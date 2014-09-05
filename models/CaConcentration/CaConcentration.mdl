@@ -1,0 +1,189 @@
+#ifndef CaConcentration_MDL
+#define CaConcentration_MDL
+
+#include "../../nti/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../LaboratoryTools/LaboratoryTools.mdl"
+
+Struct ChannelCaCurrents {
+  float []* currents;
+}
+
+Struct ReceptorCaCurrent {
+  float* current;
+  int index;
+}
+
+Struct InjectedCaCurrent {
+  float* current;
+  float currentToConc;
+  int index;
+}
+
+Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer {
+  DimensionStruct* [] dimensions;
+  BranchDataStruct* branchData;
+  float [] Ca_cur; // intracellular concentrations expressed by ion name alone
+  float [] Ca_new;
+  float [] currentToConc;
+
+  float [] Aii;
+  float [] Aip;
+  float [] Aim; // branch's distalmost compartment to junction coupling coefficient
+  float [] RHS;
+  float [] Aij;
+
+
+  // currents
+  ChannelCaCurrents [] channelCaCurrents;
+  ReceptorCaCurrent [] receptorCaCurrents;
+  InjectedCaCurrent [] injectedCaCurrents;
+
+  float* proximalCaConcentration;
+  float* [] distalAiis;
+  float* [] distalAips;
+  float* [] distalInputs;
+  DimensionStruct* [] distalDimensions;
+  DimensionStruct* proximalDimension;
+  bool proximalJunction;
+  int computeOrder;
+
+  Shared {
+    float* deltaT;
+    float DCa;
+    float bmt;
+    float beta;                    // Wagner and Keizer buffering constant
+    float CaClearance;
+
+    InitPhase deriveParameters;  
+  }
+
+  CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  SolutionArrayProducer.solutionArray << &Ca_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+  ForwardSolutionArrayProducer.AiiArray << &Aii;
+  ForwardSolutionArrayProducer.AipArray << &Aip;
+  ForwardSolutionArrayProducer.RHSArray << &RHS;
+
+  InitPhase initializeCaConcentration;
+  #if MAX_COMPUTE_ORDER>0
+  RuntimePhase forwardSolve1, backwardSolve1; 
+  #endif
+  #if MAX_COMPUTE_ORDER>1
+  RuntimePhase forwardSolve2, backwardSolve2; 
+  #endif
+  #if MAX_COMPUTE_ORDER>2
+  RuntimePhase forwardSolve3, backwardSolve3; 
+  #endif
+  #if MAX_COMPUTE_ORDER>3
+  RuntimePhase forwardSolve4, backwardSolve4; 
+  #endif
+  #if MAX_COMPUTE_ORDER>4
+  RuntimePhase forwardSolve5, backwardSolve5; 
+  #endif
+  #if MAX_COMPUTE_ORDER>5
+  RuntimePhase forwardSolve6, backwardSolve6; 
+  #endif
+  #if MAX_COMPUTE_ORDER>6
+  RuntimePhase forwardSolve7, backwardSolve7; 
+  #endif
+  RuntimePhase solve, finish;
+
+  InAttrPSet {	
+    string identifier;
+    TissueSite site;
+    int idx;
+  }
+
+  UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+   }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
+    CaCurrentArrayProducer.CaCurrents >> channelCaCurrents.currents;
+   }
+
+  Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+    setInjectedCaCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.CaCurrent >> receptorCaCurrents.current;
+    setReceptorCaCurrent();
+   }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+    CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+    setInjectedCaCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects CaConcentrationProducer, DimensionProducer {
+    CaConcentrationProducer.Ca >> proximalCaConcentration;
+    DimensionProducer.dimension >> proximalDimension;
+    setProximalJunction();
+  }
+
+  Connection Pre Node (PSet.identifier=="backwardSolvePoint") Expects SolutionProducer, DimensionProducer {
+    SolutionProducer.solution >> proximalCaConcentration;
+    DimensionProducer.dimension >> proximalDimension;
+  }
+
+  Connection Pre Node (PSet.identifier=="distalJunctionPoint") Expects CaConcentrationProducer, DimensionProducer {
+    CaConcentrationProducer.Ca >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="forwardSolvePoint") Expects ForwardSolutionProducer, DimensionProducer {
+    ForwardSolutionProducer.Aii >> distalAiis;
+    ForwardSolutionProducer.Aip >> distalAips;
+    ForwardSolutionProducer.RHS >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProducer
+{
+  float* CaConcentration;
+  DimensionStruct* dimension;
+  Shared {
+    float []* CaConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  CaConcentrationProducer.Ca << CaConcentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedCaConcentration(CaConcentration);
+  RuntimePhase produceFinishedCaConcentration(CaConcentration);
+}
+
+#endif

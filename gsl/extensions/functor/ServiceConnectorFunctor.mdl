@@ -1,0 +1,9 @@
+#ifndef ServiceConnectorFunctor_MDL
+#define ServiceConnectorFunctor_MDL
+
+Framework Functor ServiceConnectorFunctor Category "CONNECTOR" {
+   Initialize();
+   void Execute (...);
+}
+
+#endif

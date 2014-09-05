@@ -1,0 +1,9 @@
+COMPARTMENT_VARIABLE_TARGETS 4
+BRANCHTYPE
+0 Voltage Calcium
+1 Voltage
+2 Voltage Calcium
+3 Voltage Calcium
+COMPARTMENT_VARIABLE_COSTS 2
+Voltage 1.0
+Calcium 1.0

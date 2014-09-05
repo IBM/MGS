@@ -1,0 +1,88 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "Lens.h"
+#include "CahChannel.h"
+#include "CG_CahChannel.h"
+#include "rndm.h"
+
+#define SMALL 1.0E-6
+//#define SCHWEIGHOFER_1999
+#define DEGRUIJL_2012
+
+#ifdef SCHWEIGHOFER_1999
+#define ARC 1.6
+#define ARV -5.0
+#define ARD 14.0
+#define BRC 0.02
+#define BRV 8.5
+#define BRD 5.0
+#endif
+#ifdef DEGRUIJL_2012
+#define ARC 0.34
+#define ARV -5.0
+#define ARD 13.9
+#define BRC 0.004
+#define BRV 8.5
+#define BRD 5.0
+#endif
+
+float CahChannel::vtrap(float x, float y) {
+  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1)); // Corrected according to Traub 1991
+}
+
+void CahChannel::update(RNG& rng)
+{
+  float dt = *(getSharedMembers().deltaT);
+  for (unsigned i=0; i<branchData->size; ++i) {
+    E_Ca[i]=(0.04343 * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
+    float v=(*V)[i];
+    float ar = ARC/(1.0 + exp(-(v + ARV)/ARD));
+    float br = BRC*vtrap(v + BRV, BRD);
+    float pr = 0.5*dt*(ar + br);
+    r[i] = (dt*ar + r[i]*(1.0 - pr))/(1.0 + pr);
+    g[i]=gbar[i]*r[i]*r[i];
+    I_Ca[i] = g[i] * (v-E_Ca[i]);
+  }
+}
+
+void CahChannel::initializeCahChannels(RNG& rng)
+{
+  unsigned size=branchData->size;
+  assert(V);
+  assert(gbar.size()==size);
+  assert(V->size()==size);
+  assert(Ca_IC->size()==size);
+  if (g.size()!=size) g.increaseSizeTo(size);
+  if (r.size()!=size) r.increaseSizeTo(size);
+  if (E_Ca.size()!=size) E_Ca.increaseSizeTo(size);
+  if (I_Ca.size()!=size) I_Ca.increaseSizeTo(size);
+  for (int i=0; i<size; ++i) {
+    gbar[i]=gbar[0];
+  }
+  for (unsigned i=0; i<size; ++i) {
+    float v=(*V)[i];
+    float ar = ARC/(1.0 + exp(-(v + ARV)/ARD));
+    float br = BRC*vtrap(v + BRV, BRD);
+    r[i] = ar/(ar + br);
+    g[i] = gbar[i]*r[i]*r[i];
+  }
+  assert (getSharedMembers().T!=0 && getSharedMembers().Ca_EC!=0);
+}
+
+CahChannel::~CahChannel()
+{
+}
+

@@ -1,0 +1,9 @@
+CHANNEL_TARGETS 4
+BRANCHTYPE
+1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+0 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+1 Na [Voltage2] [Voltage2] KDR [Voltage2] [Voltage2]
+0 Na [Voltage2] [Voltage2] KDR [Voltage2] [Voltage2]
+CHANNEL_COSTS 2
+Na 0.414243
+KDR 0.254051

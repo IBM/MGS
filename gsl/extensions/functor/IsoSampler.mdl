@@ -1,0 +1,9 @@
+#ifndef IsoSampler_MDL
+#define IsoSampler_MDL
+
+Framework Functor IsoSampler Category "SAMPFCTR2" {
+   Initialize();
+   void Execute();
+}
+
+#endif

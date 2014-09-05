@@ -1,0 +1,44 @@
+#ifndef HCNChannel_MDL
+#define HCNChannel_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node HCNChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+  float [] q;
+  float [] g;
+  float [] gbar;
+
+  float []* V;
+
+  BranchDataStruct* branchData; 
+
+  Shared {
+    float* deltaT;
+    float [] E_h;
+  }
+
+  RuntimePhase update;
+  InitPhase initializeHCNChannels;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_h;
+  BranchDataProducer.branchData << branchData;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif

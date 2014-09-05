@@ -1,0 +1,120 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "C_phase_mapping_list.h"
+#include "C_phase_mapping.h"
+#include "DataItem.h"
+#include <cassert>
+#include "SyntaxError.h"
+
+void C_phase_mapping_list::internalExecute(LensContext *c)
+{
+   std::vector<C_phase_mapping*>::iterator it, end = _phase_mappings->end();
+   for (it = _phase_mappings->begin(); it != end; ++it) {
+      (*it)->execute(c);
+   }
+}
+
+
+C_phase_mapping_list::C_phase_mapping_list(const C_phase_mapping_list& rv)
+   : C_production(rv), _phase_mappings(0)
+{
+   _phase_mappings = new std::vector<C_phase_mapping*>;
+   if (rv._phase_mappings) {
+      std::vector<C_phase_mapping*>::iterator it, 
+	 end = rv._phase_mappings->end();
+      for (it = rv._phase_mappings->begin(); it != end; ++it) {
+	 _phase_mappings->push_back((*it)->duplicate());
+      }
+   }
+}
+
+
+C_phase_mapping_list::C_phase_mapping_list(C_phase_mapping *a, 
+					   SyntaxError * error)
+   : C_production(error), _phase_mappings(0)
+{
+   _phase_mappings = new std::vector<C_phase_mapping*>;
+   _phase_mappings->push_back(a);
+}
+
+
+C_phase_mapping_list::C_phase_mapping_list(C_phase_mapping_list *al, 
+					   C_phase_mapping *a, 
+					   SyntaxError * error)
+   : C_production(error), _phase_mappings(0)
+{
+   if (al) {
+      if (al->isError()) {
+	 delete _error;
+	 _error = al->_error->duplicate();
+      }
+      std::auto_ptr<std::vector<C_phase_mapping*> > phases;
+      al->releaseList(phases);
+      _phase_mappings = phases.release();
+      if (a) _phase_mappings->push_back(a);
+   }
+   delete al;
+}
+
+
+void C_phase_mapping_list::releaseList(
+   std::auto_ptr<std::vector<C_phase_mapping*> >& phases)
+{
+   phases.reset(_phase_mappings);
+   _phase_mappings = 0;
+}
+
+C_phase_mapping_list* C_phase_mapping_list::duplicate() const
+{
+   return new C_phase_mapping_list(*this);
+}
+
+C_phase_mapping_list::~C_phase_mapping_list()
+{
+   if (_phase_mappings) { 
+      std::vector<C_phase_mapping*>::iterator it, end = _phase_mappings->end();
+      for (it = _phase_mappings->begin(); it != end; ++it) {
+         delete *it;
+      }
+   }
+   delete _phase_mappings;
+}
+
+void C_phase_mapping_list::checkChildren() 
+{
+   if (_phase_mappings) {
+      std::vector<C_phase_mapping*>::iterator it, end;
+      end =_phase_mappings->end();
+      for(it = _phase_mappings->begin(); it != end; ++it) {
+	 (*it)->checkChildren();
+	 if ((*it)->isError()) {
+	    setError();
+	 }
+      }
+   }
+} 
+
+void C_phase_mapping_list::recursivePrint() 
+{
+   if (_phase_mappings) {
+      std::vector<C_phase_mapping*>::iterator it, end;
+      end =_phase_mappings->end();
+      for(it = _phase_mappings->begin(); it != end; ++it) {
+	 (*it)->recursivePrint();
+      }
+   }
+   printErrorMessage();
+} 

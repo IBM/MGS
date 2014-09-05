@@ -1,0 +1,9 @@
+#ifndef SrcRefSumRsqrdInvWeightModifier_MDL
+#define SrcRefSumRsqrdInvWeightModifier_MDL
+
+Framework Functor SrcRefSumRsqrdInvWeightModifier {
+   Initialize(Functor* f, int maxDim, bool setDistance);
+   ParameterSet* Execute();
+}
+
+#endif

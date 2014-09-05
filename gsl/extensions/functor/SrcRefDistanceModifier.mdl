@@ -1,0 +1,9 @@
+#ifndef SrcRefDistanceModifier_MDL
+#define SrcRefDistanceModifier_MDL
+
+Framework Functor SrcRefDistanceModifier {
+   Initialize(Functor* f);
+   ParameterSet* Execute();
+}
+
+#endif

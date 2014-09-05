@@ -1,0 +1,9 @@
+#ifndef SrcScaledContractedGaussianWeightModifier_MDL
+#define SrcScaledContractedGaussianWeightModifier_MDL
+
+Framework Functor SrcScaledContractedGaussianWeightModifier {
+   Initialize(Functor* f, float sigma, float max, float contract);
+   ParameterSet* Execute();
+}
+
+#endif

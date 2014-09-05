@@ -1,0 +1,23 @@
+CHANNEL_TARGETS 3
+BRANCHTYPE
+0 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium]
+1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+2 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium]
+
+CHANNEL_COSTS 6
+Na 0.414243
+KDR 0.254051
+KCa 0.254051
+HCN 0.254051
+Cal 0.254051
+Cah 0.254051
+
+CHANNEL_PARAMS 2
+Na 2
+BRANCHTYPE
+0 <gbar={0.7}>
+1 <gbar={0.35}>
+KDR 2
+BRANCHTYPE
+0 <gbar={0.18}>
+1 <gbar={0.09}>

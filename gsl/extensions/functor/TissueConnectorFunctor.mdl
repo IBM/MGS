@@ -1,0 +1,9 @@
+#ifndef TissueConnectorFunctor_MDL
+#define TissueConnectorFunctor_MDL
+
+Framework Functor TissueConnectorFunctor Category "CONNECTOR" {
+   Initialize();
+   void Execute();
+}
+
+#endif

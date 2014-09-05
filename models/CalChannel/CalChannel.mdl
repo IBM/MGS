@@ -1,0 +1,61 @@
+#ifndef CalChannel_MDL
+#define CalChannel_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node CalChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, CaCurrentArrayProducer, BranchDataProducer {
+  float [] g;
+  float [] k;
+  float [] l;
+  float [] gbar;
+  float [] E_Ca;
+  float [] I_Ca;
+
+  float []* V;
+  float []* Ca_IC;
+ 
+  BranchDataStruct* branchData; 
+
+  Shared {		
+    float* Ca_EC;
+    float* deltaT;
+    float* T;
+  }
+
+  RuntimePhase update;
+   InitPhase initializeCalChannels;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
+  CaCurrentArrayProducer.CaCurrents << &I_Ca;
+  BranchDataProducer.branchData << branchData;
+
+  InAttrPSet {
+    string identifier;
+    int idx;	
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+  }
+
+
+  Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+	Expects CaConcentrationProducer, TemperatureProducer {
+    CaConcentrationProducer.Ca >> Shared.Ca_EC;
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif

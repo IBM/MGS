@@ -1,0 +1,60 @@
+#ifndef GABAAReceptor_MDL
+#define GABAAReceptor_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer {
+  float g;
+  float gbar;
+  float r;
+
+  float* V;
+  int indexPost;
+  int* [] indexPrePost;
+
+  BranchDataStruct* [] branchDataPrePost;
+
+  Shared {
+    float* deltaT;
+    float E;
+    float alpha;
+    float beta;
+    float Tmax;
+    float Vp;
+    float Kp;
+  }
+
+  RuntimePhase updateGABAA;
+  InitPhase initializeGABAA;
+
+  ConductanceProducer.conductance << &g;
+  ReversalPotentialProducer.reversalPotential << &Shared.E;
+  BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
+  IndexArrayProducer.indexArray << &indexPrePost;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setPostIndex;
+
+  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
+    VoltageProducer.voltage >> V;
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    BranchDataProducer.branchData >> branchDataPrePost;
+    setPostIndex();
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+  TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif

@@ -1,0 +1,9 @@
+#ifndef TissueNodeInitFunctor_MDL
+#define TissueNodeInitFunctor_MDL
+
+Framework Functor TissueNodeInitFunctor Category "NODEINITIALIZER" {
+   Initialize();
+   void Execute();
+}
+
+#endif

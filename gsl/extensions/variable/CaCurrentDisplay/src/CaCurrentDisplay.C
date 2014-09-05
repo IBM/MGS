@@ -1,0 +1,147 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "Lens.h"
+#include "CaCurrentDisplay.h"
+#include "Simulation.h"
+#include "CG_CaCurrentDisplay.h"
+#include <memory>
+
+void CaCurrentDisplay::initialize(RNG& rng) 
+{
+  if (ICa_channel.size()>0 || ICa_synapse.size()>0) {
+    assert(deltaT);
+    std::ostringstream os;
+    os<<fileName<<getSimulation().getRank();
+    outFile = new std::ofstream(os.str().c_str());
+    outFile->precision(3);
+    (*outFile)<<"#Time\tCaCurrent :";
+    if (ICa_channel.size()>0) {
+      if (indices.size()==0) {
+	for (int i=0; i<ICa_channel.size(); ++i) {
+	  assert(ICa_channel[i]->size()>0);
+	  for (int j=0; j<ICa_channel[i]->size(); ++j) {
+	    (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&channelBranchData[i]->key))<<","<<j<<"] ";
+	  }
+	}
+      }
+      else {
+	ShallowArray< int >::iterator it, end=indices.end();
+	int idx=0;
+	for (int i=0; i<ICa_channel.size(); ++i) {	
+	  for (it=indices.begin(); it!=end; ++it) {
+	    if (*it<ICa_channel[i]->size())
+	      (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&channelBranchData[*it]->key))<<","<<*it<<"] ";
+	  }
+	}
+      }
+    }
+    if (ICa_synapse.size()>0) {
+      if (connexonBranchData.size()>0) {
+	for (int i=0; i<ICa_synapse.size(); ++i) {
+	  (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&connexonBranchData[i]->key))<<","<<*(connexonIndices[i])<<"] ";
+	}
+      }
+      else {
+	for (int i=0; i<ICa_synapse.size(); ++i) {
+	  assert(synapseBranchData[i]->size()==2);
+	  assert(synapseIndices[i].size()==2);
+	  (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&( (*synapseBranchData[i])[0]->key)))<<","<<*(synapseIndices[i][0])<<"|"
+		    <<*(reinterpret_cast<unsigned long long*>(&( (*synapseBranchData[i])[1]->key)))<<","<<*(synapseIndices[i][1])<<"] ";
+	}
+      }
+    }
+    (*outFile)<<"\n";
+  }
+}
+
+void CaCurrentDisplay::finalize(RNG& rng) 
+{
+  if (outFile) outFile->close();
+}
+
+void CaCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
+{
+  if (ICa_channel.size()>0 || ICa_synapse.size()>0) {
+    (*outFile)<<float(getSimulation().getIteration())**deltaT;
+    if (ICa_channel.size()>0) {
+      if (indices.size()==0) {
+	ShallowArray< ShallowArray <float>* >::iterator it1 = ICa_channel.begin(),
+	  end1 = ICa_channel.end();
+	for (; it1!=end1; ++it1) {
+	  ShallowArray< float >::iterator it2 = (*it1)->begin(),
+	    end2 = (*it1)->end();
+	  for (; it2!=end2; ++it2)
+	    (*outFile)<<std::fixed<<"\t"<<(*it2);
+	}
+      }
+      else {
+	ShallowArray< int >::iterator it2, end2=indices.end();
+	ShallowArray< ShallowArray <float>* >::iterator it1 = ICa_channel.begin(),
+	  end1 = ICa_channel.end();
+	for (; it1!=end1; ++it1) {
+	  for (it2 = indices.begin(); it2!=end2; ++it2) {
+	    if (*it2<(*it1)->size())
+	      (*outFile)<<std::fixed<<"\t"<<(**it1)[*it2];
+	  }
+	}
+      }
+    }
+    if (ICa_synapse.size()>0) {
+      ShallowArray<float*>::iterator it = ICa_synapse.begin(),
+	end = ICa_synapse.end();
+      for (; it!=end; ++it) {
+	(*outFile)<<std::fixed<<"\t"<<(**it);
+      }
+    }
+    (*outFile)<<"\n";
+  }
+}
+
+void CaCurrentDisplay::setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaCurrentDisplayInAttrPSet* CG_inAttrPset, CG_CaCurrentDisplayOutAttrPSet* CG_outAttrPset) 
+{
+  if (CG_inAttrPset->identifier=="CHANNEL")
+    ICa_channel.push_back(ICa_channelConnect);
+  else if (CG_inAttrPset->identifier=="SYNAPSE") {
+    synapseBranchData.push_back(synapseBranchDataConnect);
+    synapseIndices.push_back(synapseIndicesConnect);
+  }
+}
+
+CaCurrentDisplay::CaCurrentDisplay() 
+  : CG_CaCurrentDisplay(), outFile(0)
+{
+}
+
+CaCurrentDisplay::~CaCurrentDisplay() 
+{
+  delete outFile;
+}
+
+void CaCurrentDisplay::duplicate(std::auto_ptr<CaCurrentDisplay>& dup) const
+{
+   dup.reset(new CaCurrentDisplay(*this));
+}
+
+void CaCurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+{
+   dup.reset(new CaCurrentDisplay(*this));
+}
+
+void CaCurrentDisplay::duplicate(std::auto_ptr<CG_CaCurrentDisplay>& dup) const
+{
+   dup.reset(new CaCurrentDisplay(*this));
+}
+

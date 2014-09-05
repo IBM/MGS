@@ -1,0 +1,441 @@
+#ifndef LaboratoryTools_MDL
+#define LaboratoryTools_MDL
+
+#include "../std/std.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Struct TissueSite {
+  double x;
+  double y;
+  double z;
+  double r;
+}
+
+Variable VoltageClamp Implements CurrentProducer
+{
+  float command; 						// Declare command voltage
+  float Igen;							// Declare the feedback current applied to hold voltage constant
+  float [] waveform;						// Declare an array for the waveform
+  int waveformIdx;						// Declare index of the waveform array
+  float Vprev;							// Declare voltage from previous iteration for calculating dV
+  float Cm;							// Declare membrane capacitance
+  float []* V; 						   	// Declare array of pointers for the voltage measured at the cell that is input to the tool
+  float beta;
+  float* surfaceArea;
+  int idx;
+  float* deltaT;
+  bool isOn;
+  string fileName; 
+
+  TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
+  TriggeredFunction setCommand;					// a single command like a step
+  TriggeredFunction toggle;
+
+  InitPhase initialize;
+  RuntimePhase updateI;
+  FinalPhase finalize;
+
+  CurrentProducer.current << &Igen; 				// Describes the output of the function which is the current Igen
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
+    VoltageArrayProducer.voltageArray >> V;
+    ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
+  }
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, SurfaceAreaProducer {		// 
+    VoltageArrayProducer.voltageArray >> V;
+    SurfaceAreaProducer.surfaceArea >> surfaceArea;
+  }
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+}
+
+Variable PointCurrentSource Implements CurrentProducer
+{
+  float I;
+  TriggeredFunction setCurrent;
+  RuntimePhase stimulate(I);
+  CurrentProducer.current << &I;
+}
+
+Variable PointCalciumSource Implements CaCurrentProducer
+{
+  float I_Ca;
+  TriggeredFunction setCaCurrent;
+  RuntimePhase stimulate(I_Ca);
+  CaCurrentProducer.CaCurrent << &I_Ca;
+}
+
+Variable CurrentPulseGenerator Implements CurrentProducer
+{
+  float I;
+  float peak;
+  float period;
+  float duration;
+  float delay;
+  float last;
+  float inc;
+  string pattern;
+
+  float* deltaT;
+	
+  InitPhase initialize(I);
+  RuntimePhase update(I);
+
+  CurrentProducer.current << &I;
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+}
+
+Variable VoltageDisplay
+{
+   string fileName;
+   int [] [] indices;
+
+   float []* []  V;
+   float []* V_connect;
+
+   DimensionStruct* []* [] dimensions;
+   DimensionStruct* []* dimensions_connect;
+
+   BranchDataStruct* [] branchData;
+   BranchDataStruct* branchData_connect;
+
+   float* deltaT;
+   
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   InAttrPSet {
+     TissueSite site;
+   }
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node () Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+     VoltageArrayProducer.voltageArray >> V_connect; 
+     DimensionArrayProducer.dimensionArray >> dimensions_connect;
+     BranchDataProducer.branchData >> branchData_connect;
+     setUpPointers();
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable CalciumDisplay
+{
+   string fileName;
+   int [] [] indices;
+
+   float []* []  Ca;
+   float []* Ca_connect;
+
+   DimensionStruct* []* [] dimensions;
+   DimensionStruct* []* dimensions_connect;
+
+   BranchDataStruct* [] branchData;
+   BranchDataStruct* branchData_connect;
+
+   float* deltaT;
+   
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   InAttrPSet {
+     string identifier;
+     TissueSite site;
+   }
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node () Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
+     CaConcentrationArrayProducer.CaConcentrations >> Ca_connect;
+     DimensionArrayProducer.dimensionArray >> dimensions_connect;
+     BranchDataProducer.branchData >> branchData_connect;
+     setUpPointers();
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable ConductanceDisplay
+{
+   string fileName;
+   int [] indices;
+
+   float []* [] g_channel;
+   float []* g_channelConnect;
+   BranchDataStruct* [] channelBranchData;
+
+   float* [] g_synapse;
+   BranchDataStruct* []* [] synapseBranchData;
+   BranchDataStruct* []* synapseBranchDataConnect;
+   int* [] [] synapseIndices;
+   int* [] synapseIndicesConnect;
+
+   float* deltaT;
+
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   InAttrPSet {
+     string identifier;
+     string type;
+   }
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node (PSet.identifier=="CHANNEL") Expects ConductanceArrayProducer, BranchDataProducer {
+     ConductanceArrayProducer.conductanceArray >> g_channelConnect;
+     BranchDataProducer.branchData >> channelBranchData;
+     setUpPointers();
+   }
+   Connection Pre Node ((PSet.identifier=="SYNAPSE") && (PSet.type=="g")) Expects ConductanceProducer, BranchDataArrayProducer, IndexArrayProducer {
+     ConductanceProducer.conductance >> g_synapse;
+     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+     setUpPointers();
+   }
+   Connection Pre Node ((PSet.identifier=="SYNAPSE") && (PSet.type=="gbar")) Expects MaximumConductanceProducer, BranchDataArrayProducer, IndexArrayProducer {
+     MaximumConductanceProducer.maximumConductance >> g_synapse;
+     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+     setUpPointers();
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable CurrentDisplay
+{
+   string fileName;
+   int [] indices;
+
+   float []* [] I_channel;
+   float []* I_channelConnect;
+   BranchDataStruct* [] channelBranchData;
+
+   float* [] I_synapse;
+   BranchDataStruct* []* [] synapseBranchData;
+   BranchDataStruct* []* synapseBranchDataConnect;
+   int* [] [] synapseIndices;
+   int* [] synapseIndicesConnect;
+
+   BranchDataStruct* [] connexonBranchData;
+   int* [] connexonIndices;
+
+   float* deltaT;
+
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   InAttrPSet {
+     string identifier;
+   }
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer {
+     CurrentArrayProducer.currents >> I_channelConnect;
+     BranchDataProducer.branchData >> channelBranchData;
+     setUpPointers();
+   }
+   Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
+     CurrentProducer.current >> I_synapse;
+     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+     setUpPointers();
+   }
+   Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
+     CurrentProducer.current >> I_synapse;
+     BranchDataProducer.branchData >> connexonBranchData;
+     IndexProducer.index >> connexonIndices;
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable CaCurrentDisplay
+{
+   string fileName;
+   int [] indices;
+
+   float []* [] ICa_channel;
+   float []* ICa_channelConnect;
+   BranchDataStruct* [] channelBranchData;
+
+   float* [] ICa_synapse;
+   BranchDataStruct* []* [] synapseBranchData;
+   BranchDataStruct* []* synapseBranchDataConnect;
+   int* [] [] synapseIndices;
+   int* [] synapseIndicesConnect;
+
+   BranchDataStruct* [] connexonBranchData;
+   int* [] connexonIndices;
+
+   float* deltaT;
+
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   InAttrPSet {
+     string identifier;
+   }
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer {
+     CaCurrentArrayProducer.CaCurrents >> ICa_channelConnect;
+     BranchDataProducer.branchData >> channelBranchData;
+     setUpPointers();
+   }
+   Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
+     CaCurrentProducer.CaCurrent >> ICa_synapse;
+     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+     setUpPointers();
+   }
+   Connection Pre Node (PSet.identifier=="CONNEXON") Expects CaCurrentProducer, BranchDataProducer, IndexProducer {
+     CaCurrentProducer.CaCurrent >> ICa_synapse;
+     BranchDataProducer.branchData >> connexonBranchData;
+     IndexProducer.index >> connexonIndices;
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable ReversalPotentialDisplay
+{
+   string fileName;
+   int [] indices;
+
+   float []* [] E_channel;
+   float []* E_channelConnect;
+   BranchDataStruct* [] channelBranchData;
+
+   float* [] E_synapse;
+   BranchDataStruct* []* [] synapseBranchData;
+   BranchDataStruct* []* synapseBranchDataConnect;
+   int* [] [] synapseIndices;
+   int* [] synapseIndicesConnect;
+
+   float* deltaT;
+
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   InAttrPSet {
+     string identifier;
+   }
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node (PSet.identifier=="CHANNEL") Expects ReversalPotentialArrayProducer, BranchDataProducer {
+     ReversalPotentialArrayProducer.reversalPotentials >> E_channelConnect;
+     BranchDataProducer.branchData >> channelBranchData;
+     setUpPointers();
+   }
+   Connection Pre Node (PSet.identifier=="SYNAPSE") Expects ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer {
+     ReversalPotentialProducer.reversalPotential >> E_synapse;
+     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+     setUpPointers();
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable CalciumVisualization
+{
+   string inFileName;
+   string outFileName;
+   int [] indices;
+
+   bool offline;
+   long dataSize;
+   long collectionCount;
+
+   float []* []  Ca;
+   float []* Ca_connect;
+   BranchDataStruct* [] branchData;
+
+   float* deltaT;
+   
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node () Expects CaConcentrationArrayProducer, BranchDataProducer {
+     CaConcentrationArrayProducer.CaConcentrations >> Ca_connect;
+     BranchDataProducer.branchData >> branchData;
+     setUpPointers();
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable VoltageVisualization
+{
+   string inFileName;
+   string outFileName;
+   int [] indices;
+
+   bool offline;
+   long dataSize;
+   long collectionCount;
+
+   float []* []  V;
+   float []* V_connect;
+   BranchDataStruct* [] branchData;
+
+   float* deltaT;
+   
+   InitPhase initialize;
+   FinalPhase finalize;
+   TriggeredFunction dataCollection;
+
+   UserFunction setUpPointers;
+
+   Connection Pre Node () Expects VoltageArrayProducer, BranchDataProducer {
+     VoltageArrayProducer.voltageArray >> V_connect;
+     BranchDataProducer.branchData >> branchData;
+     setUpPointers();
+   }
+   Connection Pre Constant () Expects TimeStepProducer {
+     TimeStepProducer.deltaT >> deltaT;
+   }
+} 
+
+Variable SimulationSetter Implements PlasticityToggleProducer
+{
+   int plasticityToggle;
+
+   InitPhase initialize;
+   RuntimePhase propagateToggles(plasticityToggle);
+   TriggeredFunction switchPlasticityOnOff;
+
+   PlasticityToggleProducer.plasticityToggle << &plasticityToggle;
+} 
+
+#endif

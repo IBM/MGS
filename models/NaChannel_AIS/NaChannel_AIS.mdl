@@ -1,0 +1,70 @@
+#ifndef NaChannel_AIS_MDL
+#define NaChannel_AIS_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node NaChannel_AIS Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+  float [] h;
+  float [] g;
+  float [] gbar;
+  float [] hrv;
+  float [] trc;
+
+  float []* V;
+
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+
+  Shared {
+    float gbar_0;
+    float gbar_AIS;
+    float hrv_0;
+    float hrv_AIS;
+    float trc_0;
+    float trc_AIS;
+    float d_AIS;
+
+    float* Na_IC;
+    float* Na_EC;
+    float* deltaT;
+    float* T;
+    float [] E_Na;   
+    InitPhase computeE_Na;
+  }
+
+  RuntimePhase update;
+  InitPhase initializeNaChannels;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
+  BranchDataProducer.branchData << branchData;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData; 
+    DimensionArrayProducer.dimensionArray >> dimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects NaConcentrationProducer {
+    NaConcentrationProducer.Na >> Shared.Na_IC;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+	Expects NaConcentrationProducer, TemperatureProducer {
+    NaConcentrationProducer.Na >> Shared.Na_EC;
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif

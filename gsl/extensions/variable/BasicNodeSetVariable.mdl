@@ -1,0 +1,16 @@
+#ifndef BasicNodeSetVariable_H
+#define BasicNodeSetVariable_H
+
+#include "../struct/CoordsStruct.mdl"
+
+Variable BasicNodeSetVariable 
+{
+   string fileName;
+   CoordsStruct[] coords;
+   float*[] vals;
+
+   InitPhase initialize;
+   TriggeredFunction dca;
+}
+
+#endif

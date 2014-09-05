@@ -1,0 +1,132 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "BindNameFunctor.h"
+#include "FunctorType.h"
+#include "StringDataItem.h"
+#include "LensContext.h"
+//#include <iostream>
+//#include <sstream>
+#include "DataItem.h"
+#include "NumericDataItem.h"
+#include "FloatDataItem.h"
+#include "IntDataItem.h"
+#include "FunctorDataItem.h"
+#include "NDPairListDataItem.h"
+#include "InstanceFactoryQueriable.h"
+#include "NDPair.h"
+#include "DataItemQueriable.h"
+#include "FunctorDataItem.h"
+#include "SyntaxErrorException.h"
+#include <memory>
+
+void BindNameFunctor::doInitialize(LensContext *c, 
+				   const std::vector<DataItem*>& args)
+{
+   std::vector<DataItem*>::const_iterator iter, 
+      begin = args.begin(), end = args.end();
+
+   std::auto_ptr<DataItem> di;
+   for ( iter = begin; iter != end; ++iter) {
+      std::pair<std::string, DataItem*> curElem;
+
+      // get the name
+      StringDataItem* sdi;
+     sdi = dynamic_cast<StringDataItem*>(*iter);
+      if (sdi == 0) {
+	 throw SyntaxErrorException(
+	    "Dynamic cast of DataItem to StringDataItem failed in BindNameFunctor");
+      }
+      curElem.first = sdi->getString();
+
+      // get the value
+      iter++;
+      (*iter)->duplicate(di);
+      curElem.second = di.release();
+      _nameDataItems.push_back(curElem);
+   }
+}
+
+
+void BindNameFunctor::doExecute(LensContext *c, 
+				const std::vector<DataItem*>& args, 
+				std::auto_ptr<DataItem>& rvalue)
+{
+   // Get a list of names and values and store them in a NDPairList,
+   // then reset the value
+
+   std::vector<NDPairGenerator>::iterator iter, begin, end;
+
+   std::auto_ptr<NDPairList > ndpList(new NDPairList);
+   begin = _nameDataItems.begin();
+   end = _nameDataItems.end();
+ 
+   std::auto_ptr<DataItem> di;
+   for ( iter = begin; iter != end; ++iter) {
+      FunctorDataItem* fdi = dynamic_cast<FunctorDataItem*>(iter->second);
+      if (fdi) {
+	 std::vector<DataItem*> nullArgs;
+	 std::auto_ptr<DataItem> rval_ap;
+	 fdi->getFunctor()->execute(c, nullArgs, rval_ap);
+         NumericDataItem* ndi = dynamic_cast<NumericDataItem*>(rval_ap.get());
+         if (ndi ==0) {
+	    throw SyntaxErrorException(
+	       "Functor doesn't return a numeric value in BindNameFunctor");
+         }
+	 ndi->duplicate(di);
+      } else {
+	 iter->second->duplicate(di);
+      }
+      NDPair* ndp = new NDPair(iter->first, di);
+      ndpList->push_back(ndp);
+   }
+
+   NDPairListDataItem *nv_di = new NDPairListDataItem;
+   nv_di->setNDPairList(ndpList);
+   rvalue.reset(nv_di);
+}
+
+
+void BindNameFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+{
+   fap.reset(new BindNameFunctor(*this));
+}
+
+
+BindNameFunctor::BindNameFunctor()
+{
+}
+
+
+BindNameFunctor::BindNameFunctor(const BindNameFunctor &f)
+{
+
+   std::auto_ptr<DataItem> di;
+   std::vector<NDPairGenerator>::const_iterator it, 
+      end = f._nameDataItems.end();
+   for (it = f._nameDataItems.begin(); it != end; ++it) {
+      it->second->duplicate(di);
+      _nameDataItems.push_back(NDPairGenerator(it->first, di.release()));
+   }
+}
+
+
+BindNameFunctor::~BindNameFunctor()
+{
+   std::vector<NDPairGenerator>::iterator it, end = _nameDataItems.end();
+   for (it = _nameDataItems.begin(); it != end; ++it) {
+      delete it->second;
+   }
+}

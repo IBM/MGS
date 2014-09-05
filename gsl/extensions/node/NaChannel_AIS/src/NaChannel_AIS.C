@@ -1,0 +1,89 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "Lens.h"
+#include "NaChannel_AIS.h"
+#include "CG_NaChannel_AIS.h"
+#include "ShallowArray.h"
+#include "rndm.h"
+
+#define SMALL 1.0E-6
+#define DEGRUIJL_2012
+
+/* Degruijl 2012 used the following parameters:
+   gbar_0 = 120.0;
+   gbar_AIS = 240.0;
+   hrv_0 = 70.0;
+   hrv_AIS = 60.0;
+   trc_0 = 3.0;
+   trc_AIS = 1.5; */
+
+#define MRV 30.0
+#define MRD 5.5
+#define HRD -5.8
+#define TRV 40.0
+#define TRD 33.0
+
+float NaChannel_AIS::vtrap(float x, float y) {
+  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
+}
+
+void NaChannel_AIS::update(RNG& rng)
+{
+  float dt = *(getSharedMembers().deltaT);
+  for (unsigned i=0; i<branchData->size; ++i) {
+    float v=(*V)[i];
+    float minf = 1.0/(1.0 + exp(-(v + MRV) / MRD) );
+    float hinf = 1.0/(1.0 + exp(-(v + hrv[i]) / HRD) );
+    float tauh = trc[i]*exp( -(v + TRV) / TRD);
+    float ph = 0.5*dt/tauh;
+    h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
+    g[i] = gbar[i]*minf*minf*minf*h[i];
+  }
+}
+  
+void NaChannel_AIS::initializeNaChannels(RNG& rng)
+{
+  assert(branchData);
+  assert(dimensions);  
+  unsigned size=branchData->size;
+  assert(V);
+  assert(V->size()==size);
+  if (gbar.size()!=size) gbar.increaseSizeTo(size);
+  if (hrv.size()!=size) hrv.increaseSizeTo(size);
+  if (trc.size()!=size) trc.increaseSizeTo(size);
+  if (g.size()!=size) g.increaseSizeTo(size);
+  if (h.size()!=size) h.increaseSizeTo(size);
+  ShallowArray<DimensionStruct*>& dimensionsArray = *dimensions;
+  for (unsigned i=0; i<size; ++i) {
+    gbar[i]=getSharedMembers().gbar_0;
+    hrv[i]=getSharedMembers().hrv_0;
+    trc[i]=getSharedMembers().trc_0;
+    if (dimensionsArray[i]->dist2soma<=getSharedMembers().d_AIS) {
+      gbar[i]=getSharedMembers().gbar_AIS;
+      hrv[i]=getSharedMembers().hrv_AIS;
+      trc[i]=getSharedMembers().trc_AIS;
+    }
+    float v=(*V)[i];
+    h[i] = 1.0/(1.0 + exp(-(v + hrv[i]) / HRD) );
+    float minf = 1.0/(1.0 + exp(-(v + MRV) / MRD) );
+    g[i] = gbar[i]*minf*minf*minf*h[i];
+  }
+}
+
+NaChannel_AIS::~NaChannel_AIS()
+{
+}
+

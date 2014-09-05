@@ -1,0 +1,10 @@
+#ifndef RefAngleModifier_MDL
+#define RefAngleModifier_MDL
+
+Framework Functor RefAngleModifier {
+   Initialize(int directionFlag, int wrapFlag, Functor* f); // directionFlag 0=SRC, 1=DST; wrapFlag 0=none, 1=grid border wrapping
+   ParameterSet* Execute();
+
+}
+
+#endif

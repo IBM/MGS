@@ -1,0 +1,39 @@
+#ifndef PreSynapticPoint_MDL
+#define PreSynapticPoint_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProducer
+{
+  float* voltage;
+  int index;
+  Shared {
+    float []* voltageConnect;
+  }
+
+  BranchDataStruct* branchDataConnect;
+  BranchDataStruct branchData;
+
+  VoltageProducer.voltage << voltage;
+  BranchDataProducer.branchData << &branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setPointers;
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchDataConnect;
+    setPointers();
+  }
+  InitPhase produceInitialState(voltage, branchData, index);
+  RuntimePhase produceState(voltage);
+}
+
+#endif

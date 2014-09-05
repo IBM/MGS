@@ -1,0 +1,9 @@
+#ifndef NameReturnValue_MDL
+#define NameReturnValue_MDL
+
+Framework Functor NameReturnValue {
+   Initialize(string s, Functor* f);
+   NDPairList* Execute();
+}
+
+#endif

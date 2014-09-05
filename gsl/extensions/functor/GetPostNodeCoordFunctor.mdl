@@ -1,0 +1,8 @@
+#ifndef GetPostNodeCoordFunctor_MDL
+#define GetPostNodeCoordFunctor_MDL
+
+Framework Functor GetPostNodeCoordFunctor {
+   Initialize();
+   Service* Execute (Edge* edge);
+}
+#endif

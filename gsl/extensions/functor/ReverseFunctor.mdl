@@ -1,0 +1,9 @@
+#ifndef ReverseFunctor_MDL
+#define ReverseFunctor_MDL
+
+Framework Functor ReverseFunctor Category "SAMPFCTR2" {
+   Initialize(Functor* f);
+   void Execute();
+}
+
+#endif

@@ -1,0 +1,85 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef ConnectionCCBase_H
+#define ConnectionCCBase_H
+#include "Mdl.h"
+
+#include "CompCategoryBase.h"
+#include "RegularConnection.h"
+#include "UserFunction.h"
+#include "PredicateFunction.h"
+#include <memory>
+#include <vector>
+#include <string>
+
+class Generatable;
+class ArrayType;
+
+class ConnectionCCBase : public CompCategoryBase {
+
+   public:
+      ConnectionCCBase(const std::string& fileName);
+      ConnectionCCBase(const ConnectionCCBase& rv);
+      ConnectionCCBase& operator=(const ConnectionCCBase& rv);
+      virtual ~ConnectionCCBase();
+      void addConnection(std::auto_ptr<RegularConnection>& con);
+      virtual std::string generateExtra() const;
+      void setUserFunctions(
+	 std::auto_ptr<std::vector<UserFunction*> >& userFunction);
+      bool userFunctionCallExists(const std::string& name) const;
+      void setPredicateFunctions(
+	 std::auto_ptr<std::vector<PredicateFunction*> >& predicateFunction);
+      bool predicateFunctionCallExists(const std::string& name) const;
+
+      std::vector<PredicateFunction*>* getPredicateFunctions() {
+	 return _predicateFunctions;
+      }
+
+   protected:
+      virtual std::string getAddPreEdgeFunctionBody() const;
+      virtual std::string getAddPreNodeFunctionBody() const;
+      virtual std::string getAddPreConstantFunctionBody() const;
+      virtual std::string getAddPreVariableFunctionBody() const;
+
+      virtual void addExtraInstanceBaseMethods(Class& instance) const;
+      virtual void addExtraInstanceMethods(Class& instance) const;
+      virtual void addExtraInstanceProxyMethods(Class& instance) const;
+
+      std::string getAcceptServiceBody() const;
+      virtual std::string getAcceptServiceBodyExtra() const;
+
+      std::string getNonArrayConnectionAccept(
+	 const DataType* elem, bool pointer) const;
+      std::string getArrayConnectionAccept(
+	 const ArrayType* elem, bool pointer) const;
+      
+   private:
+      void copyOwnedHeap(const ConnectionCCBase& rv);
+      void destructOwnedHeap();
+      std::vector<RegularConnection*> _connections;
+      virtual std::string getAddConnectionFunctionBodyExtra(
+	 Connection::ComponentType componentType, 
+	 Connection::DirectionType directionType,
+	 const std::string& componentName, const std::string& psetType, 
+	 const std::string& psetName) const;
+      void addExtraInstanceMethodsCommon(Class& instance, 
+					 bool pureVirtual) const;
+      std::vector<UserFunction*>* _userFunctions;
+      std::vector<PredicateFunction*>* _predicateFunctions;
+};
+
+
+#endif // ConnectionCCBase_H

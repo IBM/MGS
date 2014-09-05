@@ -1,0 +1,9 @@
+#ifndef GetDstNodeCoordFunctor_MDL
+#define GetDstNodeCoordFunctor_MDL
+
+Framework Functor GetDstNodeCoordFunctor {
+   Initialize(int dim);
+   int Execute ();
+}
+
+#endif

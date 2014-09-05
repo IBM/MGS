@@ -1,0 +1,9 @@
+#ifndef UniformDiscreteDist_MDL
+#define UniformDiscreteDist_MDL
+
+Framework Functor UniformDiscreteDist {
+   Initialize(double n1, double n2);
+   int Execute();
+}
+
+#endif

@@ -1,0 +1,9 @@
+#ifndef CoordsStruct_MDL
+#define CoordsStruct_MDL
+
+Framework Struct CoordsStruct
+{
+   unsigned[] coords(3,2) : "Stores Coordinates";
+}
+
+#endif

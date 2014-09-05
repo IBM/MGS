@@ -1,0 +1,9 @@
+#ifndef ToroidalRadialSampler_MDL
+#define ToroidalRadialSampler_MDL
+
+Framework Functor ToroidalRadialSampler Category "SAMPFCTR1" {
+   Initialize(float radius);
+   void Execute();
+}
+
+#endif

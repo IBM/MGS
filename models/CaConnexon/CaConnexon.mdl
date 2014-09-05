@@ -1,0 +1,64 @@
+#ifndef CaConnexon_MDL
+#define CaConnexon_MDL
+
+#include "../std/std.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Node CaConnexon Implements VoltageProducer, CaConcentrationProducer, CurrentProducer, CaCurrentProducer, BranchDataProducer, IndexProducer {
+  float* Vi;
+  float* Vj;
+  float I;
+  float* Cai;
+  float* Caj;
+  float I_Ca;
+  float g;
+
+  BranchDataStruct* branchData;
+  int index;
+
+  Shared {
+    float* T;
+    float []* voltageConnect;
+    float []* CaConcentrationConnect;
+  }
+
+  InitPhase produceInitialState(Vi, Cai);
+  RuntimePhase produceState(Vi, Cai), computeState;
+
+  VoltageProducer.voltage << Vi;
+  CurrentProducer.current << &I;
+  CaConcentrationProducer.Ca << Cai;
+  CaCurrentProducer.CaCurrent << &I_Ca;
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setCaPointers;
+  UserFunction setVoltagePointers; 
+ 
+  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    setCaPointers();
+  }
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchData;
+    setVoltagePointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects VoltageProducer {
+    VoltageProducer.voltage >> Vj;
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Calcium]") Expects CaConcentrationProducer {
+    CaConcentrationProducer.Ca >> Caj;
+  }
+}
+
+#endif

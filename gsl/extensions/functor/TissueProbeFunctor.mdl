@@ -1,0 +1,9 @@
+#ifndef TissueProbeFunctor_MDL
+#define TissueProbeFunctor_MDL
+
+Framework Functor TissueProbeFunctor {
+   Initialize();
+   NodeSet* Execute();
+}
+
+#endif

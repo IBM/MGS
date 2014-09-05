@@ -1,0 +1,123 @@
+#ifndef HodgkinHuxley_MDL
+#define HodgkinHuxley_MDL
+
+Interface CurrentProducer {
+  float* current;
+}
+
+Interface CurrentArrayProducer {
+  float []* currents;
+}
+
+Interface CaCurrentProducer {
+  float* CaCurrent;
+}
+
+Interface CaCurrentArrayProducer {
+  float []* CaCurrents;
+}
+
+Interface ReversalPotentialProducer {
+  float* reversalPotential;
+}
+
+Interface ReversalPotentialArrayProducer {
+  float []* reversalPotentials;
+}
+
+Interface ConductanceProducer {
+  float* conductance;
+}
+
+Interface ConductanceArrayProducer {
+  float []* conductanceArray;
+}
+
+Interface MaximumConductanceArrayProducer {
+  float []* maximumConductanceArray;
+}
+
+Interface MaximumConductanceProducer {
+  float* maximumConductance;
+}
+
+Interface VoltageProducer {
+   float* voltage;
+}
+
+Interface VoltageArrayProducer {
+   float []* voltageArray;
+}
+
+Interface CaConcentrationProducer {
+   float* Ca;
+}
+
+Interface MgConcentrationProducer { 
+   float* Mg;
+}
+
+Interface CaConcentrationArrayProducer {
+   float []* CaConcentrations;
+}
+
+Interface NaConcentrationProducer {
+   float* Na;
+}
+
+Interface KConcentrationProducer {
+   float* K;
+}
+
+Interface WeightProducer {
+   float* w;
+}
+
+Interface PlasticityProducer {
+   float* w;
+}
+
+Interface PlasticityToggleProducer {
+   int* plasticityToggle;
+}
+
+Interface TemperatureProducer {
+   float* T;
+}
+
+Interface KetamineProducer {
+   float* Ketamine;
+}
+
+Interface SurfaceAreaProducer {
+   float* surfaceArea;
+}
+
+Interface ConnectionSurfaceAreaProducer {
+   float* surfaceArea;
+}
+
+Interface IndexProducer {
+   int* index;
+}
+
+Interface IndexArrayProducer {
+   int* []* indexArray;
+}
+
+Constant ExtracellularMedium Implements NaConcentrationProducer, KConcentrationProducer, CaConcentrationProducer, MgConcentrationProducer, TemperatureProducer, KetamineProducer {
+  float Na; // intracellular concetrations expressed by ion name alone
+  float K;
+  float Ca;
+  float Mg;
+  float T;
+  float Ketamine;
+  NaConcentrationProducer.Na << &Na;
+  KConcentrationProducer.K << &K;
+  CaConcentrationProducer.Ca << &Ca;
+  MgConcentrationProducer.Mg << &Mg;
+  TemperatureProducer.T << &T;
+  KetamineProducer.Ketamine << &Ketamine;
+}
+
+#endif

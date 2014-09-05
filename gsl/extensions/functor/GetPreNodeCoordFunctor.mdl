@@ -1,0 +1,8 @@
+#ifndef GetPreNodeCoordFunctor_MDL
+#define GetPreNodeCoordCoordFunctor_MDL
+
+Framework Functor GetPreNodeCoordFunctor {
+   Initialize();
+   Service* Execute (Edge* edge);
+}
+#endif

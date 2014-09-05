@@ -1,0 +1,46 @@
+#ifndef std_MDL
+#define std_MDL
+
+Interface AmplitudeProducer {
+  float* amplitude;
+}
+
+Interface PreviousAmplitudeProducer {
+  float* previousAmplitude;
+}
+
+Interface BufferedAmplitudeProducer {
+//  float []* amplitude;
+  float* currentAmplitude;
+  float* delayedAmplitude;
+}
+
+Interface TimeProducer {
+  float* pulseTime;
+}
+
+Interface UnspecifiedConnection {
+  bool b;
+}
+
+Interface BufferedTimeProducer {
+  float []* pulseTime;
+  float* currentPulseTime;
+  float* delayedPulseTime;
+}
+
+Interface TimeStepProducer {
+   float* deltaT;
+}
+
+Constant TimeStep Implements TimeStepProducer {
+  float deltaT;
+  TimeStepProducer.deltaT << &deltaT;
+}
+
+Struct ModificationStruct {
+   int iteration;
+   NDPairList* list;
+}
+
+#endif

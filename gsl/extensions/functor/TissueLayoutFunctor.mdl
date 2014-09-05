@@ -1,0 +1,9 @@
+#ifndef TissueLayoutFunctor_MDL
+#define TissueLayoutFunctor_MDL
+
+Framework Functor TissueLayoutFunctor Category "LAYOUT" {
+   Initialize();
+   int [] Execute();
+}
+
+#endif

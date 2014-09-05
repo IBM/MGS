@@ -1,0 +1,171 @@
+#!/bin/bash
+
+if [ "$1" == "-help" ] || [ $# == 0 ]; then 
+    echo -e "\n\nMake NTS... \n\nOption include : \n\n  1) make_nts LINUX : builds NTS in a LINUX environment using MPI \n  2) make_nts BGL : makes NTS on Blue Gene/L \n  3) make_nts BGP : makes NTS on Blue Gene/P \n  4) make_nts BGQ : make NTS on Blue Gene/Q\n\n"; exit;
+fi
+
+NTSROOT=`pwd`
+LENSROOT=$NTSROOT/gsl
+MDLROOT=$NTSROOT/mdl
+
+NPROCS=$((`cat /proc/cpuinfo | grep processor | awk 'END{ gsub(/"/,""); print $NF }'`+1))
+
+if [ "$1" == "LINUX" ]; then
+  if which mpiexec | grep -q1 /\mpiexec; then 
+    echo mpi found...; else echo mpi not found!; exit; fi
+fi
+
+if which bison | grep -q1 /\bison; then 
+    echo bison found...; else echo bison not found!; exit; fi
+
+VALID_BISON_VERSION=2.3
+BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
+echo version $BISON_VERSION...
+read c_major c_minor c_rev<<EOF
+ `echo ${VALID_BISON_VERSION} | tr "." " "`
+EOF
+if ! [[ "$c_rev" =~ [0-9]+$ ]]; then c_rev=0; fi
+read n_major n_minor n_rev << EOF
+`echo ${BISON_VERSION} | tr "." " "`
+EOF
+if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
+if [ "$n_major" -lt "$c_major" ]; then
+    echo bison version $VALID_BISON_VERSION or greater required!
+    exit;
+fi
+if [ "$n_major" -eq "$c_major" ] && [ "$n_minor" -lt "$c_minor" ]; then
+    echo bison version $VALID_BISON_VERSION or greater required!
+    exit;
+fi
+if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
+    echo bison version $VALID_BISON_VERSION or greater required!
+    exit;
+fi
+
+if which flex | grep -q1 /\flex; then 
+    echo flex found...; else echo flex not found!; exit; fi
+
+VALID_FLEX_VERSION=2.5.4
+FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
+echo version $FLEX_VERSION...
+read c_major c_minor c_rev << EOF
+`echo ${VALID_FLEX_VERSION} | tr "." " "`
+EOF
+if ! [[ "$c_rev" =~ [0-9]+$ ]]; then c_rev=0; fi
+read n_major n_minor n_rev << EOF
+`echo ${FLEX_VERSION} | tr "." " "`
+EOF
+if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
+if [ "$n_major" -ne "$c_major" ]; then
+    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+    if [ "$1" == "LINUX" ]; then 
+	exit;
+    fi
+fi
+if [ "$n_major" -eq "$c_major" ] &&  [ "$n_minor" -ne "$c_minor" ]; then
+    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+    if [ "$1" == "LINUX" ]; then 
+	exit;
+    fi
+fi
+if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -ne "$c_rev" ]; then
+    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+    if [ "$1" == "LINUX" ]; then 
+	exit;
+    fi
+fi
+
+if which python | grep -q1 /\python; then 
+    echo python found...; else echo python not found!; exit; fi
+
+cd $MDLROOT
+
+if [ "$1" == "LINUX" ]; then 
+touch mdl.make.mark
+if [ "$2" == "-clean" ]; then
+make clean;
+fi
+make -j $NPROCS
+if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
+    rm mdl.make.mark
+    cd $NTSROOT
+    echo mdl make failed!;
+    exit; 
+fi
+if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
+    cd $NTSROOT
+    find . -name *.mdf -exec touch '{}' \;
+    cd $MDLROOT
+fi
+rm -f mdl.make.mark
+fi
+
+cd $NTSROOT
+
+cd $NTSROOT/nti
+if [ "$2" == "-MCO" ]; then
+  sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
+fi
+sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+fi
+if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
+make realclean;
+fi
+make -j $NPROCS
+if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+    cd $NTSROOT
+    echo nti make failed!;
+    exit; 
+fi
+cd $NTSROOT
+
+cd $LENSROOT/extensions/variable
+./define variables.mdf
+cd $LENSROOT/extensions/struct
+./define structs.mdf
+cd $LENSROOT/extensions/functor
+./define functors.mdf
+cd $NTSROOT/models
+./define compartmental.mdf
+cd $NTSROOT
+
+cd $LENSROOT
+if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
+   if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib --rebuild;
+   elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib --rebuild;
+   elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib --rebuild;
+   elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib --rebuild;
+   elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib --rebuild;
+   fi
+else
+   if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
+   elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --domainLib;
+   elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
+   elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
+   elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
+   fi
+   make -j $NPROCS;
+fi
+
+if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
+    cd $NTSROOT
+    echo gsl make failed!;
+    exit; 
+else
+    echo -e "\n\n\nCongratulations! You have made NTS...
+
+To run the test tissue simulation :
+
+  1) type \"cd graphs/Compartmental\"/ 
+  2) browse to http://neuromorpho.org/neuroMorpho/bylab.jsp 
+  3) click \"Markram,\" \"Select All,\" \"Get SWC files of selected neurons\" 
+  4) download and extract zipped .swc files to graphs/Compartmental/neurons/*.swc 
+  5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n" 
+fi
+
+cd $NTSROOT

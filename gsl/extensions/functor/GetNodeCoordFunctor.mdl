@@ -1,0 +1,8 @@
+#ifndef GetNodeCoordFunctor_MDL
+#define GetNodeCoordFunctor_MDL
+
+Framework Functor GetNodeCoordFunctor {
+   Initialize();
+   Service* Execute (Node* node);
+}
+#endif

@@ -1,0 +1,9 @@
+#ifndef GetPreNodeIndexFunctors_MDL
+#define GetPreNodeIndexFunctors_MDL
+
+Framework Functor GetPreNodeIndex {
+   Initialize();
+   int Execute ();
+}
+
+#endif

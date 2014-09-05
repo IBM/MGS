@@ -1,0 +1,112 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "DataTypeAttribute.h"
+#include "AccessType.h"
+#include "DataType.h"
+#include <string>
+#include <vector>
+
+DataTypeAttribute::DataTypeAttribute(std::auto_ptr<DataType>& data,
+				     int accessType)
+   : Attribute(accessType)
+{
+   _dataType = data.release();
+}
+
+DataTypeAttribute::DataTypeAttribute(const DataTypeAttribute& rv)
+   : Attribute(rv), _dataType(0)
+{
+   copyOwnedHeap(rv);
+}
+
+void DataTypeAttribute::duplicate(std::auto_ptr<Attribute>& dup)const
+{
+   dup.reset(new DataTypeAttribute(*this));
+}
+
+DataTypeAttribute& DataTypeAttribute::operator=(const DataTypeAttribute& rv)
+{
+   if (this != &rv) {
+      Attribute::operator=(rv);
+      destructOwnedHeap();
+      copyOwnedHeap(rv);
+   }
+   return *this;
+}
+
+
+DataTypeAttribute::~DataTypeAttribute()
+{
+   destructOwnedHeap();
+}
+
+std::string DataTypeAttribute::getName() const
+{
+   return _dataType->getName();
+}
+
+std::string DataTypeAttribute::getType() const
+{
+   return _dataType->getDescriptor();
+}
+
+bool DataTypeAttribute::isBasic() const
+{
+   return _dataType->isBasic();
+}
+
+bool DataTypeAttribute::isPointer() const
+{
+   return _dataType->isPointer();
+}
+
+bool DataTypeAttribute::isOwned() const
+{
+   return _dataType->shouldBeOwned();
+}
+
+const DataType* DataTypeAttribute::getDataType() const
+{
+   return _dataType;
+}
+
+void DataTypeAttribute::releaseDataType(std::auto_ptr<DataType>& rv)
+{
+   rv.reset(_dataType);
+   _dataType = 0;
+}
+
+void DataTypeAttribute::setDataType(std::auto_ptr<DataType>& rv)
+{
+   delete _dataType;
+   _dataType = rv.release();
+}
+
+void DataTypeAttribute::destructOwnedHeap()
+{
+   delete _dataType;
+}
+
+void DataTypeAttribute::copyOwnedHeap(const DataTypeAttribute& rv)
+{   
+   if (rv._dataType) {
+      std::auto_ptr<DataType> dup;
+      rv._dataType->duplicate(dup);
+      _dataType = dup.release();
+   } else {
+      _dataType = 0;
+   }
+}

@@ -1,0 +1,16 @@
+#ifndef NodeSetSPMVariable_H
+#define NodeSetSPMVariable_H
+
+#include "../struct/CoordsStruct.mdl"
+
+Variable NodeSetSPMVariable 
+{
+   string fileName;
+   CoordsStruct[] coords;
+   float*[] vals;
+
+   InitPhase initialize;
+   TriggeredFunction dca;
+}
+
+#endif

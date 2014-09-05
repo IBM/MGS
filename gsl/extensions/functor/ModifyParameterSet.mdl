@@ -1,0 +1,9 @@
+#ifndef ModifyParameterSet_MDL
+#define ModifyParameterSet_MDL
+
+Framework Functor ModifyParameterSet {
+   Initialize(Functor* f1, Functor* f2);
+   ParameterSet* Execute();
+}
+
+#endif

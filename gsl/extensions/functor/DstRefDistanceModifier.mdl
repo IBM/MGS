@@ -1,0 +1,9 @@
+#ifndef DstRefDistanceModifier_MDL
+#define DstRefDistanceModifier_MDL
+
+Framework Functor DstRefDistanceModifier {
+   Initialize(Functor* f);
+   ParameterSet* Execute();
+}
+
+#endif

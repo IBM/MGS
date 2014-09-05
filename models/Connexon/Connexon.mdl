@@ -1,0 +1,46 @@
+#ifndef Connexon_MDL
+#define Connexon_MDL
+
+#include "../std/std.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Node Connexon Implements VoltageProducer, CurrentProducer, BranchDataProducer, IndexProducer {
+  float* Vi;
+  float* Vj;
+  float I;
+  float g;
+
+  BranchDataStruct* branchData;
+  int index;
+
+  Shared {
+    float []* voltageConnect;
+  }
+
+  InitPhase produceInitialVoltage(Vi);
+  RuntimePhase produceVoltage(Vi), computeState;
+
+  VoltageProducer.voltage << Vi;
+  CurrentProducer.current << &I;
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setPointers;
+  
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchData;
+    setPointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects VoltageProducer {
+    VoltageProducer.voltage >> Vj;
+  }
+}
+
+#endif

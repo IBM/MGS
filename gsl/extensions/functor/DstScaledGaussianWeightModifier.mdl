@@ -1,0 +1,9 @@
+#ifndef DstScaledGaussianWeightModifier_MDL
+#define DstScaledGaussianWeightModifier_MDL
+
+Framework Functor DstScaledGaussianWeightModifier {
+   Initialize(Functor* f, float sigma, float max);
+   ParameterSet* Execute();
+}
+
+#endif

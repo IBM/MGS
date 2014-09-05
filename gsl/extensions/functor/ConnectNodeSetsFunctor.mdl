@@ -1,0 +1,11 @@
+#ifndef ConnectNodeSetsFunctor_MDL
+#define ConnectNodeSetsFunctor_MDL
+
+Framework Functor ConnectNodeSetsFunctor Category "CONNECTOR" {
+   Initialize();
+   void Execute (NodeSet* source, NodeSet* destination, 
+		 Functor* sampling, Functor* sourceOutAttr, 
+		 Functor* destinationInAttr);
+}
+
+#endif

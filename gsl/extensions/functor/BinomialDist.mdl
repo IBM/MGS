@@ -1,0 +1,9 @@
+#ifndef BinomialDist_MDL
+#define BinomialDist_MDL
+
+Framework Functor BinomialDist {
+   Initialize(double probOfN1, double n1, double n2, unsigned seed);
+   double Execute();
+}
+
+#endif

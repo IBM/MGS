@@ -1,0 +1,9 @@
+#ifndef CombineNVPairs_MDL
+#define CombineNVPairs_MDL
+
+Framework Functor CombineNVPairs {
+   Initialize(NDPairList* l, Functor* [] fl);
+   NDPairList* Execute();
+}
+
+#endif

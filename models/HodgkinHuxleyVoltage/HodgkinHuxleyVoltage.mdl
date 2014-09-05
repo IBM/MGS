@@ -1,0 +1,198 @@
+#ifndef HodgkinHuxleyVoltage_MDL
+#define HodgkinHuxleyVoltage_MDL
+
+#include "../../nti/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../LaboratoryTools/LaboratoryTools.mdl"
+
+Struct ChannelCurrents {
+  float []* conductances;
+  float []* reversalPotentials;
+}
+
+Struct ReceptorCurrent {
+  float* conductance;
+  float* reversalPotential;
+  int index;
+}
+
+Struct InjectedCurrent {
+  float* current;
+  float area;
+  int index;
+}
+
+Node HodgkinHuxleyVoltage Implements VoltageArrayProducer, SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer, NaConcentrationProducer, KConcentrationProducer {
+  DimensionStruct* [] dimensions;
+  BranchDataStruct* branchData;
+  float [] Vcur;
+  float [] Vnew;
+
+  float [] Aii;
+  float [] Aip;
+  float [] Aim; // branch's distalmost compartment to junction coupling coefficient
+  float [] RHS;
+  float [] Aij;
+
+  float Cm;
+  float cmt;
+  float gLeak;
+
+  // currents
+  ChannelCurrents [] channelCurrents;
+  ReceptorCurrent [] receptorCurrents;
+  InjectedCurrent [] injectedCurrents;
+
+  float* proximalVoltage;
+  float* [] distalAiis;
+  float* [] distalAips;
+  float* [] distalInputs;
+  DimensionStruct* [] distalDimensions;
+  DimensionStruct* proximalDimension;
+  bool proximalJunction;
+  int computeOrder;
+
+  Shared {
+    float* deltaT;
+    float Ra;
+    float Na; // intracellular concentrations expressed by ion name alone
+    float K;
+    float E_leak;
+
+    InitPhase deriveParameters;
+  }
+
+  VoltageArrayProducer.voltageArray << &Vnew;
+  SolutionArrayProducer.solutionArray << &Vnew;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+  ForwardSolutionArrayProducer.AiiArray << &Aii;
+  ForwardSolutionArrayProducer.AipArray << &Aip;
+  ForwardSolutionArrayProducer.RHSArray << &RHS;
+
+  NaConcentrationProducer.Na << &Shared.Na;
+  KConcentrationProducer.K << &Shared.K;
+
+  InitPhase initializeVoltage;
+  #if MAX_COMPUTE_ORDER>0
+  RuntimePhase forwardSolve1, backwardSolve1; 
+  #endif
+  #if MAX_COMPUTE_ORDER>1
+  RuntimePhase forwardSolve2, backwardSolve2; 
+  #endif
+  #if MAX_COMPUTE_ORDER>2
+  RuntimePhase forwardSolve3, backwardSolve3; 
+  #endif
+  #if MAX_COMPUTE_ORDER>3
+  RuntimePhase forwardSolve4, backwardSolve4; 
+  #endif
+  #if MAX_COMPUTE_ORDER>4
+  RuntimePhase forwardSolve5, backwardSolve5; 
+  #endif
+  #if MAX_COMPUTE_ORDER>5
+  RuntimePhase forwardSolve6, backwardSolve6; 
+  #endif
+  #if MAX_COMPUTE_ORDER>6
+  RuntimePhase forwardSolve7, backwardSolve7; 
+  #endif
+  RuntimePhase solve, finish;
+
+  InAttrPSet {
+    string identifier;
+    TissueSite site;
+    int idx;
+  }
+
+  UserFunction setReceptorCurrent, setInjectedCurrent, setProximalJunction;
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+   }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects ConductanceArrayProducer, ReversalPotentialArrayProducer {
+    ConductanceArrayProducer.conductanceArray >> channelCurrents.conductances;
+    ReversalPotentialArrayProducer.reversalPotentials >> channelCurrents.reversalPotentials;
+   }
+
+  Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
+    CurrentProducer.current >> injectedCurrents.current;
+    setInjectedCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+    ConductanceProducer.conductance >> receptorCurrents.conductance;
+    ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
+    setReceptorCurrent();
+   }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CurrentProducer {
+    CurrentProducer.current >> injectedCurrents.current;
+    setInjectedCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects VoltageProducer, DimensionProducer {
+    VoltageProducer.voltage >> proximalVoltage;
+    DimensionProducer.dimension >> proximalDimension;
+    setProximalJunction();
+  }
+
+  Connection Pre Node (PSet.identifier=="backwardSolvePoint") Expects SolutionProducer, DimensionProducer {
+    SolutionProducer.solution >> proximalVoltage;
+    DimensionProducer.dimension >> proximalDimension;
+  }
+
+  Connection Pre Node (PSet.identifier=="distalJunctionPoint") Expects VoltageProducer, DimensionProducer {
+    VoltageProducer.voltage >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="forwardSolvePoint") Expects ForwardSolutionProducer, DimensionProducer {
+    ForwardSolutionProducer.Aii >> distalAiis;
+    ForwardSolutionProducer.Aip >> distalAips;
+    ForwardSolutionProducer.RHS >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
+{
+  float* voltage;
+  DimensionStruct* dimension;
+  Shared {
+    float []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  VoltageProducer.voltage << voltage;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects VoltageArrayProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedVoltage(voltage);
+  RuntimePhase produceFinishedVoltage(voltage);
+}
+
+#endif

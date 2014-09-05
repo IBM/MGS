@@ -1,0 +1,125 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BMC-YKT-08-23-2011-2
+//
+// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef ShallowArray_H
+#define ShallowArray_H
+#include "Copyright.h"
+
+#include "Array.h"
+#include "ArrayException.h"
+
+template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE, 
+	  unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
+class ShallowArray : public Array<T>
+{
+   public:
+      ShallowArray();
+      ShallowArray(const ShallowArray* rv);
+      ShallowArray(const ShallowArray& rv);
+      ShallowArray& operator=(const ShallowArray& rv);
+      virtual void duplicate(std::auto_ptr<Array<T> >& rv) const;
+      virtual void duplicate(std::auto_ptr<ShallowArray<T, 
+			  blockSize, blockIncrementSize> >& rv) const;
+      virtual ~ShallowArray();
+
+   protected:
+      virtual void internalCopy(T& lval, T& rval);
+      virtual unsigned getBlockSize() const {
+	 return blockSize;
+      }
+      virtual unsigned getBlockIncrementSize() const {
+	 return blockIncrementSize;
+      }
+      void destructContents();
+      void copyContents(const ShallowArray& rv);
+};
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+ShallowArray<T, blockSize, blockIncrementSize>::ShallowArray()
+   : Array<T>(blockIncrementSize)
+{
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+ShallowArray<T, blockSize, blockIncrementSize>::ShallowArray(
+   const ShallowArray* rv)
+//   : Array<T>(rv) // can not do this because of the pure virtual method in copyContents
+{
+   Array<T>::copyContents(*rv);
+   copyContents(*rv);
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+ShallowArray<T, blockSize, blockIncrementSize>::ShallowArray(
+   const ShallowArray& rv)
+//   : Array<T>(rv) // can not do this because of the pure virtual method in copyContents
+{
+   Array<T>::copyContents(rv);
+   copyContents(rv);
+}
+  
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+ShallowArray<T, blockSize, blockIncrementSize>& 
+ShallowArray<T, blockSize, blockIncrementSize>::operator=(
+   const ShallowArray& rv)
+{
+   if (this == &rv) {
+      return *this;
+   }
+   Array<T>::operator=(rv);
+   destructContents();
+   copyContents(rv);
+   return *this;
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+void ShallowArray<T, blockSize, blockIncrementSize>::duplicate(
+   std::auto_ptr<Array<T> >& rv) const
+{
+   rv.reset(new ShallowArray<T, blockSize, blockIncrementSize>(this));
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+void ShallowArray<T, blockSize, blockIncrementSize>::duplicate(
+   std::auto_ptr<ShallowArray<T, blockSize, blockIncrementSize> >& rv) const
+{
+   rv.reset(new ShallowArray<T, blockSize, blockIncrementSize>(this));
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+ShallowArray<T, blockSize, blockIncrementSize>::~ShallowArray()
+{
+   destructContents();
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+void ShallowArray<T, blockSize, blockIncrementSize>::internalCopy(
+   T& lval, T& rval)
+{
+   lval = rval;
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+void ShallowArray<T, blockSize, blockIncrementSize>::copyContents(
+   const ShallowArray& rv)
+{
+}
+
+template <class T, unsigned blockSize, unsigned blockIncrementSize>
+void ShallowArray<T, blockSize, blockIncrementSize>::destructContents()
+{
+}
+
+#endif

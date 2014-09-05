@@ -1,0 +1,9 @@
+#ifndef SrcRefGaussianWeightModifier_MDL
+#define SrcRefGaussianWeightModifier_MDL
+
+Framework Functor SrcRefGaussianWeightModifier {
+   Initialize(Functor* f, float sigma, float max, int wrapDistance);
+   ParameterSet* Execute();
+}
+
+#endif

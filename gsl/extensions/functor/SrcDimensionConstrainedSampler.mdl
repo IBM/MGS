@@ -1,0 +1,9 @@
+#ifndef SrcDimensionConstrainedSampler_MDL
+#define SrcDimensionConstrainedSampler_MDL
+
+Framework Functor SrcDimensionConstrainedSampler Category "SAMPFCTR2" {
+   Initialize(int constrainedDim);
+   void Execute();
+}
+
+#endif

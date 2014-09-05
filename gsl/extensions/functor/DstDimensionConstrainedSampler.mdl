@@ -1,0 +1,9 @@
+#ifndef DstDimensionConstrainedSampler_MDL
+#define DstDimensionConstrainedSampler_MDL
+
+Framework Functor DstDimensionConstrainedSampler Category "SAMPFCTR2" {
+   Initialize(int constrainedDim);
+   void Execute();
+}
+
+#endif

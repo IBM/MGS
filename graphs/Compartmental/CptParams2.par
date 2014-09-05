@@ -1,0 +1,9 @@
+COMPARTMENT_VARIABLE_TARGETS 4
+BRANCHTYPE
+0 Voltage Voltage2
+1 Voltage Voltage2
+2 Voltage Voltage2
+3 Voltage Voltage2
+COMPARTMENT_VARIABLE_COSTS 2
+Voltage 1.0
+Voltage2 1.0

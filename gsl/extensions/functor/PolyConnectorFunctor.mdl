@@ -1,0 +1,9 @@
+#ifndef PolyConnectorFunctor_MDL
+#define PolyConnectorFunctor_MDL
+
+Framework Functor PolyConnectorFunctor Category "CONNECTOR" {
+   Initialize();
+   void Execute (...);
+}
+
+#endif

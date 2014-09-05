@@ -1,0 +1,445 @@
+#ifndef BranchSolver_MDL
+#define BranchSolver_MDL
+
+#include "../../nti/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+
+Struct BranchDataStruct {
+  double key;
+  int size;
+}
+
+Interface BranchDataProducer {
+  BranchDataStruct*  branchData;
+}
+
+Interface BranchDataArrayProducer {
+  BranchDataStruct* []*  branchDataArray;
+}
+
+Struct DimensionStruct {
+  float x;
+  float y;
+  float z;
+  float r;
+  float dist2soma;
+}
+
+Interface DimensionProducer {
+  DimensionStruct* dimension;
+}
+
+Interface DimensionArrayProducer {
+   DimensionStruct* []* dimensionArray;
+}
+
+Interface ForwardSolutionArrayProducer {
+   float []* AiiArray;
+   float []* AipArray;
+   float []* RHSArray;
+}
+
+Interface ForwardSolutionProducer {
+   float* Aii;
+   float* Aip;
+   float* RHS;
+}
+
+Interface SolutionArrayProducer {
+   float []* solutionArray;
+}
+
+Interface SolutionProducer {
+   float* solution;
+}
+
+Constant BranchData Implements BranchDataProducer {
+  BranchDataStruct branchData;
+  BranchDataProducer.branchData << &branchData;
+}
+
+Constant CompartmentDimension Implements DimensionProducer {
+  DimensionStruct dimension;
+  DimensionProducer.dimension << &dimension;
+}
+
+#if MAX_COMPUTE_ORDER>0
+Node ForwardSolvePoint1 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint0 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#if MAX_COMPUTE_ORDER>1
+Node ForwardSolvePoint2 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint1 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#if MAX_COMPUTE_ORDER>2
+Node ForwardSolvePoint3 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint2 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#if MAX_COMPUTE_ORDER>3
+Node ForwardSolvePoint4 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint3 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#if MAX_COMPUTE_ORDER>4
+Node ForwardSolvePoint5 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint4 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#if MAX_COMPUTE_ORDER>5
+Node ForwardSolvePoint6 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint5 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#if MAX_COMPUTE_ORDER>6
+Node ForwardSolvePoint7 Implements ForwardSolutionProducer, DimensionProducer
+{
+  float* Aii;
+  float* Aip;
+  float* RHS;
+  DimensionStruct* dimension;
+  Shared {
+    DimensionStruct* []* dimensionsConnect;
+    float []* AiiConnect;
+    float []* AipConnect;
+    float []* RHSConnect;
+  }
+  ForwardSolutionProducer.Aii << Aii;
+  ForwardSolutionProducer.Aip << Aip;
+  ForwardSolutionProducer.RHS << RHS;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
+    ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
+    ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
+    ForwardSolutionArrayProducer.RHSArray >> Shared.RHSConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension), produceInitialCoefficients(Aip);
+  RuntimePhase produceForwardSolution(Aii, RHS);
+}
+
+Node BackwardSolvePoint6 Implements SolutionProducer, DimensionProducer
+{
+  float* solution;
+  DimensionStruct* dimension;
+  Shared {
+    float []* solutionConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  SolutionProducer.solution << solution;
+  DimensionProducer.dimension << dimension;
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
+    SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceBackwardSolution(solution);
+}
+#endif
+
+#endif
