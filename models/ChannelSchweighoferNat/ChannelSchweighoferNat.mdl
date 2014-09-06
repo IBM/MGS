@@ -1,0 +1,59 @@
+#ifndef ChannelSchweighoferNat_MDL
+#define ChannelSchweighoferNat_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node ChannelSchweighoferNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+  float [] m;
+  float [] h;
+  float [] g;
+  float [] gbar;
+
+  float []* V;
+
+  BranchDataStruct* branchData; 
+
+  Shared {
+    float* Na_IC;
+    float* Na_EC;
+    float* deltaT;
+    float* T;
+    float [] E_Na;
+    InitPhase computeE;
+  }
+
+  RuntimePhase update;
+  InitPhase initialize;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
+  BranchDataProducer.branchData << branchData;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+ }
+
+  Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects NaConcentrationProducer {
+    NaConcentrationProducer.Na >> Shared.Na_IC;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+	Expects NaConcentrationProducer, TemperatureProducer {
+    NaConcentrationProducer.Na >> Shared.Na_EC;
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif

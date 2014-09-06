@@ -35,19 +35,19 @@
 #define IMD -4.6
 #define IHV 48.8
 #define IHD 10.0
-#define AMC 0.182
+#define AMC -0.182
 #define AMV 38.0
-#define AMD 6.0
+#define AMD -6.0
 #define BMC 0.124
 #define BMV 38.0
 #define BMD 6.0
 #define AHC 2.88E-6
 #define AHV 17.0
 #define AHD 4.63
-#define BHC 6.94E-6
+#define BHC -6.94E-6
 #define BHV 64.4
-#define BHD 2.63
-#define T_ADJ 2.99 // 2.3*(34-21)/10
+#define BHD -2.63
+#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
 float ChannelHayNap::vtrap(float x, float y) {
   return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
@@ -59,13 +59,13 @@ void ChannelHayNap::update(RNG& rng)
   for (unsigned i=0; i<branchData->size; ++i) {
     float v=(*V)[i];
     float minf = 1/(1+exp((v + IMV)/IMD));
-    float am = AMC*vtrap(-(v + AMV), AMD);
-    float bm = BMC*vtrap( (v + BMV), BMD);
+    float am = AMC*vtrap(v + AMV, AMD);
+    float bm = BMC*vtrap(v + BMV, BMD);
     float pm = 0.5*dt*(am + bm)*T_ADJ/6.0;
     m[i] = (2*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
     float hinf = 1/(1+exp((v + IHV)/IHD));
-    float ah = AHC*vtrap( (v + AHV), AHD);
-    float bh = BHC*vtrap(-(v + BHV), BHD);
+    float ah = AHC*vtrap(v + AHV, AHD);
+    float bh = BHC*vtrap(v + BHV, BHD);
     float ph = 0.5*dt*(ah + bh)*T_ADJ; 
     h[i] = (2*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     g[i] = gbar[i]*m[i]*m[i]*m[i]*h[i];
