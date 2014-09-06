@@ -19,6 +19,8 @@
 #include "CG_ConductanceDisplay.h"
 #include <memory>
 
+#define decimal_places 8
+
 void ConductanceDisplay::initialize(RNG& rng) 
 {
   if (g_channel.size()>0 || g_synapse.size()>0) {
@@ -26,7 +28,7 @@ void ConductanceDisplay::initialize(RNG& rng)
     std::ostringstream os;
     os<<fileName<<getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
-    outFile->precision(3);
+    outFile->precision(decimal_places);
     (*outFile)<<"#Time\tConductance :";
     if (g_channel.size()>0) {
       if (indices.size()==0) {

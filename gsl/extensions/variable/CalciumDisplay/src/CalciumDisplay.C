@@ -21,6 +21,8 @@
 
 #include <memory>
 
+#define decimal_places 5
+
 void CalciumDisplay::initialize(RNG& rng) 
 {
   if (Ca.size()>0) {
@@ -28,7 +30,7 @@ void CalciumDisplay::initialize(RNG& rng)
     std::ostringstream os;
     os<<fileName<<getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
-    outFile->precision(3);
+    outFile->precision(decimal_places);
     (*outFile)<<"#Time\tCalcium :";
     if (indices.size()==0) {
       for (int i=0; i<dimensions.size(); ++i) {
