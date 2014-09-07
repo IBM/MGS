@@ -10,7 +10,7 @@ void CurrentPulseGenerator::initialize(RNG& rng)
 {
   assert(deltaT);
   if (pattern=="periodic") nextPulse=delay;
-  else if (pattern=="Poisson") nextPulse=delay;
+  else if (pattern=="poisson") nextPulse=delay-log(drandom(rng))*period;
   peakInc = peak;
 }
 
@@ -20,9 +20,8 @@ void CurrentPulseGenerator::update(RNG& rng)
   if ((getSimulation().getIteration()*(*deltaT))>=(nextPulse+duration) && (getSimulation().getIteration()*(*deltaT))<=last) {
     I=0.0;
     peakInc+=inc;
-    //std::cout << peakInc << " | " << inc << std::endl;
     if (pattern=="periodic") nextPulse+=period;
-    else if (pattern=="Poisson") nextPulse-=log(drandom(rng))*period;
+    else if (pattern=="poisson") nextPulse-=log(drandom(rng))*period;
   } 
   else if (getSimulation().getIteration()*(*deltaT)>=nextPulse && (getSimulation().getIteration()*(*deltaT))<=last) {
     I=peakInc;
