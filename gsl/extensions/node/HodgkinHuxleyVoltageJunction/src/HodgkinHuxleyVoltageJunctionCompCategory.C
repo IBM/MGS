@@ -25,15 +25,6 @@ HodgkinHuxleyVoltageJunctionCompCategory::HodgkinHuxleyVoltageJunctionCompCatego
 {
 }
 
-void HodgkinHuxleyVoltageJunctionCompCategory::deriveParameters(RNG& rng) 
-{
-  if (getSharedMembers().deltaT) {
-#ifdef DEBUG_HH
-    std::cerr<<getSimulation().getRank()<<" : HodgkinHuxleyVoltageJunctions : "<<_nodes.size()<<std::endl;
-#endif
-  }
-}
-
 void HodgkinHuxleyVoltageJunctionCompCategory::count() 
 {
   long long totalCount, localCount=_nodes.size();

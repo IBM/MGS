@@ -37,8 +37,6 @@ Node HodgkinHuxleyVoltageJunction Implements VoltageArrayProducer, DimensionArra
     float Na; // intracellular concentrations expressed by ion name alone
     float K;
     float E_leak;
-
-    InitPhase deriveParameters;
   }
 
   VoltageArrayProducer.voltageArray << &Vnew;
@@ -49,6 +47,7 @@ Node HodgkinHuxleyVoltageJunction Implements VoltageArrayProducer, DimensionArra
   KConcentrationProducer.K << &Shared.K;
 
   InitPhase initializeJunction;
+   
   RuntimePhase predictJunction, correctJunction;
 
   InAttrPSet {

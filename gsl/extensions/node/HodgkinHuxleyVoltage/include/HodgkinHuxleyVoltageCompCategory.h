@@ -26,7 +26,6 @@ class HodgkinHuxleyVoltageCompCategory : public CG_HodgkinHuxleyVoltageCompCateg
 {
    public:
       HodgkinHuxleyVoltageCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void deriveParameters(RNG& rng);
       void count();
 };
 

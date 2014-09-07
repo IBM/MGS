@@ -27,8 +27,6 @@
 
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng) 
 {
-  cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
-
   assert(Vnew.size()==1);
   Vcur=Vnew[0];
   assert(dimensions.size()==1);
@@ -51,6 +49,9 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
     float Rb = 0.5 * ( (*diter)->r + dimension->r );
     gAxial.push_back(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)));
     //std::cerr<<"gAxial:"<<(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)))<<std::endl<<std::endl;
+  }
+  if (getSharedMembers().deltaT) {
+    cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
   }
 #ifdef DEBUG_HH
   std::cerr<<"JUNCTION ("<<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<")"<<std::endl;

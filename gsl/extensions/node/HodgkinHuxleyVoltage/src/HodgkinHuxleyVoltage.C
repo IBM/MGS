@@ -68,9 +68,7 @@ float HodgkinHuxleyVoltage::getArea(int i) {
 }
 
 void HodgkinHuxleyVoltage::initializeVoltage(RNG& rng)
-{
-  cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
-
+{  
   unsigned size=branchData->size;
   SegmentDescriptor segmentDescriptor;
   computeOrder=segmentDescriptor.getComputeOrder(branchData->key);
@@ -137,6 +135,9 @@ void HodgkinHuxleyVoltage::initializeVoltage(RNG& rng)
     for (int n = 0; n < distalDimensions.size(); n++) {
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], area));
     }
+  }
+  if (getSharedMembers().deltaT) {
+    cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
   }
 }
 
