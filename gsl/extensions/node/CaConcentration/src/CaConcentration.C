@@ -181,7 +181,7 @@ void CaConcentration::doForwardSolve()
     }
 
     /* This is a simple implementation of calcium extrusion. To be elaborated as needed. */
-    RHS[i] -= getSharedMembers().CaClearance * Ca_cur[i];
+    RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
   }
 
   /* FIX */  
