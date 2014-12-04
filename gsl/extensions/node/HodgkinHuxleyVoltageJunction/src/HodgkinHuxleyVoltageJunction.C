@@ -19,9 +19,9 @@
 #include "rndm.h"
 #include "GridLayerDescriptor.h"
 #define DISTANCE_SQUARED(a,b) ((((a).x-(b).x)*((a).x-(b).x))+(((a).y-(b).y)*((a).y-(b).y))+(((a).z-(b).z)*((a).z-(b).z)))
-//#define DEBUG_HH
+#define DEBUG_HH
 
-#ifdef DEBUG_HH
+//#ifdef DEBUG_HH
 #include "../../../../../nti/SegmentDescriptor.h"
 #endif
 
@@ -97,6 +97,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   Vnew[0] = current/conductance;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
   std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
 	   <<" JUNCTION PREDICT"
 	   <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
@@ -105,8 +106,8 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 	   <<","<<segmentDescriptor.getBranchIndex(branchData->key)
 	   <<","<<segmentDescriptor.getBranchOrder(branchData->key)
 	   <<") {"
-	   <<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<"} "
-	   <<Vnew[0]<<std::endl;
+	   <<dimensions[0]->x<<","<<dimensions[0]->y<<","<<dimensions[0]->z<<","<<dimensions[0]->r<<"} "
+           <<Vnew[0]<<std::endl;	   
 #endif
 }
 
@@ -154,6 +155,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
   std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
 	   <<" JUNCTION CORRECT"
 	   <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
@@ -162,7 +164,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 	   <<","<<segmentDescriptor.getBranchIndex(branchData->key)
 	   <<","<<segmentDescriptor.getBranchOrder(branchData->key)
 	   <<") {"
-	   <<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<"} "
+	   <<dimensions[0]->x<<","<<dimensions[0]->y<<","<<dimensions[0]->z<<","<<dimensions[0]->r<<"} "
 	   <<Vnew[0]<<std::endl;
 
   Array<DimensionStruct*>::iterator diter=dimensionInputs.begin();
@@ -180,7 +182,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 	       <<","<<segmentDescriptor.getComputeOrder(branchData->key)
 	       <<") {"
 	       <<(*diter)->x<<","<<(*diter)->y<<","<<(*diter)->z<<","<<(*diter)->r<<"} "
-	       <<DISTANCE_SQUARED(*(*diter), *dimension)<<" "
+	       <<DISTANCE_SQUARED(*(*diter), *(dimensions[0]))<<" "
 	       <<*(*viter)<<std::endl;
   }
 #endif
