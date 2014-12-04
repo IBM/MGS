@@ -21,7 +21,7 @@
 #define DISTANCE_SQUARED(a,b) ((((a).x-(b).x)*((a).x-(b).x))+(((a).y-(b).y)*((a).y-(b).y))+(((a).z-(b).z)*((a).z-(b).z)))
 //#define DEBUG_HH
 
-//#ifdef DEBUG_HH
+#ifdef DEBUG_HH
 #include "../../../../../nti/SegmentDescriptor.h"
 #endif
 
