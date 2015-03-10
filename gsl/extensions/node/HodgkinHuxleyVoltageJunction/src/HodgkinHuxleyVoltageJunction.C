@@ -27,12 +27,17 @@
 
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng) 
 {
+#ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
+#endif
   assert(Vnew.size()==1);
   Vcur=Vnew[0];
   assert(dimensions.size()==1);
   DimensionStruct* dimension=dimensions[0];
-  if (dimensionInputs.size()==0) area = 1.3333333*M_PI*dimension->r*dimension->r*dimension->r;
-  else {
+  if (dimensionInputs.size()<=1) { // treating the case where there is only one input like it is a lollipop (for spines)
+    // area = 1.3333333*M_PI*dimension->r*dimension->r*dimension->r; // nope this is the volume...
+    area = 4.0*M_PI*dimension->r*dimension->r;
+  } else {
     Array<DimensionStruct*>::iterator iter=dimensionInputs.begin(), end=dimensionInputs.end(); 
     for (; iter!=end; ++iter) {
       
@@ -40,15 +45,19 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
       float L = 0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));
       
       area += 2.0 * M_PI * R * L;
-      //std::cerr<<"area:"<<area<<std::endl<<std::endl;
     }
   }
+#ifdef DEBUG_HH
+  if (segmentDescriptor.getNeuronIndex(branchData->key) == 2) {
+    printf(" --> Area = %lf\n", area);
+    //std::cerr << "area: " << area << std::endl;
+  }
+#endif
   float Poar = M_PI/(area * getSharedMembers().Ra);
   Array<DimensionStruct*>::iterator diter=dimensionInputs.begin(), dend=dimensionInputs.end(); 
   for (; diter!=dend; ++diter) {
     float Rb = 0.5 * ( (*diter)->r + dimension->r );
     gAxial.push_back(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-    //std::cerr<<"gAxial:"<<(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)))<<std::endl<<std::endl;
   }
   if (getSharedMembers().deltaT) {
     cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
