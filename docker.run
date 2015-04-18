@@ -1,6 +1,5 @@
 #!/bin/bash
 
 # $1 - model dir, e.g. /home/rkerr/NMDASpikes_Inj
-# $2 - image name, e.g. cloud-slurm:4040/nts
-# $3 - command, e.g. python spine_sims1.py
-docker run -d -v $1:/model -w /model $3 $2
+# $2 - command, e.g. python spine_sims1.py
+docker run -d -v $1:/model -w /model nts $2
