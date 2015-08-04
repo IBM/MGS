@@ -1,0 +1,38 @@
+COMPARTMENT_VARIABLE_TARGETS 4
+BRANCHTYPE
+0 Voltage Calcium
+1 Voltage
+2 Voltage Calcium
+3 Voltage Calcium
+
+COMPARTMENT_VARIABLE_COSTS 2
+Voltage 1.0
+Calcium 1.0
+
+COMPARTMENT_VARIABLE_PARAMS 2
+Voltage 16
+MTYPE BRANCHTYPE
+0 0 <Cm=0.01>
+0 0 <gLeak=0.000338>
+0 1 <Cm=0.01>
+0 1 <gLeak=0.000325>
+0 2 <Cm=0.02>
+0 2 <gLeak=0.000295>
+0 3 <Cm=0.02>
+0 3 <gLeak=0.000295>
+1 0 <Cm=0.01>
+1 0 <gLeak=0.000338>
+1 1 <Cm=0.01>
+1 1 <gLeak=0.000325>
+2 0 <Cm=0.02>
+2 0 <gLeak=0.000295>
+2 2 <Cm=0.02>
+2 2 <gLeak=0.000295>
+Calcium 6
+MTYPE BRANCHTYPE
+0 0 <CaClearance=1.1>
+0 2 <CaClearance=4.2>
+0 3 <CaClearance=4.2>
+1 0 <CaClearance=1.1>
+2 0 <CaClearance=4.2>
+2 2 <CaClearance=4.2>
