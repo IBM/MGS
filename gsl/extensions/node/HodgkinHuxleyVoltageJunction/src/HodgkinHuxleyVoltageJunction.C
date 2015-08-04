@@ -27,14 +27,17 @@
 
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng) 
 {
-  cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
-
+#ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
+#endif
   assert(Vnew.size()==1);
   Vcur=Vnew[0];
   assert(dimensions.size()==1);
   DimensionStruct* dimension=dimensions[0];
-  if (dimensionInputs.size()==0) area = 1.3333333*M_PI*dimension->r*dimension->r*dimension->r;
-  else {
+  if (dimensionInputs.size()<=1) { // treating the case where there is only one input like it is a lollipop (for spines)
+    // area = 1.3333333*M_PI*dimension->r*dimension->r*dimension->r; // nope this is the volume...
+    area = 4.0*M_PI*dimension->r*dimension->r;
+  } else {
     Array<DimensionStruct*>::iterator iter=dimensionInputs.begin(), end=dimensionInputs.end(); 
     for (; iter!=end; ++iter) {
       
@@ -42,15 +45,22 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
       float L = 0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));
       
       area += 2.0 * M_PI * R * L;
-      //std::cerr<<"area:"<<area<<std::endl<<std::endl;
     }
   }
+#ifdef DEBUG_HH
+  if (segmentDescriptor.getNeuronIndex(branchData->key) == 2) {
+    printf(" --> Area = %lf\n", area);
+    //std::cerr << "area: " << area << std::endl;
+  }
+#endif
   float Poar = M_PI/(area * getSharedMembers().Ra);
   Array<DimensionStruct*>::iterator diter=dimensionInputs.begin(), dend=dimensionInputs.end(); 
   for (; diter!=dend; ++diter) {
     float Rb = 0.5 * ( (*diter)->r + dimension->r );
     gAxial.push_back(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-    //std::cerr<<"gAxial:"<<(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)))<<std::endl<<std::endl;
+  }
+  if (getSharedMembers().deltaT) {
+    cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
   }
 #ifdef DEBUG_HH
   std::cerr<<"JUNCTION ("<<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<")"<<std::endl;
@@ -96,6 +106,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   Vnew[0] = current/conductance;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
   std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
 	   <<" JUNCTION PREDICT"
 	   <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
@@ -104,8 +115,8 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 	   <<","<<segmentDescriptor.getBranchIndex(branchData->key)
 	   <<","<<segmentDescriptor.getBranchOrder(branchData->key)
 	   <<") {"
-	   <<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<"} "
-	   <<Vnew[0]<<std::endl;
+	   <<dimensions[0]->x<<","<<dimensions[0]->y<<","<<dimensions[0]->z<<","<<dimensions[0]->r<<"} "
+           <<Vnew[0]<<std::endl;	   
 #endif
 }
 
@@ -153,6 +164,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
   std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
 	   <<" JUNCTION CORRECT"
 	   <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
@@ -161,7 +173,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 	   <<","<<segmentDescriptor.getBranchIndex(branchData->key)
 	   <<","<<segmentDescriptor.getBranchOrder(branchData->key)
 	   <<") {"
-	   <<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<"} "
+	   <<dimensions[0]->x<<","<<dimensions[0]->y<<","<<dimensions[0]->z<<","<<dimensions[0]->r<<"} "
 	   <<Vnew[0]<<std::endl;
 
   Array<DimensionStruct*>::iterator diter=dimensionInputs.begin();
@@ -179,7 +191,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 	       <<","<<segmentDescriptor.getComputeOrder(branchData->key)
 	       <<") {"
 	       <<(*diter)->x<<","<<(*diter)->y<<","<<(*diter)->z<<","<<(*diter)->r<<"} "
-	       <<DISTANCE_SQUARED(*(*diter), *dimension)<<" "
+	       <<DISTANCE_SQUARED(*(*diter), *(dimensions[0]))<<" "
 	       <<*(*viter)<<std::endl;
   }
 #endif

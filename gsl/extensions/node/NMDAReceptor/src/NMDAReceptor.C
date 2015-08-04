@@ -24,8 +24,16 @@
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
 #define NEUROTRANSMITTER (getSharedMembers().Tmax/(1.0 + exp(-(*Vpre - getSharedMembers().Vp)/getSharedMembers().Kp)))
-#define MGBLOCK (1.0/(1.0 + exp(-0.062*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57))
+
+// Mg2+ block from "Behabadi BF, Polsky A, Jadi M, Schiller J, Mel BW (2012) Location-Dependent Excitatory Synaptic Interactions in Pyramidal Neuron Dendrites. PLoS Comput Biol 8(7): e1002599. doi:10.1371/journal.pcbi.1002599"
+#define MGBLOCK (1.0/(1.0 + 0.3*exp(-0.1*(*Vpost)[indexPost])))
+
+// Mg2+ block from "Jadi M, Polsky A, Schiller J, Mel BW (2012) Location-Dependent Effects of Inhibition on Local Spiking in Pyramidal Neuron Dendrites. PLoS Comput Biol 8(6): e1002550. doi:10.1371/journal.pcbi.1002550"
+//#define MGBLOCK (1.0/(1.0 + exp(-((*Vpost)[indexPost] + 7.0)/12.5)))
+
+//#define MGBLOCK (1.0/(1.0 + exp(-0.062*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57))
 //#define MGBLOCK 1.0/(1.0 + exp(-0.122*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57) //Adjusted sigmoid to not get calcium transients at -60mV
+
 #define DT (*(getSharedMembers().deltaT))
 #define KETAMINE (*(getSharedMembers().Ketamine))
 

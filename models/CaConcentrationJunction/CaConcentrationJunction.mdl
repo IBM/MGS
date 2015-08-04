@@ -15,12 +15,11 @@ Node CaConcentrationJunction Implements CaConcentrationArrayProducer, DimensionA
   float [] Ca_new;
   float currentToConc;
 
+  float CaClearance;
+
   // currents
-
   ChannelCaCurrents [] channelCaCurrents;
-
   float* [] receptorCaCurrents;
-
   float* [] injectedCaCurrents;
 
   float* [] CaConcentrationInputs;
@@ -31,7 +30,7 @@ Node CaConcentrationJunction Implements CaConcentrationArrayProducer, DimensionA
     float DCa;
     float bmt;
     float beta;                    // Wagner and Keizer buffering constant
-    float CaClearance;
+    float CaBaseline;
 
     InitPhase deriveParameters;  
   }

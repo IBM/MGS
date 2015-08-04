@@ -25,18 +25,6 @@ HodgkinHuxleyVoltageCompCategory::HodgkinHuxleyVoltageCompCategory(Simulation& s
 {
 }
 
-void HodgkinHuxleyVoltageCompCategory::deriveParameters(RNG& rng) 
-{
-  if (getSharedMembers().deltaT) {
-#ifdef DEBUG_HH
-    std::cerr<<getSimulation().getRank()<<" : HodgkinHuxleyVoltagees : "<<_nodes.size()<<" [ ";
-    for (int i=0; i<_nodes.size(); ++i)
-      std::cerr<<_nodes[i].getSize()<<" ";
-    std::cerr<<" ]"<<std::endl;
-#endif
-  }
-}
-
 void HodgkinHuxleyVoltageCompCategory::count() 
 {
   long long totalCount, localCount=_nodes.size();

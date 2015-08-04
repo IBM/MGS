@@ -68,9 +68,7 @@ float HodgkinHuxleyVoltage::getArea(int i) {
 }
 
 void HodgkinHuxleyVoltage::initializeVoltage(RNG& rng)
-{
-  cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
-
+{  
   unsigned size=branchData->size;
   SegmentDescriptor segmentDescriptor;
   computeOrder=segmentDescriptor.getComputeOrder(branchData->key);
@@ -137,6 +135,9 @@ void HodgkinHuxleyVoltage::initializeVoltage(RNG& rng)
     for (int n = 0; n < distalDimensions.size(); n++) {
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], area));
     }
+  }
+  if (getSharedMembers().deltaT) {
+    cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
   }
 }
 
@@ -350,12 +351,13 @@ void HodgkinHuxleyVoltage::finish(RNG& rng)
 	     <<","<<segmentDescriptor.getBranchOrder(branchData->key)
 	     <<") |"<<isDistalCase0<<"|"<<isDistalCase1<<"|"<<isDistalCase2<<"|"<<isDistalCase3<<"|"
 	     <<isProximalCase0<<"|"<<isProximalCase1<<"|"<<isProximalCase2<<"|"<<" {"
-	     <<dimensions[i].x<<","<<dimensions[i].y<<","<<dimensions[i].z<<","<<dimensions[i].r<<"} "
+	     <<dimensions[i]->x<<","<<dimensions[i]->y<<","<<dimensions[i]->z<<","<<dimensions[i]->r<<"} "
 	     <<Vnew[i]<<" "<<std::endl;
   }
 #endif
   for (int i=0; i<size; ++i) {
     Vcur[i] = Vnew[i] = 2.0 * Vnew[i] - Vcur[i];
+    assert(Vnew[i]==Vnew[i]); // making sure Vnew[i] is not NaN
   }
 }
 

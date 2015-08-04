@@ -37,6 +37,7 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   float [] RHS;
   float [] Aij;
 
+  float CaClearance;
 
   // currents
   ChannelCaCurrents [] channelCaCurrents;
@@ -57,7 +58,7 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
     float DCa;
     float bmt;
     float beta;                    // Wagner and Keizer buffering constant
-    float CaClearance;
+    float CaBaseline;
 
     InitPhase deriveParameters;  
   }

@@ -181,7 +181,7 @@ void CaConcentration::doForwardSolve()
     }
 
     /* This is a simple implementation of calcium extrusion. To be elaborated as needed. */
-    RHS[i] -= getSharedMembers().CaClearance * Ca_cur[i];
+    RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
   }
 
   /* FIX */  
@@ -365,7 +365,7 @@ void CaConcentration::finish(RNG& rng)
 	     <<","<<segmentDescriptor.getBranchOrder(branchData->key)
 	     <<") |"<<isDistalCase0<<"|"<<isDistalCase1<<"|"<<isDistalCase2<<"|"<<isDistalCase3<<"|"
 	     <<isProximalCase0<<"|"<<isProximalCase1<<"|"<<isProximalCase2<<"|"<<" {"
-	     <<dimensions[i].x<<","<<dimensions[i].y<<","<<dimensions[i].z<<","<<dimensions[i].r<<"} "
+	     <<dimensions[i]->x<<","<<dimensions[i]->y<<","<<dimensions[i]->z<<","<<dimensions[i]->r<<"} "
 	     <<Ca_new[i]<<" "<<std::endl;
   }
 #endif

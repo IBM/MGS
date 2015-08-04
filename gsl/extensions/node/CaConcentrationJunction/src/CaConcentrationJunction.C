@@ -75,8 +75,8 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
 {
   assert(getSharedMembers().bmt>0);
   float LHS = getSharedMembers().bmt;
-  float RHS = (getSharedMembers().bmt - getSharedMembers().CaClearance) * Ca_cur;
-
+  float RHS = getSharedMembers().bmt * Ca_cur - CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+  
   Array<ChannelCaCurrents>::iterator citer=channelCaCurrents.begin();
   Array<ChannelCaCurrents>::iterator cend=channelCaCurrents.end();
   for (; citer!=cend; ++citer) {
@@ -121,8 +121,8 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
 {
   assert(getSharedMembers().bmt>0);
   float LHS = getSharedMembers().bmt;
-  float RHS = (getSharedMembers().bmt - getSharedMembers().CaClearance) * Ca_cur;
-
+  float RHS = getSharedMembers().bmt * Ca_cur - CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+  
   Array<ChannelCaCurrents>::iterator citer=channelCaCurrents.begin();
   Array<ChannelCaCurrents>::iterator cend=channelCaCurrents.end();
   for (; citer!=cend; ++citer) {
