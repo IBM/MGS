@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#GSLPARSER=/home/rkerr/nts/gsl/bin/gslparser
+GSLPARSER=../nts/gsl/bin/gslparser
+GSL_FILE=model.gsl
+
+mkdir -p out
+rm -f out/*.dat*
+rm -f nti.bin
+mpiexec -n 8 $GSLPARSER $GSL_FILE
