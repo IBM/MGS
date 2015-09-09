@@ -1,5 +1,4 @@
-Functor UniformLayout;
-
+#include "std.gsl"
 InitPhases = { initialize };
 RuntimePhases = { dataCollection, update, copy };
 
@@ -12,7 +11,7 @@ Grid World
    InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
    InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
    NodeSet all(.[].Layer(nodes));
-   connectSets3(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
+   polyConnect(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
 };
 
 World world;
@@ -27,14 +26,4 @@ UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ",
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
 			 ::Iteration, "==", 10, 0, lastPhase); 
-
-
-VariableType LifeDataCollector;
-LifeDataCollector collector<fileName="LifeOutput.txt">;
-
-NodeSet allNodes(world[].Layer(nodes));
-serviceConnect(allNodes, collector, GetNodeCoordFunctor(), "coordsArray",
-	       "value", "vals");
-collector.dataCollection() on iterTrig;
-
 Stop on endTrig;
