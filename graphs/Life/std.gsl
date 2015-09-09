@@ -63,6 +63,9 @@ SamplingFctr2 Unique(SamplingFctr2 sf);
 Connector PolyConnectorFunctor();
 PolyConnectorFunctor polyConnect();
 
+Connector ConnectNodeSetsFunctor();
+ConnectNodeSetsFunctor connectNodeSets();
+
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();
 

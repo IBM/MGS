@@ -1,6 +1,6 @@
 #include "std.gsl"
 InitPhases = { initialize };
-RuntimePhases = { dataCollection, update, copy };
+RuntimePhases = { dataCollection, update, copy, lastPhase };
 
 NodeType LifeNode(< habitable=2, tooSparse=1, tooCrowded=4 >);
 
@@ -11,7 +11,7 @@ Grid World
    InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
    InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
    NodeSet all(.[].Layer(nodes));
-   polyConnect(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
+   connectNodeSets(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
 };
 
 World world;
