@@ -104,13 +104,11 @@ RuntimePhases = { solveChannels, predictJunction,
 FinalPhases = { finalize };
 
 NodeType HodgkinHuxleyVoltage (<
-			Cm=0.01,		// pF/um^2
 			Ra=0.0015,		// Gohm*um
 			Na=70.0, 		// mM
 			K=433.0,		// mM	
-			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
 			E_leak=-54.4		// mV
-			     >) { initializeVoltage->initialize2, deriveParameters->initialize2 };
+			     >) { initializeVoltage->initialize2 };
 
 NodeType VoltageEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -179,14 +177,11 @@ NodeType ForwardSolvePoint7 { produceInitialState->initialize1,
 #endif
 
 NodeType HodgkinHuxleyVoltageJunction (<
-			Cm=0.01,		// pF/um^2
 			Ra=0.0015,		// Gohm*um
 			Na=70.0, 		// mM
 			K=433.0,		// mM	
-			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
-			E_leak=-54.4,		// mV
-			cmt=0
- 		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
+			E_leak=-54.4		// mV
+ 		    >) { initializeJunction->initialize2 };
 
 NodeType VoltageJunctionPoint { produceInitialState->initialize1, produceVoltage->predictJunction };
 
@@ -254,16 +249,16 @@ currentStim.setCurrent(<
 			     >) on currentOff;
 
 VariableType VoltageDisplay{ initialize->initialize1 };
-VoltageDisplay voltageDisplay0<fileName=DAT0, indices={0}>;
-VoltageDisplay voltageDisplay1<fileName=DAT1, indices={0}>;
-VoltageDisplay voltageDisplay2<fileName=DAT2, indices={0}>;
-VoltageDisplay voltageDisplay3<fileName=DAT3, indices={0}>;
-VoltageDisplay voltageDisplay4<fileName=DAT4, indices={0}>;
-VoltageDisplay voltageDisplay5<fileName=DAT5, indices={0}>;
-VoltageDisplay voltageDisplay6<fileName=DAT6, indices={0}>;
-VoltageDisplay voltageDisplay7<fileName=DAT7, indices={0}>;
-VoltageDisplay voltageDisplay8<fileName=DAT8, indices={0}>;
-VoltageDisplay voltageDisplay9<fileName=DAT9, indices={0}>;
+VoltageDisplay voltageDisplay0<fileName=DAT0>;
+VoltageDisplay voltageDisplay1<fileName=DAT1>;
+VoltageDisplay voltageDisplay2<fileName=DAT2>;
+VoltageDisplay voltageDisplay3<fileName=DAT3>;
+VoltageDisplay voltageDisplay4<fileName=DAT4>;
+VoltageDisplay voltageDisplay5<fileName=DAT5>;
+VoltageDisplay voltageDisplay6<fileName=DAT6>;
+VoltageDisplay voltageDisplay7<fileName=DAT7>;
+VoltageDisplay voltageDisplay8<fileName=DAT8>;
+VoltageDisplay voltageDisplay9<fileName=DAT9>;
 voltageDisplay0.dataCollection(<>) on recOn;
 voltageDisplay1.dataCollection(<>) on recOn;
 voltageDisplay2.dataCollection(<>) on recOn;
@@ -335,6 +330,8 @@ Grid Tissue
 											    "Aip", 
 											    "RHS", 
 											   },
+									gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
+									Cm=0.01,		// pF/um^2
 									Vnew = {-20.00}//-64.1235}
 								      > ) );
 
@@ -367,7 +364,11 @@ Grid Tissue
    InitNodes ( .[].Layer(fwdSolvePoints7), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
 #endif
-   InitNodes ( .[].Layer(voltageJunctions), tissueFunctor("NodeInit", < Vnew = {-20.000} /*-64.3346}*/  > ) );
+   InitNodes ( .[].Layer(voltageJunctions), tissueFunctor("NodeInit", < 
+			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
+			cmt=0,
+			Cm=0.01,		// pF/um^2
+			Vnew = {-20.000} /*-64.3346}*/  > ) );
    InitNodes ( .[].Layer(voltageJunctionPoints), tissueFunctor("NodeInit", <> ) );
 
    InitNodes ( .[].Layer(NaChannels), tissueFunctor("NodeInit", <
@@ -420,16 +421,16 @@ Grid Tissue
    polyConnect(timeStep, conductanceDisplay0, <>, <>);
    polyConnect(timeStep, conductanceDisplay1, <>, <>);
 
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay1, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=2>), voltageDisplay2, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=3>), voltageDisplay3, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=4>), voltageDisplay4, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=5>), voltageDisplay5, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=6>), voltageDisplay6, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=7>), voltageDisplay7, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=8>), voltageDisplay8, <>, <identifier="JUNCTION">);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=9>), voltageDisplay9, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay1, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=2>), voltageDisplay2, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=3>), voltageDisplay3, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=4>), voltageDisplay4, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=5>), voltageDisplay5, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=6>), voltageDisplay6, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=7>), voltageDisplay7, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=8>), voltageDisplay8, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=9>), voltageDisplay9, <>, <>);
 
    //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Na">), conductanceDisplay0, <>, <identifier="CHANNEL">);
    //polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPA">), conductanceDisplay1, <>, <identifier="SYNAPSE">);
