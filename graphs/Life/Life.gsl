@@ -1,0 +1,444 @@
+#include "../../nti/MaxComputeOrder.h"
+
+#define _CCAT(x,y) x ## y 
+#define CCAT(x,y) _CCAT(x,y)
+#define _STR(x) #x 
+#define STR(x) _STR(x)
+#define DAT0 "rec0.dat"
+#define DAT1 "rec1.dat"
+#define DAT2 "rec2.dat"
+#define DAT3 "rec3.dat"
+#define DAT4 "rec4.dat"
+#define DAT5 "rec5.dat"
+#define DAT6 "rec6.dat"
+#define DAT7 "rec7.dat"
+#define DAT8 "rec8.dat"
+#define DAT9 "rec9.dat"
+
+#include "Topology.h"
+
+Functor Print;
+Print print();
+	
+Functor ReSeedRandom;
+ReSeedRandom reSeed(243);
+
+Connector PolyConnectorFunctor();		
+PolyConnectorFunctor polyConnect();
+
+Connector ServiceConnectorFunctor();
+ServiceConnectorFunctor serviceConnect();		
+
+Layout TissueLayoutFunctor();
+TissueLayoutFunctor tissueLayoutFunctor();		
+
+NodeInitializer TissueNodeInitFunctor();
+TissueNodeInitFunctor tissueNodeInitFunctor();
+
+Connector TissueConnectorFunctor();
+TissueConnectorFunctor tissueConnectorFunctor();
+
+Functor TissueProbeFunctor();
+TissueProbeFunctor tissueProbeFunctor();
+
+Functor TissueFunctor(string commandLine, string commandLineModification,	
+		      string channelParamaterFile, string synapseParameteurFile,
+		      Functor, Functor, Functor, Functor, int compartmentSize);
+
+TissueFunctor tissueFunctor("minicolumn.txt -u bt -j 2 -q 12351 -g 30.0 -a 1.0 -p DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) 
+			    " -e 0.001 -t 0.01 -m 0", " -p DetParams.par -m 0 -n cost-volume",
+			    "CptParams1.par", "ChanParams1.par", "SynParams1.par",
+			    tissueLayoutFunctor, tissueNodeInitFunctor, 
+                            tissueConnectorFunctor, tissueProbeFunctor);
+	
+GranuleMapper GridGranuleMapper(string description, list<int> dimensions, list<int> densityVector);
+GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ }, {1});
+	
+InitPhases = { initialize1, initialize2, initialize3, initialize4 };
+
+RuntimePhases = { solveChannels, predictJunction,
+#if MAX_COMPUTE_ORDER>6
+		  forwardSolve7,
+#endif
+#if MAX_COMPUTE_ORDER>5  
+		  forwardSolve6,
+#endif
+#if MAX_COMPUTE_ORDER>4
+		  forwardSolve5,	
+#endif
+#if MAX_COMPUTE_ORDER>3
+		  forwardSolve4,
+#endif
+#if MAX_COMPUTE_ORDER>2
+		  forwardSolve3,
+#endif
+#if MAX_COMPUTE_ORDER>1
+		  forwardSolve2,
+#endif
+#if MAX_COMPUTE_ORDER>0	
+		  forwardSolve1,
+#endif
+		  solve, 
+#if MAX_COMPUTE_ORDER>0	
+	          backwardSolve1,
+#endif
+#if MAX_COMPUTE_ORDER>1
+	          backwardSolve2,
+#endif	
+#if MAX_COMPUTE_ORDER>2
+	          backwardSolve3,
+#endif
+#if MAX_COMPUTE_ORDER>3	
+	          backwardSolve4,
+#endif
+#if MAX_COMPUTE_ORDER>4
+	          backwardSolve5,
+#endif
+#if MAX_COMPUTE_ORDER>5
+	          backwardSolve6,
+#endif
+#if MAX_COMPUTE_ORDER>6
+	          backwardSolve7,
+#endif
+		  correctJunction, finish };
+FinalPhases = { finalize };
+
+NodeType HodgkinHuxleyVoltage (<
+			Cm=0.01,		// pF/um^2
+			Ra=0.0015,		// Gohm*um
+			Na=70.0, 		// mM
+			K=433.0,		// mM	
+			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
+			E_leak=-54.4		// mV
+			     >) { initializeVoltage->initialize2, deriveParameters->initialize2 };
+
+NodeType VoltageEndPoint { produceInitialState->initialize1,
+#if MAX_COMPUTE_ORDER>0
+		    produceSolvedVoltage-> CCAT(backwardSolve,MAX_COMPUTE_ORDER),
+#else
+		    produceSolvedVoltage->solve,
+#endif
+		    produceFinishedVoltage->finish
+		  };
+
+#if MAX_COMPUTE_ORDER>0
+NodeType BackwardSolvePoint0 { produceInitialState->initialize1,
+		    produceBackwardSolution->solve };
+NodeType ForwardSolvePoint1 { produceInitialState->initialize1,
+		    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve1 };
+#endif
+
+#if MAX_COMPUTE_ORDER>1
+NodeType BackwardSolvePoint1 { produceInitialState->initialize1,
+		    produceBackwardSolution->backwardSolve1 };
+NodeType ForwardSolvePoint2 { produceInitialState->initialize1,
+		    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve2 };
+#endif
+
+#if MAX_COMPUTE_ORDER>2
+NodeType BackwardSolvePoint2 { produceInitialState->initialize1,
+		    produceBackwardSolution->backwardSolve2 };
+NodeType ForwardSolvePoint3 { produceInitialState->initialize1,
+		    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve3 };
+#endif
+	
+#if MAX_COMPUTE_ORDER>3
+
+NodeType BackwardSolvePoint3 { produceInitialState->initialize1,
+		    produceBackwardSolution->backwardSolve3 };
+NodeType ForwardSolvePoint4 { produceInitialState->initialize1,
+		    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve4 };
+#endif
+
+#if MAX_COMPUTE_ORDER>4
+NodeType BackwardSolvePoint4 { produceInitialState->initialize1,
+		    produceBackwardSolution->backwardSolve4 };
+NodeType ForwardSolvePoint5 { produceInitialState->initialize1,
+		    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve5 };
+#endif
+
+#if MAX_COMPUTE_ORDER>5
+NodeType BackwardSolvePoint5 { produceInitialState->initialize1,
+		    produceBackwardSolution->backwardSolve5 };
+NodeType ForwardSolvePoint6 { produceInitialState->initialize1,
+			    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve6 };
+#endif
+
+#if MAX_COMPUTE_ORDER>6
+NodeType BackwardSolvePoint6 { produceInitialState->initialize1,
+		    produceBackwardSolution->backwardSolve6 };
+NodeType ForwardSolvePoint7 { produceInitialState->initialize1,
+		    produceInitialCoefficients->initialize2,
+		    produceForwardSolution->forwardSolve7 };
+#endif
+
+NodeType HodgkinHuxleyVoltageJunction (<
+			Cm=0.01,		// pF/um^2
+			Ra=0.0015,		// Gohm*um
+			Na=70.0, 		// mM
+			K=433.0,		// mM	
+			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
+			E_leak=-54.4,		// mV
+			cmt=0
+ 		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
+
+NodeType VoltageJunctionPoint { produceInitialState->initialize1, produceVoltage->predictJunction };
+
+NodeType NaChannel { computeE_Na->initialize2, initializeNaChannels->initialize3, update->solveChannels };
+NodeType KDRChannel { computeE_KDR->initialize2, initializeKDRChannels->initialize3, update->solveChannels };
+
+NodeType Connexon { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
+
+NodeType AMPAReceptor (<
+			    E=0,	  // mV
+			    alpha=0.0011, // uM^-1 msec^-1
+			    beta=0.19,    // msec^1
+			    Tmax=180,     // 160-190 uM
+			    Vp=2.0,       // mV
+			    Kp=5.0        // mV
+		      >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+
+NodeType GABAAReceptor (<
+			    E=-80,	  // mV
+			    alpha=0.005,  // uM^-1 msec^-1
+			    beta=0.18,    // msec^1
+			    Tmax=185,     // 185 um
+			    Vp=2.0,       // mV
+			    Kp=5.0        // mV
+		      >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
+
+NodeType PreSynapticPoint { produceInitialState->initialize2, produceState->finish };
+
+ConstantType ExtracellularMedium;
+ExtracellularMedium extracellularMedium<	Na=500.0, 		// mM
+						K=17.0, 	// mM
+						T=281>;         // degK  
+ConstantType TimeStep;
+TimeStep timeStep<				deltaT=0.010    // msec
+		>;
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
+
+UnsignedTrigger currentOn("Iteration Trigger : == 3000", 
+ 			 ::Iteration, "==", 3000, 0, solveChannels );
+
+UnsignedTrigger currentOff("Iteration Trigger : == 8000", 
+ 			 ::Iteration,"==", 8000, 0, solveChannels );
+
+UnsignedTrigger recOn("Iteration Trigger : < 100000", 
+ 			 ::Iteration, "<", 100000, 0, solveChannels );
+
+/*
+VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
+CurrentPulseGenerator currentStim<pattern="Poisson", peak=500.0, duration=10, period=20>;
+polyConnect(timeStep, currentStim, <>, <>);
+*/
+
+VariableType PointCurrentSource { stimulate->solveChannels };
+PointCurrentSource currentStim<>;
+
+currentStim.setCurrent(<						
+				I = 250.0                      	// pA
+			     >) on currentOn;
+
+currentStim.setCurrent(<						
+				I = 0.0                      	// pA
+			     >) on currentOff;
+
+VariableType VoltageDisplay{ initialize->initialize1 };
+VoltageDisplay voltageDisplay0<fileName=DAT0, indices={0}>;
+VoltageDisplay voltageDisplay1<fileName=DAT1, indices={0}>;
+VoltageDisplay voltageDisplay2<fileName=DAT2, indices={0}>;
+VoltageDisplay voltageDisplay3<fileName=DAT3, indices={0}>;
+VoltageDisplay voltageDisplay4<fileName=DAT4, indices={0}>;
+VoltageDisplay voltageDisplay5<fileName=DAT5, indices={0}>;
+VoltageDisplay voltageDisplay6<fileName=DAT6, indices={0}>;
+VoltageDisplay voltageDisplay7<fileName=DAT7, indices={0}>;
+VoltageDisplay voltageDisplay8<fileName=DAT8, indices={0}>;
+VoltageDisplay voltageDisplay9<fileName=DAT9, indices={0}>;
+voltageDisplay0.dataCollection(<>) on recOn;
+voltageDisplay1.dataCollection(<>) on recOn;
+voltageDisplay2.dataCollection(<>) on recOn;
+voltageDisplay3.dataCollection(<>) on recOn;
+voltageDisplay4.dataCollection(<>) on recOn;
+voltageDisplay5.dataCollection(<>) on recOn;
+voltageDisplay6.dataCollection(<>) on recOn;
+voltageDisplay7.dataCollection(<>) on recOn;
+voltageDisplay8.dataCollection(<>) on recOn;
+voltageDisplay9.dataCollection(<>) on recOn;
+
+VariableType ConductanceDisplay{ initialize->initialize4 };
+ConductanceDisplay conductanceDisplay0<fileName="crec0.dat">;
+ConductanceDisplay conductanceDisplay1<fileName="crec1.dat">;
+conductanceDisplay0.dataCollection(<>) on recOn;
+conductanceDisplay1.dataCollection(<>) on recOn;
+
+Grid Tissue
+{
+   Dimension( _X_ , _Y_ , _Z_ );
+   Layer(branches, HodgkinHuxleyVoltage, tissueFunctor("Layout", <nodekind="CompartmentVariables[Voltage]">), <nodekind="CompartmentVariables[Voltage]">, tissueGM);
+   Layer(endPoints, VoltageEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Voltage]">), <nodekind="EndPoints[Voltage]">, tissueGM);
+#if MAX_COMPUTE_ORDER>0
+   Layer(fwdSolvePoints1, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][1]">), <nodekind="ForwardSolvePoints[Voltage][1]">, tissueGM);
+   Layer(bwdSolvePoints0, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][0]">), <nodekind="BackwardSolvePoints[Voltage][0]">, tissueGM);
+#endif
+#if MAX_COMPUTE_ORDER>1
+   Layer(fwdSolvePoints2, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][2]">), <nodekind="ForwardSolvePoints[Voltage][2]">, tissueGM);
+   Layer(bwdSolvePoints1, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][1]">), <nodekind="BackwardSolvePoints[Voltage][1]">, tissueGM);
+#endif
+#if MAX_COMPUTE_ORDER>2
+   Layer(fwdSolvePoints3, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][3]">), <nodekind="ForwardSolvePoints[Voltage][3]">, tissueGM);
+   Layer(bwdSolvePoints2, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][2]">), <nodekind="BackwardSolvePoints[Voltage][2]">, tissueGM);
+#endif
+#if MAX_COMPUTE_ORDER>3
+   Layer(fwdSolvePoints4, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][4]">), <nodekind="ForwardSolvePoints[Voltage][4]">, tissueGM);
+   Layer(bwdSolvePoints3, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][3]">), <nodekind="BackwardSolvePoints[Voltage][3]">, tissueGM);
+#endif
+#if MAX_COMPUTE_ORDER>4
+   Layer(fwdSolvePoints5, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][5]">), <nodekind="ForwardSolvePoints[Voltage][5]">, tissueGM);
+   Layer(bwdSolvePoints4, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][4]">), <nodekind="BackwardSolvePoints[Voltage][4]">, tissueGM);
+#endif
+#if MAX_COMPUTE_ORDER>5
+   Layer(fwdSolvePoints6, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][6]">), <nodekind="ForwardSolvePoints[Voltage][6]">, tissueGM);
+   Layer(bwdSolvePoints5, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][5]">), <nodekind="BackwardSolvePoints[Voltage][5]">, tissueGM);
+#endif
+#if MAX_COMPUTE_ORDER>6
+   Layer(fwdSolvePoints7, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][7]">), <nodekind="ForwardSolvePoints[Voltage][7]">, tissueGM);
+   Layer(bwdSolvePoints6, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][6]">), <nodekind="BackwardSolvePoints[Voltage][6]">, tissueGM);
+#endif
+
+   Layer(voltageJunctions, HodgkinHuxleyVoltageJunction, tissueFunctor("Layout", <nodekind="Junctions[Voltage]">), <nodekind="Junctions[Voltage]">, tissueGM);
+   Layer(voltageJunctionPoints, VoltageJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Voltage]">), <nodekind="JunctionPoints[Voltage]">, tissueGM);
+
+   Layer(NaChannels, NaChannel, tissueFunctor("Layout", < nodekind="Channels[Na]" >), < nodekind="Channels[Na]" >, tissueGM);
+   Layer(KDRChannels, KDRChannel, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
+
+   Layer(AxoAxonicGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[AxAxGap]" >), < nodekind="ElectricalSynapses[AxAxGap]" >, tissueGM);
+   Layer(DendroDendriticGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[DenDenGap]" >), < nodekind="ElectricalSynapses[DenDenGap]" >, tissueGM);
+   Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
+   Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
+   Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+
+   InitNodes ( .[].Layer(branches), tissueFunctor("NodeInit", <
+									compartmentalize = {"Vnew", 
+											    "Vcur", 
+											    "Aii", 
+											    "Aim", 
+											    "Aip", 
+											    "RHS", 
+											   },
+									Vnew = {-20.00}//-64.1235}
+								      > ) );
+
+   InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
+#if MAX_COMPUTE_ORDER>0
+   InitNodes ( .[].Layer(fwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
+   InitNodes ( .[].Layer(bwdSolvePoints0), tissueFunctor("NodeInit", <> ) );
+#endif
+#if MAX_COMPUTE_ORDER>1
+   InitNodes ( .[].Layer(fwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
+   InitNodes ( .[].Layer(bwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
+#endif
+#if MAX_COMPUTE_ORDER>2
+   InitNodes ( .[].Layer(fwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
+   InitNodes ( .[].Layer(bwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
+#endif
+#if MAX_COMPUTE_ORDER>3
+   InitNodes ( .[].Layer(fwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
+   InitNodes ( .[].Layer(bwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
+#endif
+#if MAX_COMPUTE_ORDER>4
+   InitNodes ( .[].Layer(fwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
+   InitNodes ( .[].Layer(bwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
+#endif
+#if MAX_COMPUTE_ORDER>5
+   InitNodes ( .[].Layer(fwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
+	   InitNodes ( .[].Layer(bwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
+#endif
+#if MAX_COMPUTE_ORDER>6
+   InitNodes ( .[].Layer(fwdSolvePoints7), tissueFunctor("NodeInit", <> ) );
+   InitNodes ( .[].Layer(bwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
+#endif
+   InitNodes ( .[].Layer(voltageJunctions), tissueFunctor("NodeInit", < Vnew = {-20.000} /*-64.3346}*/  > ) );
+   InitNodes ( .[].Layer(voltageJunctionPoints), tissueFunctor("NodeInit", <> ) );
+
+   InitNodes ( .[].Layer(NaChannels), tissueFunctor("NodeInit", <
+									compartmentalize = { "gbar" },
+									gbar = {2.8} //1.2 2.0 2.8
+								 > ) );	
+
+
+   InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
+									compartmentalize = {  "gbar" },
+									gbar = {0.36}
+								 > ) );
+
+   InitNodes ( .[].Layer(AxoAxonicGapJunctions), tissueFunctor("NodeInit", <
+									I = 0,
+									g = 1.0 // nS
+								  > ) );
+   InitNodes ( .[].Layer(DendroDendriticGapJunctions), tissueFunctor("NodeInit", <
+									I = 0,
+									g = 1.0 // nS
+								  > ) );
+   InitNodes ( .[].Layer(AMPASynapses), tissueFunctor("NodeInit", <
+									gbar = 0.1 // nS/um^2
+									  > ) );
+   InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
+									gbar = 0.1 // nS/um^2
+								  > ) );	
+   
+   InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
+
+   polyConnect(timeStep, .[].Layer(branches, voltageJunctions, NaChannels, KDRChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
+
+   tissueFunctor("Connect", <> );	
+
+   polyConnect(currentStim, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+   polyConnect(timeStep, voltageDisplay0, <>, <>);
+   polyConnect(timeStep, voltageDisplay1, <>, <>);
+   polyConnect(timeStep, voltageDisplay2, <>, <>);
+   polyConnect(timeStep, voltageDisplay3, <>, <>);
+   polyConnect(timeStep, voltageDisplay4, <>, <>);
+   polyConnect(timeStep, voltageDisplay5, <>, <>);
+   polyConnect(timeStep, voltageDisplay6, <>, <>);
+   polyConnect(timeStep, voltageDisplay7, <>, <>);
+   polyConnect(timeStep, voltageDisplay8, <>, <>);
+   polyConnect(timeStep, voltageDisplay9, <>, <>);
+
+   polyConnect(timeStep, conductanceDisplay0, <>, <>);
+   polyConnect(timeStep, conductanceDisplay1, <>, <>);
+
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay1, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=2>), voltageDisplay2, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=3>), voltageDisplay3, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=4>), voltageDisplay4, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=5>), voltageDisplay5, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=6>), voltageDisplay6, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=7>), voltageDisplay7, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=8>), voltageDisplay8, <>, <identifier="JUNCTION">);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=9>), voltageDisplay9, <>, <identifier="JUNCTION">);
+
+   //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Na">), conductanceDisplay0, <>, <identifier="CHANNEL">);
+   //polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPA">), conductanceDisplay1, <>, <identifier="SYNAPSE">);
+};
+
+Tissue tissue;
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 100000, 0, correctJunction);
+
+Stop on endTrig;
+

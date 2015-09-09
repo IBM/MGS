@@ -1,0 +1,38 @@
+#include "../../gsl/extensions/struct/CoordsStruct.mdl"
+
+Interface ValueProducer {
+   int *value;
+}
+
+Node LifeNode Implements ValueProducer {
+   int value;
+   int publicValue;
+   int* [] neighbors;
+
+   Shared {
+     int habitable;
+     int tooSparse;
+     int tooCrowded;
+   }
+
+   InitPhase initialize;
+   RuntimePhase update();
+   RuntimePhase copy(publicValue);
+
+   ValueProducer.value << &publicValue;
+
+   Connection Pre Node () Expects ValueProducer {
+      ValueProducer.value >> neighbors;
+   }
+}
+
+Variable LifeDataCollector
+{
+   string fileName;
+   CoordsStruct [] coordsArray;
+   int* [] vals;
+
+   InitPhase initialize;
+   TriggeredFunction dataCollection;
+}
+
