@@ -11,7 +11,7 @@ void LifeNode::initialize(RNG& rng)
 void LifeNode::update(RNG& rng) 
 {
    int neighborCount=0;
-   ShallowArray<int*>::iterator iter, end = neightbors.end();
+   ShallowArray<int*>::iterator iter, end = neighbors.end();
    for (iter=neighbors.begin(); iter!=end; ++iter) {
      neighborCount += **iter;
    }
