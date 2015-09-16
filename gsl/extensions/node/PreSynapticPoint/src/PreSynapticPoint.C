@@ -20,7 +20,7 @@
 
 void PreSynapticPoint::produceInitialState(RNG& rng) 
 {
-  branchData=*branchDataConnect;
+  if (branchDataConnect) branchData=*branchDataConnect;
 }
 
 void PreSynapticPoint::produceState(RNG& rng) 
