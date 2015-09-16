@@ -1,3 +1,0 @@
-neurons/neuron_0.developed.swc 1 0 0 0.000000 0.000000 0.000000 A NULL NULL NULL
-neurons/bouton_0.developed.swc 1 1 0 0.000000 0.000000 0.000000 A NULL NULL NULL
-neurons/spine_0.developed.swc 1 2 0 0.000000 0.000000 0.000000 A NULL NULL NULL
