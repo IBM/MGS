@@ -32,7 +32,13 @@ Variable LifeDataCollector
    CoordsStruct [] coordsArray;
    int* [] vals;
 
+   Connection Pre Node () Expects ValueProducer
+   {
+   ValueProducer.value >> vals;
+   }
+
    InitPhase initialize;
    TriggeredFunction dataCollection;
+   FinalPhase finalize;
 }
 

@@ -69,6 +69,7 @@ ConnectNodeSetsFunctor connectNodeSets();
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();
 
+Functor GetNodeCoordFunctor();
 
 // ManhatGokhanGokhan	+905327233474	+905327233474GokhanGokhan	+905327233474	+905327233474tanRing returns pairs of nodes according to a distribution described by the list<int>, where
 // the position in the list corresponds to Manhattan distance on a grid and the number corresponds to the 

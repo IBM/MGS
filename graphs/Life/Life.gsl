@@ -1,6 +1,7 @@
 #include "std.gsl"
 InitPhases = { initialize };
-RuntimePhases = { dataCollection, update, copy, lastPhase };
+RuntimePhases = { dataCollect, update, copy, lastPhase };
+FinalPhases = { finalize };
 
 NodeType LifeNode(< habitable=2, tooSparse=1, tooCrowded=4 >);
 
@@ -18,12 +19,21 @@ World world;
 
 // DCA directives here
 
+VariableType LifeDataCollector;
+LifeDataCollector collector<fileName="LifeOutput.txt">;
+
+//serviceConnect(world[].Layer(nodes), collector, GetNodeCoordFunctor(), "coordsArray",
+//	       "value", "vals");
+
+polyConnect(world[].Layer(nodes), collector, <>, <>);
+
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
 
 UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
- 			 ::Iteration, ">=", 1, 0, dataCollection);
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 10, 0, lastPhase); 
+			 ::Iteration, "==", 1000, 0, lastPhase); 
+collector.dataCollection() on iterTrig;
 Stop on endTrig;
