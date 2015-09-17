@@ -10,16 +10,16 @@ Node LifeNode Implements ValueProducer {
    int* [] neighbors;
 
    Shared {
-     int habitable;
      int tooSparse;
      int tooCrowded;
    }
 
-   InitPhase initialize;
+   InitPhase initialize();
    RuntimePhase update();
    RuntimePhase copy(publicValue);
 
    ValueProducer.value << &publicValue;
+   
 
    Connection Pre Node () Expects ValueProducer {
       ValueProducer.value >> neighbors;
@@ -29,14 +29,18 @@ Node LifeNode Implements ValueProducer {
 Variable LifeDataCollector
 {
    string fileName;
-   CoordsStruct [] coordsArray;
+   int [] rows;
+   int [] cols;
+   int mxcol;
    int* [] vals;
+   UserFunction getNodeIndices;
 
    Connection Pre Node () Expects ValueProducer
    {
-   ValueProducer.value >> vals;
+      ValueProducer.value >> vals;
+      getNodeIndices();
    }
-
+ 
    InitPhase initialize;
    TriggeredFunction dataCollection;
    FinalPhase finalize;

@@ -3,7 +3,7 @@ InitPhases = { initialize };
 RuntimePhases = { dataCollect, update, copy, lastPhase };
 FinalPhases = { finalize };
 
-NodeType LifeNode(< habitable=2, tooSparse=1, tooCrowded=4 >);
+NodeType LifeNode(< tooSparse=1, tooCrowded=4 >);
 
 Grid World
 {
