@@ -107,25 +107,27 @@ class OlivoCerebellarWaypointGenerator : public WaypointGenerator
 	  }
 	}
       }
-      if (!tractTerminated && nr_tracts>0) tractsVec[nr_tracts-1].push_back(lastPoint);
-      tractFile.close();
+      if (nr_tracts>0) {
+	if (!tractTerminated) tractsVec[nr_tracts-1].push_back(lastPoint);
+	tractFile.close();
 
-      // Update the maxSize of the longest tract
-      _maxTractPointsPerNeuron[nid] = tractsVec[0].size();
-      for (int i=1; i<tractsVec.size(); ++i) {
-	if (tractsVec[i].size() > _maxTractPointsPerNeuron[nid])
-	  _maxTractPointsPerNeuron[nid] = tractsVec[i].size();			
-      }
-      // Start paths at different point indices to reflect branching patter
-      _pointIndexPerNeuronTract[nid].increaseSizeTo(nr_tracts);
-      _pointIndexPerNeuronTract[nid][0]=0;
-      for (int i=1; i<nr_tracts; ++i) {
-	_pointIndexPerNeuronTract[nid][i]=_pointIndexPerNeuronTract[nid][i-1]+1+int( (i==1 ? 0.25 : 0.02)*(double(tractsVec[i].size() ) ) );
-	if (_pointIndexPerNeuronTract[nid][i]>tractsVec[i].size()-1) {
-	  point_t tmp=tractsVec[i][tractsVec[i].size()-1];
-	  tractsVec[i].increaseSizeTo(_pointIndexPerNeuronTract[nid][i]+1);
-	  tractsVec[i][_pointIndexPerNeuronTract[nid][i]]=tmp;
-	}	  
+	// Update the maxSize of the longest tract
+	_maxTractPointsPerNeuron[nid] = tractsVec[0].size();
+	for (int i=1; i<tractsVec.size(); ++i) {
+	  if (tractsVec[i].size() > _maxTractPointsPerNeuron[nid])
+	    _maxTractPointsPerNeuron[nid] = tractsVec[i].size();			
+	}
+	// Start paths at different point indices to reflect branching patter
+	_pointIndexPerNeuronTract[nid].increaseSizeTo(nr_tracts);
+	_pointIndexPerNeuronTract[nid][0]=0;
+	for (int i=1; i<nr_tracts; ++i) {
+	  _pointIndexPerNeuronTract[nid][i]=_pointIndexPerNeuronTract[nid][i-1]+1+int( (i==1 ? 0.25 : 0.02)*(double(tractsVec[i].size() ) ) );
+	  if (_pointIndexPerNeuronTract[nid][i]>tractsVec[i].size()-1) {
+	    point_t tmp=tractsVec[i][tractsVec[i].size()-1];
+	    tractsVec[i].increaseSizeTo(_pointIndexPerNeuronTract[nid][i]+1);
+	    tractsVec[i][_pointIndexPerNeuronTract[nid][i]]=tmp;
+	  }	  
+	}
       }
     }
   }
