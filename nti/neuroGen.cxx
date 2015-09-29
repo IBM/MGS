@@ -45,6 +45,15 @@
 #define PAR_FILE_INDEX 8
 #define N_BRANCH_TYPES 3
 
+void print_help()
+{
+    std::cout << "USAGE:" << std::endl;
+    std::cout << std::endl;
+    std::cout << "./neuroGen [-tissue tissuefile] [-par parameterfilename] [-stdout] [-n]" << std::endl;
+    std::cout << "Example1: ./neuroGen -tissue \"minicolumn.txt\" " << std::endl;
+    std::cout << "Example2: (no tissue file, just one parameter filename for one neuron): ./neuroGen -par \"params.txt\"" << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
 #ifdef DBG
@@ -80,22 +89,23 @@ int main(int argc, char *argv[])
     double composite=0.0;
     int nthreads=1;
     int N=1;
-
+    if (argc==1) {
+	print_help();
+	MPI_Finalize();
+	exit(0);
+    }
     for (int i = 1; i < argc; i++) {
       std::string sCurrentArg = argv[i];
       if((sCurrentArg == "-?")||(sCurrentArg == "-help")||(sCurrentArg == "-info")) {
-	std::cout<<"USAGE:"<<std::endl;
-	std::cout<<std::endl;
-	std::cout<<"./neuroGen [-tissue tissuefile] [-par parameterfilename] [-stdout] [-n]" << std::endl;
-	std::cout<<"Example1: ./neuroGen -tissue \"minicolumn.txt\" " << std::endl;
-	std::cout<<"Example2: (no tissue file, just one parameter filename for one neuron): ./neuroGen -par \"params.txt\"" << std::endl;
+	print_help();
 	MPI_Finalize();
-	exit(1);
+	exit(0);
       }
       if ((sCurrentArg == "-par")) {
 	baseParFileName = argv[i + 1 + branchType];
 	for (int bt=1; bt<=N_BRANCH_TYPES; ++bt) {
-	  if (argv[i + bt]!="NULL") {
+	  // the last par file from axon, denda, dendb, will be the base name from the new swc file, contcatenating all outputs
+	  if (strcmp(argv[i + bt],"NULL")) {
 	    swcFileName=argv[i + bt];
 	    break;
 	  }
@@ -203,7 +213,6 @@ int main(int argc, char *argv[])
 	i++;
       }
     }
-
     std::string statsFileName, parsFileName, compositeSwcFileName;
     int nNeuronsGenerated=0;
     NeurogenParams** params=0;
@@ -213,47 +222,50 @@ int main(int argc, char *argv[])
       rng.reSeed(lrandom(params_p._rng), rank);
     }
 
-    if (!btissueFile) {   // if there is no tissue file but just a parameter file to create only 1 neuron.
-      int ln=baseParFileName.length();
-      std::string statsFileName(baseParFileName);
-      std::string parsFileName(baseParFileName);
-      statsFileName.erase(ln-4, 4);
-      parsFileName.erase(ln-4, 4);
-      if (swcFileName!="NULL") swcFileName.erase(swcFileName.length()-4, 4);
+    if (!btissueFile) {   // if there is no tissue file but just a parameter file to create only 1 neuron.      
+      if (parFile) {
+	int ln=baseParFileName.length();
+	std::string statsFileName(baseParFileName);
+	std::string parsFileName(baseParFileName);
+	statsFileName.erase(ln-4, 4);
+	parsFileName.erase(ln-4, 4);
+	if (swcFileName!="NULL") swcFileName.erase(swcFileName.length()-4, 4);
 
-      std::ostringstream statsFileNameStream, parsFileNameStream;
-      statsFileNameStream<<statsFileName<<"."<<btype<<".out";
-      statsFileName=statsFileNameStream.str();
-      parsFileNameStream<<parsFileName<<"."<<btype<<".par";
-      parsFileName=parsFileNameStream.str();
+	std::ostringstream statsFileNameStream, parsFileNameStream;
+	statsFileNameStream<<statsFileName<<"."<<btype<<".out";
+	statsFileName=statsFileNameStream.str();
+	parsFileNameStream<<parsFileName<<"."<<btype<<".par";
+	parsFileName=parsFileNameStream.str();
 
-      int neuronBegin=int(floor(double(rank)*double(N)/double(size)));
-      int neuronEnd=int(floor(double(rank+1)*double(N)/double(size)))-1;
-      nNeuronsGenerated=neuronEnd-neuronBegin+1;
-      if (nNeuronsGenerated>0) {
-	params = new NeurogenParams*[nNeuronsGenerated];
-	fileNames = new char*[nNeuronsGenerated];
-	for (int i=0; i<nNeuronsGenerated; ++i) params[i]=0;
-	if (branchType==0) {
-	  somaGenerated=new bool[nNeuronsGenerated];
-	  for (int i=0; i<nNeuronsGenerated; ++i) somaGenerated[i]=false;
+	int neuronBegin=int(floor(double(rank)*double(N)/double(size)));
+	int neuronEnd=int(floor(double(rank+1)*double(N)/double(size)))-1;
+	nNeuronsGenerated=neuronEnd-neuronBegin+1;
+
+	if (nNeuronsGenerated>0) {
+	  params = new NeurogenParams*[nNeuronsGenerated];
+	  fileNames = new char*[nNeuronsGenerated];
+	  for (int i=0; i<nNeuronsGenerated; ++i) params[i]=0;
+	  if (somaGenerated==0) {
+	    somaGenerated=new bool[nNeuronsGenerated];
+	    for (int i=0; i<nNeuronsGenerated; ++i) somaGenerated[i]=false;
+	  }
 	}
-      }
-      int idx=0;
-      for (int nid=neuronBegin; nid<=neuronEnd; ++nid, ++idx) {
-	std::ostringstream filename;
-	filename<<swcFileName<<"_"<<nid<<".swc";
-	fileNames[idx] = new char[filename.str().length()];
-	strcpy(fileNames[idx], filename.str().c_str());
-	if (parFile) {
-	  params[idx]=new NeurogenParams(baseParFileName, rank);
-	  params[idx]->RandSeed=lrandom(rng);
-	  params[idx]->_rng.reSeedShared(params[idx]->RandSeed);
+	int idx=0;
+	for (int nid=neuronBegin; nid<=neuronEnd; ++nid, ++idx) {
+	  std::ostringstream filename;
+	  filename<<swcFileName<<"_"<<nid<<".swc";
+	  fileNames[idx] = new char[filename.str().length()];
+	  strcpy(fileNames[idx], filename.str().c_str());
+	  if (parFile) {
+	    params[idx]=new NeurogenParams(baseParFileName, rank);
+	    params[idx]->RandSeed=lrandom(rng);
+	    params[idx]->_rng.reSeedShared(params[idx]->RandSeed);
+	  }
 	}
+	if (nNeuronsGenerated>0) boundingSurfaceMap[params[0]->boundingSurface] = new BoundingSurfaceMesh(params[0]->boundingSurface);
+	Neurogenesis NG(rank, size, nthreads, statsFileName, parsFileName, stdout, fout, branchType+2, boundingSurfaceMap);
+	NG.run(neuronBegin, nNeuronsGenerated, params, fileNames, somaGenerated);
       }
-      if (nNeuronsGenerated>0) boundingSurfaceMap[params[0]->boundingSurface] = new BoundingSurfaceMesh(params[0]->boundingSurface);
-      Neurogenesis NG(rank, size, nthreads, statsFileName, parsFileName, stdout, fout, branchType+2, boundingSurfaceMap);
-      NG.run(neuronBegin, nNeuronsGenerated, params, fileNames, somaGenerated);
     }
 
     else {   // there is a tissue file
@@ -341,5 +353,4 @@ int main(int argc, char *argv[])
   if (rank==0) std::cerr<<"Compute Time : "<<now-start<<std::endl;
 
   MPI_Finalize();
-  exit(1);
 }

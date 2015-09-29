@@ -161,7 +161,6 @@ void Neurogenesis::generateArbors(int threadID, int nid, int& nrStemSegments)
 #endif
   //createTestRotation();
   int count=1;
-
   if (_somaGenerated[nid]) readSoma(threadID, nid, count, params_p);  
   else generateSoma(threadID, params_p, count);
 
@@ -380,7 +379,7 @@ void Neurogenesis::generateStems(int threadID, NeurogenParams* params_p, int nid
     else {
       data.Segments[data.nrSegments-1].setNeuriteOrigin(true);
     }
-  }
+  }  
 }
 
 void Neurogenesis::extendNeurites(int threadID, NeurogenParams* params)
