@@ -1,8 +1,20 @@
+
+.DEFAULT_GOAL: target
+
+SRC_DIR :=./src
+OBJ_DIR :=./obj
+HEADER_DIR:=./include
+
+vpath %.h $(HEADER_DIR)
+vpath %.cxx $(SRC_DIR)
+
 FOR_BLUEGENE_P=0
 FOR_BLUEGENE_L=0
 FOR_BLUEGENE_Q=0
 FOR_AIX=0
 A2AW=0
+
+BIN_DIR=./bin
 
 
 ifeq ($(A2AW), 1)
@@ -10,6 +22,8 @@ ifeq ($(A2AW), 1)
 A2A = -DA2AW
 
 endif
+
+
 
 ifeq ($(FOR_BLUEGENE_Q), 1)
 
@@ -62,7 +76,7 @@ CXX=mpiCC
 LD=mpiCC
 #LDFLAGS = -L$(CVC)/lib/CVC
 #EXTRA_LD = -lcvcmc -lcvct
-CFLAGS = $(A2A) #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
+CFLAGS = $(A2A)  -I$(HEADER_DIR) #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
 #CFLAGS = -DUSING_BLUEGENE -I$(CVC)/include/CVC -DVERBOSE
 #CVCSRC = cvc.cxx
 
@@ -77,7 +91,7 @@ endif
 DEFINES = #-DVERBOSE -DBINARY64BITS
 OPT=-O3
 DEBUG=-g
-UTILS=-I../gsl/utils/std/include
+UTILS=-I../gsl/utils/std/include -I../common/include/
 COPYRIGHT=-I../gsl/framework/factories/include
 
 NG_SHARED_SOURCES = CompositeSwc.cxx \
@@ -168,35 +182,40 @@ clean: ; rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJE
 realclean: clean
 	rm -f $(TARGETS) 
 
-.SUFFIXES: .cxx .cpp .c .h .o
+#.SUFFIXES: .cxx .cpp .c .h .o
 
-.cxx.o: ;
-	$(CXX) -I. -c $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) $*.cxx
+%.o : %.cxx
+	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o $(OBJ_DIR)/$@
 
-.C.o: ;
-	$(CXX) -I. -c $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o ../gsl/utils/std/src $*.C
+%.o : %.C
+	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o ../gsl/utils/std/src $*.C
 
 neuroGen: $(NG_OBJECTS)
-	$(LD) $(MAKE64) $(DEBUG) -o neuroGen $(OPT) \
-		$(NG_OBJECTS) \
+	mkdir -p $(BIN_DIR)
+	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroGen $(OPT) \
+		$(patsubst %, $(OBJ_DIR)/%, $(NG_OBJECTS)) \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 neuroDev: $(ND_OBJECTS)
-	$(LD) $(MAKE64) $(DEBUG) -o neuroDev $(OPT) \
-		$(ND_OBJECTS) \
+	mkdir -p $(BIN_DIR)
+	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroDev $(OPT) \
+		$(patsubst %, $(OBJ_DIR)/%, $(ND_OBJECTS)) \
+		../common/obj/StringUtils.o \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 touchDetect: $(TD_OBJECTS)
-	$(LD) $(MAKE64) $(DEBUG) -o touchDetect $(OPT) \
-		$(TD_OBJECTS) \
+	mkdir -p $(BIN_DIR)
+	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/touchDetect $(OPT) \
+		$(patsubst %, $(OBJ_DIR)/%, $(TD_OBJECTS)) \
+		../common/obj/StringUtils.o \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 $(TISSUE_LIB): $(TISSUE_LIB_OBJECTS)
 		ar rcs $(TISSUE_LIB) \
-		$(TISSUE_LIB_OBJECTS)
+		$(patsubst %, %(OBJ_DIR)/%, $(TISSUE_LIB_OBJECTS))
 
 docs:
 
