@@ -18,7 +18,7 @@
 
 #include "Lens.h"
 #include "CG_GABAAReceptorCompCategory.h"
-#include "../../../../../nti/CountableModel.h"
+#include "CountableModel.h"
 
 class NDPairList;
 

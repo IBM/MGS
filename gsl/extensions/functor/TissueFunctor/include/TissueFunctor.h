@@ -26,10 +26,10 @@
 #include "rndm.h"
 
 #ifdef HAVE_MPI
-#include "../../../../../nti/Capsule.h"
-#include "../../../../../nti/TissueContext.h"
-#include "../../../../../nti/SegmentDescriptor.h"
-#include "../../../../../nti/Params.h"
+#include "Capsule.h"
+#include "TissueContext.h"
+#include "SegmentDescriptor.h"
+#include "Params.h"
 #endif
 
 #include <memory>
