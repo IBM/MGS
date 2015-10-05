@@ -17,7 +17,7 @@
 #include "VoltageVisualization.h"
 #include "Simulation.h"
 #include "CG_VoltageVisualization.h"
-#include "../../../../../nti/NeuronPartitioner.h"
+#include "NeuronPartitioner.h"
 
 #include <cmath>
 #include <memory>

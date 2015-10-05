@@ -17,7 +17,7 @@
 #include "CalciumVisualization.h"
 #include "Simulation.h"
 #include "CG_CalciumVisualization.h"
-#include "../../../../../nti/NeuronPartitioner.h"
+#include "NeuronPartitioner.h"
 
 #include <cmath>
 #include <memory>
