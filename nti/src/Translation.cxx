@@ -14,7 +14,7 @@
 // ================================================================
 
 #include "Translation.h"
-#include "string.h"
+#include <string>
 
 Translation::Translation() {}
 

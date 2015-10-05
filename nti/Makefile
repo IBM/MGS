@@ -188,6 +188,8 @@ realclean: clean
 
 CFLAGS  += -MMD
 
+$(OBJ_DIR): 
+	mkdir -p $(OBJ_DIR)
 
 %.o : %.cxx | $(OBJ_DIR)
 	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o $(OBJ_DIR)/$@
