@@ -45,40 +45,40 @@
 #include "Granule.h"
 
 #ifdef HAVE_MPI
-#include "../../../../../nti/MaxComputeOrder.h"
+#include "MaxComputeOrder.h"
 
-#include "../../../../../nti/SegmentForceAggregator.h"
-#include "../../../../../nti/AllInSegmentSpace.h"
-#include "../../../../../nti/TouchDetectTissueSlicer.h"
-#include "../../../../../nti/FrontSegmentSpace.h"
-#include "../../../../../nti/FrontLimitedSegmentSpace.h"
-#include "../../../../../nti/SegmentKeySegmentSpace.h"
-#include "../../../../../nti/ANDSegmentSpace.h"
-#include "../../../../../nti/ORSegmentSpace.h"
-#include "../../../../../nti/NOTSegmentSpace.h"
-#include "../../../../../nti/NeuroDevTissueSlicer.h"
-#include "../../../../../nti/SynapseTouchSpace.h"
-#include "../../../../../nti/AllInTouchSpace.h"
-#include "../../../../../nti/Director.h"
-#include "../../../../../nti/SegmentForceDetector.h"
-#include "../../../../../nti/Communicator.h"
-#include "../../../../../nti/Params.h"
-#include "../../../../../nti/TissueGrowthSimulator.hpp"
+#include "SegmentForceAggregator.h"
+#include "AllInSegmentSpace.h"
+#include "TouchDetectTissueSlicer.h"
+#include "FrontSegmentSpace.h"
+#include "FrontLimitedSegmentSpace.h"
+#include "SegmentKeySegmentSpace.h"
+#include "ANDSegmentSpace.h"
+#include "ORSegmentSpace.h"
+#include "NOTSegmentSpace.h"
+#include "NeuroDevTissueSlicer.h"
+#include "SynapseTouchSpace.h"
+#include "AllInTouchSpace.h"
+#include "Director.h"
+#include "SegmentForceDetector.h"
+#include "Communicator.h"
+#include "Params.h"
+#include "TissueGrowthSimulator.hpp"
 
-#include "../../../../../nti/LENSTissueSlicer.h"
-#include "../../../../../nti/TouchDetector.h"
-#include "../../../../../nti/ORTouchSpace.h"
-#include "../../../../../nti/ComputeBranch.h"
-#include "../../../../../nti/TouchVector.h"
-#include "../../../../../nti/TouchAggregator.h"
+#include "LENSTissueSlicer.h"
+#include "TouchDetector.h"
+#include "ORTouchSpace.h"
+#include "ComputeBranch.h"
+#include "TouchVector.h"
+#include "TouchAggregator.h"
 
-#include "../../../../../nti/VolumeDecomposition.h"
-#include "../../../../../nti/CountableModel.h"
+#include "VolumeDecomposition.h"
+#include "CountableModel.h"
 
-#include "../../../../../nti/Neurogenesis.h"
-#include "../../../../../nti/NeurogenParams.h"
-#include "../../../../../nti/BoundingSurfaceMesh.h"
-#include "../../../../../nti/CompositeSwc.h"
+#include "Neurogenesis.h"
+#include "NeurogenParams.h"
+#include "BoundingSurfaceMesh.h"
+#include "CompositeSwc.h"
 
 #define PAR_FILE_INDEX 8
 #define N_BRANCH_TYPES 3
@@ -90,7 +90,7 @@
 //#define INFERIOR_OLIVE
 
 #ifdef INFERIOR_OLIVE
-#include "../../../../../nti/InferiorOliveGlomeruliDetector.h"
+#include "InferiorOliveGlomeruliDetector.h"
 #endif
 
 #include <stdio.h>
