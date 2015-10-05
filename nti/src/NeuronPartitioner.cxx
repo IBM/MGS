@@ -20,8 +20,9 @@
 #include "Params.h"
 #include <map>
 #include <cassert>
+#include <algorithm>
 
-NeuronPartitioner::NeuronPartitioner(int rank, char* inputFileName, bool resample, bool dumpOutput, double pointSpacing) :
+NeuronPartitioner::NeuronPartitioner(int rank, const std::string&  inputFileName, bool resample, bool dumpOutput, double pointSpacing) :
   _nSlicers(0),
   _size(0),
   _rank(rank),
@@ -42,9 +43,9 @@ NeuronPartitioner::NeuronPartitioner(int rank, char* inputFileName, bool resampl
     if (_rank==0) std::cerr<<"Warning: Geometric spacing factor reset to 1.0!"<<std::endl;
     _pointSpacing=1.0;
   }
-  strcpy(_inputFilename, inputFileName);
-}
-
+//  strcpy(_inputFilename, inputFileName);
+  _inputFilename = std::string(inputFileName);
+} 
 NeuronPartitioner::NeuronPartitioner(NeuronPartitioner& np) :
   _nSlicers(np._nSlicers),
   _size(np._size),
@@ -63,8 +64,11 @@ NeuronPartitioner::NeuronPartitioner(NeuronPartitioner& np) :
   _pointSpacing(np._pointSpacing),
   _segmentDescriptor(np._segmentDescriptor)
 {
-  strcpy(_inputFilename, np._inputFilename);
-  memcpy(_neuronsPerLayer, np._neuronsPerLayer, 6*sizeof(int));
+  //strcpy(_inputFilename, np._inputFilename);
+  _inputFilename = np._inputFilename;
+  std::copy(np._neuronsPerLayer, np._neuronsPerLayer + 6, _neuronsPerLayer);
+  //TUAN: why we put 6 here, recommend to replace with a constant in DataConstant.h
+//  memcpy(_neuronsPerLayer, np._neuronsPerLayer, 6*sizeof(int));
   _endNeurons = new int[_nSlicers];
   for (int i=0; i<_nSlicers; ++i) _endNeurons[i]=np._endNeurons[i];
   _neuronSegments = new int[_totalNeurons];
@@ -112,8 +116,8 @@ void NeuronPartitioner::partitionBinaryNeurons(int& nSlicers, const int nTouchDe
   //Opens the files if it exist
   FILE* inputDataFile;
   
-  if((inputDataFile = fopen(_inputFilename, "rb")) == 0) {
-    printf("Could not find the input file %s...\n", _inputFilename);
+  if((inputDataFile = fopen(_inputFilename.c_str(), "rb")) == 0) {
+    printf("Could not find the input file %s...\n", _inputFilename.c_str());
     MPI_Finalize();
     exit(0);
   } 
@@ -139,17 +143,18 @@ void NeuronPartitioner::partitionBinaryNeurons(int& nSlicers, const int nTouchDe
   fclose(inputDataFile);
 }
 
-void NeuronPartitioner::countAllNeurons(const char* inputFilename, int& totalNeurons, int& totalSegmentsRead, int* neuronsPerLayer, std::vector<int>& neuronSegments)
+void NeuronPartitioner::countAllNeurons(const std::string& inputFilename, int& totalNeurons, int& totalSegmentsRead, int* neuronsPerLayer, std::vector<int>& neuronSegments)
 {
   totalNeurons=totalSegmentsRead=0;
+  //TUAN: TODO try to replace 6 with a descriptive name
   for (int i=0; i<6; ++i) neuronsPerLayer[i]=0;
   neuronSegments.clear();
 
   //Opens the files if it exist
   FILE *filenameFile, *inputDataFile;
     
-  if((filenameFile = fopen(inputFilename, "rb")) == 0) {
-    printf("Could not find the input file %s...\n", inputFilename);
+  if((filenameFile = fopen(inputFilename.c_str(), "rb")) == 0) {
+    printf("Could not find the input file %s...\n", inputFilename.c_str());
     MPI_Finalize();
     exit(0);
   } 
@@ -160,7 +165,8 @@ void NeuronPartitioner::countAllNeurons(const char* inputFilename, int& totalNeu
   double x1, y1, z1, x2, y2, z2, r;
   p.skipHeader(filenameFile); 
   while (!feof(filenameFile)) {
-    strcpy(bufS,"");
+    //strcpy(bufS,"");
+	bufS[0] = '\n';
     char* c=fgets(bufS,1024,filenameFile);
     if (bufS[0]!='#' && bufS[0]!='\n') {
       if (11==sscanf(bufS, "%s %d %d %d %lf %lf %lf %c %s %s %s", filename, &layer, &morphtype, &electrotype, &x1, &y1, &z1, &offsetType, axonPar, basalPar, apicalPar)) {

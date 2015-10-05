@@ -21,7 +21,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <string.h>
+//#include <string.h>
 #include <string>
 #include <algorithm>
 #include <utility>
@@ -135,11 +135,11 @@ public:
 
   typedef enum{COMPARTMENT, CHANNEL, SYNAPSE} ModelType;
 
-  void readDevParams(const char* fname);
-  void readDetParams(const char* fname);
-  void readCptParams(const char* fname);
-  void readChanParams(const char* fname);
-  void readSynParams(const char* fname);
+  void readDevParams(const std::string& fname);
+  void readDetParams(const std::string& fname);
+  void readCptParams(const std::string& fname);
+  void readChanParams(const std::string& fname);
+  void readSynParams(const std::string& fname);
 
   bool SIParams() {return _SIParams;}
   bool compartmentVariables() {return _compartmentVariables;}
@@ -206,7 +206,7 @@ public:
   bool readChemicalSynapseCosts(FILE *fpF);
   //bool readChannelParams(FILE* fpF);
 
-  bool readModelParams(FILE* fpF, const char* id,
+  bool readModelParams(FILE* fpF, const std::string& id,
 		       std::map<std::string, unsigned long long>& masks,
 		       std::map<std::string, std::map<double, std::list<std::pair<std::string, float> > > >& paramsMap,
 		       std::map<std::string, std::map<double, std::list<std::pair<std::string, std::vector<float> > > > >& paramsArrayMap);

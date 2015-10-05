@@ -19,15 +19,15 @@
 #include <string>
 #include "ShallowArray.h"
 
-class WaypointGenerator
-{
- public:
+class WaypointGenerator {
+  public:
   WaypointGenerator() {}
-  virtual void next(ShallowArray<ShallowArray<double> >& waypointCoords, int nid)=0;
-  virtual void readWaypoints(char** fileNames, int nrNeurons)=0;
-  virtual void reset()=0;
+  virtual void next(ShallowArray<ShallowArray<double> >& waypointCoords,
+                    int nid) = 0;
+  virtual void readWaypoints(std::vector<std::string>& fileNames,
+                             int nrNeurons) = 0;
+  virtual void reset() = 0;
   virtual ~WaypointGenerator() {}
 };
 
 #endif
-

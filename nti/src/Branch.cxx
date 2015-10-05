@@ -42,7 +42,8 @@ Branch::Branch(Branch const & b)
     _rootSegment(b._rootSegment),
     _resampledTerminalIndex(b._resampledTerminalIndex)
 {
-  memcpy(_displacedTerminalCoords, b._displacedTerminalCoords, 3*sizeof(double));
+	//std::memcpy(_displacedTerminalCoords, b._displacedTerminalCoords, 3*sizeof(double));
+	std::copy(b._displacedTerminalCoords, b._displacedTerminalCoords+3, _displacedTerminalCoords);
 }
 
 Branch& Branch::operator=(const Branch& b)
@@ -57,7 +58,8 @@ Branch& Branch::operator=(const Branch& b)
   _neuron=b._neuron;
   _rootSegment=b._rootSegment;
   _resampledTerminalIndex=b._resampledTerminalIndex;
-  memcpy(_displacedTerminalCoords, b._displacedTerminalCoords, 3*sizeof(double));
+  //std::memcpy(_displacedTerminalCoords, b._displacedTerminalCoords, 3*sizeof(double));
+  std::copy(b._displacedTerminalCoords, b._displacedTerminalCoords+3, _displacedTerminalCoords);
   return *this;
 }
 

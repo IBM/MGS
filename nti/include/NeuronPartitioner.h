@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <string>
 
 class SegmentSpace;
 class TouchSpace;
@@ -31,14 +32,14 @@ class Tissue;
 
 class NeuronPartitioner : public Decomposition {
    public:
-  NeuronPartitioner(int rank, char* inputFilename, bool resample, bool dumpOutput,double pointSpacing);
+  NeuronPartitioner(int rank, const std::string& inputFilename, bool resample, bool dumpOutput,double pointSpacing);
   NeuronPartitioner(NeuronPartitioner&);
   virtual ~NeuronPartitioner();
   Decomposition* duplicate();
 
   void readFromFile(FILE*);
   void writeToFile(FILE*);
-  static void countAllNeurons(const char* inputFilename, int& totalNeurons, int& totalSegmentsRead, int* neuronsPerLayer, std::vector<int>& neuronSegments);
+  static void countAllNeurons(const std::string& inputFilename, int& totalNeurons, int& totalSegmentsRead, int* neuronsPerLayer, std::vector<int>& neuronSegments);
   void partitionBinaryNeurons(int& nSlicers, const int nTouchDetectors, Tissue* tissue);
   void partitionTextNeurons(int& nSlicers, const int nTouchDetectors, Tissue* tissue);
   int getNumberOfSlicers() {return _nSlicers;}
@@ -61,7 +62,9 @@ class NeuronPartitioner : public Decomposition {
 
  private:
 
-  char _inputFilename[256]; //input filename 
+  //TUAN: potential error if length > 256
+  // char _inputFilename[256]; //input filename  
+  std::string _inputFilename;
   int _nSlicers;
   int _size;//number of cpus
   int _rank;//current cpu

@@ -16,6 +16,7 @@
 #ifndef NeuroDevCommandLine_H
 #define NeuroDevCommandLine_H
 
+#include "NeuroDevParser.h"
 #include <vector>
 #include <string>
 
@@ -23,9 +24,10 @@ class NeuroDevCommandLine {
 
    public:
       NeuroDevCommandLine();
+      ~NeuroDevCommandLine() {}
       bool parse(int argc, char** argv);
       bool parse(const char*);
-      ~NeuroDevCommandLine() {}
+      bool parse(std::vector<std::string>& argv);
 
       std::string getInputFileName() {return _inputFileName;}
       std::string getOutputFileName() {return _outputFileName;}
@@ -52,6 +54,8 @@ class NeuroDevCommandLine {
       std::string getOutputFormat() {return _outputFormat;}
       long getSeed() {return _seed;}
       bool getCellBodyMigration() {return _cellBodyMigration;}
+   private:
+      void addOptions(NeuroDevParser& parser);
    private:
       std::string _inputFileName;
       std::string _outputFileName;

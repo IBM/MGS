@@ -183,12 +183,25 @@ realclean: clean
 	rm -f $(TARGETS) 
 
 #.SUFFIXES: .cxx .cpp .c .h .o
+# Include the C include dependencies
+-include $(OBJS:.o=.d)
 
-%.o : %.cxx
+CFLAGS  += -MMD
+
+
+%.o : %.cxx | $(OBJ_DIR)
 	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o $(OBJ_DIR)/$@
 
-%.o : %.C
+%.o : %.C  | $(OBJ_DIR)
 	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o ../gsl/utils/std/src $*.C
+
+%.cxx : | $(SRC_DIR)
+
+$(NG_OBJECTS): | $(OBJ_DIR)
+
+$(ND_OBJECTS): | $(OBJ_DIR)
+
+$(TD_OBJECTS): | $(OBJ_DIR)
 
 neuroGen: $(NG_OBJECTS)
 	mkdir -p $(BIN_DIR)
@@ -215,7 +228,7 @@ touchDetect: $(TD_OBJECTS)
 
 $(TISSUE_LIB): $(TISSUE_LIB_OBJECTS)
 		ar rcs $(TISSUE_LIB) \
-		$(patsubst %, %(OBJ_DIR)/%, $(TISSUE_LIB_OBJECTS))
+		$(patsubst %, $(OBJ_DIR)/%, $(TISSUE_LIB_OBJECTS))
 
 docs:
 

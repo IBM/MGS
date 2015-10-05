@@ -1,0 +1,57 @@
+#!/bin/bash
+## NOTE: This script is used to build GSL separately
+
+function contains() {
+local n=$#
+local value=${!n}
+for ((i=1;i < $#;i++)) {
+	if [ "${!i}" == "${value}"  ]; then
+		echo "y"
+		return 0
+	fi
+
+}
+echo "n"
+return 1
+
+}
+
+NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+list=("LINUX" "SMP" "BGL" "BGP" "BGQ")
+var=$( IFS=' | '; echo "${list[*]}"  )
+if [ "$#" -eq 0 ] || \
+	( [ "$#" -gt 0 ] && [ $(contains "${list[@]}" "$1") == "n" ] ); then
+	echo "SYNTAX: $0 <$var> [clean]"
+	echo "NOTE: choose one value inside < >"
+
+	exit;
+fi
+
+if [ "$2" == "clean" ] ; then
+	# Generate Makefile
+	echo "clean-up GSL"
+	make $2
+	if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib --rebuild;
+	elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib --rebuild;
+	elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib --rebuild;
+	elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib --rebuild;
+	elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib --rebuild;
+	fi
+elif [ "$2" == "gen" ]; then
+	echo "regenerate Makefile"
+	if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib ;
+	elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib ;
+	elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib ;
+	elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib ;
+	elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib ;
+	fi
+else
+	echo "build GSL"
+	if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
+	elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --domainLib;
+	elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
+	elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
+	elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
+	fi
+	make -j $NPROCS;
+fi

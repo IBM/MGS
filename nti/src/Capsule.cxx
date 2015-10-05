@@ -16,6 +16,7 @@
 #include "Capsule.h"
 #include "Segment.h"
 #include "VecPrim.h"
+#include <algorithm>
 
 SegmentDescriptor Capsule::_segmentDescriptor;
 
@@ -34,8 +35,9 @@ Capsule::~Capsule()
 
 Capsule::Capsule(Capsule const & c)
   : _branch(c._branch)
-{
-  memcpy(_capsuleData._data, c._capsuleData._data, N_CAP_DATA*sizeof(double));
+{ 
+    std::copy(c._capsuleData._data, c._capsuleData._data + N_CAP_DATA, _capsuleData._data);
+//  memcpy(_capsuleData._data, c._capsuleData._data, N_CAP_DATA*sizeof(double));
 }
 
 bool Capsule::operator<(const Capsule& c1) const

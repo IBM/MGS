@@ -16,6 +16,7 @@
 #include <mpi.h>
 #include "History.h"
 #include "string.h"
+#include <algorithm>
 
 History::History(FILE* hfile, int fid, int elementLength) :
   _history(0), _historyIter(0), _iterations(0), _iterationsIter(0), _iterationsEnd(0), 
@@ -40,7 +41,8 @@ void History::flush()
 void History::add(double* t, int iteration)
 {
   *_iterationsIter = iteration;
-  memcpy(_historyIter, t, sizeof(double)*_elementLength);
+  std::copy(t, t+ _elementLength, _historyIter);
+//  memcpy(_historyIter, t, sizeof(double)*_elementLength);
   ++_iterationsIter;
   _historyIter += _elementLength;
   if (_iterationsIter == _iterationsEnd) flush();

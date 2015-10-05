@@ -21,7 +21,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include <string.h>
+//#include <string.h>
 #include <string>
 #include <limits.h>
 
@@ -57,8 +57,8 @@ class Tissue
   Tissue(int size, int rank, bool logTranslationHistory=false, bool logRotationHistory=false);
   ~Tissue();
       
-  void loadBinary(FILE*, char*, const int, const int, const int startNeuron, NeuronPartitioner*, bool resample, bool dumpOutput, double pointSpacing);
-  void loadText(char*, const int, const int, const int, NeuronPartitioner*, bool resample, bool dumpOutput, double pointSpacing);
+  void loadBinary(FILE*, const std::string&, const int, const int, const int startNeuron, NeuronPartitioner*, bool resample, bool dumpOutput, double pointSpacing);
+  void loadText(const std::string&, const int, const int, const int, NeuronPartitioner*, bool resample, bool dumpOutput, double pointSpacing);
   void setPartitioner(NeuronPartitioner* neuronPartitioner) {_neuronPartitioner=neuronPartitioner;}
   void resampleNeurons(const int neuronArraySize, std::vector<Segment>& segments, double pointSpacing);
   void resetBranchRoots(const int neuronArraySize, std::vector<Segment>& segments);
@@ -131,7 +131,8 @@ class Tissue
   double _maxXYZ[3], _minXYZ[3], _columnSizeXYZ[3], _binwidth[3];
   int _nbinsXYZ[3], _nbinsMaxXYZ[3], *_histogramXYZ[3], *_localHistogramXYZ[3];
 
-  char _inFilename[256];
+  //char _inFilename[256];
+  std::string _inFilename;
   int _nspheresAllocated;
   std::vector<std::string> _neuronOutputFilenames;
   SegmentDescriptor _segmentDescriptor;

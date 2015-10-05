@@ -647,12 +647,14 @@ class BuildSetup:
             os.system("mv -f framework/networks/include/pthread.h framework/networks/include/pthread.h.bak > /dev/null 2>&1")
 
         if self.options.rebuild == True:
-            print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
-            os.system(CLEAN_SCRIPT)
+            #print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
+            #os.system(CLEAN_SCRIPT)
+            os.system("make LINUX clean")
 
         createConfigHeader()
         touchExtensionsMk()
 
+        #self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
         if self.options.rebuild == True:
@@ -743,8 +745,15 @@ class BuildSetup:
 # This is a code generated file, generated using configure.py
 # To change any options please rerun ./configure.py with the desired options.
 # To build the project execute make -j <number of processes>
+.DEFAULT_GOAL:= final 
 
-default: all
+BIN_DIR?=./bin
+EXE_FILE=gslparser
+
+NTI_DIR=../nti
+
+BISON=$(shell which bison)
+FLEX=$(shell which flex)
 
 LENSROOT = $(shell pwd)
 OPERATING_SYSTEM = $(shell uname)
@@ -752,30 +761,29 @@ OPERATING_SYSTEM = $(shell uname)
 SCRIPTS_DIR := scripts
 DX_DIR := dx
 SO_DIR := $(LENSROOT)/so
-BIN_DIR := bin
 PARSER_PATH := framework/parser
 PARSER_GENERATED := $(PARSER_PATH)/generated
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
-DCA_OBJ := framework/dca/obj
-DCA_SRC := framework/dca/src
+"""
+#DCA_OBJ := framework/dca/obj
+#DCA_SRC := framework/dca/src
 
 # Each module adds to these initial empty definitions
-SRC :=
-OBJS :=
-SHARED_OBJECTS :=
-BASE_OBJECTS :=
-DEF_SYMBOLS := $(SO_DIR)/main.def
-UNDEF_SYMBOLS :=
+#SRC :=
+#OBJS :=
+#SHARED_OBJECTS :=
+#BASE_OBJECTS :=
+#DEF_SYMBOLS := $(SO_DIR)/main.def
+#UNDEF_SYMBOLS :=
+#
+## EXTENSION_OBJECTS is the generated modules that must be linked in statically
+#EXTENSION_OBJECTS :=
+#
+## GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
+#GENERATED_DL_OBJECTS :=
 
-# EXTENSION_OBJECTS is the generated modules that must be linked in statically
-EXTENSION_OBJECTS :=
-
-# GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
-GENERATED_DL_OBJECTS :=
-
-"""
         # BlueGene MPI flags
         if self.options.blueGeneL == True:
             retStr += \
@@ -825,6 +833,13 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
     def getModuleDefinitions(self):
         retStr = \
 """\
+####################################################################
+# Name of all submodules we want to build
+# 1. modules from the GSL frameworks
+# 2. modules from the extension (i.e. user-defined)
+#
+# part 1 --> which include framework/...
+#               utils/...
 FRAMEWORK_MODULES := dca \\
 		dataitems \\
 		factories \\
@@ -897,8 +912,12 @@ FUNCTOR_MODULES := BinomialDist \\
 	TissueProbeFunctor \\
         UniformDiscreteDist \\
 
+# part 2 --> extension/...
+# this files list all the modules we want to build
+# so that we don't have to modify this Makefile
 include Extensions.mk
 
+## hold the relative path to all extension subfolders
 EXTENSION_MODULES += $(patsubst %,constant/%,$(CONSTANT_MODULES))
 EXTENSION_MODULES += $(patsubst %,edge/%,$(EDGE_MODULES))
 EXTENSION_MODULES += $(patsubst %,functor/%,$(FUNCTOR_MODULES))
@@ -914,10 +933,38 @@ SPECIAL_EXTENSION_MODULES := $(patsubst %,extensions/%,$(SPECIAL_EXTENSION_MODUL
 
 MODULES := $(BASE_MODULES)
 MODULES += $(EXTENSION_MODULES)
-MODULES := $(patsubst %,%,$(MODULES))
 
-MODULE_MKS = $(patsubst %,%/module.mk,$(MODULES)) 
+SOURCES_DIRS := $(patsubst %,%/src, $(MODULES))
+MYSOURCES := $(foreach dir,$(SOURCES_DIRS),$(wildcard $(dir)/*.C))
 
+#IMPORTANT: If you want to ignore some files
+#           add them here (just source file names)
+MYSOURCES := $(filter-out %MatrixParser.C %ReadImage.C %Ini.C %Img.C %Matrx.C %ImgUtil.C %Wbuf.C %Lzwbuf.C %Pal.C %Bitbuf.C , $(MYSOURCES))
+HEADERS_DIRS := $(patsubst %,%/include, $(MODULES))
+
+MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
+	       echo $${file} ; \\
+	       done)
+PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
+
+NTI_OBJS := $(foreach dir,$(NTI_DIR),$(wildcard $(dir)/*.o))
+TEMP := $(filter-out $(NTI_DIR)/neuroGen.o $(NTI_DIR)/neuroDev.o $(NTI_DIR)/touchDetect.o, $(NTI_OBJS))
+NTI_OBJS := $(TEMP)
+
+COMMON_DIR := ../common/obj
+COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
+
+OBJS_DIR := obj
+OBJS := $(patsubst %, $(OBJS_DIR)/%, $(PURE_OBJS))
+
+vpath %.C $(SOURCES_DIRS)
+vpath %.c $(SOURCES_DIRS)
+vpath %.h $(HEADERS_DIRS) framework/parser/generated
+
+$(OBJS) : | $(OBJS_DIR)
+
+$(OBJS_DIR): 
+	mkdir $(OBJS_DIR)
 """
         return retStr
 
@@ -941,10 +988,13 @@ MODULE_MKS = $(patsubst %,%/module.mk,$(MODULES))
     def getCFlags(self):
         retStr = \
 """\
-CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
-$(patsubst %,-I%/generated,$(PARSER_PATH)) \
-$(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
+CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -O3 -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+CFLAGS += -I../common/include -MMD \
 """
+##CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
+#$(patsubst %,-I%/generated,$(PARSER_PATH)) \
+#$(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
+#"""
 
         if self.options.compiler == "gcc":
             if self.options.withMpi == True:
@@ -1030,8 +1080,8 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
     def getLensLibs(self):
         retStr = "LENS_LIBS := "	
 	if self.options.domainLibrary == True :
-            retStr += "lib/liblensdomain.a "
-	retStr += "lib/liblens.a\n"
+            #retStr += "lib/liblensdomain.a "
+		retStr += "lib/liblens.a\n"
         return retStr
 
     def getLibs(self):
@@ -1151,26 +1201,26 @@ DX_INCLUDE := framework/dca/include
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
 
-        retStr += \
-"""\
-FILES_EDGESETSUBSCRIBERSOCKET = $(DCA_OBJ)/edgeSetOutboard.o $(DCA_OBJ)/EdgeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
-FILES_NODESETSUBSCRIBERSOCKET = $(DCA_OBJ)/nodeSetOutboard.o $(DCA_OBJ)/NodeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
-
-$(DCA_OBJ)/edgeSetOutboard.o: $(DCA_SRC)/outboard.c
-	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_EdgeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/edgeSetOutboard.o
-
-$(DCA_OBJ)/nodeSetOutboard.o: $(DCA_SRC)/outboard.c
-	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_NodeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/nodeSetOutboard.o
-
-$(DX_DIR)/EdgeSetSubscriberSocket: $(DCA_OBJ)/edgeSetOutboard.o $(DCA_SRC)/EdgeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
-	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/EdgeSetSubscriberSocket.c -o $(DCA_OBJ)/EdgeSetSubscriberSocket.o
-	$(C_COMP) $(FILES_EDGESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/EdgeSetSubscriberSocket;
-
-$(DX_DIR)/NodeSetSubscriberSocket: $(DCA_OBJ)/nodeSetOutboard.o $(DCA_SRC)/NodeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
-	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/NodeSetSubscriberSocket.c -o $(DCA_OBJ)/NodeSetSubscriberSocket.o
-	$(C_COMP) $(FILES_NODESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/NodeSetSubscriberSocket;
-
-"""
+#        retStr += \
+#"""\
+#FILES_EDGESETSUBSCRIBERSOCKET = $(DCA_OBJ)/edgeSetOutboard.o $(DCA_OBJ)/EdgeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
+#FILES_NODESETSUBSCRIBERSOCKET = $(DCA_OBJ)/nodeSetOutboard.o $(DCA_OBJ)/NodeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
+#
+#$(DCA_OBJ)/edgeSetOutboard.o: $(DCA_SRC)/outboard.c
+#	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_EdgeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/edgeSetOutboard.o
+#
+#$(DCA_OBJ)/nodeSetOutboard.o: $(DCA_SRC)/outboard.c
+#	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_NodeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/nodeSetOutboard.o
+#
+#$(DX_DIR)/EdgeSetSubscriberSocket: $(DCA_OBJ)/edgeSetOutboard.o $(DCA_SRC)/EdgeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
+#	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/EdgeSetSubscriberSocket.c -o $(DCA_OBJ)/EdgeSetSubscriberSocket.o
+#	$(C_COMP) $(FILES_EDGESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/EdgeSetSubscriberSocket;
+#
+#$(DX_DIR)/NodeSetSubscriberSocket: $(DCA_OBJ)/nodeSetOutboard.o $(DCA_SRC)/NodeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
+#	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/NodeSetSubscriberSocket.c -o $(DCA_OBJ)/NodeSetSubscriberSocket.o
+#	$(C_COMP) $(FILES_NODESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/NodeSetSubscriberSocket;
+#
+#"""
         return retStr
 
     def getSuffixRules(self):
@@ -1180,15 +1230,17 @@ $(DX_DIR)/NodeSetSubscriberSocket: $(DCA_OBJ)/nodeSetOutboard.o $(DCA_SRC)/NodeS
 .SUFFIXES:
 
 # Our Suffix rules
-%.d: 
-	@$(SCRIPTS_DIR)/depend.sh $(subst /obj,,${@D}) ${*F} $(CFLAGS) > $@
+#%.d: 
+#	@$(SCRIPTS_DIR)/depend.sh $(subst /obj,,${@D}) ${*F} $(CFLAGS) > $@
 
-.C:
-	true	
+#.C:
+#	true	
 
-.h:
-	true
+#.h:
+#	true
 
+$(OBJS_DIR)/%.o : %.C
+	$(CC) $(CFLAGS) $(OBJECTONLYFLAGS) -c $< -o $@
 """
         return retStr
 
@@ -1212,10 +1264,10 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 """\
 # Include the description of each module. 
 # This will be in the root/project, where root is the root subdir (E.g. dir1)
-include $(patsubst %,%/module.mk,$(MODULES))
+#include $(patsubst %,%/module.mk,$(MODULES))
 
 # Include the C include dependencies
-include $(OBJS:.o=.d)
+-include $(OBJS:.o=.d)
 
 """
         return retStr
@@ -1231,15 +1283,15 @@ include $(OBJS:.o=.d)
 
 # Parser targets
 speclang.tab.h:
-	cd framework/parser/bison; """ + self.bisonBin + """ -v -d speclang.y; \\
+	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
 	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-	cd framework/parser/bison; """ + self.bisonBin + """ -v -d speclang.y; \\
+	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
 	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
-framework/parser/generated/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-	$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
+	$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
 
 """
 
@@ -1252,7 +1304,7 @@ framework/parser/generated/speclang.tab.o: framework/parser/generated/speclang.t
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-	""" + self.flexBin + """ -+ framework/parser/flex/speclang.l
+	$(FLEX) -+ framework/parser/flex/speclang.l
 	sed 's/class istream;/#include <FlexFixer.h>/' \
            lex.yy.cc > lex.yy.cc.edited
 	mv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
@@ -1269,19 +1321,21 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
 
         retStr += \
 """
-framework/parser/generated/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-	$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
+	$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
 """
         retStr += "\n"
         return retStr
 
     def getAllTarget(self):
-        retStr = "all: $(BASE_OBJECTS) $(LENS_LIBS_EXT) bin/gslparser $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
+        #retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
+        retStr = "final: speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
         if self.options.dynamicLoading == True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) -o bin/gslparser"
         return retStr
 
     def getDependfileTarget(self):
@@ -1333,7 +1387,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         return retStr
 
     def getLensparserTarget(self):
-        retStr = "bin/gslparser: "
+        retStr = "$(BIN_DIR)/$(EXE_FILE): "
 
         if self.operatingSystem == "AIX":
             retStr += LENSPARSER_TARGETS
@@ -1363,25 +1417,25 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             retStr += "$(XLINKER)"
 	if self.options.profile == USE :
 	    retStr += PROFILING_FLAGS
-        retStr += " -o bin/gslparser\n"
+        retStr += " -o $(BIN_DIR)/$(EXE_FILE)\n"
         return retStr        
 
     def getSocketTarget(self):
-        retStr = "$(DCA_OBJ)/socket.o: "
+        retStr = "socket.o: "
 
         if self.dx.exists == True:
-            retStr += "$(DCA_SRC)/socket.c\n"
+            retStr += "socket.c\n"
         else:
-            retStr += "$(DCA_SRC)/fakesocket.c\n"
+            retStr += "fakesocket.c\n"
 
         retStr += "\t$(C_COMP)"
         if self.objectMode == "64":
             retStr += " $(MAKE64)"
         if self.dx.exists == True:
-            retStr += " $(DX_CFLAGS) -c $(DCA_SRC)/socket.c"
+            retStr += " $(DX_CFLAGS) -c $< "
         else:
-            retStr += " -c $(DCA_SRC)/fakesocket.c"
-        retStr += " -o $@\n"
+            retStr += " -c $<"
+        retStr += " -o $(OBJS_DIR)/$@\n"
         return retStr        
 
     def getCleanTarget(self):
@@ -1389,27 +1443,28 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
 """\
 .PHONY: clean
 clean:
-	- find . -name "*\.o" -exec /bin/rm {} \;
-	- find . -name "*\.so" -exec /bin/rm {} \;
-	- find . -name "*\.d" -exec /bin/rm {} \;
-	- find . -name "*\.ld" -exec /bin/rm {} \;
-	- find . -name "*\.yd" -exec /bin/rm {} \;
-	- find . -name "*\.ad" -exec /bin/rm {} \;
-	- find . -name "*\.def" -exec /bin/rm {} \;
-	- find . -name "*\.undef" -exec /bin/rm {} \;
-	- rm dx/EdgeSetSubscriberSocket
-	- rm dx/NodeSetSubscriberSocket
-	- rm bin/gslparser
-	- rm bin/createDF
-	- rm lib/liblens.a
-	- rm lib/liblensext.a
-	- rm $(SO_DIR)/Dependfile
-	- rm framework/parser/bison/speclang.output
-	- rm framework/parser/generated/lex.yy.C
-	- rm framework/parser/generated/lex.yy.C
-	- rm framework/parser/generated/speclang.tab.C
-	- rm framework/parser/generated/speclang.tab.h
+	-rm -f dx/EdgeSetSubscriberSocket
+	-rm -f dx/NodeSetSubscriberSocket
+	-rm -f $(BIN_DIR)/$(EXE_FILE)
+	-rm -f bin/createDF
+	-rm -f lib/liblens.a
+	-rm -f lib/liblensext.a
+	-rm -f $(SO_DIR)/Dependfile
+	-rm -f framework/parser/bison/speclang.output
+	-rm -f framework/parser/generated/lex.yy.C
+	-rm -f framework/parser/generated/lex.yy.C
+	-rm -f framework/parser/generated/speclang.tab.C
+	-rm -f framework/parser/generated/speclang.tab.h
+	-rm -f $(OBJS_DIR)/*
 """
+#	-find . -name "*\.o" -exec /bin/rm {} \;
+#	-find . -name "*\.so" -exec /bin/rm {} \;
+#	-find . -name "*\.d" -exec /bin/rm {} \;
+#	-find . -name "*\.ld" -exec /bin/rm {} \;
+#	-find . -name "*\.yd" -exec /bin/rm {} \;
+#	-find . -name "*\.ad" -exec /bin/rm {} \;
+#	-find . -name "*\.def" -exec /bin/rm {} \;
+#	-find . -name "*\.undef" -exec /bin/rm {} \;
         return retStr        
 
        
