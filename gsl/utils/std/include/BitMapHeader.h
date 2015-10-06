@@ -8,6 +8,8 @@
 #define INFOHEADER_SIZE 40
 #define PALETTE_SIZE 1024
 
+#define FILEHEADER_ID_LENGTH 2
+
 class BitMapHeader 
 
 {
