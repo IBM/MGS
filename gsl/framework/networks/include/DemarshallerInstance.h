@@ -63,7 +63,9 @@ public:
        if (!done()) {
           int bytesRemaining = sizeof(T) - _offset;
           int toTransfer = (bytesRemaining<size)?bytesRemaining:size;
-          memcpy(_destination+_offset, buffer, toTransfer);
+          //memcpy(_destination+_offset, buffer, toTransfer);
+		  //TUAN updated
+		  std::copy(buffer, buffer+toTransfer, _destination+_offset);
 	  _offset += toTransfer;
           retval = size - toTransfer;
        }
