@@ -19,45 +19,41 @@
 
 #include "OutputBuffer.h"
 #include "StreamConstants.h"
-#include <string>
+//#include <cstring>
+#include <algorithm>
 #include <iostream>
-#include <cstring>
 
-class OutputStream
-{
-   public:      
-      OutputStream()  {}
-      OutputStream(char* buffer) : _buffer(buffer), _bufferPtr(buffer)  {}
-      virtual ~OutputStream() {}
+class OutputStream {
+  public:
+  OutputStream() {}
+  OutputStream(char* buffer) : _buffer(buffer), _bufferPtr(buffer) {}
+  virtual ~OutputStream() {}
 
-      template<typename T>
-      OutputStream& operator<<(T& data) {
-	write((const char*) &data, sizeof(T)); 
-	return *this;
-      }
-      
-      OutputStream& operator<<(std::string& data) {
-	int size = data.size();
-	write((const char*) &size, sizeof(int)); 
-	write(data.c_str(), size);
-	return *this;
-      }
-      
-      virtual void reset() {
-	_bufferPtr=_buffer;
-      }
-      
+  template <typename T>
+  OutputStream& operator<<(T& data) {
+    write((const char*)&data, sizeof(T));
+    return *this;
+  }
 
-   protected:      
+  OutputStream& operator<<(std::string& data) {
+    int size = data.size();
+    write((const char*)&size, sizeof(int));
+    write(data.c_str(), size);
+    return *this;
+  }
 
-      virtual inline void write(const char* data, int size) {
-	memcpy(_bufferPtr, data, size);
-	_bufferPtr+=size;
-      }
+  virtual void reset() { _bufferPtr = _buffer; }
 
-   private:
-      char* _buffer;
-      char* _bufferPtr;
+  protected:
+  virtual inline void write(const char* data, int size) {
+    // std::memcpy(_bufferPtr, data, size);
+    std::copy(data, data + size, _bufferPtr);
+    _bufferPtr += size;
+  }
+
+  private:
+  char* _buffer;
+  char* _bufferPtr;
 };
 
 #endif
