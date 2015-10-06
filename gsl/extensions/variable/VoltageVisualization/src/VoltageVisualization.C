@@ -19,6 +19,7 @@
 #include "CG_VoltageVisualization.h"
 #include "NeuronPartitioner.h"
 
+#include <cstring>
 #include <cmath>
 #include <memory>
 #include <algorithm>
