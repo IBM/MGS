@@ -15,9 +15,6 @@
 
 #include "ConnectorFunctor.h"
 
-const char * ConnectorFunctor::_category = "CONNECTOR";
+const std::string ConnectorFunctor::_category = "CONNECTOR";
 
-const char * ConnectorFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& ConnectorFunctor::getCategory() const { return _category; }

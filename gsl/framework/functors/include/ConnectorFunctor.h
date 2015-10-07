@@ -18,10 +18,9 @@
 #include "Copyright.h"
 
 #include "Functor.h"
-class ConnectorFunctor : public Functor
-{
-   public:
-      const char * getCategory();
-      static const char* _category;
+class ConnectorFunctor : public Functor {
+  public:
+  const std::string& getCategory() const;
+  static const std::string _category;
 };
 #endif

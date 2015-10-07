@@ -15,9 +15,8 @@
 
 #include "NodeInitializerFunctor.h"
 
-const char * NodeInitializerFunctor::_category = "NODEINITIALIZER";
+const std::string NodeInitializerFunctor::_category = "NODEINITIALIZER";
 
-const char * NodeInitializerFunctor::getCategory()
-{
-   return _category;
+const std::string& NodeInitializerFunctor::getCategory() const {
+  return _category;
 }
