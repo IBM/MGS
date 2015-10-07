@@ -24,6 +24,7 @@ CFLAGS := -Iinclude -Iparser
 ADDCFLAGS :=
 CFLAGS += $(ADDCFLAGS)
 
+
 OPERATING_SYSTEM = $(shell uname)
 
 # Can add extra system libraries later if needed

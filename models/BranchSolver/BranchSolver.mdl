@@ -1,7 +1,7 @@
 #ifndef BranchSolver_MDL
 #define BranchSolver_MDL
 
-#include "../../nti/MaxComputeOrder.h"
+#include "../../nti/include/MaxComputeOrder.h"
 
 #include "../std/std.mdl"
 

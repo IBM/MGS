@@ -98,7 +98,7 @@ NG_SHARED_SOURCES = CompositeSwc.cxx \
 
 NG_UNSHARED_SOURCES = neuroGen.cxx \
 
-NG_SOURCES = Neurogenesis.cxx\
+NG_SOURCES = Neurogenesis.cxx \
 NeurogenParams.cxx \
 NeurogenSegment.cxx \
 NeurogenBranch.cxx \
@@ -159,18 +159,23 @@ TissueContext.cxx \
 
 TISSUE_LIB_SOURCES = CompartmentKey.cxx \
 
-ND_SHARED_OBJECTS = ${ND_SHARED_SOURCES:.cxx=.o}
-NG_SHARED_OBJECTS = ${NG_SHARED_SOURCES:.cxx=.o}
-NG_OBJECTS = $(NG_SHARED_OBJECTS) ${NG_UNSHARED_SOURCES:.cxx=.o} ${NG_SOURCES:.cxx=.o}
-ND_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) ${ND_UNSHARED_SOURCES:.cxx=.o} ${ND_SOURCES:.cxx=.o}
-TD_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) ${TD_UNSHARED_SOURCES:.cxx=.o} ${TD_SOURCES:.cxx=.o}
-TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) ${NG_SOURCES:.cxx=.o} ${ND_SOURCES:.cxx=.o} ${TD_SOURCES:.cxx=.o} ${TISSUE_LIB_SOURCES:.cxx=.o}
+ND_SHARED_OBJECTS = $(patsubst %, $(OBJ_DIR)/%, ${ND_SHARED_SOURCES:.cxx=.o})
+
+NG_SHARED_OBJECTS = $(patsubst %, $(OBJ_DIR)/%, ${NG_SHARED_SOURCES:.cxx=.o})
+
+NG_OBJECTS = $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%,${NG_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${NG_SOURCES:.cxx=.o})
+
+ND_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${ND_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${ND_SOURCES:.cxx=.o})
+
+TD_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${TD_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o})
+
+TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${NG_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${ND_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TISSUE_LIB_SOURCES:.cxx=.o})
 
 TISSUE_LIB = ../gsl/lib/liblensdomain.a
 #TISSUE_LIB = ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 
-all: $(TARGETS)
+target: $(TARGETS)
 
 depend: ; makedepend $(ND_SOURCES)
 
@@ -191,8 +196,8 @@ CFLAGS  += -MMD
 $(OBJ_DIR): 
 	mkdir -p $(OBJ_DIR)
 
-%.o : %.cxx | $(OBJ_DIR)
-	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o $(OBJ_DIR)/$@
+$(OBJ_DIR)/%.o : %.cxx | $(OBJ_DIR)
+	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o $@
 
 %.o : %.C  | $(OBJ_DIR)
 	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o ../gsl/utils/std/src $*.C
@@ -208,14 +213,14 @@ $(TD_OBJECTS): | $(OBJ_DIR)
 neuroGen: $(NG_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroGen $(OPT) \
-		$(patsubst %, $(OBJ_DIR)/%, $(NG_OBJECTS)) \
+		$(NG_OBJECTS) \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 neuroDev: $(ND_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroDev $(OPT) \
-		$(patsubst %, $(OBJ_DIR)/%, $(ND_OBJECTS)) \
+		$(ND_OBJECTS) \
 		../common/obj/StringUtils.o \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
@@ -223,14 +228,14 @@ neuroDev: $(ND_OBJECTS)
 touchDetect: $(TD_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/touchDetect $(OPT) \
-		$(patsubst %, $(OBJ_DIR)/%, $(TD_OBJECTS)) \
+		$(TD_OBJECTS) \
 		../common/obj/StringUtils.o \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 $(TISSUE_LIB): $(TISSUE_LIB_OBJECTS)
 		ar rcs $(TISSUE_LIB) \
-		$(patsubst %, $(OBJ_DIR)/%, $(TISSUE_LIB_OBJECTS))
+		$(TISSUE_LIB_OBJECTS)
 
 docs:
 

@@ -1242,9 +1242,6 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-	$(CC) $(CFLAGS) $(OBJECTONLYFLAGS) -c $< -o $@
-
-$(OBJS_DIR)/TissueFunctor.o : TissueFunctor.C
 	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< -o $@
 """
         return retStr

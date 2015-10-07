@@ -1,7 +1,7 @@
 #ifndef HodgkinHuxleyVoltage_MDL
 #define HodgkinHuxleyVoltage_MDL
 
-#include "../../nti/MaxComputeOrder.h"
+#include "../../nti/include/MaxComputeOrder.h"
 
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"

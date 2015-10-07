@@ -8,8 +8,14 @@ NTSROOT=`pwd`
 LENSROOT=$NTSROOT/gsl
 MDLROOT=$NTSROOT/mdl
 
-NPROCS=$((`cat /proc/cpuinfo | grep processor | awk 'END{ gsub(/"/,""); print $NF }'`+1))
+#NPROCS=$((`cat /proc/cpuinfo | grep processor | awk 'END{ gsub(/"/,""); print $NF }'`+1))
+NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 
+### Check required tools ###
+## 1. MPI library
+## 2. Bison
+## 3. Flex
+## 4. Python
 if [ "$1" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then 
     echo mpi found...; else echo mpi not found!; exit; fi
@@ -78,29 +84,56 @@ fi
 if which python | grep -q1 /\python; then 
     echo python found...; else echo python not found!; exit; fi
 
+
+
+### MDL code ###
 cd $MDLROOT
 
 if [ "$1" == "LINUX" ]; then 
-touch mdl.make.mark
-if [ "$2" == "-clean" ]; then
-make clean;
+    touch mdl.make.mark
+    if [ "$2" == "-clean" ]; then
+        make clean;
+    fi
+    make -j $NPROCS
+    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
+        rm mdl.make.mark
+        cd $NTSROOT
+        echo mdl make failed!;
+        exit; 
+    fi
+    if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
+        cd $NTSROOT
+        find . -name *.mdf -exec touch '{}' \;
+        cd $MDLROOT
+    fi
+    rm -f mdl.make.mark
+fi
+cd $NTSROOT
+
+### COMMON code ###
+cd $NTSROOT/common
+sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+fi
+if [ "$2" == "-clean" ] ; then
+    make realclean;
 fi
 make -j $NPROCS
-if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
-    rm mdl.make.mark
-    cd $NTSROOT
-    echo mdl make failed!;
-    exit; 
-fi
-if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
-    cd $NTSROOT
-    find . -name *.mdf -exec touch '{}' \;
-    cd $MDLROOT
-fi
-rm -f mdl.make.mark
-fi
-
+#if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+#    cd $NTSROOT
+#    echo nti make failed!;
+#    exit; 
+#fi
+echo "Complete build MDL code"
 cd $NTSROOT
+
+
+
+### NTI code ###
 
 cd $NTSROOT/nti
 if [ "$2" == "-MCO" ]; then
@@ -123,7 +156,9 @@ if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then
     exit; 
 fi
 cd $NTSROOT
+echo "Complete build NTI code"
 
+### GSL code ###
 cd $LENSROOT/extensions/variable
 ./define variables.mdf
 cd $LENSROOT/extensions/struct
@@ -136,24 +171,16 @@ cd $NTSROOT
 
 cd $LENSROOT
 if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
-   if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib --rebuild;
-   elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib --rebuild;
-   elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib --rebuild;
-   elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib --rebuild;
-   elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib --rebuild;
-   fi
+    chmod +x ./build_gsl
+    ./build_gsl -clean
 else
-   if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
-   elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --domainLib;
-   elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
-   elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
-   elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
-   fi
-   make -j $NPROCS;
+    chmod +x ./build_gsl
+    ./build_gsl $1
 fi
 
+cd $NTSROOT
+
 if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
-    cd $NTSROOT
     echo gsl make failed!;
     exit; 
 else
@@ -168,4 +195,3 @@ To run the test tissue simulation :
   5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n" 
 fi
 
-cd $NTSROOT

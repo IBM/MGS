@@ -35,3 +35,7 @@ tags
 tmhoangt@*
 *.zip
 core
+*.sig
+*.std
+*.ASC
+*.DAT
