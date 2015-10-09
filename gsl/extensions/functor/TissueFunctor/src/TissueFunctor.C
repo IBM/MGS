@@ -237,6 +237,43 @@ void TissueFunctor::userInitialize(
   connectorFunctor->duplicate(_connectorFunctor);
   probeFunctor->duplicate(_probeFunctor);
 
+  //Validate inputs
+  {
+    TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
+    if (element == 0) {
+      std::cerr << "Functor passed to TissueFunctor as argument 4 is not a "
+                   "TissueElement!" << std::endl;
+      exit(-1);
+    }
+  }
+  {
+    TissueElement* element =
+        dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
+    if (element == 0) {
+      std::cerr << "Functor passed to TissueFunctor as argument 5 is not a "
+                   "TissueElement!" << std::endl;
+      exit(-1);
+    }
+  }
+  {
+    TissueElement* element =
+        dynamic_cast<TissueElement*>(_connectorFunctor.get());
+    if (element == 0) {
+      std::cerr << "Functor passed to TissueFunctor as argument 6 is not a "
+                   "TissueElement!" << std::endl;
+      exit(-1);
+    }
+  }
+  {
+    TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
+    if (element == 0) {
+      std::cerr << "Functor passed to TissueFunctor as argument 7 is not a "
+                   "TissueElement!" << std::endl;
+      exit(-1);
+    }
+  }
+
+
 #ifdef HAVE_MPI
   String command = "NULL ";
   command += commandLineArgs1;
@@ -1426,40 +1463,20 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 
   if (tissueElement == "Layout") {
     TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
-    if (element == 0) {
-      std::cerr << "Functor passed to TissueFunctor as argument 4 is not a "
-                   "TissueElement!" << std::endl;
-      exit(-1);
-    }
     element->setTissueFunctor(this);
     _layoutFunctor->duplicate(rval);
   } else if (tissueElement == "NodeInit") {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
-    if (element == 0) {
-      std::cerr << "Functor passed to TissueFunctor as argument 5 is not a "
-                   "TissueElement!" << std::endl;
-      exit(-1);
-    }
     element->setTissueFunctor(this);
     _nodeInitFunctor->duplicate(rval);
   } else if (tissueElement == "Connector") {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_connectorFunctor.get());
-    if (element == 0) {
-      std::cerr << "Functor passed to TissueFunctor as argument 6 is not a "
-                   "TissueElement!" << std::endl;
-      exit(-1);
-    }
     element->setTissueFunctor(this);
     _connectorFunctor->duplicate(rval);
   } else if (tissueElement == "Probe") {
     TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
-    if (element == 0) {
-      std::cerr << "Functor passed to TissueFunctor as argument 7 is not a "
-                   "TissueElement!" << std::endl;
-      exit(-1);
-    }
     element->setTissueFunctor(this);
     _probeFunctor->duplicate(rval);
   } else if (tissueElement == "Connect") {
