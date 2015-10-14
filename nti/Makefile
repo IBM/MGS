@@ -10,7 +10,7 @@ vpath %.cxx $(SRC_DIR)
 
 FOR_BLUEGENE_P=0
 FOR_BLUEGENE_L=0
-FOR_BLUEGENE_Q=0
+FOR_BLUEGENE_Q=1
 FOR_AIX=0
 A2AW=0
 
@@ -76,9 +76,10 @@ CXX=mpiCC
 LD=mpiCC
 #LDFLAGS = -L$(CVC)/lib/CVC
 #EXTRA_LD = -lcvcmc -lcvct
-CFLAGS = $(A2A)  -I$(HEADER_DIR) #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
+CFLAGS = $(A2A)  #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
 #CFLAGS = -DUSING_BLUEGENE -I$(CVC)/include/CVC -DVERBOSE
 #CVCSRC = cvc.cxx
+CFLAGS  += -MMD
 
 endif
 
@@ -87,6 +88,8 @@ endif
 endif
 
 endif
+
+CFLAGS += -I$(HEADER_DIR) 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
 OPT=-O3
@@ -191,7 +194,6 @@ realclean: clean
 # Include the C include dependencies
 -include $(OBJS:.o=.d)
 
-CFLAGS  += -MMD
 
 $(OBJ_DIR): 
 	mkdir -p $(OBJ_DIR)
