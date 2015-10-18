@@ -6,5 +6,4 @@ source defineModels2.sh;
 touch $1;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
-if grep include $1; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
 touch define;
