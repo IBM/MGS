@@ -873,6 +873,7 @@ FUNCTOR_MODULES := BinomialDist \\
 	DstRefSumRsqrdInvWeightModifier \\
 	DstScaledContractedGaussianWeightModifier \\
 	DstScaledGaussianWeightModifier \\
+	GetNodeCoordFunctor \\
 	IsoSampler \\
         ModifyParameterSet \\
         NameReturnValue \\
