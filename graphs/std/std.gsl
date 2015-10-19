@@ -25,6 +25,7 @@ Layout OpenCircleLayout(int nPos); // Functor provides circle of 1 densities amo
 
 
 Functor Gaussian(float mean,float stddev); // provide float from distribution upon execute
+Functor UniformDist(float min,float max); // provide float from distribution upon execute
 
 // RangePassThru calls a functor and returns the float if it satisfies the predicate
 Functor RangePassThru(float value1, string op1, Functor testvalue, string op2, float value3);

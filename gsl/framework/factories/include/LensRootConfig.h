@@ -1,3 +1,3 @@
 #include <string>
 
-const std::string LENSROOT = "/home/kozloski/nts/gsl";
+const std::string LENSROOT = "/gpfs/DDNgpfs1/kozloski/nts/gsl";
