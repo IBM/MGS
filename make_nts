@@ -146,7 +146,7 @@ cd $NTSROOT
 cd $LENSROOT
 if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
     chmod +x ./build_gsl
-    ./build_gsl -clean
+    ./build_gsl $1 -clean
 else
     chmod +x ./build_gsl
     ./build_gsl $1
