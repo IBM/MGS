@@ -18,8 +18,8 @@
 
 #include "Lens.h"
 #include "CG_CaConcentration.h"
-#include "../../../../../nti/SegmentDescriptor.h"
-#include "../../../../../nti/MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
+#include "MaxComputeOrder.h"
 
 #include "rndm.h"
 

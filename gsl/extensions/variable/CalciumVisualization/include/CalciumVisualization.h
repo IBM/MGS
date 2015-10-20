@@ -19,8 +19,8 @@
 #include <mpi.h>
 #include "Lens.h"
 #include "CG_CalciumVisualization.h"
-#include "../../../../../nti/SegmentDescriptor.h"
-#include "../../../../../nti/CompartmentKey.h"
+#include "SegmentDescriptor.h"
+#include "CompartmentKey.h"
 #include <map>
 #include <list>
 #include <memory>

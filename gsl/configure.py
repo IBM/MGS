@@ -9,7 +9,7 @@ import os.path
 
 # If we decide to put modules in the scripts directory use the following to
 # be able to import modules
-# sys.path.append("scripts/") 
+# sys.path.append("scripts/")
 
 # Constants
 USE = 1
@@ -41,7 +41,7 @@ GNU_WARNING_FLAGS = "-Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align"
 LINUX_EXTRA_FLAGS = "-DLINUX"
 LINUX_SHARED_PFIX = "-shared -Wl,--export-dynamic -Wl,-soname,lib$(notdir $@)"
 LINUX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
-LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic"
+LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic -I../nti"
 
 AIX_GNU_MINIMAL_TOC_FLAG = "-mminimal-toc"
 
@@ -151,7 +151,7 @@ def createConfigHeader():
         pass
 
     if create == True:
-        cmd =  "#include <string>\n\n" 
+        cmd =  "#include <string>\n\n"
         cmd += "const std::string LENSROOT = \"" + rootDir + "\";\n"
         header = open(CONFIG_HEADER, "w")
         header.write(cmd)
@@ -163,7 +163,7 @@ def touchExtensionsMk():
     if os.path.isfile(EXTENSIONS_MK) == False:
         f = open(EXTENSIONS_MK, "w")
         f.close()
-           
+
 class DxInfo:
 
     def __init__(self):
@@ -210,11 +210,11 @@ class DxInfo:
         retStr += TAB + "DX library is found at" + self.liteLib + "\n"
         retStr += TAB + "DX include file is found at" + self.include + "\n"
         return retStr
-        
+
 class Options:
-    
+
     def __init__(self, argv):
-                
+
         # options
         self.compilationMode = "undefined" # 32, 64, undefined
         self.withDX = UNDEF # USE, DONTUSE, UNDEF
@@ -267,10 +267,10 @@ class Options:
                            ("help", "displays the available options")]
 
         self.parseOptions(argv)
-        
+
     def getOptionList(self):
         return map(getFirst, self.cmdOptions)
-        
+
     def usage(self, argv):
         print addUnderScore("Possible command line options:"),
         for i in self.cmdOptions:
@@ -296,52 +296,52 @@ class Options:
                         self.withDX = USE
                     else:
                         raise FatalError(
-                            "with-dx and without-dx are used at the same time.")     
+                            "with-dx and without-dx are used at the same time.")
                 if o == "--without-dx":
                     if self.withDX == UNDEF:
                         self.withDX = DONTUSE
                     else:
                         raise FatalError(
-                            "with-dx and without-dx are used at the same time.")     
+                            "with-dx and without-dx are used at the same time.")
                 if o == "--with-gcc":
                     if self.compiler == "undefined":
                         self.compiler = "gcc"
                     else:
                         raise FatalError(
-                            "with-gcc and with-xl are used at the same time.")     
+                            "with-gcc and with-xl are used at the same time.")
                 if o == "--with-xl":
                     if self.compiler == "undefined":
                         self.compiler = "xl"
                     else:
                         raise FatalError(
-                            "with-gcc and with-xl are used at the same time.")     
+                            "with-gcc and with-xl are used at the same time.")
                 if o == "--ext-mode":
                     self.extMode = True
                 if o == "--O":
                     if self.optimization == "undefined":
                         self.optimization = "O"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")     
+                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--O2":
                     if self.optimization == "undefined":
                         self.optimization = "O2"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")     
+                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--O3":
                     if self.optimization == "undefined":
                         self.optimization = "O3"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")     
+                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--O4":
                     if self.optimization == "undefined":
                         self.optimization = "O4"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")     
+                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--O5":
                     if self.optimization == "undefined":
                         self.optimization = "O5"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")     
+                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--debug":
                     self.debug = USE
                 if o == "--profile":
@@ -470,7 +470,7 @@ class BuildSetup:
 
         # Command line options
         self.options = Options(sys.argv)
-    
+
         self.unameInfo = os.uname()
 
         self.operatingSystem = self.unameInfo[0]
@@ -519,35 +519,35 @@ class BuildSetup:
 	    retStr += "Off"
 	retStr += "\n"
 
-        retStr += TAB + "Extensions mode: " 
+        retStr += TAB + "Extensions mode: "
         if self.options.extMode == True:
             retStr += "On"
         else :
             retStr += "Off"
         retStr += "\n"
 
-        retStr += TAB + "Debugging: " 
+        retStr += TAB + "Debugging: "
         if self.options.debug == True:
             retStr += "On"
         else :
             retStr += "Off"
         retStr += "\n"
 
-        retStr += TAB + "Profiling: " 
+        retStr += TAB + "Profiling: "
         if self.options.profile == USE:
             retStr += "On"
         else :
             retStr += "Off"
         retStr += "\n"
 
-        retStr += TAB + "Totalview Memory Debugging: " 
+        retStr += TAB + "Totalview Memory Debugging: "
         if self.options.tvMemDebug == True:
             retStr += "On"
         else :
             retStr += "Off"
         retStr += "\n"
 
-        retStr += TAB + "MPI Trace Profiling: " 
+        retStr += TAB + "MPI Trace Profiling: "
         if self.options.mpiTrace == True:
             retStr += "On"
         else :
@@ -556,48 +556,48 @@ class BuildSetup:
 
         if self.options.optimization != "undefined":
             retStr += TAB + "Optimization level: " + self.options.optimization + "\n"
-        
-        retStr += TAB + "Dynamic loading: " 
+
+        retStr += TAB + "Dynamic loading: "
         if self.options.dynamicLoading == True:
             retStr += "Enabled"
         else :
             retStr += "Disabled"
         retStr += "\n"
 
-        retStr += TAB + "Domain specific library: " 
+        retStr += TAB + "Domain specific library: "
         if self.options.domainLibrary == True:
             retStr += "Enabled"
         else :
             retStr += "Disabled"
         retStr += "\n"
 
-        retStr += TAB + "Pthreads: " 
+        retStr += TAB + "Pthreads: "
         if self.options.pthreads == True:
             retStr += "Enabled"
         else :
             retStr += "Disabled"
         retStr += "\n"
 
-        retStr += TAB + "MPI: " 
+        retStr += TAB + "MPI: "
         if self.options.withMpi == True:
             retStr += "Used"
         else :
             retStr += "Not used"
         retStr += "\n"
 
-        retStr += TAB + "DX: " 
-    
+        retStr += TAB + "DX: "
+
         if self.dx.exists == True:
             retStr += "Used\n"
         else:
             retStr += "Not used\n"
-        
+
         retStr += "\n"
         retStr += addUnderScore("Absolute paths for tools and packages that are going to be used:")
         retStr += TAB + getFileStatus(self.bisonBin) + "\n"
         retStr += TAB + getFileStatus(self.flexBin) + "\n"
         retStr += TAB + getFileStatus(self.grepBin) + "\n"
-        retStr += TAB + getFileStatus(self.makeBin) + "\n" 
+        retStr += TAB + getFileStatus(self.makeBin) + "\n"
 
         if self.dx.exists == True:
             retStr += self.dx.getInfo()
@@ -612,7 +612,7 @@ class BuildSetup:
         fStr += "\n\n"
 
         fStr += self.getSystemInfo()
-        
+
         f = open(CONFIG_LOG, "w")
         f.write(fStr)
         f.close()
@@ -623,16 +623,16 @@ class BuildSetup:
         stderr = stderrFile.read()
         if stderr != "":
             raise FatalError(self.bisonBin + " has an error for command " + cmd)
-        stdout = stdoutFile.readline()        
+        stdout = stdoutFile.readline()
         if stdout.find("GNU") == -1:
             raise FatalError(self.bisonBin + " is not GNU")
-        tokens = stdout.split()        
+        tokens = stdout.split()
         self.bisonVersion = tokens[-1]
 
     def main(self):
         if self.options.help == True:
             return
-        
+
         self.setCompilers()
         self.setDX()
         self.bisonVersionFinder()
@@ -656,7 +656,7 @@ class BuildSetup:
         self.generateMakefile("Makefile")
 
         if self.options.rebuild == True:
-            cmd = "make -j " + str(self.numCPUs) 
+            cmd = "make -j " + str(self.numCPUs)
             print "Starting the make process with:", cmd
             os.system(cmd)
 
@@ -672,7 +672,7 @@ class BuildSetup:
 #                    "Usage of dx not specified, checking if it exists.")
 #                self.dx.setup(self.operatingSystem)
 #                if self.dx.exists == True:
-#                    printFeedback("DX found, using...\n")                
+#                    printFeedback("DX found, using...\n")
                 self.options.withDX = DONTUSE
             elif self.options.withDX == USE:
                 self.dx.setup(self.operatingSystem)
@@ -680,7 +680,7 @@ class BuildSetup:
                     raise FatalError("DX requested but not found.")
 
     def setCompilers(self):
-        
+
         if self.options.withMpi == True:
             if self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
@@ -727,13 +727,13 @@ class BuildSetup:
             if self.architecture != "ppc64":
                 raise FatalError("XL compilers can only be used in ppc64 architectures.")
             self.cCompiler = findFile("xlc_r", True)
-            self.cppCompiler = findFile("xlC_r", True)            
+            self.cppCompiler = findFile("xlC_r", True)
         elif self.options.compiler == "gcc":
             self.cCompiler = findFile("gcc", True)
             if self.operatingSystem == "AIX":
                 self.cppCompiler = findFile("g++", True)
             else:
-                self.cppCompiler = findFile("g++", True)                
+                self.cppCompiler = findFile("g++", True)
         else: # error condition
             raise InternalError("Should not have hit here in setCompilers")
 
@@ -743,7 +743,9 @@ class BuildSetup:
 # This is a code generated file, generated using configure.py
 # To change any options please rerun ./configure.py with the desired options.
 # To build the project execute make -j <number of processes>
-
+NTI_DIR=$(shell pwd)/../nti
+NTI_OBJ_DIR=$(NTI_DIR)/obj
+NTI_INC_DIR=$(NTI_DIR)/
 default: all
 
 LENSROOT = $(shell pwd)
@@ -842,20 +844,20 @@ UTILS_MODULES := std \\
 		streams \\
 
 """
-        
+
         retStr += \
 """\
 
 BASE_MODULES := $(patsubst %,framework/%,$(FRAMEWORK_MODULES))
 BASE_MODULES += $(patsubst %,utils/%,$(UTILS_MODULES))
 
-CONSTANT_MODULES := 
+CONSTANT_MODULES :=
 
-EDGE_MODULES := 
+EDGE_MODULES :=
 
-INTERFACE_MODULES := 
+INTERFACE_MODULES :=
 
-NODE_MODULES := 
+NODE_MODULES :=
 
 STRUCT_MODULES := CoordsStruct \
 
@@ -898,8 +900,12 @@ FUNCTOR_MODULES := BinomialDist \\
 	TissueProbeFunctor \\
         UniformDiscreteDist \\
 
+# part 2 --> extension/...
+# this files list all the modules we want to build
+# so that we don't have to modify this Makefile
 include Extensions.mk
 
+## hold the relative path to all extension subfolders
 EXTENSION_MODULES += $(patsubst %,constant/%,$(CONSTANT_MODULES))
 EXTENSION_MODULES += $(patsubst %,edge/%,$(EDGE_MODULES))
 EXTENSION_MODULES += $(patsubst %,functor/%,$(FUNCTOR_MODULES))
@@ -917,8 +923,11 @@ MODULES := $(BASE_MODULES)
 MODULES += $(EXTENSION_MODULES)
 MODULES := $(patsubst %,%,$(MODULES))
 
-MODULE_MKS = $(patsubst %,%/module.mk,$(MODULES)) 
+MODULE_MKS = $(patsubst %,%/module.mk,$(MODULES))
 
+NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
+TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
+NTI_OBJS := $(TEMP)
 """
         return retStr
 
@@ -945,12 +954,13 @@ MODULE_MKS = $(patsubst %,%/module.mk,$(MODULES))
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
 $(patsubst %,-I%/generated,$(PARSER_PATH)) \
 $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
+ -I$(NTI_INC_DIR) \
 """
 
         if self.options.compiler == "gcc":
             if self.options.withMpi == True:
                 retStr += "-I$(LAMHOME)/include"
-            retStr += " " + GNU_WARNING_FLAGS 
+            retStr += " " + GNU_WARNING_FLAGS
 
         if self.operatingSystem == "Linux":
             retStr += " " + LINUX_EXTRA_FLAGS
@@ -966,11 +976,11 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
         if self.options.debug == USE:
             if self.options.compiler == "gcc":
                 retStr += " " + GNU_DEBUGGING_FLAG
-            elif self.options.compiler == "xl": 
+            elif self.options.compiler == "xl":
                 retStr += " " + XL_DEBUGGING_FLAG
             else:
                 retStr += " -g"
-            
+
         if self.options.profile == USE:
             retStr += " " + PROFILING_FLAGS
 
@@ -987,10 +997,10 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
 
         if self.options.dynamicLoading == False:
             retStr += " -DDISABLE_DYNAMIC_LOADING"
-            
+
         if self.options.pthreads == False:
             retStr += " -DDISABLE_PTHREADS"
-            
+
         if self.options.withMpi == True:
             retStr += " -DHAVE_MPI"
             if self.options.compiler == "gcc":
@@ -1029,7 +1039,7 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
         return retStr
 
     def getLensLibs(self):
-        retStr = "LENS_LIBS := "	
+        retStr = "LENS_LIBS := "
 	if self.options.domainLibrary == True :
             retStr += "lib/liblensdomain.a "
 	retStr += "lib/liblens.a\n"
@@ -1037,7 +1047,7 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
 
     def getLibs(self):
         retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
-        retStr += "LIBS := "	
+        retStr += "LIBS := "
         if self.options.dynamicLoading == True:
             retStr += "-ldl "
         if self.options.pthreads == True:
@@ -1068,7 +1078,7 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
         if self.options.compiler == "gcc":
            if self.options.withMpi == True:
               retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
-        
+
         retStr += "\n"
         return retStr
 
@@ -1080,7 +1090,7 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
         elif self.operatingSystem == "AIX":
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_SHARED_PFIX
-            elif self.options.compiler == "xl": 
+            elif self.options.compiler == "xl":
                 retStr += " " + AIX_XL_SHARED_PFIX
             else:
                 raise InternalError("Unknown compiler " + self.options.compiler)
@@ -1088,7 +1098,7 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
             raise InternalError("Unknown OS " + self.operatingSystem)
         retStr += "\n"
         return retStr
-        
+
     def getSharedCC(self):
         retStr = "SHAREDCC = "
 
@@ -1108,11 +1118,11 @@ $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
             retStr += LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "AIX":
 
-            if self.options.dynamicLoading == True:               
+            if self.options.dynamicLoading == True:
                 retStr += " -Wl,-bnoautoexp -Wl,-bE:$(SO_DIR)/main.def"
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_FINAL_TARGET_FLAG
-            elif self.options.compiler == "xl": 
+            elif self.options.compiler == "xl":
                 retStr += " " + AIX_XL_FINAL_TARGET_FLAG
             else:
                 raise InternalError("Unknown compiler " + self.options.compiler)
@@ -1142,7 +1152,7 @@ DX_INCLUDE := framework/dca/include
 
 """
         retStr += "DX_BASE := " + self.dx.mainPath + "\n"
-        
+
         if self.operatingSystem == "Linux":
             retStr += "DX_CFLAGS := " + LINUX_DX_CFLAGS + "\n"
             retStr += "DX_LITELIBS := " + LINUX_DX_LITELIBS + "\n"
@@ -1181,11 +1191,11 @@ $(DX_DIR)/NodeSetSubscriberSocket: $(DCA_OBJ)/nodeSetOutboard.o $(DCA_SRC)/NodeS
 .SUFFIXES:
 
 # Our Suffix rules
-%.d: 
+%.d:
 	@$(SCRIPTS_DIR)/depend.sh $(subst /obj,,${@D}) ${*F} $(CFLAGS) > $@
 
 .C:
-	true	
+	true
 
 .h:
 	true
@@ -1208,10 +1218,10 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
         return retStr
 
 
-    def getModuleAndObjectIncludes(self):        
+    def getModuleAndObjectIncludes(self):
         retStr = \
 """\
-# Include the description of each module. 
+# Include the description of each module.
 # This will be in the root/project, where root is the root subdir (E.g. dir1)
 include $(patsubst %,%/module.mk,$(MODULES))
 
@@ -1248,7 +1258,7 @@ framework/parser/generated/speclang.tab.o: framework/parser/generated/speclang.t
 
     def getScannerTargets(self):
 
-        if self.options.blueGene == False:           
+        if self.options.blueGene == False:
             retStr = \
                    """\
 # Scanner targets
@@ -1266,7 +1276,7 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
 	cp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
 """
-        
+
 
         retStr += \
 """
@@ -1292,21 +1302,21 @@ framework/parser/generated/lex.yy.o: framework/parser/generated/lex.yy.C framewo
         else:
             retStr += "\t$(BIN_DIR)/createDF $(SO_DIR) > $@"
         retStr += "\n"
-        return retStr        
+        return retStr
 
     def getLibLensTarget(self):
         retStr = \
 """\
-# I could not find a way to ar it in one time in AIX, the command gets too 
-# long, also I cannot do this with the foreach loop using BASE_MODULES because 
+# I could not find a way to ar it in one time in AIX, the command gets too
+# long, also I cannot do this with the foreach loop using BASE_MODULES because
 # it concatenates into one single line.
-"""               
+"""
         retStr += "lib/liblens.a: $(BASE_OBJECTS)\n"
         moduleList = ["parser", "dca", "dataitems", "factories", "networks",
-                      "simulation", "functors", "std", "img"]    
+                      "simulation", "functors", "std", "img"]
         if self.options.withMpi == True:
             moduleList.append("streams")
-            
+
         extraToken = ""
         if self.objectMode == "64":
             extraToken = " -X32_64"
@@ -1321,7 +1331,7 @@ framework/parser/generated/lex.yy.o: framework/parser/generated/lex.yy.C framewo
         retStr += arCmd + "$(EXTENSION_OBJECTS)\n"
         if self.options.dynamicLoading == False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
-        retStr += "\tranlib $@\n\n"        
+        retStr += "\tranlib $@\n\n"
         return retStr
 
     def getMainDefTarget(self):
@@ -1364,8 +1374,9 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             retStr += "$(XLINKER)"
 	if self.options.profile == USE :
 	    retStr += PROFILING_FLAGS
+        retStr += " $(NTI_OBJS) "
         retStr += " -o bin/gslparser\n"
-        return retStr        
+        return retStr
 
     def getSocketTarget(self):
         retStr = "$(DCA_OBJ)/socket.o: "
@@ -1383,7 +1394,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         else:
             retStr += " -c $(DCA_SRC)/fakesocket.c"
         retStr += " -o $@\n"
-        return retStr        
+        return retStr
 
     def getCleanTarget(self):
         retStr = \
@@ -1411,14 +1422,14 @@ clean:
 	- rm framework/parser/generated/speclang.tab.C
 	- rm framework/parser/generated/speclang.tab.h
 """
-        return retStr        
+        return retStr
 
-       
+
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
-        fileBody += "\n" 
+        fileBody += "\n"
         fileBody += self.getMake64()
-        fileBody += "\n" 
+        fileBody += "\n"
         fileBody += self.getModuleDefinitions()
 
         fileBody += self.getObjectOnlyFlags()
@@ -1441,7 +1452,7 @@ clean:
         if self.options.dynamicLoading == True:
             fileBody += self.getCreateDFTargets()
         fileBody += self.getModuleAndObjectIncludes()
-               
+
         if self.dx.exists == True:
             fileBody += self.getDXSpecificCode()
 
@@ -1459,21 +1470,21 @@ clean:
         fileBody += self.getLensparserTarget()
         fileBody += "\n"
         fileBody += self.getSocketTarget()
-        fileBody += "\n"   
+        fileBody += "\n"
         fileBody += self.getCleanTarget()
-        
+
         f = open(fileName, "w")
         f.write(fileBody)
         f.close()
 
 
 if __name__ == "__main__":
-    try:        
+    try:
         buildSetup = BuildSetup()
         buildSetup.main()
     except FatalError, error:
         error.printError()
         sys.exit(-1)
-        
+
 
 

@@ -18,7 +18,7 @@
 
 #include "Lens.h"
 #include "CG_CaConcentrationJunctionCompCategory.h"
-#include "../../../../../nti/CountableModel.h"
+#include "CountableModel.h"
 
 class NDPairList;
 

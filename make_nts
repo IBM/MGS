@@ -1,5 +1,5 @@
 #!/bin/bash
-source ./setenv_nts
+$(shell source ./setenv_nts)
 
 if [ "$1" == "-help" ] || [ $# == 0 ]; then 
     echo -e "\n\nMake NTS... \n\nOption include : \n\n  1) make_nts LINUX : builds NTS in a LINUX environment using MPI \n  2) make_nts BGL : makes NTS on Blue Gene/L \n  3) make_nts BGP : makes NTS on Blue Gene/P \n  4) make_nts BGQ : make NTS on Blue Gene/Q\n\n"; exit;
@@ -131,6 +131,32 @@ make -j $NPROCS
 echo "Complete build MDL code"
 cd $NTSROOT
 
+
+
+### NTI code ###
+
+cd $NTSROOT/nti
+if [ "$2" == "-MCO" ]; then
+  sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
+fi
+sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+fi
+if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
+make realclean;
+fi
+make -j $NPROCS
+if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+    cd $NTSROOT
+    echo nti make failed!;
+    exit; 
+fi
+cd $NTSROOT
+echo "Complete build NTI code"
 
 ### GSL code ###
 cd $LENSROOT/extensions/variable

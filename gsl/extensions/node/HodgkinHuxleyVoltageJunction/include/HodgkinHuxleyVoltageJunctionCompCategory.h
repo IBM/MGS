@@ -18,7 +18,7 @@
 
 #include "Lens.h"
 #include "CG_HodgkinHuxleyVoltageJunctionCompCategory.h"
-#include "../../../../../nti/CountableModel.h"
+#include "CountableModel.h"
 
 class NDPairList;
 
