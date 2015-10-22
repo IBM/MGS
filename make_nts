@@ -85,7 +85,6 @@ if which python | grep -q1 /\python; then
     echo python found...; else echo python not found!; exit; fi
 
 
-
 ### MDL code ###
 cd $MDLROOT
 
@@ -108,33 +107,17 @@ if [ "$1" == "LINUX" ]; then
     fi
     rm -f mdl.make.mark
 fi
-cd $NTSROOT
+echo "Complete build MDL code"
 
 ### COMMON code ###
 cd $NTSROOT/common
-sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
-elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-fi
 if [ "$2" == "-clean" ] ; then
-     rm -f obj/*.o
+    rm -f obj/*.o
 fi
 make -j $NPROCS
-#if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
-#    cd $NTSROOT
-#    echo nti make failed!;
-#    exit; 
-#fi
-echo "Complete build MDL code"
-cd $NTSROOT
-
-
+echo "Complete build Common code"
 
 ### NTI code ###
-
 cd $NTSROOT/nti
 if [ "$2" == "-MCO" ]; then
   sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
@@ -147,15 +130,15 @@ elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefil
 elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 fi
 if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
-make realclean;
+    make realclean
 fi
 make -j $NPROCS
+
 if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
     cd $NTSROOT
     echo nti make failed!;
     exit; 
 fi
-cd $NTSROOT
 echo "Complete build NTI code"
 
 ### GSL code ###
@@ -167,7 +150,6 @@ cd $LENSROOT/extensions/functor
 ./define functors.mdf
 cd $NTSROOT/models
 ./define compartmental.mdf
-cd $NTSROOT
 
 cd $LENSROOT
 if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
