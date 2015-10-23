@@ -1096,7 +1096,7 @@ CFLAGS += -I../common/include \
         return retStr
 
     def getLibs(self):
-        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
+        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) #lib/liblensext.a\n"
         retStr += "LIBS := "
         if self.options.dynamicLoading == True:
             retStr += "-ldl "
@@ -1382,7 +1382,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.options.dynamicLoading == False:
             retStr += " $(GENERATED_DL_OBJECTS)"
         retStr += "\n"
-        retStr += arCmd + "$(EXTENSION_OBJECTS)\n"
+        retStr += arCmd + " $(EXTENSION_OBJECTS)\n"
         if self.options.dynamicLoading == False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
         retStr += "\tranlib $@\n\n"
