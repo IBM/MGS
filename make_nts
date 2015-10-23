@@ -106,6 +106,10 @@ if [ "$1" == "LINUX" ]; then
         cd $MDLROOT
     fi
     rm -f mdl.make.mark
+elif [ "$2" == "-clean" ]; then
+    cd $NTSROOT
+    find . -name *.mdf -exec touch '{}' \;
+    cd $MDLROOT
 fi
 echo "Complete build MDL code"
 
