@@ -890,8 +890,10 @@ FUNCTOR_MODULES := BinomialDist \\
 	DstRefSumRsqrdInvWeightModifier \\
 	DstScaledContractedGaussianWeightModifier \\
 	DstScaledGaussianWeightModifier \\
+	Exp \\
 	GetNodeCoordFunctor \\
 	IsoSampler \\
+	Log \\
         ModifyParameterSet \\
         NameReturnValue \\
 	PolyConnectorFunctor \\
