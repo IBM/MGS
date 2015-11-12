@@ -99,7 +99,13 @@ void NodeProxyBase::setIndex(int index)
   _nodeInstanceAccessor->setIndex(index);
 }
 
-                                                                                                      
+int NodeProxyBase::getGlobalIndex() const
+{
+  return _nodeInstanceAccessor->getGridLayerData()->getNodeCompCategoryBase()->
+    getGridLayerDataOffsets()[_nodeInstanceAccessor->getGridLayerData()->getGridLayerIndex()] +
+    getNodeIndex();
+}
+                                                                                             
 void NodeProxyBase::checkAndAddPreConstant(Constant* c) {
    if (relationalDataEnabled()) {
       _relationalInformation->getPreConstants().push_back(c);

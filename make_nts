@@ -154,6 +154,7 @@ cd $LENSROOT/extensions/functor
 ./define functors.mdf
 cd $NTSROOT/models
 ./define compartmental.mdf
+../mdl/bin/mdlparser compartmental.mdf
 
 cd $LENSROOT
 if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then

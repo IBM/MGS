@@ -226,6 +226,13 @@ void NodeBase::setIndex(int index)
   _nodeInstanceAccessor->setIndex(index);
 }
 
+int NodeBase::getGlobalIndex() const
+{
+  return _nodeInstanceAccessor->getGridLayerData()->getNodeCompCategoryBase()->
+    getGridLayerDataOffsets()[_nodeInstanceAccessor->getGridLayerData()->getGridLayerIndex()] +
+    getNodeIndex();
+}
+
 NodeBase::~NodeBase()
 {
    delete _publisher;
