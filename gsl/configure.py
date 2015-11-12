@@ -41,7 +41,7 @@ GNU_WARNING_FLAGS = "-Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align"
 LINUX_EXTRA_FLAGS = "-DLINUX"
 LINUX_SHARED_PFIX = "-shared -Wl,--export-dynamic -Wl,-soname,lib$(notdir $@)"
 LINUX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
-LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic -I../nti"
+LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic"
 
 AIX_GNU_MINIMAL_TOC_FLAG = "-mminimal-toc"
 
@@ -752,11 +752,6 @@ EXE_FILE=gslparser
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
 
-NTI_DIR=$(shell pwd)/../nti
-NTI_OBJ_DIR=$(NTI_DIR)/obj
-NTI_INC_DIR=$(NTI_DIR)/
-default: all
-
 LENSROOT = $(shell pwd)
 OPERATING_SYSTEM = $(shell uname)
 
@@ -890,9 +885,11 @@ FUNCTOR_MODULES := BinomialDist \\
 	DstRefSumRsqrdInvWeightModifier \\
 	DstScaledContractedGaussianWeightModifier \\
 	DstScaledGaussianWeightModifier \\
+	Exp \\
 	GetNodeCoordFunctor \\
 	IsoSampler \\
-        ModifyParameterSet \\
+        Log \\
+	ModifyParameterSet \\
         NameReturnValue \\
 	PolyConnectorFunctor \\
 	RefAngleModifier \\
@@ -904,15 +901,11 @@ FUNCTOR_MODULES := BinomialDist \\
 	SrcDimensionConstrainedSampler \\
 	SrcRefDistanceModifier \\
 	SrcRefGaussianWeightModifier \\
+	SrcRefDoGWeightModifier \\
 	SrcRefPeakedWeightModifier \\
 	SrcRefSumRsqrdInvWeightModifier \\
 	SrcScaledContractedGaussianWeightModifier \\
 	SrcScaledGaussianWeightModifier \\
-	TissueConnectorFunctor \\
-	TissueFunctor \\
-	TissueLayoutFunctor \\
-	TissueNodeInitFunctor \\
-	TissueProbeFunctor \\
         UniformDiscreteDist \\
 
 # part 2 --> extension/...
@@ -936,10 +929,6 @@ SPECIAL_EXTENSION_MODULES := $(patsubst %,extensions/%,$(SPECIAL_EXTENSION_MODUL
 
 MODULES := $(BASE_MODULES)
 MODULES += $(EXTENSION_MODULES)
-
-NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
-TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
-NTI_OBJS := $(TEMP)
 
 SOURCES_DIRS := $(patsubst %,%/src, $(MODULES))
 MYSOURCES := $(foreach dir,$(SOURCES_DIRS),$(wildcard $(dir)/*.C))
@@ -1096,7 +1085,7 @@ CFLAGS += -I../common/include \
         return retStr
 
     def getLibs(self):
-        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) #lib/liblensext.a\n"
+        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
         retStr += "LIBS := "
         if self.options.dynamicLoading == True:
             retStr += "-ldl "
@@ -1251,7 +1240,7 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(OBJECTONLYFLAGS) -c $< -o $@
 """
         return retStr
 
@@ -1346,7 +1335,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) -o bin/gslparser"
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(COMMON_OBJS) -o bin/gslparser"
         return retStr
 
     def getDependfileTarget(self):
@@ -1380,9 +1369,9 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         retStr += "\tranlib $@\n\n"
         retStr += "lib/liblensext.a: $(EXTENSION_OBJECTS) $(LENS_LIBS)"
         if self.options.dynamicLoading == False:
-            retStr += " $(GENERATED_DL_OBJECTS)"
+            retStr += "$(GENERATED_DL_OBJECTS)"
         retStr += "\n"
-        retStr += arCmd + " $(EXTENSION_OBJECTS)\n"
+        retStr += arCmd + "$(EXTENSION_OBJECTS)\n"
         if self.options.dynamicLoading == False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
         retStr += "\tranlib $@\n\n"
