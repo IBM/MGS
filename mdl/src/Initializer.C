@@ -32,7 +32,9 @@
 #include "Constants.h"
 
 extern int mdlparse(void*);
+#if YYDEBUG
 extern int yydebug;
+#endif
 
 Initializer::Initializer(int argc, char** argv)
    : _argc(argc), _argv(argv)
@@ -53,9 +55,9 @@ bool Initializer::execute()
    char const * infilename = fileName.c_str();
    std::istream *infile;
    std::ostream *outfile = &std::cout;
-
+#if YYDEBUG
    yydebug = 0;
-
+#endif
    char temporaryName[256] = "/tmp/bc_mpp.XXXXXX";             // modified by Jizhu Lu on 01/10/2006
 
    std::ostringstream command;
@@ -78,7 +80,7 @@ bool Initializer::execute()
       }
 
       system(command.str().c_str());
-      infile = new ifstream(temporaryName);
+      infile = new std::ifstream(temporaryName);
    }
    else {
       std::cerr << "Unable to open temporary file, cpp problem, aborting..." 
