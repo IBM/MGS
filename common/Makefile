@@ -24,3 +24,5 @@ final: $(OBJS)
 $(OBJDIR)/%.o: %.C 
 	$(CC) $(CFLAGS) -c $< -o $@
 
+realclean:
+	-rm $(OBJDIR)/*

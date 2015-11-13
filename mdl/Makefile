@@ -1,8 +1,11 @@
 # Run this file through gnu make, /usr/gnu/bin/make 
 
-default: bin/mdlparser
+default: final 
+
 OBJS_DIR=obj
 SOURCES_DIRS=src
+BIN_DIR=bin
+EXE_FILE=mdlparser
 
 # To compile with xlC_r edit this or use CC=xlC_r at command line.
 CC := g++
@@ -116,11 +119,6 @@ scanner/lex.yy.o: scanner/lex.yy.cc scanner/mdl.l
 $(OBJS_DIR)/%.o : %.C
 	$(CC) $(CFLAGS)  $(OBJECTONLYFLAGS) -c $< -o $@
 
-#.C:
-#	true	
-
-#.h:
-#	true
 
 lib/libmdl.a: $(OBJS)
 	ar rvu $@ $(OBJS)
@@ -129,18 +127,17 @@ lib/libmdl.a: $(OBJS)
 LIBS += lib/libmdl.a
 
 
-bin/mdlparser: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
+final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
 	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
-           $(XLINKER) -o $@ $(FINAL_TARGET_FLAG)
+           $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
 .PHONY: clean
 clean:
-	- find . -name "*\.o" -exec /bin/rm {} \;
-	- find . -name "*\.a" -exec /bin/rm {} \;
-	- find . -name "*\.d" -exec /bin/rm {} \;
-	- rm bin/mdlparser
+	- rm $(OBJS_DIR)/*
+	- rm $(BIN_DIR)/$(EXE_FILE)
 	- rm parser/mdl.output
 	- rm parser/mdl.tab.c
 	- rm parser/mdl.tab.h
 	- rm scanner/lex.yy.cc
+
 

@@ -24,6 +24,6 @@ set path+=**
 :set tags=$NTSROOT/tags
 
 au BufNewFile,BufRead *.di setlocal ft=d
-au BufNewFile,BufRead *.gsl setlocal ft=gsl
-au BufNewFile,BufRead *.mdl setlocal ft=mdl
+au BufNewFile,BufRead *.gsl setlocal ft=gsl foldmethod=marker
+au BufNewFile,BufRead *.mdl setlocal ft=mdl foldmethod=marker
 

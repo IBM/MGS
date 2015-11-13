@@ -33,7 +33,7 @@
 //#define DEBUG_HH
 
 float HodgkinHuxleyVoltage::getLambda(DimensionStruct* a, DimensionStruct* b) {
-  float radius = 0.5*(a->r + b->r);
+  float radius = 0.5*(a->r + b->r); //radius_middle ()
   float length = DISTANCE_SQUARED(a, b);
   return(radius*radius/(2.0*getSharedMembers().Ra*length*b->r)); /* needs fixing */
 }
@@ -215,7 +215,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     Aii[i] -= Aim[i]*Aip[i-1]/Aii[i-1];
     RHS[i] -= Aim[i]*RHS[i-1]/Aii[i-1];
   }
-}
+} //end doForwardSolve
 
 void HodgkinHuxleyVoltage::doBackwardSolve()
 {
@@ -228,7 +228,7 @@ void HodgkinHuxleyVoltage::doBackwardSolve()
   for (int i = size-2; i >= 0; i--) {
     Vnew[i] = (RHS[i] - Aip[i]*Vnew[i+1])/Aii[i];
   }
-}
+}//end doBackwardSolve
 
 void HodgkinHuxleyVoltage::solve(RNG& rng)
 {

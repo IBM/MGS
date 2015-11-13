@@ -3,7 +3,7 @@
 import os
 import sys
 import popen2
-import string
+#import string
 import getopt
 import os.path
 
@@ -1337,7 +1337,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) -o bin/gslparser"
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -1373,7 +1373,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.options.dynamicLoading == False:
             retStr += " $(GENERATED_DL_OBJECTS)"
         retStr += "\n"
-        retStr += arCmd + "$(EXTENSION_OBJECTS)\n"
+        retStr += arCmd + " $(EXTENSION_OBJECTS)\n"
         if self.options.dynamicLoading == False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
         retStr += "\tranlib $@\n\n"
@@ -1404,6 +1404,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         if self.options.dynamicLoading == True:
             retStr += " $(SHARED_OBJECTS)"
         retStr += "\n"
+        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o "
 	retStr += "$(LIBS) "
 	if self.options.tvMemDebug == True and self.operatingSystem != "AIX":
@@ -1448,7 +1449,7 @@ clean:
 	-rm -f dx/EdgeSetSubscriberSocket
 	-rm -f dx/NodeSetSubscriberSocket
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
-	-rm -f bin/createDF
+	-rm -f $(BIN_DIR)/createDF
 	-rm -f lib/liblens.a
 	-rm -f lib/liblensext.a
 	-rm -f $(SO_DIR)/Dependfile

@@ -44,6 +44,7 @@
 #include "CG_CompartmentDimension.h"
 #include "CG_BranchData.h"
 #include "Granule.h"
+#include "IntDataItem.h"
 
 #ifdef HAVE_MPI
 #include "MaxComputeOrder.h"
@@ -237,7 +238,7 @@ void TissueFunctor::userInitialize(
   connectorFunctor->duplicate(_connectorFunctor);
   probeFunctor->duplicate(_probeFunctor);
 
-  //Validate inputs
+  // Validate inputs
   {
     TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
     if (element == 0) {
@@ -272,7 +273,6 @@ void TissueFunctor::userInitialize(
       exit(-1);
     }
   }
-
 
 #ifdef HAVE_MPI
   String command = "NULL ";
@@ -494,8 +494,8 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
     // fileNames = new char* [bufSize];
     for (int i = 0; i < bufSize; ++i) ng_params[i] = 0;
 
-    //int ln = strlen(tissueFileName);
-	int ln = tissueFileName.length();
+    // int ln = strlen(tissueFileName);
+    int ln = tissueFileName.length();
     std::string statsFileName(tissueFileName);
     std::string parsFileName(tissueFileName);
     statsFileName.erase(ln - 4, 4);
@@ -574,14 +574,14 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
     NG.run(neuronBegin, nNeuronsGenerated, ng_params, fileNames, somaGenerated);
 
     if (composite > 0 && _rank == 0)
-      CompositeSwc(tissueFileName.c_str(), compositeSwcFileName.c_str(), composite,
-                   false);
+      CompositeSwc(tissueFileName.c_str(), compositeSwcFileName.c_str(),
+                   composite, false);
 
     for (int nid = 0; nid < nNeuronsGenerated; ++nid) {
-      //delete[] fileNames[nid];
+      // delete[] fileNames[nid];
       delete ng_params[nid];
     }
-    //delete[] fileNames;
+    // delete[] fileNames;
     delete[] ng_params;
     std::map<std::string, BoundingSurfaceMesh*>::iterator miter,
         mend = boundingSurfaceMap.end();
@@ -1280,16 +1280,16 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
         exit(-1);
       }
       std::string kind = nkDI->getString();
-	  /*
-      char* ckind = new char[kind.size() + 1];
-      strcpy(ckind, kind.c_str());
-	  
-      char* p = strtok(ckind, "][");
-      while (p != 0) {
-        nodekind.push_back(std::string(p));
-        p = strtok(0, "][");
-      }
-	  */
+      /*
+  char* ckind = new char[kind.size() + 1];
+  strcpy(ckind, kind.c_str());
+
+  char* p = strtok(ckind, "][");
+  while (p != 0) {
+    nodekind.push_back(std::string(p));
+    p = strtok(0, "][");
+  }
+      */
       std::vector<std::string> tokens;
       StringUtils::Tokenize(kind, tokens, "][");
       for (std::vector<std::string>::iterator i = tokens.begin();
