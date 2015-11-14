@@ -991,12 +991,17 @@ $(OBJS_DIR):
         retStr = \
 """\
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -O3 -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-CFLAGS += -I../common/include -MMD \
+CFLAGS += -I../common/include \
 """
 ##CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
 #$(patsubst %,-I%/generated,$(PARSER_PATH)) \
 #$(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
 #"""
+        if self.options.blueGene == False :
+            retStr += \
+"""\
+-MMD \
+"""
 
         if self.options.compiler == "gcc":
             if self.options.withMpi == True:
@@ -1337,6 +1342,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
+        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 

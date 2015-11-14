@@ -106,6 +106,7 @@ protected:
 // or this is a repeated include to define a different flavor of
 // yyFlexLexer, as discussed in the flex manual.
 #define yyFlexLexerOnce
+#define yyFlexLexer yyFlexLexer
 
 extern "C++" {
 
@@ -127,7 +128,7 @@ public:
 
 	virtual int yylex();
 	virtual void switch_streams( FLEX_STD istream* new_in, FLEX_STD ostream* new_out = 0 );
-	virtual int yywrap();
+	//virtual int yywrap();
 
 protected:
 	virtual int LexerInput( char* buf, int max_size );
@@ -155,6 +156,8 @@ protected:
 
 	FLEX_STD istream* yyin;	// input source for default LexerInput
 	FLEX_STD ostream* yyout;	// output sink for default LexerOutput
+	
+	struct yy_buffer_state* yy_current_buffer;
 
 	// yy_hold_char holds the character lost when yytext is formed.
 	char yy_hold_char;

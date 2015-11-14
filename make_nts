@@ -8,8 +8,8 @@ NTSROOT=`pwd`
 LENSROOT=$NTSROOT/gsl
 MDLROOT=$NTSROOT/mdl
 
-#NPROCS=$((`cat /proc/cpuinfo | grep processor | awk 'END{ gsub(/"/,""); print $NF }'`+1))
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+NPROCS=$(( $NPROCS*2/3 ))
 
 ### Check required tools ###
 ## 1. MPI library
@@ -89,25 +89,23 @@ if which python | grep -q1 /\python; then
 ### MDL code ###
 cd $MDLROOT
 
-if [ "$1" == "LINUX" ]; then 
-    touch mdl.make.mark
-    if [ "$2" == "-clean" ]; then
-        make clean;
-    fi
-    make -j $NPROCS
-    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
-        rm mdl.make.mark
-        cd $NTSROOT
-        echo mdl make failed!;
-        exit; 
-    fi
-    if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
-        cd $NTSROOT
-        find . -name *.mdf -exec touch '{}' \;
-        cd $MDLROOT
-    fi
-    rm -f mdl.make.mark
+touch mdl.make.mark
+if [ "$2" == "-clean" ]; then
+make clean;
 fi
+make -j $NPROCS
+if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
+rm mdl.make.mark
+cd $NTSROOT
+echo mdl make failed!;
+exit; 
+fi
+if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
+cd $NTSROOT
+find . -name *.mdf -exec touch '{}' \;
+cd $MDLROOT
+fi
+rm -f mdl.make.mark
 cd $NTSROOT
 
 ### COMMON code ###

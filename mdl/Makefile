@@ -128,6 +128,7 @@ LIBS += lib/libmdl.a
 
 
 final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
+	-rm $(BIN_DIR)/$(EXE_FILE)
 	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
            $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
