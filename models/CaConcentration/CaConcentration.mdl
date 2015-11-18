@@ -9,60 +9,74 @@
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
 Struct ChannelCaCurrents {
-  float []* currents;
+  dyn_var_t []* currents;
 }
 
 Struct ReceptorCaCurrent {
-  float* current;
+  dyn_var_t* current;
   int index;
 }
 
 Struct InjectedCaCurrent {
-  float* current;
-  float currentToConc;
+  dyn_var_t* current;
+  dyn_var_t currentToConc;
   int index;
 }
 
-Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer,
-     ForwardSolutionArrayProducer {
+Node CaConcentration Implements SolutionArrayProducer, 
+     DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer, 
+     CaConcentrationArrayProducer
+{
+/*{{{*/
+  //DATA
+    /*{{{*/
+	//data members: reference
   DimensionStruct* [] dimensions;
   BranchDataStruct* branchData;
-  float [] Ca_cur; // intracellular concentrations expressed by ion name alone
-  float [] Ca_new;
-  float [] currentToConc;
-
-  float [] Aii;
-  float [] Aip;
-  float [] Aim; // branch's distalmost compartment to junction coupling coefficient
-  float [] RHS;
-  float [] Aij;
-
-  float CaClearance;
-
-  // currents
-  ChannelCaCurrents [] channelCaCurrents;
-  ReceptorCaCurrent [] receptorCaCurrents;
-  InjectedCaCurrent [] injectedCaCurrents;
-
-  float* proximalCaConcentration;
-  float* [] distalAiis;
-  float* [] distalAips;
-  float* [] distalInputs;
+	//data members: internal, but for solver
+	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  dyn_var_t [] Aii;
+  dyn_var_t [] Aip;
+  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
+  dyn_var_t [] RHS;
+  dyn_var_t [] Aij;
+  dyn_var_t* proximalCaConcentration;
+  dyn_var_t* [] distalAiis;
+  dyn_var_t* [] distalAips;
+  dyn_var_t* [] distalInputs;
   DimensionStruct* [] distalDimensions;
   DimensionStruct* proximalDimension;
   bool proximalJunction;
   int computeOrder;
+	//data members: internal
+  dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
+  dyn_var_t [] Ca_new;
+  dyn_var_t [] currentToConc;
+    // what is this for???
+  dyn_var_t CaClearance;
+    // currents
+  ChannelCaCurrents [] channelCaCurrents;
+  ReceptorCaCurrent [] receptorCaCurrents;
+  InjectedCaCurrent [] injectedCaCurrents;
+	/*}}}*/
 
+   // design : anything currently not part of the spatial 
+   //          is put in HodgkinHuxleyVoltage Node
   Shared {
-    float* deltaT;
-    float DCa;
-    float bmt;
-    float beta;                    // Wagner and Keizer buffering constant
-    float CaBaseline;
+    /*{{{*/
+    dyn_var_t* deltaT;
+    dyn_var_t DCa;
+    dyn_var_t bmt;
+    dyn_var_t beta;                    // Wagner and Keizer buffering constant
+    dyn_var_t CaBaseline;
 
     InitPhase deriveParameters;  
+    /*}}}*/
   }
 
+	//output
+	//{{{
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
   SolutionArrayProducer.solutionArray << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
@@ -70,8 +84,12 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   ForwardSolutionArrayProducer.AiiArray << &Aii;
   ForwardSolutionArrayProducer.AipArray << &Aip;
   ForwardSolutionArrayProducer.RHSArray << &RHS;
+	//}}}
 
+    // Phases methods
+    /*{{{*/
   InitPhase initializeCaConcentration;
+
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
   #endif
@@ -93,7 +111,9 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   #if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
   #endif
+
   RuntimePhase solve, finish;
+    /*}}}*/
 
   InAttrPSet {	
     string identifier;
@@ -158,14 +178,17 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+/*}}}*/
 }
 
 Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProducer
 {
-  float* CaConcentration;
+/*{{{*/
+  dyn_var_t* CaConcentration;
   DimensionStruct* dimension;
+
   Shared {
-    float []* CaConcentrationConnect;
+    dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
   }
   CaConcentrationProducer.Ca << CaConcentration;
@@ -185,6 +208,6 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
   InitPhase produceInitialState(dimension);
   RuntimePhase produceSolvedCaConcentration(CaConcentration);
   RuntimePhase produceFinishedCaConcentration(CaConcentration);
+/*}}}*/
 }
-
 #endif

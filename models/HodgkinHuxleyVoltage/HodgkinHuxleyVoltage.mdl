@@ -9,61 +9,72 @@
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
 Struct ChannelCurrents {
-  float []* conductances;
-  float []* reversalPotentials;
+  dyn_var_t []* conductances;
+  dyn_var_t []* reversalPotentials;
 }
 
 Struct ReceptorCurrent {
-  float* conductance;
-  float* reversalPotential;
+  dyn_var_t* conductance;
+  dyn_var_t* reversalPotential;
   int index;
 }
 
 Struct InjectedCurrent {
-  float* current;
-  float area;
+  dyn_var_t* current;
+  dyn_var_t area;
   int index;
 }
 
-Node HodgkinHuxleyVoltage Implements VoltageArrayProducer, SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer,
-     ForwardSolutionArrayProducer, NaConcentrationProducer, KConcentrationProducer {
+Node HodgkinHuxleyVoltage Implements VoltageArrayProducer 
+	 , SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer, ForwardSolutionArrayProducer
+     , NaConcentrationProducer, KConcentrationProducer 
+{
+	//DATA
+    /*{{{*/
+	//data members: reference
   DimensionStruct* [] dimensions;
   BranchDataStruct* branchData;
-  float [] Vcur;
-  float [] Vnew;
-
-  float [] Aii;
-  float [] Aip;
-  float [] Aim; // branch's distalmost compartment to junction coupling coefficient
-  float [] RHS;
-  float [] Aij;
-
-  float Cm;
-  float cmt;
-  float gLeak;
+	//data members: internal, but for solver
+	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  dyn_var_t [] Aii; //diagonal element of the matrix (A[i,i])
+  dyn_var_t [] Aip; 
+  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
+  dyn_var_t [] RHS; //RHS=right-hand side
+  dyn_var_t [] Aij;
+  dyn_var_t* proximalVoltage;
+  dyn_var_t* [] distalAiis;
+  dyn_var_t* [] distalAips;
+  dyn_var_t* [] distalInputs;
+  DimensionStruct* [] distalDimensions;
+  DimensionStruct* proximalDimension;
+  bool proximalJunction;
+  int computeOrder;
+	//data members: internal
+  dyn_var_t [] Vcur;
+  dyn_var_t [] Vnew;
+	
+    // here we may consider the fact that different branch has different gLeak, capacitance Cm, cmt
+  dyn_var_t Cm;
+  dyn_var_t cmt; // what is this
+  dyn_var_t gLeak;
 
   // currents
   ChannelCurrents [] channelCurrents;
   ReceptorCurrent [] receptorCurrents;
   InjectedCurrent [] injectedCurrents;
 
-  float* proximalVoltage;
-  float* [] distalAiis;
-  float* [] distalAips;
-  float* [] distalInputs;
-  DimensionStruct* [] distalDimensions;
-  DimensionStruct* proximalDimension;
-  bool proximalJunction;
-  int computeOrder;
-
+	/*}}}*/
+   // design : anything currently not part of the spatial is put in HodgkinHuxleyVoltage Node
   Shared {
-    float* deltaT;
-    float Ra;
-    float Na; // intracellular concentrations expressed by ion name alone
-    float K;
-    float E_leak;
+    dyn_var_t* deltaT;
+    dyn_var_t Ra;
+    dyn_var_t Na; // intracellular concentrations expressed by ion name alone
+    dyn_var_t K;
+    dyn_var_t E_leak;
   }
 
+	//output
+	//{{{
   VoltageArrayProducer.voltageArray << &Vnew;
   SolutionArrayProducer.solutionArray << &Vnew;
   DimensionArrayProducer.dimensionArray << &dimensions;
@@ -71,7 +82,7 @@ Node HodgkinHuxleyVoltage Implements VoltageArrayProducer, SolutionArrayProducer
   ForwardSolutionArrayProducer.AiiArray << &Aii;
   ForwardSolutionArrayProducer.AipArray << &Aip;
   ForwardSolutionArrayProducer.RHSArray << &RHS;
-
+	//}}}
   NaConcentrationProducer.Na << &Shared.Na;
   KConcentrationProducer.K << &Shared.K;
 
@@ -169,10 +180,10 @@ Node HodgkinHuxleyVoltage Implements VoltageArrayProducer, SolutionArrayProducer
 
 Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
 {
-  float* voltage;
+  dyn_var_t* voltage;
   DimensionStruct* dimension;
   Shared {
-    float []* voltageConnect;
+    dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
   }
   VoltageProducer.voltage << voltage;

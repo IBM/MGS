@@ -5,22 +5,24 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Node CaConnexon Implements VoltageProducer, CaConcentrationProducer, CurrentProducer, CaCurrentProducer, BranchDataProducer, IndexProducer {
-  float* Vi;
-  float* Vj;
-  float I;
-  float* Cai;
-  float* Caj;
-  float I_Ca;
-  float g;
+Node CaConnexon Implements CurrentProducer, BranchDataProducer, IndexProducer,
+     VoltageProducer, CaConcentrationProducer, CaCurrentProducer 
+ {
+  dyn_var_t* Vi;
+  dyn_var_t* Vj;
+  dyn_var_t I;
+  dyn_var_t* Cai;
+  dyn_var_t* Caj;
+  dyn_var_t I_Ca;
+  dyn_var_t g;
 
   BranchDataStruct* branchData;
   int index;
 
   Shared {
-    float* T;
-    float []* voltageConnect;
-    float []* CaConcentrationConnect;
+    dyn_var_t* T;
+    dyn_var_t []* voltageConnect;
+    dyn_var_t []* CaConcentrationConnect;
   }
 
   InitPhase produceInitialState(Vi, Cai);
@@ -44,19 +46,27 @@ Node CaConnexon Implements VoltageProducer, CaConcentrationProducer, CurrentProd
   Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
     TemperatureProducer.T >> Shared.T;
   }
-  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+       CaConcentrationArrayProducer 
+  {
     CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
     setCaPointers();
   }
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
-    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, BranchDataProducer 
+  {
+    VoltageArrayProducer.voltage >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
     setVoltagePointers();
   }
-  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects VoltageProducer {
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
+    VoltageProducer 
+  {
     VoltageProducer.voltage >> Vj;
   }
-  Connection Pre Node (PSet.identifier=="connexon[Calcium]") Expects CaConcentrationProducer {
+  Connection Pre Node (PSet.identifier=="connexon[Calcium]") Expects 
+    CaConcentrationProducer 
+  {
     CaConcentrationProducer.Ca >> Caj;
   }
 }

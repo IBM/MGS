@@ -5,17 +5,19 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Node Connexon Implements VoltageProducer, CurrentProducer, BranchDataProducer, IndexProducer {
-  float* Vi;
-  float* Vj;
-  float I;
-  float g;
+Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer, 
+     VoltageProducer
+{
+  dyn_var_t* Vi;
+  dyn_var_t* Vj;
+  dyn_var_t I;
+  dyn_var_t g;
 
   BranchDataStruct* branchData;
   int index;
 
   Shared {
-    float []* voltageConnect;
+    dyn_var_t []* voltageConnect;
   }
 
   InitPhase produceInitialVoltage(Vi);
@@ -33,12 +35,16 @@ Node Connexon Implements VoltageProducer, CurrentProducer, BranchDataProducer, I
 
   UserFunction setPointers;
   
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
-    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, BranchDataProducer 
+  {
+    VoltageArrayProducer.voltage >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
     setPointers();
   }
-  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects VoltageProducer {
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
+    VoltageProducer 
+  {
     VoltageProducer.voltage >> Vj;
   }
 }

@@ -6,31 +6,34 @@
 #include "../CaConcentration/CaConcentration.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
-Node CaConcentrationJunction Implements CaConcentrationArrayProducer, DimensionArrayProducer, BranchDataProducer {
+Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
+     CaConcentrationArrayProducer 
+{
+/*{{{*/
   DimensionStruct* [] dimensions;
   BranchDataStruct* branchData;
-  float volume;
-  float [] fAxial;
-  float Ca_cur;
-  float [] Ca_new;
-  float currentToConc;
+  dyn_var_t volume;
+  dyn_var_t [] fAxial; //axial-flux
+  dyn_var_t Ca_cur;
+  dyn_var_t [] Ca_new;
+  dyn_var_t currentToConc;
 
-  float CaClearance;
+  dyn_var_t CaClearance;
 
   // currents
   ChannelCaCurrents [] channelCaCurrents;
-  float* [] receptorCaCurrents;
-  float* [] injectedCaCurrents;
+  dyn_var_t* [] receptorCaCurrents;
+  dyn_var_t* [] injectedCaCurrents;
 
-  float* [] CaConcentrationInputs;
+  dyn_var_t* [] CaConcentrationInputs;
   DimensionStruct* [] dimensionInputs;
 
   Shared {
-    float* deltaT;
-    float DCa;
-    float bmt;
-    float beta;                    // Wagner and Keizer buffering constant
-    float CaBaseline;
+    dyn_var_t* deltaT;
+    dyn_var_t DCa;
+    dyn_var_t bmt;
+    dyn_var_t beta;                    // Wagner and Keizer buffering constant
+    dyn_var_t CaBaseline;
 
     InitPhase deriveParameters;  
   }
@@ -82,14 +85,17 @@ Node CaConcentrationJunction Implements CaConcentrationArrayProducer, DimensionA
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+/*}}}*/
 }
 
 Node CaConcentrationJunctionPoint Implements CaConcentrationProducer, DimensionProducer
 {
-  float* CaConcentration;
+/*{{{*/
+  dyn_var_t* CaConcentration;
   DimensionStruct* dimension;
+
   Shared {
-    float []* CaConcentrationConnect;
+    dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
 }
   CaConcentrationProducer.Ca << CaConcentration;
@@ -108,6 +114,7 @@ Node CaConcentrationJunctionPoint Implements CaConcentrationProducer, DimensionP
   }
   InitPhase produceInitialState(dimension);
   RuntimePhase produceCaConcentration(CaConcentration);
+/*}}}*/
 }
 
 #endif

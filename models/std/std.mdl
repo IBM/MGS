@@ -1,46 +1,30 @@
 #ifndef std_MDL
 #define std_MDL
+#include "../../nti/include/MaxComputeOrder.h"
 
-Interface AmplitudeProducer {
-  float* amplitude;
-}
-
-Interface PreviousAmplitudeProducer {
-  float* previousAmplitude;
-}
-
-Interface BufferedAmplitudeProducer {
-//  float []* amplitude;
-  float* currentAmplitude;
-  float* delayedAmplitude;
-}
 
 Interface TimeProducer {
-  float* pulseTime;
+	dyn_var_t* pulseTime;
 }
 
 Interface UnspecifiedConnection {
-  bool b;
-}
-
-Interface BufferedTimeProducer {
-  float []* pulseTime;
-  float* currentPulseTime;
-  float* delayedPulseTime;
+	bool b;
 }
 
 Interface TimeStepProducer {
-   float* deltaT;
+	dyn_var_t* deltaT;
 }
 
 Constant TimeStep Implements TimeStepProducer {
-  float deltaT;
-  TimeStepProducer.deltaT << &deltaT;
+	//data members
+	dyn_var_t deltaT;
+	//output
+	TimeStepProducer.deltaT << &deltaT;
 }
 
 Struct ModificationStruct {
-   int iteration;
-   NDPairList* list;
+	int iteration;
+	NDPairList* list;
 }
 
 #endif

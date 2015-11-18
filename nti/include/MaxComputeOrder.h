@@ -14,3 +14,16 @@
 // ================================================================
 
 #define MAX_COMPUTE_ORDER 0 
+
+//g++ -DUSE_DOUBLES=1 myprogram.cpp
+//dyn_var_t = dynamical-variable-type
+#ifdef USE_DOUBLES
+//typedef double dyn_var_t;
+ #define dyn_var_t double
+#else
+//typedef float dyn_var_t;
+ #define dyn_var_t float
+#endif
+
+//typedef double key_size_t
+ #define key_size_t double

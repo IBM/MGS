@@ -7,36 +7,38 @@
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
 
-Node HodgkinHuxleyVoltageJunction Implements VoltageArrayProducer, DimensionArrayProducer, BranchDataProducer,
-	NaConcentrationProducer, KConcentrationProducer {
+Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataProducer,
+     VoltageArrayProducer, 
+	 NaConcentrationProducer, KConcentrationProducer {
+/*{{{*/
   DimensionStruct* [] dimensions;
   BranchDataStruct* branchData;
-  float area;
-  float [] gAxial;
-  float Vcur;
-  float [] Vnew;
+  dyn_var_t area;
+  dyn_var_t [] gAxial; //axial-conductance
+  dyn_var_t Vcur;
+  dyn_var_t [] Vnew;
 
-  float Cm;
-  float cmt;
-  float gLeak;
+  dyn_var_t Cm;
+  dyn_var_t cmt;
+  dyn_var_t gLeak;
 
   // currents
   ChannelCurrents [] channelCurrents;
 
-  float* [] receptorConductances;
-  float* [] receptorReversalPotentials;
+  dyn_var_t* [] receptorConductances;
+  dyn_var_t* [] receptorReversalPotentials;
 
-  float* [] injectedCurrents;
+  dyn_var_t* [] injectedCurrents;
 
-  float* [] voltageInputs;
+  dyn_var_t* [] voltageInputs;
   DimensionStruct* [] dimensionInputs;
 
   Shared {
-    float* deltaT;
-    float Ra;
-    float Na; // intracellular concentrations expressed by ion name alone
-    float K;
-    float E_leak;
+    dyn_var_t* deltaT;
+    dyn_var_t Ra;
+    dyn_var_t Na; // intracellular concentrations expressed by ion name alone
+    dyn_var_t K;
+    dyn_var_t E_leak;
   }
 
   VoltageArrayProducer.voltageArray << &Vnew;
@@ -92,14 +94,17 @@ Node HodgkinHuxleyVoltageJunction Implements VoltageArrayProducer, DimensionArra
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+/*}}}*/
 }
 
 Node VoltageJunctionPoint Implements VoltageProducer, DimensionProducer
 {
-  float* voltage;
+/*{{{*/
+  dyn_var_t* voltage;
   DimensionStruct* dimension;
+
   Shared {
-    float []* voltageConnect;
+    dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
   }
   VoltageProducer.voltage << voltage;
@@ -118,6 +123,7 @@ Node VoltageJunctionPoint Implements VoltageProducer, DimensionProducer
   }
   InitPhase produceInitialState(dimension);
   RuntimePhase produceVoltage(voltage);
+/*}}}*/
 }
 
 #endif
