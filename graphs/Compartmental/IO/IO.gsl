@@ -139,13 +139,12 @@ NodeType HodgkinHuxleyVoltage (<
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
 			E_leak=V_E_LEAK		// mV
-			     >) { initializeVoltage->initialize2, deriveParameters->initialize2 };
+			     >) { initializeVoltage->initialize2 };
 
 NodeType CaConcentration (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,               // dimensionless, Wagner and Keizer buffering constant
-                        CaClearance=CA_CLEARANCE    // s^-1
-			     >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
+                        beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
+		     >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
 
 NodeType VoltageEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -227,12 +226,11 @@ NodeType HodgkinHuxleyVoltageJunction (<
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
 			E_leak=V_E_LEAK		// mV
- 		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
+ 		    >) { initializeJunction->initialize2 };
 
 NodeType CaConcentrationJunction (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,               // dimensionless, Wagner and Keizer buffering constant
-                        CaClearance=CA_CLEARANCE    // s^-1
+                        beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
  		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 
 NodeType VoltageJunctionPoint { produceInitialState->initialize1, produceVoltage->predictJunction };
@@ -493,7 +491,8 @@ Grid Tissue
 											    "Aip", 
 											    "RHS"
 											   },
-									Ca_new = {0.1}
+									Ca_new = {0.1},
+									CaClearance=CA_CLEARANCE    // s^-1
 								      > ) );
 
    InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
@@ -544,7 +543,7 @@ Grid Tissue
 								 Cm=V_CM,		// pF/um^2
 								 gLeak=V_GLEAK 		// nS/um^2, Hines used 0.0003 S/cm^2
 								> ) );
-   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1} > ) );
+   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1}, CaClearance=CA_CLEARANCE > ) );
    InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(junctionPoints_Ca), tissueFunctor("NodeInit", <> ) );
 
