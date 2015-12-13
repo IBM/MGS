@@ -18,6 +18,8 @@
 #include "CG_ChannelHayNat.h"
 #include "rndm.h"
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #define SMALL 1.0E-6
 
 // 
@@ -45,27 +47,27 @@
 #define BHD -6.0
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-float ChannelHayNat::vtrap(float x, float y) {
+dyn_var_t ChannelHayNat::vtrap(dyn_var_t x, dyn_var_t y) {
   return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
 }
 
 void ChannelHayNat::update(RNG& rng)
 {
-  float dt = *(getSharedMembers().deltaT);
+  dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i=0; i<branchData->size; ++i) {
-    float v=(*V)[i];
-    float am = AMC*vtrap(v + AMV, AMD);
-    float bm = BMC*vtrap(v + BMV, BMD);
-    float pm = 0.5*dt*(am + bm);
+    dyn_var_t v=(*V)[i];
+    dyn_var_t am = AMC*vtrap(v + AMV, AMD);
+    dyn_var_t bm = BMC*vtrap(v + BMV, BMD);
+    dyn_var_t pm = 0.5*dt*(am + bm);
     m[i] = (dt*am + m[i]*(1.0 - pm))/(1.0 + pm);
     if (m[i] < 0.0) {
       m[i] = 0.0;
     } else if (m[i] > 1.0) {
       m[i] = 1.0;
     }
-    float ah = AHC*vtrap(v + AHV, AHD);
-    float bh = BHC*vtrap(v + BHV, BHD);
-    float ph = 0.5*dt*(ah + bh)*T_ADJ; 
+    dyn_var_t ah = AHC*vtrap(v + AHV, AHD);
+    dyn_var_t bh = BHC*vtrap(v + BHV, BHD);
+    dyn_var_t ph = 0.5*dt*(ah + bh)*T_ADJ; 
     h[i] = (dt*ah*T_ADJ + h[i]*(1.0 - ph))/(1.0 + ph);
     if (h[i] < 0.0) {
       h[i] = 0.0;
@@ -78,11 +80,15 @@ void ChannelHayNat::update(RNG& rng)
 
 void ChannelHayNat::initialize(RNG& rng)
 {
+#ifdef DEBUG_ASSERT
   assert(branchData);
+#endif
   unsigned size=branchData->size;
+#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size()==size);
   assert(V->size()==size);
+#endif
   if (g.size()!=size) g.increaseSizeTo(size);
   if (m.size()!=size) m.increaseSizeTo(size);
   if (h.size()!=size) h.increaseSizeTo(size);
@@ -90,12 +96,12 @@ void ChannelHayNat::initialize(RNG& rng)
     gbar[i]=gbar[0];
   }
   for (unsigned i=0; i<size; ++i) {
-    float v=(*V)[i];
-    float am = AMC*vtrap(v + AMV, AMD);
-    float bm = BMC*vtrap(v + BMV, BMD);
+    dyn_var_t v=(*V)[i];
+    dyn_var_t am = AMC*vtrap(v + AMV, AMD);
+    dyn_var_t bm = BMC*vtrap(v + BMV, BMD);
     m[i] = am/(am + bm);
-    float ah = AHC*vtrap(v + AHV, AHD);
-    float bh = BHC*vtrap(v + BHV, BHD);
+    dyn_var_t ah = AHC*vtrap(v + AHV, AHD);
+    dyn_var_t bh = BHC*vtrap(v + BHV, BHD);
     h[i] = ah/(ah + bh);
     g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];
   }

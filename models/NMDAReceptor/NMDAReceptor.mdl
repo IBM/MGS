@@ -1,58 +1,59 @@
 #ifndef NMDAReceptor_MDL
 #define NMDAReceptor_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer, ReversalPotentialProducer, CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer, WeightProducer {
-  float g;
-  float gbar;
-  float gbar0;
-  float w;
-  float buffer;
-  float r;
-  float I_Ca;
-  float E_Ca;
-  float tp;
+  dyn_var_t g;
+  dyn_var_t gbar;
+  dyn_var_t gbar0;
+  dyn_var_t w;
+  dyn_var_t buffer;
+  dyn_var_t r;
+  dyn_var_t I_Ca;
+  dyn_var_t E_Ca;
+  dyn_var_t tp;
 
-  float* Vpre;
-  float []* Vpost;
-  float []* Ca_IC;
+  dyn_var_t* Vpre;
+  dyn_var_t []* Vpost;
+  dyn_var_t []* Ca_IC;
   int indexPost;
   int* [] indexPrePost;
 
   BranchDataStruct* [] branchDataPrePost;
 
   Shared {
-    float alpha;
-    float beta;
-    float Tmax;
-    float Vp;
-    float Kp;
-    float E;
+    dyn_var_t alpha;
+    dyn_var_t beta;
+    dyn_var_t Tmax;
+    dyn_var_t Vp;
+    dyn_var_t Kp;
+    dyn_var_t E;
 
-    float* deltaT;
-    float* T;
-    float* Ca_EC;
-    float* Mg_EC;
-    float* Ketamine;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
+    dyn_var_t* Ca_EC;
+    dyn_var_t* Mg_EC;
+    dyn_var_t* Ketamine;
 
     //Plasticity params
     int plasticityOn;
     int plasticityStartAt;
     int plasticityStopAt;
-    float theta_d;
-    float theta_p;
-    float gamma_d;
-    float gamma_p;
-    float tau;
-    float w_th;
+    dyn_var_t theta_d;
+    dyn_var_t theta_p;
+    dyn_var_t gamma_d;
+    dyn_var_t gamma_p;
+    dyn_var_t tau;
+    dyn_var_t w_th;
 
     //Meta-plasticity NMDAR
-    float deltaNMDAR;
-    float alphaBuffer;
-    float tauBuffer;
+    dyn_var_t deltaNMDAR;
+    dyn_var_t alphaBuffer;
+    dyn_var_t tauBuffer;
    }
 
   RuntimePhase updateNMDA;

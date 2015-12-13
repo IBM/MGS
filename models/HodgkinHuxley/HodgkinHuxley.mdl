@@ -38,6 +38,13 @@ Interface CaCurrentArrayProducer {
   dyn_var_t []* CaCurrents;
 }
 
+Interface CaERCurrentProducer {
+  dyn_var_t* CaCurrent;
+}
+
+Interface CaERCurrentArrayProducer {
+  dyn_var_t []* CaCurrents;
+}
 Interface ReversalPotentialProducer {
   dyn_var_t* reversalPotential;
 }
@@ -54,12 +61,12 @@ Interface ConductanceArrayProducer {
   dyn_var_t []* conductanceArray;
 }
 
-Interface MaximumConductanceArrayProducer {
-  dyn_var_t []* maximumConductanceArray;
-}
-
 Interface MaximumConductanceProducer {
   dyn_var_t* maximumConductance;
+}
+
+Interface MaximumConductanceArrayProducer {
+  dyn_var_t []* maximumConductanceArray;
 }
 
 Interface VoltageProducer {
@@ -75,6 +82,14 @@ Interface CaConcentrationProducer {
 }
 
 Interface CaConcentrationArrayProducer {
+   dyn_var_t []* CaConcentrations;
+}
+
+Interface CaERConcentrationProducer {
+   dyn_var_t* Ca;
+}
+
+Interface CaERConcentrationArrayProducer {
    dyn_var_t []* CaConcentrations;
 }
 

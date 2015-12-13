@@ -18,6 +18,8 @@
 #include "CG_ChannelHayNap.h"
 #include "rndm.h"
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #define SMALL 1.0E-6
 
 // 
@@ -49,24 +51,24 @@
 #define BHD -2.63
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-float ChannelHayNap::vtrap(float x, float y) {
+dyn_var_t ChannelHayNap::vtrap(dyn_var_t x, dyn_var_t y) {
   return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
 }
 
 void ChannelHayNap::update(RNG& rng)
 {
-  float dt = *(getSharedMembers().deltaT);
+  dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i=0; i<branchData->size; ++i) {
-    float v=(*V)[i];
-    float minf = 1/(1+exp((v + IMV)/IMD));
-    float am = AMC*vtrap(v + AMV, AMD);
-    float bm = BMC*vtrap(v + BMV, BMD);
-    float pm = 0.5*dt*(am + bm)*T_ADJ/6.0;
+    dyn_var_t v=(*V)[i];
+    dyn_var_t minf = 1/(1+exp((v + IMV)/IMD));
+    dyn_var_t am = AMC*vtrap(v + AMV, AMD);
+    dyn_var_t bm = BMC*vtrap(v + BMV, BMD);
+    dyn_var_t pm = 0.5*dt*(am + bm)*T_ADJ/6.0;
     m[i] = (2*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
-    float hinf = 1/(1+exp((v + IHV)/IHD));
-    float ah = AHC*vtrap(v + AHV, AHD);
-    float bh = BHC*vtrap(v + BHV, BHD);
-    float ph = 0.5*dt*(ah + bh)*T_ADJ; 
+    dyn_var_t hinf = 1/(1+exp((v + IHV)/IHD));
+    dyn_var_t ah = AHC*vtrap(v + AHV, AHD);
+    dyn_var_t bh = BHC*vtrap(v + BHV, BHD);
+    dyn_var_t ph = 0.5*dt*(ah + bh)*T_ADJ; 
     h[i] = (2*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     g[i] = gbar[i]*m[i]*m[i]*m[i]*h[i];
   }
@@ -86,7 +88,7 @@ void ChannelHayNap::initialize(RNG& rng)
     gbar[i]=gbar[0];
   }
   for (unsigned i=0; i<size; ++i) {
-    float v=(*V)[i];
+    dyn_var_t v=(*V)[i];
     m[i] = 1/(1+exp((v + IMV)/IMD));
     h[i] = 1/(1+exp((v + IHV)/IHD));
     g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];

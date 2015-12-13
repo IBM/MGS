@@ -20,6 +20,9 @@
 #include "rndm.h"
 
 #define SMALL 1.0E-6
+
+// Na channel used for the axial initiation site (AIS), i.e. axon hillock
+//
 #define DEGRUIJL_2012
 
 /* Degruijl 2012 used the following parameters:
@@ -36,19 +39,19 @@
 #define TRV 40.0
 #define TRD 33.0
 
-float NaChannel_AIS::vtrap(float x, float y) {
+dyn_var_t NaChannel_AIS::vtrap(dyn_var_t x, dyn_var_t y) {
   return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
 }
 
 void NaChannel_AIS::update(RNG& rng)
 {
-  float dt = *(getSharedMembers().deltaT);
+  dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i=0; i<branchData->size; ++i) {
-    float v=(*V)[i];
-    float minf = 1.0/(1.0 + exp(-(v + MRV) / MRD) );
-    float hinf = 1.0/(1.0 + exp(-(v + hrv[i]) / HRD) );
-    float tauh = trc[i]*exp( -(v + TRV) / TRD);
-    float ph = 0.5*dt/tauh;
+    dyn_var_t v=(*V)[i];
+    dyn_var_t minf = 1.0/(1.0 + exp(-(v + MRV) / MRD) );
+    dyn_var_t hinf = 1.0/(1.0 + exp(-(v + hrv[i]) / HRD) );
+    dyn_var_t tauh = trc[i]*exp( -(v + TRV) / TRD);
+    dyn_var_t ph = 0.5*dt/tauh;
     h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     g[i] = gbar[i]*minf*minf*minf*h[i];
   }
@@ -56,11 +59,15 @@ void NaChannel_AIS::update(RNG& rng)
   
 void NaChannel_AIS::initializeNaChannels(RNG& rng)
 {
+#ifdef DEBUG_ASSERT
   assert(branchData);
   assert(dimensions);  
+#endif
   unsigned size=branchData->size;
+#ifdef DEBUG_ASSERT
   assert(V);
   assert(V->size()==size);
+#endif
   if (gbar.size()!=size) gbar.increaseSizeTo(size);
   if (hrv.size()!=size) hrv.increaseSizeTo(size);
   if (trc.size()!=size) trc.increaseSizeTo(size);
@@ -76,9 +83,9 @@ void NaChannel_AIS::initializeNaChannels(RNG& rng)
       hrv[i]=getSharedMembers().hrv_AIS;
       trc[i]=getSharedMembers().trc_AIS;
     }
-    float v=(*V)[i];
+    dyn_var_t v=(*V)[i];
     h[i] = 1.0/(1.0 + exp(-(v + hrv[i]) / HRD) );
-    float minf = 1.0/(1.0 + exp(-(v + MRV) / MRD) );
+    dyn_var_t minf = 1.0/(1.0 + exp(-(v + MRV) / MRD) );
     g[i] = gbar[i]*minf*minf*minf*h[i];
   }
 }

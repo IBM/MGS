@@ -20,6 +20,8 @@
 #include "CG_NaChannel.h"
 #include "rndm.h"
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 class NaChannel : public CG_NaChannel
 {
    public:
@@ -27,7 +29,7 @@ class NaChannel : public CG_NaChannel
       void initializeNaChannels(RNG& rng);
       virtual ~NaChannel();
    private:
-      float vtrap(float x, float y);
+      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

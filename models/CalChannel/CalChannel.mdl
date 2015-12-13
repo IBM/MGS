@@ -1,27 +1,29 @@
 #ifndef CalChannel_MDL
 #define CalChannel_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node CalChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, CaCurrentArrayProducer, BranchDataProducer {
-  float [] g;
-  float [] k;
-  float [] l;
-  float [] gbar;
-  float [] E_Ca;
-  float [] I_Ca;
+  dyn_var_t [] g;
+  dyn_var_t [] k;
+  dyn_var_t [] l;
+  dyn_var_t [] gbar;
+  dyn_var_t [] E_Ca;
+  dyn_var_t [] I_Ca;
 
-  float []* V;
-  float []* Ca_IC;
+  dyn_var_t []* V;
+  dyn_var_t []* Ca_IC;
  
   BranchDataStruct* branchData; 
 
   Shared {		
-    float* Ca_EC;
-    float* deltaT;
-    float* T;
+    dyn_var_t* Ca_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
   }
 
   RuntimePhase update;

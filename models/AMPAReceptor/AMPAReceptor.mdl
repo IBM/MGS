@@ -1,30 +1,31 @@
 #ifndef AMPAReceptor_MDL
 #define AMPAReceptor_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer, ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer {
-  float g;
-  float gbar;
-  float r;
+  dyn_var_t g;
+  dyn_var_t gbar;
+  dyn_var_t r;
 
-  float* V;
-  float* w;
+  dyn_var_t* V;
+  dyn_var_t* w;
   int indexPost;
   int* [] indexPrePost;
  
   BranchDataStruct* [] branchDataPrePost;
 
   Shared {
-    float* deltaT;
-    float E;
-    float alpha;
-    float beta;
-    float Tmax;
-    float Vp;
-    float Kp;
+    dyn_var_t* deltaT;
+    dyn_var_t E;
+    dyn_var_t alpha;
+    dyn_var_t beta;
+    dyn_var_t Tmax;
+    dyn_var_t Vp;
+    dyn_var_t Kp;
    }
 
   RuntimePhase updateAMPA;
