@@ -1,13 +1,16 @@
 #ifndef Connexon_MDL
 #define Connexon_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #include "../std/std.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer, 
+Node Connexon_Vm Implements CurrentProducer, BranchDataProducer, IndexProducer, 
      VoltageProducer
 {
+/*{{{*/
   dyn_var_t* Vi;
   dyn_var_t* Vj;
   dyn_var_t I;
@@ -38,7 +41,7 @@ Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer,
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
     VoltageArrayProducer, BranchDataProducer 
   {
-    VoltageArrayProducer.voltage >> Shared.voltageConnect;
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
     setPointers();
   }
@@ -47,6 +50,156 @@ Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer,
   {
     VoltageProducer.voltage >> Vj;
   }
+/*}}}*/
 }
 
+Node Connexon_VmCai Implements CurrentProducer, BranchDataProducer, IndexProducer,
+     VoltageProducer, 
+     CaConcentrationProducer, CaCurrentProducer
+ {
+/*{{{*/
+  dyn_var_t* Vi;
+  dyn_var_t* Vj;
+  dyn_var_t I;
+  dyn_var_t* Cai;
+  dyn_var_t* Caj;
+  dyn_var_t I_Ca;
+  dyn_var_t g;
+  dyn_var_t gMYO;
+
+  BranchDataStruct* branchData;
+  int index;
+
+  Shared {
+    dyn_var_t* T;
+    dyn_var_t []* voltageConnect;
+    dyn_var_t []* CaConcentrationConnect;
+  }
+
+  InitPhase produceInitialState(Vi, Cai);
+  RuntimePhase produceState(Vi, Cai), computeState;
+
+  VoltageProducer.voltage << Vi;
+  CurrentProducer.current << &I;
+  CaConcentrationProducer.Ca << Cai;
+  CaCurrentProducer.CaCurrent << &I_Ca;
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setCaPointers;
+  UserFunction setVoltagePointers; 
+ 
+  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    setCaPointers();
+  }
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchData;
+    setVoltagePointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects VoltageProducer {
+    VoltageProducer.voltage >> Vj;
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Calcium]") Expects CaConcentrationProducer {
+    CaConcentrationProducer.Ca >> Caj;
+  }
+/*}}}*/
+}
+
+Node Connexon_VmCaiCaER Implements CurrentProducer, BranchDataProducer, IndexProducer,
+     VoltageProducer, 
+     CaConcentrationProducer, CaCurrentProducer,
+     CaERConcentrationProducer, CaERCurrentProducer
+{
+/*{{{*/
+	//DATA
+    /*{{{*/
+	//data members: reference
+  BranchDataStruct* branchData;
+	//data members: internal, but for solver
+  dyn_var_t* Vi;
+  dyn_var_t* Vj;
+  dyn_var_t I;
+  dyn_var_t* Cai;
+  dyn_var_t* Caj;
+  dyn_var_t I_Ca;
+  dyn_var_t* CaERi;
+  dyn_var_t* CaERj;
+  dyn_var_t I_CaER;
+  dyn_var_t g;
+  dyn_var_t gMYO;
+  dyn_var_t gER; // the trans
+  /*}}}*/
+
+  int index;
+
+  Shared {
+    /*{{{*/
+    dyn_var_t* T;
+    dyn_var_t []* voltageConnect;
+    dyn_var_t []* CaConcentrationConnect;
+    dyn_var_t []* CaERConcentrationConnect;
+    /*}}}*/
+  }
+
+  InitPhase produceInitialState(Vi, Cai, CaERi);
+  RuntimePhase produceState(Vi, Cai, CaERi), computeState;
+
+  VoltageProducer.voltage << Vi;
+  CurrentProducer.current << &I;
+  CaConcentrationProducer.Ca << Cai;
+  CaCurrentProducer.CaCurrent << &I_Ca;
+  CaERConcentrationProducer.Ca << CaERi;
+  CaERCurrentProducer.CaCurrent << &I_CaER;
+
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setVoltagePointers; 
+  UserFunction setCaPointers;
+  UserFunction setCaERPointers;
+ 
+  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchData;
+    setVoltagePointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects VoltageProducer {
+    VoltageProducer.voltage >> Vj;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    setCaPointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Calcium]") Expects CaConcentrationProducer {
+    CaConcentrationProducer.Ca >> Caj;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects CaERConcentrationArrayProducer {
+    CaERConcentrationArrayProducer.CaConcentrations >> Shared.CaERConcentrationConnect;
+    setCaERPointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[CalciumER]") Expects CaERConcentrationProducer {
+    CaERConcentrationProducer.Ca >> CaERj;
+  }
+/*}}}*/
+}
 #endif

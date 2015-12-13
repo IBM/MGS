@@ -39,3 +39,4 @@ core
 *.std
 *.ASC
 *.DAT
+LensRootConfig.h
