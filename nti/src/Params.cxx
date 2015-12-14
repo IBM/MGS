@@ -21,6 +21,13 @@
 #include <string.h>
 #include <sstream>
 
+#define LENGH_LINE_MAX 1024
+// the maximum length of the name given to each FieldName as part of the key
+// helping to identify the 'component' in a branch
+#define LENGTH_TOKEN_MAX 256
+// the maximum length of the name given to each "Type" in GSL
+#define LENGTH_IDNAME_MAX 256
+
 Params::Params()
     : _bondK0(0),
       _bondR0(0),
@@ -43,7 +50,9 @@ Params::Params()
       _compartmentVariables(false),
       _channels(false),
       _electricalSynapses(false),
-      _chemicalSynapses(false) {}
+      _chemicalSynapses(false)
+{
+}
 
 Params::Params(Params const& p)
     : _bondK0(0),
@@ -87,22 +96,26 @@ Params::Params(Params const& p)
       _channels(p._channels),
       _electricalSynapses(p._electricalSynapses),
       _chemicalSynapses(p._chemicalSynapses),
-      _segmentDescriptor(p._segmentDescriptor) {
+      _segmentDescriptor(p._segmentDescriptor)
+{
   _bondK0 = new double[_nBondTypes];
   _bondR0 = new double[_nBondTypes];
-  for (int i = 0; i < _nBondTypes; i++) {
+  for (int i = 0; i < _nBondTypes; i++)
+  {
     _bondK0[i] = p._bondK0[i];
     _bondR0[i] = p._bondR0[i];
   }
   _angleK0 = new double[_nAngleTypes];
   _angleR0 = new double[_nAngleTypes];
-  for (int i = 0; i < _nAngleTypes; i++) {
+  for (int i = 0; i < _nAngleTypes; i++)
+  {
     _angleK0[i] = p._angleK0[i];
     _angleR0[i] = p._angleR0[i];
   }
   _ljEps = new double[_nLJTypes];
   _ljR0 = new double[_nLJTypes];
-  for (int i = 0; i < _nLJTypes; i++) {
+  for (int i = 0; i < _nLJTypes; i++)
+  {
     _ljEps[i] = p._ljEps[i];
     _ljR0[i] = p._ljR0[i];
   }
@@ -150,28 +163,33 @@ Params::Params(Params& p)
       _channels(p._channels),
       _electricalSynapses(p._electricalSynapses),
       _chemicalSynapses(p._chemicalSynapses),
-      _segmentDescriptor(p._segmentDescriptor) {
+      _segmentDescriptor(p._segmentDescriptor)
+{
   _bondK0 = new double[_nBondTypes];
   _bondR0 = new double[_nBondTypes];
-  for (int i = 0; i < _nBondTypes; i++) {
+  for (int i = 0; i < _nBondTypes; i++)
+  {
     _bondK0[i] = p._bondK0[i];
     _bondR0[i] = p._bondR0[i];
   }
   _angleK0 = new double[_nAngleTypes];
   _angleR0 = new double[_nAngleTypes];
-  for (int i = 0; i < _nAngleTypes; i++) {
+  for (int i = 0; i < _nAngleTypes; i++)
+  {
     _angleK0[i] = p._angleK0[i];
     _angleR0[i] = p._angleR0[i];
   }
   _ljEps = new double[_nLJTypes];
   _ljR0 = new double[_nLJTypes];
-  for (int i = 0; i < _nLJTypes; i++) {
+  for (int i = 0; i < _nLJTypes; i++)
+  {
     _ljEps[i] = p._ljEps[i];
     _ljR0[i] = p._ljR0[i];
   }
 }
 
-Params::~Params() {
+Params::~Params()
+{
   delete[] _bondR0;
   delete[] _bondK0;
   delete[] _angleR0;
@@ -180,7 +198,8 @@ Params::~Params() {
   delete[] _ljEps;
 }
 
-void Params::readDevParams(const std::string& fname) {
+void Params::readDevParams(const std::string& fname)
+{
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
@@ -192,7 +211,8 @@ void Params::readDevParams(const std::string& fname) {
   fclose(fpF);
 }
 
-void Params::readDetParams(const std::string& fname) {
+void Params::readDetParams(const std::string& fname)
+{
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
@@ -201,7 +221,8 @@ void Params::readDetParams(const std::string& fname) {
   fclose(fpF);
 }
 
-void Params::readCptParams(const std::string& fname) {
+void Params::readCptParams(const std::string& fname)
+{
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
@@ -212,7 +233,8 @@ void Params::readCptParams(const std::string& fname) {
   fclose(fpF);
 }
 
-void Params::readChanParams(const std::string& fname) {
+void Params::readChanParams(const std::string& fname)
+{
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
@@ -223,44 +245,53 @@ void Params::readChanParams(const std::string& fname) {
   fclose(fpF);
 }
 
-void Params::readSynParams(const std::string& fname) {
+void Params::readSynParams(const std::string& fname)
+{
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
-  readElectricalSynapseTargets(fpF);
-  readElectricalSynapseCosts(fpF);
+  // readElectricalSynapseTargets(fpF);
+  // readElectricalSynapseCosts(fpF);
+  readBidirectionalConnectionTargets(fpF);
+  readBidirectionalConnectionCosts(fpF);
   readChemicalSynapseTargets(fpF);
   readChemicalSynapseCosts(fpF);
   readPreSynapticPointTargets(fpF);
   fclose(fpF);
 }
 
-bool Params::symmetricElectricalSynapseTargets(double key1, double key2) {
+bool Params::symmetricElectricalSynapseTargets(key_size_t key1, key_size_t key2)
+{
   return (
       _segmentDescriptor.getSegmentKey(key1, _electricalSynapseTargetsMask1) ==
       _segmentDescriptor.getSegmentKey(key2, _electricalSynapseTargetsMask2));
 }
 
-double Params::getRadius(double key) {
+double Params::getRadius(key_size_t key)
+{
   double rval = 0.0;
-  std::map<double, double>::iterator iter =
+  std::map<key_size_t, double>::iterator iter =
       _radiiMap.find(_segmentDescriptor.getSegmentKey(key, _radiiMask));
   if (iter != _radiiMap.end()) rval = iter->second;
   return rval;
 }
 
-SIParameters Params::getSIParams(double key1, double key2) {
+SIParameters Params::getSIParams(key_size_t key1, key_size_t key2)
+{
   SIParameters rval;
-  if (_SIParams) {
+  if (_SIParams)
+  {
     bool rvalSet = false;
 
-    std::map<double, std::map<double, SIParameters> >::iterator iter1 =
+    std::map<key_size_t, std::map<key_size_t, SIParameters> >::iterator iter1 =
         _SIParamsMap.find(
             _segmentDescriptor.getSegmentKey(key1, _SIParamsMask));
-    if (iter1 != _SIParamsMap.end()) {
-      std::map<double, SIParameters>::iterator iter2 = iter1->second.find(
+    if (iter1 != _SIParamsMap.end())
+    {
+      std::map<key_size_t, SIParameters>::iterator iter2 = iter1->second.find(
           _segmentDescriptor.getSegmentKey(key2, _SIParamsMask));
-      if (iter2 != iter1->second.end()) {
+      if (iter2 != iter1->second.end())
+      {
         rval = iter2->second;
         rvalSet = true;
       }
@@ -270,26 +301,32 @@ SIParameters Params::getSIParams(double key1, double key2) {
 }
 
 std::list<std::string> const* Params::getCompartmentVariableTargets(
-    double key) {
+    key_size_t key)
+{
   std::list<std::string>* rval = 0;
-  if (_compartmentVariables) {
-    std::map<double, std::list<std::string> >::iterator miter =
+  if (_compartmentVariables)
+  {
+    std::map<key_size_t, std::list<std::string> >::iterator miter =
         _compartmentVariableTargetsMap.find(_segmentDescriptor.getSegmentKey(
             key, _compartmentVariableTargetsMask));
-    if (miter != _compartmentVariableTargetsMap.end()) {
+    if (miter != _compartmentVariableTargetsMap.end())
+    {
       rval = &miter->second;
     }
   }
   return rval;
 }
 
-std::list<Params::ChannelTarget>* Params::getChannelTargets(double key) {
+std::list<Params::ChannelTarget>* Params::getChannelTargets(key_size_t key)
+{
   std::list<Params::ChannelTarget>* rval = 0;
-  if (_channels) {
-    std::map<double, std::list<Params::ChannelTarget> >::iterator miter =
+  if (_channels)
+  {
+    std::map<key_size_t, std::list<Params::ChannelTarget> >::iterator miter =
         _channelTargetsMap.find(
             _segmentDescriptor.getSegmentKey(key, _channelTargetsMask));
-    if (miter != _channelTargetsMap.end()) {
+    if (miter != _channelTargetsMap.end())
+    {
       rval = &miter->second;
     }
   }
@@ -297,21 +334,25 @@ std::list<Params::ChannelTarget>* Params::getChannelTargets(double key) {
 }
 
 std::list<Params::Params::ElectricalSynapseTarget>*
-Params::getElectricalSynapseTargets(double key1, double key2) {
+    Params::getElectricalSynapseTargets(key_size_t key1, key_size_t key2)
+{
   std::list<Params::Params::ElectricalSynapseTarget>* rval = 0;
-  if (_electricalSynapses) {
-    std::map<double,
-             std::map<double,
+  if (_electricalSynapses)
+  {
+    std::map<key_size_t,
+             std::map<key_size_t,
                       std::list<Params::Params::ElectricalSynapseTarget> > >::
         iterator miter1 =
             _electricalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key1, _electricalSynapseTargetsMask1));
-    if (miter1 != _electricalSynapseTargetsMap.end()) {
-      std::map<double,
+    if (miter1 != _electricalSynapseTargetsMap.end())
+    {
+      std::map<key_size_t,
                std::list<Params::Params::ElectricalSynapseTarget> >::iterator
           miter2 = miter1->second.find(_segmentDescriptor.getSegmentKey(
               key2, _electricalSynapseTargetsMask2));
-      if (miter2 != miter1->second.end()) {
+      if (miter2 != miter1->second.end())
+      {
         rval = &miter2->second;
       }
     }
@@ -320,20 +361,23 @@ Params::getElectricalSynapseTargets(double key1, double key2) {
 }
 
 std::list<Params::ChemicalSynapseTarget>* Params::getChemicalSynapseTargets(
-    double key1, double key2) {
+    key_size_t key1, key_size_t key2)
+{
   std::list<Params::ChemicalSynapseTarget>* rval = 0;
-  if (_chemicalSynapses) {
-    std::map<
-        double,
-        std::map<double, std::list<Params::ChemicalSynapseTarget> > >::iterator
-        miter1 =
+  if (_chemicalSynapses)
+  {
+    std::map<key_size_t,
+             std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> > >::
+        iterator miter1 =
             _chemicalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key1, _chemicalSynapseTargetsMask1));
-    if (miter1 != _chemicalSynapseTargetsMap.end()) {
-      std::map<double, std::list<Params::ChemicalSynapseTarget> >::iterator
+    if (miter1 != _chemicalSynapseTargetsMap.end())
+    {
+      std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >::iterator
           miter2 = miter1->second.find(_segmentDescriptor.getSegmentKey(
               key2, _chemicalSynapseTargetsMask2));
-      if (miter2 != miter1->second.end()) {
+      if (miter2 != miter1->second.end())
+      {
         rval = &miter2->second;
       }
     }
@@ -341,7 +385,8 @@ std::list<Params::ChemicalSynapseTarget>* Params::getChemicalSynapseTargets(
   return rval;
 }
 
-std::string Params::getPreSynapticPointTarget(std::string chemicalSynapseType) {
+std::string Params::getPreSynapticPointTarget(std::string chemicalSynapseType)
+{
   std::map<std::string, std::string>::iterator iter =
       _preSynapticPointTargetsMap.find(chemicalSynapseType);
   assert(iter != _preSynapticPointTargetsMap.end());
@@ -349,24 +394,30 @@ std::string Params::getPreSynapticPointTarget(std::string chemicalSynapseType) {
 }
 
 std::list<std::string>& Params::getPreSynapticPointSynapseTypes(
-    std::string targetType) {
+    std::string targetType)
+{
   std::map<std::string, std::list<std::string> >::iterator iter =
       _preSynapticPointSynapseMap.find(targetType);
   assert(iter != _preSynapticPointSynapseMap.end());
   return iter->second;
 }
 
-bool Params::isCompartmentVariableTarget(double key, std::string type) {
+bool Params::isCompartmentVariableTarget(key_size_t key, std::string type)
+{
   bool rval = false;
-  if (_compartmentVariables) {
-    std::map<double, std::list<std::string> >::iterator miter =
+  if (_compartmentVariables)
+  {
+    std::map<key_size_t, std::list<std::string> >::iterator miter =
         _compartmentVariableTargetsMap.find(_segmentDescriptor.getSegmentKey(
             key, _compartmentVariableTargetsMask));
-    if (miter != _compartmentVariableTargetsMap.end()) {
+    if (miter != _compartmentVariableTargetsMap.end())
+    {
       std::list<std::string>::iterator titer = miter->second.begin(),
                                        tend = miter->second.end();
-      for (; titer != tend; ++titer) {
-        if (*titer == type) {
+      for (; titer != tend; ++titer)
+      {
+        if (*titer == type)
+        {
           rval = true;
           break;
         }
@@ -376,61 +427,74 @@ bool Params::isCompartmentVariableTarget(double key, std::string type) {
   return rval;
 }
 
-bool Params::isChannelTarget(double key) {
+bool Params::isChannelTarget(key_size_t key)
+{
   bool rval = false;
-  if (_channels) {
-    std::map<double, std::list<Params::ChannelTarget> >::iterator miter =
+  if (_channels)
+  {
+    std::map<key_size_t, std::list<Params::ChannelTarget> >::iterator miter =
         _channelTargetsMap.find(
             _segmentDescriptor.getSegmentKey(key, _channelTargetsMask));
-    if (miter != _channelTargetsMap.end()) {
+    if (miter != _channelTargetsMap.end())
+    {
       rval = true;
     }
   }
   return rval;
 }
 
-bool Params::isElectricalSynapseTarget(double key1, double key2,
-                                       bool autapses) {
+bool Params::isElectricalSynapseTarget(key_size_t key1, key_size_t key2,
+                                       bool autapses)
+{
   bool rval = false;
-  for (int direction = 0; direction <= 1 && !rval; ++direction) {
+  //bi-direction
+  for (int direction = 0; direction <= 1 && !rval; ++direction)
+  {
     if (_electricalSynapses &&
         (key1 < key2 || !symmetricElectricalSynapseTargets(key1, key2)) &&
-        (autapses || _segmentDescriptor.getNeuronIndex(key1) !=
-                         _segmentDescriptor.getNeuronIndex(key2))) {
-      std::map<double,
-               std::map<double, std::list<Params::ElectricalSynapseTarget> > >::
+        (autapses ||
+         _segmentDescriptor.getNeuronIndex(key1) !=
+             _segmentDescriptor.getNeuronIndex(key2)))
+    {
+      std::map<key_size_t,
+               std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> > >::
           iterator miter = _electricalSynapseTargetsMap.find(
               _segmentDescriptor.getSegmentKey(key1,
                                                _electricalSynapseTargetsMask1));
-      if (miter != _electricalSynapseTargetsMap.end()) {
-        std::map<double, std::list<Params::ElectricalSynapseTarget> >::iterator
+      if (miter != _electricalSynapseTargetsMap.end())
+      {
+        std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >::iterator
             miter2 = miter->second.find(_segmentDescriptor.getSegmentKey(
                 key2, _electricalSynapseTargetsMask2));
-        if (miter2 != miter->second.end()) {
+        if (miter2 != miter->second.end())
+        {
           rval = true;
         }
       }
     }
-    double tmp = key1;
+    key_size_t tmp = key1;
     key1 = key2;
     key2 = tmp;
   }
   return rval;
 }
 
-bool Params::isElectricalSynapseTarget(double key) {
+bool Params::isElectricalSynapseTarget(key_size_t key)
+{
   bool rval = false;
-  if (_electricalSynapses) {
-    std::map<double,
-             std::map<double, std::list<Params::ElectricalSynapseTarget> > >::
+  if (_electricalSynapses)
+  {
+    std::map<key_size_t,
+             std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> > >::
         const_iterator miter = _electricalSynapseTargetsMap.begin(),
                        mend = _electricalSynapseTargetsMap.end();
     rval = (_electricalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key, _electricalSynapseTargetsMask1)) != mend ||
             _electricalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key, _electricalSynapseTargetsMask2)) != mend);
-    for (; miter != mend && !rval; ++miter) {
-      std::map<double,
+    for (; miter != mend && !rval; ++miter)
+    {
+      std::map<key_size_t,
                std::list<Params::ElectricalSynapseTarget> >::const_iterator
           mend2 = miter->second.end();
       rval = (miter->second.find(_segmentDescriptor.getSegmentKey(
@@ -442,29 +506,34 @@ bool Params::isElectricalSynapseTarget(double key) {
   return rval;
 }
 
-bool Params::isChemicalSynapseTarget(double key1, double key2, bool autapses) {
+bool Params::isChemicalSynapseTarget(key_size_t key1, key_size_t key2,
+                                     bool autapses)
+{
   bool rval = false;
+  //uni-direction
   // for (int direction=0; direction<=1 && !rval; ++direction) {
-  if (_chemicalSynapses &&
-      (autapses || _segmentDescriptor.getNeuronIndex(key1) !=
-                       _segmentDescriptor.getNeuronIndex(key2))) {
-    std::map<
-        double,
-        std::map<double, std::list<Params::ChemicalSynapseTarget> > >::iterator
-        miter =
+  if (_chemicalSynapses && (autapses ||
+                            _segmentDescriptor.getNeuronIndex(key1) !=
+                                _segmentDescriptor.getNeuronIndex(key2)))
+  {
+    std::map<key_size_t,
+             std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> > >::
+        iterator miter =
             _chemicalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key1, _chemicalSynapseTargetsMask1));
-    if (miter != _chemicalSynapseTargetsMap.end()) {
-      std::map<double, std::list<Params::ChemicalSynapseTarget> >::iterator
+    if (miter != _chemicalSynapseTargetsMap.end())
+    {
+      std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >::iterator
           miter2 = miter->second.find(_segmentDescriptor.getSegmentKey(
               key2, _chemicalSynapseTargetsMask2));
-      if (miter2 != miter->second.end()) {
+      if (miter2 != miter->second.end())
+      {
         rval = true;
       }
     }
   }
   /*
-  double tmp=key1;
+  key_size_t tmp=key1;
   key1=key2;
   key2=tmp;
 }
@@ -472,19 +541,22 @@ bool Params::isChemicalSynapseTarget(double key1, double key2, bool autapses) {
   return rval;
 }
 
-bool Params::isChemicalSynapseTarget(double key) {
+bool Params::isChemicalSynapseTarget(key_size_t key)
+{
   bool rval = false;
-  if (_chemicalSynapses) {
-    std::map<double,
-             std::map<double, std::list<Params::ChemicalSynapseTarget> > >::
+  if (_chemicalSynapses)
+  {
+    std::map<key_size_t,
+             std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> > >::
         const_iterator miter = _chemicalSynapseTargetsMap.begin(),
                        mend = _chemicalSynapseTargetsMap.end();
     rval = (_chemicalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key, _chemicalSynapseTargetsMask1)) != mend ||
             _chemicalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key, _chemicalSynapseTargetsMask2)) != mend);
-    for (; miter != mend && !rval; ++miter) {
-      std::map<double,
+    for (; miter != mend && !rval; ++miter)
+    {
+      std::map<key_size_t,
                std::list<Params::ChemicalSynapseTarget> >::const_iterator
           mend2 = miter->second.end();
       rval = (miter->second.find(_segmentDescriptor.getSegmentKey(
@@ -496,13 +568,17 @@ bool Params::isChemicalSynapseTarget(double key) {
   return rval;
 }
 
-double Params::getCompartmentVariableCost(std::string compartmentVariableId) {
+double Params::getCompartmentVariableCost(std::string compartmentVariableId)
+{
   double rval = 0.0;
   std::map<std::string, double>::iterator miter =
       _compartmentVariableCostsMap.find(compartmentVariableId);
-  if (miter != _compartmentVariableCostsMap.end()) {
+  if (miter != _compartmentVariableCostsMap.end())
+  {
     rval = miter->second;
-  } else {
+  }
+  else
+  {
     std::cerr << "Params : Unspecified CompartmentVariable Cost! ID : "
               << compartmentVariableId << std::endl;
     exit(0);
@@ -510,13 +586,17 @@ double Params::getCompartmentVariableCost(std::string compartmentVariableId) {
   return rval;
 }
 
-double Params::getChannelCost(std::string channelId) {
+double Params::getChannelCost(std::string channelId)
+{
   double rval = 0.0;
   std::map<std::string, double>::iterator miter =
       _channelCostsMap.find(channelId);
-  if (miter != _channelCostsMap.end()) {
+  if (miter != _channelCostsMap.end())
+  {
     rval = miter->second;
-  } else {
+  }
+  else
+  {
     std::cerr << "Params : Unspecified Channel Cost! ID : " << channelId
               << std::endl;
     exit(0);
@@ -524,13 +604,17 @@ double Params::getChannelCost(std::string channelId) {
   return rval;
 }
 
-double Params::getElectricalSynapseCost(std::string electricalSynapseId) {
+double Params::getElectricalSynapseCost(std::string electricalSynapseId)
+{
   double rval = 0.0;
   std::map<std::string, double>::iterator miter =
       _electricalSynapseCostsMap.find(electricalSynapseId);
-  if (miter != _electricalSynapseCostsMap.end()) {
+  if (miter != _electricalSynapseCostsMap.end())
+  {
     rval = miter->second;
-  } else {
+  }
+  else
+  {
     std::cerr << "Params : Unspecified Electrical Synapse Cost! ID : "
               << electricalSynapseId << std::endl;
     exit(0);
@@ -538,13 +622,17 @@ double Params::getElectricalSynapseCost(std::string electricalSynapseId) {
   return rval;
 }
 
-double Params::getChemicalSynapseCost(std::string chemicalSynapseId) {
+double Params::getChemicalSynapseCost(std::string chemicalSynapseId)
+{
   double rval = 0.0;
   std::map<std::string, double>::iterator miter =
       _chemicalSynapseCostsMap.find(chemicalSynapseId);
-  if (miter != _chemicalSynapseCostsMap.end()) {
+  if (miter != _chemicalSynapseCostsMap.end())
+  {
     rval = miter->second;
-  } else {
+  }
+  else
+  {
     std::cerr << "Params : Unspecified Chemical Synapse Cost! ID: "
               << chemicalSynapseId << std::endl;
     exit(0);
@@ -552,15 +640,23 @@ double Params::getChemicalSynapseCost(std::string chemicalSynapseId) {
   return rval;
 }
 
+// INPUT:
+//    modelType = COMPARTMENT | SYNAPSE | CHANNEL
+//    nodeType  = the name for the nodetype passed via nodekine in Layer statement in GSL
+//    key       = the key associated with the branch's compartment from that we want to retrieve
+// OUTPUT:
+//    modelParams = the list of pair (parameter, value) for the give nodeType 
 void Params::getModelParams(
-    ModelType modelType, std::string nodeType, double key,
-    std::list<std::pair<std::string, float> >& modelParams) {
+    ModelType modelType, std::string nodeType, key_size_t key,
+    std::list<std::pair<std::string, dyn_var_t> >& modelParams)
+{
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<std::string,
-           std::map<double, std::list<std::pair<std::string, float> > > >*
+           std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >*
       modelParamsMap;
 
-  switch (modelType) {
+  switch (modelType)
+  {
     case COMPARTMENT:
       modelParamsMasks = &_compartmentParamsMasks;
       modelParamsMap = &_compartmentParamsMap;
@@ -572,33 +668,36 @@ void Params::getModelParams(
   }
 
   modelParams.clear();
-  std::map<
-      std::string,
-      std::map<double, std::list<std::pair<std::string, float> > > >::iterator
-      iter1 = modelParamsMap->find(nodeType);
-  if (iter1 != modelParamsMap->end()) {
+  std::map<std::string,
+           std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >::
+      iterator iter1 = modelParamsMap->find(nodeType);
+  if (iter1 != modelParamsMap->end())
+  {
     std::map<std::string, unsigned long long>::iterator miter =
         modelParamsMasks->find(nodeType);
     assert(miter != modelParamsMasks->end());
-    std::map<double, std::list<std::pair<std::string, float> > >::iterator
+    std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > >::iterator
         iter2 = (iter1->second)
                     .find(_segmentDescriptor.getSegmentKey(key, miter->second));
-    if (iter2 != (iter1->second).end()) {
+    if (iter2 != (iter1->second).end())
+    {
       modelParams = iter2->second;
     }
   }
 }
 
 void Params::getModelArrayParams(
-    ModelType modelType, std::string nodeType, double key,
-    std::list<std::pair<std::string, std::vector<float> > >& modelArrayParams) {
+    ModelType modelType, std::string nodeType, key_size_t key,
+    std::list<std::pair<std::string, std::vector<dyn_var_t> > >& modelArrayParams)
+{
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<std::string,
-           std::map<double,
-                    std::list<std::pair<std::string, std::vector<float> > > > >*
+           std::map<key_size_t,
+                    std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >*
       modelArrayParamsMap;
 
-  switch (modelType) {
+  switch (modelType)
+  {
     case COMPARTMENT:
       modelParamsMasks = &_compartmentParamsMasks;
       modelArrayParamsMap = &_compartmentArrayParamsMap;
@@ -612,154 +711,256 @@ void Params::getModelArrayParams(
   modelArrayParams.clear();
   std::map<
       std::string,
-      std::map<double,
-               std::list<std::pair<std::string, std::vector<float> > > > >::
+      std::map<key_size_t,
+               std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >::
       iterator iter1 = modelArrayParamsMap->find(nodeType);
-  if (iter1 != modelArrayParamsMap->end()) {
+  if (iter1 != modelArrayParamsMap->end())
+  {
     std::map<std::string, unsigned long long>::iterator miter =
         modelParamsMasks->find(nodeType);
     assert(miter != modelParamsMasks->end());
-    std::map<double,
-             std::list<std::pair<std::string, std::vector<float> > > >::iterator
+    std::map<key_size_t,
+             std::list<std::pair<std::string, std::vector<dyn_var_t> > > >::iterator
         iter2 = (iter1->second)
                     .find(_segmentDescriptor.getSegmentKey(key, miter->second));
-    if (iter2 != (iter1->second).end()) {
+    if (iter2 != (iter1->second).end())
+    {
       modelArrayParams = iter2->second;
     }
   }
 }
 
-bool Params::readBondParams(FILE* fpF) {
+// A comment line is a blank line
+//  or               a line whose first non-space character is #
+bool Params::isCommentLine(std::string& line)
+{
+  bool rval = false;
+  char space = ' ';
+  int index = line.find_first_not_of(space);
+  if (index != std::string::npos)
+  {
+    if (line[index] == '#') rval = true;
+  }
+}
+bool Params::readBondParams(FILE* fpF)
+{
   bool rval = false;
   int n = _nBondTypes = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype = std::string(tokS);
-      std::string expected_btype("NBONDTYPES");
-      if (btype == expected_btype) {
-        //      if(!strcmp("NBONDTYPES", tokS)) {
-        _nBondTypes = n;
-        break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype = std::string(tokS);
+        std::string expected_btype("NBONDTYPES");
+        if (btype == expected_btype)
+        {
+          //      if(!strcmp("NBONDTYPES", tokS)) {
+          _nBondTypes = n;
+          break;
+        }
       }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
   delete[] _bondR0;
   delete[] _bondK0;
   _bondR0 = _bondK0 = 0;
-  if (_nBondTypes > 0) {
+  if (_nBondTypes > 0)
+  {
     _bondR0 = new double[_nBondTypes];
     _bondK0 = new double[_nBondTypes];
-    for (int i = 0; i < _nBondTypes; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 != sscanf(bufS, "%lf %lf ", &_bondK0[i], &_bondR0[i])) assert(0);
+    // for (int i = 0; i < _nBondTypes; i++)
+    for (int i = 0; i < _nBondTypes;)  // for each line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 != sscanf(bufS, "%lf %lf ", &_bondK0[i], &_bondR0[i])) assert(0);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readAngleParams(FILE* fpF) {
+bool Params::readAngleParams(FILE* fpF)
+{
   bool rval = false;
   int n = _nAngleTypes = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("NANGLETYPES");
-      if (btype == expected_btype) {
-        //            if (!strcmp("NANGLETYPES", tokS)) {
-        _nAngleTypes = n;
-        break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("NANGLETYPES");
+        if (btype == expected_btype)
+        {
+          //            if (!strcmp("NANGLETYPES", tokS)) {
+          _nAngleTypes = n;
+          break;
+        }
       }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
   delete[] _angleR0;
   delete[] _angleK0;
   _angleR0 = _angleK0 = 0;
-  if (_nAngleTypes > 0) {
+  if (_nAngleTypes > 0)
+  {
     _angleR0 = new double[_nAngleTypes];
     _angleK0 = new double[_nAngleTypes];
-    for (int i = 0; i < _nAngleTypes; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 != sscanf(bufS, "%lf %lf ", &_angleK0[i], &_angleR0[i])) assert(0);
-      _angleR0[i] *= (M_PI / 180.0);
+    for (int i = 0; i < _nAngleTypes;)  // for each line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 != sscanf(bufS, "%lf %lf ", &_angleK0[i], &_angleR0[i]))
+          assert(0);
+        _angleR0[i] *= (M_PI / 180.0);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readLJParams(FILE* fpF) {
+bool Params::readLJParams(FILE* fpF)
+{
   bool rval = false;
   int n = _nLJTypes = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype1("NLJTYPES");
-      std::string expected_btype2("NREPULSETYPES");
-      if (btype == expected_btype1 || btype == expected_btype2) {
-        //      if( !strcmp("NLJTYPES", tokS) ||
-        // !strcmp("NREPULSETYPES", tokS)) {
-        _nLJTypes = n;
-        break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype1("NLJTYPES");
+        std::string expected_btype2("NREPULSETYPES");
+        if (btype == expected_btype1 || btype == expected_btype2)
+        {
+          //      if( !strcmp("NLJTYPES", tokS) ||
+          // !strcmp("NREPULSETYPES", tokS)) {
+          _nLJTypes = n;
+          break;
+        }
       }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
   delete[] _ljR0;
   delete[] _ljEps;
   _ljR0 = _ljEps = 0;
-  if (_nLJTypes > 0) {
+  if (_nLJTypes > 0)
+  {
     _ljR0 = new double[_nLJTypes];
     _ljEps = new double[_nLJTypes];
-    for (int i = 0; i < _nLJTypes; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 != sscanf(bufS, "%lf %lf ", &_ljEps[i], &_ljR0[i])) assert(0);
-      _ljEps[i] = sqrt(_ljEps[i]);
+    for (int i = 0; i < _nLJTypes;)  // for each line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 != sscanf(bufS, "%lf %lf ", &_ljEps[i], &_ljR0[i])) assert(0);
+        _ljEps[i] = sqrt(_ljEps[i]);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readRadii(FILE* fpF) {
+bool Params::readRadii(FILE* fpF)
+{
+  /* Example:
+   * RADII 2
+   * BRANCHTYPE
+   * 0 0.001
+   * 1 0.002
+   */
   bool rval = false;
   _radiiMask = 0;
   _radiiMap.clear();
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("RADII");
-      if (btype == expected_btype) break;
-      //      if(!strcmp("RADII", tokS)) break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);  // read line: RADII 2
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("RADII");
+        if (btype == expected_btype) break;
+        //      if(!strcmp("RADII", tokS)) break;
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
-    _radiiMask = resetMask(fpF, maskVector);
+    _radiiMask = resetMask(fpF, maskVector);  // generate maskVector based on
+    // the information
+    // on the next line: BRANCHTYPE
     double radius;
-    unsigned int sz = maskVector.size();
+    unsigned int sz = maskVector.size();  // number of given fieldnames
     assert(sz);
     unsigned int* ids = new unsigned int[sz];
 
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < sz; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+    for (int i = 0; i < n;)  // for each line
+    {
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
+
+        for (int j = 0; j < sz;
+             ++j)  // read the values of the associated fieldnames
+        {
+          if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+          if (maskVector[j] == SegmentDescriptor::branchType)
+            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }  // these values help to identify which branch in which neuron to get
+           // the paramater mapping
+
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);  // read the parameter
+        //  to be mapped to the given branch
+        //  NOTE: The mapping happens only at the branch-level, not
+        //            compartment-level inside the branch
+        //        To get to compartment-level, we need to know the index
+        //        which can be changed depend on how we specify
+        //        #-of-compartment per branch, so this is not easy to deal with
+        //        unless we fix the #-of-comparment per branch
+        if (1 != sscanf(bufS, "%lf", &radius)) assert(0);
+        _radiiMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] =
+            radius;
+        i++;  // line increment
       }
-      c = fgets(bufS, 1024, fpF);
-      if (1 != sscanf(bufS, "%lf", &radius)) assert(0);
-      _radiiMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = radius;
     }
     delete[] ids;
     rval = true;
@@ -767,50 +968,76 @@ bool Params::readRadii(FILE* fpF) {
   return rval;
 }
 
-bool Params::readTouchTables(FILE* fpF) {
+bool Params::readTouchTables(FILE* fpF)
+{
   bool rval = false;
   _touchTableMasks.clear();
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("TOUCH_TABLES");
-      if (btype == expected_btype) break;
-      //      if(!strcmp("TOUCH_TABLES", tokS)) break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("TOUCH_TABLES");
+        if (btype == expected_btype) break;
+        //      if(!strcmp("TOUCH_TABLES", tokS)) break;
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  for (int i = 0; i < n; i++) {
-    std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
-    resetMask(fpF, maskVector);
-    _touchTableMasks.push_back(maskVector);
+  for (int i = 0; i < n;)  // for each line (not counting comment-line)
+  {
+    fpos_t fpos;
+    fgetpos(fpF, &fpos);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      fsetpos(fpF, &fpos);
+
+      std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+      resetMask(fpF, maskVector);
+      _touchTableMasks.push_back(maskVector);
+      i++;
+    }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readSIParams(FILE* fpF) {
+bool Params::readSIParams(FILE* fpF)
+{
   _SIParams = false;
   _SIParamsMask = 0;
   _SIParamsMap.clear();
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("NSITYPES");
-      if (btype == expected_btype)
-          //            if (!strcmp("NSITYPES", tokS))
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
       {
-        break;
+        std::string btype(tokS);
+        std::string expected_btype("NSITYPES");
+        if (btype == expected_btype)
+        //            if (!strcmp("NSITYPES", tokS))
+        {
+          break;
+        }
       }
     }
-    char* c = fgets(bufS, 1024, fpF);
+    char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
     _SIParamsMask = resetMask(fpF, maskVector);
 
@@ -818,24 +1045,44 @@ bool Params::readSIParams(FILE* fpF) {
     unsigned int sz = maskVector.size() * 2;
     unsigned int* ids = new unsigned int[sz];
 
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < sz; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-      }
-      c = fgets(bufS, 1024, fpF);
-      if (2 != sscanf(bufS, "%lf %lf ", &Epsilon, &Sigma)) assert(0);
-      double key1 = _segmentDescriptor.getSegmentKey(maskVector, &ids[0]);
-      double key2 = _segmentDescriptor.getSegmentKey(maskVector, &ids[sz / 2]);
-      std::map<double, std::map<double, SIParameters> >::iterator iter =
-          _SIParamsMap.find(key1);
-      if (iter == _SIParamsMap.end()) {
-        std::map<double, SIParameters> newMap;
-        (newMap[key2]).Epsilon = Epsilon;
-        (newMap[key2]).Sigma = Sigma;
-        _SIParamsMap[key1] = newMap;
-      } else {
-        ((*iter).second)[key2].Epsilon = Epsilon;
-        ((*iter).second)[key2].Sigma = Sigma;
+    for (int i = 0; i < n;)  // for each line
+    {
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
+
+        for (int j = 0; j < sz; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+          if (maskVector[0] ==
+              SegmentDescriptor::branchType)  // special treatment
+            // for NSITYPES, BRANCHTYPE is used twice
+            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);
+        if (2 != sscanf(bufS, "%lf %lf ", &Epsilon, &Sigma)) assert(0);
+        key_size_t key1 = _segmentDescriptor.getSegmentKey(maskVector, &ids[0]);
+        key_size_t key2 =
+            _segmentDescriptor.getSegmentKey(maskVector, &ids[sz / 2]);
+        std::map<key_size_t, std::map<key_size_t, SIParameters> >::iterator iter =
+            _SIParamsMap.find(key1);
+        if (iter == _SIParamsMap.end())
+        {
+          std::map<key_size_t, SIParameters> newMap;
+          (newMap[key2]).Epsilon = Epsilon;
+          (newMap[key2]).Sigma = Sigma;
+          _SIParamsMap[key1] = newMap;
+        }
+        else
+        {
+          ((*iter).second)[key2].Epsilon = Epsilon;
+          ((*iter).second)[key2].Sigma = Sigma;
+        }
+        i++;  // line increment
       }
     }
     delete[] ids;
@@ -844,50 +1091,75 @@ bool Params::readSIParams(FILE* fpF) {
   return _SIParams;
 }
 
-bool Params::readCompartmentVariableTargets(FILE* fpF) {
+bool Params::readCompartmentVariableTargets(FILE* fpF)
+{
   _compartmentVariables = false;
   _compartmentVariableTargetsMask = 0;
   _compartmentVariableTargetsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("COMPARTMENT_VARIABLE_TARGETS");
-      if (btype == expected_btype) break;
-      //      if(!strcmp("COMPARTMENT_VARIABLE_TARGETS", tokS)) break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("COMPARTMENT_VARIABLE_TARGETS");
+        if (btype == expected_btype) break;
+        //      if(!strcmp("COMPARTMENT_VARIABLE_TARGETS", tokS)) break;
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
     _compartmentVariableTargetsMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
     unsigned int* ids = new unsigned int[sz];
 
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < sz; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-        if (maskVector[j] == SegmentDescriptor::segmentIndex) {
-          std::cerr << "Params : Targeting compartmentVariables to individual "
-                       "compartments not supported!" << std::endl;
-          exit(0);
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
+
+        for (int j = 0; j < sz; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+          if (maskVector[j] == SegmentDescriptor::branchType)
+            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          if (maskVector[j] == SegmentDescriptor::segmentIndex)
+          {
+            std::cerr
+                << "Params : Targeting compartmentVariables to individual "
+                   "compartments not supported!" << std::endl;
+            exit(0);
+          }
         }
+        assert(!feof(fpF));
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);
+        std::istringstream is(bufS);
+        std::list<std::string> targets;
+        std::string type;
+        while (is >> type)
+        {
+          targets.push_back(type);
+        }
+        targets.sort();
+        _compartmentVariableTargetsMap[_segmentDescriptor.getSegmentKey(
+            maskVector, &ids[0])] = targets;
+        i++;
       }
-      assert(!feof(fpF));
-      c = fgets(bufS, 1024, fpF);
-      std::istringstream is(bufS);
-      std::list<std::string> targets;
-      std::string type;
-      while (is >> type) {
-        targets.push_back(type);
-      }
-      targets.sort();
-      _compartmentVariableTargetsMap
-          [_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = targets;
     }
     delete[] ids;
     _compartmentVariables = true;
@@ -895,88 +1167,118 @@ bool Params::readCompartmentVariableTargets(FILE* fpF) {
   return _compartmentVariables;
 }
 
-bool Params::readChannelTargets(FILE* fpF) {
+bool Params::readChannelTargets(FILE* fpF)
+{
   _channels = false;
   _channelTargetsMask = 0;
   _channelTargetsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("CHANNEL_TARGETS");
-      if (btype == expected_btype) break;
-      //      if(!strcmp("CHANNEL_TARGETS", tokS)) break;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("CHANNEL_TARGETS");
+        if (btype == expected_btype) break;
+        //      if(!strcmp("CHANNEL_TARGETS", tokS)) break;
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
     _channelTargetsMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
     unsigned int* ids = new unsigned int[sz];
 
-    for (int i = 0; i < n; i++) {
-      for (unsigned int j = 0; j < sz; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-        if (maskVector[j] == SegmentDescriptor::segmentIndex) {
-          std::cerr << "Params : Targeting channels to individual compartments "
-                       "not supported!" << std::endl;
-          exit(0);
-        }
-      }
-      assert(!feof(fpF));
-      c = fgets(bufS, 1024, fpF);
-      std::istringstream is(bufS);
-      std::list<Params::ChannelTarget>& targets = _channelTargetsMap
-          [_segmentDescriptor.getSegmentKey(maskVector, &ids[0])];
-      Params::ChannelTarget ct;
-      while (is >> ct._type) {
-        while (is.get() != '[') {
-          assert(is.good());
-        }
-        char buf1[256];
-        is.get(buf1, 256, ']');
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
 
-        std::string stringbuf(buf1);
-        std::vector<std::string> tokens;
-        StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator i = tokens.begin();
-             i != tokens.end(); ++i) {
-          ct.addTarget1(*i);
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+          if (maskVector[j] == SegmentDescriptor::branchType)
+            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          if (maskVector[j] == SegmentDescriptor::segmentIndex)
+          {
+            std::cerr
+                << "Params : Targeting channels to individual compartments "
+                   "not supported!" << std::endl;
+            exit(0);
+          }
         }
-        /*char* tok1 = strtok(buf1, " ,");
-        while (tok1 != 0) {
-            ct.addTarget1(std::string(tok1));
-            tok1 = strtok(0, " ,");
-        }*/
-        if (is.get() != ']') assert(0);
-        while (is.get() != '[') {
-          assert(is.good());
+        assert(!feof(fpF));
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);
+        std::istringstream is(bufS);
+        std::list<Params::ChannelTarget>& targets =
+            _channelTargetsMap[_segmentDescriptor.getSegmentKey(maskVector,
+                                                                &ids[0])];
+        Params::ChannelTarget ct;
+        while (is >> ct._type)
+        {
+          while (is.get() != '[')
+          {
+            assert(is.good());
+          }
+          char buf1[LENGTH_IDNAME_MAX];
+          is.get(buf1, LENGTH_IDNAME_MAX, ']');
+
+          std::string stringbuf(buf1);
+          std::vector<std::string> tokens;
+          StringUtils::Tokenize(stringbuf, tokens, " ,");
+          for (std::vector<std::string>::iterator i = tokens.begin();
+               i != tokens.end(); ++i)
+          {
+            ct.addTarget1(*i);
+          }
+          /*char* tok1 = strtok(buf1, " ,");
+          while (tok1 != 0) {
+              ct.addTarget1(std::string(tok1));
+              tok1 = strtok(0, " ,");
+          }*/
+          if (is.get() != ']') assert(0);
+          while (is.get() != '[')
+          {
+            assert(is.good());
+          }
+          char buf2[LENGTH_IDNAME_MAX];
+          is.get(buf2, LENGTH_IDNAME_MAX, ']');
+          if (is.get() != ']') assert(0);
+          stringbuf = std::string(buf2);
+          StringUtils::Tokenize(stringbuf, tokens, " ,");
+          for (std::vector<std::string>::iterator i = tokens.begin();
+               i != tokens.end(); ++i)
+          {
+            ct.addTarget2(*i);
+          }
+          /*
+          char* tok2 = strtok(buf2, " ,");
+          while (tok2 != 0) {
+              ct.addTarget2(std::string(tok2));
+              tok2 = strtok(0, " ,");
+          }
+          */
+          targets.push_back(ct);
+          ct.clear();
         }
-        char buf2[256];
-        is.get(buf2, 256, ']');
-        if (is.get() != ']') assert(0);
-        stringbuf = std::string(buf2);
-        StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator i = tokens.begin();
-             i != tokens.end(); ++i) {
-          ct.addTarget2(*i);
-        }
-        /*
-        char* tok2 = strtok(buf2, " ,");
-        while (tok2 != 0) {
-            ct.addTarget2(std::string(tok2));
-            tok2 = strtok(0, " ,");
-        }
-        */
-        targets.push_back(ct);
-        ct.clear();
+        targets.sort();
+        i++;
       }
-      targets.sort();
     }
     delete[] ids;
     _channels = true;
@@ -984,25 +1286,29 @@ bool Params::readChannelTargets(FILE* fpF) {
   return _channels;
 }
 
-bool Params::readElectricalSynapseTargets(FILE* fpF) {
+bool Params::readElectricalSynapseTargets(FILE* fpF)
+{
   _electricalSynapses = false;
   _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
   _electricalSynapseTargetsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024];
+  char bufS[LENGH_LINE_MAX];
   std::string tokS;
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
     std::istringstream is(bufS);
     is >> tokS;
-    if (tokS == "ELECTRICAL_SYNAPSE_TARGETS") {
+    if (tokS == "ELECTRICAL_SYNAPSE_TARGETS")
+    {
       is >> n;
       break;
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
     _electricalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
     unsigned int sz1 = maskVector1.size();
@@ -1014,51 +1320,74 @@ bool Params::readElectricalSynapseTargets(FILE* fpF) {
     unsigned int* ids1 = new unsigned int[sz1];
     unsigned int* ids2 = new unsigned int[sz2];
 
-    for (int i = 0; i < n; ++i) {
-      for (int j = 0; j < sz1; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
-      }
-      for (int j = 0; j < sz2; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
-      }
-      assert(!feof(fpF));
-      c = fgets(bufS, 1024, fpF);
-      std::istringstream is(bufS);
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
 
-      std::map<double, std::list<Params::ElectricalSynapseTarget> >&
-          targetsMap = _electricalSynapseTargetsMap
-              [_segmentDescriptor.getSegmentKey(maskVector1, &ids1[0])];
-      std::list<Params::ElectricalSynapseTarget>& targets =
-          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
+        // one line:
+        // 2 2     2 0   DenSpine [Voltage] 1.0
+        for (int j = 0; j < sz1; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 2
+        for (int j = 0; j < sz2; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 0
+        assert(!feof(fpF));
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
+        std::istringstream is(bufS);
 
-      Params::ElectricalSynapseTarget st;
-      st._parameter = -1.0;
-      while (is >> st._type) {
-        while (is.get() != '[') {
-          assert(is.good());
+        std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >&
+            targetsMap =
+                _electricalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+                    maskVector1, &ids1[0])];
+        std::list<Params::ElectricalSynapseTarget>& targets =
+            targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+
+        Params::ElectricalSynapseTarget st;
+        st._parameter = -1.0;
+        while (is >> st._type)
+        {
+          while (is.get() != '[')
+          {
+            assert(is.good());
+          }
+          char buf[LENGTH_IDNAME_MAX];
+          is.get(buf, LENGTH_IDNAME_MAX, ']');
+          std::string stringbuf(buf);
+          std::vector<std::string> tokens;  // extract 'Voltage' as token
+          StringUtils::Tokenize(stringbuf, tokens, " ,");
+          for (std::vector<std::string>::iterator i = tokens.begin(),
+                                                  end = tokens.end();
+               i != end; ++i)
+          {
+            st.addTarget(*i);
+          }
+          /*
+          char* tok = strtok(buf, " ,");
+          while (tok != 0) {
+              st.addTarget(std::string(tok));
+              tok = strtok(0, " ,");
+          }*/
+          if (is.get() != ']') assert(0);
+          is >> st._parameter;
+          targets.push_back(st);
+          st.clear();
         }
-        char buf[256];
-        is.get(buf, 256, ']');
-        std::string stringbuf(buf);
-        std::vector<std::string> tokens;
-        StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator i = tokens.begin(),
-                                                end = tokens.end();
-             i != end; ++i) {
-          st.addTarget(*i);
-        }
-        /*
-        char* tok = strtok(buf, " ,");
-        while (tok != 0) {
-            st.addTarget(std::string(tok));
-            tok = strtok(0, " ,");
-        }*/
-        if (is.get() != ']') assert(0);
-        is >> st._parameter;
-        targets.push_back(st);
-        st.clear();
+        targets.sort();
+        i++;
       }
-      targets.sort();
     }
     delete[] ids1;
     delete[] ids2;
@@ -1067,25 +1396,153 @@ bool Params::readElectricalSynapseTargets(FILE* fpF) {
   return _electricalSynapses;
 }
 
-bool Params::readChemicalSynapseTargets(FILE* fpF) {
+bool Params::readBidirectionalConnectionTargets(FILE* fpF)
+{
+  _electricalSynapses = false;
+  _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
+  _electricalSynapseTargetsMap.clear();
+  skipHeader(fpF);
+  int n = 0;
+  char bufS[LENGH_LINE_MAX];
+  std::string tokS;
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      std::istringstream is(bufS);
+      is >> tokS;
+      if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
+      {
+        is >> n;
+        break;
+      }
+    }
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  }
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
+    _electricalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
+    unsigned int sz1 = maskVector1.size();
+    assert(sz1);
+    _electricalSynapseTargetsMask2 = resetMask(fpF, maskVector2);
+    unsigned int sz2 = maskVector2.size();
+    assert(sz2);
+
+    unsigned int* ids1 = new unsigned int[sz1];
+    unsigned int* ids2 = new unsigned int[sz2];
+
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
+
+        // one line:
+        // 2 2     2 0   DenSpine [Voltage] 1.0
+        for (int j = 0; j < sz1; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 2
+        for (int j = 0; j < sz2; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 0
+        assert(!feof(fpF));
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
+        std::istringstream is(bufS);
+
+        std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >&
+            targetsMap =
+                _electricalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+                    maskVector1, &ids1[0])];
+        std::list<Params::ElectricalSynapseTarget>& targets =
+            targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+
+        Params::ElectricalSynapseTarget st;
+        st._parameter = -1.0;
+        while (is >> st._type)
+        {
+          while (is.get() != '[')
+          {
+            assert(is.good());
+          }
+          char buf[LENGTH_IDNAME_MAX];
+          is.get(buf, LENGTH_IDNAME_MAX, ']');
+          std::string stringbuf(buf);
+          std::vector<std::string> tokens;  // extract 'Voltage' as token
+          StringUtils::Tokenize(stringbuf, tokens, " ,");
+          for (std::vector<std::string>::iterator i = tokens.begin(),
+                                                  end = tokens.end();
+               i != end; ++i)
+          {
+            st.addTarget(*i);
+          }
+          /*
+          char* tok = strtok(buf, " ,");
+          while (tok != 0) {
+              st.addTarget(std::string(tok));
+              tok = strtok(0, " ,");
+          }*/
+          if (is.get() != ']') assert(0);
+          is >> st._parameter;
+          targets.push_back(st);
+          st.clear();
+        }
+        targets.sort();
+        i++;
+      }
+    }
+    delete[] ids1;
+    delete[] ids2;
+    _electricalSynapses = true;
+  }
+  return _electricalSynapses;
+}
+bool Params::readChemicalSynapseTargets(FILE* fpF)
+{
+  /*
+   * CHEMICAL_SYNAPSE_TARGETS 1
+   * BRANCHTYPE MTYPE ETYPE
+   * BRANCHTYPE MTYPE
+   * 1 1 0   0 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]
+   * 1.0
+   */
   _chemicalSynapses = false;
   _chemicalSynapseTargetsMask1 = _chemicalSynapseTargetsMask2 = 0;
   _chemicalSynapseTargetsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024];
+  char bufS[LENGH_LINE_MAX];
   std::string tokS;
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    std::istringstream is(bufS);
-    is >> tokS;
-    if (tokS == "CHEMICAL_SYNAPSE_TARGETS") {
-      is >> n;
-      break;
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      std::istringstream is(bufS);
+      is >> tokS;
+      if (tokS == "CHEMICAL_SYNAPSE_TARGETS")
+      {
+        is >> n;
+        break;
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
     _chemicalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
     unsigned int sz1 = maskVector1.size();
@@ -1097,96 +1554,121 @@ bool Params::readChemicalSynapseTargets(FILE* fpF) {
     unsigned int* ids1 = new unsigned int[sz1];
     unsigned int* ids2 = new unsigned int[sz2];
 
-    for (int i = 0; i < n; ++i) {
-      for (int j = 0; j < sz1; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
-      }
-      for (int j = 0; j < sz2; ++j) {
-        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
-      }
-      assert(!feof(fpF));
-      c = fgets(bufS, 1024, fpF);
-      std::istringstream is(bufS);
+    for (int i = 0; i < n;)
+    {
+      fpos_t fpos;
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        fsetpos(fpF, &fpos);
 
-      std::map<double, std::list<Params::ChemicalSynapseTarget> >& targetsMap =
-          _chemicalSynapseTargetsMap
-              [_segmentDescriptor.getSegmentKey(maskVector1, &ids1[0])];
-      std::list<Params::ChemicalSynapseTarget>& targets =
-          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+        for (int j = 0; j < sz1; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }
+        for (int j = 0; j < sz2; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }
+        assert(!feof(fpF));
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);
+        std::istringstream is(bufS);
 
-      Params::ChemicalSynapseTarget st;
-      st._parameter = -1.0;
+        std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >&
+            targetsMap =
+                _chemicalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+                    maskVector1, &ids1[0])];
+        std::list<Params::ChemicalSynapseTarget>& targets =
+            targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
 
-      std::vector<std::string> types;
+        Params::ChemicalSynapseTarget st;
+        st._parameter = -1.0;
 
-      while (is.get() != '[') {
-        assert(is.good());
-      }
-      char buf1[256];
-      is.get(buf1, 256, ']');
-      std::string stringbuf(buf1);
-      std::vector<std::string> tokens;
-      StringUtils::Tokenize(stringbuf, tokens, " ,");
-      for (std::vector<std::string>::iterator i = tokens.begin(),
-                                              end = tokens.end();
-           i != end; ++i) {
-        types.push_back(*i);
-      }
-      /*
-      char* tok = strtok(buf1, " ,");
-      while (tok != 0) {
-          types.push_back(std::string(tok));
-          tok = strtok(0, " ,");
-      }
-      */
-      if (is.get() != ']') assert(0);
+        std::vector<std::string> types;
 
-      for (std::vector<int>::size_type i = 0; i < types.size(); ++i) {
-        while (is.get() != '[') {
+        while (is.get() != '[')
+        {
           assert(is.good());
         }
-        char buf1[256];
-        is.get(buf1, 256, ']');
+        char buf1[LENGTH_IDNAME_MAX];
+        is.get(buf1, LENGTH_IDNAME_MAX, ']');
         std::string stringbuf(buf1);
         std::vector<std::string> tokens;
         StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator j = tokens.begin(),
+        for (std::vector<std::string>::iterator ii = tokens.begin(),
                                                 end = tokens.end();
-             j != end; ++j) {
-          st.addTarget1(types[i], *j);
+             ii != end; ++ii)
+        {
+          types.push_back(*ii);
         }
         /*
-        char* tok1 = strtok(buf1, " ,");
-        while (tok1 != 0) {
-            st.addTarget1(types[i], std::string(tok1));
-            tok1 = strtok(0, " ,");
-        }*/
-        if (is.get() != ']') assert(0);
-        while (is.get() != '[') {
-          assert(is.good());
+        char* tok = strtok(buf1, " ,");
+        while (tok != 0) {
+            types.push_back(std::string(tok));
+            tok = strtok(0, " ,");
         }
-        char buf2[256];
-        is.get(buf2, 256, ']');
+        */
         if (is.get() != ']') assert(0);
-        stringbuf = std::string(buf2);
-        // std::vector<std::string> tokens;
-        StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator j = tokens.begin(),
-                                                end = tokens.end();
-             j != end; ++j) {
-          st.addTarget2(types[i], *j);
+
+        for (std::vector<int>::size_type ii = 0; ii < types.size(); ++ii)
+        {
+          while (is.get() != '[')
+          {
+            assert(is.good());
+          }
+          char buf1[LENGTH_IDNAME_MAX];
+          is.get(buf1, LENGTH_IDNAME_MAX, ']');
+          std::string stringbuf(buf1);
+          std::vector<std::string> tokens;
+          StringUtils::Tokenize(stringbuf, tokens, " ,");
+          for (std::vector<std::string>::iterator j = tokens.begin(),
+                                                  end = tokens.end();
+               j != end; ++j)
+          {
+            st.addTarget1(types[ii], *j);
+          }
+          /*
+          char* tok1 = strtok(buf1, " ,");
+          while (tok1 != 0) {
+              st.addTarget1(types[ii], std::string(tok1));
+              tok1 = strtok(0, " ,");
+          }*/
+          if (is.get() != ']') assert(0);
+          while (is.get() != '[')
+          {
+            assert(is.good());
+          }
+          char buf2[LENGTH_IDNAME_MAX];
+          is.get(buf2, LENGTH_IDNAME_MAX, ']');
+          if (is.get() != ']') assert(0);
+          stringbuf = std::string(buf2);
+          // std::vector<std::string> tokens;
+          StringUtils::Tokenize(stringbuf, tokens, " ,");
+          for (std::vector<std::string>::iterator j = tokens.begin(),
+                                                  end = tokens.end();
+               j != end; ++j)
+          {
+            st.addTarget2(types[ii], *j);
+          }
+          /*
+          char* tok2 = strtok(buf2, " ,");
+          while (tok2 != 0) {
+              st.addTarget2(types[ii], std::string(tok2));
+              tok2 = strtok(0, " ,");
+          }*/
         }
-        /*
-        char* tok2 = strtok(buf2, " ,");
-        while (tok2 != 0) {
-            st.addTarget2(types[i], std::string(tok2));
-            tok2 = strtok(0, " ,");
-        }*/
+        is >> st._parameter;
+        targets.push_back(st);
+        st.clear();
+        targets.sort();
+        i++;
       }
-      is >> st._parameter;
-      targets.push_back(st);
-      st.clear();
-      targets.sort();
     }
     delete[] ids1;
     delete[] ids2;
@@ -1195,66 +1677,97 @@ bool Params::readChemicalSynapseTargets(FILE* fpF) {
   return _chemicalSynapses;
 }
 
-bool Params::readPreSynapticPointTargets(FILE* fpF) {
+bool Params::readPreSynapticPointTargets(FILE* fpF)
+{
+  /* Example:
+   * PRESYNAPTIC_POINT_TARGETS 3
+   * AMPA Voltage
+   * NMDA Voltage
+   * GABAA Voltage
+   */
   bool rval = false;
   _preSynapticPointTargetsMap.clear();
   _preSynapticPointSynapseMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256], tokS2[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("PRESYNAPTIC_POINT_TARGETS");
-      if (btype == expected_btype) break;
-      /*                if (!strcmp("PRESYNAPTIC_POINT_TARGETS", tokS))
-              break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX], tokS2[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("PRESYNAPTIC_POINT_TARGETS");
+        if (btype == expected_btype) break;
+        /*                if (!strcmp("PRESYNAPTIC_POINT_TARGETS", tokS))
+                break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
-    for (int i = 0; i < n; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 == sscanf(bufS, "%s %s ", tokS, tokS2)) {
-        std::string synID(tokS);
-        std::string targetID(tokS2);
-        _preSynapticPointTargetsMap[synID] = targetID;
-        _preSynapticPointSynapseMap[targetID].push_back(synID);
-      } else
-        assert(0);
+  if (n > 0)
+  {
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 == sscanf(bufS, "%s %s ", tokS, tokS2))
+        {
+          std::string synID(tokS);
+          std::string targetID(tokS2);
+          _preSynapticPointTargetsMap[synID] = targetID;
+          _preSynapticPointSynapseMap[targetID].push_back(synID);
+        }
+        else
+          assert(0);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-void Params::skipHeader(FILE* fpF) {
+void Params::skipHeader(FILE* fpF)
+{
   int pos = ftell(fpF);
-  char bufS[1024];
-  do {
+  char bufS[LENGH_LINE_MAX];
+  do
+  {
     pos = ftell(fpF);
-    char* c = fgets(bufS, 1024, fpF);
+    char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
   } while (bufS[0] == '#');
   fseek(fpF, pos, SEEK_SET);
 }
 
 unsigned long long Params::readNamedParam(
-    FILE* fpF, std::string name, std::map<double, double>& namedParamsMap) {
+    FILE* fpF, std::string name, std::map<key_size_t, double>& namedParamsMap)
+{
   unsigned long long mask = 0;
   namedParamsMap.clear();
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      if (btype == name) break;
-      /*
-      if (!strcmp(name.c_str(), tokS))
-          break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        if (btype == name) break;
+        /*
+        if (!strcmp(name.c_str(), tokS))
+            break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
   assert(n > 0);
 
@@ -1265,79 +1778,125 @@ unsigned long long Params::readNamedParam(
   assert(sz);
   unsigned int* ids = new unsigned int[sz];
 
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < sz; ++j) {
-      if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+  for (int i = 0; i < n;)  // for each line, not counting comment-line
+  {
+    fpos_t fpos;
+    fgetpos(fpF, &fpos);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      fsetpos(fpF, &fpos);
+
+      for (int j = 0; j < sz; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+        if (maskVector[j] == SegmentDescriptor::branchType)
+          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }
+      assert(!feof(fpF));
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      sscanf(bufS, "%lf", &p);
+      namedParamsMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = p;
+      i++;
     }
-    assert(!feof(fpF));
-    c = fgets(bufS, 1024, fpF);
-    sscanf(bufS, "%lf", &p);
-    namedParamsMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = p;
   }
   delete[] ids;
   return mask;
 }
 
-bool Params::readCompartmentVariableCosts(FILE* fpF) {
+bool Params::readCompartmentVariableCosts(FILE* fpF)
+{
   bool rval = false;
   _compartmentVariableCostsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("COMPARTMENT_VARIABLE_COSTS");
-      if (btype == expected_btype) break;
-      /*
-      if (!strcmp("COMPARTMENT_VARIABLE_COSTS", tokS))
-          break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("COMPARTMENT_VARIABLE_COSTS");
+        if (btype == expected_btype) break;
+        /*
+        if (!strcmp("COMPARTMENT_VARIABLE_COSTS", tokS))
+            break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     double cost;
-    for (int i = 0; i < n; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost)) {
-        std::string chanID(tokS);
-        _compartmentVariableCostsMap[chanID] = cost;
-      } else
-        assert(0);
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+        {
+          std::string chanID(tokS);
+          _compartmentVariableCostsMap[chanID] = cost;
+        }
+        else
+          assert(0);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readChannelCosts(FILE* fpF) {
+bool Params::readChannelCosts(FILE* fpF)
+{
   bool rval = false;
   _channelCostsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("CHANNEL_COSTS");
-      if (btype == expected_btype) break;
-      /*
-      if (!strcmp("CHANNEL_COSTS", tokS))
-          break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("CHANNEL_COSTS");
+        if (btype == expected_btype) break;
+        /*
+        if (!strcmp("CHANNEL_COSTS", tokS))
+            break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     double cost;
-    for (int i = 0; i < n; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost)) {
-        std::string chanID(tokS);
-        _channelCostsMap[chanID] = cost;
-      } else
-        assert(0);
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        c = fgets(bufS, LENGH_LINE_MAX, fpF);
+        if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+        {
+          std::string chanID(tokS);
+          _channelCostsMap[chanID] = cost;
+        }
+        else
+          assert(0);
+        i++;
+      }
     }
     rval = true;
   }
@@ -1348,197 +1907,317 @@ bool Params::readModelParams(
     FILE* fpF, const std::string& id,
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<std::string,
-             std::map<double, std::list<std::pair<std::string, float> > > >&
+             std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
         paramsMap,
     std::map<
         std::string,
-        std::map<double,
-                 std::list<std::pair<std::string, std::vector<float> > > > >&
-        arrayParamsMap) {
+        std::map<key_size_t,
+                 std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+        arrayParamsMap)
+{
   bool rval = false;
   paramsMasks.clear();
   paramsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype(id);
-      if (btype == expected_btype) break;
-      /*
-      if (!strcmp(id, tokS))
-          break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype(id);
+        if (btype == expected_btype) break;
+        /*
+        if (!strcmp(id, tokS))
+            break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
-    for (int i = 0; i < n; i++) {
+  if (n > 0)
+  {
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
       int p;
-      c = fgets(bufS, 1024, fpF);
-      if (2 == sscanf(bufS, "%s %d ", tokS, &p)) {
-        std::string modelID(tokS);
-        std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
-        paramsMasks[modelID] = resetMask(fpF, maskVector);
-        unsigned int sz = maskVector.size();
-        assert(sz);
-        unsigned int* ids = new unsigned int[sz];
-        for (int j = 0; j < p; ++j) {
-          for (int k = 0; k < sz; ++k) {
-            if (1 != fscanf(fpF, "%d", &ids[k])) assert(0);
-            if (maskVector[k] == SegmentDescriptor::segmentIndex) {
-              std::cerr << "Params : Targeting channel parameters to "
-                           "individual compartments not supported!"
-                        << std::endl;
-              exit(0);
-            }
-          }
-          assert(!feof(fpF));
-          c = fgets(bufS, 1024, fpF);
-          std::istringstream is(bufS);
-          std::list<std::pair<std::string, float> >& params = paramsMap
-              [modelID][_segmentDescriptor.getSegmentKey(maskVector, &ids[0])];
-          std::list<std::pair<std::string, std::vector<float> > >& arrayParams =
-              arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
-                  maskVector, &ids[0])];
-          while (is.get() != '<') {
-            assert(is.good());
-          }
-          char buf1[256];
-          is.get(buf1, 256, '>');
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
 
-          std::string stringbuf1(buf1); //to replace the code below
-          std::vector<std::string> tokens1;
-          StringUtils::Tokenize(stringbuf1, tokens1, ";");
-          for (std::vector<std::string>::iterator ii = tokens1.begin(),
-                                                  end1 = tokens1.end();
-               ii != end1; ++ii) {
-            std::string delimiter = "=";
-            size_t pos = (*ii).find(delimiter);
-            std::string name = (*ii).substr(0, pos);
-            (*ii).erase(0, pos + delimiter.length());
+        if (2 == sscanf(bufS, "%s %d ", tokS, &p))
+        {
+          std::string modelID(tokS);
+          std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+          paramsMasks[modelID] = resetMask(fpF, maskVector);
+          unsigned int sz = maskVector.size();
+          assert(sz);
+          unsigned int* ids = new unsigned int[sz];
+          for (int j = 0;
+               j < p;)  // for each line (subgroup), not counting comment-line
+          {
+            fpos_t fpos;
+            fgetpos(fpF, &fpos);
+            c = fgets(bufS, LENGH_LINE_MAX, fpF);
+            std::string line(c);
+            if (!isCommentLine(line))
+            {
+              fsetpos(fpF, &fpos);
 
-            delimiter = " =";
-            pos = (*ii).find(delimiter);
-			std::string tok2 = (*ii).substr(0, pos);
-
-            std::istringstream is2(tok2);
-            if (is2.get() != '{') {
-              float value = atof(tok2.c_str());
-              params.push_back(std::pair<std::string, float>(name, value));
-            } else {
-              std::vector<float> value;
-			  //TUAN: potential bug if it takes more than 256 chars to see '}'
-			  //need to be fixed soon
-              char buf2[256];
-              is2.get(buf2, 256, '}');
-              std::string stringbuf(buf2);
-              std::vector<std::string> tokens;
-              StringUtils::Tokenize(stringbuf, tokens, ",");
-              for (std::vector<std::string>::iterator jj = tokens.begin(),
-                                                      end = tokens.end();
-                   jj != end; ++jj) {
-                value.push_back(atof((*jj).c_str()));
+              for (int k = 0; k < sz; ++k)
+              {
+                if (1 != fscanf(fpF, "%d", &ids[k])) assert(0);
+                if (maskVector[k] == SegmentDescriptor::branchType)
+                  ids[k] = ids[k] - 1;  // make sure the BRANCHTYPE is 0-based
+                if (maskVector[k] == SegmentDescriptor::segmentIndex)
+                {
+                  std::cerr << "Params : Targeting channel parameters to "
+                               "individual compartments not supported!"
+                            << std::endl;
+                  exit(0);
+                }
               }
-              arrayParams.push_back(
-                  std::pair<std::string, std::vector<float> >(name, value));
-            }
-          }
-		  /*
-          char* tok1 = strtok(buf1, ";");
-          while (tok1 != 0) {
-            char* tok2 = strtok(tok1, "=");
-            std::string name(tok2);
-            tok2 = strtok(0, " =");
-            std::istringstream is2(tok2);
-            if (is2.get() != '{') {
-              float value = atof(tok2);
-              params.push_back(std::pair<std::string, float>(name, value));
-            } else {
-              std::vector<float> value;
-              char buf2[256];
-              is2.get(buf2, 256, '}');
-              char* tok3 = strtok(buf2, ",");
-              while (tok3 != 0) {
-                value.push_back(atof(tok3));
-                tok3 = strtok(0, ",");
+              assert(!feof(fpF));
+              c = fgets(bufS, LENGH_LINE_MAX, fpF);
+              std::istringstream is(bufS);
+              std::list<std::pair<std::string, dyn_var_t> >& params =
+                  paramsMap[modelID][_segmentDescriptor.getSegmentKey(
+                      maskVector, &ids[0])];
+              std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+                  arrayParams =
+                      arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
+                          maskVector, &ids[0])];
+              while (is.get() != '<')
+              {
+                assert(is.good());
               }
-              arrayParams.push_back(
-                  std::pair<std::string, std::vector<float> >(name, value));
-            }
-            tok1 = strtok(0, ";");
-          }*/
+              char buf1[LENGTH_IDNAME_MAX];
+              is.get(buf1, LENGTH_IDNAME_MAX, '>');
+
+              std::string stringbuf1(buf1);  // to replace the code below
+              std::vector<std::string> tokens1;
+              StringUtils::Tokenize(stringbuf1, tokens1, ";");
+              for (std::vector<std::string>::iterator ii = tokens1.begin(),
+                                                      end1 = tokens1.end();
+                   ii != end1; ++ii)
+              {
+                std::string delimiter = "=";
+                size_t pos = (*ii).find(delimiter);
+                std::string name = (*ii).substr(0, pos);
+                (*ii).erase(0, pos + delimiter.length());
+
+                delimiter = " =";
+                pos = (*ii).find(delimiter);
+                std::string tok2 = (*ii).substr(0, pos);
+
+                std::istringstream is2(tok2);
+                if (is2.get() != '{')
+                {
+                  dyn_var_t value = atof(tok2.c_str());
+                  params.push_back(std::pair<std::string, dyn_var_t>(name, value));
+                }
+                else
+                {
+                  std::vector<dyn_var_t> value;
+                  // TUAN: potential bug if it takes more than 256 chars to see
+                  // '}'
+                  // need to be fixed soon
+                  char buf2[LENGTH_IDNAME_MAX];
+                  is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+                  std::string stringbuf(buf2);
+                  std::vector<std::string> tokens;
+                  StringUtils::Tokenize(stringbuf, tokens, ",");
+                  for (std::vector<std::string>::iterator jj = tokens.begin(),
+                                                          end = tokens.end();
+                       jj != end; ++jj)
+                  {
+                    value.push_back(atof((*jj).c_str()));
+                  }
+                  arrayParams.push_back(
+                      std::pair<std::string, std::vector<dyn_var_t> >(name, value));
+                }
+              }
+              /*
+      char* tok1 = strtok(buf1, ";");
+      while (tok1 != 0) {
+        char* tok2 = strtok(tok1, "=");
+        std::string name(tok2);
+        tok2 = strtok(0, " =");
+        std::istringstream is2(tok2);
+        if (is2.get() != '{') {
+          dyn_var_t value = atof(tok2);
+          params.push_back(std::pair<std::string, dyn_var_t>(name, value));
+        } else {
+          std::vector<dyn_var_t> value;
+          char buf2[LENGTH_IDNAME_MAX];
+          is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+          char* tok3 = strtok(buf2, ",");
+          while (tok3 != 0) {
+            value.push_back(atof(tok3));
+            tok3 = strtok(0, ",");
+          }
+          arrayParams.push_back(
+              std::pair<std::string, std::vector<dyn_var_t> >(name, value));
         }
-        delete[] ids;
-      } else
-        assert(0);
+        tok1 = strtok(0, ";");
+      }*/
+              j++;
+            }
+          }
+          delete[] ids;
+        }
+        else
+          assert(0);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readElectricalSynapseCosts(FILE* fpF) {
+bool Params::readElectricalSynapseCosts(FILE* fpF)
+{
   bool rval = false;
   _electricalSynapseCostsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("ELECTRICAL_SYNAPSE_COSTS");
-      if (btype == expected_btype) break;
-      /*
-      if (!strcmp("ELECTRICAL_SYNAPSE_COSTS", tokS))
-          break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("ELECTRICAL_SYNAPSE_COSTS");
+        if (btype == expected_btype) break;
+        /*
+        if (!strcmp("ELECTRICAL_SYNAPSE_COSTS", tokS))
+            break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     double cost;
-    for (int i = 0; i < n; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost)) {
-        std::string synID(tokS);
-        _electricalSynapseCostsMap[synID] = cost;
-      } else
-        assert(0);
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+        {
+          std::string synID(tokS);
+          _electricalSynapseCostsMap[synID] = cost;
+        }
+        else
+          assert(0);
+        i++;
+      }
     }
     rval = true;
   }
   return rval;
 }
 
-bool Params::readChemicalSynapseCosts(FILE* fpF) {
+bool Params::readBidirectionalConnectionCosts(FILE* fpF)
+{
+  bool rval = false;
+  _electricalSynapseCostsMap.clear();
+  skipHeader(fpF);
+  int n = 0;
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("BIDIRECTIONAL_CONNECTION_COSTS");
+        if (btype == expected_btype) break;
+      }
+    }
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  }
+  if (n > 0)
+  {
+    double cost;
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+        if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+        {
+          std::string synID(tokS);
+          _electricalSynapseCostsMap[synID] = cost;
+        }
+        else
+          assert(0);
+        i++;
+      }
+    }
+    rval = true;
+  }
+  return rval;
+}
+bool Params::readChemicalSynapseCosts(FILE* fpF)
+{
   bool rval = false;
   _chemicalSynapseCostsMap.clear();
   skipHeader(fpF);
   int n = 0;
-  char bufS[1024], tokS[256];
-  char* c = fgets(bufS, 1024, fpF);
-  while (!feof(fpF)) {
-    if (2 == sscanf(bufS, "%s %d ", tokS, &n)) {
-      std::string btype(tokS);
-      std::string expected_btype("CHEMICAL_SYNAPSE_COSTS");
-      if (btype == expected_btype) break;
-      /*
-      if (!strcmp("CHEMICAL_SYNAPSE_COSTS", tokS))
-          break;*/
+  char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  while (!feof(fpF))
+  {
+    std::string line(c);
+    if (!isCommentLine(line))
+    {
+      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+      {
+        std::string btype(tokS);
+        std::string expected_btype("CHEMICAL_SYNAPSE_COSTS");
+        if (btype == expected_btype) break;
+        /*
+        if (!strcmp("CHEMICAL_SYNAPSE_COSTS", tokS))
+            break;*/
+      }
     }
-    c = fgets(bufS, 1024, fpF);
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
   }
-  if (n > 0) {
+  if (n > 0)
+  {
     double cost;
-    for (int i = 0; i < n; i++) {
-      c = fgets(bufS, 1024, fpF);
-      if (2 == sscanf(bufS, "%s %lf ", tokS, &cost)) {
-        std::string synID(tokS);
-        _chemicalSynapseCostsMap[synID] = cost;
-      } else
-        assert(0);
+    for (int i = 0; i < n;)  // for each line, not counting comment-line
+    {
+      c = fgets(bufS, LENGH_LINE_MAX, fpF);
+      std::string line(c);
+      if (!isCommentLine(line))
+      {
+
+        if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
+        {
+          std::string synID(tokS);
+          _chemicalSynapseCostsMap[synID] = cost;
+        }
+        else
+          assert(0);
+        i++;
+      }
     }
     rval = true;
   }
@@ -1546,14 +2225,68 @@ bool Params::readChemicalSynapseCosts(FILE* fpF) {
 }
 
 unsigned long long Params::resetMask(
-    FILE* fpF, std::vector<SegmentDescriptor::SegmentKeyData>& maskVector) {
+    FILE* fpF, std::vector<SegmentDescriptor::SegmentKeyData>& maskVector)
+{
+  /* read on the line containing the name(s) of one or more field name in the
+   * key,
+   * separated by spaces
+   * e.g.: BRANCHTYPE MTYPE
+   * check SegmentDescriptor class
+   */
   maskVector.clear();
-  char bufS[1024];
-  char* c = fgets(bufS, 1024, fpF);
+  char bufS[LENGH_LINE_MAX];
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  std::string line(c);
+  // skip comment-lines
+  while (!feof(fpF) and isCommentLine(line))
+  {
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
+    line = std::string(c);
+  }
   std::istringstream is(bufS);
   std::string tokS;
   is >> tokS;
-  while (!is.eof()) {
+  while (!is.eof())
+  {
+    maskVector.push_back(_segmentDescriptor.getSegmentKeyData(tokS));
+    is >> tokS;
+  }
+  return _segmentDescriptor.getMask(maskVector);
+}
+// INPUT:
+//  fpF  = file pointer (FILE*) to the opening parameter file
+// OUTPUT:
+//  maskVector = a vector containing the indices of all given fieldname
+//  bufS       = containing the read line
+// GOAL:
+//  read the next line from 'fpF' which is expected to contain the
+//  space-delimited
+//  list of fieldnames
+//  Check SegmentDescriptor.h for the list of defined fieldnames
+unsigned long long Params::resetMask(
+    FILE* fpF, std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+    char* bufS)
+{
+  /* read on the line containing the name(s) of one or more field name in the
+   * key,
+   * separated by spaces
+   * e.g.: BRANCHTYPE MTYPE
+   * check SegmentDescriptor class
+   */
+  maskVector.clear();
+  char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+  std::string line(c);
+  // skip comment-lines
+  while (!feof(fpF) and isCommentLine(line))
+  {
+    c = fgets(bufS, LENGH_LINE_MAX, fpF);
+    line = std::string(c);
+  }
+  std::istringstream is(bufS);
+  std::string tokS;
+  is >> tokS;
+  while (!is.eof())
+  {
     maskVector.push_back(_segmentDescriptor.getSegmentKeyData(tokS));
     is >> tokS;
   }

@@ -16,13 +16,14 @@
 #ifndef SEGMENTDESCRIPTOR_H
 #define SEGMENTDESCRIPTOR_H
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include <mpi.h>
 #include <string>
 #include <vector>
 #include <cassert>
 #include <map>
 
-#define _STRG(x) #x 
+#define _STRG(x) #x
 #define STRG(x) _STRG(x)
 
 #define N_FIELDS 9
@@ -37,100 +38,105 @@
 #define FIELD_7 BRANCH_INDEX
 #define FIELD_8 FLAG
 
-#define USER_FIELD_0_BITS 4   // < 8 morphological types
-#define USER_FIELD_1_BITS 4   // < 8 electrophysiological types
-#define BRANCH_TYPE_BITS 2    // 4 types (soma, axon, dend, apic)
-#define BRANCH_ORDER_BITS 7   // < 128 branch order
-#define COMPUTE_ORDER_BITS 3  // 0-7 compute order
-#define SEGMENT_INDEX_BITS 12 // < 4,096 segments/branch
-#define NEURON_INDEX_BITS 19  // < 524,288 neurons
+#define USER_FIELD_0_BITS 4    // < 8 morphological types
+//#define USER_FIELD_1_BITS 4    // < 16 electrophysiological types
+//#define BRANCH_TYPE_BITS 2     // 4 types (soma, axon, dend, apic)
+#define USER_FIELD_1_BITS 3    // < 8 electrophysiological types
+#define BRANCH_TYPE_BITS 3     // 8 types (soma, axon, dend, apic, AIS, tufts, ???)
+#define BRANCH_ORDER_BITS 7    // < 128 branch order
+#define COMPUTE_ORDER_BITS 3   // 0-7 compute order
+#define SEGMENT_INDEX_BITS 12  // < 4,096 segments/branch
+#define NEURON_INDEX_BITS 19   // < 524,288 neurons
 #define BRANCH_INDEX_BITS 12   // < 4,096 branches/neuron
-#define FLAG_BITS 1           // transient volatile boolean
+#define FLAG_BITS 1            // transient volatile boolean
 
 class Segment;
+//TUAN: need to update all possible type to key_size_t
+//      and use an equivalent name for 'unsigned long long'
 
 /**
- * assign a unique id for a given segment object, or rather return a 
+ * assign a unique id for a given segment object, or rather return a
  * 'second-order' segment id for a given id and a certain criterion,
  * meanwhile able to retrieve the respective information stored in the id
  * (e.g. eType, mType, etc.)
  */
-class SegmentDescriptor
-{
-   public:
-           
-      enum SegmentKeyData {
-	uf0=0,
-	uf1,
-	branchType,
-	branchOrder,
-	computeOrder,
-	segmentIndex,
-	neuronIndex,
-	branchIndex,
-	flag
-      };
+class SegmentDescriptor {
+  public:
+  enum SegmentKeyData {
+    uf0 = 0,
+    uf1,
+    branchType,
+    branchOrder,
+    computeOrder,
+    segmentIndex,
+    neuronIndex,
+    branchIndex,
+    flag
+  };
 
-      SegmentDescriptor();
-      SegmentDescriptor(SegmentDescriptor const &);
-      SegmentDescriptor(SegmentDescriptor&);
-      ~SegmentDescriptor();
-      double getSegmentKey(Segment* segment);
-      double flipFlag(double key);
-      double getSegmentKey(std::vector<SegmentKeyData> const & maskVector, unsigned int* ids);
-      unsigned long long getMask(std::vector<SegmentKeyData> const & maskVector);
-      double getSegmentKey(double segmentKey, unsigned long long mask);
-      double modifySegmentKey(SegmentKeyData uf, unsigned int id, double key);
-      void printKey(double segmentKey, unsigned long long mask);
-      void printMask(unsigned long long mask);
-      unsigned long long getLongKey(double key);
+  SegmentDescriptor();
+  SegmentDescriptor(SegmentDescriptor const&);
+  SegmentDescriptor(SegmentDescriptor&);
+  ~SegmentDescriptor();
+  key_size_t flipFlag(key_size_t key);
+  unsigned long long getMask(std::vector<SegmentKeyData> const& maskVector);
+  key_size_t getSegmentKey(Segment* segment);
+  key_size_t getSegmentKey(std::vector<SegmentKeyData> const& maskVector,
+                           unsigned int* ids);
+  key_size_t getSegmentKey(key_size_t segmentKey, unsigned long long mask);
+  key_size_t modifySegmentKey(SegmentKeyData uf, unsigned int id,
+                              key_size_t key);
+  void printKey(key_size_t segmentKey, unsigned long long mask);
+  void printMask(unsigned long long mask);
+  unsigned long long getLongKey(key_size_t key);
 
-      unsigned int getValue(SegmentKeyData skd, double segmentKey);
-      SegmentKeyData getSegmentKeyData(std::string fieldName);
-      unsigned int getBranchType(double segmentKey);
-      unsigned int getBranchOrder(double segmentKey);
-      unsigned int getComputeOrder(double segmentKey);      
-      unsigned int getNeuronIndex (double segmentKey);
-      unsigned int getBranchIndex(double segmentKey);
-      unsigned int getSegmentIndex(double segmentKey);
-      bool getFlag(double segmentKey);
+  unsigned int getValue(SegmentKeyData skd, key_size_t segmentKey);
+  SegmentKeyData getSegmentKeyData(std::string fieldName);
+  unsigned int getBranchType(key_size_t segmentKey);
+  unsigned int getBranchOrder(key_size_t segmentKey);
+  unsigned int getComputeOrder(key_size_t segmentKey);
+  unsigned int getNeuronIndex(key_size_t segmentKey);
+  unsigned int getBranchIndex(key_size_t segmentKey);
+  unsigned int getSegmentIndex(key_size_t segmentKey);
+  bool getFlag(key_size_t segmentKey);
 
-   private:
-      static unsigned int pow2(int n);
+  private:
+  static unsigned int pow2(int n);
 
-     /**
-      * 64bit unsigned long long field for segment id, MUST be divided into 2 32bit parts,
-      * in order for the bitmasking to function properly, so we still need to 
-      * agree on one best bit allocation pattern
-      */
-      struct segmentKeyBitPattern {
-        unsigned int userField0 : USER_FIELD_0_BITS;		
-        unsigned int userField1 : USER_FIELD_1_BITS;		
-        unsigned int branchType : BRANCH_TYPE_BITS;		
-        unsigned int branchOrder : BRANCH_ORDER_BITS;	
-        unsigned int computeOrder : COMPUTE_ORDER_BITS;	
-        unsigned int segmentIndex : SEGMENT_INDEX_BITS;	
-        unsigned int neuronIndex : NEURON_INDEX_BITS;	
-        unsigned int branchIndex : BRANCH_INDEX_BITS;	
-        unsigned int flag : FLAG_BITS;	
-      };
+  /**
+   * 64bit unsigned long long field for segment id, MUST be divided into 2 32bit
+   * parts,
+   * in order for the bitmasking to function properly, so we still need to
+   * agree on one best bit allocation pattern
+   */
+  struct segmentKeyBitPattern {
+    unsigned int userField0 : USER_FIELD_0_BITS;
+    unsigned int userField1 : USER_FIELD_1_BITS;
+    unsigned int branchType : BRANCH_TYPE_BITS;
+    unsigned int branchOrder : BRANCH_ORDER_BITS;
+    unsigned int computeOrder : COMPUTE_ORDER_BITS;
+    unsigned int segmentIndex : SEGMENT_INDEX_BITS;
+    unsigned int neuronIndex : NEURON_INDEX_BITS;
+    unsigned int branchIndex : BRANCH_INDEX_BITS;
+    unsigned int flag : FLAG_BITS;
+  };
 
-     /**
-      * union for segment id, simultaneously holds an unsigned long long, a double
-      * or a struct
-      */
-      union SegmentID {
-        unsigned long long idLong;
-        segmentKeyBitPattern key;
-        double collapsed;
-      };
+  /**
+   * union for segment id, simultaneously holds an unsigned long long, a double
+   * or a struct
+   */
+  union SegmentID {
+    unsigned long long idLong;
+    segmentKeyBitPattern key;
+    double collapsed;
+  };
 
-      unsigned long long _mask[N_FIELDS];
-      SegmentID sid;
-      int _maxField[N_FIELDS];
+  unsigned long long _mask[N_FIELDS];
+  SegmentID sid;
+  int _maxField[N_FIELDS];
 
-      std::vector<std::string> _fields;
-      std::map<std::string, SegmentKeyData> _fieldMap;
+  std::vector<std::string> _fields;
+  std::map<std::string, SegmentKeyData> _fieldMap;
 };
 
 #endif

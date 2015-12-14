@@ -16,15 +16,18 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include <mpi.h>
 
+//key_size_t : be careful to modify this accordingly if we change key_size_t
 #define N_SPHERE_DATA 6
 
 struct Sphere
 {
   double _coords[3];
   double _radius;
-  double _key;
+  //TUAN: as key size can change, it is suggested to move it to the end of the struct
+  key_size_t _key;
   double _dist2Soma;
 };
 #endif

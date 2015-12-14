@@ -21,9 +21,12 @@
 
 SegmentDescriptor::SegmentDescriptor()
 {
+	//TUAN: treatment for key-size (need to update once key-size change)
+#ifdef DEBUG_ASSERT
   assert (sizeof(unsigned long long) == 8);
   assert (sizeof(SegmentID) == 8);
   assert (sizeof(double) == 8);
+#endif
 
   _maxField[uf0] = pow2(USER_FIELD_0_BITS);
   _maxField[uf1] = pow2(USER_FIELD_1_BITS);
@@ -122,7 +125,7 @@ SegmentDescriptor::~SegmentDescriptor()
 }
 
 
-double SegmentDescriptor::getSegmentKey(Segment* segment)
+key_size_t SegmentDescriptor::getSegmentKey(Segment* segment)
 {
   Branch* branch = segment->getBranch();
   Neuron* neuron = branch->getNeuron();
@@ -170,14 +173,16 @@ double SegmentDescriptor::getSegmentKey(Segment* segment)
   return sid.collapsed;
 }
 
-double SegmentDescriptor::flipFlag(double key)
+key_size_t SegmentDescriptor::flipFlag(key_size_t key)
 {
   sid.collapsed=key;
   sid.key.flag = (sid.key.flag==0) ? 1 : 0;
   return sid.collapsed;
 }
 
-double SegmentDescriptor::modifySegmentKey(SegmentKeyData field, unsigned int id, double key)
+//modify the existing key in 'key' using the value given in 'id'
+// of the field in 'field'
+key_size_t SegmentDescriptor::modifySegmentKey(SegmentKeyData field, unsigned int id, key_size_t key)
 {
   sid.collapsed=key;
   switch(field) {
@@ -222,7 +227,7 @@ double SegmentDescriptor::modifySegmentKey(SegmentKeyData field, unsigned int id
   return sid.collapsed;
 }
 
-double SegmentDescriptor::getSegmentKey(std::vector<SegmentKeyData> const & maskVector, unsigned int* ids)
+key_size_t SegmentDescriptor::getSegmentKey(std::vector<SegmentKeyData> const & maskVector, unsigned int* ids)
 {
   sid.idLong = 0;
 
@@ -240,14 +245,14 @@ unsigned long long SegmentDescriptor::getMask(std::vector<SegmentKeyData> const 
   return mask;
 }
 
-double SegmentDescriptor::getSegmentKey(double segmentKey, unsigned long long mask)
+key_size_t SegmentDescriptor::getSegmentKey(key_size_t segmentKey, unsigned long long mask)
 {
   sid.collapsed = segmentKey;
   sid.idLong &= mask;
   return sid.collapsed;
 }
 
-unsigned int SegmentDescriptor::getValue(SegmentKeyData skd, double segmentKey)
+unsigned int SegmentDescriptor::getValue(SegmentKeyData skd, key_size_t segmentKey)
 {
   unsigned int rval=0;
   sid.collapsed = segmentKey;
@@ -287,6 +292,10 @@ unsigned int SegmentDescriptor::getValue(SegmentKeyData skd, double segmentKey)
   return rval;
 }
 
+//INPUT:
+//  fieldName = one of the 9 field names
+//OUTPUT:
+//  return the index to the given fieldname
 SegmentDescriptor::SegmentKeyData SegmentDescriptor::getSegmentKeyData(std::string fieldName)
 {
   std::map<std::string, SegmentDescriptor::SegmentKeyData>::iterator miter=_fieldMap.find(fieldName);
@@ -298,43 +307,43 @@ SegmentDescriptor::SegmentKeyData SegmentDescriptor::getSegmentKeyData(std::stri
 }
 
 
-unsigned int SegmentDescriptor::getBranchType(double segmentKey)
+unsigned int SegmentDescriptor::getBranchType(key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return sid.key.branchType;
 }
 
-unsigned int SegmentDescriptor::getBranchOrder(double segmentKey)
+unsigned int SegmentDescriptor::getBranchOrder(key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return sid.key.branchOrder;
 }
 
-unsigned int SegmentDescriptor::getComputeOrder(double segmentKey)
+unsigned int SegmentDescriptor::getComputeOrder(key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return sid.key.computeOrder;
 }
 
-unsigned int SegmentDescriptor::getSegmentIndex(double segmentKey)
+unsigned int SegmentDescriptor::getSegmentIndex(key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return sid.key.segmentIndex;
 }
 
-unsigned int SegmentDescriptor::getBranchIndex(double segmentKey)
+unsigned int SegmentDescriptor::getBranchIndex(key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return sid.key.branchIndex;
 }
 
-unsigned int SegmentDescriptor::getNeuronIndex (double segmentKey)
+unsigned int SegmentDescriptor::getNeuronIndex (key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return sid.key.neuronIndex;
 }
 
-bool SegmentDescriptor::getFlag(double segmentKey)
+bool SegmentDescriptor::getFlag(key_size_t segmentKey)
 {
   sid.collapsed = segmentKey;
   return (sid.key.flag!=0);
@@ -347,7 +356,7 @@ unsigned int SegmentDescriptor::pow2(int n)
   return rval;
 }
 
-void SegmentDescriptor::printKey(double segmentKey, unsigned long long mask)
+void SegmentDescriptor::printKey(key_size_t segmentKey, unsigned long long mask)
 {
   sid.collapsed = segmentKey;
   SegmentKeyData skd=SegmentKeyData(0);
@@ -426,7 +435,7 @@ void SegmentDescriptor::printMask(unsigned long long mask)
   printf("\n");
 }
 
-unsigned long long SegmentDescriptor::getLongKey(double key)
+unsigned long long SegmentDescriptor::getLongKey(key_size_t key)
 {
   sid.collapsed=key;
   return sid.idLong;

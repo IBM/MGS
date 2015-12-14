@@ -1,4 +1,4 @@
-// =================================================================
+
 // Licensed Materials - Property of IBM
 //
 // "Restricted Materials of IBM"
@@ -17,6 +17,7 @@
 #define CAPSULE_H
 #include <mpi.h>
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include "Sphere.h"
 #include "Touch.h"
 #include "SegmentDescriptor.h"
@@ -43,12 +44,12 @@ public:
   bool operator==(const Capsule& c1) const;
  
   double* getData() {return _capsuleData._data;}
-  double* getBeginCoordinates() {return _capsuleData._sphere._coords;}
+  double * getBeginCoordinates() {return _capsuleData._sphere._coords;}
   double getRadius() {return _capsuleData._sphere._radius;}
   void setRadius(double radius) {_capsuleData._sphere._radius=radius;}
-  double getKey() const {return _capsuleData._sphere._key;}
+  key_size_t getKey() const {return _capsuleData._sphere._key;}
   double getDist2Soma() const {return _capsuleData._sphere._dist2Soma;}
-  void setKey(double key) {_capsuleData._sphere._key=key;}
+  void setKey(key_size_t key) {_capsuleData._sphere._key=key;}
   void setDist2Soma(double dist2Soma) {_capsuleData._sphere._dist2Soma=dist2Soma;}
   double* getEndCoordinates() {return &_capsuleData._data[CAP_END_COORD];}
   Sphere& getSphere() {return _capsuleData._sphere;}

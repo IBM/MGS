@@ -18,6 +18,7 @@
 #include "VecPrim.h"
 #include <algorithm>
 
+
 SegmentDescriptor Capsule::_segmentDescriptor;
 
 Capsule::Capsule()
@@ -43,8 +44,8 @@ Capsule::Capsule(Capsule const & c)
 bool Capsule::operator<(const Capsule& c1) const
 {
   bool rval=false;
-  double key0=getKey();
-  double key1=c1.getKey();
+  key_size_t key0=getKey();
+  key_size_t key1=c1.getKey();
 
   unsigned int n0=_segmentDescriptor.getNeuronIndex(key0);
   unsigned int n1=_segmentDescriptor.getNeuronIndex(key1);
@@ -96,8 +97,8 @@ void Capsule::writeToFile(FILE* dataFile)
 
 bool Capsule::operator==(const Capsule& c1) const
 {
-  double key0=getKey();
-  double key1=c1.getKey();
+  key_size_t key0=getKey();
+  key_size_t key1=c1.getKey();
 
   unsigned int n0=_segmentDescriptor.getNeuronIndex(key0);
   unsigned int n1=_segmentDescriptor.getNeuronIndex(key1);

@@ -26,4 +26,6 @@
 #endif
 
 //typedef double key_size_t
- #define key_size_t double
+//NOTE: both must match the size: double == unsigned long long
+#define key_size_t double
+#define key_mask_size_t unsigned long long
