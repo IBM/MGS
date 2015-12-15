@@ -50,8 +50,8 @@ void print_help()
     std::cout << "USAGE:" << std::endl;
     std::cout << std::endl;
     std::cout << "./neuroGen [-tissue tissuefile] [-par parameterfilename] [-stdout] [-n]" << std::endl;
-    std::cout << "Example1: ./neuroGen -tissue \"minicolumn.txt\" " << std::endl;
-    std::cout << "Example2: (no tissue file, just one parameter filename for one neuron): ./neuroGen -par \"params.txt\"" << std::endl;
+    std::cout << "Example1: ./neuroGen -tissue minicolumn.txt " << std::endl;
+    std::cout << "Example2: (no tissue file, just one parameter filename for one neuron): ./neuroGen -par [axon_params.txt|NULL] [denda_params.txt|NULL] [dendb_params.txt|NULL]" << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -339,7 +339,6 @@ int main(int argc, char *argv[])
     }
     
     if (composite>0 && rank==0) CompositeSwc(tissueFileName.c_str(), compositeSwcFileName.c_str(), composite, false);
-
     for (int nid=0; nid<nNeuronsGenerated; ++nid) {
       delete [] fileNames[nid];
       delete params[nid];	

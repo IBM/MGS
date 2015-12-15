@@ -47,7 +47,6 @@ Neurogenesis::Neurogenesis(int rank, int size, int nThreads, std::string statsFi
 			   std::string parsFileName, bool stdout, bool fout, int branchType,
 			   std::map<std::string, BoundingSurfaceMesh*>& boundingSurfaceMap)
   : NeuronBoundary(0),
-    totalBifurcations(0),
     _neuronBegin(0),
     _neurogenParams(0),
     _neurogenFileNames(0),
@@ -84,7 +83,7 @@ void Neurogenesis::run(int neuronBegin, int nNeurons, NeurogenParams** params, c
     p.printParams(fout, true, false, "", "\t", "\t");
     fout.close();
     fout.open(_statsFileName.c_str(), std::ios::out);
-    printStats(0, 0, &p, fout, 0, true, false, "\t", "\t");
+    printStats(0, 0, &p, fout, 0, 0, true, false, "\t", "\t");
     fout.close();
   }
 
@@ -128,8 +127,9 @@ void Neurogenesis::doWork(int threadID, int nid, ThreadData* data, Mutex* mutex)
 {
   if (_neurogenParams[nid]) {
     data[threadID].reset(_neurogenParams[nid]->maxSegments, nid, mutex);
+    int& totalBifurcations=data[threadID].totalBifurcations;
     int& nrStemSegments=data[threadID].nrStemSegments;
-    generateArbors(threadID, nid, nrStemSegments);
+    generateArbors(threadID, nid, totalBifurcations, nrStemSegments);
     _somaGenerated[nid]=true;
     if (_fout || _stdout) {
 #ifndef DISABLE_PTHREADS
@@ -137,13 +137,13 @@ void Neurogenesis::doWork(int threadID, int nid, ThreadData* data, Mutex* mutex)
 #endif
       if (_fout) {
 	_neurogenParams[nid]->printParams(_opars, false, true, "", "\t", "\t");
-	printStats(threadID, _neuronBegin+nid, _neurogenParams[nid], _ostats, nrStemSegments, false, true, "\t", "\t");
+	printStats(threadID, _neuronBegin+nid, _neurogenParams[nid], _ostats, totalBifurcations, nrStemSegments, false, true, "\t", "\t");
       }
       if (_stdout) {
 	std::ostringstream os;
 	os << "PARAMS-"<<_parsFileName<< " : " << _neuronBegin+nid << std::endl; 
 	_neurogenParams[nid]->printParams(os, true, true, "", " : ", "\n");
-	printStats(threadID, _neuronBegin+nid, _neurogenParams[nid], os, nrStemSegments, true, true, " : ", "\n");
+	printStats(threadID, _neuronBegin+nid, _neurogenParams[nid], os, totalBifurcations, nrStemSegments, true, true, " : ", "\n");
 	std::cerr<<os.str()<<std::endl;
       }
 #ifndef DISABLE_PTHREADS
@@ -153,7 +153,7 @@ void Neurogenesis::doWork(int threadID, int nid, ThreadData* data, Mutex* mutex)
   }
 }
 
-void Neurogenesis::generateArbors(int threadID, int nid, int& nrStemSegments)
+void Neurogenesis::generateArbors(int threadID, int nid, int& totalBifurcations, int& nrStemSegments)
 {
   NeurogenParams* params_p=_neurogenParams[nid];  
 #ifndef _SILENT_
@@ -166,9 +166,9 @@ void Neurogenesis::generateArbors(int threadID, int nid, int& nrStemSegments)
 
   // Start actual generation of neuritic branches
   
-  generateStems(threadID, params_p, nid, nrStemSegments);
+  generateStems(threadID, params_p, nid, totalBifurcations, nrStemSegments);
   // Generate everything
-  extendNeurites(threadID, params_p);
+  extendNeurites(threadID, totalBifurcations, params_p);
   setSegmentIDs(threadID, params_p, count);
   writeSWC(threadID, nid, _neurogenFileNames[nid]);
 }
@@ -233,7 +233,7 @@ void Neurogenesis::generateSoma(int threadID, NeurogenParams* params_p, int& cou
   }
 }
 
-void Neurogenesis::generateStems(int threadID, NeurogenParams* params_p, int nid, int& nrStemSegments)
+void Neurogenesis::generateStems(int threadID, NeurogenParams* params_p, int nid, int& totalBifurcations, int& nrStemSegments)
 {
   ThreadData& data = _threadData[threadID];
   NeurogenSegment* newSeg = 0;
@@ -344,7 +344,7 @@ void Neurogenesis::generateStems(int threadID, NeurogenParams* params_p, int nid
 	  bool success=false;
 	  while (branchCandidate!=candidatesEnd && !success) {
 	    branch1=branchCandidate->second;
-	    success=branchWithAngle(threadID, origins[branch1], params_p);
+	    success=branchWithAngle(threadID, origins[branch1], totalBifurcations, params_p);
 	    ++branchCandidate;
 	  }
 	  if (!success) {
@@ -382,7 +382,7 @@ void Neurogenesis::generateStems(int threadID, NeurogenParams* params_p, int nid
   }  
 }
 
-void Neurogenesis::extendNeurites(int threadID, NeurogenParams* params)
+void Neurogenesis::extendNeurites(int threadID, int& totalBifurcations, NeurogenParams* params)
 {
   ThreadData& data = _threadData[threadID]; 
   NeurogenParams params_p = *params;
@@ -424,7 +424,7 @@ void Neurogenesis::extendNeurites(int threadID, NeurogenParams* params)
     
     if (drandom(0.0, 1.0, params_p._rng) < branchProb && 
 	totalBifurcations <= params_p.maxBifurcations) {
-      branchWithAngle(threadID, &data.Segments[j], &params_p);
+      branchWithAngle(threadID, &data.Segments[j], totalBifurcations, &params_p);
     }
     else growSegment(threadID, &data.Segments[j], &params_p);
     
@@ -445,7 +445,7 @@ void Neurogenesis::extendNeurites(int threadID, NeurogenParams* params)
   }
 }
 
-bool Neurogenesis::branchWithAngle(int threadID, NeurogenSegment* seg_p, NeurogenParams* params_p)
+bool Neurogenesis::branchWithAngle(int threadID, NeurogenSegment* seg_p, int& totalBifurcations, NeurogenParams* params_p)
 {
   bool rval=false;
   ThreadData& data = _threadData[threadID];
@@ -814,7 +814,7 @@ void Neurogenesis::setSegmentIDs(int threadID, NeurogenParams* params_p, int& co
  
  
 void Neurogenesis::printStats(int threadID, int nid, NeurogenParams* params_p,
-			      std::ostream& os, int nrStemSegments,
+			      std::ostream& os, int totalBifurcations, int nrStemSegments,
 			      bool names, bool values, 
 			      const char* namesSeparator, const char* valuesSeparator)
 {
@@ -1012,6 +1012,7 @@ Neurogenesis::ThreadData::ThreadData() :
   Segments(0),
   Branches(0),
   nrSegments(0),
+  totalBifurcations(0),
   nrStemSegments(0),
   nrBranches(0), 
   segmentsSize(0),
@@ -1051,7 +1052,7 @@ void Neurogenesis::ThreadData::reset(int n, int id, Mutex* mutex)
   else {
     for (int i=0; i<nrBranches; ++i) Branches[i].reset();
   }
-  nrSegments=nrBranches=0;
+  nrSegments=nrBranches=totalBifurcations=0;
 }
 
 NeurogenSegment* Neurogenesis::ThreadData::allocSegment(NeurogenSegment& seg)

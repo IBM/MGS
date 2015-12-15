@@ -57,6 +57,7 @@ class Neurogenesis {
      NeurogenBranch* Branches;
      int nrSegments, nrBranches;
      int segmentsSize, branchesSize;
+     int totalBifurcations;
      int nrStemSegments;
      int nid;
   };
@@ -68,11 +69,11 @@ class Neurogenesis {
 
   void run(int neuronBegin, int nNeurons, NeurogenParams** params_p, char** fileNames, bool* somaGenerated);
   void doWork(int threadID, int i, ThreadData* data, Mutex* mutex);
-  void generateArbors(int threadID, int nid, int& nrStems);
+  void generateArbors(int threadID, int nid, int& totalBifurcations, int& nrStems);
   void readSoma(int threadID, int nid, int& count, NeurogenParams* params_p);  
   void generateSoma(int threadID, NeurogenParams* params_p, int& count);
-  void generateStems(int threadID, NeurogenParams* params_p, int nid, int& nrStems);
-  void extendNeurites(int threadID, NeurogenParams* params_p);
+  void generateStems(int threadID, NeurogenParams* params_p, int nid, int& totalBifurcations,int& nrStems);
+  void extendNeurites(int threadID, int& totalBifurcations, NeurogenParams* params_p);
   void applyForces(int threadID, NeurogenSegment* newSeg, ShallowArray<NeurogenSegment*>& SegTouchVec, NeurogenParams* params_p);
   void resampleAfterForces(NeurogenSegment* newSeg);
   void setSegmentIDs(int threadID, NeurogenParams* params_p, int& count);
@@ -81,12 +82,12 @@ class Neurogenesis {
   void writeSWC(int threadID, int nid, const char* fileName);;
   void writeSWCbySeg(int threadID, const char* fileName); // Debug purposes only
   void printStats(int threadID, int nid, NeurogenParams* params_p, std::ostream& os, 
-		  int nrStemSegments, bool names, bool values, 
+		  int totalBifurcations, int nrStemSegments, bool names, bool values, 
 		  const char* namesSeparator, const char* valuesSeparator);
 
  private:
   // Important Neurogeneration functions
-  bool branchWithAngle(int threadID, NeurogenSegment* seg_p, NeurogenParams* params_p);
+  bool branchWithAngle(int threadID, NeurogenSegment* seg_p, int& totalBifurcations, NeurogenParams* params_p);
   bool growSegment(int threadID, NeurogenSegment* seg_p, NeurogenParams* params_p);
 
   // used for checking for overlaps
@@ -109,7 +110,6 @@ class Neurogenesis {
   int getMaxBranchOrder(int threadID);
 
   BoundingVolume* NeuronBoundary;
-  int totalBifurcations;
   int _neuronBegin;
   NeurogenParams** _neurogenParams;
   char** _neurogenFileNames;
