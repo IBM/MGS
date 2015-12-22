@@ -122,6 +122,7 @@ void TissueSlicer::initializePhase0()
     _sendBuff = new double[getBuffAllocationSize(sendBuffSize)];
     _sendBuffSize=getUsableBuffSize(sendBuffSize);
   }
+
 #endif
 }
 

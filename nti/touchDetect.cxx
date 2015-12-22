@@ -1,7 +1,7 @@
 #include <mpi.h>
 
 #define SLICING_DIMENSIONS 3 // for now, this must be 3
-//#define SYNAPSE_PARAMS_TOUCH_DETECT
+//#define STAND_ALONE_ANALYSIS
 
 #include "MaxComputeOrder.h"
 #include "NeuroDevCommandLine.h"
@@ -103,12 +103,8 @@ int main(int argc, char *argv[])
    VolumeDecomposition* volumeDecomposition=0;
    Decomposition* decomposition=0;
    char* ext=&inputFilename[inputFilenameLength-3];
-   if (strcmp(ext, "bin")==0) {
-     neuronPartitioner->partitionBinaryNeurons(nSlicers, nTouchDetectors, tissue);
-   }
-   else if (strcmp(ext, "txt")==0) {
-     neuronPartitioner->partitionTextNeurons(nSlicers, nTouchDetectors, tissue);
-   }
+   if (strcmp(ext, "bin")==0) neuronPartitioner->partitionBinaryNeurons(nSlicers, nTouchDetectors, tissue);
+   else if (strcmp(ext, "txt")==0) neuronPartitioner->partitionTextNeurons(nSlicers, nTouchDetectors, tissue);
    else {
      std::cerr<<"Unrecognized input file extension: "<<&inputFilename[inputFilenameLength-3]<<std::endl;
      exit(0);
@@ -140,34 +136,40 @@ int main(int argc, char *argv[])
 					       autapses);
   
    ORTouchSpace detectionSpace(electricalSynapseTouchSpace, chemicalSynapseTouchSpace);
-
    TouchSpace* communicateTouchSpace = new AllInTouchSpace;
    TouchAggregator* touchAggregator = 0;
-   //touchAggregator = new TouchAggregator(rank, nTouchDetectors, communicateTouchSpace, 0);  // IF CREATED, TOUCHES ARE AGGREGATED
-   TouchFilter* touchFilter = 0;
-   //touchFilter = new AntiredundancyTouchFilter(touchAggregator, tissue);
-   //touchFilter = new PassThroughTouchFilter(touchAggregator, tissue);
 
    timeStep1 = MPI_Wtime();
 
    volumeDecomposition = new VolumeDecomposition(rank, NULL, nTouchDetectors, tissue, X, Y, Z);
    decomposition=volumeDecomposition;
-
-   TissueSlicer* tissueSlicer = new TouchDetectTissueSlicer(rank, nSlicers, nTouchDetectors, 
+   TouchDetectTissueSlicer* tissueSlicer = new TouchDetectTissueSlicer(rank, nSlicers, nTouchDetectors, 
 							    tissue, &decomposition, 0, &params, MAX_COMPUTE_ORDER);
-   
    
    TouchDetector *touchDetector = new TouchDetector(rank, nSlicers, nTouchDetectors, MAX_COMPUTE_ORDER, commandLine.getNumberOfThreads(),
 						    commandLine.getAppositionSamplingRate(), &decomposition, 
 						    &detectionSpace, communicateTouchSpace, neuronPartitioner, 
 						    0, &params);
 
+#ifndef STAND_ALONE_ANALYSIS
+   tissueSlicer->sendLostDaughters(false);
+   touchDetector->setPass(TissueContext::FIRST_PASS);
+   touchDetector->unique(true);
+   director->addCommunicationCouple(tissueSlicer, touchDetector);
+   director->iterate();
+   touchDetector->setUpCapsules();
+#else
    int maxIterations = commandLine.getMaxIterations();
    if (maxIterations<=0) {
      std::cerr<<"max-iterations must be > 0!"<<std::endl;
      exit(0);
    }
    
+   TouchFilter* touchFilter = 0;
+   //touchAggregator = new TouchAggregator(rank, nTouchDetectors, communicateTouchSpace, 0);  // IF CREATED, TOUCHES ARE AGGREGATED
+   //touchFilter = new AntiredundancyTouchFilter(touchAggregator, tissue);
+   //touchFilter = new PassThroughTouchFilter(touchAggregator, tissue);
+
    TouchAnalyzer* touchAnalyzer = new TouchAnalyzer(rank, commandLine.getExperimentName(), nSlicers, nTouchDetectors, 
 						    touchDetector, tissue, maxIterations, 
 						    touchFilter, true, true);
@@ -185,9 +187,6 @@ int main(int argc, char *argv[])
    touchAnalyzer->addTouchAnalysis(touchAnalysis);    // LIST CREATION : PARAMETERIZABLE
 
    timeStep2 = MPI_Wtime();
-#ifdef SYNAPSE_PARAMS_TOUCH_DETECT
-   decomposition->resetCriteria(&detectionSpace);
-#endif
    director->addCommunicationCouple(tissueSlicer, touchDetector);
    //director->addCommunicationCouple(touchDetector, touchAggregator);
    director->addCommunicationCouple(touchAnalyzer, touchAnalyzer);
@@ -211,8 +210,7 @@ int main(int argc, char *argv[])
 	
      touchAnalyzer->analyze(iteration);
      timeStep4 = MPI_Wtime();
-
-     /*	 
+ 
      if (rank==0) printf("io=%.3f slice=%.3f comm=%.3f tDetection=%.3f tTotal=%.3f MemBefore=%.2f MemAfter=%.2f\n",
 			 timeStep1 - timeStep0,
 			 timeStep2 - timeStep1,
@@ -220,20 +218,20 @@ int main(int argc, char *argv[])
 			 timeStep4 - timeStep3,
 			 timeStep4 - timeStep0,
 			 memorySize1,memorySize2);
-     */
    }
+   delete touchAnalyzer; 
+   delete touchFilter;
+#endif
    delete communicator;
    delete director;
    delete tissue;
    delete neuronPartitioner;
    delete communicateTouchSpace;
    delete touchAggregator;
-   delete touchFilter;
    delete volumeDecomposition;
    delete tissueSlicer;
-   delete touchAnalyzer; 
    delete touchDetector;
-
+   
    MPI_Finalize();
 }
 

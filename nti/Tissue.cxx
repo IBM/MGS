@@ -87,7 +87,6 @@ void Tissue::loadBinary(FILE* inputDataFile,
   _neurons = new Neuron[_neuronArraySize];//Create the array of Neurons
   _segments = new Segment[_segmentArraySize];//Create the array of segments
   Segment* segmentPtr = _segments;
-  std::vector<Segment> segments;
 
   openLogFiles();
 
@@ -124,6 +123,7 @@ void Tissue::loadBinary(FILE* inputDataFile,
   }  
 #endif
   strcpy(_inFilename, inputFilename);
+  std::vector<Segment> segments;
   if (resample) resampleNeurons(neuronArraySize, segments, pointSpacing);
   else resetBranchRoots(neuronArraySize, segments);
   setBranchOrders();
@@ -150,7 +150,6 @@ void Tissue::loadText(char * inputFilenames,
   _neurons = new Neuron[_neuronArraySize];//Create the array of Neurons
   _segments = new Segment[_segmentArraySize];//Create the array of segments
   Segment* segmentPtr = _segments;
-  std::vector<Segment> segments;
 
   openLogFiles();
 
@@ -215,6 +214,8 @@ void Tissue::loadText(char * inputFilenames,
   fclose(filenameFile);
 
   strcpy(_inFilename, inputFilenames);
+
+  std::vector<Segment> segments;
   if (resample) resampleNeurons(neuronArraySize, segments, pointSpacing);
   else resetBranchRoots(neuronArraySize, segments);
   setBranchOrders();
@@ -563,6 +564,24 @@ int Tissue::outputTextNeurons(std::string outExtension, FILE* tissueOutFile, int
   }
   return segmentsWritten;
 }
+
+void Tissue::printAllSegments()
+{
+  for (int i=0; i<_segmentArraySize; ++i) {
+    double* cds=_segments[i].getCoords();
+    double key=_segments[i].getSegmentKey();
+    printf("%f %f %f %d %d %d %d %d %d %d %d\n",cds[0],cds[1],cds[2],
+      _segmentDescriptor.getBranchType(key), 
+      _segmentDescriptor.getBranchOrder(key), 
+      _segmentDescriptor.getComputeOrder(key), 
+      _segmentDescriptor.getNeuronIndex(key), 
+      _segmentDescriptor.getBranchIndex(key), 
+      _segmentDescriptor.getSegmentIndex(key), 
+      _segmentDescriptor.getSegmentKeyData("MTYPE"), 
+      _segmentDescriptor.getSegmentKeyData("ETYPE"));
+ }
+}
+
 
 int Tissue::outputTextNeuron(int neuronID, std::string outName, FILE* tissueOutFile, int globalOffset)
 {

@@ -111,7 +111,7 @@ void TouchDetectTissueSlicer::sliceAllNeurons()
 
     ShallowArray<int, MAXRETURNRANKS, 100> indices;
     Segment* segsEnd = _segs+_tissue->getSegmentArraySize()-1;
-    for (Segment* seg=_segs; seg <= segsEnd; ++seg) {
+    for (Segment* seg=_segs; seg<=segsEnd; ++seg) {
       branch = seg->getBranch();
       segVolumeIndex=decomposition->getRank(seg->getSphere());      
       

@@ -86,7 +86,6 @@
 #define MIN(x,y) ((x)<(y) ? (x) : (y))
 #define MAX(x,y) ((x)>(y) ? (x) : (y))
 
-//#define SYNAPSE_PARAMS_TOUCH_DETECT
 //#define INFERIOR_OLIVE
 
 #ifdef INFERIOR_OLIVE
@@ -253,6 +252,7 @@ void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, 
   _tissueContext->seed(_rank);
 
   if (!_tissueContext->isInitialized()) {
+    _tissueContext->_tissue = new Tissue(_size, _rank);
     neuroGen(&_tissueParams, CG_c);
     MPI_Barrier(MPI_COMM_WORLD);
     neuroDev(&_tissueParams, CG_c);
@@ -515,39 +515,24 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
 #ifdef USING_CVC
   if (clientConnect) set_cvc_config("./cvc.config");
 #endif
-
+  
   char inputFilename[256];
   int inputFilenameLength=commandLine.getInputFileName().length();
   strcpy(inputFilename, commandLine.getInputFileName().c_str());
-  
-  _tissueContext->_tissue = new Tissue(_size, _rank);
-
-  bool resample=commandLine.getResample();
-
-  Communicator* communicator = new Communicator();   
-  Director* director = new Director(communicator);
-
-  bool dumpResampledNeurons=( (_tissueContext->_commandLine.getOutputFormat()=="t" || _tissueContext->_commandLine.getOutputFormat()=="bt") ) ? true : false;
-
-  int X=commandLine.getX();
-  int Y=commandLine.getY();
-  int Z=commandLine.getZ();  
-
   int nSlicers = commandLine.getNumberOfSlicers();
   if (nSlicers == 0 || nSlicers>_size) nSlicers = _size;
   int nSegmentForceDetectors = commandLine.getNumberOfDetectors();
   if (nSegmentForceDetectors == 0 || nSegmentForceDetectors>_size) nSegmentForceDetectors = _size;
-
- _tissueContext->_neuronPartitioner = new NeuronPartitioner(_rank, inputFilename, resample, dumpResampledNeurons, commandLine.getPointSpacing());
+  bool dumpResampledNeurons=( (_tissueContext->_commandLine.getOutputFormat()=="t" || _tissueContext->_commandLine.getOutputFormat()=="bt") ) ? true : false;
+  _tissueContext->_neuronPartitioner = new NeuronPartitioner(_rank, inputFilename, commandLine.getResample(), dumpResampledNeurons, commandLine.getPointSpacing());
+  char* ext=&inputFilename[inputFilenameLength-3];
+  if (strcmp(ext, "bin")==0) _tissueContext->_neuronPartitioner->partitionBinaryNeurons(nSlicers, nSegmentForceDetectors, _tissueContext->_tissue);
+  else _tissueContext->_neuronPartitioner->partitionTextNeurons(nSlicers, nSegmentForceDetectors, _tissueContext->_tissue);
 
   VolumeDecomposition* volumeDecomposition=0;
-  char* ext=&inputFilename[inputFilenameLength-3];
-  if (strcmp(ext, "bin")==0) {
-    _tissueContext->_neuronPartitioner->partitionBinaryNeurons(nSlicers, nSegmentForceDetectors, _tissueContext->_tissue);
-  }
-  else {
-    _tissueContext->_neuronPartitioner->partitionTextNeurons(nSlicers, nSegmentForceDetectors, _tissueContext->_tissue);
-  }
+  int X=commandLine.getX();
+  int Y=commandLine.getY();
+  int Z=commandLine.getZ();  
   _tissueContext->_decomposition = volumeDecomposition = new VolumeDecomposition(_rank, NULL, _size, _tissueContext->_tissue, X, Y, Z);
    
 #ifdef VERBOSE
@@ -572,7 +557,9 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
   double Econ=commandLine.getEnergyCon();
   double dT=commandLine.getTimeStep();
   double E=0,dE=0,En=0;
-  
+ 
+  Communicator* communicator = new Communicator();   
+  Director* director = new Director(communicator);
   TissueGrowthSimulator TissueSim(_size, _rank, _tissueContext->_tissue, director, segmentForceDetector, segmentForceAggregator, params, commandLine.getInitialFront());
 
   AllInSegmentSpace allInSegmentSpace;
@@ -720,9 +707,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
   MPI_Barrier(MPI_COMM_WORLD);
 
   NeuroDevCommandLine& commandLine=_tissueContext->_commandLine;
-
   int nSlicers = _tissueContext->_neuronPartitioner->getNumberOfSlicers();
-
   int nTouchDetectors = commandLine.getNumberOfDetectors();
   if (nTouchDetectors == 0) nTouchDetectors = _size;
 
@@ -772,11 +757,8 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     touchDetectTissueSlicer->addTolerance(glomeruliDetector->getGlomeruliSpacing());
 #endif
     touchDetector->setPass(TissueContext::FIRST_PASS);
-    //touchDetector->unique(true);
-    touchDetector->unique(false);
-#ifdef SYNAPSE_PARAMS_TOUCH_DETECT
-    _tissueContext->_decomposition->resetCriteria(&detectionTouchSpace);
-#endif
+    touchDetector->unique(true);
+    //touchDetector->unique(false);
     director->addCommunicationCouple(touchDetectTissueSlicer, touchDetector);
     director->iterate();
     touchDetector->setUpCapsules();

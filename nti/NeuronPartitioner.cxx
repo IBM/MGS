@@ -220,7 +220,7 @@ void NeuronPartitioner::partitionTextNeurons(int& nSlicers, const int nTouchDete
 
   tissue->setPartitioner(this);
   if (_rank<_nSlicers) tissue->loadText( _inputFilename, 
-					 _neuronGroupNeuronCount, 
+					 _neuronGroupNeuronCount,
 					 _neuronGroupSegCount, 
 					 _neuronGroupStartNeuron, 
 					 this, 
@@ -231,8 +231,8 @@ void NeuronPartitioner::partitionTextNeurons(int& nSlicers, const int nTouchDete
 }
 
 void NeuronPartitioner::decompose()
-{
- //decompose the neurons depending on their number of segments
+{  
+  //decompose the neurons depending on their number of segments
   int currentNeuron=0;
   int startNeuron=0;
   _neuronGroupNeuronCount = 0;
