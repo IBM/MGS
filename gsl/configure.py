@@ -866,7 +866,8 @@ UTILS_MODULES := std \\
 BASE_MODULES := $(patsubst %,framework/%,$(FRAMEWORK_MODULES))
 BASE_MODULES += $(patsubst %,utils/%,$(UTILS_MODULES))
 
-CONSTANT_MODULES :=
+CONSTANT_MODULES := CompartmentDimension \\
+	BranchData \\
 
 EDGE_MODULES :=
 
@@ -874,7 +875,9 @@ INTERFACE_MODULES :=
 
 NODE_MODULES :=
 
-STRUCT_MODULES := CoordsStruct \
+STRUCT_MODULES := CoordsStruct \\
+	DimensionStruct \\
+	BranchDataStruct \\
 
 TRIGGER_MODULES :=
 
