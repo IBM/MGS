@@ -107,9 +107,10 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
     segments[s].setSegmentIndex(segCount);
     segments[s].setSegmentArrayIndex(s);
     segments[s].setKey();
-    segCount=1;
+    ++segCount  ;
     if (segments[terminalIndex].getBranch()->getBranchType()==0)
-      segments[s].getRadius()=_segments[0].getRadius(); // overwrite soma radius
+      // overwrite soma radius for stems
+      segments[s].getRadius()=_segments[0].getRadius();
     seg1=&segments[s];
     seg2=&_segments[0];
     ++s;
@@ -215,7 +216,8 @@ void Branch::resetBranchRoots(std::vector<Segment>& segments)
       ++segCount;
     }
     if (newRoot && _rootSegment->getBranch()->getBranchIndex()==0)
-      segments[s-segCount].getRadius()=segments[s-segCount+1].getRadius(); // overwrite soma radius
+      // overwrite soma radius for stems
+      segments[s-segCount].getRadius()=segments[s-segCount+1].getRadius();
   }
   _numberOfSegments=segCount;
 }
