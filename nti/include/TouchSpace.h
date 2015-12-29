@@ -22,12 +22,13 @@
 #include <stdlib.h>
 #include <mpi.h>
 
+#include "MaxComputeOrder.h"
 class TouchSpace
 {
    public:
      virtual ~TouchSpace() {}
-     virtual bool isInSpace(double segKey)=0;
-     virtual bool areInSpace(double segKey1, double segKey2)=0;
+     virtual bool isInSpace(key_size_t segKey)=0;
+     virtual bool areInSpace(key_size_t segKey1, key_size_t segKey2)=0;
      virtual TouchSpace* duplicate()=0;
 };
  

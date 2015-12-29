@@ -107,11 +107,15 @@ class Array
       virtual unsigned getBlockIncrementSize() const = 0;
       void destructContents();
       void copyContents(const Array& rv);
-      void demote (int, int);
-      unsigned _size;
-      unsigned _activeBlocks;
-      unsigned _activeBlocksSize;
-      T** _blocksArray;
+      void demote (int, int); 
+	  // NOTE: Arrays are organized in the form of multiple 'logical blocks'
+	  //       i.e. memory increase/reduced, in the form of one or many blocks
+      unsigned _size; //the number of elements in the array containing data
+      unsigned _activeBlocks; //the number of active 
+                      	  //blocks in the array (those really containing data)
+      unsigned _activeBlocksSize;//the maximum number of elements that the allocated array
+	                             // can hold
+      T** _blocksArray; //the array holding the data
 };
 
 template <class T>

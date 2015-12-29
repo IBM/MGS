@@ -47,11 +47,17 @@ class CG_BranchData;
 
 class TissueContext
 {
-public:
+  public:
   TissueContext();
   ~TissueContext();
 
-  typedef enum{NOT_SET=0, FIRST_PASS, SECOND_PASS, ADDITIONAL_PASS} DetectionPass;
+  typedef enum
+  {
+    NOT_SET = 0,
+    FIRST_PASS,
+    SECOND_PASS,
+    ADDITIONAL_PASS
+  } DetectionPass;
   NeuroDevCommandLine _commandLine;
 
   int _nCapsules;
@@ -64,48 +70,74 @@ public:
   Tissue* _tissue;
   RNG _touchSampler, _localSynapseGenerator;
   long _boundarySynapseGeneratorSeed, _localSynapseGeneratorSeed;
-  
+
   std::map<unsigned int, std::vector<ComputeBranch*> > _neurons;
-  
-  int getRank() {return _rank;}
-  int getMpiSize() {return _mpiSize;}
+
+  int getRank() { return _rank; }
+  int getMpiSize() { return _mpiSize; }
   void readFromFile(FILE* dataFile, int size, int rank);
   void writeToFile(int size, int rank);
   void writeData(FILE* data);
-  int setUpCapsules(int nCapsules, DetectionPass detectionPass, int rank, int maxComputeOrder);
+  int setUpCapsules(int nCapsules, DetectionPass detectionPass, int rank,
+                    int maxComputeOrder);
   void setUpBranches(int rank, int maxComputeOrder);
-  bool isInitialized() {return _initialized;}
-  void setInitialized() {_initialized=true;}
-   void resetBranches();
+  bool isInitialized() { return _initialized; }
+  void setInitialized() { _initialized = true; }
+  void resetBranches();
 
   unsigned int getRankOfBeginPoint(ComputeBranch*);
   unsigned int getRankOfEndPoint(ComputeBranch*);
   bool isTouchToEnd(Capsule& c, Touch& t);
-  bool isMappedTouch(Touch& t, std::map<double, int>::iterator& iter1, std::map<double, int>::iterator& iter2);
+  bool isMappedTouch(Touch& t, std::map<key_size_t, int>::iterator& iter1,
+                     std::map<key_size_t, int>::iterator& iter2);
   bool isLensTouch(Touch& t, int rank);
-  int getCapsuleIndex(double key);
+  int getCapsuleIndex(key_size_t key);
   void correctTouchKeys(int rank);
-  DetectionPass getPass(double key);
-  DetectionPass addToCapsuleMap(double key, int index, DetectionPass);
+  DetectionPass getPass(key_size_t key);
+  DetectionPass addToCapsuleMap(key_size_t key, int index, DetectionPass);
   void clearCapsuleMaps();
   void seed(int rank);
 
-  void getCapsuleMaps(std::map<double, int>& firstPassCapsuleMap, std::map<double,int>& secondPassCapsuleMap);
-  void resetCapsuleMaps(std::map<double, int>& firstPassCapsuleMap, std::map<double,int>& secondPassCapsuleMap);
-  std::map<ComputeBranch*, std::vector<CG_CompartmentDimension*> > _branchDimensionsMap;
-  std::map<ComputeBranch*, CG_BranchData* > _branchBranchDataMap;
+  void getCapsuleMaps(std::map<key_size_t, int>& firstPassCapsuleMap,
+                      std::map<key_size_t, int>& secondPassCapsuleMap);
+  void resetCapsuleMaps(std::map<key_size_t, int>& firstPassCapsuleMap,
+                        std::map<key_size_t, int>& secondPassCapsuleMap);
+  //define the mapping from a branch (represented by ComputeBranch)
+  //    to the vector of all points in that branch
+  //            each point is represented by CG_CompartmentDimension class
+  //             which is (x,y,z,r,dist2soma)
+  std::map<ComputeBranch*, std::vector<CG_CompartmentDimension*> >
+      _branchDimensionsMap;
+  //define the mapping from a branch
+  //    to the data uniquely identified the branch (CG_BranchData*)
+  //              which is (key,size)
+  //      key  = a key formed by multiple fields that uniquely identify that branch
+  //      size = # of compartments in that branch
+  std::map<ComputeBranch*, CG_BranchData*> _branchBranchDataMap;
+  //define the linkage between a single compartment (as a junction point)
+  //         (from which the branching occurs)
+  //    to a list of other compartments (that joint to the the same junction point)
   std::map<Capsule*, CG_CompartmentDimension*> _junctionDimensionMap;
-  std::map<Capsule*, CG_BranchData* > _junctionBranchDataMap;
-  std::map<double, int> _firstPassCapsuleMap, _secondPassCapsuleMap; // key to capsule index 
+  //define the linkage between a single compartment (as a junction point)
+  //    to the branch to which it belongs 
+  std::map<Capsule*, CG_BranchData*> _junctionBranchDataMap;
+  //define the mapping from a key (representing a branch)
+  //    to the index of a capsule
+  std::map<key_size_t, int> _firstPassCapsuleMap,
+      _secondPassCapsuleMap;  // key to capsule index
 
   void rebalance(Params* params, TouchVector* touchVector);
 
- private:
-  bool isSpanning(Capsule&);             // first coord of capsule is in a different volume from second
-  bool sameBranch(Capsule&, unsigned int, unsigned int, unsigned int, DetectionPass);      
+  private:
+  bool isSpanning(Capsule&);  // first coord of capsule is in a different volume
+                              // from second
+  bool sameBranch(Capsule&, unsigned int, unsigned int, unsigned int,
+                  DetectionPass);
   // capsule is in the branch identified by neuron, bran0ch indices
-  bool isGoing(Capsule&, int);              // first coord of capsule is in this volume, while second is in another
-  bool isComing(Capsule&, int);             // first coord of capsule is another volume, while second is in this
+  bool isGoing(Capsule&, int);   // first coord of capsule is in this volume,
+                                 // while second is in another
+  bool isComing(Capsule&, int);  // first coord of capsule is another volume,
+                                 // while second is in this
   bool isOutside(ComputeBranch*, int);
   bool isConsecutiveCapsule(int index);
 
@@ -115,4 +147,3 @@ public:
   int _rank, _mpiSize;
 };
 #endif
-

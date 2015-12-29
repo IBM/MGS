@@ -19,6 +19,7 @@
 #include "../../nti/include/MaxComputeOrder.h"
 #include <mpi.h>
 
+//TUAN
 //key_size_t : be careful to modify this accordingly if we change key_size_t
 #define N_SPHERE_DATA 6
 

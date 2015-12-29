@@ -9,68 +9,102 @@
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
 Struct ChannelCurrents {
-  dyn_var_t []* conductances;
-  dyn_var_t []* reversalPotentials;
+  dyn_var_t []* conductances; // [nS/um^2]
+  dyn_var_t []* reversalPotentials; // [mV]
 }
 
 Struct ReceptorCurrent {
-  dyn_var_t* conductance;
-  dyn_var_t* reversalPotential;
-  int index;
+  dyn_var_t* conductance; // [nS/um^2]
+  dyn_var_t* reversalPotential; // [mV]
+  int index; //index of the compartment on a given branch to which the current is injected
 }
 
 Struct InjectedCurrent {
-  dyn_var_t* current;
-  dyn_var_t area;
-  int index;
+  dyn_var_t* current; // (pA)
+  dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
+  int index;     //  index of the compartment on a given branch to which the current is injected
 }
 
-Node HodgkinHuxleyVoltage Implements VoltageArrayProducer 
-	 , SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer, ForwardSolutionArrayProducer
-     , NaConcentrationProducer, KConcentrationProducer 
+Node HodgkinHuxleyVoltage Implements SolutionArrayProducer, 
+     DimensionArrayProducer, BranchDataProducer, 
+     ForwardSolutionArrayProducer,
+     VoltageArrayProducer, 
+     NaConcentrationProducer, KConcentrationProducer 
 {
+// Regular-branch: represent the diffusion of Voltage along branch with no junction
+/*{{{*/
 	//DATA
     /*{{{*/
 	//data members: reference
-  DimensionStruct* [] dimensions;
-  BranchDataStruct* branchData;
+       // pointer to array of branch
+       // help to identify the branch a Voltage-compartment belong to 
+  BranchDataStruct* branchData; 
+       // an array of pointer
+       //       each pointer pointing to an array containing the information
+       //       of all compartments for each branch
+       //  i.e. each compartment whose information (x,y,z,r)
+  DimensionStruct* [] dimensions; 
 	//data members: internal, but for solver
+    //{{{
 	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
-  dyn_var_t [] Aii; //diagonal element of the matrix (A[i,i])
-  dyn_var_t [] Aip; 
-  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
-  dyn_var_t [] RHS; //RHS=right-hand side
-  dyn_var_t [] Aij;
-  dyn_var_t* proximalVoltage;
-  dyn_var_t* [] distalAiis;
-  dyn_var_t* [] distalAips;
-  dyn_var_t* [] distalInputs;
-  DimensionStruct* [] distalDimensions;
-  DimensionStruct* proximalDimension;
-  bool proximalJunction;
-  int computeOrder;
-	//data members: internal
-  dyn_var_t [] Vcur;
-  dyn_var_t [] Vnew;
-	
-    // here we may consider the fact that different branch has different gLeak, capacitance Cm, cmt
-  dyn_var_t Cm;
-  dyn_var_t cmt; // what is this
-  dyn_var_t gLeak;
+  dyn_var_t [] Aii; //diagonal element of the matrix (A[i,i]) [nS/um^2]
+  dyn_var_t [] Aip; //right-side off-diagonal element         [nS/um^2]
+  dyn_var_t [] Aim; //left-side off-diagonal element          [nS/um^2] 
+       //... i.e. branch's distalmost compartment to junction coupling coefficient
 
-  // currents
+  dyn_var_t [] RHS; //RHS=right-hand side = current-density [pA/um^2]
+  dyn_var_t [] Aij; //a term as part of Aii[] when the comparment is branching
+                    //.. at distal-side
+                    //.. i.e. send/receive signals to/from multiple branches
+  dyn_var_t* proximalVoltage; //reference to the voltage from the compartment
+                    //.. on a different branch (on proximal side)
+  dyn_var_t* [] distalAiis; // get Aii[] from multiple branches
+  dyn_var_t* [] distalAips; // get Aip[] from multiple branches
+  dyn_var_t* [] distalInputs;// get   Vm from multiple branches
+//  dyn_var_t[] * valCur;//pointer to an array (not being used: PLAN to use it the solver)
+//  dyn_var_t[] * valNew;
+     //keep the pointer to the dimension information (x,y,z,r)
+  DimensionStruct* [] distalDimensions; // .. of the first compartment of the adjacent branch(es) 
+                                        //    on distal end (it can have many at a branch-point)
+  DimensionStruct* proximalDimension;   // .. of the first compartment of the adjacent branch 
+                                        //    on proximal end
+
+  bool proximalJunction;// true = real-branching point, 
+                        //..false=implicit-cut (i.e. cut along the branch)
+  int computeOrder;// TissueFunctor will assign the value to each branch 
+                   // (the range of values from [0..MAX_COMPUTE_ORDER-1])
+                   // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
+                   // computing of branches of the same computeOrder
+                   // If MAX_COMPUTE_ORDER=0, then 
+                   // solve all branches sequentially 
+                   //  from distal to proximal: forwardSolve
+                   //  from proximal to distal: backwardSolve
+       //}}}
+	//data members: internal
+  dyn_var_t [] Vcur; // [mV]
+  dyn_var_t [] Vnew; // [mV]
+    // here we may consider the fact that different branches
+    // have different gLeak, capacitance Cm, cmt
+    // and all compartments on the same branch share the same value
+  dyn_var_t Cm; // [pF/um^2]
+  dyn_var_t gLeak; // [nS/um^2]
+  dyn_var_t cmt; // intermediate values  = 2*Cm/dt [pF/(um^2 . ms)]
+    // currents
   ChannelCurrents [] channelCurrents;
   ReceptorCurrent [] receptorCurrents;
-  InjectedCurrent [] injectedCurrents;
-
+  InjectedCurrent [] injectedCurrents; 
 	/*}}}*/
-   // design : anything currently not part of the spatial is put in HodgkinHuxleyVoltage Node
+   // design : anything currently not part of the spatial 
+   //          is put in HodgkinHuxleyVoltage Node
   Shared {
-    dyn_var_t* deltaT;
-    dyn_var_t Ra;
-    dyn_var_t Na; // intracellular concentrations expressed by ion name alone
-    dyn_var_t K;
-    dyn_var_t E_leak;
+    /*{{{*/
+    dyn_var_t* deltaT; // [milisecond] = [ms]
+    dyn_var_t Ra; //axial resistance [GOhm.um]
+    // intracellular concentrations expressed by ion name alone
+    dyn_var_t Na; // [microMolar] = [uM]
+    dyn_var_t K;  // [uM]
+    dyn_var_t E_leak;  // [miliVolt] = [mV]
+    /*}}}*/
   }
 
 	//output
@@ -82,11 +116,14 @@ Node HodgkinHuxleyVoltage Implements VoltageArrayProducer
   ForwardSolutionArrayProducer.AiiArray << &Aii;
   ForwardSolutionArrayProducer.AipArray << &Aip;
   ForwardSolutionArrayProducer.RHSArray << &RHS;
-	//}}}
+
   NaConcentrationProducer.Na << &Shared.Na;
   KConcentrationProducer.K << &Shared.K;
+	//}}}
 
-  InitPhase initializeVoltage;
+    // Phases methods
+    /*{{{*/
+  InitPhase initializeData;
   
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
@@ -110,15 +147,21 @@ Node HodgkinHuxleyVoltage Implements VoltageArrayProducer
   RuntimePhase forwardSolve7, backwardSolve7; 
   #endif
   RuntimePhase solve, finish;
+    /*}}}*/
 
   InAttrPSet {
     string identifier;
     TissueSite site;
     int idx;
   }
-
+  // d^2 V/dx^2 = dV/dt + Ileak + Iinject + (Isyn+Iion)
+  // injectedCurrent  = (to a compartment) only if 2 scenarios
+  //               1. it forms an bi-directional
+  //                      connection (e.g. electrical-synapse or spine-neck)
+  //               2. a stimulus current is injected
   UserFunction setReceptorCurrent, setInjectedCurrent, setProximalJunction;
-
+  // Connection setup
+  //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
     DimensionProducer.dimension >> dimensions;
    }
@@ -176,12 +219,157 @@ Node HodgkinHuxleyVoltage Implements VoltageArrayProducer
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
+/*}}}*/
 }
 
 Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
 {
+// For each regular-branch, represented by HodgkinHuxleyVoltage
+// we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
+/*{{{*/
+  dyn_var_t* voltage; // reference to the voltage at either 'distalEnd' or 'proximalEnd'
+  DimensionStruct* dimension; //reference to the point's information at either 'distalEnd' or 'proximalEnd'
+
+  Shared {
+    // so the two instances share the Branch's data
+    dyn_var_t []* voltageConnect; 
+    DimensionStruct* []* dimensionsConnect;
+  }
+
+  //output
+  VoltageProducer.voltage << voltage;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {//attribute of the incoming MDL component, e.g. node
+    string identifier; //either 'distalEnd' or 'proximalEnd'
+  }
+
+  UserFunction setPointers; // which is called to create the proper memory reference for 'voltage'
+             // pointer, depending upon the incoming node's InAttrPset's identifier
+
+  //input
+  Connection Pre Node () Expects VoltageArrayProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedVoltage(voltage);
+  RuntimePhase produceFinishedVoltage(voltage);
+/*}}}*/
+}
+
+Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataProducer,
+     VoltageArrayProducer, 
+	 NaConcentrationProducer, KConcentrationProducer 
+{
+// Junction branch: represent the diffusion of Voltage along the branch that has junction
+// The diffusion between compartments in junction-branch is modeled as 'gAxial' and 
+//       cross-sectional area 'area'
+// NOTE: A soma is a special kind of junction-branch
+/*{{{*/
+  BranchDataStruct* branchData;  // the proximal-side regular-branch's data
+  DimensionStruct* [] dimensions; //the proximal-side regular-branch
+  dyn_var_t area;//surface area [um^2]
+  dyn_var_t [] gAxial; //axial-conductance  [GOm.um]
+  dyn_var_t Vcur; // iso-potential for all compartments in junction-branch [mV]
+  dyn_var_t [] Vnew; //  [mV]
+
+  dyn_var_t Cm; // [pF/um^2]
+  dyn_var_t cmt; // intermediate value = 2*Cm/dt [pF/(um^2 . ms)]
+  dyn_var_t gLeak; // [nS/um^2]
+
+  // currents
+  ChannelCurrents [] channelCurrents;
+  dyn_var_t* [] receptorConductances;
+  dyn_var_t* [] receptorReversalPotentials;
+  dyn_var_t* [] injectedCurrents;
+
+  dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
+  DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
+
+  Shared {
+	  //{{{
+    dyn_var_t* deltaT; // [milisecond] = [ms]
+    dyn_var_t Ra; //axial resistance [GOhm.um]
+    // intracellular concentrations expressed by ion name alone
+    dyn_var_t Na; // [microMolar] = [uM]
+    dyn_var_t K;  // [uM]
+    dyn_var_t E_leak;  // [miliVolt] = [mV]
+      //}}}
+  }
+
+  //output
+  VoltageArrayProducer.voltageArray << &Vnew;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+
+  NaConcentrationProducer.Na << &Shared.Na;
+  KConcentrationProducer.K << &Shared.K;
+
+  InitPhase initializeJunction;
+   
+  RuntimePhase predictJunction, correctJunction;
+
+  InAttrPSet {
+    string identifier;
+    TissueSite site;
+    int idx;
+  }	
+
+  //input
+  // the junction-branch connects to regular-branch through the regular-branch's endpoints
+  Connection Pre Node (PSet.identifier=="endpoint") Expects VoltageProducer, DimensionProducer  {
+    VoltageProducer.voltage >> voltageInputs;
+    DimensionProducer.dimension >> dimensionInputs;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+   }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects ConductanceArrayProducer, 
+    ReversalPotentialArrayProducer {
+    ConductanceArrayProducer.conductanceArray >> channelCurrents.conductances;
+    ReversalPotentialArrayProducer.reversalPotentials >> channelCurrents.reversalPotentials;
+   }
+
+  Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
+    CurrentProducer.current >> injectedCurrents;
+   }
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, 
+    ReversalPotentialProducer {
+    ConductanceProducer.conductance >> receptorConductances;
+    ReversalPotentialProducer.reversalPotential >> receptorReversalPotentials;
+   }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentProducer {
+    CurrentProducer.current >> injectedCurrents;
+   }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+/*}}}*/
+}
+
+Node VoltageJunctionPoint Implements VoltageProducer, DimensionProducer
+{
+// For each junction-branch, represented by HodgkinHuxleyVoltageJunction
+// we need 1 associated JunctionPoints that reference to ...
+/*{{{*/
   dyn_var_t* voltage;
   DimensionStruct* dimension;
+
   Shared {
     dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
@@ -201,8 +389,8 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
     setPointers();
   }
   InitPhase produceInitialState(dimension);
-  RuntimePhase produceSolvedVoltage(voltage);
-  RuntimePhase produceFinishedVoltage(voltage);
+  RuntimePhase produceVoltage(voltage);
+/*}}}*/
 }
 
 #endif

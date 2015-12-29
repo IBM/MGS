@@ -34,7 +34,7 @@ SynapseTouchSpace::SynapseTouchSpace(SynapseTouchSpace& synapseTouchSpace)
 {
 }
 
-bool SynapseTouchSpace::isInSpace(double key)
+bool SynapseTouchSpace::isInSpace(key_size_t key)
 { 
   bool rval=false;
   if (_type==ELECTRICAL) rval=_params.isElectricalSynapseTarget(key);
@@ -42,7 +42,7 @@ bool SynapseTouchSpace::isInSpace(double key)
   return rval;
 }
 
-bool SynapseTouchSpace::areInSpace(double key1, double key2)
+bool SynapseTouchSpace::areInSpace(key_size_t key1, key_size_t key2)
 {
   bool rval=false;
   if (_type==ELECTRICAL) rval=_params.isElectricalSynapseTarget(key1, key2, _autapses);

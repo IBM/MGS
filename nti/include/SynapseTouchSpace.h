@@ -33,8 +33,8 @@ class SynapseTouchSpace : public TouchSpace
 		     bool autapses);
    SynapseTouchSpace(SynapseTouchSpace& synapseTouchSpace);
    ~SynapseTouchSpace();
-   bool isInSpace(double key);
-   bool areInSpace(double key1, double key2);
+   bool isInSpace(key_size_t key);
+   bool areInSpace(key_size_t key1, key_size_t key2);
    TouchSpace* duplicate();
  private:
    SynapseType _type;

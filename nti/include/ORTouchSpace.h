@@ -28,8 +28,8 @@ class ORTouchSpace : public TouchSpace
 		TouchSpace& touchSpace2);
    ORTouchSpace(ORTouchSpace& orTouchSpace);
    ~ORTouchSpace();
-   bool isInSpace(double key);
-   bool areInSpace(double key1, double key2);
+   bool isInSpace(key_size_t key);
+   bool areInSpace(key_size_t key1, key_size_t key2);
    TouchSpace* duplicate();
  private:
    TouchSpace* _touchSpace1;

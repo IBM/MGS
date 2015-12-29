@@ -28,13 +28,13 @@ ORTouchSpace::ORTouchSpace(ORTouchSpace& orTouchSpace)
   _touchSpace2=orTouchSpace._touchSpace2->duplicate();
 }
 
-bool ORTouchSpace::isInSpace(double key)
+bool ORTouchSpace::isInSpace(key_size_t key)
 { 
   return (_touchSpace1->isInSpace(key) ||
 	  _touchSpace2->isInSpace(key) );
 }
 
-bool ORTouchSpace::areInSpace(double key1, double key2)
+bool ORTouchSpace::areInSpace(key_size_t key1, key_size_t key2)
 {
   return (_touchSpace1->areInSpace(key1, key2) ||
 	  _touchSpace2->areInSpace(key1, key2) );

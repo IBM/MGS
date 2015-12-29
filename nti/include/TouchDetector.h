@@ -34,6 +34,10 @@
 #include <vector>
 #include <list>
 
+//0..2 : TD_BEGIN_COORDS (3 doubles)
+//3..3 : TD_RADIUS (1 double)
+//4..4 : TD_KEY (1 doubles)
+//5..8 : TD_END_COORDS (3 doubles)
 #define N_TD_DATA 8
 #define TD_BEGIN_COORDS 0
 #define TD_RADIUS 3
@@ -100,10 +104,11 @@ class TouchDetector :  public Sender, public Receiver
      class TDSegment
      {
       public:
+		  //TUAN: potential bug here if we change the keysize, RECOMMEND: move key to the last component
        double seg[N_TD_DATA];
        double* getBeginCoords() {return &seg[TD_BEGIN_COORDS];}
        double getRadius() {return seg[TD_RADIUS];}
-       double getKey() const {return seg[TD_KEY];}
+       key_size_t getKey() const {return seg[TD_KEY];}
        double* getEndCoords() {return &seg[TD_END_COORDS];}
        bool operator<(const TDSegment& s1) const;
        bool operator==(const TDSegment& s1) const;

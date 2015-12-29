@@ -25,14 +25,14 @@ DendriteTouchSpace::DendriteTouchSpace(DendriteTouchSpace& dendriteTouchSpace) :
 {
 }
 
-bool DendriteTouchSpace::isInSpace(double segKey1)
+bool DendriteTouchSpace::isInSpace(key_size_t segKey1)
 {
   return (_segmentDescriptor.getBranchType(segKey1) == 0 ||
 	  _segmentDescriptor.getBranchType(segKey1) == 2 || 
 	  _segmentDescriptor.getBranchType(segKey1) == 3 );
 }
 
-bool DendriteTouchSpace::areInSpace(double segKey1, double segKey2)
+bool DendriteTouchSpace::areInSpace(key_size_t segKey1, key_size_t segKey2)
 {
   return (	(_segmentDescriptor.getBranchType(segKey1) == 0 ||
 		 _segmentDescriptor.getBranchType(segKey1) == 2 || 

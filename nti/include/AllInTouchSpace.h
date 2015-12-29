@@ -16,6 +16,7 @@
 #ifndef ALLINTOUCHSPACE_H
 #define ALLITTOUCHSPACE_H
 #include "TouchSpace.h"
+#include "MaxComputeOrder.h"
 
 #include <mpi.h>
 
@@ -25,8 +26,8 @@ class AllInTouchSpace : public TouchSpace
   AllInTouchSpace();
   AllInTouchSpace(AllInTouchSpace&);
   ~AllInTouchSpace();
-  bool isInSpace(double segKey1);
-  bool areInSpace(double segKey1, double segKey2);
+  bool isInSpace(key_size_t segKey1);
+  bool areInSpace(key_size_t segKey1, key_size_t segKey2);
   TouchSpace* duplicate();
 };
  

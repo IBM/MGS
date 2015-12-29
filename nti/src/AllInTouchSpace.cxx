@@ -23,12 +23,12 @@ AllInTouchSpace::AllInTouchSpace(AllInTouchSpace& allInTouchSpace)
 {
 }
 
-bool AllInTouchSpace::isInSpace(double key)
+bool AllInTouchSpace::isInSpace(key_size_t key)
 { 
   return true;
 }
 
-bool AllInTouchSpace::areInSpace(double key1, double key2)
+bool AllInTouchSpace::areInSpace(key_size_t key1, key_size_t key2)
 {
   return true;
 }

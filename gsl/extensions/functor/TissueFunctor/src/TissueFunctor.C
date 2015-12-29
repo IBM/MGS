@@ -46,8 +46,8 @@
 #include "Granule.h"
 #include "IntDataItem.h"
 
-#ifdef HAVE_MPI
 #include "MaxComputeOrder.h"
+#ifdef HAVE_MPI
 
 #include "SegmentForceAggregator.h"
 #include "AllInSegmentSpace.h"
@@ -214,7 +214,8 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
     f._connectorFunctor->duplicate(_connectorFunctor);
   if (f._probeFunctor.get()) f._probeFunctor->duplicate(_probeFunctor);
   if (f._params.get()) f._params->duplicate(_params);
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 2; ++i)
+  {
     _generatedChemicalSynapses[i] = f._generatedChemicalSynapses[i];
     _nonGeneratedMixedChemicalSynapses[i] =
         f._nonGeneratedMixedChemicalSynapses[i];
@@ -228,7 +229,8 @@ void TissueFunctor::userInitialize(
     String& compartmentParamFile, String& channelParamFile,
     String& synapseParamFile, Functor*& layoutFunctor,
     Functor*& nodeInitFunctor, Functor*& connectorFunctor,
-    Functor*& probeFunctor) {
+    Functor*& probeFunctor)
+{
 #ifdef HAVE_MPI
   _size = CG_c->sim->getNumProcesses();
   _rank = CG_c->sim->getRank();
@@ -241,7 +243,8 @@ void TissueFunctor::userInitialize(
   // Validate inputs
   {
     TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
-    if (element == 0) {
+    if (element == 0)
+    {
       std::cerr << "Functor passed to TissueFunctor as argument 4 is not a "
                    "TissueElement!" << std::endl;
       exit(-1);
@@ -250,7 +253,8 @@ void TissueFunctor::userInitialize(
   {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
-    if (element == 0) {
+    if (element == 0)
+    {
       std::cerr << "Functor passed to TissueFunctor as argument 5 is not a "
                    "TissueElement!" << std::endl;
       exit(-1);
@@ -259,7 +263,8 @@ void TissueFunctor::userInitialize(
   {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_connectorFunctor.get());
-    if (element == 0) {
+    if (element == 0)
+    {
       std::cerr << "Functor passed to TissueFunctor as argument 6 is not a "
                    "TissueElement!" << std::endl;
       exit(-1);
@@ -267,7 +272,8 @@ void TissueFunctor::userInitialize(
   }
   {
     TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
-    if (element == 0) {
+    if (element == 0)
+    {
       std::cerr << "Functor passed to TissueFunctor as argument 7 is not a "
                    "TissueElement!" << std::endl;
       exit(-1);
@@ -277,7 +283,8 @@ void TissueFunctor::userInitialize(
 #ifdef HAVE_MPI
   String command = "NULL ";
   command += commandLineArgs1;
-  if (_tissueContext->_commandLine.parse(command.c_str()) == false) {
+  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
+  {
     std::cerr << "Error in simulation specification's commandLineArgs1 string "
                  "argument, TissueFunctor:" << std::endl;
     std::cerr << commandLineArgs1 << std::endl;
@@ -294,9 +301,11 @@ void TissueFunctor::userInitialize(
 
   FILE* data = NULL;
   if (_tissueContext->_commandLine.getBinaryFileName() != "" &&
-      !_tissueContext->isInitialized()) {
+      !_tissueContext->isInitialized())
+  {
     if ((data = fopen(_tissueContext->_commandLine.getBinaryFileName().c_str(),
-                      "rb")) != NULL) {
+                      "rb")) != NULL)
+    {
 #ifdef HAVE_MPI
       _readFromFile = true;
       _tissueContext->_decomposition =
@@ -316,7 +325,8 @@ void TissueFunctor::userInitialize(
 
   _tissueContext->seed(_rank);
 
-  if (!_tissueContext->isInitialized()) {
+  if (!_tissueContext->isInitialized())
+  {
     neuroGen(&_tissueParams, CG_c);
     MPI_Barrier(MPI_COMM_WORLD);
     neuroDev(&_tissueParams, CG_c);
@@ -325,7 +335,8 @@ void TissueFunctor::userInitialize(
 #ifdef HAVE_MPI
   command = "NULL ";
   command += commandLineArgs2;
-  if (_tissueContext->_commandLine.parse(command.c_str()) == false) {
+  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
+  {
     std::cerr << "Error in simulation specification's commandLineArgs2 string "
                  "argument, TissueFunctor:" << std::endl;
     std::cerr << commandLineArgs2 << std::endl;
@@ -341,7 +352,8 @@ void TissueFunctor::userInitialize(
   _tissueParams.readChanParams(channelParamFile.c_str());
   _tissueParams.readSynParams(synapseParamFile.c_str());
 
-  if (!_tissueContext->isInitialized()) {
+  if (!_tissueContext->isInitialized())
+  {
     touchDetect(&_tissueParams, CG_c);
     _tissueContext->setInitialized();
   }
@@ -349,7 +361,8 @@ void TissueFunctor::userInitialize(
   if ((_tissueContext->_commandLine.getOutputFormat() == "b" ||
        _tissueContext->_commandLine.getOutputFormat() == "bt") &&
       _tissueContext->_commandLine.getBinaryFileName() != "" &&
-      !_readFromFile && CG_c->sim->isSimulatePass()) {
+      !_readFromFile && CG_c->sim->isSimulatePass())
+  {
 #ifdef HAVE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
     _tissueContext->writeToFile(_size, _rank);
@@ -359,7 +372,8 @@ void TissueFunctor::userInitialize(
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
+void TissueFunctor::neuroGen(Params* params, LensContext* CG_c)
+{
 #ifdef HAVE_MPI
   double start, now, then;
   start = then = MPI_Wtime();
@@ -380,20 +394,22 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
     strcpy(tissueFileName, commandLine.getInputFileName().c_str());
     char* ext = &tissueFileName[tissueFileNameLength - 3];*/
   std::string ext = tissueFileName.substr(tissueFileName.length() - 3);
-  if (ext == "bin") {
+  if (ext == "bin")
+  {
     // if (strcmp(ext, "bin") == 0) {
     if (_rank == 0)
       std::cerr << "NeuroGen tissue file must be a text file." << std::endl;
     exit(-1);
   }
-  if (_rank == 0) {
+  if (_rank == 0)
+  {
     std::cout << "Tissue file name: " << tissueFileName << std::endl
               << std::endl;
     std::cout << "Generating neurons...\n";
   }
 
-  for (int branchType = 0; branchType < N_BRANCH_TYPES;
-       ++branchType) {  // 0:axon, 1:basal, 2:apical
+  for (int branchType = 0; branchType < N_BRANCH_TYPES; ++branchType)
+  {  // 0:axon, 1:basal, 2:apical
     std::string btype;
     if (branchType == 0)
       btype = "axons";
@@ -411,39 +427,50 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
     // char** fileNames = 0;
     std::vector<std::string> fileNames;
 
-    if (branchType == 0) {
+    if (branchType == 0)
+    {
       // only need to do the following once per neuron
       double totalComplexity = 0.0;
       std::ifstream tissueFile(tissueFileName.c_str());
-      while (tissueFile.good()) {
+      while (tissueFile.good())
+      {
         std::string line;
         getline(tissueFile, line);
-        if (line != "" && line.at(0) != '#') {
+        if (line != "" && line.at(0) != '#')
+        {
           std::string str = line;
           std::stringstream strstr(str);
           std::istream_iterator<std::string> it(strstr);
           std::istream_iterator<std::string> end;
           std::vector<std::string> results(it, end);
           bool genParams = false;
-          if (results.size() >= PAR_FILE_INDEX + N_BRANCH_TYPES) {
+          if (results.size() >= PAR_FILE_INDEX + N_BRANCH_TYPES)
+          {
             // use first paramfile in tissue to seed RNG below
-            for (int bt = 0; bt < N_BRANCH_TYPES; ++bt) {
-              if (results.at(PAR_FILE_INDEX + bt) != "NULL") {
+            for (int bt = 0; bt < N_BRANCH_TYPES; ++bt)
+            {
+              if (results.at(PAR_FILE_INDEX + bt) != "NULL")
+              {
                 baseParFileName = results.at(PAR_FILE_INDEX + bt);
                 genParams = true;
                 break;
               }
             }
-            if (genParams) {
+            if (genParams)
+            {
               double complexity = 0.0;
               std::ifstream testFile(results.at(0).c_str());
-              if (!testFile) {
-                if (results.size() > PAR_FILE_INDEX + N_BRANCH_TYPES) {
+              if (!testFile)
+              {
+                if (results.size() > PAR_FILE_INDEX + N_BRANCH_TYPES)
+                {
                   complexity =
                       atof(results.at(PAR_FILE_INDEX + N_BRANCH_TYPES).c_str());
-                } else
+                }
+                else
                   complexity = 1.0;
-              } else
+              }
+              else
                 testFile.close();
               totalComplexity += complexity;
               complexities.push_back(complexity);
@@ -459,25 +486,31 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
       double runningComplexity = 0.0;
       int count = 0, divisor = _size;
       bool assigned = false;
-      for (int i = 0; i < nNeurons; ++i) {
+      for (int i = 0; i < nNeurons; ++i)
+      {
         somaGenerated[i] = false;
-        if ((runningComplexity += complexities[i]) >= targetComplexity) {
+        if ((runningComplexity += complexities[i]) >= targetComplexity)
+        {
           --divisor;
           neuronBegin = neuronEnd;
           if (neuronBegin == i || complexities[i] == runningComplexity ||
               runningComplexity - targetComplexity <
-                  targetComplexity - (runningComplexity - complexities[i])) {
+                  targetComplexity - (runningComplexity - complexities[i]))
+          {
             totalComplexity -= runningComplexity;
             targetComplexity = totalComplexity / divisor;
             runningComplexity = 0.0;
             neuronEnd = i + 1;
-          } else {
+          }
+          else
+          {
             totalComplexity -= (runningComplexity - complexities[i]);
             targetComplexity = totalComplexity / divisor;
             runningComplexity = complexities[i];
             neuronEnd = i;
           }
-          if (count == _rank) {
+          if (count == _rank)
+          {
             assigned = true;
             break;
           }
@@ -507,7 +540,8 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
     parsFileNameStream << parsFileName << "." << btype << ".par";
     parsFileName = parsFileNameStream.str();
 
-    if (composite > 0) {
+    if (composite > 0)
+    {
       compositeSwcFileName = tissueFileName;
       compositeSwcFileName.erase(ln - 4, 4);
       std::ostringstream compositeSwcFileNameStream;
@@ -518,12 +552,16 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
 
     int neuronID = 0, idx = 0;
     std::ifstream tissueFile(tissueFileName.c_str());
-    if (tissueFile.is_open()) {
-      while (tissueFile.good()) {
+    if (tissueFile.is_open())
+    {
+      while (tissueFile.good())
+      {
         std::string line;
         getline(tissueFile, line);
-        if (line != "" && line.at(0) != '#') {
-          if (neuronID >= neuronBegin && neuronID < neuronEnd) {
+        if (line != "" && line.at(0) != '#')
+        {
+          if (neuronID >= neuronBegin && neuronID < neuronEnd)
+          {
             std::string str = line;
             // construct a stream from the string
             std::stringstream strstr(str);
@@ -533,12 +571,14 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
             std::istream_iterator<std::string> it(strstr);
             std::istream_iterator<std::string> end;
             std::vector<std::string> results(it, end);
-            if (results.size() >= PAR_FILE_INDEX + N_BRANCH_TYPES) {
+            if (results.size() >= PAR_FILE_INDEX + N_BRANCH_TYPES)
+            {
               /*fileNames[idx] = new char[results.at(0).length() + 1];
               strcpy(fileNames[idx], results.at(0).c_str());*/
               fileNames.push_back(results.at(0));
               if (complexities[idx] > 0 &&
-                  results.at(PAR_FILE_INDEX + branchType) != "NULL") {
+                  results.at(PAR_FILE_INDEX + branchType) != "NULL")
+              {
                 ng_params[idx] = new NeurogenParams(
                     results.at(PAR_FILE_INDEX + branchType), _rank);
                 ng_params[idx]->RandSeed = lrandom(rng);
@@ -553,7 +593,9 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
                       new BoundingSurfaceMesh(ng_params[idx]->boundingSurface);
               }
               ++idx;
-            } else if (results.size() > 0) {
+            }
+            else if (results.size() > 0)
+            {
               std::cerr << "Error in Tissue File at neuron " << idx << "."
                         << std::endl;
               exit(-1);
@@ -562,7 +604,9 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
           neuronID++;
         }
       }
-    } else {
+    }
+    else
+    {
       std::cerr << "Cannot open tissue file!" << tissueFileName << std::endl;
       exit(0);
     }
@@ -577,7 +621,8 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
       CompositeSwc(tissueFileName.c_str(), compositeSwcFileName.c_str(),
                    composite, false);
 
-    for (int nid = 0; nid < nNeuronsGenerated; ++nid) {
+    for (int nid = 0; nid < nNeuronsGenerated; ++nid)
+    {
       // delete[] fileNames[nid];
       delete ng_params[nid];
     }
@@ -597,7 +642,8 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
+void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
+{
   if (_rank == 0) printf("Developing tissue...\n");
 #ifdef HAVE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
@@ -646,11 +692,14 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
   VolumeDecomposition* volumeDecomposition = 0;
   // char* ext = &inputFilename[inputFilenameLength - 3];
   std::string ext = inputFilename.substr(inputFilename.length() - 3);
-  if (ext == "bin") {
+  if (ext == "bin")
+  {
     // if (strcmp(ext, "bin") == 0) {
     _tissueContext->_neuronPartitioner->partitionBinaryNeurons(
         nSlicers, nSegmentForceDetectors, _tissueContext->_tissue);
-  } else {
+  }
+  else
+  {
     _tissueContext->_neuronPartitioner->partitionTextNeurons(
         nSlicers, nSegmentForceDetectors, _tissueContext->_tissue);
   }
@@ -674,7 +723,8 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
       _tissueContext->_neuronPartitioner, params);
 
   int maxIterations = commandLine.getMaxIterations();
-  if (maxIterations < 0) {
+  if (maxIterations < 0)
+  {
     std::cerr << "max-iterations must be >= 0!" << std::endl;
     MPI_Finalize();
     exit(0);
@@ -720,7 +770,7 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
   bool attemptConnect = true;
   unsigned iteration = 0;
   int nspheres = 0;
-  float* positions = 0, *radii = 0;
+  float* positions = 0, * radii = 0;
   int* types = 0;
   double start, now, then;
   start = then = MPI_Wtime();
@@ -735,7 +785,8 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
   bool grow = TissueSim.AdvanceFront() && maxIterations > 0;
   neuroDevTissueSlicer->resetSegmentSpace(&frontSegmentSpace);
 
-  while (grow) {
+  while (grow)
+  {
 #ifdef VERBOSE
     if (_rank == 0) printf("Front level %d", TissueSim.getFrontNumber());
     if (!grow && _rank == 0) printf(" <FINAL> ");
@@ -743,9 +794,11 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
 #endif
     En = 0;
     iteration = 0;
-    do {
+    do
+    {
 #ifdef USING_CVC
-      if (clientConnect) {
+      if (clientConnect)
+      {
         _tissueContext->_tissue->getVisualizationSpheres(
             vizSpace, nspheres, positions, radii, types);
         cvc(nspheres, positions, radii, types, attemptConnect);
@@ -797,21 +850,27 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
 
   FILE* tissueOutFile = 0;
   if (_tissueContext->_commandLine.getOutputFormat() == "t" ||
-      _tissueContext->_commandLine.getOutputFormat() == "bt") {
+      _tissueContext->_commandLine.getOutputFormat() == "bt")
+  {
     std::string outExtension(".developed");
-    if (maxIterations > 0) {
+    if (maxIterations > 0)
+    {
       _tissueContext->_tissue->outputTextNeurons(outExtension, 0, 0);
     }
-    if (commandLine.getOutputFileName() != "") {
+    if (commandLine.getOutputFileName() != "")
+    {
       int nextToWrite = 0, written = 0, segmentsWritten = 0, globalOffset = 0;
-      while (nextToWrite < _size) {
+      while (nextToWrite < _size)
+      {
         MPI_Allreduce((void*)&written, (void*)&nextToWrite, 1, MPI_INT, MPI_SUM,
                       MPI_COMM_WORLD);
         MPI_Allreduce((void*)&segmentsWritten, (void*)&globalOffset, 1, MPI_INT,
                       MPI_SUM, MPI_COMM_WORLD);
-        if (nextToWrite == _rank) {
+        if (nextToWrite == _rank)
+        {
           if ((tissueOutFile = fopen(commandLine.getOutputFileName().c_str(),
-                                     (_rank == 0) ? "wt" : "at")) == NULL) {
+                                     (_rank == 0) ? "wt" : "at")) == NULL)
+          {
             printf("Could not open the output file %s!\n",
                    commandLine.getOutputFileName().c_str());
             MPI_Finalize();
@@ -839,7 +898,8 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
+void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
+{
 #ifdef HAVE_MPI
   double start, now, then;
   start = then = MPI_Wtime();
@@ -850,6 +910,10 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
 
   int nSlicers = _tissueContext->_neuronPartitioner->getNumberOfSlicers();
 
+  // number of processes to run touch-detection
+  // can be the number of MPI processes or
+  // the number as passed though the command-line (look Document for the right
+  // option)
   int nTouchDetectors = commandLine.getNumberOfDetectors();
   if (nTouchDetectors == 0) nTouchDetectors = _size;
 
@@ -891,14 +955,16 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
   Communicator* communicator = new Communicator();
   Director* director = new Director(communicator);
 
-  if (_rank == 0) {
+  if (_rank == 0)
+  {
     printf("Using %s decomposition.\n\n",
            commandLine.getDecomposition().c_str());
     printf("Detecting touches...\n\n");
   }
 
   if (commandLine.getDecomposition() == "volume" ||
-      commandLine.getDecomposition() == "cost-volume") {
+      commandLine.getDecomposition() == "cost-volume")
+  {
 
     touchDetectTissueSlicer->sendLostDaughters(false);
 #ifdef INFERIOR_OLIVE
@@ -915,7 +981,8 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
     director->iterate();
     touchDetector->setUpCapsules();
 
-    if (commandLine.getDecomposition() == "cost-volume") {
+    if (commandLine.getDecomposition() == "cost-volume")
+    {
       touchDetector->detectTouches();
 #ifdef INFERIOR_OLIVE
       glomeruliDetector->findGlomeruli(touchDetector->getTouchVector());
@@ -934,7 +1001,9 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
       _tissueContext->clearCapsuleMaps();
       touchDetector->setUpCapsules();
       _tissueContext->correctTouchKeys(_rank);
-    } else {
+    }
+    else
+    {
       touchDetector->resetTouchVector();
       touchDetector->detectTouches();
       touchDetectTissueSlicer->sendLostDaughters(true);
@@ -972,7 +1041,9 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
     delete touchDetector;
     delete communicator;
     delete director;
-  } else if (commandLine.getDecomposition() == "neuron") {
+  }
+  else if (commandLine.getDecomposition() == "neuron")
+  {
 
     touchDetectTissueSlicer->sendLostDaughters(false);
     touchDetectTissueSlicer->addCutPointJunctions(false);
@@ -1052,7 +1123,9 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
     delete communicator;
     delete director;
     delete volumeDecomposition;
-  } else {
+  }
+  else
+  {
     std::cerr << "Unrecognized decomposition : "
               << commandLine.getDecomposition() << std::endl;
     exit(0);
@@ -1070,17 +1143,21 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c) {
 int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                                     std::string& nodeCategory,
                                     std::string& nodeType, int nodeIndex,
-                                    int densityIndex) {
+                                    int densityIndex)
+{
   int rval = 1;
   if (nodeCategory == "CompartmentVariables" ||
-      nodeCategory == "BranchChannels" || nodeCategory == "JunctionChannels") {
-    std::vector<int> size;
+      nodeCategory == "BranchChannels" || nodeCategory == "JunctionChannels")
+  {
+    std::vector<int> size;//holding # compartments at each branch
     if (nodeCategory == "CompartmentVariables" ||
-        nodeCategory == "BranchChannels") {
+        nodeCategory == "BranchChannels")
+    {
       ComputeBranch* branch = 0;
       if (nodeCategory == "CompartmentVariables")
         branch = findBranch(nodeIndex, densityIndex, nodeType);
-      else {
+      else
+      {
         std::pair<int, int>& channelBranchIndexPair =
             _channelBranchIndices1[_channelLayers.size() - 1][densityIndex][0];
         branch = findBranch(
@@ -1094,7 +1171,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       rval = ncomps;
       assert(branch->_parent || branch->_daughters.size() > 0);
 
-      if (nodeCategory == "CompartmentVariables") {
+      if (nodeCategory == "CompartmentVariables")
+      {
         DataItemArrayDataItem* dimArray = new DataItemArrayDataItem(size);
         ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
         std::auto_ptr<DataItem> aptr_cst;
@@ -1102,17 +1180,19 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             _tissueContext->_branchDimensionsMap[branch];
         if (dimensions.size() > 0)
           assert(dimensions.size() == ncomps);
-        else {
+        else // putting points information into 'dimensions' vector
+        {
           for (int i = 0, j = ncaps - ((ncaps % _compartmentSize == 0)
                                            ? _compartmentSize
                                            : ncaps % _compartmentSize);
-               i < ncomps; ++i, j -= _compartmentSize) {
+               i < ncomps; ++i, j -= _compartmentSize)
+          {
             // compartment indexing is distal to proximal, while capsule
             // indexing is proximal to distal
             Capsule* begCap = &branch->_capsules[j];
             Capsule* endCap =
-                &branch->_capsules
-                     [(i == 0) ? ncaps - 1 : j + _compartmentSize - 1];
+                &branch->_capsules[(i == 0) ? ncaps - 1
+                                            : j + _compartmentSize - 1];
             double radius = 0;
             for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
               radius += capPtr->getRadius();
@@ -1136,21 +1216,26 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           }
         }
       }
-    } else
+    }
+    else
       size.push_back(1);
 
     const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
 
     std::vector<DataItem*>::const_iterator cptiter, cptend = cpt->end();
     NDPairList::iterator ndpiter, ndpend = params->end();
-    for (cptiter = cpt->begin(); cptiter != cptend; ++cptiter) {
+    for (cptiter = cpt->begin(); cptiter != cptend; ++cptiter)
+    {
       bool foundNDP = false;
-      for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter) {
-        if ((*ndpiter)->getName() == (*cptiter)->getString()) {
+      for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
+      {
+        if ((*ndpiter)->getName() == (*cptiter)->getString())
+        {
           foundNDP = true;
           ArrayDataItem* arrayDI =
               dynamic_cast<ArrayDataItem*>((*ndpiter)->getDataItem());
-          if (arrayDI == 0) {
+          if (arrayDI == 0)
+          {
             std::cerr << "TissueFunctor: " << *(*cptiter)
                       << " comparmentalization can only be applied to an array "
                          "parameter!" << std::endl;
@@ -1160,18 +1245,22 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           break;
         }
       }
-      if (!foundNDP) {
+      if (!foundNDP)
+      {
         ArrayDataItem* arrayDI = new FloatArrayDataItem(size);
         std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
         NDPair* ndp = new NDPair((*cptiter)->getString(), arrayDI_ap);
         params->push_back(ndp);
       }
     }
-  } else if (nodeCategory == "Junctions") {
+  }
+  else if (nodeCategory == "Junctions")
+  {
     Capsule* junctionCapsule = findJunction(nodeIndex, densityIndex, nodeType);
     std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
         _tissueContext->_junctionDimensionMap.find(junctionCapsule);
-    if (miter == _tissueContext->_junctionDimensionMap.end()) {
+    if (miter == _tissueContext->_junctionDimensionMap.end())
+    {
       ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
       std::auto_ptr<DataItem> aptr_cst;
       StructDataItem* dimsDI = getDimension(
@@ -1194,14 +1283,18 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 }
 
 std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
-    NDPairList* params) {
+    NDPairList* params)
+{
   const std::vector<DataItem*>* cpt;
   NDPairList::iterator ndpiter, ndpend = params->end();
-  for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter) {
-    if ((*ndpiter)->getName() == "compartmentalize") {
+  for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
+  {
+    if ((*ndpiter)->getName() == "compartmentalize")
+    {
       DataItemArrayDataItem* cptDI =
           dynamic_cast<DataItemArrayDataItem*>((*ndpiter)->getDataItem());
-      if (cptDI == 0) {
+      if (cptDI == 0)
+      {
         std::cerr << "TissueFunctor: compartmentalization parameter is not a "
                      "list of parameter names!" << std::endl;
         exit(-1);
@@ -1215,7 +1308,8 @@ std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
 }
 
 StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
-                                            double radius, double dist2soma) {
+                                            double radius, double dist2soma)
+{
   DoubleDataItem* xddi = new DoubleDataItem(cds[0]);
   std::auto_ptr<DataItem> xddi_ap(xddi);
   NDPair* x = new NDPair("x", xddi_ap);
@@ -1253,10 +1347,12 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
 
 StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
                                             double* cds2, double radius,
-                                            double dist2soma) {
+                                            double dist2soma)
+{
   double center[3];
   double dsqrd = 0;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 3; ++i)
+  {
     center[i] = (cds1[i] + cds2[i]) / 2.0;
     double d = (cds1[i] - cds2[i]);
     dsqrd += d * d;
@@ -1266,15 +1362,19 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
 }
 
 void TissueFunctor::getNodekind(const NDPairList* ndpl,
-                                std::vector<std::string>& nodekind) {
+                                std::vector<std::string>& nodekind)
+{
   nodekind.clear();
   assert(ndpl);
   NDPairList::const_iterator ndpiter, ndpend = ndpl->end();
-  for (ndpiter = ndpl->begin(); ndpiter != ndpend; ++ndpiter) {
-    if ((*ndpiter)->getName() == "nodekind") {
+  for (ndpiter = ndpl->begin(); ndpiter != ndpend; ++ndpiter)
+  {
+    if ((*ndpiter)->getName() == "nodekind")
+    {
       StringDataItem* nkDI =
           dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
-      if (nkDI == 0) {
+      if (nkDI == 0)
+      {
         std::cerr << "TissueFunctor: nodekind parameter is not a string!"
                   << std::endl;
         exit(-1);
@@ -1293,7 +1393,8 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
       std::vector<std::string> tokens;
       StringUtils::Tokenize(kind, tokens, "][");
       for (std::vector<std::string>::iterator i = tokens.begin();
-           i != tokens.end(); ++i) {
+           i != tokens.end(); ++i)
+      {
         nodekind.push_back(*i);
       }
 
@@ -1303,19 +1404,22 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
 }
 
 ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
-                                         std::string const& nodeType) {
+                                         std::string const& nodeType)
+{
   ComputeBranch* rval = 0;
   std::map<std::string,
            std::map<int, std::map<int, ComputeBranch*> > >::iterator mapiter1 =
       _indexBranchMap.find(nodeType);
-  if (mapiter1 == _indexBranchMap.end()) {
+  if (mapiter1 == _indexBranchMap.end())
+  {
     std::cerr << "Tissue Functor::findBranch, branch node type " << nodeType
               << " not found in Branch Index Map! rank=" << _rank << std::endl;
     exit(0);
   }
   std::map<int, std::map<int, ComputeBranch*> >::iterator mapiter2 =
       mapiter1->second.find(nodeIndex);
-  if (mapiter2 == mapiter1->second.end()) {
+  if (mapiter2 == mapiter1->second.end())
+  {
     std::cerr << "Tissue Functor::findBranch, branch index not found in Branch "
                  "Index Map! rank=" << _rank
               << ", nodeIndex (failed)=" << nodeIndex
@@ -1324,7 +1428,8 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
   }
   std::map<int, ComputeBranch*>::iterator mapiter3 =
       mapiter2->second.find(densityIndex);
-  if (mapiter3 == mapiter2->second.end()) {
+  if (mapiter3 == mapiter2->second.end())
+  {
     std::cerr << "Tissue Functor::findBranch, branch density index not found "
                  "in Branch Map! rank=" << _rank << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
@@ -1334,11 +1439,13 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
   return rval;
 }
 
-std::vector<int>& TissueFunctor::findBranchIndices(
-    ComputeBranch* b, std::string const& nodeType) {
+std::vector<int>& TissueFunctor::findBranchIndices(ComputeBranch* b,
+                                                   std::string const& nodeType)
+{
   std::map<std::string, std::map<ComputeBranch*, std::vector<int> > >::iterator
       mapiter1 = _branchIndexMap.find(nodeType);
-  if (mapiter1 == _branchIndexMap.end()) {
+  if (mapiter1 == _branchIndexMap.end())
+  {
     std::cerr << "Tissue Functor::findBranchIndices, branch node type "
               << nodeType << " not found in Branch Index Map! rank=" << _rank
               << std::endl;
@@ -1346,7 +1453,8 @@ std::vector<int>& TissueFunctor::findBranchIndices(
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(b);
-  if (mapiter2 == mapiter1->second.end()) {
+  if (mapiter2 == mapiter1->second.end())
+  {
     std::cerr << "Tissue Functor::findBranchIndices, branch indices not found "
                  "in Branch Index Map! rank=" << _rank << std::endl;
     exit(0);
@@ -1354,18 +1462,25 @@ std::vector<int>& TissueFunctor::findBranchIndices(
   return mapiter2->second;
 }
 
+//GOAL: return the desired capsule
+//      based on the given node-name (i.e. nodeType)
+//      and the specific index in the grid (i.e. nodeIndex)
+//      as well as the specific index in the density of that grid-index (i.e. densityIndex)
 Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
-                                     std::string const& nodeType) {
+                                     std::string const& nodeType)
+{
   std::map<std::string, std::map<int, std::map<int, Capsule*> > >::iterator
       mapiter1 = _indexJunctionMap.find(nodeType);
-  if (mapiter1 == _indexJunctionMap.end()) {
+  if (mapiter1 == _indexJunctionMap.end())
+  {
     std::cerr << "Tissue Functor::findJunction, junction node type " << nodeType
               << " not found in Junction Map! rank=" << _rank << std::endl;
     exit(0);
   }
   std::map<int, std::map<int, Capsule*> >::iterator mapiter2 =
       mapiter1->second.find(nodeIndex);
-  if (mapiter2 == mapiter1->second.end()) {
+  if (mapiter2 == mapiter1->second.end())
+  {
     std::cerr << "Tissue Functor::findJunction, junction index not found in "
                  "Junction Map! rank=" << _rank << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
@@ -1373,7 +1488,8 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
   }
   std::map<int, Capsule*>::iterator mapiter3 =
       mapiter2->second.find(densityIndex);
-  if (mapiter3 == mapiter2->second.end()) {
+  if (mapiter3 == mapiter2->second.end())
+  {
     std::cerr << "Tissue Functor::findJunction, junction density index not "
                  "found in Junction Map! rank=" << _rank
               << ", nodeIndex=" << nodeIndex
@@ -1384,17 +1500,20 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
 }
 
 std::vector<int>& TissueFunctor::findJunctionIndices(
-    Capsule* c, std::string const& nodeType) {
+    Capsule* c, std::string const& nodeType)
+{
   std::map<std::string, std::map<Capsule*, std::vector<int> > >::iterator
       mapiter1 = _junctionIndexMap.find(nodeType);
-  if (mapiter1 == _junctionIndexMap.end()) {
+  if (mapiter1 == _junctionIndexMap.end())
+  {
     std::cerr << "Tissue Functor::findJunctionIndices, junction type not found "
                  "in Junction Index Map! rank=" << _rank << std::endl;
     exit(0);
   }
   std::map<Capsule*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(c);
-  if (mapiter2 == mapiter1->second.end()) {
+  if (mapiter2 == mapiter1->second.end())
+  {
     std::cerr << "Tissue Functor::findJunction, junction not found in Junction "
                  "Index Map! rank=" << _rank << std::endl;
     exit(0);
@@ -1403,10 +1522,12 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
 }
 
 std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
-    ComputeBranch* b, std::string& nodeType) {
+    ComputeBranch* b, std::string& nodeType)
+{
   std::map<std::string, std::map<ComputeBranch*, std::vector<int> > >::iterator
       mapiter1 = _branchForwardSolvePointIndexMap.find(nodeType);
-  if (mapiter1 == _branchForwardSolvePointIndexMap.end()) {
+  if (mapiter1 == _branchForwardSolvePointIndexMap.end())
+  {
     std::cerr << "Tissue Functor: forward solve point node type " << nodeType
               << " not found in Forward Solve Point Index Map! rank=" << _rank
               << std::endl;
@@ -1414,7 +1535,8 @@ std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(b);
-  if (mapiter2 == mapiter1->second.end()) {
+  if (mapiter2 == mapiter1->second.end())
+  {
     std::cerr << "Tissue Functor: forward solve point index not found in "
                  "Forward Solve Point Index Map! rank=" << _rank << std::endl;
     exit(0);
@@ -1423,10 +1545,12 @@ std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
 }
 
 std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
-    ComputeBranch* b, std::string& nodeType) {
+    ComputeBranch* b, std::string& nodeType)
+{
   std::map<std::string, std::map<ComputeBranch*, std::vector<int> > >::iterator
       mapiter1 = _branchBackwardSolvePointIndexMap.find(nodeType);
-  if (mapiter1 == _branchBackwardSolvePointIndexMap.end()) {
+  if (mapiter1 == _branchBackwardSolvePointIndexMap.end())
+  {
     std::cerr << "Tissue Functor: backward solve point node type " << nodeType
               << " not found in Branch Backward Solve Point Index Map! rank="
               << _rank << std::endl;
@@ -1434,7 +1558,8 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(b);
-  if (mapiter2 == mapiter1->second.end()) {
+  if (mapiter2 == mapiter1->second.end())
+  {
     std::cerr << "Tissue Functor: backward solve point index not found in "
                  "Branch Backward Solve Point Index Map! rank=" << _rank
               << std::endl;
@@ -1445,7 +1570,8 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
 
 void TissueFunctor::connect(Simulation* sim, Connector* connector,
                             NodeDescriptor* from, NodeDescriptor* to,
-                            NDPairList& ndpl) {
+                            NDPairList& ndpl)
+{
   std::auto_ptr<ParameterSet> inAttrPSet, outAttrPSet;
   to->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(
       inAttrPSet);
@@ -1457,31 +1583,43 @@ void TissueFunctor::connect(Simulation* sim, Connector* connector,
 
 std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
                                                   String& tissueElement,
-                                                  NDPairList*& params) {
+                                                  NDPairList*& params)
+{
   params->duplicate(_params);
   std::auto_ptr<Functor> rval;
 
-  if (tissueElement == "Layout") {
+  if (tissueElement == "Layout")
+  {
     TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
     element->setTissueFunctor(this);
     _layoutFunctor->duplicate(rval);
-  } else if (tissueElement == "NodeInit") {
+  }
+  else if (tissueElement == "NodeInit")
+  {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
     element->setTissueFunctor(this);
     _nodeInitFunctor->duplicate(rval);
-  } else if (tissueElement == "Connector") {
+  }
+  else if (tissueElement == "Connector")
+  {
     TissueElement* element =
         dynamic_cast<TissueElement*>(_connectorFunctor.get());
     element->setTissueFunctor(this);
     _connectorFunctor->duplicate(rval);
-  } else if (tissueElement == "Probe") {
+  }
+  else if (tissueElement == "Probe")
+  {
     TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
     element->setTissueFunctor(this);
     _probeFunctor->duplicate(rval);
-  } else if (tissueElement == "Connect") {
+  }
+  else if (tissueElement == "Connect")
+  {
     doConnector(CG_c);
-  } else {
+  }
+  else
+  {
     std::cerr << "Unrecognized tissue element specifier: " << tissueElement
               << std::endl;
     exit(0);
@@ -1489,7 +1627,8 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
   return rval;
 }
 
-ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
+ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
+{
   assert(_params.get());
 
   std::vector<std::string> nodekind;
@@ -1504,15 +1643,16 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
       nodeCategory != "EndPoints" && nodeCategory != "JunctionPoints" &&
       nodeCategory != "ForwardSolvePoints" &&
       nodeCategory != "BackwardSolvePoints" && nodeCategory != "Channels" &&
-      nodeCategory != "ElectricalSynapses" &&
-      nodeCategory != "ChemicalSynapses" &&
-      nodeCategory != "PreSynapticPoints") {
+      nodeCategory != "BidirectionalConnection" &&
+      nodeCategory != "ChemicalSynapses" && nodeCategory != "PreSynapticPoints")
+  {
     std::cerr << "Unrecognized nodeCategory parameter on Layer : "
               << nodeCategory << std::endl;
     exit(0);
   }
 
-  if (nodeCategory == "Channels") {
+  if (nodeCategory == "Channels")
+  {
     _channelBranchIndices1.push_back(
         std::vector<std::vector<std::pair<int, int> > >());
     _channelJunctionIndices1.push_back(
@@ -1525,7 +1665,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
     _channelTypesMap[nodeType] = _channelTypeCounter;
   }
 
-  if (nodeCategory == "CompartmentVariables") {
+  if (nodeCategory == "CompartmentVariables")
+  {
     assert(_compartmentVariableTypesMap.find(nodeType) ==
            _compartmentVariableTypesMap.end());
     assert(_compartmentVariableTypesMap.size() ==
@@ -1534,23 +1675,27 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
     _compartmentVariableTypes.push_back(nodeType);
   }
 
-  if (nodeCategory == "Junctions") {
+  if (nodeCategory == "Junctions")
+  {
     assert(_junctionTypesMap.find(nodeType) == _junctionTypesMap.end());
     _junctionTypesMap[nodeType] = _junctionTypeCounter;
   }
 
-  if (nodeCategory == "EndPoints") {
+  if (nodeCategory == "EndPoints")
+  {
     assert(_endPointTypesMap.find(nodeType) == _endPointTypesMap.end());
     _endPointTypesMap[nodeType] = _endPointTypeCounter;
   }
 
-  if (nodeCategory == "JunctionPoints") {
+  if (nodeCategory == "JunctionPoints")
+  {
     assert(_junctionPointTypesMap.find(nodeType) ==
            _junctionPointTypesMap.end());
     _junctionPointTypesMap[nodeType] = _junctionPointTypeCounter;
   }
 
-  if (nodeCategory == "ForwardSolvePoints") {
+  if (nodeCategory == "ForwardSolvePoints")
+  {
     assert(_forwardSolvePointTypesMap.find(nodeComputeOrder) ==
                _forwardSolvePointTypesMap.end() ||
            _forwardSolvePointTypesMap[nodeComputeOrder].find(nodeType) ==
@@ -1559,7 +1704,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
         _forwardSolvePointTypeCounter;
   }
 
-  if (nodeCategory == "BackwardSolvePoints") {
+  if (nodeCategory == "BackwardSolvePoints")
+  {
     assert(_backwardSolvePointTypesMap.find(nodeComputeOrder) ==
                _backwardSolvePointTypesMap.end() ||
            _backwardSolvePointTypesMap[nodeComputeOrder].find(nodeType) ==
@@ -1568,7 +1714,15 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
         _backwardSolvePointTypeCounter;
   }
 
-  bool electrical = (nodeCategory == "ElectricalSynapses" &&
+  /* this to
+   make sure also the bi-directional connection is defined in SynParams.par
+   (this is for ElectricalSynapse (Branch-Branch connection) and
+   SpineNeck-Branch connection)
+   with SpineNeck is treated as a dendrite branch on a two-compartment neuron,
+   with the
+   SpineHead is treated as the soma on that two-compartment neuron
+   */
+  bool electrical = (nodeCategory == "BidirectionalConnection" &&
                      _tissueParams.electricalSynapses());
   bool chemical =
       (nodeCategory == "ChemicalSynapses" && _tissueParams.chemicalSynapses());
@@ -1579,7 +1733,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
   Grid* grid = lc->layerContext->grid;
   if (_nbrGridNodes == 0)
     _nbrGridNodes = grid->getNbrGridNodes();
-  else if (_nbrGridNodes != grid->getNbrGridNodes()) {
+  else if (_nbrGridNodes != grid->getNbrGridNodes())
+  {
     std::cerr << "Error, number of grid nodes has changed! " << _nbrGridNodes
               << "!=" << grid->getNbrGridNodes() << std::endl;
     assert(0);
@@ -1587,30 +1742,41 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
   rval.assign(_nbrGridNodes, 0);
 
   int counter = 0;
-  if (electrical) {
+  if (electrical)
+  {
     _electricalSynapseTypesMap[nodeType] = counter =
         _electricalSynapseTypeCounter;
-  } else if (chemical) {
+  }
+  else if (chemical)
+  {
     _chemicalSynapseTypesMap[nodeType] = counter = _chemicalSynapseTypeCounter;
-  } else if (point) {
+  }
+  else if (point)
+  {
     assert(_preSynapticPointTypesMap.find(nodeType) ==
            _preSynapticPointTypesMap.end());
     _preSynapticPointTypesMap[nodeType] = counter =
         _preSynapticPointTypeCounter;
   }
 
-  if (electrical || chemical || point) {
-    for (int direction = 0; direction <= 1; ++direction) {
+  if (electrical || chemical || point)
+  {
+    for (int direction = 0; direction <= 1; ++direction)
+    {
 
       TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
                                  tend = _tissueContext->_touchVector.end();
-      for (; titer != tend; ++titer) {
+      for (; titer != tend; ++titer)
+      {
         if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
-        double key1, key2;
-        if (direction == 0) {
+        key_size_t key1, key2;
+        if (direction == 0)
+        {
           key1 = titer->getKey1();
           key2 = titer->getKey2();
-        } else {
+        }
+        else
+        {
           key1 = titer->getKey2();
           key2 = titer->getKey1();
         }
@@ -1626,17 +1792,22 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
         bool postJunction = false;
 
         if (_segmentDescriptor.getFlag(key1) &&
-            _tissueContext->isTouchToEnd(*preCapsule, *titer)) {
+            _tissueContext->isTouchToEnd(*preCapsule, *titer))
+        {
           // pre component is LENS junction
-          if (point && _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
-                           _capsuleJctPointIndexMap[nodeType].end())
+          if (point &&
+              _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
+                  _capsuleJctPointIndexMap[nodeType].end())
             continue;
           preJunction = true;
           indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
-        } else {
+        }
+        else
+        {
           // pre component is LENS branch
-          if (point && _capsuleCptPointIndexMap[nodeType].find(preCapsule) !=
-                           _capsuleCptPointIndexMap[nodeType].end())
+          if (point &&
+              _capsuleCptPointIndexMap[nodeType].find(preCapsule) !=
+                  _capsuleCptPointIndexMap[nodeType].end())
             continue;
           preJunction = false;
           indexPre =
@@ -1645,18 +1816,22 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
 
         std::vector<double> probabilities;
 
-        if (point) {
+        if (point)
+        {
           std::list<std::string>& synapseTypes =
               _tissueParams.getPreSynapticPointSynapseTypes(nodeType);
           std::list<std::string>::iterator synIter, synEnd = synapseTypes.end();
-          for (synIter = synapseTypes.begin(); synIter != synEnd; ++synIter) {
-            if (isPointRequired(titer, direction, *synIter)) {
+          for (synIter = synapseTypes.begin(); synIter != synEnd; ++synIter)
+          {
+            if (isPointRequired(titer, direction, *synIter))
+            {
               probabilities.push_back(1.0);
               break;
             }
             if (probabilities.size() > 0) break;
           }
-        } else if (electrical)
+        }
+        else if (electrical)
           getElectricalSynapseProbabilities(probabilities, titer, direction,
                                             nodeType);
         else if (chemical)
@@ -1665,25 +1840,32 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
         else
           assert(0);
 
-        for (int i = 0; i < probabilities.size(); ++i) {
-          if (probabilities[i] > 0) {
+        for (int i = 0; i < probabilities.size(); ++i)
+        {
+          if (probabilities[i] > 0)
+          {
             if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
-                _segmentDescriptor.getFlag(postCapsule->getKey())) {
+                _segmentDescriptor.getFlag(postCapsule->getKey()))
+            {
               // post component is LENS junction
               postJunction = true;
               indexPost = _tissueContext->getRankOfEndPoint(postBranch);
               Sphere postEndSphere;
               postCapsule->getEndSphere(postEndSphere);
               // assert(indexPost==_tissueContext->_decomposition->getRank(postEndSphere));
-            } else {
+            }
+            else
+            {
               // post component is LENS branch
               postJunction = false;
               indexPost = _tissueContext->getRankOfBeginPoint(postBranch);
               // assert(indexPost==_tissueContext->_decomposition->getRank(postCapsule->getSphere()));
             }
             // assert(indexPre==_rank || indexPost==_rank);
-            if (indexPre == _rank || indexPost == _rank) {
-              if (point) {
+            if (indexPre == _rank || indexPost == _rank)
+            {
+              if (point)
+              {
                 if (preJunction)
                   _capsuleJctPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
@@ -1691,22 +1873,30 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
                   _capsuleCptPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
                 rval[indexPre]++;
-              } else {
-                if (electrical) {
+              }
+              else
+              {
+                if (electrical)
+                {
                   if (probabilities[i] >=
-                      drandom(findSynapseGenerator(indexPre, indexPost))) {
+                      drandom(findSynapseGenerator(indexPre, indexPost)))
+                  {
                     rval[indexPre]++;
                     rval[indexPost]++;
                     setGenerated(_generatedElectricalSynapses[direction], titer,
                                  counter, i);
                   }
-                } else if (chemical) {
+                }
+                else if (chemical)
+                {
                   if (probabilities[i] >=
-                      drandom(findSynapseGenerator(indexPre, indexPost))) {
+                      drandom(findSynapseGenerator(indexPre, indexPost)))
+                  {
                     rval[indexPost]++;
                     setGenerated(_generatedChemicalSynapses[direction], titer,
                                  counter, i);
-                  } else
+                  }
+                  else
                     setNonGenerated(titer, direction, nodeType, i);
                 }
               }
@@ -1719,17 +1909,19 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
 
   std::map<unsigned int, std::vector<ComputeBranch*> >::iterator mapIter,
       mapEnd = _tissueContext->_neurons.end();
-  for (mapIter = _tissueContext->_neurons.begin(); mapIter != mapEnd;
-       ++mapIter) {
+  for (mapIter = _tissueContext->_neurons.begin(); mapIter != mapEnd; ++mapIter)
+  {
     std::vector<ComputeBranch*>& branches = mapIter->second;
     std::vector<ComputeBranch*>::iterator iter, end = branches.end();
-    for (iter = branches.begin(); iter != end; ++iter) {
+    for (iter = branches.begin(); iter != end; ++iter)
+    {
       Capsule* branchCapsules = (*iter)->_capsules;
       int nCapsules = (*iter)->_nCapsules;
       unsigned int index, indexJct;
-      double key = branchCapsules[0].getKey();
+      key_size_t key = branchCapsules[0].getKey();
       if (nodeCategory == "Channels" ||
-          _tissueParams.isCompartmentVariableTarget(key, nodeType)) {
+          _tissueParams.isCompartmentVariableTarget(key, nodeType))
+      {
         unsigned int computeOrder = _segmentDescriptor.getComputeOrder(key);
         unsigned int branchOrder = _segmentDescriptor.getBranchOrder(key);
 
@@ -1744,38 +1936,47 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
               computeOrder == 0) ||
              (nodeCategory == "ForwardSolvePoints" && (*iter)->_parent &&
               computeOrder == nodeComputeOrder) ||
-             (channelTarget && index == _rank))) {
-          if (nodeCategory == "CompartmentVariables") {
+             (channelTarget && index == _rank)))
+        {
+          if (nodeCategory == "CompartmentVariables")
+          {
             _indexBranchMap[nodeType][index][rval[index]] = (*iter);
             std::vector<int> indices;
             indices.push_back(index);
             indices.push_back(rval[index]);
             _branchIndexMap[nodeType][(*iter)] = indices;
             rval[index]++;
-          } else if (nodeCategory == "EndPoints")
+          }
+          else if (nodeCategory == "EndPoints")
             rval[index]++;
-          else if (nodeCategory == "ForwardSolvePoints") {
+          else if (nodeCategory == "ForwardSolvePoints")
+          {
             std::vector<int> indices;
             indices.push_back(index);
             indices.push_back(rval[index]);
             _branchForwardSolvePointIndexMap[nodeType][*iter] = indices;
             rval[index]++;
-          } else if (channelTarget) {
+          }
+          else if (channelTarget)
+          {
             std::list<Params::ChannelTarget>* targets =
                 _tissueParams.getChannelTargets(key);
-            if (targets) {
+            if (targets)
+            {
               std::list<Params::ChannelTarget>::iterator iiter =
                                                              targets->begin(),
                                                          iend = targets->end();
-              for (; iiter != iend; ++iiter) {
-                if (iiter->_type == nodeType) {
+              for (; iiter != iend; ++iiter)
+              {
+                if (iiter->_type == nodeType)
+                {
                   rval[index]++;
                   std::vector<std::pair<int, int> > targetVector;
                   std::list<std::string>::iterator viter,
                       vend = iiter->_target1.end();
                   assert(iiter->_target1.size() > 0);
-                  for (viter = iiter->_target1.begin(); viter != vend;
-                       ++viter) {
+                  for (viter = iiter->_target1.begin(); viter != vend; ++viter)
+                  {
                     std::vector<int>& branchIndices =
                         findBranchIndices(*iter, *viter);
                     assert(branchIndices[0] == _rank);
@@ -1783,14 +1984,14 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
                         branchIndices[1],
                         _compartmentVariableTypesMap[*viter]));
                   }
-                  _channelBranchIndices1[_channelTypeCounter]
-                      .push_back(targetVector);
+                  _channelBranchIndices1[_channelTypeCounter].push_back(
+                      targetVector);
 
                   targetVector.clear();
                   vend = iiter->_target2.end();
                   assert(iiter->_target2.size() > 0);
-                  for (viter = iiter->_target2.begin(); viter != vend;
-                       ++viter) {
+                  for (viter = iiter->_target2.begin(); viter != vend; ++viter)
+                  {
                     std::vector<int>& branchIndices =
                         findBranchIndices(*iter, *viter);
                     assert(branchIndices[0] == _rank);
@@ -1798,8 +1999,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
                         branchIndices[1],
                         _compartmentVariableTypesMap[*viter]));
                   }
-                  _channelBranchIndices2[_channelTypeCounter]
-                      .push_back(targetVector);
+                  _channelBranchIndices2[_channelTypeCounter].push_back(
+                      targetVector);
                 }
               }
             }
@@ -1807,15 +2008,20 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
         }
 
         if (nodeCategory != "CompartmentVariables" &&
-            nodeCategory != "ForwardSolvePoints") {
-          if ((*iter)->_daughters.size() > 0) {
-            if (computeOrder == MAX_COMPUTE_ORDER) {
+            nodeCategory != "ForwardSolvePoints")
+        {
+          if ((*iter)->_daughters.size() > 0)
+          {
+            if (computeOrder == MAX_COMPUTE_ORDER)
+            {
               assert(
                   _segmentDescriptor.getFlag((*iter)->lastCapsule().getKey()));
               if (nodeCategory == "EndPoints" && branchOrder != 0)
                 rval[index]++;
-              else {
-                if (nodeCategory == "Junctions") {
+              else
+              {
+                if (nodeCategory == "Junctions")
+                {
                   _indexJunctionMap[nodeType][indexJct][rval[indexJct]] =
                       &((*iter)->lastCapsule());
                   std::vector<int> indices;
@@ -1824,34 +2030,41 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
                   _junctionIndexMap[nodeType][&((*iter)->lastCapsule())] =
                       indices;
                   rval[indexJct]++;
-                } else if (nodeCategory == "JunctionPoints")
+                }
+                else if (nodeCategory == "JunctionPoints")
                   rval[indexJct]++;
-                else if (channelTarget && indexJct == _rank) {
+                else if (channelTarget && indexJct == _rank)
+                {
                   std::list<Params::ChannelTarget>* targets =
                       _tissueParams.getChannelTargets(key);
-                  if (targets) {
+                  if (targets)
+                  {
                     std::list<Params::ChannelTarget>::iterator
                         iiter = targets->begin(),
                         iend = targets->end();
-                    for (; iiter != iend; ++iiter) {
-                      if (iiter->_type == nodeType) {
+                    for (; iiter != iend; ++iiter)
+                    {
+                      if (iiter->_type == nodeType)
+                      {
                         rval[indexJct]++;
                         std::vector<std::pair<int, int> > targetVector;
                         std::list<std::string>::iterator viter,
                             vend = iiter->_target1.end();
                         assert(iiter->_target1.size() > 0);
                         for (viter = iiter->_target1.begin(); viter != vend;
-                             ++viter) {
-                          std::map<
-                              std::string,
-                              std::map<Capsule*, std::vector<int> > >::iterator
-                              jmapiter1 = _junctionIndexMap.find(*viter);
+                             ++viter)
+                        {
+                          std::map<std::string,
+                                   std::map<Capsule*, std::vector<int> > >::
+                              iterator jmapiter1 =
+                                  _junctionIndexMap.find(*viter);
                           std::map<Capsule*, std::vector<int> >::iterator
                               jmapiter2;
                           if (jmapiter1 != _junctionIndexMap.end() &&
                               (jmapiter2 = jmapiter1->second.find(
                                    &(*iter)->lastCapsule())) !=
-                                  jmapiter1->second.end()) {
+                                  jmapiter1->second.end())
+                          {
                             std::vector<int>& junctionIndices =
                                 jmapiter2->second;
                             targetVector.push_back(std::pair<int, int>(
@@ -1859,23 +2072,25 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
                                 _compartmentVariableTypesMap[*viter]));
                           }
                         }
-                        _channelJunctionIndices1[_channelTypeCounter]
-                            .push_back(targetVector);
+                        _channelJunctionIndices1[_channelTypeCounter].push_back(
+                            targetVector);
                         targetVector.clear();
                         vend = iiter->_target2.end();
                         assert(iiter->_target2.size() > 0);
                         for (viter = iiter->_target2.begin(); viter != vend;
-                             ++viter) {
-                          std::map<
-                              std::string,
-                              std::map<Capsule*, std::vector<int> > >::iterator
-                              jmapiter1 = _junctionIndexMap.find(*viter);
+                             ++viter)
+                        {
+                          std::map<std::string,
+                                   std::map<Capsule*, std::vector<int> > >::
+                              iterator jmapiter1 =
+                                  _junctionIndexMap.find(*viter);
                           std::map<Capsule*, std::vector<int> >::iterator
                               jmapiter2;
                           if (jmapiter1 != _junctionIndexMap.end() &&
                               (jmapiter2 = jmapiter1->second.find(
                                    &(*iter)->lastCapsule())) !=
-                                  jmapiter1->second.end()) {
+                                  jmapiter1->second.end())
+                          {
                             std::vector<int>& junctionIndices =
                                 jmapiter2->second;
                             targetVector.push_back(std::pair<int, int>(
@@ -1883,26 +2098,30 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
                                 _compartmentVariableTypesMap[*viter]));
                           }
                         }
-                        _channelJunctionIndices2[_channelTypeCounter]
-                            .push_back(targetVector);
+                        _channelJunctionIndices2[_channelTypeCounter].push_back(
+                            targetVector);
                       }
                     }
                   }
                 }
               }
-            } else if (nodeCategory == "BackwardSolvePoints" &&
-                       computeOrder == nodeComputeOrder) {
+            }
+            else if (nodeCategory == "BackwardSolvePoints" &&
+                     computeOrder == nodeComputeOrder)
+            {
               std::vector<int> indices;
               indices.push_back(index);
               indices.push_back(rval[index]);
               _branchBackwardSolvePointIndexMap[nodeType][*iter] = indices;
               rval[index]++;
             }
-          } else if ((nodeCategory == "Junctions" ||
-                      nodeCategory == "JunctionPoints") &&
-                     _segmentDescriptor.getFlag(
-                         (*iter)->lastCapsule().getKey())) {
-            if (nodeCategory == "Junctions") {
+          }
+          else if ((nodeCategory == "Junctions" ||
+                    nodeCategory == "JunctionPoints") &&
+                   _segmentDescriptor.getFlag((*iter)->lastCapsule().getKey()))
+          {
+            if (nodeCategory == "Junctions")
+            {
               assert(indexJct != _rank);
               _indexJunctionMap[nodeType][indexJct][rval[indexJct]] =
                   &((*iter)->lastCapsule());
@@ -1919,7 +2138,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
   }
 
   if (nodeCategory == "Channels") ++_channelTypeCounter;
-  if (nodeCategory == "ElectricalSynapses") ++_electricalSynapseTypeCounter;
+  if (nodeCategory == "BidirectionalConnection")
+    ++_electricalSynapseTypeCounter;
   if (nodeCategory == "ChemicalSynapses") ++_chemicalSynapseTypeCounter;
   if (nodeCategory == "CompartmentVariables") ++_compartmentVariableTypeCounter;
   if (nodeCategory == "Junctions") ++_junctionTypeCounter;
@@ -1931,7 +2151,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc) {
   return rval;
 }
 
-void TissueFunctor::doNodeInit(LensContext* lc) {
+void TissueFunctor::doNodeInit(LensContext* lc)
+{
   assert(_params.get());
   std::auto_ptr<ParameterSet> initPset;
   std::vector<NodeDescriptor*> nodes;
@@ -1948,65 +2169,95 @@ void TissueFunctor::doNodeInit(LensContext* lc) {
   std::string& nodeCategory = nodekind[0];
   std::string& nodeType = nodekind[1];
 
-  if (nodeCategory == "CompartmentVariables") {
+  // add the new layer to be tracked by the right bookkeeper
+  if (nodeCategory == "CompartmentVariables")
+  {
     _compartmentVariableLayers.push_back(*gld);
-  } else if (nodeCategory == "Junctions") {
+  }
+  else if (nodeCategory == "Junctions")
+  {
     _junctionLayers.push_back(*gld);
-  } else if (nodeCategory == "EndPoints") {
+  }
+  else if (nodeCategory == "EndPoints")
+  {
     _endPointLayers.push_back(*gld);
-  } else if (nodeCategory == "ForwardSolvePoints") {
+  }
+  else if (nodeCategory == "ForwardSolvePoints")
+  {
     _forwardSolvePointLayers.push_back(*gld);
-  } else if (nodeCategory == "BackwardSolvePoints") {
+  }
+  else if (nodeCategory == "BackwardSolvePoints")
+  {
     _backwardSolvePointLayers.push_back(*gld);
-  } else if (nodeCategory == "JunctionPoints") {
+  }
+  else if (nodeCategory == "JunctionPoints")
+  {
     _junctionPointLayers.push_back(*gld);
-  } else if (nodeCategory == "Channels") {
+  }
+  else if (nodeCategory == "Channels")
+  {
     _channelLayers.push_back(*gld);
-  } else if (nodeCategory == "ElectricalSynapses") {
+  }
+  else if (nodeCategory == "BidirectionalConnection")
+  {
     _electricalSynapseLayers.push_back(*gld);
-  } else if (nodeCategory == "ChemicalSynapses") {
+  }
+  else if (nodeCategory == "ChemicalSynapses")
+  {
     _chemicalSynapseLayers.push_back(*gld);
-  } else if (nodeCategory == "PreSynapticPoints") {
+  }
+  else if (nodeCategory == "PreSynapticPoints")
+  {
     _preSynapticPointLayers.push_back(*gld);
-  } else {
+  }
+  else
+  {
     std::cerr << "Unrecognized nodeCategory parameter on NodeInit : "
               << nodeCategory << std::endl;
     exit(0);
   }
 
-  nodes.clear();
-  nodeset->getNodes(nodes, *gld);
-  node = nodes.begin();
-  nodesEnd = nodes.end();
-  if (((nodeCategory == "Channels" || nodeCategory == "ElectricalSynapses" ||
+  // make sure the order of layer's nodes' initialization is correct
+  if (((nodeCategory == "Channels" ||
+        nodeCategory == "BidirectionalConnection" ||
         nodeCategory == "ChemicalSynapses" ||
         nodeCategory == "PreSynapticalPoints") &&
        (_junctionLayers.size() == 0 ||
         _compartmentVariableLayers.size() == 0)) ||
       (_junctionLayers.size() > 0 && _compartmentVariableLayers.size() == 0) ||
       (_preSynapticPointLayers.size() > 0 &&
-       _chemicalSynapseLayers.size() == 0)) {
+       _chemicalSynapseLayers.size() == 0))
+  {
     std::cerr << "TissueFunctor:" << std::endl
               << "Layers (Branches, Junctions, Channels | Synapses, "
                  "PreSynapticPoints) must be initialized in order."
               << std::endl;
     exit(0);
   }
+
+  // reset and start allocating # of instances for a given NodeType
+  nodes.clear();
+  nodeset->getNodes(nodes, *gld);
+
+  node = nodes.begin();
+  nodesEnd = nodes.end();
   NDPairList emptyOutAttr;
   NDPairList dim2cpt;
   dim2cpt.push_back(new NDPair("identifier", "dimension"));
   NDPairList brd2cpt;
   brd2cpt.push_back(new NDPair("identifier", "branchData"));
 
-  for (; node != nodesEnd; ++node) {
-    if ((*node)->getNode()) {
+  for (; node != nodesEnd; ++node)
+  {
+    if ((*node)->getNode())
+    {
       NDPairList paramsLocal = *(_params.get());
       (*gld)->getNodeType()->getInitializationParameterSet(initPset);
       ParameterSet* pset = initPset.get();
       int nodeIndex = (*node)->getNodeIndex();
       int densityIndex = (*node)->getDensityIndex();
-      if (nodeCategory == "CompartmentVariables" ||
-          nodeCategory == "Junctions") {
+      if (nodeCategory == "CompartmentVariables" || nodeCategory == "Junctions")
+      {
         int size = compartmentalize(lc, &paramsLocal, nodeCategory, nodeType,
                                     nodeIndex, densityIndex);
         StructType* st = lc->sim->getStructType("BranchDataStruct");
@@ -2016,11 +2267,12 @@ void TissueFunctor::doNodeInit(LensContext* lc) {
         std::auto_ptr<DataItem> sizeDI_ap(sizeDI);
         NDPair* ndp = new NDPair("size", sizeDI_ap);
         branchDataStructParams.push_back(ndp);
-        if (nodeCategory == "CompartmentVariables") {
+        if (nodeCategory == "CompartmentVariables")
+        {
           ComputeBranch* branch = findBranch(nodeIndex, densityIndex, nodeType);
           CG_BranchData*& branchData =
               _tissueContext->_branchBranchDataMap[branch];
-          double key = branch->_capsules[0].getKey();
+          key_size_t key = branch->_capsules[0].getKey();
           getModelParams(Params::COMPARTMENT, paramsLocal, nodeType, key);
           pset->set(paramsLocal);
           (*node)->getNode()->initialize(pset);
@@ -2056,12 +2308,14 @@ void TissueFunctor::doNodeInit(LensContext* lc) {
           for (diter = dimensions.begin(); diter != dend; ++diter)
             _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
                                           &dim2cpt);
-        } else {
+        }
+        else
+        {
           Capsule* junctionCapsule =
               findJunction(nodeIndex, densityIndex, nodeType);
           CG_BranchData*& branchData =
               _tissueContext->_junctionBranchDataMap[junctionCapsule];
-          double key = junctionCapsule->getKey();
+          key_size_t key = junctionCapsule->getKey();
           getModelParams(Params::COMPARTMENT, paramsLocal, nodeType, key);
           pset->set(paramsLocal);
           (*node)->getNode()->initialize(pset);
@@ -2092,32 +2346,38 @@ void TissueFunctor::doNodeInit(LensContext* lc) {
           _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
                                         &dim2cpt);
         }
-      } else if (nodeCategory == "Channels") {
+      }
+      else if (nodeCategory == "Channels")
+      {
         assert(nodeIndex == _rank);
         std::string channelCategory;
         assert(_channelLayers.size() > 0);
         int nChannelBranches =
             _channelBranchIndices1[_channelLayers.size() - 1].size();
-        double key;
+        key_size_t key;
         assert(_channelBranchIndices1[_channelLayers.size() - 1].size() ==
                _channelBranchIndices2[_channelLayers.size() - 1].size());
-        if (densityIndex < nChannelBranches) {
+        if (densityIndex < nChannelBranches)
+        {
           channelCategory = "BranchChannels";
-          std::pair<int, int>& channelBranchIndexPair = _channelBranchIndices1
-              [_channelLayers.size() - 1][densityIndex][0];
+          std::pair<int, int>& channelBranchIndexPair =
+              _channelBranchIndices1[_channelLayers.size() -
+                                     1][densityIndex][0];
           key = findBranch(
-              nodeIndex, channelBranchIndexPair.first,
-              _compartmentVariableTypes[channelBranchIndexPair.second])
+                    nodeIndex, channelBranchIndexPair.first,
+                    _compartmentVariableTypes[channelBranchIndexPair.second])
                     ->_capsules[0]
                     .getKey();
-        } else {
+        }
+        else
+        {
           channelCategory = "JunctionChannels";
           std::pair<int, int>& channelJunctionIndexPair =
-              _channelJunctionIndices1[_channelLayers.size() - 1]
-                                      [densityIndex - nChannelBranches][0];
+              _channelJunctionIndices1[_channelLayers.size() -
+                                       1][densityIndex - nChannelBranches][0];
           key = findJunction(
-              nodeIndex, channelJunctionIndexPair.first,
-              _compartmentVariableTypes[channelJunctionIndexPair.second])
+                    nodeIndex, channelJunctionIndexPair.first,
+                    _compartmentVariableTypes[channelJunctionIndexPair.second])
                     ->getKey();
         }
 
@@ -2128,7 +2388,9 @@ void TissueFunctor::doNodeInit(LensContext* lc) {
 
         pset->set(paramsLocal);
         (*node)->getNode()->initialize(pset);
-      } else {
+      }
+      else
+      {
         pset->set(paramsLocal);
         (*node)->getNode()->initialize(pset);
       }
@@ -2136,16 +2398,20 @@ void TissueFunctor::doNodeInit(LensContext* lc) {
   }
 }
 
-void TissueFunctor::doConnector(LensContext* lc) {
+// Perform necessary setup when
+void TissueFunctor::doConnector(LensContext* lc)
+{
   assert(_compartmentVariableLayers.size() ==
          _compartmentVariableTypesMap.size());
   assert(_junctionLayers.size() == _junctionTypesMap.size());
   assert(_compartmentVariableTypesMap.size() == _junctionTypesMap.size());
+
   std::map<int, int> cptVarJctTypeMap;
   std::map<std::string, int>::iterator mapIter,
       mapEnd = _compartmentVariableTypesMap.end();
   for (mapIter = _compartmentVariableTypesMap.begin(); mapIter != mapEnd;
-       ++mapIter) {
+       ++mapIter)
+  {
     assert(_junctionTypesMap.find(mapIter->first) != _junctionTypesMap.end());
     cptVarJctTypeMap[mapIter->second] = _junctionTypesMap[mapIter->first];
   }
@@ -2165,7 +2431,8 @@ void TissueFunctor::doConnector(LensContext* lc) {
   std::map<std::string, int>::iterator cptVarTypesIter,
       cptVarTypesEnd = _compartmentVariableTypesMap.end();
   for (cptVarTypesIter = _compartmentVariableTypesMap.begin();
-       cptVarTypesIter != cptVarTypesEnd; ++cptVarTypesIter) {
+       cptVarTypesIter != cptVarTypesEnd; ++cptVarTypesIter)
+  {
     std::ostringstream os;
 
     NDPairList Mcpt2chan;
@@ -2252,117 +2519,164 @@ void TissueFunctor::doConnector(LensContext* lc) {
   NDPairList br2fwdpt;
   NDPairList br2bwdpt;
 
+  // get to the vector of all nodetypes associated with all compartment-layers
   std::vector<NodeAccessor*> compartmentVariableAccessors;
   std::vector<GridLayerDescriptor*>::iterator layerIter,
       layerEnd = _compartmentVariableLayers.end();
   for (layerIter = _compartmentVariableLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     compartmentVariableAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
+  // get to the vector of all nodetypes associated with all junction-layers
   layerEnd = _junctionLayers.end();
   std::vector<NodeAccessor*> junctionAccessors;
-  for (layerIter = _junctionLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+  for (layerIter = _junctionLayers.begin(); layerIter != layerEnd; ++layerIter)
+  {
     junctionAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
+  // get to the vector of all nodetypes associated with all endpoint-layers
   std::vector<NodeAccessor*> endPointAccessors;
   layerEnd = _endPointLayers.end();
-  for (layerIter = _endPointLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+  for (layerIter = _endPointLayers.begin(); layerIter != layerEnd; ++layerIter)
+  {
     endPointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
+  // get to the vector of all nodetypes associated with all junctionpoint-layers
   std::vector<NodeAccessor*> junctionPointAccessors;
   layerEnd = _junctionPointLayers.end();
   for (layerIter = _junctionPointLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     junctionPointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
+  // get to the vector of all nodetypes associated with all
+  // presynapticpoint-layers
   std::vector<NodeAccessor*> preSynapticPointAccessors;
   layerEnd = _preSynapticPointLayers.end();
   for (layerIter = _preSynapticPointLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     preSynapticPointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
+  // get to the vector of all nodetypes associated with all
+  // forwardsolvepoint-layers
   std::vector<NodeAccessor*> forwardSolvePointAccessors;
   layerEnd = _forwardSolvePointLayers.end();
   for (layerIter = _forwardSolvePointLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     forwardSolvePointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
+
+  // get to the vector of all nodetypes associated with all
+  // backwardsolvepoint-layers
   std::vector<NodeAccessor*> backwardSolvePointAccessors;
   layerEnd = _backwardSolvePointLayers.end();
   for (layerIter = _backwardSolvePointLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     backwardSolvePointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
+
+  // get to the vector of all nodetypes associated with all channel-layers
   std::vector<NodeAccessor*> channelAccessors;
   layerEnd = _channelLayers.end();
-  for (layerIter = _channelLayers.begin(); layerIter != layerEnd; ++layerIter) {
+  for (layerIter = _channelLayers.begin(); layerIter != layerEnd; ++layerIter)
+  {
     channelAccessors.push_back((*layerIter)->getNodeAccessor());
   }
+
+  // get to the vector of all nodetypes associated with all
+  // bidirectional-connection-layers
   std::vector<NodeAccessor*> electricalSynapseAccessors;
   layerEnd = _electricalSynapseLayers.end();
   for (layerIter = _electricalSynapseLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     electricalSynapseAccessors.push_back((*layerIter)->getNodeAccessor());
   }
+
+  // get to the vector of all nodetypes associated with all
+  // chemicalsynapse-layers
   std::vector<NodeAccessor*> chemicalSynapseAccessors;
   layerEnd = _chemicalSynapseLayers.end();
   for (layerIter = _chemicalSynapseLayers.begin(); layerIter != layerEnd;
-       ++layerIter) {
+       ++layerIter)
+  {
     chemicalSynapseAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
   Simulation* sim = lc->sim;
   Connector* connector;
 
-  if (sim->isGranuleMapperPass()) {
+  if (sim->isGranuleMapperPass())
+  {
     connector = &_noConnector;
-  } else if (sim->isCostAggregationPass()) {
+  }
+  else if (sim->isCostAggregationPass())
+  {
     connector = &_granuleConnector;
-  } else if (sim->isSimulatePass()) {
+  }
+  else if (sim->isSimulatePass())
+  {
     connector = &_lensConnector;
-  } else {
+  }
+  else
+  {
     std::cerr << "Error, TissueFunctor : no connection context set!"
               << std::endl;
     exit(0);
   }
 
-  for (int i = 0; i < _nbrGridNodes; ++i) {
+  for (int i = 0; i < _nbrGridNodes; ++i)
+  {
     std::map<std::string, int>::iterator cptVarTypesIter,
         cptVarTypesEnd = _compartmentVariableTypesMap.end();
     for (cptVarTypesIter = _compartmentVariableTypesMap.begin();
-         cptVarTypesIter != cptVarTypesEnd; ++cptVarTypesIter) {
+         cptVarTypesIter != cptVarTypesEnd; ++cptVarTypesIter)
+    {
       std::string cptVarType = cptVarTypesIter->first;
       int cptVarTypeIdx = cptVarTypesIter->second;
+      // get to how many array elements (i.e. diffusible compartment of all
+      // neurons)
+      //     each element is an instance of the given diffusible nodetype (e.g.
+      //     Voltage)
+      //     at one compartment
       int branchDensity =
           _compartmentVariableLayers[cptVarTypeIdx]->getDensity(i);
       std::vector<int> endPointCounters;
       endPointCounters.resize(_endPointTypeCounter, 0);
-      for (int j = 0; j < branchDensity; ++j) {
+
+      for (int j = 0; j < branchDensity; ++j)
+      {
+        // get to the branch
         ComputeBranch* br = findBranch(i, j, cptVarType);
-        if (br) {
-          double key = br->_capsules[0].getKey();
+        if (br)
+        {
+          key_size_t key = br->_capsules[0].getKey();
           int computeOrder = _segmentDescriptor.getComputeOrder(key);
           assert(i == _tissueContext->getRankOfBeginPoint(br));
           int endPointType = _endPointTypesMap[cptVarType];
           int junctionPointType = _junctionPointTypesMap[cptVarType];
 
-          if (br->_daughters.size() > 0) {
+          if (br->_daughters.size() > 0)
+          {
             NodeDescriptor* compartmentVariable =
-                compartmentVariableAccessors[cptVarTypeIdx]
-                    ->getNodeDescriptor(i, j);
+                compartmentVariableAccessors[cptVarTypeIdx]->getNodeDescriptor(
+                    i, j);
             assert(i ==
                    sim->getGranule(*compartmentVariable)->getPartitionId());
-            if (computeOrder == MAX_COMPUTE_ORDER) {
+            if (computeOrder == MAX_COMPUTE_ORDER)
+            {
               NodeDescriptor* endPoint =
-                  endPointAccessors[endPointType]
-                      ->getNodeDescriptor(i, endPointCounters[endPointType]);
+                  endPointAccessors[endPointType]->getNodeDescriptor(
+                      i, endPointCounters[endPointType]);
               ++endPointCounters[endPointType];
               connect(sim, connector, compartmentVariable, endPoint, dist2end);
               Capsule* c = &br->lastCapsule();
@@ -2379,7 +2693,9 @@ void TissueFunctor::doConnector(LensContext* lc) {
               connect(sim, connector, junction, junctionPoint, jct2jctpt);
               connect(sim, connector, junctionPoint, compartmentVariable,
                       jctpt2prox);
-            } else {
+            }
+            else
+            {
               std::vector<int>& backwardSolvePointIndices =
                   findBackwardSolvePointIndices(br, cptVarType);
               assert(i == backwardSolvePointIndices[0]);
@@ -2392,16 +2708,18 @@ void TissueFunctor::doConnector(LensContext* lc) {
             }
           }
 
-          if (br->_parent) {
+          if (br->_parent)
+          {
             NodeDescriptor* compartmentVariable =
-                compartmentVariableAccessors[cptVarTypeIdx]
-                    ->getNodeDescriptor(i, j);
+                compartmentVariableAccessors[cptVarTypeIdx]->getNodeDescriptor(
+                    i, j);
             assert(i ==
                    sim->getGranule(*compartmentVariable)->getPartitionId());
-            if (computeOrder == 0) {
+            if (computeOrder == 0)
+            {
               NodeDescriptor* endPoint =
-                  endPointAccessors[endPointType]
-                      ->getNodeDescriptor(i, endPointCounters[endPointType]);
+                  endPointAccessors[endPointType]->getNodeDescriptor(
+                      i, endPointCounters[endPointType]);
               ++endPointCounters[endPointType];
               connect(sim, connector, compartmentVariable, endPoint, prox2end);
               Capsule* c = &br->_parent->lastCapsule();
@@ -2418,7 +2736,9 @@ void TissueFunctor::doConnector(LensContext* lc) {
               connect(sim, connector, junction, junctionPoint, jct2jctpt);
               connect(sim, connector, junctionPoint, compartmentVariable,
                       jctpt2dist);
-            } else {
+            }
+            else
+            {
               std::vector<int>& forwardSolvePointIndices =
                   findForwardSolvePointIndices(br, cptVarType);
               assert(i == forwardSolvePointIndices[0]);
@@ -2437,12 +2757,14 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
   int i = _rank;
   assert(_channelTypeCounter == _channelLayers.size());
-  for (int ctype = 0; ctype < _channelTypeCounter; ++ctype) {
+  for (int ctype = 0; ctype < _channelTypeCounter; ++ctype)
+  {
     int channelDensity = _channelLayers[ctype]->getDensity(i);
     std::vector<std::vector<std::pair<int, int> > >::iterator
         iter = _channelBranchIndices1[ctype].begin(),
         end = _channelBranchIndices1[ctype].end();
-    for (int j = 0; iter != end; ++iter, ++j) {
+    for (int j = 0; iter != end; ++iter, ++j)
+    {
       NodeDescriptor* channel =
           channelAccessors[ctype]->getNodeDescriptor(i, j);
       NodeDescriptor* compartmentVariable = 0;
@@ -2450,10 +2772,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
       std::vector<std::pair<int, int> >::iterator
           ctiter = channelBranchIndexPairs.begin(),
           ctend = channelBranchIndexPairs.end();
-      for (; ctiter != ctend; ++ctiter) {
+      for (; ctiter != ctend; ++ctiter)
+      {
         assert(ctiter->second < _compartmentVariableTypesMap.size());
-        compartmentVariable = compartmentVariableAccessors[ctiter->second]
-                                  ->getNodeDescriptor(i, ctiter->first);
+        compartmentVariable =
+            compartmentVariableAccessors[ctiter->second]->getNodeDescriptor(
+                i, ctiter->first);
         assert(compartmentVariable);
         assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
                _rank);
@@ -2465,7 +2789,8 @@ void TissueFunctor::doConnector(LensContext* lc) {
     }
     iter = _channelBranchIndices2[ctype].begin(),
     end = _channelBranchIndices2[ctype].end();
-    for (int j = 0; iter != end; ++iter, ++j) {
+    for (int j = 0; iter != end; ++iter, ++j)
+    {
       NodeDescriptor* channel =
           channelAccessors[ctype]->getNodeDescriptor(i, j);
       NodeDescriptor* compartmentVariable = 0;
@@ -2473,10 +2798,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
       std::vector<std::pair<int, int> >::iterator
           ctiter = channelBranchIndexPairs.begin(),
           ctend = channelBranchIndexPairs.end();
-      for (; ctiter != ctend; ++ctiter) {
+      for (; ctiter != ctend; ++ctiter)
+      {
         assert(ctiter->second < _compartmentVariableTypesMap.size());
-        compartmentVariable = compartmentVariableAccessors[ctiter->second]
-                                  ->getNodeDescriptor(i, ctiter->first);
+        compartmentVariable =
+            compartmentVariableAccessors[ctiter->second]->getNodeDescriptor(
+                i, ctiter->first);
         assert(compartmentVariable);
         assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
                _rank);
@@ -2489,8 +2816,8 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
     iter = _channelJunctionIndices1[ctype].begin(),
     end = _channelJunctionIndices1[ctype].end();
-    for (int j = _channelBranchIndices1[ctype].size(); iter != end;
-         ++iter, ++j) {
+    for (int j = _channelBranchIndices1[ctype].size(); iter != end; ++iter, ++j)
+    {
       NodeDescriptor* channel =
           channelAccessors[ctype]->getNodeDescriptor(i, j);
       NodeDescriptor* compartmentVariable = 0;
@@ -2498,10 +2825,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
       std::vector<std::pair<int, int> >::iterator
           ctiter = channelJunctionIndexPairs.begin(),
           ctend = channelJunctionIndexPairs.end();
-      for (; ctiter != ctend; ++ctiter) {
+      for (; ctiter != ctend; ++ctiter)
+      {
         assert(ctiter->second < _compartmentVariableTypesMap.size());
-        compartmentVariable = junctionAccessors[ctiter->second]
-                                  ->getNodeDescriptor(i, ctiter->first);
+        compartmentVariable =
+            junctionAccessors[ctiter->second]->getNodeDescriptor(i,
+                                                                 ctiter->first);
         assert(compartmentVariable);
         assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
                _rank);
@@ -2513,8 +2842,8 @@ void TissueFunctor::doConnector(LensContext* lc) {
     }
     iter = _channelJunctionIndices2[ctype].begin(),
     end = _channelJunctionIndices2[ctype].end();
-    for (int j = _channelBranchIndices2[ctype].size(); iter != end;
-         ++iter, ++j) {
+    for (int j = _channelBranchIndices2[ctype].size(); iter != end; ++iter, ++j)
+    {
       NodeDescriptor* channel =
           channelAccessors[ctype]->getNodeDescriptor(i, j);
       NodeDescriptor* compartmentVariable = 0;
@@ -2522,10 +2851,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
       std::vector<std::pair<int, int> >::iterator
           ctiter = channelJunctionIndexPairs.begin(),
           ctend = channelJunctionIndexPairs.end();
-      for (; ctiter != ctend; ++ctiter) {
+      for (; ctiter != ctend; ++ctiter)
+      {
         assert(ctiter->second < _compartmentVariableTypesMap.size());
-        compartmentVariable = junctionAccessors[ctiter->second]
-                                  ->getNodeDescriptor(i, ctiter->first);
+        compartmentVariable =
+            junctionAccessors[ctiter->second]->getNodeDescriptor(i,
+                                                                 ctiter->first);
         assert(compartmentVariable);
         assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
                _rank);
@@ -2537,27 +2868,32 @@ void TissueFunctor::doConnector(LensContext* lc) {
     }
   }
 
-  for (int i = 0; i < _nbrGridNodes; ++i) {
+  for (int i = 0; i < _nbrGridNodes; ++i)
+  {
     std::map<std::string, int>::iterator cptVarTypesIter,
         cptVarTypesEnd = _compartmentVariableTypesMap.end();
     for (cptVarTypesIter = _compartmentVariableTypesMap.begin();
-         cptVarTypesIter != cptVarTypesEnd; ++cptVarTypesIter) {
+         cptVarTypesIter != cptVarTypesEnd; ++cptVarTypesIter)
+    {
       std::string cptVarType = cptVarTypesIter->first;
       int cptVarTypeIdx = cptVarTypesIter->second;
       int branchDensity =
           _compartmentVariableLayers[cptVarTypeIdx]->getDensity(i);
-      for (int j = 0; j < branchDensity; ++j) {
+      for (int j = 0; j < branchDensity; ++j)
+      {
         ComputeBranch* br = findBranch(i, j, cptVarType);
-        double key = br->_capsules[0].getKey();
+        key_size_t key = br->_capsules[0].getKey();
         int computeOrder = _segmentDescriptor.getComputeOrder(key);
 
-        if (br->_daughters.size() > 0 && computeOrder != MAX_COMPUTE_ORDER) {
+        if (br->_daughters.size() > 0 && computeOrder != MAX_COMPUTE_ORDER)
+        {
           NodeDescriptor* compartmentVariable =
-              compartmentVariableAccessors[cptVarTypeIdx]
-                  ->getNodeDescriptor(i, j);
+              compartmentVariableAccessors[cptVarTypeIdx]->getNodeDescriptor(i,
+                                                                             j);
           std::list<ComputeBranch*>::iterator diter,
               dend = br->_daughters.end();
-          for (diter = br->_daughters.begin(); diter != dend; ++diter) {
+          for (diter = br->_daughters.begin(); diter != dend; ++diter)
+          {
             assert(_tissueContext->getPass((*diter)->_capsules->getKey()) ==
                    TissueContext::FIRST_PASS);
             std::vector<int>& forwardSolvePointIndices =
@@ -2572,15 +2908,17 @@ void TissueFunctor::doConnector(LensContext* lc) {
                     fwdpt2br);
           }
         }
-        if (br->_parent && computeOrder != 0) {
+        if (br->_parent && computeOrder != 0)
+        {
           assert(_tissueContext->getPass(br->_parent->_capsules->getKey()) ==
                  TissueContext::FIRST_PASS);
           NodeDescriptor* compartmentVariable =
-              compartmentVariableAccessors[cptVarTypeIdx]
-                  ->getNodeDescriptor(i, j);
-          assert(computeOrder == _segmentDescriptor.getComputeOrder(
-                                     br->_parent->_capsules[0].getKey()) +
-                                     1);
+              compartmentVariableAccessors[cptVarTypeIdx]->getNodeDescriptor(i,
+                                                                             j);
+          assert(computeOrder ==
+                 _segmentDescriptor.getComputeOrder(
+                     br->_parent->_capsules[0].getKey()) +
+                     1);
           std::vector<int>& backwardSolvePointIndices =
               findBackwardSolvePointIndices(br->_parent, cptVarType);
           // This is hard! If you want to change it, you better be sure...
@@ -2601,18 +2939,23 @@ void TissueFunctor::doConnector(LensContext* lc) {
   electricalSynapseCounters.resize(_electricalSynapseTypeCounter);
   chemicalSynapseCounters.resize(_chemicalSynapseTypeCounter);
 
-  for (int direction = 0; direction <= 1; ++direction) {
+  for (int direction = 0; direction <= 1; ++direction)
+  {
 
     TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
                                tend = _tissueContext->_touchVector.end();
 
-    for (; titer != tend; ++titer) {
+    for (; titer != tend; ++titer)
+    {
       if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
-      double key1, key2;
-      if (direction == 0) {
+      key_size_t key1, key2;
+      if (direction == 0)
+      {
         key1 = titer->getKey1();
         key2 = titer->getKey2();
-      } else {
+      }
+      else
+      {
         key1 = titer->getKey2();
         key2 = titer->getKey1();
       }
@@ -2625,18 +2968,24 @@ void TissueFunctor::doConnector(LensContext* lc) {
       unsigned int indexPre, indexPost;
 
       if (_segmentDescriptor.getFlag(key1) &&
-          _tissueContext->isTouchToEnd(*preCapsule, *titer)) {
+          _tissueContext->isTouchToEnd(*preCapsule, *titer))
+      {
         preJunction = true;
         indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
-      } else {
+      }
+      else
+      {
         preJunction = false;
         indexPre = _tissueContext->getRankOfBeginPoint(preCapsule->getBranch());
       }
       if (_segmentDescriptor.getFlag(key2) &&
-          _tissueContext->isTouchToEnd(*postCapsule, *titer)) {
+          _tissueContext->isTouchToEnd(*postCapsule, *titer))
+      {
         postJunction = true;
         indexPost = _tissueContext->getRankOfEndPoint(postCapsule->getBranch());
-      } else {
+      }
+      else
+      {
         postJunction = false;
         indexPost =
             _tissueContext->getRankOfBeginPoint(postCapsule->getBranch());
@@ -2644,25 +2993,30 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
       std::list<Params::ElectricalSynapseTarget>* esynTargets =
           _tissueParams.getElectricalSynapseTargets(key1, key2);
-      if (esynTargets) {
+      if (esynTargets)
+      {
         std::list<Params::ElectricalSynapseTarget>::iterator esiter,
             esend = esynTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_electricalSynapseTypesMap.size(), 0);
-        for (esiter = esynTargets->begin(); esiter != esend; ++esiter) {
+        for (esiter = esynTargets->begin(); esiter != esend; ++esiter)
+        {
           int synapseType = _electricalSynapseTypesMap[esiter->_type];
           if (isGenerated(_generatedElectricalSynapses[direction], titer,
-                          synapseType, typeCounter[synapseType])) {
+                          synapseType, typeCounter[synapseType]))
+          {
             std::map<int, int>& ecounts =
                 electricalSynapseCounters[synapseType];
             int preDI = getCountAndIncrement(ecounts, indexPre);
             int postDI = getCountAndIncrement(ecounts, indexPost);
             std::list<std::string>::iterator etiter = esiter->_target.begin(),
                                              etend = esiter->_target.end();
-            for (; etiter != etend; ++etiter) {
+            for (; etiter != etend; ++etiter)
+            {
               NodeDescriptor* preCpt = 0;
               int preIdx = 0;
-              if (preJunction) {
+              if (preJunction)
+              {
                 std::map<std::string,
                          std::map<Capsule*, std::vector<int> > >::iterator
                     jmapiter1 = _junctionIndexMap.find(*etiter);
@@ -2676,7 +3030,9 @@ void TissueFunctor::doConnector(LensContext* lc) {
                                   [_compartmentVariableTypesMap[*etiter]]]
                                  ->getNodeDescriptor(junctionIndices[0],
                                                      junctionIndices[1]);
-              } else {
+              }
+              else
+              {
                 std::vector<int>& branchIndices =
                     findBranchIndices(preCapsule->getBranch(), *etiter);
                 preCpt = compartmentVariableAccessors
@@ -2693,7 +3049,8 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
               NodeDescriptor* postCpt = 0;
               int postIdx = 0;
-              if (postJunction) {
+              if (postJunction)
+              {
                 std::map<std::string,
                          std::map<Capsule*, std::vector<int> > >::iterator
                     jmapiter1 = _junctionIndexMap.find(*etiter);
@@ -2707,7 +3064,9 @@ void TissueFunctor::doConnector(LensContext* lc) {
                                    [_compartmentVariableTypesMap[*etiter]]]
                                   ->getNodeDescriptor(junctionIndices[0],
                                                       junctionIndices[1]);
-              } else {
+              }
+              else
+              {
                 std::vector<int>& branchIndices =
                     findBranchIndices(postCapsule->getBranch(), *etiter);
                 postCpt = compartmentVariableAccessors
@@ -2721,12 +3080,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
               }
 
               NodeDescriptor* preConnexon =
-                  electricalSynapseAccessors[synapseType]
-                      ->getNodeDescriptor(indexPre, preDI);
+                  electricalSynapseAccessors[synapseType]->getNodeDescriptor(
+                      indexPre, preDI);
 
               NodeDescriptor* postConnexon =
-                  electricalSynapseAccessors[synapseType]
-                      ->getNodeDescriptor(indexPost, postDI);
+                  electricalSynapseAccessors[synapseType]->getNodeDescriptor(
+                      indexPost, postDI);
 
               NDPairList Mcpt2syn = cpt2syn[*etiter];
               NDPairList Mesyn2cpt = esyn2cpt[*etiter];
@@ -2752,25 +3111,29 @@ void TissueFunctor::doConnector(LensContext* lc) {
       preSynPoints.resize(_chemicalSynapseTypeCounter, 0);
       std::list<Params::ChemicalSynapseTarget>* csynTargets =
           _tissueParams.getChemicalSynapseTargets(key1, key2);
-      if (csynTargets) {
+      if (csynTargets)
+      {
         std::list<Params::ChemicalSynapseTarget>::iterator csiter,
             csend = csynTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_chemicalSynapseTypesMap.size(), 0);
-        for (csiter = csynTargets->begin(); csiter != csend; ++csiter) {
+        for (csiter = csynTargets->begin(); csiter != csend; ++csiter)
+        {
           std::map<std::string, std::pair<std::list<std::string>,
                                           std::list<std::string> > >::iterator
               targetsIter,
               targetsEnd = csiter->_targets.end();
           std::vector<NodeDescriptor*> mixedSynapse;
           for (targetsIter = csiter->_targets.begin();
-               targetsIter != targetsEnd; ++targetsIter) {
+               targetsIter != targetsEnd; ++targetsIter)
+          {
             std::map<std::string, int>::iterator miter =
                 _chemicalSynapseTypesMap.find(targetsIter->first);
             assert(miter != _chemicalSynapseTypesMap.end());
             int synapseType = miter->second;
             if (isGenerated(_generatedChemicalSynapses[direction], titer,
-                            synapseType, typeCounter[synapseType])) {
+                            synapseType, typeCounter[synapseType]))
+            {
               std::map<int, int>& ccounts =
                   chemicalSynapseCounters[synapseType];
               NodeDescriptor* receptor =
@@ -2781,10 +3144,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
               std::list<std::string>::iterator
                   ctiter = targetsIter->second.first.begin(),
                   ctend = targetsIter->second.first.end();
-              for (; ctiter != ctend; ++ctiter) {
+              for (; ctiter != ctend; ++ctiter)
+              {
                 NodeDescriptor* preCpt = 0;
                 int preIdx = 0;
-                if (preJunction) {
+                if (preJunction)
+                {
                   std::map<std::string,
                            std::map<Capsule*, std::vector<int> > >::iterator
                       jmapiter1 = _junctionIndexMap.find(*ctiter);
@@ -2798,7 +3163,9 @@ void TissueFunctor::doConnector(LensContext* lc) {
                                     [_compartmentVariableTypesMap[*ctiter]]]
                                    ->getNodeDescriptor(junctionIndices[0],
                                                        junctionIndices[1]);
-                } else {
+                }
+                else
+                {
                   std::vector<int>& branchIndices =
                       findBranchIndices(preCapsule->getBranch(), *ctiter);
                   preCpt = compartmentVariableAccessors
@@ -2817,16 +3184,20 @@ void TissueFunctor::doConnector(LensContext* lc) {
                     _preSynapticPointTypesMap.find(preSynapticPointType);
                 assert(tmapiter != _preSynapticPointTypesMap.end());
                 unsigned int preSynPointType = (tmapiter->second);
-                if (preSynPoints[preSynPointType] == 0) {
+                if (preSynPoints[preSynPointType] == 0)
+                {
                   assert(preSynapticPointAccessors.size() > preSynPointType);
                   preSynapticPointAccessor =
                       preSynapticPointAccessors[preSynPointType];
-                  if (preJunction) {
+                  if (preJunction)
+                  {
                     preSynPoints[preSynPointType] =
                         preSynapticPointAccessor->getNodeDescriptor(
                             indexPre, _capsuleJctPointIndexMap
                                           [preSynapticPointType][preCapsule]);
-                  } else {
+                  }
+                  else
+                  {
                     preSynPoints[preSynPointType] =
                         preSynapticPointAccessor->getNodeDescriptor(
                             indexPre, _capsuleCptPointIndexMap
@@ -2844,10 +3215,12 @@ void TissueFunctor::doConnector(LensContext* lc) {
               // Post
               ctiter = targetsIter->second.second.begin(),
               ctend = targetsIter->second.second.end();
-              for (; ctiter != ctend; ++ctiter) {
+              for (; ctiter != ctend; ++ctiter)
+              {
                 NodeDescriptor* postCpt = 0;
                 int postIdx = 0;
-                if (postJunction) {
+                if (postJunction)
+                {
                   std::map<std::string,
                            std::map<Capsule*, std::vector<int> > >::iterator
                       jmapiter1 = _junctionIndexMap.find(*ctiter);
@@ -2861,7 +3234,9 @@ void TissueFunctor::doConnector(LensContext* lc) {
                                      [_compartmentVariableTypesMap[*ctiter]]]
                                     ->getNodeDescriptor(junctionIndices[0],
                                                         junctionIndices[1]);
-                } else {
+                }
+                else
+                {
                   std::vector<int>& branchIndices =
                       findBranchIndices(postCapsule->getBranch(), *ctiter);
                   postCpt = compartmentVariableAccessors
@@ -2888,8 +3263,10 @@ void TissueFunctor::doConnector(LensContext* lc) {
             }
             typeCounter[synapseType]++;
           }
-          for (int i = 0; i < mixedSynapse.size(); ++i) {
-            for (int j = 0; j < mixedSynapse.size(); ++j) {
+          for (int i = 0; i < mixedSynapse.size(); ++i)
+          {
+            for (int j = 0; j < mixedSynapse.size(); ++j)
+            {
               if (i != j)
                 connect(sim, connector, mixedSynapse[i], mixedSynapse[j],
                         recp2recp);
@@ -2900,7 +3277,8 @@ void TissueFunctor::doConnector(LensContext* lc) {
     }
   }
 
-  if (sim->isSimulatePass()) {
+  if (sim->isSimulatePass())
+  {
     CountableModel* countableModel = 0;
 
     std::vector<GridLayerDescriptor*>::iterator layerIter, layerEnd;
@@ -2908,12 +3286,14 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
     layerEnd = _compartmentVariableLayers.end();
     for (layerIter = _compartmentVariableLayers.begin(); layerIter != layerEnd;
-         ++layerIter) {
+         ++layerIter)
+    {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
-      if (countableModel) {
-        if (find(models.begin(), models.end(), countableModel) ==
-            models.end()) {
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
           countableModel->count();
           models.push_back(countableModel);
         }
@@ -2923,12 +3303,14 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
     layerEnd = _junctionLayers.end();
     for (layerIter = _junctionLayers.begin(); layerIter != layerEnd;
-         ++layerIter) {
+         ++layerIter)
+    {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
-      if (countableModel) {
-        if (find(models.begin(), models.end(), countableModel) ==
-            models.end()) {
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
           countableModel->count();
           models.push_back(countableModel);
         }
@@ -2937,13 +3319,14 @@ void TissueFunctor::doConnector(LensContext* lc) {
     models.clear();
 
     layerEnd = _channelLayers.end();
-    for (layerIter = _channelLayers.begin(); layerIter != layerEnd;
-         ++layerIter) {
+    for (layerIter = _channelLayers.begin(); layerIter != layerEnd; ++layerIter)
+    {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
-      if (countableModel) {
-        if (find(models.begin(), models.end(), countableModel) ==
-            models.end()) {
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
           countableModel->count();
           models.push_back(countableModel);
         }
@@ -2953,12 +3336,14 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
     layerEnd = _electricalSynapseLayers.end();
     for (layerIter = _electricalSynapseLayers.begin(); layerIter != layerEnd;
-         ++layerIter) {
+         ++layerIter)
+    {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
-      if (countableModel) {
-        if (find(models.begin(), models.end(), countableModel) ==
-            models.end()) {
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
           countableModel->count();
           models.push_back(countableModel);
         }
@@ -2968,12 +3353,14 @@ void TissueFunctor::doConnector(LensContext* lc) {
 
     layerEnd = _chemicalSynapseLayers.end();
     for (layerIter = _chemicalSynapseLayers.begin(); layerIter != layerEnd;
-         ++layerIter) {
+         ++layerIter)
+    {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
-      if (countableModel) {
-        if (find(models.begin(), models.end(), countableModel) ==
-            models.end()) {
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
           countableModel->count();
           models.push_back(countableModel);
         }
@@ -2982,28 +3369,32 @@ void TissueFunctor::doConnector(LensContext* lc) {
   }
 }
 
-void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
+void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
+{
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
   NDPairList::iterator ndpiter = _params->end(),
                        ndpend_reverse = _params->begin();
   --ndpiter;
   --ndpend_reverse;
 
-  if ((*ndpiter)->getName() != "CATEGORY") {
+  if ((*ndpiter)->getName() != "CATEGORY")
+  {
     std::cerr << "First parameter of TissueProbe must be CATEGORY!"
               << std::endl;
     exit(0);
   }
   StringDataItem* categoryDI =
       dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
-  if (categoryDI == 0) {
+  if (categoryDI == 0)
+  {
     std::cerr << "CATEGORY parameter of TissueProbe must be a string!"
               << std::endl;
     exit(0);
   }
   std::string category = categoryDI->getString();
   if (category != "BRANCH" && category != "JUNCTION" && category != "CHANNEL" &&
-      category != "SYNAPSE") {
+      category != "SYNAPSE")
+  {
     std::cerr << "Unrecognized CATEGORY during TissueProbe : " << category
               << " !" << std::endl;
     exit(0);
@@ -3011,13 +3402,15 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
 
   --ndpiter;
 
-  if ((*ndpiter)->getName() != "TYPE") {
+  if ((*ndpiter)->getName() != "TYPE")
+  {
     std::cerr << "Second parameter of TissueProbe must be TYPE!" << std::endl;
     exit(0);
   }
   StringDataItem* typeDI =
       dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
-  if (typeDI == 0) {
+  if (typeDI == 0)
+  {
     std::cerr << "TYPE parameter of TissueProbe must be a string!" << std::endl;
     exit(0);
   }
@@ -3025,36 +3418,44 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
 
   int typeIdx;
   std::map<std::string, int>::iterator typeIter;
-  if (category == "BRANCH") {
+  if (category == "BRANCH")
+  {
     typeIter = _compartmentVariableTypesMap.find(type);
-    if (typeIter == _compartmentVariableTypesMap.end()) {
+    if (typeIter == _compartmentVariableTypesMap.end())
+    {
       std::cerr << "Unrecognized TYPE TissueProbe : " << type << " !"
                 << std::endl;
       exit(0);
     }
     typeIdx = typeIter->second;
   }
-  if (category == "JUNCTION") {
+  if (category == "JUNCTION")
+  {
     typeIter = _junctionTypesMap.find(type);
-    if (typeIter == _junctionTypesMap.end()) {
+    if (typeIter == _junctionTypesMap.end())
+    {
       std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                 << std::endl;
       exit(0);
     }
     typeIdx = typeIter->second;
   }
-  if (category == "CHANNEL") {
+  if (category == "CHANNEL")
+  {
     typeIter = _channelTypesMap.find(type);
-    if (typeIter == _channelTypesMap.end()) {
+    if (typeIter == _channelTypesMap.end())
+    {
       std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                 << std::endl;
       exit(0);
     }
     typeIdx = typeIter->second;
   }
-  if (category == "CHANNEL") {
+  if (category == "CHANNEL")
+  {
     typeIter = _channelTypesMap.find(type);
-    if (typeIter == _channelTypesMap.end()) {
+    if (typeIter == _channelTypesMap.end())
+    {
       std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                 << std::endl;
       exit(0);
@@ -3062,11 +3463,14 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
     typeIdx = typeIter->second;
   }
   bool esyn = false;
-  if (category == "SYNAPSE") {
+  if (category == "SYNAPSE")
+  {
     typeIter = _chemicalSynapseTypesMap.find(type);
-    if (typeIter == _chemicalSynapseTypesMap.end()) {
+    if (typeIter == _chemicalSynapseTypesMap.end())
+    {
       typeIter = _electricalSynapseTypesMap.find(type);
-      if (typeIter == _electricalSynapseTypesMap.end()) {
+      if (typeIter == _electricalSynapseTypesMap.end())
+      {
         std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                   << std::endl;
         esyn = true;
@@ -3084,11 +3488,14 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
   unsigned long long mask = 0;
   double targetKey = 0;
 
-  if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL") {
-    for (; ndpiter != ndpend_reverse; --ndpiter) {
+  if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL")
+  {
+    for (; ndpiter != ndpend_reverse; --ndpiter)
+    {
       NumericDataItem* ndi =
           dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-      if (ndi == 0) {
+      if (ndi == 0)
+      {
         std::cerr << "TissueProbe parameter specification must comprise "
                      "unsigned integers!" << std::endl;
         exit(0);
@@ -3105,42 +3512,48 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
   std::vector<NodeDescriptor*> nodeDescriptors;
   GridLayerDescriptor* layer = 0;
   std::map<ComputeBranch*, std::vector<int> >* indexMap;
-  if (category == "BRANCH") {
+  if (category == "BRANCH")
+  {
     layer = _compartmentVariableLayers[typeIdx];
     assert(layer);
     std::map<ComputeBranch*, std::vector<int> >::iterator mapiter,
         mapend = _branchIndexMap[type].end();
-    for (mapiter = _branchIndexMap[type].begin(); mapiter != mapend;
-         ++mapiter) {
-      double key = mapiter->first->_capsules->getKey();
+    for (mapiter = _branchIndexMap[type].begin(); mapiter != mapend; ++mapiter)
+    {
+      key_size_t key = mapiter->first->_capsules->getKey();
       if ((mapiter->second)[0] == _rank &&
           _segmentDescriptor.getSegmentKey(key, mask) == targetKey)
         nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(
             (mapiter->second)[0], (mapiter->second)[1]));
     }
   }
-  if (category == "JUNCTION") {
+  if (category == "JUNCTION")
+  {
     layer = _junctionLayers[typeIdx];
     assert(layer);
     std::map<Capsule*, std::vector<int> >::iterator mapiter,
         mapend = _junctionIndexMap[type].end();
     for (mapiter = _junctionIndexMap[type].begin(); mapiter != mapend;
-         ++mapiter) {
-      double key = mapiter->first->getKey();
+         ++mapiter)
+    {
+      key_size_t key = mapiter->first->getKey();
       if ((mapiter->second)[0] == _rank &&
           _segmentDescriptor.getSegmentKey(key, mask) == targetKey)
         nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(
             (mapiter->second)[0], (mapiter->second)[1]));
     }
   }
-  if (category == "CHANNEL") {
+  if (category == "CHANNEL")
+  {
     layer = _channelLayers[typeIdx];
     assert(layer);
     int density = layer->getDensity(_rank);
     int nChannelBranches = _channelBranchIndices1[typeIdx].size();
-    double key;
-    for (int i = 0; i < density; ++i) {
-      if (i < nChannelBranches) {
+    key_size_t key;
+    for (int i = 0; i < density; ++i)
+    {
+      if (i < nChannelBranches)
+      {
         std::pair<int, int>& channelBranchIndexPair =
             _channelBranchIndices1[typeIdx][i][0];
         key =
@@ -3148,12 +3561,14 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
                        _compartmentVariableTypes[channelBranchIndexPair.second])
                 ->_capsules[0]
                 .getKey();
-      } else {
+      }
+      else
+      {
         std::pair<int, int>& channelJunctionIndexPair =
             _channelJunctionIndices1[typeIdx][i - nChannelBranches][0];
         key = findJunction(
-            _rank, channelJunctionIndexPair.first,
-            _compartmentVariableTypes[channelJunctionIndexPair.second])
+                  _rank, channelJunctionIndexPair.first,
+                  _compartmentVariableTypes[channelJunctionIndexPair.second])
                   ->getKey();
       }
       if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey)
@@ -3161,23 +3576,28 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
             layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
     }
   }
-  if (category == "SYNAPSE") {
+  if (category == "SYNAPSE")
+  {
     layer = esyn ? _electricalSynapseLayers[typeIdx]
                  : _chemicalSynapseLayers[typeIdx];
     assert(layer);
     int density = layer->getDensity(_rank);
-    for (int i = 0; i < density; ++i) {
+    for (int i = 0; i < density; ++i)
+    {
       nodeDescriptors.push_back(
           layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
     }
   }
 
   NodeSet* ns = 0;
-  if (nodeDescriptors.size() > 0) {
+  if (nodeDescriptors.size() > 0)
+  {
     ns = new NodeSet(
         (*nodeDescriptors.begin())->getGridLayerDescriptor()->getGrid(),
         nodeDescriptors);
-  } else {
+  }
+  else
+  {
     ns = new NodeSet(layer->getGrid());
     ns->empty();
   }
@@ -3186,13 +3606,15 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval) {
 
 void TissueFunctor::getModelParams(Params::ModelType modelType,
                                    NDPairList& paramsLocal,
-                                   std::string& nodeType, double key) {
+                                   std::string& nodeType, key_size_t key)
+{
   std::list<std::pair<std::string, float> > compartmentParams;
   _tissueParams.getModelParams(modelType, nodeType, key, compartmentParams);
   std::list<std::pair<std::string, float> >::iterator
       cpiter = compartmentParams.begin(),
       cpend = compartmentParams.end();
-  for (; cpiter != cpend; ++cpiter) {
+  for (; cpiter != cpend; ++cpiter)
+  {
     FloatDataItem* paramDI = new FloatDataItem(cpiter->second);
     std::auto_ptr<DataItem> paramDI_ap(paramDI);
     NDPair* ndp = new NDPair(cpiter->first, paramDI_ap);
@@ -3206,29 +3628,35 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
   std::list<std::pair<std::string, std::vector<float> > >::iterator
       capiter = compartmentArrayParams.begin(),
       capend = compartmentArrayParams.end();
-  for (; capiter != capend; ++capiter) {
+  for (; capiter != capend; ++capiter)
+  {
     ShallowArray<float> farr;
     std::vector<float>::iterator viter = capiter->second.begin(),
                                  vend = capiter->second.end();
     for (; viter != vend; ++viter) farr.push_back(*viter);
     FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
     std::auto_ptr<DataItem> paramDI_ap(paramDI);
-    if (!paramsLocal.replace(capiter->first, paramDI_ap)) {
+    if (!paramsLocal.replace(capiter->first, paramDI_ap))
+    {
       NDPair* ndp = new NDPair(capiter->first, paramDI_ap);
       paramsLocal.push_back(ndp);
     }
   }
 }
 
-bool TissueFunctor::isChannelTarget(double key, std::string nodeType) {
+bool TissueFunctor::isChannelTarget(key_size_t key, std::string nodeType)
+{
   bool rval = false;
   std::list<Params::ChannelTarget>* channelTypes =
       _tissueParams.getChannelTargets(key);
-  if (channelTypes) {
+  if (channelTypes)
+  {
     std::list<Params::ChannelTarget>::iterator iiter = channelTypes->begin(),
                                                iend = channelTypes->end();
-    for (; iiter != iend; ++iiter) {
-      if (iiter->_type == nodeType) {
+    for (; iiter != iend; ++iiter)
+    {
+      if (iiter->_type == nodeType)
+      {
         rval = true;
         break;
       }
@@ -3239,19 +3667,23 @@ bool TissueFunctor::isChannelTarget(double key, std::string nodeType) {
 
 void TissueFunctor::getElectricalSynapseProbabilities(
     std::vector<double>& probabilities, TouchVector::TouchIterator& titer,
-    int direction, std::string nodeType) {
-  double key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
-  double key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
+    int direction, std::string nodeType)
+{
+  key_size_t key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
+  key_size_t key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
   if (_tissueParams.electricalSynapses() &&
       (key1 < key2 ||
-       !_tissueParams.symmetricElectricalSynapseTargets(key1, key2))) {
+       !_tissueParams.symmetricElectricalSynapseTargets(key1, key2)))
+  {
     std::list<Params::ElectricalSynapseTarget>* synapseTypes =
         _tissueParams.getElectricalSynapseTargets(key1, key2);
-    if (synapseTypes) {
+    if (synapseTypes)
+    {
       std::list<Params::ElectricalSynapseTarget>::iterator
           iiter = synapseTypes->begin(),
           iend = synapseTypes->end();
-      for (; iiter != iend; ++iiter) {
+      for (; iiter != iend; ++iiter)
+      {
         if (iiter->_type == nodeType)
           probabilities.push_back(iiter->_parameter);
       }
@@ -3261,19 +3693,23 @@ void TissueFunctor::getElectricalSynapseProbabilities(
 
 void TissueFunctor::getChemicalSynapseProbabilities(
     std::vector<double>& probabilities, TouchVector::TouchIterator& titer,
-    int direction, std::string nodeType) {
-  double key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
-  double key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
-  if (_tissueParams.chemicalSynapses()) {
+    int direction, std::string nodeType)
+{
+  key_size_t key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
+  key_size_t key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
+  if (_tissueParams.chemicalSynapses())
+  {
     std::list<Params::ChemicalSynapseTarget>* synapseTypes =
         _tissueParams.getChemicalSynapseTargets(key1, key2);
-    if (synapseTypes) {
+    if (synapseTypes)
+    {
       std::vector<int> typeCounter;
       typeCounter.resize(_chemicalSynapseTypesMap.size(), 0);
       std::list<Params::ChemicalSynapseTarget>::iterator
           iiter = synapseTypes->begin(),
           iend = synapseTypes->end();
-      for (; iiter != iend; ++iiter) {
+      for (; iiter != iend; ++iiter)
+      {
         bool generated = false;
         bool nonGenerated = false;
         bool hit = false;
@@ -3284,10 +3720,12 @@ void TissueFunctor::getChemicalSynapseProbabilities(
             targetsEnd = iiter->_targets.end();
         int d = 0;
         for (targetsIter = iiter->_targets.begin(); targetsIter != targetsEnd;
-             ++targetsIter, ++d) {
+             ++targetsIter, ++d)
+        {
           std::map<std::string, int>::iterator miter =
               _chemicalSynapseTypesMap.find(targetsIter->first);
-          if (miter != _chemicalSynapseTypesMap.end()) {
+          if (miter != _chemicalSynapseTypesMap.end())
+          {
             int type = miter->second;
             assert(type < typeCounter.size());
             if (mixedSynapse && !nonGenerated && !generated)
@@ -3300,7 +3738,8 @@ void TissueFunctor::getChemicalSynapseProbabilities(
             typeCounter[type]++;
           }
         }
-        if (hit) {
+        if (hit)
+        {
           if (generated)
             probabilities.push_back(1.0);
           else if (nonGenerated)
@@ -3314,24 +3753,29 @@ void TissueFunctor::getChemicalSynapseProbabilities(
 }
 
 bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
-                                    int direction, std::string nodeType) {
+                                    int direction, std::string nodeType)
+{
   bool rval = false;
-  double key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
-  double key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
-  if (_tissueParams.chemicalSynapses()) {
+  key_size_t key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
+  key_size_t key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
+  if (_tissueParams.chemicalSynapses())
+  {
     std::list<Params::ChemicalSynapseTarget>* synapseTypes =
         _tissueParams.getChemicalSynapseTargets(key1, key2);
-    if (synapseTypes) {
+    if (synapseTypes)
+    {
       std::list<Params::ChemicalSynapseTarget>::iterator
           iiter = synapseTypes->begin(),
           iend = synapseTypes->end();
-      for (; iiter != iend && !rval; ++iiter) {
+      for (; iiter != iend && !rval; ++iiter)
+      {
         std::map<std::string, std::pair<std::list<std::string>,
                                         std::list<std::string> > >::iterator
             targetsIter,
             targetsEnd = iiter->_targets.end();
         for (targetsIter = iiter->_targets.begin();
-             targetsIter != targetsEnd && !rval; ++targetsIter) {
+             targetsIter != targetsEnd && !rval; ++targetsIter)
+        {
           if (targetsIter->first == nodeType) rval = true;
         }
       }
@@ -3342,10 +3786,12 @@ bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
 
 void TissueFunctor::setGenerated(
     std::map<Touch*, std::list<std::pair<int, int> > >& smap,
-    TouchVector::TouchIterator& titer, int type, int order) {
+    TouchVector::TouchIterator& titer, int type, int order)
+{
   std::map<Touch*, std::list<std::pair<int, int> > >::iterator miter =
       smap.find(&(*titer));
-  if (miter == smap.end()) {
+  if (miter == smap.end())
+  {
     smap[&(*titer)] = std::list<std::pair<int, int> >();
     miter = smap.find(&(*titer));
   }
@@ -3353,26 +3799,29 @@ void TissueFunctor::setGenerated(
 }
 
 std::list<Params::ChemicalSynapseTarget>::iterator
-TissueFunctor::getChemicalSynapseTargetFromOrder(
-    TouchVector::TouchIterator& titer, int direction, std::string type,
-    int order) {
+    TissueFunctor::getChemicalSynapseTargetFromOrder(
+        TouchVector::TouchIterator& titer, int direction, std::string type,
+        int order)
+{
   std::list<Params::ChemicalSynapseTarget>::iterator rval, rend;
-  double key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
-  double key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
+  key_size_t key1 = (direction == 0) ? titer->getKey1() : titer->getKey2();
+  key_size_t key2 = (direction == 0) ? titer->getKey2() : titer->getKey1();
   assert(_tissueParams.chemicalSynapses());
   std::list<Params::ChemicalSynapseTarget>* synapseTypes =
       _tissueParams.getChemicalSynapseTargets(key1, key2);
   assert(synapseTypes);
   rval = synapseTypes->begin();
   rend = synapseTypes->end();
-  while (order >= 0 && rval != rend) {
+  while (order >= 0 && rval != rend)
+  {
     std::map<std::string, std::pair<std::list<std::string>,
                                     std::list<std::string> > >::iterator
         targetsIter,
         targetsEnd = rval->_targets.end();
     int j = 0;
     for (targetsIter = rval->_targets.begin(); targetsIter != targetsEnd;
-         ++targetsIter) {
+         ++targetsIter)
+    {
       if (targetsIter->first == type) --order;
     }
     if (order >= 0) ++rval;
@@ -3383,18 +3832,23 @@ TissueFunctor::getChemicalSynapseTargetFromOrder(
 
 bool TissueFunctor::isGenerated(
     std::map<Touch*, std::list<std::pair<int, int> > >& smap,
-    TouchVector::TouchIterator& titer, int type, int order) {
+    TouchVector::TouchIterator& titer, int type, int order)
+{
   bool rval = false;
   std::map<Touch*, std::list<std::pair<int, int> > >::iterator miter =
       smap.find(&(*titer));
-  if (miter != smap.end()) {
+  if (miter != smap.end())
+  {
     if (type < 0)
       rval = true;
-    else {
+    else
+    {
       std::list<std::pair<int, int> >& l = miter->second;
       std::list<std::pair<int, int> >::iterator liter, lend = l.end();
-      for (liter = l.begin(); liter != lend; ++liter) {
-        if (liter->first == type && liter->second == order) {
+      for (liter = l.begin(); liter != lend; ++liter)
+      {
+        if (liter->first == type && liter->second == order)
+        {
           rval = true;
           break;
         }
@@ -3405,27 +3859,31 @@ bool TissueFunctor::isGenerated(
 }
 
 void TissueFunctor::setNonGenerated(TouchVector::TouchIterator& titer,
-                                    int direction, std::string type,
-                                    int order) {
+                                    int direction, std::string type, int order)
+{
   std::list<Params::ChemicalSynapseTarget>::iterator iiter =
       getChemicalSynapseTargetFromOrder(titer, direction, type, order);
-  if (iiter->_targets.size() > 1) {
+  if (iiter->_targets.size() > 1)
+  {
     _nonGeneratedMixedChemicalSynapses[direction][&(*titer)].push_back(iiter);
   }
 }
 
 bool TissueFunctor::isNonGenerated(TouchVector::TouchIterator& titer,
                                    int direction, std::string nodeType,
-                                   int order) {
+                                   int order)
+{
   bool rval = false;
   std::list<Params::ChemicalSynapseTarget>::iterator iiter =
       getChemicalSynapseTargetFromOrder(titer, direction, nodeType, order);
-  if (iiter->_targets.size() > 1) {
+  if (iiter->_targets.size() > 1)
+  {
     std::map<Touch*,
              std::list<std::list<Params::ChemicalSynapseTarget>::iterator> >::
         iterator miter =
             _nonGeneratedMixedChemicalSynapses[direction].find(&(*titer));
-    if (miter != _nonGeneratedMixedChemicalSynapses[direction].end()) {
+    if (miter != _nonGeneratedMixedChemicalSynapses[direction].end())
+    {
       if (find(miter->second.begin(), miter->second.end(), iiter) !=
           miter->second.end())
         rval = true;
@@ -3434,73 +3892,89 @@ bool TissueFunctor::isNonGenerated(TouchVector::TouchIterator& titer,
   return rval;
 }
 
-RNG& TissueFunctor::findSynapseGenerator(int preRank, int postRank) {
+RNG& TissueFunctor::findSynapseGenerator(int preRank, int postRank)
+{
   if (preRank == postRank) return _tissueContext->_localSynapseGenerator;
   int rank1 = MIN(preRank, postRank);
   int rank2 = MAX(preRank, postRank);
 
   std::map<int, std::map<int, RNG> >::iterator miter =
       _synapseGeneratorMap.find(rank1);
-  if (miter == _synapseGeneratorMap.end()) {
+  if (miter == _synapseGeneratorMap.end())
+  {
     RNG rng;
     resetSynapseGenerator(rng, rank1, rank2);
     std::map<int, RNG> smap;
     smap[rank2] = rng;
     _synapseGeneratorMap[rank1] = smap;
     return _synapseGeneratorMap[rank1][rank2];
-  } else {
+  }
+  else
+  {
     std::map<int, RNG>::iterator miter2 = miter->second.find(rank2);
-    if (miter2 == miter->second.end()) {
+    if (miter2 == miter->second.end())
+    {
       RNG rng;
       resetSynapseGenerator(rng, rank1, rank2);
       miter->second[rank2] = rng;
       return miter->second[rank2];
-    } else {
+    }
+    else
+    {
       return miter2->second;
     }
   }
 }
 
-void TissueFunctor::resetSynapseGenerator(RNG& rng, int rank1, int rank2) {
+void TissueFunctor::resetSynapseGenerator(RNG& rng, int rank1, int rank2)
+{
   rng.reSeedShared(_tissueContext->_boundarySynapseGeneratorSeed);
-  for (int i = 0; i < rank1; ++i) {
+  for (int i = 0; i < rank1; ++i)
+  {
     long nextSeed = lrandom(rng);
     rng.reSeedShared(nextSeed);
   }
   rng.reSeedShared(lrandom(rng) + rank2);
 }
 
-TissueFunctor::~TissueFunctor() {
+TissueFunctor::~TissueFunctor()
+{
 #ifdef HAVE_MPI
   --_instanceCounter;
-  if (_instanceCounter == 0) {
+  if (_instanceCounter == 0)
+  {
     std::map<ComputeBranch*, std::vector<CG_CompartmentDimension*> >::iterator
         miter,
         mend = _tissueContext->_branchDimensionsMap.end();
     for (miter = _tissueContext->_branchDimensionsMap.begin(); miter != mend;
-         ++miter) {
+         ++miter)
+    {
       std::vector<CG_CompartmentDimension*>::iterator viter,
           vend = miter->second.end();
-      for (viter = miter->second.begin(); viter != vend; ++viter) {
+      for (viter = miter->second.begin(); viter != vend; ++viter)
+      {
         delete *viter;
       }
     }
     std::map<Capsule*, CG_CompartmentDimension*>::iterator miter2,
         mend2 = _tissueContext->_junctionDimensionMap.end();
     for (miter2 = _tissueContext->_junctionDimensionMap.begin();
-         miter2 != mend2; ++miter2) {
+         miter2 != mend2; ++miter2)
+    {
       delete miter2->second;
     }
     std::map<ComputeBranch*, CG_BranchData*>::iterator miter3,
         mend3 = _tissueContext->_branchBranchDataMap.end();
     for (miter3 = _tissueContext->_branchBranchDataMap.begin(); miter3 != mend3;
-         ++miter3) {
+         ++miter3)
+    {
       delete miter3->second;
     }
     std::map<Capsule*, CG_BranchData*>::iterator miter4,
         mend4 = _tissueContext->_junctionBranchDataMap.end();
     for (miter4 = _tissueContext->_junctionBranchDataMap.begin();
-         miter4 != mend4; ++miter4) {
+         miter4 != mend4; ++miter4)
+    {
       delete miter4->second;
     }
     delete _tissueContext;
@@ -3508,24 +3982,29 @@ TissueFunctor::~TissueFunctor() {
 #endif
 }
 
-void TissueFunctor::duplicate(std::auto_ptr<TissueFunctor>& dup) const {
+void TissueFunctor::duplicate(std::auto_ptr<TissueFunctor>& dup) const
+{
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::auto_ptr<Functor>& dup) const {
+void TissueFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+{
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::auto_ptr<CG_TissueFunctorBase>& dup) const {
+void TissueFunctor::duplicate(std::auto_ptr<CG_TissueFunctorBase>& dup) const
+{
   dup.reset(new TissueFunctor(*this));
 }
 
-int TissueFunctor::getCountAndIncrement(std::map<int, int>& cmap, int index) {
+int TissueFunctor::getCountAndIncrement(std::map<int, int>& cmap, int index)
+{
   int rval = 0;
   std::map<int, int>::iterator miter = cmap.find(index);
   if (miter == cmap.end())
     cmap[index] = 1;
-  else {
+  else
+  {
     rval = miter->second;
     ++miter->second;
   }

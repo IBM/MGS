@@ -24,12 +24,12 @@ NonautapticTouchSpace::NonautapticTouchSpace(NonautapticTouchSpace& nonautapticT
 {
 }
 
-bool NonautapticTouchSpace::isInSpace(double segKey1)
+bool NonautapticTouchSpace::isInSpace(key_size_t segKey1)
 {
   return true;
 }
 
-bool NonautapticTouchSpace::areInSpace(double segKey1, double segKey2)
+bool NonautapticTouchSpace::areInSpace(key_size_t segKey1, key_size_t segKey2)
 {
   return ( _segmentDescriptor.getNeuronIndex(segKey1)!= 
 	   _segmentDescriptor.getNeuronIndex(segKey2) );

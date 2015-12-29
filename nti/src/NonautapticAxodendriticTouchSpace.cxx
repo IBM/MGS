@@ -15,29 +15,29 @@
 
 #include "NonautapticAxodendriticTouchSpace.h"
 
-NonautapticAxodendriticTouchSpace::NonautapticAxodendriticTouchSpace()
+NonautapticAxodendriticTouchSpace::NonautapticAxodendriticTouchSpace() {}
+
+NonautapticAxodendriticTouchSpace::NonautapticAxodendriticTouchSpace(
+    NonautapticAxodendriticTouchSpace& nonautapticAxodendriticTouchSpace)
+    : _segmentDescriptor(nonautapticAxodendriticTouchSpace._segmentDescriptor)
 {
 }
 
-NonautapticAxodendriticTouchSpace::NonautapticAxodendriticTouchSpace(NonautapticAxodendriticTouchSpace& nonautapticAxodendriticTouchSpace) :
-  _segmentDescriptor(nonautapticAxodendriticTouchSpace._segmentDescriptor)
-{
-}
-
-bool NonautapticAxodendriticTouchSpace::isInSpace(double segKey1)
+bool NonautapticAxodendriticTouchSpace::isInSpace(key_size_t segKey1)
 {
   return (_segmentDescriptor.getBranchType(segKey1) == 1);
 }
 
-bool NonautapticAxodendriticTouchSpace::areInSpace(double segKey1, double segKey2)
+bool NonautapticAxodendriticTouchSpace::areInSpace(key_size_t segKey1,
+                                                   key_size_t segKey2)
 {
-  return (	(_segmentDescriptor.getNeuronIndex(segKey1)!= 
-		 _segmentDescriptor.getNeuronIndex(segKey2)) &&
+  return ((_segmentDescriptor.getNeuronIndex(segKey1) !=
+           _segmentDescriptor.getNeuronIndex(segKey2)) &&
 
-		(_segmentDescriptor.getBranchType(segKey1) == 1) &&
-		
-		(_segmentDescriptor.getBranchType(segKey2) == 2 || 
-		 _segmentDescriptor.getBranchType(segKey2) == 3 ) );
+          (_segmentDescriptor.getBranchType(segKey1) == 1) &&
+
+          (_segmentDescriptor.getBranchType(segKey2) == 2 ||
+           _segmentDescriptor.getBranchType(segKey2) == 3));
 }
 
 TouchSpace* NonautapticAxodendriticTouchSpace::duplicate()
@@ -45,6 +45,4 @@ TouchSpace* NonautapticAxodendriticTouchSpace::duplicate()
   return new NonautapticAxodendriticTouchSpace(*this);
 }
 
-NonautapticAxodendriticTouchSpace::~NonautapticAxodendriticTouchSpace()
-{
-}
+NonautapticAxodendriticTouchSpace::~NonautapticAxodendriticTouchSpace() {}

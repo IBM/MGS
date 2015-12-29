@@ -26,8 +26,8 @@ class DendriteTouchSpace : public TouchSpace
    DendriteTouchSpace();
    DendriteTouchSpace(DendriteTouchSpace& dendriteTouchSpace);
    ~DendriteTouchSpace();
-   bool isInSpace(double segKey1);
-   bool areInSpace(double segKey1, double segKey2);
+   bool isInSpace(key_size_t segKey1);
+   bool areInSpace(key_size_t segKey1, key_size_t segKey2);
    TouchSpace* duplicate();
  private:
    SegmentDescriptor _segmentDescriptor;
