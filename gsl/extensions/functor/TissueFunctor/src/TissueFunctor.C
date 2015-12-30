@@ -293,12 +293,10 @@ void TissueFunctor::userInitialize(
 #endif
 
   std::string paramFilename(_tissueContext->_commandLine.getParamFileName());
-  /*char paramFilename[256];
-  strcpy(paramFilename,
-  _tissueContext->_commandLine.getParamFileName().c_str());*/
   _tissueParams.readDevParams(paramFilename);
   _compartmentSize = _tissueContext->_commandLine.getCapsPerCpt();
 
+  // OPTION-1: re-read data structure from binary file
   FILE* data = NULL;
   if (_tissueContext->_commandLine.getBinaryFileName() != "" &&
       !_tissueContext->isInitialized())
@@ -325,6 +323,7 @@ void TissueFunctor::userInitialize(
 
   _tissueContext->seed(_rank);
 
+  // OPTION-2: regenerate data structure from .swc file
   if (!_tissueContext->isInitialized())
   {
     neuroGen(&_tissueParams, CG_c);
@@ -372,6 +371,9 @@ void TissueFunctor::userInitialize(
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+// GOAL: growth neurons that have either AXON_PAR, BASAL_PAR
+//                                       APICAL_PAR
+//                           that are not-NULL
 void TissueFunctor::neuroGen(Params* params, LensContext* CG_c)
 {
 #ifdef HAVE_MPI
@@ -655,11 +657,6 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
   if (clientConnect) set_cvc_config("./cvc.config");
 #endif
 
-  /*
-  char inputFilename[256];
-  int inputFilenameLength = commandLine.getInputFileName().length();
-  strcpy(inputFilename, commandLine.getInputFileName().c_str());
-*/
   std::string inputFilename(commandLine.getInputFileName());
 
   _tissueContext->_tissue = new Tissue(_size, _rank);
@@ -848,6 +845,7 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
   if (_rank == 0)
     printf("\nTissue development compute time : %lf\n\n", now - start);
 
+  //output the combined .swc file 
   FILE* tissueOutFile = 0;
   if (_tissueContext->_commandLine.getOutputFormat() == "t" ||
       _tissueContext->_commandLine.getOutputFormat() == "bt")
@@ -1165,8 +1163,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             _compartmentVariableTypes[channelBranchIndexPair.second]);
       }
       assert(branch);
-      int ncaps = branch->_nCapsules;
-      int ncomps = N_COMPARTMENTS(ncaps);
+      int ncaps = branch->_nCapsules; //#caps_inbranch =  capsules in that branch
+      int ncomps = N_COMPARTMENTS(ncaps); //find # compartments = #caps_inbranch / #caps_percompartment
       size.push_back(ncomps);
       rval = ncomps;
       assert(branch->_parent || branch->_daughters.size() > 0);
@@ -1307,6 +1305,7 @@ std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
   return cpt;
 }
 
+//GOAL: returns 
 StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
                                             double radius, double dist2soma)
 {
@@ -1345,6 +1344,14 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
   return dimsDI;
 }
 
+//GOAL: return the data structure representing the center point between two points
+//
+//  INPUT: cds1 = begin coord (1st point)
+//         cds2 = end coord (2nd point)
+//         radius 
+//         dist2soma
+//
+//
 StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
                                             double* cds2, double radius,
                                             double dist2soma)
@@ -1876,7 +1883,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
               }
               else
               {
-                if (electrical)
+                if (electrical && direction == 0)
                 {
                   if (probabilities[i] >=
                       drandom(findSynapseGenerator(indexPre, indexPost)))

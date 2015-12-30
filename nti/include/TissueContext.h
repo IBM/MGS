@@ -60,8 +60,9 @@ class TissueContext
   } DetectionPass;
   NeuroDevCommandLine _commandLine;
 
-  int _nCapsules;
-  Capsule* _capsules;
+  int _nCapsules; // total # capsules in the tissue partitioned to the current MPI process
+  Capsule* _capsules; // array of all capsules, starting from soma
+              //NOTE: A soma is a capsule with 2 ends at the same coordinate, same radius
   Capsule* _origin;
   TouchVector _touchVector;
 
@@ -71,6 +72,8 @@ class TissueContext
   RNG _touchSampler, _localSynapseGenerator;
   long _boundarySynapseGeneratorSeed, _localSynapseGeneratorSeed;
 
+  //define the mapping from a neuron (based on its index)
+  //       to the list of all branches for that neuron 
   std::map<unsigned int, std::vector<ComputeBranch*> > _neurons;
 
   int getRank() { return _rank; }

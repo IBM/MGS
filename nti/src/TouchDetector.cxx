@@ -660,6 +660,9 @@ void TouchDetector::detectTouches() {
 #endif
 }
 
+// GOAL: Find the Capsules that 'touches' the given Capsule
+//    sid = the index of the given Capsule
+//
 void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
                            Mutex* mutex) {
   Params* params = data->_parms[threadID];
@@ -676,9 +679,11 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
          bw0 = 0, bw1 = 0, bw2 = 0, ww0 = 0, ww1 = 0, ww2 = 0, disSphere = 0,
          mdis = 0, mdis2 = 0, dist, crit, c1, c2;
   double pointLineDistances[4];
+  // loop through all other Capsules
   for (int sid2 = 0; sid2 < _numberOfCapsules; ++sid2)
+	  // check prob. for forming a touch
     if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate) {
-      double s2Key, s1Key = caps[sid].getKey();
+      key_size_t s2Key, s1Key = caps[sid].getKey();
       double* s1begin = caps[sid].getBeginCoordinates();
       double* s1end = caps[sid].getEndCoordinates();
       s1Ar = caps[sid].getRadius() + params->getRadius(s1Key);
@@ -698,6 +703,8 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
       a = u0 * u0 + u1 * u1 + u2 * u2;  // FOR USE BELOW : OPTIMIZATION
 
       s2Key = caps[sid2].getKey();
+	  //check if both capsules can be grouped to form 'electricalSynapse'
+	  //                            OR                'chemicalSynapse'
       if (detectionTouchSpace->areInSpace(s1Key, s2Key)) {
         double* s2begin = caps[sid2].getBeginCoordinates();
         double* s2end = caps[sid2].getEndCoordinates();
@@ -885,6 +892,8 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
               distancePointLine(s1begin, s1end, s2begin, s2end,
                                 pointLineDistances);
               short* endTouch = touch.getEndTouches();
+			  //with 2 ends for each Capsule, 
+			  //... we have 4 pairs of points to find the distance
               for (int i = 0; i < 4; ++i) {
                 endTouch[i] = 0;
                 if (pointLineDistances[i] < crit) endTouch[i] = 1;

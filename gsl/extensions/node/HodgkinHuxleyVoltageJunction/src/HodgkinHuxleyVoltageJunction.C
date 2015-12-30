@@ -18,202 +18,250 @@
 #include "CG_HodgkinHuxleyVoltageJunction.h"
 #include "rndm.h"
 #include "GridLayerDescriptor.h"
-#define DISTANCE_SQUARED(a,b) ((((a).x-(b).x)*((a).x-(b).x))+(((a).y-(b).y)*((a).y-(b).y))+(((a).z-(b).z)*((a).z-(b).z)))
-//#define DEBUG_HH
+#include "MaxComputeOrder.h"
 
+//#define DEBUG_HH
 #ifdef DEBUG_HH
 #include "../../../../../nti/SegmentDescriptor.h"
 #endif
 
-void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng) 
+#define DISTANCE_SQUARED(a, b)                                                 \
+  ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
+   (((a).z - (b).z) * ((a).z - (b).z)))
+
+void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 {
 #ifdef DEBUG_HH
   SegmentDescriptor segmentDescriptor;
 #endif
-  assert(Vnew.size()==1);
-  Vcur=Vnew[0];
-  assert(dimensions.size()==1);
-  DimensionStruct* dimension=dimensions[0];
-  if (dimensionInputs.size()<=1) { // treating the case where there is only one input like it is a lollipop (for spines)
-    // area = 1.3333333*M_PI*dimension->r*dimension->r*dimension->r; // nope this is the volume...
-    area = 4.0*M_PI*dimension->r*dimension->r;
-  } else {
-    Array<DimensionStruct*>::iterator iter=dimensionInputs.begin(), end=dimensionInputs.end(); 
-    for (; iter!=end; ++iter) {
-      
-      float R = 0.5 * (0.5 * ( (*iter)->r + dimension->r ) + dimension->r);
-      float L = 0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));
-      
+#ifdef DEBUG_ASSERT
+  assert(Vnew.size() == 1);
+  assert(dimensions.size() == 1);
+#endif
+
+  Vcur = Vnew[0];
+  // So, one junction-branch is composed of one (index-0) proximal-side data
+  // point
+  //    and (one or many ) single-compartment (1 point) the child-branches
+  // Then
+  DimensionStruct* dimension = dimensions[0];  // the single distal-end point of
+                                               // the proximal-side
+                                               // regular-branch
+  area = 0.0;
+  if (segmentDescriptor.getBranchType(branchData->key) == 0)
+  { //soma:
+	// surface area = sphere surface area - sum (cross-sectional area other branches)
+    area = 4.0 * M_PI * dimension->r * dimension->r;
+    Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
+                                      end = dimensionInputs.end();
+    for (; iter != end; ++iter)
+    {
+      dyn_var_t R = (*iter)->r;
+      area -= M_PI * R * R;
+    }
+  }
+  else
+  { /* explicit junction */
+    // area = sum (cylinder surface area)
+    Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
+                                      end = dimensionInputs.end();
+    for (; iter != end; ++iter)
+    {
+
+      dyn_var_t R = 0.5 * (0.5 * ((*iter)->r + dimension->r) + dimension->r);
+      dyn_var_t L = 0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));
+
       area += 2.0 * M_PI * R * L;
     }
   }
 #ifdef DEBUG_HH
-  if (segmentDescriptor.getNeuronIndex(branchData->key) == 2) {
+  if (segmentDescriptor.getNeuronIndex(branchData->key) == 2)
+  {
     printf(" --> Area = %lf\n", area);
-    //std::cerr << "area: " << area << std::endl;
+    // std::cerr << "area: " << area << std::endl;
   }
 #endif
-  float Poar = M_PI/(area * getSharedMembers().Ra);
-  Array<DimensionStruct*>::iterator diter=dimensionInputs.begin(), dend=dimensionInputs.end(); 
-  for (; diter!=dend; ++diter) {
-    float Rb = 0.5 * ( (*diter)->r + dimension->r );
-    gAxial.push_back(Poar * Rb * Rb / sqrt(DISTANCE_SQUARED(**diter, *dimension)));
+  dyn_var_t Poar = M_PI / (area * getSharedMembers().Ra);  // Pi-over-(area *
+                                                       // axial-resistance)
+  Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
+                                    dend = dimensionInputs.end();
+  for (; diter != dend; ++diter)
+  {
+    dyn_var_t Rb = 0.5 * ((*diter)->r + dimension->r);
+    gAxial.push_back(Poar * Rb * Rb /
+                     sqrt(DISTANCE_SQUARED(**diter, *dimension)));
   }
-  if (getSharedMembers().deltaT) {
+  if (getSharedMembers().deltaT)
+  {
     cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
   }
 #ifdef DEBUG_HH
-  std::cerr<<"JUNCTION ("<<dimension->x<<","<<dimension->y<<","<<dimension->z<<","<<dimension->r<<")"<<std::endl;
+  std::cerr << "JUNCTION (" << dimension->x << "," << dimension->y << ","
+            << dimension->z << "," << dimension->r << ")" << std::endl;
 #endif
 }
 
-void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng) 
+void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 {
-  assert(cmt>0);
-  float conductance = cmt;
-  float current = cmt * Vcur;
+  assert(cmt > 0);
+  dyn_var_t conductance = cmt;
+  dyn_var_t current = cmt * Vcur;
 
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
-  Array<ChannelCurrents>::iterator citer=channelCurrents.begin();
-  Array<ChannelCurrents>::iterator cend=channelCurrents.end();
-  for (; citer!=cend; ++citer) {
-    float gloc = (*(citer->conductances))[0];
+  Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
+  Array<ChannelCurrents>::iterator cend = channelCurrents.end();
+  for (; citer != cend; ++citer)
+  {
+    dyn_var_t gloc = (*(citer->conductances))[0];
     conductance += gloc;
     current += gloc * (*(citer->reversalPotentials))[0];
   }
-  Array<float*>::iterator iter=receptorReversalPotentials.begin();
-  Array<float*>::iterator end=receptorReversalPotentials.end();
-  Array<float*>::iterator giter=receptorConductances.begin();
-  for (; iter!=end; ++iter, ++giter) {
+  Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
+  Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
+  Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
+  for (; iter != end; ++iter, ++giter)
+  {
     conductance += **giter;
     current += **iter * **giter;
   }
 
-  iter=injectedCurrents.begin();
-  end=injectedCurrents.end();
-  for (; iter!=end; ++iter) {
-    current += **iter/area;
+  iter = injectedCurrents.begin();
+  end = injectedCurrents.end();
+  for (; iter != end; ++iter)
+  {
+    current += **iter / area;
   }
 
-  Array<float>::iterator xiter=gAxial.begin(), xend=gAxial.end(); 
-  Array<float*>::iterator viter=voltageInputs.begin();
-  for (; xiter!=xend; ++xiter, ++viter) {
+  Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+  Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+  for (; xiter != xend; ++xiter, ++viter)
+  {
     current += (*xiter) * ((**viter) - Vcur);
   }
 
-  Vnew[0] = current/conductance;
+  Vnew[0] = current / conductance;
 
 #ifdef DEBUG_HH
   SegmentDescriptor segmentDescriptor;
-  std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
-	   <<" JUNCTION PREDICT"
-	   <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
-	   <<getIndex()<<"] "
-	   <<"("<<segmentDescriptor.getNeuronIndex(branchData->key)
-	   <<","<<segmentDescriptor.getBranchIndex(branchData->key)
-	   <<","<<segmentDescriptor.getBranchOrder(branchData->key)
-	   <<") {"
-	   <<dimensions[0]->x<<","<<dimensions[0]->y<<","<<dimensions[0]->z<<","<<dimensions[0]->r<<"} "
-           <<Vnew[0]<<std::endl;	   
+  std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
+            << " JUNCTION PREDICT"
+            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+            << getIndex() << "] "
+            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << dimensions[0]->x << "," << dimensions[0]->y << ","
+            << dimensions[0]->z << "," << dimensions[0]->r << "} " << Vnew[0]
+            << std::endl;
 #endif
 }
 
-void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng) 
+void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 {
-  float conductance = cmt;
-  float current = cmt * Vcur;
+  dyn_var_t conductance = cmt;
+  dyn_var_t current = cmt * Vcur;
 
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
-  Array<ChannelCurrents>::iterator citer=channelCurrents.begin();
-  Array<ChannelCurrents>::iterator cend=channelCurrents.end();
+  Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
+  Array<ChannelCurrents>::iterator cend = channelCurrents.end();
 
-  for (; citer!=cend; ++citer) {
-    float gloc = (*(citer->conductances))[0];
+  for (; citer != cend; ++citer)
+  {
+    dyn_var_t gloc = (*(citer->conductances))[0];
     conductance += gloc;
     current += gloc * (*(citer->reversalPotentials))[0];
   }
 
-  Array<float*>::iterator iter=receptorReversalPotentials.begin();
-  Array<float*>::iterator end=receptorReversalPotentials.end();
-  Array<float*>::iterator giter=receptorConductances.begin();
-  for (; iter!=end; ++iter, ++giter) {
+  Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
+  Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
+  Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
+  for (; iter != end; ++iter, ++giter)
+  {
     conductance += **giter;
     current += **iter * **giter;
   }
-  
-  iter=injectedCurrents.begin();
-  end=injectedCurrents.end();
-  for (; iter!=end; ++iter) {
-    current += **iter/area;
+
+  iter = injectedCurrents.begin();
+  end = injectedCurrents.end();
+  for (; iter != end; ++iter)
+  {
+    current += **iter / area;
   }
 
-  Array<float>::iterator xiter=gAxial.begin(), xend=gAxial.end(); 
-  Array<float*>::iterator viter=voltageInputs.begin();
-  for (; xiter!=xend; ++xiter, ++viter) {
+  Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+  Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+  for (; xiter != xend; ++xiter, ++viter)
+  {
     current += (*xiter) * (**viter);
     conductance += (*xiter);
-  }  
+  }
 
-  Vnew[0] = current/conductance;
+  Vnew[0] = current / conductance;
 
   // This is the swap phase
   Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
 
 #ifdef DEBUG_HH
   SegmentDescriptor segmentDescriptor;
-  std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
-	   <<" JUNCTION CORRECT"
-	   <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
-	   <<getIndex()<<"] "
-	   <<"("<<segmentDescriptor.getNeuronIndex(branchData->key)
-	   <<","<<segmentDescriptor.getBranchIndex(branchData->key)
-	   <<","<<segmentDescriptor.getBranchOrder(branchData->key)
-	   <<") {"
-	   <<dimensions[0]->x<<","<<dimensions[0]->y<<","<<dimensions[0]->z<<","<<dimensions[0]->r<<"} "
-	   <<Vnew[0]<<std::endl;
+  std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
+            << " JUNCTION CORRECT"
+            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+            << getIndex() << "] "
+            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << dimensions[0]->x << "," << dimensions[0]->y << ","
+            << dimensions[0]->z << "," << dimensions[0]->r << "} " << Vnew[0]
+            << std::endl;
 
-  Array<DimensionStruct*>::iterator diter=dimensionInputs.begin();
-  Array<float*>::iterator vend=voltageInputs.end();
-  int c=0;
+  Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
+  Array<dyn_var_t*>::iterator vend = voltageInputs.end();
+  int c = 0;
 
-  for (viter=voltageInputs.begin(); viter!=vend; ++viter, ++diter) {
-    std::cerr<<getSimulation().getIteration() * *getSharedMembers().deltaT
-               <<" JCT_INPUT_"<<c++
-	       <<" ["<<getSimulation().getRank()<<","<<getNodeIndex()<<","
-	       <<getIndex()<<"] "
-	       <<"("<<segmentDescriptor.getNeuronIndex(branchData->key)
-	       <<","<<segmentDescriptor.getBranchIndex(branchData->key)
-	       <<","<<segmentDescriptor.getBranchOrder(branchData->key)
-	       <<","<<segmentDescriptor.getComputeOrder(branchData->key)
-	       <<") {"
-	       <<(*diter)->x<<","<<(*diter)->y<<","<<(*diter)->z<<","<<(*diter)->r<<"} "
-	       <<DISTANCE_SQUARED(*(*diter), *(dimensions[0]))<<" "
-	       <<*(*viter)<<std::endl;
+  for (viter = voltageInputs.begin(); viter != vend; ++viter, ++diter)
+  {
+    std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
+              << " JCT_INPUT_" << c++ << " [" << getSimulation().getRank()
+              << "," << getNodeIndex() << "," << getIndex() << "] "
+              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+              << segmentDescriptor.getBranchIndex(branchData->key) << ","
+              << segmentDescriptor.getBranchOrder(branchData->key) << ","
+              << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
+              << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
+              << (*diter)->r << "} "
+              << DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
+              << *(*viter) << std::endl;
   }
 #endif
 }
 
-bool HodgkinHuxleyVoltageJunction::checkSite(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
+bool HodgkinHuxleyVoltageJunction::checkSite(
+    const String& CG_direction, const String& CG_component,
+    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+    Constant* CG_constant,
+    CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset,
+    CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
 {
-  assert(dimensions.size()==1);
-  DimensionStruct* dimension=dimensions[0];
-  TissueSite& site=CG_inAttrPset->site;
-  bool rval=(site.r==0);
-  if (!rval)
-    rval=( (site.r*site.r) >= DISTANCE_SQUARED(site, *dimension) );
+  assert(dimensions.size() == 1);
+  DimensionStruct* dimension = dimensions[0];
+  TissueSite& site = CG_inAttrPset->site;
+  bool rval = (site.r == 0);
+  if (!rval) rval = ((site.r * site.r) >= DISTANCE_SQUARED(site, *dimension));
   return rval;
 }
 
-bool HodgkinHuxleyVoltageJunction::confirmUniqueDeltaT(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
+bool HodgkinHuxleyVoltageJunction::confirmUniqueDeltaT(
+    const String& CG_direction, const String& CG_component,
+    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+    Constant* CG_constant,
+    CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset,
+    CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
 {
-  return (getSharedMembers().deltaT==0);
+  return (getSharedMembers().deltaT == 0);
 }
 
-HodgkinHuxleyVoltageJunction::~HodgkinHuxleyVoltageJunction() 
-{
-}
-
+HodgkinHuxleyVoltageJunction::~HodgkinHuxleyVoltageJunction() {}

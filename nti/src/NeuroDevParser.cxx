@@ -66,7 +66,7 @@ void NeuroDevParser::help() {
     std::cout << "    -t : time-step : Time step. MD concept usesd in force "
                  "field iteration." << std::endl;
     std::cout << "    -u : dump-all-output : output file format : text 't' "
-                 "(default) | binary 't' | text and binary 'bt'." << std::endl;
+                 "(default) | binary 'b' | text and binary 'bt'." << std::endl;
     std::cout << "    -x : slicing-geom-x : X dimension of slicing geometry."
               << std::endl;
     std::cout << "    -y : slicing-geom-y : Y dimension of slicing geometry."
