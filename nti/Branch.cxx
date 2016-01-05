@@ -138,6 +138,7 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
 	if (!nextSegment(seg1, seg2, i, L)) break;
       }
     }
+    /*
     if (segCount==1 && pointSpacing>1.0) {
       double d=2.0*L*seg1->getRadius()/( L + seg1->getRadius() - seg2->getRadius()); //see P1010005.jpg
       if (fabs(d)<=L) {
@@ -151,6 +152,7 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
 	++s;
       }
     }
+    */
     if (segCount>1) {
       numberOfResampledSegments=segCount; 
       _resampledTerminalIndex=segments.size()-1;

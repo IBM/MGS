@@ -190,7 +190,6 @@ double SegmentDescriptor::modifySegmentKey(SegmentKeyData field, unsigned int id
     sid.key.userField1=id; 
     break;
   case branchType:  
-    if (id>=_maxField[branchType]) printf("%d\n",id);
     assert(id<_maxField[branchType]);
     sid.key.branchType=id; 
     break;
