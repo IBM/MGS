@@ -26,16 +26,16 @@
 
 class ComputeBranch
 {
- public:
+  public:
   ComputeBranch() : _capsules(0), _nCapsules(0), _parent(0) {}
   Capsule* _capsules;
   int _nCapsules;
   ComputeBranch* _parent;
-  std::list<ComputeBranch*> _daughters;
-  Capsule& lastCapsule() {
-    assert(_nCapsules>0);
-    return _capsules[_nCapsules-1];
+  std::list<ComputeBranch*> _daughters; //TUAN: GPU port TODO: try to use contiguous array??
+  Capsule& lastCapsule()
+  {
+    assert(_nCapsules > 0);
+    return _capsules[_nCapsules - 1];
   }
 };
 #endif
-

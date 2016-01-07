@@ -34,15 +34,15 @@
 #include <vector>
 #include <list>
 
-//0..2 : TD_BEGIN_COORDS (3 doubles)
-//3..3 : TD_RADIUS (1 double)
-//4..4 : TD_KEY (1 doubles)
-//5..8 : TD_END_COORDS (3 doubles)
+// 0..2 : TD_BEGIN_COORDS (3 doubles)
+// 3..3 : TD_RADIUS (1 double)
+// 4..4 : TD_KEY (1 doubles)
+// 5..8 : TD_END_COORDS (3 doubles)
 #define N_TD_DATA 8
 #define TD_BEGIN_COORDS 0
 #define TD_RADIUS 3
 #define TD_KEY 4
-#define TD_END_COORDS 5 
+#define TD_END_COORDS 5
 
 class Decomposition;
 class TouchSpace;
@@ -55,127 +55,145 @@ class Mutex;
 
 class GlomeruliDetector;
 
-class TouchDetector :  public Sender, public Receiver
+class TouchDetector : public Sender, public Receiver
 {
-   public:
-  TouchDetector(const int rank, const int nSlicers, const int nTouchDetectors, const int maxComputeOrder, const int nThreads,
-		double appositionRate, Decomposition** decomposition, TouchSpace* detectionTouchSpace, 
-		TouchSpace* communicateTouchSpace, NeuronPartitioner* neuronPartitioner,
-		TissueContext* tissueContext, Params* params);
-     virtual ~TouchDetector();
+  public:
+  TouchDetector(const int rank, const int nSlicers, const int nTouchDetectors,
+                const int maxComputeOrder, const int nThreads,
+                double appositionRate, Decomposition** decomposition,
+                TouchSpace* detectionTouchSpace,
+                TouchSpace* communicateTouchSpace,
+                NeuronPartitioner* neuronPartitioner,
+                TissueContext* tissueContext, Params* params);
+  virtual ~TouchDetector();
 
-     int getRank() {return _rank;}
-             
-     void prepareToReceive(int receiveCycle, int receivePhase, CommunicatorFunction& funPtrRef);
-     void* getRecvbuf(int receiveCycle, int receivePhase);
-     int* getRecvcounts(int receiveCycle, int receivePhase);
-     int* getRdispls(int receiveCycle, int receivePhase);
-     MPI_Datatype* getRecvtypes(int receiveCycle, int receivePhase);
-     int* getRecvSizes(int receiveCycle, int receivePhase);
-     int getNumberOfReceiveCycles() {return 1;}
-     int getNumberOfReceivePhasesPerCycle(int receiveCycle);
-     void finalizeReceive(int receiveCycle, int receivePhase);
-     int getNumberOfSenders() {return _numberOfSenders;}
+  int getRank() { return _rank; }
 
-     void prepareToSend(int sendCycle, int sendPhase, CommunicatorFunction& funPtrRef);
-     void* getSendbuf(int sendCycle, int sendPhase);
-     int* getSendcounts(int sendCycle, int sendPhase);
-     int* getSdispls(int sendCycle, int sendPhase);
-     MPI_Datatype* getSendtypes(int sendCycle, int sendPhase);
-     int getNumberOfSendCycles() {return 1;}
-     int getNumberOfSendPhasesPerCycle(int sendCycle);
-     void mergeWithSendBuf(int index, int count, int sendCycle, int sendPhase) {assert(0);}
-     int getNumberOfReceivers() {return _numberOfReceivers;}
+  void prepareToReceive(int receiveCycle, int receivePhase,
+                        CommunicatorFunction& funPtrRef);
+  void* getRecvbuf(int receiveCycle, int receivePhase);
+  int* getRecvcounts(int receiveCycle, int receivePhase);
+  int* getRdispls(int receiveCycle, int receivePhase);
+  MPI_Datatype* getRecvtypes(int receiveCycle, int receivePhase);
+  int* getRecvSizes(int receiveCycle, int receivePhase);
+  int getNumberOfReceiveCycles() { return 1; }
+  int getNumberOfReceivePhasesPerCycle(int receiveCycle);
+  void finalizeReceive(int receiveCycle, int receivePhase);
+  int getNumberOfSenders() { return _numberOfSenders; }
 
-     void setTouchAnalyzer(TouchAnalyzer* touchAnalyzer);
-     void resetTouchVector();
-     TouchVector* getTouchVector() {return _touchVector;}
-     void detectTouches();
-     void doWork(int threadID, int i, ThreadUserData* data, Mutex* mutex);
-     void writeToFile(std::string experimentName);
-     void unique(bool unique);
-     void resetBufferSize(bool resetBufferSize) {_resetBufferSize=resetBufferSize;}
-     void receiveAtBufferOffset(bool receiveAtBufferOffset) {_receiveAtBufferOffset=receiveAtBufferOffset;}
-     void setUpCapsules();
-     void setCapsuleOffset(int offset);
-     void setPass(TissueContext::DetectionPass detectionPass) {_detectionPass=detectionPass;}
-     std::string getPassName();
-     
-     class TDSegment
-     {
-      public:
-		  //TUAN: potential bug here if we change the keysize, RECOMMEND: move key to the last component
-       double seg[N_TD_DATA];
-       double* getBeginCoords() {return &seg[TD_BEGIN_COORDS];}
-       double getRadius() {return seg[TD_RADIUS];}
-       key_size_t getKey() const {return seg[TD_KEY];}
-       double* getEndCoords() {return &seg[TD_END_COORDS];}
-       bool operator<(const TDSegment& s1) const;
-       bool operator==(const TDSegment& s1) const;
-     };
+  void prepareToSend(int sendCycle, int sendPhase,
+                     CommunicatorFunction& funPtrRef);
+  void* getSendbuf(int sendCycle, int sendPhase);
+  int* getSendcounts(int sendCycle, int sendPhase);
+  int* getSdispls(int sendCycle, int sendPhase);
+  MPI_Datatype* getSendtypes(int sendCycle, int sendPhase);
+  int getNumberOfSendCycles() { return 1; }
+  int getNumberOfSendPhasesPerCycle(int sendCycle);
+  void mergeWithSendBuf(int index, int count, int sendCycle, int sendPhase)
+  {
+    assert(0);
+  }
+  int getNumberOfReceivers() { return _numberOfReceivers; }
 
-   private:
+  void setTouchAnalyzer(TouchAnalyzer* touchAnalyzer);
+  void resetTouchVector();
+  TouchVector* getTouchVector() { return _touchVector; }
+  void detectTouches();
+  void doWork(int threadID, int i, ThreadUserData* data, Mutex* mutex);
+  void writeToFile(std::string experimentName);
+  void unique(bool unique);
+  void resetBufferSize(bool resetBufferSize)
+  {
+    _resetBufferSize = resetBufferSize;
+  }
+  void receiveAtBufferOffset(bool receiveAtBufferOffset)
+  {
+    _receiveAtBufferOffset = receiveAtBufferOffset;
+  }
+  void setUpCapsules();
+  void setCapsuleOffset(int offset);
+  void setPass(TissueContext::DetectionPass detectionPass)
+  {
+    _detectionPass = detectionPass;
+  }
+  std::string getPassName();
 
-     void initializePhase1Receive(int);
-     void initializePhase0Send();
-     void initializePhase1Send();
-     inline void distancePointLine(double p1A[3], double p1B[3], double p2A[3], double p2B[3], double* pointLineDistances);
+  class TDSegment
+  {
+public:
+    // TUAN: potential bug here if we change the keysize, RECOMMEND: move key to
+    // the last component
+    double seg[N_TD_DATA];
+    double* getBeginCoords() { return &seg[TD_BEGIN_COORDS]; }
+    double getRadius() { return seg[TD_RADIUS]; }
+    key_size_t getKey() const { return seg[TD_KEY]; }
+    double* getEndCoords() { return &seg[TD_END_COORDS]; }
+    bool operator<(const TDSegment& s1) const;
+    bool operator==(const TDSegment& s1) const;
+  };
 
-     int _numberOfSenders;
-     int _numberOfReceivers;
-     int _rank;
-     int _nSlicers;
-     int _nTouchDetectors;
-     int _maxComputeOrder;
-     int _nThreads;
-     ThreadUserData* _threadUserData;
+  private:
+  void initializePhase1Receive(int);
+  void initializePhase0Send();
+  void initializePhase1Send();
+  inline void distancePointLine(double p1A[3], double p1B[3], double p2A[3],
+                                double p2B[3], double* pointLineDistances);
 
-     double _appositionRate;
-     Decomposition** _decomposition;
-     TouchSpace* _detectionTouchSpace;
-     TouchSpace* _communicateTouchSpace;
-     NeuronPartitioner* _neuronPartitioner;
-     Params* _params;
-     bool _writeToFile;
-		 
-     long long _connectionCount;
-     TouchAnalyzer* _touchAnalyzer;
+  int _numberOfSenders;
+  int _numberOfReceivers;
+  int _rank;
+  int _nSlicers;
+  int _nTouchDetectors;
+  int _maxComputeOrder;
+  int _nThreads;
+  ThreadUserData* _threadUserData;
 
-     // Receive Phase 0: ALLTOALL
-     int *_segmentsPerSender; 		    // recvbuf
-     int _numberOfInts;                     // recvcount
-     MPI_Datatype _typeInt;                 // recvtype
-        
-     // Receive Phase 1: ALLTOALLW
-     Capsule** _capsules;         // ptr to recvbuf array
-     TouchVector* _touchVector;
-     TouchVector _initialTouchVector;
+  double _appositionRate;
+  Decomposition** _decomposition;
+  TouchSpace* _detectionTouchSpace;
+  TouchSpace* _communicateTouchSpace;
+  NeuronPartitioner* _neuronPartitioner;
+  Params* _params;
+  bool _writeToFile;
 
-     int* _segmentCounts;         // recvcount
-     int* _segmentDispls;         // recvDispls
-     MPI_Datatype* _typeSegments; // recvtype
-     int _segmentDataSize;
-     int _numberOfCapsules;
-     int _previousPhase1RecvBufSize;
-     
-     // Send Phase 0: ALLTOALL
-     int *_touchesPerReceiver;
-     
-     // Send Phase 1: ALLTOALLW
-     Touch* _touchOrigin;
-     int* _touchCounts;
-     int* _touchDispls;
-     MPI_Datatype* _typeTouches;
-     double* _sendBuf;
-     int _sendBufSize;
-     int _maxNumTouches;
-     int* _touchBlockLengths;
-     MPI_Aint* _touchBlockDisplacements;
+  long long _connectionCount;
+  TouchAnalyzer* _touchAnalyzer;
 
-     bool _unique, _resetBufferSize, _receiveAtBufferOffset;
-     TissueContext* _tissueContext;
-     TissueContext::DetectionPass _detectionPass;
-     std::string _experimentName;
+  // Receive Phase 0: ALLTOALL
+  int* _segmentsPerSender;  // recvbuf
+  int _numberOfInts;        // recvcount
+  MPI_Datatype _typeInt;    // recvtype
+
+  // Receive Phase 1: ALLTOALLW
+  Capsule** _capsules;  // ptr to recvbuf array
+  TouchVector* _touchVector;
+  TouchVector _initialTouchVector;
+
+  int* _segmentCounts;          // recvcount
+  int* _segmentDispls;          // recvDispls
+  MPI_Datatype* _typeSegments;  // recvtype
+  int _segmentDataSize;
+  int _numberOfCapsules;
+  int _previousPhase1RecvBufSize;
+
+  // Send Phase 0: ALLTOALL
+  int* _touchesPerReceiver;
+
+  // Send Phase 1: ALLTOALLW
+  Touch* _touchOrigin;
+  int* _touchCounts;
+  int* _touchDispls;
+  MPI_Datatype* _typeTouches;
+  double* _sendBuf;
+  int _sendBufSize;
+  int _maxNumTouches;
+  int* _touchBlockLengths;
+  MPI_Aint* _touchBlockDisplacements;
+
+  bool _unique, _resetBufferSize, _receiveAtBufferOffset;
+  TissueContext* _tissueContext;
+  TissueContext::DetectionPass _detectionPass;
+  std::string _experimentName;
 };
 
 #endif

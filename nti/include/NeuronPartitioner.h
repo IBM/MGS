@@ -62,9 +62,7 @@ class NeuronPartitioner : public Decomposition {
 
  private:
 
-  //TUAN: potential error if length > 256
-  // char _inputFilename[256]; //input filename  
-  std::string _inputFilename;
+  std::string _inputFilename;//input filename  
   int _nSlicers;
   int _size;//number of cpus
   int _rank;//current cpu

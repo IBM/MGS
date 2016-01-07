@@ -29,7 +29,7 @@ struct Sphere
   double _radius;
   //TUAN: as key size can change, it is suggested to move it to the end of the struct
   key_size_t _key;
-  double _dist2Soma;
+  double _dist2Soma; // along-the-branch-distance to the soma
 };
 #endif
 

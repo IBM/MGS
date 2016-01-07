@@ -40,3 +40,10 @@ core
 *.ASC
 *.DAT
 LensRootConfig.h
+.ropeproject
+gsl/extensions/interface/*
+models/**/*.h
+models/**/*.C
+gsl/extensions/struct/*
+*.swn
+graphs/**/runs/**

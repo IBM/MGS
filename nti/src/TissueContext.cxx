@@ -289,6 +289,8 @@ void TissueContext::setUpBranches(int rank, int maxComputeOrder)
   }
 }
 
+// reset:
+//    _neurons
 void TissueContext::resetBranches()
 {
   std::map<unsigned int, std::vector<ComputeBranch*> >::iterator mapIter,
@@ -373,6 +375,8 @@ unsigned int TissueContext::getRankOfEndPoint(ComputeBranch* branch)
   return _decomposition->getRank(endSphere);
 }
 
+//if touch is at the distal-end of the Capsule
+//TUAN NOTE: check the criteria again
 bool TissueContext::isTouchToEnd(Capsule& c, Touch& t)
 {
   bool rval = false;

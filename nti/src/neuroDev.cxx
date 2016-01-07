@@ -68,9 +68,6 @@ int main(int argc, char* argv[]) {
   if (clientConnect) set_cvc_config("./cvc.config");
 #endif
 
-  /*char inputFilename[256];
-int inputFilenameLength=commandLine.getInputFileName().length();
-strcpy(inputFilename, commandLine.getInputFileName().c_str());*/
   std::string inputFilename = commandLine.getInputFileName();
 
   bool logTranslations =
@@ -126,9 +123,6 @@ strcpy(inputFilename, commandLine.getInputFileName().c_str());*/
 
   Params params;
   std::string paramS = commandLine.getParamFileName();
-  /*
-  char paramS[256];
-  strcpy(paramS, commandLine.getParamFileName().c_str());*/
   params.readDevParams(paramS);
 
 #ifdef VERBOSE

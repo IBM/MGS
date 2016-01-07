@@ -25,6 +25,9 @@ class SyntaxError;
 class C_types : public C_production
 {
    public:
+	   //TUAN: these items are not used so far
+	   //_NVPAIR, _MATRIX
+	   //_FUNCTOR, _GRID, _COMPOSITE
       enum Type
       {
          _PSET,

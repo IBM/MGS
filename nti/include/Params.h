@@ -16,7 +16,7 @@
 #ifndef PARAMS_H
 #define PARAMS_H
 
-#include "../../nti/include/MaxComputeOrder.h"
+#include "MaxComputeOrder.h"
 
 #include <cassert>
 #include <math.h>
@@ -381,6 +381,10 @@ public:
 
   std::vector<std::vector<SegmentDescriptor::SegmentKeyData> > _touchTableMasks;
 
+  // tell if the information read from the parameter files
+  // having the corresponding section
+  // e.g. _compartmentVariables == TRUE when  CptParams.par is read
+  //      _channels == TRUE when CHEMICAL_SYNAPSE_TARGETS section in SynParams.par is read
   bool _SIParams, _compartmentVariables, _channels, _electricalSynapses,
       _chemicalSynapses;
 

@@ -27,6 +27,8 @@ class DataItem;
 class C_argument : public C_production
 {
    public:
+	   //TUAN: these items are not used so far
+	   //_NVPAIRLIST, _NVPAIR 
       enum Type
       {
          _CONSTANT,

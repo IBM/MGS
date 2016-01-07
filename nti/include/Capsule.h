@@ -61,12 +61,14 @@ public:
   void writeToFile(FILE* dataFile);
 
 private:
+  //when the capsule represent a soma, then Sphere is used
+  //when the capsule represent a regular segment, then _data is used
   union CapsuleData {
     Sphere _sphere;
     double _data[N_CAP_DATA];
   } _capsuleData;
-  ComputeBranch* _branch;
-  static SegmentDescriptor _segmentDescriptor;
+  ComputeBranch* _branch; //the branch to which the capsule belongs 
+  static SegmentDescriptor _segmentDescriptor; //TUAN: QUESTION: why the key is 'static' (does all capsules share the key?)
 };
 #endif
 

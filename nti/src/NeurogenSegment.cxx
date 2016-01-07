@@ -470,6 +470,7 @@ double NeurogenSegment::getDistance(ShallowArray<double>& coords)
   return distance;
 }
 
+// GOAL: return the distance from the current segment point to its parent
 double NeurogenSegment::getLength()
 {
   double length = sqrt((X-parent_p->getX())*(X-parent_p->getX()) + (Y-parent_p->getY())*(Y-parent_p->getY()) + (Z-parent_p->getZ())*(Z-parent_p->getZ()));
@@ -695,6 +696,7 @@ void NeurogenSegment::forwardBias()
   biasZ += deltaZ * fac;
 }
 
+// GOAL: surface area
 double NeurogenSegment::getSideArea()
 {
   return 2*M_PI*Radius * getLength();
