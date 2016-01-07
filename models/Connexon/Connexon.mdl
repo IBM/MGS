@@ -237,14 +237,14 @@ Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer,
     int idx;
   }
 
-  UserFunction setVoltagePointers;
+  UserFunction setPointers;
   
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
     VoltageArrayProducer, BranchDataProducer 
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
-    setVoltagePointers();
+    setPointers();
   }
   Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
     VoltageProducer 

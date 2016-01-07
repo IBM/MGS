@@ -16,15 +16,21 @@ return 1
 
 }
 
-NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 list=("LINUX" "SMP" "BGL" "BGP" "BGQ")
 var=$( IFS=' | '; echo "${list[*]}"  )
 if [ "$#" -eq 0 ] || \
 	( [ "$#" -gt 0 ] && [ $(contains "${list[@]}" "$1") == "n" ] ); then
 	echo "SYNTAX: $0 <$var> [-clean | -rebuild]"
+	echo "SYNTAX: $0 <$var> <-clean | -rebuild> <num-processes-4-make>"
+	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
 
 	exit;
+fi
+
+NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+if [ "$#" -gt 2 ] ; then
+	NPROCS=$3
 fi
 
 if [ "$2" == "-clean" ] ; then

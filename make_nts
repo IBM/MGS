@@ -10,7 +10,9 @@ MDLROOT=$NTSROOT/mdl
 
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 NPROCS=$(( $NPROCS*2/3 ))
-
+if [ "$2" == "-singlethread" ] || [ "$2" == "-s" ]; then
+	NPROCS=1
+fi
 ### Check required tools ###
 ## 1. MPI library
 ## 2. Bison
@@ -188,11 +190,11 @@ fi
 cd $LENSROOT
 chmod +x ./build_gsl
 if [ "$2" == "-clean" ] ; then
-    ./build_gsl $1 -clean
+    ./build_gsl $1 -clean 
 elif [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
-    ./build_gsl $1 -rebuild
+    ./build_gsl $1 -rebuild 
 else
-    ./build_gsl $1
+    ./build_gsl $1 $NPROCS
 fi
 
 cd $NTSROOT
