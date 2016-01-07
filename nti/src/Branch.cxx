@@ -63,10 +63,14 @@ Branch& Branch::operator=(const Branch& b)
   return *this;
 }
 
+//   Revised this: should return the branch-lenght
+//   instead of the distance between the first and last segment
 const double Branch::getLength()
 {
   assert(_numberOfSegments>0);
-  return sqrt(SqDist(_segments[0].getCoords(), _segments[_numberOfSegments-1].getCoords()));
+  //return sqrt(SqDist(_segments[0].getCoords(), _segments[_numberOfSegments-1].getCoords()));
+  return _segments[_numberOfSegments-1].getDist2Soma() - _segments[0].getDist2Soma();
+
 }
 
 void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
@@ -74,7 +78,7 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
   int i=0;
   Segment newSeg;
   newSeg=_segments[0];
-  int segCount=0;
+  int segCount=0; // track # segments in the resampled branch
   Segment *seg1, *seg2;
   double L, d=0;
   unsigned s=segments.size();
@@ -323,12 +327,17 @@ Segment* Branch::loadText(
   return segmentPtr;
 }
 
+// CONTEXT: the current branch belong to a certain neuron '_neuron'
+// GOAL: Return the segment associated with the soma of that '_neuron'
+//
 void Branch::findRootSegment()
 {
   assert (_numberOfSegments>0);
   double D = FLT_MAX;
   double* firstcoords = _segments[0].getCoords();
   Branch* branches = _neuron->getBranches();
+  // traverse all branches of that '_neuron' and find the one with the 
+  //    shortest distance between the 'first' and 'last' segments of a branch
   for(int k=0; k<_branchIndex; ++k) {
     if (branches[k].getNumberOfSegments()!=0) {
       Segment& lastseg=branches[k].getSegments()[branches[k].getNumberOfSegments()-1];
@@ -343,6 +352,10 @@ void Branch::findRootSegment()
   assert(D==0.0);
 }
 
+// GOAL: Set the along-branch-distances to the soma
+//       from each Segment in the current Branch 
+// INPUT:
+//    dist2Soma = the along-branch-distance from the first Segment of that Branch to the soma
 void Branch::setDist2Soma(double dist2Soma)
 {
   assert(_numberOfSegments>0);

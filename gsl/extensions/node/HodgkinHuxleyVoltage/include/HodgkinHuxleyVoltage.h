@@ -26,7 +26,7 @@
 class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
 {
    public:
-      void initializeData(RNG& rng);
+      void initializeCompartmentData(RNG& rng);
       void solve(RNG& rng);
       void finish(RNG& rng);
       virtual void setReceptorCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
@@ -43,7 +43,6 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
       float getAij(DimensionStruct* a, DimensionStruct* b, float Area);
       unsigned getSize() {return branchData->size;}
 	
-      void initializeCompartments(RNG& rng);
 #if MAX_COMPUTE_ORDER>0
       void forwardSolve1(RNG& rng);
       void backwardSolve1(RNG& rng);

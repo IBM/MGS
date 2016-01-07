@@ -134,11 +134,11 @@ final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
 
 .PHONY: clean
 clean:
-	- rm $(OBJS_DIR)/*
-	- rm $(BIN_DIR)/$(EXE_FILE)
-	- rm parser/mdl.output
-	- rm parser/mdl.tab.c
-	- rm parser/mdl.tab.h
-	- rm scanner/lex.yy.cc
+	-rm $(OBJS_DIR)/*
+	-rm $(BIN_DIR)/$(EXE_FILE)
+	-rm parser/mdl.output
+	-rm parser/mdl.tab.c
+	-rm parser/mdl.tab.h
+	-rm scanner/lex.yy.cc
 
 

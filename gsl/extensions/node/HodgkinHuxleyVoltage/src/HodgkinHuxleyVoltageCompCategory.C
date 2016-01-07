@@ -22,9 +22,17 @@
 
 HodgkinHuxleyVoltageCompCategory::HodgkinHuxleyVoltageCompCategory(
     Simulation& sim, const std::string& modelName, const NDPairList& ndpList)
-    : CG_HodgkinHuxleyVoltageCompCategory(sim, modelName, ndpList) {}
+    : CG_HodgkinHuxleyVoltageCompCategory(sim, modelName, ndpList)
+{
+}
 
-void HodgkinHuxleyVoltageCompCategory::count() {
+// Return the statistics of distributing the instances of this nodetype
+// onto different computing nodes
+// i.e. the total instances,
+//      the mean #-of-instance-being-processed by each node,
+//      the stddev #-of-instance-being-processed by each node
+void HodgkinHuxleyVoltageCompCategory::count()
+{
   long long totalCount, localCount = _nodes.size();
   MPI_Allreduce((void*)&localCount, (void*)&totalCount, 1, MPI_LONG_LONG,
                 MPI_SUM, MPI_COMM_WORLD);
@@ -38,12 +46,11 @@ void HodgkinHuxleyVoltageCompCategory::count() {
     printf("Total HodgkinHuxleyVoltage = %lld, Mean = %lf, StDev = %lf\n",
            totalCount, mean, std);
 
-  ////
-
   totalCount = localCount = 0;
   ShallowArray<HodgkinHuxleyVoltage>::iterator nodesIter = _nodes.begin(),
                                                nodesEnd = _nodes.end();
-  for (; nodesIter != nodesEnd; ++nodesIter) {
+  for (; nodesIter != nodesEnd; ++nodesIter)
+  {
     localCount += nodesIter->dimensions.size();
   }
 

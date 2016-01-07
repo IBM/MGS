@@ -10,7 +10,7 @@ vpath %.cxx $(SRC_DIR)
 
 FOR_BLUEGENE_P=0
 FOR_BLUEGENE_L=0
-FOR_BLUEGENE_Q=1
+FOR_BLUEGENE_Q=0
 FOR_AIX=0
 A2AW=0
 
@@ -186,9 +186,9 @@ uninstall:
 
 install: all
 
-clean: ; rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o
+clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o
 realclean: clean
-	rm -f $(TARGETS) 
+	-rm -f $(TARGETS) 
 
 #.SUFFIXES: .cxx .cpp .c .h .o
 # Include the C include dependencies

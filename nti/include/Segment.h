@@ -21,6 +21,7 @@
 #include "Sphere.h"
 #include "SegmentDescriptor.h"
 #include "SegmentForce.h"
+#include "../../nti/include/MaxComputeOrder.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -63,7 +64,7 @@ public:
   double* getData() {return _segmentData._data;}
   double* getCoords() {return _segmentData._sphere._coords;}
   double& getRadius() {return _segmentData._sphere._radius;}
-  double getSegmentKey() const {return _segmentData._sphere._key;}
+  key_size_t getSegmentKey() const {return _segmentData._sphere._key;}
   double* getOrigCoords() {return &_segmentData._data[SEG_ORIG_COORDS];}
 
   void loadBinary(FILE*, Branch*, const int segmentIndex);

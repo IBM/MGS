@@ -11,7 +11,7 @@ Struct BranchDataStruct {
 	// All models (receptor model, voltage model, ...) needs to have a reference to this 
 	key_size_t key;
 	//unsigned int size; // not accepted
-	unsigned size;
+	unsigned size; //the number of compartments on that branch
 }
 
 Interface BranchDataProducer {
@@ -68,12 +68,14 @@ Constant BranchData Implements BranchDataProducer {
 Constant CompartmentDimension Implements DimensionProducer {
 	// data members
 	DimensionStruct dimension;
+	//output (just take reference, don't copy)
 	DimensionProducer.dimension << &dimension;
 }
 
 #if MAX_COMPUTE_ORDER>0
 //IMPORTANT: The solver does not hold any physical data object, just reference to the data
 //           that it solves
+//{{{
 Node ForwardSolvePoint1 Implements ForwardSolutionProducer, DimensionProducer
 {
 	// data members
@@ -133,9 +135,11 @@ Node BackwardSolvePoint0 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #if MAX_COMPUTE_ORDER>1
+//{{{
 Node ForwardSolvePoint2 Implements ForwardSolutionProducer, DimensionProducer
 {
 	//data members
@@ -185,6 +189,7 @@ Node BackwardSolvePoint1 Implements SolutionProducer, DimensionProducer
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
+
 	//input
 	Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
 		SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
@@ -194,9 +199,11 @@ Node BackwardSolvePoint1 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #if MAX_COMPUTE_ORDER>2
+//{{{
 Node ForwardSolvePoint3 Implements ForwardSolutionProducer, DimensionProducer
 {
 	//data members
@@ -218,6 +225,7 @@ Node ForwardSolvePoint3 Implements ForwardSolutionProducer, DimensionProducer
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
+
 	//input
 	Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
 		ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
@@ -245,6 +253,7 @@ Node BackwardSolvePoint2 Implements SolutionProducer, DimensionProducer
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
+
 	//input
 	Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
 		SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
@@ -254,9 +263,11 @@ Node BackwardSolvePoint2 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #if MAX_COMPUTE_ORDER>3
+//{{{
 Node ForwardSolvePoint4 Implements ForwardSolutionProducer, DimensionProducer
 {
 	//data members
@@ -278,6 +289,7 @@ Node ForwardSolvePoint4 Implements ForwardSolutionProducer, DimensionProducer
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
+
 	//input
 	Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
 		ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
@@ -292,17 +304,21 @@ Node ForwardSolvePoint4 Implements ForwardSolutionProducer, DimensionProducer
 
 Node BackwardSolvePoint3 Implements SolutionProducer, DimensionProducer
 {
+	//data members
 	dyn_var_t* solution;
 	DimensionStruct* dimension;
+	//share
 	Shared {
 		dyn_var_t []* solutionConnect;
 		DimensionStruct* []* dimensionsConnect;
 	}
+	//output
 	SolutionProducer.solution << solution;
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
 
+	//input
 	Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
 		SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
 		DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
@@ -311,21 +327,26 @@ Node BackwardSolvePoint3 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #if MAX_COMPUTE_ORDER>4
+//{{{
 Node ForwardSolvePoint5 Implements ForwardSolutionProducer, DimensionProducer
 {
+	//data members
 	dyn_var_t* Aii;
 	dyn_var_t* Aip;
 	dyn_var_t* RHS;
 	DimensionStruct* dimension;
+	//share
 	Shared {
 		DimensionStruct* []* dimensionsConnect;
 		dyn_var_t []* AiiConnect;
 		dyn_var_t []* AipConnect;
 		dyn_var_t []* RHSConnect;
 	}
+    //output
 	ForwardSolutionProducer.Aii << Aii;
 	ForwardSolutionProducer.Aip << Aip;
 	ForwardSolutionProducer.RHS << RHS;
@@ -333,6 +354,7 @@ Node ForwardSolvePoint5 Implements ForwardSolutionProducer, DimensionProducer
 
 	UserFunction setPointers;
 
+	//input
 	Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
 		ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
 		ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
@@ -346,17 +368,21 @@ Node ForwardSolvePoint5 Implements ForwardSolutionProducer, DimensionProducer
 
 Node BackwardSolvePoint4 Implements SolutionProducer, DimensionProducer
 {
+	//data members
 	dyn_var_t* solution;
 	DimensionStruct* dimension;
+	//share
 	Shared {
 		dyn_var_t []* solutionConnect;
 		DimensionStruct* []* dimensionsConnect;
 	}
+	//output
 	SolutionProducer.solution << solution;
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
 
+	//input
 	Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
 		SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
 		DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
@@ -365,21 +391,26 @@ Node BackwardSolvePoint4 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #if MAX_COMPUTE_ORDER>5
+//{{{
 Node ForwardSolvePoint6 Implements ForwardSolutionProducer, DimensionProducer
 {
+	//data members
 	dyn_var_t* Aii;
 	dyn_var_t* Aip;
 	dyn_var_t* RHS;
 	DimensionStruct* dimension;
+	//share
 	Shared {
 		DimensionStruct* []* dimensionsConnect;
 		dyn_var_t []* AiiConnect;
 		dyn_var_t []* AipConnect;
 		dyn_var_t []* RHSConnect;
 	}
+	//output
 	ForwardSolutionProducer.Aii << Aii;
 	ForwardSolutionProducer.Aip << Aip;
 	ForwardSolutionProducer.RHS << RHS;
@@ -387,6 +418,7 @@ Node ForwardSolvePoint6 Implements ForwardSolutionProducer, DimensionProducer
 
 	UserFunction setPointers;
 
+	//input
 	Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
 		ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
 		ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
@@ -400,17 +432,21 @@ Node ForwardSolvePoint6 Implements ForwardSolutionProducer, DimensionProducer
 
 Node BackwardSolvePoint5 Implements SolutionProducer, DimensionProducer
 {
+	//data members
 	dyn_var_t* solution;
 	DimensionStruct* dimension;
+	//share
 	Shared {
 		dyn_var_t []* solutionConnect;
 		DimensionStruct* []* dimensionsConnect;
 	}
+	//output
 	SolutionProducer.solution << solution;
 	DimensionProducer.dimension << dimension;
 
 	UserFunction setPointers;
 
+	//input
 	Connection Pre Node () Expects SolutionArrayProducer, DimensionArrayProducer {
 		SolutionArrayProducer.solutionArray >> Shared.solutionConnect;
 		DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
@@ -419,14 +455,18 @@ Node BackwardSolvePoint5 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #if MAX_COMPUTE_ORDER>6
+//{{{
 Node ForwardSolvePoint7 Implements ForwardSolutionProducer, DimensionProducer
 {
+	//data members
 	dyn_var_t* Aii;
 	dyn_var_t* Aip;
 	dyn_var_t* RHS;
+	//share
 	DimensionStruct* dimension;
 	Shared {
 		DimensionStruct* []* dimensionsConnect;
@@ -434,6 +474,7 @@ Node ForwardSolvePoint7 Implements ForwardSolutionProducer, DimensionProducer
 		dyn_var_t []* AipConnect;
 		dyn_var_t []* RHSConnect;
 	}
+	//output
 	ForwardSolutionProducer.Aii << Aii;
 	ForwardSolutionProducer.Aip << Aip;
 	ForwardSolutionProducer.RHS << RHS;
@@ -441,6 +482,7 @@ Node ForwardSolvePoint7 Implements ForwardSolutionProducer, DimensionProducer
 
 	UserFunction setPointers;
 
+	//input
 	Connection Pre Node () Expects ForwardSolutionArrayProducer, DimensionArrayProducer {
 		ForwardSolutionArrayProducer.AiiArray >> Shared.AiiConnect;
 		ForwardSolutionArrayProducer.AipArray >> Shared.AipConnect;
@@ -477,6 +519,7 @@ Node BackwardSolvePoint6 Implements SolutionProducer, DimensionProducer
 	InitPhase produceInitialState(dimension);
 	RuntimePhase produceBackwardSolution(solution);
 }
+//}}}
 #endif
 
 #endif

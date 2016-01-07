@@ -31,8 +31,8 @@ class NeurogenBranch {
   virtual ~NeurogenBranch();
 
   int getNrSegments();
-  double getLength();
-  double getTotalSegmentLength();
+  double getLength(); // == double getTotalSegmentLength();
+  double getDistanceFirstLastSegment();
   void addSegment(NeurogenSegment* s);
   void terminateBranch();
   void setSegmentIDs(NeurogenParams* params_p, int& count);

@@ -7,24 +7,29 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
+// A Connexon is a bidirectional connection between
+//   a compartment in one neuron (serve as a spine neck)
+//   to another compartment in another neuron (serve as dendritic compartment)
+//Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer, 
+//     VoltageProducer
 Node Connexon_Vm Implements CurrentProducer, BranchDataProducer, IndexProducer, 
      VoltageProducer
 {
 /*{{{*/
-  dyn_var_t* Vi;
-  dyn_var_t* Vj;
-  dyn_var_t I;
-  dyn_var_t g;
+  dyn_var_t* Vi; //reference to the compartment representing the spine neck 
+  dyn_var_t* Vj; //reference to the compartment representing the spine 'head'
+  dyn_var_t I;   //the current [pA]
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
 
-  BranchDataStruct* branchData;
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
   int index;
 
   Shared {
     dyn_var_t []* voltageConnect;
   }
 
-  InitPhase produceInitialVoltage(Vi);
-  RuntimePhase produceVoltage(Vi), computeState;
+  InitPhase produceInitialState(Vi);
+  RuntimePhase produceState(Vi), computeState;
 
   VoltageProducer.voltage << Vi;
   CurrentProducer.current << &I;
@@ -36,14 +41,14 @@ Node Connexon_Vm Implements CurrentProducer, BranchDataProducer, IndexProducer,
     int idx;
   }
 
-  UserFunction setPointers;
+  UserFunction setVoltagePointers;
   
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
     VoltageArrayProducer, BranchDataProducer 
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
-    setPointers();
+    setVoltagePointers();
   }
   Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
     VoltageProducer 
@@ -61,10 +66,10 @@ Node Connexon_VmCai Implements CurrentProducer, BranchDataProducer, IndexProduce
   dyn_var_t* Vi;
   dyn_var_t* Vj;
   dyn_var_t I;
+  dyn_var_t g;
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
-  dyn_var_t g;
   dyn_var_t gMYO;
 
   BranchDataStruct* branchData;
@@ -129,14 +134,14 @@ Node Connexon_VmCaiCaER Implements CurrentProducer, BranchDataProducer, IndexPro
   dyn_var_t* Vi;
   dyn_var_t* Vj;
   dyn_var_t I;
+  dyn_var_t g;
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
+  dyn_var_t gMYO;
   dyn_var_t* CaERi;
   dyn_var_t* CaERj;
   dyn_var_t I_CaER;
-  dyn_var_t g;
-  dyn_var_t gMYO;
   dyn_var_t gER; // the trans
   /*}}}*/
 
@@ -202,4 +207,51 @@ Node Connexon_VmCaiCaER Implements CurrentProducer, BranchDataProducer, IndexPro
   }
 /*}}}*/
 }
+
+Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer, 
+     VoltageProducer
+{ // for historical purpose (we still keep it here; use Connexon_Vm instead)
+/*{{{*/
+  dyn_var_t* Vi; //reference to the compartment representing the spine neck 
+  dyn_var_t* Vj; //reference to the compartment representing the spine 'head'
+  dyn_var_t I;   //the current [pA]
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
+
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;
+
+  Shared {
+    dyn_var_t []* voltageConnect;
+  }
+
+  InitPhase produceInitialVoltage(Vi);
+  RuntimePhase produceVoltage(Vi), computeState;
+
+  VoltageProducer.voltage << Vi;
+  CurrentProducer.current << &I;
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setVoltagePointers;
+  
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, BranchDataProducer 
+  {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchData;
+    setVoltagePointers();
+  }
+  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
+    VoltageProducer 
+  {
+    VoltageProducer.voltage >> Vj;
+  }
+/*}}}*/
+}
+
 #endif

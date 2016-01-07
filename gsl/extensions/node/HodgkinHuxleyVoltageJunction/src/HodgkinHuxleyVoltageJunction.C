@@ -21,19 +21,18 @@
 #include "MaxComputeOrder.h"
 
 //#define DEBUG_HH
-#ifdef DEBUG_HH
-#include "../../../../../nti/SegmentDescriptor.h"
-#endif
+#include "SegmentDescriptor.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
-{
-#ifdef DEBUG_HH
+{  // explicit junction (which can be soma (with branches are axon/dendrite
+   // trees)
+  // or a junction with 3 or more branches (one from main, 2+ for children
+  // branches))
   SegmentDescriptor segmentDescriptor;
-#endif
 #ifdef DEBUG_ASSERT
   assert(Vnew.size() == 1);
   assert(dimensions.size() == 1);
@@ -49,8 +48,9 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
                                                // regular-branch
   area = 0.0;
   if (segmentDescriptor.getBranchType(branchData->key) == 0)
-  { //soma:
-	// surface area = sphere surface area - sum (cross-sectional area other branches)
+  {  // soma:
+    // surface area = sphere surface area - sum (cross-sectional area other
+    //                                           branches)
     area = 4.0 * M_PI * dimension->r * dimension->r;
     Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
                                       end = dimensionInputs.end();
@@ -62,34 +62,36 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   }
   else
   { /* explicit junction */
-    // area = sum (cylinder surface area)
+    // area = sum (half-side cylinder surface area)
     Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
                                       end = dimensionInputs.end();
     for (; iter != end; ++iter)
     {
-
       dyn_var_t R = 0.5 * (0.5 * ((*iter)->r + dimension->r) + dimension->r);
-      dyn_var_t L = 0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));
-
-      area += 2.0 * M_PI * R * L;
+      dyn_var_t L =
+          0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));  // half-side
+      area += 2.0 * M_PI * R * L ;  
     }
   }
 #ifdef DEBUG_HH
+  // check 'bouton' neuron ???
   if (segmentDescriptor.getNeuronIndex(branchData->key) == 2)
   {
     printf(" --> Area = %lf\n", area);
     // std::cerr << "area: " << area << std::endl;
   }
 #endif
+
   dyn_var_t Poar = M_PI / (area * getSharedMembers().Ra);  // Pi-over-(area *
-                                                       // axial-resistance)
+                                                           // axial-resistance)
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
                                     dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
     dyn_var_t Rb = 0.5 * ((*diter)->r + dimension->r);
-    gAxial.push_back(Poar * Rb * Rb /
-                     sqrt(DISTANCE_SQUARED(**diter, *dimension)));
+    dyn_var_t distance =
+        sqrt(DISTANCE_SQUARED(**diter, *dimension)) / 2.0;  // half half-side
+    gAxial.push_back(Poar * Rb * Rb / distance);
   }
   if (getSharedMembers().deltaT)
   {
@@ -144,7 +146,6 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   Vnew[0] = current / conductance;
 
 #ifdef DEBUG_HH
-  SegmentDescriptor segmentDescriptor;
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","

@@ -18,11 +18,11 @@
 #include "CG_Connexon_Vm.h"
 #include "rndm.h"
 
-void Connexon_Vm::produceInitialVoltage(RNG& rng) 
+void Connexon_Vm::produceInitialState(RNG& rng) 
 {
 }
 
-void Connexon_Vm::produceVoltage(RNG& rng) 
+void Connexon_Vm::produceState(RNG& rng) 
 {
 }
 
@@ -31,7 +31,7 @@ void Connexon_Vm::computeState(RNG& rng)
   I=g*(*Vj-*Vi);
 }
 
-void Connexon_Vm::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmInAttrPSet* CG_inAttrPset, CG_Connexon_VmOutAttrPSet* CG_outAttrPset) 
+void Connexon_Vm::setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmInAttrPSet* CG_inAttrPset, CG_Connexon_VmOutAttrPSet* CG_outAttrPset) 
 {
   index=CG_inAttrPset->idx;
   assert(getSharedMembers().voltageConnect);

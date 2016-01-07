@@ -8,7 +8,7 @@ Connexon_VmCaiCompCategory::Connexon_VmCaiCompCategory(Simulation& sim, const st
 {
 }
 
-void CaConnexonCompCategory::count() 
+void Connexon_VmCaiCompCategory::count() 
 {
   long long totalCount, localCount=_nodes.size();
   MPI_Allreduce((void*) &localCount, (void*) &totalCount, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);

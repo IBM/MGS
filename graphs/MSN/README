@@ -1,0 +1,21 @@
+In this folder, the model for MSN is developped
+
+There will be two models we target: D1-type and D2-type
+
+** COMMON
+
+A .swc file will be used 
+To generate the synapses, we develop a synapse_gen.py code 
+that randomly generate the synapse on every branch of the MSN.
+
+METHOD: each synapse is represented by a small neuron, and then we need to use
+a tissue file, that lists a 'real' MSN + thousands of 'bouton' neuron
+
+
+* D1-type
+
+
+
+* D2-type
+
+

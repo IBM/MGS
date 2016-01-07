@@ -23,10 +23,10 @@
 class Connexon_Vm : public CG_Connexon_Vm
 {
    public:
-      void produceInitialVoltage(RNG& rng);
-      void produceVoltage(RNG& rng);
+      void produceInitialState(RNG& rng);
+      void produceState(RNG& rng);
       void computeState(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmInAttrPSet* CG_inAttrPset, CG_Connexon_VmOutAttrPSet* CG_outAttrPset);
+      virtual void setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmInAttrPSet* CG_inAttrPset, CG_Connexon_VmOutAttrPSet* CG_outAttrPset);
       virtual ~Connexon_Vm();
 };
 

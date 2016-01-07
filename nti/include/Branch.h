@@ -61,17 +61,18 @@ class Branch {
       bool isTerminalBranch();
 
    private:
-      int _branchType;
-      int _branchOrder;
-      double _dist2Soma;
+      int _branchType; // NOTE: Follow .SWC convention minus 1, e.g. soma has branchType=0
+      int _branchOrder; // NOTE: soma has branchOrder = 1, and it increases at each branching
+      double _dist2Soma; // along-fiber-distance to the soma from the first Segment of the branch
       int _numberOfSegments;
-      int _numberOfResampledSegments;
-      int _branchIndex;
+      //int _numberOfResampledSegments;
+      int _branchIndex; // order of the Branch in the associated neuron '_neuron' starting from 0 = soma
+	  //NOTE: A soma is a 2-segment branch with both having the same (x,y,z,radius)
       
       Segment* _segments;
       Neuron* _neuron;
-      Segment* _rootSegment;
-      int _resampledTerminalIndex;
+      Segment* _rootSegment; // reference to the root segment (i.e. the soma) of the neuron
+      int _resampledTerminalIndex; // the new index of the last segment in that branch after resampling
       double _displacedTerminalCoords[3];
 };
 #endif

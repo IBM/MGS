@@ -42,18 +42,23 @@ class Touch
   static MPI_Datatype* getTypeTouch();
   ~Touch();
 		
+  //TUAN: NOTE - potential bug here if we change key's size
+  //key_size_t 
+  //TODO- modify to move the two key parts to the end
+  //and use offset = sizeof(key_size_t)/sizeof(double)
+  //e.g. _touchData[FIRST_KEY_INDEX], _touchData[FIRST_KEY_INDEX+offset]
   double* getTouchData() {return _touchData;}
   double* getKeys() {return _touchData;}
   double* getProps() {return &_touchData[2];}
 
-  double getKey1() {return _touchData[0];}
-  double getKey2() {return _touchData[1];}
-  void setKey1(double key1) {_touchData[0]=key1;}
-  void setKey2(double key2) {_touchData[1]=key2;}
+  key_size_t getKey1() {return _touchData[0];}
+  key_size_t getKey2() {return _touchData[1];}
+  void setKey1(key_size_t key1) {_touchData[0]=key1;}
+  void setKey2(key_size_t key2) {_touchData[1]=key2;}
   void setProp1(double prop1) {_touchData[2]=prop1;}
   void setProp2(double prop2) {_touchData[3]=prop2;}
 
-  double getPartner(double key);
+  key_size_t getPartner(key_size_t key);
 
   void readFromFile(FILE* dataFile);
   void writeToFile(FILE* dataFile);

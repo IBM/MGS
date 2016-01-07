@@ -20,6 +20,7 @@
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
 
+
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
@@ -43,7 +44,7 @@
   (distalAiis.size() > \
    1)  // connected to distal branch point for implicit solve
 
-//TUAN: now try to revise the code so that it can be adopted to Ca, CaER easily
+// TUAN: now try to revise the code so that it can be adopted to Ca, CaER easily
 
 //#define DEBUG_HH
 // Conserved region (only change ClassName)
@@ -193,51 +194,75 @@ void HodgkinHuxleyVoltage::setProximalJunction(
   proximalJunction = true;
 }
 
-// membrane surface area between 2 points
-//   area = 2* pi * r * l 
+// 1/2 membrane surface area between 2 center points of the 2 compartments
+//   area = 2* pi * r * (l / 2.0)
 //      pi = PI number
 //      r  = radius cable
 //      l  = length cable
-// NOTE: Each point is the central point if a compartment
-dyn_var_t HodgkinHuxleyVoltage::getArea(DimensionStruct* a, DimensionStruct* b) //TUAN: check ok
+// NOTE: Each point is the central point of a compartment
+dyn_var_t HodgkinHuxleyVoltage::getArea(DimensionStruct* a,
+                                        DimensionStruct* b)  // TUAN: check ok
 {
   dyn_var_t radius = 0.5 * (b->r + 0.5 * (a->r + b->r));
   dyn_var_t length = 0.5 * sqrt(DISTANCE_SQUARED(a, b));
   return (2.0 * M_PI * radius * length);
 }
-// membrane surface area of the compartment based on its index 'i' 
-// is calculated as 
+// membrane surface area of the compartment based on its index 'i'
+// is calculated as
 //    half of (i+1,i) and half of (i,i-1) compartments
 //           with the 2 central points on both sides
 //  i.e. getArea(i) = getArea(i+1,i) + getArea(i,i-1)
 //  SPECIAL CASE:
 //     if the distal-end compartment (i=0) get only half
 //     if the proximal-end comp. (i=size()-1)
-dyn_var_t HodgkinHuxleyVoltage::getArea(int i) //TUAN: check ok
+dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // TUAN: check ok
 {
 #ifdef DEBUG_ASSERT
   assert(i >= 0 && i < branchData->size);
 #endif
   dyn_var_t area = 0.0;
-  //getArea(i+1,i)
+  // getArea(i+1,i)
   if (i == branchData->size - 1)
   {
-	  //
-    if (proximalDimension) area += getArea(proximalDimension, dimensions[i]);
+    // TUAN: fixed the surface area of the compartment next to the soma
+    // as it is not always half, but should remove the part enclosed inside the
+    // soma sphere
+    // CHALLENGE: how to know the branchtype of the proximalDimension
+    if (proximalDimension)
+    {
+      // if the proximalDimension is the soma
+      if (proximalDimension->dist2soma <= DISTANCE_AS_OVERLAPPED)
+      {
+        DimensionStruct* a = proximalDimension;
+        DimensionStruct* b = dimensions[i];
+        dyn_var_t radius = b->r;
+        dyn_var_t distance = sqrt(DISTANCE_SQUARED(a, b));
+        dyn_var_t length = distance - a->r;
+        area += 2.0 * M_PI * radius * length;
+      }
+      else
+		// proximal-end of implicit junction
+        // else just use half half-side cylinder surface-area formula
+        area += getArea(proximalDimension, dimensions[i]) / 2.0;
+    }
+    //    if (proximalDimension)
+    //      area += getArea(proximalDimension, dimensions[i]) / 2.0;
   }
   else
   {
     area += getArea(dimensions[i + 1], dimensions[i]);
   }
-  //getArea(i,i-1)
-  if (i == 0) 
+  // getArea(i,i-1)
+  if (i == 0)
   {
+	// distal-end of implicit junction
     // NOTE: Based on the indexing scheme of Hines-method
     // the compartment on the distal end is indexed first, i.e. the first
     // compartment on distal end is indexed zero
+    // area = sum (half of half-side cylinder surface area)
     for (int n = 0; n < distalDimensions.size(); n++)
     {
-      area += getArea(distalDimensions[n], dimensions[i]);
+      area += getArea(distalDimensions[n], dimensions[i]) / 2.0;
     }
   }
   else
@@ -247,7 +272,7 @@ dyn_var_t HodgkinHuxleyVoltage::getArea(int i) //TUAN: check ok
   return area;
 }
 
-// update: Vm(t+dt) = 2 * V(t+dt/2) - V(t)
+// update: V(t+dt) = 2 * V(t+dt/2) - V(t)
 // second-step (final step) in Crank-Nicolson method
 void HodgkinHuxleyVoltage::finish(RNG& rng)
 {
@@ -282,17 +307,18 @@ void HodgkinHuxleyVoltage::finish(RNG& rng)
 
 //}}} //end Conserved region
 
-//GOAL: initialize data at each branch
+// GOAL: initialize data at each branch
 //    the compartments along one branch are indexed from distal (index=0)
 //    to the proximal (index=branchData->size-1)
 //    so Aim[..] from distal side
 //       Aip[..] from proximal side
-void HodgkinHuxleyVoltage::initializeData(RNG& rng)//TUAN: checked ok
+void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
+                                                                // ok
 {
   // for a given computing process:
   //  here all the data in vector-form are initialized to
   //  the same size of the number of compartments in a branch (i.e. branchData)
-  unsigned size = branchData->size; //# of compartments
+  unsigned size = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
 #ifdef DEBUG_ASSERT
@@ -334,7 +360,8 @@ void HodgkinHuxleyVoltage::initializeData(RNG& rng)//TUAN: checked ok
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (!isProximalCase0)
   {
-    Aip[size - 1] = -getLambda(proximalDimension, dimensions[size - 1]); // [nS/um^2]
+    Aip[size - 1] =
+        -getLambda(proximalDimension, dimensions[size - 1]);  // [nS/um^2]
   }
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase1 || isDistalCase2)
@@ -374,7 +401,7 @@ void HodgkinHuxleyVoltage::initializeData(RNG& rng)//TUAN: checked ok
   }
   if (getSharedMembers().deltaT)
   {
-    cmt = 2.0 * Cm / *(getSharedMembers().deltaT); // [pF/(um^2 . ms)]
+    cmt = 2.0 * Cm / *(getSharedMembers().deltaT);  // [pF/(um^2 . ms)]
   }
 }
 
@@ -383,19 +410,19 @@ void HodgkinHuxleyVoltage::doForwardSolve()
 {
   unsigned size = branchData->size;
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
-  for (int i = 0; i < size; i++) //for each compartment on that branch
+  for (int i = 0; i < size; i++)  // for each compartment on that branch
   {
     Aii[i] = cmt - Aim[i] - Aip[i] + gLeak;
     RHS[i] = cmt * Vcur[i] + gLeak * getSharedMembers().E_leak;
     /* * * Sum Currents * * */
-     //loop through different kinds of currents (Kv, Nav1.6, ...)
-    Array<ChannelCurrents>::iterator iter = channelCurrents.begin(); 
+    // loop through different kinds of currents (Kv, Nav1.6, ...)
+    Array<ChannelCurrents>::iterator iter = channelCurrents.begin();
     Array<ChannelCurrents>::iterator end = channelCurrents.end();
     for (int k = 0; iter != end; iter++, ++k)
     {
       ShallowArray<dyn_var_t>* conductances = iter->conductances;
-	  //at each current type, there is an array of currents of that type, 
-	  //...each current element flows into one compartment
+      // at each current type, there is an array of currents of that type,
+      //...each current element flows into one compartment
       RHS[i] +=
           (*conductances)[i] *
           (*(iter->reversalPotentials))[(iter->reversalPotentials->size() == 1)
@@ -407,8 +434,8 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase3)
   {
-    Aii[0] = cmt - Aip[0] + gLeak; //[nS/um^2]
-    RHS[0] = cmt * Vcur[0] + gLeak * getSharedMembers().E_leak; //[pA/um^2]
+    Aii[0] = cmt - Aip[0] + gLeak;                               //[nS/um^2]
+    RHS[0] = cmt * Vcur[0] + gLeak * getSharedMembers().E_leak;  //[pA/um^2]
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];
@@ -418,8 +445,9 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     Array<ChannelCurrents>::iterator cend = channelCurrents.end();
     for (; citer != cend; citer++)
     {
-      ShallowArray<dyn_var_t>* conductances = citer->conductances; // [nS/um^2]
-      RHS[0] += (*conductances)[0] * (*(citer->reversalPotentials))[0]; // [pA/um^2]
+      ShallowArray<dyn_var_t>* conductances = citer->conductances;  // [nS/um^2]
+      RHS[0] +=
+          (*conductances)[0] * (*(citer->reversalPotentials))[0];  // [pA/um^2]
       Aii[0] += (*conductances)[0];
     }
   }
@@ -545,14 +573,14 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
   assert(injectedCurrents.size() > 0);
 #endif
   TissueSite& site = CG_inAttrPset->site;
-  if (site.r != 0) // a sphere is provided, i.e. bi-directional connection
+  if (site.r != 0)  // a sphere is provided, i.e. bi-directional connection
   {
-	  //go through all compartments
+    // go through all compartments
     for (int i = 0; i < dimensions.size(); ++i)
     {
-		//.. check the distance between that compartment and the size
-		//   here if it falls inside the sphere then connection established 
-		//     for bidirectional connection
+      //.. check the distance between that compartment and the size
+      //   here if it falls inside the sphere then connection established
+      //     for bidirectional connection
       if ((site.r * site.r) >= DISTANCE_SQUARED(&site, dimensions[i]))
       {
         CurrentProducer* CG_CurrentProducerPtr =
@@ -571,7 +599,7 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
       }
     }
   }
-  else if (CG_inAttrPset->idx < 0) //??? TUAN : which condition is this
+  else if (CG_inAttrPset->idx < 0)  //??? TUAN : which condition is this
   {
     injectedCurrents[injectedCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)

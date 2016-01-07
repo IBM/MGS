@@ -58,7 +58,9 @@ class SegmentForce
   ~SegmentForce();
 		
   
-  double getKey() {return _segmentForceData[0];}
+  //TUAN: NOTE - potential bug when the key's size change
+  //  PLAN: move key component to the last part of the array
+  key_size_t getKey() {return _segmentForceData[0];}
   const double getForceX() {return _segmentForceData[1];}
   const double getForceY() {return _segmentForceData[2];}
   const double getForceZ() {return _segmentForceData[3];}
@@ -66,7 +68,7 @@ class SegmentForce
 
   double* getSegmentForceData() {return _segmentForceData;}
 
-  void setKey(double key) {_segmentForceData[0]=key;}
+  void setKey(key_size_t key) {_segmentForceData[0]=key;}
   void setForceX(double forceX) {_segmentForceData[1]=forceX;}
   void setForceY(double forceY) {_segmentForceData[2]=forceY;}
   void setForceZ(double forceZ) {_segmentForceData[3]=forceZ;}

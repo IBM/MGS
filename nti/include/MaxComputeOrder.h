@@ -14,6 +14,18 @@
 // ================================================================
 
 #define MAX_COMPUTE_ORDER 0 
+  // USAGE: compare the distance between 2 points, if it is smaller than this then
+  //        treated as overlapped
+  // unit: micrometer
+#define DISTANCE_AS_OVERLAPPED 1.0E-6
+  // USAGE: fraction of myoplasm volume vs total compartment volume
+#define FRACTIONVOLUME_MYO    0.5
+  // USAGE: fraction of smooth endoplasmic reticulum volume vs total compartment volume
+  //        (dendrite)
+#define FRACTIONVOLUME_SmoothER    0.032
+  // USAGE: fraction of rough endoplasmic reticulum volume vs total compartment volume
+  //        (only soma)
+#define FRACTIONVOLUME_RoughER    0.15
 
 //g++ -DUSE_DOUBLES=1 myprogram.cpp
 //dyn_var_t = dynamical-variable-type

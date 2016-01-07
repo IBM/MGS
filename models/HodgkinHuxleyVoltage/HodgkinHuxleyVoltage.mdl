@@ -25,25 +25,22 @@ Struct InjectedCurrent {
   int index;     //  index of the compartment on a given branch to which the current is injected
 }
 
+// It represents one regular branch (which comprises regular compartments + implicit junctions)
 Node HodgkinHuxleyVoltage Implements SolutionArrayProducer, 
      DimensionArrayProducer, BranchDataProducer, 
      ForwardSolutionArrayProducer,
      VoltageArrayProducer, 
      NaConcentrationProducer, KConcentrationProducer 
 {
-// Regular-branch: represent the diffusion of Voltage along branch with no junction
+// Regular-branch: represent the diffusion of Voltage along branch with no explicit junction
 /*{{{*/
 	//DATA
     /*{{{*/
 	//data members: reference
        // pointer to array of branch
        // help to identify the branch a Voltage-compartment belong to 
-  BranchDataStruct* branchData; 
-       // an array of pointer
-       //       each pointer pointing to an array containing the information
-       //       of all compartments for each branch
-       //  i.e. each compartment whose information (x,y,z,r)
-  DimensionStruct* [] dimensions; 
+  BranchDataStruct* branchData; // pointer to branch's data
+  DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
 	//data members: internal, but for solver
     //{{{
 	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
@@ -95,7 +92,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   InjectedCurrent [] injectedCurrents; 
 	/*}}}*/
    // design : anything currently not part of the spatial 
-   //          is put in HodgkinHuxleyVoltage Node
+   //          is put here
   Shared {
     /*{{{*/
     dyn_var_t* deltaT; // [milisecond] = [ms]
@@ -123,7 +120,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 
     // Phases methods
     /*{{{*/
-  InitPhase initializeData;
+  InitPhase initializeCompartmentData;
   
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
@@ -223,16 +220,20 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 /*}}}*/
 }
 
+
+// represent an end-point (i.e. last compartment in the series of compartments along a branch)
+// thus don't hold real data, just a reference to that last segment
 Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
 {
 // For each regular-branch, represented by HodgkinHuxleyVoltage
 // we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
 /*{{{*/
-  dyn_var_t* voltage; // reference to the voltage at either 'distalEnd' or 'proximalEnd'
-  DimensionStruct* dimension; //reference to the point's information at either 'distalEnd' or 'proximalEnd'
+  dyn_var_t* voltage; // reference to the voltage of the compartment at either 'distalEnd' or 'proximalEnd'
+  DimensionStruct* dimension; //reference to the struct representing the compartment
 
   Shared {
     // so the two instances share the Branch's data
+		// an array but indeed is a scalar
     dyn_var_t []* voltageConnect; 
     DimensionStruct* []* dimensionsConnect;
   }
@@ -245,8 +246,8 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
     string identifier; //either 'distalEnd' or 'proximalEnd'
   }
 
-  UserFunction setPointers; // which is called to create the proper memory reference for 'voltage'
-             // pointer, depending upon the incoming node's InAttrPset's identifier
+  UserFunction setPointers; // which is called to create the proper memory reference for 'voltage' of the end-point component
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
 
   //input
   Connection Pre Node () Expects VoltageArrayProducer, DimensionArrayProducer {
@@ -254,27 +255,34 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     setPointers();
   }
+	// as end-point, so we use 'produce' prefix for kernels
   InitPhase produceInitialState(dimension);
   RuntimePhase produceSolvedVoltage(voltage);
   RuntimePhase produceFinishedVoltage(voltage);
 /*}}}*/
 }
 
+// It represents one (explicit) junction branch (which comprise half regular compartments)
 Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataProducer,
      VoltageArrayProducer, 
 	 NaConcentrationProducer, KConcentrationProducer 
 {
-// Junction branch: represent the diffusion of Voltage along the branch that has junction
-// The diffusion between compartments in junction-branch is modeled as 'gAxial' and 
+// Junction branch: a branch comprised of half-compartments (or better half-capsules) 
+//   at a junction 
+//   All half-compartments (one from the parent compartment, and all others are from
+//          daughter branches) are assumed iso-potential (i.e. same Vm)
+// The diffusion between the half-compartments in junction-branch 
+//   is modeled as 'gAxial' and 
 //       cross-sectional area 'area'
 // NOTE: A soma is a special kind of junction-branch
+//   and its surface are is treated differently
 /*{{{*/
   BranchDataStruct* branchData;  // the proximal-side regular-branch's data
-  DimensionStruct* [] dimensions; //the proximal-side regular-branch
+  DimensionStruct* [] dimensions; //the proximal-side regular-branch's compartments
   dyn_var_t area;//surface area [um^2]
   dyn_var_t [] gAxial; //axial-conductance  [GOm.um]
   dyn_var_t Vcur; // iso-potential for all compartments in junction-branch [mV]
-  dyn_var_t [] Vnew; //  [mV]
+  dyn_var_t [] Vnew; // indeed only one element,  [mV]
 
   dyn_var_t Cm; // [pF/um^2]
   dyn_var_t cmt; // intermediate value = 2*Cm/dt [pF/(um^2 . ms)]

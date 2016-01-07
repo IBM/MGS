@@ -13,19 +13,19 @@
 //
 // =================================================================
 
-#ifndef Connexon_VmCompCategory_H
-#define Connexon_VmCompCategory_H
+#ifndef Connexon_VmCaiCompCategory_H
+#define Connexon_VmCaiCompCategory_H
 
 #include "Lens.h"
-#include "CG_Connexon_VmCompCategory.h"
+#include "CG_Connexon_VmCaiCompCategory.h"
 #include "CountableModel.h"
 
 class NDPairList;
 
-class Connexon_VmCompCategory : public CG_Connexon_VmCompCategory, public CountableModel
+class Connexon_VmCaiCompCategory : public CG_Connexon_VmCaiCompCategory, public CountableModel
 {
    public:
-      Connexon_VmCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+      Connexon_VmCaiCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
       void count();
 };
 

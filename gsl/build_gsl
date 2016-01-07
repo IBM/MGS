@@ -21,7 +21,7 @@ list=("LINUX" "SMP" "BGL" "BGP" "BGQ")
 var=$( IFS=' | '; echo "${list[*]}"  )
 if [ "$#" -eq 0 ] || \
 	( [ "$#" -gt 0 ] && [ $(contains "${list[@]}" "$1") == "n" ] ); then
-	echo "SYNTAX: $0 <$var> [-clean]"
+	echo "SYNTAX: $0 <$var> [-clean | -rebuild]"
 	echo "NOTE: choose one value inside < >"
 
 	exit;
@@ -30,14 +30,14 @@ fi
 if [ "$2" == "-clean" ] ; then
 	# Generate Makefile
 	echo "clean-up GSL"
-	make $2
-	if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib --rebuild;
-	elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib --rebuild;
-	elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib --rebuild;
-	elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib --rebuild;
-	elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib --rebuild;
+	make clean
+	if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib ;
+	elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib ;
+	elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib ;
+	elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib ;
+	elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib ;
 	fi
-else
+elif [ "$2" == "-rebuild" ] ; then 
 	echo "build GSL"
 	if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
 	elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --domainLib;
@@ -45,5 +45,7 @@ else
 	elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
 	elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
 	fi
+	make -j $NPROCS;
+else
 	make -j $NPROCS;
 fi

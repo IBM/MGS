@@ -657,7 +657,8 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
   if (clientConnect) set_cvc_config("./cvc.config");
 #endif
 
-  std::string inputFilename(commandLine.getInputFileName());
+  // file containing lists of .swc files
+  std::string inputFilename(commandLine.getInputFileName()); //e.g. tissues.txt
 
   _tissueContext->_tissue = new Tissue(_size, _rank);
 
@@ -687,7 +688,6 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
       commandLine.getPointSpacing());
 
   VolumeDecomposition* volumeDecomposition = 0;
-  // char* ext = &inputFilename[inputFilenameLength - 3];
   std::string ext = inputFilename.substr(inputFilename.length() - 3);
   if (ext == "bin")
   {
@@ -1195,7 +1195,15 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
               radius += capPtr->getRadius();
             radius /= ((endCap - begCap) + 1);
-
+			//create DimensionStruct
+			//TUAN: TODO revise the information of DimensionStruct
+			//   to include (x,y,z, surfacearea, length)
+			//   surfacearea = sum(surface area of capsules)
+			//       and takes into account (1) compartment next to soma (i.e. need to subtract the area
+			//          of the capsule enclosed inside the soma sphere)
+			//                              (2) the compartment next to junction (i.e. half of the area of the capsules next to the junction)
+			//   length      = sum(capsule lengths)
+			//
             StructDataItem* dimsDI = getDimension(
                 lc, begCap->getBeginCoordinates(), endCap->getEndCoordinates(),
                 radius, begCap->getDist2Soma());
@@ -1261,6 +1269,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     {
       ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
       std::auto_ptr<DataItem> aptr_cst;
+	  //create DimensionStruct for 'junction' branch
       StructDataItem* dimsDI = getDimension(
           lc, junctionCapsule->getEndCoordinates(),
           junctionCapsule->getRadius(), junctionCapsule->getDist2Soma());
@@ -1305,7 +1314,12 @@ std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
   return cpt;
 }
 
-//GOAL: returns 
+//GOAL: returns a DimensionStruct's content 
+//  which includes (x,y,z,r,dist2soma)
+//  given 
+//    cds = (x,y,z)
+//    radius = r
+//    dist2soma = dist2soma     
 StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
                                             double radius, double dist2soma)
 {
@@ -1410,6 +1424,11 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
   }
 }
 
+//GOAL: return the ComputeBranch of the branch
+//   nodeType     = string of nodetype
+//   nodeIndex = grid's node
+//   densityIndex = index in that grid's node
+//   <"nodeType", <"nodeIndex", < density-index, ComputeBranch*>
 ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
                                          std::string const& nodeType)
 {
@@ -1575,6 +1594,10 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
   return mapiter2->second;
 }
 
+//GOAL: this method performs the connection from any nodetype
+//    (channel, connexon, junction)
+//    to another nodetype
+//    for a given connector based on the given InAttrPset in NDPairList 'ndpl'
 void TissueFunctor::connect(Simulation* sim, Connector* connector,
                             NodeDescriptor* from, NodeDescriptor* to,
                             NDPairList& ndpl)
@@ -1652,14 +1675,14 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       nodeCategory != "BackwardSolvePoints" && nodeCategory != "Channels" &&
       nodeCategory != "BidirectionalConnection" &&
       nodeCategory != "ChemicalSynapses" && nodeCategory != "PreSynapticPoints")
-  {
+  {//validation purpose
     std::cerr << "Unrecognized nodeCategory parameter on Layer : "
               << nodeCategory << std::endl;
     exit(0);
   }
 
   if (nodeCategory == "Channels")
-  {
+  {//create tracker mapping channel to branch and explicit junction
     _channelBranchIndices1.push_back(
         std::vector<std::vector<std::pair<int, int> > >());
     _channelJunctionIndices1.push_back(
@@ -1673,7 +1696,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   }
 
   if (nodeCategory == "CompartmentVariables")
-  {
+  {//create tracker of different compartment variables
     assert(_compartmentVariableTypesMap.find(nodeType) ==
            _compartmentVariableTypesMap.end());
     assert(_compartmentVariableTypesMap.size() ==
@@ -1725,18 +1748,19 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
    make sure also the bi-directional connection is defined in SynParams.par
    (this is for ElectricalSynapse (Branch-Branch connection) and
    SpineNeck-Branch connection)
-   with SpineNeck is treated as a dendrite branch on a two-compartment neuron,
+   with SpineNeck is treated as a apical-dendrite branch on a two-compartment neuron,
    with the
    SpineHead is treated as the soma on that two-compartment neuron
    */
   bool electrical = (nodeCategory == "BidirectionalConnection" &&
                      _tissueParams.electricalSynapses());
-  bool chemical =
+  /* Chemical synapse is the SpineHead (soma) - Bouton (axon of another neuron) connection
+   */
+  bool chemical = 
       (nodeCategory == "ChemicalSynapses" && _tissueParams.chemicalSynapses());
   bool point =
       (nodeCategory == "PreSynapticPoints" && _tissueParams.chemicalSynapses());
 
-  ShallowArray<int> rval;
   Grid* grid = lc->layerContext->grid;
   if (_nbrGridNodes == 0)
     _nbrGridNodes = grid->getNbrGridNodes();
@@ -1746,9 +1770,12 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
               << "!=" << grid->getNbrGridNodes() << std::endl;
     assert(0);
   }
+  // rval[gridnode-index] = how-many-capsules-in-that-gridnode
+  ShallowArray<int> rval;
   rval.assign(_nbrGridNodes, 0);
 
   int counter = 0;
+  //create tracker for Layers associated with ...
   if (electrical)
   {
     _electricalSynapseTypesMap[nodeType] = counter =
@@ -1766,11 +1793,19 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
         _preSynapticPointTypeCounter;
   }
 
+  // if a Layer of a nodetype as electrical, chemical or point
+  //  i.e. not compartment variables
+  //  then find all Capsules to be handled by the current gridnode (density array)
+  //  and find which pair of Capsules can form a connection
   if (electrical || chemical || point)
-  {
+  {// then  perform connection, i.e. connect the output to which compartmental variable
+	  // and get output from which compartmental variable
     for (int direction = 0; direction <= 1; ++direction)
     {
-
+      //REMEBER that all the touches have been detected,
+	  //we just need to find out which compartment (from which branch) connect to which compartment (in which branch) 
+	  //and use the branches (as well as other keyfields, e.g. MTYPE) to connect 
+	  // the input/output to the receptors/channels
       TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
                                  tend = _tissueContext->_touchVector.end();
       for (; titer != tend; ++titer)
@@ -1800,8 +1835,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
 
         if (_segmentDescriptor.getFlag(key1) &&
             _tissueContext->isTouchToEnd(*preCapsule, *titer))
-        {
-          // pre component is LENS junction
+        { // pre component is LENS junction
           if (point &&
               _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
                   _capsuleJctPointIndexMap[nodeType].end())
@@ -1810,8 +1844,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
           indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
         }
         else
-        {
-          // pre component is LENS branch
+        { // pre component is LENS branch
           if (point &&
               _capsuleCptPointIndexMap[nodeType].find(preCapsule) !=
                   _capsuleCptPointIndexMap[nodeType].end())
@@ -1822,7 +1855,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
         }
 
         std::vector<double> probabilities;
-
+        //assign the probability for the touch to be connected
         if (point)
         {
           std::list<std::string>& synapseTypes =
@@ -1845,10 +1878,11 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
           getChemicalSynapseProbabilities(probabilities, titer, direction,
                                           nodeType);
         else
-          assert(0);
+          assert(0); //end assign probability
+
 
         for (int i = 0; i < probabilities.size(); ++i)
-        {
+        {//go through all kinds of touches, each one has a probability
           if (probabilities[i] > 0)
           {
             if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
@@ -1869,6 +1903,10 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
               // assert(indexPost==_tissueContext->_decomposition->getRank(postCapsule->getSphere()));
             }
             // assert(indexPre==_rank || indexPost==_rank);
+			
+			// as it loops through all touches, it only handle the touches
+			// that are designed for the current MPI process, i.e.
+			// based on the indexPre and indexPost
             if (indexPre == _rank || indexPost == _rank)
             {
               if (point)
@@ -1917,18 +1955,20 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   std::map<unsigned int, std::vector<ComputeBranch*> >::iterator mapIter,
       mapEnd = _tissueContext->_neurons.end();
   for (mapIter = _tissueContext->_neurons.begin(); mapIter != mapEnd; ++mapIter)
-  {
+  {//traverse through all neurons
     std::vector<ComputeBranch*>& branches = mapIter->second;
     std::vector<ComputeBranch*>::iterator iter, end = branches.end();
     for (iter = branches.begin(); iter != end; ++iter)
-    {
+    {//traverse through all branches in that neuron
       Capsule* branchCapsules = (*iter)->_capsules;
       int nCapsules = (*iter)->_nCapsules;
       unsigned int index, indexJct;
       key_size_t key = branchCapsules[0].getKey();
+	  //find out if the first capsule in that branch that match the key-mask
+	  // defined for that channel in parameter file
       if (nodeCategory == "Channels" ||
           _tissueParams.isCompartmentVariableTarget(key, nodeType))
-      {
+      {//  - if YES, then 
         unsigned int computeOrder = _segmentDescriptor.getComputeOrder(key);
         unsigned int branchOrder = _segmentDescriptor.getBranchOrder(key);
 
@@ -2242,7 +2282,8 @@ void TissueFunctor::doNodeInit(LensContext* lc)
     exit(0);
   }
 
-  // reset and start allocating # of instances for a given NodeType
+  // reset and start allocating # of instances for 
+  //a given NodeType associated with the current Layer statement
   nodes.clear();
   nodeset->getNodes(nodes, *gld);
 
@@ -2405,7 +2446,8 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   }
 }
 
-// Perform necessary setup when
+// Perform necessary setup to connect one compartment to another
+// satisfying the condition given in different parameter files (SynParams.par, ChanParams.par) 
 void TissueFunctor::doConnector(LensContext* lc)
 {
   assert(_compartmentVariableLayers.size() ==
@@ -2426,15 +2468,29 @@ void TissueFunctor::doConnector(LensContext* lc)
   assert(_forwardSolvePointLayers.size() == _forwardSolvePointTypeCounter);
   assert(_backwardSolvePointLayers.size() == _backwardSolvePointTypeCounter);
 
+  //Example: "Voltage", <"identifier"="compartment[Voltage]">
   std::map<std::string, NDPairList> cpt2chan;
+  //Example: "Voltage", <"identifier"="compartment[Voltage]",
+  //                   "idx"=0>
   std::map<std::string, NDPairList> cpt2syn;
+  //Example: "Voltage", <"identifier"="channels[Voltage]">
   std::map<std::string, NDPairList> chan2cpt;
+  //Example: "Voltage", <"identifier"="electricalSynapse[Voltage]",
+  //                   "idx"=0>
   std::map<std::string, NDPairList> esyn2cpt;
+  //Example: "Voltage", <"identifier"="chemicalSynapse[Voltage]",
+  //                   "idx"=0>
   std::map<std::string, NDPairList> csyn2cpt;
+  //Example: "Voltage", <"identifier"="IC[Voltage]",
+  //                   "idx"=0>
   std::map<std::string, NDPairList> ic2syn;
+  //Example: "Voltage", <"identifier"="IC[Voltage]">
   std::map<std::string, NDPairList> ic2chan;
+  //Example: "Voltage", <"identifier"="connexon[Voltage]",
+  //                   "idx"=0>
   std::map<std::string, NDPairList> cnnxn2cnnxn;
 
+  //Define all InAttrPSet of nodetypes that can connect to a compartment variable
   std::map<std::string, int>::iterator cptVarTypesIter,
       cptVarTypesEnd = _compartmentVariableTypesMap.end();
   for (cptVarTypesIter = _compartmentVariableTypesMap.begin();
@@ -2493,6 +2549,8 @@ void TissueFunctor::doConnector(LensContext* lc)
     cnnxn2cnnxn[cptVarTypesIter->first] = Mcnnxn2cnnxn;
   }
 
+  //Define InAttrPset for 'point', i.e. endPoint, junctionPoint, SolvePoint, 
+  //                                    presynapticPoint
   NDPairList end2jct;
   end2jct.push_back(new NDPair("identifier", "endpoint"));
 
@@ -2641,8 +2699,13 @@ void TissueFunctor::doConnector(LensContext* lc)
     exit(0);
   }
 
+  //traverse each grid's node, and get the density
+  //    which is the number of ComputeBranch on that grid's node
+  // --> configure EndPoint, Junction, JunctionPoint, ForwardSolver, BackwardSolver
   for (int i = 0; i < _nbrGridNodes; ++i)
   {
+	  //    then traverse through every ComputeBranch
+	  //       and connect to the proper nodetype
     std::map<std::string, int>::iterator cptVarTypesIter,
         cptVarTypesEnd = _compartmentVariableTypesMap.end();
     for (cptVarTypesIter = _compartmentVariableTypesMap.begin();
@@ -2650,11 +2713,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     {
       std::string cptVarType = cptVarTypesIter->first;
       int cptVarTypeIdx = cptVarTypesIter->second;
-      // get to how many array elements (i.e. diffusible compartment of all
-      // neurons)
-      //     each element is an instance of the given diffusible nodetype (e.g.
-      //     Voltage)
-      //     at one compartment
+      // get to how many array elements (i.e. ComputeBranch)
       int branchDensity =
           _compartmentVariableLayers[cptVarTypeIdx]->getDensity(i);
       std::vector<int> endPointCounters;
@@ -2673,19 +2732,23 @@ void TissueFunctor::doConnector(LensContext* lc)
           int junctionPointType = _junctionPointTypesMap[cptVarType];
 
           if (br->_daughters.size() > 0)
-          {
+          {//if the ComputeBranch connects to other distal-ComputeBranch
+			  // get to all instances of the associated diffusible nodetype (e.g.
+			  //     Voltage, Calcium)
+			  //     at one ComputeBranch
             NodeDescriptor* compartmentVariable =
                 compartmentVariableAccessors[cptVarTypeIdx]->getNodeDescriptor(
                     i, j);
             assert(i ==
                    sim->getGranule(*compartmentVariable)->getPartitionId());
             if (computeOrder == MAX_COMPUTE_ORDER)
-            {
+            {//make endpoint and explicit junction
               NodeDescriptor* endPoint =
                   endPointAccessors[endPointType]->getNodeDescriptor(
                       i, endPointCounters[endPointType]);
               ++endPointCounters[endPointType];
               connect(sim, connector, compartmentVariable, endPoint, dist2end);
+
               Capsule* c = &br->lastCapsule();
               std::vector<int>& junctionIndices =
                   findJunctionIndices(c, cptVarType);
@@ -2702,7 +2765,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                       jctpt2prox);
             }
             else
-            {
+            {//implicit junction at distal-end
               std::vector<int>& backwardSolvePointIndices =
                   findBackwardSolvePointIndices(br, cptVarType);
               assert(i == backwardSolvePointIndices[0]);
@@ -2716,14 +2779,14 @@ void TissueFunctor::doConnector(LensContext* lc)
           }
 
           if (br->_parent)
-          {
+          {//it connects to a proximal-ComputeBranch
             NodeDescriptor* compartmentVariable =
                 compartmentVariableAccessors[cptVarTypeIdx]->getNodeDescriptor(
                     i, j);
             assert(i ==
                    sim->getGranule(*compartmentVariable)->getPartitionId());
             if (computeOrder == 0)
-            {
+            {//an explicit junction at proximal-end
               NodeDescriptor* endPoint =
                   endPointAccessors[endPointType]->getNodeDescriptor(
                       i, endPointCounters[endPointType]);
@@ -2745,7 +2808,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                       jctpt2dist);
             }
             else
-            {
+            {//implicit junction
               std::vector<int>& forwardSolvePointIndices =
                   findForwardSolvePointIndices(br, cptVarType);
               assert(i == forwardSolvePointIndices[0]);
@@ -2764,12 +2827,16 @@ void TissueFunctor::doConnector(LensContext* lc)
 
   int i = _rank;
   assert(_channelTypeCounter == _channelLayers.size());
+  //traverse all layers declared for channels
   for (int ctype = 0; ctype < _channelTypeCounter; ++ctype)
   {
     int channelDensity = _channelLayers[ctype]->getDensity(i);
     std::vector<std::vector<std::pair<int, int> > >::iterator
         iter = _channelBranchIndices1[ctype].begin(),
         end = _channelBranchIndices1[ctype].end();
+	//for a given channel, traverse all array elements
+	// from the given grid's node index 'i' 
+	//      and density-index 'j'
     for (int j = 0; iter != end; ++iter, ++j)
     {
       NodeDescriptor* channel =
@@ -2788,14 +2855,18 @@ void TissueFunctor::doConnector(LensContext* lc)
         assert(compartmentVariable);
         assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
                _rank);
+		//connect to channel that use the compartment variable as 'IC[]'
         connect(sim, connector, compartmentVariable, channel,
                 ic2chan[_compartmentVariableTypes[ctiter->second]]);
+		//connect to channel that use the compartment variable as 'compartment[]'
         connect(sim, connector, compartmentVariable, channel,
                 cpt2chan[_compartmentVariableTypes[ctiter->second]]);
       }
     }
+
     iter = _channelBranchIndices2[ctype].begin(),
     end = _channelBranchIndices2[ctype].end();
+	//
     for (int j = 0; iter != end; ++iter, ++j)
     {
       NodeDescriptor* channel =
@@ -3285,7 +3356,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   }
 
   if (sim->isSimulatePass())
-  {
+  {//testing purpose (I think)
     CountableModel* countableModel = 0;
 
     std::vector<GridLayerDescriptor*>::iterator layerIter, layerEnd;

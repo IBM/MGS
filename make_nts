@@ -90,23 +90,31 @@ if which python | grep -q1 /\python; then
 cd $MDLROOT
 
 touch mdl.make.mark
-if [ "$2" == "-clean" ]; then
-make clean;
+if [ "$#" -eq 1 ] ; then
+	make -j $NPROCS
 fi
-make -j $NPROCS
+if [ "$2" == "-clean" ]; then
+	make clean;
+fi
+if [ "$2" == "-rebuild" ]; then
+	make clean;
+	make -j $NPROCS
+fi
+if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
 if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
-rm mdl.make.mark
-cd $NTSROOT
-echo mdl make failed!;
+	rm mdl.make.mark
+	cd $NTSROOT
+	echo mdl make failed!;
 exit; 
 fi
 if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
-cd $NTSROOT
-find . -name *.mdf -exec touch '{}' \;
-cd $MDLROOT
+	cd $NTSROOT
+	find . -name *.mdf -exec touch '{}' \;
+	cd $MDLROOT
 fi
 rm -f mdl.make.mark
 cd $NTSROOT
+fi
 
 ### COMMON code ###
 cd $NTSROOT/common
@@ -120,7 +128,10 @@ fi
 if [ "$2" == "-clean" ] ; then
     make realclean;
 fi
-make -j $NPROCS
+if [ "$2" == "-rebuild" ] ; then
+    make realclean;
+	make -j $NPROCS
+fi
 #if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
 #    cd $NTSROOT
 #    echo nti make failed!;
@@ -144,10 +155,14 @@ if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile 
 elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
 elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 fi
-if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
-make realclean;
+if [ "$2" == "-clean" ] ; then
+	make realclean;
 fi
-make -j $NPROCS
+if [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
+	make realclean;
+	make -j $NPROCS
+fi
+if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
 if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
     cd $NTSROOT
     echo nti make failed!;
@@ -155,29 +170,33 @@ if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then
 fi
 cd $NTSROOT
 echo "Complete build NTI code"
+fi
 
 ### GSL code ###
-cd $LENSROOT/extensions/variable
-./define variables.mdf
-cd $LENSROOT/extensions/struct
-./define structs.mdf
-cd $LENSROOT/extensions/functor
-./define functors.mdf
-cd $NTSROOT/models
-./define compartmental.mdf
-cd $NTSROOT
+if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
+	cd $LENSROOT/extensions/variable
+	./define variables.mdf
+	cd $LENSROOT/extensions/struct
+	./define structs.mdf
+	cd $LENSROOT/extensions/functor
+	./define functors.mdf
+	cd $NTSROOT/models
+	./define compartmental.mdf
+	cd $NTSROOT
+fi
 
 cd $LENSROOT
-if [ "$2" == "-clean" ] || [ "$2" == "-MCO" ]; then
-    chmod +x ./build_gsl
+chmod +x ./build_gsl
+if [ "$2" == "-clean" ] ; then
     ./build_gsl $1 -clean
+elif [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
+    ./build_gsl $1 -rebuild
 else
-    chmod +x ./build_gsl
     ./build_gsl $1
 fi
 
 cd $NTSROOT
-
+if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
 if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
     echo gsl make failed!;
     exit; 
@@ -192,4 +211,4 @@ To run the test tissue simulation :
   4) download and extract zipped .swc files to graphs/Compartmental/neurons/*.swc 
   5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n" 
 fi
-
+fi

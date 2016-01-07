@@ -9,53 +9,65 @@
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
 Struct ChannelCaCurrents {
-  dyn_var_t []* currents;
+  dyn_var_t []* currents; // [nS/um^2]
 }
 
 Struct ReceptorCaCurrent {
-  dyn_var_t* current;
+  dyn_var_t* current; // [nS/um^2]
   int index;
 }
 
 Struct InjectedCaCurrent {
-  dyn_var_t* current;
-  dyn_var_t currentToConc;
+  dyn_var_t* current;  // [pA]
+  dyn_var_t currentToConc; // [uA] TODO
   int index;
 }
 
+// It represents one branch (which comprises regular compartments + implicit junctions)
 Node CaConcentration Implements SolutionArrayProducer, 
      DimensionArrayProducer, BranchDataProducer,
      ForwardSolutionArrayProducer, 
      CaConcentrationArrayProducer
 {
+// Regular-branch: represent the diffusion of Calcium(myo) along branch with no explicit junction
 /*{{{*/
-  //DATA
+	//DATA
     /*{{{*/
 	//data members: reference
-  BranchDataStruct* branchData; // a branch has many compartments whose information (x,y,z,r)
-  DimensionStruct* [] dimensions; //  ... are being tracked in here
+       // pointer to array of branch
+       // help to identify the branch a Calcium(myo)-compartment belong to 
+  BranchDataStruct* branchData; // pointer to branch's data
+  DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
 	//data members: internal, but for solver
+    //{{{
 	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
-  dyn_var_t [] Aii;
-  dyn_var_t [] Aip;
+  dyn_var_t [] Aii; // TODO unit
+  dyn_var_t [] Aip; // TODO unit
   dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
-  dyn_var_t [] RHS;
-  dyn_var_t [] Aij;
-  dyn_var_t* proximalCaConcentration;
+
+  dyn_var_t [] RHS; // TODO unit
+  dyn_var_t [] Aij; // TODO unit
+
+  dyn_var_t* proximalCaConcentration; // TODO unit
   dyn_var_t* [] distalAiis;
   dyn_var_t* [] distalAips;
   dyn_var_t* [] distalInputs;
-  dyn_var_t[] * valCur;//pointer to an array
-  dyn_var_t[] * valNew;
+  //dyn_var_t[] * valCur;//pointer to an array
+  //dyn_var_t[] * valNew;
   DimensionStruct* [] distalDimensions;
   DimensionStruct* proximalDimension;
-  bool proximalJunction;
-  int computeOrder;
 
-
-
-
-
+  bool proximalJunction;// true = real-branching point, 
+                        //..false=implicit-cut (i.e. cut along the branch)
+  int computeOrder;// TissueFunctor will assign the value to each branch 
+                   // (the range of values from [0..MAX_COMPUTE_ORDER-1])
+                   // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
+                   // computing of branches of the same computeOrder
+                   // If MAX_COMPUTE_ORDER=0, then 
+                   // solve all branches sequentially 
+                   //  from distal to proximal: forwardSolve
+                   //  from proximal to distal: backwardSolve
+       //}}}
 	//data members: internal
   dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] Ca_new;
@@ -70,14 +82,14 @@ Node CaConcentration Implements SolutionArrayProducer,
 	/*}}}*/
 
    // design : anything currently not part of the spatial 
-   //          is put in HodgkinHuxleyVoltage Node
+   //          is put here
   Shared {
     /*{{{*/
     dyn_var_t* deltaT;
-    dyn_var_t DCa;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
     dyn_var_t bmt; //what is this???
     dyn_var_t beta;                    // Wagner and Keizer buffering constant
-    dyn_var_t CaBaseline;
+    dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  
     /*}}}*/
@@ -96,7 +108,7 @@ Node CaConcentration Implements SolutionArrayProducer,
 
     // Phases methods
     /*{{{*/
-  InitPhase initializeData;
+  InitPhase initializeCompartmentData;
 
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
@@ -129,8 +141,14 @@ Node CaConcentration Implements SolutionArrayProducer,
     int idx;
   }
 
+  // d^2 Ca/dx^2 = dCa/dt + ICaleak + ICainject + (ICasyn+ICaion)
+  // injectedCurrent  = (to a compartment) only if 2 scenarios
+  //               1. it forms an bi-directional
+  //                      connection (e.g. electrical-synapse or spine-neck)
+  //               2. a stimulus current is injected
   UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
-
+  // Connection setup
+  //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
     DimensionProducer.dimension >> dimensions;
    }
@@ -186,19 +204,23 @@ Node CaConcentration Implements SolutionArrayProducer,
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
 /*}}}*/
 }
 
-// represent the last end-point (i.e. last segment in the series of segments)
+// represent an end-point (i.e. last compartment in the series of compartments along a branch)
 // thus don't hold real data, just a reference to that last segment
 Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProducer
 {
+// For each regular-branch, represented by HodgkinHuxleyVoltage
+// we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
 /*{{{*/
 	// single value
-  dyn_var_t* CaConcentration;
-  DimensionStruct* dimension;
+  dyn_var_t* CaConcentration; // reference to the Ca(myo) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
+  DimensionStruct* dimension; //reference to the struct representing the compartment
 
   Shared {
+    // so the two instances share the Branch's data
 		// an array but indeed is a scalar
     dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
@@ -207,11 +229,12 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
   CaConcentrationProducer.Ca << CaConcentration;
   DimensionProducer.dimension << dimension;
 
-  InAttrPSet {
+  InAttrPSet {//attribute of the incoming MDL component, e.g. node
     string identifier;
   }
 
-  UserFunction setPointers;
+  UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(myo)' of the end-point component which
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
 
 	//input
   Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
@@ -226,6 +249,7 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
 /*}}}*/
 }
 
+// It represents one (exlicit) junction branch (which comprise half regular compartments)
 Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
      CaConcentrationArrayProducer 
 {

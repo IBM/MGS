@@ -158,18 +158,26 @@ class TissueFunctor : public CG_TissueFunctorBase
 	  //      with that layer
 	  // <"nodeType", <"nodeIndex", < density-index, ComputeBranch*>
 	  // e.g.:
-	  // <"Voltage", <compute-index, < array-element-index, ComputeBranch* the associated branch>>
+	  // <"Voltage", <MPI-rank|gridnode|compute-index, < array-element-index, ComputeBranch* the associated branch>>
       std::map<std::string, std::map<int, std::map<int, ComputeBranch*> > > _indexBranchMap;
       std::map<std::string, std::map<ComputeBranch*, std::vector<int> > > _branchIndexMap;
+
       std::map<std::string, std::map<int, std::map<int, Capsule*> > > _indexJunctionMap;
       std::map<std::string, std::map<Capsule*, std::vector<int> > > _junctionIndexMap;
       std::map<std::string, std::map<ComputeBranch*, std::vector<int> > > _branchForwardSolvePointIndexMap;
       std::map<std::string, std::map<ComputeBranch*, std::vector<int> > > _branchBackwardSolvePointIndexMap;
+	  //<nodeType, <Capsule*, density-index>>
+	  //NOTE: density-index = index in the density array of Capsules for the current gridnode
       std::map<std::string, std::map<Capsule*, int> > _capsuleCptPointIndexMap;
       std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap; 
 
-      std::vector<std::vector<std::vector<std::pair<int, int> > > > _channelBranchIndices1, _channelBranchIndices2, _channelJunctionIndices1, _channelJunctionIndices2;
+	  //[index-layer-for-the-same-nodetype][density-index-of-node-that-channel-getinputs][branch-index]< node-index,  layer-index>
+      std::vector<std::vector<std::vector<std::pair<int, int> > > > _channelBranchIndices1,_channelJunctionIndices1;
+	  //[index-layer-for-the-same-nodetype][density-index-of-node-that-channel-produceoutputs][branch-index]< node-index,  layer-index>
+      std::vector<std::vector<std::vector<std::pair<int, int> > > > _channelBranchIndices2, _channelJunctionIndices2;
 
+      //keep tracks of the current number of layers being declared for nodetype of 
+	  //the associated type (e.g. channel, bidirectionalsynapse, ...)
       int _channelTypeCounter;
       int _electricalSynapseTypeCounter;
       int _chemicalSynapseTypeCounter;
@@ -191,6 +199,21 @@ class TissueFunctor : public CG_TissueFunctorBase
       std::auto_ptr<NDPairList> _params;
       Params _tissueParams;
 
+	  //EXAMPLE: A touch is defined in SynParams.par
+	  //BIDIRECTIONAL_CONNECTION_TARGETS 4
+	  //BRANCHTYPE MTYPE
+	  //BRANCHTYPE MTYPE 
+	  //3 2     3 0   DenSpine [Voltage Calcium] 1.0
+	  //3 2     4 0   DenSpine [Voltage Calcium] 1.0
+	  //3 3     3 0   DenSpine [Voltage Calcium] 1.0
+	  //3 3     4 0   DenSpine [Voltage Calcium] 1.0
+	  // /       \
+	  //left    right
+	  //
+	  //for each Touch (formed by a Capsule on left to a Capsule on right)
+	  //  it has a list of  <index-(point|chemical|electrical)-layer,order>
+	  //  in two direction [0] (left->right)
+	  //                   [1] (right->left)
       std::map<Touch*, std::list<std::pair<int, int> > > _generatedChemicalSynapses[2];
       std::map<Touch*, std::list<std::list<Params::ChemicalSynapseTarget>::iterator> > _nonGeneratedMixedChemicalSynapses[2];
       std::map<Touch*, std::list<std::pair<int, int> > > _generatedElectricalSynapses[2];
@@ -200,8 +223,10 @@ class TissueFunctor : public CG_TissueFunctorBase
 	   // the list of names for all diffusible nodetypes pass through nodekind argument
 	   //    in the Layer statement
       std::vector<std::string> _compartmentVariableTypes;
-	   // hold the name of layers passed to nodekind and its associated index (based on the order of adding in GSL)
-	   //   NOTE: The name is passed inside the square bracket of the associated components
+	   // map the name of nodeType
+	   //     to its associated index (based on the order of adding in GSL)
+	   //   NOTE: The name of nodeType is passed inside 
+	   //   the square bracket of the associated components of <nodekind="..."> NDPair
 	   //     BidirectionalConnection[...]
 	   //     ChemicalSynapses[...]
 	   //     CompartmentVariables[...]

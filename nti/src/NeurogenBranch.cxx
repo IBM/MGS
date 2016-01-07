@@ -41,7 +41,7 @@ void NeurogenBranch::addSegment(NeurogenSegment * seg)
   BSegments.push_back(seg);
 }
 
-double NeurogenBranch::getLength()
+double NeurogenBranch::getDistanceFirstLastSegment()
 {
   double length = 0;
   if (getNrSegments()>0) {
@@ -53,7 +53,8 @@ double NeurogenBranch::getLength()
   return length;
 }
 
-double NeurogenBranch::getTotalSegmentLength()
+//double NeurogenBranch::getTotalSegmentLength()
+double NeurogenBranch::getLength()
 {
   double length = 0;
   for (unsigned int i=0; i<BSegments.size(); i++) {

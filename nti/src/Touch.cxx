@@ -99,8 +99,8 @@ void Touch::printTouch() {
       ;
 }
 
-double Touch::getPartner(double key) {
-  double rval = 0;
+key_size_t Touch::getPartner(key_size_t key) {
+  key_size_t rval = 0;
   if (key == getKey1())
     rval = getKey2();
   else if (key == getKey2())
@@ -108,7 +108,7 @@ double Touch::getPartner(double key) {
   return rval;
 }
 
-double Touch::getProp(double key) {
+double Touch::getProp(key_size_t key) {
   double rval = DBL_MAX;
   if (key == getKey1())
     rval = getProp1();
@@ -124,7 +124,7 @@ Touch::compare::compare(int c) : _case(c) {}
 bool Touch::compare::operator()(const Touch& t0, const Touch& t1) {
   bool rval = false;
 
-  double key0, key1, key2, key3;
+  key_size_t key0, key1, key2, key3;
   if (_case == 0) {
     key0 = t0._touchData[0];
     key1 = t1._touchData[0];
@@ -195,9 +195,9 @@ Touch& Touch::operator=(const Touch& t) {
 
 bool Touch::operator==(const Touch& t) {
   if (this == &t) return true;
-  double key0 = _touchData[0];
-  double key1 = t._touchData[0];
-  double key2 = _touchData[1];
-  double key3 = t._touchData[1];
+  key_size_t key0 = _touchData[0];
+  key_size_t key1 = t._touchData[0];
+  key_size_t key2 = _touchData[1];
+  key_size_t key3 = t._touchData[1];
   return ((key0 == key1 && key2 == key3));  //|| (key0==key3 && key1==key2) );
 }
