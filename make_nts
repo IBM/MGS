@@ -165,13 +165,14 @@ if [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
 	make -j $NPROCS
 fi
 if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
-if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
-    cd $NTSROOT
-    echo nti make failed!;
-    exit; 
-fi
-cd $NTSROOT
-echo "Complete build NTI code"
+	make -j $NPROCS
+	if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+			cd $NTSROOT
+			echo nti make failed!;
+			exit; 
+	fi
+	cd $NTSROOT
+	echo "Complete build NTI code"
 fi
 
 ### GSL code ###
@@ -189,28 +190,32 @@ fi
 
 cd $LENSROOT
 chmod +x ./build_gsl
-if [ "$2" == "-clean" ] ; then
-    ./build_gsl $1 -clean 
-elif [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
-    ./build_gsl $1 -rebuild 
+if [ "$#" -gt 1 ] ; then 
+	if [ "$2" == "-clean" ] ; then
+		./build_gsl $1 -clean  
+	elif [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
+		./build_gsl $1 -rebuild $NPROCS
+	else # -s or -singlethread
+		./build_gsl $1 -s $NPROCS
+	fi
 else
-    ./build_gsl $1 $NPROCS
+    ./build_gsl $1 
 fi
 
 cd $NTSROOT
-if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
-if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
-    echo gsl make failed!;
-    exit; 
-else
-    echo -e "\n\n\nCongratulations! You have made NTS...
+if [ "$#" -eq 1 ] || { [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ;} ; then 
+	if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
+		echo gsl make failed!;
+		exit; 
+	else
+		echo -e "\n\n\nCongratulations! You have made NTS...
 
-To run the test tissue simulation :
+	To run the test tissue simulation :
 
-  1) type \"cd graphs/Compartmental\"/ 
-  2) browse to http://neuromorpho.org/neuroMorpho/bylab.jsp 
-  3) click \"Markram,\" \"Select All,\" \"Get SWC files of selected neurons\" 
-  4) download and extract zipped .swc files to graphs/Compartmental/neurons/*.swc 
-  5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n" 
-fi
+	  1) type \"cd graphs/Compartmental\"/ 
+	  2) browse to http://neuromorpho.org/neuroMorpho/bylab.jsp 
+	  3) click \"Markram,\" \"Select All,\" \"Get SWC files of selected neurons\" 
+	  4) download and extract zipped .swc files to graphs/Compartmental/neurons/*.swc 
+	  5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n" 
+	fi
 fi

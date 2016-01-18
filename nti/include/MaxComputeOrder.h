@@ -26,6 +26,13 @@
   // USAGE: fraction of rough endoplasmic reticulum volume vs total compartment volume
   //        (only soma)
 #define FRACTIONVOLUME_RoughER    0.15
+ 
+  // assume that the surface area of myoplasm is the same as that of biomembrane
+#define FRACTION_SURFACEAREA_MYO 1.0 
+
+  // the surface area of ER must be smaller than that of biomembrane
+#define FRACTION_SURFACEAREA_SmoothER 0.5 
+#define FRACTION_SURFACEAREA_RoughER 0.5 
 
 //g++ -DUSE_DOUBLES=1 myprogram.cpp
 //dyn_var_t = dynamical-variable-type

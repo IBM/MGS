@@ -14,6 +14,7 @@
 // ================================================================
 
 #include "DendriteTouchSpace.h"
+#include "Branch.h"
 
 DendriteTouchSpace::DendriteTouchSpace()
 {
@@ -27,20 +28,20 @@ DendriteTouchSpace::DendriteTouchSpace(DendriteTouchSpace& dendriteTouchSpace) :
 
 bool DendriteTouchSpace::isInSpace(key_size_t segKey1)
 {
-  return (_segmentDescriptor.getBranchType(segKey1) == 0 ||
-	  _segmentDescriptor.getBranchType(segKey1) == 2 || 
-	  _segmentDescriptor.getBranchType(segKey1) == 3 );
+  return (_segmentDescriptor.getBranchType(segKey1) == Branch::_SOMA ||
+	  _segmentDescriptor.getBranchType(segKey1) == Branch::_BASALDEN || 
+	  _segmentDescriptor.getBranchType(segKey1) == Branch::_APICALDEN );
 }
 
 bool DendriteTouchSpace::areInSpace(key_size_t segKey1, key_size_t segKey2)
 {
-  return (	(_segmentDescriptor.getBranchType(segKey1) == 0 ||
-		 _segmentDescriptor.getBranchType(segKey1) == 2 || 
-		 _segmentDescriptor.getBranchType(segKey1) == 3 ) &&
+  return (	(_segmentDescriptor.getBranchType(segKey1) == Branch::_SOMA ||
+		 _segmentDescriptor.getBranchType(segKey1) == Branch::_BASALDEN || 
+		 _segmentDescriptor.getBranchType(segKey1) == Branch::_APICALDEN ) &&
 
-		 (_segmentDescriptor.getBranchType(segKey1) == 0 ||
-		  _segmentDescriptor.getBranchType(segKey2) == 2 || 
-		  _segmentDescriptor.getBranchType(segKey2) == 3 ) );
+		 (_segmentDescriptor.getBranchType(segKey1) == Branch::_SOMA ||
+		  _segmentDescriptor.getBranchType(segKey2) == Branch::_BASALDEN || 
+		  _segmentDescriptor.getBranchType(segKey2) == Branch::_APICALDEN ) );
 }
 
 DendriteTouchSpace::~DendriteTouchSpace()

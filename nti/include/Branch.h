@@ -23,10 +23,20 @@
 
 #include "Segment.h"
 
+//#define SOMA_BRANCH 0
+//#define APICAL_BRANCH 1
+//#define BASAL_BRANCH 2
+//#define AXON_BRANCH 3
+//#define AIS_BRANCH 4
+//#define TUFT_BRANCH 5
+
 class Neuron;
 
 class Branch {
    public:
+		 //AIS = axon initiation site
+		 //TUFTEDDEN = the distal tufted dendritic part
+		  enum BranchType { _SOMA=0, _AXON, _BASALDEN, _APICALDEN, _AIS, _TUFTEDDEN };
       Branch();
       Branch(Branch const & s);
       Branch& operator=(const Branch& branch);

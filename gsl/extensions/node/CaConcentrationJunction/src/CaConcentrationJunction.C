@@ -23,47 +23,50 @@
 //#define DEBUG_HH
 
 #include "SegmentDescriptor.h"
+#include "Branch.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
-void CaConcentrationJunction::initializeJunction(RNG& rng)
+// Get myoplasmic surface area at the compartment i-th 
+dyn_var_t CaConcentrationJunction::getArea() // Tuan: check ok
 {
+  dyn_var_t area= 0.0;
+  area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_MYO;
+}
+
+// Get myoplasmic volume at the compartment i-th 
+dyn_var_t CaConcentrationJunction::getVolume() // Tuan: check ok
+{
+  dyn_var_t volume = 0.0;
+  volume = dimensions[0]->volume * FRACTIONVOLUME_MYO;
+}
+
+void CaConcentrationJunction::initializeJunction(RNG& rng)
+{// explicit junction (which can be soma (with branches are axon/dendrite
+  // trees)
+  // or a cut point junction 
+	// or a branching point junction with 3 or more branches (one from main, 2+ for children
+  // branches))
   SegmentDescriptor segmentDescriptor;
 #ifdef DEBUG_ASSERT
-  assert(dimensions.size() == 1);
   assert(Ca_new.size() == 1);
+  assert(dimensions.size() == 1);
 #endif
 
   Ca_cur = Ca_new[0];
-  // So, one junction-branch is composed of one (index-0) proximal-side data
-  // point
-  //    and (one or many ) single-compartment (1 point) the child-branches
-  // Then
-  DimensionStruct* dimension = dimensions[0];  // the single distal-end point of
-                                               // the proximal-side
-                                               // regular-branch
+  // So, one explicit junction is composed of one compartment 
+  // which can be explicit cut-point junction or
+  //              explicit branching-point junction
+  DimensionStruct* dimension = dimensions[0];  
 
   Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
                                     end = dimensionInputs.end();
 
-  if (segmentDescriptor.getBranchType(branchData->key) == 0)
-  {  // soma ~ sphere
-    volume = 4.0 / 3.0 * M_PI * dimension->r * dimension->r * dimension->r;
-  }
-  else
-  { // explicit junction
-	  // volume = sum ()
-    for (; iter != end; ++iter)
-    {
-      float R = 0.5 * (0.5 * ((*iter)->r + dimension->r) + dimension->r);
-      float L = 0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));
-      volume += M_PI * R * R * L;
-      // std::cerr<<"volume:"<<volume<<std::endl<<std::endl;
-    }
-  }
+  volume = getVolume();
+
   float Pdov = M_PI * getSharedMembers().DCa / volume;
   currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 
@@ -72,8 +75,10 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
   for (; diter != dend; ++diter)
   {
     float Rb = 0.5 * ((*diter)->r + dimension->r);
-    fAxial.push_back(Pdov * Rb * Rb /
-                     sqrt(DISTANCE_SQUARED(**diter, *dimension)));
+    //fAxial.push_back(Pdov * Rb * Rb /
+    //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
+	dyn_var_t length= abs((*diter)->dist2soma - dimension->dist2soma);
+	fAxial.push_back(Pdov * Rb * Rb / length );
   }
 #ifdef DEBUG_HH
   std::cerr << "CA_JUNCTION (" << dimension->x << "," << dimension->y << ","
@@ -199,7 +204,8 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
               << segmentDescriptor.getBranchOrder(branchData->key) << ","
               << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
               << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
-              << (*diter)->r << "} " << DISTANCE_SQUARED(*(*diter), *dimension)
+              //<< (*diter)->r << "} " << DISTANCE_SQUARED(*(*diter), *dimension)
+              << (*diter)->r << "} " << ((*(*diter))->dist2soma - dimension->dist2soma)
               << " " << *(*viter) << std::endl;
   }
 #endif
@@ -228,25 +234,5 @@ bool CaConcentrationJunction::confirmUniqueDeltaT(
   return (getSharedMembers().deltaT == 0);
 }
 
-float CaConcentrationJunction::getArea(DimensionStruct* a, DimensionStruct* b)
-{
-  float radius = 0.5 * (b->r + 0.5 * (a->r + b->r));
-  float length = 0.5 * sqrt(DISTANCE_SQUARED(*a, *b));
-  return (2.0 * M_PI * radius * length);
-}
-
-float CaConcentrationJunction::getArea()
-{
-  float area = 0.0;
-  assert(dimensions.size() == 1);
-  DimensionStruct* dimension = dimensions[0];
-  Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
-                                    end = dimensionInputs.end();
-  for (; iter != end; ++iter)
-  {
-    area += getArea(*iter, dimension);
-  }
-  return area;
-}
 
 CaConcentrationJunction::~CaConcentrationJunction() {}

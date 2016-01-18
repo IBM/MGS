@@ -14,6 +14,7 @@
 // ================================================================
 
 #include "NonautapticAxodendriticTouchSpace.h"
+#include "Branch.h"
 
 NonautapticAxodendriticTouchSpace::NonautapticAxodendriticTouchSpace() {}
 
@@ -25,7 +26,7 @@ NonautapticAxodendriticTouchSpace::NonautapticAxodendriticTouchSpace(
 
 bool NonautapticAxodendriticTouchSpace::isInSpace(key_size_t segKey1)
 {
-  return (_segmentDescriptor.getBranchType(segKey1) == 1);
+  return (_segmentDescriptor.getBranchType(segKey1) == Branch::_AXON);
 }
 
 bool NonautapticAxodendriticTouchSpace::areInSpace(key_size_t segKey1,
@@ -34,10 +35,10 @@ bool NonautapticAxodendriticTouchSpace::areInSpace(key_size_t segKey1,
   return ((_segmentDescriptor.getNeuronIndex(segKey1) !=
            _segmentDescriptor.getNeuronIndex(segKey2)) &&
 
-          (_segmentDescriptor.getBranchType(segKey1) == 1) &&
+          (_segmentDescriptor.getBranchType(segKey1) == Branch::_AXON) &&
 
-          (_segmentDescriptor.getBranchType(segKey2) == 2 ||
-           _segmentDescriptor.getBranchType(segKey2) == 3));
+          (_segmentDescriptor.getBranchType(segKey2) == Branch::_BASALDEN ||
+           _segmentDescriptor.getBranchType(segKey2) == Branch::_APICALDEN));
 }
 
 TouchSpace* NonautapticAxodendriticTouchSpace::duplicate()

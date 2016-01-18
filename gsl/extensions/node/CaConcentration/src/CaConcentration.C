@@ -195,82 +195,6 @@ void CaConcentration::setProximalJunction(
   proximalJunction = true;
 }
 
-/* CHECK */
-// 1/2 membrane surface area between 2 center points of the 2 compartments
-//   area = 2* pi * r * (l / 2.0)
-//      pi = PI number
-//      r  = radius cable
-//      l  = length cable
-// NOTE: Each point is the central point of a compartment
-dyn_var_t CaConcentration::getArea(DimensionStruct* a, DimensionStruct* b)
-{
-  dyn_var_t radius = 0.5 * (b->r + 0.5 * (a->r + b->r));
-  dyn_var_t length = 0.5 * sqrt(DISTANCE_SQUARED(a, b));
-  return (2.0 * M_PI * radius * length);
-}
-/* CHECK */
-// membrane surface area of the compartment based on its index 'i' 
-// is calculated as 
-//    half of (i+1,i) and half of (i,i-1) compartments
-//           with the 2 central points on both sides
-//  i.e. getArea(i) = getArea(i+1,i) + getArea(i,i-1)
-//  SPECIAL CASE:
-//     if the distal-end compartment (i=0) get only half
-//     if the proximal-end comp. (i=size()-1)
-dyn_var_t CaConcentration::getArea(int i)
-{
-#ifdef DEBUG_ASSERT
-  assert(i >= 0 && i < branchData->size);
-#endif
-  dyn_var_t area = 0.0;
-  // getArea(i+1,i)
-  if (i == branchData->size - 1)
-  {
-    // TUAN: fixed the surface area of the compartment next to the soma
-    // as it is not always half, but should remove the part enclosed inside the
-    // soma sphere
-    // CHALLENGE: how to know the branchtype of the proximalDimension
-    if (proximalDimension)
-    {
-      // if the proximalDimension is the soma
-      if (proximalDimension->dist2soma <= DISTANCE_AS_OVERLAPPED)
-      {
-        DimensionStruct* a = proximalDimension;
-        DimensionStruct* b = dimensions[i];
-        dyn_var_t radius = b->r;
-        dyn_var_t distance = sqrt(DISTANCE_SQUARED(a, b));
-        dyn_var_t length = distance - a->r;
-        area += 2.0 * M_PI * radius * length;
-      }
-      else
-        // else just use half-area formula
-        area += getArea(proximalDimension, dimensions[i]) / 2.0;
-    }
-    //    if (proximalDimension)
-    //      area += getArea(proximalDimension, dimensions[i]) / 2.0;
-  }
-  else
-  {
-    area += getArea(dimensions[i + 1], dimensions[i]);
-  }
-  // getArea(i,i-1)
-  if (i == 0)
-  {
-    // NOTE: Based on the indexing scheme of Hines-method
-    // the compartment on the distal end is indexed first, i.e. the first
-    // compartment on distal end is indexed zero
-    for (int n = 0; n < distalDimensions.size(); n++)
-    {
-      area += getArea(distalDimensions[n], dimensions[i]) / 2.0;
-    }
-  }
-  else
-  {
-    area += getArea(dimensions[i - 1], dimensions[i]);
-  }
-  return area;
-}
-
 // update: Ca(t+dt) = 2 * Ca(t+dt/2) - Ca(t)
 // second-step (final step) in Crank-Nicolson method
 void CaConcentration::finish(RNG& rng)
@@ -304,69 +228,19 @@ void CaConcentration::finish(RNG& rng)
   }
 }
 
-// Get myoplasmic volume between 2 points
-//  volume = pi * r^2 * (l/2) * vol_fraction
-dyn_var_t CaConcentration::getVolume(DimensionStruct* a, DimensionStruct* b)
+// Get myoplasmic surface area at the compartment i-th 
+dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 {
-  dyn_var_t radius = 0.5 * (b->r + 0.5 * (a->r + b->r));
-  dyn_var_t length = 0.5 * sqrt(DISTANCE_SQUARED(a, b));
-  return (M_PI * radius * radius * length * FRACTIONVOLUME_MYO);
+  dyn_var_t area= 0.0;
+  area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_MYO;
 }
 
-// Get myoplasmic volume surround the centroid point 
-//  volume = getVolume(i+1,i) + getVolume(i,i-1)
+// Get myoplasmic volume at the compartment i-th 
 dyn_var_t CaConcentration::getVolume(int i) // Tuan: check ok
 {
-#ifdef DEBUG_ASSERT
-  assert(i >= 0 && i < branchData->size);
-#endif
   dyn_var_t volume = 0.0;
-  // getVolume(i+1,i)
-  if (i == branchData->size - 1)
-  {
-    // TUAN: fixed the volume area of the compartment next to the soma
-    // CHALLENGE: how to know the branchtype of the proximalDimension
-    if (proximalDimension)
-    {
-      // if the proximalDimension is the soma
-      if (proximalDimension->dist2soma <= DISTANCE_AS_OVERLAPPED)
-      {
-        DimensionStruct* a = proximalDimension;
-        DimensionStruct* b = dimensions[i];
-        dyn_var_t radius = b->r;
-        dyn_var_t distance = sqrt(DISTANCE_SQUARED(a, b));
-        dyn_var_t length = distance - a->r;
-		volume +=  (M_PI * radius * radius * length * FRACTIONVOLUME_MYO);
-      }
-      else
-        // else just use half-area formula
-        volume += getVolume(proximalDimension, dimensions[i]) / 2.0;
-    }
-    //if (proximalDimension)
-    //  volume += getVolume(proximalDimension, dimensions[i]);
-  }
-  else
-  {
-    volume += getVolume(dimensions[i + 1], dimensions[i]);
-  }
-  // getVolume(i,i-1)
-  if (i == 0)
-  {
-    // NOTE: Based on the indexing scheme of Hines-method
-    // the compartment on the distal end is indexed first, i.e. the first
-    // compartment on distal end is indexed zero
-    for (int n = 0; n < distalDimensions.size(); n++)
-    {
-      volume += getVolume(distalDimensions[n], dimensions[i]) / 2.0;
-    }
-  }
-  else
-  {
-    volume += getVolume(dimensions[i - 1], dimensions[i]);
-  }
-  return volume;
+  volume = dimensions[i]->volume * FRACTIONVOLUME_MYO;
 }
-
 //}}} //end Conserved region
 
 void CaConcentration::initializeCompartmentData(RNG& rng)
@@ -567,9 +441,12 @@ void CaConcentration::doBackwardSolve()
 dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 {
   dyn_var_t radius = 0.5 * (a->r + b->r);
-  dyn_var_t length = DISTANCE_SQUARED(a, b);
+  //dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
+  //return (getSharedMembers().DCa * radius * radius /
+  //        (lengthsq * b->r * b->r)); /* needs fixing */
+  dyn_var_t length = abs(b->dist2soma - a->dist2soma);
   return (getSharedMembers().DCa * radius * radius /
-          (length * b->r * b->r)); /* needs fixing */
+          (length * length * b->r * b->r)); /* needs fixing */
 }
 
 /* FIX */
@@ -577,8 +454,11 @@ dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
                                   dyn_var_t V)
 {
   dyn_var_t Rb = 0.5 * (a->r + b->r);
+  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
+  //        (V * sqrt(DISTANCE_SQUARED(a, b))));
+  dyn_var_t length = abs(b->dist2soma - a->dist2soma);
   return (M_PI * Rb * Rb * getSharedMembers().DCa /
-          (V * sqrt(DISTANCE_SQUARED(a, b))));
+          (V * length));
 }
 
 void CaConcentration::setReceptorCaCurrent(

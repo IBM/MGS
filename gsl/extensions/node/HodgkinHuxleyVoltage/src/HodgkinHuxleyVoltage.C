@@ -20,7 +20,6 @@
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
 
-
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
@@ -39,7 +38,7 @@
   (distalAiis.size() == 1)  // connected to distal cut point for implicit solve
 #define isDistalCase2        \
   (distalAiis.size() == 0 && \
-   distalInputs.size() == 1)  // connected to distal junction
+   distalInputs.size() == 1)  // connected to distal explicit junction
 #define isDistalCase3  \
   (distalAiis.size() > \
    1)  // connected to distal branch point for implicit solve
@@ -172,6 +171,11 @@ bool HodgkinHuxleyVoltage::confirmUniqueDeltaT(
   return (getSharedMembers().deltaT == 0);
 }
 
+//TUAN: TODO challenge
+//   how to check for 2 sites overlapping
+//   if we don't retain the dimension's (x,y,z) coordinate
+//  Even if we retain (x,y,z) this value change with the #capsule per compartment
+//   and geometric sampling --> so not a good choice
 bool HodgkinHuxleyVoltage::checkSite(
     const String& CG_direction, const String& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
@@ -194,83 +198,6 @@ void HodgkinHuxleyVoltage::setProximalJunction(
   proximalJunction = true;
 }
 
-// 1/2 membrane surface area between 2 center points of the 2 compartments
-//   area = 2* pi * r * (l / 2.0)
-//      pi = PI number
-//      r  = radius cable
-//      l  = length cable
-// NOTE: Each point is the central point of a compartment
-dyn_var_t HodgkinHuxleyVoltage::getArea(DimensionStruct* a,
-                                        DimensionStruct* b)  // TUAN: check ok
-{
-  dyn_var_t radius = 0.5 * (b->r + 0.5 * (a->r + b->r));
-  dyn_var_t length = 0.5 * sqrt(DISTANCE_SQUARED(a, b));
-  return (2.0 * M_PI * radius * length);
-}
-// membrane surface area of the compartment based on its index 'i'
-// is calculated as
-//    half of (i+1,i) and half of (i,i-1) compartments
-//           with the 2 central points on both sides
-//  i.e. getArea(i) = getArea(i+1,i) + getArea(i,i-1)
-//  SPECIAL CASE:
-//     if the distal-end compartment (i=0) get only half
-//     if the proximal-end comp. (i=size()-1)
-dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // TUAN: check ok
-{
-#ifdef DEBUG_ASSERT
-  assert(i >= 0 && i < branchData->size);
-#endif
-  dyn_var_t area = 0.0;
-  // getArea(i+1,i)
-  if (i == branchData->size - 1)
-  {
-    // TUAN: fixed the surface area of the compartment next to the soma
-    // as it is not always half, but should remove the part enclosed inside the
-    // soma sphere
-    // CHALLENGE: how to know the branchtype of the proximalDimension
-    if (proximalDimension)
-    {
-      // if the proximalDimension is the soma
-      if (proximalDimension->dist2soma <= DISTANCE_AS_OVERLAPPED)
-      {
-        DimensionStruct* a = proximalDimension;
-        DimensionStruct* b = dimensions[i];
-        dyn_var_t radius = b->r;
-        dyn_var_t distance = sqrt(DISTANCE_SQUARED(a, b));
-        dyn_var_t length = distance - a->r;
-        area += 2.0 * M_PI * radius * length;
-      }
-      else
-		// proximal-end of implicit junction
-        // else just use half half-side cylinder surface-area formula
-        area += getArea(proximalDimension, dimensions[i]) / 2.0;
-    }
-    //    if (proximalDimension)
-    //      area += getArea(proximalDimension, dimensions[i]) / 2.0;
-  }
-  else
-  {
-    area += getArea(dimensions[i + 1], dimensions[i]);
-  }
-  // getArea(i,i-1)
-  if (i == 0)
-  {
-	// distal-end of implicit junction
-    // NOTE: Based on the indexing scheme of Hines-method
-    // the compartment on the distal end is indexed first, i.e. the first
-    // compartment on distal end is indexed zero
-    // area = sum (half of half-side cylinder surface area)
-    for (int n = 0; n < distalDimensions.size(); n++)
-    {
-      area += getArea(distalDimensions[n], dimensions[i]) / 2.0;
-    }
-  }
-  else
-  {
-    area += getArea(dimensions[i - 1], dimensions[i]);
-  }
-  return area;
-}
 
 // update: V(t+dt) = 2 * V(t+dt/2) - V(t)
 // second-step (final step) in Crank-Nicolson method
@@ -305,6 +232,16 @@ void HodgkinHuxleyVoltage::finish(RNG& rng)
   }
 }
 
+// membrane surface area of the compartment based on its index 'i'
+dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // TUAN: check ok
+{
+#ifdef DEBUG_ASSERT
+  assert(i >= 0 && i < branchData->size);
+#endif
+  dyn_var_t area = dimensions[i]->surface_area;
+  return area;
+
+}
 //}}} //end Conserved region
 
 // GOAL: initialize data at each branch
@@ -382,18 +319,27 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase3)
   {
+  //IMPORTANT CHANGE:
+  // Unlike the original approach
+  //   which doesn't have a compartment for the implicit branching
+  // The branch now has
+  //at least 2: one compartment as implicit branching point + one as regular
+  //    compartment-zero as implicit branching compartment
+  //    compartment-1th and above as normal
+	  
     // Compute total area of the junction...
     dyn_var_t area = getArea(0);
 
     // Compute Aij[n] for the junction...one of which goes in Aip[0]...
-    if (size == 1)
+    /*if (size == 1)
     {
       Aip[0] = -getAij(proximalDimension, dimensions[0], area);
     }
     else
     {
       Aip[0] = -getAij(dimensions[1], dimensions[0], area);
-    }
+    }*/
+    Aip[0] = -getAij(dimensions[1], dimensions[0], area);
     for (int n = 0; n < distalDimensions.size(); n++)
     {
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], area));
@@ -406,6 +352,7 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
 }
 
 // Update: RHS[], Aii[]
+// Convert to upper triangular matrix  
 void HodgkinHuxleyVoltage::doForwardSolve()
 {
   unsigned size = branchData->size;
@@ -485,6 +432,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   }
 
   /* * *  Forward Solve Ax = B * * */
+  //Gaussian elimination
   if (isDistalCase1)
   {
     Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
@@ -510,7 +458,8 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   }
 }  // end doForwardSolve
 
-// Update; Vnew[]
+// Update: Vnew[]
+// Solve: backward substitution on upper triangular matrix
 void HodgkinHuxleyVoltage::doBackwardSolve()
 {
   unsigned size = branchData->size;
@@ -535,18 +484,24 @@ dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
                                           DimensionStruct* b)
 {
   dyn_var_t radius = 0.5 * (a->r + b->r);  // radius_middle ()
-  dyn_var_t length = DISTANCE_SQUARED(a, b);
+  // dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
+  //return (radius * radius /
+  //        (2.0 * getSharedMembers().Ra * lengthsq * b->r)); /* needs fixing */
+  dyn_var_t length = abs(b->dist2soma - a->dist2soma);
   return (radius * radius /
-          (2.0 * getSharedMembers().Ra * length * b->r)); /* needs fixing */
+          (2.0 * getSharedMembers().Ra * length * length * b->r)); /* needs fixing */
 }
 
 // GOAL get the Aij[]
+//  A = surface_area
 dyn_var_t HodgkinHuxleyVoltage::getAij(DimensionStruct* a, DimensionStruct* b,
                                        dyn_var_t A)
 {
   dyn_var_t Rb = 0.5 * (a->r + b->r);
+  // dyn_var_t length = sqrt(DISTANCE_SQUARED(a, b);
+  dyn_var_t length = abs(b->dist2soma - a->dist2soma);
   return (M_PI * Rb * Rb /
-          (A * getSharedMembers().Ra * sqrt(DISTANCE_SQUARED(a, b))));
+          (A * getSharedMembers().Ra * length));
 }
 
 void HodgkinHuxleyVoltage::setReceptorCurrent(

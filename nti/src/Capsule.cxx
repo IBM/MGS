@@ -18,76 +18,75 @@
 #include "VecPrim.h"
 #include <algorithm>
 
-
 SegmentDescriptor Capsule::_segmentDescriptor;
 
-Capsule::Capsule()
-  : _branch(0)
+Capsule::Capsule() : _branch(0)
 {
-  for (int i=0; i<N_CAP_DATA; ++i) {
-    _capsuleData._data[i]=0;
+  for (int i = 0; i < N_CAP_DATA; ++i)
+  {
+    _capsuleData._data[i] = 0;
   }
 }
 
-Capsule::~Capsule()
+Capsule::~Capsule() {}
+
+Capsule::Capsule(Capsule const& c) : _branch(c._branch)
 {
-}
-
-
-Capsule::Capsule(Capsule const & c)
-  : _branch(c._branch)
-{ 
-    std::copy(c._capsuleData._data, c._capsuleData._data + N_CAP_DATA, _capsuleData._data);
-//  memcpy(_capsuleData._data, c._capsuleData._data, N_CAP_DATA*sizeof(double));
+  std::copy(c._capsuleData._data, c._capsuleData._data + N_CAP_DATA,
+            _capsuleData._data);
+  //  memcpy(_capsuleData._data, c._capsuleData._data,
+  //  N_CAP_DATA*sizeof(double));
 }
 
 bool Capsule::operator<(const Capsule& c1) const
 {
-  bool rval=false;
-  key_size_t key0=getKey();
-  key_size_t key1=c1.getKey();
+  bool rval = false;
+  key_size_t key0 = getKey();
+  key_size_t key1 = c1.getKey();
 
-  unsigned int n0=_segmentDescriptor.getNeuronIndex(key0);
-  unsigned int n1=_segmentDescriptor.getNeuronIndex(key1);
+  unsigned int n0 = _segmentDescriptor.getNeuronIndex(key0);
+  unsigned int n1 = _segmentDescriptor.getNeuronIndex(key1);
 
-  if (n0==n1) {
-    unsigned int b0=_segmentDescriptor.getBranchIndex(key0);
-    unsigned int b1=_segmentDescriptor.getBranchIndex(key1);
- 
-    if (b0==b1) {
-      unsigned int s0=_segmentDescriptor.getSegmentIndex(key0);
-      unsigned int s1=_segmentDescriptor.getSegmentIndex(key1);
+  if (n0 == n1)
+  {
+    unsigned int b0 = _segmentDescriptor.getBranchIndex(key0);
+    unsigned int b1 = _segmentDescriptor.getBranchIndex(key1);
 
-      rval=(s0<s1);
-      
+    if (b0 == b1)
+    {
+      unsigned int s0 = _segmentDescriptor.getSegmentIndex(key0);
+      unsigned int s1 = _segmentDescriptor.getSegmentIndex(key1);
+
+      rval = (s0 < s1);
     }
-    else rval=(b0<b1);
-
+    else
+      rval = (b0 < b1);
   }
-  else rval=(n0<n1);
+  else
+    rval = (n0 < n1);
 
   return rval;
 }
 
 double Capsule::getEndProp()
 {
-  double dist=SqDist(getBeginCoordinates(), getEndCoordinates());
-  double rval=(dist>0) ? 1.0-(getRadius()/dist) : 0;
-  return (rval<0) ? 0 : rval;
+  double dist = SqDist(getBeginCoordinates(), getEndCoordinates());
+  double rval = (dist > 0) ? 1.0 - (getRadius() / dist) : 0;
+  return (rval < 0) ? 0 : rval;
 }
 
 void Capsule::getEndSphere(Sphere& sphere)
 {
-  sphere=_capsuleData._sphere;
-  double* endCoords=getEndCoordinates();
-  sphere._coords[0]=endCoords[0];
-  sphere._coords[1]=endCoords[1];
-  sphere._coords[2]=endCoords[2];
+  sphere = _capsuleData._sphere;
+  double* endCoords = getEndCoordinates();
+  sphere._coords[0] = endCoords[0];
+  sphere._coords[1] = endCoords[1];
+  sphere._coords[2] = endCoords[2];
 }
 
 void Capsule::readFromFile(FILE* dataFile)
 {
-  size_t s=fread(_capsuleData._data, sizeof(double), N_CAP_DATA, dataFile);
+  size_t s = fread(_capsuleData._data, sizeof(double), N_CAP_DATA, dataFile);
 }
 
 void Capsule::writeToFile(FILE* dataFile)
@@ -97,17 +96,32 @@ void Capsule::writeToFile(FILE* dataFile)
 
 bool Capsule::operator==(const Capsule& c1) const
 {
-  key_size_t key0=getKey();
-  key_size_t key1=c1.getKey();
+  key_size_t key0 = getKey();
+  key_size_t key1 = c1.getKey();
 
-  unsigned int n0=_segmentDescriptor.getNeuronIndex(key0);
-  unsigned int n1=_segmentDescriptor.getNeuronIndex(key1);
+  unsigned int n0 = _segmentDescriptor.getNeuronIndex(key0);
+  unsigned int n1 = _segmentDescriptor.getNeuronIndex(key1);
 
-  unsigned int b0=_segmentDescriptor.getBranchIndex(key0);
-  unsigned int b1=_segmentDescriptor.getBranchIndex(key1);
+  unsigned int b0 = _segmentDescriptor.getBranchIndex(key0);
+  unsigned int b1 = _segmentDescriptor.getBranchIndex(key1);
 
-  unsigned int i0=_segmentDescriptor.getSegmentIndex(key0);
-  unsigned int i1=_segmentDescriptor.getSegmentIndex(key1);
+  unsigned int i0 = _segmentDescriptor.getSegmentIndex(key0);
+  unsigned int i1 = _segmentDescriptor.getSegmentIndex(key1);
 
-  return (n0==n1 && b0==b1 && i0==i1);
+  return (n0 == n1 && b0 == b1 && i0 == i1);
+}
+
+dyn_var_t Capsule::getLength()
+{
+  dyn_var_t h =
+      sqrt(SqDist(this->getBeginCoordinates(), this->getEndCoordinates()));
+	return h;
+}
+dyn_var_t Capsule::getSurfaceArea()
+{
+  // NOTE: treat as a sphere if two points are the same <--not implemented here
+	
+  //2.0 * M_PI * r * h
+	dyn_var_t area = 2.0 * M_PI * getRadius() * getLength();
+	
 }

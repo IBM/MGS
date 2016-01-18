@@ -116,7 +116,7 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
     segments[s].setSegmentArrayIndex(s);
     segments[s].setKey();
     segCount=1;
-    if (segments[terminalIndex].getBranch()->getBranchType()==0)
+    if (segments[terminalIndex].getBranch()->getBranchType()==Branch::_SOMA)
       segments[s].getRadius()=_segments[0].getRadius();
     seg1=&segments[s];
     seg2=&_segments[0];

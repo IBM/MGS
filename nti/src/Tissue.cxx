@@ -650,7 +650,7 @@ int Tissue::outputTextNeuron(int neuronID, std::string outName,
 #ifdef COMPOSITE_OUTPUT
             fprintf(tissueOutFile, "%d %d %lf %lf %lf %lf %d\n",
                     ++segCount + globalOffset,
-                    (b->getBranchType() == 0 && n->getGlobalNeuronIndex() > 0)
+                    (b->getBranchType() == Branch::_SOMA && n->getGlobalNeuronIndex() > 0)
                         ? 2
                         : b->getBranchType() + 1,
                     coords[0], coords[1], coords[2], radius,

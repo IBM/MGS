@@ -59,6 +59,8 @@ public:
   double getEndProp();
   void readFromFile(FILE* dataFile);
   void writeToFile(FILE* dataFile);
+	dyn_var_t getLength();
+	dyn_var_t getSurfaceArea();
 
 private:
   //when the capsule represent a soma, then Sphere is used

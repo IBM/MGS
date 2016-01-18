@@ -14,6 +14,7 @@
 // ================================================================
 
 #include "NonautapticTouchSpace.h"
+#include "Branch.h"
 
 NonautapticTouchSpace::NonautapticTouchSpace()
 {

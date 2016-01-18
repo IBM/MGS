@@ -38,10 +38,9 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
 	  
 	  //user-added
       float getLambda(DimensionStruct* a, DimensionStruct* b);
-      float getArea(DimensionStruct* a, DimensionStruct* b);
       float getArea(int i);
       float getAij(DimensionStruct* a, DimensionStruct* b, float Area);
-      unsigned getSize() {return branchData->size;}
+      //unsigned getSize() {return branchData->size;}
 	
 #if MAX_COMPUTE_ORDER>0
       void forwardSolve1(RNG& rng);

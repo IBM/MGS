@@ -27,10 +27,18 @@
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 
+// Get biomembrane surface area at the compartment i-th 
+dyn_var_t HodgkinHuxleyVoltageJunction::getArea() // Tuan: check ok
+{
+  dyn_var_t area= 0.0;
+  area = dimensions[0]->surface_area;
+}
+
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
-{  // explicit junction (which can be soma (with branches are axon/dendrite
-   // trees)
-  // or a junction with 3 or more branches (one from main, 2+ for children
+{ // explicit junction (which can be soma (with branches are axon/dendrite
+  // trees)
+  // or a cut point junction 
+	// or a branching point junction with 3 or more branches (one from main, 2+ for children
   // branches))
   SegmentDescriptor segmentDescriptor;
 #ifdef DEBUG_ASSERT
@@ -39,40 +47,12 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 #endif
 
   Vcur = Vnew[0];
-  // So, one junction-branch is composed of one (index-0) proximal-side data
-  // point
-  //    and (one or many ) single-compartment (1 point) the child-branches
-  // Then
-  DimensionStruct* dimension = dimensions[0];  // the single distal-end point of
-                                               // the proximal-side
-                                               // regular-branch
-  area = 0.0;
-  if (segmentDescriptor.getBranchType(branchData->key) == 0)
-  {  // soma:
-    // surface area = sphere surface area - sum (cross-sectional area other
-    //                                           branches)
-    area = 4.0 * M_PI * dimension->r * dimension->r;
-    Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
-                                      end = dimensionInputs.end();
-    for (; iter != end; ++iter)
-    {
-      dyn_var_t R = (*iter)->r;
-      area -= M_PI * R * R;
-    }
-  }
-  else
-  { /* explicit junction */
-    // area = sum (half-side cylinder surface area)
-    Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
-                                      end = dimensionInputs.end();
-    for (; iter != end; ++iter)
-    {
-      dyn_var_t R = 0.5 * (0.5 * ((*iter)->r + dimension->r) + dimension->r);
-      dyn_var_t L =
-          0.5 * sqrt(DISTANCE_SQUARED(**iter, *dimension));  // half-side
-      area += 2.0 * M_PI * R * L ;  
-    }
-  }
+  // So, one explicit junction is composed of one compartment 
+  // which can be explicit cut-point junction or
+  //              explicit branching-point junction
+  DimensionStruct* dimension = dimensions[0];  
+                                             
+  area = getArea();
 #ifdef DEBUG_HH
   // check 'bouton' neuron ???
   if (segmentDescriptor.getNeuronIndex(branchData->key) == 2)
@@ -89,8 +69,7 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   for (; diter != dend; ++diter)
   {
     dyn_var_t Rb = 0.5 * ((*diter)->r + dimension->r);
-    dyn_var_t distance =
-        sqrt(DISTANCE_SQUARED(**diter, *dimension)) / 2.0;  // half half-side
+    dyn_var_t distance = (*diter)->dist2soma - dimension->dist2soma;
     gAxial.push_back(Poar * Rb * Rb / distance);
   }
   if (getSharedMembers().deltaT)
@@ -154,7 +133,8 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
             << segmentDescriptor.getBranchIndex(branchData->key) << ","
             << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimensions[0]->x << "," << dimensions[0]->y << ","
-            << dimensions[0]->z << "," << dimensions[0]->r << "} " << Vnew[0]
+            << dimensions[0]->z << "," 
+						<< dimensions[0]->r << "} " << Vnew[0]
             << std::endl;
 #endif
 }
@@ -216,7 +196,8 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
             << segmentDescriptor.getBranchIndex(branchData->key) << ","
             << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimensions[0]->x << "," << dimensions[0]->y << ","
-            << dimensions[0]->z << "," << dimensions[0]->r << "} " << Vnew[0]
+            << dimensions[0]->z << "," 
+						<< dimensions[0]->r << "} " << Vnew[0]
             << std::endl;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
@@ -234,12 +215,18 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
               << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
               << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
               << (*diter)->r << "} "
-              << DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
+              //<< DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
+		      << ((**diter)->dist2soma - dimension->dist2soma << " "
               << *(*viter) << std::endl;
   }
 #endif
 }
 
+//TUAN: TODO challenge
+//   how to check for 2 sites overlapping
+//   if we don't retain the dimension's (x,y,z) coordinate
+//  Even if we retain (x,y,z) this value change with the #capsule per compartment
+//   and geometric sampling --> so not a good choice
 bool HodgkinHuxleyVoltageJunction::checkSite(
     const String& CG_direction, const String& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
