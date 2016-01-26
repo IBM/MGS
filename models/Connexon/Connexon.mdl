@@ -70,7 +70,7 @@ Node Connexon_VmCai Implements CurrentProducer, BranchDataProducer, IndexProduce
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
-  dyn_var_t gMYO;
+  dyn_var_t gCYTO;
 
   BranchDataStruct* branchData;
   int index;
@@ -138,7 +138,7 @@ Node Connexon_VmCaiCaER Implements CurrentProducer, BranchDataProducer, IndexPro
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
-  dyn_var_t gMYO;
+  dyn_var_t gCYTO;
   dyn_var_t* CaERi;
   dyn_var_t* CaERj;
   dyn_var_t I_CaER;

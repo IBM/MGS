@@ -31,7 +31,7 @@ void Connexon_VmCai::computeState(RNG& rng)
   float V=*Vj-*Vi;
   I=g*V;
   float E_Ca=0.08686 * *(getSharedMembers().T) * log(*Caj / *Cai);
-  I_Ca=gMYO*(V+E_Ca);
+  I_Ca=gCYTO*(V+E_Ca);
 }
 
 void Connexon_VmCai::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmCaiInAttrPSet* CG_inAttrPset, CG_Connexon_VmCaiOutAttrPSet* CG_outAttrPset) 

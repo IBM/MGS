@@ -25,7 +25,12 @@
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
    (((a)->z - (b)->z) * ((a)->z - (b)->z)))
 
-// TUAN TODO : find out the formula
+// NOTE: value = 1/(zCa*Farad*d)
+// zCa = valence of Ca2+
+// Farad = Faraday's constant
+// d = depth of thin layer
+//   (NOTE: we can try to use 'd' as distance of 2 compartments: spine-neck vs dendrite compt)
+//NOTE: the value below is based on (d=1um)
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
 #define isProximalCase0 (proximalDimension == 0)  // no flux boundary condition
@@ -228,18 +233,20 @@ void CaConcentration::finish(RNG& rng)
   }
 }
 
-// Get myoplasmic surface area at the compartment i-th 
+// Get cytoplasmic surface area at the compartment i-th 
 dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 {
   dyn_var_t area= 0.0;
-  area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_MYO;
+  area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_CYTO;
+	return area;
 }
 
-// Get myoplasmic volume at the compartment i-th 
+// Get cytoplasmic volume at the compartment i-th 
 dyn_var_t CaConcentration::getVolume(int i) // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
-  volume = dimensions[i]->volume * FRACTIONVOLUME_MYO;
+  volume = dimensions[i]->volume * FRACTIONVOLUME_CYTO;
+	return volume;
 }
 //}}} //end Conserved region
 
@@ -336,6 +343,7 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 }
 
 // Update: RHS[], Aii[]
+// Thomas algorithm forward step 
 void CaConcentration::doForwardSolve()
 {
   unsigned size = branchData->size;
@@ -419,6 +427,8 @@ void CaConcentration::doForwardSolve()
 }
 
 // Update; Ca_new[]
+// Thomas algorithm backward step 
+//   - backward substitution on upper triangular matrix
 void CaConcentration::doBackwardSolve()
 {
   unsigned size = branchData->size;
@@ -450,6 +460,8 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 }
 
 /* FIX */
+// NOTE: 
+//   V = volume
 dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
                                   dyn_var_t V)
 {

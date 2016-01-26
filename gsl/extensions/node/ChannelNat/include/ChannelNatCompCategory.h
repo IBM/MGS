@@ -7,12 +7,14 @@
 
 class NDPairList;
 
-class ChannelNatCompCategory : public CG_ChannelNatCompCategory, public CountableModel
+class ChannelNatCompCategory : public CG_ChannelNatCompCategory,
+                               public CountableModel
 {
-   public:
-      ChannelNatCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void computeE(RNG& rng);
-	  void count();
+  public:
+  ChannelNatCompCategory(Simulation& sim, const std::string& modelName,
+                         const NDPairList& ndpList);
+  void computeE(RNG& rng);
+  void count();
 };
 
 #endif

@@ -37,12 +37,6 @@ if [ "$2" == "-clean" ] ; then
 	# Generate Makefile
 	echo "clean-up GSL"
 	make clean
-	if [ "$1" == "LINUX" ]; then ./configure.py --O3 --with-mpi --domainLib ;
-	elif [ "$1" == "SMP" ]; then ./configure.py --O3 --domainLib ;
-	elif [ "$1" == "BGL" ]; then ./configure.py --blueGeneL --domainLib ;
-	elif [ "$1" == "BGP" ]; then ./configure.py --blueGeneP --domainLib ;
-	elif [ "$1" == "BGQ" ]; then ./configure.py --blueGeneQ --domainLib ;
-	fi
 elif [ "$2" == "-rebuild" ] ; then 
 	echo "build GSL"
 	if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
@@ -51,7 +45,9 @@ elif [ "$2" == "-rebuild" ] ; then
 	elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
 	elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
 	fi
+	make clean
 	make -j $NPROCS;
 else
+	make clean
 	make -j $NPROCS;
 fi

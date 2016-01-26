@@ -240,7 +240,6 @@ dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // TUAN: check ok
 #endif
   dyn_var_t area = dimensions[i]->surface_area;
   return area;
-
 }
 //}}} //end Conserved region
 
@@ -353,6 +352,7 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
 
 // Update: RHS[], Aii[]
 // Convert to upper triangular matrix  
+// Thomas algorithm forward step 
 void HodgkinHuxleyVoltage::doForwardSolve()
 {
   unsigned size = branchData->size;
@@ -432,7 +432,6 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   }
 
   /* * *  Forward Solve Ax = B * * */
-  //Gaussian elimination
   if (isDistalCase1)
   {
     Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
@@ -459,7 +458,8 @@ void HodgkinHuxleyVoltage::doForwardSolve()
 }  // end doForwardSolve
 
 // Update: Vnew[]
-// Solve: backward substitution on upper triangular matrix
+// Thomas algorithm backward step 
+//   - backward substitution on upper triangular matrix
 void HodgkinHuxleyVoltage::doBackwardSolve()
 {
   unsigned size = branchData->size;

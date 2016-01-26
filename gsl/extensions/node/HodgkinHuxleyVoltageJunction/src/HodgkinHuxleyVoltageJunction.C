@@ -32,6 +32,7 @@ dyn_var_t HodgkinHuxleyVoltageJunction::getArea() // Tuan: check ok
 {
   dyn_var_t area= 0.0;
   area = dimensions[0]->surface_area;
+	return area;
 }
 
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)

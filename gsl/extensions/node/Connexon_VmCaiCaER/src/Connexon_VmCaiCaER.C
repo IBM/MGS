@@ -31,7 +31,7 @@ void Connexon_VmCaiCaER::computeState(RNG& rng)
   float V=*Vj-*Vi;
   I=g*V;
   float E_Ca=0.08686 * *(getSharedMembers().T) * log(*Caj / *Cai);
-  I_Ca=gMYO*(V+E_Ca);
+  I_Ca=gCYTO*(V+E_Ca);
   float E_CaER=0.08686 * *(getSharedMembers().T) * log(*CaERj / *CaERi);
   I_CaER=gER*(E_CaER);
 }

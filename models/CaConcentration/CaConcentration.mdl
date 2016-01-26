@@ -29,13 +29,13 @@ Node CaConcentration Implements SolutionArrayProducer,
      ForwardSolutionArrayProducer, 
      CaConcentrationArrayProducer
 {
-// Regular-branch: represent the diffusion of Calcium(myo) along branch with no explicit junction
+// Regular-branch: represent the diffusion of Calcium(cyto) along branch with no explicit junction
 /*{{{*/
 	//DATA
     /*{{{*/
 	//data members: reference
        // pointer to array of branch
-       // help to identify the branch a Calcium(myo)-compartment belong to 
+       // help to identify the branch a Calcium(cyto)-compartment belong to 
   BranchDataStruct* branchData; // pointer to branch's data
   DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
 	//data members: internal, but for solver
@@ -216,7 +216,7 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
 // we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
 /*{{{*/
 	// single value
-  dyn_var_t* CaConcentration; // reference to the Ca(myo) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
+  dyn_var_t* CaConcentration; // reference to the Ca(cyto) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
   DimensionStruct* dimension; //reference to the struct representing the compartment
 
   Shared {
@@ -233,7 +233,7 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
     string identifier;
   }
 
-  UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(myo)' of the end-point component which
+  UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(cyto)' of the end-point component which
             // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
 
 	//input

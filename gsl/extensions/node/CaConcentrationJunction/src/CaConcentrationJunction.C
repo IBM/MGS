@@ -30,18 +30,20 @@
    (((a).z - (b).z) * ((a).z - (b).z)))
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
-// Get myoplasmic surface area at the compartment i-th 
+// Get cytoplasmic surface area at the compartment i-th 
 dyn_var_t CaConcentrationJunction::getArea() // Tuan: check ok
 {
   dyn_var_t area= 0.0;
-  area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_MYO;
+  area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_CYTO;
+	return area;
 }
 
-// Get myoplasmic volume at the compartment i-th 
+// Get cytoplasmic volume at the compartment i-th 
 dyn_var_t CaConcentrationJunction::getVolume() // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
-  volume = dimensions[0]->volume * FRACTIONVOLUME_MYO;
+  volume = dimensions[0]->volume * FRACTIONVOLUME_CYTO;
+	return volume;
 }
 
 void CaConcentrationJunction::initializeJunction(RNG& rng)
