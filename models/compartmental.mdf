@@ -3,6 +3,14 @@
 #include "BranchSolver/BranchSolver.mdl"
 #include "HodgkinHuxley/HodgkinHuxley.mdl"
 #include "HodgkinHuxleyVoltage/HodgkinHuxleyVoltage.mdl"
+#include "ChannelNat/ChannelNat.mdl"
+#include "ChannelNap/ChannelNap.mdl"
+#include "ChannelKAf/ChannelKAf.mdl"
+#include "ChannelKAs/ChannelKAs.mdl"
+#include "ChannelKIR/ChannelKIR.mdl"
+#include "ChannelKRP/ChannelKRP.mdl"
+
+
 #include "NaChannel/NaChannel.mdl"
 #include "NaChannel_AIS/NaChannel_AIS.mdl"
 #include "KDRChannel/KDRChannel.mdl"

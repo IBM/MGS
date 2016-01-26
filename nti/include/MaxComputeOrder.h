@@ -27,7 +27,6 @@
 #define _WOLF_2005_MSN  1 
 //}}}
 // define 
-#define MODEL_TO_USE _MODEL_NOT_DEFINED
 
 ///////////////////////////////////////////////////////////////////////
 // Numerical settings
@@ -96,18 +95,18 @@
 #define NAT_WOLF_2005           2
 #define NAT_HAY_2011            3
 #define NAT_SCHWEIGHOFER_1999   4
-#define CHANNEL_NAT _COMPONENT_UNDEFINED
 // Na-persistent
 #define NAP_WOLF_2005           2
-#define CHANNEL_NAP _COMPONENT_UNDEFINED
 //}}}
 //{{{ K-models
 // KAf
-#define CHANNEL_KAf _COMPONENT_UNDEFINED
+#define KAf_WOLF_2005          2
 // KAs
-#define CHANNEL_KAs _COMPONENT_UNDEFINED
+#define KAs_WOLF_2005          2
+// KIR
+#define KIR_WOLF_2005          2
 // KRP
-#define CHANNEL_KRP _COMPONENT_UNDEFINED
+#define KRP_WOLF_2005          2
 // KDR
 #define CHANNEL_KDR _COMPONENT_UNDEFINED
 // BK
@@ -152,8 +151,36 @@
 #if MODEL_TO_USE == _WOLF_2005_MSN
   #define CHANNEL_NAT NAT_WOLF_2005
   #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_KAf KAf_WOLF_2005
+  #define CHANNEL_KAs KAs_WOLF_2005
+  #define CHANNEL_KIR KIR_WOLF_2005
+  #define CHANNEL_KRP KRP_WOLF_2005
 #else
   NOT IMPLEMENTED YET
 #endif
 
+//////////////////////////////////////////////////////////////////////
+// Default setting
+//
+#ifndef CHANNEL_NAT
+  #define CHANNEL_NAT _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_NAP
+#define CHANNEL_NAP _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_KAf
+#define CHANNEL_KAf _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_KAs
+#define CHANNEL_KAs _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_KIR
+#define CHANNEL_KIR _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_KRP
+#define CHANNEL_KRP _COMPONENT_UNDEFINED
+#endif
+#ifndef MODEL_TO_USE
+#define MODEL_TO_USE _MODEL_NOT_DEFINED
+#endif
 #endif //_MAXCOMPUTEORDER_H

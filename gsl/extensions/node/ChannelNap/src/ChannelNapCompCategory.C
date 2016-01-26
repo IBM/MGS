@@ -1,21 +1,21 @@
 #include "Lens.h"
-#include "ChannelNatCompCategory.h"
+#include "ChannelNapCompCategory.h"
 #include "NDPairList.h"
-#include "CG_ChannelNatCompCategory.h"
+#include "CG_ChannelNapCompCategory.h"
 
 #include "NumberUtils.h"
 
-ChannelNatCompCategory::ChannelNatCompCategory(Simulation& sim,
+ChannelNapCompCategory::ChannelNapCompCategory(Simulation& sim,
                                                const std::string& modelName,
                                                const NDPairList& ndpList)
-    : CG_ChannelNatCompCategory(sim, modelName, ndpList)
+    : CG_ChannelNapCompCategory(sim, modelName, ndpList)
 {
 }
 
 // GOAL:
 //  1. compute Erev
 //  2. find Q10 adjustment
-void ChannelNatCompCategory::computeE(RNG& rng)
+void ChannelNapCompCategory::computeE(RNG& rng)
 {
   // step 1.
   if (getSharedMembers().T && getSharedMembers().Na_EC &&
@@ -40,9 +40,6 @@ void ChannelNatCompCategory::computeE(RNG& rng)
   if (getSharedMembers().T)
     getSharedMembers().Tadj = pow(
         Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
-  // pow(static_cast<dyn_var_t>(Q10), ((*(getSharedMembers().T) - 273.15 -
-  // BASED_TEMPERATURE) / 10.0));
-  //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
 }
 
 //
@@ -51,7 +48,7 @@ void ChannelNatCompCategory::computeE(RNG& rng)
 // i.e. the total instances,
 //      the mean #-of-instance-being-processed by each node,
 //      the stddev #-of-instance-being-processed by each node
-void ChannelNatCompCategory::count()
+void ChannelNapCompCategory::count()
 {
   long long totalCount, localCount = _nodes.size();
   MPI_Allreduce((void*)&localCount, (void*)&totalCount, 1, MPI_LONG_LONG,
@@ -64,6 +61,6 @@ void ChannelNatCompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total Nat Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total Nap Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }
