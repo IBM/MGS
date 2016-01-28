@@ -10,9 +10,11 @@
 static pthread_once_t once_KRP = PTHREAD_ONCE_INIT;
 
 //
-// This is an implementation of the "KRP potassium current
+// This is an implementation of the "4-AP resistant persistent 
+//                  KRP potassium current
 //
 #if CHANNEL_KRP == KRP_WOLF_2005
+// Model: partial inactivation
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -13.5
