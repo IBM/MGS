@@ -13,20 +13,20 @@
 //
 // =================================================================
 
-#ifndef Connexon_VmCaiCompCategory_H
-#define Connexon_VmCaiCompCategory_H
+#ifndef SpineAttachment_VmCaiCaERCompCategory_H
+#define SpineAttachment_VmCaiCaERCompCategory_H
 
 #include "Lens.h"
-#include "CG_Connexon_VmCaiCompCategory.h"
+#include "CG_SpineAttachment_VmCaiCaERCompCategory.h"
 #include "CountableModel.h"
 
 class NDPairList;
 
-class Connexon_VmCaiCompCategory : public CG_Connexon_VmCaiCompCategory, public CountableModel
+class SpineAttachment_VmCaiCaERCompCategory : public CG_SpineAttachment_VmCaiCaERCompCategory, public CountableModel
 {
    public:
-      Connexon_VmCaiCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+      SpineAttachment_VmCaiCaERCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+	  void count();
 };
 
 #endif

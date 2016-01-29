@@ -14,19 +14,19 @@
 // =================================================================
 
 #include "Lens.h"
-#include "Connexon_VmCaiCaER.h"
-#include "CG_Connexon_VmCaiCaER.h"
+#include "SpineAttachment_VmCaiCaER.h"
+#include "CG_SpineAttachment_VmCaiCaER.h"
 #include "rndm.h"
 
-void Connexon_VmCaiCaER::produceInitialState(RNG& rng) 
+void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng) 
 {
 }
 
-void Connexon_VmCaiCaER::produceState(RNG& rng) 
+void SpineAttachment_VmCaiCaER::produceState(RNG& rng) 
 {
 }
 
-void Connexon_VmCaiCaER::computeState(RNG& rng) 
+void SpineAttachment_VmCaiCaER::computeState(RNG& rng) 
 {
   float V=*Vj-*Vi;
   I=g*V;
@@ -36,7 +36,7 @@ void Connexon_VmCaiCaER::computeState(RNG& rng)
   I_CaER=gER*(E_CaER);
 }
 
-void Connexon_VmCaiCaER::setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmCaiCaERInAttrPSet* CG_inAttrPset, CG_Connexon_VmCaiCaEROutAttrPSet* CG_outAttrPset) 
+void SpineAttachment_VmCaiCaER::setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset, CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset) 
 {
   int index=CG_inAttrPset->idx;
   assert(getSharedMembers().voltageConnect);
@@ -44,7 +44,7 @@ void Connexon_VmCaiCaER::setVoltagePointers(const String& CG_direction, const St
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 }
 
-void Connexon_VmCaiCaER::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmCaiCaERInAttrPSet* CG_inAttrPset, CG_Connexon_VmCaiCaEROutAttrPSet* CG_outAttrPset) 
+void SpineAttachment_VmCaiCaER::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset, CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset) 
 {
   index=CG_inAttrPset->idx;
   assert(getSharedMembers().CaConcentrationConnect);
@@ -52,7 +52,7 @@ void Connexon_VmCaiCaER::setCaPointers(const String& CG_direction, const String&
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
 
-void Connexon_VmCaiCaER::setCaERPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmCaiCaERInAttrPSet* CG_inAttrPset, CG_Connexon_VmCaiCaEROutAttrPSet* CG_outAttrPset) 
+void SpineAttachment_VmCaiCaER::setCaERPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset, CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset) 
 {
   index=CG_inAttrPset->idx;
   assert(getSharedMembers().CaERConcentrationConnect);
@@ -60,7 +60,7 @@ void Connexon_VmCaiCaER::setCaERPointers(const String& CG_direction, const Strin
   CaERi = &((*(getSharedMembers().CaERConcentrationConnect))[index]);
 }
 
-Connexon_VmCaiCaER::~Connexon_VmCaiCaER() 
+SpineAttachment_VmCaiCaER::~SpineAttachment_VmCaiCaER() 
 {
 }
 

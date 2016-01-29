@@ -14,19 +14,19 @@
 // =================================================================
 
 #include "Lens.h"
-#include "Connexon_VmCai.h"
-#include "CG_Connexon_VmCai.h"
+#include "SpineAttachment_VmCai.h"
+#include "CG_SpineAttachment_VmCai.h"
 #include "rndm.h"
 
-void Connexon_VmCai::produceInitialState(RNG& rng) 
+void SpineAttachment_VmCai::produceInitialState(RNG& rng) 
 {
 }
 
-void Connexon_VmCai::produceState(RNG& rng) 
+void SpineAttachment_VmCai::produceState(RNG& rng) 
 {
 }
 
-void Connexon_VmCai::computeState(RNG& rng) 
+void SpineAttachment_VmCai::computeState(RNG& rng) 
 {
   float V=*Vj-*Vi;
   I=g*V;
@@ -34,7 +34,7 @@ void Connexon_VmCai::computeState(RNG& rng)
   I_Ca=gCYTO*(V+E_Ca);
 }
 
-void Connexon_VmCai::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmCaiInAttrPSet* CG_inAttrPset, CG_Connexon_VmCaiOutAttrPSet* CG_outAttrPset) 
+void SpineAttachment_VmCai::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset, CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset) 
 {
   index=CG_inAttrPset->idx;
   assert(getSharedMembers().CaConcentrationConnect);
@@ -42,7 +42,7 @@ void Connexon_VmCai::setCaPointers(const String& CG_direction, const String& CG_
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
 
-void Connexon_VmCai::setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_Connexon_VmCaiInAttrPSet* CG_inAttrPset, CG_Connexon_VmCaiOutAttrPSet* CG_outAttrPset) 
+void SpineAttachment_VmCai::setVoltagePointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset, CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset) 
 {
   index=CG_inAttrPset->idx;
   assert(getSharedMembers().voltageConnect);
@@ -50,7 +50,7 @@ void Connexon_VmCai::setVoltagePointers(const String& CG_direction, const String
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 }
 
-Connexon_VmCai::~Connexon_VmCai() 
+SpineAttachment_VmCai::~SpineAttachment_VmCai() 
 {
 }
 
