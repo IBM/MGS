@@ -83,10 +83,12 @@ class TissueFunctor : public CG_TissueFunctorBase
   void neuroGen(Params* params, LensContext* CG_c);
   // perform neuron development
   void neuroDev(Params* params, LensContext* CG_c);
-  // perform touch detection from the list of neurons (.swc files) and criteria
-  // for
-  // touch detection
+  // perform touch detection from
+	//    1. the list of neurons (.swc files) and 
+	//    2. criteria for touch detection in DetParams file
   void touchDetect(Params* params, LensContext* CG_c);
+	// perform spine creation
+  void createSpines(Params* params, LensContext* CG_c);
   //
   int compartmentalize(LensContext* lc, NDPairList* params,
                        std::string& nodeCategory, std::string& nodeType,
@@ -135,13 +137,16 @@ class TissueFunctor : public CG_TissueFunctorBase
   bool isChannelTarget(key_size_t key, std::string nodeType);
   void getElectricalSynapseProbabilities(std::vector<double>& probabilities,
                                          TouchVector::TouchIterator& titer,
-                                         int direction, std::string nodeType);
+                                         std::string nodeType);
+	void getBidirectionalConnectionProbabilities(
+			std::vector<double>& probabilities, TouchVector::TouchIterator& titer,
+    std::string nodeType);
   // void getSpineBranchProbabilities(std::vector<double>& probabilities,
   // TouchVector::TouchIterator & titer, int direction, std::string nodeType);
   void getChemicalSynapseProbabilities(std::vector<double>& probabilities,
                                        TouchVector::TouchIterator& titer,
-                                       int direction, std::string nodeType);
-  bool isPointRequired(TouchVector::TouchIterator& titer, int direction,
+                                       std::string nodeType);
+  bool isPointRequired(TouchVector::TouchIterator& titer,
                        std::string nodeType);
 
   // number of capsules that are organized into a single compartment
@@ -155,13 +160,13 @@ class TissueFunctor : public CG_TissueFunctorBase
                     TouchVector::TouchIterator& titer, int type, int order);
   bool isGenerated(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
                    TouchVector::TouchIterator& titer, int type, int order);
-  void setNonGenerated(TouchVector::TouchIterator& titer, int direction,
+  void setNonGenerated(TouchVector::TouchIterator& titer, 
                        std::string type, int order);
-  bool isNonGenerated(TouchVector::TouchIterator& titer, int direction,
+  bool isNonGenerated(TouchVector::TouchIterator& titer, 
                       std::string nodeType, int order);
   std::list<Params::ChemicalSynapseTarget>::iterator
       getChemicalSynapseTargetFromOrder(TouchVector::TouchIterator& titer,
-                                        int direction, std::string type,
+                                        std::string type,
                                         int order);
 
   RNG& findSynapseGenerator(int preRank, int postRank);
@@ -179,6 +184,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::vector<GridLayerDescriptor*> _junctionPointLayers;
   std::vector<GridLayerDescriptor*> _channelLayers;
   std::vector<GridLayerDescriptor*> _electricalSynapseLayers;
+  std::vector<GridLayerDescriptor*> _bidirectionalConnectionLayers;
   // std::vector<GridLayerDescriptor*> _spineBranchLayers;
   std::vector<GridLayerDescriptor*> _chemicalSynapseLayers;
   std::vector<GridLayerDescriptor*> _preSynapticPointLayers;
@@ -240,6 +246,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   // the associated type (e.g. channel, bidirectionalsynapse, ...)
   int _channelTypeCounter;
   int _electricalSynapseTypeCounter;
+  int _bidirectionalConnectionTypeCounter;
   int _chemicalSynapseTypeCounter;
   int _compartmentVariableTypeCounter;
   int _junctionTypeCounter;
@@ -260,6 +267,11 @@ class TissueFunctor : public CG_TissueFunctorBase
   Params _tissueParams;
 
   // EXAMPLE: A touch is defined in SynParams.par
+  // SPINY_CHEMICAL_SYNAPSE_TARGETS 2
+  // BRANCHTYPE MTYPE ETYPE
+  // BRANCHTYPE MTYPE
+  // 2 1 0   1 3   [AMPAmush NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+  // 2 1 0   1 2   [AMPAthin NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
   // BIDIRECTIONAL_CONNECTION_TARGETS 4
   // BRANCHTYPE MTYPE
   // BRANCHTYPE MTYPE
@@ -269,20 +281,21 @@ class TissueFunctor : public CG_TissueFunctorBase
   // 3 3     4 0   DenSpine [Voltage Calcium] 1.0
   // /       \
 	  //left    right
-  //
+  // for chemical-synapse: only 1 touch is created in _touchVector (A->B) with A=bouton, B=spinehead
+	// for electrical-synapse: 2 touch is created in _touchVector (A->B, B->A) with A=spineneck, B=den-shaft
   // for each Touch (formed by a Capsule on left to a Capsule on right)
-  //  it has a list of  <index-(point|chemical|electrical)-layer,order>
-  //  in two direction [0] (left->right)
-  //                   [1] (right->left)
+  //  it has a list of  <index-(point|chemical|electrical|bidirectionalconnection)-layer,order>
   std::map<Touch*, std::list<std::pair<int, int> > >
-      _generatedChemicalSynapses[2];
+      _generatedChemicalSynapses;
   std::map<Touch*,
            std::list<std::list<Params::ChemicalSynapseTarget>::iterator> >
-      _nonGeneratedMixedChemicalSynapses[2];
+      _nonGeneratedMixedChemicalSynapses;
   std::map<Touch*, std::list<std::pair<int, int> > >
-      _generatedElectricalSynapses[2];
+      _generatedElectricalSynapses;
+  std::map<Touch*, std::list<std::pair<int, int> > >
+      _generatedBidirectionalConnections;
   // std::map<Touch*, std::list<std::pair<int, int> > >
-  // _generatedSpineBranch[2];
+  // _generatedSpineBranch;
   std::map<int, std::map<int, RNG> > _synapseGeneratorMap;
 
   // the list of names for all diffusible nodetypes pass through nodekind
@@ -294,7 +307,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   //   NOTE: The name of nodeType is passed inside
   //   the square bracket of the associated components of <nodekind="...">
   //   NDPair
-  //     BidirectionalConnection[...]
+  //     BidirectionalConnections[...]
+  //     ElectricalSynapses[...]
   //     ChemicalSynapses[...]
   //     CompartmentVariables[...]
   //     Junctions[...]
@@ -306,6 +320,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   //     BackwardSolvePoints[...]
   std::map<std::string, int> _electricalSynapseTypesMap,
       _chemicalSynapseTypesMap;
+  std::map<std::string, int> _bidirectionalConnectionTypesMap;
   std::map<std::string, int> _compartmentVariableTypesMap, _junctionTypesMap;
   std::map<std::string, int> _channelTypesMap;
   std::map<std::string, int> _preSynapticPointTypesMap, _endPointTypesMap,

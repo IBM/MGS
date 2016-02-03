@@ -250,12 +250,32 @@ void Params::readSynParams(const std::string& fname)
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
-  // readElectricalSynapseTargets(fpF);
-  // readElectricalSynapseCosts(fpF);
-  readBidirectionalConnectionTargets(fpF);
-  readBidirectionalConnectionCosts(fpF);
-  readChemicalSynapseTargets(fpF);
-  readChemicalSynapseCosts(fpF);
+
+	std::string keyword;
+	keyword = std::string("ELECTRICAL_SYNAPSE_TARGETS");
+	if (isGivenKeywordNext(fpF, keyword))
+	{
+			readElectricalSynapseTargets(fpF);
+			readElectricalSynapseCosts(fpF);
+	}
+	keyword = std::string("BIDIRECTIONAL_CONNECTION_TARGETS");
+	if (isGivenKeywordNext(fpF, keyword))
+	{
+		readBidirectionalConnectionTargets(fpF);
+		readBidirectionalConnectionCosts(fpF);
+	}
+	keyword = std::string("CHEMICAL_SYNAPSE_TARGETS");
+	if (isGivenKeywordNext(fpF, keyword))
+	{
+		readChemicalSynapseTargets(fpF);
+		readChemicalSynapseCosts(fpF);
+	}
+  //readElectricalSynapseTargets(fpF);
+  //readElectricalSynapseCosts(fpF);
+  //readBidirectionalConnectionTargets(fpF);
+  //readBidirectionalConnectionCosts(fpF);
+  //readChemicalSynapseTargets(fpF);
+  //readChemicalSynapseCosts(fpF);
   readPreSynapticPointTargets(fpF);
   fclose(fpF);
 }
@@ -265,6 +285,13 @@ bool Params::symmetricElectricalSynapseTargets(key_size_t key1, key_size_t key2)
   return (
       _segmentDescriptor.getSegmentKey(key1, _electricalSynapseTargetsMask1) ==
       _segmentDescriptor.getSegmentKey(key2, _electricalSynapseTargetsMask2));
+}
+
+bool Params::symmetricBidirectionalConnectionTargets(key_size_t key1, key_size_t key2)
+{
+  return (
+      _segmentDescriptor.getSegmentKey(key1, _bidirectionalConnectionTargetsMask1) ==
+      _segmentDescriptor.getSegmentKey(key2, _bidirectionalConnectionTargetsMask2));
 }
 
 double Params::getRadius(key_size_t key)
@@ -338,7 +365,9 @@ std::list<Params::Params::ElectricalSynapseTarget>*
 {
   std::list<Params::Params::ElectricalSynapseTarget>* rval = 0;
   if (_electricalSynapses)
-  {
+  {//if there is information about what branch can connect with what branch
+		// to form a bidirectional connection
+		// then 
     std::map<key_size_t,
              std::map<key_size_t,
                       std::list<Params::Params::ElectricalSynapseTarget> > >::
@@ -351,6 +380,35 @@ std::list<Params::Params::ElectricalSynapseTarget>*
                std::list<Params::Params::ElectricalSynapseTarget> >::iterator
           miter2 = miter1->second.find(_segmentDescriptor.getSegmentKey(
               key2, _electricalSynapseTargetsMask2));
+      if (miter2 != miter1->second.end())
+      {
+        rval = &miter2->second;
+      }
+    }
+  }
+  return rval;
+}
+
+std::list<Params::Params::BidirectionalConnectionTarget>*
+    Params::getBidirectionalConnectionTargets(key_size_t key1, key_size_t key2)
+{
+  std::list<Params::Params::BidirectionalConnectionTarget>* rval = 0;
+  if (_bidirectionalConnections)
+  {//if there is information about what branch can connect with what branch
+		// to form a bidirectional connection
+		// then 
+    std::map<key_size_t,
+             std::map<key_size_t,
+                      std::list<Params::Params::BidirectionalConnectionTarget> > >::
+        iterator miter1 =
+            _bidirectionalConnectionTargetsMap.find(_segmentDescriptor.getSegmentKey(
+                key1, _bidirectionalConnectionTargetsMask1));
+    if (miter1 != _bidirectionalConnectionTargetsMap.end())
+    {
+      std::map<key_size_t,
+               std::list<Params::Params::BidirectionalConnectionTarget> >::iterator
+          miter2 = miter1->second.find(_segmentDescriptor.getSegmentKey(
+              key2, _bidirectionalConnectionTargetsMask2));
       if (miter2 != miter1->second.end())
       {
         rval = &miter2->second;
@@ -446,11 +504,24 @@ bool Params::isChannelTarget(key_size_t key)
 bool Params::isElectricalSynapseTarget(key_size_t key1, key_size_t key2,
                                        bool autapses)
 {
+	bool rval;
+	rval = isGapJunctionTarget(key1, key2, autapses) ||
+		isBidirectionalConnectionTarget(key1, key2, autapses);
+	return rval;
+}
+bool Params::isElectricalSynapseTarget(key_size_t key)
+{
+	bool rval;
+	rval = isGapJunctionTarget(key) ||
+		isBidirectionalConnectionTarget(key);
+	return rval;
+	
+}
+bool Params::isGapJunctionTarget(key_size_t key1, key_size_t key2,
+                                       bool autapses)
+{
   bool rval = false;
-  //bi-direction
-  for (int direction = 0; direction <= 1 && !rval; ++direction)
-  {
-    if (_electricalSynapses &&
+  if (_electricalSynapses &&
         (key1 < key2 || !symmetricElectricalSynapseTargets(key1, key2)) &&
         (autapses ||
          _segmentDescriptor.getNeuronIndex(key1) !=
@@ -472,14 +543,10 @@ bool Params::isElectricalSynapseTarget(key_size_t key1, key_size_t key2,
         }
       }
     }
-    key_size_t tmp = key1;
-    key1 = key2;
-    key2 = tmp;
-  }
   return rval;
 }
 
-bool Params::isElectricalSynapseTarget(key_size_t key)
+bool Params::isGapJunctionTarget(key_size_t key)
 {
   bool rval = false;
   if (_electricalSynapses)
@@ -506,12 +573,74 @@ bool Params::isElectricalSynapseTarget(key_size_t key)
   return rval;
 }
 
+bool Params::isBidirectionalConnectionTarget(key_size_t key1, key_size_t key2,
+                                       bool autapses)
+{
+  bool rval = false;
+  //bi-direction
+  //for (int direction = 0; direction <= 1 && !rval; ++direction)
+  //{
+    if (_bidirectionalConnections &&
+        (key1 < key2 || !symmetricBidirectionalConnectionTargets(key1, key2)) &&
+        (autapses ||
+         _segmentDescriptor.getNeuronIndex(key1) !=
+             _segmentDescriptor.getNeuronIndex(key2)))
+    {
+      std::map<key_size_t,
+               std::map<key_size_t, std::list<Params::BidirectionalConnectionTarget> > >::
+          iterator miter = _bidirectionalConnectionTargetsMap.find(
+              _segmentDescriptor.getSegmentKey(key1,
+                                               _bidirectionalConnectionTargetsMask1));
+      if (miter != _bidirectionalConnectionTargetsMap.end())
+      {
+        std::map<key_size_t, std::list<Params::BidirectionalConnectionTarget> >::iterator
+            miter2 = miter->second.find(_segmentDescriptor.getSegmentKey(
+                key2, _bidirectionalConnectionTargetsMask2));
+        if (miter2 != miter->second.end())
+        {
+          rval = true;
+        }
+      }
+    }
+   /* key_size_t tmp = key1;
+    key1 = key2;
+    key2 = tmp;
+  }*/
+  return rval;
+}
+
+bool Params::isBidirectionalConnectionTarget(key_size_t key)
+{
+  bool rval = false;
+  if (_bidirectionalConnections)
+  {
+    std::map<key_size_t,
+             std::map<key_size_t, std::list<Params::BidirectionalConnectionTarget> > >::
+        const_iterator miter = _bidirectionalConnectionTargetsMap.begin(),
+                       mend = _bidirectionalConnectionTargetsMap.end();
+    rval = (_bidirectionalConnectionTargetsMap.find(_segmentDescriptor.getSegmentKey(
+                key, _bidirectionalConnectionTargetsMask1)) != mend ||
+            _bidirectionalConnectionTargetsMap.find(_segmentDescriptor.getSegmentKey(
+                key, _bidirectionalConnectionTargetsMask2)) != mend);
+    for (; miter != mend && !rval; ++miter)
+    {
+      std::map<key_size_t,
+               std::list<Params::BidirectionalConnectionTarget> >::const_iterator
+          mend2 = miter->second.end();
+      rval = (miter->second.find(_segmentDescriptor.getSegmentKey(
+                  key, _bidirectionalConnectionTargetsMask1)) != mend2 ||
+              miter->second.find(_segmentDescriptor.getSegmentKey(
+                  key, _bidirectionalConnectionTargetsMask2)) != mend2);
+    }
+  }
+  return rval;
+}
+
 bool Params::isChemicalSynapseTarget(key_size_t key1, key_size_t key2,
                                      bool autapses)
 {
   bool rval = false;
   //uni-direction
-  // for (int direction=0; direction<=1 && !rval; ++direction) {
   if (_chemicalSynapses && (autapses ||
                             _segmentDescriptor.getNeuronIndex(key1) !=
                                 _segmentDescriptor.getNeuronIndex(key2)))
@@ -532,12 +661,6 @@ bool Params::isChemicalSynapseTarget(key_size_t key1, key_size_t key2,
       }
     }
   }
-  /*
-  key_size_t tmp=key1;
-  key1=key2;
-  key2=tmp;
-}
-  */
   return rval;
 }
 
@@ -617,6 +740,24 @@ double Params::getElectricalSynapseCost(std::string electricalSynapseId)
   {
     std::cerr << "Params : Unspecified Electrical Synapse Cost! ID : "
               << electricalSynapseId << std::endl;
+    exit(0);
+  }
+  return rval;
+}
+
+double Params::getBidirectionalConnectionCost(std::string bidirectionalConnectionId)
+{
+  double rval = 0.0;
+  std::map<std::string, double>::iterator miter =
+      _bidirectionalConnectionCostsMap.find(bidirectionalConnectionId);
+  if (miter != _bidirectionalConnectionCostsMap.end())
+  {
+    rval = miter->second;
+  }
+  else
+  {
+    std::cerr << "Params : Unspecified Bidirectional Connection Cost! ID : "
+              << bidirectionalConnectionId << std::endl;
     exit(0);
   }
   return rval;
@@ -742,6 +883,65 @@ bool Params::isCommentLine(std::string& line)
     if (line[index] == '#') rval = true;
   }
 }
+
+// GOAL: return true if the next section is the one
+//       matching the given keyword
+// ASSUMPTION: 
+//   1. it expects the next non-comment line is a beginning of a section
+//   2. this beginning line has the format 
+//      KEYWORD NUM
+bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
+{
+	bool rval = false;
+	fpos_t fpos;
+	fgetpos(fpF, &fpos);
+	char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+	int n;
+	char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+	std::string line(c);
+	if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+	{
+		std::string btype(tokS);
+		if (btype == keyword) 
+		{
+			rval = true;
+		}
+	}
+	else{
+		std::cerr <<  "Syntax of SynParam invalid: expect \n SOME_KEYWORD num-column"
+			<< std::endl;
+	}
+	fsetpos(fpF, &fpos);
+	return rval;
+}
+
+//GOAL: read the keyword in the next section
+// ASSUMPTION: 
+//   1. it expects the next non-comment line is a beginning of a section
+//   2. this beginning line has the format 
+//      KEYWORD NUM
+// which can be used to identify the section
+std::string Params::findNextKeyword(FILE* fpF)
+{
+	std::string rval;
+	fpos_t fpos;
+	fgetpos(fpF, &fpos);
+	char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+	int n;
+	char* c = fgets(bufS, LENGH_LINE_MAX, fpF);
+	std::string line(c);
+	if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+	{
+		rval = std::string(tokS);
+	}
+	else{
+		std::cerr <<  "Syntax of SynParam invalid: expect \n SOME_KEYWORD num-column"
+			<< std::endl;
+	}
+	fsetpos(fpF, &fpos);
+	return rval;
+}
+
 bool Params::readBondParams(FILE* fpF)
 {
   bool rval = false;
@@ -1398,9 +1598,9 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
 
 bool Params::readBidirectionalConnectionTargets(FILE* fpF)
 {
-  _electricalSynapses = false;
-  _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
-  _electricalSynapseTargetsMap.clear();
+  _bidirectionalConnections = false;
+  _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 = 0;
+  _bidirectionalConnectionTargetsMap.clear();
   skipHeader(fpF);
   int n = 0;
   char bufS[LENGH_LINE_MAX];
@@ -1424,10 +1624,10 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
   if (n > 0)
   {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
-    _electricalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
+    _bidirectionalConnectionTargetsMask1 = resetMask(fpF, maskVector1);
     unsigned int sz1 = maskVector1.size();
     assert(sz1);
-    _electricalSynapseTargetsMask2 = resetMask(fpF, maskVector2);
+    _bidirectionalConnectionTargetsMask2 = resetMask(fpF, maskVector2);
     unsigned int sz2 = maskVector2.size();
     assert(sz2);
 
@@ -1445,7 +1645,7 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
         fsetpos(fpF, &fpos);
 
         // one line:
-        // 2 2     2 0   DenSpine [Voltage] 1.0
+        // 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
         for (int j = 0; j < sz1; ++j)
         {
           if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
@@ -1462,14 +1662,14 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
         c = fgets(bufS, LENGH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
         std::istringstream is(bufS);
 
-        std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >&
+        std::map<key_size_t, std::list<Params::BidirectionalConnectionTarget> >&
             targetsMap =
-                _electricalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+                _bidirectionalConnectionTargetsMap[_segmentDescriptor.getSegmentKey(
                     maskVector1, &ids1[0])];
-        std::list<Params::ElectricalSynapseTarget>& targets =
+        std::list<Params::BidirectionalConnectionTarget>& targets =
             targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
 
-        Params::ElectricalSynapseTarget st;
+        Params::BidirectionalConnectionTarget st;
         st._parameter = -1.0;
         while (is >> st._type)
         {
@@ -1505,9 +1705,9 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
     }
     delete[] ids1;
     delete[] ids2;
-    _electricalSynapses = true;
+    _bidirectionalConnections = true;
   }
-  return _electricalSynapses;
+  return _bidirectionalConnections;
 }
 bool Params::readChemicalSynapseTargets(FILE* fpF)
 {
@@ -2132,7 +2332,7 @@ bool Params::readElectricalSynapseCosts(FILE* fpF)
 bool Params::readBidirectionalConnectionCosts(FILE* fpF)
 {
   bool rval = false;
-  _electricalSynapseCostsMap.clear();
+  _bidirectionalConnectionCostsMap.clear();
   skipHeader(fpF);
   int n = 0;
   char bufS[LENGH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -2163,7 +2363,7 @@ bool Params::readBidirectionalConnectionCosts(FILE* fpF)
         if (2 == sscanf(bufS, "%s %lf ", tokS, &cost))
         {
           std::string synID(tokS);
-          _electricalSynapseCostsMap[synID] = cost;
+          _bidirectionalConnectionCostsMap[synID] = cost;
         }
         else
           assert(0);

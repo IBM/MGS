@@ -1041,7 +1041,7 @@ Grid MSN_D1Neuron{
 #elif SIMULATION_INVOLVE == VM_CACYTO
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				g = 2.0 // nS
+				Raxial = R_axial // [Gohm.um] 
 				I_Cacyto = 0, //TUAN: check this
         RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
 				> ) );

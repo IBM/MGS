@@ -1,0 +1,234 @@
+#include "Lens.h"
+#include "CaERConcentrationJunction.h"
+#include "CG_CaERConcentrationJunction.h"
+#include "rndm.h"
+#include "MaxComputeOrder.h"
+
+//#define DEBUG_HH
+
+#include "SegmentDescriptor.h"
+#include "Branch.h"
+
+#define DISTANCE_SQUARED(a, b)                                                 \
+  ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
+   (((a).z - (b).z) * ((a).z - (b).z)))
+#define uM_um_cubed_per_pA_msec 5.18213484752067
+
+SegmentDescriptor CaERConcentrationJunction::_segmentDescriptor;
+
+// Get endoplasmic reticular surface area at the compartment i-th 
+// Check if smooth or rough ER
+dyn_var_t CaERConcentrationJunction::getArea() // Tuan: check ok
+{
+  dyn_var_t area= 0.0;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+	{
+		area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_SmoothER;
+	}
+	else{
+		area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_RoughER;
+	}
+	return area;
+}
+
+// Get endoplasmic reticulum volume at the compartment i-th 
+// Check if smooth or rough ER
+dyn_var_t CaERConcentrationJunction::getVolume() // Tuan: check ok
+{
+  dyn_var_t volume = 0.0;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+	{
+  volume = dimensions[0]->volume * FRACTIONVOLUME_SmoothER;
+	}else{
+  volume = dimensions[0]->volume * FRACTIONVOLUME_RoughER;
+		
+	}
+	return volume;
+}
+
+
+void CaERConcentrationJunction::initializeJunction(RNG& rng) 
+{// explicit junction (which can be soma (with branches are axon/dendrite
+  // trees)
+  // or a cut point junction 
+	// or a branching point junction with 3 or more branches (one from main, 2+ for children
+  // branches))
+#ifdef DEBUG_ASSERT
+  assert(Ca_new.size() == 1);
+  assert(dimensions.size() == 1);
+#endif
+
+  Ca_cur = Ca_new[0];
+  // So, one explicit junction is composed of one compartment 
+  // which can be explicit cut-point junction or
+  //              explicit branching-point junction
+  DimensionStruct* dimension = dimensions[0];  
+
+  Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
+                                    end = dimensionInputs.end();
+
+  volume = getVolume();
+
+  float Pdov = M_PI * getSharedMembers().DCa / volume;
+  currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+
+  Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
+                                    dend = dimensionInputs.end();
+  for (; diter != dend; ++diter)
+  {
+    float Rb = 0.5 * ((*diter)->r + dimension->r);
+    //fAxial.push_back(Pdov * Rb * Rb /
+    //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
+	dyn_var_t length= abs((*diter)->dist2soma - dimension->dist2soma);
+	fAxial.push_back(Pdov * Rb * Rb / length );
+  }
+#ifdef DEBUG_HH
+  std::cerr << "CaER_JUNCTION (" << dimension->x << "," << dimension->y << ","
+            << dimension->z << "," << dimension->r << ")" << std::endl;
+#endif
+}
+
+void CaERConcentrationJunction::predictJunction(RNG& rng) 
+{
+  assert(getSharedMembers().bmt > 0);
+  float LHS = getSharedMembers().bmt;
+  float RHS = getSharedMembers().bmt * Ca_cur -
+              CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+
+  Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
+  Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
+  for (; citer != cend; ++citer)
+  {
+    RHS -= currentToConc * (*(citer->currents))[0];
+  }
+
+  Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
+  Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
+  for (; iter != end; ++iter)
+  {
+    RHS -= currentToConc * **iter;
+  }
+
+  iter = injectedCaCurrents.begin();
+  end = injectedCaCurrents.end();
+  for (; iter != end; ++iter)
+  {
+    RHS += **iter * currentToConc / getArea();
+  }
+
+  Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
+  Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
+  for (; xiter != xend; ++xiter, ++viter)
+  {
+    RHS += (*xiter) * ((**viter) - Ca_cur);
+  }
+
+  Ca_new[0] = RHS / LHS;
+
+#ifdef DEBUG_HH
+  std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
+            << " CaER_JUNCTION PREDICT"
+            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+            << getIndex() << "] "
+            << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << dimension->x << "," << dimension->y << "," << dimension->z << ","
+            << dimension->r << "} " << Ca_new[0] << std::endl;
+#endif
+}
+
+void CaERConcentrationJunction::correctJunction(RNG& rng) 
+{
+  assert(getSharedMembers().bmt > 0);
+  float LHS = getSharedMembers().bmt;
+  float RHS = getSharedMembers().bmt * Ca_cur -
+              CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+
+  Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
+  Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
+  for (; citer != cend; ++citer)
+  {
+    RHS -= currentToConc * (*(citer->currents))[0];
+  }
+
+  Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
+  Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
+  for (; iter != end; ++iter)
+  {
+    RHS -= currentToConc * **iter;
+  }
+
+  iter = injectedCaCurrents.begin();
+  end = injectedCaCurrents.end();
+  for (; iter != end; ++iter)
+  {
+    RHS += **iter * currentToConc / getArea();
+  }
+
+  Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
+  Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
+  for (; xiter != xend; ++xiter, ++viter)
+  {
+    LHS += (*xiter);
+    RHS += (*xiter) * (**viter);
+  }
+
+  Ca_new[0] = RHS / LHS;
+
+  // This is the swap phase
+  Ca_cur = Ca_new[0] = 2.0 * Ca_new[0] - Ca_cur;
+
+#ifdef DEBUG_HH
+  assert(dimensions.size() == 1);
+  DimensionStruct* dimension = dimensions[0];
+  std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
+            << " CaER_JUNCTION CORRECT"
+            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+            << getIndex() << "] "
+            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << dimension->x << "," << dimension->y << "," << dimension->z << ","
+            << dimension->r << "} " << Ca_new[0] << std::endl;
+
+  Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
+  Array<dyn_var_t*>::iterator vend = CaConcentrationInputs.end();
+  int c = 0;
+
+  for (viter = CaConcentrationInputs.begin(); viter != vend; ++viter, ++diter)
+  {
+    std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
+              << " CaER_JCT_INPUT_" << c++ << " [" << getSimulation().getRank()
+              << "," << getNodeIndex() << "," << getIndex() << "] "
+              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+              << segmentDescriptor.getBranchIndex(branchData->key) << ","
+              << segmentDescriptor.getBranchOrder(branchData->key) << ","
+              << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
+              << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
+              //<< (*diter)->r << "} " << DISTANCE_SQUARED(*(*diter), *dimension)
+              << (*diter)->r << "} " << ((*(*diter))->dist2soma - dimension->dist2soma)
+              << " " << *(*viter) << std::endl;
+  }
+#endif
+}
+
+bool CaERConcentrationJunction::checkSite(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaERConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  assert(dimensions.size() == 1);
+  DimensionStruct* dimension = dimensions[0];
+  TissueSite& site = CG_inAttrPset->site;
+  bool rval = (site.r == 0);
+  if (!rval) rval = ((site.r * site.r) >= DISTANCE_SQUARED(site, *dimension));
+  return rval;
+}
+
+bool CaERConcentrationJunction::confirmUniqueDeltaT(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaERConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  return (getSharedMembers().deltaT == 0);
+}
+
+CaERConcentrationJunction::~CaERConcentrationJunction() 
+{
+}
+

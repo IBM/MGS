@@ -20,14 +20,6 @@
 
 void SpineAttachment_Vm::produceInitialState(RNG& rng) 
 {
-}
-
-void SpineAttachment_Vm::produceState(RNG& rng) 
-{
-}
-
-void SpineAttachment_Vm::computeState(RNG& rng) 
-{
 	//NOTE: g (nS) which is infered from R (GigaOhm)
 	//   R = rho. l / A
 	//   rho (GigaOhm.cm) = specific resisitivity
@@ -41,7 +33,16 @@ void SpineAttachment_Vm::computeState(RNG& rng)
 	//     l = 1/2 nec-length + r2 
 	//            A = pi * ((r1+r2)/2)^2
 	//            rho = Ra ~ 100 GOhm.um
-	//  g = 1/R = A * rho / l 
+	//  g = 1/R = A / (rho * l) 
+	g = abs(Ai - Aj) / (Raxial * (leni + lenj)/2.0); // [nS]
+}
+
+void SpineAttachment_Vm::produceState(RNG& rng) 
+{
+}
+
+void SpineAttachment_Vm::computeState(RNG& rng) 
+{
   I=g*(*Vj-*Vi);// g = should be a function of spineneck size
 }
 
@@ -53,6 +54,11 @@ void SpineAttachment_Vm::setVoltagePointers(const String& CG_direction, const St
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 }
 
+void SpineAttachment_Vm::set_A_and_len(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineAttachment_VmInAttrPSet* CG_inAttrPset, CG_SpineAttachment_VmOutAttrPSet* CG_outAttrPset) 
+{
+  Ai=CG_inAttrPset->A;
+  leni = CG_inAttrPset->len;
+}
 SpineAttachment_Vm::~SpineAttachment_Vm() 
 {
 }

@@ -17,7 +17,8 @@ Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer,
   dyn_var_t* Vi; //reference to the compartment representing the spine neck 
   dyn_var_t* Vj; //reference to the compartment representing the spine 'head'
   dyn_var_t I;   //the current [pA]
-  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
+  dyn_var_t g;   //the conductance [nS] between the gap junction formed by 2 compartments
+                 // .. from 2 different branches
 
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
   int index;

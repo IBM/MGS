@@ -134,6 +134,10 @@ if [ "$2" == "-rebuild" ] ; then
     make realclean;
 	make -j $NPROCS
 fi
+if [ "$2" == "-s" ] ; then
+ # -s or -singlethread
+     make -j $NPROCS
+fi
 #if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
 #    cd $NTSROOT
 #    echo nti make failed!;

@@ -89,12 +89,26 @@ class Touch
     };
 
 
+	//return: sc (the scaling term in [0,1] form the starting coord on the first capsule 
+	//           at that the point with minimum distance locates)
   double getProp1() {return _touchData[2];}
+	//return: sc (the scaling term in [0,1] form the starting coord on the second capsule
+	//           at that the point with minimum distance locates)
   double getProp2() {return _touchData[3];}
   double getProp(double key);
 
+	//if the touch has one side is spine-neck then return 'true'
+	//  and pass the key of the capsule as spine-neck out via argument
+	bool hasSpineNeck(key_size_t& key);
+	//if the touch has one side is spine-head then return 'true'
+	//  and pass the key of the capsule as spine-head out via argument
+	bool hasSpineHead(key_size_t& key);
  private:
-
+  // [0] = key1
+	// [1] = key2
+	// [2] = prop1
+	// [3] = prop2
+	// [4] = distance of 2 capsules forming the touch
   double _touchData[N_TOUCH_DATA];
 
 #ifndef LTWT_TOUCH

@@ -9,7 +9,12 @@
 #include "ChannelKAs/ChannelKAs.mdl"
 #include "ChannelKIR/ChannelKIR.mdl"
 #include "ChannelKRP/ChannelKRP.mdl"
+#include "ChannelBK/ChannelBK.mdl"
+#include "ChannelSK/ChannelSK.mdl"
+#include "CaERConcentration/CaERConcentration.mdl"
+#include "SpineAttachment/SpineAttachment.mdl"
 
+#include "Life/Life.mdl"
 
 #include "NaChannel/NaChannel.mdl"
 #include "NaChannel_AIS/NaChannel_AIS.mdl"

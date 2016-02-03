@@ -51,8 +51,10 @@ public:
         : _type(ct._type), _target1(ct._target1), _target2(ct._target2)
     {
     }
-    std::string _type;
-    std::list<std::string> _target1, _target2;
+    std::string _type; //nodekind's value passed to GSL
+    std::list<std::string> _target1, _target2; 
+		  //_target1 = list of nodekind's value as input 
+			//_target2 = list of nodekind's value as output
     void addTarget1(std::string t1)
     {
       _target1.push_back(t1);
@@ -85,16 +87,18 @@ public:
   };
 
   class ElectricalSynapseTarget
-  {
+  {//i.e. gap junction
 public:
     ElectricalSynapseTarget() : _type(""), _parameter(0) {}
     ElectricalSynapseTarget(const ElectricalSynapseTarget& st)
         : _type(st._type), _target(st._target), _parameter(st._parameter)
     {
     }
-    std::string _type;
+    std::string _type; //nodekind's value passed to GSL
     std::list<std::string> _target;
-    double _parameter;
+		  //_target = list of nodekind's value as passing in 2 directions 
+			//  NOTE: designed for gap-junction, i.e.value should refer to voltage
+    double _parameter;//the probability for forming the gap-junction 
     void addTarget(std::string target)
     {
       _target.push_back(target);
@@ -117,6 +121,15 @@ public:
     }
   };
 
+	class BidirectionalConnectionTarget: public ElectricalSynapseTarget
+	{//i.e. spine-attachment to shaft 
+		  //_target = list of nodekind's value as passing in 2 directions 
+			//  NOTE: designed for spine-attachment, i.e.value should refer to 
+			//          electrical (i.e. voltage) and/or 
+			//          chemical (e.g. calcium-cyto, calcium-ER, mobile-species)
+			//          parts
+	};
+
   class ChemicalSynapseTarget
   {
 public:
@@ -125,6 +138,10 @@ public:
         : _targets(st._targets), _parameter(st._parameter)
     {
     }
+		  //_target = map a given synapse's receptor name
+			//          with a pair of 'inputs', 'outputs'
+			//   'inputs' = list of nodekind's value as input to the receptor above 
+			//   'outputs' = list of nodekind's value as output of the receptor above
     std::map<std::string, std::pair<std::list<std::string>,
                                     std::list<std::string> > > _targets;
     double _parameter;//the probability for forming the synapse
@@ -170,8 +187,10 @@ public:
   bool compartmentVariables() { return _compartmentVariables; }
   bool channels() { return _channels; }
   bool electricalSynapses() { return _electricalSynapses; }
+  bool bidirectionalConnections() { return _bidirectionalConnections; }
   bool chemicalSynapses() { return _chemicalSynapses; }
   bool symmetricElectricalSynapseTargets(key_size_t key1, key_size_t key2);
+  bool symmetricBidirectionalConnectionTargets(key_size_t key1, key_size_t key2);
 
   double getBondK0(int typ)
   {
@@ -210,6 +229,8 @@ public:
   std::list<ChannelTarget>* getChannelTargets(key_size_t key);
   std::list<ElectricalSynapseTarget>* getElectricalSynapseTargets(key_size_t key1,
                                                                   key_size_t key2);
+  std::list<BidirectionalConnectionTarget>* getBidirectionalConnectionTargets(key_size_t key1,
+                                                                  key_size_t key2);
   std::list<ChemicalSynapseTarget>* getChemicalSynapseTargets(key_size_t key1,
                                                               key_size_t key2);
   std::string getPreSynapticPointTarget(std::string chemicalSynapseType);
@@ -220,12 +241,17 @@ public:
   bool isChannelTarget(key_size_t key);
   bool isElectricalSynapseTarget(key_size_t key1, key_size_t key2, bool autapses);
   bool isElectricalSynapseTarget(key_size_t key);
+	bool isGapJunctionTarget(key_size_t key);
+	bool isGapJunctionTarget(key_size_t key1, key_size_t key2, bool autapses);
+  bool isBidirectionalConnectionTarget(key_size_t key1, key_size_t key2, bool autapses);
+  bool isBidirectionalConnectionTarget(key_size_t key);
   bool isChemicalSynapseTarget(key_size_t key1, key_size_t key2, bool autapses);
   bool isChemicalSynapseTarget(key_size_t key);
 
   double getCompartmentVariableCost(std::string compartmentVariableId);
   double getChannelCost(std::string channelId);
   double getElectricalSynapseCost(std::string electricalSynapseId);
+  double getBidirectionalConnectionCost(std::string bidirectionalConnectionId);
   double getChemicalSynapseCost(std::string chemicalSynapseId);
 
   void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
@@ -250,6 +276,8 @@ public:
 
   private:
   bool isCommentLine(std::string& line);
+	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
+	std::string findNextKeyword(FILE* fpF);
   bool readBondParams(FILE* fpF);
   bool readAngleParams(FILE* fpF);
   bool readLJParams(FILE* fpF);
@@ -307,6 +335,8 @@ public:
       _channelTargetsMask, _electricalSynapseTargetsMask1,
       _electricalSynapseTargetsMask2, _chemicalSynapseTargetsMask1,
       _chemicalSynapseTargetsMask2;
+	unsigned long long _bidirectionalConnectionTargetsMask1,
+								_bidirectionalConnectionTargetsMask2;
 
    //define the distance 'radius' (2nd arg) 
    //   to each compartment having the associated key (1st arg)
@@ -358,8 +388,10 @@ public:
    //         3. a double _parameter = -1.0 (default) representing the prob. for forming the 
    //                                   bidirectional connection (e.g. electrical synapse
    //                                      or spine_neck + branch's compartment)
-  std::map<key_size_t, std::map<key_size_t, std::list<ElectricalSynapseTarget> > >
+  std::map<key_size_t, std::map<key_size_t, std::list<ElectricalSynapseTarget> > > 
       _electricalSynapseTargetsMap;
+  std::map<key_size_t, std::map<key_size_t, std::list<BidirectionalConnectionTarget> > > 
+      _bidirectionalConnectionTargetsMap;
    //define mapping a compartment of a given key (1st arg)
    //    to a second compartment of a given key (1st arg_level2)
    //      each chemicalsynapse is represented as a list of 'ChemicalSynapseTarget'
@@ -378,6 +410,7 @@ public:
    //   which is used to estimate the complexity in calculating
   std::map<std::string, double> _compartmentVariableCostsMap, _channelCostsMap,
       _electricalSynapseCostsMap, _chemicalSynapseCostsMap;
+	std::map<std::string, double> _bidirectionalConnectionCostsMap;
 
   std::vector<std::vector<SegmentDescriptor::SegmentKeyData> > _touchTableMasks;
 
@@ -387,6 +420,7 @@ public:
   //      _channels == TRUE when CHEMICAL_SYNAPSE_TARGETS section in SynParams.par is read
   bool _SIParams, _compartmentVariables, _channels, _electricalSynapses,
       _chemicalSynapses;
+	bool _bidirectionalConnections;
 
   SegmentDescriptor _segmentDescriptor;
 };

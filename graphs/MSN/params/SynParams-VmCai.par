@@ -1,0 +1,40 @@
+ELECTRICAL_SYNAPSE_TARGETS 2
+BRANCHTYPE ETYPE
+BRANCHTYPE ETYPE
+1 0 1 0 AxAxGap [Voltage] 1.0
+2 1 2 1 DenDenGap [Voltage] 1.0
+
+ELECTRICAL_SYNAPSE_COSTS 2
+AxAxGap 0.005309
+DenDenGap 0.005309
+
+BIDIRECTIONAL_CONNECTION_TARGETS 4
+BRANCHTYPE MTYPE
+BRANCHTYPE MTYPE 
+3 2     3 0   DenSpine [Voltage Calcium] 1.0
+3 2     4 0   DenSpine [Voltage Calcium] 1.0
+3 3     3 0   DenSpine [Voltage Calcium] 1.0
+3 3     4 0   DenSpine [Voltage Calcium] 1.0
+
+BIDIRECTIONAL_CONNECTION_COSTS 1
+DenSpine 0.005309
+
+CHEMICAL_SYNAPSE_TARGETS 2
+BRANCHTYPE MTYPE ETYPE
+BRANCHTYPE MTYPE
+2 1 0   1 3   [AMPAmush NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium] 1.0
+2 1 0   1 2   [AMPAthin NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium] 1.0
+
+CHEMICAL_SYNAPSE_COSTS 5
+AMPAmush 0.296407
+AMPAthin 0.296407
+NMDAmush 0.296407
+NMDAthin 0.296407
+GABAA 0.149978
+
+PRESYNAPTIC_POINT_TARGETS 5
+AMPAmush Voltage
+AMPAthin Voltage
+NMDAmush Voltage
+NMDAthin Voltage
+GABAA Voltage

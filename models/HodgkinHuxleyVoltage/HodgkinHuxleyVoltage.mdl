@@ -25,6 +25,8 @@ Struct InjectedCurrent {
   int index;     //  index of the compartment on a given branch to which the current is injected
 }
 
+//TUAN: TODO consider add SurfaceAreaLengthProducer interface here so that SpineAttachment node 
+//          knows about the length and radius of the compartment
 // It represents one regular branch (which comprises regular compartments + implicit junctions)
 Node HodgkinHuxleyVoltage Implements SolutionArrayProducer, 
      DimensionArrayProducer, BranchDataProducer, 
@@ -178,6 +180,10 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     setInjectedCurrent();
    }
 
+  Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
+    CurrentProducer.current >> injectedCurrents.current;
+    setInjectedCurrent();
+   }
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
     ConductanceProducer.conductance >> receptorCurrents.conductance;
     ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
@@ -354,6 +360,10 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
    }
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
+    CurrentProducer.current >> injectedCurrents;
+   }
+
+  Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
    }
 

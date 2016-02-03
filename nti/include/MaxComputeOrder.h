@@ -48,6 +48,12 @@
 //}}}
 
 ///////////////////////////////////////////////////////////////////////
+// Physical constants
+//
+#define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant
+#define zR  8.314472e3 //[mJ/(K.mol)] - universal constant
+
+///////////////////////////////////////////////////////////////////////
 // Geometrical settings
 // NOTE: You are not suppose to modified it
 //   If you really want to, modify in 'MODEL DESIGN' section
@@ -109,10 +115,15 @@
 #define KRP_WOLF_2005          2
 // KDR
 #define CHANNEL_KDR _COMPONENT_UNDEFINED
-// BK
-#define CHANNEL_BK _COMPONENT_UNDEFINED
+// BK-alpha
+// BK-alphabeta
+// NOTE: Those with the same values are indeed the same model
+//        just being used in different papers
+#define BKalphabeta_SHAO_1999       2       
+#define BKalphabeta_WOLF_2005       2       
 // SK
-#define CHANNEL_SK _COMPONENT_UNDEFINED
+#define SK_MOCZYDLOWSKI_1993 2
+#define SK_WOLF_2005    2
 //}}}
 //{{{ Ca-models
 // CaN
@@ -155,6 +166,8 @@
   #define CHANNEL_KAs KAs_WOLF_2005
   #define CHANNEL_KIR KIR_WOLF_2005
   #define CHANNEL_KRP KRP_WOLF_2005
+  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_SK SK_WOLF_2005
 #else
   NOT IMPLEMENTED YET
 #endif
@@ -179,6 +192,15 @@
 #endif
 #ifndef CHANNEL_KRP
 #define CHANNEL_KRP _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_BKalpha
+#define CHANNEL_BKalpha _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_BKalphabeta
+#define CHANNEL_BKalphabeta _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_SK
+#define CHANNEL_SK _COMPONENT_UNDEFINED
 #endif
 #ifndef MODEL_TO_USE
 #define MODEL_TO_USE _MODEL_NOT_DEFINED

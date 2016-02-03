@@ -528,8 +528,8 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
   assert(injectedCurrents.size() > 0);
 #endif
   TissueSite& site = CG_inAttrPset->site;
-  if (site.r != 0)  // a sphere is provided, i.e. bi-directional connection
-  {
+  if (site.r != 0)  // a sphere is provided, i.e. used for current injection
+  {//stimulation purpose
     // go through all compartments
     for (int i = 0; i < dimensions.size(); ++i)
     {
@@ -555,7 +555,7 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
     }
   }
   else if (CG_inAttrPset->idx < 0)  //??? TUAN : which condition is this
-  {
+  {//inject at all compartments???
     injectedCurrents[injectedCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)
     {
@@ -576,7 +576,7 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
     }
   }
   else
-  {
+  {//i.e. bi-directional connection (electrical synapse or spineneck-compartment)
     injectedCurrents[injectedCurrents.size() - 1].index = CG_inAttrPset->idx;
   }
 }

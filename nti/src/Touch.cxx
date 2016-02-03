@@ -19,6 +19,8 @@
 #include <iostream>
 #include <float.h>
 
+#include "Branch.h"
+
 MPI_Datatype* Touch::_typeTouch = 0;
 
 SegmentDescriptor Touch::_segmentDescriptor;
@@ -108,6 +110,8 @@ key_size_t Touch::getPartner(key_size_t key) {
   return rval;
 }
 
+//GOAL: return 'prop' of the given key
+// NOTE: Go to TouchDetector to see how 'prop' is calculated
 double Touch::getProp(key_size_t key) {
   double rval = DBL_MAX;
   if (key == getKey1())
@@ -115,6 +119,65 @@ double Touch::getProp(key_size_t key) {
   else if (key == getKey2())
     rval = getProp2();
   return rval;
+}
+
+//GOAL: check if the capsule is the spineneck
+// TODO: change the way we determine in the comping future
+//       where the spine head+neck is not passed in via tissue file
+//       but automatically generated
+bool Touch::hasSpineNeck(key_size_t& key)
+{
+	//right now, for single neuron scenario, 
+	// if one-side MTYPE > 0 and the other-side MTYPE=0
+	// indicate a spine-denshaft touch
+	//     
+	bool rval=false;
+
+	key_size_t tkey1 = getKey1();
+	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	key_size_t tkey2 = getKey2();
+	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
+  if (mtype1 > 0 && mtype2 == 0 )
+	{
+		rval = true;
+		key = tkey1;
+	}
+	if (mtype1 == 0 && mtype2 > 0)
+	{
+		rval = true;
+		key = tkey2;
+	}
+
+	return rval;
+
+}
+
+//GOAL: check if the capsule is the spinehead
+// TODO: change the way we determine in the comping future
+//       where the spine head+neck is not passed in via tissue file
+//       but automatically generated
+bool Touch::hasSpineHead(key_size_t& key)
+{
+	//right now, for single neuron scenario, 
+	// if one-side MTYPE > 0 and the other-side MTYPE>0
+	// indicate a spine-bouton touch
+	//     
+	bool rval=false;
+
+	key_size_t tkey1 = getKey1();
+	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	key_size_t tkey2 = getKey2();
+	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
+  if (mtype1 > 0 && mtype2 > 0 )
+	{
+		rval = true;
+		unsigned int brtype1 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey1);
+		if (brtype1 == Branch::_AXON)
+			key =  tkey2;
+		else
+			key = tkey1;
+	}
+	return rval;
 }
 
 Touch::~Touch() {}
