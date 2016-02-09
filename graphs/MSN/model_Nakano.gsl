@@ -155,18 +155,18 @@ TissueProbeFunctor tissueProbeFunctor();
 Functor TissueFunctor(string commandLine, string commandLineModification, 
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
-String strArg1("neurons.txt -p params/DevParams.par")
-String strArg1_supplement("-p params/DetParams.par -n cost-volume")
-String strArg3("params/ChanParams.par")
+string strArg1("neurons.txt -p params/DevParams.par");
+string strArg1_supplement("-p params/DetParams.par -n cost-volume");
+string strArg3("params/ChanParams.par");
 #if SIMULATION_INVOLVE == VMONLY
-String strArg2("params/CptParams.par")
-String strArg4("params/SynParams.par")
+string strArg2("params/CptParams.par");
+string strArg4("params/SynParams.par");
 #elif SIMULATION_INVOLVE == VM_CACYTO
-String strArg2("params/CptParams-VmCai.par")
-String strArg4("params/SynParams-VmCai.par")
+string strArg2("params/CptParams-VmCai.par");
+string strArg4("params/SynParams-VmCai.par");
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
-String strArg2("params/CptParams-VmCaiCaER.par")
-String strArg4("params/SynParams-VmCaiCaER.par")
+string strArg2("params/CptParams-VmCaiCaER.par");
+string strArg4("params/SynParams-VmCaiCaER.par");
 #endif
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -1122,7 +1122,7 @@ Grid MSN_D1Neuron{
 	/*{{{*/
 	/*}}}*/
 /*}}}*/
-; //end grid
+}; //end grid
 
 MSN_D1Neuron msn;
 

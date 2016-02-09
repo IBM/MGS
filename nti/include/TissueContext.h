@@ -71,10 +71,40 @@ class TissueContext
   Tissue* _tissue;
   RNG _touchSampler, _localSynapseGenerator;
   long _boundarySynapseGeneratorSeed, _localSynapseGeneratorSeed;
-
-  //define the mapping from a neuron (based on its index)
-  //       to the list of all branches for that neuron 
+  // keeps track of all neuron in this computing node
+  // neuron is uniquely identified via its index - an integer
+  //    index is defined based on the order in tissue.txt file
+  // each neuron has a list of branches (ComputeBranch)
   std::map<unsigned int, std::vector<ComputeBranch*> > _neurons;
+
+  //define the mapping from a branch (represented by ComputeBranch)
+  //    to the vector of all compartments in that branch
+	// a compartment is the representation of a number of Capsules
+	// and comprises
+  //   (1) a centroid-point  
+  //    that has the same value of the compartmental variable in the solver
+  // a compartment is represented by CG_CompartmentDimension class
+  //           VER.1.0:  which is (x,y,z,r,dist2soma)
+  //           VER.2.0:  which is (r,dist2soma, surface_area)
+  std::map<ComputeBranch*, std::vector<CG_CompartmentDimension*> >
+      _branchDimensionsMap;
+  //define the mapping from a branch
+  //    to the data uniquely identified the branch (CG_BranchData*)
+  //              which is (key,size)
+  //      key  = a key formed by multiple fields that uniquely identify that branch
+  //      size = # of compartments in that branch
+  std::map<ComputeBranch*, CG_BranchData*> _branchBranchDataMap;
+  //define the mapping between a capsule (the last capsule
+	//        on the branch where junction start)
+  //    to junction-compartment (that joint to the the same junction point)
+  std::map<Capsule*, CG_CompartmentDimension*> _junctionDimensionMap;
+  //define the linkage between a capsule (as a junction point)
+  //    to the branch to which it belongs 
+  std::map<Capsule*, CG_BranchData*> _junctionBranchDataMap;
+  //define the mapping from a key (representing a branch)
+  //    to the index of a capsule
+  std::map<key_size_t, int> _firstPassCapsuleMap,
+      _secondPassCapsuleMap;  // key to capsule index
 
   int getRank() { return _rank; }
   int getMpiSize() { return _mpiSize; }
@@ -105,35 +135,11 @@ class TissueContext
                       std::map<key_size_t, int>& secondPassCapsuleMap);
   void resetCapsuleMaps(std::map<key_size_t, int>& firstPassCapsuleMap,
                         std::map<key_size_t, int>& secondPassCapsuleMap);
-  //define the mapping from a branch (represented by ComputeBranch)
-  //    to the vector of all points in that branch
-  //            each point is represented by CG_CompartmentDimension class
-  //             which is (x,y,z,r,dist2soma)
-  std::map<ComputeBranch*, std::vector<CG_CompartmentDimension*> >
-      _branchDimensionsMap;
-  //define the mapping from a branch
-  //    to the data uniquely identified the branch (CG_BranchData*)
-  //              which is (key,size)
-  //      key  = a key formed by multiple fields that uniquely identify that branch
-  //      size = # of compartments in that branch
-  std::map<ComputeBranch*, CG_BranchData*> _branchBranchDataMap;
-  //define the linkage between a single compartment (as a junction point)
-  //         (from which the branching occurs)
-  //    to a list of other compartments (that joint to the the same junction point)
-  std::map<Capsule*, CG_CompartmentDimension*> _junctionDimensionMap;
-  //define the linkage between a single compartment (as a junction point)
-  //    to the branch to which it belongs 
-  std::map<Capsule*, CG_BranchData*> _junctionBranchDataMap;
-  //define the mapping from a key (representing a branch)
-  //    to the index of a capsule
-  std::map<key_size_t, int> _firstPassCapsuleMap,
-      _secondPassCapsuleMap;  // key to capsule index
 
   void rebalance(Params* params, TouchVector* touchVector);
 
   private:
-  bool isSpanning(Capsule&);  // first coord of capsule is in a different volume
-                              // from second
+  bool isSpanning(Capsule&);  // check if a Capsule span the slicing boundary
   bool sameBranch(Capsule&, unsigned int, unsigned int, unsigned int,
                   DetectionPass);
   // capsule is in the branch identified by neuron, bran0ch indices

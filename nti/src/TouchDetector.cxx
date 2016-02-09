@@ -662,7 +662,7 @@ void TouchDetector::detectTouches() {
 
 // GOAL: Find the Capsules that 'touches' the given Capsule
 //    sid = the index of the given Capsule
-//
+//    sid2 = index of the Capsule being checked 
 void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
                            Mutex* mutex) {
   Params* params = data->_parms[threadID];

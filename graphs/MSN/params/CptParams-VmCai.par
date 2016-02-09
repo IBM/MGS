@@ -1,16 +1,15 @@
 COMPARTMENT_VARIABLE_TARGETS 6
 BRANCHTYPE
-1 Voltage Calcium CalciumER
+1 Voltage Calcium
 2 Voltage
-3 Voltage Calcium CalciumER
-4 Voltage Calcium CalciumER
-5 Voltage Calcium CalciumER
-6 Voltage Calcium CalciumER
+3 Voltage Calcium
+4 Voltage Calcium
+5 Voltage Calcium
+6 Voltage Calcium
 
 COMPARTMENT_VARIABLE_COSTS 2
 Voltage 1.0
 Calcium 1.0
-CalciumER 1.0
 
 COMPARTMENT_VARIABLE_PARAMS 2
 Voltage 20

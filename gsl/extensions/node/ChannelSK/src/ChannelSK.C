@@ -67,7 +67,13 @@ void ChannelSK::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];      //[mV]
+#if SIMULATION_INVOLVE  == VMONLY
+		dyn_var_t Cai_base = 0.1e-3; // [mM]
+    dyn_var_t cai = Cai_base;
+#else
     dyn_var_t cai = (*Cai)[i];  //[mM]
+#endif
+
 #if CHANNEL_SK == SK_WOLF_2005
     // Rate k1-k2: unit 1/(ms)
 
@@ -126,7 +132,12 @@ void ChannelSK::initialize(RNG& rng)
     //fO[i] = fO[0];
     dyn_var_t v = (*V)[i];
     //g[i] = gbar[i] * fO[i];
+#if SIMULATION_INVOLVE  == VMONLY
+		dyn_var_t Cai_base = 0.1e-3; // [mM]
+    dyn_var_t cai = Cai_base;
+#else
 		dyn_var_t cai = (*Cai)[i];
+#endif
 		dyn_var_t a = fwrate(v, cai);
 		dyn_var_t sum = a+bwrate(v,cai);
 		dyn_var_t tau = 1/(sum);

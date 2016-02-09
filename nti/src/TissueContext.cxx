@@ -337,6 +337,9 @@ bool TissueContext::isComing(Capsule& capsule, int rank)
           _decomposition->getRank(endSphere) == rank);
 }
 
+// check if
+// the first coord of capsule is in a different volume
+// from second
 bool TissueContext::isSpanning(Capsule& capsule)
 {
   Sphere endSphere;

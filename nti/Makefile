@@ -92,8 +92,14 @@ endif
 CFLAGS += -I$(HEADER_DIR) 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
-OPT=-O3
+ifeq ($(debug), yes)
+OPT=
 DEBUG=-g
+else
+OPT=-O3
+DEBUG=
+endif
+
 UTILS=-I../gsl/utils/std/include -I../common/include/
 COPYRIGHT=-I../gsl/framework/factories/include
 

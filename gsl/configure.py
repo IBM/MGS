@@ -219,14 +219,14 @@ class Options:
         self.compilationMode = "undefined" # 32, 64, undefined
         self.withDX = UNDEF # USE, DONTUSE, UNDEF
         self.compiler = "undefined" # gcc, xl, undefined
-	self.silent = False # True, False
-	self.verbose = False # True, False
+        self.silent = False # True, False
+        self.verbose = False # True, False
         self.extMode = False  # True, False
         self.debug = DONTUSE # USE, DONTUSE, UNDEF
         self.profile = DONTUSE # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE # USE, DONTUSE, UNDEF
-	self.optimization = "undefined" # O1, O2, O3, undefined
+        self.optimization = "undefined" # O1, O2, O3, undefined
         self.dynamicLoading = False # True, False
         self.domainLibrary = False # True, False
         self.pthreads = True # True, False
@@ -990,7 +990,7 @@ $(OBJS_DIR):
     def getCFlags(self):
         retStr = \
 """\
-CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -O3 -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 CFLAGS += -I../common/include \
 """
 ##CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \

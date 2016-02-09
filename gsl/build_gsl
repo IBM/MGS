@@ -37,14 +37,26 @@ if [ "$2" == "-clean" ] ; then
 	# Generate Makefile
 	echo "clean-up GSL"
 	make clean
+	rm Makefile
 elif [ "$2" == "-rebuild" ] ; then 
 	echo "build GSL"
+	## detect if -release is used
+for last; do true; done
+if [ $last == "-release" ]; then 
 	if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
 	elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --domainLib;
 	elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
 	elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
 	elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
 	fi
+else 
+	if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --with-mpi --domainLib;
+	elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
+	elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
+	elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
+	elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
+	fi
+fi
 	make clean
 	make -j $NPROCS;
 else

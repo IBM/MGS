@@ -77,6 +77,12 @@
   // the surface area of ER must be smaller than that of biomembrane
 #define FRACTION_SURFACEAREA_SmoothER 0.5 
 #define FRACTION_SURFACEAREA_RoughER 0.5 
+
+  // the fraction of cross-surface area of the volume occupied by cyto
+  //               compared to that occupied by total compartment volume
+#define FRACTION_CROSS_SECTIONALAREA_CYTO 0.5 
+  
+#define FRACTION_CROSS_SECTIONALAREA_ER 0.032 
 //}}}
 
 ///////////////////////////////////////////////////////////////////////

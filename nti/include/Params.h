@@ -276,6 +276,7 @@ public:
 
   private:
   bool isCommentLine(std::string& line);
+  void jumpOverCommentLine(FILE* fpF);
 	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
 	std::string findNextKeyword(FILE* fpF);
   bool readBondParams(FILE* fpF);

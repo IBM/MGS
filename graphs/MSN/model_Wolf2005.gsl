@@ -155,18 +155,18 @@ TissueProbeFunctor tissueProbeFunctor();
 Functor TissueFunctor(string commandLine, string commandLineModification, 
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
-String strArg1("neurons.txt -p params/DevParams.par")
-String strArg1_supplement("-p params/DetParams.par -n cost-volume")
-String strArg3("params/ChanParams.par")
+#define strArg1 "neurons.txt -p params/DevParams.par"
+#define strArg1_supplement "-p params/DetParams.par -n cost-volume"
+#define strArg3 "params/ChanParams.par"
 #if SIMULATION_INVOLVE == VMONLY
-String strArg2("params/CptParams.par")
-String strArg4("params/SynParams.par")
+#define  strArg2 "params/CptParams.par"
+#define  strArg4 "params/SynParams.par"
 #elif SIMULATION_INVOLVE == VM_CACYTO
-String strArg2("params/CptParams-VmCai.par")
-String strArg4("params/SynParams-VmCai.par")
+#define  strArg2 "params/CptParams-VmCai.par"
+#define  strArg4 "params/SynParams-VmCai.par"
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
-String strArg2("params/CptParams-VmCaiCaER.par")
-String strArg4("params/SynParams-VmCaiCaER.par")
+#define  strArg2 "params/CptParams-VmCaiCaER.par"
+#define  strArg4 "params/SynParams-VmCaiCaER.par"
 #endif
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -484,7 +484,7 @@ TimeStep timeStep< deltaT=TimeStep_value >; // msec
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
 
-UnsignedTrigger recOn(STR("Iteration Trigger : !% " RecordInterval), 
+UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval), 
           ::Iteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
 /*}}}*/
 
@@ -1122,7 +1122,7 @@ Grid MSN_D1Neuron{
 	/*{{{*/
 	/*}}}*/
 /*}}}*/
-; //end grid
+}; //end grid
 
 MSN_D1Neuron msn;
 

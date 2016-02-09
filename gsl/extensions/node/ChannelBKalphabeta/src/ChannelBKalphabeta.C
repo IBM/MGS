@@ -63,7 +63,12 @@ void ChannelBKalphabeta::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];      //[mV]
+#if SIMULATION_INVOLVE  == VMONLY
+		dyn_var_t Cai_base = 0.1e-3; // [mM]
+    dyn_var_t cai = Cai_base;
+#else
     dyn_var_t cai = (*Cai)[i];  //[mM]
+#endif
 #if CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
     // NOTE: Some models use m_inf and tau_m to estimate m
     // Rate k1-k4: unit 1/(ms)
