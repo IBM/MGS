@@ -10,7 +10,6 @@
 Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
 /*{{{*/
   //DATA
-  //{{{ 
   // Hodgkin-Huxley-based formula
   //{{{
   //internal data
@@ -21,6 +20,28 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  int index; //index of the compartment in branch
+
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] gbar_branchorder;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_values;// ... having the corresponding gbar conductance
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3 
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorder={0, 1, 2}> 
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
   //}}}
 
   //SHARED DATA
@@ -41,6 +62,7 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 
   RuntimePhase update();
   InitPhase initialize;
+  UserFunction setPointers;
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
@@ -51,10 +73,14 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     int idx;   // index of the compartment on a branch
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+          BranchDataProducer, DimensionArrayProducer
+  {
     VoltageArrayProducer.voltageArray >> V;
     BranchDataProducer.branchData >> branchData;
-  }
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    setPointers();
+ }
 
   Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects KConcentrationProducer {
     KConcentrationProducer.K >> Shared.K_IC;

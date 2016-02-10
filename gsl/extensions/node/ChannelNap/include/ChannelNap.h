@@ -23,6 +23,8 @@ class ChannelNap : public CG_ChannelNap
   virtual ~ChannelNap();
 
   static void initialize_others();//new
+  virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelNapInAttrPSet* CG_inAttrPset, CG_ChannelNapOutAttrPSet* CG_outAttrPset);
+
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y); //new
 #if CHANNEL_NAP == NAP_WOLF_2005
@@ -30,6 +32,7 @@ class ChannelNap : public CG_ChannelNap
 	static dyn_var_t tauhNap[];
 	static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
+	int _cptindex;// index of the associated compartment
 };
 
 #endif

@@ -7,59 +7,6 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-//Node ChannelHayNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
-///*{{{*/
-//  dyn_var_t [] m;
-//  dyn_var_t [] h;
-//  dyn_var_t [] g; // nS/um^2
-//  dyn_var_t [] gbar; // nS/um^2
-//
-//  dyn_var_t []* V;
-//
-//  BranchDataStruct* branchData; 
-//
-//  Shared {
-//    dyn_var_t* Na_IC;
-//    dyn_var_t* Na_EC;
-//    dyn_var_t* deltaT;
-//    dyn_var_t* T;
-//    dyn_var_t [] E_Na;
-//    InitPhase computeE;
-//  }
-//
-//  RuntimePhase update;
-//  InitPhase initialize;
-//
-//  ConductanceArrayProducer.conductanceArray << &g;
-//  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
-//  BranchDataProducer.branchData << branchData;
-//
-//  InAttrPSet {
-//    string identifier;
-//    int idx;
-//  }
-//
-//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
-//    VoltageArrayProducer.voltageArray >> V;
-//    BranchDataProducer.branchData >> branchData;
-// }
-//
-//  Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects NaConcentrationProducer {
-//    NaConcentrationProducer.Na >> Shared.Na_IC;
-//  }
-//
-//  Connection Pre Constant (PSet.identifier=="EC") 
-//	Expects NaConcentrationProducer, TemperatureProducer {
-//    NaConcentrationProducer.Na >> Shared.Na_EC;
-//    TemperatureProducer.T >> Shared.T;
-//  }
-//
-//  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
-//    TimeStepProducer.deltaT >> Shared.deltaT;
-//  }
-///*}}}*/
-//}
-
 Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
 /*{{{*/
   //DATA
@@ -149,5 +96,58 @@ Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 /*}}}*/
 }
 
+
+//Node ChannelHayNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+///*{{{*/
+//  dyn_var_t [] m;
+//  dyn_var_t [] h;
+//  dyn_var_t [] g; // nS/um^2
+//  dyn_var_t [] gbar; // nS/um^2
+//
+//  dyn_var_t []* V;
+//
+//  BranchDataStruct* branchData; 
+//
+//  Shared {
+//    dyn_var_t* Na_IC;
+//    dyn_var_t* Na_EC;
+//    dyn_var_t* deltaT;
+//    dyn_var_t* T;
+//    dyn_var_t [] E_Na;
+//    InitPhase computeE;
+//  }
+//
+//  RuntimePhase update;
+//  InitPhase initialize;
+//
+//  ConductanceArrayProducer.conductanceArray << &g;
+//  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
+//  BranchDataProducer.branchData << branchData;
+//
+//  InAttrPSet {
+//    string identifier;
+//    int idx;
+//  }
+//
+//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+//    VoltageArrayProducer.voltageArray >> V;
+//    BranchDataProducer.branchData >> branchData;
+// }
+//
+//  Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects NaConcentrationProducer {
+//    NaConcentrationProducer.Na >> Shared.Na_IC;
+//  }
+//
+//  Connection Pre Constant (PSet.identifier=="EC") 
+//	Expects NaConcentrationProducer, TemperatureProducer {
+//    NaConcentrationProducer.Na >> Shared.Na_EC;
+//    TemperatureProducer.T >> Shared.T;
+//  }
+//
+//  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+//    TimeStepProducer.deltaT >> Shared.deltaT;
+//  }
+///*}}}*/
+//}
 
 #endif

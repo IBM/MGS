@@ -47,6 +47,7 @@ class ChannelNat : public CG_ChannelNat
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
+	int _cptindex;// index of the associated compartment
 };
 
 #endif

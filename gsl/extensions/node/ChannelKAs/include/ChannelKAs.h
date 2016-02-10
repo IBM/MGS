@@ -22,8 +22,10 @@ class ChannelKAs : public CG_ChannelKAs
   void initialize(RNG& rng);
   virtual ~ChannelKAs();
   static void initialize_others();  // new
+  virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKAsInAttrPSet* CG_inAttrPset, CG_ChannelKAsOutAttrPSet* CG_outAttrPset);
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
+	int _cptindex;// index of the associated compartment
 };
 
 #endif

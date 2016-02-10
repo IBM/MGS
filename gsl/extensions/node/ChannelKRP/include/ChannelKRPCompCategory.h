@@ -3,7 +3,8 @@
 
 #include "Lens.h"
 #include "CG_ChannelKRPCompCategory.h"
-#include "CountableModel.h"
+
+#include "CountableModel.h" //new
 
 class NDPairList;
 
