@@ -10,6 +10,7 @@
 Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
 /*{{{*/
   //DATA
+  //{{{ 
   // Hodgkin-Huxley-based formula
   //{{{
   //internal data
@@ -36,6 +37,7 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     InitPhase computeE; // [mV]
   //}}}
   }
+  //}}}
 
   RuntimePhase update();
   InitPhase initialize;
@@ -52,7 +54,7 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
     VoltageArrayProducer.voltageArray >> V;
     BranchDataProducer.branchData >> branchData;
- }
+  }
 
   Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects KConcentrationProducer {
     KConcentrationProducer.K >> Shared.K_IC;

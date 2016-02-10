@@ -14,16 +14,15 @@
 // =================================================================
 
 #include "Lens.h"
-#include "KDRChannel.h"
-#include "CG_KDRChannel.h"
+#include "ChannelKDR.h"
+#include "CG_ChannelKDR.h"
 #include "rndm.h"
 
 #define SMALL 1.0E-6
 
-#define HH_1952
-//#define SCHWEIGHOFER_1999
 
-#ifdef HH_1952
+#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952
+// data measured from squid giant axon
 #define ANC 0.01
 #define ANV 55.0
 #define AND 10.0
@@ -31,33 +30,40 @@
 #define BNV 65.0
 #define BND 80.0
 #endif
-#ifdef SCHWEIGHOFER_1999
+#elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
 #define ANC 0.2
 #define ANV 41.0
 #define AND 10.0
 #define BNC 2.5
 #define BNV 51.0
 #define BND 80.0
+#else
+ NOT IMPLEMENTED YET
 #endif
 
-float KDRChannel::vtrap(float x, float y) {
+dyn_var_t ChannelKDR::vtrap(dyn_var_t x, dyn_var_t y) {
 	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
 }
 
-void KDRChannel::update(RNG& rng)
+void ChannelKDR::update(RNG& rng)
 {
-  float dt = *(getSharedMembers().deltaT);
+  dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i=0; i<branchData->size; ++i) {
-    float v=(*V)[i];
-    float an = ANC*vtrap(-(v + ANV), AND);
-    float bn = BNC*exp(-(v + BNV)/BND);
-    float pn = 0.5*dt*(an + bn);
-    n[i] = (dt*an + n[i]*(1.0 - pn))/(1.0 + pn);
+#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 || CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
+    dyn_var_t v=(*V)[i];
+    dyn_var_t an = ANC*vtrap(-(v + ANV), AND);
+    dyn_var_t bn = BNC*exp(-(v + BNV)/BND);
+		// see Rempe-Chomp (2006)
+    dyn_var_t pn = 0.5*dt*(an + bn) * getSharedMembers().Tadj;
+    n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
+#else
+		NOT IMPLEMENTED YET
+#endif
   }
 }
 
-void KDRChannel::initializeKDRChannels(RNG& rng)
+void ChannelKDR::initialize(RNG& rng)
 {
   unsigned size=branchData->size;
   assert(V);
@@ -67,15 +73,17 @@ void KDRChannel::initializeKDRChannels(RNG& rng)
   if (n.size()!=size) n.increaseSizeTo(size);
   for (unsigned i=0; i<size; ++i) {
     gbar[i]=gbar[0];
-    float v=(*V)[i];
-    float an = ANC*vtrap(-(v + ANV), AND);
-    float bn = BNC*exp(-(v + BNV)/BND);
-    n[i] = an/(an + bn);
+    dyn_var_t v=(*V)[i];
+#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 || CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
+    dyn_var_t an = ANC*vtrap(-(v + ANV), AND);
+    dyn_var_t bn = BNC*exp(-(v + BNV)/BND);
+    n[i] = an/(an + bn); // steady-state value
     g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];
+#endif
   }
 }
 
-KDRChannel::~KDRChannel()
+ChannelKDR::~ChannelKDR()
 {
 }
 

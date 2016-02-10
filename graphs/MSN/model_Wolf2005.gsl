@@ -369,8 +369,8 @@ NodeType ChannelKAf { computeE->initialize2, initialize->initialize3, update->so
 NodeType ChannelKAs { computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* KRP 4-AP resistent persistent K+ current */
 NodeType ChannelKRP { computeE->initialize2, initialize->initialize3, update->solveChannels };
-  /* KDR - delayed-rectifier outward K+ Kv1.3 */
-NodeType ChannelKDR { computeE->initialize2, initialize->initialize3, update->solveChannels };
+  /* KIR - inward-rectifying K+  */
+NodeType ChannelKIR { computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* large-conductance BK Ca2+-dependent K+ current */
   /* type-I alpha+beta subunits: fast-activating + inactivating */
 NodeType ChannelBKalphabeta { computeE->initialize2, initialize->initialize3, update->solveChannels };
@@ -706,7 +706,7 @@ Grid MSN_D1Neuron{
 	Layer(KAfChannels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[KAf]" >), < nodekind="Channels[KAf]" >, tissueGM);
 	Layer(KAsChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[KAs]" >), < nodekind="Channels[KAs]" >, tissueGM);
 	Layer(KRPChannels, ChannelKRP, tissueFunctor("Layout", < nodekind="Channels[KRP]" >), < nodekind="Channels[KRP]" >, tissueGM);
-	Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
+	Layer(KIRChannels, ChannelKIR, tissueFunctor("Layout", < nodekind="Channels[KIR]" >), < nodekind="Channels[KIR]" >, tissueGM);
 	Layer( BKalphabetaChannels, ChannelBKalphabeta,  tissueFunctor("Layout", < nodekind="Channels[BK]" >), < nodekind="Channels[BK]" >, tissueGM);
 	Layer( SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
      //}}}

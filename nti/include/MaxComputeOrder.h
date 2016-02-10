@@ -120,7 +120,9 @@
 // KRP
 #define KRP_WOLF_2005          2
 // KDR
-#define CHANNEL_KDR _COMPONENT_UNDEFINED
+#define KDR_HODGKIN_HUXLEY_1952 1
+#define KDR_SCHWEIGHOFER_1999   4
+
 // BK-alpha
 // BK-alphabeta
 // NOTE: Those with the same values are indeed the same model
@@ -207,6 +209,9 @@
 #endif
 #ifndef CHANNEL_SK
 #define CHANNEL_SK _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_KDR
+#define CHANNEL_KDR _COMPONENT_UNDEFINED
 #endif
 #ifndef MODEL_TO_USE
 #define MODEL_TO_USE _MODEL_NOT_DEFINED

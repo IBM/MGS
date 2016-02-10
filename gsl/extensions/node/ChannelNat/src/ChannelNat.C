@@ -3,6 +3,8 @@
 #include "CG_ChannelNat.h"
 #include "rndm.h"
 
+#include "SegmentDescriptor.h"
+
 #define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
@@ -228,9 +230,46 @@ void ChannelNat::initialize(RNG& rng)
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
   // initialize
+  float gbar_default = gbar[0];
+	if (gbar_dists.size() > 0 and gbar_branchorder.size() > 0)
+	{
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorder on Channels Param"
+			<< std::endl;
+		assert(0);
+	}
   for (unsigned i = 0; i < size; ++i)
   {
-    gbar[i] = gbar[0];
+    if (gbar_dists.size() > 0) {
+      int j;
+      for (j=0; j<gbar_dists.size(); ++j) {
+        if ((*dimensions)[index]->dist2soma < gbar_dists[j]) break;
+      }
+      if (j < gbar_values.size()) 
+        gbar[i] = gbar_values[j];
+      else
+        gbar[i] = gbar_default;
+    } 
+		/*else if (gbar_values.size() == 1) {
+      gbar[i] = gbar_values[0];
+    } */
+		else if (gbar_branchorder.size() > 0)
+		{
+      int j;
+			SegmentDescriptor segmentDescriptor;
+      for (j=0; j<gbar_branchorder.size(); ++j) {
+        if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorder[j]) break;
+      }
+      if (j < gbar_values.size()) 
+        gbar[i] = gbar_values[j];
+      else
+        gbar[i] = gbar_default;
+		}
+		else {
+      gbar[i] = gbar_default;
+    }
+	}
+  for (unsigned i = 0; i < size; ++i)
+  {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
     dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
@@ -281,6 +320,11 @@ void ChannelNat::initialize_others()
       Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }
 #endif
+}
+  
+void ChannelNat::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelNatInAttrPSet* CG_inAttrPset, CG_ChannelNatOutAttrPSet* CG_outAttrPset)
+{
+  index=CG_inAttrPset->idx;
 }
 
 ChannelNat::~ChannelNat() {}

@@ -13,21 +13,23 @@
 //
 // =================================================================
 
-#ifndef KDRChannelCompCategory_H
-#define KDRChannelCompCategory_H
+#ifndef ChannelKDRCompCategory_H
+#define ChannelKDRCompCategory_H
 
 #include "Lens.h"
-#include "CG_KDRChannelCompCategory.h"
+#include "CG_ChannelKDRCompCategory.h"
 #include "CountableModel.h"
 
 class NDPairList;
 
-class KDRChannelCompCategory : public CG_KDRChannelCompCategory, public CountableModel
+class ChannelKDRCompCategory : public CG_ChannelKDRCompCategory,
+                               public CountableModel
 {
-   public:
-      KDRChannelCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void computeE_KDR(RNG& rng);
-      void count();      
+  public:
+  ChannelKDRCompCategory(Simulation& sim, const std::string& modelName,
+                         const NDPairList& ndpList);
+  void computeE(RNG& rng);
+  void count();
 };
 
 #endif

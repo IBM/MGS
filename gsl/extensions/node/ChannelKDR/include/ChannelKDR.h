@@ -13,21 +13,35 @@
 //
 // =================================================================
 
-#ifndef KDRChannel_H
-#define KDRChannel_H
+#ifndef ChannelKDR_H
+#define ChannelKDR_H
 
 #include "Lens.h"
-#include "CG_KDRChannel.h"
+#include "CG_ChannelKDR.h"
 #include "rndm.h"
 
-class KDRChannel : public CG_KDRChannel
+#include "MaxComputeOrder.h"
+
+#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952
+#define BASED_TEMPERATURE 6.3  // Celcius
+#define Q10 3.0
+#elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
+#define BASED_TEMPERATURE 35.0  // Celcius
+#define Q10 3.0
+#endif
+
+#ifndef Q10 
+#define Q10 3.0 //default
+#endif
+
+class ChannelKDR : public CG_ChannelKDR
 {
    public:
       void update(RNG& rng);
-      void initializeKDRChannels(RNG& rng);
-      virtual ~KDRChannel();
+      void initialize(RNG& rng);
+      virtual ~ChannelKDR();
    private:
-      float vtrap(float x, float y);
+      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif
