@@ -39,7 +39,7 @@ NOT IMPLEMENTED YET
 // T=temperature
 dyn_var_t ChannelSK::KV(dyn_var_t k, dyn_var_t d, dyn_var_t v)
 {
-  const dyn_var_t zCa = 2;
+  //const dyn_var_t zCa = 2;
   dyn_var_t exp1 = k * exp(-zCa * d * zF * v / zR / (*(getSharedMembers().T)));
   return exp1;
 }

@@ -29,7 +29,6 @@
 #define BNC 0.125
 #define BNV 65.0
 #define BND 80.0
-#endif
 #elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
 #define ANC 0.2
 #define ANV 41.0
