@@ -100,7 +100,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   // is expected to be 3-element array)+ radius + distance to soma)
   StructDataItem* getDimension(LensContext* lc, double* cds, dyn_var_t radius,
                                dyn_var_t dist2soma, dyn_var_t surface_area,
-															 dyn_var_t volume);
+															 dyn_var_t volume, dyn_var_t length);
   StructDataItem* getDimension(LensContext* lc, double* cds1, double* cds2,
                                dyn_var_t radius, dyn_var_t dist2soma,
                                dyn_var_t surface_area,

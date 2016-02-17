@@ -1,0 +1,130 @@
+# MTYPE = 0 (neuron), = 1 (bouton), = 2 (spine)
+CHANNEL_TARGETS 3
+BRANCHTYPE MTYPE
+# need to define KIR KRP
+# Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] KRP [Voltage] [Voltage] BK [Calcium] [Voltage] SK [Calcium] [Voltage] 
+# CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium]
+# CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium]
+# CaR    [Voltage] [Voltage, Calcium] CaT    [Voltage] [Voltage, Calcium]
+[1:6] 0  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
+     KRP [Voltage] [Voltage] BK [Calcium] [Voltage] SK [Calcium] [Voltage] \
+     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
+     CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
+     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] \
+     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
+     IP3R [IP3] [Calcium, IP3]
+[1,2] 1  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
+     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
+[1,3] 2  Nat [Voltage] [Voltage] \
+     MK [Voltage] [Voltage] Kv31 [Voltage] [Voltage] SK [Calcium] [Voltage]  \
+     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
+     CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
+     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] \
+     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
+     IP3R [IP3] [Calcium, IP3]
+
+CHANNEL_COSTS 10
+Nat 0.414243
+Nap 0.414243
+MK 0.254051
+Kp 0.254051
+Kt 0.254051
+Kv31 0.254051
+Cah 0.254051
+Cal 0.254051
+SK 0.254051
+
+CHANNEL_PARAMS 10
+Nat 8 
+BRANCHTYPE MTYPE
+# Wolf-2005 
+1  0 <gbar={1.5}>
+2  0 <gbar={0.0195}>
+# Moyer-2007
+#1  0 <gbar={1.875}>
+#2  0 <gbar={0.0244}>
+#3  0 <gbar={0.0244}>
+#4  0 <gbar={0.0244}>
+#1  1 <gbar={0.0244}>
+#2  1 <gbar={0.0244}>
+#1  2 <gbar={0.0244}>
+#2  2 <gbar={0.0244}>
+#1 0 <gbar={20.4}>
+#2 0 <gbar={20.4}>
+#3 0 <gbar={0.213}>
+#4 0 <gbar={0.213}>
+#1 1 <gbar={20.4}>
+#2 1 <gbar={20.4}>
+#1 2 <gbar={0.213}>
+#3 2 <gbar={0.213}>
+#1 3 <gbar={0.213}>
+#3 3 <gbar={0.213}>
+Nap 4
+BRANCHTYPE MTYPE
+1 0 <gbar={0.0172}>
+2 0 <gbar={0.0172}>
+1 1 <gbar={0.0172}>
+2 1 <gbar={0.0172}>
+MK 6
+BRANCHTYPE MTYPE
+3 0 <gbar={0.000675}>
+4 0 <gbar={0.000675}>
+1 2 <gbar={0.000675}>
+3 2 <gbar={0.000675}>
+1 3 <gbar={0.000675}>
+3 3 <gbar={0.000675}>
+Kp 4
+BRANCHTYPE MTYPE
+1 0 <gbar={0.0223}>
+2 0 <gbar={0.0223}>
+1 1 <gbar={0.0223}>
+2 1 <gbar={0.0223}>
+Kt 4
+BRANCHTYPE MTYPE
+1 0 <gbar={0.812}>
+2 0 <gbar={0.812}>
+1 1 <gbar={0.812}>
+2 1 <gbar={0.812}>
+Kv31 10
+BRANCHTYPE MTYPE
+1 0 <gbar={6.930}>
+2 0 <gbar={6.930}>
+3 0 <gbar={0.00261}>
+4 0 <gbar={0.00261}>
+1 1 <gbar={6.930}>
+2 1 <gbar={6.930}>
+1 2 <gbar={0.00261}>
+3 2 <gbar={0.00261}>
+1 3 <gbar={0.00261}>
+3 3 <gbar={0.00261}>
+Cah 8
+BRANCHTYPE MTYPE
+1 0 <gbar={0.00992}>
+3 0 <gbar={0.00992}>
+4 0 <gbar_dists={380.0,480.0}> 
+4 0 <gbar_values={0.000555,0.00555,0.000555}>
+1 2 <gbar={0.00992}>
+3 2 <gbar={0.00992}>
+1 3 <gbar={0.00992}>
+3 3 <gbar={0.00992}>
+Cal 8
+BRANCHTYPE MTYPE
+1 0 <gbar={0.0343}>
+3 0 <gbar={0.0343}>
+4 0 <gbar_dists={380.0,480.0}> 
+4 0 <gbar_values={0.00187,0.187,0.00187}>
+1 2 <gbar={0.0343}>
+3 2 <gbar={0.0343}>
+1 3 <gbar={0.0343}>
+3 3 <gbar={0.0343}>
+SK 7
+BRANCHTYPE MTYPE
+1 0 <gbar={0.441}>
+3 0 <gbar={0.012}>
+4 0 <gbar={0.012}>
+1 2 <gbar={0.012}>
+3 2 <gbar={0.012}>
+1 3 <gbar={0.012}>
+3 3 <gbar={0.012}>

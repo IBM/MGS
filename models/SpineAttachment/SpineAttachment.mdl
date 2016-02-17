@@ -8,8 +8,8 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Interface SurfaceAreaLengthProducer {
-	dyn_var_t A; // [um^2]
-	dyn_var_t len; // [um]
+	dyn_var_t* A; // [um^2]
+	dyn_var_t* len; // [um]
 }
 
 // A SpineAttachment is a bidirectional connection between
@@ -26,30 +26,34 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
   dyn_var_t Raxial;   // [Gohm.um] 
   //}}}
   //{{{ internal calculation
+    //either the 'i'-part or the 'j'-part will
+    //  reference to 1. spine-neck
+    //               2. den-shaft 
 	//{{{ help finding the conductance 'g' as a function of necklength and neck-radius
-  dyn_var_t leni; //[um]
-	dyn_var_t lenj;
-	dyn_var_t Ai;   //[um^2]
-	dyn_var_t Aj;
+  dyn_var_t *leni; //[um]
+  dyn_var_t Ai;   //[um^2]
+  dyn_var_t *lenj;
+  dyn_var_t *Aj;
    //}}}
-  dyn_var_t* Vi; //reference to the compartment representing the spine neck 
-  dyn_var_t* Vj; //reference to the compartment representing the spine 'head'
+  dyn_var_t* Vi;  // [mV]
+  dyn_var_t* Vj; 
   dyn_var_t I;   //the current [pA]
   dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
   //}}}
 
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
-  int index;//TUAN: should we move to Shared region (as it is used at connection-time only)
+  int index;//index of the compartment that this SpineAttachment node associates with
 
   Shared {
-    dyn_var_t []* voltageConnect;
+	  dyn_var_t []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
   }
 
   InitPhase produceInitialState(Vi);
   RuntimePhase produceState(Vi), computeState;
 
   VoltageProducer.voltage << Vi;
-  SurfaceAreaLengthProducer.A << Ai;
+  SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
   CurrentProducer.current << &I;
   BranchDataProducer.branchData << branchData;
@@ -59,32 +63,27 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
     string identifier;
     int idx; //the index of the compartment in the compute-branch that connect to 
              // this SpineAttachment node
-    dyn_var_t A;
-    dyn_var_t len;
+    string typeCpt; //"spine-neck" or "den-shaft"
   }
 
   UserFunction setVoltagePointers;
+  UserFunction set_A_and_len;
   
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
-    VoltageArrayProducer, BranchDataProducer 
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
     setVoltagePointers(); //set Vi
-    set_A_and_len();
+    set_A_and_len();//set Ai, leni
   }
-  Connection Pre Node (PSet.identifier=="spineconnexon[Voltage]") Expects 
+  Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
     VoltageProducer, SurfaceAreaLengthProducer
   {
-    VoltageProducer.voltage >> Vj;
-    //how about spineneck cross-sectional surface area 'A'
-    //                    length 'len'
-    // len1 = 1/2 spineneck (from spineneck-side)
-    // len2 = radius of the shaft
-    // A1   = cross-sectional surface area of spineneck
-    // A2   = zero (from shaft-side)
-    SurfaceAreaLengthProducer.A >> Aj;
-    SurfaceAreaLengthProducer.len >> lenj;
+	  VoltageProducer.voltage >> Vj;
+	  SurfaceAreaLengthProducer.A >> Aj;
+	  SurfaceAreaLengthProducer.len >> lenj;
   }
 /*}}}*/
 }
@@ -93,44 +92,52 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
      VoltageProducer, 
      SurfaceAreaLengthProducer,
      CaConcentrationProducer, CaCurrentProducer
- {
+{
 /*{{{*/
+	//DATA
+    /*{{{*/
 	//{{{ need user-input
   dyn_var_t Raxial;   // [Gohm.um] 
   dyn_var_t RCacytoaxial;   // [Gohm.um] 
   //}}}
   //{{{ internal calculation
-	 //{{{ help finding the conductance 'g' as a function of necklength and neck-radius
-  dyn_var_t leni; //[um]
-	dyn_var_t lenj;
-	dyn_var_t Ai;   //[um^2]
-	dyn_var_t Aj;
+    //either the 'i'-part or the 'j'-part will
+    //  reference to 1. spine-neck
+    //               2. den-shaft 
+	//{{{ help finding the conductance 'g' as a function of necklength and neck-radius
+  dyn_var_t *leni; //[um]
+  dyn_var_t Ai;   //[um^2]
+  dyn_var_t *lenj;
+  dyn_var_t *Aj;
    //}}}
-
-  dyn_var_t* Vi;
-  dyn_var_t* Vj;
-  dyn_var_t I;
-  dyn_var_t g;
+  dyn_var_t* Vi;  // [mV]
+  dyn_var_t* Vj; 
+  dyn_var_t I;   //the current [pA]
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
   dyn_var_t gCYTO;
   //}}}
+    /*}}}*/
 
-  BranchDataStruct* branchData;
-  int index;
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;//index of the compartment that this SpineAttachment node associates with
 
   Shared {
+    /*{{{*/
     dyn_var_t* T;
     dyn_var_t []* voltageConnect;
     dyn_var_t []* CaConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+    /*}}}*/
   }
 
   InitPhase produceInitialState(Vi, Cai);
   RuntimePhase produceState(Vi, Cai), computeState;
 
   VoltageProducer.voltage << Vi;
-  SurfaceAreaLengthProducer.A << Ai;
+  SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
@@ -142,40 +149,43 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
     string identifier;
     int idx; //the index of the compartment in the compute-branch that connect to 
              // this SpineAttachment node
-    dyn_var_t A;
-    dyn_var_t len;
+    string typeCpt; //"spine-neck" or "den-shaft"
   }
 
-  UserFunction setCaPointers;
   UserFunction setVoltagePointers; 
+  UserFunction setCaPointers;
+  UserFunction set_A_and_len;
  
   Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
     TemperatureProducer.T >> Shared.T;
   }
-  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
-    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
-    setCaPointers();
-  }
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
+  {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
-    setVoltagePointers();
-    set_A_and_len();
+    setVoltagePointers(); //set Vi
+    set_A_and_len();//set Ai, leni
   }
-  Connection Pre Node (PSet.identifier=="spineconnexon[Voltage]") Expects VoltageProducer,
-     SurfaceAreaLengthProducer
- {
+  Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
+    VoltageProducer, SurfaceAreaLengthProducer
+  {
     VoltageProducer.voltage >> Vj;
-    //how about spineneck cross-sectional surface area 'A'
-    //                    length 'len'
-    // len1 = 1/2 spineneck (from spineneck-side)
-    // len2 = radius of the shaft
-    // A1   = cross-sectional surface area of spineneck
-    // A2   = zero (from shaft-side)
     SurfaceAreaLengthProducer.A >> Aj;
     SurfaceAreaLengthProducer.len >> lenj;
   }
-  Connection Pre Node (PSet.identifier=="spineconnexon[Calcium]") Expects CaConcentrationProducer {
+
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    setCaPointers();
+  }
+  Connection Pre Node (PSet.identifier=="spineConnexon[Calcium]") Expects 
+    CaConcentrationProducer 
+  {
     CaConcentrationProducer.Ca >> Caj;
   }
 /*}}}*/
@@ -189,23 +199,26 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
 {
 /*{{{*/
 	//DATA
-    /*{{{*/
+  /*{{{*/
 	//{{{ need user-input
   dyn_var_t Raxial;   // [Gohm.um] 
   dyn_var_t RCacytoaxial;   // [Gohm.um] 
   dyn_var_t RCaERaxial;   // [Gohm.um] 
   //}}}
-  //{{{ internal
-	 //{{{ help finding the conductance 'g' as a function of necklength and neck-radius
-  dyn_var_t leni; //[um]
-	dyn_var_t lenj;
-	dyn_var_t Ai;   //[um^2]
-	dyn_var_t Aj;
+  //{{{ internal calculation
+    //either the 'i'-part or the 'j'-part will
+    //  reference to 1. spine-neck
+    //               2. den-shaft 
+	//{{{ help finding the conductance 'g' as a function of necklength and neck-radius
+  dyn_var_t *leni; //[um]
+  dyn_var_t Ai;   //[um^2]
+  dyn_var_t *lenj;
+  dyn_var_t *Aj;
    //}}}
-  dyn_var_t* Vi;
-  dyn_var_t* Vj;
-  dyn_var_t I;
-  dyn_var_t g;
+  dyn_var_t* Vi;  // [mV]
+  dyn_var_t* Vj; 
+  dyn_var_t I;   //the current [pA]
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
@@ -214,11 +227,11 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   dyn_var_t* CaERj;
   dyn_var_t I_CaER;
   dyn_var_t gER; // the trans
+  //}}}
   /*}}}*/
 
-	//data members: reference
-  BranchDataStruct* branchData;
-  int index;
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;//index of the compartment that this SpineAttachment node associates with
 
   Shared {
     /*{{{*/
@@ -226,6 +239,7 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     dyn_var_t []* voltageConnect;
     dyn_var_t []* CaConcentrationConnect;
     dyn_var_t []* CaERConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
     /*}}}*/
   }
 
@@ -233,7 +247,7 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   RuntimePhase produceState(Vi, Cai, CaERi), computeState;
 
   VoltageProducer.voltage << Vi;
-  SurfaceAreaLengthProducer.A << Ai;
+  SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
@@ -248,42 +262,43 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     string identifier;
     int idx; //the index of the compartment in the compute-branch that connect to 
              // this SpineAttachment node
-    dyn_var_t A;
-    dyn_var_t len;
+    string typeCpt; //"spine-neck" or "den-shaft"
   }
 
   UserFunction setVoltagePointers; 
   UserFunction setCaPointers;
   UserFunction setCaERPointers;
+  UserFunction set_A_and_len;
  
   Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
     TemperatureProducer.T >> Shared.T;
   }
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
+  {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
-    setVoltagePointers();
-    set_A_and_len();
+    setVoltagePointers(); //set Vi
+    set_A_and_len();//set Ai, leni
   }
-  Connection Pre Node (PSet.identifier=="spineconnexon[Voltage]") Expects VoltageProducer,
-     SurfaceAreaLengthProducer
- {
+  Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
+    VoltageProducer, SurfaceAreaLengthProducer
+  {
     VoltageProducer.voltage >> Vj;
-    //how about spineneck cross-sectional surface area 'A'
-    //                    length 'len'
-    // len1 = 1/2 spineneck (from spineneck-side)
-    // len2 = radius of the shaft
-    // A1   = cross-sectional surface area of spineneck
-    // A2   = zero (from shaft-side)
     SurfaceAreaLengthProducer.A >> Aj;
     SurfaceAreaLengthProducer.len >> lenj;
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer 
+  {
     CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
     setCaPointers();
   }
-  Connection Pre Node (PSet.identifier=="spineconnexon[Calcium]") Expects CaConcentrationProducer {
+  Connection Pre Node (PSet.identifier=="spineConnexon[Calcium]") Expects 
+    CaConcentrationProducer 
+  {
     CaConcentrationProducer.Ca >> Caj;
   }
 
@@ -291,7 +306,7 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     CaERConcentrationArrayProducer.CaConcentrations >> Shared.CaERConcentrationConnect;
     setCaERPointers();
   }
-  Connection Pre Node (PSet.identifier=="spineconnexon[CalciumER]") Expects CaERConcentrationProducer {
+  Connection Pre Node (PSet.identifier=="spineConnexon[CalciumER]") Expects CaERConcentrationProducer {
     CaERConcentrationProducer.Ca >> CaERj;
   }
 /*}}}*/

@@ -242,7 +242,7 @@ void ChannelNat::initialize(RNG& rng)
     if (gbar_dists.size() > 0) {
       int j;
       for (j=0; j<gbar_dists.size(); ++j) {
-        if ((*dimensions)[_cptindex]->dist2soma < gbar_dists[j]) break;
+        if ((*dimensions)[_cptIndex]->dist2soma < gbar_dists[j]) break;
       }
       if (j < gbar_values.size()) 
         gbar[i] = gbar_values[j];
@@ -324,7 +324,7 @@ void ChannelNat::initialize_others()
   
 void ChannelNat::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelNatInAttrPSet* CG_inAttrPset, CG_ChannelNatOutAttrPSet* CG_outAttrPset)
 {
-  _cptindex=CG_inAttrPset->idx;
+  _cptIndex=CG_inAttrPset->idx;
 }
 
 ChannelNat::~ChannelNat() {}

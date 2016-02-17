@@ -279,7 +279,30 @@ public:
   void jumpOverCommentLine(FILE* fpF);
 	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
 	std::string findNextKeyword(FILE* fpF);
-  bool readBondParams(FILE* fpF);
+	void readMultiLine(std::string& out_bufS, FILE* fpF);
+	void buildChannelTargetsMap(
+			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+			std::vector<unsigned int*>& v_ids, std::istringstream &is);
+	void buildCompartmentVariableTargetsMap(
+			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+			std::vector<unsigned int*>& v_ids, std::istringstream& is
+			);
+	void buildParamsMap(
+			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+			std::vector<unsigned int*>& v_ids, std::istringstream& is, 
+			std::string & modelID,
+			std::map<std::string,
+			std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+			paramsMap,
+			std::map<
+			std::string,
+			std::map<key_size_t,
+			std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+			arrayParamsMap
+			);
+	bool checkForSpecialCases(FILE* fpF, int sz);
+	void getListofValues(FILE* fpF, std::vector<int>& values);
+	bool readBondParams(FILE* fpF);
   bool readAngleParams(FILE* fpF);
   bool readLJParams(FILE* fpF);
   bool readRadii(FILE* fpF);
@@ -313,7 +336,7 @@ public:
           std::string,
           std::map<key_size_t,
                    std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
-          paramsArrayMap);
+          arrayParamsMap);
 
   unsigned long long resetMask(
       FILE* fpF, std::vector<SegmentDescriptor::SegmentKeyData>& maskVector);

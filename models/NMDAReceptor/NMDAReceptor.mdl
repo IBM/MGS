@@ -68,9 +68,9 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer, Re
   IndexArrayProducer.indexArray << &indexPrePost;
   WeightProducer.w << &w; //Repeated in MaxConductanceProducer?
 
-  InAttrPSet {
-    string identifier;
-    int idx;
+  InAttrPSet {//information of the incoming connection
+    string identifier; //name of the compartment variable
+    int idx;   // index of the compartment on a branch
   }
 
   UserFunction setPostIndex;

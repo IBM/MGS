@@ -157,7 +157,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 #define strArg1 "neurons.txt -p params/DevParams.par"
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
-#define strArg3 "params/ChanParams.par"
+#define strArg3 "params/ChanParams-Wolf2005.par"
 #if SIMULATION_INVOLVE == VMONLY
 #define  strArg2 "params/CptParams.par"
 #define  strArg4 "params/SynParams.par"
@@ -716,7 +716,7 @@ Grid MSN_D1Neuron{
 	Layer(CaRChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaR]" >), < nodekind="Channels[CaR]" >, tissueGM);
 	Layer(CaLv12Channels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
 	Layer(CaLv13Channels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
-	Layer(CaTChannels, ChannelCaLVA, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
+	Layer(CaTChannels, ChannelCaCaT, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
      //}}}
 	/*}}}*/
       // 3. SYNAPSES
@@ -1074,16 +1074,21 @@ Grid MSN_D1Neuron{
     /*{{{*/
 	// 1. with CONSTANTS
 	/*{{{*/
-	polyConnect(timeStep, .[].Layer(branches, junctions, branches_Ca, junctions_Ca), <>, <identifier="dt">);
+	polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
+	polyConnect(timeStep, .[].Layer(branches_Ca, junctions_Ca), <>, <identifier="dt">);
 	polyConnect(timeStep, .[].Layer(branches_CaER, junctions_CaER), <>, <identifier="dt">);
 	polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
 	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="dt">);
 	polyConnect(timeStep, .[].Layer(CaNChannels, CaPQChannels, CaRChannels, CaLv12Channels, CaLv13Channels, CaTChannels), <>, <identifier="dt">);
-
-	polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels, HCNChannels, MKChannels, KpChannels, KtChannels, Kv31Channels, NMDASynapses, CahChannels, CalChannels, SKChannels), <>, <identifier="EC">);
 	polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
 	polyConnect(timeStep, .[].Layer(NMDASynapses), <>, <identifier="dt">);
 	polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
+
+	polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
+	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(CaNChannels, CaPQChannels, CaRChannels, CaLv12Channels, CaLv13Channels, CaTChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(NMDASynapses), <>, <identifier="EC">);
+	polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
 	/*}}}*/
 
     //IMPORTANT: call this once you already have all Layers with NodeTypes required for the simulation

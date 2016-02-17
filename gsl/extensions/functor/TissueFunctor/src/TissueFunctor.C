@@ -1338,6 +1338,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 						surface_area += 2.0 * M_PI * r * h * frac;
 						volume += M_PI * r * r * h * frac;
 
+						dyn_var_t length =  frac * lastCapsule->getLength();
+						dyn_var_t sumlen = 0;
 						std::list<ComputeBranch*>::const_iterator
 							iter = branch->_daughters.begin(),
 									 iterend = branch->_daughters.end();
@@ -1348,11 +1350,13 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 							frac = getFractionCapsuleVolumeFromPost((*iter));
 							surface_area += 2.0 * M_PI * r * h * frac;
 							volume +=  M_PI * r * r * h * frac;
+							sumlen += frac * h;
 						}
+						length += sumlen/branch->_daughters.size();
 						double *cds = lastCapsule->getEndCoordinates() ;
 						// create DimensionStruct
 						StructDataItem* dimsDI = getDimension(
-								lc, cds, r, dist2soma, surface_area, volume);
+								lc, cds, r, dist2soma, surface_area, volume, length);
 						std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
 						NDPair* ndp = new NDPair("dimension", dimsDI_ap);
 
@@ -1534,6 +1538,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       dyn_var_t r = junctionCapsule->getRadius();
       dyn_var_t surface_area = 0.0;
       dyn_var_t volume = 0.0;
+			dyn_var_t length = 0.0;
       // explicit junction can be
       //  1. soma junction
       //  2. slicing-cut junction (by the slicing plane split 2 MPI processes)
@@ -1548,6 +1553,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           dyn_var_t r = (*iter)->_capsules[0].getRadius();
           surface_area -= M_PI * r * r;
         }
+				length = 2*r;
       }
       else
       {  // cut/branch explicit junction 
@@ -1555,6 +1561,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 				 dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch_parent);
 				 surface_area += 2.0 * M_PI * r * h * frac;
 				 volume += M_PI * r * r * h * frac;
+				 length += frac * h;
+				 dyn_var_t sumlen = 0.0;
         //  2.b. then sum with the parts from the distal-side
         if (branch_parent->_daughters.size() == 1)
         {  // slicing cut point explicit junction
@@ -1566,6 +1574,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 					frac = getFractionCapsuleVolumeFromPost(childbranch);
           surface_area += 2.0 * M_PI * r * h * frac;
           volume += M_PI * r * r * h * frac;
+					sumlen += h * frac;
         }
         else
         {  // branching point explicit junction
@@ -1576,8 +1585,10 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 						frac = getFractionCapsuleVolumeFromPost((*iter));
 						surface_area += 2.0 * M_PI * r * h * frac;
 						volume += M_PI * r * r * h * frac;
+						sumlen +=  h* frac;
           }
         }
+				length += sumlen / branch_parent->_daughters.size();
       }
       // create DimensionStruct for explicit 'junction' single-compartment branch
       dyn_var_t dist2soma =
@@ -1585,7 +1596,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       StructDataItem* dimsDI =
           getDimension(lc, junctionCapsule->getEndCoordinates(),
                        (dyn_var_t)junctionCapsule->getRadius(),
-                       (dyn_var_t)dist2soma, surface_area, volume);
+                       (dyn_var_t)dist2soma, surface_area, volume, length);
       std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
       NDPair* ndp = new NDPair("dimension", dimsDI_ap);
       NDPairList dimParams;
@@ -1663,7 +1674,7 @@ std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
 //      1.0: use (x,y,z,r,dist2soma)
 StructDataItem* TissueFunctor::getDimension(
     LensContext* lc, double* cds, dyn_var_t radius, dyn_var_t dist2soma,
-    dyn_var_t surface_area, dyn_var_t volume)
+    dyn_var_t surface_area, dyn_var_t volume, dyn_var_t length)
 {
     DoubleDataItem* xddi = new DoubleDataItem(cds[0]);
     std::auto_ptr<DataItem> xddi_ap(xddi);
@@ -1694,6 +1705,10 @@ StructDataItem* TissueFunctor::getDimension(
   std::auto_ptr<DataItem> volumeddi_ap(volumeddi);
   NDPair* volumeptr = new NDPair("volume", volumeddi_ap);
 
+  DoubleDataItem* lengthddi = new DoubleDataItem(length);
+  std::auto_ptr<DataItem> lengthddi_ap(lengthddi);
+  NDPair* lengthptr = new NDPair("length", lengthddi_ap);
+
   NDPairList dimList;
 	dimList.push_back(x);
 	dimList.push_back(y);
@@ -1703,6 +1718,8 @@ StructDataItem* TissueFunctor::getDimension(
   dimList.push_back(d2s);
   dimList.push_back(area);
   dimList.push_back(volumeptr);
+
+  dimList.push_back(lengthptr);
 
   StructType* st = lc->sim->getStructType("DimensionStruct");
   std::auto_ptr<Struct> dims;
@@ -1734,8 +1751,10 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
     double d = (cds1[i] - cds2[i]);
     dsqrd += d * d;
   }
-  dist2soma += 0.5 * sqrt(dsqrd);
-  return getDimension(lc, center, radius, dist2soma, surface_area, volume);
+  //dist2soma += 0.5 * sqrt(dsqrd);
+	dyn_var_t length = sqrt(dsqrd); 
+	dist2soma += 0.5 * length;
+  return getDimension(lc, center, radius, dist2soma, surface_area, volume, length);
 }
 
 void TissueFunctor::getNodekind(const NDPairList* ndpl,
@@ -2927,14 +2946,13 @@ void TissueFunctor::doConnector(LensContext* lc)
   //                   "idx"=0>
   std::map<std::string, NDPairList> cnnxn2cnnxn;
   // Example: "Voltage", <"identifier"="compartment[Voltage]",
-  //                   "idx"=0,
-	//                   "A" = cross-sectional-area or 0,
-	//                   "len" = 1/2 necklen or radius>
+  //                   "idx"=0, //index of compartment
+	//                   "typeCpt" = "spine-neck" or "den-shaft"
   std::map<std::string, NDPairList> cpt2spineattach;
-  // Example: "Voltage", <"identifier"="spineattachment[Voltage]",
+  // Example: "Voltage", <"identifier"="spineAttachment[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> spineattach2cpt;
-  // Example: "Voltage", <"identifier"="spineconnexon[Voltage]",
+  // Example: "Voltage", <"identifier"="spineConnexon[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> spineattach2spineattach;
 
@@ -2960,8 +2978,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     NDPairList Mcpt2spineattach;
     Mcpt2spineattach.push_back(new NDPair("identifier", os.str()));
     Mcpt2spineattach.push_back(new NDPair("idx", 0));
-    Mcpt2spineattach.push_back(new NDPair("A", 0));
-    Mcpt2spineattach.push_back(new NDPair("len", 0));
+    Mcpt2spineattach.push_back(new NDPair("typeCpt", ""));
     cpt2spineattach[cptVarTypesIter->first] = Mcpt2spineattach;
     
     os.str("");
@@ -3012,7 +3029,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     
     os.str(""); //to be used for
     NDPairList Mspineattach2spineattach;
-    os << "spineconnexon[" << cptVarTypesIter->first << "]";
+    os << "spineConnexon[" << cptVarTypesIter->first << "]";
     Mspineattach2spineattach.push_back(new NDPair("identifier", os.str()));
     spineattach2spineattach[cptVarTypesIter->first] = Mspineattach2spineattach;
   }
@@ -3811,30 +3828,28 @@ void TissueFunctor::doConnector(LensContext* lc)
 
 							if (keyneck == key1)
 							{
-								Mspineattach2cpt.replace("A", M_PI * capsneck->getRadius() * capsneck->getRadius());
-								Mspineattach2cpt.replace("len", capsneck->getLength()/2);
+								Mcpt2spineattach.replace("typeCpt", "spine-neck");
 							}
 							else
 							{
-								Mspineattach2cpt.replace("len", capsneck->getRadius());
+								Mspineattach2cpt.replace("typeCpt", "den-shaft");
 							}
 
               Mspineattach2cpt.replace("idx", preIdx);
               connect(sim, connector, preSpineConnexon, preCpt, Mspineattach2cpt);
               Mcpt2spineattach.replace("idx", preIdx);
               connect(sim, connector, preCpt, preSpineConnexon, Mcpt2spineattach);
-              Mspineattach2cpt.replace("idx", postIdx);
 
 							if (keyneck == key2)
 							{
-								Mspineattach2cpt.replace("A", M_PI * capsneck->getRadius() * capsneck->getRadius());
-								Mspineattach2cpt.replace("len", capsneck->getLength()/2);
+								Mcpt2spineattach.replace("typeCpt", "spine-neck");
 							}
 							else
 							{
-								Mspineattach2cpt.replace("len", capsneck->getRadius());
+								Mspineattach2cpt.replace("typeCpt", "den-shaft");
 							}
 
+              Mspineattach2cpt.replace("idx", postIdx);
               connect(sim, connector, postSpineConnexon, postCpt, Mspineattach2cpt);
               Mcpt2spineattach.replace("idx", postIdx);
               connect(sim, connector, postCpt, postSpineConnexon, Mcpt2spineattach);

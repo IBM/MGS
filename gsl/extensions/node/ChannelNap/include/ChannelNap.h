@@ -32,7 +32,7 @@ class ChannelNap : public CG_ChannelNap
 	static dyn_var_t tauhNap[];
 	static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
-	int _cptindex;// index of the associated compartment
+	int _cptIndex;// index of the associated compartment
 };
 
 #endif

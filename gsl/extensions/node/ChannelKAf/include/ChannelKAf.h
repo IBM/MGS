@@ -30,7 +30,7 @@ class ChannelKAf : public CG_ChannelKAf
 	static dyn_var_t taumKAf[];
   static std::vector<dyn_var_t> Vmrange_taum;
 #endif
-	int _cptindex;// index of the associated compartment
+	int _cptIndex;// index of the associated compartment
 };
 
 #endif

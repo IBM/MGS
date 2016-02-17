@@ -935,7 +935,7 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
   fgetpos(fpF, &fpos);
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
   int n;
-	jumpOverCommentLine(fpF);
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   std::string line(bufS);
   if (2 == sscanf(bufS, "%s %d ", tokS, &n))
@@ -945,16 +945,17 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
     {
       rval = true;
     }
-		else
-		{
-        std::cerr << "Expected: " << keyword << ", but Found: " << btype << std::endl;
-		}
+    else
+    {
+      std::cerr << "Expected: " << keyword << ", but Found: " << btype
+                << std::endl;
+    }
   }
   else
   {
     std::cerr << "Syntax of SynParam invalid: expect \n SOME_KEYWORD num-column"
               << std::endl;
-		std::cerr << "Read line: " << line << std::endl;
+    std::cerr << "Read line: " << line << std::endl;
   }
   fsetpos(fpF, &fpos);
   return rval;
@@ -1278,7 +1279,7 @@ bool Params::readSIParams(FILE* fpF)
     unsigned int sz = maskVector.size() * 2;
     unsigned int* ids = new unsigned int[sz];
 
-    for (int i = 0; i < n;i++)  // for each non-comment line
+    for (int i = 0; i < n; i++)  // for each non-comment line
     {
       jumpOverCommentLine(fpF);
       for (int j = 0; j < sz; ++j)
@@ -1347,37 +1348,137 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
     _compartmentVariableTargetsMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
-    unsigned int* ids = new unsigned int[sz];
+		for (int j = 0; j < sz; ++j)
+		{
+			if (maskVector[j] == SegmentDescriptor::segmentIndex)
+			{
+				std::cerr << "Params : Targeting compartmentVariables to individual "
+					"compartments not supported!" << std::endl;
+				return false;
+				//exit(0);
+			}
+		}
+
 
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
     {
       jumpOverCommentLine(fpF);
-      for (int j = 0; j < sz; ++j)
-      {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-        if (maskVector[j] == SegmentDescriptor::branchType)
-          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-        if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      std::vector<unsigned int*> v_ids;
+      if (checkForSpecialCases(fpF, sz))
+			{
+        // check if a special case is used
+        // A special case can be either:
+        //      range [2, 5]
+        //      range [2:5]
+        //      range [2,5:7]
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
         {
-          std::cerr << "Params : Targeting compartmentVariables to individual "
-                       "compartments not supported!" << std::endl;
-          exit(0);
+          std::vector<int> values;
+          int val = 0;
+          // LIMIT: current only support  special case for BRANCHTYPE
+          if (maskVector[j] == SegmentDescriptor::branchType)
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+            /*  if (isAsterisk(fpF))
+            {
+              assert(0);
+            }
+            else if (isBracket(fpF, lval, hval))
+            {
+            }
+                                                */
+            // make sure the BRANCHTYPE is 0-based
+            for (std::vector<int>::iterator it = values.begin();
+                 it != values.end(); ++it)
+            {
+              *it -= 1;
+            }
+            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+            // });
+          }
+          else
+          {
+            if (1 != fscanf(fpF, "%d", &val)) assert(0);
+            values.push_back(val);
+          }
+          /*
+                   if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+                   if (maskVector[j] == SegmentDescriptor::branchType)
+                   ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+    */
+          vect_values.push_back(values);
+          total_vect *= values.size();
         }
-      }
-      assert(!feof(fpF));
-      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      std::istringstream is(bufS);
-      std::list<std::string> targets;
-      std::string type;
-      while (is >> type)
+        // generate all array elements in the vector
+        {
+          unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            pids[jj] = new unsigned int[sz]();
+            v_ids.push_back(pids[jj]);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                    iterstart = v_ids.begin() + xx,
+                    iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+			}else
+			{ 
+				unsigned int* ids = new unsigned int[sz]();
+				for (int j = 0; j < sz; ++j)
+				{
+					if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+					if (maskVector[j] == SegmentDescriptor::branchType)
+						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+				}
+        // put into v_ids
+        v_ids.push_back(ids);
+			}
+
+			assert(!feof(fpF));
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);
+      std::istringstream is(myBuf);
+      /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      std::istringstream is(bufS);*/
+			buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+      // memory clean v_ids
+      for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+           it != v_ids.end(); it++)
       {
-        targets.push_back(type);
+        delete *it;
       }
-      targets.sort();
-      _compartmentVariableTargetsMap[_segmentDescriptor.getSegmentKey(
-          maskVector, &ids[0])] = targets;
+      v_ids.clear();
     }
-    delete[] ids;
+    //delete[] ids;
   }
   else
     rval = false;
@@ -1387,22 +1488,22 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
 
 bool Params::readChannelTargets(FILE* fpF)
 {
-  /*
-CHANNEL_TARGETS 8
-BRANCHTYPE MTYPE
-1 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage]
-*/
+  /* Example:
+  CHANNEL_TARGETS 8
+  BRANCHTYPE MTYPE
+  1 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage]
+  */
   _channels = false;
   bool rval = true;
   _channelTargetsMask = 0;
   _channelTargetsMap.clear();
-  skipHeader(fpF);
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (2 == sscanf(bufS, "%s %d ", tokS, &n))
-  {
+  {  // read 'n'
     std::string btype(tokS);
     std::string expected_btype("CHANNEL_TARGETS");
     if (btype == expected_btype)
@@ -1421,80 +1522,141 @@ BRANCHTYPE MTYPE
     _channelTargetsMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
-    unsigned int* ids = new unsigned int[sz];
+    for (unsigned int j = 0; j < sz; j++)
+    {  // validate
+      if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      {
+        std::cerr << "Params : Targeting channels to individual compartments "
+                     "not supported!" << std::endl;
+        return false;
+        // exit(0);
+      }
+    }
 
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
     {
       jumpOverCommentLine(fpF);
-      for (unsigned int j = 0; j < sz; ++j)
+      std::vector<unsigned int*> v_ids;
+      if (checkForSpecialCases(fpF, sz))
       {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-        if (maskVector[j] == SegmentDescriptor::branchType)
-          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-        if (maskVector[j] == SegmentDescriptor::segmentIndex)
+        // check if a special case is used
+        // A special case can be either:
+        //      range [2, 5]
+        //      range [2:5]
+        //      range [2,5:7]
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
         {
-          std::cerr << "Params : Targeting channels to individual compartments "
-                       "not supported!" << std::endl;
-          exit(0);
+          std::vector<int> values;
+          int val = 0;
+          // LIMIT: current only support  special case for BRANCHTYPE
+          if (maskVector[j] == SegmentDescriptor::branchType)
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+            /*  if (isAsterisk(fpF))
+            {
+              assert(0);
+            }
+            else if (isBracket(fpF, lval, hval))
+            {
+            }
+                                                */
+            // make sure the BRANCHTYPE is 0-based
+            for (std::vector<int>::iterator it = values.begin();
+                 it != values.end(); ++it)
+            {
+              *it -= 1;
+            }
+            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+            // });
+          }
+          else
+          {
+            if (1 != fscanf(fpF, "%d", &val)) assert(0);
+            values.push_back(val);
+          }
+          /*
+                   if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+                   if (maskVector[j] == SegmentDescriptor::branchType)
+                   ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+    */
+          vect_values.push_back(values);
+          total_vect *= values.size();
         }
+        // generate all array elements in the vector
+        {
+          unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            pids[jj] = new unsigned int[sz]();
+            v_ids.push_back(pids[jj]);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                    iterstart = v_ids.begin() + xx,
+                    iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        // v_ids[0] = new unsigned int [sz];
+        // unsigned int* ids = v_ids[0];
+        unsigned int* ids = new unsigned int[sz]();
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+          if (maskVector[j] == SegmentDescriptor::branchType)
+          {
+            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          }
+        }
+        // put into v_ids
+        v_ids.push_back(ids);
       }
       assert(!feof(fpF));
-      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);
+      std::istringstream is(myBuf);
+      /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
       std::istringstream is(bufS);
-      std::list<Params::ChannelTarget>& targets =
-          _channelTargetsMap[_segmentDescriptor.getSegmentKey(maskVector,
-                                                              &ids[0])];
-      Params::ChannelTarget ct;
-      while (is >> ct._type)
+                        */
+      buildChannelTargetsMap(maskVector, v_ids, is);
+      // memory clean v_ids
+      for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+           it != v_ids.end(); it++)
       {
-        while (is.get() != '[')
-        {
-          assert(is.good());
-        }
-        char buf1[LENGTH_IDNAME_MAX];
-        is.get(buf1, LENGTH_IDNAME_MAX, ']');
-
-        std::string stringbuf(buf1);
-        std::vector<std::string> tokens;
-        StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator i = tokens.begin();
-             i != tokens.end(); ++i)
-        {
-          ct.addTarget1(*i);
-        }
-        /*char* tok1 = strtok(buf1, " ,");
-                while (tok1 != 0) {
-                ct.addTarget1(std::string(tok1));
-                tok1 = strtok(0, " ,");
-                }*/
-        if (is.get() != ']') assert(0);
-        while (is.get() != '[')
-        {
-          assert(is.good());
-        }
-        char buf2[LENGTH_IDNAME_MAX];
-        is.get(buf2, LENGTH_IDNAME_MAX, ']');
-        if (is.get() != ']') assert(0);
-        stringbuf = std::string(buf2);
-        StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator i = tokens.begin();
-             i != tokens.end(); ++i)
-        {
-          ct.addTarget2(*i);
-        }
-        /*
-                 char* tok2 = strtok(buf2, " ,");
-                 while (tok2 != 0) {
-                 ct.addTarget2(std::string(tok2));
-                 tok2 = strtok(0, " ,");
-                 }
-                 */
-        targets.push_back(ct);
-        ct.clear();
+        delete *it;
       }
-      targets.sort();
+      v_ids.clear();
     }
-    delete[] ids;
+    // delete[] ids;
   }
   else
     rval = false;
@@ -1506,21 +1668,22 @@ BRANCHTYPE MTYPE
 bool Params::readElectricalSynapseTargets(FILE* fpF)
 {
   _electricalSynapses = false;
-	bool rval = true;
+  bool rval = true;
   _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
   _electricalSynapseTargetsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX];
   std::string tokS;
-  jumpOverCommentLine(fpF); 	
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	std::istringstream is(bufS);
-	is >> tokS;
-	if (tokS == "ELECTRICAL_SYNAPSE_TARGETS")
-	{
-		is >> n;
-	}
-	else rval = false;
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "ELECTRICAL_SYNAPSE_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
 
   if (n > 0)
   {
@@ -1535,78 +1698,78 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
     unsigned int* ids1 = new unsigned int[sz1];
     unsigned int* ids2 = new unsigned int[sz2];
 
-    for (int i = 0; i < n;i++)  // for each line, not counting comment-line
-		{
-			jumpOverCommentLine(fpF);
-			// one line:
-			// 2 2     2 0   DenSpine [Voltage] 1.0
-			for (int j = 0; j < sz1; ++j)
-			{
-				if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
-				if (maskVector1[j] == SegmentDescriptor::branchType)
-					ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
-			}                           // read-in 2 2
-			for (int j = 0; j < sz2; ++j)
-			{
-				if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
-				if (maskVector2[j] == SegmentDescriptor::branchType)
-					ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
-			}                           // read-in 2 0
-			assert(!feof(fpF));
-			c = fgets(bufS, LENGTH_LINE_MAX,
-					fpF);  // read-in DenSpine [Voltage] 1.0
-			std::istringstream is(bufS);
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      // one line:
+      // 2 2     2 0   DenSpine [Voltage] 1.0
+      for (int j = 0; j < sz1; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+        if (maskVector1[j] == SegmentDescriptor::branchType)
+          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }                           // read-in 2 2
+      for (int j = 0; j < sz2; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+        if (maskVector2[j] == SegmentDescriptor::branchType)
+          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }                           // read-in 2 0
+      assert(!feof(fpF));
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
+      std::istringstream is(bufS);
 
-			std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >&
-				targetsMap =
-				_electricalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
-						maskVector1, &ids1[0])];
-			std::list<Params::ElectricalSynapseTarget>& targets =
-				targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+      std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >&
+          targetsMap =
+              _electricalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+                  maskVector1, &ids1[0])];
+      std::list<Params::ElectricalSynapseTarget>& targets =
+          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
 
-			Params::ElectricalSynapseTarget st;
-			st._parameter = -1.0;
-			while (is >> st._type)
-			{
-				while (is.get() != '[')
-				{
-					assert(is.good());
-				}
-				char buf[LENGTH_IDNAME_MAX];
-				is.get(buf, LENGTH_IDNAME_MAX, ']');
-				std::string stringbuf(buf);
-				std::vector<std::string> tokens;  // extract 'Voltage' as token
-				StringUtils::Tokenize(stringbuf, tokens, " ,");
-				for (std::vector<std::string>::iterator i = tokens.begin(),
-						end = tokens.end();
-						i != end; ++i)
-				{
-					st.addTarget(*i);
-				}
-				/*
-					 char* tok = strtok(buf, " ,");
-					 while (tok != 0) {
-					 st.addTarget(std::string(tok));
-					 tok = strtok(0, " ,");
-					 }*/
-				if (is.get() != ']') assert(0);
-				is >> st._parameter;
-				targets.push_back(st);
-				st.clear();
-			}
-			targets.sort();
-		}
-		delete[] ids1;
+      Params::ElectricalSynapseTarget st;
+      st._parameter = -1.0;
+      while (is >> st._type)
+      {
+        while (is.get() != '[')
+        {
+          assert(is.good());
+        }
+        char buf[LENGTH_IDNAME_MAX];
+        is.get(buf, LENGTH_IDNAME_MAX, ']');
+        std::string stringbuf(buf);
+        std::vector<std::string> tokens;  // extract 'Voltage' as token
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator i = tokens.begin(),
+                                                end = tokens.end();
+             i != end; ++i)
+        {
+          st.addTarget(*i);
+        }
+        /*
+                 char* tok = strtok(buf, " ,");
+                 while (tok != 0) {
+                 st.addTarget(std::string(tok));
+                 tok = strtok(0, " ,");
+                 }*/
+        if (is.get() != ']') assert(0);
+        is >> st._parameter;
+        targets.push_back(st);
+        st.clear();
+      }
+      targets.sort();
+    }
+    delete[] ids1;
     delete[] ids2;
   }
-	else rval = false;
-	_electricalSynapses = rval;
+  else
+    rval = false;
+  _electricalSynapses = rval;
   return _electricalSynapses;
 }
 
 bool Params::readBidirectionalConnectionTargets(FILE* fpF)
 {
-	bool rval = true;
+  bool rval = true;
   _bidirectionalConnections = false;
   _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
       0;
@@ -1615,14 +1778,16 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
   int n = 0;
   char bufS[LENGTH_LINE_MAX];
   std::string tokS;
-	jumpOverCommentLine(fpF);
-	char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	std::istringstream is(bufS);
-	is >> tokS;
-	if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
-	{
-		is >> n;
-	}else rval = false;
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
 
   if (n > 0)
   {
@@ -1637,71 +1802,72 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
     unsigned int* ids1 = new unsigned int[sz1];
     unsigned int* ids2 = new unsigned int[sz2];
 
-		for (int i = 0; i < n;i++)  // for each line, not counting comment-line
-		{
-			jumpOverCommentLine(fpF);
-			// one line:
-			// 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
-			for (int j = 0; j < sz1; ++j)
-			{
-				if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
-				if (maskVector1[j] == SegmentDescriptor::branchType)
-					ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
-			}                           // read-in 2 2
-			for (int j = 0; j < sz2; ++j)
-			{
-				if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
-				if (maskVector2[j] == SegmentDescriptor::branchType)
-					ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
-			}                           // read-in 2 0
-			assert(!feof(fpF));
-			c = fgets(bufS, LENGTH_LINE_MAX,
-					fpF);  // read-in DenSpine [Voltage] 1.0
-			std::istringstream is(bufS);
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      // one line:
+      // 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
+      for (int j = 0; j < sz1; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+        if (maskVector1[j] == SegmentDescriptor::branchType)
+          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }                           // read-in 2 2
+      for (int j = 0; j < sz2; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+        if (maskVector2[j] == SegmentDescriptor::branchType)
+          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }                           // read-in 2 0
+      assert(!feof(fpF));
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
+      std::istringstream is(bufS);
 
-			std::map<key_size_t, std::list<Params::BidirectionalConnectionTarget> >&
-				targetsMap = _bidirectionalConnectionTargetsMap
-				[_segmentDescriptor.getSegmentKey(maskVector1, &ids1[0])];
-			std::list<Params::BidirectionalConnectionTarget>& targets =
-				targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+      std::map<key_size_t,
+               std::list<Params::BidirectionalConnectionTarget> >& targetsMap =
+          _bidirectionalConnectionTargetsMap[_segmentDescriptor.getSegmentKey(
+              maskVector1, &ids1[0])];
+      std::list<Params::BidirectionalConnectionTarget>& targets =
+          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
 
-			Params::BidirectionalConnectionTarget st;
-			st._parameter = -1.0;
-			while (is >> st._type)
-			{
-				while (is.get() != '[')
-				{
-					assert(is.good());
-				}
-				char buf[LENGTH_IDNAME_MAX];
-				is.get(buf, LENGTH_IDNAME_MAX, ']');
-				std::string stringbuf(buf);
-				std::vector<std::string> tokens;  // extract 'Voltage' as token
-				StringUtils::Tokenize(stringbuf, tokens, " ,");
-				for (std::vector<std::string>::iterator i = tokens.begin(),
-						end = tokens.end();
-						i != end; ++i)
-				{
-					st.addTarget(*i);
-				}
-				/*
-					 char* tok = strtok(buf, " ,");
-					 while (tok != 0) {
-					 st.addTarget(std::string(tok));
-					 tok = strtok(0, " ,");
-					 }*/
-				if (is.get() != ']') assert(0);
-				is >> st._parameter;
-				targets.push_back(st);
-				st.clear();
-			}
-			targets.sort();
-		}
-		delete[] ids1;
+      Params::BidirectionalConnectionTarget st;
+      st._parameter = -1.0;
+      while (is >> st._type)
+      {
+        while (is.get() != '[')
+        {
+          assert(is.good());
+        }
+        char buf[LENGTH_IDNAME_MAX];
+        is.get(buf, LENGTH_IDNAME_MAX, ']');
+        std::string stringbuf(buf);
+        std::vector<std::string> tokens;  // extract 'Voltage' as token
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator i = tokens.begin(),
+                                                end = tokens.end();
+             i != end; ++i)
+        {
+          st.addTarget(*i);
+        }
+        /*
+                 char* tok = strtok(buf, " ,");
+                 while (tok != 0) {
+                 st.addTarget(std::string(tok));
+                 tok = strtok(0, " ,");
+                 }*/
+        if (is.get() != ']') assert(0);
+        is >> st._parameter;
+        targets.push_back(st);
+        st.clear();
+      }
+      targets.sort();
+    }
+    delete[] ids1;
     delete[] ids2;
   }
-	else rval = false;
-	_bidirectionalConnections = rval;
+  else
+    rval = false;
+  _bidirectionalConnections = rval;
   return _bidirectionalConnections;
 }
 bool Params::readChemicalSynapseTargets(FILE* fpF)
@@ -1713,7 +1879,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
    * 1 1 0   0 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]
    * 1.0
    */
-	bool rval = true;
+  bool rval = true;
   _chemicalSynapses = false;
   _chemicalSynapseTargetsMask1 = _chemicalSynapseTargetsMask2 = 0;
   _chemicalSynapseTargetsMap.clear();
@@ -1721,17 +1887,18 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
   int n = 0;
   char bufS[LENGTH_LINE_MAX];
   std::string tokS;
-	jumpOverCommentLine(fpF);
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	std::istringstream is(bufS);
-	is >> tokS;
-	if (tokS == "CHEMICAL_SYNAPSE_TARGETS")
-	{
-		is >> n;
-	}
-	else rval = false;
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "CHEMICAL_SYNAPSE_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
 
-	if (n > 0)
+  if (n > 0)
   {
     std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
     _chemicalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
@@ -1744,36 +1911,62 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
     unsigned int* ids1 = new unsigned int[sz1];
     unsigned int* ids2 = new unsigned int[sz2];
 
-    for (int i = 0; i < n;i++)
+    for (int i = 0; i < n; i++)
     {
-        for (int j = 0; j < sz1; ++j)
-        {
-          if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
-        }
-        for (int j = 0; j < sz2; ++j)
-        {
-          if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
-        }
-        assert(!feof(fpF));
-        c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-        std::istringstream is(bufS);
+      for (int j = 0; j < sz1; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+        if (maskVector1[j] == SegmentDescriptor::branchType)
+          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }
+      for (int j = 0; j < sz2; ++j)
+      {
+        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+        if (maskVector2[j] == SegmentDescriptor::branchType)
+          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      }
+      assert(!feof(fpF));
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      std::istringstream is(bufS);
 
-        std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >&
-            targetsMap =
-                _chemicalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
-                    maskVector1, &ids1[0])];
-        std::list<Params::ChemicalSynapseTarget>& targets =
-            targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+      std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >&
+          targetsMap =
+              _chemicalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+                  maskVector1, &ids1[0])];
+      std::list<Params::ChemicalSynapseTarget>& targets =
+          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
 
-        Params::ChemicalSynapseTarget st;
-        st._parameter = -1.0;
+      Params::ChemicalSynapseTarget st;
+      st._parameter = -1.0;
 
-        std::vector<std::string> types;
+      std::vector<std::string> types;
 
+      while (is.get() != '[')
+      {
+        assert(is.good());
+      }
+      char buf1[LENGTH_IDNAME_MAX];
+      is.get(buf1, LENGTH_IDNAME_MAX, ']');
+      std::string stringbuf(buf1);
+      std::vector<std::string> tokens;
+      StringUtils::Tokenize(stringbuf, tokens, " ,");
+      for (std::vector<std::string>::iterator ii = tokens.begin(),
+                                              end = tokens.end();
+           ii != end; ++ii)
+      {
+        types.push_back(*ii);
+      }
+      /*
+      char* tok = strtok(buf1, " ,");
+      while (tok != 0) {
+          types.push_back(std::string(tok));
+          tok = strtok(0, " ,");
+      }
+      */
+      if (is.get() != ']') assert(0);
+
+      for (std::vector<int>::size_type ii = 0; ii < types.size(); ++ii)
+      {
         while (is.get() != '[')
         {
           assert(is.good());
@@ -1783,79 +1976,54 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
         std::string stringbuf(buf1);
         std::vector<std::string> tokens;
         StringUtils::Tokenize(stringbuf, tokens, " ,");
-        for (std::vector<std::string>::iterator ii = tokens.begin(),
+        for (std::vector<std::string>::iterator j = tokens.begin(),
                                                 end = tokens.end();
-             ii != end; ++ii)
+             j != end; ++j)
         {
-          types.push_back(*ii);
+          st.addTarget1(types[ii], *j);
         }
         /*
-        char* tok = strtok(buf1, " ,");
-        while (tok != 0) {
-            types.push_back(std::string(tok));
-            tok = strtok(0, " ,");
-        }
-        */
+        char* tok1 = strtok(buf1, " ,");
+        while (tok1 != 0) {
+            st.addTarget1(types[ii], std::string(tok1));
+            tok1 = strtok(0, " ,");
+        }*/
         if (is.get() != ']') assert(0);
-
-        for (std::vector<int>::size_type ii = 0; ii < types.size(); ++ii)
+        while (is.get() != '[')
         {
-          while (is.get() != '[')
-          {
-            assert(is.good());
-          }
-          char buf1[LENGTH_IDNAME_MAX];
-          is.get(buf1, LENGTH_IDNAME_MAX, ']');
-          std::string stringbuf(buf1);
-          std::vector<std::string> tokens;
-          StringUtils::Tokenize(stringbuf, tokens, " ,");
-          for (std::vector<std::string>::iterator j = tokens.begin(),
-                                                  end = tokens.end();
-               j != end; ++j)
-          {
-            st.addTarget1(types[ii], *j);
-          }
-          /*
-          char* tok1 = strtok(buf1, " ,");
-          while (tok1 != 0) {
-              st.addTarget1(types[ii], std::string(tok1));
-              tok1 = strtok(0, " ,");
-          }*/
-          if (is.get() != ']') assert(0);
-          while (is.get() != '[')
-          {
-            assert(is.good());
-          }
-          char buf2[LENGTH_IDNAME_MAX];
-          is.get(buf2, LENGTH_IDNAME_MAX, ']');
-          if (is.get() != ']') assert(0);
-          stringbuf = std::string(buf2);
-          // std::vector<std::string> tokens;
-          StringUtils::Tokenize(stringbuf, tokens, " ,");
-          for (std::vector<std::string>::iterator j = tokens.begin(),
-                                                  end = tokens.end();
-               j != end; ++j)
-          {
-            st.addTarget2(types[ii], *j);
-          }
-          /*
-          char* tok2 = strtok(buf2, " ,");
-          while (tok2 != 0) {
-              st.addTarget2(types[ii], std::string(tok2));
-              tok2 = strtok(0, " ,");
-          }*/
+          assert(is.good());
         }
-        is >> st._parameter;
-        targets.push_back(st);
-        st.clear();
-        targets.sort();
+        char buf2[LENGTH_IDNAME_MAX];
+        is.get(buf2, LENGTH_IDNAME_MAX, ']');
+        if (is.get() != ']') assert(0);
+        stringbuf = std::string(buf2);
+        // std::vector<std::string> tokens;
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator j = tokens.begin(),
+                                                end = tokens.end();
+             j != end; ++j)
+        {
+          st.addTarget2(types[ii], *j);
+        }
+        /*
+        char* tok2 = strtok(buf2, " ,");
+        while (tok2 != 0) {
+            st.addTarget2(types[ii], std::string(tok2));
+            tok2 = strtok(0, " ,");
+        }*/
+      }
+      is >> st._parameter;
+      targets.push_back(st);
+      st.clear();
+      targets.sort();
     }
     delete[] ids1;
     delete[] ids2;
   }
-	else rval = false;
-	_chemicalSynapses = rval;
-	return _chemicalSynapses;
+  else
+    rval = false;
+  _chemicalSynapses = rval;
+  return _chemicalSynapses;
 }
 
 bool Params::readPreSynapticPointTargets(FILE* fpF)
@@ -1872,37 +2040,43 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
   skipHeader(fpF);
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX], tokS2[LENGTH_TOKEN_MAX];
-	jumpOverCommentLine(fpF);
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %d ", tokS, &n))
-      {
-        std::string btype(tokS);
-        std::string expected_btype("PRESYNAPTIC_POINT_TARGETS");
-        if (btype == expected_btype) 
-				{
-					//do nothing
-				}else rval = false;
-      }else rval = false;
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {
+    std::string btype(tokS);
+    std::string expected_btype("PRESYNAPTIC_POINT_TARGETS");
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+      rval = false;
+  }
+  else
+    rval = false;
   if (n > 0)
   {
-    for (int i = 0; i < n;i++)  // for each line, not counting comment-line
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
     {
-			jumpOverCommentLine(fpF);
-			c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-			if (2 == sscanf(bufS, "%s %s ", tokS, tokS2))
-			{
-				std::string synID(tokS);
-				std::string targetID(tokS2);
-				_preSynapticPointTargetsMap[synID] = targetID;
-				_preSynapticPointSynapseMap[targetID].push_back(synID);
-			}
-			else
-			{
-				rval = false;
-				assert(0);
-			}
+      jumpOverCommentLine(fpF);
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      if (2 == sscanf(bufS, "%s %s ", tokS, tokS2))
+      {
+        std::string synID(tokS);
+        std::string targetID(tokS2);
+        _preSynapticPointTargetsMap[synID] = targetID;
+        _preSynapticPointSynapseMap[targetID].push_back(synID);
+      }
+      else
+      {
+        rval = false;
+        assert(0);
+      }
     }
-  }else rval = false;
+  }
+  else
+    rval = false;
   return rval;
 }
 
@@ -1922,20 +2096,24 @@ unsigned long long Params::readNamedParam(
     FILE* fpF, std::string name, std::map<key_size_t, double>& namedParamsMap)
 {
   unsigned long long mask = 0;
-	bool rval = true;
+  bool rval = true;
   namedParamsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
-	jumpOverCommentLine(fpF);
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	if (2 == sscanf(bufS, "%s %d ", tokS, &n))
-	{
-		std::string btype(tokS);
-		if (btype == name) 
-		{
-			//do nothing
-		}else rval = false;
-	}else rval = false;
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {
+    std::string btype(tokS);
+    if (btype == name)
+    {
+      // do nothing
+    }
+    else
+      rval = false;
+  }
+  else
+    rval = false;
 
   assert(n > 0);
 
@@ -1946,22 +2124,22 @@ unsigned long long Params::readNamedParam(
   assert(sz);
   unsigned int* ids = new unsigned int[sz];
 
-  for (int i = 0; i < n;i++)  // for each line, not counting comment-line
+  for (int i = 0; i < n; i++)  // for each line, not counting comment-line
   {
-		jumpOverCommentLine(fpF);
-		for (int j = 0; j < sz; ++j)
-		{
-			if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-			if (maskVector[j] == SegmentDescriptor::branchType)
-				ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-		}
-		assert(!feof(fpF));
-		c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-		sscanf(bufS, "%lf", &p);
-		namedParamsMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = p;
+    jumpOverCommentLine(fpF);
+    for (int j = 0; j < sz; ++j)
+    {
+      if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+      if (maskVector[j] == SegmentDescriptor::branchType)
+        ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+    }
+    assert(!feof(fpF));
+    c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+    sscanf(bufS, "%lf", &p);
+    namedParamsMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = p;
   }
   delete[] ids;
-	assert(rval);
+  assert(rval);
   return mask;
 }
 
@@ -2070,7 +2248,8 @@ bool Params::readModelParams(
                                                  std::vector<dyn_var_t> > > > >&
         arrayParamsMap)
 {
-  /* NOTE: id = COMPARTMENT_VARIABLE_PARAMS
+  /* Example of input from fpF
+	 * NOTE: id = COMPARTMENT_VARIABLE_PARAMS
    * Here, there are 2 sub-groups
 COMPARTMENT_VARIABLE_PARAMS 2
 Voltage 3
@@ -2083,6 +2262,13 @@ MTYPE BRANCHTYPE
 0 1 <CaClearance=1.1>
 0 3 <CaClearance=4.2>
 0 4 <CaClearance=4.2>
+Cah 8
+BRANCHTYPE MTYPE
+1 0 <gbar={0.00992}>
+3 0 <gbar={0.00992}>
+4 0 <gbar_dists={380.0,480.0}>
+4 0 <gbar_values={0.000555,0.00555,0.000555}>
+1 2 <gbar={0.00992}>
    */
   bool rval = true;
   paramsMasks.clear();
@@ -2093,6 +2279,7 @@ MTYPE BRANCHTYPE
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (2 == sscanf(bufS, "%s %d ", tokS, &n))
   {  // find number of subgroups
+		//read line:   COMPARTMENT_VARIABLE_PARAMS 2
     std::string btype(tokS);
     std::string expected_btype(id);
     if (btype == expected_btype)
@@ -2109,129 +2296,171 @@ MTYPE BRANCHTYPE
   {
     for (int i = 0; i < n; i++)  // for each subgroup
     {
-      /* One group is
+      /* Two examples:
+			 * One group for compartment
 Calcium 3
 MTYPE BRANCHTYPE
 0 1 <CaClearance=1.1>
 0 3 <CaClearance=4.2>
-0 4 <CaClearance=4.2>
+0 4 <CaClearance=4.2; other=5>
+
+        One group for channel
+Cah 8
+BRANCHTYPE MTYPE
+1 0 <gbar={0.00992}>
+3 0 <gbar={0.00992}; other = 5>
+4 0 <gbar_dists={380.0,480.0}>
+4 0 <gbar_values={0.000555,0.00555,0.000555}>
+1 2 <gbar={0.00992}>
        */
       jumpOverCommentLine(fpF);
       int p;
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 == sscanf(bufS, "%s %d ", tokS, &p))// e.g.: Calcium 3
-      {  
+      if (2 == sscanf(bufS, "%s %d ", tokS, &p))  // e.g.: Calcium 3
+      {
         std::string modelID(tokS);
         std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
         paramsMasks[modelID] = resetMask(fpF, maskVector);
         unsigned int sz = maskVector.size();
         assert(sz);
-        unsigned int* ids = new unsigned int[sz];
-        for (int j = 0; j < p;
-             j++)  // for each line (subgroup), not counting comment-line
-        {
-          jumpOverCommentLine(fpF);
-          for (int k = 0; k < sz; ++k)
-          {  // read vector mask part
-            if (1 != fscanf(fpF, "%d", &ids[k])) assert(0);
-            if (maskVector[k] == SegmentDescriptor::branchType)
-              ids[k] = ids[k] - 1;  // make sure the BRANCHTYPE is 0-based
-            if (maskVector[k] == SegmentDescriptor::segmentIndex)
-            {
-              std::cerr << "Params : Targeting channel parameters to "
-                           "individual compartments not supported!"
-                        << std::endl;
-              exit(0);
-            }
-          }
+				for (int k = 0; k < sz; ++k)
+				{  // validate
+					if (maskVector[k] == SegmentDescriptor::segmentIndex)
+					{
+						std::cerr << "Params : Targeting channel parameters to "
+							"individual compartments not supported!"
+							<< std::endl;
+						return false;
+						//exit(0);
+					}
+				}	
+
+        unsigned int* ids = new unsigned int[sz]();
+				for (int j = 0; j < p;
+						j++)  // for each line (subgroup), not counting comment-line
+				{
+					jumpOverCommentLine(fpF);
+					std::vector<unsigned int*> v_ids;
+					if (checkForSpecialCases(fpF, sz))
+					{
+						// check if a special case is used
+						// A special case can be either:
+						//      range [2, 5]
+						//      range [2:5]
+						//      range [2,5:7]
+						// then, create a vector of v_ids
+						// NOTE: We planed to support
+						//      asterisk *
+						//  but then it requires implicit knowledge of the range of value
+						//  so we don't support it now
+
+						unsigned int* ids = new unsigned int[sz];
+						std::vector<std::vector<int> > vect_values;
+						int total_vect = 1;
+						for (unsigned int j = 0; j < sz; ++j)
+						{
+							std::vector<int> values;
+							int val = 0;
+							// LIMIT: current only support  special case for BRANCHTYPE
+							if (maskVector[j] == SegmentDescriptor::branchType)
+							{
+								getListofValues(fpF, values);  // assume the next data to read is in
+								// the form  [...] and it occurs for
+								// BRANCHTYPE
+								/*  if (isAsterisk(fpF))
+										{
+										assert(0);
+										}
+										else if (isBracket(fpF, lval, hval))
+										{
+										}
+										*/
+								// make sure the BRANCHTYPE is 0-based
+								for (std::vector<int>::iterator it = values.begin();
+										it != values.end(); ++it)
+								{
+									*it -= 1;
+								}
+								// std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+								// });
+							}
+							else
+							{
+								if (1 != fscanf(fpF, "%d", &val)) assert(0);
+								values.push_back(val);
+							}
+							/*
+								 if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+								 if (maskVector[j] == SegmentDescriptor::branchType)
+								 ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+								 */
+							vect_values.push_back(values);
+							total_vect *= values.size();
+						}
+						// generate all array elements in the vector
+						{
+							unsigned int** pids = new unsigned int* [total_vect];
+							for (int jj = 0; jj < total_vect; ++jj)
+							{
+								pids[jj] = new unsigned int[sz]();
+								v_ids.push_back(pids[jj]);
+							}
+
+							// fill the data
+							for (unsigned int jj = 0; jj < sz; jj++)
+							{
+								int num2clone = 1;
+								for (unsigned int xx = jj + 1; xx < sz; xx++)
+									num2clone *= vect_values[xx].size();
+								int gap = num2clone * vect_values[jj].size();
+
+								for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+								{
+									for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+									{
+										std::vector<unsigned int*>::iterator iter,
+											iterstart = v_ids.begin() + xx,
+											iterend = v_ids.begin() + xx + num2clone - 1;
+										for (iter = iterstart; iter <= iterend; iter++)
+											(*iter)[jj] = vect_values[jj][kk];
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						// v_ids[0] = new unsigned int [sz];
+						// unsigned int* ids = v_ids[0];
+						unsigned int* ids = new unsigned int[sz]();
+						for (unsigned int kk = 0; kk < sz; ++kk)
+						{// read vector mask part
+							if (1 != fscanf(fpF, "%d", &ids[kk])) assert(0);
+							if (maskVector[kk] == SegmentDescriptor::branchType)
+							{
+								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
+							}
+						}
+						// put into v_ids
+						v_ids.push_back(ids);
+					}
           assert(!feof(fpF));
-          c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-          std::istringstream is(bufS);
-          std::list<std::pair<std::string, dyn_var_t> >& params =
-              paramsMap[modelID][_segmentDescriptor.getSegmentKey(maskVector,
-                                                                  &ids[0])];
-          std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
-              arrayParams =
-                  arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
-                      maskVector, &ids[0])];
-          while (is.get() != '<')
-          {
-            assert(is.good());
-          }
-          char buf1[LENGTH_IDNAME_MAX];
-          is.get(buf1, LENGTH_IDNAME_MAX, '>');
 
-          std::string stringbuf1(buf1);  // to replace the code below
-          std::vector<std::string> tokens1;
-          StringUtils::Tokenize(stringbuf1, tokens1, ";");
-          for (std::vector<std::string>::iterator ii = tokens1.begin(),
-                                                  end1 = tokens1.end();
-               ii != end1; ++ii)
-          {
-            std::string delimiter = "=";
-            size_t pos = (*ii).find(delimiter);
-            std::string name = (*ii).substr(0, pos);
-            (*ii).erase(0, pos + delimiter.length());
-
-            delimiter = " =";
-            pos = (*ii).find(delimiter);
-            std::string tok2 = (*ii).substr(0, pos);
-
-            std::istringstream is2(tok2);
-            if (is2.get() != '{')
-            {
-              dyn_var_t value = atof(tok2.c_str());
-              params.push_back(std::pair<std::string, dyn_var_t>(name, value));
-            }
-            else
-            {
-              std::vector<dyn_var_t> value;
-              // TUAN: potential bug if it takes more than 256 chars to see
-              // '}'
-              // need to be fixed soon
-              char buf2[LENGTH_IDNAME_MAX];
-              is2.get(buf2, LENGTH_IDNAME_MAX, '}');
-              std::string stringbuf(buf2);
-              std::vector<std::string> tokens;
-              StringUtils::Tokenize(stringbuf, tokens, ",");
-              for (std::vector<std::string>::iterator jj = tokens.begin(),
-                                                      end = tokens.end();
-                   jj != end; ++jj)
-              {
-                value.push_back(atof((*jj).c_str()));
-              }
-              arrayParams.push_back(
-                  std::pair<std::string, std::vector<dyn_var_t> >(name, value));
-            }
-          }
-          /*
-                   char* tok1 = strtok(buf1, ";");
-                   while (tok1 != 0) {
-                   char* tok2 = strtok(tok1, "=");
-                   std::string name(tok2);
-                   tok2 = strtok(0, " =");
-                   std::istringstream is2(tok2);
-                   if (is2.get() != '{') {
-                   dyn_var_t value = atof(tok2);
-                   params.push_back(std::pair<std::string, dyn_var_t>(name,
-             value));
-                   } else {
-                   std::vector<dyn_var_t> value;
-                   char buf2[LENGTH_IDNAME_MAX];
-                   is2.get(buf2, LENGTH_IDNAME_MAX, '}');
-                   char* tok3 = strtok(buf2, ",");
-                   while (tok3 != 0) {
-                   value.push_back(atof(tok3));
-                   tok3 = strtok(0, ",");
-                   }
-                   arrayParams.push_back(
-                   std::pair<std::string, std::vector<dyn_var_t> >(name,
-             value));
-                   }
-                   tok1 = strtok(0, ";");
-                   }*/
-        }
-        delete[] ids;
+					std::string myBuf("");
+					readMultiLine(myBuf, fpF);
+					std::istringstream is(myBuf);
+					/*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+          std::istringstream is(bufS);*/
+          buildParamsMap(maskVector, v_ids, is, modelID, paramsMap, arrayParamsMap);
+					// memory clean v_ids
+					for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+							it != v_ids.end(); it++)
+					{
+						delete *it;
+					}
+					v_ids.clear();
+				}
+				//delete[] ids;
       }
       else
       {
@@ -2437,4 +2666,326 @@ unsigned long long Params::resetMask(
     is >> tokS;
   }
   return _segmentDescriptor.getMask(maskVector);
+}
+
+// GOAL: read until the end of the line
+//    if the last non-space character is '\'
+//    then continue to the next line
+void Params::readMultiLine(std::string& out_bufS, FILE* fpF)
+{
+  char bufS[LENGTH_LINE_MAX];
+  char* c = fgets(bufS, sizeof(bufS), fpF);
+  bool itsok = true;
+  do
+  {
+    int i = 1;
+    while (strlen(bufS) >= i and
+           (bufS[strlen(bufS) - i] == ' ' || bufS[strlen(bufS) - i] == '\n'))
+    {
+      i++;
+    }
+    if (strlen(bufS) >= i)
+    {
+      std::string tmp(bufS);
+      out_bufS.append(tmp.substr(0, strlen(bufS) - i));
+      if (bufS[strlen(bufS) - i] == '\\')
+      {
+        jumpOverCommentLine(fpF);
+        c = fgets(bufS, sizeof(bufS), fpF);
+      }
+      else
+      {
+        itsok = false;
+      }
+    }
+  } while (itsok);
+}
+
+// Given a vector v_ids of matched pattern
+// Given a stream of channel target
+// GOAL: create _channelTargetsMap
+void Params::buildChannelTargetsMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+    std::vector<unsigned int*>& v_ids, std::istringstream& is)
+{
+  std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
+                                             iterend = v_ids.end();
+  for (; iter < iterend; iter++)
+  {
+    unsigned int* ids = *iter;
+    std::list<Params::ChannelTarget>& targets =
+        _channelTargetsMap[_segmentDescriptor.getSegmentKey(maskVector,
+                                                            &ids[0])];
+    Params::ChannelTarget ct;
+    while (is >> ct._type)
+    {
+      while (is.get() != '[')
+      {
+        assert(is.good());
+      }
+      char buf1[LENGTH_IDNAME_MAX];
+      is.get(buf1, LENGTH_IDNAME_MAX, ']');
+
+      std::string stringbuf(buf1);
+      std::vector<std::string> tokens;
+      StringUtils::Tokenize(stringbuf, tokens, " ,");
+      for (std::vector<std::string>::iterator i = tokens.begin();
+           i != tokens.end(); ++i)
+      {
+        ct.addTarget1(*i);
+      }
+      /*char* tok1 = strtok(buf1, " ,");
+              while (tok1 != 0) {
+              ct.addTarget1(std::string(tok1));
+              tok1 = strtok(0, " ,");
+              }*/
+      if (is.get() != ']') assert(0);
+      while (is.get() != '[')
+      {
+        assert(is.good());
+      }
+      char buf2[LENGTH_IDNAME_MAX];
+      is.get(buf2, LENGTH_IDNAME_MAX, ']');
+      if (is.get() != ']') assert(0);
+      stringbuf = std::string(buf2);
+      StringUtils::Tokenize(stringbuf, tokens, " ,");
+      for (std::vector<std::string>::iterator i = tokens.begin();
+           i != tokens.end(); ++i)
+      {
+        ct.addTarget2(*i);
+      }
+      /*
+               char* tok2 = strtok(buf2, " ,");
+               while (tok2 != 0) {
+               ct.addTarget2(std::string(tok2));
+               tok2 = strtok(0, " ,");
+               }
+               */
+      targets.push_back(ct);
+      ct.clear();
+    }
+    targets.sort();
+  }
+}
+
+// Given a vector v_ids of matched pattern
+// Given a stream of channel's parameters
+//            or compartment variable's parameters
+// GOAL: create _...ParamsMap
+void Params::buildParamsMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+    std::vector<unsigned int*>& v_ids, std::istringstream& is, 
+		std::string & modelID,
+		std::map<std::string,
+		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+		paramsMap,
+		std::map<
+		std::string,
+		std::map<key_size_t,
+		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+		arrayParamsMap
+		)
+{
+  std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
+                                             iterend = v_ids.end();
+	for (; iter < iterend; iter++)
+	{
+		/* Support
+<gbar={0.0343}> //single name=val
+<gbar=0.0343>
+<gbar_dists={380.0,480.0}>  // one name-multiple-values
+<gbar_values={0.00187,0.187,0.00187}>
+<Cm=0.01; gLeak=0.000325> // multiple name=val
+		 */
+		unsigned int* ids = *iter;
+		std::list<std::pair<std::string, dyn_var_t> >& params =
+			paramsMap[modelID][_segmentDescriptor.getSegmentKey(maskVector,
+					&ids[0])];
+		std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+			arrayParams =
+			arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
+					maskVector, &ids[0])];
+		while (is.get() != '<')
+		{
+			assert(is.good());
+		}
+		char buf1[LENGTH_IDNAME_MAX];
+		is.get(buf1, LENGTH_IDNAME_MAX, '>');
+		/*  buf1 looks like any of these
+				<gbar={24.4}>
+				<gbar={24.4}; other=5>
+				<gbar_dists={24.4, 4.6}; other=5>
+				*/
+		std::string stringbuf1(buf1);  // to replace the code below
+		std::vector<std::string> tokens1;
+		StringUtils::Tokenize(stringbuf1, tokens1, ";");
+		for (std::vector<std::string>::iterator ii = tokens1.begin(),
+				end1 = tokens1.end();
+				ii != end1; ++ii)
+		{
+			std::string delimiter = "=";
+			size_t pos = (*ii).find(delimiter);
+			std::string name = (*ii).substr(0, pos);
+			(*ii).erase(0, pos + delimiter.length());
+
+			delimiter = " =";
+			pos = (*ii).find(delimiter);
+			std::string tok2 = (*ii).substr(0, pos);
+
+			std::istringstream is2(tok2);
+			if (is2.get() != '{')
+			{  // single value
+				dyn_var_t value = atof(tok2.c_str());
+				params.push_back(std::pair<std::string, dyn_var_t>(name, value));
+			}
+			else
+			{  // contain multiple values (comma-separated)
+				std::vector<dyn_var_t> value;
+				// TUAN: potential bug if it takes more than 256 chars to see
+				// '}'
+				// need to be fixed soon
+				char buf2[LENGTH_IDNAME_MAX];
+				is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+				std::string stringbuf(buf2);
+				std::vector<std::string> tokens;
+				StringUtils::Tokenize(stringbuf, tokens, ",");
+				for (std::vector<std::string>::iterator jj = tokens.begin(),
+						end = tokens.end();
+						jj != end; ++jj)
+				{
+					// assume input values are numerics
+					value.push_back(atof((*jj).c_str()));
+				}
+				arrayParams.push_back(
+						std::pair<std::string, std::vector<dyn_var_t> >(name, value));
+			}
+		}
+		/*
+			 char* tok1 = strtok(buf1, ";");
+			 while (tok1 != 0) {
+			 char* tok2 = strtok(tok1, "=");
+			 std::string name(tok2);
+			 tok2 = strtok(0, " =");
+			 std::istringstream is2(tok2);
+			 if (is2.get() != '{') {
+			 dyn_var_t value = atof(tok2);
+			 params.push_back(std::pair<std::string, dyn_var_t>(name,
+			 value));
+			 } else {
+			 std::vector<dyn_var_t> value;
+			 char buf2[LENGTH_IDNAME_MAX];
+			 is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+			 char* tok3 = strtok(buf2, ",");
+			 while (tok3 != 0) {
+			 value.push_back(atof(tok3));
+			 tok3 = strtok(0, ",");
+			 }
+			 arrayParams.push_back(
+			 std::pair<std::string, std::vector<dyn_var_t> >(name,
+			 value));
+			 }
+			 tok1 = strtok(0, ";");
+			 }*/
+	}
+
+}
+
+// Given a vector v_ids of matched pattern
+// Given a stream of compartment's parameters
+// GOAL: create _compartmentVariableTargetsMap
+void Params::buildCompartmentVariableTargetsMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+    std::vector<unsigned int*>& v_ids, std::istringstream& is
+		)
+{
+  std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
+                                             iterend = v_ids.end();
+	for (; iter < iterend; iter++)
+	{
+		unsigned int* ids = *iter;
+		std::list<std::string> targets;
+		std::string type;
+		while (is >> type)
+		{
+			targets.push_back(type);
+		}
+		targets.sort();
+		_compartmentVariableTargetsMap[_segmentDescriptor.getSegmentKey(
+				maskVector, &ids[0])] = targets;
+	}
+}
+
+// GOAL: check if the next 'sz' space-separated words
+//     are all numerics or not
+//  true = all are numerics
+//  SCENARIO:   sz = 4
+//  1 4 5 6  --> true
+//  1 [4,6] 5 6 --> false
+//  * 4 5 6  --> false
+bool Params::checkForSpecialCases(FILE* fpF, int sz)
+{
+  bool rval = true;
+  fpos_t fpos;
+  fgetpos(fpF, &fpos);
+  int ival;
+  for (unsigned int j = 0; j < sz; ++j)
+  {
+    if (1 != fscanf(fpF, "%d", &ival))
+    {
+      rval = false;
+      break;
+    }
+  }
+  fsetpos(fpF, &fpos);
+  return rval;
+}
+
+// SCENARIO: the next character in file pointed by fpF
+//   should be a string in such forms
+//   [4:6]
+//   [2, 4:6]
+// GOAL: extract and return the vectors containing all values
+//   4,5,6
+//   2,4,5,6
+void Params::getListofValues(FILE* fpF, std::vector<int>& values)
+{
+  char ch;
+  while ((ch = fgetc(fpF)) != '[')
+  {
+  }
+  while ((ch = fgetc(fpF)) != ']')
+  {
+    char str[LENGTH_TOKEN_MAX];
+    int i = 0;
+    do
+    {
+      str[i] = ch;
+      i++;
+      ch = fgetc(fpF);
+    } while (ch != ',' and ch != ']' and ch != ':');
+    str[i] = '\0';
+    if (ch == ',')
+    {
+      values.push_back(atoi(str));
+    }
+    else if (ch == ':')
+    {
+      int val1 = atoi(str);
+      ch = fgetc(fpF);
+      i = 0;
+      do
+      {
+        str[i] = ch;
+        i++;
+        ch = fgetc(fpF);
+        if (ch == ':') assert(0);
+      } while (ch != ',' and ch != ']');
+      str[i] = '\0';
+
+      int val2 = atoi(str);
+      for (int i = val1; i <= val2; i++) values.push_back(i);
+    }
+    else if (ch == ']')
+      break;
+  }
 }

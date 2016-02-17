@@ -52,6 +52,9 @@
 //
 #define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant
 #define zR  8.314472e3 //[mJ/(K.mol)] - universal constant
+#define zCa 2          // valance of Ca2+ ions
+#define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
+#define zCaF_R (zCa*zF/(zR))
 
 ///////////////////////////////////////////////////////////////////////
 // Geometrical settings
@@ -95,7 +98,6 @@
 #define VM_CACYTO_CAER_DOPA 4
 //}}}
  //default
-#define SIMULATION_INVOLVE  VMONLY
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -215,5 +217,8 @@
 #endif
 #ifndef MODEL_TO_USE
 #define MODEL_TO_USE _MODEL_NOT_DEFINED
+#endif
+#ifndef SIMULATION_INVOLVE
+#define SIMULATION_INVOLVE  VMONLY
 #endif
 #endif //_MAXCOMPUTEORDER_H

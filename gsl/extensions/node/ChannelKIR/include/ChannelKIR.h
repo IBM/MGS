@@ -30,7 +30,7 @@ class ChannelKIR : public CG_ChannelKIR
 	static dyn_var_t taumKIR[];
   static std::vector<dyn_var_t> Vmrange_taum;
 #endif
-	int _cptindex;// index of the associated compartment
+	int _cptIndex;// index of the associated compartment
 };
 
 #endif

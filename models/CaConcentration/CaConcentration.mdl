@@ -8,21 +8,6 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
-Struct ChannelCaCurrents {
-  dyn_var_t []* currents; // [nS/um^2]
-}
-
-Struct ReceptorCaCurrent {
-  dyn_var_t* current; // [nS/um^2]
-  int index;
-}
-
-Struct InjectedCaCurrent {
-  dyn_var_t* current;  // [pA]
-  dyn_var_t currentToConc; // [uA] TODO
-  int index;
-}
-
 // It represents one branch (which comprises regular compartments + implicit junctions)
 Node CaConcentration Implements SolutionArrayProducer, 
      DimensionArrayProducer, BranchDataProducer,
@@ -240,7 +225,7 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
   UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(cyto)' of the end-point component which
             // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
 
-	//input
+  // Connection setup (i.e. input)
   Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
     CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   

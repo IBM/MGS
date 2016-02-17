@@ -7,9 +7,12 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+     BranchDataProducer 
+{
 /*{{{*/
   //DATA
+  //{{{
   // Hodgkin-Huxley-based formula
   //{{{
   //internal data
@@ -21,7 +24,7 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
-  int index; //index of the compartment in branch
+  //int index; //index of the compartment in branch
 
   //data mainly used to dynamically assign different conductance on different location
   //NOTE: In SynParams.par file

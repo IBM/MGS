@@ -29,8 +29,9 @@ Struct DimensionStruct {
 	dyn_var_t z;
 	dyn_var_t r;
 	dyn_var_t dist2soma;
-  dyn_var_t surface_area;
-  dyn_var_t volume;
+	dyn_var_t surface_area;
+	dyn_var_t volume;
+	dyn_var_t length;
 //  dyn_var_t surface_area_lost2junction; //either at proximal-end or distal-end
           // this is 1/4 surface area of the terminal capsule if ComputeBranch has 1 capsule only
           //                       and MAX_COMPUTE_ORDER == 0

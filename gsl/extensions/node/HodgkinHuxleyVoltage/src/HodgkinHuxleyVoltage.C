@@ -554,9 +554,9 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
       }
     }
   }
-  else if (CG_inAttrPset->idx < 0)  //??? TUAN : which condition is this
-  {//inject at all compartments???
-    injectedCurrents[injectedCurrents.size() - 1].index = 0;
+  else if (CG_inAttrPset->idx < 0)  // Can be used via 'Probe' of TissueFunctor
+  {//inject at all compartments of a branch having the compartment touch the stim-Site
+		injectedCurrents[injectedCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)
     {
       CurrentProducer* CG_CurrentProducerPtr =
