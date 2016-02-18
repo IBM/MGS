@@ -679,10 +679,10 @@ Grid MSN_D1Neuron{
       //  1.3. - [Ca]ER
       /*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
-	Layer(branches_CaER, CaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[CalciumER]">), <nodekind="CompartmentVariables[CalciumER]">, tissueGM);
-	Layer(endPoints_CaER, CaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[CalciumER]">), <nodekind="EndPoints[CalciumER]">, tissueGM);
-    Layer(junctions_CaER, CaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[CalciumER]">), <nodekind="Junctions[CalciumER]">, tissueGM);
-	Layer(junctionPoints_CaER, CaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[CalciumER]">), <nodekind="JunctionPoints[CalciumER]">, tissueGM);
+	Layer(branches_CaER, CaERConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[CalciumER]">), <nodekind="CompartmentVariables[CalciumER]">, tissueGM);
+	Layer(endPoints_CaER, CaERConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[CalciumER]">), <nodekind="EndPoints[CalciumER]">, tissueGM);
+    Layer(junctions_CaER, CaERConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[CalciumER]">), <nodekind="Junctions[CalciumER]">, tissueGM);
+	Layer(junctionPoints_CaER, CaERConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[CalciumER]">), <nodekind="JunctionPoints[CalciumER]">, tissueGM);
 #endif
       /*}}}*/
       //  1.4. - [Dopamine]extracellular
@@ -711,12 +711,12 @@ Grid MSN_D1Neuron{
 	Layer( SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
      //}}}
     //{{{ Ca2+ channels
-	Layer(CaNChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaN]" >), < nodekind="Channels[CaN]" >, tissueGM);
-	Layer(CaPQChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaPQ]" >), < nodekind="Channels[CaPQ]" >, tissueGM);
-	Layer(CaRChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaR]" >), < nodekind="Channels[CaR]" >, tissueGM);
-	Layer(CaLv12Channels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
-	Layer(CaLv13Channels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
-	Layer(CaTChannels, ChannelCaCaT, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
+	Layer(CaLv12Channels, ChannelCaLv12_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
+	Layer(CaLv13Channels, ChannelCaKv13_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
+	Layer(CaNChannels, ChannelCaN_GHK, tissueFunctor("Layout", < nodekind="Channels[CaN]" >), < nodekind="Channels[CaN]" >, tissueGM);
+	Layer(CaPQChannels, ChannelCaPQ_GHK, tissueFunctor("Layout", < nodekind="Channels[CaPQ]" >), < nodekind="Channels[CaPQ]" >, tissueGM);
+	Layer(CaRChannels, ChannelCaR_GHK, tissueFunctor("Layout", < nodekind="Channels[CaR]" >), < nodekind="Channels[CaR]" >, tissueGM);
+	Layer(CaTChannels, ChannelCaT_GHK, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
      //}}}
 	/*}}}*/
       // 3. SYNAPSES
@@ -985,28 +985,28 @@ Grid MSN_D1Neuron{
     //}}}
 	//{{{ Ca2+ channels
 	InitNodes ( .[].Layer(CaNChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "Pbar" },
+				Pbar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaPQChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "Pbar" },
+				Pbar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaRChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "Pbar" },
+				Pbar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaLv12Channels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "Pbar" },
+				Pbar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaLv13Channels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "Pbar" },
+				Pbar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaTChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "Pbar" },
+				Pbar = {0.0}
 				> ) );
     //}}}
 	/*}}}*/

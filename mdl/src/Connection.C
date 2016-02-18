@@ -164,6 +164,55 @@ std::string Connection::getCommonConnectionCode(const std::string& tab,
    return os.str();   
 }
 
+std::string Connection::getCommonConnectionCodeWithPredicate(const std::string& tab,
+						const std::string& name) const
+{
+   std::ostringstream os;
+
+   std::set<std::string> interfaceNames = getInterfaceNames();
+   std::set<std::string>::iterator it, end = interfaceNames.end();
+	 os << tab << "matchLocal = true;\n";
+   for (it = interfaceNames.begin(); it != end; ++it) {
+      os << tab << "if (" << PREFIX << *it << "Ptr == 0) {\n"
+	 << tab << TAB << "std::cerr << \"Dynamic Cast of "
+	 << *it << " failed in " << name
+	 << "\" << std::endl;\n"
+	 //<< tab << TAB << "exit(-1);\n"
+	 << tab << TAB << "matchLocal = false;\n"
+	 << tab << "}\n"
+	 << "\n";
+   }
+
+   MemberContainer<InterfaceToMember>::const_iterator it2, 
+      end2 = _interfaces.end();
+   
+   std::set<std::string> requiredIncreases;
+   std::string interfaceToMemberCodes;
+   std::string psetToMemberCodes;
+   for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
+      interfaceToMemberCodes += 
+	 it2->second->getInterfaceToMemberCode(tab, requiredIncreases);
+   }
+   psetToMemberCodes = _psetMappings.getPSetToMemberCode(tab, 
+							 requiredIncreases);
+
+   end = requiredIncreases.end();
+	 os << tab <<  "if (matchLocal) { \n";
+   for (it = requiredIncreases.begin(); it != end; ++it) {
+      std::string sizeName = PREFIX + *it + "Size";
+      os << tab << TAB << "int " << sizeName << " = " << *it 
+	 << ".size();\n"
+	 << tab << TAB << *it << ".increase();\n";
+   }
+   
+
+   os << TAB << interfaceToMemberCodes
+      << psetToMemberCodes;
+	 os << tab <<  "} \n";
+	 os << tab <<  "match = match || matchLocal; \n";
+   return os.str();   
+}
+
 void Connection::addInterfaceHeaders(Class& instance) const
 {
    MemberContainer<InterfaceToMember>::const_iterator it, 

@@ -28,7 +28,7 @@ Node ChannelKAf Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   //    Use either gbar_dists or gbar_branch
   //      and combine with gbar_values
   float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
-  float [] gbar_branchorder;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
   float [] gbar_values;// ... having the corresponding gbar conductance
   // Example:
   // CHANNEL_PARAMS 2
@@ -40,7 +40,7 @@ Node ChannelKAf Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   // Nat 3 
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_branchorder={0, 1, 2}> 
+  // 4 0 <gbar_branchorders={0, 1, 2}> 
   // 4 0 <gbar_values={0.0555,0.555,0.000555}>
   //}}}
 

@@ -9,8 +9,14 @@
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
 Struct ChannelCurrents {
+//use this for Hodgkin-Huxley equation
   dyn_var_t []* conductances; // [nS/um^2]
   dyn_var_t []* reversalPotentials; // [mV]
+}
+
+Struct ChannelCurrentsGHK {
+//use this for GHK equation
+  dyn_var_t []* currents; // [pA/um^2]
 }
 
 Struct ReceptorCurrent {
@@ -91,6 +97,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   dyn_var_t cmt; // intermediate values  = 2*Cm/dt [pF/(um^2 . ms)]
     // currents
   ChannelCurrents [] channelCurrents;
+  ChannelCurrentsGHK [] channelCurrentsGHK;
   ReceptorCurrent [] receptorCurrents;
   InjectedCurrent [] injectedCurrents; 
 	/*}}}*/
@@ -160,7 +167,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   //                      connection (e.g. electrical-synapse or spine-neck)
   //               2. a stimulus current is injected
   UserFunction setReceptorCurrent, setInjectedCurrent, setProximalJunction;
-  // Connection setup
+  // Connection setup (i.e. input)
   //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
     DimensionProducer.dimension >> dimensions;
@@ -173,7 +180,12 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects ConductanceArrayProducer, ReversalPotentialArrayProducer {
     ConductanceArrayProducer.conductanceArray >> channelCurrents.conductances;
     ReversalPotentialArrayProducer.reversalPotentials >> channelCurrents.reversalPotentials;
-   }
+  }
+
+  Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
+  {
+    CurrentArrayProducer.currents >> channelCurrentsGHK.currents;
+  }
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
@@ -302,6 +314,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 
   // currents
   ChannelCurrents [] channelCurrents;
+  ChannelCurrentsGHK [] channelCurrentsGHK;
   dyn_var_t* [] receptorConductances;
   dyn_var_t* [] receptorReversalPotentials;
   dyn_var_t* [] injectedCurrents;
@@ -358,6 +371,11 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     ConductanceArrayProducer.conductanceArray >> channelCurrents.conductances;
     ReversalPotentialArrayProducer.reversalPotentials >> channelCurrents.reversalPotentials;
    }
+
+  Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
+  {
+    CurrentArrayProducer.currents >> channelCurrentsGHK.currents;
+  }
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;

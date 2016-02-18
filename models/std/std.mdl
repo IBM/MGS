@@ -27,4 +27,20 @@ Struct ModificationStruct {
 	NDPairList* list;
 }
 
+// for modeling Ca-currents
+Struct ChannelCaCurrents {
+  dyn_var_t []* currents; // [nS/um^2]
+}
+
+Struct ReceptorCaCurrent {
+  dyn_var_t* current; // [nS/um^2]
+  int index;
+}
+
+Struct InjectedCaCurrent {
+  dyn_var_t* current;  // [pA]
+  dyn_var_t currentToConc; // [uA] TODO
+  int index;
+}
+
 #endif

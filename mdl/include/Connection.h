@@ -110,6 +110,8 @@ class Connection {
       std::string getCommonConnectionCode(const std::string& tab, 
 					  const std::string& name) const;
 
+      std::string getCommonConnectionCodeWithPredicate(const std::string& tab, 
+					  const std::string& name) const;
       DirectionType _directionType;
       ComponentType _componentType;
 

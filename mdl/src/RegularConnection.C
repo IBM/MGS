@@ -157,13 +157,14 @@ std::string RegularConnection::getConnectionCode(
       tab = TAB + TAB;
       os << TAB << "if (";
       if (_predicate) {
-	 os << _predicate->getName();
+       	 os << _predicate->getName();
       }
       os << ") {\n";
+      os << getCommonConnectionCodeWithPredicate(tab, name);
    } else {
       tab = TAB;
+      os << getCommonConnectionCode(tab, name);
    }
-   os << getCommonConnectionCode(tab, name);
    if (_userFunctionCalls) {
       std::vector<UserFunctionCall*>::const_iterator it, 
 	 end = _userFunctionCalls->end();

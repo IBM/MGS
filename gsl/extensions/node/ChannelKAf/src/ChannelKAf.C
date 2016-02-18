@@ -4,6 +4,8 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "GlobalNTSConfig.h"
+
 #define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
@@ -95,9 +97,9 @@ void ChannelKAf::initialize(RNG& rng)
   if (h.size() != size) h.increaseSizeTo(size);
   // initialize
   float gbar_default = gbar[0];
-	if (gbar_dists.size() > 0 and gbar_branchorder.size() > 0)
+	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorder on Channels Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
 			<< std::endl;
 		assert(0);
 	}
@@ -105,6 +107,7 @@ void ChannelKAf::initialize(RNG& rng)
   {
     if (gbar_dists.size() > 0) {
       int j;
+      assert(gbar_values.size() == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
         if ((*dimensions)[_cptIndex]->dist2soma < gbar_dists[j]) break;
       }
@@ -116,14 +119,19 @@ void ChannelKAf::initialize(RNG& rng)
 		/*else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];
     } */
-		else if (gbar_branchorder.size() > 0)
+		else if (gbar_branchorders.size() > 0)
 		{
       int j;
-			SegmentDescriptor segmentDescriptor;
-      for (j=0; j<gbar_branchorder.size(); ++j) {
-        if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorder[j]) break;
+      assert(gbar_values.size() == gbar_branchorders.size());
+      SegmentDescriptor segmentDescriptor;
+      for (j=0; j<gbar_branchorders.size(); ++j) {
+        if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
       }
-      if (j < gbar_values.size()) 
+			if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+			{
+				gbar[i] = gbar_values[j-1];
+			}
+			else if (j < gbar_values.size()) 
         gbar[i] = gbar_values[j];
       else
         gbar[i] = gbar_default;

@@ -2950,9 +2950,15 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz)
 void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 {
   char ch;
+	bool readOK = true;
   while ((ch = fgetc(fpF)) != '[')
   {
   }
+	if (feof(fpF))
+	{
+		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
+		exit(-1);
+	}
   while ((ch = fgetc(fpF)) != ']')
   {
     char str[LENGTH_TOKEN_MAX];
@@ -2962,7 +2968,12 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
       str[i] = ch;
       i++;
       ch = fgetc(fpF);
-    } while (ch != ',' and ch != ']' and ch != ':');
+    } while (ch != ',' and ch != ']' and ch != ':' and !feof(fpF));
+		if (feof(fpF))
+		{
+			readOK = false;
+			break;
+		}
     str[i] = '\0';
     if (ch == ',')
     {
@@ -2979,7 +2990,7 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
         i++;
         ch = fgetc(fpF);
         if (ch == ':') assert(0);
-      } while (ch != ',' and ch != ']');
+      } while (ch != ',' and ch != ']' and !feof(fpF));
       str[i] = '\0';
 
       int val2 = atoi(str);
@@ -2988,4 +2999,9 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
     else if (ch == ']')
       break;
   }
+	if (!readOK)
+	{
+		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
+		exit(-1);
+	}
 }

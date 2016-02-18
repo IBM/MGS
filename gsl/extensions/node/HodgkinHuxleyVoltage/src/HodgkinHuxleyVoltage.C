@@ -356,6 +356,8 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
 void HodgkinHuxleyVoltage::doForwardSolve()
 {
   unsigned size = branchData->size;
+	//Find A[ii]i and RHS[ii]  
+	//  1. ionic currents using Hodgkin-Huxley type equations (gV, gErev)
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   for (int i = 0; i < size; i++)  // for each compartment on that branch
   {
@@ -399,6 +401,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     }
   }
 
+	//  2. receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<ReceptorCurrent>::iterator riter = receptorCurrents.begin();
   Array<ReceptorCurrent>::iterator rend = receptorCurrents.end();
   for (; riter != rend; riter++)
@@ -408,7 +411,18 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     Aii[i] += *(riter->conductance);
   }
 
-  /* Note: Injected currents comprise current interfaces produced by two
+	//  3. ionic currents using GHK equations (Iion)
+	{
+		Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+		Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+		for (int k = 0; iiter != iend; iiter++, ++k)
+		{
+			RHS[k] +=  (*(iiter->currents))[k]; //[pA/um^2]
+		}
+	}
+
+  //  4. injected currents
+	/* Note: Injected currents comprise current interfaces produced by two
      different
      categories of models: 1) experimentally injected currents, as in a patch
      clamp
@@ -422,13 +436,12 @@ void HodgkinHuxleyVoltage::doForwardSolve()
      pA/um^2,
      even for electrical synapses.
   */
-
   Array<InjectedCurrent>::iterator iiter = injectedCurrents.begin();
   Array<InjectedCurrent>::iterator iend = injectedCurrents.end();
   for (; iiter != iend; iiter++)
   {
     if (iiter->index < branchData->size)
-      RHS[iiter->index] += *(iiter->current) / iiter->area;
+      RHS[iiter->index] += *(iiter->current) / iiter->area; // [pA/um^2]
   }
 
   /* * *  Forward Solve Ax = B * * */

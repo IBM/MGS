@@ -213,6 +213,8 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
       (*it2)->getFunctionPredicateNames(predicateFunctions);
    }   
    // ConnectionCodes
+	 subBody += TAB + "bool match = false; \n";
+	 subBody += TAB + "bool matchLocal = true; \n";
    for (it2 = connections.begin(); it2 != end2; ++it2) {
       std::set<std::string> tmpInterfaceCasts= 
 	 (*it2)->getInterfaceCasts(componentName);
