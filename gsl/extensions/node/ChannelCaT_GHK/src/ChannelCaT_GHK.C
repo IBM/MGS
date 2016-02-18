@@ -87,7 +87,9 @@ void ChannelCaT_GHK::update(RNG& rng)
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
 #endif
 		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-		const dyn_var_t unit_scale = 1e-3; 
+		//NOTE: PCa [um/ms], Vm [mV], Cai/o [mM], F [C/mol] or [mJ/(mV.mol)]
+		//     R [mJ/(mol.K)]
+		const dyn_var_t unit_scale = 1e+3; // to convert from nA/um^2 to pA/um^2
     I_Ca[i] = unit_scale * PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
 			v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
 			(1- tmp); // [pA/um^2]
