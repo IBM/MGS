@@ -164,7 +164,7 @@ std::string Connection::getCommonConnectionCode(const std::string& tab,
    return os.str();   
 }
 
-std::string Connection::getCommonConnectionCodeWithPredicate(const std::string& tab,
+std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
 						const std::string& name) const
 {
    std::ostringstream os;

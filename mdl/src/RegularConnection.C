@@ -160,12 +160,13 @@ std::string RegularConnection::getConnectionCode(
        	 os << _predicate->getName();
       }
       os << ") {\n";
-      os << getCommonConnectionCodeWithPredicate(tab, name);
+//      os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
    } else {
       tab = TAB;
-      os << getCommonConnectionCode(tab, name);
+//      os << getCommonConnectionCode(tab, name);
    }
-   if (_userFunctionCalls) {
+	 os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
+	 if (_userFunctionCalls) {
       std::vector<UserFunctionCall*>::const_iterator it, 
 	 end = _userFunctionCalls->end();
       for (it = _userFunctionCalls->begin();  it != end; ++it) {
