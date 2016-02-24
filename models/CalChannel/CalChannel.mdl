@@ -31,7 +31,7 @@ Node CalChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
-  CaCurrentArrayProducer.CaCurrents << &I_Ca;
+  CaCurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
 
   InAttrPSet {

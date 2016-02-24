@@ -6,7 +6,16 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer, ReversalPotentialProducer, CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer, WeightProducer {
+Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer, 
+            ReversalPotentialProducer, CaCurrentProducer, 
+            BranchDataArrayProducer, IndexArrayProducer, WeightProducer 
+{
+/*{{{*/
+	//DATA
+	//{{{ 
+	// Hodgkin-Huxley-based formula 
+	//internal data
+	//{{{
   dyn_var_t g;
   dyn_var_t gbar;
   dyn_var_t gbar0;
@@ -16,35 +25,44 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer, Re
   dyn_var_t I_Ca;
   dyn_var_t E_Ca;
   dyn_var_t tp;
+  //}}}
 
+  //reference data
   dyn_var_t* Vpre;
   dyn_var_t []* Vpost;
   dyn_var_t []* Ca_IC;
-  int indexPost;
-  int* [] indexPrePost;
+  int indexPost; //index of compartment in post-synaptic side (i.e. spine head)
+  int* [] indexPrePost; // index of compartment in pre-synaptic side (i.e. bouton)
 
   BranchDataStruct* [] branchDataPrePost;
+  //}}}
 
   Shared {
-    dyn_var_t alpha;
-    dyn_var_t beta;
-    dyn_var_t Tmax;
-    dyn_var_t Vp;
-    dyn_var_t Kp;
+    //{{{ 
+     //NT + C <==>[alpha][beta] O.NT
+    dyn_var_t alpha; // uM^-1 msec^-1
+    dyn_var_t beta;  // msec^-1
+    dyn_var_t NTmax; // [uM] maximum concentration of NeuroTransmitter Glutamate
+    dyn_var_t Vp; // [mV]  voltage at which concentration of Glutamate is at half-peak
+    dyn_var_t Kp; // [mV]  the steepness of the curve of Glutamate = f(Vm)
     dyn_var_t E;
 
     dyn_var_t* deltaT;
     dyn_var_t* T;
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+		InitPhase computeTadj;  
     dyn_var_t* Ca_EC;
     dyn_var_t* Mg_EC;
     dyn_var_t* Ketamine;
+    dyn_var_t* Glycine; //PLAN to use
 
     //Plasticity params
     int plasticityOn;
     int plasticityStartAt;
     int plasticityStopAt;
-    dyn_var_t theta_d;
-    dyn_var_t theta_p;
+    dyn_var_t theta_d; // threshold of Ca2+ for depression
+    dyn_var_t theta_p; // threshold of Ca2+ for potentiation
     dyn_var_t gamma_d;
     dyn_var_t gamma_p;
     dyn_var_t tau;
@@ -54,54 +72,73 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer, Re
     dyn_var_t deltaNMDAR;
     dyn_var_t alphaBuffer;
     dyn_var_t tauBuffer;
+    //}}}
    }
 
+  InitPhase initializeNMDA;
   RuntimePhase updateNMDA;
   RuntimePhase updateNMDADepPlasticity;
-  InitPhase initializeNMDA;
 
+  // Output
+	//{{{
   ConductanceProducer.conductance << &g;
   MaximumConductanceProducer.maximumConductance << &w;
   ReversalPotentialProducer.reversalPotential << &Shared.E;
-  CaCurrentProducer.CaCurrent << &I_Ca;
+  CaCurrentProducer.current << &I_Ca;
   BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
   IndexArrayProducer.indexArray << &indexPrePost;
   WeightProducer.w << &w; //Repeated in MaxConductanceProducer?
+  //}}}
 
   InAttrPSet {//information of the incoming connection
-    string identifier; //name of the compartment variable
+    string identifier; 
     int idx;   // index of the compartment on a branch
+          // if identifier is the name of the compartment variable
   }
 
   UserFunction setPostIndex;
 
-  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
+  // Connection (input)
+	//{{{
+  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {//the info from presynaptic-side is passed to receptor via this
+      // intermediate nodetype
+		//{{{
     VoltageProducer.voltage >> Vpre;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
+    //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
+    //REMEMBER: When use in C++ code, only use Vpost[0]
     VoltageArrayProducer.voltageArray >> Vpost;
     BranchDataProducer.branchData >> branchDataPrePost;
-    setPostIndex();
+    setPostIndex(); // so that Vpost[0] point to the voltage in the proper compartment index 
   }
 
   Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+    //REMEMBER: When use in C++ code, only use Ca_IC[0]
     CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
   }
 
-  Connection Pre Constant (PSet.identifier=="EC") Expects CaConcentrationProducer, MgConcentrationProducer, TemperatureProducer, KetamineProducer {
+  Connection Pre Constant (PSet.identifier=="EC") Expects CaConcentrationProducer, 
+        MgConcentrationProducer, TemperatureProducer, KetamineProducer, GlycineProducer 
+  {
+		//{{{
     CaConcentrationProducer.Ca >> Shared.Ca_EC;
     MgConcentrationProducer.Mg >> Shared.Mg_EC;
     TemperatureProducer.T >> Shared.T;
     KetamineProducer.Ketamine >> Shared.Ketamine;
+    GlycineProducer.Glycine >> Shared.Glycine;
+    //}}}
   }
 
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
 
+/*}}}*/
 }
 
 #endif

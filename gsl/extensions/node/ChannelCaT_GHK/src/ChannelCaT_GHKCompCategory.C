@@ -25,7 +25,7 @@ void ChannelCaT_GHKCompCategory::computeTadj(RNG& rng)
   // BASED_TEMPERATURE) / 10.0));
   //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
 }
-//
+
 // Return the statistics of distributing the instances of this nodetype
 // onto different computing nodes
 // i.e. the total instances,

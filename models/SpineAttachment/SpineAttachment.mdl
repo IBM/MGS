@@ -141,7 +141,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   SurfaceAreaLengthProducer.len << leni;
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
-  CaCurrentProducer.CaCurrent << &I_Ca;
+  CaCurrentProducer.current << &I_Ca;
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
 
@@ -251,9 +251,9 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   SurfaceAreaLengthProducer.len << leni;
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
-  CaCurrentProducer.CaCurrent << &I_Ca;
+  CaCurrentProducer.current << &I_Ca;
   CaERConcentrationProducer.Ca << CaERi;
-  CaERCurrentProducer.CaCurrent << &I_CaER;
+  CaERCurrentProducer.current << &I_CaER;
 
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;

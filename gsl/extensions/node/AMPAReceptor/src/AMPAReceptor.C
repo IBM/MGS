@@ -19,14 +19,26 @@
 #include "rndm.h"
 #include <iostream>
 
+// Destexhe-Mainen-Sejnowski (1994)
+// The Glutamate neurotransmitter concentration, i.e. [NT]
+//  which is assumed to be an instantaneous function of Vm
+//  [NT] = NTmax / (1 + exp (-(Vm - Vp)/Kp))
+//
+// The gating of AMPAR is modeled using
+//   C <==>[alpha * [NT]][beta] O
+// then given r = fO (fraction of AMPAR in Open state)
+//    dr/dt = alpha * NT * (1-r) - beta * r
+
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
-#define NEUROTRANSMITTER (getSharedMembers().Tmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
+#define NEUROTRANSMITTER (getSharedMembers().NTmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
+// take into account the effect of temperature making the change faster or slower
 #define DT (*(getSharedMembers().deltaT))
+#define Tscale (*(getSharedMembers().deltaT) * (getSharedMembers().Tadj))
 
 void AMPAReceptor::initializeAMPA(RNG& rng) {
   assert(V);
-  float ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
+  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
   r = ALPHANEUROTRANSMITTER/(BETA + ALPHANEUROTRANSMITTER);
 
   //std::cout << "Weight: " << (*w) << std::endl;
@@ -37,10 +49,17 @@ void AMPAReceptor::initializeAMPA(RNG& rng) {
   }
 }
 
-void AMPAReceptor::updateAMPA(RNG& rng) {
-  float ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
-  float A = DT*(BETA + ALPHANEUROTRANSMITTER)/2.0;
-  r =  (DT*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
+void AMPAReceptor::updateAMPA(RNG& rng) 
+{
+	//Rempe-Chopp 2006
+  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
+	dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA)/2.0 * Tscale; 
+	r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale)/ tmp;
+  //dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
+  //r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
+
+	if (r < 0.0) { r = 0.0; }
+	else if (r > 1.0) { r = 1.0; }
 
   if(w==NULL){
     g = gbar*r;}

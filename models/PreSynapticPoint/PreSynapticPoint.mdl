@@ -7,10 +7,13 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
+// It is used as an intermediate node connecting
+//   pre-Compartment[Node]  --> PreSynapticPoint --> Receptor(Synapse)
 Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProducer
 {
+/*{{{*/
   dyn_var_t* voltage;
-  int index;
+  int index; //index of compartment in Presynaptic-side (i.e. bouton)
   Shared {
     dyn_var_t []* voltageConnect;
   }
@@ -18,9 +21,12 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
   BranchDataStruct* branchDataConnect;
   BranchDataStruct branchData;
 
+  // Output
+  //{{{ 
   VoltageProducer.voltage << voltage;
   BranchDataProducer.branchData << &branchData;
   IndexProducer.index << &index;
+  //}}}
 
   InAttrPSet {
     string identifier;
@@ -29,13 +35,19 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
 
   UserFunction setPointers;
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  // Input (Connection setup)
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+        BranchDataProducer 
+  {
+    //{{{ 
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchDataConnect;
     setPointers();
+    //}}}
   }
   InitPhase produceInitialState(voltage, branchData, index);
   RuntimePhase produceState(voltage);
+/*}}}*/
 }
 
 #endif

@@ -3867,6 +3867,15 @@ void TissueFunctor::doConnector(LensContext* lc)
           _tissueParams.getChemicalSynapseTargets(key1, key2);
       if (csynTargets)
       {// touch falls into chemical-synapse group
+//key1    key2   
+//2 1 0   1 3   [AMPAmush NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+//--> converted into a list, each element is a map as 
+//    std::map<std::string, std::pair<std::list<std::string>,
+//                                    std::list<std::string> > > _targets;
+// e.g.: the above example has a list of 2 elements, each element is
+//  <AMPAmush, pair( "Voltage", "Voltage" )
+//  <NMDAmush, pair( ["Voltage"], ["Voltage", "Calcium"] )
+//NOTE: csiter iterate through the list
         std::list<Params::ChemicalSynapseTarget>::iterator csiter,
             csend = csynTargets->end();
         std::vector<int> typeCounter;
@@ -3883,7 +3892,9 @@ void TissueFunctor::doConnector(LensContext* lc)
           {
             std::map<std::string, int>::iterator miter =
                 _chemicalSynapseTypesMap.find(targetsIter->first);
+						// miter --> check if there is a layer name, say 'ChemicalSynapses[AMPAmush]'
             assert(miter != _chemicalSynapseTypesMap.end());
+						// if present, get the layer index
             int synapseType = miter->second;
             if (isGenerated(_generatedChemicalSynapses, titer,
                             synapseType, typeCounter[synapseType]))

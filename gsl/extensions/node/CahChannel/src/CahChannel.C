@@ -58,7 +58,7 @@ void CahChannel::update(RNG& rng)
   }
 }
 
-void CahChannel::initializeCahChannels(RNG& rng)
+void CahChannel::initialize(RNG& rng)
 {
   unsigned size=branchData->size;
   assert(V);

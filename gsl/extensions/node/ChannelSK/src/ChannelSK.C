@@ -105,7 +105,7 @@ void ChannelSK::update(RNG& rng)
     //}
     // fC[i] = ...
     // fC[i] = 1.0 - (fO[i]);  //no need
-    g[i] = gbar[i] * fO[i] * (v - getSharedMembers().E_K[0]);
+    g[i] = gbar[i] * fO[i] ;
   }
 }
 

@@ -68,7 +68,7 @@ Variable PointCalciumSource Implements CaCurrentProducer
 	dyn_var_t I_Ca;
 	TriggeredFunction setCaCurrent;
 	RuntimePhase stimulate(I_Ca);
-	CaCurrentProducer.CaCurrent << &I_Ca;
+	CaCurrentProducer.current << &I_Ca;
 }
 
 Variable CurrentPulseGenerator Implements CurrentProducer
@@ -300,18 +300,18 @@ Variable CaCurrentDisplay
 	UserFunction setUpPointers;
 
 	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer {
-		CaCurrentArrayProducer.CaCurrents >> ICa_channelConnect;
+		CaCurrentArrayProducer.currents >> ICa_channelConnect;
 		BranchDataProducer.branchData >> channelBranchData;
 		setUpPointers();
 	}
 	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
-		CaCurrentProducer.CaCurrent >> ICa_synapse;
+		CaCurrentProducer.current >> ICa_synapse;
 		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
 		IndexArrayProducer.indexArray >> synapseIndicesConnect;
 		setUpPointers();
 	}
 	Connection Pre Node (PSet.identifier=="CONNEXON") Expects CaCurrentProducer, BranchDataProducer, IndexProducer {
-		CaCurrentProducer.CaCurrent >> ICa_synapse;
+		CaCurrentProducer.current >> ICa_synapse;
 		BranchDataProducer.branchData >> connexonBranchData;
 		IndexProducer.index >> connexonIndices;
 	}

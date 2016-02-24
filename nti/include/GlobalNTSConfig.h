@@ -7,6 +7,4 @@ class GlobalNTS{
 	static const int anybranch_at_end = -1;
 };
 
-
-
 #endif

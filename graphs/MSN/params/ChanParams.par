@@ -1,5 +1,6 @@
-CHANNEL_TARGETS 8
+CHANNEL_TARGETS 12
 BRANCHTYPE MTYPE
+# need to define KIR KRP
 1 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] Kv31 [Voltage] [Voltage] SK [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
 2 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] Kv31 [Voltage] [Voltage]
 3 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage] MK [Voltage] [Voltage] Kv31 [Voltage] [Voltage] SK [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
@@ -26,20 +27,22 @@ Cal 0.254051
 SK 0.254051
 
 CHANNEL_PARAMS 10
-Nat 8 
-BRANCHTYPE MTYPE
 # Wolf-2005 
-#1  0 <gbar={1.5}>
-#2  0 <gbar={0.0195}>
-# Moyer-2007
-1  0 <gbar={1.875}>
-2  0 <gbar={0.0244}>
-3  0 <gbar={0.0244}>
-4  0 <gbar={0.0244}>
-1  1 <gbar={0.0244}>
-2  1 <gbar={0.0244}>
-1  2 <gbar={0.0244}>
-2  2 <gbar={0.0244}>
+Nat 2
+BRANCHTYPE MTYPE
+1  0 <gbar={1.5}>
+2  0 <gbar={0.0195}>
+## Moyer-2007
+#Nat 8 
+#BRANCHTYPE MTYPE
+#1  0 <gbar={1.875}>
+#2  0 <gbar={0.0244}>
+#3  0 <gbar={0.0244}>
+#4  0 <gbar={0.0244}>
+#1  1 <gbar={0.0244}>
+#2  1 <gbar={0.0244}>
+#1  2 <gbar={0.0244}>
+#2  2 <gbar={0.0244}>
 #1 0 <gbar={20.4}>
 #2 0 <gbar={20.4}>
 #3 0 <gbar={0.213}>

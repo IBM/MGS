@@ -55,6 +55,7 @@ void ChannelHayHCN::initialize(RNG& rng)
   for (int i=0; i<size; ++i) {
     if (gbar_dists.size() > 0) {
       int j;
+      assert(gbar_values.size() == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
         if ((*dimensions)[0]->dist2soma < gbar_dists[j]) break;
       }

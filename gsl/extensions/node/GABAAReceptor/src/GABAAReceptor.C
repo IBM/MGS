@@ -18,21 +18,33 @@
 #include "CG_GABAAReceptor.h"
 #include "rndm.h"
 
+// Destexhe-Mainen-Sejnowski (1994)
+// The Glutamate neurotransmitter concentration, i.e. [NT]
+//  which is assumed to be an instantaneous function of Vm
+//  [NT] = NTmax / (1 + exp (-(Vm - Vp)/Kp))
+//
+// The gating of AMPAR is modeled using
+//   C <==>[alpha * [NT]][beta] O
+// then given r = fO (fraction of AMPAR in Open state)
+//    dr/dt = alpha * NT * (1-r) - beta * r
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
-#define NEUROTRANSMITTER (getSharedMembers().Tmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
+#define NEUROTRANSMITTER (getSharedMembers().NTmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
 #define DT (*(getSharedMembers().deltaT))
+#define Tscale (*(getSharedMembers().deltaT) * (getSharedMembers().Tadj))
 
 void GABAAReceptor::initializeGABAA(RNG& rng) {
-  float ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
+  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
   r = ALPHANEUROTRANSMITTER/(BETA + ALPHANEUROTRANSMITTER);
   g = gbar*r;
 }
 
 void GABAAReceptor::updateGABAA(RNG& rng) {
-  float ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
-  float A = DT*(BETA + ALPHANEUROTRANSMITTER)/2.0;
-  r =  (DT*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
+  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
+	dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA)/2.0 * Tscale; 
+	r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale)/ tmp;
+  //dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
+  //r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
   g = gbar*r;
 }
 

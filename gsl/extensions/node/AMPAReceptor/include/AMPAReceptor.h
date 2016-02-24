@@ -19,7 +19,19 @@
 #include "Lens.h"
 #include "CG_AMPAReceptor.h"
 #include "rndm.h"
+#include "MaxComputeOrder.h"
 
+#if RECEPTOR_AMPA == AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#define BASED_TEMPERATURE 35.0  // Celcius
+#define Q10 3.0
+#elif RECEPTOR_AMPA == AMPAR_POINTPROCESS
+#define BASED_TEMPERATURE 35.0  // Celcius
+#define Q10 3.0
+#endif
+
+#ifndef Q10 
+#define Q10 3.0 //default
+#endif
 class AMPAReceptor : public CG_AMPAReceptor
 {
    public:

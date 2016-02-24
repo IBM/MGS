@@ -36,7 +36,7 @@
 //
 //  ConductanceArrayProducer.conductanceArray << &g;
 //  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
-//  CaCurrentArrayProducer.CaCurrents << &I_Ca;
+//  CaCurrentArrayProducer.currents << &I_Ca;
 //  BranchDataProducer.branchData << branchData;
 //
 //  InAttrPSet {
@@ -70,12 +70,12 @@
 // NOTE: This channel is modeled using GHK formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 Node ChannelCaT_GHK Implements 
-		 BranchDataProducer, CurrentArrayProducer
+		 BranchDataProducer, CaCurrentArrayProducer
 {
 /*{{{*/
 	//DATA
 	//{{{ 
-	// Hodgkin-Huxley-based formula
+	// GHK formula with Hodgkin-Huxley-based gating variable
 	//{{{
 	//internal data
 	dyn_var_t [] m;
@@ -121,7 +121,7 @@ Node ChannelCaT_GHK Implements
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
 		//   and tempt. used for the simulation 
 		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
-		InitPhase computeTadj; // [mV]
+		InitPhase computeTadj; 
 		//}}}
 	}
 	//}}}
@@ -130,7 +130,7 @@ Node ChannelCaT_GHK Implements
 	InitPhase initialize;
 	UserFunction setPointers;
 
-	CurrentArrayProducer.currents << &I_Ca;
+	CaCurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection

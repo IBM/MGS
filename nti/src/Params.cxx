@@ -2671,9 +2671,12 @@ unsigned long long Params::resetMask(
 // GOAL: read until the end of the line
 //    if the last non-space character is '\'
 //    then continue to the next line
+// NOTE: existing content of 'out_bufS'  is cleared before loading data
 void Params::readMultiLine(std::string& out_bufS, FILE* fpF)
 {
   char bufS[LENGTH_LINE_MAX];
+	out_bufS.clear();
+  //NOTE: The '\n' new-line character is read-in as well
   char* c = fgets(bufS, sizeof(bufS), fpF);
   bool itsok = true;
   do
@@ -2681,11 +2684,11 @@ void Params::readMultiLine(std::string& out_bufS, FILE* fpF)
     int i = 1;
     while (strlen(bufS) >= i and
            (bufS[strlen(bufS) - i] == ' ' || bufS[strlen(bufS) - i] == '\n'))
-    {
+    {//move index to the first non-space character on the right-side of buffer
       i++;
     }
     if (strlen(bufS) >= i)
-    {
+    {//using 'i' to check if backslash is used
       std::string tmp(bufS);
       out_bufS.append(tmp.substr(0, strlen(bufS) - i));
       if (bufS[strlen(bufS) - i] == '\\')

@@ -512,7 +512,7 @@ void CaConcentration::setInjectedCaCurrent(
         }
         injectedCaCurrents.increase();
         injectedCaCurrents[injectedCaCurrents.size() - 1].current =
-            CG_CaCurrentProducerPtr->CG_get_CaCurrentProducer_CaCurrent();
+            CG_CaCurrentProducerPtr->CG_get_CaCurrentProducer_current();
         injectedCaCurrents[injectedCaCurrents.size() - 1].index = i;
         checkAndAddPreVariable(CG_variable);
       }
@@ -533,7 +533,7 @@ void CaConcentration::setInjectedCaCurrent(
       }
       injectedCaCurrents.increase();
       injectedCaCurrents[injectedCaCurrents.size() - 1].current =
-          CG_CaCurrentProducerPtr->CG_get_CaCurrentProducer_CaCurrent();
+          CG_CaCurrentProducerPtr->CG_get_CaCurrentProducer_current();
       injectedCaCurrents[injectedCaCurrents.size() - 1].index = i;
       checkAndAddPreVariable(CG_variable);
     }

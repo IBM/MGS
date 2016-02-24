@@ -29,7 +29,7 @@ Node CaConnexon Implements VoltageProducer, CaConcentrationProducer, CurrentProd
   VoltageProducer.voltage << Vi;
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
-  CaCurrentProducer.CaCurrent << &I_Ca;
+  CaCurrentProducer.current << &I_Ca;
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
 

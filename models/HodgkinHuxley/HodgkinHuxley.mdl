@@ -31,19 +31,19 @@ Interface CurrentArrayProducer {
 }
 
 Interface CaCurrentProducer {
-  dyn_var_t* CaCurrent;
+  dyn_var_t* current;
 }
 
 Interface CaCurrentArrayProducer {
-  dyn_var_t []* CaCurrents;
+  dyn_var_t []* currents;
 }
 
 Interface CaERCurrentProducer {
-  dyn_var_t* CaCurrent;
+  dyn_var_t* current;
 }
 
 Interface CaERCurrentArrayProducer {
-  dyn_var_t []* CaCurrents;
+  dyn_var_t []* currents;
 }
 Interface ReversalPotentialProducer {
   dyn_var_t* reversalPotential;
@@ -126,11 +126,11 @@ Interface KetamineProducer {
 }
 
 Interface SurfaceAreaProducer {
-   dyn_var_t* surfaceArea;
+   dyn_var_t* surfaceArea; // [um^2]
 }
 
 Interface ConnectionSurfaceAreaProducer {
-   dyn_var_t* surfaceArea;
+   dyn_var_t* surfaceArea; // [um^2]
 }
 
 Interface IndexProducer {
@@ -141,19 +141,28 @@ Interface IndexArrayProducer {
    int* []* indexArray;
 }
 
-Constant ExtracellularMedium Implements NaConcentrationProducer, KConcentrationProducer, CaConcentrationProducer, MgConcentrationProducer, TemperatureProducer, KetamineProducer {
-  dyn_var_t Na; // intracellular concetrations expressed by ion name alone
-  dyn_var_t K;
-  dyn_var_t Ca;
-  dyn_var_t Mg;
-  dyn_var_t T;
-  dyn_var_t Ketamine;
+Interface GlycineProducer {
+   dyn_var_t* Glycine;
+}
+
+Constant ExtracellularMedium Implements NaConcentrationProducer, 
+    KConcentrationProducer, CaConcentrationProducer, MgConcentrationProducer, 
+    TemperatureProducer, KetamineProducer, GlycineProducer
+{
+  dyn_var_t Na; // [mM] extracellular concetrations expressed by ion name alone
+  dyn_var_t K;  // [mM]
+  dyn_var_t Ca; // [mM]
+  dyn_var_t Mg; // [mM]
+  dyn_var_t T;  // [K]
+  dyn_var_t Ketamine; // [mM]
+  dyn_var_t Glycine; // [mM]
   NaConcentrationProducer.Na << &Na;
   KConcentrationProducer.K << &K;
   CaConcentrationProducer.Ca << &Ca;
   MgConcentrationProducer.Mg << &Mg;
   TemperatureProducer.T << &T;
   KetamineProducer.Ketamine << &Ketamine;
+  GlycineProducer.Glycine << &Glycine;
 }
 
 #endif

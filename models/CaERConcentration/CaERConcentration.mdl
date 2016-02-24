@@ -136,26 +136,26 @@ Node CaERConcentration Implements SolutionArrayProducer,
    }
 
   Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
-    CaCurrentArrayProducer.CaCurrents >> channelCaCurrents.currents;
+    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
    }
 
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
-  //  CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+  //  CaCurrentProducer.current >> injectedCaCurrents.current;
   //  setInjectedCaCurrent();
   // }
 
   Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+    CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
   //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
-  //  CaCurrentProducer.CaCurrent >> receptorCaCurrents.current;
+  //  CaCurrentProducer.current >> receptorCaCurrents.current;
   //  setReceptorCaCurrent();
   // }
 
   PredicateFunction checkSite;
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+    CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
 
@@ -286,24 +286,24 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
    }
 
   Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
-    CaCurrentArrayProducer.CaCurrents >> channelCaCurrents.currents;
+    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
   }
 
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
-  //  CaCurrentProducer.CaCurrent >> injectedCaCurrents;
+  //  CaCurrentProducer.current >> injectedCaCurrents;
   //}
 
   Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> injectedCaCurrents;
+    CaCurrentProducer.current >> injectedCaCurrents;
   }
 
   //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
-  //  CaCurrentProducer.CaCurrent >> receptorCaCurrents;
+  //  CaCurrentProducer.current >> receptorCaCurrents;
   //}
 
   PredicateFunction checkSite;
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> injectedCaCurrents;
+    CaCurrentProducer.current >> injectedCaCurrents;
    }
 
   Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, DimensionProducer  {

@@ -304,12 +304,14 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::vector<std::string> _compartmentVariableTypes;
   // map the name of nodeType
   //     to its associated index (based on the order of Layer adding in GSL)
-  //   NOTE: The name of nodeType is passed inside
+	//     (such information is extracted from Layer statements
+  //     where The name of nodeType is passed inside
   //   the square bracket of the associated components of <nodekind="...">
+	//     )
   //   NDPair
-  //     BidirectionalConnections[...]
   //     ElectricalSynapses[...]
   //     ChemicalSynapses[...]
+  //     BidirectionalConnections[...]
   //     CompartmentVariables[...]
   //     Junctions[...]
   //     Channels[...]

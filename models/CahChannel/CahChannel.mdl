@@ -8,30 +8,40 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node CahChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, CaCurrentArrayProducer, BranchDataProducer {
+  //DATA
+  //{{{ 
+  // Hodgkin-Huxley-based formula
+  //{{{
+  //internal data
   dyn_var_t [] r;
-  dyn_var_t [] g;
-  dyn_var_t [] gbar;
+  dyn_var_t [] g;  // nS/um^2
+  dyn_var_t [] gbar; // nS/um^2
   dyn_var_t [] E_Ca;
   dyn_var_t [] I_Ca;
 
+  // reference data
   dyn_var_t []* V;
   dyn_var_t []* Ca_IC;
-
   BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
+  //}}}
 
-  Shared {		
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+  //{{{
     dyn_var_t* Ca_EC;
     dyn_var_t* deltaT;
     dyn_var_t* T;
+  //}}}
   }
+  //}}}
 
   RuntimePhase update;	
-  InitPhase initializeCahChannels;
+  InitPhase initialize;
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
-  CaCurrentArrayProducer.CaCurrents << &I_Ca;
+  CaCurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
 
   InAttrPSet {

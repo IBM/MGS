@@ -22,11 +22,14 @@
 
 class NDPairList;
 
-class AMPAReceptorCompCategory : public CG_AMPAReceptorCompCategory, public CountableModel
+class AMPAReceptorCompCategory : public CG_AMPAReceptorCompCategory,
+                                 public CountableModel
 {
-   public:
-      AMPAReceptorCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+  public:
+  AMPAReceptorCompCategory(Simulation& sim, const std::string& modelName,
+                           const NDPairList& ndpList);
+  void computeTadj(RNG& rng);
+  void count();
 };
 
 #endif

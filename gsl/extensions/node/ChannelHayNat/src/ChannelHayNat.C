@@ -18,7 +18,7 @@
 #include "CG_ChannelHayNat.h"
 #include "rndm.h"
 
-#include "../../nti/include/MaxComputeOrder.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 

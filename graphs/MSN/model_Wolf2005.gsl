@@ -37,9 +37,9 @@
 //}}}
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
-#define Cacyto_value  0.1   // [uM]
-#define CaER_value   500   // [uM]
-#define Ca_o_value  1800   // [uM]
+#define Cacyto_value  0.1e-3  // [mM]
+#define CaER_value   1    // [mM]
+#define Ca_o_value  1.8   // [mM]
 #define Mg_o_value  1.5    // [mM]
 #define Mg_i_value  0.8    // [mM]
 #define Na_i_value   12.0  // [mM]
@@ -418,7 +418,7 @@ NodeType AMPAReceptor (<
           E=0.0,        // mV
           alpha=0.05, // uM^-1 msec^-1
           beta=2.0,    // msec^1
-          Tmax=180,     // 160-190 uM
+          NTmax=180,     // 160-190 uM
           Vp=2.0,       // mV
           Kp=5.0        // mV
           >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
@@ -426,7 +426,7 @@ NodeType NMDAReceptor (<
           E = 0.0,       // mV
           alpha=0.000512,  // uM^-1 msec^-1
           beta=0.053,     // msec^1
-          Tmax=180,      // 160-190 uM
+          NTmax=180,      // 160-190 uM
           Vp=2.0,        // mV
           Kp=5.0,        // mV
           plasticityOn = 0,
@@ -446,7 +446,7 @@ NodeType GABAAReceptor (<
           E=-80.0,      // mV
           alpha=0.005,  // uM^-1 msec^-1
           beta=0.18,    // msec^1
-          Tmax=185,     // 185 um
+          NTmax=185,     // 185 uM
           Vp=2.0,       // mV
           Kp=5.0        // mV
           >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
@@ -729,6 +729,7 @@ Grid MSN_D1Neuron{
       /*}}}*/
       // 3.2. PRE-SYNAPSE (get Voltage from bouton-side)
 	/*{{{*/
+// TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
 	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
 	/*}}}*/
       // 3.3. SpineAttachment
@@ -1088,6 +1089,8 @@ Grid MSN_D1Neuron{
 	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(CaNChannels, CaPQChannels, CaRChannels, CaLv12Channels, CaLv13Channels, CaTChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(NMDASynapses), <>, <identifier="EC">);
+	polyConnect(extracellularMedium, .[].Layer(AMPASynapses), <>, <identifier="EC">);
+	polyConnect(extracellularMedium, .[].Layer(GABASynapses), <>, <identifier="EC">);
 	polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
 	/*}}}*/
 
