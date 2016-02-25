@@ -7,22 +7,15 @@
 #define _NO 0
 
 ///////////////////////////////////////////////////////////////////////
-/// Define what models are available here
-//{{{
-#define _MODEL_NOT_DEFINED 0 
-#define _WOLF_2005_MSN  1 
-//}}}
-// define 
-
-
-///////////////////////////////////////////////////////////////////////
 // Physical constants
 //
+//{{{
 #define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant
 #define zR  8.314472e3 //[mJ/(K.mol)] - universal constant
 #define zCa 2          // valance of Ca2+ ions
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
+//}}}
 
 ///////////////////////////////////////////////////////////////////////
 // Geometrical settings
@@ -72,72 +65,105 @@
 // list of paper models
 #define _COMPONENT_UNDEFINED    0
 //{{{ Na-models
-//Na-transient
+//Na-transient   CHANNEL_NAT macro
 #define NAT_HODGKIN_HUXLEY_1952 1
 #define NAT_WOLF_2005           2
 #define NAT_HAY_2011            3
 #define NAT_SCHWEIGHOFER_1999   4
-// Na-persistent
+// Na-persistent CHANNE_NAP macro
 #define NAP_WOLF_2005           2
 //}}}
 //{{{ K-models
-// KAf
+// KAf   CHANNEL_KAf macro
 #define KAf_WOLF_2005          2
-// KAs
+// KAs   CHANNEL_KAs macro
 #define KAs_WOLF_2005          2
-// KIR
+// KIR   CHANNEL_KIR macro
 #define KIR_WOLF_2005          2
-// KRP
+// KRP   CHANNEL_KRP macro
 #define KRP_WOLF_2005          2
-// KDR
+// KDR   CHANNEL_KDR macro
 #define KDR_HODGKIN_HUXLEY_1952 1
 #define KDR_SCHWEIGHOFER_1999   4
 
 // BK-alpha
-// BK-alphabeta
+// BK-alphabeta   CHANNEL_BKalphabeta macro
 // NOTE: Those with the same values are indeed the same model
 //        just being used in different papers
 #define BKalphabeta_SHAO_1999       2       
 #define BKalphabeta_WOLF_2005       2       
-// SK
+
+// SK       CHANNEL_SK macro
 #define SK_MOCZYDLOWSKI_1993 2
 #define SK_WOLF_2005    2
 //}}}
 //{{{ Ca-models
-// CaLv12
+// CaLv12   CHANNEL_CaLv12 macro
 #define CHANNEL_CaLv12 _COMPONENT_UNDEFINED
-// CaLv13
+// CaLv13   CHANNEL_CaLv13 macro
 #define CHANNEL_CaLv13 _COMPONENT_UNDEFINED
-// CaN
+// CaN      CHANNEL_CaN macro
 #define CHANNEL_CaN _COMPONENT_UNDEFINED
-// CaPQ
+// CaPQ     CHANNEL_CaPQ macro
 #define CHANNEL_CaPQ _COMPONENT_UNDEFINED
-// CaR
+// CaR      CHANNEL_CaR macro
 #define CHANNEL_CaR _COMPONENT_UNDEFINED
-// CaT
+// CaT      CHANNEL_CaT macro
 #define CaT_GHK_WOLF_2005 2
 //}}}
-// NMDAR???
+//{{{ Synapse Receptors
+// NMDAR      RECEPTOR_NMDA macro 
 #define NMDAR_POINTPROCESS                    1
 #define NMDAR_BEHABADI_2012                   2
 #define NMDAR_JADI_2012                       3
 #define NMDAR_JAHR_STEVENS_1990               4
-// AMPAR (RECEPTOR_AMPA)
+// AMPAR      RECEPTOR_AMPA macro
 #define AMPAR_POINTPROCESS                    1
 #define AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
-// GABA_A (RECEPTOR_GABAA)
+// GABA_A     RECEPTOR_GABAA
 #define GABAAR_POINTPROCESS 1
 #define GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
-// GABA_B (RECEPTOR_GABAB)
+// GABA_B     RECEPTOR_GABAB
 #define GABABR_DESTEXHE_SEJNOWSKI_1996  3
-// PMCA???
-#define CHANNEL_PMCA _COMPONENT_UNDEFINED
-// NCX???
-#define CHANNEL_NCX _COMPONENT_UNDEFINED
-// RYR???
-#define CHANNEL_RYR _COMPONENT_UNDEFINED
-// IP3R???
-#define CHANNEL_IP3R _COMPONENT_UNDEFINED
+//}}}
+//{{{ Sarcolema membrane exchanger/pump
+// PMCA       PUMP_PMCA
+
+// NCX        EXCHANGER_NCX
+//
+//}}}
+//{{{ ER membrane channels/pump
+// RYR       CHANNEL_RYR
+
+// IP3R     CHANNEL_IP3R
+
+// SERCA    PUMP_SERCA
+
+//}}}
+
+///////////////////////////////////////////////////////
+// Synaptic model design
+//   SYNAPSE_MODEL_STRATEGY macro
+#define USE_PRESYNAPTICPOINT   1
+#define USE_SYNAPTICCLEFT      2
+//{{{ Neurotransmitter Update method
+// Neurotransmitter update method 
+//   Use a continuous function to transform presynaptic Vm 
+//   into transmitter concentration as a sigmoid function
+//   from Tmin to Tmax
+//   T(Vpre) = Tmin + Tmax / ( 1 + exp (- (Vpre - Vp) /  Kp) )
+#define NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 1
+//}}}
+
+///////////////////////////////////////////////////////////////////////
+/// Define what models are available here
+//    MODEL_TO_USE macro
+//{{{
+#define _MODEL_NOT_DEFINED 0 
+#define _WOLF_2005_MSN  1 
+//}}}
+// define 
+
 
 ///////////////////////////////////////////////////////////////////////
 // MODEL DESIGN
@@ -147,6 +173,9 @@
 #define SIMULATION_INVOLVE VMONLY
 // 3. to disable any channel from the model, just comment it out
 #if MODEL_TO_USE == _WOLF_2005_MSN
+//#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+//{{{
   #define CHANNEL_NAT NAT_WOLF_2005
   #define CHANNEL_NAP NAP_WOLF_2005
   #define CHANNEL_KAf KAf_WOLF_2005
@@ -159,6 +188,12 @@
   #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  #define CHANNEL_RYR RYR_SOMETHING
+  #define CHANNEL_IP3R  IP3R_SOMETHING
+  #define EXCHANGER_NCX  NCX_SOMETHING
+  #define PUMP_PMCA  PMCA_SOMETHING
+  #define PUMP_SERCA  SERCA_SOMETHING
+//}}}
 #else
   NOT IMPLEMENTED YET
 #endif
@@ -166,6 +201,7 @@
 //////////////////////////////////////////////////////////////////////
 // Default setting
 //
+//{{{
 #ifndef CHANNEL_NAT
   #define CHANNEL_NAT _COMPONENT_UNDEFINED
 #endif
@@ -215,8 +251,43 @@
 #define RECEPTOR_GABAB _COMPONENT_UNDEFINED
 #endif
 
+#ifndef PUMP_PMCA
+#define PUMP_PMCA _COMPONENT_UNDEFINED
+#endif
+#ifndef EXCHANGER_NCX
+#define EXCHANGER_NCX _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_RYR
+#define CHANNEL_RYR _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_IP3R
+#define CHANNEL_IP3R _COMPONENT_UNDEFINED
+#endif
+#ifndef PUMP_SERCA
+#define PUMP_SERCA _COMPONENT_UNDEFINED
+#endif
+	 // implicit synapse space
+#ifndef SYNAPSE_MODEL_STRATEGY
+#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+#endif
+
+	 // if explicit synapse space is used
+#if SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
+	 // default: use simple estimation of neurotransmitter as 
+	 // given in Dextexhe-Mainen-Sejnowski 1994 
+#ifndef GLUTAMATE_UPDATE_METHOD
+#define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#endif
+#ifndef GABA_UPDATE_METHOD
+#define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#endif
+#endif
+
 #ifndef SIMULATION_INVOLVE
 #define SIMULATION_INVOLVE  VMONLY
 #endif
+
+//}}}
+
 
 #endif

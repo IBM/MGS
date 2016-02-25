@@ -32,9 +32,15 @@
 //    dr/dt = alpha * NT * (1-r) - beta * r
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
+
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 #define NEUROTRANSMITTER      \
   (getSharedMembers().NTmax / \
    (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
+#define NEUROTRANSMITTER      *Glut
+#endif
+
 #define DT (*(getSharedMembers().deltaT))
 #define Tscale (*(getSharedMembers().deltaT) * (getSharedMembers().Tadj))
 #define KETAMINE (*(getSharedMembers().Ketamine))

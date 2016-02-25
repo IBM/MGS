@@ -1,6 +1,7 @@
 #ifndef GABAAReceptor_MDL
 #define GABAAReceptor_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
@@ -9,13 +10,17 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer,
     BranchDataArrayProducer, IndexArrayProducer 
 {
 /*{{{*/
-  //DATA
+	//DATA
+	//{{{ 
+	// Hodgkin-Huxley-based formula 
+	//internal data
 	//{{{
   dyn_var_t g;
   dyn_var_t gbar;
   dyn_var_t r; // fraction of opening receptors
 
   dyn_var_t* V;
+  dyn_var_t* GABA; // [uM] concentration
   int indexPost;
   int* [] indexPrePost;
 
@@ -26,9 +31,11 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer,
 		//{{{ C <==>[alpha * r(NT) * f(Vpost)][beta]
     dyn_var_t alpha;
     dyn_var_t beta;
+		//{{{ only used with preSynapticPoint
     dyn_var_t NTmax;
     dyn_var_t Vp;
     dyn_var_t Kp;
+	  //}}}
     dyn_var_t E;
     dyn_var_t* deltaT;
     dyn_var_t *T;   // [K]
@@ -57,6 +64,12 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer,
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
     VoltageProducer.voltage >> V;
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+  }
+
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GABAConcentrationProducer, BranchDataProducer, IndexProducer {
+    GABAConcentrationProducer.NT >> GABA;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
   }

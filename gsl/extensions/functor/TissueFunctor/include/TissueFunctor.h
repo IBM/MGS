@@ -188,6 +188,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   // std::vector<GridLayerDescriptor*> _spineBranchLayers;
   std::vector<GridLayerDescriptor*> _chemicalSynapseLayers;
   std::vector<GridLayerDescriptor*> _preSynapticPointLayers;
+  std::vector<GridLayerDescriptor*> _synapticCleftLayers;
   std::vector<GridLayerDescriptor*> _forwardSolvePointLayers;
   std::vector<GridLayerDescriptor*> _backwardSolvePointLayers;
 
@@ -251,6 +252,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int _compartmentVariableTypeCounter;
   int _junctionTypeCounter;
   int _preSynapticPointTypeCounter;
+  int _synapticCleftTypeCounter;
   int _endPointTypeCounter;
   int _junctionPointTypeCounter;
   int _forwardSolvePointTypeCounter;
@@ -327,6 +329,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::map<std::string, int> _channelTypesMap;
   std::map<std::string, int> _preSynapticPointTypesMap, _endPointTypesMap,
       _junctionPointTypesMap;
+  std::map<std::string, int> _synapticCleftTypesMap;
   std::map<int, std::map<std::string, int> > _forwardSolvePointTypesMap,
       _backwardSolvePointTypesMap;
 

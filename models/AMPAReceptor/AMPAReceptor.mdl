@@ -15,9 +15,12 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 	//{{{
   dyn_var_t g;
   dyn_var_t gbar;
-  dyn_var_t r;
+  dyn_var_t r; // fraction of opening receptors
 
-  dyn_var_t* V;
+  //{{{only use with preSynapticPoint
+  dyn_var_t* V;  // [mV] preSynaptic voltage
+  //}}}
+  dyn_var_t* Glut; //[uM] concentration
   dyn_var_t* w;
   int indexPost;
   int* [] indexPrePost;
@@ -29,9 +32,11 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 		//{{{
     dyn_var_t alpha; // uM^-1 msec^-1
     dyn_var_t beta;  // msec^-1
+		//{{{ only used with preSynapticPoint
     dyn_var_t NTmax; // [uM] maximum concentration of NeuroTransmitter Glutamate
     dyn_var_t Vp; // [mV]  voltage at which concentration of Glutamate is at half-peak
     dyn_var_t Kp; // [mV]  the steepness of the curve of Glutamate = f(Vm)
+	  //}}}
     dyn_var_t E; // [mV]
 
     dyn_var_t* deltaT;
@@ -62,6 +67,12 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
     VoltageProducer.voltage >> V;
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+  }
+
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, BranchDataProducer, IndexProducer {
+    GlutamateConcentrationProducer.NT >> Glut;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
   }
@@ -97,7 +108,10 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
   dyn_var_t gbar;
 	dyn_var_t fC0, fC1, fD1, fC2, fD2, fO;
 
+  //{{{only use with preSynapticPoint
   dyn_var_t* V;
+  //}}}
+  dyn_var_t* Glut; // [uM]
   dyn_var_t* w;
   int indexPost;
   int* [] indexPrePost;
@@ -114,11 +128,12 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
     dyn_var_t beta;// msec^-1,   which is Rc
     dyn_var_t Rr;// msec^-1
     dyn_var_t Rd;// msec^-1
+		//{{{ only used with preSynapticPoint
     dyn_var_t NTmax; // [uM] maximum concentration of NeuroTransmitter Glutamate
     dyn_var_t Vp; // [mV]  voltage at which concentration of Glutamate is at half-peak
     dyn_var_t Kp; // [mV]  the steepness of the curve of Glutamate = f(Vm)
+    //}}}
     dyn_var_t E; // [mV]
-	  dyn_var_t fC0, fC1, fD1, fC2, fD2, fO;
 
     dyn_var_t* deltaT;
     dyn_var_t *T;   // [K]
@@ -148,6 +163,12 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
     VoltageProducer.voltage >> V;
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+  }
+
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, BranchDataProducer, IndexProducer {
+    GlutamateConcentrationProducer.NT >> Glut;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
   }

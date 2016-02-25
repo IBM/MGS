@@ -47,6 +47,10 @@
 #define K_i_value    139.0 // [mM]
 #define K_o_value     4.0  // [mM]
 #define Dopa_value   0.0   // [???]
+#define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
+#define NTGABA_max      185.0  // [uM]  
+#define NTGlutamate_baseline 5  // [uM]
+#define NTGABA_baseline 5  // [uM]
 //{{{ Condition
 #define Ra_value 0.001     // [GOhm*um]
 #define E_leak_value -90.0 // [mV]
@@ -418,17 +422,32 @@ NodeType AMPAReceptor (<
           E=0.0,        // mV
           alpha=0.05, // uM^-1 msec^-1
           beta=2.0,    // msec^1
-          NTmax=180,     // 160-190 uM
+          //{{{ older preSynapticPoint
+          NTmax=NTGlutamate_max,     // 160-190 uM
           Vp=2.0,       // mV
           Kp=5.0        // mV
+          //}}}
+          >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+NodeType AMPAReceptor_Markov (<
+// based on Destexhe-Mainen-Sejnowski-1994 (Chap.1 - Methods in Neuron Modeling)
+          E=0.0,        // mV
+          Rb=0.013, // uM^-1 .msec^-1
+          Ru1=0.0059, // msec^-1
+          Ru2=86.0, //msec^-1
+          Rd=0.9, //msec^-1
+          Rr=0.064, //msec^-1
+          alpha=2.7, // uM^-1 msec^-1  //Ro
+          beta=0.2    // msec^1        //Rc
           >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
 NodeType NMDAReceptor (<
           E = 0.0,       // mV
           alpha=0.000512,  // uM^-1 msec^-1
           beta=0.053,     // msec^1
-          NTmax=180,      // 160-190 uM
-          Vp=2.0,        // mV
+          //{{{ older preSynapticPoint
+          NTmax=NTGlutamate_max,     // 160-190 uM
+          Vp=2.0,       // mV
           Kp=5.0,        // mV
+          //}}}
           plasticityOn = 0,
           plasticityStartAt = 0, //ms
           plasticityStopAt = 100000, //ms
@@ -446,14 +465,34 @@ NodeType GABAAReceptor (<
           E=-80.0,      // mV
           alpha=0.005,  // uM^-1 msec^-1
           beta=0.18,    // msec^1
-          NTmax=185,     // 185 uM
+          //{{{ older preSynapticPoint
+          NTmax=NTGABA_max,     
           Vp=2.0,       // mV
           Kp=5.0        // mV
+          //}}}
           >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
 /*}}}*/
 // 3.2. PRE-SYNAPSE NODE
 /*{{{*/
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 NodeType PreSynapticPoint { produceInitialState->initialize2, produceState->finish };
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+//or 
+NodeType SynapticCleft(
+      <
+        Glut_baseline = NTGlutamate_baseline, //[uM]
+        GABA_baseline = NTGABA_baseline,   // [uM]
+				//{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth curve
+        Glut_max= NTGlutamate_max,  
+        GABA_max= NTGABA_max,  
+        Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
+        Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
+        Vp_GABA=2.0,        // mV
+        Kp_GABA=5.0        // mV
+				//}}}
+      >
+		) { produceInitialState->initialize2, produceState->finish };
+#endif
 /*}}}*/
 
 // 3.3 CONNECXON - connecting a spine (2-compartment neuron) - with a branch
@@ -729,8 +768,13 @@ Grid MSN_D1Neuron{
       /*}}}*/
       // 3.2. PRE-SYNAPSE (get Voltage from bouton-side)
 	/*{{{*/
-// TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+//or
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+// TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
+	Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
+#endif
 	/*}}}*/
       // 3.3. SpineAttachment
 	/*{{{*/
@@ -1030,7 +1074,12 @@ Grid MSN_D1Neuron{
     /*}}}*/
     // 3.2. PRE-SYNAPSE
     /*{{{*/
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 	InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
+//or
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+	InitNodes ( .[].Layer(SynapticClefts), tissueFunctor("NodeInit", <> ) );
+#endif
     /*}}}*/
     // 3.3. SpineAttachment 
 		//{{{

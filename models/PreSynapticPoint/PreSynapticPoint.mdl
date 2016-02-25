@@ -7,6 +7,12 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
+//There are two options to use here when implementing postsynaptic receptors
+// 1. PreSynapticPoint -- if the receptor want to get directly the voltage
+//          and then decide what to do with it
+// 2. SynapticCleft    -- if the receptor want to get the concentration of neurotransmitter
+//          and then decide what to do with it
+
 // It is used as an intermediate node connecting
 //   pre-Compartment[Node]  --> PreSynapticPoint --> Receptor(Synapse)
 Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProducer
@@ -33,6 +39,8 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
     int idx;
   }
 
+  InitPhase produceInitialState(voltage, branchData, index);
+  RuntimePhase produceState(voltage);
   UserFunction setPointers;
 
   // Input (Connection setup)
@@ -45,9 +53,65 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
     setPointers();
     //}}}
   }
-  InitPhase produceInitialState(voltage, branchData, index);
-  RuntimePhase produceState(voltage);
 /*}}}*/
 }
 
+// It is used as an intermediate node connecting
+//   pre-Compartment[Node]  --> SynapticCleft --> Receptor(Synapse)
+// However, here it has the states
+Node SynapticCleft Implements BranchDataProducer, IndexProducer,
+    GlutamateConcentrationProducer, GABAConcentrationProducer
+{
+/*{{{*/
+  dyn_var_t* Vpre; //presynaptic voltage Vpre
+  int index; //index of compartment in Presynaptic-side (i.e. bouton)
+  dyn_var_t Glut; // [uM]  Glutamate concentration
+  dyn_var_t GABA; // [uM]  GABA concentration
+
+  Shared {
+    dyn_var_t []* voltageConnect;
+    dyn_var_t Glut_baseline;
+    dyn_var_t GABA_baseline;
+    dyn_var_t Glut_max;
+    dyn_var_t GABA_max;
+				//{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth sigmoid curve
+    dyn_var_t Vp_Glut;        // mV   half-max of Glut
+    dyn_var_t Kp_Glut;        // mV   steepness of Glut increase
+    dyn_var_t Vp_GABA;        // mV
+    dyn_var_t Kp_GABA;        // mV
+        //}}}
+  }
+
+  BranchDataStruct* branchDataConnect; //of the presynaptic compartment's branch
+  BranchDataStruct branchData;
+
+  // Output
+  //{{{ 
+  GlutamateConcentrationProducer.NT << &Glut;
+  GABAConcentrationProducer.NT << &GABA;
+  BranchDataProducer.branchData << &branchData;
+  IndexProducer.index << &index;
+  //}}}
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  InitPhase produceInitialState(Glut, GABA, branchData, index);
+  RuntimePhase produceState(Glut, GABA);
+  UserFunction setPointers;
+
+  // Input (Connection setup)
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+        BranchDataProducer 
+  {
+    //{{{ 
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchDataConnect;
+    setPointers();
+    //}}}
+  }
+/*}}}*/
+}
 #endif

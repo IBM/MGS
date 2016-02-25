@@ -29,31 +29,45 @@
 //    dr/dt = alpha * NT * (1-r) - beta * r
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
-#define NEUROTRANSMITTER (getSharedMembers().NTmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
+
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+#define NEUROTRANSMITTER      \
+  (getSharedMembers().NTmax / \
+   (1.0 + exp(-(*V - getSharedMembers().Vp) / getSharedMembers().Kp)))
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+#define NEUROTRANSMITTER *GABA
+#endif
+
 #define DT (*(getSharedMembers().deltaT))
 #define Tscale (*(getSharedMembers().deltaT) * (getSharedMembers().Tadj))
 
-void GABAAReceptor::initializeGABAA(RNG& rng) {
-  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
-  r = ALPHANEUROTRANSMITTER/(BETA + ALPHANEUROTRANSMITTER);
-  g = gbar*r;
+void GABAAReceptor::initializeGABAA(RNG& rng)
+{
+  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
+  r = ALPHANEUROTRANSMITTER / (BETA + ALPHANEUROTRANSMITTER);
+  g = gbar * r;
 }
 
-void GABAAReceptor::updateGABAA(RNG& rng) {
-  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
-	dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA)/2.0 * Tscale; 
-	r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale)/ tmp;
-  //dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
-  //r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
-  g = gbar*r;
+void GABAAReceptor::updateGABAA(RNG& rng)
+{
+  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
+  dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA) / 2.0 * Tscale;
+  r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale) / tmp;
+  // dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
+  // r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
+  g = gbar * r;
 }
 
-void GABAAReceptor::setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GABAAReceptorInAttrPSet* CG_inAttrPset, CG_GABAAReceptorOutAttrPSet* CG_outAttrPset) 
+void GABAAReceptor::setPostIndex(const String& CG_direction,
+                                 const String& CG_component,
+                                 NodeDescriptor* CG_node, Edge* CG_edge,
+                                 VariableDescriptor* CG_variable,
+                                 Constant* CG_constant,
+                                 CG_GABAAReceptorInAttrPSet* CG_inAttrPset,
+                                 CG_GABAAReceptorOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
   indexPrePost.push_back(&indexPost);
 }
 
-GABAAReceptor::~GABAAReceptor() 
-{
-}
+GABAAReceptor::~GABAAReceptor() {}

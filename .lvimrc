@@ -1,15 +1,18 @@
 "" Set indentation rule "
-set tabstop=4
-set softtabstop=4
-set shiftwidth=4
+"set tabstop=4
+"set softtabstop=4
+"set shiftwidth=4
+set tabstop=2
+set softtabstop=2
+set shiftwidth=2
 set noexpandtab
 
 "" Notify user if lines too long"
 set colorcolumn=110
 highlight ColorColumn ctermbg=darkgray
 
-"" Vim search path "
-:set path+=$NTSROOT/common/include,$NTSROOT/gsl/utils/std/include,$NTSROOT/gsl/framework/dca/include,$NTSROOT/mdl/include,$NTSROOT/gsl/framework/simulation/include,$NTSROOT/gsl/framework/parser/include,$NTSROOT/gsl/framework/factories/include,$NTSROOT/gsl/framework/networks/include,$NTSROOT/gsl/framework/dataitems/include,
+"" Vim search path (when we press 'gf')"
+:set path+=$NTSROOT/common/include,$NTSROOT/gsl/utils/std/include,$NTSROOT/gsl/framework/dca/include,$NTSROOT/mdl/include,$NTSROOT/gsl/framework/simulation/include,$NTSROOT/gsl/framework/parser/include,$NTSROOT/gsl/framework/factories/include,$NTSROOT/gsl/framework/networks/include,$NTSROOT/gsl/framework/dataitems/include,$NTSROOT/nti/include,
 
 " add ** to 'path' to enable recursive search
 " using :find myfile.txt
@@ -26,4 +29,9 @@ set path+=**
 au BufNewFile,BufRead *.di setlocal ft=d
 au BufNewFile,BufRead *.gsl setlocal ft=gsl foldmethod=marker
 au BufNewFile,BufRead *.mdl setlocal ft=mdl foldmethod=marker
-
+au BufNewFile,BufRead NTSMacros.h setlocal foldmethod=marker
+"noremap <leader>f <Esc>:syn region myFold start="/*{{{*/" end="/*}}}*/" transparent fold<CR>
+noremap <leader>f <Esc>:syn region myFold start="{{{" end="}}}" transparent fold<CR>
+"" all consecutive comments (starting with a space and //)
+"" will be folded"
+"syn match comment "\v(^\s*//.*\n)+" fold<CR>

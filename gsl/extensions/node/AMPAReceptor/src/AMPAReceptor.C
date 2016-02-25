@@ -31,7 +31,11 @@
 
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 #define NEUROTRANSMITTER (getSharedMembers().NTmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
+#define NEUROTRANSMITTER      *Glut
+#endif
 // take into account the effect of temperature making the change faster or slower
 #define DT (*(getSharedMembers().deltaT))
 #define Tscale (*(getSharedMembers().deltaT) * (getSharedMembers().Tadj))
