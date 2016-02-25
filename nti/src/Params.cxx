@@ -2927,15 +2927,17 @@ void Params::buildCompartmentVariableTargetsMap(
 //  * 4 5 6  --> false
 bool Params::checkForSpecialCases(FILE* fpF, int sz)
 {
-  bool rval = true;
+  bool rval = false;
   fpos_t fpos;
   fgetpos(fpF, &fpos);
   int ival;
+	char oneword[LENGTH_TOKEN_MAX];
   for (unsigned int j = 0; j < sz; ++j)
   {
-    if (1 != fscanf(fpF, "%d", &ival))
+		char c = fscanf(fpF, " %s", oneword);
+    if (oneword[0] == '[' || oneword[0] == '*')
     {
-      rval = false;
+      rval = true;
       break;
     }
   }

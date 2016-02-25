@@ -43,4 +43,14 @@ Struct InjectedCaCurrent {
   int index;
 }
 
+// for Synaptic Cleft
+Interface NeuroTransmitterConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface GlutamateConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface GABAConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
 #endif

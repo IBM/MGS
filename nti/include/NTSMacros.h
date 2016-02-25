@@ -51,7 +51,8 @@
 
 ///////////////////////////////////////////////////////////////////////
 //NOTE: Assign to one of this for further computation
-//   The value order are important here
+//   --> The value order are important here
+//       Don't change it
 //{{{
 #define VMONLY 1
 #define VM_CACYTO 2
@@ -98,16 +99,18 @@
 #define SK_WOLF_2005    2
 //}}}
 //{{{ Ca-models
-// CaLv12   CHANNEL_CaLv12 macro
-#define CHANNEL_CaLv12 _COMPONENT_UNDEFINED
-// CaLv13   CHANNEL_CaLv13 macro
-#define CHANNEL_CaLv13 _COMPONENT_UNDEFINED
+// CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
+#define CaL_GENERAL    100
+// CaLv12 (HVA)   CHANNEL_CaLv12 macro
+#define CaLv12_GHK_WOLF_2005 2
+// CaLv13 (LVA)  CHANNEL_CaLv13 macro
+#define CaLv13_GHK_WOLF_2005 2
 // CaN      CHANNEL_CaN macro
-#define CHANNEL_CaN _COMPONENT_UNDEFINED
+#define CaN_GHK_WOLF_2005 2
 // CaPQ     CHANNEL_CaPQ macro
-#define CHANNEL_CaPQ _COMPONENT_UNDEFINED
+#define CaPQ_GHK_WOLF_2005 2
 // CaR      CHANNEL_CaR macro
-#define CHANNEL_CaR _COMPONENT_UNDEFINED
+#define CaR_GHK_WOLF_2005 2
 // CaT      CHANNEL_CaT macro
 #define CaT_GHK_WOLF_2005 2
 //}}}
@@ -159,8 +162,9 @@
 /// Define what models are available here
 //    MODEL_TO_USE macro
 //{{{
-#define _MODEL_NOT_DEFINED 0 
-#define _WOLF_2005_MSN  1 
+#define _MODEL_NOT_DEFINED    0 
+#define _MSN_2005_WOLF        1 
+#define _MSN_2016_TUAN_JAMES  2
 //}}}
 // define 
 
@@ -168,11 +172,11 @@
 ///////////////////////////////////////////////////////////////////////
 // MODEL DESIGN
 // 1. to choose a model: select the proper value for MODEL_TO_USE
-#define MODEL_TO_USE _WOLF_2005_MSN
+#define MODEL_TO_USE _MSN_2005_WOLF
 // 2. select what compartmental variables to use
 #define SIMULATION_INVOLVE VMONLY
 // 3. to disable any channel from the model, just comment it out
-#if MODEL_TO_USE == _WOLF_2005_MSN
+#if MODEL_TO_USE == _MSN_2005_WOLF
 //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
 //{{{
@@ -184,6 +188,32 @@
   #define CHANNEL_KRP KRP_WOLF_2005
   #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
   #define CHANNEL_SK SK_WOLF_2005
+  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  #define CHANNEL_CaN CaN_GHK_WOLF_2005
+  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  #define CHANNEL_CaR CaR_GHK_WOLF_2005
+  #define CHANNEL_CaT CaT_GHK_WOLF_2005
+  #define RECEPTOR_AMPA AMPAR_POINTPROCESS
+  #define RECEPTOR_NMDA NMDAR_POINTPROCESS
+//}}}
+#elif MODEL_TO_USE == _MSN_2016_TUAN_JAMES
+//#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+//{{{
+  #define CHANNEL_NAT NAT_WOLF_2005
+  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_KAf KAf_WOLF_2005
+  #define CHANNEL_KAs KAs_WOLF_2005
+  #define CHANNEL_KIR KIR_WOLF_2005
+  #define CHANNEL_KRP KRP_WOLF_2005
+  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_SK SK_WOLF_2005
+  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  #define CHANNEL_CaN CaN_GHK_WOLF_2005
+  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  #define CHANNEL_CaR CaR_GHK_WOLF_2005
   #define CHANNEL_CaT CaT_GHK_WOLF_2005
   #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
@@ -231,6 +261,24 @@
 #endif
 #ifndef CHANNEL_KDR
 #define CHANNEL_KDR _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_CaL
+#define CHANNEL_CaL _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_CaLv12
+#define CHANNEL_CaLv12 _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_CaLv13
+#define CHANNEL_CaLv13 _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_CaN
+#define CHANNEL_CaN _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_CaPQ
+#define CHANNEL_CaPQ _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_CaR
+#define CHANNEL_CaR _COMPONENT_UNDEFINED
 #endif
 #ifndef CHANNEL_CaT
 #define CHANNEL_CaT _COMPONENT_UNDEFINED

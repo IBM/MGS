@@ -81,16 +81,16 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 const dyn_var_t ChannelNat::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
 // NOTE:
-// if (-100+(-90))/2 >= Vm               : tau_m = taumNaf[1st-element]
-// if (-100+(-90))/2 < Vm < (-90+(-80))/2: tau_m = taumNaf[2nd-element]
+// if (-100+(-90))/2 >= Vm               : tau_m = taumNat[1st-element]
+// if (-100+(-90))/2 < Vm < (-90+(-80))/2: tau_m = taumNat[2nd-element]
 //...
-dyn_var_t ChannelNat::taumNaf[] = {0.06, 0.06, 0.07, 0.09, 0.11, 0.13, 0.20, 0.32,
+dyn_var_t ChannelNat::taumNat[] = {0.06, 0.06, 0.07, 0.09, 0.11, 0.13, 0.20, 0.32,
                        0.16, 0.15, 0.12, 0.08, 0.06, 0.06, 0.06, 0.06};
 #define LOOKUP_TAUH_LENGTH 16  // size of the below array
 // dyn_var_t _Vmrange_tauh[] = _Vmrange_taum;
 const dyn_var_t ChannelNat::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
-dyn_var_t ChannelNat::tauhNaf[] = {1.3,  1.3, 1.3,  1.3,  1.3,  1.3,  1.3,  1.3,
+dyn_var_t ChannelNat::tauhNat[] = {1.3,  1.3, 1.3,  1.3,  1.3,  1.3,  1.3,  1.3,
                        0.85, 0.5, 0.45, 0.32, 0.30, 0.28, 0.28, 0.28};
 std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
 std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
@@ -158,11 +158,34 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t bm = BMC * exp(-(v + BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v + AHV) / AHD);
     dyn_var_t bh = BHC * vtrap(-(v + BHV), BHD);
+		m[i] = am/(am+bm); // assumption of instantaneous
     // see Rempe-Chomp (2006)
-    dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
-    m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
+    //dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
+    //m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
+#elif CHANNEL_NAT == NAT_WOLF_2005
+    // NOTE: Some models use m_inf and tau_m to estimate m
+    // tau_m in the lookup table
+    std::vector<dyn_var_t>::iterator low =
+        std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
+    int index = low - Vmrange_taum.begin();
+    //-->tau_m[i] = taumNat[index];
+    // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
+    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumNat[index] * 2);
+    /* no need to search as they both use the same Vmrange
+     * IF NOT< make sure you add this code
+    std::vector<dyn_var_t>::iterator low= std::lower_bound(Vmrange_tauh.begin(),
+    Vmrange_tauh.end(), v);
+    int index = low-Vmrange_tauh.begin();
+    */
+    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNat[index] * 2);
+
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
 #elif CHANNEL_NAT == NAT_HAY_2011
     dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
     dyn_var_t bm = BMC * vtrap(-(v + BMV), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
@@ -173,28 +196,6 @@ void ChannelNat::update(RNG& rng)
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
-#elif CHANNEL_NAT == NAT_WOLF_2005
-    // NOTE: Some models use m_inf and tau_m to estimate m
-    // tau_m in the lookup table
-    std::vector<dyn_var_t>::iterator low =
-        std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
-    int index = low - Vmrange_taum.begin();
-    //-->tau_m[i] = taumNaf[index];
-    // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumNaf[index] * 2);
-    /* no need to search as they both use the same Vmrange
-     * IF NOT< make sure you add this code
-    std::vector<dyn_var_t>::iterator low= std::lower_bound(Vmrange_tauh.begin(),
-    Vmrange_tauh.end(), v);
-    int index = low-Vmrange_tauh.begin();
-    */
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNaf[index] * 2);
-
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
-
-    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
-    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -315,14 +316,14 @@ void ChannelNat::initialize_others()
   {
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);
-    assert((sizeof(taumNaf) / sizeof(taumNaf[0])) == tmp.size());
+    assert((sizeof(taumNat) / sizeof(taumNat[0])) == tmp.size());
     for (int i = 1; i < tmp.size() - 1; i++)
       Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }
   {
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
-    assert(sizeof(tauhNaf) / sizeof(tauhNaf[0]) == tmp.size());
+    assert(sizeof(tauhNat) / sizeof(tauhNat[0]) == tmp.size());
     for (int i = 1; i < tmp.size() - 1; i++)
       Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }

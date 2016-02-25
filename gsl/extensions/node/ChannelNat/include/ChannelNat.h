@@ -42,8 +42,8 @@ class ChannelNat : public CG_ChannelNat
 #if CHANNEL_NAT == NAT_WOLF_2005
 	const static dyn_var_t _Vmrange_taum[];
 	const static dyn_var_t _Vmrange_tauh[];
-	static dyn_var_t taumNaf[];
-	static dyn_var_t tauhNaf[];
+	static dyn_var_t taumNat[];
+	static dyn_var_t tauhNat[];
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif

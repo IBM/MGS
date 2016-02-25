@@ -83,7 +83,6 @@ void ChannelCaT_GHK::update(RNG& rng)
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
     //E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
     //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
-    dyn_var_t v = (*V)[i];
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
 #endif
 		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));

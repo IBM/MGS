@@ -27,6 +27,9 @@
 #elif RECEPTOR_AMPA == AMPAR_POINTPROCESS
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
+#else
+#define BASED_TEMPERATURE 0.0  // Celcius
+#define Q10 3.0
 #endif
 
 #ifndef Q10 

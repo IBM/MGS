@@ -1,5 +1,5 @@
-#ifndef ChannelCaT_MDL
-#define ChannelCaT_MDL
+#ifndef ChannelCaN_MDL
+#define ChannelCaN_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
 
@@ -9,7 +9,7 @@
 
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
-//Node ChannelCaT Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+//Node ChannelCaN Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
 //    CaCurrentArrayProducer, BranchDataProducer 
 //{
 ////{{{
@@ -69,7 +69,7 @@
 
 // NOTE: This channel is modeled using GHK formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
-Node ChannelCaT_GHK Implements 
+Node ChannelCaN_GHK Implements 
 		 BranchDataProducer, CaCurrentArrayProducer
 {
 /*{{{*/
