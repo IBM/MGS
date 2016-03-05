@@ -16,6 +16,7 @@ Struct ChannelCurrents {
 
 Struct ChannelCurrentsGHK {
 //use this for GHK equation
+// which is negative for inward currents
   dyn_var_t []* currents; // [pA/um^2]
 }
 
@@ -26,6 +27,7 @@ Struct ReceptorCurrent {
 }
 
 Struct InjectedCurrent {
+// which is positive for inward current
   dyn_var_t* current; // (pA)
   dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
   int index;     //  index of the compartment on a given branch to which the current is injected
@@ -95,11 +97,13 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   dyn_var_t Cm; // [pF/um^2]
   dyn_var_t gLeak; // [nS/um^2]
   dyn_var_t cmt; // intermediate values  = 2*Cm/dt [pF/(um^2 . ms)]
-    // currents
-  ChannelCurrents [] channelCurrents;
-  ChannelCurrentsGHK [] channelCurrentsGHK;
-  ReceptorCurrent [] receptorCurrents;
-  InjectedCurrent [] injectedCurrents; 
+    // currents 
+    // IMPORTANT: inward ionic current = negative
+    //            inward injectedCurrents is positive
+  ChannelCurrents [] channelCurrents; // [pA/um^2]
+  ChannelCurrentsGHK [] channelCurrentsGHK; // [pA/um^2]
+  ReceptorCurrent [] receptorCurrents; // [pA/um^2]
+  InjectedCurrent [] injectedCurrents;  // [pA]
 	/*}}}*/
    // design : anything currently not part of the spatial 
    //          is put here
@@ -108,8 +112,8 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     dyn_var_t* deltaT; // [milisecond] = [ms]
     dyn_var_t Ra; //axial resistance [GOhm.um]
     // intracellular concentrations expressed by ion name alone
-    dyn_var_t Na; // [microMolar] = [uM]
-    dyn_var_t K;  // [uM]
+    dyn_var_t Na; // [mM]
+    dyn_var_t K;  // [mM]
     dyn_var_t E_leak;  // [miliVolt] = [mV]
     /*}}}*/
   }
@@ -327,8 +331,8 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     dyn_var_t* deltaT; // [milisecond] = [ms]
     dyn_var_t Ra; //axial resistance [GOhm.um]
     // intracellular concentrations expressed by ion name alone
-    dyn_var_t Na; // [microMolar] = [uM]
-    dyn_var_t K;  // [uM]
+    dyn_var_t Na; // [mM]
+    dyn_var_t K;  // [mM]
     dyn_var_t E_leak;  // [miliVolt] = [mV]
       //}}}
   }

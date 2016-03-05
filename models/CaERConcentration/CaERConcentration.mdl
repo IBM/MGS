@@ -15,6 +15,7 @@ Node CaERConcentration Implements SolutionArrayProducer,
      ForwardSolutionArrayProducer, 
      CaConcentrationArrayProducer
 {
+// Regular-branch: represent the diffusion of Calcium(ER) along branch with no explicit junction
 /*{{{*/
   //DATA
     /*{{{*/
@@ -59,9 +60,9 @@ Node CaERConcentration Implements SolutionArrayProducer,
     // and all compartments on the same branch share the same value
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
     // currents
-  ChannelCaCurrents [] channelCaCurrents;
-  ReceptorCaCurrent [] receptorCaCurrents;
-  InjectedCaCurrent [] injectedCaCurrents;
+  ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+  ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  InjectedCaCurrent [] injectedCaCurrents; // [pA]
 	/*}}}*/
 
    // design : anything currently not part of the spatial 
@@ -70,8 +71,11 @@ Node CaERConcentration Implements SolutionArrayProducer,
     /*{{{*/
     dyn_var_t* deltaT;
     dyn_var_t DCa; // diffusion constant [um^2/ms]
-    dyn_var_t bmt; //what is this???
-    dyn_var_t beta;                    // Wagner and Keizer buffering constant
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
     dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  

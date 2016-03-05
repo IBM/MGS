@@ -11,6 +11,7 @@
 // and get data from 2 compartment variables: Voltage + Calcium
 //   Low-voltage activated
 //Node ChannelCaLVA Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+//    CurrentArrayProducer,
 //    CaCurrentArrayProducer, BranchDataProducer 
 //{
 ////{{{
@@ -39,6 +40,7 @@
 //  ConductanceArrayProducer.conductanceArray << &g;
 //  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
 //  CaCurrentArrayProducer.currents << &I_Ca;
+//  CurrentArrayProducer.currents << &I_Ca;
 //  BranchDataProducer.branchData << branchData;
 //
 //  InAttrPSet {
@@ -73,7 +75,9 @@
 // and get data from 2 compartment variables: Voltage + Calcium
 // General form
 //Node ChannelCaL_GHK Implements 
-//		 BranchDataProducer, CaCurrentArrayProducer
+//		 BranchDataProducer, 
+//     CurrentArrayProducer
+//     CaCurrentArrayProducer
 //{
 ///*{{{*/
 //	//DATA
@@ -88,7 +92,7 @@
 //	dyn_var_t [] PCabar; // um/ms
 //	// reference data
 //	dyn_var_t []* V;//transmembrane voltage [mV]
-//	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [mM]
+//	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 //	BranchDataStruct* branchData; 
 //	DimensionStruct* []* dimensions;
 //	//int index; //index of the compartment in branch
@@ -117,7 +121,7 @@
 //	//SHARED DATA
 //	Shared {//in xxxCompCategory.C
 //		//{{{
-//		dyn_var_t* Ca_EC; // [mM]
+//		dyn_var_t* Ca_EC; // [uM]
 //		dyn_var_t* deltaT; // [ms]
 //		dyn_var_t* T;     // [K]
 //		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
@@ -136,7 +140,9 @@
 //	RuntimePhase update();
 //	UserFunction setPointers;
 //
+//  //Output
 //	CaCurrentArrayProducer.currents << &I_Ca;
+//	CurrentArrayProducer.currents << &I_Ca;
 //	BranchDataProducer.branchData << branchData;
 //
 //	InAttrPSet {//information of the incoming connection
@@ -177,7 +183,9 @@
 // and get data from 2 compartment variables: Voltage + Calcium
 //  HVA channel (high-voltage activated)
 Node ChannelCaLv12_GHK Implements 
-		 BranchDataProducer, CaCurrentArrayProducer
+		 BranchDataProducer, 
+     CurrentArrayProducer,
+     CaCurrentArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -192,7 +200,7 @@ Node ChannelCaLv12_GHK Implements
 	dyn_var_t [] PCabar; // um/ms
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [mM]
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 	BranchDataStruct* branchData; 
 	DimensionStruct* []* dimensions;
 	//int index; //index of the compartment in branch
@@ -221,7 +229,7 @@ Node ChannelCaLv12_GHK Implements
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
 		//{{{
-		dyn_var_t* Ca_EC; // [mM]
+		dyn_var_t* Ca_EC; // [uM]
 		dyn_var_t* deltaT; // [ms]
 		dyn_var_t* T;     // [K]
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
@@ -237,7 +245,9 @@ Node ChannelCaLv12_GHK Implements
 	RuntimePhase update();
 	UserFunction setPointers;
 
+  // Output
 	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection
@@ -277,7 +287,9 @@ Node ChannelCaLv12_GHK Implements
 // and get data from 2 compartment variables: Voltage + Calcium
 //  LVA channel (low-voltage activated)
 Node ChannelCaLv13_GHK Implements 
-		 BranchDataProducer, CaCurrentArrayProducer
+		 BranchDataProducer, 
+     CurrentArrayProducer,
+     CaCurrentArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -292,7 +304,7 @@ Node ChannelCaLv13_GHK Implements
 	dyn_var_t [] PCabar; // um/ms
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [mM]
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 	BranchDataStruct* branchData; 
 	DimensionStruct* []* dimensions;
 	//int index; //index of the compartment in branch
@@ -321,7 +333,7 @@ Node ChannelCaLv13_GHK Implements
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
 		//{{{
-		dyn_var_t* Ca_EC; // [mM]
+		dyn_var_t* Ca_EC; // [uM]
 		dyn_var_t* deltaT; // [ms]
 		dyn_var_t* T;     // [K]
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
@@ -337,6 +349,7 @@ Node ChannelCaLv13_GHK Implements
 	UserFunction setPointers;
 
 	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection

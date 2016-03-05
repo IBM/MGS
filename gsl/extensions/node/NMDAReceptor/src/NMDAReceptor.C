@@ -69,13 +69,15 @@
 // Mg2+ block from "Jadi M, Polsky A, Schiller J, Mel BW (2012)
 // Location-Dependent Effects of Inhibition on Local Spiking in Pyramidal Neuron
 // Dendrites. PLoS Comput Biol 8(6): e1002550. doi:10.1371/journal.pcbi.1002550"
-#define MGBLOCK (1.0 / (1.0 + exp(-((*Vpost)[indexPost] + 7.0) / 12.5)))
+#define Kp_Mgion 12.5 // [mM] the steepness of voltage dependency
+#define MGBLOCK (1.0 / (1.0 + exp(-((*Vpost)[indexPost] + 7.0) / Kp_Mgion )))
 
 #elif RECEPTOR_NMDA == NMDAR_JAHR_STEVENS_1990
+#define Kp_Mgion 3.57 // [mM] the steepness of voltage dependency
 #define MGBLOCK                                 \
   (1.0 / (1.0 +                                 \
           exp(-0.062 * ((*Vpost)[indexPost])) * \
-              (*(getSharedMembers().Mg_EC)) / 3.57))
+              (*(getSharedMembers().Mg_EC)) / Kp_Mgion))
 //#define MGBLOCK 1.0/(1.0 +
 // exp(-0.122*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57)
 ////Adjusted sigmoid to not get calcium transients at -60mV
@@ -146,7 +148,7 @@ void NMDAReceptor::updateNMDA(RNG& rng)
     gCa = g / 20;
   }
 
-  I_Ca = gCa * ((*Vpost)[indexPost] - E_Ca);
+  I_Ca = gCa * ((*Vpost)[indexPost] - E_Ca); // [pA/um^2]
 }
 
 void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)

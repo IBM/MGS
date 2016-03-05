@@ -15,7 +15,22 @@ static pthread_once_t once_CaLv12_GHK = PTHREAD_ONCE_INIT;
 // This is an implementation of L-type alpha1.2 Ca2+ channel
 //              CaLv12_GHK current
 //
-#if CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+//   Experimental data showed that Vm-dependent activation + inactivation
+//   is not enough to fit the data
+//    Ca2+-dependent activation + inactivation
+//    Vm-dependent activation only (though data shows biphasic behavior)
+//    ICa = PCabar * m^3* h * zCa^2 * F^2 * Vm/(RT) * 
+//          ( gamma_o [Ca]_o - gamma_i [Ca]_i * exp(zCa * F * Vm / (RT)) ) /
+//          (1- exp(zCa * F * Vm / (RT)))
+//    with m(Vm,t) and h(Cai,t) 
+//    gamma_i = gamma_o = 1
+//    Pcabar = 6*10^-5 cm/sec
+//NOTE: Later models use gamma_i = 1.0; gamma_o  = 0.341 (for Ca2+, Ba2+)
+//#endif
+#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+//  The model still assume Vm-dependent activation and inactivation
+//
 // same kinetics as that of CaLv13 of Wolf2005, just Vhalf-activated is higher
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
@@ -112,10 +127,16 @@ PCabar[i] = Pbar_values[0];
 #if CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+    dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+    // NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+    //     R [mJ/(mol.K)]
+    I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
+              ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+              (1 - tmp);  // [pA/um^2]
 #else
     NOT IMPLEMENTED YET
 #endif
-    PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
   }
 }
 
@@ -143,14 +164,25 @@ void ChannelCaLv12_GHK::update(RNG& rng)
     // E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
     //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
-#endif
+
     dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    // NOTE: PCa [um/ms], Vm [mV], Cai/o [mM], F [C/mol] or [mJ/(mV.mol)]
+    // NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
     //     R [mJ/(mol.K)]
-    const dyn_var_t unit_scale = 1e+3;  // to convert from nA/um^2 to pA/um^2
-    I_Ca[i] = unit_scale * PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+    I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
+#endif
+		/*
+		 * TUAN TODO: think about stochastic modelling
+		 * I_Ca[i] = Nopen * P_Ca_singlechannel * ...
+		 * with Nopen is from 0 to ... Nchannelpercompartment
+		 * Nchannelpercompartment = PCa*surfacearea_compartment/P_Ca_singlechannel
+		 * And use the Markov-based model for a single channel to determine
+		 * Nopen
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+              ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+              (1 - tmp);  // [pA/um^2]
+		*/
   }
 }
 

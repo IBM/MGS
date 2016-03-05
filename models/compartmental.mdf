@@ -27,6 +27,8 @@
 #include "Connexon/Connexon.mdl"
 #include "PreSynapticPoint/PreSynapticPoint.mdl"
 
+#include "Exchanger/NCX.mdl"
+
 #include "Life/Life.mdl"
 
 #include "NaChannel/NaChannel.mdl"

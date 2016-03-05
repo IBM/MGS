@@ -4,6 +4,9 @@
 #include "rndm.h"
 
 #define SMALL 1.0E-6
+// unit conversion 
+#define uM2mM  1e-3
+
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
@@ -103,20 +106,22 @@ void ChannelBKalphabeta::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];      //[mV]
+		// IMPORTANT: Make sure to convert [Ca]cyto from [uM] to [mM]
 #if SIMULATION_INVOLVE  == VMONLY
 		dyn_var_t Cai_base = 0.1e-3; // [mM]
     dyn_var_t cai = Cai_base;
 #else
-    dyn_var_t cai = (*Cai)[i];  //[mM]
+    dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]
 #endif
+
 #if CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
     // NOTE: Some models use m_inf and tau_m to estimate m
     // Rate kij from state i to j: unit 1/(ms)
     dyn_var_t kOI = alp(tminOI, v, VhOI, kOI);
     dyn_var_t kIC = alp(tminIC, v, VhIC, kIC);
-    const dyn_var_t ca_factor = 1.0e8;  // [1/(mM^n)] - proportional to unit
-    const dyn_var_t n = 3;
-    dyn_var_t Ca_depdency = ca_factor * pow(cai, n);
+    const dyn_var_t Ca_factor = 1.0e8;  // [1/(mM^n)] - proportional to unit
+    const dyn_var_t n = 3; // the number of bound Ca2+ ions
+    dyn_var_t Ca_depdency = Ca_factor * pow(cai, n);
     dyn_var_t kCO = alpha(tminCO, 1.0, v, VhCO, kCO) * Ca_depdency;
     dyn_var_t kOC = alp(tminOC, v, VhOC, kOC);
 

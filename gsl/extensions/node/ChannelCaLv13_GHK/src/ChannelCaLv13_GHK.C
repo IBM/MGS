@@ -112,10 +112,16 @@ PCabar[i] = Pbar_values[0];
 #if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+    dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+    // NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+    //     R [mJ/(mol.K)]
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+              ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+              (1 - tmp);  // [pA/um^2]
 #else
     NOT IMPLEMENTED YET
 #endif
-    PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
   }
 }
 
@@ -143,14 +149,13 @@ void ChannelCaLv13_GHK::update(RNG& rng)
     // E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
     //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
-#endif
     dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    // NOTE: PCa [um/ms], Vm [mV], Cai/o [mM], F [C/mol] or [mJ/(mV.mol)]
+    // NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
     //     R [mJ/(mol.K)]
-    const dyn_var_t unit_scale = 1e+3;  // to convert from nA/um^2 to pA/um^2
-    I_Ca[i] = unit_scale * PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
+#endif
   }
 }
 

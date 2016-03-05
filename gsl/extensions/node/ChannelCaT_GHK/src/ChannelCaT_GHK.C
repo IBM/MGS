@@ -53,48 +53,6 @@ dyn_var_t ChannelCaT_GHK::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
-void ChannelCaT_GHK::update(RNG& rng)
-{
-  dyn_var_t dt = *(getSharedMembers().deltaT);
-  for (unsigned i = 0; i < branchData->size; ++i)
-  {
-    dyn_var_t v = (*V)[i];
-#if CHANNEL_CaT == CaT_WOLF_2005
-    // NOTE: Some models use m_inf and tau_m to estimate m
-    // tau_m in the lookup table
-    std::vector<dyn_var_t>::iterator low =
-        std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
-    int index = low - Vmrange_taum.begin();
-    //-->tau_m[i] = taumCaT[index];
-    // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumCaT[index] * 2);
-    /* no need to search as they both use the same Vmrange
-     * IF NOT< make sure you add this code
-    std::vector<dyn_var_t>::iterator low= std::lower_bound(Vmrange_tauh.begin(),
-    Vmrange_tauh.end(), v);
-    int index = low-Vmrange_tauh.begin();
-    */
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhCaT[index] * 2);
-
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
-
-    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
-    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
-    //E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
-    //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
-    PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
-#endif
-		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-		//NOTE: PCa [um/ms], Vm [mV], Cai/o [mM], F [C/mol] or [mJ/(mV.mol)]
-		//     R [mJ/(mol.K)]
-		const dyn_var_t unit_scale = 1e+3; // to convert from nA/um^2 to pA/um^2
-    I_Ca[i] = unit_scale * PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
-			v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
-			(1- tmp); // [pA/um^2]
-  }
-}
-
 void ChannelCaT_GHK::initialize(RNG& rng)
 {
   pthread_once(&once_CaT_GHK, initialize_others);
@@ -170,10 +128,57 @@ PCabar[i] = Pbar_values[0];
 #if CHANNEL_CaT == CaT_GHK_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
+		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+		//NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+		//     R [mJ/(mol.K)]
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
+			v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
+			(1- tmp); // [pA/um^2]
 #else
     NOT IMPLEMENTED YET
 #endif
+  }
+}
+
+void ChannelCaT_GHK::update(RNG& rng)
+{
+  dyn_var_t dt = *(getSharedMembers().deltaT);
+  for (unsigned i = 0; i < branchData->size; ++i)
+  {
+    dyn_var_t v = (*V)[i];
+#if CHANNEL_CaT == CaT_WOLF_2005
+    // NOTE: Some models use m_inf and tau_m to estimate m
+    // tau_m in the lookup table
+    std::vector<dyn_var_t>::iterator low =
+        std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
+    int index = low - Vmrange_taum.begin();
+    //-->tau_m[i] = taumCaT[index];
+    // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
+    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumCaT[index] * 2);
+    /* no need to search as they both use the same Vmrange
+     * IF NOT< make sure you add this code
+    std::vector<dyn_var_t>::iterator low= std::lower_bound(Vmrange_tauh.begin(),
+    Vmrange_tauh.end(), v);
+    int index = low-Vmrange_tauh.begin();
+    */
+    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhCaT[index] * 2);
+
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    //E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
+    //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
+		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+		//NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+		//     R [mJ/(mol.K)]
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
+			v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
+			(1- tmp); // [pA/um^2]
+#endif
   }
 }
 

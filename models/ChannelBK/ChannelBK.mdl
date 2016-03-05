@@ -20,7 +20,7 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 	dyn_var_t [] gbar; // nS/um^2
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Cai;//submembrane Ca2+ [mM]
+	dyn_var_t []* Cai;//submembrane Ca2+ [uM]
 	BranchDataStruct* branchData; 
 	//}}}
 

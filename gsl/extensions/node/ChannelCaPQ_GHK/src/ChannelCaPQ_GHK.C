@@ -117,6 +117,12 @@ PCabar[i] = Pbar_values[0];
 #endif
     //PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
     PCa[i] = PCabar[i] * m[i] * m[i] ;
+    dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+    // NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+    //     R [mJ/(mol.K)]
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+              ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+              (1 - tmp);  // [pA/um^2]
   }
 }
 
@@ -146,14 +152,13 @@ void ChannelCaPQ_GHK::update(RNG& rng)
     //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     //PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
     PCa[i] = PCabar[i] * m[i] * m[i] ;
-#endif
     dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    // NOTE: PCa [um/ms], Vm [mV], Cai/o [mM], F [C/mol] or [mJ/(mV.mol)]
+    // NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
     //     R [mJ/(mol.K)]
-    const dyn_var_t unit_scale = 1e+3;  // to convert from nA/um^2 to pA/um^2
-    I_Ca[i] = unit_scale * PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
+#endif
   }
 }
 

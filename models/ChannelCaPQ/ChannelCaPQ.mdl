@@ -85,7 +85,7 @@ Node ChannelCaPQ_GHK Implements
 	dyn_var_t [] PCabar; // um/ms
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [mM]
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 	BranchDataStruct* branchData; 
 	DimensionStruct* []* dimensions;
 	//int index; //index of the compartment in branch
@@ -114,7 +114,7 @@ Node ChannelCaPQ_GHK Implements
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
 		//{{{
-		dyn_var_t* Ca_EC; // [mM]
+		dyn_var_t* Ca_EC; // [uM]
 		dyn_var_t* deltaT; // [ms]
 		dyn_var_t* T;     // [K]
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 

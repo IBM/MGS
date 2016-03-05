@@ -16,15 +16,15 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 	// Hodgkin-Huxley-based formula 
 	//internal data
 	//{{{
-  dyn_var_t g;
-  dyn_var_t gbar;
+  dyn_var_t g;     // [nS/um^2]
+  dyn_var_t gbar;  // [nS/um^2]
   dyn_var_t gbar0;
-  dyn_var_t w;
+  dyn_var_t w;     // [unitless]
   dyn_var_t buffer;
   dyn_var_t r; // fraction of opening receptors
-  dyn_var_t I_Ca;
-  dyn_var_t E_Ca;
-  dyn_var_t tp;
+  dyn_var_t I_Ca; // [pA/um^2]
+  dyn_var_t E_Ca; // [mV]
+  dyn_var_t tp; // TUAN: why we have 'tp' here?
   //}}}
 
   //reference data
@@ -33,7 +33,7 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
   //}}}
   dyn_var_t* Glut; //[uM] concentration
   dyn_var_t []* Vpost;
-  dyn_var_t []* Ca_IC;
+  dyn_var_t []* Ca_IC; // [uM]
   int indexPost; //index of compartment in post-synaptic side (i.e. spine head)
   int* [] indexPrePost; // index of compartment in pre-synaptic side (i.e. bouton)
 
@@ -57,10 +57,10 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
 		//   and tempt. used for the simulation 
 		InitPhase computeTadj;  
-    dyn_var_t* Ca_EC;
-    dyn_var_t* Mg_EC;
-    dyn_var_t* Ketamine;
-    dyn_var_t* Glycine; //PLAN to use
+    dyn_var_t* Mg_EC; // [mM]
+    dyn_var_t* Ketamine; // 0..1 (fraction of Ketamine block)
+    dyn_var_t* Ca_EC; // [uM]
+    dyn_var_t* Glycine; // [uM]
 
     //Plasticity params
     int plasticityOn;
@@ -105,7 +105,8 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 
   // Connection (input)
 	//{{{
-  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {//the info from presynaptic-side is passed to receptor via this
+  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, 
+     BranchDataProducer, IndexProducer {//the info from presynaptic-side is passed to receptor via this
       // intermediate nodetype
 		//{{{
     VoltageProducer.voltage >> Vpre;
@@ -114,13 +115,15 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
     //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, BranchDataProducer, IndexProducer {
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, 
+     BranchDataProducer, IndexProducer {
     GlutamateConcentrationProducer.NT >> Glut;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+     BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
     //REMEMBER: When use in C++ code, only use Vpost[0]
     VoltageArrayProducer.voltageArray >> Vpost;
     BranchDataProducer.branchData >> branchDataPrePost;

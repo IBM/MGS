@@ -20,14 +20,18 @@
 #include "CG_CaERConcentrationCompCategory.h"
 #include "CountableModel.h"
 
+#include "NTSMacros.h"
+
 class NDPairList;
 
-class CaERConcentrationCompCategory : public CG_CaERConcentrationCompCategory, public CountableModel
+class CaERConcentrationCompCategory : public CG_CaERConcentrationCompCategory,
+                                      public CountableModel
 {
-   public:
-      CaERConcentrationCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void deriveParameters(RNG& rng);
-			void count();
+  public:
+  CaERConcentrationCompCategory(Simulation& sim, const std::string& modelName,
+                                const NDPairList& ndpList);
+  void deriveParameters(RNG& rng);
+  void count();
 };
 
 #endif

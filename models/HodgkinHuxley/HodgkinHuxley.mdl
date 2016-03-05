@@ -148,14 +148,14 @@ Interface GlycineProducer {
 Constant ExtracellularMedium Implements NaConcentrationProducer, 
     KConcentrationProducer, CaConcentrationProducer, MgConcentrationProducer, 
     TemperatureProducer, KetamineProducer, GlycineProducer
-{
+{// NOTE: Be careful when modifying the unit
   dyn_var_t Na; // [mM] extracellular concetrations expressed by ion name alone
   dyn_var_t K;  // [mM]
-  dyn_var_t Ca; // [mM]
   dyn_var_t Mg; // [mM]
   dyn_var_t T;  // [K]
-  dyn_var_t Ketamine; // [mM]
-  dyn_var_t Glycine; // [mM]
+  dyn_var_t Ketamine; // 0 .. 1 (fraction of ketamine block)
+  dyn_var_t Ca; // [uM]
+  dyn_var_t Glycine; // [uM]
   NaConcentrationProducer.Na << &Na;
   KConcentrationProducer.K << &K;
   CaConcentrationProducer.Ca << &Ca;

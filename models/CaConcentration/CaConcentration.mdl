@@ -8,15 +8,15 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
+
 // It represents one branch (which comprises regular compartments + implicit junctions)
 Node CaConcentration Implements SolutionArrayProducer, 
      DimensionArrayProducer, BranchDataProducer,
      ForwardSolutionArrayProducer, 
      CaConcentrationArrayProducer
 {
-// Regular-branch: represent the diffusion of Calcium(cyto) along branch with no explicit junction
 /*{{{*/
-	//DATA
+  //DATA
     /*{{{*/
 	//data members: reference
        // pointer to array of branch
@@ -61,9 +61,9 @@ Node CaConcentration Implements SolutionArrayProducer,
     // and all compartments on the same branch share the same value
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
     // currents
-  ChannelCaCurrents [] channelCaCurrents;
-  ReceptorCaCurrent [] receptorCaCurrents;
-  InjectedCaCurrent [] injectedCaCurrents;
+  ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+  ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  InjectedCaCurrent [] injectedCaCurrents; // [pA]
 	/*}}}*/
 
    // design : anything currently not part of the spatial 
@@ -72,8 +72,11 @@ Node CaConcentration Implements SolutionArrayProducer,
     /*{{{*/
     dyn_var_t* deltaT;
     dyn_var_t DCa; // diffusion constant [um^2/ms]
-    dyn_var_t bmt; //what is this???
-    dyn_var_t beta;                    // Wagner and Keizer buffering constant
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
     dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  
@@ -155,10 +158,12 @@ Node CaConcentration Implements SolutionArrayProducer,
     CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
-  //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
-  //  CaCurrentProducer.current >> receptorCaCurrents.current;
-  //  setReceptorCaCurrent();
-  // }
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+    // for receptors like NMDAR
+    CaCurrentProducer.current >> receptorCaCurrents.current;
+    setReceptorCaCurrent();
+   }
 
   PredicateFunction checkSite;
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {

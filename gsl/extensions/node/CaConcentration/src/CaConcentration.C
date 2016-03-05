@@ -46,7 +46,7 @@
   (distalAiis.size() == 1)  // connected to distal cut point for implicit solve
 #define isDistalCase2        \
   (distalAiis.size() == 0 && \
-   distalInputs.size() == 1)  // connected to distal junction
+   distalInputs.size() == 1)  // connected to distal explicit junction
 #define isDistalCase3  \
   (distalAiis.size() > \
    1)  // connected to distal branch point for implicit solve
@@ -62,6 +62,7 @@ void CaConcentration::solve(RNG& rng)
     doBackwardSolve();
   }
 }
+
 #if MAX_COMPUTE_ORDER > 0
 void CaConcentration::forwardSolve1(RNG& rng)
 {
@@ -176,6 +177,11 @@ bool CaConcentration::confirmUniqueDeltaT(
   return (getSharedMembers().deltaT == 0);
 }
 
+//TUAN: TODO challenge
+//   how to check for 2 sites overlapping
+//   if we don't retain the dimension's (x,y,z) coordinate
+//  Even if we retain (x,y,z) this value change with the #capsule per compartment
+//   and geometric sampling --> so not a good choice
 bool CaConcentration::checkSite(const String& CG_direction,
                                 const String& CG_component,
                                 NodeDescriptor* CG_node, Edge* CG_edge,
@@ -229,11 +235,12 @@ void CaConcentration::finish(RNG& rng)
     Ca_cur[i] = Ca_new[i] = 2.0 * Ca_new[i] - Ca_cur[i];
 #ifdef DEBUG_ASSERT
     assert(Ca_new[i] >= 0);
+		assert(Ca_new[i] == Ca_new[i]); // making sure Ca_new[i] is not NaN
 #endif
   }
 }
 
-// Get cytoplasmic surface area at the compartment i-th 
+// Get cytoplasmic surface area at the compartment based on its index 'i'
 dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 {
   dyn_var_t area= 0.0;
@@ -241,7 +248,7 @@ dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 	return area;
 }
 
-// Get cytoplasmic volume at the compartment i-th 
+// Get cytoplasmic volume at the compartment based on its index 'i'
 dyn_var_t CaConcentration::getVolume(int i) // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
@@ -250,18 +257,24 @@ dyn_var_t CaConcentration::getVolume(int i) // Tuan: check ok
 }
 //}}} //end Conserved region
 
+// GOAL: initialize data at each branch
+//    the compartments along one branch are indexed from distal (index=0)
+//    to the proximal (index=branchData->size-1)
+//    so Aim[..] from distal side
+//       Aip[..] from proximal side
 void CaConcentration::initializeCompartmentData(RNG& rng)
 {
-  // here all the data in vector-form are initialized to
-  // the same size of the number of compartment in a branch (i.e. branchData)
-  unsigned size = branchData->size;
+  // for a given computing process:
+  //  here all the data in vector-form are initialized to
+  //  the same size as the number of compartments in a branch (i.e. branchData)
+  unsigned size = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
 #ifdef DEBUG_ASSERT
   if (isProximalCase2) assert(computeOrder == 0);
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
-  assert(Ca_new.size() == size);
   assert(dimensions.size() == size);
+  assert(Ca_new.size() == size);
   assert(distalDimensions.size() == distalInputs.size());
 #endif
 
@@ -323,12 +336,21 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   /* FIX */
   if (isDistalCase3)
   {
+  //IMPORTANT CHANGE:
+  // Unlike the original approach
+  //   which doesn't have a compartment for the implicit branching
+  // The branch now has
+  //at least 2: one compartment as implicit branching point + one as regular
+  //    compartment-zero as implicit branching compartment
+  //    compartment-1th and above as normal
+	
     // Compute total volume of the junction...
     dyn_var_t volume = getVolume(0);
 
     // Compute Aij[n] for the junction...one of which goes in Aip[0]...
     if (size == 1)
-    {
+    {//branch has only 1 compartment, so get compartment in another branch
+			// which is referenced via proximalDimension
       Aip[0] = -getAij(proximalDimension, dimensions[0], volume);
     }
     else
@@ -343,15 +365,19 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 }
 
 // Update: RHS[], Aii[]
+// Unit: RHS = 
 // Thomas algorithm forward step 
 void CaConcentration::doForwardSolve()
 {
   unsigned size = branchData->size;
   for (int i = 0; i < size; i++)
   {
-    // Aii[i] = 2.0/(*(getSharedMembers().deltaT)) - Aim[i] - Aip[i];
+#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
+#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
+		 do something here
+#endif
     /* * * Sum Currents * * */
     Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
     Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
@@ -369,8 +395,12 @@ void CaConcentration::doForwardSolve()
   /* FIX */
   if (isDistalCase3)
   {
+#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * Ca_cur[0];
+#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
+		do something here
+#endif
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];
@@ -459,9 +489,10 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
           (length * length * b->r * b->r)); /* needs fixing */
 }
 
-/* FIX */
-// NOTE: 
-//   V = volume
+// GOAL: Get coefficient of Ca(i=0,j=branch-index)
+//  DCa * (1/V) * PI * r_(i->j)^2 / (ds_(i->j))
+//   V = volume of ER compartment
+//   DCa = diffusion constant of CaER
 dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
                                   dyn_var_t V)
 {

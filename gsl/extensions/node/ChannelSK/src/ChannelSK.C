@@ -4,6 +4,9 @@
 #include "rndm.h"
 
 #define SMALL 1.0E-6
+// unit conversion 
+#define uM2mM  1e-3
+
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
@@ -37,6 +40,7 @@ NOT IMPLEMENTED YET
 // F=Faraday
 // R=universial constant
 // T=temperature
+// d=delta=fractional distance of the electric field that is felt by the ions
 dyn_var_t ChannelSK::KV(dyn_var_t k, dyn_var_t d, dyn_var_t v)
 {
   //const dyn_var_t zCa = 2;
@@ -44,10 +48,13 @@ dyn_var_t ChannelSK::KV(dyn_var_t k, dyn_var_t d, dyn_var_t v)
   return exp1;
 }
 
+// NOTE: 
+//    v = voltage [mV]
+//    cai = [Ca]cyto [mM]
 dyn_var_t  ChannelSK::fwrate(dyn_var_t v, dyn_var_t cai)
 {
 	dyn_var_t fwrate;
-	const dyn_var_t d1 = 0.84;
+	const dyn_var_t d1 = 0.84; // [0..1] unitless
 	const dyn_var_t k1 = 0.18; //[mM] - K(0)
 	fwrate = beta / (1 + KV(k1,d1,v)/cai);
 	return fwrate;
@@ -55,7 +62,7 @@ dyn_var_t  ChannelSK::fwrate(dyn_var_t v, dyn_var_t cai)
 dyn_var_t ChannelSK::bwrate(dyn_var_t v, dyn_var_t cai)
 {
 	dyn_var_t bwrate;
-	const dyn_var_t d2 = 1.0;
+	const dyn_var_t d2 = 1.0;// [0..1] unitless
 	const dyn_var_t k2 = 0.011; //[mM] - K(0)
 	bwrate = alpha / (1 + cai/KV(k2,d2,v));
 	return bwrate;
@@ -71,7 +78,7 @@ void ChannelSK::update(RNG& rng)
 		dyn_var_t Cai_base = 0.1e-3; // [mM]
     dyn_var_t cai = Cai_base;
 #else
-    dyn_var_t cai = (*Cai)[i];  //[mM]
+    dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]
 #endif
 
 #if CHANNEL_SK == SK_WOLF_2005
@@ -136,7 +143,7 @@ void ChannelSK::initialize(RNG& rng)
 		dyn_var_t Cai_base = 0.1e-3; // [mM]
     dyn_var_t cai = Cai_base;
 #else
-		dyn_var_t cai = (*Cai)[i];
+		dyn_var_t cai = (*Cai)[i] * uM2mM; // [mM]
 #endif
 		dyn_var_t a = fwrate(v, cai);
 		dyn_var_t sum = a+bwrate(v,cai);

@@ -198,7 +198,6 @@ void HodgkinHuxleyVoltage::setProximalJunction(
   proximalJunction = true;
 }
 
-
 // update: V(t+dt) = 2 * V(t+dt/2) - V(t)
 // second-step (final step) in Crank-Nicolson method
 void HodgkinHuxleyVoltage::finish(RNG& rng)
@@ -219,8 +218,8 @@ void HodgkinHuxleyVoltage::finish(RNG& rng)
               << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
               << isProximalCase1 << "|" << isProximalCase2 << "|"
               << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << "} " << Vnew[i]
-              << " " << std::endl;
+              << dimensions[i]->z << "," << dimensions[i]->r << "} "
+							<< Vnew[i]  << " " << std::endl;
   }
 #endif
   for (int i = 0; i < size; ++i)
@@ -232,8 +231,8 @@ void HodgkinHuxleyVoltage::finish(RNG& rng)
   }
 }
 
-// membrane surface area of the compartment based on its index 'i'
-dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // TUAN: check ok
+// Get membrane surface area of the compartment based on its index 'i'
+dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // Tuan: check ok
 {
 #ifdef DEBUG_ASSERT
   assert(i >= 0 && i < branchData->size);
@@ -253,7 +252,7 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
 {
   // for a given computing process:
   //  here all the data in vector-form are initialized to
-  //  the same size of the number of compartments in a branch (i.e. branchData)
+  //  the same size as the number of compartments in a branch (i.e. branchData)
   unsigned size = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
@@ -279,6 +278,7 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
     Vnew[i] = Vnew[0];
     Vcur[i] = Vcur[0];
   }
+  // go through each compartments in a branch
   for (int i = 0; i < size; ++i)
   {
     Aii[i] = Aip[i] = Aim[i] = RHS[i] = 0.0;
@@ -351,6 +351,8 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
 }
 
 // Update: RHS[], Aii[]
+// Unit: RHS = current density (pA/um^2)
+//       Aii = conductance density (nS/um^2)
 // Convert to upper triangular matrix  
 // Thomas algorithm forward step 
 void HodgkinHuxleyVoltage::doForwardSolve()
@@ -416,8 +418,8 @@ void HodgkinHuxleyVoltage::doForwardSolve()
 		Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
 		Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
 		for (int k = 0; iiter != iend; iiter++, ++k)
-		{
-			RHS[k] +=  (*(iiter->currents))[k]; //[pA/um^2]
+		{//IMPORTANT: subtraction is used
+			RHS[k] -=  (*(iiter->currents))[k]; //[pA/um^2]
 		}
 	}
 
@@ -506,6 +508,9 @@ dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
 }
 
 // GOAL get the Aij[]
+// At implicit branching
+//  Aij = 1/A * sum_branch(pi*r_branch^2/(Ra * ds_branch))
+// given
 //  A = surface_area
 dyn_var_t HodgkinHuxleyVoltage::getAij(DimensionStruct* a, DimensionStruct* b,
                                        dyn_var_t A)

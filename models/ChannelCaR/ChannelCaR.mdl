@@ -10,6 +10,7 @@
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 //Node ChannelCaR Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+//    CurrentArrayProducer,
 //    CaCurrentArrayProducer, BranchDataProducer 
 //{
 ////{{{
@@ -37,6 +38,7 @@
 //  ConductanceArrayProducer.conductanceArray << &g;
 //  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
 //  CaCurrentArrayProducer.currents << &I_Ca;
+//  CurrentArrayProducer.currents << &I_Ca;
 //  BranchDataProducer.branchData << branchData;
 //
 //  InAttrPSet {
@@ -70,7 +72,9 @@
 // NOTE: This channel is modeled using GHK formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 Node ChannelCaR_GHK Implements 
-		 BranchDataProducer, CaCurrentArrayProducer
+		 BranchDataProducer, 
+     CurrentArrayProducer,
+     CaCurrentArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -85,7 +89,7 @@ Node ChannelCaR_GHK Implements
 	dyn_var_t [] PCabar; // um/ms
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [mM]
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 	BranchDataStruct* branchData; 
 	DimensionStruct* []* dimensions;
 	//int index; //index of the compartment in branch
@@ -114,7 +118,7 @@ Node ChannelCaR_GHK Implements
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
 		//{{{
-		dyn_var_t* Ca_EC; // [mM]
+		dyn_var_t* Ca_EC; // [uM]
 		dyn_var_t* deltaT; // [ms]
 		dyn_var_t* T;     // [K]
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
@@ -130,6 +134,7 @@ Node ChannelCaR_GHK Implements
 	UserFunction setPointers;
 
 	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection

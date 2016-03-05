@@ -1,6 +1,9 @@
 #ifndef _NTSMacros_H
 #define _NTSMacros_H
 
+
+/// IMPORTANT: jump to USER-SELECTED section 
+
 ///////////////////////////////////////////////////////////////////////
 /// General definition
 #define _YES 1
@@ -10,11 +13,17 @@
 // Physical constants
 //
 //{{{
-#define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant
+#define e0  1.602e-19   // Coulomb = [C] - the elementary charge for 1 univalent ion
+#define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant - total charges for 1 mole 
+                        // of univalent ion
 #define zR  8.314472e3 //[mJ/(K.mol)] - universal constant
 #define zCa 2          // valance of Ca2+ ions
+#define zNa 1          // valence of Na+ ions
+#define zK  1          // valence of K+ ions
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
+#define zkB  1.381e-23  // [J/K] = Joule/Kelvin = Boltzmann constant (R/N_A)
+#define zN_A 6.022e23   // [1/mol] = number of molecuels/atoms/ions per mole - Avogadro number
 //}}}
 
 ///////////////////////////////////////////////////////////////////////
@@ -38,9 +47,14 @@
   // assume that the surface area of cytoplasm is the same as that of biomembrane
 #define FRACTION_SURFACEAREA_CYTO 1.0 
 
-  // the surface area of ER must be smaller than that of biomembrane
-#define FRACTION_SURFACEAREA_SmoothER 0.5 
-#define FRACTION_SURFACEAREA_RoughER 0.5 
+  // the surface area of ER may be a few times more than that of biomembrane
+	// due to the folding structure
+	// Liver hepatocyte
+#define FRACTION_SURFACEAREA_SmoothER 8 
+#define FRACTION_SURFACEAREA_RoughER 27
+  // Pancreatic exocrine cell
+//#define FRACTION_SURFACEAREA_SmoothER 8 
+//#define FRACTION_SURFACEAREA_RoughER 27
 
   // the fraction of cross-surface area of the volume occupied by cyto
   //               compared to that occupied by total compartment volume
@@ -50,6 +64,7 @@
 //}}}
 
 ///////////////////////////////////////////////////////////////////////
+// SIMULATION_INVOLVE macro
 //NOTE: Assign to one of this for further computation
 //   --> The value order are important here
 //       Don't change it
@@ -102,6 +117,7 @@
 // CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
 #define CaL_GENERAL    100
 // CaLv12 (HVA)   CHANNEL_CaLv12 macro
+#define CaLv12_GHK_Standen_Stanfield_1982 3
 #define CaLv12_GHK_WOLF_2005 2
 // CaLv13 (LVA)  CHANNEL_CaLv13 macro
 #define CaLv13_GHK_WOLF_2005 2
@@ -131,9 +147,12 @@
 //}}}
 //{{{ Sarcolema membrane exchanger/pump
 // PMCA       PUMP_PMCA
-
+#define PMCA_Traub_Llinas_1997  1
+#define PMCA_PUMPRATE_CONSTANT  PMCA_Traub_Llinas_1997
+#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 2
 // NCX        EXCHANGER_NCX
-//
+#define NCX_Gabbiani_Mdtgaard_Kopfel_1994 2
+#define NCX_Webber_Bers_2001  3
 //}}}
 //{{{ ER membrane channels/pump
 // RYR       CHANNEL_RYR
@@ -144,7 +163,7 @@
 
 //}}}
 
-///////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // Synaptic model design
 //   SYNAPSE_MODEL_STRATEGY macro
 #define USE_PRESYNAPTICPOINT   1
@@ -157,28 +176,49 @@
 //   T(Vpre) = Tmin + Tmax / ( 1 + exp (- (Vpre - Vp) /  Kp) )
 #define NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 1
 //}}}
+///////////////////////////////////////////////////////////////////////
+// How you want to model dynamics 
+//{{{ Calcium-dynamics method
+#define REGULAR_DYNAMICS  1
+#define FAST_BUFFERING   2
+//}}}
 
 ///////////////////////////////////////////////////////////////////////
 /// Define what models are available here
 //    MODEL_TO_USE macro
 //{{{
 #define _MODEL_NOT_DEFINED    0 
-#define _MSN_2005_WOLF        1 
-#define _MSN_2016_TUAN_JAMES  2
+#define _MODEL_TESTING        1
+#define _MSN_2005_WOLF        2 
+#define _MSN_2016_TUAN_JAMES  3
 //}}}
 // define 
 
 
 ///////////////////////////////////////////////////////////////////////
-// MODEL DESIGN
+///////////////////////////////////////////////////////////////////////
+// USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 #define MODEL_TO_USE _MSN_2005_WOLF
-// 2. select what compartmental variables to use
-#define SIMULATION_INVOLVE VMONLY
-// 3. to disable any channel from the model, just comment it out
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////
+// MODEL DESIGN
+// IMPORTANT: try not to modify an existing one, instead create a new one
+//           by copying an existing model, and define a new name
+//           in section MODE_TO_USE macro 
+//           user are free to work on section _MODEL_TESTING
+// 2. configure each model
+//  2.a select what compartmental variables to use
+//  2.b to disable any channel from the model, just comment it out
 #if MODEL_TO_USE == _MSN_2005_WOLF
 //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+  #define SIMULATION_INVOLVE VMONLY
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 //{{{
   #define CHANNEL_NAT NAT_WOLF_2005
   #define CHANNEL_NAP NAP_WOLF_2005
@@ -197,9 +237,12 @@
   #define RECEPTOR_AMPA AMPAR_POINTPROCESS
   #define RECEPTOR_NMDA NMDAR_POINTPROCESS
 //}}}
+
 #elif MODEL_TO_USE == _MSN_2016_TUAN_JAMES
-//#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+  #define SIMULATION_INVOLVE VM_CACYTO_CAER
+  #define CALCIUM_CYTO_DYNAMICS REGULAR_DYNAMICS
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
 //{{{
   #define CHANNEL_NAT NAT_WOLF_2005
   #define CHANNEL_NAP NAP_WOLF_2005
@@ -220,10 +263,11 @@
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define CHANNEL_RYR RYR_SOMETHING
   #define CHANNEL_IP3R  IP3R_SOMETHING
-  #define EXCHANGER_NCX  NCX_SOMETHING
-  #define PUMP_PMCA  PMCA_SOMETHING
+  #define EXCHANGER_NCX  NCX_Webber_Bers_2001
+  #define PUMP_PMCA  PMCA_PUMPRATE_VOLTAGE_FUNCTION
   #define PUMP_SERCA  SERCA_SOMETHING
 //}}}
+
 #else
   NOT IMPLEMENTED YET
 #endif
@@ -333,6 +377,12 @@
 
 #ifndef SIMULATION_INVOLVE
 #define SIMULATION_INVOLVE  VMONLY
+#endif
+#ifndef CALCIUM_CYTO_DYNAMICS
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+#endif
+#ifndef CALCIUM_ER_DYNAMICS
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 #endif
 
 //}}}

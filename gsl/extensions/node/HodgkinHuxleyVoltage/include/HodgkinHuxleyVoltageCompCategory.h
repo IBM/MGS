@@ -22,11 +22,15 @@
 
 class NDPairList;
 
-class HodgkinHuxleyVoltageCompCategory : public CG_HodgkinHuxleyVoltageCompCategory, public CountableModel
+class HodgkinHuxleyVoltageCompCategory
+    : public CG_HodgkinHuxleyVoltageCompCategory,
+      public CountableModel
 {
-   public:
-      HodgkinHuxleyVoltageCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+  public:
+  HodgkinHuxleyVoltageCompCategory(Simulation& sim,
+                                   const std::string& modelName,
+                                   const NDPairList& ndpList);
+  void count();
 };
 
 #endif
