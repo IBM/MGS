@@ -234,14 +234,15 @@ BRANCHTYPE MTYPE
 PMCA   3 
 BRANCHTYPE MTYPE
 # 0.05 uA/uF = 0.05 uA/cm^2 = 0.05x10^-2 pA/um^2
-[1:6] 0 <Ipmcabar={0.0005}>
-[1,2] 1 <Ipmcabar={0.0005}>
-[1,3] 2 <Ipmcabar={0.0005}>
+[1:6] 0 <IPMCAbar={0.0005}>
+[1,2] 1 <IPMCAbar={0.0005}>
+[1,3] 2 <IPMCAbar={0.0005}>
 NCX    3 
 BRANCHTYPE MTYPE
-[1:6] 0 <gbar={0.000004}>
-[1,2] 1 <gbar={0.000004}>
-[1,3] 2 <gbar={0.000004}>
+#Incx = 1000 pA/cm^2 = 10^-5 [pA/um^2]
+[1:6] 0 <INCXbar={0.00001}>
+[1,2] 1 <INCXbar={0.00001}>
+[1,3] 2 <INCXbar={0.00001}>
 SERCA  3 
 BRANCHTYPE MTYPE
 [1:6] 0 <gbar={0.000004}>

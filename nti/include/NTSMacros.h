@@ -20,10 +20,15 @@
 #define zCa 2          // valance of Ca2+ ions
 #define zNa 1          // valence of Na+ ions
 #define zK  1          // valence of K+ ions
-#define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
-#define zCaF_R (zCa*zF/(zR))
 #define zkB  1.381e-23  // [J/K] = Joule/Kelvin = Boltzmann constant (R/N_A)
 #define zN_A 6.022e23   // [1/mol] = number of molecuels/atoms/ions per mole - Avogadro number
+
+#define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
+#define zCaF_R (zCa*zF/(zR))
+#define zF_RT (zF / (zR * *getSharedMembers().T))
+#define mM2uM 1e3   // conversion factor
+#define uM2mM 1e-3  // conversion factor
+
 //}}}
 
 ///////////////////////////////////////////////////////////////////////
@@ -146,13 +151,18 @@
 #define GABABR_DESTEXHE_SEJNOWSKI_1996  3
 //}}}
 //{{{ Sarcolema membrane exchanger/pump
-// PMCA       PUMP_PMCA
-#define PMCA_Traub_Llinas_1997  1
-#define PMCA_PUMPRATE_CONSTANT  PMCA_Traub_Llinas_1997
-#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 2
+// PMCA       PUMP_PMCA:
+//{{{
+#define PMCA_PUMPRATE_CONSTANT 1
+#define PMCA_Traub_Llinas_1997 PMCA_PUMPRATE_CONSTANT  
+#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 2 
+#define PMCA_Zador_Koch_Brown_1990 PMCA_PUMPRATE_VOLTAGE_FUNCTION 
+#define PMCA_Jafri_Rice_Winslow_1998 3
+#define PMCA_Greenstein_Winslow_2002       4
+//}}}
 // NCX        EXCHANGER_NCX
-#define NCX_Gabbiani_Mdtgaard_Kopfel_1994 2
-#define NCX_Webber_Bers_2001  3
+#define NCX_Gabbiani_Midtgaard_Kopfel_1994 2
+#define NCX_Weber_Bers_2001  3
 //}}}
 //{{{ ER membrane channels/pump
 // RYR       CHANNEL_RYR
@@ -160,6 +170,7 @@
 // IP3R     CHANNEL_IP3R
 
 // SERCA    PUMP_SERCA
+#define SERCA_Tran_Crampin_2009  2
 
 //}}}
 
@@ -263,9 +274,9 @@
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define CHANNEL_RYR RYR_SOMETHING
   #define CHANNEL_IP3R  IP3R_SOMETHING
-  #define EXCHANGER_NCX  NCX_Webber_Bers_2001
+  #define EXCHANGER_NCX  NCX_Weber_Bers_2001
   #define PUMP_PMCA  PMCA_PUMPRATE_VOLTAGE_FUNCTION
-  #define PUMP_SERCA  SERCA_SOMETHING
+  #define PUMP_SERCA  SERCA_Tran_Crampin_2009
 //}}}
 
 #else

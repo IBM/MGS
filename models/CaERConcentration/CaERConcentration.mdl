@@ -60,8 +60,14 @@ Node CaERConcentration Implements SolutionArrayProducer,
     // and all compartments on the same branch share the same value
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
     // currents
-  ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
-  ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+  //CONVENTION:  the fluxs flowing toward the ER get negative 
+  // yet contribute positive to the [Ca2+](ER)
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //CONVENTION: the flux flowing toward the ER get positive
+  // 1. current from spine-ER to shaft-ER and vice versa
+  // 2. user-defined stimulus current
   InjectedCaCurrent [] injectedCaCurrents; // [pA]
 	/*}}}*/
 
@@ -128,7 +134,8 @@ Node CaERConcentration Implements SolutionArrayProducer,
     int idx;
   }
 
-  UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
+  //UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
+  UserFunction setInjectedCaCurrent, setProximalJunction;
   // Connection setup
   //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
@@ -139,8 +146,12 @@ Node CaERConcentration Implements SolutionArrayProducer,
     BranchDataProducer.branchData >> branchData;
    }
 
-  Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
-    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  //Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
+  //  CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  // }
+
+  Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
    }
 
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
@@ -251,9 +262,14 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
   dyn_var_t CaClearance;
 
   // currents
-  ChannelCaCurrents [] channelCaCurrents;
-  dyn_var_t* [] receptorCaCurrents;
-  dyn_var_t* [] injectedCaCurrents;
+  //ChannelCaCurrents [] channelCaCurrents;
+  //CONVENTION:  the fluxs flowing toward the ER get negative 
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //CONVENTION: the flux flowing toward the ER get positive
+  // 1. current from spine-ER to shaft-ER and vice versa
+  // 2. user-defined stimulus current
+  dyn_var_t* [] injectedCaCurrents; // [pA]
 
   dyn_var_t* [] CaConcentrationInputs;
   DimensionStruct* [] dimensionInputs;
@@ -289,9 +305,12 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
     BranchDataProducer.branchData >> branchData;
    }
 
-  Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
-    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
-  }
+  //Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
+  //  CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  //}
+  Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
+   }
 
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
   //  CaCurrentProducer.current >> injectedCaCurrents;

@@ -376,7 +376,8 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
 }
 
 // Update: RHS[], Aii[]
-// Unit: RHS = 
+// Unit: RHS =  [uM/msec]
+//       Aii =  [1/msec]
 // Thomas algorithm forward step 
 void CaERConcentration::doForwardSolve()
 {
@@ -390,17 +391,23 @@ void CaERConcentration::doForwardSolve()
 		 do something here
 #endif
     /* * * Sum Currents * * */
-    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
-    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
+//    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
+//    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
+//    for (; iter != end; iter++)
+//    {
+//      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
+//    }
+    Array<ChannelCaFluxes>::iterator iter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator end = channelCaFluxes.end();
     for (; iter != end; iter++)
     {
-      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
+      RHS[i] -=  (*iter->fluxes)[i];
     }
 
     /* This is a simple implementation of calcium extrusion. To be elaborated as
      * needed. */
     // TUAN: need to be updated to take into account PMCA
-    RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
+    //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
   }
 
   /* FIX */
@@ -417,21 +424,27 @@ void CaERConcentration::doForwardSolve()
       Aii[0] -= Aij[n];
     }
     /* * * Sum Currents * * */
-    Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
-    Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
+//    Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
+//    Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
+//    for (; citer != cend; citer++)
+//    {
+//      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
+//    }
+    Array<ChannelCaFluxes>::iterator citer = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator cend = channelCaFluxes.end();
     for (; citer != cend; citer++)
     {
-      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
+      RHS[0] -= (*citer->fluxes)[0];
     }
   }
 
-  Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
-  Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
-  for (; riter != rend; riter++)
-  {
-    int i = riter->index;
-    RHS[i] -= currentToConc[i] * *(riter->current);
-  }
+//  Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
+//  Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
+//  for (; riter != rend; riter++)
+//  {
+//    int i = riter->index;
+//    RHS[i] -= currentToConc[i] * *(riter->current);
+//  }
 
   Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();
   Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
@@ -515,17 +528,17 @@ dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
           (V * length));
 }
 
-void CaERConcentration::setReceptorCaCurrent(
-    const String& CG_direction, const String& CG_component,
-    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
-    Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
-    CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
-{
-#ifdef DEBUG_ASSERT
-  assert(receptorCaCurrents.size() > 0);
-#endif
-  receptorCaCurrents[receptorCaCurrents.size() - 1].index = CG_inAttrPset->idx;
-}
+//void CaERConcentration::setReceptorCaCurrent(
+//    const String& CG_direction, const String& CG_component,
+//    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+//    Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
+//    CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
+//{
+//#ifdef DEBUG_ASSERT
+//  assert(receptorCaCurrents.size() > 0);
+//#endif
+//  receptorCaCurrents[receptorCaCurrents.size() - 1].index = CG_inAttrPset->idx;
+//}
 
 void CaERConcentration::setInjectedCaCurrent(
     const String& CG_direction, const String& CG_component,

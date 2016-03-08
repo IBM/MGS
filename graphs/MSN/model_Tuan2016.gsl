@@ -373,7 +373,7 @@ NodeType DopamineConcentrationJunctionPoint {
 /*}}}*/
 /*}}}*/
 
-// 2. RECEPTOR/CHANNEL NODE
+// 2.1 RECEPTOR/CHANNEL NODE
 /*{{{*/
 //Na+ currents
 /*{{{*/
@@ -420,10 +420,11 @@ NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
 //IP3R
 #endif
 /*}}}*/
-// 2.1. PUMPS 
+// 2.2. PUMP + EXCHANGER NODE
 /*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
+//{{{
 NodeType PumpPMCA (
    < 
    Km = Km_PMCA,   // [uM]
@@ -444,15 +445,25 @@ NodeType PumpPMCA_Markov (
 
    >
 		){ initialize->initialize3, update->solveChannels };
+//}}}
 // NCX
+//{{{
 NodeType ExchangerNCX(
    < 
    eta_NCX = 0.35   //  (Vm-dependent coefficient)
+#if EXCHANGER_NCX == NCX_Gabbiani_Midtgaard_Kopfel_1994
+   k_NCX = 4.677e-6   // [pA . mM^-4 . um^-2] // Original: 4.677.10^-4 (uA/(mM^4 . cm^2))
+#endif
    >
 		){ initialize->initialize3, update->solveChannels };
+//}}}
 #endif
 #if SIMULATION_INVOLVE == VM_CACYTO_CAER
 // SERCA
+NodeType PumpSERCA(
+		){ initialize->initialize3, update->solveChannels };
+NodeType LeakER(
+		){ initialize->initialize3, update->solveChannels };
 #endif
 /*}}}*/
 
@@ -514,12 +525,13 @@ NodeType GABAAReceptor (<
           //}}}
           >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
 /*}}}*/
-// 3.2. PRE-SYNAPSE NODE
+// 3.2. PRE-SYNAPSE (or SYNAPTIC-CLEFT) NODE
 /*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 NodeType PreSynapticPoint { produceInitialState->initialize2, produceState->finish };
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
 //or 
+//{{{
 NodeType SynapticCleft(
       <
         Glut_baseline = NTGlutamate_baseline, //[uM]
@@ -534,10 +546,11 @@ NodeType SynapticCleft(
 				//}}}
       >
 		) { produceInitialState->initialize2, produceState->finish };
+//}}}
 #endif
 /*}}}*/
 
-// 3.3 CONNECXON - connecting a spine (2-compartment neuron) - with a branch
+// 3.3 SpineAttachment CONNECXON - connecting spine-neck with a branch
 /*{{{*/
 #if SIMULATION_INVOLVE == VMONLY
 NodeType SpineAttachment_Vm { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
@@ -1115,15 +1128,15 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
 	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
-				compartmentalize = { "tau", "Ipmcabar" },
+				compartmentalize = { "tau", "IPMCAbar" },
         tau = {0.0},
-				Ipmcabar = {0.0} 
+				IPMCAbar = {0.0} 
 				> ) ); 
 NodeType PumpPMCA { initialize->initialize3, update->solveChannels };
 // NCX
 	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
-				compartmentalize = { "Ipmcabar" },
-				Ipmcabar = {0.0} 
+				compartmentalize = { "INCXbar" },
+				INCXbar = {0.0} 
 				> ) ); 
 #endif
 #if SIMULATION_INVOLVE == VM_CACYTO_CAER

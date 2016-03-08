@@ -15,8 +15,9 @@ Node CaConcentration Implements SolutionArrayProducer,
      ForwardSolutionArrayProducer, 
      CaConcentrationArrayProducer
 {
+// Regular-branch: represent the diffusion of Calcium(cyto) along branch with no explicit junction
 /*{{{*/
-  //DATA
+	//DATA
     /*{{{*/
 	//data members: reference
        // pointer to array of branch
@@ -61,8 +62,28 @@ Node CaConcentration Implements SolutionArrayProducer,
     // and all compartments on the same branch share the same value
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
     // currents
+  //CONVENTION: the currents flowing toward the cytosol get negative value
+  // yet it contribute positive to the increase of [Ca2+](cyto)
+  // so dCa/dt = - Icurrent * A/(zCa*F*Vcyto)
+  //     A = surface area Cyto = surface area SL
+  // so dCa/dt = - Icurrent * A/(zCa*F*Vcyto)
+  //     A = surface area ER
+  // In the case of Ca2+ channels (L,N,PQ,R,T), 
+  //      if channel current is negative (which means Ca2+ influx), 
+  //            so ICa(channel) is the same as chanel current (i.e. negative)
+  // In the case of NCX, 
+  //      if INCX is negative (which means Ca2+ extrude), 
+  //            so ICa(NCX) must be positive
   ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+  //CONVENTION:  the fluxs flowing toward the cytosol get positive
+  // and it contributes positive to the increase of [Ca2+](cyto)
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //CONVENTION: the currents flowing toward the cytosol get negative
+  // yet it contribute positive to the increase of [Ca2+](cyto)
   ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //CONVENTION: the currents flowing toward the cytosol get positive
+  // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
+  // 2. user-defined stimulus current
   InjectedCaCurrent [] injectedCaCurrents; // [pA]
 	/*}}}*/
 
@@ -147,6 +168,21 @@ Node CaConcentration Implements SolutionArrayProducer,
 
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
     CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+   }
+  //TUAN; TODO how to project RYR, Ip3r calcium from calciumer
+/*
+OPTIION 1:
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaERCurrentArrayProducer {
+    CaERCurrentArrayProducer.currents >> channelER_CaCurrents.currents;
+    CaERCurrentArrayProducer.areas >> channelER_CaCurrents.areas;
+   }
+and we treat them differently in CaConcentration when mapping from currents to 
+[Ca2+](cyto)
+*/
+
+// OPTION 2: channel produce flux JCa (uM/msec) instead of current ICa (pA/um^2)
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
    }
 
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
@@ -259,8 +295,18 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t CaClearance;
 
   // currents
+  //CONVENTION: the currents flowing toward the cytosol get negative value
+  // yet it contribute positive to the increase of [Ca2+](cyto)
   ChannelCaCurrents [] channelCaCurrents;
+  //CONVENTION:  the fluxs flowing toward the cytosol get positive
+  // and it contributes positive to the increase of [Ca2+](cyto)
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //CONVENTION: the currents flowing toward the cytosol get negative
+  // yet it contribute positive to the increase of [Ca2+](cyto)
   dyn_var_t* [] receptorCaCurrents;
+  //CONVENTION: the currents flowing toward the cytosol get positive
+  // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
+  // 2. user-defined stimulus current
   dyn_var_t* [] injectedCaCurrents;
 
   dyn_var_t* [] CaConcentrationInputs;
@@ -301,6 +347,10 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
   }
 
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
+   }
+
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
   //  CaCurrentProducer.current >> injectedCaCurrents;
   //}
@@ -309,9 +359,9 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     CaCurrentProducer.current >> injectedCaCurrents;
   }
 
-  //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
-  //  CaCurrentProducer.current >> receptorCaCurrents;
-  //}
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.current >> receptorCaCurrents;
+  }
 
   PredicateFunction checkSite;
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
