@@ -12,7 +12,6 @@
 #include <pthread.h>
 #include <algorithm>
 
-dyn_var_t Km;  // [uM] dissociation constant of half-saturation
 
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997
@@ -28,7 +27,7 @@ dyn_var_t Km;  // [uM] dissociation constant of half-saturation
   // NOTE Jafri-Rice-Winslow (1998) Cardiac Ca2+ dynamics - role of RyR and SR load
 	//      (Biophys.J.)
 	// neutral PMCA with 1Ca2+ out and 2H+ in for 1 ATP molecule
-  #define Km_pmca 0.5  // [uM]
+  #define Km_pmca 0.5  // [uM] - dissociation constant of half-saturation
 
 #elif PUMP_PMCA == PMCA_Greenstein_Winslow_2002
   // NOTE Greenstein-Winslow (2002) Integrative model of cardiac ventricular myocyte
@@ -47,8 +46,9 @@ void PumpPMCA::initialize(RNG& rng)
   unsigned size = branchData->size;
 #ifdef DEBUG_ASSERT
   assert(V);
-  assert(IPMCAbar.size() == size);
   assert(V->size() == size);
+	assert(IPMCAbar);
+  assert(IPMCAbar.size() == size);
 #endif
 // allocate
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \

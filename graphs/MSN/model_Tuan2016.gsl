@@ -68,7 +68,7 @@
 #define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
 //}}}
 //{{{ PMCA
-#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
+//#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
 //}}}
 //}}}
 
@@ -418,6 +418,10 @@ NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
 #if SIMULATION_INVOLVE == VM_CACYTO_CAER
 //RYR
 //IP3R
+//Non-specific leak (NOTE: not being used for now)
+NodeType LeakER(
+		){ initialize->initialize3, update->solveChannels };
+#endif
 #endif
 /*}}}*/
 // 2.2. PUMP + EXCHANGER NODE
@@ -427,24 +431,22 @@ NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
 //{{{
 NodeType PumpPMCA (
    < 
-   Km = Km_PMCA,   // [uM]
+   //Km = Km_PMCA,   // [uM]
    //{{{ for simple extrusion model
      tau_pump = tau_PMCA_Calciumclearance, // [msec]
      Ca_equil = Cacyto_value 
    //}}}
-
    >
 		){ initialize->initialize3, update->solveChannels };
-NodeType PumpPMCA_Markov (
-   < 
-   Km = Km_PMCA,   // [uM]
-   //{{{ for simple extrusion model
-     tau_pump = tau_PMCA_Calciumclearance,
-     Ca_equil = Cacyto_value 
-   //}}}
-
-   >
-		){ initialize->initialize3, update->solveChannels };
+//NodeType PumpPMCA_Markov (
+//   < 
+//   //Km = Km_PMCA,   // [uM]
+//   //{{{ for simple extrusion model
+//     tau_pump = tau_PMCA_Calciumclearance,
+//     Ca_equil = Cacyto_value 
+//   //}}}
+//   >
+//		){ initialize->initialize3, update->solveChannels };
 //}}}
 // NCX
 //{{{
@@ -462,9 +464,6 @@ NodeType ExchangerNCX(
 // SERCA
 NodeType PumpSERCA(
 		){ initialize->initialize3, update->solveChannels };
-NodeType LeakER(
-		){ initialize->initialize3, update->solveChannels };
-#endif
 /*}}}*/
 
 // 3. SYNAPSE
@@ -824,6 +823,7 @@ Grid MSN_D1Neuron{
 #endif
 #if SIMULATION_INVOLVE == VM_CACYTO_CAER
 // SERCA
+	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
 #endif
 /*}}}*/
       // 3. SYNAPSES
@@ -1128,11 +1128,14 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
 	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
-				compartmentalize = { "tau", "IPMCAbar" },
-        tau = {0.0},
+#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+				compartmentalize = { "tau" },
+        tau = {0.0}
+#elif PUMP_PMCA != PMCA_PUMPRATE_CONSTANT
+				compartmentalize = { "IPMCAbar" },
 				IPMCAbar = {0.0} 
+#endif
 				> ) ); 
-NodeType PumpPMCA { initialize->initialize3, update->solveChannels };
 // NCX
 	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
 				compartmentalize = { "INCXbar" },
@@ -1141,6 +1144,10 @@ NodeType PumpPMCA { initialize->initialize3, update->solveChannels };
 #endif
 #if SIMULATION_INVOLVE == VM_CACYTO_CAER
 // SERCA
+	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
+				compartmentalize = { "SERCAConc" },
+				SERCAConc = {0.0} 
+   > ) );
 #endif
 		/*}}}*/
 
@@ -1251,6 +1258,9 @@ NodeType PumpPMCA { initialize->initialize3, update->solveChannels };
 
 	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 	/*}}}*/
 
     //IMPORTANT: call this once you already have all Layers with NodeTypes required for the simulation

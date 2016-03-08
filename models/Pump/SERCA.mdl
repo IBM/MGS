@@ -1,0 +1,230 @@
+#ifndef PumpSERCA_MDL
+#define PumpSERCA_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+// NOTE: SERCA is a Ca-reuptake mechanism that utilize ATP as an energy source
+// Rate: each SERCA molecule pumps
+//       ???? ions per second  (a dynamic value)
+Node PumpSERCA Implements 
+		 BranchDataProducer, 
+     CaFluxArrayProducer
+     //CurrentArrayProducer,  
+     //CaCurrentArrayProducer
+{
+/*{{{*/
+	//DATA
+	//{{{ 
+	//{{{
+	//{{{
+  // user-input
+  dyn_var_t [] SERCAConc; // [uM]
+	//internal data
+  // NOTE: The flux is expected to get positive value if flowing toward cytosol
+  // J_Ca = - zCa * vcycle * Ap
+  // with Ap = SERCAConc = concentration of SERCA [uM]
+  dyn_var_t [] J_Ca; // [pA/um^2]
+	//data mainly used to dynamically assign different conductance on different location
+	//NOTE: In SynParams.par file
+	//    Use either SERCAConc_dists or SERCAConc_branchorders
+	//      and combine with SERCAConc_values
+	dyn_var_t [] SERCAConc_dists; // an array that indicate the threshold-distance (in micrometer)
+	dyn_var_t [] SERCAConc_branchorders;// an array that indicate the branch-order (zero-based integer)
+	dyn_var_t [] SERCAConc_values;// ... having the corresponding Ap [uM]
+// Example:
+	// CHANNEL_PARAMS 2
+	// Cah 3
+	// BRANCHTYPE MTYPE
+	// 1 0 <gbar={0.00992}>
+	// 4 0 <gbar_dists={380.0,480.0, 590}> 
+	// 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+	// Nat 3 
+	// BRANCHTYPE MTYPE
+	// 1 0 <gbar={0.00992}>
+	// 4 0 <gbar_branchorders={0, 1, 2}> 
+	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //}}}
+	// reference data
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+	dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
+	BranchDataStruct* branchData; 
+	DimensionStruct* []* dimensions;
+	//int index; //index of the compartment in branch
+
+	//}}}
+
+	//SHARED DATA
+	Shared {//in xxxCompCategory.C
+		//{{{
+		dyn_var_t* Ca_EC; // [uM]
+		dyn_var_t* deltaT; // [ms]
+		dyn_var_t* T;     // [K]
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+		InitPhase computeTadj; 
+		//}}}
+	}
+	//}}}
+
+	RuntimePhase update();
+	InitPhase initialize;
+	UserFunction setPointers;
+
+  // Output 
+  CaFluxArrayProducer.fluxes << &J_Ca;
+	BranchDataProducer.branchData << branchData;
+
+	InAttrPSet {//information of the incoming connection
+		string identifier; // name of the incoming node
+		int idx;   // if identifier = name of the compartment variable 
+		// then idx = index of the compartment on a branch
+	}
+
+  //Input (Connection setup)
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer,
+	   BranchDataProducer, DimensionArrayProducer 
+  {
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+			BranchDataProducer.branchData >> branchData;
+			DimensionArrayProducer.dimensionArray >> dimensions;
+			setPointers();
+	}
+
+	Connection Pre Node (PSet.identifier=="IC[CalciumER]") Expects CaConcentrationArrayProducer {
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_ER;
+	}
+
+	Connection Pre Constant (PSet.identifier=="EC") 
+		Expects TemperatureProducer 
+	{
+			TemperatureProducer.T >> Shared.T;
+	}
+
+	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+		TimeStepProducer.deltaT >> Shared.deltaT;
+	}
+/*}}}*/
+}
+
+
+//Node PumpSERCA_Markov Implements 
+//		 BranchDataProducer, 
+//     CurrentArrayProducer,
+//     CaCurrentArrayProducer
+//{
+///*{{{*/
+//	//DATA
+//	//{{{ 
+//	//{{{
+//	//internal data
+//	dyn_var_t [] tau;
+//  //FORMULA: Ipmca = Ipmcabar * Cacyto^eta_pmca / (Kmpmca^ eta_pmca + Cacyto^eta_pmca)
+//	dyn_var_t [] I_Ca; // [pA/um^2]
+//	dyn_var_t [] I_SERCA; // [pA/um^2]
+//  dyn_var_t [] Ipmcabar; // [pA/um^2]
+//  dyn_var_t [] fSERCA;  // fraction of SERCA in free form (unstimulated)
+//  dyn_var_t [] fSERCACaCaM; // CaCaM-bound SERCA (unstimulated)
+//  dyn_var_t [] fSERCACaCaMasterisk; //  CaCaM-bound SERCA (stimulated)
+//  dyn_var_t [] fSERCAasterisk; // free SERCA (stimulated)
+//  // NOTE: Ipmcabar = zCa * zF * Vmax
+//  //   Vmax [(mole of Ca2+) /(cm^2.msec)] - taking into account the surface density of SERCA
+//  //       = 30 (ions /sec) * SERCA_density (1/um^2) / N_A
+//  //   SERCA_density = 2000 (1/um^2) in hair cell (i.e. total 10^6 molecules) Yamoah-Gillespie (1998, J Neuros)
+//  //   N_A = avogadro = # ions per mole
+//  //   zCa = valence Calcium
+//  //   zF  = Faraday constant
+//  dyn_var_t Km; // [uM] dissociation constant of half-saturation 
+//	// reference data
+//	dyn_var_t []* V;//transmembrane voltage [mV]
+//	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+//  dyn_var_t []* CaCaM; // intracellular Ca2+/CaM complex [uM]
+//	BranchDataStruct* branchData; 
+//	DimensionStruct* []* dimensions;
+//	//int index; //index of the compartment in branch
+//
+//	//data mainly used to dynamically assign different conductance on different location
+//	//NOTE: In SynParams.par file
+//	//    Use either gbar_dists or gbar_branch
+//	//      and combine with gbar_values
+////	dyn_var_t [] Pbar_dists; // an array that indicate the threshold-distance (in micrometer)
+////	dyn_var_t [] Pbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+////	dyn_var_t [] Pbar_values;// ... having the corresponding Pbar conductance [um/ms]
+//	// Example:
+//	// CHANNEL_PARAMS 2
+//	// Cah 3
+//	// BRANCHTYPE MTYPE
+//	// 1 0 <gbar={0.00992}>
+//	// 4 0 <gbar_dists={380.0,480.0, 590}> 
+//	// 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+//	// Nat 3 
+//	// BRANCHTYPE MTYPE
+//	// 1 0 <gbar={0.00992}>
+//	// 4 0 <gbar_branchorders={0, 1, 2}> 
+//	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
+//	//}}}
+//
+//	//SHARED DATA
+//	Shared {//in xxxCompCategory.C
+//		//{{{
+//		dyn_var_t* Ca_EC; // [uM]
+//		dyn_var_t* deltaT; // [ms]
+//		dyn_var_t* T;     // [K]
+//		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+//		//   and tempt. used for the simulation 
+//		InitPhase computeTadj; 
+//		//}}}
+//	}
+//	//}}}
+//
+//	RuntimePhase update();
+//	InitPhase initialize;
+//	UserFunction setPointers;
+//
+//  //Output
+//	CaCurrentArrayProducer.currents << &I_Ca;
+//	CurrentArrayProducer.currents << &I_SERCA;
+//	BranchDataProducer.branchData << branchData;
+//
+//	InAttrPSet {//information of the incoming connection
+//		string identifier; // name of the incoming node
+//		int idx;   // if identifier = name of the compartment variable 
+//		// then idx = index of the compartment on a branch
+//	}
+//
+//  //Connection setup (input)
+//	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+//	BranchDataProducer, DimensionArrayProducer 
+//	{
+//			VoltageArrayProducer.voltageArray >> V;
+//			BranchDataProducer.branchData >> branchData;
+//			DimensionArrayProducer.dimensionArray >> dimensions;
+//			setPointers();
+//	}
+//
+//	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+//		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+//	}
+//
+//	Connection Pre Node (PSet.identifier=="IC[CaM]") Expects CaCaMConcentrationArrayProducer {
+//		CaMConcentrationArrayProducer.CaCaMConcentrations >> CaCaM;
+//	}
+//
+//	Connection Pre Constant (PSet.identifier=="EC") 
+//		Expects CaConcentrationProducer, TemperatureProducer 
+//	{
+//			CaConcentrationProducer.Ca >> Shared.Ca_EC;
+//			TemperatureProducer.T >> Shared.T;
+//	}
+//
+//	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+//		TimeStepProducer.deltaT >> Shared.deltaT;
+//	}
+///*}}}*/
+//}
+
+#endif

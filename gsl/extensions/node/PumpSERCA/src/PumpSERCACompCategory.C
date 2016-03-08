@@ -1,18 +1,18 @@
 #include "Lens.h"
-#include "PumpPMCACompCategory.h"
+#include "PumpSERCACompCategory.h"
 #include "NDPairList.h"
-#include "CG_PumpPMCACompCategory.h"
+#include "CG_PumpSERCACompCategory.h"
 
 #include "NumberUtils.h"
 
-PumpPMCACompCategory::PumpPMCACompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_PumpPMCACompCategory(sim, modelName, ndpList)
+PumpSERCACompCategory::PumpSERCACompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
+   : CG_PumpSERCACompCategory(sim, modelName, ndpList)
 {
 }
 
 // GOAL:
 //  1. find Q10 adjustment
-void PumpPMCACompCategory::computeTadj(RNG& rng) 
+void PumpSERCACompCategory::computeTadj(RNG& rng) 
 {
   // Step 1. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
@@ -29,7 +29,7 @@ void PumpPMCACompCategory::computeTadj(RNG& rng)
 // i.e. the total instances,
 //      the mean #-of-instance-being-processed by each node,
 //      the stddev #-of-instance-being-processed by each node
-void PumpPMCACompCategory::count()
+void PumpSERCACompCategory::count()
 {
   long long totalCount, localCount = _nodes.size();
   MPI_Allreduce((void*)&localCount, (void*)&totalCount, 1, MPI_LONG_LONG,
@@ -45,5 +45,6 @@ void PumpPMCACompCategory::count()
     printf("Total KAf Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }
+
 
 

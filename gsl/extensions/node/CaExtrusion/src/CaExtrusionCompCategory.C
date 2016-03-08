@@ -11,26 +11,9 @@ CaExtrusionCompCategory::CaExtrusionCompCategory(Simulation& sim, const std::str
 }
 
 // GOAL:
-//  1. compute Erev
-//  2. find Q10 adjustment
+//  1. find Q10 adjustment
 void CaExtrusionCompCategory::computeTadj(RNG& rng) 
 {
-  // step 1.
-  if (getSharedMembers().T && getSharedMembers().K_EC &&
-      getSharedMembers().K_IC)
-  {
-    dyn_var_t E_K;
-    // E_rev  = RT/(zF)ln([K]o/[K]i)   [mV]
-    E_K = 0.08617373 * *(getSharedMembers().T) *
-           log(*(getSharedMembers().K_EC) / *(getSharedMembers().K_IC));
-    getSharedMembers().E_K.push_back(E_K);
-  }
-#ifdef DEBUG
-  std::cerr << getSimulation().getRank() << " : T=" << *getSharedMembers().T
-            << " K_EC=" << *getSharedMembers().K_EC
-            << " K_IC=" << *getSharedMembers().K_IC
-            << " E_K=" << getSharedMembers().E_K[0] << std::endl;
-#endif
   // Step 2. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
   assert(*(getSharedMembers().T) > 273.15);

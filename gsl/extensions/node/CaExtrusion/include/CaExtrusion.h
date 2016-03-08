@@ -7,6 +7,13 @@
 
 #include "MaxComputeOrder.h"
 
+#ifndef BASED_TEMPERATURE 
+#define BASED_TEMPERATURE 35.0 //Celcius
+#endif
+
+#ifndef Q10 
+#define Q10 3.0 //default
+#endif
 // This is a simple implementation of Ca2+(cyto) extrusion
 class CaExtrusion : public CG_CaExtrusion
 {

@@ -28,6 +28,8 @@
 #include "PreSynapticPoint/PreSynapticPoint.mdl"
 
 #include "Exchanger/NCX.mdl"
+#include "Pump/PMCA.mdl"
+#include "Pump/SERCA.mdl"
 
 #include "Life/Life.mdl"
 

@@ -31,8 +31,8 @@ void CaExtrusion::initialize(RNG& rng)
   {
     //dyn_var_t v = (*V)[i];        // mV
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
-    J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) * (
-                      *getSharedMembers().Ca_equil - cai);  // [uM/ms]
+    J_Ca[i] = 1.0 / ((getSharedMembers().tau_pump)) * (
+                      getSharedMembers().Ca_equil - cai);  // [uM/ms]
   }
 }
 
@@ -41,8 +41,8 @@ void CaExtrusion::update(RNG& rng) {
 	{
     dyn_var_t v = (*V)[i];        // mV
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
-    J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) * (
-                      *getSharedMembers().Ca_equil - cai);  // [uM/msec]
+    J_Ca[i] = 1.0 / ((getSharedMembers().tau_pump)) * (
+                      getSharedMembers().Ca_equil - cai);  // [uM/msec]
 	}
 }
 
