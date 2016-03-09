@@ -25,7 +25,7 @@ Node PumpSERCA Implements
   dyn_var_t [] SERCAConc; // [uM]
 	//internal data
   // NOTE: The flux is expected to get positive value if flowing toward cytosol
-  // J_Ca = - zCa * vcycle * Ap
+  // J_Ca = - coupling_Calcium * vcycle * Ap
   // with Ap = SERCAConc = concentration of SERCA [uM]
   dyn_var_t [] J_Ca; // [pA/um^2]
 	//data mainly used to dynamically assign different conductance on different location

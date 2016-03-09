@@ -59,8 +59,6 @@ Node CaConcentration Implements SolutionArrayProducer,
   dyn_var_t [] Ca_new;
   dyn_var_t [] currentToConc;
 
-    // and all compartments on the same branch share the same value
-  dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
     // currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
   // yet it contribute positive to the increase of [Ca2+](cyto)
@@ -291,8 +289,6 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
   dyn_var_t currentToConc;
-
-  dyn_var_t CaClearance;
 
   // currents
   //CONVENTION: the currents flowing toward the cytosol get negative value

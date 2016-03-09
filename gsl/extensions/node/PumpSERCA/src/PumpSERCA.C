@@ -13,9 +13,21 @@
 #include <algorithm>
 
 #if PUMP_SERCA == SERCA_Tran_Crampin_2009
+  // NOTE: Tran - ... - Crampin (2009)  thermodynamic model 
+	//    Here the two state model is used
 #define Kp_nsr 2.24e3              // [uM]
 #define Kp_myo 0.91e3              // [uM]
 #define coupling_Ca 2  // number of Ca2+ translocated per molecule cycle
+
+#elif PUMP_SERCA == SERCA_Klein_Schneider_1991
+   // NOTE: Klein - .... - Schneider (1991) Michaelis-Menten-based formula 
+	 //       derived for frog skeletal muscle 
+	 //       with 4Ca+ binding in cytosol for the pump to activate
+	 //       No [Ca]SR dependent
+#define coupling_Ca   4   // 4-Ca2+ binding for the pump to do the job
+#define K_serca 0.28  // [uM] 
+#define v_max   0.208   // [uM/msec]
+
 #elif PUMP_SERCA == _COMPONENT_UNDEFINED
   // do nothing
 #else
@@ -102,7 +114,7 @@ SERCAConc[i] = SERCAConc_values[0];
 
 #if PUMP_SERCA == SERCA_Tran_Crampin_2009
     dyn_var_t TCa_ic2 = pow(cai / Kp_myo, 2);  // unitless
-    dyn_var_t TCa_sr2 = pow(ca / Kp_nsr, 2);   // unitless
+    dyn_var_t TCa_sr2 = pow(casr / Kp_nsr, 2);   // unitless
     dyn_var_t Dcycle = 0.104217 + 17.923 * TCa_sr2 +
                        TCa_ic2 * (1.75583e6 + 7.61673e6 * TCa_sr2) +
                        TCa_ic2 * (6.08463e11 + 4.50544e11 * TCa_sr2);
@@ -111,7 +123,9 @@ SERCAConc[i] = SERCAConc_values[0];
         (3.24873e12 * pow(TCa_ic2, 2) +
          TCa_ic2 * (9.17846e6 - 11478.2 * TCa_sr2) - 0.329904 * TCa_sr2) /
         Dcycle;                              // [1/msec]
-    J_Ca[i] = coupling_Ca * vcycle * SERCAConc[i];  // [uM/ms]
+    J_Ca[i] = - coupling_Ca * vcycle * SERCAConc[i];  // [uM/ms]
+#elif PUMP_SERCA == SERCA_Klein_Schneider_1991 
+		J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
 #endif
   }
 }
@@ -124,7 +138,7 @@ void PumpSERCA::update(RNG& rng) {
 
 #if PUMP_SERCA == SERCA_Tran_Crampin_2009
     dyn_var_t TCa_ic2 = pow(cai / Kp_myo, 2);  // unitless
-    dyn_var_t TCa_sr2 = pow(ca / Kp_nsr, 2);   // unitless
+    dyn_var_t TCa_sr2 = pow(casr / Kp_nsr, 2);   // unitless
     dyn_var_t Dcycle = 0.104217 + 17.923 * TCa_sr2 +
                        TCa_ic2 * (1.75583e6 + 7.61673e6 * TCa_sr2) +
                        TCa_ic2 * (6.08463e11 + 4.50544e11 * TCa_sr2);
@@ -133,7 +147,9 @@ void PumpSERCA::update(RNG& rng) {
         (3.24873e12 * pow(TCa_ic2, 2) +
          TCa_ic2 * (9.17846e6 - 11478.2 * TCa_sr2) - 0.329904 * TCa_sr2) /
         Dcycle;                              // [1/msec]
-    J_Ca[i] = coupling_Ca * vcycle * SERCAConc[i];  // [uM/ms]
+    J_Ca[i] = - coupling_Ca * vcycle * SERCAConc[i];  // [uM/ms]
+#elif PUMP_SERCA == SERCA_Klein_Schneider_1991 
+		J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
 #endif
   }
 }

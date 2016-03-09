@@ -131,19 +131,19 @@ INCXbar[i] = INCXbar_values[0];
                             pow(*(getSharedMembers().Na_IC), eta_Na) *
                             exp(gamma_NCX * zF_RT * v) -
                         cai * pow(*(getSharedMembers().Na_EC), eta_Na) *
-                            *exp(-(1 - gamma_NCX) * zF_RT * v));
+                            exp(-(1 - gamma_NCX) * zF_RT * v));
     // must be opposite sign
     I_Ca[i] = -NCX2Caconversion * I_NCX[i];  // [pA/um^2]
 
 #elif EXCHANGER_NCX == NCX_Weber_Bers_2001
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     // The saturation is incorporated in the denominator of the formula
-    I_NCX[i] = INCXbar *
+    I_NCX[i] = INCXbar[i] *
                (*(getSharedMembers().Ca_EC) *
                     pow(*(getSharedMembers().Na_IC) * mM2uM, eta_Na) *
                     exp(gamma_NCX * zF_RT * v) -
                 cai * pow(*(getSharedMembers().Na_EC) * mM2uM, eta_Na) *
-                    *exp(-(1 - gamma_NCX) * zF_RT * v)) /
+                    exp(-(1 - gamma_NCX) * zF_RT * v)) /
                ((pow(KNCX_Na, eta_Na) +
                  pow(*(getSharedMembers().Na_EC) * mM2uM, eta_Na)) *
                 (KNCX_Ca + *(getSharedMembers().Ca_EC)) *
@@ -176,19 +176,19 @@ void ExchangerNCX::update(RNG& rng)
                             pow(*(getSharedMembers().Na_IC), eta_Na) *
                             exp(gamma_NCX * zF_RT * v) -
                         cai * pow(*(getSharedMembers().Na_EC), eta_Na) *
-                            *exp(-(1 - gamma_NCX) * zF_RT * v));
+                            exp(-(1 - gamma_NCX) * zF_RT * v));
     // must be opposite sign
     I_Ca[i] = -NCX2Caconversion * I_NCX[i];  // [pA/um^2]
 
 #elif EXCHANGER_NCX == NCX_Weber_Bers_2001
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     // The saturation is incorporated in the denominator of the formula
-    I_NCX[i] = INCXbar *
+    I_NCX[i] = INCXbar[i] *
                (*(getSharedMembers().Ca_EC) *
                     pow(*(getSharedMembers().Na_IC) * mM2uM, eta_Na) *
                     exp(gamma_NCX * zF_RT * v) -
                 cai * pow(*(getSharedMembers().Na_EC) * mM2uM, eta_Na) *
-                    *exp(-(1 - gamma_NCX) * zF_RT * v)) /
+                    exp(-(1 - gamma_NCX) * zF_RT * v)) /
                ((pow(KNCX_Na, eta_Na) +
                  pow(*(getSharedMembers().Na_EC) * mM2uM, eta_Na)) *
                 (KNCX_Ca + *(getSharedMembers().Ca_EC)) *

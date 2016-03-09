@@ -90,10 +90,14 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 
 void CaConcentrationJunction::predictJunction(RNG& rng)
 {
+#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
   assert(getSharedMembers().bmt > 0);
   float LHS = getSharedMembers().bmt;
-  float RHS = getSharedMembers().bmt * Ca_cur -
-              CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+  float RHS = getSharedMembers().bmt * Ca_cur ;
+#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
+		 do something here
+#endif
+
 
   Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
   Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
@@ -101,6 +105,13 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
   {
     RHS -= currentToConc * (*(citer->currents))[0];
   }
+
+	Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+	Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+	for (; fiter != fend; fiter++)
+	{
+		RHS +=  (*fiter->fluxes)[0];
+	}
 
   Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
   Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
@@ -140,10 +151,13 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
 
 void CaConcentrationJunction::correctJunction(RNG& rng)
 {
+#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
   assert(getSharedMembers().bmt > 0);
   float LHS = getSharedMembers().bmt;
-  float RHS = getSharedMembers().bmt * Ca_cur -
-              CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+  float RHS = getSharedMembers().bmt * Ca_cur;
+#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
+		 do something here
+#endif
 
   Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
   Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
@@ -151,6 +165,13 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
   {
     RHS -= currentToConc * (*(citer->currents))[0];
   }
+
+	Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+	Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+	for (; fiter != fend; fiter++)
+	{
+		RHS +=  (*fiter->fluxes)[0];
+	}
 
   Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
   Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();

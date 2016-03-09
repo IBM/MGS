@@ -359,7 +359,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
 {
   unsigned size = branchData->size;
 	//Find A[ii]i and RHS[ii]  
-	//  1. ionic currents using Hodgkin-Huxley type equations (gV, gErev)
+	//  1. ionic currents 
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   for (int i = 0; i < size; i++)  // for each compartment on that branch
   {
@@ -367,6 +367,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     RHS[i] = cmt * Vcur[i] + gLeak * getSharedMembers().E_leak;
     /* * * Sum Currents * * */
     // loop through different kinds of currents (Kv, Nav1.6, ...)
+	  //  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
     Array<ChannelCurrents>::iterator iter = channelCurrents.begin();
     Array<ChannelCurrents>::iterator end = channelCurrents.end();
     for (int k = 0; iter != end; iter++, ++k)
@@ -381,6 +382,14 @@ void HodgkinHuxleyVoltage::doForwardSolve()
                                             : i];
       Aii[i] += (*conductances)[i];
     }
+
+	  //  1.b. ionic currents using GHK equations (-Iion)
+		Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+		Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+		for (; iiter != iend; iiter++)
+		{//IMPORTANT: subtraction is used
+			RHS[i] -=  (*(iiter->currents))[i]; //[pA/um^2]
+		}
   }
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase3)
@@ -401,6 +410,12 @@ void HodgkinHuxleyVoltage::doForwardSolve()
           (*conductances)[0] * (*(citer->reversalPotentials))[0];  // [pA/um^2]
       Aii[0] += (*conductances)[0];
     }
+		Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+		Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+		for (; iiter != iend; iiter++)
+		{//IMPORTANT: subtraction is used
+			RHS[0] -=  (*(iiter->currents))[0]; //[pA/um^2]
+		}
   }
 
 	//  2. receptor currents using Hodgkin-Huxley type equations (gV, gErev)
@@ -413,15 +428,17 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     Aii[i] += *(riter->conductance);
   }
 
-	//  3. ionic currents using GHK equations (Iion)
-	{
-		Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
-		Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
-		for (int k = 0; iiter != iend; iiter++, ++k)
-		{//IMPORTANT: subtraction is used
-			RHS[k] -=  (*(iiter->currents))[k]; //[pA/um^2]
-		}
-	}
+	//  3. receptor currents using GHK type equations (gV, gErev)
+	//  TUAN : TODO consider if this happens
+	//{
+	//	Array<ReceptorCurrentsGHK>::iterator riter = receptorCurrentsGHK.begin();
+	//	Array<ReceptorCurrentsGHK>::iterator rend = receptorCurrentsGHK.end();
+	//	for (; riter != rend; riter++)
+	//	{//IMPORTANT: subtraction is used
+	//	   int i = riter->index; 
+	//		RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+	//	}
+	//}
 
   //  4. injected currents
 	/* Note: Injected currents comprise current interfaces produced by two

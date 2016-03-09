@@ -170,6 +170,7 @@
 // IP3R     CHANNEL_IP3R
 
 // SERCA    PUMP_SERCA
+#define SERCA_Klein_Schneider_1991 1
 #define SERCA_Tran_Crampin_2009  2
 
 //}}}
@@ -210,7 +211,8 @@
 ///////////////////////////////////////////////////////////////////////
 // USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
-#define MODEL_TO_USE _MSN_2005_WOLF
+//#define MODEL_TO_USE _MSN_2005_WOLF
+#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
@@ -255,7 +257,7 @@
   #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 
   #define SIMULATION_INVOLVE VM_CACYTO_CAER
-  #define CALCIUM_CYTO_DYNAMICS REGULAR_DYNAMICS
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
 //{{{
   #define CHANNEL_NAT NAT_WOLF_2005

@@ -93,9 +93,12 @@ void CaERConcentrationJunction::initializeJunction(RNG& rng)
 void CaERConcentrationJunction::predictJunction(RNG& rng)
 {
   assert(getSharedMembers().bmt > 0);
+#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
   float LHS = getSharedMembers().bmt;
-  float RHS = getSharedMembers().bmt * Ca_cur -
-              CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+  float RHS = getSharedMembers().bmt * Ca_cur ;
+#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
+		 do something here
+#endif
 
   //  Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
   //  Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
@@ -103,26 +106,26 @@ void CaERConcentrationJunction::predictJunction(RNG& rng)
   //  {
   //    RHS -= currentToConc * (*(citer->currents))[0];
   //  }
-  Array<ChannelCaFluxes>::iterator citer = channelCaFluxes.begin();
-  Array<ChannelCaFluxes>::iterator cend = channelCaFluxes.end();
-  for (; citer != cend; citer++)
+  Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+  Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+  for (; fiter != fend; fiter++)
   {
-    RHS -= (*citer->fluxes)[0];
+    RHS -= (*fiter->fluxes)[0];
   }
    
-	Array<dyn_var_t*>::iterator iter, end;
-  //  Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
-  //  Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
-  //  for (; iter != end; ++iter)
+  //  Array<dyn_var_t*>::iterator riter = receptorCaCurrents.begin();
+  //  Array<dyn_var_t*>::iterator rend = receptorCaCurrents.end();
+  //  for (; riter != rend; ++riter)
   //  {
-  //    RHS -= currentToConc * **iter;
+  //    RHS -= currentToConc * **riter;
   //  }
 
-  iter = injectedCaCurrents.begin();
-  end = injectedCaCurrents.end();
-  for (; iter != end; ++iter)
+	Array<dyn_var_t*>::iterator iiter, iend;
+  iiter = injectedCaCurrents.begin();
+  iend = injectedCaCurrents.end();
+  for (; iiter != iend; ++iiter)
   {
-    RHS += **iter * currentToConc / getArea();
+    RHS += **iiter * currentToConc / getArea();
   }
 
   Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
@@ -149,10 +152,13 @@ void CaERConcentrationJunction::predictJunction(RNG& rng)
 
 void CaERConcentrationJunction::correctJunction(RNG& rng)
 {
+#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
   assert(getSharedMembers().bmt > 0);
   float LHS = getSharedMembers().bmt;
-  float RHS = getSharedMembers().bmt * Ca_cur -
-              CaClearance * (Ca_cur - getSharedMembers().CaBaseline);
+  float RHS = getSharedMembers().bmt * Ca_cur;
+#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
+		 do something here
+#endif
 
   //  Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
   //  Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
@@ -160,25 +166,26 @@ void CaERConcentrationJunction::correctJunction(RNG& rng)
   //  {
   //    RHS -= currentToConc * (*(citer->currents))[0];
   //  }
-  Array<ChannelCaFluxes>::iterator citer = channelCaFluxes.begin();
-  Array<ChannelCaFluxes>::iterator cend = channelCaFluxes.end();
-  for (; citer != cend; citer++)
+  Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+  Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+  for (; fiter != fend; fiter++)
   {
-    RHS -= (*citer->fluxes)[0];
+    RHS -= (*fiter->fluxes)[0];
   }
-  Array<dyn_var_t*>::iterator iter, end;
-  //  Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
-  //  Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
-  //  for (; iter != end; ++iter)
+
+  //  Array<dyn_var_t*>::iterator riter = receptorCaCurrents.begin();
+  //  Array<dyn_var_t*>::iterator rend = receptorCaCurrents.end();
+  //  for (; riter != rend; ++riter)
   //  {
-  //    RHS -= currentToConc * **iter;
+  //    RHS -= currentToConc * **riter;
   //  }
 
-  iter = injectedCaCurrents.begin();
-  end = injectedCaCurrents.end();
-  for (; iter != end; ++iter)
+	Array<dyn_var_t*>::iterator iiter, iend;
+  iiter = injectedCaCurrents.begin();
+  iend = injectedCaCurrents.end();
+  for (; iiter != iend; ++iiter)
   {
-    RHS += **iter * currentToConc / getArea();
+    RHS += **iiter * currentToConc / getArea();
   }
 
   Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();

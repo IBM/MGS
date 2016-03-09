@@ -365,11 +365,14 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 }
 
 // Update: RHS[], Aii[]
-// Unit: RHS = 
+// Unit: RHS =  [uM/msec]
+//       Aii =  [1/msec]
 // Thomas algorithm forward step 
 void CaConcentration::doForwardSolve()
 {
   unsigned size = branchData->size;
+	//Find A[ii]i and RHS[ii]  
+	//  1. ionic currents 
   for (int i = 0; i < size; i++)
   {
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
@@ -379,6 +382,8 @@ void CaConcentration::doForwardSolve()
 		 do something here
 #endif
     /* * * Sum Currents * * */
+    // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
+		// 1.a. producing I_Ca [pA/um^2]
     Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
     Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
     for (; iter != end; iter++)
@@ -386,10 +391,17 @@ void CaConcentration::doForwardSolve()
       RHS[i] -= currentToConc[i] * (*iter->currents)[i];
     }
 
+		// 1.b. producing J_Ca [uM/msec]
+    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+    for (; fiter != fend; fiter++)
+    {
+      RHS[i] +=  (*fiter->fluxes)[i];
+    }
     /* This is a simple implementation of calcium extrusion. To be elaborated as
      * needed. */
     // TUAN: need to be updated to take into account PMCA
-    RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
+    //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
   }
 
   /* FIX */
@@ -411,6 +423,13 @@ void CaConcentration::doForwardSolve()
     for (; citer != cend; citer++)
     {
       RHS[0] -= currentToConc[0] * (*citer->currents)[0];
+    }
+
+    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+    for (; fiter != fend; fiter++)
+    {
+      RHS[0] =  (*fiter->fluxes)[0];
     }
   }
 

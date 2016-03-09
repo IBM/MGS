@@ -3,6 +3,13 @@
 #include "BranchSolver/BranchSolver.mdl"
 #include "HodgkinHuxley/HodgkinHuxley.mdl"
 #include "HodgkinHuxleyVoltage/HodgkinHuxleyVoltage.mdl"
+
+#include "CaConcentration/CaConcentration.mdl"
+#include "CaERConcentration/CaERConcentration.mdl"
+#include "SpineAttachment/SpineAttachment.mdl"
+#include "Connexon/Connexon.mdl"
+#include "PreSynapticPoint/PreSynapticPoint.mdl"
+
 #include "ChannelNat/ChannelNat.mdl"
 #include "ChannelNap/ChannelNap.mdl"
 #include "ChannelKAf/ChannelKAf.mdl"
@@ -20,12 +27,6 @@
 #include "GABAAReceptor/GABAAReceptor.mdl"
 #include "AMPAReceptor/AMPAReceptor.mdl"
 #include "NMDAReceptor/NMDAReceptor.mdl"
-
-#include "CaConcentration/CaConcentration.mdl"
-#include "CaERConcentration/CaERConcentration.mdl"
-#include "SpineAttachment/SpineAttachment.mdl"
-#include "Connexon/Connexon.mdl"
-#include "PreSynapticPoint/PreSynapticPoint.mdl"
 
 #include "Exchanger/NCX.mdl"
 #include "Pump/PMCA.mdl"

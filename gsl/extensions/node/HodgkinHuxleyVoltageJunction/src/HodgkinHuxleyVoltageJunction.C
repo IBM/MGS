@@ -100,6 +100,14 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     conductance += gloc;
     current += gloc * (*(citer->reversalPotentials))[0];
   }
+
+	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+	for (; iiter != iend; iiter++)
+	{//IMPORTANT: subtraction is used
+		current -=  (*(iiter->currents))[0]; //[pA/um^2]
+	}
+
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
@@ -157,6 +165,13 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     conductance += gloc;
     current += gloc * (*(citer->reversalPotentials))[0];
   }
+
+	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+	for (; iiter != iend; iiter++)
+	{//IMPORTANT: subtraction is used
+		current -=  (*(iiter->currents))[0]; //[pA/um^2]
+	}
 
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();

@@ -422,7 +422,6 @@ NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
 NodeType LeakER(
 		){ initialize->initialize3, update->solveChannels };
 #endif
-#endif
 /*}}}*/
 // 2.2. PUMP + EXCHANGER NODE
 /*{{{*/
@@ -464,6 +463,7 @@ NodeType ExchangerNCX(
 // SERCA
 NodeType PumpSERCA(
 		){ initialize->initialize3, update->solveChannels };
+#endif
 /*}}}*/
 
 // 3. SYNAPSE

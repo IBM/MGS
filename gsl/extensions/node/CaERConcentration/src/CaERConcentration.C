@@ -397,17 +397,12 @@ void CaERConcentration::doForwardSolve()
 //    {
 //      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
 //    }
-    Array<ChannelCaFluxes>::iterator iter = channelCaFluxes.begin();
-    Array<ChannelCaFluxes>::iterator end = channelCaFluxes.end();
-    for (; iter != end; iter++)
+    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+    for (; fiter != fend; fiter++)
     {
-      RHS[i] -=  (*iter->fluxes)[i];
+      RHS[i] -=  (*fiter->fluxes)[i];
     }
-
-    /* This is a simple implementation of calcium extrusion. To be elaborated as
-     * needed. */
-    // TUAN: need to be updated to take into account PMCA
-    //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
   }
 
   /* FIX */

@@ -124,16 +124,14 @@ IPMCAbar[i] = IPMCAbar_values[0];
 // IMPORTANT: positive flux helps increase dCa/dt
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997
-    dyn_var_t v = (*V)[i];        // mV
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) *
-              (*getSharedMembers().Ca_equil - cai);  // [uM/ms]
+              (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
-    dyn_var_t v = (*V)[i];             // mV
     dyn_var_t cai = (*Ca_IC)[i];       //[uM]
     tau[i] = tc_factor * exp(v / kV);  // [msec]
-    J_Ca[i] = 1.0 / (tau[i]) * (*getSharedMembers().Ca_equil - cai);  // [uM/ms]
+    J_Ca[i] = 1.0 / (tau[i]) * (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 
 #elif PUMP_PMCA == PMCA_Jafri_Rice_Winslow_1998
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
@@ -163,17 +161,15 @@ void PumpPMCA::update(RNG& rng)
 // IMPORTANT: positive flux helps increase dCa/dt
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997
-    dyn_var_t v = (*V)[i];        // mV
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) *
-              (*getSharedMembers().Ca_equil - cai);  // [uM/ms]
+              (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
-    dyn_var_t v = (*V)[i];             // mV
     dyn_var_t cai = (*Ca_IC)[i];       //[uM]
 
     tau[i] = tc_factor * exp(v / kV);  // [msec]
-    J_Ca[i] = 1.0 / (tau[i]) * (*getSharedMembers().Ca_equil - cai);  // [uM/ms]
+    J_Ca[i] = 1.0 / (tau[i]) * (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 
 #elif PUMP_PMCA == PMCA_Jafri_Rice_Winslow_1998
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
@@ -185,7 +181,7 @@ void PumpPMCA::update(RNG& rng)
     // The saturation is incorporated in the denominator of the formula
     I_Ca[i] = -IPMCAbar * pow(cai, eta_pmca) /
               (pow(Km_pmca, eta_pmca) + pow(cai, eta_pmca));
-    I_PMCA[i] = -I_Ca[i];
+    I_PMCA[i] = I_Ca[i]; // 2Ca2+ out - 2H+ in --> 2charges out
 #elif PUMP_PMCA == _COMPONENT_UNDEFINED
 // do nothing
 #else
