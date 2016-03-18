@@ -17,9 +17,31 @@
 #include "Segment.h"
 #include "SegmentDescriptor.h"
 #include "StringUtils.h"
+#include "NumberUtils.h"
 
 #include <string.h>
 #include <sstream>
+#include <vector>
+#include <iostream>
+#include <algorithm>
+#include <valarray>
+#include <functional>
+#include <numeric>
+#include <climits>
+
+//x = row, y=col
+//WIDTH=#col, HEIGHT=#row
+#ifndef Map1Dindex
+#define Map1Dindex(x,y, WIDTH) ((y)+(x)*(WIDTH))
+#endif
+
+#ifndef Find2Dindex
+#define Find2Dindex(x,y, i, WIDTH) \
+		do{\
+			(y) = (i) % (WIDTH);\
+			(x) = (i) / (WIDTH);\
+		}while (0)
+#endif
 
 #define LENGTH_LINE_MAX 1024
 // the maximum length of the name given to each FieldName as part of the key
@@ -890,13 +912,14 @@ void Params::getModelArrayParams(
   }
 }
 
+//GOAL: check if the content of a string is a comment-line
 // A comment line is a blank line
 //  or               a line whose first non-space character is #
 bool Params::isCommentLine(std::string& line)
 {
   bool rval = false;
   char space = ' ';
-  int index = line.find_first_not_of(space);
+	std::string::size_type  index = line.find_first_not_of(space);
   if (index != std::string::npos)
   {
     if (line[index] == '#' or line[index] == '\n') rval = true;
@@ -911,7 +934,7 @@ void Params::jumpOverCommentLine(FILE* fpF)
 {
   fpos_t fpos;
   fgetpos(fpF, &fpos);
-  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  char bufS[LENGTH_LINE_MAX];
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   std::string line(bufS);
   while ((bufS[0] == '\n' or isCommentLine(line)) and !feof(fpF))
@@ -3008,5 +3031,372 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 	{
 		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
 		exit(-1);
+	}
+}
+
+///NOTE: Accept traditional ** array
+void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRateConstant,
+		int &numChanStates, int* &vChannelStates, int &initialstate)
+{
+  FILE* fpF = fopen(fname.c_str(), "r");
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  assert(fpF);
+	//read in the number of states
+	jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (1 != sscanf(bufS, "%d ", &numChanStates))
+	{
+    std::cerr << "Syntax of Markov-model file invalid: expect \n #-states" << std::endl;
+		exit(0);
+	}
+
+	//read in which state(s) is open-state
+	jumpOverCommentLine(fpF);
+  vChannelStates =	new int[numChanStates]();
+  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+	std::string str(bufS);
+	std::vector<std::string> tokens;
+	std::string delimiters(",");
+	StringUtils::Tokenize(str, tokens, delimiters);
+	if (tokens.size() != numChanStates)
+	{
+		std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
+	}
+	for (int ii = 0; ii < numChanStates; ++ii )
+	{
+		vChannelStates[ii] = (int) atoi(tokens[ii].c_str());
+	}
+
+	// read in which state should be the initial state
+	// ASSUMPTION: All channels having the same initial state
+	jumpOverCommentLine(fpF);
+  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (1 != sscanf(bufS, "%d ", &initialstate))
+	{
+		if (initialstate < 0 or initialstate > numChanStates)
+		{
+			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
+			exit(0);
+		}
+	}
+	
+
+	// read in transition rate matrix
+	matChannelRateConstant = new dyn_var_t*[numChanStates];
+	for(int i = 0; i < numChanStates; ++i) {
+		matChannelRateConstant[i] = new dyn_var_t[numChanStates]();
+	}
+	
+	bool isOK = true;
+	jumpOverCommentLine(fpF);
+  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  while (!feof(fpF))
+	{
+		int ifrom, ito;
+		dyn_var_t rate;
+		if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
+		{
+			isOK = false;
+			break;
+		}
+		if (ifrom < 1 or ifrom > numChanStates or ito < 1 or ito > numChanStates )
+		{
+			isOK = false;
+			break;
+		}
+		matChannelRateConstant[ifrom-1][ito-1] = rate;
+		jumpOverCommentLine(fpF);
+		c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+	}
+	if (!isOK)
+	{
+		std::cerr << "Error at reading matrix of rate-constants" << std::endl;
+		exit(0);
+	}
+  fclose(fpF);
+}
+
+// NOTE
+// matChannelRateConstant = [numChanStates][numChanStates] matrix of rate constant
+// vChannelStates = [numChanStates] vector telling which state is conducting
+// initialstate = value telling which state is the initial state for all channels in the cluster
+void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRateConstant,
+		int &numChanStates, int* &vChannelStates, int &initialstate)
+{
+  FILE* fpF = fopen(fname.c_str(), "r");
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  assert(fpF);
+	//read in the number of states
+	jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (1 != sscanf(bufS, "%d ", &numChanStates))
+	{
+    std::cerr << "Syntax of Markov-model file invalid: expect \n #-states" << std::endl;
+		exit(0);
+	}
+
+	//read in which state(s) is open-state
+	jumpOverCommentLine(fpF);
+  vChannelStates =	new int[numChanStates]();
+  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+	std::string str(bufS);
+	std::vector<std::string> tokens;
+	std::string delimiters(",");
+	StringUtils::Tokenize(str, tokens, delimiters);
+	if (tokens.size() != numChanStates)
+	{
+		std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
+	}
+	for (int ii = 0; ii < numChanStates; ++ii )
+	{
+		vChannelStates[ii] = (int) atoi(tokens[ii].c_str());
+	}
+
+	// read in which state should be the initial state
+	// ASSUMPTION: All channels having the same initial state
+	jumpOverCommentLine(fpF);
+  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (1 != sscanf(bufS, "%d ", &initialstate))
+	{
+		if (initialstate < 0 or initialstate > numChanStates)
+		{
+			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
+			exit(0);
+		}
+	}
+	
+
+	// read in transition rate matrix
+	matChannelRateConstant = new dyn_var_t[numChanStates* numChanStates]();
+	
+	bool isOK = true;
+	jumpOverCommentLine(fpF);
+  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  while (!feof(fpF))
+	{
+		int ifrom, ito;
+		dyn_var_t rate;
+		if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
+		{
+			isOK = false;
+			break;
+		}
+		if (ifrom < 1 or ifrom > numChanStates or ito < 1 or ito > numChanStates )
+		{
+			isOK = false;
+			break;
+		}
+		matChannelRateConstant[Map1Dindex(ifrom-1,ito-1,numChanStates)] = rate;
+		jumpOverCommentLine(fpF);
+		c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+	}
+	if (!isOK)
+	{
+		std::cerr << "Error at reading matrix of rate-constants" << std::endl;
+		exit(0);
+	}
+  fclose(fpF);
+}
+
+// Cluster:
+// Suppose a cluster has M states
+// M = numClusterStates  = number of states in the cluster
+// the transition matrix is of size M * M
+// which is sparse
+// NOTE:
+//
+// numClusterStates = scalar
+//
+// matClusterStateInfo[M*numChanStates] = 2D matrix, each row
+//                is a vector of length 'numChanStates' telling cluster-state info
+//                which is how many channels in each channel-state
+//
+// vClusterNumOpenChan   = vector of size M
+//          that tells the #openingChannel at that cluste-state
+//
+// maxNumNeighbors = max-number of neighbors for all rows
+//
+// matK_channelstate_fromto[0..numClusterStates-1][0..maxNumNeighbors-1] = {from|to}
+//    'from' and 'to' are both index of single-channel state
+// matK_indx  = the real index  of cluster-state
+// matK_indx[i][j] = val=> keeping the real index of the next state
+//               which can be used to trace 
+//               to the next state using indexK[val][?]
+void Params::setupCluster(
+		dyn_var_t* const &matChannelRateConstant,
+		const int &numChan, const int &numChanStates, int* const &vChannelStates, 
+		//output
+    int & numClusterStates, 
+		int* &matClusterStateInfo, 
+		int* &vClusterNumOpenChan,
+		int &maxNumNeighbors,
+		//Combined2MarkovState_t* &matK_channelstate_fromto, long * &matK_indx
+		long* &matK_channelstate_fromto, ClusterStateIndex_t * &matK_indx
+		)
+{
+	// Step 1. find numClusterStates, matClusterStateInfo
+	int balls = numChan;
+	int bins = numChanStates;
+	// how many ways to put balls
+	// into bins
+	// regardless of which balls
+    //CALL count_ball2bin(balls, bins, matClusterStateInfo, numClusterStates, icols)
+		//matClusterStateInfo [0..ClusterNumStates-1,0..numChanStates-1]
+		//each row of matClusterStateInfo represent each cluster-state, i.e. it tells
+		//the information of Channels distribution to each Markov-state
+	int rows, cols;
+	count_ball2bin(balls, bins, matClusterStateInfo, rows, cols);
+	numClusterStates = rows;
+	assert(bins=cols);
+
+	// Step 2. Find vClusterNumOpenChan
+  // + vector that tells how many conducting channels in each cluster-state
+	vClusterNumOpenChan = new int[numClusterStates]();
+
+	for (unsigned int ii=0; ii < numClusterStates; ii++)
+	{
+		for (unsigned int jj=0; jj< numChanStates; jj++)
+		{
+			int OpenState = 1;
+			if (vChannelStates[jj] == OpenState)
+			{
+				vClusterNumOpenChan[ii] += matClusterStateInfo[Map1Dindex(ii,jj, numChanStates)];
+			}
+		}
+	}
+	
+	// Step 3. find maxNumNeighbors, matK_channelstate_fromto, matK_indx
+/*
+    !size (numClusterStates,0:maxnkL..) :: compK_L..
+    !size (numClusterStates,0:maxnkL..) :: idxK_L..
+    ! NOTE: The zero-th column keeps the 'true' number of non-zero elements in the row
+    !       However, it's does't mean anything here as non-zero elements are not consecutives all the time
+    CALL getcompK_5(channel_cMat, mL, matClusterStateInfo, numClusterStates, N_L, matK_channelstate_fromto, matK_indx, maxNumNeighbors)
+*/
+
+	getCompactK(matChannelRateConstant, 
+			numChanStates,
+			numChan, 
+			matClusterStateInfo, 
+			numClusterStates,
+			//output
+			maxNumNeighbors,
+			matK_channelstate_fromto,
+			matK_indx
+			);
+}
+
+//NOTE:
+//matK_channelstate_fromto[..][..] = numClusterStates * maxNumNeighbors
+//matK_indx[..][..] = of the same size
+void Params::getCompactK(
+	dyn_var_t* const & matChannelRateConstant,
+  const int & numChanStates,
+  const int & numChan,
+  int* const &matClusterStateInfo,
+  const int & numClusterStates,
+	 // output
+  int & maxNumNeighbors,
+  long* & matK_channelstate_fromto,
+  ClusterStateIndex_t* & matK_indx
+		)
+{
+	// Step 1. Find maximum # of possible neighbors
+	// which is equal to # of non-zero non-diagonal elements
+	unsigned int icount = 0;
+	if (numChan > numChanStates)
+	{
+		for (int ii=0; ii< numChanStates; ii++)
+		{
+			int offset = Map1Dindex(ii,0, numChanStates);
+			icount += count_nonzero(matChannelRateConstant, offset, numChanStates );
+		}
+	}
+	else{
+		//a more general case 
+		//which requires sorting
+		//and takes only the sum of the min(numChanStates,numChan) rows of the most non-zero elements
+		std::vector<int> vcount;
+		for (int ii = 0; ii< numChanStates; ii++)
+		{
+			int offset = Map1Dindex(ii,0, numChanStates);
+			int icount = count_nonzero(matChannelRateConstant, offset, numChanStates );
+			vcount.push_back(icount);
+		}
+		std::sort(vcount.begin(), vcount.end(), std::greater<int>());//descending
+		icount = 0;
+		for(int ii=0; ii < std::min(numChanStates, numChan); ii++)
+			icount  += vcount[ii];
+	}
+	maxNumNeighbors = icount;
+
+	// Step 2. Find big K matrice in compact form
+  matK_channelstate_fromto = new long[numClusterStates * maxNumNeighbors]();
+	//matK_indx = new int[numClusterStates * maxNumNeighbors]();
+	matK_indx = new ClusterStateIndex_t[numClusterStates * maxNumNeighbors]();
+
+	long fromto;
+	for (int ii=0; ii < numClusterStates; ii++)
+	{
+		int icount = 0;
+		//	std::valarray<int> v1(matClusterStateInfo + Map1Dindex(ii,0,numChanStates), numChanStates);
+		std::vector<int> v1(matClusterStateInfo + Map1Dindex(ii,0, numChanStates), 
+				matClusterStateInfo + Map1Dindex(ii,0, numChanStates) + numChanStates 
+				);
+/*		std::cout << "v1: ";
+		for (int jj = 0; jj < v1.size(); jj++)
+			std::cout << v1[jj] << ",";
+		std::cout << std::endl;
+		*/
+		for (int jj=0; jj < numClusterStates; jj++)
+		{
+//			//std::valarray<int> v2(matClusterStateInfo + Map1Dindex(jj,0,numChanStates), numChanStates);
+			std::vector<int> v2(matClusterStateInfo + Map1Dindex(jj,0,numChanStates), 
+					matClusterStateInfo + Map1Dindex(jj,0,numChanStates) + numChanStates);
+//			//std::valarray<int> res = (v2 - v1);
+			std::vector<int> res;
+			res.reserve(v1.size());
+			//std::transform(v2.begin(), v2.end(), v1.begin(), res.begin(), std::minus<int>());
+			std::transform(v2.begin(), v2.end(), v1.begin(), std::back_inserter(res), std::minus<int>());
+			// int sumval = std::abs(res.sum());
+			int sumval = std::accumulate(res.begin(), res.end(), 0, [](int a, int b){ return std::abs(a)+std::abs(b); });
+/*		std::cout << "v2: ";
+		for (int jj = 0; jj < v2.size(); jj++)
+			std::cout << v2[jj] << ",";
+		std::cout << std::endl;
+		std::cout << "--- v2-v1: ";
+		for (int jj = 0; jj < res.size(); jj++)
+			std::cout << res[jj] << ",";
+		std::cout << std::endl;
+		std::cout << "sumval = " << sumval ;
+		std::cin.get();
+		*/
+		if (sumval == 2) // eligible for two neighbor cluster-states
+		{
+			//				//int initial_state = std::distance(res, std::max_element(std::begin(res), res.size())); //location of element with value 1;
+			//				//int final_state = std::distance(res, std::min_element(res, res.size())) //location of element with value -1;
+			int initial_state = std::distance(res.begin(), std::max_element(res.begin(), res.end())); //location of element with value 1;
+			int final_state = std::distance(res.begin(), std::min_element(res.begin(), res.end())); //location of element with value -1;
+			if (initial_state > MAXRANGE_MARKOVSTATE or final_state > MAXRANGE_MARKOVSTATE)
+			{
+				std::cerr << "The Markov-model should not have more than " << MAXRANGE_MARKOVSTATE << " states\n";
+				exit(0);
+			}
+			std::cout << "from, to = " << initial_state << ", " << final_state << std::endl;
+			if (matChannelRateConstant[Map1Dindex(initial_state, final_state, numChanStates)] > 0.0)
+			{
+/*
+               fromto = IOR(ISHFT(INT(initial_state), bitshift), final_state)
+                ChannelStateFromTo(ii, icount) = fromto ![initial_state,final_state]
+                idxK(ii, icount) = jj
+*/
+ 
+				fromto = final_state | (initial_state << BITSHIFT_MARKOV);
+				matK_channelstate_fromto[Map1Dindex(ii, icount, maxNumNeighbors)] = fromto;
+				matK_indx[Map1Dindex(ii, icount, maxNumNeighbors)] = jj;
+				icount++;
+			}
+		}
+		}
 	}
 }

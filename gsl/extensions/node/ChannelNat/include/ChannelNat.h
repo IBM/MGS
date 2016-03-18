@@ -35,7 +35,6 @@ class ChannelNat : public CG_ChannelNat
   void initialize(RNG& rng);
   virtual ~ChannelNat();
   static void initialize_others();
-  virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelNatInAttrPSet* CG_inAttrPset, CG_ChannelNatOutAttrPSet* CG_outAttrPset);
 
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
@@ -47,7 +46,6 @@ class ChannelNat : public CG_ChannelNat
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
-	int _cptIndex;// index of the associated compartment
 };
 
 #endif

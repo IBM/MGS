@@ -77,7 +77,7 @@ void PumpPMCA::initialize(RNG& rng)
       assert(IPMCAbar_values.size() == IPMCAbar_dists.size());
       for (j = 0; j < IPMCAbar_dists.size(); ++j)
       {
-        if ((*dimensions)[_cptindex]->dist2soma < IPMCAbar_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < IPMCAbar_dists[j]) break;
       }
       if (j < IPMCAbar_values.size())
         IPMCAbar[i] = IPMCAbar_values[j];
@@ -190,14 +190,5 @@ void PumpPMCA::update(RNG& rng)
   }
 }
 
-void PumpPMCA::setPointers(const String& CG_direction,
-                           const String& CG_component, NodeDescriptor* CG_node,
-                           Edge* CG_edge, VariableDescriptor* CG_variable,
-                           Constant* CG_constant,
-                           CG_PumpPMCAInAttrPSet* CG_inAttrPset,
-                           CG_PumpPMCAOutAttrPSet* CG_outAttrPset)
-{
-  _cptindex = CG_inAttrPset->idx;
-}
 
 PumpPMCA::~PumpPMCA() {}

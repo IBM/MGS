@@ -297,6 +297,14 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   if (RHS.size() != size) RHS.increaseSizeTo(size);
   if (currentToConc.size() != size) currentToConc.increaseSizeTo(size);
 
+	//get fraction volume
+  if (_segmentDescriptor.getBranchType(branchData->key) == 0)
+  {  // soma:
+	  fractionVolumeER = FRACTIONVOLUME_RoughER;
+	}else{ 
+		fractionVolumeER = FRACTIONVOLUME_SmoothER;
+	}
+
   // initialize data
   Ca_cur[0] = Ca_new[0];
   for (int i = 1; i < size; ++i)
@@ -399,11 +407,14 @@ void CaERConcentration::doForwardSolve()
 //    }
     Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
-    for (; fiter != fend; fiter++)
-    {
-      RHS[i] -=  (*fiter->fluxes)[i];
-    }
-  }
+		for (; fiter != fend; fiter++)
+		{
+			//original: RHS[i] -=  (*fiter->fluxes)[i];
+			//correct: RHS[i] -=  (*fiter->fluxes)[i] * Vmyo / Ver;
+			//equivalent of correct:
+			RHS[i] -=  (*fiter->fluxes)[i] * FRACTIONVOLUME_CYTO / fractionVolumeER;
+		}
+	}
 
   /* FIX */
   if (isDistalCase3)
@@ -425,11 +436,12 @@ void CaERConcentration::doForwardSolve()
 //    {
 //      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
 //    }
-    Array<ChannelCaFluxes>::iterator citer = channelCaFluxes.begin();
-    Array<ChannelCaFluxes>::iterator cend = channelCaFluxes.end();
-    for (; citer != cend; citer++)
+    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+    for (; fiter != fend; fiter++)
     {
-      RHS[0] -= (*citer->fluxes)[0];
+      //RHS[0] -= (*fiter->fluxes)[0];
+			RHS[0] -=  (*fiter->fluxes)[0] * FRACTIONVOLUME_CYTO / fractionVolumeER;
     }
   }
 

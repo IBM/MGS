@@ -60,6 +60,14 @@ void CaERConcentrationJunction::initializeJunction(RNG& rng)
   assert(dimensions.size() == 1);
 #endif
 
+	//get fraction volume
+  if (_segmentDescriptor.getBranchType(branchData->key) == 0)
+  {  // soma:
+	  fractionVolumeER = FRACTIONVOLUME_RoughER;
+	}else{ 
+		fractionVolumeER = FRACTIONVOLUME_SmoothER;
+	}
+
   Ca_cur = Ca_new[0];
   // So, one explicit junction is composed of one compartment
   // which can be explicit cut-point junction or
@@ -110,7 +118,8 @@ void CaERConcentrationJunction::predictJunction(RNG& rng)
   Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
   for (; fiter != fend; fiter++)
   {
-    RHS -= (*fiter->fluxes)[0];
+    //RHS -= (*fiter->fluxes)[0];
+		RHS -=  (*fiter->fluxes)[0] * FRACTIONVOLUME_CYTO / fractionVolumeER;
   }
    
   //  Array<dyn_var_t*>::iterator riter = receptorCaCurrents.begin();
@@ -170,7 +179,8 @@ void CaERConcentrationJunction::correctJunction(RNG& rng)
   Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
   for (; fiter != fend; fiter++)
   {
-    RHS -= (*fiter->fluxes)[0];
+    //RHS -= (*fiter->fluxes)[0];
+		RHS -=  (*fiter->fluxes)[0] * FRACTIONVOLUME_CYTO / fractionVolumeER;
   }
 
   //  Array<dyn_var_t*>::iterator riter = receptorCaCurrents.begin();

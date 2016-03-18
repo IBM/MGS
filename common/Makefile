@@ -1,7 +1,8 @@
-CFLAGS= -g -Wall -O3                                                            
 OBJDIR= ./obj
 SRCDIR= ./src
 INCDIR= ./include
+CC=g++
+CFLAGS=-I$(INCDIR) -g -Wall -O3 -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
 
 .DEFAULT_GOAL := final
 
@@ -19,10 +20,13 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 	
 final: $(OBJS)
+#final: 
 	echo $(OBJS)
 
 $(OBJDIR)/%.o: %.C 
 	$(CC) $(CFLAGS) -c $< -o $@
+
+clean: realclean
 
 realclean:
 	-rm $(OBJDIR)/*

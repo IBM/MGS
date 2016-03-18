@@ -81,11 +81,11 @@ void ChannelCaT_GHK::initialize(RNG& rng)
   {
     if (Pbar_dists.size() > 0)
     {
-      int j;
+      unsigned int j;
 			assert(Pbar_values.size() == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
-        if ((*dimensions)[_cptindex]->dist2soma < Pbar_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < Pbar_dists[j]) break;
       }
       if (j < Pbar_values.size())
         PCabar[i] = Pbar_values[j];
@@ -97,7 +97,7 @@ PCabar[i] = Pbar_values[0];
 } */
     else if (Pbar_branchorders.size() > 0)
     {
-      int j;
+      unsigned int j;
 			assert(Pbar_values.size() == Pbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
 		  //const special_value = -1; 
@@ -200,17 +200,6 @@ void ChannelCaT_GHK::initialize_others()
       Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }
 #endif
-}
-
-void ChannelCaT_GHK::setPointers(const String& CG_direction,
-                             const String& CG_component,
-                             NodeDescriptor* CG_node, Edge* CG_edge,
-                             VariableDescriptor* CG_variable,
-                             Constant* CG_constant,
-                             CG_ChannelCaT_GHKInAttrPSet* CG_inAttrPset,
-                             CG_ChannelCaT_GHKOutAttrPSet* CG_outAttrPset)
-{
-  _cptindex = CG_inAttrPset->idx;
 }
 
 ChannelCaT_GHK::~ChannelCaT_GHK() {}

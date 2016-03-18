@@ -17,7 +17,9 @@
 #define SEGMENTDESCRIPTOR_H
 
 #include "../../nti/include/MaxComputeOrder.h"
+#ifdef HAVE_MPI
 #include <mpi.h>
+#endif
 #include <string>
 #include <vector>
 #include <cassert>

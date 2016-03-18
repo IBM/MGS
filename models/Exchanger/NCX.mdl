@@ -1,5 +1,5 @@
-#ifndef PumpSERCA_MDL
-#define PumpSERCA_MDL
+#ifndef ExchangerNCX_MDL
+#define ExchangerNCX_MDL
 
 #include "../../nti/include/MaxComputeOrder.h"
 
@@ -7,66 +7,89 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-// NOTE: SERCA is a Ca-reuptake mechanism that utilize ATP as an energy source
-// Rate: each SERCA molecule pumps
-//       ???? ions per second  (a dynamic value)
-Node PumpSERCA Implements 
+// NOTE: Na+/Ca2+ exchanger (NCX) is a Ca-extrusion mechanism that utilize 
+// the gradient Delta[Na+] as an energy source
+//  It has low affinity to [Ca2+] (Km = 2-20 uM) with big capacity
+// and get data from 2 compartment variables: Voltage + Calcium
+//  forward mode: 3Na+ in  - 1Ca2+ out --> inward Incx (during high Cacyto)
+//  reverse mode: 3Na+ out - 1Ca2+ in -->  outward Incx
+// The coupling ratio: Ca2+ : Na+ is 1:3
+// Rate: each NCX molecule pumps
+//       2000-5000 ions per second (low-affinity, high capacity) 
+Node ExchangerNCX Implements 
 		 BranchDataProducer, 
-     CaFluxArrayProducer
-     //CurrentArrayProducer,  
-     //CaCurrentArrayProducer
+     CurrentArrayProducer,
+     CaCurrentArrayProducer
 {
 /*{{{*/
 	//DATA
 	//{{{ 
 	//{{{
-	//{{{
-  // user-input
-  dyn_var_t [] SERCAConc; // [uM]
 	//internal data
-  // NOTE: The flux is expected to get positive value if flowing toward cytosol
-  // J_Ca = - coupling_Calcium * vcycle * Ap
-  // with Ap = SERCAConc = concentration of SERCA [uM]
-  dyn_var_t [] J_Ca; // [pA/um^2]
-	//data mainly used to dynamically assign different conductance on different location
-	//NOTE: In SynParams.par file
-	//    Use either SERCAConc_dists or SERCAConc_branchorders
-	//      and combine with SERCAConc_values
-	dyn_var_t [] SERCAConc_dists; // an array that indicate the threshold-distance (in micrometer)
-	dyn_var_t [] SERCAConc_branchorders;// an array that indicate the branch-order (zero-based integer)
-	dyn_var_t [] SERCAConc_values;// ... having the corresponding Ap [uM]
-  // Example:
-	// CHANNEL_PARAMS 2
-	// Cah 3
-	// BRANCHTYPE MTYPE
-	// 1 0 <INCXbar={0.00992}>
-	// 4 0 <INCXbar_dists={380.0,480.0, 590}> 
-	// 4 0 <INCXbar_values={0.000555,0.00555,0.000555}>
-	// Nat 3 
-	// BRANCHTYPE MTYPE
-	// 1 0 <INCXbar={0.00992}>
-	// 4 0 <INCXbar_branchorders={0, 1, 2}> 
-	// 4 0 <INCXbar_values={0.0555,0.555,0.000555}>
+  //FORMULA: INCX = INCXbar * ... ;  
+	dyn_var_t [] I_NCX; // [pA/um^2]
+	dyn_var_t [] I_Ca; // [pA/um^2] = 2 * I_NCX
+	//dyn_var_t [] I_Na; // [pA/um^2]  - not being used
+#if EXCHANGER_NCX == NCX_Weber_Bers_2001
+  dyn_var_t [] INCXbar; // [pA/um^2]
+#endif
+	//{{{
+  // NOTE: INCXbar = zCa * zF * Vmax
+  //   Vmax [(mole of Ca2+) /(cm^2.msec)] - taking into account the surface density of NCX
+  //       = 2000-to-5000 (ions /sec) * NCX_density (1/um^2) / N_A
+  //   NCX_density = ??? (1/um^2) in hair cell (i.e. total 10^6 molecules) Yamoah-Gillespie (1998, J Neuros)
+  //   N_A = avogadro = # ions per mole
+  //   zCa = valence Calcium
+  //   zF  = Faraday constant
+  //dyn_var_t Km; // [uM] dissociation constant of half-saturation 
+	//dyn_var_t [] tau;
   //}}}
 	// reference data
+	dyn_var_t []* V;//transmembrane voltage [mV]
 	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
-	dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
 	BranchDataStruct* branchData; 
 	DimensionStruct* []* dimensions;
 	//int index; //index of the compartment in branch
 
+	//data mainly used to dynamically assign different conductance on different location
+	//NOTE: In SynParams.par file
+	//    Use either INCXbar_dists or INCXbar_branchorder
+	//      and combine with INCXbar_values
+	dyn_var_t [] INCXbar_dists; // an array that indicate the threshold-distance (in micrometer)
+	dyn_var_t [] INCXbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+	dyn_var_t [] INCXbar_values;// ... having the corresponding INCXbar [pA/um^2]
+	// Example:
+	// CHANNEL_PARAMS 2
+	// Cah 3
+	// BRANCHTYPE MTYPE
+	// 1 0 <gbar={0.00992}>
+	// 4 0 <gbar_dists={380.0,480.0, 590}> 
+	// 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+	// Nat 3 
+	// BRANCHTYPE MTYPE
+	// 1 0 <gbar={0.00992}>
+	// 4 0 <gbar_branchorders={0, 1, 2}> 
+	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
 	//}}}
 
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
 		//{{{
 		dyn_var_t* Ca_EC; // [uM]
+		dyn_var_t* Na_EC; // [mM]
+		dyn_var_t* Na_IC; // [mM]
 		dyn_var_t* deltaT; // [ms]
 		dyn_var_t* T;     // [K]
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
 		//   and tempt. used for the simulation 
-		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+		//dyn_var_t a; // fraction of inactivation (i.e. with partial inactivation properties)
 		InitPhase computeTadj; 
+#if EXCHANGER_NCX == NCX_Weber_Bers_2001
+    dyn_var_t eta_NCX; 
+#endif
+#if EXCHANGER_NCX == NCX_Gabbiani_Midtgaard_Kopfel_1994
+    dyn_var_t k_NCX ; // [pA . mM^-4 . um^-2]
+#endif
 		//}}}
 	}
 	//}}}
@@ -74,8 +97,9 @@ Node PumpSERCA Implements
 	RuntimePhase update();
 	InitPhase initialize;
 
-  // Output 
-  CaFluxArrayProducer.fluxes << &J_Ca;
+  // Output
+	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_NCX;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection
@@ -84,23 +108,26 @@ Node PumpSERCA Implements
 		// then idx = index of the compartment on a branch
 	}
 
-  //Input (Connection setup)
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer,
-	   BranchDataProducer, DimensionArrayProducer 
-  {
-		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+  //Connection setup (input)
+	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+	BranchDataProducer, DimensionArrayProducer 
+	{
+			VoltageArrayProducer.voltageArray >> V;
 			BranchDataProducer.branchData >> branchData;
 			DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="IC[CalciumER]") Expects CaConcentrationArrayProducer {
-		CaConcentrationArrayProducer.CaConcentrations >> Ca_ER;
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
 	}
 
 	Connection Pre Constant (PSet.identifier=="EC") 
-		Expects TemperatureProducer 
+		Expects CaConcentrationProducer, TemperatureProducer,
+    NaConcentrationProducer
 	{
+			CaConcentrationProducer.Ca >> Shared.Ca_EC;
 			TemperatureProducer.T >> Shared.T;
+			NaConcentrationProducer.Na >> Shared.Na_EC;
 	}
 
 	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
@@ -110,10 +137,9 @@ Node PumpSERCA Implements
 }
 
 
-//Node PumpSERCA_Markov Implements 
-//		 BranchDataProducer, 
+//Node ExchangerNCX_Markov Implements 
 //     CurrentArrayProducer,
-//     CaCurrentArrayProducer
+//		 BranchDataProducer, CaCurrentArrayProducer
 //{
 ///*{{{*/
 //	//DATA
@@ -121,18 +147,18 @@ Node PumpSERCA Implements
 //	//{{{
 //	//internal data
 //	dyn_var_t [] tau;
-//  //FORMULA: Ipmca = Ipmcabar * Cacyto^eta_pmca / (Kmpmca^ eta_pmca + Cacyto^eta_pmca)
+//  //FORMULA: INCX = INCXbar * Cacyto^eta_NCX / (KmNCX^ eta_NCX + Cacyto^eta_NCX)
+//	dyn_var_t [] I_NCX; // [pA/um^2]
 //	dyn_var_t [] I_Ca; // [pA/um^2]
-//	dyn_var_t [] I_SERCA; // [pA/um^2]
-//  dyn_var_t [] Ipmcabar; // [pA/um^2]
-//  dyn_var_t [] fSERCA;  // fraction of SERCA in free form (unstimulated)
-//  dyn_var_t [] fSERCACaCaM; // CaCaM-bound SERCA (unstimulated)
-//  dyn_var_t [] fSERCACaCaMasterisk; //  CaCaM-bound SERCA (stimulated)
-//  dyn_var_t [] fSERCAasterisk; // free SERCA (stimulated)
-//  // NOTE: Ipmcabar = zCa * zF * Vmax
-//  //   Vmax [(mole of Ca2+) /(cm^2.msec)] - taking into account the surface density of SERCA
-//  //       = 30 (ions /sec) * SERCA_density (1/um^2) / N_A
-//  //   SERCA_density = 2000 (1/um^2) in hair cell (i.e. total 10^6 molecules) Yamoah-Gillespie (1998, J Neuros)
+//  dyn_var_t [] INCXbar; // [pA/um^2]
+//  dyn_var_t [] fNCX;  // fraction of NCX in free form (unstimulated)
+//  dyn_var_t [] fNCXCaCaM; // CaCaM-bound NCX (unstimulated)
+//  dyn_var_t [] fNCXCaCaMasterisk; //  CaCaM-bound NCX (stimulated)
+//  dyn_var_t [] fNCXasterisk; // free NCX (stimulated)
+//  // NOTE: INCXbar = zCa * zF * Vmax
+//  //   Vmax [(mole of Ca2+) /(cm^2.msec)] - taking into account the surface density of NCX
+//  //       = 30 (ions /sec) * NCX_density (1/um^2) / N_A
+//  //   NCX_density = 2000 (1/um^2) in hair cell (i.e. total 10^6 molecules) Yamoah-Gillespie (1998, J Neuros)
 //  //   N_A = avogadro = # ions per mole
 //  //   zCa = valence Calcium
 //  //   zF  = Faraday constant
@@ -182,9 +208,8 @@ Node PumpSERCA Implements
 //	RuntimePhase update();
 //	InitPhase initialize;
 //
-//  //Output
 //	CaCurrentArrayProducer.currents << &I_Ca;
-//	CurrentArrayProducer.currents << &I_SERCA;
+//	CurrentArrayProducer.currents << &I_NCX;
 //	BranchDataProducer.branchData << branchData;
 //
 //	InAttrPSet {//information of the incoming connection

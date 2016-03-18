@@ -90,6 +90,9 @@ endif
 endif
 
 CFLAGS += -I$(HEADER_DIR) 
+#Add support for GMP library
+CFLAGS += -lgmp -std=c++11
+LDFLAGS += -lgmp -std=c++11 -I../common/include
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
 ifeq ($(debug), yes)
@@ -180,6 +183,9 @@ TD_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/
 
 TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${NG_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${ND_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TISSUE_LIB_SOURCES:.cxx=.o})
 
+COMMON_DIR=../common/obj/
+COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
+
 TISSUE_LIB = ../gsl/lib/liblensdomain.a
 #TISSUE_LIB = ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
@@ -229,7 +235,7 @@ neuroDev: $(ND_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroDev $(OPT) \
 		$(ND_OBJECTS) \
-		../common/obj/StringUtils.o \
+		$(COMMON_OBJS)\
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
@@ -237,7 +243,7 @@ touchDetect: $(TD_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/touchDetect $(OPT) \
 		$(TD_OBJECTS) \
-		../common/obj/StringUtils.o \
+		$(COMMON_OBJS) \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 

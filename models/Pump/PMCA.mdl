@@ -106,7 +106,6 @@ Node CaExtrusion  Implements
 
 	RuntimePhase update();
 	InitPhase initialize;
-	UserFunction setPointers;
 
 	CaFluxArrayProducer.fluxes << &J_Ca;
 	BranchDataProducer.branchData << branchData;
@@ -124,7 +123,6 @@ Node CaExtrusion  Implements
 			VoltageArrayProducer.voltageArray >> V;
 			BranchDataProducer.branchData >> branchData;
 			DimensionArrayProducer.dimensionArray >> dimensions;
-			setPointers();
 	}
 
 	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
@@ -241,7 +239,6 @@ Node PumpPMCA Implements
 
 	RuntimePhase update();
 	InitPhase initialize;
-	//UserFunction setPointers;
 
   // Output 
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
@@ -265,7 +262,6 @@ Node PumpPMCA Implements
 			VoltageArrayProducer.voltageArray >> V;
 			BranchDataProducer.branchData >> branchData;
 			DimensionArrayProducer.dimensionArray >> dimensions;
-			//setPointers();
 	}
 
 	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
@@ -357,7 +353,6 @@ Node PumpPMCA Implements
 //
 //	RuntimePhase update();
 //	InitPhase initialize;
-//	UserFunction setPointers;
 //
 //  //Output
 //	CaCurrentArrayProducer.currents << &I_Ca;
@@ -377,7 +372,6 @@ Node PumpPMCA Implements
 //			VoltageArrayProducer.voltageArray >> V;
 //			BranchDataProducer.branchData >> branchData;
 //			DimensionArrayProducer.dimensionArray >> dimensions;
-//			setPointers();
 //	}
 //
 //	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {

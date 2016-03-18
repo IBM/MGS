@@ -35,3 +35,7 @@ noremap <leader>f <Esc>:syn region myFold start="{{{" end="}}}" transparent fold
 "" all consecutive comments (starting with a space and //)
 "" will be folded"
 "syn match comment "\v(^\s*//.*\n)+" fold<CR>
+
+"YouCompleteMe
+"let vimDir = "$NTSROOT"
+"let g:ycm_global_ycm_extra_conf = expand(vimDir . ".ycm_extra_conf.py")

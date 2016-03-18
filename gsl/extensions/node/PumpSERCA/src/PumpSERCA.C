@@ -63,11 +63,11 @@ void PumpSERCA::initialize(RNG& rng)
   {
     if (SERCAConc_dists.size() > 0)
     {
-      int j;
+      unsigned int j;
       assert(SERCAConc_values.size() == SERCAConc_dists.size());
       for (j = 0; j < SERCAConc_dists.size(); ++j)
       {
-        if ((*dimensions)[_cptindex]->dist2soma < SERCAConc_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < SERCAConc_dists[j]) break;
       }
       if (j < SERCAConc_values.size())
         SERCAConc[i] = SERCAConc_values[j];
@@ -152,16 +152,6 @@ void PumpSERCA::update(RNG& rng) {
 		J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
 #endif
   }
-}
-
-void PumpSERCA::setPointers(const String& CG_direction,
-                              const String& CG_component,
-                              NodeDescriptor* CG_node, Edge* CG_edge,
-                              VariableDescriptor* CG_variable,
-                              Constant* CG_constant,
-                              CG_PumpSERCAInAttrPSet* CG_inAttrPset,
-                              CG_PumpSERCAOutAttrPSet* CG_outAttrPset)
-{
 }
 
 PumpSERCA::~PumpSERCA() {}

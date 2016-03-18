@@ -73,11 +73,11 @@ void ExchangerNCX::initialize(RNG& rng)
   {
     if (INCXbar_dists.size() > 0)
     {
-      int j;
+      unsigned int j;
       assert(INCXbar_values.size() == INCXbar_dists.size());
       for (j = 0; j < INCXbar_dists.size(); ++j)
       {
-        if ((*dimensions)[_cptindex]->dist2soma < INCXbar_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < INCXbar_dists[j]) break;
       }
       if (j < INCXbar_values.size())
         INCXbar[i] = INCXbar_values[j];
@@ -207,17 +207,6 @@ void ExchangerNCX::update(RNG& rng)
      * Incx[i] = Nncx * pumping_rate_per_molecule * ...
     */
   }
-}
-
-void ExchangerNCX::setPointers(const String& CG_direction,
-                               const String& CG_component,
-                               NodeDescriptor* CG_node, Edge* CG_edge,
-                               VariableDescriptor* CG_variable,
-                               Constant* CG_constant,
-                               CG_ExchangerNCXInAttrPSet* CG_inAttrPset,
-                               CG_ExchangerNCXOutAttrPSet* CG_outAttrPset)
-{
-  _cptindex = CG_inAttrPset->idx;
 }
 
 ExchangerNCX::~ExchangerNCX() {}

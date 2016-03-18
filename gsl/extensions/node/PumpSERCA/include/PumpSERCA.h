@@ -19,10 +19,8 @@ class PumpSERCA : public CG_PumpSERCA
    public:
       void update(RNG& rng);
       void initialize(RNG& rng);
-      virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_PumpSERCAInAttrPSet* CG_inAttrPset, CG_PumpSERCAOutAttrPSet* CG_outAttrPset);
       virtual ~PumpSERCA();
 	 private:
-			int _cptindex;// index of the associated compartment
 };
 
 #endif

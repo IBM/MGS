@@ -83,6 +83,7 @@ void NaChannel::update(RNG& rng)
     m[i] = (dt*am + m[i]*(1.0 - pm))/(1.0 + pm);
 #endif
 #ifdef SCHWEIGHOFER_1999
+		//TUAN: NOTE Bug in the implementation
     m[i] = am/(am + bm);
 #endif
     dyn_var_t ph = 0.5*dt*(ah + bh);

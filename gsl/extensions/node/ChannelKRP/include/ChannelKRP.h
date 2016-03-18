@@ -22,7 +22,6 @@ class ChannelKRP : public CG_ChannelKRP
   void initialize(RNG& rng);
   virtual ~ChannelKRP();
   static void initialize_others();//new
-  virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKRPInAttrPSet* CG_inAttrPset, CG_ChannelKRPOutAttrPSet* CG_outAttrPset);
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);//new
 #if CHANNEL_KRP == KRP_WOLF_2005
@@ -33,7 +32,6 @@ class ChannelKRP : public CG_ChannelKRP
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
-	int _cptIndex;// index of the associated compartment
 };
 
 #endif

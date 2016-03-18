@@ -27,8 +27,12 @@
 #include <string>
 #include <algorithm>
 #include <utility>
+#include <cstdint>
+#include <climits>
 
 #include "SegmentDescriptor.h"
+
+#define Combined2MarkovState_t long
 
 class Segment;
 
@@ -267,9 +271,37 @@ public:
   }
 
   void skipHeader(FILE* fpF);
+	void readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRateConstant,
+			int &numChanStates, int* &vChannelStates, int &initialstate);
+	void readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRateConstant,
+			int &numChanStates, int* &vChannelStates, int &initialstate);
+	void setupCluster(
+			dyn_var_t* const &matChannelRateConstant,
+			const int &numChan, 
+			const int &numChanStates, int* const &vChannelStates, 
+			//output
+			int & numClusterStates, 
+			int* &matClusterStateInfo, 
+			int* &vClusterNumOpenChan,
+			int &maxNumNeighbors,
+			//Combined2MarkovState_t * &matK_channelstate_fromto, long* &indxK
+			long* &matK_channelstate_fromto, ClusterStateIndex_t* &indxK
+			);
+	void getCompactK(
+			dyn_var_t* const & matChannelRateConstant,
+			const int & numChanStates,
+			const int & numChan,
+			int* const &matClusterStateInfo,
+			const int & numClusterStates,
+			// output
+			int & maxNumNeighbors	,
+			long* & matK_channelstate_fromto,
+			//int* & matK_indx
+			ClusterStateIndex_t* & matK_indx
+			);
 
-  Params& operator=(const Params& p)
-  {
+	Params& operator=(const Params& p)
+	{
     assert(0);
     return (*this);
   }

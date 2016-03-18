@@ -62,7 +62,6 @@ Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 
   RuntimePhase update();
   InitPhase initialize;
-  UserFunction setPointers;
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
@@ -79,7 +78,6 @@ Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     VoltageArrayProducer.voltageArray >> V;
     BranchDataProducer.branchData >> branchData;
     DimensionArrayProducer.dimensionArray >> dimensions;
-    setPointers();
  }
 
   Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects KConcentrationProducer {

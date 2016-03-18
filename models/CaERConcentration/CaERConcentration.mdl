@@ -59,6 +59,7 @@ Node CaERConcentration Implements SolutionArrayProducer,
 
     // and all compartments on the same branch share the same value
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
+  dyn_var_t fractionVolumeER;
     // currents
   //ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
   //CONVENTION:  the fluxs flowing toward the ER get negative 
@@ -259,7 +260,9 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
   dyn_var_t [] Ca_new;
   dyn_var_t currentToConc;
 
-  dyn_var_t CaClearance;
+    // and all compartments on the same branch share the same value
+  dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
+  dyn_var_t fractionVolumeER;
 
   // currents
   //ChannelCaCurrents [] channelCaCurrents;

@@ -22,7 +22,6 @@ class ChannelKIR : public CG_ChannelKIR
   void initialize(RNG& rng);
   virtual ~ChannelKIR();
   static void initialize_others();  // new
-  virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKIRInAttrPSet* CG_inAttrPset, CG_ChannelKIROutAttrPSet* CG_outAttrPset);
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
 #if CHANNEL_KIR == KIR_WOLF_2005
@@ -30,7 +29,6 @@ class ChannelKIR : public CG_ChannelKIR
 	static dyn_var_t taumKIR[];
   static std::vector<dyn_var_t> Vmrange_taum;
 #endif
-	int _cptIndex;// index of the associated compartment
 };
 
 #endif

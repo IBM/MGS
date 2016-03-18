@@ -127,7 +127,6 @@ Node ChannelCaPQ_GHK Implements
 
 	RuntimePhase update();
 	InitPhase initialize;
-	UserFunction setPointers;
 
 	CaCurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
@@ -145,7 +144,6 @@ Node ChannelCaPQ_GHK Implements
 							 VoltageArrayProducer.voltageArray >> V;
 							 BranchDataProducer.branchData >> branchData;
 							 DimensionArrayProducer.dimensionArray >> dimensions;
-							 setPointers();
 						 }
 
 	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {

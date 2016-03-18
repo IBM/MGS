@@ -129,10 +129,10 @@ void ChannelKRP::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     if (gbar_dists.size() > 0) {
-      int j;
+      unsigned int j;
       assert(gbar_values.size() == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
-        if ((*dimensions)[_cptIndex]->dist2soma < gbar_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
       if (j < gbar_values.size()) 
         gbar[i] = gbar_values[j];
@@ -144,7 +144,7 @@ void ChannelKRP::initialize(RNG& rng)
     } */
 		else if (gbar_branchorders.size() > 0)
 		{
-      int j;
+      unsigned int j;
       assert(gbar_values.size() == gbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
       for (j=0; j<gbar_branchorders.size(); ++j) {
@@ -196,8 +196,4 @@ void ChannelKRP::initialize_others()
 #endif
 }
 
-void ChannelKRP::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelKRPInAttrPSet* CG_inAttrPset, CG_ChannelKRPOutAttrPSet* CG_outAttrPset)
-{
-  _cptIndex=CG_inAttrPset->idx;
-}
 ChannelKRP::~ChannelKRP() {}
