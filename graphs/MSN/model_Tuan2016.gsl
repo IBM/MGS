@@ -55,6 +55,9 @@
 //}}}
 //{{{ Condition
 #define Ra_value 0.001     // [GOhm*um]
+#define R_axial 0.001     // [GOhm*um]
+#define R_CACYTO_AXIAL 0.001     // [GOhm*um]
+#define R_CAER_AXIAL 0.001     // [GOhm*um]
 #define E_leak_value -90.0 // [mV]
   // NOTE: 310K = 37-degree Celcius (body)
   //       298K = 25-degree Celcius (room)
@@ -69,6 +72,11 @@
 //}}}
 //{{{ PMCA
 //#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
+//}}}
+//{{{ RYR
+#define RYRMarkovFilename "RYR_Markov_Williams2012"
+#define RYRSingleChannelCurrent 2.0 // [pA]
+#define RYRChannelDensity   2    // [1/um^2] = number of channels per 1um^2 of ER surface
 //}}}
 //}}}
 
@@ -284,7 +292,7 @@ NodeType VoltageJunctionPoint {
 /*}}}*/
 //   1.2. - [Ca]intracellular
 /*{{{*/
-#if SIMULATION_INVOLVE == VM_CACYTO
+#if SIMULATION_INVOLVE >= VM_CACYTO 
 NodeType CaConcentration (<
                         DCa=Cacyto_DiffusionConstant, // [um^2/ms] unbuffered
                         //{{{ only used for fast-buffering assumption 
@@ -316,7 +324,7 @@ NodeType CaConcentrationJunctionPoint {
 /*}}}*/
 //   1.3. - [Ca]ER
 /*{{{*/
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 NodeType CaERConcentration (<
                         DCa=CaER_DiffusionConstant, // [um^2/ms] unbuffered
                         //{{{ only used for fast-buffering assumption 
@@ -324,7 +332,7 @@ NodeType CaERConcentration (<
                         beta=CaER_beta, // dimensionless
                         //}}}
                         CaBaseline=CaER_value      // [uM]
-           >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
+           >) { initializeCompartmentData->initialize2, deriveParameters->initialize2 };
 
 NodeType CaERConcentrationEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -349,7 +357,7 @@ NodeType CaERConcentrationJunctionPoint {
 /*}}}*/
 //   1.4. - [Dopamine]extracellular
 /*{{{*/
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA 
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER_DOPA 
 NodeType DopamineConcentration (<
                         DDopa = Dopa_DiffusionConstant,                 // [um^2/ms] 
                         DopaBaseline=DA_o_value      // [uM]
@@ -402,25 +410,33 @@ NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->sol
 //Ca2+ currents
 /*{{{*/
   /* N-type Ca2+ Cav2.2 (high-voltaged activated) */
-NodeType ChannelCaN_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaN_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* P/Q-type Ca2+ Cav2.1 (high-voltaged activated) */
-NodeType ChannelCaPQ_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaPQ_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* R-type Ca2+ Cav2.3 (high-voltaged activated) */
-NodeType ChannelCaR_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaR_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* NOTE: L-type Cav1.1, Cav1.2, Cav1.3, Cav1.4 */
   /* L-type Ca2+ Cav1.2 and Cav1.3 (high-voltage activated)*/
 //NodeType ChannelCaL { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLv12_GHK { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLv13_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLv12_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLv13_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* T-type Ca2+ (low-voltage activated)*/
-NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 //RYR
+NodeType SingleChannelRYR(
+    <
+				SingleChannelModelFileName = RYRMarkovFilename,
+        iryr = RYRSingleChannelCurrent,
+        channelDensity = RYRChannelDensity
+    >
+		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
+
 //Non-specific leak (NOTE: not being used for now)
-NodeType LeakER(
-		){ initialize->initialize3, update->solveChannels };
+//NodeType LeakER(
+//		){ initialize->initialize3, update->solveChannels };
 #endif
 /*}}}*/
 // 2.2. PUMP + EXCHANGER NODE
@@ -436,7 +452,7 @@ NodeType PumpPMCA (
      Ca_equil = Cacyto_value 
    //}}}
    >
-		){ initialize->initialize3, update->solveChannels };
+		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //NodeType PumpPMCA_Markov (
 //   < 
 //   //Km = Km_PMCA,   // [uM]
@@ -456,13 +472,13 @@ NodeType ExchangerNCX(
    k_NCX = 4.677e-6   // [pA . mM^-4 . um^-2] // Original: 4.677.10^-4 (uA/(mM^4 . cm^2))
 #endif
    >
-		){ initialize->initialize3, update->solveChannels };
+		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //}}}
 #endif
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
 NodeType PumpSERCA(
-		){ initialize->initialize3, update->solveChannels };
+		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 #endif
 /*}}}*/
 
@@ -479,7 +495,7 @@ NodeType AMPAReceptor (<
           Vp=2.0,       // mV
           Kp=5.0        // mV
           //}}}
-          >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+          >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
 NodeType AMPAReceptor_Markov (<
 // based on Destexhe-Mainen-Sejnowski-1994 (Chap.1 - Methods in Neuron Modeling)
           E=0.0,        // mV
@@ -490,7 +506,7 @@ NodeType AMPAReceptor_Markov (<
           Rr=0.064, //msec^-1
           alpha=2.7, // uM^-1 msec^-1  //Ro
           beta=0.2    // msec^1        //Rc
-          >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+          >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
 NodeType NMDAReceptor (<
           E = 0.0,       // mV
           alpha=0.000512,  // uM^-1 msec^-1
@@ -512,7 +528,7 @@ NodeType NMDAReceptor (<
           deltaNMDAR = 0, // Turns on/off changes in NMDARs
           alphaBuffer = 0.0175,
           tauBuffer = 3000
- >) { initializeNMDA->initialize3, updateNMDA->solveChannels };
+ >) {computeTadj->initialize2, initializeNMDA->initialize3, updateNMDA->solveChannels };
 NodeType GABAAReceptor (<
           E=-80.0,      // mV
           alpha=0.005,  // uM^-1 msec^-1
@@ -522,7 +538,7 @@ NodeType GABAAReceptor (<
           Vp=2.0,       // mV
           Kp=5.0        // mV
           //}}}
-          >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
+          >) {computeTadj->initialize2, initializeGABAA->initialize3, updateGABAA->solveChannels };
 /*}}}*/
 // 3.2. PRE-SYNAPSE (or SYNAPTIC-CLEFT) NODE
 /*{{{*/
@@ -812,6 +828,15 @@ Grid MSN_D1Neuron{
 	Layer(CaRChannels, ChannelCaR_GHK, tissueFunctor("Layout", < nodekind="Channels[CaR]" >), < nodekind="Channels[CaR]" >, tissueGM);
 	Layer(CaTChannels, ChannelCaT_GHK, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
      //}}}
+		 //{{{ RYR, IP3R
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
+     //RYR
+	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+     //IP3R
+
+     //LeakER
+#endif
+     //}}}
 	/*}}}*/
 			// 2.1. PUMPS 
 			/*{{{*/
@@ -821,7 +846,7 @@ Grid MSN_D1Neuron{
 // NCX
 	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
 #endif
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
 	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
 #endif
@@ -830,7 +855,7 @@ Grid MSN_D1Neuron{
       /*{{{*/
       // 3.1. CHEMICAL SYNAPSE RECEPTORS
       /*{{{*/
-	Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
+	Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
 	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDA]" >), < nodekind="ChemicalSynapses[NMDA]" >, tissueGM);
 	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
       /*}}}*/
@@ -1122,6 +1147,19 @@ Grid MSN_D1Neuron{
 				Pbar = {0.0}
 				> ) );
     //}}}
+		//{{{RYR, IP3R, LeakER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
+  //RYR
+	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
+				compartmentalize = { "numChan", "Ej" },
+				numChan = {0},
+        Ej = 0
+     > ) );
+   //IP3R
+
+   //LeakER
+#endif
+    //}}}
 	/*}}}*/
 		// 2.1. PUMPS 
 		/*{{{*/
@@ -1142,7 +1180,7 @@ Grid MSN_D1Neuron{
 				INCXbar = {0.0} 
 				> ) ); 
 #endif
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
 	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
 				compartmentalize = { "SERCAConc" },
@@ -1160,7 +1198,8 @@ Grid MSN_D1Neuron{
 				> ) );
 
 	InitNodes ( .[].Layer(NMDASynapses), tissueFunctor("NodeInit", <
-				gbar = 5.0, w = 1.0 // 0.17 0.115 nS/um^2 // 
+				gbar = 5.0, 
+        w = 1.0 // 0.17 0.115 nS/um^2 // 
 				> ) );
 
 	InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
@@ -1181,21 +1220,21 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE == VMONLY
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				g = 2.0 // nS
+				Raxial = R_axial // [Gohm.um] 
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_axial // [Gohm.um] 
+				Raxial = R_axial, // [Gohm.um] 
 				I_Cacyto = 0, //TUAN: check this
         RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_axial // [Gohm.um] 
+				Raxial = R_axial, // [Gohm.um] 
 				I_Cacyto = 0, //TUAN: check this
-        RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
+        RCacytoaxial = R_CACYTO_AXIAL, // [Gohm.um]
 				I_CaER = 0,
         RCaERaxial = R_CAER_AXIAL // [Gohm.um]
 				> ) );
@@ -1261,6 +1300,11 @@ Grid MSN_D1Neuron{
 
 	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
+  //IP3R
+  //LeakER
 	/*}}}*/
 
     //IMPORTANT: call this once you already have all Layers with NodeTypes required for the simulation

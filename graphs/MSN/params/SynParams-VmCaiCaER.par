@@ -51,14 +51,14 @@ DenSpine 0.005309
 #NMDAmush 0.296407
 #NMDAthin 0.296407
 
-CHEMICAL_SYNAPSE_TARGETS 2
+CHEMICAL_SYNAPSE_TARGETS 3
 BRANCHTYPE MTYPE ETYPE
 BRANCHTYPE MTYPE
-2 1 0   1 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+2 1 0   1 2   [AMPA, NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
 2 1 0   3 0   [GABAA] [Voltage] [Voltage] 1.0
 2 1 0   4 0   [GABAA] [Voltage] [Voltage] 1.0
 
-CHEMICAL_SYNAPSE_COSTS 4
+CHEMICAL_SYNAPSE_COSTS 3
 AMPA 0.296407
 NMDA 0.296407
 GABAA 0.149978

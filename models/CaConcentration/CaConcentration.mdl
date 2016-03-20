@@ -169,13 +169,17 @@ Node CaConcentration Implements SolutionArrayProducer,
    }
   //TUAN; TODO how to project RYR, Ip3r calcium from calciumer
 /*
-OPTIION 1:
+OPTIION 1: use as ionic current (pA/um^2)
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaERCurrentArrayProducer {
     CaERCurrentArrayProducer.currents >> channelER_CaCurrents.currents;
     CaERCurrentArrayProducer.areas >> channelER_CaCurrents.areas;
    }
 and we treat them differently in CaConcentration when mapping from currents to 
 [Ca2+](cyto)
+as they have different surface area
+
+OPTION 3:
+   Use as injectedCurrent (pA)
 */
 
 // OPTION 2: channel produce flux JCa (uM/msec) instead of current ICa (pA/um^2)
@@ -310,10 +314,13 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
 
   Shared {
     dyn_var_t* deltaT;
-    dyn_var_t DCa;
-    dyn_var_t bmt;
-    dyn_var_t beta;                    // Wagner and Keizer buffering constant
-    dyn_var_t CaBaseline;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  
   }

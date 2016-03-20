@@ -314,14 +314,21 @@ public:
 	void readMultiLine(std::string& out_bufS, FILE* fpF);
 	void buildChannelTargetsMap(
 			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
-			std::vector<unsigned int*>& v_ids, std::istringstream &is);
+			std::vector<unsigned int*>& v_ids, 
+			//std::istringstream &is
+			const std::string & myBuf
+			);
 	void buildCompartmentVariableTargetsMap(
 			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
-			std::vector<unsigned int*>& v_ids, std::istringstream& is
+			std::vector<unsigned int*>& v_ids, 
+			//std::istringstream& is
+			const std::string & myBuf
 			);
 	void buildParamsMap(
 			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
-			std::vector<unsigned int*>& v_ids, std::istringstream& is, 
+			std::vector<unsigned int*>& v_ids, 
+			//std::istringstream& is, 
+			const std::string & myBuf,
 			std::string & modelID,
 			std::map<std::string,
 			std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&

@@ -36,6 +36,7 @@ Node SingleChannelRYR Implements BranchDataProducer,
   dyn_var_t* [] probStateTransition;
   // RyR specific
   dyn_var_t [] Ej; // unitless = average RyR connectivity
+  dyn_var_t [] v_ryr; // the transfer rate [1/ms]
 
   //data mainly used to dynamically assign different channel density on different location
 	//NOTE: In SynParams.par file
@@ -67,11 +68,10 @@ Node SingleChannelRYR Implements BranchDataProducer,
 		dyn_var_t* deltaT; // [ms]
 		dyn_var_t* T;     // [K]
 		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
-		InitPhase computeTadj; 
 		//   and tempt. used for the simulation 
 		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
     string SingleChannelModelFileName;
-    dyn_var_t v_ryr; // the transfer rate
+    dyn_var_t iryr; // single-channel current [pA]
     dyn_var_t channelDensity; // [1/um^2] - the # of RyR per 1um^2
     //{{{ to be generated
     int numChanStates; // number of Markov-based channel states
@@ -85,6 +85,7 @@ Node SingleChannelRYR Implements BranchDataProducer,
     int [][]_StateSpace;
     int maxNumNeighbors;
 */
+		InitPhase computeTadj; 
     InitPhase setupChannel;
 		//}}}
 	}

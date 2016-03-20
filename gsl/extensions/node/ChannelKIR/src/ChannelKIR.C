@@ -143,4 +143,4 @@ void ChannelKIR::initialize_others()
 #endif
 }
 
-voiChannelKIR::~ChannelKIR() {}
+ChannelKIR::~ChannelKIR() {}

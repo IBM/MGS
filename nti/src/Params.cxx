@@ -28,6 +28,7 @@
 #include <functional>
 #include <numeric>
 #include <climits>
+#include <string>
 
 //x = row, y=col
 //WIDTH=#col, HEIGHT=#row
@@ -736,7 +737,7 @@ double Params::getCompartmentVariableCost(std::string compartmentVariableId)
   {
     std::cerr << "Params : Unspecified CompartmentVariable Cost! ID : "
               << compartmentVariableId << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return rval;
 }
@@ -754,7 +755,7 @@ double Params::getChannelCost(std::string channelId)
   {
     std::cerr << "Params : Unspecified Channel Cost! ID : " << channelId
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return rval;
 }
@@ -772,7 +773,7 @@ double Params::getElectricalSynapseCost(std::string electricalSynapseId)
   {
     std::cerr << "Params : Unspecified Electrical Synapse Cost! ID : "
               << electricalSynapseId << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return rval;
 }
@@ -791,7 +792,7 @@ double Params::getBidirectionalConnectionCost(
   {
     std::cerr << "Params : Unspecified Bidirectional Connection Cost! ID : "
               << bidirectionalConnectionId << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return rval;
 }
@@ -809,7 +810,7 @@ double Params::getChemicalSynapseCost(std::string chemicalSynapseId)
   {
     std::cerr << "Params : Unspecified Chemical Synapse Cost! ID: "
               << chemicalSynapseId << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return rval;
 }
@@ -1378,7 +1379,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
 				std::cerr << "Params : Targeting compartmentVariables to individual "
 					"compartments not supported!" << std::endl;
 				return false;
-				//exit(0);
+				//exit(EXIT_FAILURE);
 			}
 		}
 
@@ -1489,10 +1490,11 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
 			assert(!feof(fpF));
       std::string myBuf("");
       readMultiLine(myBuf, fpF);
-      std::istringstream is(myBuf);
+      //std::istringstream is(myBuf);
       /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
       std::istringstream is(bufS);*/
-			buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+			buildCompartmentVariableTargetsMap(maskVector, v_ids, myBuf);
       // memory clean v_ids
       for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
            it != v_ids.end(); it++)
@@ -1552,7 +1554,7 @@ bool Params::readChannelTargets(FILE* fpF)
         std::cerr << "Params : Targeting channels to individual compartments "
                      "not supported!" << std::endl;
         return false;
-        // exit(0);
+        // exit(EXIT_FAILURE);
       }
     }
 
@@ -1573,7 +1575,7 @@ bool Params::readChannelTargets(FILE* fpF)
         //  but then it requires implicit knowledge of the range of value
         //  so we don't support it now
 
-        unsigned int* ids = new unsigned int[sz];
+        //unsigned int* ids = new unsigned int[sz];
         std::vector<std::vector<int> > vect_values;
         int total_vect = 1;
         for (unsigned int j = 0; j < sz; ++j)
@@ -1605,7 +1607,11 @@ bool Params::readChannelTargets(FILE* fpF)
           }
           else
           {
-            if (1 != fscanf(fpF, "%d", &val)) assert(0);
+						//int dummy = fscanf(fpF, "%d", &val);
+            char ch[1000];
+            fscanf(fpF," %s", ch);
+						val = atoi(ch);
+            //if (1 != fscanf(fpF, "%d", &val)) assert(0);
             values.push_back(val);
           }
           /*
@@ -1666,11 +1672,12 @@ bool Params::readChannelTargets(FILE* fpF)
       assert(!feof(fpF));
       std::string myBuf("");
       readMultiLine(myBuf, fpF);
-      std::istringstream is(myBuf);
+      //std::istringstream is(myBuf);
       /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
       std::istringstream is(bufS);
                         */
-      buildChannelTargetsMap(maskVector, v_ids, is);
+      //buildChannelTargetsMap(maskVector, v_ids, is);
+      buildChannelTargetsMap(maskVector, v_ids, myBuf);
       // memory clean v_ids
       for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
            it != v_ids.end(); it++)
@@ -2346,7 +2353,7 @@ BRANCHTYPE MTYPE
         paramsMasks[modelID] = resetMask(fpF, maskVector);
         unsigned int sz = maskVector.size();
         assert(sz);
-				for (int k = 0; k < sz; ++k)
+				for (unsigned int k = 0; k < sz; ++k)
 				{  // validate
 					if (maskVector[k] == SegmentDescriptor::segmentIndex)
 					{
@@ -2354,11 +2361,11 @@ BRANCHTYPE MTYPE
 							"individual compartments not supported!"
 							<< std::endl;
 						return false;
-						//exit(0);
+						//exit(EXIT_FAILURE);
 					}
 				}	
 
-        unsigned int* ids = new unsigned int[sz]();
+        //unsigned int* ids = new unsigned int[sz]();
 				for (int j = 0; j < p;
 						j++)  // for each line (subgroup), not counting comment-line
 				{
@@ -2471,10 +2478,10 @@ BRANCHTYPE MTYPE
 
 					std::string myBuf("");
 					readMultiLine(myBuf, fpF);
-					std::istringstream is(myBuf);
 					/*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
           std::istringstream is(bufS);*/
-          buildParamsMap(maskVector, v_ids, is, modelID, paramsMap, arrayParamsMap);
+          //buildParamsMap(maskVector, v_ids, is, modelID, paramsMap, arrayParamsMap);
+          buildParamsMap(maskVector, v_ids, myBuf, modelID, paramsMap, arrayParamsMap);
 					// memory clean v_ids
 					for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
 							it != v_ids.end(); it++)
@@ -2713,14 +2720,15 @@ void Params::readMultiLine(std::string& out_bufS, FILE* fpF)
     if (strlen(bufS) >= i)
     {//using 'i' to check if backslash is used
       std::string tmp(bufS);
-      out_bufS.append(tmp.substr(0, strlen(bufS) - i));
       if (bufS[strlen(bufS) - i] == '\\')
-      {
-        jumpOverCommentLine(fpF);
+      {//automatically ignore the last backslash character
+				out_bufS.append(tmp.substr(0, strlen(bufS) - i)); 
+				jumpOverCommentLine(fpF);
         c = fgets(bufS, sizeof(bufS), fpF);
       }
       else
-      {
+			{
+				out_bufS.append(tmp.substr(0, strlen(bufS) - i+1)); 
         itsok = false;
       }
     }
@@ -2732,7 +2740,10 @@ void Params::readMultiLine(std::string& out_bufS, FILE* fpF)
 // GOAL: create _channelTargetsMap
 void Params::buildChannelTargetsMap(
     std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
-    std::vector<unsigned int*>& v_ids, std::istringstream& is)
+    std::vector<unsigned int*>& v_ids, 
+		//std::istringstream& is
+		const std::string & myBuf
+		)
 {
   std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
                                              iterend = v_ids.end();
@@ -2743,6 +2754,7 @@ void Params::buildChannelTargetsMap(
         _channelTargetsMap[_segmentDescriptor.getSegmentKey(maskVector,
                                                             &ids[0])];
     Params::ChannelTarget ct;
+		std::istringstream is(myBuf);
     while (is >> ct._type)
     {
       while (is.get() != '[')
@@ -2800,7 +2812,9 @@ void Params::buildChannelTargetsMap(
 // GOAL: create _...ParamsMap
 void Params::buildParamsMap(
     std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
-    std::vector<unsigned int*>& v_ids, std::istringstream& is, 
+    std::vector<unsigned int*>& v_ids, 
+		//std::istringstream& is_origin, 
+		const std::string& myBuf, 
 		std::string & modelID,
 		std::map<std::string,
 		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
@@ -2815,14 +2829,7 @@ void Params::buildParamsMap(
   std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
                                              iterend = v_ids.end();
 	for (; iter < iterend; iter++)
-	{
-		/* Support
-<gbar={0.0343}> //single name=val
-<gbar=0.0343>
-<gbar_dists={380.0,480.0}>  // one name-multiple-values
-<gbar_values={0.00187,0.187,0.00187}>
-<Cm=0.01; gLeak=0.000325> // multiple name=val
-		 */
+	{//for each element in v_ids, apply the same read-in data to it
 		unsigned int* ids = *iter;
 		std::list<std::pair<std::string, dyn_var_t> >& params =
 			paramsMap[modelID][_segmentDescriptor.getSegmentKey(maskVector,
@@ -2831,6 +2838,14 @@ void Params::buildParamsMap(
 			arrayParams =
 			arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
 					maskVector, &ids[0])];
+		/* Support form of data
+<gbar={0.0343}> //single name=val
+<gbar=0.0343>
+<gbar_dists={380.0,480.0}>  // one name-multiple-values
+<gbar_values={0.00187,0.187,0.00187}>
+<Cm=0.01; gLeak=0.000325> // multiple name=val
+		 */
+		std::istringstream is(myBuf);
 		while (is.get() != '<')
 		{
 			assert(is.good());
@@ -2921,7 +2936,9 @@ void Params::buildParamsMap(
 // GOAL: create _compartmentVariableTargetsMap
 void Params::buildCompartmentVariableTargetsMap(
     std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
-    std::vector<unsigned int*>& v_ids, std::istringstream& is
+    std::vector<unsigned int*>& v_ids, 
+		const std::string &myBuf
+		//std::istringstream& is
 		)
 {
   std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
@@ -2931,6 +2948,7 @@ void Params::buildCompartmentVariableTargetsMap(
 		unsigned int* ids = *iter;
 		std::list<std::string> targets;
 		std::string type;
+		std::istringstream is(myBuf);
 		while (is >> type)
 		{
 			targets.push_back(type);
@@ -2987,14 +3005,17 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
 		exit(-1);
 	}
-  while ((ch = fgetc(fpF)) != ']')
+  ch = fgetc(fpF);
+  while (ch != ']' and readOK and !feof(fpF))
   {
-    char str[LENGTH_TOKEN_MAX];
+    //char str[LENGTH_TOKEN_MAX];
+		std::string str;
     int i = 0;
     do
     {
-      str[i] = ch;
-      i++;
+      //str[i] = ch;
+			str.push_back(ch);
+      //i++;
       ch = fgetc(fpF);
     } while (ch != ',' and ch != ']' and ch != ':' and !feof(fpF));
 		if (feof(fpF))
@@ -3002,26 +3023,29 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 			readOK = false;
 			break;
 		}
-    str[i] = '\0';
+    //str[i] = '\0';
+		
     if (ch == ',')
     {
-      values.push_back(atoi(str));
+      values.push_back(atoi(str.c_str()));
     }
     else if (ch == ':')
     {
-      int val1 = atoi(str);
+      int val1 = atoi(str.c_str());
       ch = fgetc(fpF);
-      i = 0;
+      //i = 0;
+			str.clear();
       do
       {
-        str[i] = ch;
-        i++;
+        //str[i] = ch;
+        //i++;
+			  str.push_back(ch);
         ch = fgetc(fpF);
         if (ch == ':') assert(0);
       } while (ch != ',' and ch != ']' and !feof(fpF));
-      str[i] = '\0';
+      //str[i] = '\0';
 
-      int val2 = atoi(str);
+      int val2 = atoi(str.c_str());
       for (int i = val1; i <= val2; i++) values.push_back(i);
     }
     else if (ch == ']')
@@ -3047,7 +3071,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
   if (1 != sscanf(bufS, "%d ", &numChanStates))
 	{
     std::cerr << "Syntax of Markov-model file invalid: expect \n #-states" << std::endl;
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	//read in which state(s) is open-state
@@ -3073,11 +3097,13 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (1 != sscanf(bufS, "%d ", &initialstate))
 	{
-		if (initialstate < 0 or initialstate > numChanStates)
+		if (initialstate < 1 or initialstate > numChanStates)
 		{
 			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
-			exit(0);
+			exit(EXIT_FAILURE);
 		}
+		// map to zero-based
+		initialstate--;
 	}
 	
 
@@ -3111,7 +3137,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
 	if (!isOK)
 	{
 		std::cerr << "Error at reading matrix of rate-constants" << std::endl;
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
   fclose(fpF);
 }
@@ -3132,7 +3158,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
   if (1 != sscanf(bufS, "%d ", &numChanStates))
 	{
     std::cerr << "Syntax of Markov-model file invalid: expect \n #-states" << std::endl;
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
 
 	//read in which state(s) is open-state
@@ -3161,7 +3187,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 		if (initialstate < 0 or initialstate > numChanStates)
 		{
 			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
-			exit(0);
+			exit(EXIT_FAILURE);
 		}
 	}
 	
@@ -3193,7 +3219,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 	if (!isOK)
 	{
 		std::cerr << "Error at reading matrix of rate-constants" << std::endl;
-		exit(0);
+		exit(EXIT_FAILURE);
 	}
   fclose(fpF);
 }
@@ -3380,7 +3406,7 @@ void Params::getCompactK(
 			if (initial_state > MAXRANGE_MARKOVSTATE or final_state > MAXRANGE_MARKOVSTATE)
 			{
 				std::cerr << "The Markov-model should not have more than " << MAXRANGE_MARKOVSTATE << " states\n";
-				exit(0);
+				exit(EXIT_FAILURE);
 			}
 			std::cout << "from, to = " << initial_state << ", " << final_state << std::endl;
 			if (matChannelRateConstant[Map1Dindex(initial_state, final_state, numChanStates)] > 0.0)

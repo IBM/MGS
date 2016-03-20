@@ -25,7 +25,7 @@ read_LCC_Markov_Sun2000(filename, akL, mL, vOpenStates, initial_state, P_dhprT)
 	
 	Params param;
 	param.readMarkovModel(getSharedMembers().SingleChannelModelFileName.c_str(), 
-			getSharedMembers().matChannelRateConstant, getSharedMembers().numStates,
+			getSharedMembers().matChannelRateConstant, getSharedMembers().numChanStates,
 			getSharedMembers().vOpenStates, getSharedMembers().initialstate);
 }
 

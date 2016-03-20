@@ -279,10 +279,13 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
 
   Shared {
     dyn_var_t* deltaT;
-    dyn_var_t DCa;
-    dyn_var_t bmt;
-    dyn_var_t beta;                    // Wagner and Keizer buffering constant
-    dyn_var_t CaBaseline;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  
   }

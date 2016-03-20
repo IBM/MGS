@@ -85,6 +85,8 @@
 #include "Capsule.h"
 #include "Touch.h"
 
+#include <cstdlib>
+
 // number of fields in tissue.txt file
 #define PAR_FILE_INDEX 8
 #define N_BRANCH_TYPES 3
@@ -322,7 +324,7 @@ void TissueFunctor::userInitialize(
     std::cerr << "Error in simulation specification's commandLineArgs1 string "
                  "argument, TissueFunctor:" << std::endl;
     std::cerr << commandLineArgs1 << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 #endif
 
@@ -373,7 +375,7 @@ void TissueFunctor::userInitialize(
     std::cerr << "Error in simulation specification's commandLineArgs2 string "
                  "argument, TissueFunctor:" << std::endl;
     std::cerr << commandLineArgs2 << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 #endif
 
@@ -645,7 +647,7 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c)
     else
     {
       std::cerr << "Cannot open tissue file!" << tissueFileName << std::endl;
-      exit(0);
+      exit(EXIT_FAILURE);
     }
     tissueFile.clear();
     tissueFile.close();
@@ -760,7 +762,7 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
   {
     std::cerr << "max-iterations must be >= 0!" << std::endl;
     MPI_Finalize();
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   double Econ = commandLine.getEnergyCon();
@@ -908,7 +910,7 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
             printf("Could not open the output file %s!\n",
                    commandLine.getOutputFileName().c_str());
             MPI_Finalize();
-            exit(0);
+            exit(EXIT_FAILURE);
           }
           segmentsWritten = _tissueContext->_tissue->outputTextNeurons(
               outExtension, tissueOutFile, globalOffset);
@@ -1164,7 +1166,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
   {
     std::cerr << "Unrecognized decomposition : "
               << commandLine.getDecomposition() << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   Touch::compare c(0);
@@ -1840,7 +1842,7 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
   {
     std::cerr << "Tissue Functor::findBranch, branch node type " << nodeType
               << " not found in Branch Index Map! rank=" << _rank << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<int, std::map<int, ComputeBranch*> >::iterator mapiter2 =
       mapiter1->second.find(nodeIndex);
@@ -1850,7 +1852,7 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
                  "Index Map! rank=" << _rank
               << ", nodeIndex (failed)=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<int, ComputeBranch*>::iterator mapiter3 =
       mapiter2->second.find(densityIndex);
@@ -1859,7 +1861,7 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
     std::cerr << "Tissue Functor::findBranch, branch density index not found "
                  "in Branch Map! rank=" << _rank << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   rval = mapiter3->second;
   return rval;
@@ -1875,7 +1877,7 @@ std::vector<int>& TissueFunctor::findBranchIndices(ComputeBranch* b,
     std::cerr << "Tissue Functor::findBranchIndices, branch node type "
               << nodeType << " not found in Branch Index Map! rank=" << _rank
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(b);
@@ -1883,7 +1885,8 @@ std::vector<int>& TissueFunctor::findBranchIndices(ComputeBranch* b,
   {
     std::cerr << "Tissue Functor::findBranchIndices, branch indices not found "
                  "in Branch Index Map! rank=" << _rank << std::endl;
-    exit(0);
+		std::cerr << ".. from node type " << nodeType << std::endl;
+    exit(EXIT_FAILURE);
   }
   return mapiter2->second;
 }
@@ -1909,7 +1912,7 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
   {
     std::cerr << "Tissue Functor::findJunction, junction node type " << nodeType
               << " not found in Junction Map! rank=" << _rank << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<int, std::map<int, Capsule*> >::iterator mapiter2 =
       mapiter1->second.find(nodeIndex);
@@ -1918,7 +1921,7 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
     std::cerr << "Tissue Functor::findJunction, junction index not found in "
                  "Junction Map! rank=" << _rank << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<int, Capsule*>::iterator mapiter3 =
       mapiter2->second.find(densityIndex);
@@ -1928,7 +1931,7 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
                  "found in Junction Map! rank=" << _rank
               << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return mapiter3->second;
 }
@@ -1946,7 +1949,7 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
   {
     std::cerr << "Tissue Functor::findJunctionIndices, junction type not found "
                  "in Junction Index Map! rank=" << _rank << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<Capsule*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(c);
@@ -1954,7 +1957,7 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
   {
     std::cerr << "Tissue Functor::findJunction, junction not found in Junction "
                  "Index Map! rank=" << _rank << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return mapiter2->second;
 }
@@ -1969,7 +1972,7 @@ std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
     std::cerr << "Tissue Functor: forward solve point node type " << nodeType
               << " not found in Forward Solve Point Index Map! rank=" << _rank
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(b);
@@ -1977,7 +1980,7 @@ std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
   {
     std::cerr << "Tissue Functor: forward solve point index not found in "
                  "Forward Solve Point Index Map! rank=" << _rank << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return mapiter2->second;
 }
@@ -1992,7 +1995,7 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
     std::cerr << "Tissue Functor: backward solve point node type " << nodeType
               << " not found in Branch Backward Solve Point Index Map! rank="
               << _rank << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
       mapiter1->second.find(b);
@@ -2001,7 +2004,7 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
     std::cerr << "Tissue Functor: backward solve point index not found in "
                  "Branch Backward Solve Point Index Map! rank=" << _rank
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return mapiter2->second;
 }
@@ -2064,7 +2067,7 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
   {
     std::cerr << "Unrecognized tissue element specifier: " << tissueElement
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   return rval;
 }
@@ -2093,7 +2096,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   {  // validation purpose
     std::cerr << "Unrecognized nodeCategory parameter on Layer : "
               << nodeCategory << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   if (nodeCategory == "Channels")
@@ -2716,7 +2719,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   {
     std::cerr << "Unrecognized nodeCategory parameter on NodeInit : "
               << nodeCategory << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   // make sure the order of layer's nodes' initialization is correct
@@ -2741,7 +2744,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         << "Layers (Branches, Junctions, Channels | Synapses, "
            "PreSynapticPoints | SynapticClefts) must be initialized in order."
         << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   // reset and start allocating # of instances for
@@ -3246,7 +3249,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   {
     std::cerr << "Error, TissueFunctor : no connection context set!"
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   // traverse each grid's node, and get the density
@@ -4260,7 +4263,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   {
     std::cerr << "First parameter of TissueProbe must be CATEGORY!"
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   StringDataItem* categoryDI =
       dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
@@ -4268,7 +4271,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   {
     std::cerr << "CATEGORY parameter of TissueProbe must be a string!"
               << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::string category = categoryDI->getString();
   if (category != "BRANCH" && category != "JUNCTION" && category != "CHANNEL" &&
@@ -4276,7 +4279,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   {
     std::cerr << "Unrecognized CATEGORY during TissueProbe : " << category
               << " !" << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
 
   --ndpiter;
@@ -4284,14 +4287,14 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   if ((*ndpiter)->getName() != "TYPE")
   {
     std::cerr << "Second parameter of TissueProbe must be TYPE!" << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   StringDataItem* typeDI =
       dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
   if (typeDI == 0)
   {
     std::cerr << "TYPE parameter of TissueProbe must be a string!" << std::endl;
-    exit(0);
+    exit(EXIT_FAILURE);
   }
   std::string type = typeDI->getString();
 
@@ -4304,7 +4307,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     {
       std::cerr << "Unrecognized TYPE TissueProbe : " << type << " !"
                 << std::endl;
-      exit(0);
+      exit(EXIT_FAILURE);
     }
     typeIdx = typeIter->second;
   }
@@ -4315,7 +4318,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     {
       std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                 << std::endl;
-      exit(0);
+      exit(EXIT_FAILURE);
     }
     typeIdx = typeIter->second;
   }
@@ -4326,7 +4329,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     {
       std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                 << std::endl;
-      exit(0);
+      exit(EXIT_FAILURE);
     }
     typeIdx = typeIter->second;
   }
@@ -4337,7 +4340,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     {
       std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                 << std::endl;
-      exit(0);
+      exit(EXIT_FAILURE);
     }
     typeIdx = typeIter->second;
   }
@@ -4353,7 +4356,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
         std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
                   << std::endl;
         esyn = true;
-        exit(0);
+        exit(EXIT_FAILURE);
       }
     }
     typeIdx = typeIter->second;
@@ -4377,7 +4380,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
       {
         std::cerr << "TissueProbe parameter specification must comprise "
                      "unsigned integers!" << std::endl;
-        exit(0);
+        exit(EXIT_FAILURE);
       }
       maskVector.push_back(
           _segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
