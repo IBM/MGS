@@ -1068,7 +1068,7 @@ std::string InterfaceImplementorBase::getAddConnectionFunctionBody(
    os << TAB << "checkAndAdd" << connectionAdd << "(" 
       << componentName << ");\n";
 	 if (connectionAdd == "PreNode" )
-   	 os << TAB << "assert(match);\n";
+   	 os << TAB << "assert(noPredicateMatch || matchPredicateAndCast);\n";
    return os.str();
 }
 

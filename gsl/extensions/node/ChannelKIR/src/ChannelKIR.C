@@ -138,7 +138,8 @@ void ChannelKIR::initialize_others()
 #if CHANNEL_KIR == KIR_WOLF_2005
   std::vector<dyn_var_t> tmp(_Vmrange_taum, _Vmrange_taum + LOOKUP_TAUM_LENGTH);
   assert(sizeof(taumKIR) / sizeof(taumKIR[0]) == tmp.size());
-  for (int i = 1; i < tmp.size() - 1; i++)
+	Vmrange_taum.resize(tmp.size()-2);
+  for (unsigned long i = 1; i < tmp.size() - 1; i++)
     Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
 #endif
 }

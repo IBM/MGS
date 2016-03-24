@@ -63,7 +63,7 @@ void ChannelBKalphabeta::initialize(RNG& rng)
 #ifdef DEBUG_ASSERT
   assert(branchData);
 #endif
-  unsigned size = branchData->size;
+  unsigned int size = branchData->size;
 #ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
@@ -75,6 +75,7 @@ void ChannelBKalphabeta::initialize(RNG& rng)
   if (fI.size() != size) fI.increaseSizeTo(size);
   if (fC.size() != size) fC.increaseSizeTo(size);
   // initialize
+	fI[0] = fO[0]= 0.0;
   assert(fabs(fI[0] + fO[0] + fC[0] - 1.0) < SMALL);  // conservation
   for (unsigned i = 0; i < size; ++i)
   {
@@ -82,26 +83,29 @@ void ChannelBKalphabeta::initialize(RNG& rng)
     fI[i] = fI[0];
     fO[i] = fO[0];
     fC[i] = fI[0];
-    dyn_var_t v = (*V)[i];
+    //dyn_var_t v = (*V)[i];
     g[i] = gbar[i] * fO[i];
   }
 }
 
 void ChannelBKalphabeta::update(RNG& rng)
 {
+#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
 	const dyn_var_t tminOI = 0.1; //msec
 	const dyn_var_t tminIC = 0.1; //msec
 	const dyn_var_t tminCO = 0.001; //msec
 	const dyn_var_t tminOC = 0.01; //msec
-	const dyn_var_t tmaxCO = 1; //msec
-	const dyn_var_t kOI = 1; //mV   = steepness of activation
-	const dyn_var_t kIC = -10; //mV
-	const dyn_var_t kCO = 7; //mV
-	const dyn_var_t kOC = -5; //mV
-	const dyn_var_t VhOI = -10.0; //mV
-	const dyn_var_t VhIC = -120.0; //mV
-	const dyn_var_t VhCO = -20.0; //mV
-	const dyn_var_t VhOC = -44.0; //mV
+	const dyn_var_t tmaxCO = 1.0; //msec
+	const dyn_var_t kV_OI = 1.0; //mV   = steepness of activation
+	const dyn_var_t kV_IC = -10.0; //mV
+	const dyn_var_t kV_CO = 7.0; //mV
+	const dyn_var_t kV_OC = -5.0; //mV
+	const dyn_var_t Vhalf_OI = -10.0; //mV
+	const dyn_var_t Vhalf_IC = -120.0; //mV
+	const dyn_var_t Vhalf_CO = -20.0; //mV
+	const dyn_var_t Vhalf_OC = -44.0; //mV
+#endif
+
   dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i = 0; i < branchData->size; ++i)
   {
@@ -114,16 +118,16 @@ void ChannelBKalphabeta::update(RNG& rng)
     dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]
 #endif
 
-#if CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
+#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
     // NOTE: Some models use m_inf and tau_m to estimate m
     // Rate kij from state i to j: unit 1/(ms)
-    dyn_var_t kOI = alp(tminOI, v, VhOI, kOI);
-    dyn_var_t kIC = alp(tminIC, v, VhIC, kIC);
+    dyn_var_t kOI = alp(tminOI, v, Vhalf_OI, kV_OI);
+    dyn_var_t kIC = alp(tminIC, v, Vhalf_IC, kV_IC);
     const dyn_var_t Ca_factor = 1.0e8;  // [1/(mM^n)] - proportional to unit
     const dyn_var_t n = 3; // the number of bound Ca2+ ions
     dyn_var_t Ca_depdency = Ca_factor * pow(cai, n);
-    dyn_var_t kCO = alpha(tminCO, 1.0, v, VhCO, kCO) * Ca_depdency;
-    dyn_var_t kOC = alp(tminOC, v, VhOC, kOC);
+    dyn_var_t kCO = alpha(tminCO, tmaxCO, v, Vhalf_CO, kV_CO) * Ca_depdency;
+    dyn_var_t kOC = alp(tminOC, v, Vhalf_OC, kV_OC);
 
     dyn_var_t Oval = fO[i], Cval = fC[i], Ival = fI[i];  // temp
                                                          // Rempe-Chopp 2006

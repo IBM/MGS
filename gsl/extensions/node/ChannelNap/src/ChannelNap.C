@@ -175,7 +175,8 @@ void ChannelNap::initialize_others()
 #if CHANNEL_NAP == NAP_WOLF_2005
   std::vector<dyn_var_t> tmp(_Vmrange_tauh, _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
   assert((sizeof(tauhNap) / sizeof(tauhNap[0])) == tmp.size());
-  for (int i = 1; i < tmp.size() - 1; i++)
+	Vmrange_tauh.resize(tmp.size()-2);
+  for (unsigned long i = 1; i < tmp.size() - 1; i++)
     Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
 #endif
 }

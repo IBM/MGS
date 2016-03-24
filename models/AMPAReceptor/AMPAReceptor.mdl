@@ -18,7 +18,7 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
   dyn_var_t r; // fraction of opening receptors
 
   //{{{only use with preSynapticPoint
-  dyn_var_t* V;  // [mV] preSynaptic voltage
+  dyn_var_t* Vpre;  // [mV] preSynaptic voltage
   //}}}
   dyn_var_t* Glut; //[uM] concentration
   dyn_var_t* w;
@@ -66,11 +66,17 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
-    VoltageProducer.voltage >> V;
+    VoltageProducer.voltage >> Vpre;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
   }
 
+/*TUAN TODO: Think about using this as a strategy to split synapticCleft
+to have only "*NT"
+instead of 'Glut' and 'Gaba'
+
+ Connection Pre Node (PSet.identifier=="synapticCleft[GLUT]") Expects GlutamateConcentrationProducer, BranchDataProducer, IndexProducer {
+*/
   Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, BranchDataProducer, IndexProducer {
     GlutamateConcentrationProducer.NT >> Glut;
     BranchDataProducer.branchData >> branchDataPrePost;
@@ -109,7 +115,7 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
 	dyn_var_t fC0, fC1, fD1, fC2, fD2, fO;
 
   //{{{only use with preSynapticPoint
-  dyn_var_t* V;
+  dyn_var_t* Vpre;
   //}}}
   dyn_var_t* Glut; // [uM]
   dyn_var_t* w;
@@ -162,7 +168,7 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
 
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
-    VoltageProducer.voltage >> V;
+    VoltageProducer.voltage >> Vpre;
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
   }

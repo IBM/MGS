@@ -166,8 +166,10 @@
 //}}}
 //{{{ ER membrane channels/pump
 // RYR       CHANNEL_RYR
+#define RYR_WILLIAMS_JAFRI_2011
 
 // IP3R     CHANNEL_IP3R
+#define IP3R_ULLAH_MAK_PEARSON_2012
 
 // SERCA    PUMP_SERCA
 #define SERCA_Klein_Schneider_1991 1
@@ -203,6 +205,7 @@
 #define _MODEL_TESTING        1
 #define _MSN_2005_WOLF        2 
 #define _MSN_2016_TUAN_JAMES  3
+#define _PYRAMIDAL_2011_HAY  4
 //}}}
 // define 
 
@@ -212,6 +215,7 @@
 // USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 //#define MODEL_TO_USE _MSN_2005_WOLF
+//#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
 #define MODEL_TO_USE _MSN_2016_TUAN_JAMES
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -229,7 +233,7 @@
 #if MODEL_TO_USE == _MSN_2005_WOLF
 //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
-  #define SIMULATION_INVOLVE VMONLY
+  #define SIMULATION_INVOLVE VM_CACYTO
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 //{{{
@@ -277,11 +281,35 @@
   #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  #define CHANNEL_RYR RYR_SOMETHING
-  #define CHANNEL_IP3R  IP3R_SOMETHING
+  #define CHANNEL_RYR RYR_WILLIAMS_JAFRI_2011
+  #define CHANNEL_IP3R  IP3R_ULLAH_MAK_PEARSON_2012
   #define EXCHANGER_NCX  NCX_Weber_Bers_2001
   #define PUMP_PMCA  PMCA_PUMPRATE_VOLTAGE_FUNCTION
   #define PUMP_SERCA  SERCA_Tran_Crampin_2009
+//}}}
+
+#elif MODEL_TO_USE == _PYRAMIDAL_2011_HAY
+  #define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SIMULATION_INVOLVE VM_CACYTO
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
+//{{{
+  #define CHANNEL_NAT NAT_WOLF_2005
+  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_KAf KAf_WOLF_2005
+  #define CHANNEL_KAs KAs_WOLF_2005
+  #define CHANNEL_KIR KIR_WOLF_2005
+  #define CHANNEL_KRP KRP_WOLF_2005
+  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_SK SK_WOLF_2005
+  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  #define CHANNEL_CaN CaN_GHK_WOLF_2005
+  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  #define CHANNEL_CaR CaR_GHK_WOLF_2005
+  #define CHANNEL_CaT CaT_GHK_WOLF_2005
+  #define RECEPTOR_AMPA AMPAR_POINTPROCESS
+  #define RECEPTOR_NMDA NMDAR_POINTPROCESS
 //}}}
 
 #else
@@ -380,7 +408,7 @@
 #endif
 
 	 // if explicit synapse space is used
-#if SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
+//#if SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 	 // default: use simple estimation of neurotransmitter as 
 	 // given in Dextexhe-Mainen-Sejnowski 1994 
 #ifndef GLUTAMATE_UPDATE_METHOD
@@ -389,7 +417,7 @@
 #ifndef GABA_UPDATE_METHOD
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #endif
-#endif
+//#endif
 
 #ifndef SIMULATION_INVOLVE
 #define SIMULATION_INVOLVE  VMONLY

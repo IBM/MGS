@@ -65,6 +65,7 @@ void ChannelCaLv12_GHK::initialize(RNG& rng)
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
   if (PCa.size() != size) PCa.increaseSizeTo(size);
+  if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
   // initialize
   dyn_var_t PCabar_default = PCabar[0];
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)

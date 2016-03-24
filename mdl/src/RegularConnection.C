@@ -153,11 +153,14 @@ std::string RegularConnection::getConnectionCode(
       psetName += OUTATTRPSETNAME;
    }
    std::string tab;   
+   std::string predicateString;   
    if (_predicate) {
       tab = TAB + TAB;
       os << TAB << "if (";
       if (_predicate) {
        	 os << _predicate->getName();
+				 predicateString = (_predicate->getName());
+				 //predicateString = (_predicate->getPredicate1Name());
       }
       os << ") {\n";
 //      os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
@@ -165,7 +168,8 @@ std::string RegularConnection::getConnectionCode(
       tab = TAB;
 //      os << getCommonConnectionCode(tab, name);
    }
-	 os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
+	 //os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
+	 os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicateString);
 	 if (_userFunctionCalls) {
       std::vector<UserFunctionCall*>::const_iterator it, 
 	 end = _userFunctionCalls->end();

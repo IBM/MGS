@@ -57,8 +57,8 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 		BranchDataProducer.branchData >> branchData;
 	}
 
-	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer,
-                      BranchDataProducer 
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer//,
+//                      BranchDataProducer 
   {
 		CaConcentrationArrayProducer.CaConcentrations >> Cai;
 		//BranchDataProducer.branchData >> branchData;

@@ -21,24 +21,35 @@
 #define NumIterationsUntilEnd   2   // unitless
 //}}}
 //{{{ Diffusion
-#define CA_DCA 4.4        // 0.4 um^2/ms unbuffered
-#define CA_BETA 0.002     // 0.05 dimensionless, Wagner and Keizer buffering constant
-#define CA_CLEARANCE 1.1  // 1.1, 0.5 ms^-1
-#define CA_BASELINE 0.1   // uM
-#define Cacyto_DiffusionConstant 4.4   // [um^2/ms]  unbuffered
-#define Cacyto_EffectiveDiffusionConstant  ??? // [um^2/ms] unbuffered+buffered
+//#define CA_DCA 4.4        // 0.4 um^2/ms unbuffered
+#define Cacyto_DiffusionConstant 0.27   // [um^2/ms]  unbuffered
+#define CaER_DiffusionConstant 0.06   //  [um^2/ms]  unbuffered
+#define Dopa_DiffusionConstant 0.182  // um^2/ms  0.082 +/- 0.013 at cell surface (about 6-10x slower than in free solution)
+#define Fluo3_DiffusionConstant 0.09  //[um^2/ms]
+//#define CA_BETA 0.002     // 0.05 dimensionless, Wagner and Keizer buffering constant
+//#define CA_CLEARANCE 1.1  // 1.1, 0.5 ms^-1
+//#define CA_BASELINE 0.1   // uM
+//#define Cacyto_DiffusionConstant 4.4   // [um^2/ms]  unbuffered
+//#define Cacyto_EffectiveDiffusionConstant  ??? // [um^2/ms] unbuffered+buffered
 
-//#define Cacyto_beta   0.002     // dimensionless 
+ // use with fast-buffering assumption
+//#define CA_BETA 0.002     // 0.05 dimensionless, Wagner and Keizer buffering constant
+#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
-
-#define CaER_DiffusionConstant 200.0   // units???
+//#define Cacyto_beta   0.002     // dimensionless 
 #define CaER_EffectiveDiffusionConstant  100.0  // units???
-#define Cacyto_clearancerate     1.1  // units???
+#define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
+//#define Cacyto_beta   0.002     // dimensionless 
+//#define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
+
+//#define CaER_DiffusionConstant 200.0   // units???
+//#define CaER_EffectiveDiffusionConstant  100.0  // units???
+//#define Cacyto_clearancerate     1.1  // units???
 //}}}
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
 #define Cacyto_value  0.1  // [uM]
-#define CaER_value   1e3    // [uM]
+#define CaER_value   1.0e3    // [uM]
 #define Ca_o_value  1.8e3   // [uM]
 #define Mg_o_value  1.5    // [mM]
 #define Mg_i_value  0.8    // [mM]
@@ -277,11 +288,14 @@ NodeType VoltageJunctionPoint {
 /*}}}*/
 //   1.2. - [Ca]intracellular
 /*{{{*/
-#if SIMULATION_INVOLVE == VM_CACYTO
+#if SIMULATION_INVOLVE >= VM_CACYTO
 NodeType CaConcentration (<
-                        DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA, // dimensionless, Wagner and Keizer buffering constant
-                        CaBaseline=CA_BASELINE      // uM
+                        DCa=Cacyto_DiffusionConstant, // [um^2/ms] unbuffered
+                        //{{{ only used for fast-buffering assumption 
+                        DCaeff = Cacyto_EffectiveDiffusionConstant, // [um^2/ms]
+                        beta=Cacyto_beta, // dimensionless
+                        //}}}
+                        CaBaseline=Cacyto_value      // [uM]
            >) { initializeCompartmentData->initialize2, deriveParameters->initialize2 };
 
 NodeType CaConcentrationEndPoint { produceInitialState->initialize1,
@@ -293,9 +307,12 @@ NodeType CaConcentrationEndPoint { produceInitialState->initialize1,
         produceFinishedCaConcentration->finish
       };
 NodeType CaConcentrationJunction (<
-                        DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,  // dimensionless, Wagner and Keizer buffering constant
-                        CaBaseline=CA_BASELINE      // uM
+                        DCa=Cacyto_DiffusionConstant, // [um^2/ms] unbuffered
+                        //{{{ only used for fast-buffering assumption 
+                        DCaeff = Cacyto_EffectiveDiffusionConstant, // [um^2/ms]
+                        beta=Cacyto_beta, // dimensionless
+                        //}}}
+                        CaBaseline=Cacyto_value      // [uM]
         >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 NodeType CaConcentrationJunctionPoint { 
          produceInitialState->initialize1, produceCaConcentration->predictJunction };
@@ -303,12 +320,15 @@ NodeType CaConcentrationJunctionPoint {
 /*}}}*/
 //   1.3. - [Ca]ER
 /*{{{*/
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 NodeType CaERConcentration (<
-                        DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA, // dimensionless, Wagner and Keizer buffering constant
-                        CaBaseline=CA_BASELINE      // uM
-           >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
+                        DCa=CaER_DiffusionConstant, // [um^2/ms] unbuffered
+                        //{{{ only used for fast-buffering assumption 
+                        DCaeff = CaER_EffectiveDiffusionConstant, // [um^2/ms]
+                        beta=CaER_beta, // dimensionless
+                        //}}}
+                        CaBaseline=CaER_value      // [uM]
+           >) { initializeCompartmentData->initialize2, deriveParameters->initialize2 };
 
 NodeType CaERConcentrationEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -319,9 +339,12 @@ NodeType CaERConcentrationEndPoint { produceInitialState->initialize1,
         produceFinishedCaConcentration->finish
       };
 NodeType CaERConcentrationJunction (<
-                        DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,  // dimensionless, Wagner and Keizer buffering constant
-                        CaBaseline=CA_BASELINE      // uM
+                        DCa=CaER_DiffusionConstant, // [um^2/ms] unbuffered
+                        //{{{ only used for fast-buffering assumption 
+                        DCaeff = CaER_EffectiveDiffusionConstant, // [um^2/ms]
+                        beta=CaER_beta, // dimensionless
+                        //}}}
+                        CaBaseline=CaER_value      // [uM]
         >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 NodeType CaERConcentrationJunctionPoint { 
          produceInitialState->initialize1, produceCaConcentration->predictJunction };
@@ -330,7 +353,7 @@ NodeType CaERConcentrationJunctionPoint {
 /*}}}*/
 //   1.4. - [Dopamine]extracellular
 /*{{{*/
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA 
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER_DOPA 
 NodeType DopamineConcentration (<
                         DiffDA=DiffDA_value,                 // um^2/ms unbuffered
                         beta=BETA_Dopamine_value, // dimensionless, Wagner and Keizer buffering constant
@@ -385,20 +408,20 @@ NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->sol
 //Ca2+ currents
 /*{{{*/
   /* N-type Ca2+ Cav2.2 (high-voltaged activated) */
-NodeType ChannelCaN_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaN_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* P/Q-type Ca2+ Cav2.1 (high-voltaged activated) */
-NodeType ChannelCaPQ_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaPQ_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* R-type Ca2+ Cav2.3 (high-voltaged activated) */
-NodeType ChannelCaR_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaR_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* NOTE: L-type Cav1.1, Cav1.2, Cav1.3, Cav1.4 */
   /* L-type Ca2+ Cav1.2 and Cav1.3 (high-voltage activated)*/
 //NodeType ChannelCaL { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLv12_GHK { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLv13_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLv12_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLv13_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* T-type Ca2+ (low-voltage activated)*/
-NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 //RYR
 //IP3R
 #endif
@@ -409,7 +432,7 @@ NodeType ChannelCaT_GHK { initialize->initialize3, update->solveChannels };
 // PMCA
 // NCX
 #endif
-#if SIMULATION_INVOLVE == VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
 #endif
 /*}}}*/
@@ -427,7 +450,7 @@ NodeType AMPAReceptor (<
           Vp=2.0,       // mV
           Kp=5.0        // mV
           //}}}
-          >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+          >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
 NodeType AMPAReceptor_Markov (<
 // based on Destexhe-Mainen-Sejnowski-1994 (Chap.1 - Methods in Neuron Modeling)
           E=0.0,        // mV
@@ -438,7 +461,7 @@ NodeType AMPAReceptor_Markov (<
           Rr=0.064, //msec^-1
           alpha=2.7, // uM^-1 msec^-1  //Ro
           beta=0.2    // msec^1        //Rc
-          >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+          >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
 NodeType NMDAReceptor (<
           E = 0.0,       // mV
           alpha=0.000512,  // uM^-1 msec^-1
@@ -460,7 +483,7 @@ NodeType NMDAReceptor (<
           deltaNMDAR = 0, // Turns on/off changes in NMDARs
           alphaBuffer = 0.0175,
           tauBuffer = 3000
- >) { initializeNMDA->initialize3, updateNMDA->solveChannels };
+ >) {computeTadj->initialize2, initializeNMDA->initialize3, updateNMDA->solveChannels };
 NodeType GABAAReceptor (<
           E=-80.0,      // mV
           alpha=0.005,  // uM^-1 msec^-1
@@ -470,7 +493,7 @@ NodeType GABAAReceptor (<
           Vp=2.0,       // mV
           Kp=5.0        // mV
           //}}}
-          >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
+          >) {computeTadj->initialize2, initializeGABAA->initialize3, updateGABAA->solveChannels };
 /*}}}*/
 // 3.2. PRE-SYNAPSE NODE
 /*{{{*/
@@ -498,7 +521,7 @@ NodeType SynapticCleft(
 // 3.3 CONNECXON - connecting a spine (2-compartment neuron) - with a branch
 /*{{{*/
 #if SIMULATION_INVOLVE == VMONLY
-NodeType SpineAttachment_Vm { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
+NodeType SpineAttachment_Vm { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #elif SIMULATION_INVOLVE == VM_CACYTO
 NodeType SpineAttachment_VmCai { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
@@ -726,7 +749,7 @@ Grid MSN_D1Neuron{
       /*}}}*/
       //  1.4. - [Dopamine]extracellular
       /*{{{*/
-#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER_DOPA
 	Layer(branches_Dopa, DopaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Dopa]">), <nodekind="CompartmentVariables[Dopa]">, tissueGM);
 	Layer(endPoints_Dopa, DopaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Dopa]">), <nodekind="EndPoints[Dopa]">, tissueGM);
   Layer(junctions_Dopa, DopaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Dopa]">), <nodekind="Junctions[Dopa]">, tissueGM);
@@ -1086,21 +1109,21 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE == VMONLY
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				g = 2.0 // nS
+				Raxial = R_axial // [Gohm.um] 
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_axial // [Gohm.um] 
+				Raxial = R_axial, // [Gohm.um] 
 				I_Cacyto = 0, //TUAN: check this
         RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_axial // [Gohm.um] 
+				Raxial = R_axial, // [Gohm.um] 
 				I_Cacyto = 0, //TUAN: check this
-        RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
+        RCacytoaxial = R_CACYTO_AXIAL, // [Gohm.um]
 				I_CaER = 0,
         RCaERaxial = R_CAER_AXIAL // [Gohm.um]
 				> ) );
@@ -1125,22 +1148,33 @@ Grid MSN_D1Neuron{
 	// 1. with CONSTANTS
 	/*{{{*/
 	polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
+#if SIMULATION_INVOLVE >= VM_CACYTO
 	polyConnect(timeStep, .[].Layer(branches_Ca, junctions_Ca), <>, <identifier="dt">);
+#endif
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 	polyConnect(timeStep, .[].Layer(branches_CaER, junctions_CaER), <>, <identifier="dt">);
-	polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
-	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="dt">);
-	polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-	polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
-	polyConnect(timeStep, .[].Layer(NMDASynapses), <>, <identifier="dt">);
-	polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
+#endif
 
+	polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
-	polyConnect(extracellularMedium, .[].Layer(NMDASynapses), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(AMPASynapses), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(NMDASynapses), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(NMDASynapses), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(GABASynapses), <>, <identifier="EC">);
+#if SIMULATION_INVOLVE != VM_ONLY
 	polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
+#endif
 	/*}}}*/
 
     //IMPORTANT: call this once you already have all Layers with NodeTypes required for the simulation

@@ -112,6 +112,8 @@ class Connection {
 
       std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab, 
 					  const std::string& name) const;
+			std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
+					const std::string& name, const std::string& predicate) const;
       DirectionType _directionType;
       ComponentType _componentType;
 

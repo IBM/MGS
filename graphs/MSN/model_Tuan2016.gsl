@@ -1,4 +1,5 @@
 #include "Topology.h"
+#include "std.gsl"
 /// PLAN
 // Add astrocyte as a new neuron with Kir4.1
 //    which regulate synapse [K+]_o and branch [K+]_o
@@ -55,9 +56,11 @@
 //}}}
 //{{{ Condition
 #define Ra_value 0.001     // [GOhm*um]
+  //across the spine-neck to shaft
 #define R_axial 0.001     // [GOhm*um]
 #define R_CACYTO_AXIAL 0.001     // [GOhm*um]
 #define R_CAER_AXIAL 0.001     // [GOhm*um]
+
 #define E_leak_value -90.0 // [mV]
   // NOTE: 310K = 37-degree Celcius (body)
   //       298K = 25-degree Celcius (room)
@@ -82,8 +85,9 @@
 
 //CONNECTOR FUNCTOR
 /*{{{*/
-Connector PolyConnectorFunctor();   
-PolyConnectorFunctor polyConnect();
+//defined in std.gsl
+//Connector PolyConnectorFunctor();   
+//PolyConnectorFunctor polyConnect();
 /*}}}*/
 
 //PHASES DEFINITION
@@ -174,7 +178,8 @@ TissueProbeFunctor tissueProbeFunctor();
 Functor TissueFunctor(string commandLine, string commandLineModification, 
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
-#define strArg1 "neurons.txt -p params/DevParams.par"
+//#define strArg1 "neurons.txt -p params/DevParams.par"
+#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0" //" -g 1.0"
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
 #define strArg3 "params/ChanParams-Tuan2016.par"
 #if SIMULATION_INVOLVE == VMONLY
@@ -409,29 +414,29 @@ NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->sol
 /*}}}*/
 //Ca2+ currents
 /*{{{*/
+  /* NOTE: L-type Cav1.1, Cav1.2, Cav1.3, Cav1.4 */
+  /* L-type Ca2+ Cav1.2 and Cav1.3 (high-voltage activated)*/
+//NodeType ChannelCaL { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLv12_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLv13_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* N-type Ca2+ Cav2.2 (high-voltaged activated) */
 NodeType ChannelCaN_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* P/Q-type Ca2+ Cav2.1 (high-voltaged activated) */
 NodeType ChannelCaPQ_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* R-type Ca2+ Cav2.3 (high-voltaged activated) */
 NodeType ChannelCaR_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
-  /* NOTE: L-type Cav1.1, Cav1.2, Cav1.3, Cav1.4 */
-  /* L-type Ca2+ Cav1.2 and Cav1.3 (high-voltage activated)*/
-//NodeType ChannelCaL { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLv12_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLv13_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* T-type Ca2+ (low-voltage activated)*/
 NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 //RYR
-NodeType SingleChannelRYR(
-    <
-				SingleChannelModelFileName = RYRMarkovFilename,
-        iryr = RYRSingleChannelCurrent,
-        channelDensity = RYRChannelDensity
-    >
-		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
+//NodeType SingleChannelRYR(
+//    <
+//				SingleChannelModelFileName = RYRMarkovFilename,
+//        iryr = RYRSingleChannelCurrent,
+//        channelDensity = RYRChannelDensity
+//    >
+//		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
 
 //Non-specific leak (NOTE: not being used for now)
@@ -444,15 +449,19 @@ NodeType SingleChannelRYR(
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
 //{{{
+/*
 NodeType PumpPMCA (
    < 
    //Km = Km_PMCA,   // [uM]
    //{{{ for simple extrusion model
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
      tau_pump = tau_PMCA_Calciumclearance, // [msec]
      Ca_equil = Cacyto_value 
+#endif
    //}}}
    >
 		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+*/
 //NodeType PumpPMCA_Markov (
 //   < 
 //   //Km = Km_PMCA,   // [uM]
@@ -465,20 +474,23 @@ NodeType PumpPMCA (
 //}}}
 // NCX
 //{{{
-NodeType ExchangerNCX(
+/*NodeType ExchangerNCX(
    < 
+#if EXCHANGER_NCX == NCX_Weber_Bers_2001
    eta_NCX = 0.35   //  (Vm-dependent coefficient)
+#endif
 #if EXCHANGER_NCX == NCX_Gabbiani_Midtgaard_Kopfel_1994
    k_NCX = 4.677e-6   // [pA . mM^-4 . um^-2] // Original: 4.677.10^-4 (uA/(mM^4 . cm^2))
 #endif
    >
 		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+*/
 //}}}
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
-NodeType PumpSERCA(
-		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+//NodeType PumpSERCA(
+//		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 #endif
 /*}}}*/
 
@@ -486,7 +498,7 @@ NodeType PumpSERCA(
 /*{{{*/
 // 3.1. CHEMICAL SYNAPSE RECEPTOR
 /*{{{*/
-NodeType AMPAReceptor (<
+/*NodeType AMPAReceptor (<
           E=0.0,        // mV
           alpha=0.05, // uM^-1 msec^-1
           beta=2.0,    // msec^1
@@ -495,7 +507,7 @@ NodeType AMPAReceptor (<
           Vp=2.0,       // mV
           Kp=5.0        // mV
           //}}}
-          >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
+          >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };*/
 NodeType AMPAReceptor_Markov (<
 // based on Destexhe-Mainen-Sejnowski-1994 (Chap.1 - Methods in Neuron Modeling)
           E=0.0,        // mV
@@ -565,16 +577,18 @@ NodeType SynapticCleft(
 #endif
 /*}}}*/
 
-// 3.3 SpineAttachment CONNECXON - connecting spine-neck with a branch
+// 3.3 SpineAttachment CONNEXON - connecting spine-neck with a branch
 /*{{{*/
 #if SIMULATION_INVOLVE == VMONLY
-NodeType SpineAttachment_Vm { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
+NodeType SpineAttachment_Vm { produceInitialState->initialize2, produceVoltage->finish, computeState->solveChannels };
 #elif SIMULATION_INVOLVE == VM_CACYTO
 NodeType SpineAttachment_VmCai { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
 NodeType SpineAttachment_VmCaiCaER { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #endif
 /*}}}*/
+// 3.4 CONNEXON - electrical synapse
+NodeType Connexon { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
 /*}}}*/
 
 // 4. CONSTANT [no need to change, modify SECTIONZ]
@@ -831,7 +845,7 @@ Grid MSN_D1Neuron{
 		 //{{{ RYR, IP3R
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
      //RYR
-	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+//	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
      //IP3R
 
      //LeakER
@@ -842,13 +856,13 @@ Grid MSN_D1Neuron{
 			/*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
-	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
-// NCX
-	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
+//	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
+//// NCX
+//	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
-	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
+//	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
 #endif
 /*}}}*/
       // 3. SYNAPSES
@@ -879,7 +893,7 @@ Grid MSN_D1Neuron{
 	Layer(DendriticSpines, SpineAttachment_VmCaiCaER, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
 #endif
 	/*}}}*/
-      // 4. CONNECXON (gap-junction)
+      // 4. CONNEXON (gap-junction)
       /*{{{*/
    Layer(AxoAxonicGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[AxAxGap]" >), < nodekind="ElectricalSynapses[AxAxGap]" >, tissueGM);
    Layer(DendroDendriticGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[DenDenGap]" >), < nodekind="ElectricalSynapses[DenDenGap]" >, tissueGM);
@@ -1046,18 +1060,18 @@ Grid MSN_D1Neuron{
     /*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 	InitNodes ( .[].Layer(branches_CaER), tissueFunctor("NodeInit", <
-				compartmentalize = {"CaER_new", 
-				"CaER_cur", 
+				compartmentalize = {"Ca_new", 
+				"Ca_cur", 
 				"currentToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
 				"RHS"
 				},
-				CaER_new = {CaER_value} 
+				Ca_new = {CaER_value} 
 				> ) );
 	InitNodes ( .[].Layer(endPoints_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(junctions_CaER), tissueFunctor("NodeInit", < CaER_new = {CaER_value} > ) ); 
+	InitNodes ( .[].Layer(junctions_CaER), tissueFunctor("NodeInit", < Ca_new = {CaER_value} > ) ); 
 	InitNodes ( .[].Layer(junctionPoints_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
     /*}}}*/
@@ -1108,13 +1122,14 @@ Grid MSN_D1Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0}
 				> ) );
-	InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
+	InitNodes ( .[].Layer(KIRChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
 				gbar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(BKalphabetaChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}
+				compartmentalize = { "gbar", "fC" },
+				gbar = {0.0},
+        fC = {1.0}
 				> ) );
 	InitNodes ( .[].Layer(SKChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
@@ -1123,38 +1138,38 @@ Grid MSN_D1Neuron{
     //}}}
 	//{{{ Ca2+ channels
 	InitNodes ( .[].Layer(CaLv12Channels), tissueFunctor("NodeInit", <
-				compartmentalize = { "Pbar" },
-				Pbar = {0.0}
+				compartmentalize = { "PCabar" },
+				PCabar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaLv13Channels), tissueFunctor("NodeInit", <
-				compartmentalize = { "Pbar" },
-				Pbar = {0.0}
+				compartmentalize = { "PCabar" },
+				PCabar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaNChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "Pbar" },
-				Pbar = {0.0}
+				compartmentalize = { "PCabar" },
+				PCabar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaPQChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "Pbar" },
-				Pbar = {0.0}
+				compartmentalize = { "PCabar" },
+				PCabar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaRChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "Pbar" },
-				Pbar = {0.0}
+				compartmentalize = { "PCabar" },
+				PCabar = {0.0}
 				> ) );
 	InitNodes ( .[].Layer(CaTChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "Pbar" },
-				Pbar = {0.0}
+				compartmentalize = { "PCabar" },
+				PCabar = {0.0}
 				> ) );
     //}}}
 		//{{{RYR, IP3R, LeakER
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
   //RYR
-	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "numChan", "Ej" },
-				numChan = {0},
-        Ej = 0
-     > ) );
+//	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
+//				compartmentalize = { "numChan", "Ej" },
+//				numChan = {0},
+//        Ej = 0
+//     > ) );
    //IP3R
 
    //LeakER
@@ -1165,27 +1180,27 @@ Grid MSN_D1Neuron{
 		/*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
-	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
-#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
-				compartmentalize = { "tau" },
-        tau = {0.0}
-#elif PUMP_PMCA != PMCA_PUMPRATE_CONSTANT
-				compartmentalize = { "IPMCAbar" },
-				IPMCAbar = {0.0} 
-#endif
-				> ) ); 
-// NCX
-	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
-				compartmentalize = { "INCXbar" },
-				INCXbar = {0.0} 
-				> ) ); 
+//	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
+//#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+//				compartmentalize = { "tau" },
+//        tau = {0.0}
+//#elif PUMP_PMCA != PMCA_PUMPRATE_CONSTANT
+//				compartmentalize = { "IPMCAbar" },
+//				IPMCAbar = {0.0} 
+//#endif
+//				> ) ); 
+//// NCX
+//	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
+//				compartmentalize = { "INCXbar" },
+//				INCXbar = {0.0} 
+//				> ) ); 
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
-	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
-				compartmentalize = { "SERCAConc" },
-				SERCAConc = {0.0} 
-   > ) );
+//	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
+//				compartmentalize = { "SERCAConc" },
+//				SERCAConc = {0.0} 
+//   > ) );
 #endif
 		/*}}}*/
 
@@ -1240,7 +1255,7 @@ Grid MSN_D1Neuron{
 				> ) );
 #endif
      //}}}
-    // 4. CONNECXON 
+    // 4. CONNEXON 
     /*{{{*/
    InitNodes ( .[].Layer(AxoAxonicGapJunctions), tissueFunctor("NodeInit", <
 									I = 0,
@@ -1272,12 +1287,27 @@ Grid MSN_D1Neuron{
 	polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KDRChannels), <>, <identifier="EC">);
+	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
 
 
 	polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(CaLv13Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(CaLv13Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(CaNChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(CaNChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(CaPQChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(CaPQChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(CaRChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(CaRChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
+
+	polyConnect(timeStep, .[].Layer(CaTChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(CaTChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
 
 	polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(AMPASynapses), <>, <identifier="EC">);
@@ -1286,23 +1316,23 @@ Grid MSN_D1Neuron{
 	polyConnect(extracellularMedium, .[].Layer(NMDASynapses), <>, <identifier="EC">);
 
 	polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(GABASynapses), <>, <identifier="EC">);
+	polyConnect(extracellularMedium, .[].Layer(GABAASynapses), <>, <identifier="EC">);
 
 #if SIMULATION_INVOLVE != VM_ONLY
 	polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
 #endif
 
-	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
+//	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
+//	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
+//
+//	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
+//	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
+//
+//	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
+//	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
+//	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
+//	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
   //IP3R
   //LeakER
 	/*}}}*/

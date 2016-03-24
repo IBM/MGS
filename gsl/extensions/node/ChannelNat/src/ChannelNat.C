@@ -317,14 +317,16 @@ void ChannelNat::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);
     assert((sizeof(taumNat) / sizeof(taumNat[0])) == tmp.size());
-    for (int i = 1; i < tmp.size() - 1; i++)
+		Vmrange_taum.resize(tmp.size()-2);
+    for (unsigned long i = 1; i < tmp.size() - 1; i++)
       Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }
   {
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhNat) / sizeof(tauhNat[0]) == tmp.size());
-    for (int i = 1; i < tmp.size() - 1; i++)
+		Vmrange_tauh.resize(tmp.size()-2);
+    for (unsigned long i = 1; i < tmp.size() - 1; i++)
       Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }
 #endif

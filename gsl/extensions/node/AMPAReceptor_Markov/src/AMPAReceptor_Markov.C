@@ -41,7 +41,7 @@
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 #define NEUROTRANSMITTER      \
   (getSharedMembers().NTmax / \
-   (1.0 + exp(-(*V - getSharedMembers().Vp) / getSharedMembers().Kp)))
+   (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 #define NEUROTRANSMITTER      *Glut
 #endif
@@ -53,8 +53,10 @@
 
 void AMPAReceptor_Markov::initializeAMPA(RNG& rng)
 {
-  assert(V);
-  dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+  assert(Vpre);
+#endif
+  //dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
   //dyn_var_t r = ALPHANEUROTRANSMITTER / (BETA + ALPHANEUROTRANSMITTER);
 	dyn_var_t r = fO;
 
@@ -68,6 +70,8 @@ void AMPAReceptor_Markov::initializeAMPA(RNG& rng)
     g = (*w) * gbar * r;
   }
   // initialize
+	fC0 = 1.0;
+	fC1 = fD1 = fC2 = fD2 = fO = 0.0;
   assert(fabs(fC0 + fC1 + fD1 + fC2 + fD2 + fO - 1.0) < SMALL);  // conservation
 }
 

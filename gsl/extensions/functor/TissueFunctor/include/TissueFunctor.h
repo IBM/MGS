@@ -76,6 +76,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getCptIndex(Capsule*);
   dyn_var_t getFractionCapsuleVolumeFromPre(ComputeBranch* branch);
   dyn_var_t getFractionCapsuleVolumeFromPost(ComputeBranch* branch);
+	int getNumCompartments(
+			ComputeBranch* branch, std::vector<int> &cptsizes_in_branch, bool& isDistalEndSeeImplicitBranchingPoint);
   int getNumCompartments(ComputeBranch* branch,
                          bool& isDistalEndSeeImplicitBranchingPoint);
   int getNumCompartments(ComputeBranch* branch);
@@ -207,6 +209,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   // ComputeBranch* the associated branch>>
   std::map<std::string, std::map<int, std::map<int, ComputeBranch*> > >
       _indexBranchMap;
+  // <"Voltage", <ComputeBranch* the associated branch,
+	//     vector2element{gridnode, array-element-index} > >
   std::map<std::string, std::map<ComputeBranch*, std::vector<int> > >
       _branchIndexMap;
 
@@ -234,12 +238,14 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::map<std::string, std::map<Capsule*, int> > _capsuleCptPointIndexMap;
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
 
-  //[index-layer-for-the-same-nodetype][density-index-of-node-that-channel-getinputs][branch-index]<
-  // node-index,  layer-index>
+	//NOTE: While parsing GSL, each layer is given an index, 
+	//                   starting from 0 for the first Layer
+  //[index-layer][density-index-of-node-that-channel-getinputs]
+	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
       _channelBranchIndices1, _channelJunctionIndices1;
-  //[index-layer-for-the-same-nodetype][density-index-of-node-that-channel-produceoutputs][branch-index]<
-  // node-index,  layer-index>
+  //[index-layer][density-index-of-node-that-channel-produceoutputs]
+	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
       _channelBranchIndices2, _channelJunctionIndices2;
 

@@ -87,7 +87,9 @@
 
 void NMDAReceptor::initializeNMDA(RNG& rng)
 {
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
   assert(Vpre);
+#endif
   assert(Vpost);
   assert(Ca_IC);
   assert(getSharedMembers().T != 0 && getSharedMembers().Ca_EC != 0 &&

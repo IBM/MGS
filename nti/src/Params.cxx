@@ -221,6 +221,7 @@ Params::~Params()
   delete[] _ljEps;
 }
 
+// GOAL: read DevParams.par
 void Params::readDevParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
@@ -229,18 +230,19 @@ void Params::readDevParams(const std::string& fname)
   assert(readBondParams(fpF));
   // assert(readAngleParams(fpF));
   assert(readLJParams(fpF));
-  readSIParams(fpF);
-  readRadii(fpF);
+  assert(readSIParams(fpF));
+  assert(readRadii(fpF));
   fclose(fpF);
 }
 
+// GOAL: read DetParams.par
 void Params::readDetParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
-  readRadii(fpF);
-  readTouchTables(fpF);
+  assert(readRadii(fpF));
+  assert(readTouchTables(fpF));
   fclose(fpF);
 }
 
@@ -249,8 +251,8 @@ void Params::readCptParams(const std::string& fname)
   FILE* fpF = fopen(fname.c_str(), "r");
   assert(fpF);
   skipHeader(fpF);
-  readCompartmentVariableTargets(fpF);
-  readCompartmentVariableCosts(fpF);
+  assert(readCompartmentVariableTargets(fpF));
+  assert(readCompartmentVariableCosts(fpF));
   readModelParams(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
                   _compartmentParamsMap, _compartmentArrayParamsMap);
   fclose(fpF);
@@ -1013,6 +1015,7 @@ std::string Params::findNextKeyword(FILE* fpF)
   return rval;
 }
 
+// GOAL: read section    NBONDTYPES
 bool Params::readBondParams(FILE* fpF)
 {
   bool rval = true;
@@ -1102,6 +1105,7 @@ bool Params::readAngleParams(FILE* fpF)
   return rval;
 }
 
+// GOAL: read section    NREPULSETYPES
 bool Params::readLJParams(FILE* fpF)
 {
   /*
@@ -1157,6 +1161,7 @@ NREPULSETYPES 6
   return rval;
 }
 
+// GOAL: read section    RADII
 bool Params::readRadii(FILE* fpF)
 {
   /* Example:
@@ -1200,7 +1205,7 @@ bool Params::readRadii(FILE* fpF)
     for (int i = 0; i < n; i++)  // for each line
     {
       jumpOverCommentLine(fpF);
-      for (int j = 0; j < sz;
+      for (unsigned int j = 0; j < sz;
            ++j)  // read the values of the associated fieldnames
       {
         if (1 != fscanf(fpF, "%d", &ids[j]))
@@ -1235,6 +1240,9 @@ bool Params::readRadii(FILE* fpF)
   return rval;
 }
 
+// GOAL: read section		TOUCH_TABLES 
+//  which tell what information would be used for touch-detection between any 2 capsules
+//  Typically, it is based on 2 informations: NEURON_INDEX and BRANCHTYPE
 bool Params::readTouchTables(FILE* fpF)
 {
   bool rval = true;
@@ -1271,6 +1279,7 @@ bool Params::readTouchTables(FILE* fpF)
   return rval;
 }
 
+// GOAL: read section    NSITYPES
 bool Params::readSIParams(FILE* fpF)
 {
   bool rval = true;
@@ -1300,18 +1309,18 @@ bool Params::readSIParams(FILE* fpF)
     _SIParamsMask = resetMask(fpF, maskVector);
 
     double Epsilon, Sigma;
+          // for NSITYPES, BRANCHTYPE is used twice
     unsigned int sz = maskVector.size() * 2;
     unsigned int* ids = new unsigned int[sz];
 
     for (int i = 0; i < n; i++)  // for each non-comment line
-    {
+    {//each line: BRANCHTYPE BRANCHTYPE Epsilon Sigma
       jumpOverCommentLine(fpF);
-      for (int j = 0; j < sz; ++j)
+      for (unsigned int j = 0; j < sz; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
         if (maskVector[j] ==
             SegmentDescriptor::branchType)  // special treatment
-          // for NSITYPES, BRANCHTYPE is used twice
           ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -1342,6 +1351,7 @@ bool Params::readSIParams(FILE* fpF)
   return _SIParams;
 }
 
+//GOAL: read section COMPARTMENT_VARIABLE_TARGETS
 bool Params::readCompartmentVariableTargets(FILE* fpF)
 {
   bool rval = true;
@@ -1372,7 +1382,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
     _compartmentVariableTargetsMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
-		for (int j = 0; j < sz; ++j)
+		for (unsigned int j = 0; j < sz; ++j)
 		{
 			if (maskVector[j] == SegmentDescriptor::segmentIndex)
 			{
@@ -1401,7 +1411,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
         //  but then it requires implicit knowledge of the range of value
         //  so we don't support it now
 
-        unsigned int* ids = new unsigned int[sz];
+        //unsigned int* ids = new unsigned int[sz];
         std::vector<std::vector<int> > vect_values;
         int total_vect = 1;
         for (unsigned int j = 0; j < sz; ++j)
@@ -1444,13 +1454,14 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
           vect_values.push_back(values);
           total_vect *= values.size();
         }
-        // generate all array elements in the vector
-        {
-          unsigned int** pids = new unsigned int* [total_vect];
+        {// generate all array elements in the vector
+          //unsigned int** pids = new unsigned int* [total_vect];
           for (int jj = 0; jj < total_vect; ++jj)
           {
-            pids[jj] = new unsigned int[sz]();
-            v_ids.push_back(pids[jj]);
+            //pids[jj] = new unsigned int[sz]();
+            //v_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
           }
 
           // fill the data
@@ -1474,10 +1485,11 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             }
           }
         }
-			}else
+			}
+			else
 			{ 
 				unsigned int* ids = new unsigned int[sz]();
-				for (int j = 0; j < sz; ++j)
+				for (unsigned int j = 0; j < sz; ++j)
 				{
 					if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
 					if (maskVector[j] == SegmentDescriptor::branchType)
@@ -1608,10 +1620,10 @@ bool Params::readChannelTargets(FILE* fpF)
           else
           {
 						//int dummy = fscanf(fpF, "%d", &val);
-            char ch[1000];
-            fscanf(fpF," %s", ch);
-						val = atoi(ch);
-            //if (1 != fscanf(fpF, "%d", &val)) assert(0);
+            //char ch[1000];
+            //fscanf(fpF," %s", ch);
+						//val = atoi(ch);
+            if (1 != fscanf(fpF, "%d", &val)) assert(0);
             values.push_back(val);
           }
           /*
@@ -1943,13 +1955,13 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
 
     for (int i = 0; i < n; i++)
     {
-      for (int j = 0; j < sz1; ++j)
+      for (unsigned int j = 0; j < sz1; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
         if (maskVector1[j] == SegmentDescriptor::branchType)
           ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }
-      for (int j = 0; j < sz2; ++j)
+      for (unsigned int j = 0; j < sz2; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
         if (maskVector2[j] == SegmentDescriptor::branchType)
@@ -2616,7 +2628,7 @@ bool Params::readChemicalSynapseCosts(FILE* fpF)
   }
   else
     rval = false;
-  if (n > 0)
+  if (n > 0 and rval)
   {
     double cost;
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
@@ -2931,8 +2943,8 @@ void Params::buildParamsMap(
 
 }
 
-// Given a vector v_ids of matched pattern
-// Given a stream of compartment's parameters
+// Given a vector v_ids whose element is a vector of matched pattern
+// Given a string of compartments' names
 // GOAL: create _compartmentVariableTargetsMap
 void Params::buildCompartmentVariableTargetsMap(
     std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,

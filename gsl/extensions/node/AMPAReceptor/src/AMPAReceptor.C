@@ -32,7 +32,7 @@
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-#define NEUROTRANSMITTER (getSharedMembers().NTmax/(1.0 + exp(-(*V - getSharedMembers().Vp)/getSharedMembers().Kp)))
+#define NEUROTRANSMITTER (getSharedMembers().NTmax/(1.0 + exp(-(*Vpre - getSharedMembers().Vp)/getSharedMembers().Kp)))
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 #define NEUROTRANSMITTER      *Glut
 #endif
@@ -41,7 +41,9 @@
 #define Tscale (*(getSharedMembers().deltaT) * (getSharedMembers().Tadj))
 
 void AMPAReceptor::initializeAMPA(RNG& rng) {
-  assert(V);
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+  assert(Vpre);
+#endif
   dyn_var_t ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
   r = ALPHANEUROTRANSMITTER/(BETA + ALPHANEUROTRANSMITTER);
 

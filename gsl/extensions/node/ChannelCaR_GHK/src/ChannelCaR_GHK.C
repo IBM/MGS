@@ -55,6 +55,7 @@ void ChannelCaR_GHK::initialize(RNG& rng)
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
   if (PCa.size() != size) PCa.increaseSizeTo(size);
+  if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
   // initialize
   dyn_var_t PCabar_default = PCabar[0];
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
@@ -174,6 +175,7 @@ void ChannelCaR_GHK::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhCaR) / sizeof(tauhCaR[0]) == tmp.size());
+		Vmrange_tauh.resize(tmp.size()-2);
     for (int i = 1; i < tmp.size() - 1; i++)
       Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   }
