@@ -73,7 +73,7 @@ void PumpPMCA::initialize(RNG& rng)
   {
     if (IPMCAbar_dists.size() > 0)
     {
-      int j;
+      unsigned long j;
       assert(IPMCAbar_values.size() == IPMCAbar_dists.size());
       for (j = 0; j < IPMCAbar_dists.size(); ++j)
       {
@@ -89,7 +89,7 @@ IPMCAbar[i] = IPMCAbar_values[0];
 } */
     else if (IPMCAbar_branchorders.size() > 0)
     {
-      int j;
+      unsigned long j;
       assert(IPMCAbar_values.size() == IPMCAbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
       // const special_value = -1;
@@ -136,13 +136,13 @@ IPMCAbar[i] = IPMCAbar_values[0];
 #elif PUMP_PMCA == PMCA_Jafri_Rice_Winslow_1998
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     // The saturation is incorporated in the denominator of the formula
-    I_Ca[i] = IPMCAbar * (cai) / (Km_pmca + cai); // [pA/um^2]
+    I_Ca[i] = IPMCAbar[i] * (cai) / (Km_pmca + cai); // [pA/um^2]
 		I_PMCA[i] = 0.0;  // 1Ca2+ out - 2H+ in --> neutral
 
 #elif PUMP_PMCA == PMCA_Greenstein_Winslow_2002
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     // The saturation is incorporated in the denominator of the formula
-    I_Ca[i] = IPMCAbar * (pow(cai, eta_pmca)) /
+    I_Ca[i] = IPMCAbar[i] * (pow(cai, eta_pmca)) /
               (pow(Km_pmca, eta_pmca) + pow(cai, eta_pmca));
     I_PMCA[i] = I_Ca[i]; // 2Ca2+ out - 2H+ in --> 2charges out
 #elif PUMP_PMCA == _COMPONENT_UNDEFINED
@@ -174,12 +174,12 @@ void PumpPMCA::update(RNG& rng)
 #elif PUMP_PMCA == PMCA_Jafri_Rice_Winslow_1998
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     // The saturation is incorporated in the denominator of the formula
-    I_Ca[i] = -IPMCAbar * (cai) / (Km_pmca + cai);
+    I_Ca[i] = IPMCAbar[i] * (cai) / (Km_pmca + cai);
 
 #elif PUMP_PMCA == PMCA_Greenstein_Winslow_2002
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     // The saturation is incorporated in the denominator of the formula
-    I_Ca[i] = -IPMCAbar * pow(cai, eta_pmca) /
+    I_Ca[i] = IPMCAbar[i] * pow(cai, eta_pmca) /
               (pow(Km_pmca, eta_pmca) + pow(cai, eta_pmca));
     I_PMCA[i] = I_Ca[i]; // 2Ca2+ out - 2H+ in --> 2charges out
 #elif PUMP_PMCA == _COMPONENT_UNDEFINED

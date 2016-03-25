@@ -449,7 +449,7 @@ NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, upda
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
 //{{{
-/*
+
 NodeType PumpPMCA (
    < 
    //Km = Km_PMCA,   // [uM]
@@ -461,7 +461,7 @@ NodeType PumpPMCA (
    //}}}
    >
 		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
-*/
+
 //NodeType PumpPMCA_Markov (
 //   < 
 //   //Km = Km_PMCA,   // [uM]
@@ -856,7 +856,7 @@ Grid MSN_D1Neuron{
 			/*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
-//	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
+	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
 //// NCX
 //	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
 #endif
@@ -1180,15 +1180,15 @@ Grid MSN_D1Neuron{
 		/*{{{*/
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
-//	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
-//#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
-//				compartmentalize = { "tau" },
-//        tau = {0.0}
-//#elif PUMP_PMCA != PMCA_PUMPRATE_CONSTANT
-//				compartmentalize = { "IPMCAbar" },
-//				IPMCAbar = {0.0} 
-//#endif
-//				> ) ); 
+	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
+#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+				compartmentalize = { "tau" },
+        tau = {0.0}
+#elif PUMP_PMCA != PMCA_PUMPRATE_CONSTANT
+				compartmentalize = { "IPMCAbar" },
+				IPMCAbar = {0.0} 
+#endif
+				> ) ); 
 //// NCX
 //	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
 //				compartmentalize = { "INCXbar" },
@@ -1325,9 +1325,9 @@ Grid MSN_D1Neuron{
 //	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
 //	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
 //
-//	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
-//	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
-//
+	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
+
 //	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
 //	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 

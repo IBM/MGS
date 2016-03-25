@@ -10,6 +10,7 @@ import os.path
 # If we decide to put modules in the scripts directory use the following to
 # be able to import modules
 # sys.path.append("scripts/")
+import pdb; pdb.set_trace()  # XXX BREAKPOINT
 
 # Constants
 USE = 1
@@ -879,40 +880,41 @@ STRUCT_MODULES := CoordsStruct \
 TRIGGER_MODULES :=
 
 VARIABLE_MODULES := BasicNodeSetVariable \\
-	NodeSetSPMVariable \\
+       	NodeSetSPMVariable \\
 
 FUNCTOR_MODULES := BinomialDist \\
         CombineNVPairs \\
         ConnectNodeSetsFunctor \\
-	DstDimensionConstrainedSampler \\
-	DstRefDistanceModifier \\
-	DstRefGaussianWeightModifier \\
-	DstRefSumRsqrdInvWeightModifier \\
-	DstScaledContractedGaussianWeightModifier \\
-	DstScaledGaussianWeightModifier \\
-	IsoSampler \\
+       	DstDimensionConstrainedSampler \\
+       	DstRefDistanceModifier \\
+       	DstRefGaussianWeightModifier \\
+       	DstRefSumRsqrdInvWeightModifier \\
+       	DstScaledContractedGaussianWeightModifier \\
+       	DstScaledGaussianWeightModifier \\
+       	IsoSampler \\
         ModifyParameterSet \\
         NameReturnValue \\
-	PolyConnectorFunctor \\
-	RefAngleModifier \\
-	RefDistanceModifier \\
-	ReversedDstRefGaussianWeightModifier \\
-	ReversedSrcRefGaussianWeightModifier \\
-	ReverseFunctor \\
-	ServiceConnectorFunctor \\
-	SrcDimensionConstrainedSampler \\
-	SrcRefDistanceModifier \\
-	SrcRefGaussianWeightModifier \\
-	SrcRefPeakedWeightModifier \\
-	SrcRefSumRsqrdInvWeightModifier \\
-	SrcScaledContractedGaussianWeightModifier \\
-	SrcScaledGaussianWeightModifier \\
-	TissueConnectorFunctor \\
-	TissueFunctor \\
-	TissueLayoutFunctor \\
-	TissueNodeInitFunctor \\
-	TissueProbeFunctor \\
+      	PolyConnectorFunctor \\
+      	RefAngleModifier \\
+      	RefDistanceModifier \\
+      	ReversedDstRefGaussianWeightModifier \\
+      	ReversedSrcRefGaussianWeightModifier \\
+      	ReverseFunctor \\
+      	ServiceConnectorFunctor \\
+      	SrcDimensionConstrainedSampler \\
+      	SrcRefDistanceModifier \\
+      	SrcRefGaussianWeightModifier \\
+      	SrcRefPeakedWeightModifier \\
+      	SrcRefSumRsqrdInvWeightModifier \\
+      	SrcScaledContractedGaussianWeightModifier \\
+      	SrcScaledGaussianWeightModifier \\
+      	TissueConnectorFunctor \\
+      	TissueFunctor \\
+      	TissueLayoutFunctor \\
+      	TissueNodeInitFunctor \\
+      	TissueProbeFunctor \\
         UniformDiscreteDist \\
+        GetNodeCoordFunctor \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build

@@ -202,6 +202,7 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 	 os << tab <<  "if (castMatchLocal) { \n";
 	 os << tab << TAB <<  "if (matchPredicateAndCast) {\n";
 	 os << tab << TAB << TAB <<  "std::cerr << \"WARNING: You already have a cast match of predicate\" << R\"(" << predicate << ")\";\n";
+	 os << tab << TAB << TAB <<  "assert(0);\n";
 	 os << tab << TAB <<  "}; \n";
 	 os << tab << TAB <<  "matchPredicateAndCast = true; \n";
 
