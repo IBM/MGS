@@ -474,7 +474,7 @@ NodeType PumpPMCA (
 //}}}
 // NCX
 //{{{
-/*NodeType ExchangerNCX(
+NodeType ExchangerNCX(
    < 
 #if EXCHANGER_NCX == NCX_Weber_Bers_2001
    eta_NCX = 0.35   //  (Vm-dependent coefficient)
@@ -484,7 +484,7 @@ NodeType PumpPMCA (
 #endif
    >
 		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
-*/
+
 //}}}
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
@@ -858,7 +858,7 @@ Grid MSN_D1Neuron{
 // PMCA
 	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
 //// NCX
-//	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
+	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
@@ -1190,10 +1190,10 @@ Grid MSN_D1Neuron{
 #endif
 				> ) ); 
 //// NCX
-//	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
-//				compartmentalize = { "INCXbar" },
-//				INCXbar = {0.0} 
-//				> ) ); 
+	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
+				compartmentalize = { "INCXbar" },
+				INCXbar = {0.0} 
+				> ) ); 
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
@@ -1322,9 +1322,9 @@ Grid MSN_D1Neuron{
 	polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
 #endif
 
-//	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
-//	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
-//
+	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
+
 	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
 

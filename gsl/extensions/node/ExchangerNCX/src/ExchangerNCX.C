@@ -59,6 +59,7 @@ void ExchangerNCX::initialize(RNG& rng)
   // allocate
   if (I_NCX.size() != size) I_NCX.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+  if (INCXbar.size() != size) INCXbar.increaseSizeTo(size);
   // initialize
 #if EXCHANGER_NCX == NCX_Weber_Bers_2001
   dyn_var_t INCXbar_default = INCXbar[0];
