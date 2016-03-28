@@ -15,11 +15,9 @@ DenDenGap 0.005309
 # a bidirectional connection must be created as well
 # so I suggest to remove the prob. out of bidirectional connection targets
 # Maybe part of the spinemush.spn
-BIDIRECTIONAL_CONNECTION_TARGETS 4
+BIDIRECTIONAL_CONNECTION_TARGETS 2
 BRANCHTYPE MTYPE
 BRANCHTYPE MTYPE 
-2 1     3 0   DenSpine [Voltage Calcium] 1.0
-2 1     4 0   DenSpine [Voltage Calcium] 1.0
 3 2     3 0   DenSpine [Voltage Calcium] 1.0
 3 2     4 0   DenSpine [Voltage Calcium] 1.0
 

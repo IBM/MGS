@@ -18,6 +18,7 @@
 #include "NDPairList.h"
 #include "CG_AMPAReceptorCompCategory.h"
 #include <math.h>
+#include <mpi.h>
 
 #include "NumberUtils.h" //new
 
@@ -61,6 +62,6 @@ void AMPAReceptorCompCategory::count()
                 MPI_COMM_WORLD);
   float std = sqrt(totalVar / getSimulation().getNumProcesses());
   if (getSimulation().getRank() == 0)
-    printf("Total synapses having AMPAR = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total AMPA synapse = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }

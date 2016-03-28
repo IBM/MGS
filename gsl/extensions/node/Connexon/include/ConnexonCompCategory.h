@@ -22,11 +22,13 @@
 
 class NDPairList;
 
-class ConnexonCompCategory : public CG_ConnexonCompCategory, public CountableModel
+class ConnexonCompCategory : public CG_ConnexonCompCategory,
+                             public CountableModel
 {
-   public:
-      ConnexonCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+  public:
+  ConnexonCompCategory(Simulation& sim, const std::string& modelName,
+                       const NDPairList& ndpList);
+  void count();
 };
 
 #endif

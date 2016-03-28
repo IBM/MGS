@@ -2,6 +2,7 @@
 #include "PumpSERCACompCategory.h"
 #include "NDPairList.h"
 #include "CG_PumpSERCACompCategory.h"
+#include <mpi.h>
 
 #include "NumberUtils.h"
 
@@ -42,7 +43,7 @@ void PumpSERCACompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total KAf Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total SERCA Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }
 

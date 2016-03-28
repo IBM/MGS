@@ -49,9 +49,12 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
     DimensionStruct* []* dimensionsConnect;
   }
 
-  InitPhase produceInitialState(Vi);
+  InitPhase produceInitialState(Vi); // IMPORTANT: a treat - whenever a pointer to something else 
+                       // is passed out via the Interface, make sure you pass it to the 
+                       // InitPhase's method and RuntimePhase's method that synchronize data
   RuntimePhase produceState(Vi), computeState;
 
+  // Output
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
@@ -69,6 +72,7 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
   UserFunction setVoltagePointers;
   UserFunction set_A_and_len;
   
+  // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
   {
@@ -116,7 +120,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
   dyn_var_t* Cai;
   dyn_var_t* Caj;
-  dyn_var_t I_Ca;
+  dyn_var_t I_Ca;//the current [pA]  TUAN TOTHINK: should we use the fluxes???? J_Ca like RyR
   dyn_var_t gCYTO;
   //}}}
     /*}}}*/
@@ -136,6 +140,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   InitPhase produceInitialState(Vi, Cai);
   RuntimePhase produceState(Vi, Cai), computeState;
 
+  //Output
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
@@ -156,6 +161,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   UserFunction setCaPointers;
   UserFunction set_A_and_len;
  
+  // Input (Connection setting)
   Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
     TemperatureProducer.T >> Shared.T;
   }
@@ -270,9 +276,6 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   UserFunction setCaERPointers;
   UserFunction set_A_and_len;
  
-  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
-    TemperatureProducer.T >> Shared.T;
-  }
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
   {
@@ -296,18 +299,29 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
     setCaPointers();
   }
+
   Connection Pre Node (PSet.identifier=="spineConnexon[Calcium]") Expects 
     CaConcentrationProducer 
   {
     CaConcentrationProducer.Ca >> Caj;
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects CaERConcentrationArrayProducer {
-    CaERConcentrationArrayProducer.CaConcentrations >> Shared.CaERConcentrationConnect;
+  //Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects CaERConcentrationArrayProducer {
+  Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects 
+    CaConcentrationArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaERConcentrationConnect;
     setCaERPointers();
   }
-  Connection Pre Node (PSet.identifier=="spineConnexon[CalciumER]") Expects CaERConcentrationProducer {
+
+  Connection Pre Node (PSet.identifier=="spineConnexon[CalciumER]") Expects 
+    CaERConcentrationProducer 
+  {
     CaERConcentrationProducer.Ca >> CaERj;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
   }
 /*}}}*/
 }

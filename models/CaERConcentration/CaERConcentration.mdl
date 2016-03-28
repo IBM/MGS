@@ -13,6 +13,7 @@
 Node CaERConcentration Implements SolutionArrayProducer, 
      DimensionArrayProducer, BranchDataProducer,
      ForwardSolutionArrayProducer, 
+     //CaERConcentrationArrayProducer,
      CaConcentrationArrayProducer
 {
 // Regular-branch: represent the diffusion of Calcium(ER) along branch with no explicit junction
@@ -92,6 +93,7 @@ Node CaERConcentration Implements SolutionArrayProducer,
 	//output
 	//{{{
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  //CaERConcentrationArrayProducer.CaConcentrations << &Ca_new;
   SolutionArrayProducer.solutionArray << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
   BranchDataProducer.branchData << branchData;
@@ -208,7 +210,9 @@ Node CaERConcentration Implements SolutionArrayProducer,
 
 // represent an end-point (i.e. last compartment in the series of compartments along a branch)
 // thus don't hold real data, just a reference to that last segment
-Node CaERConcentrationEndPoint Implements CaConcentrationProducer, DimensionProducer
+Node CaERConcentrationEndPoint Implements DimensionProducer,
+		 //CaERConcentrationProducer,
+		 CaConcentrationProducer
 {
 // For each regular compute-branch (i.e. not a junction), represented by CaERConcentration 
 // we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
@@ -225,6 +229,7 @@ Node CaERConcentrationEndPoint Implements CaConcentrationProducer, DimensionProd
   }
     //output
   CaConcentrationProducer.Ca << CaConcentration;
+  //CaERConcentrationProducer.Ca << CaConcentration;
   DimensionProducer.dimension << dimension;
 
   InAttrPSet {//attribute of the incoming MDL component, e.g. node
@@ -249,6 +254,7 @@ Node CaERConcentrationEndPoint Implements CaConcentrationProducer, DimensionProd
 
 // It represents one (exlicit) junction branch (which comprise half regular compartments)
 Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
+     //CaERConcentrationArrayProducer,
      CaConcentrationArrayProducer 
 {
 /*{{{*/
@@ -290,6 +296,7 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
     InitPhase deriveParameters;  
   }
 
+  //CaERConcentrationArrayProducer.CaConcentrations << &Ca_new;
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
   BranchDataProducer.branchData << branchData;
@@ -347,16 +354,20 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
 /*}}}*/
 }
 
-Node CaERConcentrationJunctionPoint Implements CaConcentrationProducer, DimensionProducer
+Node CaERConcentrationJunctionPoint Implements DimensionProducer,
+		 //CaERConcentrationProducer
+		 CaConcentrationProducer
 {
 /*{{{*/
   dyn_var_t* CaConcentration;
   DimensionStruct* dimension;
 
-  Shared {
-    dyn_var_t []* CaConcentrationConnect;
-    DimensionStruct* []* dimensionsConnect;
-}
+	Shared {
+		dyn_var_t []* CaConcentrationConnect;
+		DimensionStruct* []* dimensionsConnect;
+	}
+
+  //CaERConcentrationProducer.Ca << CaConcentration;
   CaConcentrationProducer.Ca << CaConcentration;
   DimensionProducer.dimension << dimension;
 

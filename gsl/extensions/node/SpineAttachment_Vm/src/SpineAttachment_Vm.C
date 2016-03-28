@@ -17,9 +17,12 @@
 #include "SpineAttachment_Vm.h"
 #include "CG_SpineAttachment_Vm.h"
 #include "rndm.h"
+#include <cmath>
 
 void SpineAttachment_Vm::produceInitialState(RNG& rng) 
 {
+	assert(Vi);
+	assert(Vj);
 	//NOTE: g (nS) which is infered from R (GigaOhm)
 	//   R = rho. l / A
 	//   rho (GigaOhm.cm) = specific resisitivity
@@ -34,7 +37,7 @@ void SpineAttachment_Vm::produceInitialState(RNG& rng)
 	//            A = pi * ((r1+r2)/2)^2
 	//            rho = Ra ~ 100 GOhm.um
 	//  g = 1/R = A / (rho * l) 
-  dyn_var_t A = abs(Ai - *Aj);
+  dyn_var_t A = std::abs(Ai - *Aj);
 	dyn_var_t len = (*leni + *lenj)/2.0;
 	g = A / (Raxial * len); // [nS]
 }

@@ -22,11 +22,13 @@
 
 class NDPairList;
 
-class SpineAttachment_VmCompCategory : public CG_SpineAttachment_VmCompCategory, public CountableModel
+class SpineAttachment_VmCompCategory : public CG_SpineAttachment_VmCompCategory,
+                                       public CountableModel
 {
-   public:
-      SpineAttachment_VmCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+  public:
+  SpineAttachment_VmCompCategory(Simulation& sim, const std::string& modelName,
+                                 const NDPairList& ndpList);
+  void count();
 };
 
 #endif

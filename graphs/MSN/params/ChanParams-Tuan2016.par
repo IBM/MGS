@@ -14,8 +14,8 @@ BRANCHTYPE MTYPE
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
      CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] \
-     PMCA [Voltage, Calcium] [Voltage, Calcium] NCX [Voltage, Calcium] [Voltage, Calcium] 
-#     SERCA [Calcium, CalciumER] [Calcium, CalciumER] \
+     PMCA [Voltage, Calcium] [Voltage, Calcium] NCX [Voltage, Calcium] [Voltage, Calcium] \
+     SERCA [Calcium, CalciumER] [Calcium, CalciumER] 
 #     RYR2 [Calcium, CalciumER] [Calcium, CalciumER]  \
 #     IP3R [Calcium, CalciumER] [Calcium, CalciumER]
 
@@ -44,13 +44,13 @@ BRANCHTYPE MTYPE
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
      CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] \
-     PMCA [Voltage, Calcium] [Voltage, Calcium] NCX [Voltage, Calcium] [Voltage, Calcium] 
-#     SERCA [Calcium, CalciumER] [Calcium, CalciumER] \
+     PMCA [Voltage, Calcium] [Voltage, Calcium] NCX [Voltage, Calcium] [Voltage, Calcium] \
+     SERCA [Calcium, CalciumER] [Calcium, CalciumER] 
 #     RYR2 [Calcium, CalciumER] [Calcium, CalciumER]  \
 #     IP3R [Calcium, CalciumER] [Calcium, CalciumER]
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 
-CHANNEL_COSTS 16
+CHANNEL_COSTS 17
 Nat     0.414243
 Nap     0.414243
 KAf     0.254051
@@ -67,11 +67,11 @@ CaR     0.254051
 CaT     0.254051
 PMCA    0.254051
 NCX     0.254051
-#SERCA   0.254051
+SERCA   0.254051
 #RYR2    0.254051
 #IP3R    0.254051
 
-CHANNEL_PARAMS 16
+CHANNEL_PARAMS 17
 # Wolf-2005 
 Nat 4 
 BRANCHTYPE MTYPE
@@ -252,12 +252,12 @@ BRANCHTYPE MTYPE
 [1:4] 0 <INCXbar={0.00001}>
 [1,2] 1 <INCXbar={0.00001}>
 [1,3] 2 <INCXbar={0.00001}>
-#SERCA  3 
-#BRANCHTYPE MTYPE
-## [uM]
-#[1:4] 0 <SERCAConc={220}>
-#[1,2] 1 <SERCAConc={220}>
-#[1,3] 2 <SERCAConc={220}>
+SERCA  3 
+BRANCHTYPE MTYPE
+# [uM]
+[1:4] 0 <SERCAConc={220}>
+[1,2] 1 <SERCAConc={220}>
+[1,3] 2 <SERCAConc={220}>
 #RYR2   3
 #BRANCHTYPE MTYPE
 #[1:6] 0 <numChan={49}, Ej={0.0714}>

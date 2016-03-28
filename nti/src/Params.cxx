@@ -69,11 +69,14 @@ Params::Params()
       _electricalSynapseTargetsMask2(0),
       _chemicalSynapseTargetsMask1(0),
       _chemicalSynapseTargetsMask2(0),
+			_bidirectionalConnectionTargetsMask1(0),
+			_bidirectionalConnectionTargetsMask2(0),
       _SIParams(false),
       _compartmentVariables(false),
       _channels(false),
       _electricalSynapses(false),
-      _chemicalSynapses(false)
+      _chemicalSynapses(false),
+      _bidirectionalConnections(false)
 {
 }
 
@@ -95,6 +98,8 @@ Params::Params(Params const& p)
       _electricalSynapseTargetsMask2(p._electricalSynapseTargetsMask2),
       _chemicalSynapseTargetsMask1(p._chemicalSynapseTargetsMask1),
       _chemicalSynapseTargetsMask2(p._chemicalSynapseTargetsMask2),
+			_bidirectionalConnectionTargetsMask1(p._bidirectionalConnectionTargetsMask1),
+			_bidirectionalConnectionTargetsMask2(p._bidirectionalConnectionTargetsMask2),
       _radiiMap(p._radiiMap),
       _SIParamsMap(p._SIParamsMap),
       _compartmentVariableTargetsMap(p._compartmentVariableTargetsMap),
@@ -106,6 +111,7 @@ Params::Params(Params const& p)
       _compartmentParamsMap(p._compartmentParamsMap),
       _compartmentArrayParamsMap(p._compartmentArrayParamsMap),
       _electricalSynapseTargetsMap(p._electricalSynapseTargetsMap),
+			_bidirectionalConnectionTargetsMap(p._bidirectionalConnectionTargetsMap),
       _chemicalSynapseTargetsMap(p._chemicalSynapseTargetsMap),
       _preSynapticPointTargetsMap(p._preSynapticPointTargetsMap),
       _preSynapticPointSynapseMap(p._preSynapticPointSynapseMap),
@@ -119,6 +125,7 @@ Params::Params(Params const& p)
       _channels(p._channels),
       _electricalSynapses(p._electricalSynapses),
       _chemicalSynapses(p._chemicalSynapses),
+			_bidirectionalConnections(p._bidirectionalConnections),
       _segmentDescriptor(p._segmentDescriptor)
 {
   _bondK0 = new double[_nBondTypes];
@@ -162,6 +169,8 @@ Params::Params(Params& p)
       _electricalSynapseTargetsMask2(p._electricalSynapseTargetsMask2),
       _chemicalSynapseTargetsMask1(p._chemicalSynapseTargetsMask1),
       _chemicalSynapseTargetsMask2(p._chemicalSynapseTargetsMask2),
+			_bidirectionalConnectionTargetsMask1(p._bidirectionalConnectionTargetsMask1),
+			_bidirectionalConnectionTargetsMask2(p._bidirectionalConnectionTargetsMask2),
       _radiiMap(p._radiiMap),
       _SIParamsMap(p._SIParamsMap),
       _compartmentVariableTargetsMap(p._compartmentVariableTargetsMap),
@@ -173,6 +182,7 @@ Params::Params(Params& p)
       _compartmentParamsMap(p._compartmentParamsMap),
       _compartmentArrayParamsMap(p._compartmentArrayParamsMap),
       _electricalSynapseTargetsMap(p._electricalSynapseTargetsMap),
+			_bidirectionalConnectionTargetsMap(p._bidirectionalConnectionTargetsMap),
       _chemicalSynapseTargetsMap(p._chemicalSynapseTargetsMap),
       _preSynapticPointTargetsMap(p._preSynapticPointTargetsMap),
       _preSynapticPointSynapseMap(p._preSynapticPointSynapseMap),
@@ -186,6 +196,7 @@ Params::Params(Params& p)
       _channels(p._channels),
       _electricalSynapses(p._electricalSynapses),
       _chemicalSynapses(p._chemicalSynapses),
+			_bidirectionalConnections(p._bidirectionalConnections),
       _segmentDescriptor(p._segmentDescriptor)
 {
   _bondK0 = new double[_nBondTypes];
@@ -280,20 +291,20 @@ void Params::readSynParams(const std::string& fname)
   keyword = std::string("ELECTRICAL_SYNAPSE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    readElectricalSynapseTargets(fpF);
-    readElectricalSynapseCosts(fpF);
+    assert(readElectricalSynapseTargets(fpF));
+    assert(readElectricalSynapseCosts(fpF));
   }
   keyword = std::string("BIDIRECTIONAL_CONNECTION_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    readBidirectionalConnectionTargets(fpF);
-    readBidirectionalConnectionCosts(fpF);
+    assert(readBidirectionalConnectionTargets(fpF));
+    assert(readBidirectionalConnectionCosts(fpF));
   }
   keyword = std::string("CHEMICAL_SYNAPSE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    readChemicalSynapseTargets(fpF);
-    readChemicalSynapseCosts(fpF);
+    assert(readChemicalSynapseTargets(fpF));
+    assert(readChemicalSynapseCosts(fpF));
   }
   // readElectricalSynapseTargets(fpF);
   // readElectricalSynapseCosts(fpF);
@@ -301,7 +312,7 @@ void Params::readSynParams(const std::string& fname)
   // readBidirectionalConnectionCosts(fpF);
   // readChemicalSynapseTargets(fpF);
   // readChemicalSynapseCosts(fpF);
-  readPreSynapticPointTargets(fpF);
+  assert(readPreSynapticPointTargets(fpF));
   fclose(fpF);
 }
 
@@ -387,24 +398,24 @@ std::list<Params::ChannelTarget>* Params::getChannelTargets(key_size_t key)
   return rval;
 }
 
-std::list<Params::Params::ElectricalSynapseTarget>*
+std::list<Params::ElectricalSynapseTarget>*
     Params::getElectricalSynapseTargets(key_size_t key1, key_size_t key2)
 {
-  std::list<Params::Params::ElectricalSynapseTarget>* rval = 0;
+  std::list<Params::ElectricalSynapseTarget>* rval = 0;
   if (_electricalSynapses)
   {  // if there is information about what branch can connect with what branch
     // to form a bidirectional connection
     // then
     std::map<key_size_t,
              std::map<key_size_t,
-                      std::list<Params::Params::ElectricalSynapseTarget> > >::
+                      std::list<Params::ElectricalSynapseTarget> > >::
         iterator miter1 =
             _electricalSynapseTargetsMap.find(_segmentDescriptor.getSegmentKey(
                 key1, _electricalSynapseTargetsMask1));
     if (miter1 != _electricalSynapseTargetsMap.end())
     {
       std::map<key_size_t,
-               std::list<Params::Params::ElectricalSynapseTarget> >::iterator
+               std::list<Params::ElectricalSynapseTarget> >::iterator
           miter2 = miter1->second.find(_segmentDescriptor.getSegmentKey(
               key2, _electricalSynapseTargetsMask2));
       if (miter2 != miter1->second.end())
@@ -416,10 +427,10 @@ std::list<Params::Params::ElectricalSynapseTarget>*
   return rval;
 }
 
-std::list<Params::Params::BidirectionalConnectionTarget>*
+std::list<Params::BidirectionalConnectionTarget>*
     Params::getBidirectionalConnectionTargets(key_size_t key1, key_size_t key2)
 {
-  std::list<Params::Params::BidirectionalConnectionTarget>* rval = 0;
+  std::list<Params::BidirectionalConnectionTarget>* rval = 0;
   if (_bidirectionalConnections)
   {  // if there is information about what branch can connect with what branch
     // to form a bidirectional connection
@@ -427,7 +438,7 @@ std::list<Params::Params::BidirectionalConnectionTarget>*
     std::map<
         key_size_t,
         std::map<key_size_t,
-                 std::list<Params::Params::BidirectionalConnectionTarget> > >::
+                 std::list<Params::BidirectionalConnectionTarget> > >::
         iterator miter1 = _bidirectionalConnectionTargetsMap.find(
             _segmentDescriptor.getSegmentKey(
                 key1, _bidirectionalConnectionTargetsMask1));
@@ -435,7 +446,7 @@ std::list<Params::Params::BidirectionalConnectionTarget>*
     {
       std::map<
           key_size_t,
-          std::list<Params::Params::BidirectionalConnectionTarget> >::iterator
+          std::list<Params::BidirectionalConnectionTarget> >::iterator
           miter2 = miter1->second.find(_segmentDescriptor.getSegmentKey(
               key2, _bidirectionalConnectionTargetsMask2));
       if (miter2 != miter1->second.end())
@@ -1709,8 +1720,8 @@ bool Params::readChannelTargets(FILE* fpF)
 
 bool Params::readElectricalSynapseTargets(FILE* fpF)
 {
-  _electricalSynapses = false;
   bool rval = true;
+  _electricalSynapses = false;
   _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
   _electricalSynapseTargetsMap.clear();
   int n = 0;
@@ -1745,13 +1756,13 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
       jumpOverCommentLine(fpF);
       // one line:
       // 2 2     2 0   DenSpine [Voltage] 1.0
-      for (int j = 0; j < sz1; ++j)
+      for (unsigned int j = 0; j < sz1; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
         if (maskVector1[j] == SegmentDescriptor::branchType)
           ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }                           // read-in 2 2
-      for (int j = 0; j < sz2; ++j)
+      for (unsigned int j = 0; j < sz2; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
         if (maskVector2[j] == SegmentDescriptor::branchType)
@@ -1811,12 +1822,18 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
 
 bool Params::readBidirectionalConnectionTargets(FILE* fpF)
 {
+	/*
+BIDIRECTIONAL_CONNECTION_TARGETS 2
+BRANCHTYPE MTYPE
+BRANCHTYPE MTYPE 
+3 2     3 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
+	 */
   bool rval = true;
   _bidirectionalConnections = false;
   _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
       0;
   _bidirectionalConnectionTargetsMap.clear();
-  skipHeader(fpF);
   int n = 0;
   char bufS[LENGTH_LINE_MAX];
   std::string tokS;
@@ -1849,13 +1866,13 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
       jumpOverCommentLine(fpF);
       // one line:
       // 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
-      for (int j = 0; j < sz1; ++j)
+      for (unsigned int j = 0; j < sz1; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
         if (maskVector1[j] == SegmentDescriptor::branchType)
           ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }                           // read-in 2 2
-      for (int j = 0; j < sz2; ++j)
+      for (unsigned int j = 0; j < sz2; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
         if (maskVector2[j] == SegmentDescriptor::branchType)
@@ -1898,7 +1915,7 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
                  tok = strtok(0, " ,");
                  }*/
         if (is.get() != ']') assert(0);
-        is >> st._parameter;
+        is >> st._parameter; // probability of forming the spine-attachment
         targets.push_back(st);
         st.clear();
       }
@@ -1912,6 +1929,7 @@ bool Params::readBidirectionalConnectionTargets(FILE* fpF)
   _bidirectionalConnections = rval;
   return _bidirectionalConnections;
 }
+
 bool Params::readChemicalSynapseTargets(FILE* fpF)
 {
   /*
@@ -2076,7 +2094,7 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
    * NMDA Voltage
    * GABAA Voltage
    */
-  bool rval = false;
+  bool rval = true;
   _preSynapticPointTargetsMap.clear();
   _preSynapticPointSynapseMap.clear();
   skipHeader(fpF);

@@ -2,6 +2,7 @@
 #include "ChannelSKCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ChannelSKCompCategory.h"
+#include <mpi.h>
 
 #include "NumberUtils.h" //new
 
@@ -59,6 +60,6 @@ void ChannelSKCompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total KRP Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total SK Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }

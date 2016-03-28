@@ -46,7 +46,7 @@ void PumpPMCACompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total KAf Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total PMCA Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }
 

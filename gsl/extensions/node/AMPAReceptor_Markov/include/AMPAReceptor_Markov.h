@@ -12,11 +12,11 @@
  // recorded at 31^oC
 #define BASED_TEMPERATURE 31.0  // Celcius
 #define Q10 3.0
-//#elif RECEPTOR_AMPA == AMPAR_POINTPROCESS
-//#define BASED_TEMPERATURE 35.0  // Celcius
-//#define Q10 3.0
 #endif
 
+#ifndef BASED_TEMPERATURE
+#define BASED_TEMPERATURE 35.0  // Celcius
+#endif
 #ifndef Q10 
 #define Q10 3.0 //default
 #endif

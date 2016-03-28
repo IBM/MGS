@@ -23,7 +23,7 @@ fold_list = [x[0] for x in os.walk(directory) if 'include' in x[0]]
 common_include_fold_list = intersperse('-I', fold_list)
 
 BASE_FLAGS = [
-	  '-I.',
+    '-I.',
     '-Wall',
     '-Wextra',
     '-Werror',
@@ -33,7 +33,7 @@ BASE_FLAGS = [
     '-fexceptions',
     '-ferror-limit=10000',
     '-DNDEBUG',
-    '-std=c++98',
+    '-std=c++11',
     '-xc++',
     '-I/usr/lib/',
     '-I/usr/include/',
@@ -47,7 +47,8 @@ BASE_FLAGS = [
     '-isystem', '/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed',
     '-isystem', '/usr/include/x86_64-linux-gnu',
     '-isystem', '/usr/include',
-	  '-I', '/packages/gmp/6.0.0/include'
+    '-isystem', '/usr/include/openmpi',
+    '-I', '/packages/gmp/6.0.0/include'
 ]
 # NOTE: run to get information
 # g++ -v -E -x c++ -

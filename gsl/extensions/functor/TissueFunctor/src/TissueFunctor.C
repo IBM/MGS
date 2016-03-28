@@ -2780,7 +2780,9 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         << "TissueFunctor:" << std::endl
         << "Layers (Branches, Junctions, Channels | Synapses, "
            "PreSynapticPoints | SynapticClefts) must be initialized in order."
-        << std::endl;
+        << std::endl
+				<< "Synapses can be either ElectricalSynapses, ChemicalSynapses, BidirectionalConnections"
+				<< std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -3240,6 +3242,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 
   // get to the vector of all nodetypes associated with all
   // bidirectional-connection-layers
+	// 2 types of bidirectional-connection
   // 1.1 = gap junction
   std::vector<NodeAccessor*> electricalSynapseAccessors;
   layerEnd = _electricalSynapseLayers.end();
@@ -4285,6 +4288,24 @@ void TissueFunctor::doConnector(LensContext* lc)
         }
       }
     }
+		models.clear();
+
+    layerEnd = _bidirectionalConnectionLayers.end();
+    for (layerIter = _bidirectionalConnectionLayers.begin(); layerIter != layerEnd;
+         ++layerIter)
+    {
+      countableModel =
+          dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
+          countableModel->count();
+          models.push_back(countableModel);
+        }
+      }
+    }
+		models.clear();
   }
 }
 

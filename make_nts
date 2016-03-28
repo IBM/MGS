@@ -87,6 +87,14 @@ if which python | grep -q1 /\python; then
     echo python found...; else echo python not found!; exit; fi
 
 
+#if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] && [ "$2" != "-rebuild"] && [ "$2" != "-s" ] && [ "$2" != "-singlethread" ] && [ "$2" != "-release" ] 
+#then 
+#	echo "Unexpected argument number 2"
+#	exit;
+#else 
+#	echo "$2  - TUAN"
+#	exit;
+#fi
 
 ### MDL code ###
 cd $MDLROOT
@@ -185,9 +193,14 @@ if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then
 	cd $NTSROOT
 	echo "Complete build NTI code"
 fi
+if [ "$#" -eq 1 ] ; then
+	make -j $NPROCS 
+fi
 
 ### GSL code ###
-if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
+#if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
+if [ "$#" -gt 1 ] && [ "$2" == "-rebuild" ] ; then 
+#if [ "$#" -gt 1 ] && { [ "$2" == "-clean" ] || [ "$2" == "-rebuild" ] ;} ; then 
 	cd $LENSROOT/extensions/variable
 	./define variables.mdf
 	cd $LENSROOT/extensions/struct

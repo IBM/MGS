@@ -7,13 +7,16 @@
 
 class NDPairList;
 
-class CaERConcentrationJunctionCompCategory : public CG_CaERConcentrationJunctionCompCategory,
-	public CountableModel
+class CaERConcentrationJunctionCompCategory
+    : public CG_CaERConcentrationJunctionCompCategory,
+      public CountableModel
 {
-   public:
-      CaERConcentrationJunctionCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void deriveParameters(RNG& rng);
-      void count();
+  public:
+  CaERConcentrationJunctionCompCategory(Simulation& sim,
+                                        const std::string& modelName,
+                                        const NDPairList& ndpList);
+  void deriveParameters(RNG& rng);
+  void count();
 };
 
 #endif

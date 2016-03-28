@@ -2,6 +2,7 @@
 #include "ExchangerNCXCompCategory.h"
 #include "NDPairList.h"
 #include "CG_ExchangerNCXCompCategory.h"
+#include <mpi.h>
 
 #include "NumberUtils.h"
 
@@ -44,7 +45,7 @@ void ExchangerNCXCompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total CaLv12_GHK Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total NCX Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }
 

@@ -489,8 +489,8 @@ NodeType ExchangerNCX(
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
-//NodeType PumpSERCA(
-//		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType PumpSERCA(
+		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 #endif
 /*}}}*/
 
@@ -580,7 +580,7 @@ NodeType SynapticCleft(
 // 3.3 SpineAttachment CONNEXON - connecting spine-neck with a branch
 /*{{{*/
 #if SIMULATION_INVOLVE == VMONLY
-NodeType SpineAttachment_Vm { produceInitialState->initialize2, produceVoltage->finish, computeState->solveChannels };
+NodeType SpineAttachment_Vm { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #elif SIMULATION_INVOLVE == VM_CACYTO
 NodeType SpineAttachment_VmCai { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
@@ -661,7 +661,7 @@ Grid MSN_D1Neuron{
 	//     tissueFunctor("Layout", <nodekind="AValueIn") 
 	//     )
 	/*{{{*/
-  	  // 1. LAYER BRANCHES (data as an array)
+  	  // 1. LAYER BRANCHES+JUNCTIONS (data as an array)
      /*{{{*/
       //  1.0. - Compute Nodes
       /*{{{*/
@@ -862,7 +862,7 @@ Grid MSN_D1Neuron{
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
-//	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
+	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
 #endif
 /*}}}*/
       // 3. SYNAPSES
@@ -1197,10 +1197,10 @@ Grid MSN_D1Neuron{
 #endif
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 // SERCA
-//	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
-//				compartmentalize = { "SERCAConc" },
-//				SERCAConc = {0.0} 
-//   > ) );
+	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
+				compartmentalize = { "SERCAConc" },
+				SERCAConc = {0.0} 
+   > ) );
 #endif
 		/*}}}*/
 
@@ -1241,14 +1241,14 @@ Grid MSN_D1Neuron{
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
 				Raxial = R_axial, // [Gohm.um] 
-				I_Cacyto = 0, //TUAN: check this
+				I_Ca = 0, //TUAN: check this
         RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
 				Raxial = R_axial, // [Gohm.um] 
-				I_Cacyto = 0, //TUAN: check this
+				I_Ca = 0, //TUAN: check this
         RCacytoaxial = R_CACYTO_AXIAL, // [Gohm.um]
 				I_CaER = 0,
         RCaERaxial = R_CAER_AXIAL // [Gohm.um]
@@ -1328,8 +1328,8 @@ Grid MSN_D1Neuron{
 	polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
 
-//	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
-//	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
+	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 
 //	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
 //	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
