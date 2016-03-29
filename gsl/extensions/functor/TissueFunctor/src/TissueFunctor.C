@@ -5112,7 +5112,10 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
 dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPre(ComputeBranch* branch)
 {
   dyn_var_t frac;
-  assert(branch->_parent);  // not soma
+  //assert(branch->_parent);  // not soma
+	Capsule caps = branch->_capsules[0];
+  assert(_segmentDescriptor.getBranchType(caps.getKey()) !=
+          Branch::_SOMA); // not soma
   if (branch->_nCapsules == 1)
     frac = 1.0 / 4.0;
   else
@@ -5126,7 +5129,10 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPre(ComputeBranch* branch)
 dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 {
   dyn_var_t frac;
-  assert(branch->_parent);  // not soma
+  //assert(branch->_parent);  // not soma
+	Capsule caps = branch->_capsules[0];
+  assert(_segmentDescriptor.getBranchType(caps.getKey()) !=
+          Branch::_SOMA); // not soma
   if (branch->_nCapsules == 1)
   {
     ComputeBranch* branch_parent = branch->_parent;

@@ -6,22 +6,26 @@
 
 #include "NumberUtils.h"
 
-PumpSERCACompCategory::PumpSERCACompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_PumpSERCACompCategory(sim, modelName, ndpList)
+PumpSERCACompCategory::PumpSERCACompCategory(Simulation& sim,
+                                             const std::string& modelName,
+                                             const NDPairList& ndpList)
+    : CG_PumpSERCACompCategory(sim, modelName, ndpList)
 {
 }
 
 // GOAL:
 //  1. find Q10 adjustment
-void PumpSERCACompCategory::computeTadj(RNG& rng) 
+void PumpSERCACompCategory::computeTadj(RNG& rng)
 {
   // Step 1. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
-  assert(*(getSharedMembers().T) > 273.15);
   // if (getSharedMembers().T and getSharedMembers().Tadj)
   if (getSharedMembers().T)
+  {
+    assert(*(getSharedMembers().T) > 273.15);
     getSharedMembers().Tadj = pow(
         Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
 }
 
 //
@@ -46,6 +50,3 @@ void PumpSERCACompCategory::count()
     printf("Total SERCA Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }
-
-
-

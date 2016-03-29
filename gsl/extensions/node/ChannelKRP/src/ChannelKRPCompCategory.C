@@ -3,17 +3,20 @@
 #include "NDPairList.h"
 #include "CG_ChannelKRPCompCategory.h"
 
+#include <mpi.h>
 #include "NumberUtils.h"
 
-ChannelKRPCompCategory::ChannelKRPCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_ChannelKRPCompCategory(sim, modelName, ndpList)
+ChannelKRPCompCategory::ChannelKRPCompCategory(Simulation& sim,
+                                               const std::string& modelName,
+                                               const NDPairList& ndpList)
+    : CG_ChannelKRPCompCategory(sim, modelName, ndpList)
 {
 }
 
 // GOAL:
 //  1. compute Erev
 //  2. find Q10 adjustment
-void ChannelKRPCompCategory::computeE(RNG& rng) 
+void ChannelKRPCompCategory::computeE(RNG& rng)
 {
   // step 1.
   if (getSharedMembers().T && getSharedMembers().K_EC &&
@@ -22,7 +25,7 @@ void ChannelKRPCompCategory::computeE(RNG& rng)
     dyn_var_t E_K;
     // E_rev  = RT/(zF)ln([K]o/[K]i)   [mV]
     E_K = 0.08617373 * *(getSharedMembers().T) *
-           log(*(getSharedMembers().K_EC) / *(getSharedMembers().K_IC));
+          log(*(getSharedMembers().K_EC) / *(getSharedMembers().K_IC));
     getSharedMembers().E_K.push_back(E_K);
   }
 #ifdef DEBUG
@@ -33,11 +36,13 @@ void ChannelKRPCompCategory::computeE(RNG& rng)
 #endif
   // Step 2. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
-  assert(*(getSharedMembers().T) > 273.15);
   // if (getSharedMembers().T and getSharedMembers().Tadj)
   if (getSharedMembers().T)
+  {
+    assert(*(getSharedMembers().T) > 273.15);
     getSharedMembers().Tadj = pow(
         Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
 }
 
 //

@@ -4,8 +4,9 @@
 #include "CG_AMPAReceptor_MarkovCompCategory.h"
 #include <mpi.h>
 
-AMPAReceptor_MarkovCompCategory::AMPAReceptor_MarkovCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_AMPAReceptor_MarkovCompCategory(sim, modelName, ndpList)
+AMPAReceptor_MarkovCompCategory::AMPAReceptor_MarkovCompCategory(
+    Simulation& sim, const std::string& modelName, const NDPairList& ndpList)
+    : CG_AMPAReceptor_MarkovCompCategory(sim, modelName, ndpList)
 {
 }
 
@@ -15,11 +16,13 @@ void AMPAReceptor_MarkovCompCategory::computeTadj(RNG& rng)
 {
   // Step 1. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
-  assert(*(getSharedMembers().T) > 273.15);
   // if (getSharedMembers().T and getSharedMembers().Tadj)
   if (getSharedMembers().T)
+  {
+    assert(*(getSharedMembers().T) > 273.15);
     getSharedMembers().Tadj = pow(
         Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
   // pow(static_cast<dyn_var_t>(Q10), ((*(getSharedMembers().T) - 273.15 -
   // BASED_TEMPERATURE) / 10.0));
   //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));

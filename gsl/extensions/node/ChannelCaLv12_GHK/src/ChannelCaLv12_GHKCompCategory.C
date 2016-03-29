@@ -3,10 +3,12 @@
 #include "NDPairList.h"
 #include "CG_ChannelCaLv12_GHKCompCategory.h"
 
-#include "NumberUtils.h" //new
+#include <mpi.h>
+#include "NumberUtils.h"  //new
 
-ChannelCaLv12_GHKCompCategory::ChannelCaLv12_GHKCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_ChannelCaLv12_GHKCompCategory(sim, modelName, ndpList)
+ChannelCaLv12_GHKCompCategory::ChannelCaLv12_GHKCompCategory(
+    Simulation& sim, const std::string& modelName, const NDPairList& ndpList)
+    : CG_ChannelCaLv12_GHKCompCategory(sim, modelName, ndpList)
 {
 }
 
@@ -16,11 +18,13 @@ void ChannelCaLv12_GHKCompCategory::computeTadj(RNG& rng)
 {
   // Step 1. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
-  assert(*(getSharedMembers().T) > 273.15);
   // if (getSharedMembers().T and getSharedMembers().Tadj)
   if (getSharedMembers().T)
+  {
+    assert(*(getSharedMembers().T) > 273.15);
     getSharedMembers().Tadj = pow(
         Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
   // pow(static_cast<dyn_var_t>(Q10), ((*(getSharedMembers().T) - 273.15 -
   // BASED_TEMPERATURE) / 10.0));
   //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
@@ -44,7 +48,6 @@ void ChannelCaLv12_GHKCompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total CaLv12_GHK Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
-           mean, std);
+    printf("Total CaLv12_GHK Channel = %lld, Mean = %lf, StDev = %lf\n",
+           totalCount, mean, std);
 }
-

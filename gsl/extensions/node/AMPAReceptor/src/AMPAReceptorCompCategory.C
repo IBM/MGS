@@ -35,11 +35,13 @@ void AMPAReceptorCompCategory::computeTadj(RNG& rng)
 {
   // Step 1. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
-  assert(*(getSharedMembers().T) > 273.15);
   // if (getSharedMembers().T and getSharedMembers().Tadj)
   if (getSharedMembers().T)
-    getSharedMembers().Tadj = pow(
-        Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  {
+	  assert(*(getSharedMembers().T) > 273.15);
+	  getSharedMembers().Tadj = pow(
+			  Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
   // pow(static_cast<dyn_var_t>(Q10), ((*(getSharedMembers().T) - 273.15 -
   // BASED_TEMPERATURE) / 10.0));
   //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));

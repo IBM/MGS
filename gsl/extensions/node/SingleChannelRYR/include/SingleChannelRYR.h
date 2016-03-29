@@ -7,6 +7,13 @@
 
 #include "MaxComputeOrder.h"
 
+#ifndef BASED_TEMPERATURE
+#define BASED_TEMPERATURE 35.0  // Celcius
+#endif
+
+#ifndef Q10
+#define Q10 3.0  // default
+#endif
 class SingleChannelRYR : public CG_SingleChannelRYR
 {
   public:
@@ -14,8 +21,10 @@ class SingleChannelRYR : public CG_SingleChannelRYR
   void initialize(RNG& rng);
   virtual ~SingleChannelRYR();
 
-	void updateChannelTransitionRate(dyn_var_t* & matChannelTransitionRate, int cptIdx);
-	private:
+  void updateChannelTransitionRate(dyn_var_t*& matChannelTransitionRate,
+                                   int cptIdx);
+
+  private:
 };
 
 #endif

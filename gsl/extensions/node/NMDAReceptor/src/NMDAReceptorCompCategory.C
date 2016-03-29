@@ -18,6 +18,7 @@
 #include "NDPairList.h"
 #include "CG_NMDAReceptorCompCategory.h"
 #include <math.h>
+#include <mpi.h>
 
 NMDAReceptorCompCategory::NMDAReceptorCompCategory(Simulation& sim,
                                                    const std::string& modelName,
@@ -32,11 +33,13 @@ void NMDAReceptorCompCategory::computeTadj(RNG& rng)
 {
   // Step 1. Find temperature adjustment factor Tadj
   //      based upon Q10 and T values
-  assert(*(getSharedMembers().T) > 273.15);
   // if (getSharedMembers().T and getSharedMembers().Tadj)
   if (getSharedMembers().T)
+  {
+    assert(*(getSharedMembers().T) > 273.15);
     getSharedMembers().Tadj = pow(
         Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
   // pow(static_cast<dyn_var_t>(Q10), ((*(getSharedMembers().T) - 273.15 -
   // BASED_TEMPERATURE) / 10.0));
   //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));

@@ -17,7 +17,7 @@
 //{{{ Numerics
 #define TimeStep_value   0.010 // [ms]
 #define RecordInterval   20   // every ... timesteps
-#define NumIterationsUntilEnd   2   // unitless
+#define NumIterationsUntilEnd   20   // unitless
 //}}}
 //{{{ Diffusion
 //#define CA_DCA 4.4        // 0.4 um^2/ms unbuffered
@@ -63,11 +63,12 @@
 
 #define E_leak_value -90.0 // [mV]
   // NOTE: 310K = 37-degree Celcius (body)
+  //       308.15K = 35-degree Celcius (body)
   //       298K = 25-degree Celcius (room)
   //       295K = 22-degree Celcius (room)
   //              20.0-22.0-degree Celcius (room)
   //       281K = 7.85-degree Celcius (cold)
-#define Temperature_value  281.0 // [K] Kelvin
+#define Temperature_value  308.15 // [K] Kelvin
 #define Vrest_value  -85.0 // [mV]
 //}}}
 //{{{ Time constant

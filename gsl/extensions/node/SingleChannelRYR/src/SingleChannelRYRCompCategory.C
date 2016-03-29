@@ -14,7 +14,20 @@ SingleChannelRYRCompCategory::SingleChannelRYRCompCategory(
 {
 }
 
-void SingleChannelRYRCompCategory::computeTadj(RNG& rng) {}
+// GOAL:
+//  1. find Q10 adjustment
+void SingleChannelRYRCompCategory::computeTadj(RNG& rng)
+{
+  // Step 1. Find temperature adjustment factor Tadj
+  //      based upon Q10 and T values
+  // if (getSharedMembers().T and getSharedMembers().Tadj)
+  if (getSharedMembers().T)
+  {
+    assert(*(getSharedMembers().T) > 273.15);
+    getSharedMembers().Tadj = pow(
+        Q10, ((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
+  }
+}
 
 void SingleChannelRYRCompCategory::setupChannel(RNG& rng)
 {
