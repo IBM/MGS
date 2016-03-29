@@ -25,14 +25,18 @@ void SingleChannelRYR::initialize(RNG& rng)
   if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);
   if (numChan.size() != size) numChan.increaseSizeTo(size);
   if (numClusterStates.size() != size) numClusterStates.increaseSizeTo(size);
-  if (matK_channelstate_fromto.size() != size)
-    matK_channelstate_fromto.increaseSizeTo(size);
-  if (matK_indx.size() != size) matK_indx.increaseSizeTo(size);
-  if (vClusterNumOpenChan.size() != size)
-    vClusterNumOpenChan.increaseSizeTo(size);
+  if (maxNumNeighbors.size() != size) maxNumNeighbors.increaseSizeTo(size);
+
   if (matClusterStateInfo.size() != size)
     matClusterStateInfo.increaseSizeTo(size);
-  if (maxNumNeighbors.size() != size) maxNumNeighbors.increaseSizeTo(size);
+  if (vClusterNumOpenChan.size() != size)
+    vClusterNumOpenChan.increaseSizeTo(size);
+
+  if (matK_channelstate_fromto.size() != size)
+    matK_channelstate_fromto.increaseSizeTo(size);
+	if (matK_indx.size() != size) matK_indx.increaseSizeTo(size);
+	if (matChannelTransitionRate.size() != size) matChannelTransitionRate.increaseSizeTo(size);
+
   if (currentStateIndex.size() != size) currentStateIndex.increaseSizeTo(size);
   if (probStateTransition.size() != size) probStateTransition.increaseSizeTo(size);
   // RyR specific
@@ -45,6 +49,7 @@ void SingleChannelRYR::initialize(RNG& rng)
   ChanDenbar[0] = getSharedMembers().channelDensity;
   // initialize
   dyn_var_t ChanDenbar_default = ChanDenbar[0];
+	int numChan_default = numChan[0];
   if (ChanDenbar_dists.size() > 0 and ChanDenbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either ChanDenbar_dists or "
@@ -99,7 +104,11 @@ void SingleChannelRYR::initialize(RNG& rng)
   Params param;
   for (unsigned i = 0; i < size; ++i)
   {
-    numChan[i] =std::ceil(ChanDenbar[i] * (*dimensions)[i]->surface_area);
+		if (getSharedMembers().useExplicitNumberofChannels == false)
+			numChan[i] =std::ceil(ChanDenbar[i] * (*dimensions)[i]->surface_area);
+		else
+			numChan[i] = numChan_default;
+		assert(numChan[i]>0);
     /*
      * N_L = numChannels
      * mL  = numStates
@@ -122,6 +131,15 @@ matClusterStateInfo_LCC, maxNumNeighbors) RESULT(res)
 				vClusterNumOpenChan[i],
 				maxNumNeighbors[i],
 				matK_channelstate_fromto[i], matK_indx[i]);
+
+		for (int ii = 0; ii < numClusterStates[i]; ii++)
+		{//initial cluster-state
+			if (matClusterStateInfo[i][Map1Dindex(ii,getSharedMembers().initialstate, getSharedMembers().numChanStates)] == numChan[i])
+			{
+				currentStateIndex[i] = ii;
+			}
+		}
+
     // the matrix that keep update the true transition rate
     matChannelTransitionRate[i] =
         new dyn_var_t[getSharedMembers().numChanStates *
@@ -131,13 +149,6 @@ matClusterStateInfo_LCC, maxNumNeighbors) RESULT(res)
     probStateTransition[i] =
         new dyn_var_t[maxNumNeighbors[i]]();
 
-		for (int ii = 0; ii < numClusterStates[i]; ii++)
-		{//initial cluster-state
-			if (matClusterStateInfo[i][Map1Dindex(ii,getSharedMembers().initialstate, getSharedMembers().numChanStates)] == numChan[i])
-			{
-				currentStateIndex[i] = ii;
-			}
-		}
 		dyn_var_t Caer0 = 1000.0 ; //[uM]
 		dyn_var_t Cacyto0 = 0.1; //[uM]
 		dyn_var_t zCaF = zCa * zF; 
@@ -159,7 +170,9 @@ void SingleChannelRYR::updateChannelTransitionRate(
 	dyn_var_t k_jsr0 = 2.3e-4; // [1/uM]
 	dyn_var_t k_jsr1 = 2.0-2;  // unitless
   dyn_var_t N_R = numChan[cptIdx];
-  int RYRgate = vClusterNumOpenChan[cptIdx][currentStateIndex[cptIdx]];
+	int * nOpenChans =vClusterNumOpenChan[cptIdx];
+  //int RYRgate = vClusterNumOpenChan[cptIdx][currentStateIndex[cptIdx]];
+  int RYRgate = nOpenChans[currentStateIndex[cptIdx]];
 	{//0->1 as a function of k01 * [Ca2+]^eta_RYR * f([Cajsr]) * Energy_coupling(FKBP12.6)
     // chiC(ii) = EXP(-Ej*0.5d0*((N_R-RYRgate(ii))*Ecc - (RYRgate(ii)-1)*Eoo))
 		dyn_var_t chiC =
@@ -201,7 +214,7 @@ void SingleChannelRYR::update(RNG& rng)
 
 		std::fill(probStateTransition[i], probStateTransition[i] + maxNumNeighbors[i], 0.0);
 		dyn_var_t sumval = 0.0;
-		for (int jj = 0; jj < maxNumNeighbors[jj]; jj++)
+		for (int jj = 0; jj < maxNumNeighbors[i]; jj++)
 		{
 			long offset = 	Map1Dindex(currentStateIndex[i],jj, maxNumNeighbors[i]);
 			short to = matK_channelstate_fromto[i][offset]  & MASK_MARKOV;

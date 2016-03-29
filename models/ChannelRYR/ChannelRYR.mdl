@@ -73,6 +73,8 @@ Node SingleChannelRYR Implements BranchDataProducer,
     string SingleChannelModelFileName;
     dyn_var_t iryr; // single-channel current [pA]
     dyn_var_t channelDensity; // [1/um^2] - the # of RyR per 1um^2
+    bool useExplicitNumberofChannels; // if true, then #channels is read-in explicitly via ChanParam file
+                                     // if false, then #channels is calculated via channelDensity
     //{{{ to be generated
     int numChanStates; // number of Markov-based channel states
     int initialstate; // index of the starting channel-state for all channels in the cpt 

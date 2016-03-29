@@ -306,6 +306,8 @@ public:
     return (*this);
   }
 
+	void getListofValues(FILE* fpF, std::vector<int>& values);
+
   private:
   bool isCommentLine(std::string& line);
   void jumpOverCommentLine(FILE* fpF);
@@ -340,7 +342,6 @@ public:
 			arrayParamsMap
 			);
 	bool checkForSpecialCases(FILE* fpF, int sz);
-	void getListofValues(FILE* fpF, std::vector<int>& values);
 	bool readBondParams(FILE* fpF);
   bool readAngleParams(FILE* fpF);
   bool readLJParams(FILE* fpF);

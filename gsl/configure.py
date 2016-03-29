@@ -1338,14 +1338,15 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         return retStr
 
     def getAllTarget(self):
+        retStr = "cleanfirst:\n"
+        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         #retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
-        retStr = "final: speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
+        retStr = "final: cleanfirst speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
         if self.options.dynamicLoading == True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
@@ -1398,7 +1399,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         return retStr
 
     def getLensparserTarget(self):
-        retStr = "$(BIN_DIR)/$(EXE_FILE): "
+        retStr = "$(BIN_DIR)/$(EXE_FILE): cleanfirst "
 
         if self.operatingSystem == "AIX":
             retStr += LENSPARSER_TARGETS
@@ -1413,7 +1414,6 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         if self.options.dynamicLoading == True:
             retStr += " $(SHARED_OBJECTS)"
         retStr += "\n"
-        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o "
 	retStr += "$(LIBS) "
 	if self.options.tvMemDebug == True and self.operatingSystem != "AIX":

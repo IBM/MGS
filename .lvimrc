@@ -30,6 +30,7 @@ au BufNewFile,BufRead *.di setlocal ft=d
 au BufNewFile,BufRead *.gsl setlocal ft=gsl foldmethod=marker
 au BufNewFile,BufRead *.mdl setlocal ft=mdl foldmethod=marker
 au BufNewFile,BufRead NTSMacros.h setlocal foldmethod=marker
+au BufNewFile,BufRead *.par setlocal foldmethod=marker
 "noremap <leader>f <Esc>:syn region myFold start="/*{{{*/" end="/*}}}*/" transparent fold<CR>
 noremap <leader>f <Esc>:syn region myFold start="{{{" end="}}}" transparent fold<CR>
 "" all consecutive comments (starting with a space and //)

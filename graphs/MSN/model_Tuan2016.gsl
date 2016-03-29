@@ -77,9 +77,12 @@
 //#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
 //}}}
 //{{{ RYR
-#define RYRMarkovFilename "RYR_Markov_Williams2012"
+#define RYRMarkovFilename "RYR_Markov_Williams2012.conf"
 #define RYRSingleChannelCurrent 2.0 // [pA]
-#define RYRChannelDensity   2    // [1/um^2] = number of channels per 1um^2 of ER surface
+//NOTE: 1 RYR = 30nm x 30nm
+#define RYRChannelDensity   300.0    // [1/um^2] = number of channels per 1um^2 of ER surface
+// NOTE: if 1, then numChan information is used
+#define RYRUseExplicitNumChan 1 // 0 or 1 only
 //}}}
 //}}}
 
@@ -430,13 +433,14 @@ NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, upda
 /*}}}*/
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
 //RYR
-//NodeType SingleChannelRYR(
-//    <
-//				SingleChannelModelFileName = RYRMarkovFilename,
-//        iryr = RYRSingleChannelCurrent,
-//        channelDensity = RYRChannelDensity
-//    >
-//		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
+NodeType SingleChannelRYR(
+    <
+				SingleChannelModelFileName = RYRMarkovFilename,
+        iryr = RYRSingleChannelCurrent,
+        channelDensity = RYRChannelDensity,
+        useExplicitNumberofChannels = RYRUseExplicitNumChan
+    >
+		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
 
 //Non-specific leak (NOTE: not being used for now)
@@ -845,7 +849,7 @@ Grid MSN_D1Neuron{
 		 //{{{ RYR, IP3R
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
      //RYR
-//	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
      //IP3R
 
      //LeakER
@@ -1165,11 +1169,11 @@ Grid MSN_D1Neuron{
 		//{{{RYR, IP3R, LeakER
 #if SIMULATION_INVOLVE >= VM_CACYTO_CAER
   //RYR
-//	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
-//				compartmentalize = { "numChan", "Ej" },
-//				numChan = {0},
-//        Ej = 0
-//     > ) );
+	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
+				compartmentalize = { "int:numChan", "Ej" },
+				numChan = {1},
+        Ej = {0.0}
+     > ) );
    //IP3R
 
    //LeakER
@@ -1331,8 +1335,8 @@ Grid MSN_D1Neuron{
 	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 
-//	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
-//	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
+	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
   //IP3R
   //LeakER
 	/*}}}*/

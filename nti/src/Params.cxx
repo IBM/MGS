@@ -236,7 +236,11 @@ Params::~Params()
 void Params::readDevParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  assert(fpF);
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
   skipHeader(fpF);
   assert(readBondParams(fpF));
   // assert(readAngleParams(fpF));
@@ -250,7 +254,11 @@ void Params::readDevParams(const std::string& fname)
 void Params::readDetParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  assert(fpF);
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
   skipHeader(fpF);
   assert(readRadii(fpF));
   assert(readTouchTables(fpF));
@@ -260,7 +268,11 @@ void Params::readDetParams(const std::string& fname)
 void Params::readCptParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  assert(fpF);
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
   skipHeader(fpF);
   assert(readCompartmentVariableTargets(fpF));
   assert(readCompartmentVariableCosts(fpF));
@@ -272,7 +284,11 @@ void Params::readCptParams(const std::string& fname)
 void Params::readChanParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  assert(fpF);
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
   skipHeader(fpF);
   readChannelTargets(fpF);
   readChannelCosts(fpF);
@@ -284,7 +300,11 @@ void Params::readChanParams(const std::string& fname)
 void Params::readSynParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  assert(fpF);
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
   skipHeader(fpF);
 
   std::string keyword;
@@ -3027,6 +3047,8 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 {
   char ch;
 	bool readOK = true;
+	values.clear();//reset data first
+
   while ((ch = fgetc(fpF)) != '[')
   {
   }
@@ -3035,12 +3057,12 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
 		exit(-1);
 	}
-  ch = fgetc(fpF);
+  ch = fgetc(fpF);//read character after '['
   while (ch != ']' and readOK and !feof(fpF))
   {
     //char str[LENGTH_TOKEN_MAX];
-		std::string str;
-    int i = 0;
+		std::string str("");
+    //int i = 0;
     do
     {
       //str[i] = ch;
@@ -3071,7 +3093,7 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
         //i++;
 			  str.push_back(ch);
         ch = fgetc(fpF);
-        if (ch == ':') assert(0);
+        if (ch == ':') assert(0);//we cann't have two ':' at the same time, e.g. 2:3:5
       } while (ch != ',' and ch != ']' and !feof(fpF));
       //str[i] = '\0';
 
@@ -3079,7 +3101,13 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
       for (int i = val1; i <= val2; i++) values.push_back(i);
     }
     else if (ch == ']')
+		{
+			if (str.length() > 0)
+				values.push_back(atoi(str.c_str()));
       break;
+		}
+		if (ch != ']')
+			ch = fgetc(fpF);
   }
 	if (!readOK)
 	{
@@ -3093,8 +3121,12 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
 		int &numChanStates, int* &vChannelStates, int &initialstate)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
-  assert(fpF);
+  char bufS[LENGTH_LINE_MAX];
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
 	//read in the number of states
 	jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -3112,7 +3144,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
 	std::vector<std::string> tokens;
 	std::string delimiters(",");
 	StringUtils::Tokenize(str, tokens, delimiters);
-	if (tokens.size() != numChanStates)
+	if ((int)tokens.size() != numChanStates)
 	{
 		std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
 	}
@@ -3125,15 +3157,20 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
 	// ASSUMPTION: All channels having the same initial state
 	jumpOverCommentLine(fpF);
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  if (1 != sscanf(bufS, "%d ", &initialstate))
+  if (1 == sscanf(bufS, "%d ", &initialstate))
 	{
 		if (initialstate < 1 or initialstate > numChanStates)
 		{
 			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
+			std::cerr << " to be in the range [1, " << numChanStates << "]\n";
 			exit(EXIT_FAILURE);
 		}
 		// map to zero-based
 		initialstate--;
+	}
+	else{
+		std::cerr << "Please input only 1 value for channel's initial-state in Markov file\n";
+		exit(EXIT_FAILURE);
 	}
 	
 
@@ -3180,8 +3217,12 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 		int &numChanStates, int* &vChannelStates, int &initialstate)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
-  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
-  assert(fpF);
+  char bufS[LENGTH_LINE_MAX];
+	if (fpF == NULL)
+	{
+		std::cerr << "File " << fname << " not found.\n";
+		assert(fpF);
+	}
 	//read in the number of states
 	jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -3199,7 +3240,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 	std::vector<std::string> tokens;
 	std::string delimiters(",");
 	StringUtils::Tokenize(str, tokens, delimiters);
-	if (tokens.size() != numChanStates)
+	if ((int)tokens.size() != numChanStates)
 	{
 		std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
 	}
@@ -3212,13 +3253,20 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 	// ASSUMPTION: All channels having the same initial state
 	jumpOverCommentLine(fpF);
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  if (1 != sscanf(bufS, "%d ", &initialstate))
+  if (1 == sscanf(bufS, "%d ", &initialstate))
 	{
-		if (initialstate < 0 or initialstate > numChanStates)
+		if (initialstate < 1 or initialstate > numChanStates)
 		{
 			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
+			std::cerr << " to be in the range [1, " << numChanStates << "]\n";
 			exit(EXIT_FAILURE);
 		}
+		// map to zero-based
+		initialstate--;
+	}
+	else{
+		std::cerr << "Please input only 1 value for channel's initial-state in Markov file\n";
+		exit(EXIT_FAILURE);
 	}
 	
 
@@ -3438,7 +3486,7 @@ void Params::getCompactK(
 				std::cerr << "The Markov-model should not have more than " << MAXRANGE_MARKOVSTATE << " states\n";
 				exit(EXIT_FAILURE);
 			}
-			std::cout << "from, to = " << initial_state << ", " << final_state << std::endl;
+			//std::cout << "from, to = " << initial_state << ", " << final_state << std::endl;
 			if (matChannelRateConstant[Map1Dindex(initial_state, final_state, numChanStates)] > 0.0)
 			{
 /*

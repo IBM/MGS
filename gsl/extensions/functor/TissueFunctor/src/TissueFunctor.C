@@ -33,7 +33,6 @@
 #include "StructDataItem.h"
 #include "StringDataItem.h"
 #include "DataItemArrayDataItem.h"
-#include "FloatArrayDataItem.h"
 #include "ConstantDataItem.h"
 #include "Struct.h"
 #include "NodeAccessor.h"
@@ -45,6 +44,7 @@
 #include "CG_BranchData.h"
 #include "Granule.h"
 #include "IntDataItem.h"
+#include "IntArrayDataItem.h"
 
 #include "MaxComputeOrder.h"
 #ifdef HAVE_MPI
@@ -1554,9 +1554,29 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       }
       if (!foundNDP)
       {
-        ArrayDataItem* arrayDI = new FloatArrayDataItem(size);
+        ArrayDataItem* arrayDI =  0;
+				std::string mystring = (*cptiter)->getString();
+				std::vector<std::string> tokens;
+				std::string delimiters = ": ";
+				StringUtils::Tokenize(mystring, tokens, delimiters );
+				assert(tokens.size() == 1 || tokens.size() == 2);
+				//if (tokens.size() == 1 || tokens[0] == "float" || tokens[0] == "double")
+				if (tokens.size() == 1 || tokens[0] == "float" )
+				{
+					arrayDI = new FloatArrayDataItem(size);
+				//	std::cerr << "float - " << mystring << std::endl;
+				}
+				else if (tokens[0] == "int")
+				{
+					arrayDI = new IntArrayDataItem(size);
+					//std::cerr << "int - " << mystring << std::endl;
+				}
+				assert(arrayDI);
+				std::string varName = tokens[tokens.size()-1];
+				//std::cerr << "varName = " << varName << std::endl;
+
         std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
-        NDPair* ndp = new NDPair((*cptiter)->getString(), arrayDI_ap);
+        NDPair* ndp = new NDPair(varName, arrayDI_ap);
         params->push_back(ndp);
       }
     }
@@ -4544,6 +4564,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   rval.reset(ns);
 }
 
+// GOAL: map the values from *.par file to the data member
+//
 void TissueFunctor::getModelParams(Params::ModelType modelType,
                                    NDPairList& paramsLocal,
                                    std::string& nodeType, key_size_t key)
@@ -4555,10 +4577,32 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       cpend = compartmentParams.end();
   for (; cpiter != cpend; ++cpiter)
   {
-    FloatDataItem* paramDI = new FloatDataItem(cpiter->second);
-    std::auto_ptr<DataItem> paramDI_ap(paramDI);
-    NDPair* ndp = new NDPair(cpiter->first, paramDI_ap);
-    paramsLocal.push_back(ndp);
+			//NOTE: if we update the next 'for' code, update here too
+		std::string mystring = (*cpiter).first;
+		std::vector<std::string> tokens;
+		std::string delimiters = ": ";
+		StringUtils::Tokenize(mystring, tokens, delimiters );
+		assert(tokens.size() == 1 || tokens.size() == 2);
+		std::string varName = tokens[tokens.size()-1];
+
+		if (tokens.size() == 1 || tokens[0] == "float" )
+		{
+			////////////
+			FloatDataItem* paramDI = new FloatDataItem(cpiter->second);
+			std::auto_ptr<DataItem> paramDI_ap(paramDI);
+			NDPair* ndp = new NDPair(varName, paramDI_ap);
+			paramsLocal.push_back(ndp);
+
+		}
+		else if (tokens[0] == "int")
+		{
+			////////////
+			IntDataItem* paramDI = new IntDataItem((int)cpiter->second);
+			std::auto_ptr<DataItem> paramDI_ap(paramDI);
+			NDPair* ndp = new NDPair(varName, paramDI_ap);
+			paramsLocal.push_back(ndp);
+		}
+
   }
 
   std::list<std::pair<std::string, std::vector<float> > >
@@ -4570,17 +4614,51 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
   {
-    ShallowArray<float> farr;
-    std::vector<float>::iterator viter = capiter->second.begin(),
-                                 vend = capiter->second.end();
-    for (; viter != vend; ++viter) farr.push_back(*viter);
-    FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
-    std::auto_ptr<DataItem> paramDI_ap(paramDI);
-    if (!paramsLocal.replace(capiter->first, paramDI_ap))
-    {
-      NDPair* ndp = new NDPair(capiter->first, paramDI_ap);
-      paramsLocal.push_back(ndp);
-    }
+
+		std::string mystring = (*capiter).first;
+		std::vector<std::string> tokens;
+		std::string delimiters = ": ";
+		StringUtils::Tokenize(mystring, tokens, delimiters );
+		assert(tokens.size() == 1 || tokens.size() == 2);
+		std::string varName = tokens[tokens.size()-1];
+
+		if (tokens.size() == 1 || tokens[0] == "float" )
+		{
+			//TUAN TODO we may consider doing this 
+			//DynamicFloatArrayDataItem* paramDI = new DynamicFloatArrayDataItem(farr);
+			//which we need to implement DynamicFloatArrayDataItem using dyn_var_t
+			//or
+			//we can check what is the value of dyn_var_t vs. 'float' or 'double'
+			//ShallowArray<dyn_var_t> farr;
+			ShallowArray<float> farr;
+			std::vector<float>::iterator viter = capiter->second.begin(),
+				vend = capiter->second.end();
+			for (; viter != vend; ++viter) farr.push_back(*viter);
+			FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
+			std::auto_ptr<DataItem> paramDI_ap(paramDI);
+			if (!paramsLocal.replace(capiter->first, paramDI_ap))
+			{
+				//NDPair* ndp = new NDPair(capiter->first, paramDI_ap);
+				NDPair* ndp = new NDPair(varName, paramDI_ap);
+				paramsLocal.push_back(ndp);
+			}
+		}
+		else if (tokens[0] == "int")
+		{
+			ShallowArray<int> farr;
+			std::vector<float>::iterator viter = capiter->second.begin(),
+				vend = capiter->second.end();
+			for (; viter != vend; ++viter) farr.push_back(*viter);
+			IntArrayDataItem* paramDI = new IntArrayDataItem(farr);
+			std::auto_ptr<DataItem> paramDI_ap(paramDI);
+			if (!paramsLocal.replace(capiter->first, paramDI_ap))
+			{
+				//NDPair* ndp = new NDPair(capiter->first, paramDI_ap);
+				NDPair* ndp = new NDPair(varName, paramDI_ap);
+				paramsLocal.push_back(ndp);
+			}
+
+		}	
   }
 }
 
