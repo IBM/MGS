@@ -22,6 +22,8 @@
 
 //#define DEBUG_HH
 
+#include <cmath>
+#include <cfloat>
 #include "SegmentDescriptor.h"
 #include "Branch.h"
 
@@ -79,7 +81,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
     float Rb = 0.5 * ((*diter)->r + dimension->r);
     //fAxial.push_back(Pdov * Rb * Rb /
     //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-	dyn_var_t length= abs((*diter)->dist2soma - dimension->dist2soma);
+	dyn_var_t length= std::abs((*diter)->dist2soma - dimension->dist2soma);
 	fAxial.push_back(Pdov * Rb * Rb / length );
   }
 #ifdef DEBUG_HH
@@ -137,6 +139,8 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
   Ca_new[0] = RHS / LHS;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
+  DimensionStruct* dimension = dimensions[0];  
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " CA_JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
@@ -201,6 +205,7 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
   Ca_cur = Ca_new[0] = 2.0 * Ca_new[0] - Ca_cur;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
   assert(dimensions.size() == 1);
   DimensionStruct* dimension = dimensions[0];
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
@@ -228,7 +233,7 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
               << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
               << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
               //<< (*diter)->r << "} " << DISTANCE_SQUARED(*(*diter), *dimension)
-              << (*diter)->r << "} " << ((*(*diter))->dist2soma - dimension->dist2soma)
+              << (*diter)->r << "} " << (((*diter))->dist2soma - dimension->dist2soma)
               << " " << *(*viter) << std::endl;
   }
 #endif

@@ -17,101 +17,147 @@
 #include "VoltageDisplay.h"
 #include "Simulation.h"
 #include "CG_VoltageDisplay.h"
-#define DISTANCE_SQUARED(a,b) ((((a).x-(b).x)*((a).x-(b).x))+(((a).y-(b).y)*((a).y-(b).y))+(((a).z-(b).z)*((a).z-(b).z)))
+#include "MaxComputeOrder.h"
+#define DISTANCE_SQUARED(a, b)                                                 \
+  ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
+   (((a).z - (b).z) * ((a).z - (b).z)))
 
 #include <memory>
 
-void VoltageDisplay::initialize(RNG& rng) 
+void VoltageDisplay::initialize(RNG& rng)
 {
-  if (V.size()>0) {
+  if (V.size() > 0)
+  {
     assert(deltaT);
     std::ostringstream os;
-    os<<fileName<<getSimulation().getRank();
+    os << fileName << getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
     outFile->precision(3);
-    (*outFile)<<"#Time\tVoltage :";
-    if (indices.size()==0) {
-      for (int i=0; i<dimensions.size(); ++i) {
-	for (int j=0; j<dimensions[i]->size(); ++j) {
-	  (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&branchData[i]->key))<<","<<j<<"]("<<(*dimensions[i])[j]->x<<","<<(*dimensions[i])[j]->y<<","<<(*dimensions[i])[j]->z<<","<<(*dimensions[i])[j]->r<<","<<(*dimensions[i])[j]->dist2soma<<") ";
-	}
+    (*outFile) << "#Time\tVoltage :";
+    if (indices.size() == 0)
+    {
+      for (unsigned int i = 0; i < dimensions.size(); ++i)
+      {
+        for (unsigned int j = 0; j < dimensions[i]->size(); ++j)
+        {
+          (*outFile) << std::fixed << " ["
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &branchData[i]->key)) << "," << j << "]("
+                     << (*dimensions[i])[j]->x << "," << (*dimensions[i])[j]->y
+                     << "," << (*dimensions[i])[j]->z << ","
+                     << (*dimensions[i])[j]->r << ","
+                     << (*dimensions[i])[j]->dist2soma << ") ";
+        }
       }
     }
-    else {
-      ShallowArray< ShallowArray < int > >::iterator it1=indices.begin(), end1=indices.end();
-      for (int i=0; it1!=end1; ++it1, ++i) {
-	ShallowArray < int >::iterator it2=it1->begin(), end2=it1->end();
-	for (; it2!=end2; ++it2) {
-	  assert(*it2<dimensions[i]->size());
-	  (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&branchData[i]->key))<<","<<*it2<<"]("<<(*dimensions[i])[*it2]->x<<","<<(*dimensions[i])[*it2]->y<<","<<(*dimensions[i])[*it2]->z<<","<<(*dimensions[i])[*it2]->r<<","<<(*dimensions[i])[*it2]->dist2soma<<") ";
-	}
+    else
+    {
+      ShallowArray<ShallowArray<int> >::iterator it1 = indices.begin(),
+                                                 end1 = indices.end();
+      for (int i = 0; it1 != end1; ++it1, ++i)
+      {
+        ShallowArray<int>::iterator it2 = it1->begin(), end2 = it1->end();
+        for (; it2 != end2; ++it2)
+        {
+          assert(*it2 < dimensions[i]->size());
+          (*outFile) << std::fixed << " ["
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &branchData[i]->key)) << "," << *it2 << "]("
+                     << (*dimensions[i])[*it2]->x << ","
+                     << (*dimensions[i])[*it2]->y << ","
+                     << (*dimensions[i])[*it2]->z << ","
+                     << (*dimensions[i])[*it2]->r << ","
+                     << (*dimensions[i])[*it2]->dist2soma << ") ";
+        }
       }
     }
-    (*outFile)<<"\n";
+    (*outFile) << "\n";
   }
 }
 
-void VoltageDisplay::finalize(RNG& rng) 
+void VoltageDisplay::finalize(RNG& rng)
 {
-  if (V.size()>0) outFile->close();
+  if (V.size() > 0) outFile->close();
 }
 
-void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
+void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 {
-  if (V.size()>0) {
-    (*outFile)<<float(getSimulation().getIteration())**deltaT;
-    if (indices.size()==0) {
-      ShallowArray< ShallowArray <float>* >::iterator it1 = V.begin(),
-	end1 = V.end();
-      for (; it1!=end1; ++it1) {
-	ShallowArray< float >::iterator it2 = (*it1)->begin(),
-	  end2 = (*it1)->end();
-	for (; it2!=end2; ++it2)
-	  (*outFile)<<std::fixed<<"\t"<<(*it2);
+  if (V.size() > 0)
+  {
+    (*outFile) << float(getSimulation().getIteration()) * *deltaT;
+    if (indices.size() == 0)
+    {
+      ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = V.begin(),
+                                                       end1 = V.end();
+      for (; it1 != end1; ++it1)
+      {
+        ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
+                                          end2 = (*it1)->end();
+        for (; it2 != end2; ++it2) (*outFile) << std::fixed << "\t" << (*it2);
       }
     }
-    else {
-      ShallowArray< ShallowArray <float>* >::iterator it1=V.begin(), end1=V.end();
-      ShallowArray< ShallowArray < int > >::iterator it2=indices.begin(), end2=indices.end();
-      for (; it1!=end1; ++it1, ++it2) {
-	assert(it2!=end2);
-	ShallowArray < int >::iterator it3=it2->begin(), end3=it2->end();
-	for (; it3!=end3; ++it3) {
-	  assert(*it3<(*it1)->size());
-	  (*outFile)<<std::fixed<<"\t"<<(**it1)[*it3];
-	}
+    else
+    {
+      ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = V.begin(),
+                                                       end1 = V.end();
+      ShallowArray<ShallowArray<int> >::iterator it2 = indices.begin(),
+                                                 end2 = indices.end();
+      for (; it1 != end1; ++it1, ++it2)
+      {
+        assert(it2 != end2);
+        ShallowArray<int>::iterator it3 = it2->begin(), end3 = it2->end();
+        for (; it3 != end3; ++it3)
+        {
+          assert(*it3 < (*it1)->size());
+          (*outFile) << std::fixed << "\t" << (**it1)[*it3];
+        }
       }
     }
-    (*outFile)<<"\n";
+    (*outFile) << "\n";
   }
 }
 
-void VoltageDisplay::setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageDisplayInAttrPSet* CG_inAttrPset, CG_VoltageDisplayOutAttrPSet* CG_outAttrPset) 
+void VoltageDisplay::setUpPointers(const String& CG_direction,
+                                   const String& CG_component,
+                                   NodeDescriptor* CG_node, Edge* CG_edge,
+                                   VariableDescriptor* CG_variable,
+                                   Constant* CG_constant,
+                                   CG_VoltageDisplayInAttrPSet* CG_inAttrPset,
+                                   CG_VoltageDisplayOutAttrPSet* CG_outAttrPset)
 {
-  TissueSite& site=CG_inAttrPset->site;
-  bool record=true;
+  TissueSite& site = CG_inAttrPset->site;
+  bool record = true;
   ShallowArray<int> ind;
-  if (site.r!=0) {
-    record=false;
-    for (int i=0; i<dimensions_connect->size(); ++i) {
-      if ( (site.r*site.r) >= DISTANCE_SQUARED(site, *( (*dimensions_connect)[i]) ) ) {
-	ind.push_back(i);
-	record=true;
+  if (site.r != 0)
+  {
+    record = false;
+    for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
+    {
+      if ((site.r * site.r) >=
+          DISTANCE_SQUARED(site, *((*dimensions_connect)[i])))
+      {
+        ind.push_back(i);
+        record = true;
       }
     }
   }
-  else if (indices.size()>0) {
-    for (int i=0; i<dimensions_connect->size(); ++i) ind.push_back(i);
+  else if (indices.size() > 0)
+  {
+    for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
+      ind.push_back(i);
   }
-  if (record) {
-    if (ind.size()>0) {
-      if (indices.size()==0) {
-	for (int i=0; i<V.size(); ++i) {
-	  ShallowArray<int> inds;
-	  for (int j=0; j<V[i]->size(); ++j)
-	    inds.push_back(j);
-	  indices.push_back(inds);
-	}
+  if (record)
+  {
+    if (ind.size() > 0)
+    {
+      if (indices.size() == 0)
+      {
+        for (unsigned int i = 0; i < V.size(); ++i)
+        {
+          ShallowArray<int> inds;
+          for (unsigned int j = 0; j < V[i]->size(); ++j) inds.push_back(j);
+          indices.push_back(inds);
+        }
       }
       indices.push_back(ind);
     }
@@ -121,28 +167,21 @@ void VoltageDisplay::setUpPointers(const String& CG_direction, const String& CG_
   }
 }
 
-VoltageDisplay::VoltageDisplay() 
-  : CG_VoltageDisplay(), outFile(0)
-{
-}
+VoltageDisplay::VoltageDisplay() : CG_VoltageDisplay(), outFile(0) {}
 
-VoltageDisplay::~VoltageDisplay() 
-{
-  delete outFile;
-}
+VoltageDisplay::~VoltageDisplay() { delete outFile; }
 
 void VoltageDisplay::duplicate(std::auto_ptr<VoltageDisplay>& dup) const
 {
-   dup.reset(new VoltageDisplay(*this));
+  dup.reset(new VoltageDisplay(*this));
 }
 
 void VoltageDisplay::duplicate(std::auto_ptr<Variable>& dup) const
 {
-   dup.reset(new VoltageDisplay(*this));
+  dup.reset(new VoltageDisplay(*this));
 }
 
 void VoltageDisplay::duplicate(std::auto_ptr<CG_VoltageDisplay>& dup) const
 {
-   dup.reset(new VoltageDisplay(*this));
+  dup.reset(new VoltageDisplay(*this));
 }
-

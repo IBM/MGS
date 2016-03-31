@@ -134,6 +134,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   Vnew[0] = current / conductance;
 
 #ifdef DEBUG_HH
+  SegmentDescriptor segmentDescriptor;
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
@@ -232,7 +233,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
               << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
               << (*diter)->r << "} "
               //<< DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
-		      << ((**diter)->dist2soma - dimension->dist2soma << " "
+		      << (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
               << *(*viter) << std::endl;
   }
 #endif

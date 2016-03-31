@@ -26,6 +26,7 @@
 // Numerical settings
 //{{{
 #define MAX_COMPUTE_ORDER 0 
+#define USE_DOUBLES 
 //g++ -DUSE_DOUBLES=1 myprogram.cpp
 //dyn_var_t = dynamical-variable-type
 #ifdef USE_DOUBLES

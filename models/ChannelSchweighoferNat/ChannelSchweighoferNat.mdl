@@ -6,21 +6,21 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node ChannelSchweighoferNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
-  float [] m;
-  float [] h;
-  float [] g;
-  float [] gbar;
+  dyn_var_t [] m;
+  dyn_var_t [] h;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
 
-  float []* V;
+  dyn_var_t []* V;
 
   BranchDataStruct* branchData; 
 
   Shared {
-    float* Na_IC;
-    float* Na_EC;
-    float* deltaT;
-    float* T;
-    float [] E_Na;
+    dyn_var_t* Na_IC;
+    dyn_var_t* Na_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
+    dyn_var_t [] E_Na;
     InitPhase computeE;
   }
 

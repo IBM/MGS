@@ -37,9 +37,9 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
       virtual ~HodgkinHuxleyVoltage();
 	  
 	  //user-added
-      float getLambda(DimensionStruct* a, DimensionStruct* b);
-      float getArea(int i);
-      float getAij(DimensionStruct* a, DimensionStruct* b, float Area);
+      dyn_var_t getLambda(DimensionStruct* a, DimensionStruct* b);
+      dyn_var_t getArea(int i);
+      dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t Area);
       //unsigned getSize() {return branchData->size;}
 	
 #if MAX_COMPUTE_ORDER>0

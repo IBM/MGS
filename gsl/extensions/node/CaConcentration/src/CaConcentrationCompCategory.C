@@ -40,11 +40,11 @@ void CaConcentrationCompCategory::deriveParameters(RNG& rng)
 #endif
 
 #ifdef DEBUG_HH
-    std::cerr << getSimulation().getRank()
-              << " : CaConcentrations : " << _nodes.size() << " [ ";
-    for (int i = 0; i < _nodes.size(); ++i)
-      std::cerr << _nodes[i].getSize() << " ";
-    std::cerr << " ]" << std::endl;
+    //std::cerr << getSimulation().getRank()
+    //          << " : CaConcentrations : " << _nodes.size() << " [ ";
+    //for (int i = 0; i < _nodes.size(); ++i)
+    //  std::cerr << _nodes[i].getSize() << " ";
+    //std::cerr << " ]" << std::endl;
 #endif
   }
 }

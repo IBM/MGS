@@ -45,8 +45,7 @@ void PumpSERCA::initialize(RNG& rng)
   assert(Ca_ER->size() == size);
   assert(Ca_IC);
   assert(Ca_IC->size() == size);
-  assert(SERCAConc);
-  assert(SERCAConc->size() == size);
+  assert(SERCAConc.size() == size);
 #endif
   // allocate
   if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);

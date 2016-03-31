@@ -47,7 +47,6 @@ void PumpPMCA::initialize(RNG& rng)
 #ifdef DEBUG_ASSERT
   assert(V);
   assert(V->size() == size);
-	assert(IPMCAbar);
   assert(IPMCAbar.size() == size);
 #endif
 // allocate

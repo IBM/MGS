@@ -147,6 +147,8 @@ void CaERConcentrationJunction::predictJunction(RNG& rng)
   Ca_new[0] = RHS / LHS;
 
 #ifdef DEBUG_HH
+  DimensionStruct* dimension = dimensions[0];  
+
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " CaER_JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
@@ -218,9 +220,9 @@ void CaERConcentrationJunction::correctJunction(RNG& rng)
             << " CaER_JUNCTION CORRECT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
             << getIndex() << "] "
-            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimension->x << "," << dimension->y << "," << dimension->z << ","
             << dimension->r << "} " << Ca_new[0] << std::endl;
 
@@ -233,15 +235,15 @@ void CaERConcentrationJunction::correctJunction(RNG& rng)
     std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
               << " CaER_JCT_INPUT_" << c++ << " [" << getSimulation().getRank()
               << "," << getNodeIndex() << "," << getIndex() << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ","
-              << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
+              << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+              << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+              << _segmentDescriptor.getBranchOrder(branchData->key) << ","
+              << _segmentDescriptor.getComputeOrder(branchData->key) << ") {"
               << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
               //<< (*diter)->r << "} " << DISTANCE_SQUARED(*(*diter),
               //*dimension)
               << (*diter)->r << "} "
-              << ((*(*diter))->dist2soma - dimension->dist2soma) << " "
+              << (((*diter))->dist2soma - dimension->dist2soma) << " "
               << *(*viter) << std::endl;
   }
 #endif

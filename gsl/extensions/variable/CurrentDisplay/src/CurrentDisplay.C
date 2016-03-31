@@ -18,130 +18,167 @@
 #include "Simulation.h"
 #include "CG_CurrentDisplay.h"
 #include <memory>
+#include "MaxComputeOrder.h"
 
-void CurrentDisplay::initialize(RNG& rng) 
+void CurrentDisplay::initialize(RNG& rng)
 {
-  if (I_channel.size()>0 || I_synapse.size()>0) {
+  if (I_channel.size() > 0 || I_synapse.size() > 0)
+  {
     assert(deltaT);
     std::ostringstream os;
-    os<<fileName<<getSimulation().getRank();
+    os << fileName << getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
     outFile->precision(3);
-    (*outFile)<<"#Time\tCurrent :";
-    if (I_channel.size()>0) {
-      if (indices.size()==0) {
-	for (int i=0; i<I_channel.size(); ++i) {
-	  assert(I_channel[i]->size()>0);
-	  for (int j=0; j<I_channel[i]->size(); ++j) {
-	    (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&channelBranchData[i]->key))<<","<<j<<"] ";
-	  }
-	}
+    (*outFile) << "#Time\tCurrent :";
+    if (I_channel.size() > 0)
+    {
+      if (indices.size() == 0)
+      {
+        for (unsigned int i = 0; i < I_channel.size(); ++i)
+        {
+          assert(I_channel[i]->size() > 0);
+          for (unsigned int j = 0; j < I_channel[i]->size(); ++j)
+          {
+            (*outFile) << std::fixed << " ["
+                       << *(reinterpret_cast<unsigned long long*>(
+                              &channelBranchData[i]->key)) << "," << j << "] ";
+          }
+        }
       }
-      else {
-	ShallowArray< int >::iterator it, end=indices.end();
-	int idx=0;
-	for (int i=0; i<I_channel.size(); ++i) {	
-	  for (it=indices.begin(); it!=end; ++it) {
-	    if (*it<I_channel[i]->size())
-	      (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&channelBranchData[*it]->key))<<","<<*it<<"] ";
-	  }
-	}
-      }
-    }
-    if (I_synapse.size()>0) {
-      if (connexonBranchData.size()>0) {
-	for (int i=0; i<I_synapse.size(); ++i) {
-	  (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&connexonBranchData[i]->key))<<","<<*(connexonIndices[i])<<"] ";
-	}
-      }
-      else {
-	for (int i=0; i<I_synapse.size(); ++i) {
-	  assert(synapseBranchData[i]->size()==2);
-	  assert(synapseIndices[i].size()==2);
-	  (*outFile)<<std::fixed<<" ["<<*(reinterpret_cast<unsigned long long*>(&( (*synapseBranchData[i])[0]->key)))<<","<<*(synapseIndices[i][0])<<"|"
-		    <<*(reinterpret_cast<unsigned long long*>(&( (*synapseBranchData[i])[1]->key)))<<","<<*(synapseIndices[i][1])<<"] ";
-	}
+      else
+      {
+        ShallowArray<int>::iterator it, end = indices.end();
+        int idx = 0;
+        for (unsigned int i = 0; i < I_channel.size(); ++i)
+        {
+          for (it = indices.begin(); it != end; ++it)
+          {
+            if ((unsigned)*it < I_channel[i]->size())
+              (*outFile) << std::fixed << " ["
+                         << *(reinterpret_cast<unsigned long long*>(
+                                &channelBranchData[*it]->key)) << "," << *it
+                         << "] ";
+          }
+        }
       }
     }
-    (*outFile)<<"\n";
+    if (I_synapse.size() > 0)
+    {
+      if (connexonBranchData.size() > 0)
+      {
+        for (unsigned int i = 0; i < I_synapse.size(); ++i)
+        {
+          (*outFile) << std::fixed << " ["
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &connexonBranchData[i]->key)) << ","
+                     << *(connexonIndices[i]) << "] ";
+        }
+      }
+      else
+      {
+        for (unsigned int i = 0; i < I_synapse.size(); ++i)
+        {
+          assert(synapseBranchData[i]->size() == 2);
+          assert(synapseIndices[i].size() == 2);
+          (*outFile) << std::fixed << " ["
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &((*synapseBranchData[i])[0]->key))) << ","
+                     << *(synapseIndices[i][0]) << "|"
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &((*synapseBranchData[i])[1]->key))) << ","
+                     << *(synapseIndices[i][1]) << "] ";
+        }
+      }
+    }
+    (*outFile) << "\n";
   }
 }
 
-void CurrentDisplay::finalize(RNG& rng) 
+void CurrentDisplay::finalize(RNG& rng)
 {
   if (outFile) outFile->close();
 }
 
-void CurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
+void CurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 {
-  if (I_channel.size()>0 || I_synapse.size()>0) {
-    (*outFile)<<float(getSimulation().getIteration())**deltaT;
-    if (I_channel.size()>0) {
-      if (indices.size()==0) {
-	ShallowArray< ShallowArray <float>* >::iterator it1 = I_channel.begin(),
-	  end1 = I_channel.end();
-	for (; it1!=end1; ++it1) {
-	  ShallowArray< float >::iterator it2 = (*it1)->begin(),
-	    end2 = (*it1)->end();
-	  for (; it2!=end2; ++it2)
-	    (*outFile)<<std::fixed<<"\t"<<(*it2);
-	}
+  if (I_channel.size() > 0 || I_synapse.size() > 0)
+  {
+    (*outFile) << float(getSimulation().getIteration()) * *deltaT;
+    if (I_channel.size() > 0)
+    {
+      if (indices.size() == 0)
+      {
+        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 =
+                                                             I_channel.begin(),
+                                                         end1 = I_channel.end();
+        for (; it1 != end1; ++it1)
+        {
+          ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
+                                            end2 = (*it1)->end();
+          for (; it2 != end2; ++it2) (*outFile) << std::fixed << "\t" << (*it2);
+        }
       }
-      else {
-	ShallowArray< int >::iterator it2, end2=indices.end();
-	ShallowArray< ShallowArray <float>* >::iterator it1 = I_channel.begin(),
-	  end1 = I_channel.end();
-	for (; it1!=end1; ++it1) {
-	  for (it2 = indices.begin(); it2!=end2; ++it2) {
-	    if (*it2<(*it1)->size())
-	      (*outFile)<<std::fixed<<"\t"<<(**it1)[*it2];
-	  }
-	}
+      else
+      {
+        ShallowArray<int>::iterator it2, end2 = indices.end();
+        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 =
+                                                             I_channel.begin(),
+                                                         end1 = I_channel.end();
+        for (; it1 != end1; ++it1)
+        {
+          for (it2 = indices.begin(); it2 != end2; ++it2)
+          {
+            if ((unsigned)*it2 < (*it1)->size())
+              (*outFile) << std::fixed << "\t" << (**it1)[*it2];
+          }
+        }
       }
     }
-    if (I_synapse.size()>0) {
-      ShallowArray<float*>::iterator it = I_synapse.begin(),
-	end = I_synapse.end();
-      for (; it!=end; ++it) {
-	(*outFile)<<std::fixed<<"\t"<<(**it);
+    if (I_synapse.size() > 0)
+    {
+      ShallowArray<dyn_var_t*>::iterator it = I_synapse.begin(),
+                                         end = I_synapse.end();
+      for (; it != end; ++it)
+      {
+        (*outFile) << std::fixed << "\t" << (**it);
       }
     }
-    (*outFile)<<"\n";
+    (*outFile) << "\n";
   }
 }
 
-void CurrentDisplay::setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CurrentDisplayInAttrPSet* CG_inAttrPset, CG_CurrentDisplayOutAttrPSet* CG_outAttrPset) 
+void CurrentDisplay::setUpPointers(const String& CG_direction,
+                                   const String& CG_component,
+                                   NodeDescriptor* CG_node, Edge* CG_edge,
+                                   VariableDescriptor* CG_variable,
+                                   Constant* CG_constant,
+                                   CG_CurrentDisplayInAttrPSet* CG_inAttrPset,
+                                   CG_CurrentDisplayOutAttrPSet* CG_outAttrPset)
 {
-  if (CG_inAttrPset->identifier=="CHANNEL")
+  if (CG_inAttrPset->identifier == "CHANNEL")
     I_channel.push_back(I_channelConnect);
-  else if (CG_inAttrPset->identifier=="SYNAPSE") {
+  else if (CG_inAttrPset->identifier == "SYNAPSE")
+  {
     synapseBranchData.push_back(synapseBranchDataConnect);
     synapseIndices.push_back(synapseIndicesConnect);
   }
 }
 
-CurrentDisplay::CurrentDisplay() 
-  : CG_CurrentDisplay(), outFile(0)
-{
-}
+CurrentDisplay::CurrentDisplay() : CG_CurrentDisplay(), outFile(0) {}
 
-CurrentDisplay::~CurrentDisplay() 
-{
-  delete outFile;
-}
+CurrentDisplay::~CurrentDisplay() { delete outFile; }
 
 void CurrentDisplay::duplicate(std::auto_ptr<CurrentDisplay>& dup) const
 {
-   dup.reset(new CurrentDisplay(*this));
+  dup.reset(new CurrentDisplay(*this));
 }
 
 void CurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
 {
-   dup.reset(new CurrentDisplay(*this));
+  dup.reset(new CurrentDisplay(*this));
 }
 
 void CurrentDisplay::duplicate(std::auto_ptr<CG_CurrentDisplay>& dup) const
 {
-   dup.reset(new CurrentDisplay(*this));
+  dup.reset(new CurrentDisplay(*this));
 }
-

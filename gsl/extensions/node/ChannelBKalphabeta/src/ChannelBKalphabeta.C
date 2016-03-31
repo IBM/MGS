@@ -138,9 +138,6 @@ void ChannelBKalphabeta::update(RNG& rng)
     // dfI[i] = Oval*kOI-Ival*kIC;
     fI[i] =
         ((Oval * kOI - Ival * kIC / 2) * Tscale + Ival) / (1 + kIC / 2 * Tscale);
-#ifdef DEBUG_ASSERT
-    assert(fabs(fI[0] + fO[0] + fC[0] - 1.0) < SMALL);  // conservation
-#endif
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -167,6 +164,13 @@ void ChannelBKalphabeta::update(RNG& rng)
     //}
     // fC[i] = ...
     fC[i] = 1.0 - (fO[i] + fI[i]);
+#ifdef DEBUG_ASSERT
+		if (fabs(fI[i] + fO[i] + fC[i] - 1.0) < SMALL)
+		{
+			std::cerr << i << ": fI =" << fI[i] << ",fO = " << fO[i] << ", fC =" << fC[i] << std::endl;
+		}
+    assert(fabs(fI[i] + fO[i] + fC[i] - 1.0) < SMALL);  // conservation
+#endif
     g[i] = gbar[i] * fO[i] ;
   }
 }

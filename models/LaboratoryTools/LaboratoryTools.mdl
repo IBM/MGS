@@ -14,6 +14,7 @@ Struct TissueSite {
 
 Variable VoltageClamp Implements CurrentProducer
 {
+//{{{
 	dyn_var_t command; 						// Declare command voltage
 	dyn_var_t Igen;							// Declare the feedback current applied to hold voltage constant
 	dyn_var_t [] waveform;						// Declare an array for the waveform
@@ -53,27 +54,33 @@ Variable VoltageClamp Implements CurrentProducer
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 }
 
 Variable PointCurrentSource Implements CurrentProducer
 {
+//{{{
 	dyn_var_t I;
 	TriggeredFunction setCurrent;
 	RuntimePhase stimulate(I);
 	CurrentProducer.current << &I;
+//}}}
 }
 
 Variable PointCalciumSource Implements CaCurrentProducer
 {
+//{{{
 	dyn_var_t I_Ca;
 	TriggeredFunction setCaCurrent;
 	RuntimePhase stimulate(I_Ca);
 	CaCurrentProducer.current << &I_Ca;
+//}}}
 }
 
 Variable CurrentPulseGenerator Implements CurrentProducer
 {
-	dyn_var_t I;
+//{{{
+	dyn_var_t I; // [pA]
 	dyn_var_t peak;
 	dyn_var_t period;
 	dyn_var_t duration;
@@ -91,10 +98,12 @@ Variable CurrentPulseGenerator Implements CurrentProducer
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 }
 
 Variable VoltageDisplay
 {
+//{{{
 	string fileName;
 	int [] [] indices;
 
@@ -128,10 +137,12 @@ Variable VoltageDisplay
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable CalciumDisplay
 {
+//{{{
 	string fileName;
 	int [] [] indices;
 
@@ -166,10 +177,12 @@ Variable CalciumDisplay
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable ConductanceDisplay
 {
+//{{{
 	string fileName;
 	int [] indices;
 
@@ -216,10 +229,12 @@ Variable ConductanceDisplay
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable CurrentDisplay
 {
+//{{{
 	string fileName;
 	int [] indices;
 
@@ -267,10 +282,12 @@ Variable CurrentDisplay
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable CaCurrentDisplay
 {
+//{{{
 	string fileName;
 	int [] indices;
 
@@ -318,10 +335,12 @@ Variable CaCurrentDisplay
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable ReversalPotentialDisplay
 {
+//{{{
 	string fileName;
 	int [] indices;
 
@@ -361,10 +380,12 @@ Variable ReversalPotentialDisplay
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable CalciumVisualization
 {
+//{{{
 	string inFileName;
 	string outFileName;
 	int [] indices;
@@ -393,10 +414,12 @@ Variable CalciumVisualization
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable VoltageVisualization
 {
+//{{{
 	string inFileName;
 	string outFileName;
 	int [] indices;
@@ -425,10 +448,12 @@ Variable VoltageVisualization
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
+//}}}
 } 
 
 Variable SimulationSetter Implements PlasticityToggleProducer
 {
+//{{{
 	int plasticityToggle;
 
 	InitPhase initialize;
@@ -436,6 +461,7 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 	TriggeredFunction switchPlasticityOnOff;
 
 	PlasticityToggleProducer.plasticityToggle << &plasticityToggle;
+//}}}
 } 
 
 #endif

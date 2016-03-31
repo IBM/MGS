@@ -18,7 +18,9 @@
 #include "Simulation.h"
 #include "CG_VoltageVisualization.h"
 #include "NeuronPartitioner.h"
+#include "MaxComputeOrder.h"
 
+#include <cfloat>
 #include <cmath>
 #include <memory>
 #include <algorithm>
@@ -40,14 +42,18 @@ VoltageVisualization::VoltageVisualization()
       _nBuffs(0),
       _nSends(0),
       _nKreceives(0),
-      _nVreceives(0) {}
+      _nVreceives(0)
+{
+}
 
-void VoltageVisualization::initialize(RNG& rng) {
+void VoltageVisualization::initialize(RNG& rng)
+{
   _rank = getSimulation().getRank();
   _size = getSimulation().getNumProcesses();
   assert(_size >= N_IO_NODES);
   _ioNodes.resize(N_IO_NODES);
-  for (int i = 0; i < N_IO_NODES; ++i) {
+  for (unsigned int i = 0; i < N_IO_NODES; ++i)
+  {
     _ioNodes[i] = i;  // randomize this for better performance
   }
   std::vector<int>::iterator iter =
@@ -59,13 +65,16 @@ void VoltageVisualization::initialize(RNG& rng) {
   // per memory space, and initialized in its own InitPhase
 
   assert(deltaT);
-  std::map<CompartmentKey, float*, CompartmentKey::compare> voltageMap;
-  if (V.size() > 0) {
-    for (int i = 0; i < V.size(); ++i) {
+  std::map<CompartmentKey, dyn_var_t*, CompartmentKey::compare> voltageMap;
+  if (V.size() > 0)
+  {
+    for (unsigned int i = 0; i < V.size(); ++i)
+    {
       double key = branchData[i]->key;
       int sid = _segmentDescriptor.getSegmentIndex(key);
       int Vsz = V[i]->size();
-      for (int j = 0; j < Vsz; ++j) {
+      for (int j = 0; j < Vsz; ++j)
+      {
         voltageMap[CompartmentKey(key, j + sid)] = &(*V[i])[j];
       }
     }
@@ -78,7 +87,8 @@ void VoltageVisualization::initialize(RNG& rng) {
 
   _nSends = int(ceil(double(localDataSize) / double(BUFF_SIZE)));
   int destIO = _ioNodes[_rank % N_IO_NODES];
-  for (int i = 0; i < N_IO_NODES; ++i) {
+  for (int i = 0; i < N_IO_NODES; ++i)
+  {
     int sendToDest = 0;
     if (i == _rank % N_IO_NODES) sendToDest = _nSends;
     MPI::COMM_WORLD.Reduce(&sendToDest, &_nVreceives, 1, MPI::INT, MPI::SUM,
@@ -91,41 +101,48 @@ void VoltageVisualization::initialize(RNG& rng) {
                       : ((N_SEND_BUFFS < _nSends) ? N_SEND_BUFFS : _nSends);
   if (_isIoNode) assert(_nBuffs > 0);
   double** keyBuffs = 0;
-  if (_nBuffs > 0) {
+  if (_nBuffs > 0)
+  {
     keyBuffs = new double* [_nBuffs];
     for (int i = 0; i < _nBuffs; ++i) keyBuffs[i] = new double[BUFF_SIZE];
-    std::map<CompartmentKey, float*, CompartmentKey::compare>::iterator
+    std::map<CompartmentKey, dyn_var_t*, CompartmentKey::compare>::iterator
         voltageMapIter = voltageMap.begin();
-    for (int i = 0; i < localDataSize; ++i, ++voltageMapIter) {
+    for (int i = 0; i < localDataSize; ++i, ++voltageMapIter)
+    {
       if (i % BUFF_SIZE != 0 &&
           voltageMapIter->second == _marshallPatterns.back().first + 1)
         _marshallPatterns.back().second++;
       else
         _marshallPatterns.push_back(
-            std::pair<float*, int>(voltageMapIter->second, 1));
+            std::pair<dyn_var_t*, int>(voltageMapIter->second, 1));
     }
-    if (!_isIoNode) {
-      for (int pass = 0; pass < 2; ++pass) {
+    if (!_isIoNode)
+    {
+      for (int pass = 0; pass < 2; ++pass)
+      {
         std::vector<std::pair<MPI::Request, double*> > requests(_nBuffs);
         std::map<double*, int> destIndices;
-        for (int i = 0; i < _nBuffs; ++i) {
+        for (int i = 0; i < _nBuffs; ++i)
+        {
           requests[i].second = keyBuffs[i];
           destIndices[keyBuffs[i]] = 0;
         }
         std::vector<std::pair<MPI::Request, double*> >::iterator riter, rend;
         MPI::Status status;
         voltageMapIter = voltageMap.begin();
-        std::map<CompartmentKey, float*, CompartmentKey::compare>::iterator
+        std::map<CompartmentKey, dyn_var_t*, CompartmentKey::compare>::iterator
             voltageMapEnd = voltageMap.end();
         rend = requests.end();
 
-        for (riter = requests.begin(); riter != rend; ++riter) {
+        for (riter = requests.begin(); riter != rend; ++riter)
+        {
           int scount;
           double* sbuff = riter->second;
           assert(destIndices[sbuff] == 0);
           for (scount = 0;
                scount < BUFF_SIZE && voltageMapIter != voltageMapEnd;
-               ++scount, ++voltageMapIter) {
+               ++scount, ++voltageMapIter)
+          {
             sbuff[scount] = _segmentDescriptor.modifySegmentKey(
                 SegmentDescriptor::segmentIndex, voltageMapIter->first._cptIdx,
                 voltageMapIter->first._key);
@@ -134,13 +151,15 @@ void VoltageVisualization::initialize(RNG& rng) {
                                                _ioNodes[destIndices[sbuff]], 0);
           if (++destIndices[sbuff] == N_IO_NODES) destIndices[sbuff] = 0;
         }
-        while (voltageMapIter != voltageMapEnd) {
+        while (voltageMapIter != voltageMapEnd)
+        {
           riter = requests.begin();
           while (0 == riter->first.Test(status))
             if (++riter == rend) riter = requests.begin();
           int scount;
           double* sbuff = riter->second;
-          if (destIndices[sbuff] == 0) {
+          if (destIndices[sbuff] == 0)
+          {
             for (scount = 0;
                  scount < BUFF_SIZE && voltageMapIter != voltageMapEnd;
                  ++scount, ++voltageMapIter)
@@ -154,7 +173,9 @@ void VoltageVisualization::initialize(RNG& rng) {
         }
         MPI::COMM_WORLD.Barrier();
       }
-    } else {  // _isIoNode
+    }
+    else
+    {  // _isIoNode
       _demarshalPatterns.resize(_size);
       int totalNeurons = 0;
       int totalSegmentsRead = 0;
@@ -174,7 +195,8 @@ void VoltageVisualization::initialize(RNG& rng) {
       std::vector<std::vector<int> > branchSegmentOffsets;
       branchSegmentOffsets.resize(totalNeurons);
 
-      for (int pass = 0; pass < 2; ++pass) {
+      for (int pass = 0; pass < 2; ++pass)
+      {
         keysRecvdCount = localDataSize;
         std::vector<std::pair<MPI::Request, double*> > requests(_nBuffs);
         for (int i = 0; i < _nBuffs; ++i) requests[i].second = keyBuffs[i];
@@ -186,9 +208,10 @@ void VoltageVisualization::initialize(RNG& rng) {
           riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
                                                MPI::DOUBLE, MPI_ANY_SOURCE, 0);
 
-        if (pass == 1) {
-          for (int i = 0; i < totalNeurons;
-               ++i) {  // finish set up of branchSegmentOffsets
+        if (pass == 1)
+        {
+          for (int i = 0; i < totalNeurons; ++i)
+          {  // finish set up of branchSegmentOffsets
             std::vector<int>& branchOffsets = branchSegmentOffsets[i];
             int totalBranches = branchOffsets.size();
             for (int j = totalBranches - 1; j > 0; --j)
@@ -199,23 +222,28 @@ void VoltageVisualization::initialize(RNG& rng) {
           }
         }
 
-        std::map<CompartmentKey, float*, CompartmentKey::compare>::iterator
+        std::map<CompartmentKey, dyn_var_t*, CompartmentKey::compare>::iterator
             voltageMapIter = voltageMap.begin(),
             voltageMapEnd = voltageMap.end();
 
         int buffsRecvdCount = 0;
-        while (buffsRecvdCount < _nKreceives) {
+        while (buffsRecvdCount < _nKreceives)
+        {
           int rcount, sender = _rank;
           double* rbuff = keyBuffs[0];
-          if (buffsRecvdCount < _nSends) {  // receive from self
+          if (buffsRecvdCount < _nSends)
+          {  // receive from self
             for (rcount = 0;
                  rcount < BUFF_SIZE && voltageMapIter != voltageMapEnd;
-                 ++rcount, ++voltageMapIter) {
+                 ++rcount, ++voltageMapIter)
+            {
               rbuff[rcount] = _segmentDescriptor.modifySegmentKey(
                   SegmentDescriptor::segmentIndex,
                   voltageMapIter->first._cptIdx, voltageMapIter->first._key);
             }
-          } else {
+          }
+          else
+          {
             riter = requests.begin();
             while (0 == riter->first.Test(status))
               if (++riter == requests.end()) riter = requests.begin();
@@ -227,25 +255,37 @@ void VoltageVisualization::initialize(RNG& rng) {
 
           std::vector<std::pair<int, int> > buffPattern;
           int lastPattern = -1;
-          for (int i = 0; i < rcount; ++i) {
+          for (int i = 0; i < rcount; ++i)
+          {
             double key = rbuff[i];
             int nid = _segmentDescriptor.getNeuronIndex(key);
             int bid = _segmentDescriptor.getBranchIndex(key);
             int sid = _segmentDescriptor.getSegmentIndex(key);
             std::vector<int>& branchOffsets = branchSegmentOffsets[nid];
-            if (pass == 0) {  // begin set up branchSegmentOffsets
-              if (bid + 1 > branchOffsets.size()) {
+            if (pass == 0)
+            {  // begin set up branchSegmentOffsets
+              if ((unsigned)bid + 1 > branchOffsets.size())
+              {
                 branchOffsets.resize(bid + 1);
                 branchOffsets[bid] = sid + 1;
-              } else if (sid + 1 > branchOffsets[bid]) {
+              }
+              else if (sid + 1 > branchOffsets[bid])
+              {
                 branchOffsets[bid] = sid + 1;
               }
-            } else {  // pass==1, set up fseek, fwrite patterns by rank
+            }
+            else
+            {  // pass==1, set up fseek, fwrite patterns by rank
               int offset = neuronSegmentOffsets[nid] + branchOffsets[bid] + sid;
-              if (i > 0 && offset == buffPattern[lastPattern].first +
-                                         buffPattern[lastPattern].second) {
+              if (i > 0 &&
+                  offset ==
+                      buffPattern[lastPattern].first +
+                          buffPattern[lastPattern].second)
+              {
                 ++buffPattern[lastPattern].second;
-              } else {
+              }
+              else
+              {
                 buffPattern.push_back(std::pair<int, int>(offset, 1));
                 ++lastPattern;
               }
@@ -253,7 +293,8 @@ void VoltageVisualization::initialize(RNG& rng) {
           }
           ++buffsRecvdCount;
 
-          if (buffsRecvdCount + requests.size() <= _nKreceives) {
+          if (buffsRecvdCount + requests.size() <= _nKreceives)
+          {
             if (buffsRecvdCount > _nSends)
               riter->first = MPI::COMM_WORLD.Irecv(
                   riter->second, BUFF_SIZE, MPI::DOUBLE, MPI_ANY_SOURCE, 0);
@@ -261,10 +302,12 @@ void VoltageVisualization::initialize(RNG& rng) {
               requests[0].first =
                   MPI::COMM_WORLD.Irecv(requests[0].second, BUFF_SIZE,
                                         MPI::DOUBLE, MPI_ANY_SOURCE, 0);
-          } else
+          }
+          else
             requests.erase(riter);
-          if (pass == 1) {
-            for (int i = 0; i < buffPattern.size(); ++i)
+          if (pass == 1)
+          {
+            for (unsigned int i = 0; i < buffPattern.size(); ++i)
               buffPattern[i].first *= sizeof(float);
             _demarshalPatterns[sender].push_back(buffPattern);
           }
@@ -273,13 +316,15 @@ void VoltageVisualization::initialize(RNG& rng) {
       }
 
       _outFile = fopen(outFileName.c_str(), "wb");
-      if (_outFile == 0) {
+      if (_outFile == 0)
+      {
         std::cerr << "Problem opening " << outFileName << "!" << std::endl;
         exit(0);
       }
 
       dataSize = keysRecvdCount;
-      if (N_IO_NODES > 1) {
+      if (N_IO_NODES > 1)
+      {
         dataSize = 0;
         MPI::Group world_group = MPI::COMM_WORLD.Get_group();
         MPI::Group new_group =
@@ -288,11 +333,15 @@ void VoltageVisualization::initialize(RNG& rng) {
         MPI::COMM_WORLD.Reduce(&dataSize, &keysRecvdCount, 1,
                                MPI::UNSIGNED_LONG, MPI::SUM, _ioNodes[0]);
       }
-      if (_rank == _ioNodes[0]) {
-        if (offline) {
+      if (_rank == _ioNodes[0])
+      {
+        if (offline)
+        {
           fwrite(&dataSize, sizeof(long), 1, _outFile);
           fwrite(&collectionCount, sizeof(long), 1, _outFile);
-        } else {
+        }
+        else
+        {
           float d = FLT_MAX;
           for (int i = 0; i < dataSize; ++i)
             fwrite(&d, sizeof(float), 1, _outFile);
@@ -309,9 +358,12 @@ void VoltageVisualization::initialize(RNG& rng) {
   }
 }
 
-void VoltageVisualization::finalize(RNG& rng) {
-  if (_isIoNode) {
-    if (offline) {
+void VoltageVisualization::finalize(RNG& rng)
+{
+  if (_isIoNode)
+  {
+    if (offline)
+    {
       rewind(_outFile);
       fwrite(&dataSize, sizeof(long), 1, _outFile);
       fwrite(&collectionCount, sizeof(long), 1, _outFile);
@@ -321,22 +373,27 @@ void VoltageVisualization::finalize(RNG& rng) {
 }
 
 void VoltageVisualization::dataCollection(Trigger* trigger,
-                                          NDPairList* ndPairList) {
-  if (_nBuffs > 0) {
+                                          NDPairList* ndPairList)
+{
+  if (_nBuffs > 0)
+  {
     int destIO = _ioNodes[_rank % N_IO_NODES];
-    if (!_isIoNode) {
+    if (!_isIoNode)
+    {
       std::vector<std::pair<MPI::Request, float*> > requests(_nBuffs);
       for (int i = 0; i < _nBuffs; ++i) requests[i].second = _voltageBuffs[i];
       std::vector<std::pair<MPI::Request, float*> >::iterator riter;
       MPI::Status status;
-      std::vector<std::pair<float*, int> >::iterator
+      std::vector<std::pair<dyn_var_t*, int> >::iterator
           marshallPatternIter = _marshallPatterns.begin(),
           marshallPatternEnd = _marshallPatterns.end();
-      for (riter = requests.begin(); riter != requests.end(); ++riter) {
+      for (riter = requests.begin(); riter != requests.end(); ++riter)
+      {
         int scount = 0;
         float* sbuff = riter->second;
         for (; scount < BUFF_SIZE && marshallPatternIter != marshallPatternEnd;
-             ++marshallPatternIter) {
+             ++marshallPatternIter)
+        {
           int n = marshallPatternIter->second;
           // memcpy(&sbuff[scount], marshallPatternIter->first,
           // n*sizeof(float));
@@ -347,14 +404,16 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
         riter->first =
             MPI::COMM_WORLD.Isend(sbuff, scount, MPI::FLOAT, destIO, 0);
       }
-      while (marshallPatternIter != marshallPatternEnd) {
+      while (marshallPatternIter != marshallPatternEnd)
+      {
         riter = requests.begin();
         while (0 == riter->first.Test(status))
           if (++riter == requests.end()) riter = requests.begin();
         int scount = 0;
         float* sbuff = riter->second;
         for (; scount < BUFF_SIZE && marshallPatternIter != marshallPatternEnd;
-             ++marshallPatternIter) {
+             ++marshallPatternIter)
+        {
           int n = marshallPatternIter->second;
           // memcpy(&sbuff[scount], marshallPatternIter->first,
           // n*sizeof(float));
@@ -365,8 +424,11 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
         riter->first =
             MPI::COMM_WORLD.Isend(sbuff, scount, MPI::FLOAT, destIO, 0);
       }
-    } else {  // _isIoNode
-      if (offline) {
+    }
+    else
+    {  // _isIoNode
+      if (offline)
+      {
         long offset =
             sizeof(long) * 2 + sizeof(float) * collectionCount * dataSize;
         fseek(_outFile, offset, SEEK_SET);
@@ -387,17 +449,20 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
                                              MPI::FLOAT, MPI_ANY_SOURCE, 0);
 
       int buffsRecvdCount = 0;
-      while (buffsRecvdCount < _nVreceives) {
+      while (buffsRecvdCount < _nVreceives)
+      {
         int rcount = 0;
         int sender = _rank;
         float* rbuff = _voltageBuffs[0];
-        if (buffsRecvdCount < _nSends) {  // receive from self
-          std::vector<std::pair<float*, int> >::iterator
+        if (buffsRecvdCount < _nSends)
+        {  // receive from self
+          std::vector<std::pair<dyn_var_t*, int> >::iterator
               marshallPatternIter = _marshallPatterns.begin(),
               marshallPatternEnd = _marshallPatterns.end();
           for (;
                rcount < BUFF_SIZE && marshallPatternIter != marshallPatternEnd;
-               ++marshallPatternIter) {
+               ++marshallPatternIter)
+          {
             int n = marshallPatternIter->second;
             // memcpy(&rbuff[rcount], marshallPatternIter->first,
             // n*sizeof(float));
@@ -408,7 +473,9 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
 #ifdef SWAP_BYTE_ORDER
           swapByteOrder(rbuff);
 #endif
-        } else {
+        }
+        else
+        {
           riter = requests.begin();
           while (0 == riter->first.Test(status))
             if (++riter == requests.end()) riter = requests.begin();
@@ -426,7 +493,8 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
                                                         buffPattern.begin(),
                                                     patternEnd =
                                                         buffPattern.end();
-        for (; patternIter != patternEnd; ++patternIter) {
+        for (; patternIter != patternEnd; ++patternIter)
+        {
           long offset = patternIter->first +
                         (offline ? (sizeof(long) * 2 +
                                     sizeof(float) * collectionCount * dataSize)
@@ -437,14 +505,16 @@ void VoltageVisualization::dataCollection(Trigger* trigger,
           rbuff += number;
         }
         ++buffsRecvdCount;
-        if (buffsRecvdCount + requests.size() <= _nVreceives) {
+        if (buffsRecvdCount + requests.size() <= (unsigned)_nVreceives)
+        {
           if (buffsRecvdCount > _nSends)
             riter->first = MPI::COMM_WORLD.Irecv(riter->second, BUFF_SIZE,
                                                  MPI::FLOAT, MPI_ANY_SOURCE, 0);
           else if (buffsRecvdCount == _nSends)
             requests[0].first = MPI::COMM_WORLD.Irecv(
                 requests[0].second, BUFF_SIZE, MPI::FLOAT, MPI_ANY_SOURCE, 0);
-        } else
+        }
+        else
           requests.erase(riter);
       }
     }
@@ -456,39 +526,48 @@ void VoltageVisualization::setUpPointers(
     const String& CG_direction, const String& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
     Constant* CG_constant, CG_VoltageVisualizationInAttrPSet* CG_inAttrPset,
-    CG_VoltageVisualizationOutAttrPSet* CG_outAttrPset) {
+    CG_VoltageVisualizationOutAttrPSet* CG_outAttrPset)
+{
   V.push_back(V_connect);
 }
 
-VoltageVisualization::~VoltageVisualization() {
-  for (int i = 0; i < _nBuffs; ++i) {
+VoltageVisualization::~VoltageVisualization()
+{
+  for (int i = 0; i < _nBuffs; ++i)
+  {
     delete[] _voltageBuffs[i];
   }
   delete[] _voltageBuffs;
 }
 
-void VoltageVisualization::duplicate(std::auto_ptr<VoltageVisualization>& dup)
-    const {
+void VoltageVisualization::duplicate(
+    std::auto_ptr<VoltageVisualization>& dup) const
+{
   dup.reset(new VoltageVisualization(*this));
 }
 
-void VoltageVisualization::duplicate(std::auto_ptr<Variable>& dup) const {
+void VoltageVisualization::duplicate(std::auto_ptr<Variable>& dup) const
+{
   dup.reset(new VoltageVisualization(*this));
 }
 
 void VoltageVisualization::duplicate(
-    std::auto_ptr<CG_VoltageVisualization>& dup) const {
+    std::auto_ptr<CG_VoltageVisualization>& dup) const
+{
   dup.reset(new VoltageVisualization(*this));
 }
 
-float VoltageVisualization::swapByteOrder(float* buff) {
+float VoltageVisualization::swapByteOrder(float* buff)
+{
   unsigned base = sizeof(float);
-  for (unsigned long ii = 0; ii < BUFF_SIZE; ++ii) {
+  for (unsigned long ii = 0; ii < BUFF_SIZE; ++ii)
+  {
     unsigned char sw[base];
     unsigned char* offset = reinterpret_cast<unsigned char*>(&buff[ii]);
     // std::memcpy(sw, offset, base);
     std::copy(offset, offset + base, sw);
-    for (unsigned jj = 0; jj < base; ++jj) {
+    for (unsigned jj = 0; jj < base; ++jj)
+    {
       offset[jj] = sw[base - jj - 1];
     }
   }

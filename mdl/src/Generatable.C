@@ -436,7 +436,7 @@ std::string Generatable::getSetupFromNDPairListMethodBody(
       << TAB << TAB << TAB << "std::ostringstream os;\n"
       << TAB << TAB << TAB << "os << (*it)->getName() << "
       << "\" can not be handled.\";\n"
-      << "\" HINTS: the data member name is not available but you may be using it somewhere (e.g. in GSL file or the parameter file)\";\n"
+      << TAB << TAB << TAB << "os << \" HINTS: the data member name is not available but you may be using it somewhere (e.g. in GSL file or the parameter file)\";\n"
       << TAB << TAB << TAB << "throw SyntaxErrorException(os.str());\n"
       << TAB << TAB << "}\n"      
       << TAB << "}\n";

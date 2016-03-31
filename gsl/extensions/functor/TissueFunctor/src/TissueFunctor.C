@@ -45,6 +45,8 @@
 #include "Granule.h"
 #include "IntDataItem.h"
 #include "IntArrayDataItem.h"
+#include "DoubleDataItem.h"
+#include "DoubleArrayDataItem.h"
 
 #include "MaxComputeOrder.h"
 #ifdef HAVE_MPI
@@ -1563,7 +1565,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 				//if (tokens.size() == 1 || tokens[0] == "float" || tokens[0] == "double")
 				if (tokens.size() == 1 || tokens[0] == "float" )
 				{
+//		#ifdef USE_DOUBLES
+//					arrayDI = new DoubleArrayDataItem(size);
+//    #else
 					arrayDI = new FloatArrayDataItem(size);
+//    #endif
 				//	std::cerr << "float - " << mystring << std::endl;
 				}
 				else if (tokens[0] == "int")
@@ -4329,6 +4335,18 @@ void TissueFunctor::doConnector(LensContext* lc)
   }
 }
 
+// Perform necessary setup to connect a variable nodetype (for doing I/O)
+// to a particular nodetype in the graph with the data that you want to be recorded
+// The data (to be recorded) is identified based on 
+//    1. CATEGORY (a string) which can be either "BRANCH", "JUNCTION", "CHANNEL", "SYNAPSE"
+//    2. TYPE (a string) which is the name of argument passed to the 'nodekind', e.g. nodekind="Channels[Nat]", 
+//                           then the name to be used is 'Nat'
+//  NOTE:  for BRANCH, use name passed in 'CompartmentVariables[]'
+//         for JUNCTION, use name passed in 'Junctions[]'
+//         for CHANNEL, use name passed in 'Channels[]'
+//         for SYNAPSE, use name passed in 'ElectricalSynapses[]' or 'ChemicalSynapses[]'
+//    3. NEURON_INDEX (an integer, maybe optional) which is the index of the neuron based on the order given in neurons.txt
+//  NOTE: only required if CATEGORY is BRANCH, JUNCTION, or CHANNEL
 void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 {
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
@@ -4570,9 +4588,9 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
                                    NDPairList& paramsLocal,
                                    std::string& nodeType, key_size_t key)
 {
-  std::list<std::pair<std::string, float> > compartmentParams;
+  std::list<std::pair<std::string, dyn_var_t> > compartmentParams;
   _tissueParams.getModelParams(modelType, nodeType, key, compartmentParams);
-  std::list<std::pair<std::string, float> >::iterator
+  std::list<std::pair<std::string, dyn_var_t> >::iterator
       cpiter = compartmentParams.begin(),
       cpend = compartmentParams.end();
   for (; cpiter != cpend; ++cpiter)
@@ -4588,7 +4606,11 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 		if (tokens.size() == 1 || tokens[0] == "float" )
 		{
 			////////////
+//		#ifdef USE_DOUBLES
+//			DoubleDataItem* paramDI = new DoubleDataItem(cpiter->second);
+//    #else
 			FloatDataItem* paramDI = new FloatDataItem(cpiter->second);
+//    #endif
 			std::auto_ptr<DataItem> paramDI_ap(paramDI);
 			NDPair* ndp = new NDPair(varName, paramDI_ap);
 			paramsLocal.push_back(ndp);
@@ -4605,11 +4627,11 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 
   }
 
-  std::list<std::pair<std::string, std::vector<float> > >
+  std::list<std::pair<std::string, std::vector<dyn_var_t> > >
       compartmentArrayParams;
   _tissueParams.getModelArrayParams(modelType, nodeType, key,
                                     compartmentArrayParams);
-  std::list<std::pair<std::string, std::vector<float> > >::iterator
+  std::list<std::pair<std::string, std::vector<dyn_var_t> > >::iterator
       capiter = compartmentArrayParams.begin(),
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
@@ -4624,17 +4646,19 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 
 		if (tokens.size() == 1 || tokens[0] == "float" )
 		{
-			//TUAN TODO we may consider doing this 
-			//DynamicFloatArrayDataItem* paramDI = new DynamicFloatArrayDataItem(farr);
-			//which we need to implement DynamicFloatArrayDataItem using dyn_var_t
-			//or
-			//we can check what is the value of dyn_var_t vs. 'float' or 'double'
-			//ShallowArray<dyn_var_t> farr;
+//	#ifdef USE_DOUBLES
+//			ShallowArray<double> farr;
+//			std::vector<double>::iterator viter = capiter->second.begin(),
+//				vend = capiter->second.end();
+//			for (; viter != vend; ++viter) farr.push_back(*viter);
+//			DoubleArrayDataItem* paramDI = new DoubleArrayDataItem(farr);
+//  #else
 			ShallowArray<float> farr;
-			std::vector<float>::iterator viter = capiter->second.begin(),
+			std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
 				vend = capiter->second.end();
 			for (; viter != vend; ++viter) farr.push_back(*viter);
 			FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
+//  #endif
 			std::auto_ptr<DataItem> paramDI_ap(paramDI);
 			if (!paramsLocal.replace(capiter->first, paramDI_ap))
 			{
@@ -4646,7 +4670,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 		else if (tokens[0] == "int")
 		{
 			ShallowArray<int> farr;
-			std::vector<float>::iterator viter = capiter->second.begin(),
+			std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
 				vend = capiter->second.end();
 			for (; viter != vend; ++viter) farr.push_back(*viter);
 			IntArrayDataItem* paramDI = new IntArrayDataItem(farr);

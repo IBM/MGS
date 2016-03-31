@@ -50,10 +50,19 @@
 #define pOn (getSharedMembers().plasticityOn)
 #define pStart (getSharedMembers().plasticityStartAt)
 #define pStop (getSharedMembers().plasticityStopAt)
+
+#if SIMULATION_INVOLVE  == VMONLY
+  #define Cai_base  0.1e-3 // [mM]
+  #define TAU (100.0 / (100.0 / 0.001 + pow(Cai_base, 3)) + 1000.0)
+  #define CAFUN                                       \
+  	(0.25 + sigmoid(Cai_base - 0.55, 80) - \
+  	 0.25 * sigmoid(Cai_base - 0.35, 80))
+#else
 #define TAU (100.0 / (100.0 / 0.001 + pow((*Ca_IC)[indexPost], 3)) + 1000.0)
 #define CAFUN                                       \
   (0.25 + sigmoid((*Ca_IC)[indexPost] - 0.55, 80) - \
    0.25 * sigmoid((*Ca_IC)[indexPost] - 0.35, 80))
+#endif
 
 #if RECEPTOR_NMDA == NMDAR_BEHABADI_2012
 // Mg2+ block from "Behabadi BF, Polsky A, Jadi M, Schiller J, Mel BW (2012)
@@ -91,7 +100,9 @@ void NMDAReceptor::initializeNMDA(RNG& rng)
   assert(Vpre);
 #endif
   assert(Vpost);
+#if SIMULATION_INVOLVE  != VMONLY
   assert(Ca_IC);
+#endif
   assert(getSharedMembers().T != 0 && getSharedMembers().Ca_EC != 0 &&
          getSharedMembers().Mg_EC != 0);
 
@@ -136,9 +147,14 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 	//TODO: TUAN incorporate the effect of Glycine into gating dynamics
   g = gbar * MGBLOCK * r * (1 - KETAMINE) ;
 
+#if SIMULATION_INVOLVE  == VMONLY
+    dyn_var_t cai = Cai_base;
+#else
+		dyn_var_t cai = (*Ca_IC)[indexPost];
+#endif
   // Updates the channel reversal potential
   E_Ca = (0.04343 * *(getSharedMembers().T) *
-          log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[indexPost]));
+          log(*(getSharedMembers().Ca_EC) / cai));
 
   dyn_var_t gCa = g;
   if (pOn == 1)
@@ -155,6 +171,11 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 
 void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
 {
+#if SIMULATION_INVOLVE  == VMONLY
+    dyn_var_t cai = Cai_base;
+#else
+		dyn_var_t cai = (*Ca_IC)[indexPost];
+#endif
   if (pOn)
   {
     if ((getSimulation().getIteration() * DT) > pStart &&
@@ -164,10 +185,10 @@ void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
       {  // Graupner & Brunel 2012 PNAS
         dyn_var_t dw = (-w * (1.0 - w) * (getSharedMembers().w_th - w) +
                         getSharedMembers().gamma_p * (1.0 - w) *
-                            ((dyn_var_t)(((*Ca_IC)[indexPost] -
+                            ((dyn_var_t)((cai -
                                           getSharedMembers().theta_p) >= 0)) -
                         getSharedMembers().gamma_d * w *
-                            ((dyn_var_t)(((*Ca_IC)[indexPost] -
+                            ((dyn_var_t)((cai -
                                           getSharedMembers().theta_d) >= 0))) /
                        getSharedMembers().tau;
         w = w + DT * dw;

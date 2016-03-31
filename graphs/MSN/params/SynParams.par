@@ -52,7 +52,7 @@ DenSpine 0.005309
 CHEMICAL_SYNAPSE_TARGETS 3
 BRANCHTYPE MTYPE ETYPE
 BRANCHTYPE MTYPE
-2 1 0   1 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+2 1 0   1 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage]  1.0
 2 1 0   3 0   [GABAA] [Voltage] [Voltage] 1.0
 2 1 0   4 0   [GABAA] [Voltage] [Voltage] 1.0
 

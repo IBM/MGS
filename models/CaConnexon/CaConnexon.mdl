@@ -6,21 +6,21 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Node CaConnexon Implements VoltageProducer, CaConcentrationProducer, CurrentProducer, CaCurrentProducer, BranchDataProducer, IndexProducer {
-  float* Vi;
-  float* Vj;
-  float I;
-  float* Cai;
-  float* Caj;
-  float I_Ca;
-  float g;
+  dyn_var_t* Vi;
+  dyn_var_t* Vj;
+  dyn_var_t I;
+  dyn_var_t* Cai;
+  dyn_var_t* Caj;
+  dyn_var_t I_Ca;
+  dyn_var_t g;
 
   BranchDataStruct* branchData;
   int index;
 
   Shared {
-    float* T;
-    float []* voltageConnect;
-    float []* CaConcentrationConnect;
+    dyn_var_t* T;
+    dyn_var_t []* voltageConnect;
+    dyn_var_t []* CaConcentrationConnect;
   }
 
   InitPhase produceInitialState(Vi, Cai);

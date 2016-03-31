@@ -10,7 +10,6 @@ import os.path
 # If we decide to put modules in the scripts directory use the following to
 # be able to import modules
 # sys.path.append("scripts/")
-import pdb; pdb.set_trace()  # XXX BREAKPOINT
 
 # Constants
 USE = 1
@@ -64,6 +63,9 @@ O2_OPTIMIZATION_FLAG = "-O2"
 O3_OPTIMIZATION_FLAG = "-O3"
 O4_OPTIMIZATION_FLAG = "-O4"
 O5_OPTIMIZATION_FLAG = "-O5"
+
+DEBUG_ASSERT = "-DDEBUG_ASSERT"
+DEBUG_HH = "-DDEBUG_HH"
 
 COMMON_DX_CFLAGS = " -I . -I$(DX_INCLUDE) -I$(DX_BASE)/include $(MAKE64)"
 AIX_DX_CFLAGS = "-O -Dibm6000 " + COMMON_DX_CFLAGS
@@ -224,6 +226,8 @@ class Options:
         self.verbose = False # True, False
         self.extMode = False  # True, False
         self.debug = DONTUSE # USE, DONTUSE, UNDEF
+        self.debug_assert = False # True, False
+        self.debug_hh = False # True, False
         self.profile = DONTUSE # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE # USE, DONTUSE, UNDEF
@@ -254,6 +258,8 @@ class Options:
                            ("O4", "optimize at level 4"),
                            ("O5", "optimize at level 5"),
                            ("debug", "compile with debugging flags"),
+                           ("debug_assert", "compile with debugging flags for assert"),
+                           ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
                            ("profile", "compile with profile flags"),
                            ("tvMemDebug", "enable totalview memory debugging for parallel jobs (perfomance impact)"),
                            ("mpiTrace", "enable mpiTrace profiling (for BG)"),
@@ -345,6 +351,10 @@ class Options:
                         raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--debug":
                     self.debug = USE
+                if o == "--debug_assert":
+                    self.debug_assert = True
+                if o == "--debug_hh":
+                    self.debug_hh = True
                 if o == "--profile":
                     self.profile = USE
                 if o == "--tvMemDebug":
@@ -402,7 +412,6 @@ class Options:
                 print
                 self.optimization = "O3"
 
-
             if self.withMpi == True and self.dynamicLoading == True:
                 printFeedback("Dynamic loading will be disabled due to existence of MPI.")
                 self.dynamicLoading = False
@@ -414,7 +423,7 @@ class Options:
                 self.dynamicLoading = False
                 self.withDX = DONTUSE
                 self.compilationMode = "32"
-		self.silent = True
+                self.silent = True
                 self.optimization = "O3"
 
             if self.blueGeneP == True:
@@ -424,7 +433,7 @@ class Options:
                 self.dynamicLoading = False
                 self.withDX = DONTUSE
                 self.compilationMode = "32"
-		self.silent = True
+                self.silent = True
                 self.optimization = "O3"
 
             if self.blueGeneQ == True:
@@ -434,7 +443,7 @@ class Options:
                 self.dynamicLoading = False
                 self.withDX = DONTUSE
                 self.compilationMode = "32"
-		self.silent = True
+                self.silent = True
                 self.optimization = "O3"
 
         except getopt.GetoptError:
@@ -507,18 +516,18 @@ class BuildSetup:
         retStr += TAB + "C++ compiler: " + self.cppCompiler + "\n"
 
         retStr += TAB + "Silent mode: "
-	if self.options.silent == True:
-	    retStr += "On"
+        if self.options.silent == True:
+            retStr += "On"
         else :
-	    retStr += "Off"
-	retStr += "\n"
+            retStr += "Off"
+        retStr += "\n"
 
         retStr += TAB + "Verbose mode: "
-	if self.options.verbose == True:
-	    retStr += "On"
+        if self.options.verbose == True:
+            retStr += "On"
         else :
-	    retStr += "Off"
-	retStr += "\n"
+            retStr += "Off"
+        retStr += "\n"
 
         retStr += TAB + "Extensions mode: "
         if self.options.extMode == True:
@@ -818,7 +827,7 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         if self.options.pthreads == True:
             retStr += "HAVE_PTHREADS := 1\n"
         if self.options.profile == USE:
-	    retStr += "PROFILING := 1\n"
+            retStr += "PROFILING := 1\n"
         return retStr
 
     def getMake64(self):
@@ -1029,6 +1038,12 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
                 retStr += " " + XL_DEBUGGING_FLAG
             else:
                 retStr += " -g"
+
+        if self.options.debug_assert == True:
+            retStr += " " + DEBUG_ASSERT
+
+        if self.options.debug_hh == True:
+            retStr += " " + DEBUG_HH
 
         if self.options.profile == USE:
             retStr += " " + PROFILING_FLAGS
@@ -1341,7 +1356,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         retStr = "cleanfirst:\n"
         retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         #retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
-        retStr = "final: cleanfirst speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
+        retStr += "final: cleanfirst speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
         if self.options.dynamicLoading == True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists == True:
