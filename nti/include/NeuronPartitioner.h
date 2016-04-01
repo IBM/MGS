@@ -31,45 +31,55 @@ class TouchSpace;
 class Tissue;
 
 class NeuronPartitioner : public Decomposition {
-   public:
-  NeuronPartitioner(int rank, const std::string& inputFilename, bool resample, bool dumpOutput,double pointSpacing);
+  public:
+  NeuronPartitioner(int rank, const std::string& inputFilename, bool resample,
+                    bool dumpOutput, double pointSpacing);
   NeuronPartitioner(NeuronPartitioner&);
   virtual ~NeuronPartitioner();
   Decomposition* duplicate();
 
   void readFromFile(FILE*);
   void writeToFile(FILE*);
-  static void countAllNeurons(const std::string& inputFilename, int& totalNeurons, int& totalSegmentsRead, int* neuronsPerLayer, std::vector<int>& neuronSegments);
-  void partitionBinaryNeurons(int& nSlicers, const int nTouchDetectors, Tissue* tissue);
-  void partitionTextNeurons(int& nSlicers, const int nTouchDetectors, Tissue* tissue);
-  int getNumberOfSlicers() {return _nSlicers;}
-  int* getNeuronsPerLayer() {return _neuronsPerLayer;}
-  int getTotalNeurons() {return _totalNeurons;}
-  int getTotalSegmentsRead() {return _totalSegmentsRead;}
+  static void countAllNeurons(const std::string& inputFilename,
+                              int& totalNeurons, int& totalSegmentsRead,
+                              int* neuronsPerLayer,
+                              std::vector<int>& neuronSegments);
+  void partitionBinaryNeurons(int& nSlicers, const int nTouchDetectors,
+                              Tissue* tissue);
+  void partitionTextNeurons(int& nSlicers, const int nTouchDetectors,
+                            Tissue* tissue);
+  int getNumberOfSlicers() { return _nSlicers; }
+  int* getNeuronsPerLayer() { return _neuronsPerLayer; }
+  int getTotalNeurons() { return _totalNeurons; }
+  int getTotalSegmentsRead() { return _totalSegmentsRead; }
 
   void decompose();
-  void getRanks(Sphere* sphere, double* coords2, double deltaRadius, ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
-  void addRanks(Sphere* sphere, double* coords2, double deltaRadius, ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
-  bool mapsToRank(Sphere* sphere, double* coords2, double deltaRadius, int rank);
-  void resetCriteria(SegmentSpace* segmentSpace) {assert(0);}
-  void resetCriteria(TouchSpace* touchSpace) {assert(0);}
+  void getRanks(Sphere* sphere, double* coords2, double deltaRadius,
+                ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
+  void addRanks(Sphere* sphere, double* coords2, double deltaRadius,
+                ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
+  bool mapsToRank(Sphere* sphere, double* coords2, double deltaRadius,
+                  int rank);
+  void resetCriteria(SegmentSpace* segmentSpace) { assert(0); }
+  void resetCriteria(TouchSpace* touchSpace) { assert(0); }
 
-  void getRanks(Sphere* sphere, double deltaRadius, ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
+  void getRanks(Sphere* sphere, double deltaRadius,
+                ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
   int getRank(Sphere& sphere);
-  bool isCoordinatesBased() {return false;}
-  int getRank() {return _rank;}
+  bool isCoordinatesBased() { return false; }
+  int getRank() { return _rank; }
   int getNeuronRank(int neuronIndex);
 
- private:
-
-  std::string _inputFilename;//input filename  
+  private:
+  std::string _inputFilename;  // input filename
   int _nSlicers;
-  int _size;//number of cpus
-  int _rank;//current cpu
-      
+  int _size;  // number of cpus
+  int _rank;  // current cpu
+
   int _neuronsPerLayer[6];
   int _totalNeurons;
-  int _totalSegmentsRead; // note: the number of segments changes after resampling
+  int _totalSegmentsRead;  // note: the number of segments changes after
+                           // resampling
   bool _logTranslationHistory;
   bool _logRotationHistory;
   int* _endNeurons;

@@ -78,7 +78,7 @@ void Tissue::loadBinary(FILE* inputDataFile, const std::string& inputFilename,
 
   assert(_neuronArraySize > 0);
   assert(_segmentArraySize > 0);
-  _neurons = new Neuron[_neuronArraySize];  // Create the array of Neurons
+  _neurons = new Neuron[_neuronArraySize];     // Create the array of Neurons
   _segments = new Segment[_segmentArraySize];  // Create the array of segments
   Segment* segmentPtr = _segments;
   std::vector<Segment> segments;
@@ -141,7 +141,7 @@ void Tissue::loadText(const std::string& inputFilenames,
 
   assert(_neuronArraySize > 0);
   assert(_segmentArraySize > 0);
-  _neurons = new Neuron[_neuronArraySize];  // Create the array of Neurons
+  _neurons = new Neuron[_neuronArraySize];     // Create the array of Neurons
   _segments = new Segment[_segmentArraySize];  // Create the array of segments
   Segment* segmentPtr = _segments;
   std::vector<Segment> segments;
@@ -169,8 +169,8 @@ void Tissue::loadText(const std::string& inputFilenames,
   char bufS[1024];
   char* c;
   for (int i = 0; i < startNeuron; ++i) {
-    //strcpy(bufS, "");
-	bufS[0] = '\n';
+    // strcpy(bufS, "");
+    bufS[0] = '\n';
     do {
       c = fgets(bufS, 1024, filenameFile);
     } while (bufS[0] == '#' || bufS[0] == '\n');
@@ -187,8 +187,8 @@ void Tissue::loadText(const std::string& inputFilenames,
   }
 
   for (int i = 0; i < _neuronArraySize; ++i) {
-    //strcpy(bufS, "");
-	bufS[0] = '\n';
+    // strcpy(bufS, "");
+    bufS[0] = '\n';
     do {
       c = fgets(bufS, 1024, filenameFile);
     } while (bufS[0] == '#' || bufS[0] == '\n');
@@ -320,8 +320,8 @@ void Tissue::resetSegments(std::vector<Segment>& segments, bool resampled) {
   _segmentArraySize = segments.size();
   _segments =
       new Segment[_segmentArraySize];  // Create the new array of segments
-  Branch* thisBranch = 0, *lastBranch = 0;
-  Neuron* thisNeuron = 0, *lastNeuron = 0;
+  Branch* thisBranch = 0, * lastBranch = 0;
+  Neuron* thisNeuron = 0, * lastNeuron = 0;
   for (int i = 0; i < _segmentArraySize; ++i) {
     segments[i].setKey();
     _segments[i] = segments[i];
@@ -650,7 +650,8 @@ int Tissue::outputTextNeuron(int neuronID, std::string outName,
 #ifdef COMPOSITE_OUTPUT
             fprintf(tissueOutFile, "%d %d %lf %lf %lf %lf %d\n",
                     ++segCount + globalOffset,
-                    (b->getBranchType() == Branch::_SOMA && n->getGlobalNeuronIndex() > 0)
+                    (b->getBranchType() == Branch::_SOMA &&
+                     n->getGlobalNeuronIndex() > 0)
                         ? 2
                         : b->getBranchType() + 1,
                     coords[0], coords[1], coords[2], radius,
@@ -840,7 +841,7 @@ void Tissue::writeForcesToFile() {
   int countForces = 0;
   fwrite(&countForces, sizeof(int), 1, data);
 
-  Segment* segmentEnd = _segments + _segmentArraySize - 1, *s = _segments;
+  Segment* segmentEnd = _segments + _segmentArraySize - 1, * s = _segments;
   int forceInfo[3];
   double s1Key;
   for (; s != segmentEnd; ++s, ++countForces) {
