@@ -62,6 +62,7 @@ class CaConcentration : public CG_CaConcentration
   dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t volume);
   dyn_var_t getVolume(int i);
   dyn_var_t getArea(int i);
+	void printDebugHH();
 
 // - common for all compartment variables
 #if MAX_COMPUTE_ORDER > 0

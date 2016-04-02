@@ -79,7 +79,10 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   }
 #ifdef DEBUG_HH
   std::cerr << "JUNCTION (" << dimension->x << "," << dimension->y << ","
-            << dimension->z << "," << dimension->r << ")" << std::endl;
+		<< dimension->z << "," << dimension->r 
+		<< "," << dimension->surface_area 
+		<< "," << dimension->dist2soma
+		<< ")" << std::endl;
 #endif
 }
 
@@ -144,7 +147,9 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
             << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimensions[0]->x << "," << dimensions[0]->y << ","
             << dimensions[0]->z << "," 
-						<< dimensions[0]->r << "} " << Vnew[0]
+						<< dimensions[0]->r << ","
+            << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
+            << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
             << std::endl;
 #endif
 }
@@ -157,9 +162,9 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
+	//Hodgkin-Huxley typed membrane currents
   Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
   Array<ChannelCurrents>::iterator cend = channelCurrents.end();
-
   for (; citer != cend; ++citer)
   {
     dyn_var_t gloc = (*(citer->conductances))[0];
@@ -167,6 +172,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     current += gloc * (*(citer->reversalPotentials))[0];
   }
 
+	//GHK-formula typed membrane currents
 	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
 	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
 	for (; iiter != iend; iiter++)
@@ -174,6 +180,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 		current -=  (*(iiter->currents))[0]; //[pA/um^2]
 	}
 
+	// Synapse Receptor's currents
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
@@ -183,6 +190,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     current += **iter * **giter;
   }
 
+	// Injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
   for (; iter != end; ++iter)
@@ -214,7 +222,9 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
             << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimensions[0]->x << "," << dimensions[0]->y << ","
             << dimensions[0]->z << "," 
-						<< dimensions[0]->r << "} " << Vnew[0]
+						<< dimensions[0]->r << "," 
+            << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
+            << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
             << std::endl;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
@@ -231,9 +241,11 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
               << segmentDescriptor.getBranchOrder(branchData->key) << ","
               << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
               << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
-              << (*diter)->r << "} "
+              << (*diter)->r << "," 
+              << (*diter)->dist2soma << "," << (*diter)->surface_area << "," 
+							<< (*diter)->volume << "," << (*diter)->length  << "} "
               //<< DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
-		      << (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
+		          //<< (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
               << *(*viter) << std::endl;
   }
 #endif

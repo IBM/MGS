@@ -270,7 +270,6 @@ public:
     masks = _touchTableMasks;
   }
 
-  void skipHeader(FILE* fpF);
 	void readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRateConstant,
 			int &numChanStates, int* &vChannelStates, int &initialstate);
 	void readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRateConstant,
@@ -306,11 +305,12 @@ public:
     return (*this);
   }
 
+  void skipHeader(FILE* fpF);
 	void getListofValues(FILE* fpF, std::vector<int>& values);
-
-  private:
   bool isCommentLine(std::string& line);
   void jumpOverCommentLine(FILE* fpF);
+
+  private:
 	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
 	std::string findNextKeyword(FILE* fpF);
 	void readMultiLine(std::string& out_bufS, FILE* fpF);

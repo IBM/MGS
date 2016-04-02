@@ -89,7 +89,7 @@ void CaERConcentrationJunction::initializeJunction(RNG& rng)
     float Rb = 0.5 * ((*diter)->r + dimension->r);
     // fAxial.push_back(Pdov * Rb * Rb /
     //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-    dyn_var_t length = abs((*diter)->dist2soma - dimension->dist2soma);
+    dyn_var_t length = fabs((*diter)->dist2soma - dimension->dist2soma);
     fAxial.push_back(Pdov * Rb * Rb / length);
   }
 #ifdef DEBUG_HH

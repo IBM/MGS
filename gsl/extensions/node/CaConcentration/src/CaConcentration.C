@@ -61,6 +61,10 @@ void CaConcentration::solve(RNG& rng)
     doForwardSolve();
     doBackwardSolve();
   }
+#ifdef DEBUG_HH
+	std::cerr << "Solve:\n";
+	printDebugHH();
+#endif
 }
 
 #if MAX_COMPUTE_ORDER > 0
@@ -212,23 +216,7 @@ void CaConcentration::finish(RNG& rng)
 {
   unsigned size = branchData->size;
 #ifdef DEBUG_HH
-  SegmentDescriptor segmentDescriptor;
-  for (int i = 0; i < size; ++i)
-  {
-    std::cerr << dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " CA_BRANCH"
-              << " [" << getSimulation().getRank() << "," << getNodeIndex()
-              << "," << getIndex() << "," << i << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ") |"
-              << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
-              << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
-              << isProximalCase1 << "|" << isProximalCase2 << "|"
-              << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << "} "
-              << Ca_new[i] << " " << std::endl;
-  }
+	printDebugHH();
 #endif
   for (int i = 0; i < size; ++i)
   {
@@ -362,7 +350,41 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], volume));
     }
   }
+#ifdef DEBUG_HH
+	printDebugHH();
+#endif
 }
+
+void CaConcentration::printDebugHH()
+{
+  unsigned size = branchData->size;
+  SegmentDescriptor segmentDescriptor;
+	std::cerr << "time| BRANCH | rank | nodeIndex | layerIndex | cptIndex |"
+		<< "neuronIdx | branchIdx | branchOrder | distalC0 | distalC1 | distalC2 |"
+		<< "distalC3 | proxC0 | proxC1 | proxC2 |"
+		<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
+  for (int i = 0; i < size; ++i)
+  {
+    std::cerr << dyn_var_t(getSimulation().getIteration()) *
+                     *getSharedMembers().deltaT << " CA_BRANCH"
+              << " [" << getSimulation().getRank() << "," << getNodeIndex()
+              << "," << getIndex() << "," << i << "] "
+              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+              << segmentDescriptor.getBranchIndex(branchData->key) << ","
+              << segmentDescriptor.getBranchOrder(branchData->key) << ") |"
+              << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
+              << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
+              << isProximalCase1 << "|" << isProximalCase2 << "|"
+              << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
+              << dimensions[i]->z << "," << dimensions[i]->r << "," 
+							<< dimensions[i]->dist2soma  << ","
+              << dimensions[i]->surface_area << "," 
+              << dimensions[i]->volume << "," << dimensions[i]->length << ","
+							<< "} "
+							<< Ca_new[i]  << " " << std::endl;
+  }
+}
+
 
 // Update: RHS[], Aii[]
 // Unit: RHS =  [uM/msec]
@@ -503,7 +525,7 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
   //dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
   //return (getSharedMembers().DCa * radius * radius /
   //        (lengthsq * b->r * b->r)); /* needs fixing */
-  dyn_var_t length = abs(b->dist2soma - a->dist2soma);
+  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
   return (getSharedMembers().DCa * radius * radius /
           (length * length * b->r * b->r)); /* needs fixing */
 }
@@ -518,7 +540,7 @@ dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
   dyn_var_t Rb = 0.5 * (a->r + b->r);
   //return (M_PI * Rb * Rb * getSharedMembers().DCa /
   //        (V * sqrt(DISTANCE_SQUARED(a, b))));
-  dyn_var_t length = abs(b->dist2soma - a->dist2soma);
+  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
   return (M_PI * Rb * Rb * getSharedMembers().DCa /
           (V * length));
 }

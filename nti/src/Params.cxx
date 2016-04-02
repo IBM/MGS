@@ -964,20 +964,21 @@ bool Params::isCommentLine(std::string& line)
 }
 
 // Skip the comment lines
+//   - including blank line
 void Params::jumpOverCommentLine(FILE* fpF)
 {
   fpos_t fpos;
   fgetpos(fpF, &fpos);
   char bufS[LENGTH_LINE_MAX];
-  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  std::string line(bufS);
-  while ((bufS[0] == '\n' or isCommentLine(line)) and !feof(fpF))
-  {
-    fgetpos(fpF, &fpos);
-    c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-    line = std::string(bufS);
-  }
-  fsetpos(fpF, &fpos);
+	char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+	std::string line(bufS);
+	while ((bufS[0] == '\n' or isCommentLine(line)) and !feof(fpF))
+	{
+		fgetpos(fpF, &fpos);
+		c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+		line = std::string(bufS);
+	}
+	fsetpos(fpF, &fpos);
 }
 // GOAL: return true if the next section is the one
 //       matching the given keyword
@@ -3186,7 +3187,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
   while (!feof(fpF))
 	{
 		int ifrom, ito;
-		dyn_var_t rate;
+		float rate;
 		if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
 		{
 			isOK = false;

@@ -1439,30 +1439,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
               surface_area += 2.0 * M_PI * r * h;
               volume += M_PI * r * r * h;
 
-              if (i == 0 && capPtr == endCap)
-              {  // check distal-end
-                key_size_t key = capPtr->getKey();
-                unsigned int computeOrder =
-                    _segmentDescriptor.getComputeOrder(key);
-                if (computeOrder == MAX_COMPUTE_ORDER)
-                {  // reserve some for the explicit junction
-                  dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-                  surface_area -= 2.0 * M_PI * r * h * frac;
-                  volume -= M_PI * r * r * h * frac;
-                }
-                else
-                {
-                  if (branch->_daughters.size() > 1)
-                  {  // reserve some for the implicit branching junction
-                    dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-                    surface_area -= 2.0 * M_PI * r * h * frac;
-                    volume -= M_PI * r * r * h * frac;
-                  }
-                  else
-                  {  // do nothing for implicit cut junction
-                  }
-                }
-              }
+							dyn_var_t somaR = 0.0;//soma radius (if present)
+							dyn_var_t lost_distance = 0.0;//using lost_distance ensures no negative surface_volume and volume
               if (j == 0 && capPtr == begCap)
               {  // check proximal-end
                 key_size_t key = capPtr->getKey();
@@ -1475,24 +1453,56 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                   if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
                       Branch::_SOMA)
                   {  // remove the part of the capsule covered inside soma
-                    surface_area -= 2.0 * M_PI * r * firstcaps.getRadius();
-                    volume -= M_PI * r * r * firstcaps.getRadius();
-										if (h < firstcaps.getRadius())
+										somaR = firstcaps.getRadius();
+                    surface_area -= 2.0 * M_PI * r * somaR;
+                    volume -= M_PI * r * r * somaR;
+										if (h < somaR)
 										{//TUAN DEBUG
-											std::cerr << "h = " << h << "; soma radius = " << firstcaps.getRadius()
+											std::cerr << "First capsule to soma is too short\n";
+											std::cerr << "length = " << h << "; while soma radius = " << somaR 
 												<< " from neuron index " << _segmentDescriptor.getNeuronIndex(key)
 												<< std::endl;
 										}
-                    assert(h > firstcaps.getRadius());
-                    // lost_distance = firstcaps.getRadius();
+                    assert(h > somaR);
+                    lost_distance = somaR;
                   }
                   else
                   {  // reserve some for the cut/branch explicit junction
                     dyn_var_t frac = getFractionCapsuleVolumeFromPost(branch);
                     surface_area -= 2.0 * M_PI * r * h * frac;
                     volume -= M_PI * r * r * h * frac;
+										lost_distance = h * frac;
                   }
                 }
+								assert(surface_area > 0);
+								assert(volume > 0);
+              }
+							////
+							if (i == 0 && capPtr == endCap)
+              {  // check distal-end
+                key_size_t key = capPtr->getKey();
+                unsigned int computeOrder =
+                    _segmentDescriptor.getComputeOrder(key);
+                if (computeOrder == MAX_COMPUTE_ORDER)
+                {  // reserve some for the explicit junction
+                  dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+                  surface_area -= 2.0 * M_PI * r * (h-lost_distance) * frac;
+                  volume -= M_PI * r * r * (h-lost_distance) * frac;
+                }
+                else
+                {
+                  if (branch->_daughters.size() > 1)
+                  {  // reserve some for the implicit branching junction
+                    dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+                    surface_area -= 2.0 * M_PI * r * (h-lost_distance) * frac;
+                    volume -= M_PI * r * r * (h-lost_distance) * frac;
+                  }
+                  else
+                  {  // do nothing for implicit cut junction or the terminal-end capsule
+                  }
+                }
+								assert(surface_area > 0);
+								assert(volume > 0);
               }
             }
             radius /= ((endCap - begCap) + 1);  // still the average between the
@@ -1588,9 +1598,12 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     }
   }
   else if (nodeCategory == "Junctions")
-  {  // explicit junction (which can face
-    //         a branching point or a cutpoint
-    //  if the previous ComputeBranch of computeOrder=MAX_COMPUTE_ORDER)
+  {  // explicit junction (which can be
+		 //   1. soma
+		 //   2. explicit branching point 
+		 //   3. or a slicing-cut junction 
+		 //    (a cutpoint by 2 MPI processes if the previous ComputeBranch of computeOrder=MAX_COMPUTE_ORDER
+		 //   )
     Capsule* junctionCapsule = findJunction(nodeIndex, densityIndex, nodeType);
     std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
         _tissueContext->_junctionDimensionMap.find(junctionCapsule);
@@ -1625,6 +1638,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           dyn_var_t r = (*iter)->_capsules[0].getRadius();
           surface_area -= M_PI * r * r;
         }
+				if (surface_area <= 0)
+				{
+					std::cerr << "ERROR: The dendritic/axonal branch has size greater than the soma's radius" << std::endl;
+					assert(surface_area>0);
+				}
         length = 2 * r;
       }
       else
@@ -1734,8 +1752,9 @@ std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
   return cpt;
 }
 
-// GOAL: returns a DimensionStruct's content for 1 compartment
-//  which includes (x,y,z,r,dist2soma, surface_area, volume)
+// GOAL: create a new DimensionStruct object
+//   which holds information for 1 compartment
+//   the information includes (x,y,z,r,dist2soma, surface_area, volume)
 //  given
 //    cds = (x,y,z) centroid point
 //    radius = r (averaged radius over capsules of same cpt)
@@ -1754,6 +1773,12 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
                                             dyn_var_t surface_area,
                                             dyn_var_t volume, dyn_var_t length)
 {
+	assert(radius > 0);
+	assert(surface_area > 0);
+	assert(dist2soma >= 0);
+	assert(volume > 0);
+	assert(length > 0);
+
   DoubleDataItem* xddi = new DoubleDataItem(cds[0]);
   std::auto_ptr<DataItem> xddi_ap(xddi);
   NDPair* x = new NDPair("x", xddi_ap);
@@ -5144,6 +5169,9 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPre(ComputeBranch* branch)
     frac = 1.0 / 4.0;
   else
     frac = 1.0 / 2.0;
+	assert(frac > 0);
+	assert(frac < 1);
+	return frac;
 }
 // GOAL: find the fractional volume of a single capsule on the distal-side
 // branch
@@ -5175,6 +5203,10 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
   }
   else
     frac = 1.0 / 2.0;
+
+	assert(frac > 0);
+	assert(frac < 1);
+	return frac;
 }
 
 // REMARK: If upper ceiling is used, there is a chance that the last compartment
