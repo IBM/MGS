@@ -1,8 +1,14 @@
 #!/bin/bash
 
-if [ "$1" == "-help" ] || [ $# == 0 ]; then 
-	echo -e "\n\nMake NTS... \n\nOption include : \n\n  1) make_nts LINUX : builds NTS in a LINUX environment using MPI \n  2) make_nts BGL : makes NTS on Blue Gene/L \n  3) make_nts BGP : makes NTS on Blue Gene/P \n  4) make_nts BGQ : make NTS on Blue Gene/Q\n Other options:\n -clean             to clean everything\n -rebuild           to clean and rebuild\n -s|-singlethread   to build in single thread \n -release           to build in release mode (must be the last argument)\n\n"; exit;
-fi
+#Escape code
+esc=`echo -en "\033"`
+
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
 
 NTSROOT=`pwd`
 LENSROOT=$NTSROOT/gsl
@@ -10,15 +16,121 @@ MDLROOT=$NTSROOT/mdl
 
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 NPROCS=$(( $NPROCS*2/3 ))
-if [ "$2" == "-singlethread" ] || [ "$2" == "-s" ]; then
-	NPROCS=1
+#########################################
+#   PRINT HELP
+#{{{
+function print_help {
+	echo -e "\n\n${cc_blue}Make NTS...${cc_normal} \n\nOption include : \n\n  
+  -p [LINUX|BGL|BGP|BGQ]    default = LINUX  build to run on what platform
+  -c [all|mdl|gsl|nti]      default = all    what components to build
+  -r|--release              to build in release mode [default: debug mode]
+
+Example: 
+1) make_nts -p LINUX : builds NTS in a LINUX environment using MPI 
+2) make_nts -p BGL : makes NTS on Blue Gene/L
+3) make_nts -p BGP : makes NTS on Blue Gene/P 
+4) make_nts -p BGQ : make NTS on Blue Gene/Q\n 
+Other options:\n 
+  --clean             to clean everything
+  --rebuild           to clean and rebuild
+  --mco         
+  -s|--singlethread   to build in single thread 
+\n\n"; exit;
+}
+
+if [ "$1" == "--help" ] || [ $# == 0 ]; then 
+  print_help
 fi
+#}}}
+
+##########################################
+## Detect what need to be built
+#{{{
+PLATFORM="LINUX"
+WHAT_TO_BUILD="all"
+CLEAN=""
+REBUILD=""
+MCO=""
+NTI_BUILD_MODE="debug=yes"
+GSL_BUILD_MODE=""
+optspec=":c:p:sr-:"
+while getopts "$optspec" optchar; do
+  case $optchar in
+    p)
+      echo "Platform: $OPTARG" >&2
+      PLATFORM=$OPTARG
+      ;;
+    c)
+      echo "Build: $OPTARG"
+      WHAT_TO_BUILD=$OPTARG
+      ;;
+    s)
+      NPROCS=1
+      ;;
+    r) # release
+      NTI_BUILD_MODE=""
+      GSL_BUILD_MODE="-release"
+      ;;
+    -)  #parse long-option
+            case "${OPTARG}" in
+                clean)
+                    CLEAN="-clean"
+                    ;;
+                rebuild)
+                    REBUILD="-rebuild"
+                    ;;
+                singlethread)
+                    NPROCS=1
+                    ;;
+                mco)
+                    MCO="-MCO"
+                    ;;
+			          release) # release
+			          	NTI_BUILD_MODE=""
+                  GSL_BUILD_MODE="-release"
+			          	;;
+                loglevel)
+                    val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                    echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+                    ;;
+                =*)
+                    val=${OPTARG#*=}
+                    opt=${OPTARG%=$val}
+                    echo "parsing option: '--${opt}', value: '${val}'" >&2
+                    ;;
+                *)
+                    if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                        echo "unknown option --${OPTARG}" >&2
+                    fi
+                    ;;
+            esac;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+#    :)
+#      echo "Option -$OPTARG requires an argument." >&2
+#      exit 1
+#      ;;
+  esac
+done
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+#[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && echo 'right platform' || { echo "wrong-platform $PLATFORM"; exit; }
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+
+SUPPORTED_COMPONENTS="all mdl gsl nti"
+[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
+
+#}}}
+
+########################################
 ### Check required tools ###
 ## 1. MPI library
 ## 2. Bison
 ## 3. Flex
 ## 4. Python
-if [ "$1" == "LINUX" ]; then
+#{{{
+if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then 
     echo mpi found...; else echo mpi not found!; exit; fi
 fi
@@ -66,140 +178,132 @@ EOF
 if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
 if [ "$n_major" -ne "$c_major" ]; then
     echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$1" == "LINUX" ]; then 
+    if [ "$PLATFORM" == "LINUX" ]; then 
 	exit;
     fi
 fi
 if [ "$n_major" -eq "$c_major" ] &&  [ "$n_minor" -ne "$c_minor" ]; then
     echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$1" == "LINUX" ]; then 
+    if [ "$PLATFORM" == "LINUX" ]; then 
 	exit;
     fi
 fi
 if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -ne "$c_rev" ]; then
     echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$1" == "LINUX" ]; then 
+    if [ "$PLATFORM" == "LINUX" ]; then 
 	exit;
     fi
 fi
 
 if which python | grep -q1 /\python; then 
-    echo python found...; else echo python not found!; exit; fi
+    echo python found...; else echo python not found!; 
+	exit; 
+fi
+#}}}
 
-
-#if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] && [ "$2" != "-rebuild"] && [ "$2" != "-s" ] && [ "$2" != "-singlethread" ] && [ "$2" != "-release" ] 
-#then 
-#	echo "Unexpected argument number 2"
-#	exit;
-#else 
-#	echo "$2  - TUAN"
-#	exit;
-#fi
-
+################################################
 ### MDL code ###
+#{{{
+if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
 cd $MDLROOT
 
 touch mdl.make.mark
 if [ "$#" -eq 1 ] ; then
 	make -j $NPROCS
 fi
-if [ "$2" == "-clean" ]; then
+if [ "$CLEAN" == "-clean" ]; then
 	make clean;
 fi
-if [ "$2" == "-rebuild" ]; then
+if [ "$REBUILD" == "-rebuild" ]; then
 	make clean;
 	make -j $NPROCS
 fi
-if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
-if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
-	rm mdl.make.mark
+if [ "$CLEAN" != "-clean" ] ; then 
+	if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
+		rm mdl.make.mark
+		cd $NTSROOT
+		echo mdl make failed!;
+		exit; 
+	fi
+	if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$MCO" == "-MCO" ]; then
+		cd $NTSROOT
+		find . -name *.mdf -exec touch '{}' \;
+		cd $MDLROOT
+	fi
+	rm -f mdl.make.mark
 	cd $NTSROOT
-	echo mdl make failed!;
-exit; 
 fi
-if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$2" == "-MCO" ]; then
-	cd $NTSROOT
-	find . -name *.mdf -exec touch '{}' \;
-	cd $MDLROOT
 fi
-rm -f mdl.make.mark
-cd $NTSROOT
-fi
+#}}}
 
+################################################
 ### COMMON code ###
+#{{{
 cd $NTSROOT/common
 sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
-elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 fi
-if [ "$2" == "-clean" ] ; then
+if [ "$REBUILD" == "-rebuild" ] ; then
     make realclean;
-fi
-if [ "$2" == "-rebuild" ] ; then
+	  make -j $NPROCS
+elif [ "$CLEAN" == "-clean" ] ; then
     make realclean;
-	make -j $NPROCS
-fi
-if [ "$2" == "-s" ] ; then
- # -s or -singlethread
-     make -j $NPROCS
+else
+    make -j $NPROCS
 fi
 #if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
 #    cd $NTSROOT
 #    echo nti make failed!;
 #    exit; 
 #fi
-echo "Complete build MDL code"
+echo "${cc_green}Complete build MDL code${cc_normal}"
 cd $NTSROOT
 
+#}}}
 
-
+################################################
 ### NTI code ###
-		## detect if -release is used
-for last; do true; done
-if [ $last == "-release" ]; then 
-	lastarg=""; 
-else 
-	lastarg="debug=yes";
-fi
-
+#{{{
+if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
 cd $NTSROOT/nti
-if [ "$2" == "-MCO" ]; then
+if [ "$MCO" == "-MCO" ]; then
+   #TODO: Find out what is $3 here to replace it
   sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
 fi
 sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-if [ "$1" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-elif [ "$1" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
-elif [ "$1" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 fi
-if [ "$2" == "-clean" ] ; then
+if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
 	make realclean;
-fi
-if [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
+	make -j $NPROCS $NTI_BUILD_MODE 
+elif [ "$CLEAN" == "-clean" ] ; then
 	make realclean;
-	make -j $NPROCS $lastarg
-fi
-if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
-	make -j $NPROCS $lastarg
+else
+	make -j $NPROCS $NTI_BUILD_MODE
 	if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
 			cd $NTSROOT
 			echo nti make failed!;
 			exit; 
 	fi
 	cd $NTSROOT
-	echo "Complete build NTI code"
+	echo "${cc_blue}Complete build NTI code${cc_normal}"
 fi
-if [ "$#" -eq 1 ] ; then
-	make -j $NPROCS 
 fi
+#}}}
 
+##########################################
 ### GSL code ###
-#if [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ; then 
-if [ "$#" -gt 1 ] && [ "$2" == "-rebuild" ] ; then 
+#{{{
+if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+if [ "$REBUILD" == "-rebuild" ] ; then 
 #if [ "$#" -gt 1 ] && { [ "$2" == "-clean" ] || [ "$2" == "-rebuild" ] ;} ; then 
 	cd $LENSROOT/extensions/variable
 	./define variables.mdf
@@ -215,25 +319,23 @@ fi
 
 cd $LENSROOT
 chmod +x ./build_gsl
-if [ "$#" -gt 1 ] ; then 
-	if [ "$2" == "-clean" ] ; then
-		./build_gsl $1 -clean  
-	elif [ "$2" == "-rebuild" ] || [ "$2" == "-MCO" ]; then
-		./build_gsl $1 -rebuild $NPROCS $last
-	else # -s or -singlethread
-		./build_gsl $1 -s $NPROCS $last
-	fi
-else
-    ./build_gsl $1  $last
+if [ "$CLEAN" == "-clean" ] ; then
+	./build_gsl $PLATFORM -clean  
+elif [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
+	./build_gsl $PLATFORM -rebuild $NPROCS $GSL_BUILD_MODE
+else # -s or -singlethread
+	./build_gsl $PLATFORM -s $NPROCS $GSL_BUILD_MODE
 fi
+fi
+#}}}
 
 cd $NTSROOT
-if [ "$#" -eq 1 ] || { [ "$#" -gt 1 ] && [ "$2" != "-clean" ] ;} ; then 
+if { [ "$CLEAN" != "-clean" ] ;} ; then 
 	if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
 		echo gsl make failed!;
 		exit; 
 	else
-		echo -e "\n\n\nCongratulations! You have made NTS...
+		echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS...${cc_normal}
 
 	To run the test tissue simulation :
 
