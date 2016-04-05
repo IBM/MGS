@@ -22,7 +22,7 @@ NPROCS=$(( $NPROCS*2/3 ))
 function print_help {
 	echo -e "\n\n${cc_blue}Make NTS...${cc_normal} \n\nOption include : \n\n  
   -p [LINUX|BGL|BGP|BGQ]    default = LINUX  build to run on what platform
-  -c [all|mdl|gsl|nti]      default = all    what components to build
+  -c [all|common|mdl|gsl|nti]      default = all    what components to build
   -r|--release              to build in release mode [default: debug mode]
 
 Example: 
@@ -35,6 +35,10 @@ Other options:\n
   --rebuild           to clean and rebuild
   --mco         
   -s|--singlethread   to build in single thread 
+	--loglevel [1|2]    determine the log-level 
+	                    [by default: build with -g information, but not printing out any thing]
+											log1 = print out DEBUG_HH and DEBUG_ASSERT 
+											log2 = print out ... during loops
 \n\n"; exit;
 }
 
@@ -90,6 +94,10 @@ while getopts "$optspec" optchar; do
                   GSL_BUILD_MODE="-release"
 			          	;;
                 loglevel)
+									NTI_BUILD_MODE=""
+									GSL_BUILD_MODE="-log$OPTARG" 
+                  ;;
+                someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
                     ;;
@@ -118,7 +126,7 @@ SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 #[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && echo 'right platform' || { echo "wrong-platform $PLATFORM"; exit; }
 [[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
 
-SUPPORTED_COMPONENTS="all mdl gsl nti"
+SUPPORTED_COMPONENTS="all common mdl gsl nti"
 [[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
 
 #}}}
@@ -204,7 +212,7 @@ fi
 ################################################
 ### MDL code ###
 #{{{
-if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
 cd $MDLROOT
 
 touch mdl.make.mark
@@ -239,6 +247,7 @@ fi
 ################################################
 ### COMMON code ###
 #{{{
+if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
 cd $NTSROOT/common
 sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
 sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
@@ -262,13 +271,13 @@ fi
 #fi
 echo "${cc_green}Complete build MDL code${cc_normal}"
 cd $NTSROOT
-
+fi
 #}}}
 
 ################################################
 ### NTI code ###
 #{{{
-if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
 cd $NTSROOT/nti
 if [ "$MCO" == "-MCO" ]; then
    #TODO: Find out what is $3 here to replace it
@@ -302,7 +311,7 @@ fi
 ##########################################
 ### GSL code ###
 #{{{
-if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
 if [ "$REBUILD" == "-rebuild" ] ; then 
 #if [ "$#" -gt 1 ] && { [ "$2" == "-clean" ] || [ "$2" == "-rebuild" ] ;} ; then 
 	cd $LENSROOT/extensions/variable

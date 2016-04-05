@@ -19,6 +19,7 @@
 #include "rndm.h"
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
+#include "Branch.h"
 
 //#define DEBUG_HH
 #include "SegmentDescriptor.h"
@@ -26,6 +27,8 @@
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
+
+SegmentDescriptor HodgkinHuxleyVoltageJunction::_segmentDescriptor;
 
 // Get biomembrane surface area at the compartment i-th 
 dyn_var_t HodgkinHuxleyVoltageJunction::getArea() // Tuan: check ok
@@ -63,14 +66,24 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   }
 #endif
 
+	//NOTE: Should not use the whole area here
   dyn_var_t Poar = M_PI / (area * getSharedMembers().Ra);  // Pi-over-(area *
                                                            // axial-resistance)
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
                                     dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
-    dyn_var_t Rb = 0.5 * ((*diter)->r + dimension->r);
-    dyn_var_t distance = (*diter)->dist2soma - dimension->dist2soma;
+		//TUAN
+		//BUG IS HERE - we should not use the radius of the SOMA
+		dyn_var_t Rb;
+		if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+		{
+			Rb = ((*diter)->r );
+		}else{
+			Rb = 0.5 * ((*diter)->r + dimension->r);
+		}
+    dyn_var_t distance = fabs((*diter)->dist2soma - dimension->dist2soma);
+		assert(distance > 0);
     gAxial.push_back(Poar * Rb * Rb / distance);
   }
   if (getSharedMembers().deltaT)
@@ -82,19 +95,25 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 		<< dimension->z << "," << dimension->r 
 		<< "," << dimension->surface_area 
 		<< "," << dimension->dist2soma
+		<< "," << dimension->length
 		<< ")" << std::endl;
+#endif
+#ifdef DEBUG_ASSERT
+  assert(cmt > 0);
 #endif
 }
 
 void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 {
-  assert(cmt > 0);
   dyn_var_t conductance = cmt;
   dyn_var_t current = cmt * Vcur;
 
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
+	/* * * Sum Currents * * */
+	// loop through different kinds of currents (Kv, Nav1.6, ...)
+	//  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
   Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
   Array<ChannelCurrents>::iterator cend = channelCurrents.end();
   for (; citer != cend; ++citer)
@@ -104,6 +123,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += gloc * (*(citer->reversalPotentials))[0];
   }
 
+	//  1.b. ionic currents using GHK equations (-Iion)
 	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
 	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
 	for (; iiter != iend; iiter++)
@@ -111,6 +131,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 		current -=  (*(iiter->currents))[0]; //[pA/um^2]
 	}
 
+	//  2. receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
@@ -120,6 +141,10 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += **iter * **giter;
   }
 
+	//  3. receptor currents using GHK type equations (gV, gErev)
+	//  NOTE: Not available
+
+  //  4. injected currents
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
   for (; iter != end; ++iter)
@@ -127,6 +152,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += **iter / area;
   }
 
+	// 5. Current loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   for (; xiter != xend; ++xiter, ++viter)
@@ -135,6 +161,10 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   }
 
   Vnew[0] = current / conductance;
+
+#ifdef DEBUG_ASSERT
+	assert(Vnew[0] == Vnew[0]);
+#endif
 
 #ifdef DEBUG_HH
   SegmentDescriptor segmentDescriptor;
@@ -211,7 +241,17 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   // This is the swap phase
   Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
 
+#ifdef DEBUG_ASSERT
+	assert(Vnew[0] == Vnew[0]);
+#endif
+
 #ifdef DEBUG_HH
+	printDebugHH();
+#endif
+}
+
+void HodgkinHuxleyVoltageJunction::printDebugHH()
+{
   SegmentDescriptor segmentDescriptor;
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " JUNCTION CORRECT"
@@ -231,6 +271,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   Array<dyn_var_t*>::iterator vend = voltageInputs.end();
   int c = 0;
 
+  Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   for (viter = voltageInputs.begin(); viter != vend; ++viter, ++diter)
   {
     std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
@@ -248,9 +289,8 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 		          //<< (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
               << *(*viter) << std::endl;
   }
-#endif
+	
 }
-
 //TUAN: TODO challenge
 //   how to check for 2 sites overlapping
 //   if we don't retain the dimension's (x,y,z) coordinate

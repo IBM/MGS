@@ -22,9 +22,13 @@ if [ "$#" -eq 0 ] || \
 	( [ "$#" -gt 0 ] && [ $(contains "${list[@]}" "$1") == "n" ] ); then
 	echo "SYNTAX: $0 <$var> [-clean | -rebuild]"
 	echo "SYNTAX: $0 <$var> <-clean | -rebuild> <num-processes-4-make>"
+	echo "SYNTAX: $0 <$var> <-clean | -rebuild> <num-processes-4-make> [-release | -log1 | -log2]"
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
-
+	echo "default: debug with debug_assert"
+	echo "-release: O3 with debug_assert"
+	echo "-log1: debug with debug_assert and debug_hh for initialize methods"
+	echo "-log2: debug with debug_assert and debug_hh and print out debug for loops"
 	exit;
 fi
 
@@ -43,14 +47,29 @@ elif [ "$2" == "-rebuild" ] ; then
 	## detect if -release is used
 	for last; do true; done
 	if [ $last == "-release" ]; then 
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --with-mpi --domainLib;
-		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --domainLib;
+		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --with-mpi --domainLib;
+		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --domainLib;
+		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --debug_assert --domainLib;
+		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --debug_assert --domainLib;
+		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --debug_assert --domainLib;
+		fi
+	elif [ $last == "-log1" ]; then 
+		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --debug_hh --with-mpi --domainLib;
+		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
 		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
 		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
 		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
 		fi
-	else 
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --debug_hh --with-mpi --domainLib;
+	elif [ $last == "-log2" ]; then 
+		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --debug_hh --debug_in_loops --with-mpi --domainLib;
+		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
+		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
+		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
+		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
+		fi
+	else #default: standard debug
+		#if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --with-mpi --domainLib;
+		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --with-mpi --domainLib;
 		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
 		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
 		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;

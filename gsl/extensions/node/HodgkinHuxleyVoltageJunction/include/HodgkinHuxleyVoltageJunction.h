@@ -20,6 +20,7 @@
 #include "CG_HodgkinHuxleyVoltageJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
 
 class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
 {
@@ -43,6 +44,9 @@ class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
   // user-defined functions
   // junction designed as 1-compartment always, there is no need for index
   dyn_var_t getArea();
+	void printDebugHH();
+	private:
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

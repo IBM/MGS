@@ -3,6 +3,7 @@
 #include "CG_CaERConcentrationJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
+#include "Branch.h"
 
 //#define DEBUG_HH
 
@@ -86,7 +87,13 @@ void CaERConcentrationJunction::initializeJunction(RNG& rng)
                                     dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
-    float Rb = 0.5 * ((*diter)->r + dimension->r);
+		dyn_var_t Rb;
+		if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+		{
+			Rb = ((*diter)->r );
+		}else{
+			Rb = 0.5 * ((*diter)->r + dimension->r);
+		}
     // fAxial.push_back(Pdov * Rb * Rb /
     //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
     dyn_var_t length = fabs((*diter)->dist2soma - dimension->dist2soma);

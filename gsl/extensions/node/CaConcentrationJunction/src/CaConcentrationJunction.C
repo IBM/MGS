@@ -19,6 +19,7 @@
 #include "rndm.h"
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
+#include "Branch.h"
 
 //#define DEBUG_HH
 
@@ -31,6 +32,8 @@
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 #define uM_um_cubed_per_pA_msec 5.18213484752067
+
+SegmentDescriptor CaConcentrationJunction::_segmentDescriptor;
 
 // Get cytoplasmic surface area at the compartment i-th 
 dyn_var_t CaConcentrationJunction::getArea() // Tuan: check ok
@@ -66,9 +69,6 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
   //              explicit branching-point junction
   DimensionStruct* dimension = dimensions[0];  
 
-  Array<DimensionStruct*>::iterator iter = dimensionInputs.begin(),
-                                    end = dimensionInputs.end();
-
   volume = getVolume();
 
   float Pdov = M_PI * getSharedMembers().DCa / volume;
@@ -78,12 +78,18 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
                                     dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
-    float Rb = 0.5 * ((*diter)->r + dimension->r);
+		dyn_var_t Rb;
+		if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+		{
+			Rb = ((*diter)->r );
+		}else{
+			Rb = 0.5 * ((*diter)->r + dimension->r);
+		}
     //fAxial.push_back(Pdov * Rb * Rb /
     //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-	dyn_var_t length= std::fabs((*diter)->dist2soma - dimension->dist2soma);
-	fAxial.push_back(Pdov * Rb * Rb / length );
-  }
+		dyn_var_t length= std::fabs((*diter)->dist2soma - dimension->dist2soma);
+		fAxial.push_back(Pdov * Rb * Rb / length );
+	}
 #ifdef DEBUG_HH
   std::cerr << "CA_JUNCTION (" << dimension->x << "," << dimension->y << ","
             << dimension->z << "," << dimension->r << ")" << std::endl;

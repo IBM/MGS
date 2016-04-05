@@ -20,6 +20,7 @@
 #include "CG_CaConcentrationJunction.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
 
 class CaConcentrationJunction : public CG_CaConcentrationJunction
 {
@@ -43,6 +44,8 @@ class CaConcentrationJunction : public CG_CaConcentrationJunction
   // junction designed as 1-compartment always, there is no need for index
   dyn_var_t getVolume();
   dyn_var_t getArea();
+	private:
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

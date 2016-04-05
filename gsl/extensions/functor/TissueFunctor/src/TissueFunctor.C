@@ -1453,6 +1453,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                   if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
                       Branch::_SOMA)
                   {  // remove the part of the capsule covered inside soma
+									/*TUAN : disable it as we now ignore the physical location of soma covering the dendrite
 										somaR = firstcaps.getRadius();
                     surface_area -= 2.0 * M_PI * r * somaR;
                     volume -= M_PI * r * r * somaR;
@@ -1465,6 +1466,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 										}
                     assert(h > somaR);
                     lost_distance = somaR;
+										*/
                   }
                   else
                   {  // reserve some for the cut/branch explicit junction
@@ -1822,7 +1824,10 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
   dimList.push_back(volumeptr);
 
   dimList.push_back(lengthptr);
-
+#ifdef DEBUG_ASSERT
+	std::cerr << "Dimension (x,y,z,r,dist2soma, surface_area, volume, length) = "
+		<< "[ ("  << cds[0] << "," <<  cds[1] << "," << cds[2] << "," << radius << ")," << dist2soma << "," << surface_area << "," << volume << "," << length << "]" << std::endl;
+#endif
   StructType* st = lc->sim->getStructType("DimensionStruct");
   std::auto_ptr<Struct> dims;
   st->getStruct(dims);

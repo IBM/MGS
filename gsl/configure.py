@@ -66,6 +66,7 @@ O5_OPTIMIZATION_FLAG = "-O5"
 
 DEBUG_ASSERT = "-DDEBUG_ASSERT"
 DEBUG_HH = "-DDEBUG_HH"
+DEBUG_LOOPS = "-DDEBUG_LOOPS"
 
 COMMON_DX_CFLAGS = " -I . -I$(DX_INCLUDE) -I$(DX_BASE)/include $(MAKE64)"
 AIX_DX_CFLAGS = "-O -Dibm6000 " + COMMON_DX_CFLAGS
@@ -228,6 +229,7 @@ class Options:
         self.debug = DONTUSE # USE, DONTUSE, UNDEF
         self.debug_assert = False # True, False
         self.debug_hh = False # True, False
+        self.debug_loops = False # True, False
         self.profile = DONTUSE # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE # USE, DONTUSE, UNDEF
@@ -260,6 +262,7 @@ class Options:
                            ("debug", "compile with debugging flags"),
                            ("debug_assert", "compile with debugging flags for assert"),
                            ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
+                           ("debug_loops", "compile with debugging flags for methods to be called iteratively (time loop)"),
                            ("profile", "compile with profile flags"),
                            ("tvMemDebug", "enable totalview memory debugging for parallel jobs (perfomance impact)"),
                            ("mpiTrace", "enable mpiTrace profiling (for BG)"),
@@ -355,6 +358,8 @@ class Options:
                     self.debug_assert = True
                 if o == "--debug_hh":
                     self.debug_hh = True
+                if o == "--debug_loops":
+                    self.debug_loops = True
                 if o == "--profile":
                     self.profile = USE
                 if o == "--tvMemDebug":
@@ -1044,6 +1049,9 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 
         if self.options.debug_hh == True:
             retStr += " " + DEBUG_HH
+
+        if self.options.debug_loops == True:
+            retStr += " " + DEBUG_LOOPS
 
         if self.options.profile == USE:
             retStr += " " + PROFILING_FLAGS
