@@ -889,9 +889,9 @@ INTERFACE_MODULES :=
 
 NODE_MODULES :=
 
-STRUCT_MODULES := CoordsStruct \
+STRUCT_MODULES := CoordsStruct \\
 
-TRIGGER_MODULES :=
+TRIGGER_MODULES := UnsignedServiceTrigger \\
 
 VARIABLE_MODULES := BasicNodeSetVariable \\
        	NodeSetSPMVariable \\
@@ -944,6 +944,7 @@ EXTENSION_MODULES += $(patsubst %,struct/%,$(STRUCT_MODULES))
 EXTENSION_MODULES += $(patsubst %,trigger/%,$(TRIGGER_MODULES))
 EXTENSION_MODULES += $(patsubst %,variable/%,$(VARIABLE_MODULES))
 
+# those with only header files
 SPECIAL_EXTENSION_MODULES += $(patsubst %,interface/%,$(INTERFACE_MODULES))
 
 EXTENSION_MODULES := $(patsubst %,extensions/%,$(EXTENSION_MODULES))
@@ -1042,7 +1043,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             elif self.options.compiler == "xl":
                 retStr += " " + XL_DEBUGGING_FLAG
             else:
-                retStr += " -g"
+                retStr += " -g -fno-inline -fno-eliminate-unused-debug-types"
 
         if self.options.debug_assert == True:
             retStr += " " + DEBUG_ASSERT

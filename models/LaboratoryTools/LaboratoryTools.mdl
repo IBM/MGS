@@ -101,13 +101,23 @@ Variable CurrentPulseGenerator Implements CurrentProducer
 //}}}
 }
 
+// GOAL: it connects to 1 or more Voltage producer compartment/channel/...
+//    so one connection is an element in the array []V;
+//          that reference to the real data 'dyn_var_t []*'
+//   each Voltage is written to one column in the file, in the order it is connected 
+//   the first column is always the time
+// FORMAT:
+//  time  V1  V2 V3 ....
 Variable VoltageDisplay
 {
 //{{{
+  //{{{ Data
 	string fileName;
-	int [] [] indices;
-
-	dyn_var_t []* []  V;
+	int [] [] indices;// each element keeps track of (from a given ComputeBranch)
+                    // the vector of indices of the compartments on that 
+                    // data 'V' below is need to be recorded
+	dyn_var_t []* []  V;// each element is a reference to 
+                   // a vector of data to record on 1 ComputeBranch
 	dyn_var_t []* V_connect;
 
 	DimensionStruct* []* [] dimensions;
@@ -117,10 +127,13 @@ Variable VoltageDisplay
 	BranchDataStruct* branchData_connect;
 
 	dyn_var_t* deltaT;
+  //}}}
 
+  //{{{ Methods
 	InitPhase initialize;
 	FinalPhase finalize;
 	TriggeredFunction dataCollection;
+  //}}}
 
 	InAttrPSet {
 		TissueSite site;
@@ -128,7 +141,7 @@ Variable VoltageDisplay
 
 	UserFunction setUpPointers;
 
-	Connection Pre Node () Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+	Connection Pre Node () Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {// NOTE: each node represents data associated with compartments in 1 ComputeBranch
 		VoltageArrayProducer.voltageArray >> V_connect; 
 		DimensionArrayProducer.dimensionArray >> dimensions_connect;
 		BranchDataProducer.branchData >> branchData_connect;
@@ -463,5 +476,24 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 	PlasticityToggleProducer.plasticityToggle << &plasticityToggle;
 //}}}
 } 
+
+Variable SimulationInfo 
+{
+  //NOTE: make sure it has to be 'float'
+  // to be able to absorved by FloatTrigger
+  float currentTime;    //[ms]
+  float recordIntervalInTime; //[ms]
+  int recordIntervalInIterations; 
+
+	dyn_var_t* deltaT;
+
+	InitPhase initialize;
+  RuntimePhase calculateInfo; //estimate the current time
+
+	Connection Pre Constant () Expects TimeStepProducer {
+		TimeStepProducer.deltaT >> deltaT;
+	}
+ 
+}
 
 #endif

@@ -164,11 +164,15 @@ void ChannelBKalphabeta::update(RNG& rng)
     //}
     // fC[i] = ...
     fC[i] = 1.0 - (fO[i] + fI[i]);
-#ifdef DEBUG_ASSERT
+#ifdef DEBUG_LOOPS
+#ifdef DEBUG_HH 
 		if (fabs(fI[i] + fO[i] + fC[i] - 1.0) < SMALL)
 		{
 			std::cerr << i << ": fI =" << fI[i] << ",fO = " << fO[i] << ", fC =" << fC[i] << std::endl;
 		}
+#endif
+#endif
+#ifdef DEBUG_ASSERT
     assert(fabs(fI[i] + fO[i] + fC[i] - 1.0) < SMALL);  // conservation
 #endif
     g[i] = gbar[i] * fO[i] ;
