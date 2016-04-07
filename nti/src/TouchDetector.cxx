@@ -122,7 +122,8 @@ TouchDetector::TouchDetector(
       _receiveAtBufferOffset(false),
       _tissueContext(tissueContext),
       _detectionPass(TissueContext::FIRST_PASS),
-      _experimentName("") {
+      _experimentName("")
+{
   _numberOfSenders = _numberOfReceivers =
       (nSlicers > nTouchDetectors) ? nSlicers : nTouchDetectors;
 
@@ -152,7 +153,8 @@ TouchDetector::TouchDetector(
   _segmentsPerSender = new int[_numberOfSenders];
   _segmentDispls = new int[_numberOfSenders];
 
-  for (int i = 0; i < _numberOfSenders; ++i) {
+  for (int i = 0; i < _numberOfSenders; ++i)
+  {
 #ifdef A2AW
     _typeSegments[i] = typeCapsule;
 #endif
@@ -160,15 +162,18 @@ TouchDetector::TouchDetector(
     _segmentDispls[i] = 0;
   }
 
-  if (_tissueContext) {
+  if (_tissueContext)
+  {
     _capsules = &_tissueContext->_capsules;
     assert(_communicateTouchSpace == 0);
-  } else
+  }
+  else
     _capsules = new Capsule*;
 
   *_capsules = new Capsule[_previousPhase1RecvBufSize];
 
-  if (_communicateTouchSpace || _tissueContext) {
+  if (_communicateTouchSpace || _tissueContext)
+  {
     _touchVector = &_initialTouchVector;
     _touchesPerReceiver = new int[_numberOfReceivers];
     _touchCounts = new int[_numberOfReceivers];
@@ -178,7 +183,8 @@ TouchDetector::TouchDetector(
 #else
     _typeTouches = new MPI_Datatype[1];
 #endif
-    for (int i = 0; i < _numberOfReceivers; ++i) {
+    for (int i = 0; i < _numberOfReceivers; ++i)
+    {
       _touchesPerReceiver[i] = 0;
       _touchCounts[i] = 1;
       _touchDispls[i] = 0;
@@ -188,12 +194,14 @@ TouchDetector::TouchDetector(
     _touchBlockLengths = new int[_maxNumTouches];
     _touchBlockDisplacements = new MPI_Aint[_maxNumTouches];
 
-    for (int j = 0; j < _maxNumTouches; ++j) {
+    for (int j = 0; j < _maxNumTouches; ++j)
+    {
       _touchBlockLengths[j] = 1;
       _touchBlockDisplacements[j] = 0;
     }
 
-    for (int i = 0; i < _numberOfReceivers; ++i) {
+    for (int i = 0; i < _numberOfReceivers; ++i)
+    {
       int numTouches = 1;
       MPI_Type_create_hindexed(numTouches, _touchBlockLengths,
                                _touchBlockDisplacements,
@@ -206,13 +214,15 @@ TouchDetector::TouchDetector(
 #endif
   }
   _threadUserData = new ThreadUserData(_nThreads);
-  for (int i = 0; i < _nThreads; ++i) {
+  for (int i = 0; i < _nThreads; ++i)
+  {
     _threadUserData->_parms[i] = new Params(*_params);
     _threadUserData->_touchSpaces[i] = _detectionTouchSpace->duplicate();
   }
 }
 
-TouchDetector::~TouchDetector() {
+TouchDetector::~TouchDetector()
+{
   delete[] _typeSegments;
   delete[] _segmentsPerSender;
   delete[] _segmentDispls;
@@ -222,7 +232,8 @@ TouchDetector::~TouchDetector() {
   delete[] _typeTouches;
   delete[] _touchBlockLengths;
   delete[] _touchBlockDisplacements;
-  if (_tissueContext == 0) {
+  if (_tissueContext == 0)
+  {
     delete[] * _capsules;
     delete _capsules;
   }
@@ -230,8 +241,10 @@ TouchDetector::~TouchDetector() {
 }
 
 void TouchDetector::prepareToReceive(int receiveCycle, int receivePhase,
-                                     CommunicatorFunction& funPtrRef) {
-  switch (receivePhase) {
+                                     CommunicatorFunction& funPtrRef)
+{
+  switch (receivePhase)
+  {
     case 0:
       funPtrRef = &Communicator::allToAll;
       break;
@@ -248,9 +261,11 @@ void TouchDetector::prepareToReceive(int receiveCycle, int receivePhase,
   }
 }
 
-void* TouchDetector::getRecvbuf(int receiveCycle, int receivePhase) {
+void* TouchDetector::getRecvbuf(int receiveCycle, int receivePhase)
+{
   void* rval;
-  switch (receivePhase) {
+  switch (receivePhase)
+  {
     case 0:
       rval = (void*)_segmentsPerSender;
       break;
@@ -266,9 +281,11 @@ void* TouchDetector::getRecvbuf(int receiveCycle, int receivePhase) {
   return rval;
 }
 
-int* TouchDetector::getRecvcounts(int receiveCycle, int receivePhase) {
+int* TouchDetector::getRecvcounts(int receiveCycle, int receivePhase)
+{
   int* rval;
-  switch (receivePhase) {
+  switch (receivePhase)
+  {
     case 0:
       rval = &_numberOfInts;
       break;
@@ -281,9 +298,11 @@ int* TouchDetector::getRecvcounts(int receiveCycle, int receivePhase) {
   return rval;
 }
 
-int* TouchDetector::getRdispls(int receiveCycle, int receivePhase) {
+int* TouchDetector::getRdispls(int receiveCycle, int receivePhase)
+{
   int* rval;
-  switch (receivePhase) {
+  switch (receivePhase)
+  {
     case 0:
       assert(0);
       break;
@@ -296,9 +315,11 @@ int* TouchDetector::getRdispls(int receiveCycle, int receivePhase) {
   return rval;
 }
 
-MPI_Datatype* TouchDetector::getRecvtypes(int receiveCycle, int receivePhase) {
+MPI_Datatype* TouchDetector::getRecvtypes(int receiveCycle, int receivePhase)
+{
   MPI_Datatype* rval;
-  switch (receivePhase) {
+  switch (receivePhase)
+  {
     case 0:
       rval = &_typeInt;
       break;
@@ -311,10 +332,12 @@ MPI_Datatype* TouchDetector::getRecvtypes(int receiveCycle, int receivePhase) {
   return rval;
 }
 
-void TouchDetector::initializePhase1Receive(int receiveCycle) {
+void TouchDetector::initializePhase1Receive(int receiveCycle)
+{
   if (_resetBufferSize) _segmentDataSize = 0;
   int segCount = 0;
-  for (int i = 0; i < _numberOfSenders; i++) {
+  for (int i = 0; i < _numberOfSenders; i++)
+  {
 #ifdef A2AW
     _segmentDispls[i] = segCount * sizeof(Capsule);
 #else
@@ -323,7 +346,8 @@ void TouchDetector::initializePhase1Receive(int receiveCycle) {
     segCount += _segmentsPerSender[i];
   }
   _segmentDataSize += segCount;
-  if (_segmentDataSize > _previousPhase1RecvBufSize) {
+  if (_segmentDataSize > _previousPhase1RecvBufSize)
+  {
     delete[] * _capsules;
     *_capsules = new Capsule[getBuffAllocationSize(_segmentDataSize)];
     _previousPhase1RecvBufSize = getUsableBuffSize(_segmentDataSize);
@@ -331,9 +355,11 @@ void TouchDetector::initializePhase1Receive(int receiveCycle) {
 }
 
 void TouchDetector::prepareToSend(int sendCycle, int sendPhase,
-                                  CommunicatorFunction& funPtrRef) {
+                                  CommunicatorFunction& funPtrRef)
+{
   assert(sendCycle == 0);
-  switch (sendPhase) {
+  switch (sendPhase)
+  {
     case 0:
       initializePhase0Send();
       funPtrRef = &Communicator::allToAll;
@@ -351,10 +377,12 @@ void TouchDetector::prepareToSend(int sendCycle, int sendPhase,
   }
 }
 
-void* TouchDetector::getSendbuf(int sendCycle, int sendPhase) {
+void* TouchDetector::getSendbuf(int sendCycle, int sendPhase)
+{
   assert(sendCycle == 0);
   void* rval;
-  switch (sendPhase) {
+  switch (sendPhase)
+  {
     case 0:
       rval = (void*)_touchesPerReceiver;
       break;
@@ -373,10 +401,12 @@ void* TouchDetector::getSendbuf(int sendCycle, int sendPhase) {
   return rval;
 }
 
-int* TouchDetector::getSendcounts(int sendCycle, int sendPhase) {
+int* TouchDetector::getSendcounts(int sendCycle, int sendPhase)
+{
   assert(sendCycle == 0);
   int* rval;
-  switch (sendPhase) {
+  switch (sendPhase)
+  {
     case 0:
       rval = &_numberOfInts;
       break;
@@ -395,10 +425,12 @@ int* TouchDetector::getSendcounts(int sendCycle, int sendPhase) {
   return rval;
 }
 
-int* TouchDetector::getSdispls(int sendCycle, int sendPhase) {
+int* TouchDetector::getSdispls(int sendCycle, int sendPhase)
+{
   assert(sendCycle == 0);
   int* rval;
-  switch (sendPhase) {
+  switch (sendPhase)
+  {
     case 0:
       assert(0);
       break;
@@ -411,10 +443,12 @@ int* TouchDetector::getSdispls(int sendCycle, int sendPhase) {
   return rval;
 }
 
-MPI_Datatype* TouchDetector::getSendtypes(int sendCycle, int sendPhase) {
+MPI_Datatype* TouchDetector::getSendtypes(int sendCycle, int sendPhase)
+{
   assert(sendCycle == 0);
   MPI_Datatype* rval;
-  switch (sendPhase) {
+  switch (sendPhase)
+  {
     case 0:
       rval = &_typeInt;
       break;
@@ -427,18 +461,21 @@ MPI_Datatype* TouchDetector::getSendtypes(int sendCycle, int sendPhase) {
   return rval;
 }
 
-int TouchDetector::getNumberOfSendPhasesPerCycle(int sendCycle) {
+int TouchDetector::getNumberOfSendPhasesPerCycle(int sendCycle)
+{
   assert(sendCycle == 0);
   return TOUCH_DETECTOR_SEND_PHASES;
 }
 
-void TouchDetector::initializePhase0Send() {
+void TouchDetector::initializePhase0Send()
+{
   assert(_touchVector);
   std::map<int, std::list<TouchIndex> >& touchMap = _touchVector->getTouchMap();
   int size = 0;
   std::map<int, std::list<TouchIndex> >::iterator mapIter,
       mapEnd = touchMap.end();
-  for (int i = 0; i < _numberOfReceivers; ++i) {
+  for (int i = 0; i < _numberOfReceivers; ++i)
+  {
     mapIter = touchMap.find(i);
     if (mapIter == mapEnd)
       _touchesPerReceiver[i] = 0;
@@ -453,13 +490,15 @@ void TouchDetector::initializePhase0Send() {
   }
 
 #ifdef A2AW
-  if (_maxNumTouches < size) {
+  if (_maxNumTouches < size)
+  {
     int touchAllocationSize = getBuffAllocationSize(size);
     delete[] _touchBlockLengths;
     delete[] _touchBlockDisplacements;
     _touchBlockLengths = new int[touchAllocationSize];
     _touchBlockDisplacements = new MPI_Aint[touchAllocationSize];
-    for (int j = 0; j < touchAllocationSize; ++j) {
+    for (int j = 0; j < touchAllocationSize; ++j)
+    {
       _touchBlockLengths[j] = 0;
       _touchBlockDisplacements[j] = 0;
     }
@@ -467,7 +506,8 @@ void TouchDetector::initializePhase0Send() {
   }
 #else
   size *= N_TOUCH_DATA;
-  if (size > _sendBufSize) {
+  if (size > _sendBufSize)
+  {
     delete[] _sendBuf;
     _sendBuf = new double[getBuffAllocationSize(size)];
     _sendBufSize = getUsableBuffSize(size);
@@ -475,7 +515,8 @@ void TouchDetector::initializePhase0Send() {
 #endif
 }
 
-void TouchDetector::initializePhase1Send() {
+void TouchDetector::initializePhase1Send()
+{
   std::map<int, std::list<TouchIndex> >& touchMap = _touchVector->getTouchMap();
   std::map<int, std::list<TouchIndex> >::iterator mapIter,
       mapEnd = touchMap.end();
@@ -485,13 +526,16 @@ void TouchDetector::initializePhase1Send() {
   MPI_Get_address(_touchOrigin, &touchOriginAddress);
   MPI_Aint touchAddress;
   int numBlocks = 0;
-  for (int i = 0; i < _numberOfReceivers; ++i) {
+  for (int i = 0; i < _numberOfReceivers; ++i)
+  {
     mapIter = touchMap.find(i);
     int j = 0;
-    if (mapIter != mapEnd) {
+    if (mapIter != mapEnd)
+    {
       std::list<TouchIndex>::iterator iter = mapIter->second.begin(),
                                       end = mapIter->second.end();
-      while (iter != end) {
+      while (iter != end)
+      {
         Touch& t = _touchVector->getValue(*iter);
         int number = iter->getBlock(), index = iter->getIndex();
         MPI_Aint touchAddress;
@@ -511,12 +555,15 @@ void TouchDetector::initializePhase1Send() {
   }
 #else
   int writePos = 0;
-  for (int i = 0; i < _numberOfReceivers; ++i) {
+  for (int i = 0; i < _numberOfReceivers; ++i)
+  {
     mapIter = touchMap.find(i);
-    if (mapIter != mapEnd) {
+    if (mapIter != mapEnd)
+    {
       std::list<TouchIndex>::iterator iter = mapIter->second.begin(),
                                       end = mapIter->second.end();
-      for (; iter != end; ++iter) {
+      for (; iter != end; ++iter)
+      {
         assert(writePos <= _sendBufSize - N_TOUCH_DATA);
         Touch& t = _touchVector->getValue(*iter);
         std::copy(t.getTouchData(), t.getTouchData() + N_TOUCH_DATA,
@@ -530,37 +577,45 @@ void TouchDetector::initializePhase1Send() {
 #endif
 }
 
-void TouchDetector::setTouchAnalyzer(TouchAnalyzer* touchAnalyzer) {
+void TouchDetector::setTouchAnalyzer(TouchAnalyzer* touchAnalyzer)
+{
   _touchAnalyzer = touchAnalyzer;
 }
 
-void TouchDetector::resetTouchVector() {
+void TouchDetector::resetTouchVector()
+{
   // printf("%d,
   // %d\n",_initialTouchVector.getCount(),_tissueContext->_touchVector.getCount());
   _initialTouchVector.clear();
   if (_tissueContext) _touchVector = &_tissueContext->_touchVector;
 }
 
-void TouchDetector::setUpCapsules() {
-  if (_tissueContext) {
+void TouchDetector::setUpCapsules()
+{
+  if (_tissueContext)
+  {
     _numberOfCapsules = _segmentDataSize = _tissueContext->setUpCapsules(
         _segmentDataSize, _detectionPass, _rank, _maxComputeOrder);
-  } else {
-    Capsule* caps = *_capsules, *capsEnd = caps + _segmentDataSize;
+  }
+  else
+  {
+    Capsule* caps = *_capsules, * capsEnd = caps + _segmentDataSize;
     std::sort(caps, capsEnd);
     capsEnd = std::unique(caps, capsEnd);
     _segmentDataSize = _numberOfCapsules = capsEnd - caps;
   }
 }
 
-void TouchDetector::setCapsuleOffset(int offset) {
+void TouchDetector::setCapsuleOffset(int offset)
+{
   *_capsules += offset;
   _segmentDataSize -= offset;
   _numberOfCapsules -= offset;
   if (_tissueContext) _tissueContext->_nCapsules -= offset;
 }
 
-void TouchDetector::detectTouches() {
+void TouchDetector::detectTouches()
+{
 #ifdef USING_BLUEGENE
   if (_rank == 0)
     printf("Available memory before touch detection %s : %lf MB.\n\n",
@@ -571,11 +626,13 @@ void TouchDetector::detectTouches() {
   RNG* rng;
   if (_tissueContext)
     rng = &_tissueContext->_touchSampler;
-  else {
+  else
+  {
     rng = new RNG;
     rng->reSeed(12345678, _rank);
   }
-  for (int i = 0; i < _nThreads; ++i) {
+  for (int i = 0; i < _nThreads; ++i)
+  {
     _threadUserData->_touchVectors[i].clear();
     _threadUserData->_rangens[i].reSeed(lrandom(*rng), _rank);
   }
@@ -584,10 +641,12 @@ void TouchDetector::detectTouches() {
   long int binpos = 0;
   _connectionCount = 0;
   FILE* data = 0;
-  if (_writeToFile) {
+  if (_writeToFile)
+  {
     char filename[256];
     sprintf(filename, "outTouches_%s_%d.bin", _experimentName.c_str(), _rank);
-    if ((data = fopen(filename, "wb")) == NULL) {
+    if ((data = fopen(filename, "wb")) == NULL)
+    {
       printf("Could not open the output file %s!\n", filename);
       MPI_Finalize();
       exit(0);
@@ -605,25 +664,30 @@ void TouchDetector::detectTouches() {
   For<TouchDetector, ThreadUserData>::execute(0, 1, _numberOfCapsules, this,
                                               _threadUserData, _nThreads);
 #else
-  for (int sid = 0; sid < _numberOfCapsules; ++sid) {
+  for (int sid = 0; sid < _numberOfCapsules; ++sid)
+  {
     doWork(0, sid, _threadUserData, 0);
   }  // for (; sid<_nCapsules...
 #endif
   _connectionCount = 0;
-  for (int i = 0; i < _nThreads; ++i) {
+  for (int i = 0; i < _nThreads; ++i)
+  {
     _connectionCount += _threadUserData->_touchVectors[i].getCount();
     _touchVector->merge(_threadUserData->_touchVectors[i]);
   }
   assert(_connectionCount == _touchVector->getCount());
-  if (_tissueContext == 0) {
+  if (_tissueContext == 0)
+  {
     Capsule* caps = *_capsules;
     std::map<double, int> capsuleMap;
     for (int sid = 0; sid < _numberOfCapsules; ++sid)
       capsuleMap[caps[sid].getKey()] = sid;
     TouchVector::TouchIterator titer = _touchVector->begin(),
                                tend = _touchVector->end();
-    for (; titer != tend; ++titer) {
-      if (_communicateTouchSpace) {
+    for (; titer != tend; ++titer)
+    {
+      if (_communicateTouchSpace)
+      {
         double s1Key = titer->getKey1();
         if (_communicateTouchSpace->isInSpace(s1Key))
           _touchVector->mapTouch(
@@ -635,7 +699,8 @@ void TouchDetector::detectTouches() {
               _neuronPartitioner->getRank(caps[capsuleMap[s2Key]].getSphere()),
               titer);
       }
-      if (_touchAnalyzer != 0) {
+      if (_touchAnalyzer != 0)
+      {
         _touchAnalyzer->evaluateTouch(*titer);
       }
     }
@@ -643,7 +708,8 @@ void TouchDetector::detectTouches() {
 
   if (_touchAnalyzer) _touchAnalyzer->confirmTouchCounts(_connectionCount);
 
-  if (_writeToFile) {
+  if (_writeToFile)
+  {
     fseek(data, binpos, SEEK_SET);
     fwrite(&_connectionCount, sizeof(long long), 1, data);
     fclose(data);
@@ -653,7 +719,8 @@ void TouchDetector::detectTouches() {
                 MPI_SUM, MPI_COMM_WORLD);
   if (_rank == 0) printf("Total Touch = %lld\n\n", totalCount);
 #ifdef USING_BLUEGENE
-  if (_rank == 0) {
+  if (_rank == 0)
+  {
     printf("Available memory after touch detection %s : %lf MB.\n\n",
            getPassName().c_str(), AvailableMemory());
   }
@@ -662,9 +729,10 @@ void TouchDetector::detectTouches() {
 
 // GOAL: Find the Capsules that 'touches' the given Capsule
 //    sid = the index of the given Capsule
-//    sid2 = index of the Capsule being checked 
+//    sid2 = index of the Capsule being checked
 void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
-                           Mutex* mutex) {
+                           Mutex* mutex)
+{
   Params* params = data->_parms[threadID];
   TouchVector& touchVector = _threadUserData->_touchVectors[threadID];
   RNG& rng = _threadUserData->_rangens[threadID];
@@ -681,8 +749,9 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
   double pointLineDistances[4];
   // loop through all other Capsules
   for (int sid2 = 0; sid2 < _numberOfCapsules; ++sid2)
-	  // check prob. for forming a touch
-    if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate) {
+    // check prob. for forming a touch
+    if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate)
+    {
       key_size_t s2Key, s1Key = caps[sid].getKey();
       double* s1begin = caps[sid].getBeginCoordinates();
       double* s1end = caps[sid].getEndCoordinates();
@@ -703,9 +772,10 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
       a = u0 * u0 + u1 * u1 + u2 * u2;  // FOR USE BELOW : OPTIMIZATION
 
       s2Key = caps[sid2].getKey();
-	  //check if both capsules can be grouped to form 'electricalSynapse'
-	  //                            OR                'chemicalSynapse'
-      if (detectionTouchSpace->areInSpace(s1Key, s2Key)) {
+      // check if both capsules can be grouped to form 'electricalSynapse'
+      //                            OR                'chemicalSynapse'
+      if (detectionTouchSpace->areInSpace(s1Key, s2Key))
+      {
         double* s2begin = caps[sid2].getBeginCoordinates();
         double* s2end = caps[sid2].getEndCoordinates();
         s2Ar = caps[sid2].getRadius() + params->getRadius(s2Key);
@@ -730,8 +800,8 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
         ww1 = s1By - s2By + w1;
         ww2 = s1Bz - s2Bz + w2;
 
-        if (((ww0 * ww0 + ww1 * ww1 + ww2 * ww2) <=
-             disSphere)) {  // it is 0.5*0.5
+        if (((ww0 * ww0 + ww1 * ww1 + ww2 * ww2) <= disSphere))
+        {  // it is 0.5*0.5
 
           // u0 = s1Bx - s1Ax;   COMPUTED ABOVE : OPTIMIZATION
           // u1 = s1By - s1Ay;   COMPUTED ABOVE : OPTIMIZATION
@@ -755,50 +825,62 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
           tD = D;             // tc = tN / tD, default tD = D >= 0
 
           // compute the line parameters of the two closest points
-          if (D < SMALL_NUM) {  // the lines are almost parallel
+          if (D < SMALL_NUM)
+          {            // the lines are almost parallel
             sN = 0.0;  // force using point P0 on segment S1
             sD = 1.0;  // to prevent possible division by 0.0 later
             tN = e;
             tD = c;
-          } else {  // get the closest points on the infinite lines
+          }
+          else
+          {  // get the closest points on the infinite lines
             sN = (b * e - c * d);
             tN = (a * e - b * d);
-            if (sN <= 0.0) {  // sc < 0 => the s=0 edge is visible
+            if (sN <= 0.0)
+            {  // sc < 0 => the s=0 edge is visible
               sN = 0.0;
               tN = e;
               tD = c;
-            } else if (sN >= sD) {  // sc > 1 => the s=1 edge is visible
+            }
+            else if (sN >= sD)
+            {  // sc > 1 => the s=1 edge is visible
               sN = sD;
               tN = e + b;
               tD = c;
             }
           }
 
-          if (tN <= 0.0) {  // tc < 0 => the t=0 edge is visible
+          if (tN <= 0.0)
+          {  // tc < 0 => the t=0 edge is visible
             tN = 0.0;
             // recompute sc for this edge
             if (-d <= 0.0)
               sN = 0.0;
             else if (-d >= a)
               sN = sD;
-            else {
+            else
+            {
               sN = -d;
               sD = a;
             }
-          } else if (tN >= tD) {  // tc > 1 => the t=1 edge is visible
+          }
+          else if (tN >= tD)
+          {           // tc > 1 => the t=1 edge is visible
             tN = tD;  // recompute sc for this edge
             if ((-d + b) <= 0.0)
               sN = 0.0;
             else if ((-d + b) >= a)
               sN = sD;
-            else {
+            else
+            {
               sN = (-d + b);
               sD = a;
             }
           }
           if (fabs(sN) < SMALL_NUM)
             aw0 = aw1 = aw2 = sc = 0.0;
-          else {
+          else
+          {
             sc = sN / sD;
             aw0 = u0 * sc;
             aw1 = u1 * sc;
@@ -809,7 +891,8 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
           }
           if (fabs(tN) < SMALL_NUM)
             bw0 = bw1 = bw2 = tc = 0.0;
-          else {
+          else
+          {
             tc = tN / tD;
             bw0 = v0 * tc;
             bw1 = v1 * tc;
@@ -821,7 +904,8 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
           dist = w0 * w0 + w1 * w1 + w2 * w2;
           crit = (s1Ar + s2Ar) * (s1Ar + s2Ar);
           bool countTouch = false;
-          if (dist < crit) {
+          if (dist < crit)
+          {
             /**
              * The coordinates of the touch can be calculated by vector
              * arithmetic as follows:
@@ -832,7 +916,8 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
 
             countTouch = true;
 
-            if (_unique) {
+            if (_unique)
+            {
 // The following code ensures global non-redundant touches by setting
 // the boolean "countTouch"
 
@@ -850,11 +935,14 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
               ShallowArray<int, MAXRETURNRANKS, 100>::iterator
                   ranksIter = ranks1.begin(),
                   ranksEnd = ranks1.end();
-              if (ranksIter != ranksEnd) {
+              if (ranksIter != ranksEnd)
+              {
                 int idx = *ranksIter;
                 ++ranksIter;
-                for (; ranksIter != ranksEnd; ++ranksIter) {
-                  if (idx == *ranksIter) {
+                for (; ranksIter != ranksEnd; ++ranksIter)
+                {
+                  if (idx == *ranksIter)
+                  {
                     if (idx == _rank) countTouch = true;
                     break;
                   }
@@ -868,19 +956,21 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
               sphere1._coords[2] = s1Az + aw2;
               int touchVolume = decomposition->getRank(sphere1);
               countTouch = (touchVolume == _rank);
-              if (!countTouch) {
+              if (!countTouch)
+              {
                 Sphere sphere2;
                 sphere2._coords[0] = s2Ax + bw0;
                 sphere2._coords[1] = s2Ay + bw1;
                 sphere2._coords[2] = s2Az + bw2;
                 countTouch = (decomposition->getRank(sphere2) == _rank &&
                               !decomposition->mapsToRank(
-                                   &caps[sid2].getSphere(), s2end,
-                                   params->getRadius(s2Key), touchVolume));
+                                  &caps[sid2].getSphere(), s2end,
+                                  params->getRadius(s2Key), touchVolume));
               }
 #endif
             }
-            if (countTouch) {
+            if (countTouch)
+            {
               Touch touch;
               touch.setKey1(s1Key);
               touch.setKey2(s2Key);
@@ -892,15 +982,17 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
               distancePointLine(s1begin, s1end, s2begin, s2end,
                                 pointLineDistances);
               short* endTouch = touch.getEndTouches();
-			  //with 2 ends for each Capsule, 
-			  //... we have 4 pairs of points to find the distance
-              for (int i = 0; i < 4; ++i) {
+              // with 2 ends for each Capsule,
+              //... we have 4 pairs of points to find the distance
+              for (int i = 0; i < 4; ++i)
+              {
                 endTouch[i] = 0;
                 if (pointLineDistances[i] < crit) endTouch[i] = 1;
               }
 #endif
               touchVector.push_back(touch, mutex);
-              if (_writeToFile) {
+              if (_writeToFile)
+              {
 #ifndef DISABLE_PTHREADS
                 mutex->lock();
 #endif
@@ -911,19 +1003,22 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
               }
             }  // if (countTouch)
           }    // if (dist<crit)
-        }  // if((ww0 * ww0 + ww1 * ww1 + ww2
-      }  // if (detectionTouchSpace->areInSpace...
-    }  // for (; sid2<_nCapsules...
+        }      // if((ww0 * ww0 + ww1 * ww1 + ww2
+      }        // if (detectionTouchSpace->areInSpace...
+    }          // for (; sid2<_nCapsules...
 }
 
 void TouchDetector::distancePointLine(double p1A[3], double p1B[3],
                                       double p2A[3], double p2B[3],
-                                      double* pointLineDistances) {
+                                      double* pointLineDistances)
+{
   double dis, U, Intersection[3], v[3];
   double* p[3];
 
-  for (int i = 0; i < 4; ++i) {
-    switch (i) {
+  for (int i = 0; i < 4; ++i)
+  {
+    switch (i)
+    {
       case 0:
         p[0] = p1A;
         p[1] = p2A;
@@ -960,7 +1055,8 @@ void TouchDetector::distancePointLine(double p1A[3], double p1B[3],
         //( dis * dis );
         (dis);
 
-    if (U < 0.0f) {
+    if (U < 0.0f)
+    {
       // find distance
       v[0] = p[0][0] - p[1][0];
       v[1] = p[0][1] - p[1][1];
@@ -968,7 +1064,8 @@ void TouchDetector::distancePointLine(double p1A[3], double p1B[3],
       pointLineDistances[i] = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
       continue;
     }
-    if (U > 1.0f) {
+    if (U > 1.0f)
+    {
       // find distance
       v[0] = p[0][0] - p[2][0];
       v[1] = p[0][1] - p[2][1];
@@ -990,29 +1087,35 @@ void TouchDetector::distancePointLine(double p1A[3], double p1B[3],
   }
 }
 
-int TouchDetector::getNumberOfReceivePhasesPerCycle(int receiveCycle) {
+int TouchDetector::getNumberOfReceivePhasesPerCycle(int receiveCycle)
+{
   return TOUCH_DETECTOR_RECEIVE_PHASES;
 }
 
-void TouchDetector::finalizeReceive(int receiveCycle, int receivePhase) {
+void TouchDetector::finalizeReceive(int receiveCycle, int receivePhase)
+{
   assert(receiveCycle == 0);
-  switch (receivePhase) {
+  switch (receivePhase)
+  {
     case 1:
-      if (_tissueContext == 0) {
+      if (_tissueContext == 0)
+      {
         setUpCapsules();
         detectTouches();
       }
   }
 }
 
-void TouchDetector::writeToFile(std::string experimentName) {
+void TouchDetector::writeToFile(std::string experimentName)
+{
   _writeToFile = true;
   _experimentName = experimentName;
 }
 
 void TouchDetector::unique(bool unique) { _unique = unique; }
 
-std::string TouchDetector::getPassName() {
+std::string TouchDetector::getPassName()
+{
   std::string rval;
   if (_detectionPass == TissueContext::FIRST_PASS)
     rval = "first pass";

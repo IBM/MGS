@@ -29,26 +29,27 @@ class Simulation;
 class UnsignedTrigger : public TriggerBase
 {
 
-   public:
-      UnsignedTrigger(Simulation& sim, std::vector<DataItem*> const & args);
-      virtual bool status();
-      virtual void duplicate(std::auto_ptr<Trigger>& dup) const;
-      virtual ~UnsignedTrigger();
-   private:
-      void setEvaluator(std::string op);
-      bool isEqual();
-      bool isGreaterThan();
-      bool isLessThan();
-      bool isNotEqual();
-      bool isGreaterThanOrEqual();
-      bool isLessThanOrEqual();
-      bool isModulusZero();
-      bool isModulusNonZero();
+  public:
+  UnsignedTrigger(Simulation& sim, std::vector<DataItem*> const& args);
+  virtual bool status();
+  virtual void duplicate(std::auto_ptr<Trigger>& dup) const;
+  virtual ~UnsignedTrigger();
 
-      Simulation& _sim;
-      unsigned* _service;
-      std::string _op;
-      unsigned _criterion;
-      bool (UnsignedTrigger::*_evaluator) ();
+  private:
+  void setEvaluator(std::string op);
+  bool isEqual();
+  bool isGreaterThan();
+  bool isLessThan();
+  bool isNotEqual();
+  bool isGreaterThanOrEqual();
+  bool isLessThanOrEqual();
+  bool isModulusZero();
+  bool isModulusNonZero();
+
+  Simulation& _sim;
+  unsigned* _service;
+  std::string _op;
+  unsigned _criterion;
+  bool (UnsignedTrigger::*_evaluator)();
 };
 #endif

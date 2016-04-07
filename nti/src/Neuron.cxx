@@ -36,48 +36,62 @@ Neuron::Neuron()
       _segmentsBegin(0),
       _segmentsEnd(0),
       _translationHistory(0),
-      _rotationYHistory(0) {}
+      _rotationYHistory(0)
+{
+}
 
-Neuron::~Neuron() {
+Neuron::~Neuron()
+{
   delete _translationHistory;
   delete _rotationYHistory;
   delete[] _branch;
 }
 
-void Neuron::setRootSegments() {
-  for (int j = 1; j < _numberOfBranches; ++j) {
+void Neuron::setRootSegments()
+{
+  for (int j = 1; j < _numberOfBranches; ++j)
+  {
     _branch[j].findRootSegment();
   }
 }
 
-void Neuron::resample(std::vector<Segment>& segments, double pointSpacing) {
-  for (int i = 0; i < _numberOfBranches; i++) {
+void Neuron::resample(std::vector<Segment>& segments, double pointSpacing)
+{
+  for (int i = 0; i < _numberOfBranches; i++)
+  {
     assert(_branch[i].getNumberOfSegments() > 0);
     _branch[i].resample(segments, pointSpacing);
   }
 }
 
-void Neuron::resetBranchRoots(std::vector<Segment>& segments) {
-  for (int i = 0; i < _numberOfBranches; i++) {
+void Neuron::resetBranchRoots(std::vector<Segment>& segments)
+{
+  for (int i = 0; i < _numberOfBranches; i++)
+  {
     assert(_branch[i].getNumberOfSegments() > 0);
     _branch[i].resetBranchRoots(segments);
   }
 }
 
-void Neuron::eliminateLostBranches() {
-  for (int i = 0; i < _numberOfBranches; i++) {
+void Neuron::eliminateLostBranches()
+{
+  for (int i = 0; i < _numberOfBranches; i++)
+  {
     int skip = 0;
     while (i + skip < _numberOfBranches &&
            _branch[i + skip].getNumberOfSegments() == 0)
       ++skip;
-    if (skip > 0) {
+    if (skip > 0)
+    {
       _numberOfBranches -= skip;
-      for (int j = i; j < _numberOfBranches; ++j) {
+      for (int j = i; j < _numberOfBranches; ++j)
+      {
         _branch[j] = _branch[j + skip];
         _branch[j].resetBranchIndex(j);
         int nsegs = _branch[j].getNumberOfSegments();
         Segment* segs = _branch[j].getSegments();
-        for (int k = 0; k < nsegs; ++k) {
+        for (int k = 0; k < nsegs; ++k)
+        {
           segs[k].resetBranch(&_branch[j]);
         }
       }
@@ -88,7 +102,8 @@ void Neuron::eliminateLostBranches() {
 Segment* Neuron::loadBinary(FILE* inputDataFile, Segment* segmentPtr,
                             Tissue* neuronGroup, const int neuronIndex,
                             FILE* translationHistoryFile,
-                            FILE* rotationYHistoryFile) {
+                            FILE* rotationYHistoryFile)
+{
   _segmentsBegin = segmentPtr;
   _neuronGroup = neuronGroup;
   _neuronIndex = neuronIndex;
@@ -129,7 +144,8 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
                           FILE* rotationYHistoryFile, int layer,
                           int morphologicalType, int electrophysiologicalType,
                           double xOffset, double yOffset, double zOffset,
-                          char offsetType) {
+                          char offsetType)
+{
   _segmentsBegin = segmentPtr;
   _neuronGroup = neuronGroup;
   _neuronIndex = neuronIndex;
@@ -152,11 +168,14 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
   int pos = ftell(inputDataFile);
   std::list<int> branchTerminals;
   while (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &branchType, &x,
-                &y, &z, &r, &parent) != EOF) {
-    if (parent == -1) {
+                &y, &z, &r, &parent) != EOF)
+  {
+    if (parent == -1)
+    {
       int tmpSeg, tmpParent, tmpBranchType, pos2 = ftell(inputDataFile);
       float tmpx = 0.0, tmpy = 0.0, tmpz = 0.0, tmpr = 0.0;
-      do {
+      do
+      {
         ++cb;
         x += tmpx;
         y += tmpy;
@@ -174,11 +193,14 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
       z /= double(cb);
       r /= double(cb);
       --cb;
-      if (offsetType == 'A') {
+      if (offsetType == 'A')
+      {
         xOffset -= x;
         yOffset -= y;
         zOffset -= z;
-      } else if (offsetType != 'R') {
+      }
+      else if (offsetType != 'R')
+      {
         std::cerr << "Unrecognized offset type in tissue specification! "
                      "(Offsets ignored). Use \'R\' or \'A\'." << std::endl;
         xOffset = yOffset = zOffset = 0;
@@ -186,10 +208,13 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
       _center[0] = x + xOffset;
       _center[1] = y + yOffset;
       _center[2] = z + zOffset;
-    } else {
+    }
+    else
+    {
       if (parent != 1) parent -= cb;
       seg -= cb;
-      if (parent != prevSeg || prevBranchType != branchType) {
+      if (parent != prevSeg || prevBranchType != branchType)
+      {
         branchTerminals.push_back(parent);
         branchTerminals.push_back(prevSeg);
       }
@@ -204,11 +229,14 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
   prevBranchType = -1;
   fseek(inputDataFile, pos, SEEK_SET);
   while (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &seg, &branchType, &x,
-                &y, &z, &r, &parent) != EOF) {
-    if (parent == -1) {
+                &y, &z, &r, &parent) != EOF)
+  {
+    if (parent == -1)
+    {
       int tmpSeg, tmpParent, tmpBranchType, pos2;
       float tmpx = 0.0, tmpy = 0.0, tmpz = 0.0, tmpr = 0.0;
-      do {
+      do
+      {
         pos2 = ftell(inputDataFile);
         if (fscanf(inputDataFile, "%d %d %f %f %f %f %d", &tmpSeg,
                    &tmpBranchType, &tmpx, &tmpy, &tmpz, &tmpr,
@@ -216,12 +244,15 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
           break;
       } while (tmpBranchType == 1 && tmpParent == 1);
       fseek(inputDataFile, pos2, SEEK_SET);
-    } else {
+    }
+    else
+    {
       if (parent > 1) parent -= cb;
       seg -= cb;
     }
     if (find(branchTerminals.begin(), branchTerminals.end(), seg) !=
-        branchTerminals.end()) {
+        branchTerminals.end())
+    {
       ++_numberOfBranches;
     }
     prevSeg = seg;
@@ -239,7 +270,8 @@ Segment* Neuron::loadText(FILE* inputDataFile, Segment* segmentPtr,
   return segmentPtr;
 }
 
-void Neuron::writeCoordinates(FILE* fp) {
+void Neuron::writeCoordinates(FILE* fp)
+{
   fwrite(&_center, sizeof(double[4]), 1, fp);
   fwrite(&_layer, sizeof(int), 1, fp);
   fwrite(&_morphologicalType, sizeof(int), 1, fp);
@@ -248,22 +280,26 @@ void Neuron::writeCoordinates(FILE* fp) {
   for (int i = 0; i < _numberOfBranches; i++) _branch[i].writeCoordinates(fp);
 }
 
-void Neuron::translate(double xyz[3], int iteration) {
+void Neuron::translate(double xyz[3], int iteration)
+{
   if (_translationHistory) _translationHistory->add(xyz, iteration);
-  for (Segment* seg = _segmentsBegin; seg != _segmentsEnd; ++seg) {
+  for (Segment* seg = _segmentsBegin; seg != _segmentsEnd; ++seg)
+  {
     seg->getCoords()[0] += xyz[0];
     seg->getCoords()[1] += xyz[1];
     seg->getCoords()[2] += xyz[2];
   }
 }
 
-void Neuron::rotateY(double angle, int iteration) {
+void Neuron::rotateY(double angle, int iteration)
+{
   if (_rotationYHistory) _rotationYHistory->add(&angle, iteration);
   double angleSin = sin(DEG_RAD * angle);
   double angleCos = cos(DEG_RAD * angle);
   double nx, nz;
 
-  for (Segment* seg = _segmentsBegin; seg != _segmentsEnd; ++seg) {
+  for (Segment* seg = _segmentsBegin; seg != _segmentsEnd; ++seg)
+  {
     seg->getCoords()[0] -= _center[0];
     // seg->getCoords()[1] -= _center[1];
     seg->getCoords()[2] -= _center[2];
@@ -280,9 +316,11 @@ void Neuron::rotateY(double angle, int iteration) {
   }
 }
 
-int Neuron::getMaxBranchOrder() {
+int Neuron::getMaxBranchOrder()
+{
   int rval = -1;
-  for (int i = 0; i < _numberOfBranches; ++i) {
+  for (int i = 0; i < _numberOfBranches; ++i)
+  {
     if (_branch[i].getBranchOrder() > rval) rval = _branch[i].getBranchOrder();
   }
   return rval;

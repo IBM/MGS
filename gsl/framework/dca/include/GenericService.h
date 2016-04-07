@@ -29,45 +29,49 @@
 class DataItem;
 class Publishable;
 
-template<class T>
+template <class T>
 class GenericService : public Service
 {
 
-   public:
-      GenericService(Publishable* publishable, T* data) 
-	 : _publishable(publishable), _data(data) {
-      }
-      virtual std::string getName() const {
-	 return _publishable->getServiceName(_data);
-      }
-      virtual std::string getDescription() const {
-	 return _publishable->getServiceDescription(_data);
-      }
-      virtual std::string getDataItemDescription() const {
-	 return TypeClassifier<T>::getName();
-      }
+  public:
+  GenericService(Publishable* publishable, T* data)
+      : _publishable(publishable), _data(data)
+  {
+  }
+  virtual std::string getName() const
+  {
+    return _publishable->getServiceName(_data);
+  }
+  virtual std::string getDescription() const
+  {
+    return _publishable->getServiceDescription(_data);
+  }
+  virtual std::string getDataItemDescription() const
+  {
+    return TypeClassifier<T>::getName();
+  }
 
-      virtual std::string getStringValue() const {
-	 std::ostringstream os;
-	 os << *_data;
-	 return os.str();
-      }      
-      virtual void setStringValue(const std::string& value) {
-	 std::istringstream is(value);
-	 is >> *_data;
-      }      
-      T* getData() {
-	 return _data;
-      }
+  virtual std::string getStringValue() const
+  {
+    std::ostringstream os;
+    os << *_data;
+    return os.str();
+  }
+  virtual void setStringValue(const std::string& value)
+  {
+    std::istringstream is(value);
+    is >> *_data;
+  }
+  T* getData() { return _data; }
 
-      virtual void duplicate(std::auto_ptr<Service>& dup) const {
-	 dup.reset(new GenericService<T>(*this));
-      }
-      virtual ~GenericService() {
+  virtual void duplicate(std::auto_ptr<Service>& dup) const
+  {
+    dup.reset(new GenericService<T>(*this));
+  }
+  virtual ~GenericService() {}
 
-      }
-   private:
-      Publishable* _publishable;
-      T* _data;
+  private:
+  Publishable* _publishable;
+  T* _data;
 };
 #endif

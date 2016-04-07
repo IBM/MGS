@@ -30,12 +30,14 @@ void VoltageDisplay::initialize(RNG& rng)
   {
     assert(deltaT);
     std::ostringstream os;
+		//file name: filename_<MPIrank>
+		//e.g. somaVm.dat_0
     os << fileName << getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
     outFile->precision(3);
     (*outFile) << "#Time\tVoltage :";
     if (indices.size() == 0)
-    {
+    {//TUAN TODO: need to ask James (when this happens)
       for (unsigned int i = 0; i < dimensions.size(); ++i)
       {
         for (unsigned int j = 0; j < dimensions[i]->size(); ++j)
@@ -60,6 +62,7 @@ void VoltageDisplay::initialize(RNG& rng)
         for (; it2 != end2; ++it2)
         {
           assert(*it2 < dimensions[i]->size());
+					//[key_cpt, index-value-in-that-cpt](x,y,z,r,dist2soma)
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(
                             &branchData[i]->key)) << "," << *it2 << "]("
@@ -80,13 +83,17 @@ void VoltageDisplay::finalize(RNG& rng)
   if (V.size() > 0) outFile->close();
 }
 
+// TODO: TUAN - put << std.endl; 
+//  after a certain interval for data write out
 void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 {
   if (V.size() > 0)
   {
-    (*outFile) << float(getSimulation().getIteration()) * *deltaT;
+
+    float current_time = float(getSimulation().getIteration()) * *deltaT; // [msec]
+    (*outFile) << current_time; 
     if (indices.size() == 0)
-    {
+    {// TUAN TODO : again not sure when this occurs
       ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = V.begin(),
                                                        end1 = V.end();
       for (; it1 != end1; ++it1)
@@ -113,6 +120,9 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         }
       }
     }
+		//if (every second )
+		// call flush
+		// else
     (*outFile) << "\n";
   }
 }
@@ -129,10 +139,11 @@ void VoltageDisplay::setUpPointers(const String& CG_direction,
   bool record = true;
   ShallowArray<int> ind;
   if (site.r != 0)
-  {
+  {//record based on distance criteria to a site
     record = false;
     for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
-    {
+    {//make sure it connect to the 'whatever-data' associated with the compartment within the 
+			// spherical range
       if ((site.r * site.r) >=
           DISTANCE_SQUARED(site, *((*dimensions_connect)[i])))
       {
@@ -142,16 +153,18 @@ void VoltageDisplay::setUpPointers(const String& CG_direction,
     }
   }
   else if (indices.size() > 0)
-  {
+  {// record data from all compartments associated with the given ComputeBranch
     for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
       ind.push_back(i);
   }
+
+	//now check
   if (record)
   {
     if (ind.size() > 0)
     {
       if (indices.size() == 0)
-      {
+      {// TUAN TODO: Not sure when this happens (need to ask James) 
         for (unsigned int i = 0; i < V.size(); ++i)
         {
           ShallowArray<int> inds;

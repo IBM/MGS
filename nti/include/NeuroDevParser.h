@@ -20,15 +20,18 @@
 #include <vector>
 #include <algorithm>
 #include <string>
-class NeuroDevParser {
+class NeuroDevParser
+{
 
   public:
-  class Option {
+  class Option
+  {
 public:
     static char ND_SHORT_NAME_NONE;
     static std::string ND_LONG_NAME_NONE;
     static Option ND_OPTION_NONE;
-    enum Type {
+    enum Type
+    {
       TYPE_NONE,
       TYPE_OPTIONAL,
       TYPE_REQUIRED
@@ -55,7 +58,8 @@ public:
     Option &operator=(const Option &option);
   };
 
-  class Parameter {
+  class Parameter
+  {
 private:
     Option fieldOption;
     std::string fieldValue;
@@ -78,7 +82,8 @@ public:
   typedef std::vector<String> StringVector;
   typedef std::vector<Option> OptionVector;
   typedef std::vector<Parameter> ParameterVector;
-  class Exception {
+  class Exception
+  {
 private:
     String fieldMessage;
 
@@ -116,44 +121,55 @@ public:
 
 inline NeuroDevParser::NeuroDevParser() {}
 inline NeuroDevParser::~NeuroDevParser() {}
-inline int NeuroDevParser::getOptionCount() const {
+inline int NeuroDevParser::getOptionCount() const
+{
   return (fieldOptions.size());
 }
-inline NeuroDevParser::Option const &NeuroDevParser::getOption(int i) const {
+inline NeuroDevParser::Option const &NeuroDevParser::getOption(int i) const
+{
   return (fieldOptions.at(i));
 }
-inline void NeuroDevParser::addOption(Option option) {
+inline void NeuroDevParser::addOption(Option option)
+{
   // Doesn't throw an exception if same option is added twice...
   fieldOptions.push_back(option);
 }
-inline void NeuroDevParser::removeOption(Option option) {
+inline void NeuroDevParser::removeOption(Option option)
+{
   // Doesn't throw an exception if non-existent option is removed...
   fieldOptions.erase(find(fieldOptions.begin(), fieldOptions.end(), option));
 }
 
-inline NeuroDevParser::OptionVector &NeuroDevParser::getOptions() {
+inline NeuroDevParser::OptionVector &NeuroDevParser::getOptions()
+{
   return (fieldOptions);
 }
 
-inline char NeuroDevParser::Option::getShortName() const {
+inline char NeuroDevParser::Option::getShortName() const
+{
   return (fieldShortName);
 }
-inline void NeuroDevParser::Option::setShortName(char shortName) {
+inline void NeuroDevParser::Option::setShortName(char shortName)
+{
   fieldShortName = shortName;
 }
-inline std::string NeuroDevParser::Option::getLongName() const {
+inline std::string NeuroDevParser::Option::getLongName() const
+{
   return (fieldLongName);
 }
-inline void NeuroDevParser::Option::setLongName(const std::string &longName) {
+inline void NeuroDevParser::Option::setLongName(const std::string &longName)
+{
   fieldLongName = longName;
 }
-inline NeuroDevParser::Option::Type NeuroDevParser::Option::getType() const {
+inline NeuroDevParser::Option::Type NeuroDevParser::Option::getType() const
+{
   return (fieldType);
 }
 inline void NeuroDevParser::Option::setType(Type type) { fieldType = type; }
 
 inline bool NeuroDevParser::Option::operator==(
-    const NeuroDevParser::Option &option) {
+    const NeuroDevParser::Option &option)
+{
   return (getShortName() == option.getShortName() &&
           getLongName() == option.getLongName() &&
           getType() == option.getType());
@@ -161,29 +177,40 @@ inline bool NeuroDevParser::Option::operator==(
 
 inline NeuroDevParser::Parameter::Parameter(
     const NeuroDevParser::Option &option, const std::string &value)
-    : fieldOption(option), fieldValue(value) {}
+    : fieldOption(option), fieldValue(value)
+{
+}
 inline NeuroDevParser::Parameter::Parameter(const Parameter &parameter)
-    : fieldOption(parameter.getOption()), fieldValue(parameter.getValue()) {}
+    : fieldOption(parameter.getOption()), fieldValue(parameter.getValue())
+{
+}
 inline NeuroDevParser::Parameter::Parameter(
     const NeuroDevParser::Option &option)
-    : fieldOption(option), fieldValue("") {}
+    : fieldOption(option), fieldValue("")
+{
+}
 inline NeuroDevParser::Parameter::~Parameter() {}
 inline NeuroDevParser::Option const &NeuroDevParser::Parameter::getOption()
-    const {
+    const
+{
   return (fieldOption);
 }
 inline void NeuroDevParser::Parameter::setOption(
-    const NeuroDevParser::Option &option) {
+    const NeuroDevParser::Option &option)
+{
   fieldOption = option;
 }
-inline std::string NeuroDevParser::Parameter::getValue() const {
+inline std::string NeuroDevParser::Parameter::getValue() const
+{
   return (fieldValue);
 }
-inline void NeuroDevParser::Parameter::setValue(const std::string &value) {
+inline void NeuroDevParser::Parameter::setValue(const std::string &value)
+{
   fieldValue = value;
 }
 inline NeuroDevParser::Parameter &NeuroDevParser::Parameter::operator=(
-    const NeuroDevParser::Parameter &parameter) {
+    const NeuroDevParser::Parameter &parameter)
+{
   setOption(parameter.getOption());
   setValue(parameter.getValue());
   return (*this);
