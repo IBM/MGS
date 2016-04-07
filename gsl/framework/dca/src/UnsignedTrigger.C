@@ -66,15 +66,15 @@ UnsignedTrigger::UnsignedTrigger(Simulation& sim,
   _op = opDI->getString();
   ++iter;
   NumericDataItem* criterionDI = dynamic_cast<NumericDataItem*>(*iter);
- /* if (criteriondi == 0)
+  if (criterionDI == 0)
   {
     std::cerr << "Dynamic cast of DataItem to NumericDataItem failed on "
                  "UnsignedTrigger!" << std::endl;
     exit(-1);
 	}
 	_criterion = criterionDI->getUnsignedInt();
-	*/
 	//MODIFIED: either a NumericDataItem or a ServiceDataItem
+	/*
   if (criterionDI == 0)
 	{
 		ServiceDataItem* ptrSvcDI = dynamic_cast<ServiceDataItem*>(*iter);
@@ -98,7 +98,7 @@ UnsignedTrigger::UnsignedTrigger(Simulation& sim,
 	else{
 		_criterion = criterionDI->getUnsignedInt();
 
-	}
+	}*/
   ++iter;
   NumericDataItem* delayDI = dynamic_cast<NumericDataItem*>(*iter);
   if (delayDI == 0)

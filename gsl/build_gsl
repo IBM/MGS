@@ -44,6 +44,7 @@ if [ "$2" == "-clean" ] ; then
 	rm Makefile
 elif [ "$2" == "-rebuild" ] ; then 
 	echo "build GSL"
+	rm Makefile
 	## detect if -release is used
 	for last; do true; done
 	if [ $last == "-release" ]; then 
