@@ -1,0 +1,8 @@
+{{#inputs}} 
+CurrentPulseGenerator synapseStimInj_{{name}}<pattern="periodic", peak=200.0, duration=1, period={{period}}, delay=100, last=500, inc=0>;
+{{/inputs}}
+{{#inputsInhibitory}} 
+CurrentPulseGenerator synapseStimInj_{{name}}<pattern="poisson", peak=200.0, duration=1, period={{period}}, delay=100, last=500, inc=0>;
+{{/inputsInhibitory}}
+
+

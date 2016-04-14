@@ -18,6 +18,7 @@
 #include "NDPairList.h"
 #include "CG_HodgkinHuxleyVoltageCompCategory.h"
 #include <math.h>
+#include <mpi.h>
 //#define DEBUG_HH
 
 HodgkinHuxleyVoltageCompCategory::HodgkinHuxleyVoltageCompCategory(
@@ -43,7 +44,7 @@ void HodgkinHuxleyVoltageCompCategory::count()
                 MPI_COMM_WORLD);
   float std = sqrt(totalVar / getSimulation().getNumProcesses());
   if (getSimulation().getRank() == 0)
-    printf("Total HodgkinHuxleyVoltage = %lld, Mean = %lf, StDev = %lf\n",
+    printf("Total HodgkinHuxleyVoltage (represent a ComputeBranch) = %lld, Mean = %lf, StDev = %lf\n",
            totalCount, mean, std);
 
   totalCount = localCount = 0;

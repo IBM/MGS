@@ -1,0 +1,70 @@
+
+{{#inputs}}
+   polyConnect(timeStep, synapseStimInj_{{name}}, <>, <>);
+   polyConnect(synapseStimInj_{{name}}, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), <>, <identifier="stimulation">);
+     
+{{/inputs}}
+
+{{#inputsInhibitory}}
+   polyConnect(timeStep, synapseStimInj_{{name}}, <>, <>);
+   polyConnect(synapseStimInj_{{name}}, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), <>, <identifier="stimulation">);
+     
+{{/inputsInhibitory}}
+   TissueSite currentStimSite0( 0, 0, 0, 1.0 );
+   polyConnect(currentStimInj0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite0>);
+   
+{{#inputs}}
+   {{#synapse_include}}
+   TissueSite synapseSite_{{name}}( {{siteX}}, {{ siteY}}, {{siteZ}}, {{siteR}} );
+   
+   polyConnect(timeStep, voltageDisplay_synapse{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay_synapse{{name}}, <>, <site=synapseSite_{{name}}>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, calciumDisplay_synapse{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), calciumDisplay_synapse{{name}}, <>, <site=synapseSite_{{name}}>);
+#endif
+   
+   {{/synapse_include}}
+   {{#spine_include}}
+   polyConnect(timeStep, voltageDisplay_spine{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{spine_index}}>), voltageDisplay_spine{{name}}, <>, <>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, calciumDisplay_spine{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{spine_index}}>), calciumDisplay_spine{{name}}, <>, <>);
+#endif
+
+   {{/spine_include}}
+   {{#bouton_include}}
+   polyConnect(timeStep, voltageDisplay_bouton{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), voltageDisplay_bouton{{name}}, <>, <>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, calciumDisplay_bouton{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), calciumDisplay_bouton{{name}}, <>, <>);
+#endif
+
+   {{/bouton_include}}
+{{/inputs}}
+
+{{#inputsInhibitory}}
+   {{#synapse_include}}
+   TissueSite synapseSite_{{name}}( {{siteX}}, {{ siteY}}, {{siteZ}}, {{siteR}} );
+
+   polyConnect(timeStep, voltageDisplay_synapse{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay_synapse{{name}}, <>, <site=synapseSite_{{name}}>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, calciumDisplay_synapse{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), calciumDisplay_synapse{{name}}, <>, <site=synapseSite_{{name}}>);
+#endif
+  
+   {{/synapse_include}}
+   {{#bouton_include}}
+   polyConnect(timeStep, voltageDisplay_bouton{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), voltageDisplay_bouton{{name}}, <>, <>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, calciumDisplay_bouton{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), calciumDisplay_bouton{{name}}, <>, <>);
+#endif
+
+   {{/bouton_include}}
+{{/inputsInhibitory}}
+

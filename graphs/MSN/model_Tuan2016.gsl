@@ -32,7 +32,7 @@
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
 	#define RecordInterval   1.0   //  [ms]
-	#define TimeEnd          10      // [ms]
+	#define TimeEnd          100      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -212,8 +212,8 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 //NOTE: -r #capsules-per-cpt
 //#define strArg1 "neurons_msn.txt -p params/DevParams.par"
-//#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
-#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 " //" -g 1.0"
+#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
+//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 " //" -g 1.0"
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
 #if SIMULATION_INVOLVE == VMONLY
 #define  strArg2 "params/CptParams.par"
@@ -685,6 +685,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
 CurrentPulseGenerator synapseStimInj0<pattern="periodic", peak=0.1, duration=1, delay=200, period=600, last=3600, inc=0>;
 
+#include "stimulus_model_Tuan2016.gsl"
 //CurrentPulseGenerator currentStimInj0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
 //polyConnect(timeStep, currentStimInj0, <>, <>);
 //
@@ -707,6 +708,9 @@ VoltageDisplay synapseVoltageDisplay0<fileName=PathFileCombine("synapseV0.dat")>
 synapseVoltageDisplay0.dataCollection(<>) on recOn;
 CalciumDisplay synapseCalciumDisplay0<fileName=PathFileCombine("synapseC0.dat")>;
 synapseCalciumDisplay0.dataCollection(<>) on recOn;
+
+#include "recording_model_Tuan2016.gsl"
+
 //}}}
 
 /*}}}*/
@@ -1426,6 +1430,8 @@ Grid MSN_D1Neuron{
     // 2. with VARIABLES (for I/O, stimulus)
 	/*{{{*/
   //{{{ I/O
+#include "connect_model_Tuan2016.gsl"
+/*
 	TissueSite synapseSite0( -41.813, 175.470, -0.645, 7.0 );
 
 	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
@@ -1441,6 +1447,7 @@ Grid MSN_D1Neuron{
    polyConnect(timeStep, calciumSomaDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0>), calciumSomaDisplay, <>, <>);
 #endif
+*/
 
   //}}}
   //{{{ Stimulus

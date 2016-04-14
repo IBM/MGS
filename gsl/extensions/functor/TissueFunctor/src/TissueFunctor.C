@@ -1410,7 +1410,6 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             Capsule* begCap = &branch->_capsules[j];
             Capsule* endCap =
                 &branch->_capsules[j + currentcompartment_size - 1];
-            if (i >= remainder_caps) currentcompartment_size = cptSize;
 
             dyn_var_t radius = 0.0;
             dyn_var_t surface_area = 0.0;
@@ -1529,6 +1528,9 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             cdi->getConstant()->duplicate(aptr_dim);
             Constant* dim = aptr_dim.release();
             dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
+
+            if (i+1 >= remainder_caps) currentcompartment_size = cptSize;
+						//currentcompartment_size = chemicalSynapseTouchSpace[i+1];
           }
         }
       }

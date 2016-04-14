@@ -1,0 +1,61 @@
+
+{{#inputs}}
+{{#spine_include}}
+VoltageDisplay voltageDisplay_spine{{name}}<fileName="out/V_spine{{name}}.dat">;
+voltageDisplay_spine{{name}}.dataCollection(<>) on recOn;
+
+#if SIMULATION_INVOLVE >= VM_CACYTO
+CalciumDisplay calciumDisplay_spine{{name}}<fileName="out/Ca_spine{{name}}.dat">;
+calciumDisplay_spine{{name}}.dataCollection(<>) on recOn;
+#endif
+
+{{/spine_include}}
+
+{{#bouton_include}}
+VoltageDisplay voltageDisplay_bouton{{name}}<fileName="out/V_bouton{{name}}.dat">;
+voltageDisplay_bouton{{name}}.dataCollection(<>) on recOn;
+
+#if SIMULATION_INVOLVE >= VM_CACYTO
+CalciumDisplay calciumDisplay_bouton{{name}}<fileName="out/Ca_bouton{{name}}.dat">;
+calciumDisplay_bouton{{name}}.dataCollection(<>) on recOn;
+#endif
+
+{{/bouton_include}}
+
+{{#synapse_include}}
+VoltageDisplay voltageDisplay_synapse{{name}}<fileName="out/V_synapse{{name}}.dat">;
+voltageDisplay_synapse{{name}}.dataCollection(<>) on recOn;
+#if SIMULATION_INVOLVE >= VM_CACYTO
+CalciumDisplay calciumDisplay_synapse{{name}}<fileName="out/Ca_synapse{{name}}.dat">;
+calciumDisplay_synapse{{name}}.dataCollection(<>) on recOn;
+#endif
+
+{{/synapse_include}}
+{{/inputs}}
+
+
+{{#inputsInhibitory}}
+{{#bouton_include}}
+
+VoltageDisplay voltageDisplay_bouton{{name}}<fileName="out/V_bouton{{name}}.dat">;
+voltageDisplay_bouton{{name}}.dataCollection(<>) on recOn;
+
+#if SIMULATION_INVOLVE >= VM_CACYTO
+CalciumDisplay calciumDisplay_bouton{{name}}<fileName="out/Ca_bouton{{name}}.dat">;
+calciumDisplay_bouton{{name}}.dataCollection(<>) on recOn;
+#endif
+
+{{/bouton_include}}
+
+{{#synapse_include}}
+VoltageDisplay voltageDisplay_synapse{{name}}<fileName="out/V_synapse{{name}}.dat">;
+voltageDisplay_synapse{{name}}.dataCollection(<>) on recOn;
+
+#if SIMULATION_INVOLVE >= VM_CACYTO
+CalciumDisplay calciumDisplay_synapse{{name}}<fileName="out/Ca_synapse{{name}}.dat">;
+calciumDisplay_synapse{{name}}.dataCollection(<>) on recOn;
+#endif
+
+{{/synapse_include}}
+
+{{/inputsInhibitory}}
