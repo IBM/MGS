@@ -1,0 +1,10 @@
+#FILENAME LAYER MTYPE ETYPE XOFFSET YOFFSET ZOFFSET OFFSET_TYPE AXON_PAR BASAL_PAR APICAL_PAR
+neurons_msn/MSN_denda_0.swc 1 0 0 0.000 0.000 0.000 A NULL NULL NULL
+#neurons_msn/bouton.swc 1 1 0 -41.813  175.470  -0.645 A NULL NULL NULL
+#neurons_msn/spine.swc  1 2 0 -41.813  175.470  -0.645 A NULL NULL NULL
+#neurons_msn/bouton.swc 1 1 0 -45.239 182.894  -1.390 A NULL NULL NULL
+#neurons_msn/spine.swc  1 2 0 -45.239 182.894  -1.390 A NULL NULL NULL
+#neurons_msn/bouton.swc 1 1 0 -47.539 188.846  -0.149 A NULL NULL NULL
+#neurons_msn/spine.swc  1 2 0 -47.539 188.846  -0.149 A NULL NULL NULL
+#neurons_msn/bouton.swc 1 1 0 -51.148 194.765  2.1231 A NULL NULL NULL
+#neurons_msn/spine.swc  1 2 0 -51.148 194.765  2.1231 A NULL NULL NULL

@@ -1,3 +1,10 @@
+CurrentPulseGenerator synapseStimInj0<pattern="periodic", peak=0.1, duration=1, delay=200, period=600, last=3600, inc=0>;
+//CurrentPulseGenerator currentStimInj0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
+//polyConnect(timeStep, currentStimInj0, <>, <>);
+//
+//CurrentPulseGenerator currentStimInj1<pattern="periodic", peak=2000, duration=3, period=5000, delay=400, last=3600, inc=0>; 
+//polyConnect(timeStep, currentStimInj1, <>, <>);
+
 {{#inputs}} 
 CurrentPulseGenerator synapseStimInj_{{name}}<pattern="periodic", peak=200.0, duration=1, period={{period}}, delay=100, last=500, inc=0>;
 {{/inputs}}

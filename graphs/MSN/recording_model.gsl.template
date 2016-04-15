@@ -1,3 +1,13 @@
+VoltageDisplay voltageDisplay<fileName= PathFileCombine("somaV.dat")>;
+voltageDisplay.dataCollection(<>) on recOn;
+
+CalciumDisplay calciumSomaDisplay<fileName= PathFileCombine("somaCa.dat")>;
+calciumSomaDisplay.dataCollection(<>) on recOn;
+
+VoltageDisplay synapseVoltageDisplay0<fileName=PathFileCombine("synapseV0.dat")>;
+synapseVoltageDisplay0.dataCollection(<>) on recOn;
+CalciumDisplay synapseCalciumDisplay0<fileName=PathFileCombine("synapseC0.dat")>;
+synapseCalciumDisplay0.dataCollection(<>) on recOn;
 
 {{#inputs}}
 {{#spine_include}}

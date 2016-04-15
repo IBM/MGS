@@ -13,11 +13,11 @@
 
 //SECTIONZ: Modify the data in this section for general setting
 // 
-//{{{
+//{{{ 1. Output Location
 #define OutputFolderName "./out2"
 #define PathFileCombine(X) OutputFolderName"/"X
 
-//{{{ Methods for Time-Step and Time-end
+//{{{ 2. Methods for Time-Step and Time-end
 #define BASED_ON_ITERATIONS 1
 #define BASED_ON_TIMES 2
 
@@ -25,7 +25,7 @@
 #define SIMULATION_RECORD BASED_ON_TIMES
 //#define SIMULATION_RECORD BASED_ON_ITERATIONS
 //}}}
-//{{{ Numerics
+//{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
 #define TimeStep_value   0.0010 // [ms]
 
@@ -46,15 +46,13 @@
 #endif
 
 //}}}
-//{{{ Diffusion
-//#define CA_DCA 4.4        // 0.4 um^2/ms unbuffered
+//{{{ Diffusion + Fast-buffering constants
 #define Cacyto_DiffusionConstant 0.27   // [um^2/ms]  unbuffered
 #define CaER_DiffusionConstant 0.06   //  [um^2/ms]  unbuffered
 #define Dopa_DiffusionConstant 0.182  // um^2/ms  0.082 +/- 0.013 at cell surface (about 6-10x slower than in free solution)
 #define Fluo3_DiffusionConstant 0.09  //[um^2/ms]
 
  // use with fast-buffering assumption
-//#define CA_BETA 0.002     // 0.05 dimensionless, Wagner and Keizer buffering constant
 #define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
 //#define Cacyto_beta   0.002     // dimensionless 
@@ -78,10 +76,10 @@
 
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
-#define NTGlutamate_baseline 5  // [uM]
-#define NTGABA_baseline 5  // [uM]
+#define NTGlutamate_baseline 5.0  // [uM]
+#define NTGABA_baseline 5.0  // [uM]
 //}}}
-//{{{ Condition
+//{{{ Conditions: conductance + temperature + Vrest + Eleak
 #define Ra_value 0.001     // [GOhm*um]
   //across the spine-neck to shaft
 #define R_AXIAL 0.001     // [GOhm*um]
@@ -100,9 +98,9 @@
 #define E_leak_value Vrest_value
 //}}}
 //{{{ Time constant
-#define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
 //}}}
 //{{{ PMCA
+#define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
 //#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
 //}}}
 //{{{ RYR
@@ -683,31 +681,16 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 //stimulus
 //{{{
 VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
-CurrentPulseGenerator synapseStimInj0<pattern="periodic", peak=0.1, duration=1, delay=200, period=600, last=3600, inc=0>;
 
 #include "stimulus_model_Tuan2016.gsl"
-//CurrentPulseGenerator currentStimInj0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
-//polyConnect(timeStep, currentStimInj0, <>, <>);
-//
-//CurrentPulseGenerator currentStimInj1<pattern="periodic", peak=2000, duration=3, period=5000, delay=400, last=3600, inc=0>; 
-//polyConnect(timeStep, currentStimInj1, <>, <>);
 //}}}
 
 //I/O purpose
 //{{{
 
 VariableType VoltageDisplay{ initialize->initialize1 };
-VoltageDisplay voltageDisplay<fileName= PathFileCombine("somaV.dat")>;
-voltageDisplay.dataCollection(<>) on recOn;
 
 VariableType CalciumDisplay{ initialize->initialize4 };
-CalciumDisplay calciumSomaDisplay<fileName= PathFileCombine("somaCa.dat")>;
-calciumSomaDisplay.dataCollection(<>) on recOn;
-
-VoltageDisplay synapseVoltageDisplay0<fileName=PathFileCombine("synapseV0.dat")>;
-synapseVoltageDisplay0.dataCollection(<>) on recOn;
-CalciumDisplay synapseCalciumDisplay0<fileName=PathFileCombine("synapseC0.dat")>;
-synapseCalciumDisplay0.dataCollection(<>) on recOn;
 
 #include "recording_model_Tuan2016.gsl"
 
@@ -1362,9 +1345,11 @@ Grid MSN_D1Neuron{
 	polyConnect(timeStep, .[].Layer(branches_Dopa, junctions_Dopa), <>, <identifier="dt">);
 #endif
 
+  // Na+ channels
 	polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
 
+  // K+ channels
 	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
 
@@ -1373,21 +1358,6 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE >= VM_CACYTO
 	polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(CaLv13Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(CaLv13Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(CaNChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(CaNChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(CaPQChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(CaPQChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(CaRChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(CaRChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
-
-	polyConnect(timeStep, .[].Layer(CaTChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(CaTChannels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
 
 	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
@@ -1430,35 +1400,11 @@ Grid MSN_D1Neuron{
     // 2. with VARIABLES (for I/O, stimulus)
 	/*{{{*/
   //{{{ I/O
-#include "connect_model_Tuan2016.gsl"
-/*
-	TissueSite synapseSite0( -41.813, 175.470, -0.645, 7.0 );
-
-	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
-	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite0>);
-
-   polyConnect(timeStep, voltageDisplay, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0>), voltageDisplay, <>, <>);
-
-#if SIMULATION_INVOLVE >= VM_CACYTO
-	polyConnect(timeStep, synapseCalciumDisplay0, <>, <>);
-	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite0>);
-
-   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0>), calciumSomaDisplay, <>, <>);
-#endif
-*/
+#include "connect_recording_model_Tuan2016.gsl"
 
   //}}}
   //{{{ Stimulus
-	polyConnect(timeStep, synapseStimInj0, <>, <>);
-	polyConnect(synapseStimInj0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), <>, <identifier="stimulation">);
-
-//   TissueSite currentStimSite0( 0, 0, 0, 1.0 );
-//   polyConnect(currentStimInj0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite0>);
-//
-//   TissueSite currentStimSite1( 0, 0, 0, 1.0 );
-//   polyConnect(currentStimInj1, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite1>);
+#include "connect_stimulus_model_Tuan2016.gsl"
   //}}}
 	polyConnect(timeStep, simInfo, <>, <>);
 	/*}}}*/

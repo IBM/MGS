@@ -63,7 +63,10 @@ class SomeClass(object):
               self.saveSpines(filename)
               4. generate bouton/spine SWC files (default:./neurons/)
               self.genboutonspineSWCFiles_MSN(folder)
-
+              5. generate the neurons.txt/tissue.txt file
+              self.genTissueText()
+              6. generate the GSL component files
+              self.genModelGSL()
 
               """)
 
