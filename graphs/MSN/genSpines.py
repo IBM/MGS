@@ -1803,12 +1803,18 @@ class SomeClass(object):
                                                 'inputsInhibitory': inputsInhibitory}))
             newFile.close()
 
-        with open("connect_model.gsl.template", "r") as file:
+        with open("connect_recording_model.gsl.template", "r") as file:
             gsl = file.read()
             targetFile = "./" + "connect_" + modelfile
             newFile = open(targetFile, "w")
             newFile.write(pystache.render(gsl, {'inputs': inputs,
                                                 'inputsInhibitory': inputsInhibitory}))
 
+        with open("connect_stimulus_model.gsl.template", "r") as file:
+            gsl = file.read()
+            targetFile = "./" + "connect_" + modelfile
+            newFile = open(targetFile, "w")
+            newFile.write(pystache.render(gsl, {'inputs': inputs,
+                                                'inputsInhibitory': inputsInhibitory}))
 if __name__ == '__main__':
     genSpine = SomeClass('neurons/neuron_test.swc')
