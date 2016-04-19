@@ -32,7 +32,7 @@
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
 	#define RecordInterval   1.0   //  [ms]
-	#define TimeEnd          100      // [ms]
+	#define TimeEnd          10      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -210,7 +210,8 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 //NOTE: -r #capsules-per-cpt
 //#define strArg1 "neurons_msn.txt -p params/DevParams.par"
-#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
+//#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
+#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3" // -g 3.0"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 " //" -g 1.0"
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
 #if SIMULATION_INVOLVE == VMONLY
@@ -646,7 +647,8 @@ TimeStep timeStep< deltaT=TimeStep_value >; // msec
 // 4b. SERVICE
 //{{{
 //Service Provider to Simulation Info
-VariableType SimulationInfo {initialize->initialize4, calculateInfo->finish};
+// NOTE: Use global is critical to ensure each MPI rank has a copy 
+VariableType SimulationInfo(global) {initialize->initialize4, calculateInfo->finish};
 #if  SIMULATION_RECORD == BASED_ON_TIMES
 SimulationInfo simInfo<recordIntervalInTime=RecordInterval>;
 #elif SIMULATION_RECORD == BASED_ON_ITERATIONS

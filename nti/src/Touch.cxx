@@ -121,8 +121,11 @@ double Touch::getProp(key_size_t key) {
   return rval;
 }
 
-//GOAL: check if the capsule is the spineneck
-// TODO: change the way we determine in the comping future
+//GOAL: 
+// A touch has 2 capsule
+//    check if one of the two capsules is the spineneck
+//    and return the key of that capsule
+// TODO: change the way we determine in the coming future
 //       where the spine head+neck is not passed in via tissue file
 //       but automatically generated
 bool Touch::hasSpineNeck(key_size_t& key)
@@ -152,8 +155,11 @@ bool Touch::hasSpineNeck(key_size_t& key)
 
 }
 
-//GOAL: check if the capsule is the spinehead
-// TODO: change the way we determine in the comping future
+//GOAL: 
+// A touch has 2 capsule
+//    check if one of the two capsules is the spinehead
+//    and return the key of that capsule
+// TODO: change the way we determine in the coming future
 //       where the spine head+neck is not passed in via tissue file
 //       but automatically generated
 bool Touch::hasSpineHead(key_size_t& key)

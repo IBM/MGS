@@ -514,6 +514,14 @@ definition: functor_definition {
    localError->setOriginal();
    $$ = new C_definition_variabletype($2, $4, localError);
 }
+| VARIABLETYPE declarator '(' name ')' '{' phase_mapping_list '}' ';' {
+   std::string mes = "VariableType \"";
+   mes += $2->getName() + "\"";
+   SyntaxError* localError = 
+      new SyntaxError(CURRENTFILE, @1.first_line, mes.c_str());
+   localError->setOriginal();
+   $$ = new C_definition_variabletype($2, $4, $7, localError);
+}
 | VARIABLETYPE error_list ';' {
    SyntaxError* localError = 
       new SyntaxError(CURRENTFILE, @1.first_line, "Definition or Declaration", 
@@ -2937,7 +2945,7 @@ int main(int argc, char** argv)
           << ".                                                           .\n"
           << ".  BMC-YKT-08-23-2011-2                                     .\n"
           << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2014  All rights reserved   .\n"
+          << ".  (C) Copyright IBM Corp. 2005-2016  All rights reserved   .\n"
           << ".                                                           .\n"
           << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n";
   }

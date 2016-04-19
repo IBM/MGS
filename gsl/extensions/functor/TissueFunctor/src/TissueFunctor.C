@@ -2610,7 +2610,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
               else
               {
                 if (nodeCategory == "Junctions")
-                {
+                {// Junction compartment that resides on the same MPI processs of the ComputeBranch under investigation
                   _indexJunctionMap[nodeType][indexJct][rval[indexJct]] =
                       &((*iter)->lastCapsule());  // lastcapsule in the branch
                                                   // (*iter)
@@ -2709,7 +2709,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
           else if ((nodeCategory == "Junctions" ||
                     nodeCategory == "JunctionPoints") &&
                    _segmentDescriptor.getFlag((*iter)->lastCapsule().getKey()))
-          {
+          {// Junction compartment or JunctionPoint node that resides on a different MPI processs 
+			  // of the ComputeBranch under investigation
             if (nodeCategory == "Junctions")
             {
               assert(indexJct != _rank);
@@ -3978,7 +3979,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               NDPairList Mspineattach2spineattach =
                   spineattach2spineattach[*etiter];
 
-              key_size_t keyneck;
+              key_size_t keyneck=0;
               (*titer).hasSpineNeck(keyneck);
               Capsule* capsneck = (keyneck == key1) ? preCapsule : postCapsule;
 
