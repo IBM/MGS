@@ -175,9 +175,11 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 	 os << tab << "noPredicateMatch = true;\n";
    for (it = interfaceNames.begin(); it != end; ++it) {
       os << tab << "if (" << PREFIX << *it << "Ptr == 0) {\n"
+	 << "#if !defined(NOWARNING_DYNAMICCAST) \n"
 	 << tab << TAB << "std::cerr << \"Dynamic Cast of "
 	 << *it << " failed in " << name
 	 << "\" << std::endl;\n"
+	 << "#endif\n"
 	 //<< tab << TAB << "exit(-1);\n"
 	 << tab << TAB << "castMatchLocal = false;\n"
 	 << tab << "}\n"
@@ -232,9 +234,11 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 	 os << tab << "matchLocal = true;\n";
    for (it = interfaceNames.begin(); it != end; ++it) {
       os << tab << "if (" << PREFIX << *it << "Ptr == 0) {\n"
+	 << "#if !defined(NOWARNING_DYNAMICCAST) \n"
 	 << tab << TAB << "std::cerr << \"Dynamic Cast of "
 	 << *it << " failed in " << name
 	 << "\" << std::endl;\n"
+	 << "#endif\n"
 	 //<< tab << TAB << "exit(-1);\n"
 	 << tab << TAB << "matchLocal = false;\n"
 	 << tab << "}\n"

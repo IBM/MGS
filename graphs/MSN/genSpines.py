@@ -23,11 +23,19 @@ NOTE: branchOrder being store starts from zero
 class SomeClass(object):
     branchType = {"soma": 1, "axon": 2, "basal": 3, "apical": 4,
                   "AIS": 5, "tufted": 6,"bouton":7 }
-    spineType = {"generic": 0, "thin": 2, "mush": 3}
+    # NOTE: The regular neuron is going to use '0' in MTYPE
+    # so we should use a different MTYPE for spine and bouton
+    # The different set of configuration that we can use
+    #   spine="generic"= 1  ; bouton = "excitatory=2" or "inhibitory=3"
+    spineType = {"generic": 2}
+    boutonType = {"excitatory":1, "inhibitory":3}
+
+    """
+    spineType = {"thin": 2, "mush": 3}
     #boutonType = {"excitatory":4, "inhibitory":5}
-    boutonType = {"excitatory":4, "inhibitory":1}
     boutonTypeOnSpine = {"thin":4, "mush":5} #as a function of spine-type
-    numFields = 7
+    """
+    numFields = 7   # number of fields in SWC file
     # def __new__(cls, *args, **kwargs):
     #   pass
 

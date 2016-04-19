@@ -73,18 +73,18 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
                                     dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
-		//TUAN
-		//BUG IS HERE - we should not use the radius of the SOMA
-		dyn_var_t Rb;
-		if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
-		{
-			Rb = ((*diter)->r );
-		}else{
-			Rb = 0.5 * ((*diter)->r + dimension->r);
-		}
-    dyn_var_t distance = fabs((*diter)->dist2soma - dimension->dist2soma);
-		assert(distance > 0);
-    gAxial.push_back(Poar * Rb * Rb / distance);
+	  //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
+	  //      in calculating the cross-sectional area
+	  dyn_var_t Rb;
+	  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+	  {
+		  Rb = ((*diter)->r );
+	  }else{
+		  Rb = 0.5 * ((*diter)->r + dimension->r);
+	  }
+	  dyn_var_t distance = fabs((*diter)->dist2soma - dimension->dist2soma);
+	  assert(distance > 0);
+	  gAxial.push_back(Poar * Rb * Rb / distance);
   }
   if (getSharedMembers().deltaT)
   {
@@ -99,7 +99,12 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 		<< ")" << std::endl;
 #endif
 #ifdef DEBUG_ASSERT
-  assert(cmt > 0);
+  if (cmt <= 0)
+  {
+	  std::cout << "HINTS: Check CptParams...par file, maybe you're using the neurons with MTYPE"
+		  << " not defined in the param file\n";
+	  assert(cmt > 0);
+  }
 #endif
 }
 

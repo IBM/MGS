@@ -48,7 +48,7 @@ elif [ "$2" == "-rebuild" ] ; then
 	## detect if -release is used
 	for last; do true; done
 	if [ $last == "-release" ]; then 
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --with-mpi --domainLib;
+		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --with-mpi --domainLib --nowarning_dynamiccast;
 		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --domainLib;
 		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --debug_assert --domainLib;
 		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --debug_assert --domainLib;
@@ -70,7 +70,7 @@ elif [ "$2" == "-rebuild" ] ; then
 		fi
 	else #default: standard debug
 		#if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --with-mpi --domainLib;
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --with-mpi --domainLib;
+		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --with-mpi --domainLib --nowarning_dynamiccast;
 		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
 		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
 		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
