@@ -1,35 +1,21 @@
 /*
-	TissueSite synapseSite0( -41.813, 175.470, -0.645, 7.0 );
+	TissueSite synapseSite_0( -41.813, 175.470, -0.645, 7.0 );
 
 	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
-	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite0>);
+	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite_0>);
 
    polyConnect(timeStep, voltageDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0>), voltageDisplay, <>, <>);
 
 #if SIMULATION_INVOLVE >= VM_CACYTO
 	polyConnect(timeStep, synapseCalciumDisplay0, <>, <>);
-	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite0>);
+	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite_0>);
 
    polyConnect(timeStep, calciumSomaDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0>), calciumSomaDisplay, <>, <>);
 #endif
 */
 
-{{#inputs}}
-   polyConnect(timeStep, synapseStimInj_{{name}}, <>, <>);
-   polyConnect(synapseStimInj_{{name}}, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), <>, <identifier="stimulation">);
-     
-{{/inputs}}
-
-{{#inputsInhibitory}}
-   polyConnect(timeStep, synapseStimInj_{{name}}, <>, <>);
-   polyConnect(synapseStimInj_{{name}}, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), <>, <identifier="stimulation">);
-     
-{{/inputsInhibitory}}
-   TissueSite currentStimSite0( 0, 0, 0, 1.0 );
-   polyConnect(currentStimInj0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite0>);
-   
 {{#inputs}}
    {{#synapse_include}}
    TissueSite synapseSite_{{name}}( {{siteX}}, {{ siteY}}, {{siteZ}}, {{siteR}} );

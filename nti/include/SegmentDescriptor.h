@@ -50,7 +50,8 @@
 #define SEGMENT_INDEX_BITS 12  // < 4,096 segments/branch
 #define NEURON_INDEX_BITS 19   // < 524,288 neurons
 #define BRANCH_INDEX_BITS 12   // < 4,096 branches/neuron
-#define FLAG_BITS 1            // transient volatile boolean
+#define FLAG_BITS 1            // transient volatile boolean (true if the 
+                     //associated compartment is a junction)
 
 class Segment;
 //TUAN: need to update all possible type to key_size_t

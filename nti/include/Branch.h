@@ -36,7 +36,7 @@ class Branch {
    public:
 		 //AIS = axon initiation site
 		 //TUFTEDDEN = the distal tufted dendritic part
-		  enum BranchType { _SOMA=0, _AXON=1, _BASALDEN=2, _APICALDEN=3, _AIS=4, _TUFTEDDEN=5, _BOUTON=6 };
+	  enum BranchType { _SOMA=0, _AXON=1, _BASALDEN=2, _APICALDEN=3, _AIS=4, _TUFTEDDEN=5, _BOUTON=6 };
       Branch();
       Branch(Branch const & s);
       Branch& operator=(const Branch& branch);

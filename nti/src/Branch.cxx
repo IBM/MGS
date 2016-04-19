@@ -119,6 +119,31 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
     numberOfResampledSegments = 2;
     _resampledTerminalIndex = segments.size() - 1;
   }
+  else if (_branchIndex == 1 and _numberOfSegments == 1 and
+         _rootSegment->getBranch()->getBranchType() == Branch::_SOMA
+		  )
+  {// for the first branch stemming out of soma, special treament if it has only 1 compartment
+	//i.e. don't scale that single data point
+    assert(_rootSegment);
+    segments.resize(s + 2);
+    int terminalIndex = _rootSegment->getBranch()->getResampledTerminalIndex();
+    assert(terminalIndex >= 0);
+    segments[s] = segments[terminalIndex];
+    segments[s].resetBranch(this);
+    segments[s].setSegmentIndex(segCount);
+    segments[s].setSegmentArrayIndex(s);
+    segments[s].setKey();
+    if (segments[terminalIndex].getBranch()->getBranchType() == Branch::_SOMA)
+      segments[s].getRadius() = _segments[0].getRadius();
+    ++s;
+    ++segCount;
+    segments[s] = _segments[0];
+    segments[s].setSegmentIndex(segCount);
+    segments[s].setSegmentArrayIndex(s);
+    segments[s].setKey();
+    numberOfResampledSegments = 2;
+    _resampledTerminalIndex = segments.size() - 1;
+  }
   else
   {
     assert(_rootSegment);

@@ -49,6 +49,7 @@ class SomeClass(object):
            math.radians(216)
         ]
         self.swc_filename = x
+        self.swcFolder = os.path.dirname(x)
         self.parse_file()
         print("""
               Please perform the operations in the following order
@@ -406,7 +407,7 @@ class SomeClass(object):
                     boutonFileName = "bouton_generic"
                     spineFileName = "spine_generic"
                     siteR = 5  # radius (micrometer) of stimulus taking effect
-                    period = 0 # period of stimulus
+                    period = 300 # period of stimulus
                     bouton_include= 0
                     spine_include = 0
                     synapse_include= 0
@@ -603,7 +604,7 @@ class SomeClass(object):
                         boutonFileName = "bouton_generic"
                         spineFileName = "spine_generic"
                         siteR = 5  # radius (micrometer) of stimulus taking effect
-                        period = 0 # period of stimulus
+                        period = 300 # period of stimulus
                         bouton_include= 0
                         spine_include = 0
                         synapse_include= 0
@@ -1681,40 +1682,49 @@ class SomeClass(object):
                            'bouton_include': line[10]=='1',
                            'spine_include': line[11]=='1',
                            'synapse_include': line[12]=='1',
-                           'orientation': line[13]})
-
-        try:
-            linesInhibitory = open(self.inhibitoryFileName).read().splitlines()
-        except IOError:
-            print "Could not open file to write! Please check !" +  self.spineFileName
-        split_linesInhibitory = map(lambda x: x.split(' '), linesInhibitory)
+                           'orientation': line[13],
+                           'folder': self.swcFolder})
 
         inputsInhibitory = []
-
-        x = len(open(self.spineFileName).readlines())
-
-        for i, line in enumerate(split_linesInhibitory[1:]):
-            inputsInhibitory.append({'name': (i+x),
-                                     'bouton_index': ((i+(2*x))-1),
-                                     'branchType': line[0],
-                                     'boutonType': line[1],
-                                     'siteX': line[2],
-                                     'siteY': line[3],
-                                     'siteZ': line[4],
-                                     'siteR': line[5],
-                                     'period': line[6],
-                                     'boutonFileName': line[7],
-                                     'spineFileName': line[8],
-                                     'bouton_include': line[9]=='1',
-                                     'spine_include': line[10]=='1',
-                                     'synapse_include': line[11]=='1'})
+        try:
+            linesInhibitory = open(self.inhibitoryFileName).read().splitlines()
+            split_linesInhibitory = map(lambda x: x.split(' '), linesInhibitory)
 
 
+            x = len(open(self.spineFileName).readlines())
+
+            for i, line in enumerate(split_linesInhibitory[1:]):
+                inputsInhibitory.append({'name': (i+x),
+                                        'bouton_index': ((i+(2*x))-1),
+                                        'branchType': line[0],
+                                        'boutonType': line[1],
+                                        'siteX': line[2],
+                                        'siteY': line[3],
+                                        'siteZ': line[4],
+                                        'siteR': line[5],
+                                        'period': line[6],
+                                        'boutonFileName': line[7],
+                                        'spineFileName': line[8],
+                                        'bouton_include': line[9]=='1',
+                                        'spine_include': line[10]=='1',
+                                        'synapse_include': line[11]=='1',
+                                        'folder': self.swcFolder})
+        except IOError:
+            print "Could not open file to write! Please check !" +  self.inhibitoryFileName
+            isContinue = self.getConfirmation()
+            assert(isContinue)
+
+
+        mainNeuronFile = []
+        mainNeuronFile.append({'neuronFile': self.swc_filename,
+                               }
+                              )
         with open("neurons.txt.template", "r") as file:
             txt = file.read()
             newFile = open(self.tissueFileName, "w")
             newFile.write(pystache.render(txt,
-                                          {'inputs': inputs,
+                                          { 'mainNeuron': mainNeuronFile,
+                                            'inputs': inputs,
                                            'inputsInhibitory': inputsInhibitory}))
             newFile.close()
 
@@ -1757,31 +1767,32 @@ class SomeClass(object):
                            'spine_include': line[11]=='1',
                            'synapse_include': line[12]=='1',
                            'orientation': line[13]})
+        inputsInhibitory = []
         try:
             linesInhibitory = open(self.inhibitoryFileName).read().splitlines()
+            split_linesInhibitory = map(lambda x: x.split(' '), linesInhibitory)
+
+            x = len(open(self.spineFileName).readlines())
+
+            for i, line in enumerate(split_linesInhibitory[1:]):
+                inputsInhibitory.append({'name': (i+x),
+                                        'bouton_index': ((i+(2*x))-1),
+                                        'branchType': line[0],
+                                        'boutonType': line[1],
+                                        'siteX': line[2],
+                                        'siteY': line[3],
+                                        'siteZ': line[4],
+                                        'siteR': line[5],
+                                        'period': line[6],
+                                        'boutonFileName': line[7],
+                                        'spineFileName': line[8],
+                                        'bouton_include': line[9]=='1',
+                                        'spine_include': line[10]=='1',
+                                        'synapse_include': line[11]=='1'})
         except IOError:
-            print "Could not open file to write! Please check !" +  self.spineFileName
-        split_linesInhibitory = map(lambda x: x.split(' '), linesInhibitory)
-
-        inputsInhibitory = []
-
-        x = len(open(self.spineFileName).readlines())
-
-        for i, line in enumerate(split_linesInhibitory[1:]):
-            inputsInhibitory.append({'name': (i+x),
-                                     'bouton_index': ((i+(2*x))-1),
-                                     'branchType': line[0],
-                                     'boutonType': line[1],
-                                     'siteX': line[2],
-                                     'siteY': line[3],
-                                     'siteZ': line[4],
-                                     'siteR': line[5],
-                                     'period': line[6],
-                                     'boutonFileName': line[7],
-                                     'spineFileName': line[8],
-                                     'bouton_include': line[9]=='1',
-                                     'spine_include': line[10]=='1',
-                                     'synapse_include': line[11]=='1'})
+            print "Could not open file to write! Please check !" +  self.inhibitoryFileName
+            isContinue = self.getConfirmation()
+            assert(isContinue)
         #with open("model.gsl.template", "r") as file:
         #    gsl = file.read()
         #    newFile = open("model.gsl", "w")
@@ -1805,16 +1816,32 @@ class SomeClass(object):
 
         with open("connect_recording_model.gsl.template", "r") as file:
             gsl = file.read()
-            targetFile = "./" + "connect_" + modelfile
+            targetFile = "./" + "connect_recording_" + modelfile
             newFile = open(targetFile, "w")
             newFile.write(pystache.render(gsl, {'inputs': inputs,
                                                 'inputsInhibitory': inputsInhibitory}))
 
         with open("connect_stimulus_model.gsl.template", "r") as file:
             gsl = file.read()
-            targetFile = "./" + "connect_" + modelfile
+            targetFile = "./" + "connect_stimulus_" + modelfile
             newFile = open(targetFile, "w")
             newFile.write(pystache.render(gsl, {'inputs': inputs,
                                                 'inputsInhibitory': inputsInhibitory}))
+    def getConfirmation(self, msg="Continue (y/n)?"):
+        # raw_input returns the empty string for "enter"
+        yes = set(['yes','y', 'ye', ''])
+        no = set(['no','n'])
+
+        print(msg)
+        choice = raw_input().lower()
+        isValid = False
+        while (not isValid):
+            if choice in yes:
+                return True
+            elif choice in no:
+                return False
+            else:
+                sys.stdout.write("Please respond with 'yes' or 'no'")
+
 if __name__ == '__main__':
     genSpine = SomeClass('neurons/neuron_test.swc')
