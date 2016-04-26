@@ -25,10 +25,11 @@
 
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
+#define R_zCaF (zR/(zCa*zF))
 #define zF_RT (zF / (zR * *getSharedMembers().T))
 #define mM2uM 1e3   // conversion factor
 #define uM2mM 1e-3  // conversion factor
-
+#define MIN_RESISTANCE_VALUE 0.0001  //[GOhm*um] - keep this for numerical stability
 //}}}
 
 ///////////////////////////////////////////////////////////////////////

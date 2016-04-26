@@ -436,6 +436,8 @@ bool TissueContext::isLensTouch(Touch& t, int rank)
   return rval;
 }
 
+// PARAMS:
+//   rank = MPI rank of the process calling this
 void TissueContext::correctTouchKeys(int rank)
 {
   SegmentDescriptor segmentDescriptor;

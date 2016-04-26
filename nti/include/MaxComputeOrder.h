@@ -65,4 +65,11 @@
 		}while (0)
 #endif
 
+//NOTE: distable this if we want 'distance' information is kept in Touch
+//  LTWT = light-weight
+#define LTWT_TOUCH
+
+//#define SYNAPSE_PARAMS_TOUCH_DETECT
+//#define INFERIOR_OLIVE
+
 #endif //_MAXCOMPUTEORDER_H

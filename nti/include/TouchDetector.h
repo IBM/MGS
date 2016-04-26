@@ -100,6 +100,16 @@ class TouchDetector : public Sender, public Receiver
   TouchVector* getTouchVector() { return _touchVector; }
   void detectTouches();
   void doWork(int threadID, int i, ThreadUserData* data, Mutex* mutex);
+  void doWork_original(int threadID, int i, ThreadUserData* data, Mutex* mutex);
+  void doWork_new(int threadID, int i, ThreadUserData* data, Mutex* mutex);
+  double findShortestDistance(Capsule& caps_from, Capsule& caps_to, Params*, int threadID,
+		 double &sc, double&tc ) const;
+  Capsule* getProximalCapsule(Capsule* caps, int sid); //caps = array, sid = index
+  std::vector<Capsule*> getDistalCapsules(Capsule* caps, int sid);
+  bool isNeighborsFormingTouchSIDside(int threadID, Params* params, double dist, Capsule* caps, int sid, int sid2);
+  bool isNeighborsFormingTouchSID2side(int threadID, Params* params, double dist, Capsule* caps, int sid, int sid2);
+
+
   void writeToFile(std::string experimentName);
   void unique(bool unique);
   void resetBufferSize(bool resetBufferSize)
@@ -166,7 +176,7 @@ public:
 
   // Receive Phase 1: ALLTOALLW
   Capsule** _capsules;  // ptr to recvbuf array
-  TouchVector* _touchVector;
+  TouchVector* _touchVector; // each thread handle a TouchVector 
   TouchVector _initialTouchVector;
 
   int* _segmentCounts;          // recvcount

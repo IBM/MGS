@@ -18,15 +18,18 @@
 #include "CG_SpineAttachment_VmCaiCaER.h"
 #include "rndm.h"
 #include <cmath>
+#include <cfloat>
+#include "NTSMacros.h"
+
 
 void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
 {
-	assert(Vi);
-	assert(Vj);
-	assert(Cai);
-	assert(Caj);
-	assert(CaERi);
-	assert(CaERj);
+  assert(Vi);
+  assert(Vj);
+  assert(Cai);
+  assert(Caj);
+  assert(CaERi);
+  assert(CaERj);
   // NOTE: g (nS) which is infered from R (GigaOhm)
   // NOTE: g (nS) which is infered from R (GigaOhm)
   // NOTE: g (nS) which is infered from R (GigaOhm)
@@ -43,8 +46,19 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   //            A = pi * ((r1+r2)/2)^2
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
+  assert(Raxial > MIN_RESISTANCE_VALUE);
+  assert(RCacytoaxial > MIN_RESISTANCE_VALUE);
+  assert(RCaERaxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj);
   dyn_var_t len = (*leni + *lenj) / 2.0;
+  /*
+  if (Raxial == 0.0)
+          g = FLT_MAX/2;
+  if (RCacytoaxial == 0.0)
+          gCYTO = FLT_MAX/2;
+  if (RCaERaxial == 0.0)
+          gER = FLT_MAX/2;
+          */
   g = A / (Raxial * len);            // [nS]
   gCYTO = A / (RCacytoaxial * len);  // [nS]
   gER = A / (RCaERaxial * len);      // [nS]
@@ -56,10 +70,10 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 {
   float V = *Vj - *Vi;
   I = g * V;
-  float E_Ca = 0.08686 * *(getSharedMembers().T) * log(*Caj / *Cai);
-  I_Ca = gCYTO * (V + E_Ca);
-  float E_CaER = 0.08686 * *(getSharedMembers().T) * log(*CaERj / *CaERi);
-  // TUAN: TODO Need to reconsider this
+  // Nernst equation
+  float E_Ca = R_zCaF * *(getSharedMembers().T) * log(*Caj / *Cai);
+  I_Ca = gCYTO * (E_Ca);
+  float E_CaER = R_zCaF * *(getSharedMembers().T) * log(*CaERj / *CaERi);
   I_CaER = gER * (E_CaER);
 }
 

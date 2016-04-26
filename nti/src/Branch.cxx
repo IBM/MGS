@@ -223,6 +223,11 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
   _numberOfSegments = numberOfResampledSegments;
 }
 
+//NOTE: This is relevant to ::resample() method
+//     except that it does not try to resample
+//     ONLY it increase the number of Segment data to 2x more
+//     to help creating Capsule data structure
+//     (each Capsule needs 2 adjacent Segment points)
 void Branch::resetBranchRoots(std::vector<Segment>& segments)
 {
   int segCount = 0;
@@ -231,7 +236,7 @@ void Branch::resetBranchRoots(std::vector<Segment>& segments)
 
   if (_branchIndex == 0)
   {
-    if (_branchType != 0)
+    if (_branchType != Branch::_SOMA)
     {
       std::cerr << "Branch.cxx : First branch must be cell body!" << std::endl;
       exit(0);

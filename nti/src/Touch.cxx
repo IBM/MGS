@@ -18,6 +18,8 @@
 #include <cassert>
 #include <iostream>
 #include <float.h>
+#include <cfloat>
+#include <algorithm>
 
 #include "Branch.h"
 
@@ -55,11 +57,12 @@ MPI_Datatype* Touch::getTypeTouch() {
     Touch t;
     _typeTouch = new MPI_Datatype;
 #ifndef LTWT_TOUCH
-    Datatype datatype(4, &t);
+    Datatype datatype(5, &t);
     datatype.set(0, MPI_LB, 0);
     datatype.set(1, MPI_DOUBLE, N_TOUCH_DATA, t._touchData);
     datatype.set(2, MPI_SHORT, 4, t._endTouch);
-    datatype.set(3, MPI_UB, sizeof(Touch));
+    datatype.set(3, MPI_CHAR, 1, t._remains);
+    datatype.set(4, MPI_UB, sizeof(Touch));
     *_typeTouch = datatype.commit();
 #else
     Datatype datatype(3, &t);
@@ -76,6 +79,7 @@ void Touch::readFromFile(FILE* dataFile) {
   size_t s = fread(_touchData, sizeof(double), N_TOUCH_DATA, dataFile);
 #ifndef LTWT_TOUCH
   fread(_endTouch, sizeof(short), 4, dataFile);
+  fread(&_remains, sizeof(bool), 1, dataFile);
 #endif
 }
 
@@ -83,6 +87,7 @@ void Touch::writeToFile(FILE* dataFile) {
   fwrite(_touchData, sizeof(double), N_TOUCH_DATA, dataFile);
 #ifndef LTWT_TOUCH
   fwrite(_endTouch, sizeof(short), 4, dataFile);
+  fwrite(&_remains, sizeof(bool), 1, dataFile);
 #endif
 }
 
@@ -96,7 +101,7 @@ void Touch::printTouch() {
             << _touchData[2] << " " << _touchData[3] << " "
 #ifndef LTWT_TOUCH
             << _touchData[4] << " " << _endTouch[0] << _endTouch[1]
-            << _endTouch[2] << _endTouch[3] << " "
+            << _endTouch[2] << _endTouch[3] << " " << _remains
 #endif
       ;
 }
@@ -137,6 +142,7 @@ bool Touch::hasSpineNeck(key_size_t& key)
 	bool rval=false;
 
 	key_size_t tkey1 = getKey1();
+	//NOTE: uf0 = MTYPE
 	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
 	key_size_t tkey2 = getKey2();
 	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
@@ -165,19 +171,28 @@ bool Touch::hasSpineNeck(key_size_t& key)
 bool Touch::hasSpineHead(key_size_t& key)
 {
 	//right now, for single neuron scenario, 
-	// if one-side MTYPE > 0 and the other-side MTYPE>0
-	// indicate a spine-bouton touch
+	// a spine-bouton touch
+	// if 
+	//   1. one-side MTYPE > 0 and the other-side MTYPE>0
+	//   2. the neuron index difference == 1
 	//     
 	bool rval=false;
 
 	key_size_t tkey1 = getKey1();
+	//NOTE: uf0 = MTYPE
 	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
 	key_size_t tkey2 = getKey2();
 	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
-  if (mtype1 > 0 && mtype2 > 0 )
+	unsigned int brtype1 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey1);
+	unsigned int brtype2 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey2);
+	unsigned int neuronIdx1 = _segmentDescriptor.getValue(SegmentDescriptor::neuronIndex, tkey1);
+	unsigned int neuronIdx2 = _segmentDescriptor.getValue(SegmentDescriptor::neuronIndex, tkey2);
+	bool isChemSynapsePair = (brtype1 == Branch::_AXON and brtype2 == Branch::_SOMA) ||
+		(brtype2 == Branch::_AXON and brtype1 == Branch::_SOMA) ;
+	if (mtype1 > 0 && mtype2 > 0 and std::abs((int)neuronIdx1-(int)neuronIdx2) ==1 and
+	  isChemSynapsePair)
 	{
 		rval = true;
-		unsigned int brtype1 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey1);
 		if (brtype1 == Branch::_AXON)
 			key =  tkey2;
 		else

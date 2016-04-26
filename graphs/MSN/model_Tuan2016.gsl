@@ -21,8 +21,10 @@
 #define BASED_ON_ITERATIONS 1
 #define BASED_ON_TIMES 2
 
-#define SIMULATION_STOP BASED_ON_TIMES
-#define SIMULATION_RECORD BASED_ON_TIMES
+//#define SIMULATION_STOP BASED_ON_TIMES
+//#define SIMULATION_RECORD BASED_ON_TIMES
+#define SIMULATION_STOP BASED_ON_ITERATIONS
+#define SIMULATION_RECORD BASED_ON_ITERATIONS
 //#define SIMULATION_RECORD BASED_ON_ITERATIONS
 //}}}
 //{{{ 3. Simulation configuration:  time + time-step + I/O
@@ -37,7 +39,7 @@
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
 //{{{
-	#define RecordInterval   20   // every ... timesteps
+	#define RecordInterval   1   // every ... timesteps
 	//#define NumIterationsUntilEnd   1000000   // unitless
 	#define NumIterationsUntilEnd   10000   // unitless
 //}}}
@@ -211,7 +213,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 //NOTE: -r #capsules-per-cpt
 //#define strArg1 "neurons_msn.txt -p params/DevParams.par"
 //#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
-#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3" // -g 3.0"
+#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3" 
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 " //" -g 1.0"
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
 #if SIMULATION_INVOLVE == VMONLY
@@ -928,13 +930,7 @@ Grid MSN_D1Neuron{
 /*}}}*/
       // 3. SYNAPSES
       /*{{{*/
-      // 3.1. CHEMICAL SYNAPSE RECEPTORS
-      /*{{{*/
-	Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
-	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDA]" >), < nodekind="ChemicalSynapses[NMDA]" >, tissueGM);
-	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
-      /*}}}*/
-      // 3.2. PRE-SYNAPSE (get Voltage from bouton-side)
+      // 3.1. PRE-SYNAPSE (get Voltage from bouton-side)
 	/*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
@@ -944,6 +940,12 @@ Grid MSN_D1Neuron{
 	Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
 #endif
 	/*}}}*/
+      // 3.2. CHEMICAL SYNAPSE RECEPTORS
+      /*{{{*/
+	Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
+	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDA]" >), < nodekind="ChemicalSynapses[NMDA]" >, tissueGM);
+	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
+      /*}}}*/
       // 3.3. SpineAttachment
 	/*{{{*/
 #if SIMULATION_INVOLVE == VMONLY
@@ -1269,7 +1271,16 @@ Grid MSN_D1Neuron{
 
 	// 3. SYNAPSES NODES 
     /*{{{*/ 
-    // 3.1. SYNAPSE RECEPTORS
+    // 3.1. PRE-SYNAPSE
+    /*{{{*/
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+	InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
+//or
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+	InitNodes ( .[].Layer(SynapticClefts), tissueFunctor("NodeInit", <> ) );
+#endif
+    /*}}}*/
+    // 3.2. SYNAPSE RECEPTORS
     /*{{{*/
 	InitNodes ( .[].Layer(AMPASynapses), tissueFunctor("NodeInit", <
 				gbar = 5.0 // 2.2223 nS/um^2
@@ -1283,15 +1294,6 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
 				gbar = 0.50 // nS/um^2
 				> ) );  
-    /*}}}*/
-    // 3.2. PRE-SYNAPSE
-    /*{{{*/
-#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-	InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
-//or
-#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
-	InitNodes ( .[].Layer(SynapticClefts), tissueFunctor("NodeInit", <> ) );
-#endif
     /*}}}*/
     // 3.3. SpineAttachment 
 		//{{{

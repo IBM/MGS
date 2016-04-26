@@ -216,14 +216,15 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
 cd $MDLROOT
 
 touch mdl.make.mark
-if [ "$#" -eq 1 ] ; then
-	make -j $NPROCS
-fi
+if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
 if [ "$CLEAN" == "-clean" ]; then
 	make clean;
 fi
 if [ "$REBUILD" == "-rebuild" ]; then
 	make clean;
+	make -j $NPROCS
+fi
+else
 	make -j $NPROCS
 fi
 if [ "$CLEAN" != "-clean" ] ; then 
@@ -335,8 +336,6 @@ elif [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
 else # -s or -singlethread
 	./build_gsl $PLATFORM -s $NPROCS $GSL_BUILD_MODE
 fi
-fi
-#}}}
 
 cd $NTSROOT
 if { [ "$CLEAN" != "-clean" ] ;} ; then 
@@ -355,3 +354,6 @@ if { [ "$CLEAN" != "-clean" ] ;} ; then
 	  5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n" 
 	fi
 fi
+fi
+#}}}
+

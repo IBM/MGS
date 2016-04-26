@@ -528,7 +528,9 @@ void Node::generateNodeAccessor()
    getNodeDescriptor2MethodFB
       << TAB << "int density = _gridLayerDescriptor->getDensity(nodeIndex);\n"
       << TAB << "if (densityIndex >= density) {\n"
-      << TAB << TAB << "std::cerr << DENSITY_ERROR_MESSAGE << std::endl;\n"
+      //<< TAB << TAB << "std::cerr << DENSITY_ERROR_MESSAGE << std::endl;\n"
+      << TAB << TAB << "std::cerr << \" " 
+	  << getNodeAccessorName()  << " \" << DENSITY_ERROR_MESSAGE << std::endl;\n"
       << TAB << TAB << "throw SyntaxErrorException(DENSITY_ERROR_MESSAGE);\n"
       << TAB << "}\n"
       << TAB << "if (_gridLayerDescriptor->isUniform()) {\n"

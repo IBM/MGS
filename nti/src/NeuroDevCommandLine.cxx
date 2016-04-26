@@ -226,7 +226,7 @@ bool NeuroDevCommandLine::parse(std::vector<std::string>& argv)
       {
         if (_verbose)
           std::cout << "Compartment resampling factor set : " << value << ".\n";
-        _resample = true;
+        //_resample = true;
         _capsPerCpt = atoi(value.c_str());
       }
       else if (option.getShortName() == 's')

@@ -410,7 +410,7 @@ void CaERConcentration::doForwardSolve()
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
 #elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-		 do something here
+	assert(0); // need to implement
 #endif
     /* * * Sum Currents * * */
 //    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
@@ -437,7 +437,7 @@ void CaERConcentration::doForwardSolve()
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * Ca_cur[0];
 #elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-		do something here
+	assert(0); // need to implement
 #endif
     for (int n = 0; n < distalInputs.size(); n++)
     {

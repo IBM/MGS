@@ -15,6 +15,13 @@ DenDenGap 0.005309
 # a bidirectional connection must be created as well
 # so I suggest to remove the prob. out of bidirectional connection targets
 # Maybe part of the spinemush.spn
+# CONVENTION: always put spine first
+# as we use this assumption to ensure 1 spine-capsule connects with ONLY 1 denshaft capsule
+# yet 1 denshaft capsule can connect with MORE THAN 1 spine-capsule
+# TODO: a better strategy to avoid this assumption is to use Touch::hasSpineNeck()
+#  to see which side is the spine-neck. BUT, we need to come with 
+#  a solid convention of spineneck
+#  Currently, the convention for spineneck is non-zero neuron-index and BRANCHTYPE=3
 BIDIRECTIONAL_CONNECTION_TARGETS 2
 BRANCHTYPE MTYPE
 BRANCHTYPE MTYPE 
@@ -41,6 +48,8 @@ DenSpine 0.005309
 #CHEMICAL_SYNAPSE_TARGETS 2
 #BRANCHTYPE MTYPE ETYPE
 #BRANCHTYPE MTYPE
+#2 1 1   1 3   [GABAA] [Voltage] [Voltage] 1.0
+#2 1 1   1 2   [GABAA] [Voltage] [Voltage] 1.0
 
 #SPINY_CHEMICAL_SYNAPSE_COSTS 4
 #CHEMICAL_SYNAPSE_COSTS 4
@@ -61,6 +70,7 @@ AMPA 0.296407
 NMDA 0.296407
 GABAA 0.149978
 
+# NOTE: no need for probabilities, it is implicitly assigned as 1.0
 PRESYNAPTIC_POINT_TARGETS 3
 AMPA Voltage
 NMDA Voltage

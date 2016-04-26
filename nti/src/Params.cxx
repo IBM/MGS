@@ -1048,6 +1048,8 @@ std::string Params::findNextKeyword(FILE* fpF)
 }
 
 // GOAL: read section    NBONDTYPES
+//  Each line maps to the bonding for one branchtype (1=soma,2=axon...)
+//  Make sure it equals to the total possible values for branchtype
 bool Params::readBondParams(FILE* fpF)
 {
   bool rval = true;
@@ -1312,6 +1314,8 @@ bool Params::readTouchTables(FILE* fpF)
 }
 
 // GOAL: read section    NSITYPES
+//  Each line maps to the SI for one branchtype (1=soma,2=axon...)
+//  Make sure it equals to the total possible values for branchtype
 bool Params::readSIParams(FILE* fpF)
 {
   bool rval = true;
@@ -3280,7 +3284,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
   while (!feof(fpF))
 	{
 		int ifrom, ito;
-		dyn_var_t rate;
+		float rate;
 		if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
 		{
 			isOK = false;

@@ -67,12 +67,21 @@
 #ifdef USING_BLUEGENE
 #include "BG_AvailableMemory.h"
 #endif
+#include "NTSMacros.h"
+#include "MaxComputeOrder.h"
 
 #include <cassert>
 #include <algorithm>
 #include <memory>
+#include <cfloat>
 
 #define SMALL_NUM 0.00000000000001  // anything that avoids division overflow
+
+//#define TD_DEBUG  //TD = TouchDetector
+#ifdef TD_DEBUG
+#include <set>
+  static std::set<int> neuronWithTouch;
+#endif
 
 TouchDetector::TouchDetector(
     const int rank, const int nSlicers, const int nTouchDetectors,
@@ -209,7 +218,12 @@ TouchDetector::TouchDetector(
       MPI_Type_commit(&_typeTouches[i]);
     }
 #else
+	//TUAN TODO: fix this to suppor the case with _endTouch + _remains data
+ #ifdef LTWT_TOUCH
     MPI_Type_contiguous(N_TOUCH_DATA, MPI_DOUBLE, _typeTouches);
+ #else
+    _typeTouches[0]=*(Touch::getTypeTouch());
+ #endif
     MPI_Type_commit(_typeTouches);
 #endif
   }
@@ -564,6 +578,8 @@ void TouchDetector::initializePhase1Send()
                                       end = mapIter->second.end();
       for (; iter != end; ++iter)
       {
+		  //TUAN TODO
+		  //BUG to fix this to ensure it copy the full information when LTWT_TOUCH is not defined
         assert(writePos <= _sendBufSize - N_TOUCH_DATA);
         Touch& t = _touchVector->getValue(*iter);
         std::copy(t.getTouchData(), t.getTouchData() + N_TOUCH_DATA,
@@ -660,6 +676,7 @@ void TouchDetector::detectTouches()
 
   _threadUserData->resetDecompositions(*_decomposition);
 
+
 #ifndef DISABLE_PTHREADS
   For<TouchDetector, ThreadUserData>::execute(0, 1, _numberOfCapsules, this,
                                               _threadUserData, _nThreads);
@@ -718,6 +735,26 @@ void TouchDetector::detectTouches()
   MPI_Allreduce((void*)&_connectionCount, (void*)&totalCount, 1, MPI_LONG_LONG,
                 MPI_SUM, MPI_COMM_WORLD);
   if (_rank == 0) printf("Total Touch = %lld\n\n", totalCount);
+
+#ifdef TD_DEBUG
+  //GOAL: here to find out which spine(neuron) has no touch
+  std::set<int> s;
+  int numNeurons = _neuronPartitioner->getTotalNeurons();
+  std::set<int>::iterator it = s.begin();
+  for (int i = 0; i < numNeurons; ++i)
+  {
+	  it = s.insert(it, i);
+  }
+  std::set<int> spineNoTouch;
+  std::set_difference(s.begin(), s.end(), 
+		  neuronWithTouch.begin(), neuronWithTouch.end(), 
+		  std::inserter(spineNoTouch, spineNoTouch.begin()));
+  std::cerr << "spine have no touches: ";
+  for (it = spineNoTouch.begin(); it != spineNoTouch.end(); ++it)
+	  std::cerr << *it << " " ;
+  std::cerr << std::endl;
+#endif
+
 #ifdef USING_BLUEGENE
   if (_rank == 0)
   {
@@ -733,6 +770,253 @@ void TouchDetector::detectTouches()
 void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
                            Mutex* mutex)
 {
+   //doWork_original(threadID, sid, data, mutex);
+   doWork_new(threadID, sid, data, mutex);
+}
+
+// NOTE: This implementation was derived to ensure that only 1 capsule got connected
+//    suppose on 1 branch, we have three adjacent capsules (Bparent, B, Bchild)
+//    falls within the distance
+//    criteria to capsule A, only the one with the shorted distance to capsule A
+//    get the touch
+void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
+                           Mutex* mutex)
+{
+
+  Params* params = data->_parms[threadID];
+  TouchVector& touchVector = _threadUserData->_touchVectors[threadID];
+  RNG& rng = _threadUserData->_rangens[threadID];
+  TouchSpace* detectionTouchSpace = _threadUserData->_touchSpaces[threadID];
+  Decomposition* decomposition = _threadUserData->_decompositions[threadID];
+  Capsule* caps = *_capsules;
+  double s1Ax = 0, s1Ay = 0, s1Az = 0, s1Bx = 0, s1By = 0, s1Bz = 0, s1Ar = 0,
+         s1Ab = 0, s2Ax = 0, s2Ay = 0, s2Az = 0, s2Bx = 0, s2By = 0, s2Bz = 0,
+         s2Ar = 0, s2Ab = 0, a = 0, b = 0, c = 0, d = 0, e = 0, D = 0, sc = 0,
+         sN = 0, sD = 0, tc = 0, tN = 0, tD = 0, u0 = 0, u1 = 0, u2 = 0, v0 = 0,
+         v1 = 0, v2 = 0, w0 = 0, w1 = 0, w2 = 0, aw0 = 0, aw1 = 0, aw2 = 0,
+         bw0 = 0, bw1 = 0, bw2 = 0, ww0 = 0, ww1 = 0, ww2 = 0, disSphere = 0,
+         mdis = 0, mdis2 = 0, dist, crit, c1, c2;
+  double pointLineDistances[4];
+  // loop through all other Capsules
+  // NOTE: due to the touch is direction, so we may have
+  //   sid=27 touch sid2=21
+  //   but not sid=21 touch sid2=27
+  //   So we always start from zero
+#ifdef TD_DEBUG
+  int numTouchesForThisCapsule = 0;//DEBUG PURPOSE
+  std::vector<key_size_t> touchingCapsules;
+  std::vector<bool> touchingSpineNeck;
+  SegmentDescriptor segDesc;
+#endif
+  key_size_t s1Key = caps[sid].getKey();
+  for (int sid2 = 0; sid2 < _numberOfCapsules; ++sid2)
+  //for (int sid2 = sid+1; sid2 < _numberOfCapsules; ++sid2) --> wrong
+    // check prob. for forming a touch
+	// BUG 
+	// TUAN TODO: should be inside (only when a valid touch is detected, then 
+	// use the probability for determining of creating a touch or ot)
+    //if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate)
+  {
+      key_size_t s2Key;//, s1Key = caps[sid].getKey();
+      double* s1begin = caps[sid].getBeginCoordinates();
+      double* s1end = caps[sid].getEndCoordinates();
+      s1Ar = caps[sid].getRadius() + params->getRadius(s1Key);
+
+      s1Ax = s1begin[0];
+      s1Ay = s1begin[1];
+      s1Az = s1begin[2];
+      s1Bx = s1end[0];
+      s1By = s1end[1];
+      s1Bz = s1end[2];
+
+      u0 = s1Bx - s1Ax;  // FOR USE BELOW : OPTIMIZATION
+      u1 = s1By - s1Ay;  // FOR USE BELOW : OPTIMIZATION
+      u2 = s1Bz - s1Az;  // FOR USE BELOW : OPTIMIZATION
+      s1Ab = sqrt(SqDist(s1begin, s1end)) +
+             2.0 * s1Ar;                // FOR USE BELOW : OPTIMIZATION
+      a = u0 * u0 + u1 * u1 + u2 * u2;  // FOR USE BELOW : OPTIMIZATION
+
+      s2Key = caps[sid2].getKey();
+      // check if both capsules can be grouped to form 'electricalSynapse'
+      //                            OR                'chemicalSynapse'
+      if (detectionTouchSpace->areInSpace(s1Key, s2Key))
+      {
+
+        double* s2begin = caps[sid2].getBeginCoordinates();
+        double* s2end = caps[sid2].getEndCoordinates();
+        s2Ar = caps[sid2].getRadius() + params->getRadius(s2Key);
+        s2Ax = s2begin[0];
+        s2Ay = s2begin[1];
+        s2Az = s2begin[2];
+        s2Bx = s2end[0];
+        s2By = s2end[1];
+        s2Bz = s2end[2];
+
+        // Check spheres if they are close first
+
+        // s1Ab = SqDist(s1, &s1[TD_END_COORDS])+2.0*s1Ar; COMPUTED ABOVE :
+        // OPTIMIZATION
+        s2Ab = sqrt(SqDist(s2begin, s2end)) + 2.0 * s2Ar;
+        disSphere = (s1Ab + s2Ab) * (s1Ab + s2Ab);
+
+        w0 = s1Ax - s2Ax;
+        w1 = s1Ay - s2Ay;
+        w2 = s1Az - s2Az;
+        ww0 = s1Bx - s2Bx + w0;
+        ww1 = s1By - s2By + w1;
+        ww2 = s1Bz - s2Bz + w2;
+
+        if (((ww0 * ww0 + ww1 * ww1 + ww2 * ww2) <= disSphere))
+        {  // it is 0.5*0.5
+		  double dist = findShortestDistance(caps[sid], caps[sid2], params, threadID, sc, tc);
+          crit = (s1Ar + s2Ar) * (s1Ar + s2Ar);
+          bool countTouch = false;
+          if (dist < crit)
+          {
+			  //GOAL: for 'sid' capsule side: let the parent handle
+			  if (!isNeighborsFormingTouchSIDside(threadID, params, dist, caps, sid, sid2)
+					  and
+					  !isNeighborsFormingTouchSID2side(threadID, params, dist, caps, sid, sid2)
+				 ){
+				  //countTouch = true;
+               if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate)
+				  countTouch = true;
+			  }
+			  /*
+			  if (countTouch == true)
+				  std::cout << "sid, sid2 = " << sid << "," << sid2 << std::endl;
+			*/
+            /**
+             * The coordinates of the touch can be calculated by vector
+             * arithmetic as follows:
+             * touchX = s1Ax + aw0 - w0*0.5;
+             * touchY = s1Ay + aw1 - w1*0.5;
+             * touchZ = s1Az + aw2 - w2*0.5;
+             */
+
+            //countTouch = true;
+
+            if (_unique)
+            {
+// The following code ensures global non-redundant touches by setting
+// the boolean "countTouch"
+
+#if 1
+              ShallowArray<int, MAXRETURNRANKS, 100> ranks1, ranks2;
+              decomposition->getRanks(&caps[sid].getSphere(),
+                                      caps[sid].getEndCoordinates(),
+                                      params->getRadius(s1Key), ranks1);
+              decomposition->getRanks(&caps[sid2].getSphere(),
+                                      caps[sid2].getEndCoordinates(),
+                                      params->getRadius(s2Key), ranks2);
+              ranks1.merge(ranks2);
+
+              countTouch = false;
+              ShallowArray<int, MAXRETURNRANKS, 100>::iterator
+                  ranksIter = ranks1.begin(),
+                  ranksEnd = ranks1.end();
+              if (ranksIter != ranksEnd)
+              {
+                int idx = *ranksIter;
+                ++ranksIter;
+                for (; ranksIter != ranksEnd; ++ranksIter)
+                {
+                  if (idx == *ranksIter)
+                  {
+                    if (idx == _rank) countTouch = true;
+                    break;
+                  }
+                  idx = *ranksIter;
+                }
+              }
+#else
+              Sphere sphere1;
+              sphere1._coords[0] = s1Ax + aw0;
+              sphere1._coords[1] = s1Ay + aw1;
+              sphere1._coords[2] = s1Az + aw2;
+              int touchVolume = decomposition->getRank(sphere1);
+              countTouch = (touchVolume == _rank);
+              if (!countTouch)
+              {
+                Sphere sphere2;
+                sphere2._coords[0] = s2Ax + bw0;
+                sphere2._coords[1] = s2Ay + bw1;
+                sphere2._coords[2] = s2Az + bw2;
+                countTouch = (decomposition->getRank(sphere2) == _rank &&
+                              !decomposition->mapsToRank(
+                                  &caps[sid2].getSphere(), s2end,
+                                  params->getRadius(s2Key), touchVolume));
+              }
+#endif
+            }
+            if (countTouch)
+            {
+              Touch touch;
+              touch.setKey1(s1Key);
+              touch.setKey2(s2Key);
+
+              touch.setProp1(sc);  // aw0*aw0+aw1*aw1+aw2*aw2);
+              touch.setProp2(tc);  // bw0*bw0+bw1*bw1+bw2*bw2);
+#ifndef LTWT_TOUCH
+              touch.setDistance(dist);
+              distancePointLine(s1begin, s1end, s2begin, s2end,
+                                pointLineDistances);
+              short* endTouch = touch.getEndTouches();
+              // with 2 ends for each Capsule,
+              //... we have 4 pairs of points to find the distance
+              for (int i = 0; i < 4; ++i)
+              {
+                endTouch[i] = 0;
+                if (pointLineDistances[i] < crit) endTouch[i] = 1;
+              }
+#endif
+              touchVector.push_back(touch, mutex);
+#ifdef TD_DEBUG
+			  numTouchesForThisCapsule += 1;
+			  touchingCapsules.push_back(s2Key);
+			  key_size_t dummy;
+			  touchingSpineNeck.push_back(touch.hasSpineNeck(dummy));
+			  neuronWithTouch.insert(segDesc.getNeuronIndex(s1Key));
+#endif
+              if (_writeToFile)
+              {
+#ifndef DISABLE_PTHREADS
+                mutex->lock();
+#endif
+                touch.writeToFile(data->_file);
+#ifndef DISABLE_PTHREADS
+                mutex->unlock();
+#endif
+              }
+            }  // if (countTouch)
+          }    // if (dist<crit)
+        }      // if((ww0 * ww0 + ww1 * ww1 + ww2
+      }        // if (detectionTouchSpace->areInSpace...
+    }          // for (; sid2<_nCapsules...
+#ifdef TD_DEBUG
+   if (numTouchesForThisCapsule > 1)
+   {
+	   Touch tc;
+	   std::cerr << "Capsule " << s1Key << " of neuron "<< segDesc.getNeuronIndex(s1Key) << " has " << numTouchesForThisCapsule << " touches with neurons" << std::endl;
+	   for (int i=0; i < touchingCapsules.size(); i++)
+		   std::cerr << " " << segDesc.getNeuronIndex(touchingCapsules[i]) 
+			   << " branchOrder=" << segDesc.getBranchOrder(touchingCapsules[i])
+			   << "segIdx=" << segDesc.getSegmentIndex(touchingCapsules[i])
+			   << "neck=" << touchingSpineNeck[i] 
+			   << ";";
+	   std::cerr << std::endl;
+
+	   //". It is a spineneck? " << tc.hasSpineNeck() << std::endl;
+   }
+#endif
+}
+
+
+// NOTE: This is the method originally implemented
+void TouchDetector::doWork_original(int threadID, int sid, ThreadUserData* data,
+                           Mutex* mutex)
+{
+
   Params* params = data->_parms[threadID];
   TouchVector& touchVector = _threadUserData->_touchVectors[threadID];
   RNG& rng = _threadUserData->_rangens[threadID];
@@ -1124,4 +1408,276 @@ std::string TouchDetector::getPassName()
   else
     rval = "additional pass";
   return rval;
+}
+
+//GOAL: return the reference to the adjacent capsule at proximal-side
+//  NOTE: can be NULL
+Capsule* TouchDetector::getProximalCapsule(Capsule* caps, int sid)
+{
+	Capsule* retval = NULL;
+    if (caps[sid].getBranch()->_capsules==&caps[sid]) {
+		if (caps[sid].getBranch()->_parent) {
+			Capsule& proxCap = caps[sid].getBranch()->_parent->lastCapsule();
+			retval = &proxCap;
+		}
+	}	
+	else{
+		retval = &caps[sid-1];
+	}
+	return retval;
+}
+
+std::vector<Capsule*> TouchDetector::getDistalCapsules(Capsule* caps, int sid)
+{
+	std::vector<Capsule*> retval;
+	ComputeBranch* thisBranch = caps[sid].getBranch();
+    if (&(thisBranch->lastCapsule())==&caps[sid]) {
+		std::list<ComputeBranch*>& daughters=thisBranch->_daughters;
+		std::list<ComputeBranch*>::iterator diter, dend=daughters.end();
+		for (diter=daughters.begin(); diter!=dend; ++diter) {
+			Capsule* daughterCap=(*diter)->_capsules;
+			retval.push_back(daughterCap);
+		}
+	}else{
+		retval.push_back(&caps[sid+1]);
+	}
+	return retval;
+}
+
+// NOTE: The distance here is not really Eucledian distance
+//   First, they must be in the same space for forming touch
+//     then the distance is Eucledian distance
+//   Otherwise, the distance is FLT_MAX (infinite)
+double TouchDetector::findShortestDistance(Capsule& caps_from, Capsule& caps_to, 
+		Params* params, int threadID, double &sc, double &tc)  const
+{
+	double s1Ax = 0, s1Ay = 0, s1Az = 0, s1Bx = 0, s1By = 0, s1Bz = 0, s1Ar = 0,
+		   s1Ab = 0, s2Ax = 0, s2Ay = 0, s2Az = 0, s2Bx = 0, s2By = 0, s2Bz = 0,
+		   s2Ar = 0, s2Ab = 0, a = 0, b = 0, c = 0, d = 0, e = 0, D = 0, 
+		   sN = 0, sD = 0, tN = 0, tD = 0, u0 = 0, u1 = 0, u2 = 0, v0 = 0,
+		   v1 = 0, v2 = 0, w0 = 0, w1 = 0, w2 = 0, aw0 = 0, aw1 = 0, aw2 = 0,
+		   bw0 = 0, bw1 = 0, bw2 = 0, ww0 = 0, ww1 = 0, ww2 = 0, disSphere = 0,
+		   mdis = 0, mdis2 = 0, dist, crit, c1, c2;
+	sc = 0;
+	tc = 0;
+	dist = FLT_MAX;
+	key_size_t s1Key = caps_from.getKey();
+	key_size_t s2Key = caps_to.getKey();
+	RNG& rng = _threadUserData->_rangens[threadID];
+	TouchSpace* detectionTouchSpace = _threadUserData->_touchSpaces[threadID];
+	if (! detectionTouchSpace->areInSpace(s1Key, s2Key))
+		//IMPORTANT: out of space have infinite distance
+		return dist;
+
+	double* s1begin = caps_from.getBeginCoordinates();
+	double* s1end = caps_from.getEndCoordinates();
+	// NOTE: params->getRadius(s1Key) return 
+	// the tolerence of distance between 2 capsules for forming a touch
+	//  This data is given in DetParams.par: RADII section
+	s1Ar = caps_from.getRadius() + params->getRadius(s1Key);
+
+	s1Ax = s1begin[0];
+	s1Ay = s1begin[1];
+	s1Az = s1begin[2];
+	s1Bx = s1end[0];
+	s1By = s1end[1];
+	s1Bz = s1end[2];
+
+	u0 = s1Bx - s1Ax;  // FOR USE BELOW : OPTIMIZATION
+	u1 = s1By - s1Ay;  // FOR USE BELOW : OPTIMIZATION
+	u2 = s1Bz - s1Az;  // FOR USE BELOW : OPTIMIZATION
+	s1Ab = sqrt(SqDist(s1begin, s1end)) +
+		2.0 * s1Ar;                // FOR USE BELOW : OPTIMIZATION
+	a = u0 * u0 + u1 * u1 + u2 * u2;  // FOR USE BELOW : OPTIMIZATION
+
+	double* s2begin = caps_to.getBeginCoordinates();
+	double* s2end = caps_to.getEndCoordinates();
+	s2Ar = caps_to.getRadius() + params->getRadius(s2Key);
+	s2Ax = s2begin[0];
+	s2Ay = s2begin[1];
+	s2Az = s2begin[2];
+	s2Bx = s2end[0];
+	s2By = s2end[1];
+	s2Bz = s2end[2];
+
+	// Check spheres if they are close first
+
+	// s1Ab = SqDist(s1, &s1[TD_END_COORDS])+2.0*s1Ar; COMPUTED ABOVE :
+	// OPTIMIZATION
+	s2Ab = sqrt(SqDist(s2begin, s2end)) + 2.0 * s2Ar;
+	disSphere = (s1Ab + s2Ab) * (s1Ab + s2Ab);
+
+	w0 = s1Ax - s2Ax;
+	w1 = s1Ay - s2Ay;
+	w2 = s1Az - s2Az;
+	ww0 = s1Bx - s2Bx + w0;
+	ww1 = s1By - s2By + w1;
+	ww2 = s1Bz - s2Bz + w2;
+
+	if (((ww0 * ww0 + ww1 * ww1 + ww2 * ww2) <= disSphere))
+	{  // it is 0.5*0.5
+
+		// u0 = s1Bx - s1Ax;   COMPUTED ABOVE : OPTIMIZATION
+		// u1 = s1By - s1Ay;   COMPUTED ABOVE : OPTIMIZATION
+		// u2 = s1Bz - s1Az;   COMPUTED ABOVE : OPTIMIZATION
+		v0 = s2Bx - s2Ax;
+		v1 = s2By - s2Ay;
+		v2 = s2Bz - s2Az;
+
+		// double a = dot(u,u); //always >= 0
+		// a = u0 * u0 + u1 * u1 + u2 * u2      COMPUTED ABOVE : OPTIMIZATION
+		// double b = dot(u,v);
+		b = u0 * v0 + u1 * v1 + u2 * v2;
+		// double c = dot(v,v); //always >= 0
+		c = v0 * v0 + v1 * v1 + v2 * v2;
+		// double d = dot(u,w);
+		d = u0 * w0 + u1 * w1 + u2 * w2;
+		// double e = dot(v,w);
+		e = v0 * w0 + v1 * w1 + v2 * w2;
+		D = a * c - b * b;  // always >= 0
+		sD = D;             // sc = sN / sD, default sD = D >= 0
+		tD = D;             // tc = tN / tD, default tD = D >= 0
+
+		// compute the line parameters of the two closest points
+		if (D < SMALL_NUM)
+		{            // the lines are almost parallel
+			sN = 0.0;  // force using point P0 on segment S1
+			sD = 1.0;  // to prevent possible division by 0.0 later
+			tN = e;
+			tD = c;
+		}
+		else
+		{  // get the closest points on the infinite lines
+			sN = (b * e - c * d);
+			tN = (a * e - b * d);
+			if (sN <= 0.0)
+			{  // sc < 0 => the s=0 edge is visible
+				sN = 0.0;
+				tN = e;
+				tD = c;
+			}
+			else if (sN >= sD)
+			{  // sc > 1 => the s=1 edge is visible
+				sN = sD;
+				tN = e + b;
+				tD = c;
+			}
+		}
+
+		if (tN <= 0.0)
+		{  // tc < 0 => the t=0 edge is visible
+			tN = 0.0;
+			// recompute sc for this edge
+			if (-d <= 0.0)
+				sN = 0.0;
+			else if (-d >= a)
+				sN = sD;
+			else
+			{
+				sN = -d;
+				sD = a;
+			}
+		}
+		else if (tN >= tD)
+		{           // tc > 1 => the t=1 edge is visible
+			tN = tD;  // recompute sc for this edge
+			if ((-d + b) <= 0.0)
+				sN = 0.0;
+			else if ((-d + b) >= a)
+				sN = sD;
+			else
+			{
+				sN = (-d + b);
+				sD = a;
+			}
+		}
+		if (fabs(sN) < SMALL_NUM)
+			aw0 = aw1 = aw2 = sc = 0.0;
+		else
+		{
+			sc = sN / sD;
+			aw0 = u0 * sc;
+			aw1 = u1 * sc;
+			aw2 = u2 * sc;
+			w0 += aw0;
+			w1 += aw1;
+			w2 += aw2;
+		}
+		if (fabs(tN) < SMALL_NUM)
+			bw0 = bw1 = bw2 = tc = 0.0;
+		else
+		{
+			tc = tN / tD;
+			bw0 = v0 * tc;
+			bw1 = v1 * tc;
+			bw2 = v2 * tc;
+			w0 -= bw0;
+			w1 -= bw1;
+			w2 -= bw2;
+		}
+		dist = w0 * w0 + w1 * w1 + w2 * w2;
+
+
+	}
+	return dist;
+}
+
+// GOAL: return 'true' if either the parent or child capsule of 'sid'
+//     should form the touch with 'sid2'
+bool TouchDetector::isNeighborsFormingTouchSIDside(int threadID, Params* params, double dist, Capsule* caps, int sid, int sid2)
+{
+	double dist2 = FLT_MAX;
+	double dist3 = FLT_MAX;
+	bool retval = false;
+	double dummy;
+	Capsule* caps_parent = getProximalCapsule(caps, sid);
+	std::vector<Capsule*> caps_children = getDistalCapsules(caps,sid);
+	if (caps_parent)
+		dist2 = findShortestDistance(*caps_parent, caps[sid2], params, threadID,
+				dummy, dummy);
+	std::vector<Capsule*>::iterator iter = caps_children.begin(),
+		iend = caps_children.end();
+	for (; iter < iend; iter++) 
+	{
+		double tmpdist = findShortestDistance(**iter, caps[sid2], params, threadID,
+				dummy, dummy);
+		if (tmpdist < dist3)
+			dist3 = tmpdist;
+	} 
+
+	if (dist2 <= dist  ||
+			dist > dist3)
+		retval = true;
+	return retval;
+
+}
+
+// GOAL: return 'true' if either the parent or child capsule of 'sid2'
+//     should form the touch with 'sid'
+bool TouchDetector::isNeighborsFormingTouchSID2side(int threadID, Params* params, double dist, Capsule* caps, int sid, int sid2)
+{
+	double dist2 = FLT_MAX;
+	double dist3 = FLT_MAX;
+	bool retval = false;
+	double dummy;
+	Capsule* caps_parent = getProximalCapsule(caps, sid2);
+	std::vector<Capsule*> caps_children = getDistalCapsules(caps,sid2);
+	if (caps_parent)
+		dist2 = findShortestDistance(caps[sid], *caps_parent, params, threadID,
+				dummy, dummy);
+	std::vector<Capsule*>::iterator iter = caps_children.begin(),
+		iend = caps_children.end();
+	for (; iter < iend; iter++) 
+	{
+		double tmpdist = findShortestDistance(caps[sid], **iter, params, threadID,
+				dummy, dummy);
+		if (tmpdist < dist3)
+			dist3 = tmpdist;
+	} 
+
+	if (dist2 <= dist  ||
+			dist > dist3)
+		retval = true;
+
+	return retval;
 }

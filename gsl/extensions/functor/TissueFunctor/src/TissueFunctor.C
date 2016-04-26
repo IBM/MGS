@@ -49,6 +49,7 @@
 #include "DoubleArrayDataItem.h"
 
 #include "MaxComputeOrder.h"
+#include "NTSMacros.h"
 #ifdef HAVE_MPI
 
 #include "SegmentForceAggregator.h"
@@ -88,6 +89,8 @@
 #include "Touch.h"
 
 #include <cstdlib>
+#include "MaxComputeOrder.h"
+#include "NTSMacros.h"
 
 // number of fields in tissue.txt file
 #define PAR_FILE_INDEX 8
@@ -113,8 +116,6 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-//#define SYNAPSE_PARAMS_TOUCH_DETECT
-//#define INFERIOR_OLIVE
 
 #ifdef INFERIOR_OLIVE
 #include "InferiorOliveGlomeruliDetector.h"
@@ -250,6 +251,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
   if (f._params.get()) f._params->duplicate(_params);
   _generatedChemicalSynapses = f._generatedChemicalSynapses;
   _nonGeneratedMixedChemicalSynapses = f._nonGeneratedMixedChemicalSynapses;
+  _generatedSynapticClefts = f._generatedSynapticClefts;
   _generatedElectricalSynapses = f._generatedElectricalSynapses;
   _generatedBidirectionalConnections = f._generatedBidirectionalConnections;
   ++_instanceCounter;
@@ -937,7 +939,9 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // GOAL:
-//   perform detect touches between any 2 capsules
+//   perform 
+//   1. generate Capsules from Segments structure
+//   2. detect touches between any 2 capsules
 void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
 {
 #ifdef HAVE_MPI
@@ -1180,8 +1184,14 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
 
 // GOAL:
 //   create spines by
-//   1. adding new touches,
-//   2. generate new Capsules information
+//   0. check for Touch(capA, capB)
+//     if capA represents bouton, capB represent denshaft
+//     then add new spine structure (2 compartment - head+neck)
+//   1. generate new Capsules information
+//     with keys for 2 new capsules, add them to the list of _capsules
+//     modify Touch(capA,capB) --> Touch(capA,head)
+//   2. adding new touches,
+//       Touch(neck,capB)
 void TissueFunctor::createSpines(Params* params, LensContext* CG_c)
 {  // not implemented yet
    // loop throughs all  _tissueContext->_touchVector
@@ -1456,24 +1466,25 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                   if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
                       Branch::_SOMA)
                   {  // remove the part of the capsule covered inside soma
-                     /*TUAN : disable it as we now ignore the physical location
- of soma covering the dendrite
-                             somaR = firstcaps.getRadius();
-surface_area -= 2.0 * M_PI * r * somaR;
-volume -= M_PI * r * r * somaR;
-                             if (h < somaR)
-                             {//TUAN DEBUG
-                                     std::cerr << "First capsule to soma is too
- short\n";
-                                     std::cerr << "length = " << h << "; while
- soma radius = " << somaR
-                                             << " from neuron index " <<
- _segmentDescriptor.getNeuronIndex(key)
-                                             << std::endl;
-                             }
-assert(h > somaR);
-lost_distance = somaR;
-                             */
+					  /*
+					   //TUAN : disable it as we now ignore the physical location
+					   //	of soma covering the dendrite
+						somaR = firstcaps.getRadius();
+						surface_area -= 2.0 * M_PI * r * somaR;
+						volume -= M_PI * r * r * somaR;
+						if (h < somaR)
+						{//TUAN DEBUG
+						std::cerr << "First capsule to soma is too
+						short\n";
+						std::cerr << "length = " << h << "; while
+						soma radius = " << somaR
+						<< " from neuron index " <<
+						_segmentDescriptor.getNeuronIndex(key)
+						<< std::endl;
+						}
+						assert(h > somaR);
+						lost_distance = somaR;
+						*/
                   }
                   else
                   {  // reserve some for the cut/branch explicit junction
@@ -2185,6 +2196,17 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 }
 
 // GOAL : calcualte the density vector (which is local for each gridnode)
+//    It tells how many instance for the NodeType associated with the given layer
+//    to be created at each grid-location
+//    Shallow<int> rval;
+//    with rval.size() == _nbrGridNodes
+//       rval.assign(_nbrGridNodes, 0);
+// NOTE:
+//  Example: Layer (..., <nodekind="SynapticClefts[Voltage][2]">, ...)
+//  then
+//   nodeCategory = "SynapticClefts"
+//   nodeType  = "Voltage"
+//   nodeComputeOrder = 2
 ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
 {
   assert(_params.get());
@@ -2333,31 +2355,39 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   }
   else if (point)
   {
-    assert(_preSynapticPointTypesMap.find(nodeType) ==
-           _preSynapticPointTypesMap.end());
-    _preSynapticPointTypesMap[nodeType] = counter =
-        _preSynapticPointTypeCounter;
-    assert(_synapticCleftTypesMap.find(nodeType) ==
-           _synapticCleftTypesMap.end());
-    _synapticCleftTypesMap[nodeType] = counter = _synapticCleftTypeCounter;
+    if (nodeCategory == "PreSynapticPoints")
+	{
+		assert(_preSynapticPointTypesMap.find(nodeType) ==
+				_preSynapticPointTypesMap.end());
+		_preSynapticPointTypesMap[nodeType] = counter =
+			_preSynapticPointTypeCounter;
+	}
+	if (nodeCategory == "SynapticClefts")
+	{
+		assert(_synapticCleftTypesMap.find(nodeType) ==
+				_synapticCleftTypesMap.end());
+		_synapticCleftTypesMap[nodeType] = counter = _synapticCleftTypeCounter;
+	}
   }
 
   // if a Layer of a nodetype as electrical (gap junction), bidirectional
-  // (spineattachment),
-  //                             chemical or point
+  // (spineattachment), chemical or point
   //  i.e. not compartment variables
-  //  then traverse the touchVectors to establish connections
+  //  then traverse the touchVectors to determine if an instance of such nodetype 
+  //  should be created   (through the increase of rval[grid-index])
+  //  which is later can be used by ::doConnector() to establish connection
   //     cpt<--[connexon]-->cpt
-  //     cpt<--[spineconnexon]-->cpt
-  //     bouton --[presynapticpoint]-->cpt(spine-head)
-  //  then find all Capsules to be handled by the current gridnode (density
-  //  array)
-  //  and find which pair of Capsules can form a connection
+  //     cpt<--[spineconnexon]--><--[spineconnexon]-->cpt
+  //     bouton --[presynapticpoint]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  //     bouton --[synapticCleft]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  //  Here, one or two instances may needed be created using one or two sides of a Touch
+  //  then find the preCapsule and postCapsule for each Touch
+  //  identify the grid-index (indexPre) to which preCapsule belongs
+  //           the grid-index (indexPost) to which postCapsule belongs
+  //  and decide if an instance for the NodeType to be created or not at indexPre
+  //         and/or indexPost
   if (electrical || chemical || point || bidirectional)
-  {  // then  perform connection, i.e. connect the output to which compartmental
-     // variable
-     // and get output from which compartmental variable
-
+  {  
     // REMEBER that all the touches have been detected,
     // we just need to find out which compartment (from which branch) connect
     // to which compartment (in which branch)
@@ -2366,9 +2396,11 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
     // the input/output to the receptors/channels
     TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
                                tend = _tissueContext->_touchVector.end();
+
     for (; titer != tend; ++titer)
-    {
+    {//traverse all the recorded Touch(es)
       if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
+	  //make sure only consider the touch belonging to the current MPI process
       key_size_t key1, key2;
       key1 = titer->getKey1();
       key2 = titer->getKey2();
@@ -2379,7 +2411,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       ComputeBranch* postBranch = postCapsule->getBranch();
       assert(postBranch);
 
-      unsigned int indexPre, indexPost;
+      unsigned int indexPre, indexPost; //GSL Grid's index at which preCapsule
+	    // and postCapsule belongs to, respectively
       bool preJunction = false;
       bool postJunction = false;
 
@@ -2430,7 +2463,9 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
         assert(0);  // end assign probability
 
       for (int i = 0; i < probabilities.size(); ++i)
-      {  // go through all kinds of touches, each one has a probability
+      {  // each structure (electrical, chemical, bidirectional) that is based on Touch, 
+		  // such structure (e.g. chemical synapse)
+		  // has a series of probabilities (each prob. for one type (e.g. DenSpine))
         if (probabilities[i] > 0)
         {
           if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
@@ -2459,11 +2494,18 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
           {
             if (point)
             {
-              if (preJunction)
-                _capsuleJctPointIndexMap[nodeType][preCapsule] = rval[indexPre];
-              else
-                _capsuleCptPointIndexMap[nodeType][preCapsule] = rval[indexPre];
-              rval[indexPre]++;
+				//NEW CODE: constraint the number of PreSynapticPoint or SynapticCleft instances
+				//to be instantiated to the exact number of chemical synapses
+				bool result = setGenerated(_generatedSynapticClefts, titer,
+						counter, i, nodeCategory);
+				if (result)
+				{
+					if (preJunction)
+						_capsuleJctPointIndexMap[nodeType][preCapsule] = rval[indexPre];
+					else
+						_capsuleCptPointIndexMap[nodeType][preCapsule] = rval[indexPre];
+					rval[indexPre]++;
+				}
             }
             else
             {
@@ -2478,31 +2520,45 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
                 }
               }
               if (bidirectional)
-              {  // TUAN: plan to make this as part of generating the chemical
+              {  // TUAN TODO: plan to make this as part of generating the chemical
                  // synapse below
                 // in such cases, we don't need an explicit statement
                 // for 'BidirectionalConnections[DenSpine]' in the GSL
                 // instead, a new node for that should be created and the
                 // density should be increase for
+				
+				// TUAN TODO NOTE: for the given touch, find the spine neuron of the spineneck
+				//    then check if the soma forms the chemical synapse or not
+				//    if yes, then create the spineattachment
                 if (probabilities[i] >=
                     drandom(findSynapseGenerator(indexPre, indexPost)))
                 {
-                  rval[indexPre]++;
-                  rval[indexPost]++;
-                  setGenerated(_generatedBidirectionalConnections, titer,
-                               counter, i);
+					//NOTE: rval control the number of instances to be created
+                  bool result = setGenerated(_generatedBidirectionalConnections, titer,
+                               counter, i, nodeCategory);
+				  if (result)
+				  {
+					  rval[indexPre]++;
+					  rval[indexPost]++;
+				  }
                 }
               }
               else if (chemical)
-              {
-                if (probabilities[i] >=
-                    drandom(findSynapseGenerator(indexPre, indexPost)))
-                {
-                  rval[indexPost]++;
-                  setGenerated(_generatedChemicalSynapses, titer, counter, i);
-                }
-                else
-                  setNonGenerated(titer, nodeType, i);
+			  {
+				if (touchIsChemicalSynapse(_generatedSynapticClefts, titer))
+				{
+					if (probabilities[i] >=
+							drandom(findSynapseGenerator(indexPre, indexPost)))
+					{
+						rval[indexPost]++;
+						setGenerated(_generatedChemicalSynapses, titer, counter, i, nodeCategory);
+					}
+					else
+						setNonGenerated(titer, nodeType, i);
+
+				}
+				else
+						setNonGenerated(titer, nodeType, i);
               }
             }
           }
@@ -2842,6 +2898,13 @@ void TissueFunctor::doNodeInit(LensContext* lc)
     exit(EXIT_FAILURE);
   }
 
+  if (_preSynapticPointLayers.size() > 0 &&
+      _synapticCleftLayers.size() > 0)
+  {
+	  std::cerr << "We cannot have both PreSynapticPoints and SynapticClefts"
+		  << " in the system\n";
+	  exit(EXIT_FAILURE);
+  }
   // make sure the order of layer's nodes' initialization is correct
   if (((nodeCategory == "Channels" || nodeCategory == "ElectricalSynapses" ||
         nodeCategory == "BidirectionalConnections" ||
@@ -2850,15 +2913,18 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         nodeCategory == "SynapticClefts") &&
        (_junctionLayers.size() == 0 ||
         _compartmentVariableLayers.size() == 0)) ||
-      (_junctionLayers.size() > 0 && _compartmentVariableLayers.size() == 0) ||
-      (_preSynapticPointLayers.size() > 0 &&
-       _chemicalSynapseLayers.size() == 0) ||
-      (_synapticCleftLayers.size() > 0 && _chemicalSynapseLayers.size() == 0))
+      (_junctionLayers.size() > 0 && _compartmentVariableLayers.size() == 0) 
+     ||( (_preSynapticPointLayers.size() == 0 &&
+       _chemicalSynapseLayers.size() > 0) &&
+      (_synapticCleftLayers.size() == 0 && _chemicalSynapseLayers.size() > 0)
+	  )
+	 )
   {
     std::cerr
         << "TissueFunctor:" << std::endl
-        << "Layers (Branches, Junctions, Channels | Synapses, "
-           "PreSynapticPoints | SynapticClefts) must be initialized in order."
+		<< "Layers (Branches, Junctions, PreSynapticPoints | SynapticClefts,"
+		<< "Channels | Synapses "
+           ") must be initialized in order."
         << std::endl
         << "Synapses can be either ElectricalSynapses, ChemicalSynapses, "
            "BidirectionalConnections" << std::endl;
@@ -3057,9 +3123,9 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   }
 }
 
-// Perform necessary setup to connect all declared nodetypes
-// (different channels, receptors, ...)
-// to the associated compartment variable (Voltage, Calcium)
+// GOAL: perform necessary setup and then connect instances of 
+// all declared nodetypes (different channels, receptors, ...)
+// to the proper instance of the associated compartment variable (Voltage, Calcium)
 // based on the condition given in different parameter files (SynParams.par,
 // ChanParams.par)
 void TissueFunctor::doConnector(LensContext* lc)
@@ -3117,7 +3183,11 @@ void TissueFunctor::doConnector(LensContext* lc)
   //                   "idx"=0>
   std::map<std::string, NDPairList> spineattach2spineattach;
 
-  // Define all InAttrPSet of nodetypes that can connect to a compartment
+  // Define InAttrPset for connection to comparment-nodetype
+  // Here, we assign value to the 'map' object defined above
+  // The values represents all possible InAttrPSet that can be used to establish 
+  // a connection from the given nodetype to the proper compartment nodetypes 
+  //      (Voltage, Calcium, CalciumER ...)
   // variable and put to the 'map' objects defined above
   std::map<std::string, int>::iterator cptVarTypesIter,
       cptVarTypesEnd = _compartmentVariableTypesMap.end();
@@ -3195,11 +3265,12 @@ void TissueFunctor::doConnector(LensContext* lc)
     spineattach2spineattach[cptVarTypesIter->first] = Mspineattach2spineattach;
   }
 
-  // Define InAttrPset for non-compartment nodetype
-  //  e.g. 'point', i.e. endPoint, junctionPoint, SolvePoint,
-  //                                    presynapticPoint, SynapticCleft
-  //        junction
-  //        receptor
+  // Define InAttrPset for connection to non-compartment nodetype
+  // Example of non-compartment nodetype:
+  //  e.g. 1. 'point', i.e. endPoint, junctionPoint, SolvePoint,
+  //                               presynapticPoint, SynapticCleft
+  //       2. junction
+  //       3. receptor
   NDPairList end2jct;
   end2jct.push_back(new NDPair("identifier", "endpoint"));
 
@@ -3236,7 +3307,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   NDPairList br2fwdpt;
   NDPairList br2bwdpt;
 
-  // get to the vector of all nodetypes associated with all compartment-layers
+  // get to the vector of all instances of nodetypes associated with all compartment-layers
   std::vector<NodeAccessor*> compartmentVariableAccessors;
   std::vector<GridLayerDescriptor*>::iterator layerIter,
       layerEnd = _compartmentVariableLayers.end();
@@ -3246,7 +3317,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     compartmentVariableAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all junction-layers
+  // get to the vector of all instances of nodetypes associated with all junction-layers
   layerEnd = _junctionLayers.end();
   std::vector<NodeAccessor*> junctionAccessors;
   for (layerIter = _junctionLayers.begin(); layerIter != layerEnd; ++layerIter)
@@ -3254,7 +3325,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     junctionAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all endpoint-layers
+  // get to the vector of all instances of nodetypes associated with all endpoint-layers
   std::vector<NodeAccessor*> endPointAccessors;
   layerEnd = _endPointLayers.end();
   for (layerIter = _endPointLayers.begin(); layerIter != layerEnd; ++layerIter)
@@ -3262,7 +3333,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     endPointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all junctionpoint-layers
+  // get to the vector of all instances of nodetypes associated with all junctionpoint-layers
   std::vector<NodeAccessor*> junctionPointAccessors;
   layerEnd = _junctionPointLayers.end();
   for (layerIter = _junctionPointLayers.begin(); layerIter != layerEnd;
@@ -3271,7 +3342,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     junctionPointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all
+  // get to the vector of all instances of nodetypes associated with all
   // presynapticpoint-layers
   std::vector<NodeAccessor*> preSynapticPointAccessors;
   layerEnd = _preSynapticPointLayers.end();
@@ -3281,7 +3352,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     preSynapticPointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all
+  // get to the vector of all instances of nodetypes associated with all
   // synapticClefts-layers
   std::vector<NodeAccessor*> synapticCleftAccessors;
   layerEnd = _synapticCleftLayers.end();
@@ -3291,7 +3362,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     synapticCleftAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all
+  // get to the vector of all instances of nodetypes associated with all
   // forwardsolvepoint-layers
   std::vector<NodeAccessor*> forwardSolvePointAccessors;
   layerEnd = _forwardSolvePointLayers.end();
@@ -3301,7 +3372,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     forwardSolvePointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all
+  // get to the vector of all instances of nodetypes associated with all
   // backwardsolvepoint-layers
   std::vector<NodeAccessor*> backwardSolvePointAccessors;
   layerEnd = _backwardSolvePointLayers.end();
@@ -3311,7 +3382,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     backwardSolvePointAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all channel-layers
+  // get to the vector of all instances of nodetypes associated with all channel-layers
   std::vector<NodeAccessor*> channelAccessors;
   layerEnd = _channelLayers.end();
   for (layerIter = _channelLayers.begin(); layerIter != layerEnd; ++layerIter)
@@ -3319,7 +3390,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     channelAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all
+  // get to the vector of all instances of nodetypes associated with all
   // bidirectional-connection-layers
   // 2 types of bidirectional-connection
   // 1.1 = gap junction
@@ -3331,6 +3402,8 @@ void TissueFunctor::doConnector(LensContext* lc)
     electricalSynapseAccessors.push_back((*layerIter)->getNodeAccessor());
   }
   // 1.2 = spine attachment
+  //  loop through each Layer defined for BidirectionalConnections
+  //  and get access to the list of instances for that Layer
   std::vector<NodeAccessor*> bidirectionalConnectionAccessors;
   layerEnd = _bidirectionalConnectionLayers.end();
   for (layerIter = _bidirectionalConnectionLayers.begin();
@@ -3339,7 +3412,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     bidirectionalConnectionAccessors.push_back((*layerIter)->getNodeAccessor());
   }
 
-  // get to the vector of all nodetypes associated with all
+  // get to the vector of all instances of nodetypes associated with all
   // chemicalsynapse-layers
   std::vector<NodeAccessor*> chemicalSynapseAccessors;
   layerEnd = _chemicalSynapseLayers.end();
@@ -3371,10 +3444,15 @@ void TissueFunctor::doConnector(LensContext* lc)
     exit(EXIT_FAILURE);
   }
 
-  // traverse each grid's node, and get the density
+  // GOAL: create connection 
+  //      Cpt1->EndPoint-->Junction-->JunctionPoint->Cpt2
+  //      ImplicitJunction-->ForwardSolverPoint
+  //      ImplicitJunction-->BackwardSolverPoint
+  // HOW: traverse each grid's node, 
+  //   at each grid'node, traverse different compartment nodeType (e.g. Voltage, Calcium)
+  //   and get the density
   //    which is the number of ComputeBranch on that grid's node
-  // --> configure EndPoint, Junction, JunctionPoint, ForwardSolver,
-  // BackwardSolver
+  //    find out the compute-branch value on such ComputeBranch
   for (int i = 0; i < _nbrGridNodes; ++i)
   {
     //    then traverse through every ComputeBranch
@@ -3513,7 +3591,8 @@ void TissueFunctor::doConnector(LensContext* lc)
 
   int i = _rank;
   assert(_channelTypeCounter == _channelLayers.size());
-  // GOAL: traverse all layers declared for channels
+  // GOAL: connect channel to comparment variables
+  // HOW: traverse all layers declared for channels
   // and connect to the proper compartment variables
   for (int ctype = 0; ctype < _channelTypeCounter; ++ctype)
   {
@@ -3634,7 +3713,10 @@ void TissueFunctor::doConnector(LensContext* lc)
     }
   }
 
-  // traverse through all gridnode's index
+  // GOAL: connect compartment to ForwardSolver and BackwardSolver
+  //    Cpt->ForwardSolverPoint
+  //    Cpt->BackwardSolverPoint
+  // HOW: traverse through all grid's node
   // .. for each compartment variable on that gridnode
   // .....traverse through all index in the density
   // .....and get the ComputeBranch
@@ -3720,6 +3802,11 @@ void TissueFunctor::doConnector(LensContext* lc)
   chemicalSynapseCounters.resize(_chemicalSynapseTypeCounter);
   // GOAL: 1. connect connexon (chemicalSynapse) to compartment variable
   //      2. connect spineneck-dendrite         to compartment variable
+  //      3. connect bouton-compartment to preSynapticPoint or synapticCleft variable
+  // HOW: traverse all touches, identify if the touch is 
+  //      1. chemicalSynapse (::touchIsChemicalSynapse)
+  //      2. bidirectional (spineneck-denshaft attachment)
+  //      3. chemicalSynapse (::touchIsChemicalSynapse)
   if (1)  // just for grouping long-code
   {
     TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
@@ -3898,6 +3985,10 @@ void TissueFunctor::doConnector(LensContext* lc)
             bdend = spineattachTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_bidirectionalConnectionTypesMap.size(), 0);
+		//TUAN TEST
+		//std::cout << _generatedBidirectionalConnections.size() << std::endl;
+		//assert(0);
+		//END TUAN TEST
         for (bditer = spineattachTargets->begin(); bditer != bdend; ++bditer)
         {
           int synapseType = _bidirectionalConnectionTypesMap[bditer->_type];
@@ -4068,7 +4159,7 @@ void TissueFunctor::doConnector(LensContext* lc)
         std::list<Params::ChemicalSynapseTarget>::iterator csiter,
             csend = csynTargets->end();
         std::vector<int> typeCounter;
-        typeCounter.resize(_chemicalSynapseTypesMap.size(), 0);
+        typeCounter.resize(_chemicalSynapseTypesMap.size(), 0);//number of Layers defined with "ChemicalSynapses"
         for (csiter = csynTargets->begin(); csiter != csend; ++csiter)
         {
           std::map<std::string, std::pair<std::list<std::string>,
@@ -4279,7 +4370,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   }
 
   if (sim->isSimulatePass())
-  {  // testing purpose (I think)
+  {  // print-out information about how many instances are created 
     CountableModel* countableModel = 0;
 
     std::vector<GridLayerDescriptor*>::iterator layerIter, layerEnd;
@@ -4371,6 +4462,23 @@ void TissueFunctor::doConnector(LensContext* lc)
 
     layerEnd = _bidirectionalConnectionLayers.end();
     for (layerIter = _bidirectionalConnectionLayers.begin();
+         layerIter != layerEnd; ++layerIter)
+    {
+      countableModel =
+          dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
+          countableModel->count();
+          models.push_back(countableModel);
+        }
+      }
+    }
+    models.clear();
+
+    layerEnd = _synapticCleftLayers.end();
+    for (layerIter = _synapticCleftLayers.begin();
          layerIter != layerEnd; ++layerIter)
     {
       countableModel =
@@ -4888,6 +4996,12 @@ void TissueFunctor::getBidirectionalConnectionProbabilities(
   }
 }
 
+//GOAL for a given touch (with 2 Capsules) referenced by the iterator 'titer'
+//  if the data for defining a chemical-synapse is provided (via SynParam.par file)
+//given nodeType (e.g. AMPA)
+// 
+//  check if such nodeType (e.g. AMPA)
+//  is defined as belonging to ChemicalSynapse for that touch 'titer'
 bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
                                     std::string nodeType)
 {
@@ -4905,6 +5019,8 @@ bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
           iend = synapseTypes->end();
       for (; iiter != iend && !rval; ++iiter)
       {
+		  //<"AMPA", pair(list-of-nodeType-it-get-inputs, 
+		  //              list-of-nodeType-it-perturb) >
         std::map<std::string, std::pair<std::list<std::string>,
                                         std::list<std::string> > >::iterator
             targetsIter,
@@ -4920,18 +5036,255 @@ bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
   return rval;
 }
 
-void TissueFunctor::setGenerated(
+// GOAL: the method setup the map 'smap' 
+//       during doLayout()
+//       which is then used during doConnect()
+//       via isGenerated() method to see if instances are created (e.g. Connexon, 
+//        SpineAttachment) 
+// PARAMS:
+//   titer = the iterator pointing to the given Touch element in TouchVector
+//                _tissueContext->_touchVector
+//   type = the integer value indicating the type of touch (i.e. mapping to the nodekind value)
+//           such as 'DenSpine' (if order=2), or 'Voltage' (if order=3)
+//           NOTE: if order=1, we can have more than one case for type: 'AMPA', 'NMDA', 'GABAA'
+//
+//   order =  the integer value indicating what kind of touch (e.g. 0 = electrical synapse,
+//                         1 = chemical synapse
+//                         2 = spineneck-denshaft touch
+//                         3 = synapticCleft or preSynapticPoint)
+//          for one 'order' value, we can have different types of that kind of touch
+//  RETURN:
+//   true  = if a new one is added to the map 
+//   false = if not
+bool TissueFunctor::setGenerated(
     std::map<Touch*, std::list<std::pair<int, int> > >& smap,
-    TouchVector::TouchIterator& titer, int type, int order)
+    TouchVector::TouchIterator& titer, int type, int order, std::string specialTreatment)
 {
   std::map<Touch*, std::list<std::pair<int, int> > >::iterator miter =
       smap.find(&(*titer));
+  bool newlyCreated = false;
+  // (specialTreatment == "BidirectionalConnections")
+  bool touchSpineNeckDenShaftIsUsed = false;
+  bool newTouchIsNeckDenShaft;
+  // (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
+  bool touchBoutonSpineHeadIsUsed = false;
+  bool newTouchIsChemSynapse;
+  // endspecialTreatment
+  bool alreadyThere = false;
   if (miter == smap.end())
   {
-    smap[&(*titer)] = std::list<std::pair<int, int> >();
-    miter = smap.find(&(*titer));
+	  if (specialTreatment == "BidirectionalConnections")
+	  {//detect if any capsule of the Touch already involved in 
+		  //another bidirectional-connection. If so, ignore it (or 
+		  //...we can decide which one to keep)
+		  key_size_t key1 = (*titer).getKey1();
+		  key_size_t key2 = (*titer).getKey2();
+		  key_size_t key_spineneck=-1.0;
+		  newTouchIsNeckDenShaft = (*titer).hasSpineNeck(key_spineneck);
+		  double propSpineNeck =0;
+		  propSpineNeck = (key1 == key_spineneck)? (*titer).getProp1(): (*titer).getProp2();
+			  
+		  //more constraint
+		  newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck > 0.99);
+		  if (newTouchIsNeckDenShaft )
+		  {
+			  bool isSide1 = (key_spineneck == key1);
+
+#ifndef LTWT_TOUCH
+			  double dist = (*titer).getDistance();
+#endif
+			  int count = 0;
+			  double propSpineNeck_inloop=0.0;
+			  Touch* touchCanBeRemoved=0;
+			  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
+			  {
+				  Touch* touch = it->first;
+				  key_size_t key1_inloop = (*touch).getKey1();
+				  key_size_t key2_inloop = (*touch).getKey2();
+				  key_size_t key_inloop_spineneck=+1.0;
+				  (*touch).hasSpineNeck(key_inloop_spineneck);
+				  propSpineNeck_inloop = (key1_inloop == key_inloop_spineneck)? (*touch).getProp1() : (*touch).getProp2();
+				  bool isSide1_inloop = (key_inloop_spineneck == key1_inloop);
+#ifndef LTWT_TOUCH
+				  double dist_inloop = (*touch).getDistance();
+#endif
+				  // equal and must be on the same side (i.e. either both first keys or 
+				  //                                    both second keys)
+				  //if (key_spineneck == key_inloop_spineneck)
+				  if ((key_spineneck == key_inloop_spineneck)
+						  //  and (isSide1 == isSide1_inloop)
+					 )
+				  {
+					  if (1)
+					  {//debug purpose
+					  
+						 std::cout << "found " << key1 << " "
+						 << key2 << " "
+						 << key_spineneck << " "
+						 << key1_inloop << " "
+						 << key2_inloop << " "
+						 << key_inloop_spineneck << " " 
+						 << isSide1 << isSide1_inloop << " "
+						 << propSpineNeck << " " << propSpineNeck_inloop  
+#ifndef LTWT_TOUCH
+						 << dist << " " << dist_inloop
+#endif
+						 << std::endl;
+
+					  }
+					  //count += 1;
+					  //if (count ==2)
+					  //{
+					  touchSpineNeckDenShaftIsUsed = true;
+					  touchCanBeRemoved=it->first;
+					  //TUAN TODO
+					  //we may use the comparison between propSpineNeck and propSpineNeck_inloop
+					  //to determine which connection is the right one for the spine
+					  break;
+					  //}
+				  }
+				  //string value = it->second;
+			  }
+			 // if ((touchSpineNeckDenShaftIsUsed) and (propSpineNeck > propSpineNeck_inloop))
+			 // {//the newer touch is considered better reflect the spineneck-denshaft touch
+			 //     //remove the existing one
+			 //     assert(smap.erase(touchCanBeRemoved) ==1); 
+			 //     //make sure the new one will be added 
+			 //     touchSpineNeckDenShaftIsUsed=false;
+			 // }
+			  if (! touchSpineNeckDenShaftIsUsed)
+			  {
+				  smap[&(*titer)] = std::list<std::pair<int, int> >();
+				  miter = smap.find(&(*titer));
+				  newlyCreated = true;
+			  }
+
+		  }
+		  
+	  }
+	  else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
+	  {	//first make sure this Touch is a valid ChemicalSynapse touch
+		  key_size_t key1 = (*titer).getKey1();
+		  key_size_t key2 = (*titer).getKey2();
+		  key_size_t key_spinehead=-1.0;
+		  newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);
+		  double propBouton = (key1 == key_spinehead)? (*titer).getProp2() : (*titer).getProp1();
+
+		  //more constraint
+		  newTouchIsChemSynapse = newTouchIsChemSynapse && (propBouton > 0.99);
+		  if (newTouchIsChemSynapse)
+		  {//detect if any capsule of the Touch already involved in 
+		  //another chemical synapse-connection. If so, ignore it (or 
+		  //...we can decide which one to keep)
+
+			  bool isSide1 = (key_spinehead == key1);
+#ifndef LTWT_TOUCH
+			  double dist = (*titer).getDistance();
+#endif
+			  int count = 0;
+			  double propBouton_inloop=0.0;
+			  Touch* touchCanBeRemoved=0;
+			  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
+			  {
+				  Touch* touch = it->first;
+				  key_size_t key1_inloop = (*touch).getKey1();
+				  key_size_t key2_inloop = (*touch).getKey2();
+				  key_size_t key_inloop_spinehead=+1.0;
+				  (*touch).hasSpineHead(key_inloop_spinehead);
+				  propBouton_inloop = (key1_inloop == key_inloop_spinehead) ? (*touch).getProp2() : (*touch).getProp1();
+				  bool isSide1_inloop = (key_inloop_spinehead == key1_inloop);
+#ifndef LTWT_TOUCH
+				  double dist_inloop = (*touch).getDistance();
+#endif
+				  // equal and must be on the same side (i.e. either both first keys or 
+				  //                                    both second keys)
+				  //if (key_spinehead == key_inloop_spinehead)
+				  if ((key_spinehead == key_inloop_spinehead)
+						  //  and (isSide1 == isSide1_inloop)
+					 )
+				  {
+					  if (1)
+					  {
+						 std::cout << "found " << key1 << " "
+						 << key2 << " "
+						 << key_spinehead << " "
+						 << key1_inloop << " "
+						 << key2_inloop << " "
+						 << key_inloop_spinehead << " " 
+						 << isSide1 << isSide1_inloop << " "
+						 << propBouton << " " << propBouton_inloop  
+#ifndef LTWT_TOUCH
+						 << dist << " " << dist_inloop
+#endif
+						 << std::endl;
+					  }
+					  //count += 1;
+					  //if (count ==2)
+					  //{
+					  touchBoutonSpineHeadIsUsed = true;
+					  touchCanBeRemoved=it->first;
+					  //TUAN TODO
+					  //we may use the comparison between propBouton and propBouton_inloop
+					  //to determine which connection is the right one for the spine
+					  break;
+					  //}
+				  }
+				  //string value = it->second;
+			  }
+			  //TUAN TODO: try to think a way to do find the right touch
+			 // if ((touchBoutonSpineHeadIsUsed) and (propBouton > propBouton_inloop))
+			 // {//the newer touch is considered better reflect the bouton-spineHead touch
+			 //     //remove the existing one
+			 //     assert(smap.erase(touchCanBeRemoved) ==1); 
+			 //     //make sure the new one will be added 
+			 //     touchBoutonSpineHeadIsUsed=false;
+			 // }
+			  if (! touchBoutonSpineHeadIsUsed)
+			  {
+				  smap[&(*titer)] = std::list<std::pair<int, int> >();
+				  miter = smap.find(&(*titer));
+				  newlyCreated = true;
+			  }
+
+		  }
+		  
+	  }
+	  else if (specialTreatment == "ChemicalSynapses")
+	  {//always add it here
+		  smap[&(*titer)] = std::list<std::pair<int, int> >();
+		  miter = smap.find(&(*titer));
+		  newlyCreated = true;
+	  }
+	  else
+	  {
+		  smap[&(*titer)] = std::list<std::pair<int, int> >();
+		  miter = smap.find(&(*titer));
+		  newlyCreated = true;
+	  }
   }
-  miter->second.push_back(std::pair<int, int>(type, order));
+  else alreadyThere=true;
+	  
+  bool rval = true;
+  // Special treatment
+  // for BidirectionalConnections, we only create for 1 touch
+  if (specialTreatment == "BidirectionalConnections")
+  {
+	  //if (newlyCreated or alreadyThere) 
+	  if (newTouchIsNeckDenShaft and ! touchSpineNeckDenShaftIsUsed)
+		  miter->second.push_back(std::pair<int, int>(type, order));
+	  else rval = false;
+  }
+  else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
+  {
+	  if (newTouchIsChemSynapse and ! touchBoutonSpineHeadIsUsed)
+		  miter->second.push_back(std::pair<int, int>(type, order));
+	  else rval = false;
+  }
+  else
+  {
+	  miter->second.push_back(std::pair<int, int>(type, order));
+  }
+  return rval;
 }
 
 std::list<Params::ChemicalSynapseTarget>::iterator
@@ -4966,10 +5319,18 @@ std::list<Params::ChemicalSynapseTarget>::iterator
 }
 
 // check if the touch formed by two capsules
-//  is 'generated' as the given 'type' or not
-//   with type can be 'ChemicalSynapse' or 'ElectricalSynapse'
-//   NOTE: 'ElectricalSynapse' represents both regular electrical touch and
-//                                           spine-neck+dendritic-shaft touch
+//  is 'generated' as the given 'order' or not
+//   with order is an integer representing
+//      'ChemicalSynapses' or 'ElectricalSynapses' or 'BidirectionalConnections'
+//   and 'type' is an integer representing the name assigned for one 'order'
+//      e.g. 'DenSpine' for ChemicalSynapses
+//   (NOTE: one 'order' can have one or many 'name' defined via SynParam.par file)
+//  PARAMS:
+//   smap = the map holding what touch has been added, 
+//               and is used for what pair of (type,order)
+//  NOTE: It is called during doConnect 
+//   and the maps 'smap' is setup (created) during
+//    doLayout via setGenerated()  method
 bool TissueFunctor::isGenerated(
     std::map<Touch*, std::list<std::pair<int, int> > >& smap,
     TouchVector::TouchIterator& titer, int type, int order)
@@ -5301,4 +5662,17 @@ int TissueFunctor::getNumCompartments(ComputeBranch* branch)
 {
   bool dummy;
   return getNumCompartments(branch, dummy);
+}
+  
+bool TissueFunctor::touchIsChemicalSynapse(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
+		TouchVector::TouchIterator& titer)
+{ 
+	bool rval = true;
+  std::map<Touch*, std::list<std::pair<int, int> > >::iterator miter =
+      smap.find(&(*titer));
+  if (miter == smap.end())
+  {
+	  rval = false;
+  }
+  return rval;
 }

@@ -13,8 +13,8 @@
 // 2. SynapticCleft    -- if the receptor want to get the concentration of neurotransmitter
 //          and then decide what to do with it
 
-// It is used as an intermediate node connecting
-//   pre-Compartment[Node]  --> PreSynapticPoint --> Receptor(Synapse)
+// PreSynapticPoint is used as an intermediate node connecting
+//   pre-Compartment[Node]  --> PreSynapticPoint --> one-or-many Receptor(Synapse)
 Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProducer
 {
 /*{{{*/

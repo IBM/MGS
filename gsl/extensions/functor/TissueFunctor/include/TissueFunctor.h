@@ -158,8 +158,11 @@ class TissueFunctor : public CG_TissueFunctorBase
   int _compartmentSize;
 
 #ifdef HAVE_MPI
-  void setGenerated(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
-                    TouchVector::TouchIterator& titer, int type, int order);
+  bool touchIsChemicalSynapse(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
+                    TouchVector::TouchIterator& titer);
+  bool setGenerated(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
+                    TouchVector::TouchIterator& titer, int type, int order, std::string
+					specialTreatment=std::string());
   bool isGenerated(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
                    TouchVector::TouchIterator& titer, int type, int order);
   void setNonGenerated(TouchVector::TouchIterator& titer, 
@@ -290,32 +293,46 @@ class TissueFunctor : public CG_TissueFunctorBase
   // /       \
 	  //left    right
   // for chemical-synapse: only 1 touch is created in _touchVector (A->B) with A=bouton, B=spinehead
-	// for electrical-synapse: 2 touch is created in _touchVector (A->B, B->A) with A=spineneck, B=den-shaft
+	// for electrical-synapse or spineneck-denshaft (current strategy): 1 touch is created in _touchVector (A->B) with A=spineneck, B=den-shaft and
+	//   CASE 1: 2 Connexon instances are created to form bidirectional connection
+	// A->Connexon->B, B->Connexon->A
+	//   CASE 2: 2 SpineAttachment instances are created to form bidirectional connection
+	// A->SpineAttachment->B, B->SpineAttachment->A
+	// for electrical-synapse (old strategy): 2 touch is created in _touchVector (A->B, B->A) with A=spineneck, B=den-shaft
   // for each Touch (formed by a Capsule on left to a Capsule on right)
   //  it has a list of  <index-(point|chemical|electrical|bidirectionalconnection)-layer,order>
+  //  example:
+  //   _generatedChemicalSynapses<TouchA, {(layerindex-for-ChemicalSynapse-nodeCategory,
+  //                                        index-for-for-the-type-of-pair-capsules-forming-the-touch-which-is-given-in-SynParam-file)}
   std::map<Touch*, std::list<std::pair<int, int> > >
       _generatedChemicalSynapses;
   std::map<Touch*,
            std::list<std::list<Params::ChemicalSynapseTarget>::iterator> >
       _nonGeneratedMixedChemicalSynapses;
   std::map<Touch*, std::list<std::pair<int, int> > >
+      _generatedSynapticClefts;
+  std::map<Touch*, std::list<std::pair<int, int> > >
       _generatedElectricalSynapses;
   std::map<Touch*, std::list<std::pair<int, int> > >
       _generatedBidirectionalConnections;
   // std::map<Touch*, std::list<std::pair<int, int> > >
   // _generatedSpineBranch;
+  
+  // NOTE:  
+  // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>
   std::map<int, std::map<int, RNG> > _synapseGeneratorMap;
 
   // the list of names for all diffusible nodetypes pass through nodekind
   // argument
   //    in the Layer statement
   std::vector<std::string> _compartmentVariableTypes;
+
   // map the name of nodeType
   //     to its associated index (based on the order of Layer adding in GSL)
-	//     (such information is extracted from Layer statements
+  //     (such information is extracted from Layer statements
   //     where The name of nodeType is passed inside
   //   the square bracket of the associated components of <nodekind="...">
-	//     )
+  //     )
   //   NDPair
   //     ElectricalSynapses[...]
   //     ChemicalSynapses[...]
@@ -323,11 +340,13 @@ class TissueFunctor : public CG_TissueFunctorBase
   //     CompartmentVariables[...]
   //     Junctions[...]
   //     Channels[...]
-  //     PreSynapticPoints[...]
+  // (*1)    PreSynapticPoints[...]
+  // (*1)    SynapticClefts[...]
   //     EndPoints[...]
   //     JunctionsPoints[...]
   //     ForwardSolvePoints[...]
   //     BackwardSolvePoints[...]
+  // NOTE: (*1) = we choose either to use in GSL (not both)
   std::map<std::string, int> _electricalSynapseTypesMap,
       _chemicalSynapseTypesMap;
   std::map<std::string, int> _bidirectionalConnectionTypesMap;

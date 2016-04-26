@@ -21,8 +21,10 @@
 #include <string.h>
 
 #include "SegmentDescriptor.h"
+#include "NTSMacros.h"
+#include "MaxComputeOrder.h"
 
-#define LTWT_TOUCH
+//#define LTWT_TOUCH (moved to NTSMacro.h)
 
 #ifndef LTWT_TOUCH
 #define N_TOUCH_DATA 5
@@ -65,7 +67,7 @@ class Touch
   void printTouch();
 
 #ifndef LTWT_TOUCH
-  const double getDistance() {return _touchData[4];}
+  double getDistance() const {return _touchData[4];}
   void setDistance(double distance) {_touchData[4]=distance;}
 
   short* getEndTouches() {return _endTouch;}
@@ -116,6 +118,8 @@ class Touch
   bool _remains;
 #endif		
 
+  // this is used to hold data for a Touch, but organized in such a way that can be used
+  // for data exchange between MPI processes 
   static MPI_Datatype* _typeTouch;
   static SegmentDescriptor _segmentDescriptor;
 };
