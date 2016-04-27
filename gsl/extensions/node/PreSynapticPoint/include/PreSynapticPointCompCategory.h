@@ -18,13 +18,17 @@
 
 #include "Lens.h"
 #include "CG_PreSynapticPointCompCategory.h"
+#include "CountableModel.h"
 
 class NDPairList;
 
-class PreSynapticPointCompCategory : public CG_PreSynapticPointCompCategory
+class PreSynapticPointCompCategory : public CG_PreSynapticPointCompCategory,
+                                     public CountableModel
 {
-   public:
-      PreSynapticPointCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+  public:
+  PreSynapticPointCompCategory(Simulation& sim, const std::string& modelName,
+                               const NDPairList& ndpList);
+  void count();
 };
 
 #endif

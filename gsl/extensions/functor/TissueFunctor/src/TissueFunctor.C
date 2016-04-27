@@ -3999,6 +3999,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                 bidirectionalConnectionCounters[synapseType];
             int preDI = getCountAndIncrement(ecounts, indexPre);
             int postDI = getCountAndIncrement(ecounts, indexPost);
+			
             // list of compartment-node's name (e.g. 'Voltage', 'Calcium')
             // that are supposed to pass through
             std::list<std::string>::iterator etiter = bditer->_target.begin(),
@@ -4093,14 +4094,15 @@ void TissueFunctor::doConnector(LensContext* lc)
               key_size_t keyneck = 0;
               (*titer).hasSpineNeck(keyneck);
               Capsule* capsneck = (keyneck == key1) ? preCapsule : postCapsule;
+			  assert((keyneck == key1) || keyneck == key2);
 
               if (keyneck == key1)
               {
-                Mcpt2spineattach.replace("typeCpt", "spine-neck");
+                assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
               }
               else
               {
-                Mspineattach2cpt.replace("typeCpt", "den-shaft");
+                assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
               }
 
               Mspineattach2cpt.replace("idx", preIdx);
@@ -4112,11 +4114,11 @@ void TissueFunctor::doConnector(LensContext* lc)
 
               if (keyneck == key2)
               {
-                Mcpt2spineattach.replace("typeCpt", "spine-neck");
+                assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
               }
               else
               {
-                Mspineattach2cpt.replace("typeCpt", "den-shaft");
+                assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
               }
 
               Mspineattach2cpt.replace("idx", postIdx);
@@ -5115,7 +5117,7 @@ bool TissueFunctor::setGenerated(
 						  //  and (isSide1 == isSide1_inloop)
 					 )
 				  {
-					  if (1)
+					  if (0)
 					  {//debug purpose
 					  
 						 std::cout << "found " << key1 << " "
@@ -5203,7 +5205,7 @@ bool TissueFunctor::setGenerated(
 						  //  and (isSide1 == isSide1_inloop)
 					 )
 				  {
-					  if (1)
+					  if (0)
 					  {
 						 std::cout << "found " << key1 << " "
 						 << key2 << " "
@@ -5509,6 +5511,7 @@ int TissueFunctor::getCountAndIncrement(std::map<int, int>& cmap, int index)
   }
   return rval;
 }
+
 // GOAL: for a given capsule (in the associated ComputeBranch),
 // returns the index of the compartment it belongs to
 //  NOTE:

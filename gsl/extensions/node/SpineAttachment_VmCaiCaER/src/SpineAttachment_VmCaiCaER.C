@@ -22,6 +22,10 @@
 #include "NTSMacros.h"
 
 
+SpineAttachment_VmCaiCaER::SpineAttachment_VmCaiCaER() 
+{
+ _index = -1;
+}
 void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
 {
   assert(Vi);
@@ -42,7 +46,7 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   //  with complex geometry, calculating the resistance be much more complicated
   //  https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistance_versus_resistivity_in_complicated_geometries
   //  SOLUTION: l = distance from 2 center points in neck + compartment
-  //     l = 1/2 nec-length + r2
+  //     l = 1/2 neck-length + r2
   //            A = pi * ((r1+r2)/2)^2
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
@@ -62,6 +66,11 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   g = A / (Raxial * len);            // [nS]
   gCYTO = A / (RCacytoaxial * len);  // [nS]
   gER = A / (RCaERaxial * len);      // [nS]
+  //TUAN TODO: HERE we should take into account the cross-sectional difference
+  //A for Vm
+  //A for Cacyto
+  //A for CaER
+  //
 }
 
 void SpineAttachment_VmCaiCaER::produceState(RNG& rng) {}
@@ -72,7 +81,7 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
   I = g * V;
   // Nernst equation
   float E_Ca = R_zCaF * *(getSharedMembers().T) * log(*Caj / *Cai);
-  I_Ca = gCYTO * (E_Ca);
+  I_Ca = gCYTO * (V + E_Ca);
   float E_CaER = R_zCaF * *(getSharedMembers().T) * log(*CaERj / *CaERi);
   I_CaER = gER * (E_CaER);
 }
@@ -85,6 +94,10 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
   int index = CG_inAttrPset->idx;
+  if (_index >=0)
+	  assert(_index == index);
+  else
+	  _index = index;
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
@@ -98,6 +111,10 @@ void SpineAttachment_VmCaiCaER::setCaPointers(
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
   int index = CG_inAttrPset->idx;
+  if (_index >=0)
+	  assert(_index == index);
+  else
+	  _index = index;
   assert(getSharedMembers().CaConcentrationConnect);
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
@@ -110,6 +127,10 @@ void SpineAttachment_VmCaiCaER::setCaERPointers(
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
   int index = CG_inAttrPset->idx;
+  if (_index >=0)
+	  assert(_index == index);
+  else
+	  _index = index;
   assert(getSharedMembers().CaERConcentrationConnect);
   CaERi = &((*(getSharedMembers().CaERConcentrationConnect))[index]);
 }
@@ -122,7 +143,7 @@ void SpineAttachment_VmCaiCaER::set_A_and_len(
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
   assert(getSharedMembers().dimensionsConnect);
-  String cptType = CG_inAttrPset->typeCpt;
+  String cptType (CG_inAttrPset->typeCpt);
   String typeDenShaft("den-shaft");
   String typeSpineNeck("spine-neck");
   DimensionStruct* dimension = (*(getSharedMembers().dimensionsConnect))[0];

@@ -304,6 +304,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   //  example:
   //   _generatedChemicalSynapses<TouchA, {(layerindex-for-ChemicalSynapse-nodeCategory,
   //                                        index-for-for-the-type-of-pair-capsules-forming-the-touch-which-is-given-in-SynParam-file)}
+  //   _generatedBidirectionalConnections<TouchA, {(layerindex-for-SpineAttachment-nodeCategory,
+  //                                        index-for-for-the-type-of-pair-capsules-forming-the-touch-which-is-given-in-SynParam-file)}
   std::map<Touch*, std::list<std::pair<int, int> > >
       _generatedChemicalSynapses;
   std::map<Touch*,

@@ -567,10 +567,14 @@ void CaConcentration::setInjectedCaCurrent(
   assert(injectedCaCurrents.size() > 0);
 #endif
   TissueSite& site = CG_inAttrPset->site;
-  if (site.r != 0)
-  {
+  if (site.r != 0)// a sphere is provided, i.e. used for current injection
+  {//stimulate a region (any compartments fall within the sphere are affected)
+    // go through all compartments
     for (int i = 0; i < dimensions.size(); ++i)
     {
+      //.. check the distance between that compartment and the size
+      //   here if it falls inside the sphere then connection established
+      //     for bidirectional connection
       if ((site.r * site.r) >= DISTANCE_SQUARED(&site, dimensions[i]))
       {
         CaCurrentProducer* CG_CaCurrentProducerPtr =
@@ -590,8 +594,8 @@ void CaConcentration::setInjectedCaCurrent(
       }
     }
   }
-  else if (CG_inAttrPset->idx < 0)
-  {
+  else if (CG_inAttrPset->idx < 0) // Can be used via 'Probe' of TissueFunctor
+  {//inject at all compartments of one or many branchs meet the condition 
     injectedCaCurrents[injectedCaCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)
     {
@@ -611,7 +615,8 @@ void CaConcentration::setInjectedCaCurrent(
     }
   }
   else
-  {
+  {//i.e. bi-directional connection (electrical synapse or spineneck-compartment)
+   //NOTE: The current component already been assigned via code-generated specified in MDL
     injectedCaCurrents[injectedCaCurrents.size() - 1].index =
         CG_inAttrPset->idx;
   }

@@ -268,7 +268,7 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     string identifier;
     int idx; //the index of the compartment in the compute-branch that connect to 
              // this SpineAttachment node
-    string typeCpt; //"spine-neck" or "den-shaft"
+    string typeCpt; //help to identify the compartment: "spine-neck" or "den-shaft"
   }
 
   UserFunction setVoltagePointers; 
