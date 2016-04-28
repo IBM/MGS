@@ -20,6 +20,11 @@
 #include <cmath>
 #include "NTSMacros.h"
 
+SpineAttachment_VmCai::SpineAttachment_VmCai() 
+{
+	_gotAssigned = false;
+}
+
 void SpineAttachment_VmCai::produceInitialState(RNG& rng)
 {
   assert(Vi);
@@ -41,11 +46,10 @@ void SpineAttachment_VmCai::produceInitialState(RNG& rng)
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
   assert(Raxial > MIN_RESISTANCE_VALUE);
-  assert(RCacytoaxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj);
   dyn_var_t len = (*leni + *lenj) / 2.0;
   g = A / (Raxial * len);            // [nS]
-  gCYTO = A / (RCacytoaxial * len);  // [nS]
+  Caconc2current = A * DCa * zCa * zF / (100*len);
 }
 
 void SpineAttachment_VmCai::produceState(RNG& rng) {}
@@ -54,9 +58,7 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
 {
   float V = *Vj - *Vi;
   I = g * V;
-  // float E_Ca=0.08686 * *(getSharedMembers().T) * log(*Caj / *Cai);
-  float E_Ca = R_zCaF * *(getSharedMembers().T) * log(*Caj / *Cai);
-  I_Ca = gCYTO * (E_Ca);
+  I_Ca = Caconc2current * (*Caj - *Cai);
 }
 
 void SpineAttachment_VmCai::setCaPointers(
@@ -65,6 +67,13 @@ void SpineAttachment_VmCai::setCaPointers(
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
 {
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
+  else
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
   assert(getSharedMembers().CaConcentrationConnect);
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
@@ -75,7 +84,13 @@ void SpineAttachment_VmCai::setVoltagePointers(
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
 {
-  index = CG_inAttrPset->idx;
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
+  else
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);

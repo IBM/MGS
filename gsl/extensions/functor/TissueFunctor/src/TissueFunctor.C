@@ -4098,11 +4098,17 @@ void TissueFunctor::doConnector(LensContext* lc)
 
               if (keyneck == key1)
               {
-                assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+				  std::string name("typeCpt");
+				  std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                //assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
               }
               else
               {
-                assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+				  std::string name("typeCpt");
+				  std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                //assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
               }
 
               Mspineattach2cpt.replace("idx", preIdx);
@@ -4114,11 +4120,17 @@ void TissueFunctor::doConnector(LensContext* lc)
 
               if (keyneck == key2)
               {
-                assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+				  std::string name("typeCpt");
+				  std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                //assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
               }
               else
               {
-                assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+				  std::string name("typeCpt");
+				  std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                //assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
               }
 
               Mspineattach2cpt.replace("idx", postIdx);

@@ -102,7 +102,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
     /*{{{*/
 	//{{{ need user-input
   dyn_var_t Raxial;   // [Gohm.um] 
-  dyn_var_t RCacytoaxial;   // [Gohm.um] 
+  dyn_var_t DCa; // diffusion constant [um^2/ms]
   //}}}
   //{{{ internal calculation
     //either the 'i'-part or the 'j'-part will
@@ -121,7 +121,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;//the current [pA]  TUAN TOTHINK: should we use the fluxes???? J_Ca like RyR
-  dyn_var_t gCYTO;
+  dyn_var_t Caconc2current;
   //}}}
     /*}}}*/
 
@@ -208,8 +208,8 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   /*{{{*/
 	//{{{ need user-input
   dyn_var_t Raxial;   // [Gohm.um] 
-  dyn_var_t RCacytoaxial;   // [Gohm.um] 
-  dyn_var_t RCaERaxial;   // [Gohm.um] 
+  dyn_var_t DCa; // diffusion constant [um^2/ms]
+  dyn_var_t DCaER; // diffusion constant [um^2/ms]
   //}}}
   //{{{ internal calculation
     //either the 'i'-part or the 'j'-part will
@@ -228,11 +228,11 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   dyn_var_t* Cai;
   dyn_var_t* Caj;
   dyn_var_t I_Ca;
-  dyn_var_t gCYTO;
+  dyn_var_t Caconc2current;
   dyn_var_t* CaERi;
   dyn_var_t* CaERj;
   dyn_var_t I_CaER;
-  dyn_var_t gER; // the trans
+  dyn_var_t CaERconc2current;
   //}}}
   /*}}}*/
 

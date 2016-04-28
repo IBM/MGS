@@ -24,8 +24,9 @@
 
 SpineAttachment_VmCaiCaER::SpineAttachment_VmCaiCaER() 
 {
- _index = -1;
+	_gotAssigned = false;
 }
+
 void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
 {
   assert(Vi);
@@ -51,26 +52,17 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
   assert(Raxial > MIN_RESISTANCE_VALUE);
-  assert(RCacytoaxial > MIN_RESISTANCE_VALUE);
-  assert(RCaERaxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj);
   dyn_var_t len = (*leni + *lenj) / 2.0;
-  /*
-  if (Raxial == 0.0)
-          g = FLT_MAX/2;
-  if (RCacytoaxial == 0.0)
-          gCYTO = FLT_MAX/2;
-  if (RCaERaxial == 0.0)
-          gER = FLT_MAX/2;
-          */
   g = A / (Raxial * len);            // [nS]
-  gCYTO = A / (RCacytoaxial * len);  // [nS]
-  gER = A / (RCaERaxial * len);      // [nS]
+  Caconc2current = A * DCa * zCa * zF / (100*len);
+  CaERconc2current = A * DCaER * zCa * zF / (100.0*len);
   //TUAN TODO: HERE we should take into account the cross-sectional difference
   //A for Vm
   //A for Cacyto
   //A for CaER
   //
+  
 }
 
 void SpineAttachment_VmCaiCaER::produceState(RNG& rng) {}
@@ -79,11 +71,8 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 {
   float V = *Vj - *Vi;
   I = g * V;
-  // Nernst equation
-  float E_Ca = R_zCaF * *(getSharedMembers().T) * log(*Caj / *Cai);
-  I_Ca = gCYTO * (V + E_Ca);
-  float E_CaER = R_zCaF * *(getSharedMembers().T) * log(*CaERj / *CaERi);
-  I_CaER = gER * (E_CaER);
+  I_Ca = Caconc2current * (*Caj - *Cai);
+  I_CaER = CaERconc2current * (*CaERj - *CaERi);
 }
 
 void SpineAttachment_VmCaiCaER::setVoltagePointers(
@@ -93,11 +82,13 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
-  int index = CG_inAttrPset->idx;
-  if (_index >=0)
-	  assert(_index == index);
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
   else
-	  _index = index;
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
@@ -110,11 +101,13 @@ void SpineAttachment_VmCaiCaER::setCaPointers(
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
-  int index = CG_inAttrPset->idx;
-  if (_index >=0)
-	  assert(_index == index);
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
   else
-	  _index = index;
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
   assert(getSharedMembers().CaConcentrationConnect);
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
@@ -126,11 +119,13 @@ void SpineAttachment_VmCaiCaER::setCaERPointers(
     CG_SpineAttachment_VmCaiCaERInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiCaEROutAttrPSet* CG_outAttrPset)
 {
-  int index = CG_inAttrPset->idx;
-  if (_index >=0)
-	  assert(_index == index);
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
   else
-	  _index = index;
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
   assert(getSharedMembers().CaERConcentrationConnect);
   CaERi = &((*(getSharedMembers().CaERConcentrationConnect))[index]);
 }
@@ -163,4 +158,5 @@ void SpineAttachment_VmCaiCaER::set_A_and_len(
     leni = &(dimension->length);
   }
 }
+
 SpineAttachment_VmCaiCaER::~SpineAttachment_VmCaiCaER() {}

@@ -21,32 +21,36 @@
 #define BASED_ON_ITERATIONS 1
 #define BASED_ON_TIMES 2
 
-//#define SIMULATION_STOP BASED_ON_TIMES
-//#define SIMULATION_RECORD BASED_ON_TIMES
-#define SIMULATION_STOP BASED_ON_ITERATIONS
-#define SIMULATION_RECORD BASED_ON_ITERATIONS
+#define SIMULATION_STOP BASED_ON_TIMES
+#define SIMULATION_RECORD BASED_ON_TIMES
+//#define SIMULATION_STOP BASED_ON_ITERATIONS
 //#define SIMULATION_RECORD BASED_ON_ITERATIONS
 //}}}
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0010 // [ms]
+#define TimeStep_value   0.00170 // [ms]
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define RecordInterval   1.0   //  [ms]
-	#define TimeEnd          10      // [ms]
+	#define TimeEnd          1000      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
 //{{{
-	#define RecordInterval   1   // every ... timesteps
-	//#define NumIterationsUntilEnd   1000000   // unitless
 	#define NumIterationsUntilEnd   10000   // unitless
 //}}}
 #else
-  SOMETHING WRONG
+  assert(0);
 #endif
-
+#if  SIMULATION_RECORD == BASED_ON_TIMES
+	#define RecordInterval   1.0   //  [ms]
+  #define TimeStartRecord  900.0 // [ms]
+#elif  SIMULATION_RECORD == BASED_ON_ITERATIONS
+	#define RecordInterval   1   // every ... timesteps
+	//#define NumIterationsUntilEnd   1000000   // unitless
+#else
+  assert(0);
+#endif
 //}}}
 //{{{ Diffusion + Fast-buffering constants
 #define Cacyto_DiffusionConstant 0.27   // [um^2/ms]  unbuffered
@@ -82,11 +86,10 @@
 #define NTGABA_baseline 5.0  // [uM]
 //}}}
 //{{{ Conditions: conductance + temperature + Vrest + Eleak
-#define Ra_value 0.001     // [GOhm*um]
+#define Ra_value 0.001     // [GOhm*um] 
   //across the spine-neck to shaft
-#define R_AXIAL 0.001     // [GOhm*um]
-#define R_CACYTO_AXIAL 0.001     // [GOhm*um]
-#define R_CAER_AXIAL 0.001     // [GOhm*um]
+//#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
+#define R_NECK 0.012     // [GOhm*um] --> g~12 nS
 
   // NOTE: 310K = 37-degree Celcius (body)
   //       308.15K = 35-degree Celcius (body)
@@ -668,12 +671,14 @@ Service ImplicitRecordInterval (simInfo, "recordIntervalInIterations");
 /*{{{*/
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
 Trigger UnsignedServiceTrigger(string description, Service svc, string operator, Service svc2, int delay, string phaseName);
-Trigger FloatTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
+Trigger FloatTrigger(string description, Service svc, string operator, float criterion, int delay, string phaseName);
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
 
 #if  SIMULATION_RECORD == BASED_ON_TIMES
 UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
           ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
+FloatTrigger recOnPassTime("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
+          CurrentTime, ">=", TimeStartRecord, 0, solveChannels ); //Record only after it passes
 #elif SIMULATION_RECORD == BASED_ON_ITERATIONS
 UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval), 
           ::Iteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
@@ -1300,23 +1305,23 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE == VMONLY
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_AXIAL // [Gohm.um] 
+				Raxial = R_NECK // [Gohm.um] 
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_AXIAL, // [Gohm.um] 
-				I_Ca = 0, //TUAN: check this
-        RCacytoaxial = R_CACYTO_AXIAL // [Gohm.um]
+				Raxial = R_NECK, // [Gohm.um] 
+				I_Ca = 0, 
+        DCa = Cacyto_DiffusionConstant //[um^2/ms]
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
-				Raxial = R_AXIAL, // [Gohm.um] 
-				I_Ca = 0, //TUAN: check this
-        RCacytoaxial = R_CACYTO_AXIAL, // [Gohm.um]
+				Raxial = R_NECK, // [Gohm.um] 
+				I_Ca = 0, 
+        DCa = Cacyto_DiffusionConstant, //[um^2/ms]
 				I_CaER = 0,
-        RCaERaxial = R_CAER_AXIAL // [Gohm.um]
+        DCaER = CaER_DiffusionConstant //[um^2/ms]
 				> ) );
 #endif
      //}}}

@@ -536,7 +536,15 @@ void HodgkinHuxleyVoltage::doBackwardSolve()
 dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
                                           DimensionStruct* b)
 {
-  dyn_var_t radius = 0.5 * (a->r + b->r);  // radius_middle ()
+	dyn_var_t radius;// radius_middle ()
+	if (a->dist2soma == 0.0)
+	{
+		radius = b->r;
+	}
+	else if (b->dist2soma == 0.0)
+		radius = a->r;
+	else
+		radius = 0.5 * (a->r + b->r);
   // dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
   //return (radius * radius /
   //        (2.0 * getSharedMembers().Ra * lengthsq * b->r)); /* needs fixing */
@@ -553,7 +561,15 @@ dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
 dyn_var_t HodgkinHuxleyVoltage::getAij(DimensionStruct* a, DimensionStruct* b,
                                        dyn_var_t A)
 {
-  dyn_var_t Rb = 0.5 * (a->r + b->r);
+	dyn_var_t Rb;
+	if (a->dist2soma == 0.0)
+	{
+		Rb = b->r;
+	}
+	else if (b->dist2soma == 0.0)
+		Rb = a->r;
+	else
+		Rb = 0.5 * (a->r + b->r);
   // dyn_var_t length = sqrt(DISTANCE_SQUARED(a, b);
   dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
   return (M_PI * Rb * Rb /

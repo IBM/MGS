@@ -4,6 +4,7 @@
 #include "Lens.h"
 #include "CG_SpineAttachment_VmCaiCaER.h"
 #include "rndm.h"
+#include "SegmentDescriptor.h"
 
 #include "MaxComputeOrder.h"
 
@@ -42,7 +43,7 @@ class SpineAttachment_VmCaiCaER : public CG_SpineAttachment_VmCaiCaER
 
   private:
   dyn_var_t* _ri;
-  int _index;
+  bool _gotAssigned;
 };
 
 #endif

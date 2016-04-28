@@ -525,7 +525,15 @@ void CaERConcentration::doBackwardSolve()
 
 dyn_var_t CaERConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 {
-  dyn_var_t radius = 0.5 * (a->r + b->r);
+	dyn_var_t radius;
+	if (a->dist2soma == 0.0)
+	{
+		radius = b->r;
+	}
+	else if (b->dist2soma == 0.0)
+		radius = a->r;
+	else
+		radius = 0.5 * (a->r + b->r);
   //dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
   //return (getSharedMembers().DCa * radius * radius /
   //        (lengthsq * b->r * b->r)); /* needs fixing */
@@ -541,12 +549,20 @@ dyn_var_t CaERConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
                                   dyn_var_t V)
 {
-  dyn_var_t Rb = 0.5 * (a->r + b->r);
-  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
-  //        (V * sqrt(DISTANCE_SQUARED(a, b))));
-  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
-  return (M_PI * Rb * Rb * getSharedMembers().DCa /
-          (V * length));
+	dyn_var_t Rb;
+	if (a->dist2soma == 0.0)
+	{
+		Rb = b->r;
+	}
+	else if (b->dist2soma == 0.0)
+		Rb = a->r;
+	else
+		Rb = 0.5 * (a->r + b->r);
+	//return (M_PI * Rb * Rb * getSharedMembers().DCa /
+	//        (V * sqrt(DISTANCE_SQUARED(a, b))));
+	dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
+	return (M_PI * Rb * Rb * getSharedMembers().DCa /
+			(V * length));
 }
 
 //void CaERConcentration::setReceptorCaCurrent(
