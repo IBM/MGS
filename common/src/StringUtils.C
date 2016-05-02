@@ -1,8 +1,14 @@
 #include "../include/StringUtils.h"
 #include <string>
+#include <limits>
+#include <iostream>
 
 using namespace std;
 
+// GOAL: parse the given string
+//  into a vector of tokens
+//  using the given set of delimiters
+// DEFAULT: delimiter is blank space
 void StringUtils::Tokenize(const string& str,
                            vector<string>& tokens,
                            const string& delimiters)
@@ -23,4 +29,12 @@ void StringUtils::Tokenize(const string& str,
         // Find next "non-delimiter"
         pos = str.find_first_of(delimiters, lastPos);
     }
+}
+
+// GOAL: just print out a message - pause the execution 
+// until user presses ENTER key
+void StringUtils::wait()
+{
+  std::cout << "Press ENTER to continue...";
+  std::cin.ignore( std::numeric_limits < std::streamsize> :: max(), '\n');
 }

@@ -25,12 +25,9 @@
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
    (((a)->z - (b)->z) * ((a)->z - (b)->z)))
 
-// NOTE: value = 1/(zCa*Farad*d)
+// NOTE: value = 1e6/(zCa*Farad)
 // zCa = valence of Ca2+
 // Farad = Faraday's constant
-// d = depth of thin layer
-//   (NOTE: we can try to use 'd' as distance of 2 compartments: spine-neck vs dendrite compt)
-//NOTE: the value below is based on (d=1um)
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
 #define isProximalCase0 (proximalDimension == 0)  // no flux boundary condition
@@ -196,7 +193,7 @@ bool CaConcentration::checkSite(const String& CG_direction,
 {
   TissueSite& site = CG_inAttrPset->site;
   bool atSite = (site.r == 0);
-  for (int i = 0; !atSite && i < dimensions.size(); ++i)
+  for (unsigned int i = 0; !atSite && i < dimensions.size(); ++i)
     atSite = ((site.r * site.r) >= DISTANCE_SQUARED(&site, dimensions[i]));
   return atSite;
 }
@@ -223,12 +220,13 @@ void CaConcentration::finish(RNG& rng)
     Ca_cur[i] = Ca_new[i] = 2.0 * Ca_new[i] - Ca_cur[i];
 #ifdef DEBUG_ASSERT
     assert(Ca_new[i] >= 0);
-		assert(Ca_new[i] == Ca_new[i]); // making sure Ca_new[i] is not NaN
+    assert(Ca_new[i] == Ca_new[i]);  // making sure Ca_new[i] is not NaN
 #endif
   }
 }
 
-// Get cytoplasmic surface area at the compartment based on its index 'i'
+// Get cytoplasmic surface area (um^2)
+// at the compartment based on its index 'i'
 dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 {
   dyn_var_t area= 0.0;
@@ -236,7 +234,8 @@ dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 	return area;
 }
 
-// Get cytoplasmic volume at the compartment based on its index 'i'
+// Get cytoplasmic volume (um^3) 
+// at the compartment based on its index 'i'
 dyn_var_t CaConcentration::getVolume(int i) // Tuan: check ok
 {
   dyn_var_t volume = 0.0;

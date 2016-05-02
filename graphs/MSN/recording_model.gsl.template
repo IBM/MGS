@@ -1,8 +1,17 @@
 VoltageDisplay voltageDisplay<fileName= PathFileCombine("somaV.dat")>;
 voltageDisplay.dataCollection(<>) on recOn;
 
+#if SIMULATION_INVOLVE >= VM_CACYTO
 CalciumDisplay calciumSomaDisplay<fileName= PathFileCombine("somaCa.dat")>;
 calciumSomaDisplay.dataCollection(<>) on recOn;
+//calciumSomaDisplay.dataCollection(<>) on recOnPassTime;
+#endif
+
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
+CalciumDisplay calciumSomaERDisplay<fileName= PathFileCombine("somaCaER.dat")>;
+calciumSomaERDisplay.dataCollection(<>) on recOn;
+//calciumSomaDisplay.dataCollection(<>) on recOnPassTime;
+#endif
 
 /*
 VoltageDisplay synapseVoltageDisplay_0<fileName=PathFileCombine("synapseV0.dat")>;

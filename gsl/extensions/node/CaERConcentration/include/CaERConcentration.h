@@ -28,11 +28,12 @@ class CaERConcentration : public CG_CaERConcentration
   void initializeCompartmentData(RNG& rng);
   void solve(RNG& rng);
   void finish(RNG& rng);
-//  virtual void setReceptorCaCurrent(
-//      const String& CG_direction, const String& CG_component,
-//      NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
-//      Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
-//      CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
+  //  virtual void setReceptorCaCurrent(
+  //      const String& CG_direction, const String& CG_component,
+  //      NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor*
+  //      CG_variable,
+  //      Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
+  //      CG_CaERConcentrationOutAttrPSet* CG_outAttrPset);
   virtual void setInjectedCaCurrent(
       const String& CG_direction, const String& CG_component,
       NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
@@ -61,7 +62,7 @@ class CaERConcentration : public CG_CaERConcentration
   dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t volume);
   dyn_var_t getVolume(int i);
   dyn_var_t getArea(int i);
-	void printDebugHH();
+  void printDebugHH();
 
 // - common for all compartment variables
 #if MAX_COMPUTE_ORDER > 0
@@ -95,7 +96,7 @@ class CaERConcentration : public CG_CaERConcentration
   private:
   void doForwardSolve();
   void doBackwardSolve();
-	static SegmentDescriptor _segmentDescriptor;
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

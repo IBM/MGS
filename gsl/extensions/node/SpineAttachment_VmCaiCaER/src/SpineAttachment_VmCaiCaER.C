@@ -55,8 +55,8 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   dyn_var_t A = std::abs(Ai - *Aj);
   dyn_var_t len = (*leni + *lenj) / 2.0;
   g = A / (Raxial * len);            // [nS]
-  Caconc2current = A * DCa * zCa * zF / (100*len);
-  CaERconc2current = A * DCaER * zCa * zF / (100.0*len);
+  Caconc2current = A * DCa * zCa * zF / (1000000.0*len);
+  CaERconc2current = A * DCaER * zCa * zF / (1000000.0*len);
   //TUAN TODO: HERE we should take into account the cross-sectional difference
   //A for Vm
   //A for Cacyto
@@ -69,10 +69,13 @@ void SpineAttachment_VmCaiCaER::produceState(RNG& rng) {}
 
 void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 {
+	//i = index of compartment this connexon is connecting to
+	//j = index of compartment from the other side
   float V = *Vj - *Vi;
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
   I_CaER = CaERconc2current * (*CaERj - *CaERi);
+  //std::cout << *Cai << "  " << *Caj << "; ER " << *CaERi << " " << *CaERj << "\n";
 }
 
 void SpineAttachment_VmCaiCaER::setVoltagePointers(

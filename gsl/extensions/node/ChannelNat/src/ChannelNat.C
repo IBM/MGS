@@ -128,7 +128,7 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 // NOTE: Use original HH-1952, but shift V-dependent upward along voltage-axis
 //    hNa is replaced by a linear function of potassium inactivation hNa=0.85-n
 //    to approximate sodium activation 'm'
-NOT IMPLEMENTED YET
+    assert(0);
 #endif
 
 dyn_var_t ChannelNat::vtrap(dyn_var_t x, dyn_var_t y)
@@ -197,7 +197,7 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
 #else
-    NOT IMPLEMENTED YET
+	assert(0);
 #endif
     // trick to keep m in [0, 1]
     if (m[i] < 0.0) { m[i] = 0.0; }
@@ -275,7 +275,7 @@ void ChannelNat::initialize(RNG& rng)
 		else {
       gbar[i] = gbar_default;
     }
-	}
+  }
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -304,7 +304,7 @@ void ChannelNat::initialize(RNG& rng)
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 #else
-    NOT IMPLEMENTED YET
+	assert(0);
 #endif
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
   }

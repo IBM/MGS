@@ -6,6 +6,11 @@
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0>), calciumSomaDisplay, <>, <>);
 #endif
 
+#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
+   polyConnect(timeStep, calciumSomaERDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="CalciumER", BRANCHORDER=0>), calciumSomaERDisplay, <>, <>);
+#endif
+
 /*
 	TissueSite synapseSite_0( -41.813, 175.470, -0.645, 7.0 );
 	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);

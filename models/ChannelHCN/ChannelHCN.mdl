@@ -1,0 +1,84 @@
+#ifndef ChannelHCN_MDL
+#define ChannelHCN_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+/*{{{*/
+  //DATA
+  // Hodgkin-Huxley-based formula
+  //{{{
+  dyn_var_t [] gbar; // [nS/um^2]
+  //internal data
+  dyn_var_t [] m;
+  dyn_var_t [] g;
+
+  // reference data
+  dyn_var_t []* V;
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  dyn_var_t [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  dyn_var_t [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  dyn_var_t [] gbar_values;// ... having the corresponding gbar conductance
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3 
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //}}}
+  //}}}
+
+  Shared {
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t [] E_h;  // [mV]
+    dyn_var_t* T;     // [K]
+    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
+    InitPhase computeTadj;
+  }
+
+  RuntimePhase update;
+  InitPhase initialize;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_h;
+  BranchDataProducer.branchData << branchData;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+      BranchDataProducer, DimensionArrayProducer 
+  {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+	Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+/*}}}*/
+}
+
+#endif

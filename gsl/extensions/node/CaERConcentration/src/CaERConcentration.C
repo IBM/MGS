@@ -20,6 +20,9 @@
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
 
+#include "Branch.h"
+#include "StringUtils.h"
+
 SegmentDescriptor CaERConcentration::_segmentDescriptor;
 
 #define DISTANCE_SQUARED(a, b)               \
@@ -27,13 +30,9 @@ SegmentDescriptor CaERConcentration::_segmentDescriptor;
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
    (((a)->z - (b)->z) * ((a)->z - (b)->z)))
 
-// NOTE: value = 1/(zCa*Farad*d)
+// NOTE: value = 1e6/(zCa*Farad)
 // zCa = valence of Ca2+
 // Farad = Faraday's constant
-// d = depth of thin layer
-//   (NOTE: we can try to use 'd' as distance of 2 compartments: spine-neck vs
-//   dendrite compt)
-// NOTE: the value below is based on (d=1um)
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
 #define isProximalCase0 (proximalDimension == 0)  // no flux boundary condition
@@ -64,6 +63,10 @@ void CaERConcentration::solve(RNG& rng)
     doForwardSolve();
     doBackwardSolve();
   }
+#ifdef DEBUG_HH
+	std::cerr << "Solve:\n";
+	printDebugHH();
+#endif
 }
 
 #if MAX_COMPUTE_ORDER > 0
@@ -180,7 +183,7 @@ bool CaERConcentration::confirmUniqueDeltaT(
   return (getSharedMembers().deltaT == 0);
 }
 
-//TUAN: TODO challenge
+// TUAN: TODO challenge
 //   how to check for 2 sites overlapping
 //   if we don't retain the dimension's (x,y,z) coordinate
 //  Even if we retain (x,y,z) this value change with the #capsule per compartment
@@ -193,7 +196,7 @@ bool CaERConcentration::checkSite(
 {
   TissueSite& site = CG_inAttrPset->site;
   bool atSite = (site.r == 0);
-  for (int i = 0; !atSite && i < dimensions.size(); ++i)
+  for (unsigned int i = 0; !atSite && i < dimensions.size(); ++i)
     atSite = ((site.r * site.r) >= DISTANCE_SQUARED(&site, dimensions[i]));
   return atSite;
 }
@@ -213,42 +216,58 @@ void CaERConcentration::finish(RNG& rng)
 {
   unsigned size = branchData->size;
 #ifdef DEBUG_HH
-	printDebugHH();
+  printDebugHH();
 #endif
   for (int i = 0; i < size; ++i)
   {
     Ca_cur[i] = Ca_new[i] = 2.0 * Ca_new[i] - Ca_cur[i];
 #ifdef DEBUG_ASSERT
+	//TUAN DEBUG why CaER drop on spines
+    //if ( _segmentDescriptor.getNeuronIndex(branchData->key) == 2)
+	//{
+	//	printDebugHH();
+	//}
+	//END TUAN DEBUG
+	if ( Ca_cur[i] <= 0 || Ca_cur[i] > 2000)
+	{
+		printDebugHH();
+		StringUtils::wait();
+	}
+
     assert(Ca_new[i] >= 0);
-		assert(Ca_new[i] == Ca_new[i]); // making sure Ca_new[i] is not NaN
+    assert(Ca_new[i] == Ca_new[i]);  // making sure Ca_new[i] is not NaN
 #endif
   }
 }
 
 // Get cytoplasmic surface area at the compartment based on its index 'i'
-dyn_var_t CaERConcentration::getArea(int i) // Tuan: check ok
+dyn_var_t CaERConcentration::getArea(int i)  // Tuan: check ok
 {
-  dyn_var_t area= 0.0;
-  if (_segmentDescriptor.getBranchType(branchData->key) == 0)
+  dyn_var_t area = 0.0;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {  // soma:
-		area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_RoughER;
-	}else{ 
-		area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_SmoothER;
-	}
-	return area;
+    area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_RoughER;
+  }
+  else
+  {
+    area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_SmoothER;
+  }
+  return area;
 }
 
 // Get cytoplasmic volume at the compartment based on its index 'i'
-dyn_var_t CaERConcentration::getVolume(int i) // Tuan: check ok
+dyn_var_t CaERConcentration::getVolume(int i)  // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
-  if (_segmentDescriptor.getBranchType(branchData->key) == 0)
-	{  // soma:
-		volume = dimensions[i]->volume * FRACTIONVOLUME_RoughER;
-	}else{
-		volume = dimensions[i]->volume * FRACTIONVOLUME_SmoothER;
-	}
-	return volume;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {  // soma:
+    volume = dimensions[i]->volume * FRACTIONVOLUME_RoughER;
+  }
+  else
+  {
+    volume = dimensions[i]->volume * FRACTIONVOLUME_SmoothER;
+  }
+  return volume;
 }
 //}}} //end Conserved region
 
@@ -281,13 +300,15 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   if (RHS.size() != size) RHS.increaseSizeTo(size);
   if (currentToConc.size() != size) currentToConc.increaseSizeTo(size);
 
-	//get fraction volume
-  if (_segmentDescriptor.getBranchType(branchData->key) == 0)
+  // get fraction volume
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {  // soma:
-	  fractionVolumeER = FRACTIONVOLUME_RoughER;
-	}else{ 
-		fractionVolumeER = FRACTIONVOLUME_SmoothER;
-	}
+    fractionVolumeER = FRACTIONVOLUME_RoughER;
+  }
+  else
+  {
+    fractionVolumeER = FRACTIONVOLUME_SmoothER;
+  }
 
   // initialize data
   Ca_cur[0] = Ca_new[0];
@@ -312,7 +333,6 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
     if (iiter->index < branchData->size)
       iiter->currentToConc = uM_um_cubed_per_pA_msec / getVolume(iiter->index);
   }
-
 
   Aim[0] = Aip[size - 1] = 0;
 
@@ -339,21 +359,21 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   /* FIX */
   if (isDistalCase3)
   {
-  //IMPORTANT CHANGE:
-  // Unlike the original approach
-  //   which doesn't have a compartment for the implicit branching
-  // The branch now has
-  //at least 2: one compartment as implicit branching point + one as regular
-  //    compartment-zero as implicit branching compartment
-  //    compartment-1th and above as normal
-	
+    // IMPORTANT CHANGE:
+    // Unlike the original approach
+    //   which doesn't have a compartment for the implicit branching
+    // The branch now has
+    // at least 2: one compartment as implicit branching point + one as regular
+    //    compartment-zero as implicit branching compartment
+    //    compartment-1th and above as normal
+
     // Compute total volume of the junction...
     dyn_var_t volume = getVolume(0);
 
     // Compute Aij[n] for the junction...one of which goes in Aip[0]...
     if (size == 1)
-    {//branch has only 1 compartment, so get compartment in another branch
-			// which is referenced via proximalDimension
+    {  // branch has only 1 compartment, so get compartment in another branch
+      // which is referenced via proximalDimension
       Aip[0] = -getAij(proximalDimension, dimensions[0], volume);
     }
     else
@@ -365,70 +385,73 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], volume));
     }
   }
+#ifdef DEBUG_HH
+	printDebugHH();
+#endif
 }
 
 void CaERConcentration::printDebugHH()
 {
   unsigned size = branchData->size;
   SegmentDescriptor segmentDescriptor;
-	std::cerr << "time| BRANCH | rank | nodeIndex | layerIndex | cptIndex |"
-		<< "neuronIdx | branchIdx | branchOrder | distalC0 | distalC1 | distalC2 |"
-		<< "distalC3 | proxC0 | proxC1 | proxC2 |"
-		<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
+  std::cerr << "time| BRANCH [rank, nodeIndex, layerIndex, cptIndex]"
+            << "(neuronIdx, branchIdx, branchOrder)| distalCase(C0,C1,C2,C3) |"
+            << "prox(C0,C1,C2) |"
+            << "{x,y,z,r, dist2soma, surface_area, volume, length} CaER\n";
   for (int i = 0; i < size; ++i)
   {
     std::cerr << dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " CAER_BRANCH"
+                     *getSharedMembers().deltaT << " | CAER_BRANCH "
               << " [" << getSimulation().getRank() << "," << getNodeIndex()
               << "," << getIndex() << "," << i << "] "
               << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
               << segmentDescriptor.getBranchIndex(branchData->key) << ","
               << segmentDescriptor.getBranchOrder(branchData->key) << ") |"
-              << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
-              << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
-              << isProximalCase1 << "|" << isProximalCase2 << "|"
+              << "(" << isDistalCase0 << "," << isDistalCase1 << "," << isDistalCase2
+              << "," << isDistalCase3 << ")|(" << isProximalCase0 << ","
+              << isProximalCase1 << "," << isProximalCase2 << ")|"
               << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << "," 
-							<< dimensions[i]->dist2soma  << ","
-              << dimensions[i]->surface_area << "," 
-              << dimensions[i]->volume << "," << dimensions[i]->length << ","
-							<< "} "
-							<< Ca_new[i]  << " " << std::endl;
+              << dimensions[i]->z << "," << dimensions[i]->r << ","
+              << dimensions[i]->dist2soma << "," << dimensions[i]->surface_area
+              << "," << dimensions[i]->volume << "," << dimensions[i]->length
+              << "} " << Ca_new[i] << " " << std::endl;
   }
 }
 
 // Update: RHS[], Aii[]
 // Unit: RHS =  [uM/msec]
 //       Aii =  [1/msec]
-// Thomas algorithm forward step 
+// Thomas algorithm forward step
 void CaERConcentration::doForwardSolve()
 {
   unsigned size = branchData->size;
+	//Find A[ii]i and RHS[ii]  
+	//  1. ionic currents 
   for (int i = 0; i < size; i++)
   {
 #if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
 #elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-	assert(0); // need to implement
+    assert(0);  // need to implement
 #endif
     /* * * Sum Currents * * */
-//    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
-//    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
-//    for (; iter != end; iter++)
-//    {
-//      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
-//    }
+    //    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
+    //    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
+    //    for (; iter != end; iter++)
+    //    {
+    //      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
+    //    }
     Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
-		for (; fiter != fend; fiter++)
-		{
-			//original: RHS[i] -=  (*fiter->fluxes)[i];
-			//correct: RHS[i] -=  (*fiter->fluxes)[i] * Vmyo / Ver;
-			//equivalent of correct:
-			RHS[i] -=  (*fiter->fluxes)[i] * FRACTIONVOLUME_CYTO / fractionVolumeER;
-		}
-	}
+    for (; fiter != fend; fiter++)
+    {
+      // original: RHS[i] -=  (*fiter->fluxes)[i];
+      // correct: RHS[i] -=  (*fiter->fluxes)[i] * Vmyo / Ver;
+      // equivalent of correct:
+      RHS[i] -= (*fiter->fluxes)[i] * FRACTIONVOLUME_CYTO / fractionVolumeER;
+    }
+  }
 
   /* FIX */
   if (isDistalCase3)
@@ -437,35 +460,35 @@ void CaERConcentration::doForwardSolve()
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * Ca_cur[0];
 #elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-	assert(0); // need to implement
+    assert(0);  // need to implement
 #endif
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];
     }
     /* * * Sum Currents * * */
-//    Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
-//    Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
-//    for (; citer != cend; citer++)
-//    {
-//      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
-//    }
+    //    Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
+    //    Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
+    //    for (; citer != cend; citer++)
+    //    {
+    //      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
+    //    }
     Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
     for (; fiter != fend; fiter++)
     {
-      //RHS[0] -= (*fiter->fluxes)[0];
-			RHS[0] -=  (*fiter->fluxes)[0] * FRACTIONVOLUME_CYTO / fractionVolumeER;
+      // RHS[0] -= (*fiter->fluxes)[0];
+      RHS[0] -= (*fiter->fluxes)[0] * FRACTIONVOLUME_CYTO / fractionVolumeER;
     }
   }
 
-//  Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
-//  Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
-//  for (; riter != rend; riter++)
-//  {
-//    int i = riter->index;
-//    RHS[i] -= currentToConc[i] * *(riter->current);
-//  }
+  //  Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
+  //  Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
+  //  for (; riter != rend; riter++)
+  //  {
+  //    int i = riter->index;
+  //    RHS[i] -= currentToConc[i] * *(riter->current);
+  //  }
 
   Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();
   Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
@@ -502,7 +525,7 @@ void CaERConcentration::doForwardSolve()
 }
 
 // Update; Ca_new[]
-// Thomas algorithm backward step 
+// Thomas algorithm backward step
 //   - backward substitution on upper triangular matrix
 void CaERConcentration::doBackwardSolve()
 {
@@ -525,17 +548,17 @@ void CaERConcentration::doBackwardSolve()
 
 dyn_var_t CaERConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 {
-	dyn_var_t radius;
-	if (a->dist2soma == 0.0)
-	{
-		radius = b->r;
-	}
-	else if (b->dist2soma == 0.0)
-		radius = a->r;
-	else
-		radius = 0.5 * (a->r + b->r);
-  //dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
-  //return (getSharedMembers().DCa * radius * radius /
+  dyn_var_t radius;
+  if (a->dist2soma == 0.0)
+  {
+    radius = b->r;
+  }
+  else if (b->dist2soma == 0.0)
+    radius = a->r;
+  else
+    radius = 0.5 * (a->r + b->r);
+  // dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
+  // return (getSharedMembers().DCa * radius * radius /
   //        (lengthsq * b->r * b->r)); /* needs fixing */
   dyn_var_t length = std::fabs(b->dist2soma - a->dist2soma);
   return (getSharedMembers().DCa * radius * radius /
@@ -547,25 +570,24 @@ dyn_var_t CaERConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 //   V = volume of ER compartment
 //   DCa = diffusion constant of CaER
 dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
-                                  dyn_var_t V)
+                                    dyn_var_t V)
 {
-	dyn_var_t Rb;
-	if (a->dist2soma == 0.0)
-	{
-		Rb = b->r;
-	}
-	else if (b->dist2soma == 0.0)
-		Rb = a->r;
-	else
-		Rb = 0.5 * (a->r + b->r);
-	//return (M_PI * Rb * Rb * getSharedMembers().DCa /
-	//        (V * sqrt(DISTANCE_SQUARED(a, b))));
-	dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
-	return (M_PI * Rb * Rb * getSharedMembers().DCa /
-			(V * length));
+  dyn_var_t Rb;
+  if (a->dist2soma == 0.0)
+  {
+    Rb = b->r;
+  }
+  else if (b->dist2soma == 0.0)
+    Rb = a->r;
+  else
+    Rb = 0.5 * (a->r + b->r);
+  // return (M_PI * Rb * Rb * getSharedMembers().DCa /
+  //        (V * sqrt(DISTANCE_SQUARED(a, b))));
+  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
+  return (M_PI * Rb * Rb * getSharedMembers().DCa / (V * length));
 }
 
-//void CaERConcentration::setReceptorCaCurrent(
+// void CaERConcentration::setReceptorCaCurrent(
 //    const String& CG_direction, const String& CG_component,
 //    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
 //    Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset,
@@ -574,7 +596,8 @@ dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
 //#ifdef DEBUG_ASSERT
 //  assert(receptorCaCurrents.size() > 0);
 //#endif
-//  receptorCaCurrents[receptorCaCurrents.size() - 1].index = CG_inAttrPset->idx;
+//  receptorCaCurrents[receptorCaCurrents.size() - 1].index =
+//  CG_inAttrPset->idx;
 //}
 
 void CaERConcentration::setInjectedCaCurrent(
@@ -587,11 +610,15 @@ void CaERConcentration::setInjectedCaCurrent(
   assert(injectedCaCurrents.size() > 0);
 #endif
   TissueSite& site = CG_inAttrPset->site;
-  if (site.r != 0) // a sphere is provided, i.e. used for current injection
-  {//stimulate a region (any compartments fall within the sphere are affected)
+  if (site.r != 0)  // a sphere is provided, i.e. used for current injection
+  {  // stimulate a region (any compartments fall within the sphere are
+     // affected)
     // go through all compartments
     for (int i = 0; i < dimensions.size(); ++i)
     {
+      //.. check the distance between that compartment and the size
+      //   here if it falls inside the sphere then connection established
+      //     for bidirectional connection
       if ((site.r * site.r) >= DISTANCE_SQUARED(&site, dimensions[i]))
       {
         CaCurrentProducer* CG_CaCurrentProducerPtr =
@@ -612,7 +639,7 @@ void CaERConcentration::setInjectedCaCurrent(
     }
   }
   else if (CG_inAttrPset->idx < 0)  // Can be used via 'Probe' of TissueFunctor
-  {//inject at all compartments of one or many branchs meet the condition
+  {  // inject at all compartments of one or many branchs meet the condition
     injectedCaCurrents[injectedCaCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)
     {
@@ -620,8 +647,9 @@ void CaERConcentration::setInjectedCaCurrent(
           dynamic_cast<CaCurrentProducer*>(CG_variable);
       if (CG_CaCurrentProducerPtr == 0)
       {
-        std::cerr << "Dynamic Cast of CurrentProducer failed in CaERConcentration"
-                  << std::endl;
+        std::cerr
+            << "Dynamic Cast of CurrentProducer failed in CaERConcentration"
+            << std::endl;
         exit(-1);
       }
       injectedCaCurrents.increase();
@@ -632,8 +660,10 @@ void CaERConcentration::setInjectedCaCurrent(
     }
   }
   else
-  {//i.e. bi-directional connection (electrical synapse or spineneck-compartment)
-   //NOTE: The current component already been assigned via code-generated specified in MDL
+  {  // i.e. bi-directional connection (electrical synapse or
+     // spineneck-compartment)
+    // NOTE: The current component already been assigned via code-generated
+    // specified in MDL
     injectedCaCurrents[injectedCaCurrents.size() - 1].index =
         CG_inAttrPset->idx;
   }

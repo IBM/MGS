@@ -46,10 +46,10 @@ void SpineAttachment_VmCai::produceInitialState(RNG& rng)
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
   assert(Raxial > MIN_RESISTANCE_VALUE);
-  dyn_var_t A = std::abs(Ai - *Aj);
-  dyn_var_t len = (*leni + *lenj) / 2.0;
+  dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
+  dyn_var_t len = (*leni + *lenj) / 2.0; //[um]
   g = A / (Raxial * len);            // [nS]
-  Caconc2current = A * DCa * zCa * zF / (100*len);
+  Caconc2current = A * DCa * zCa * zF / (1000000.0*len);
 }
 
 void SpineAttachment_VmCai::produceState(RNG& rng) {}
