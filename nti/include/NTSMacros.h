@@ -86,6 +86,7 @@
 ///////////////////////////////////////////////////////////////////////
 // list of paper models
 #define _COMPONENT_UNDEFINED    0
+//{{{
 //{{{ Na-models
 //Na-transient   CHANNEL_NAT macro
 #define NAT_HODGKIN_HUXLEY_1952 1
@@ -95,6 +96,7 @@
 // Na-persistent CHANNE_NAP macro
 #define NAP_WOLF_2005           2
 //}}}
+
 //{{{ K-models
 // KAf   CHANNEL_KAf macro
 #define KAf_WOLF_2005          2
@@ -143,6 +145,7 @@
 // CaT      CHANNEL_CaT macro
 #define CaT_GHK_WOLF_2005 2
 //}}}
+
 //{{{ Synapse Receptors
 // NMDAR      RECEPTOR_NMDA macro 
 #define NMDAR_POINTPROCESS                    1
@@ -159,20 +162,25 @@
 // GABA_B     RECEPTOR_GABAB
 #define GABABR_DESTEXHE_SEJNOWSKI_1996  3
 //}}}
+
 //{{{ Sarcolema membrane exchanger/pump
 // PMCA       PUMP_PMCA:
 //{{{
+  // all branches have the same clearance rate
 #define PMCA_PUMPRATE_CONSTANT 1
 #define PMCA_Traub_Llinas_1997 PMCA_PUMPRATE_CONSTANT  
 #define PMCA_PUMPRATE_VOLTAGE_FUNCTION 2 
 #define PMCA_Zador_Koch_Brown_1990 PMCA_PUMPRATE_VOLTAGE_FUNCTION 
 #define PMCA_Jafri_Rice_Winslow_1998 3
 #define PMCA_Greenstein_Winslow_2002       4
+  // each branch has a different clearance rate
+#define PMCA_PUMPRATE_CONSTANT_DYNAMICS 5
 //}}}
 // NCX        EXCHANGER_NCX
 #define NCX_Gabbiani_Midtgaard_Kopfel_1994 2
 #define NCX_Weber_Bers_2001  3
 //}}}
+
 //{{{ ER membrane channels/pump
 // RYR       CHANNEL_RYR
 #define RYR_WILLIAMS_JAFRI_2011
@@ -184,6 +192,7 @@
 #define SERCA_Klein_Schneider_1991 1
 #define SERCA_Tran_Crampin_2009  2
 
+//}}}
 //}}}
 
 //////////////////////////////////////////////////////////////////////
@@ -225,8 +234,8 @@
 // USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 //#define MODEL_TO_USE _MSN_2005_WOLF
-//#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
-#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
+#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
+//#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
@@ -322,6 +331,8 @@
   #define CHANNEL_CaT CaT_GHK_WOLF_2005
   #define RECEPTOR_AMPA AMPAR_POINTPROCESS
   #define RECEPTOR_NMDA NMDAR_POINTPROCESS
+  #define RECEPTOR_GABAA GABAAR_POINTPROCESS
+  #define PUMP_PMCA  PMCA_PUMPRATE_CONSTANT_DYNAMICS
 //}}}
 
 #elif MODEL_TO_USE == _INFERIOR_OLIVE_1999_SCHWEIGHOER

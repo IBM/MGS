@@ -22,8 +22,10 @@
 #include "NumberUtils.h"
 //#define DEBUG_HH
 
-ChannelHCNCompCategory::ChannelHCNCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_ChannelHCNCompCategory(sim, modelName, ndpList)
+ChannelHCNCompCategory::ChannelHCNCompCategory(Simulation& sim,
+                                               const std::string& modelName,
+                                               const NDPairList& ndpList)
+    : CG_ChannelHCNCompCategory(sim, modelName, ndpList)
 {
 }
 
@@ -45,13 +47,18 @@ void ChannelHCNCompCategory::computeTadj(RNG& rng)
   //(((*(getSharedMembers().T) - 273.15 - BASED_TEMPERATURE) / 10.0));
 }
 
-void ChannelHCNCompCategory::count() 
+void ChannelHCNCompCategory::count()
 {
-  long long totalCount, localCount=_nodes.size();
-  MPI_Allreduce((void*) &localCount, (void*) &totalCount, 1, MPI_LONG_LONG, MPI_SUM, MPI_COMM_WORLD);
-  float localVar, totalVar, mean=float(totalCount)/getSimulation().getNumProcesses();
-  localVar=(float(localCount)-mean)*(float(localCount)-mean);
-  MPI_Allreduce((void*) &localVar, (void*) &totalVar, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-  float std=sqrt(totalVar/getSimulation().getNumProcesses());
-  if (getSimulation().getRank()==0) printf("Total HCN Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount, mean, std);
+  long long totalCount, localCount = _nodes.size();
+  MPI_Allreduce((void*)&localCount, (void*)&totalCount, 1, MPI_LONG_LONG,
+                MPI_SUM, MPI_COMM_WORLD);
+  float localVar, totalVar,
+      mean = float(totalCount) / getSimulation().getNumProcesses();
+  localVar = (float(localCount) - mean) * (float(localCount) - mean);
+  MPI_Allreduce((void*)&localVar, (void*)&totalVar, 1, MPI_FLOAT, MPI_SUM,
+                MPI_COMM_WORLD);
+  float std = sqrt(totalVar / getSimulation().getNumProcesses());
+  if (getSimulation().getRank() == 0)
+    printf("Total HCN Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+           mean, std);
 }

@@ -105,6 +105,8 @@ class Touch
 	//if the touch has one side is spine-head then return 'true'
 	//  and pass the key of the capsule as spine-head out via argument
 	bool hasSpineHead(key_size_t& key);
+	// return the axon_key
+	bool isSpineless(key_size_t& axon_key);
  private:
   // [0] = key1
 	// [1] = key2

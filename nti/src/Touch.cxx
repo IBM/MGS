@@ -201,6 +201,45 @@ bool Touch::hasSpineHead(key_size_t& key)
 	return rval;
 }
 
+//GOAL: 
+// A touch has 2 capsule
+//    check if it is a spineless touch that can form a chemical synapse
+//    and return the key of the axon-capsule
+// TODO: change the way we determine in the coming future
+//       where the spine head+neck is not passed in via tissue file
+//       but automatically generated
+bool Touch::isSpineless(key_size_t& axon_key)
+{
+	bool rval=false;
+
+	key_size_t tkey1 = getKey1();
+	//NOTE: uf0 = MTYPE
+	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	key_size_t tkey2 = getKey2();
+	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
+	unsigned int brtype1 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey1);
+	unsigned int brtype2 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey2);
+	unsigned int neuronIdx1 = _segmentDescriptor.getValue(SegmentDescriptor::neuronIndex, tkey1);
+	unsigned int neuronIdx2 = _segmentDescriptor.getValue(SegmentDescriptor::neuronIndex, tkey2);
+	bool isSpinelessChemSynapsePair = (brtype1 == Branch::_AXON and (brtype2 == Branch::_BASALDEN ||
+				brtype2 == Branch::_APICALDEN || brtype2 == Branch::_TUFTEDDEN)
+			) ||
+		(brtype2 == Branch::_AXON and 
+		 (brtype1 == Branch::_BASALDEN ||
+				brtype1 == Branch::_APICALDEN || brtype1 == Branch::_TUFTEDDEN)
+		 ) ;
+	if (isSpinelessChemSynapsePair)
+//mtype1 > 0 && mtype2 > 0 and std::abs((int)neuronIdx1-(int)neuronIdx2) ==1 and
+	{
+		rval = true;
+		if (brtype1 == Branch::_AXON)
+			axon_key =  tkey1;
+		else
+			axon_key = tkey2;
+	}
+	return rval;
+}
+
 Touch::~Touch() {}
 
 Touch::compare::compare(int c) : _case(c) {}

@@ -44,7 +44,7 @@
 		}while (0)
 #endif
 
-#define LENGTH_LINE_MAX 1024
+#define LENGTH_LINE_MAX 10240
 // the maximum length of the name given to each FieldName as part of the key
 // helping to identify the 'component' in a branch
 #define LENGTH_TOKEN_MAX 256
@@ -1813,7 +1813,8 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
           assert(is.good());
         }
         char buf[LENGTH_IDNAME_MAX];
-        is.get(buf, LENGTH_IDNAME_MAX, ']');
+		assert(StringUtils::streamGet(is, buf, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf, LENGTH_IDNAME_MAX, ']');
         std::string stringbuf(buf);
         std::vector<std::string> tokens;  // extract 'Voltage' as token
         StringUtils::Tokenize(stringbuf, tokens, " ,");
@@ -1923,7 +1924,8 @@ BRANCHTYPE MTYPE
           assert(is.good());
         }
         char buf[LENGTH_IDNAME_MAX];
-        is.get(buf, LENGTH_IDNAME_MAX, ']');
+		assert(StringUtils::streamGet(is, buf, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf, LENGTH_IDNAME_MAX, ']');
         std::string stringbuf(buf);
         std::vector<std::string> tokens;  // extract 'Voltage' as token
         StringUtils::Tokenize(stringbuf, tokens, " ,");
@@ -2031,7 +2033,8 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
         assert(is.good());
       }
       char buf1[LENGTH_IDNAME_MAX];
-      is.get(buf1, LENGTH_IDNAME_MAX, ']');
+	  assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+      //is.get(buf1, LENGTH_IDNAME_MAX, ']');
       std::string stringbuf(buf1);
       std::vector<std::string> tokens;
       StringUtils::Tokenize(stringbuf, tokens, " ,");
@@ -2057,7 +2060,8 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
           assert(is.good());
         }
         char buf1[LENGTH_IDNAME_MAX];
-        is.get(buf1, LENGTH_IDNAME_MAX, ']');
+		assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf1, LENGTH_IDNAME_MAX, ']');
         std::string stringbuf(buf1);
         std::vector<std::string> tokens;
         StringUtils::Tokenize(stringbuf, tokens, " ,");
@@ -2079,7 +2083,8 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
           assert(is.good());
         }
         char buf2[LENGTH_IDNAME_MAX];
-        is.get(buf2, LENGTH_IDNAME_MAX, ']');
+		assert(StringUtils::streamGet(is, buf2, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf2, LENGTH_IDNAME_MAX, ']');
         if (is.get() != ']') assert(0);
         stringbuf = std::string(buf2);
         // std::vector<std::string> tokens;
@@ -2817,7 +2822,8 @@ void Params::buildChannelTargetsMap(
         assert(is.good());
       }
       char buf1[LENGTH_IDNAME_MAX];
-      is.get(buf1, LENGTH_IDNAME_MAX, ']');
+	  assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+      //is.get(buf1, LENGTH_IDNAME_MAX, ']');
 
       std::string stringbuf(buf1);
       std::vector<std::string> tokens;
@@ -2838,7 +2844,8 @@ void Params::buildChannelTargetsMap(
         assert(is.good());
       }
       char buf2[LENGTH_IDNAME_MAX];
-      is.get(buf2, LENGTH_IDNAME_MAX, ']');
+	  assert(StringUtils::streamGet(is, buf2, LENGTH_IDNAME_MAX, ']'));
+      //is.get(buf2, LENGTH_IDNAME_MAX, ']');
       if (is.get() != ']') assert(0);
       stringbuf = std::string(buf2);
       StringUtils::Tokenize(stringbuf, tokens, " ,");
@@ -2894,6 +2901,7 @@ void Params::buildParamsMap(
 			arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
 					maskVector, &ids[0])];
 		/* Support form of data
+NOTE: must starts with '<' and ends with'>'
 <gbar={0.0343}> //single name=val
 <gbar=0.0343>
 <gbar_dists={380.0,480.0}>  // one name-multiple-values
@@ -2905,8 +2913,9 @@ void Params::buildParamsMap(
 		{
 			assert(is.good());
 		}
-		char buf1[LENGTH_IDNAME_MAX];
-		is.get(buf1, LENGTH_IDNAME_MAX, '>');
+		char buf1[LENGTH_LINE_MAX];
+		assert(StringUtils::streamGet(is, buf1, LENGTH_LINE_MAX, '>'));
+		//is.get(buf1, LENGTH_LINE_MAX, '>');
 		/*  buf1 looks like any of these
 				<gbar={24.4}>
 				<gbar={24.4}; other=5>
@@ -2937,11 +2946,11 @@ void Params::buildParamsMap(
 			else
 			{  // contain multiple values (comma-separated)
 				std::vector<dyn_var_t> value;
-				// TUAN: potential bug if it takes more than 256 chars to see
-				// '}'
-				// need to be fixed soon
-				char buf2[LENGTH_IDNAME_MAX];
+				char buf2[LENGTH_LINE_MAX];
+				/* NOTE: This code is potentialy bug when token info is too long
 				is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+				*/
+				assert(StringUtils::streamGet(is2, buf2, LENGTH_LINE_MAX, '}'));
 				std::string stringbuf(buf2);
 				std::vector<std::string> tokens;
 				StringUtils::Tokenize(stringbuf, tokens, ",");

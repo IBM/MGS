@@ -153,7 +153,9 @@ Node CaExtrusion  Implements
 //       30-100 ions per second (high-affinity, low capacity) or 30-100 Hz
 Node PumpPMCA Implements 
 		 BranchDataProducer, 
-#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
      CaFluxArrayProducer
 #else
      CurrentArrayProducer,  
@@ -164,12 +166,16 @@ Node PumpPMCA Implements
 	//DATA
 	//{{{ 
 	//{{{
-#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION 
 	//internal data
   // J_Ca = ([Ca]equil - Cai) / tau;
   dyn_var_t [] J_Ca; // [pA/um^2]
-#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
-	dyn_var_t [] tau;
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+  //can be user-input for *CONSTANT_DYNAMICS
+  dyn_var_t [] tau; // [msec] - time constant of pumping Ca2+ out of the cell 
 #endif
 #else
 	//{{{
@@ -229,7 +235,9 @@ Node PumpPMCA Implements
 		//   and tempt. used for the simulation 
 		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
 		InitPhase computeTadj; 
-#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     dyn_var_t Ca_equil; // [uM]
     dyn_var_t tau_pump; // [msec] - time constant of pumping Ca2+ out of the cell 
 #endif
@@ -241,7 +249,9 @@ Node PumpPMCA Implements
 	InitPhase initialize;
 
   // Output 
-#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   CaFluxArrayProducer.fluxes << &J_Ca;
 #else
 	CaCurrentArrayProducer.currents << &I_Ca;

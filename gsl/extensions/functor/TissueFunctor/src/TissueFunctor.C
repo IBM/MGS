@@ -3804,9 +3804,9 @@ void TissueFunctor::doConnector(LensContext* lc)
   //      2. connect spineneck-dendrite         to compartment variable
   //      3. connect bouton-compartment to preSynapticPoint or synapticCleft variable
   // HOW: traverse all touches, identify if the touch is 
-  //      1. chemicalSynapse (::touchIsChemicalSynapse)
+  //      1. spineless chemicalSynapse (::touchIsChemicalSynapse)
   //      2. bidirectional (spineneck-denshaft attachment)
-  //      3. chemicalSynapse (::touchIsChemicalSynapse)
+  //      3. spine chemicalSynapse (::touchIsChemicalSynapse)
   if (1)  // just for grouping long-code
   {
     TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
@@ -4507,6 +4507,23 @@ void TissueFunctor::doConnector(LensContext* lc)
       }
     }
     models.clear();
+
+    layerEnd = _preSynapticPointLayers.end();
+    for (layerIter = _preSynapticPointLayers.begin();
+         layerIter != layerEnd; ++layerIter)
+    {
+      countableModel =
+          dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
+      if (countableModel)
+      {
+        if (find(models.begin(), models.end(), countableModel) == models.end())
+        {
+          countableModel->count();
+          models.push_back(countableModel);
+        }
+      }
+    }
+    models.clear();
   }
 }
 
@@ -5083,8 +5100,10 @@ bool TissueFunctor::setGenerated(
   // (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
   bool touchBoutonSpineHeadIsUsed = false;
   bool newTouchIsChemSynapse;
+  bool newTouchIsSpinelessChemSynapse;
   // endspecialTreatment
   bool alreadyThere = false;
+  key_size_t dummy_key;
   if (miter == smap.end())
   {
 	  if (specialTreatment == "BidirectionalConnections")
@@ -5178,90 +5197,181 @@ bool TissueFunctor::setGenerated(
 	  }
 	  else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
 	  {	//first make sure this Touch is a valid ChemicalSynapse touch
-		  key_size_t key1 = (*titer).getKey1();
-		  key_size_t key2 = (*titer).getKey2();
-		  key_size_t key_spinehead=-1.0;
-		  newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);
-		  double propBouton = (key1 == key_spinehead)? (*titer).getProp2() : (*titer).getProp1();
+		  if ((*titer).isSpineless(dummy_key))
+		  {//spine-less touch
+			  key_size_t key1 = (*titer).getKey1();
+			  key_size_t key2 = (*titer).getKey2();
+			  key_size_t axon_key=-1.0;
+			  newTouchIsSpinelessChemSynapse = (*titer).isSpineless(axon_key);
+			  double propBouton = (key1 == axon_key)? (*titer).getProp1() : (*titer).getProp2();
 
-		  //more constraint
-		  newTouchIsChemSynapse = newTouchIsChemSynapse && (propBouton > 0.99);
-		  if (newTouchIsChemSynapse)
-		  {//detect if any capsule of the Touch already involved in 
-		  //another chemical synapse-connection. If so, ignore it (or 
-		  //...we can decide which one to keep)
+			  //more constraint
+			  //newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton > 0.99);
+			  if (newTouchIsSpinelessChemSynapse)
+			  {//detect if any capsule of the Touch already involved in 
+				  //another chemical synapse-connection. If so, ignore it (or 
+				  //...we can decide which one to keep)
 
-			  bool isSide1 = (key_spinehead == key1);
+				  bool isSide1 = (axon_key == key1);
 #ifndef LTWT_TOUCH
-			  double dist = (*titer).getDistance();
+				  double dist = (*titer).getDistance();
 #endif
-			  int count = 0;
-			  double propBouton_inloop=0.0;
-			  Touch* touchCanBeRemoved=0;
-			  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
-			  {
-				  Touch* touch = it->first;
-				  key_size_t key1_inloop = (*touch).getKey1();
-				  key_size_t key2_inloop = (*touch).getKey2();
-				  key_size_t key_inloop_spinehead=+1.0;
-				  (*touch).hasSpineHead(key_inloop_spinehead);
-				  propBouton_inloop = (key1_inloop == key_inloop_spinehead) ? (*touch).getProp2() : (*touch).getProp1();
-				  bool isSide1_inloop = (key_inloop_spinehead == key1_inloop);
-#ifndef LTWT_TOUCH
-				  double dist_inloop = (*touch).getDistance();
-#endif
-				  // equal and must be on the same side (i.e. either both first keys or 
-				  //                                    both second keys)
-				  //if (key_spinehead == key_inloop_spinehead)
-				  if ((key_spinehead == key_inloop_spinehead)
-						  //  and (isSide1 == isSide1_inloop)
-					 )
+				  int count = 0;
+				  double propBouton_inloop=0.0;
+				  Touch* touchCanBeRemoved=0;
+				  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
 				  {
-					  if (0)
+					  Touch* touch = it->first;
+					  key_size_t key1_inloop = (*touch).getKey1();
+					  key_size_t key2_inloop = (*touch).getKey2();
+					  key_size_t key_inloop_axon=+1.0;
+					  if ((*touch).isSpineless(key_inloop_axon))
 					  {
-						 std::cout << "found " << key1 << " "
-						 << key2 << " "
-						 << key_spinehead << " "
-						 << key1_inloop << " "
-						 << key2_inloop << " "
-						 << key_inloop_spinehead << " " 
-						 << isSide1 << isSide1_inloop << " "
-						 << propBouton << " " << propBouton_inloop  
+						  propBouton_inloop = (key1_inloop == key_inloop_axon) ? (*touch).getProp1() : (*touch).getProp2();
+						  bool isSide1_inloop = (key_inloop_axon == key1_inloop);
 #ifndef LTWT_TOUCH
-						 << dist << " " << dist_inloop
+						  double dist_inloop = (*touch).getDistance();
 #endif
-						 << std::endl;
+						  // equal and must be on the same side (i.e. either both first keys or 
+						  //                                    both second keys)
+						  if ((axon_key == key_inloop_axon)
+								  //  and (isSide1 == isSide1_inloop)
+							 )
+						  {
+							  if (0)
+							  {
+								  std::cout << "found " << key1 << " "
+									  << key2 << " "
+									  << axon_key << " "
+									  << key1_inloop << " "
+									  << key2_inloop << " "
+									  << key_inloop_axon << " " 
+									  << isSide1 << isSide1_inloop << " "
+									  << propBouton << " " << propBouton_inloop  
+#ifndef LTWT_TOUCH
+									  << dist << " " << dist_inloop
+#endif
+									  << std::endl;
+							  }
+							  //count += 1;
+							  //if (count ==2)
+							  //{
+							  touchBoutonSpineHeadIsUsed = true;
+							  touchCanBeRemoved=it->first;
+							  //TUAN TODO
+							  //we may use the comparison between propBouton and propBouton_inloop
+							  //to determine which connection is the right one for the spine
+							  break;
+							  //}
+						  }
+
 					  }
-					  //count += 1;
-					  //if (count ==2)
-					  //{
-					  touchBoutonSpineHeadIsUsed = true;
-					  touchCanBeRemoved=it->first;
-					  //TUAN TODO
-					  //we may use the comparison between propBouton and propBouton_inloop
-					  //to determine which connection is the right one for the spine
-					  break;
-					  //}
+					  //string value = it->second;
 				  }
-				  //string value = it->second;
+				  //TUAN TODO: try to think a way to do find the right touch
+				  // if ((touchBoutonSpineHeadIsUsed) and (propBouton > propBouton_inloop))
+				  // {//the newer touch is considered better reflect the bouton-spineHead touch
+				  //     //remove the existing one
+				  //     assert(smap.erase(touchCanBeRemoved) ==1); 
+				  //     //make sure the new one will be added 
+				  //     touchBoutonSpineHeadIsUsed=false;
+				  // }
+				  if (! touchBoutonSpineHeadIsUsed)
+				  {
+					  smap[&(*titer)] = std::list<std::pair<int, int> >();
+					  miter = smap.find(&(*titer));
+					  newlyCreated = true;
+				  }
+
 			  }
-			  //TUAN TODO: try to think a way to do find the right touch
-			 // if ((touchBoutonSpineHeadIsUsed) and (propBouton > propBouton_inloop))
-			 // {//the newer touch is considered better reflect the bouton-spineHead touch
-			 //     //remove the existing one
-			 //     assert(smap.erase(touchCanBeRemoved) ==1); 
-			 //     //make sure the new one will be added 
-			 //     touchBoutonSpineHeadIsUsed=false;
-			 // }
-			  if (! touchBoutonSpineHeadIsUsed)
-			  {
-				  smap[&(*titer)] = std::list<std::pair<int, int> >();
-				  miter = smap.find(&(*titer));
-				  newlyCreated = true;
+		  }
+		  else
+		  {//spiny-touch
+			  key_size_t key1 = (*titer).getKey1();
+			  key_size_t key2 = (*titer).getKey2();
+			  key_size_t key_spinehead=-1.0;
+			  newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);
+			  double propBouton = (key1 == key_spinehead)? (*titer).getProp2() : (*titer).getProp1();
+
+			  //more constraint
+			  newTouchIsChemSynapse = newTouchIsChemSynapse && (propBouton > 0.99);
+			  if (newTouchIsChemSynapse)
+			  {//detect if any capsule of the Touch already involved in 
+				  //another chemical synapse-connection. If so, ignore it (or 
+				  //...we can decide which one to keep)
+
+				  bool isSide1 = (key_spinehead == key1);
+#ifndef LTWT_TOUCH
+				  double dist = (*titer).getDistance();
+#endif
+				  int count = 0;
+				  double propBouton_inloop=0.0;
+				  Touch* touchCanBeRemoved=0;
+				  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
+				  {
+					  Touch* touch = it->first;
+					  key_size_t key1_inloop = (*touch).getKey1();
+					  key_size_t key2_inloop = (*touch).getKey2();
+					  key_size_t key_inloop_spinehead=+1.0;
+					  (*touch).hasSpineHead(key_inloop_spinehead);
+					  propBouton_inloop = (key1_inloop == key_inloop_spinehead) ? (*touch).getProp2() : (*touch).getProp1();
+					  bool isSide1_inloop = (key_inloop_spinehead == key1_inloop);
+#ifndef LTWT_TOUCH
+					  double dist_inloop = (*touch).getDistance();
+#endif
+					  // equal and must be on the same side (i.e. either both first keys or 
+					  //                                    both second keys)
+					  //if (key_spinehead == key_inloop_spinehead)
+					  if ((key_spinehead == key_inloop_spinehead)
+							  //  and (isSide1 == isSide1_inloop)
+						 )
+					  {
+						  if (0)
+						  {
+							  std::cout << "found " << key1 << " "
+								  << key2 << " "
+								  << key_spinehead << " "
+								  << key1_inloop << " "
+								  << key2_inloop << " "
+								  << key_inloop_spinehead << " " 
+								  << isSide1 << isSide1_inloop << " "
+								  << propBouton << " " << propBouton_inloop  
+#ifndef LTWT_TOUCH
+								  << dist << " " << dist_inloop
+#endif
+								  << std::endl;
+						  }
+						  //count += 1;
+						  //if (count ==2)
+						  //{
+						  touchBoutonSpineHeadIsUsed = true;
+						  touchCanBeRemoved=it->first;
+						  //TUAN TODO
+						  //we may use the comparison between propBouton and propBouton_inloop
+						  //to determine which connection is the right one for the spine
+						  break;
+						  //}
+					  }
+					  //string value = it->second;
+				  }
+				  //TUAN TODO: try to think a way to do find the right touch
+				  // if ((touchBoutonSpineHeadIsUsed) and (propBouton > propBouton_inloop))
+				  // {//the newer touch is considered better reflect the bouton-spineHead touch
+				  //     //remove the existing one
+				  //     assert(smap.erase(touchCanBeRemoved) ==1); 
+				  //     //make sure the new one will be added 
+				  //     touchBoutonSpineHeadIsUsed=false;
+				  // }
+				  if (! touchBoutonSpineHeadIsUsed)
+				  {
+					  smap[&(*titer)] = std::list<std::pair<int, int> >();
+					  miter = smap.find(&(*titer));
+					  newlyCreated = true;
+				  }
+
 			  }
 
 		  }
-		  
 	  }
 	  else if (specialTreatment == "ChemicalSynapses")
 	  {//always add it here
@@ -5290,7 +5400,7 @@ bool TissueFunctor::setGenerated(
   }
   else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
   {
-	  if (newTouchIsChemSynapse and ! touchBoutonSpineHeadIsUsed)
+	  if ((newTouchIsChemSynapse || newTouchIsSpinelessChemSynapse) and ! touchBoutonSpineHeadIsUsed)
 		  miter->second.push_back(std::pair<int, int>(type, order));
 	  else rval = false;
   }

@@ -1,5 +1,4 @@
 #include "Topology.h"
-#include "std.gsl"
 /// PLAN
 // Add astrocyte as a new neuron with Kir4.1
 //    which regulate synapse [K+]_o and branch [K+]_o
@@ -12,23 +11,25 @@
 #define STR(x) _STR(x)
 
 //SECTIONZ: Modify the data in this section for general setting
-// 
+//{{{
 //{{{ 1. Output Location
 #define OutputFolderName "./out2"
 #define PathFileCombine(X) OutputFolderName"/"X
+//}}}
 
 //{{{ 2. Methods for Time-Step and Time-end
 #define BASED_ON_ITERATIONS 1
 #define BASED_ON_TIMES 2
 
 #define SIMULATION_STOP BASED_ON_TIMES
-#define SIMULATION_RECORD BASED_ON_TIMES
 //#define SIMULATION_STOP BASED_ON_ITERATIONS
+#define SIMULATION_RECORD BASED_ON_TIMES
 //#define SIMULATION_RECORD BASED_ON_ITERATIONS
 //}}}
+
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.00170 // [ms]
+#define TimeStep_value   0.0010 // [ms]
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
@@ -38,6 +39,7 @@
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
 //{{{
 	#define NumIterationsUntilEnd   10000   // unitless
+	//#define NumIterationsUntilEnd   1000000   // unitless
 //}}}
 #else
   assert(0);
@@ -46,17 +48,19 @@
 	#define RecordInterval   1.0   //  [ms]
   #define TimeStartRecord  900.0 // [ms]
 #elif  SIMULATION_RECORD == BASED_ON_ITERATIONS
-	#define RecordInterval   1   // every ... timesteps
-	//#define NumIterationsUntilEnd   1000000   // unitless
+	#define RecordInterval   10   // every ... timesteps
 #else
   assert(0);
 #endif
 //}}}
+
 //{{{ Diffusion + Fast-buffering constants
 #define Cacyto_DiffusionConstant 0.27   // [um^2/ms]  unbuffered
 #define CaER_DiffusionConstant 0.06   //  [um^2/ms]  unbuffered
 #define Dopa_DiffusionConstant 0.182  // um^2/ms  0.082 +/- 0.013 at cell surface (about 6-10x slower than in free solution)
 #define Fluo3_DiffusionConstant 0.09  //[um^2/ms]
+#define Cacyto_DiffusionConstant_SpineNeck 0.27   // [um^2/ms]  unbuffered
+#define CaER_DiffusionConstant_SpineNeck 0.06   //  [um^2/ms]  unbuffered
 
  // use with fast-buffering assumption
 #define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
@@ -65,6 +69,7 @@
 #define CaER_EffectiveDiffusionConstant  100.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //}}}
+
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
 #define Cacyto_value  0.1  // [uM]
@@ -85,6 +90,7 @@
 #define NTGlutamate_baseline 5.0  // [uM]
 #define NTGABA_baseline 5.0  // [uM]
 //}}}
+
 //{{{ Conditions: conductance + temperature + Vrest + Eleak
 #define Ra_value 0.001     // [GOhm*um] 
   //across the spine-neck to shaft
@@ -102,12 +108,15 @@
 //#define E_leak_value -90.0 // [mV]
 #define E_leak_value Vrest_value
 //}}}
+
 //{{{ Time constant
 //}}}
+
 //{{{ PMCA
 #define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
 //#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
 //}}}
+
 //{{{ RYR
 #define RYRMarkovFilename "RYR_Markov_Williams2012.conf"
 #define RYRSingleChannelCurrent 2.0 // [pA]
@@ -216,7 +225,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 //NOTE: -r #capsules-per-cpt
 //#define strArg1 "neurons_msn.txt -p params/DevParams.par"
 //#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
-#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3" 
+#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 2" 
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 " //" -g 1.0"
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
 #if SIMULATION_INVOLVE == VMONLY
@@ -634,7 +643,9 @@ NodeType SpineAttachment_VmCaiCaER { produceInitialState->initialize2, produceSt
 #endif
 /*}}}*/
 // 3.4 CONNEXON - electrical synapse
+//{{{
 NodeType Connexon { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
+//}}}
 /*}}}*/
 
 // 4. CONSTANT [no need to change, modify SECTIONZ]
@@ -1251,9 +1262,10 @@ Grid MSN_D1Neuron{
 #if SIMULATION_INVOLVE >= VM_CACYTO
 // PMCA
 	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
-#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
 				compartmentalize = { "tau" },
-        tau = {0.0}
+        tau = {tau_PMCA_Calciumclearance}
 #elif PUMP_PMCA != PMCA_PUMPRATE_CONSTANT
 				compartmentalize = { "IPMCAbar" },
 				IPMCAbar = {0.0} 
@@ -1312,16 +1324,16 @@ Grid MSN_D1Neuron{
 				I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
 				I_Ca = 0, 
-        DCa = Cacyto_DiffusionConstant //[um^2/ms]
+        DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
 				I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
 				I_Ca = 0, 
-        DCa = Cacyto_DiffusionConstant, //[um^2/ms]
+        DCa = Cacyto_DiffusionConstant_SpineNeck, //[um^2/ms]
 				I_CaER = 0,
-        DCaER = CaER_DiffusionConstant //[um^2/ms]
+        DCaER = CaER_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #endif
      //}}}

@@ -71,17 +71,20 @@ void ChannelHayCaHVA::initialize(RNG& rng)
   if (I_Ca.size()!=size) I_Ca.increaseSizeTo(size);
 
   float gbar_default = gbar[0];
-  for (int i=0; i<size; ++i) {
+  for (unsigned int i=0; i<size; ++i) {
     if (gbar_dists.size() > 0) {
-      int j;
-      assert(gbar_values.size() == gbar_dists.size());
+      unsigned int j;
+	  //NOTE: 'n' bins are splitted by (n-1) points
+      if (gbar_values.size() - 1 != gbar_dists.size())
+	  {
+		  std::cerr << "gbar_values.size = " << gbar_values.size() 
+			 << "; gbar_dists.size = " << gbar_dists.size() << std::endl; 
+	  }
+      assert(gbar_values.size() -1 == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
         if ((*dimensions)[0]->dist2soma < gbar_dists[j]) break;
       }
-      if (j < gbar_values.size()) 
-        gbar[i] = gbar_values[j];
-      else
-        gbar[i] = gbar_default;
+      gbar[i] = gbar_values[j];
     } else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];
     } else {

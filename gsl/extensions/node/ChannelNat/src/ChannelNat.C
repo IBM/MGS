@@ -131,6 +131,7 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
     assert(0);
 #endif
 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 dyn_var_t ChannelNat::vtrap(dyn_var_t x, dyn_var_t y)
 {
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));

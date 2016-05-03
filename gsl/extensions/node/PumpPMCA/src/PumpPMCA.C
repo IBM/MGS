@@ -17,6 +17,9 @@
     // PMCA_Traub_Llinas_1997
 		// NOTE : a lumped mechanism with neutral effect on Vm
 		//        and constant rate
+#elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
+    // Enable the assignment of different rate on different branches
+	//  via the ChanParam.par file
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
 		// NOTE : a lumped mechanism with neutral effect on Vm
@@ -47,16 +50,20 @@ void PumpPMCA::initialize(RNG& rng)
 #ifdef DEBUG_ASSERT
   assert(V);
   assert(V->size() == size);
-  assert(IPMCAbar.size() == size);
 #endif
 // allocate
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);
-#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+ #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS 
+  assert(tau.size() == size);
+ #endif
+ #if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION 
   if (tau.size() != size) tau.increaseSizeTo(size);
-#endif
+ #endif
 #else
+  assert(IPMCAbar.size() == size);
   if (I_PMCA.size() != size) I_PMCA.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
   // initialize
@@ -124,7 +131,12 @@ IPMCAbar[i] = IPMCAbar_values[0];
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
-    J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) *
+    J_Ca[i] = 1.0 / ((getSharedMembers().tau_pump)) *
+              (getSharedMembers().Ca_equil - cai);  // [uM/ms]
+#elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
+    // PMCA_Traub_Llinas_1997
+    dyn_var_t cai = (*Ca_IC)[i];  //[uM]
+    J_Ca[i] = 1.0 / ((tau[i])) *
               (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
@@ -162,6 +174,11 @@ void PumpPMCA::update(RNG& rng)
     // PMCA_Traub_Llinas_1997
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
     J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) *
+              (getSharedMembers().Ca_equil - cai);  // [uM/ms]
+#elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
+    // PMCA_Traub_Llinas_1997
+    dyn_var_t cai = (*Ca_IC)[i];  //[uM]
+    J_Ca[i] = 1.0 / ((tau[i])) *
               (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
