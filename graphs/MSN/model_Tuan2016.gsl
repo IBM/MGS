@@ -5,6 +5,8 @@
 //    or emulate the effect of increasing [K+]_o
 
 #include "../../nti/include/MaxComputeOrder.h"
+
+
 #define _CCAT(x,y) x ## y 
 #define CCAT(x,y) _CCAT(x,y)
 #define _STR(x) #x 
@@ -107,6 +109,7 @@
 #define Vrest_value  -85.0 // [mV]
 //#define E_leak_value -90.0 // [mV]
 #define E_leak_value Vrest_value
+#define Erev_HCN  -45.0 // [mV]
 //}}}
 
 //{{{ Time constant
@@ -509,7 +512,9 @@ NodeType PumpPMCA (
    < 
    //Km = Km_PMCA,   // [uM]
    //{{{ for simple extrusion model
-#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
+    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
      tau_pump = tau_PMCA_Calciumclearance, // [msec]
      Ca_equil = Cacyto_value 
 #endif
@@ -551,7 +556,31 @@ NodeType PumpSERCA(
 
 // 3. SYNAPSE
 /*{{{*/
-// 3.1. CHEMICAL SYNAPSE RECEPTOR
+// 3.1. PRE-SYNAPSE (or SYNAPTIC-CLEFT) NODE
+/*{{{*/
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+NodeType PreSynapticPoint { produceInitialState->initialize2, produceState->finish };
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+//or 
+//{{{
+NodeType SynapticCleft(
+      <
+        Glut_baseline = NTGlutamate_baseline, //[uM]
+        GABA_baseline = NTGABA_baseline,   // [uM]
+				//{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth curve
+        Glut_max= NTGlutamate_max,  
+        GABA_max= NTGABA_max,  
+        Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
+        Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
+        Vp_GABA=2.0,        // mV
+        Kp_GABA=5.0        // mV
+				//}}}
+      >
+		) { produceInitialState->initialize2, produceState->finish };
+//}}}
+#endif
+/*}}}*/
+// 3.2. CHEMICAL SYNAPSE RECEPTOR
 /*{{{*/
 /*NodeType AMPAReceptor (<
           E=0.0,        // mV
@@ -607,31 +636,6 @@ NodeType GABAAReceptor (<
           //}}}
           >) {computeTadj->initialize2, initializeGABAA->initialize3, updateGABAA->solveChannels };
 /*}}}*/
-// 3.2. PRE-SYNAPSE (or SYNAPTIC-CLEFT) NODE
-/*{{{*/
-#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-NodeType PreSynapticPoint { produceInitialState->initialize2, produceState->finish };
-#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
-//or 
-//{{{
-NodeType SynapticCleft(
-      <
-        Glut_baseline = NTGlutamate_baseline, //[uM]
-        GABA_baseline = NTGABA_baseline,   // [uM]
-				//{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth curve
-        Glut_max= NTGlutamate_max,  
-        GABA_max= NTGABA_max,  
-        Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
-        Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
-        Vp_GABA=2.0,        // mV
-        Kp_GABA=5.0        // mV
-				//}}}
-      >
-		) { produceInitialState->initialize2, produceState->finish };
-//}}}
-#endif
-/*}}}*/
-
 // 3.3 SpineAttachment CONNEXON - connecting spine-neck with a branch
 /*{{{*/
 #if SIMULATION_INVOLVE == VMONLY

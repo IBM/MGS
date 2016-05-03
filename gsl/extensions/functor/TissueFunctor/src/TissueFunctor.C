@@ -5096,11 +5096,11 @@ bool TissueFunctor::setGenerated(
   bool newlyCreated = false;
   // (specialTreatment == "BidirectionalConnections")
   bool touchSpineNeckDenShaftIsUsed = false;
-  bool newTouchIsNeckDenShaft;
+  bool newTouchIsNeckDenShaft = false;
   // (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
-  bool touchBoutonSpineHeadIsUsed = false;
-  bool newTouchIsChemSynapse;
-  bool newTouchIsSpinelessChemSynapse;
+  bool touchChemSynapseIsUsed = false;//both Bouton-Spinehead and Bouton-DenShaft
+  bool newTouchIsChemSynapse = false;
+  bool newTouchIsSpinelessChemSynapse = false;
   // endspecialTreatment
   bool alreadyThere = false;
   key_size_t dummy_key;
@@ -5206,7 +5206,7 @@ bool TissueFunctor::setGenerated(
 			  double propBouton = (key1 == axon_key)? (*titer).getProp1() : (*titer).getProp2();
 
 			  //more constraint
-			  //newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton > 0.99);
+			  newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton > 0.99);
 			  if (newTouchIsSpinelessChemSynapse)
 			  {//detect if any capsule of the Touch already involved in 
 				  //another chemical synapse-connection. If so, ignore it (or 
@@ -5256,7 +5256,7 @@ bool TissueFunctor::setGenerated(
 							  //count += 1;
 							  //if (count ==2)
 							  //{
-							  touchBoutonSpineHeadIsUsed = true;
+							  touchChemSynapseIsUsed = true;
 							  touchCanBeRemoved=it->first;
 							  //TUAN TODO
 							  //we may use the comparison between propBouton and propBouton_inloop
@@ -5269,14 +5269,14 @@ bool TissueFunctor::setGenerated(
 					  //string value = it->second;
 				  }
 				  //TUAN TODO: try to think a way to do find the right touch
-				  // if ((touchBoutonSpineHeadIsUsed) and (propBouton > propBouton_inloop))
+				  // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
 				  // {//the newer touch is considered better reflect the bouton-spineHead touch
 				  //     //remove the existing one
 				  //     assert(smap.erase(touchCanBeRemoved) ==1); 
 				  //     //make sure the new one will be added 
-				  //     touchBoutonSpineHeadIsUsed=false;
+				  //     touchChemSynapseIsUsed=false;
 				  // }
-				  if (! touchBoutonSpineHeadIsUsed)
+				  if (! touchChemSynapseIsUsed)
 				  {
 					  smap[&(*titer)] = std::list<std::pair<int, int> >();
 					  miter = smap.find(&(*titer));
@@ -5344,7 +5344,7 @@ bool TissueFunctor::setGenerated(
 						  //count += 1;
 						  //if (count ==2)
 						  //{
-						  touchBoutonSpineHeadIsUsed = true;
+						  touchChemSynapseIsUsed = true;
 						  touchCanBeRemoved=it->first;
 						  //TUAN TODO
 						  //we may use the comparison between propBouton and propBouton_inloop
@@ -5355,14 +5355,14 @@ bool TissueFunctor::setGenerated(
 					  //string value = it->second;
 				  }
 				  //TUAN TODO: try to think a way to do find the right touch
-				  // if ((touchBoutonSpineHeadIsUsed) and (propBouton > propBouton_inloop))
+				  // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
 				  // {//the newer touch is considered better reflect the bouton-spineHead touch
 				  //     //remove the existing one
 				  //     assert(smap.erase(touchCanBeRemoved) ==1); 
 				  //     //make sure the new one will be added 
-				  //     touchBoutonSpineHeadIsUsed=false;
+				  //     touchChemSynapseIsUsed=false;
 				  // }
-				  if (! touchBoutonSpineHeadIsUsed)
+				  if (! touchChemSynapseIsUsed)
 				  {
 					  smap[&(*titer)] = std::list<std::pair<int, int> >();
 					  miter = smap.find(&(*titer));
@@ -5400,7 +5400,7 @@ bool TissueFunctor::setGenerated(
   }
   else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
   {
-	  if ((newTouchIsChemSynapse || newTouchIsSpinelessChemSynapse) and ! touchBoutonSpineHeadIsUsed)
+	  if ((newTouchIsChemSynapse || newTouchIsSpinelessChemSynapse) and ! touchChemSynapseIsUsed)
 		  miter->second.push_back(std::pair<int, int>(type, order));
 	  else rval = false;
   }

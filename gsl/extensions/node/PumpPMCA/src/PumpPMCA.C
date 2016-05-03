@@ -58,6 +58,12 @@ void PumpPMCA::initialize(RNG& rng)
   if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);
  #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS 
   assert(tau.size() == size);
+  float tau_default = tau[0];
+  for (unsigned i = 0; i < size; ++i)
+  {
+      tau[i] = tau_default;
+  }
+ 
  #endif
  #if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION 
   if (tau.size() != size) tau.increaseSizeTo(size);
@@ -134,14 +140,15 @@ IPMCAbar[i] = IPMCAbar_values[0];
     J_Ca[i] = 1.0 / ((getSharedMembers().tau_pump)) *
               (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
-    // PMCA_Traub_Llinas_1997
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
+	assert(tau[i] > 0.0);
     J_Ca[i] = 1.0 / ((tau[i])) *
               (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
     dyn_var_t cai = (*Ca_IC)[i];       //[uM]
     tau[i] = tc_factor * exp(v / kV);  // [msec]
+	assert(tau[i] > 0.0);
     J_Ca[i] = 1.0 / (tau[i]) * (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 
 #elif PUMP_PMCA == PMCA_Jafri_Rice_Winslow_1998

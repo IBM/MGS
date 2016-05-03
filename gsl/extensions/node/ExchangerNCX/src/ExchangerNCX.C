@@ -53,15 +53,17 @@ void ExchangerNCX::initialize(RNG& rng)
   unsigned size = branchData->size;
 #ifdef DEBUG_ASSERT
   assert(V);
+#if EXCHANGER_NCX == NCX_Weber_Bers_2001
   assert(INCXbar.size() == size);
+#endif
   assert(V->size() == size);
 #endif
   // allocate
   if (I_NCX.size() != size) I_NCX.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
-  if (INCXbar.size() != size) INCXbar.increaseSizeTo(size);
   // initialize
 #if EXCHANGER_NCX == NCX_Weber_Bers_2001
+  if (INCXbar.size() != size) INCXbar.increaseSizeTo(size);
   dyn_var_t INCXbar_default = INCXbar[0];
   if (INCXbar_dists.size() > 0 and INCXbar_branchorders.size() > 0)
   {

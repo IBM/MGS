@@ -10,6 +10,10 @@
 #if CHANNEL_SK == SK_WOLF_2005
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
+#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN || \
+	  CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT
+#define BASED_TEMPERATURE 25.0  // Celcius
+#define Q10 3.0
 #endif
 
 #ifndef Q10

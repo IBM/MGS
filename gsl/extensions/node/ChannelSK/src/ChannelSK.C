@@ -5,12 +5,13 @@
 
 #define SMALL 1.0E-6
 // unit conversion 
-#define uM2mM  1e-3
+#define uM2mM  1e-3 // from [uM] to [mM] concentration
 
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
 
+#define Cai_base 0.1e-6 // [uM]
 //
 // This is an implementation of the "SK(ca) potassium current
 //
@@ -29,6 +30,22 @@
 //     Po = fwrate / (fwrate + bwrate)
 #define alpha 0.28  // [1/ms]
 #define beta 0.480  // [1/ms]
+
+#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT
+// Kohler -...-Adelman (1996) Science 
+//   Small-conductance, Ca2+ activated potassium channels from mammalian brain
+//   1. SK permeate to K+ rather than Na+
+//   2. record data for hSK1 and rSK2
+//   3. current activate instantly and show no inactivation (during 500ms test pulse)
+//   rSK2: gmax = 3.6 [nS]
+//   hSK1: gmax = 13.5 [nS]
+//  NOTE: Hill_coeff == steepness
+#define KCa_half  0.43  // [uM]
+#define Hill_coef  4.8 // 4.8+/-1.46  
+
+#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN
+#define KCa_half  0.71  // [uM]
+#define Hill_coef  3.9  // 3.9+/-0.45 suggest 4 Ca2+ binding sites involved
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -75,28 +92,26 @@ void ChannelSK::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];      //[mV]
 #if SIMULATION_INVOLVE  == VMONLY
-		dyn_var_t Cai_base = 0.1e-3; // [mM]
     dyn_var_t cai = Cai_base;
 #else
-    dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]
+    dyn_var_t cai = (*Cai)[i] ;  //[uM]
 #endif
 
 #if CHANNEL_SK == SK_WOLF_2005
+	{//to group code
     // Rate k1-k2: unit 1/(ms)
+	dyn_var_t cai_mM = cai * uM2mM; //[mM]
 
     dyn_var_t Oval = fO[i];  // temporary
-                             // Rempe-Chopp 2006
-		dyn_var_t a = fwrate(v, cai);
-		dyn_var_t sum = a+bwrate(v,cai);
-		dyn_var_t tau = 1/(sum);
-		dyn_var_t Oinf = a/(sum); 
-		dyn_var_t Tscale_tau = dt  * getSharedMembers().Tadj /tau;
-		fO[i] = (Oinf * Tscale_tau + Oval * (1-Tscale_tau))/(1+Tscale_tau);
+	// Rempe-Chopp 2006
+	dyn_var_t a = fwrate(v, cai_mM);
+	dyn_var_t sum = a+bwrate(v,cai_mM);
+	dyn_var_t tau = 1/(sum);
+	dyn_var_t Oinf = a/(sum); 
+	dyn_var_t Tscale_tau = dt  * getSharedMembers().Tadj /tau;
+	fO[i] = (Oinf * Tscale_tau + Oval * (1-Tscale_tau))/(1+Tscale_tau);
 #ifdef DEBUG_ASSERT
     //assert(fabs(fO[0] + fC[0] - 1.0) < SMALL);  // conservation
-#endif
-#else
-    NOT IMPLEMENTED YET
 #endif
     // trick to keep fO in [0, 1]
     if (fO[i] < 0.0) { fO[i] = 0.0; }
@@ -112,7 +127,22 @@ void ChannelSK::update(RNG& rng)
     //}
     // fC[i] = ...
     // fC[i] = 1.0 - (fO[i]);  //no need
+
+	}
     g[i] = gbar[i] * fO[i] ;
+#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT || \
+	  CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN
+	// Rempe-Chopp 2006
+	dyn_var_t minf = (1.0)/ (1.0 + pow(KCa_half/ca, Hill_coef));
+	dyn_var_t qm = 0.5 * dt * getSharedMembers().Tadj/ TAU ;
+	//fO means 'm' (activation gate)
+    //m[i] = (2 * minf * qm - m[i] * (qm-1)) / (qm + 1);
+    //g[i] = gbar[i]*m[i];
+    fO[i] = (2 * minf * qm - fO[i] * (qm-1)) / (qm + 1);
+    g[i] = gbar[i]*fO[i];
+#else
+    NOT IMPLEMENTED YET
+#endif
   }
 }
 
@@ -140,16 +170,27 @@ void ChannelSK::initialize(RNG& rng)
     dyn_var_t v = (*V)[i];
     //g[i] = gbar[i] * fO[i];
 #if SIMULATION_INVOLVE  == VMONLY
-		dyn_var_t Cai_base = 0.1e-3; // [mM]
+	dyn_var_t Cai_base = 0.1e-6; // [uM]
     dyn_var_t cai = Cai_base;
 #else
-		dyn_var_t cai = (*Cai)[i] * uM2mM; // [mM]
+	dyn_var_t cai = (*Cai)[i]; // [uM]
 #endif
-		dyn_var_t a = fwrate(v, cai);
-		dyn_var_t sum = a+bwrate(v,cai);
-		dyn_var_t tau = 1/(sum);
-		dyn_var_t Oinf = a/(sum); 
-		fO[i] = Oinf;
+
+#if CHANNEL_SK == SK_WOLF_2005
+	dyn_var_t cai_mM = cai  * uM2mM; // [mM]
+	dyn_var_t a = fwrate(v, cai_mM);
+	dyn_var_t sum = a+bwrate(v,cai_mM);
+	dyn_var_t tau = 1/(sum);
+	dyn_var_t Oinf = a/(sum); 
+	fO[i] = Oinf;
+    g[i] = gbar[i]*fO[i];
+#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT || \
+	  CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN
+    //m[i] = 1.0/(1 + pow(KCa_half/ca,Hill_coef));
+    //g[i] = gbar[i]*m[i];
+    fO[i] = 1.0/(1 + pow(KCa_half/ca,Hill_coef));
+    g[i] = gbar[i]*fO[i];
+#endif
   }
 }
 

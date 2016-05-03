@@ -63,6 +63,30 @@ The choice N = 1 is justified as there is no apparent delay in activation
 #define k_M 4.0        // [mV^{-1}]
 #define POW_M 1
 
+#elif CHANNEL_HCN == HCN_KOLE_2006 || \
+	  CHANNEL_HCN == HCN_HAY_2011
+// Kole et al. (2006) 
+// Simulation suggests: gh ~ 2.3 at soma
+//                         ~  93 pS/um^2 distal apical dendrites ~ 1000 um from soma
+//  Erev_h = -45 mV
+//
+
+dyn_var_t ChannelHCN::conductance(int i)
+{
+	//conductance density gh is distributed across compartments
+	//using the exponential functions: gh = y0 + A * exp(d/lambda)
+	//with y0 = -2 pS/um^2
+	//     A  = 4.28 pS/um^2
+	//     lambda = 323 um
+	//     d  = distance from the soma
+	float d = dimensions[i].dist2soma;
+	const float y0 = -2.0 ;
+	const float A = 4.28 ; 
+	const float	lambda = 323.0 ;
+	dyn_var_t gh = y0 + A * exp(d/lambda);
+	return gh;
+}
+
 #elif CHANNEL_HCN == HCN_SOMETHING
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 // a_m  = AMC*(V + AMV)/( exp( (V + AMV)/AMD ) - 1.0 )
@@ -75,7 +99,6 @@ The choice N = 1 is justified as there is no apparent delay in activation
 #define BMC 0.193
 #define BMD 33.1
 
-#elif CHANNEL_HCN == HCN_KOLE_2006
 #endif
 
 dyn_var_t ChannelHCN::vtrap(dyn_var_t x, dyn_var_t y)
@@ -218,6 +241,14 @@ gbar[i] = gbar_values[0];
 #elif CHANNEL_HCN == HCN_VANDERGIESSEN_DEZEEUW_2008
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     g[i] = gbar[i] * m[i];  // pow(m[i], POW_M)
+#elif CHANNEL_HCN == HCN_KOLE_2006 || \
+	  CHANNEL_HCN == HCN_HAY_2011
+	gbar[i] = conductance(i);
+  #if CHANNEL_HCN == HCN_HAY_2011
+   NumChan[i] = 1
+  #else
+   NumChan[i] = dimensions[i].surface_area * ChanDen;
+  #endif
 #elif CHANNEL_HCN == HCN_SOMETHING
     dyn_var_t am = AMC * vtrap(v + AMV, AMD);
     dyn_var_t bm = BMC * exp(v / BMD);

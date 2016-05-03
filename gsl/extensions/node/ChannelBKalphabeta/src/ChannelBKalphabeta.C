@@ -15,7 +15,8 @@
 // This is an implementation of the "BK(ca) potassium current
 //      with alpha+beta subunit (fast-activating, and inactivating K+ current)
 //
-#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
+#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || \
+	CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
 // The implementation is indeed from Shao et al. 1999
 //    for CA1 pyramidal neuron
 //    alpha+beta-generic
@@ -90,7 +91,8 @@ void ChannelBKalphabeta::initialize(RNG& rng)
 
 void ChannelBKalphabeta::update(RNG& rng)
 {
-#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
+#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || \
+	CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
 	const dyn_var_t tminOI = 0.1; //msec
 	const dyn_var_t tminIC = 0.1; //msec
 	const dyn_var_t tminCO = 0.001; //msec
@@ -118,7 +120,8 @@ void ChannelBKalphabeta::update(RNG& rng)
     dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]
 #endif
 
-#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
+#if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || \
+	CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
     // NOTE: Some models use m_inf and tau_m to estimate m
     // Rate kij from state i to j: unit 1/(ms)
     dyn_var_t kOI = alp(tminOI, v, Vhalf_OI, kV_OI);
