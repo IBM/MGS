@@ -36,11 +36,18 @@ GridLayerDescriptor::GridLayerDescriptor(
    setNodeAccessor(nodeAccessor);
 }
 
+// Return the string representation of the model name
+// e.g. in GSL we declare:
+// NodeType HodgkinHuxleyVoltage(...){...}
+// then 'HodgkinHuxleyVoltage' is the model name
 std::string GridLayerDescriptor::getModelName()
 {
    return _nt->getModelName();
 }
 
+// Return the #of instances to be created at 
+// the given grid's index position 'nodeIndex'
+// for this GridLayer
 int GridLayerDescriptor::getDensity(int nodeIndex)
 {
    int retval = _uniformDensity;

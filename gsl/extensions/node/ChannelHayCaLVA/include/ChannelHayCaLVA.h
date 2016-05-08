@@ -19,6 +19,7 @@
 #include "Lens.h"
 #include "CG_ChannelHayCaLVA.h"
 #include "rndm.h"
+#include "MaxComputeOrder.h"
 
 class ChannelHayCaLVA : public CG_ChannelHayCaLVA
 {
@@ -27,7 +28,7 @@ class ChannelHayCaLVA : public CG_ChannelHayCaLVA
       void initialize(RNG& rng);
       virtual ~ChannelHayCaLVA();
    private:
-      float vtrap(float x, float y);
+      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

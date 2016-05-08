@@ -240,6 +240,9 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _forwardSolvePointTypesMap(f._forwardSolvePointTypesMap),
       _backwardSolvePointTypesMap(f._backwardSolvePointTypesMap),
       _readFromFile(f._readFromFile),
+#ifdef IDEA1
+	 // _numCapsulesEachSideForBranchPointMap(f._numCapsulesEachSideForBranchPointMap)
+#endif
       _segmentDescriptor(f._segmentDescriptor)
 #endif
 {
@@ -1242,6 +1245,7 @@ void TissueFunctor::createSpines(Params* params, LensContext* CG_c)
 //   get call when nodeCategory == 'CompartmentVariables' or 'Junctions'
 //                                or (in the case of 'Channels')
 //                                 'JunctionChannels' or 'BranchChannels'
+//
 //     for a given 'nodeType' (e.g. 'Voltage'), at
 //     a particular grid-node-index 'nodeIndex'
 //     'densityIndex' = # of instances of that nodeType
@@ -1252,6 +1256,12 @@ void TissueFunctor::createSpines(Params* params, LensContext* CG_c)
 //          junction
 //    2. Initialize the size of array of data members to the same size with that
 //    above
+// PARAMS:
+//    nodeCategory = one of value above
+//    nodeType    = any value defined for the Layer of the above nodeCategory
+//    nodeIndex  = index in the grid (where it holds one or many instances
+//                 of such NodeType's nodeCategory[nodeType])
+//    densityIndex = index in the density vector, i.e. the exact instance to handle 
 int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                                     std::string& nodeCategory,
                                     std::string& nodeType, int nodeIndex,
@@ -1296,7 +1306,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       // Find: # compartments in the current branch
       // int ncpts = N_COMPARTMENTS(ncaps, cptSize);
       bool isDistalEndSeeImplicitBranchingPoint = false;
-      // TUAN: plan to make compsize holds the information about #capsules per
+      // TUAN: plan to make cptsizes_in_branch holds the information about #capsules per
       // cpt
       //   index=0 --> distal-end cpt
       //   index=ncpts-1 --> proximal-end cpt
@@ -1346,8 +1356,6 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           //         (2) the compartment next to junction (i.e. half of the
           //         area of the capsule next to the junction)
           //
-          int currentcompartment_size =
-              (remainder_caps > 0) ? cptSize + 1 : cptSize;
           ////TUAN :
           //# compartment should depend upon
           // if the branch faces
@@ -1414,14 +1422,17 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             Constant* dim = aptr_dim.release();
             dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
           }
-          for (int i = 0, j = ncaps - currentcompartment_size; i < ncpts;
-               ++i, j -= currentcompartment_size)
+		  //now 
+		  std::vector<int>::const_iterator cibiter = cptsizes_in_branch.begin(),
+			  cibiend = cptsizes_in_branch.end();
+            for (int i = 0, j = ncaps - (*cibiter); i < ncpts, cibiter < cibiend; 
+					++i, cibiter++, j -= (*cibiter))
           {  // compartment indexing is distal to proximal, while capsule
              // indexing is proximal to distal
             assert(j >= 0);
             Capsule* begCap = &branch->_capsules[j];
             Capsule* endCap =
-                &branch->_capsules[j + currentcompartment_size - 1];
+                &branch->_capsules[j + (*cibiter) - 1];
 
             dyn_var_t radius = 0.0;
             dyn_var_t surface_area = 0.0;
@@ -1549,7 +1560,6 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             Constant* dim = aptr_dim.release();
             dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
 
-            if (i + 1 >= remainder_caps) currentcompartment_size = cptSize;
             // currentcompartment_size = chemicalSynapseTouchSpace[i+1];
           }
         }
@@ -1573,9 +1583,10 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     {
       bool foundNDP = false;
       for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
-      {
+      {//for each data member
         if ((*ndpiter)->getName() == (*cptiter)->getString())
-        {
+        {//if the data member is part of 'compartmentalize' declaration
+			//...adjust the size of the data member vector to the #cpts on that branch
           foundNDP = true;
           ArrayDataItem* arrayDI =
               dynamic_cast<ArrayDataItem*>((*ndpiter)->getDataItem());
@@ -1595,28 +1606,20 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
         ArrayDataItem* arrayDI = 0;
         std::string mystring = (*cptiter)->getString();
         std::vector<std::string> tokens;
-        std::string delimiters = ": ";
+        std::string delimiters = ":";
         StringUtils::Tokenize(mystring, tokens, delimiters);
         assert(tokens.size() == 1 || tokens.size() == 2);
-        // if (tokens.size() == 1 || tokens[0] == "float" || tokens[0] ==
-        // "double")
         if (tokens.size() == 1 || tokens[0] == "float")
         {
-          //		#ifdef USE_DOUBLES
-          //					arrayDI = new
-          // DoubleArrayDataItem(size);
-          //    #else
           arrayDI = new FloatArrayDataItem(size);
-          //    #endif
-          //	std::cerr << "float - " << mystring << std::endl;
         }
         else if (tokens[0] == "int")
         {
           arrayDI = new IntArrayDataItem(size);
-          // std::cerr << "int - " << mystring << std::endl;
         }
         assert(arrayDI);
         std::string varName = tokens[tokens.size() - 1];
+		StringUtils::trim(varName);
         // std::cerr << "varName = " << varName << std::endl;
 
         std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
@@ -1743,19 +1746,16 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 //			InitNodes ( .[].Layer(branches),
 // tissueFunctor("NodeInit",
 //<
-//							compartmentalize = {
-//"Vnew",
-//											"Vcur",
-//											"Aii",
-//											"Aim",
-//											"Aip",
-//											"RHS",
-//											},
-//											Vnew
-//=
-//{Vrest_value}
-//											>
-//)
+//compartmentalize = {
+//   "Vnew",
+//   "Vcur",
+//   "Aii",
+//   "Aim",
+//   "Aip",
+//   "RHS",
+//},
+//Vnew={Vrest_value}
+//>
 //)
 std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
     NDPairList* params)
@@ -2824,16 +2824,26 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   return rval;
 }
 
+// GOAL: perform initialization for different node instances (i.e. nodeset)
+// NOTE:  the nodeset must come from the same layer, i.e. of the same NodeType
+//      'gld' variable represents the layer to which these node instances belong
+//  the initial data can be passed through via
+//     1. shared data: via name declaration in GSL (e.g. NodeType ...)
+//     2. specific data:
+//         + via NodeInit() in GSL
+//         + via data in *params.par files
 void TissueFunctor::doNodeInit(LensContext* lc)
 {
+	//NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
+	// statement
   assert(_params.get());
   std::auto_ptr<ParameterSet> initPset;
-  std::vector<NodeDescriptor*> nodes;
+  std::vector<NodeDescriptor*> nodes; //pointer to instances of nodes in grids
   std::vector<NodeDescriptor*>::iterator node, nodesEnd;
 
-  NodeSet* nodeset = lc->layerContext->nodeset;
-  std::vector<GridLayerDescriptor*> const& layers = nodeset->getLayers();
-  assert(layers.size() == 1);
+  NodeSet* nodeset = lc->layerContext->nodeset; // set of instances of nodes to be initialized
+  std::vector<GridLayerDescriptor*> const& layers = nodeset->getLayers();//determine the layer to which this nodeset belong
+  assert(layers.size() == 1); // make sure they come from the same layer
   std::vector<GridLayerDescriptor*>::const_iterator gld = layers.begin();
 
   std::vector<std::string> nodekind;
@@ -2931,8 +2941,8 @@ void TissueFunctor::doNodeInit(LensContext* lc)
     exit(EXIT_FAILURE);
   }
 
-  // reset and start allocating # of instances for
-  // a given NodeType associated with the current Layer statement
+  // reset and start pointing to the instances for
+  // the nodeset to be initialized, which is accessed via the LayerDescriptor 'gld'
   nodes.clear();
   nodeset->getNodes(nodes, *gld);
 
@@ -2940,12 +2950,14 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   nodesEnd = nodes.end();
   NDPairList emptyOutAttr;
   NDPairList dim2cpt;
+  //NOTE: inAttr that we use to connect 'DimensionStruct' and 'BranchData'
+  //   to the each node instance
   dim2cpt.push_back(new NDPair("identifier", "dimension"));
   NDPairList brd2cpt;
   brd2cpt.push_back(new NDPair("identifier", "branchData"));
 
   for (; node != nodesEnd; ++node)
-  {
+  {//traverse all instances of the nodeset
     if ((*node)->getNode())
     {
       NDPairList paramsLocal = *(_params.get());
@@ -2965,7 +2977,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         NDPair* ndp = new NDPair("size", sizeDI_ap);
         branchDataStructParams.push_back(ndp);
         if (nodeCategory == "CompartmentVariables")
-        {
+        {//initialize: branchData, dimensions
           // now start initializing data members, e.g.
           // HHVoltage{
           // BranchDataStruct* branchData; //key_size_t key; unsigned size;
@@ -2978,6 +2990,8 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           getModelParams(Params::COMPARTMENT, paramsLocal, nodeType, key);
           pset->set(paramsLocal);
           (*node)->getNode()->initialize(pset);
+		  //TUAN NOTE: another location where bug may occur if we
+		  //change the key size (key_size_t)
           DoubleDataItem* keyDI =
               new DoubleDataItem(branch->_capsules[0].getKey());
           std::auto_ptr<DataItem> keyDI_ap(keyDI);
@@ -4780,11 +4794,18 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 }
 
 // GOAL: map the values from *.par file to the data member
-//
+//  ModelType can be CHANNEL | COMPARTMENT | SYNAPSE
+//  Supported ModelType: CHANNEL | COMPARTMENT 
+// NOTE: only the first two ones have data inputable via *params.par file
+//   As currently, Synapse Receptors are not supposed to 
+//have parameters whose values varies upon neuron types/branch location
+//TUAN TODO: maybe consider this in the future
 void TissueFunctor::getModelParams(Params::ModelType modelType,
                                    NDPairList& paramsLocal,
                                    std::string& nodeType, key_size_t key)
 {
+	//NOTE: Currently for compartment data, e.g. Cm, gLeak
+	//it is limited to have single value for all compartments in 1 branch
   std::list<std::pair<std::string, dyn_var_t> > compartmentParams;
   _tissueParams.getModelParams(modelType, nodeType, key, compartmentParams);
   std::list<std::pair<std::string, dyn_var_t> >::iterator
@@ -4795,23 +4816,64 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     // NOTE: if we update the next 'for' code, update here too
     std::string mystring = (*cpiter).first;
     std::vector<std::string> tokens;
-    std::string delimiters = ": ";
+    std::string delimiters = ":";
     StringUtils::Tokenize(mystring, tokens, delimiters);
     assert(tokens.size() == 1 || tokens.size() == 2);
     std::string varName = tokens[tokens.size() - 1];
 
     if (tokens.size() == 1 || tokens[0] == "float")
     {
-      ////////////
-      //		#ifdef USE_DOUBLES
-      //			DoubleDataItem* paramDI = new
-      // DoubleDataItem(cpiter->second);
-      //    #else
-      FloatDataItem* paramDI = new FloatDataItem(cpiter->second);
-      //    #endif
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
-      NDPair* ndp = new NDPair(varName, paramDI_ap);
-      paramsLocal.push_back(ndp);
+		//NEW CODE
+		//first check if the tokens presence
+		//
+		NDPairList::iterator ndpiter, ndpend = paramsLocal.end();
+		bool found = false;
+		for (ndpiter = paramsLocal.begin(); ndpiter != ndpend; ++ndpiter)
+		{
+			if (varName.compare((*ndpiter)->getName()) == 0)
+				   //if ((*ndpiter)->getName() 	== varName)
+			{
+				found = true;
+				FloatArrayDataItem* arrayDI =
+					dynamic_cast<FloatArrayDataItem*>((*ndpiter)->getDataItem());
+				if (arrayDI == 0)
+				{// handle the case for scalar data, e.g. Cm
+					FloatDataItem* fltDI =
+						dynamic_cast<FloatDataItem*>((*ndpiter)->getDataItem());
+					if (fltDI == 0)
+					{
+						std::cerr << "TissueFunctor: " << varName
+							<< " is being used but not Float"<< std::endl;
+						assert(0);
+					}
+					fltDI->setFloat((float)cpiter->second);
+				}
+				else{
+					//handle the situation for array data, e.g. Vnew
+					std::vector<int> coords;
+					//NOTE: coords.push_back(index);
+					//with 'index' is the value from 0 to #compartments-1
+					//                                    in that branch
+					coords.push_back(0);// the first
+					arrayDI->setFloat(coords, (float)cpiter->second);
+				}
+				break;
+
+			}
+		}
+		//
+		if (!found)
+		{
+			FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
+			std::auto_ptr<DataItem> paramDI_ap(paramDI);
+			NDPair* ndp = new NDPair(varName, paramDI_ap);
+			paramsLocal.push_back(ndp);
+		}
+		//END NEW CODE
+      //FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
+      //std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      //NDPair* ndp = new NDPair(varName, paramDI_ap);
+      //paramsLocal.push_back(ndp);
     }
     else if (tokens[0] == "int")
     {
@@ -4823,6 +4885,9 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     }
   }
 
+  //NOTE: for channel data, e.g. gbar
+  //we can have different values for different compatments in 1 branch
+  //that's why we use std:vector<dyn_var_t>  here
   std::list<std::pair<std::string, std::vector<dyn_var_t> > >
       compartmentArrayParams;
   _tissueParams.getModelArrayParams(modelType, nodeType, key,
@@ -4842,22 +4907,11 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 
     if (tokens.size() == 1 || tokens[0] == "float")
     {
-      //	#ifdef USE_DOUBLES
-      //			ShallowArray<double> farr;
-      //			std::vector<double>::iterator viter =
-      // capiter->second.begin(),
-      //				vend = capiter->second.end();
-      //			for (; viter != vend; ++viter)
-      // farr.push_back(*viter);
-      //			DoubleArrayDataItem* paramDI = new
-      // DoubleArrayDataItem(farr);
-      //  #else
       ShallowArray<float> farr;
       std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
-      //  #endif
       std::auto_ptr<DataItem> paramDI_ap(paramDI);
       if (!paramsLocal.replace(capiter->first, paramDI_ap))
       {
@@ -5650,7 +5704,7 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
   bool isDistalEndSeeImplicitBranchingPoint;
   int ncpts = getNumCompartments(branch, cptsizes_in_branch,
 		  isDistalEndSeeImplicitBranchingPoint);
-  int cps_index = (capsule - capsule->getBranch()->_capsules);
+  int cps_index = (capsule - capsule->getBranch()->_capsules); //zero-based index
   //# capsules in that branch
   int ncaps = branch->_nCapsules;
   int cps_index_reverse = ncaps - cps_index - 1;  // from the distal-end
@@ -5667,6 +5721,26 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
 	  }
 	  cptIndex++;
   }
+  //DEBUG PURPOSE
+  //if (cptIndex >= cptsizes_in_branch.size())
+  //{
+  //    std::cerr << "Total compartments: " << cptsizes_in_branch.size()
+  //  	     << "#capsules " << ncaps 
+  //  	     << "cps_index " << cps_index 
+  //          << "index to compart " << cps_index_reverse << std::endl;
+  //    iter = cptsizes_in_branch.begin();
+  //    count = 0;
+  //    for (; iter < iterend; iter++)
+  //    {
+  //  	  std::cerr << count << " " << *iter << std::endl;
+  //  	  count = count + *iter;
+  //  	  /*if  (count >= cps_index_reverse){
+  //  		break;
+  //  		}*/
+  //  	  cptIndex++;
+  //    }
+  //}//END DEBUG PURPOSE
+  assert(cptIndex < cptsizes_in_branch.size());
   return cptIndex;
 }
 
@@ -5757,10 +5831,12 @@ int TissueFunctor::getNumCompartments(
   int remainder_caps;
   remainder_caps = ncaps - cptSize * ncpts;
   cptsizes_in_branch.clear();
+  int increment = int(floor(float(remainder_caps)/ncpts));
+  remainder_caps = remainder_caps - ncpts * increment;
   for (int ii = 0; ii < ncpts; ii++)
   {
     int ncapsule = cptSize;
-    ncapsule += (ii < remainder_caps) ? 1 : 0;
+    ncapsule += (ii < remainder_caps) ? increment + 1 : increment + 0;
     cptsizes_in_branch.push_back(ncapsule);
   }
   Capsule* capPtr = &branch->_capsules[ncaps - 1];

@@ -18,6 +18,7 @@
 #include "CG_SpineAttachment_VmCai.h"
 #include "rndm.h"
 #include <cmath>
+#include <cfloat>
 #include "NTSMacros.h"
 
 SpineAttachment_VmCai::SpineAttachment_VmCai() 
@@ -41,7 +42,7 @@ void SpineAttachment_VmCai::produceInitialState(RNG& rng)
   //  with complex geometry, calculating the resistance be much more complicated
   //  https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistance_versus_resistivity_in_complicated_geometries
   //  SOLUTION: l = distance from 2 center points in neck + compartment
-  //     l = 1/2 nec-length + r2
+  //     l = 1/2 neck-length + r2
   //            A = pi * ((r1+r2)/2)^2
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
@@ -56,26 +57,11 @@ void SpineAttachment_VmCai::produceState(RNG& rng) {}
 
 void SpineAttachment_VmCai::computeState(RNG& rng)
 {
+	//i = index of compartment this connexon is connecting to
+	//j = index of compartment from the other side
   float V = *Vj - *Vi;
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
-}
-
-void SpineAttachment_VmCai::setCaPointers(
-    const String& CG_direction, const String& CG_component,
-    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
-    Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
-    CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
-{
-  if (_gotAssigned)
-	  assert(index == CG_inAttrPset->idx);
-  else
-  {
-	  index = CG_inAttrPset->idx;
-	  _gotAssigned = true;
-  }
-  assert(getSharedMembers().CaConcentrationConnect);
-  Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
 }
 
 void SpineAttachment_VmCai::setVoltagePointers(
@@ -95,6 +81,24 @@ void SpineAttachment_VmCai::setVoltagePointers(
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 }
+
+void SpineAttachment_VmCai::setCaPointers(
+    const String& CG_direction, const String& CG_component,
+    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+    Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
+    CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
+{
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
+  else
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
+  assert(getSharedMembers().CaConcentrationConnect);
+  Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);
+}
+
 
 void SpineAttachment_VmCai::set_A_and_len(
     const String& CG_direction, const String& CG_component,

@@ -856,6 +856,7 @@ double Params::getChemicalSynapseCost(std::string chemicalSynapseId)
 //    want to retrieve
 // OUTPUT:
 //    modelParams = the list of pair (parameter, value) for the give nodeType
+//        such 'value' are input via the *params.par file
 void Params::getModelParams(
     ModelType modelType, std::string nodeType, key_size_t key,
     std::list<std::pair<std::string, dyn_var_t> >& modelParams)
@@ -2000,6 +2001,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
 
     for (int i = 0; i < n; i++)
     {
+      jumpOverCommentLine(fpF);
       for (unsigned int j = 0; j < sz1; ++j)
       {
         if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
@@ -2931,6 +2933,7 @@ NOTE: must starts with '<' and ends with'>'
 			std::string delimiter = "=";
 			size_t pos = (*ii).find(delimiter);
 			std::string name = (*ii).substr(0, pos);
+			StringUtils::trim(name);
 			(*ii).erase(0, pos + delimiter.length());
 
 			delimiter = " =";

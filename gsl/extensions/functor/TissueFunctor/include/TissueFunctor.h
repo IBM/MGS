@@ -361,6 +361,17 @@ class TissueFunctor : public CG_TissueFunctorBase
       _backwardSolvePointTypesMap;
 
   bool _readFromFile;
+#ifdef IDEA1
+  //The idea is that for each ComputeBranch
+  //instead of using a certain fraction from 1 capsule (one at proximal-end and 
+  //                                                   one at distal-end)
+  //for creating
+  // the branchpoint compartment
+  // we can make it a bigger compartment by taking the whole 'x' capsules from each side
+  //   (if possible, i.e. the number of compartment on that side is > 'x'
+  //   and each compartment has >= '3x' capsules)
+//  std::map<ComputeBranch*, std::pair<int, int>> _numCapsulesEachSideForBranchPointMap; // we use this information to determine how many capsule is reserved for a branchpoint
+#endif
 
   SegmentDescriptor _segmentDescriptor;
 #endif

@@ -19,8 +19,8 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
   dyn_var_t g;     // [nS/um^2]
   dyn_var_t gbar;  // [nS/um^2]
   dyn_var_t gbar0;
-  dyn_var_t w;     // [unitless]
-  dyn_var_t buffer;
+  dyn_var_t w;     // [unitless] - plasticity factor (if enabled)
+  dyn_var_t buffer; //[nS/ms]  - METAplasticity factor (if enabled)
   dyn_var_t r; // fraction of opening receptors
   dyn_var_t I_Ca; // [pA/um^2]
   dyn_var_t E_Ca; // [mV]
@@ -124,14 +124,14 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
 
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
      BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
-    //REMEMBER: When use in C++ code, only use Vpost[0]
+    //REMEMBER: When use in C++ code, only use Vpost[indexPost]
     VoltageArrayProducer.voltageArray >> Vpost;
     BranchDataProducer.branchData >> branchDataPrePost;
-    setPostIndex(); // so that Vpost[0] point to the voltage in the proper compartment index 
+    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
   }
 
   Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
-    //REMEMBER: When use in C++ code, only use Ca_IC[0]
+    //REMEMBER: When use in C++ code, only use Ca_IC[indexPost]
     CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
   }
 

@@ -28,7 +28,8 @@
 #elif CHANNEL_HCN == HCN_HUGUENARD_MCCORMICK_1992
 #define BASED_TEMPERATURE 35.5  // Celcius
 #define Q10 3.0
-#elif CHANNEL_HCN == HCN_KOLE_2006
+#elif CHANNEL_HCN == HCN_KOLE_2006 || \
+	  CHANNEL_HCN == HCN_HAY_2011
 #define BASED_TEMPERATURE 35  // Celcius
 #define Q10 3.0
 #endif
@@ -43,7 +44,8 @@ class ChannelHCN : public CG_ChannelHCN
   void update(RNG& rng);
   void initialize(RNG& rng);
   virtual ~ChannelHCN();
-#if CHANNEL_HCN == HCN_KOLE_2006
+#if CHANNEL_HCN == HCN_KOLE_2006 || \
+    CHANNEL_HCN == HCN_HAY_2011
   dyn_var_t conductance(int i);
 #endif
 

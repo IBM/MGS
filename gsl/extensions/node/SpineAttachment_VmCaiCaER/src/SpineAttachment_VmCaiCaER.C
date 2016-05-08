@@ -36,8 +36,6 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   assert(CaERi);
   assert(CaERj);
   // NOTE: g (nS) which is infered from R (GigaOhm)
-  // NOTE: g (nS) which is infered from R (GigaOhm)
-  // NOTE: g (nS) which is infered from R (GigaOhm)
   //   R = rho. l / A
   //   rho (GigaOhm.cm) = specific resisitivity
   //   l = length of diffusion
@@ -52,8 +50,8 @@ void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
   assert(Raxial > MIN_RESISTANCE_VALUE);
-  dyn_var_t A = std::abs(Ai - *Aj);
-  dyn_var_t len = (*leni + *lenj) / 2.0;
+  dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
+  dyn_var_t len = (*leni + *lenj) / 2.0; //[um]
   g = A / (Raxial * len);            // [nS]
   Caconc2current = A * DCa * zCa * zF / (1000000.0*len);
   CaERconc2current = A * DCaER * zCa * zF / (1000000.0*len);

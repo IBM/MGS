@@ -20,6 +20,7 @@
 #include <iostream>
 #include "math.h"
 #include <limits>
+#include "NTSMacros.h"
 
 // Destexhe-Mainen-Sejnowski (1994)
 // The Glutamate neurotransmitter concentration, i.e. [NT]
@@ -37,6 +38,7 @@
 #define NEUROTRANSMITTER      \
   (getSharedMembers().NTmax / \
    (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
+
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 #define NEUROTRANSMITTER      *Glut
 #endif
@@ -52,7 +54,9 @@
 #define pStop (getSharedMembers().plasticityStopAt)
 
 #if SIMULATION_INVOLVE  == VMONLY
-  #define Cai_base  0.1e-3 // [mM]
+//NOTE: TAU = time-constant for learning
+//       i.e. Ca2+-dependent learning rate is 1/TAU
+  #define Cai_base  0.1 // [uM]
   #define TAU (100.0 / (100.0 / 0.001 + pow(Cai_base, 3)) + 1000.0)
   #define CAFUN                                       \
   	(0.25 + sigmoid(Cai_base - 0.55, 80) - \
@@ -90,7 +94,8 @@
 //#define MGBLOCK 1.0/(1.0 +
 // exp(-0.122*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57)
 ////Adjusted sigmoid to not get calcium transients at -60mV
-#else
+#elif RECEPTOR_NMDA == NMDAR_POINTPROCESS
+// No Mg2+ blocks
 #define MGBLOCK  1
 #endif
 
@@ -139,13 +144,12 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 {
   // Calculate receptor conductance
   dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
-	dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA)/2.0 * Tscale; 
-	r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale)/ tmp;
-  //dyn_var_t A = Tscale * (BETA + ALPHANEUROTRANSMITTER) / 2.0;
-  //r = (Tscale * ALPHANEUROTRANSMITTER + r * (1.0 - A)) / (1.0 + A);
+  dyn_var_t A = Tscale * (BETA + ALPHANEUROTRANSMITTER) / 2.0;
+  r = (Tscale * ALPHANEUROTRANSMITTER + r * (1.0 - A)) / (1.0 + A);
 
 	//TODO: TUAN incorporate the effect of Glycine into gating dynamics
   g = gbar * MGBLOCK * r * (1 - KETAMINE) ;
+//  if (getSimulation().getIteration().(*(getSharedMembers().deltaT))
 
 #if SIMULATION_INVOLVE  == VMONLY
     dyn_var_t cai = Cai_base;
@@ -153,7 +157,8 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 		dyn_var_t cai = (*Ca_IC)[indexPost];
 #endif
   // Updates the channel reversal potential
-  E_Ca = (0.04343 * *(getSharedMembers().T) *
+  // RT/(zCa*F) * ln(Cao/Cai)
+  E_Ca = (R_zCaF * *(getSharedMembers().T) *
           log(*(getSharedMembers().Ca_EC) / cai));
 
   dyn_var_t gCa = g;

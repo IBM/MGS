@@ -31,25 +31,35 @@
 #define alpha 0.28  // [1/ms]
 #define beta 0.480  // [1/ms]
 
-#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT
+#elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT
 // Kohler -...-Adelman (1996) Science 
 //   Small-conductance, Ca2+ activated potassium channels from mammalian brain
 //   1. SK permeate to K+ rather than Na+
 //   2. record data for hSK1 and rSK2
 //   3. current activate instantly and show no inactivation (during 500ms test pulse)
+//   SK2 and SK3 is apamin-sensitive
+//   SK1 is apamin-insensitive
 //   rSK2: gmax = 3.6 [nS]
 //   hSK1: gmax = 13.5 [nS]
 //  NOTE: Hill_coeff == steepness
 #define KCa_half  0.43  // [uM]
 #define Hill_coef  4.8 // 4.8+/-1.46  
+#define TAU 1.0
 
-#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN
+#elif CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
 #define KCa_half  0.71  // [uM]
 #define Hill_coef  3.9  // 3.9+/-0.45 suggest 4 Ca2+ binding sites involved
+#define TAU 1.0
 #else
 NOT IMPLEMENTED YET
 #endif
 
+#ifndef  alpha
+#define alpha 0.00001  // [1/ms]
+#endif
+#ifndef beta
+#define beta 0.000010  // [1/ms]
+#endif
 // GOAL: find K(V) = K(0) * exp(-zCa * delta * FV / (RT))
 //   - dissociation constant as a function of voltage
 // Unit on return: mM
@@ -130,10 +140,10 @@ void ChannelSK::update(RNG& rng)
 
 	}
     g[i] = gbar[i] * fO[i] ;
-#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT || \
-	  CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN
+#elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT || \
+	  CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
 	// Rempe-Chopp 2006
-	dyn_var_t minf = (1.0)/ (1.0 + pow(KCa_half/ca, Hill_coef));
+	dyn_var_t minf = (1.0)/ (1.0 + pow(KCa_half/cai, Hill_coef));
 	dyn_var_t qm = 0.5 * dt * getSharedMembers().Tadj/ TAU ;
 	//fO means 'm' (activation gate)
     //m[i] = (2 * minf * qm - m[i] * (qm-1)) / (qm + 1);
@@ -184,11 +194,11 @@ void ChannelSK::initialize(RNG& rng)
 	dyn_var_t Oinf = a/(sum); 
 	fO[i] = Oinf;
     g[i] = gbar[i]*fO[i];
-#elif CHANNEL_SK == SK_KOHLER_ADELMAN_1996_RAT || \
-	  CHANNEL_SK == SK_KOHLER_ADELMAN_1996_HUMAN
-    //m[i] = 1.0/(1 + pow(KCa_half/ca,Hill_coef));
+#elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT || \
+	  CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
+    //m[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));
     //g[i] = gbar[i]*m[i];
-    fO[i] = 1.0/(1 + pow(KCa_half/ca,Hill_coef));
+    fO[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));
     g[i] = gbar[i]*fO[i];
 #endif
   }

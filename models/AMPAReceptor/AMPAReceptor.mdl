@@ -8,14 +8,16 @@
 
 // Simplified 2-state model 
 Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer, 
-     ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer 
+     ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer,
+     CurrentProducer
 {
 /*{{{*/
   //DATA
 	//{{{
-  dyn_var_t g;
-  dyn_var_t gbar;
+  dyn_var_t g;  //[nS/um^2]
+  dyn_var_t gbar; // [nS/um^2]
   dyn_var_t r; // fraction of opening receptors
+  dyn_var_t I; // [pA/um^2] 
 
   //{{{only use with preSynapticPoint
   dyn_var_t* Vpre;  // [mV] preSynaptic voltage
@@ -24,6 +26,7 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
   dyn_var_t* w;
   int indexPost;
   int* [] indexPrePost;
+  dyn_var_t []* Vpost;
  
   BranchDataStruct* [] branchDataPrePost;
   //}}}
@@ -56,6 +59,7 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
   ReversalPotentialProducer.reversalPotential << &Shared.E;
   BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
   IndexArrayProducer.indexArray << &indexPrePost;
+  CurrentProducer.current << &I;
 
   InAttrPSet {
     string identifier;
@@ -85,7 +89,9 @@ instead of 'Glut' and 'Gaba'
 
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
     BranchDataProducer.branchData >> branchDataPrePost;
-    setPostIndex();
+    //REMEMBER: When use in C++ code, only use Vpost[indexPost]
+    VoltageArrayProducer.voltageArray >> Vpost;
+    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
   }
 
   Connection Pre Node (PSet.identifier=="receptor") Expects WeightProducer {
@@ -105,14 +111,16 @@ instead of 'Glut' and 'Gaba'
 
 // Markov-based model
 Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProducer, 
-     ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer 
+     ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer,
+     CurrentProducer
 {
 /*{{{*/
   //DATA
 	//{{{
   dyn_var_t g;
   dyn_var_t gbar;
-	dyn_var_t fC0, fC1, fD1, fC2, fD2, fO;
+  dyn_var_t fC0, fC1, fD1, fC2, fD2, fO;
+  dyn_var_t I; // [pA/um^2] 
 
   //{{{only use with preSynapticPoint
   dyn_var_t* Vpre;
@@ -121,6 +129,7 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
   dyn_var_t* w;
   int indexPost;
   int* [] indexPrePost;
+  dyn_var_t []* Vpost;
  
   BranchDataStruct* [] branchDataPrePost;
   //}}}
@@ -158,6 +167,7 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
   ReversalPotentialProducer.reversalPotential << &Shared.E;
   BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
   IndexArrayProducer.indexArray << &indexPrePost;
+  CurrentProducer.current << &I;
 
   InAttrPSet {
     string identifier;
@@ -181,7 +191,9 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, MaximumConductanceProdu
 
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
     BranchDataProducer.branchData >> branchDataPrePost;
-    setPostIndex();
+    //REMEMBER: When use in C++ code, only use Vpost[indexPost]
+    VoltageArrayProducer.voltageArray >> Vpost;
+    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
   }
 
   Connection Pre Node (PSet.identifier=="receptor") Expects WeightProducer {

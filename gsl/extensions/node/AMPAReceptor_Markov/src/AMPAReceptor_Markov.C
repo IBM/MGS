@@ -37,12 +37,12 @@
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
 // dynamics of neurotransmitter
-// NOTE: Plan to (should be updated in SynapticCleft nodetype)
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 #define NEUROTRANSMITTER      \
   (getSharedMembers().NTmax / \
    (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
+// NOTE: (should be updated in SynapticCleft nodetype)
 #define NEUROTRANSMITTER      *Glut
 #endif
 
