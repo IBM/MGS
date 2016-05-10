@@ -26,6 +26,7 @@ class SpineAttachment_VmCai : public CG_SpineAttachment_VmCai
 {
   public:
   void produceInitialState(RNG& rng);
+  void computeInitialState(RNG& rng);
   void produceState(RNG& rng);
   void computeState(RNG& rng);
   virtual void setCaPointers(

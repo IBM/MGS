@@ -241,7 +241,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _backwardSolvePointTypesMap(f._backwardSolvePointTypesMap),
       _readFromFile(f._readFromFile),
 #ifdef IDEA1
-	 // _numCapsulesEachSideForBranchPointMap(f._numCapsulesEachSideForBranchPointMap)
+	  _numCapsulesEachSideForBranchPointMap(f._numCapsulesEachSideForBranchPointMap)
 #endif
       _segmentDescriptor(f._segmentDescriptor)
 #endif
@@ -2400,7 +2400,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
     for (; titer != tend; ++titer)
     {//traverse all the recorded Touch(es)
       if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
-	  //make sure only consider the touch belonging to the current MPI process
+	  //make sure only consider the touch with one capsule belonging to the current MPI process
       key_size_t key1, key2;
       key1 = titer->getKey1();
       key2 = titer->getKey2();
@@ -4175,13 +4175,13 @@ void TissueFunctor::doConnector(LensContext* lc)
       {  // touch falls into chemical-synapse group
         // key1    key2
         // 2 1 0   1 3   [AMPAmush NMDAmush] [Voltage] [Voltage] [Voltage]
-        // [Voltage, Calcium]  1.0
+        //                                   [Voltage, Calcium]  1.0
         //--> converted into a list, each element is a map as
         //    std::map<std::string, std::pair<std::list<std::string>,
         //                                    std::list<std::string> > >
         //                                    _targets;
         // e.g.: the above example has a list of 2 elements, each element is
-        //  <AMPAmush, pair( "Voltage", "Voltage" )
+        //  <AMPAmush, pair( ["Voltage"], ["Voltage"] )
         //  <NMDAmush, pair( ["Voltage"], ["Voltage", "Calcium"] )
         // NOTE: csiter iterate through the list
         std::list<Params::ChemicalSynapseTarget>::iterator csiter,
@@ -5170,9 +5170,19 @@ bool TissueFunctor::setGenerated(
 		  newTouchIsNeckDenShaft = (*titer).hasSpineNeck(key_spineneck);
 		  double propSpineNeck =0;
 		  propSpineNeck = (key1 == key_spineneck)? (*titer).getProp1(): (*titer).getProp2();
-			  
+
 		  //more constraint
-		  newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck > 0.99);
+		  //newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck > 0.99);
+		  //Using propSpineNeck == 1.0 help to reduce the chance for the below bug to occur
+		  //TUAN TODO: there is still potential bug when the spine neck is cut by the 
+		  //  TissueSlicer  and thus a SpineAttachment* is created but not sure on which 
+		  //  MPIProcess
+		  //newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck == 1.0);
+		  Capsule* neckCapsule =
+		      &_tissueContext->_capsules[_tissueContext->getCapsuleIndex(key_spineneck)];
+		  ComputeBranch* branch = neckCapsule->getBranch();
+		    newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck > 0.99) and
+		  	  branch->_daughters.size() == 0;
 		  if (newTouchIsNeckDenShaft )
 		  {
 			  bool isSide1 = (key_spineneck == key1);
@@ -5261,6 +5271,7 @@ bool TissueFunctor::setGenerated(
 
 			  //more constraint
 			  newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton > 0.99);
+			  //newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton == 1.0);
 			  if (newTouchIsSpinelessChemSynapse)
 			  {//detect if any capsule of the Touch already involved in 
 				  //another chemical synapse-connection. If so, ignore it (or 
@@ -5824,6 +5835,9 @@ int TissueFunctor::getNumCompartments(
   // we need this in case the ncaps is less than _compartmentSize
   // e.g. soma has only 1 capsule
   int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
+#ifdef IDEA1
+  //suppose the branch is long enough, reverse some capsules at each end for branchpoint
+#endif
   // Find: # compartments in the current branch
   ncpts = (int(floor(double(ncaps) / double(cptSize))) > 0)
               ? int(floor(double(ncaps) / double(cptSize)))

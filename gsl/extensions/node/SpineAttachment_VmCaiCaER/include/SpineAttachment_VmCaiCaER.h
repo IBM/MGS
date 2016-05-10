@@ -12,6 +12,7 @@ class SpineAttachment_VmCaiCaER : public CG_SpineAttachment_VmCaiCaER
 {
   public:
   void produceInitialState(RNG& rng);
+  void computeInitialState(RNG& rng);
   void produceState(RNG& rng);
   void computeState(RNG& rng);
   virtual void setVoltagePointers(

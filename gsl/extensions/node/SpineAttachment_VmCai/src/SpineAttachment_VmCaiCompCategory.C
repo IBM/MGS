@@ -13,6 +13,18 @@ SpineAttachment_VmCaiCompCategory::SpineAttachment_VmCaiCompCategory(
 void SpineAttachment_VmCaiCompCategory::count()
 {
   long long totalCount, localCount = _nodes.size();
+  //TUAN DEBUG MESSAGE
+  //int MPIsize;
+  //MPI_Comm_size(MPI_COMM_WORLD, &MPIsize);
+  //for (int i=0; i < MPIsize; i++)
+  //{
+  //    if (i == getSimulation().getRank())
+  //  	  std::cerr << "process : " << getSimulation().getRank()
+  //  		  << " has " << localCount << "spine-node" << std::endl;
+  //    MPI_Barrier(MPI_COMM_WORLD);
+  //}
+  //END
+
   MPI_Allreduce((void*)&localCount, (void*)&totalCount, 1, MPI_LONG_LONG,
                 MPI_SUM, MPI_COMM_WORLD);
   float localVar, totalVar,

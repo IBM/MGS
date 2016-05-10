@@ -49,7 +49,7 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
     DimensionStruct* []* dimensionsConnect;
   }
 
-  InitPhase produceInitialState(Vi); // IMPORTANT: a treat - whenever a pointer to something else 
+  InitPhase produceInitialState(Vi, leni), computeInitialState(); // IMPORTANT: a treat - whenever a pointer to something else 
                        // is passed out via the Interface, make sure you pass it to the 
                        // InitPhase's method and RuntimePhase's method that synchronize data
   RuntimePhase produceState(Vi), computeState;
@@ -137,7 +137,7 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
     /*}}}*/
   }
 
-  InitPhase produceInitialState(Vi, Cai);
+  InitPhase produceInitialState(Vi, Cai, leni), computeInitialState();
   RuntimePhase produceState(Vi, Cai), computeState;
 
   //Output
@@ -249,7 +249,7 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     /*}}}*/
   }
 
-  InitPhase produceInitialState(Vi, Cai, CaERi);
+  InitPhase produceInitialState(Vi, Cai, CaERi, leni), computeInitialState();
   RuntimePhase produceState(Vi, Cai, CaERi), computeState;
 
   VoltageProducer.voltage << Vi;

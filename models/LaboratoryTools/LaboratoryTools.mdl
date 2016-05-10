@@ -298,6 +298,112 @@ Variable CurrentDisplay
 //}}}
 } 
 
+//Variable GenericDataDisplay
+//{//any kind of data (need user to interpret)
+////{{{
+//	string fileName;
+//	int [] indices;
+//
+//	dyn_var_t []* [] I_channel;
+//	dyn_var_t []* I_channelConnect;
+//	BranchDataStruct* [] channelBranchData;
+//
+//	dyn_var_t* [] I_synapse;
+//	BranchDataStruct* []* [] synapseBranchData;
+//	BranchDataStruct* []* synapseBranchDataConnect;
+//	int* [] [] synapseIndices;
+//	int* [] synapseIndicesConnect;
+//
+//	BranchDataStruct* [] connexonBranchData;
+//	int* [] connexonIndices;
+//
+//	dyn_var_t* deltaT;
+//
+//	InitPhase initialize;
+//	FinalPhase finalize;
+//	TriggeredFunction dataCollection;
+//
+//	InAttrPSet {
+//		string identifier;
+//	}
+//
+//	UserFunction setUpPointers;
+//
+//	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer {
+//		CurrentArrayProducer.currents >> I_channelConnect;
+//		BranchDataProducer.branchData >> channelBranchData;
+//		setUpPointers();
+//	}
+//	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
+//		CurrentProducer.current >> I_synapse;
+//		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+//		IndexArrayProducer.indexArray >> synapseIndicesConnect;
+//		setUpPointers();
+//	}
+//	Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
+//		CurrentProducer.current >> I_synapse;
+//		BranchDataProducer.branchData >> connexonBranchData;
+//		IndexProducer.index >> connexonIndices;
+//	}
+//	Connection Pre Constant () Expects TimeStepProducer {
+//		TimeStepProducer.deltaT >> deltaT;
+//	}
+////}}}
+//} 
+//
+//Variable IndirectCurrentDisplay
+//{//TUAN TODO: how to implement that we can provide current for channel that only produce g and Erev
+////{{{
+//	string fileName;
+//	int [] indices;
+//
+//	dyn_var_t []* [] I_channel;
+//	dyn_var_t []* I_channelConnect;
+//	BranchDataStruct* [] channelBranchData;
+//
+//	dyn_var_t* [] I_synapse;
+//	BranchDataStruct* []* [] synapseBranchData;
+//	BranchDataStruct* []* synapseBranchDataConnect;
+//	int* [] [] synapseIndices;
+//	int* [] synapseIndicesConnect;
+//
+//	BranchDataStruct* [] connexonBranchData;
+//	int* [] connexonIndices;
+//
+//	dyn_var_t* deltaT;
+//
+//	InitPhase initialize;
+//	FinalPhase finalize;
+//	TriggeredFunction dataCollection;
+//
+//	InAttrPSet {
+//		string identifier;
+//	}
+//
+//	UserFunction setUpPointers;
+//
+//	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer {
+//		CurrentArrayProducer.currents >> I_channelConnect;
+//		BranchDataProducer.branchData >> channelBranchData;
+//		setUpPointers();
+//	}
+//	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
+//		CurrentProducer.current >> I_synapse;
+//		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+//		IndexArrayProducer.indexArray >> synapseIndicesConnect;
+//		setUpPointers();
+//	}
+//	Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
+//		CurrentProducer.current >> I_synapse;
+//		BranchDataProducer.branchData >> connexonBranchData;
+//		IndexProducer.index >> connexonIndices;
+//	}
+//	Connection Pre Constant () Expects TimeStepProducer {
+//		TimeStepProducer.deltaT >> deltaT;
+//	}
+////}}}
+//} 
+
 Variable CaCurrentDisplay
 {
 //{{{

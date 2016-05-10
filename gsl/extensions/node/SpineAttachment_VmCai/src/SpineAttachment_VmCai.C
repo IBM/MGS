@@ -28,6 +28,10 @@ SpineAttachment_VmCai::SpineAttachment_VmCai()
 
 void SpineAttachment_VmCai::produceInitialState(RNG& rng)
 {
+
+}
+void SpineAttachment_VmCai::computeInitialState(RNG& rng)
+{
   assert(Vi);
   assert(Vj);
   assert(Cai);
@@ -106,11 +110,18 @@ void SpineAttachment_VmCai::set_A_and_len(
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
 {
+  if (_gotAssigned)
+	  assert(index == CG_inAttrPset->idx);
+  else
+  {
+	  index = CG_inAttrPset->idx;
+	  _gotAssigned = true;
+  }
   assert(getSharedMembers().dimensionsConnect);
   String cptType = CG_inAttrPset->typeCpt;
   String typeDenShaft("den-shaft");
   String typeSpineNeck("spine-neck");
-  DimensionStruct* dimension = (*(getSharedMembers().dimensionsConnect))[0];
+  DimensionStruct* dimension = (*(getSharedMembers().dimensionsConnect))[index];
   if (cptType == typeDenShaft)
   {
     // len2 = radius of the shaft

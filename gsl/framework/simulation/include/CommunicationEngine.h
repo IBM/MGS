@@ -143,6 +143,10 @@ class CommunicationEngine
       /* MPI_W begin: measure MPI collective communication */
       now = MPI_Wtime();
 #endif
+	  //TUAN DEBUG MSG
+	  //if (getRank()==0)
+	  //	  std::cerr << "current phase name: " << phaseName << std::endl; 
+	  //END 
       MPI_Alltoallv((void*)_vsbuff, snd->counts, snd->displs, MPI_CHAR,
 		    (void*)_vrbuff, rcv->counts, rcv->displs, MPI_CHAR, _phaseCommunicators[phaseName]);
 
