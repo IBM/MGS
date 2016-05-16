@@ -1,0 +1,80 @@
+#ifndef PassiveLeakCurrent_MDL
+#define PassiveLeakCurrent_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+Node PassiveLeakCaER  Implements
+		 BranchDataProducer, 
+     CaFluxArrayProducer
+{
+/*{{{*/
+	//DATA
+	//{{{
+	//internal data
+	dyn_var_t [] tau;
+	dyn_var_t [] J_Ca; // [uA/ms]
+	// reference data
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+	dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
+	BranchDataStruct* branchData; 
+	DimensionStruct* []* dimensions;
+	//int index; //index of the compartment in branch
+
+	//SHARED DATA
+	Shared {//in xxxCompCategory.C
+		//{{{
+		//dyn_var_t* deltaT; // [ms]
+		//dyn_var_t* T;     // [K]
+		//dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+    //dyn_var_t tau_leak; // [msec] - time constant of leaking Ca2+ out of the ER membrane 
+    dyn_var_t v_leak; // [1/msec] - the leak rate through ER membrane
+		InitPhase computeTadj; 
+		//}}}
+	}
+	//}}}
+
+	RuntimePhase update();
+	InitPhase initialize;
+
+	//CaCurrentArrayProducer.currents << &I_Ca;
+	CaFluxArrayProducer.fluxes << &J_Ca;
+	BranchDataProducer.branchData << branchData;
+
+	InAttrPSet {//information of the incoming connection
+		string identifier; // name of the incoming node
+		int idx;   // if identifier = name of the compartment variable 
+		// then idx = index of the compartment on a branch
+	}
+
+  //Connection setup (input)
+
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer
+	BranchDataProducer, DimensionArrayProducer 
+	{
+		BranchDataProducer.branchData >> branchData;
+		DimensionArrayProducer.dimensionArray >> dimensions;
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+	}
+
+	Connection Pre Node (PSet.identifier=="IC[CalciumER]") Expects CaConcentrationArrayProducer
+	{
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_ER;
+	}
+	//Connection Pre Constant (PSet.identifier=="EC") 
+	//	Expects TemperatureProducer 
+	//{
+	//		TemperatureProducer.T >> Shared.T;
+	//}
+
+	//Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+	//	TimeStepProducer.deltaT >> Shared.deltaT;
+	//}
+/*}}}*/
+}
+
+#endif

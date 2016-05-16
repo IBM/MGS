@@ -4555,12 +4555,13 @@ void TissueFunctor::doConnector(LensContext* lc)
   }
 }
 
-// Perform necessary setup to connect a variable nodetype (for doing I/O)
-// to a particular nodetype in the graph with the data that you want to be
-// recorded
-// The data (to be recorded) is identified based on
+// GOAL: returns a nodeset satisfying the given criteria
+//  This nodeset will be used to connect to a variable automatically by the MGS system
+//
+// The criteria to select the nodeset
 //    1. CATEGORY (a string) which can be either "BRANCH", "JUNCTION",
 //    "CHANNEL", "SYNAPSE"
+//        This must match with the category of the type-name given next
 //    2. TYPE (a string) which is the name of argument passed to the 'nodekind',
 //    e.g. nodekind="Channels[Nat]",
 //                           then the name to be used is 'Nat'
@@ -4571,7 +4572,8 @@ void TissueFunctor::doConnector(LensContext* lc)
 //         'ChemicalSynapses[]'
 //    3. NEURON_INDEX (an integer, maybe optional) which is the index of the
 //    neuron based on the order given in neurons.txt
-//  NOTE: only required if CATEGORY is BRANCH, JUNCTION, or CHANNEL
+// NOTE: only required if CATEGORY is BRANCH, JUNCTION, or CHANNEL
+// NOTE: It is mainly used identify the data (to be recorded) 
 void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 {
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;

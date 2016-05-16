@@ -47,3 +47,10 @@ models/**/*.C
 gsl/extensions/struct/*
 *.swn
 graphs/**/runs/**
+graphs/**/L5bPCmodelsEH/**
+graphs/**/*.out
+graphs/**/*.par
+graphs/**/out*/**
+graphs/**/*backup*/**
+graphs/**/*ongoing*/**
+graphs/**/*test*/**

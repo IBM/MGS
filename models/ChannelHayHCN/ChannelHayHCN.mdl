@@ -1,0 +1,50 @@
+#ifndef ChannelHayHCN_MDL
+#define ChannelHayHCN_MDL
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../../nti/include/MaxComputeOrder.h"
+
+Node ChannelHayHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+  dyn_var_t [] m;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
+
+  dyn_var_t [] gbar_dists;
+  dyn_var_t [] gbar_values;
+
+  dyn_var_t []* V;
+
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+
+  Shared {
+    dyn_var_t* deltaT;
+    dyn_var_t [] E_h;
+  }
+
+  RuntimePhase update;
+  InitPhase initialize;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_h;
+  BranchDataProducer.branchData << branchData;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif
