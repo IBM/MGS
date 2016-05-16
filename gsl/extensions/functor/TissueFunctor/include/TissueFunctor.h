@@ -49,7 +49,7 @@ class ComputeBranch;
 class CG_CompartmentDimension;
 class NodeAccessor;
 
-class TissueFunctor : public CG_TissueFunctorBase
+class TissueFunctor : public CG_TissueFunctorBase 
 {
   friend class TissueLayoutFunctor;
   friend class TissueNodeInitFunctor;
@@ -76,8 +76,9 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getCptIndex(Capsule*);
   dyn_var_t getFractionCapsuleVolumeFromPre(ComputeBranch* branch);
   dyn_var_t getFractionCapsuleVolumeFromPost(ComputeBranch* branch);
-	int getNumCompartments(
-			ComputeBranch* branch, std::vector<int> &cptsizes_in_branch, bool& isDistalEndSeeImplicitBranchingPoint);
+  int getNumCompartments(ComputeBranch* branch,
+                         std::vector<int>& cptsizes_in_branch,
+                         bool& isDistalEndSeeImplicitBranchingPoint);
   int getNumCompartments(ComputeBranch* branch,
                          bool& isDistalEndSeeImplicitBranchingPoint);
   int getNumCompartments(ComputeBranch* branch);
@@ -86,10 +87,10 @@ class TissueFunctor : public CG_TissueFunctorBase
   // perform neuron development
   void neuroDev(Params* params, LensContext* CG_c);
   // perform touch detection from
-	//    1. the list of neurons (.swc files) and 
-	//    2. criteria for touch detection in DetParams file
+  //    1. the list of neurons (.swc files) and
+  //    2. criteria for touch detection in DetParams file
   void touchDetect(Params* params, LensContext* CG_c);
-	// perform spine creation
+  // perform spine creation
   void createSpines(Params* params, LensContext* CG_c);
   //
   int compartmentalize(LensContext* lc, NDPairList* params,
@@ -102,11 +103,10 @@ class TissueFunctor : public CG_TissueFunctorBase
   // is expected to be 3-element array)+ radius + distance to soma)
   StructDataItem* getDimension(LensContext* lc, double* cds, dyn_var_t radius,
                                dyn_var_t dist2soma, dyn_var_t surface_area,
-															 dyn_var_t volume, dyn_var_t length);
+                               dyn_var_t volume, dyn_var_t length);
   StructDataItem* getDimension(LensContext* lc, double* cds1, double* cds2,
                                dyn_var_t radius, dyn_var_t dist2soma,
-                               dyn_var_t surface_area,
-															 dyn_var_t volume);
+                               dyn_var_t surface_area, dyn_var_t volume);
   // get the list of name of nodes (passed in GSL via nodekind)
   // from a list of layers represented as NDPairList*
   void getNodekind(const NDPairList* layerNdpl,
@@ -140,16 +140,15 @@ class TissueFunctor : public CG_TissueFunctorBase
   void getElectricalSynapseProbabilities(std::vector<double>& probabilities,
                                          TouchVector::TouchIterator& titer,
                                          std::string nodeType);
-	void getBidirectionalConnectionProbabilities(
-			std::vector<double>& probabilities, TouchVector::TouchIterator& titer,
-    std::string nodeType);
+  void getBidirectionalConnectionProbabilities(
+      std::vector<double>& probabilities, TouchVector::TouchIterator& titer,
+      std::string nodeType);
   // void getSpineBranchProbabilities(std::vector<double>& probabilities,
   // TouchVector::TouchIterator & titer, int direction, std::string nodeType);
   void getChemicalSynapseProbabilities(std::vector<double>& probabilities,
                                        TouchVector::TouchIterator& titer,
                                        std::string nodeType);
-  bool isPointRequired(TouchVector::TouchIterator& titer,
-                       std::string nodeType);
+  bool isPointRequired(TouchVector::TouchIterator& titer, std::string nodeType);
 
   // number of capsules that are organized into a single compartment
   // NOTE: This is not the exact number for each compartment, just
@@ -165,18 +164,19 @@ class TissueFunctor : public CG_TissueFunctorBase
 					specialTreatment=std::string());
   bool isGenerated(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
                    TouchVector::TouchIterator& titer, int type, int order);
-  void setNonGenerated(TouchVector::TouchIterator& titer, 
-                       std::string type, int order);
-  bool isNonGenerated(TouchVector::TouchIterator& titer, 
-                      std::string nodeType, int order);
+  void setNonGenerated(TouchVector::TouchIterator& titer, std::string type,
+                       int order);
+  bool isNonGenerated(TouchVector::TouchIterator& titer, std::string nodeType,
+                      int order);
   std::list<Params::ChemicalSynapseTarget>::iterator
       getChemicalSynapseTargetFromOrder(TouchVector::TouchIterator& titer,
-                                        std::string type,
-                                        int order);
+                                        std::string type, int order);
 
   RNG& findSynapseGenerator(int preRank, int postRank);
   void resetSynapseGenerator(RNG& rng, int rank1, int rank2);
   int getCountAndIncrement(std::map<int, int>& cmap, int);
+  //  void reviseTouchesForSpineAttachment();
+  //  int getRankCapsuleViaKey(key_size_t key);
 
   int _size;
   int _rank;
@@ -241,8 +241,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::map<std::string, std::map<Capsule*, int> > _capsuleCptPointIndexMap;
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
 
-	//NOTE: While parsing GSL, each layer is given an index, 
-	//                   starting from 0 for the first Layer
+  // NOTE: While parsing GSL, each layer is given an index,
+  //                   starting from 0 for the first Layer
   //[index-layer][density-index-of-node-that-channel-getinputs]
 	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
@@ -319,8 +319,8 @@ class TissueFunctor : public CG_TissueFunctorBase
       _generatedBidirectionalConnections;
   // std::map<Touch*, std::list<std::pair<int, int> > >
   // _generatedSpineBranch;
-  
-  // NOTE:  
+
+  // NOTE:
   // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>
   std::map<int, std::map<int, RNG> > _synapseGeneratorMap;
 
@@ -362,15 +362,19 @@ class TissueFunctor : public CG_TissueFunctorBase
 
   bool _readFromFile;
 #ifdef IDEA1
-  //The idea is that for each ComputeBranch
-  //instead of using a certain fraction from 1 capsule (one at proximal-end and 
+  // The idea is that for each ComputeBranch
+  // instead of using a certain fraction from 1 capsule (one at proximal-end and
   //                                                   one at distal-end)
-  //for creating
+  // for creating
   // the branchpoint compartment
-  // we can make it a bigger compartment by taking the whole 'x' capsules from each side
+  // we can make it a bigger compartment by taking the whole 'x' capsules from
+  // each side
   //   (if possible, i.e. the number of compartment on that side is > 'x'
   //   and each compartment has >= '3x' capsules)
-  std::map<ComputeBranch*, std::pair<int, int>> _numCapsulesEachSideForBranchPointMap; // we use this information to determine how many capsule is reserved for a branchpoint
+  std::map<ComputeBranch*, std::pair<int, int> >
+      _numCapsulesEachSideForBranchPointMap;  // we use this information to
+                                              // determine how many capsule is
+                                              // reserved for a branchpoint
 #endif
 
   SegmentDescriptor _segmentDescriptor;

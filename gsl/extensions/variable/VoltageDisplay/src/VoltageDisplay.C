@@ -24,6 +24,9 @@
 
 #include <memory>
 
+#define decimal_places 3
+#define fieldDelimiter "\t"
+
 void VoltageDisplay::initialize(RNG& rng)
 {
   if (V.size() > 0)
@@ -34,10 +37,17 @@ void VoltageDisplay::initialize(RNG& rng)
 		//e.g. somaVm.dat_0
     os << fileName << getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
-    outFile->precision(3);
-    (*outFile) << "#Time\tVoltage :";
+	// print out the header:
+	// NOTE: The first field is always the time, and then next each field
+	// represent the data from one specific recording compartment/channel
+	// This compartment/channel can be uniquely identified using the
+	// header information
+	// The header each field has the format
+	//[key-cpt,index-of-that-cpt](x,y,z,r,dist2soma) ...
+	outFile->precision(decimal_places);
+    (*outFile) << "#Time" << fieldDelimiter << "Voltage :";
     if (indices.size() == 0)
-    {//TUAN TODO: need to ask James (when this happens)
+    {
       for (unsigned int i = 0; i < dimensions.size(); ++i)
       {
         for (unsigned int j = 0; j < dimensions[i]->size(); ++j)
@@ -93,14 +103,14 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
     float current_time = float(getSimulation().getIteration()) * *deltaT; // [msec]
     (*outFile) << current_time; 
     if (indices.size() == 0)
-    {// TUAN TODO : again not sure when this occurs
+    {//perform I/O routine
       ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = V.begin(),
                                                        end1 = V.end();
       for (; it1 != end1; ++it1)
       {
         ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
                                           end2 = (*it1)->end();
-        for (; it2 != end2; ++it2) (*outFile) << std::fixed << "\t" << (*it2);
+        for (; it2 != end2; ++it2) (*outFile) << std::fixed << fieldDelimiter << (*it2);
       }
     }
     else
@@ -116,7 +126,7 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         for (; it3 != end3; ++it3)
         {
           assert(*it3 < (*it1)->size());
-          (*outFile) << std::fixed << "\t" << (**it1)[*it3];
+          (*outFile) << std::fixed << fieldDelimiter << (**it1)[*it3];
         }
       }
     }

@@ -53,6 +53,11 @@ SegmentDescriptor CaERConcentration::_segmentDescriptor;
   (distalAiis.size() > \
    1)  // connected to distal branch point for implicit solve
 
+#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
+#define DCa (getSharedMembers().DCaeff)
+#else
+#define DCa (getSharedMembers().DCa)
+#endif
 //#define DEBUG_HH
 // Conserved region (only change ClassName)
 //{{{
@@ -561,7 +566,8 @@ dyn_var_t CaERConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
   // return (getSharedMembers().DCa * radius * radius /
   //        (lengthsq * b->r * b->r)); /* needs fixing */
   dyn_var_t length = std::fabs(b->dist2soma - a->dist2soma);
-  return (getSharedMembers().DCa * radius * radius /
+  //return (getSharedMembers().DCa * radius * radius /
+  return (DCa * radius * radius /
           (length * length * b->r * b->r)); /* needs fixing */
 }
 
@@ -584,7 +590,8 @@ dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
   // return (M_PI * Rb * Rb * getSharedMembers().DCa /
   //        (V * sqrt(DISTANCE_SQUARED(a, b))));
   dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
-  return (M_PI * Rb * Rb * getSharedMembers().DCa / (V * length));
+  //return (M_PI * Rb * Rb * getSharedMembers().DCa / (V * length));
+  return (M_PI * Rb * Rb * DCa / (V * length));
 }
 
 // void CaERConcentration::setReceptorCaCurrent(

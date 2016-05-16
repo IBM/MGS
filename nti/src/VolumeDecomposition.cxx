@@ -448,9 +448,21 @@ int VolumeDecomposition::getSliceNumber(double coord, int dim)
   return lo;
 }
 
+//GOAL: return the rank of the MPI process at which the 
+//  coordinate of the enter of the Sphere 'sphere'
+//  falls within
 int VolumeDecomposition::getRank(Sphere& sphere)
 {
   double* coords=sphere._coords;
+  int sliceIndices[3];
+  sliceIndices[0] = getSliceNumber(coords[0], 0);
+  sliceIndices[1] = getSliceNumber(coords[1], 1);
+  sliceIndices[2] = getSliceNumber(coords[2], 2);
+  return getVolumeIndex(sliceIndices);	
+}
+
+int VolumeDecomposition::getRank(double* coords)
+{
   int sliceIndices[3];
   sliceIndices[0] = getSliceNumber(coords[0], 0);
   sliceIndices[1] = getSliceNumber(coords[1], 1);

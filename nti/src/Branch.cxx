@@ -76,7 +76,7 @@ Branch& Branch::operator=(const Branch& b)
 
 //   Revised this: should return the branch-lenght
 //   instead of the distance between the first and last segment
-const double Branch::getLength()
+double Branch::getLength() const
 {
   assert(_numberOfSegments > 0);
   // return sqrt(SqDist(_segments[0].getCoords(),

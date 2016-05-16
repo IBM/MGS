@@ -116,7 +116,6 @@
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
-
 #ifdef INFERIOR_OLIVE
 #include "InferiorOliveGlomeruliDetector.h"
 #endif
@@ -241,9 +240,10 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _backwardSolvePointTypesMap(f._backwardSolvePointTypesMap),
       _readFromFile(f._readFromFile),
 #ifdef IDEA1
-	  _numCapsulesEachSideForBranchPointMap(f._numCapsulesEachSideForBranchPointMap)
+      _numCapsulesEachSideForBranchPointMap(
+          f._numCapsulesEachSideForBranchPointMap)
 #endif
-      _segmentDescriptor(f._segmentDescriptor)
+          _segmentDescriptor(f._segmentDescriptor)
 #endif
 {
   if (f._layoutFunctor.get()) f._layoutFunctor->duplicate(_layoutFunctor);
@@ -942,7 +942,7 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // GOAL:
-//   perform 
+//   perform
 //   1. generate Capsules from Segments structure
 //   2. detect touches between any 2 capsules
 void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
@@ -1267,474 +1267,474 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                                     std::string& nodeType, int nodeIndex,
                                     int densityIndex)
 {
-  int rval = 1;
-  if (nodeCategory == "CompartmentVariables" ||
-      nodeCategory == "BranchChannels" || nodeCategory == "JunctionChannels")
-  {  // 1, regular branch or 2= 'channels' on regular branch, or 3 = 'channels'
-     // on junction (i.e. a single-compartment branch)
-    std::vector<int> size;  // holding # compartments at each branch
-    // Does 2 things:
-    //   1. get to know the 'size' (so that the data members as array
-    //        can be initialized to that size)
-    //   2. if nodeCategory=CompartmentVariables,
-    //        also create CompartmentDimension(x,y,z,r,dist2soma,surface_area,
-    //        volume)
-    //            for every compartments on that ComputeBranch
-    //            which is tracked by _tissueContext->_branchDimensionsMap
-    if (nodeCategory == "CompartmentVariables" ||
-        nodeCategory == "BranchChannels")
-    {
-      ComputeBranch* branch = 0;
-      // just find the right ComputeBranch
-      if (nodeCategory == "CompartmentVariables")
-        branch = findBranch(nodeIndex, densityIndex, nodeType);
-      else
-      {
-        std::pair<int, int>& channelBranchIndexPair =
-            _channelBranchIndices1[_channelLayers.size() - 1][densityIndex][0];
-        branch = findBranch(
-            nodeIndex, channelBranchIndexPair.first,
-            _compartmentVariableTypes[channelBranchIndexPair.second]);
-      }
-      assert(branch);
+	int rval = 1;
+	if (nodeCategory == "CompartmentVariables" ||
+			nodeCategory == "BranchChannels" || nodeCategory == "JunctionChannels")
+	{  // 1, regular branch or 2= 'channels' on regular branch, or 3 = 'channels'
+		// on junction (i.e. a single-compartment branch)
+		std::vector<int> size;  // holding # compartments at each branch
+		// Does 2 things:
+		//   1. get to know the 'size' (so that the data members as array
+		//        can be initialized to that size)
+		//   2. if nodeCategory=CompartmentVariables,
+		//        also create CompartmentDimension(x,y,z,r,dist2soma,surface_area,
+		//        volume)
+		//            for every compartments on that ComputeBranch
+		//            which is tracked by _tissueContext->_branchDimensionsMap
+		if (nodeCategory == "CompartmentVariables" ||
+				nodeCategory == "BranchChannels")
+		{
+			ComputeBranch* branch = 0;
+			// just find the right ComputeBranch
+			if (nodeCategory == "CompartmentVariables")
+				branch = findBranch(nodeIndex, densityIndex, nodeType);
+			else
+			{
+				std::pair<int, int>& channelBranchIndexPair =
+					_channelBranchIndices1[_channelLayers.size() - 1][densityIndex][0];
+				branch = findBranch(
+						nodeIndex, channelBranchIndexPair.first,
+						_compartmentVariableTypes[channelBranchIndexPair.second]);
+			}
+			assert(branch);
 
-      //# capsules in that branch
-      int ncaps = branch->_nCapsules;
-      // we need this in case the ncaps is less than _compartmentSize
-      // e.g. soma has only 1 capsule
-      int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
-      // Find: # compartments in the current branch
-      // int ncpts = N_COMPARTMENTS(ncaps, cptSize);
-      bool isDistalEndSeeImplicitBranchingPoint = false;
-      // TUAN: plan to make cptsizes_in_branch holds the information about #capsules per
-      // cpt
-      //   index=0 --> distal-end cpt
-      //   index=ncpts-1 --> proximal-end cpt
-      std::vector<int> cptsizes_in_branch;
-      int ncpts = getNumCompartments(branch, cptsizes_in_branch,
-                                     isDistalEndSeeImplicitBranchingPoint);
-      size.push_back(ncpts);
-      // int ncpts =
-      //   getNumCompartments(branch, isDistalEndSeeImplicitBranchingPoint);
-      // NOTE: The remainer capsules will be distributed every one to each
-      // compartment from distal-end
-      int remainder_caps;
-      if (isDistalEndSeeImplicitBranchingPoint)
-        remainder_caps = ncaps - cptSize * (ncpts - 1);
-      else
-        remainder_caps = ncaps - cptSize * ncpts;
+			//# capsules in that branch
+			int ncaps = branch->_nCapsules;
+			// we need this in case the ncaps is less than _compartmentSize
+			// e.g. soma has only 1 capsule
+			int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
+			// Find: # compartments in the current branch
+			// int ncpts = N_COMPARTMENTS(ncaps, cptSize);
+			bool isDistalEndSeeImplicitBranchingPoint = false;
+			// TUAN: plan to make cptsizes_in_branch holds the information about #capsules per
+			// cpt
+			//   index=0 --> distal-end cpt
+			//   index=ncpts-1 --> proximal-end cpt
+			std::vector<int> cptsizes_in_branch;
+			int ncpts = getNumCompartments(branch, cptsizes_in_branch,
+					isDistalEndSeeImplicitBranchingPoint);
+			size.push_back(ncpts);
+			// int ncpts =
+			//   getNumCompartments(branch, isDistalEndSeeImplicitBranchingPoint);
+			// NOTE: The remainer capsules will be distributed every one to each
+			// compartment from distal-end
+			int remainder_caps;
+			if (isDistalEndSeeImplicitBranchingPoint)
+				remainder_caps = ncaps - cptSize * (ncpts - 1);
+			else
+				remainder_caps = ncaps - cptSize * ncpts;
 
-      rval = ncpts;
-      assert(branch->_parent || branch->_daughters.size() > 0);
+			rval = ncpts;
+			assert(branch->_parent || branch->_daughters.size() > 0);
 
-      Capsule& firstcaps = branch->_capsules[0];
-      // if (nodeCategory == "CompartmentVariables")
-      if (nodeCategory == "CompartmentVariables" and
-          // TUAN: this check is wrong, a branch starting of an MPI process
-          // has no parent, but it is not a soma
-          // branch->_parent  (WRONG check)
-          // TUAN: this is correct check
-          _segmentDescriptor.getBranchType(firstcaps.getKey()) !=
-              Branch::_SOMA)  // the branch is not a soma
-      {
-        DataItemArrayDataItem* dimArray = new DataItemArrayDataItem(size);
-        ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
-        std::auto_ptr<DataItem> aptr_cst;
-        std::vector<CG_CompartmentDimension*>& dimensions =
-            _tissueContext->_branchDimensionsMap[branch];
-        if (dimensions.size() > 0)
-          assert(dimensions.size() == ncpts);
-        else  // no-data yet--> start putting information into
-              // 'CompartmentDimension' vector
-        {
-          // revised the information of DimensionStruct
-          //   to include (x,y,z, r, dist2soma, surface_area, volume)
-          //   surface_area = sum(surface area of capsules)
-          //       and takes into account
-          //         (1) compartment next to soma (i.e. need to subtract the
-          //         area of the capsule enclosed inside the soma sphere)
-          //         (2) the compartment next to junction (i.e. half of the
-          //         area of the capsule next to the junction)
-          //
-          ////TUAN :
-          //# compartment should depend upon
-          // if the branch faces
-          //   1. explicit junction on proximal-side
-          //       --> reserve some surface area
-          //         (1) if parent is soma
-          //         (2) if parent is cut/branch point
-          //   3. implicit             proximal-side
-          //        3.a implicit is just a cut point-->do nothing
-          //        3.b implicit is a branching point--> reserve some surface
-          //        area
-          //   2. explicit junction on distal-side
-          //       --> reserve some surface area
-          //   4. implicit             distal-side
-          //        4.a implicit cut point-->do nothing
-          //        4.b implicit branching point -->
-          //            (1) an additional CompartmentDimension is created as 1st
-          //            cpt
-          //            (2) reserve some surface area on the 2nd cpt
-          if (isDistalEndSeeImplicitBranchingPoint)
-          {  // create the CompartmentDimension for implicit branching junction
-            // by reserving a certain fraction of the distal-end capsule
-            Capsule* lastCapsule = &branch->lastCapsule();
-            ncpts--;
-            dyn_var_t surface_area = 0.0;
-            dyn_var_t volume = 0.0;
-            dyn_var_t dist2soma =
-                lastCapsule->getDist2Soma() + lastCapsule->getLength();
-            dyn_var_t h = lastCapsule->getLength();
-            dyn_var_t r = lastCapsule->getRadius();
-            dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-            surface_area += 2.0 * M_PI * r * h * frac;
-            volume += M_PI * r * r * h * frac;
+			Capsule& firstcaps = branch->_capsules[0];
+			// if (nodeCategory == "CompartmentVariables")
+			if (nodeCategory == "CompartmentVariables" and
+					// TUAN: this check is wrong, a branch starting of an MPI process
+					// has no parent, but it is not a soma
+					// branch->_parent  (WRONG check)
+					// TUAN: this is correct check
+					_segmentDescriptor.getBranchType(firstcaps.getKey()) !=
+					Branch::_SOMA)  // the branch is not a soma
+			{
+				DataItemArrayDataItem* dimArray = new DataItemArrayDataItem(size);
+				ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
+				std::auto_ptr<DataItem> aptr_cst;
+				std::vector<CG_CompartmentDimension*>& dimensions =
+					_tissueContext->_branchDimensionsMap[branch];
+				if (dimensions.size() > 0)
+					assert(dimensions.size() == ncpts);
+				else  // no-data yet--> start putting information into
+					// 'CompartmentDimension' vector
+				{
+					// revised the information of DimensionStruct
+					//   to include (x,y,z, r, dist2soma, surface_area, volume)
+					//   surface_area = sum(surface area of capsules)
+					//       and takes into account
+					//         (1) compartment next to soma (i.e. need to subtract the
+					//         area of the capsule enclosed inside the soma sphere)
+					//         (2) the compartment next to junction (i.e. half of the
+					//         area of the capsule next to the junction)
+					//
+					////TUAN :
+					//# compartment should depend upon
+					// if the branch faces
+					//   1. explicit junction on proximal-side
+					//       --> reserve some surface area
+					//         (1) if parent is soma
+					//         (2) if parent is cut/branch point
+					//   3. implicit             proximal-side
+					//        3.a implicit is just a cut point-->do nothing
+					//        3.b implicit is a branching point--> reserve some surface
+					//        area
+					//   2. explicit junction on distal-side
+					//       --> reserve some surface area
+					//   4. implicit             distal-side
+					//        4.a implicit cut point-->do nothing
+					//        4.b implicit branching point -->
+					//            (1) an additional CompartmentDimension is created as 1st
+					//            cpt
+					//            (2) reserve some surface area on the 2nd cpt
+					if (isDistalEndSeeImplicitBranchingPoint)
+					{  // create the CompartmentDimension for implicit branching junction
+						// by reserving a certain fraction of the distal-end capsule
+						Capsule* lastCapsule = &branch->lastCapsule();
+						ncpts--;
+						dyn_var_t surface_area = 0.0;
+						dyn_var_t volume = 0.0;
+						dyn_var_t dist2soma =
+							lastCapsule->getDist2Soma() + lastCapsule->getLength();
+						dyn_var_t h = lastCapsule->getLength();
+						dyn_var_t r = lastCapsule->getRadius();
+						dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+						surface_area += 2.0 * M_PI * r * h * frac;
+						volume += M_PI * r * r * h * frac;
 
-            dyn_var_t length = frac * lastCapsule->getLength();
-            dyn_var_t sumlen = 0;
-            std::list<ComputeBranch*>::const_iterator
-                iter = branch->_daughters.begin(),
-                iterend = branch->_daughters.end();
-            for (; iter != iterend; iter++)
-            {  // take half surface area from the first capsule
-              dyn_var_t h = (*iter)->_capsules[0].getLength();
-              dyn_var_t r = (*iter)->_capsules[0].getRadius();
-              frac = getFractionCapsuleVolumeFromPost((*iter));
-              surface_area += 2.0 * M_PI * r * h * frac;
-              volume += M_PI * r * r * h * frac;
-              sumlen += frac * h;
-            }
-            length += sumlen / branch->_daughters.size();
-            double* cds = lastCapsule->getEndCoordinates();
-            // create DimensionStruct
-            StructDataItem* dimsDI = getDimension(lc, cds, r, dist2soma,
-                                                  surface_area, volume, length);
-            std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
-            NDPair* ndp = new NDPair("dimension", dimsDI_ap);
-
-            NDPairList dimParams;
-            dimParams.push_back(ndp);
-            ct->getInstance(aptr_cst, dimParams, lc);
-            ConstantDataItem* cdi =
-                dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-            std::auto_ptr<Constant> aptr_dim;
-            cdi->getConstant()->duplicate(aptr_dim);
-            Constant* dim = aptr_dim.release();
-            dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
-          }
-		  //now 
-		  std::vector<int>::const_iterator cibiter = cptsizes_in_branch.begin(),
-			  cibiend = cptsizes_in_branch.end();
-            for (int i = 0, j = ncaps - (*cibiter); i < ncpts, cibiter < cibiend; 
-					++i, cibiter++, j -= (*cibiter))
-          {  // compartment indexing is distal to proximal, while capsule
-             // indexing is proximal to distal
-            assert(j >= 0);
-            Capsule* begCap = &branch->_capsules[j];
-            Capsule* endCap =
-                &branch->_capsules[j + (*cibiter) - 1];
-
-            dyn_var_t radius = 0.0;
-            dyn_var_t surface_area = 0.0;
-            dyn_var_t volume = 0.0;
-            dyn_var_t lost_distance = 0.0;
-            for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
-            {
-              radius += capPtr->getRadius();
-              // A = pi/4 (D+d) * sqrt((D-d)^2 + 4h^2)
-              //  D,d : diameters 2 ends
-              //  h   : height
-              // dyn_var_t d2 = d1 = 2* capPtr->getRadius();
-              // dyn_var_t h = sqrt(SqDist(capPtr->getBeginCoordinates(),
-              //                          capPtr->getEndCoordinates()));
-              dyn_var_t h = capPtr->getLength();
-              // surface_area += M_PI/4.0 * (d1+d2) sqrt(pow(d1-d2,2)+
-              // 4*pow(h,2));
-              // simplified form
-              dyn_var_t r = capPtr->getRadius();
-              // TUAN: TODO need to update to consider the case of
-              // single-capsule single-compartment branch
-              //  - we cannot put half to junction before and half to junction
-              //  after --> no surface area left
-              //  solution: put 1/4 to the junction before, 1/4 to junction
-              //  after and half to the surface area
-              surface_area += 2.0 * M_PI * r * h;
-              volume += M_PI * r * r * h;
-
-              dyn_var_t somaR = 0.0;          // soma radius (if present)
-              dyn_var_t lost_distance = 0.0;  // using lost_distance ensures no
-                                              // negative surface_volume and
-                                              // volume
-              if (j == 0 && capPtr == begCap)
-              {  // check proximal-end
-                key_size_t key = capPtr->getKey();
-                unsigned int computeOrder =
-                    _segmentDescriptor.getComputeOrder(key);
-                if (computeOrder == 0)
-                {  // reserve some for the explicit junction
-                  ComputeBranch* parentbranch = branch->_parent;
-                  Capsule& firstcaps = parentbranch->_capsules[0];
-                  if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
-                      Branch::_SOMA)
-                  {  // remove the part of the capsule covered inside soma
-					  /*
-					   //TUAN : disable it as we now ignore the physical location
-					   //	of soma covering the dendrite
-						somaR = firstcaps.getRadius();
-						surface_area -= 2.0 * M_PI * r * somaR;
-						volume -= M_PI * r * r * somaR;
-						if (h < somaR)
-						{//TUAN DEBUG
-						std::cerr << "First capsule to soma is too
-						short\n";
-						std::cerr << "length = " << h << "; while
-						soma radius = " << somaR
-						<< " from neuron index " <<
-						_segmentDescriptor.getNeuronIndex(key)
-						<< std::endl;
+						dyn_var_t length = frac * lastCapsule->getLength();
+						dyn_var_t sumlen = 0;
+						std::list<ComputeBranch*>::const_iterator
+							iter = branch->_daughters.begin(),
+									 iterend = branch->_daughters.end();
+						for (; iter != iterend; iter++)
+						{  // take half surface area from the first capsule
+							dyn_var_t h = (*iter)->_capsules[0].getLength();
+							dyn_var_t r = (*iter)->_capsules[0].getRadius();
+							frac = getFractionCapsuleVolumeFromPost((*iter));
+							surface_area += 2.0 * M_PI * r * h * frac;
+							volume += M_PI * r * r * h * frac;
+							sumlen += frac * h;
 						}
-						assert(h > somaR);
-						lost_distance = somaR;
-						*/
-                  }
-                  else
-                  {  // reserve some for the cut/branch explicit junction
-                    dyn_var_t frac = getFractionCapsuleVolumeFromPost(branch);
-                    surface_area -= 2.0 * M_PI * r * h * frac;
-                    volume -= M_PI * r * r * h * frac;
-                    lost_distance = h * frac;
-                  }
-                }
-                assert(surface_area > 0);
-                assert(volume > 0);
-              }
-              ////
-              if (i == 0 && capPtr == endCap)
-              {  // check distal-end
-                key_size_t key = capPtr->getKey();
-                unsigned int computeOrder =
-                    _segmentDescriptor.getComputeOrder(key);
-                if (computeOrder == MAX_COMPUTE_ORDER)
-                {  // reserve some for the explicit junction
-                  dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-                  surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
-                  volume -= M_PI * r * r * (h - lost_distance) * frac;
-                }
-                else
-                {
-                  if (branch->_daughters.size() > 1)
-                  {  // reserve some for the implicit branching junction
-                    dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-                    surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
-                    volume -= M_PI * r * r * (h - lost_distance) * frac;
-                  }
-                  else
-                  {  // do nothing for implicit cut junction or the terminal-end
-                     // capsule
-                  }
-                }
-                assert(surface_area > 0);
-                assert(volume > 0);
-              }
-            }
-            radius /= ((endCap - begCap) + 1);  // still the average between the
-                                                // first and last capsules
-            dyn_var_t dist2soma =
-                begCap->getDist2Soma() +
-                0.5 * (endCap->getDist2Soma() - begCap->getDist2Soma() -
-                       lost_distance);
-            // create DimensionStruct
-            StructDataItem* dimsDI = getDimension(
-                lc, begCap->getBeginCoordinates(), endCap->getEndCoordinates(),
-                radius, dist2soma, surface_area, volume);
-            std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
-            NDPair* ndp = new NDPair("dimension", dimsDI_ap);
+						length += sumlen / branch->_daughters.size();
+						double* cds = lastCapsule->getEndCoordinates();
+						// create DimensionStruct
+						StructDataItem* dimsDI = getDimension(lc, cds, r, dist2soma,
+								surface_area, volume, length);
+						std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
+						NDPair* ndp = new NDPair("dimension", dimsDI_ap);
 
-            NDPairList dimParams;
-            dimParams.push_back(ndp);
-            ct->getInstance(aptr_cst, dimParams, lc);
-            ConstantDataItem* cdi =
-                dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-            std::auto_ptr<Constant> aptr_dim;
-            cdi->getConstant()->duplicate(aptr_dim);
-            Constant* dim = aptr_dim.release();
-            dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
+						NDPairList dimParams;
+						dimParams.push_back(ndp);
+						ct->getInstance(aptr_cst, dimParams, lc);
+						ConstantDataItem* cdi =
+							dynamic_cast<ConstantDataItem*>(aptr_cst.get());
+						std::auto_ptr<Constant> aptr_dim;
+						cdi->getConstant()->duplicate(aptr_dim);
+						Constant* dim = aptr_dim.release();
+						dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
+					}
+					// now
+					std::vector<int>::const_iterator cibiter = cptsizes_in_branch.begin(),
+						cibiend = cptsizes_in_branch.end();
+					for (int i = 0, j = ncaps - (*cibiter); i < ncpts, cibiter < cibiend;
+							++i, cibiter++, j -= (*cibiter))
+					{  // compartment indexing is distal to proximal, while capsule
+						// indexing is proximal to distal
+						assert(j >= 0);
+						Capsule* begCap = &branch->_capsules[j];
+						Capsule* endCap = &branch->_capsules[j + (*cibiter) - 1];
 
-            // currentcompartment_size = chemicalSynapseTouchSpace[i+1];
-          }
-        }
-      }
-    }
-    else
-    {  // only 1-compartment for JunctionChannels
-      size.push_back(1);
-    }
+						dyn_var_t radius = 0.0;
+						dyn_var_t surface_area = 0.0;
+						dyn_var_t volume = 0.0;
+						dyn_var_t lost_distance = 0.0;
+						for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
+						{
+							radius += capPtr->getRadius();
+							// A = pi/4 (D+d) * sqrt((D-d)^2 + 4h^2)
+							//  D,d : diameters 2 ends
+							//  h   : height
+							// dyn_var_t d2 = d1 = 2* capPtr->getRadius();
+							// dyn_var_t h = sqrt(SqDist(capPtr->getBeginCoordinates(),
+							//                          capPtr->getEndCoordinates()));
+							dyn_var_t h = capPtr->getLength();
+							// surface_area += M_PI/4.0 * (d1+d2) sqrt(pow(d1-d2,2)+
+							// 4*pow(h,2));
+							// simplified form
+							dyn_var_t r = capPtr->getRadius();
+							// TUAN: TODO need to update to consider the case of
+							// single-capsule single-compartment branch
+							//  - we cannot put half to junction before and half to junction
+							//  after --> no surface area left
+							//  solution: put 1/4 to the junction before, 1/4 to junction
+							//  after and half to the surface area
+							surface_area += 2.0 * M_PI * r * h;
+							volume += M_PI * r * r * h;
 
-    const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
-    // for parameters for the nodeType and are defined inside
-    // 'compartmentalize='
-    // arguments,
-    std::vector<DataItem*>::const_iterator cptiter, cptend = cpt->end();
-    //  ... make them an array of the same size as the #cpts in that
-    //  ComputeBranch
-    //   make the arrays of size = #-compartments in that ComputeBranch
-    NDPairList::iterator ndpiter, ndpend = params->end();
-    for (cptiter = cpt->begin(); cptiter != cptend; ++cptiter)
-    {
-      bool foundNDP = false;
-      for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
-      {//for each data member
-        if ((*ndpiter)->getName() == (*cptiter)->getString())
-        {//if the data member is part of 'compartmentalize' declaration
-			//...adjust the size of the data member vector to the #cpts on that branch
-          foundNDP = true;
-          ArrayDataItem* arrayDI =
-              dynamic_cast<ArrayDataItem*>((*ndpiter)->getDataItem());
-          if (arrayDI == 0)
-          {
-            std::cerr << "TissueFunctor: " << *(*cptiter)
-                      << " comparmentalization can only be applied to an array "
-                         "parameter!" << std::endl;
-            exit(-1);
-          }
-          arrayDI->setDimensions(size);
-          break;
-        }
-      }
-      if (!foundNDP)
-      {
-        ArrayDataItem* arrayDI = 0;
-        std::string mystring = (*cptiter)->getString();
-        std::vector<std::string> tokens;
-        std::string delimiters = ":";
-        StringUtils::Tokenize(mystring, tokens, delimiters);
-        assert(tokens.size() == 1 || tokens.size() == 2);
-        if (tokens.size() == 1 || tokens[0] == "float")
-        {
-          arrayDI = new FloatArrayDataItem(size);
-        }
-        else if (tokens[0] == "int")
-        {
-          arrayDI = new IntArrayDataItem(size);
-        }
-        assert(arrayDI);
-        std::string varName = tokens[tokens.size() - 1];
-		StringUtils::trim(varName);
-        // std::cerr << "varName = " << varName << std::endl;
+							dyn_var_t somaR = 0.0;          // soma radius (if present)
+							dyn_var_t lost_distance = 0.0;  // using lost_distance ensures no
+							// negative surface_volume and
+							// volume
+							if (j == 0 && capPtr == begCap)
+							{  // check proximal-end
+								key_size_t key = capPtr->getKey();
+								unsigned int computeOrder =
+									_segmentDescriptor.getComputeOrder(key);
+								if (computeOrder == 0)
+								{  // reserve some for the explicit junction
+									ComputeBranch* parentbranch = branch->_parent;
+									Capsule& firstcaps = parentbranch->_capsules[0];
+									if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+											Branch::_SOMA)
+									{  // remove the part of the capsule
+										// covered inside soma
+										/*
+										//TUAN : disable it as we now ignore the physical location
+										//	of soma covering the dendrite
+										somaR = firstcaps.getRadius();
+										surface_area -= 2.0 * M_PI * r * somaR;
+										volume -= M_PI * r * r * somaR;
+										if (h < somaR)
+										{//TUAN DEBUG
+										std::cerr << "First capsule to soma is too
+										short\n";
+										std::cerr << "length = " << h << "; while
+										soma radius = " << somaR
+										<< " from neuron index " <<
+										_segmentDescriptor.getNeuronIndex(key)
+										<< std::endl;
+										}
+										assert(h > somaR);
+										lost_distance = somaR;
+										*/
+									}
+									else
+									{  // reserve some for the cut/branch explicit junction
+										dyn_var_t frac = getFractionCapsuleVolumeFromPost(branch);
+										surface_area -= 2.0 * M_PI * r * h * frac;
+										volume -= M_PI * r * r * h * frac;
+										lost_distance = h * frac;
+									}
+								}
+								assert(surface_area > 0);
+								assert(volume > 0);
+							}
+							////
+							if (i == 0 && capPtr == endCap)
+							{  // check distal-end
+								key_size_t key = capPtr->getKey();
+								unsigned int computeOrder =
+									_segmentDescriptor.getComputeOrder(key);
+								if (computeOrder == MAX_COMPUTE_ORDER)
+								{  // reserve some for the explicit junction
+									dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+									surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
+									volume -= M_PI * r * r * (h - lost_distance) * frac;
+								}
+								else
+								{
+									if (branch->_daughters.size() > 1)
+									{  // reserve some for the implicit branching junction
+										dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+										surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
+										volume -= M_PI * r * r * (h - lost_distance) * frac;
+									}
+									else
+									{  // do nothing for implicit cut junction or the terminal-end
+										// capsule
+									}
+								}
+								assert(surface_area > 0);
+								assert(volume > 0);
+							}
+						}
+						radius /= ((endCap - begCap) + 1);  // still the average between the
+						// first and last capsules
+						dyn_var_t dist2soma =
+							begCap->getDist2Soma() +
+							0.5 * (endCap->getDist2Soma() - begCap->getDist2Soma() -
+									lost_distance);
+						// create DimensionStruct
+						StructDataItem* dimsDI = getDimension(
+								lc, begCap->getBeginCoordinates(), endCap->getEndCoordinates(),
+								radius, dist2soma, surface_area, volume);
+						std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
+						NDPair* ndp = new NDPair("dimension", dimsDI_ap);
 
-        std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
-        NDPair* ndp = new NDPair(varName, arrayDI_ap);
-        params->push_back(ndp);
-      }
-    }
-  }
-  else if (nodeCategory == "Junctions")
-  {  // explicit junction (which can be
-     //   1. soma
-     //   2. explicit branching point
-     //   3. or a slicing-cut junction
-     //    (a cutpoint by 2 MPI processes if the previous ComputeBranch of
-     //    computeOrder=MAX_COMPUTE_ORDER
-     //   )
-    Capsule* junctionCapsule = findJunction(nodeIndex, densityIndex, nodeType);
-    std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
-        _tissueContext->_junctionDimensionMap.find(junctionCapsule);
-    // make sure the Layer of the given nodeType has not been declared
-    // then
-    // create the data structure for the explicit junction of the given nodeType
-    // example of nodeType can be 'Voltage', 'Calcium', 'CalciumER'
-    if (miter == _tissueContext->_junctionDimensionMap.end())
-    {
-      ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
-      std::auto_ptr<DataItem> aptr_cst;
-      ComputeBranch* branch_parent = junctionCapsule->getBranch();
-      std::list<ComputeBranch*>::const_iterator
-          iter = branch_parent->_daughters.begin(),
-          iterend = branch_parent->_daughters.end();
-      dyn_var_t h = junctionCapsule->getLength();
-      dyn_var_t r = junctionCapsule->getRadius();
-      dyn_var_t surface_area = 0.0;
-      dyn_var_t volume = 0.0;
-      dyn_var_t length = 0.0;
-      // explicit junction can be
-      //  1. soma junction
-      //  2. slicing-cut junction (by the slicing plane split 2 MPI processes)
-      //  3. branching-point junction
-      if (_segmentDescriptor.getBranchType(junctionCapsule->getKey()) ==
-          Branch::_SOMA)
-      {  // soma explicit junction
-        surface_area += 4.0 * M_PI * r * r;
-        volume += 4.0 / 3.0 * M_PI * r * r * r;
-        for (; iter != iterend; iter++)
-        {  // subtract those covered by the steming axon/dendrite
-          dyn_var_t r = (*iter)->_capsules[0].getRadius();
-          surface_area -= M_PI * r * r;
-        }
-        if (surface_area <= 0)
-        {
-          std::cerr << "ERROR: The dendritic/axonal branch has size greater "
-                       "than the soma's radius" << std::endl;
-          assert(surface_area > 0);
-        }
-        length = 2 * r;
-      }
-      else
-      {  // cut/branch explicit junction
-         // 2.a first take proximal-side of junction
-        dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch_parent);
-        surface_area += 2.0 * M_PI * r * h * frac;
-        volume += M_PI * r * r * h * frac;
-        length += frac * h;
-        dyn_var_t sumlen = 0.0;
-        //  2.b. then sum with the parts from the distal-side
-        if (branch_parent->_daughters.size() == 1)
-        {  // slicing cut point explicit junction
-          iter = branch_parent->_daughters.begin();
-          ComputeBranch* childbranch = (*iter);
-          Capsule* childCapsule = &childbranch->_capsules[0];
-          dyn_var_t h = childCapsule->getLength();
-          dyn_var_t r = childCapsule->getRadius();
-          frac = getFractionCapsuleVolumeFromPost(childbranch);
-          surface_area += 2.0 * M_PI * r * h * frac;
-          volume += M_PI * r * r * h * frac;
-          sumlen += h * frac;
-        }
-        else
-        {  // branching point explicit junction
-          for (; iter != iterend; iter++)
-          {  // take half surface area from the first capsule
-            dyn_var_t h = (*iter)->_capsules[0].getLength();
-            dyn_var_t r = (*iter)->_capsules[0].getRadius();
-            frac = getFractionCapsuleVolumeFromPost((*iter));
-            surface_area += 2.0 * M_PI * r * h * frac;
-            volume += M_PI * r * r * h * frac;
-            sumlen += h * frac;
-          }
-        }
-        length += sumlen / branch_parent->_daughters.size();
-      }
-      // create DimensionStruct for explicit 'junction' single-compartment
-      // branch
-      dyn_var_t dist2soma =
-          junctionCapsule->getDist2Soma() + junctionCapsule->getLength();
-      StructDataItem* dimsDI =
-          getDimension(lc, junctionCapsule->getEndCoordinates(),
-                       (dyn_var_t)junctionCapsule->getRadius(),
-                       (dyn_var_t)dist2soma, surface_area, volume, length);
-      std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
-      NDPair* ndp = new NDPair("dimension", dimsDI_ap);
-      NDPairList dimParams;
-      dimParams.push_back(ndp);
-      ct->getInstance(aptr_cst, dimParams, lc);
-      ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-      std::auto_ptr<Constant> aptr_dim;
-      cdi->getConstant()->duplicate(aptr_dim);
-      Constant* dim = aptr_dim.release();
-      _tissueContext->_junctionDimensionMap[junctionCapsule] =
-          dynamic_cast<CG_CompartmentDimension*>(dim);
-    }
-  }
-  return rval;
+						NDPairList dimParams;
+						dimParams.push_back(ndp);
+						ct->getInstance(aptr_cst, dimParams, lc);
+						ConstantDataItem* cdi =
+							dynamic_cast<ConstantDataItem*>(aptr_cst.get());
+						std::auto_ptr<Constant> aptr_dim;
+						cdi->getConstant()->duplicate(aptr_dim);
+						Constant* dim = aptr_dim.release();
+						dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
+
+						// currentcompartment_size = chemicalSynapseTouchSpace[i+1];
+					}
+				}
+			}
+		}
+		else
+		{  // only 1-compartment for JunctionChannels
+			size.push_back(1);
+		}
+
+		const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
+		// for parameters for the nodeType and are defined inside
+		// 'compartmentalize='
+		// arguments,
+		std::vector<DataItem*>::const_iterator cptiter, cptend = cpt->end();
+		//  ... make them an array of the same size as the #cpts in that
+		//  ComputeBranch
+		//   make the arrays of size = #-compartments in that ComputeBranch
+		NDPairList::iterator ndpiter, ndpend = params->end();
+		for (cptiter = cpt->begin(); cptiter != cptend; ++cptiter)
+		{
+			bool foundNDP = false;
+			for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
+			{//for each data member
+				if ((*ndpiter)->getName() == (*cptiter)->getString())
+				{//if the data member is part of 'compartmentalize' declaration
+					//...adjust the size of the data member vector to the #cpts on that branch
+					foundNDP = true;
+					ArrayDataItem* arrayDI =
+						dynamic_cast<ArrayDataItem*>((*ndpiter)->getDataItem());
+					if (arrayDI == 0)
+					{
+						std::cerr << "TissueFunctor: " << *(*cptiter)
+							<< " comparmentalization can only be applied to an array "
+							"parameter!" << std::endl;
+						exit(-1);
+					}
+					arrayDI->setDimensions(size);
+					break;
+				}
+			}
+			if (!foundNDP)
+			{
+				ArrayDataItem* arrayDI = 0;
+				std::string mystring = (*cptiter)->getString();
+				std::vector<std::string> tokens;
+				std::string delimiters = ":";
+				StringUtils::Tokenize(mystring, tokens, delimiters);
+				assert(tokens.size() == 1 || tokens.size() == 2);
+				if (tokens.size() == 1 || tokens[0] == "float")
+				{
+					arrayDI = new FloatArrayDataItem(size);
+				}
+				else if (tokens[0] == "int")
+				{
+					arrayDI = new IntArrayDataItem(size);
+				}
+				assert(arrayDI);
+				std::string varName = tokens[tokens.size() - 1];
+				StringUtils::trim(varName);
+				// std::cerr << "varName = " << varName << std::endl;
+
+				std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
+				NDPair* ndp = new NDPair(varName, arrayDI_ap);
+				params->push_back(ndp);
+			}
+		}
+	}
+	else if (nodeCategory == "Junctions")
+	{  // explicit junction (which can be
+	//   1. soma
+	//   2. explicit branching point
+	//   3. or a slicing-cut junction
+	//    (a cutpoint by 2 MPI processes if the previous ComputeBranch of
+	//    computeOrder=MAX_COMPUTE_ORDER
+	//   )
+	Capsule* junctionCapsule = findJunction(nodeIndex, densityIndex, nodeType);
+	std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
+		_tissueContext->_junctionDimensionMap.find(junctionCapsule);
+	// make sure the Layer of the given nodeType has not been declared
+	// then
+	// create the data structure for the explicit junction of the given nodeType
+	// example of nodeType can be 'Voltage', 'Calcium', 'CalciumER'
+	if (miter == _tissueContext->_junctionDimensionMap.end())
+	{
+		ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
+		std::auto_ptr<DataItem> aptr_cst;
+		ComputeBranch* branch_parent = junctionCapsule->getBranch();
+		std::list<ComputeBranch*>::const_iterator
+			iter = branch_parent->_daughters.begin(),
+					 iterend = branch_parent->_daughters.end();
+		dyn_var_t h = junctionCapsule->getLength();
+		dyn_var_t r = junctionCapsule->getRadius();
+		dyn_var_t surface_area = 0.0;
+		dyn_var_t volume = 0.0;
+		dyn_var_t length = 0.0;
+		// explicit junction can be
+		//  1. soma junction
+		//  2. slicing-cut junction (by the slicing plane split 2 MPI processes)
+		//  3. branching-point junction
+		if (_segmentDescriptor.getBranchType(junctionCapsule->getKey()) ==
+				Branch::_SOMA)
+		{  // soma explicit junction
+			surface_area += 4.0 * M_PI * r * r;
+			volume += 4.0 / 3.0 * M_PI * r * r * r;
+			for (; iter != iterend; iter++)
+			{  // subtract those covered by the steming axon/dendrite
+				dyn_var_t r = (*iter)->_capsules[0].getRadius();
+				surface_area -= M_PI * r * r;
+			}
+			if (surface_area <= 0)
+			{
+				std::cerr << "ERROR: The dendritic/axonal branch has size greater "
+					"than the soma's radius" << std::endl;
+				assert(surface_area > 0);
+			}
+			length = 2 * r;
+		}
+		else
+		{  // cut/branch explicit junction
+			// 2.a first take proximal-side of junction
+			dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch_parent);
+			surface_area += 2.0 * M_PI * r * h * frac;
+			volume += M_PI * r * r * h * frac;
+			length += frac * h;
+			dyn_var_t sumlen = 0.0;
+			//  2.b. then sum with the parts from the distal-side
+			if (branch_parent->_daughters.size() == 1)
+			{  // slicing cut point explicit junction
+				iter = branch_parent->_daughters.begin();
+				ComputeBranch* childbranch = (*iter);
+				Capsule* childCapsule = &childbranch->_capsules[0];
+				dyn_var_t h = childCapsule->getLength();
+				dyn_var_t r = childCapsule->getRadius();
+				frac = getFractionCapsuleVolumeFromPost(childbranch);
+				surface_area += 2.0 * M_PI * r * h * frac;
+				volume += M_PI * r * r * h * frac;
+				sumlen += h * frac;
+			}
+			else
+			{  // branching point explicit junction
+				for (; iter != iterend; iter++)
+				{  // take half surface area from the first capsule
+					dyn_var_t h = (*iter)->_capsules[0].getLength();
+					dyn_var_t r = (*iter)->_capsules[0].getRadius();
+					frac = getFractionCapsuleVolumeFromPost((*iter));
+					surface_area += 2.0 * M_PI * r * h * frac;
+					volume += M_PI * r * r * h * frac;
+					sumlen += h * frac;
+				}
+			}
+			length += sumlen / branch_parent->_daughters.size();
+		}
+		// create DimensionStruct for explicit 'junction' single-compartment
+		// branch
+		dyn_var_t dist2soma =
+			junctionCapsule->getDist2Soma() + junctionCapsule->getLength();
+		StructDataItem* dimsDI =
+			getDimension(lc, junctionCapsule->getEndCoordinates(),
+					(dyn_var_t)junctionCapsule->getRadius(),
+					(dyn_var_t)dist2soma, surface_area, volume, length);
+		std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
+		NDPair* ndp = new NDPair("dimension", dimsDI_ap);
+		NDPairList dimParams;
+		dimParams.push_back(ndp);
+		ct->getInstance(aptr_cst, dimParams, lc);
+		ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
+		std::auto_ptr<Constant> aptr_dim;
+		cdi->getConstant()->duplicate(aptr_dim);
+		Constant* dim = aptr_dim.release();
+		_tissueContext->_junctionDimensionMap[junctionCapsule] =
+			dynamic_cast<CG_CompartmentDimension*>(dim);
+	}
+}
+return rval;
 }
 
 // GOAL: During NodeInit statement
@@ -1746,7 +1746,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 //			InitNodes ( .[].Layer(branches),
 // tissueFunctor("NodeInit",
 //<
-//compartmentalize = {
+// compartmentalize = {
 //   "Vnew",
 //   "Vcur",
 //   "Aii",
@@ -1754,7 +1754,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 //   "Aip",
 //   "RHS",
 //},
-//Vnew={Vrest_value}
+// Vnew={Vrest_value}
 //>
 //)
 std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
@@ -2356,18 +2356,18 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   else if (point)
   {
     if (nodeCategory == "PreSynapticPoints")
-	{
-		assert(_preSynapticPointTypesMap.find(nodeType) ==
-				_preSynapticPointTypesMap.end());
-		_preSynapticPointTypesMap[nodeType] = counter =
-			_preSynapticPointTypeCounter;
-	}
-	if (nodeCategory == "SynapticClefts")
-	{
-		assert(_synapticCleftTypesMap.find(nodeType) ==
-				_synapticCleftTypesMap.end());
-		_synapticCleftTypesMap[nodeType] = counter = _synapticCleftTypeCounter;
-	}
+    {
+      assert(_preSynapticPointTypesMap.find(nodeType) ==
+             _preSynapticPointTypesMap.end());
+      _preSynapticPointTypesMap[nodeType] = counter =
+          _preSynapticPointTypeCounter;
+    }
+    if (nodeCategory == "SynapticClefts")
+    {
+      assert(_synapticCleftTypesMap.find(nodeType) ==
+             _synapticCleftTypesMap.end());
+      _synapticCleftTypesMap[nodeType] = counter = _synapticCleftTypeCounter;
+    }
   }
 
   // if a Layer of a nodetype as electrical (gap junction), bidirectional
@@ -2387,7 +2387,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   //  and decide if an instance for the NodeType to be created or not at indexPre
   //         and/or indexPost
   if (electrical || chemical || point || bidirectional)
-  {  
+  {
     // REMEBER that all the touches have been detected,
     // we just need to find out which compartment (from which branch) connect
     // to which compartment (in which branch)
@@ -2411,8 +2411,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       ComputeBranch* postBranch = postCapsule->getBranch();
       assert(postBranch);
 
-      unsigned int indexPre, indexPost; //GSL Grid's index at which preCapsule
-	    // and postCapsule belongs to, respectively
+      unsigned int indexPre, indexPost;  // GSL Grid's index at which preCapsule
+      // and postCapsule belongs to, respectively
       bool preJunction = false;
       bool postJunction = false;
 
@@ -2494,18 +2494,21 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
           {
             if (point)
             {
-				//NEW CODE: constraint the number of PreSynapticPoint or SynapticCleft instances
-				//to be instantiated to the exact number of chemical synapses
-				bool result = setGenerated(_generatedSynapticClefts, titer,
-						counter, i, nodeCategory);
-				if (result)
-				{
-					if (preJunction)
-						_capsuleJctPointIndexMap[nodeType][preCapsule] = rval[indexPre];
-					else
-						_capsuleCptPointIndexMap[nodeType][preCapsule] = rval[indexPre];
-					rval[indexPre]++;
-				}
+              // NEW CODE: constraint the number of PreSynapticPoint or
+              // SynapticCleft instances
+              // to be instantiated to the exact number of chemical synapses
+              bool result = setGenerated(_generatedSynapticClefts, titer,
+                                         counter, i, nodeCategory);
+              if (result)
+              {
+                if (preJunction)
+                  _capsuleJctPointIndexMap[nodeType][preCapsule] =
+                      rval[indexPre];
+                else
+                  _capsuleCptPointIndexMap[nodeType][preCapsule] =
+                      rval[indexPre];
+                rval[indexPre]++;
+              }
             }
             else
             {
@@ -2526,39 +2529,50 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
                 // for 'BidirectionalConnections[DenSpine]' in the GSL
                 // instead, a new node for that should be created and the
                 // density should be increase for
-				
-				// TUAN TODO NOTE: for the given touch, find the spine neuron of the spineneck
-				//    then check if the soma forms the chemical synapse or not
-				//    if yes, then create the spineattachment
+
+                // TUAN TODO NOTE: for the given touch, find the spine neuron of
+                // the spineneck
+                //    then check if the soma forms the chemical synapse or not
+                //    if yes, then create the spineattachment
                 if (probabilities[i] >=
                     drandom(findSynapseGenerator(indexPre, indexPost)))
                 {
-					//NOTE: rval control the number of instances to be created
-                  bool result = setGenerated(_generatedBidirectionalConnections, titer,
-                               counter, i, nodeCategory);
-				  if (result)
-				  {
-					  rval[indexPre]++;
-					  rval[indexPost]++;
-				  }
+                  // NOTE: rval control the number of instances to be created
+                  // bool result =
+                  // setGenerated(_generatedBidirectionalConnections,
+                  //                           titer, counter, i, nodeCategory);
+                  bool result = setGenerated(_generatedBidirectionalConnections,
+                                             titer, counter, i);
+                  // bool result;
+                  // if (indexPre == indexPost)
+                  // result = setGenerated(_generatedBidirectionalConnections,
+                  //                       titer, counter, i, nodeCategory);
+                  // else result =
+                  // setGenerated(_generatedBidirectionalConnections,
+                  //                           titer, counter, i );
+                  if (result)
+                  {
+                    rval[indexPre]++;
+                    rval[indexPost]++;
+                  }
                 }
               }
               else if (chemical)
-			  {
-				if (touchIsChemicalSynapse(_generatedSynapticClefts, titer))
-				{
-					if (probabilities[i] >=
-							drandom(findSynapseGenerator(indexPre, indexPost)))
-					{
-						rval[indexPost]++;
-						setGenerated(_generatedChemicalSynapses, titer, counter, i, nodeCategory);
-					}
-					else
-						setNonGenerated(titer, nodeType, i);
-
-				}
-				else
-						setNonGenerated(titer, nodeType, i);
+              {
+                if (touchIsChemicalSynapse(_generatedSynapticClefts, titer))
+                {
+                  if (probabilities[i] >=
+                      drandom(findSynapseGenerator(indexPre, indexPost)))
+                  {
+                    rval[indexPost]++;
+                    setGenerated(_generatedChemicalSynapses, titer, counter, i,
+                                 nodeCategory);
+                  }
+                  else
+                    setNonGenerated(titer, nodeType, i);
+                }
+                else
+                  setNonGenerated(titer, nodeType, i);
               }
             }
           }
@@ -2838,12 +2852,14 @@ void TissueFunctor::doNodeInit(LensContext* lc)
 	// statement
   assert(_params.get());
   std::auto_ptr<ParameterSet> initPset;
-  std::vector<NodeDescriptor*> nodes; //pointer to instances of nodes in grids
+  std::vector<NodeDescriptor*> nodes;  // pointer to instances of nodes in grids
   std::vector<NodeDescriptor*>::iterator node, nodesEnd;
 
-  NodeSet* nodeset = lc->layerContext->nodeset; // set of instances of nodes to be initialized
-  std::vector<GridLayerDescriptor*> const& layers = nodeset->getLayers();//determine the layer to which this nodeset belong
-  assert(layers.size() == 1); // make sure they come from the same layer
+  NodeSet* nodeset =
+      lc->layerContext->nodeset;  // set of instances of nodes to be initialized
+  std::vector<GridLayerDescriptor*> const& layers =
+      nodeset->getLayers();  // determine the layer to which this nodeset belong
+  assert(layers.size() == 1);  // make sure they come from the same layer
   std::vector<GridLayerDescriptor*>::const_iterator gld = layers.begin();
 
   std::vector<std::string> nodekind;
@@ -2908,12 +2924,11 @@ void TissueFunctor::doNodeInit(LensContext* lc)
     exit(EXIT_FAILURE);
   }
 
-  if (_preSynapticPointLayers.size() > 0 &&
-      _synapticCleftLayers.size() > 0)
+  if (_preSynapticPointLayers.size() > 0 && _synapticCleftLayers.size() > 0)
   {
-	  std::cerr << "We cannot have both PreSynapticPoints and SynapticClefts"
-		  << " in the system\n";
-	  exit(EXIT_FAILURE);
+    std::cerr << "We cannot have both PreSynapticPoints and SynapticClefts"
+              << " in the system\n";
+    exit(EXIT_FAILURE);
   }
   // make sure the order of layer's nodes' initialization is correct
   if (((nodeCategory == "Channels" || nodeCategory == "ElectricalSynapses" ||
@@ -2923,19 +2938,16 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         nodeCategory == "SynapticClefts") &&
        (_junctionLayers.size() == 0 ||
         _compartmentVariableLayers.size() == 0)) ||
-      (_junctionLayers.size() > 0 && _compartmentVariableLayers.size() == 0) 
-     ||( (_preSynapticPointLayers.size() == 0 &&
-       _chemicalSynapseLayers.size() > 0) &&
-      (_synapticCleftLayers.size() == 0 && _chemicalSynapseLayers.size() > 0)
-	  )
-	 )
+      (_junctionLayers.size() > 0 && _compartmentVariableLayers.size() == 0) ||
+      ((_preSynapticPointLayers.size() == 0 &&
+        _chemicalSynapseLayers.size() > 0) &&
+       (_synapticCleftLayers.size() == 0 && _chemicalSynapseLayers.size() > 0)))
   {
     std::cerr
         << "TissueFunctor:" << std::endl
-		<< "Layers (Branches, Junctions, PreSynapticPoints | SynapticClefts,"
-		<< "Channels | Synapses "
-           ") must be initialized in order."
-        << std::endl
+        << "Layers (Branches, Junctions, PreSynapticPoints | SynapticClefts,"
+        << "Channels | Synapses "
+           ") must be initialized in order." << std::endl
         << "Synapses can be either ElectricalSynapses, ChemicalSynapses, "
            "BidirectionalConnections" << std::endl;
     exit(EXIT_FAILURE);
@@ -2950,14 +2962,14 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   nodesEnd = nodes.end();
   NDPairList emptyOutAttr;
   NDPairList dim2cpt;
-  //NOTE: inAttr that we use to connect 'DimensionStruct' and 'BranchData'
+  // NOTE: inAttr that we use to connect 'DimensionStruct' and 'BranchData'
   //   to the each node instance
   dim2cpt.push_back(new NDPair("identifier", "dimension"));
   NDPairList brd2cpt;
   brd2cpt.push_back(new NDPair("identifier", "branchData"));
 
   for (; node != nodesEnd; ++node)
-  {//traverse all instances of the nodeset
+  {  // traverse all instances of the nodeset
     if ((*node)->getNode())
     {
       NDPairList paramsLocal = *(_params.get());
@@ -2977,7 +2989,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         NDPair* ndp = new NDPair("size", sizeDI_ap);
         branchDataStructParams.push_back(ndp);
         if (nodeCategory == "CompartmentVariables")
-        {//initialize: branchData, dimensions
+        {  // initialize: branchData, dimensions
           // now start initializing data members, e.g.
           // HHVoltage{
           // BranchDataStruct* branchData; //key_size_t key; unsigned size;
@@ -2990,8 +3002,8 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           getModelParams(Params::COMPARTMENT, paramsLocal, nodeType, key);
           pset->set(paramsLocal);
           (*node)->getNode()->initialize(pset);
-		  //TUAN NOTE: another location where bug may occur if we
-		  //change the key size (key_size_t)
+          // TUAN NOTE: another location where bug may occur if we
+          // change the key size (key_size_t)
           DoubleDataItem* keyDI =
               new DoubleDataItem(branch->_capsules[0].getKey());
           std::auto_ptr<DataItem> keyDI_ap(keyDI);
@@ -3137,9 +3149,10 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   }
 }
 
-// GOAL: perform necessary setup and then connect instances of 
+// GOAL: perform necessary setup and then connect instances of
 // all declared nodetypes (different channels, receptors, ...)
-// to the proper instance of the associated compartment variable (Voltage, Calcium)
+// to the proper instance of the associated compartment variable (Voltage,
+// Calcium)
 // based on the condition given in different parameter files (SynParams.par,
 // ChanParams.par)
 void TissueFunctor::doConnector(LensContext* lc)
@@ -3199,8 +3212,8 @@ void TissueFunctor::doConnector(LensContext* lc)
 
   // Define InAttrPset for connection to comparment-nodetype
   // Here, we assign value to the 'map' object defined above
-  // The values represents all possible InAttrPSet that can be used to establish 
-  // a connection from the given nodetype to the proper compartment nodetypes 
+  // The values represents all possible InAttrPSet that can be used to establish
+  // a connection from the given nodetype to the proper compartment nodetypes
   //      (Voltage, Calcium, CalciumER ...)
   // variable and put to the 'map' objects defined above
   std::map<std::string, int>::iterator cptVarTypesIter,
@@ -3458,7 +3471,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     exit(EXIT_FAILURE);
   }
 
-  // GOAL: create connection 
+  // GOAL: create connection
   //      Cpt1->EndPoint-->Junction-->JunctionPoint->Cpt2
   //      ImplicitJunction-->ForwardSolverPoint
   //      ImplicitJunction-->BackwardSolverPoint
@@ -3563,7 +3576,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                // connect (1) compartment to endpoint
                //         (2) endpoint to explicit junction
                //         (3) explicit junction to junction point,
-               //         (4) junction point to distalEnd of another compartment
+              //         (4) junction point to distalEnd of another compartment
               NodeDescriptor* endPoint =
                   endPointAccessors[endPointType]->getNodeDescriptor(
                       i, endPointCounters[endPointType]);
@@ -3843,7 +3856,8 @@ void TissueFunctor::doConnector(LensContext* lc)
           &_tissueContext->_capsules[_tissueContext->getCapsuleIndex(key2)];
       bool preJunction, postJunction;  // preJunction = check if the preCapsule
                                        // is part of a Junction or not
-      unsigned int indexPre, indexPost;
+      unsigned int indexPre, indexPost;  // GSL Grid's index at which preCapsule
+      // and postCapsule belongs to, respectively [ NOTE: Grid's index = MPI rank ]
 
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
@@ -3999,10 +4013,10 @@ void TissueFunctor::doConnector(LensContext* lc)
             bdend = spineattachTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_bidirectionalConnectionTypesMap.size(), 0);
-		//TUAN TEST
-		//std::cout << _generatedBidirectionalConnections.size() << std::endl;
-		//assert(0);
-		//END TUAN TEST
+        // TUAN TEST
+        // std::cout << _generatedBidirectionalConnections.size() << std::endl;
+        // assert(0);
+        // END TUAN TEST
         for (bditer = spineattachTargets->begin(); bditer != bdend; ++bditer)
         {
           int synapseType = _bidirectionalConnectionTypesMap[bditer->_type];
@@ -4013,7 +4027,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                 bidirectionalConnectionCounters[synapseType];
             int preDI = getCountAndIncrement(ecounts, indexPre);
             int postDI = getCountAndIncrement(ecounts, indexPost);
-			
+
             // list of compartment-node's name (e.g. 'Voltage', 'Calcium')
             // that are supposed to pass through
             std::list<std::string>::iterator etiter = bditer->_target.begin(),
@@ -4108,21 +4122,21 @@ void TissueFunctor::doConnector(LensContext* lc)
               key_size_t keyneck = 0;
               (*titer).hasSpineNeck(keyneck);
               Capsule* capsneck = (keyneck == key1) ? preCapsule : postCapsule;
-			  assert((keyneck == key1) || keyneck == key2);
+              assert((keyneck == key1) || keyneck == key2);
 
               if (keyneck == key1)
               {
-				  std::string name("typeCpt");
-				  std::string value("spine-neck");
+                std::string name("typeCpt");
+                std::string value("spine-neck");
                 assert(Mcpt2spineattach.replace(name, value));
-                //assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
               }
               else
               {
-				  std::string name("typeCpt");
-				  std::string value("den-shaft");
+                std::string name("typeCpt");
+                std::string value("den-shaft");
                 assert(Mcpt2spineattach.replace(name, value));
-                //assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
               }
 
               Mspineattach2cpt.replace("idx", preIdx);
@@ -4134,17 +4148,17 @@ void TissueFunctor::doConnector(LensContext* lc)
 
               if (keyneck == key2)
               {
-				  std::string name("typeCpt");
-				  std::string value("spine-neck");
+                std::string name("typeCpt");
+                std::string value("spine-neck");
                 assert(Mcpt2spineattach.replace(name, value));
-                //assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
               }
               else
               {
-				  std::string name("typeCpt");
-				  std::string value("den-shaft");
+                std::string name("typeCpt");
+                std::string value("den-shaft");
                 assert(Mcpt2spineattach.replace(name, value));
-                //assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
               }
 
               Mspineattach2cpt.replace("idx", postIdx);
@@ -4506,8 +4520,8 @@ void TissueFunctor::doConnector(LensContext* lc)
     models.clear();
 
     layerEnd = _synapticCleftLayers.end();
-    for (layerIter = _synapticCleftLayers.begin();
-         layerIter != layerEnd; ++layerIter)
+    for (layerIter = _synapticCleftLayers.begin(); layerIter != layerEnd;
+         ++layerIter)
     {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
@@ -4523,8 +4537,8 @@ void TissueFunctor::doConnector(LensContext* lc)
     models.clear();
 
     layerEnd = _preSynapticPointLayers.end();
-    for (layerIter = _preSynapticPointLayers.begin();
-         layerIter != layerEnd; ++layerIter)
+    for (layerIter = _preSynapticPointLayers.begin(); layerIter != layerEnd;
+         ++layerIter)
     {
       countableModel =
           dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
@@ -4795,17 +4809,17 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 
 // GOAL: map the values from *.par file to the data member
 //  ModelType can be CHANNEL | COMPARTMENT | SYNAPSE
-//  Supported ModelType: CHANNEL | COMPARTMENT 
+//  Supported ModelType: CHANNEL | COMPARTMENT
 // NOTE: only the first two ones have data inputable via *params.par file
-//   As currently, Synapse Receptors are not supposed to 
-//have parameters whose values varies upon neuron types/branch location
-//TUAN TODO: maybe consider this in the future
+//   As currently, Synapse Receptors are not supposed to
+// have parameters whose values varies upon neuron types/branch location
+// TUAN TODO: maybe consider this in the future
 void TissueFunctor::getModelParams(Params::ModelType modelType,
                                    NDPairList& paramsLocal,
                                    std::string& nodeType, key_size_t key)
 {
-	//NOTE: Currently for compartment data, e.g. Cm, gLeak
-	//it is limited to have single value for all compartments in 1 branch
+  // NOTE: Currently for compartment data, e.g. Cm, gLeak
+  // it is limited to have single value for all compartments in 1 branch
   std::list<std::pair<std::string, dyn_var_t> > compartmentParams;
   _tissueParams.getModelParams(modelType, nodeType, key, compartmentParams);
   std::list<std::pair<std::string, dyn_var_t> >::iterator
@@ -4823,57 +4837,57 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 
     if (tokens.size() == 1 || tokens[0] == "float")
     {
-		//NEW CODE
-		//first check if the tokens presence
-		//
-		NDPairList::iterator ndpiter, ndpend = paramsLocal.end();
-		bool found = false;
-		for (ndpiter = paramsLocal.begin(); ndpiter != ndpend; ++ndpiter)
-		{
-			if (varName.compare((*ndpiter)->getName()) == 0)
-				   //if ((*ndpiter)->getName() 	== varName)
-			{
-				found = true;
-				FloatArrayDataItem* arrayDI =
-					dynamic_cast<FloatArrayDataItem*>((*ndpiter)->getDataItem());
-				if (arrayDI == 0)
-				{// handle the case for scalar data, e.g. Cm
-					FloatDataItem* fltDI =
-						dynamic_cast<FloatDataItem*>((*ndpiter)->getDataItem());
-					if (fltDI == 0)
-					{
-						std::cerr << "TissueFunctor: " << varName
-							<< " is being used but not Float"<< std::endl;
-						assert(0);
-					}
-					fltDI->setFloat((float)cpiter->second);
-				}
-				else{
-					//handle the situation for array data, e.g. Vnew
-					std::vector<int> coords;
-					//NOTE: coords.push_back(index);
-					//with 'index' is the value from 0 to #compartments-1
-					//                                    in that branch
-					coords.push_back(0);// the first
-					arrayDI->setFloat(coords, (float)cpiter->second);
-				}
-				break;
-
-			}
-		}
-		//
-		if (!found)
-		{
-			FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
-			std::auto_ptr<DataItem> paramDI_ap(paramDI);
-			NDPair* ndp = new NDPair(varName, paramDI_ap);
-			paramsLocal.push_back(ndp);
-		}
-		//END NEW CODE
-      //FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
-      //std::auto_ptr<DataItem> paramDI_ap(paramDI);
-      //NDPair* ndp = new NDPair(varName, paramDI_ap);
-      //paramsLocal.push_back(ndp);
+      // NEW CODE
+      // first check if the tokens presence
+      //
+      NDPairList::iterator ndpiter, ndpend = paramsLocal.end();
+      bool found = false;
+      for (ndpiter = paramsLocal.begin(); ndpiter != ndpend; ++ndpiter)
+      {
+        if (varName.compare((*ndpiter)->getName()) == 0)
+        // if ((*ndpiter)->getName() 	== varName)
+        {
+          found = true;
+          FloatArrayDataItem* arrayDI =
+              dynamic_cast<FloatArrayDataItem*>((*ndpiter)->getDataItem());
+          if (arrayDI == 0)
+          {  // handle the case for scalar data, e.g. Cm
+            FloatDataItem* fltDI =
+                dynamic_cast<FloatDataItem*>((*ndpiter)->getDataItem());
+            if (fltDI == 0)
+            {
+              std::cerr << "TissueFunctor: " << varName
+                        << " is being used but not Float" << std::endl;
+              assert(0);
+            }
+            fltDI->setFloat((float)cpiter->second);
+          }
+          else
+          {
+            // handle the situation for array data, e.g. Vnew
+            std::vector<int> coords;
+            // NOTE: coords.push_back(index);
+            // with 'index' is the value from 0 to #compartments-1
+            //                                    in that branch
+            coords.push_back(0);  // the first
+            arrayDI->setFloat(coords, (float)cpiter->second);
+          }
+          break;
+        }
+      }
+      //
+      if (!found)
+      {
+        FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
+        std::auto_ptr<DataItem> paramDI_ap(paramDI);
+        NDPair* ndp = new NDPair(varName, paramDI_ap);
+        paramsLocal.push_back(ndp);
+      }
+      // END NEW CODE
+      // FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
+      // std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      // NDPair* ndp = new NDPair(varName, paramDI_ap);
+      // paramsLocal.push_back(ndp);
     }
     else if (tokens[0] == "int")
     {
@@ -4885,9 +4899,9 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     }
   }
 
-  //NOTE: for channel data, e.g. gbar
-  //we can have different values for different compatments in 1 branch
-  //that's why we use std:vector<dyn_var_t>  here
+  // NOTE: for channel data, e.g. gbar
+  // we can have different values for different compatments in 1 branch
+  // that's why we use std:vector<dyn_var_t>  here
   std::list<std::pair<std::string, std::vector<dyn_var_t> > >
       compartmentArrayParams;
   _tissueParams.getModelArrayParams(modelType, nodeType, key,
@@ -5104,8 +5118,8 @@ bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
           iend = synapseTypes->end();
       for (; iiter != iend && !rval; ++iiter)
       {
-		  //<"AMPA", pair(list-of-nodeType-it-get-inputs, 
-		  //              list-of-nodeType-it-perturb) >
+        //<"AMPA", pair(list-of-nodeType-it-get-inputs,
+        //              list-of-nodeType-it-perturb) >
         std::map<std::string, std::pair<std::list<std::string>,
                                         std::list<std::string> > >::iterator
             targetsIter,
@@ -5121,11 +5135,11 @@ bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
   return rval;
 }
 
-// GOAL: the method setup the map 'smap' 
+// GOAL: the method setup the map 'smap'
 //       during doLayout()
 //       which is then used during doConnect()
-//       via isGenerated() method to see if instances are created (e.g. Connexon, 
-//        SpineAttachment) 
+//       via isGenerated() method to see if instances are created (e.g.
+//       Connexon, SpineAttachment)
 // PARAMS:
 //   titer = the iterator pointing to the given Touch element in TouchVector
 //                _tissueContext->_touchVector
@@ -5139,11 +5153,12 @@ bool TissueFunctor::isPointRequired(TouchVector::TouchIterator& titer,
 //                         3 = synapticCleft or preSynapticPoint)
 //          for one 'order' value, we can have different types of that kind of touch
 //  RETURN:
-//   true  = if a new one is added to the map 
+//   true  = if a new one is added to the map
 //   false = if not
 bool TissueFunctor::setGenerated(
     std::map<Touch*, std::list<std::pair<int, int> > >& smap,
-    TouchVector::TouchIterator& titer, int type, int order, std::string specialTreatment)
+    TouchVector::TouchIterator& titer, int type, int order,
+    std::string specialTreatment)
 {
   std::map<Touch*, std::list<std::pair<int, int> > >::iterator miter =
       smap.find(&(*titer));
@@ -5160,318 +5175,347 @@ bool TissueFunctor::setGenerated(
   key_size_t dummy_key;
   if (miter == smap.end())
   {
-	  if (specialTreatment == "BidirectionalConnections")
-	  {//detect if any capsule of the Touch already involved in 
-		  //another bidirectional-connection. If so, ignore it (or 
-		  //...we can decide which one to keep)
-		  key_size_t key1 = (*titer).getKey1();
-		  key_size_t key2 = (*titer).getKey2();
-		  key_size_t key_spineneck=-1.0;
-		  newTouchIsNeckDenShaft = (*titer).hasSpineNeck(key_spineneck);
-		  double propSpineNeck =0;
-		  propSpineNeck = (key1 == key_spineneck)? (*titer).getProp1(): (*titer).getProp2();
+    if (specialTreatment == "BidirectionalConnections")
+    {  // detect if any capsule of the Touch
+       // already involved in
+      // another bidirectional-connection. If so, ignore it (or
+      //...we can decide which one to keep)
+      key_size_t key1 = (*titer).getKey1();
+      key_size_t key2 = (*titer).getKey2();
+      key_size_t key_spineneck = -1.0;
+      newTouchIsNeckDenShaft = (*titer).hasSpineNeck(key_spineneck);
+      double propSpineNeck = 0;
+      propSpineNeck =
+          (key1 == key_spineneck) ? (*titer).getProp1() : (*titer).getProp2();
 
-		  //more constraint
-		  //newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck > 0.99);
-		  //Using propSpineNeck == 1.0 help to reduce the chance for the below bug to occur
-		  //TUAN TODO: there is still potential bug when the spine neck is cut by the 
-		  //  TissueSlicer  and thus a SpineAttachment* is created but not sure on which 
-		  //  MPIProcess
-		  //newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck == 1.0);
-		  Capsule* neckCapsule =
-		      &_tissueContext->_capsules[_tissueContext->getCapsuleIndex(key_spineneck)];
-		  ComputeBranch* branch = neckCapsule->getBranch();
-		    newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck > 0.99) and
-		  	  branch->_daughters.size() == 0;
-		  if (newTouchIsNeckDenShaft )
-		  {
-			  bool isSide1 = (key_spineneck == key1);
+      // more constraint
+      // newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck >
+      // 0.99);
+      // Using propSpineNeck == 1.0 help to reduce the chance for the below bug
+      // to occur
+      // TUAN TODO: there is still potential bug when the spine neck is cut by
+      // the
+      //  TissueSlicer  and thus a SpineAttachment* is created but not sure on
+      //  which
+      //  MPIProcess
+      // newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and (propSpineNeck ==
+      // 1.0);
+      Capsule* neckCapsule =
+          &_tissueContext
+               ->_capsules[_tissueContext->getCapsuleIndex(key_spineneck)];
+      ComputeBranch* branch = neckCapsule->getBranch();
+      newTouchIsNeckDenShaft = newTouchIsNeckDenShaft and
+                               //  (propSpineNeck > 0.98) and
+                               branch->_daughters.size() == 0;
+      if (newTouchIsNeckDenShaft)
+      {
+        bool isSide1 = (key_spineneck == key1);
 
 #ifndef LTWT_TOUCH
-			  double dist = (*titer).getDistance();
+        double dist = (*titer).getDistance();
 #endif
-			  int count = 0;
-			  double propSpineNeck_inloop=0.0;
-			  Touch* touchCanBeRemoved=0;
-			  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
-			  {
-				  Touch* touch = it->first;
-				  key_size_t key1_inloop = (*touch).getKey1();
-				  key_size_t key2_inloop = (*touch).getKey2();
-				  key_size_t key_inloop_spineneck=+1.0;
-				  (*touch).hasSpineNeck(key_inloop_spineneck);
-				  propSpineNeck_inloop = (key1_inloop == key_inloop_spineneck)? (*touch).getProp1() : (*touch).getProp2();
-				  bool isSide1_inloop = (key_inloop_spineneck == key1_inloop);
+        int count = 0;
+        double propSpineNeck_inloop = 0.0;
+        Touch* touchCanBeRemoved = 0;
+        for (std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator
+                 it = smap.begin();
+             it != smap.end(); ++it)
+        {
+          Touch* touch = it->first;
+          key_size_t key1_inloop = (*touch).getKey1();
+          key_size_t key2_inloop = (*touch).getKey2();
+          key_size_t key_inloop_spineneck = +1.0;
+          (*touch).hasSpineNeck(key_inloop_spineneck);
+          propSpineNeck_inloop = (key1_inloop == key_inloop_spineneck)
+                                     ? (*touch).getProp1()
+                                     : (*touch).getProp2();
+          bool isSide1_inloop = (key_inloop_spineneck == key1_inloop);
 #ifndef LTWT_TOUCH
-				  double dist_inloop = (*touch).getDistance();
+          double dist_inloop = (*touch).getDistance();
 #endif
-				  // equal and must be on the same side (i.e. either both first keys or 
-				  //                                    both second keys)
-				  //if (key_spineneck == key_inloop_spineneck)
-				  if ((key_spineneck == key_inloop_spineneck)
-						  //  and (isSide1 == isSide1_inloop)
-					 )
-				  {
-					  if (0)
-					  {//debug purpose
-					  
-						 std::cout << "found " << key1 << " "
-						 << key2 << " "
-						 << key_spineneck << " "
-						 << key1_inloop << " "
-						 << key2_inloop << " "
-						 << key_inloop_spineneck << " " 
-						 << isSide1 << isSide1_inloop << " "
-						 << propSpineNeck << " " << propSpineNeck_inloop  
+          // equal and must be on the same side (i.e. either both first keys or
+          //                                    both second keys)
+          // if (key_spineneck == key_inloop_spineneck)
+          if ((key_spineneck == key_inloop_spineneck)
+              //  and (isSide1 == isSide1_inloop)
+              )
+          {
+            if (0)
+            {  // debug purpose
+
+              std::cout << "found " << key1 << " " << key2 << " "
+                        << key_spineneck << " " << key1_inloop << " "
+                        << key2_inloop << " " << key_inloop_spineneck << " "
+                        << isSide1 << isSide1_inloop << " " << propSpineNeck
+                        << " " << propSpineNeck_inloop
 #ifndef LTWT_TOUCH
-						 << dist << " " << dist_inloop
+                        << dist << " " << dist_inloop
 #endif
-						 << std::endl;
+                        << std::endl;
+            }
+            // count += 1;
+            // if (count ==2)
+            //{
+            touchSpineNeckDenShaftIsUsed = true;
+            touchCanBeRemoved = it->first;
+            // TUAN TODO
+            // we may use the comparison between propSpineNeck and
+            // propSpineNeck_inloop
+            // to determine which connection is the right one for the spine
+            break;
+            //}
+          }
+          // string value = it->second;
+        }
+        // if ((touchSpineNeckDenShaftIsUsed) and (propSpineNeck >
+        // propSpineNeck_inloop))
+        // {//the newer touch is considered better reflect the
+        // spineneck-denshaft touch
+        //     //remove the existing one
+        //     assert(smap.erase(touchCanBeRemoved) ==1);
+        //     //make sure the new one will be added
+        //     touchSpineNeckDenShaftIsUsed=false;
+        // }
+        if (!touchSpineNeckDenShaftIsUsed)
+        {
+          smap[&(*titer)] = std::list<std::pair<int, int> >();
+          miter = smap.find(&(*titer));
+          newlyCreated = true;
+        }
+      }
+    }
+    else if (specialTreatment == "SynapticClefts" ||
+             specialTreatment == "PreSynapticPoints")
+    {  // first make sure this Touch is a
+       // valid ChemicalSynapse touch
+      if ((*titer).isSpineless(dummy_key))
+      {  // spine-less touch
+        key_size_t key1 = (*titer).getKey1();
+        key_size_t key2 = (*titer).getKey2();
+        key_size_t axon_key = -1.0;
+        newTouchIsSpinelessChemSynapse = (*titer).isSpineless(axon_key);
+        double propBouton =
+            (key1 == axon_key) ? (*titer).getProp1() : (*titer).getProp2();
 
-					  }
-					  //count += 1;
-					  //if (count ==2)
-					  //{
-					  touchSpineNeckDenShaftIsUsed = true;
-					  touchCanBeRemoved=it->first;
-					  //TUAN TODO
-					  //we may use the comparison between propSpineNeck and propSpineNeck_inloop
-					  //to determine which connection is the right one for the spine
-					  break;
-					  //}
-				  }
-				  //string value = it->second;
-			  }
-			 // if ((touchSpineNeckDenShaftIsUsed) and (propSpineNeck > propSpineNeck_inloop))
-			 // {//the newer touch is considered better reflect the spineneck-denshaft touch
-			 //     //remove the existing one
-			 //     assert(smap.erase(touchCanBeRemoved) ==1); 
-			 //     //make sure the new one will be added 
-			 //     touchSpineNeckDenShaftIsUsed=false;
-			 // }
-			  if (! touchSpineNeckDenShaftIsUsed)
-			  {
-				  smap[&(*titer)] = std::list<std::pair<int, int> >();
-				  miter = smap.find(&(*titer));
-				  newlyCreated = true;
-			  }
+        // more constraint
+        newTouchIsSpinelessChemSynapse =
+            newTouchIsSpinelessChemSynapse && (propBouton > 0.99);
+        // newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse &&
+        // (propBouton == 1.0);
+        if (newTouchIsSpinelessChemSynapse)
+        {  // detect if any capsule of the
+           // Touch already involved in
+          // another chemical synapse-connection. If so, ignore it (or
+          //...we can decide which one to keep)
 
-		  }
-		  
-	  }
-	  else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
-	  {	//first make sure this Touch is a valid ChemicalSynapse touch
-		  if ((*titer).isSpineless(dummy_key))
-		  {//spine-less touch
-			  key_size_t key1 = (*titer).getKey1();
-			  key_size_t key2 = (*titer).getKey2();
-			  key_size_t axon_key=-1.0;
-			  newTouchIsSpinelessChemSynapse = (*titer).isSpineless(axon_key);
-			  double propBouton = (key1 == axon_key)? (*titer).getProp1() : (*titer).getProp2();
-
-			  //more constraint
-			  newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton > 0.99);
-			  //newTouchIsSpinelessChemSynapse = newTouchIsSpinelessChemSynapse && (propBouton == 1.0);
-			  if (newTouchIsSpinelessChemSynapse)
-			  {//detect if any capsule of the Touch already involved in 
-				  //another chemical synapse-connection. If so, ignore it (or 
-				  //...we can decide which one to keep)
-
-				  bool isSide1 = (axon_key == key1);
+          bool isSide1 = (axon_key == key1);
 #ifndef LTWT_TOUCH
-				  double dist = (*titer).getDistance();
+          double dist = (*titer).getDistance();
 #endif
-				  int count = 0;
-				  double propBouton_inloop=0.0;
-				  Touch* touchCanBeRemoved=0;
-				  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
-				  {
-					  Touch* touch = it->first;
-					  key_size_t key1_inloop = (*touch).getKey1();
-					  key_size_t key2_inloop = (*touch).getKey2();
-					  key_size_t key_inloop_axon=+1.0;
-					  if ((*touch).isSpineless(key_inloop_axon))
-					  {
-						  propBouton_inloop = (key1_inloop == key_inloop_axon) ? (*touch).getProp1() : (*touch).getProp2();
-						  bool isSide1_inloop = (key_inloop_axon == key1_inloop);
+          int count = 0;
+          double propBouton_inloop = 0.0;
+          Touch* touchCanBeRemoved = 0;
+          for (std::map<Touch*,
+                        std::list<std::pair<int, int> > >::const_iterator it =
+                   smap.begin();
+               it != smap.end(); ++it)
+          {
+            Touch* touch = it->first;
+            key_size_t key1_inloop = (*touch).getKey1();
+            key_size_t key2_inloop = (*touch).getKey2();
+            key_size_t key_inloop_axon = +1.0;
+            if ((*touch).isSpineless(key_inloop_axon))
+            {
+              propBouton_inloop = (key1_inloop == key_inloop_axon)
+                                      ? (*touch).getProp1()
+                                      : (*touch).getProp2();
+              bool isSide1_inloop = (key_inloop_axon == key1_inloop);
 #ifndef LTWT_TOUCH
-						  double dist_inloop = (*touch).getDistance();
+              double dist_inloop = (*touch).getDistance();
 #endif
-						  // equal and must be on the same side (i.e. either both first keys or 
-						  //                                    both second keys)
-						  if ((axon_key == key_inloop_axon)
-								  //  and (isSide1 == isSide1_inloop)
-							 )
-						  {
-							  if (0)
-							  {
-								  std::cout << "found " << key1 << " "
-									  << key2 << " "
-									  << axon_key << " "
-									  << key1_inloop << " "
-									  << key2_inloop << " "
-									  << key_inloop_axon << " " 
-									  << isSide1 << isSide1_inloop << " "
-									  << propBouton << " " << propBouton_inloop  
+              // equal and must be on the same side (i.e. either both first keys
+              // or
+              //                                    both second keys)
+              if ((axon_key == key_inloop_axon)
+                  //  and (isSide1 == isSide1_inloop)
+                  )
+              {
+                if (0)
+                {
+                  std::cout << "found " << key1 << " " << key2 << " "
+                            << axon_key << " " << key1_inloop << " "
+                            << key2_inloop << " " << key_inloop_axon << " "
+                            << isSide1 << isSide1_inloop << " " << propBouton
+                            << " " << propBouton_inloop
 #ifndef LTWT_TOUCH
-									  << dist << " " << dist_inloop
+                            << dist << " " << dist_inloop
 #endif
-									  << std::endl;
-							  }
-							  //count += 1;
-							  //if (count ==2)
-							  //{
-							  touchChemSynapseIsUsed = true;
-							  touchCanBeRemoved=it->first;
-							  //TUAN TODO
-							  //we may use the comparison between propBouton and propBouton_inloop
-							  //to determine which connection is the right one for the spine
-							  break;
-							  //}
-						  }
+                            << std::endl;
+                }
+                // count += 1;
+                // if (count ==2)
+                //{
+                touchChemSynapseIsUsed = true;
+                touchCanBeRemoved = it->first;
+                // TUAN TODO
+                // we may use the comparison between propBouton and
+                // propBouton_inloop
+                // to determine which connection is the right one for the spine
+                break;
+                //}
+              }
+            }
+            // string value = it->second;
+          }
+          // TUAN TODO: try to think a way to do find the right touch
+          // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
+          // {//the newer touch is considered better reflect the
+          // bouton-spineHead touch
+          //     //remove the existing one
+          //     assert(smap.erase(touchCanBeRemoved) ==1);
+          //     //make sure the new one will be added
+          //     touchChemSynapseIsUsed=false;
+          // }
+          if (!touchChemSynapseIsUsed)
+          {
+            smap[&(*titer)] = std::list<std::pair<int, int> >();
+            miter = smap.find(&(*titer));
+            newlyCreated = true;
+          }
+        }
+      }
+      else
+      {  // spiny-touch
+        key_size_t key1 = (*titer).getKey1();
+        key_size_t key2 = (*titer).getKey2();
+        key_size_t key_spinehead = -1.0;
+        newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);
+        double propBouton =
+            (key1 == key_spinehead) ? (*titer).getProp2() : (*titer).getProp1();
 
-					  }
-					  //string value = it->second;
-				  }
-				  //TUAN TODO: try to think a way to do find the right touch
-				  // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
-				  // {//the newer touch is considered better reflect the bouton-spineHead touch
-				  //     //remove the existing one
-				  //     assert(smap.erase(touchCanBeRemoved) ==1); 
-				  //     //make sure the new one will be added 
-				  //     touchChemSynapseIsUsed=false;
-				  // }
-				  if (! touchChemSynapseIsUsed)
-				  {
-					  smap[&(*titer)] = std::list<std::pair<int, int> >();
-					  miter = smap.find(&(*titer));
-					  newlyCreated = true;
-				  }
+        // more constraint
+        newTouchIsChemSynapse = newTouchIsChemSynapse && (propBouton > 0.99);
+        if (newTouchIsChemSynapse)
+        {  // detect if any capsule of the Touch
+           // already involved in
+          // another chemical synapse-connection. If so, ignore it (or
+          //...we can decide which one to keep)
 
-			  }
-		  }
-		  else
-		  {//spiny-touch
-			  key_size_t key1 = (*titer).getKey1();
-			  key_size_t key2 = (*titer).getKey2();
-			  key_size_t key_spinehead=-1.0;
-			  newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);
-			  double propBouton = (key1 == key_spinehead)? (*titer).getProp2() : (*titer).getProp1();
-
-			  //more constraint
-			  newTouchIsChemSynapse = newTouchIsChemSynapse && (propBouton > 0.99);
-			  if (newTouchIsChemSynapse)
-			  {//detect if any capsule of the Touch already involved in 
-				  //another chemical synapse-connection. If so, ignore it (or 
-				  //...we can decide which one to keep)
-
-				  bool isSide1 = (key_spinehead == key1);
+          bool isSide1 = (key_spinehead == key1);
 #ifndef LTWT_TOUCH
-				  double dist = (*titer).getDistance();
+          double dist = (*titer).getDistance();
 #endif
-				  int count = 0;
-				  double propBouton_inloop=0.0;
-				  Touch* touchCanBeRemoved=0;
-				  for( std::map<Touch*, std::list<std::pair<int, int> > >::const_iterator it = smap.begin(); it != smap.end(); ++it  )
-				  {
-					  Touch* touch = it->first;
-					  key_size_t key1_inloop = (*touch).getKey1();
-					  key_size_t key2_inloop = (*touch).getKey2();
-					  key_size_t key_inloop_spinehead=+1.0;
-					  (*touch).hasSpineHead(key_inloop_spinehead);
-					  propBouton_inloop = (key1_inloop == key_inloop_spinehead) ? (*touch).getProp2() : (*touch).getProp1();
-					  bool isSide1_inloop = (key_inloop_spinehead == key1_inloop);
+          int count = 0;
+          double propBouton_inloop = 0.0;
+          Touch* touchCanBeRemoved = 0;
+          for (std::map<Touch*,
+                        std::list<std::pair<int, int> > >::const_iterator it =
+                   smap.begin();
+               it != smap.end(); ++it)
+          {
+            Touch* touch = it->first;
+            key_size_t key1_inloop = (*touch).getKey1();
+            key_size_t key2_inloop = (*touch).getKey2();
+            key_size_t key_inloop_spinehead = +1.0;
+            (*touch).hasSpineHead(key_inloop_spinehead);
+            propBouton_inloop = (key1_inloop == key_inloop_spinehead)
+                                    ? (*touch).getProp2()
+                                    : (*touch).getProp1();
+            bool isSide1_inloop = (key_inloop_spinehead == key1_inloop);
 #ifndef LTWT_TOUCH
-					  double dist_inloop = (*touch).getDistance();
+            double dist_inloop = (*touch).getDistance();
 #endif
-					  // equal and must be on the same side (i.e. either both first keys or 
-					  //                                    both second keys)
-					  //if (key_spinehead == key_inloop_spinehead)
-					  if ((key_spinehead == key_inloop_spinehead)
-							  //  and (isSide1 == isSide1_inloop)
-						 )
-					  {
-						  if (0)
-						  {
-							  std::cout << "found " << key1 << " "
-								  << key2 << " "
-								  << key_spinehead << " "
-								  << key1_inloop << " "
-								  << key2_inloop << " "
-								  << key_inloop_spinehead << " " 
-								  << isSide1 << isSide1_inloop << " "
-								  << propBouton << " " << propBouton_inloop  
+            // equal and must be on the same side (i.e. either both first keys
+            // or
+            //                                    both second keys)
+            // if (key_spinehead == key_inloop_spinehead)
+            if ((key_spinehead == key_inloop_spinehead)
+                //  and (isSide1 == isSide1_inloop)
+                )
+            {
+              if (0)
+              {
+                std::cout << "found " << key1 << " " << key2 << " "
+                          << key_spinehead << " " << key1_inloop << " "
+                          << key2_inloop << " " << key_inloop_spinehead << " "
+                          << isSide1 << isSide1_inloop << " " << propBouton
+                          << " " << propBouton_inloop
 #ifndef LTWT_TOUCH
-								  << dist << " " << dist_inloop
+                          << dist << " " << dist_inloop
 #endif
-								  << std::endl;
-						  }
-						  //count += 1;
-						  //if (count ==2)
-						  //{
-						  touchChemSynapseIsUsed = true;
-						  touchCanBeRemoved=it->first;
-						  //TUAN TODO
-						  //we may use the comparison between propBouton and propBouton_inloop
-						  //to determine which connection is the right one for the spine
-						  break;
-						  //}
-					  }
-					  //string value = it->second;
-				  }
-				  //TUAN TODO: try to think a way to do find the right touch
-				  // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
-				  // {//the newer touch is considered better reflect the bouton-spineHead touch
-				  //     //remove the existing one
-				  //     assert(smap.erase(touchCanBeRemoved) ==1); 
-				  //     //make sure the new one will be added 
-				  //     touchChemSynapseIsUsed=false;
-				  // }
-				  if (! touchChemSynapseIsUsed)
-				  {
-					  smap[&(*titer)] = std::list<std::pair<int, int> >();
-					  miter = smap.find(&(*titer));
-					  newlyCreated = true;
-				  }
-
-			  }
-
-		  }
-	  }
-	  else if (specialTreatment == "ChemicalSynapses")
-	  {//always add it here
-		  smap[&(*titer)] = std::list<std::pair<int, int> >();
-		  miter = smap.find(&(*titer));
-		  newlyCreated = true;
-	  }
-	  else
-	  {
-		  smap[&(*titer)] = std::list<std::pair<int, int> >();
-		  miter = smap.find(&(*titer));
-		  newlyCreated = true;
-	  }
+                          << std::endl;
+              }
+              // count += 1;
+              // if (count ==2)
+              //{
+              touchChemSynapseIsUsed = true;
+              touchCanBeRemoved = it->first;
+              // TUAN TODO
+              // we may use the comparison between propBouton and
+              // propBouton_inloop
+              // to determine which connection is the right one for the spine
+              break;
+              //}
+            }
+            // string value = it->second;
+          }
+          // TUAN TODO: try to think a way to do find the right touch
+          // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
+          // {//the newer touch is considered better reflect the
+          // bouton-spineHead touch
+          //     //remove the existing one
+          //     assert(smap.erase(touchCanBeRemoved) ==1);
+          //     //make sure the new one will be added
+          //     touchChemSynapseIsUsed=false;
+          // }
+          if (!touchChemSynapseIsUsed)
+          {
+            smap[&(*titer)] = std::list<std::pair<int, int> >();
+            miter = smap.find(&(*titer));
+            newlyCreated = true;
+          }
+        }
+      }
+    }
+    else if (specialTreatment == "ChemicalSynapses")
+    {  // always add it here
+      smap[&(*titer)] = std::list<std::pair<int, int> >();
+      miter = smap.find(&(*titer));
+      newlyCreated = true;
+    }
+    else
+    {
+      smap[&(*titer)] = std::list<std::pair<int, int> >();
+      miter = smap.find(&(*titer));
+      newlyCreated = true;
+    }
   }
-  else alreadyThere=true;
-	  
+  else
+    alreadyThere = true;
+
   bool rval = true;
   // Special treatment
   // for BidirectionalConnections, we only create for 1 touch
   if (specialTreatment == "BidirectionalConnections")
   {
-	  //if (newlyCreated or alreadyThere) 
-	  if (newTouchIsNeckDenShaft and ! touchSpineNeckDenShaftIsUsed)
-		  miter->second.push_back(std::pair<int, int>(type, order));
-	  else rval = false;
+    // if (newlyCreated or alreadyThere)
+    if (newTouchIsNeckDenShaft and !touchSpineNeckDenShaftIsUsed)
+      miter->second.push_back(std::pair<int, int>(type, order));
+    else
+      rval = false;
   }
-  else if (specialTreatment == "SynapticClefts" || specialTreatment == "PreSynapticPoints")
+  else if (specialTreatment == "SynapticClefts" ||
+           specialTreatment == "PreSynapticPoints")
   {
-	  if ((newTouchIsChemSynapse || newTouchIsSpinelessChemSynapse) and ! touchChemSynapseIsUsed)
-		  miter->second.push_back(std::pair<int, int>(type, order));
-	  else rval = false;
+    if ((newTouchIsChemSynapse || newTouchIsSpinelessChemSynapse) and
+        !touchChemSynapseIsUsed)
+      miter->second.push_back(std::pair<int, int>(type, order));
+    else
+      rval = false;
   }
   else
   {
-	  miter->second.push_back(std::pair<int, int>(type, order));
+    miter->second.push_back(std::pair<int, int>(type, order));
   }
   return rval;
 }
@@ -5515,9 +5559,9 @@ std::list<Params::ChemicalSynapseTarget>::iterator
 //      e.g. 'DenSpine' for ChemicalSynapses
 //   (NOTE: one 'order' can have one or many 'name' defined via SynParam.par file)
 //  PARAMS:
-//   smap = the map holding what touch has been added, 
+//   smap = the map holding what touch has been added,
 //               and is used for what pair of (type,order)
-//  NOTE: It is called during doConnect 
+//  NOTE: It is called during doConnect
 //   and the maps 'smap' is setup (created) during
 //    doLayout via setGenerated()  method
 bool TissueFunctor::isGenerated(
@@ -5714,30 +5758,32 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
   std::vector<int> cptsizes_in_branch;
   bool isDistalEndSeeImplicitBranchingPoint;
   int ncpts = getNumCompartments(branch, cptsizes_in_branch,
-		  isDistalEndSeeImplicitBranchingPoint);
-  int cps_index = (capsule - capsule->getBranch()->_capsules); //zero-based index
+                                 isDistalEndSeeImplicitBranchingPoint);
+  int cps_index =
+      (capsule - capsule->getBranch()->_capsules);  // zero-based index
   //# capsules in that branch
   int ncaps = branch->_nCapsules;
   int cps_index_reverse = ncaps - cps_index - 1;  // from the distal-end
   std::vector<int>::iterator iter = cptsizes_in_branch.begin(),
-	  iterend = cptsizes_in_branch.end();
+                             iterend = cptsizes_in_branch.end();
   int count = 0;
   int cptIndex = 0;
 
   for (; iter < iterend; iter++)
   {
-	  count = count + *iter;
-	  if  (count >= cps_index_reverse){
-		  break;
-	  }
-	  cptIndex++;
+    count = count + *iter;
+    if (count >= cps_index_reverse)
+    {
+      break;
+    }
+    cptIndex++;
   }
-  //DEBUG PURPOSE
-  //if (cptIndex >= cptsizes_in_branch.size())
+  // DEBUG PURPOSE
+  // if (cptIndex >= cptsizes_in_branch.size())
   //{
   //    std::cerr << "Total compartments: " << cptsizes_in_branch.size()
-  //  	     << "#capsules " << ncaps 
-  //  	     << "cps_index " << cps_index 
+  //  	     << "#capsules " << ncaps
+  //  	     << "cps_index " << cps_index
   //          << "index to compart " << cps_index_reverse << std::endl;
   //    iter = cptsizes_in_branch.begin();
   //    count = 0;
@@ -5836,7 +5882,8 @@ int TissueFunctor::getNumCompartments(
   // e.g. soma has only 1 capsule
   int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
 #ifdef IDEA1
-  //suppose the branch is long enough, reverse some capsules at each end for branchpoint
+// suppose the branch is long enough, reverse some capsules at each end for
+// branchpoint
 #endif
   // Find: # compartments in the current branch
   ncpts = (int(floor(double(ncaps) / double(cptSize))) > 0)
@@ -5845,7 +5892,7 @@ int TissueFunctor::getNumCompartments(
   int remainder_caps;
   remainder_caps = ncaps - cptSize * ncpts;
   cptsizes_in_branch.clear();
-  int increment = int(floor(float(remainder_caps)/ncpts));
+  int increment = int(floor(float(remainder_caps) / ncpts));
   remainder_caps = remainder_caps - ncpts * increment;
   for (int ii = 0; ii < ncpts; ii++)
   {
@@ -5878,16 +5925,17 @@ int TissueFunctor::getNumCompartments(ComputeBranch* branch)
   bool dummy;
   return getNumCompartments(branch, dummy);
 }
-  
-bool TissueFunctor::touchIsChemicalSynapse(std::map<Touch*, std::list<std::pair<int, int> > >& smap,
-		TouchVector::TouchIterator& titer)
-{ 
-	bool rval = true;
+
+bool TissueFunctor::touchIsChemicalSynapse(
+    std::map<Touch*, std::list<std::pair<int, int> > >& smap,
+    TouchVector::TouchIterator& titer)
+{
+  bool rval = true;
   std::map<Touch*, std::list<std::pair<int, int> > >::iterator miter =
       smap.find(&(*titer));
   if (miter == smap.end())
   {
-	  rval = false;
+    rval = false;
   }
   return rval;
 }

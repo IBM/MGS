@@ -24,11 +24,12 @@
 #include "Segment.h"
 
 //#define SOMA_BRANCH 0
-//#define APICAL_BRANCH 1
+//#define AXON_BRANCH 1
 //#define BASAL_BRANCH 2
-//#define AXON_BRANCH 3
+//#define APICAL_BRANCH 3
 //#define AIS_BRANCH 4
 //#define TUFT_BRANCH 5
+//#define BOUTON_BRANCH 6
 
 class Neuron;
 
@@ -47,12 +48,12 @@ class Branch {
       Segment* loadText(FILE*, Segment*, Neuron*, const int branchIndex, std::list<int>& branchTerminals,
 			double xOffset, double yOffset, double zOffset, int cellBodyCorrection);
       void writeCoordinates(FILE*);
-      const int getBranchType() {return _branchType;}
-      const int getBranchOrder() {return _branchOrder;}
-      const double getDist2Soma() {return _dist2Soma;}
-      const double getLength();
-      const int getBranchIndex() {return _branchIndex;}
-      const int getNumberOfSegments() {return _numberOfSegments;}
+      int getBranchType() const {return _branchType;}
+      int getBranchOrder() const {return _branchOrder;}
+      double getDist2Soma() const {return _dist2Soma;}
+      double getLength() const;
+      int getBranchIndex() const {return _branchIndex;}
+      int getNumberOfSegments() const {return _numberOfSegments;}
       Segment* getSegments() {return _segments;}
       Segment* getTerminalSegment() {return &_segments[_numberOfSegments-1];}
       double* getDisplacedTerminalCoords() {return _displacedTerminalCoords;}

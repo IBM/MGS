@@ -1,0 +1,107 @@
+//polyConnect(timeStep, ReversalPotentialDisplay_0, <>, <>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=0>), ReversalPotentialDisplay_0, <>, <identifier="CHANNEL">);
+
+ //neuron soma
+ //{{{
+ //{{{soma
+#define neuronIndex 0
+  polyConnect(timeStep, voltageSomaDisplay, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), voltageSomaDisplay, <>, <>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), calciumSomaDisplay, <>, <>);
+#endif
+ //}}}
+  //{{{dendrite shaft
+  //{{{LOCATION 1
+  TissueSite distalDenSite(64.136, 834.27, -14.87, 15.0);
+  polyConnect(timeStep, voltageDisplay_den, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den, <>, <site=distalDenSite>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+  polyConnect(timeStep, calciumDisplay_den, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den, <>, <site=distalDenSite>);
+#endif
+  //}}}
+  //{{{LOCATION 2
+  //}}}
+  //}}}
+ //}}}
+
+  //mushroom spine + bouton
+#define spineIndex 2
+#define boutonIndex 3
+  //{{{
+  //{{{spine Vm+Ca
+  polyConnect(timeStep, spineVoltageDisplay, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, spineCalciumDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineCalciumDisplay, <>, <>);
+#endif
+  //}}}
+  //{{{NMDAR current
+polyConnect(timeStep, currentNMDARDisplay, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDAmush", NEURON_INDEX=spineIndex>), currentNMDARDisplay, <>, <identifier="SYNAPSE">);
+  //}}}
+  //{{{AMPAR
+polyConnect(timeStep, currentAMPARDisplay, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", NEURON_INDEX=spineIndex>), currentAMPARDisplay, <>, <identifier="SYNAPSE">);
+  //}}}
+  //{{{bouton
+//  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), voltageDisplay, <>, <>);
+//#if SIMULATION_INVOLVE >= VM_CACYTO
+//   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), calciumSomaDisplay, <>, <>);
+//#endif
+  //}}}
+  //}}}
+
+  //thin spine + bouton
+#define spineIndex 2
+#define boutonIndex 3
+  //{{{
+  //{{{spine Vm+Ca
+   polyConnect(timeStep, spineVoltageDisplay, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+   polyConnect(timeStep, spineCalciumDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineCalciumDisplay, <>, <>);
+#endif
+  //}}}
+  //{{{NMDAR current
+polyConnect(timeStep, currentNMDARDisplay, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDAthin", NEURON_INDEX=spineIndex>), currentNMDARDisplay, <>, <identifier="SYNAPSE">);
+  //}}}
+  //{{{AMPAR
+polyConnect(timeStep, currentAMPARDisplay, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAthin", NEURON_INDEX=spineIndex>), currentAMPARDisplay, <>, <identifier="SYNAPSE">);
+  //}}}
+  //{{{bouton
+//  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), voltageDisplay, <>, <>);
+//#if SIMULATION_INVOLVE >= VM_CACYTO
+//   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), calciumSomaDisplay, <>, <>);
+//#endif
+  //}}}
+  //}}}
+
+
+/*
+	TissueSite synapseSite_0( -41.813, 175.470, -0.645, 7.0 );
+	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
+	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite_0>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+	polyConnect(timeStep, synapseCalciumDisplay0, <>, <>);
+	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite_0>);
+#endif
+
+*/
+
+
+//	TissueSite synapseSite_0( 62.126, 646.12, 16.34, 3.0);
+//	polyConnect(timeStep, spineVoltageDisplay, <>, <>);
+//	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=2>), spineVoltageDisplay, <>, <site=synapseSite_0>);
+//
+//	polyConnect(timeStep, spineCalciumDisplay, <>, <>);
+//	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=2>), spineCalciumDisplay, <>, <site=synapseSite_0>);
+

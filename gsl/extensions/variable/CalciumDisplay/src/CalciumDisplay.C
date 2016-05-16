@@ -25,6 +25,7 @@
 #include <memory>
 
 #define decimal_places 5
+#define fieldDelimiter "\t"
 
 void CalciumDisplay::initialize(RNG& rng)
 {
@@ -35,13 +36,21 @@ void CalciumDisplay::initialize(RNG& rng)
     os << fileName << getSimulation().getRank();
     outFile = new std::ofstream(os.str().c_str());
     outFile->precision(decimal_places);
-    (*outFile) << "#Time\tCalcium :";
-    if (indices.size() == 0)
+	// print out the header:
+	// NOTE: The first field is always the time, and then next each field
+	// represent the data from one specific recording compartment/channel
+	// This compartment/channel can be uniquely identified using the
+	// header information
+	// The header each field has the format
+	//[key-cpt,index-of-that-cpt](x,y,z,r,dist2soma) ...
+	(*outFile) << "#Time" << fieldDelimiter << "Calcium :";
+	if (indices.size() == 0)
     {
-      for (int i = 0; i < dimensions.size(); ++i)
+      for (unsigned int i = 0; i < dimensions.size(); ++i)
       {
-        for (int j = 0; j < dimensions[i]->size(); ++j)
+        for (unsigned int j = 0; j < dimensions[i]->size(); ++j)
         {
+					//TUAN TODO: potential BUG when key is not unsigned long long
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(
                             &branchData[i]->key)) << "," << j << "]("
@@ -95,7 +104,8 @@ void CalciumDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
       {
         ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
                                           end2 = (*it1)->end();
-        for (; it2 != end2; ++it2) (*outFile) << std::fixed << "\t" << (*it2);
+        for (; it2 != end2; ++it2)
+          (*outFile) << std::fixed << fieldDelimiter << (*it2);
       }
     }
     else
@@ -111,7 +121,7 @@ void CalciumDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         for (; it3 != end3; ++it3)
         {
           assert(*it3 < (*it1)->size());
-          (*outFile) << std::fixed << "\t" << (**it1)[*it3];
+          (*outFile) << std::fixed << fieldDelimiter << (**it1)[*it3];
         }
       }
     }

@@ -172,6 +172,8 @@ void TissueContext::writeData(FILE* data)
   }
 }
 
+// GOAL: put capsules to the capsuleMap
+//
 int TissueContext::setUpCapsules(int nCapsules, DetectionPass detectionPass,
                                  int rank, int maxComputeOrder)
 {

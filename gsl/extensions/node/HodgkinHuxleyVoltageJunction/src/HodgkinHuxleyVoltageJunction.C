@@ -168,6 +168,9 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   Vnew[0] = current / conductance;
 
 #ifdef DEBUG_ASSERT
+  if (not (Vnew[0] == Vnew[0])){
+	  printDebugHH();
+  }
 	assert(Vnew[0] == Vnew[0]);
 #endif
 
@@ -247,6 +250,10 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
 
 #ifdef DEBUG_ASSERT
+  if (not (Vnew[0] == Vnew[0])){
+    std::cerr << "Iteration: " << getSimulation().getIteration() << std::endl;
+	  printDebugHH();
+  }
 	assert(Vnew[0] == Vnew[0]);
 #endif
 

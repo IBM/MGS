@@ -1,0 +1,8 @@
+//CurrentPulseGenerator synapseStimInj_0<pattern="periodic", peak=0.1, duration=1, delay=200, period=600, last=3600, inc=0>;
+//CurrentPulseGenerator currentStimInj_0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
+//CurrentPulseGenerator currentStimInj_1<pattern="periodic", peak=2000, duration=3, period=5000, delay=400, last=3600, inc=0>; 
+
+ 
+CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=100.0, duration=5, period=100, delay=10, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=20.0, duration=5, period=100, delay=10, last=500, inc=0>;
+ 

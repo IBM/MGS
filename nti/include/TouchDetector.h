@@ -104,6 +104,8 @@ class TouchDetector : public Sender, public Receiver
   void doWork_new(int threadID, int i, ThreadUserData* data, Mutex* mutex);
   double findShortestDistance(Capsule& caps_from, Capsule& caps_to, Params*, int threadID,
 		 double &sc, double&tc ) const;
+  double findShortestDistance(double* coord, Capsule& caps_to, Params*, int threadID,
+		 double&tc ) const;
   Capsule* getProximalCapsule(Capsule* caps, int sid); //caps = array, sid = index
   std::vector<Capsule*> getDistalCapsules(Capsule* caps, int sid);
   bool isNeighborsFormingTouchSIDside(int threadID, Params* params, double dist, Capsule* caps, int sid, int sid2);

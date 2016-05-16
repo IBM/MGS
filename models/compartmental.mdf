@@ -25,6 +25,7 @@
 #include "ChannelCaT/ChannelCaT.mdl"
 
 #include "ChannelHCN/ChannelHCN.mdl"
+#include "ChannelHayHCN/ChannelHayHCN.mdl"
 
 #include "GABAAReceptor/GABAAReceptor.mdl"
 #include "AMPAReceptor/AMPAReceptor.mdl"

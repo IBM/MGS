@@ -135,6 +135,7 @@ double Touch::getProp(key_size_t key) {
 //       but automatically generated
 bool Touch::hasSpineNeck(key_size_t& key)
 {
+	//TUAN TODO POTENTIAL BUG
 	//right now, for single neuron scenario, 
 	// if one-side MTYPE > 0 and the other-side MTYPE=0
 	// indicate a spine-denshaft touch
@@ -144,17 +145,25 @@ bool Touch::hasSpineNeck(key_size_t& key)
 	key_size_t tkey1 = getKey1();
 	//NOTE: uf0 = MTYPE
 	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	unsigned int brchtype1 = _segmentDescriptor.getBranchType(tkey1);
 	key_size_t tkey2 = getKey2();
 	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
-  if (mtype1 > 0 && mtype2 == 0 )
+	unsigned int brchtype2 = _segmentDescriptor.getBranchType(tkey2);
+  if (mtype1 > 0 && mtype2 == 0 && brchtype1 == Branch::_BASALDEN)
+  //if (mtype1 > 0 && mtype2 == 0)
 	{
 		rval = true;
 		key = tkey1;
+		//std::cout << brchtype1+1 << brchtype2+1<< " ";
+		assert(mtype1 == 2 or mtype1 == 3);
 	}
-	if (mtype1 == 0 && mtype2 > 0)
+	if (mtype1 == 0 && mtype2 > 0 && brchtype2 == Branch::_BASALDEN)
+	//if (mtype1 == 0 && mtype2 > 0)
 	{
 		rval = true;
 		key = tkey2;
+		assert(mtype2 == 2 or mtype2 == 3);
+		//std::cout << brchtype2+1  << brchtype1+1<< " ";
 	}
 
 	return rval;

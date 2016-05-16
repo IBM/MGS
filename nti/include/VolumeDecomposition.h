@@ -51,6 +51,7 @@ class VolumeDecomposition : public Decomposition
   void decompose();
   void getRanks(Sphere* sphere, double deltaRadius, ShallowArray<int, MAXRETURNRANKS, 100>& ranks);
   int getRank(Sphere& sphere);
+  int getRank(double* coord);
   bool isCoordinatesBased() {return true;}
   void resetCriteria(SegmentSpace*);
   void resetCriteria(TouchSpace*);
