@@ -47,6 +47,8 @@
 #include "IntArrayDataItem.h"
 #include "DoubleDataItem.h"
 #include "DoubleArrayDataItem.h"
+#include "StringDataItem.h"
+#include "StringArrayDataItem.h"
 
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
@@ -1616,6 +1618,10 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 				else if (tokens[0] == "int")
 				{
 					arrayDI = new IntArrayDataItem(size);
+				}
+				else if (tokens[0] == "string")
+				{
+					arrayDI = new StringArrayDataItem(size);
 				}
 				assert(arrayDI);
 				std::string varName = tokens[tokens.size() - 1];
@@ -4899,6 +4905,14 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       NDPair* ndp = new NDPair(varName, paramDI_ap);
       paramsLocal.push_back(ndp);
     }
+    else if (tokens[0] == "string")
+    {
+      ////////////
+			StringDataItem* paramDI = new StringDataItem((int)cpiter->second);
+      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      NDPair* ndp = new NDPair(varName, paramDI_ap);
+      paramsLocal.push_back(ndp);
+    }
   }
 
   // NOTE: for channel data, e.g. gbar
@@ -4950,6 +4964,14 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
         NDPair* ndp = new NDPair(varName, paramDI_ap);
         paramsLocal.push_back(ndp);
       }
+    }
+    else if (tokens[0] == "string")
+    {
+      ////////////
+			StringDataItem* paramDI = new StringDataItem((int)cpiter->second);
+      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      NDPair* ndp = new NDPair(varName, paramDI_ap);
+      paramsLocal.push_back(ndp);
     }
   }
 }
