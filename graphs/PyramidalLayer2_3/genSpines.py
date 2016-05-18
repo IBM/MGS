@@ -2792,13 +2792,14 @@ class SomeClass(object):
         """
         e.g. inhibitory.txt
         """
-        try:
-            inhibitoryFile = open(self.inhibitoryFileName, "w")
-            np.savetxt(inhibitoryFile, self.inhibitory_output,
-                    fmt='%s %s %s %s %s %s %s %s %s %s %s %s %s %s')
-            inhibitoryFile.close()
-        except IOError:
-            print "Could not open file to write! Please check !" +  self.inhibitoryFileName
+        if (self.inhibitoryArray):
+            try:
+                inhibitoryFile = open(self.inhibitoryFileName, "w")
+                np.savetxt(inhibitoryFile, self.inhibitory_output,
+                        fmt='%s %s %s %s %s %s %s %s %s %s %s %s %s %s')
+                inhibitoryFile.close()
+            except IOError:
+                print "Could not open file to write! Please check !" +  self.inhibitoryFileName
 
     def saveStatisticsToFile(self):
         """
