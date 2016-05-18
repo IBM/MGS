@@ -33,6 +33,20 @@ voltageDisplay_den_middle.dataCollection(<>) on recOn;
 CalciumDisplay calciumDisplay_den_middle<fileName= PathFileCombine("middledendriticCa.dat")>;
 calciumDisplay_den_middle.dataCollection(<>) on recOn;
 //calciumDisplay_den_middle.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay voltageDisplay_perisomaticApicalDen<fileName= PathFileCombine("perisomaticApicalDenV.dat")>;
+voltageDisplay_perisomaticApicalDen.dataCollection(<>) on recOn;
+//voltageDisplay_perisomaticApicalDen.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_perisomaticApicalDen<fileName= PathFileCombine("perisomaticApicalDenCa.dat")>;
+calciumDisplay_perisomaticApicalDen.dataCollection(<>) on recOn;
+//calciumDisplay_perisomaticApicalDen.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay voltageDisplay_perisomaticBasalDen<fileName= PathFileCombine("perisomaticBasalDenV.dat")>;
+voltageDisplay_perisomaticBasalDen.dataCollection(<>) on recOn;
+//voltageDisplay_perisomaticBasalDen.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_perisomaticBasalDen<fileName= PathFileCombine("perisomaticBasalDenCa.dat")>;
+calciumDisplay_perisomaticBasalDen.dataCollection(<>) on recOn;
+//calciumDisplay_perisomaticBasalDen.dataCollection(<>) on recOnPassTime;
 //}}}
 //}}}
 

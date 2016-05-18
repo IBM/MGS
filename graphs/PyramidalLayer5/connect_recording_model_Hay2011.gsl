@@ -32,6 +32,24 @@
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_middle, <>, <site=middleDenSite2>);
 #endif
   //}}}
+  //{{{LOCATION 3 - perisomatic apicalDen
+  TissueSite perisomaticApicalDenSite2(1.23, 20.415, 6.3015, 15.0);
+  polyConnect(timeStep, voltageDisplay_perisomaticApicalDen, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_perisomaticApicalDen, <>, <site=perisomaticApicalDenSite2>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+  polyConnect(timeStep, calciumDisplay_perisomaticApicalDen, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_perisomaticApicalDen, <>, <site=perisomaticApicalDenSite2>);
+#endif
+  //}}}
+  //{{{LOCATION 4 - perisomatic basalDen
+  TissueSite perisomaticBasalDenSite2(-23.12, -12.87, 4.809, 15.0);
+  polyConnect(timeStep, voltageDisplay_perisomaticBasalDen, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_perisomaticBasalDen, <>, <site=perisomaticBasalDenSite2>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+  polyConnect(timeStep, calciumDisplay_perisomaticBasalDen, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_perisomaticBasalDen, <>, <site=perisomaticBasalDenSite2>);
+#endif
+  //}}}
   //}}}
  //}}}
 

@@ -2,7 +2,10 @@
 //CurrentPulseGenerator currentStimInj_0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
 //CurrentPulseGenerator currentStimInj_1<pattern="periodic", peak=2000, duration=3, period=5000, delay=400, last=3600, inc=0>; 
 
+//NOTE: Unit of current injection is [pA]
+// match the experiment  inject 1.9nA for 5ms at soma
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=5, period=510, delay=140, last=500, inc=0>; //GOOD
  
-CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=100.0, duration=5, period=100, delay=10, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=100.0, duration=5, period=100, delay=10, last=500, inc=0>; //GOOD
 //CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=20.0, duration=5, period=100, delay=10, last=500, inc=0>;
  

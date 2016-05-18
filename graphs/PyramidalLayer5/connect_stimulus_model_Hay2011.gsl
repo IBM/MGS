@@ -1,8 +1,9 @@
-//polyConnect(timeStep, currentStimInj_0, <>, <>);
+polyConnect(timeStep, somaStimInj, <>, <>);
+polyConnect(somaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+
 //polyConnect(timeStep, currentStimInj_1, <>, <>);
 //	polyConnect(timeStep, synapseStimInj_0, <>, <>);
 //	polyConnect(synapseStimInj_0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), <>, <identifier="stimulation">);
-
 
 //   TissueSite currentStimSite_0( 0, 0, 0, 1.0 );
 //   polyConnect(currentStimInj_0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite_0>);
@@ -10,7 +11,7 @@
 //   TissueSite currentStimSite_1( 0, 0, 0, 1.0 );
 //   polyConnect(currentStimInj1, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite_1>);
 
-   polyConnect(timeStep, synapseStimInj_1, <>, <>);
+//   polyConnect(timeStep, synapseStimInj_1, <>, <>);
 //   polyConnect(synapseStimInj_1, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), <>, <identifier="stimulation">);
      
 //   polyConnect(timeStep, synapseStimInj_2, <>, <>);

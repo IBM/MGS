@@ -166,10 +166,18 @@ class SomeClass(object):
         Convert a region of distal apical dendrites to thick tufted dendrite
         NOTE:
             thresholdDistance = 600.0 um
+        Convert a region of axon to AIS
+        NOTE:
+            proximalAISDistance2Soma = 20.0 um
+            distalAISDistance2Soma = 30.0 um
         """
         #Put branchType = 5 to represent the region of high CaLVA, CaHVA
         PL5bFileName = self.swc_filename+"_new.swc"
         SWCFileSpine = open(PL5bFileName, "w")
+
+        thresholdTuftedZone = 600.0 # [um]
+        proximalAISDistance2Soma = 20.0 # [um]
+        distalAISDistance2Soma = 30.0 # [um]
         lineArray = []
         for x in range(len(self.point_lookup)):
             id = str(x+1)
@@ -181,8 +189,12 @@ class SomeClass(object):
             r =self.point_lookup[id]['siteR']
             dist2soma= self.point_lookup[id]['dist2soma']
 
-            if (float(dist2soma) > 600.0 and int(brType) == self.branchType["apical"]):
+            if (float(dist2soma) > thresholdTuftedZone and int(brType) == self.branchType["apical"]):
                 brType = self.branchType["tufted"]
+            if (float(dist2soma) <= distalAISDistance2Soma
+                and float(dist2soma) >= proximalAISDistance2Soma
+                and int(brType) == self.branchType["axon"]):
+                brType = self.branchType["AIS"]
             lineArray.append([id, str(brType),
                             str(x), str(y),
                             str(z), str(r), str(parent_id)])
@@ -1523,7 +1535,7 @@ class SomeClass(object):
         mean_inhibitory_interval = 3
         boutonMType = 1
         inhibitory_location = 0
-        stimR = 5
+        #stimR = 5
         bouton_include = 0
         spine_include = 'N/A'
         synapse_include = 0
@@ -1551,6 +1563,194 @@ class SomeClass(object):
                                              str(synapse_include)])
             else:
                 break
+
+    def _genInhibitory(self, listBranches, mean_symsynapse_distance, stimPeriod,
+                          boutonFileName, spineFileName, branchType,
+                          spineMType, ageType):
+        stimR = 5 # radius of stimulus [um]
+        bouton_include = 0 # I/O on bouton?
+        spine_include = 'N/A'
+        synapse_include = 0
+        # rate of having spine on branchpoint
+        chance2HaveSpine = 0.60
+        spineFileName = 'N/A'
+        spineMType = 'N/A'
+
+        # NOW: traverse the neuron at different branch-order
+        #  and generate the 'true' number of spines at that branch-order
+        #  with location is based on the
+        holdpoint_list = []
+        # start with all distal ends to examine toward soma
+        for id in self.line_ids:
+            numChildren = int(self.point_lookup[id]['numChildren'])
+            if numChildren == 0:
+                holdpoint_list.append(id)
+                branchOrder = int(self.point_lookup[id]['branchOrder'])
+
+        holdpoint_list = list(set(holdpoint_list))
+        # print(holdpoint_list)
+        ############
+        # start the spine generation process
+        """
+        Basically, what the algorithm does is
+          1. start with all the distal points
+          2. for each point in the list
+            generate the next spine using Poisson distribution
+            put the coordinate in the spineArray[]
+            .... in the holdpoint_list
+        """
+        point_lookupBackUp = deepcopy(self.point_lookup)
+        while holdpoint_list:
+            tmplist = []
+            for id in holdpoint_list:
+                if (int(id) == -1):
+                    break
+                point_info = self.point_lookup[id]
+                branchType = point_info['type']
+                parent_id =  point_info['parent']
+                branchOrder =  point_info['branchOrder']
+                dist2branchPoint = float(point_info['dist2branchPoint'])
+                dist2soma = float(point_info['dist2soma'])
+                #spine_filename = 'spine' +
+                pid = parent_id
+                cid = id
+                if (int (pid) == -1):
+                    continue
+                if (int(pid) != -1 and
+                    not self._branchInList(branchType, listBranches)):
+                    tmplist.append(pid)
+                    continue
+
+                distance=self.find_distance(cid, pid)
+
+                # Assume spine appearance with adjacent-distance
+                # follows exponential distribution
+                interval = rnd.exponential(mean_symsynapse_distance)
+                #interval = self.nextLocation(mean_symsynapse_distance)
+                #print(interval)
+                assert(interval > 0)
+                assert(self.spineCount< 10000)
+                # Find the pair of points
+                while (interval > distance and int(pid) != -1):
+                    # update interval and find new cid, pid
+                    interval = interval - distance
+                    cid = pid
+                    point_info = self.point_lookup[cid]
+                    pid =  point_info['parent']
+                    if (int(pid) == -1):
+                        break
+                    distance=self.find_distance(cid, pid)
+                    dist2branchPoint = float(point_info['dist2branchPoint'])
+                    if (dist2branchPoint == 0.0):
+                        tmplist.append(cid)
+                        break
+
+                if (dist2branchPoint == 0.0 and interval > distance):
+                    continue
+                if (int(pid) == -1):
+                   continue
+
+                #now we ensure the spine in between cid and pid
+                x1 = float(self.point_lookup[cid]['siteX'])
+                y1 = float(self.point_lookup[cid]['siteY'])
+                z1 = float(self.point_lookup[cid]['siteZ'])
+                parent_x1 = float(self.point_lookup[pid]['siteX'])
+                parent_y1 = float(self.point_lookup[pid]['siteY'])
+                parent_z1 = float(self.point_lookup[pid]['siteZ'])
+                # generate new point for spine
+                siteX = np.interp(distance-interval, [0, distance], [parent_x1, x1])
+                siteY = np.interp(distance-interval, [0, distance], [parent_y1, y1])
+                siteZ = np.interp(distance-interval, [0, distance], [parent_z1, z1])
+                rand = np.random.uniform()
+                if (rand < chance2HaveSpine):
+                # if (1):
+                    # limits # spines to be generated
+                    period = stimPeriod
+                    self.spineArray.append([str(branchType),
+                                            str(boutonMType),
+                                            str(spineMType),
+                                            str(siteX), str(siteY), str(siteZ),
+                                            str(stimR), str(period),
+                                            str(boutonFileName), str(spineFileName),
+                                            str(bouton_include),
+                                            str(spine_include),
+                                            str(synapse_include)
+                                            ]
+                                            )
+                    self.spineCount += 1
+                    index = self.spineCount
+                    dend_dx = parent_x1 - x1
+                    dend_dy = parent_y1 - y1
+                    dend_dz = parent_z1 - z1
+                    dx, dy, dz = getSpineVector(dend_dx, dend_dy, dend_dz, index)
+                    #genSpine(array, index, spineMType, x, y, z, dx, dy, dz, period, ageType, branchType)
+                    ######################
+                    rNeck = 0.1
+                    if int(spineMType) == 2: # thin
+                        boutonMType = 4
+                        if int(branchType) == 3: # basal
+                            rHead = 0.1282 if ageType == 'young' else 0.1408
+                            lNeck = 1.4360 if ageType == 'young' else 1.2663
+                        elif int(branchType) == 4 or int(branchType) == 6: # apical
+                            rHead = 0.1255 if ageType == 'young' else 0.1360
+                            lNeck = 1.4289 if ageType == 'young' else 1.3820
+                        else:
+                            print 'Unknown branch type: ' + str(branchType)
+                            return
+                    elif int(spineMType) == 3: # mushroom
+                        boutonMType = 5
+                        if int(branchType) == 3:
+                            rHead = 0.2377 if ageType == 'young' else 0.2366
+                            lNeck = 1.4819 if ageType == 'young' else 1.4476
+                        elif int(branchType) == 4 or int(branchType) == 6: #apical or tufted
+                            rHead = 0.2358 if ageType == 'young' else 0.2382
+                            lNeck = 1.4906 if ageType == 'young' else 1.4571
+                        else:
+                            print 'Unknown branch type: ' + str(branchType)
+                            return
+                    else:
+                        print 'Unknown spine type: ' + str(spineMType)
+                        return
+                    offset = 0.0
+                    self.createSpineSWC(index, dx, dy, dz, rHead, rNeck, lNeck,
+                                        offset)
+                    ### CHECK ANGLE (90-degreee)
+                    #p1 = Point3D(x1,y1,z1)
+                    #p2 = Point3D(parent_x1, parent_y1, parent_z1)
+                    #l1 = Line3D(p1,p2)
+                    #p3 = Point3D(0,0,0)
+                    #p4 = Point3D(dx*lNeck, dy*lNeck, dz*lNeck)
+                    #l2 = Line3D(p3,p4)
+                    #print(l1.is_perpendicular(l2), " ", math.degrees(l1.angle_between(l2)))
+                    #print (l1.distance())
+                    #angle = math.degrees(l1.angle_between(l2))
+                    #if (angle < 80 or angle > 99):
+                    #    print (angle)
+                    ##END CHECK
+                    #createBoutonSWC(index, dx, dy, dz, lNeck + 0.1)
+                    self.createBoutonSWC(index, dx, dy, dz, lNeck + 0.0)
+
+                newid = str(len(self.point_lookup)+1)
+                newid_dist2soma = float(self.point_lookup[cid]['dist2soma']) - interval
+                newid_dist2branchPoint = newid_dist2soma -\
+                    self.point_lookup[pid]['dist2soma'] + \
+                    self.point_lookup[pid]['dist2branchPoint']
+                assert newid_dist2soma >= 0.0
+                assert newid_dist2branchPoint >= 0.0
+                self.point_lookup[newid] = {'type': self.point_lookup[cid]['type'],
+                                        'siteX': str(siteX), 'siteY': str(siteY),
+                                        'siteZ': str(siteZ),
+                                        'siteR': self.point_lookup[cid]['siteR'],
+                                        'parent': pid,
+                                        'dist2soma': newid_dist2soma,
+                                        'dist2branchPoint': newid_dist2branchPoint,
+                                        'branchOrder': branchOrder,
+                                        'numChildren': 1}
+                self.point_lookup[cid]['parent'] = str(newid)
+                tmplist.append(newid)
+            holdpoint_list = list(set(tmplist))
+        #print("spines count: ", basalSpineCount)
+        self.point_lookup = deepcopy(point_lookupBackUp) # restore
 
     def createSpineSWC(self, index, dx, dy, dz, rHead, rNeck, lNeck, offset):
         swcFile = open('spines/spine_%04.d.swc' % index, 'w')
@@ -1616,6 +1816,8 @@ class SomeClass(object):
         # execute('rm spines/*')
         execute('find spines -maxdepth 1 -name "*.swc" -print0 | xargs -0 rm')
 
+        ###################
+        ## APICAL + BASAL DEN
         #period of stimulus signal
         apical_period = 300
         basal_period = 140
@@ -1666,7 +1868,28 @@ class SomeClass(object):
                          self.branchType["apical"],
                          self.spineMType["mush"], ageType
                                )
-        #genInhibitory(apical_inhibitory_period, distance)
+
+        print("Total excit. spines: ", self.spineCount)
+        boutonTypeGABA = "GABABouton_" + ageType + apical
+        listBranches = [self.branchType["apical"], self.branchType["tufted"]]
+        self._genInhibitory(listBranches, meanApicalInhInterval,
+                            apical_inhibitory_period,
+                            boutonTypeGABA,
+                            "N/A",
+                            self.branchType["apical"],
+                            "N/A",
+                            ageType
+                            )
+        boutonTypeGABA = "GABABouton_" + ageType + basal
+        listBranches = [self.branchType["basal"],]
+        self._genInhibitory(listBranches, meanBasalInhInterval,
+                            basal_inhibitory_period,
+                            boutonTypeGABA,
+                            "N/A",
+                            self.branchType["basal"],
+                            "N/A",
+                            ageType
+                            )
         print("Total spines: ", self.spineCount)
         self.genboutonspineSWCFiles_PL5b()
 

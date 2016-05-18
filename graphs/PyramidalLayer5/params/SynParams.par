@@ -28,6 +28,7 @@ DenSpine 0.005309
 CHEMICAL_SYNAPSE_TARGETS 5
 BRANCHTYPE MTYPE ETYPE
 BRANCHTYPE MTYPE
+#{{{bouton-spine
 2 5 0   1 3   [AMPAmush NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium] 1.0
 2 4 0   1 2   [AMPAthin NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium] 1.0
 # disable NMDAR
@@ -36,9 +37,12 @@ BRANCHTYPE MTYPE
 # disable AMPAAR
 #2 5 0   1 3   [NMDAmush] [Voltage] [Voltage, Calcium] 1.0
 #2 4 0   1 2   [NMDAthin] [Voltage] [Voltage, Calcium] 1.0
+#}}}
+#{{{bouton-neuron
 2 1 1	3 0   [GABAA] [Voltage] [Voltage] 1.0
 2 1 1	4 0   [GABAA] [Voltage] [Voltage] 1.0
 2 1 1	6 0   [GABAA] [Voltage] [Voltage] 1.0
+#}}}
 
 CHEMICAL_SYNAPSE_COSTS 5
 AMPAmush 0.296407

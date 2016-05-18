@@ -16,7 +16,7 @@
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
 //{{{ 1. Output Location
-#define OutputFolderName "./out2"
+#define OutputFolderName "./out2_May1a7triggersoma"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -59,10 +59,6 @@
 //}}}
 
 //{{{ Diffusion + Fast-buffering constants
-#define CA_DCA 4.4        // 0.4 um^2/ms unbuffered
-#define CA_BETA 0.002     // 0.05 dimensionless, Wagner and Keizer buffering constant
-#define CA_CLEARANCE 1.1  // 1.1, 0.5 ms^-1
-#define CA_BASELINE 0.1   // uM
 #define Cacyto_DiffusionConstant 0.27   // [um^2/ms]  unbuffered
 #define CaER_DiffusionConstant 0.06   //  [um^2/ms]  unbuffered
 #define Dopa_DiffusionConstant 0.182  // um^2/ms  0.082 +/- 0.013 at cell surface (about 6-10x slower than in free solution)
@@ -163,6 +159,17 @@
 //defined in std.gsl
 //Connector PolyConnectorFunctor();   
 //PolyConnectorFunctor polyConnect();
+Functor Print;
+Print print();
+  
+Functor ReSeedRandom;
+ReSeedRandom reSeed(243);
+
+Connector PolyConnectorFunctor();   
+PolyConnectorFunctor polyConnect();
+
+Connector ServiceConnectorFunctor();
+ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
 
 //PHASES DEFINITION
@@ -236,18 +243,6 @@ GranuleMapper GridGranuleMapper(string description, list<int> dimensions, list<i
 GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ }, {1});
 
 
-
-Functor Print;
-Print print();
-  
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();   
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();   
 
 //TISSUE FUNCTOR
 /*{{{*/
