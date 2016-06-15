@@ -17,7 +17,10 @@ BRANCHTYPE MTYPE
 #AIS
 5 0 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
     HCN [Voltage] [Voltage]  \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] Kv31 [Voltage] [Voltage]
+    Cah [Voltage] [Voltage, Calcium] \ 
+    PMCA [Voltage, Calcium] [Calcium] \
+    MK [Voltage] [Voltage] \
+    Kp [Voltage] [Voltage] Kv31 [Voltage] [Voltage]
 #dendrite
 3 0 Nat [Voltage] [Voltage] \
     HCN [Voltage] [Voltage] \
@@ -130,9 +133,11 @@ CHANNEL_PARAMS 11
 Nat 16
 #{{{
 BRANCHTYPE MTYPE
-1 0 <gbar={20.4}>
-2 0 <gbar={20.4}>
-5 0 <gbar={20.4}>
+1 0 <gbar={00.6}>
+2 0 <gbar={00.6}>
+#Nat increase 2x in AIS (at 23um from soma) and Vhalf_m shift -7mV
+# (done in code so no need to change here)
+5 0 <gbar={20.2}>
 3 0 <gbar={0.213}>
 4 0 <gbar={0.213}>
 6 0 <gbar={0.213}>
@@ -147,11 +152,12 @@ BRANCHTYPE MTYPE
 1 5 <gbar={20.4}>
 2 5 <gbar={20.4}>
 #}}}
-Nap 8
+Nap 9
 #{{{
 BRANCHTYPE MTYPE
 1 0 <gbar={0.0172}>
 2 0 <gbar={0.0172}>
+5 0 <gbar={0.0472}>
 #{{{GABA bouton
 1 1 <gbar={0.0172}>
 2 1 <gbar={0.0172}>
@@ -163,9 +169,11 @@ BRANCHTYPE MTYPE
 2 5 <gbar={0.0172}>
 #}}}
 #}}}
-MK 7
+MK 8
 #{{{
 BRANCHTYPE MTYPE
+#MK (Kv7.2/3) colocalize with Nav in distal AIS; while Nav occur throughout AIS
+5 0 <gbar={0.000675}>
 3 0 <gbar={0.000675}>
 4 0 <gbar={0.000675}>
 6 0 <gbar={0.000675}>
@@ -174,13 +182,22 @@ BRANCHTYPE MTYPE
 1 3 <gbar={0.000675}>
 3 3 <gbar={0.000675}>
 #}}}
-HCN 17
+HCN 19
 #{{{
 BRANCHTYPE MTYPE
 #{{{main neuron
 1 0 <gbar={0.0020}>
 2 0 <gbar={0.0020}>
-3 0 <gbar={0.0020}>
+5 0 <gbar={0.0020}>
+#3 0 <gbar={0.0020}>
+3 0 <gbar_dists={10,20,30,40,50,60,70,80,90,100,110,120,130,140,\
+    150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,\
+    300,310,320,330,340,350,360,370,380,390,400,410,420,430,440,\
+    450,460,470,480,490,500,510,520,530,540,550,560,570,580,590,\
+    600,610,620,630,640,650,660,670,680,690,700,710,720,730,740,\
+    750,760,770,780,790,800,810,820,830,840,850,860,870,880,890,\
+    900,910,920,930,940,950,960,970,980,990}>
+3 0 <gbar_values={0.0020,0.0021,0.0022,0.0022,0.0023,0.0024,0.0025,0.0026,0.0027,0.0028,0.0029,0.0029,0.0030,0.0032,0.0033,0.0034,0.0035,0.0036,0.0037,0.0038,0.0039,0.0041,0.0042,0.0043,0.0045,0.0046,0.0047,0.0049,0.0050,0.0052,0.0054,0.0055,0.0057,0.0058,0.0060,0.0062,0.0064,0.0066,0.0068,0.0070,0.0072,0.0074,0.0076,0.0078,0.0080,0.0082,0.0085,0.0087,0.0090,0.0092,0.0095,0.0097,0.0100,0.0103,0.0106,0.0109,0.0112,0.0115,0.0118,0.0121,0.0124,0.0128,0.0131,0.0135,0.0139,0.0142,0.0146,0.0150,0.0154,0.0158,0.0163,0.0167,0.0171,0.0176,0.0181,0.0186,0.0191,0.0196,0.0201,0.0206,0.0212,0.0217,0.0223,0.0229,0.0235,0.0241,0.0248,0.0254,0.0261,0.0268,0.0275,0.0282,0.0289,0.0297,0.0305,0.0313,0.0321,0.0329,0.0338,0.0346}>
 #4 0 <gbar={0.0020}>
 #4 0 <gbar={0.0020}>
 4 0 <gbar_dists={10,20,30,40,50,60,70,80,90,100,110,120,130,140,\
@@ -219,11 +236,12 @@ BRANCHTYPE MTYPE
 2 5 <gbar={0.002}>
 #}}}
 #}}}
-Kp 12
-#{{{
+Kp 13
+#{{{ delayed-rectifier slow-inactivating
 BRANCHTYPE MTYPE
 1 0 <gbar={0.0223}>
 2 0 <gbar={0.0223}>
+5 0 <gbar={0.0223}>
 1 1 <gbar={0.0223}>
 2 1 <gbar={0.0223}>
 1 2 <gbar={0.0223}>
@@ -240,6 +258,8 @@ Kt 12
 BRANCHTYPE MTYPE
 1 0 <gbar={0.812}>
 2 0 <gbar={0.812}>
+#NOTE: Colbert and Pan (2002) showed no A-current in axonal proper
+#5 0 <gbar={0.812}>
 #{{{GABA bouton
 1 1 <gbar={0.812}>
 2 1 <gbar={0.812}>
@@ -260,54 +280,67 @@ BRANCHTYPE MTYPE
 Kv31 16
 #{{{
 BRANCHTYPE MTYPE
+#{{{neuron
 1 0 <gbar={6.930}>
 2 0 <gbar={6.930}>
 5 0 <gbar={6.930}>
 3 0 <gbar={0.00261}>
 4 0 <gbar={0.00261}>
 6 0 <gbar={0.00261}>
+#}}}
 1 1 <gbar={6.930}>
 2 1 <gbar={6.930}>
+#{{{spine
 1 2 <gbar={0.00261}>
 3 2 <gbar={0.00261}>
 1 3 <gbar={0.00261}>
 3 3 <gbar={0.00261}>
+#}}}
 1 4 <gbar={6.930}>
 2 4 <gbar={6.930}>
 1 5 <gbar={6.930}>
 2 5 <gbar={6.930}>
 #}}}
-Cah 8
+Cah 9
 #{{{
 BRANCHTYPE MTYPE
-1 0 <gbar={0.00992}>
-3 0 <gbar={0.00992}>
-4 0 <gbar={0.000278}>
-6 0 <gbar={0.00278}>
+1 0 <gbar={0.0992}>
+## Check N-type or P/Q-type
+## some neuron depends more on N-type and others on P/Q-type
+5 0 <gbar={0.0992}>
+#NOTE: Cah is important: 0.0278-> 1.2 uM 
+#             0.0992 -> 17uM
+3 0 <gbar={0.0278}>
+4 0 <gbar={0.078}>
+6 0 <gbar={0.278}>
 #4 0 <gbar_dists={380.0,480.0}> 
 #4 0 <gbar_values={0.000555,0.00555,0.000555}>
 #6 0 <gbar_dists={380.0,480.0}> 
 #6 0 <gbar_values={0.000555,0.00555,0.000555}>
-1 2 <gbar={0.00992}>
-3 2 <gbar={0.00992}>
-1 3 <gbar={0.00992}>
-3 3 <gbar={0.00992}>
+1 2 <gbar={0.0992}>
+3 2 <gbar={0.0992}>
+1 3 <gbar={0.0992}>
+3 3 <gbar={0.0992}>
 #}}}
-Cal 8
+Cal 9
 #{{{
 BRANCHTYPE MTYPE
-1 0 <gbar={0.0343}>
-3 0 <gbar={0.0343}>
-4 0 <gbar={0.000935}>
-6 0 <gbar={0.0935}>
+1 0 <gbar={0.0543}>
+2 0 <gbar={0.0343}>
+# NOTE: The Cal in basal is smaller to produce proper Ca2+ elevation 
+3 0 <gbar={0.0335}>
+4 0 <gbar={0.0935}>
+6 0 <gbar={0.935}>
 #4 0 <gbar_dists={380.0,480.0}> 
 #4 0 <gbar_values={0.00187,0.187,0.00187}>
 #5 0 <gbar_dists={380.0,480.0}> 
 #5 0 <gbar_values={0.00187,0.187,0.00187}>
+#{{{spine
 1 2 <gbar={0.0343}>
 3 2 <gbar={0.0343}>
 1 3 <gbar={0.0343}>
 3 3 <gbar={0.0343}>
+#}}}
 #}}}
 SK 8
 #{{{
@@ -322,22 +355,27 @@ BRANCHTYPE MTYPE
 1 3 <gbar={0.012}>
 3 3 <gbar={0.012}>
 #}}}
-PMCA 11
+PMCA 13
 #{{{
 # tau ~ [ms]
-MTYPE BRANCHTYPE
-0 1 <tau={0.9}>
-0 3 <tau={0.23}>
-0 4 <tau={0.23}>
-0 6 <tau={0.23}>
+BRANCHTYPE MTYPE 
+1 0 <tau={1.9}>
+2 0 <tau={1.9}>
+5 0 <tau={1.9}>
+3 0 <tau={1.9}>
+4 0 <tau={1.9}>
+6 0 <tau={1.9}>
+#3 0 <tau={0.23}>
+#4 0 <tau={0.23}>
+#6 0 <tau={0.23}>
 #GABA bouton
 1 1 <tau={0.23}>
 #spine
-2 1 <tau={0.023}>
-2 3 <tau={0.023}>
-3 1 <tau={0.023}>
+1 2 <tau={0.023}>
+3 2 <tau={0.023}>
+1 3 <tau={0.023}>
 3 3 <tau={0.023}>
 #bouton
-4 1 <tau={0.23}>
-5 1 <tau={0.23}>
+1 4 <tau={0.23}>
+1 5 <tau={0.23}>
 #}}}

@@ -29,7 +29,8 @@
 //#define APICAL_BRANCH 3
 //#define AIS_BRANCH 4
 //#define TUFT_BRANCH 5
-//#define BOUTON_BRANCH 6
+//#define AXONHILLOCK_BRANCH 6
+//#define BOUTON_BRANCH 7
 
 class Neuron;
 
@@ -37,7 +38,7 @@ class Branch {
    public:
 		 //AIS = axon initiation site
 		 //TUFTEDDEN = the distal tufted dendritic part
-	  enum BranchType { _SOMA=0, _AXON=1, _BASALDEN=2, _APICALDEN=3, _AIS=4, _TUFTEDDEN=5, _BOUTON=6 };
+	  enum BranchType { _SOMA=0, _AXON=1, _BASALDEN=2, _APICALDEN=3, _AIS=4, _TUFTEDDEN=5, _AXONHILLLOCK=6, _BOUTON=7  };
       Branch();
       Branch(Branch const & s);
       Branch& operator=(const Branch& branch);

@@ -51,41 +51,53 @@
 #endif
   //}}}
   //}}}
+	//{{{ axon
+  //{{{LOCATION a1 - AIS 
+  TissueSite AIS_Site1(0.174, -22.92, -1.8, 15.0);
+  polyConnect(timeStep, voltageDisplay_ais, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_ais, <>, <site=AIS_Site1>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+  polyConnect(timeStep, calciumDisplay_ais, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_ais, <>, <site=AIS_Site1>);
+#endif
+  //}}}
+
+	//}}}
  //}}}
 
   //mushroom spine + bouton
-#define spineIndex 2
-#define boutonIndex 3
-  //{{{
-  //{{{spine Vm+Ca
-  polyConnect(timeStep, spineVoltageDisplay, <>, <>);
-  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
-   polyConnect(timeStep, spineCalciumDisplay, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineCalciumDisplay, <>, <>);
-#endif
-  //}}}
-  //{{{NMDAR current
-polyConnect(timeStep, currentNMDARDisplay, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDAmush", NEURON_INDEX=spineIndex>), currentNMDARDisplay, <>, <identifier="SYNAPSE">);
-  //}}}
-  //{{{AMPAR
-polyConnect(timeStep, currentAMPARDisplay, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", NEURON_INDEX=spineIndex>), currentAMPARDisplay, <>, <identifier="SYNAPSE">);
-  //}}}
-  //{{{bouton
-//  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), voltageDisplay, <>, <>);
+//#define boutonIndex 1
+//#define spineIndex 2
+//  //{{{
+//  //{{{spine Vm+Ca
+//  polyConnect(timeStep, spineVoltageDisplay, <>, <>);
+//  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
 //#if SIMULATION_INVOLVE >= VM_CACYTO
-//   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
-//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), calciumSomaDisplay, <>, <>);
+//   polyConnect(timeStep, spineCalciumDisplay, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineCalciumDisplay, <>, <>);
 //#endif
-  //}}}
+//  //}}}
+//  //{{{NMDAR current
+//polyConnect(timeStep, currentNMDARDisplay, <>, <>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDAmush", NEURON_INDEX=spineIndex>), currentNMDARDisplay, <>, <identifier="SYNAPSE">);
+//  //}}}
+//  //{{{AMPAR
+//polyConnect(timeStep, currentAMPARDisplay, <>, <>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", NEURON_INDEX=spineIndex>), currentAMPARDisplay, <>, <identifier="SYNAPSE">);
+//  //}}}
+//  //{{{bouton
+////  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), voltageDisplay, <>, <>);
+////#if SIMULATION_INVOLVE >= VM_CACYTO
+////   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
+////   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), calciumSomaDisplay, <>, <>);
+////#endif
+//  //}}}
   //}}}
 
   //thin spine + bouton
+#define boutonIndex 1
 #define spineIndex 2
-#define boutonIndex 3
-  //{{{
+//{{{
   //{{{spine Vm+Ca
    polyConnect(timeStep, spineVoltageDisplay, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
@@ -109,7 +121,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAthin", NEURON
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), calciumSomaDisplay, <>, <>);
 //#endif
   //}}}
-  //}}}
+//}}}
 
 
 /*

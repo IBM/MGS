@@ -16,7 +16,7 @@
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
 //{{{ 1. Output Location
-#define OutputFolderName "./out2_May1a7triggersoma"
+#define OutputFolderName "./out2_May19"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -152,6 +152,14 @@
 // NOTE: if 1, then numChan information is used
 #define RYRUseExplicitNumChan 1 // 0 or 1 only
 //}}}
+//}}}
+
+// STIMULUS
+//{{{ see stimulus*.gsl and connect_stimulus*.gsl
+#define CASE_01  1
+#define CASE_02  2
+#define CASE_03  3
+#define STIMULUS_CASE   CASE_01
 //}}}
 
 //CONNECTOR FUNCTOR
@@ -433,7 +441,8 @@ NodeType CaConcentrationJunctionPoint {
 //Na+ currents
 /*{{{*/
    /* Fast-inactivating (transient) Na+ */
-NodeType ChannelHayNat { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelNatv16 { computeE->initialize2, initialize->initialize3, update->solveChannels };
    /* Persistent Na+ current */
 NodeType ChannelHayNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
@@ -773,7 +782,8 @@ Grid PyramidalL5_Neuron{
       // 2. RECEPTOR/CHANNEL    
 	/*{{{*/
      //{{{ Na channels
-   Layer(NatChannels, ChannelHayNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
+   Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
+   Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
    Layer(NapChannels, ChannelHayNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
    Layer(HCNChannels, ChannelHayHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
@@ -945,6 +955,10 @@ Grid PyramidalL5_Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0} 
 				> ) ); 
+	InitNodes ( .[].Layer(Natv16Channels), tissueFunctor("NodeInit", <
+				compartmentalize = { "gbar" },
+				gbar = {0.0} 
+				> ) ); 
 
 	InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
@@ -1100,6 +1114,8 @@ Grid PyramidalL5_Neuron{
    // Na+ channels
    polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(Natv16Channels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(Natv16Channels), <>, <identifier="EC">);
 
    // HCN channel
    polyConnect(timeStep, .[].Layer(HCNChannels), <>, <identifier="dt">);

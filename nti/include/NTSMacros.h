@@ -93,8 +93,10 @@
 #define NAT_WOLF_2005           2
 #define NAT_HAY_2011            3
 #define NAT_SCHWEIGHOFER_1999   4
+#define NAT_COLBERT_PAN_2002    5
 // Na-persistent CHANNE_NAP macro
 #define NAP_WOLF_2005           2
+#define NAP_MAGISTRETTI_1999    3
 //}}}
 
 //{{{ K-models
@@ -156,6 +158,7 @@
 #define NMDAR_BEHABADI_2012                   2
 #define NMDAR_JADI_2012                       3
 #define NMDAR_JAHR_STEVENS_1990               4
+#define NMDAR_BEHABADI_2012_MODIFIED          5
 // AMPAR      RECEPTOR_AMPA macro
 #define AMPAR_POINTPROCESS                    1
 #define AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
@@ -205,12 +208,15 @@
 #define USE_PRESYNAPTICPOINT   1
 #define USE_SYNAPTICCLEFT      2
 //{{{ Neurotransmitter Update method
+//     GLUTAMATE_UPDATE_METHOD 
+//     GABA_UPDATE_METHOD NEURO
 // Neurotransmitter update method 
 //   Use a continuous function to transform presynaptic Vm 
 //   into transmitter concentration as a sigmoid function
 //   from Tmin to Tmax
 //   T(Vpre) = Tmin + Tmax / ( 1 + exp (- (Vpre - Vp) /  Kp) )
 #define NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 1
+#define NEUROTRANSMITTER_BIEXPONENTIAL 2
 //}}}
 ///////////////////////////////////////////////////////////////////////
 // How you want to model dynamics 
@@ -229,6 +235,7 @@
 #define _MSN_2016_TUAN_JAMES  3
 #define _PYRAMIDAL_2011_HAY  4
 #define _INFERIOR_OLIVE_1999_SCHWEIGHOER 5
+#define _PYRAMIDAL_L5b_2016_TUAN_JAMES 6
 //}}}
 // define 
 
@@ -238,7 +245,8 @@
 // USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 //#define MODEL_TO_USE _MSN_2005_WOLF
-#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
+//#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
+#define MODEL_TO_USE _PYRAMIDAL_L5b_2016_TUAN_JAMES
 //#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
@@ -342,6 +350,47 @@
   //#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
   //#define RECEPTOR_NMDA NMDAR_JADI_2012
   #define RECEPTOR_NMDA NMDAR_BEHABADI_2012
+  #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION  
+  #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS
+  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990 
+  //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
+//}}}
+
+#elif MODEL_TO_USE == _PYRAMIDAL_L5b_2016_TUAN_JAMES
+  #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+  //#define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  #define GLUTAMATE_UPDATE_METHOD  NEUROTRANSMITTER_BIEXPONENTIAL
+  #define GABA_UPDATE_METHOD      NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  //#define GABA_UPDATE_METHOD       NEUROTRANSMITTER_BIEXPONENTIAL
+
+  #define SIMULATION_INVOLVE VM_CACYTO
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
+//{{{
+  #define CHANNEL_NAT NAT_COLBERT_PAN_2002
+  //#define CHANNEL_NAT NAT_HAY_2011
+  //#define CHANNEL_NAT NAT_WOLF_2005
+  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_HCN HCN_HAY_2011
+  #define CHANNEL_KAf KAf_WOLF_2005
+  #define CHANNEL_KAs KAs_WOLF_2005
+  #define CHANNEL_KIR KIR_WOLF_2005
+  #define CHANNEL_KRP KRP_WOLF_2005
+  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_SK SK2_KOHLER_ADELMAN_1996_RAT
+  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  #define CHANNEL_CaN CaN_GHK_WOLF_2005
+  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  #define CHANNEL_CaR CaR_GHK_WOLF_2005
+  #define CHANNEL_CaT CaT_GHK_WOLF_2005
+  //#define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#define RECEPTOR_AMPA AMPAR_Markov_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  //#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
+  //#define RECEPTOR_NMDA NMDAR_JADI_2012
+  #define RECEPTOR_NMDA NMDAR_BEHABADI_2012
+  //#define RECEPTOR_NMDA NMDAR_BEHABADI_2012_MODIFIED
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION  
   #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS

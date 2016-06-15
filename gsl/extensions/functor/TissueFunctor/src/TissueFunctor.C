@@ -4905,14 +4905,15 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       NDPair* ndp = new NDPair(varName, paramDI_ap);
       paramsLocal.push_back(ndp);
     }
-    else if (tokens[0] == "string")
-    {
-      ////////////
-			StringDataItem* paramDI = new StringDataItem((int)cpiter->second);
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
-      NDPair* ndp = new NDPair(varName, paramDI_ap);
-      paramsLocal.push_back(ndp);
-    }
+		//TUAN TODO: update Params.cxx for this to work
+    //else if (tokens[0] == "string")
+    //{
+    //  ////////////
+		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
+    //  std::auto_ptr<DataItem> paramDI_ap(paramDI);
+    //  NDPair* ndp = new NDPair(varName, paramDI_ap);
+    //  paramsLocal.push_back(ndp);
+    //}
   }
 
   // NOTE: for channel data, e.g. gbar
@@ -4965,14 +4966,15 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
         paramsLocal.push_back(ndp);
       }
     }
-    else if (tokens[0] == "string")
-    {
-      ////////////
-			StringDataItem* paramDI = new StringDataItem((int)cpiter->second);
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
-      NDPair* ndp = new NDPair(varName, paramDI_ap);
-      paramsLocal.push_back(ndp);
-    }
+		//TUAN TODO: update Params.cxx for this to work
+    //else if (tokens[0] == "string")
+    //{
+    //  ////////////
+		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
+    //  std::auto_ptr<DataItem> paramDI_ap(paramDI);
+    //  NDPair* ndp = new NDPair(varName, paramDI_ap);
+    //  paramsLocal.push_back(ndp);
+    //}
   }
 }
 

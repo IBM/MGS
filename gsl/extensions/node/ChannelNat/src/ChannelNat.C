@@ -4,7 +4,9 @@
 #include "rndm.h"
 
 #include "SegmentDescriptor.h"
+#include "Branch.h"
 #include "GlobalNTSConfig.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -21,23 +23,23 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 // data measured from squid giant axon
 //   at temperature = 6.3-degree celcius
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-// a_m  = AMC*(V + AMV)/( exp( (V + AMV)/AMD ) - 1.0 )
-// b_m  = BMC * exp( (V + BMV)/BMD )
-// a_h  = AHC * exp( (V + AHV)/AHD )
-// b_h  = BHC / (exp( (V + BHV)/BHD ) + 1.0)
+// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
+// b_m  = BMC * exp( (V - BMV)/BMD )
+// a_h  = AHC * exp( (V - AHV)/AHD )
+// b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
 // NOTE: gNa = 1.20 nS/um^2 (equivalent to 120 mS/cm^2)
 //   can be used with Q10 = 3
 #define AMC 0.1
-#define AMV 40.0
+#define AMV -40.0
 #define AMD 10.0
 #define BMC 4.0
-#define BMV 65.0
+#define BMV -65.0
 #define BMD 18.0
 #define AHC 0.07
-#define AHV 65.0
+#define AHV -65.0
 #define AHD 20.0
 #define BHC 1.0
-#define BHV 35.0
+#define BHV -35.0
 #define BHD 10.0
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 // Developed for IO cell (inferior olive)
@@ -45,18 +47,18 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 //     to give long-lasting inactivation component
 // data adjusted to 35-degree Celcius
 #define AMC 0.1
-#define AMV 41.0
+#define AMV -41.0
 #define AMD 10.0
 #define BMC 9.0
-#define BMV 66.0
+#define BMV -66.0
 #define BMD 20.0
 // This is 5/170 to account for the 170 in \tau_h
 #define AHC 0.029411764705882
-#define AHV 60.0
+#define AHV -60.0
 #define AHD 15.0
 // This is 1/170 to account for the 170 in \tau_h
 #define BHC 0.005882352941176
-#define BHV 50.0
+#define BHV -50.0
 #define BHD 10.0
 //#endif
 //#ifdef NAT_WOLF_2005
@@ -98,7 +100,7 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 // Kinetics data for Layer V5 pyramidal neuron
 //       recorded at room tempt.(23-degree C)
 //       from "Colbert-Pan (2002) - Nat. Neurosci (5)"
-// This has been implemented without modification.
+// This implementation uses kinetics of Nat from soma/den/IS
 //    an implementation of the "Fast activating, inactivating Na^+
 //    current,I_Nat".
 // Taken from Hay et al. (2011) "Models of Neocortical Layer 5b Pyramidal
@@ -106,17 +108,36 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 // which in turn references the work of Colbert et al. (2002).
 //   Q10=2.3 to map to 34-degree C
 #define AMC 0.182
-#define AMV 38.0
+#define AMV -38.0
 #define AMD 6.0
 #define BMC -0.124
-#define BMV 38.0
+#define BMV -38.0
 #define BMD -6.0
 #define AHC -0.015
-#define AHV 66.0
+#define AHV -66.0
 #define AHD -6.0
 #define BHC 0.015
-#define BHV 66.0
+#define BHV -66.0
 #define BHD 6.0
+#elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
+// Kinetics data for Layer V5 pyramidal neuron
+//       recorded at room tempt.(23-degree C)
+//       from "Colbert-Pan (2002) - Nat. Neurosci (5)"
+// This implementation uses kinetics of Nat from soma/den/IS
+//  and it treats the Nat in AIS region by shifting V1/2 to the left 8mV
+#define AMC 0.182
+#define AMV -40.0
+#define AMD 6.0
+#define BMC -0.124
+#define BMV -40.0
+#define BMD -6.0
+#define AHC -0.015
+#define AHV -66.0
+#define AHD -6.0
+#define BHC 0.015
+#define BHV -66.0
+#define BHD 6.0
+
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 // Rush-Rinzel (1994) thalamic neuron
 // adopted from HH-1952 data with
@@ -145,20 +166,20 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
     // NOTE: Some models use alpha_m and beta_m to estimate m
-    dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
-    dyn_var_t bm = BMC * exp(-(v + BMV) / BMD);
-    dyn_var_t ah = AHC * exp(-(v + AHV) / AHD);
-    dyn_var_t bh = BHC / (1.0 + exp(-(v + BHV) / BHD));
+    dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
+    dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
+    dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp(-(v - BHV) / BHD));
     // see Rempe-Chomp (2006)
     dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
-    dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
-    dyn_var_t bm = BMC * exp(-(v + BMV) / BMD);
-    dyn_var_t ah = AHC * exp(-(v + AHV) / AHD);
-    dyn_var_t bh = BHC * vtrap(-(v + BHV), BHD);
+    dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
+    dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
+    dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
+    dyn_var_t bh = BHC * vtrap(-(v - BHV), BHD);
 		m[i] = am/(am+bm); // assumption of instantaneous
     // see Rempe-Chomp (2006)
     //dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
@@ -187,11 +208,12 @@ void ChannelNat::update(RNG& rng)
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
-#elif CHANNEL_NAT == NAT_HAY_2011
-    dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
-    dyn_var_t bm = BMC * vtrap(-(v + BMV), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
-    dyn_var_t ah = AHC * vtrap(-(v + AHV), AHD);
-    dyn_var_t bh = BHC * vtrap(-(v + BHV), BHD);
+#elif CHANNEL_NAT == NAT_HAY_2011 || \
+		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
+    dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
+    dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
+    dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
+    dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift[i]), BHD);
     // see Rempe-Chomp (2006)
     dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
@@ -213,6 +235,11 @@ void ChannelNat::update(RNG& rng)
       h[i] = 1.0;
     }
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
+#ifdef WAIT_FOR_REST
+		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+		if (currentTime < NOGATING_TIME)
+			g[i]= 0.0;
+#endif
   }
 }
 
@@ -232,7 +259,10 @@ void ChannelNat::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
+	if (Vhalf_m_shift.size() !=size) Vhalf_m_shift.increaseSizeTo(size);
+	if (Vhalf_h_shift.size() !=size) Vhalf_h_shift.increaseSizeTo(size);
   // initialize
+	SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
@@ -242,16 +272,41 @@ void ChannelNat::initialize(RNG& rng)
 	}
   for (unsigned i = 0; i < size; ++i)
   {
-    if (gbar_dists.size() > 0) {
-      unsigned int j;
-      assert(gbar_values.size() == gbar_dists.size());
-      for (j=0; j<gbar_dists.size(); ++j) {
-        if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
-      }
-      if (j < gbar_values.size()) 
-        gbar[i] = gbar_values[j];
-      else
-        gbar[i] = gbar_default;
+#if CHANNEL_NAT == NAT_COLBERT_PAN_2002
+		//Vhalf_m init
+		//NOTE: Shift to the left V1/2 for Nat in AIS region
+		Vhalf_m_shift[i] = 0.0; //[mV]
+		Vhalf_h_shift[i] = 0.0; 
+		if ((segmentDescriptor.getBranchType(branchData->key) == Branch::_AIS)
+#define DIST_START_AIS   30.0 //[um]
+		// 	or 
+		//	(		(segmentDescriptor.getBranchType(branchData->key) == Branch::_AXON)  and
+	  //		 	(*dimensions)[i]->dist2soma >= DIST_START_AIS)
+			)
+		{
+			//gbar[i] = gbar[i] * 1.50; // increase 3x
+			Vhalf_m_shift[i] = -10.0 ; //[mV]
+			Vhalf_h_shift[i] = -3.0 ; //[mV]
+		}
+#else
+		Vhalf_m_shift[i] = 0.0; //[mV]
+		Vhalf_h_shift[i] = 0.0; //[mV]
+#endif
+
+		//gbar init
+		if (gbar_dists.size() > 0) {
+			unsigned int j;
+			//NOTE: 'n' bins are splitted by (n-1) points
+			if (gbar_values.size() - 1 != gbar_dists.size())
+			{
+				std::cerr << "gbar_values.size = " << gbar_values.size() 
+					<< "; gbar_dists.size = " << gbar_dists.size() << std::endl; 
+			}
+			assert(gbar_values.size() -1 == gbar_dists.size());
+			for (j=0; j<gbar_dists.size(); ++j) {
+				if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
+			}
+			gbar[i] = gbar_values[j];
     } 
 		/*else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];
@@ -281,24 +336,26 @@ void ChannelNat::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
-    dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
-    dyn_var_t bm = BMC * exp(-(v + BMV) / BMD);
-    dyn_var_t ah = AHC * exp(-(v + AHV) / AHD);
-    dyn_var_t bh = BHC / (1.0 + exp(-(v + BHV) / BHD));
+    dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
+    dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
+    dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp(-(v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
-    dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
-    dyn_var_t bm = BMC * exp(-(v + BMV) / BMD);
-    dyn_var_t ah = AHC * exp(-(v + AHV) / AHD);
-    dyn_var_t bh = BHC * vtrap(-(v + BHV), BHD);
+    dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
+    dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
+    dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
+    dyn_var_t bh = BHC * vtrap(-(v - BHV), BHD);
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
-#elif CHANNEL_NAT == NAT_HAY_2011
-    dyn_var_t am = AMC * vtrap(-(v + AMV), AMD);
-    dyn_var_t bm = BMC * vtrap(-(v + BMV), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
-    dyn_var_t ah = AHC * vtrap(-(v + AHV), AHD);
-    dyn_var_t bh = BHC * vtrap(-(v + BHV), BHD);
+#elif CHANNEL_NAT == NAT_HAY_2011 || \
+		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
+    //dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
+    dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
+    dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
+    dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
+    dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift[i]), BHD);
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
 #elif CHANNEL_NAT == NAT_WOLF_2005

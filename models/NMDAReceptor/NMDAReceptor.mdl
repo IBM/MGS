@@ -115,7 +115,7 @@ Node NMDAReceptor Implements ConductanceProducer, MaximumConductanceProducer,
     //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, 
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer,
      BranchDataProducer, IndexProducer {
     GlutamateConcentrationProducer.NT >> Glut;
     BranchDataProducer.branchData >> branchDataPrePost;

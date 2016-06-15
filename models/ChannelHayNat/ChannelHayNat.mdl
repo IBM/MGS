@@ -12,10 +12,12 @@ Node ChannelHayNat Implements ConductanceArrayProducer, ReversalPotentialArrayPr
   dyn_var_t [] h;
   dyn_var_t [] g;
   dyn_var_t [] gbar;
+  dyn_var_t [] Vhalf_m;
 
   dyn_var_t []* V;
 
   BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
 
   Shared {
     dyn_var_t* Na_IC;
@@ -38,9 +40,10 @@ Node ChannelHayNat Implements ConductanceArrayProducer, ReversalPotentialArrayPr
     int idx;
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
     VoltageArrayProducer.voltageArray >> V;
     BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
  }
 
   Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects NaConcentrationProducer {

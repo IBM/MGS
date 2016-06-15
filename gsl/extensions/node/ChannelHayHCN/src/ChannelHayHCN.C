@@ -52,7 +52,8 @@ void ChannelHayHCN::initialize(RNG& rng)
   assert(V->size()==size);
   if (g.size()!=size) g.increaseSizeTo(size);
   if (m.size()!=size) m.increaseSizeTo(size);
-  dyn_var_t scaling_factor = 2.0;
+  //dyn_var_t scaling_factor = 2.0;
+  dyn_var_t scaling_factor = 1.0;
   dyn_var_t gbar_default = gbar[0] * scaling_factor;
   for (unsigned int i=0; i<size; ++i) {
     if (gbar_dists.size() > 0) {

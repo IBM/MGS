@@ -44,7 +44,7 @@
 //#define USER_FIELD_1_BITS 4    // < 16 electrophysiological types
 //#define BRANCH_TYPE_BITS 2     // 4 types (soma, axon, dend, apic)
 #define USER_FIELD_1_BITS 3    // < 8 electrophysiological types
-#define BRANCH_TYPE_BITS 3     // 8 types (soma, axon, dend, apic, AIS, tufts, ???)
+#define BRANCH_TYPE_BITS 3     // 8 types (soma, axon, (basal)dend, apic, AIS, tufts, axonhillock, bouton)
 #define BRANCH_ORDER_BITS 7    // < 128 branch order
 #define COMPUTE_ORDER_BITS 3   // 0-7 compute order
 #define SEGMENT_INDEX_BITS 12  // < 4,096 segments/branch

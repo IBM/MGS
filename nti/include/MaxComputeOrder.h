@@ -23,20 +23,31 @@
 */
 
 ///////////////////////////////////////////////////////////////////////
+// NOTE: use WAIT_FOR_REST to ensure no current is activated
+//       during the time the Vm is resetle to proper resting value
+//       This should be applied to Ca2+ channels
+//#define WAIT_FOR_REST 
+#ifdef WAIT_FOR_REST
+#define NOGATING_TIME 20.0 //ms
+#else
+#define NOGATING_TIME 0.0 //ms
+#endif
 // Numerical settings
 //{{{
 #define MAX_COMPUTE_ORDER 0 
-#define USE_DOUBLES 
-//g++ -DUSE_DOUBLES=1 myprogram.cpp
-//dyn_var_t = dynamical-variable-type
+//#define USE_DOUBLES 
+
+//NOTE: g++ -DUSE_DOUBLES=1 myprogram.cpp
+//NOTE: dyn_var_t = dynamical-variable-type
+//NOTE: we can't use typedef as MDL currently does not support type with new name like 'dyn_var_t'
+//   e.g. typedef double dyn_var_t;
+//   e.g. typedef float dyn_var_t;
+//   e.g. typedef double key_size_t
 #ifdef USE_DOUBLES
-//typedef double dyn_var_t;
  #define dyn_var_t double
 #else
-//typedef float dyn_var_t;
  #define dyn_var_t float
 #endif
-//typedef double key_size_t
 //NOTE: both must match the size: double == unsigned long long
 #define key_size_t double
 #define key_mask_size_t unsigned long long

@@ -16,8 +16,8 @@ class CurrentPulseGenerator : public CG_CurrentPulseGenerator
       virtual void duplicate(std::auto_ptr<Variable>& dup) const;
       virtual void duplicate(std::auto_ptr<CG_CurrentPulseGenerator>& dup) const;
    private:
-      float nextPulse;
-      float peakInc;
+      float nextPulse; //[ms]
+      float peakInc; //[pA]
 };
 
 #endif

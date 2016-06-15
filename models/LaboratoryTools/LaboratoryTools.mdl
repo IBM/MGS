@@ -88,6 +88,10 @@ Variable CurrentPulseGenerator Implements CurrentProducer
 	dyn_var_t last;
 	dyn_var_t inc;
 	string pattern;
+	//{{{ use with dualexp
+  dyn_var_t riseTime; //[ms]
+  dyn_var_t decayTime; //[ms]
+  //}}}
 
 	dyn_var_t* deltaT;
 

@@ -25,9 +25,9 @@ MTYPE BRANCHTYPE
 #{{{neuron
 0 1 <Cm=0.01; gLeak=0.000138>
 0 2 <Cm=0.01; gLeak=0.000325>
-0 3 <Cm=0.01; gLeak=0.000234>
-0 4 <Cm=0.01; gLeak=0.000295>
 0 5 <Cm=0.01; gLeak=0.000295>
+0 3 <Cm=0.01; gLeak=0.000295>
+0 4 <Cm=0.01; gLeak=0.000295>
 0 6 <Cm=0.01; gLeak=0.000295>
 #}}}
 #{{{ GABAergic bouton

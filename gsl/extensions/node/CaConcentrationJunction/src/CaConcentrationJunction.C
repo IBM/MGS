@@ -31,9 +31,19 @@
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
+
+// NOTE: value = 1e6/(zCa*Farad)
+// zCa = valence of Ca2+
+// Farad = Faraday's constant
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
 SegmentDescriptor CaConcentrationJunction::_segmentDescriptor;
+
+#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
+#define DCa (getSharedMembers().DCaeff)
+#else
+#define DCa (getSharedMembers().DCa)
+#endif
 
 // Get cytoplasmic surface area at the compartment i-th 
 dyn_var_t CaConcentrationJunction::getArea() // Tuan: check ok
@@ -71,7 +81,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 
   volume = getVolume();
 
-  float Pdov = M_PI * getSharedMembers().DCa / volume;
+  float Pdov = M_PI * DCa / volume;
   currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),

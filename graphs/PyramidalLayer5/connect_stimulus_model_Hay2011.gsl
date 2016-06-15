@@ -1,6 +1,32 @@
+
+// NOTE: Check definition in model*.gsl file
+#if STIMULUS_CASE == CASE_01
+/// CASE 1: inject Soma
 polyConnect(timeStep, somaStimInj, <>, <>);
 polyConnect(somaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+print ("Case 01: connect-stimulus ok");
+/// END CASE 1
+#endif
 
+#if STIMULUS_CASE == CASE_02
+/// CASE 2: inject a distal apical site (620 um)
+// 0.5ms rise time, 5ms decay time Iinj = 0.5 nA
+// check EPSP there is 15mV 
+#define neuronIndex 0
+TissueSite currentStimSite_0( 1.4, 332.99, -6.68, 15.0 );
+polyConnect(timeStep, somaStimInj, <>, <>);
+polyConnect(emulateSpineStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation", site=currentStimSite_0>);
+#endif
+
+#if STIMULUS_CASE == CASE_03
+/// CASE 2better: inject a distal apical site (620 um)
+// by stimulting the cell projecting to the spine at that location
+TissueSite somaPresynapticNeuronStimSite_0( 9.064, 605.478, -1.098, 1.0 );
+polyConnect(timeStep, somaStimInj, <>, <>);
+polyConnect(somaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=somaPresynapticNeuronStimSite_0>);
+#endif
+
+//
 //polyConnect(timeStep, currentStimInj_1, <>, <>);
 //	polyConnect(timeStep, synapseStimInj_0, <>, <>);
 //	polyConnect(synapseStimInj_0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), <>, <identifier="stimulation">);

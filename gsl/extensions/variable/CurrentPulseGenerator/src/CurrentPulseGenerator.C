@@ -5,14 +5,29 @@
 #include <memory>
 #include <math.h>
 #include <iostream>
+#include "MaxComputeOrder.h"
 
 void CurrentPulseGenerator::initialize(RNG& rng)
 {
+#ifdef WAIT_FOR_REST
+		if (delay < NOGATING_TIME)
+		{
+			std::cerr << "ERROR : delay is smaller than NOGATING_TIME" << std::endl;
+			std::cerr << "Either disable WAIT_FOR_REST or make delay longer" << std::endl;
+			assert(0);
+		}
+#endif
   assert(deltaT);
   if (pattern == "periodic")
     nextPulse = delay;
   else if (pattern == "poisson")
     nextPulse = delay - log(drandom(rng)) * period;
+	else if (pattern == "dualexp")
+	{
+    nextPulse = delay;
+		assert(riseTime > 0 );
+		assert(decayTime > 0);
+	}
   peakInc = peak;
   if (duration > period)
   {
@@ -27,21 +42,28 @@ void CurrentPulseGenerator::update(RNG& rng)
   I = 0.0;
   float currentTime = (getSimulation().getIteration() * (*deltaT));
   if (currentTime >= (nextPulse + duration) && currentTime <= last)
-  {
+  {//no pulse
     I = 0.0;
     peakInc += inc;
     if (pattern == "periodic")
       nextPulse += period;
     else if (pattern == "poisson")
       nextPulse -= log(drandom(rng)) * period;
+		else if (pattern == "dualexp")
+      nextPulse += period;
   }
   else if (currentTime >= nextPulse && currentTime <= last)
-  {
-    I = peakInc;
+  {//having pulse
+		float dt = currentTime - nextPulse;
+    if ((pattern == "periodic") || (pattern == "poisson"))
+			I = peakInc;
+		else if (pattern == "dualexp")
+			I = peakInc * (1- exp(-dt/riseTime)) * (exp(-dt/decayTime));
   }
 }
 
-CurrentPulseGenerator::CurrentPulseGenerator() : CG_CurrentPulseGenerator() {}
+CurrentPulseGenerator::CurrentPulseGenerator() : CG_CurrentPulseGenerator() {
+}
 
 CurrentPulseGenerator::~CurrentPulseGenerator() {}
 
