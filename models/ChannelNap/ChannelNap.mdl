@@ -7,7 +7,8 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelNap Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+Node ChannelNap Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+BranchDataProducer, IOCurrentArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -17,6 +18,7 @@ Node ChannelNap Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
   dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
@@ -64,6 +66,7 @@ Node ChannelNap Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
   BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection
     string identifier; //name of the compartment variable

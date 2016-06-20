@@ -371,12 +371,27 @@ class TissueFunctor : public CG_TissueFunctorBase
   // each side
   //   (if possible, i.e. the number of compartment on that side is > 'x'
   //   and each compartment has >= '3x' capsules)
-  std::map<ComputeBranch*, std::pair<int, int> >
+  //std::map<ComputeBranch*, std::pair<int, int> >
+	//                                <proximalSide, distalSide>
+  std::map<ComputeBranch*, std::pair<float, float> >
       _numCapsulesEachSideForBranchPointMap;  // we use this information to
                                               // determine how many capsule is
                                               // reserved for a branchpoint
 #endif
 
+#ifdef DEBUG_CPTS
+  //std::vector<float> cpt_surfaceArea;
+  //std::vector<float> cpt_volume;
+  std::vector<std::pair<int,float> > cpt_surfaceArea;
+  std::vector<std::pair<int,float> > cpt_volume;
+  //std::pair<int,std::vector<float> > cpt_surfaceArea;
+  //std::pair<int,std::vector<float> > cpt_volume;
+  ComputeBranch* currentBranch;
+  std::pair<float, float> getMeanSTD(int brType, 
+    std::vector<std::pair<int, float> > cptData);
+  std::pair<float, float> getMeanSTD(int brType, 
+    std::vector<std::pair<int, float> > cptData, float& minVal, float& maxVal);
+#endif
   SegmentDescriptor _segmentDescriptor;
 #endif
 };

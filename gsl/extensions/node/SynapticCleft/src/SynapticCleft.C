@@ -21,28 +21,48 @@ void SynapticCleft::produceInitialState(RNG& rng)
   if (branchDataConnect) branchData=*branchDataConnect;
 	Glut = (getSharedMembers().Glut_baseline);
 	GABA = (getSharedMembers().GABA_baseline);
-#if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  Glut = 0.0;
-#endif
-#if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-	GABA = 0.0;
-#endif
+//#if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
+//	GLUTAMATE_UPDATE_METHOD ==  NEUROTRANSMITTER_BIEXPONENTIAL
+//  Glut = 0.0;
+//#endif
+//#if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
+//	GABA_UPDATE_METHOD ==  NEUROTRANSMITTER_BIEXPONENTIAL
+//	GABA = 0.0;
+//#endif
 }
 
 void SynapticCleft::produceState(RNG& rng) 
 {
 	dyn_var_t* V = Vpre;
+	{//Glut
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  Glut =  (getSharedMembers().Glut_max/(1.0 + exp(-(*V - getSharedMembers().Vp_Glut)/getSharedMembers().Kp_Glut)));
+		Glut =  (getSharedMembers().Glut_max/(1.0 + exp(-(*V - getSharedMembers().Vp_Glut)/getSharedMembers().Kp_Glut)));
+#elif GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
+		dyn_var_t dt = *(getSharedMembers().deltaT);
+		float J_decay = 1.0 / ((getSharedMembers().tau_Glut)) * (
+												Glut - getSharedMembers().Glut_baseline);  // [uM/msec]
+		Glut = Glut + dt *( 
+				(getSharedMembers().Glut_max/(1.0 + exp(-(*V - getSharedMembers().Vp_Glut)/getSharedMembers().Kp_Glut)))
+				- J_decay);
 #else
-	 // may be dynamics true concentration of Glut
-	NOT IMPLEMENTED YET
+		 // may be dynamics true concentration of Glut
+		NOT IMPLEMENTED YET
 #endif
+	}
+	{//GABA
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  GABA =  (getSharedMembers().GABA_max/(1.0 + exp(-(*V - getSharedMembers().Vp_GABA)/getSharedMembers().Kp_GABA)));
+		GABA =  (getSharedMembers().GABA_max/(1.0 + exp(-(*V - getSharedMembers().Vp_GABA)/getSharedMembers().Kp_GABA)));
+#elif GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
+		dyn_var_t dt = *(getSharedMembers().deltaT);
+		float J_decay = 1.0 / ((getSharedMembers().tau_GABA)) * (
+												GABA - getSharedMembers().GABA_baseline);  // [uM/msec]
+		GABA = GABA + dt * ( 
+				(getSharedMembers().GABA_max/(1.0 + exp(-(*V - getSharedMembers().Vp_GABA)/getSharedMembers().Kp_GABA)))
+				- J_decay);
 #else
-	NOT IMPLEMENTED YET
+		NOT IMPLEMENTED YET
 #endif
+	}
 }
 
 void SynapticCleft::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SynapticCleftInAttrPSet* CG_inAttrPset, CG_SynapticCleftOutAttrPSet* CG_outAttrPset) 

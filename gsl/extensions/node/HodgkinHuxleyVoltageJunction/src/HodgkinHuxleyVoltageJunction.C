@@ -165,10 +165,15 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += (*xiter) * ((**viter) - Vcur);
   }
 
+	float Vold = Vnew[0];
   Vnew[0] = current / conductance;
 
 #ifdef DEBUG_ASSERT
-  if (not (Vnew[0] == Vnew[0])){
+  if (not (Vnew[0] == Vnew[0])
+//			or std::fabs(Vnew[0]-Vold)/(*getSharedMembers().deltaT)
+//			or Vnew[0]> 130.0
+		 )
+			{
 	  printDebugHH();
   }
 	assert(Vnew[0] == Vnew[0]);
@@ -264,6 +269,8 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 
 void HodgkinHuxleyVoltageJunction::printDebugHH()
 {
+	std::cerr << "t JUNCTION CORRECT [rank,nodeIdx,instanceIdx] " <<
+		"(neuronIdx,branchIdx,brchOrder){x,y,z,r,dist2soma,surfarea,volume,len}" << std::endl;
   SegmentDescriptor segmentDescriptor;
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " JUNCTION CORRECT"

@@ -30,6 +30,13 @@ Interface CurrentArrayProducer {
   dyn_var_t []* currents;
 }
 
+Interface IOCurrentArrayProducer {
+//designed for I/O purpose
+// This is to avoid the case when HH-channel produces (conductanceArray,ErevArray)
+//                    to be conflict with GHK-channel produces (CurrentArrayProducer)
+  dyn_var_t []* currents;
+}
+
 Interface CaCurrentProducer {
   dyn_var_t* current;
 }
@@ -75,6 +82,14 @@ Interface VoltageProducer {
 
 Interface VoltageArrayProducer {
    dyn_var_t []* voltageArray;
+}
+
+Interface AnyConcentrationProducer {
+//this is help to output data using the same I/O variable
+   dyn_var_t* AnyConc;
+}
+Interface AnyConcentrationArrayProducer {
+   dyn_var_t []* AnyConcs;
 }
 
 Interface CaConcentrationProducer {

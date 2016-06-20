@@ -78,12 +78,16 @@
 //   NOTE: formula in senselab website
 #define MGBLOCK (1.0 / (1.0 + 0.3 * exp(-0.1 * (*Vpost)[indexPost])))
 
+#elif RECEPTOR_NMDA == NMDAR_BEHABADI_2012_MODIFIED
+//#define MGBLOCK (1.0 / (1.0 + 0.3 * exp(-0.1136 * (*Vpost)[indexPost])))
+#define MGBLOCK (1.0 / (1.0 + 0.3 * exp(-0.1316 * (*Vpost)[indexPost])))
+
 #elif RECEPTOR_NMDA == NMDAR_JADI_2012
 // Mg2+ block from "Jadi M, Polsky A, Schiller J, Mel BW (2012)
 // Location-Dependent Effects of Inhibition on Local Spiking in Pyramidal Neuron
 // Dendrites. PLoS Comput Biol 8(6): e1002550. doi:10.1371/journal.pcbi.1002550"
-#define Kp_Mgion 12.5 // [mM] the steepness of voltage dependency
-#define MGBLOCK (1.0 / (1.0 + exp(-((*Vpost)[indexPost] + 7.0) / Kp_Mgion )))
+#define Kp_V  12.5 // [mV] the steepness of voltage dependency
+#define MGBLOCK (1.0 / (1.0 + exp(-((*Vpost)[indexPost] + 7.0) / Kp_V)))
 
 #elif RECEPTOR_NMDA == NMDAR_JAHR_STEVENS_1990
 #define Kp_Mgion 3.57 // [mM] the steepness of voltage dependency

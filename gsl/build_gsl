@@ -1,6 +1,16 @@
 #!/bin/bash
 ## NOTE: This script is used to build GSL separately
 
+#Escape code
+esc=`echo -en "\033"`
+
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
+
 function contains() {
 local n=$#
 local value=${!n}
@@ -16,69 +26,194 @@ return 1
 
 }
 
-list=("LINUX" "SMP" "BGL" "BGP" "BGQ")
-var=$( IFS=' | '; echo "${list[*]}"  )
-if [ "$#" -eq 0 ] || \
-	( [ "$#" -gt 0 ] && [ $(contains "${list[@]}" "$1") == "n" ] ); then
-	echo "SYNTAX: $0 <$var> [-clean | -rebuild]"
-	echo "SYNTAX: $0 <$var> <-clean | -rebuild> <num-processes-4-make>"
-	echo "SYNTAX: $0 <$var> <-clean | -rebuild> <num-processes-4-make> [-release | -log1 | -log2]"
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+#########################################
+#   PRINT HELP
+#{{{
+function print_help {
+	echo "SYNTAX: $0 
+  -p <$SUPPORTED_PLATFORMS>    [default: LINUX]
+  [--clean | --rebuild]
+  -j <n>                  with <n> is num-processes [default: 2/3 total cores]
+  --release | <empty>   [default: (empty)]
+  -d1                 [default: debug_assert]
+  -d2                 [debug_hh] --> print debugs for Initialize() methods
+  -d3                 [debug_in_loops] --> print debugs inside Loops
+  -d4                 [debug_cpts] --> print compartmental information 
+     	--release: O3 with debug_assert
+     	--loglevel 1: debug with debug_assert and debug_hh for initialize methods
+     	--loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
+  "
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
-	echo "default: debug with debug_assert"
-	echo "-release: O3 with debug_assert"
-	echo "-log1: debug with debug_assert and debug_hh for initialize methods"
-	echo "-log2: debug with debug_assert and debug_hh and print out debug for loops"
 	exit;
-fi
+}
 
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then 
+  print_help
+fi
+#}}}
+
+##########################################
+## Detect what options for compilation
+#{{{
+PLATFORM="LINUX"
+CLEAN=""
+REBUILD=""
+GSL_BUILD_MODE=""
+DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 if [ "$#" -gt 2 ] ; then
 	NPROCS=$3
 fi
 
-if [ "$2" == "-clean" ] ; then
-	# Generate Makefile
-	echo "clean-up GSL"
-	make clean
-	rm Makefile
-elif [ "$2" == "-rebuild" ] ; then 
-	echo "build GSL"
-	rm Makefile
-	## detect if -release is used
-	for last; do true; done
-	if [ $last == "-release" ]; then 
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --with-mpi --domainLib --nowarning_dynamiccast;
-		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --O3 --debug_assert --domainLib;
-		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --debug_assert --domainLib;
-		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --debug_assert --domainLib;
-		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --debug_assert --domainLib;
-		fi
-	elif [ $last == "-log1" ]; then 
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --debug_hh --with-mpi --domainLib;
-		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
-		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
-		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
-		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
-		fi
-	elif [ $last == "-log2" ]; then 
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --debug_hh --debug_in_loops --with-mpi --domainLib;
-		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
-		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
-		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
-		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
-		fi
-	else #default: standard debug
-		#if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --with-mpi --domainLib;
-		if [ "$1" == "LINUX" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --debug_assert --with-mpi --domainLib --nowarning_dynamiccast;
-		elif [ "$1" == "SMP" ] && [ ! `ls Makefile` ]; then ./configure.py --debug --domainLib;
-		elif [ "$1" == "BGL" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneL --domainLib;
-		elif [ "$1" == "BGP" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneP --domainLib;
-		elif [ "$1" == "BGQ" ] && [ ! `ls Makefile` ]; then ./configure.py --blueGeneQ --domainLib;
-		fi
-	fi
-	make clean
-	make -j $NPROCS;
+optspec=":d:p:sr-:j:"
+while getopts "$optspec" optchar; do
+  case $optchar in
+    p)
+      echo "Platform: $OPTARG" >&2
+      PLATFORM=$OPTARG
+      ;;
+    j)
+      echo "Num-processes: $OPTARG"
+      NPROCS=$OPTARG
+      ;;
+    s)
+      NPROCS=1
+      ;;
+    r) # release
+      GSL_BUILD_MODE="-release"
+      ;;
+    d) # log options
+      DEBUGOPTS+=("$OPTARG")
+      ;;
+    -)  #parse long-option
+      case "${OPTARG}" in
+          clean)
+              CLEAN="-clean"
+              ;;
+          rebuild)
+              REBUILD="-rebuild"
+              ;;
+          singlethread)
+              NPROCS=1
+              ;;
+          release) # release
+            GSL_BUILD_MODE="-release"
+            ;;
+          loglevel=*)
+            val=${OPTARG#*=}
+            opt=${OPTARG%=$val}
+            ;;
+          loglevel)
+            val="${!OPTIND}"
+            GSL_BUILD_MODE="-log$val" 
+            case $GSL_BUILD_MODE in 
+              -log1 )
+                DEBUGOPTS+=("1" "2")
+                ;;
+              -log2 )
+                DEBUGOPTS+=("1" "2" "3")
+                ;;
+            esac
+            ;;
+          someloglevel)
+              val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+              echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+              ;;
+          =*)
+              val=${OPTARG#*=}
+              opt=${OPTARG%=$val}
+              echo "parsing option: '--${opt}', value: '${val}'" >&2
+              ;;
+          *)
+              if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                  echo "unknown option --${OPTARG}" >&2
+              fi
+              ;;
+      esac;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+#    :)
+#      echo "Option -$OPTARG requires an argument." >&2
+#      exit 1
+#      ;;
+  esac
+done
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+
+PLATFORM_OPTS="--domainLib  "
+case $PLATFORM in
+  LINUX )
+    PLATFORM_OPTS+="--with-mpi "
+	  if [ "$GSL_BUILD_MODE" == "-release" ]; then 
+     PLATFORM_OPTS+=" --nowarning_dynamiccast "
+    fi
+    ;;
+  SMP )
+    PLATFORM_OPTS+=""
+    ;;
+  BGL )
+    PLATFORM_OPTS+=" --blueGeneL "
+    ;;
+  BGP )
+    PLATFORM_OPTS+=" --blueGeneP "
+    ;;
+  BGQ )
+    PLATFORM_OPTS+=" --blueGeneQ "
+    ;;
+esac
+
+DEBUGMACROS="--debug_assert "
+for val in "${DEBUGOPTS[@]}"; do
+  case $val in 
+    1)
+      # do nothing as it is already added
+      #i.e. DEBUGMACROS="--debug_assert"
+      ;;
+    2)
+      DEBUGMACROS+=" --debug_hh"
+      ;;
+    3)
+      DEBUGMACROS+=" --debug_in_loops"
+      ;;
+    4)
+      DEBUGMACROS+=" --debug_cpts"
+      ;;
+  esac
+done
+#}}}
+
+
+if [ "$CLEAN" == "-clean" ] || \
+   [ "$REBUILD" == "-rebuild" ] ; then 
+  if [ "$CLEAN" == "-clean" ] ; then
+    echo "clean-up GSL"
+    make clean
+    rm Makefile
+  fi
+  if [ "$REBUILD" == "-rebuild" ] ; then 
+    echo "Rebuild GSL"
+    rm Makefile
+    # Generate Makefile
+    if [ "$GSL_BUILD_MODE" == "-release" ]; then 
+      ## detect if -release is used
+      ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
+    else
+      ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
+    fi
+    make clean
+    make -j $NPROCS;
+  fi
 else
 	make -j $NPROCS;
+fi
+
+if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
+  echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
+  exit; 
+else
+  echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
 fi

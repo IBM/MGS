@@ -7,7 +7,10 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+//NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
+//    Use IOCurrentArrayProducer instead
+Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+BranchDataProducer, IOCurrentArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -17,10 +20,9 @@ Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
-  //dyn_var_t [] Vhalf_m; // [mV]
-  dyn_var_t [] Vhalf_m_shift; // [mV]
-  //dyn_var_t [] Vhalf_h; // [mV]
-  dyn_var_t [] Vhalf_h_shift; // [mV]
+  float [] Vhalf_m_shift; // [mV]
+  float [] Vhalf_h_shift; // [mV]
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
@@ -68,6 +70,7 @@ Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
   BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection
     string identifier; //name of the compartment variable
@@ -99,7 +102,8 @@ Node ChannelNat Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 }
 
 //NOTE: Model suppose to be specific for Nav1.6 gene-expressed Na+ channel
-Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+BranchDataProducer, IOCurrentArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -113,6 +117,7 @@ Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayPr
   dyn_var_t [] Vhalf_m_shift; // [mV]
   //dyn_var_t [] Vhalf_h; // [mV]
   dyn_var_t [] Vhalf_h_shift; // [mV]
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
@@ -160,6 +165,7 @@ Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayPr
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_Na;
   BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection
     string identifier; //name of the compartment variable
@@ -189,3 +195,6 @@ Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayPr
   }
 /*}}}*/
 }
+
+
+#endif

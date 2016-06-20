@@ -197,6 +197,52 @@ Variable CalciumDisplay
 //}}}
 } 
 
+
+//Variable ConcentrationDisplay
+//{
+////{{{
+//	string fileName;
+//	int [] [] indices;
+//
+//	dyn_var_t * []  Glutamate;
+//	//dyn_var_t []* Glutamate_connect;
+//
+//	//DimensionStruct* []* [] dimensions;
+//	//DimensionStruct* []* dimensions_connect;
+//
+//	BranchDataStruct* [] branchData;
+//	BranchDataStruct* branchData_connect;
+//
+//	dyn_var_t* deltaT;
+//
+//	InitPhase initialize;
+//	FinalPhase finalize;
+//	TriggeredFunction dataCollection;
+//
+//	InAttrPSet {
+//		string identifier;
+//		TissueSite site;
+//	}
+//
+//	UserFunction setUpPointers;
+//
+//	Connection Pre Node () Expects 
+//   GlutamateConcentrationProducer, BranchDataProducer
+//  //GlutamateConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer 
+//  {
+//		//GlutamateConcentrationArrayProducer.NT >> Glutamate_connect;
+//		//GlutamateConcentrationArrayProducer.NT >> Glutamate_connect;
+//		//DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//    GlutamateConcentrationProducer.NT >> Glutamate; 
+//		BranchDataProducer.branchData >> branchData_connect;
+//		setUpPointers();
+//	}
+//	Connection Pre Constant () Expects TimeStepProducer {
+//		TimeStepProducer.deltaT >> deltaT;
+//	}
+////}}}
+//} 
+
 Variable ConductanceDisplay
 {
 //{{{
@@ -301,6 +347,60 @@ Variable CurrentDisplay
 	}
 //}}}
 } 
+
+Variable ConcentrationDisplay
+{//any concentration
+//{{{
+	string fileName;
+	int [] indices;
+
+	dyn_var_t []* [] Conc_cpt;
+	dyn_var_t []* Conc_cptConnect;
+	BranchDataStruct* [] channelBranchData;
+
+	dyn_var_t* [] Conc_synapse;
+	BranchDataStruct* []* [] synapseBranchData;
+	BranchDataStruct* []* synapseBranchDataConnect;
+	int* [] [] synapseIndices;
+	int* [] synapseIndicesConnect;
+
+	BranchDataStruct* [] connexonBranchData;
+	int* [] connexonIndices;
+
+	dyn_var_t* deltaT;
+
+	InitPhase initialize;
+	FinalPhase finalize;
+	TriggeredFunction dataCollection;
+
+	InAttrPSet {
+		string identifier;
+	}
+
+	UserFunction setUpPointers;
+
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects AnyConcentrationArrayProducer, BranchDataProducer {
+		AnyConcentrationArrayProducer.AnyConcs >> Conc_cptConnect;
+		BranchDataProducer.branchData >> channelBranchData;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects AnyConcentrationProducer, BranchDataArrayProducer, IndexArrayProducer {
+		AnyConcentrationProducer.AnyConc >> Conc_synapse;
+		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+		IndexArrayProducer.indexArray >> synapseIndicesConnect;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="CONNEXON") Expects AnyConcentrationProducer, BranchDataProducer, IndexProducer {
+		AnyConcentrationProducer.AnyConc >> Conc_synapse;
+		BranchDataProducer.branchData >> connexonBranchData;
+		IndexProducer.index >> connexonIndices;
+	}
+	Connection Pre Constant () Expects TimeStepProducer {
+		TimeStepProducer.deltaT >> deltaT;
+	}
+//}}}
+} 
+
 
 //Variable GenericDataDisplay
 //{//any kind of data (need user to interpret)
@@ -589,6 +689,7 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 
 Variable SimulationInfo 
 {
+	//{{{
   //NOTE: make sure it has to be 'float'
   // to be able to absorved by FloatTrigger
   float currentTime;    //[ms]
@@ -603,7 +704,75 @@ Variable SimulationInfo
 	Connection Pre Constant () Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> deltaT;
 	}
- 
+  //}}}
 }
 
+Variable AnyCurrentDisplay
+{
+//{{{
+	string fileName;
+	int [] indices;
+
+	dyn_var_t []* [] I_channel;
+	dyn_var_t []* I_channelConnect;
+	BranchDataStruct* [] channelBranchData;
+
+	dyn_var_t* [] I_synapse;
+	BranchDataStruct* []* [] synapseBranchData;
+	BranchDataStruct* []* synapseBranchDataConnect;
+	int* [] [] synapseIndices;
+	int* [] synapseIndicesConnect;
+
+	BranchDataStruct* [] connexonBranchData;
+	int* [] connexonIndices;
+
+	dyn_var_t* deltaT;
+
+	InitPhase initialize;
+	FinalPhase finalize;
+	TriggeredFunction dataCollection;
+
+	InAttrPSet {
+		string identifier;
+	}
+
+	UserFunction setUpPointers;
+
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer {
+		CurrentArrayProducer.currents >> I_channelConnect;
+		BranchDataProducer.branchData >> channelBranchData;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer {
+		IOCurrentArrayProducer.currents >> I_channelConnect;
+		BranchDataProducer.branchData >> channelBranchData;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer {
+		CaCurrentArrayProducer.currents >> I_channelConnect;
+		BranchDataProducer.branchData >> channelBranchData;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
+		CurrentProducer.current >> I_synapse;
+		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+		IndexArrayProducer.indexArray >> synapseIndicesConnect;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
+		CaCurrentProducer.current >> I_synapse;
+		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
+		IndexArrayProducer.indexArray >> synapseIndicesConnect;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
+		CurrentProducer.current >> I_synapse;
+		BranchDataProducer.branchData >> connexonBranchData;
+		IndexProducer.index >> connexonIndices;
+	}
+	Connection Pre Constant () Expects TimeStepProducer {
+		TimeStepProducer.deltaT >> deltaT;
+	}
+//}}}
+} 
 #endif

@@ -67,6 +67,7 @@ O5_OPTIMIZATION_FLAG = "-O5"
 DEBUG_ASSERT = "-DDEBUG_ASSERT"
 DEBUG_HH = "-DDEBUG_HH"
 DEBUG_LOOPS = "-DDEBUG_LOOPS"
+DEBUG_CPTS = "-DDEBUG_CPTS"
 NOWARNING_DYNAMICCAST = "-DNOWARNING_DYNAMICCAST"
 
 COMMON_DX_CFLAGS = " -I . -I$(DX_INCLUDE) -I$(DX_BASE)/include $(MAKE64)"
@@ -231,6 +232,7 @@ class Options:
         self.debug_assert = False # True, False
         self.debug_hh = False # True, False
         self.debug_loops = False # True, False
+        self.debug_cpts = False # True, False
         self.nowarning_dynamiccast = False # True, False
         self.profile = DONTUSE # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE # USE, DONTUSE, UNDEF
@@ -265,6 +267,7 @@ class Options:
                            ("debug_assert", "compile with debugging flags for assert"),
                            ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
                            ("debug_loops", "compile with debugging flags for methods to be called iteratively (time loop)"),
+                           ("debug_cpts", "compile with debugging flags to print out the information for every compartments"),
                            ("nowarning_dynamiccast", "disable printing out Dynamic Cast failed warning messages"),
                            ("tvMemDebug", "enable totalview memory debugging for parallel jobs (perfomance impact)"),
                            ("mpiTrace", "enable mpiTrace profiling (for BG)"),
@@ -362,6 +365,8 @@ class Options:
                     self.debug_hh = True
                 if o == "--debug_loops":
                     self.debug_loops = True
+                if o == "--debug_cpts":
+                    self.debug_cpts = True
                 if o == "--nowarning_dynamiccast":
                     self.nowarning_dynamiccast = True
                 if o == "--profile":
@@ -547,10 +552,18 @@ class BuildSetup:
 
         retStr += TAB + "Debugging: "
         if self.options.debug == True:
-            retStr += "On"
+            retStr += "On\n"
+            if self.options.debug_assert == True:
+              retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
+            if self.options.debug_hh == True:
+              retStr += TAB + TAB + "- DEBUG_HH : YES\n"
+            if self.options.debug_loops == True:
+              retStr += TAB + TAB + "- DEBUG_LOOPS : YES\n"
+            if self.options.debug_cpts == True:
+              retStr += TAB + TAB + "- DEBUG_CPTS : YES\n"
         else :
-            retStr += "Off"
-        retStr += "\n"
+            retStr += "Off\n"
+        #retStr += "\n"
 
         retStr += TAB + "Profiling: "
         if self.options.profile == USE:
@@ -1057,6 +1070,9 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 
         if self.options.debug_loops == True:
             retStr += " " + DEBUG_LOOPS
+
+        if self.options.debug_cpts == True:
+            retStr += " " + DEBUG_CPTS
 
         if self.options.nowarning_dynamiccast == True:
             retStr += " " + NOWARNING_DYNAMICCAST

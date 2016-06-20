@@ -7,7 +7,9 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+// A-type slow (persistent) component (Kp)
+Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+BranchDataProducer, IOCurrentArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -17,6 +19,7 @@ Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
   dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
@@ -66,6 +69,7 @@ Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection
     string identifier; //name of the compartment variable

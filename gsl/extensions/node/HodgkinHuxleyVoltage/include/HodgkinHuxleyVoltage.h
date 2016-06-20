@@ -42,6 +42,7 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
       dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t Area);
       //unsigned getSize() {return branchData->size;}
 			void printDebugHH();
+			void printDebugHH(int i);
 			
 	
 #if MAX_COMPUTE_ORDER>0

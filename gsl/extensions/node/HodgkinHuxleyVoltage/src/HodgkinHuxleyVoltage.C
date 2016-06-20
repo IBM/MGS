@@ -345,30 +345,41 @@ void HodgkinHuxleyVoltage::printDebugHH()
 {
   unsigned size = branchData->size;
   SegmentDescriptor segmentDescriptor;
-	std::cerr << "time| BRANCH | rank | nodeIndex | layerIndex | cptIndex |"
-		<< "neuronIdx | branchIdx | branchOrder | distalC0 | distalC1 | distalC2 |"
-		<< "distalC3 | proxC0 | proxC1 | proxC2 |"
-		<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
   for (int i = 0; i < size; ++i)
   {
-    std::cerr << dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " BRANCH"
-              << " [" << getSimulation().getRank() << "," << getNodeIndex()
-              << "," << getIndex() << "," << i << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ") |"
-              << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
-              << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
-              << isProximalCase1 << "|" << isProximalCase2 << "|"
-              << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << "," 
-							<< dimensions[i]->dist2soma  << ","
-              << dimensions[i]->surface_area << "," 
-              << dimensions[i]->volume << "," << dimensions[i]->length << ","
-							<< "} "
-							<< Vnew[i]  << " " << std::endl;
+		this->printDebugHH(i);
   }
+}
+
+void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
+{
+  unsigned size = branchData->size;
+  SegmentDescriptor segmentDescriptor;
+	if (cptIndex == 0)
+	{
+		std::cerr << "time| BRANCH | rank | nodeIndex | layerIndex | cptIndex |"
+			<< "neuronIdx | branchIdx | branchOrder | distalC0 | distalC1 | distalC2 |"
+			<< "distalC3 | proxC0 | proxC1 | proxC2 |"
+			<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
+	}
+	int i  = cptIndex;
+	std::cerr << dyn_var_t(getSimulation().getIteration()) *
+		*getSharedMembers().deltaT << " BRANCH"
+		<< " [" << getSimulation().getRank() << "," << getNodeIndex()
+		<< "," << getIndex() << "," << i << "] "
+		<< "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
+		<< segmentDescriptor.getBranchIndex(branchData->key) << ","
+		<< segmentDescriptor.getBranchOrder(branchData->key) << ") |"
+		<< isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
+		<< "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
+		<< isProximalCase1 << "|" << isProximalCase2 << "|"
+		<< " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
+		<< dimensions[i]->z << "," << dimensions[i]->r << "," 
+		<< dimensions[i]->dist2soma  << ","
+		<< dimensions[i]->surface_area << "," 
+		<< dimensions[i]->volume << "," << dimensions[i]->length << ","
+		<< "} "
+		<< Vnew[i]  << " " << std::endl;
 }
 
 // Update: RHS[], Aii[]

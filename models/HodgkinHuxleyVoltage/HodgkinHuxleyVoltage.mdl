@@ -181,7 +181,8 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     BranchDataProducer.branchData >> branchData;
    }
 
-  Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects ConductanceArrayProducer, ReversalPotentialArrayProducer {
+  Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects ConductanceArrayProducer, 
+    ReversalPotentialArrayProducer {
     ConductanceArrayProducer.conductanceArray >> channelCurrents.conductances;
     ReversalPotentialArrayProducer.reversalPotentials >> channelCurrents.reversalPotentials;
   }

@@ -1,31 +1,15 @@
-// =================================================================
-// Licensed Materials - Property of IBM
-//
-// "Restricted Materials of IBM"
-//
-// BMC-YKT-08-23-2011-2
-//
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
-
 #include "Lens.h"
-#include "CaCurrentDisplay.h"
-#include "Simulation.h"
-#include "CG_CaCurrentDisplay.h"
+#include "AnyCurrentDisplay.h"
+#include "CG_AnyCurrentDisplay.h"
 #include "MaxComputeOrder.h"
 #include <memory>
 
 #define decimal_places 3
 #define fieldDelimiter "\t"
 
-void CaCurrentDisplay::initialize(RNG& rng)
+void AnyCurrentDisplay::initialize(RNG& rng) 
 {
-  if (ICa_channel.size() > 0 || ICa_synapse.size() > 0)
+  if (I_channel.size() > 0 || I_synapse.size() > 0)
   {//Ca2+ current via Ca2+ channel; or Ca2+-permeable receptor at synapse
     assert(deltaT);
     std::ostringstream os;
@@ -33,14 +17,14 @@ void CaCurrentDisplay::initialize(RNG& rng)
     outFile = new std::ofstream(os.str().c_str());
     outFile->precision(decimal_places);
     (*outFile) << "#Time" << fieldDelimiter << "CaCurrent :";
-    if (ICa_channel.size() > 0)
+    if (I_channel.size() > 0)
     {//via Ca2+ channels
       if (indices.size() == 0)
       {
-        for (unsigned int i = 0; i < ICa_channel.size(); ++i)
+        for (unsigned int i = 0; i < I_channel.size(); ++i)
         {
-          assert(ICa_channel[i]->size() > 0);
-          for (unsigned int j = 0; j < ICa_channel[i]->size(); ++j)
+          assert(I_channel[i]->size() > 0);
+          for (unsigned int j = 0; j < I_channel[i]->size(); ++j)
           {
             (*outFile) << std::fixed << " ["
                        << *(reinterpret_cast<unsigned long long*>(
@@ -52,11 +36,11 @@ void CaCurrentDisplay::initialize(RNG& rng)
       {
         ShallowArray<int>::iterator it, end = indices.end();
         int idx = 0;
-        for (unsigned int i = 0; i < ICa_channel.size(); ++i)
+        for (unsigned int i = 0; i < I_channel.size(); ++i)
         {
           for (it = indices.begin(); it != end; ++it)
           {
-            if ((unsigned)*it < ICa_channel[i]->size())
+            if ((unsigned)*it < I_channel[i]->size())
               (*outFile) << std::fixed << " ["
                          << *(reinterpret_cast<unsigned long long*>(
                                 &channelBranchData[*it]->key)) << "," << *it
@@ -65,11 +49,11 @@ void CaCurrentDisplay::initialize(RNG& rng)
         }
       }
     }
-    if (ICa_synapse.size() > 0)
+    if (I_synapse.size() > 0)
     {//via Ca2+-permeable receptor at synapse
       if (connexonBranchData.size() > 0)
       {
-        for (unsigned int i = 0; i < ICa_synapse.size(); ++i)
+        for (unsigned int i = 0; i < I_synapse.size(); ++i)
         {
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(
@@ -79,7 +63,7 @@ void CaCurrentDisplay::initialize(RNG& rng)
       }
       else
       {
-        for (unsigned int i = 0; i < ICa_synapse.size(); ++i)
+        for (unsigned int i = 0; i < I_synapse.size(); ++i)
         {
 					if (synapseIndices[i].size() != 2)
 					{
@@ -103,24 +87,24 @@ void CaCurrentDisplay::initialize(RNG& rng)
   }
 }
 
-void CaCurrentDisplay::finalize(RNG& rng)
+void AnyCurrentDisplay::finalize(RNG& rng) 
 {
   if (outFile) outFile->close();
 }
 
-void CaCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
+void AnyCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
 {
-  if (ICa_channel.size() > 0 || ICa_synapse.size() > 0)
+  if (I_channel.size() > 0 || I_synapse.size() > 0)
   {
     (*outFile) << float(getSimulation().getIteration()) * *deltaT;
-    if (ICa_channel.size() > 0)
+    if (I_channel.size() > 0)
     {
       if (indices.size() == 0)
       {
-        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = ICa_channel
+        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = I_channel
                                                                    .begin(),
                                                          end1 =
-                                                             ICa_channel.end();
+                                                             I_channel.end();
         for (; it1 != end1; ++it1)
         {
           ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
@@ -131,10 +115,10 @@ void CaCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
       else
       {
         ShallowArray<int>::iterator it2, end2 = indices.end();
-        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = ICa_channel
+        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = I_channel
                                                                    .begin(),
                                                          end1 =
-                                                             ICa_channel.end();
+                                                             I_channel.end();
         for (; it1 != end1; ++it1)
         {
           for (it2 = indices.begin(); it2 != end2; ++it2)
@@ -145,10 +129,10 @@ void CaCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         }
       }
     }
-    if (ICa_synapse.size() > 0)
+    if (I_synapse.size() > 0)
     {
-      ShallowArray<dyn_var_t*>::iterator it = ICa_synapse.begin(),
-                                         end = ICa_synapse.end();
+      ShallowArray<dyn_var_t*>::iterator it = I_synapse.begin(),
+                                         end = I_synapse.end();
       for (; it != end; ++it)
       {
         (*outFile) << std::fixed << fieldDelimiter << (**it);
@@ -158,14 +142,10 @@ void CaCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   }
 }
 
-void CaCurrentDisplay::setUpPointers(
-    const String& CG_direction, const String& CG_component,
-    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
-    Constant* CG_constant, CG_CaCurrentDisplayInAttrPSet* CG_inAttrPset,
-    CG_CaCurrentDisplayOutAttrPSet* CG_outAttrPset)
+void AnyCurrentDisplay::setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AnyCurrentDisplayInAttrPSet* CG_inAttrPset, CG_AnyCurrentDisplayOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->identifier == "CHANNEL")
-    ICa_channel.push_back(ICa_channelConnect);
+    I_channel.push_back(I_channelConnect);
   else if (CG_inAttrPset->identifier == "SYNAPSE")
   {
     synapseBranchData.push_back(synapseBranchDataConnect);
@@ -173,21 +153,28 @@ void CaCurrentDisplay::setUpPointers(
   }
 }
 
-CaCurrentDisplay::CaCurrentDisplay() : CG_CaCurrentDisplay(), outFile(0) {}
-
-CaCurrentDisplay::~CaCurrentDisplay() { delete outFile; }
-
-void CaCurrentDisplay::duplicate(std::auto_ptr<CaCurrentDisplay>& dup) const
+AnyCurrentDisplay::AnyCurrentDisplay() 
+   : CG_AnyCurrentDisplay(), outFile(0)
 {
-  dup.reset(new CaCurrentDisplay(*this));
 }
 
-void CaCurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+AnyCurrentDisplay::~AnyCurrentDisplay() 
 {
-  dup.reset(new CaCurrentDisplay(*this));
+  delete outFile;
 }
 
-void CaCurrentDisplay::duplicate(std::auto_ptr<CG_CaCurrentDisplay>& dup) const
+void AnyCurrentDisplay::duplicate(std::auto_ptr<AnyCurrentDisplay>& dup) const
 {
-  dup.reset(new CaCurrentDisplay(*this));
+   dup.reset(new AnyCurrentDisplay(*this));
 }
+
+void AnyCurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+{
+   dup.reset(new AnyCurrentDisplay(*this));
+}
+
+void AnyCurrentDisplay::duplicate(std::auto_ptr<CG_AnyCurrentDisplay>& dup) const
+{
+   dup.reset(new AnyCurrentDisplay(*this));
+}
+

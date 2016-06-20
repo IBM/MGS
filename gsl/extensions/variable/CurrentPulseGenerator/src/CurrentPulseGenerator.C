@@ -7,6 +7,15 @@
 #include <iostream>
 #include "MaxComputeOrder.h"
 
+/**
+ * periodic   = 
+ * poisson    =
+ * dualexp    = f(t) = (1 - e^(-t/tauRise)) * e^(-t/tauDecay)
+ *        tauRise, tauDecay = in [ms]
+ *        NOTE: EPSP-like current injection
+ *        Larkum - Zhu - Sakmann (2001) chose tauDecay=4*tauRise
+ *                         tauRise = 2, 5, 10, or 50 [ms]
+ **/ 
 void CurrentPulseGenerator::initialize(RNG& rng)
 {
 #ifdef WAIT_FOR_REST
