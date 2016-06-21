@@ -94,6 +94,9 @@
 #include <cstdlib>
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 // number of fields in tissue.txt file
 #define PAR_FILE_INDEX 8
@@ -244,7 +247,9 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _readFromFile(f._readFromFile),
 #ifdef IDEA1
       _numCapsulesEachSideForBranchPointMap(
-          f._numCapsulesEachSideForBranchPointMap)
+          f._numCapsulesEachSideForBranchPointMap),
+      _cptSizesForBranchMap(
+          f._cptSizesForBranchMap),
 #endif
       _segmentDescriptor(f._segmentDescriptor)
 #endif
@@ -583,10 +588,16 @@ void TissueFunctor::neuroGen(Params* params, LensContext* CG_c)
     statsFileName.erase(ln - 4, 4);
     parsFileName.erase(ln - 4, 4);
 
+    struct stat st = {0};
+    std::string statFolder = "./stats/";
+    if (stat(statFolder.c_str(), &st) == -1)
+    {
+      mkdir (statFolder.c_str(), 0700);
+    }
     std::ostringstream statsFileNameStream, parsFileNameStream;
-    statsFileNameStream << statsFileName << "." << btype << ".out";
+    statsFileNameStream << statFolder << statsFileName << "." << btype << ".out";
     statsFileName = statsFileNameStream.str();
-    parsFileNameStream << parsFileName << "." << btype << ".par";
+    parsFileNameStream << statFolder << parsFileName << "." << btype << ".par";
     parsFileName = parsFileNameStream.str();
 
     if (composite > 0)
@@ -1303,11 +1314,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 
       //# capsules in that branch
       int ncaps = branch->_nCapsules;
-      // we need this in case the ncaps is less than _compartmentSize
-      // e.g. soma has only 1 capsule
-      int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
       // Find: # compartments in the current branch
-      // int ncpts = N_COMPARTMENTS(ncaps, cptSize);
       bool isDistalEndSeeImplicitBranchingPoint = false;
       // NOTE: cptsizes_in_branch holds the information about #capsules per cpt
       //   index=0 --> distal-end cpt
@@ -1384,25 +1391,69 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             dyn_var_t volume = 0.0;
             dyn_var_t dist2soma =
               lastCapsule->getDist2Soma() + lastCapsule->getLength();
+            dyn_var_t length = 0.0;
+#ifdef IDEA1
+            float reserved4distend = _numCapsulesEachSideForBranchPointMap[branch].second;
+            Capsule* caps = lastCapsule;
+            int ii = 1;
+            for (; ii < reserved4distend; ii++)
+            {
+              dyn_var_t h = caps->getLength();
+              dyn_var_t r = caps->getRadius();
+              surface_area += 2.0 * M_PI * r * h;
+              volume += M_PI * r * r * h;
+              length += caps->getLength();
+              caps = caps -1;
+            }
+            dyn_var_t h = caps->getLength();
+            dyn_var_t r = caps->getRadius();
+            dyn_var_t frac = reserved4distend-ii+1;
+            surface_area += 2.0 * M_PI * r * h * frac;
+            volume += M_PI * r * r * h * frac;
+            length += frac * caps->getLength();
+#else
             dyn_var_t h = lastCapsule->getLength();
             dyn_var_t r = lastCapsule->getRadius();
             dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
             surface_area += 2.0 * M_PI * r * h * frac;
             volume += M_PI * r * r * h * frac;
+            length += frac * lastCapsule->getLength();
+#endif
 
-            dyn_var_t length = frac * lastCapsule->getLength();
             dyn_var_t sumlen = 0;
             std::list<ComputeBranch*>::const_iterator
               iter = branch->_daughters.begin(),
                    iterend = branch->_daughters.end();
             for (; iter != iterend; iter++)
-            {  // take half surface area from the first capsule
+            {  
+#ifdef IDEA1
+              float reserved4proxend = _numCapsulesEachSideForBranchPointMap[*iter].first;
+              Capsule* caps = (*iter)->_capsules;
+              int ii = 1;
+              for (ii = 1; ii < reserved4proxend; ii++)
+              {
+                dyn_var_t h = caps->getLength();
+                dyn_var_t r = caps->getRadius();
+                surface_area += 2.0 * M_PI * r * h;
+                volume += M_PI * r * r * h;
+                sumlen += caps->getLength();
+                caps = caps +1;
+              }
+              dyn_var_t h = caps->getLength();
+              dyn_var_t r = caps->getRadius();
+              frac = reserved4proxend-ii+1;
+              surface_area += 2.0 * M_PI * r * h * frac;
+              volume += M_PI * r * r * h * frac;
+              sumlen += frac * h;
+#else
+              // take half surface area from the first capsule
               dyn_var_t h = (*iter)->_capsules[0].getLength();
               dyn_var_t r = (*iter)->_capsules[0].getRadius();
               frac = getFractionCapsuleVolumeFromPost((*iter));
               surface_area += 2.0 * M_PI * r * h * frac;
               volume += M_PI * r * r * h * frac;
               sumlen += frac * h;
+#endif
             }
             length += sumlen / branch->_daughters.size();
             double* cds = lastCapsule->getEndCoordinates();
@@ -1425,6 +1476,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           // now
           std::vector<int>::const_iterator cibiter = cptsizes_in_branch.begin(),
             cibiend = cptsizes_in_branch.end();
+          //NOTE: i = cpt index; j = capsule index
           for (int i = 0, j = ncaps - (*cibiter); i < ncpts, cibiter < cibiend;
               ++i, cibiter++, j -= (*cibiter))
           {  // compartment indexing is distal to proximal, while capsule
@@ -1437,8 +1489,24 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             dyn_var_t surface_area = 0.0;
             dyn_var_t volume = 0.0;
             dyn_var_t lost_distance = 0.0;
-            for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
+#ifdef IDEA1
+            float reserved4distend = _numCapsulesEachSideForBranchPointMap[branch].second;
+            float reserved4proxend = _numCapsulesEachSideForBranchPointMap[branch].first;
+            if (j == 0)
             {
+              //1. shift capPtr
+              begCap += int(std::floor(reserved4proxend));
+            }
+
+            if (i == 0)
+            {//distal-end
+              //1. shift capPtr
+              endCap -= int(std::floor(reserved4distend));
+              //2. 
+            }
+#endif
+            for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
+            {//find dimension information for this compartment by summing up the capsules
               radius += capPtr->getRadius();
               // A = pi/4 (D+d) * sqrt((D-d)^2 + 4h^2)
               //  D,d : diameters 2 ends
@@ -1466,6 +1534,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                                               // volume
               if (j == 0 && capPtr == begCap)
               {  // check proximal-end
+              //TUAN TODO NOW
                 key_size_t key = capPtr->getKey();
                 unsigned int computeOrder =
                   _segmentDescriptor.getComputeOrder(key);
@@ -1499,7 +1568,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                   }
                   else
                   {  // reserve some for the cut/branch explicit junction
+#ifdef IDEA1
+                    dyn_var_t frac = reserved4proxend - int(std::floor(reserved4proxend));
+#else
                     dyn_var_t frac = getFractionCapsuleVolumeFromPost(branch);
+#endif
                     surface_area -= 2.0 * M_PI * r * h * frac;
                     volume -= M_PI * r * r * h * frac;
                     lost_distance = h * frac;
@@ -1508,15 +1581,20 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                 assert(surface_area > 0);
                 assert(volume > 0);
               }
-              ////
               if (i == 0 && capPtr == endCap)
               {  // check distal-end
+              //TUAN TODO NOW
                 key_size_t key = capPtr->getKey();
                 unsigned int computeOrder =
                   _segmentDescriptor.getComputeOrder(key);
                 if (computeOrder == MAX_COMPUTE_ORDER)
                 {  // reserve some for the explicit junction
+                  assert(isDistalEndSeeImplicitBranchingPoint == false);
+#ifdef IDEA1
+                  dyn_var_t frac = reserved4distend - int(std::floor(reserved4distend));
+#else
                   dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+#endif
                   surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
                   volume -= M_PI * r * r * (h - lost_distance) * frac;
                 }
@@ -1524,7 +1602,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                 {
                   if (branch->_daughters.size() > 1)
                   {  // reserve some for the implicit branching junction
+#ifdef IDEA1
+                    dyn_var_t frac = reserved4distend - int(std::floor(reserved4distend));
+#else
                     dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+#endif
                     surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
                     volume -= M_PI * r * r * (h - lost_distance) * frac;
                   }
@@ -1688,34 +1770,104 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     else
     {  // cut/branch explicit junction
       // 2.a first take proximal-side of junction
+#ifdef IDEA1
+      //which is the distal-end of the parent branch
+      float reserved4distend = _numCapsulesEachSideForBranchPointMap[branch_parent].second;
+      Capsule* lastCapsule = &branch_parent->lastCapsule();
+      Capsule* caps = lastCapsule;
+      int ii = 1;
+      for (; ii < reserved4distend; ii++)
+      {
+        dyn_var_t h = caps->getLength();
+        dyn_var_t r = caps->getRadius();
+        surface_area += 2.0 * M_PI * r * h;
+        volume += M_PI * r * r * h;
+        length += caps->getLength();
+        caps = caps -1;
+      }
+      dyn_var_t h = caps->getLength();
+      dyn_var_t r = caps->getRadius();
+      dyn_var_t frac = reserved4distend-ii+1;
+#else
       dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch_parent);
+#endif
       surface_area += 2.0 * M_PI * r * h * frac;
       volume += M_PI * r * r * h * frac;
       length += frac * h;
       dyn_var_t sumlen = 0.0;
       //  2.b. then sum with the parts from the distal-side
+      // NOTE: we have two scenarios:
+      //    a. slicing-cut (1-child) branchpoint
+      //    b. true-branching (many-children) branchpoint 
+      //  but currently the two scenarios are treated the same
       if (branch_parent->_daughters.size() == 1)
       {  // slicing cut point explicit junction
         iter = branch_parent->_daughters.begin();
         ComputeBranch* childbranch = (*iter);
         Capsule* childCapsule = &childbranch->_capsules[0];
+#ifdef IDEA1
+        //distal-side of branchpoint means the proximal-side of the child-branch
+        float reserved4proxend = _numCapsulesEachSideForBranchPointMap[childbranch].first;
+        Capsule* caps = childCapsule;
+        int ii = 1;
+        for (ii = 1; ii < reserved4proxend; ii++)
+        {
+          dyn_var_t h = caps->getLength();
+          dyn_var_t r = caps->getRadius();
+          surface_area += 2.0 * M_PI * r * h;
+          volume += M_PI * r * r * h;
+          sumlen += caps->getLength();
+          caps = caps +1;
+        }
+        dyn_var_t h = caps->getLength();
+        dyn_var_t r = caps->getRadius();
+        frac = reserved4proxend-ii+1;
+        surface_area += 2.0 * M_PI * r * h * frac;
+        volume += M_PI * r * r * h * frac;
+        sumlen += frac * h;
+#else
         dyn_var_t h = childCapsule->getLength();
         dyn_var_t r = childCapsule->getRadius();
         frac = getFractionCapsuleVolumeFromPost(childbranch);
         surface_area += 2.0 * M_PI * r * h * frac;
         volume += M_PI * r * r * h * frac;
         sumlen += h * frac;
+#endif
       }
       else
-      {  // branching point explicit junction
+      {  // iterate all children branches: branching point explicit junction
         for (; iter != iterend; iter++)
         {  // take half surface area from the first capsule
+#ifdef IDEA1
+          ComputeBranch* childbranch = (*iter);
+          Capsule* childCapsule = &childbranch->_capsules[0];
+          //distal-side of branchpoint means the proximal-side of the child-branch
+          float reserved4proxend = _numCapsulesEachSideForBranchPointMap[childbranch].first;
+          Capsule* caps = childCapsule;
+          int ii = 1;
+          for (ii = 1; ii < reserved4proxend; ii++)
+          {
+            dyn_var_t h = caps->getLength();
+            dyn_var_t r = caps->getRadius();
+            surface_area += 2.0 * M_PI * r * h;
+            volume += M_PI * r * r * h;
+            sumlen += caps->getLength();
+            caps = caps +1;
+          }
+          dyn_var_t h = caps->getLength();
+          dyn_var_t r = caps->getRadius();
+          frac = reserved4proxend-ii+1;
+          surface_area += 2.0 * M_PI * r * h * frac;
+          volume += M_PI * r * r * h * frac;
+          sumlen += frac * h;
+#else
           dyn_var_t h = (*iter)->_capsules[0].getLength();
           dyn_var_t r = (*iter)->_capsules[0].getRadius();
           frac = getFractionCapsuleVolumeFromPost((*iter));
           surface_area += 2.0 * M_PI * r * h * frac;
           volume += M_PI * r * r * h * frac;
           sumlen += h * frac;
+#endif
         }
       }
       length += sumlen / branch_parent->_daughters.size();
@@ -2449,8 +2601,12 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       bool preJunction = false;
       bool postJunction = false;
 
+#ifdef IDEA1
+      if (isPartofJunction(preCapsule, *titer))
+#else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
+#endif
       {  // pre component is LENS junction
         if (point &&
             _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
@@ -2501,8 +2657,12 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
 		  // has a series of probabilities (each prob. for one type (e.g. DenSpine))
         if (probabilities[i] > 0)
         {
+#ifdef IDEA1
+      if (isPartofJunction(postCapsule, *titer))
+#else
           if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
               _segmentDescriptor.getFlag(postCapsule->getKey()))
+#endif
           {
             // post component is LENS junction
             postJunction = true;
@@ -3892,8 +4052,12 @@ void TissueFunctor::doConnector(LensContext* lc)
       unsigned int indexPre, indexPost;  // GSL Grid's index at which preCapsule
       // and postCapsule belongs to, respectively [ NOTE: Grid's index = MPI rank ]
 
+#ifdef IDEA1
+      if (isPartofJunction(preCapsule, *titer))
+#else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
+#endif
       {
         preJunction = true;
         indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
@@ -3903,8 +4067,12 @@ void TissueFunctor::doConnector(LensContext* lc)
         preJunction = false;
         indexPre = _tissueContext->getRankOfBeginPoint(preCapsule->getBranch());
       }
+#ifdef IDEA1
+      if (isPartofJunction(postCapsule, *titer))
+#else
       if (_segmentDescriptor.getFlag(key2) &&
           _tissueContext->isTouchToEnd(*postCapsule, *titer))
+#endif
       {
         postJunction = true;
         indexPost = _tissueContext->getRankOfEndPoint(postCapsule->getBranch());
@@ -5887,6 +6055,7 @@ int TissueFunctor::getCountAndIncrement(std::map<int, int>& cmap, int index)
 //    (we just assume ignore that capsule if it presents)
 int TissueFunctor::getCptIndex(Capsule* capsule)
 {
+  int cptIndex = 0;
   ComputeBranch* branch = capsule->getBranch();
   std::vector<int> cptsizes_in_branch;
   bool isDistalEndSeeImplicitBranchingPoint;
@@ -5900,7 +6069,6 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
   std::vector<int>::iterator iter = cptsizes_in_branch.begin(),
                              iterend = cptsizes_in_branch.end();
   int count = 0;
-  int cptIndex = 0;
 
   for (; iter < iterend; iter++)
   {
@@ -5933,6 +6101,44 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
   assert(cptIndex < cptsizes_in_branch.size());
   return cptIndex;
 }
+
+#ifdef IDEA1
+int TissueFunctor::getCptIndex(Capsule* capsule, Touch & touch)
+{
+  int cptIndex = 0;
+  //TUAN TODO NOW update
+  ComputeBranch* branch = capsule->getBranch();
+  std::vector<int>* cptsizes_in_branch = &(_cptSizesForBranchMap[branch]);
+  if (isPartofJunction(capsule, touch))
+  {
+    cptIndex = 0;
+  }
+  else{
+    assert(cptsizes_in_branch->size()>0);
+    int cps_index =
+      (capsule - capsule->getBranch()->_capsules);  // zero-based index
+    //# capsules in that branch
+    int ncaps = branch->_nCapsules;
+    int cps_index_reverse = ncaps - cps_index - 1;  // from the distal-end
+    std::vector<int>::iterator iter = cptsizes_in_branch->begin(),
+      iterend = cptsizes_in_branch->end();
+
+    int count = 0;
+    for (; iter < iterend; iter++)
+    {
+      count = count + *iter;
+      if (count >= cps_index_reverse)
+      {
+        break;
+      }
+      cptIndex++;
+    }
+
+  }
+  assert(cptIndex < cptsizes_in_branch->size());
+  return cptIndex;
+}
+#endif
 
 // GOAL: find the fractional volume of a single capsule on the proximal-side
 // branch
@@ -6019,14 +6225,99 @@ int TissueFunctor::getNumCompartments(
   // we need this in case the ncaps is less than _compartmentSize
   // e.g. soma has only 1 capsule
   int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
-#ifdef IDEA1
-// suppose the branch is long enough, reverse some capsules at each end for
-// branchpoint
-#endif
   // Find: # compartments in the current branch
   ncpts = (int(floor(double(ncaps) / double(cptSize))) > 0)
               ? int(floor(double(ncaps) / double(cptSize)))
               : 1;
+#ifdef IDEA1
+// suppose the branch is long enough, reverse some capsules at each end for
+// branchpoint
+  cptsizes_in_branch.clear();
+  //NOTE: '-r' #caps/cpt
+  if (ncaps == 1)
+  {// -r get any value 
+    cptSize = 1;
+    ncpts = 1;
+    //_numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0,0);
+    _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0.25,0.25);
+    cptsizes_in_branch.push_back(cptSize);
+  }
+  else if (ncaps == 2)
+  {// -r get any value
+    cptSize = 2;
+    ncpts = 1;
+    _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0.5,0.5);
+    cptsizes_in_branch.push_back(cptSize);
+  }
+  else if (ncaps >= 3)
+  {
+    float fcaps_loss = 0.0;
+    if (_compartmentSize >= 2)
+      //NOTE: adjust this we need to adjust "secA"
+      fcaps_loss = 1.5; //0.75 for proximal, 0.75 for distal end
+    else
+      fcaps_loss = 1.0;
+    int ncaps_loss = std::ceil(fcaps_loss);
+    ncpts = (int(floor(double(ncaps-ncaps_loss) / double(cptSize))) > 0)
+                ? int(floor(double(ncaps-ncaps_loss) / double(cptSize)))
+                : 1;
+    int caps_left = ncaps - ncaps_loss;
+    cptsizes_in_branch.resize(ncpts);
+    std::fill(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
+    if (_compartmentSize >= 2)
+    {//"secA"
+      cptsizes_in_branch[0] += 1;
+      cptsizes_in_branch[ncpts-1] += 1;
+    }else{
+      cptsizes_in_branch[ncpts-1] += 1;
+    }
+    int count = 0;
+    int reserved4proxend = 0;
+    int reserved4distend = 0;
+    do{
+      count++;
+      for (int ii = 0; ii < ncpts; ii++)
+      {
+        if (caps_left > 0)
+        {
+          cptsizes_in_branch[ii] += 1;
+          caps_left -= 1;
+        }
+        else
+          break;
+      }
+      if (count == 3)
+      {//every 3 capsules added to each cpt, there is 1 for prox.end branching point and 1 for dist.end branching point
+        if (caps_left > 0)
+        {
+          cptsizes_in_branch[ncpts-1] += 1;
+          caps_left -= 1;
+          reserved4distend += 1;
+        }
+        if (caps_left > 0)
+        {
+          cptsizes_in_branch[0] += 1;
+          caps_left -= 1;
+          reserved4proxend += 1;
+        }
+        count = 0;
+      }
+    }while (caps_left>0);
+
+    _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(reserved4proxend+ fcaps_loss/2.0,
+        reserved4distend+ fcaps_loss/2.0);
+  }
+  Capsule* capPtr = &branch->_capsules[ncaps - 1];
+  key_size_t key = capPtr->getKey();
+  unsigned int computeOrder = _segmentDescriptor.getComputeOrder(key);
+  if (computeOrder < MAX_COMPUTE_ORDER and branch->_daughters.size() > 1)
+  {  // make one more for implicit branching junction
+    ncpts++;
+    isDistalEndSeeImplicitBranchingPoint = true;
+  }
+  _cptSizesForBranchMap[branch] = cptsizes_in_branch;
+#else
+  {
   int remainder_caps;
   remainder_caps = ncaps - cptSize * ncpts;
   cptsizes_in_branch.clear();
@@ -6057,6 +6348,15 @@ int TissueFunctor::getNumCompartments(
     ncpts++;
     isDistalEndSeeImplicitBranchingPoint = true;
   }
+
+  }
+#endif
+
+  //just for checking
+  int  sumEle = std::accumulate(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
+  if (sumEle != ncaps)
+    std::cout << "numEle =" << sumEle << "; ncaps = " << ncaps << std::endl;
+  assert (sumEle == ncaps);
 
   rval = ncpts;
   return rval;
@@ -6128,4 +6428,49 @@ std::pair<float, float> TissueFunctor::getMeanSTD(int brType,
   std::pair<float, float> result = std::make_pair(mean,std);
   return result;
 }
+#endif
+
+#ifdef IDEA1
+//GOAL: check if the capsule belong to the junction or not
+//   The junction has to be explicit
+//NOTE: This is a better strategy
+// as the previous approach assumed that the junction takes the last capsule from 
+//     the parent branch only, i.e. in a branchpoint, only the last capsule of the
+//     parent branch is assigned with getFlag(key_thecapsule) == 1
+//   However, this needs to be revised, as with '-r' option, the junction
+//   may occupy more than one capsule at each side of the branchpoint
+bool TissueFunctor::isPartofJunction(Capsule* capsule, Touch &t)
+{
+  ComputeBranch* branch = capsule->getBranch();
+  float reserved4distend = _numCapsulesEachSideForBranchPointMap[branch].second;
+  float reserved4proxend = _numCapsulesEachSideForBranchPointMap[branch].first;
+  int cps_index =
+      (capsule - capsule->getBranch()->_capsules);  // zero-based index
+
+  //# capsules in that branch
+  int ncaps = branch->_nCapsules;
+  int cps_index_reverse = ncaps - cps_index - 1;  // from the distal-end
+  bool result = false;
+  key_size_t key = capsule->getKey();
+  unsigned int computeOrder =
+    _segmentDescriptor.getComputeOrder(key);
+  if (computeOrder == 0 || computeOrder == MAX_COMPUTE_ORDER)
+  {
+    if (cps_index < reserved4proxend ||
+        cps_index_reverse < reserved4distend
+       )
+      result = true;
+    if (cps_index == int(floor(reserved4proxend)))
+    {
+      result = (capsule->getEndProp() > t.getProp(capsule->getKey()));
+
+    }else  if (cps_index_reverse == int(floor(reserved4distend)))
+    {
+      result = (capsule->getEndProp() <= t.getProp(capsule->getKey()));
+    }
+
+  }
+  return result;
+}
+
 #endif

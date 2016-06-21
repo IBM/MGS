@@ -380,8 +380,10 @@ unsigned int TissueContext::getRankOfEndPoint(ComputeBranch* branch)
   return _decomposition->getRank(endSphere);
 }
 
-//if touch is at the distal-end of the Capsule
-//TUAN NOTE: check the criteria again
+//GOAL: check if touch is at the distal-end of the Capsule 'c'
+//NOTE: it is assumed that the junction takes the last capsule only
+//   However, this needs to be revised, as with '-r' option, the junction
+//   may occupy more than one capsule at each side of the branchpoint
 bool TissueContext::isTouchToEnd(Capsule& c, Touch& t)
 {
   bool rval = false;

@@ -84,10 +84,10 @@ void Neurogenesis::run(int neuronBegin, int nNeurons, NeurogenParams** params,
     std::ofstream fout;
     NeurogenParams p(_rank);
     fout.open(_parsFileName.c_str(), std::ios::out);
-    p.printParams(fout, true, false, "", "\t", "\t");
+    p.printParams(fout, true, true, "", "\t", "\t");
     fout.close();
     fout.open(_statsFileName.c_str(), std::ios::out);
-    printStats(0, 0, &p, fout, 0, true, false, "\t", "\t");
+    printStats(0, 0, &p, fout, 0, true, true, "\t", "\t");
     fout.close();
   }
 
@@ -982,20 +982,31 @@ double Neurogenesis::getTotalFiberLength(int threadID,
 
 double Neurogenesis::getTotalArea(int threadID, NeurogenParams* params_p) {
   ThreadData& data = _threadData[threadID];
-  double totalArea =
-      4.0 * M_PI * data.Segments[0].getRadius() * data.Segments[0].getRadius();
-  for (unsigned int i = 1 + params_p->somaSegments; i < data.nrSegments; i++) {
-    totalArea += data.Segments[i].getSideArea();
-  }
+  //NOTE: assume sphere for soma
+  double totalArea = 0.0;
+  if (data.nrSegments > 0)
+  {
+    totalArea =
+        4.0 * M_PI * data.Segments[0].getRadius() * data.Segments[0].getRadius();
+    for (unsigned int i = 1 + params_p->somaSegments; i < data.nrSegments; i++) {
+      totalArea += data.Segments[i].getSideArea();
+    }
+
+  } 
   return totalArea;
 }
 
 double Neurogenesis::getTotalVolume(int threadID, NeurogenParams* params_p) {
   ThreadData& data = _threadData[threadID];
-  double totalVol = 1.3333333333333 * M_PI * data.Segments[0].getRadius() *
-                    data.Segments[0].getRadius() * data.Segments[0].getRadius();
-  for (unsigned int i = 1 + params_p->somaSegments; i < data.nrSegments; i++) {
-    totalVol += data.Segments[i].getVolume();
+  //NOTE: assume sphere for soma
+  double totalVol = 0.0;
+  if (data.nrSegments > 0)
+  {
+    totalVol = 1.3333333333333 * M_PI * data.Segments[0].getRadius() *
+      data.Segments[0].getRadius() * data.Segments[0].getRadius();
+    for (unsigned int i = 1 + params_p->somaSegments; i < data.nrSegments; i++) {
+      totalVol += data.Segments[i].getVolume();
+    }
   }
   return totalVol;
 }

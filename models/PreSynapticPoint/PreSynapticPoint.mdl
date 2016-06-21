@@ -60,7 +60,8 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
 //   pre-Compartment[Node]  --> SynapticCleft --> Receptor(Synapse)
 // However, here it has the states
 Node SynapticCleft Implements BranchDataProducer, IndexProducer,
-    GlutamateConcentrationProducer, GABAConcentrationProducer
+    GlutamateConcentrationProducer, GABAConcentrationProducer,
+    AnyConcentrationProducer
 {
 /*{{{*/
   dyn_var_t* Vpre; //presynaptic voltage Vpre
@@ -79,6 +80,9 @@ Node SynapticCleft Implements BranchDataProducer, IndexProducer,
     dyn_var_t Kp_Glut;        // mV   steepness of Glut increase
     dyn_var_t Vp_GABA;        // mV
     dyn_var_t Kp_GABA;        // mV
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t tau_Glut; // [ms] time constant for uptake Glu
+    dyn_var_t tau_GABA; // [ms] time constant for uptake GABA
         //}}}
   }
 
@@ -88,6 +92,7 @@ Node SynapticCleft Implements BranchDataProducer, IndexProducer,
   // Output
   //{{{ 
   GlutamateConcentrationProducer.NT << &Glut;
+  AnyConcentrationProducer.AnyConc << &Glut;
   GABAConcentrationProducer.NT << &GABA;
   BranchDataProducer.branchData << &branchData;
   IndexProducer.index << &index;
@@ -111,6 +116,9 @@ Node SynapticCleft Implements BranchDataProducer, IndexProducer,
     BranchDataProducer.branchData >> branchDataConnect;
     setPointers();
     //}}}
+  }
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
   }
 /*}}}*/
 }

@@ -361,6 +361,7 @@ class TissueFunctor : public CG_TissueFunctorBase
       _backwardSolvePointTypesMap;
 
   bool _readFromFile;
+#define IDEA1
 #ifdef IDEA1
   // The idea is that for each ComputeBranch
   // instead of using a certain fraction from 1 capsule (one at proximal-end and
@@ -377,6 +378,11 @@ class TissueFunctor : public CG_TissueFunctorBase
       _numCapsulesEachSideForBranchPointMap;  // we use this information to
                                               // determine how many capsule is
                                               // reserved for a branchpoint
+  std::map<ComputeBranch*, std::vector<int> >
+      _cptSizesForBranchMap;  // we use this information to
+                                      
+  bool isPartofJunction(Capsule* caps, Touch& t);
+  int getCptIndex(Capsule* capsule, Touch & t);
 #endif
 
 #ifdef DEBUG_CPTS
