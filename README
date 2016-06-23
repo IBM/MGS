@@ -1,0 +1,10 @@
+./make_nts  [print out help instruction]
+
+
+GSL:
+./build_gsl -h     [print out help instruction]
+  ./build_gsl --rebuild --release -d 4   is good for release
+  ./build_gsl --rebuild -d 4 is good for debugging
+
+
+NTI:

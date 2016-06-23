@@ -1498,8 +1498,9 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
               begCap += int(std::floor(reserved4proxend));
             }
 
-            if (i == 0)
-            {//distal-end
+            if (i == 0 && 
+                branch->_daughters.size() >= 1)
+            {//distal-end and the tree continue 
               //1. shift capPtr
               endCap -= int(std::floor(reserved4distend));
               //2. 
@@ -1545,22 +1546,28 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                   if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
                       Branch::_SOMA)
                   {  // remove the part of the capsule
+                    //UPDATE: there is no longer need, as we already shift the capsule index
+                    // as given above
                     // covered inside soma
-                    /*
                     //TUAN : disable it as we now ignore the physical location
                     //  of soma covering the dendrite
+                    //  NOTE: we should not disable this as the soma typically large,
+                    //  and if we add this it may hinder the proper signal propagation
+                    //dyn_var_t h = capPtr->getLength();
+                    //surface_area -= 2.0 * M_PI * r * h;
+                    //volume -= M_PI * r * r * h;
+                    //lost_distance = h ;
+                    /*
                     somaR = firstcaps.getRadius();
                     surface_area -= 2.0 * M_PI * r * somaR;
                     volume -= M_PI * r * r * somaR;
                     if (h < somaR)
                     {//TUAN DEBUG
-                    std::cerr << "First capsule to soma is too
-                    short\n";
-                    std::cerr << "length = " << h << "; while
-                    soma radius = " << somaR
-                    << " from neuron index " <<
-                    _segmentDescriptor.getNeuronIndex(key)
-                    << std::endl;
+                    std::cerr << "First capsule to soma is too short\n";
+                    std::cerr << "length = " << h << "; while soma radius = " << somaR
+                      << " from neuron index " <<
+                      _segmentDescriptor.getNeuronIndex(key)
+                      << std::endl;
                     }
                     assert(h > somaR);
                     lost_distance = somaR;
@@ -1578,8 +1585,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                     lost_distance = h * frac;
                   }
                 }
-                assert(surface_area > 0);
-                assert(volume > 0);
+                //assert(surface_area > 0);
+                //assert(volume > 0);
               }
               if (i == 0 && capPtr == endCap)
               {  // check distal-end
@@ -1589,18 +1596,21 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                   _segmentDescriptor.getComputeOrder(key);
                 if (computeOrder == MAX_COMPUTE_ORDER)
                 {  // reserve some for the explicit junction
-                  assert(isDistalEndSeeImplicitBranchingPoint == false);
+                  if (branch->_daughters.size() >= 1)
+                  {
+                    assert(isDistalEndSeeImplicitBranchingPoint == false);
 #ifdef IDEA1
-                  dyn_var_t frac = reserved4distend - int(std::floor(reserved4distend));
+                    dyn_var_t frac = reserved4distend - int(std::floor(reserved4distend));
 #else
-                  dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+                    dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
 #endif
-                  surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
-                  volume -= M_PI * r * r * (h - lost_distance) * frac;
+                    surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
+                    volume -= M_PI * r * r * (h - lost_distance) * frac;
+                  }
                 }
                 else
                 {
-                  if (branch->_daughters.size() > 1)
+                  if (branch->_daughters.size() >= 1)
                   {  // reserve some for the implicit branching junction
 #ifdef IDEA1
                     dyn_var_t frac = reserved4distend - int(std::floor(reserved4distend));
@@ -1615,10 +1625,12 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                     // capsule
                   }
                 }
-                assert(surface_area > 0);
-                assert(volume > 0);
+                //assert(surface_area > 0);
+                //assert(volume > 0);
               }
             }
+            assert(surface_area > 0);
+            assert(volume > 0);
             radius /= ((endCap - begCap) + 1);  // still the average between the
                                                 // first and last capsules
             dyn_var_t dist2soma =
@@ -2031,16 +2043,19 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
   {
     cpt_surfaceArea.push_back(std::pair<int,float>(Branch::_AXON,surface_area));
     cpt_volume.push_back(std::pair<int,float>(Branch::_AXON,volume));
+    cpt_length.push_back(std::pair<int,float>(Branch::_AXON,length));
   }else if (brType == Branch::_BASALDEN) 
   {
     cpt_surfaceArea.push_back(std::pair<int,float>(Branch::_BASALDEN,surface_area));
     cpt_volume.push_back(std::pair<int,float>(Branch::_BASALDEN,volume));
+    cpt_length.push_back(std::pair<int,float>(Branch::_BASALDEN,length));
   }
   else if (brType == Branch::_APICALDEN ||
       brType == Branch::_TUFTEDDEN)
   {
     cpt_surfaceArea.push_back(std::pair<int,float>(Branch::_APICALDEN,surface_area));
     cpt_volume.push_back(std::pair<int,float>(Branch::_APICALDEN,volume));
+    cpt_length.push_back(std::pair<int,float>(Branch::_APICALDEN,length));
   }
 #endif
   StructType* st = lc->sim->getStructType("DimensionStruct");
@@ -4758,28 +4773,41 @@ void TissueFunctor::doConnector(LensContext* lc)
   //surfaceArea
   std::pair<float, float> result,result2;
   float minVal, maxVal;
+  int brType;
   std::cerr << "Compartments AXON: \n" ;
-  result = getMeanSTD(Branch::_AXON, cpt_surfaceArea, minVal, maxVal);//mean+/-STD
+  brType = Branch::_AXON;
+  result = getMeanSTD(brType, cpt_surfaceArea, minVal, maxVal);//mean+/-STD
   std::cerr<< "  surfaceArea = " << result.first << " +/- " << result.second << "\n";
   std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
-  result2 = getMeanSTD(Branch::_AXON, cpt_volume, minVal, maxVal);//mean+/-STD
+  result2 = getMeanSTD(brType, cpt_volume, minVal, maxVal);//mean+/-STD
   std::cerr<< "  volume = " << result2.first << " +/- " << result2.second << "\n";
+  std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
+  result2 = getMeanSTD(brType, cpt_length, minVal, maxVal);//mean+/-STD
+  std::cerr<< "  length = " << result2.first << " +/- " << result2.second << "\n";
   std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
 
   std::cerr << "Compartments BASALDEN: \n";
-  result = getMeanSTD(Branch::_BASALDEN, cpt_surfaceArea, minVal, maxVal);//mean+/-STD
+  brType = Branch::_BASALDEN;
+  result = getMeanSTD(brType, cpt_surfaceArea, minVal, maxVal);//mean+/-STD
   std::cerr<< "  surfaceArea = " << result.first << " +/- " << result.second << "\n";
   std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
-  result2 = getMeanSTD(Branch::_BASALDEN, cpt_volume, minVal, maxVal);//mean+/-STD
+  result2 = getMeanSTD(brType, cpt_volume, minVal, maxVal);//mean+/-STD
   std::cerr<< "  volume = " << result2.first << " +/- " << result2.second << "\n";
+  std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
+  result2 = getMeanSTD(brType, cpt_length, minVal, maxVal);//mean+/-STD
+  std::cerr<< "  length = " << result2.first << " +/- " << result2.second << "\n";
   std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
 
   std::cerr << "Compartments APICALDEN: \n";
-  result = getMeanSTD(Branch::_APICALDEN, cpt_surfaceArea, minVal, maxVal);//mean+/-STD
+  brType = Branch::_APICALDEN;
+  result = getMeanSTD(brType, cpt_surfaceArea, minVal, maxVal);//mean+/-STD
   std::cerr<< " surfaceArea = " << result.first << " +/- " << result.second << "\n";
   std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
-  result2 = getMeanSTD(Branch::_APICALDEN, cpt_volume, minVal, maxVal);//mean+/-STD
+  result2 = getMeanSTD(brType, cpt_volume, minVal, maxVal);//mean+/-STD
   std::cerr<< " volume = " << result2.first << "+/- " << result2.second << "\n";
+  std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
+  result2 = getMeanSTD(brType, cpt_length, minVal, maxVal);//mean+/-STD
+  std::cerr<< "  length = " << result2.first << " +/- " << result2.second << "\n";
   std::cerr << "   min = " << minVal <<"; max = " << maxVal << std::endl;
 //    << "           volume = " << meanVolume << "+/- " << stdevVolume << std::endl;
 //  std::vector<float>* v;
@@ -6240,6 +6268,17 @@ int TissueFunctor::getNumCompartments(
     ncpts = 1;
     //_numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0,0);
     _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0.25,0.25);
+    if (branch->_parent)
+    {
+      Capsule& firstcaps = branch->_parent->_capsules[0];
+      if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+          Branch::_SOMA)  // the parent branch is soma
+      {
+        std::cerr << "There should be at least two points for the branch from soma"
+          << std::endl;
+        assert(0);
+      }
+    }
     cptsizes_in_branch.push_back(cptSize);
   }
   else if (ncaps == 2)
@@ -6247,6 +6286,15 @@ int TissueFunctor::getNumCompartments(
     cptSize = 2;
     ncpts = 1;
     _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0.5,0.5);
+    if (branch->_parent)
+    {
+      Capsule& firstcaps = branch->_parent->_capsules[0];
+      if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+          Branch::_SOMA)  // the parent branch is soma
+      {//ignore the first capsule
+        _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(1.0,0.25);
+      }
+    }
     cptsizes_in_branch.push_back(cptSize);
   }
   else if (ncaps >= 3)
@@ -6264,11 +6312,14 @@ int TissueFunctor::getNumCompartments(
     int caps_left = ncaps - ncaps_loss;
     cptsizes_in_branch.resize(ncpts);
     std::fill(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
+    //NOTE: reserve at each end
     if (_compartmentSize >= 2)
     {//"secA"
       cptsizes_in_branch[0] += 1;
       cptsizes_in_branch[ncpts-1] += 1;
     }else{
+      //it means the prox-end is a fraction
+      cptsizes_in_branch[0] = 0;
       cptsizes_in_branch[ncpts-1] += 1;
     }
     int count = 0;
@@ -6304,8 +6355,16 @@ int TissueFunctor::getNumCompartments(
       }
     }while (caps_left>0);
 
-    _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(reserved4proxend+ fcaps_loss/2.0,
-        reserved4distend+ fcaps_loss/2.0);
+    Capsule& firstcaps = branch->_parent->_capsules[0];
+    if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+        Branch::_SOMA)  // the parent branch is soma
+    {//ignore the first capsule
+      _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(reserved4proxend+ 1.0,
+          reserved4distend+ std::max(fcaps_loss - 1.0, 0.25));
+    }
+    else
+      _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(reserved4proxend+ fcaps_loss/2.0,
+          reserved4distend+ fcaps_loss/2.0);
   }
   Capsule* capPtr = &branch->_capsules[ncaps - 1];
   key_size_t key = capPtr->getKey();
@@ -6351,6 +6410,12 @@ int TissueFunctor::getNumCompartments(
 
   }
 #endif
+
+  //making sure no distal-end reserve for terminal branch
+  if (branch->_daughters.size() == 0)
+  {
+    _numCapsulesEachSideForBranchPointMap[branch].second = 0.0;
+  }
 
   //just for checking
   int  sumEle = std::accumulate(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);

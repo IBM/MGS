@@ -15,6 +15,19 @@ targetDir = "neurons"
 #neuron = SomeClass(targetDir +"/neuron.swc")
 #neuron.removeTerminalPoints()
 
+##############
+# Remove points that are adjacent to each other
+##############
+#neuron = SomeClass(targetDir +"/neuron.swc")
+#distcriteria = 0.0
+#neuron.removeNearbyPoints(distcriteria)
+
+##############
+# Remove points based on line index
+##############
+neuron = SomeClass(targetDir +"/neuron.swc_new.swc")
+lineIndex = [1510]
+neuron.removeGivenPoints(lineIndex)
 
 ##############
 # The goal is to modify multiple-point soma into single-point soma
@@ -27,6 +40,7 @@ targetDir = "neurons"
 ##############
 # revise soma + closedpoints
 ##############
-targetDir = "neurons"
-neuron = SomeClass(targetDir +"/hay2.swc")
-neuron.reviseSWCFile()
+#targetDir = "neurons"
+#neuron = SomeClass(targetDir +"/hay2.swc")
+#neuron.reviseSWCFile()
+

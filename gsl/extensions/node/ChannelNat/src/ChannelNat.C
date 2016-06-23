@@ -240,6 +240,7 @@ void ChannelNat::update(RNG& rng)
 		if (currentTime < NOGATING_TIME)
 			g[i]= 0.0;
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
 
@@ -261,6 +262,7 @@ void ChannelNat::initialize(RNG& rng)
   if (h.size() != size) h.increaseSizeTo(size);
 	if (Vhalf_m_shift.size() !=size) Vhalf_m_shift.increaseSizeTo(size);
 	if (Vhalf_h_shift.size() !=size) Vhalf_h_shift.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
 	SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
@@ -272,25 +274,22 @@ void ChannelNat::initialize(RNG& rng)
 	}
   for (unsigned i = 0; i < size; ++i)
   {
+		Vhalf_m_shift[i] = 0.0; //[mV]
+		Vhalf_h_shift[i] = 0.0; //[mV]
 #if CHANNEL_NAT == NAT_COLBERT_PAN_2002
 		//Vhalf_m init
 		//NOTE: Shift to the left V1/2 for Nat in AIS region
-		Vhalf_m_shift[i] = 0.0; //[mV]
-		Vhalf_h_shift[i] = 0.0; 
-		if ((segmentDescriptor.getBranchType(branchData->key) == Branch::_AIS)
 #define DIST_START_AIS   30.0 //[um]
+		if ((segmentDescriptor.getBranchType(branchData->key) == Branch::_AIS)
 		// 	or 
 		//	(		(segmentDescriptor.getBranchType(branchData->key) == Branch::_AXON)  and
 	  //		 	(*dimensions)[i]->dist2soma >= DIST_START_AIS)
 			)
 		{
 			//gbar[i] = gbar[i] * 1.50; // increase 3x
-			Vhalf_m_shift[i] = -10.0 ; //[mV]
+			Vhalf_m_shift[i] = -15.0 ; //[mV]
 			Vhalf_h_shift[i] = -3.0 ; //[mV]
 		}
-#else
-		Vhalf_m_shift[i] = 0.0; //[mV]
-		Vhalf_h_shift[i] = 0.0; //[mV]
 #endif
 
 		//gbar init

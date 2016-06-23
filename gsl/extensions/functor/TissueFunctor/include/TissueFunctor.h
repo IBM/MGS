@@ -388,8 +388,10 @@ class TissueFunctor : public CG_TissueFunctorBase
 #ifdef DEBUG_CPTS
   //std::vector<float> cpt_surfaceArea;
   //std::vector<float> cpt_volume;
+  //NOTE: <branchType, value>
   std::vector<std::pair<int,float> > cpt_surfaceArea;
   std::vector<std::pair<int,float> > cpt_volume;
+  std::vector<std::pair<int,float> > cpt_length;
   //std::pair<int,std::vector<float> > cpt_surfaceArea;
   //std::pair<int,std::vector<float> > cpt_volume;
   ComputeBranch* currentBranch;

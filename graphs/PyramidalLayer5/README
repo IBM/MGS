@@ -1,0 +1,9 @@
+0. for new morphology, put them into the subfolder with name 'neurons_<suffix>'
+1. select the morphology (check/revise changemorph.sh script)
+2. revise the morphology (if needed)
+3. create symbolic link 'neuron.swc' to that morphology
+4. gen spines  (created inside that morphology folder)
+5. copy the spines folder to the main folder
+6. move the neurons.txt file (inside spines folder) to the main folder
+7. configure the GSL (stimulus, I/O, params)
+8. run the simulation 
