@@ -400,49 +400,179 @@ class SomeClass(object):
         print("Write to file: ", PL5bFileName)
 
     def checkSiteApical(self, startDist=615.0, endDist=625.0):
-      """
-      This is useful for find the recording site or stimulus site
-      Return the point on apical den at a given distance to soma
-      """
-      #thresholdfrom = 615.0 # [um]
-      #thresholdto = 625.0 # [um]
-      thresholdfrom = startDist # [um]
-      thresholdto = endDist # [um]
-      print("Display points on the tree (apical dendrite) whose")
-      print("coordinate fall within: [", thresholdfrom, ',', thresholdto, ']')
-      print('dist2soma, x,y,z : ')
-      for ix in range(len(self.point_lookup)):
-        id = str(ix+1)
-        parent_id = self.point_lookup[id]['parent']
-        brType =self.point_lookup[id]['type']
-        x = self.point_lookup[id]['siteX']
-        y = self.point_lookup[id]['siteY']
-        z = self.point_lookup[id]['siteZ']
-        r = self.point_lookup[id]['siteR']
-        dist2soma= self.point_lookup[id]['dist2soma']
-        dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
-        ## parent
-        if (int(parent_id) == -1):
-          continue
-        parent_x1 = self.point_lookup[parent_id]['siteX']
-        parent_y1 = self.point_lookup[parent_id]['siteY']
-        parent_z1 = self.point_lookup[parent_id]['siteZ']
-        parent_dist2soma= self.point_lookup[parent_id]['dist2soma']
-        parent_dist2branchPoint = \
-            float(self.point_lookup[parent_id]['dist2branchPoint'])
-        ## halfway to previous point
-        gap = dist2soma - parent_dist2soma
-        dis2points = self.find_distance(id, parent_id)
-        halfwayX = np.interp(gap-gap/2.0, [0, dis2points], [parent_x1, x])
-        halfwayY = np.interp(gap-gap/2.0, [0, dis2points], [parent_y1, y])
-        halfwayZ = np.interp(gap-gap/2.0, [0, dis2points], [parent_z1, z])
+        """
+        This is useful for find the recording site or stimulus site
+        Return the point on apical den at a given distance to soma
+        """
+        #thresholdfrom = 615.0 # [um]
+        #thresholdto = 625.0 # [um]
+        thresholdfrom = startDist # [um]
+        thresholdto = endDist # [um]
+        print("Display points on the tree (apical dendrite) whose")
+        print("coordinate fall within: [", thresholdfrom, ',', thresholdto, ']')
+        print('---> dist2soma, x,y,z, r : ')
+        maxR = 0.0
+        point = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x = self.point_lookup[id]['siteX']
+            y = self.point_lookup[id]['siteY']
+            z = self.point_lookup[id]['siteZ']
+            r = self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            ## parent
+            if (int(parent_id) == -1):
+                continue
+            parent_x1 = self.point_lookup[parent_id]['siteX']
+            parent_y1 = self.point_lookup[parent_id]['siteY']
+            parent_z1 = self.point_lookup[parent_id]['siteZ']
+            parent_dist2soma= self.point_lookup[parent_id]['dist2soma']
+            parent_dist2branchPoint = \
+                float(self.point_lookup[parent_id]['dist2branchPoint'])
+            ## halfway to previous point
+            gap = dist2soma - parent_dist2soma
+            dis2points = self.find_distance(id, parent_id)
+            halfwayX = np.interp(gap-gap/2.0, [0, dis2points], [parent_x1, x])
+            halfwayY = np.interp(gap-gap/2.0, [0, dis2points], [parent_y1, y])
+            halfwayZ = np.interp(gap-gap/2.0, [0, dis2points], [parent_z1, z])
 
-        if (float(dist2soma) > thresholdfrom and
-         float(dist2soma) < thresholdto and
-         int(brType) == self.branchType["apical"]):
-            print(dist2soma, x,y,z)
-            print('... its halfway to proximal is:')
-            print('    ', dist2soma-gap/2, halfwayX, halfwayY, halfwayZ)
+            if (float(dist2soma) > thresholdfrom and
+                float(dist2soma) < thresholdto and
+                (int(brType) == self.branchType["apical"] or
+                int(brType) == self.branchType["tufted"]
+                )):
+                print(dist2soma, x,y,z, r)
+                print('... its halfway to proximal is (dist,coordinates):')
+                print('    ', dist2soma-gap/2, halfwayX, halfwayY, halfwayZ)
+                if (float(r) > maxR):
+                    maxR= float(r)
+                    point =[dist2soma, x,y,z,r]
+        ##Point with largest radius (mostlikely the main branch)
+        print("Apical Final: ", point)
+
+    def checkSiteBasal(self, startDist=615.0, endDist=625.0):
+        """
+        This is useful for find the recording site or stimulus site
+        Return the point on basal den at a given distance to soma
+        """
+        #thresholdfrom = 615.0 # [um]
+        #thresholdto = 625.0 # [um]
+        thresholdfrom = startDist # [um]
+        thresholdto = endDist # [um]
+        print("Display points on the tree (apical dendrite) whose")
+        print("coordinate fall within: [", thresholdfrom, ',', thresholdto, ']')
+        print('---> dist2soma, x,y,z, r : ')
+        maxR = 0.0
+        point = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x = self.point_lookup[id]['siteX']
+            y = self.point_lookup[id]['siteY']
+            z = self.point_lookup[id]['siteZ']
+            r = self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            ## parent
+            if (int(parent_id) == -1):
+                continue
+            parent_x1 = self.point_lookup[parent_id]['siteX']
+            parent_y1 = self.point_lookup[parent_id]['siteY']
+            parent_z1 = self.point_lookup[parent_id]['siteZ']
+            parent_dist2soma= self.point_lookup[parent_id]['dist2soma']
+            parent_dist2branchPoint = \
+                float(self.point_lookup[parent_id]['dist2branchPoint'])
+            ## halfway to previous point
+            gap = dist2soma - parent_dist2soma
+            dis2points = self.find_distance(id, parent_id)
+            halfwayX = np.interp(gap-gap/2.0, [0, dis2points], [parent_x1, x])
+            halfwayY = np.interp(gap-gap/2.0, [0, dis2points], [parent_y1, y])
+            halfwayZ = np.interp(gap-gap/2.0, [0, dis2points], [parent_z1, z])
+
+            if (float(dist2soma) > thresholdfrom and
+                float(dist2soma) < thresholdto and
+                (int(brType) == self.branchType["basal"]
+                )):
+                print(dist2soma, x,y,z, r)
+                print('... its halfway to proximal is (dist,coordinates):')
+                print('    ', dist2soma-gap/2, halfwayX, halfwayY, halfwayZ)
+                if (float(r) > maxR):
+                    maxR= float(r)
+                    point =[dist2soma, x,y,z,r]
+        ##Point with largest radius (mostlikely the main branch)
+        print("Basal Final: ", point)
+
+    def checkSiteAxon(self, startDist=615.0, endDist=625.0):
+        """
+        This is useful for find the recording site or stimulus site
+        Return the point on basal den at a given distance to soma
+        """
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x_soma =float(self.point_lookup[id]['siteX'])
+            y_soma =float(self.point_lookup[id]['siteY'])
+            z_soma =float(self.point_lookup[id]['siteZ'])
+            r_soma =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) == -1):
+              break
+        #thresholdfrom = 615.0 # [um]
+        #thresholdto = 625.0 # [um]
+        #thresholdfrom = startDist # [um]
+        #thresholdto = endDist # [um]
+        thresholdfrom = startDist + r_soma # [um]
+        thresholdto = endDist + r_soma # [um]
+        print("Display points on the tree (apical dendrite) whose")
+        print("coordinate fall within: [", thresholdfrom, ',', thresholdto, ']')
+        print('---> dist2soma, x,y,z, r : ')
+        maxR = 0.0
+        point = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x = self.point_lookup[id]['siteX']
+            y = self.point_lookup[id]['siteY']
+            z = self.point_lookup[id]['siteZ']
+            r = self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            ## parent
+            if (int(parent_id) == -1):
+                continue
+            parent_x1 = self.point_lookup[parent_id]['siteX']
+            parent_y1 = self.point_lookup[parent_id]['siteY']
+            parent_z1 = self.point_lookup[parent_id]['siteZ']
+            parent_dist2soma= self.point_lookup[parent_id]['dist2soma']
+            parent_dist2branchPoint = \
+                float(self.point_lookup[parent_id]['dist2branchPoint'])
+            ## halfway to previous point
+            gap = dist2soma - parent_dist2soma
+            dis2points = self.find_distance(id, parent_id)
+            halfwayX = np.interp(gap-gap/2.0, [0, dis2points], [parent_x1, x])
+            halfwayY = np.interp(gap-gap/2.0, [0, dis2points], [parent_y1, y])
+            halfwayZ = np.interp(gap-gap/2.0, [0, dis2points], [parent_z1, z])
+
+            if (float(dist2soma) > thresholdfrom and
+                float(dist2soma) < thresholdto and
+                (int(brType) == self.branchType["axon"] or
+                int(brType) == self.branchType["AIS"]
+                )):
+                print(dist2soma, x,y,z, r)
+                print('... its halfway to proximal is (dist,coordinates):')
+                print('    ', dist2soma-gap/2, halfwayX, halfwayY, halfwayZ)
+                if (float(r) > maxR):
+                    maxR= float(r)
+                    #point =[dist2soma, x,y,z,r]
+                    point =[dist2soma-r_soma, x,y,z,r]
+        ##Point with largest radius (mostlikely the main branch)
+        print("Axon/AIS Final: ", point)
+
 
     def getDist2Soma(self, site):
       """
@@ -3499,7 +3629,7 @@ class SomeClass(object):
                                 "{0:.3f}".format(offset),
                                 "{0:.3f}".format(offset),
                                 "{0:.3f}".format(offset),
-                                str(rNeck), '1'])+"\n")
+                                str(rNeck), '2'])+"\n")
         swcFile.close()
 
     def createBoutonSWC(self, index, dx, dy, dz, offset):

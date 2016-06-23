@@ -1010,19 +1010,21 @@ def plot_case9():
     args = parse()
     print (args.subparsers_name)
     print(args)
+    #mainFolder="./"
+    mainFolder="./data/"
     if (args.subparsers_name == 'folder'):
-      folder = args.folderName
+      folder = mainFolder + args.folderName
     elif (args.subparsers_name == 'protocol'):
       folder='./out2_May27_fullspine'
       folder='./out2_May27'
       mapFolders = {}
-      mapFolders[0] = 'out2_May29_rest'
-      mapFolders[1] = 'out2_May29_triggersoma'
-      mapFolders[2] = 'out2_May29_triggershaft'
-      mapFolders[3] = 'out2_May29_triggerspine'
-      mapFolders[4] = 'out2_May29_triggerdistalspines'
-      mapFolders[5] = 'out2_May29_triggersoma_then_distalspines'
-      mapFolders[6] = 'out2_May29_case06'
+      mapFolders[0] = mainFolder + 'out2_May29_rest'
+      mapFolders[1] = mainFolder + 'out2_May29_triggersoma'
+      mapFolders[2] = mainFolder + 'out2_May29_triggershaft'
+      mapFolders[3] = mainFolder + 'out2_May29_triggerspine'
+      mapFolders[4] = mainFolder + 'out2_May29_triggerdistalspines'
+      mapFolders[5] = mainFolder + 'out2_May29_triggersoma_then_distalspines'
+      mapFolders[6] = mainFolder + 'out2_May29_case06'
       tmpMap = {}
       date = args.date
       protocol = args.number

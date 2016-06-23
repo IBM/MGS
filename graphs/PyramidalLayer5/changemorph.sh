@@ -24,11 +24,11 @@ ln -s neurons_$1 neurons
 rm params
 ln -s params_$1 params
 rm connect_recording_model.gsl
-ln -s neurons/connect_recording_model_Hay2011.gsl connect_recording_model.gsl
+ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
 rm recording_model.gsl
-ln -s neurons/recording_model_Hay2011.gsl recording_model.gsl
+ln -s neurons/recording_model_$1.gsl recording_model.gsl
 rm connect_stimulus_model.gsl
-ln -s neurons/connect_stimulus_model_Hay2011.gsl  connect_stimulus_model.gsl
+ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
 rm stimulus_model.gsl
-ln -s neurons/stimulus_model_Hay2011.gsl stimulus_model.gsl
+ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
 fi

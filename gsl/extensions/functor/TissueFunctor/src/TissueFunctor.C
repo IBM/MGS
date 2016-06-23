@@ -2616,12 +2616,12 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       bool preJunction = false;
       bool postJunction = false;
 
-#ifdef IDEA1
-      if (isPartofJunction(preCapsule, *titer))
-#else
+//#ifdef IDEA1
+//      if (isPartofJunction(preCapsule, *titer))
+//#else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
-#endif
+//#endif
       {  // pre component is LENS junction
         if (point &&
             _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
@@ -2672,12 +2672,12 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
 		  // has a series of probabilities (each prob. for one type (e.g. DenSpine))
         if (probabilities[i] > 0)
         {
-#ifdef IDEA1
-      if (isPartofJunction(postCapsule, *titer))
-#else
+//#ifdef IDEA1
+//      if (isPartofJunction(postCapsule, *titer))
+//#else
           if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
               _segmentDescriptor.getFlag(postCapsule->getKey()))
-#endif
+//#endif
           {
             // post component is LENS junction
             postJunction = true;
@@ -4067,12 +4067,12 @@ void TissueFunctor::doConnector(LensContext* lc)
       unsigned int indexPre, indexPost;  // GSL Grid's index at which preCapsule
       // and postCapsule belongs to, respectively [ NOTE: Grid's index = MPI rank ]
 
-#ifdef IDEA1
-      if (isPartofJunction(preCapsule, *titer))
-#else
+//#ifdef IDEA1
+//      if (isPartofJunction(preCapsule, *titer))
+//#else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
-#endif
+//#endif
       {
         preJunction = true;
         indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
@@ -4082,12 +4082,12 @@ void TissueFunctor::doConnector(LensContext* lc)
         preJunction = false;
         indexPre = _tissueContext->getRankOfBeginPoint(preCapsule->getBranch());
       }
-#ifdef IDEA1
-      if (isPartofJunction(postCapsule, *titer))
-#else
+//#ifdef IDEA1
+//      if (isPartofJunction(postCapsule, *titer))
+//#else
       if (_segmentDescriptor.getFlag(key2) &&
           _tissueContext->isTouchToEnd(*postCapsule, *titer))
-#endif
+//#endif
       {
         postJunction = true;
         indexPost = _tissueContext->getRankOfEndPoint(postCapsule->getBranch());
@@ -4153,7 +4153,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                      _compartmentSize) -
                     1;
                                                                 */
+#ifdef IDEA1
+                preIdx = getCptIndex(preCapsule, *titer);
+#else
                 preIdx = getCptIndex(preCapsule);
+#endif
               }
 
               // bool electrical, chemical, generated;
@@ -4190,7 +4194,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                            _compartmentSize) -
                           1;
                                                                 */
+#ifdef IDEA1
+                postIdx = getCptIndex(postCapsule, *titer);
+#else
                 postIdx = getCptIndex(postCapsule);
+#endif
               }
 
               NodeDescriptor* preConnexon =
@@ -4282,7 +4290,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                      _compartmentSize) -
                     1;
                                                                 */
+#ifdef IDEA1
+                preIdx = getCptIndex(preCapsule, *titer);
+#else
                 preIdx = getCptIndex(preCapsule);
+#endif
               }
 
               // bool electrical, chemical, generated;
@@ -4319,7 +4331,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                            _compartmentSize) -
                           1;
                                                                 */
+#ifdef IDEA1
+                postIdx = getCptIndex(postCapsule, *titer);
+#else
                 postIdx = getCptIndex(postCapsule);
+#endif
               }
 
               NodeDescriptor* preSpineConnexon =
@@ -4483,7 +4499,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                            ((preCapsule - preCapsule->getBranch()->_capsules) /
                             _compartmentSize) -
                            1;*/
+#ifdef IDEA1
+                  preIdx = getCptIndex(preCapsule, *titer);
+#else
                   preIdx = getCptIndex(preCapsule);
+#endif
                 }
                 if (_preSynapticPointTypeCounter > 0)
                 {  // PreSynapticPoint layer is used
@@ -4597,7 +4617,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                       ((postCapsule - postCapsule->getBranch()->_capsules) /
                        _compartmentSize) -
                       1;*/
+#ifdef IDEA1
+                  postIdx = getCptIndex(postCapsule, *titer);
+#else
                   postIdx = getCptIndex(postCapsule);
+#endif
                 }
                 NDPairList Mcsyn2cpt = csyn2cpt[*ctiter];
                 Mcsyn2cpt.replace("idx", postIdx);
@@ -6131,12 +6155,28 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
 }
 
 #ifdef IDEA1
+// NOTE: This is a replacement for the previous function
+// as it handle the case of rescaling branch-point junction based on '-r' option
 int TissueFunctor::getCptIndex(Capsule* capsule, Touch & touch)
 {
   int cptIndex = 0;
   //TUAN TODO NOW update
   ComputeBranch* branch = capsule->getBranch();
-  std::vector<int>* cptsizes_in_branch = &(_cptSizesForBranchMap[branch]);
+//  std::vector<int>* cptsizes_in_branch = (_cptSizesForBranchMap[branch]);
+  std::map<ComputeBranch*, std::vector<int> >::iterator miter =
+      _cptSizesForBranchMap.find(branch);
+  //assert(miter != _cptSizesForBranchMap.end());
+  if (miter == _cptSizesForBranchMap.end())
+  {
+      std::vector<int> cptsizes_in_branch;
+      bool isDistalEndSeeImplicitBranchingPoint;
+      int ncpts = getNumCompartments(branch, cptsizes_in_branch,
+              isDistalEndSeeImplicitBranchingPoint);
+      miter =
+          _cptSizesForBranchMap.find(branch);
+
+  }
+  std::vector<int>* cptsizes_in_branch = &(miter->second); 
   if (isPartofJunction(capsule, touch))
   {
     cptIndex = 0;
@@ -6268,15 +6308,35 @@ int TissueFunctor::getNumCompartments(
     ncpts = 1;
     //_numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0,0);
     _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0.25,0.25);
+    Capsule& firstcaps = branch->_capsules[0];
     if (branch->_parent)
     {
-      Capsule& firstcaps = branch->_parent->_capsules[0];
-      if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+      Capsule& pcaps = branch->_parent->_capsules[0];
+      float length = firstcaps.getLength();
+      if (_segmentDescriptor.getBranchType(pcaps.getKey()) ==
           Branch::_SOMA)  // the parent branch is soma
       {
-        std::cerr << "There should be at least two points for the branch from soma"
-          << std::endl;
-        assert(0);
+
+          if (length <= pcaps.getLength())
+          {
+              //std::cerr << "There should be at least two points for the branch from soma"
+              //    << std::endl;
+              std::cerr << "ERROR: There is 1-capsule branch from the soma, and the point falls within the soma'radius"
+                  << std::endl;
+              std::cerr << 
+                  "Neuron index: " << _segmentDescriptor.getNeuronIndex(pcaps.getKey()) 
+                  << std::endl;
+              double* coord = firstcaps.getBeginCoordinates();
+              std::cerr << "Coord: " << coord[0] << ", " << coord[1] << ", " << coord[2]
+              << std::endl;
+              assert(0);
+          }
+          else
+          {
+              float proxfrac = pcaps.getLength()/length;
+              float distfrac = 0.25 * (1.0-proxfrac); 
+              _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(proxfrac, distfrac);
+          }
       }
     }
     cptsizes_in_branch.push_back(cptSize);
@@ -6286,13 +6346,23 @@ int TissueFunctor::getNumCompartments(
     cptSize = 2;
     ncpts = 1;
     _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(0.5,0.5);
+    Capsule& firstcaps = branch->_capsules[0];
     if (branch->_parent)
     {
-      Capsule& firstcaps = branch->_parent->_capsules[0];
+      Capsule& pcaps = branch->_parent->_capsules[0];
+      float length = firstcaps.getLength();
       if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
           Branch::_SOMA)  // the parent branch is soma
       {//ignore the first capsule
-        _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(1.0,0.25);
+
+          if (length <= pcaps.getLength())
+          {
+              _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(1.0,0.25);
+          }else
+          {
+              float proxfrac = pcaps.getLength()/length;
+              _numCapsulesEachSideForBranchPointMap[branch] = std::make_pair(proxfrac, 0.25);
+          } 
       }
     }
     cptsizes_in_branch.push_back(cptSize);
@@ -6306,9 +6376,8 @@ int TissueFunctor::getNumCompartments(
     else
       fcaps_loss = 1.0;
     int ncaps_loss = std::ceil(fcaps_loss);
-    ncpts = (int(floor(double(ncaps-ncaps_loss) / double(cptSize))) > 0)
-                ? int(floor(double(ncaps-ncaps_loss) / double(cptSize)))
-                : 1;
+    int tmpVal= int(floor(double(ncaps-ncaps_loss) / double(cptSize))); 
+    ncpts = (tmpVal > 0) ? tmpVal : 1;
     int caps_left = ncaps - ncaps_loss;
     cptsizes_in_branch.resize(ncpts);
     std::fill(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
@@ -6375,6 +6444,7 @@ int TissueFunctor::getNumCompartments(
     isDistalEndSeeImplicitBranchingPoint = true;
   }
   _cptSizesForBranchMap[branch] = cptsizes_in_branch;
+  assert(cptsizes_in_branch.size() > 0);
 #else
   {
   int remainder_caps;
