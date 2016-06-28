@@ -91,8 +91,9 @@ endif
 
 CFLAGS += -I$(HEADER_DIR) 
 #Add support for GMP library
-CFLAGS += -lgmp -std=c++11
-LDFLAGS += -lgmp -std=c++11 -I../common/include
+CFLAGS += -lgmp -std=c++11 
+LDFLAGS += -lgmp -std=c++11 -I../common/include 
+
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
 ifeq ($(debug), yes)
@@ -144,6 +145,7 @@ NeuroDevTissueSlicer.cxx \
 SegmentForce.cxx \
 SegmentForceAggregator.cxx \
 SegmentForceDetector.cxx \
+Touch.cxx \
 
 TD_UNSHARED_SOURCES = touchDetect.cxx \
 
