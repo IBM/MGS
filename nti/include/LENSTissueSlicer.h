@@ -24,6 +24,8 @@
 #include "TouchVector.h"
 #include "Decomposition.h"
 
+#include "MaxComputeOrder.h"
+
 class TissueContext;
 class Params;
 
@@ -45,6 +47,8 @@ class LENSTissueSlicer : public TissueSlicer
      bool _sliced;
      TissueContext* _tissueContext;
      SegmentDescriptor _segmentDescriptor;
+     //TUAN NOTE: this is currently not being used
+     //  what is it was designed for?
      std::map<int, std::vector<long int> > _foreignTouchCapsuleMap;
 };
 

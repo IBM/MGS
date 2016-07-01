@@ -42,6 +42,8 @@
 #include <vector>
 #include <cassert>
 
+#include "MaxComputeOrder.h"
+
 class CG_CompartmentDimension;
 class CG_BranchData;
 
@@ -50,6 +52,14 @@ class TissueContext
   public:
   TissueContext();
   ~TissueContext();
+
+  typedef enum 
+  {
+      UNDEFINED = 0,
+      PROXIMAL = 1,
+      DISTAL = 2,
+      SOMA = 3
+  } CapsuleAtBranchStatus;
 
   typedef enum
   {
@@ -137,6 +147,23 @@ class TissueContext
                         std::map<key_size_t, int>& secondPassCapsuleMap);
 
   void rebalance(Params* params, TouchVector* touchVector);
+
+#ifdef IDEA1
+  //bool isPartOfJunction(Capsule& capsule, Touch &t);
+  //bool isPartOfJunction(Capsule& capsule, Touch &t, int& rank, Capsule* junctionCapsule);
+  //bool isPartOfJunction(Capsule& capsule, Touch &t, int &rank);
+  //bool isPartOfImplicitJunction(Capsule& capsule, Touch &t, int &status, int &rank);
+  //int getJunctionMPIRank(Capsule &caps);
+  bool isPartOfExplicitJunction(Capsule& capsule, Touch &t, CapsuleAtBranchStatus& status, int &rank);
+  bool isPartOfExplicitJunction(Capsule& capsule, Touch &t, int& rank, Capsule** junctionCapsule);
+  bool isPartOfExplicitJunction(Capsule& capsule, Touch &t, int& rank);
+  bool isPartOfExplicitJunction(Capsule& capsule, Touch &t);
+  int getCptIndex(Capsule& caps, Touch & t);
+  int getCptIndex(Capsule* caps, Touch & touch);
+  int getNumCompartments(ComputeBranch* branch);
+  int getNumCompartments(
+    ComputeBranch* branch, std::vector<int>& cptsizes_in_branch);
+#endif
 
   private:
   bool isSpanning(Capsule&);  // check if a Capsule span the slicing boundary

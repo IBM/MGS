@@ -30,6 +30,7 @@
 #include <list>
 #include <algorithm>
 #include <utility>
+#include "MaxComputeOrder.h"
 
 LENSTissueSlicer::LENSTissueSlicer(const int rank, const int nSlicers,
                                    const int nTouchDetectors,
@@ -37,7 +38,8 @@ LENSTissueSlicer::LENSTissueSlicer(const int rank, const int nSlicers,
     : TissueSlicer(rank, nSlicers, nTouchDetectors, tissueContext->_tissue,
                    &tissueContext->_decomposition, params),
       _tissueContext(tissueContext),
-      _sliced(false) {
+      _sliced(false)
+{
   _dataSize = N_CAP_DATA;
 #ifdef A2AW
   Capsule capsule;
@@ -57,7 +59,8 @@ LENSTissueSlicer::LENSTissueSlicer(const int rank, const int nSlicers,
                           &_typeSegmentData);
   MPI_Type_commit(&_typeSegmentData);
 
-  for (int i = 0; i < _numberOfReceivers; ++i) {
+  for (int i = 0; i < _numberOfReceivers; ++i)
+  {
     int numSegs = 1;
     MPI_Type_indexed(numSegs, _segmentBlockLengths, _segmentBlockDisplacements,
                      _typeSegmentData, &_typeSegments[i]);
@@ -71,8 +74,10 @@ LENSTissueSlicer::LENSTissueSlicer(const int rank, const int nSlicers,
 
 LENSTissueSlicer::~LENSTissueSlicer() {}
 
-void LENSTissueSlicer::sliceAllNeurons() {
-  if (_tissueContext->_touchVector.getBlockCount() > 0 && !_sliced) {
+void LENSTissueSlicer::sliceAllNeurons()
+{
+  if (_tissueContext->_touchVector.getBlockCount() > 0 && !_sliced)
+  {
     Decomposition* decomposition = *_decomposition;
     TouchVector::TouchIterator tend = _tissueContext->_touchVector.end();
     for (int i = 0; i < _numberOfReceivers; ++i)
@@ -80,7 +85,8 @@ void LENSTissueSlicer::sliceAllNeurons() {
     //_sliceSegmentIndices[volumeIndex].push_back(i);
     for (TouchVector::TouchIterator titer =
              _tissueContext->_touchVector.begin();
-         titer != tend; ++titer) {
+         titer != tend; ++titer)
+    {
       double key1 = titer->getKey1();
       double key2 = titer->getKey2();
       int c1Idx = _tissueContext->getCapsuleIndex(key1);
@@ -90,36 +96,62 @@ void LENSTissueSlicer::sliceAllNeurons() {
 
       // Determine the volumeIndex of the key1 node's LENS touch element
       int v1Idx = -1;
+      int rank2HandleCapsule;
+      TissueContext::CapsuleAtBranchStatus status;
+#ifdef IDEA1
+      if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule))
+      //if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule, decomposition))
+      {
+          v1Idx = rank2HandleCapsule;
+      }
+#else
       if (_segmentDescriptor.getFlag(key1) &&
-          _tissueContext->isTouchToEnd(c1, *titer)) {
+          _tissueContext->isTouchToEnd(c1, *titer))
+      {
         Sphere sphere;
         c1.getEndSphere(sphere);
         v1Idx = decomposition->getRank(sphere);
-      } else
+      }
+#endif
+      else
         v1Idx = decomposition->getRank(c1.getSphere());
 
       // Determine the volumeIndex of the key2 node's LENS touch element
       int v2Idx = -1;
+#ifdef IDEA1
+      if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule))
+      //if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule, decomposition))
+      {
+          //v2Idx = _tissueContext->getJunctionMPIRank(c2);
+          v2Idx = rank2HandleCapsule;
+      }
+#else
       if (_segmentDescriptor.getFlag(titer->getKey2()) &&
-          _tissueContext->isTouchToEnd(c2, *titer)) {
+          _tissueContext->isTouchToEnd(c2, *titer))
+      {
         Sphere sphere;
         c2.getEndSphere(sphere);
         v2Idx = decomposition->getRank(sphere);
-      } else
+      }
+#endif
+      else
         v2Idx = decomposition->getRank(c2.getSphere());
 
-      if (v1Idx != _rank) {
+      if (v1Idx != _rank)
+      {
         _sliceSegmentIndices[v1Idx].push_back(c1Idx);
         _sliceSegmentIndices[v1Idx].push_back(c2Idx);
         _tissueContext->_touchVector.mapTouch(v1Idx, titer);
       }
       /*
-	   //TUAN: fix this if 'neuron' decomposition is used
+           //TUAN: fix this if 'neuron' decomposition is used
       else if (v2Idx!=_rank) // This else only required for neuron decomposition
         _sliceSegmentIndices[v1Idx].push_back(c2Idx);
       */
-      if (v2Idx != v1Idx) {
-        if (v2Idx != _rank) {
+      if (v2Idx != v1Idx)
+      {
+        if (v2Idx != _rank)
+        {
           _sliceSegmentIndices[v2Idx].push_back(c1Idx);
           _sliceSegmentIndices[v2Idx].push_back(c2Idx);
           _tissueContext->_touchVector.mapTouch(v2Idx, titer);
@@ -131,7 +163,8 @@ void LENSTissueSlicer::sliceAllNeurons() {
         */
       }
     }
-    for (int i = 0; i < _numberOfReceivers; ++i) {
+    for (int i = 0; i < _numberOfReceivers; ++i)
+    {
       sort(_sliceSegmentIndices[i].begin(), _sliceSegmentIndices[i].end());
       std::vector<long int>::iterator newEnd = unique(
           _sliceSegmentIndices[i].begin(), _sliceSegmentIndices[i].end());
@@ -141,7 +174,8 @@ void LENSTissueSlicer::sliceAllNeurons() {
   _sliced = true;
 }
 
-void LENSTissueSlicer::writeBuff(int i, int j, int& writePos) {
+void LENSTissueSlicer::writeBuff(int i, int j, int& writePos)
+{
   assert(writePos <= _sendBuffSize - _dataSize);
   std::copy(_tissueContext->_capsules[(_sliceSegmentIndices[i])[j]].getData(),
             _tissueContext->_capsules[(_sliceSegmentIndices[i])[j]].getData() +
@@ -153,10 +187,12 @@ void LENSTissueSlicer::writeBuff(int i, int j, int& writePos) {
   writePos += _dataSize;
 }
 
-void* LENSTissueSlicer::getSendBuff() {
+void* LENSTissueSlicer::getSendBuff()
+{
 #ifdef A2AW
   return (void*)_tissueContext->_capsules;
 #else
   return (void*)_sendBuff;
 #endif
 }
+

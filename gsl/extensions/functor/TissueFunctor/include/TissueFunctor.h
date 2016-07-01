@@ -73,15 +73,21 @@ class TissueFunctor : public CG_TissueFunctorBase
   virtual void duplicate(std::auto_ptr<CG_TissueFunctorBase>& dup) const;
 
   private:
-  int getCptIndex(Capsule*);
   dyn_var_t getFractionCapsuleVolumeFromPre(ComputeBranch* branch);
   dyn_var_t getFractionCapsuleVolumeFromPost(ComputeBranch* branch);
+#ifdef IDEA1
+  //int getNumCompartments(ComputeBranch* branch,
+  //                       std::vector<int>& cptsizes_in_branch);
+  //int getNumCompartments(ComputeBranch* branch);
+#else
+  int getCptIndex(Capsule* caps);
   int getNumCompartments(ComputeBranch* branch,
                          std::vector<int>& cptsizes_in_branch,
                          bool& isDistalEndSeeImplicitBranchingPoint);
   int getNumCompartments(ComputeBranch* branch,
                          bool& isDistalEndSeeImplicitBranchingPoint);
   int getNumCompartments(ComputeBranch* branch);
+#endif
   // perform neuron generating from a given set of parameters
   void neuroGen(Params* params, LensContext* CG_c);
   // perform neuron development
@@ -226,7 +232,8 @@ class TissueFunctor : public CG_TissueFunctorBase
       _indexJunctionMap;
   // NOTE: A capsule can belong to a junction, e.g. Junction['Voltage'],
   // Junction['Calcium'],
-  //         of a particular density-index
+  //         of a given vector index (i.e. density-index)
+  //         on a particular MPI-process-rank (i.e. grid-index or junctionIndex)
   // <"nodeType", <Capsule*, vector{"junctionIndex",
   // "density-index[of-that-junctionIndex]"}>>
   std::map<std::string, std::map<Capsule*, std::vector<int> > >
@@ -361,7 +368,6 @@ class TissueFunctor : public CG_TissueFunctorBase
       _backwardSolvePointTypesMap;
 
   bool _readFromFile;
-#define IDEA1
 #ifdef IDEA1
   // The idea is that for each ComputeBranch
   // instead of using a certain fraction from 1 capsule (one at proximal-end and
@@ -372,17 +378,17 @@ class TissueFunctor : public CG_TissueFunctorBase
   // each side
   //   (if possible, i.e. the number of compartment on that side is > 'x'
   //   and each compartment has >= '3x' capsules)
-  //std::map<ComputeBranch*, std::pair<int, int> >
-	//                                <proximalSide, distalSide>
-  std::map<ComputeBranch*, std::pair<float, float> >
-      _numCapsulesEachSideForBranchPointMap;  // we use this information to
-                                              // determine how many capsule is
-                                              // reserved for a branchpoint
-  std::map<ComputeBranch*, std::vector<int> >
-      _cptSizesForBranchMap;  // we use this information to
+  /////std::map<ComputeBranch*, std::pair<int, int> >
+  ///  //                                <proximalSide, distalSide>
+  ///std::map<ComputeBranch*, std::pair<float, float> >
+  ///    _numCapsulesEachSideForBranchPointMap;  // we use this information to
+  ///                                            // determine how many capsule is
+  ///                                            // reserved for a branchpoint
+  ///std::map<ComputeBranch*, std::vector<int> >
+  ///    _cptSizesForBranchMap;  // we use this information to
                                       
-  bool isPartofJunction(Capsule* caps, Touch& t);
-  int getCptIndex(Capsule* capsule, Touch & t);
+  //bool isPartofJunction(Capsule* caps, Touch& t);
+  //int getCptIndex(Capsule* capsule, Touch & t);
 #endif
 
 #ifdef DEBUG_CPTS

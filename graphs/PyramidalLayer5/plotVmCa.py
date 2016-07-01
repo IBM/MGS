@@ -1029,7 +1029,7 @@ def plot_case9():
       date = args.date
       protocol = args.number
       for key,val in mapFolders.iteritems():
-        print(val.replace('May29',date))
+        #print(val.replace('May29',date))
         tmpMap[key] = val.replace('May29',date)
       mapFolders = tmpMap
       # create folder purpose (if not exist)
@@ -1039,6 +1039,7 @@ def plot_case9():
       if int(protocol) == -1:#first arg should be the protocol
         sys.exit("Folders created")
       folder = mapFolders[int(protocol)]
+      print("Plot folder " + folder)
     else:
       print("Unknown method")
       sys.exit("")
@@ -1246,16 +1247,24 @@ def plot_case9():
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
 
-    if (os.path.isfile(folder + '/spineV.dat'+str(thinSpineMPIprocess))):
-        #t, v1 = np.loadtxt(folder + '/spineV.dat'+str(thinSpineMPIprocess),
-        #                unpack=True, skiprows=1,
-        #                usecols=(0, 1))
-        t, v1,v2 = np.loadtxt(folder + '/spineV.dat'+str(thinSpineMPIprocess),
-                        unpack=True, skiprows=1,
-                        usecols=(0, 1,2))
+    myFile = folder + '/spineV.dat'+str(thinSpineMPIprocess)
+    if (os.path.isfile(myFile)):
+        with open(myFile, 'rb') as f:
+            lines = [f.readline()]
+            lines = [f.readline()]
+        numCols = len(np.loadtxt(lines, dtype='float'))#.shape[1]
+        if (numCols == 2):
+            t, v1 = np.loadtxt(folder + '/spineV.dat'+str(thinSpineMPIprocess),
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1))
+        else:
+            t, v1,v2 = np.loadtxt(folder + '/spineV.dat'+str(thinSpineMPIprocess),
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1,2))
         axarr[2, 0].plot(t, v1, spineColor, label='head-V')
         #jaxarr[2, 0].plot(t, v2, spineColor, linestyle='dashdot', label='neck-V')
-        axarr[2, 0].plot(t, v2, 'black', linestyle='dashdot', label='neck-V')
+        if (numCols > 2):
+            axarr[2, 0].plot(t, v2, 'black', linestyle='dashdot', label='neck-V')
     axarr[2, 0].set_xlim(left=timeStart, right=timeEnd)
     axarr[2, 0].legend()
 
@@ -1347,16 +1356,24 @@ def plot_case9():
         axarr[1, 1].set_xlim(left=timeStart, right=timeEnd)
     # plt.legend(bbox_to_anchor=(1,1), loc=2)
 
-    if (os.path.isfile(folder + '/spineCa.dat'+str(thinSpineMPIprocess))):
-        #t, v1 = np.loadtxt(folder + '/spineCa.dat'+str(thinSpineMPIprocess),
-        #                unpack=True, skiprows=1,
-        #                usecols=(0, 1))
-        t, v1,v2 = np.loadtxt(folder + '/spineCa.dat'+str(thinSpineMPIprocess),
-                        unpack=True, skiprows=1,
-                        usecols=(0, 1,2))
+    myFile = folder + '/spineCa.dat'+str(thinSpineMPIprocess)
+    if (os.path.isfile(myFile)):
+        with open(myFile, 'rb') as f:
+            lines = [f.readline()]
+            lines = [f.readline()]
+        numCols = len(np.loadtxt(lines, dtype='float'))#.shape[1]
+        if (numCols == 2):
+            t, v1 = np.loadtxt(folder + '/spineCa.dat'+str(thinSpineMPIprocess),
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1))
+        else:
+            t, v1,v2 = np.loadtxt(folder + '/spineCa.dat'+str(thinSpineMPIprocess),
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1,2))
         axarr[2, 1].plot(t, v1, spineColor, label='spine-Ca')
         #axarr[2, 1].plot(t, v2, spineColor, linestyle='dashdot', label='neck-Ca')
-        axarr[2, 1].plot(t, v2, 'black', linestyle='dashdot', label='neck-Ca')
+        if (numCols > 2):
+            axarr[2, 1].plot(t, v2, 'black', linestyle='dashdot', label='neck-Ca')
     axarr[2, 1].set_xlim(left=timeStart, right=timeEnd)
     axarr[2, 1].legend()
     if (os.path.isfile(folder + '/proximalSpineCa.dat'+str(thinSpineMPIprocess))):

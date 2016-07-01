@@ -7,16 +7,69 @@
 
 #include "../../nti/include/MaxComputeOrder.h"
 
+// STIMULUS
+//{{{ see stimulus*.gsl and connect_stimulus*.gsl
+#define CASE_VIVO 1000 // random input at all spines
+#define CASE_00  0  //resting
+#define CASE_01  1   //inject soma
+#define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
+#define CASE_03  3   //inject a particular presynaptic neuron 
+#define CASE_04  4  //inject presynaptic neurons at distal region
+#define CASE_05  5   //trigger soma + distal end within 5ms
+#define CASE_06  6   //trigger soma then another spine 5ms later
+#define STIMULUS_CASE   CASE_00
+//}}}
 
 #define _CCAT(x,y) x ## y 
 #define CCAT(x,y) _CCAT(x,y)
 #define _STR(x) #x 
 #define STR(x) _STR(x)
 
+//CONNECTOR FUNCTOR
+/*{{{*/
+//defined in std.gsl
+//Connector PolyConnectorFunctor();   
+//PolyConnectorFunctor polyConnect();
+Functor Print;
+Print print();
+  
+Functor ReSeedRandom;
+ReSeedRandom reSeed(243);
+
+Connector PolyConnectorFunctor();   
+PolyConnectorFunctor polyConnect();
+
+Connector ServiceConnectorFunctor();
+ServiceConnectorFunctor serviceConnect();   
+/*}}}*/
+
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
 //{{{ 1. Output Location
-#define OutputFolderName "./out2_May19"
+//#define dataFolder "./"
+#define dataFolder "./data/"
+#if STIMULUS_CASE ==  CASE_00
+#define OutputFolderName dataFolder "out2_Jun23_rest"
+print("Case 00: resting");
+#elif STIMULUS_CASE ==  CASE_01
+#define OutputFolderName dataFolder "out2_Jun23_triggersoma"
+#elif STIMULUS_CASE ==  CASE_02
+#define OutputFolderName dataFolder "out2_Jun23_triggershaft"
+#elif STIMULUS_CASE ==  CASE_03
+#define OutputFolderName dataFolder "out2_Jun23_triggerspine"
+//#define OutputFolderName dataFolder "out2_Jun23_case03"
+#elif STIMULUS_CASE ==  CASE_04
+#define OutputFolderName dataFolder "out2_Jun23_triggerdistalspines"
+#elif STIMULUS_CASE ==  CASE_05
+#define OutputFolderName dataFolder "out2_Jun23_triggersoma_then_distalspines"
+#elif STIMULUS_CASE ==  CASE_06
+#define OutputFolderName dataFolder "out2_Jun23_case06"
+#endif
+//#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
+//#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
+//#define OutputFolderName dataFolder "out2_May27_trigger_distal"
+//#define OutputFolderName dataFolder "out2_May27_trigger_soma"
+//#define OutputFolderName dataFolder "out2_May27_trigger_soma_distal"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -33,11 +86,12 @@
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
 #define TimeStep_value   0.0010 // [ms]
+//#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          360      // [ms]
+	#define TimeEnd          747      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -50,6 +104,7 @@
 #endif
 #if  SIMULATION_RECORD == BASED_ON_TIMES
 	#define RecordInterval   0.10   //  [ms]
+	//#define RecordInterval   0.05   //  [ms]
   #define TimeStartRecord  100.0 // [ms]
 #elif  SIMULATION_RECORD == BASED_ON_ITERATIONS
 	#define RecordInterval   10   // every ... timesteps
@@ -63,14 +118,16 @@
 #define CaER_DiffusionConstant 0.06   //  [um^2/ms]  unbuffered
 #define Dopa_DiffusionConstant 0.182  // um^2/ms  0.082 +/- 0.013 at cell surface (about 6-10x slower than in free solution)
 #define Fluo3_DiffusionConstant 0.09  //[um^2/ms]
-#define Cacyto_DiffusionConstant_SpineNeck 0.27   // [um^2/ms]  unbuffered
+//#define Cacyto_DiffusionConstant_SpineNeck 0.27   // [um^2/ms]  unbuffered
+#define Cacyto_DiffusionConstant_SpineNeck 4.4   // [um^2/ms]  unbuffered
 #define CaER_DiffusionConstant_SpineNeck 0.06   //  [um^2/ms]  unbuffered
 
  // use with fast-buffering assumption
-#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
+//#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
+#define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
 //#define Cacyto_beta   0.002     // dimensionless 
-#define CaER_EffectiveDiffusionConstant  100.0  // units???
+#define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //}}}
 
@@ -91,14 +148,26 @@
 
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
+#if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
+    GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
+#define NTGlutamate_baseline 1.0  // [uM]
+#else
 #define NTGlutamate_baseline 5.0  // [uM]
+#endif
+#if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
+    GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
+#define NTGABA_baseline 0.0  // [uM]
+#else
 #define NTGABA_baseline 5.0  // [uM]
+#endif
 //}}}
 
 //{{{ Conditions: conductance + temperature + Vrest + Eleak
 #define Ra_value 0.001     // [GOhm*um] 
+//#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
 //#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
+//#define R_NECK 0.005     // [GOhm*um] --> g~
 #define R_NECK 0.012     // [GOhm*um] --> g~12 nS
 
   // NOTE: 310K = 37-degree Celcius (body)
@@ -108,10 +177,11 @@
   //              20.0-22.0-degree Celcius (room)
   //       281K = 7.85-degree Celcius (cold)
 #define Temperature_value  308.15 // [K] Kelvin
-#define Vrest_value  -79.0 // [mV]
+//#define Vrest_value  -79.0 // [mV]
+#define Vrest_value  -74.0 // [mV]
 #define E_leak_value -90.0 
-#define Erev_HCN  -45.0 // [mV]
-//#define Erev_HCN  -30.0 // [mV]
+//#define Erev_HCN  -45.0 // [mV]
+#define Erev_HCN  -30.0 // [mV]
 //}}}
 
 //{{{ Time constant
@@ -120,8 +190,8 @@
 //{{{ AMPAR
 // AMPA unitary condutance < 1 pS  [Smith et al., 2000]
 // total ~ 11 pS
-//#define AMPAR_CONDUCTANCE 0.5 // 2.2223 nS/um^2
-#define AMPAR_CONDUCTANCE 2.5 // 2.2223 nS/um^2
+#define AMPAR_CONDUCTANCE 1.3 // 2.2223 nS/um^2
+//#define AMPAR_CONDUCTANCE 2.5 // 2.2223 nS/um^2
 //}}}
 //{{{ NMDAR (g = conductance via NMDAR)
 #define _NO_PLASTICITY 0 
@@ -132,7 +202,8 @@
 //NOTE: Dexteshe et al. gNMDAR(total) ~ 0.01 to 0.6 nS
 //NOTE: A good estimate of gNMDAR(total) ~ 0.875 nS
 //  A typical spinehead as a sphere with r=0.1255 (um)
-#define NMDAR_CONDUCTANCE 4.42  //  nS/um^2  
+//#define NMDAR_CONDUCTANCE 39.42  //  nS/um^2  
+#define NMDAR_CONDUCTANCE 29.42  //  nS/um^2  
 //#define NMDAR_CONDUCTANCE 0.11  //  nS/um^2  
 //}}}
 //{{{ GABAR
@@ -154,31 +225,7 @@
 //}}}
 //}}}
 
-// STIMULUS
-//{{{ see stimulus*.gsl and connect_stimulus*.gsl
-#define CASE_01  1
-#define CASE_02  2
-#define CASE_03  3
-#define STIMULUS_CASE   CASE_01
-//}}}
 
-//CONNECTOR FUNCTOR
-/*{{{*/
-//defined in std.gsl
-//Connector PolyConnectorFunctor();   
-//PolyConnectorFunctor polyConnect();
-Functor Print;
-Print print();
-  
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();   
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();   
-/*}}}*/
 
 //PHASES DEFINITION
 /*{{{*/
@@ -271,32 +318,28 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 ////NOTE: -r #capsules-per-cpt
-////#define strArg1 "neurons_msn.txt -p params/DevParams.par"
-////#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 3 -g 3.0"
-//#define strArg1 "neurons_msn.txt -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 2" 
-////#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 " //" -g 1.0"
-//#define strArg1_supplement "-p params/DetParams.par -n cost-volume"
-//#if SIMULATION_INVOLVE == VMONLY
-//#define  strArg2 "params/CptParams.par"
-//#define strArg3 "params/ChanParams-Tuan2016-Vm.par"
-//#define  strArg4 "params/SynParams.par"
-//#elif SIMULATION_INVOLVE == VM_CACYTO
-//#define  strArg2 "params/CptParams-VmCai.par"
-//#define strArg3 "params/ChanParams-Tuan2016.par"
-//#define  strArg4 "params/SynParams-VmCai.par"
-//#elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
-//#define  strArg2 "params/CptParams-VmCaiCaER.par"
-//#define strArg3 "params/ChanParams-Tuan2016.par"
-//#define  strArg4 "params/SynParams-VmCaiCaER.par"
-//#endif
-//#define strArg1 "neurons_onlyGABA.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-//#define strArg1 "neurons_singlespine.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 20"
-#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2" //" -g 18"
+//#define ALLSPINES
+#if STIMULUS_CASE == CASE_04
+#define tissueFile "neurons.txt_triggerdistalspines"
+#else
+#define tissueFile "neurons.txt"
+#endif
+
+#ifdef ALLSPINES
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
+//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
+#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
+#define strArg2  "params_allspines/CptParams.par"
+#define strArg3 "params_allspines/ChanParams.par"
+#define strArg4 "params_allspines/SynParams.par"
+#else
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 4 " //" -g 18"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
 #define strArg3 "params/ChanParams.par"
 #define strArg4 "params/SynParams.par"
+#endif
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -514,11 +557,21 @@ NodeType SynapticCleft(
         Glut_max= NTGlutamate_max,  
         Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
         Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
+#elif GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
+        Glut_max= NTGlutamate_max,  
+        Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
+        Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
+        tau_Glut = 1.0,  // [ms]  //dont make it bigger
 #endif
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
         GABA_max= NTGABA_max,  
         Vp_GABA=2.0,        // mV
         Kp_GABA=5.0        // mV
+#elif GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
+        GABA_max= NTGABA_max,  
+        Vp_GABA=2.0,        // mV
+        Kp_GABA=5.0,   // mV
+        tau_GABA = 5.0  // [ms]
 #endif
 				//}}}
       >
@@ -532,7 +585,7 @@ NodeType AMPAReceptor (<
           E=0.0,        // mV
 //NOTE: Destexhe-Mainen_Sejnowski (1994) alpha = 0.011; beta=0.19
           alpha=0.011, // uM^-1 msec^-1
-          beta=0.20,    // msec^-1
+          beta=0.30,    // msec^-1
           //{{{ older preSynapticPoint
           NTmax=NTGlutamate_max,     // 160-190 uM
           Vp=2.0,       // mV
@@ -549,7 +602,9 @@ NodeType AMPAReceptor (<
 NodeType NMDAReceptor (<
           E = 0.0,       // mV
           alpha=0.000512,  // uM^-1 msec^-1
-          beta=0.053,     // msec^1
+          //beta=0.053,     // msec^1 - original
+          beta=0.033,     // msec^1 -
+          //beta=0.153,     // msec^1
           //{{{ older preSynapticPoint
           NTmax=NTGlutamate_max,     // 160-190 uM
           Vp=2.0,       // mV
@@ -653,7 +708,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 //{{{
 VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
 
-#include "stimulus_model_Hay2011.gsl"
+#include "stimulus_model.gsl"
 //}}}
  
 
@@ -667,9 +722,11 @@ VariableType CalciumDisplay{ initialize->initialize4 };
 VariableType CurrentDisplay{ initialize->initialize4 };
 VariableType CaCurrentDisplay{ initialize->initialize4 };
 
+VariableType ConductanceDisplay{ initialize->initialize4 };
+
 VariableType ReversalPotentialDisplay{ initialize->initialize4 };
 
-#include "recording_model_Hay2011.gsl"
+#include "recording_model.gsl"
 
 //}}}
 
@@ -1133,6 +1190,8 @@ Grid PyramidalL5_Neuron{
    polyConnect(extracellularMedium, .[].Layer(CahChannels, CalChannels), <>, <identifier="EC">);
 #endif
 
+   //Synaptic Cleft
+   polyConnect(timeStep, .[].Layer(SynapticClefts), <>, <identifier="dt">);
    // Synapse Receptors
    polyConnect(timeStep, .[].Layer(NMDASynapsesMush), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(NMDASynapsesThin), <>, <identifier="dt">);
@@ -1151,24 +1210,26 @@ Grid PyramidalL5_Neuron{
    polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
 	/*}}}*/
 
+    //IMPORTANT: call this 
+    // 1. before Variables Layers
+    // 2. after non-Variable Layers
+   tissueFunctor("Connect", <> );  // This is important to perform connections
+
     // 2. with VARIABLES (for I/O, stimulus)
 	/*{{{*/
   //{{{ I/O
-#include "connect_recording_model_Hay2011.gsl"
+#include "connect_recording_model.gsl"
 
   //}}}
   //{{{ Stimulus
-#include "connect_stimulus_model_Hay2011.gsl"
+#include "connect_stimulus_model.gsl"
   //}}}
 	polyConnect(timeStep, simInfo, <>, <>);
 	/*}}}*/
 
-    //IMPORTANT: call this once you already have all Layers with NodeTypes required for the simulation
-   tissueFunctor("Connect", <> );  // This is important to perform connections
-
     /*}}}*/
 
-	/*{{{*/
+	/*{{{ reserved for extra code*/ 
 	/*}}}*/
 /*}}}*/
 }; //end grid

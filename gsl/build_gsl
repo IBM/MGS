@@ -33,13 +33,13 @@ SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 function print_help {
 	echo "SYNTAX: $0 
   -p <$SUPPORTED_PLATFORMS>    [default: LINUX]
-  [--clean | --rebuild]
+  [--clean | --rebuild | --remake]
   -j <n>                  with <n> is num-processes [default: 2/3 total cores]
   --release | <empty>   [default: (empty)]
-  -d1                 [default: debug_assert]
-  -d2                 [debug_hh] --> print debugs for Initialize() methods
-  -d3                 [debug_in_loops] --> print debugs inside Loops
-  -d4                 [debug_cpts] --> print compartmental information 
+  -d 1                 [default: debug_assert]
+  -d 2                 [debug_hh] --> print debugs for Initialize() methods
+  -d 3                 [debug_in_loops] --> print debugs inside Loops
+  -d 4                 [debug_cpts] --> print compartmental information 
      	--release: O3 with debug_assert
      	--loglevel 1: debug with debug_assert and debug_hh for initialize methods
      	--loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
@@ -60,6 +60,7 @@ fi
 PLATFORM="LINUX"
 CLEAN=""
 REBUILD=""
+REMAKE=""
 GSL_BUILD_MODE=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
@@ -94,6 +95,9 @@ while getopts "$optspec" optchar; do
               ;;
           rebuild)
               REBUILD="-rebuild"
+              ;;
+          remake)
+              REMAKE="-remake"
               ;;
           singlethread)
               NPROCS=1
@@ -148,9 +152,9 @@ PLATFORM_OPTS="--domainLib  "
 case $PLATFORM in
   LINUX )
     PLATFORM_OPTS+="--with-mpi "
-	  if [ "$GSL_BUILD_MODE" == "-release" ]; then 
+	#if [ "$GSL_BUILD_MODE" == "-release" ]; then 
      PLATFORM_OPTS+=" --nowarning_dynamiccast "
-    fi
+    #fi
     ;;
   SMP )
     PLATFORM_OPTS+=""
@@ -188,24 +192,31 @@ done
 
 
 if [ "$CLEAN" == "-clean" ] || \
-   [ "$REBUILD" == "-rebuild" ] ; then 
+   ( [ "$REBUILD" == "-rebuild" ] || \
+   [ "$REMAKE" == "-remake"  \
+   ] ) ; then 
   if [ "$CLEAN" == "-clean" ] ; then
     echo "clean-up GSL"
     make clean
     rm Makefile
   fi
-  if [ "$REBUILD" == "-rebuild" ] ; then 
-    echo "Rebuild GSL"
-    rm Makefile
-    # Generate Makefile
-    if [ "$GSL_BUILD_MODE" == "-release" ]; then 
-      ## detect if -release is used
-      ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
+  if [ "$REBUILD" == "-rebuild" ] || \
+    [ "$REMAKE" == "-remake" ] ; then 
+    if [ "$REMAKE" != "-remake" ]; then
+      echo "Rebuild GSL"
+      make clean
+      make -j $NPROCS;
     else
-      ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
+      rm Makefile
+      # Generate Makefile
+      if [ "$GSL_BUILD_MODE" == "-release" ]; then 
+        ## detect if -release is used
+        ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
+      else
+        ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
+      fi
+      echo "${cc_green}Recreate the Makefile only${cc_normal}"
     fi
-    make clean
-    make -j $NPROCS;
   fi
 else
 	make -j $NPROCS;

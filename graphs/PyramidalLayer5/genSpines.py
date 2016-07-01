@@ -21,7 +21,7 @@ from sympy.abc import L
 from sympy import Line3D, Segment3D
 import glob
 
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(100000)
 # import re
 from math import sqrt
 from copy import deepcopy
@@ -1372,20 +1372,20 @@ class SomeClass(object):
         lineArray = np.asarray(lineArray)
         np.savetxt(neuronFileName, lineArray, fmt='%s')
 
-    def update_dist2branchPoint_and_branchOrder(self, ids_as_parent):
+    def update_dist2branchPoint_and_branchOrder(self, ids_HaveChanged):
         """
         Update the dist2soma for all points
                 (currently absorbed in the self.point_lookup so far)
                 based on the  given index 'id' of a new branching point
 
-        @param ids_as_parent
+        @param ids_HaveChanged
         @type list
 
         STRATEGY:
-            check for all ids with parent_id in the list ids_as_parent
+            check for all ids with parent_id in the list ids_HaveChanged
         """
-        new_ids_as_parent = deepcopy(ids_as_parent)
-        for idparent in ids_as_parent:
+        ids_toUpdate = deepcopy(ids_HaveChanged)
+        for idparent in ids_HaveChanged:
             #idparent = the id of the line that need to be update (due to
             #           it becomes a branchpoint)
             for id in self.line_ids:
@@ -1394,16 +1394,20 @@ class SomeClass(object):
                     # update current dist2branchPoint of  'id'
                     parent_dist2branchPoint = \
                         self.point_lookup[idparent]['dist2branchPoint']
-                    self.point_lookup[id]['dist2branchPoint'] = \
-                        self.find_distance(id, parent_id) + \
-                        parent_dist2branchPoint
-                    self.point_lookup[id]['branchOrder'] = \
-                        self.point_lookup[parent_id]['branchOrder']
-
-                    new_ids_as_parent.append(id)
-            new_ids_as_parent.remove(idparent)
-        if (new_ids_as_parent):
-            self.update_dist2branchPoint_and_branchOrder(new_ids_as_parent)
+                    if (self.point_lookup[id]['numChildren'] == 1):
+                        self.point_lookup[id]['dist2branchPoint'] = \
+                            self.find_distance(id, parent_id) + \
+                            parent_dist2branchPoint
+                        self.point_lookup[id]['branchOrder'] = \
+                            self.point_lookup[parent_id]['branchOrder']
+                    else:
+                        self.point_lookup[id]['branchOrder'] = \
+                            self.point_lookup[parent_id]['branchOrder'] + 1
+                    ids_toUpdate.append(id)
+            ids_toUpdate = list(set(ids_toUpdate))
+            ids_toUpdate.remove(idparent)
+        if (ids_toUpdate):
+            self.update_dist2branchPoint_and_branchOrder(ids_toUpdate)
 
     def find_distance(self, id1, id2):
         """
@@ -1454,7 +1458,6 @@ class SomeClass(object):
             'numChildren'
 
         """
-        # lines = open(self.swc_filename).read().splitlines()
         try:
             # file object
             myfile = open(self.swc_filename, "r+")
@@ -1472,13 +1475,15 @@ class SomeClass(object):
 
         # a vector containing each line in the form of point_lookup
         self.line_ids = []
-        # take the line index as the key and value is
         # another map to enable
         # access to individual field (column)
+        # take the line index as the key; and
+        # value is
         self.point_lookup = {}
 
         maxDist2BranchPoint = 0.0
         maxDist2Soma = 0.0
+        maxChildren = 0
         start = 0
         while True:
             # remove potential comment-line in .swc file
@@ -1488,14 +1493,15 @@ class SomeClass(object):
                 start += 1
             else:
                 break
-            # first patch = check error
+        # first patch = check error
         for line in split_lines[start:]:
             if (len(line) != self.__class__.numFields):
                 sys.exit("There is line " +
                          str(line) +
                          " not conform to the format with 7 fields")
 
-            # second patch = add data first
+        ## second patch = add data first
+        #NO NEED THIS SECTION
         #for line in split_lines[start:]:
         #    if (len(line) < self.__class__.numFields):
         #        continue
@@ -1517,8 +1523,8 @@ class SomeClass(object):
         #                             'branchOrder': branchOrder,
         #                             'numChildren': numChildren}
         #    self.line_ids.append(id)
-        self.listDuplicatedPoints = []
 
+        #self.listDuplicatedPoints = []
         for line in split_lines[start:]:
             if (len(line) != self.__class__.numFields):
                 continue
@@ -1529,7 +1535,9 @@ class SomeClass(object):
             numChildren = 0
 
             do_update = False
-            ids_as_parent = []
+            ids_as_new_branchpoint = []
+            #if (id == '3441' or id == '3447' or id == '6782'):
+            #    pdb.set_trace()
             if (int(line[6]) != -1):
                 parent_id = line[6]
                 parent_info = self.point_lookup[parent_id]
@@ -1544,7 +1552,7 @@ class SomeClass(object):
                                 (z - parent_z)**2)
                 dist2soma = distance + parent_dist2soma
                 assert dist2soma >= 0.0
-                if (distance <= 0.0):
+                if (distance <= 0.1):#don't want points to closed to each other
                   print("WARNING: there are duplicated points")
                   #self.listDuplicatedPoints.append(id)
                   #print(id, x,y,z,parent_id)
@@ -1557,12 +1565,17 @@ class SomeClass(object):
                     self.point_lookup[parent_id]["dist2branchPoint"] = 0.0
                     self.point_lookup[parent_id]["branchOrder"] += 1
                     # update dist2branchPoint and branchOrder of all its children
-                    ids_as_parent = [parent_id]
+                    ids_as_new_branchpoint = [parent_id]
                     do_update = True
 
                 dist2branchPoint = distance + \
                     self.point_lookup[parent_id]["dist2branchPoint"]
-                branchOrder = self.point_lookup[parent_id]["branchOrder"]
+                if (int(parent_id) == 1):
+                    branchOrder = self.point_lookup[parent_id]["branchOrder"]+1
+                else:
+                    branchOrder = self.point_lookup[parent_id]["branchOrder"]
+            else:
+                pass
 
             # TODO: add 1. distance to soma;
             #           2. distance to nearest proximal branching point;
@@ -1582,10 +1595,18 @@ class SomeClass(object):
                 maxDist2Soma = dist2soma
                 idOfMaxDist2Soma = id
             if (do_update):
-                    self.update_dist2branchPoint_and_branchOrder(ids_as_parent)
+                    self.update_dist2branchPoint_and_branchOrder(ids_as_new_branchpoint)
 
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            point_info = self.point_lookup[id]
+            numChildren = point_info['numChildren']
+            if (int(numChildren)> maxChildren):
+                maxChildren = numChildren
+                idOfMaxChildren = id
         if (self.verbose):
           print("point with max-Dist2Soma is ", maxDist2Soma, " and id =", idOfMaxDist2Soma)
+          print("point with max-Children is ", maxChildren, " and id =", idOfMaxChildren)
         # NOTE: keep this code for debug purpose
         """
         for ix in range(len(self.point_lookup)):
@@ -2501,6 +2522,20 @@ class SomeClass(object):
                             junctionBoutonType), str(junctionSpineType), str(bouton_include), str(spine_include), str(synapse_include), str(boutonMType)])
                     else:
                         break
+    def _isChildOf(self, listCandidate, parentCandidate ):
+        """
+        Tell if a point in the list is a child of the given point
+        """
+        for id in listCandidate:
+            point_info = self.point_lookup[id]
+            parent_id =  point_info['parent']
+            stored_id = id
+            while (parent_id != '1'):
+                if (parent_id == parentCandidate):
+                    print("OOOOOOOOOOOOOOOOOOOOWW", stored_id, id)
+                    id = parent_id
+                    point_info = self.point_lookup[id]
+                    parent_id =  point_info['parent']
 
     def genSpine_PyramidalL5(self):
         """
@@ -2521,11 +2556,11 @@ class SomeClass(object):
         #    to the adjacent one (regardless of type)
         if (data2use == "MorrisonLab_L23"):
             ##the same for any age
-            scaling_factor = 1.0  # for distance scaling [um]
-            mean_apical_thin_interval = scaling_factor * 1.6
-            mean_apical_mush_interval = scaling_factor * 5.0
-            mean_basal_thin_interval = scaling_factor * 1.6
-            mean_basal_mush_interval = scaling_factor * 5.0
+            scaling_factor = 1.3  # for distance scaling [um]
+            mean_apical_thin_interval = scaling_factor * 0.81
+            mean_apical_mush_interval = scaling_factor * 0.81
+            mean_basal_thin_interval = scaling_factor * 0.81
+            mean_basal_mush_interval = scaling_factor * 0.81
             inhFactor = 2.6
             meanApicalInhInterval  = inhFactor*1.0
             meanBasalInhInterval   = inhFactor*1.0
@@ -2697,6 +2732,23 @@ class SomeClass(object):
                 branchOrder = int(self.point_lookup[id]['branchOrder'])
 
         holdpoint_list = list(set(holdpoint_list))
+
+        #### Hold number of times visited a point
+        #[pointID] = times
+        timeVisitPoint = {}
+
+        #####Find soma
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x_soma =float(self.point_lookup[id]['siteX'])
+            y_soma =float(self.point_lookup[id]['siteY'])
+            z_soma =float(self.point_lookup[id]['siteZ'])
+            r_soma =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) == -1):
+              break
+        print("soma radius: ", r_soma)
         ############
         # start the spine generation process
         """
@@ -2710,6 +2762,7 @@ class SomeClass(object):
         point_lookupBackUp = deepcopy(self.point_lookup)
         while holdpoint_list:
             tmplist = []
+
             for id in holdpoint_list:
                 if (int(id) == -1):
                     break
@@ -2719,16 +2772,17 @@ class SomeClass(object):
                 branchOrder =  point_info['branchOrder']
                 dist2branchPoint = float(point_info['dist2branchPoint'])
                 dist2soma = float(point_info['dist2soma'])
+                numChildren =  int(point_info['numChildren'])
+                if (dist2branchPoint == 0.0):
+                    assert(numChildren > 0)
+                #assert(dist2branchPoint==0.0 && numChildren > 0)
                 #spine_filename = 'spine' +
                 pid = parent_id
                 cid = id
                 if (int (pid) == -1):
                     continue
-                #if (int(pid) != -1 and
-                #    not self._branchInList(branchType, listBranches)):
-                #    tmplist.append(pid)
-                #    continue
-                #tmplist.append(pid)
+                if  (dist2soma <= r_soma):
+                    continue
 
                 distance=self.find_distance(cid, pid)
                 randUniform = random.random()
@@ -2799,7 +2853,10 @@ class SomeClass(object):
                 assert(self.spineCount< 20000)
                 #assert(self.spineCount< 30000)
                 # Find the pair of points
-                while (interval > distance and int(pid) != -1):
+                keepGoing = False
+                firstUse = True
+                while (interval >= distance and int(pid) != -1):
+                    firstUse = False
                     # update interval and find new cid, pid
                     interval = interval - distance
                     cid = pid
@@ -2809,16 +2866,34 @@ class SomeClass(object):
                         break
                     distance=self.find_distance(cid, pid)
                     dist2branchPoint = float(point_info['dist2branchPoint'])
+                    dist2soma = float(point_info['dist2soma'])
+                    numChildren =  int(point_info['numChildren'])
                     if (dist2branchPoint == 0.0):
-                        tmplist.append(cid)
+                        keepGoing = True
+                        if (cid in timeVisitPoint):
+                            timeVisitPoint[cid] += 1
+                        else:
+                            timeVisitPoint[cid] = 1
+                        if (timeVisitPoint[cid] == int(numChildren)):
+                            tmplist.append(cid)
+                        #else:
+                            #timeVisitPoint[cid] -= 1 #as the point will be visit again
+                            #print (cid + ": child = " + str(numChildren) + " while it is "
+                            #       #+ str(timeVisitPoint[cid]))
+                            #       + str(timeVisitPoint))
+                            #timeVisitPoint[cid] += 1 #as the point will be visit again
+                            #keepGoing = True
                         break
-
-                if (dist2branchPoint == 0.0 and interval > distance):
+                if  (keepGoing):
                     continue
+
                 if (int(pid) == -1):
                    continue
 
-                #now we ensure the spine in between cid and pid
+                if  (dist2soma-interval <= r_soma):
+                    continue
+
+                #now we ensured the spine in between cid and pid
                 x1 = float(self.point_lookup[cid]['siteX'])
                 y1 = float(self.point_lookup[cid]['siteY'])
                 z1 = float(self.point_lookup[cid]['siteZ'])
@@ -2917,24 +2992,30 @@ class SomeClass(object):
                     #createBoutonSWC(index, dx, dy, dz, lNeck + 0.1)
                     self.createBoutonSWC(index, dx, dy, dz, lNeck + 0.0)
 
-                newid = str(len(self.point_lookup)+1)
-                newid_dist2soma = float(self.point_lookup[cid]['dist2soma']) - interval
-                newid_dist2branchPoint = newid_dist2soma -\
-                    self.point_lookup[pid]['dist2soma'] + \
-                    self.point_lookup[pid]['dist2branchPoint']
-                assert newid_dist2soma >= 0.0
-                assert newid_dist2branchPoint >= 0.0
-                self.point_lookup[newid] = {'type': self.point_lookup[cid]['type'],
-                                        'siteX': str(siteX), 'siteY': str(siteY),
-                                        'siteZ': str(siteZ),
-                                        'siteR': self.point_lookup[cid]['siteR'],
-                                        'parent': pid,
-                                        'dist2soma': newid_dist2soma,
-                                        'dist2branchPoint': newid_dist2branchPoint,
-                                        'branchOrder': branchOrder,
-                                        'numChildren': 1}
-                self.point_lookup[cid]['parent'] = str(newid)
-                tmplist.append(newid)
+
+                if (interval > 0.05):#tolerance distance
+                    # NOTE: this if is important
+                    newid = str(len(self.point_lookup)+1)
+                    newid_dist2soma = float(self.point_lookup[cid]['dist2soma']) - interval
+                    newid_dist2branchPoint = newid_dist2soma -\
+                        self.point_lookup[pid]['dist2soma'] + \
+                        self.point_lookup[pid]['dist2branchPoint']
+                    #pdb.set_trace()
+                    assert newid_dist2soma >= 0.0
+                    assert newid_dist2branchPoint >= 0.0
+                    self.point_lookup[newid] = {'type': self.point_lookup[cid]['type'],
+                                            'siteX': str(siteX), 'siteY': str(siteY),
+                                            'siteZ': str(siteZ),
+                                            'siteR': self.point_lookup[cid]['siteR'],
+                                            'parent': pid,
+                                            'dist2soma': newid_dist2soma,
+                                            'dist2branchPoint': newid_dist2branchPoint,
+                                            'branchOrder': branchOrder,
+                                            'numChildren': 1}
+                    self.point_lookup[cid]['parent'] = str(newid)
+                    tmplist.append(newid)
+                else:
+                    tmplist.append(cid)
             holdpoint_list = list(set(tmplist))
         #print("spines count: ", basalSpineCount)
         self.point_lookup = deepcopy(point_lookupBackUp) # restore
@@ -3618,18 +3699,26 @@ class SomeClass(object):
                                 "{0:.3f}".format(dy*(point)),
                                 "{0:.3f}".format(dz*(point)),
                                 str(rHead), '-1'])+"\n")
-        point = (lNeck+offset)
+        #point = (lNeck+offset)
+        #swcFile.write(' '.join(['2', '3',
+        #                        "{0:.3f}".format(dx*(point)),
+        #                        "{0:.3f}".format(dy*(point)),
+        #                        "{0:.3f}".format(dz*(point)),
+        #                        str(rNeck), '1'])+"\n")
+        ##swcFile.write(' '.join(['2', '3', str(dx*offset), str(dy*offset), str(dz*offset), str(rNeck), '1'])+"\n")
+        #swcFile.write(' '.join(['3', '3',
+        #                        "{0:.3f}".format(offset),
+        #                        "{0:.3f}".format(offset),
+        #                        "{0:.3f}".format(offset),
+        #                        str(rNeck), '2'])+"\n")
+        #####IMPORTANT
+        # to ensure proper spine-attachment
+        # the spine must have 1 capsule of neck
         swcFile.write(' '.join(['2', '3',
-                                "{0:.3f}".format(dx*(point)),
-                                "{0:.3f}".format(dy*(point)),
-                                "{0:.3f}".format(dz*(point)),
+                                "{0:.3f}".format(offset),
+                                "{0:.3f}".format(offset),
+                                "{0:.3f}".format(offset),
                                 str(rNeck), '1'])+"\n")
-        #swcFile.write(' '.join(['2', '3', str(dx*offset), str(dy*offset), str(dz*offset), str(rNeck), '1'])+"\n")
-        swcFile.write(' '.join(['3', '3',
-                                "{0:.3f}".format(offset),
-                                "{0:.3f}".format(offset),
-                                "{0:.3f}".format(offset),
-                                str(rNeck), '2'])+"\n")
         swcFile.close()
 
     def createBoutonSWC(self, index, dx, dy, dz, offset):

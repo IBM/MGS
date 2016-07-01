@@ -44,7 +44,8 @@ TouchDetectTissueSlicer::TouchDetectTissueSlicer(
       _sendLostDaughters(false),
       _addCutPointJunctions(true),
       _tissueContext(tissueContext),
-      _tolerance(0) {
+      _tolerance(0)
+{
   assert(_params);
   if (_tissue->isEmpty())
     _segs = new Segment[1];
@@ -73,7 +74,8 @@ TouchDetectTissueSlicer::TouchDetectTissueSlicer(
                           &_typeSegmentData);
   MPI_Type_commit(&_typeSegmentData);
 
-  for (int i = 0; i < _numberOfReceivers; ++i) {
+  for (int i = 0; i < _numberOfReceivers; ++i)
+  {
     int numSegs = 1;
     MPI_Type_indexed(numSegs, _segmentBlockLengths, _segmentBlockDisplacements,
                      _typeSegmentData, &_typeSegments[i]);
@@ -85,16 +87,19 @@ TouchDetectTissueSlicer::TouchDetectTissueSlicer(
 #endif
 }
 
-TouchDetectTissueSlicer::~TouchDetectTissueSlicer() {
+TouchDetectTissueSlicer::~TouchDetectTissueSlicer()
+{
   if (_tissue->isEmpty()) delete[] _segs;
 }
 
-void TouchDetectTissueSlicer::sliceAllNeurons() {
-  if (!_tissue->isEmpty()) {
+void TouchDetectTissueSlicer::sliceAllNeurons()
+{
+  if (!_tissue->isEmpty())
+  {
     for (int i = 0; i < _numberOfReceivers; ++i)
       _sliceSegmentIndices[i].clear();
     Segment* previousSeg = _segs;
-    Branch* branch, *previousBranch = 0;
+    Branch* branch, * previousBranch = 0;
     int idx = -1;
     int computeOrder = 0;
     int segVolumeIndex, prevSegVolumeIndex = -1;
@@ -104,18 +109,21 @@ void TouchDetectTissueSlicer::sliceAllNeurons() {
 
     ShallowArray<int, MAXRETURNRANKS, 100> indices;
     Segment* segsEnd = _segs + _tissue->getSegmentArraySize() - 1;
-    for (Segment* seg = _segs; seg <= segsEnd; ++seg) {
+    for (Segment* seg = _segs; seg <= segsEnd; ++seg)
+    {
       branch = seg->getBranch();
       segVolumeIndex = decomposition->getRank(seg->getSphere());
 
-      if (branch == previousBranch) {
+      if (branch == previousBranch)
+      {
         assert(_params);
         decomposition->addRanks(
             &previousSeg->getSphere(), seg->getCoords(),
             _params->getRadius(previousSeg->getSegmentKey()) + _tolerance,
             indices);
         if (_sendLostDaughters && previousSeg->getSegmentIndex() == 0 &&
-            branch->getBranchOrder() != 0) {
+            branch->getBranchOrder() != 0)
+        {
           // send lost daughters
           Segment* parentPreviousSeg = branch->getRootSegment() - 1;
           indices.push_back(
@@ -130,21 +138,29 @@ void TouchDetectTissueSlicer::sliceAllNeurons() {
       }
       indices.clear();
 
+      // TUAN NOTE: A segment is a point, i.e. the core of a sphere
+      // TUAN TODO: Remove the flag out of the key once IDEA1 is tested  working 
       seg->isJunctionSegment(false);
-      if (branch != previousBranch) {
-        if (branch->getBranchOrder() == 0) {
+      if (branch != previousBranch)
+      {
+        if (branch->getBranchOrder() == 0)
+        {
           seg->isJunctionSegment(true);
           computeOrder = _maxComputeOrder;
-        } else {
+        }
+        else
+        {
           Segment* parentPreviousSeg = branch->getRootSegment() - 1;
           computeOrder = branch->getRootSegment()->getComputeOrder() + 1;
           if (computeOrder > _maxComputeOrder)
             parentPreviousSeg->isJunctionSegment(true);
         }
-      } else if (segVolumeIndex != prevSegVolumeIndex &&
-                 seg->getSegmentIndex() <
-                     seg->getBranch()->getNumberOfSegments() - 1 &&
-                 _addCutPointJunctions) {
+      }
+      else if (segVolumeIndex != prevSegVolumeIndex &&
+               seg->getSegmentIndex() <
+                   seg->getBranch()->getNumberOfSegments() - 1 &&
+               _addCutPointJunctions)
+      {
         ++computeOrder;
         if (computeOrder > _maxComputeOrder)
           previousSeg->isJunctionSegment(true);
@@ -163,7 +179,8 @@ void TouchDetectTissueSlicer::sliceAllNeurons() {
   }
 }
 
-void TouchDetectTissueSlicer::writeBuff(int i, int j, int& writePos) {
+void TouchDetectTissueSlicer::writeBuff(int i, int j, int& writePos)
+{
   assert(writePos <= _sendBuffSize - (WRITE_SZ1 + WRITE_SZ2));
   std::copy(_segs[(_sliceSegmentIndices[i])[j]].getCoords(),
             _segs[(_sliceSegmentIndices[i])[j]].getCoords() + WRITE_SZ1,
@@ -180,7 +197,8 @@ void TouchDetectTissueSlicer::writeBuff(int i, int j, int& writePos) {
   writePos += WRITE_SZ2;
 }
 
-void* TouchDetectTissueSlicer::getSendBuff() {
+void* TouchDetectTissueSlicer::getSendBuff()
+{
 #ifdef A2AW
   return (void*)_segs;
 #else

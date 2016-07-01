@@ -83,4 +83,14 @@
 //#define SYNAPSE_PARAMS_TOUCH_DETECT
 //#define INFERIOR_OLIVE
 
+//NOTE: 
+///enable or disable the macro to turn on or off the option
+//  IDEA1 = the rescale of explicit junction compartment by taking capsules from 
+//  NEWIDEA = (Params.cxx) which is mainly to deal with accept param's value as a string, which can be the name of the function with parameters for that function, e.g.
+//  gbar = lineardistane(a,b) 
+//  gbar = linearbranchorder
+//  ...
+//#define IDEA1
+//#define NEWIDEA
+
 #endif //_MAXCOMPUTEORDER_H
