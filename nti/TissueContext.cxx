@@ -159,6 +159,9 @@ int TissueContext::setUpCapsules(int nCapsules, DetectionPass detectionPass,int 
 
 void TissueContext::setUpBranches(int rank, int maxComputeOrder)
 {
+  std::map<int, std::map<ComputeBranch*, int> > properSpanningComputeBranchSizes; // mapped by rank; proper: CBs that end in another rank, start in this rank
+  std::map<int, std::map<ComputeBranch*, int> > improperSpanningComputeBranchSizes; // mapped by rank; improper: CBs that end in this rank, start in another rank
+
   int i=0;
   while (i<_nCapsules) {
     ComputeBranch* branch=new ComputeBranch; 
@@ -226,9 +229,67 @@ void TissueContext::setUpBranches(int rank, int maxComputeOrder)
     }
     for (int j=0; j<branch->_nCapsules; ++j) {
       branch->_capsules[j].setBranch(branch);
+      // Check for improper/proper spanning CBs
+      ShallowArray<int, MAXRETURNRANKS, 100> endRanks=0;
+      int beginRank;
+      if (isProperSpanning(branch, endRanks))
+	for (int n=0; n<endRanks.size(); ++n) {
+	  properSpanningComputeBranchSizes[endRanks[n]][branch]=branch->_nCapsules; // to become sendbuf
+	}
+      else if (isImproperSpanning(branch, beginRank))
+	improperSpanningComputeBranchSizes[beginRank][branch]=0; // to become recvbuf
     }
     _neurons[neuronIndex].push_back(branch);
   }
+
+  // Do an MPI Collective to finish creation of _improperComputeBranchCorrectedCapsuleCountsMap
+  int sendbufsize = 0;
+  int* sendcounts = new int[_mpiSize];
+  int* senddispls = new int[_mpiSize];
+  std::map<int, std::map<ComputeBranch*, int> >::iterator miter, mend = properSpanningComputeBranchSizes.end();
+  int total=0;
+  for (int r=0; r<_mpiSize; ++r) {
+    int count=0;
+    miter = properSpanningComputeBranchSizes.find(r);
+    if (miter!=mend) count = miter->second.size();
+    senddispls[r]=total;
+    total+=(sendcounts[r]=count);
+  }
+  int* sendbuf = new int[total];
+
+  int recvbufsize = 0;
+  int* recvcounts = new int[_mpiSize];
+  int* recvdispls = new int[_mpiSize];
+  mend = improperSpanningComputeBranchSizes.end();
+  total = 0;
+  for (int r=0; r<_mpiSize; ++r) {
+    int count=0;
+    miter = improperSpanningComputeBranchSizes.find(r);
+    if (miter!=mend) count = miter->second.size();
+    recvdispls[r]=total;
+    total+=(recvcounts[r]=count);
+  }
+  int* recvbuf = new int[total];
+
+  MPI_Alltoallv(sendbuf, sendcounts, senddispls, MPI_INT, recvbuf, recvcounts, recvdispls, MPI_INT, MPI_COMM_WORLD);
+  int bufidx=0;
+  for (int r=0; r<_mpiSize; ++r) {
+    miter = improperSpanningComputeBranchSizes.find(r);
+    if (miter!=mend) {
+      std::map<ComputeBranch*, int>::iterator miter2, mend2=miter->second.end();
+      for (miter2=miter->second.begin(); miter2!=mend2; ++miter2, ++bufidx) {
+	assert(_improperComputeBranchCorrectedCapsuleCountsMap.count(miter2->first)==0);
+	_improperComputeBranchCorrectedCapsuleCountsMap[miter2->first]=recvbuf[bufidx];
+      }
+    }
+  }
+  
+  delete [] sendbuf;
+  delete [] sendcounts;
+  delete [] senddispls;
+  delete [] recvbuf;
+  delete [] recvcounts;
+  delete [] recvdispls;
 }
 
 void TissueContext::resetBranches()
@@ -295,6 +356,30 @@ bool TissueContext::isConsecutiveCapsule(int index)
 {
   assert(index>0 && index<_nCapsules);
   return (_segmentDescriptor.getSegmentIndex(_capsules[index].getKey())-_segmentDescriptor.getSegmentIndex(_capsules[index-1].getKey())==1);
+}
+
+
+bool TissueContext::isProperSpanning(ComputeBranch* branch, ShallowArray<int, MAXRETURNRANKS, 100>& endRanks)
+{
+  bool rval=false;
+  if (_decomposition->getRank(branch->_capsules->getSphere())==_rank &&
+      isSpanning(branch->lastCapsule())) {
+    rval=true;
+    _decomposition->getRanks(&branch->lastCapsule().getSphere(), branch->lastCapsule().getEndCoordinates(), 0 /*params->getRadius(branch->lastCapsule().getKey())*/,
+			     endRanks);
+  }
+  return rval;
+}
+
+bool TissueContext::isImproperSpanning(ComputeBranch* branch, int& beginRank)
+{
+  bool rval=false;
+  if (_decomposition->getRank(branch->lastCapsule().getSphere())!=_rank &&
+      isSpanning(branch->lastCapsule())) {
+    rval=true;
+    beginRank=_decomposition->getRank(branch->lastCapsule().getSphere());
+  }
+  return rval;
 }
 
 unsigned int TissueContext::getRankOfBeginPoint(ComputeBranch* branch)
