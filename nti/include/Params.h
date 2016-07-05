@@ -260,6 +260,8 @@ public:
 
   void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
                       std::list<std::pair<std::string, dyn_var_t> >& modelParams);
+  void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
+                      std::list<std::pair<std::string, std::string> >& modelParams);
   void getModelArrayParams(
       ModelType modelType, std::string nodeType, key_size_t key,
       std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
@@ -427,17 +429,31 @@ public:
    //define mapping from a channel/receptor of a given name (1st arg)
    //    to a given compartment represented via the key (1st arg_level2)
    //       containing a list of pairs (param,value) 
+#ifdef NEWIDEA
+	//TEST NEW IDEA
+  std::map<std::string,
+           std::map<key_size_t, std::list<std::pair<std::string, std::string> > > >
+      _channelParamsMapGeneric;
+#else
   std::map<std::string,
            std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
       _channelParamsMap;
+#endif
   std::map<std::string,
            std::map<key_size_t,
                     std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
       _channelArrayParamsMap;
   std::map<std::string, unsigned long long> _compartmentParamsMasks;
+#ifdef NEWIDEA
+	//TEST NEW IDEA
+  std::map<std::string,
+           std::map<key_size_t, std::list<std::pair<std::string, std::string> > > >
+      _compartmentParamsMapGeneric;
+#else
   std::map<std::string,
            std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
       _compartmentParamsMap;
+#endif
   std::map<std::string,
            std::map<key_size_t,
                     std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
@@ -487,5 +503,6 @@ public:
 	bool _bidirectionalConnections;
 
   SegmentDescriptor _segmentDescriptor;
+  std::string _currentFName;
 };
 #endif

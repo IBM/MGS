@@ -105,10 +105,18 @@ Params::Params(Params const& p)
       _compartmentVariableTargetsMap(p._compartmentVariableTargetsMap),
       _channelTargetsMap(p._channelTargetsMap),
       _channelParamsMasks(p._channelParamsMasks),
+#ifdef NEWIDEA
+      _channelParamsMapGeneric(p._channelParamsMapGeneric),
+#else
       _channelParamsMap(p._channelParamsMap),
+#endif
       _channelArrayParamsMap(p._channelArrayParamsMap),
       _compartmentParamsMasks(p._compartmentParamsMasks),
+#ifdef NEWIDEA
+      _compartmentParamsMapGeneric(p._compartmentParamsMapGeneric),
+#else
       _compartmentParamsMap(p._compartmentParamsMap),
+#endif
       _compartmentArrayParamsMap(p._compartmentArrayParamsMap),
       _electricalSynapseTargetsMap(p._electricalSynapseTargetsMap),
 			_bidirectionalConnectionTargetsMap(p._bidirectionalConnectionTargetsMap),
@@ -176,10 +184,18 @@ Params::Params(Params& p)
       _compartmentVariableTargetsMap(p._compartmentVariableTargetsMap),
       _channelTargetsMap(p._channelTargetsMap),
       _channelParamsMasks(p._channelParamsMasks),
+#ifdef NEWIDEA
+      _channelParamsMapGeneric(p._channelParamsMapGeneric),
+#else
       _channelParamsMap(p._channelParamsMap),
+#endif
       _channelArrayParamsMap(p._channelArrayParamsMap),
       _compartmentParamsMasks(p._compartmentParamsMasks),
+#ifdef NEWIDEA
+      _compartmentParamsMapGeneric(p._compartmentParamsMapGeneric),
+#else
       _compartmentParamsMap(p._compartmentParamsMap),
+#endif
       _compartmentArrayParamsMap(p._compartmentArrayParamsMap),
       _electricalSynapseTargetsMap(p._electricalSynapseTargetsMap),
 			_bidirectionalConnectionTargetsMap(p._bidirectionalConnectionTargetsMap),
@@ -236,17 +252,39 @@ Params::~Params()
 void Params::readDevParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
 	if (fpF == NULL)
 	{
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
+  bool result;
   skipHeader(fpF);
-  assert(readBondParams(fpF));
+  result = readBondParams(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section BOND" << std::endl;
+    assert(result);
+  }
   // assert(readAngleParams(fpF));
-  assert(readLJParams(fpF));
-  assert(readSIParams(fpF));
-  assert(readRadii(fpF));
+  result = readLJParams(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section LJ" << std::endl;
+    assert(result);
+  }
+  result = readSIParams(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section SI" << std::endl;
+    assert(result);
+  }
+  result = readRadii(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Radii (radius)" << std::endl;
+    assert(result);
+  }
   fclose(fpF);
 }
 
@@ -254,77 +292,161 @@ void Params::readDevParams(const std::string& fname)
 void Params::readDetParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
 	if (fpF == NULL)
 	{
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
+  bool result;
   skipHeader(fpF);
-  assert(readRadii(fpF));
-  assert(readTouchTables(fpF));
+  result =readRadii(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Radii (radius)" << std::endl;
+    assert(result);
+  }
+
+  result = (readTouchTables(fpF));
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Touch table" << std::endl;
+    assert(result);
+  }
   fclose(fpF);
 }
 
 void Params::readCptParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
 	if (fpF == NULL)
 	{
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
+  bool result;
   skipHeader(fpF);
-  assert(readCompartmentVariableTargets(fpF));
-  assert(readCompartmentVariableCosts(fpF));
-  readModelParams(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
+  result = (readCompartmentVariableTargets(fpF));
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Compartmental variable" << std::endl;
+    assert(result);
+  }
+  result = (readCompartmentVariableCosts(fpF));
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Compartmental cost" << std::endl;
+    assert(result);
+  }
+  result = readModelParams(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
                   _compartmentParamsMap, _compartmentArrayParamsMap);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section for Compartmental data" << std::endl;
+    assert(result);
+  }
   fclose(fpF);
 }
 
 void Params::readChanParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
 	if (fpF == NULL)
 	{
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
+  bool result;
   skipHeader(fpF);
-  readChannelTargets(fpF);
-  readChannelCosts(fpF);
-  readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+  result = readChannelTargets(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Channel Target " << std::endl;
+    assert(result);
+  }
+  result = readChannelCosts(fpF);
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Channel cost" << std::endl;
+    assert(result);
+  }
+#ifdef NEWIDEA
+  result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
                   _channelArrayParamsMap);
+#else
+  result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+                  _channelArrayParamsMap);
+#endif
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Channel data" << std::endl;
+    assert(result);
+  }
   fclose(fpF);
 }
 
 void Params::readSynParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
 	if (fpF == NULL)
 	{
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
+  bool result;
   skipHeader(fpF);
 
   std::string keyword;
   keyword = std::string("ELECTRICAL_SYNAPSE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    assert(readElectricalSynapseTargets(fpF));
-    assert(readElectricalSynapseCosts(fpF));
+    result = (readElectricalSynapseTargets(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse Target" << std::endl;
+      assert(result);
+    }
+    result = (readElectricalSynapseCosts(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse cost" << std::endl;
+      assert(result);
+    }
   }
   keyword = std::string("BIDIRECTIONAL_CONNECTION_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    assert(readBidirectionalConnectionTargets(fpF));
-    assert(readBidirectionalConnectionCosts(fpF));
+    result = (readBidirectionalConnectionTargets(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection Target" << std::endl;
+      assert(result);
+    }
+    result = (readBidirectionalConnectionCosts(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection cost" << std::endl;
+      assert(result);
+    }
   }
   keyword = std::string("CHEMICAL_SYNAPSE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    assert(readChemicalSynapseTargets(fpF));
-    assert(readChemicalSynapseCosts(fpF));
+    result = (readChemicalSynapseTargets(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse Target" << std::endl;
+      assert(result);
+    }
+    result = (readChemicalSynapseCosts(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse cost" << std::endl;
+      assert(result);
+    }
   }
   // readElectricalSynapseTargets(fpF);
   // readElectricalSynapseCosts(fpF);
@@ -332,7 +454,12 @@ void Params::readSynParams(const std::string& fname)
   // readBidirectionalConnectionCosts(fpF);
   // readChemicalSynapseTargets(fpF);
   // readChemicalSynapseCosts(fpF);
-  assert(readPreSynapticPointTargets(fpF));
+  result = (readPreSynapticPointTargets(fpF));
+  if (! result)
+  {
+    std::cerr << "ERROR: reading file " << fname << " at section Presynaptic Target" << std::endl;
+    assert(result);
+  }
   fclose(fpF);
 }
 
@@ -857,9 +984,20 @@ double Params::getChemicalSynapseCost(std::string chemicalSynapseId)
 // OUTPUT:
 //    modelParams = the list of pair (parameter, value) for the give nodeType
 //        such 'value' are input via the *params.par file
+#ifdef NEWIDEA
+// NOTE: This version enable the passing of a string as the value part of the 
+//    name=value  
+// input
+// This expand the capabilities to accept a string representing the method 
+// name that can be used to extend the power to define parameter's values
+void Params::getModelParams(
+    ModelType modelType, std::string nodeType, key_size_t key,
+    std::list<std::pair<std::string, std::string> >& modelParams)
+#else
 void Params::getModelParams(
     ModelType modelType, std::string nodeType, key_size_t key,
     std::list<std::pair<std::string, dyn_var_t> >& modelParams)
+#endif
 {
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<
@@ -898,6 +1036,56 @@ void Params::getModelParams(
       modelParams = iter2->second;
     }
   }
+}
+
+// NOTE: This version enable the passing of a string as the value part of the 
+//    name=value  
+// input
+// This expand the capabilities to accept a string representing the method 
+// name that can be used to extend the power to define parameter's values
+void Params::getModelParams(
+    ModelType modelType, std::string nodeType, key_size_t key,
+    std::list<std::pair<std::string, std::string> >& modelParams)
+{
+	/*
+  std::map<std::string, unsigned long long>* modelParamsMasks;
+  std::map<
+      std::string,
+      std::map<key_size_t, std::list<std::pair<std::string, std::string> > > >*
+      modelParamsMap;
+
+  switch (modelType)
+  {
+    case COMPARTMENT:
+      modelParamsMasks = &_compartmentParamsMasks;
+      modelParamsMap = &_compartmentParamsMapGeneric;
+      break;
+    case CHANNEL:
+      modelParamsMasks = &_channelParamsMasks;
+      modelParamsMap = &_channelParamsMapGeneric;
+      break;
+  }
+
+  modelParams.clear();
+  std::map<std::string,
+           std::map<key_size_t,
+                    std::list<std::pair<std::string, std::string> > > >::iterator
+      iter1 = modelParamsMap->find(nodeType);
+  if (iter1 != modelParamsMap->end())
+  {
+    std::map<std::string, unsigned long long>::iterator miter =
+        modelParamsMasks->find(nodeType);
+    assert(miter != modelParamsMasks->end());
+    std::map<key_size_t,
+             std::list<std::pair<std::string, std::string> > >::iterator iter2 =
+        (iter1->second)
+            .find(_segmentDescriptor.getSegmentKey(key, miter->second));
+    if (iter2 != (iter1->second).end())
+    {
+      modelParams = iter2->second;
+    }
+  }
+	*/
 }
 
 void Params::getModelArrayParams(
@@ -1086,6 +1274,9 @@ bool Params::readBondParams(FILE* fpF)
       if (2 != sscanf(bufS, "%lf %lf ", &_bondK0[i], &_bondR0[i]))
       {
         rval = false;
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect two floats for bonding energies ... line\n" <<
+          bufS << std::endl;
         assert(0);
       }
     }
@@ -1130,6 +1321,9 @@ bool Params::readAngleParams(FILE* fpF)
       if (2 != sscanf(bufS, "%lf %lf ", &_angleK0[i], &_angleR0[i]))
       {
         rval = false;
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect two floats for angle ... line\n" <<
+          bufS << std::endl;
         assert(0);
       }
       _angleR0[i] *= (M_PI / 180.0);
@@ -1186,6 +1380,9 @@ NREPULSETYPES 6
       if (2 != sscanf(bufS, "%lf %lf ", &_ljEps[i], &_ljR0[i]))
       {
         rval = false;
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect two floats for LJ epsilon and radius... line\n" <<
+          bufS << std::endl;
         assert(0);
       }
       _ljEps[i] = sqrt(_ljEps[i]);
@@ -1205,6 +1402,7 @@ bool Params::readRadii(FILE* fpF)
    0 0.001
    1 0.002
    */
+  int errorCode;
   bool rval = true;
   _radiiMask = 0;
   _radiiMap.clear();
@@ -1234,7 +1432,14 @@ bool Params::readRadii(FILE* fpF)
     // on the next line: BRANCHTYPE
     double radius;
     unsigned int sz = maskVector.size();  // number of given fieldnames
-    assert(sz);
+    if (sz == 0)
+    {
+      std::cerr << "ERROR in file " << _currentFName << std::endl;
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      std::cerr << "IMPROPER  number of key-fields for vector mask ... line\n" <<
+        bufS << std::endl;
+      assert(sz);
+    }
     unsigned int* ids = new unsigned int[sz];
 
     for (int i = 0; i < n; i++)  // for each line
@@ -1243,9 +1448,19 @@ bool Params::readRadii(FILE* fpF)
       for (unsigned int j = 0; j < sz;
            ++j)  // read the values of the associated fieldnames
       {
-        if (1 != fscanf(fpF, "%d", &ids[j]))
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
         {
           rval = false;
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
           assert(0);
         }
         if (maskVector[j] == SegmentDescriptor::branchType)
@@ -1264,6 +1479,9 @@ bool Params::readRadii(FILE* fpF)
       if (1 != sscanf(bufS, "%lf", &radius))
       {
         rval = false;
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << "Expect an integer number after line\n" <<
+          bufS << std::endl;
         assert(0);
       }
       _radiiMap[_segmentDescriptor.getSegmentKey(maskVector, &ids[0])] = radius;
@@ -1319,6 +1537,7 @@ bool Params::readTouchTables(FILE* fpF)
 //  Make sure it equals to the total possible values for branchtype
 bool Params::readSIParams(FILE* fpF)
 {
+  int errorCode;
   bool rval = true;
   _SIParams = false;
   _SIParamsMask = 0;
@@ -1355,13 +1574,34 @@ bool Params::readSIParams(FILE* fpF)
       jumpOverCommentLine(fpF);
       for (unsigned int j = 0; j < sz; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-        if (maskVector[j] ==
-            SegmentDescriptor::branchType)  // special treatment
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              std::string(bufS, LENGTH_LINE_MAX) << std::endl;
+          }
+          assert(0);
+        }
+        if (maskVector[j] == SegmentDescriptor::branchType)
           ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-      }
+      }  // these values help to identify which branch in which neuron to get
+      // the paramater mapping
+
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-      if (2 != sscanf(bufS, "%lf %lf ", &Epsilon, &Sigma)) assert(0);
+      if (2 != sscanf(bufS, "%lf %lf ", &Epsilon, &Sigma)) 
+      {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << "Expect two float values of Epsilon and Sigma ... line\n" <<
+            std::string(bufS, LENGTH_LINE_MAX) << std::endl;
+          assert(0);
+
+      }
       key_size_t key1 = _segmentDescriptor.getSegmentKey(maskVector, &ids[0]);
       key_size_t key2 =
           _segmentDescriptor.getSegmentKey(maskVector, &ids[sz / 2]);
@@ -1391,6 +1631,7 @@ bool Params::readSIParams(FILE* fpF)
 //GOAL: read section COMPARTMENT_VARIABLE_TARGETS
 bool Params::readCompartmentVariableTargets(FILE* fpF)
 {
+  int errorCode;
   bool rval = true;
   _compartmentVariables = false;
   _compartmentVariableTargetsMask = 0;
@@ -1480,7 +1721,20 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
           }
           else
           {
-            if (1 != fscanf(fpF, "%d", &val)) assert(0);
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
             values.push_back(val);
           }
           /*
@@ -1528,7 +1782,20 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
 				unsigned int* ids = new unsigned int[sz]();
 				for (unsigned int j = 0; j < sz; ++j)
 				{
-					if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
 					if (maskVector[j] == SegmentDescriptor::branchType)
 						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
 				}
@@ -1567,6 +1834,7 @@ bool Params::readChannelTargets(FILE* fpF)
   BRANCHTYPE MTYPE
   1 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage]
   */
+  int errorCode;
   _channels = false;
   bool rval = true;
   _channelTargetsMask = 0;
@@ -1660,7 +1928,20 @@ bool Params::readChannelTargets(FILE* fpF)
             //char ch[1000];
             //fscanf(fpF," %s", ch);
 						//val = atoi(ch);
-            if (1 != fscanf(fpF, "%d", &val)) assert(0);
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
             values.push_back(val);
           }
           /*
@@ -1709,7 +1990,20 @@ bool Params::readChannelTargets(FILE* fpF)
         unsigned int* ids = new unsigned int[sz]();
         for (unsigned int j = 0; j < sz; ++j)
         {
-          if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
@@ -1746,6 +2040,7 @@ bool Params::readChannelTargets(FILE* fpF)
 
 bool Params::readElectricalSynapseTargets(FILE* fpF)
 {
+  int errorCode;
   bool rval = true;
   _electricalSynapses = false;
   _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
@@ -1784,13 +2079,39 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
       // 2 2     2 0   DenSpine [Voltage] 1.0
       for (unsigned int j = 0; j < sz1; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids1[j]))) 
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
+          assert(0);
+        }
         if (maskVector1[j] == SegmentDescriptor::branchType)
           ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }                           // read-in 2 2
       for (unsigned int j = 0; j < sz2; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
+        { 
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
+          assert(0);
+        }
         if (maskVector2[j] == SegmentDescriptor::branchType)
           ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }                           // read-in 2 0
@@ -1856,6 +2177,7 @@ BRANCHTYPE MTYPE
 3 2     3 0   DenSpine [Voltage Calcium CalciumER] 1.0
 3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
 	 */
+  int errorCode;
   bool rval = true;
   _bidirectionalConnections = false;
   _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
@@ -1895,13 +2217,39 @@ BRANCHTYPE MTYPE
       // 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
       for (unsigned int j = 0; j < sz1; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids1[j])))
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
+          assert(0);
+        }
         if (maskVector1[j] == SegmentDescriptor::branchType)
           ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }                           // read-in 2 2
       for (unsigned int j = 0; j < sz2; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
+          assert(0);
+        }
         if (maskVector2[j] == SegmentDescriptor::branchType)
           ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }                           // read-in 2 0
@@ -1967,6 +2315,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
    * 1 1 0   0 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]
    * 1.0
    */
+  int errorCode;
   bool rval = true;
   _chemicalSynapses = false;
   _chemicalSynapseTargetsMask1 = _chemicalSynapseTargetsMask2 = 0;
@@ -2004,13 +2353,39 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
       jumpOverCommentLine(fpF);
       for (unsigned int j = 0; j < sz1; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids1[j])) assert(0);
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids1[j])))
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
+          assert(0);
+        }
         if (maskVector1[j] == SegmentDescriptor::branchType)
           ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }
       for (unsigned int j = 0; j < sz2; ++j)
       {
-        if (1 != fscanf(fpF, "%d", &ids2[j])) assert(0);
+        if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          if (errorCode == EOF)
+          {
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+          }
+          else{
+            c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+            std::cerr << "Expect an integer number after line\n" <<
+              bufS << std::endl;
+          }
+          assert(0);
+        }
         if (maskVector2[j] == SegmentDescriptor::branchType)
           ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
       }
@@ -2187,6 +2562,7 @@ void Params::skipHeader(FILE* fpF)
 unsigned long long Params::readNamedParam(
     FILE* fpF, std::string name, std::map<key_size_t, double>& namedParamsMap)
 {
+  int errorCode;
   unsigned long long mask = 0;
   bool rval = true;
   namedParamsMap.clear();
@@ -2221,7 +2597,20 @@ unsigned long long Params::readNamedParam(
     jumpOverCommentLine(fpF);
     for (int j = 0; j < sz; ++j)
     {
-      if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+      if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+      {
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        if (errorCode == EOF)
+        {
+          std::cerr << " Unexpected reaching EOF"  << std::endl;
+        }
+        else{
+          c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+          std::cerr << "Expect an integer number after line\n" <<
+            bufS << std::endl;
+        }
+        assert(0);
+      }
       if (maskVector[j] == SegmentDescriptor::branchType)
         ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
     }
@@ -2362,6 +2751,7 @@ BRANCHTYPE MTYPE
 4 0 <gbar_values={0.000555,0.00555,0.000555}>
 1 2 <gbar={0.00992}>
    */
+  int errorCode;
   bool rval = true;
   paramsMasks.clear();
   paramsMap.clear();
@@ -2379,10 +2769,20 @@ BRANCHTYPE MTYPE
       // do nothing
     }
     else
+    {
+      std::cerr << "ERROR in file " << _currentFName << std::endl;
+      std::cerr << ".. unmatch section: expect " << expected_btype << ", while given "
+        << btype << std::endl;
       rval = false;
+    }
   }
   else
+  {
+    std::cerr << "ERROR in file " << _currentFName << std::endl;
+    std::cerr << " Expect a string and a number ... line"
+      << bufS << std::endl;
     rval = false;
+  }
 
   if (n > 0)
   {
@@ -2414,7 +2814,14 @@ BRANCHTYPE MTYPE
         std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
         paramsMasks[modelID] = resetMask(fpF, maskVector);
         unsigned int sz = maskVector.size();
-        assert(sz);
+        if (sz == 0)
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+          std::cerr << "IMPROPER  number of key-fields for vector mask ... line\n" <<
+            bufS << std::endl;
+          assert(sz);
+        }
 				for (unsigned int k = 0; k < sz; ++k)
 				{  // validate
 					if (maskVector[k] == SegmentDescriptor::segmentIndex)
@@ -2429,9 +2836,15 @@ BRANCHTYPE MTYPE
 
         //unsigned int* ids = new unsigned int[sz]();
 				for (int j = 0; j < p;
-						j++)  // for each line (subgroup), not counting comment-line
+						j++)  // for each line (in the current subgroup), not counting comment-line
 				{
 					jumpOverCommentLine(fpF);
+          if (feof(fpF))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " End of File: Not enough data ..." << std::endl;
+            assert(!feof(fpF));
+          }
 					std::vector<unsigned int*> v_ids;
 					if (checkForSpecialCases(fpF, sz))
 					{
@@ -2478,7 +2891,20 @@ BRANCHTYPE MTYPE
 							}
 							else
 							{
-								if (1 != fscanf(fpF, "%d", &val)) assert(0);
+								if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+                {
+                  std::cerr << "ERROR in file " << _currentFName << std::endl;
+                  if (errorCode == EOF)
+                  {
+                    std::cerr << " Unexpected reaching EOF"  << std::endl;
+                  }
+                  else{
+                    c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                    std::cerr << "Expect an integer number after line\n" <<
+                      bufS << std::endl;
+                  }
+                  assert(0);
+                }
 								values.push_back(val);
 							}
 							/*
@@ -2527,7 +2953,20 @@ BRANCHTYPE MTYPE
 						unsigned int* ids = new unsigned int[sz]();
 						for (unsigned int kk = 0; kk < sz; ++kk)
 						{// read vector mask part
-							if (1 != fscanf(fpF, "%d", &ids[kk])) assert(0);
+							if (1 != (errorCode = fscanf(fpF, "%d", &ids[kk])))
+              {
+                std::cerr << "ERROR in file " << _currentFName << std::endl;
+                if (errorCode == EOF)
+                {
+                  std::cerr << " Unexpected reaching EOF"  << std::endl;
+                }
+                else{
+                  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                  std::cerr << "Expect an integer number after line\n" <<
+                    bufS << std::endl;
+                }
+                assert(0);
+              }
 							if (maskVector[kk] == SegmentDescriptor::branchType)
 							{
 								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
@@ -2536,7 +2975,6 @@ BRANCHTYPE MTYPE
 						// put into v_ids
 						v_ids.push_back(ids);
 					}
-          assert(!feof(fpF));
 
 					std::string myBuf("");
 					readMultiLine(myBuf, fpF);
@@ -2557,6 +2995,9 @@ BRANCHTYPE MTYPE
       else
       {
         rval = false;
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect something like 'Calcium 4'... line\n" <<
+          bufS << std::endl;
         assert(0);
       }
     }
@@ -3042,7 +3483,7 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz)
 	char oneword[LENGTH_TOKEN_MAX];
   for (unsigned int j = 0; j < sz; ++j)
   {
-		char c = fscanf(fpF, " %s", oneword);
+		int errorCode = fscanf(fpF, " %s", oneword);
     if (oneword[0] == '[' || oneword[0] == '*')
     {
       rval = true;
@@ -3138,6 +3579,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
 		int &numChanStates, int* &vChannelStates, int &initialstate)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
   char bufS[LENGTH_LINE_MAX];
 	if (fpF == NULL)
 	{
@@ -3234,6 +3676,7 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 		int &numChanStates, int* &vChannelStates, int &initialstate)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
+  _currentFName = fname;
   char bufS[LENGTH_LINE_MAX];
 	if (fpF == NULL)
 	{

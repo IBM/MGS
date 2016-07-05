@@ -89,10 +89,13 @@ endif
 
 endif
 
+STD_UTILS_OBJ_PATH := ../gsl/utils/std/obj
+STD_UTILS_INC_PATH := ../gsl/utils/std/include/
 CFLAGS += -I$(HEADER_DIR) 
 #Add support for GMP library
 CFLAGS += -lgmp -std=c++11 
-LDFLAGS += -lgmp -std=c++11 -I../common/include 
+LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
+					 -I../gsl/framework/factories/include/
 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
