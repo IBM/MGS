@@ -87,6 +87,7 @@ void LENSTissueSlicer::sliceAllNeurons()
              _tissueContext->_touchVector.begin();
          titer != tend; ++titer)
     {
+      //TUAN TODO TOFIX: replace with key_size_t
       double key1 = titer->getKey1();
       double key2 = titer->getKey2();
       int c1Idx = _tissueContext->getCapsuleIndex(key1);
@@ -99,8 +100,8 @@ void LENSTissueSlicer::sliceAllNeurons()
       int rank2HandleCapsule;
       TissueContext::CapsuleAtBranchStatus status;
 #ifdef IDEA1
-      if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule))
-      //if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule, decomposition))
+      //if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule))
+      if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule, decomposition))
       {
           v1Idx = rank2HandleCapsule;
       }
@@ -119,8 +120,8 @@ void LENSTissueSlicer::sliceAllNeurons()
       // Determine the volumeIndex of the key2 node's LENS touch element
       int v2Idx = -1;
 #ifdef IDEA1
-      if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule))
-      //if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule, decomposition))
+      //if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule))
+      if (_tissueContext->isPartOfExplicitJunction(c2, *titer, status, rank2HandleCapsule, decomposition))
       {
           //v2Idx = _tissueContext->getJunctionMPIRank(c2);
           v2Idx = rank2HandleCapsule;

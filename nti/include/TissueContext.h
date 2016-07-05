@@ -158,6 +158,8 @@ class TissueContext
   bool isPartOfExplicitJunction(Capsule& capsule, Touch &t, int& rank, Capsule** junctionCapsule);
   bool isPartOfExplicitJunction(Capsule& capsule, Touch &t, int& rank);
   bool isPartOfExplicitJunction(Capsule& capsule, Touch &t);
+  bool isPartOfExplicitJunction(Capsule& capsule, Touch &t, 
+        CapsuleAtBranchStatus& status, int& rank, Decomposition* decomposition);
   int getCptIndex(Capsule& caps, Touch & t);
   int getCptIndex(Capsule* caps, Touch & touch);
   int getNumCompartments(ComputeBranch* branch);

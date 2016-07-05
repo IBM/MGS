@@ -440,6 +440,8 @@ bool TissueContext::isLensTouch(Touch& t, int rank)
     }
     //check if this MPI process should handle the touch
     rval = (rank == rank2HandleCapsule);
+    //rval = (rank == rank2HandleCapsule) or 
+    //  (rank == _decomposition->getRank(c1.getSphere()));
     if (!rval)
     {
       key_size_t s2Key = t.getKey2();
@@ -453,6 +455,8 @@ bool TissueContext::isLensTouch(Touch& t, int rank)
           rank2HandleCapsule = _decomposition->getRank(c2.getSphere());
       }
       rval = (rank == rank2HandleCapsule);
+      //rval = (rank == rank2HandleCapsule) or 
+      //  (rank == _decomposition->getRank(c2.getSphere()));
     }
   }
   return rval;
@@ -881,6 +885,13 @@ bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t)
 bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t, 
         CapsuleAtBranchStatus& status, int& rank)
 {
+  return isPartOfExplicitJunction(capsule, t, 
+      status, rank, _decomposition);
+}
+
+bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t, 
+        CapsuleAtBranchStatus& status, int& rank, Decomposition* decomposition)
+{
     //NOTE: check the original implementation 'TouchDetectTissueSlicer::sliceAllNeurons()'
     //which calll Segment->isJunctionSegment(true) to configure the flag
     //TODO: remove the flag as it wont be used any more 
@@ -907,16 +918,17 @@ bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t,
   {
       result = true;
       status = CapsuleAtBranchStatus::SOMA;
-      rank = this->getRankOfEndPoint(capsule.getBranch());
+      //rank = this->getRankOfEndPoint(capsule.getBranch());
       Sphere endSphere1;
       branch->lastCapsule().getEndSphere(endSphere1);
-      //rank = _decomposition->getRank(endSphere1);
-      assert(rank == _decomposition->getRank(endSphere1));
+      rank = decomposition->getRank(endSphere1);
+      //assert(rank == _decomposition->getRank(endSphere1));
   }
   else{
       if (computeOrder == 0)
       {
-          if (cps_index < reserved4proxend)
+          //if (cps_index < reserved4proxend)
+          if (cps_index < int(floor(reserved4proxend)))
               result = true;
           if (cps_index == int(floor(reserved4proxend)))
           {
@@ -925,11 +937,11 @@ bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t,
           if (result)
           {
               status = CapsuleAtBranchStatus::PROXIMAL;
-              rank = this->getRankOfBeginPoint(capsule.getBranch());
+              //rank = this->getRankOfBeginPoint(capsule.getBranch());
               //assert(capsule.getBranch()->_parent);
               //rank = this->getRankOfEndPoint(capsule.getBranch()->_parent);
-              //rank == _decomposition->getRank(branch->_capsules[0].getSphere());
-              assert(rank == _decomposition->getRank(branch->_capsules[0].getSphere()));
+              rank = decomposition->getRank(branch->_capsules[0].getSphere());
+              //assert(rank == _decomposition->getRank(branch->_capsules[0].getSphere()));
           }
       }
       if (!result and computeOrder == MAX_COMPUTE_ORDER and 
@@ -937,7 +949,8 @@ bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t,
               branch->_daughters.size() >= 1
               /*ensure not terminal*/)
       {
-          if (cps_index_reverse < reserved4distend)
+          //if (cps_index_reverse < reserved4distend)
+          if (cps_index_reverse < int(floor(reserved4distend)))
               result = true;
           if (cps_index_reverse == int(floor(reserved4distend)))
           {
@@ -946,11 +959,11 @@ bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t,
           if (result)
           {
               status = CapsuleAtBranchStatus::DISTAL;
-              rank = this->getRankOfEndPoint(capsule.getBranch());
+              //rank = this->getRankOfEndPoint(capsule.getBranch());
               Sphere endSphere1;
               branch->lastCapsule().getEndSphere(endSphere1);
-              //rank = _decomposition->getRank(endSphere1);
-              assert(rank == _decomposition->getRank(endSphere1));
+              rank = decomposition->getRank(endSphere1);
+              //assert(rank == _decomposition->getRank(endSphere1));
           }
       }
 
