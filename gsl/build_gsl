@@ -26,6 +26,15 @@ return 1
 
 }
 
+function createMakeFile(){
+      if [ "$GSL_BUILD_MODE" == "-release" ]; then 
+        ## detect if -release is used
+        ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
+      else
+        ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
+      fi
+}
+
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 #########################################
 #   PRINT HELP
@@ -209,22 +218,23 @@ if [ "$CLEAN" == "-clean" ] || \
     else
       rm Makefile
       # Generate Makefile
-      if [ "$GSL_BUILD_MODE" == "-release" ]; then 
-        ## detect if -release is used
-        ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
-      else
-        ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
-      fi
+      createMakeFile
       echo "${cc_green}Recreate the Makefile only${cc_normal}"
     fi
   fi
 else
+
+  if [ ! -f Makefile ]; then
+    createMakeFile
+  fi
 	make -j $NPROCS;
 fi
 
-if [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ]; then 
+if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
   echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
   exit; 
+elif [ "$CLEAN" == "-clean" ]; then 
+  echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
 else
   echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
 fi
