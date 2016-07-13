@@ -20,7 +20,18 @@ static pthread_once_t once_Nap = PTHREAD_ONCE_INIT;
 // persistent-activating
 //         Vm-gated Na^+ current, I_Nap".
 //
-#if CHANNEL_NAP == NAP_WOLF_2005
+#if CHANNEL_NAP == NAP_MAGISTRETTI_1999
+// Magistretti - Alonso (1999)
+//     Slow voltage-inactivation of sustained Na+ current in entorhinal cortex
+//     Layer 2 principal pyramidal neurons, i.e. stellate cells 
+//     --> whole-cell and single-channel
+//     study
+#define VHALF_M -52.6
+#define k_M -4.6
+#define VHALF_H -48.8
+#define k_H 10.0
+
+#elif CHANNEL_NAP == NAP_WOLF_2005
 // data
 //    activation : from entorhinal cortical stellate cell (Magistretti-Alonso,
 //    1999)
@@ -92,6 +103,7 @@ void ChannelNap::update(RNG& rng)
       h[i] = 1.0;
     }
     g[i] = gbar[i] * m[i] * h[i];
+		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
 
@@ -111,6 +123,7 @@ void ChannelNap::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)

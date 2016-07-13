@@ -955,6 +955,10 @@ void TissueFunctor::neuroDev(Params* params, LensContext* CG_c)
 //   2. detect touches between any 2 capsules
 void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
 {
+#ifdef IDEA1
+  _tissueContext->_params = params;
+#endif
+
 #ifdef HAVE_MPI
   double start, now, then;
   start = then = MPI_Wtime();
@@ -1069,7 +1073,10 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     director->clearCommunicationCouples();
     director->addCommunicationCouple(lensTissueSlicer, touchDetector);
     director->addCommunicationCouple(touchDetector, touchAggregator);
-    director->iterate();
+#ifdef IDEA1
+    _tissueContext->makeProperComputeBranch();
+#endif
+    director->iterate();//exchange Touches across MPI processes
 
     delete touchAggregator;
 
@@ -1084,6 +1091,9 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     touchDetector->resetBufferSize(false);
     touchDetector->receiveAtBufferOffset(true);
     director->clearCommunicationCouples();
+#ifdef IDEA1
+    //_tissueContext->makeProperComputeBranch();
+#endif
     director->addCommunicationCouple(lensTissueSlicer, touchDetector);
     director->iterate();
     delete lensTissueSlicer;
@@ -1310,7 +1320,6 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       //# capsules in that branch
       int ncaps = branch->_nCapsules;
       // Find: # compartments in the current branch
-      bool isDistalEndSeeImplicitBranchingPoint = false;
       // NOTE: cptsizes_in_branch holds the information about #capsules per cpt
       //   index=0 --> distal-end cpt
       //   index=ncpts-1 --> proximal-end cpt
@@ -1319,12 +1328,9 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 #ifdef IDEA1
       int ncpts = _tissueContext->getNumCompartments(branch, cptsizes_in_branch);
 #else
-      int ncpts = getNumCompartments(branch, cptsizes_in_branch,
-          isDistalEndSeeImplicitBranchingPoint);
+      int ncpts = getNumCompartments(branch, cptsizes_in_branch);
 #endif
       size.push_back(ncpts);
-      // int ncpts =
-      //   getNumCompartments(branch, isDistalEndSeeImplicitBranchingPoint);
       // NOTE: The remainer capsules will be distributed every one to each
       // compartment from distal-end
 
@@ -1380,106 +1386,6 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           //            (1) an additional CompartmentDimension is created as 1st
           //            cpt
           //            (2) reserve some surface area on the 2nd cpt
-#ifdef IDEA1
-          //NOTE: there is no compartment for implicit branching junction
-#else
-            //NOTE: assuming having a compartment for an implicit branching junction 
-            //just make the problem more compicated to solve
-          if (isDistalEndSeeImplicitBranchingPoint)
-          {  // create the CompartmentDimension for implicit branching junction
-            // by reserving a certain fraction of the distal-end capsule
-            Capsule* lastCapsule = &branch->lastCapsule();
-#ifdef DEBUG_CPTS
-            currentBranch = branch;
-#endif
-            ncpts--;
-            dyn_var_t surface_area = 0.0;
-            dyn_var_t volume = 0.0;
-            dyn_var_t dist2soma =
-              lastCapsule->getDist2Soma() + lastCapsule->getLength();
-            dyn_var_t length = 0.0;
-//#ifdef IDEA1
-//            float reserved4distend = branch->_numCapsulesEachSideForBranchPoint.second;
-//            Capsule* caps = lastCapsule;
-//            int ii = 1;
-//            for (; ii < reserved4distend; ii++)
-//            {
-//              dyn_var_t h = caps->getLength();
-//              dyn_var_t r = caps->getRadius();
-//              surface_area += 2.0 * M_PI * r * h;
-//              volume += M_PI * r * r * h;
-//              length += caps->getLength();
-//              caps = caps -1;
-//            }
-//            dyn_var_t h = caps->getLength();
-//            dyn_var_t r = caps->getRadius();
-//            dyn_var_t frac = reserved4distend-ii+1;
-//            surface_area += 2.0 * M_PI * r * h * frac;
-//            volume += M_PI * r * r * h * frac;
-//            length += frac * caps->getLength();
-//#else
-            dyn_var_t h = lastCapsule->getLength();
-            dyn_var_t r = lastCapsule->getRadius();
-            dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-            surface_area += 2.0 * M_PI * r * h * frac;
-            volume += M_PI * r * r * h * frac;
-            length += frac * lastCapsule->getLength();
-//#endif
-
-            dyn_var_t sumlen = 0;
-            std::list<ComputeBranch*>::const_iterator
-              iter = branch->_daughters.begin(),
-                   iterend = branch->_daughters.end();
-            for (; iter != iterend; iter++)
-            {  
-#ifdef IDEA1
-              float reserved4proxend = (*iter)->_numCapsulesEachSideForBranchPoint.first;
-              Capsule* caps = (*iter)->_capsules;
-              int ii = 1;
-              for (ii = 1; ii < reserved4proxend; ii++)
-              {
-                dyn_var_t h = caps->getLength();
-                dyn_var_t r = caps->getRadius();
-                surface_area += 2.0 * M_PI * r * h;
-                volume += M_PI * r * r * h;
-                sumlen += caps->getLength();
-                caps = caps +1;
-              }
-              dyn_var_t h = caps->getLength();
-              dyn_var_t r = caps->getRadius();
-              frac = reserved4proxend-ii+1;
-              surface_area += 2.0 * M_PI * r * h * frac;
-              volume += M_PI * r * r * h * frac;
-              sumlen += frac * h;
-#else
-              // take half surface area from the first capsule
-              dyn_var_t h = (*iter)->_capsules[0].getLength();
-              dyn_var_t r = (*iter)->_capsules[0].getRadius();
-              frac = getFractionCapsuleVolumeFromPost((*iter));
-              surface_area += 2.0 * M_PI * r * h * frac;
-              volume += M_PI * r * r * h * frac;
-              sumlen += frac * h;
-#endif
-            }
-            length += sumlen / branch->_daughters.size();
-            double* cds = lastCapsule->getEndCoordinates();
-            // create DimensionStruct
-            StructDataItem* dimsDI = getDimension(lc, cds, r, dist2soma,
-                surface_area, volume, length);
-            std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
-            NDPair* ndp = new NDPair("dimension", dimsDI_ap);
-
-            NDPairList dimParams;
-            dimParams.push_back(ndp);
-            ct->getInstance(aptr_cst, dimParams, lc);
-            ConstantDataItem* cdi =
-              dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-            std::auto_ptr<Constant> aptr_dim;
-            cdi->getConstant()->duplicate(aptr_dim);
-            Constant* dim = aptr_dim.release();
-            dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
-          }
-#endif
           // now
           std::vector<int>::const_iterator cibiter = cptsizes_in_branch.begin(),
             cibiend = cptsizes_in_branch.end();
@@ -1611,7 +1517,6 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 #ifdef IDEA1
                     dyn_var_t frac = reserved4distend - int(std::floor(reserved4distend));
 #else
-                    assert(isDistalEndSeeImplicitBranchingPoint == false);
                     dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
 #endif
                     surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
@@ -2638,8 +2543,12 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
     // and use the branches (as well as other keyfields, e.g. MTYPE) to
     // connect
     // the input/output to the receptors/channels
+#ifdef IDEA1
     int nn = 0;
     int mm = 0;
+    int bb = 0;
+#endif
+
     TouchVector::TouchIterator titer = _tissueContext->_touchVector.begin(),
                                tend = _tissueContext->_touchVector.end();
 
@@ -2651,9 +2560,32 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       //by the current MPI process
       //assert(_tissueContext->isLensTouch(*titer, _rank));
 
+#ifdef IDEA1
       ++mm;
-      if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
+      //if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
+      if (!_tissueContext->isLensTouch(*titer, _rank)) 
+      {
+        if (bidirectional)
+        {
+          for (int ii = 0; ii < _size; ii++)
+          {
+            //MPI_Barrier(MPI_COMM_WORLD);
+            if (ii == _rank)
+            {
+              std::cout << "rank " << _rank << " with touch-- " << 
+                _segmentDescriptor.getLongKey(titer->getKey1()) << "," << 
+                _segmentDescriptor.getLongKey(titer->getKey2()) << " to be handled in rank \n " ;
+              std::cout << "neuron index : " << _segmentDescriptor.getNeuronIndex(titer->getKey1())  << ", " << _segmentDescriptor.getNeuronIndex(titer->getKey2()) << std::endl;
+            }
+
+          }
+        }
+       continue; 
+      }
       ++nn;
+#else
+      if (!_tissueContext->isLensTouch(*titer, _rank))  continue;
+#endif
 
       key_size_t key1, key2;
       key1 = titer->getKey1();
@@ -2830,6 +2762,9 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
                 // the spineneck
                 //    then check if the soma forms the chemical synapse or not
                 //    if yes, then create the spineattachment
+#ifdef IDEA1
+                ++bb;
+#endif
                 if (probabilities[i] >=
                     drandom(findSynapseGenerator(indexPre, indexPost)))
                 {
@@ -2875,8 +2810,15 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
         }
       }
     }
+#ifdef IDEA1
+    if (bidirectional)
+    {
     std::cout << "nn"  << (_rank) << " = " << nn << std::endl;
     std::cout << "mm"  << (_rank) << " = " << mm << std::endl;
+    std::cout << "bb"  << (_rank) << " = " << bb << std::endl;
+
+    }
+#endif
   }
 
   std::map<unsigned int, std::vector<ComputeBranch*> >::iterator mapIter,
@@ -4723,7 +4665,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               NodeDescriptor* postCpt = 0;
               int postIdx = 0;
 #ifdef IDEA1
-              if (postJunction)
+              if (postJunction and jctCapsulePostCapsule)
               //if (postJunction and indexPost == _rank)
               {
                 //TUAN NOTICE
@@ -6612,9 +6554,7 @@ int TissueFunctor::getCptIndex(Capsule* capsule)
   int cptIndex = 0;
   ComputeBranch* branch = capsule->getBranch();
   std::vector<int> cptsizes_in_branch;
-  bool isDistalEndSeeImplicitBranchingPoint;
-  int ncpts = getNumCompartments(branch, cptsizes_in_branch,
-                                 isDistalEndSeeImplicitBranchingPoint);
+  int ncpts = getNumCompartments(branch, cptsizes_in_branch);
   int cps_index =
       (capsule - capsule->getBranch()->_capsules);  // zero-based index
   //# capsules in that branch
@@ -7028,12 +6968,10 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 //}
 #else
 int TissueFunctor::getNumCompartments(
-    ComputeBranch* branch, std::vector<int>& cptsizes_in_branch,
-    bool& isDistalEndSeeImplicitBranchingPoint)
+    ComputeBranch* branch, std::vector<int>& cptsizes_in_branch)
 {
   int rval;
   int ncpts;
-  isDistalEndSeeImplicitBranchingPoint = false;
   //# capsules in that branch
   int ncaps = branch->_nCapsules;
   // we need this in case the ncaps is less than _compartmentSize
@@ -7068,11 +7006,6 @@ int TissueFunctor::getNumCompartments(
   Capsule* capPtr = &branch->_capsules[ncaps - 1];
   key_size_t key = capPtr->getKey();
   unsigned int computeOrder = _segmentDescriptor.getComputeOrder(key);
-  if (computeOrder < MAX_COMPUTE_ORDER and branch->_daughters.size() > 1)
-  {  // make one more for implicit branching junction
-    ncpts++;
-    isDistalEndSeeImplicitBranchingPoint = true;
-  }
 
   //just for checking
   int  sumEle = std::accumulate(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
@@ -7084,17 +7017,11 @@ int TissueFunctor::getNumCompartments(
   return rval;
 }
 int TissueFunctor::getNumCompartments(
-    ComputeBranch* branch, bool& isDistalEndSeeImplicitBranchingPoint)
+    ComputeBranch* branch)
 {
   std::vector<int> cptsizes_in_branch;
-  int rval = getNumCompartments(branch, cptsizes_in_branch,
-                                isDistalEndSeeImplicitBranchingPoint);
+  int rval = getNumCompartments(branch, cptsizes_in_branch);
   return rval;
-}
-int TissueFunctor::getNumCompartments(ComputeBranch* branch)
-{
-  bool dummy;
-  return getNumCompartments(branch, dummy);
 }
 #endif
 

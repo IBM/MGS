@@ -25,6 +25,7 @@
 #include "Decomposition.h"
 
 #include "MaxComputeOrder.h"
+#include "TissueContext.h"
 
 class TissueContext;
 class Params;

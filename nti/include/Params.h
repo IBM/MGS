@@ -343,6 +343,15 @@ public:
 			std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
 			arrayParamsMap
 			);
+  void buildBidirectionalConnectionMap(
+      std::vector<SegmentDescriptor::SegmentKeyData>& maskVector1,
+      std::vector<SegmentDescriptor::SegmentKeyData>& maskVector2,
+      std::vector<unsigned int*>& v1_ids, 
+      std::vector<unsigned int*>& v2_ids, 
+      //    unsigned long long bidirectionalConnectionTargetsMask1,
+      //    unsigned long long bidirectionalConnectionTargetsMask2,
+      const std::string& myBuf 
+      );
 	bool checkForSpecialCases(FILE* fpF, int sz);
 	bool readBondParams(FILE* fpF);
   bool readAngleParams(FILE* fpF);
@@ -355,6 +364,7 @@ public:
   bool readChannelTargets(FILE* fpF);
   bool readElectricalSynapseTargets(FILE* fpF);
   bool readBidirectionalConnectionTargets(FILE* fpF);
+  bool readBidirectionalConnectionTargets_vector(FILE* fpF);
   bool readChemicalSynapseTargets(FILE* fpF);
   bool readPreSynapticPointTargets(FILE* fpF);
 

@@ -82,10 +82,7 @@ class TissueFunctor : public CG_TissueFunctorBase
 #else
   int getCptIndex(Capsule* caps);
   int getNumCompartments(ComputeBranch* branch,
-                         std::vector<int>& cptsizes_in_branch,
-                         bool& isDistalEndSeeImplicitBranchingPoint);
-  int getNumCompartments(ComputeBranch* branch,
-                         bool& isDistalEndSeeImplicitBranchingPoint);
+                         std::vector<int>& cptsizes_in_branch);
   int getNumCompartments(ComputeBranch* branch);
 #endif
   // perform neuron generating from a given set of parameters

@@ -34,6 +34,10 @@
 #define Q10 3.0
 #endif
 
+//default
+#ifndef BASED_TEMPERATURE
+#define BASED_TEMPERATURE 35  // Celcius
+#endif
 #ifndef Q10
 #define Q10 3.0  // default
 #endif

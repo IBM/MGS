@@ -87,7 +87,7 @@ void LENSTissueSlicer::sliceAllNeurons()
              _tissueContext->_touchVector.begin();
          titer != tend; ++titer)
     {
-      //TUAN TODO TOFIX: replace with key_size_t
+      //TUAN TODO TOFIX: replace 'double' with key_size_t
       double key1 = titer->getKey1();
       double key2 = titer->getKey2();
       int c1Idx = _tissueContext->getCapsuleIndex(key1);
@@ -104,6 +104,10 @@ void LENSTissueSlicer::sliceAllNeurons()
       if (_tissueContext->isPartOfExplicitJunction(c1, *titer, status, rank2HandleCapsule, decomposition))
       {
           v1Idx = rank2HandleCapsule;
+          //TUAN TODO
+          //we may also need to set the flag for the proper Capsule for the touch
+          //as we can not access to its ComputeBranch which is a good
+          //resource to tell if the Touch on that capsule's side belongs to the junction
       }
 #else
       if (_segmentDescriptor.getFlag(key1) &&
@@ -125,6 +129,10 @@ void LENSTissueSlicer::sliceAllNeurons()
       {
           //v2Idx = _tissueContext->getJunctionMPIRank(c2);
           v2Idx = rank2HandleCapsule;
+          //TUAN TODO
+          //we may also need to set the flag for the proper Capsule for the touch
+          //as we can not access to its ComputeBranch which is a good
+          //resource to tell if the Touch on that capsule's side belongs to the junction
       }
 #else
       if (_segmentDescriptor.getFlag(titer->getKey2()) &&

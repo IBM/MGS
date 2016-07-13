@@ -92,6 +92,9 @@ TouchDetectTissueSlicer::~TouchDetectTissueSlicer()
   if (_tissue->isEmpty()) delete[] _segs;
 }
 
+//GOAL: work with Segment, Branch
+//   find out which Segment point is parent-end of the Junction
+//   (i.e. set the flag)
 void TouchDetectTissueSlicer::sliceAllNeurons()
 {
   if (!_tissue->isEmpty())
@@ -112,15 +115,20 @@ void TouchDetectTissueSlicer::sliceAllNeurons()
     for (Segment* seg = _segs; seg <= segsEnd; ++seg)
     {
       branch = seg->getBranch();
-      segVolumeIndex = decomposition->getRank(seg->getSphere());
+      segVolumeIndex = decomposition->getRank(seg->getSphere());//the Segment obj belong
+        //the MPI rank that hold the segment's sphere
 
       if (branch == previousBranch)
-      {
+      {//new branch or continued the branch
         assert(_params);
         decomposition->addRanks(
             &previousSeg->getSphere(), seg->getCoords(),
             _params->getRadius(previousSeg->getSegmentKey()) + _tolerance,
-            indices);
+            indices);// return all the MPI ranks in 'indices' at which the given Capsule
+        // as defined by the starting sphere (of previous Segment), and the 
+        // current sphere (of current Segment) with a given tolerance '_tolerance'
+        // is intersectd with, i.e. such ranks are supposed to 
+        // have the Segment (which will be used for TouchDetection)
         if (_sendLostDaughters && previousSeg->getSegmentIndex() == 0 &&
             branch->getBranchOrder() != 0)
         {
@@ -142,7 +150,7 @@ void TouchDetectTissueSlicer::sliceAllNeurons()
       // TUAN TODO: Remove the flag out of the key once IDEA1 is tested  working 
       seg->isJunctionSegment(false);
       if (branch != previousBranch)
-      {
+      {//start a new branch
         if (branch->getBranchOrder() == 0)
         {
           seg->isJunctionSegment(true);
@@ -160,7 +168,7 @@ void TouchDetectTissueSlicer::sliceAllNeurons()
                seg->getSegmentIndex() <
                    seg->getBranch()->getNumberOfSegments() - 1 &&
                _addCutPointJunctions)
-      {
+      {//same branch, but start a slicing cut
         ++computeOrder;
         if (computeOrder > _maxComputeOrder)
           previousSeg->isJunctionSegment(true);

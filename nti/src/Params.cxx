@@ -2306,6 +2306,336 @@ BRANCHTYPE MTYPE
   return _bidirectionalConnections;
 }
 
+bool Params::readBidirectionalConnectionTargets_vector(FILE* fpF)
+{
+	/*
+BIDIRECTIONAL_CONNECTION_TARGETS 2
+BRANCHTYPE MTYPE
+BRANCHTYPE MTYPE 
+3 2     3 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
+	 */
+  int errorCode;
+  bool rval = true;
+  _bidirectionalConnections = false;
+  _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
+      0;
+  _bidirectionalConnectionTargetsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX];
+  std::string tokS;
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
+    _bidirectionalConnectionTargetsMask1 = resetMask(fpF, maskVector1);
+    unsigned int sz1 = maskVector1.size();
+    assert(sz1);
+    _bidirectionalConnectionTargetsMask2 = resetMask(fpF, maskVector2);
+    unsigned int sz2 = maskVector2.size();
+    assert(sz2);
+
+    std::vector<unsigned int*> v1_ids;
+    std::vector<unsigned int*> v2_ids;
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      // one line:
+      // 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
+      if (checkForSpecialCases(fpF, sz1))
+      {
+        int sz = sz1;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector1;
+        // check if a special case is used
+        // A special case can be either:
+        //      range [2, 5]
+        //      range [2:5]
+        //      range [2,5:7]
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+        unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          // LIMIT: current only support  special case for BRANCHTYPE
+          if (maskVector[j] == SegmentDescriptor::branchType)
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            // the form  [...] and it occurs for
+            // BRANCHTYPE
+            /*  if (isAsterisk(fpF))
+                {
+                assert(0);
+                }
+                else if (isBracket(fpF, lval, hval))
+                {
+                }
+                */
+            // make sure the BRANCHTYPE is 0-based
+            for (std::vector<int>::iterator it = values.begin();
+                it != values.end(); ++it)
+            {
+              *it -= 1;
+            }
+            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+            // });
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          /*
+             if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+             if (maskVector[j] == SegmentDescriptor::branchType)
+             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+             */
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            pids[jj] = new unsigned int[sz]();
+            v1_ids.push_back(pids[jj]);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v1_ids.begin() + xx,
+                  iterend = v1_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        unsigned int* ids1 = new unsigned int[sz1]();
+        for (unsigned int j = 0; j < sz1; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids1[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 2
+        v1_ids.push_back(ids1);
+      }
+
+      if (checkForSpecialCases(fpF, sz2))
+      {
+        int sz = sz2;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector2;
+        // check if a special case is used
+        // A special case can be either:
+        //      range [2, 5]
+        //      range [2:5]
+        //      range [2,5:7]
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+        unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          // LIMIT: current only support  special case for BRANCHTYPE
+          if (maskVector[j] == SegmentDescriptor::branchType)
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            // the form  [...] and it occurs for
+            // BRANCHTYPE
+            /*  if (isAsterisk(fpF))
+                {
+                assert(0);
+                }
+                else if (isBracket(fpF, lval, hval))
+                {
+                }
+                */
+            // make sure the BRANCHTYPE is 0-based
+            for (std::vector<int>::iterator it = values.begin();
+                it != values.end(); ++it)
+            {
+              *it -= 1;
+            }
+            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+            // });
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          /*
+             if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
+             if (maskVector[j] == SegmentDescriptor::branchType)
+             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+             */
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            pids[jj] = new unsigned int[sz]();
+            v2_ids.push_back(pids[jj]);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v2_ids.begin() + xx,
+                  iterend = v2_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+
+      }
+      else
+      {
+        unsigned int* ids2 = new unsigned int[sz2];
+        for (unsigned int j = 0; j < sz2; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 0
+        v2_ids.push_back(ids2);
+      }
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);// read-in DenSpine [Voltage] 1.0
+
+      buildBidirectionalConnectionMap(maskVector1, maskVector2, v1_ids, v2_ids, 
+          //_bidirectionalConnectionTargetsMask1, 
+          //_bidirectionalConnectionTargetsMask2,
+          myBuf 
+          //modelID, paramsMap, arrayParamsMap
+          );
+
+      //clean data
+      for (std::vector<unsigned int*>::const_iterator it = v1_ids.begin();
+          it != v1_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v1_ids.clear();
+      for (std::vector<unsigned int*>::const_iterator it = v2_ids.begin();
+          it != v2_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v2_ids.clear();
+    }
+  }
+  else
+    rval = false;
+  _bidirectionalConnections = rval;
+  return _bidirectionalConnections;
+}
+
 bool Params::readChemicalSynapseTargets(FILE* fpF)
 {
   /*
@@ -2842,7 +3172,7 @@ BRANCHTYPE MTYPE
           if (feof(fpF))
           {
             std::cerr << "ERROR in file " << _currentFName << std::endl;
-            std::cerr << " End of File: Not enough data ..." << std::endl;
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
             assert(!feof(fpF));
           }
 					std::vector<unsigned int*> v_ids;
@@ -3464,6 +3794,86 @@ void Params::buildCompartmentVariableTargetsMap(
 		targets.sort();
 		_compartmentVariableTargetsMap[_segmentDescriptor.getSegmentKey(
 				maskVector, &ids[0])] = targets;
+	}
+}
+
+// Given a vector v1_ids of one-side 
+//                v2_ids of the other-side for forming a Touch
+// Given a stream of channel's parameters
+//            or compartment variable's parameters
+// GOAL: create _...ParamsMap
+void Params::buildBidirectionalConnectionMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector1,
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector2,
+    std::vector<unsigned int*>& v1_ids, 
+    std::vector<unsigned int*>& v2_ids, 
+//    unsigned long long bidirectionalConnectionTargetsMask1,
+//    unsigned long long bidirectionalConnectionTargetsMask2,
+		const std::string& myBuf 
+/*		std::string & modelID,
+		std::map<std::string,
+		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+		paramsMap,
+		std::map<
+		std::string,
+		std::map<key_size_t,
+		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+		arrayParamsMap
+    */
+		)
+{
+  std::vector<unsigned int*>::const_iterator iter = v1_ids.begin(),
+                                             iterend = v1_ids.end();
+	for (; iter < iterend; iter++)
+	{//for each element in v_ids, apply the same read-in data to it
+		unsigned int* ids1 = *iter;
+
+    std::map<key_size_t,
+      std::list<Params::BidirectionalConnectionTarget> >& targetsMap =
+        _bidirectionalConnectionTargetsMap[_segmentDescriptor.getSegmentKey(
+            maskVector1, &ids1[0])];
+    std::vector<unsigned int*>::const_iterator iter2 = v2_ids.begin(),
+      iter2end = v2_ids.end();
+    for (; iter2 < iter2end; iter2++)
+    {
+      unsigned int* ids2 = *iter2;
+      std::list<Params::BidirectionalConnectionTarget>& targets =
+          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+      std::istringstream is(myBuf);
+
+      Params::BidirectionalConnectionTarget st;
+      st._parameter = -1.0;
+      while (is >> st._type)
+      {
+        while (is.get() != '[')
+        {
+          assert(is.good());
+        }
+        char buf[LENGTH_IDNAME_MAX];
+		assert(StringUtils::streamGet(is, buf, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf, LENGTH_IDNAME_MAX, ']');
+        std::string stringbuf(buf);
+        std::vector<std::string> tokens;  // extract 'Voltage' as token
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator i = tokens.begin(),
+                                                end = tokens.end();
+             i != end; ++i)
+        {
+          st.addTarget(*i);
+        }
+        /*
+                 char* tok = strtok(buf, " ,");
+                 while (tok != 0) {
+                 st.addTarget(std::string(tok));
+                 tok = strtok(0, " ,");
+                 }*/
+        if (is.get() != ']') assert(0);
+        is >> st._parameter; // probability of forming the spine-attachment
+        targets.push_back(st);
+        st.clear();
+      }
+      targets.sort();
+    }
 	}
 }
 

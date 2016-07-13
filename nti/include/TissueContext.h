@@ -115,6 +115,13 @@ class TissueContext
   //    to the index of a capsule
   std::map<key_size_t, int> _firstPassCapsuleMap,
       _secondPassCapsuleMap;  // key to capsule index
+#ifdef IDEA1
+  // for ComputeBranch that are 'improper', then it tells how many capsules in the 
+  //   right ComputeBranch, which resides on a different MPI process
+  std::map<ComputeBranch*, int> _improperComputeBranchCorrectedCapsuleCountsMap; // improper: CBs that start in another rank, end either (in this rank or in another rank)
+  Params* _params;
+  void makeProperComputeBranch();
+#endif
 
   int getRank() { return _rank; }
   int getMpiSize() { return _mpiSize; }
@@ -178,6 +185,10 @@ class TissueContext
                                  // while second is in this
   bool isOutside(ComputeBranch*, int);
   bool isConsecutiveCapsule(int index);
+#ifdef IDEA1
+  bool isProperSpanning(ComputeBranch* branch, ShallowArray<int, MAXRETURNRANKS, 100>& endRanks);
+  bool isImproperSpanning(ComputeBranch* branch, int& beginRank);
+#endif
 
   bool _initialized;
   SegmentDescriptor _segmentDescriptor;

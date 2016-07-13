@@ -33,6 +33,9 @@ TissueContext::TissueContext()
       _seeded(false),
       _rank(0),
       _mpiSize(0)
+#ifdef IDEA1
+      , _params(NULL)
+#endif
 {
   MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &_mpiSize);
@@ -194,8 +197,141 @@ int TissueContext::setUpCapsules(int nCapsules, DetectionPass detectionPass,
   return _nCapsules;
 }
 
+#ifdef IDEA1
+void TissueContext::makeProperComputeBranch()
+{
+  std::map<int, std::map<ComputeBranch*, int> > properSpanningComputeBranchSizes; // mapped by rank; proper: CBs that end in another rank, start in this rank (last 'int' holds the true size)
+  std::map<int, std::map<ComputeBranch*, int> > improperSpanningComputeBranchSizes; // mapped by rank; improper: CBs that pass-through this rank, start in another rank (last 'int' holds the expected true size that will be passed to from another rank)
+  int numImproperBranches = 0;
+  int i = 0;
+  std::map<unsigned int, std::vector<ComputeBranch*> >::iterator iiter = 
+    _neurons.begin(), iend = _neurons.end();
+  for (; iiter != iend; iiter++)
+  {
+    std::vector<ComputeBranch*>::iterator citer = iiter->second.begin(),
+      cend = iiter->second.end();
+    for (; citer != cend; citer++)
+    {
+      ComputeBranch* branch = (*citer);
+      // Check for improper/proper spanning CBs
+      ShallowArray<int, MAXRETURNRANKS, 100> endRanks;
+      int beginRank;
+      if (isProperSpanning(branch, endRanks))
+        for (int n=0; n<endRanks.size(); ++n) {
+          if (endRanks[n] != _rank)
+          {
+            assert(branch->_nCapsules > 0);
+            properSpanningComputeBranchSizes[endRanks[n]][branch]=branch->_nCapsules; // to become sendbuf
+          }
+        }
+      else if (isImproperSpanning(branch, beginRank))
+      {
+        assert(beginRank != _rank);
+        improperSpanningComputeBranchSizes[beginRank][branch]=0; // to become recvbuf
+        numImproperBranches++;
+      }
+      assert(! (isProperSpanning(branch, endRanks) == true and 
+            isImproperSpanning(branch, beginRank) == true));
+
+    }
+  }
+
+  // Do an MPI Collective to finish creation of _improperComputeBranchCorrectedCapsuleCountsMap
+  int sendbufsize = 0;
+  int* sendcounts = new int[_mpiSize];
+  int* senddispls = new int[_mpiSize];
+  std::map<int, std::map<ComputeBranch*, int> >::iterator miter, mend = properSpanningComputeBranchSizes.end();
+  int total=0;
+  for (int r=0; r<_mpiSize; ++r) {
+    int count=0;
+    miter = properSpanningComputeBranchSizes.find(r);
+    if (miter!=mend) count = miter->second.size();
+    senddispls[r]=total;
+    total+=(sendcounts[r]=count);
+  }
+  sendbufsize = total;
+  //prepare sendbuf
+  int* sendbuf = new int[total];
+  for (int r=0; r<_mpiSize; ++r) {
+    int count=0;
+    miter = properSpanningComputeBranchSizes.find(r);
+    if (miter!=mend) 
+    {
+      std::map<ComputeBranch*,int>::iterator miter2 = miter->second.begin(),
+        mend2 = miter->second.end();
+      int offset =0;
+      for (; miter2 != mend2; miter2++)
+      {
+        assert(miter2->second > 0);
+        sendbuf[senddispls[r]+offset] = miter2->second;
+        offset++;
+      }
+    }
+  }
+
+  //prepare recvbuf
+  int recvbufsize = 0;
+  int* recvcounts = new int[_mpiSize];
+  int* recvdispls = new int[_mpiSize];
+  mend = improperSpanningComputeBranchSizes.end();
+  total = 0;
+  for (int r=0; r<_mpiSize; ++r) {
+    int count=0;
+    miter = improperSpanningComputeBranchSizes.find(r);
+    if (r == _rank)
+      assert(miter == mend);
+    if (miter!=mend) count = miter->second.size();
+    recvdispls[r]=total;
+    total+=(recvcounts[r]=count);
+  }
+  recvbufsize = total;
+  int* recvbuf = new int[total];
+  memset(recvbuf, 0, total* sizeof(int));
+
+  //if (_rank == 0)
+  //  std::cout << "BEFORE Send proper CB capsules info" << std::endl;
+
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Alltoallv(sendbuf, sendcounts, senddispls, MPI_INT, recvbuf, recvcounts, recvdispls, MPI_INT, MPI_COMM_WORLD);
+  _improperComputeBranchCorrectedCapsuleCountsMap.clear();
+  int bufidx=0;
+  for (int r=0; r<_mpiSize; ++r) {
+    miter = improperSpanningComputeBranchSizes.find(r);
+    if (miter!=mend) {
+      std::map<ComputeBranch*, int>::iterator miter2=miter->second.begin(), 
+        mend2=miter->second.end();
+      for (; miter2!=mend2; ++miter2, ++bufidx) {
+        //if (_improperComputeBranchCorrectedCapsuleCountsMap.count(miter2->first)!=0)
+        //{
+        //  std::cout << "---" << _improperComputeBranchCorrectedCapsuleCountsMap[miter2->first] << " and " << recvbuf[bufidx] << std::endl; 
+        //}
+        assert(_improperComputeBranchCorrectedCapsuleCountsMap.count(miter2->first)==0);
+        _improperComputeBranchCorrectedCapsuleCountsMap[miter2->first]=recvbuf[bufidx];
+      }
+    }
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  
+  delete [] sendbuf;
+  delete [] sendcounts;
+  delete [] senddispls;
+  delete [] recvbuf;
+  delete [] recvcounts;
+  delete [] recvdispls;
+  //if (_rank == 0)
+  //  std::cout << "COMPLETE Send proper CB capsules info" << std::endl;
+}
+#endif
+
 void TissueContext::setUpBranches(int rank, int maxComputeOrder)
 {
+//#ifdef IDEA1
+//  std::map<int, std::map<ComputeBranch*, int> > properSpanningComputeBranchSizes; // mapped by rank; proper: CBs that end in another rank, start in this rank (last 'int' holds the true size)
+//  properSpanningComputeBranchSizes.clear();
+//  std::map<int, std::map<ComputeBranch*, int> > improperSpanningComputeBranchSizes; // mapped by rank; improper: CBs that pass-through this rank, start in another rank (last 'int' holds the expected true size that will be passed to from another rank)
+//  improperSpanningComputeBranchSizes.clear();
+//  int numImproperBranches = 0;
+//#endif
   int i = 0;
   while (i < _nCapsules)
   {
@@ -288,8 +424,117 @@ void TissueContext::setUpBranches(int rank, int maxComputeOrder)
     {
       branch->_capsules[j].setBranch(branch);
     }
+    assert(branch->_nCapsules > 0);
     _neurons[neuronIndex].push_back(branch);
+//#ifdef IDEA1
+//    // Check for improper/proper spanning CBs
+//    ShallowArray<int, MAXRETURNRANKS, 100> endRanks;
+//    int beginRank;
+//    if (isProperSpanning(branch, endRanks))
+//      for (int n=0; n<endRanks.size(); ++n) {
+//        if (endRanks[n] != _rank)
+//        {
+//          assert(branch->_nCapsules > 0);
+//          properSpanningComputeBranchSizes[endRanks[n]][branch]=branch->_nCapsules; // to become sendbuf
+//        }
+//      }
+//    else if (isImproperSpanning(branch, beginRank))
+//    {
+//      assert(beginRank != _rank);
+//      improperSpanningComputeBranchSizes[beginRank][branch]=0; // to become recvbuf
+//      numImproperBranches++;
+//    }
+//    assert(! (isProperSpanning(branch, endRanks) == true and 
+//          isImproperSpanning(branch, beginRank) == true));
+//#endif
   }
+
+//#ifdef IDEA1
+//  // Do an MPI Collective to finish creation of _improperComputeBranchCorrectedCapsuleCountsMap
+//  int sendbufsize = 0;
+//  int* sendcounts = new int[_mpiSize];
+//  int* senddispls = new int[_mpiSize];
+//  std::map<int, std::map<ComputeBranch*, int> >::iterator miter, mend = properSpanningComputeBranchSizes.end();
+//  int total=0;
+//  for (int r=0; r<_mpiSize; ++r) {
+//    int count=0;
+//    miter = properSpanningComputeBranchSizes.find(r);
+//    if (miter!=mend) count = miter->second.size();
+//    senddispls[r]=total;
+//    total+=(sendcounts[r]=count);
+//  }
+//  sendbufsize = total;
+//  //prepare sendbuf
+//  int* sendbuf = new int[total];
+//  for (int r=0; r<_mpiSize; ++r) {
+//    int count=0;
+//    miter = properSpanningComputeBranchSizes.find(r);
+//    if (miter!=mend) 
+//    {
+//      std::map<ComputeBranch*,int>::iterator miter2 = miter->second.begin(),
+//        mend2 = miter->second.end();
+//      int offset =0;
+//      for (; miter2 != mend2; miter2++)
+//      {
+//        assert(miter2->second > 0);
+//        sendbuf[senddispls[r]+offset] = miter2->second;
+//        offset++;
+//      }
+//    }
+//  }
+//
+//  //prepare recvbuf
+//  int recvbufsize = 0;
+//  int* recvcounts = new int[_mpiSize];
+//  int* recvdispls = new int[_mpiSize];
+//  mend = improperSpanningComputeBranchSizes.end();
+//  total = 0;
+//  for (int r=0; r<_mpiSize; ++r) {
+//    int count=0;
+//    miter = improperSpanningComputeBranchSizes.find(r);
+//    if (r == _rank)
+//      assert(miter == mend);
+//    if (miter!=mend) count = miter->second.size();
+//    recvdispls[r]=total;
+//    total+=(recvcounts[r]=count);
+//  }
+//  recvbufsize = total;
+//  int* recvbuf = new int[total];
+//  memset(recvbuf, 0, total* sizeof(int));
+//
+//  //if (_rank == 0)
+//  //  std::cout << "BEFORE Send proper CB capsules info" << std::endl;
+//
+//  MPI_Barrier(MPI_COMM_WORLD);
+//  MPI_Alltoallv(sendbuf, sendcounts, senddispls, MPI_INT, recvbuf, recvcounts, recvdispls, MPI_INT, MPI_COMM_WORLD);
+//  _improperComputeBranchCorrectedCapsuleCountsMap.clear();
+//  int bufidx=0;
+//  for (int r=0; r<_mpiSize; ++r) {
+//    miter = improperSpanningComputeBranchSizes.find(r);
+//    if (miter!=mend) {
+//      std::map<ComputeBranch*, int>::iterator miter2=miter->second.begin(), 
+//        mend2=miter->second.end();
+//      for (; miter2!=mend2; ++miter2, ++bufidx) {
+//        //if (_improperComputeBranchCorrectedCapsuleCountsMap.count(miter2->first)!=0)
+//        //{
+//        //  std::cout << "---" << _improperComputeBranchCorrectedCapsuleCountsMap[miter2->first] << " and " << recvbuf[bufidx] << std::endl; 
+//        //}
+//        assert(_improperComputeBranchCorrectedCapsuleCountsMap.count(miter2->first)==0);
+//        _improperComputeBranchCorrectedCapsuleCountsMap[miter2->first]=recvbuf[bufidx];
+//      }
+//    }
+//  }
+//  MPI_Barrier(MPI_COMM_WORLD);
+//  
+//  delete [] sendbuf;
+//  delete [] sendcounts;
+//  delete [] senddispls;
+//  delete [] recvbuf;
+//  delete [] recvcounts;
+//  delete [] recvdispls;
+//  //if (_rank == 0)
+//  //  std::cout << "COMPLETE Send proper CB capsules info" << std::endl;
+//#endif
 }
 
 // reset:
@@ -368,6 +613,41 @@ bool TissueContext::isConsecutiveCapsule(int index)
           _segmentDescriptor.getSegmentIndex(_capsules[index - 1].getKey()) ==
       1);
 }
+
+#ifdef IDEA1
+bool TissueContext::isProperSpanning(ComputeBranch* branch, ShallowArray<int, MAXRETURNRANKS, 100>& endRanks)
+{
+  bool rval=false;
+  if (_decomposition->getRank(branch->_capsules->getSphere())==_rank &&
+      isSpanning(branch->lastCapsule())) {
+    rval=true;
+    float deltaR = 0;
+    if (_params)
+     deltaR =  _params->getRadius(branch->lastCapsule().getKey());
+    _decomposition->getRanks(&branch->lastCapsule().getSphere(), branch->lastCapsule().getEndCoordinates(), deltaR, endRanks);
+  }
+  return rval;
+}
+
+//GOAL: return TRUE if the current CB is an improper mirror part 
+//      of the CB in a different rank
+bool TissueContext::isImproperSpanning(ComputeBranch* branch, int& beginRank)
+{
+  bool rval=false;
+  //if (_decomposition->getRank(branch->lastCapsule().getSphere())!=_rank &&
+  //    isSpanning(branch->lastCapsule())) {
+  //  rval=true;
+  //  beginRank=_decomposition->getRank(branch->lastCapsule().getSphere());
+  //}
+  int someRank = _decomposition->getRank(branch->_capsules->getSphere());
+  if (someRank !=_rank ) {
+    rval=true;
+    beginRank=someRank;
+  }
+  return rval;
+}
+
+#endif 
 
 unsigned int TissueContext::getRankOfBeginPoint(ComputeBranch* branch)
 {
@@ -897,9 +1177,25 @@ bool TissueContext::isPartOfExplicitJunction(Capsule& capsule, Touch &t,
     //TODO: remove the flag as it wont be used any more 
   ComputeBranch* branch = capsule.getBranch();
   //assert(branch->_configuredCompartment);
+  int beginRank;
+  bool isImproperCB = this->isImproperSpanning(branch, beginRank);
+  float reserved4distend;
+  float reserved4proxend;
   this->getNumCompartments(branch);
-  float reserved4distend = branch->_numCapsulesEachSideForBranchPoint.second;
-  float reserved4proxend = branch->_numCapsulesEachSideForBranchPoint.first;
+  if ( isImproperCB )
+  {
+    reserved4distend = branch->_numCapsulesEachSideForBranchPoint.second;
+    reserved4proxend = 0;
+  }
+  else{
+    reserved4distend = branch->_numCapsulesEachSideForBranchPoint.second;
+    reserved4proxend = branch->_numCapsulesEachSideForBranchPoint.first;
+    
+  }
+
+  //this->getNumCompartments(branch);
+  //float reserved4distend = branch->_numCapsulesEachSideForBranchPoint.second;
+  //float reserved4proxend = branch->_numCapsulesEachSideForBranchPoint.first;
   int cps_index =
       (&capsule - capsule.getBranch()->_capsules);  // zero-based index
 
@@ -1036,6 +1332,7 @@ int TissueContext::getCptIndex(Capsule* caps, Touch & touch)
 {
     return this->getCptIndex(*caps, touch);
 }
+
 //bool TissueContext::isPartOfJunction(Capsule& capsule, Touch &t, int &rank)
 //{//either explicit (slicing cut or branchpoint) junction or implicit (slicing cut or branchpoint) junction
 //
@@ -1229,16 +1526,31 @@ int TissueContext::getNumCompartments(ComputeBranch* branch)
 int TissueContext::getNumCompartments(
     ComputeBranch* branch, std::vector<int>& cptsizes_in_branch)
 {
-  if (branch->_configuredCompartment)
-  {//stop here to avoid recalculation
-      cptsizes_in_branch = branch->_cptSizesForBranch ;
-      return branch->_cptSizesForBranch.size();
-  }
+  //TUANTODO: as there are two times it is called after which the ComputeBranch
+  //can change
+  //we need to ensure  it still update the last 
+  //if (branch->_configuredCompartment)
+  //{//stop here to avoid recalculation
+  //    cptsizes_in_branch = branch->_cptSizesForBranch ;
+  //    return branch->_cptSizesForBranch.size();
+  //}
 
   int rval;
   int ncpts;
   //# capsules in that branch
-  int ncaps = branch->_nCapsules;
+  int ncaps;
+  
+  int beginRank;
+  bool isImproperCB = isImproperSpanning(branch, beginRank);
+  if (isImproperCB)
+  {
+    assert(this->_improperComputeBranchCorrectedCapsuleCountsMap.count(branch) == 1);
+    ncaps = this->_improperComputeBranchCorrectedCapsuleCountsMap[branch];
+    assert(ncaps > 0);
+  }
+  else
+   ncaps = branch->_nCapsules;
+
   // we need this in case the ncaps is less than _compartmentSize
   // e.g. soma has only 1 capsule
   int _compartmentSize = this->_commandLine.getCapsPerCpt();
@@ -1483,5 +1795,264 @@ int TissueContext::getNumCompartments(
   rval = ncpts;
   return rval;
 }
+
+//int TissueContext::getNumCompartments(
+//    ComputeBranch* branch, std::vector<int>& cptsizes_in_branch)
+//{
+//  if (branch->_configuredCompartment)
+//  {//stop here to avoid recalculation
+//      cptsizes_in_branch = branch->_cptSizesForBranch ;
+//      return branch->_cptSizesForBranch.size();
+//  }
+//
+//  int rval;
+//  int ncpts;
+//  //# capsules in that branch
+//  int ncaps = branch->_nCapsules;
+//  // we need this in case the ncaps is less than _compartmentSize
+//  // e.g. soma has only 1 capsule
+//  int _compartmentSize = this->_commandLine.getCapsPerCpt();
+//  int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
+//  // Find: # compartments in the current branch
+//  ncpts = (int(floor(double(ncaps) / double(cptSize))) > 0)
+//              ? int(floor(double(ncaps) / double(cptSize)))
+//              : 1;
+//// suppose the branch is long enough, reverse some capsules at each end for
+//// branchpoint
+////  2. explicit slicing cut
+////  3. explicit branchpoint
+//  cptsizes_in_branch.clear();
+//  Capsule* capPtr = &branch->_capsules[ncaps - 1];
+//  key_size_t key = capPtr->getKey();
+//  unsigned int computeOrder = _segmentDescriptor.getComputeOrder(key);
+//  float reserved4proxend = 0.0;
+//  float reserved4distend = 0.0;
+//  //NOTE: '-r' #caps/cpt
+//  if (ncaps == 1)
+//  {// -r get any value 
+//    cptSize = 1;
+//    ncpts = 1;
+//    //REGULAR treatment
+//    if (computeOrder == 0 and 
+//            (branch->_daughters.size() > 0 and computeOrder == MAX_COMPUTE_ORDER))
+//    {
+//        reserved4proxend = 0.25;
+//        reserved4distend = 0.25;
+//    }else if (computeOrder == 0)
+//    {
+//        reserved4proxend = 0.25;
+//        reserved4distend = 0.0;
+//    }else if (computeOrder == MAX_COMPUTE_ORDER and branch->_daughters.size() > 0
+//            )
+//    {
+//        reserved4proxend = 0.0;
+//        reserved4distend = 0.25;
+//    }
+//    else{
+//        reserved4proxend = 0.0;
+//        reserved4distend = 0.0;
+//    }
+//    //SPECIAL treatment
+//    if (branch->_parent)
+//    {
+//      Capsule& firstcaps = branch->_capsules[0];
+//      Capsule& pcaps = branch->_parent->_capsules[0];
+//      if (_segmentDescriptor.getBranchType(pcaps.getKey()) ==
+//          Branch::_SOMA)  // the parent branch is soma
+//      {
+//          float length = firstcaps.getLength();
+//          float somaR = pcaps.getLength(); //soma radius
+//          if (length <= somaR)
+//          {
+//              std::cerr << "ERROR: There is 1-capsule branch from the soma, and the point falls within the soma'radius"
+//                  << std::endl;
+//              std::cerr << " ... Please make the capsule longer\n";
+//              std::cerr << 
+//                  "Neuron index: " << _segmentDescriptor.getNeuronIndex(pcaps.getKey()) 
+//                  << std::endl;
+//              double* coord = firstcaps.getBeginCoordinates();
+//              std::cerr << "Coord: " << coord[0] << ", " << coord[1] << ", " << coord[2]
+//              << std::endl;
+//              assert(0);
+//          }
+//          else
+//          {
+//              reserved4proxend = somaR/length;
+//              reserved4distend = 0.25 * (1.0-reserved4proxend); 
+//          }
+//      }
+//    }
+//    branch->_numCapsulesEachSideForBranchPoint = std::make_pair(reserved4proxend, reserved4distend);
+//    cptsizes_in_branch.push_back(cptSize);
+//  }
+//  else if (ncaps == 2)
+//  {// -r get any value
+//    cptSize = 2;
+//    ncpts = 1;
+//    //REGULAR treatment
+//    if (computeOrder == 0 
+//            and (computeOrder == MAX_COMPUTE_ORDER and branch->_daughters.size() > 0))
+//    {
+//        reserved4proxend = 0.5;
+//        reserved4distend = 0.5;
+//    }else if (computeOrder == 0)
+//    {
+//        reserved4proxend = 0.5;
+//        reserved4distend = 0.0;
+//    }else if (computeOrder == MAX_COMPUTE_ORDER and branch->_daughters.size() > 0
+//            )
+//    {
+//        reserved4proxend = 0.0;
+//        reserved4distend = 0.5;
+//    }
+//    else{
+//        reserved4proxend = 0.0;
+//        reserved4distend = 0.0;
+//    }
+//    //SPECIAL treatment
+//    if (branch->_parent)
+//    {
+//      Capsule& firstcaps = branch->_capsules[0];
+//      Capsule& pcaps = branch->_parent->_capsules[0];
+//      if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+//          Branch::_SOMA)  // the parent branch is soma
+//      {//ignore the first capsule
+//          float length = firstcaps.getLength();
+//          float somaR = pcaps.getLength(); //soma radius
+//          if (length <= somaR)
+//          {//skip the first capsule 
+//              reserved4proxend = 1.0;
+//              reserved4distend = 0.25;
+//          }else
+//          {
+//              reserved4proxend = somaR/length;
+//              reserved4distend = 0.25;
+//          } 
+//      }
+//    }
+//    branch->_numCapsulesEachSideForBranchPoint = std::make_pair(reserved4proxend, reserved4distend);
+//    cptsizes_in_branch.push_back(cptSize);
+//  }
+//  else if (ncaps >= 3)
+//  {
+//    float fcaps_loss = 0.0;
+//    if (computeOrder == 0 
+//       and (computeOrder == MAX_COMPUTE_ORDER and branch->_daughters.size() > 0))
+//    {
+//        if (_compartmentSize >= 2)
+//        {
+//            reserved4proxend = 0.75;
+//            reserved4distend = 0.75;
+//        }else{
+//            reserved4proxend = 0.5;
+//            reserved4distend = 0.5;
+//        }
+//    }else if (computeOrder == 0)
+//    {
+//        reserved4proxend = 0.5;
+//        reserved4distend = 0.0;
+//    }else if (computeOrder == MAX_COMPUTE_ORDER and branch->_daughters.size() > 0)
+//    {
+//        reserved4proxend = 0.0;
+//        reserved4distend = 0.5;
+//    }
+//    else{
+//        reserved4proxend = 0.0;
+//        reserved4distend = 0.0;
+//    }
+//    //NOTE: adjust this we need to adjust "secA"
+//    fcaps_loss = reserved4distend + reserved4proxend; //0.75 for proximal, 0.75 for distal end
+//
+//#define SMALL_FLT 0.00013
+//    int caps_loss_prox = (reserved4proxend < SMALL_FLT) ? 0 : 1;
+//    int caps_loss_dist = (reserved4distend < SMALL_FLT) ? 0 : 1;
+//    int ncaps_loss =  caps_loss_prox + caps_loss_dist;
+//    int tmpVal= int(floor(double(ncaps-ncaps_loss) / double(cptSize))); 
+//    ncpts = (tmpVal > 0) ? tmpVal : 1;
+//    cptsizes_in_branch.resize(ncpts);
+//    std::fill(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
+//    //NOTE: reserve at each end
+//    cptsizes_in_branch[0] += caps_loss_prox; //reserve 1 for proximal
+//    cptsizes_in_branch[ncpts-1] += caps_loss_dist;//reserve 1 for distal
+//    int caps_left = ncaps - ncaps_loss;
+//
+//    int count = 0;
+//    do{
+//      count++;
+//      for (int ii = 0; ii < ncpts; ii++)
+//      {
+//        if (caps_left > 0)
+//        {
+//          cptsizes_in_branch[ii] += 1;
+//          caps_left -= 1;
+//        }
+//        else
+//          break;
+//      }
+//      if (count == 3)
+//      {//every 3 capsules added to each cpt, there is 1 for prox.end branching point and 1 for dist.end branching point
+//        if (caps_left > 0)
+//        {
+//          if (computeOrder == MAX_COMPUTE_ORDER and branch->_daughters.size() > 0)
+//          {
+//              cptsizes_in_branch[ncpts-1] += 1;
+//              caps_left -= 1;
+//              reserved4distend += 1;
+//          }
+//        }
+//        if (caps_left > 0)
+//        {
+//          if (computeOrder ==  0)
+//          {
+//              cptsizes_in_branch[0] += 1;
+//              caps_left -= 1;
+//              reserved4proxend += 1;
+//          }
+//        }
+//        count = 0;
+//      }
+//    }while (caps_left>0);
+//
+//    //SPECIAL treatment
+//    if (branch->_parent)
+//    {
+//        Capsule& pcaps = branch->_parent->_capsules[0];
+//        if (_segmentDescriptor.getBranchType(pcaps.getKey()) ==
+//                Branch::_SOMA)  // the parent branch is soma
+//        {//ignore the first capsule
+//            reserved4proxend = (reserved4proxend >= 1.0) ? reserved4proxend : 1.0;
+//        }
+//    }
+//    branch->_numCapsulesEachSideForBranchPoint = std::make_pair(reserved4proxend, reserved4distend);
+//  }
+//
+//  branch->_cptSizesForBranch = cptsizes_in_branch;
+//  branch->_configuredCompartment = true;
+//  assert(cptsizes_in_branch.size() > 0);
+//  //making sure no distal-end reserve for terminal branch
+//  if (branch->_daughters.size() == 0)
+//  {
+//    branch->_numCapsulesEachSideForBranchPoint.second = 0.0;
+//  }
+//
+//  //just for checking
+//  int  sumEle = std::accumulate(cptsizes_in_branch.begin(), cptsizes_in_branch.end(), 0);
+//  if (sumEle != ncaps)
+//  {
+//    std::cout << "numEle =" << sumEle << "; ncaps = " << ncaps << std::endl;
+//    std::vector<int>::iterator iter=cptsizes_in_branch.begin(), iterend=cptsizes_in_branch.end();
+//    for (iter; iter < iterend; iter++)
+//    {
+//        std::cout << (*iter) << " " ;
+//    }
+//    std::cout << std::endl;
+//      
+//  }
+//  assert (sumEle == ncaps);
+//
+//  rval = ncpts;
+//  return rval;
+//}
+
 
 #endif

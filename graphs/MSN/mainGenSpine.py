@@ -12,6 +12,7 @@ spines = SomeClass(targetDir +"/neuron.swc")
 #spines.genSpine_MSN_branchorder_based()
 #spines.genSpine_at_branchpoint()
 spines.genSpine_MSN_distance_based()
+#spines.genSpine_PyramidalL5()  #better
 
 #spines.rotateSpines()
 #spines.saveSpines()  # default:spines.txt
