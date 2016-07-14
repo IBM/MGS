@@ -771,7 +771,7 @@ VariableType CaCurrentDisplay{ initialize->initialize4 };
 VariableType ConductanceDisplay{ initialize->initialize4 };
 
 VariableType ReversalPotentialDisplay{ initialize->initialize4 };
-#include "recording_model_Tuan2016.gsl"
+#include "recording_model.gsl"
 
 //}}}
 
@@ -1017,8 +1017,8 @@ Grid MSN_D1Neuron{
 	/*}}}*/
       // 3.2. CHEMICAL SYNAPSE RECEPTORS
       /*{{{*/
-	Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
-	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDA]" >), < nodekind="ChemicalSynapses[NMDA]" >, tissueGM);
+	Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
+	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDA]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
 	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
       /*}}}*/
       // 3.3. SpineAttachment
