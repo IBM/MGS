@@ -170,7 +170,7 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
     dyn_var_t bh = BHC / (1.0 + exp(-(v - BHV) / BHD));
-    // see Rempe-Chomp (2006)
+    // see Rempe-Chopp (2006)
     dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;

@@ -50,6 +50,15 @@
 #define KCa_half  0.71  // [uM]
 #define Hill_coef  3.9  // 3.9+/-0.45 suggest 4 Ca2+ binding sites involved
 #define TAU 1.0
+
+#elif CHANNEL_SK == SK_TRAUB_1994
+// SK equation used in many Traub papers:
+//   alpha = min(0.2x10^-4 x [Ca]i, 0.01)
+//   beta = 0.001
+//   chi means [Ca]i
+#define alphamax 0.01
+#define chiscaling 0.00002
+#define beta 0.001
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -150,6 +159,15 @@ void ChannelSK::update(RNG& rng)
     //g[i] = gbar[i]*m[i];
     fO[i] = (2 * minf * qm - fO[i] * (qm-1)) / (qm + 1);
     g[i] = gbar[i]*fO[i];
+
+#elif CHANNEL_SK == SK_TRAUB_1994
+    // a is alpha
+    dyn_var_t aq = ((chiscaling*cai)>alphamax)?alphamax:(chiscaling*cai);
+    dyn_var_t bq = beta;
+    // Rempe & Chopp (2006)
+    dyn_var_t pq = 0.5*dt*(aq+bq);
+    fO[i] = (dt*aq + fO[i]*(1.0-pq))/(1.0+pq);
+    g[i] = gbar[i]*fO[i];
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -199,6 +217,12 @@ void ChannelSK::initialize(RNG& rng)
     //m[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));
     //g[i] = gbar[i]*m[i];
     fO[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));
+    g[i] = gbar[i]*fO[i];
+#elif CHANNEL_SK == SK_TRAUB_1994
+    // a is alpha
+    dyn_var_t aq = ((chiscaling*cai)>alphamax)?alphamax:(chiscaling*cai);
+    dyn_var_t bq = beta;
+    fO[i] = aq/(aq+bq);
     g[i] = gbar[i]*fO[i];
 #endif
   }
