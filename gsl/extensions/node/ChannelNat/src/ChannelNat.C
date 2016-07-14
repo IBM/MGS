@@ -41,6 +41,22 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHC 1.0
 #define BHV -35.0
 #define BHD 10.0
+#elif CHANNEL_NAT == NAT_TRAUB_1994
+//Developed for Gamagenesis in interneurons
+//All above conventions for a_m, a_h, b_h remain the same as above except b_m below
+//b_m = (BMC * (V - BMV))/(exp((V-BMV)/BMD)-1)
+#define AMC -0.32
+#define AMV 13.1
+#define AMD -4.0
+#define BMC 0.28
+#define BMV 40.1
+#define BMD 5.0
+#define AHC 0.128
+#define AHV -17.0
+#define AHD -18.0
+#define BHC 4.0
+#define BHV -40.0
+#define BHD -5.0
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 // Developed for IO cell (inferior olive)
 //     adapted from Rush-Rinzel (1994) thalamic neuron
@@ -175,6 +191,18 @@ void ChannelNat::update(RNG& rng)
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
+#elif CHANNEL_NAT == NAT_TRAUB_1994
+    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
+    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
+    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    // Traub Models do not have temperature dependence and hence Tadj is not used
+    dyn_var_t pm = 0.5 * dt * (am + bm) ;
+    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
+    dyn_var_t ph = 0.5 * dt * (ah + bh) ;
+    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+
+
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
@@ -234,7 +262,13 @@ void ChannelNat::update(RNG& rng)
     {
       h[i] = 1.0;
     }
+   
+#if CHANNEL_NAT == NAT_TRAUB_1994
+    g[i] = gbar[i] * m[i] *  m[i] * h[i];
+#else 
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
+#endif
+
 #ifdef WAIT_FOR_REST
 		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
 		if (currentTime < NOGATING_TIME)
@@ -341,6 +375,13 @@ void ChannelNat::initialize(RNG& rng)
     dyn_var_t bh = BHC / (1.0 + exp(-(v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
+#elif CHANNEL_NAT == NAT_TRAUB_1994    
+    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
+    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
+    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    m[i] = am / (am + bm);  // steady-state value
+    h[i] = ah / (ah + bh);
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
@@ -363,7 +404,12 @@ void ChannelNat::initialize(RNG& rng)
 #else
 	assert(0);
 #endif
+
+#if CHANNEL_NAT == NAT_TRAUB_1994
+    g[i] = gbar[i] * m[i] *  m[i] * h[i];
+#else 
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
+#endif
   }
 }
 

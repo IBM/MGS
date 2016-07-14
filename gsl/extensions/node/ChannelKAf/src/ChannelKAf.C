@@ -31,6 +31,22 @@ const dyn_var_t ChannelKAf::_Vmrange_taum[] = {-40, -30, -20, -10, 0, 10,
 dyn_var_t ChannelKAf::taumKAf[] = {1.8, 1.1, 1.0, 1.0, 0.9, 0.8,
                                    0.9, 0.9, 0.9, 0.8, 0.8};
 std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
+//The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
+#elif CHANNEL_KAf == KAf_TRAUB_1994
+#define AMC -0.02
+#define AMV 13.1
+#define AMD -10.0
+#define BMC 0.0175
+#define BMV 40.1
+#define BMD 10.0
+#define AHC 0.0016
+#define AHV -13.0
+#define AHD -18
+#define BHC 0.05
+#define BHV 60.1
+#define BHD -5.0
+
+
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -60,6 +76,21 @@ void ChannelKAf::update(RNG& rng)
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+
+#elif CHANNEL_KAf == KAf_TRAUB_1994
+    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
+    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
+    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    // Traub Models do not have temperature dependence and hence Tadj is not used
+    dyn_var_t pm = 0.5 * dt * (am + bm) ;
+    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
+    dyn_var_t ph = 0.5 * dt * (ah + bh) ;
+    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+
+
+
+
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -75,7 +106,12 @@ void ChannelKAf::update(RNG& rng)
     {
       h[i] = 1.0;
     }
-    g[i] = gbar[i] * m[i] * m[i] * h[i];
+    
+#if CHANNEL_KAf == KAf_TRAUB_1994
+     g[i] = gbar[i] * m[i] * h[i];
+#else
+     g[i] = gbar[i] * m[i] * m[i] * h[i];
+#endif
   }
 }
 
@@ -146,13 +182,26 @@ void ChannelKAf::initialize(RNG& rng)
 #if CHANNEL_KAf == KAf_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+
+#elif CHANNEL_KAf == KAf_TRAUB_1994    
+    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
+    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
+    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    m[i] = am / (am + bm);  // steady-state value
+    h[i] = ah / (ah + bh);
 #else
     NOT IMPLEMENTED YET;
 // m[i] = am / (am + bm);  // steady-state value
 // h[i] = ah / (ah + bh);
 #endif
+
+#if CHANNEL_KAf == KAf_TRAUB_1994
+    g[i] = gbar[i] * m[i] * h[i];
+#else
     g[i] = gbar[i] * m[i] * m[i] * h[i];
-  }
+#endif 
+ }
 }
 
 void ChannelKAf::initialize_others()
