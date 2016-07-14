@@ -25,6 +25,9 @@
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 #define BASED_TEMPERATURE 23  // Celcius
 #define Q10 2.3
+#elif CHANNEL_NAT == NAT_TRAUB_1994
+#define BASED_TEMPERATURE 23  // Celcius
+#define Q10 3.0
 #endif
 
 #ifndef Q10 
