@@ -101,7 +101,7 @@ BranchDataProducer, IOCurrentArrayProducer {
 /*}}}*/
 }
 
-////NOTE: Model suppose to be specific for Nav1.6 gene-expressed Na+ channel
+//NOTE: Model suppose to be specific for Nav1.6 gene-expressed Na+ channel
 //Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
 //BranchDataProducer, IOCurrentArrayProducer {
 ///*{{{*/
@@ -195,6 +195,6 @@ BranchDataProducer, IOCurrentArrayProducer {
 //  }
 ///*}}}*/
 //}
-//
+
 
 #endif
