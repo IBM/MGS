@@ -10,6 +10,9 @@
 #if CHANNEL_KAf == KAf_WOLF_2005
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
+#elif CHANNEL_KAf == KAf_TRAUB_1994 // There is no temperature dependence
+#define BASED_TEMPERATURE 23.0  // Celcius
+#define Q10 3.0
 #endif
 
 #ifndef Q10 

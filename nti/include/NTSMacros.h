@@ -94,7 +94,13 @@
 #define NAT_HAY_2011            3
 #define NAT_SCHWEIGHOFER_1999   4
 #define NAT_COLBERT_PAN_2002    5
+#define NAT_TRAUB_1994          6
+
+//NAT_AIS Channel Channel_NAT_AIS macro
+#define NAT__AIS_TRAUB_1994     1     
+
 // Na-persistent CHANNE_NAP macro
+
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
 //}}}
@@ -102,6 +108,7 @@
 //{{{ K-models
 // KAf   CHANNEL_KAf macro
 #define KAf_WOLF_2005          2
+#define KAf_TRAUB_1994         3
 // KAs   CHANNEL_KAs macro
 #define KAs_WOLF_2005          2
 // KIR   CHANNEL_KIR macro
@@ -111,6 +118,9 @@
 // KDR   CHANNEL_KDR macro
 #define KDR_HODGKIN_HUXLEY_1952 1
 #define KDR_SCHWEIGHOFER_1999   4
+#define KDR_TRAUB_1994          5
+// KDR_AIS  CHANNEL_KDR_AIS macro
+#define KDR_AIS_TRAUB_1994  1
 
 // BK-alpha
 // BK-alphabeta   CHANNEL_BKalphabeta macro
@@ -118,12 +128,16 @@
 //        just being used in different papers
 #define BKalphabeta_SHAO_1999       2       
 #define BKalphabeta_WOLF_2005       2       
+// BK
+// BK_ CHANNEL_BK macro
+#define BK_TRAUB_1994 1
 
 // SK       CHANNEL_SK macro
 #define SK_MOCZYDLOWSKI_1993 2
 #define SK_WOLF_2005    2
 #define SK2_KOHLER_ADELMAN_1996_RAT 3
 #define SK1_KOHLER_ADELMAN_1996_HUMAN 4
+#define SK_TRAUB_1994 5
 //}}}
 
 //{{{ HCN-models
@@ -236,6 +250,7 @@
 #define _PYRAMIDAL_2011_HAY  4
 #define _INFERIOR_OLIVE_1999_SCHWEIGHOER 5
 #define _PYRAMIDAL_L5b_2016_TUAN_JAMES 6
+#define _INTERNEURON_TRAUB_1995 7
 //}}}
 // define 
 
@@ -246,8 +261,9 @@
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 //#define MODEL_TO_USE _MSN_2005_WOLF
 //#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
-#define MODEL_TO_USE _PYRAMIDAL_L5b_2016_TUAN_JAMES
+//#define MODEL_TO_USE _PYRAMIDAL_L5b_2016_TUAN_JAMES
 //#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
+#define MODEL_TO_USE _INTERNEURON_TRAUB_1995
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
@@ -284,6 +300,37 @@
   #define CHANNEL_CaT CaT_GHK_WOLF_2005
   #define RECEPTOR_AMPA AMPAR_POINTPROCESS
   #define RECEPTOR_NMDA NMDAR_POINTPROCESS
+//}}}
+#elif MODEL_TO_USE == _INTERNEURON_TRAUB_1995
+  #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+  #define SIMULATION_INVOLVE VM_CACYTO
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
+  #define CHANNEL_NAT NAT_TRAUB_1994
+  #define CHANNEL_NAT_AIS NAT_AIS_TRAUB_1994
+  #define CHANNEL_KDR KDR_TRAUB_1994
+  #define CHANNEL_KDR_AIS KDR_AIS_TRAUB_1994
+  #define CHANNEL_KAf KAf_TRAUB_1994
+  #define CHANNEL_KAs KAs_WOLF_2005
+  #define CHANNEL_KIR KIR_WOLF_2005
+  #define CHANNEL_KRP KRP_WOLF_2005
+  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_BK BK_TRAUB_1994
+  #define CHANNEL_SK SK_TRAUB_1994
+  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  #define CHANNEL_CaN CaN_GHK_WOLF_2005
+  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  #define CHANNEL_CaR CaR_GHK_WOLF_2005
+  #define CHANNEL_CaT CaT_GHK_WOLF_2005
+  #define RECEPTOR_AMPA AMPAR_POINTPROCESS
+  #define RECEPTOR_NMDA NMDAR_POINTPROCESS
+  #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  #define CHANNEL_RYR RYR_WILLIAMS_JAFRI_2011
+  #define CHANNEL_IP3R  IP3R_ULLAH_MAK_PEARSON_2012
+  #define EXCHANGER_NCX  NCX_Weber_Bers_2001
+  #define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
+  #define PUMP_SERCA  SERCA_Tran_Crampin_2009
 //}}}
 
 #elif MODEL_TO_USE == _MSN_2016_TUAN_JAMES
@@ -433,6 +480,9 @@
 #ifndef CHANNEL_NAT
   #define CHANNEL_NAT _COMPONENT_UNDEFINED
 #endif
+#ifndef CHANNEL_NAT_AIS
+  #define CHANNEL_NAT_AIS _COMPONENT_UNDEFINED
+#endif
 #ifndef CHANNEL_NAP
 #define CHANNEL_NAP _COMPONENT_UNDEFINED
 #endif
@@ -448,6 +498,9 @@
 #ifndef CHANNEL_KRP
 #define CHANNEL_KRP _COMPONENT_UNDEFINED
 #endif
+#ifndef CHANNEL_BK
+#define CHANNEL_BK _COMPONENT_UNDEFINED
+#endif
 #ifndef CHANNEL_BKalpha
 #define CHANNEL_BKalpha _COMPONENT_UNDEFINED
 #endif
@@ -459,6 +512,9 @@
 #endif
 #ifndef CHANNEL_KDR
 #define CHANNEL_KDR _COMPONENT_UNDEFINED
+#endif
+#ifndef CHANNEL_KDR_AIS
+#define CHANNEL_KDR_AIS _COMPONENT_UNDEFINED
 #endif
 #ifndef CHANNEL_CaL
 #define CHANNEL_CaL _COMPONENT_UNDEFINED

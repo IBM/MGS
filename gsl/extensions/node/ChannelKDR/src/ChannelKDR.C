@@ -1,6 +1,5 @@
 // =================================================================
 // Licensed Materials - Property of IBM
-//
 // "Restricted Materials of IBM"
 //
 // BMC-YKT-08-23-2011-2
@@ -36,8 +35,13 @@
 #define BNC 2.5
 #define BNV 51.0
 #define BND 80.0
-#else
- NOT IMPLEMENTED YET
+#elif CHANNEL_KDR == KDR_TRAUB_1994
+#define ANC 0.016
+#define ANV 35.1
+#define AND 5
+#define BNC 0.25
+#define BNV 20
+#define BND 40
 #endif
 
 dyn_var_t ChannelKDR::vtrap(dyn_var_t x, dyn_var_t y) {
@@ -56,6 +60,14 @@ void ChannelKDR::update(RNG& rng)
     dyn_var_t pn = 0.5*dt*(an + bn) * getSharedMembers().Tadj;
     n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
+#elif CHANNEL_KDR == KDR_TRAUB_1994
+    dyn_var_t v=(*V)[i];
+    dyn_var_t an = ANC*vtrap((ANV - v), AND);
+    dyn_var_t bn = BNC*exp((BNV - v)/BND);
+		// see Rempe-Chomp (2006)
+    dyn_var_t pn = 0.5*dt*(an + bn);
+    n[i] = (dt*an + n[i]*(1.0 - pn))/(1.0 + pn);
+    g[i] = gbar[i]*n[i]*n[i];
 #else
 		NOT IMPLEMENTED YET
 #endif
@@ -78,6 +90,12 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t bn = BNC*exp(-(v + BNV)/BND);
     n[i] = an/(an + bn); // steady-state value
     g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];
+#elif CHANNEL_KDR == KDR_TRAUB_1994
+    dyn_var_t an = ANC*vtrap((ANV-v), AND);
+    dyn_var_t bn = BNC*exp((BNV - v)/BND);
+    n[i] = an/(an + bn); // steady-state value
+    g[i]=gbar[i]*n[i]*n[i];
+    g[i] = gbar[i]*n[i]*n[i];
 #endif
   }
 }
