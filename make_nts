@@ -50,10 +50,6 @@ if [ "$1" == "--help" ] || [ $# == 0 ]; then
 fi
 #}}}
 
-if [ "$NTSROOT" == "" ]; then
-  echo "Please run: source setenv_nts"
-  exit
-fi
 
 ##########################################
 ## Detect what need to be built
@@ -221,6 +217,14 @@ if which python | grep -q1 /\python; then
 fi
 #}}}
 
+if [ "$NTSROOT" == "" ]; then
+  echo "Please run: source setenv_nts"
+  exit
+fi
+if [ ! -f ".built" ] && [ "$REBUILD" != "-rebuild" ]; then
+  echo "First build. Please run with --rebuild"
+  exit
+fi
 ################################################
 ### MDL code ###
 #{{{
@@ -333,7 +337,7 @@ fi
 ### GSL code ###
 #{{{
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-#  if [ "$REBUILD" == "-rebuild" ] ;then
+  if [ "$REBUILD" == "-rebuild" ] ;then
 #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
 #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then 
     cd $LENSROOT/extensions/variable
@@ -344,9 +348,9 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     ./define functors.mdf
     cd $NTSROOT/models
     ./define compartmental.mdf
-  if [ "$REBUILD" == "-rebuild" ] ;then
     cp Extensions.mk $LENSROOT/
     cd $NTSROOT
+    touch .built
   fi
 
   cd $LENSROOT

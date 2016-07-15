@@ -22,6 +22,7 @@ gsl/*/module.mk
 gsl/*/*/*/module.mk
 gsl/*/*/*.mk
 lex.yy.C
+lex.yy.cc
 speclang.tab.C
 speclang.tab.h
 mdl.output
@@ -54,3 +55,4 @@ graphs/**/out*/**
 graphs/**/*backup*/**
 graphs/**/*ongoing*/**
 graphs/**/*test*/**
+.built
