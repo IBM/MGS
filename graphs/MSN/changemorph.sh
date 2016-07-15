@@ -15,6 +15,8 @@ clean_all() {
   rm_if_link model.gsl
 }
 
+ModelFolder=systems
+
 if [ "$#" == "0" ]; then
   echo "$0 <morph_suffix> [author_suffix] "
   echo "    <prefix> is the prefix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
@@ -32,7 +34,7 @@ else
 
   if [ "$#" == "2" ]; then
     ln -s neurons_$1/params_$2 params
-    ln -s model_$2.gsl model.gsl
+    ln -s $ModelFolder/model_$2.gsl model.gsl
   else
     #paramFold = ($(find -maxdepth 1 -type d -name 'params_*'))
     paramFold=($(find neurons_$1 -maxdepth 1 -type d -name 'params_*'))
@@ -57,7 +59,7 @@ else
     done
     ln -s $arg2 params
     authorName=`echo $arg2 | cut -d'_' -f 3`
-    ln -s model_$authorName.gsl model.gsl
+    ln -s $ModelFolder/model_$authorName.gsl model.gsl
   fi
   ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
   ln -s neurons/recording_model_$1.gsl recording_model.gsl
