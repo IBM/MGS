@@ -21,9 +21,9 @@
 #include "MaxComputeOrder.h"
 #define SMALL 1.0E-6
 
-#define IMV 40.0
+#define IMV -40.0
 #define IMD -6.0
-#define IHV 90.0
+#define IHV -90.0
 #define IHD 6.4
 #define TMC 5.0
 #define TMF 20.0
@@ -34,6 +34,9 @@
 #define THV 50.0
 #define THD 7.0
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
+//#define T_ADJ 4.17 // 3.0^((34-21)/10)
+
+#define Vhalf_shift 7.0  // [mV]
 
 dyn_var_t ChannelHayCaLVA::vtrap(dyn_var_t x, dyn_var_t y) {
   return(fabs(x/y) < SMALL ? y*(x/y/2 - 1) : x/(1 - exp(x/y)));
@@ -45,9 +48,9 @@ void ChannelHayCaLVA::update(RNG& rng)
   for (unsigned i=0; i<branchData->size; ++i) {
     E_Ca[i]=(0.04343 * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     dyn_var_t v=(*V)[i];
-    dyn_var_t minf = 1.0/(1.0 + exp((v + IMV)/IMD));
+    dyn_var_t minf = 1.0/(1.0 + exp((v - IMV - Vhalf_shift)/IMD));
     dyn_var_t taum = (TMC + TMF/(1+exp((v + TMV)/TMD)))/T_ADJ;
-    dyn_var_t hinf = 1.0/(1.0 + exp((v + IHV)/IHD));
+    dyn_var_t hinf = 1.0/(1.0 + exp((v - IHV - Vhalf_shift)/IHD));
     dyn_var_t tauh = (THC + THF/(1+exp((v + THV)/THD)))/T_ADJ;
     dyn_var_t pm = 0.5*dt/taum;
     dyn_var_t ph = 0.5*dt/tauh;
@@ -55,6 +58,11 @@ void ChannelHayCaLVA::update(RNG& rng)
     h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     g[i] = gbar[i]*m[i]*m[i]*h[i];
     I_Ca[i] = g[i] * (v-E_Ca[i]);
+#ifdef WAIT_FOR_REST
+		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+		if (currentTime < NOGATING_TIME)
+			I_Ca[i] = 0.0;
+#endif
   }
 }
 
@@ -99,9 +107,9 @@ void ChannelHayCaLVA::initialize(RNG& rng)
   }
   for (unsigned i=0; i<size; ++i) {
     dyn_var_t v=(*V)[i];
-    //m[i] = 1.0/(1.0 + exp(-(v + IMV)/IMD));
+    //m[i] = 1.0/(1.0 + exp(-(v - IMV)/IMD));
 	m[i] = 0.0;
-    //h[i] = 1.0/(1.0 + exp( (v + IHV)/IHD));
+    //h[i] = 1.0/(1.0 + exp( (v - IHV)/IHD));
 	h[i] =  0.0;
     g[i] = gbar[i]*m[i]*m[i]*h[i];
   }

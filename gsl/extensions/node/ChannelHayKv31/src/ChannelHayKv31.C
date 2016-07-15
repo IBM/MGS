@@ -18,6 +18,7 @@
 #include "CG_ChannelHayKv31.h"
 #include "rndm.h"
 
+#include "MaxComputeOrder.h"
 #define SMALL 1.0E-6
 
 #define IMV -18.7
@@ -47,6 +48,11 @@ void ChannelHayKv31::update(RNG& rng)
       m[i] = 1.0;
     }
     g[i] = gbar[i]*m[i];
+#ifdef WAIT_FOR_REST
+		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+		if (currentTime < NOGATING_TIME)
+			g[i]= 0.0;
+#endif
   }
 }
 

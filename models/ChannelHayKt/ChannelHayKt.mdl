@@ -14,6 +14,14 @@ Node ChannelHayKt Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   dyn_var_t []* V;
 	
   BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_values;// ... having the corresponding gbar conductance
 
   Shared {
     dyn_var_t* K_IC;
@@ -36,9 +44,10 @@ Node ChannelHayKt Implements ConductanceArrayProducer, ReversalPotentialArrayPro
     int idx;
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
     VoltageArrayProducer.voltageArray >> V;
     BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
   }
 
   Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects KConcentrationProducer {

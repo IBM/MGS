@@ -18,7 +18,7 @@
 #include "CG_ChannelHayNap.h"
 #include "rndm.h"
 
-#include "../../nti/include/MaxComputeOrder.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 
@@ -71,6 +71,11 @@ void ChannelHayNap::update(RNG& rng)
     dyn_var_t ph = 0.5*dt*(ah + bh)*T_ADJ; 
     h[i] = (2*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     g[i] = gbar[i]*m[i]*m[i]*m[i]*h[i];
+#ifdef WAIT_FOR_REST
+		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+		if (currentTime < NOGATING_TIME)
+			g[i]= 0.0;
+#endif
   }
 }
 

@@ -567,7 +567,7 @@ def parse():
   parser_folder.set_defaults(which='folder')
 
   parser_protocol = subparsers.add_parser('protocol')
-  parser_protocol.add_argument("number", default=-1, help="index of simulation protocol")
+  parser_protocol.add_argument("number", default=-1, help="index of simulation protocol (0 = rest; 1 = inject soma; 2= inject shaft with dual-exp EPSP-like current; 3 = inject a particular presynaptic neuron; 4 = like 3, but at a distal region; 5 = trigger soma then at distal end (within a small window of time); 6 = trigger soma, then another spine (within a window of time))")
   parser_protocol.add_argument("date", default="May29", help="date of data, e.g. May30")
   #parser_protocol.set_defaults(func=plot_case9a)
   parser_protocol.set_defaults(which='protocol')

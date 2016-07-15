@@ -7,7 +7,6 @@ m.txt
 mc.txt
 *.pyc
 *~
-*.swc
 *.swo
 bin
 *.swp
@@ -50,7 +49,6 @@ gsl/extensions/struct/*
 graphs/**/runs/**
 graphs/**/L5bPCmodelsEH/**
 graphs/**/*.out
-graphs/**/*.par
 graphs/**/out*/**
 graphs/**/*backup*/**
 graphs/**/*ongoing*/**

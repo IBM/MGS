@@ -3734,17 +3734,22 @@ class SomeClass(object):
                                 "{0:.3f}".format(dy*(point)),
                                 "{0:.3f}".format(dz*(point)),
                                 '5.0', '-1'])+"\n")
-        point = (offset+axonLen)
+        #point = (offset+axonLen)
+        #swcFile.write(' '.join(['2', '2',
+        #                        "{0:.3f}".format(dx*(point)),
+        #                        "{0:.3f}".format(dy*(point)),
+        #                        "{0:.3f}".format(dz*(point)),
+        #                        '1.0', '1'])+"\n")
+        #swcFile.write(' '.join(['3', '2',
+        #                        "{0:.3f}".format(dx*offset),
+        #                        "{0:.3f}".format(dy*offset),
+        #                        "{0:.3f}".format(dz*offset),
+        #                        '1.0', '2'])+"\n")
         swcFile.write(' '.join(['2', '2',
-                                "{0:.3f}".format(dx*(point)),
-                                "{0:.3f}".format(dy*(point)),
-                                "{0:.3f}".format(dz*(point)),
-                                '1.0', '1'])+"\n")
-        swcFile.write(' '.join(['3', '2',
                                 "{0:.3f}".format(dx*offset),
                                 "{0:.3f}".format(dy*offset),
                                 "{0:.3f}".format(dz*offset),
-                                '1.0', '2'])+"\n")
+                                '1.0', '1'])+"\n")
         swcFile.close()
 
     def getSpineVector(self, dx, dy, dz, orientation):
@@ -3760,6 +3765,8 @@ class SomeClass(object):
         """
         read data from 'spines.txt'
         and save to 'neurons.txt' tissue file
+
+        It uses the number to name files
         """
 
         split_lines = readLines('spines.txt')

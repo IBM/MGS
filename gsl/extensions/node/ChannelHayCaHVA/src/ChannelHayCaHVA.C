@@ -17,21 +17,29 @@
 #include "ChannelHayCaHVA.h"
 #include "CG_ChannelHayCaHVA.h"
 #include "rndm.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 
 #define AMC -0.055
-#define AMV 27
+#define AMV -27
 #define AMD -3.8
 #define BMC 0.94
-#define BMV 75
+#define BMV -75
 #define BMD -17
 #define AHC 0.000457
-#define AHV 13
+#define AHV -13
 #define AHD -50
 #define BHC 0.0065
-#define BHV 15
+#define BHV -15
 #define BHD -28
+
+//#define T_ADJ 2.9529 // 2.3^((34-21)/10)
+//#define T_ADJ 4.17 // 3.0^((34-21)/10)
+#define T_ADJ 1.0 
+
+//#define Vhalf_shift 5.0 // [mV]
+#define Vhalf_shift 0.0 // [mV]
 
 float ChannelHayCaHVA::vtrap(float x, float y) {
   return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
@@ -39,20 +47,25 @@ float ChannelHayCaHVA::vtrap(float x, float y) {
 
 void ChannelHayCaHVA::update(RNG& rng)
 {
-  float dt = *(getSharedMembers().deltaT);
+  float dt = *(getSharedMembers().deltaT) * T_ADJ;
   for (unsigned i=0; i<branchData->size; ++i) {
     E_Ca[i]=(0.04343 * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     float v=(*V)[i];
-    float am = AMC*vtrap(v + AMV, AMD);
-    float bm = BMC*exp((v + BMV)/BMD);
+    float am = AMC*vtrap(v - AMV - Vhalf_shift , AMD);
+    float bm = BMC*exp((v - BMV - Vhalf_shift)/BMD);
     float pm = 0.5*dt*(am + bm);
     m[i] = (dt*am + m[i]*(1.0 - pm))/(1.0 + pm);
-    float ah = AHC*exp((v + AHV)/AHD);
-    float bh = BHC/(1.0 + exp((v + BHV)/BHD));
+    float ah = AHC*exp((v - AHV - Vhalf_shift)/AHD);
+    float bh = BHC/(1.0 + exp((v - BHV - Vhalf_shift)/BHD));
     float ph = 0.5*dt*(ah + bh);
     h[i] = (dt*ah + h[i]*(1.0 - ph))/(1.0 + ph);    
     g[i]=gbar[i]*m[i]*m[i]*h[i];
     I_Ca[i] = g[i] * (v-E_Ca[i]);
+#ifdef WAIT_FOR_REST
+		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+		if (currentTime < NOGATING_TIME)
+			I_Ca[i] = 0.0;
+#endif
   }
 }
 
@@ -93,11 +106,11 @@ void ChannelHayCaHVA::initialize(RNG& rng)
   }
   for (unsigned i=0; i<size; ++i) {
     float v=(*V)[i];
-    float am = AMC*vtrap(v + AMV, AMD);
-    float bm = BMC*exp((v + BMV)/BMD);
+    float am = AMC*vtrap(v - AMV - Vhalf_shift, AMD);
+    float bm = BMC*exp((v - BMV - Vhalf_shift)/BMD);
     m[i] = am/(am + bm);
-    float ah = AHC*exp(-(v + AHV)/AHD);
-    float bh = BHC/(1.0 + exp(-(v + BHV)/BHD));
+    float ah = AHC*exp(-(v - AHV - Vhalf_shift)/AHD);
+    float bh = BHC/(1.0 + exp(-(v - BHV - Vhalf_shift)/BHD));
     h[i] = ah/(ah + bh);
     g[i] = gbar[i]*m[i]*m[i]*h[i];
   }
