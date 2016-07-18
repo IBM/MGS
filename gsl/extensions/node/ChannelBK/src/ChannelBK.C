@@ -36,18 +36,20 @@ void ChannelBK::update(RNG& rng)
 #endif
 
 #if CHANNEL_BK == BK_TRAUB_1994
+        dyn_var_t alpha;
         if ( v <= 50 ) {
-            dyn_var_t alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
+            alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
         } else if ( v > 50) {
-            dyn_var_t alpha = 2*exp(-((v-6.5)/27));
+            alpha = 2*exp(-((v-6.5)/27));
         }
-        dyn_var_t beta = 2*exp(-((V-6.5)/27))-alpha;
+        dyn_var_t beta = 2*exp(-((v-6.5)/27))-alpha;
         // Rempe * Chopp (2006)
         dyn_var_t pc = 0.5*dt*(alpha+beta);
         fO[i] = (dt*alpha + fO[i]*(1.0-pc))/(1.0+pc);
         dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
         g[i] = gbar[i]*fO[i]*CaGate;
     }
+#endif
 }
 
 void ChannelBK::initialize(RNG& rng) 
@@ -56,16 +58,23 @@ void ChannelBK::initialize(RNG& rng)
     assert(V);
     assert(gbar.size()==size);
     assert (V->size()==size);
-    if (fO.size()!=size fO.increaseSizeTo(size);
+    if (fO.size()!=size) fO.increaseSizeTo(size);
     for (unsigned i = 0; i < size; ++i) {
+#if SIMULATION_INVOLVE == VMONLY
+        dyn_var_t Cai_base = 0.1e-6 // [uM]
+        dyn_var_t cai = Cai_base;            
+#else
+        dyn_var_t cai = (*Cai)[i]; // [uM]
+#endif
         gbar[i]=gbar[0];
+        dyn_var_t alpha ;
         dyn_var_t v=(*V)[i];
         if ( v <= 50 ) {
-            dyn_var_t alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
+            alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
         } else if ( v > 50) {
-            dyn_var_t alpha = 2*exp(-((v-6.5)/27));
+            alpha = 2*exp(-((v-6.5)/27));
         }
-        dyn_var_t beta = 2*exp(-((V-6.5)/27))-alpha;
+        dyn_var_t beta = 2*exp(-((v-6.5)/27))-alpha;
         fO[i] = alpha/(alpha+beta); // steady-state value
         dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
         g[i] = gbar[i]*fO[i]*CaGate;
