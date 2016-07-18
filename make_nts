@@ -225,6 +225,14 @@ if [ ! -f ".built" ] && [ "$REBUILD" != "-rebuild" ]; then
   echo "First build. Please run with --rebuild"
   exit
 fi
+
+if [  -f ".built"  ]; then
+  line=$(head -n 1 ".built")
+  if  [ "$NTSROOT" != "$line" ]; then
+    echo "Please run: source setenv_nts"
+    exit
+  fi
+fi
 ################################################
 ### MDL code ###
 #{{{
@@ -350,7 +358,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     ./define compartmental.mdf
     cp Extensions.mk $LENSROOT/
     cd $NTSROOT
-    touch .built
+    touch .built && echo $NTSROOT > .built
   fi
 
   cd $LENSROOT
@@ -360,6 +368,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     rm $NTSROOT/models/Extensions.mk
     find . -iname "CG_*" | xargs -I{} rm {}
     find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
+    rm $NTSROOT/.built
   elif [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
     ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE
   else # -s or -singlethread
