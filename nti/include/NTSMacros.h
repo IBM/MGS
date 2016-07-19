@@ -260,10 +260,10 @@
 // USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 //#define MODEL_TO_USE _MSN_2005_WOLF
-//#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
+#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
 //#define MODEL_TO_USE _PYRAMIDAL_L5b_2016_TUAN_JAMES
 //#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
-#define MODEL_TO_USE _INTERNEURON_TRAUB_1995
+//#define MODEL_TO_USE _INTERNEURON_TRAUB_1995
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
@@ -379,7 +379,7 @@
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 //{{{
   #define CHANNEL_NAT NAT_HAY_2011
-  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_NAP NAP_MAGISTRETTI_1999
   #define CHANNEL_HCN HCN_HAY_2011
   #define CHANNEL_KAf KAf_WOLF_2005
   #define CHANNEL_KAs KAs_WOLF_2005
