@@ -195,7 +195,13 @@ TISSUE_LIB = ../gsl/lib/liblensdomain.a
 #TISSUE_LIB = ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 
-target: $(TARGETS)
+create_file: 
+	@if [ ! -f ./include/Model2Use.h ]; then \
+		touch include/Model2Use.h; \
+		echo "//#define MODEL_TO_USE <value>" > include/Model2Use.h; \
+	fi 
+
+target: $(TARGETS) | create_file
 
 depend: ; makedepend $(ND_SOURCES)
 

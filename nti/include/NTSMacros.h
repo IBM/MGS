@@ -300,11 +300,8 @@
 ///////////////////////////////////////////////////////////////////////
 // USER-SELECTED SECTION 
 // 1. to choose a model: select the proper value for MODEL_TO_USE
-//#define MODEL_TO_USE _MSN_2005_WOLF
-//#define MODEL_TO_USE _PYRAMIDAL_2011_HAY
-//#define MODEL_TO_USE _PYRAMIDAL_L5b_2016_TUAN_JAMES
-//#define MODEL_TO_USE _MSN_2016_TUAN_JAMES
-#define MODEL_TO_USE _INTERNEURON_TRAUB_1995
+// Please don't do it here, edit inside this file
+#include "Model2Use.h"
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
