@@ -1,367 +1,171 @@
 # MTYPE = 0 (neuron), = 1 (GABA axonal terminal), = 2 or 3 (thin or mush spine)
 #       = 4 or 5 (thin or mush axonal terminal)
 # BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
-CHANNEL_TARGETS 16
+CHANNEL_TARGETS 5
 BRANCHTYPE MTYPE
 #{{{
 #{{{ main neuron
 1 0 Nat [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage] \
-    PMCA [Voltage, Calcium] [Calcium] \
-    Cah [Voltage] [Voltage, Calcium]  Cal [Voltage] [Voltage, Calcium] \
-    SK [Calcium] [Voltage] 
-2 0 Nat [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] \
-    Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-#AIS
-5 0 Nat_AIS [Voltage] [Voltage] \ 
-    Cah [Voltage] [Voltage, Calcium] \ 
-    PMCA [Voltage, Calcium] [Calcium] \
-    MK [Voltage] [Voltage] \
+    KAf [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] \
+    Cah [Voltage] [Voltage, Calcium]  \
+    BK [Calcium] [Voltage] \
     SK [Calcium] [Voltage] \
-    Kt [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] Kv31 [Voltage] [Voltage]
+    PMCA [Voltage, Calcium] [Calcium] 
+2 0 Nat [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] 
+#AIS
+5 0 Nat_AIS [Voltage] [Voltage] \
+    KDR_AIS [Voltage] [Voltage] 
 #dendrite
 3 0 Nat [Voltage] [Voltage] \
-    MK [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] \
-    SK [Calcium] [Voltage] PMCA [Voltage, Calcium] [Calcium] \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] \
-    Kv31 [Voltage] [Voltage] 
-4 0 \ 
-# No Kt on apical den
-    Nat [Voltage] [Voltage] \
-    MK [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] \
-    SK [Calcium] [Voltage]  \
-    Kv31 [Voltage] [Voltage] \
-    PMCA [Voltage, Calcium] [Calcium] \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] 
-6 0 \
-    Nat [Voltage] [Voltage] \
-    MK [Voltage] [Voltage] \
+    KAf [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] \
+    Cah [Voltage] [Voltage, Calcium]  \
+    BK [Calcium] [Voltage] \
     SK [Calcium] [Voltage] \
-    PMCA [Voltage, Calcium] [Calcium] \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] \
-    Kv31 [Voltage] [Voltage] 
+    PMCA [Voltage, Calcium] [Calcium] 
+4 0 Nat [Voltage] [Voltage] \
+    KAf [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] \
+    Cah [Voltage] [Voltage, Calcium]  \
+    BK [Calcium] [Voltage] \
+    SK [Calcium] [Voltage] \
+    PMCA [Voltage, Calcium] [Calcium] 
 #}}}
 #{{{GABAergic bouton
-1 1 Nat [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-2 1 Nat [Voltage] [Voltage]  \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
 #}}} 
 #{{{  spines (spine-head need PMCA to counteract with NMDA)
-#no active process
-1 2 Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-#Nat [Voltage] [Voltage] \
-    PMCA [Voltage, Calcium] [Calcium] \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] \
-    Kv31 [Voltage] [Voltage]
-3 2 PMCA [Voltage, Calcium] [Calcium] \
-#Nat [Voltage] [Voltage] \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] \
-    Kv31 [Voltage] [Voltage]
-#1 2 Nat [Voltage] [Voltage] \
-#    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-#    MK [Voltage] [Voltage] \
-#   # SK [Calcium] [Voltage] \
-#    PMCA [Voltage, Calcium] [Calcium] \
-#    Kv31 [Voltage] [Voltage] 
-##    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
-#3 2 Nat [Voltage] [Voltage] \
-#    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-#    MK [Voltage] [Voltage] \
-##    SK [Calcium] [Voltage] 
-#    PMCA [Voltage, Calcium] [Calcium] \
-##    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
-#    Kv31 [Voltage] [Voltage] 
-1 3 PMCA [Voltage, Calcium] [Calcium] \
-#Nat [Voltage] [Voltage]  \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-3 3 PMCA [Voltage, Calcium] [Calcium] \
-#Nat [Voltage] [Voltage]  \
-    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium] \
-    Kv31 [Voltage] [Voltage]
-#1 3 Nat [Voltage] [Voltage] \
-#    MK [Voltage] [Voltage] \
-##    SK [Calcium] [Voltage] 
-#    PMCA [Voltage, Calcium] [Calcium] \
-#    Kv31 [Voltage] [Voltage] 
-##    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
-#3 3 Nat [Voltage] [Voltage] \
-#    MK [Voltage] [Voltage] \
-#    Kv31 [Voltage] [Voltage] 
-##    SK [Calcium] [Voltage]  PMCA [Voltage, Calcium] [Calcium] \
-##    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
 #}}}
 #{{{ Glutamatergic bouton
-1 4 Nat [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-2 4 Nat [Voltage] [Voltage]  \
-    Kv31 [Voltage] [Voltage]
-1 5 Nat [Voltage] [Voltage]  \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-2 5 Nat [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
 #}}}
 #}}}
 
-CHANNEL_COSTS 11
-#{{{
+CHANNEL_COSTS 9
+#{{{//wall-time execution after xxx iterations (maybe)
 Nat 0.414243
-Nap 0.414243
-HCN 0.254051
-MK 0.254051
-Kp 0.254051
-Kt 0.254051
-Kv31 0.254051
+Nat_AIS 0.414243
+KAf 0.254051
+KDR 0.254051
+KDR_AIS 0.254051
 Cah 0.254051
-Cal 0.254051
 PMCA 0.254051
+BK 0.254051
 SK 0.254051
 #}}}
 
-CHANNEL_PARAMS 8
+CHANNEL_PARAMS 9
 # gbar = [nS/um^2]
-Nat 11
+Nat 5
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
-1 0 <gbar={20.04}>
-2 0 <gbar={0.107}>
-#Nat increase 2x in AIS (at 23um from soma) and Vhalf_m shift -7mV
-# (done in code so no need to change here)
-5 0 <gbar={20.04}>
-#3 0 <gbar={0.113}>
-3 0 <gbar_dists={10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330}>
-#3 0 <gbar_values={0.2,0.194,0.188,0.182,0.176,0.17,0.164,0.158,0.152,0.146,0.14,0.134,0.128,0.122,0.116,0.11,0.104,0.098,0.092,0.086,0.08,0.074,0.068,0.062,0.056,0.05,0.044,0.038,0.032,0.026,0.02,0.014,0.008,0.002}>
-3 0 <gbar_values={0.6,0.582,0.564,0.546,0.528,0.51,0.492,0.474,0.456,0.438,0.42,0.402,0.384,0.366,0.348,0.33,0.312,0.294,0.276,0.258,0.24,0.222,0.204,0.186,0.168,0.15,0.132,0.114,0.096,0.078,0.06,0.042,0.024,0.006}>
-4 0 <gbar={0.133}>
-6 0 <gbar={0.133}>
+1 0 <gbar={1.0}>
+2 0 <gbar={5.0}>
+5 0 <gbar={5.0}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.05, 0.0, 0.0}}
 #}}}
 #{{{ GABA bouton
-1 1 <gbar={20.4}>
-2 1 <gbar={20.4}>
 #}}}
 #{{{ GLUT bouton
-1 4 <gbar={5.4}>
-1 5 <gbar={5.4}>
 #}}}
 #}}}
-MK 8
+Nat_AIS 1
 #{{{
-BRANCHTYPE MTYPE
-#MK (Kv7.2/3) colocalize with Nav in distal AIS; while Nav occur throughout AIS
-#{{{ neuron
-5 0 <gbar={0.00675}>
-3 0 <gbar={0.000675}>
-4 0 <gbar={0.000675}>
-6 0 <gbar={0.000675}>
-#}}}
-#{{{spine
-1 2 <gbar={0.000675}>
-3 2 <gbar={0.000675}>
-1 3 <gbar={0.000675}>
-3 3 <gbar={0.000675}>
-#}}}
-#}}}
-Kp 15
-#{{{ slow-inactivating
 BRANCHTYPE MTYPE
 #{{{ neuron
-# increase this to terminate AP
-1 0 <gbar={0.0223}>
-[2,5] 0 <gbar={0.0223}>
-### Schaefer-Korngreen (2007)
-[3,4] 0 <gbar_dists={10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330,340,350,360,370,380,390,400,410,420,430,440,450,460,470,480,490,500}>
-[3,4] 0 <gbar_values={0.1717,0.1612,0.1317,0.1089,0.0914,0.0780,0.0679,0.0603,0.0546,0.0501,0.0466,0.0436,0.0410,0.0386,0.0362,0.0338,0.0315,0.0291,0.0267,0.0243,0.0221,0.0210,0.0200,0.0190,0.0180,0.0170,0.0160,0.0150,0.0150,0.0150,0.0150,0.0150,0.0150,0.0150,0.0150,0.0150,0.0150,0.0140,0.0130,0.0120,0.0110,0.0100,0.0090,0.0090,0.0090,0.0090,0.0090,0.0085,0.0080,0.0080,0.0080}>
-# tufted: harnett et al. (2013)
-6 0 <gbar={0.023}>
-#3 0 <gbar={0.0223}>
-#}}}
-#{{{ GABA bouton
-1 1 <gbar={0.0223}>
-2 1 <gbar={0.0223}>
-#}}}
-#{{{ spine
-1 2 <gbar={0.0223}>
-3 2 <gbar={0.0223}>
-1 3 <gbar={0.0223}>
-3 3 <gbar={0.0223}>
-#}}}
-#{{{ GLUT bouton
-1 4 <gbar={0.0223}>
-2 4 <gbar={0.0223}>
-1 5 <gbar={0.0223}>
-2 5 <gbar={0.0223}>
+5 0 <gbar={5.0}>
 #}}}
 #}}}
-Kt 15
-#{{{
-## fast-inactivating  (A-type current)
-BRANCHTYPE MTYPE
-1 0 <gbar={0.812}>
-#NOTE: Colbert and Pan (2002) showed no A-type K+ current in axonal proper => change '2 0' to 'axonhillock 0'
-2 0 <gbar={0.312}>
-5 0 <gbar={0.812}>
-3 0 <gbar={0.312}>
-# tufted: harnett et al. (2013)
-6 0 <gbar={0.077}>
-#{{{GABA bouton
-1 1 <gbar={0.812}>
-2 1 <gbar={0.812}>
-#}}}
-#{{{spine
-1 2 <gbar={0.812}>
-3 2 <gbar={0.812}>
-1 3 <gbar={0.812}>
-3 3 <gbar={0.812}>
-#}}}
-#{{{Excit boutons
-1 4 <gbar={0.112}>
-2 4 <gbar={0.112}>
-1 5 <gbar={0.112}>
-2 5 <gbar={0.112}>
-#}}}
-#}}}
-Kv31 16
+KDR 5
 #{{{
 BRANCHTYPE MTYPE
-## NOTE:delayed-rectifier  Kv31 (slow non-inactivating) critical for generate continuous spike
-## Increase this help repolarizing faster,  without compromising the threshold for AP
 #{{{ neuron
-1 0 <gbar={6.930}>
-2 0 <gbar={6.930}>
-5 0 <gbar={6.930}>
-#TUAN 
-#1 0 <gbar={4.930}>
-#2 0 <gbar={3.930}>
-#5 0 <gbar={3.930}>
-3 0 <gbar={0.00161}>
-4 0 <gbar={0.00161}>
-6 0 <gbar={0.00161}>
-#}}}
-#{{{
-1 1 <gbar={6.930}>
-2 1 <gbar={6.930}>
-#}}}
-#{{{ spine
-1 2 <gbar={0.00261}>
-3 2 <gbar={0.00261}>
-1 3 <gbar={0.00261}>
-3 3 <gbar={0.00261}>
-#}}}
-#{{{GLUT bouton
-1 4 <gbar={4.930}>
-2 4 <gbar={4.930}>
-1 5 <gbar={4.930}>
-2 5 <gbar={4.930}>
+1 0 <gbar={1.350}>
+2 0 <gbar={2.5}>
+5 0 <gbar={2.5}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.15, 0.0, 0.0}}
 #}}}
 #}}}
-Cah 14
+KDR_AIS 1
 #{{{
 BRANCHTYPE MTYPE
-#{{{neuron
-1 0 <gbar={0.0992}>
-2 0 <gbar={0.0292}>
-## Check N-type or P/Q-type
-## some neuron depends more on N-type and others on P/Q-type
-5 0 <gbar={0.0292}>
-#NOTE: Cah is important to bring elevation: 
-#             0.0278-> 1.2 uM 
-#             0.0992 -> 17uM
-#3 0 <gbar={0.0108}>
-3 0 <gbar={0.0008}>
-#TUAN" try to have more Ca2+ influx"
-#4 0 <gbar={0.0378}>
-#6 0 <gbar={0.108}>
-4 0 <gbar={0.00291}>
-6 0 <gbar={0.00291}>
-#}}}
-#{{{ spine
-# NMDAR is the major source of Ca2+ at spine
-1 2 <gbar={0.0092}>
-3 2 <gbar={0.0092}>
-1 3 <gbar={0.0092}>
-3 3 <gbar={0.0092}>
-#}}}
-1 4 <gbar={0.0992}>
-2 4 <gbar={0.0292}>
-1 5 <gbar={0.0992}>
-2 5 <gbar={0.0292}>
-#}}}
-SK 13
-#{{{
-BRANCHTYPE MTYPE
-# gbar ~ [nS/um^2]
-# SK is important for terminating AP properly
-# which is also a function of Ca2+ level, i.e. influx via CaLVA/CaHVA
 #{{{ neuron
-1 0 <gbar={0.441}>
-## Yu, McCormick (2010) show that SK available in soma and AIS 
-5 0 <gbar={0.442}>
-3 0 <gbar={0.002}>
-# SK is important: small value help Ca2+ retain in apical dendrite 
-# 0.002 give second spike 
-# 0.012 is too much
-4 0 <gbar={0.006}>
-6 0 <gbar={0.006}>
-# TUAN original value
-#4 0 <gbar={0.012}>
-#6 0 <gbar={0.012}>
-#}}}
-#{{{spine
-1 2 <gbar={0.442}>
-3 2 <gbar={0.442}>
-1 3 <gbar={0.442}>
-3 3 <gbar={0.442}>
-#}}}
-#{{{bouton
-1 4 <gbar={0.443}>
-2 4 <gbar={0.443}>
-1 5 <gbar={0.443}>
-2 5 <gbar={0.443}>
+5 0 <gbar={2.5}>
 #}}}
 #}}}
+Cah 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.01}>
+2 0 <gbar={0.01}>
+5 0 <gbar={0.01}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.01, 0.01, 0.01}}
 #}}}
-PMCA 13
+#}}}
+KAf 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.005}>
+2 0 <gbar={0.005}>
+5 0 <gbar={0.005}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.005, 0.005, 0.00, 0.00, 0.00, 0.00}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.005, 0.005, 0.00}}
+#}}}
+#}}}
+SK 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.0001}>
+2 0 <gbar={0.0001}>
+5 0 <gbar={0.0001}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.0001, 0.0001, 0.0001}}
+#}}}
+#}}}
+BK 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.2}>
+2 0 <gbar={0.0}>
+5 0 <gbar={0.0}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.08, 0.08, 0.04, 0.04, 0.04, 0.04}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.08, 0.04, 0.04}}
+#}}}
+#}}}
+PMCA 3
 #{{{
 # tau ~ [ms]
 BRANCHTYPE MTYPE 
 ## NOTE: large value of tau is important in keeping Ca-neck high
 #{{{neuron
-1 0 <tau={1.9}>
-2 0 <tau={1.9}>
-5 0 <tau={1.9}>
-##TUAN: make Ca2+ depletion slower (from 0.9)
-3 0 <tau={1.9}>
-4 0 <tau={1.9}>
-6 0 <tau={1.9}>
-#3 0 <tau={0.23}>
-#4 0 <tau={0.23}>
-#6 0 <tau={0.23}>
+1 0 <tau={333}>
+3 0 <tau={20}>
+4 0 <tau={20}>
 #}}}
 #{{{GABA bouton
-1 1 <tau={0.23}>
-2 1 <tau={0.23}>
 #}}}
 #{{{ spine
-1 2 <tau={0.023}>
-3 2 <tau={0.90}>
-1 3 <tau={0.023}>
-3 3 <tau={0.90}>
 #}}}
 #{{{bouton
-1 4 <tau={0.93}>
-1 5 <tau={0.93}>
 #}}}
 #}}}

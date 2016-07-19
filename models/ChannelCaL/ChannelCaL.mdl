@@ -59,7 +59,7 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
 		InitPhase computeTadj; // [mV]
   }
 
-  InitPhase initializeCalChannels;
+  InitPhase initialize;
   RuntimePhase update;
 
   ConductanceArrayProducer.conductanceArray << &g;

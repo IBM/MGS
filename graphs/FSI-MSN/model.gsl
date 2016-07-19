@@ -125,7 +125,7 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
+#define Cacyto_beta 1// [Wagner and Keizer buffering constant]
 //#define Cacyto_beta   0.002     // dimensionless 
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
@@ -491,7 +491,7 @@ NodeType ChannelNat_AIS { computeE->initialize2, initialize->initialize3, update
 /*}}}*/
 //K+ currents
 /*{{{*/
-NodeType ChannelKDR { computeE->initialize2, initialize->initiailize3, update->solveChannels };
+NodeType ChannelKDR { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelKDR_AIS { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelKAf { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelBK { computeE->initialize2, initialize->initialize3, update->solveChannels };
@@ -502,7 +502,7 @@ NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->sol
 //NodeType ChannelHCN (< E_h = {Erev_HCN} >) { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //Ca2+ currents
 /*{{{*/
-NodeType ChannelCaHVA { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaHVA { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //NodeType ChannelHayCaLVA { initialize->initialize3, update->solveChannels };
 /*}}}*/
 //Non-specific leak (NOTE: not being used for now)
@@ -738,7 +738,7 @@ Struct TissueSite;
 
 //GRID DEFINITION
 //Pyramidal L5 neuron
-Grid PyramidalL5_Neuron{
+Grid InterNeuron{
 /*{{{*/
 	// GRID DIMENSION
 	//_X_*_Y_*_Z_ = # processes in MPI
@@ -882,11 +882,11 @@ Grid PyramidalL5_Neuron{
 	/*}}}*/
       // 3.2. CHEMICAL SYNAPSE RECEPTORS
       /*{{{*/
-   Layer(AMPASynapsesMush, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
-   Layer(AMPASynapsesThin, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM); 
-   Layer(NMDASynapsesMush, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
-   Layer(NMDASynapsesThin, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
-   Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
+   //Layer(AMPASynapsesMush, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
+   //Layer(AMPASynapsesThin, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM); 
+   //Layer(NMDASynapsesMush, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
+   //Layer(NMDASynapsesThin, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
+   //Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
       /*}}}*/
 
       // 3.3. SpineAttachment
@@ -1018,6 +1018,7 @@ Grid PyramidalL5_Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0} 
 				> ) ); 
+
 	//InitNodes ( .[].Layer(Natv16Channels), tissueFunctor("NodeInit", <
 	//			compartmentalize = { "gbar" },
 	//			gbar = {0.0} 
@@ -1028,10 +1029,10 @@ Grid PyramidalL5_Neuron{
 	//			gbar = {0.0} 
 	//			> ) ); 
      //}}}
-   InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
-                  compartmentalize = { "gbar" },
-                  gbar = {0.0}
-                  > ) );
+   //InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
+   //               compartmentalize = { "gbar" },
+   //               gbar = {0.0}
+   //               > ) );
 	 //{{{ K+ channels
    InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
          compartmentalize = { "gbar" },
@@ -1073,10 +1074,10 @@ Grid PyramidalL5_Neuron{
          gbar = {0.0}
          > ) );
 
-   InitNodes ( .[].Layer(CalChannels), tissueFunctor("NodeInit", <
-         compartmentalize = { "gbar" },
-         gbar = {0.0}
-         > ) );
+   //InitNodes ( .[].Layer(CalChannels), tissueFunctor("NodeInit", <
+   //      compartmentalize = { "gbar" },
+   //      gbar = {0.0}
+   //      > ) );
 #endif
 
 	/*}}}*/
@@ -1112,27 +1113,27 @@ Grid PyramidalL5_Neuron{
     /*}}}*/
     // 3.2. SYNAPSE RECEPTORS
     /*{{{*/
-  InitNodes ( .[].Layer(AMPASynapsesMush), tissueFunctor("NodeInit", <
-        gbar = AMPAR_CONDUCTANCE
-        > ) );
+  //InitNodes ( .[].Layer(AMPASynapsesMush), tissueFunctor("NodeInit", <
+  //      gbar = AMPAR_CONDUCTANCE
+  //      > ) );
 
-  InitNodes ( .[].Layer(AMPASynapsesThin), tissueFunctor("NodeInit", <
-        gbar = AMPAR_CONDUCTANCE
-        > ) );
+  //InitNodes ( .[].Layer(AMPASynapsesThin), tissueFunctor("NodeInit", <
+  //      gbar = AMPAR_CONDUCTANCE
+  //      > ) );
 
-  InitNodes ( .[].Layer(NMDASynapsesMush), tissueFunctor("NodeInit", <
-        gbar = NMDAR_CONDUCTANCE, 
-        w = 1.0
-        > ) );
+  //InitNodes ( .[].Layer(NMDASynapsesMush), tissueFunctor("NodeInit", <
+  //      gbar = NMDAR_CONDUCTANCE, 
+  //      w = 1.0
+  //      > ) );
 
-   InitNodes ( .[].Layer(NMDASynapsesThin), tissueFunctor("NodeInit", <
-		  gbar = NMDAR_CONDUCTANCE,
-      w = 1.0
-		  > ) );
+  // InitNodes ( .[].Layer(NMDASynapsesThin), tissueFunctor("NodeInit", <
+	//	  gbar = NMDAR_CONDUCTANCE,
+  //    w = 1.0
+	//	  > ) );
 
-   InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
-         gbar = GABAAR_CONDUCTANCE 
-         > ) );  
+  // InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
+  //       gbar = GABAAR_CONDUCTANCE 
+  //       > ) );  
    
     /*}}}*/
     // 3.3. SpineAttachment 
@@ -1210,13 +1211,13 @@ Grid PyramidalL5_Neuron{
    //Synaptic Cleft
    polyConnect(timeStep, .[].Layer(SynapticClefts), <>, <identifier="dt">);
    // Synapse Receptors
-   polyConnect(timeStep, .[].Layer(NMDASynapsesMush), <>, <identifier="dt">);
-   polyConnect(timeStep, .[].Layer(NMDASynapsesThin), <>, <identifier="dt">);
-   polyConnect(extracellularMedium, .[].Layer(NMDASynapsesMush, NMDASynapsesThin), <>, <identifier="EC">);
-   polyConnect(timeStep, .[].Layer(AMPASynapsesMush), <>, <identifier="dt">);
-   polyConnect(timeStep, .[].Layer(AMPASynapsesThin), <>, <identifier="dt">);
-   polyConnect(extracellularMedium, .[].Layer(AMPASynapsesMush, AMPASynapsesThin), <>, <identifier="EC">);
-   polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
+   //polyConnect(timeStep, .[].Layer(NMDASynapsesMush), <>, <identifier="dt">);
+   //polyConnect(timeStep, .[].Layer(NMDASynapsesThin), <>, <identifier="dt">);
+   //polyConnect(extracellularMedium, .[].Layer(NMDASynapsesMush, NMDASynapsesThin), <>, <identifier="EC">);
+   //polyConnect(timeStep, .[].Layer(AMPASynapsesMush), <>, <identifier="dt">);
+   //polyConnect(timeStep, .[].Layer(AMPASynapsesThin), <>, <identifier="dt">);
+   //polyConnect(extracellularMedium, .[].Layer(AMPASynapsesMush, AMPASynapsesThin), <>, <identifier="EC">);
+   //polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
 
 #if SIMULATION_INVOLVE >= VM_CACYTO
    polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
@@ -1251,7 +1252,7 @@ Grid PyramidalL5_Neuron{
 /*}}}*/
 }; //end grid
 
-PyramidalL5_Neuron pyramidalL5b;
+InterNeuron interneuron;
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
   //criteria is evaluated at any time correctJunction is called 

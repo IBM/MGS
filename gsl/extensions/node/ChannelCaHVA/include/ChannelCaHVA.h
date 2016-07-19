@@ -18,7 +18,7 @@
 class ChannelCaHVA : public CG_ChannelCaHVA
 {
    public:
-      void initializeCalChannels(RNG& rng);
+      void initialize(RNG& rng);
       void update(RNG& rng);
       virtual ~ChannelCaHVA();
    private:

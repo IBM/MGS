@@ -29,7 +29,7 @@ dyn_var_t ChannelCaHVA::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
-void ChannelCaHVA::initializeCalChannels(RNG& rng) 
+void ChannelCaHVA::initialize(RNG& rng) 
 {
 #ifdef DEBUG_ASSERT
   assert(branchData);
