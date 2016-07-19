@@ -1,6 +1,6 @@
 #include "Lens.h"
-#include "ChannelNat_AIS.h"
-#include "CG_ChannelNat_AIS.h"
+#include "ChannelCaHVA.h"
+#include "CG_ChannelCaHVA.h"
 #include "rndm.h"
 
 #include "SegmentDescriptor.h"
@@ -9,68 +9,27 @@
 #include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
+#include <math.h>
+#include <pthread.h>
+#include <algorithm>
 
-#if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
-//Developed for Gamagenesis in interneurons
-//All above conventions for a_m, a_h, b_h remain the same as above except b_m below
-//b_m = (BMC * (V - BMV))/(exp((V-BMV)/BMD)-1)
-#define AMC -0.8
-#define AMV 17.2
-#define AMD -4.0
-#define BMC 0.7
-#define BMV 42.2
-#define BMD 5.0
-#define AHC 0.3
-#define AHV -42.0
-#define AHD -18.0
-#define BHC 10.0
-#define BHV -42.0
-#define BHD -5.0
+#if CHANNEL_CaHVA == CaHVA_TRAUB_1994 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
+// b_m  = BMC * exp( (V - BMV)/BMD )
+// a_h  = AHC * exp( (V - AHV)/AHD )
+// b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
+#define am  (1.6 / (1.0 + exp(-0.072 * (v-65))))
+#define bm  (0.02 * (vtrap((v-51.1), 5.0)))
 #endif
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelNat_AIS::vtrap(dyn_var_t x, dyn_var_t y)
+dyn_var_t ChannelCaHVA::vtrap(dyn_var_t x, dyn_var_t y)
 {
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
-void ChannelNat_AIS::update(RNG& rng) 
-{
-  dyn_var_t dt = *(getSharedMembers().deltaT);
-  for (unsigned i = 0; i < branchData->size; ++i)
-  {
-    dyn_var_t v = (*V)[i];
-#if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
-    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
-    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
-    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
-    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-    // Traub Models do not have temperature dependence and hence Tadj is not used
-    dyn_var_t pm = 0.5 * dt * (am + bm) ;
-    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
-    dyn_var_t ph = 0.5 * dt * (ah + bh) ;
-    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
-#endif
-    // trick to keep m in [0, 1]
-    if (m[i] < 0.0) { m[i] = 0.0; }
-    else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
-    }
-#if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
-    g[i] = gbar[i] * m[i] *  m[i] * m[i] * h[i];
-#endif
-  }
-}
-
-
-void ChannelNat_AIS::initialize(RNG& rng) 
+void ChannelCaHVA::initialize(RNG& rng) 
 {
 #ifdef DEBUG_ASSERT
   assert(branchData);
@@ -83,6 +42,10 @@ void ChannelNat_AIS::initialize(RNG& rng)
 #endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
+  if (s.size() != size) s.increaseSizeTo(size);
+  //if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
+  if (E_Ca.size() != size) E_Ca.increaseSizeTo(size);
   // initialize
 	SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
@@ -133,24 +96,45 @@ void ChannelNat_AIS::initialize(RNG& rng)
       gbar[i] = gbar_default;
     }
   }
+
   for (unsigned i = 0; i < size; ++i)
   {
-    gbar[i] = gbar[0];
     dyn_var_t v = (*V)[i];
-#if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994    
-    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
-    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
-    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
-    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-    m[i] = am / (am + bm);  // steady-state value
-    h[i] = ah / (ah + bh);
-    g[i] = gbar[i] * m[i] *  m[i] * h[i];
-#endif
+#if CHANNEL_CaHVA == CaHVA_TRAUB_1994
+    E_Ca[i] = 140.0 ; //[mV]
+    s[i] = am / (am + bm);  // steady-state value
+    g[i] = gbar[i] * s[i] *  s[i];
+    //I_Ca[i] = g[i] * (v-E_Ca)
+    Iion[i] = g[i] * (v-E_Ca[i]);
+#else
+    // E_rev  = RT/(zF)ln([Ca]o/[Ca]i)   [mV]
+    //E_Ca = 0.08617373 * *(getSharedMembers().T) *
+    //       log(*(getSharedMembers().Ca_EC) / *(getSharedMembers().Ca_IC));
 
+#endif
   }
 }
 
-ChannelNat_AIS::~ChannelNat_AIS() 
+void ChannelCaHVA::update(RNG& rng) 
+{
+  dyn_var_t dt = *(getSharedMembers().deltaT);
+  for (unsigned i = 0; i < branchData->size; ++i)
+  {
+    dyn_var_t v = (*V)[i];
+    // NOTE: Some models use alpha_m and beta_m to estimate m
+    // see Rempe-Chopp (2006)
+    dyn_var_t pm = 0.5 * dt * (am + bm);
+    s[i] = (dt * am + s[i] * (1.0 - pm)) / (1.0 + pm);
+    // trick to keep s in [0, 1]
+    if (s[i] < 0.0) { s[i] = 0.0; }
+    else if (s[i] > 1.0) { s[i] = 1.0; }
+#if CHANNEL_CaHVA == CaHVA_TRAUB_1994
+    g[i] = gbar[i] * s[i] *  s[i];
+#endif
+  }
+}
+
+ChannelCaHVA::~ChannelCaHVA() 
 {
 }
 

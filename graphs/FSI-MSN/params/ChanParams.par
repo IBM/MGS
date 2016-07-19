@@ -1,0 +1,171 @@
+# MTYPE = 0 (neuron), = 1 (GABA axonal terminal), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush axonal terminal)
+# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
+CHANNEL_TARGETS 5
+BRANCHTYPE MTYPE
+#{{{
+#{{{ main neuron
+1 0 Nat [Voltage] [Voltage] \
+    KAf [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] \
+    Cah [Voltage] [Voltage, Calcium]  \
+    BK [Calcium] [Voltage] \
+    SK [Calcium] [Voltage] \
+    PMCA [Voltage, Calcium] [Calcium] 
+2 0 Nat [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] 
+#AIS
+5 0 Nat_AIS [Voltage] [Voltage] \
+    KDR_AIS [Voltage] [Voltage] 
+#dendrite
+3 0 Nat [Voltage] [Voltage] \
+    KAf [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] \
+    Cah [Voltage] [Voltage, Calcium]  \
+    BK [Calcium] [Voltage] \
+    SK [Calcium] [Voltage] \
+    PMCA [Voltage, Calcium] [Calcium] 
+4 0 Nat [Voltage] [Voltage] \
+    KAf [Voltage] [Voltage] \
+    KDR [Voltage] [Voltage] \
+    Cah [Voltage] [Voltage, Calcium]  \
+    BK [Calcium] [Voltage] \
+    SK [Calcium] [Voltage] \
+    PMCA [Voltage, Calcium] [Calcium] 
+#}}}
+#{{{GABAergic bouton
+#}}} 
+#{{{  spines (spine-head need PMCA to counteract with NMDA)
+#}}}
+#{{{ Glutamatergic bouton
+#}}}
+#}}}
+
+CHANNEL_COSTS 9
+#{{{//wall-time execution after xxx iterations (maybe)
+Nat 0.414243
+Nat_AIS 0.414243
+KAf 0.254051
+KDR 0.254051
+KDR_AIS 0.254051
+Cah 0.254051
+PMCA 0.254051
+BK 0.254051
+SK 0.254051
+#}}}
+
+CHANNEL_PARAMS 9
+# gbar = [nS/um^2]
+Nat 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={1.0}>
+2 0 <gbar={5.0}>
+5 0 <gbar={5.0}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.05, 0.0, 0.0}}
+#}}}
+#{{{ GABA bouton
+#}}}
+#{{{ GLUT bouton
+#}}}
+#}}}
+Nat_AIS 1
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+5 0 <gbar={5.0}>
+#}}}
+#}}}
+KDR 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={1.350}>
+2 0 <gbar={2.5}>
+5 0 <gbar={2.5}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.15, 0.0, 0.0}}
+#}}}
+#}}}
+KDR_AIS 1
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+5 0 <gbar={2.5}>
+#}}}
+#}}}
+Cah 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.01}>
+2 0 <gbar={0.01}>
+5 0 <gbar={0.01}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.01, 0.01, 0.01}}
+#}}}
+#}}}
+KAf 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.005}>
+2 0 <gbar={0.005}>
+5 0 <gbar={0.005}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.005, 0.005, 0.00, 0.00, 0.00, 0.00}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.005, 0.005, 0.00}}
+#}}}
+#}}}
+SK 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.0001}>
+2 0 <gbar={0.0001}>
+5 0 <gbar={0.0001}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.0001, 0.0001, 0.0001}}
+#}}}
+#}}}
+BK 5
+#{{{
+BRANCHTYPE MTYPE
+#{{{ neuron
+1 0 <gbar={0.2}>
+2 0 <gbar={0.0}>
+5 0 <gbar={0.0}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
+     gbar_values={0.08, 0.08, 0.04, 0.04, 0.04, 0.04}}
+4 0 <gbar_dists={50, 100, 150}, \
+     gbar_values={0.08, 0.04, 0.04}}
+#}}}
+#}}}
+PMCA 3
+#{{{
+# tau ~ [ms]
+BRANCHTYPE MTYPE 
+## NOTE: large value of tau is important in keeping Ca-neck high
+#{{{neuron
+1 0 <tau={333}>
+3 0 <tau={20}>
+4 0 <tau={20}>
+#}}}
+#{{{GABA bouton
+#}}}
+#{{{ spine
+#}}}
+#{{{bouton
+#}}}
+#}}}

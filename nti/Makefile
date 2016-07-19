@@ -1,5 +1,5 @@
 
-.DEFAULT_GOAL: target
+.DEFAULT_GOAL:=target
 
 SRC_DIR :=./src
 OBJ_DIR :=./obj
@@ -195,7 +195,13 @@ TISSUE_LIB = ../gsl/lib/liblensdomain.a
 #TISSUE_LIB = ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 
-target: $(TARGETS)
+create_file: 
+	@if [ ! -f ./include/Model2Use.h ]; then \
+		touch include/Model2Use.h; \
+		echo "//#define MODEL_TO_USE <value>" > include/Model2Use.h; \
+	fi; 
+
+target: create_file $(TARGETS) 
 
 depend: ; makedepend $(ND_SOURCES)
 
@@ -203,7 +209,7 @@ uninstall:
 
 install: all
 
-clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o
+clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o  $(BIN_DIR)/neuroGen $(BIN_DIR)/neuroDev $(BIN_DIR)/touchDetect $(OBJ_DIR)/*
 realclean: clean
 	-rm -f $(TARGETS) 
 

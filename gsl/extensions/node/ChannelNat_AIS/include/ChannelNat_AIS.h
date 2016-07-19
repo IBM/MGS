@@ -18,6 +18,8 @@ class ChannelNat_AIS : public CG_ChannelNat_AIS
       void update(RNG& rng);
       void initialize(RNG& rng);
       virtual ~ChannelNat_AIS();
+   private:
+      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

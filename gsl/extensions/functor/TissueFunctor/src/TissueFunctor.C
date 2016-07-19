@@ -3323,6 +3323,16 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   if (nodeCategory == "JunctionPoints") ++_junctionPointTypeCounter;
   if (nodeCategory == "BackwardSolvePoints") ++_backwardSolvePointTypeCounter;
   if (nodeCategory == "ForwardSolvePoints") ++_forwardSolvePointTypeCounter;
+
+#ifdef MGS_NTS_HYBRID
+  int* mgsrval = new int(_nbrGridNodes);
+  int n = rval[_rank];
+  MPI_Allgather(&n, 1, MPI_INT, mgsrval, _nbrGridNodes, MPI_INT, MPI_COMM_WORLD);
+  for (int n=0; n<_nbrGridNodes; ++n)    
+    rval[n]=mgsrval[n];
+  delete [] mgsrval;
+#endif
+  
   return rval;
 }
 
