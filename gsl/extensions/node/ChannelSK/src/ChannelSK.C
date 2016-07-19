@@ -198,7 +198,6 @@ void ChannelSK::initialize(RNG& rng)
     dyn_var_t v = (*V)[i];
     //g[i] = gbar[i] * fO[i];
 #if SIMULATION_INVOLVE  == VMONLY
-	dyn_var_t Cai_base = 0.1e-6; // [uM]
     dyn_var_t cai = Cai_base;
 #else
 	dyn_var_t cai = (*Cai)[i]; // [uM]

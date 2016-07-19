@@ -41,7 +41,7 @@
 #elif RECEPTOR_AMPA == AMPAR_POINTPROCESS
 // NOTE: Vp = Vthreshold
 #define NEUROTRANSMITTER      \
-  (((*Vpre) > Vp ? getSharedMembers().NTmax : 0))
+  (((*Vpre) > getSharedMembers().Vp ? getSharedMembers().NTmax : 0))
 #else
   NOT SUPPORT
 #endif

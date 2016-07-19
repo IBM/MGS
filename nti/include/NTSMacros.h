@@ -499,8 +499,6 @@
   #define RECEPTOR_AMPA AMPAR_POINTPROCESS
   #define RECEPTOR_NMDA NMDAR_POINTPROCESS
 //}}}
-#else
-  NOT IMPLEMENTED YET
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -568,7 +566,7 @@
 #define CHANNEL_CaT _CaT_DEFAULT
 #endif
 #ifndef RECEPTOR_AMPA
-#define RECEPTOR_AMPA _AMPAAR_DEFAULT
+#define RECEPTOR_AMPA _AMPAR_DEFAULT
 #endif
 #ifndef RECEPTOR_NMDA
 #define RECEPTOR_NMDA _NMDAR_DEFAULT

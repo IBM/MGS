@@ -180,7 +180,7 @@ void PumpPMCA::update(RNG& rng)
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997
     dyn_var_t cai = (*Ca_IC)[i];  //[uM]
-    J_Ca[i] = 1.0 / (*(getSharedMembers().tau_pump)) *
+    J_Ca[i] = 1.0 / ((getSharedMembers().tau_pump)) *
               (getSharedMembers().Ca_equil - cai);  // [uM/ms]
 #elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
     // PMCA_Traub_Llinas_1997
