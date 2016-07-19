@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <algorithm>
 
+#define Cai_base 0.1e-6 // [uM]
 //
 // Implementation of the KCa potassium current
 //  Voltage and Calcium dependent Potassium
@@ -29,7 +30,6 @@ void ChannelBK::update(RNG& rng)
     {
         dyn_var_t v = (*V)[i];
 #if SIMULATION_INVOLVE == VMONLY
-        dyn_var_t Cai_base = 0.1e-6 // [uM]
         dyn_var_t cai = Cai_base;            
 #else
         dyn_var_t cai = (*Cai)[i]; // [uM]
@@ -61,7 +61,6 @@ void ChannelBK::initialize(RNG& rng)
     if (fO.size()!=size) fO.increaseSizeTo(size);
     for (unsigned i = 0; i < size; ++i) {
 #if SIMULATION_INVOLVE == VMONLY
-        dyn_var_t Cai_base = 0.1e-6 // [uM]
         dyn_var_t cai = Cai_base;            
 #else
         dyn_var_t cai = (*Cai)[i]; // [uM]
