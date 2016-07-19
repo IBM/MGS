@@ -10,6 +10,9 @@
 #if CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
 #define BASED_TEMPERATURE 35.0 //Celcius
 #define Q10 3.0
+#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+#define BASED_TEMPERATURE 35.0 //Celcius
+#define Q10 3.0
 #endif
 
 #ifndef Q10 

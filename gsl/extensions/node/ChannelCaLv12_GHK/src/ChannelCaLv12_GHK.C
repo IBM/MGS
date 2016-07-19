@@ -135,6 +135,8 @@ PCabar[i] = Pbar_values[0];
     I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
+#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+    assert(0);
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -172,6 +174,8 @@ void ChannelCaLv12_GHK::update(RNG& rng)
     I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
+#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+    assert(0);
 #endif
 		/*
 		 * TUAN TODO: think about stochastic modelling

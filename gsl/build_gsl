@@ -213,6 +213,9 @@ if [ "$CLEAN" == "-clean" ] || \
     [ "$REMAKE" == "-remake" ] ; then 
     if [ "$REMAKE" != "-remake" ]; then
       echo "Rebuild GSL"
+      if [ ! -f Makefile ]; then
+        createMakeFile
+      fi
       make clean
       make -j $NPROCS;
     else
