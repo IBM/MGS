@@ -1,34 +1,68 @@
 #!/bin/bash
 ####
 # This script was written to enable quicly switching from one morphology to another
+#  and one model to another
 # author: Tuan M. Hoang Trong (IBM, @2016)
 #
+rm_if_link(){ [ ! -L "$1" ] || rm -v "$1"; }
+clean_all() {
+  rm_if_link neurons
+  rm_if_link params
+  rm_if_link connect_recording_model.gsl
+  rm_if_link recording_model.gsl
+  rm_if_link connect_stimulus_model.gsl
+  rm_if_link stimulus_model.gsl
+  rm_if_link model.gsl
+}
+
+ModelFolder=systems
+
 if [ "$#" == "0" ]; then
-  echo "$0 <prefix> "
+  echo "$0 <morph_suffix> [author_suffix] "
   echo "    <prefix> is the prefix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
   echo "  e.g. hay2, hay1, unknown"
   echo "NOTE: $0 clean "
   echo "   to clean the symbolic links"
+  exit
 fi
 if [ "$1" == "clean" ]; then
-rm neurons
-rm params
-rm connect_recording_model.gsl
-rm recording_model.gsl
-rm connect_stimulus_model.gsl
-rm stimulus_model.gsl
+  clean_all
 else
-#NOTE: $1  = suffix (e.g. hay2, hay1, unknown)
-rm neurons
-ln -s neurons_$1 neurons
-rm params
-ln -s params_$1 params
-rm connect_recording_model.gsl
-ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
-rm recording_model.gsl
-ln -s neurons/recording_model_$1.gsl recording_model.gsl
-rm connect_stimulus_model.gsl
-ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
-rm stimulus_model.gsl
-ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
+  #NOTE: $1  = suffix (e.g. hay2, hay1, unknown)
+  clean_all
+  ln -s neurons_$1 neurons
+
+  if [ "$#" == "2" ]; then
+    ln -s neurons_$1/params_$2 params
+    ln -s $ModelFolder/model_$2.gsl model.gsl
+  else
+    #paramFold = ($(find -maxdepth 1 -type d -name 'params_*'))
+    paramFold=($(find neurons_$1 -maxdepth 1 -type d -name 'params_*'))
+    echo "Select one of this:"
+    arrSize=${#paramFold[@]}
+    for i in "${!paramFold[@]}"; do 
+      printf "%s\t%s\n" "$i" "${paramFold[$i]}"
+    done
+    #for item in ${paramFold[*]}
+    #do
+    #  printf "   %s;" $item
+    #done
+    re='^[0-9]+$'
+    while true; do
+        read -p "Type in the number?" REPLY
+        if  [[ $REPLY =~ $re ]] ; then
+          if [ $REPLY -ge 0 ] && [ $REPLY -lt $arrSize ]; then 
+            arg2="${paramFold[$REPLY]}"
+            break; 
+          fi;
+        fi
+    done
+    ln -s $arg2 params
+    authorName=`echo $arg2 | cut -d'_' -f 3`
+    ln -s $ModelFolder/model_$authorName.gsl model.gsl
+  fi
+  ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
+  ln -s neurons/recording_model_$1.gsl recording_model.gsl
+  ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
+  ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
 fi
