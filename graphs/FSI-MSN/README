@@ -1,0 +1,19 @@
+traub51: Traub-Miles (1995)
+   46 compartments for soma-dend; 
+    5 compartments for axon
+
+
+Network: 384 neurons laid out on 96x4 arrays
+  - Traub 1999 - describe network synaptic connectivity
+4 types of interneurons: not different in electro-physiol. properties
+     - different in connection patterns to pyramidal cells
+ (basket cells
+  axon-axonic cells
+  interneurons type 1 : contact den of pyramidal cells
+  interneurons type 2 : contact den of pyramidal cells
+ )
+
+connection patterns:
+  random between 2 interneurons within 25 units (i.e. 500 um), i.e. each unit 20 um
+  along axis of array
+  one interneuron has exactly 20 inputs from basket cell; 40 inputs from interneurons (i.e. 20 from each of the two types via den-contacting)
