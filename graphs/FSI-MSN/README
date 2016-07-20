@@ -17,3 +17,7 @@ connection patterns:
   random between 2 interneurons within 25 units (i.e. 500 um), i.e. each unit 20 um
   along axis of array
   one interneuron has exactly 20 inputs from basket cell; 40 inputs from interneurons (i.e. 20 from each of the two types via den-contacting)
+
+
+NOTE: The formula for [Ca2+] dynamics is different from that of Traub 
+  which makes the change to Ca-dependency formula in BK channel

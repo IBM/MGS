@@ -17,7 +17,7 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_00
+#define STIMULUS_CASE   CASE_01
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -133,6 +133,7 @@ print("Case 00: resting");
 
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
+//Calcium
 #define Cacyto_value  0.1  // [uM]
 #define CaER_value    1.0e3    // [uM]
 #define Ca_o_value    1.8e3  // [uM]
@@ -141,7 +142,7 @@ print("Case 00: resting");
 #define Mg_i_value   0.8    // [mM]
 #define Na_i_value   22.0 //12.0  // [mM]
 #define Na_o_value   145.0 // [mM]
-#define K_i_value    120.0 //139.0 // [mM]
+#define K_i_value    170.0 //139.0 // [mM]
 #define K_o_value    6.0  // [mM]  4.1+/-1.8 mM
 
 #define Dopa_value   0.0   // [uM]
@@ -179,7 +180,7 @@ print("Case 00: resting");
 #define Temperature_value  308.15 // [K] Kelvin
 //#define Vrest_value  -79.0 // [mV]
 #define Vrest_value  -74.0 // [mV]
-#define E_leak_value -90.0 
+#define E_leak_value -70.0 
 //#define Erev_HCN  -45.0 // [mV]
 #define Erev_HCN  -30.0 // [mV]
 //}}}

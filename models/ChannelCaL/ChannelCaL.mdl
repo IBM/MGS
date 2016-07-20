@@ -12,7 +12,7 @@
 //   High-voltage activated
 Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
     //CurrentArrayProducer,
-    //CaCurrentArrayProducer, 
+    CaCurrentArrayProducer, 
     BranchDataProducer, IOCurrentArrayProducer
 {
 //{{{
@@ -23,7 +23,7 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   //dyn_var_t [] l;
   dyn_var_t [] gbar;
   dyn_var_t [] E_Ca;
-  //dyn_var_t [] I_Ca;
+  dyn_var_t [] I_Ca;
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
 
   dyn_var_t []* V;
@@ -64,7 +64,7 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
-  //CaCurrentArrayProducer.currents << &I_Ca;
+  CaCurrentArrayProducer.currents << &I_Ca;
   //CurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
   IOCurrentArrayProducer.currents << &Iion;
