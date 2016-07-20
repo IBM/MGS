@@ -20,9 +20,9 @@ Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
 	dyn_var_t []* Cai;//submembrane Ca2+ [uM]
+
 	BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
-
   //data mainly used to dynamically assign different conductance on different location
   //NOTE: In SynParams.par file
   //    Use either gbar_dists or gbar_branch

@@ -58,7 +58,8 @@ void ChannelCaHVA::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
 		//gbar init
-		if (gbar_dists.size() > 0) {
+		if (gbar_dists.size() > 0) 
+    {
 			unsigned int j;
 			//NOTE: 'n' bins are splitted by (n-1) points
 			if (gbar_values.size() - 1 != gbar_dists.size())

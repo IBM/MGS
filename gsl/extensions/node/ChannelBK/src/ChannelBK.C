@@ -43,7 +43,7 @@ void ChannelBK::update(RNG& rng)
         dyn_var_t alpha;
         if ( v <= 50 ) {
             alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
-        } else if ( v > 50) {
+        } else  {
             alpha = 2*exp(-((v-6.5)/27));
         }
         dyn_var_t beta = 2*exp(-((v-6.5)/27))-alpha;
@@ -58,82 +58,86 @@ void ChannelBK::update(RNG& rng)
 
 void ChannelBK::initialize(RNG& rng) 
 {
-    unsigned size=branchData->size;
-    assert(V);
-    assert(gbar.size()==size);
-    assert (V->size()==size);
-    if (fO.size()!=size) fO.increaseSizeTo(size);
+  assert(branchData);
+  unsigned size=branchData->size;
+  assert(V);
+  assert(gbar.size()==size);
+  assert (V->size()==size);
+  if (fO.size()!=size) fO.increaseSizeTo(size);
+  if (g.size()!=size) g.increaseSizeTo(size);
 
-    // initialize
-    SegmentDescriptor segmentDescriptor;
-    float gbar_default = gbar[0];
-    if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
-    {
+  // initialize
+  SegmentDescriptor segmentDescriptor;
+  float gbar_default = gbar[0];
+  if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
+  {
     std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
-            << std::endl;
-        assert(0);
+      << std::endl;
+    assert(0);
+  }
+  for (unsigned i = 0; i < size; ++i)
+  {
+    //gbar init
+    if (gbar_dists.size() > 0) {
+      unsigned int j;
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (gbar_values.size() - 1 != gbar_dists.size())
+      {
+        std::cerr << "gbar_values.size = " << gbar_values.size()
+          << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
+      }
+      assert(gbar_values.size() -1 == gbar_dists.size());
+      for (j=0; j<gbar_dists.size(); ++j) {
+        if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
+      }
+      gbar[i] = gbar_values[j];
     }
-    for (unsigned i = 0; i < size; ++i)
+    else if (gbar_branchorders.size() > 0)
     {
-          //gbar init
-          if (gbar_dists.size() > 0) {
-              unsigned int j;
-              //NOTE: 'n' bins are splitted by (n-1) points
-              if (gbar_values.size() - 1 != gbar_dists.size())
-              {
-                  std::cerr << "gbar_values.size = " << gbar_values.size()
-                      << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
-              }
-              assert(gbar_values.size() -1 == gbar_dists.size());
-              for (j=0; j<gbar_dists.size(); ++j) {
-                  if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
-              }
-              gbar[i] = gbar_values[j];
+      unsigned int j;
+      assert(gbar_values.size() == gbar_branchorders.size());
+      SegmentDescriptor segmentDescriptor;
+      for (j=0; j<gbar_branchorders.size(); ++j) {
+        if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
       }
-          /*else if (gbar_values.size() == 1) {
-        gbar[i] = gbar_values[0];
-      } */
-          else if (gbar_branchorders.size() > 0)
-          {
-        unsigned int j;
-        assert(gbar_values.size() == gbar_branchorders.size());
-        SegmentDescriptor segmentDescriptor;
-        for (j=0; j<gbar_branchorders.size(); ++j) {
-          if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
-        }
-              if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
-              {
-                  gbar[i] = gbar_values[j-1];
-              }
-              else if (j < gbar_values.size())
-          gbar[i] = gbar_values[j];
-        else
-          gbar[i] = gbar_default;
-          }
-          else {
+      if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+      {
+        gbar[i] = gbar_values[j-1];
+      }
+      else if (j < gbar_values.size())
+        gbar[i] = gbar_values[j];
+      else
         gbar[i] = gbar_default;
-      }
     }
+    else {
+      gbar[i] = gbar_default;
+    }
+  }
 
-    for (unsigned i = 0; i < size; ++i) {
+  for (unsigned i = 0; i < size; ++i) {
 #if SIMULATION_INVOLVE == VMONLY
-        dyn_var_t cai = Cai_base;            
+    dyn_var_t cai = Cai_base;            
 #else
-        dyn_var_t cai = (*Cai)[i]; // [uM]
+    assert(Cai);
+    dyn_var_t cai = (*Cai)[i]; // [uM]
 #endif
-        gbar[i]=gbar[0];
-        dyn_var_t alpha ;
-        dyn_var_t v=(*V)[i];
-        if ( v <= 50 ) {
-            alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
-        } else if ( v > 50) {
-            alpha = 2*exp(-((v-6.5)/27));
-        }
-        dyn_var_t beta = 2*exp(-((v-6.5)/27))-alpha;
-        fO[i] = alpha/(alpha+beta); // steady-state value
-        dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
-        g[i] = gbar[i]*fO[i]*CaGate;
+
+#if CHANNEL_BK == BK_TRAUB_1994
+    dyn_var_t alpha, beta ;
+    dyn_var_t v=(*V)[i];
+    if ( v <= 50 ) {
+      alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
+      beta = 2*exp(-((v-6.5)/27))-alpha;
+    } else {
+      alpha = 2*exp(-((v-6.5)/27));
+      beta = 0.0;
     }
+    fO[i] = alpha/(alpha+beta); // steady-state value
+    //dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
+    dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
+    g[i] = gbar[i]*fO[i]*CaGate;
+#endif
+  }
 }
 
 ChannelBK::~ChannelBK() 

@@ -318,28 +318,14 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 ////NOTE: -r #capsules-per-cpt
-//#define ALLSPINES
-#if STIMULUS_CASE == CASE_04
-#define tissueFile "neurons.txt_triggerdistalspines"
-#else
 #define tissueFile "neurons.txt"
-#endif
 
-#ifdef ALLSPINES
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
-//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
-#define strArg2  "params_allspines/CptParams.par"
-#define strArg3 "params_allspines/ChanParams.par"
-#define strArg4 "params_allspines/SynParams.par"
-#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 4 " //" -g 18"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 " //" -g 18"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
 #define strArg3 "params/ChanParams.par"
 #define strArg4 "params/SynParams.par"
-#endif
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
