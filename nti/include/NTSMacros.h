@@ -103,7 +103,7 @@
 // Na-persistent CHANNEL_NAP macro
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
-#define _NAP_DEFAULT 2
+#define _NAP_DEFAULT NAP_WOLF_2005
 //}}}
 
 //{{{ K-models
@@ -139,13 +139,13 @@
 //        just being used in different papers
 #define BKalphabeta_SHAO_1999       2       
 #define BKalphabeta_WOLF_2005       BKalphabeta_SHAO_1999       
-#define _BKalphabeta_DEFAULT        2
+
+#define _BKalphabeta_DEFAULT        BKalphabeta_SHAO_1999
 // BK
 // BK_ CHANNEL_BK macro
 #define BK_TRAUB_1994 1
 
 #define _BK_DEFAULT BK_TRAUB_1994
-
 // SK       CHANNEL_SK macro
 #define SK_MOCZYDLOWSKI_1993 2
 #define SK_WOLF_2005    2
@@ -167,28 +167,34 @@
 //{{{ Ca-models
 //CaHVA  CHANNEL_CaHVA
 #define CaHVA_TRAUB_1994  1
-#define _CaHVA_DEFAULT CaHVA_TRAUB_1994
 
+#define _CaHVA_DEFAULT CaHVA_TRAUB_1994
 // CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
 #define CaL_GENERAL    100
 // CaLv12 (HVA)   CHANNEL_CaLv12 macro
 #define CaLv12_GHK_Standen_Stanfield_1982 3
 #define CaLv12_GHK_WOLF_2005 2
+
 #define _CaLv12_DEFAULT      CaLv12_GHK_Standen_Stanfield_1982
 // CaLv13 (LVA)  CHANNEL_CaLv13 macro
 #define CaLv13_GHK_WOLF_2005 2
+
 #define _CaLv13_DEFAULT    CaLv13_GHK_WOLF_2005
 // CaN      CHANNEL_CaN macro
 #define CaN_GHK_WOLF_2005 2
+
 #define _CaN_DEFAULT   CaN_GHK_WOLF_2005
 // CaPQ     CHANNEL_CaPQ macro
 #define CaPQ_GHK_WOLF_2005 2
+
 #define _CaPQ_DEFAULT   CaPQ_GHK_WOLF_2005
 // CaR      CHANNEL_CaR macro
 #define CaR_GHK_WOLF_2005 2
+
 #define _CaR_DEFAULT  CaR_GHK_WOLF_2005
 // CaT      CHANNEL_CaT macro
 #define CaT_GHK_WOLF_2005 2
+
 #define _CaT_DEFAULT CaT_GHK_WOLF_2005
 //}}}
 
@@ -199,6 +205,7 @@
 #define NMDAR_JADI_2012                       3
 #define NMDAR_JAHR_STEVENS_1990               4
 #define NMDAR_BEHABADI_2012_MODIFIED          5
+
 #define _NMDAR_DEFAULT   NMDAR_POINTPROCESS
 // AMPAR      RECEPTOR_AMPA macro
 #define AMPAR_POINTPROCESS                    1
@@ -209,9 +216,11 @@
 // GABA_A     RECEPTOR_GABAA
 #define GABAAR_POINTPROCESS 1
 #define GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
+
 #define _GABAAR_DEFAULT GABAAR_POINTPROCESS
 // GABA_B     RECEPTOR_GABAB
 #define GABABR_DESTEXHE_SEJNOWSKI_1996  3
+
 #define _GABABR_DEFAULT GABABR_DESTEXHE_SEJNOWSKI_1996
 //}}}
 
@@ -411,7 +420,7 @@
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 //{{{
   #define CHANNEL_NAT NAT_HAY_2011
-  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_NAP NAP_MAGISTRETTI_1999
   #define CHANNEL_HCN HCN_HAY_2011
   #define CHANNEL_KAf KAf_WOLF_2005
   #define CHANNEL_KAs KAs_WOLF_2005
