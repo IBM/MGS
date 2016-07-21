@@ -306,27 +306,29 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase3)
   {
-  //IMPORTANT CHANGE:
-  // Unlike the original approach
-  //   which doesn't have a compartment for the implicit branching
-  // The branch now has
-  //at least 2: one compartment as implicit branching point + one as regular
-  //    compartment-zero as implicit branching compartment
-  //    compartment-1th and above as normal
 	  
     // Compute total area of the junction...
     dyn_var_t area = getArea(0);
 
     // Compute Aij[n] for the junction...one of which goes in Aip[0]...
-    /*if (size == 1)
+    if (size == 1)
     {
       Aip[0] = -getAij(proximalDimension, dimensions[0], area);
     }
     else
     {
       Aip[0] = -getAij(dimensions[1], dimensions[0], area);
-    }*/
+    }
+    /* We revert to the original approach,  
+  //IMPORTANT CHANGE: new approach
+  // Unlike the original approach
+  //   which doesn't have a compartment for the implicit branching
+  // The branch now has
+  //at least 2: one compartment as implicit branching point + one as regular
+  //    compartment-zero as implicit branching compartment
+  //    compartment-1th and above as normal
     Aip[0] = -getAij(dimensions[1], dimensions[0], area);
+    */
     for (int n = 0; n < distalDimensions.size(); n++)
     {
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], area));
