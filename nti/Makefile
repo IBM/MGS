@@ -198,7 +198,16 @@ TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 create_file: 
 	@if [ ! -f ./include/Model2Use.h ]; then \
 		touch include/Model2Use.h; \
-		echo "//#define MODEL_TO_USE <value>" > include/Model2Use.h; \
+		echo "//Please consider to define the following option, with MODEL_TO_USE is required" > include/Model2Use.h; \
+		echo "//#define MODEL_TO_USE <value>" >> include/Model2Use.h; \
+		echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> include/Model2Use.h; \
+		echo "//#define USE_DOUBLES   [to enable double-precision]" >> include/Model2Use.h; \
+    echo "//#define WAIT_FOR_REST" >> include/Model2Use.h; \
+		echo "#ifdef WAIT_FOR_REST" >> include/Model2Use.h; \
+		echo "#define NOGATING_TIME 20.0 //ms" >> include/Model2Use.h; \
+		echo "#else " >> include/Model2Use.h; \
+		echo "#define NOGATING_TIME 0.0 //ms" >> include/Model2Use.h; \
+		echo "#endif" >> include/Model2Use.h; \
 	fi; 
 
 target: create_file $(TARGETS) 

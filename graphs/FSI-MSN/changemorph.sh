@@ -6,7 +6,7 @@
 if [ "$#" == "0" ]; then
   echo "$0 <prefix> "
   echo "    <prefix> is the prefix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
-  echo "  e.g. traub51, traub3"
+  echo "  e.g. traub51, traub3, traub1"
   echo "NOTE: $0 clean "
   echo "   to clean the symbolic links"
 fi

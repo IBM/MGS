@@ -58,9 +58,11 @@ dyn_var_t ChannelKDR::vtrap(dyn_var_t x, dyn_var_t y) {
 void ChannelKDR::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
-  for (unsigned i=0; i<branchData->size; ++i) {
-#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 || CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
+  for (unsigned i=0; i<branchData->size; ++i) 
+  {
     dyn_var_t v=(*V)[i];
+#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 || \
+    CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
     dyn_var_t an = ANC*vtrap(-(v + ANV), AND);
     dyn_var_t bn = BNC*exp(-(v + BNV)/BND);
 		// see Rempe-Chomp (2006)
@@ -68,7 +70,6 @@ void ChannelKDR::update(RNG& rng)
     n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
 #elif CHANNEL_KDR == KDR_TRAUB_1994
-    dyn_var_t v=(*V)[i];
     dyn_var_t an = ANC*vtrap((ANV - v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
 		// see Rempe-Chomp (2006)
@@ -83,6 +84,7 @@ void ChannelKDR::update(RNG& rng)
 
 void ChannelKDR::initialize(RNG& rng)
 {
+  assert(branchData);
   unsigned size=branchData->size;
   assert(V);
   assert(gbar.size()==size);
@@ -141,10 +143,11 @@ void ChannelKDR::initialize(RNG& rng)
     }
   }
 
-  for (unsigned i=0; i<size; ++i) {
-    gbar[i]=gbar[0];
+  for (unsigned i=0; i<size; ++i) 
+  {
     dyn_var_t v=(*V)[i];
-#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 || CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
+#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 || \
+    CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
     dyn_var_t an = ANC*vtrap(-(v + ANV), AND);
     dyn_var_t bn = BNC*exp(-(v + BNV)/BND);
     n[i] = an/(an + bn); // steady-state value
@@ -153,7 +156,6 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t an = ANC*vtrap((ANV-v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
     n[i] = an/(an + bn); // steady-state value
-    g[i]=gbar[i]*n[i]*n[i];
     g[i] = gbar[i]*n[i]*n[i];
 #endif
   }

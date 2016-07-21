@@ -27,14 +27,19 @@
 //       during the time the Vm is resetle to proper resting value
 //       This should be applied to Ca2+ channels
 //#define WAIT_FOR_REST 
-#ifdef WAIT_FOR_REST
-#define NOGATING_TIME 20.0 //ms
-#else
+//#ifdef WAIT_FOR_REST
+//#define NOGATING_TIME 20.0 //ms
+//#else
+//#define NOGATING_TIME 0.0 //ms
+//#endif
+#ifndef NOGATING_TIME
 #define NOGATING_TIME 0.0 //ms
 #endif
 // Numerical settings
 //{{{
+#ifndef MAX_COMPUTE_ORDER
 #define MAX_COMPUTE_ORDER 0 
+#endif
 //#define USE_DOUBLES 
 
 //NOTE: g++ -DUSE_DOUBLES=1 myprogram.cpp

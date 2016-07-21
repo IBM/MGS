@@ -46,7 +46,6 @@ std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
 #define BHV 60.1
 #define BHD -5.0
 
-
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -88,9 +87,6 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t ph = 0.5 * dt * (ah + bh) ;
     h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
 
-
-
-
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -98,14 +94,8 @@ void ChannelKAf::update(RNG& rng)
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
     // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
-    }
+    if (h[i] < 0.0) { h[i] = 0.0; }
+    else if (h[i] > 1.0) { h[i] = 1.0; }
     
 #if CHANNEL_KAf == KAf_TRAUB_1994
      g[i] = gbar[i] * m[i] * h[i];
@@ -118,15 +108,11 @@ void ChannelKAf::update(RNG& rng)
 void ChannelKAf::initialize(RNG& rng)
 {
   pthread_once(&once_KAf, ChannelKAf::initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);

@@ -40,17 +40,19 @@ void ChannelBK::update(RNG& rng)
 #endif
 
 #if CHANNEL_BK == BK_TRAUB_1994
-        dyn_var_t alpha;
+        dyn_var_t alpha, beta;
         if ( v <= 50 ) {
             alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
+            beta = 2*exp(-((v-6.5)/27))-alpha;
         } else  {
             alpha = 2*exp(-((v-6.5)/27));
+            beta = 0.0;
         }
-        dyn_var_t beta = 2*exp(-((v-6.5)/27))-alpha;
         // Rempe * Chopp (2006)
         dyn_var_t pc = 0.5*dt*(alpha+beta);
         fO[i] = (dt*alpha + fO[i]*(1.0-pc))/(1.0+pc);
-        dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
+        //dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
+        dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
         g[i] = gbar[i]*fO[i]*CaGate;
     }
 #endif

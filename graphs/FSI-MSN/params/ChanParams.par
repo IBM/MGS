@@ -104,11 +104,17 @@ Cah 3
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
-1 0 <gbar={0.01}>
+1 0 <gbar={0.08}>
 3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
-     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01}}
+     gbar_values={0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08}}
 4 0 <gbar_dists={50, 100}; \
-     gbar_values={0.01, 0.01, 0.01}}
+     gbar_values={0.08, 0.08, 0.08}}
+##original Traub
+#1 0 <gbar={0.01}>
+#3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01}}
+#4 0 <gbar_dists={50, 100}; \
+#     gbar_values={0.01, 0.01, 0.01}}
 #}}}
 #}}}
 KAf 5
@@ -129,23 +135,29 @@ SK 5
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
-1 0 <gbar={0.0001}>
-2 0 <gbar={0.0001}>
-5 0 <gbar={0.0001}>
+#to compensate for small [Ca]
+1 0 <gbar={0.01}>  
+2 0 <gbar={0.01}>
+5 0 <gbar={0.01}>
 3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
-     gbar_values={0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.001}}
+     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.1}}
 4 0 <gbar_dists={50, 100}; \
-     gbar_values={0.0001, 0.0001, 0.0001}}
+     gbar_values={0.01, 0.01, 0.01}}
+#1 0 <gbar={0.0001}>//original
+#2 0 <gbar={0.0001}>//original
+#5 0 <gbar={0.0001}>//original
+#3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.001}}
+#4 0 <gbar_dists={50, 100}; \
+#     gbar_values={0.0001, 0.0001, 0.0001}}
 #}}}
 #}}}
-BK 5
+BK 3
 # NOTE: K(C) in Traub's term
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
 1 0 <gbar={0.2}>
-2 0 <gbar={0.0}>
-5 0 <gbar={0.0}>
 3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
      gbar_values={0.08, 0.08, 0.04, 0.04, 0.04, 0.04, 0.04}}
 4 0 <gbar_dists={50, 100}; \
