@@ -87,6 +87,7 @@
 #define MAX(x,y) ((x)>(y) ? (x) : (y))
 
 //#define INFERIOR_OLIVE
+//#define MGS_NTS_HYBRID
 
 #ifdef INFERIOR_OLIVE
 #include "../../../../../nti/InferiorOliveGlomeruliDetector.h"
@@ -1641,6 +1642,19 @@ ShallowArray< int > TissueFunctor::doLayout(LensContext* lc)
   if (nodeCategory=="JunctionPoints") ++_junctionPointTypeCounter;  
   if (nodeCategory=="BackwardSolvePoints") ++_backwardSolvePointTypeCounter;
   if (nodeCategory=="ForwardSolvePoints") ++_forwardSolvePointTypeCounter;
+
+#ifdef MGS_NTS_HYBRID
+  if (lc->sim->isSimulatePass()) {
+    int* mgsrval = new int(_nbrGridNodes);
+    int n = rval[_rank];
+    MPI_Allgather(&n, 1, MPI_INT, mgsrval, _nbrGridNodes, MPI_INT, MPI_COMM_WORLD);
+    assert(rval.size()==_nbrGridNodes);
+    for (int n=0; n<_nbrGridNodes; ++n)    
+      rval[n]=mgsrval[n];
+    delete [] mgsrval;
+  }
+#endif
+
   return rval;
 }
 

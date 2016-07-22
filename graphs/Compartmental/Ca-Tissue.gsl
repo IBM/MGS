@@ -26,9 +26,7 @@
 #define DAT18 "rec18.dat"
 #define DAT19 "rec19.dat"
 
-#define _X_ 1
-#define _Y_ 1
-#define _Z_ 1
+#include "Topology.h"
 
 #define CA_BETA 0.05
 #define CA_CLEARANCE 0.025
@@ -69,7 +67,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		      string channelParamaterFile, string synapseParameteurFile,
 		      Functor, Functor, Functor, Functor, int compartmentSize);
 
-TissueFunctor tissueFunctor("test0.txt -j 2 -a 1.0 -u bt -b nti.bin -g 1.0 -r 40 -p DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) 
+TissueFunctor tissueFunctor("minicolumn.txt -j 2 -a 1.0 -u bt -b nti.bin -g 1.0 -r 40 -p DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) 
 			    " -e 0.001 -t 0.01 -m 0", " -p DetParams.par -m 0 -n cost-volume",
 			    "CptParamsCa.par", "ChanParamsCa.par", "SynParamsCa.par",
 			    tissueLayoutFunctor, tissueNodeInitFunctor, 
@@ -128,19 +126,16 @@ RuntimePhases = { solveChannels, predictJunction,
 FinalPhases = { finalize };
 
 NodeType HodgkinHuxleyVoltage (<
-			Cm=V_CM,		// pF/um^2
 			Ra=V_RA,		// Gohm*um
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
-			gLeak=V_GLEAK, 		// nS/um^2, Hines used 0.0003 S/cm^2
 			E_leak=V_E_LEAK		// mV
-			     >) { initializeVoltage->initialize2, deriveParameters->initialize2 };
+			     >) { initializeVoltage->initialize2 };
 
 NodeType CaConcentration (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,               // dimensionless, Wagner and Keizer buffering constant
-                        CaClearance=CA_CLEARANCE    // s^-1
-			     >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
+                        beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
+			     >) { deriveParameters->initialize2, initializeCaConcentration->initialize2 };
 
 NodeType VoltageEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -218,18 +213,15 @@ NodeType ForwardSolvePoint7 { produceInitialState->initialize1,
 #endif
 
 NodeType HodgkinHuxleyVoltageJunction (<
-			Cm=V_CM,		// pF/um^2
 			Ra=V_RA,		// Gohm*um
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
-			gLeak=V_GLEAK, 		// nS/um^2, Hines used 0.0003 S/cm^2
 			E_leak=V_E_LEAK		// mV
- 		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
+ 		    >) { initializeJunction->initialize2 };
 
 NodeType CaConcentrationJunction (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,               // dimensionless, Wagner and Keizer buffering constant
-                        CaClearance=CA_CLEARANCE    // s^-1
+                        beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
  		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 
 NodeType VoltageJunctionPoint { produceInitialState->initialize1, produceVoltage->predictJunction };
@@ -459,7 +451,9 @@ Grid Tissue
 											    "Aip", 
 											    "RHS"
 											   },
-									Vnew = {-64.1235}
+									Vnew = {-64.1235},
+									gLeak=V_GLEAK,  // nS/um^2, Hines used 0.0003 S/cm^2
+									Cm = V_CM
 								      > ) );
 
    InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
@@ -471,7 +465,8 @@ Grid Tissue
 											    "Aip", 
 											    "RHS"
 											   },
-									Ca_new = {0.1}
+									Ca_new = {0.1},
+									CaClearance=CA_CLEARANCE    // s^-1
 								      > ) );
 
    InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
@@ -518,8 +513,8 @@ Grid Tissue
    InitNodes ( .[].Layer(bwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
-   InitNodes ( .[].Layer(junctions), tissueFunctor("NodeInit", < Vnew = {-64.3346}  > ) ); 
-   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1} > ) );
+   InitNodes ( .[].Layer(junctions), tissueFunctor("NodeInit", < Vnew = {-64.3346}, gLeak=V_GLEAK, Cm=V_CM > ) ); 
+   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1}, CaClearance=CA_CLEARANCE > ) );
    InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(junctionPoints_Ca), tissueFunctor("NodeInit", <> ) );
 
@@ -568,7 +563,6 @@ Grid Tissue
 								  > ) );	
    
    InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
-
    polyConnect(timeStep, .[].Layer(branches, junctions, branches_Ca, junctions_Ca, NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels), <>, <identifier="EC">);
    polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
@@ -576,6 +570,7 @@ Grid Tissue
 
    tissueFunctor("Connect", <> );	
 
+/*
 
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
@@ -585,7 +580,7 @@ Grid Tissue
    polyConnect(timeStep, voltageDisplay0, <>, <>);
    polyConnect(timeStep, voltageDisplay1, <>, <>);
    polyConnect(timeStep, voltageDisplay2, <>, <>);
-/*
+
    polyConnect(timeStep, voltageDisplay3, <>, <>);
    polyConnect(timeStep, voltageDisplay4, <>, <>);
    polyConnect(timeStep, voltageDisplay5, <>, <>);
@@ -593,12 +588,11 @@ Grid Tissue
    polyConnect(timeStep, voltageDisplay7, <>, <>);
    polyConnect(timeStep, voltageDisplay8, <>, <>);	
    polyConnect(timeStep, voltageDisplay9, <>, <>);
-*/
 
    polyConnect(timeStep, CalciumDisplay10, <>, <>);
    polyConnect(timeStep, CalciumDisplay11, <>, <>);
    polyConnect(timeStep, CalciumDisplay12, <>, <>);
-/*
+
    polyConnect(timeStep, CalciumDisplay13, <>, <>);
    polyConnect(timeStep, CalciumDisplay14, <>, <>);
    polyConnect(timeStep, CalciumDisplay15, <>, <>);
@@ -606,12 +600,12 @@ Grid Tissue
    polyConnect(timeStep, CalciumDisplay17, <>, <>);
    polyConnect(timeStep, CalciumDisplay18, <>, <>);
    polyConnect(timeStep, CalciumDisplay19, <>, <>);
-*/
+
 
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <identifier="JUNCTION">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, BRANCHTYPE=1, NEURON_INDEX=0>), voltageDisplay1, <>, <identifier="BRANCH">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <identifier="BRANCH">);
-/*
+
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=1, NEURON_INDEX=0>), voltageDisplay3, <>, <identifier="JUNCTION">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=2, BRANCH_INDEX=2, NEURON_INDEX=0>), voltageDisplay4, <>, <identifier="BRANCH">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=2, BRANCH_INDEX=2, NEURON_INDEX=0>), voltageDisplay5, <>, <identifier="BRANCH">);
@@ -619,12 +613,12 @@ Grid Tissue
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=2, BRANCH_INDEX=3, NEURON_INDEX=0>), voltageDisplay7, <>, <identifier="BRANCH">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=2, BRANCH_INDEX=3, NEURON_INDEX=0>), voltageDisplay8, <>, <identifier="BRANCH">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=2, BRANCH_INDEX=3, NEURON_INDEX=0>), voltageDisplay9, <>, <identifier="BRANCH">);
-*/
+
 
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=0>), CalciumDisplay10, <>, <identifier="JUNCTION">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=1, BRANCHTYPE=1, NEURON_INDEX=0>), CalciumDisplay11, <>, <identifier="BRANCH">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=1, BRANCHTYPE=2, NEURON_INDEX=0>), CalciumDisplay12, <>, <identifier="BRANCH">);
-/*
+
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=1, NEURON_INDEX=0>), CalciumDisplay13, <>, <identifier="JUNCTION">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=2, BRANCH_INDEX=2, NEURON_INDEX=0>), CalciumDisplay14, <>, <identifier="BRANCH">);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=2, BRANCH_INDEX=2, NEURON_INDEX=0>), CalciumDisplay15, <>, <identifier="BRANCH">);

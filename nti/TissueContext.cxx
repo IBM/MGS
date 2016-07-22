@@ -224,6 +224,9 @@ void TissueContext::setUpBranches(int rank, int maxComputeOrder)
       std::vector<ComputeBranch*> newBranchVector;
       _neurons[neuronIndex]=newBranchVector;
     }
+    for (int j=0; j<branch->_nCapsules; ++j) {
+      branch->_capsules[j].setBranch(branch);
+    }
     _neurons[neuronIndex].push_back(branch);
   }
 }

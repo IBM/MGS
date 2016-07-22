@@ -26,9 +26,7 @@
 #define DAT18 "rec18.dat"
 #define DAT19 "rec19.dat"
 
-#define _X_ 1
-#define _Y_ 2
-#define _Z_ 1
+#include "Topology.h"
 
 Functor Print;
 Print print();
@@ -117,13 +115,11 @@ RuntimePhases = { solveChannels, predictJunction,
 FinalPhases = { finalize };
 
 NodeType HodgkinHuxleyVoltage (<
-			Cm=0.01,		// pF/um^2
 			Ra=0.0015,		// Gohm*um
 			Na=70.0, 		// mM
 			K=433.0,		// mM	
-			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
 			E_leak=-54.4		// mV
-			     >) { initializeVoltage->initialize2, deriveParameters->initialize2 };
+			     >) { initializeVoltage->initialize2 };
 
 NodeType VoltageEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -193,14 +189,11 @@ NodeType ForwardSolvePoint7 { produceInitialState->initialize1,
 #endif
 
 NodeType HodgkinHuxleyVoltageJunction (<
-			Cm=0.01,		// pF/um^2
 			Ra=0.0015,		// Gohm*um
 			Na=70.0, 		// mM
 			K=433.0,		// mM	
-			gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
-			E_leak=-54.4,		// mV
-			cmt=0
- 		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
+			E_leak=-54.4		// mV
+ 		    >) { initializeJunction->initialize2 };
 
 NodeType VoltageJunctionPoint { produceInitialState->initialize1, produceVoltage->predictJunction };
 
@@ -257,27 +250,27 @@ pointCurrentSource.setCurrent(<
 			     >) on currentOn;
 
 VariableType VoltageDisplay{ initialize->initialize1 };
-VoltageDisplay voltageDisplay0<fileName=DAT0, indices={0}>;
-VoltageDisplay voltageDisplay1<fileName=DAT1, indices={0}>;
-VoltageDisplay voltageDisplay2<fileName=DAT2, indices={0}>;
-VoltageDisplay voltageDisplay3<fileName=DAT3, indices={0}>;
-VoltageDisplay voltageDisplay4<fileName=DAT4, indices={0}>;
-VoltageDisplay voltageDisplay5<fileName=DAT5, indices={0}>;
-VoltageDisplay voltageDisplay6<fileName=DAT6, indices={0}>;
-VoltageDisplay voltageDisplay7<fileName=DAT7, indices={0}>;
-VoltageDisplay voltageDisplay8<fileName=DAT8, indices={0}>;
-VoltageDisplay voltageDisplay9<fileName=DAT9, indices={0}>;
+VoltageDisplay voltageDisplay0<fileName=DAT0>;
+VoltageDisplay voltageDisplay1<fileName=DAT1>;
+VoltageDisplay voltageDisplay2<fileName=DAT2>;
+VoltageDisplay voltageDisplay3<fileName=DAT3>;
+VoltageDisplay voltageDisplay4<fileName=DAT4>;
+VoltageDisplay voltageDisplay5<fileName=DAT5>;
+VoltageDisplay voltageDisplay6<fileName=DAT6>;
+VoltageDisplay voltageDisplay7<fileName=DAT7>;
+VoltageDisplay voltageDisplay8<fileName=DAT8>;
+VoltageDisplay voltageDisplay9<fileName=DAT9>;
 
-VoltageDisplay voltageDisplay10<fileName=DAT10, indices={0}>;
-VoltageDisplay voltageDisplay11<fileName=DAT11, indices={0}>;
-VoltageDisplay voltageDisplay12<fileName=DAT12, indices={0}>;
-VoltageDisplay voltageDisplay13<fileName=DAT13, indices={0}>;
-VoltageDisplay voltageDisplay14<fileName=DAT14, indices={0}>;
-VoltageDisplay voltageDisplay15<fileName=DAT15, indices={0}>;
-VoltageDisplay voltageDisplay16<fileName=DAT16, indices={0}>;
-VoltageDisplay voltageDisplay17<fileName=DAT17, indices={0}>;
-VoltageDisplay voltageDisplay18<fileName=DAT18, indices={0}>;
-VoltageDisplay voltageDisplay19<fileName=DAT19, indices={0}>;
+VoltageDisplay voltageDisplay10<fileName=DAT10>;
+VoltageDisplay voltageDisplay11<fileName=DAT11>;
+VoltageDisplay voltageDisplay12<fileName=DAT12>;
+VoltageDisplay voltageDisplay13<fileName=DAT13>;
+VoltageDisplay voltageDisplay14<fileName=DAT14>;
+VoltageDisplay voltageDisplay15<fileName=DAT15>;
+VoltageDisplay voltageDisplay16<fileName=DAT16>;
+VoltageDisplay voltageDisplay17<fileName=DAT17>;
+VoltageDisplay voltageDisplay18<fileName=DAT18>;
+VoltageDisplay voltageDisplay19<fileName=DAT19>;
 
 voltageDisplay0.dataCollection(<>) on recOn;
 voltageDisplay1.dataCollection(<>) on recOn;
@@ -374,6 +367,8 @@ Grid Tissue
 											    "Aip", 
 											    "RHS", 
 											   },
+								      Cm=0.01,		// pF/um^2
+								      gLeak=0.003, 		// nS/um^2, Hines used 0.0003 S/cm^2
 									Vnew = {-20.00}//-64.1235}
 								      > ) );
 
@@ -432,7 +427,7 @@ Grid Tissue
    InitNodes ( .[].Layer(bwdVoltageSolvePoints6), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdVoltageSolvePoints6_2), tissueFunctor("NodeInit", <> ) );
 #endif
-   InitNodes ( .[].Layer(voltageJunctions), tissueFunctor("NodeInit", < Vnew = {-20.000} /*-64.3346}*/  > ) ); 
+   InitNodes ( .[].Layer(voltageJunctions), tissueFunctor("NodeInit", < Vnew = {-20.000} /*-64.3346}*/ , Cm=0.01, gLeak=0.003 > ) ); 
    InitNodes ( .[].Layer(voltageJunctions_2), tissueFunctor("NodeInit", < Vnew = {-20.000} /*-64.3346}*/  > ) );
    InitNodes ( .[].Layer(voltageJunctionPoints), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(voltageJunctionPoints_2), tissueFunctor("NodeInit", <> ) );
