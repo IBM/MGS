@@ -403,8 +403,8 @@ Grid Tissue
    polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels), <>, <identifier="EC">);
    polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
-
    tissueFunctor("Connect", <> );	
+print("made it");
 
    polyConnect(currentStim, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
    polyConnect(timeStep, voltageDisplay0, <>, <>);
