@@ -98,7 +98,6 @@ public:
   std::map<Capsule*, CG_CompartmentDimension*> _junctionDimensionMap;
   std::map<Capsule*, CG_BranchData* > _junctionBranchDataMap;
   std::map<double, int> _firstPassCapsuleMap, _secondPassCapsuleMap; // key to capsule index 
-  std::map<ComputeBranch*, int> _improperComputeBranchCorrectedCapsuleCountsMap; // improper: CBs that start in another rank, end in this rank
 
   void rebalance(Params* params, TouchVector* touchVector);
 
@@ -110,8 +109,6 @@ public:
   bool isComing(Capsule&, int);             // first coord of capsule is another volume, while second is in this
   bool isOutside(ComputeBranch*, int);
   bool isConsecutiveCapsule(int index);
-  bool isProperSpanning(ComputeBranch* branch, ShallowArray<int, MAXRETURNRANKS, 100>& endRanks);
-  bool isImproperSpanning(ComputeBranch* branch, int& beginRank);
 
   bool _initialized;
   SegmentDescriptor _segmentDescriptor;
