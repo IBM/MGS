@@ -226,13 +226,6 @@ void TissueContext::setUpBranches(int rank, int maxComputeOrder)
     }
     _neurons[neuronIndex].push_back(branch);
   }
-
-  delete [] sendbuf;
-  delete [] sendcounts;
-  delete [] senddispls;
-  delete [] recvbuf;
-  delete [] recvcounts;
-  delete [] recvdispls;
 }
 
 void TissueContext::resetBranches()
