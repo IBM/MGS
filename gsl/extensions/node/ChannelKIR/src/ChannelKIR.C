@@ -63,15 +63,11 @@ void ChannelKIR::update(RNG& rng)
 void ChannelKIR::initialize(RNG& rng)
 {
   pthread_once(&once_KIR, ChannelKIR::initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
@@ -79,7 +75,7 @@ void ChannelKIR::initialize(RNG& rng)
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels KIR Param"
 			<< std::endl;
 		assert(0);
 	}

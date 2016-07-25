@@ -199,6 +199,7 @@ create_file:
 	@if [ ! -f ./include/Model2Use.h ]; then \
 		touch include/Model2Use.h; \
 		echo "//Please consider to define the following option, with MODEL_TO_USE is required" > include/Model2Use.h; \
+		echo "//IMPORTANT: any change is expected to have full rebuild" >> include/Model2Use.h; \
 		echo "//#define MODEL_TO_USE <value>" >> include/Model2Use.h; \
 		echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> include/Model2Use.h; \
 		echo "//#define USE_DOUBLES   [to enable double-precision]" >> include/Model2Use.h; \

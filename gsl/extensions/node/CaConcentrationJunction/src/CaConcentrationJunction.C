@@ -68,10 +68,8 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 	// or a branching point junction with 3 or more branches (one from main, 2+ for children
   // branches))
   SegmentDescriptor segmentDescriptor;
-#ifdef DEBUG_ASSERT
   assert(Ca_new.size() == 1);
   assert(dimensions.size() == 1);
-#endif
 
   Ca_cur = Ca_new[0];
   // So, one explicit junction is composed of one compartment 

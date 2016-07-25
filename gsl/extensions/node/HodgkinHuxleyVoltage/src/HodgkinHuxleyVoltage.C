@@ -359,14 +359,15 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
   SegmentDescriptor segmentDescriptor;
 	if (cptIndex == 0)
 	{
-		std::cerr << "time| BRANCH | rank | nodeIndex | layerIndex | cptIndex |"
-			<< "neuronIdx | branchIdx | branchOrder | distalC0 | distalC1 | distalC2 |"
+		std::cerr << "step,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
+			<< "(neuronIdx, branchIdx, branchOrder) | distalC0 | distalC1 | distalC2 |"
 			<< "distalC3 | proxC0 | proxC1 | proxC2 |"
 			<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
 	}
 	int i  = cptIndex;
-	std::cerr << dyn_var_t(getSimulation().getIteration()) *
-		*getSharedMembers().deltaT << " BRANCH"
+	std::cerr << getSimulation().getIteration() << "," <<
+    dyn_var_t(getSimulation().getIteration()) *
+		*getSharedMembers().deltaT << "| BRANCH"
 		<< " [" << getSimulation().getRank() << "," << getNodeIndex()
 		<< "," << getIndex() << "," << i << "] "
 		<< "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
@@ -566,8 +567,9 @@ dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
           (2.0 * getSharedMembers().Ra * length * length * b->r)); /* needs fixing */
 }
 
-// GOAL get the Aij[]
-// At implicit branching
+// GOAL: Get coefficient of Aip[0] and Aim[size-1]
+//  for Vm(i=0,j=branch-index)
+// i.e. at implicit branch point
 //  Aij = 1/A * sum_branch(pi*r_branch^2/(Ra * ds_branch))
 // given
 //  A = surface_area

@@ -42,6 +42,9 @@ PolyConnectorFunctor polyConnect();
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
+#ifndef MODEL_TO_USE
+print("WARNING: You haven't selected MODEL_TO_USE")
+#endif
 
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
@@ -180,8 +183,7 @@ print("Case 00: resting");
 //#define Vrest_value  -79.0 // [mV]
 #define Vrest_value  -74.0 // [mV]
 #define E_leak_value -90.0 
-//#define Erev_HCN  -45.0 // [mV]
-#define Erev_HCN  -30.0 // [mV]
+#define Erev_HCN  -45.0 // [mV]
 //}}}
 
 //{{{ Time constant
@@ -319,27 +321,27 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 ////NOTE: -r #capsules-per-cpt
 //#define ALLSPINES
-#if STIMULUS_CASE == CASE_04
-#define tissueFile "neurons.txt_triggerdistalspines"
-#else
+//#if STIMULUS_CASE == CASE_04
+//#define tissueFile "neurons.txt_triggerdistalspines"
+//#else
 #define tissueFile "neurons.txt"
-#endif
+//#endif
 
-#ifdef ALLSPINES
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
-//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
-#define strArg2  "params_allspines/CptParams.par"
-#define strArg3 "params_allspines/ChanParams.par"
-#define strArg4 "params_allspines/SynParams.par"
-#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 4 " //" -g 18"
+//#ifdef ALLSPINES
+//#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
+////#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
+//#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
+//#define strArg2  "params_allspines/CptParams.par"
+//#define strArg3 "params_allspines/ChanParams.par"
+//#define strArg4 "params_allspines/SynParams.par"
+//#else
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 " //" -g 18"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
 #define strArg3 "params/ChanParams.par"
 #define strArg4 "params/SynParams.par"
-#endif
+//#endif
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -491,7 +493,7 @@ NodeType ChannelHayNap { computeE->initialize2, initialize->initialize3, update-
 /*}}}*/
 //K+ currents
 /*{{{*/
-NodeType ChannelHayMK { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelMK { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelHayKp { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelHayKt { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelHayKv31 { computeE->initialize2, initialize->initialize3, update->solveChannels };
@@ -845,7 +847,7 @@ Grid PyramidalL5_Neuron{
      //}}}
    Layer(HCNChannels, ChannelHayHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
-   Layer(MKChannels, ChannelHayMK, tissueFunctor("Layout", < nodekind="Channels[MK]" >), < nodekind="Channels[MK]" >, tissueGM);
+   Layer(MKChannels, ChannelMK, tissueFunctor("Layout", < nodekind="Channels[MK]" >), < nodekind="Channels[MK]" >, tissueGM);
    Layer(KpChannels, ChannelHayKp, tissueFunctor("Layout", < nodekind="Channels[Kp]" >), < nodekind="Channels[Kp]" >, tissueGM);
    Layer(KtChannels, ChannelHayKt, tissueFunctor("Layout", < nodekind="Channels[Kt]" >), < nodekind="Channels[Kt]" >, tissueGM);
    Layer(Kv31Channels, ChannelHayKv31, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
@@ -1231,6 +1233,7 @@ Grid PyramidalL5_Neuron{
 
 	/*{{{ reserved for extra code*/ 
 	/*}}}*/
+/*}}}*/
 /*}}}*/
 }; //end grid
 

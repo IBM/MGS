@@ -53,10 +53,10 @@ BranchDataProducer, IOCurrentArrayProducer {
   //SHARED DATA
   Shared {//in xxxCompCategory.C
   //{{{
-    dyn_var_t* Na_IC; // [mM]
-    dyn_var_t* Na_EC; // [mM]
+    dyn_var_t* Na_IC;  // [mM]
+    dyn_var_t* Na_EC;  // [mM]
     dyn_var_t* deltaT; // [ms]
-    dyn_var_t* T;     // [K]
+    dyn_var_t* T;      // [K]
     dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
                       //   and tempt. used for the simulation 
     dyn_var_t [] E_Na; // [mV]

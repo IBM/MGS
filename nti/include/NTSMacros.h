@@ -132,7 +132,6 @@
 #define KDR_AIS_TRAUB_1994  1
 
 #define _KDR_AIS_DEFAULT KDR_AIS_TRAUB_1994
-
 // BK-alpha
 // BK-alphabeta   CHANNEL_BKalphabeta macro
 // NOTE: Those with the same values are indeed the same model
@@ -154,6 +153,11 @@
 #define SK_TRAUB_1994 5
 
 #define _SK_DEFAULT SK_WOLF_2005
+// MK (Muscarinic-sensitive K+ current) CHANNEL_MK macro
+#define  MK_ADAMS_BROWN_CONSTANTI_1982  1
+
+#define _MK_DEFAULT MK_ADAMS_BROWN_CONSTANTI_1982
+
 //}}}
 
 //{{{ HCN-models
@@ -422,6 +426,7 @@
   #define CHANNEL_NAT NAT_HAY_2011
   #define CHANNEL_NAP NAP_MAGISTRETTI_1999
   #define CHANNEL_HCN HCN_HAY_2011
+  #define CHANNEL_MK  MK_ADAMS_BROWN_CONSTANTI_1982
   #define CHANNEL_KAf KAf_WOLF_2005
   #define CHANNEL_KAs KAs_WOLF_2005
   #define CHANNEL_KIR KIR_WOLF_2005
@@ -554,6 +559,9 @@
 #endif
 #ifndef CHANNEL_KDR_AIS
 #define CHANNEL_KDR_AIS _KDR_AIS_DEFAULT
+#endif
+#ifndef CHANNEL_MK
+#define CHANNEL_MK _MK_DEFAULT
 #endif
 #ifndef CHANNEL_CaHVA
 #define CHANNEL_CaHVA _CaHVA_DEFAULT
