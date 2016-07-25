@@ -15,7 +15,7 @@ Voltage 1.0
 Calcium 1.0
 
 COMPARTMENT_VARIABLE_PARAMS 1
-Voltage 16
+Voltage 6
 MTYPE BRANCHTYPE
 # Cm ~ [pF/um^2]
 # gLeak ~ [nS/um^2]
@@ -23,28 +23,19 @@ MTYPE BRANCHTYPE
 ## NOTE: Make sure semi-colon separated
 #{{{
 #{{{neuron
-0 1 <Cm=0.01; gLeak=0.000138>
-0 2 <Cm=0.01; gLeak=0.000138>
-0 5 <Cm=0.01; gLeak=0.000138>
-0 3 <Cm=0.01; gLeak=0.000138>
-0 4 <Cm=0.01; gLeak=0.000138>
-0 6 <Cm=0.01; gLeak=0.000138>
+0 1 <Cm=0.01; gLeak=0.0002>
+0 2 <Cm=0.01; gLeak=0.000325>
+0 5 <Cm=0.01; gLeak=0.000325>
+0 3 <Cm=0.02; gLeak=0.000234>
+0 4 <Cm=0.02; gLeak=0.000295>
+0 6 <Cm=0.02; gLeak=0.000295>
+# NOTE: for non-uniform gLeak; the authors confirmed that we need non-uniform Eleak (page 12 column 1)
 #}}}
 #{{{ GABAergic bouton
-1 1 <Cm=0.01; gLeak=0.000295>
-1 2 <Cm=0.01; gLeak=0.000295>
 #}}}
 #{{{ spines
-2 1 <Cm=0.01; gLeak=0.000135>
-2 3 <Cm=0.01; gLeak=0.000135>
-3 1 <Cm=0.01; gLeak=0.000135>
-3 3 <Cm=0.01; gLeak=0.000135>
 #}}}
 #{{{ Glutamatergic bouton
 ## leak -89.52mV for 0.000295
-4 1 <Cm=0.01; gLeak=0.000135; Vnew={-70.0}>
-4 2 <Cm=0.01; gLeak=0.000135; Vnew={-70.0}>
-5 1 <Cm=0.01; gLeak=0.000135; Vnew={-70.0}>
-5 2 <Cm=0.01; gLeak=0.000135; Vnew={-70.0}>
 #}}}
 #}}}

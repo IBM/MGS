@@ -225,6 +225,9 @@ void CaConcentration::finish(RNG& rng)
   {
     Ca_cur[i] = Ca_new[i] = 2.0 * Ca_new[i] - Ca_cur[i];
 #ifdef DEBUG_ASSERT
+    if (Ca_new[i] != Ca_new[i] or 
+        Ca_new[i] <= 0)
+      printDebugHH();
     assert(Ca_new[i] >= 0);
     assert(Ca_new[i] == Ca_new[i]);  // making sure Ca_new[i] is not NaN
 #endif
@@ -263,13 +266,11 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   unsigned size = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
-#ifdef DEBUG_ASSERT
   if (isProximalCase2) assert(computeOrder == 0);
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
   assert(dimensions.size() == size);
   assert(Ca_new.size() == size);
   assert(distalDimensions.size() == distalInputs.size());
-#endif
 
   // allocate data
   if (Ca_cur.size() != size) Ca_cur.increaseSizeTo(size);
@@ -313,12 +314,14 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 
   if (isDistalCase1 || isDistalCase2)
   {
-    Aim[0] = -getLambda(distalDimensions[0], dimensions[0]);
+    //Aim[0] = -getLambda(distalDimensions[0], dimensions[0]);
+    Aim[0] = -getLambda(dimensions[0], distalDimensions[0]);
   }
 
   for (int i = 1; i < size; i++)
   {
-    Aim[i] = -getLambda(dimensions[i - 1], dimensions[i]);
+    //Aim[i] = -getLambda(dimensions[i - 1], dimensions[i]);
+    Aim[i] = -getLambda(dimensions[i], dimensions[i - 1]);
   }
 
   for (int i = 0; i < size - 1; i++)
@@ -355,7 +358,8 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   */
     for (int n = 0; n < distalDimensions.size(); n++)
     {
-      Aij.push_back(-getAij(distalDimensions[n], dimensions[0], volume));
+      //Aij.push_back(-getAij(distalDimensions[n], dimensions[0], volume));
+      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume));
     }
   }
 #ifdef DEBUG_HH
@@ -367,14 +371,15 @@ void CaConcentration::printDebugHH()
 {
   unsigned size = branchData->size;
   SegmentDescriptor segmentDescriptor;
-	std::cerr << "time| BRANCH | rank | nodeIndex | layerIndex | cptIndex |"
-		<< "neuronIdx | branchIdx | branchOrder | distalC0 | distalC1 | distalC2 |"
+	std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
+		<< "(neuronIdx, branchIdx, branchOrder) distalC0 | distalC1 | distalC2 |"
 		<< "distalC3 | proxC0 | proxC1 | proxC2 |"
 		<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
   for (int i = 0; i < size; ++i)
   {
-    std::cerr << dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " CA_BRANCH"
+    std::cerr << getSimulation().getIteration()<<"," << 
+      dyn_var_t(getSimulation().getIteration()) *
+                     *getSharedMembers().deltaT << " Ca_BRANCH"
               << " [" << getSimulation().getRank() << "," << getNodeIndex()
               << "," << getIndex() << "," << i << "] "
               << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
@@ -459,7 +464,7 @@ void CaConcentration::doForwardSolve()
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
     for (; fiter != fend; fiter++)
     {
-      RHS[0] =  (*fiter->fluxes)[0];
+      RHS[0] +=  (*fiter->fluxes)[0];
     }
   }
 
@@ -527,6 +532,8 @@ void CaConcentration::doBackwardSolve()
   }
 }
 
+//GOAL: get coefficient of Aip or Aim
+//  DCa * (r_{i->j})^2 / (dist^2 * b->r^2)
 dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 {
 	dyn_var_t radius;// radius_middle ()
@@ -543,11 +550,13 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
   //        (lengthsq * b->r * b->r)); /* needs fixing */
   dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
   //return (getSharedMembers().DCa * radius * radius /
+  //        (length * length * b->r * b->r)); /* needs fixing */
   return (DCa * radius * radius /
           (length * length * b->r * b->r)); /* needs fixing */
 }
 
 // GOAL: Get coefficient of Ca(i=0,j=branch-index)
+// i.e. at implicit branch point
 //  DCa * (1/V) * PI * r_(i->j)^2 / (ds_(i->j))
 //   V = volume of cytosolic compartment
 //   DCa = diffusion constant of Ca(cyto)

@@ -31,6 +31,23 @@ static pthread_once_t once_Nap = PTHREAD_ONCE_INIT;
 #define VHALF_H -48.8
 #define k_H 10.0
 
+#define IMV 52.6
+#define IMD -4.6
+#define IHV 48.8
+#define IHD 10.0
+#define AMC -0.182
+#define AMV 38.0
+#define AMD -6.0
+#define BMC 0.124
+#define BMV 38.0
+#define BMD 6.0
+#define AHC 2.88E-6
+#define AHV 17.0
+#define AHD 4.63
+#define BHC -6.94E-6
+#define BHV 64.4
+#define BHD -2.63
+//#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 #elif CHANNEL_NAP == NAP_WOLF_2005
 // data
 //    activation : from entorhinal cortical stellate cell (Magistretti-Alonso,
@@ -70,6 +87,7 @@ void ChannelNap::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAP == NAP_WOLF_2005
+    {
     // NOTE: Some models use m_inf and tau_m to estimate m
     dyn_var_t tau_m;
     if (v < -40.0)
@@ -87,22 +105,45 @@ void ChannelNap::update(RNG& rng)
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    }
+#elif CHANNEL_NAP == NAP_MAGISTRETTI_1999
+    {
+    dyn_var_t m_inf = 1/(1+exp((v + IMV)/IMD));
+    dyn_var_t am = AMC*vtrap(v + AMV, AMD);
+    dyn_var_t bm = BMC*vtrap(v + BMV, BMD);
+    //dyn_var_t pm = 0.5*dt*(am + bm)*T_ADJ/6.0;
+    dyn_var_t pm = 0.5*dt*(am + bm)*getSharedMembers().Tadj/6.0;
+    m[i] = (2*pm*m_inf + m[i]*(1.0 - pm))/(1.0 + pm);
+    dyn_var_t h_inf = 1/(1+exp((v + IHV)/IHD));
+    dyn_var_t ah = AHC*vtrap(v + AHV, AHD);
+    dyn_var_t bh = BHC*vtrap(v + BHV, BHD);
+    //dyn_var_t ph = 0.5*dt*(ah + bh)*T_ADJ; 
+    dyn_var_t ph = 0.5*dt*(ah + bh)*getSharedMembers().Tadj; 
+    h[i] = (2*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);
+    }
 #else
     NOT IMPLEMENTED YET
 #endif
+    {//keep range [0..1]
     // trick to keep m in [0, 1]
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
+    // trick to keep h in [0, 1]
+    if (h[i] < 0.0) { h[i] = 0.0; }
+    else if (h[i] > 1.0) { h[i] = 1.0; }
     }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
-    }
+
+#if CHANNEL_NAP == NAP_WOLF_2005
     g[i] = gbar[i] * m[i] * h[i];
+#elif CHANNEL_NAP == NAP_MAGISTRETTI_1999
+    g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];
+#endif
+#ifdef WAIT_FOR_REST
+		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+		if (currentTime < NOGATING_TIME)
+			g[i]= 0.0;
+#endif
+    //common
 		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
@@ -110,25 +151,22 @@ void ChannelNap::update(RNG& rng)
 void ChannelNap::initialize(RNG& rng)
 {
   pthread_once(&once_Nap, ChannelNap::initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
+	SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Nap Param"
 			<< std::endl;
 		assert(0);
 	}
@@ -136,14 +174,17 @@ void ChannelNap::initialize(RNG& rng)
   {
     if (gbar_dists.size() > 0) {
       unsigned int j;
-      assert(gbar_values.size() == gbar_dists.size());
+			//NOTE: 'n' bins are splitted by (n-1) points
+			if (gbar_values.size() - 1 != gbar_dists.size())
+			{
+				std::cerr << "gbar_values.size = " << gbar_values.size() 
+					<< "; gbar_dists.size = " << gbar_dists.size() << std::endl; 
+			}
+			assert(gbar_values.size() -1 == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
-      if (j < gbar_values.size()) 
-        gbar[i] = gbar_values[j];
-      else
-        gbar[i] = gbar_default;
+			gbar[i] = gbar_values[j];
     } 
 		/*else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];
@@ -152,7 +193,6 @@ void ChannelNap::initialize(RNG& rng)
 		{
       unsigned int j;
       assert(gbar_values.size() == gbar_branchorders.size());
-      SegmentDescriptor segmentDescriptor;
       for (j=0; j<gbar_branchorders.size(); ++j) {
         if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
       }
@@ -175,11 +215,14 @@ void ChannelNap::initialize(RNG& rng)
 #if CHANNEL_NAP == NAP_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
-#else
-    NOT IMPLEMENTED YET m[i] = am / (am + bm);  // steady-state value
-    h[i] = ah / (ah + bh);
-#endif
     g[i] = gbar[i] * m[i] * h[i];
+#elif CHANNEL_NAP == NAP_MAGISTRETTI_1999
+    m[i] = 1/(1+exp((v + IMV)/IMD));
+    h[i] = 1/(1+exp((v + IHV)/IHD));
+    g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];
+#else
+    NOT IMPLEMENTED YET
+#endif
   }
 }
 

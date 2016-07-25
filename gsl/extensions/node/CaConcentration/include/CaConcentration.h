@@ -96,6 +96,7 @@ class CaConcentration : public CG_CaConcentration
   private:
   void doForwardSolve();
   void doBackwardSolve();
+  SegmentDescriptor _segmentDescriptor; //for debug purpose
 };
 
 #endif

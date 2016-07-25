@@ -10,24 +10,25 @@
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
 #define BASED_TEMPERATURE 6.3  // Celcius
 #define Q10 3.0
-#elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
+#elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
-#elif CHANNEL_NAT == NAT_WOLF_2005
-#define BASED_TEMPERATURE 33.0  // Celcius
+#elif CHANNEL_NAT == NAT_TRAUB_1994
+#define BASED_TEMPERATURE 23  // Celcius
 #define Q10 3.0
-#elif CHANNEL_NAT == NAT_HAY_2011
-#define BASED_TEMPERATURE 21  // Celcius
-#define Q10 2.3
-#elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
+#elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 #define BASED_TEMPERATURE 23  // Celcius
 #define Q10 2.3
-#elif CHANNEL_NAT == NAT_TRAUB_1994
-#define BASED_TEMPERATURE 23  // Celcius
+#elif CHANNEL_NAT == NAT_WOLF_2005
+#define BASED_TEMPERATURE 33.0  // Celcius
 #define Q10 3.0
+#elif CHANNEL_NAT == NAT_HAY_2011
+//Modified Colbert - Pan (2002) model
+#define BASED_TEMPERATURE 22  // Celcius
+#define Q10 2.3
 #endif
 
 #ifndef Q10 

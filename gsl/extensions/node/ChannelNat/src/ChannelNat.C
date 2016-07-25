@@ -41,6 +41,18 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHC 1.0
 #define BHV -35.0
 #define BHD 10.0
+#elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
+// Rush-Rinzel (1994) thalamic neuron
+// adopted from HH-1952 data with
+//  the kinetics has been adjusted to 35-degree C using Q10=3
+// NOTE:
+// the channel model is almost fully inactivate (h~0.1 at -65mV)
+// and it requires the cell to be hyperpolarized a certain amount of time
+// to remove the inactivation
+// NOTE: Use original HH-1952, but shift V-dependent upward along voltage-axis
+//    hNa is replaced by a linear function of potassium inactivation hNa=0.85-n
+//    to approximate sodium activation 'm'
+    assert(0);
 #elif CHANNEL_NAT == NAT_TRAUB_1994
 //Developed for Gamagenesis in interneurons
 //All above conventions for a_m, a_h, b_h remain the same as above except b_m below
@@ -154,18 +166,6 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHV -66.0
 #define BHD 6.0
 
-#elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
-// Rush-Rinzel (1994) thalamic neuron
-// adopted from HH-1952 data with
-//  the kinetics has been adjusted to 35-degree C using Q10=3
-// NOTE:
-// the channel model is almost fully inactivate (h~0.1 at -65mV)
-// and it requires the cell to be hyperpolarized a certain amount of time
-// to remove the inactivation
-// NOTE: Use original HH-1952, but shift V-dependent upward along voltage-axis
-//    hNa is replaced by a linear function of potassium inactivation hNa=0.85-n
-//    to approximate sodium activation 'm'
-    assert(0);
 #endif
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
@@ -181,6 +181,7 @@ void ChannelNat::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+    {
     // NOTE: Some models use alpha_m and beta_m to estimate m
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
@@ -191,7 +192,9 @@ void ChannelNat::update(RNG& rng)
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
 #elif CHANNEL_NAT == NAT_TRAUB_1994
+    {
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
     dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
     dyn_var_t ah = AHC * exp((v - AHV) / AHD);
@@ -201,9 +204,10 @@ void ChannelNat::update(RNG& rng)
     m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) ;
     h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
-
+    }
 
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
+    {
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
@@ -214,7 +218,9 @@ void ChannelNat::update(RNG& rng)
     //m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
 #elif CHANNEL_NAT == NAT_WOLF_2005
+    {
     // NOTE: Some models use m_inf and tau_m to estimate m
     // tau_m in the lookup table
     std::vector<dyn_var_t>::iterator low =
@@ -236,8 +242,11 @@ void ChannelNat::update(RNG& rng)
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+      
+    }
 #elif CHANNEL_NAT == NAT_HAY_2011 || \
 		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
+    {
     dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
     dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
     dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
@@ -247,20 +256,18 @@ void ChannelNat::update(RNG& rng)
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
+
+    }
 #else
-	assert(0);
+    assert(0);
 #endif
+    {//keep range [0..1]
     // trick to keep m in [0, 1]
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
+    // trick to keep h in [0, 1]
+    if (h[i] < 0.0) { h[i] = 0.0; }
+    else if (h[i] > 1.0) { h[i] = 1.0; }
     }
    
 #if CHANNEL_NAT == NAT_TRAUB_1994
@@ -281,15 +288,11 @@ void ChannelNat::update(RNG& rng)
 void ChannelNat::initialize(RNG& rng)
 {
   pthread_once(&once_Nat, initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
@@ -302,7 +305,7 @@ void ChannelNat::initialize(RNG& rng)
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Nat Param"
 			<< std::endl;
 		assert(0);
 	}
@@ -348,7 +351,6 @@ void ChannelNat::initialize(RNG& rng)
 		{
       unsigned int j;
       assert(gbar_values.size() == gbar_branchorders.size());
-      SegmentDescriptor segmentDescriptor;
       for (j=0; j<gbar_branchorders.size(); ++j) {
         if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
       }
@@ -369,26 +371,32 @@ void ChannelNat::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+    {
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
     dyn_var_t bh = BHC / (1.0 + exp(-(v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
+    }
 #elif CHANNEL_NAT == NAT_TRAUB_1994    
+    {
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
     dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
     dyn_var_t ah = AHC * exp((v - AHV) / AHD);
     dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
+    }
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
+    {
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
     dyn_var_t bh = BHC * vtrap(-(v - BHV), BHD);
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
+    }
 #elif CHANNEL_NAT == NAT_HAY_2011 || \
 		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
     //dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
