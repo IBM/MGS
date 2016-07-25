@@ -46,7 +46,6 @@ std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
 #define BHV 60.1
 #define BHD -5.0
 
-
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -88,9 +87,6 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t ph = 0.5 * dt * (ah + bh) ;
     h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
 
-
-
-
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -98,14 +94,8 @@ void ChannelKAf::update(RNG& rng)
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
     // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
-    }
+    if (h[i] < 0.0) { h[i] = 0.0; }
+    else if (h[i] > 1.0) { h[i] = 1.0; }
     
 #if CHANNEL_KAf == KAf_TRAUB_1994
      g[i] = gbar[i] * m[i] * h[i];
@@ -118,15 +108,11 @@ void ChannelKAf::update(RNG& rng)
 void ChannelKAf::initialize(RNG& rng)
 {
   pthread_once(&once_KAf, ChannelKAf::initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
@@ -143,14 +129,17 @@ void ChannelKAf::initialize(RNG& rng)
   {
     if (gbar_dists.size() > 0) {
       unsigned int j;
-      assert(gbar_values.size() == gbar_dists.size());
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (gbar_values.size() - 1 != gbar_dists.size())
+      {
+        std::cerr << "gbar_values.size = " << gbar_values.size()
+          << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
+      }
+      assert(gbar_values.size() -1 == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
-      if (j < gbar_values.size()) 
-        gbar[i] = gbar_values[j];
-      else
-        gbar[i] = gbar_default;
+      gbar[i] = gbar_values[j];
     } 
 		/*else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];

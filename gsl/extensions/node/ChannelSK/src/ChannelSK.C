@@ -62,7 +62,8 @@
 //   beta = 0.001
 //   chi means [Ca]i
 #define alphamax 0.01
-#define chiscaling 0.00002
+//#define chiscaling 0.00002
+#define chiscaling 0.0004
 #define beta 0.001
 #else
 NOT IMPLEMENTED YET
@@ -181,15 +182,11 @@ void ChannelSK::update(RNG& rng)
 
 void ChannelSK::initialize(RNG& rng)
 {
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (fO.size() != size) fO.increaseSizeTo(size);
@@ -254,19 +251,19 @@ void ChannelSK::initialize(RNG& rng)
 #if SIMULATION_INVOLVE  == VMONLY
     dyn_var_t cai = Cai_base;
 #else
-	dyn_var_t cai = (*Cai)[i]; // [uM]
+    dyn_var_t cai = (*Cai)[i]; // [uM]
 #endif
 
 #if CHANNEL_SK == SK_WOLF_2005
-	dyn_var_t cai_mM = cai  * uM2mM; // [mM]
-	dyn_var_t a = fwrate(v, cai_mM);
-	dyn_var_t sum = a+bwrate(v,cai_mM);
-	dyn_var_t tau = 1/(sum);
-	dyn_var_t Oinf = a/(sum); 
-	fO[i] = Oinf;
+    dyn_var_t cai_mM = cai  * uM2mM; // [mM]
+    dyn_var_t a = fwrate(v, cai_mM);
+    dyn_var_t sum = a+bwrate(v,cai_mM);
+    dyn_var_t tau = 1/(sum);
+    dyn_var_t Oinf = a/(sum); 
+    fO[i] = Oinf;
     g[i] = gbar[i]*fO[i];
 #elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT || \
-	  CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
+    CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
     //m[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));
     //g[i] = gbar[i]*m[i];
     fO[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));

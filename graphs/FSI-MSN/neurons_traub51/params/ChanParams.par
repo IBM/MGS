@@ -9,8 +9,8 @@ BRANCHTYPE MTYPE
     KAf [Voltage] [Voltage] \
     KDR [Voltage] [Voltage] \
     Cah [Voltage] [Voltage, Calcium]  \
-    BK [Calcium] [Voltage] \
-    SK [Calcium] [Voltage] \
+    BK [Voltage, Calcium] [Voltage] \
+    SK [Voltage, Calcium] [Voltage] \
     PMCA [Voltage, Calcium] [Calcium] 
 2 0 Nat [Voltage] [Voltage] \
     KDR [Voltage] [Voltage] 
@@ -22,15 +22,15 @@ BRANCHTYPE MTYPE
     KAf [Voltage] [Voltage] \
     KDR [Voltage] [Voltage] \
     Cah [Voltage] [Voltage, Calcium]  \
-    BK [Calcium] [Voltage] \
-    SK [Calcium] [Voltage] \
+    BK [Voltage, Calcium] [Voltage] \
+    SK [Voltage, Calcium] [Voltage] \
     PMCA [Voltage, Calcium] [Calcium] 
 4 0 Nat [Voltage] [Voltage] \
     KAf [Voltage] [Voltage] \
     KDR [Voltage] [Voltage] \
     Cah [Voltage] [Voltage, Calcium]  \
-    BK [Calcium] [Voltage] \
-    SK [Calcium] [Voltage] \
+    BK [Voltage, Calcium] [Voltage] \
+    SK [Voltage, Calcium] [Voltage] \
     PMCA [Voltage, Calcium] [Calcium] 
 #}}}
 #{{{GABAergic bouton
@@ -63,9 +63,9 @@ BRANCHTYPE MTYPE
 1 0 <gbar={1.0}>
 2 0 <gbar={5.0}>
 5 0 <gbar={5.0}>
-3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
-     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0}}
-4 0 <gbar_dists={50, 100, 150}, \
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0, 0.0}}
+4 0 <gbar_dists={50, 100}; \
      gbar_values={0.05, 0.0, 0.0}}
 #}}}
 #{{{ GABA bouton
@@ -87,9 +87,9 @@ BRANCHTYPE MTYPE
 1 0 <gbar={1.350}>
 2 0 <gbar={2.5}>
 5 0 <gbar={2.5}>
-3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
-     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0}}
-4 0 <gbar_dists={50, 100, 150}, \
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0, 0.0}}
+4 0 <gbar_dists={50, 100}; \
      gbar_values={0.15, 0.0, 0.0}}
 #}}}
 #}}}
@@ -100,17 +100,21 @@ BRANCHTYPE MTYPE
 5 0 <gbar={2.5}>
 #}}}
 #}}}
-Cah 5
+Cah 3
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
-1 0 <gbar={0.01}>
-2 0 <gbar={0.01}>
-5 0 <gbar={0.01}>
-3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
-     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01}}
-4 0 <gbar_dists={50, 100, 150}, \
-     gbar_values={0.01, 0.01, 0.01}}
+1 0 <gbar={0.08}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+     gbar_values={0.08, 0.08, 0.08, 0.08, 0.08, 0.08, 0.08}}
+4 0 <gbar_dists={50, 100}; \
+     gbar_values={0.08, 0.08, 0.08}}
+##original Traub
+#1 0 <gbar={0.01}>
+#3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01}}
+#4 0 <gbar_dists={50, 100}; \
+#     gbar_values={0.01, 0.01, 0.01}}
 #}}}
 #}}}
 KAf 5
@@ -120,35 +124,43 @@ BRANCHTYPE MTYPE
 1 0 <gbar={0.005}>
 2 0 <gbar={0.005}>
 5 0 <gbar={0.005}>
-3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
-     gbar_values={0.005, 0.005, 0.00, 0.00, 0.00, 0.00}}
-4 0 <gbar_dists={50, 100, 150}, \
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+     gbar_values={0.005, 0.005, 0.00, 0.00, 0.00, 0.00, 0.0}}
+4 0 <gbar_dists={50, 100}; \
      gbar_values={0.005, 0.005, 0.00}}
 #}}}
 #}}}
 SK 5
+# NOTE: K(AHP) in Traub's term
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
-1 0 <gbar={0.0001}>
-2 0 <gbar={0.0001}>
-5 0 <gbar={0.0001}>
-3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
-     gbar_values={0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001}}
-4 0 <gbar_dists={50, 100, 150}, \
-     gbar_values={0.0001, 0.0001, 0.0001}}
+#to compensate for small [Ca]
+1 0 <gbar={0.01}>  
+2 0 <gbar={0.01}>
+5 0 <gbar={0.01}>
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+     gbar_values={0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.1}}
+4 0 <gbar_dists={50, 100}; \
+     gbar_values={0.01, 0.01, 0.01}}
+#1 0 <gbar={0.0001}>//original
+#2 0 <gbar={0.0001}>//original
+#5 0 <gbar={0.0001}>//original
+#3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.001}}
+#4 0 <gbar_dists={50, 100}; \
+#     gbar_values={0.0001, 0.0001, 0.0001}}
 #}}}
 #}}}
-BK 5
+BK 3
+# NOTE: K(C) in Traub's term
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
 1 0 <gbar={0.2}>
-2 0 <gbar={0.0}>
-5 0 <gbar={0.0}>
-3 0 <gbar_dists={50, 100, 150, 200, 250, 300, 350}, \
-     gbar_values={0.08, 0.08, 0.04, 0.04, 0.04, 0.04}}
-4 0 <gbar_dists={50, 100, 150}, \
+3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+     gbar_values={0.08, 0.08, 0.04, 0.04, 0.04, 0.04, 0.04}}
+4 0 <gbar_dists={50, 100}; \
      gbar_values={0.08, 0.04, 0.04}}
 #}}}
 #}}}

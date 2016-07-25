@@ -65,6 +65,7 @@ void ChannelNat_AIS::update(RNG& rng)
     }
 #if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
     g[i] = gbar[i] * m[i] *  m[i] * m[i] * h[i];
+		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
 #endif
   }
 }
@@ -72,17 +73,16 @@ void ChannelNat_AIS::update(RNG& rng)
 
 void ChannelNat_AIS::initialize(RNG& rng) 
 {
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
+  if (m.size() != size) m.increaseSizeTo(size);
+  if (h.size() != size) h.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
 	SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
@@ -135,7 +135,6 @@ void ChannelNat_AIS::initialize(RNG& rng)
   }
   for (unsigned i = 0; i < size; ++i)
   {
-    gbar[i] = gbar[0];
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994    
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
@@ -144,7 +143,10 @@ void ChannelNat_AIS::initialize(RNG& rng)
     dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
-    g[i] = gbar[i] * m[i] *  m[i] * h[i];
+    g[i] = gbar[i] * m[i] *  m[i] * m[i] * h[i];
+		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
+#else
+    NOT IMPLEMENTED
 #endif
 
   }

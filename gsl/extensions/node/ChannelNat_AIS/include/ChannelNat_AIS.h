@@ -8,7 +8,7 @@
 #include "MaxComputeOrder.h"
 
 #if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
-#define BASED_TEMPERATURE 6.3  // Celcius
+#define BASED_TEMPERATURE 25  // Celcius
 #define Q10 3.0
 #endif
 

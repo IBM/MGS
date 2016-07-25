@@ -19,6 +19,7 @@
 // b_m  = BMC * exp( (V - BMV)/BMD )
 // a_h  = AHC * exp( (V - AHV)/AHD )
 // b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
+#define Erev_Ca 75.0 // [mV]
 #define am  (1.6 / (1.0 + exp(-0.072 * (v-65))))
 #define bm  (0.02 * (vtrap((v-51.1), 5.0)))
 #endif
@@ -43,7 +44,7 @@ void ChannelCaHVA::initialize(RNG& rng)
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (s.size() != size) s.increaseSizeTo(size);
-  //if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+  if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   if (E_Ca.size() != size) E_Ca.increaseSizeTo(size);
   // initialize
@@ -58,7 +59,8 @@ void ChannelCaHVA::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
 		//gbar init
-		if (gbar_dists.size() > 0) {
+		if (gbar_dists.size() > 0) 
+    {
 			unsigned int j;
 			//NOTE: 'n' bins are splitted by (n-1) points
 			if (gbar_values.size() - 1 != gbar_dists.size())
@@ -101,10 +103,10 @@ void ChannelCaHVA::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_CaHVA == CaHVA_TRAUB_1994
-    E_Ca[i] = 140.0 ; //[mV]
+    E_Ca[i] = Erev_Ca ; //[mV]
     s[i] = am / (am + bm);  // steady-state value
     g[i] = gbar[i] * s[i] *  s[i];
-    //I_Ca[i] = g[i] * (v-E_Ca)
+    I_Ca[i] = g[i] * (v-E_Ca[i]);
     Iion[i] = g[i] * (v-E_Ca[i]);
 #else
     // E_rev  = RT/(zF)ln([Ca]o/[Ca]i)   [mV]
@@ -130,6 +132,8 @@ void ChannelCaHVA::update(RNG& rng)
     else if (s[i] > 1.0) { s[i] = 1.0; }
 #if CHANNEL_CaHVA == CaHVA_TRAUB_1994
     g[i] = gbar[i] * s[i] *  s[i];
+    I_Ca[i] = g[i] * (v-E_Ca[i]);
+    Iion[i] = g[i] * (v-E_Ca[i]);
 #endif
   }
 }

@@ -329,13 +329,6 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   /* FIX */
   if (isDistalCase3)
   {
-  //IMPORTANT CHANGE:
-  // Unlike the original approach
-  //   which doesn't have a compartment for the implicit branching
-  // The branch now has
-  //at least 2: one compartment as implicit branching point + one as regular
-  //    compartment-zero as implicit branching compartment
-  //    compartment-1th and above as normal
 	
     // Compute total volume of the junction...
     dyn_var_t volume = getVolume(0);
@@ -350,6 +343,16 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
     {
       Aip[0] = -getAij(dimensions[1], dimensions[0], volume);
     }
+    /* reverted back to original approach
+  //IMPORTANT CHANGE:
+  // Unlike the original approach
+  //   which doesn't have a compartment for the implicit branching
+  // The branch now has
+  //at least 2: one compartment as implicit branching point + one as regular
+  //    compartment-zero as implicit branching compartment
+  //    compartment-1th and above as normal
+      Aip[0] = -getAij(dimensions[1], dimensions[0], volume);
+  */
     for (int n = 0; n < distalDimensions.size(); n++)
     {
       Aij.push_back(-getAij(distalDimensions[n], dimensions[0], volume));
