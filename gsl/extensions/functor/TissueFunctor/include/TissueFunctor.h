@@ -51,17 +51,24 @@ class NodeAccessor;
 
 class TissueFunctor : public CG_TissueFunctorBase 
 {
+<<<<<<< HEAD
   friend class TissueLayoutFunctor;
   friend class TissueNodeInitFunctor;
   friend class TissueConnectorFunctor;
   friend class TissueProbeFunctor;
+  friend class TissueMGSifyFunctor;
 
   public:
-  void userInitialize(LensContext* CG_c, String& commandLineArgs1,
-                      String& commandLineArgs2, String& compartmentParamFile,
-                      String& channelParamFile, String& synapseParamFile,
-                      Functor*& layoutFunctor, Functor*& nodeInitFunctor,
-                      Functor*& connectorFunctor, Functor*& probeFunctor);
+  //void userInitialize(LensContext* CG_c, String& commandLineArgs1,
+  //                    String& commandLineArgs2, String& compartmentParamFile,
+  //                    String& channelParamFile, String& synapseParamFile,
+  //                    Functor*& layoutFunctor, Functor*& nodeInitFunctor,
+  //                    Functor*& connectorFunctor, Functor*& probeFunctor);
+   void userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
+		       String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+		       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
+		       Functor*& connectorFunctor, Functor*& probeFunctor,
+		       Functor*& MGSifyFunctor);
   std::auto_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
                                      NDPairList*& params);
 
@@ -124,6 +131,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   void doNodeInit(LensContext* lc);
   void doConnector(LensContext* lc);
   void doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval);
+  void doMGSify(LensContext* lc);
   ComputeBranch* findBranch(int nodeIndex, int densityIndex,
                             std::string const& cptVariableType);
   std::vector<int>& findBranchIndices(ComputeBranch*,
@@ -280,6 +288,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::auto_ptr<Functor> _nodeInitFunctor;
   std::auto_ptr<Functor> _connectorFunctor;
   std::auto_ptr<Functor> _probeFunctor;
+  std::auto_ptr<Functor> _MGSifyFunctor;
   std::auto_ptr<NDPairList> _params;
   Params _tissueParams;
 

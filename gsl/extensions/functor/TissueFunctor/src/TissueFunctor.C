@@ -121,6 +121,7 @@
 //  if (int(floor(double(x) / double(_compartmentSize))) > 0):int(floor(double(x) / double(_compartmentSize))):1
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
+//#define INFERIOR_OLIVE
 
 #ifdef INFERIOR_OLIVE
 #include "InferiorOliveGlomeruliDetector.h"
@@ -253,6 +254,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
   if (f._connectorFunctor.get())
     f._connectorFunctor->duplicate(_connectorFunctor);
   if (f._probeFunctor.get()) f._probeFunctor->duplicate(_probeFunctor);
+  if (f._MGSifyFunctor.get()) f._MGSifyFunctor->duplicate(_MGSifyFunctor);
   if (f._params.get()) f._params->duplicate(_params);
   _generatedChemicalSynapses = f._generatedChemicalSynapses;
   _nonGeneratedMixedChemicalSynapses = f._nonGeneratedMixedChemicalSynapses;
@@ -269,12 +271,11 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //     2.  detect touches
 //     3.  generate spines
 //  based on the inputs passed to the object
-void TissueFunctor::userInitialize(
-    LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2,
-    String& compartmentParamFile, String& channelParamFile,
-    String& synapseParamFile, Functor*& layoutFunctor,
-    Functor*& nodeInitFunctor, Functor*& connectorFunctor,
-    Functor*& probeFunctor)
+void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
+				   String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+				   Functor*& layoutFunctor, Functor*& nodeInitFunctor, 
+				   Functor*& connectorFunctor, Functor*& probeFunctor,
+				   Functor*& MGSifyFunctor)
 {
 #ifdef HAVE_MPI
   _size = CG_c->sim->getNumProcesses();
@@ -284,6 +285,7 @@ void TissueFunctor::userInitialize(
   nodeInitFunctor->duplicate(_nodeInitFunctor);
   connectorFunctor->duplicate(_connectorFunctor);
   probeFunctor->duplicate(_probeFunctor);
+  MGSifyFunctor->duplicate(_MGSifyFunctor);
 
   // Validate inputs
   {
@@ -414,6 +416,151 @@ void TissueFunctor::userInitialize(
 #endif
   }
 }
+//void TissueFunctor::userInitialize(
+//    LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2,
+//    String& compartmentParamFile, String& channelParamFile,
+//    String& synapseParamFile, Functor*& layoutFunctor,
+//    Functor*& nodeInitFunctor, Functor*& connectorFunctor,
+//    Functor*& probeFunctor)
+//{
+//#ifdef HAVE_MPI
+//  _size = CG_c->sim->getNumProcesses();
+//  _rank = CG_c->sim->getRank();
+//#endif
+//  layoutFunctor->duplicate(_layoutFunctor);
+//  nodeInitFunctor->duplicate(_nodeInitFunctor);
+//  connectorFunctor->duplicate(_connectorFunctor);
+//  probeFunctor->duplicate(_probeFunctor);
+//
+//  // Validate inputs
+//  {
+//    TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
+//    if (element == 0)
+//    {
+//      std::cerr << "Functor passed to TissueFunctor as argument 4 is not a "
+//                   "TissueElement!" << std::endl;
+//      exit(-1);
+//    }
+//  }
+//  {
+//    TissueElement* element =
+//        dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
+//    if (element == 0)
+//    {
+//      std::cerr << "Functor passed to TissueFunctor as argument 5 is not a "
+//                   "TissueElement!" << std::endl;
+//      exit(-1);
+//    }
+//  }
+//  {
+//    TissueElement* element =
+//        dynamic_cast<TissueElement*>(_connectorFunctor.get());
+//    if (element == 0)
+//    {
+//      std::cerr << "Functor passed to TissueFunctor as argument 6 is not a "
+//                   "TissueElement!" << std::endl;
+//      exit(-1);
+//    }
+//  }
+//  {
+//    TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
+//    if (element == 0)
+//    {
+//      std::cerr << "Functor passed to TissueFunctor as argument 7 is not a "
+//                   "TissueElement!" << std::endl;
+//      exit(-1);
+//    }
+//  }
+//
+//#ifdef HAVE_MPI
+//  String command = "NULL ";
+//  command += commandLineArgs1;
+//  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
+//  {
+//    std::cerr << "Error in simulation specification's commandLineArgs1 string "
+//                 "argument, TissueFunctor:" << std::endl;
+//    std::cerr << commandLineArgs1 << std::endl;
+//    exit(EXIT_FAILURE);
+//  }
+//#endif
+//
+//  std::string paramFilename(_tissueContext->_commandLine.getParamFileName());
+//  _tissueParams.readDevParams(paramFilename);
+//  _compartmentSize = _tissueContext->_commandLine.getCapsPerCpt();
+//
+//  // OPTION-1: re-read data structure from binary file
+//  FILE* data = NULL;
+//  if (_tissueContext->_commandLine.getBinaryFileName() != "" &&
+//      !_tissueContext->isInitialized())
+//  {
+//    if ((data = fopen(_tissueContext->_commandLine.getBinaryFileName().c_str(),
+//                      "rb")) != NULL)
+//    {
+//#ifdef HAVE_MPI
+//      _readFromFile = true;
+//      _tissueContext->_decomposition =
+//          new VolumeDecomposition(_rank, data, _size, _tissueContext->_tissue,
+//                                  _tissueContext->_commandLine.getX(),
+//                                  _tissueContext->_commandLine.getY(),
+//                                  _tissueContext->_commandLine.getZ());
+//      _tissueContext->readFromFile(data, _size, _rank);
+//      _tissueContext->setUpCapsules(_tissueContext->_nCapsules,
+//                                    TissueContext::NOT_SET, _rank,
+//                                    MAX_COMPUTE_ORDER);
+//      _tissueContext->setInitialized();
+//      fclose(data);
+//#endif
+//    }
+//  }
+//
+//  _tissueContext->seed(_rank);
+//
+//  // OPTION-2: regenerate data structure from .swc file
+//  if (!_tissueContext->isInitialized())
+//  {
+//    neuroGen(&_tissueParams, CG_c);
+//    MPI_Barrier(MPI_COMM_WORLD);
+//    neuroDev(&_tissueParams, CG_c);
+//  }
+//
+//#ifdef HAVE_MPI
+//  command = "NULL ";
+//  command += commandLineArgs2;
+//  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
+//  {
+//    std::cerr << "Error in simulation specification's commandLineArgs2 string "
+//                 "argument, TissueFunctor:" << std::endl;
+//    std::cerr << commandLineArgs2 << std::endl;
+//    exit(EXIT_FAILURE);
+//  }
+//#endif
+//
+//  paramFilename = _tissueContext->_commandLine.getParamFileName();
+//  /*strcpy(paramFilename,
+//         _tissueContext->_commandLine.getParamFileName().c_str());*/
+//  _tissueParams.readDetParams(paramFilename);
+//  _tissueParams.readCptParams(compartmentParamFile.c_str());
+//  _tissueParams.readChanParams(channelParamFile.c_str());
+//  _tissueParams.readSynParams(synapseParamFile.c_str());
+//
+//  if (!_tissueContext->isInitialized())
+//  {
+//    touchDetect(&_tissueParams, CG_c);
+//    createSpines(&_tissueParams, CG_c);  // need to create spines here
+//    _tissueContext->setInitialized();
+//  }
+//
+//  if ((_tissueContext->_commandLine.getOutputFormat() == "b" ||
+//       _tissueContext->_commandLine.getOutputFormat() == "bt") &&
+//      _tissueContext->_commandLine.getBinaryFileName() != "" &&
+//      !_readFromFile && CG_c->sim->isSimulatePass())
+//  {
+//#ifdef HAVE_MPI
+//    MPI_Barrier(MPI_COMM_WORLD);
+//    _tissueContext->writeToFile(_size, _rank);
+//#endif
+//  }
+//}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -2409,15 +2556,24 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
     element->setTissueFunctor(this);
     _probeFunctor->duplicate(rval);
   }
-  else if (tissueElement == "Connect")
-  {
+  else if (tissueElement=="MGSify") {
+    TissueElement* element=dynamic_cast<TissueElement*>(_MGSifyFunctor.get());
+    if (element==0) {
+      std::cerr<<"Functor passed to TissueFunctor as argument 8 is not a TissueElement!"<<std::endl;
+      exit(-1);
+    }
+    element->setTissueFunctor(this);
+    _MGSifyFunctor->duplicate(rval);
+  }
+  else if (tissueElement=="Connect") {
     doConnector(CG_c);
   }
-  else
-  {
-    std::cerr << "Unrecognized tissue element specifier: " << tissueElement
-              << std::endl;
-    exit(EXIT_FAILURE);
+  else if (tissueElement=="Tissue->MGS") {
+    doMGSify(CG_c);
+  }
+  else {
+    std::cerr<<"Unrecognized tissue element specifier: "<<tissueElement<<std::endl;
+    exit(0);
   }
   return rval;
 }
@@ -3413,15 +3569,6 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   if (nodeCategory == "JunctionPoints") ++_junctionPointTypeCounter;
   if (nodeCategory == "BackwardSolvePoints") ++_backwardSolvePointTypeCounter;
   if (nodeCategory == "ForwardSolvePoints") ++_forwardSolvePointTypeCounter;
-
-#ifdef MGS_NTS_HYBRID
-  int* mgsrval = new int[_nbrGridNodes];
-  int n = rval[_rank];
-  MPI_Allgather(&n, 1, MPI_INT, mgsrval, 1, MPI_INT, MPI_COMM_WORLD);
-  for (int n=0; n<_nbrGridNodes; ++n) 
-    rval[n]=mgsrval[n];
-  delete [] mgsrval;
-#endif
   
   return rval;
 }
@@ -5552,7 +5699,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
               << " !" << std::endl;
     exit(EXIT_FAILURE);
   }
-
+  
   --ndpiter;
 
   if ((*ndpiter)->getName() != "TYPE")
@@ -5784,6 +5931,33 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     ns->empty();
   }
   rval.reset(ns);
+}
+
+void TissueFunctor::doMGSify(LensContext* lc)
+{
+  std::vector<std::vector<GridLayerDescriptor*> > layers;
+  layers.push_back(_compartmentVariableLayers);
+  layers.push_back(_junctionLayers);
+  layers.push_back(_endPointLayers);
+  layers.push_back(_junctionPointLayers);
+  layers.push_back(_channelLayers);
+  layers.push_back(_electricalSynapseLayers);
+  layers.push_back(_chemicalSynapseLayers);
+  layers.push_back(_preSynapticPointLayers);
+  layers.push_back(_forwardSolvePointLayers);
+  layers.push_back(_backwardSolvePointLayers);
+    
+  std::vector<std::vector<GridLayerDescriptor*> >::iterator lliter, llend=layers.end();
+  unsigned* mgsrval = new unsigned(_nbrGridNodes);
+  for (lliter=layers.begin(); lliter!=llend; ++lliter) {
+    std::vector<GridLayerDescriptor*>::iterator liter, lend=lliter->end();
+    for (liter=lliter->begin(); liter!=lend; ++liter) {
+      unsigned n = (*liter)->getDensity(_rank);
+      MPI_Allgather(&n, 1, MPI_UNSIGNED, mgsrval, 1, MPI_UNSIGNED, MPI_COMM_WORLD);
+      (*liter)->replaceDensityVector(mgsrval, _nbrGridNodes);
+    }
+  }
+  delete [] mgsrval;
 }
 
 // GOAL: map the values from *.par file to the data member

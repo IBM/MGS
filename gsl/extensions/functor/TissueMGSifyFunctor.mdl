@@ -1,0 +1,9 @@
+#ifndef TissueMGSifyFunctor_MDL
+#define TissueMGSifyFunctor_MDL
+
+Framework Functor TissueMGSifyFunctor {
+   Initialize();
+   void Execute();
+}
+
+#endif
