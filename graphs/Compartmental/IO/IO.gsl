@@ -72,16 +72,19 @@ TissueConnectorFunctor tissueConnectorFunctor();
 Functor TissueProbeFunctor();
 TissueProbeFunctor tissueProbeFunctor();
 
+Functor TissueMGSifyFunctor();
+TissueMGSifyFunctor tissueMGSifyFunctor();
+
 Functor TissueFunctor(string commandLine, string commandLineModification,	
 		      string channelParamaterFile, string synapseParameteurFile,
-		      Functor, Functor, Functor, Functor, int compartmentSize);
+		      Functor, Functor, Functor, Functor, Functor, int compartmentSize);
 
 TissueFunctor tissueFunctor("-i IO_5_neurons_sorted.txt -j 1 -a 1.0 -u bt -o IO_5_neurons_sorted_developed.txt -g 50.0 -r 1 -p DevParamsIO.par -x " 
 	      		    STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0", 
 			    "-p DetParamsIO.par -m 1 -n cost-volume",
 			    "CptParamsIO.par", "ChanParamsIO.par", "SynParamsIO.par",
 			    tissueLayoutFunctor, tissueNodeInitFunctor, 
-                            tissueConnectorFunctor, tissueProbeFunctor);
+                            tissueConnectorFunctor, tissueProbeFunctor, tissueMGSifyFunctor);
 
 GranuleMapper GridGranuleMapper(string description, list<int> dimensions, list<int> densityVector);
 GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ }, {1});

@@ -87,7 +87,6 @@
 #define MAX(x,y) ((x)>(y) ? (x) : (y))
 
 //#define INFERIOR_OLIVE
-//#define MGS_NTS_HYBRID
 
 #ifdef INFERIOR_OLIVE
 #include "../../../../../nti/InferiorOliveGlomeruliDetector.h"
@@ -195,6 +194,7 @@ TissueFunctor::TissueFunctor(TissueFunctor const & f)
   if (f._nodeInitFunctor.get()) f._nodeInitFunctor->duplicate(_nodeInitFunctor);
   if (f._connectorFunctor.get()) f._connectorFunctor->duplicate(_connectorFunctor);
   if (f._probeFunctor.get()) f._probeFunctor->duplicate(_probeFunctor);
+  if (f._MGSifyFunctor.get()) f._MGSifyFunctor->duplicate(_MGSifyFunctor);
   if (f._params.get()) f._params->duplicate(_params);
   for (int i=0; i<2; ++i) {
     _generatedChemicalSynapses[i]=f._generatedChemicalSynapses[i];
@@ -207,7 +207,8 @@ TissueFunctor::TissueFunctor(TissueFunctor const & f)
 void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
 				   String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
 				   Functor*& layoutFunctor, Functor*& nodeInitFunctor, 
-				   Functor*& connectorFunctor, Functor*& probeFunctor)
+				   Functor*& connectorFunctor, Functor*& probeFunctor,
+				   Functor*& MGSifyFunctor)
 {
 #ifdef HAVE_MPI
   _size=CG_c->sim->getNumProcesses();
@@ -217,6 +218,7 @@ void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, 
   nodeInitFunctor->duplicate(_nodeInitFunctor);
   connectorFunctor->duplicate(_connectorFunctor);
   probeFunctor->duplicate(_probeFunctor);
+  MGSifyFunctor->duplicate(_MGSifyFunctor);
 
 #ifdef HAVE_MPI
   String command="NULL ";
@@ -1277,8 +1279,20 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c, String& tis
     element->setTissueFunctor(this);
     _probeFunctor->duplicate(rval);
   }
+  else if (tissueElement=="MGSify") {
+    TissueElement* element=dynamic_cast<TissueElement*>(_MGSifyFunctor.get());
+    if (element==0) {
+      std::cerr<<"Functor passed to TissueFunctor as argument 8 is not a TissueElement!"<<std::endl;
+      exit(-1);
+    }
+    element->setTissueFunctor(this);
+    _MGSifyFunctor->duplicate(rval);
+  }
   else if (tissueElement=="Connect") {
     doConnector(CG_c);
+  }
+  else if (tissueElement=="Tissue->MGS") {
+    doMGSify(CG_c);
   }
   else {
     std::cerr<<"Unrecognized tissue element specifier: "<<tissueElement<<std::endl;
@@ -1631,7 +1645,7 @@ ShallowArray< int > TissueFunctor::doLayout(LensContext* lc)
       }
     }
   }
-
+  
   if (nodeCategory=="Channels") ++_channelTypeCounter;
   if (nodeCategory=="ElectricalSynapses") ++_electricalSynapseTypeCounter;
   if (nodeCategory=="ChemicalSynapses") ++_chemicalSynapseTypeCounter;
@@ -1642,18 +1656,7 @@ ShallowArray< int > TissueFunctor::doLayout(LensContext* lc)
   if (nodeCategory=="JunctionPoints") ++_junctionPointTypeCounter;  
   if (nodeCategory=="BackwardSolvePoints") ++_backwardSolvePointTypeCounter;
   if (nodeCategory=="ForwardSolvePoints") ++_forwardSolvePointTypeCounter;
-
-#ifdef MGS_NTS_HYBRID
-  if (lc->sim->isSimulatePass()) {
-    int* mgsrval = new int(_nbrGridNodes);
-    int n = rval[_rank];
-    MPI_Allgather(&n, 1, MPI_INT, mgsrval, 1, MPI_INT, MPI_COMM_WORLD);
-    assert(rval.size()==_nbrGridNodes);
-    for (int n=0; n<_nbrGridNodes; ++n) rval[n]=mgsrval[n];
-    delete [] mgsrval;
-  }
-#endif
-
+  
   return rval;
 }
 
@@ -1857,7 +1860,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     assert(_junctionTypesMap.find(mapIter->first)!=_junctionTypesMap.end());
     cptVarJctTypeMap[mapIter->second]=_junctionTypesMap[mapIter->first];
   }
-
+  
   assert(_forwardSolvePointLayers.size()==_forwardSolvePointTypeCounter);
   assert(_backwardSolvePointLayers.size()==_backwardSolvePointTypeCounter);
   
@@ -2033,9 +2036,10 @@ void TissueFunctor::doConnector(LensContext* lc)
       std::string cptVarType=cptVarTypesIter->first;
       int cptVarTypeIdx=cptVarTypesIter->second;
       int branchDensity=_compartmentVariableLayers[cptVarTypeIdx]->getDensity(i);       
+
       std::vector<int> endPointCounters;
       endPointCounters.resize(_endPointTypeCounter,0);
-      for (int j=0; j<branchDensity; ++j) {
+      for (int j=0; j<branchDensity; ++j) { // FIX
 	ComputeBranch* br=findBranch(i, j, cptVarType);
 	if (br) {
 	  double key=br->_capsules[0].getKey();
@@ -2175,7 +2179,7 @@ void TissueFunctor::doConnector(LensContext* lc)
       std::string cptVarType=cptVarTypesIter->first;
       int cptVarTypeIdx=cptVarTypesIter->second;
       int branchDensity=_compartmentVariableLayers[cptVarTypeIdx]->getDensity(i);
-      for (int j=0; j<branchDensity; ++j) {
+      for (int j=0; j<branchDensity; ++j) {  // FIX
 	ComputeBranch* br=findBranch(i, j, cptVarType);
 	double key=br->_capsules[0].getKey();
 	int computeOrder=_segmentDescriptor.getComputeOrder(key);
@@ -2389,7 +2393,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 		connect(sim, connector, preCpt, preSynPoints[preSynPointType], Mcpt2syn);
 		connect(sim, connector, preSynPoints[preSynPointType], receptor, presynpt);
 	      }
-
+	      
 	      // Post
 	      ctiter=targetsIter->second.second.begin(), ctend=targetsIter->second.second.end();
 	      for (; ctiter!=ctend; ++ctiter) {
@@ -2461,7 +2465,7 @@ void TissueFunctor::doConnector(LensContext* lc)
       }
     }
     models.clear();
-
+    
     layerEnd=_channelLayers.end();
     for (layerIter=_channelLayers.begin(); layerIter!=layerEnd; ++layerIter) {
       countableModel=dynamic_cast<CountableModel*>((*layerIter)->getNodeType());
@@ -2520,7 +2524,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     std::cerr<<"Unrecognized CATEGORY during TissueProbe : "<<category<<" !"<<std::endl;
     exit(0);
   }
-
+  
   --ndpiter;
   
   if ((*ndpiter)->getName()!="TYPE") {
@@ -2533,7 +2537,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     exit(0);
   }  
   std::string type=typeDI->getString();
-
+  
   int typeIdx;
   std::map<std::string, int>::iterator typeIter;
   if (category=="BRANCH") {
@@ -2636,7 +2640,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     int density=layer->getDensity(_rank);
     int nChannelBranches=_channelBranchIndices1[typeIdx].size(); 
     double key;
-    for (int i=0; i<density; ++i) {
+    for (int i=0; i<density; ++i) {  // FIX
       if (i<nChannelBranches) {
 	std::pair<int, int>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
 	key=findBranch(_rank, channelBranchIndexPair.first, _compartmentVariableTypes[channelBranchIndexPair.second])->_capsules[0].getKey();
@@ -2653,11 +2657,11 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
     assert(layer);
     int density=layer->getDensity(_rank);
-    for (int i=0; i<density; ++i) {
+    for (int i=0; i<density; ++i) { // FIX
       nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
     }
   }
-
+  
   NodeSet* ns=0;
   if (nodeDescriptors.size()>0) {
     ns=new NodeSet( (*nodeDescriptors.begin())->getGridLayerDescriptor()->getGrid(), nodeDescriptors);
@@ -2667,6 +2671,33 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     ns->empty();
   }
   rval.reset(ns);
+}
+
+void TissueFunctor::doMGSify(LensContext* lc)
+{
+  std::vector<std::vector<GridLayerDescriptor*> > layers;
+  layers.push_back(_compartmentVariableLayers);
+  layers.push_back(_junctionLayers);
+  layers.push_back(_endPointLayers);
+  layers.push_back(_junctionPointLayers);
+  layers.push_back(_channelLayers);
+  layers.push_back(_electricalSynapseLayers);
+  layers.push_back(_chemicalSynapseLayers);
+  layers.push_back(_preSynapticPointLayers);
+  layers.push_back(_forwardSolvePointLayers);
+  layers.push_back(_backwardSolvePointLayers);
+    
+  std::vector<std::vector<GridLayerDescriptor*> >::iterator lliter, llend=layers.end();
+  unsigned* mgsrval = new unsigned(_nbrGridNodes);
+  for (lliter=layers.begin(); lliter!=llend; ++lliter) {
+    std::vector<GridLayerDescriptor*>::iterator liter, lend=lliter->end();
+    for (liter=lliter->begin(); liter!=lend; ++liter) {
+      unsigned n = (*liter)->getDensity(_rank);
+      MPI_Allgather(&n, 1, MPI_UNSIGNED, mgsrval, 1, MPI_UNSIGNED, MPI_COMM_WORLD);
+      (*liter)->replaceDensityVector(mgsrval, _nbrGridNodes);
+    }
+  }
+  delete [] mgsrval;
 }
 
 void TissueFunctor::getModelParams(Params::ModelType modelType, NDPairList& paramsLocal, std::string& nodeType, double key)
@@ -2680,7 +2711,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType, NDPairList& para
     NDPair* ndp=new NDPair(cpiter->first, paramDI_ap);
     paramsLocal.push_back(ndp);
   }
-
+  
   std::list<std::pair<std::string, std::vector<float> > > compartmentArrayParams;
   _tissueParams.getModelArrayParams(modelType, nodeType, key, compartmentArrayParams);
   std::list<std::pair<std::string, std::vector<float> > >::iterator capiter=compartmentArrayParams.begin(), capend=compartmentArrayParams.end();
@@ -2714,7 +2745,7 @@ bool TissueFunctor::isChannelTarget(double key, std::string nodeType)
   return rval;
 }
 
-void TissueFunctor::getElectricalSynapseProbabilities(std::vector<double>& probabilities, TouchVector::TouchIterator & titer, int direction, std::string nodeType)
+ void TissueFunctor::getElectricalSynapseProbabilities(std::vector<double>& probabilities, TouchVector::TouchIterator & titer, int direction, std::string nodeType)
 {
   double key1 = (direction==0) ? titer->getKey1() : titer->getKey2();
   double key2 = (direction==0) ? titer->getKey2() : titer->getKey1();

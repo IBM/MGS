@@ -913,7 +913,8 @@ FUNCTOR_MODULES := BinomialDist \\
 	TissueConnectorFunctor \\
 	TissueFunctor \\
 	TissueLayoutFunctor \\
-	TissueNodeInitFunctor \\
+	TissueMGSifyFunctor \\
+        TissueNodeInitFunctor \\
 	TissueProbeFunctor \\
         UniformDiscreteDist \\
 
