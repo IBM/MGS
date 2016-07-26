@@ -1482,6 +1482,7 @@ def plot_case9_adv():
     somaColor = 'blue'
     middledenColor= 'red'
     distaldenColor= 'green'
+    tufteddenColor= 'black'
     perisomaticApicalDenColor= 'orange'
     perisomaticBasalDenColor= 'violet'
     axonAISColor = 'black'
@@ -1634,6 +1635,14 @@ def plot_case9_adv():
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
         axarr[2, 0].plot(t, v1, distaldenColor, label='distal-den')
+    axarr[2, 0].legend()
+
+    myFile = folder+'/'+getFile(folder,'tufteddendriticV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[2, 0].plot(t, v1, tufteddenColor, label='tufted-den')
     axarr[2, 0].legend()
 
     myFile = folder+'/'+getFile(folder,'middledendriticV.dat')

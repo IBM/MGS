@@ -22,13 +22,20 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", BRANCHORDE
  //}}}
  //}}}
   //{{{dendrite shaft
-  //{{{LOCATION 1
-  TissueSite distalDenSite(17.95, 581.565, -58.29, 15.0); //622um to soma, radius = 1.41um
+  TissueSite distalDenSite(-23.11, 853.49, -20.0, 15.0); //917um to soma, radius = 0.515um
   polyConnect(timeStep, voltageDisplay_den_distal, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_distal, <>, <site=distalDenSite>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
   polyConnect(timeStep, calciumDisplay_den_distal, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_distal, <>, <site=distalDenSite>);
+#endif
+  //{{{LOCATION 1
+  TissueSite tuftedDenSite(17.95, 581.565, -58.29, 15.0); //622um to soma, radius = 1.41um
+  polyConnect(timeStep, voltageDisplay_den_tufted, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_tufted, <>, <site=tuftedDenSite>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+  polyConnect(timeStep, calciumDisplay_den_tufted, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_tufted, <>, <site=tuftedDenSite>);
 #endif
   //}}}
   //{{{LOCATION 2
