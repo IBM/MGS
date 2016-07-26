@@ -3977,6 +3977,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   //   at each grid'node, traverse different compartment nodeType (e.g. Voltage, Calcium)
   //   and get the density
   //    which is the number of ComputeBranch on that grid's node
+  // .....traverse through all index in the density
   //    find out the compute-branch value on such ComputeBranch
   for (int i = 0; i < _nbrGridNodes; ++i)
   {
@@ -4245,9 +4246,9 @@ void TissueFunctor::doConnector(LensContext* lc)
   //    Cpt->ForwardSolverPoint
   //    Cpt->BackwardSolverPoint
   // HOW: traverse through all grid's node
-  // .. for each compartment variable on that gridnode
+  // .. for each compartment variable (i.e. Calcium, Voltage) on that gridnode
   // .....traverse through all index in the density
-  // .....and get the ComputeBranch
+  // .....(for each index) get the ComputeBranch
   // NOTE: Each ComputeBranch belong to the branch of a given compute-order
   //      from 0 to MAX_COMPUTE_ORDER-1
   //  and make the junction of this branch is implicit or explicit junction

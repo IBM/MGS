@@ -52,21 +52,21 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder "out2_Jun23_rest"
+#define OutputFolderName dataFolder "out2_Jul15_rest"
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma"
+#define OutputFolderName dataFolder "out2_Jul15_triggersoma"
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder "out2_Jun23_triggershaft"
+#define OutputFolderName dataFolder "out2_Jul15_triggershaft"
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder "out2_Jun23_triggerspine"
-//#define OutputFolderName dataFolder "out2_Jun23_case03"
+#define OutputFolderName dataFolder "out2_Jul15_triggerspine"
+//#define OutputFolderName dataFolder "out2_Jul15_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder "out2_Jun23_triggerdistalspines"
+#define OutputFolderName dataFolder "out2_Jul15_triggerdistalspines"
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder "out2_Jul15_triggersoma_then_distalspines"
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder "out2_Jun23_case06"
+#define OutputFolderName dataFolder "out2_Jul15_case06"
 #endif
 //#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
 //#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
@@ -94,7 +94,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          747      // [ms]
+	#define TimeEnd          147      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -488,7 +488,7 @@ NodeType CaConcentrationJunctionPoint {
 /*{{{*/
    /* Fast-inactivating (transient) Na+ */
 NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelNatv16 { computeE->initialize2, initialize->initialize3, update->solveChannels };
+//NodeType ChannelNatv16 { computeE->initialize2, initialize->initialize3, update->solveChannels };
    /* Persistent Na+ current */
 NodeType ChannelNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
@@ -842,8 +842,11 @@ Grid PyramidalL5_Neuron{
 	/*{{{*/
      //{{{ Na channels
    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
-   Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
+//   Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
    Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
+     //}}}
+   Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
+     //{{{ K+ channels
      //}}}
    Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
@@ -1014,10 +1017,10 @@ Grid PyramidalL5_Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0} 
 				> ) ); 
-	InitNodes ( .[].Layer(Natv16Channels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0} 
-				> ) ); 
+//	InitNodes ( .[].Layer(Natv16Channels), tissueFunctor("NodeInit", <
+//				compartmentalize = { "gbar" },
+//				gbar = {0.0} 
+//				> ) ); 
 
 	InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
@@ -1173,8 +1176,8 @@ Grid PyramidalL5_Neuron{
    // Na+ channels
    polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
-   polyConnect(timeStep, .[].Layer(Natv16Channels), <>, <identifier="dt">);
-   polyConnect(extracellularMedium, .[].Layer(Natv16Channels), <>, <identifier="EC">);
+//   polyConnect(timeStep, .[].Layer(Natv16Channels), <>, <identifier="dt">);
+//   polyConnect(extracellularMedium, .[].Layer(Natv16Channels), <>, <identifier="EC">);
 
    // HCN channel
    polyConnect(timeStep, .[].Layer(HCNChannels), <>, <identifier="dt">);
