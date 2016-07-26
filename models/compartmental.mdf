@@ -28,7 +28,6 @@
 #include "ChannelCaT/ChannelCaT.mdl"
 
 #include "ChannelHCN/ChannelHCN.mdl"
-#include "ChannelHayHCN/ChannelHayHCN.mdl"
 
 #include "GABAAReceptor/GABAAReceptor.mdl"
 #include "AMPAReceptor/AMPAReceptor.mdl"
@@ -50,13 +49,6 @@
 #include "CalChannel/CalChannel.mdl"
 #include "KCaChannel/KCaChannel.mdl"
 #include "CaConnexon/CaConnexon.mdl"
-#include "ChannelHayNat/ChannelHayNat.mdl"
-#include "ChannelHayNap/ChannelHayNap.mdl"
-#include "ChannelHayKp/ChannelHayKp.mdl"
-#include "ChannelHayKt/ChannelHayKt.mdl"
-#include "ChannelHayCaHVA/ChannelHayCaHVA.mdl"
-#include "ChannelHayCaLVA/ChannelHayCaLVA.mdl"
-#include "ChannelHaySK/ChannelHaySK.mdl"
 #include "ChannelHodgkinKDR/ChannelHodgkinKDR.mdl"
 #include "ChannelHodgkinNat/ChannelHodgkinNat.mdl"
 #include "ChannelSchweighoferCah/ChannelSchweighoferCah.mdl"
