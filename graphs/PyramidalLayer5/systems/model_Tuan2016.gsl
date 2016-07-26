@@ -42,6 +42,9 @@ PolyConnectorFunctor polyConnect();
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
+#ifndef MODEL_TO_USE
+print("WARNING: You haven't selected MODEL_TO_USE")
+#endif
 
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
@@ -85,7 +88,7 @@ print("Case 00: resting");
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0010 // [ms]
+#define TimeStep_value   0.0030 // [ms]
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
@@ -319,27 +322,27 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 ////NOTE: -r #capsules-per-cpt
 //#define ALLSPINES
-#if STIMULUS_CASE == CASE_04
-#define tissueFile "neurons.txt_triggerdistalspines"
-#else
+//#if STIMULUS_CASE == CASE_04
+//#define tissueFile "neurons.txt_triggerdistalspines"
+//#else
 #define tissueFile "neurons.txt"
-#endif
+//#endif
 
-#ifdef ALLSPINES
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
-//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
-#define strArg2  "params_allspines/CptParams.par"
-#define strArg3 "params_allspines/ChanParams.par"
-#define strArg4 "params_allspines/SynParams.par"
-#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 4 " //" -g 18"
+//#ifdef ALLSPINES
+//#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
+////#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
+//#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
+//#define strArg2  "params_allspines/CptParams.par"
+//#define strArg3 "params_allspines/ChanParams.par"
+//#define strArg4 "params_allspines/SynParams.par"
+//#else
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 " //" -g 18"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
 #define strArg3 "params/ChanParams.par"
 #define strArg4 "params/SynParams.par"
-#endif
+//#endif
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -487,23 +490,22 @@ NodeType CaConcentrationJunctionPoint {
 NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelNatv16 { computeE->initialize2, initialize->initialize3, update->solveChannels };
    /* Persistent Na+ current */
-NodeType ChannelHayNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 //K+ currents
 /*{{{*/
-NodeType ChannelHayMK { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHayKp { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHayKt { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHayKv31 { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHaySK { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelMK { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKAs { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKAf { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKv31 { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 // HCN current
-NodeType ChannelHayHCN (< E_h = {Erev_HCN} >) { initialize->initialize3, update->solveChannels };
-//NodeType ChannelHCN (< E_h = {Erev_HCN} >) { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelHCN (< E_HCN = {Erev_HCN} >) {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //Ca2+ currents
 /*{{{*/
-NodeType ChannelHayCaHVA { initialize->initialize3, update->solveChannels };
-NodeType ChannelHayCaLVA { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaHVA { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLVA { initialize->initialize3, update->solveChannels };
 /*}}}*/
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(
@@ -841,20 +843,20 @@ Grid PyramidalL5_Neuron{
      //{{{ Na channels
    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
    Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
-   Layer(NapChannels, ChannelHayNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
+   Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
-   Layer(HCNChannels, ChannelHayHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
+   Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
-   Layer(MKChannels, ChannelHayMK, tissueFunctor("Layout", < nodekind="Channels[MK]" >), < nodekind="Channels[MK]" >, tissueGM);
-   Layer(KpChannels, ChannelHayKp, tissueFunctor("Layout", < nodekind="Channels[Kp]" >), < nodekind="Channels[Kp]" >, tissueGM);
-   Layer(KtChannels, ChannelHayKt, tissueFunctor("Layout", < nodekind="Channels[Kt]" >), < nodekind="Channels[Kt]" >, tissueGM);
-   Layer(Kv31Channels, ChannelHayKv31, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
-   Layer(SKChannels, ChannelHaySK, tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
+   Layer(MKChannels, ChannelMK, tissueFunctor("Layout", < nodekind="Channels[MK]" >), < nodekind="Channels[MK]" >, tissueGM);
+   Layer(KpChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[Kp]" >), < nodekind="Channels[Kp]" >, tissueGM);
+   Layer(KtChannels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[Kt]" >), < nodekind="Channels[Kt]" >, tissueGM);
+   Layer(Kv31Channels, ChannelKv31, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
+   Layer(SKChannels, ChannelSK, tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
      //}}}
     //{{{ Ca2+ channels
 #if SIMULATION_INVOLVE >= VM_CACYTO
-   Layer(CahChannels, ChannelHayCaHVA, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
-   Layer(CalChannels, ChannelHayCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
+   Layer(CahChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
+   Layer(CalChannels, ChannelCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
 #endif
      //}}}
 	/*}}}*/
@@ -1231,6 +1233,7 @@ Grid PyramidalL5_Neuron{
 
 	/*{{{ reserved for extra code*/ 
 	/*}}}*/
+/*}}}*/
 /*}}}*/
 }; //end grid
 
