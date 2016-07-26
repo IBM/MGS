@@ -137,9 +137,7 @@ void ChannelCaHVA::initialize(RNG& rng)
     //g[i] = gbar[i]*m[i]*m[i]*h[i];
     g[i] = gbar[i]*s[i]*s[i]*k[i];
 #else
-    // E_rev  = RT/(zF)ln([Ca]o/[Ca]i)   [mV]
-    //E_Ca = 0.08617373 * *(getSharedMembers().T) *
-    //       log(*(getSharedMembers().Ca_EC) / *(getSharedMembers().Ca_IC));
+    // E_rev  = RT/(zCa.F)ln([Ca]o/[Ca]i)   [mV]
 
 #endif
     I_Ca[i] = g[i] * (v-E_Ca[i]);
