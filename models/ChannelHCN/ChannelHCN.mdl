@@ -5,7 +5,7 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -14,6 +14,7 @@ Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   //internal data
   dyn_var_t [] m;
   dyn_var_t [] g;
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
 
   // reference data
   dyn_var_t []* V;
@@ -44,7 +45,7 @@ Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 
   Shared {
     dyn_var_t* deltaT; // [ms]
-    dyn_var_t [] E_h;  // [mV]
+    dyn_var_t [] E_HCN;  // [mV]
     dyn_var_t* T;     // [K]
     dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
     InitPhase computeTadj;
@@ -54,8 +55,9 @@ Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   InitPhase initialize;
 
   ConductanceArrayProducer.conductanceArray << &g;
-  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_h;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_HCN;
   BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {
     string identifier;

@@ -52,15 +52,12 @@ dyn_var_t ChannelCaLv12_GHK::vtrap(dyn_var_t x, dyn_var_t y)
 void ChannelCaLv12_GHK::initialize(RNG& rng)
 {
   pthread_once(&once_CaLv12_GHK, initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(PCabar.size() == size);
   assert(V->size() == size);
-#endif
+
   // allocate
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
@@ -71,7 +68,7 @@ void ChannelCaLv12_GHK::initialize(RNG& rng)
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
-                 "GHK-formula Ca2+ channel "
+                 "GHK-formula Ca2+ Lv12 channel "
                  "Channels Param" << std::endl;
     assert(0);
   }
@@ -80,7 +77,13 @@ void ChannelCaLv12_GHK::initialize(RNG& rng)
     if (Pbar_dists.size() > 0)
     {
       unsigned int j;
-      assert(Pbar_values.size() == Pbar_dists.size());
+			//NOTE: 'n' bins are splitted by (n-1) points
+			if (Pbar_values.size() - 1 != Pbar_dists.size())
+			{
+				std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+					<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+			}
+      assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
         if ((*dimensions)[i]->dist2soma < Pbar_dists[j]) break;
@@ -122,10 +125,14 @@ PCabar[i] = Pbar_values[0];
       PCabar[i] = PCabar_default;
     }
   }
+
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+    assert(0);
+#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+    {
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
@@ -135,8 +142,8 @@ PCabar[i] = Pbar_values[0];
     I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
-#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
-    assert(0);
+      
+    }
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -149,7 +156,10 @@ void ChannelCaLv12_GHK::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_CaLv12 == CaLv12_WOLF_2005
+#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+    assert(0);
+#elif CHANNEL_CaLv12 == CaLv12_WOLF_2005
+    {
     // NOTE: Some models use m_inf and tau_m to estimate m
     dyn_var_t ma = 0.1194 * (v + 8.124) / (exp((v + 8.124) / 9.005) - 1);
     dyn_var_t mb = 2.97 * exp((v) / 31.4);
@@ -174,8 +184,8 @@ void ChannelCaLv12_GHK::update(RNG& rng)
     I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
               ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
               (1 - tmp);  // [pA/um^2]
-#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
-    assert(0);
+
+    }
 #endif
 		/*
 		 * TUAN TODO: think about stochastic modelling

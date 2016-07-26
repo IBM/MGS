@@ -89,7 +89,26 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHV -50.0
 #define BHD 10.0
 //#endif
-//#ifdef NAT_WOLF_2005
+#elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
+// Kinetics data for Layer V5 pyramidal neuron
+//       recorded at room tempt.(23-degree C)
+//       from "Colbert-Pan (2002) - Nat. Neurosci (5)"
+// This implementation uses kinetics of Nat from soma/den/IS
+//  and it treats the Nat in AIS region by shifting V1/2 to the left 8mV
+// This implementation uses kinetics of Nat from soma/den/IS
+//    current,I_Nat".
+#define AMC 0.182
+#define AMV -40.0
+#define AMD 6.0
+#define BMC -0.124
+#define BMV -40.0
+#define BMD -6.0
+#define AHC -0.015
+#define AHV -66.0
+#define AHD -6.0
+#define BHC 0.015
+#define BHV -66.0
+#define BHD 6.0
 #elif CHANNEL_NAT == NAT_WOLF_2005
 // data from rat CA1 hippocampal pyramidal neuron
 //     recorded at 22-24C and then mapped to 35C using Q10 = 3
@@ -124,16 +143,11 @@ dyn_var_t ChannelNat::tauhNat[] = {1.3,  1.3, 1.3,  1.3,  1.3,  1.3,  1.3,  1.3,
                        0.85, 0.5, 0.45, 0.32, 0.30, 0.28, 0.28, 0.28};
 std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
 std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
+
 #elif CHANNEL_NAT == NAT_HAY_2011
-// Kinetics data for Layer V5 pyramidal neuron
-//       recorded at room tempt.(23-degree C)
-//       from "Colbert-Pan (2002) - Nat. Neurosci (5)"
-// This implementation uses kinetics of Nat from soma/den/IS
-//    an implementation of the "Fast activating, inactivating Na^+
-//    current,I_Nat".
 // Taken from Hay et al. (2011) "Models of Neocortical Layer 5b Pyramidal
 // Cells..."
-// which in turn references the work of Colbert et al. (2002).
+// which in turn references the work of Colbert et al. (2002) - NAT_COLBERT_PAN_2002
 //   Q10=2.3 to map to 34-degree C
 #define AMC 0.182
 #define AMV -38.0
@@ -147,25 +161,6 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHC 0.015
 #define BHV -66.0
 #define BHD 6.0
-#elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
-// Kinetics data for Layer V5 pyramidal neuron
-//       recorded at room tempt.(23-degree C)
-//       from "Colbert-Pan (2002) - Nat. Neurosci (5)"
-// This implementation uses kinetics of Nat from soma/den/IS
-//  and it treats the Nat in AIS region by shifting V1/2 to the left 8mV
-#define AMC 0.182
-#define AMV -40.0
-#define AMD 6.0
-#define BMC -0.124
-#define BMV -40.0
-#define BMD -6.0
-#define AHC -0.015
-#define AHV -66.0
-#define AHD -6.0
-#define BHC 0.015
-#define BHV -66.0
-#define BHD 6.0
-
 #endif
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)

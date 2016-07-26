@@ -65,7 +65,7 @@ The choice N = 1 is justified as there is no apparent delay in activation
 
 #elif CHANNEL_HCN == HCN_KOLE_2006 || \
 	  CHANNEL_HCN == HCN_HAY_2011
-// Kole et al. (2006) 
+/* Kole et al. (2006) 
 // Simulation suggests: gh ~ 2.3 pS/um^2 at soma
 //                         ~  93 pS/um^2 distal apical dendrites ~ 1000 um from soma
 //  Erev_h = -45 mV
@@ -74,11 +74,13 @@ The choice N = 1 is justified as there is no apparent delay in activation
 // b_m  = BMC * exp( (V + BMV)/BMD )
 // a_h  = AHC * exp( (V + AHV)/AHD )
 // b_h  = BHC / (exp( (V + BHV)/BHD ) + 1.0)
+*/
 #define AMC 0.00643
 #define AMV 154.9
 #define AMD 11.9
 #define BMC 0.193
 #define BMD 33.1
+#endif
 
 dyn_var_t ChannelHCN::conductance(int i)
 {
@@ -97,7 +99,6 @@ dyn_var_t ChannelHCN::conductance(int i)
 }
 
 
-#endif
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 dyn_var_t ChannelHCN::vtrap(dyn_var_t x, dyn_var_t y)
@@ -118,6 +119,9 @@ void ChannelHCN::update(RNG& rng)
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     // see Rempe-Chomp (2006)
     m[i] = (2.0 * m_inf * qm - m[i] * (qm - 1.0)) / (qm + 1.0);
+#elif CHANNEL_HCN == HCN_KOLE_2006
+	//to be implemented (probably put into a new _Markov channel name for stochastic simulation)
+	assert(0);
 #elif CHANNEL_HCN == HCN_VANDERGIESSEN_DEZEEUW_2008
     // NOTE: Some models use m_inf and tau_m to estimate m
 	dyn_var_t taum = 1.0 / ( exp(-0.086 * v - 14.6) + exp (0.07 * v - 1.87) );
@@ -125,15 +129,12 @@ void ChannelHCN::update(RNG& rng)
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     // see Rempe-Chomp (2006)
     m[i] = (2.0 * m_inf * qm - m[i] * (qm - 1.0)) / (qm + 1.0);
-#elif CHANNEL_HCN == HCN_KOLE_2006
-	//to be implemented (probably put into a new _Markov channel name for stochastic simulation)
-	assert(0);
 #elif CHANNEL_HCN == HCN_HAY_2011
     // NOTE: Some models use alpha_m and beta_m to estimate m
     dyn_var_t am = AMC * vtrap(v + AMV, AMD);
     dyn_var_t bm = BMC * exp(v / BMD);
-	//m_infty = am / (am+bm)
-	//tau_m = 1/(am+bm)
+    //m_infty = am / (am+bm)
+    //tau_m = 1/(am+bm)
     // see Rempe-Chomp (2006)
     dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
@@ -141,30 +142,32 @@ void ChannelHCN::update(RNG& rng)
 #else
 	assert(0);
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_HCN[0]);
   }
 }
 
 void ChannelHCN::initialize(RNG& rng)
 {
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
+
+  // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
 
   // initialize
   // NOTE: add the scaling_factor for testing channel easier
   //  Should be set to 1.0 by default
   dyn_var_t scaling_factor = 1.0;
-  //float gbar_default = gbar[0];
   float gbar_default = gbar[0] * scaling_factor;
+  //float gbar_default = gbar[0];
   if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
   {
     std::cerr
-        << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
+        << "ERROR: Use either gbar_dists or gbar_branchorders on Channels HCN Param"
         << std::endl;
     assert(0);
   }
@@ -177,16 +180,16 @@ void ChannelHCN::initialize(RNG& rng)
 	  //gbar_dists = hold such points
 	  //gbar_values = hold value in each bin
       if (gbar_values.size() - 1 != gbar_dists.size())
-	  {
-		  std::cerr << "gbar_values.size = " << gbar_values.size() 
-			 << "; gbar_dists.size = " << gbar_dists.size() << std::endl; 
-	  }
+      {
+        std::cerr << "gbar_values.size = " << gbar_values.size() 
+          << "; gbar_dists.size = " << gbar_dists.size() << std::endl; 
+      }
       assert(gbar_values.size() -1 == gbar_dists.size());
       for (j = 0; j < gbar_dists.size(); ++j)
       {
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
-	  gbar[i] = gbar_values[j] * scaling_factor;
+      gbar[i] = gbar_values[j] * scaling_factor;
     }
     else if (gbar_branchorders.size() > 0)
     {
@@ -245,7 +248,7 @@ void ChannelHCN::initialize(RNG& rng)
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     g[i] = gbar[i] * m[i];  // pow(m[i], POW_M)
 #elif CHANNEL_HCN == HCN_KOLE_2006 
-	gbar[i] = conductance(i);
+    gbar[i] = conductance(i);
     NumChan[i] = dimensions[i].surface_area * ChanDen;
 #elif CHANNEL_HCN == HCN_HAY_2011
    //NumChan[i] = 1
@@ -257,6 +260,7 @@ void ChannelHCN::initialize(RNG& rng)
 #else
     assert(0);
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_HCN[0]);
   }
 }
 

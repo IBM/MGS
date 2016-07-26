@@ -7,7 +7,8 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+// Small-conductance, Ca2+-activated K+ channel
+Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
 	/*{{{*/
 	//DATA
 	// Markov-based formula
@@ -17,6 +18,7 @@ Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
 	//dyn_var_t [] fC; //  Closed-state - NOTE: consider removing as implicit with 2 state
 	dyn_var_t [] g;  // nS/um^2
 	dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] Iion;
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
 	dyn_var_t []* Cai;//submembrane Ca2+ [uM]
@@ -65,6 +67,7 @@ Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
 	ConductanceArrayProducer.conductanceArray << &g;
 	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
 	BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; //name of the compartment variable
