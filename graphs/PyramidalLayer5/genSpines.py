@@ -333,13 +333,19 @@ class SomeClass(object):
       """
       pass
       self.reviseSomaSWCFile(write2File=False)
-      dist = 0.0
+      dist = 0.1
       #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
       self.removeNearbyPoints(dist, write2File=False)
-      self.convertToTufted()
+      #self.convertToTufted()
+      thresholdTuftedZone=550
+      proximalAISDistance2Soma=10
+      distalAISDistance2Soma=45.0
+      #self.convertToTuftedandAIS(thresholdTuftedZone, proximalAISDistance2Soma,
+      #                        distalAISDistance2Soma)
+      self.convertToTufted(thresholdTuftedZone)
 
-
-    def convertToTufted(self):
+    def convertToTuftedandAIS(self, thresholdTuftedZone=550, proximalAISDistance2Soma=10,
+                              distalAISDistance2Soma=45.0):
         """
         Convert a region of distal apical dendrites to thick tufted dendrite
         NOTE:
@@ -364,10 +370,9 @@ class SomeClass(object):
             if (int(parent_id) == -1):
               break
 
-        thresholdTuftedZone = 550.0 + r_soma # [um]
-        #proximalAISDistance2Soma = 20.0 # [um]
-        proximalAISDistance2Soma = 10.0 + r_soma # [um]
-        distalAISDistance2Soma = 45.0 + r_soma # [um]  - before the onset of myelination
+        thresholdTuftedZone = thresholdTuftedZone + r_soma # [um]
+        proximalAISDistance2Soma = proximalAISDistance2Soma + r_soma # [um]
+        distalAISDistance2Soma = distalAISDistance2Soma + r_soma # [um]  - before the onset of myelination
         lineArray = []
         for ix in range(len(self.point_lookup)):
             id = str(ix+1)
@@ -385,6 +390,121 @@ class SomeClass(object):
             if (float(dist2soma_straight) > thresholdTuftedZone and int(brType) == self.branchType["apical"]):
                 brType = self.branchType["tufted"]
             elif (float(dist2soma) <= distalAISDistance2Soma
+                and float(dist2soma) >= proximalAISDistance2Soma
+                and int(brType) == self.branchType["axon"]):
+                brType = self.branchType["AIS"]
+                if (float(dist2soma) >= proximalAISDistance2Soma and
+                    float(dist2soma) < (proximalAISDistance2Soma)+13.0):
+                  print(dist2soma, x,y,z)
+
+            lineArray.append([id, str(brType),
+                            str(x), str(y),
+                            str(z), str(r), str(parent_id)])
+        lineArray = np.asarray(lineArray)
+        np.savetxt(PL5bFileName, lineArray, fmt='%s')
+        print("Write to file: ", PL5bFileName)
+
+    def convertToTufted(self, thresholdTuftedZone=550):
+        """
+        Convert a region of distal apical dendrites to thick tufted dendrite
+        NOTE:
+            thresholdDistance = 600.0 um
+        Convert a region of axon to AIS
+        """
+        #Put branchType = 5 to represent the region of high CaLVA, CaHVA
+        PL5bFileName = self.swc_filename+"_new.swc"
+        SWCFileSpine = open(PL5bFileName, "w")
+
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x_soma =float(self.point_lookup[id]['siteX'])
+            y_soma =float(self.point_lookup[id]['siteY'])
+            z_soma =float(self.point_lookup[id]['siteZ'])
+            r_soma =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) == -1):
+              break
+
+        thresholdTuftedZone = thresholdTuftedZone + r_soma # [um]
+        #proximalAISDistance2Soma = 20.0 # [um]
+        #proximalAISDistance2Soma = 10.0 + r_soma # [um]
+        #distalAISDistance2Soma = 45.0 + r_soma # [um]  - before the onset of myelination
+        lineArray = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            ## NOTE: we use direct distance
+            dist2soma_straight = sqrt((x_soma - x)**2 +
+                        (y_soma - y)**2 + (z_soma - z)**2)
+
+            if (float(dist2soma_straight) > thresholdTuftedZone and int(brType) == self.branchType["apical"]):
+                brType = self.branchType["tufted"]
+            #elif (float(dist2soma) <= distalAISDistance2Soma
+            #    and float(dist2soma) >= proximalAISDistance2Soma
+            #    and int(brType) == self.branchType["axon"]):
+            #    brType = self.branchType["AIS"]
+            #    if (float(dist2soma) >= proximalAISDistance2Soma and
+            #        float(dist2soma) < (proximalAISDistance2Soma)+13.0):
+            #      print(dist2soma, x,y,z)
+
+            lineArray.append([id, str(brType),
+                            str(x), str(y),
+                            str(z), str(r), str(parent_id)])
+        lineArray = np.asarray(lineArray)
+        np.savetxt(PL5bFileName, lineArray, fmt='%s')
+        print("Write to file: ", PL5bFileName)
+
+    def convertToAIS(self, proximalAISDistance2Soma=10,
+                           distalAISDistance2Soma=45.0):
+        """
+        Convert a region of axon to AIS
+        NOTE:
+            proximalAISDistance2Soma = 23.0 um
+            distalAISDistance2Soma = 50 um
+        """
+        #Put branchType = 5 to represent the region of high CaLVA, CaHVA
+        PL5bFileName = self.swc_filename+"_new.swc"
+        SWCFileSpine = open(PL5bFileName, "w")
+
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x_soma =float(self.point_lookup[id]['siteX'])
+            y_soma =float(self.point_lookup[id]['siteY'])
+            z_soma =float(self.point_lookup[id]['siteZ'])
+            r_soma =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) == -1):
+              break
+
+        #thresholdTuftedZone = 550.0 + r_soma # [um]
+        #proximalAISDistance2Soma = 20.0 # [um]
+        proximalAISDistance2Soma = 10.0 + r_soma # [um]
+        distalAISDistance2Soma = 45.0 + r_soma # [um]  - before the onset of myelination
+        lineArray = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            ## NOTE: we use direct distance
+            dist2soma_straight = sqrt((x_soma - x)**2 +
+                        (y_soma - y)**2 + (z_soma - z)**2)
+
+            #if (float(dist2soma_straight) > thresholdTuftedZone and int(brType) == self.branchType["apical"]):
+            #    brType = self.branchType["tufted"]
+            if (float(dist2soma) <= distalAISDistance2Soma
                 and float(dist2soma) >= proximalAISDistance2Soma
                 and int(brType) == self.branchType["axon"]):
                 brType = self.branchType["AIS"]
