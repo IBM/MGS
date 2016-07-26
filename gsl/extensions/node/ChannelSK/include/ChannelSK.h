@@ -8,15 +8,15 @@
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
 
-#if CHANNEL_SK == SK_WOLF_2005
-#define BASED_TEMPERATURE 35.0  // Celcius
+#if CHANNEL_SK == SK_TRAUB_1994
+#define BASED_TEMPERATURE 25.0  // Celcius
 #define Q10 3.0
 #elif CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN || \
 	  CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT
 #define BASED_TEMPERATURE 25.0  // Celcius
 #define Q10 3.0
-#elif CHANNEL_SK == SK_TRAUB_1994
-#define BASED_TEMPERATURE 25.0  // Celcius
+#elif CHANNEL_SK == SK_WOLF_2005
+#define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
 #endif
 

@@ -27,7 +27,7 @@
 #define Q10 3.0
 #elif CHANNEL_NAT == NAT_HAY_2011
 //Modified Colbert - Pan (2002) model
-#define BASED_TEMPERATURE 22  // Celcius
+#define BASED_TEMPERATURE 21  // Celcius
 #define Q10 2.3
 #endif
 

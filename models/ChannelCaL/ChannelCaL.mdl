@@ -18,8 +18,8 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
 //{{{
 // Hodgkin-Huxley-based formula
   dyn_var_t [] g;
-  dyn_var_t [] s;
-  //dyn_var_t [] k;
+  dyn_var_t [] s; //activating gate
+  dyn_var_t [] k; //inactivating gate
   //dyn_var_t [] l;
   dyn_var_t [] gbar;
   dyn_var_t [] E_Ca;

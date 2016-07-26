@@ -18,21 +18,7 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 //
 // This is an implementation of the "KAf potassium current
 //
-#if CHANNEL_KAf == KAf_WOLF_2005
-// minf(Vm) = 1/(1+exp((Vm-Vh)/k))
-// hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
-#define VHALF_M -10.0
-#define k_M -17.7
-#define VHALF_H -75.6
-#define k_H 10.0
-#define LOOKUP_TAUM_LENGTH 11  // size of the below array
-const dyn_var_t ChannelKAf::_Vmrange_taum[] = {-40, -30, -20, -10, 0, 10,
-                                               20,  30,  40,  50,  60};
-dyn_var_t ChannelKAf::taumKAf[] = {1.8, 1.1, 1.0, 1.0, 0.9, 0.8,
-                                   0.9, 0.9, 0.9, 0.8, 0.8};
-std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
-//The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
-#elif CHANNEL_KAf == KAf_TRAUB_1994
+#if CHANNEL_KAf == KAf_TRAUB_1994
 #define AMC -0.02
 #define AMV 13.1
 #define AMD -10.0
@@ -46,6 +32,41 @@ std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
 #define BHV 60.1
 #define BHD -5.0
 
+#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+// Korngreen - Sakmann (2000) Vm-gated K+ channels in PL5 neocortical young rat
+// recorded in soma using nucleated outside-out patches
+//          ... dendrite up to 430 um from soma using cell-attached recording
+// NOTE: estimated patch surface area 440+/- 10 um^2
+//             average series resistance 13.2+/-0.7 M.Ohm
+//                    input resistance 2.7+/- 0.2 G.Ohm
+//                    capacitance      2.2+/- 0.1 pF
+#define IMV 10.0
+#define IMD 19.0
+#define IHV 76.0
+#define IHD 10.0
+#define TMC 0.34
+#define TMF 0.92
+#define TMV 81.0
+#define TMD 59.0
+#define THC 8.0
+#define THF 49.0
+#define THV 83.0
+#define THD 23.0
+
+#elif CHANNEL_KAf == KAf_WOLF_2005
+// minf(Vm) = 1/(1+exp((Vm-Vh)/k))
+// hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
+#define VHALF_M -10.0
+#define k_M -17.7
+#define VHALF_H -75.6
+#define k_H 10.0
+#define LOOKUP_TAUM_LENGTH 11  // size of the below array
+const dyn_var_t ChannelKAf::_Vmrange_taum[] = {-40, -30, -20, -10, 0, 10,
+                                               20,  30,  40,  50,  60};
+dyn_var_t ChannelKAf::taumKAf[] = {1.8, 1.1, 1.0, 1.0, 0.9, 0.8,
+                                   0.9, 0.9, 0.9, 0.8, 0.8};
+std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
+//The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -61,7 +82,33 @@ void ChannelKAf::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_KAf == KAf_WOLF_2005
+#if CHANNEL_KAf == KAf_TRAUB_1994
+    {
+    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
+    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
+    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    // Traub Models do not have temperature dependence and hence Tadj is not used
+    dyn_var_t pm = 0.5 * dt * (am + bm) ;
+    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
+    dyn_var_t ph = 0.5 * dt * (ah + bh) ;
+    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
+#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+    {
+    dyn_var_t minf = 1.0/(1.0 + exp(-(v + IMV)/IMD));
+    //dyn_var_t taum = (TMC + TMF*exp(-pow((v + TMV)/TMD,2)))/T_ADJ;
+    dyn_var_t taum = (TMC + TMF*exp(-pow((v + TMV)/TMD,2)))/getSharedMembers().Tadj;
+    dyn_var_t hinf = 1.0/(1.0 + exp((v + IHV)/IHD));
+    //dyn_var_t tauh = (THC + THF*exp(-pow((v + THV)/THD,2)))/T_ADJ;
+    dyn_var_t tauh = (THC + THF*exp(-pow((v + THV)/THD,2)))/getSharedMembers().Tadj;
+    dyn_var_t pm = 0.5*dt/taum;
+    dyn_var_t ph = 0.5*dt/tauh;
+    m[i] = (2.0*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
+    h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
+    }
+#elif CHANNEL_KAf == KAf_WOLF_2005
+    {
     // NOTE: Some models use m_inf and tau_m to estimate m
     std::vector<dyn_var_t>::iterator low =
         std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
@@ -76,16 +123,7 @@ void ChannelKAf::update(RNG& rng)
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
 
-#elif CHANNEL_KAf == KAf_TRAUB_1994
-    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
-    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
-    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
-    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-    // Traub Models do not have temperature dependence and hence Tadj is not used
-    dyn_var_t pm = 0.5 * dt * (am + bm) ;
-    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
-    dyn_var_t ph = 0.5 * dt * (ah + bh) ;
-    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
 
 #else
     NOT IMPLEMENTED YET
@@ -93,15 +131,18 @@ void ChannelKAf::update(RNG& rng)
     // trick to keep m in [0, 1]
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep m in [0, 1]
+    // trick to keep h in [0, 1]
     if (h[i] < 0.0) { h[i] = 0.0; }
     else if (h[i] > 1.0) { h[i] = 1.0; }
     
 #if CHANNEL_KAf == KAf_TRAUB_1994
-     g[i] = gbar[i] * m[i] * h[i];
-#else
-     g[i] = gbar[i] * m[i] * m[i] * h[i];
+    g[i] = gbar[i] * m[i] * h[i];
+#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+    g[i] = gbar[i]*m[i]*m[i]*m[i]*m[i]*h[i];
+#elif CHANNEL_KAf == KAf_WOLF_2005
+    g[i] = gbar[i] * m[i] * m[i] * h[i];
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -117,11 +158,12 @@ void ChannelKAf::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels KAf (KAt) Param"
 			<< std::endl;
 		assert(0);
 	}
@@ -147,6 +189,11 @@ void ChannelKAf::initialize(RNG& rng)
 		else if (gbar_branchorders.size() > 0)
 		{
       unsigned int j;
+      if (gbar_values.size() != gbar_branchorders.size())
+      {
+        std::cerr << "gbar_values.size = " << gbar_values.size()
+          << "; gbar_branchorders.size = " << gbar_branchorders.size() << std::endl;
+      }
       assert(gbar_values.size() == gbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
       for (j=0; j<gbar_branchorders.size(); ++j) {
@@ -168,28 +215,29 @@ void ChannelKAf::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_KAf == KAf_WOLF_2005
-    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
-    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
-
-#elif CHANNEL_KAf == KAf_TRAUB_1994    
+#if CHANNEL_KAf == KAf_TRAUB_1994    
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
     dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
     dyn_var_t ah = AHC * exp((v - AHV) / AHD);
     dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
+    g[i] = gbar[i] * m[i] * h[i];
+#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+    m[i] = 1.0/(1.0 + exp(-(v + IMV)/IMD));
+    h[i] = 1.0/(1.0 + exp((v + IHV)/IHD));
+    g[i] = gbar[i]*m[i]*m[i]*m[i]*m[i]*h[i];
+#elif CHANNEL_KAf == KAf_WOLF_2005
+    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    g[i] = gbar[i] * m[i] * m[i] * h[i];
 #else
     NOT IMPLEMENTED YET;
 // m[i] = am / (am + bm);  // steady-state value
 // h[i] = ah / (ah + bh);
 #endif
 
-#if CHANNEL_KAf == KAf_TRAUB_1994
-    g[i] = gbar[i] * m[i] * h[i];
-#else
-    g[i] = gbar[i] * m[i] * m[i] * h[i];
-#endif 
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
  }
 }
 

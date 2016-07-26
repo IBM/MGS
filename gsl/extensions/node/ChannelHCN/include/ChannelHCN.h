@@ -48,10 +48,7 @@ class ChannelHCN : public CG_ChannelHCN
   void update(RNG& rng);
   void initialize(RNG& rng);
   virtual ~ChannelHCN();
-#if CHANNEL_HCN == HCN_KOLE_2006 || \
-    CHANNEL_HCN == HCN_HAY_2011
   dyn_var_t conductance(int i);
-#endif
 
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);

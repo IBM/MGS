@@ -7,7 +7,13 @@
 
 #include "MaxComputeOrder.h"
 
-#if CHANNEL_CaHVA == CaHVA_TRAUB_1994 
+#if CHANNEL_CaHVA == CaHVA_REUVENI_AMITAI_GUTNICK_1993 
+//note: DUAL_GATE means 2 gates are used: activate + inactivate
+#define DUAL_GATE _YES 
+#define BASED_TEMPERATURE 35.0  // Celcius
+#define Q10 3.0
+#elif CHANNEL_CaHVA == CaHVA_TRAUB_1994  //Temperature is not being used
+#define DUAL_GATE _NO
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
 #endif

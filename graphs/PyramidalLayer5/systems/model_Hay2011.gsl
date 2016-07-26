@@ -17,7 +17,7 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_00
+#define STIMULUS_CASE   CASE_01
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -52,21 +52,21 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder "out2_Jun23_rest"
+#define OutputFolderName dataFolder "out2_Jul25_rest"
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma"
+#define OutputFolderName dataFolder "out2_Jul25_triggersoma"
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder "out2_Jun23_triggershaft"
+#define OutputFolderName dataFolder "out2_Jul25_triggershaft"
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder "out2_Jun23_triggerspine"
-//#define OutputFolderName dataFolder "out2_Jun23_case03"
+#define OutputFolderName dataFolder "out2_Jul25_triggerspine"
+//#define OutputFolderName dataFolder "out2_Jul25_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder "out2_Jun23_triggerdistalspines"
+#define OutputFolderName dataFolder "out2_Jul25_triggerdistalspines"
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder "out2_Jul25_triggersoma_then_distalspines"
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder "out2_Jun23_case06"
+#define OutputFolderName dataFolder "out2_Jul25_case06"
 #endif
 //#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
 //#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
@@ -88,7 +88,7 @@ print("Case 00: resting");
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0010 // [ms]
+#define TimeStep_value   0.0030 // [ms]
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
@@ -489,23 +489,22 @@ NodeType CaConcentrationJunctionPoint {
 NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels };
 //NodeType ChannelNatv16 { computeE->initialize2, initialize->initialize3, update->solveChannels };
    /* Persistent Na+ current */
-NodeType ChannelHayNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 //K+ currents
 /*{{{*/
 NodeType ChannelMK { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHayKp { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHayKt { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHayKv31 { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelHaySK { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKAs { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKAf { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKv31 { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 // HCN current
-NodeType ChannelHayHCN (< E_h = {Erev_HCN} >) { initialize->initialize3, update->solveChannels };
-//NodeType ChannelHCN (< E_h = {Erev_HCN} >) { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelHCN (< E_HCN = {Erev_HCN} >) {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //Ca2+ currents
 /*{{{*/
-NodeType ChannelHayCaHVA { initialize->initialize3, update->solveChannels };
-NodeType ChannelHayCaLVA { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaHVA {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLVA {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(
@@ -843,20 +842,20 @@ Grid PyramidalL5_Neuron{
      //{{{ Na channels
    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
 //   Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
-   Layer(NapChannels, ChannelHayNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
+   Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
-   Layer(HCNChannels, ChannelHayHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
+   Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
    Layer(MKChannels, ChannelMK, tissueFunctor("Layout", < nodekind="Channels[MK]" >), < nodekind="Channels[MK]" >, tissueGM);
-   Layer(KpChannels, ChannelHayKp, tissueFunctor("Layout", < nodekind="Channels[Kp]" >), < nodekind="Channels[Kp]" >, tissueGM);
-   Layer(KtChannels, ChannelHayKt, tissueFunctor("Layout", < nodekind="Channels[Kt]" >), < nodekind="Channels[Kt]" >, tissueGM);
-   Layer(Kv31Channels, ChannelHayKv31, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
-   Layer(SKChannels, ChannelHaySK, tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
+   Layer(KpChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[Kp]" >), < nodekind="Channels[Kp]" >, tissueGM);
+   Layer(KtChannels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[Kt]" >), < nodekind="Channels[Kt]" >, tissueGM);
+   Layer(Kv31Channels, ChannelKv31, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
+   Layer(SKChannels, ChannelSK, tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
      //}}}
     //{{{ Ca2+ channels
 #if SIMULATION_INVOLVE >= VM_CACYTO
-   Layer(CahChannels, ChannelHayCaHVA, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
-   Layer(CalChannels, ChannelHayCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
+   Layer(CahChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
+   Layer(CalChannels, ChannelCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
 #endif
      //}}}
 	/*}}}*/

@@ -108,20 +108,31 @@
 
 //{{{ K-models
 // KAf   CHANNEL_KAf macro
+//{{{
 #define KAf_WOLF_2005          2
 #define KAf_TRAUB_1994         3
+#define KAf_KORNGREEN_SAKMANN_2000 4
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
+//}}}
 // KAs   CHANNEL_KAs macro
+//{{{
 #define KAs_WOLF_2005          2
+#define KAs_KORNGREEN_SAKMANN_2000 4
 #define _KAs_DEFAULT           KAs_WOLF_2005
+//}}}
 // KIR   CHANNEL_KIR macro
+//{{{
 #define KIR_WOLF_2005          2
 #define _KIR_DEFAULT           KIR_WOLF_2005
+//}}}
 // KRP   CHANNEL_KRP macro
+//{{{
 #define KRP_WOLF_2005          2
 #define _KRP_DEFAULT           KRP_WOLF_2005
+//}}}
 // KDR   CHANNEL_KDR macro
+//{{{
 #define KDR_HODGKIN_HUXLEY_1952 1
 #define KDR_SCHWEIGHOFER_1999   4
 #define KDR_TRAUB_1994          5
@@ -132,7 +143,9 @@
 #define KDR_AIS_TRAUB_1994  1
 
 #define _KDR_AIS_DEFAULT KDR_AIS_TRAUB_1994
+//}}}
 // BK-alpha
+//{{{
 // BK-alphabeta   CHANNEL_BKalphabeta macro
 // NOTE: Those with the same values are indeed the same model
 //        just being used in different papers
@@ -145,7 +158,9 @@
 #define BK_TRAUB_1994 1
 
 #define _BK_DEFAULT BK_TRAUB_1994
+//}}}
 // SK       CHANNEL_SK macro
+//{{{
 #define SK_MOCZYDLOWSKI_1993 2
 #define SK_WOLF_2005    2
 #define SK2_KOHLER_ADELMAN_1996_RAT 3
@@ -153,11 +168,20 @@
 #define SK_TRAUB_1994 5
 
 #define _SK_DEFAULT SK_WOLF_2005
+//}}}
 // MK (Muscarinic-sensitive K+ current) CHANNEL_MK macro
+//{{{
 #define  MK_ADAMS_BROWN_CONSTANTI_1982  1
 
 #define _MK_DEFAULT MK_ADAMS_BROWN_CONSTANTI_1982
+//}}}
 
+// Kv31 (Shaker-related)
+//{{{
+#define  Kv31_RETTIG_1992  1
+
+#define _Kv31_DEFAULT Kv31_RETTIG_1992
+//}}}
 //}}}
 
 //{{{ HCN-models
@@ -170,36 +194,60 @@
 
 //{{{ Ca-models
 //CaHVA  CHANNEL_CaHVA
+//{{{
 #define CaHVA_TRAUB_1994  1
+#define CaHVA_REUVENI_AMITAI_GUTNICK_1993 2
 
 #define _CaHVA_DEFAULT CaHVA_TRAUB_1994
+//}}}
+//CaLVA  CHANNEL_CaLVA
+//{{{
+#define CaLVA_AVERY_JOHNSTON_1996 2
+#define CaLVA_HAY_2011 3
+
+#define _CaLVA_DEFAULT CaLVA_HAY_2011 
+//}}}
 // CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
+//{{{
+//}}}
 #define CaL_GENERAL    100
 // CaLv12 (HVA)   CHANNEL_CaLv12 macro
+//{{{
 #define CaLv12_GHK_Standen_Stanfield_1982 3
 #define CaLv12_GHK_WOLF_2005 2
 
 #define _CaLv12_DEFAULT      CaLv12_GHK_Standen_Stanfield_1982
-// CaLv13 (LVA)  CHANNEL_CaLv13 macro
+//}}}
+// CaLv13 (HVA)  CHANNEL_CaLv13 macro
+//{{{
 #define CaLv13_GHK_WOLF_2005 2
 
 #define _CaLv13_DEFAULT    CaLv13_GHK_WOLF_2005
+//}}}
 // CaN      CHANNEL_CaN macro
+//{{{
 #define CaN_GHK_WOLF_2005 2
 
 #define _CaN_DEFAULT   CaN_GHK_WOLF_2005
+//}}}
 // CaPQ     CHANNEL_CaPQ macro
+//{{{
 #define CaPQ_GHK_WOLF_2005 2
 
 #define _CaPQ_DEFAULT   CaPQ_GHK_WOLF_2005
+//}}}
 // CaR      CHANNEL_CaR macro
+//{{{
 #define CaR_GHK_WOLF_2005 2
 
 #define _CaR_DEFAULT  CaR_GHK_WOLF_2005
-// CaT      CHANNEL_CaT macro
+//}}}
+// CaT (LVA)      CHANNEL_CaT macro
+//{{{
 #define CaT_GHK_WOLF_2005 2
 
 #define _CaT_DEFAULT CaT_GHK_WOLF_2005
+//}}}
 //}}}
 
 //{{{ Synapse Receptors
@@ -427,18 +475,12 @@
   #define CHANNEL_NAP NAP_MAGISTRETTI_1999
   #define CHANNEL_HCN HCN_HAY_2011
   #define CHANNEL_MK  MK_ADAMS_BROWN_CONSTANTI_1982
-  #define CHANNEL_KAf KAf_WOLF_2005
-  #define CHANNEL_KAs KAs_WOLF_2005
-  #define CHANNEL_KIR KIR_WOLF_2005
-  #define CHANNEL_KRP KRP_WOLF_2005
-  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_KAf KAf_KORNGREEN_SAKMANN_2000
+  #define CHANNEL_KAs KAs_KORNGREEN_SAKMANN_2000
+  #define CHANNEL_Kv31 Kv31_RETTIG_1992
   #define CHANNEL_SK SK2_KOHLER_ADELMAN_1996_RAT
-  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
-  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
-  #define CHANNEL_CaN CaN_GHK_WOLF_2005
-  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
-  #define CHANNEL_CaR CaR_GHK_WOLF_2005
-  #define CHANNEL_CaT CaT_GHK_WOLF_2005
+  #define CHANNEL_CaHVA CaHVA_REUVENI_AMITAI_GUTNICK_1993
+  #define CHANNEL_CaLVA CaLVA_HAY_2011
   #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   //#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
   //#define RECEPTOR_NMDA NMDAR_JADI_2012
@@ -563,8 +605,14 @@
 #ifndef CHANNEL_MK
 #define CHANNEL_MK _MK_DEFAULT
 #endif
+#ifndef CHANNEL_Kv31
+#define CHANNEL_Kv31 _Kv31_DEFAULT
+#endif
 #ifndef CHANNEL_CaHVA
 #define CHANNEL_CaHVA _CaHVA_DEFAULT
+#endif
+#ifndef CHANNEL_CaLVA
+#define CHANNEL_CaLVA _CaLVA_DEFAULT
 #endif
 #ifndef CHANNEL_CaLv12
 #define CHANNEL_CaLv12 _CaLv12_DEFAULT
