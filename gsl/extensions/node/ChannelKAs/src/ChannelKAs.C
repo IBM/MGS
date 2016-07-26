@@ -53,7 +53,7 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 #define THV1 65.0
 #define THV2 85.0
 #define THD 48.0
-#define T_ADJ 2.9529 // 2.3^((34-21)/10)
+//#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -74,12 +74,15 @@ void ChannelKAs::update(RNG& rng)
     dyn_var_t minf = 1.0/(1.0 + exp(-(v + IMV)/IMD));
     dyn_var_t taum;
     if (v < -60.0) {
-      taum = (TMC + TMF1*exp(TMD1*(v + TMV)))/T_ADJ;
+      //taum = (TMC + TMF1*exp(TMD1*(v + TMV)))/T_ADJ;
+      taum = (TMC + TMF1*exp(TMD1*(v + TMV)))/getSharedMembers().Tadj;
     } else {
-      taum = (TMC + TMF2*exp(TMD2*(v + TMV)))/T_ADJ;
+      //taum = (TMC + TMF2*exp(TMD2*(v + TMV)))/T_ADJ;
+      taum = (TMC + TMF2*exp(TMD2*(v + TMV)))/getSharedMembers().Tadj;
     }
     dyn_var_t hinf = 1.0/(1.0 + exp((v + IHV)/IHD));
-    dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v + THV2)/THD,2)))/T_ADJ;
+    //dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v + THV2)/THD,2)))/T_ADJ;
+    dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v + THV2)/THD,2)))/getSharedMembers().Tadj;
     dyn_var_t pm = 0.5*dt/taum;
     dyn_var_t ph = 0.5*dt/tauh;
     m[i] = (2.0*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);

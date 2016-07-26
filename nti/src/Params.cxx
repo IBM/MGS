@@ -2132,6 +2132,12 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
       {
         while (is.get() != '[')
         {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              bufS << std::endl;
+          }
           assert(is.good());
         }
         char buf[LENGTH_IDNAME_MAX];
@@ -2270,6 +2276,12 @@ BRANCHTYPE MTYPE
       {
         while (is.get() != '[')
         {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              bufS << std::endl;
+          }
           assert(is.good());
         }
         char buf[LENGTH_IDNAME_MAX];
@@ -2737,6 +2749,12 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
 
       while (is.get() != '[')
       {
+        if (not is.good())
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a '[' symbol ... line\n" <<
+            bufS << std::endl;
+        }
         assert(is.good());
       }
       char buf1[LENGTH_IDNAME_MAX];
@@ -2764,6 +2782,12 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
       {
         while (is.get() != '[')
         {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              bufS << std::endl;
+          }
           assert(is.good());
         }
         char buf1[LENGTH_IDNAME_MAX];
@@ -2784,15 +2808,32 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
             st.addTarget1(types[ii], std::string(tok1));
             tok1 = strtok(0, " ,");
         }*/
-        if (is.get() != ']') assert(0);
+        if (is.get() != ']') {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a ']' symbol ... line\n" <<
+            bufS << std::endl;
+          assert(0);
+        }
         while (is.get() != '[')
         {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              bufS << std::endl;
+          }
           assert(is.good());
         }
         char buf2[LENGTH_IDNAME_MAX];
 		assert(StringUtils::streamGet(is, buf2, LENGTH_IDNAME_MAX, ']'));
         //is.get(buf2, LENGTH_IDNAME_MAX, ']');
-        if (is.get() != ']') assert(0);
+        if (is.get() != ']') 
+        { 
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a ']' symbol ... line\n" <<
+            bufS << std::endl;
+          assert(0); 
+        }
         stringbuf = std::string(buf2);
         // std::vector<std::string> tokens;
         StringUtils::Tokenize(stringbuf, tokens, " ,");
@@ -3592,6 +3633,12 @@ void Params::buildChannelTargetsMap(
     {
       while (is.get() != '[')
       {
+        if (not is.good())
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a '[' symbol ... line\n" <<
+            myBuf << std::endl;
+        }
         assert(is.good());
       }
       char buf1[LENGTH_IDNAME_MAX];
@@ -3614,6 +3661,12 @@ void Params::buildChannelTargetsMap(
       if (is.get() != ']') assert(0);
       while (is.get() != '[')
       {
+        if (not is.good())
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a '[' symbol ... line\n" <<
+            myBuf << std::endl;
+        }
         assert(is.good());
       }
       char buf2[LENGTH_IDNAME_MAX];
@@ -3684,6 +3737,12 @@ NOTE: must starts with '<' and ends with'>'
 		std::istringstream is(myBuf);
 		while (is.get() != '<')
 		{
+      if (not is.good())
+      {
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect a '[' symbol ... line\n" <<
+          myBuf << std::endl;
+      }
 			assert(is.good());
 		}
 		char buf1[LENGTH_LINE_MAX];
@@ -3847,6 +3906,12 @@ void Params::buildBidirectionalConnectionMap(
       {
         while (is.get() != '[')
         {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              myBuf << std::endl;
+          }
           assert(is.good());
         }
         char buf[LENGTH_IDNAME_MAX];
