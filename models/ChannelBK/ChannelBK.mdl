@@ -7,7 +7,7 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
 	/*{{{*/
 	//DATA
 	// Markov-based formula
@@ -18,10 +18,36 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 	dyn_var_t [] fC; //  Closed-state
 	dyn_var_t [] g;  // nS/um^2
 	dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] Iion;
 	// reference data
-	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Cai;//submembrane Ca2+ [uM]
-	BranchDataStruct* branchData; 
+  //{{{
+  //internal data
+  dyn_var_t []* V;//transmembrane voltage [mV]
+  dyn_var_t []* Cai;//submembrane Ca2+ [uM]
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //int index; //index of the compartment in branch
+
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_values;// ... having the corresponding gbar conductance
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}>
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}>
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //}}}
 	//}}}
 
 	//SHARED DATA
@@ -45,6 +71,7 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 	ConductanceArrayProducer.conductanceArray << &g;
 	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
 	BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; //name of the compartment variable
@@ -52,9 +79,10 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 	}
 
 	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-                      BranchDataProducer {
+                      BranchDataProducer, DimensionArrayProducer {
 		VoltageArrayProducer.voltageArray >> V;
 		BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
 	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer//,
@@ -221,42 +249,43 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 //}
 //
 
-Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
+Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
 	/*{{{*/
 	//DATA
 	// Alpha-Beta forward-backward rate based formula
-	//{{{
-	//internal data
-	dyn_var_t [] fO; //fraction of channel in Open-state
-	dyn_var_t [] g;  // nS/um^2
-	dyn_var_t [] gbar; // nS/um^2
-	// reference data
-	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Cai;//submembrane Ca2+ [uM]
-	BranchDataStruct* branchData; 
-    DimensionStruct* []* dimensions;
-    //int index; //index of the compartment in branch
-  
-    //data mainly used to dynamically assign different conductance on different location
-    //NOTE: In SynParams.par file
-    //    Use either gbar_dists or gbar_branch
-    //      and combine with gbar_values
-    float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
-    float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
-    float [] gbar_values;// ... having the corresponding gbar conductance
-    // Example:
-    // CHANNEL_PARAMS 2
-    // Cah 3
-    // BRANCHTYPE MTYPE
-    // 1 0 <gbar={0.00992}>
-    // 4 0 <gbar_dists={380.0,480.0, 590}>
-    // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-    // Nat 3
-    // BRANCHTYPE MTYPE
-    // 1 0 <gbar={0.00992}>
-    // 4 0 <gbar_branchorders={0, 1, 2}>
-    // 4 0 <gbar_values={0.0555,0.555,0.000555}>
-	//}}}
+  //{{{
+  //internal data
+  dyn_var_t [] fO; //fraction of channel in Open-state
+  dyn_var_t [] g;  // nS/um^2
+  dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] Iion;
+  // reference data
+  dyn_var_t []* V;//transmembrane voltage [mV]
+  dyn_var_t []* Cai;//submembrane Ca2+ [uM]
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //int index; //index of the compartment in branch
+
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_values;// ... having the corresponding gbar conductance
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}>
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}>
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //}}}
 
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
@@ -279,6 +308,7 @@ Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
 	ConductanceArrayProducer.conductanceArray << &g;
 	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
 	BranchDataProducer.branchData << branchData;
+  IOCurrentArrayProducer.currents << &Iion;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; //name of the compartment variable
@@ -289,7 +319,7 @@ Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
                       BranchDataProducer, DimensionArrayProducer {
 		VoltageArrayProducer.voltageArray >> V;
 		BranchDataProducer.branchData >> branchData;
-        DimensionArrayProducer.dimensionArray >> dimensions;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
 	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer//,

@@ -54,8 +54,9 @@ void ChannelBK::update(RNG& rng)
         //dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
         dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
         g[i] = gbar[i]*fO[i]*CaGate;
-    }
 #endif
+        Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    }
 }
 
 void ChannelBK::initialize(RNG& rng) 
@@ -67,13 +68,14 @@ void ChannelBK::initialize(RNG& rng)
   assert (V->size()==size);
   if (fO.size()!=size) fO.increaseSizeTo(size);
   if (g.size()!=size) g.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
 
   // initialize
   SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
   if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
   {
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels BK Param"
       << std::endl;
     assert(0);
   }
@@ -137,8 +139,14 @@ void ChannelBK::initialize(RNG& rng)
     fO[i] = alpha/(alpha+beta); // steady-state value
     //dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
     dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
+#endif
+    // trick to keep m in [0, 1]
+    if (fO[i] < 0.0) { fO[i] = 0.0; }
+    else if (fO[i] > 1.0) { fO[i] = 1.0; }
+#if CHANNEL_BK == BK_TRAUB_1994
     g[i] = gbar[i]*fO[i]*CaGate;
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 

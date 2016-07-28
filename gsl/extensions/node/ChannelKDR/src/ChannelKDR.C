@@ -79,6 +79,7 @@ void ChannelKDR::update(RNG& rng)
 #else
 		NOT IMPLEMENTED YET
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -91,15 +92,16 @@ void ChannelKDR::initialize(RNG& rng)
   assert (V->size()==size);
   if (g.size()!=size) g.increaseSizeTo(size);
   if (n.size()!=size) n.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
   SegmentDescriptor segmentDescriptor;
 
   float gbar_default = gbar[0];
   if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
   {
-  std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Param"
-          << std::endl;
-      assert(0);
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels KDR Param"
+      << std::endl;
+    assert(0);
   }
   for (unsigned i = 0; i < size; ++i)
   {
@@ -158,6 +160,7 @@ void ChannelKDR::initialize(RNG& rng)
     n[i] = an/(an + bn); // steady-state value
     g[i] = gbar[i]*n[i]*n[i];
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 

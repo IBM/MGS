@@ -33,7 +33,7 @@
 // b_m  = BMC * exp( (V - BMV)/BMD )
 // a_h  = AHC * exp( (V - AHV)/AHD )
 // b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
-#define Erev_Ca 75.0 // [mV]
+#define Erev_Ca 125.0 // [mV]
 #define am  (1.6 / (1.0 + exp(-0.072 * (v-65))))
 #define bm  (0.02 * (vtrap((v-51.1), 5.0)))
 
@@ -59,7 +59,7 @@ void ChannelCaHVA::initialize(RNG& rng)
   if (k.size() != size) k.increaseSizeTo(size);
 #endif
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
-  if (Iion.size()!=size) Iion.increaseSizeTo(size);
+  //if (Iion.size()!=size) Iion.increaseSizeTo(size);
   if (E_Ca.size() != size) E_Ca.increaseSizeTo(size);
   // initialize
 	SegmentDescriptor segmentDescriptor;
@@ -141,7 +141,7 @@ void ChannelCaHVA::initialize(RNG& rng)
 
 #endif
     I_Ca[i] = g[i] * (v-E_Ca[i]);
-    Iion[i] = g[i] * (v-E_Ca[i]);
+    //Iion[i] = g[i] * (v-E_Ca[i]);
   }
 }
 
@@ -186,11 +186,11 @@ void ChannelCaHVA::update(RNG& rng)
     //g[i]=gbar[i]*m[i]*m[i]*h[i];
     g[i]=gbar[i]*s[i]*s[i]*k[i];
     I_Ca[i] = g[i] * (v-E_Ca[i]);
-    Iion[i] = g[i] * (v-E_Ca[i]);
+    //Iion[i] = g[i] * (v-E_Ca[i]);
 #elif CHANNEL_CaHVA == CaHVA_TRAUB_1994
     g[i] = gbar[i] * s[i] *  s[i];
     I_Ca[i] = g[i] * (v-E_Ca[i]);
-    Iion[i] = g[i] * (v-E_Ca[i]);
+    //Iion[i] = g[i] * (v-E_Ca[i]);
 #endif
 
 #ifdef WAIT_FOR_REST

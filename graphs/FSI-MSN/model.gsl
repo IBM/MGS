@@ -17,7 +17,7 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_01
+#define STIMULUS_CASE   CASE_00
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -85,13 +85,13 @@ print("Case 00: resting");
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0010 // [ms]
+#define TimeStep_value   0.0050 // [ms]
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          747      // [ms]
+	#define TimeEnd          10      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -125,10 +125,15 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_beta 1// [Wagner and Keizer buffering constant]
-//#define Cacyto_beta   0.002     // dimensionless 
-#define CaER_EffectiveDiffusionConstant  1.0  // units???
+#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
+#define CaER_EffectiveDiffusionConstant  1.0  // [um^2/ms] 
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
+//// SPECIAL TREATMENT
+// Traub et al. 1995 model
+#define Cacyto_DiffusionConstant 0.0   // [um^2/ms]  unbuffered
+#define Cacyto_EffectiveDiffusionConstant  0.0 // [um^2/ms] unbuffered+buffered
+#define CaER_EffectiveDiffusionConstant  1.0  // [um^2/ms] 
+#define Cacyto_beta 1.0 // 
 //}}}
 
 //{{{ Concentration
@@ -178,9 +183,8 @@ print("Case 00: resting");
   //              20.0-22.0-degree Celcius (room)
   //       281K = 7.85-degree Celcius (cold)
 #define Temperature_value  308.15 // [K] Kelvin
-//#define Vrest_value  -79.0 // [mV]
-#define Vrest_value  -74.0 // [mV]
-#define E_leak_value -70.0 
+#define Vrest_value  -70.0 // [mV]
+#define E_leak_value -65.0  // [mV] - Traub et al. 1995
 //#define Erev_HCN  -45.0 // [mV]
 #define Erev_HCN  -30.0 // [mV]
 //}}}
@@ -698,20 +702,17 @@ VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChann
 #include "stimulus_model.gsl"
 //}}}
  
-
 //I/O purpose
 //{{{
 
-VariableType VoltageDisplay{ initialize->initialize1 };
-
+VariableType VoltageDisplay{ initialize->initialize4 };
 VariableType CalciumDisplay{ initialize->initialize4 };
 
-VariableType CurrentDisplay{ initialize->initialize4 };
+VariableType CurrentDisplay{ initialize->initialize4 }; //NMDAR/AMPAR
 VariableType CaCurrentDisplay{ initialize->initialize4 };
-
+VariableType AnyCurrentDisplay{ initialize->initialize4 }; //Na/Ca/K/...
 VariableType ConductanceDisplay{ initialize->initialize4 };
-
-VariableType ReversalPotentialDisplay{ initialize->initialize4 };
+//VariableType ReversalPotentialDisplay{ initialize->initialize4 };
 
 #include "recording_model.gsl"
 
@@ -1016,10 +1017,12 @@ Grid InterNeuron{
 	//			gbar = {0.0} 
 	//			> ) ); 
      //}}}
+	//{{{ HCN channels
    //InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
    //               compartmentalize = { "gbar" },
    //               gbar = {0.0}
    //               > ) );
+     //}}}
 	 //{{{ K+ channels
    InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
          compartmentalize = { "gbar" },
@@ -1030,29 +1033,29 @@ Grid InterNeuron{
          gbar = {0.0}
          > ) );
 
-   //InitNodes ( .[].Layer(KpChannels), tissueFunctor("NodeInit", <
-   //      compartmentalize = { "gbar" },
-   //      gbar = {0.0}
-   //      > ) );
-
    InitNodes ( .[].Layer(KAfChannels), tissueFunctor("NodeInit", <
          compartmentalize = { "gbar" },
          gbar = {0.0}
          > ) );
 
-   //InitNodes ( .[].Layer(Kv31Channels), tissueFunctor("NodeInit", <
-   //      compartmentalize = { "gbar" },
-   //      gbar = {0.0}
-   //      > ) );
    InitNodes ( .[].Layer(BKChannels), tissueFunctor("NodeInit", <
          compartmentalize = { "gbar" },
          gbar = {0.0}
          > ) );
                  
    InitNodes ( .[].Layer(SKChannels), tissueFunctor("NodeInit", <
-         compartmentalize = { "gbar" },
+         compartmentalize = { "gbar"},
          gbar = {0.0}
          > ) );
+   //InitNodes ( .[].Layer(Kv31Channels), tissueFunctor("NodeInit", <
+   //      compartmentalize = { "gbar" },
+   //      gbar = {0.0}
+   //      > ) );
+   //InitNodes ( .[].Layer(KpChannels), tissueFunctor("NodeInit", <
+   //      compartmentalize = { "gbar" },
+   //      gbar = {0.0}
+   //      > ) );
+
     //}}}
 	//{{{ Ca2+ channels
 #if SIMULATION_INVOLVE >= VM_CACYTO
@@ -1161,6 +1164,7 @@ Grid InterNeuron{
     /*}}}*/
     /*}}}*/
     /*}}}*/
+  /*}}}*/
 
 	// GRID - CONNECT LAYERS with ...
     /*{{{*/

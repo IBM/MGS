@@ -5313,7 +5313,8 @@ void TissueFunctor::doConnector(LensContext* lc)
 }
 
 // GOAL: returns a nodeset satisfying the given criteria
-//  This nodeset will be used to connect to a variable automatically by the MGS system
+//    that will be used in a connection functor, e.g. PolyConnector
+//  E.g.: this nodeset will be used to connect to a variable for outputing data 
 //
 // The criteria to select the nodeset
 //    1. CATEGORY (a string) which can be either "BRANCH", "JUNCTION",
@@ -5414,17 +5415,17 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     }
     typeIdx = typeIter->second;
   }
-  if (category == "CHANNEL")
-  {
-    typeIter = _channelTypesMap.find(type);
-    if (typeIter == _channelTypesMap.end())
-    {
-      std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    typeIdx = typeIter->second;
-  }
+  //if (category == "CHANNEL")
+  //{
+  //  typeIter = _channelTypesMap.find(type);
+  //  if (typeIter == _channelTypesMap.end())
+  //  {
+  //    std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
+  //              << std::endl;
+  //    exit(EXIT_FAILURE);
+  //  }
+  //  typeIdx = typeIter->second;
+  //}
   bool esyn = false;
   if (category == "SYNAPSE")
   {

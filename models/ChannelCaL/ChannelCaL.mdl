@@ -13,7 +13,7 @@
 Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
     //CurrentArrayProducer,
     CaCurrentArrayProducer, 
-    BranchDataProducer, IOCurrentArrayProducer
+    BranchDataProducer //, IOCurrentArrayProducer
 {
 //{{{
 // Hodgkin-Huxley-based formula
@@ -67,7 +67,8 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   CaCurrentArrayProducer.currents << &I_Ca;
   //CurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
-  IOCurrentArrayProducer.currents << &Iion;
+  //IOCurrentArrayProducer.currents << &Iion;
+  //IOCurrentArrayProducer.currents << &I_Ca;
 
   InAttrPSet {
     string identifier;
@@ -210,7 +211,7 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
 //  HVA channel (high-voltage activated)
 Node ChannelCaLv12_GHK Implements 
 		 BranchDataProducer, 
-     CurrentArrayProducer,
+     //CurrentArrayProducer,
      CaCurrentArrayProducer
 {
 /*{{{*/
@@ -272,7 +273,7 @@ Node ChannelCaLv12_GHK Implements
 
   // Output
 	CaCurrentArrayProducer.currents << &I_Ca;
-	CurrentArrayProducer.currents << &I_Ca;
+	//CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection
@@ -312,7 +313,7 @@ Node ChannelCaLv12_GHK Implements
 //  HVA channel (high-voltage activated)
 Node ChannelCaLv13_GHK Implements 
 		 BranchDataProducer, 
-     CurrentArrayProducer,
+     //CurrentArrayProducer,
      CaCurrentArrayProducer
 {
 /*{{{*/
@@ -372,7 +373,7 @@ Node ChannelCaLv13_GHK Implements
 	RuntimePhase update();
 
 	CaCurrentArrayProducer.currents << &I_Ca;
-	CurrentArrayProducer.currents << &I_Ca;
+	//CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection

@@ -722,6 +722,8 @@ Variable AnyCurrentDisplay
 	BranchDataStruct* []* synapseBranchDataConnect;
 	int* [] [] synapseIndices;
 	int* [] synapseIndicesConnect;
+	string [] strChannelTypeOnCompt;
+	string [] strChannelTypeOnSynapse;
 
 	BranchDataStruct* [] connexonBranchData;
 	int* [] connexonIndices;
@@ -733,7 +735,8 @@ Variable AnyCurrentDisplay
 	TriggeredFunction dataCollection;
 
 	InAttrPSet {
-		string identifier;
+		string identifier;//CHANNEL
+    string type;//Nat, Cah
 	}
 
 	UserFunction setUpPointers;

@@ -413,6 +413,7 @@ void ChannelNat::initialize(RNG& rng)
 #else 
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
 

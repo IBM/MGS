@@ -171,11 +171,14 @@ std::string RegularConnection::getConnectionCode(
 	 //os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
 	 os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicateString);
 	 if (_userFunctionCalls) {
-      std::vector<UserFunctionCall*>::const_iterator it, 
-	 end = _userFunctionCalls->end();
-      for (it = _userFunctionCalls->begin();  it != end; ++it) {
-	 os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
-      }
+     os << tab <<  "if (castMatchLocal) { \n";
+     std::vector<UserFunctionCall*>::const_iterator it, 
+       end = _userFunctionCalls->end();
+     for (it = _userFunctionCalls->begin();  it != end; ++it) {
+       //os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
+       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
+     }
+     os << tab << "}; \n";
    }
    if (_predicate) {
       os << TAB << "}\n";      

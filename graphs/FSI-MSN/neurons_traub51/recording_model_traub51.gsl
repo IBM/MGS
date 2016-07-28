@@ -13,14 +13,18 @@ calciumSomaDisplay.dataCollection(<>) on recOn;
 //calciumSomaDisplay.dataCollection(<>) on recOnPassTime;
 
 //CurrentDisplay current_somaNa<fileName= PathFileCombine("current_somaNa.dat")>;
-ConductanceDisplay current_somaNa<fileName= PathFileCombine("current_somaNa.dat")>;
-current_somaNa.dataCollection(<>) on recOn;
+//ConductanceDisplay current_somaNa<fileName= PathFileCombine("current_somaNa.dat")>;
+//current_somaNa.dataCollection(<>) on recOn;
 //current_somaNa.dataCollection(<>) on recOnPassTime;
 
 //CurrentDisplay current_somaK<fileName= PathFileCombine("current_somaK.dat")>;
-ConductanceDisplay current_somaK<fileName= PathFileCombine("current_somaK.dat")>;
-current_somaK.dataCollection(<>) on recOn;
-//current_somaK.dataCollection(<>) on recOnPassTime;
+//ConductanceDisplay g_somaK<fileName= PathFileCombine("g_somaK.dat")>;
+//g_somaK.dataCollection(<>) on recOn;
+////g_somaK.dataCollection(<>) on recOnPassTime;
+
+AnyCurrentDisplay currentSomaDisplay<fileName= PathFileCombine("currentsSoma.dat")>;
+currentSomaDisplay.dataCollection(<>) on recOn;
+//currentDisplay.dataCollection(<>) on recOnPassTime;
 //}}}
 //{{{dendritic shaft
 //VoltageDisplay voltageDisplay_den<fileName= PathFileCombine("dendriticV.dat")>;

@@ -14,11 +14,21 @@
 //polyConnect(timeStep, current_somaNa, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaNa, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaNa, <>, <>);
+//polyConnect(timeStep, g_somaK, <>, <>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), g_somaK, <>, <identifier="CHANNEL", type="SK">);
 //
 //polyConnect(timeStep, current_somaK, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaK, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaK, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaK, <>, <>);
+polyConnect(timeStep, currentSomaDisplay, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="Nat">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KAf", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="KAf">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KDR", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="KDR">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="Cah">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="BK",  BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="BK">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="SK">);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="SK">);
  //}}}
  //}}}
   //{{{dendrite shaft

@@ -18,7 +18,7 @@ Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
 	//dyn_var_t [] fC; //  Closed-state - NOTE: consider removing as implicit with 2 state
 	dyn_var_t [] g;  // nS/um^2
 	dyn_var_t [] gbar; // nS/um^2
-  dyn_var_t [] Iion;
+  dyn_var_t [] Iion; // pA/um^2
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]
 	dyn_var_t []* Cai;//submembrane Ca2+ [uM]
