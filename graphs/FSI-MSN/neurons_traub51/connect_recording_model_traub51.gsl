@@ -82,7 +82,25 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANC
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_ais, <>, <site=AIS_Site1>);
 //#endif
   //}}}
-
+  //{{{LOCATION a1 - distal axon 
+  TissueSite axon_site1(-189.7241, 37.5, 0.0, 15.0); // distal most compartment of axon in Traub's 1995 
+  polyConnect(timeStep, voltageDisplay_axonDistal, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_axonDistal, <>, <site=axon_site1>);
+//#if SIMULATION_INVOLVE >= VM_CACYTO
+//  polyConnect(timeStep, calciumDisplay_axonDistal, <>, <>);
+//  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_axonDistal, <>, <site=AIS_Site1>);
+//#endif
+polyConnect(timeStep, currentDistalAxonDisplay, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="CHANNEL", type="Nat", site=axon_site1>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KAf", NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="CHANNEL", type="KAf", site=axon_site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KDR", NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="CHANNEL", type="KDR", site=axon_site1>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="CHANNEL", type="Cah", site=axon_site1>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="BK",  NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="CHANNEL", type="BK", site=axon_site1>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="CHANNEL", type="SK", site=axon_site1>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_INDEX=neuronIndex>), currentDistalAxonDisplay, <>, <identifier="BRANCH", site=axon_site1>);
+#endif
+  //}}}
 	//}}}
  //}}}
 

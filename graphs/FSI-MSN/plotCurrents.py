@@ -1455,6 +1455,7 @@ def plot_case9_adv():
 
 
     ############################
+    ### row 0
     ## For 1 file
     myFile = folder+'/'+getFile(folder,'currentsSoma.dat')
     file=open(myFile)
@@ -1636,6 +1637,191 @@ def plot_case9_adv():
     for tl in ax2.get_yticklabels():
         tl.set_color(color)
     print minVal, maxVal
+
+    ############################
+    ### row 2
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'currentsDistalAxon.dat')
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 1; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = markers[((i/len(colors))%len(markers))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata), minVal)
+            maxVal = max(np.amax(ydata), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.5*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.5*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'axonDistalV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 1; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = markers[((i/len(colors))%len(markers))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata), minVal)
+        maxVal = max(np.amax(ydata), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.5*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.5*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'axonDistalCa.dat')
+    if (os.path.isfile(myFile)):
+      channelNames=["Ca"]
+      nCols = len(channelNames)
+
+      arrays = np.loadtxt(myFile,
+                          skiprows=2,
+                        # usecols=(0, 1)
+                         )
+      arraysT = np.transpose(arrays)
+      t = arraysT[0]
+      #############
+      # Define time range
+      idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+      if (timeEnd == -1.0):
+        idxEnd = len(t)-1
+        timeEnd = t[idxEnd]
+      else:
+        idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+      #END
+      #################
+      arraysT = np.delete(arraysT, 0, 0)
+      #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+      #print arr
+      #arr = np.delete(arr,0,1)
+      #print arr
+      #return
+      #print t
+      #print nCols
+      minVal = 200000000.0
+      maxVal = -minVal
+      i =0
+      #gr = 0; gc = 1 # graph row, col
+      ax2 = ax1.twinx()
+      for ydata in arraysT:
+          #plot (t, col)
+          # legend(time, channelNames[i])
+          color = colors[(i+1)%len(colors)]
+          marker = markers[((i/len(colors))%len(markers))]
+          #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+          #axarr[gr, gc].legend()
+          ax2.plot(t, ydata , color, label=channelNames[i])
+          ax2.legend(loc=0)
+          minVal = min(np.amin(ydata), minVal)
+          maxVal = max(np.amax(ydata), maxVal)
+          #print len(t), len(ydata)
+          i += 1
+      #s2 = np.sin(2*np.pi*t)
+      #ax2.plot(t, s2, 'r.')
+      #ax2.set_ylabel('sin', color='r')
+      ax2.set_ylim(bottom=minVal - 1.5*max(0.1,abs(minVal)))
+      ax2.set_ylim(top=maxVal + 0.5*max(0.1,abs(maxVal)))
+      ax2.set_xlim(left=timeStart, right=timeEnd)
+      for tl in ax2.get_yticklabels():
+          tl.set_color(color)
+      print minVal, maxVal
 
 
     plt.show()

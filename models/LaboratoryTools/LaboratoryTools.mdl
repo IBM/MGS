@@ -711,7 +711,11 @@ Variable AnyCurrentDisplay
 {
 //{{{
 	string fileName;
+#ifdef IDEA_CURRENTONCOMPT
+	int [] [] indices_channel;
+#else
 	int [] indices;
+#endif
 
 	dyn_var_t []* [] I_channel;
 	dyn_var_t []* I_channelConnect;
@@ -723,6 +727,9 @@ Variable AnyCurrentDisplay
 	dyn_var_t []* V_connect;
 	BranchDataStruct* [] leakBranchData;
 	dyn_var_t * [] Eleak;
+#ifdef IDEA_CURRENTONCOMPT
+	int [] [] indices_leak;
+#endif
 #endif
 
 	dyn_var_t* [] I_synapse;
@@ -742,43 +749,86 @@ Variable AnyCurrentDisplay
 	FinalPhase finalize;
 	TriggeredFunction dataCollection;
 
+#ifdef IDEA_CURRENTONCOMPT
+	//DimensionStruct* []* [] dimensions;
+	DimensionStruct* []* dimensions_connect;
+#endif
+
 	InAttrPSet {
 		string identifier;//CHANNEL
     string type;//Nat, Cah
+#ifdef IDEA_CURRENTONCOMPT
+		TissueSite site;
+#endif
 	}
 
 	UserFunction setUpPointers;
 
 #ifdef IDEA_ILEAK
-	Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  {		// 
+	Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  
+#ifdef IDEA_CURRENTONCOMPT
+  , DimensionArrayProducer 
+#endif
+{		// 
 		VoltageArrayProducer.voltageArray >> V_connect;
     ConductanceProducer.conductance >> gLeak;
 		BranchDataProducer.branchData >> leakBranchData;
+#ifdef IDEA_CURRENTONCOMPT
+		DimensionArrayProducer.dimensionArray >> dimensions_connect;
+#endif
     ReversalPotentialProducer.reversalPotential >> Eleak;
 		setUpPointers();
 	}
-	Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, ConductanceProducer, BranchDataProducer, ReversalPotentialProducer {		// 
+	Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, ConductanceProducer, BranchDataProducer, ReversalPotentialProducer 
+#ifdef IDEA_CURRENTONCOMPT
+  , DimensionArrayProducer 
+#endif
+{		// 
 		VoltageArrayProducer.voltageArray >> V_connect;
     ConductanceProducer.conductance >> gLeak;
 		BranchDataProducer.branchData >> leakBranchData;
+#ifdef IDEA_CURRENTONCOMPT
+		DimensionArrayProducer.dimensionArray >> dimensions_connect;
+#endif
     ReversalPotentialProducer.reversalPotential >> Eleak;
 		setUpPointers();
 	}
 #endif
 
-	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer {
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer 
+#ifdef IDEA_CURRENTONCOMPT
+  , DimensionArrayProducer 
+#endif
+{
 		CurrentArrayProducer.currents >> I_channelConnect;
 		BranchDataProducer.branchData >> channelBranchData;
+#ifdef IDEA_CURRENTONCOMPT
+		DimensionArrayProducer.dimensionArray >> dimensions_connect;
+#endif
 		setUpPointers();
 	}
-	Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer {
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer
+#ifdef IDEA_CURRENTONCOMPT
+  , DimensionArrayProducer 
+#endif
+ {
 		IOCurrentArrayProducer.currents >> I_channelConnect;
 		BranchDataProducer.branchData >> channelBranchData;
+#ifdef IDEA_CURRENTONCOMPT
+		DimensionArrayProducer.dimensionArray >> dimensions_connect;
+#endif
 		setUpPointers();
 	}
-	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer {
+	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer 
+#ifdef IDEA_CURRENTONCOMPT
+  , DimensionArrayProducer 
+#endif
+{
 		CaCurrentArrayProducer.currents >> I_channelConnect;
 		BranchDataProducer.branchData >> channelBranchData;
+#ifdef IDEA_CURRENTONCOMPT
+		DimensionArrayProducer.dimensionArray >> dimensions_connect;
+#endif
 		setUpPointers();
 	}
 	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {

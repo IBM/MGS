@@ -70,6 +70,17 @@ CalciumDisplay calciumDisplay_ais<fileName= PathFileCombine("axonAISCa.dat")>;
 calciumDisplay_ais.dataCollection(<>) on recOn;
 //calciumDisplay_ais.dataCollection(<>) on recOnPassTime;
 //}}}
+//{{{ distal axon 
+//VoltageDisplay voltageDisplay_axonDistal<indices={1,4},fileName= PathFileCombine("axonDistalV.dat")>;
+VoltageDisplay voltageDisplay_axonDistal<fileName= PathFileCombine("axonDistalV.dat")>;
+voltageDisplay_axonDistal.dataCollection(<>) on recOn;
+//voltageDisplay_axonDistal.dataCollection(<>) on recOnPassTime;
+//CalciumDisplay calciumDisplay_axonDistal<fileName= PathFileCombine("axonDistalCa.dat")>;
+//calciumDisplay_axonDistal.dataCollection(<>) on recOn;
+//calciumDisplay_ais.dataCollection(<>) on recOnPassTime;
+AnyCurrentDisplay currentDistalAxonDisplay<fileName= PathFileCombine("currentsDistalAxon.dat")>;
+currentDistalAxonDisplay.dataCollection(<>) on recOn;
+//}}}
 //}}}
 
 //spine

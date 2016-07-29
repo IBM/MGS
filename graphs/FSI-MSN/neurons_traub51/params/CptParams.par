@@ -23,12 +23,22 @@ MTYPE BRANCHTYPE
 ## NOTE: Make sure semi-colon separated
 #{{{
 #{{{neuron
-0 1 <Cm=0.0075; gLeak=0.0002>
-0 2 <Cm=0.0075; gLeak=0.0002>
-0 5 <Cm=0.0075; gLeak=0.0002>
-0 3 <Cm=0.0075; gLeak=0.0002>
-0 4 <Cm=0.0075; gLeak=0.0002>
-0 6 <Cm=0.0075; gLeak=0.0002>
+##gLeak=0.0001 ~ -86mV
+##gLeak=0.0003 ~ -82mV
+##gLeak=0.0013 ~ -75mV
+##gLeak=0.0023 ~ -70mV
+0 1 <Cm=0.0075; gLeak=0.0033>
+0 2 <Cm=0.0075; gLeak=0.0033>
+0 5 <Cm=0.0075; gLeak=0.0033>
+0 3 <Cm=0.0075; gLeak=0.0033>
+0 4 <Cm=0.0075; gLeak=0.0033>
+0 6 <Cm=0.0075; gLeak=0.0033>
+#0 1 <Cm=0.0075; gLeak=0.0002>
+#0 2 <Cm=0.0075; gLeak=0.0002>
+#0 5 <Cm=0.0075; gLeak=0.0002>
+#0 3 <Cm=0.0075; gLeak=0.0002>
+#0 4 <Cm=0.0075; gLeak=0.0002>
+#0 6 <Cm=0.0075; gLeak=0.0002>
 #}}}
 #{{{ GABAergic bouton
 #}}}

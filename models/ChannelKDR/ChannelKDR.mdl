@@ -7,7 +7,7 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelKDR Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelKDR Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 //{{{
 /*{{{*/
   //DATA
@@ -67,6 +67,7 @@ Node ChannelKDR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection
@@ -98,7 +99,7 @@ Node ChannelKDR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 /*}}}*/
 }
 
-Node ChannelKDR_AIS Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelKDR_AIS Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 /*{{{*/
 /*{{{*/
   //DATA
@@ -158,6 +159,7 @@ Node ChannelKDR_AIS Implements ConductanceArrayProducer, ReversalPotentialArrayP
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection

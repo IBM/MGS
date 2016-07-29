@@ -93,9 +93,11 @@
 //  gbar = linearbranchorder
 //  ...
 //  IDEA_ILEAK (if defined, the code that enable outputing Ileak is added to AnyCurrentDisplay via HodgkinHuxleyVoltage connection)
+//  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
 //#define IDEA1
 //#define NEWIDEA
 //#define IDEA_ILEAK
+//#define IDEA_CURRENTONCOMPT
 //#define SYNAPSE_PARAMS_TOUCH_DETECT
 //#define INFERIOR_OLIVE
 
