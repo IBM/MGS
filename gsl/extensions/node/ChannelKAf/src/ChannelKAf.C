@@ -19,17 +19,18 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 // This is an implementation of the "KAf potassium current
 //
 #if CHANNEL_KAf == KAf_TRAUB_1994
+#define Eleak -65.0 //mV
 #define AMC -0.02
-#define AMV 13.1
+#define AMV (13.1+Eleak)
 #define AMD -10.0
 #define BMC 0.0175
-#define BMV 40.1
+#define BMV (40.1+Eleak)
 #define BMD 10.0
 #define AHC 0.0016
-#define AHV -13.0
+#define AHV (-13.0+Eleak)
 #define AHD -18
 #define BHC 0.05
-#define BHV 60.1
+#define BHV (60.1+Eleak)
 #define BHD -5.0
 
 #elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000

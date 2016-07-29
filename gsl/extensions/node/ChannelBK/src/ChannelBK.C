@@ -23,6 +23,7 @@
 //  Used in Traub's models of several neuron types
 //  Non-inactivating, V- and Ca-dep K
 //  Alpha-Beta forward-backward rate formulation model
+#define Eleak -65.0  // mV
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -41,11 +42,12 @@ void ChannelBK::update(RNG& rng)
 
 #if CHANNEL_BK == BK_TRAUB_1994
         dyn_var_t alpha, beta;
-        if ( v <= 50 ) {
-            alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
-            beta = 2*exp(-((v-6.5)/27))-alpha;
+        dyn_var_t Voff = v - Eleak;
+        if ( Voff <= 50 ) {
+            alpha = exp(((Voff-10)/11) - ((Voff-6.5)/27))/18.975;
+            beta = 2*exp(-((Voff-6.5)/27))-alpha;
         } else  {
-            alpha = 2*exp(-((v-6.5)/27));
+            alpha = 2*exp(-((Voff-6.5)/27));
             beta = 0.0;
         }
         // Rempe * Chopp (2006)
@@ -129,11 +131,12 @@ void ChannelBK::initialize(RNG& rng)
 #if CHANNEL_BK == BK_TRAUB_1994
     dyn_var_t alpha, beta ;
     dyn_var_t v=(*V)[i];
-    if ( v <= 50 ) {
-      alpha = exp(((v-10)/11) - ((v-6.5)/27))/18.975;
-      beta = 2*exp(-((v-6.5)/27))-alpha;
+    dyn_var_t Voff = v - Eleak;
+    if ( Voff <= 50 ) {
+      alpha = exp(((Voff-10)/11) - ((Voff-6.5)/27))/18.975;
+      beta = 2*exp(-((Voff-6.5)/27))-alpha;
     } else {
-      alpha = 2*exp(-((v-6.5)/27));
+      alpha = 2*exp(-((Voff-6.5)/27));
       beta = 0.0;
     }
     fO[i] = alpha/(alpha+beta); // steady-state value

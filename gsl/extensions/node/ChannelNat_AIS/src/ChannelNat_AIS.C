@@ -14,17 +14,18 @@
 //Developed for Gamagenesis in interneurons
 //All above conventions for a_m, a_h, b_h remain the same as above except b_m below
 //b_m = (BMC * (V - BMV))/(exp((V-BMV)/BMD)-1)
+#define Eleak -65.0 //[mV]
 #define AMC -0.8
-#define AMV 17.2
+#define AMV (17.2+Eleak)
 #define AMD -4.0
 #define BMC 0.7
-#define BMV 42.2
+#define BMV (42.2+Eleak)
 #define BMD 5.0
 #define AHC 0.3
-#define AHV -42.0
+#define AHV (-42.0+Eleak)
 #define AHD -18.0
 #define BHC 10.0
-#define BHV -42.0
+#define BHV (-42.0+Eleak)
 #define BHD -5.0
 #endif
 

@@ -13,6 +13,7 @@
 Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
     //CurrentArrayProducer,
     CaCurrentArrayProducer, 
+    DimensionArrayProducer,
     BranchDataProducer //, IOCurrentArrayProducer
 {
 //{{{
@@ -67,6 +68,7 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   CaCurrentArrayProducer.currents << &I_Ca;
   //CurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   //IOCurrentArrayProducer.currents << &Iion;
   //IOCurrentArrayProducer.currents << &I_Ca;
 

@@ -14,11 +14,12 @@
 #include <algorithm>
 
 #if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994
+#define Eleak -65.0 // [mV]
 #define ANC 0.03
-#define ANV 17.2
+#define ANV (17.2+Eleak)
 #define AND 5
 #define BNC 0.45
-#define BNV 12
+#define BNV (12+Eleak)
 #define BND 40
 #endif
 

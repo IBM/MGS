@@ -1455,7 +1455,7 @@ def plot_case9_adv():
 
 
     ############################
-    ### row 0
+    ### row 1
     ## For 1 file
     myFile = folder+'/'+getFile(folder,'currentsSoma.dat')
     file=open(myFile)

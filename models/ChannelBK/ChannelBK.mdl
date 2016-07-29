@@ -7,7 +7,7 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 	/*{{{*/
 	//DATA
 	// Markov-based formula
@@ -71,6 +71,7 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 	ConductanceArrayProducer.conductanceArray << &g;
 	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
 	InAttrPSet {//information of the incoming connection
@@ -249,7 +250,7 @@ Node ChannelBKalphabeta Implements ConductanceArrayProducer, ReversalPotentialAr
 //}
 //
 
-Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 	/*{{{*/
 	//DATA
 	// Alpha-Beta forward-backward rate based formula
@@ -308,6 +309,7 @@ Node ChannelBK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
 	ConductanceArrayProducer.conductanceArray << &g;
 	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
 	InAttrPSet {//information of the incoming connection

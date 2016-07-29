@@ -9,7 +9,7 @@
 
 // A-type fast component (Kt)
 Node ChannelKAf Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-BranchDataProducer, IOCurrentArrayProducer {
+BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -67,6 +67,7 @@ BranchDataProducer, IOCurrentArrayProducer {
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection

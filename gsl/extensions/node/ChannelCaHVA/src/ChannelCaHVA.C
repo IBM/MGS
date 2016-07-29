@@ -33,9 +33,11 @@
 // b_m  = BMC * exp( (V - BMV)/BMD )
 // a_h  = AHC * exp( (V - AHV)/AHD )
 // b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
-#define Erev_Ca 125.0 // [mV]
-#define am  (1.6 / (1.0 + exp(-0.072 * (v-65))))
-#define bm  (0.02 * (vtrap((v-51.1), 5.0)))
+//#define Erev_Ca 125.0 // [mV]  - used in Neuron implementation
+#define Erev_Ca 75.0 // [mV]
+#define Eleak -65.0 //[mV]
+#define am  (1.6 / (1.0 + exp(-0.072 * (v-65-Eleak))))
+#define bm  (0.02 * (vtrap((v-Eleak-51.1), 5.0)))
 
 #endif
 

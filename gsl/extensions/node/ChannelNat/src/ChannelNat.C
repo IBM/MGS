@@ -57,17 +57,18 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 //Developed for Gamagenesis in interneurons
 //All above conventions for a_m, a_h, b_h remain the same as above except b_m below
 //b_m = (BMC * (V - BMV))/(exp((V-BMV)/BMD)-1)
+#define Eleak -65.0 //mV
 #define AMC -0.32
-#define AMV 13.1
+#define AMV (13.1+Eleak)
 #define AMD -4.0
 #define BMC 0.28
-#define BMV 40.1
+#define BMV (40.1+Eleak)
 #define BMD 5.0
 #define AHC 0.128
-#define AHV -17.0
+#define AHV (-17.0+Eleak)
 #define AHD -18.0
 #define BHC 4.0
-#define BHV -40.0
+#define BHV (-40.0+Eleak)
 #define BHD -5.0
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 // Developed for IO cell (inferior olive)

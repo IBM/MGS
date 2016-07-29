@@ -43,11 +43,12 @@
 #define BNV 51.0
 #define BND 80.0
 #elif CHANNEL_KDR == KDR_TRAUB_1994
+#define Eleak -65.0 //mV
 #define ANC 0.016
-#define ANV 35.1
+#define ANV (35.1+Eleak)
 #define AND 5
 #define BNC 0.25
-#define BNV 20
+#define BNV (20+Eleak)
 #define BND 40
 #endif
 
