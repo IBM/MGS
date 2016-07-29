@@ -29,6 +29,9 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", BRANCHORDER
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="BK",  BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="BK">);
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="SK">);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="CHANNEL", type="SK">);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), currentSomaDisplay, <>, <identifier="JUNCTION">);
+#endif
  //}}}
  //}}}
   //{{{dendrite shaft

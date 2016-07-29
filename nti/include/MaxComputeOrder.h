@@ -81,12 +81,9 @@
 		}while (0)
 #endif
 
-//NOTE: distable this if we want 'distance' information is kept in Touch
-//  LTWT = light-weight
+//NOTE: disable this if we want 'distance' information is kept in Touch
+//  LTWT = light-weight    (NOTE: there is still bug with heavy-weight)
 #define LTWT_TOUCH
-
-//#define SYNAPSE_PARAMS_TOUCH_DETECT
-//#define INFERIOR_OLIVE
 
 //NOTE: 
 ///enable or disable the macro to turn on or off the option
@@ -95,7 +92,12 @@
 //  gbar = lineardistane(a,b) 
 //  gbar = linearbranchorder
 //  ...
+//  IDEA_ILEAK (if defined, the code that enable outputing Ileak is added to AnyCurrentDisplay via HodgkinHuxleyVoltage connection)
 //#define IDEA1
 //#define NEWIDEA
+//#define IDEA_ILEAK
+//#define SYNAPSE_PARAMS_TOUCH_DETECT
+//#define INFERIOR_OLIVE
+
 
 #endif //_MAXCOMPUTEORDER_H

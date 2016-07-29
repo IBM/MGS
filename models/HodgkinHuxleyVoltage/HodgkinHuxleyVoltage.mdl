@@ -40,6 +40,10 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
      DimensionArrayProducer, BranchDataProducer, 
      ForwardSolutionArrayProducer,
      VoltageArrayProducer, 
+#ifdef IDEA_ILEAK
+     ConductanceProducer,
+     ReversalPotentialProducer,
+#endif
      NaConcentrationProducer, KConcentrationProducer 
 {
 // Regular-branch: represent the diffusion of Voltage along branch with no explicit junction
@@ -127,6 +131,10 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   ForwardSolutionArrayProducer.AiiArray << &Aii;
   ForwardSolutionArrayProducer.AipArray << &Aip;
   ForwardSolutionArrayProducer.RHSArray << &RHS;
+#ifdef IDEA_ILEAK
+  ConductanceProducer.conductance << &gLeak;
+  ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
+#endif
 
   NaConcentrationProducer.Na << &Shared.Na;
   KConcentrationProducer.K << &Shared.K;
@@ -294,6 +302,10 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
 // It represents one explicit junction branch (which comprise half regular compartments)
 Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataProducer,
      VoltageArrayProducer, 
+#ifdef IDEA_ILEAK
+     ConductanceProducer,
+     ReversalPotentialProducer,
+#endif
 	 NaConcentrationProducer, KConcentrationProducer 
 {
 // Explicit junction branch: a branch comprised of half-compartments (or better half-capsules) 
@@ -342,6 +354,10 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   VoltageArrayProducer.voltageArray << &Vnew;
   DimensionArrayProducer.dimensionArray << &dimensions;
   BranchDataProducer.branchData << branchData;
+#ifdef IDEA_ILEAK
+  ConductanceProducer.conductance << &gLeak;
+  ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
+#endif
 
   NaConcentrationProducer.Na << &Shared.Na;
   KConcentrationProducer.K << &Shared.K;

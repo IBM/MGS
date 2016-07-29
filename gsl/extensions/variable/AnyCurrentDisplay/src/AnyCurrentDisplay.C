@@ -9,7 +9,11 @@
 
 void AnyCurrentDisplay::initialize(RNG& rng)
 {
-  if (I_channel.size() > 0 || I_synapse.size() > 0)
+  if (I_channel.size() > 0 || I_synapse.size() > 0
+#ifdef IDEA_ILEAK
+      || V.size() > 0
+#endif
+      )
   {  // current via Ca2+/Na+/or K+ channel; or ion/Ca2+-permeable receptor at
      // synapse
     assert(deltaT);
@@ -39,7 +43,6 @@ void AnyCurrentDisplay::initialize(RNG& rng)
       else
       {
         ShallowArray<int>::iterator it, end = indices.end();
-        int idx = 0;
         for (unsigned int i = 0; i < I_channel.size(); ++i)
         {
           for (it = indices.begin(); it != end; ++it)
@@ -90,6 +93,42 @@ void AnyCurrentDisplay::initialize(RNG& rng)
         }
       }
     }
+#ifdef IDEA_ILEAK
+    if (V.size() > 0)
+    {
+      if (indices.size() == 0)
+      {
+        for (unsigned int i = 0; i < V.size(); ++i)
+        {
+          assert(V[i]->size() > 0);
+          for (unsigned int j = 0; j < V[i]->size(); ++j)
+          {
+            (*outFile) << std::fixed << " ["
+                       << *(reinterpret_cast<unsigned long long*>(
+                              &leakBranchData[i]->key)) << "," << j << "] ";
+              os2 << "leak" << ", "; 
+          }
+        }
+      }
+      else
+      {
+        ShallowArray<int>::iterator it, end = indices.end();
+        for (unsigned int i = 0; i < V.size(); ++i)
+        {
+          for (it = indices.begin(); it != end; ++it)
+          {
+            if ((unsigned)*it < V[i]->size())
+              (*outFile) << std::fixed << " ["
+                         << *(reinterpret_cast<unsigned long long*>(
+                                &leakBranchData[*it]->key)) << "," << *it
+                         << "] ";
+              os2 << "leak" << ", "; 
+          }
+        }
+      }
+      
+    }
+#endif
     (*outFile) << "\n";
     (*outFile) << os2.str() << "\n";
   }
@@ -102,7 +141,11 @@ void AnyCurrentDisplay::finalize(RNG& rng)
 
 void AnyCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 {
-  if (I_channel.size() > 0 || I_synapse.size() > 0)
+  if (I_channel.size() > 0 || I_synapse.size() > 0
+#ifdef IDEA_ILEAK
+      || V.size() > 0
+#endif
+      )
   {
     (*outFile) << float(getSimulation().getIteration()) * *deltaT;
     if (I_channel.size() > 0)
@@ -145,6 +188,47 @@ void AnyCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         (*outFile) << std::fixed << fieldDelimiter << (**it);
       }
     }
+#ifdef IDEA_ILEAK
+    if (V.size() > 0)
+    {
+      if (indices.size() == 0)
+      {
+        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 =
+                                                             V.begin(),
+                                                         end1 = V.end();
+        for (; it1 != end1; ++it1)
+        {
+          ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
+                                            end2 = (*it1)->end();
+          int i=0;
+          for (; it2 != end2; ++it2)
+          {
+            float Ileak = *(gLeak[i]) * ((*it2) - *(Eleak[i]));
+            (*outFile) << std::fixed << fieldDelimiter << Ileak ;
+            
+          }
+        }
+      }
+      else
+      {
+        ShallowArray<int>::iterator it2, end2 = indices.end();
+        ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 =
+                                                             V.begin(),
+                                                         end1 = V.end();
+        for (; it1 != end1; ++it1)
+        {
+          for (it2 = indices.begin(); it2 != end2; ++it2)
+          {
+            if ((unsigned)*it2 < (*it1)->size())
+            {
+              float Ileak = *(gLeak[*it2]) * ((**it1)[*it2] - *(Eleak[*it2]));
+              (*outFile) << std::fixed << fieldDelimiter << Ileak;
+            }
+          }
+        }
+      }
+    }
+#endif
     (*outFile) << "\n";
   }
 }
@@ -169,6 +253,13 @@ void AnyCurrentDisplay::setUpPointers(
     synapseIndices.push_back(synapseIndicesConnect);
     strChannelTypeOnSynapse.push_back(type);
   }
+#ifdef IDEA_ILEAK
+  else if (CG_inAttrPset->identifier == "BRANCH" or
+      CG_inAttrPset->identifier == "JUNCTION")
+  {
+    V.push_back(V_connect);
+  }
+#endif
 }
 
 AnyCurrentDisplay::AnyCurrentDisplay() : CG_AnyCurrentDisplay(), outFile(0) {}

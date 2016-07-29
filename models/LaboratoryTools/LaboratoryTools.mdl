@@ -716,6 +716,14 @@ Variable AnyCurrentDisplay
 	dyn_var_t []* [] I_channel;
 	dyn_var_t []* I_channelConnect;
 	BranchDataStruct* [] channelBranchData;
+#ifdef IDEA_ILEAK
+  //for Ileak
+	dyn_var_t []* [] V;
+	dyn_var_t * [] gLeak;
+	dyn_var_t []* V_connect;
+	BranchDataStruct* [] leakBranchData;
+	dyn_var_t * [] Eleak;
+#endif
 
 	dyn_var_t* [] I_synapse;
 	BranchDataStruct* []* [] synapseBranchData;
@@ -740,6 +748,23 @@ Variable AnyCurrentDisplay
 	}
 
 	UserFunction setUpPointers;
+
+#ifdef IDEA_ILEAK
+	Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  {		// 
+		VoltageArrayProducer.voltageArray >> V_connect;
+    ConductanceProducer.conductance >> gLeak;
+		BranchDataProducer.branchData >> leakBranchData;
+    ReversalPotentialProducer.reversalPotential >> Eleak;
+		setUpPointers();
+	}
+	Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, ConductanceProducer, BranchDataProducer, ReversalPotentialProducer {		// 
+		VoltageArrayProducer.voltageArray >> V_connect;
+    ConductanceProducer.conductance >> gLeak;
+		BranchDataProducer.branchData >> leakBranchData;
+    ReversalPotentialProducer.reversalPotential >> Eleak;
+		setUpPointers();
+	}
+#endif
 
 	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer {
 		CurrentArrayProducer.currents >> I_channelConnect;
