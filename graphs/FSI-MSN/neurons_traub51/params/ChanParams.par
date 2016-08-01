@@ -56,13 +56,12 @@ SK 0.254051
 
 CHANNEL_PARAMS 9
 # gbar = [nS/um^2]
-Nat 5
+Nat 4
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
 1 0 <gbar={1.0}>
 2 0 <gbar={5.0}>
-5 0 <gbar={5.0}>
 3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
      gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0, 0.0}}
 4 0 <gbar_dists={50, 100}; \
@@ -80,13 +79,12 @@ BRANCHTYPE MTYPE
 5 0 <gbar={5.0}>
 #}}}
 #}}}
-KDR 5
+KDR 4
 #{{{
 BRANCHTYPE MTYPE
 #{{{ neuron
 1 0 <gbar={1.350}>
 2 0 <gbar={2.5}>
-5 0 <gbar={2.5}>
 3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
      gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0, 0.0}}
 4 0 <gbar_dists={50, 100}; \
@@ -170,9 +168,9 @@ PMCA 3
 BRANCHTYPE MTYPE 
 ## NOTE: large value of tau is important in keeping Ca-neck high
 #{{{neuron
-1 0 <tau={333}>
-3 0 <tau={20}>
-4 0 <tau={20}>
+1 0 <tau={13.33}>
+3 0 <tau={12.0}>
+4 0 <tau={12.0}>
 #}}}
 #{{{GABA bouton
 #}}}

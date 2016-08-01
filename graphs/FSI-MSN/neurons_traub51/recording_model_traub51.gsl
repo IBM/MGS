@@ -69,6 +69,8 @@ voltageDisplay_ais.dataCollection(<>) on recOn;
 CalciumDisplay calciumDisplay_ais<fileName= PathFileCombine("axonAISCa.dat")>;
 calciumDisplay_ais.dataCollection(<>) on recOn;
 //calciumDisplay_ais.dataCollection(<>) on recOnPassTime;
+AnyCurrentDisplay currentAISDisplay<fileName= PathFileCombine("currentsAIS.dat")>;
+currentAISDisplay.dataCollection(<>) on recOn;
 //}}}
 //{{{ distal axon 
 //VoltageDisplay voltageDisplay_axonDistal<indices={1,4},fileName= PathFileCombine("axonDistalV.dat")>;

@@ -28,7 +28,8 @@
 #elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
-#elif CHANNEL_KDR == KDR_TRAUB_1994
+#elif CHANNEL_KDR == KDR_TRAUB_1994 || \
+      CHANNEL_KDR == KDR_TRAUB_1995 //not being used for these models
 #define BASED_TEMPERATURE 23.0
 #define Q10 3.0
 #endif

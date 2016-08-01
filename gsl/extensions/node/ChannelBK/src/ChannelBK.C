@@ -24,6 +24,14 @@
 //  Non-inactivating, V- and Ca-dep K
 //  Alpha-Beta forward-backward rate formulation model
 #define Eleak -65.0  // mV
+//NOTE: Traub's original unitless formula
+//#define CaMax 250.0
+//#define CaGate ((cai/250) > 1.0 ? 1.0 : (cai/250)  \
+//    )
+//NOTE: revised formula to adopt more realistic range of Ca2+
+#define CaMax 2.0
+#define CaGate ((cai/CaMax) > 1.0 ? 1.0 : (cai/CaMax)  \
+    )
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -54,7 +62,7 @@ void ChannelBK::update(RNG& rng)
         dyn_var_t pc = 0.5*dt*(alpha+beta);
         fO[i] = (dt*alpha + fO[i]*(1.0-pc))/(1.0+pc);
         //dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
-        dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
+        //dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
         g[i] = gbar[i]*fO[i]*CaGate;
 #endif
         Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
@@ -141,7 +149,7 @@ void ChannelBK::initialize(RNG& rng)
     }
     fO[i] = alpha/(alpha+beta); // steady-state value
     //dyn_var_t CaGate = (cai/250.0)>1.0?1.0:(cai/250.0);
-    dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
+    //dyn_var_t CaGate = (cai/0.250)>1.0?1.0:(cai/0.250);
 #endif
     // trick to keep m in [0, 1]
     if (fO[i] < 0.0) { fO[i] = 0.0; }

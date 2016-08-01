@@ -91,7 +91,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          10      // [ms]
+	#define TimeEnd          150      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -147,8 +147,8 @@ print("Case 00: resting");
 #define Mg_i_value   0.8    // [mM]
 #define Na_i_value   22.0 //12.0  // [mM]
 #define Na_o_value   145.0 // [mM]
-#define K_i_value    170.0 //139.0 // [mM]
-#define K_o_value    6.0  // [mM]  4.1+/-1.8 mM
+#define K_i_value    120.0 //139.0 // [mM]
+#define K_o_value    6.0  // [mM]  4.1+/-1.8 mM  //GOAL: -80mV
 
 #define Dopa_value   0.0   // [uM]
 
@@ -168,9 +168,9 @@ print("Case 00: resting");
 #endif
 //}}}
 
-//{{{ Conditions: conductance + temperature + Vrest + Eleak
+//{{{ Conditions: conductance (axial resistance) + temperature + Vrest + Eleak
+//NOTE: 1 Ohm.cm = 10^-5 GOhm*um
 #define Ra_value 0.001     // [GOhm*um] 
-//#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
 //#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
 //#define R_NECK 0.005     // [GOhm*um] --> g~
@@ -183,8 +183,8 @@ print("Case 00: resting");
   //              20.0-22.0-degree Celcius (room)
   //       281K = 7.85-degree Celcius (cold)
 #define Temperature_value  308.15 // [K] Kelvin
-#define Vrest_value  -70.0 // [mV]
-#define E_leak_value -65.0  // [mV] - Traub et al. 1995
+#define Vrest_value  -67.0 // [mV]
+#define E_leak_value -63.0  // [mV] - Traub et al. 1995
 //#define Erev_HCN  -45.0 // [mV]
 #define Erev_HCN  -30.0 // [mV]
 //}}}

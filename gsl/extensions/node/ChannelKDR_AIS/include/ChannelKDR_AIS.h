@@ -7,7 +7,8 @@
 
 #include "MaxComputeOrder.h"
 
-#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994
+#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994 || \
+    CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1995 //not being used for these models
 #define BASED_TEMPERATURE 23.0 // Celsius
 #define Q10 3.0
 #endif

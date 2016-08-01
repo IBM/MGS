@@ -8,7 +8,7 @@
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 
-#define decimal_places 3
+#define decimal_places 6
 #define fieldDelimiter "\t"
 
 #ifdef IDEA_CURRENTONCOMPT

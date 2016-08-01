@@ -21,11 +21,11 @@
 #define BMC 0.7
 #define BMV (42.2+Eleak)
 #define BMD 5.0
-#define AHC 0.3
-#define AHV (-42.0+Eleak)
+#define AHC 0.32
+#define AHV (42.0+Eleak)
 #define AHD -18.0
 #define BHC 10.0
-#define BHV (-42.0+Eleak)
+#define BHV (42.0+Eleak)
 #define BHD -5.0
 #endif
 
@@ -42,6 +42,7 @@ void ChannelNat_AIS::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
+    {
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
     dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
     dyn_var_t ah = AHC * exp((v - AHV) / AHD);
@@ -51,18 +52,15 @@ void ChannelNat_AIS::update(RNG& rng)
     m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) ;
     h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
 #endif
+    {//keep range [0..1]
     // trick to keep m in [0, 1]
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
+    // trick to keep h in [0, 1]
+    if (h[i] < 0.0) { h[i] = 0.0; }
+    else if (h[i] > 1.0) { h[i] = 1.0; }
     }
 #if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
     g[i] = gbar[i] * m[i] *  m[i] * m[i] * h[i];

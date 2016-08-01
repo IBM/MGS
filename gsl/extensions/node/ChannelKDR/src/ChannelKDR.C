@@ -42,8 +42,9 @@
 #define BNC 2.5
 #define BNV 51.0
 #define BND 80.0
-#elif CHANNEL_KDR == KDR_TRAUB_1994
-#define Eleak -65.0 //mV
+#elif CHANNEL_KDR == KDR_TRAUB_1994 || \
+      CHANNEL_KDR == KDR_TRAUB_1995
+#define Eleak -60.0 //mV
 #define ANC 0.016
 #define ANV (35.1+Eleak)
 #define AND 5
@@ -70,17 +71,24 @@ void ChannelKDR::update(RNG& rng)
     dyn_var_t pn = 0.5*dt*(an + bn) * getSharedMembers().Tadj;
     n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
-#elif CHANNEL_KDR == KDR_TRAUB_1994
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+#elif CHANNEL_KDR == KDR_TRAUB_1994 || \
+      CHANNEL_KDR == KDR_TRAUB_1995
     dyn_var_t an = ANC*vtrap((ANV - v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
 		// see Rempe-Chomp (2006)
     dyn_var_t pn = 0.5*dt*(an + bn);
     n[i] = (dt*an + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i];
+#if CHANNEL_KDR == KDR_TRAUB_1994 
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+#elif CHANNEL_KDR == KDR_TRAUB_1995
+#define Vshift 10.0 // [mV]
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0] - Vshift);
+#endif
 #else
 		NOT IMPLEMENTED YET
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -155,7 +163,8 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t bn = BNC*exp(-(v + BNV)/BND);
     n[i] = an/(an + bn); // steady-state value
     g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];
-#elif CHANNEL_KDR == KDR_TRAUB_1994
+#elif CHANNEL_KDR == KDR_TRAUB_1994  || \
+      CHANNEL_KDR == KDR_TRAUB_1995 
     dyn_var_t an = ANC*vtrap((ANV-v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
     n[i] = an/(an + bn); // steady-state value

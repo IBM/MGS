@@ -13,8 +13,9 @@
 #include <pthread.h>
 #include <algorithm>
 
-#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994
-#define Eleak -65.0 // [mV]
+#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994 || \
+    CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1995
+#define Eleak -60.0 // [mV]
 #define ANC 0.03
 #define ANV (17.2+Eleak)
 #define AND 5
@@ -30,18 +31,30 @@ dyn_var_t ChannelKDR_AIS::vtrap(dyn_var_t x, dyn_var_t y) {
 void ChannelKDR_AIS::update(RNG& rng) 
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994
+  dyn_var_t Vshift = 0.0; 
+  SegmentDescriptor segmentDescriptor;
+  if (segmentDescriptor.getBranchType(branchData->key) == Branch::_AXON ||
+      segmentDescriptor.getBranchType(branchData->key) == Branch::_AIS ||
+      segmentDescriptor.getBranchType(branchData->key) == Branch::_AXONHILLLOCK 
+      )
+    Vshift = 10.0 ; //[mV]
+#elif CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1995
+  dyn_var_t Vshift = 10.0; 
+#endif
   for (unsigned i=0; i<branchData->size; ++i) 
   {
     dyn_var_t v=(*V)[i];
-#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994
+#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994 || \
+    CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1995
     dyn_var_t an = ANC*vtrap((ANV - v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
     // see Rempe-Chomp (2006)
     dyn_var_t pn = 0.5*dt*(an + bn);
     n[i] = (dt*an + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0] - Vshift);
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -107,7 +120,8 @@ void ChannelKDR_AIS::initialize(RNG& rng)
   }
   for (unsigned i=0; i<size; ++i) {
     dyn_var_t v=(*V)[i];
-#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994
+#if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994 || \
+    CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1995
     dyn_var_t an = ANC*vtrap((ANV-v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
     n[i] = an/(an + bn); // steady-state value

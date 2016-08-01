@@ -26,9 +26,10 @@
 //   beta = 0.001
 //   chi means [Ca]i
 #define alphamax 0.01
-//#define chiscaling 0.00002
-#define chiscaling 0.0004
 #define beta 0.001
+//original Traub: chiscaling (0.0002) with Camax(400-den; 40-soma)
+//#define chiscaling 0.00002
+#define chiscaling 0.0008
 
 #elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT
 // Kohler -...-Adelman (1996) Science 

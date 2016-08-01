@@ -65,10 +65,10 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BMV (40.1+Eleak)
 #define BMD 5.0
 #define AHC 0.128
-#define AHV (-17.0+Eleak)
+#define AHV (17.0+Eleak)
 #define AHD -18.0
 #define BHC 4.0
-#define BHV (-40.0+Eleak)
+#define BHV (40.0+Eleak)
 #define BHD -5.0
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 // Developed for IO cell (inferior olive)
