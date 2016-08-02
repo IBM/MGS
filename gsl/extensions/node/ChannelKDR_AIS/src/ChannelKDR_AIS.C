@@ -15,7 +15,7 @@
 
 #if CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1994 || \
     CHANNEL_KDR_AIS == KDR_AIS_TRAUB_1995
-#define Eleak -60.0 // [mV]
+#define Eleak -65.0 // [mV]
 #define ANC 0.03
 #define ANV (17.2+Eleak)
 #define AND 5

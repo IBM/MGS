@@ -91,7 +91,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          150      // [ms]
+	#define TimeEnd          100      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -184,7 +184,7 @@ print("Case 00: resting");
   //       281K = 7.85-degree Celcius (cold)
 #define Temperature_value  308.15 // [K] Kelvin
 #define Vrest_value  -67.0 // [mV]
-#define E_leak_value -63.0  // [mV] - Traub et al. 1995
+#define E_leak_value -65.0  // [mV] - Traub et al. 1995
 //#define Erev_HCN  -45.0 // [mV]
 #define Erev_HCN  -30.0 // [mV]
 //}}}
