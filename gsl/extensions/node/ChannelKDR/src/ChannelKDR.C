@@ -44,7 +44,7 @@
 #define BND 80.0
 #elif CHANNEL_KDR == KDR_TRAUB_1994 || \
       CHANNEL_KDR == KDR_TRAUB_1995
-#define Eleak -60.0 //mV
+#define Eleak -65.0 //mV
 #define ANC 0.016
 #define ANV (35.1+Eleak)
 #define AND 5
