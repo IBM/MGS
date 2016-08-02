@@ -8,10 +8,14 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 // A-type slow (persistent) component (Kp)
-Node ChannelKAs Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelKAs Implements 
+     ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
+     IOCurrentArrayProducer, //HH-based to I/O
+     DimensionArrayProducer,
+     BranchDataProducer {
 /*{{{*/
   //DATA
+  //{{{
   // Hodgkin-Huxley-based formula
   //{{{
   //internal data
@@ -69,6 +73,7 @@ BranchDataProducer, IOCurrentArrayProducer {
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection

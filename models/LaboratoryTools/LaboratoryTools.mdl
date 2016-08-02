@@ -795,6 +795,7 @@ Variable AnyCurrentDisplay
 	}
 #endif
 
+  //Use for GHK-based current formula
 	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer 
 #ifdef IDEA_CURRENTONCOMPT
   , DimensionArrayProducer 
@@ -807,6 +808,7 @@ Variable AnyCurrentDisplay
 #endif
 		setUpPointers();
 	}
+  //Use for HH-based current formula
 	Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer
 #ifdef IDEA_CURRENTONCOMPT
   , DimensionArrayProducer 
@@ -819,18 +821,18 @@ Variable AnyCurrentDisplay
 #endif
 		setUpPointers();
 	}
-	Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer 
-#ifdef IDEA_CURRENTONCOMPT
-  , DimensionArrayProducer 
-#endif
-{
-		CaCurrentArrayProducer.currents >> I_channelConnect;
-		BranchDataProducer.branchData >> channelBranchData;
-#ifdef IDEA_CURRENTONCOMPT
-		DimensionArrayProducer.dimensionArray >> dimensions_connect;
-#endif
-		setUpPointers();
-	}
+//	//Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer 
+//#ifdef IDEA_CURRENTONCOMPT
+//  , DimensionArrayProducer 
+//#endif
+//{
+//		CaCurrentArrayProducer.currents >> I_channelConnect;
+//		BranchDataProducer.branchData >> channelBranchData;
+//#ifdef IDEA_CURRENTONCOMPT
+//		DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//#endif
+//		setUpPointers();
+//	}
 	Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
 		CurrentProducer.current >> I_synapse;
 		BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;

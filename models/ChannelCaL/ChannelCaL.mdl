@@ -10,11 +10,12 @@
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 //   High-voltage activated
-Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-    //CurrentArrayProducer,
-    CaCurrentArrayProducer, 
+Node ChannelCaHVA Implements 
+    ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
+    CaCurrentArrayProducer, //HH-based to Ca2+
+    IOCurrentArrayProducer, //HH-based to I/O
     DimensionArrayProducer,
-    BranchDataProducer //, IOCurrentArrayProducer
+    BranchDataProducer 
 {
 //{{{
 // Hodgkin-Huxley-based formula
@@ -25,7 +26,7 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   dyn_var_t [] gbar;
   dyn_var_t [] E_Ca;
   dyn_var_t [] I_Ca;
-  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
+  //dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
 
   dyn_var_t []* V;
   dyn_var_t []* Ca_IC;
@@ -66,11 +67,10 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
   CaCurrentArrayProducer.currents << &I_Ca;
+  IOCurrentArrayProducer.currents << &I_Ca;
   //CurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
-  //IOCurrentArrayProducer.currents << &Iion;
-  //IOCurrentArrayProducer.currents << &I_Ca;
 
   InAttrPSet {
     string identifier;
@@ -212,9 +212,10 @@ Node ChannelCaHVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
 // and get data from 2 compartment variables: Voltage + Calcium
 //  HVA channel (high-voltage activated)
 Node ChannelCaLv12_GHK Implements 
+     CurrentArrayProducer, //GHK-based to Vm, GHK-based to I/O
+     CaCurrentArrayProducer, //GHK-based to Ca2+
 		 BranchDataProducer, 
-     //CurrentArrayProducer,
-     CaCurrentArrayProducer
+     DimensionArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -275,8 +276,9 @@ Node ChannelCaLv12_GHK Implements
 
   // Output
 	CaCurrentArrayProducer.currents << &I_Ca;
-	//CurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node
@@ -314,9 +316,10 @@ Node ChannelCaLv12_GHK Implements
 // and get data from 2 compartment variables: Voltage + Calcium
 //  HVA channel (high-voltage activated)
 Node ChannelCaLv13_GHK Implements 
+     CurrentArrayProducer, //GHK-based to Vm, GHK-based to I/O
+     CaCurrentArrayProducer, //GHK-based to Ca2+
 		 BranchDataProducer, 
-     //CurrentArrayProducer,
-     CaCurrentArrayProducer
+     DimensionArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -375,8 +378,9 @@ Node ChannelCaLv13_GHK Implements
 	RuntimePhase update();
 
 	CaCurrentArrayProducer.currents << &I_Ca;
-	//CurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node

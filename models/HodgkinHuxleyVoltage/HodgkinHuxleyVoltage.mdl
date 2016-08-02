@@ -189,12 +189,14 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     BranchDataProducer.branchData >> branchData;
    }
 
+  //Use for HH-based any current formula
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects ConductanceArrayProducer, 
     ReversalPotentialArrayProducer {
     ConductanceArrayProducer.conductanceArray >> channelCurrents.conductances;
     ReversalPotentialArrayProducer.reversalPotentials >> channelCurrents.reversalPotentials;
   }
 
+  //Use for GHK-based any current formula
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
   {
     CurrentArrayProducer.currents >> channelCurrentsGHK.currents;

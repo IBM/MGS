@@ -3,78 +3,183 @@
  //{{{
 #define neuronIndex 0
  //{{{soma
-  polyConnect(timeStep, voltageSomaDisplay, <>, <>);
-  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), voltageSomaDisplay, <>, <>);
+  polyConnect(timeStep, somaVoltageDisplay, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaVoltageDisplay, <>, <>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
-   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), calciumSomaDisplay, <>, <>);
+   polyConnect(timeStep, somaCalciumDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCalciumDisplay, <>, <>);
 #endif
 
-//TissueSite somaSite(0.0, 0.0, 0.0, 3.0);
-polyConnect(timeStep, current_somaNa, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaNa, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaNa, <>, <>);
-
-polyConnect(timeStep, current_somaK, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaK, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaK, <>, <>);
-polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", BRANCHORDER=0,  NEURON_INDEX=neuronIndex>), current_somaK, <>, <>);
+//{{{currents
+polyConnect(timeStep, somaCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="JUNCTION">);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="SK">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah">);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal">);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="SK">);
+//}}}
  //}}}
  //}}}
   //{{{dendrite shaft
-  TissueSite distalDenSite(-23.11, 853.49, -20.0, 15.0); //917um to soma, radius = 0.515um
-  polyConnect(timeStep, voltageDisplay_den_distal, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_distal, <>, <site=distalDenSite>);
+  //{{{LOCATION 1 
+  TissueSite distaldendritic_site(-23.11, 853.49, -20.0, 1.5); //917um to soma, radius = 0.515um
+  polyConnect(timeStep, distaldendriticVoltageDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distaldendriticVoltageDisplay, <>, <site=distaldendritic_site>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
-  polyConnect(timeStep, calciumDisplay_den_distal, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_distal, <>, <site=distalDenSite>);
+  polyConnect(timeStep, distaldendriticCalciumDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distaldendriticCalciumDisplay, <>, <site=distaldendritic_site>);
 #endif
-  //{{{LOCATION 1
-  TissueSite tuftedDenSite(17.95, 581.565, -58.29, 15.0); //622um to soma, radius = 1.41um
-  polyConnect(timeStep, voltageDisplay_den_tufted, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_tufted, <>, <site=tuftedDenSite>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
-  polyConnect(timeStep, calciumDisplay_den_tufted, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_tufted, <>, <site=tuftedDenSite>);
+//{{{currents
+polyConnect(timeStep, distaldendriticCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="BRANCH", site=distaldendritic_site>);
 #endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah", site=distaldendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal", site=distaldendritic_site>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0, NEURON_INDEX=neuronIndex>), distaldendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=distaldendritic_site>);
+//}}}
   //}}}
   //{{{LOCATION 2
-  TissueSite middleDenSite2(26.7, 365.95, -56.47, 15.0); // 387 um, radius = 1.285um
-  polyConnect(timeStep, voltageDisplay_den_middle, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_middle, <>, <site=middleDenSite2>);
+  TissueSite tufteddendritic_site(17.95, 581.565, -58.29, 1.0); //622um to soma, radius = 1.41um
+  polyConnect(timeStep, tufteddendriticVoltageDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), tufteddendriticVoltageDisplay, <>, <site=tufteddendritic_site>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
-  polyConnect(timeStep, calciumDisplay_den_middle, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_middle, <>, <site=middleDenSite2>);
+  polyConnect(timeStep, tufteddendriticCalciumDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), tufteddendriticCalciumDisplay, <>, <site=tufteddendritic_site>);
 #endif
+//{{{currents
+polyConnect(timeStep, tufteddendriticCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="BRANCH", site=tufteddendritic_site>);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah", site=tufteddendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal", site=tufteddendritic_site>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0, NEURON_INDEX=neuronIndex>), tufteddendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=tufteddendritic_site>);
+//}}}
   //}}}
-  //{{{LOCATION 3 - perisomatic apicalDen
-  TissueSite perisomaticApicalDenSite2(26.27, 122.51, -42.4, 15.0);  // 116.3 um to soma, radius=1.545
-  polyConnect(timeStep, voltageDisplay_perisomaticApicalDen, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_perisomaticApicalDen, <>, <site=perisomaticApicalDenSite2>);
+  //{{{LOCATION 3
+  TissueSite middledendritic_site(26.7, 364.245, -56.17, 1.0); // 385 um, radius = 1.285um
+  polyConnect(timeStep, middledendriticVoltageDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), middledendriticVoltageDisplay, <>, <site=middledendritic_site>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
-  polyConnect(timeStep, calciumDisplay_perisomaticApicalDen, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_perisomaticApicalDen, <>, <site=perisomaticApicalDenSite2>);
+  polyConnect(timeStep, middledendriticCalciumDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), middledendriticCalciumDisplay, <>, <site=middledendritic_site>);
 #endif
+//{{{currents
+polyConnect(timeStep, middledendriticCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="BRANCH", site=middledendritic_site>);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah", site=middledendritic_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal", site=middledendritic_site>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0,  NEURON_INDEX=neuronIndex>), middledendriticCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=middledendritic_site>);
+//}}}
   //}}}
-  //{{{LOCATION 4 - perisomatic basalDen
-  TissueSite perisomaticBasalDenSite2(58.1, -49.27, -24.32, 15.0); // 118 um, radius = 0.440um
-  polyConnect(timeStep, voltageDisplay_perisomaticBasalDen, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_perisomaticBasalDen, <>, <site=perisomaticBasalDenSite2>);
+  //{{{LOCATION 4 - perisomatic apicalDen
+  TissueSite perisomaticApicalDen_site(26.27, 122.51, -42.4, 2.0);  // 116.3 um to soma, radius=1.545
+  polyConnect(timeStep, perisomaticApicalDenVoltageDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), perisomaticApicalDenVoltageDisplay, <>, <site=perisomaticApicalDen_site>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
-  polyConnect(timeStep, calciumDisplay_perisomaticBasalDen, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_perisomaticBasalDen, <>, <site=perisomaticBasalDenSite2>);
+  polyConnect(timeStep, perisomaticApicalDenCalciumDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCalciumDisplay, <>, <site=perisomaticApicalDen_site>);
 #endif
+//{{{currents
+polyConnect(timeStep, perisomaticApicalDenCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="BRANCH", site=perisomaticApicalDen_site>);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah", site=perisomaticApicalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal", site=perisomaticApicalDen_site>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0,  NEURON_INDEX=neuronIndex>), perisomaticApicalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=perisomaticApicalDen_site>);
+//}}}
+  //}}}
+  //{{{LOCATION 5 - perisomatic basalDen
+  TissueSite perisomaticBasalDen_site(59.55, -58.08, -21.35, 1.0); // 118 um, radius = 0.440um
+  polyConnect(timeStep, perisomaticBasalDenVoltageDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), perisomaticBasalDenVoltageDisplay, <>, <site=perisomaticBasalDen_site>);
+#if SIMULATION_INVOLVE >= VM_CACYTO
+  polyConnect(timeStep, perisomaticBasalDenCalciumDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCalciumDisplay, <>, <site=perisomaticBasalDen_site>);
+#endif
+//{{{currents
+polyConnect(timeStep, perisomaticBasalDenCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="BRANCH", site=perisomaticBasalDen_site>);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah", site=perisomaticBasalDen_site>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal", site=perisomaticBasalDen_site>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0, NEURON_INDEX=neuronIndex>), perisomaticBasalDenCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=perisomaticBasalDen_site>);
+//}}}
   //}}}
   //}}}
 	//{{{ axon
   //{{{LOCATION a1 - AIS 
-  TissueSite AIS_Site1(468.660, 63.300, -18.380, 15.0); // 35um from soma, radius = 0.440um
-  polyConnect(timeStep, voltageDisplay_ais, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_ais, <>, <site=AIS_Site1>);
+  TissueSite AIS_Site1(47.88, -25.63, -41.125, 1.0); // 35um from soma, radius = 0.440um
+  polyConnect(timeStep, axonAISVoltageDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), axonAISVoltageDisplay, <>, <site=AIS_Site1>);
 #if SIMULATION_INVOLVE >= VM_CACYTO
-  polyConnect(timeStep, calciumDisplay_ais, <>, <>);
-  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_ais, <>, <site=AIS_Site1>);
+  polyConnect(timeStep, axonAISCalciumDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), axonAISCalciumDisplay, <>, <site=AIS_Site1>);
 #endif
+//{{{currents
+polyConnect(timeStep, axonAISCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="BRANCH", site=AIS_Site1>);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kt", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Kt", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kp", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Kp", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cah", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Cah", site=AIS_Site1>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Cal", NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="Cal", site=AIS_Site1>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0,NEURON_INDEX=neuronIndex>), axonAISCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=AIS_Site1>);
+//}}}
   //}}}
 
 	//}}}

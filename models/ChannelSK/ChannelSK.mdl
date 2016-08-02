@@ -8,7 +8,10 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 // Small-conductance, Ca2+-activated K+ channel
-Node ChannelSK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
+Node ChannelSK Implements 
+     ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+     IOCurrentArrayProducer, 
+     BranchDataProducer, DimensionArrayProducer {
 	/*{{{*/
 	//DATA
 	// Markov-based formula

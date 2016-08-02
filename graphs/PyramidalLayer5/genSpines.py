@@ -333,10 +333,10 @@ class SomeClass(object):
       """
       pass
       self.reviseSomaSWCFile(write2File=False)
-      dist = 0.1
+      dist = 2.5
       #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
       self.removeNearbyPoints(dist, write2File=False)
-      #self.convertToTufted()
+      ####self.convertToTufted()
       thresholdTuftedZone=550
       proximalAISDistance2Soma=10
       distalAISDistance2Soma=45.0
@@ -533,6 +533,7 @@ class SomeClass(object):
         print('---> dist2soma, x,y,z, r : ')
         maxR = 0.0
         point = []
+        hwpoint = []
         for ix in range(len(self.point_lookup)):
             id = str(ix+1)
             parent_id = self.point_lookup[id]['parent']
@@ -570,14 +571,26 @@ class SomeClass(object):
                 if (float(r) > maxR):
                     maxR= float(r)
                     point =[dist2soma, x,y,z,r]
+                    hwpoint = [dist2soma-gap/2, halfwayX, halfwayY, halfwayZ]
         ##Point with largest radius (mostlikely the main branch)
         print("Apical Final: ", point)
+        print(".... halfway: ", hwpoint)
 
     def checkSiteBasal(self, startDist=615.0, endDist=625.0):
         """
         This is useful for find the recording site or stimulus site
         Return the point on basal den at a given distance to soma
         """
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x_soma =float(self.point_lookup[id]['siteX'])
+            y_soma =float(self.point_lookup[id]['siteY'])
+            z_soma =float(self.point_lookup[id]['siteZ'])
+            r_soma =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) == -1):
+              break
         #thresholdfrom = 615.0 # [um]
         #thresholdto = 625.0 # [um]
         thresholdfrom = startDist # [um]
@@ -585,8 +598,11 @@ class SomeClass(object):
         print("Display points on the tree (apical dendrite) whose")
         print("coordinate fall within: [", thresholdfrom, ',', thresholdto, ']')
         print('---> dist2soma, x,y,z, r : ')
+        thresholdfrom = startDist + r_soma # [um]
+        thresholdto = endDist + r_soma # [um]
         maxR = 0.0
         point = []
+        hwpoint = []
         for ix in range(len(self.point_lookup)):
             id = str(ix+1)
             parent_id = self.point_lookup[id]['parent']
@@ -617,14 +633,16 @@ class SomeClass(object):
                 float(dist2soma) < thresholdto and
                 (int(brType) == self.branchType["basal"]
                 )):
-                print(dist2soma, x,y,z, r)
+                print(dist2soma-r_soma, x,y,z, r)
                 print('... its halfway to proximal is (dist,coordinates):')
-                print('    ', dist2soma-gap/2, halfwayX, halfwayY, halfwayZ)
+                print('    ', dist2soma-gap/2-r_soma, halfwayX, halfwayY, halfwayZ)
                 if (float(r) > maxR):
                     maxR= float(r)
                     point =[dist2soma, x,y,z,r]
+                    hwpoint = [dist2soma-r_soma-gap/2, halfwayX, halfwayY, halfwayZ]
         ##Point with largest radius (mostlikely the main branch)
         print("Basal Final: ", point)
+        print(".... halfway: ", hwpoint)
 
     def checkSiteAxon(self, startDist=615.0, endDist=625.0):
         """
@@ -648,10 +666,11 @@ class SomeClass(object):
         thresholdfrom = startDist + r_soma # [um]
         thresholdto = endDist + r_soma # [um]
         print("Display points on the tree (apical dendrite) whose")
-        print("coordinate fall within: [", thresholdfrom, ',', thresholdto, ']')
+        print("coordinate fall within: [", startDist, ',', endDist, ']')
         print('---> dist2soma, x,y,z, r : ')
         maxR = 0.0
         point = []
+        hwpoint = []
         for ix in range(len(self.point_lookup)):
             id = str(ix+1)
             parent_id = self.point_lookup[id]['parent']
@@ -683,15 +702,17 @@ class SomeClass(object):
                 (int(brType) == self.branchType["axon"] or
                 int(brType) == self.branchType["AIS"]
                 )):
-                print(dist2soma, x,y,z, r)
+                print(dist2soma-r_soma, x,y,z, r)
                 print('... its halfway to proximal is (dist,coordinates):')
-                print('    ', dist2soma-gap/2, halfwayX, halfwayY, halfwayZ)
+                print('    ', dist2soma-gap/2-r_soma, halfwayX, halfwayY, halfwayZ)
                 if (float(r) > maxR):
                     maxR= float(r)
                     #point =[dist2soma, x,y,z,r]
                     point =[dist2soma-r_soma, x,y,z,r]
+                    hwpoint = [dist2soma-r_soma-gap/2, halfwayX, halfwayY, halfwayZ]
         ##Point with largest radius (mostlikely the main branch)
         print("Axon/AIS Final: ", point)
+        print(".... halfway: ", hwpoint)
 
 
     def getDist2Soma(self, site):
@@ -846,6 +867,34 @@ class SomeClass(object):
       dist = 0.0
       self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
 
+    def _findListDuplicatedPoint(self, dist_criteria):
+        """
+        Return a list of points that are considered 'nearby' to its parents
+        and its parents must not be in the list
+        """
+        listDuplicatedPoints = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) != -1):
+                parent_info = self.point_lookup[parent_id]
+                parent_x = float(parent_info['siteX'])
+                parent_y = float(parent_info['siteY'])
+                parent_z = float(parent_info['siteZ'])
+                dist2soma= self.point_lookup[id]['dist2soma']
+                distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                                (z - parent_z)**2)
+                if (distance <= dist_criteria and
+                    not (parent_id in listDuplicatedPoints)):
+                    listDuplicatedPoints.append(int(id))
+                #print(id, x,y,z,parent_id)
+        return list(set(listDuplicatedPoints))
+
     def removeNearbyPoints(self, dist_criteria=0.0, write2File=True,
                            fileSuffix='_trimmedClosedPoints.swc'):
       """
@@ -871,61 +920,75 @@ class SomeClass(object):
             dist2soma= self.point_lookup[id]['dist2soma']
             distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
                             (z - parent_z)**2)
-            if (distance <= dist_criteria):
-              listDuplicatedPoints.append(int(parent_id))
+            if (distance <= dist_criteria and
+                not (parent_id in listDuplicatedPoints)):
+              listDuplicatedPoints.append(int(id))
             #print(id, x,y,z,parent_id)
+      #listDuplicatedPoints = [2, 6]
+      #listDuplicatedPoints = [28, 538, 570, 1060, 4064]
+      #listDuplicatedPoints = [28, 538]# 570, 1060, 4064]
       self.listDuplicatedPoints= list(set(listDuplicatedPoints))
-      ##
-      #Step 2: delete these points and update others
-      ##....
-      lines2Delete = []
-      lines2Delete.extend(self.listDuplicatedPoints)
-      lineArray = []
-      index = 0
-      mapNewId = {}
-      tmpPointLookup = deepcopy(self.point_lookup)
+      print("Remove nearby points------")
       print("Before delete: ", len(self.point_lookup), " points")
-      for ix in range(len(self.point_lookup)):
-          id = str(ix+1)
-          parent_id = self.point_lookup[id]['parent']
-          brType =self.point_lookup[id]['type']
-          x =self.point_lookup[id]['siteX']
-          y =self.point_lookup[id]['siteY']
-          z =self.point_lookup[id]['siteZ']
-          r =self.point_lookup[id]['siteR']
-          dist2soma= self.point_lookup[id]['dist2soma']
-          dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
-          branchOrder = self.point_lookup[id]['branchOrder']
-          numChildren = self.point_lookup[id]['numChildren']
-          if (int(id) in lines2Delete):
-            # start to delete from this line
-            del tmpPointLookup[id]
-            mapNewId[id] = parent_id   # important if we delete intermediate points
-            #print("line deleted ", id, "its parent: ", parent_id)
-          else:
-            index += 1
-            mapNewId[id] = index
-            if (parent_id in mapNewId):
-              parent_id = mapNewId[parent_id]
-            lineArray.append([str(index), str(brType),
-                            str(x), str(y),
-                            str(z), str(r), str(parent_id)])
-            tmpPointLookup[str(index)] = {'type': brType,
-                                     'siteX': x,
-                                     'siteY': y,
-                                     'siteZ': z,
-                                     'siteR': r, 'parent': str(parent_id),
-                                     'dist2soma': dist2soma,
-                                     'dist2branchPoint': dist2branchPoint,
-                                     'branchOrder': branchOrder,
-                                     'numChildren': numChildren}
-      for ix in range(index, len(self.point_lookup)):
-        id = str(ix+1)
-        del tmpPointLookup[id]
-        #print ix
+      while (self.listDuplicatedPoints):
+        ##
+        #Step 2: delete these points and update others
+        ##....
+        lines2Delete = []
+        lines2Delete.extend(self.listDuplicatedPoints)
+        lineArray = []
+        index = 0
+        mapNewId = {}
+        mapNewParentId = {}
+        #tmpPointLookup = deepcopy(self.point_lookup)
+        tmpPointLookup  = {}
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =self.point_lookup[id]['siteX']
+            y =self.point_lookup[id]['siteY']
+            z =self.point_lookup[id]['siteZ']
+            r =self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            branchOrder = self.point_lookup[id]['branchOrder']
+            numChildren = self.point_lookup[id]['numChildren']
+            if (int(id) in lines2Delete):
+              # start to delete from this line
+              #del tmpPointLookup[id]
+              ###anything accept 'id' as parent, now accept 'parent_id' as parent
+              mapNewId[id] = parent_id   # important if we delete intermediate points
+              if (parent_id in mapNewId):
+                mapNewId[id] = mapNewId[parent_id]   # important if we delete intermediate points
+
+              mapNewParentId[id] = self.point_lookup[mapNewId[id]]['parent']
+              #print("line deleted ", id, "its parent: ", parent_id)
+            else:
+              index += 1
+              mapNewId[id] = str(index)
+              if (parent_id in mapNewId):
+                    parent_id = mapNewId[parent_id]
+              lineArray.append([str(index), str(brType),
+                              str(x), str(y),
+                              str(z), str(r), str(parent_id)])
+              tmpPointLookup[str(index)] = {'type': brType,
+                                       'siteX': x,
+                                       'siteY': y,
+                                       'siteZ': z,
+                                       'siteR': r, 'parent': str(parent_id),
+                                       'dist2soma': dist2soma,
+                                       'dist2branchPoint': dist2branchPoint,
+                                       'branchOrder': branchOrder,
+                                       'numChildren': numChildren}
+        #for ix in range(index, len(self.point_lookup)):
+        #    id = str(ix+1)
+        #    print ix
+        #    del tmpPointLookup[id]
+        self.point_lookup = tmpPointLookup
+        self.listDuplicatedPoints= self._findListDuplicatedPoint(dist_criteria)
 
       print("After delete: ", len(tmpPointLookup), " points")
-      self.point_lookup = tmpPointLookup
       lineArray = np.asarray(lineArray)
       if (write2File):
         PL5bFileName = self.swc_filename+fileSuffix

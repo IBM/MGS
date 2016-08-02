@@ -153,13 +153,14 @@ Node CaExtrusion  Implements
 //       30-100 ions per second (high-affinity, low capacity) or 30-100 Hz
 Node PumpPMCA Implements 
 		 BranchDataProducer, 
+     DimensionArrayProducer,
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
     PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
      CaFluxArrayProducer
 #else
-     CurrentArrayProducer,  
-     CaCurrentArrayProducer
+     CurrentArrayProducer, // to Vm, and to I/O 
+     CaCurrentArrayProducer // to Ca2+
 #endif
 {
 /*{{{*/
@@ -254,10 +255,11 @@ Node PumpPMCA Implements
     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   CaFluxArrayProducer.fluxes << &J_Ca;
 #else
-	CaCurrentArrayProducer.currents << &I_Ca;
 	CurrentArrayProducer.currents << &I_PMCA;
+	CaCurrentArrayProducer.currents << &I_Ca;
 #endif
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node
@@ -294,6 +296,7 @@ Node PumpPMCA Implements
 
 //Node PumpPMCA_Markov Implements 
 //		 BranchDataProducer, 
+//     DimensionArrayProducer,
 //     CurrentArrayProducer,
 //     CaCurrentArrayProducer
 //{
@@ -368,6 +371,7 @@ Node PumpPMCA Implements
 //	CaCurrentArrayProducer.currents << &I_Ca;
 //	CurrentArrayProducer.currents << &I_PMCA;
 //	BranchDataProducer.branchData << branchData;
+//  DimensionArrayProducer.dimensionArray << dimensions;
 //
 //	InAttrPSet {//information of the incoming connection
 //		string identifier; // name of the incoming node

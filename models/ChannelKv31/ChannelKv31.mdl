@@ -6,7 +6,7 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 // Shaw-related (Kv31) potassium channel
-Node ChannelKv31 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelKv31 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -62,6 +62,7 @@ Node ChannelKv31 Implements ConductanceArrayProducer, ReversalPotentialArrayProd
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {

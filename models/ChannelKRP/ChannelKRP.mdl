@@ -8,7 +8,7 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-     BranchDataProducer 
+     BranchDataProducer, DimensionArrayProducer 
 {
 /*{{{*/
   //DATA
@@ -68,6 +68,7 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
+  DimensionArrayProducer.dimensionArray << dimensions;
   BranchDataProducer.branchData << branchData;
 
   InAttrPSet {//information of the incoming connection

@@ -164,6 +164,7 @@ Node CaConcentration Implements SolutionArrayProducer,
     BranchDataProducer.branchData >> branchData;
    }
 
+  //Trans-plasma-membrane Ca2+ channel produce current
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
     CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
    }
@@ -183,6 +184,7 @@ OPTION 3:
 */
 
 // OPTION 2: channel produce flux JCa (uM/msec) instead of current ICa (pA/um^2)
+  //Trans-ER-membrane Ca2+ channel produce flux 
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
     CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
    }
