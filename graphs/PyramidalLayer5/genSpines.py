@@ -333,7 +333,7 @@ class SomeClass(object):
       """
       pass
       self.reviseSomaSWCFile(write2File=False)
-      dist = 2.5
+      dist = 3.5
       #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
       self.removeNearbyPoints(dist, write2File=False)
       ####self.convertToTufted()
@@ -890,7 +890,7 @@ class SomeClass(object):
                 distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
                                 (z - parent_z)**2)
                 if (distance <= dist_criteria and
-                    not (parent_id in listDuplicatedPoints)):
+                    not (int(parent_id) in listDuplicatedPoints)):
                     listDuplicatedPoints.append(int(id))
                 #print(id, x,y,z,parent_id)
         return list(set(listDuplicatedPoints))
@@ -921,7 +921,7 @@ class SomeClass(object):
             distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
                             (z - parent_z)**2)
             if (distance <= dist_criteria and
-                not (parent_id in listDuplicatedPoints)):
+                not (int(parent_id) in listDuplicatedPoints)):
               listDuplicatedPoints.append(int(id))
             #print(id, x,y,z,parent_id)
       #listDuplicatedPoints = [2, 6]
