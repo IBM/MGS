@@ -37,6 +37,13 @@ CalciumDisplay calciumDisplay_den_distal<fileName= PathFileCombine("distaldendri
 calciumDisplay_den_distal.dataCollection(<>) on recOn;
 //calciumDisplay_den_distal.dataCollection(<>) on recOnPassTime;
 
+VoltageDisplay voltageDisplay_den_tufted<fileName= PathFileCombine("tufteddendriticV.dat")>;
+voltageDisplay_den_tufted.dataCollection(<>) on recOn;
+//voltageDisplay_den_tufted.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_den_tufted<fileName= PathFileCombine("tufteddendriticCa.dat")>;
+calciumDisplay_den_distal.dataCollection(<>) on recOn;
+//calciumDisplay_den_distal.dataCollection(<>) on recOnPassTime;
+
 VoltageDisplay voltageDisplay_den_middle<fileName= PathFileCombine("middledendriticV.dat")>;
 voltageDisplay_den_middle.dataCollection(<>) on recOn;
 //voltageDisplay_den_middle.dataCollection(<>) on recOnPassTime;

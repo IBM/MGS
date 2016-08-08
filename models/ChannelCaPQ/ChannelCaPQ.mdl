@@ -9,8 +9,12 @@
 
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
-//Node ChannelCaPQ Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-//    CaCurrentArrayProducer, BranchDataProducer 
+//Node ChannelCaPQ Implements 
+//    ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
+//    CaCurrentArrayProducer, //HH-based to Ca2+
+//    IOCurrentArrayProducer, //HH-based to I/O
+//    DimensionArrayProducer,
+//    BranchDataProducer 
 //{
 ////{{{
 //  dyn_var_t [] g;
@@ -37,6 +41,7 @@
 //  ConductanceArrayProducer.conductanceArray << &g;
 //  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
 //  CaCurrentArrayProducer.currents << &I_Ca;
+//  IOCurrentArrayProducer.currents << &I_Ca;
 //  BranchDataProducer.branchData << branchData;
 //
 //  InAttrPSet {
@@ -70,7 +75,9 @@
 // NOTE: This channel is modeled using GHK formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 Node ChannelCaPQ_GHK Implements 
-		 BranchDataProducer, CaCurrentArrayProducer
+     CurrentArrayProducer, //GHK-based to Vm, GHK-based to I/O
+     CaCurrentArrayProducer, //GHK-based to Ca2+
+		 BranchDataProducer
 {
 /*{{{*/
 	//DATA
@@ -129,6 +136,7 @@ Node ChannelCaPQ_GHK Implements
 	InitPhase initialize;
 
 	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
 
 	InAttrPSet {//information of the incoming connection

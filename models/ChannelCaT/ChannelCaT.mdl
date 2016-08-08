@@ -71,8 +71,12 @@
 // Low-voltage activated Ca2+ channel
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
-Node ChannelCaLVA Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-    CaCurrentArrayProducer, BranchDataProducer, IOCurrentArrayProducer 
+Node ChannelCaLVA Implements 
+    ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
+    CaCurrentArrayProducer,  //HH-based to Ca2+
+    IOCurrentArrayProducer, //HH-based to I/O 
+    BranchDataProducer, 
+    DimensionArrayProducer
 {
 //{{{
 // Hodgkin-Huxley-based formula
@@ -130,6 +134,7 @@ Node ChannelCaLVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
   CaCurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {
@@ -163,9 +168,10 @@ Node ChannelCaLVA Implements ConductanceArrayProducer, ReversalPotentialArrayPro
 // NOTE: This channel is modeled using GHK formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 Node ChannelCaT_GHK Implements 
+     CurrentArrayProducer, //GHK-based to VM, GHK-based to I/O
+     CaCurrentArrayProducer, //GHK-based to Ca2+
 		 BranchDataProducer, 
-     CurrentArrayProducer,
-     CaCurrentArrayProducer
+     DimensionArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -226,6 +232,7 @@ Node ChannelCaT_GHK Implements
 	CaCurrentArrayProducer.currents << &I_Ca;
 	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node

@@ -41,7 +41,7 @@
 #define THF 50.0
 #define THV 50.0
 #define THD 7.0
-#define T_ADJ 2.9529 // 2.3^((34-21)/10)
+//#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 //#define T_ADJ 4.17 // 3.0^((34-21)/10)
 #else
   NOT IMPLEMENTED YET
@@ -81,6 +81,7 @@ void ChannelCaLVA::update(RNG& rng)
 		if (currentTime < NOGATING_TIME)
 			I_Ca[i] = 0.0;
 #endif
+    Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
   }
 }
 
@@ -150,7 +151,7 @@ void ChannelCaLVA::initialize(RNG& rng)
     g[i] = gbar[i]*m[i]*m[i]*h[i];
 #endif
     I_Ca[i] = g[i] * (v-E_Ca[i]);
-    Iion[i] = g[i] * (v-E_Ca[i]);
+    Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
   }
 }
 
