@@ -77,6 +77,7 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
    private:
       void doForwardSolve();
       void doBackwardSolve();
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

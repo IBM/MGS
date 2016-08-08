@@ -256,7 +256,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 // represent an end-point (i.e. last compartment in the series of compartments along a branch 
 //                         that face explicit junction)
 // thus don't hold real data, just a reference to that last segment
-Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
+Node VoltageEndPoint Implements VoltageProducer, DimensionProducer, BranchDataProducer
 {
 // For each regular-branch represented by HodgkinHuxleyVoltage
 // that has computeOrder=0 or computeOrder=MAX_COMPUTE_ORDER-1, 
@@ -267,6 +267,7 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
 /*{{{*/
   dyn_var_t* voltage; // reference to the voltage of the compartment at either 'distalEnd' or 'proximalEnd'
   DimensionStruct* dimension; //reference to the struct representing the compartment
+  BranchDataStruct* branchData; // pointer to branch's data
 
   Shared {
     // so the two instances share the Branch's data
@@ -278,6 +279,7 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
   //output
   VoltageProducer.voltage << voltage;
   DimensionProducer.dimension << dimension;
+  BranchDataProducer.branchData << branchData;
 
   InAttrPSet {//attribute of the incoming MDL component, e.g. node
     string identifier; //either 'distalEnd' or 'proximalEnd'
@@ -287,9 +289,10 @@ Node VoltageEndPoint Implements VoltageProducer, DimensionProducer
             // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
 
   //input
-  Connection Pre Node () Expects VoltageArrayProducer, DimensionArrayProducer {
+  Connection Pre Node () Expects VoltageArrayProducer, DimensionArrayProducer, BranchDataProducer {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    BranchDataProducer.branchData >> branchData;
     setPointers();
   }
 	// as end-point, so we use 'produce' prefix for kernels
@@ -337,7 +340,8 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t* [] injectedCurrents;
 
   dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
-  DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
+  DimensionStruct* [] dimensionInputs; // cpts from different branches (1prox + 1..n dist)
+  BranchDataStruct* [] branchDataInputs;  // 
 
   Shared {
 	  //{{{
@@ -374,9 +378,11 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 
   //input
   // the junction-branch connects to regular-branch through the regular-branch's endpoints
-  Connection Pre Node (PSet.identifier=="endpoint") Expects VoltageProducer, DimensionProducer  {
+  Connection Pre Node (PSet.identifier=="endpoint") Expects VoltageProducer, 
+    DimensionProducer, BranchDataProducer  {
     VoltageProducer.voltage >> voltageInputs;
     DimensionProducer.dimension >> dimensionInputs;
+    BranchDataProducer.branchData >> branchDataInputs;
   }
 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
