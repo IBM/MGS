@@ -2519,8 +2519,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
     }
   }
 
-  // if a Layer of a nodetype as electrical (gap junction), bidirectional
-  // (spineattachment), chemical or point
+  // if a Layer of a nodetype as electrical synapse (gap junction), 
+  // bidirectional (spineattachment), chemical synapse, or point (synapticcleft)
   //  i.e. not compartment variables
   //  then traverse the touchVectors to determine if an instance of such nodetype 
   //  should be created   (through the increase of rval[grid-index])
@@ -2792,15 +2792,21 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
               {
                 if (touchIsChemicalSynapse(_generatedSynapticClefts, titer))
                 {
+                  //NOTE: It's ok to create SynapticCleft, but does not form 
+                  //a true chemical synapse as there is no receptor there to sense the signal
                   if (probabilities[i] >=
                       drandom(findSynapseGenerator(indexPre, indexPost)))
                   {
+                    //NOTE: Assumpe postCapsule is always postsynaptic side (SynParam.par)
+                    //for receptors, create on the postSynaptic side
                     rval[indexPost]++;
                     setGenerated(_generatedChemicalSynapses, titer, counter, i,
                                  nodeCategory);
                   }
                   else
+                  {
                     setNonGenerated(titer, nodeType, i);
+                  }
                 }
                 else
                   setNonGenerated(titer, nodeType, i);
@@ -4595,10 +4601,6 @@ void TissueFunctor::doConnector(LensContext* lc)
             bdend = spineattachTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_bidirectionalConnectionTypesMap.size(), 0);
-        // TUAN TEST
-        // std::cout << _generatedBidirectionalConnections.size() << std::endl;
-        // assert(0);
-        // END TUAN TEST
         for (bditer = spineattachTargets->begin(); bditer != bdend; ++bditer)
         {
           int synapseType = _bidirectionalConnectionTypesMap[bditer->_type];
@@ -6132,6 +6134,11 @@ bool TissueFunctor::setGenerated(
             key_size_t key1_inloop = (*touch).getKey1();
             key_size_t key2_inloop = (*touch).getKey2();
             key_size_t key_inloop_axon = +1.0;
+#ifdef TOUCHDETECT_SINGLENEURON_SPINES
+          //Don't use in a tissue simulation scenario
+          //as we want all possible 'GABAergic synapse' touches
+          //are created - not to constraint that one 'axon' capsule can involve 
+          //in only 1 'GABAergic synapse' touch
             if ((*touch).isSpineless(key_inloop_axon))
             {
               propBouton_inloop = (key1_inloop == key_inloop_axon)
@@ -6141,9 +6148,10 @@ bool TissueFunctor::setGenerated(
 #ifndef LTWT_TOUCH
               double dist_inloop = (*touch).getDistance();
 #endif
-              // equal and must be on the same side (i.e. either both first keys
+              // equal and must be on the same side 
+              // (i.e. either both first keys
               // or
-              //                                    both second keys)
+              // both second keys)
               if ((axon_key == key_inloop_axon)
                   //  and (isSide1 == isSide1_inloop)
                   )
@@ -6174,6 +6182,7 @@ bool TissueFunctor::setGenerated(
               }
             }
             // string value = it->second;
+#endif
           }
           // TUAN TODO: try to think a way to do find the right touch
           // if ((touchChemSynapseIsUsed) and (propBouton > propBouton_inloop))
@@ -6400,6 +6409,9 @@ bool TissueFunctor::isGenerated(
   return rval;
 }
 
+// GOAL
+//  type = a string representing a nodetype can be "GABAA"
+//  order = 
 void TissueFunctor::setNonGenerated(TouchVector::TouchIterator& titer,
                                     std::string type, int order)
 {

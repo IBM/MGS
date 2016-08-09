@@ -3,10 +3,12 @@ targetDir = "neurons"
 neuron = SomeClass(targetDir +"/neuron.swc")
 ##########################
 ### APICAL DEN (apical/tufted)
-dfrom = 615.0 # um
-dto = 625.0 # um
-#dfrom = 315.0 # um
-#dto = 325.0 # um
+#dfrom = 915.0 # um
+#dto = 935.0 # um
+#dfrom = 615.0 # um
+#dto = 625.0 # um
+#dfrom = 385.0 # um
+#dto = 395.0 # um
 #dfrom = 115.0 # um
 #dto = 125.0 # um
 #neuron.checkSiteApical(dfrom, dto )
@@ -20,15 +22,15 @@ dto = 625.0 # um
 
 ##########################
 ### APICAL DEN (apical/tufted)
-#dfrom = 115.0 # um
-#dto = 125.0 # um
-#neuron.checkSiteBasal(dfrom, dto )
+dfrom = 115.0 # um
+dto = 125.0 # um
+neuron.checkSiteBasal(dfrom, dto )
 
 ##########################
 ### AXON/AIS
-dfrom = 35.0 # um
-dto = 45.0 # um
-neuron.checkSiteAxon(dfrom, dto )
+#dfrom = 35.0 # um
+#dto = 45.0 # um
+#neuron.checkSiteAxon(dfrom, dto )
 
 #############################
 ## site = (x,y,z,r)

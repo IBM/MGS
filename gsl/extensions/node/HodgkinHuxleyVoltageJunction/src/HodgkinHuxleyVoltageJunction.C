@@ -22,6 +22,7 @@
 #include "Branch.h"
 
 //#define DEBUG_HH
+#include <iomanip>
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
 
@@ -98,7 +99,7 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   area = getArea();
 #ifdef DEBUG_HH
   // check 'bouton' neuron ???
-  if (segmentDescriptor.getNeuronIndex(branchData->key) == 2)
+  if (_segmentDescriptor.getNeuronIndex(branchData->key) == 2)
   {
     printf(" --> Area = %lf\n", area);
     // std::cerr << "area: " << area << std::endl;
@@ -219,14 +220,13 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 #endif
 
 #ifdef DEBUG_HH
-  SegmentDescriptor segmentDescriptor;
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
             << getIndex() << "] "
-            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimensions[0]->x << "," << dimensions[0]->y << ","
             << dimensions[0]->z << "," 
 						<< dimensions[0]->r << ","
@@ -240,7 +240,12 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 {
   dyn_var_t conductance = cmt;
   dyn_var_t current = cmt * Vcur;
-
+  //TUAN DEBUG
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->size);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->size);
+  volatile unsigned iteration = getSimulation().getIteration();
+  //END TUAN DEBUG
+ 
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
@@ -282,8 +287,10 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+  int i =0;
   for (; xiter != xend; ++xiter, ++viter)
   {
+    i++;
     current += (*xiter) * (**viter);
     conductance += (*xiter);
   }
@@ -306,46 +313,46 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 #endif
 }
 
-void HodgkinHuxleyVoltageJunction::printDebugHH()
+void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
 {
-	std::cerr << "t JUNCTION CORRECT [rank,nodeIdx,instanceIdx] " <<
-		"(neuronIdx,branchIdx,brchOrder){x,y,z,r,dist2soma,surfarea,volume,len}" << std::endl;
-  SegmentDescriptor segmentDescriptor;
-  std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
-            << " JUNCTION CORRECT"
-            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
-            << getIndex() << "] "
-            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
-            << dimensions[0]->x << "," << dimensions[0]->y << ","
-            << dimensions[0]->z << "," 
-						<< dimensions[0]->r << "," 
-            << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
-            << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
-            << std::endl;
+	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
+		"(neuronIdx,branchIdx,brchOrder){x,y,z,r,dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << getSimulation().getIteration() << "," 
+    <<  getSimulation().getIteration() * *getSharedMembers().deltaT
+    << "|" << phase << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+    << getIndex() << "] "
+    << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+    << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+    << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+    << dimensions[0]->x << "," << dimensions[0]->y << ","
+    << dimensions[0]->z << "," 
+    << dimensions[0]->r << "," 
+    << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
+    << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
+    << std::endl;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
   Array<dyn_var_t*>::iterator vend = voltageInputs.end();
-  int c = 0;
+  int c = -1;
 
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   for (viter = voltageInputs.begin(); viter != vend; ++viter, ++diter)
   {
-    std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
-              << " JCT_INPUT_" << c++ << " [" << getSimulation().getRank()
-              << "," << getNodeIndex() << "," << getIndex() << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ","
-              << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
-              << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
-              << (*diter)->r << "," 
-              << (*diter)->dist2soma << "," << (*diter)->surface_area << "," 
-							<< (*diter)->volume << "," << (*diter)->length  << "} "
-              //<< DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
-		          //<< (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
-              << *(*viter) << std::endl;
+    c++;
+    std::cerr << " JCT_INPUT_" << c 
+      << "(" << _segmentDescriptor.getNeuronIndex(branchDataInputs[c]->key) << ","
+      << std::setw(2) << _segmentDescriptor.getBranchIndex(branchDataInputs[c]->key) << ","
+      << _segmentDescriptor.getBranchOrder(branchDataInputs[c]->key) << ","
+      << _segmentDescriptor.getComputeOrder(branchDataInputs[c]->key) << ") {"
+      << std::setprecision(3) << (*diter)->x << "," 
+      << std::setprecision(3) << (*diter)->y << "," 
+      << std::setprecision(3) << (*diter)->z << ","
+      << std::setprecision(3) << (*diter)->r << "," 
+      << (*diter)->dist2soma << "," << (*diter)->surface_area << "," 
+      << (*diter)->volume << "," << (*diter)->length  << "} "
+      //<< DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "
+      //<< (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
+      << *(*viter) << std::endl;
   }
 	
 }

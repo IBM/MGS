@@ -44,7 +44,7 @@ class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
   // user-defined functions
   // junction designed as 1-compartment always, there is no need for index
   dyn_var_t getArea();
-	void printDebugHH();
+	void printDebugHH(std::string phase="JUNCTION_CORRECT");
 	private:
   static SegmentDescriptor _segmentDescriptor;
 };

@@ -874,7 +874,7 @@ Grid InterNeuron{
    //Layer(AMPASynapsesThin, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM); 
    //Layer(NMDASynapsesMush, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
    //Layer(NMDASynapsesThin, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
-   //Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
+   Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
       /*}}}*/
 
       // 3.3. SpineAttachment
@@ -1121,9 +1121,9 @@ Grid InterNeuron{
   //    w = 1.0
 	//	  > ) );
 
-  // InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
-  //       gbar = GABAAR_CONDUCTANCE 
-  //       > ) );  
+   InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
+         gbar = GABAAR_CONDUCTANCE 
+         > ) );  
    
     /*}}}*/
     // 3.3. SpineAttachment 
@@ -1208,7 +1208,7 @@ Grid InterNeuron{
    //polyConnect(timeStep, .[].Layer(AMPASynapsesMush), <>, <identifier="dt">);
    //polyConnect(timeStep, .[].Layer(AMPASynapsesThin), <>, <identifier="dt">);
    //polyConnect(extracellularMedium, .[].Layer(AMPASynapsesMush, AMPASynapsesThin), <>, <identifier="EC">);
-   //polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
 
 #if SIMULATION_INVOLVE >= VM_CACYTO
    polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);

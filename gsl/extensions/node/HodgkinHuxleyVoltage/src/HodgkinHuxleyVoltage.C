@@ -21,10 +21,14 @@
 #include "MaxComputeOrder.h"
 #include "GlobalNTSConfig.h"
 
+#include <iomanip>
+
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
    (((a)->z - (b)->z) * ((a)->z - (b)->z)))
+
+SegmentDescriptor HodgkinHuxleyVoltage::_segmentDescriptor;
 
 #define isProximalCase0 (proximalDimension == 0)  // no flux boundary condition
 #define isProximalCase1 \
@@ -207,6 +211,11 @@ void HodgkinHuxleyVoltage::setProximalJunction(
 // second-step (final step) in Crank-Nicolson method
 void HodgkinHuxleyVoltage::finish(RNG& rng)
 {
+  //TUAN DEBUG
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->size);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->size);
+  volatile unsigned iteration = getSimulation().getIteration();
+  //END TUAN DEBUG
   unsigned size = branchData->size;
 #ifdef DEBUG_HH
 	printDebugHH();
@@ -243,8 +252,7 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
   //  here all the data in vector-form are initialized to
   //  the same size as the number of compartments in a branch (i.e. branchData)
   unsigned size = branchData->size;  //# of compartments
-  SegmentDescriptor segmentDescriptor;
-  computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
+  computeOrder = _segmentDescriptor.getComputeOrder(branchData->key);
 #ifdef DEBUG_ASSERT
   if (isProximalCase2) assert(computeOrder == 0);
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
@@ -392,7 +400,6 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
 void HodgkinHuxleyVoltage::printDebugHH()
 {
   unsigned size = branchData->size;
-  SegmentDescriptor segmentDescriptor;
   for (int i = 0; i < size; ++i)
   {
 		this->printDebugHH(i);
@@ -402,7 +409,6 @@ void HodgkinHuxleyVoltage::printDebugHH()
 void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 {
   unsigned size = branchData->size;
-  SegmentDescriptor segmentDescriptor;
 	if (cptIndex == 0)
 	{
 		std::cerr << "step,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
@@ -416,17 +422,20 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 		*getSharedMembers().deltaT << "| BRANCH"
 		<< " [" << getSimulation().getRank() << "," << getNodeIndex()
 		<< "," << getIndex() << "," << i << "] "
-		<< "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-		<< segmentDescriptor.getBranchIndex(branchData->key) << ","
-		<< segmentDescriptor.getBranchOrder(branchData->key) << ") |"
+		<< "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+		<< std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+		<< _segmentDescriptor.getBranchOrder(branchData->key) << ") |"
 		<< isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
 		<< "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
 		<< isProximalCase1 << "|" << isProximalCase2 << "|"
-		<< " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-		<< dimensions[i]->z << "," << dimensions[i]->r << "," 
+		<< " {" 
+    << std::setprecision(3) << dimensions[i]->x << "," 
+    << std::setprecision(3) << dimensions[i]->y << ","
+		<< std::setprecision(3) << dimensions[i]->z << "," 
+    << std::setprecision(3) << dimensions[i]->r << "," 
 		<< dimensions[i]->dist2soma  << ","
 		<< dimensions[i]->surface_area << "," 
-		<< dimensions[i]->volume << "," << dimensions[i]->length << ","
+		<< dimensions[i]->volume << "," << dimensions[i]->length 
 		<< "} "
 		<< Vnew[i]  << " " << std::endl;
 }
@@ -576,6 +585,11 @@ void HodgkinHuxleyVoltage::doForwardSolve()
 void HodgkinHuxleyVoltage::doBackwardSolve()
 {
   unsigned size = branchData->size;
+  //TUAN DEBUG
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->size);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->size);
+  volatile unsigned iteration = getSimulation().getIteration();
+  //END TUAN DEBUG
   if (isProximalCase0)
   {
     Vnew[size - 1] = RHS[size - 1] / Aii[size - 1];
