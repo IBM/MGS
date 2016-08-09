@@ -140,6 +140,49 @@ def getNeuronStatisticsFromSWC(pathToFile='./neurons/neurons.swc', ignoreComment
   Return the statistics (surface area, volume ...)
   from a given neuron based on the morphology
   """
+  def configure():
+    neuronStat = {}
+    if (type2Analyze== 'all' or type=='surfaceArea'):
+      neuronStat['surfaceArea'] = 0.0
+    if (type2Analyze== 'all' or type=='volume'):
+      neuronStat['volume'] = 0.0
+    if (type2Analyze== 'all' or type=='radius'):
+      neuronStat['radius-min'] = 1000000.0
+      neuronStat['radius-max'] = 0.0
+    if (type2Analyze== 'all' or type=='compartment'):
+      neuronStat['compartment-surfacearea'] = []
+      neuronStat['compartment-volume'] = []
+      neuronStat['compartment-surfacearea-mean'] = 0.0
+      neuronStat['compartment-surfacearea-std'] = 0.0
+      neuronStat['compartment-volume-mean'] = 0.0
+      neuronStat['compartment-volume-std'] = 0.0
+      neuronStat['compartment-count'] = 0
+    return neuronStat
+  def getResult(result, neuronStat):
+    if (type2Analyze== 'all' or type=='surfaceArea'):
+        neuronStat['surfaceArea'] += result['surfaceArea']
+    if (type2Analyze== 'all' or type=='volume'):
+        neuronStat['volume'] += result['volume']
+    if (type2Analyze== 'all' or type=='radius'):
+        neuronStat['radius-min'] =min(neuronStat['radius-min'], result['radius-min'])
+        neuronStat['radius-max'] =max(neuronStat['radius-max'], result['radius-max'])
+    if (type2Analyze== 'all' or type=='compartment'):
+      neuronStat['compartment-surfacearea'].extend(result['compartment-surfacearea'])
+      neuronStat['compartment-volume'].extend(result['compartment-volume'])
+      neuronStat['compartment-count']       += result['compartment-count']
+      arr = np.array(neuronStat['compartment-surfacearea'])
+      print("A(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
+      print("A(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
+      arr = np.array(neuronStat['compartment-volume'])
+      print("V(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
+      print("V(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
+      neuronStat['compartment-surfacearea-mean'] = \
+         sum(neuronStat['compartment-surfacearea'])/neuronStat['compartment-count']
+      neuronStat['compartment-volume-mean']    = \
+         sum(neuronStat['compartment-volume'])/neuronStat['compartment-count']
+      del neuronStat['compartment-surfacearea']
+      del neuronStat['compartment-volume']
+
   #ignoreCommentedLine = True
   #ignoreCommentedLine = False
   start = 1
@@ -149,28 +192,70 @@ def getNeuronStatisticsFromSWC(pathToFile='./neurons/neurons.swc', ignoreComment
   neuronStat = {}
   global type2Analyse
   type2Analyze = "all" # 'all', 'surfaceArea', 'volume'
-  if (type2Analyze== 'all' or type=='surfaceArea'):
-    neuronStat['surfaceArea'] = 0.0
-  if (type2Analyze== 'all' or type=='volume'):
-    neuronStat['volume'] = 0.0
+  neuronStat = configure()
   spine  = SomeClass(pathToFile, False)
   branchTypes=[
 #                      branchType['soma'],
-#                      branchType['axon'],
+                      branchType['axon'],
                       branchType['basal'],
                       branchType['apical'],
-#                      branchType['AIS'],
+                      branchType['AIS'],
                       branchType['tufted'],
                       branchType['bouton'],
                       ]
   result = spine.getStatistics(type=type2Analyze, branchType2Find = branchTypes)
-  if (type2Analyze== 'all' or type=='surfaceArea'):
-    neuronStat['surfaceArea'] += result['surfaceArea']
-  if (type2Analyze== 'all' or type=='volume'):
-    neuronStat['volume'] += result['volume']
+  getResult(result, neuronStat)
   #print neuronStat
-  for key,val in neuronStat.items():
+  for key,val in sorted(neuronStat.items()):
     print(key, ': ', val)
+  print("##############################")
+  ### SOMA
+  print("   for soma")
+  neuronStat = configure()
+  branchTypes=[
+                      branchType['soma'],
+                      ]
+  result = spine.getStatistics(type=type2Analyze, branchType2Find = branchTypes)
+  getResult(result, neuronStat)
+  #print neuronStat
+  for key,val in sorted(neuronStat.items()):
+    print(key, ': ', val)
+  ### BASAL
+  print("   for basal")
+  neuronStat = configure()
+  branchTypes=[
+                      branchType['basal'],
+                      ]
+  result = spine.getStatistics(type=type2Analyze, branchType2Find = branchTypes)
+  getResult(result, neuronStat)
+  #print neuronStat
+  for key,val in sorted(neuronStat.items()):
+    print(key, ': ', val)
+  ### APICAL + TUFTED
+  print("   for apical(+tuft)")
+  neuronStat = configure()
+  branchTypes=[
+                      branchType['apical'],
+                      branchType['tufted'],
+                      ]
+  result = spine.getStatistics(type=type2Analyze, branchType2Find = branchTypes)
+  getResult(result, neuronStat)
+  #print neuronStat
+  for key,val in sorted(neuronStat.items()):
+    print(key, ': ', val)
+  ### AXON + AIS
+  print("   for AXON(+AIS)")
+  neuronStat = configure()
+  branchTypes=[
+                      branchType['axon'],
+                      branchType['AIS'],
+                      ]
+  result = spine.getStatistics(type=type2Analyze, branchType2Find = branchTypes)
+  getResult(result, neuronStat)
+  #print neuronStat
+  for key,val in sorted(neuronStat.items()):
+    print(key, ': ', val)
+
 
 """
 NOTE: branchOrder being store starts from zero
@@ -335,7 +420,10 @@ class SomeClass(object):
       self.reviseSomaSWCFile(write2File=False)
       dist = 3.5
       #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
-      self.removeNearbyPoints(dist, write2File=False)
+      self.removeNearbyPointsByDist(dist, write2File=False)
+      #self.removeNearbyPointsByDist(dist, write2File=True,fileSuffix='_revised.swc')
+      volume = 3.5
+      self.removeNearbyPointsByVolume(volume, write2File=False)
       ####self.convertToTufted()
       thresholdTuftedZone=550
       proximalAISDistance2Soma=10
@@ -867,7 +955,7 @@ class SomeClass(object):
       dist = 0.0
       self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
 
-    def _findListDuplicatedPoint(self, dist_criteria):
+    def _findListDuplicatedPointByDist(self, dist_criteria):
         """
         Return a list of points that are considered 'nearby' to its parents
         and its parents must not be in the list
@@ -895,7 +983,7 @@ class SomeClass(object):
                 #print(id, x,y,z,parent_id)
         return list(set(listDuplicatedPoints))
 
-    def removeNearbyPoints(self, dist_criteria=0.0, write2File=True,
+    def removeNearbyPointsByDist(self, dist_criteria=0.0, write2File=True,
                            fileSuffix='_trimmedClosedPoints.swc'):
       """
       Remove points that are too closed to another one based on
@@ -928,7 +1016,7 @@ class SomeClass(object):
       #listDuplicatedPoints = [28, 538, 570, 1060, 4064]
       #listDuplicatedPoints = [28, 538]# 570, 1060, 4064]
       self.listDuplicatedPoints= list(set(listDuplicatedPoints))
-      print("Remove nearby points------")
+      print("Remove nearby points (dist-criteria)------")
       print("Before delete: ", len(self.point_lookup), " points")
       while (self.listDuplicatedPoints):
         ##
@@ -986,7 +1074,137 @@ class SomeClass(object):
         #    print ix
         #    del tmpPointLookup[id]
         self.point_lookup = tmpPointLookup
-        self.listDuplicatedPoints= self._findListDuplicatedPoint(dist_criteria)
+        self.listDuplicatedPoints= self._findListDuplicatedPointByDist(dist_criteria)
+
+      print("After delete: ", len(tmpPointLookup), " points")
+      lineArray = np.asarray(lineArray)
+      if (write2File):
+        PL5bFileName = self.swc_filename+fileSuffix
+        np.savetxt(PL5bFileName, lineArray, fmt='%s')
+        print("Write to file: ", PL5bFileName)
+
+    def _findListDuplicatedPointByVolume(self, volume_criteria):
+        """
+        Return a list of points that are considered 'nearby' to its parents
+        and its parents must not be in the list
+        """
+        listDuplicatedPoints = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) != -1):
+                parent_info = self.point_lookup[parent_id]
+                parent_x = float(parent_info['siteX'])
+                parent_y = float(parent_info['siteY'])
+                parent_z = float(parent_info['siteZ'])
+                dist2soma= self.point_lookup[id]['dist2soma']
+                distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                                (z - parent_z)**2)
+                vol = math.pi * math.pow(r, 2) * distance
+                if (vol <= volume_criteria and
+                    not (int(parent_id) in listDuplicatedPoints)):
+                    listDuplicatedPoints.append(int(id))
+                #print(id, x,y,z,parent_id)
+        return list(set(listDuplicatedPoints))
+
+    def removeNearbyPointsByVolume(self, volume_criteria=0.0, write2File=True,
+                           fileSuffix='_trimmedClosedPointsByVolume.swc'):
+      """
+      Remove points that are too closed to another one based on
+      the given 'volume_criteria' volume criteria
+      NOTE:
+        we can revise this
+      """
+      listDuplicatedPoints = []
+      for ix in range(len(self.point_lookup)):
+          id = str(ix+1)
+          parent_id = self.point_lookup[id]['parent']
+          brType =self.point_lookup[id]['type']
+          x =float(self.point_lookup[id]['siteX'])
+          y =float(self.point_lookup[id]['siteY'])
+          z =float(self.point_lookup[id]['siteZ'])
+          r =float(self.point_lookup[id]['siteR'])
+          if (int(parent_id) != -1):
+            parent_info = self.point_lookup[parent_id]
+            parent_x = float(parent_info['siteX'])
+            parent_y = float(parent_info['siteY'])
+            parent_z = float(parent_info['siteZ'])
+            dist2soma= self.point_lookup[id]['dist2soma']
+            distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                            (z - parent_z)**2)
+            vol = math.pi * math.pow(r, 2) * distance
+            if (vol <= volume_criteria and
+                not (int(parent_id) in listDuplicatedPoints)):
+              listDuplicatedPoints.append(int(id))
+            #print(id, x,y,z,parent_id)
+      #listDuplicatedPoints = [2, 6]
+      #listDuplicatedPoints = [28, 538, 570, 1060, 4064]
+      #listDuplicatedPoints = [28, 538]# 570, 1060, 4064]
+      self.listDuplicatedPoints= list(set(listDuplicatedPoints))
+      print("Remove nearby points (volume criteria)------")
+      print("Before delete: ", len(self.point_lookup), " points")
+      while (self.listDuplicatedPoints):
+        ##
+        #Step 2: delete these points and update others
+        ##....
+        lines2Delete = []
+        lines2Delete.extend(self.listDuplicatedPoints)
+        lineArray = []
+        index = 0
+        mapNewId = {}
+        mapNewParentId = {}
+        #tmpPointLookup = deepcopy(self.point_lookup)
+        tmpPointLookup  = {}
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =self.point_lookup[id]['siteX']
+            y =self.point_lookup[id]['siteY']
+            z =self.point_lookup[id]['siteZ']
+            r =self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            branchOrder = self.point_lookup[id]['branchOrder']
+            numChildren = self.point_lookup[id]['numChildren']
+            if (int(id) in lines2Delete):
+              # start to delete from this line
+              #del tmpPointLookup[id]
+              ###anything accept 'id' as parent, now accept 'parent_id' as parent
+              mapNewId[id] = parent_id   # important if we delete intermediate points
+              if (parent_id in mapNewId):
+                mapNewId[id] = mapNewId[parent_id]   # important if we delete intermediate points
+
+              mapNewParentId[id] = self.point_lookup[mapNewId[id]]['parent']
+              #print("line deleted ", id, "its parent: ", parent_id)
+            else:
+              index += 1
+              mapNewId[id] = str(index)
+              if (parent_id in mapNewId):
+                    parent_id = mapNewId[parent_id]
+              lineArray.append([str(index), str(brType),
+                              str(x), str(y),
+                              str(z), str(r), str(parent_id)])
+              tmpPointLookup[str(index)] = {'type': brType,
+                                       'siteX': x,
+                                       'siteY': y,
+                                       'siteZ': z,
+                                       'siteR': r, 'parent': str(parent_id),
+                                       'dist2soma': dist2soma,
+                                       'dist2branchPoint': dist2branchPoint,
+                                       'branchOrder': branchOrder,
+                                       'numChildren': numChildren}
+        #for ix in range(index, len(self.point_lookup)):
+        #    id = str(ix+1)
+        #    print ix
+        #    del tmpPointLookup[id]
+        self.point_lookup = tmpPointLookup
+        self.listDuplicatedPoints= self._findListDuplicatedPointByVolume(volume_criteria)
 
       print("After delete: ", len(tmpPointLookup), " points")
       lineArray = np.asarray(lineArray)
@@ -1398,6 +1616,13 @@ class SomeClass(object):
         result['surfaceArea'] = 0.0
       if (type == 'all' or type=='volume'):
         result['volume'] = 0.0
+      if (type == 'all' or type=='radius'):
+        result['radius-min'] = 1000000.0
+        result['radius-max'] = 0.0
+      if (type == 'all' or type=='compartment'):
+        result['compartment-surfacearea'] = []
+        result['compartment-volume'] = []
+        result['compartment-count'] = 0
       for ix in range(len(self.point_lookup)):
         id = str(ix+1)
         parent_id = self.point_lookup[id]['parent']
@@ -1426,14 +1651,25 @@ class SomeClass(object):
           lenSeg = 0
         if (int(brType) == self.branchType["soma"] ):
           if (type == 'all' or type=='surfaceArea'):
-            result['surfaceArea'] += 4 * pi * new_r * new_r
+            surfArea = 4.0 * pi * new_r * new_r
+            result['surfaceArea'] += surfArea
           if (type == 'all' or type=='volume'):
-            result['volume'] += 4.0/3.0 * pi * new_r * new_r * new_r
+            vol = 4.0/3.0 * pi * new_r * new_r * new_r
+            result['volume'] += vol
         else :
           if (type == 'all' or type=='surfaceArea'):
-            result['surfaceArea'] +=  2 * pi * new_r * lenSeg
+            surfArea = 2.0 * pi * new_r * lenSeg
+            result['surfaceArea'] += surfArea
           if (type == 'all' or type=='volume'):
-            result['volume'] +=  pi * new_r * new_r * lenSeg
+            vol = pi * new_r * new_r * lenSeg
+            result['volume'] +=  vol
+        if (type == 'all' or type=='radius'):
+            result['radius-min'] =  min(result['radius-min'], r)
+            result['radius-max'] =  max(result['radius-max'], r)
+        if (type == 'all' or type=='compartment'):
+            result['compartment-surfacearea'].append(surfArea)
+            result['compartment-volume'].append(vol)
+            result['compartment-count'] += 1
       #print result
       #time.sleep(10)
       #sys.exit

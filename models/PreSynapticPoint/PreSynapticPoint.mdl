@@ -39,6 +39,8 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
     int idx;
   }
 
+  //NOTE: As voltage is used by receptors which can be in another process, 
+  // it needs to be sync to proxy node
   InitPhase produceInitialState(voltage, branchData, index);
   RuntimePhase produceState(voltage);
   UserFunction setPointers;
@@ -103,6 +105,8 @@ Node SynapticCleft Implements BranchDataProducer, IndexProducer,
     int idx;
   }
 
+  //NOTE: As neurotransmitter is used by receptors which can be in another process, 
+  // it needs to be sync to proxy node
   InitPhase produceInitialState(Glut, GABA, branchData, index);
   RuntimePhase produceState(Glut, GABA);
   UserFunction setPointers;

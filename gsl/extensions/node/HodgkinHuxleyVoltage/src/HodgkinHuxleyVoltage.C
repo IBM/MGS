@@ -211,9 +211,11 @@ void HodgkinHuxleyVoltage::setProximalJunction(
 void HodgkinHuxleyVoltage::finish(RNG& rng)
 {
   //TUAN DEBUG
-  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->size);
-  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->size);
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
   volatile unsigned iteration = getSimulation().getIteration();
+#endif
   //END TUAN DEBUG
   unsigned size = branchData->size;
 #ifdef DEBUG_HH
@@ -247,18 +249,31 @@ dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // Tuan: check ok
 void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
                                                                 // ok
 {
+  //TUAN DEBUG
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile unsigned iteration = getSimulation().getIteration();
+#endif
+  //END TUAN DEBUG
   // for a given computing process:
   //  here all the data in vector-form are initialized to
   //  the same size as the number of compartments in a branch (i.e. branchData)
   unsigned size = branchData->size;  //# of compartments
   computeOrder = _segmentDescriptor.getComputeOrder(branchData->key);
-#ifdef DEBUG_ASSERT
-  if (isProximalCase2) assert(computeOrder == 0);
+
+  if (isProximalCase2) 
+  {
+    if (computeOrder != 0)
+      printDebugHH();
+    assert(computeOrder == 0);
+
+  } 
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
   assert(dimensions.size() == size);
   assert(Vnew.size() == size);
   assert(distalDimensions.size() == distalInputs.size());
-#endif
+
 
   // allocate data
   if (Vcur.size() != size) Vcur.increaseSizeTo(size);
@@ -366,9 +381,9 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 	if (cptIndex == 0)
 	{
 		std::cerr << "step,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
-			<< "(neuronIdx, branchIdx, branchOrder) | distalC0 | distalC1 | distalC2 |"
-			<< "distalC3 | proxC0 | proxC1 | proxC2 |"
-			<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
+			<< "(neuronIdx, brIdx, brOrder, brType) | distal(C0 | C1 | C2) |"
+			<< "distalC3 | prox(C0 | C1 | C2) |"
+			<< "{x,y,z,r | dist2soma, surface_area, volume, length} Vm\n";
 	}
 	int i  = cptIndex;
 	std::cerr << getSimulation().getIteration() << "," <<
@@ -378,7 +393,8 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 		<< "," << getIndex() << "," << i << "] "
 		<< "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
 		<< std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
-		<< _segmentDescriptor.getBranchOrder(branchData->key) << ") |"
+		<< _segmentDescriptor.getBranchOrder(branchData->key) << ","
+		<< _segmentDescriptor.getBranchType(branchData->key) << ") |"
 		<< isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
 		<< "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
 		<< isProximalCase1 << "|" << isProximalCase2 << "|"
@@ -386,7 +402,7 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
     << std::setprecision(3) << dimensions[i]->x << "," 
     << std::setprecision(3) << dimensions[i]->y << ","
 		<< std::setprecision(3) << dimensions[i]->z << "," 
-    << std::setprecision(3) << dimensions[i]->r << "," 
+    << std::setprecision(3) << dimensions[i]->r << " | " 
 		<< dimensions[i]->dist2soma  << ","
 		<< dimensions[i]->surface_area << "," 
 		<< dimensions[i]->volume << "," << dimensions[i]->length 
@@ -401,6 +417,13 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 // Thomas algorithm forward step 
 void HodgkinHuxleyVoltage::doForwardSolve()
 {
+  //TUAN DEBUG
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile unsigned iteration = getSimulation().getIteration();
+#endif
+  //END TUAN DEBUG
   unsigned size = branchData->size;
 	//Find A[ii]i and RHS[ii]  
 	//  1. ionic currents 
@@ -531,6 +554,18 @@ void HodgkinHuxleyVoltage::doForwardSolve()
     Aii[i] -= Aim[i] * Aip[i - 1] / Aii[i - 1];
     RHS[i] -= Aim[i] * RHS[i - 1] / Aii[i - 1];
   }
+  //TUAN DEBUG TUAN 
+#ifdef DEBUG_COMPARTMENT
+  for (int i = 0; i < size; i++)  // for each compartment on that branch
+  {
+    if (Aii[i] != Aii[i])
+      printDebugHH();
+    assert(Aii[i] == Aii[i]);
+    if (RHS[i] != RHS[i])
+      printDebugHH();
+    assert(RHS[i] == RHS[i]);
+  }
+#endif  //END DEBUG SECTION
 }  // end doForwardSolve
 
 // Update: Vnew[]
@@ -540,9 +575,11 @@ void HodgkinHuxleyVoltage::doBackwardSolve()
 {
   unsigned size = branchData->size;
   //TUAN DEBUG
-  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->size);
-  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->size);
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
   volatile unsigned iteration = getSimulation().getIteration();
+#endif
   //END TUAN DEBUG
   if (isProximalCase0)
   {

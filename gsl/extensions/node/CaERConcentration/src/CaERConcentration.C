@@ -403,7 +403,7 @@ void CaERConcentration::printDebugHH()
   unsigned size = branchData->size;
   SegmentDescriptor segmentDescriptor;
   std::cerr << "time| BRANCH [rank, nodeIndex, layerIndex, cptIndex]"
-            << "(neuronIdx, branchIdx, branchOrder)| distalCase(C0,C1,C2,C3) |"
+            << "(neuronIdx, brIdx, brOrder, brType)| distalCase(C0,C1,C2,C3) |"
             << "prox(C0,C1,C2) |"
             << "{x,y,z,r, dist2soma, surface_area, volume, length} CaER\n";
   for (int i = 0; i < size; ++i)
@@ -414,7 +414,9 @@ void CaERConcentration::printDebugHH()
               << "," << getIndex() << "," << i << "] "
               << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
               << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ") |"
+              << segmentDescriptor.getBranchOrder(branchData->key) << ","
+              << segmentDescriptor.getBranchType(branchData->key) 
+              << ") |"
               << "(" << isDistalCase0 << "," << isDistalCase1 << "," << isDistalCase2
               << "," << isDistalCase3 << ")|(" << isProximalCase0 << ","
               << isProximalCase1 << "," << isProximalCase2 << ")|"

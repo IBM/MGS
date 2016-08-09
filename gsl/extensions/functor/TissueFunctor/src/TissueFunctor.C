@@ -1695,7 +1695,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       length = 2 * r;
     }
     else
-    {  // cut/branch explicit junction
+    {  // slicing-cut/branching-point explicit junction
       // 2.a first take proximal-side of junction
 #ifdef IDEA1
       //which is the distal-end of the parent branch
@@ -1757,7 +1757,16 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 
       }
 #else
-      if (branch_parent->_daughters.size() == 1)
+      //TUAN NOTE: using _daughters.size() == 1
+      //is not a good criteria for slicing cut, as the user-defined branchType
+      //can lead to a new branch, at which there is no Y-shape branching point
+      //e.g. axon---AIS--axon
+      //as for now, there is no different in treatment between slicing-cut cpt vs. branching cpt, so it is OK
+      //to use this
+      if (branch_parent->_daughters.size() == 1 
+//THINKING about this          
+//          and _segmentDescriptor.getComputeOrder(branch_parent->lastCapsule().getKey()) < MAX_COMPUTE_ORDER 
+          )
       {  // slicing cut point explicit junction
         iter = branch_parent->_daughters.begin();
         ComputeBranch* childbranch = (*iter);
@@ -2392,6 +2401,11 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
         std::vector<std::vector<std::pair<int, int> > >());
     _channelJunctionIndices2.push_back(
         std::vector<std::vector<std::pair<int, int> > >());
+    if (_channelTypesMap.find(nodeType) != _channelTypesMap.end())
+    {
+      std::cerr << "Unrecognized " << nodeType << " on nodeCategory : "
+                << nodeCategory << std::endl;
+    }
     assert(_channelTypesMap.find(nodeType) == _channelTypesMap.end());
     _channelTypesMap[nodeType] = _channelTypeCounter;
   }
@@ -6678,7 +6692,7 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPre(ComputeBranch* branch)
   if (branch->_nCapsules == 1)
     frac = 1.0 / 4.0;
   else
-    frac = 1.0 / 2.0;
+    frac = 1.0 / 3.0;
   assert(frac > 0);
   assert(frac < 1);
   return frac;
@@ -6712,7 +6726,7 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
       frac = 1.0 / 4.0;
   }
   else
-    frac = 1.0 / 2.0;
+    frac = 1.0 / 3.0;
 
   assert(frac > 0);
   assert(frac < 1);
