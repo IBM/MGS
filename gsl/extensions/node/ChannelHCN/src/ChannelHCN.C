@@ -217,26 +217,6 @@ void ChannelHCN::initialize(RNG& rng)
       gbar[i] = gbar_default;
     }
   }
-  /*
-  dyn_var_t gbar_default = gbar[0];
-  for (unsigned int i=0; i<size; ++i) {
-    if (gbar_dists.size() > 0) {
-      unsigned int j;
-      assert(gbar_values.size() == gbar_dists.size());
-      for (j=0; j<gbar_dists.size(); ++j) {
-        if ((*dimensions)[0]->dist2soma < gbar_dists[j]) break;
-      }
-      if (j < gbar_values.size())
-        gbar[i] = gbar_values[j];
-      else
-        gbar[i] = gbar_default;
-    } else if (gbar_values.size() == 1) {
-      gbar[i] = gbar_values[0];
-    } else {
-      gbar[i] = gbar_default;
-    }
-  }
-  */
 
   for (unsigned i = 0; i < size; ++i)
   {

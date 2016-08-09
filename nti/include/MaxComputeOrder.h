@@ -95,6 +95,8 @@
 //  IDEA_ILEAK (if defined, the code that enable outputing Ileak is added to AnyCurrentDisplay via HodgkinHuxleyVoltage connection)
 //  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
 //  DEBUG_COMPARTMENT (if define, it helps to analyze when a cpt variable becomes NaN)
+//  IDEA_DYNAMIC_INITIALVOLTAGE (if defined, it enables us to pass different voltage value at different location of branch tree - this helps to reach equilibrium faster on neuron where gradient voltage occurs)
+//  TOUCHDETECT_SINGLENEURON_SPINES (if defined, it will use the strategy developed to ensure proper binding to the right location on the branch compartment) - DO NOT defined this when using full tissue 
 //#define IDEA1
 //#define NEWIDEA
 //#define IDEA_ILEAK
@@ -102,6 +104,8 @@
 //#define SYNAPSE_PARAMS_TOUCH_DETECT
 //#define INFERIOR_OLIVE
 //#define DEBUG_COMPARTMENT
+//#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
+//#define TOUCHDETECT_SINGLENEURON_SPINES
 
 
 #endif //_MAXCOMPUTEORDER_H

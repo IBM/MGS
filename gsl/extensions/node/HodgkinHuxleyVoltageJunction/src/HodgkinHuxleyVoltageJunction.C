@@ -24,6 +24,7 @@
 //#define DEBUG_HH
 #include <iomanip>
 #include "SegmentDescriptor.h"
+#include "GlobalNTSConfig.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
@@ -45,10 +46,50 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   // or a cut point junction 
 	// or a branching point junction with 3 or more branches (one from main, 2+ for children
   // branches))
+  unsigned size = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   assert(Vnew.size() == 1);
   assert(dimensions.size() == 1);
 
+#ifdef IDEA_DYNAMIC_INITIALVOLTAGE
+  dyn_var_t Vm_default = Vnew[0];
+  for (unsigned int i=0; i<size; ++i) {
+    if (Vm_dists.size() > 0) {
+      unsigned int j;
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (Vm_values.size() - 1 != Vm_dists.size())
+      {
+        std::cerr << "Vm_values.size = " << Vm_values.size() 
+          << "; Vm_dists.size = " << Vm_dists.size() << std::endl; 
+      }
+      assert(Vm_values.size() -1 == Vm_dists.size());
+      for (j=0; j<Vm_dists.size(); ++j) {
+        if ((dimensions)[i]->dist2soma < Vm_dists[j]) break;
+      }
+      Vnew[i] = Vm_values[j];
+    }
+		else if (Vm_branchorders.size() > 0)
+		{
+      unsigned int j;
+      assert(Vm_values.size() == Vm_branchorders.size());
+      SegmentDescriptor segmentDescriptor;
+      for (j=0; j<Vm_branchorders.size(); ++j) {
+        if (segmentDescriptor.getBranchOrder(branchData->key) == Vm_branchorders[j]) break;
+      }
+			if (j == Vm_branchorders.size() and Vm_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+			{
+				Vnew[i] = Vm_values[j-1];
+			}
+			else if (j < Vm_values.size()) 
+        Vnew[i] = Vm_values[j];
+      else
+        Vnew[i] = Vm_default;
+		}
+		else {
+      Vnew[i] = Vm_default;
+    }
+  }
+#endif
   Vcur = Vnew[0];
   // So, one explicit junction is composed of one compartment 
   // which can be explicit cut-point junction or

@@ -68,7 +68,6 @@ Node ChannelCaHVA Implements
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
   CaCurrentArrayProducer.currents << &I_Ca;
   IOCurrentArrayProducer.currents << &I_Ca;
-  //CurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
 

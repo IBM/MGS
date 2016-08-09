@@ -771,8 +771,13 @@ void TouchDetector::detectTouches()
 void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
                            Mutex* mutex)
 {
-  // doWork_original(threadID, sid, data, mutex);
+#ifdef TOUCHDETECT_SINGLENEURON_SPINES
   doWork_new(threadID, sid, data, mutex);
+  ////TUAN TODO: there is a bug in doWork_new
+  //that makes touch creation is not symmetric when we increase the radius real big
+#else
+   doWork_original(threadID, sid, data, mutex);
+#endif
 }
 
 // NOTE: This implementation was derived to ensure that only 1 capsule got

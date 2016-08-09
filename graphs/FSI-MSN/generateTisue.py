@@ -28,5 +28,5 @@ with open(outfilename,'a') as the_file:
      for k in range(0,zdim):
             for j in range(0,ydim):
                    for i in range(0,xdim):
-                             the_file.write('\n%s 1 0 0 %f %f %f A NULL NULL NULL' %(filename,xinit+i*xoffset,yinit+j*yoffset,zinit+k*zoffset))
-                             the_file.close()
+                             the_file.write('\n%s 1 1 0 %f %f %f R NULL NULL NULL' %(filename,xinit+i*xoffset,yinit+j*yoffset,zinit+k*zoffset))
+the_file.close()

@@ -49,14 +49,14 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 // Regular-branch: represent the diffusion of Voltage along branch with no explicit junction
 /*{{{*/
 	//DATA
+  //{{{
     /*{{{*/
-	//data members: reference
+	     //data members: reference
        // pointer to array of branch
        // help to identify the branch a Voltage-compartment belong to 
   BranchDataStruct* branchData; // pointer to branch's data
   DimensionStruct* [] dimensions; // 1 branch = N compartments (represented by DimensionStruct)
-	//data members: internal, but for solver
-    //{{{
+    //{{{data members: internal, but for solver
 	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
   dyn_var_t [] Aii; //diagonal element of the matrix (A[i,i]) [nS/um^2]
   dyn_var_t [] Aip; //right-side off-diagonal element         [nS/um^2]
@@ -92,7 +92,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
                    //  from proximal to distal: backwardSolve
                    //  2. treat all junctions as explicit junction
        //}}}
-	//data members: internal
+	//{{{data members: internal
   dyn_var_t [] Vcur; // [mV]
   dyn_var_t [] Vnew; // [mV]
     // here we may consider the fact that different branches
@@ -101,13 +101,24 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   dyn_var_t Cm; // [pF/um^2]
   dyn_var_t gLeak; // [nS/um^2]
   dyn_var_t cmt; // intermediate values  = 2*Cm/dt [pF/(um^2 . ms)]
-    // currents 
+   //}}}
+#ifdef IDEA_DYNAMIC_INITIALVOLTAGE
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either Vm_dists or Vm_branchorders
+  //      and combine with Vm_values
+  float [] Vm_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] Vm_branchorders; // an array that indicate the threshold-distance (in micrometer)
+  float [] Vm_values;// ... having the corresponding Vm conductance
+#endif
+    //{{{ ionic currents 
     // IMPORTANT: inward ionic current = negative
     //            inward injectedCurrents is positive
   ChannelCurrents [] channelCurrents; // [pA/um^2]
   ChannelCurrentsGHK [] channelCurrentsGHK; // [pA/um^2]
   ReceptorCurrent [] receptorCurrents; // [pA/um^2]
   InjectedCurrent [] injectedCurrents;  // [pA]
+    //}}}
 	/*}}}*/
    // design : anything currently not part of the spatial 
    //          is put here
@@ -121,6 +132,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     dyn_var_t E_leak;  // [miliVolt] = [mV]
     /*}}}*/
   }
+  //}}}
 
 	//output
 	//{{{
@@ -323,8 +335,15 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 // NOTE: A soma is a special kind of junction-branch
 //   and its surface are is treated differently
 /*{{{*/
+	//DATA
+  //{{{
   BranchDataStruct* branchData;  // the proximal-side regular-branch's data
   DimensionStruct* [] dimensions; //the proximal-side regular-branch's compartments
+    //{{{data members: internal, but for solver
+  dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
+  DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
+    //}}}
+	//{{{data members: internal
   dyn_var_t area;//surface area [um^2]
   dyn_var_t [] gAxial; //axial-conductance  [GOm.um]
   dyn_var_t Vcur; // iso-potential for all compartments in junction-branch [mV]
@@ -333,13 +352,23 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t Cm; // [pF/um^2]
   dyn_var_t cmt; // intermediate value = 2*Cm/dt [pF/(um^2 . ms)]
   dyn_var_t gLeak; // [nS/um^2]
-
-  // currents
+  //}}}
+#ifdef IDEA_DYNAMIC_INITIALVOLTAGE
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either Vm_dists or Vm_branchorders
+  //      and combine with Vm_values
+  float [] Vm_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] Vm_branchorders; // an array that indicate the threshold-distance (in micrometer)
+  float [] Vm_values;// ... having the corresponding Vm conductance
+#endif
+  //{{{ ionic currents
   ChannelCurrents [] channelCurrents;
   ChannelCurrentsGHK [] channelCurrentsGHK;
   dyn_var_t* [] receptorConductances;
   dyn_var_t* [] receptorReversalPotentials;
   dyn_var_t* [] injectedCurrents;
+  //}}}
 
   dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
   DimensionStruct* [] dimensionInputs; // cpts from different branches (1prox + 1..n dist)
@@ -355,6 +384,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     dyn_var_t E_leak;  // [miliVolt] = [mV]
       //}}}
   }
+  //}}}
 
   //output
   VoltageArrayProducer.voltageArray << &Vnew;
