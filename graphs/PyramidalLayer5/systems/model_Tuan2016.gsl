@@ -165,8 +165,9 @@ print("Case 00: resting");
 #endif
 //}}}
 
-//{{{ Conditions: conductance + temperature + Vrest + Eleak
-#define Ra_value 0.001     // [GOhm*um] 
+//{{{ Conditions: axial conductance + temperature + Vrest + Eleak
+//#define Ra_value 0.001     // [GOhm*um] 
+#define Ra_value 1.001     // [GOhm*um] 
 //#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
 //#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
@@ -336,7 +337,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 //#define strArg3 "params_allspines/ChanParams.par"
 //#define strArg4 "params_allspines/SynParams.par"
 //#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 " //" -g 18"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 "//" -g 5"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
@@ -504,8 +505,8 @@ NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->sol
 NodeType ChannelHCN (< E_HCN = {Erev_HCN} >) {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //Ca2+ currents
 /*{{{*/
-NodeType ChannelCaHVA { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLVA { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaHVA {computeTadj->initialize2,  initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLVA {computeTadj->initialize2,  initialize->initialize3, update->solveChannels };
 /*}}}*/
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(
@@ -844,9 +845,6 @@ Grid PyramidalL5_Neuron{
    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
 //   Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
    Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
-     //}}}
-   Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
-     //{{{ K+ channels
      //}}}
    Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
