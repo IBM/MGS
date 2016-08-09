@@ -65,7 +65,7 @@ void ChannelSchweighoferCah::initialize(RNG& rng)
       int j;
       assert(gbar_values.size() == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
-        if ((*dimensions)[0]->dist2soma < gbar_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
       if (j < gbar_values.size()) 
         gbar[i] = gbar_values[j];

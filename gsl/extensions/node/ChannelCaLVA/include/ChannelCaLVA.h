@@ -23,7 +23,7 @@
 
 #if CHANNEL_CaLVA == CaLVA_HAY_2011
 #define DUAL_GATE _YES 
-#define BASED_TEMPERATURE 21.0  // Celcius
+#define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.3
 #endif
 

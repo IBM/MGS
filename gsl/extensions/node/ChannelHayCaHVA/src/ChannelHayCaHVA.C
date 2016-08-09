@@ -95,7 +95,7 @@ void ChannelHayCaHVA::initialize(RNG& rng)
 	  }
       assert(gbar_values.size() -1 == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
-        if ((*dimensions)[0]->dist2soma < gbar_dists[j]) break;
+        if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
       gbar[i] = gbar_values[j];
     } else if (gbar_values.size() == 1) {

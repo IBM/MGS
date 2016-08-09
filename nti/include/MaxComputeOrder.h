@@ -94,12 +94,14 @@
 //  ...
 //  IDEA_ILEAK (if defined, the code that enable outputing Ileak is added to AnyCurrentDisplay via HodgkinHuxleyVoltage connection)
 //  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
+//  IDEA_DYNAMIC_INITIALVOLTAGE (if defined, it enables us to pass different voltage value at different location of branch tree - this helps to reach equilibrium faster on neuron where gradient voltage occurs)
 //#define IDEA1
 //#define NEWIDEA
 //#define IDEA_ILEAK
 //#define IDEA_CURRENTONCOMPT
 //#define SYNAPSE_PARAMS_TOUCH_DETECT
 //#define INFERIOR_OLIVE
+//#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
 
 
 #endif //_MAXCOMPUTEORDER_H

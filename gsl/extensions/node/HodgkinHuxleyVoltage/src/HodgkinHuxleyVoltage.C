@@ -19,6 +19,7 @@
 #include "rndm.h"
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
+#include "GlobalNTSConfig.h"
 
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
@@ -260,12 +261,57 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
   if (RHS.size() != size) RHS.increaseSizeTo(size);
 
   // initialize data
+#ifdef IDEA_DYNAMIC_INITIALVOLTAGE
+  dyn_var_t Vm_default = Vnew[0];
+  for (unsigned int i=0; i<size; ++i) {
+    if (Vm_dists.size() > 0) {
+      unsigned int j;
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (Vm_values.size() - 1 != Vm_dists.size())
+      {
+        std::cerr << "Vm_values.size = " << Vm_values.size() 
+          << "; Vm_dists.size = " << Vm_dists.size() << std::endl; 
+      }
+      assert(Vm_values.size() -1 == Vm_dists.size());
+      for (j=0; j<Vm_dists.size(); ++j) {
+        if ((dimensions)[i]->dist2soma < Vm_dists[j]) break;
+      }
+      Vcur[i] = Vm_values[j];
+    }
+		else if (Vm_branchorders.size() > 0)
+		{
+      unsigned int j;
+      assert(Vm_values.size() == Vm_branchorders.size());
+      SegmentDescriptor segmentDescriptor;
+      for (j=0; j<Vm_branchorders.size(); ++j) {
+        if (segmentDescriptor.getBranchOrder(branchData->key) == Vm_branchorders[j]) break;
+      }
+			if (j == Vm_branchorders.size() and Vm_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+			{
+				Vcur[i] = Vm_values[j-1];
+			}
+			else if (j < Vm_values.size()) 
+        Vcur[i] = Vm_values[j];
+      else
+        Vcur[i] = Vm_default;
+		}
+		else {
+      Vcur[i] = Vm_default;
+    }
+  }
+  for (int i = 1; i < size; ++i)
+  {
+    Vnew[i] = Vcur[i];
+  }
+#else
   Vcur[0] = Vnew[0];
   for (int i = 1; i < size; ++i)
   {
     Vnew[i] = Vnew[0];
     Vcur[i] = Vcur[0];
   }
+#endif
+
   // go through each compartments in a branch
   for (int i = 0; i < size; ++i)
   {

@@ -161,7 +161,7 @@ void ChannelCaHVA::update(RNG& rng)
     E_Ca[i]=(R_zCaF * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / cai));
     dyn_var_t am = AMC*vtrap(v - AMV , AMD);
     dyn_var_t bm = BMC*exp((v - BMV )/BMD);
-    dyn_var_t pm = 0.5*dt*(am + bm);
+    dyn_var_t pm = 0.5*dt*getSharedMembers().Tadj*(am + bm);
     s[i] = (dt*getSharedMembers().Tadj*am + s[i]*(1.0 - pm))/(1.0 + pm);
     dyn_var_t ah = AHC*exp((v - AHV )/AHD);
     dyn_var_t bh = BHC/(1.0 + exp((v - BHV )/BHD));

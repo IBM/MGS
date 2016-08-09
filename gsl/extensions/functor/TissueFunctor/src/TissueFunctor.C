@@ -3325,7 +3325,7 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   if (nodeCategory == "ForwardSolvePoints") ++_forwardSolvePointTypeCounter;
 
 #ifdef MGS_NTS_HYBRID
-  int* mgsrval = new int(_nbrGridNodes);
+  int* mgsrval = new int[_nbrGridNodes];
   int n = rval[_rank];
   MPI_Allgather(&n, 1, MPI_INT, mgsrval, 1, MPI_INT, MPI_COMM_WORLD);
   for (int n=0; n<_nbrGridNodes; ++n) 

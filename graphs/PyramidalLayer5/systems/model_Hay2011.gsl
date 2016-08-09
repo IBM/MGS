@@ -17,7 +17,7 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_01
+#define STIMULUS_CASE   CASE_05
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -94,7 +94,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          747      // [ms]
+	#define TimeEnd          1000      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
@@ -128,14 +128,16 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
-//#define Cacyto_beta   0.002     // dimensionless 
+#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
+//SPECIFIC: HAY2011  (no need)
+//#define Cacyto_beta 0.000501// unitless [Wagner and Keizer buffering constant] - require change to tau_PMCA
 //}}}
 
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
+//Calcium
 #define Cacyto_value  0.1  // [uM]
 #define CaER_value    1.0e3    // [uM]
 #define Ca_o_value    1.8e3  // [uM]
@@ -319,29 +321,14 @@ TissueProbeFunctor tissueProbeFunctor();
 Functor TissueFunctor(string commandLine, string commandLineModification, 
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
-////NOTE: -r #capsules-per-cpt
-//#define ALLSPINES
-//#if STIMULUS_CASE == CASE_04
-//#define tissueFile "neurons.txt_triggerdistalspines"
-//#else
 #define tissueFile "neurons.txt"
-//#endif
 
-//#ifdef ALLSPINES
-//#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
-////#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-//#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
-//#define strArg2  "params_allspines/CptParams.par"
-//#define strArg3 "params_allspines/ChanParams.par"
-//#define strArg4 "params_allspines/SynParams.par"
-//#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 " //" -g 18"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" // -g 4"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
 #define strArg3 "params/ChanParams.par"
 #define strArg4 "params/SynParams.par"
-//#endif
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -722,10 +709,9 @@ VariableType CalciumDisplay{ initialize->initialize4 };
 
 VariableType CurrentDisplay{ initialize->initialize4 };
 VariableType CaCurrentDisplay{ initialize->initialize4 };
-
+VariableType AnyCurrentDisplay{ initialize->initialize4 }; //Na/Ca/K/...
 VariableType ConductanceDisplay{ initialize->initialize4 };
-
-VariableType ReversalPotentialDisplay{ initialize->initialize4 };
+//VariableType ReversalPotentialDisplay{ initialize->initialize4 };
 
 #include "recording_model.gsl"
 

@@ -10,8 +10,9 @@
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
 Node ChannelNat Implements 
-     ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-     BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
+     ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm
+     IOCurrentArrayProducer, // to I/O
+     BranchDataProducer, DimensionArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula

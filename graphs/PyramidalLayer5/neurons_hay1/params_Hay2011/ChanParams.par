@@ -44,8 +44,9 @@ BRANCHTYPE MTYPE
 #    PMCA [Voltage, Calcium] [Calcium] \
 #    Cah [Voltage] [Voltage, Calcium]  Cal [Voltage] [Voltage, Calcium] \
 #    MK [Voltage] [Voltage] \
-4 0 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] \
+4 0 Nat [Voltage] [Voltage] \
+#Nap [Voltage] [Voltage] \
+#    Kp [Voltage] [Voltage] \
 #Kt [Voltage] [Voltage] \
     Kv31 [Voltage] [Voltage] \
     SK [Voltage, Calcium] [Voltage] \
@@ -53,8 +54,9 @@ BRANCHTYPE MTYPE
     Cah [Voltage] [Voltage, Calcium]  Cal [Voltage] [Voltage, Calcium] \
     MK [Voltage] [Voltage] \
     HCN [Voltage] [Voltage] 
-6 0 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] \
+6 0 Nat [Voltage] [Voltage] \
+#Nap [Voltage] [Voltage] \
+#    Kp [Voltage] [Voltage] \
 #Kt [Voltage] [Voltage] \
     Kv31 [Voltage] [Voltage] \
     SK [Voltage, Calcium] [Voltage] \
@@ -222,7 +224,10 @@ Cah 3
 #{{{
 BRANCHTYPE MTYPE
 #{{{neuron
+##Hay: 10x in hot zone (HVA)
 1 0 <gbar={0.00992}>
+4 0 <gbar={0.00029}>
+6 0 <gbar={0.00291}>
 #2 0 <gbar={0.0292}>
 ## Check N-type or P/Q-type
 ## some neuron depends more on N-type and others on P/Q-type
@@ -235,8 +240,6 @@ BRANCHTYPE MTYPE
 #TUAN" try to have more Ca2+ influx"
 #4 0 <gbar={0.0378}>
 #6 0 <gbar={0.108}>
-4 0 <gbar={0.00091}>
-6 0 <gbar={0.00291}>
 #}}}
 #{{{ spine
 # NMDAR is the major source of Ca2+ at spine
@@ -245,8 +248,11 @@ BRANCHTYPE MTYPE
 Cal 3
 #{{{
 #{{{neuron
+##Hay: 100x in hot zone (LVA)
 BRANCHTYPE MTYPE
-1 0 <gbar={0.00343}>
+1 0 <gbar={0.0343}>
+4 0 <gbar={0.00093}>
+6 0 <gbar={0.0935}>
 #2 0 <gbar={0.0343}>
 # NOTE: The Cal in basal is smaller to produce proper Ca2+ elevation 
 #3 0 <gbar={0.0035}>
@@ -254,8 +260,6 @@ BRANCHTYPE MTYPE
 #TUAN" try to have more Ca2+ influx (from 0.035)"
 #4 0 <gbar={1.1335}>
 #6 0 <gbar={1.135}>
-4 0 <gbar={0.00343}>
-6 0 <gbar={0.0935}>
 #4 0 <gbar_dists={380.0,480.0}> 
 #4 0 <gbar_values={0.00187,0.187,0.00187}>
 #5 0 <gbar_dists={380.0,480.0}> 
@@ -295,11 +299,17 @@ PMCA 6
 # tau ~ [ms]
 BRANCHTYPE MTYPE 
 ## NOTE: large value of tau is important in keeping Ca-neck high
+##Hay2011: tau_soma = 460ms; tau_apical=122ms
 #{{{neuron
+#1 0 <tau={459}>
+#2 0 <tau={459}>
+#5 0 <tau={459}>
+#3 0 <tau={122}>
+#4 0 <tau={122}>
+#6 0 <tau={122}>
 1 0 <tau={1.9}>
 2 0 <tau={1.9}>
 5 0 <tau={1.9}>
-##TUAN: make Ca2+ depletion slower (from 0.9)
 3 0 <tau={1.9}>
 4 0 <tau={1.9}>
 6 0 <tau={1.9}>
