@@ -212,9 +212,11 @@ bool Touch::hasSpineHead(key_size_t& key)
 
 //GOAL: 
 // A touch has 2 capsule
-//    check if it is a spineless touch that can form a chemical synapse
-//    and return the key of the axon-capsule
-// TODO: change the way we determine in the coming future
+//     check if it is a spineless touch that can form a chemical synapse
+// RETURN:
+//  true =  if it is a spineless touch 
+//  axon_key = the key of the capsule that serves as the axonic-side
+// TUAN TODO: change the way we determine in the coming future
 //       where the spine head+neck is not passed in via tissue file
 //       but automatically generated
 bool Touch::isSpineless(key_size_t& axon_key)
