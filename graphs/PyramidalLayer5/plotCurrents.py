@@ -1864,8 +1864,8 @@ def plot_case9_adv():
     ############################
     ### row 3
     ## For 1 file
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenCurrents.dat')
-    YLABEL = "perisomaticApicalDen"
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCurrents.dat')
+    YLABEL = "proximalTrunk"
     file=open(myFile)
     lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -1932,7 +1932,7 @@ def plot_case9_adv():
     ############################
     ## For 1 file
     ### first y-axis (Voltage)
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkV.dat')
     #file=open(myFile)
     #lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -1995,7 +1995,7 @@ def plot_case9_adv():
     ax1 = axarr[gr, gc]
     ### second y-axis
     ## Calcium
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCa.dat')
     if (os.path.isfile(myFile)):
       channelNames=["Ca"]
       nCols = len(channelNames)
@@ -2063,7 +2063,7 @@ def plot_case9_adv():
     ############################
     ### row 1
     ## For 1 file
-    myFile = folder+'/'+getFile(folder,'distaldendriticCurrents.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedCurrents.dat')
     YLABEL = "distalDenApical"
     file=open(myFile)
     lines=file.readlines()
@@ -2130,7 +2130,7 @@ def plot_case9_adv():
     ############################
     ## For 1 file
     ### first y-axis (Voltage)
-    myFile = folder+'/'+getFile(folder,'distaldendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedV.dat')
     #file=open(myFile)
     #lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -2193,7 +2193,7 @@ def plot_case9_adv():
     ax1 = axarr[gr, gc]
     ### second y-axis
     ## Calcium
-    myFile = folder+'/'+getFile(folder,'distaldendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedCa.dat')
     channelNames=["Ca"]
     nCols = len(channelNames)
 
@@ -2255,7 +2255,7 @@ def plot_case9_adv():
     ############################
     ### row 2
     ## For 1 file
-    myFile = folder+'/'+getFile(folder,'tufteddendriticCurrents.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTuftedCurrents.dat')
     YLABEL = "tuftedDen"
     file=open(myFile)
     lines=file.readlines()
@@ -2322,7 +2322,7 @@ def plot_case9_adv():
     ############################
     ## For 1 file
     ### first y-axis (Voltage)
-    myFile = folder+'/'+getFile(folder,'tufteddendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTuftedV.dat')
     #file=open(myFile)
     #lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -2385,7 +2385,7 @@ def plot_case9_adv():
     ax1 = axarr[gr, gc]
     ### second y-axis
     ## Calcium
-    myFile = folder+'/'+getFile(folder,'tufteddendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTuftedCa.dat')
     if (os.path.isfile(myFile)):
       channelNames=["Ca"]
       nCols = len(channelNames)
@@ -2449,8 +2449,8 @@ def plot_case9_adv():
     ############################
     ### row 3
     ## For 1 file
-    myFile = folder+'/'+getFile(folder,'middledendriticCurrents.dat')
-    YLABEL = "middledendritic"
+    myFile = folder+'/'+getFile(folder,'distalTrunkCurrents.dat')
+    YLABEL = "distalTrunk"
     file=open(myFile)
     lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -2517,7 +2517,7 @@ def plot_case9_adv():
     ############################
     ## For 1 file
     ### first y-axis (Voltage)
-    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
     #file=open(myFile)
     #lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -2580,7 +2580,7 @@ def plot_case9_adv():
     ax1 = axarr[gr, gc]
     ### second y-axis
     ## Calcium
-    myFile = folder+'/'+getFile(folder,'middledendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkCa.dat')
     if (os.path.isfile(myFile)):
       channelNames=["Ca"]
       nCols = len(channelNames)
@@ -2652,27 +2652,27 @@ def plot_case9_adv():
     # axarr[0, 0].plot(t, v1, 'red', label='bouton')
     # axarr[0, 0].plot(t, v2, 'green', label='spinehead')
 
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        axarr[0, 0].plot(t, v1, proximalTrunkColor, label='perisomatic-ApicalDen')
         axarr[0, 0].legend()
         minCa = min(np.amin(v1), minCa)
         maxCa = max(np.amax(v1), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalBasalDenCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
+        axarr[0, 0].plot(t, v1, proximalBasalDenColor, label='perisomatic-BasalDen')
         axarr[0, 0].legend()
         minCa = min(np.amin(v1), minCa)
         maxCa = max(np.amax(v1), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'distaldendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -2682,7 +2682,7 @@ def plot_case9_adv():
         minCa = min(np.amin(v1), minCa)
         maxCa = max(np.amax(v1), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'middledendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -2730,22 +2730,22 @@ def plot_case9_adv():
     # axarr[2, 0].set_ylim(bottom=min(np.amin(v3),np.amin(v4))-0.5);
     # axarr[2, 0].set_ylim(top=max(np.amax(v3),np.amax(v4))+0.5);
 
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[1, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        axarr[1, 0].plot(t, v1, proximalTrunkColor, label='perisomatic-ApicalDen')
         #axarr[1, 0].legend()
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
 
-    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalBasalDenV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[1, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
+        axarr[1, 0].plot(t, v1, proximalBasalDenColor, label='perisomatic-BasalDen')
         #axarr[1, 0].legend()
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
@@ -2759,7 +2759,7 @@ def plot_case9_adv():
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
 
-    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -2773,7 +2773,7 @@ def plot_case9_adv():
     axarr[1, 0].set_ylim(top=maxVm+0.5);
     axarr[1, 0].set_xlim(left=timeStart, right=timeEnd)
 
-    myFile = folder+'/'+getFile(folder,'distaldendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -2781,7 +2781,7 @@ def plot_case9_adv():
         axarr[2, 0].plot(t, v1, distaldenColor, label='distal-den')
     axarr[2, 0].legend()
 
-    myFile = folder+'/'+getFile(folder,'tufteddendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTuftedV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -2789,7 +2789,7 @@ def plot_case9_adv():
         axarr[2, 0].plot(t, v1, tufteddenColor, label='tufted-den')
     axarr[2, 0].legend()
 
-    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
