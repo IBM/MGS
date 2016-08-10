@@ -570,16 +570,17 @@ def plot_case8():
 def parse():
   global parser
   parser = argparse.ArgumentParser(prog = 'plotVmCa')
-  parser.add_argument('--version', action='version', version='1.0.0')
+  parser.add_argument('--version', action='version', version='1.0.1')
   subparsers = parser.add_subparsers(dest="subparsers_name")
   parser_folder = subparsers.add_parser('folder')
-  parser_folder.add_argument("folderName", help="name of the folder with data to be plotted")
+  parser_folder.add_argument("folderName", help="full name of the folder with data to be plotted")
   parser_folder.set_defaults(which='folder')
 
   parser_protocol = subparsers.add_parser('protocol')
   parser_protocol.add_argument("number", default=-1, help="index of simulation protocol (0 = rest; 1 = inject soma; 2= inject shaft with dual-exp EPSP-like current; 3 = inject a particular presynaptic neuron; 4 = like 3, but at a distal region; 5 = trigger soma then at distal end (within a small window of time); 6 = trigger soma, then another spine (within a window of time))")
   parser_protocol.add_argument("date", default="May29", help="date of data, e.g. May30")
   #parser_protocol.set_defaults(func=plot_case9a)
+  parser_protocol.add_argument("morphology", default="", help="(optional) name of morph, e.g. hay1")
   parser_protocol.set_defaults(which='protocol')
 
   #global args
@@ -1410,14 +1411,17 @@ def plot_case9_adv():
     elif (args.subparsers_name == 'protocol'):
       folder='./out2_May27_fullspine'
       folder='./out2_May27'
+      morph = args.morphology
+      if (morph != ""):
+          morph += "_"
       mapFolders = {}
-      mapFolders[0] = mainFolder + 'out2_May29_rest'
-      mapFolders[1] = mainFolder + 'out2_May29_triggersoma'
-      mapFolders[2] = mainFolder + 'out2_May29_triggershaft'
-      mapFolders[3] = mainFolder + 'out2_May29_triggerspine'
-      mapFolders[4] = mainFolder + 'out2_May29_triggerdistalspines'
-      mapFolders[5] = mainFolder + 'out2_May29_triggersoma_then_distalspines'
-      mapFolders[6] = mainFolder + 'out2_May29_case06'
+      mapFolders[0] = mainFolder + morph + 'May29_rest'
+      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'
+      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'
+      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'
+      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'
+      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines'
+      mapFolders[6] = mainFolder + morph + 'May29_case06'
       tmpMap = {}
       date = args.date
       protocol = args.number
