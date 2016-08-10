@@ -151,11 +151,14 @@ def getNeuronStatisticsFromSWC(pathToFile='./neurons/neurons.swc', ignoreComment
       neuronStat['radius-max'] = 0.0
     if (type2Analyze== 'all' or type=='compartment'):
       neuronStat['compartment-surfacearea'] = []
-      neuronStat['compartment-volume'] = []
       neuronStat['compartment-surfacearea-mean'] = 0.0
       neuronStat['compartment-surfacearea-std'] = 0.0
+      neuronStat['compartment-volume'] = []
       neuronStat['compartment-volume-mean'] = 0.0
       neuronStat['compartment-volume-std'] = 0.0
+      neuronStat['compartment-length'] = []
+      neuronStat['compartment-length-mean'] = 0.0
+      neuronStat['compartment-length-std'] = 0.0
       neuronStat['compartment-count'] = 0
     return neuronStat
   def getResult(result, neuronStat):
@@ -169,19 +172,29 @@ def getNeuronStatisticsFromSWC(pathToFile='./neurons/neurons.swc', ignoreComment
     if (type2Analyze== 'all' or type=='compartment'):
       neuronStat['compartment-surfacearea'].extend(result['compartment-surfacearea'])
       neuronStat['compartment-volume'].extend(result['compartment-volume'])
+      neuronStat['compartment-length'].extend(result['compartment-length'])
       neuronStat['compartment-count']       += result['compartment-count']
-      arr = np.array(neuronStat['compartment-surfacearea'])
-      print("A(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
-      print("A(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
-      arr = np.array(neuronStat['compartment-volume'])
-      print("V(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
-      print("V(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
-      neuronStat['compartment-surfacearea-mean'] = \
-         sum(neuronStat['compartment-surfacearea'])/neuronStat['compartment-count']
-      neuronStat['compartment-volume-mean']    = \
-         sum(neuronStat['compartment-volume'])/neuronStat['compartment-count']
+      if (neuronStat['compartment-surfacearea']):
+        arr = np.array(neuronStat['compartment-surfacearea'])
+        print("A(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
+        print("A(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
+        neuronStat['compartment-surfacearea-mean'] = \
+            sum(neuronStat['compartment-surfacearea'])/neuronStat['compartment-count']
+      if (neuronStat['compartment-volume']):
+        arr = np.array(neuronStat['compartment-volume'])
+        print("V(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
+        print("V(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
+        neuronStat['compartment-volume-mean']    = \
+            sum(neuronStat['compartment-volume'])/neuronStat['compartment-count']
+      if (neuronStat['compartment-length']):
+        arr = np.array(neuronStat['compartment-length'])
+        print("L(mean+/-std) = ", np.mean(arr), "+/- = ", np.std(arr))
+        print("L(min/max) = ", np.amin(arr), "--> ", np.amax(arr))
+        neuronStat['compartment-length-mean']    = \
+            sum(neuronStat['compartment-length'])/neuronStat['compartment-count']
       del neuronStat['compartment-surfacearea']
       del neuronStat['compartment-volume']
+      del neuronStat['compartment-length']
 
   #ignoreCommentedLine = True
   #ignoreCommentedLine = False
@@ -1622,6 +1635,7 @@ class SomeClass(object):
       if (type == 'all' or type=='compartment'):
         result['compartment-surfacearea'] = []
         result['compartment-volume'] = []
+        result['compartment-length'] = []
         result['compartment-count'] = 0
       for ix in range(len(self.point_lookup)):
         id = str(ix+1)
@@ -1644,6 +1658,7 @@ class SomeClass(object):
           parent_brType = self.point_lookup[parent_id]['type']
           if (parent_brType == self.branchType['soma']):
             new_r = r
+            lenSeg = r
           else:
             parent_r = float(self.point_lookup[parent_id]['siteR'])
             new_r = (r + parent_r)/2.0
@@ -1669,6 +1684,7 @@ class SomeClass(object):
         if (type == 'all' or type=='compartment'):
             result['compartment-surfacearea'].append(surfArea)
             result['compartment-volume'].append(vol)
+            result['compartment-length'].append(lenSeg)
             result['compartment-count'] += 1
       #print result
       #time.sleep(10)
