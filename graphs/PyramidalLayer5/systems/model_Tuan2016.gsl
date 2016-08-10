@@ -18,6 +18,9 @@
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define STIMULUS_CASE   CASE_01
+//#define morph ""
+#define morph "hay2_"
+//#define morph "hay2spines_"
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -51,9 +54,6 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //{{{ 1. Output Location
 //#define dataFolder "./"
 #define dataFolder "./data/"
-//#define morph ""
-//#define morph "hay2_"
-#define morph "hay2spines_"
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "Jul15_rest"
 print("Case 00: resting");
