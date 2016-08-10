@@ -51,28 +51,25 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //{{{ 1. Output Location
 //#define dataFolder "./"
 #define dataFolder "./data/"
+//#define morph ""
+#define morph "hay2_"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder "out2_Jul25_rest"
+#define OutputFolderName dataFolder morph "out2_Jul25_rest"
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder "out2_Jul25_triggersoma"
+#define OutputFolderName dataFolder morph "Jul25_triggersoma"
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder "out2_Jul25_triggershaft"
+#define OutputFolderName dataFolder morph "Jul25_triggershaft"
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder "out2_Jul25_triggerspine"
-//#define OutputFolderName dataFolder "out2_Jul25_case03"
+#define OutputFolderName dataFolder morph "Jul25_triggerspine"
+//#define OutputFolderName dataFolder morph "Jul25_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder "out2_Jul25_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Jul25_triggerdistalspines"
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder "out2_Jul25_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Jul25_triggersoma_then_distalspines"
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder "out2_Jul25_case06"
+#define OutputFolderName dataFolder morph "Jul25_case06"
 #endif
-//#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
-//#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
-//#define OutputFolderName dataFolder "out2_May27_trigger_distal"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma_distal"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -167,7 +164,7 @@ print("Case 00: resting");
 #endif
 //}}}
 
-//{{{ Conditions: conductance + temperature + Vrest + Eleak
+//{{{ Conditions: axial conductance + temperature + Vrest + Eleak
 #define Ra_value 0.001     // [GOhm*um] 
 //#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
