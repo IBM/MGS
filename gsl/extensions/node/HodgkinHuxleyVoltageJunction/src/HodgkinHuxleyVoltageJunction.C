@@ -148,8 +148,16 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 #endif
 }
 
+//GOAL: predict Vnew[0]
 void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 {
+  //TUAN DEBUG
+#ifdef DEBUG_COMPARTMENT
+  volatile int nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile int bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile int iteration = getSimulation().getIteration();
+#endif
+  //END TUAN DEBUG
   dyn_var_t conductance = cmt;
   dyn_var_t current = cmt * Vcur;
 
@@ -236,14 +244,17 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 #endif
 }
 
+//GOAL: correct Vnew[0] and update Vcur
 void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 {
   dyn_var_t conductance = cmt;
   dyn_var_t current = cmt * Vcur;
   //TUAN DEBUG
-  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->size);
-  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->size);
-  volatile unsigned iteration = getSimulation().getIteration();
+#ifdef DEBUG_COMPARTMENT
+  volatile int nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile int bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile int iteration = getSimulation().getIteration();
+#endif
   //END TUAN DEBUG
  
   conductance += gLeak;
@@ -316,17 +327,18 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
 {
 	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
-		"(neuronIdx,branchIdx,brchOrder){x,y,z,r,dist2soma,surfarea,volume,len} Vm" << std::endl;
+		"(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   std::cerr << getSimulation().getIteration() << "," 
     <<  getSimulation().getIteration() * *getSharedMembers().deltaT
-    << "|" << phase << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+    << "|" << phase 
+    << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
     << getIndex() << "] "
     << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
     << _segmentDescriptor.getBranchIndex(branchData->key) << ","
     << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
     << dimensions[0]->x << "," << dimensions[0]->y << ","
     << dimensions[0]->z << "," 
-    << dimensions[0]->r << "," 
+    << dimensions[0]->r << " | " 
     << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
     << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
     << std::endl;
@@ -335,6 +347,8 @@ void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
   Array<dyn_var_t*>::iterator vend = voltageInputs.end();
   int c = -1;
 
+	std::cerr << "JCT_INPUT_i " <<
+		"(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   for (viter = voltageInputs.begin(); viter != vend; ++viter, ++diter)
   {
@@ -343,11 +357,12 @@ void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
       << "(" << _segmentDescriptor.getNeuronIndex(branchDataInputs[c]->key) << ","
       << std::setw(2) << _segmentDescriptor.getBranchIndex(branchDataInputs[c]->key) << ","
       << _segmentDescriptor.getBranchOrder(branchDataInputs[c]->key) << ","
+      << _segmentDescriptor.getBranchType(branchDataInputs[c]->key) << ","
       << _segmentDescriptor.getComputeOrder(branchDataInputs[c]->key) << ") {"
       << std::setprecision(3) << (*diter)->x << "," 
       << std::setprecision(3) << (*diter)->y << "," 
       << std::setprecision(3) << (*diter)->z << ","
-      << std::setprecision(3) << (*diter)->r << "," 
+      << std::setprecision(3) << (*diter)->r << " | " 
       << (*diter)->dist2soma << "," << (*diter)->surface_area << "," 
       << (*diter)->volume << "," << (*diter)->length  << "} "
       //<< DISTANCE_SQUARED(*(*diter), *(dimensions[0])) << " "

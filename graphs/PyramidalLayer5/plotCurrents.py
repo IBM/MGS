@@ -9,6 +9,7 @@ import matplotlib
 import matplotlib as mpl
 #matplotlib.use('pdf')
 matplotlib.use('gtk')
+import re
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +18,7 @@ import csv
 import sys
 import argparse
 import fnmatch
+from mpldatacursor import datacursor
 
 def getFile(folder,fileNamePrefix):
     for file in os.listdir(folder):
@@ -577,8 +579,8 @@ def parse():
   parser_protocol = subparsers.add_parser('protocol')
   parser_protocol.add_argument("number", default=-1, help="index of simulation protocol (0 = rest; 1 = inject soma; 2= inject shaft with dual-exp EPSP-like current; 3 = inject a particular presynaptic neuron; 4 = like 3, but at a distal region; 5 = trigger soma then at distal end (within a small window of time); 6 = trigger soma, then another spine (within a window of time))")
   parser_protocol.add_argument("date", default="May29", help="date of data, e.g. May30")
-  parser_protocol.add_argument("morphology", default="", help="(optional) name of morph, e.g. hay1")
   #parser_protocol.set_defaults(func=plot_case9a)
+  parser_protocol.add_argument("morphology", default="", help="(optional) name of morph, e.g. hay1")
   parser_protocol.set_defaults(which='protocol')
 
   #global args
@@ -1440,70 +1442,1208 @@ def plot_case9_adv():
       sys.exit("")
     #print(args)
 
-    #folder='./out2_May26'
-    #kfolder='./out2_May27_trigger_soma'
-    #folder='./out2_May27_fullspine'
-    #folder='./out2_May27'
-    #mapFolders = {}
-    #mapFolders[0] = 'out2_May29_rest'
-    #mapFolders[1] = 'out2_May29_triggersoma'
-    #mapFolders[2] = 'out2_May29_triggershaft'
-    #mapFolders[3] = 'out2_May29_triggerspine'
-    #mapFolders[4] = 'out2_May29_triggerdistalspines'
-    #mapFolders[5] = 'out2_May29_triggersoma_then_distalspines'
-    #mapFolders[6] = 'out2_May29_case06'
-    #tmpMap = {}
-    #if len(sys.argv) == 1:
-    #  print("Help: python " + sys.argv[0] + " <number> <date>")
-    #  print("  <number> = index of simulating protocol (use -1 if you only want to create folders)")
-    #  print("  <date>   = the date of data, e.g. May28")
-    #  sys.exit("")
-
-    #if len(sys.argv) > 2:#second arg should be the day (e.g. May29)
-    #  for key,val in mapFolders.iteritems():
-    #    print(val.replace('May29',sys.argv[2]))
-    #    tmpMap[key] = val.replace('May29',sys.argv[2])
-    #  mapFolders = tmpMap
-
-    ## create folder purpose (if not exist)
-    #for key,value in mapFolders.iteritems():
-    #  if not os.path.exists(value):
-    #    os.makedirs(value)
-
-    #if len(sys.argv) > 1 and int(sys.argv[1]) == -1:#first arg should be the protocol
-    #  sys.exit("Folders created")
-
-    #if len(sys.argv) > 1:#first arg should be the protocol
-    #  folder = mapFolders[int(sys.argv[1])]
-
-    #timeStart = 28.0
-    timeStart = 0.0
-    #timeEnd = 60.0
-    timeEnd = -1.0
+    #timeStart = 0.0
+    timeStart = 390.0
+    #timeEnd = -1.0
+    timeEnd = 470.0
     #timeStart = 270.0
     #timeEnd = 380.0
-    somaMPIprocess=2
-    somaColor = 'blue'
-    middledenColor= 'red'
-    distaldenColor= 'green'
-    tufteddenColor= 'black'
-    perisomaticApicalDenColor= 'orange'
-    perisomaticBasalDenColor= 'violet'
-    axonAISColor = 'black'
-    spineColor = 'magenta'
-    preNeuronColor = 'brown'
-    f, axarr = plt.subplots(3, 2)
+
+    #colors = ['blue', 'red', 'green', 'black', 'orange', 'violet', 'magenta', 'brown']
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    linestyles = ['-', '--' ]
+    #linestyles = ['_', '-', '--', ':']
+    #markers = []
+    #for m in LIne2D.markers:
+    #    try:
+    #        if len(m) == 1 and m != ' ':
+    #            markers.append(m)
+    #    except TypeError:
+    #        pass
+    #styles = markers + [
+    #    r'$\lambda$',
+    #    r'$\bowtie$',
+    #    r'$\circlearrowleft$',
+    #    r'$\clubsuit$',
+    #    r'$\checkmark$']
+    # page size (3 rows, 2 columns)
+    #fig_01 = plt.figure(0)
+    f1, axarr1 = plt.subplots(3, 2)
+    axarr = axarr1
+
+    # common configuration
     mpl.rcParams['lines.linewidth'] = 2
-    myFile = folder+'/'+getFile(folder,'somaCa.dat')
-    t, v0 = np.loadtxt(myFile,
-                       unpack=True, skiprows=1,
-                       usecols=(0, 1))
+
+
+    ############################
+    ### row 1
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'somaCurrents.dat')
+    YLABEL = "soma"
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
     idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
     if (timeEnd == -1.0):
       idxEnd = len(t)-1
       timeEnd = t[idxEnd]
     else:
       idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 0; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        style = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , linestyle=style, color=color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+    axarr[gr, gc].set_ylabel(YLABEL)
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'somaV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=1,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 0; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'somaCa.dat')
+    channelNames=["Ca"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    #gr = 0; gc = 1 # graph row, col
+    ax2 = ax1.twinx()
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[(i+1)%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        #axarr[gr, gc].legend()
+        ax2.plot(t, ydata , color, label=channelNames[i])
+        ax2.legend(loc=0)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    #s2 = np.sin(2*np.pi*t)
+    #ax2.plot(t, s2, 'r.')
+    #ax2.set_ylabel('sin', color='r')
+    ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    ax2.set_xlim(left=timeStart, right=timeEnd)
+    for tl in ax2.get_yticklabels():
+        tl.set_color(color)
+    print minVal, maxVal
+
+    ############################
+    ### row 2
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'axonAISCurrents.dat')
+    YLABEL = "axon-AIS"
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 1; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+    axarr[gr, gc].set_ylabel(YLABEL)
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'axonAISV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 1; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'axonAISCa.dat')
+    if (os.path.isfile(myFile)):
+      channelNames=["Ca"]
+      nCols = len(channelNames)
+
+      arrays = np.loadtxt(myFile,
+                          skiprows=2,
+                        # usecols=(0, 1)
+                         )
+      arraysT = np.transpose(arrays)
+      t = arraysT[0]
+      #############
+      # Define time range
+      idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+      if (timeEnd == -1.0):
+        idxEnd = len(t)-1
+        timeEnd = t[idxEnd]
+      else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+      #END
+      #################
+      arraysT = np.delete(arraysT, 0, 0)
+      #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+      #print arr
+      #arr = np.delete(arr,0,1)
+      #print arr
+      #return
+      #print t
+      #print nCols
+      minVal = 200000000.0
+      maxVal = -minVal
+      i =0
+      #gr = 0; gc = 1 # graph row, col
+      ax2 = ax1.twinx()
+      for ydata in arraysT:
+          #plot (t, col)
+          # legend(time, channelNames[i])
+          color = colors[(i+1)%len(colors)]
+          marker = linestyles[((i/len(colors))%len(linestyles))]
+          #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+          #axarr[gr, gc].legend()
+          ax2.plot(t, ydata , color, label=channelNames[i])
+          ax2.legend(loc=0)
+          minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+          maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+          #print len(t), len(ydata)
+          i += 1
+      #s2 = np.sin(2*np.pi*t)
+      #ax2.plot(t, s2, 'r.')
+      #ax2.set_ylabel('sin', color='r')
+      ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+      ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+      ax2.set_xlim(left=timeStart, right=timeEnd)
+      for tl in ax2.get_yticklabels():
+          tl.set_color(color)
+      print minVal, maxVal
+
+
+    ############################
+    ### row 3
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCurrents.dat')
+    YLABEL = "proximalTrunk"
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 2; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+    axarr[gr, gc].set_ylabel(YLABEL)
+    datacursor(axarr[gr,gc])
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'proximalTrunkV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 2; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCa.dat')
+    if (os.path.isfile(myFile)):
+      channelNames=["Ca"]
+      nCols = len(channelNames)
+
+      arrays = np.loadtxt(myFile,
+                          skiprows=2,
+                        # usecols=(0, 1)
+                         )
+      arraysT = np.transpose(arrays)
+      t = arraysT[0]
+      #############
+      # Define time range
+      idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+      if (timeEnd == -1.0):
+        idxEnd = len(t)-1
+        timeEnd = t[idxEnd]
+      else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+      #END
+      #################
+      arraysT = np.delete(arraysT, 0, 0)
+      #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+      #print arr
+      #arr = np.delete(arr,0,1)
+      #print arr
+      #return
+      #print t
+      #print nCols
+      minVal = 200000000.0
+      maxVal = -minVal
+      i =0
+      #gr = 0; gc = 1 # graph row, col
+      ax2 = ax1.twinx()
+      for ydata in arraysT:
+          #plot (t, col)
+          # legend(time, channelNames[i])
+          color = colors[(i+1)%len(colors)]
+          marker = linestyles[((i/len(colors))%len(linestyles))]
+          #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+          #axarr[gr, gc].legend()
+          ax2.plot(t, ydata , color, label=channelNames[i])
+          ax2.legend(loc=0)
+          minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+          maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+          #print len(t), len(ydata)
+          i += 1
+      #s2 = np.sin(2*np.pi*t)
+      #ax2.plot(t, s2, 'r.')
+      #ax2.set_ylabel('sin', color='r')
+      ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+      ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+      ax2.set_xlim(left=timeStart, right=timeEnd)
+      for tl in ax2.get_yticklabels():
+          tl.set_color(color)
+      print minVal, maxVal
+    datacursor(ax1)
+
+    ##########################################################
+    ### Page 2
+    f2, axarr2 = plt.subplots(3, 2)
+    axarr = axarr2
+    ############################
+    ### row 1
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'distalTuftedCurrents.dat')
+    YLABEL = "distalDenApical"
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 0; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+    axarr[gr, gc].set_ylabel(YLABEL)
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'distalTuftedV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=1,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 0; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'distalTuftedCa.dat')
+    channelNames=["Ca"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    #gr = 0; gc = 1 # graph row, col
+    ax2 = ax1.twinx()
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[(i+1)%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        #axarr[gr, gc].legend()
+        ax2.plot(t, ydata , color, label=channelNames[i])
+        ax2.legend(loc=0)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    #s2 = np.sin(2*np.pi*t)
+    #ax2.plot(t, s2, 'r.')
+    #ax2.set_ylabel('sin', color='r')
+    ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    ax2.set_xlim(left=timeStart, right=timeEnd)
+    for tl in ax2.get_yticklabels():
+        tl.set_color(color)
+    print minVal, maxVal
+
+    ############################
+    ### row 2
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'proximalTuftedCurrents.dat')
+    YLABEL = "tuftedDen"
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 1; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+    axarr[gr, gc].set_ylabel(YLABEL)
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'proximalTuftedV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 1; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'proximalTuftedCa.dat')
+    if (os.path.isfile(myFile)):
+      channelNames=["Ca"]
+      nCols = len(channelNames)
+
+      arrays = np.loadtxt(myFile,
+                          skiprows=2,
+                        # usecols=(0, 1)
+                         )
+      arraysT = np.transpose(arrays)
+      t = arraysT[0]
+      #############
+      # Define time range
+      idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+      if (timeEnd == -1.0):
+        idxEnd = len(t)-1
+        timeEnd = t[idxEnd]
+      else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+      #END
+      #################
+      arraysT = np.delete(arraysT, 0, 0)
+      #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+      #print arr
+      #arr = np.delete(arr,0,1)
+      #print arr
+      #return
+      #print t
+      #print nCols
+      minVal = 200000000.0
+      maxVal = -minVal
+      i =0
+      #gr = 0; gc = 1 # graph row, col
+      ax2 = ax1.twinx()
+      for ydata in arraysT:
+          #plot (t, col)
+          # legend(time, channelNames[i])
+          color = colors[(i+1)%len(colors)]
+          marker = linestyles[((i/len(colors))%len(linestyles))]
+          #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+          #axarr[gr, gc].legend()
+          ax2.plot(t, ydata , color, label=channelNames[i])
+          ax2.legend(loc=0)
+          minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+          maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+          #print len(t), len(ydata)
+          i += 1
+      #s2 = np.sin(2*np.pi*t)
+      #ax2.plot(t, s2, 'r.')
+      #ax2.set_ylabel('sin', color='r')
+      ax2.set_ylim(bottom=minVal - .05*max(0.1,abs(minVal)))
+      ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+      ax2.set_xlim(left=timeStart, right=timeEnd)
+      for tl in ax2.get_yticklabels():
+          tl.set_color(color)
+      print minVal, maxVal
+
+
+    ############################
+    ### row 3
+    ## For 1 file
+    myFile = folder+'/'+getFile(folder,'distalTrunkCurrents.dat')
+    YLABEL = "distalTrunk"
+    file=open(myFile)
+    lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    channelNames = re.split(",",re.sub('[\s+]','',lines[1]))
+    del channelNames[-1], channelNames[0]
+    #print lines[1]
+    print channelNames
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    hide = []   #decide what channel to hide
+    #hide = ['Nat', 'KAf', 'KDR', 'Cah', 'BK', 'SK']
+    #hide = ['Nat', 'KAf', 'KDR', 'BK', 'SK']
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 2; gc = 0 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        if (not channelNames[i] in hide):
+            axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            axarr[gr, gc].legend()
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. currents (pA/um^2)")
+    axarr[gr, gc].set_ylabel(YLABEL)
+    datacursor(axarr[gr,gc])
+
+
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
+    #file=open(myFile)
+    #lines=file.readlines()
+    #channelNames = re.split(",",lines[1])
+    #del channelNames[-1], channelNames[0]
+    #print lines[1]
+    #print channelNames
+    channelNames=["Vm"]
+    nCols = len(channelNames)
+
+    arrays = np.loadtxt(myFile,
+                        skiprows=2,
+                      # usecols=(0, 1)
+                       )
+    arraysT = np.transpose(arrays)
+    t = arraysT[0]
+    #############
+    # Define time range
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+    #END
+    #################
+    arraysT = np.delete(arraysT, 0, 0)
+    #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+    #print arr
+    #arr = np.delete(arr,0,1)
+    #print arr
+    #return
+    #print t
+    #print nCols
+    minVal = 200000000.0
+    maxVal = -minVal
+    i =0
+    gr = 2; gc = 1 # graph row, col
+    for ydata in arraysT:
+        #plot (t, col)
+        # legend(time, channelNames[i])
+        color = colors[i%len(colors)]
+        marker = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        axarr[gr, gc].legend(loc=4)
+        minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+        maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+        #print len(t), len(ydata)
+        i += 1
+    print i
+    print minVal, maxVal
+    axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+    axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("time (ms) vs. Vm | Calcium")
+    for tl in axarr[gr, gc].get_yticklabels():
+        tl.set_color(color)
+    ax1 = axarr[gr, gc]
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'distalTrunkCa.dat')
+    if (os.path.isfile(myFile)):
+      channelNames=["Ca"]
+      nCols = len(channelNames)
+
+      arrays = np.loadtxt(myFile,
+                          skiprows=2,
+                        # usecols=(0, 1)
+                         )
+      arraysT = np.transpose(arrays)
+      t = arraysT[0]
+      #############
+      # Define time range
+      idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+      if (timeEnd == -1.0):
+        idxEnd = len(t)-1
+        timeEnd = t[idxEnd]
+      else:
+        try:
+            idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+        except StopIteration as e:
+            idxEnd = len(t)-1
+      #END
+      #################
+      arraysT = np.delete(arraysT, 0, 0)
+      #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+      #print arr
+      #arr = np.delete(arr,0,1)
+      #print arr
+      #return
+      #print t
+      #print nCols
+      minVal = 200000000.0
+      maxVal = -minVal
+      i =0
+      #gr = 0; gc = 1 # graph row, col
+      ax2 = ax1.twinx()
+      for ydata in arraysT:
+          #plot (t, col)
+          # legend(time, channelNames[i])
+          color = colors[(i+1)%len(colors)]
+          marker = linestyles[((i/len(colors))%len(linestyles))]
+          #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+          #axarr[gr, gc].legend()
+          ax2.plot(t, ydata , color, label=channelNames[i])
+          ax2.legend(loc=0)
+          minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+          maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+          #print len(t), len(ydata)
+          i += 1
+      #s2 = np.sin(2*np.pi*t)
+      #ax2.plot(t, s2, 'r.')
+      #ax2.set_ylabel('sin', color='r')
+      ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+      ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+      ax2.set_xlim(left=timeStart, right=timeEnd)
+      for tl in ax2.get_yticklabels():
+          tl.set_color(color)
+      print minVal, maxVal
+    datacursor()
+    plt.show()
+
+    #f, axarr = plt.subplots(3, 2)
+    return
 
     minCa = np.amin(v0)
     maxCa = np.amax(v0)
@@ -1512,27 +2652,27 @@ def plot_case9_adv():
     # axarr[0, 0].plot(t, v1, 'red', label='bouton')
     # axarr[0, 0].plot(t, v2, 'green', label='spinehead')
 
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        axarr[0, 0].plot(t, v1, proximalTrunkColor, label='perisomatic-ApicalDen')
         axarr[0, 0].legend()
         minCa = min(np.amin(v1), minCa)
         maxCa = max(np.amax(v1), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalBasalDenCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
+        axarr[0, 0].plot(t, v1, proximalBasalDenColor, label='perisomatic-BasalDen')
         axarr[0, 0].legend()
         minCa = min(np.amin(v1), minCa)
         maxCa = max(np.amax(v1), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'distaldendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -1542,7 +2682,7 @@ def plot_case9_adv():
         minCa = min(np.amin(v1), minCa)
         maxCa = max(np.amax(v1), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'middledendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -1590,22 +2730,22 @@ def plot_case9_adv():
     # axarr[2, 0].set_ylim(bottom=min(np.amin(v3),np.amin(v4))-0.5);
     # axarr[2, 0].set_ylim(top=max(np.amax(v3),np.amax(v4))+0.5);
 
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[1, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        axarr[1, 0].plot(t, v1, proximalTrunkColor, label='perisomatic-ApicalDen')
         #axarr[1, 0].legend()
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
 
-    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalBasalDenV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[1, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
+        axarr[1, 0].plot(t, v1, proximalBasalDenColor, label='perisomatic-BasalDen')
         #axarr[1, 0].legend()
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
@@ -1619,7 +2759,7 @@ def plot_case9_adv():
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
 
-    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -1633,7 +2773,7 @@ def plot_case9_adv():
     axarr[1, 0].set_ylim(top=maxVm+0.5);
     axarr[1, 0].set_xlim(left=timeStart, right=timeEnd)
 
-    myFile = folder+'/'+getFile(folder,'distaldendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -1641,7 +2781,7 @@ def plot_case9_adv():
         axarr[2, 0].plot(t, v1, distaldenColor, label='distal-den')
     axarr[2, 0].legend()
 
-    myFile = folder+'/'+getFile(folder,'tufteddendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTuftedV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
@@ -1649,7 +2789,7 @@ def plot_case9_adv():
         axarr[2, 0].plot(t, v1, tufteddenColor, label='tufted-den')
     axarr[2, 0].legend()
 
-    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,

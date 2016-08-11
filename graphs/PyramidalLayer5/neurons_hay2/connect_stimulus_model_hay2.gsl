@@ -18,17 +18,20 @@ print ("Case 05: connect-stimulus ok");
 //}}}
 #endif
 
-#if STIMULUS_CASE == CASE_02
+#if STIMULUS_CASE == CASE_02 || \
+    STIMULUS_CASE == CASE_05 
+#if STIMULUS_CASE == CASE_02 
 print ("Case 02: connect-stimulus ok");
+#endif
 //{{{
 /// CASE 2: inject a distal apical site (620 um)
 // to emulate the effect of EPSP-like input
 // 0.5ms rise time, 5ms decay time Iinj = 0.5 nA
 // check EPSP there is 15mV 
 #define neuronIndex 0
-//TissueSite currentStimSite_0( 1.4, 332.99, -6.68, 15.0 );
+TissueSite currentStimSite_tufted(547.200, 698.35, -94.41, 1.0); //613um to soma, radius = 1.16um
 polyConnect(timeStep, shaftStimInj, <>, <>);
-polyConnect(shaftStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation", site=currentStimSite_0>);
+polyConnect(shaftStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation", site=currentStimSite_tufted>);
 //}}}
 #endif
 
@@ -47,7 +50,6 @@ polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION",
 #endif
 
 #if STIMULUS_CASE == CASE_04 || \
-    STIMULUS_CASE == CASE_05 || \
     STIMULUS_CASE == CASE_06 
 //{{{
 #if STIMULUS_CASE == CASE_04 

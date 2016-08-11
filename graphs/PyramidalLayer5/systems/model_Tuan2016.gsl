@@ -17,7 +17,10 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_00
+#define STIMULUS_CASE   CASE_01
+//#define morph ""
+#define morph "hay2_"
+//#define morph "hay2spines_"
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -52,21 +55,21 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder "out2_Jul15_rest"
+#define OutputFolderName dataFolder morph "Jul15_rest"
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder "out2_Jul15_triggersoma"
+#define OutputFolderName dataFolder morph "Jul15_triggersoma"
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder "out2_Jul15_triggershaft"
+#define OutputFolderName dataFolder morph "Jul15_triggershaft"
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder "out2_Jul15_triggerspine"
-//#define OutputFolderName dataFolder "out2_Jul15_case03"
+#define OutputFolderName dataFolder morph "Jul15_triggerspine"
+//#define OutputFolderName dataFolder morph "Jul15_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder "out2_Jul15_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Jul15_triggerdistalspines"
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder "out2_Jul15_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Jul15_triggersoma_then_distalspines"
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder "out2_Jul15_case06"
+#define OutputFolderName dataFolder morph "Jul15_case06"
 #endif
 //#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
 //#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
@@ -77,13 +80,18 @@ print("Case 00: resting");
 //}}}
 
 //{{{ 2. Methods for Time-Step and Time-end
-#define BASED_ON_ITERATIONS 1
-#define BASED_ON_TIMES 2
+//{{{list to choose
+//for SIMULATION_STOP
+#define BASED_ON_ITERATIONS_COUNT 1
+#define BASED_ON_TIMES_COUNT 2
+//for SIMULATION_RECORD //only for SIMULATION_STOP==...TIMES_COUNT
+#define _SR_FROM_BEGINNING 1
+#define _SR_AFTER_A_DELAY 2
+//}}}
 
-#define SIMULATION_STOP BASED_ON_TIMES
-//#define SIMULATION_STOP BASED_ON_ITERATIONS
-#define SIMULATION_RECORD BASED_ON_TIMES
-//#define SIMULATION_RECORD BASED_ON_ITERATIONS
+#define SIMULATION_STOP BASED_ON_TIMES_COUNT
+#define SIMULATION_RECORD _SR_FROM_BEGINNING
+
 //}}}
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
@@ -92,24 +100,23 @@ print("Case 00: resting");
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
-#if  SIMULATION_STOP == BASED_ON_TIMES
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          147      // [ms]
-	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+	#define TimeEnd          470      // [ms]
 //}}}
-#elif SIMULATION_STOP == BASED_ON_ITERATIONS
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
 	#define NumIterationsUntilEnd   10000   // unitless
 	//#define NumIterationsUntilEnd   1000000   // unitless
+	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #else
   assert(0);
 #endif
-#if  SIMULATION_RECORD == BASED_ON_TIMES
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 	#define RecordInterval   0.10   //  [ms]
-	//#define RecordInterval   0.05   //  [ms]
   #define TimeStartRecord  100.0 // [ms]
-#elif  SIMULATION_RECORD == BASED_ON_ITERATIONS
+#elif  SIMULATION_STOP == BASED_ON_ITERATIONS
 	#define RecordInterval   10   // every ... timesteps
 #else
   assert(0);
@@ -128,14 +135,14 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_beta 0.05 // [Wagner and Keizer buffering constant]
-//#define Cacyto_beta   0.002     // dimensionless 
+#define Cacyto_beta 0.05 // unitless [Wagner and Keizer buffering constant]
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //}}}
 
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
+//Calcium
 #define Cacyto_value  0.1  // [uM]
 #define CaER_value    1.0e3    // [uM]
 #define Ca_o_value    1.8e3  // [uM]
@@ -165,7 +172,7 @@ print("Case 00: resting");
 #endif
 //}}}
 
-//{{{ Conditions: conductance + temperature + Vrest + Eleak
+//{{{ Conditions: axial conductance + temperature + Vrest + Eleak
 #define Ra_value 0.001     // [GOhm*um] 
 //#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
@@ -183,8 +190,9 @@ print("Case 00: resting");
 //#define Vrest_value  -79.0 // [mV]
 #define Vrest_value  -74.0 // [mV]
 #define E_leak_value -90.0 
-//#define Erev_HCN  -45.0 // [mV]
-#define Erev_HCN  -30.0 // [mV]
+#define Erev_HCN  -45.0 // [mV]
+// TUAN 2016 model update from Hay2011
+//#define Erev_HCN  -30.0 // [mV]
 //}}}
 
 //{{{ Time constant
@@ -336,7 +344,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 //#define strArg3 "params_allspines/ChanParams.par"
 //#define strArg4 "params_allspines/SynParams.par"
 //#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 " //" -g 18"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 "//" -g 5"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
 #define strArg2  "params/CptParams.par"
@@ -504,8 +512,8 @@ NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->sol
 NodeType ChannelHCN (< E_HCN = {Erev_HCN} >) {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //Ca2+ currents
 /*{{{*/
-NodeType ChannelCaHVA { initialize->initialize3, update->solveChannels };
-NodeType ChannelCaLVA { initialize->initialize3, update->solveChannels };
+NodeType ChannelCaHVA {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelCaLVA {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(
@@ -672,9 +680,9 @@ TimeStep timeStep< deltaT=TimeStep_value >; // msec
 //Service Provider to Simulation Info
 // NOTE: Use global is critical to ensure each MPI rank has a copy 
 VariableType SimulationInfo(global) {initialize->initialize4, calculateInfo->finish};
-#if  SIMULATION_RECORD == BASED_ON_TIMES
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 SimulationInfo simInfo<recordIntervalInTime=RecordInterval>;
-#elif SIMULATION_RECORD == BASED_ON_ITERATIONS
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 SimulationInfo simInfo<recordIntervalInIterations=RecordInterval>;
 #endif
 //Service <serviceAccessorName> (service)
@@ -693,12 +701,16 @@ Trigger UnsignedServiceTrigger(string description, Service svc, string operator,
 Trigger FloatTrigger(string description, Service svc, string operator, float criterion, int delay, string phaseName);
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
 
-#if  SIMULATION_RECORD == BASED_ON_TIMES
-UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-          ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
-FloatTrigger recOnPassTime("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
-          CurrentTime, ">=", TimeStartRecord, 0, solveChannels ); //Record only after it passes
-#elif SIMULATION_RECORD == BASED_ON_ITERATIONS
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+  #if SIMULATION_RECORD == _SR_FROM_BEGINNING
+  UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
+            ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
+  #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
+  FloatTrigger recOn("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
+            CurrentTime, ">=", TimeStartRecord, 0, solveChannels ); //Record only after it passes
+  #endif
+
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval), 
           ::Iteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
 #endif
@@ -723,10 +735,9 @@ VariableType CalciumDisplay{ initialize->initialize4 };
 
 VariableType CurrentDisplay{ initialize->initialize4 };
 VariableType CaCurrentDisplay{ initialize->initialize4 };
-
+VariableType AnyCurrentDisplay{ initialize->initialize4 }; //Na/Ca/K/...
 VariableType ConductanceDisplay{ initialize->initialize4 };
-
-VariableType ReversalPotentialDisplay{ initialize->initialize4 };
+//VariableType ReversalPotentialDisplay{ initialize->initialize4 };
 
 #include "recording_model.gsl"
 
@@ -844,9 +855,6 @@ Grid PyramidalL5_Neuron{
    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
 //   Layer(Natv16Channels, ChannelNatv16, tissueFunctor("Layout", < nodekind="Channels[Natv16]" >), < nodekind="Channels[Natv16]" >, tissueGM);
    Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
-     //}}}
-   Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
-     //{{{ K+ channels
      //}}}
    Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
@@ -1242,11 +1250,11 @@ Grid PyramidalL5_Neuron{
 
 PyramidalL5_Neuron pyramidalL5b;
 
-#if  SIMULATION_STOP == BASED_ON_TIMES
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
   //criteria is evaluated at any time correctJunction is called 
 FloatTrigger endTrig("Time Trigger to end or stop", 
 		CurrentTime , ">=", TimeEnd, 0, correctJunction); 
-#elif SIMULATION_STOP == BASED_ON_ITERATIONS
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
 		::Iteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
 #endif

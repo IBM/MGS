@@ -5,8 +5,7 @@ from genSpines import SomeClass
 ##############
 targetDir = "neurons"
 #neuron = SomeClass(targetDir +"/neuron.swc")
-neuron = SomeClass(targetDir +"/neuron_0.developed.swc")
-#neuron = SomeClass(targetDir +"/test.swc")
+neuron = SomeClass(targetDir +"/hay2_0.developed.swc")
 neuron.genPL5b()
 
 ##############

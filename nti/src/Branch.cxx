@@ -74,7 +74,7 @@ Branch& Branch::operator=(const Branch& b)
   return *this;
 }
 
-//   Revised this: should return the branch-lenght
+// TODO   Revised this: should return the branch-lenght
 //   instead of the distance between the first and last segment
 double Branch::getLength() const
 {
@@ -119,7 +119,7 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
     numberOfResampledSegments = 2;
     _resampledTerminalIndex = segments.size() - 1;
   }
-  else if (_branchIndex == 1 and _numberOfSegments == 1 and
+  else if (_branchOrder == 1 and _numberOfSegments == 1 and
          _rootSegment->getBranch()->getBranchType() == Branch::_SOMA
 		  )
   {// for the first branch stemming out of soma, special treament if it has only 1 compartment
@@ -161,6 +161,11 @@ void Branch::resample(std::vector<Segment>& segments, double pointSpacing)
     seg1 = &segments[s];
     seg2 = &_segments[0];
     ++s;
+    //TO DO TEST
+    // try to ensure the first point is not scaled
+    // .....
+    
+    //END TEST
 
     if (nextSegment(seg1, seg2, i, L))
     {// seg2 is the Segment that is far enough from seg1
