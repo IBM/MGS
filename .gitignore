@@ -54,4 +54,5 @@ graphs/**/out*/**
 graphs/**/*backup*/**
 graphs/**/*ongoing*/**
 graphs/**/*test*/**
+graphs/**/data/**
 .built

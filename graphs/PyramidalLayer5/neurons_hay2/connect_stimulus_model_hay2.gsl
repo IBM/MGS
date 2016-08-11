@@ -12,7 +12,7 @@ print ("Case 01: connect-stimulus ok");
 #elif STIMULUS_CASE == CASE_05 
 print ("Case 05: connect-stimulus ok");
 #elif STIMULUS_CASE == CASE_06 
-print ("Case 05: connect-stimulus ok");
+print ("Case 06: connect-stimulus ok");
 #endif
 /// END CASE 1
 //}}}

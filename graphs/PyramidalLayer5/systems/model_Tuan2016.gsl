@@ -19,8 +19,9 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define STIMULUS_CASE   CASE_01
 //#define morph ""
-#define morph "hay2_"
+//#define morph "hay2_"
 //#define morph "hay2spines_"
+#define morph "hay1_"
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -55,27 +56,22 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Jul15_rest"
+#define OutputFolderName dataFolder morph "Jul15Tuan_rest"
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Jul15_triggersoma"
+#define OutputFolderName dataFolder morph "Jul15Tuan_triggersoma"
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Jul15_triggershaft"
+#define OutputFolderName dataFolder morph "Jul15Tuan_triggershaft"
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Jul15_triggerspine"
-//#define OutputFolderName dataFolder morph "Jul15_case03"
+#define OutputFolderName dataFolder morph "Jul15Tuan_triggerspine"
+//#define OutputFolderName dataFolder morph "Jul15Tuan_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Jul15_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Jul15Tuan_triggerdistalspines"
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Jul15_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Jul15Tuan_triggersoma_then_distalspines"
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Jul15_case06"
+#define OutputFolderName dataFolder morph "Jul15Tuan_case06"
 #endif
-//#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
-//#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
-//#define OutputFolderName dataFolder "out2_May27_trigger_distal"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma_distal"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -135,7 +131,7 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_beta 0.05 // unitless [Wagner and Keizer buffering constant]
+#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //}}}
@@ -156,6 +152,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
+//{{{ neurotransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
@@ -170,6 +167,7 @@ print("Case 00: resting");
 #else
 #define NTGABA_baseline 5.0  // [uM]
 #endif
+//}}}
 //}}}
 
 //{{{ Conditions: axial conductance + temperature + Vrest + Eleak
@@ -604,10 +602,8 @@ NodeType AMPAReceptor (<
           >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
 
 // Graupner&Brunel cortical slices parameters
-
 //%         lr.tau_ca lr.Cpre lr.Cpost lr.theta_d lr.theta_p lr.gamma_d lr.gamma_p lr.tau lr.w_th lr.delay
-
-    //params = [22.69e-3 0.56*1.75 1.23 1 1.3 331.9  725.085  346.3615/10  0.5   4.6e-3]; %Speedup
+//params = [22.69e-3 0.56*1.75 1.23 1 1.3 331.9  725.085  346.3615/10  0.5   4.6e-3]; %Speedup
 
 NodeType NMDAReceptor (<
           E = 0.0,       // mV

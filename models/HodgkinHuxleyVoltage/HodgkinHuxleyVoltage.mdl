@@ -342,6 +342,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     //{{{data members: internal, but for solver
   dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
   DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
+  BranchDataStruct* [] branchDataInputs;  // 
     //}}}
 	//{{{data members: internal
   dyn_var_t area;//surface area [um^2]
@@ -370,9 +371,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t* [] injectedCurrents;
   //}}}
 
-  dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
-  DimensionStruct* [] dimensionInputs; // cpts from different branches (1prox + 1..n dist)
-  BranchDataStruct* [] branchDataInputs;  // 
 
   Shared {
 	  //{{{
