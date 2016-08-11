@@ -54,7 +54,7 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define morph ""
 #define morph "hay2_"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "out2_Jul25_rest"
+#define OutputFolderName dataFolder morph "Jul25_rest"
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
 #define OutputFolderName dataFolder morph "Jul25_triggersoma"
@@ -91,7 +91,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES
 //{{{
-	#define TimeEnd          1000      // [ms]
+	#define TimeEnd          500      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS
