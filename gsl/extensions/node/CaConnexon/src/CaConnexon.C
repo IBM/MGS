@@ -36,7 +36,12 @@ void CaConnexon::computeState(RNG& rng)
 
 void CaConnexon::setCaPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConnexonInAttrPSet* CG_inAttrPset, CG_CaConnexonOutAttrPSet* CG_outAttrPset) 
 {
-  index=CG_inAttrPset->idx;
+  if (CG_inAttrPset->idx>=0) {
+    index=CG_inAttrPset->idx;
+  }
+  else if (CG_inAttrPset->idx==-1) {
+    index=int(float(branchData->size)*CG_inAttrPset->branchProp);
+  }
   assert(getSharedMembers().CaConcentrationConnect);
   assert(index>=0 && index<getSharedMembers().CaConcentrationConnect->size());    
   Cai = &((*(getSharedMembers().CaConcentrationConnect))[index]);

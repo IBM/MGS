@@ -18,8 +18,13 @@
 #include "CG_TissueProbeFunctorBase.h"
 #include "LensContext.h"
 #include "NodeSet.h"
+#include "NodeDescriptor.h"
 #include "TissueFunctor.h"
+#include "GridLayerDescriptor.h"
+#include "Grid.h"
+#include "Simulation.h"
 #include <memory>
+#include <algorithm>
 
 void TissueProbeFunctor::userInitialize(LensContext* CG_c) 
 {
@@ -28,14 +33,43 @@ void TissueProbeFunctor::userInitialize(LensContext* CG_c)
 std::auto_ptr<NodeSet> TissueProbeFunctor::userExecute(LensContext* CG_c) 
 {
   std::auto_ptr<NodeSet> rval;
-  _tissueFunctor->doProbe(CG_c, rval);
+  if (CG_c->connectionContext->restart) {
+    _grid = _tissueFunctor->doProbe(CG_c, _nodeDescriptors);
+    assert(_grid);
+    sort(_nodeDescriptors.begin(), _nodeDescriptors.end());
+    CG_c->connectionContext->restart = false;
+  }
+  if (_nodeDescriptors.size()>0) { 
+    std::vector<NodeDescriptor*> subtract, orig=_nodeDescriptors;
+    NodeSet* ns = new NodeSet( _grid, _nodeDescriptors);
+    ns->getNodes(subtract);
+    std::vector<NodeDescriptor*>::iterator ndsit =
+      std::set_difference(orig.begin(), orig.end(), 
+			  subtract.begin(), subtract.end(), 
+			  _nodeDescriptors.begin());
+    _nodeDescriptors.resize(ndsit-_nodeDescriptors.begin());
+    rval.reset(ns);
+  }
+  else if (_nodeDescriptors.size()==0) {
+    NodeSet* ns=new NodeSet(_grid);
+    ns->empty();
+    rval.reset(ns);
+    CG_c->connectionContext->done=true;
+  }
   return rval;
 }
 
 TissueProbeFunctor::TissueProbeFunctor() 
-   : CG_TissueProbeFunctorBase()
+  : CG_TissueProbeFunctorBase(), _tissueFunctor(0), _grid(0)
 {
 }
+
+TissueProbeFunctor::TissueProbeFunctor(TissueProbeFunctor* tpf)
+  : CG_TissueProbeFunctorBase(), _tissueFunctor(tpf->_tissueFunctor), 
+    _grid(tpf->_grid), _nodeDescriptors(tpf->_nodeDescriptors)
+{
+}
+
 
 TissueProbeFunctor::~TissueProbeFunctor() 
 {

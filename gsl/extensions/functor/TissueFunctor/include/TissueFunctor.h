@@ -82,7 +82,10 @@ class TissueFunctor : public CG_TissueFunctorBase
       ShallowArray< int > doLayout(LensContext* lc);
       void doNodeInit(LensContext* lc);
       void doConnector(LensContext* lc);
-      void doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval);
+      Grid* doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
+      std::pair<std::string, std::string> getCategoryTypePair(NDPairList::iterator& ndpiter);
+      int getTypeIdx(std::string category, std::string type, bool& esyn);
+
       ComputeBranch* findBranch(int nodeIndex, int densityIndex, std::string const & cptVariableType);
       std::vector<int>& findBranchIndices(ComputeBranch*, std::string const & cptVariableType);
       Capsule* findJunction(int nodeIndex, int densityIndex, std::string const & cptVariableType);
@@ -134,6 +137,8 @@ class TissueFunctor : public CG_TissueFunctorBase
       static TissueContext* _tissueContext;
       static int _instanceCounter;
 
+      std::map<std::string, ShallowArray<int> > _probedLayoutsMap;
+      std::map<std::string, std::map<std::pair<std::string, std::string>, std::pair<Grid*, std::vector<NodeDescriptor*> > > > _probedNodesMap;
       std::map<std::string, std::map<int, std::map<int, ComputeBranch*> > > _indexBranchMap;
       std::map<std::string, std::map<ComputeBranch*, std::vector<int> > > _branchIndexMap;
       std::map<std::string, std::map<int, std::map<int, Capsule*> > > _indexJunctionMap;

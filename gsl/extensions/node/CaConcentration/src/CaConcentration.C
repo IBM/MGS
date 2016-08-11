@@ -377,8 +377,15 @@ void CaConcentration::finish(RNG& rng)
 
 void CaConcentration::setReceptorCaCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
 {
+  int idx=0;
+  if (CG_inAttrPset->idx>=0) {
+    idx=CG_inAttrPset->idx;
+  }
+  else if (CG_inAttrPset->idx==-1) {
+    idx=int(float(branchData->size)*CG_inAttrPset->branchProp);
+  }
   assert(receptorCaCurrents.size()>0);
-  receptorCaCurrents[receptorCaCurrents.size()-1].index=CG_inAttrPset->idx;
+  receptorCaCurrents[receptorCaCurrents.size()-1].index=idx;
 }
 
 void CaConcentration::setInjectedCaCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
@@ -400,7 +407,10 @@ void CaConcentration::setInjectedCaCurrent(const String& CG_direction, const Str
       }
     }
   }
-  else if (CG_inAttrPset->idx<0) {
+  else if (CG_inAttrPset->idx==-1) {
+    injectedCaCurrents[injectedCaCurrents.size()-1].index=int(float(branchData->size)*CG_inAttrPset->branchProp);
+  }
+  else if (CG_inAttrPset->idx==-2) {
     injectedCaCurrents[injectedCaCurrents.size()-1].index=0;
     for (int i=1; i<branchData->size; ++i) {
       CaCurrentProducer* CG_CaCurrentProducerPtr = dynamic_cast<CaCurrentProducer*>(CG_variable);

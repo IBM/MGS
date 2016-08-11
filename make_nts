@@ -1,5 +1,5 @@
 #!/bin/bash
-$(shell source ./setenv_nts)
+set -e
 
 if [ "$1" == "-help" ] || [ $# == 0 ]; then 
     echo -e "\n\nMake NTS... \n\nOption include : \n\n  1) make_nts LINUX : builds NTS in a LINUX environment using MPI \n  2) make_nts BGL : makes NTS on Blue Gene/L \n  3) make_nts BGP : makes NTS on Blue Gene/P \n  4) make_nts BGQ : make NTS on Blue Gene/Q\n\n"; exit;

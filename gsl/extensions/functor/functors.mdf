@@ -27,7 +27,6 @@
 #include "SrcDimensionConstrainedSampler.mdl"
 #include "SrcRefDistanceModifier.mdl"
 #include "SrcRefGaussianWeightModifier.mdl"
-#include "SrcRefDoGWeightModifier.mdl"
 #include "SrcRefPeakedWeightModifier.mdl"
 #include "SrcRefSumRsqrdInvWeightModifier.mdl"
 #include "SrcScaledContractedGaussianWeightModifier.mdl"
@@ -39,3 +38,4 @@
 #include "TissueProbeFunctor.mdl"
 #include "ToroidalRadialSampler.mdl"
 #include "UniformDiscreteDist.mdl"
+#include "Zipper.mdl"

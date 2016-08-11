@@ -1,4 +1,5 @@
 #include "../../../nti/MaxComputeOrder.h"
+#include "../../std/std.gsl"
 #include "Topology.h"
 
 #define _CCAT(x,y) x ## y 
@@ -48,17 +49,11 @@
 #define V_GLEAK 0.00015
 #define V_E_LEAK -10.0
 
-Functor Print;
-Print print();
+#define PRMASK0 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, MTYPE=0, NEURON_INDEX=0
+#define PRMASK1 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, MTYPE=0, NEURON_INDEX=1
 
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();		
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();
+Connector Zipper();
+Zipper zipper();
 
 Layout TissueLayoutFunctor();
 		TissueLayoutFunctor tissueLayoutFunctor();		
@@ -591,12 +586,12 @@ Grid Tissue
    InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
 
    polyConnect(timeStep, .[].Layer(branches, junctions, branches_Ca, junctions_Ca, NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels), <>, <identifier="dt">);
-   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, DendroDendriticGapJunctions), <>, <identifier="EC">);
+   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, DendroDendriticGapJunctions
+   ), <>, <identifier="EC">);
    polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
 
    tissueFunctor("Connect", <> );	
-
 
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
@@ -667,13 +662,47 @@ Grid Tissue
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=4>), CalciumDisplay32, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=4>), CalciumDisplay33, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=4>), CalciumDisplay34, <>, <>);
-
 };
 
 Tissue tissue;
 
+Grid Adaptor
+{
+   Dimension( _X_ , _Y_ , _Z_ );
+   Layer(DendroDendriticGapJunctionConnexons0, Connexon, tissueFunctor("ProbedLayout", <PROBED="pr0", N=6, PRMASK0>), <>, tissueGM);
+   Layer(DendroDendriticGapJunctionConnexons1, Connexon, tissueFunctor("ProbedLayout", <PROBED="pr1", N=6, PRMASK1>), <>, tissueGM);
+
+   BindName cnnxn ("I", 0, "g", 0.5);
+   NdplNodeInit Mcnnxn(cnnxn);
+
+   InitNodes ( .[].Layer(DendroDendriticGapJunctionConnexons0), Mcnnxn );
+   InitNodes ( .[].Layer(DendroDendriticGapJunctionConnexons1), Mcnnxn );
+
+   BindName cpt2cnnxn("idx", -1,
+   	 	      "identifier", "compartment[Voltage]");
+   NdplInAttrInit Mcpt2cnnxn(cpt2cnnxn);
+
+   BindName cnnxn2cpt("idx", -1,
+   	 	      "identifier", "electricalSynapse[Voltage]");
+   NdplInAttrInit Mcnnxn2cpt(cnnxn2cpt);
+
+   BindName cnnxn2cnnxn("identifier", "connexon[Voltage]");
+   NdplInAttrInit Mcnnxn2cnnxn(cnnxn2cnnxn);
+
+   zipper(tissueFunctor("Probe", <PROBED="pr0", PRMASK0>), .[].Layer(DendroDendriticGapJunctionConnexons0), outAttrDef, Mcpt2cnnxn, "ids0");
+   zipper(tissueFunctor("Probe", <PROBED="pr1", PRMASK1>), .[].Layer(DendroDendriticGapJunctionConnexons1), outAttrDef, Mcpt2cnnxn, "ids1");
+
+   zipper(.[].Layer(DendroDendriticGapJunctionConnexons0), tissueFunctor("Probe", <PROBED="pr0", PRMASK0>), outAttrDef, Mcnnxn2cpt, "ids0");
+   zipper(.[].Layer(DendroDendriticGapJunctionConnexons1), tissueFunctor("Probe", <PROBED="pr1", PRMASK1>), outAttrDef, Mcnnxn2cpt, "ids1");
+
+   connectNodeSets(.[].Layer(DendroDendriticGapJunctionConnexons0), .[].Layer(DendroDendriticGapJunctionConnexons1), isoSampler, outAttrDef, Mcnnxn2cnnxn);
+   connectNodeSets(.[].Layer(DendroDendriticGapJunctionConnexons1), .[].Layer(DendroDendriticGapJunctionConnexons0), isoSampler, outAttrDef, Mcnnxn2cnnxn);
+};
+
+Adaptor adaptor;
+
 // DCA directives here
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 300000, 0, correctJunction);
+			 ::Iteration, "==", 30000, 0, correctJunction);
 Stop on endTrig;

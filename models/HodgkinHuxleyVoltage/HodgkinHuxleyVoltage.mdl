@@ -104,6 +104,7 @@ Node HodgkinHuxleyVoltage Implements VoltageArrayProducer, SolutionArrayProducer
     string identifier;
     TissueSite site;
     int idx;
+    float branchProp;
   }
 
   UserFunction setReceptorCurrent, setInjectedCurrent, setProximalJunction;

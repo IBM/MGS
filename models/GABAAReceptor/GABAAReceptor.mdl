@@ -37,6 +37,7 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer, Br
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   UserFunction setPostIndex;

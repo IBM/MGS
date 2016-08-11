@@ -23,6 +23,7 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   UserFunction setPointers;

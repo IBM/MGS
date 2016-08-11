@@ -99,6 +99,7 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
     string identifier;
     TissueSite site;
     int idx;
+    float branchProp;
   }
 
   UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;

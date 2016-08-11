@@ -39,6 +39,7 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer, Re
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   UserFunction setPostIndex;

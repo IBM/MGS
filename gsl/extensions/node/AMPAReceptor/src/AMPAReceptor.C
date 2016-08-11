@@ -29,7 +29,7 @@ void AMPAReceptor::initializeAMPA(RNG& rng) {
   float ALPHANEUROTRANSMITTER = ALPHA*NEUROTRANSMITTER;
   r = ALPHANEUROTRANSMITTER/(BETA + ALPHANEUROTRANSMITTER);
 
-  //std::cout << "Weight: " << (*w) << std::endl;
+  //std::cout << "Weight: " << (*wv << std::endl;
   if(w==NULL){
     g = gbar*r;}
   else{
@@ -51,7 +51,12 @@ void AMPAReceptor::updateAMPA(RNG& rng) {
 
 void AMPAReceptor::setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_AMPAReceptorInAttrPSet* CG_inAttrPset, CG_AMPAReceptorOutAttrPSet* CG_outAttrPset) 
 {
-  indexPost = CG_inAttrPset->idx;
+  if (CG_inAttrPset->idx>=0) {
+    indexPost = CG_inAttrPset->idx;
+  }
+  else if (CG_inAttrPset->idx==-1) {
+    indexPost=int(float(branchDataPrePost[branchDataPrePost.size()-1]->size)*CG_inAttrPset->branchProp);
+  }
   indexPrePost.push_back(&indexPost);
 }
 

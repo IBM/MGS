@@ -363,8 +363,15 @@ void HodgkinHuxleyVoltage::finish(RNG& rng)
 
 void HodgkinHuxleyVoltage::setReceptorCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
 {
+  int idx=0;
+  if (CG_inAttrPset->idx>=0) {
+    idx=CG_inAttrPset->idx;
+  }
+  else if (CG_inAttrPset->idx==-1) {
+    idx=int(float(branchData->size)*CG_inAttrPset->branchProp);
+  }
   assert(receptorCurrents.size()>0);
-  receptorCurrents[receptorCurrents.size()-1].index=CG_inAttrPset->idx;
+  receptorCurrents[receptorCurrents.size()-1].index=idx;
 }
 
 void HodgkinHuxleyVoltage::setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
@@ -386,7 +393,10 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(const String& CG_direction, const 
       }
     }
   }
-  else if (CG_inAttrPset->idx<0) {
+  else if (CG_inAttrPset->idx==-1) {
+    injectedCurrents[injectedCurrents.size()-1].index=int(float(branchData->size)*CG_inAttrPset->branchProp);
+  }
+  else if (CG_inAttrPset->idx==-2) {
     injectedCurrents[injectedCurrents.size()-1].index=0;
     for (int i=1; i<branchData->size; ++i) {
       CurrentProducer* CG_CurrentProducerPtr = dynamic_cast<CurrentProducer*>(CG_variable);

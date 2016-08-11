@@ -16,6 +16,7 @@
 #include "Capsule.h"
 #include "Segment.h"
 #include "VecPrim.h"
+#include "math.h"
 
 SegmentDescriptor Capsule::_segmentDescriptor;
 
@@ -82,6 +83,12 @@ void Capsule::getEndSphere(Sphere& sphere)
   sphere._coords[2]=endCoords[2];
 }
 
+int Capsule::getEndSphereSurfaceArea()
+{
+  double r=getRadius();
+  return (4.0*M_PI*r*r);
+}
+
 void Capsule::readFromFile(FILE* dataFile)
 {
   size_t s=fread(_capsuleData._data, sizeof(double), N_CAP_DATA, dataFile);
@@ -107,4 +114,10 @@ bool Capsule::operator==(const Capsule& c1) const
   unsigned int i1=_segmentDescriptor.getSegmentIndex(key1);
 
   return (n0==n1 && b0==b1 && i0==i1);
+}
+
+int Capsule::getSurfaceArea()
+{
+  double dist=sqrt(SqDist(getBeginCoordinates(), getEndCoordinates()));
+  return (dist*2.0*M_PI*getRadius());
 }

@@ -29,6 +29,7 @@ Node Connexon Implements VoltageProducer, CurrentProducer, BranchDataProducer, I
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   UserFunction setPointers;

@@ -916,6 +916,7 @@ FUNCTOR_MODULES := BinomialDist \\
 	TissueNodeInitFunctor \\
 	TissueProbeFunctor \\
         UniformDiscreteDist \\
+        Zipper \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build

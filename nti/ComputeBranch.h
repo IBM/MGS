@@ -36,6 +36,12 @@ class ComputeBranch
     assert(_nCapsules>0);
     return _capsules[_nCapsules-1];
   }
+  int getSurfaceArea() {
+    int rval=0;
+    for (int n=0; n<_nCapsules; ++n)
+      rval+=_capsules[n].getSurfaceArea();
+    return rval;
+  }
 };
 #endif
 

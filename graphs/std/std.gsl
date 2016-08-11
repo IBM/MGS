@@ -12,6 +12,8 @@ EdgeDefault edgeDef();   // instance
 Functor InAttrDefault; //  Functor that gives default in attribute Pset for a node
 InAttrDefault inAttrDef();
 
+InAttrInitializer NdplInAttrInit(NDPairListFunctor);
+
 Functor OutAttrDefault; //  Functor that gives default out attribute Pset for a node
 OutAttrDefault outAttrDef();
 
@@ -66,6 +68,9 @@ PolyConnectorFunctor polyConnect();
 
 Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
+
+SamplingFctr2 IsoSampler();
+IsoSampler isoSampler();
 
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();
