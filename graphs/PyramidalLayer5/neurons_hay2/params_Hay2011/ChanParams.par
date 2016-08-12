@@ -225,7 +225,7 @@ Cah 3
 BRANCHTYPE MTYPE
 #{{{neuron
 ##Hay: 10x in hot zone (HVA)
-1 0 <gbar={0.00992}>
+1 0 <gbar={0.01292}>
 4 0 <gbar={0.00029}>
 6 0 <gbar={0.00291}>
 #2 0 <gbar={0.0292}>
