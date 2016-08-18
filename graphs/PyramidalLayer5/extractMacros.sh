@@ -25,6 +25,7 @@ RunSim()
    echo "Output Folder: " $OutputFolderName
    cp params $OutputFolderName/ -L -r
    cp *.gsl $OutputFolderName/ -L -r
+   cp SIM_LOG $OutputFolderName/ -L -r
    mpiexec -n 2  ../../gsl/bin/gslparser $temp_file -t 4
    echo "Output Folder: " $OutputFolderName
 }
