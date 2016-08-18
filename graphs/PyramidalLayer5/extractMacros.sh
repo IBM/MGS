@@ -52,7 +52,12 @@ fi
 #}}}
 #########################
 ##
-temp_file=$(mktemp)
+TMPDIR=./.tmp
+if [ ! -d $TMPDIR ]; then
+  mkdir $TMPDIR
+fi
+temp_file=`mktemp --tmpdir=$TMPDIR`
+exit
 cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
 ###cpp -dM -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
 ##awk -F '/^#define[[:space:]]+morph/{ printf "%s | %s \n", $2, $3 }' < ${temp_file}
