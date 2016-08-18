@@ -45,7 +45,7 @@ if [ "$#" == "0" ]; then
   exit
 fi
 if [ "$1" == "-unique" ]; then
-  uniqueName=`date +'%Y-%m-%d-%s'`
+  uniqueName=-`date +'%Y-%m-%d-%s'`
 else
   uniqueName=$1
 fi
@@ -53,7 +53,8 @@ fi
 #########################
 ##
 temp_file=$(mktemp)
-cpp -dU -P model.gsl -DEXTENSION=$1 > ${temp_file} 2> /dev/null
+cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
+###cpp -dM -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
 ##awk -F '/^#define[[:space:]]+morph/{ printf "%s | %s \n", $2, $3 }' < ${temp_file}
 #morph=`awk  '/^#define morph/{printf "%s\n", $3}' < ${temp_file}`
 morph=`awk  '/^#define morph/{print $3}' < ${temp_file}`
