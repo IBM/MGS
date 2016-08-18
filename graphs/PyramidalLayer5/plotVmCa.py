@@ -578,6 +578,7 @@ def parse():
   parser_protocol.add_argument("number", default=-1, help="index of simulation protocol (0 = rest; 1 = inject soma; 2= inject shaft with dual-exp EPSP-like current; 3 = inject a particular presynaptic neuron; 4 = like 3, but at a distal region; 5 = trigger soma then at distal end (within a small window of time); 6 = trigger soma, then another spine (within a window of time))")
   parser_protocol.add_argument("date", default="May29", help="date of data, e.g. May30")
   parser_protocol.add_argument("morphology", default="", help="(optional) name of morph, e.g. hay1")
+  parser_protocol.add_argument("-extension", default="", help="an extension to folder")
   #parser_protocol.set_defaults(func=plot_case9a)
   parser_protocol.set_defaults(which='protocol')
 
@@ -1411,17 +1412,20 @@ def plot_case9_adv():
       folder='./out2_May27_fullspine'
       folder='./out2_May27'
       morph = args.morphology
+      extension = args.extension
+      if (extension != ""):
+          extension = "-"+extension
       if (morph != ""):
           morph += "_"
       mapFolders = {}
-      mapFolders[0] = mainFolder + morph + 'May29_rest'
-      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'
-      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'
-      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'
-      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'
-      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines'
-      mapFolders[6] = mainFolder + morph + 'May29_case06'
-      mapFolders[7] = mainFolder + morph + 'May29_triggeraxon'
+      mapFolders[0] = mainFolder + morph + 'May29_rest'                          +  extension
+      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'                   +  extension
+      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'                  +  extension
+      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'                  +  extension
+      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'           +  extension
+      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines' +  extension
+      mapFolders[6] = mainFolder + morph + 'May29_case06'                        +  extension
+      mapFolders[7] = mainFolder + morph + 'May29_triggeraxon'                   +  extension
       tmpMap = {}
       date = args.date
       protocol = args.number
@@ -1482,6 +1486,8 @@ def plot_case9_adv():
     if (timeEnd == -1.0):
       idxEnd = len(t)-1
       timeEnd = t[idxEnd]
+    elif (timeEnd > t[len(t)-1]):
+      idxEnd = len(t)-1
     else:
       idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
     minCa = 100000.00
@@ -1580,6 +1586,8 @@ def plot_case9_adv():
     if (timeEnd == -1.0):
       idxEnd = len(t)-1
       timeEnd = t[idxEnd]
+    elif (timeEnd > t[len(t)-1]):
+      idxEnd = len(t)-1
     else:
       idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
     minCa = 100000.00

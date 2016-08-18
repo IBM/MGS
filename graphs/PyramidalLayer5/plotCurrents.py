@@ -581,6 +581,7 @@ def parse():
   parser_protocol.add_argument("date", default="May29", help="date of data, e.g. May30")
   #parser_protocol.set_defaults(func=plot_case9a)
   parser_protocol.add_argument("morphology", default="", help="(optional) name of morph, e.g. hay1")
+  parser_protocol.add_argument("-extension", default="", help="an extension to folder")
   parser_protocol.set_defaults(which='protocol')
 
   #global args
@@ -1412,16 +1413,20 @@ def plot_case9_adv():
       folder='./out2_May27_fullspine'
       folder='./out2_May27'
       morph = args.morphology
+      extension = args.extension
+      if (extension != ""):
+          extension = "-"+extension
       if (morph != ""):
           morph += "_"
       mapFolders = {}
-      mapFolders[0] = mainFolder + morph + 'May29_rest'
-      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'
-      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'
-      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'
-      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'
-      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines'
-      mapFolders[6] = mainFolder + morph + 'May29_case06'
+      mapFolders[0] = mainFolder + morph + 'May29_rest'                            +  extension
+      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'                     +  extension
+      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'                    +  extension
+      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'                    +  extension
+      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'             +  extension
+      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines'   +  extension
+      mapFolders[6] = mainFolder + morph + 'May29_case06'                          +  extension
+      mapFolders[7] = mainFolder + morph + 'May29_triggeraxon'                     +  extension
       tmpMap = {}
       date = args.date
       protocol = args.number
@@ -1429,12 +1434,12 @@ def plot_case9_adv():
         #print(val.replace('May29',date))
         tmpMap[key] = val.replace('May29',date)
       mapFolders = tmpMap
-      # create folder purpose (if not exist)
-      for key,value in mapFolders.iteritems():
-        if not os.path.exists(value):
-          os.makedirs(value)
       if int(protocol) == -1:#first arg should be the protocol
-        sys.exit("Folders created")
+         # create folder purpose (if not exist)
+         for key,value in mapFolders.iteritems():
+           if not os.path.exists(value):
+             os.makedirs(value)
+         sys.exit("Folders created")
       folder = mapFolders[int(protocol)]
       print("Plot folder " + folder)
     else:
@@ -1442,8 +1447,8 @@ def plot_case9_adv():
       sys.exit("")
     #print(args)
 
-    #timeStart = 0.0
-    timeStart = 200.0
+    timeStart = 0.0
+    #timeStart = 200.0
     timeEnd = -1.0
     #timeEnd = 470.0
     #timeStart = 270.0
