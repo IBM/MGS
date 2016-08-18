@@ -1443,15 +1443,16 @@ def plot_case9_adv():
     #print(args)
 
     #timeStart = 0.0
-    timeStart = 390.0
-    #timeEnd = -1.0
-    timeEnd = 470.0
+    timeStart = 200.0
+    timeEnd = -1.0
+    #timeEnd = 470.0
     #timeStart = 270.0
     #timeEnd = 380.0
 
     #colors = ['blue', 'red', 'green', 'black', 'orange', 'violet', 'magenta', 'brown']
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     linestyles = ['-', '--' ]
+
     #linestyles = ['_', '-', '--', ':']
     #markers = []
     #for m in LIne2D.markers:
@@ -1473,6 +1474,7 @@ def plot_case9_adv():
 
     # common configuration
     mpl.rcParams['lines.linewidth'] = 2
+    mpl.rcParams['legend.fontsize'] = 13
 
 
     ############################
@@ -2064,7 +2066,7 @@ def plot_case9_adv():
     ### row 1
     ## For 1 file
     myFile = folder+'/'+getFile(folder,'distalTuftedCurrents.dat')
-    YLABEL = "distalDenApical"
+    YLABEL = "distalTufted"
     file=open(myFile)
     lines=file.readlines()
     #channelNames = re.split(",",lines[1])
@@ -2256,7 +2258,7 @@ def plot_case9_adv():
     ### row 2
     ## For 1 file
     myFile = folder+'/'+getFile(folder,'proximalTuftedCurrents.dat')
-    YLABEL = "tuftedDen"
+    YLABEL = "proximalTufted"
     file=open(myFile)
     lines=file.readlines()
     #channelNames = re.split(",",lines[1])

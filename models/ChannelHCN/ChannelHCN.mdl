@@ -11,6 +11,7 @@ Node ChannelHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   // Hodgkin-Huxley-based formula
   //{{{
   dyn_var_t [] gbar; // [nS/um^2]
+  dyn_var_t gbar_scale;// ... 
   //internal data
   dyn_var_t [] m;
   dyn_var_t [] g;
