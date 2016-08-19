@@ -1482,6 +1482,8 @@ def plot_case9_adv():
     if (timeEnd == -1.0):
       idxEnd = len(t)-1
       timeEnd = t[idxEnd]
+    elif (timeEnd > t[len(t)-1]):
+      idxEnd = len(t)-1
     else:
       idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
     minCa = 100000.00
@@ -1580,6 +1582,8 @@ def plot_case9_adv():
     if (timeEnd == -1.0):
       idxEnd = len(t)-1
       timeEnd = t[idxEnd]
+    elif (timeEnd > t[len(t)-1]):
+      idxEnd = len(t)-1
     else:
       idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
     minCa = 100000.00
