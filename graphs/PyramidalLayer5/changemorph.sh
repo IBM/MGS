@@ -14,6 +14,7 @@ clean_all() {
   rm_if_link stimulus_model.gsl
   rm_if_link model.gsl
   rm_if_link neurons.txt 
+  rm_if_link spines
 }
 
 Yes_No_ChangeSWC ()
@@ -57,12 +58,13 @@ ChangeSWC ()
   rm_if_link neurons/neuron.swc 2>&1 >/dev/null
   cd neurons;ln -s $arg2 neuron.swc; cd -
   spineFolder=$(echo $swcFile | cut -f 1 -d '.')"_spines"
-  if [ -d "$spineFolder" ]; then
+  if [ -d neurons/"$spineFolder" ]; then
     rm_if_link spines 2>&1 >/dev/null
-    ln -s $spineFolder spines
+    ln -s neurons/$spineFolder spines
     rm_if_link neurons.txt
     ln -s spines/neurons.txt neurons.txt
   else 
+    echo "$spineFolder not found"
     rm_if_link neurons.txt
     ln -s single_neuron.txt neurons.txt
   fi
