@@ -1,7 +1,10 @@
 #!/bin/bash
+#author  = Hoang Trong Minh Tuan (@IBM - 2016)
+#version = 1.0
 #///{{{
 Yes_No_RunSim()
 {
+  #{{{
   # print question
   echo -n "The folder exist; want to override ?(yes(y)/no(n)): "
 
@@ -19,15 +22,34 @@ Yes_No_RunSim()
     "n")  ;;
     *)      echo "Please answer yes(y) or no(n)" ; Yes_No_RunSim;;
   esac
+  #}}}
 }
+
 RunSim()
 {
+  #{{{
    echo "Output Folder: " $OutputFolderName
    cp params $OutputFolderName/ -L -r
    cp *.gsl $OutputFolderName/ -L -r
+   echo "----> $OutputFolderName" >> SIM_LOG
+   echo "----> RESULT: " >> SIM_LOG
+   echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
    mpiexec -n 2  ../../gsl/bin/gslparser $temp_file -t 4
    echo "Output Folder: " $OutputFolderName
+  #}}}
+}
+
+DoFinish()
+{
+  #{{{
+  ##NOTE: each line in this file will be read in by Plot code
+  fileListFolders=./.listFolders2Plot
+  if [ ! -f $fileListFolders ]; then
+    touch $fileListFolders
+  fi
+   echo "$OutputFolderName" >> $fileListFolders
+  #}}}
 }
 #///}}}
 
@@ -47,7 +69,7 @@ fi
 if [ "$1" == "-unique" ]; then
   uniqueName=-`date +'%Y-%m-%d-%s'`
 else
-  uniqueName=$1
+  uniqueName=-$1
 fi
 #}}}
 #########################
@@ -81,4 +103,6 @@ if [ ! -d $OutputFolderName ]; then
 else
   Yes_No_RunSim
 fi
+
+DoFinish
 rm ${temp_file}

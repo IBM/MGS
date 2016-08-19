@@ -1446,6 +1446,7 @@ def plot_case9_adv():
       sys.exit("")
     #print(args)
 
+    print ("Working on: ", folder)
     #timeStart = 28.0
     timeStart = 390.0
     #timeEnd = 60.0

@@ -584,6 +584,12 @@ def parse():
   parser_protocol.add_argument("-extension", default="", help="an extension to folder")
   parser_protocol.set_defaults(which='protocol')
 
+#### TODO: Implement the function that read each line, ignore comment line
+### and call the apropriate plotting functions for files in that folder
+  parser_folder = subparsers.add_parser('file')
+  parser_folder.add_argument("fileName", default=".fileListFilder", help="the name of the file")
+  parser_folder.set_defaults(which='plotAllFoldersInFile')
+
   #global args
   args = parser.parse_args()
   return args
@@ -678,6 +684,7 @@ def plot_case9a(args):
     if len(sys.argv) > 1:#first arg should be the protocol
       folder = mapFolders[int(sys.argv[1])]
 
+    print ("Working on: ", folder)
     timeStart = 28.0
     #timeEnd = 60.0
     timeEnd = -1.0
@@ -1447,6 +1454,7 @@ def plot_case9_adv():
       sys.exit("")
     #print(args)
 
+    print ("Working on: ", folder)
     timeStart = 0.0
     #timeStart = 200.0
     timeEnd = -1.0
@@ -1540,8 +1548,8 @@ def plot_case9_adv():
             maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -1604,8 +1612,8 @@ def plot_case9_adv():
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -1672,7 +1680,7 @@ def plot_case9_adv():
     ax2.set_xlim(left=timeStart, right=timeEnd)
     for tl in ax2.get_yticklabels():
         tl.set_color(color)
-    print minVal, maxVal
+    #print minVal, maxVal
 
     ############################
     ### row 2
@@ -1732,8 +1740,8 @@ def plot_case9_adv():
             maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -1796,8 +1804,8 @@ def plot_case9_adv():
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -1926,8 +1934,8 @@ def plot_case9_adv():
             maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -1991,8 +1999,8 @@ def plot_case9_adv():
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -2060,7 +2068,7 @@ def plot_case9_adv():
       ax2.set_xlim(left=timeStart, right=timeEnd)
       for tl in ax2.get_yticklabels():
           tl.set_color(color)
-      print minVal, maxVal
+      #print minVal, maxVal
     datacursor(ax1)
 
     ##########################################################
@@ -2125,8 +2133,8 @@ def plot_case9_adv():
             maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -2189,8 +2197,8 @@ def plot_case9_adv():
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -2257,7 +2265,7 @@ def plot_case9_adv():
     ax2.set_xlim(left=timeStart, right=timeEnd)
     for tl in ax2.get_yticklabels():
         tl.set_color(color)
-    print minVal, maxVal
+    #print minVal, maxVal
 
     ############################
     ### row 2
@@ -2317,8 +2325,8 @@ def plot_case9_adv():
             maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -2381,8 +2389,8 @@ def plot_case9_adv():
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
-    print i
-    print minVal, maxVal
+    #print i
+    #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
     axarr[gr, gc].set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
     axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
@@ -2450,7 +2458,7 @@ def plot_case9_adv():
       ax2.set_xlim(left=timeStart, right=timeEnd)
       for tl in ax2.get_yticklabels():
           tl.set_color(color)
-      print minVal, maxVal
+      #print minVal, maxVal
 
 
     ############################
