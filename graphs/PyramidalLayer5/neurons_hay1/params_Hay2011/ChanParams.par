@@ -226,7 +226,7 @@ BRANCHTYPE MTYPE
 #{{{neuron
 ##Hay: 10x in hot zone (HVA)
 1 0 <gbar={0.00992}>
-4 0 <gbar={0.00029}>
+4 0 <gbar={0.00229}>
 6 0 <gbar={0.00291}>
 #2 0 <gbar={0.0292}>
 ## Check N-type or P/Q-type
@@ -250,9 +250,10 @@ Cal 3
 #{{{neuron
 ##Hay: 100x in hot zone (LVA)
 BRANCHTYPE MTYPE
-1 0 <gbar={0.0343}>
-4 0 <gbar={0.00093}>
-6 0 <gbar={0.0935}>
+1 0 <gbar={0.343}>
+#4 0 <gbar={0.200}>
+4 0 <gbar_dists={50.0};gbar_values={0.04, 0.200}>
+6 0 <gbar={0.535}>
 #2 0 <gbar={0.0343}>
 # NOTE: The Cal in basal is smaller to produce proper Ca2+ elevation 
 #3 0 <gbar={0.0035}>

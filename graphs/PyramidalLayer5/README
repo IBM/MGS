@@ -6,8 +6,10 @@
 5. copy the spines folder to the main folder
 6. move the neurons.txt file (inside spines folder) to the main folder
 7. configure the GSL (stimulus, I/O, params)
+ 7.1. update 'morph' 
+ 7.2. configure other parameters
 8. run the simulation 
-
+9. analyze the data
 
 NOTE: prblem with ChannelNat-ColbertPan 
   use Hay2011 Nat for now
