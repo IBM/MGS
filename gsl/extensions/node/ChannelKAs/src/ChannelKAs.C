@@ -119,6 +119,7 @@ void ChannelKAs::update(RNG& rng)
 #elif CHANNEL_KAs == KAs_WOLF_2005
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
