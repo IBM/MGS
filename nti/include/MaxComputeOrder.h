@@ -97,6 +97,7 @@
 //  DEBUG_COMPARTMENT (if define, it helps to analyze when a cpt variable becomes NaN)
 //  IDEA_DYNAMIC_INITIALVOLTAGE (if defined, it enables us to pass different voltage value at different location of branch tree - this helps to reach equilibrium faster on neuron where gradient voltage occurs)
 //  TOUCHDETECT_SINGLENEURON_SPINES (if defined, it will use the strategy developed to ensure proper binding to the right location on the branch compartment) - DO NOT defined this when using full tissue 
+//#define RESAMPLING_SPACE_VOLUME (if defined, it resample based on a given space distance and volume for a given tolerance, i.e. (dist-space) < dist_tolerance, (volume-volCrit) < volTolerance)
 //#define IDEA1
 //#define NEWIDEA
 //#define IDEA_ILEAK
@@ -106,6 +107,7 @@
 //#define DEBUG_COMPARTMENT
 //#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
 //#define TOUCHDETECT_SINGLENEURON_SPINES
+//#define RESAMPLING_SPACE_VOLUME
 
 
 #endif //_MAXCOMPUTEORDER_H

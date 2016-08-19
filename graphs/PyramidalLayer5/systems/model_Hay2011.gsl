@@ -67,7 +67,7 @@ print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_04
 #define OutputFolderName dataFolder morph "Hay_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Hay_triggersoma_then_distalspines" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Hay_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
 #define OutputFolderName dataFolder morph "Hay_case06" STR(EXTENSION)
 #endif
@@ -124,10 +124,11 @@ print("Case 00: resting");
 #define CaER_DiffusionConstant_SpineNeck 0.06   //  [um^2/ms]  unbuffered
 
  // use with fast-buffering assumption
-//#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
+#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
+//#define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
 //#define Cacyto_EffectiveDiffusionConstant  0.004 // [um^2/ms] - block Ca2+ diffusion
-#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
+//#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
+#define Cacyto_beta 0.005// unitless [Wagner and Keizer buffering constant]
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //SPECIFIC: HAY2011  (no need)
@@ -150,6 +151,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
+  //{{{ neuroransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
@@ -164,6 +166,7 @@ print("Case 00: resting");
 #else
 #define NTGABA_baseline 5.0  // [uM]
 #endif
+  //}}}
 //}}}
 
 //{{{ Conditions: axial conductance + temperature + Vrest + Eleak
