@@ -1,3 +1,6 @@
+///////////////////////
+/// CONNECT STIMULATION DATA WITH SYSTEM
+//////////////////////
 
 // NOTE: Check definition in model*.gsl file
 #if STIMULUS_CASE == CASE_01 || \
@@ -24,14 +27,14 @@ print ("Case 06: connect-stimulus ok");
 print ("Case 02: connect-stimulus ok");
 #endif
 //{{{
-/// CASE 2: inject a distal apical site (620 um)
+/// CASE 2: inject a distal apical site 
 // to emulate the effect of EPSP-like input
 // 0.5ms rise time, 5ms decay time Iinj = 0.5 nA
 // check EPSP there is 15mV 
 #define neuronIndex 0
-TissueSite currentStimSite_tufted(547.200, 698.35, -94.41, 1.0); //613um to soma, radius = 1.16um
-polyConnect(timeStep, shaftStimInj, <>, <>);
-polyConnect(shaftStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation", site=currentStimSite_tufted>);
+  TissueSite currentStimSite_tufted(576.93, 832.91, -82.22, 0.3); //754um to soma, radius =0.68um
+  polyConnect(timeStep, shaftStimInj, <>, <>);
+  polyConnect(shaftStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation", site=currentStimSite_tufted>);
 //}}}
 #endif
 
@@ -60,6 +63,17 @@ polyConnect(timeStep, presynapticSomaStimInj, <>, <>);
 polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE =4>), <>, <identifier="stimulation", site=currentStimSite_0>);
 polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE =5>), <>, <identifier="stimulation", site=currentStimSite_0>);
 //polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), <>, <identifier="stimulation", site=currentStimSite_0>);
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_07 
+print ("Case 07: connect-stimulus ok");
+//{{{
+/// CASE 7: inject a distal size of AIS
+#define neuronIndex 0
+TissueSite currentStimSite_distalAIS(469.35, 56.15, -13.79, 2.0); //42um to soma, radius = 0.4um
+polyConnect(timeStep, distalAISStimInj, <>, <>);
+polyConnect(distalAISStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation", site=currentStimSite_distalAIS>);
 //}}}
 #endif
 

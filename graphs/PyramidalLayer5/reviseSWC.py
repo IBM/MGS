@@ -4,10 +4,21 @@ targetDir = "neurons"
 ##############
 # Remove some branches from the tree
 ##############
-#neuron = SomeClass(targetDir +"/neuron.swc_new.swc")
+#neuron = SomeClass(targetDir +"/neuron.swc")
 ##lineIndex =[116, 89, 50, 105, 153]
-#lineIndex =[981, 983]
+lineIndex =[2]
 #neuron.removeBranch(lineIndex)
+
+##############
+# Remove some branches (only from branching point) from the tree
+# if the proximal-side branchpoint of that branch is outside the sphere
+# based on the given max-distance to soma
+##############
+neuron = SomeClass(targetDir +"/neuron.swc")
+dist=150.0 #[um]
+#neuron.removeApicalBranch(dist)
+neuron.removeApicalBasalBranch(dist)
+
 
 ##############
 # Remove terminal points in a tree
@@ -25,9 +36,9 @@ targetDir = "neurons"
 ##############
 # Remove points based on line index
 ##############
-neuron = SomeClass(targetDir +"/neuron.swc_new.swc")
-lineIndex = [1510]
-neuron.removeGivenPoints(lineIndex)
+#neuron = SomeClass(targetDir +"/neuron.swc")
+#lineIndex = [110]
+#neuron.removeGivenPoints(lineIndex)
 
 ##############
 # The goal is to modify multiple-point soma into single-point soma

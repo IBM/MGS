@@ -7,6 +7,11 @@
 
 #include "../../nti/include/MaxComputeOrder.h"
 
+#define _CCAT(x,y) x ## y 
+#define CCAT(x,y) _CCAT(x,y)
+#define _STR(x) #x 
+#define STR(x) _STR(x)
+
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
 #define CASE_VIVO 1000 // random input at all spines
@@ -17,17 +22,29 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_01
+#define CASE_07  7   //inject  distal to AIS 
+#define STIMULUS_CASE   CASE_07
 //#define morph ""
 //#define morph "hay2_"
+//#define morph "hay2NormalCm_"
 //#define morph "hay2spines_"
-#define morph "hay1_"
+//#define morph "hay2spinesNormalCm_"
+//#define morph "hay2spinesNormalCmHighNeckR_"
+//#define morph "hay2spinesNormalCmHighLeak2_"
+//#define morph "hay2spinesNormalCmErevHCN30_"
+//#define morph "hay2spinesNormalCmErevHCN35_"
+//#define morph "hay2spinesNormalCmErevHCN30scale1.5AIS_"
+//#define morph "hay2spinesNormalCmErevHCN30scale1.5AISlong_"
+//#define morph "hay2spinesNormalCmErevHCN30Harnett_"
+//#define morph "hay2spinesNormalCmErevHCN30HarnettNormal_" //linear
+//#define morph "hay1_"
+#define morph "hay2trimmedspinesNormalCmErevHCN30Harnett_"
 //}}}
 
-#define _CCAT(x,y) x ## y 
-#define CCAT(x,y) _CCAT(x,y)
-#define _STR(x) #x 
-#define STR(x) _STR(x)
+//Functor ExecuteShell;
+//ExecuteShell shellcommand();
+//#define command "mkdir " morph
+//shellcommand(command);
 
 //CONNECTOR FUNCTOR
 /*{{{*/
@@ -56,21 +73,26 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Jul15Tuan_rest"
+#define OutputFolderName dataFolder morph "Aug17Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Jul15Tuan_triggersoma"
+#define OutputFolderName dataFolder morph "Aug17Tuan_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Jul15Tuan_triggershaft"
+#define OutputFolderName dataFolder morph "Aug17Tuan_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Jul15Tuan_triggerspine"
-//#define OutputFolderName dataFolder morph "Jul15Tuan_case03"
+#define OutputFolderName dataFolder morph "Aug17Tuan_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Aug17Tuan_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Jul15Tuan_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Aug17Tuan_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Jul15Tuan_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Aug17Tuan_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Jul15Tuan_case06"
+#define OutputFolderName dataFolder morph "Aug17Tuan_case06" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_07
+#define OutputFolderName dataFolder morph "Aug17Tuan_triggeraxon"  STR(EXTENSION)
+#else
+  print("NOT DEFINED STIMULUS_CASE .... ")
+  WRONG
 #endif
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
@@ -98,7 +120,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          470      // [ms]
+	#define TimeEnd          500.1      // [ms]
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -170,13 +192,16 @@ print("Case 00: resting");
 //}}}
 //}}}
 
-//{{{ Conditions: axial conductance + temperature + Vrest + Eleak
+//{{{ Conditions: axial conductance + temperature + Vrest + Eleak + resistance
 #define Ra_value 0.001     // [GOhm*um] 
 //#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
-//#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
+//#define R_NECK 0.001     // [GOhm*um] --> g~150 nS = 150x10^-9 (S)--> 6.6x10^6 (Ohm) = 6.6 MOhm
 //#define R_NECK 0.005     // [GOhm*um] --> g~
-#define R_NECK 0.012     // [GOhm*um] --> g~12 nS
+#define R_NECK 0.012     // [GOhm*um] --> g~12 nS ~  66 MOhm
+//#define R_NECK 0.112     // [GOhm*um] --> g~1.2 nS ~ 0.8 GOhm
+//#define R_NECK 1.112     // [GOhm*um] --> g~12e-2 nS ~ 8.0 GOhm
+//#define R_NECK 100.112     // [GOhm*um] --> g~12e-4 nS ~ 800 GOhm
 
   // NOTE: 310K = 37-degree Celcius (body)
   //       308.15K = 35-degree Celcius (body)
@@ -190,7 +215,7 @@ print("Case 00: resting");
 #define E_leak_value -90.0 
 #define Erev_HCN  -45.0 // [mV]
 // TUAN 2016 model update from Hay2011
-//#define Erev_HCN  -30.0 // [mV]
+#define Erev_HCN  -30.0 // [mV]
 //}}}
 
 //{{{ Time constant
@@ -1019,7 +1044,7 @@ Grid PyramidalL5_Neuron{
 	//{{{ Na+ channels
 	InitNodes ( .[].Layer(NatChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
-				gbar = {0.0} 
+				gbar = {0.0}, Vhalf_m_shift = 0.0, Vhalf_h_shift = 0.0
 				> ) ); 
 //	InitNodes ( .[].Layer(Natv16Channels), tissueFunctor("NodeInit", <
 //				compartmentalize = { "gbar" },
@@ -1033,7 +1058,7 @@ Grid PyramidalL5_Neuron{
      //}}}
    InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
                   compartmentalize = { "gbar" },
-                  gbar = {0.0}
+                  gbar = {0.0}, gbar_scale = 1.0
                   > ) );
 	 //{{{ K+ channels
    InitNodes ( .[].Layer(MKChannels), tissueFunctor("NodeInit", <
