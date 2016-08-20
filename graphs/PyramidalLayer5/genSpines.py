@@ -1,3 +1,10 @@
+### TODO
+# write code to detect uprupt change in radius
+# this is important as it affect the calculation of signal propagation,
+# especially from soma
+# 1. dr = |r2 -r1|/max(r1, r2) < some threshold
+# 2. r(first compartment from soma) must be at least some minium value, e.g. 1um
+# 3. ...???
 __author__ = "Hoang Trong Minh Tuan"
 __copyright__ = "Copyright 2016, IBM"
 __credits__ = []  # list of people who file pugs
@@ -453,6 +460,7 @@ class SomeClass(object):
       #self.convertToTuftedandAIS(thresholdTuftedZone, proximalAISDistance2Soma,
       #                        distalAISDistance2Soma)
       self.convertToTufted(thresholdTuftedZone)
+      self.reviseRadius(write2File=True)
 
     def removeApicalBranch(self, dist_criteria):
         """
@@ -520,6 +528,94 @@ class SomeClass(object):
           id = parent_id
         return proxid
         #####end
+
+    def reviseRadius(self, minR=0.10):
+        """
+        Revise the radius
+        if r(parent) < r(current cpt) < r(child)
+           then r(current) = 1/2 (rparent = rchild)
+        """
+        #Put branchType = 5 to represent the region of high CaLVA, CaHVA
+        PL5bFileName = self.swc_filename+"_reviseRadius.swc"
+        SWCFileSpine = open(PL5bFileName, "w")
+
+        holdpoint_list = []
+        # start with all distal ends to examine toward soma
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            numChildren = int(self.point_lookup[id]['numChildren'])
+            r = float(self.point_lookup[id]['siteR'])
+            if numChildren == 0:
+                holdpoint_list.append(id)
+                branchOrder = int(self.point_lookup[id]['branchOrder'])
+                #if branchOrder >= len(branchorder_slot):
+                #    print("""ERROR: swc file has branchOrder exceed the data available
+                #          Please check to update statistics data
+                #          """)
+                if (r < minR):
+                    print "WARNING: radius of line", id, " (r=", r, ") is < ", minR
+
+        holdpoint_list = list(set(holdpoint_list))
+        while holdpoint_list:
+            tmplist = []
+            for id in holdpoint_list:
+                point_info = self.point_lookup[id]
+                branchType = point_info['type']
+                parent_id =  point_info['parent']
+                r = float(self.point_lookup[id]['siteR'])
+                #branchOrder =  point_info['branchOrder']
+                #dist2branchPoint = float(point_info['dist2branchPoint'])
+                dist2soma = float(point_info['dist2soma'])
+
+                if (int(id) == 1):
+                    continue
+                parent_id = self.point_lookup[parent_id]['parent']
+                parent_brType =self.point_lookup[parent_id]['type']
+                parent_r = float(self.point_lookup[parent_id]['siteR'])
+                parent_dist2soma = float(self.point_lookup[parent_id]['dist2soma'])
+                #x_soma =float(self.point_lookup[parent_id]['siteX'])
+                #y_soma =float(self.point_lookup[parent_id]['siteY'])
+                #z_soma =float(self.point_lookup[parent_id]['siteZ'])
+                #r_soma =float(self.point_lookup[parent_id]['siteR'])
+                if (int(parent_id) == 1):
+                    continue
+                pparent_id = self.point_lookup[parent_id]['parent']
+                if (int(pparent_id) == 1):
+                    ## parent of parent is soma
+                    if (parent_r < r):
+                        self.point_lookup[parent_id]['siteR']=(r)
+                    continue
+                pparent_brType =self.point_lookup[pparent_id]['type']
+                pparent_r = float(self.point_lookup[pparent_id]['siteR'])
+                pparent_dist2soma = float(self.point_lookup[pparent_id]['dist2soma'])
+                if (parent_r <= r):
+                    if (r <= pparent_r):
+                        self.point_lookup[parent_id]['siteR']=(pparent_r + r)/2.0
+                        ## consider distance ratio
+                        # x/pparent_r =
+                        # (dist2soma-parent_dist2soma)/(dist2soma-pparent_dist2soma)
+                        #self.point_lookup[parent_id]['siteR']=(pparent_r + r)/2.0
+                    else:
+                        self.point_lookup[parent_id]['siteR']=(r)
+                tmplist.append(parent_id)
+            holdpoint_list = list(set(tmplist))
+
+        lineArray = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            lineArray.append([id, str(brType),
+                              str(x), str(y),
+                              str(z),
+                              str("%.3f" % r), str(parent_id)])
+        lineArray = np.asarray(lineArray)
+        np.savetxt(PL5bFileName, lineArray, fmt='%s')
+        print("Write to file: ", PL5bFileName)
 
     def convertToTuftedandAIS(self, thresholdTuftedZone=550, proximalAISDistance2Soma=10,
                               distalAISDistance2Soma=45.0):
