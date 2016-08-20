@@ -35,8 +35,10 @@ RunSim()
    echo "----> RESULT: " >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
-   mpiexec -n 2  ../../gsl/bin/gslparser $temp_file -t 4
+   mpiexec -n 1  ../../gsl/bin/gslparser $temp_file -t 4
    echo "Output Folder: " $OutputFolderName
+   ## NOTE: comment out if we don't want to plot
+   ./doPlot.sh  ${uniqueName:1}
   #}}}
 }
 
