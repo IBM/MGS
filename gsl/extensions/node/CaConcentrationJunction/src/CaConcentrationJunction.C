@@ -22,7 +22,7 @@
 #include "Branch.h"
 
 //#define DEBUG_HH
-
+#include <iomanip>
 #include <cmath>
 #include <cfloat>
 #include "SegmentDescriptor.h"
@@ -32,12 +32,13 @@
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 
+SegmentDescriptor CaConcentrationJunction::_segmentDescriptor;
+
 // NOTE: value = 1e6/(zCa*Farad)
 // zCa = valence of Ca2+
 // Farad = Faraday's constant
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
-SegmentDescriptor CaConcentrationJunction::_segmentDescriptor;
 
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
 #define DCa (getSharedMembers().DCaeff)
@@ -67,7 +68,6 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
   // or a cut point junction 
 	// or a branching point junction with 3 or more branches (one from main, 2+ for children
   // branches))
-  SegmentDescriptor segmentDescriptor;
   assert(Ca_new.size() == 1);
   assert(dimensions.size() == 1);
 
@@ -86,17 +86,45 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
                                     dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
+	  //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
+	  //      in calculating the cross-sectional area
 		dyn_var_t Rb;
+    dyn_var_t distance;
 		if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
 		{
+		  //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
+      //  NOTE: should be applied for Axon hillock only
 			Rb = ((*diter)->r );
+      //TEST 
+			Rb /= SCALING_NECK_FROM_SOMA;
+      //END TEST
+#ifdef USE_SOMA_AS_POINT
+      distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
+#else
+		  //distance= std::fabs((*diter)->dist2soma + dimension->r );
+      distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
+         // from soma is always the distance from the center of soma to the center
+         // of that compartment
+      //TEST 
+      distance += STRETCH_SOMA_WITH;
+      //END TEST
+#endif
+      if (distance <= 0)
+        std::cerr << "distance = " << distance << ": " << (*diter)->dist2soma << ","<< dimension->r << std::endl;
+      assert(distance > 0);
 		}else{
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+		  Rb = ((*diter)->r); //the small diameter of the branch means small current pass to it
+#else
 			Rb = 0.5 * ((*diter)->r + dimension->r);
+#endif
+		  distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
+      assert(distance > 0);
 		}
     //fAxial.push_back(Pdov * Rb * Rb /
     //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-		dyn_var_t length= std::fabs((*diter)->dist2soma - dimension->dist2soma);
-		fAxial.push_back(Pdov * Rb * Rb / length );
+		//dyn_var_t distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
+		fAxial.push_back(Pdov * Rb * Rb / distance );
 	}
 #ifdef DEBUG_HH
   std::cerr << "CA_JUNCTION (" << dimension->x << "," << dimension->y << ","
@@ -104,6 +132,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 #endif
 }
 
+//GOAL: predict Canew[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
 void CaConcentrationJunction::predictJunction(RNG& rng)
 {
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
@@ -136,6 +165,10 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
     RHS -= currentToConc * **iter;
   }
 
+	//  3. synapse receptor currents using GHK type equations (gV, gErev)
+	//  NOTE: Not available
+
+  //  4. injected currents
   iter = injectedCaCurrents.begin();
   end = injectedCaCurrents.end();
   for (; iter != end; ++iter)
@@ -153,20 +186,24 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
   Ca_new[0] = RHS / LHS;
 
 #ifdef DEBUG_HH
-  SegmentDescriptor segmentDescriptor;
-  DimensionStruct* dimension = dimensions[0];  
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
             << " CA_JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
             << getIndex() << "] "
-            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
-            << dimension->x << "," << dimension->y << "," << dimension->z << ","
-            << dimension->r << "} " << Ca_new[0] << std::endl;
+            << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << dimensions[0]->x << "," << dimensions[0]->y << ","
+            << dimensions[0]->z << ","
+            << dimensions[0]->r << ","
+            << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
+            << dimensions[0]->volume << "," << dimensions[0]->length << "} " 
+            << Ca_new[0] << std::endl;
 #endif
 }
 
+//GOAL: correct Canew[0] at (t+dt/2) 
+// and finally update at (t+dt) for Cacur, and Canew[0]
 void CaConcentrationJunction::correctJunction(RNG& rng)
 {
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
@@ -219,40 +256,63 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
   Ca_cur = Ca_new[0] = 2.0 * Ca_new[0] - Ca_cur;
 
 #ifdef DEBUG_HH
-  SegmentDescriptor segmentDescriptor;
-  assert(dimensions.size() == 1);
-  DimensionStruct* dimension = dimensions[0];
-  std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
-            << " CA_JUNCTION CORRECT"
-            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
-            << getIndex() << "] "
-            << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchIndex(branchData->key) << ","
-            << segmentDescriptor.getBranchOrder(branchData->key) << ") {"
-            << dimension->x << "," << dimension->y << "," << dimension->z << ","
-            << dimension->r << "} " << Ca_new[0] << std::endl;
-
-  Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
-  Array<dyn_var_t*>::iterator vend = CaConcentrationInputs.end();
-  int c = 0;
-
-  for (viter = CaConcentrationInputs.begin(); viter != vend; ++viter, ++diter)
-  {
-    std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
-              << " CA_JCT_INPUT_" << c++ << " [" << getSimulation().getRank()
-              << "," << getNodeIndex() << "," << getIndex() << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ","
-              << segmentDescriptor.getComputeOrder(branchData->key) << ") {"
-              << (*diter)->x << "," << (*diter)->y << "," << (*diter)->z << ","
-              //<< (*diter)->r << "} " << DISTANCE_SQUARED(*(*diter), *dimension)
-              << (*diter)->r << "} " << (((*diter))->dist2soma - dimension->dist2soma)
-              << " " << *(*viter) << std::endl;
-  }
+	printDebugHH();
 #endif
 }
 
+void CaConcentrationJunction::printDebugHH(std::string phase)
+{
+	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
+		"(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  assert(dimensions.size() == 1);
+  DimensionStruct* dimension = dimensions[0];
+  std::cerr << getSimulation().getIteration() << "," 
+            << getSimulation().getIteration() * *getSharedMembers().deltaT
+            << "| " << phase
+            << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
+            << getIndex() << "] "
+            << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+            << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+            << dimensions[0]->x << "," 
+            << dimensions[0]->y << ","
+            << dimensions[0]->z << "," 
+            << dimensions[0]->r << " | " 
+            << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
+            << dimensions[0]->volume << "," << dimensions[0]->length << "} " 
+            << Ca_new[0] << std::endl;
+
+  Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
+  Array<dyn_var_t*>::iterator vend = CaConcentrationInputs.end();
+  int c = -1;
+
+	std::cerr << "JCT_INPUT_i " <<
+		"(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
+  for (viter = CaConcentrationInputs.begin(); viter != vend; ++viter, ++diter)
+  {
+    c++;
+    std::cerr << " JCT_INPUT_" << c 
+      << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+      << std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+      << _segmentDescriptor.getBranchOrder(branchData->key) << ","
+      << _segmentDescriptor.getBranchType(branchDataInputs[c]->key) << ","
+      << _segmentDescriptor.getComputeOrder(branchData->key) << ") {"
+      << std::setprecision(3) << (*diter)->x << "," 
+      << std::setprecision(3) << (*diter)->y << "," 
+      << std::setprecision(3) << (*diter)->z << ","
+      << std::setprecision(3) << (*diter)->r << " | " 
+      << (*diter)->dist2soma << "," << (*diter)->surface_area << "," 
+      << (*diter)->volume << "," << (*diter)->length  << "} "
+      << " " << *(*viter) << std::endl;
+  }
+}
+
+//TUAN: TODO challenge
+//   how to check for 2 sites overlapping
+//   if we don't retain the dimension's (x,y,z) coordinate
+//  Even if we retain (x,y,z) this value change with the #capsule per compartment
+//   and geometric sampling --> so not a good choice
 bool CaConcentrationJunction::checkSite(
     const String& CG_direction, const String& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,

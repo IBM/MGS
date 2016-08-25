@@ -288,15 +288,23 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
      CaConcentrationArrayProducer 
 {
 /*{{{*/
-  BranchDataStruct* branchData;
+	//DATA
+  //{{{
+  BranchDataStruct* branchData; // the proximal-side regular-branch's data
   DimensionStruct* [] dimensions;
+    //{{{data members: internal, but for solver
+  dyn_var_t* [] CaConcentrationInputs;
+  DimensionStruct* [] dimensionInputs;
+  BranchDataStruct* [] branchDataInputs;  // 
+    //}}}
+	//{{{data members: internal
   dyn_var_t volume;
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
   dyn_var_t currentToConc;
 
-  // currents
+  //{{{ ionic currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
   // yet it contribute positive to the increase of [Ca2+](cyto)
   ChannelCaCurrents [] channelCaCurrents;
@@ -310,11 +318,11 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
   // 2. user-defined stimulus current
   dyn_var_t* [] injectedCaCurrents;
+  //}}}
 
-  dyn_var_t* [] CaConcentrationInputs;
-  DimensionStruct* [] dimensionInputs;
 
   Shared {
+	  //{{{
     dyn_var_t* deltaT;
     dyn_var_t DCa; // diffusion constant [um^2/ms]
     //{{{ used only for fast-buffering assumption 
@@ -325,7 +333,9 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  
+    //}}}
   }
+  //}}}
 
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
@@ -339,6 +349,15 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     TissueSite site;
     int idx;
   }	
+
+  //input
+  // the junction-branch connects to regular-branch through the regular-branch's endpoints
+  Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, 
+    DimensionProducer, BranchDataProducer  {
+    CaConcentrationProducer.Ca >> CaConcentrationInputs;
+    DimensionProducer.dimension >> dimensionInputs;
+    BranchDataProducer.branchData >> branchDataInputs;
+  }
 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
     DimensionProducer.dimension >> dimensions;
@@ -373,11 +392,6 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     CaCurrentProducer.current >> injectedCaCurrents;
    }
 
-  Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, DimensionProducer  {
-    CaConcentrationProducer.Ca >> CaConcentrationInputs;
-    DimensionProducer.dimension >> dimensionInputs;
-  }
-
   PredicateFunction confirmUniqueDeltaT;
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
@@ -387,6 +401,8 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
 
 Node CaConcentrationJunctionPoint Implements CaConcentrationProducer, DimensionProducer
 {
+// For each junction-branch, represented by HodgkinHuxleyVoltageJunction
+// we need 1 associated JunctionPoints that reference to the end...
 /*{{{*/
   dyn_var_t* CaConcentration;
   DimensionStruct* dimension;
@@ -394,7 +410,7 @@ Node CaConcentrationJunctionPoint Implements CaConcentrationProducer, DimensionP
   Shared {
     dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
-}
+  }
   CaConcentrationProducer.Ca << CaConcentration;
   DimensionProducer.dimension << dimension;
 

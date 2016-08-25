@@ -84,6 +84,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getNumCompartments(ComputeBranch* branch,
                          std::vector<int>& cptsizes_in_branch);
   int getNumCompartments(ComputeBranch* branch);
+  int getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch);
 #endif
   // perform neuron generating from a given set of parameters
   void neuroGen(Params* params, LensContext* CG_c);
@@ -109,7 +110,8 @@ class TissueFunctor : public CG_TissueFunctorBase
                                dyn_var_t volume, dyn_var_t length);
   StructDataItem* getDimension(LensContext* lc, double* cds1, double* cds2,
                                dyn_var_t radius, dyn_var_t dist2soma,
-                               dyn_var_t surface_area, dyn_var_t volume);
+                               dyn_var_t surface_area, dyn_var_t volume,
+                               dyn_var_t length);
   // get the list of name of nodes (passed in GSL via nodekind)
   // from a list of layers represented as NDPairList*
   void getNodekind(const NDPairList* layerNdpl,
