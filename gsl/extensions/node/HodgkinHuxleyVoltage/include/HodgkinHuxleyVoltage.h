@@ -25,59 +25,83 @@
 
 class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
 {
-   public:
-      void initializeCompartmentData(RNG& rng);
-      void solve(RNG& rng);
-      void finish(RNG& rng);
-      virtual void setReceptorCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
-      virtual void setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
-      virtual void setProximalJunction(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
-      virtual bool checkSite(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
-      virtual bool confirmUniqueDeltaT(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
-      virtual ~HodgkinHuxleyVoltage();
-	  
-	  //user-added
-      dyn_var_t getLambda(DimensionStruct* a, DimensionStruct* b);
-      dyn_var_t getArea(int i);
-      dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t Area);
-      //unsigned getSize() {return branchData->size;}
-			void printDebugHH();
-			void printDebugHH(int i);
-			
-	
+  public:
+    void initializeCompartmentData(RNG& rng);
+    void solve(RNG& rng);
+    void finish(RNG& rng);
+    virtual void setReceptorCurrent(
+        const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+    virtual void setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+    virtual void setProximalJunction(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+    virtual bool checkSite(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+    virtual bool confirmUniqueDeltaT(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+    virtual ~HodgkinHuxleyVoltage();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //user-added
+    //dyn_var_t getLambda(DimensionStruct* a, DimensionStruct* b, bool connectJunction=false);
+    dyn_var_t getLambda(DimensionStruct* a, DimensionStruct* b, int index, bool connectJunction=false);
+    //dyn_var_t getLambda(DimensionStruct* a);
+    dyn_var_t getLambda(DimensionStruct* a, int index);
+    dyn_var_t getHalfDistance(int index);
+    dyn_var_t getArea(int i);
+    dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t Area, bool connectJunction=false);
+    //unsigned getSize() {return branchData->size;}
+    void printDebugHH();
+    void printDebugHH(int i);
+    // - common for all compartment variables
 #if MAX_COMPUTE_ORDER>0
-      void forwardSolve1(RNG& rng);
-      void backwardSolve1(RNG& rng);
+    void forwardSolve1(RNG& rng);
+    void backwardSolve1(RNG& rng);
 #endif
 #if MAX_COMPUTE_ORDER>1
-      void forwardSolve2(RNG& rng);
-      void backwardSolve2(RNG& rng);
+    void forwardSolve2(RNG& rng);
+    void backwardSolve2(RNG& rng);
 #endif
 #if MAX_COMPUTE_ORDER>2
-      void forwardSolve3(RNG& rng);
-      void backwardSolve3(RNG& rng);
+    void forwardSolve3(RNG& rng);
+    void backwardSolve3(RNG& rng);
 #endif
 #if MAX_COMPUTE_ORDER>3
-      void forwardSolve4(RNG& rng);
-      void backwardSolve4(RNG& rng);
+    void forwardSolve4(RNG& rng);
+    void backwardSolve4(RNG& rng);
 #endif
 #if MAX_COMPUTE_ORDER>4
-      void forwardSolve5(RNG& rng);
-      void backwardSolve5(RNG& rng);
+    void forwardSolve5(RNG& rng);
+    void backwardSolve5(RNG& rng);
 #endif
 #if MAX_COMPUTE_ORDER>5
-      void forwardSolve6(RNG& rng);
-      void backwardSolve6(RNG& rng);
+    void forwardSolve6(RNG& rng);
+    void backwardSolve6(RNG& rng);
 #endif
 #if MAX_COMPUTE_ORDER>6
-      void forwardSolve7(RNG& rng);
-      void backwardSolve7(RNG& rng);
+    void forwardSolve7(RNG& rng);
+    void backwardSolve7(RNG& rng);
 #endif
 
-   private:
-      void doForwardSolve();
-      void doBackwardSolve();
-  static SegmentDescriptor _segmentDescriptor;
+  private:
+    void doForwardSolve();
+    void doBackwardSolve();
+    static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

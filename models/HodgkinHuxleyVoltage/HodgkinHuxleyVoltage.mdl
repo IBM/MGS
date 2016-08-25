@@ -380,7 +380,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     dyn_var_t Na; // [mM]
     dyn_var_t K;  // [mM]
     dyn_var_t E_leak;  // [miliVolt] = [mV]
-      //}}}
+    //}}}
   }
   //}}}
 

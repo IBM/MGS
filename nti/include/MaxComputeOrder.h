@@ -108,6 +108,28 @@
 //#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
 //#define TOUCHDETECT_SINGLENEURON_SPINES
 //#define RESAMPLING_SPACE_VOLUME
+//#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as a single point
+//#define STRETCH_SOMA_WITH 40.0 // [um] - make soma longer (hoping to make diffusion slower)
+//#define STRETCH_SOMA_WITH 0.0 
+//#define STRETCH_SOMA_WITH 130.0 
+//#define STRETCH_SOMA_WITH 50.0 
+//#define STRETCH_SOMA_WITH 25.0    
+#define STRETCH_SOMA_WITH 35.0    //seem ok  value if used
+//#define STRETCH_SOMA_WITH 050.0 
+//#define SCALING_NECK_FROM_SOMA 10.0  //>1: make neck smaller
+#define SCALING_NECK_FROM_SOMA 1.0  //>1: make neck smaller
+#define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
+                        // if not; then Rb = ((*diter)->r + dimension->r)/2
+//#define USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION //if defined, then 
+         // (suppose Vm[size-1]) instead of using proximalVoltage, and the distance between them
+         // it use V0 (or Vterminal_proximal) and distance as length/2
+         // and Vterminal_proximal is estiamted using algebraic equation
+         // Vterminal_proximal= (w1 * proximalVm + w2 * Vm[size-1])
+         //  with weight is inverse of distance
+         //     w1 = 1/(proximalDimension->length)
+         //     w2 = 1/(dimensions[size-1]->length)
 
+#define NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
+//       dsi = (dx1 + dx2)/2 - Check Mascagni (1995, pg 33)
 
 #endif //_MAXCOMPUTEORDER_H
