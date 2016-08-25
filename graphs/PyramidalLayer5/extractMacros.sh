@@ -31,6 +31,9 @@ RunSim()
    echo "Output Folder: " $OutputFolderName
    cp params $OutputFolderName/ -L -r
    cp *.gsl $OutputFolderName/ -L -r
+   cp neurons.txt $OutputFolderName/ -L -r
+   cp neurons/neuron.swc $OutputFolderName/ -L -r
+   #cp spines $OutputFolderName/ -L -r
    echo "----> $OutputFolderName" >> SIM_LOG
    echo "----> RESULT: " >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
@@ -82,7 +85,7 @@ if [ ! -d $TMPDIR ]; then
 fi
 temp_file=`mktemp --tmpdir=$TMPDIR`
 cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
-###cpp -dM -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
+###cpp -dU -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
 ##awk -F '/^#define[[:space:]]+morph/{ printf "%s | %s \n", $2, $3 }' < ${temp_file}
 #morph=`awk  '/^#define morph/{printf "%s\n", $3}' < ${temp_file}`
 morph=`awk  '/^#define morph/{print $3}' < ${temp_file}`
@@ -97,6 +100,7 @@ OutputFolderName+=$uniqueName
 #echo "morph="$morph
 #echo $dataFolder
 #echo $suffix
+mv $OutputFolderName $TMPDIR/
 
 ###########################
 if [ ! -d $OutputFolderName ]; then
