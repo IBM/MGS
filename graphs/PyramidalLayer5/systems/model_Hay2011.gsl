@@ -124,11 +124,11 @@ print("Case 00: resting");
 #define CaER_DiffusionConstant_SpineNeck 0.06   //  [um^2/ms]  unbuffered
 
  // use with fast-buffering assumption
-#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
-//#define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
+//#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
+#define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
 //#define Cacyto_EffectiveDiffusionConstant  0.004 // [um^2/ms] - block Ca2+ diffusion
-//#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
-#define Cacyto_beta 0.005// unitless [Wagner and Keizer buffering constant]
+#define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
+//#define Cacyto_beta 0.005// unitless 
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //SPECIFIC: HAY2011  (no need)
