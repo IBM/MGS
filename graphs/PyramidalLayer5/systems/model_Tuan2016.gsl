@@ -25,7 +25,7 @@
 #define CASE_07  7   //inject  distal to AIS 
 #define STIMULUS_CASE   CASE_07
 //#define morph ""
-//#define morph "hay2_"
+#define morph "hay2_"
 //#define morph "hay2NormalCm_"
 //#define morph "hay2spines_"
 //#define morph "hay2spinesNormalCm_"
@@ -38,7 +38,7 @@
 //#define morph "hay2spinesNormalCmErevHCN30Harnett_"
 //#define morph "hay2spinesNormalCmErevHCN30HarnettNormal_" //linear
 //#define morph "hay1_"
-#define morph "hay2trimmedspinesNormalCmErevHCN30Harnett_"
+//#define morph "hay2trimmedspinesNormalCmErevHCN30Harnett_"
 //}}}
 
 //Functor ExecuteShell;
@@ -73,23 +73,23 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Aug17Tuan_rest" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Aug17Tuan_triggersoma" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Aug17Tuan_triggershaft" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Aug17Tuan_triggerspine" STR(EXTENSION)
-//#define OutputFolderName dataFolder morph "Aug17Tuan_case03"
+#define OutputFolderName dataFolder morph "Tuan_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Tuan_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Aug17Tuan_triggerdistalspines" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Aug17Tuan_case05" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Aug17Tuan_case06" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_07
-#define OutputFolderName dataFolder morph "Aug17Tuan_triggeraxon"  STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Tuan_triggeraxon"  STR(EXTENSION)
 #else
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
@@ -120,7 +120,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          500.1      // [ms]
+	#define TimeEnd          350.1      // [ms]
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -154,6 +154,7 @@ print("Case 00: resting");
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
+//#define Cacyto_beta 0.005// unitless 
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //}}}

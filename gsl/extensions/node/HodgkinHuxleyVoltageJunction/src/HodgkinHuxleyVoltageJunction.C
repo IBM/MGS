@@ -58,6 +58,7 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   assert(Vnew.size() == 1);
   assert(dimensions.size() == 1);
 
+
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   dyn_var_t Vm_default = Vnew[0];
   for (unsigned int i=0; i<size; ++i) {
@@ -446,3 +447,29 @@ bool HodgkinHuxleyVoltageJunction::confirmUniqueDeltaT(
 }
 
 HodgkinHuxleyVoltageJunction::~HodgkinHuxleyVoltageJunction() {}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT
+void HodgkinHuxleyVoltageJunction::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countSpineConnected.size() != size) 
+  {
+    countSpineConnected.increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      countSpineConnected[i] = 0;
+  }
+  countSpineConnected[0]++;
+}
+
+void HodgkinHuxleyVoltageJunction::updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countGapJunctionConnected.size() != size) 
+  {
+    countGapJunctionConnected.increaseSizeTo(size); 
+    for (int i = 0; i < size; i++)
+      countGapJunctionConnected[i] = 0;
+  }
+  countGapJunctionConnected[0]++;
+}
+#endif

@@ -915,14 +915,33 @@ dyn_var_t CaConcentration::getHalfDistance (int index)
     {
       if (proximalDimension->dist2soma <= SMALL)
       {
-        halfDist = (
-            std::abs( dimensions[index]->length/2 )
-            +
-            std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
-            )/ 2.0;
-        //halfDist = (
-        //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
-        //    );
+        if (size==1)
+        {
+          if (isDistalCase0)
+          {//no flux distal
+            halfDist = ( dimensions[index]->length/2 );
+          }
+          else if (isDistalCase1 or isDistalCase2)
+          {
+            halfDist = (
+                std::abs( dimensions[index]->length/2 )
+                +
+                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                )/ 2.0;
+          }
+        }
+        else
+        {
+          halfDist = (
+              std::abs( dimensions[index]->length/2 )
+              +
+              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              )/ 2.0;
+          //halfDist = (
+          //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          //    );
+
+        }
       }
       else{
         if (size==1)

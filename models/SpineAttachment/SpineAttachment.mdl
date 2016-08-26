@@ -10,6 +10,9 @@
 Interface SurfaceAreaLengthProducer {
 	dyn_var_t* A; // [um^2]
 	dyn_var_t* len; // [um]
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  int * spineCount;
+#endif
 }
 
 // A SpineAttachment is a bidirectional connection between
@@ -39,6 +42,11 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
   dyn_var_t* Vj; 
   dyn_var_t I;   //the current [pA]
   dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
+  string typeCpt; //"spine-neck" or "den-shaft"
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
   //}}}
 
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
@@ -47,9 +55,16 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
   Shared {
 	  dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    int []* countSpineConnect;
+#endif
   }
 
-  InitPhase produceInitialState(Vi, leni), computeInitialState(); // IMPORTANT: a treat - whenever a pointer to something else 
+  InitPhase produceInitialState(Vi, leni
+#ifdef CONSIDER_MANYSPINE_EFFECT
+      , countSpineConnectedToCompartment_i
+#endif
+         ), computeInitialState(); // IMPORTANT: a treat - whenever a pointer to something else 
                        // is passed out via the Interface, make sure you pass it to the 
                        // InitPhase's method and RuntimePhase's method that synchronize data
   RuntimePhase produceState(Vi), computeState;
@@ -58,6 +73,9 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
+#endif
   CurrentProducer.current << &I;
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
@@ -74,11 +92,17 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
   
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT
+      CountInformationArrayProducer, 
+#endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
+#endif
     setVoltagePointers(); //set Vi
     set_A_and_len();//set Ai, leni
   }
@@ -88,6 +112,9 @@ Node SpineAttachment_Vm Implements CurrentProducer, BranchDataProducer, IndexPro
 	  VoltageProducer.voltage >> Vj;
 	  SurfaceAreaLengthProducer.A >> Aj;
 	  SurfaceAreaLengthProducer.len >> lenj;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+#endif
   }
 /*}}}*/
 }
@@ -122,11 +149,18 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   dyn_var_t* Caj;
   dyn_var_t I_Ca;//the current [pA]  TUAN TOTHINK: should we use the fluxes???? J_Ca like RyR
   dyn_var_t Caconc2current;
+  string typeCpt; //"spine-neck" or "den-shaft"
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
   //}}}
     /*}}}*/
 
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
   int index;//index of the compartment that this SpineAttachment node associates with
+  BranchDataStruct* branchDataOther; // reference to the branch of the SpineAttachment this
+                            // ... SpineAttachment is paired with
 
   Shared {
     /*{{{*/
@@ -134,21 +168,33 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
     dyn_var_t []* voltageConnect;
     dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    int []* countSpineConnect;
+#endif
     /*}}}*/
   }
 
-  InitPhase produceInitialState(Vi, Cai, leni), computeInitialState();
+  InitPhase produceInitialState(Vi, Cai, leni
+#ifdef CONSIDER_MANYSPINE_EFFECT
+      , countSpineConnectedToCompartment_i
+#endif
+           ), computeInitialState();
   RuntimePhase produceState(Vi, Cai), computeState;
 
   //Output
+  //{{{
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
+#endif
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
   CaCurrentProducer.current << &I_Ca;
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
+  //}}}
 
   InAttrPSet {
     string identifier;
@@ -167,20 +213,30 @@ Node SpineAttachment_VmCai Implements CurrentProducer, BranchDataProducer, Index
   }
 
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT
+      CountInformationArrayProducer, 
+#endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
+#endif
     setVoltagePointers(); //set Vi
     set_A_and_len();//set Ai, leni
   }
   Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
-    VoltageProducer, SurfaceAreaLengthProducer
+    VoltageProducer, SurfaceAreaLengthProducer, BranchDataProducer
   {
     VoltageProducer.voltage >> Vj;
     SurfaceAreaLengthProducer.A >> Aj;
     SurfaceAreaLengthProducer.len >> lenj;
+    BranchDataProducer.branchData >> branchDataOther;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+#endif
   }
 
   Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
@@ -233,6 +289,11 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   dyn_var_t* CaERj;
   dyn_var_t I_CaER;
   dyn_var_t CaERconc2current;
+  string typeCpt; //"spine-neck" or "den-shaft"
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
   //}}}
   /*}}}*/
 
@@ -246,15 +307,25 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     dyn_var_t []* CaConcentrationConnect;
     dyn_var_t []* CaERConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    int []* countSpineConnect;
+#endif
     /*}}}*/
   }
 
-  InitPhase produceInitialState(Vi, Cai, CaERi, leni), computeInitialState();
+  InitPhase produceInitialState(Vi, Cai, CaERi, leni
+#ifdef CONSIDER_MANYSPINE_EFFECT
+      , countSpineConnectedToCompartment_i
+#endif
+          ), computeInitialState();
   RuntimePhase produceState(Vi, Cai, CaERi), computeState;
 
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
+#endif
   CurrentProducer.current << &I;
   CaConcentrationProducer.Ca << Cai;
   CaCurrentProducer.current << &I_Ca;
@@ -277,11 +348,17 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
   UserFunction set_A_and_len;
  
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT
+      CountInformationArrayProducer, 
+#endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
+#endif
     setVoltagePointers(); //set Vi
     set_A_and_len();//set Ai, leni
   }
@@ -291,6 +368,9 @@ Node SpineAttachment_VmCaiCaER Implements CurrentProducer, BranchDataProducer, I
     VoltageProducer.voltage >> Vj;
     SurfaceAreaLengthProducer.A >> Aj;
     SurfaceAreaLengthProducer.len >> lenj;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+#endif
   }
 
   Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 

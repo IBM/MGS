@@ -4888,6 +4888,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               Mcpt2spineattach.replace("idx", postIdx);
               connect(sim, connector, postCpt, postSpineConnexon,
                       Mcpt2spineattach);
+              //finally connect 2 spineattachment nodes together
               connect(sim, connector, preSpineConnexon, postSpineConnexon,
                       Mspineattach2spineattach);
               connect(sim, connector, postSpineConnexon, preSpineConnexon,
@@ -7076,30 +7077,38 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 #else
 int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
 {
-  ComputeBranch* parentbranch = branch->_parent;
-  Capsule& firstcaps = parentbranch->_capsules[0];
-  int ncaps = branch->_nCapsules;
   int firstIndexSpanningSoma = 0; //index of the first capsule that span the soma-membrane
-  if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
-      Branch::_SOMA)
+  ComputeBranch* parentbranch = branch->_parent;
+  if (parentbranch)
   {
-    float somaR = firstcaps.getRadius();
-    int i = 0;
-    float dist2somaStart = branch->_capsules[i].getDist2Soma();
-    float dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
-    while (
-        dist2somaStart < somaR and somaR > dist2somaEnd)
+    Capsule& firstcaps = parentbranch->_capsules[0];
+    int ncaps = branch->_nCapsules;
+    if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+        Branch::_SOMA)
     {
-      i++;
-      dist2somaStart = branch->_capsules[i].getDist2Soma();
-      dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
-      if (i > ncaps-1)
+      float somaR = firstcaps.getRadius();
+      int i = 0;
+      float dist2somaStart = branch->_capsules[i].getDist2Soma();
+      float dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
+      if (branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() <= somaR)
       {
-        std::cerr << "ERROR: The branch stemming from soma is too short" << std::endl;
-        assert(0);
+        std::cerr << "The first ComputeBranch falls within the soma" << std::endl;
+        assert(branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() > somaR);
       }
+      while (
+          dist2somaStart < somaR and somaR > dist2somaEnd)
+      {
+        i++;
+        dist2somaStart = branch->_capsules[i].getDist2Soma();
+        dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
+        if (i > ncaps-1)
+        {
+          std::cerr << "ERROR: The branch stemming from soma is too short" << std::endl;
+          assert(0);
+        }
+      }
+      firstIndexSpanningSoma = i;
     }
-    firstIndexSpanningSoma = i;
   }
   return firstIndexSpanningSoma;
 }
@@ -7119,18 +7128,21 @@ int TissueFunctor::getNumCompartments(
     this->getFirstIndexOfCapsuleSpanningSoma(branch); //index of the first capsule that span the soma-membrane
   int extraCapsule4SomaAdjacentCpt = 0;
   ComputeBranch* parentbranch = branch->_parent;
-  Capsule& firstcaps = parentbranch->_capsules[0];
-#define THRESHOLD_ACCEPTABLE_MIN_LENGTH_COMPARTMENT 3.0 //[um] micrometer
-  if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
-      Branch::_SOMA)
+  if (parentbranch)
   {
-    float somaR = firstcaps.getRadius();
-    if (branch->_capsules[firstIndexSpanningSoma].getDist2Soma()
-        + branch->_capsules[firstIndexSpanningSoma].getLength() - somaR 
-        <= THRESHOLD_ACCEPTABLE_MIN_LENGTH_COMPARTMENT and
-        cptSize == 1)
+    Capsule& firstcaps = parentbranch->_capsules[0];
+#define THRESHOLD_ACCEPTABLE_MIN_LENGTH_COMPARTMENT 3.0 //[um] micrometer
+    if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+        Branch::_SOMA)
     {
-      extraCapsule4SomaAdjacentCpt = 1;
+      float somaR = firstcaps.getRadius();
+      if (branch->_capsules[firstIndexSpanningSoma].getDist2Soma()
+          + branch->_capsules[firstIndexSpanningSoma].getLength() - somaR 
+          <= THRESHOLD_ACCEPTABLE_MIN_LENGTH_COMPARTMENT and
+          cptSize == 1)
+      {
+        extraCapsule4SomaAdjacentCpt = 1;
+      }
     }
   }
 

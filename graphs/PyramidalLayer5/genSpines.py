@@ -505,6 +505,48 @@ class SomeClass(object):
       scaleFactor = 1.0
       self.scaleBasalDen(scaleFactor, write2File=True)
 
+    def genPL5b_hay2(self):
+      """
+      1. convert multiple-point soma to 1point
+      2. remove nearbyPoint
+      3. convert to tufted region
+      """
+      pass
+      self.reviseSomaSWCFile(write2File=False)
+      dist = 1.5
+      #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
+      self.removeNearbyPointsByDist(dist, write2File=False)
+      #self.removeNearbyPointsByDist(dist, write2File=True,fileSuffix='_revised.swc')
+      volume = 3.5
+      ##disable self.removeNearbyPointsByVolume(volume, write2File=False)
+      branchTypes=[
+                        branchType['basal'],
+                        branchType['apical'],
+                        branchType['tufted'],
+                        branchType['bouton'],
+                        ]
+      self.removeNearbyPointsByVolume2(branchTypes,
+                                       volume,
+                                       write2File=False)
+      ####self.convertToTufted()
+      thresholdTuftedZone=550
+      #proximalAISDistance2Soma=10
+      #distalAISDistance2Soma=45.0
+      #self.convertToTuftedandAIS(thresholdTuftedZone, proximalAISDistance2Soma,
+      #                        distalAISDistance2Soma)
+      self.convertToTufted(thresholdTuftedZone, write2File=False)
+      minR = 0.15
+      self.reviseRadius(minR, write2File=False)
+      scaleFactor = 1.0
+      #scaleFactor = 1.2
+      #scaleFactor = 1.4
+      #scaleFactor = 1.6
+      #scaleFactor = 2.2
+      #self.scaleApical(scaleFactor, write2File=True)
+      self.scaleApical(scaleFactor, write2File=False)
+      scaleFactor = 1.0
+      self.scaleBasalDen(scaleFactor, write2File=True)
+
     def removeBasalBranch(self, dist_criteria):
         """
         Remove all points in apical (tufted as well) if it is farther form the soma

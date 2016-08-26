@@ -28,7 +28,11 @@ void Connexon::produceVoltage(RNG& rng)
 
 void Connexon::computeState(RNG& rng) 
 {
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  I=g*(*Vj-*Vi) / *countGapJunctionConnectedToCompartment_j;//TUAN TODO TO BE REVISED
+#else
   I=g*(*Vj-*Vi);
+#endif
 }
 
 void Connexon::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ConnexonInAttrPSet* CG_inAttrPset, CG_ConnexonOutAttrPSet* CG_outAttrPset) 
@@ -37,6 +41,10 @@ void Connexon::setPointers(const String& CG_direction, const String& CG_componen
   assert(getSharedMembers().voltageConnect);
   assert(index>=0 && index<getSharedMembers().voltageConnect->size());    
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  countGapJunctionConnectedToCompartment_i = 
+    &((*(getSharedMembers().countGapJunctionConnect))[index]);
+#endif
 }
 
 Connexon::~Connexon() 

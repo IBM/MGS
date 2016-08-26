@@ -494,6 +494,24 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 		<< Vnew[i]  << " " << std::endl;
 }
 
+void HodgkinHuxleyVoltage::printDebugHHCurrent(int cptIndex)
+{
+  unsigned size = branchData->size;
+	int i  = cptIndex;
+  Array<InjectedCurrent>::iterator iiter = injectedCurrents.begin();
+  Array<InjectedCurrent>::iterator iend = injectedCurrents.end();
+  std::cerr << "==================" << std::endl;
+  for (; iiter != iend; iiter++)
+  {
+    if (iiter->index == cptIndex) 
+    {
+      std::cerr << "Inj [pA/um^2] = " << *(iiter->current) / iiter->area //; // [pA/um^2]
+        << " [pA] = " << *(iiter->current) << ", [um^2] = " << iiter->area
+          << " | " << getArea(iiter->index) << std::endl;
+    }
+  }
+  std::cerr << "==================" << std::endl;
+}
 // Update: RHS[], Aii[]
 // Unit: RHS = current density (pA/um^2)
 //       Aii = conductance density (nS/um^2)
@@ -689,10 +707,16 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   for (int i = 0; i < size; i++)  // for each compartment on that branch
   {
     if (Aii[i] != Aii[i])
+    {
       printDebugHH();
+      printDebugHHCurrent(i);
+    }
     assert(Aii[i] == Aii[i]);
     if (RHS[i] != RHS[i])
+    {
       printDebugHH();
+      printDebugHHCurrent(i);
+    }
     assert(RHS[i] == RHS[i]);
   }
 #endif  //END DEBUG SECTION
@@ -1041,14 +1065,33 @@ dyn_var_t HodgkinHuxleyVoltage::getHalfDistance (int index)
     {
       if (proximalDimension->dist2soma <= SMALL)
       {
-        halfDist = (
-            std::abs( dimensions[index]->length/2 )
-            +
-            std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
-            )/ 2.0;
-        //halfDist = (
-        //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
-        //    );
+        if (size==1)
+        {
+          if (isDistalCase0)
+          {//no flux distal
+            halfDist = ( dimensions[index]->length/2 );
+          }
+          else if (isDistalCase1 or isDistalCase2)
+          {
+            halfDist = (
+                std::abs( dimensions[index]->length/2 )
+                +
+                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                )/ 2.0;
+          }
+        }
+        else
+        {
+          halfDist = (
+              std::abs( dimensions[index]->length/2 )
+              +
+              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              )/ 2.0;
+          //halfDist = (
+          //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          //    );
+
+        }
       }
       else{
         if (size==1)
@@ -1102,3 +1145,29 @@ dyn_var_t HodgkinHuxleyVoltage::getHalfDistance (int index)
   }
   return halfDist;
 }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT
+void HodgkinHuxleyVoltage::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countSpineConnected.size() != size) 
+  {
+    countSpineConnected.increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      countSpineConnected[i] = 0;
+  }
+  countSpineConnected[CG_inAttrPset->idx]++;
+}
+
+void HodgkinHuxleyVoltage::updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countGapJunctionConnected.size() != size) 
+  {
+    countGapJunctionConnected.increaseSizeTo(size); 
+    for (int i = 0; i < size; i++)
+      countGapJunctionConnected[i] = 0;
+  }
+  countGapJunctionConnected[CG_inAttrPset->idx]++;
+}
+#endif

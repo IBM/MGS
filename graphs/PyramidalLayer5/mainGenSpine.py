@@ -5,15 +5,20 @@ from genSpines import SomeClass
 # Pyramidal neuron
 # OPTION 1: full tree
 ################
-##spines = SomeClass("neurons/neuron_test.swc")
-##spines = SomeClass("neurons/neuron.swc")
-##spines.genSpine_PL5_new()
+##if (0):
+##    targetDir = "neurons"
+##    #spines = SomeClass("neurons/neuron_test.swc")
+##    #spines = SomeClass("neurons/neuron.swc")
+##    spines = SomeClass(targetDir +"/hay2_3K.swc")
+##    spines.genSpine_PL5_new()
 
-#targetDir = "neurons"
-#modelFile = "model_somethingHay2011.gsl"
-#tissueFile = "neurons_pyramidalL5.txt"
-#spines = SomeClass(targetDir +"/neuron.swc")
-#spines.genSpine_PyramidalL5()  #better
+if (1): #use this
+    targetDir = "neurons"
+    modelFile = "model_somethingHay2011.gsl"
+    tissueFile = "neurons_pyramidalL5.txt"
+    #spines = SomeClass(targetDir +"/neuron.swc")
+    spines = SomeClass(targetDir +"/hay2_3K.swc")
+    spines.genSpine_PyramidalL5()  #better
 
 ################
 #
@@ -21,8 +26,8 @@ from genSpines import SomeClass
 # OPTION 1: trimmed tree
 ################
 targetDir = "neurons"
-spines = SomeClass(targetDir +"/neuron.swc_trimmedBranchMaxDistance.swc")
-spines.genSpine_PyramidalL5()  #better
+#spines = SomeClass(targetDir +"/neuron.swc_trimmedBranchMaxDistance.swc")
+#spines.genSpine_PyramidalL5()  #better
 
 
 

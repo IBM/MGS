@@ -29,6 +29,10 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
     void initializeCompartmentData(RNG& rng);
     void solve(RNG& rng);
     void finish(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT
+    virtual void updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+    virtual void updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+#endif
     virtual void setReceptorCurrent(
         const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
     virtual void setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
@@ -68,6 +72,7 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
     //unsigned getSize() {return branchData->size;}
     void printDebugHH();
     void printDebugHH(int i);
+    void printDebugHHCurrent(int i);
     // - common for all compartment variables
 #if MAX_COMPUTE_ORDER>0
     void forwardSolve1(RNG& rng);

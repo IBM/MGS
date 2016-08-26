@@ -67,6 +67,13 @@ Interface SolutionProducer {
 	dyn_var_t* solution;
 }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT
+Interface CountInformationArrayProducer {
+  int []* countSpineConnected;
+  int []* countGapJunctionConnected;
+}
+#endif
+
 Constant BranchData Implements BranchDataProducer {
 	// data members
 	BranchDataStruct branchData;

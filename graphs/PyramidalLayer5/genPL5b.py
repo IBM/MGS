@@ -8,11 +8,24 @@ targetDir = "neurons"
 #neuron = SomeClass(targetDir +"/hay2_0.developed.swc")
 #neuron.genPL5b()
 #neuron = SomeClass(targetDir +"/hay1.swc_original_revisedSoma.swc")
-neuron = SomeClass(targetDir +"/hay1.swc_original_revisedSoma.swc_changedBranch.swc")
-neuron.genPL5b_hay1()
-dist=0.0 #[um]
-neuron = SomeClass(targetDir +"/hay1.swc_original_revisedSoma.swc_changedBranch.swc_scaledBasal.swc")
-neuron.removeBasalBranch(dist)
+###############
+## hay1 swc
+if (0):
+    neuron = SomeClass(targetDir +"/hay1.swc_original_revisedSoma.swc_changedBranch.swc")
+    neuron.genPL5b_hay1()
+    dist=0.0 #[um]
+    neuron = SomeClass(targetDir +"/hay1.swc_original_revisedSoma.swc_changedBranch.swc_scaledBasal.swc")
+    neuron.removeBasalBranch(dist)
+
+###############
+## hay2 swc
+if (1):
+    targetDir = "neurons"
+    neuron = SomeClass(targetDir +"/hay2.swc")
+    neuron.genPL5b_hay2()
+    #dist=0.0 #[um]
+    #neuron = SomeClass(targetDir +"/hay1.swc_original_revisedSoma.swc_changedBranch.swc_scaledBasal.swc")
+    #neuron.removeBasalBranch(dist)
 
 ##############
 # convert the branch supposed to be apical to apical

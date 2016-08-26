@@ -114,7 +114,9 @@
 //#define STRETCH_SOMA_WITH 130.0 
 //#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 25.0    
+#ifndef STRETCH_SOMA_WITH
 #define STRETCH_SOMA_WITH 35.0    //seem ok  value if used
+#endif
 //#define STRETCH_SOMA_WITH 050.0 
 //#define SCALING_NECK_FROM_SOMA 10.0  //>1: make neck smaller
 #define SCALING_NECK_FROM_SOMA 1.0  //>1: make neck smaller
@@ -131,5 +133,6 @@
 
 #define NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
 //       dsi = (dx1 + dx2)/2 - Check Mascagni (1995, pg 33)
+#define CONSIDER_MANYSPINE_EFFECT // if defined, the new codes that handle the case when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ propagate to the nneck needs to be equally divided  (this is important for numerical stability)
 
 #endif //_MAXCOMPUTEORDER_H

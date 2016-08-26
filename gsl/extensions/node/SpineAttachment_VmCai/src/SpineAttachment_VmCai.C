@@ -21,6 +21,8 @@
 #include <cfloat>
 #include "NTSMacros.h"
 
+SegmentDescriptor SpineAttachment_VmCai::_segmentDescriptor;
+
 SpineAttachment_VmCai::SpineAttachment_VmCai() 
 {
 	_gotAssigned = false;
@@ -32,6 +34,13 @@ void SpineAttachment_VmCai::produceInitialState(RNG& rng)
 }
 void SpineAttachment_VmCai::computeInitialState(RNG& rng)
 {
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile unsigned iteration = getSimulation().getIteration();
+  volatile unsigned nidxOther = _segmentDescriptor.getNeuronIndex(branchDataOther->key);
+  volatile unsigned bidxOther = _segmentDescriptor.getBranchIndex(branchDataOther->key);
+#endif
   assert(Vi);
   assert(Vj);
   assert(Cai);
@@ -52,20 +61,40 @@ void SpineAttachment_VmCai::computeInitialState(RNG& rng)
   //  g = 1/R = A / (rho * l)
   assert(Raxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
-  dyn_var_t len = (*leni + *lenj) / 2.0; //[um]
-  g = A / (Raxial * len);            // [nS]
-  Caconc2current = A * DCa * zCa * zF / (1000000.0*len);
+  dyn_var_t distance;
+  String typeDenShaft("den-shaft");
+  String typeSpineNeck("spine-neck");
+  if (typeCpt == typeDenShaft)
+  {
+   distance = (*leni + *lenj / 2.0); //[um]
+  }else{//connect to spine-neck
+   distance = (*leni / 2.0  + *lenj); //[um]
+  }
+  g = A / (Raxial * distance);            // [nS]
+  Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
 }
 
 void SpineAttachment_VmCai::produceState(RNG& rng) {}
 
 void SpineAttachment_VmCai::computeState(RNG& rng)
 {
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile unsigned iteration = getSimulation().getIteration();
+  volatile unsigned nidxOther = _segmentDescriptor.getNeuronIndex(branchDataOther->key);
+  volatile unsigned bidxOther = _segmentDescriptor.getBranchIndex(branchDataOther->key);
+#endif
 	//i = index of compartment this connexon is connecting to
 	//j = index of compartment from the other side
-  float V = *Vj - *Vi;
+  dyn_var_t V = *Vj - *Vi;
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  I = g * V / *countSpineConnectedToCompartment_j;
+  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
+#else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
+#endif
 }
 
 void SpineAttachment_VmCai::setVoltagePointers(
@@ -84,6 +113,9 @@ void SpineAttachment_VmCai::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
+#ifdef CONSIDER_MANYSPINE_EFFECT
+  countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
+#endif
 }
 
 void SpineAttachment_VmCai::setCaPointers(
@@ -110,6 +142,11 @@ void SpineAttachment_VmCai::set_A_and_len(
     Constant* CG_constant, CG_SpineAttachment_VmCaiInAttrPSet* CG_inAttrPset,
     CG_SpineAttachment_VmCaiOutAttrPSet* CG_outAttrPset)
 {
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile unsigned iteration = getSimulation().getIteration();
+#endif
   if (_gotAssigned)
 	  assert(index == CG_inAttrPset->idx);
   else
@@ -128,6 +165,7 @@ void SpineAttachment_VmCai::set_A_and_len(
     // A2   = zero (from shaft-side)
     Ai = 0.0;
     leni = &(dimension->r);
+    typeCpt = typeDenShaft;
   }
   else if (cptType == typeSpineNeck)
   {
@@ -136,6 +174,10 @@ void SpineAttachment_VmCai::set_A_and_len(
     _ri = &(dimension->r);
     Ai = M_PI * (*_ri) * (*_ri);
     leni = &(dimension->length);
+    typeCpt = typeDenShaft;
+  }
+  else{//do not accept other names
+    assert(0);
   }
 }
 
