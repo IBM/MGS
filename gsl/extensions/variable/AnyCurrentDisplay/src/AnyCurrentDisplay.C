@@ -470,8 +470,9 @@ void AnyCurrentDisplay::setUpPointers(
   if (CG_inAttrPset->identifier == "CHANNEL"
 #ifdef IDEA_ILEAK
      or CG_inAttrPset->identifier == "BRANCH" or
-      CG_inAttrPset->identifier == "JUNCTION")
+      CG_inAttrPset->identifier == "JUNCTION"
 #endif
+   )
   {
     //now check
     if (record)

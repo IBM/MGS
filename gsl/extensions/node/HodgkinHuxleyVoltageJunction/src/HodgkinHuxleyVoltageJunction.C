@@ -327,7 +327,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
 {
 	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
-		"(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+		"(neuronIdx,branchIdx,brchOrder,brType){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   std::cerr << getSimulation().getIteration() << "," 
     <<  getSimulation().getIteration() * *getSharedMembers().deltaT
     << "|" << phase 
@@ -335,7 +335,8 @@ void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
     << getIndex() << "] "
     << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
     << _segmentDescriptor.getBranchIndex(branchData->key) << ","
-    << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
+    << _segmentDescriptor.getBranchOrder(branchData->key) << ","
+    << _segmentDescriptor.getBranchType(branchData->key) << ") {"
     << dimensions[0]->x << "," << dimensions[0]->y << ","
     << dimensions[0]->z << "," 
     << dimensions[0]->r << " | " 
