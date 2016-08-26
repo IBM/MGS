@@ -61,6 +61,7 @@ void ChannelCaHVA::initialize(RNG& rng)
   if (k.size() != size) k.increaseSizeTo(size);
 #endif
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+  //NOTE I_Ca plays the role for Iion already
   //if (Iion.size()!=size) Iion.increaseSizeTo(size);
   if (E_Ca.size() != size) E_Ca.increaseSizeTo(size);
   // initialize
@@ -126,6 +127,7 @@ void ChannelCaHVA::initialize(RNG& rng)
     //I_Ca[i] = g[i] * (v-E_Ca[i]);
     //Iion[i] = g[i] * (v-E_Ca[i]);
 #elif CHANNEL_CaHVA == CaHVA_REUVENI_AMITAI_GUTNICK_1993 
+    {
     //E_Ca[i]=(0.04343 * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     E_Ca[i]=(R_zCaF * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / cai));
     // s = m
@@ -138,11 +140,14 @@ void ChannelCaHVA::initialize(RNG& rng)
     k[i] = ah/(ah + bh);
     //g[i] = gbar[i]*m[i]*m[i]*h[i];
     g[i] = gbar[i]*s[i]*s[i]*k[i];
+
+    }
 #else
     // E_rev  = RT/(zCa.F)ln([Ca]o/[Ca]i)   [mV]
 
 #endif
     I_Ca[i] = g[i] * (v-E_Ca[i]);
+    //Iion[i] = I_Ca[i];
     //Iion[i] = g[i] * (v-E_Ca[i]);
   }
 }
@@ -200,6 +205,7 @@ void ChannelCaHVA::update(RNG& rng)
 		if (currentTime < NOGATING_TIME)
 			I_Ca[i] = 0.0;
 #endif
+    //Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
   }
 }
 

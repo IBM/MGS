@@ -39,20 +39,43 @@ void SpineAttachment_Vm::computeInitialState(RNG& rng)
   //  with complex geometry, calculating the resistance be much more complicated
   //  https://en.wikipedia.org/wiki/Electrical_resistivity_and_conductivity#Resistance_versus_resistivity_in_complicated_geometries
   //  SOLUTION: l = distance from 2 center points in neck + compartment
-  //     l = 1/2 nec-length + r2
+  //     l = 1/2 neck-length + r2
   //            A = pi * ((r1+r2)/2)^2
   //            rho = Ra ~ 100 GOhm.um
   //  g = 1/R = A / (rho * l)
-  dyn_var_t A = std::abs(Ai - *Aj);
-  dyn_var_t len = (*leni + *lenj) / 2.0;
-  g = A / (Raxial * len);  // [nS]
+  dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
+  dyn_var_t distance;
+  String typeDenShaft("den-shaft");
+  String typeSpineNeck("spine-neck");
+  if (typeCpt == typeDenShaft)
+  {
+   distance = (*leni + *lenj / 2.0); //[um]
+  }else{//connect to spine-neck
+   distance = (*leni / 2.0  + *lenj); //[um]
+  }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#else
+  g = A / (Raxial * distance);            // [nS]
+#endif
 }
 
 void SpineAttachment_Vm::produceState(RNG& rng) {}
 
 void SpineAttachment_Vm::computeState(RNG& rng)
 {
-  I = g * (*Vj - *Vi);  // g = should be a function of spineneck size
+	//i = index of compartment this connexon is connecting to
+	//j = index of compartment from the other side
+  dyn_var_t V = *Vj - *Vi;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  I = g * V / *countSpineConnectedToCompartment_j;
+#else
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  //no need to update I(Vm), as it produces g, and Vj
+#else
+  I = g * V;  // g = should be a function of spineneck size
+#endif
+#endif
 }
 
 void SpineAttachment_Vm::setVoltagePointers(
@@ -71,6 +94,9 @@ void SpineAttachment_Vm::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
+#endif
 }
 
 void SpineAttachment_Vm::set_A_and_len(
@@ -97,6 +123,7 @@ void SpineAttachment_Vm::set_A_and_len(
     // A2   = zero (from shaft-side)
     Ai = 0.0;
     leni = &(dimension->r);
+    typeCpt = typeDenShaft;
   }
   else if (cptType == typeSpineNeck)
   {
@@ -105,6 +132,10 @@ void SpineAttachment_Vm::set_A_and_len(
     _ri = &(dimension->r);
     Ai = M_PI * (*_ri) * (*_ri);
     leni = &(dimension->length);
+    typeCpt = typeDenShaft;
+  }
+  else{//do not accept other names
+    assert(0);
   }
 }
 

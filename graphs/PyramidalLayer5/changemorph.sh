@@ -14,6 +14,61 @@ clean_all() {
   rm_if_link stimulus_model.gsl
   rm_if_link model.gsl
   rm_if_link neurons.txt 
+  rm_if_link spines
+}
+
+Yes_No_ChangeSWC ()
+{
+  # print question
+  echo -n "Want to change SWC link ?(yes(y)/no(n)): "
+
+  # read answer
+  read YnAnswer
+
+  # all to lower case
+  YnAnswer=$(echo $YnAnswer | awk '{print tolower($0)}')
+
+  # check and act on given answer
+  case $YnAnswer in
+    "yes")  ChangeSWC;;
+    "y")  ChangeSWC;;
+    "no")  ;;
+    "n")  ;;
+    *)      echo "Please answer yes(y) or no(n)" ; Yes_No_ChangeSWC ;;
+  esac
+}
+ChangeSWC ()
+{
+  paramFold=($(find neurons/ -maxdepth 1 -type f -name '*.swc' ! -name 'neuron.swc' -printf "%f\n"))
+  echo "SUGGEST: neurons.swc_tufted.swc_reviseRadius.swc for hay1"
+  echo "Select one of this:"
+  arrSize=${#paramFold[@]}
+  for i in "${!paramFold[@]}"; do 
+    printf "%s\t%s\n" "$i" "${paramFold[$i]}"
+  done
+  re='^[0-9]+$'
+  while true; do
+      read -p "Type in the number? " REPLY
+      if  [[ $REPLY =~ $re ]] ; then
+        if [ $REPLY -ge 0 ] && [ $REPLY -lt $arrSize ]; then 
+          arg2="${paramFold[$REPLY]}"
+          break; 
+        fi;
+      fi
+  done
+  rm_if_link neurons/neuron.swc 2>&1 >/dev/null
+  cd neurons;ln -s $arg2 neuron.swc; cd -
+  spineFolder=$(echo $swcFile | cut -f 1 -d '.')"_spines"
+  if [ -d neurons/"$spineFolder" ]; then
+    rm_if_link spines 2>&1 >/dev/null
+    ln -s neurons/$spineFolder spines
+    rm_if_link neurons.txt
+    ln -s spines/neurons.txt neurons.txt
+  else 
+    echo "$spineFolder not found"
+    rm_if_link neurons.txt
+    ln -s single_neuron.txt neurons.txt
+  fi
 }
 
 ModelFolder=systems
@@ -52,7 +107,7 @@ else
     #done
     re='^[0-9]+$'
     while true; do
-        read -p "Type in the number?" REPLY
+        read -p "Type in the number? " REPLY
         if  [[ $REPLY =~ $re ]] ; then
           if [ $REPLY -ge 0 ] && [ $REPLY -lt $arrSize ]; then 
             arg2="${paramFold[$REPLY]}"
@@ -69,4 +124,21 @@ else
   ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
   ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
   ln -s neurons/neurons_$authorName.txt neurons.txt
+
+  ls neurons/neuron.swc 2>&1 >/dev/null
+  swcFile=""
+  if [ $? != 0 ]; then 
+    swcFile=""
+  else
+    swcFile=($(ls -l neurons/neuron.swc 2>/dev/null | awk '{print $11}' 2>/dev/null))
+  fi
+  echo "Please make sure neurons/neuron.swc link to the right file"
+  if [ "$swcFile" != "" ]; then
+    echo "Currently link to $swcFile"
+    Yes_No_ChangeSWC
+  else
+      ChangeSWC
+  fi
+
+
 fi

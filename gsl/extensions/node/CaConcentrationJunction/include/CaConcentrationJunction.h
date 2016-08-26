@@ -44,6 +44,7 @@ class CaConcentrationJunction : public CG_CaConcentrationJunction
   // junction designed as 1-compartment always, there is no need for index
   dyn_var_t getVolume();
   dyn_var_t getArea();
+	void printDebugHH(std::string phase="JUNCTION_CORRECT");
 	private:
   static SegmentDescriptor _segmentDescriptor;
 };

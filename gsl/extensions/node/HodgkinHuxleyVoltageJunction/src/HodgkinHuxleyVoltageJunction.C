@@ -26,6 +26,7 @@
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
 
+#define SMALL 1.0E-6
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
@@ -40,16 +41,23 @@ dyn_var_t HodgkinHuxleyVoltageJunction::getArea() // Tuan: check ok
 	return area;
 }
 
+
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 { // explicit junction (which can be soma (with branches are axon/dendrite
   // trees)
   // or a cut point junction 
-	// or a branching point junction with 3 or more branches (one from main, 2+ for children
-  // branches))
+	// or a branching point junction with 
+  //    either 3 or more branches (one from main, 2+ for children
+  // branches)
+  //    or 2 branches (one from main, one from children when there is branchType changing, 
+  //    but not branchpoint), e.g. from prox-axon to AIS, or AIS to distal-axon on 1 branch
+  //               or apical-trunk to apical-tuft
+  // )
   unsigned size = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   assert(Vnew.size() == 1);
   assert(dimensions.size() == 1);
+
 
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   dyn_var_t Vm_default = Vnew[0];
@@ -116,19 +124,50 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 	  //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
 	  //      in calculating the cross-sectional area
 	  dyn_var_t Rb;
+	  dyn_var_t distance ;
 	  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
 	  {
-		  Rb = ((*diter)->r );
+		  //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
+      //  NOTE: should be applied for Axon hillock only
+		  Rb = ((*diter)->r ) ;
+      //TEST 
+			Rb /= SCALING_NECK_FROM_SOMA;
+      //END TEST
+#ifdef USE_SOMA_AS_POINT
+      distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
+#else
+      //distance = (*diter)->dist2soma + dimension->r;
+      distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
+         // from soma is always the distance from the center of soma to the center
+         // of that compartment
+      //distance += 50.0;//TUAN TESTING - make soma longer
+      //TEST 
+      distance += STRETCH_SOMA_WITH;
+      //END TEST
+#endif
+      assert(distance > 0);
 	  }else{
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+		  Rb = ((*diter)->r); //the small diameter of the branch means small current pass to it
+#else
 		  Rb = 0.5 * ((*diter)->r + dimension->r);
+#endif
+	    distance = fabs((*diter)->dist2soma - dimension->dist2soma);
+      assert(distance > 0);
 	  }
-	  dyn_var_t distance = fabs((*diter)->dist2soma - dimension->dist2soma);
+//#define TEST_IDEA_R_HALF_SOMA
+//#ifdef TEST_IDEA_R_HALF_SOMA
+//		  Rb = 0.5 * ((*diter)->r + dimension->r);
+//#endif
+    if (distance <= 0) 
+      std::cerr << "distance = " << distance << std::endl;
 	  assert(distance > 0);
 	  gAxial.push_back(Poar * Rb * Rb / distance);
   }
   if (getSharedMembers().deltaT)
   {
     cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
+    //cmt =  Cm / *(getSharedMembers().deltaT);
   }
 #ifdef DEBUG_HH
   std::cerr << "JUNCTION (" << dimension->x << "," << dimension->y << ","
@@ -148,7 +187,7 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 #endif
 }
 
-//GOAL: predict Vnew[0]
+//GOAL: predict Vnew[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
 void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 {
   //TUAN DEBUG
@@ -184,7 +223,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 		current -=  (*(iiter->currents))[0]; //[pA/um^2]
 	}
 
-	//  2. receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
@@ -194,7 +233,7 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += **iter * **giter;
   }
 
-	//  3. receptor currents using GHK type equations (gV, gErev)
+	//  3. synapse receptor currents using GHK type equations (gV, gErev)
 	//  NOTE: Not available
 
   //  4. injected currents
@@ -213,8 +252,8 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += (*xiter) * ((**viter) - Vcur);
   }
 
-	float Vold = Vnew[0];
-  Vnew[0] = current / conductance;
+	//float Vold = Vnew[0];
+  Vnew[0] = current / conductance; //estimate at (t+dt/2)
 
 #ifdef DEBUG_ASSERT
   if (not (Vnew[0] == Vnew[0])
@@ -236,15 +275,16 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
             << _segmentDescriptor.getBranchIndex(branchData->key) << ","
             << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
             << dimensions[0]->x << "," << dimensions[0]->y << ","
-            << dimensions[0]->z << "," 
+            << dimensions[0]->z << ","
 						<< dimensions[0]->r << ","
             << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
-            << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
-            << std::endl;
+            << dimensions[0]->volume << "," << dimensions[0]->length << "} " 
+            << Vnew[0] << std::endl;
 #endif
 }
 
-//GOAL: correct Vnew[0] and update Vcur
+//GOAL: correct Vnew[0] at (t+dt/2) 
+// and finally update at (t+dt) for Vcur, and Vnew[0]
 void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 {
   dyn_var_t conductance = cmt;
@@ -260,7 +300,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
-	//Hodgkin-Huxley typed membrane currents
+	//  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
   Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
   Array<ChannelCurrents>::iterator cend = channelCurrents.end();
   for (; citer != cend; ++citer)
@@ -270,7 +310,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     current += gloc * (*(citer->reversalPotentials))[0];
   }
 
-	//GHK-formula typed membrane currents
+	//  1.b. ionic currents using GHK equations (-Iion)
 	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
 	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
 	for (; iiter != iend; iiter++)
@@ -278,7 +318,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 		current -=  (*(iiter->currents))[0]; //[pA/um^2]
 	}
 
-	// Synapse Receptor's currents
+	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
@@ -288,7 +328,10 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     current += **iter * **giter;
   }
 
-	// Injected currents [pA]
+	//  3. synapse receptor currents using GHK type equations (gV, gErev)
+	//  NOTE: Not available
+
+  //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
   for (; iter != end; ++iter)
@@ -336,11 +379,13 @@ void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
     << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
     << _segmentDescriptor.getBranchIndex(branchData->key) << ","
     << _segmentDescriptor.getBranchOrder(branchData->key) << ") {"
-    << dimensions[0]->x << "," << dimensions[0]->y << ","
+    << dimensions[0]->x << "," 
+    << dimensions[0]->y << ","
     << dimensions[0]->z << "," 
     << dimensions[0]->r << " | " 
     << dimensions[0]->dist2soma << "," << dimensions[0]->surface_area << ","
-    << dimensions[0]->volume << "," << dimensions[0]->length << "} " << Vnew[0]
+    << dimensions[0]->volume << "," << dimensions[0]->length << "} " 
+    << Vnew[0]
     << std::endl;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin();
@@ -402,3 +447,29 @@ bool HodgkinHuxleyVoltageJunction::confirmUniqueDeltaT(
 }
 
 HodgkinHuxleyVoltageJunction::~HodgkinHuxleyVoltageJunction() {}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+void HodgkinHuxleyVoltageJunction::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countSpineConnected.size() != size) 
+  {
+    countSpineConnected.increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      countSpineConnected[i] = 0;
+  }
+  countSpineConnected[0]++;
+}
+
+void HodgkinHuxleyVoltageJunction::updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countGapJunctionConnected.size() != size) 
+  {
+    countGapJunctionConnected.increaseSizeTo(size); 
+    for (int i = 0; i < size; i++)
+      countGapJunctionConnected[i] = 0;
+  }
+  countGapJunctionConnected[0]++;
+}
+#endif

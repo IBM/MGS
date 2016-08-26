@@ -81,7 +81,7 @@ void ChannelCaLVA::update(RNG& rng)
 		if (currentTime < NOGATING_TIME)
 			I_Ca[i] = 0.0;
 #endif
-    Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
+    //Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
   }
 }
 
@@ -99,7 +99,7 @@ void ChannelCaLVA::initialize(RNG& rng)
   if (m.size()!=size) m.increaseSizeTo(size);
   if (h.size()!=size) h.increaseSizeTo(size);
   if (E_Ca.size()!=size) E_Ca.increaseSizeTo(size);
-  if (Iion.size()!=size) Iion.increaseSizeTo(size);
+  //if (Iion.size()!=size) Iion.increaseSizeTo(size);
   if (I_Ca.size()!=size) I_Ca.increaseSizeTo(size);
   
   // initialize
@@ -151,7 +151,7 @@ void ChannelCaLVA::initialize(RNG& rng)
     g[i] = gbar[i]*m[i]*m[i]*h[i];
 #endif
     I_Ca[i] = g[i] * (v-E_Ca[i]);
-    Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
+    //Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
   }
 }
 

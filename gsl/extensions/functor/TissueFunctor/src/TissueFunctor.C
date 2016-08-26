@@ -1328,6 +1328,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 #ifdef IDEA1
       int ncpts = _tissueContext->getNumCompartments(branch, cptsizes_in_branch);
 #else
+      //NUMCPT 1
       int ncpts = getNumCompartments(branch, cptsizes_in_branch);
 #endif
       size.push_back(ncpts);
@@ -1401,7 +1402,8 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             dyn_var_t radius = 0.0;
             dyn_var_t surface_area = 0.0;
             dyn_var_t volume = 0.0;
-            dyn_var_t lost_distance = 0.0;
+            dyn_var_t lost_distance_distal = 0.0;
+            dyn_var_t lost_distance_proximal = 0.0;
 #ifdef IDEA1
             float reserved4distend = branch->_numCapsulesEachSideForBranchPoint.second;
             float reserved4proxend = branch->_numCapsulesEachSideForBranchPoint.first;
@@ -1418,7 +1420,13 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
               endCap -= int(std::floor(reserved4distend));
               //2. 
             }
+#else
+            if (j == 0 )
+            {
+              begCap = &branch->_capsules[j+getFirstIndexOfCapsuleSpanningSoma(branch)];
+            }
 #endif
+
             for (Capsule* capPtr = begCap; capPtr <= endCap; ++capPtr)
             {//find dimension information for this compartment by summing up the capsules
               radius += capPtr->getRadius();
@@ -1443,9 +1451,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
               volume += M_PI * r * r * h;
 
               dyn_var_t somaR = 0.0;          // soma radius (if present)
-              dyn_var_t lost_distance = 0.0;  // using lost_distance ensures no
+              //dyn_var_t lost_distance = 0.0;  // using lost_distance ensures no
                                               // negative surface_volume and
                                               // volume
+              //lost_distance_distal = 0.0;
+              //lost_distance_proximal = 0.0;
               if (j == 0 && capPtr == begCap)
               {  // check proximal-end
               //TUAN TODO NOW
@@ -1453,18 +1463,19 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                 unsigned int computeOrder =
                   _segmentDescriptor.getComputeOrder(key);
                 if (computeOrder == 0)
-                {  // reserve some for the explicit junction
+                {  // reserve some at proximal-end for the explicit junction
                   ComputeBranch* parentbranch = branch->_parent;
                   Capsule& firstcaps = parentbranch->_capsules[0];
 #ifdef IDEA1
                     dyn_var_t frac = reserved4proxend - int(std::floor(reserved4proxend));
                     surface_area -= 2.0 * M_PI * r * h * frac;
                     volume -= M_PI * r * r * h * frac;
-                    lost_distance = h * frac;
+                    //lost_distance = h * frac;
+                    lost_distance_proximal = h * frac;
 #else
                   if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
                       Branch::_SOMA)
-                  {  // remove the part of the capsule
+                  {  // remove the part of the capsule covered inside soma sphere
                     //UPDATE: there is no longer need, as we already shift the capsule index
                     // as given above
                     // covered inside soma
@@ -1476,28 +1487,30 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                     //surface_area -= 2.0 * M_PI * r * h;
                     //volume -= M_PI * r * r * h;
                     //lost_distance = h ;
-                    /*
                     somaR = firstcaps.getRadius();
-                    surface_area -= 2.0 * M_PI * r * somaR;
-                    volume -= M_PI * r * r * somaR;
-                    if (h < somaR)
-                    {//TUAN DEBUG
-                    std::cerr << "First capsule to soma is too short\n";
-                    std::cerr << "length = " << h << "; while soma radius = " << somaR
-                      << " from neuron index " <<
-                      _segmentDescriptor.getNeuronIndex(key)
-                      << std::endl;
-                    }
-                    assert(h > somaR);
-                    lost_distance = somaR;
-                    */
+                    assert(capPtr->getDist2Soma()+capPtr->getLength()>somaR);
+                    lost_distance_proximal = somaR - capPtr->getDist2Soma();
+                    surface_area -= 2.0 * M_PI * r * lost_distance_proximal;
+                    volume -= M_PI * r * r * lost_distance_proximal;
+                    //if (h < somaR)
+                    //{//TUAN DEBUG
+                    //std::cerr << "First capsule to soma is too short\n";
+                    //std::cerr << "length = " << h << "; while soma radius = " << somaR
+                    //  << " from neuron index " <<
+                    //  _segmentDescriptor.getNeuronIndex(key)
+                    //  << std::endl;
+                    //}
+                    //assert(h > somaR);
+                    assert(lost_distance_proximal >= 0.0);
                   }
                   else
-                  {  // reserve some for the cut/branch explicit junction
+                  {  // reserve proximal-end for the cut/branch explicit junction
                     dyn_var_t frac = getFractionCapsuleVolumeFromPost(branch);
-                    surface_area -= 2.0 * M_PI * r * h * frac;
-                    volume -= M_PI * r * r * h * frac;
-                    lost_distance = h * frac;
+                    lost_distance_proximal = h * frac;
+                    surface_area -= 2.0 * M_PI * r * lost_distance_proximal;
+                    volume -= M_PI * r * r * lost_distance_proximal;
+                    //lost_distance = h * frac;
+                    assert(lost_distance_proximal >= 0.0);
                   }
 #endif
                 }
@@ -1511,7 +1524,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
                 unsigned int computeOrder =
                   _segmentDescriptor.getComputeOrder(key);
                 if (computeOrder == MAX_COMPUTE_ORDER)
-                {  // reserve some for the explicit junction
+                {  // reserve some at distal-end for the explicit junction
                   if (branch->_daughters.size() >= 1)
                   {
 #ifdef IDEA1
@@ -1519,26 +1532,38 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 #else
                     dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
 #endif
-                    surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
-                    volume -= M_PI * r * r * (h - lost_distance) * frac;
+                    //surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
+                    //volume -= M_PI * r * r * (h - lost_distance) * frac;
+                    //lost_distance_distal = (h-lost_distance_proximal) * frac;
+                    lost_distance_distal = (h) * frac; //to make sure it consistent witht the amount transferred to the 'junction' 
+                                            //as the junction has no idea about the fraction hold in proximal of this compartment
+                    surface_area -= 2.0 * M_PI * r * lost_distance_distal;
+                    volume -= M_PI * r * r * lost_distance_distal;
                   }
                 }
 #ifdef IDEA1
                  //NOTE: no compartment on implicit (slice-cut or branchpoint)
 #else
-                else
-                {
-                  if (branch->_daughters.size() >= 1)
-                  {  // reserve some for the implicit branching junction
-                    dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
-                    surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
-                    volume -= M_PI * r * r * (h - lost_distance) * frac;
-                  }
-                  else
-                  {  // do nothing for implicit cut junction or the terminal-end
-                    // capsule
-                  }
-                }
+                //else
+                //{
+                //  //TOFIX TUAN TODO: check if we create a compartment for the implicit 
+                //  //branching point
+                //  if (branch->_daughters.size() >= 1)
+                //  {  // reserve some for the implicit branching junction
+                //    dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch);
+                //    //surface_area -= 2.0 * M_PI * r * (h - lost_distance) * frac;
+                //    //volume -= M_PI * r * r * (h - lost_distance) * frac;
+                //    //lost_distance_distal = (h-lost_distance_proximal) * frac;
+                //    lost_distance_distal = (h) * frac; //to make sure it consistent witht the amount transferred to the 'junction' 
+                //                            //as the junction has no idea about the fraction hold in proximal of this compartment
+                //    surface_area -= 2.0 * M_PI * r * lost_distance_distal;
+                //    volume -= M_PI * r * r * lost_distance_distal;
+                //  }
+                //  else
+                //  {  // do nothing for implicit cut junction or the terminal-end
+                //    // capsule
+                //  }
+                //}
 #endif
                 //assert(surface_area > 0);
                 //assert(volume > 0);
@@ -1548,17 +1573,35 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             assert(volume > 0);
             radius /= ((endCap - begCap) + 1);  // still the average between the
                                                 // first and last capsules
-            dyn_var_t dist2soma =
-              begCap->getDist2Soma() +
-              0.5 * (endCap->getDist2Soma() - begCap->getDist2Soma() -
-                  lost_distance);
+            //dyn_var_t dist2soma =
+            //  begCap->getDist2Soma() +
+            //  0.5 * (endCap->getDist2Soma() - begCap->getDist2Soma() -
+            //      lost_distance);
+            //      IMPORTANT: The first capsule stemming from soma
+            //      then its 'dist2soma' is also the distance
+            //      between its central point to the soma central point
+            dyn_var_t length = endCap->getDist2Soma() + endCap->getLength() - 
+                lost_distance_distal - (begCap->getDist2Soma() + lost_distance_proximal) ;
+            dyn_var_t dist2soma = begCap->getDist2Soma() + lost_distance_proximal +
+              0.5 * length;
+            assert(dist2soma > 0.0);
+            ComputeBranch* parentbranch = branch->_parent;
+            Capsule& firstcaps = parentbranch->_capsules[0];
+            if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+                Branch::_SOMA)
+            {
+              assert(dist2soma > firstcaps.getRadius());
+            }
 #ifdef DEBUG_CPTS
             currentBranch = branch;
 #endif
             // create DimensionStruct
+            // //LOC 1
+            // TRY to find the location of the center point
+            //double center[3];
             StructDataItem* dimsDI = getDimension(
                 lc, begCap->getBeginCoordinates(), endCap->getEndCoordinates(),
-                radius, dist2soma, surface_area, volume);
+                radius, dist2soma, surface_area, volume, length);
             std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
             NDPair* ndp = new NDPair("dimension", dimsDI_ap);
 
@@ -1646,225 +1689,243 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
   }
   else if (nodeCategory == "Junctions")
   {  // explicit junction (which can be
-  //   1. soma
-  //   2. explicit branching point
-  //   3. or a slicing-cut junction
-  //    (a cutpoint by 2 MPI processes if the previous ComputeBranch of
-  //    computeOrder=MAX_COMPUTE_ORDER
-  //   )
-  Capsule* junctionCapsule = findJunction(nodeIndex, densityIndex, nodeType);
-  std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
-    _tissueContext->_junctionDimensionMap.find(junctionCapsule);
-  // make sure the Layer of the given nodeType has not been declared
-  // then
-  // create the data structure for the explicit junction of the given nodeType
-  // example of nodeType can be 'Voltage', 'Calcium', 'CalciumER'
-  if (miter == _tissueContext->_junctionDimensionMap.end())
-  {
-    ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
-    std::auto_ptr<DataItem> aptr_cst;
-    ComputeBranch* branch_parent = junctionCapsule->getBranch();
-    std::list<ComputeBranch*>::const_iterator
-      iter = branch_parent->_daughters.begin(),
-           iterend = branch_parent->_daughters.end();
-    dyn_var_t h = junctionCapsule->getLength();
-    dyn_var_t r = junctionCapsule->getRadius();
-    dyn_var_t surface_area = 0.0;
-    dyn_var_t volume = 0.0;
-    dyn_var_t length = 0.0;
-    // explicit junction can be
-    //  1. soma junction
-    //  2. slicing-cut junction (by the slicing plane split 2 MPI processes)
-    //  3. branching-point junction
-    if (_segmentDescriptor.getBranchType(junctionCapsule->getKey()) ==
-        Branch::_SOMA)
-    {  // soma explicit junction
-      surface_area += 4.0 * M_PI * r * r;
-      volume += 4.0 / 3.0 * M_PI * r * r * r;
-      for (; iter != iterend; iter++)
-      {  // subtract those covered by the steming axon/dendrite
-        dyn_var_t r = (*iter)->_capsules[0].getRadius();
-        surface_area -= M_PI * r * r;
-      }
-      if (surface_area <= 0)
-      {
-        std::cerr << "ERROR: The dendritic/axonal branch has size greater "
-          "than the soma's radius" << std::endl;
-        assert(surface_area > 0);
-      }
-      length = 2 * r;
-    }
-    else
-    {  // slicing-cut/branching-point explicit junction
-      // 2.a first take proximal-side of junction
-#ifdef IDEA1
-      //which is the distal-end of the parent branch
-      float reserved4distend = branch_parent->_numCapsulesEachSideForBranchPoint.second;
-      Capsule* lastCapsule = &branch_parent->lastCapsule();
-      Capsule* caps = lastCapsule;
-      int ii = 1;
-      for (; ii < reserved4distend; ii++)
-      {
-        dyn_var_t h = caps->getLength();
-        dyn_var_t r = caps->getRadius();
-        surface_area += 2.0 * M_PI * r * h;
-        volume += M_PI * r * r * h;
-        length += caps->getLength();
-        caps = caps -1;
-      }
-      dyn_var_t h = caps->getLength();
-      dyn_var_t r = caps->getRadius();
-      dyn_var_t frac = reserved4distend-ii+1;
-#else
-      dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch_parent);
-#endif
-      surface_area += 2.0 * M_PI * r * h * frac;
-      volume += M_PI * r * r * h * frac;
-      length += frac * h;
-      dyn_var_t sumlen = 0.0;
-      //  2.b. then sum with the parts from the distal-side
-      // NOTE: we have two scenarios:
-      //    a. slicing-cut (1-child) branchpoint
-      //    b. true-branching (many-children) branchpoint 
-      //  but currently the two scenarios are treated the same
-#ifdef IDEA1
-      if (branch_parent->_daughters.size() >= 1)
-      {// slicing cut point or branchpoint explicit junction
+    //   1. soma
+    //   2. explicit branching point
+    //   3. or a slicing-cut junction
+    //    (a cutpoint by 2 MPI processes if the previous ComputeBranch of
+    //    computeOrder=MAX_COMPUTE_ORDER
+    //   )
+    Capsule* junctionCapsule = findJunction(nodeIndex, densityIndex, nodeType);
+    std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
+      _tissueContext->_junctionDimensionMap.find(junctionCapsule);
+    // make sure the Layer of the given nodeType has not been declared
+    // then
+    // create the data structure for the explicit junction of the given nodeType
+    // example of nodeType can be 'Voltage', 'Calcium', 'CalciumER'
+    if (miter == _tissueContext->_junctionDimensionMap.end())
+    {
+      ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
+      std::auto_ptr<DataItem> aptr_cst;
+      ComputeBranch* branch_parent = junctionCapsule->getBranch();
+      std::list<ComputeBranch*>::const_iterator
+        iter = branch_parent->_daughters.begin(),
+            iterend = branch_parent->_daughters.end();
+      dyn_var_t h = junctionCapsule->getLength();
+      dyn_var_t r = junctionCapsule->getRadius();
+      dyn_var_t surface_area = 0.0;
+      dyn_var_t volume = 0.0;
+      dyn_var_t length = 0.0;
+      // explicit junction can be
+      //  1. soma junction
+      //  2. slicing-cut junction (by the slicing plane split 2 MPI processes)
+      //  3. branching-point junction
+      if (_segmentDescriptor.getBranchType(junctionCapsule->getKey()) ==
+          Branch::_SOMA)
+      {  // soma explicit junction
+        surface_area += 4.0 * M_PI * r * r;
+        volume += 4.0 / 3.0 * M_PI * r * r * r;
         for (; iter != iterend; iter++)
-        {  
-          ComputeBranch* childbranch = (*iter);
-          Capsule* childCapsule = &childbranch->_capsules[0];
-          //distal-side of branchpoint means the proximal-side of the child-branch
-          float reserved4proxend = childbranch->_numCapsulesEachSideForBranchPoint.first;
-          Capsule* caps = childCapsule;
-          int ii = 1;
-          for (ii = 1; ii < reserved4proxend; ii++)
-          {
-            dyn_var_t h = caps->getLength();
-            dyn_var_t r = caps->getRadius();
-            surface_area += 2.0 * M_PI * r * h;
-            volume += M_PI * r * r * h;
-            sumlen += caps->getLength();
-            caps = caps +1;
-          }
-          dyn_var_t h = caps->getLength();
-          dyn_var_t r = caps->getRadius();
-          frac = reserved4proxend-ii+1;
-          surface_area += 2.0 * M_PI * r * h * frac;
-          volume += M_PI * r * r * h * frac;
-          sumlen += frac * h;
+        {  // subtract those covered by the steming axon/dendrite
+          dyn_var_t r = (*iter)->_capsules[0].getRadius();
+          surface_area -= M_PI * r * r;
         }
-
-      }
-#else
-      //TUAN NOTE: using _daughters.size() == 1
-      //is not a good criteria for slicing cut, as the user-defined branchType
-      //can lead to a new branch, at which there is no Y-shape branching point
-      //e.g. axon---AIS--axon
-      //as for now, there is no different in treatment between slicing-cut cpt vs. branching cpt, so it is OK
-      //to use this
-      if (branch_parent->_daughters.size() == 1 
-//THINKING about this          
-//          and _segmentDescriptor.getComputeOrder(branch_parent->lastCapsule().getKey()) < MAX_COMPUTE_ORDER 
-          )
-      {  // slicing cut point explicit junction
-        iter = branch_parent->_daughters.begin();
-        ComputeBranch* childbranch = (*iter);
-        Capsule* childCapsule = &childbranch->_capsules[0];
-//#ifdef IDEA1
-//        //distal-side of branchpoint means the proximal-side of the child-branch
-//        float reserved4proxend = childbranch->_numCapsulesEachSideForBranchPoint.first;
-//        Capsule* caps = childCapsule;
-//        int ii = 1;
-//        for (ii = 1; ii < reserved4proxend; ii++)
-//        {
-//          dyn_var_t h = caps->getLength();
-//          dyn_var_t r = caps->getRadius();
-//          surface_area += 2.0 * M_PI * r * h;
-//          volume += M_PI * r * r * h;
-//          sumlen += caps->getLength();
-//          caps = caps +1;
-//        }
-//        dyn_var_t h = caps->getLength();
-//        dyn_var_t r = caps->getRadius();
-//        frac = reserved4proxend-ii+1;
-//        surface_area += 2.0 * M_PI * r * h * frac;
-//        volume += M_PI * r * r * h * frac;
-//        sumlen += frac * h;
-//#else
-        dyn_var_t h = childCapsule->getLength();
-        dyn_var_t r = childCapsule->getRadius();
-        frac = getFractionCapsuleVolumeFromPost(childbranch);
-        surface_area += 2.0 * M_PI * r * h * frac;
-        volume += M_PI * r * r * h * frac;
-        sumlen += h * frac;
-//#endif
+        if (surface_area <= 0)
+        {
+          std::cerr << "ERROR: The dendritic/axonal branch has size greater "
+            "than the soma's radius" << std::endl;
+          assert(surface_area > 0);
+        }
+        length = 2 * r;
+  //#define TEST_IDEA_LONGER_SOMA
+  //#ifdef TEST_IDEA_LONGER_SOMA
+  //      length = 2.5 * r;
+  //#endif
       }
       else
-      {  // iterate all children branches: branching point explicit junction
-        for (; iter != iterend; iter++)
-        {  
-//#ifdef IDEA1
-//          ComputeBranch* childbranch = (*iter);
-//          Capsule* childCapsule = &childbranch->_capsules[0];
-//          //distal-side of branchpoint means the proximal-side of the child-branch
-//          float reserved4proxend = childbranch->_numCapsulesEachSideForBranchPoint.first;
-//          Capsule* caps = childCapsule;
-//          int ii = 1;
-//          for (ii = 1; ii < reserved4proxend; ii++)
-//          {
-//            dyn_var_t h = caps->getLength();
-//            dyn_var_t r = caps->getRadius();
-//            surface_area += 2.0 * M_PI * r * h;
-//            volume += M_PI * r * r * h;
-//            sumlen += caps->getLength();
-//            caps = caps +1;
-//          }
-//          dyn_var_t h = caps->getLength();
-//          dyn_var_t r = caps->getRadius();
-//          frac = reserved4proxend-ii+1;
-//          surface_area += 2.0 * M_PI * r * h * frac;
-//          volume += M_PI * r * r * h * frac;
-//          sumlen += frac * h;
-//#else
-//// take half surface area from the first capsule
-          dyn_var_t h = (*iter)->_capsules[0].getLength();
-          dyn_var_t r = (*iter)->_capsules[0].getRadius();
-          frac = getFractionCapsuleVolumeFromPost((*iter));
-          surface_area += 2.0 * M_PI * r * h * frac;
-          volume += M_PI * r * r * h * frac;
-          sumlen += h * frac;
-//#endif
+      {  // slicing-cut/branching-point explicit junction
+        // 2.a first take proximal-side of junction
+#ifdef IDEA1
+        //which is the distal-end of the parent branch
+        float reserved4distend = branch_parent->_numCapsulesEachSideForBranchPoint.second;
+        Capsule* lastCapsule = &branch_parent->lastCapsule();
+        Capsule* caps = lastCapsule;
+        int ii = 1;
+        for (; ii < reserved4distend; ii++)
+        {
+          dyn_var_t h = caps->getLength();
+          dyn_var_t r = caps->getRadius();
+          surface_area += 2.0 * M_PI * r * h;
+          volume += M_PI * r * r * h;
+          length += caps->getLength();
+          caps = caps -1;
         }
+        dyn_var_t h = caps->getLength();
+        dyn_var_t r = caps->getRadius();
+        dyn_var_t frac = reserved4distend-ii+1;
+#else
+        dyn_var_t frac = getFractionCapsuleVolumeFromPre(branch_parent);
+#endif
+        dyn_var_t part_reserved_on_parentBranch = h * frac;
+        surface_area += 2.0 * M_PI * r * part_reserved_on_parentBranch;
+        volume += M_PI * r * r * part_reserved_on_parentBranch;
+        length += part_reserved_on_parentBranch;
+        dyn_var_t sumlen = 0.0;
+        //  2.b. then sum with the parts from the distal-side
+        // NOTE: we have two scenarios:
+        //    a. slicing-cut (1-child) branchpoint
+        //    b. true-branching (many-children) branchpoint 
+        //  but currently the two scenarios are treated the same
+#ifdef IDEA1
+        if (branch_parent->_daughters.size() >= 1)
+        {// slicing cut point or branchpoint explicit junction
+          for (; iter != iterend; iter++)
+          {  
+            ComputeBranch* childbranch = (*iter);
+            Capsule* childCapsule = &childbranch->_capsules[0];
+            //distal-side of branchpoint means the proximal-side of the child-branch
+            float reserved4proxend = childbranch->_numCapsulesEachSideForBranchPoint.first;
+            Capsule* caps = childCapsule;
+            int ii = 1;
+            for (ii = 1; ii < reserved4proxend; ii++)
+            {
+              dyn_var_t h = caps->getLength();
+              dyn_var_t r = caps->getRadius();
+              surface_area += 2.0 * M_PI * r * h;
+              volume += M_PI * r * r * h;
+              sumlen += caps->getLength();
+              caps = caps +1;
+            }
+            dyn_var_t h = caps->getLength();
+            dyn_var_t r = caps->getRadius();
+            frac = reserved4proxend-ii+1;
+            surface_area += 2.0 * M_PI * r * h * frac;
+            volume += M_PI * r * r * h * frac;
+            sumlen += frac * h;
+          }
+
+        }
+#else
+        //TUAN NOTE: using _daughters.size() == 1
+        //is not a good criteria for slicing cut, as the user-defined branchType
+        //can lead to a new branch, at which there is no Y-shape branching point
+        //e.g. axon---AIS--axon
+        //as for now, there is no different in treatment between slicing-cut cpt vs. branching cpt, so it is OK
+        //to use this
+        if (branch_parent->_daughters.size() == 1 
+  //THINKING about this          
+  //          and _segmentDescriptor.getComputeOrder(branch_parent->lastCapsule().getKey()) < MAX_COMPUTE_ORDER 
+            )
+        {  // slicing cut point explicit junction
+          iter = branch_parent->_daughters.begin();
+          ComputeBranch* childbranch = (*iter);
+          Capsule* childCapsule = &childbranch->_capsules[0];
+  //#ifdef IDEA1
+  //        //distal-side of branchpoint means the proximal-side of the child-branch
+  //        float reserved4proxend = childbranch->_numCapsulesEachSideForBranchPoint.first;
+  //        Capsule* caps = childCapsule;
+  //        int ii = 1;
+  //        for (ii = 1; ii < reserved4proxend; ii++)
+  //        {
+  //          dyn_var_t h = caps->getLength();
+  //          dyn_var_t r = caps->getRadius();
+  //          surface_area += 2.0 * M_PI * r * h;
+  //          volume += M_PI * r * r * h;
+  //          sumlen += caps->getLength();
+  //          caps = caps +1;
+  //        }
+  //        dyn_var_t h = caps->getLength();
+  //        dyn_var_t r = caps->getRadius();
+  //        frac = reserved4proxend-ii+1;
+  //        surface_area += 2.0 * M_PI * r * h * frac;
+  //        volume += M_PI * r * r * h * frac;
+  //        sumlen += frac * h;
+  //#else
+          dyn_var_t h = childCapsule->getLength();
+          dyn_var_t r = childCapsule->getRadius();
+          frac = getFractionCapsuleVolumeFromPost(childbranch);
+          dyn_var_t part_reserved_on_AChildBranch = h * frac;
+          surface_area += 2.0 * M_PI * r * part_reserved_on_AChildBranch; 
+          volume += M_PI * r * r * part_reserved_on_AChildBranch;
+          sumlen += part_reserved_on_AChildBranch;
+  //#endif
+        }
+        else
+        {  // iterate all children branches: branching point explicit junction
+          for (; iter != iterend; iter++)
+          {  
+  //#ifdef IDEA1
+  //          ComputeBranch* childbranch = (*iter);
+  //          Capsule* childCapsule = &childbranch->_capsules[0];
+  //          //distal-side of branchpoint means the proximal-side of the child-branch
+  //          float reserved4proxend = childbranch->_numCapsulesEachSideForBranchPoint.first;
+  //          Capsule* caps = childCapsule;
+  //          int ii = 1;
+  //          for (ii = 1; ii < reserved4proxend; ii++)
+  //          {
+  //            dyn_var_t h = caps->getLength();
+  //            dyn_var_t r = caps->getRadius();
+  //            surface_area += 2.0 * M_PI * r * h;
+  //            volume += M_PI * r * r * h;
+  //            sumlen += caps->getLength();
+  //            caps = caps +1;
+  //          }
+  //          dyn_var_t h = caps->getLength();
+  //          dyn_var_t r = caps->getRadius();
+  //          frac = reserved4proxend-ii+1;
+  //          surface_area += 2.0 * M_PI * r * h * frac;
+  //          volume += M_PI * r * r * h * frac;
+  //          sumlen += frac * h;
+  //#else
+  //// take half surface area from the first capsule
+            dyn_var_t h = (*iter)->_capsules[0].getLength();
+            dyn_var_t r = (*iter)->_capsules[0].getRadius();
+            frac = getFractionCapsuleVolumeFromPost((*iter));
+            dyn_var_t part_reserved_on_AChildBranch = h * frac;
+            surface_area += 2.0 * M_PI * r * part_reserved_on_AChildBranch;
+            volume += M_PI * r * r * part_reserved_on_AChildBranch;
+            sumlen += part_reserved_on_AChildBranch;
+  //#endif
+          }
+        }
+#endif
+        length += (sumlen / branch_parent->_daughters.size());
       }
-#endif
-      length += sumlen / branch_parent->_daughters.size();
-    }
-    // create DimensionStruct for explicit 'junction' single-compartment
-    // branch
-    dyn_var_t dist2soma =
-      junctionCapsule->getDist2Soma() + junctionCapsule->getLength();
+      // create DimensionStruct for explicit 'junction' single-compartment
+      // branch
+      dyn_var_t dist2soma ;
+      if (_segmentDescriptor.getBranchType(junctionCapsule->getKey()) ==
+          Branch::_SOMA)
+      {
+         dist2soma = 0.0;
+      }
+      else
+      {
+        dist2soma =
+          junctionCapsule->getDist2Soma() + junctionCapsule->getLength();
+        assert(dist2soma>0.0);
+      }
 #ifdef DEBUG_CPTS
-            currentBranch = branch_parent;
+              currentBranch = branch_parent;
 #endif
-    StructDataItem* dimsDI =
-      getDimension(lc, junctionCapsule->getEndCoordinates(),
-          (dyn_var_t)junctionCapsule->getRadius(),
-          (dyn_var_t)dist2soma, surface_area, volume, length);
-    std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
-    NDPair* ndp = new NDPair("dimension", dimsDI_ap);
-    NDPairList dimParams;
-    dimParams.push_back(ndp);
-    ct->getInstance(aptr_cst, dimParams, lc);
-    ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-    std::auto_ptr<Constant> aptr_dim;
-    cdi->getConstant()->duplicate(aptr_dim);
-    Constant* dim = aptr_dim.release();
-    _tissueContext->_junctionDimensionMap[junctionCapsule] =
-      dynamic_cast<CG_CompartmentDimension*>(dim);
+              //LOC 2 - explicit junction
+      StructDataItem* dimsDI =
+        getDimension(lc, junctionCapsule->getEndCoordinates(),
+            (dyn_var_t)junctionCapsule->getRadius(),
+            (dyn_var_t)dist2soma, surface_area, volume, length);
+      std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
+      NDPair* ndp = new NDPair("dimension", dimsDI_ap);
+      NDPairList dimParams;
+      dimParams.push_back(ndp);
+      ct->getInstance(aptr_cst, dimParams, lc);
+      ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
+      std::auto_ptr<Constant> aptr_dim;
+      cdi->getConstant()->duplicate(aptr_dim);
+      Constant* dim = aptr_dim.release();
+      _tissueContext->_junctionDimensionMap[junctionCapsule] =
+        dynamic_cast<CG_CompartmentDimension*>(dim);
+    }
   }
-}
-return rval;
+  return rval;
 }
 
 // GOAL: During NodeInit statement
@@ -1940,6 +2001,7 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
   assert(volume > 0);
   assert(length > 0);
 
+  //TUAN TODO PLAN: Use FloatDataItem is better (for coordinate)
   DoubleDataItem* xddi = new DoubleDataItem(cds[0]);
   std::auto_ptr<DataItem> xddi_ap(xddi);
   NDPair* x = new NDPair("x", xddi_ap);
@@ -2034,10 +2096,13 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
                                             double* cds2, dyn_var_t radius,
                                             dyn_var_t dist2soma,
                                             dyn_var_t surface_area,
-                                            dyn_var_t volume)
+                                            dyn_var_t volume, 
+                                            dyn_var_t length)
 {
   double center[3];
   double dsqrd = 0;
+  //TUAN TODO: may need revision for the center point
+  //when a compartment is multi-capsules
   for (int i = 0; i < 3; ++i)
   {
     center[i] = (cds1[i] + cds2[i]) / 2.0;
@@ -2045,8 +2110,8 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
     dsqrd += d * d;
   }
   // dist2soma += 0.5 * sqrt(dsqrd);
-  dyn_var_t length = sqrt(dsqrd);
-  dist2soma += 0.5 * length;
+  //dyn_var_t length = sqrt(dsqrd);
+  //dist2soma += 0.5 * length;
   return getDimension(lc, center, radius, dist2soma, surface_area, volume,
                       length);
 }
@@ -4780,6 +4845,107 @@ void TissueFunctor::doConnector(LensContext* lc)
               Capsule* capsneck = (keyneck == key1) ? preCapsule : postCapsule;
               assert((keyneck == key1) || keyneck == key2);
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+              //order is important:
+              //preCpt - spineattach1
+              //postCpt - spineattach2
+              //spineattach1-spineattach2
+              //spineattach2-spineattach1
+              //spineattach1 - preCpt
+              //spineattach2 - postCpt
+              {
+              if (keyneck == key1)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mcpt2spineattach.replace("idx", preIdx);
+              connect(sim, connector, preCpt, preSpineConnexon,
+                      Mcpt2spineattach);
+                
+              }
+              {
+              if (keyneck == key2)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mcpt2spineattach.replace("idx", postIdx);
+              connect(sim, connector, postCpt, postSpineConnexon,
+                      Mcpt2spineattach);
+
+              }
+              {
+              //connect 2 spineattachment nodes together
+              connect(sim, connector, preSpineConnexon, postSpineConnexon,
+                      Mspineattach2spineattach);
+              connect(sim, connector, postSpineConnexon, preSpineConnexon,
+                      Mspineattach2spineattach);
+
+              }
+              {
+              if (keyneck == key1)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mspineattach2cpt.replace("idx", preIdx);
+              connect(sim, connector, preSpineConnexon, preCpt,
+                      Mspineattach2cpt);
+
+              }
+              {
+              if (keyneck == key2)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mspineattach2cpt.replace("idx", postIdx);
+              connect(sim, connector, postSpineConnexon, postCpt,
+                      Mspineattach2cpt);
+              }
+
+#else
               if (keyneck == key1)
               {
                 std::string name("typeCpt");
@@ -4823,10 +4989,12 @@ void TissueFunctor::doConnector(LensContext* lc)
               Mcpt2spineattach.replace("idx", postIdx);
               connect(sim, connector, postCpt, postSpineConnexon,
                       Mcpt2spineattach);
+              //finally connect 2 spineattachment nodes together
               connect(sim, connector, preSpineConnexon, postSpineConnexon,
                       Mspineattach2spineattach);
               connect(sim, connector, postSpineConnexon, preSpineConnexon,
                       Mspineattach2spineattach);
+#endif
             }
           }
           typeCounter[synapseType]++;
@@ -6701,10 +6869,11 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPre(ComputeBranch* branch)
   Capsule caps = branch->_capsules[0];
   assert(_segmentDescriptor.getBranchType(caps.getKey()) !=
          Branch::_SOMA);  // not soma
-  if (branch->_nCapsules == 1)
-    frac = 1.0 / 4.0;
-  else
-    frac = 1.0 / 3.0;
+  //if (branch->_nCapsules == 1)
+  //  frac = 1.0 / 4.0;
+  //else
+  //  frac = 1.0 / 3.0;
+  frac = 1.0 / 5.0;
   assert(frac > 0);
   assert(frac < 1);
   return frac;
@@ -6721,24 +6890,27 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
   Capsule caps = branch->_capsules[0];
   assert(_segmentDescriptor.getBranchType(caps.getKey()) !=
          Branch::_SOMA);  // not soma
-  if (branch->_nCapsules == 1)
-  {
-    ComputeBranch* branch_parent = branch->_parent;
-    // check if the branch is next to soma (as a major portion can be covered by
-    // soma)
-    // and thus we need to use a smaller fraction
-    if (_segmentDescriptor.getBranchType(
-            branch_parent->_capsules[0].getKey()) == Branch::_SOMA)
-    {
-      frac = (branch->_capsules[0].getLength() -
-              branch_parent->_capsules[0].getRadius()) /
-             branch->_capsules[0].getLength() / 4.0;
-    }
-    else
-      frac = 1.0 / 4.0;
-  }
-  else
-    frac = 1.0 / 3.0;
+  //if (branch->_nCapsules == 1)
+  //{
+  //  ComputeBranch* branch_parent = branch->_parent;
+  //  assert(_segmentDescriptor.getBranchType(branch_parent->_capsules[0].getKey()) !=
+  //      Branch::_SOMA);  // not soma
+  //  // check if the branch is next to soma (as a major portion can be covered by
+  //  // soma)
+  //  // and thus we need to use a smaller fraction
+  //  if (_segmentDescriptor.getBranchType(
+  //          branch_parent->_capsules[0].getKey()) == Branch::_SOMA)
+  //  {
+  //    frac = (branch->_capsules[0].getLength() -
+  //            branch_parent->_capsules[0].getRadius()) /
+  //           branch->_capsules[0].getLength() / 4.0;
+  //  }
+  //  else
+  //    frac = 1.0 / 4.0;
+  //}
+  //else
+  //  frac = 1.0 / 3.0;
+  frac = 1.0 / 5.0;
 
   assert(frac > 0);
   assert(frac < 1);
@@ -7005,6 +7177,43 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 //  return rval;
 //}
 #else
+int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
+{
+  int firstIndexSpanningSoma = 0; //index of the first capsule that span the soma-membrane
+  ComputeBranch* parentbranch = branch->_parent;
+  if (parentbranch)
+  {
+    Capsule& firstcaps = parentbranch->_capsules[0];
+    int ncaps = branch->_nCapsules;
+    if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+        Branch::_SOMA)
+    {
+      float somaR = firstcaps.getRadius();
+      int i = 0;
+      float dist2somaStart = branch->_capsules[i].getDist2Soma();
+      float dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
+      if (branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() <= somaR)
+      {
+        std::cerr << "The first ComputeBranch falls within the soma" << std::endl;
+        assert(branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() > somaR);
+      }
+      while (
+          dist2somaStart < somaR and somaR > dist2somaEnd)
+      {
+        i++;
+        dist2somaStart = branch->_capsules[i].getDist2Soma();
+        dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
+        if (i > ncaps-1)
+        {
+          std::cerr << "ERROR: The branch stemming from soma is too short" << std::endl;
+          assert(0);
+        }
+      }
+      firstIndexSpanningSoma = i;
+    }
+  }
+  return firstIndexSpanningSoma;
+}
 int TissueFunctor::getNumCompartments(
     ComputeBranch* branch, std::vector<int>& cptsizes_in_branch)
 {
@@ -7015,12 +7224,36 @@ int TissueFunctor::getNumCompartments(
   // we need this in case the ncaps is less than _compartmentSize
   // e.g. soma has only 1 capsule
   int cptSize = (ncaps > _compartmentSize) ? _compartmentSize : ncaps;
+
+
+  int firstIndexSpanningSoma = 
+    this->getFirstIndexOfCapsuleSpanningSoma(branch); //index of the first capsule that span the soma-membrane
+  int extraCapsule4SomaAdjacentCpt = 0;
+  ComputeBranch* parentbranch = branch->_parent;
+  if (parentbranch)
+  {
+    Capsule& firstcaps = parentbranch->_capsules[0];
+#define THRESHOLD_ACCEPTABLE_MIN_LENGTH_COMPARTMENT 3.0 //[um] micrometer
+    if (_segmentDescriptor.getBranchType(firstcaps.getKey()) ==
+        Branch::_SOMA)
+    {
+      float somaR = firstcaps.getRadius();
+      if (branch->_capsules[firstIndexSpanningSoma].getDist2Soma()
+          + branch->_capsules[firstIndexSpanningSoma].getLength() - somaR 
+          <= THRESHOLD_ACCEPTABLE_MIN_LENGTH_COMPARTMENT and
+          cptSize == 1)
+      {
+        extraCapsule4SomaAdjacentCpt = 1;
+      }
+    }
+  }
+
   // Find: # compartments in the current branch
-  ncpts = (int(floor(double(ncaps) / double(cptSize))) > 0)
-              ? int(floor(double(ncaps) / double(cptSize)))
+  ncpts = (int(floor(double(ncaps-firstIndexSpanningSoma-extraCapsule4SomaAdjacentCpt) / double(cptSize))) > 0)
+              ? int(floor(double(ncaps-firstIndexSpanningSoma-extraCapsule4SomaAdjacentCpt) / double(cptSize)))
               : 1;
   int remainder_caps;
-  remainder_caps = ncaps - cptSize * ncpts;
+  remainder_caps = ncaps - firstIndexSpanningSoma - extraCapsule4SomaAdjacentCpt - cptSize * ncpts;
   cptsizes_in_branch.clear();
   //suppose 2cpts, each has 7caps, and remainder is 5
   //so increment = int(5/2)=2
@@ -7037,8 +7270,12 @@ int TissueFunctor::getNumCompartments(
    */
   for (int ii = 0; ii < ncpts; ii++)
   {
+    // compartment indexing is distal to proximal, while 
+    // capsule indexing is proximal to distal
     int ncapsule = cptSize;
     ncapsule += (ii < remainder_caps) ? increment + 1 : increment + 0;
+    if (ii == ncpts-1)
+      ncapsule += firstIndexSpanningSoma + extraCapsule4SomaAdjacentCpt;
     cptsizes_in_branch.push_back(ncapsule);
   }
   Capsule* capPtr = &branch->_capsules[ncaps - 1];

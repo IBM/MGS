@@ -578,6 +578,7 @@ def parse():
   parser_protocol.add_argument("number", default=-1, help="index of simulation protocol (0 = rest; 1 = inject soma; 2= inject shaft with dual-exp EPSP-like current; 3 = inject a particular presynaptic neuron; 4 = like 3, but at a distal region; 5 = trigger soma then at distal end (within a small window of time); 6 = trigger soma, then another spine (within a window of time))")
   parser_protocol.add_argument("date", default="May29", help="date of data, e.g. May30")
   parser_protocol.add_argument("morphology", default="", help="(optional) name of morph, e.g. hay1")
+  parser_protocol.add_argument("-extension", default="", help="an extension to folder")
   #parser_protocol.set_defaults(func=plot_case9a)
   parser_protocol.set_defaults(which='protocol')
 
@@ -651,6 +652,7 @@ def plot_case9a(args):
     mapFolders[4] = 'out2_May29_triggerdistalspines'
     mapFolders[5] = 'out2_May29_triggersoma_then_distalspines'
     mapFolders[6] = 'out2_May29_case06'
+    mapFolders[7] = 'out2_May29_triggeraxon'
     tmpMap = {}
     if len(sys.argv) == 1:
       print("Help: python " + sys.argv[0] + " <number> <date>")
@@ -664,12 +666,12 @@ def plot_case9a(args):
         tmpMap[key] = val.replace('May29',sys.argv[2])
       mapFolders = tmpMap
 
-    # create folder purpose (if not exist)
-    for key,value in mapFolders.iteritems():
-      if not os.path.exists(value):
-        os.makedirs(value)
 
     if len(sys.argv) > 1 and int(sys.argv[1]) == -1:#first arg should be the protocol
+      # create folder purpose (if not exist)
+      for key,value in mapFolders.iteritems():
+        if not os.path.exists(value):
+          os.makedirs(value)
       sys.exit("Folders created")
 
     if len(sys.argv) > 1:#first arg should be the protocol
@@ -1410,16 +1412,20 @@ def plot_case9_adv():
       folder='./out2_May27_fullspine'
       folder='./out2_May27'
       morph = args.morphology
+      extension = args.extension
+      if (extension != ""):
+          extension = "-"+extension
       if (morph != ""):
           morph += "_"
       mapFolders = {}
-      mapFolders[0] = mainFolder + morph + 'May29_rest'
-      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'
-      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'
-      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'
-      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'
-      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines'
-      mapFolders[6] = mainFolder + morph + 'May29_case06'
+      mapFolders[0] = mainFolder + morph + 'May29_rest'                          +  extension
+      mapFolders[1] = mainFolder + morph + 'May29_triggersoma'                   +  extension
+      mapFolders[2] = mainFolder + morph + 'May29_triggershaft'                  +  extension
+      mapFolders[3] = mainFolder + morph + 'May29_triggerspine'                  +  extension
+      mapFolders[4] = mainFolder + morph + 'May29_triggerdistalspines'           +  extension
+      mapFolders[5] = mainFolder + morph + 'May29_triggersoma_then_distalspines' +  extension
+      mapFolders[6] = mainFolder + morph + 'May29_case06'                        +  extension
+      mapFolders[7] = mainFolder + morph + 'May29_triggeraxon'                   +  extension
       tmpMap = {}
       date = args.date
       protocol = args.number
@@ -1440,60 +1446,39 @@ def plot_case9_adv():
       sys.exit("")
     #print(args)
 
-    #folder='./out2_May26'
-    #kfolder='./out2_May27_trigger_soma'
-    #folder='./out2_May27_fullspine'
-    #folder='./out2_May27'
-    #mapFolders = {}
-    #mapFolders[0] = 'out2_May29_rest'
-    #mapFolders[1] = 'out2_May29_triggersoma'
-    #mapFolders[2] = 'out2_May29_triggershaft'
-    #mapFolders[3] = 'out2_May29_triggerspine'
-    #mapFolders[4] = 'out2_May29_triggerdistalspines'
-    #mapFolders[5] = 'out2_May29_triggersoma_then_distalspines'
-    #mapFolders[6] = 'out2_May29_case06'
-    #tmpMap = {}
-    #if len(sys.argv) == 1:
-    #  print("Help: python " + sys.argv[0] + " <number> <date>")
-    #  print("  <number> = index of simulating protocol (use -1 if you only want to create folders)")
-    #  print("  <date>   = the date of data, e.g. May28")
-    #  sys.exit("")
-
-    #if len(sys.argv) > 2:#second arg should be the day (e.g. May29)
-    #  for key,val in mapFolders.iteritems():
-    #    print(val.replace('May29',sys.argv[2]))
-    #    tmpMap[key] = val.replace('May29',sys.argv[2])
-    #  mapFolders = tmpMap
-
-    ## create folder purpose (if not exist)
-    #for key,value in mapFolders.iteritems():
-    #  if not os.path.exists(value):
-    #    os.makedirs(value)
-
-    #if len(sys.argv) > 1 and int(sys.argv[1]) == -1:#first arg should be the protocol
-    #  sys.exit("Folders created")
-
-    #if len(sys.argv) > 1:#first arg should be the protocol
-    #  folder = mapFolders[int(sys.argv[1])]
-
+    print ("Working on: ", folder)
     #timeStart = 28.0
-    timeStart = 0.0
+    timeStart = 390.0
     #timeEnd = 60.0
-    timeEnd = -1.0
+    #timeEnd = -1.0
     #timeStart = 270.0
-    #timeEnd = 380.0
+    timeEnd = 490.0
     somaMPIprocess=2
+    distalTuftedColor= 'green'
+    proximalTuftedColor= 'y'
+    distalTrunkColor= 'red'
+    proximalTrunkColor= 'orange'
     somaColor = 'blue'
-    middledenColor= 'red'
-    distaldenColor= 'green'
-    tufteddenColor= 'black'
-    perisomaticApicalDenColor= 'orange'
-    perisomaticBasalDenColor= 'violet'
     axonAISColor = 'black'
+    proximalBasalColor= 'violet'
     spineColor = 'magenta'
     preNeuronColor = 'brown'
-    f, axarr = plt.subplots(3, 2)
+
+    distalTuftedColor= 'red'
+    proximalTuftedColor= 'red'
+    distalTrunkColor= 'green'
+    proximalTrunkColor= 'green'
+    somaColor = 'black'
+    axonAISColor = 'black'
+    proximalBasalColor= 'violet'
+
+    f, axarr = plt.subplots(2, 2)
     mpl.rcParams['lines.linewidth'] = 2
+    ##################
+    ## row 1
+    gr = 0; gc = 0 # graph row, col
+
+    ###########just for setting the time
     myFile = folder+'/'+getFile(folder,'somaCa.dat')
     t, v0 = np.loadtxt(myFile,
                        unpack=True, skiprows=1,
@@ -1502,72 +1487,290 @@ def plot_case9_adv():
     if (timeEnd == -1.0):
       idxEnd = len(t)-1
       timeEnd = t[idxEnd]
+    elif (timeEnd > t[len(t)-1]):
+      idxEnd = len(t)-1
     else:
       idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    minCa = 100000.00
+    maxCa = -100000.00
+    #endif
 
-    minCa = np.amin(v0)
-    maxCa = np.amax(v0)
-    # f, axarr = plt.subplots(3, sharex=True)
-    axarr[0, 0].plot(t, v0, somaColor, label='soma')
-    # axarr[0, 0].plot(t, v1, 'red', label='bouton')
-    # axarr[0, 0].plot(t, v2, 'green', label='spinehead')
-
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTuftedCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
-        axarr[0, 0].legend()
-        minCa = min(np.amin(v1), minCa)
-        maxCa = max(np.amax(v1), maxCa)
+        axarr[gr, gc].plot(t, v1, distalTuftedColor, label='distalTufted')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenCa.dat')
+
+    myFile = folder+'/'+getFile(folder,'proximalTuftedCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
-        axarr[0, 0].legend()
-        minCa = min(np.amin(v1), minCa)
-        maxCa = max(np.amax(v1), maxCa)
+        axarr[gr, gc].plot(t, v1, proximalTuftedColor, label='proximalTufted')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'distaldendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'distalTrunkCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, distaldenColor, label='distal-den')
-        axarr[0, 0].legend()
-        minCa = min(np.amin(v1), minCa)
-        maxCa = max(np.amax(v1), maxCa)
+        axarr[gr, gc].plot(t, v1, distalTrunkColor, label='distalTrunk')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
 
-    myFile = folder+'/'+getFile(folder,'middledendriticCa.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, middledenColor, label='middle-den')
-        axarr[0, 0].legend()
-        minCa = min(np.amin(v1), minCa)
-        maxCa = max(np.amax(v1), maxCa)
+        axarr[gr, gc].plot(t, v1, proximalTrunkColor, label='proximalTrunk')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'somaCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v0 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        minCa = np.amin(v0[idxStart:idxEnd])
+        maxCa = np.amax(v0[idxStart:idxEnd])
+        axarr[gr, gc].plot(t, v0, somaColor, label='soma')
 
     myFile = folder+'/'+getFile(folder,'axonAISCa.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[0, 0].plot(t, v1, axonAISColor, label='AIS')
-        axarr[0, 0].legend()
-        minCa = min(np.amin(v1), minCa)
-        maxCa = max(np.amax(v1), maxCa)
+        axarr[gr, gc].plot(t, v1, axonAISColor, label='AIS')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
 
-    axarr[0, 0].set_ylim(bottom=minCa - 0.5)
-    axarr[0, 0].set_ylim(top=maxCa + 0.5)
-    axarr[0, 0].set_xlim(left=timeStart, right=timeEnd)
-    axarr[0, 0].set_title("[Ca2+] (uM)")
-    # axarr[0].set_xlim(left=0);
-    # axarr[0].set_xlim(right=60);
+
+
+    myFile = folder+'/'+getFile(folder,'proximalBasalCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, proximalBasalColor, label='proximalBasal')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+
+
+    axarr[gr, gc].set_ylim(bottom=minCa - 0.5)
+    axarr[gr, gc].set_ylim(top=maxCa + 0.5)
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("[Ca2+] (uM)")
+
+    ##################
+    ## row 2
+    gr = 1; gc = 0 # graph row, col
+
+    ###########just for setting the time
+    myFile = folder+'/'+getFile(folder,'somaV.dat')
+    t, v0 = np.loadtxt(myFile,
+                       unpack=True, skiprows=1,
+                       usecols=(0, 1))
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    elif (timeEnd > t[len(t)-1]):
+      idxEnd = len(t)-1
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+    minCa = 100000.00
+    maxCa = -100000.00
+    #endif
+
+    myFile = folder+'/'+getFile(folder,'distalTuftedV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, distalTuftedColor, label='distalTufted')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+
+    myFile = folder+'/'+getFile(folder,'proximalTuftedV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, proximalTuftedColor, label='proximalTufted')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'distalTrunkV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, distalTrunkColor, label='distalTrunk')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'proximalTrunkV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, proximalTrunkColor, label='proximalTrunk')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'somaV.dat')
+    if (os.path.isfile(myFile)):
+        t, v0 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        minCa = np.amin(v0[idxStart:idxEnd])
+        maxCa = np.amax(v0[idxStart:idxEnd])
+        axarr[gr, gc].plot(t, v0, somaColor, label='soma')
+
+    myFile = folder+'/'+getFile(folder,'axonAISV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, axonAISColor, label='AIS')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'proximalBasalV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[gr, gc].plot(t, v1, proximalBasalColor, label='proximalBasal')
+        axarr[gr, gc].legend()
+        minCa = min(np.amin(v1[idxStart:idxEnd]), minCa)
+        maxCa = max(np.amax(v1[idxStart:idxEnd]), maxCa)
+
+
+    if (minCa > 0):
+        axarr[gr, gc].set_ylim(bottom=minCa - minCa * 0.05)
+    else:
+        axarr[gr, gc].set_ylim(bottom=minCa + minCa * 0.05)
+
+    if (maxCa > 0):
+        axarr[gr, gc].set_ylim(top=maxCa + maxCa * 0.05)
+    else:
+        axarr[gr, gc].set_ylim(top=maxCa - maxCa * 0.05)
+    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+    axarr[gr, gc].set_title("[Vm] (mV)")
+
+
+
+    plt.show()
+    return
+##################
+#    myFile = folder+'/'+getFile(folder,'somaCa.dat')
+#    t, v0 = np.loadtxt(myFile,
+#                       unpack=True, skiprows=1,
+#                       usecols=(0, 1))
+#    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+#    if (timeEnd == -1.0):
+#      idxEnd = len(t)-1
+#      timeEnd = t[idxEnd]
+#    else:
+#      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+#
+#    minCa = np.amin(v0)
+#    maxCa = np.amax(v0)
+#    axarr[gr, gc].plot(t, v0, somaColor, label='soma')
+#
+#    myFile = folder+'/'+getFile(folder,'axonAISCa.dat')
+#    if (os.path.isfile(myFile)):
+#        t, v1 = np.loadtxt(myFile,
+#                        unpack=True, skiprows=1,
+#                        usecols=(0, 1))
+#        axarr[gr, gc].plot(t, v1, axonAISColor, label='AIS')
+#        axarr[gr, gc].legend()
+#        minCa = min(np.amin(v1), minCa)
+#        maxCa = max(np.amax(v1), maxCa)
+#
+#
+#    myFile = folder+'/'+getFile(folder,'proximalTrunkCa.dat')
+#    if (os.path.isfile(myFile)):
+#        t, v1 = np.loadtxt(myFile,
+#                        unpack=True, skiprows=1,
+#                        usecols=(0, 1))
+#        axarr[gr, gc].plot(t, v1, proximalTrunkColor, label='proximalTrunk')
+#        axarr[gr, gc].legend()
+#        minCa = min(np.amin(v1), minCa)
+#        maxCa = max(np.amax(v1), maxCa)
+#
+#    myFile = folder+'/'+getFile(folder,'distalTrunkCa.dat')
+#    if (os.path.isfile(myFile)):
+#        t, v1 = np.loadtxt(myFile,
+#                        unpack=True, skiprows=1,
+#                        usecols=(0, 1))
+#        axarr[gr, gc].plot(t, v1, middledenColor, label='middle-den')
+#        axarr[gr, gc].legend()
+#        minCa = min(np.amin(v1), minCa)
+#        maxCa = max(np.amax(v1), maxCa)
+#
+#    myFile = folder+'/'+getFile(folder,'proximalBasalCa.dat')
+#    if (os.path.isfile(myFile)):
+#        t, v1 = np.loadtxt(myFile,
+#                        unpack=True, skiprows=1,
+#                        usecols=(0, 1))
+#        axarr[gr, gc].plot(t, v1, proximalBasalColor, label='proximalBasal')
+#        axarr[gr, gc].legend()
+#        minCa = min(np.amin(v1), minCa)
+#        maxCa = max(np.amax(v1), maxCa)
+#
+#    myFile = folder+'/'+getFile(folder,'proximalTuftedCa.dat')
+#    if (os.path.isfile(myFile)):
+#        t, v1 = np.loadtxt(myFile,
+#                        unpack=True, skiprows=1,
+#                        usecols=(0, 1))
+#        axarr[gr, gc].plot(t, v1, distaldenColor, label='distal-den')
+#        axarr[gr, gc].legend()
+#        minCa = min(np.amin(v1), minCa)
+#        maxCa = max(np.amax(v1), maxCa)
+#
+#    myFile = folder+'/'+getFile(folder,'distalTuftedCa.dat')
+#    if (os.path.isfile(myFile)):
+#        t, v1 = np.loadtxt(myFile,
+#                        unpack=True, skiprows=1,
+#                        usecols=(0, 1))
+#        axarr[gr, gc].plot(t, v1, distaldenColor, label='distal-den')
+#        axarr[gr, gc].legend()
+#        minCa = min(np.amin(v1), minCa)
+#        maxCa = max(np.amax(v1), maxCa)
+#
+#
+#    axarr[gr, gc].set_ylim(bottom=minCa - 0.5)
+#    axarr[gr, gc].set_ylim(top=maxCa + 0.5)
+#    axarr[gr, gc].set_xlim(left=timeStart, right=timeEnd)
+#    axarr[gr, gc].set_title("[Ca2+] (uM)")
+    #############################
+    ## row 2
+    gr = 0; gc = 1 # graph row, col
+
+
+    #############################
+    ##
     myFile = folder+'/'+getFile(folder,'somaV.dat')
     t, v0 = np.loadtxt(myFile,
                        unpack=True, skiprows=1,
@@ -1590,12 +1793,12 @@ def plot_case9_adv():
     # axarr[2, 0].set_ylim(bottom=min(np.amin(v3),np.amin(v4))-0.5);
     # axarr[2, 0].set_ylim(top=max(np.amax(v3),np.amax(v4))+0.5);
 
-    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenV.dat')
+    myFile = folder+'/'+getFile(folder,'proximalTrunkV.dat')
     if (os.path.isfile(myFile)):
         t, v1 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1))
-        axarr[1, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        axarr[1, 0].plot(t, v1, proximalTrunkColor, label='perisomatic-ApicalDen')
         #axarr[1, 0].legend()
         minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
         maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)

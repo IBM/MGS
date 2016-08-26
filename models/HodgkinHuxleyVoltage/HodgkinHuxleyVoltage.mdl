@@ -8,6 +8,7 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
+//{{{structs
 Struct ChannelCurrents {
 //use this for Hodgkin-Huxley equation
   dyn_var_t []* conductances; // [nS/um^2]
@@ -32,6 +33,7 @@ Struct InjectedCurrent {
   dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
   int index;     //  index of the compartment on a given branch to which the current is injected
 }
+//}}}
 
 //TUAN: TODO consider add SurfaceAreaLengthProducer interface here so that SpineAttachment node 
 //          knows about the length and radius of the compartment
@@ -43,6 +45,9 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 #ifdef IDEA_ILEAK
      ConductanceProducer,
      ReversalPotentialProducer,
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      CountInformationArrayProducer, 
 #endif
      NaConcentrationProducer, KConcentrationProducer 
 {
@@ -91,6 +96,10 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
                    //  from distal to proximal: forwardSolve
                    //  from proximal to distal: backwardSolve
                    //  2. treat all junctions as explicit junction
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int[] countSpineConnected;
+  int[] countGapJunctionConnected;
+#endif
        //}}}
 	//{{{data members: internal
   dyn_var_t [] Vcur; // [mV]
@@ -147,11 +156,18 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
+  CountInformationArrayProducer.countGapJunctionConnected << &countGapJunctionConnected;
+#endif
 
   NaConcentrationProducer.Na << &Shared.Na;
   KConcentrationProducer.K << &Shared.K;
 	//}}}
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  UserFunction updateSpineCount, updateGapJunctionCount;
+#endif
     // Phases methods
     /*{{{*/
   InitPhase initializeCompartmentData;
@@ -217,12 +233,26 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    updateGapJunctionCount();
+#endif
    }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+    ConductanceProducer.conductance >> receptorCurrents.conductance;
+    ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
+    setReceptorCurrent();
+   }
+#else
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    updateSpineCount();
+#endif
    }
+#endif
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
     ConductanceProducer.conductance >> receptorCurrents.conductance;
     ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
@@ -323,6 +353,9 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      CountInformationArrayProducer, 
+#endif
 	 NaConcentrationProducer, KConcentrationProducer 
 {
 // Explicit junction branch: a branch comprised of half-compartments (or better half-capsules) 
@@ -341,8 +374,12 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   DimensionStruct* [] dimensions; //the proximal-side regular-branch's compartments
     //{{{data members: internal, but for solver
   dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
-  DimensionStruct* [] dimensionInputs; // points of adjacent cpts from different branches (1prox + 1..n dist)
+  DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
   BranchDataStruct* [] branchDataInputs;  // 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int []countSpineConnected;
+  int []countGapJunctionConnected;
+#endif
     //}}}
 	//{{{data members: internal
   dyn_var_t area;//surface area [um^2]
@@ -380,7 +417,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     dyn_var_t Na; // [mM]
     dyn_var_t K;  // [mM]
     dyn_var_t E_leak;  // [miliVolt] = [mV]
-      //}}}
+    //}}}
   }
   //}}}
 
@@ -392,13 +429,22 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
+  CountInformationArrayProducer.countGapJunctionConnected << &countGapJunctionConnected;
+#endif
 
   NaConcentrationProducer.Na << &Shared.Na;
   KConcentrationProducer.K << &Shared.K;
 
+   //{{{ Phases 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  UserFunction updateSpineCount, updateGapJunctionCount;
+#endif
   InitPhase initializeJunction;
    
   RuntimePhase predictJunction, correctJunction;
+   // }}}
 
   InAttrPSet {
     string identifier;
@@ -436,11 +482,24 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    updateGapJunctionCount();
+#endif
    }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+    ConductanceProducer.conductance >> receptorConductances;
+    ReversalPotentialProducer.reversalPotential >> receptorReversalPotentials;
+   }
+#else
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    updateSpineCount();
+#endif
    }
+#endif
 
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, 
     ReversalPotentialProducer {

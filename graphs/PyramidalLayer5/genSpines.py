@@ -1,3 +1,10 @@
+### TODO
+# write code to detect uprupt change in radius
+# this is important as it affect the calculation of signal propagation,
+# especially from soma
+# 1. dr = |r2 -r1|/max(r1, r2) < some threshold
+# 2. r(first compartment from soma) must be at least some minium value, e.g. 1um
+# 3. ...???
 __author__ = "Hoang Trong Minh Tuan"
 __copyright__ = "Copyright 2016, IBM"
 __credits__ = []  # list of people who file pugs
@@ -373,36 +380,38 @@ class SomeClass(object):
                 """)
 
 
-    def convertBranch(self, startIndex, newBranch, write2File=True, fileSuffix="_changeBranch.swc"):
-      """
-      Convert all points starting from the given 'startIndex'
-      to the new branchType 'newBranch'
-      NOTE: Some swc files does not discriminate between apical and basal den
-            So this function can be useful
-      """
-      lines2Change = []
-      lines2Change.extend(startIndex)
-      tmpPointLookup = deepcopy(self.point_lookup)
-      lineArray = []
-      index = 0
-      mapNewId = {}
-      for ix in range(len(self.point_lookup)):
-          id = str(ix+1)
-          parent_id = self.point_lookup[id]['parent']
-          brType =self.point_lookup[id]['type']
-          x =self.point_lookup[id]['siteX']
-          y =self.point_lookup[id]['siteY']
-          z =self.point_lookup[id]['siteZ']
-          r =self.point_lookup[id]['siteR']
-          dist2soma= self.point_lookup[id]['dist2soma']
-          dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
-          branchOrder = self.point_lookup[id]['branchOrder']
-          numChildren = self.point_lookup[id]['numChildren']
-          if ((int(id) in lines2Change) or
-             (int(parent_id) in lines2Change)):
-            # start to delete from this line
-            lines2Change.append(int(id))
-            brType = newBranch
+    def convertBranch(self, startIndex, newBranch,
+                      write2File=True,
+                      fileSuffix="_changedBranch.swc"):
+        """
+        Convert all points starting from the given 'startIndex'
+        to the new branchType 'newBranch'
+        NOTE: Some swc files does not discriminate between apical and basal den
+                So this function can be useful
+        """
+        lines2Change = []
+        lines2Change.extend(startIndex)
+        tmpPointLookup = deepcopy(self.point_lookup)
+        lineArray = []
+        index = 0
+        mapNewId = {}
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =self.point_lookup[id]['siteX']
+            y =self.point_lookup[id]['siteY']
+            z =self.point_lookup[id]['siteZ']
+            r =self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            branchOrder = self.point_lookup[id]['branchOrder']
+            numChildren = self.point_lookup[id]['numChildren']
+            if ((int(id) in lines2Change) or
+                (int(parent_id) in lines2Change)):
+                # start to delete from this line
+                lines2Change.append(int(id))
+                brType = newBranch
             tmpPointLookup[str(id)] = {'type': brType,
                                      'siteX': x,
                                      'siteY': y,
@@ -412,15 +421,15 @@ class SomeClass(object):
                                      'dist2branchPoint': dist2branchPoint,
                                      'branchOrder': branchOrder,
                                      'numChildren': numChildren}
-          lineArray.append([str(id), str(brType),
+            lineArray.append([str(id), str(brType),
                           str(x), str(y),
                           str(z), str(r), str(parent_id)])
-      self.point_lookup = tmpPointLookup
-      lineArray = np.asarray(lineArray)
-      if (write2File):
-        PL5bFileName = self.swc_filename+fileSuffix
-        np.savetxt(PL5bFileName, lineArray, fmt='%s')
-        print("Write to file: ", PL5bFileName)
+        self.point_lookup = tmpPointLookup
+        lineArray = np.asarray(lineArray)
+        if (write2File):
+            PL5bFileName = self.swc_filename+fileSuffix
+            np.savetxt(PL5bFileName, lineArray, fmt='%s')
+            print("Write to file: ", PL5bFileName)
 
 
     def genPL5b(self):
@@ -436,7 +445,16 @@ class SomeClass(object):
       self.removeNearbyPointsByDist(dist, write2File=False)
       #self.removeNearbyPointsByDist(dist, write2File=True,fileSuffix='_revised.swc')
       volume = 3.5
-      self.removeNearbyPointsByVolume(volume, write2File=False)
+      #disable self.removeNearbyPointsByVolume(volume, write2File=False)
+      branchTypes=[
+                        branchType['basal'],
+                        branchType['apical'],
+                        branchType['tufted'],
+                        branchType['bouton'],
+                        ]
+      self.removeNearbyPointsByVolume2(branchTypes,
+                                       volume,
+                                       write2File=False)
       ####self.convertToTufted()
       thresholdTuftedZone=550
       proximalAISDistance2Soma=10
@@ -444,9 +462,353 @@ class SomeClass(object):
       #self.convertToTuftedandAIS(thresholdTuftedZone, proximalAISDistance2Soma,
       #                        distalAISDistance2Soma)
       self.convertToTufted(thresholdTuftedZone)
+      self.reviseRadius(write2File=True)
 
-    def convertToTuftedandAIS(self, thresholdTuftedZone=550, proximalAISDistance2Soma=10,
-                              distalAISDistance2Soma=45.0):
+    def genPL5b_hay1(self):
+      """
+      1. convert multiple-point soma to 1point
+      2. remove nearbyPoint
+      3. convert to tufted region
+      """
+      pass
+      self.reviseSomaSWCFile(write2File=False)
+      dist = 1.5
+      #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
+      self.removeNearbyPointsByDist(dist, write2File=False)
+      #self.removeNearbyPointsByDist(dist, write2File=True,fileSuffix='_revised.swc')
+      #volume = 3.5
+      ##disable self.removeNearbyPointsByVolume(volume, write2File=False)
+      #branchTypes=[
+      #                  branchType['basal'],
+      #                  branchType['apical'],
+      #                  branchType['tufted'],
+      #                  branchType['bouton'],
+      #                  ]
+      #self.removeNearbyPointsByVolume2(branchTypes,
+      #                                 volume,
+      #                                 write2File=False)
+      ####self.convertToTufted()
+      thresholdTuftedZone=550
+      #proximalAISDistance2Soma=10
+      #distalAISDistance2Soma=45.0
+      #self.convertToTuftedandAIS(thresholdTuftedZone, proximalAISDistance2Soma,
+      #                        distalAISDistance2Soma)
+      self.convertToTufted(thresholdTuftedZone, write2File=True)
+      self.reviseRadius(write2File=True)
+      scaleFactor = 1.1
+      #scaleFactor = 1.2
+      #scaleFactor = 1.4
+      #scaleFactor = 1.6
+      #scaleFactor = 2.2
+      #self.scaleApical(scaleFactor, write2File=True)
+      self.scaleApical(scaleFactor)
+      scaleFactor = 1.0
+      self.scaleBasalDen(scaleFactor, write2File=True)
+
+    def genPL5b_hay2(self):
+      """
+      1. convert multiple-point soma to 1point
+      2. remove nearbyPoint
+      3. convert to tufted region
+      """
+      pass
+      self.reviseSomaSWCFile(write2File=False)
+      dist = 1.5
+      #self.removeNearbyPoints(dist, write2File=True,fileSuffix='_revised.swc')
+      self.removeNearbyPointsByDist(dist, write2File=False)
+      #self.removeNearbyPointsByDist(dist, write2File=True,fileSuffix='_revised.swc')
+      volume = 3.5
+      ##disable self.removeNearbyPointsByVolume(volume, write2File=False)
+      branchTypes=[
+                        branchType['basal'],
+                        branchType['apical'],
+                        branchType['tufted'],
+                        branchType['bouton'],
+                        ]
+      self.removeNearbyPointsByVolume2(branchTypes,
+                                       volume,
+                                       write2File=False)
+      ####self.convertToTufted()
+      thresholdTuftedZone=550
+      #proximalAISDistance2Soma=10
+      #distalAISDistance2Soma=45.0
+      #self.convertToTuftedandAIS(thresholdTuftedZone, proximalAISDistance2Soma,
+      #                        distalAISDistance2Soma)
+      self.convertToTufted(thresholdTuftedZone, write2File=False)
+      minR = 0.15
+      self.reviseRadius(minR, write2File=False)
+      scaleFactor = 1.0
+      #scaleFactor = 1.2
+      #scaleFactor = 1.4
+      #scaleFactor = 1.6
+      #scaleFactor = 2.2
+      #self.scaleApical(scaleFactor, write2File=True)
+      self.scaleApical(scaleFactor, write2File=False)
+      scaleFactor = 1.0
+      self.scaleBasalDen(scaleFactor, write2File=True)
+
+    def removeBasalBranch(self, dist_criteria):
+        """
+        Remove all points in apical (tufted as well) if it is farther form the soma
+        at a given max-distance (but only remove starting from the first branchpoints)
+        """
+        branchTypes=[
+            branchType['basal'],
+        ]
+        self.removeBranchTooFarFromSoma(branchTypes,
+                                        dist_criteria,
+                                        write2File=True,
+                                        fileSuffix='_trimmedBasalBranchMaxDistance.swc')
+
+    def removeApicalBranch(self, dist_criteria):
+        """
+        Remove all points in apical (tufted as well) if it is farther form the soma
+        at a given max-distance (but only remove starting from the first branchpoints)
+        """
+        branchTypes=[
+            branchType['apical'],
+            branchType['tufted'],
+        ]
+        self.removeBranchTooFarFromSoma(branchTypes,
+                                        dist_criteria,
+                                        write2File=True)
+
+    def removeApicalBasalBranch(self, dist_criteria):
+        """
+        Remove all points in apical (tufted as well) if it is farther form the soma
+        at a given max-distance (but only remove starting from the first branchpoints)
+        """
+        branchTypes=[
+            branchType['basal'],
+            branchType['apical'],
+            branchType['tufted'],
+        ]
+        self.removeBranchTooFarFromSoma(branchTypes,
+                                        dist_criteria,
+                                        write2File=True)
+
+    def getPointsInBranchFartherThan(self, id, dist_criteria, listPoints):
+        """
+        Find all points in the branch having id as distal end
+        and return the list of points  from id to the branchpoint 'proxid'
+        IF the dist2soma of proxid is > dist_criteria
+        RETURN : proxid
+        """
+        del listPoints[:]
+        proxid = -1
+        while True:
+          id = str(id)
+          parent_id = self.point_lookup[id]['parent']
+          if (int(parent_id) == -1):
+              break
+          brType =self.point_lookup[id]['type']
+          x =self.point_lookup[id]['siteX']
+          y =self.point_lookup[id]['siteY']
+          z =self.point_lookup[id]['siteZ']
+          r =self.point_lookup[id]['siteR']
+          dist2soma= self.point_lookup[id]['dist2soma']
+          dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+          branchOrder = self.point_lookup[id]['branchOrder']
+          parent_numChildren = self.point_lookup[parent_id]['numChildren']
+          parent_brType =self.point_lookup[parent_id]['type']
+          if ((int(parent_numChildren) > 1) or\
+                  (brType != parent_brType)) and \
+                  float(dist2soma) < dist_criteria:
+              break
+          if ((int(parent_numChildren) > 1) or\
+                  (brType != parent_brType)) and \
+                  float(dist2soma) >= dist_criteria:
+            listPoints.append(id)
+            proxid = parent_id
+            break
+          if (int(parent_id) == -1):
+              break
+          id = parent_id
+        return proxid
+        #####end
+
+    def scaleApical(self, scaleFactor=1.0, write2File=False):
+        """
+        Scale the radius on the apical tree
+        """
+        #Put branchType = 5 to represent the region of high CaLVA, CaHVA
+        PL5bFileName = self.swc_filename+"_scaledApical.swc"
+        SWCFileSpine = open(PL5bFileName, "w")
+
+        #for ix in range(len(self.point_lookup)):
+        #    id = str(ix+1)
+        #    parent_id = self.point_lookup[id]['parent']
+        #    brType =self.point_lookup[id]['type']
+        #    x_soma =float(self.point_lookup[id]['siteX'])
+        #    y_soma =float(self.point_lookup[id]['siteY'])
+        #    z_soma =float(self.point_lookup[id]['siteZ'])
+        #    r_soma =float(self.point_lookup[id]['siteR'])
+        #    if (int(parent_id) == -1):
+        #      break
+
+        lineArray = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            dist2soma= self.point_lookup[id]['dist2soma']
+            if (
+                int(brType) == self.branchType["apical"] or
+                int(brType) == self.branchType["tufted"]
+            ) and (int(parent_id) != 1):
+                r  = r * scaleFactor
+                self.point_lookup[id]['siteR'] = r
+
+            lineArray.append([id, str(brType),
+                            str(x), str(y),
+                            str(z), str(r), str(parent_id)])
+        if (write2File):
+            lineArray = np.asarray(lineArray)
+            np.savetxt(PL5bFileName, lineArray, fmt='%s')
+            print("Write to file: ", PL5bFileName)
+
+    def scaleBasalDen(self, scaleFactor=1.0, write2File=False):
+        """
+        Scale the radius on the basal tree
+        """
+        #Put branchType = 5 to represent the region of high CaLVA, CaHVA
+        PL5bFileName = self.swc_filename+"_scaledBasal.swc"
+        SWCFileSpine = open(PL5bFileName, "w")
+
+        #for ix in range(len(self.point_lookup)):
+        #    id = str(ix+1)
+        #    parent_id = self.point_lookup[id]['parent']
+        #    brType =self.point_lookup[id]['type']
+        #    x_soma =float(self.point_lookup[id]['siteX'])
+        #    y_soma =float(self.point_lookup[id]['siteY'])
+        #    z_soma =float(self.point_lookup[id]['siteZ'])
+        #    r_soma =float(self.point_lookup[id]['siteR'])
+        #    if (int(parent_id) == -1):
+        #      break
+
+        lineArray = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            dist2soma= self.point_lookup[id]['dist2soma']
+            if (
+                int(brType) == self.branchType["basal"]
+                #or
+                #int(brType) == self.branchType["tufted"]
+            ) and (int(parent_id) != 1):
+                r  = r * scaleFactor
+                self.point_lookup[id]['siteR'] = r
+
+            lineArray.append([id, str(brType),
+                            str(x), str(y),
+                            str(z), str(r), str(parent_id)])
+        if (write2File):
+            lineArray = np.asarray(lineArray)
+            np.savetxt(PL5bFileName, lineArray, fmt='%s')
+            print("Write to file: ", PL5bFileName)
+
+    def reviseRadius(self, minR=0.10, write2File=True):
+        """
+        Revise the radius
+        if r(parent) < r(current cpt) < r(child)
+           then r(current) = 1/2 (rparent = rchild)
+        """
+        #Put branchType = 5 to represent the region of high CaLVA, CaHVA
+        PL5bFileName = self.swc_filename+"_reviseRadius.swc"
+        SWCFileSpine = open(PL5bFileName, "w")
+
+        holdpoint_list = []
+        # start with all distal ends to examine toward soma
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            numChildren = int(self.point_lookup[id]['numChildren'])
+            r = float(self.point_lookup[id]['siteR'])
+            if numChildren == 0:
+                holdpoint_list.append(id)
+                branchOrder = int(self.point_lookup[id]['branchOrder'])
+                #if branchOrder >= len(branchorder_slot):
+                #    print("""ERROR: swc file has branchOrder exceed the data available
+                #          Please check to update statistics data
+                #          """)
+                if (r < minR):
+                    print "WARNING: radius of line", id, " (r=", r, ") is < ", minR
+
+        holdpoint_list = list(set(holdpoint_list))
+        while holdpoint_list:
+            tmplist = []
+            for id in holdpoint_list:
+                point_info = self.point_lookup[id]
+                branchType = point_info['type']
+                parent_id =  point_info['parent']
+                r = float(self.point_lookup[id]['siteR'])
+                #branchOrder =  point_info['branchOrder']
+                #dist2branchPoint = float(point_info['dist2branchPoint'])
+                dist2soma = float(point_info['dist2soma'])
+
+                if (int(id) == 1):
+                    continue
+                parent_id = self.point_lookup[parent_id]['parent']
+                parent_brType =self.point_lookup[parent_id]['type']
+                parent_r = float(self.point_lookup[parent_id]['siteR'])
+                parent_dist2soma = float(self.point_lookup[parent_id]['dist2soma'])
+                #x_soma =float(self.point_lookup[parent_id]['siteX'])
+                #y_soma =float(self.point_lookup[parent_id]['siteY'])
+                #z_soma =float(self.point_lookup[parent_id]['siteZ'])
+                #r_soma =float(self.point_lookup[parent_id]['siteR'])
+                if (int(parent_id) == 1):
+                    continue
+                pparent_id = self.point_lookup[parent_id]['parent']
+                if (int(pparent_id) == 1):
+                    ## parent of parent is soma
+                    if (parent_r < r):
+                        self.point_lookup[parent_id]['siteR']=(r)
+                    continue
+                pparent_brType =self.point_lookup[pparent_id]['type']
+                pparent_r = float(self.point_lookup[pparent_id]['siteR'])
+                pparent_dist2soma = float(self.point_lookup[pparent_id]['dist2soma'])
+                if (parent_r <= r):
+                    if (r <= pparent_r):
+                        self.point_lookup[parent_id]['siteR']=str("%.3f" % ((pparent_r + r)/2.0))
+                        ## consider distance ratio
+                        # x/pparent_r =
+                        # (dist2soma-parent_dist2soma)/(dist2soma-pparent_dist2soma)
+                        #self.point_lookup[parent_id]['siteR']=(pparent_r + r)/2.0
+                    else:
+                        self.point_lookup[parent_id]['siteR']=(r)
+                tmplist.append(parent_id)
+            holdpoint_list = list(set(tmplist))
+
+        lineArray = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            lineArray.append([id, str(brType),
+                              str(x), str(y),
+                              str(z),
+                              str("%.3f" % r), str(parent_id)])
+        if (write2File):
+            lineArray = np.asarray(lineArray)
+            np.savetxt(PL5bFileName, lineArray, fmt='%s')
+            print("Write to file: ", PL5bFileName)
+
+    def convertToTuftedandAIS(self, thresholdTuftedZone=550,
+                              proximalAISDistance2Soma=10,
+                              distalAISDistance2Soma=45.0,
+                              write2File=False):
         """
         Convert a region of distal apical dendrites to thick tufted dendrite
         NOTE:
@@ -497,15 +859,17 @@ class SomeClass(object):
                 if (float(dist2soma) >= proximalAISDistance2Soma and
                     float(dist2soma) < (proximalAISDistance2Soma)+13.0):
                   print(dist2soma, x,y,z)
+            self.point_lookup[id]['type']=  brType
 
             lineArray.append([id, str(brType),
                             str(x), str(y),
                             str(z), str(r), str(parent_id)])
-        lineArray = np.asarray(lineArray)
-        np.savetxt(PL5bFileName, lineArray, fmt='%s')
-        print("Write to file: ", PL5bFileName)
+        if (write2File):
+            lineArray = np.asarray(lineArray)
+            np.savetxt(PL5bFileName, lineArray, fmt='%s')
+            print("Write to file: ", PL5bFileName)
 
-    def convertToTufted(self, thresholdTuftedZone=550):
+    def convertToTufted(self, thresholdTuftedZone=550, write2File=False):
         """
         Convert a region of distal apical dendrites to thick tufted dendrite
         NOTE:
@@ -545,7 +909,8 @@ class SomeClass(object):
             dist2soma_straight = sqrt((x_soma - x)**2 +
                         (y_soma - y)**2 + (z_soma - z)**2)
 
-            if (float(dist2soma_straight) > thresholdTuftedZone and int(brType) == self.branchType["apical"]):
+            if (float(dist2soma_straight) > thresholdTuftedZone
+                and int(brType) == self.branchType["apical"]):
                 brType = self.branchType["tufted"]
             #elif (float(dist2soma) <= distalAISDistance2Soma
             #    and float(dist2soma) >= proximalAISDistance2Soma
@@ -554,13 +919,15 @@ class SomeClass(object):
             #    if (float(dist2soma) >= proximalAISDistance2Soma and
             #        float(dist2soma) < (proximalAISDistance2Soma)+13.0):
             #      print(dist2soma, x,y,z)
+            self.point_lookup[id]['type'] =  brType
 
             lineArray.append([id, str(brType),
                             str(x), str(y),
                             str(z), str(r), str(parent_id)])
-        lineArray = np.asarray(lineArray)
-        np.savetxt(PL5bFileName, lineArray, fmt='%s')
-        print("Write to file: ", PL5bFileName)
+        if (write2File):
+            lineArray = np.asarray(lineArray)
+            np.savetxt(PL5bFileName, lineArray, fmt='%s')
+            print("Write to file: ", PL5bFileName)
 
     def convertToAIS(self, proximalAISDistance2Soma=10,
                            distalAISDistance2Soma=45.0):
@@ -1031,6 +1398,7 @@ class SomeClass(object):
       self.listDuplicatedPoints= list(set(listDuplicatedPoints))
       print("Remove nearby points (dist-criteria)------")
       print("Before delete: ", len(self.point_lookup), " points")
+      tmpPointLookup  = {}
       while (self.listDuplicatedPoints):
         ##
         #Step 2: delete these points and update others
@@ -1090,8 +1458,8 @@ class SomeClass(object):
         self.listDuplicatedPoints= self._findListDuplicatedPointByDist(dist_criteria)
 
       print("After delete: ", len(tmpPointLookup), " points")
-      lineArray = np.asarray(lineArray)
       if (write2File):
+        lineArray = np.asarray(lineArray)
         PL5bFileName = self.swc_filename+fileSuffix
         np.savetxt(PL5bFileName, lineArray, fmt='%s')
         print("Write to file: ", PL5bFileName)
@@ -1119,6 +1487,37 @@ class SomeClass(object):
                 distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
                                 (z - parent_z)**2)
                 vol = math.pi * math.pow(r, 2) * distance
+                if (vol <= volume_criteria and
+                    not (int(parent_id) in listDuplicatedPoints)):
+                    listDuplicatedPoints.append(int(id))
+                #print(id, x,y,z,parent_id)
+        return list(set(listDuplicatedPoints))
+
+    def _findListDuplicatedPointByVolume2(self, volume_criteria, branchType2Find):
+        """
+        Return a list of points that are considered 'nearby' to its parents
+        and its parents must not be in the list
+        """
+        listDuplicatedPoints = []
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =float(self.point_lookup[id]['siteX'])
+            y =float(self.point_lookup[id]['siteY'])
+            z =float(self.point_lookup[id]['siteZ'])
+            r =float(self.point_lookup[id]['siteR'])
+            if (int(parent_id) != -1):
+                parent_info = self.point_lookup[parent_id]
+                parent_x = float(parent_info['siteX'])
+                parent_y = float(parent_info['siteY'])
+                parent_z = float(parent_info['siteZ'])
+                dist2soma= self.point_lookup[id]['dist2soma']
+                distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                                (z - parent_z)**2)
+                vol = math.pi * math.pow(r, 2) * distance
+                if (not int(brType) in branchType2Find):
+                    continue
                 if (vol <= volume_criteria and
                     not (int(parent_id) in listDuplicatedPoints)):
                     listDuplicatedPoints.append(int(id))
@@ -1225,6 +1624,183 @@ class SomeClass(object):
         PL5bFileName = self.swc_filename+fileSuffix
         np.savetxt(PL5bFileName, lineArray, fmt='%s')
         print("Write to file: ", PL5bFileName)
+
+    def removeNearbyPointsByVolume2(self, branchType2Find, volume_criteria=0.0,
+                                    write2File=True,
+                                    fileSuffix='_trimmedClosedPointsByVolume.swc'):
+      """
+      Remove points that are too closed to another one based on
+      the given 'volume_criteria' volume criteria
+      NOTE:
+        we can revise this
+      """
+      listDuplicatedPoints = []
+      for ix in range(len(self.point_lookup)):
+          id = str(ix+1)
+          parent_id = self.point_lookup[id]['parent']
+          brType =self.point_lookup[id]['type']
+          x =float(self.point_lookup[id]['siteX'])
+          y =float(self.point_lookup[id]['siteY'])
+          z =float(self.point_lookup[id]['siteZ'])
+          r =float(self.point_lookup[id]['siteR'])
+          if (int(parent_id) != -1):
+            parent_info = self.point_lookup[parent_id]
+            parent_x = float(parent_info['siteX'])
+            parent_y = float(parent_info['siteY'])
+            parent_z = float(parent_info['siteZ'])
+            dist2soma= self.point_lookup[id]['dist2soma']
+            distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                            (z - parent_z)**2)
+            vol = math.pi * math.pow(r, 2) * distance
+            if (not int(brType) in branchType2Find):
+                continue
+            if (vol <= volume_criteria and
+                not (int(parent_id) in listDuplicatedPoints)):
+              listDuplicatedPoints.append(int(id))
+            #print(id, x,y,z,parent_id)
+      #listDuplicatedPoints = [2, 6]
+      #listDuplicatedPoints = [28, 538, 570, 1060, 4064]
+      #listDuplicatedPoints = [28, 538]# 570, 1060, 4064]
+      self.listDuplicatedPoints= list(set(listDuplicatedPoints))
+      print("====================Remove nearby points (volume criteria)------")
+      print("Before delete: ", len(self.point_lookup), " points")
+      while (self.listDuplicatedPoints):
+        ##
+        #Step 2: delete these points and update others
+        ##....
+        lines2Delete = []
+        lines2Delete.extend(self.listDuplicatedPoints)
+        lineArray = []
+        index = 0
+        mapNewId = {}
+        mapNewParentId = {}
+        #tmpPointLookup = deepcopy(self.point_lookup)
+        tmpPointLookup  = {}
+        for ix in range(len(self.point_lookup)):
+            id = str(ix+1)
+            parent_id = self.point_lookup[id]['parent']
+            brType =self.point_lookup[id]['type']
+            x =self.point_lookup[id]['siteX']
+            y =self.point_lookup[id]['siteY']
+            z =self.point_lookup[id]['siteZ']
+            r =self.point_lookup[id]['siteR']
+            dist2soma= self.point_lookup[id]['dist2soma']
+            dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+            branchOrder = self.point_lookup[id]['branchOrder']
+            numChildren = self.point_lookup[id]['numChildren']
+            if (int(id) in lines2Delete):
+              # start to delete from this line
+              #del tmpPointLookup[id]
+              ###anything accept 'id' as parent, now accept 'parent_id' as parent
+              mapNewId[id] = parent_id   # important if we delete intermediate points
+              if (parent_id in mapNewId):
+                mapNewId[id] = mapNewId[parent_id]   # important if we delete intermediate points
+
+              mapNewParentId[id] = self.point_lookup[mapNewId[id]]['parent']
+              #print("line deleted ", id, "its parent: ", parent_id)
+            else:
+              index += 1
+              mapNewId[id] = str(index)
+              if (parent_id in mapNewId):
+                    parent_id = mapNewId[parent_id]
+              lineArray.append([str(index), str(brType),
+                              str(x), str(y),
+                              str(z), str(r), str(parent_id)])
+              tmpPointLookup[str(index)] = {'type': brType,
+                                       'siteX': x,
+                                       'siteY': y,
+                                       'siteZ': z,
+                                       'siteR': r, 'parent': str(parent_id),
+                                       'dist2soma': dist2soma,
+                                       'dist2branchPoint': dist2branchPoint,
+                                       'branchOrder': branchOrder,
+                                       'numChildren': numChildren}
+        #for ix in range(index, len(self.point_lookup)):
+        #    id = str(ix+1)
+        #    print ix
+        #    del tmpPointLookup[id]
+        self.point_lookup = tmpPointLookup
+        self.listDuplicatedPoints= self._findListDuplicatedPointByVolume2(volume_criteria, branchType2Find)
+
+      print("After delete: ", len(tmpPointLookup), " points")
+      lineArray = np.asarray(lineArray)
+      if (write2File):
+        PL5bFileName = self.swc_filename+fileSuffix
+        np.savetxt(PL5bFileName, lineArray, fmt='%s')
+        print("Write to file: ", PL5bFileName)
+
+    def removeBranchTooFarFromSoma(self, branchType2Find, distance_criteria,
+                                    write2File=True,
+                                    fileSuffix='_trimmedBranchMaxDistance.swc'):
+      """
+        Remove all points in apical (tufted as well) if it is farther form the soma
+        at a given max-distance (but only remove starting from the first branchpoints)
+      """
+      listPointToDeletes = []
+      listPointExamines = []
+      subList = []
+      for ix in range(len(self.point_lookup)):
+          #### Get terminal end points
+          id = str(ix+1)
+          parent_id = self.point_lookup[id]['parent']
+          brType =self.point_lookup[id]['type']
+          x =float(self.point_lookup[id]['siteX'])
+          y =float(self.point_lookup[id]['siteY'])
+          z =float(self.point_lookup[id]['siteZ'])
+          r =float(self.point_lookup[id]['siteR'])
+          numChildren = self.point_lookup[id]["numChildren"]
+          if (int(parent_id) != -1):
+            parent_info = self.point_lookup[parent_id]
+            parent_x = float(parent_info['siteX'])
+            parent_y = float(parent_info['siteY'])
+            parent_z = float(parent_info['siteZ'])
+            dist2soma= self.point_lookup[id]['dist2soma']
+            distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                            (z - parent_z)**2)
+            vol = math.pi * math.pow(r, 2) * distance
+            if (not int(brType) in branchType2Find):
+                continue
+            if (int(numChildren) != 0):
+                continue
+            proxid = self.getPointsInBranchFartherThan(id, distance_criteria, subList)
+            if (subList):
+                listPointToDeletes.extend(subList)
+                listPointExamines.append(str(proxid))
+      self.listPointToDeletes= list(set(listPointToDeletes))
+      self.listPointExamines= list(set(listPointExamines))
+      print("Trim the tree (distance criteria)------")
+      print("Before delete: ", len(self.point_lookup), " points")
+      mapNewId = {}
+      while (self.listPointExamines):
+        if (self.listPointToDeletes):
+              mapNewId = self.removeBranch(self.listPointToDeletes, write2File=False, internalCall=True)
+              for (i, id) in enumerate(self.listPointExamines):
+                  if id in mapNewId:
+                      self.listPointExamines[i] = str(mapNewId[id])
+                  else:
+                      pass
+                    #print id, "aaaaaaa", type(id)
+        #print "=================================================="
+        listPointToDeletes = []
+        listPointExamines = []
+        for id in self.listPointExamines:
+            #print id, type(id)
+            if (not id in self.point_lookup):
+                continue
+            brType =self.point_lookup[id]['type']
+            if (not int(brType) in branchType2Find):
+                continue
+            proxid = self.getPointsInBranchFartherThan(id, distance_criteria, subList)
+            if (subList):
+                listPointToDeletes.extend(subList)
+                listPointExamines.append(proxid)
+        self.listPointToDeletes= list(set(listPointToDeletes))
+        self.listPointExamines= list(set(listPointExamines))
+
+      if (write2File):
+        self.removeBranch(self.listPointToDeletes, write2File=True,
+                          fileSuffix=fileSuffix, internalCall=True)
+      print("After delete: ", len(self.point_lookup), " points")
 
     def removeGivenPoints(self, lineIndex, write2File=True,
                            fileSuffix='_trimmedPoints.swc'):
@@ -1420,17 +1996,26 @@ class SomeClass(object):
         print("Write to file: ", PL5bFileName)
         print("IMPORTANT: Please revise the coordinate and radius of the soma point")
 
-    def removeBranch(self, lineIndex, write2File=True, fileSuffix="_trimmed.swc"):
+    def removeBranch(self, lineIndex, write2File=True, fileSuffix="_trimmed.swc",
+                     internalCall=False):
       """
-      Remove a branch starting from the given line index
+      Remove one or more branches starting from the given line index
       """
       lines2Delete = []
-      lines2Delete.extend(lineIndex)
-      tmpPointLookup = deepcopy(self.point_lookup)
-      print("Before delete: ", len(self.point_lookup), " points")
+      if (isinstance(lineIndex, list)):
+        lines2Delete.extend(lineIndex)
+      else:
+        lines2Delete.append(lineIndex)
+      tmp = [int(x) for x in lines2Delete]
+      lines2Delete  = tmp
+      #tmpPointLookup = deepcopy(self.point_lookup)
+      if (not internalCall):
+        print("=======================Remove Branch")
+        print("Before delete: ", len(self.point_lookup), " points")
       lineArray = []
       index = 0
       mapNewId = {}
+      tmpPointLookup = {}
       for ix in range(len(self.point_lookup)):
           id = str(ix+1)
           parent_id = self.point_lookup[id]['parent']
@@ -1446,7 +2031,7 @@ class SomeClass(object):
           if ((int(id) in lines2Delete) or
              (int(parent_id) in lines2Delete)):
             # start to delete from this line
-            del tmpPointLookup[id]
+            #del tmpPointLookup[id]
             lines2Delete.append(int(id))
           else:
             index += 1
@@ -1460,13 +2045,15 @@ class SomeClass(object):
                                      'siteX': x,
                                      'siteY': y,
                                      'siteZ': z,
-                                     'siteR': r, 'parent': str(parent_id),
+                                     'siteR': r,
+                                     'parent': str(parent_id),
                                      'dist2soma': dist2soma,
                                      'dist2branchPoint': dist2branchPoint,
                                      'branchOrder': branchOrder,
                                      'numChildren': numChildren}
 
-      print("After delete: ", len(tmpPointLookup), " points")
+      if (not internalCall):
+        print("After delete: ", len(tmpPointLookup), " points")
       self.point_lookup = tmpPointLookup
       #idx = 0
       #for ix in range(len(tmpPointLookup)):
@@ -1489,6 +2076,7 @@ class SomeClass(object):
         PL5bFileName = self.swc_filename+fileSuffix
         np.savetxt(PL5bFileName, lineArray, fmt='%s')
         print("Write to file: ", PL5bFileName)
+      return mapNewId
 
     def removeTerminalPoints(self,write2File=True, fileSuffix="_trimmedTerminalPoints.swc"):
       """

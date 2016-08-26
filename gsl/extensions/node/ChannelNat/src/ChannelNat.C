@@ -253,8 +253,10 @@ assert(Vmrange_taum[index-1] <= v and v <= Vmrange_taum[index]);
     //dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNat[index] * 2);
     dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift[i]) / k_M));
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H - Vhalf_h_shift[i]) / k_H));
+    //dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift[i]) / k_M));
+    //dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H - Vhalf_h_shift[i]) / k_H));
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
@@ -263,10 +265,14 @@ assert(Vmrange_taum[index-1] <= v and v <= Vmrange_taum[index]);
 #elif CHANNEL_NAT == NAT_HAY_2011 || \
 		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
     {
-    dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
-    dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
-    dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
-    dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift[i]), BHD);
+    //dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
+    //dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
+    //dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
+    //dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift[i]), BHD);
+    dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift), AMD);
+    dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
+    dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift), AHD);
+    dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift), BHD);
     // see Rempe-Chomp (2006)
     dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
@@ -313,14 +319,14 @@ void ChannelNat::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
-	if (Vhalf_m_shift.size() !=size) Vhalf_m_shift.increaseSizeTo(size);
-	if (Vhalf_h_shift.size() !=size) Vhalf_h_shift.increaseSizeTo(size);
+	//if (Vhalf_m_shift.size() !=size) Vhalf_m_shift.increaseSizeTo(size);
+	//if (Vhalf_h_shift.size() !=size) Vhalf_h_shift.increaseSizeTo(size);
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
 	SegmentDescriptor segmentDescriptor;
   float gbar_default = gbar[0];
-  float Vhalf_h_shift_default = Vhalf_h_shift[0];
-  float Vhalf_m_shift_default = Vhalf_m_shift[0];
+  //float Vhalf_m_default = Vhalf_m_shift[0];
+  //float Vhalf_h_default = Vhalf_h_shift[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
 	{
     std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels Nat Param"
@@ -329,8 +335,26 @@ void ChannelNat::initialize(RNG& rng)
 	}
   for (unsigned i = 0; i < size; ++i)
   {
-		Vhalf_m_shift[i] = Vhalf_m_shift_default; //[mV]
-		Vhalf_h_shift[i] = Vhalf_h_shift_default; //[mV]
+		//Vhalf_m_shift[i] = 0.0; //[mV]
+		//Vhalf_h_shift[i] = 0.0; //[mV]
+		//Vhalf_m_shift[i] = Vhalf_m_shift_default; //[mV]
+		//Vhalf_h_shift[i] = Vhalf_h_shift_default; //[mV]
+//#if CHANNEL_NAT == NAT_COLBERT_PAN_2002
+//		//Vhalf_m init
+//		//NOTE: Shift to the left V1/2 for Nat in AIS region
+//#define DIST_START_AIS   30.0 //[um]
+//		if ((segmentDescriptor.getBranchType(branchData->key) == Branch::_AIS)
+//		// 	or 
+//		//	(		(segmentDescriptor.getBranchType(branchData->key) == Branch::_AXON)  and
+//	  //		 	(*dimensions)[i]->dist2soma >= DIST_START_AIS)
+//			)
+//		{
+//			//gbar[i] = gbar[i] * 1.50; // increase 3x
+//			//Vhalf_m_shift[i] = -15.0 ; //[mV]
+//			//Vhalf_h_shift[i] = -3.0 ; //[mV]
+//		}
+//#endif
+
 		//gbar init
 		if (gbar_dists.size() > 0) {
 			unsigned int j;
@@ -403,16 +427,21 @@ void ChannelNat::initialize(RNG& rng)
 		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
     {
     //dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
-    dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
-    dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
-    dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
-    dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift[i]), BHD);
+    //dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
+    //dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
+    //dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
+    //dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift[i]), AHD);
+    //dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift[i]), BHD);
+    dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift), AMD);
+    dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
+    dyn_var_t ah = AHC * vtrap(-(v - AHV - Vhalf_h_shift), AHD);
+    dyn_var_t bh = BHC * vtrap(-(v - BHV - Vhalf_h_shift), BHD);
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
     }
 #elif CHANNEL_NAT == NAT_WOLF_2005
-    m[i] = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift[i]) / k_M));
-    h[i] = 1.0 / (1 + exp((v - VHALF_H - Vhalf_h_shift[i]) / k_H));
+    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 #else
 	assert(0);
 #endif

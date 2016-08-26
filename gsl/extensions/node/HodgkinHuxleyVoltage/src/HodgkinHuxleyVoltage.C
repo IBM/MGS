@@ -23,6 +23,7 @@
 
 #include <iomanip>
 
+#define SMALL 1.0E-6
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
@@ -193,7 +194,7 @@ bool HodgkinHuxleyVoltage::checkSite(
 {
   TissueSite& site = CG_inAttrPset->site;
   bool atSite = (site.r == 0);
-  for (int i = 0; !atSite && i < dimensions.size(); ++i)
+  for (unsigned int i = 0; !atSite && i < dimensions.size(); ++i)
     atSite = ((site.r * site.r) >= DISTANCE_SQUARED(&site, dimensions[i]));
   return atSite;
 }
@@ -353,40 +354,71 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (!isProximalCase0)
   {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    if (isProximalCase1)
+    {
+      Aip[size - 1] =
+        -getLambda(dimensions[size - 1], size-1);  // [nS/um^2]
+    }
+    else{
+      Aip[size - 1] =
+        -getLambda(dimensions[size - 1], proximalDimension, size-1, true);  // [nS/um^2]
+    }
+#else
     Aip[size - 1] =
-        -getLambda(proximalDimension, dimensions[size - 1]);  // [nS/um^2]
+        -getLambda(dimensions[size - 1], proximalDimension, size-1, true);  // [nS/um^2]
+#endif
   }
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase1 || isDistalCase2)
   {
-    Aim[0] = -getLambda(distalDimensions[0], dimensions[0]);
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    if (isDistalCase1)
+      Aim[0] = -getLambda(dimensions[0], 0);
+    else
+      Aim[0] = -getLambda(dimensions[0],distalDimensions[0], 0, true);
+#else
+    Aim[0] = -getLambda(dimensions[0],distalDimensions[0], 0, true);
+#endif
   }
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   for (int i = 1; i < size; i++)
   {
-    Aim[i] = -getLambda(dimensions[i - 1], dimensions[i]);
+    Aim[i] = -getLambda(dimensions[i], dimensions[i - 1], i);
   }
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   for (int i = 0; i < size - 1; i++)
   {
-    Aip[i] = -getLambda(dimensions[i + 1], dimensions[i]);
+    Aip[i] = -getLambda(dimensions[i], dimensions[i + 1], i);
   }
 
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase3)
   {
-	  
     // Compute total area of the junction...
     dyn_var_t area = getArea(0);
 
     // Compute Aij[n] for the junction...one of which goes in Aip[0]...
     if (size == 1)
     {
-      Aip[0] = -getAij(proximalDimension, dimensions[0], area);
+
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+      //CHECK AGAIN
+      if (isProximalCase1)
+      {
+        Aip[0] =
+          -getLambda(dimensions[0], i);  // [nS/um^2]
+      }
+      else{
+        Aip[0] = -getAij(dimensions[0], proximalDimension, area, true);
+      }
+#else
+      Aip[0] = -getAij(dimensions[0], proximalDimension, area, true);
+#endif
     }
     else
     {
-      Aip[0] = -getAij(dimensions[1], dimensions[0], area);
+      Aip[0] = -getAij(dimensions[0], dimensions[1], area);
     }
     /* We revert to the original approach,  
   //IMPORTANT CHANGE: new approach
@@ -396,16 +428,22 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
   //at least 2: one compartment as implicit branching point + one as regular
   //    compartment-zero as implicit branching compartment
   //    compartment-1th and above as normal
-    Aip[0] = -getAij(dimensions[1], dimensions[0], area);
-    */
+      Aip[0] = -getAij(dimensions[1], dimensions[0], area);
+  */
     for (int n = 0; n < distalDimensions.size(); n++)
     {
-      Aij.push_back(-getAij(distalDimensions[n], dimensions[0], area));
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+      //CHECK AGAIN
+      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], area, true));
+#else
+      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], area, true));
+#endif
     }
   }
   if (getSharedMembers().deltaT)
   {
     cmt = 2.0 * Cm / *(getSharedMembers().deltaT);  // [pF/(um^2 . ms)]
+    //cmt =  Cm / *(getSharedMembers().deltaT);  // [pF/(um^2 . ms)]
   }
 #ifdef DEBUG_HH
 	printDebugHH();
@@ -426,7 +464,7 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
   unsigned size = branchData->size;
 	if (cptIndex == 0)
 	{
-		std::cerr << "step,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
+		std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
 			<< "(neuronIdx, brIdx, brOrder, brType) | distal(C0 | C1 | C2) |"
 			<< "distalC3 | prox(C0 | C1 | C2) |"
 			<< "{x,y,z,r | dist2soma, surface_area, volume, length} Vm\n";
@@ -456,6 +494,24 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 		<< Vnew[i]  << " " << std::endl;
 }
 
+void HodgkinHuxleyVoltage::printDebugHHCurrent(int cptIndex)
+{
+  unsigned size = branchData->size;
+	int i  = cptIndex;
+  Array<InjectedCurrent>::iterator iiter = injectedCurrents.begin();
+  Array<InjectedCurrent>::iterator iend = injectedCurrents.end();
+  std::cerr << "==================" << std::endl;
+  for (; iiter != iend; iiter++)
+  {
+    if (iiter->index == cptIndex) 
+    {
+      std::cerr << "Inj [pA/um^2] = " << *(iiter->current) / iiter->area //; // [pA/um^2]
+        << " [pA] = " << *(iiter->current) << ", [um^2] = " << iiter->area
+          << " | " << getArea(iiter->index) << std::endl;
+    }
+  }
+  std::cerr << "==================" << std::endl;
+}
 // Update: RHS[], Aii[]
 // Unit: RHS = current density (pA/um^2)
 //       Aii = conductance density (nS/um^2)
@@ -509,10 +565,19 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   {
     Aii[0] = cmt - Aip[0] + gLeak;                               //[nS/um^2]
     RHS[0] = cmt * Vcur[0] + gLeak * getSharedMembers().E_leak;  //[pA/um^2]
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    //no change to Aii[0]
+    for (int n = 0; n < distalInputs.size(); n++)
+    {
+      Aii[0] -= Aij[n];
+      RHS[0] -= Aij[n] * *distalInputs[n];
+    }
+#else
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];
     }
+#endif
     /* * * Sum Currents * * */
     Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
     Array<ChannelCurrents>::iterator cend = channelCurrents.end();
@@ -531,7 +596,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
 		}
   }
 
-	//  2. receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<ReceptorCurrent>::iterator riter = receptorCurrents.begin();
   Array<ReceptorCurrent>::iterator rend = receptorCurrents.end();
   for (; riter != rend; riter++)
@@ -577,38 +642,81 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   }
 
   /* * *  Forward Solve Ax = B * * */
+  /* Starting from distal-end (i=0)
+   * Eliminate Aim[?] by taking
+   * RHS -= Aim[?] * V[proximal]
+   * Aii = 
+   */
   if (isDistalCase1)
   {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    //Aii[0] = 0; //-= Aim[0] * *distalAips[0] / *distalAiis[0];
+    dyn_var_t V1;
+    dyn_var_t w1 = 1.0/(distalDimensions[0]->length);
+    dyn_var_t w2 = 1.0/(dimensions[0]->length);
+    V1 = (w1 * *distalInputs[0] + w2 * Vnew[0])/(w1+w2);
+    //no change Aii[0]
+    RHS[0] -= Aim[0] * V1; 
+    RHS[0] /= Aii[0];
+    Aip[0] /= Aii[0];
+#else
     Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
     RHS[0] -= Aim[0] * *distalInputs[0] / *distalAiis[0];
+#endif
   }
   else if (isDistalCase2)
   {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    RHS[0] -= Aim[0] * *distalInputs[0];
+    RHS[0] /= Aii[0];
+    Aip[0] /= Aii[0];
+#else
     // Why do we not adjust Aii[0]? Check.
     RHS[0] -= Aim[0] * *distalInputs[0];
+#endif
   }
   else if (isDistalCase3)
   {
     for (int n = 0; n < distalInputs.size(); n++)
     {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+      //CHECK AGAIN
+      //already added in line 552
+      Aii[0] -= Aij[n] ;
+      RHS[0] -= Aij[n] * *distalInputs[n] ;
+      RHS[0] /= Aii[0];
+      Aip[0] /= Aii[0];
+#else
       Aii[0] -= Aij[n] * *distalAips[n] / *distalAiis[n];
       RHS[0] -= Aij[n] * *distalInputs[n] / *distalAiis[n];
+#endif
     }
   }
   for (int i = 1; i < size; i++)
   {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    Aip[i] /= (Aii[i] - Aim[i] * Aip[i - 1] );
+    RHS[i] = (RHS[i] - Aim[i] * RHS[i-1]) / (Aii[i] - Aim[i] * Aip[i - 1]);
+#else
     Aii[i] -= Aim[i] * Aip[i - 1] / Aii[i - 1];
     RHS[i] -= Aim[i] * RHS[i - 1] / Aii[i - 1];
+#endif
   }
   //TUAN DEBUG TUAN 
 #ifdef DEBUG_COMPARTMENT
   for (int i = 0; i < size; i++)  // for each compartment on that branch
   {
     if (Aii[i] != Aii[i])
+    {
       printDebugHH();
+      printDebugHHCurrent(i);
+    }
     assert(Aii[i] == Aii[i]);
     if (RHS[i] != RHS[i])
+    {
       printDebugHH();
+      printDebugHHCurrent(i);
+    }
     assert(RHS[i] == RHS[i]);
   }
 #endif  //END DEBUG SECTION
@@ -633,8 +741,23 @@ void HodgkinHuxleyVoltage::doBackwardSolve()
   }
   else
   {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    dyn_var_t V0;
+    if (isProximalCase1)
+    {
+      dyn_var_t w1 = 1.0/(proximalDimension->length);
+      dyn_var_t w2 = 1.0/(dimensions[size-1]->length);
+      V0 = (w1 * *proximalVoltage + w2 * Vnew[size-1])/(w1+w2);
+    }else
+    {
+     V0 = *proximalVoltage; 
+    }
+    Vnew[size - 1] =
+        (RHS[size - 1] - Aip[size - 1] * V0) / Aii[size - 1];
+#else
     Vnew[size - 1] =
         (RHS[size - 1] - Aip[size - 1] * *proximalVoltage) / Aii[size - 1];
+#endif
   }
   for (int i = size - 2; i >= 0; i--)
   {
@@ -644,49 +767,212 @@ void HodgkinHuxleyVoltage::doBackwardSolve()
 
 // unit: [nS/um^2]
 // GOA: get 'lambda' term between two adjacent compartments
+// a is proximal-side and b is distal-side
+//|dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
+//|                                          DimensionStruct* b)
+//|{
+//|	dyn_var_t radius;// radius_middle ()
+//|  dyn_var_t distance;
+//|  dyn_var_t length;
+//|	if (a->dist2soma <= SMALL)
+//|	{//a is the compartment representing 'soma'
+//|		radius = b->r; //NOTE: if we change the cross-sectional surface here, we need to update for HHJunction as well
+//|    //distance = std::fabs(b->dist2soma + a->r);
+//|    //distance = std::fabs(b->dist2soma); //NOTE: The dist2soma of the first compartment stemming
+//|         // from soma is always the distance from the center of soma to the center
+//|         // of that compartment
+//|    //  distance += 50.0;//TUAN TESTING - make soma longer
+//|    distance = std::fabs(b->dist2soma - a->r); // SOMA is treated as a point source
+//|	}
+//|	else if (b->dist2soma <= SMALL)
+//|	{//b is the compartment representing 'soma'
+//|		radius = a->r;
+//|    //distance = std::fabs(b->r + a->dist2soma);
+//|    //distance = std::fabs(a->dist2soma);
+//|    //  distance += 50.0;//TUAN TESTING - make soma longer
+//|    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+//|    assert(0); //never 'b' is the soma
+//|  }
+//|	else
+//|  {
+//|		radius = 0.5 * (a->r + b->r);
+//|    distance = std::fabs(b->dist2soma - a->dist2soma);
+//|  }
+//|  // dyn_var_t distancesq = DISTANCE_SQUARED(a, b);
+//|  //return (radius * radius /
+//|  //        (2.0 * getSharedMembers().Ra * distancesq * b->r)); /* needs fixing */
+//|  //dyn_var_t distance = std::fabs(b->dist2soma - a->dist2soma);
+//|  return (radius * radius /
+//|          (2.0 * getSharedMembers().Ra * distance * distance * b->r)); /* needs fixing */
+//|}
+//NOTE: a is the current compartment, and
+//      b is the adjacent compartment (can be proximal or distal side)
 dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
-                                          DimensionStruct* b)
+    DimensionStruct* b,
+    int index, 
+    bool connectJunction)
 {
-	dyn_var_t radius;// radius_middle ()
-	if (a->dist2soma == 0.0)
-	{
-		radius = b->r;
+	dyn_var_t Rb ;// radius_middle ()
+#ifdef NEW_DISTANCE_NONUNIFORM_GRID 
+  dyn_var_t dsi = getHalfDistance(index);
+#else
+  dyn_var_t dsi = a->length;
+#endif
+  dyn_var_t distance;
+	if (a->dist2soma <= SMALL)
+	{//a  CAN't BE the compartment representing 'soma'
+    assert(0);
 	}
-	else if (b->dist2soma == 0.0)
-		radius = a->r;
+	else if (b->dist2soma <= SMALL)
+	{//b is the compartment representing 'soma'
+		Rb = a->r;
+      //TEST 
+			Rb /= SCALING_NECK_FROM_SOMA;
+      //END TEST
+#ifdef USE_SOMA_AS_POINT
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    distance = std::fabs(a->dist2soma);
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+      //TEST 
+      distance += STRETCH_SOMA_WITH;
+      //END TEST
+#endif
+  }
 	else
-		radius = 0.5 * (a->r + b->r);
-  // dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
-  //return (radius * radius /
-  //        (2.0 * getSharedMembers().Ra * lengthsq * b->r)); /* needs fixing */
-  dyn_var_t length = std::fabs(b->dist2soma - a->dist2soma);
-  return (radius * radius /
-          (2.0 * getSharedMembers().Ra * length * length * b->r)); /* needs fixing */
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
+		Rb = 0.5 * (a->r + b->r);
+#endif
+    distance = std::fabs(b->dist2soma - a->dist2soma);
+  }
+  return (Rb * Rb /
+          (2.0 * getSharedMembers().Ra * dsi * distance * a->r)); /* needs fixing */
+}
+
+//find the lambda between the terminal point of the 
+//compartment represented by 'a'
+//'a' can be cpt[0] (distal-end) or cpt[size-1] (proximal-end)
+dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a, int index)
+{
+	dyn_var_t Rb ;// radius_middle ()
+  dyn_var_t distance;
+	if (a->dist2soma <= SMALL)
+	{//a  CAN't BE the compartment representing 'soma'
+    assert(0);
+	}
+	else
+  {
+    Rb = a->r;
+    distance = std::fabs(a->length/2.0);
+  }
+#ifdef NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
+  dyn_var_t dsi ;
+  if (index == 0)
+    dsi = (a->length/2.0 + std::abs(a->dist2soma - dimensions[1]->dist2soma));
+  else if (index == branchData->size-1)
+    dsi = (a->length/2.0 + std::abs(a->dist2soma - dimensions[index-2]->dist2soma));
+  else
+    assert(0);
+#else
+  dyn_var_t dsi  = distance;
+#endif
+  return (Rb * Rb /
+          (2.0 * getSharedMembers().Ra * dsi * distance * a->r)); /* needs fixing */
 }
 
 // GOAL: Get coefficient of Aip[0] and Aim[size-1]
 //  for Vm(i=0,j=branch-index)
-// i.e. at implicit branch point
-//  Aij = 1/A * sum_branch(pi*r_branch^2/(Ra * ds_branch))
+// i.e. at implicit branch point, of the current compartment 'i'=0
+//          for every distal-branch 'j'
+//  Aij = 1/A * (pi*r_branch^2/(Ra * ds_branch))
 // given
 //  A = surface_area
+//  NOTE: 'a' is the distal-end compartment of the branch (i=0)
+//        serving as implicit branch 
 dyn_var_t HodgkinHuxleyVoltage::getAij(DimensionStruct* a, DimensionStruct* b,
-                                       dyn_var_t A)
+                                       dyn_var_t A,
+                                       bool connectJunction)
 {
 	dyn_var_t Rb;
-	if (a->dist2soma == 0.0)
+  dyn_var_t distance;
+	if (a->dist2soma <= SMALL)
 	{
-		Rb = b->r;
+    assert(0); // a CANNOT be soma
 	}
-	else if (b->dist2soma == 0.0)
+	else if (b->dist2soma <= SMALL)
+  {
 		Rb = a->r;
+      //TEST 
+			Rb /= SCALING_NECK_FROM_SOMA;
+      //END TEST
+#ifdef USE_SOMA_AS_POINT
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    //distance = fabs(b->r + a->dist2soma );
+    distance = std::fabs(a->dist2soma);
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+      //TEST 
+      distance += STRETCH_SOMA_WITH; //similar to the 'base point of soma in NEURON'
+      //better STRETCH_SOMA_WITH = b->r
+      //END TEST
+#endif
+  }
 	else
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
 		Rb = 0.5 * (a->r + b->r);
-  // dyn_var_t length = sqrt(DISTANCE_SQUARED(a, b);
-  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
+#endif
+    distance = fabs(b->dist2soma - a->dist2soma);
+  }
   return (M_PI * Rb * Rb /
-          (A * getSharedMembers().Ra * length));
+          (A * getSharedMembers().Ra * distance));
 }
+
+//|dyn_var_t HodgkinHuxleyVoltage::getAij(DimensionStruct* a, DimensionStruct* b,
+//|                                       dyn_var_t A)
+//|{
+//|	dyn_var_t Rb;
+//|  dyn_var_t distance;
+//|	if (a->dist2soma <= SMALL)
+//|	{
+//|		Rb = b->r;
+//|    //distance = fabs(b->dist2soma + a->r );
+//|   // distance = std::fabs(b->dist2soma); //NOTE: The dist2soma of the first compartment stemming
+//|         // from soma is always the distance from the center of soma to the center
+//|         // of that compartment
+//|    //  distance += 50.0;//TUAN TESTING - make soma longer
+//|    distance = std::fabs(b->dist2soma - a->r); // SOMA is treated as a point source
+//|	}
+//|	else if (b->dist2soma <= SMALL)
+//|  {
+//|		Rb = a->r;
+//|    //distance = fabs(b->r + a->dist2soma );
+//|    //distance = std::fabs(a->dist2soma);
+//|    //  distance += 50.0;//TUAN TESTING - make soma longer
+//|    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+//|  }
+//|	else
+//|  {
+//|		Rb = 0.5 * (a->r + b->r);
+//|    distance = fabs(b->dist2soma - a->dist2soma);
+//|  }
+//|  // dyn_var_t distance = sqrt(DISTANCE_SQUARED(a, b);
+//|  //dyn_var_t distance = fabs(b->dist2soma - a->dist2soma);
+//|  return (M_PI * Rb * Rb /
+//|          (A * getSharedMembers().Ra * distance));
+//|}
 
 void HodgkinHuxleyVoltage::setReceptorCurrent(
     const String& CG_direction, const String& CG_component,
@@ -748,8 +1034,8 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
       if (CG_CurrentProducerPtr == 0)
       {
         std::cerr
-            << "Dynamic Cast of CurrentProducer failed in HodgkinHuxleyVoltage"
-            << std::endl;
+          << "Dynamic Cast of CurrentProducer failed in HodgkinHuxleyVoltage"
+          << std::endl;
         exit(-1);
       }
       injectedCurrents.increase();
@@ -767,3 +1053,121 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
 }
 
 HodgkinHuxleyVoltage::~HodgkinHuxleyVoltage() {}
+
+dyn_var_t HodgkinHuxleyVoltage::getHalfDistance (int index) 
+{
+  dyn_var_t halfDist = 0.0 ;
+  unsigned size = branchData->size;  //# of compartments
+  assert(index >=0 and index <= size-1);
+  if  (index == size-1)
+  {
+    if (! isProximalCase0)
+    {
+      if (proximalDimension->dist2soma <= SMALL)
+      {
+        if (size==1)
+        {
+          if (isDistalCase0)
+          {//no flux distal
+            halfDist = ( dimensions[index]->length/2 );
+          }
+          else if (isDistalCase1 or isDistalCase2)
+          {
+            halfDist = (
+                std::abs( dimensions[index]->length/2 )
+                +
+                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                )/ 2.0;
+          }
+        }
+        else
+        {
+          halfDist = (
+              std::abs( dimensions[index]->length/2 )
+              +
+              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              )/ 2.0;
+          //halfDist = (
+          //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          //    );
+
+        }
+      }
+      else{
+        if (size==1)
+        {
+          if (isDistalCase0)
+            halfDist = (
+                std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+                );
+          else if (isDistalCase1 or isDistalCase2)
+            halfDist = (
+                std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+                +
+                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                )/ 2.0;
+        }
+        else
+          halfDist = (
+              std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+              +
+              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              )/ 2.0;
+      }
+
+    }
+    else
+      halfDist = (
+          std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          );
+  }
+  else if (index == 0)
+    if (isDistalCase0)
+      halfDist = (
+          std::abs( dimensions[index]->dist2soma - dimensions[index+1]->dist2soma )
+          );
+    else if (isDistalCase1 or isDistalCase2)
+      halfDist = (
+          std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+          +
+          std::abs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
+          )/ 2.0;
+    else 
+    {// no use
+    }
+  else 
+  {
+    halfDist = (
+        std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+        +
+        std::abs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
+        )/ 2.0;
+  }
+  return halfDist;
+}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+void HodgkinHuxleyVoltage::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countSpineConnected.size() != size) 
+  {
+    countSpineConnected.increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      countSpineConnected[i] = 0;
+  }
+  countSpineConnected[CG_inAttrPset->idx]++;
+}
+
+void HodgkinHuxleyVoltage::updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
+{
+  unsigned size = branchData->size;  //# of compartments
+  if (countGapJunctionConnected.size() != size) 
+  {
+    countGapJunctionConnected.increaseSizeTo(size); 
+    for (int i = 0; i < size; i++)
+      countGapJunctionConnected[i] = 0;
+  }
+  countGapJunctionConnected[CG_inAttrPset->idx]++;
+}
+#endif

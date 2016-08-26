@@ -20,6 +20,7 @@
 #include "CG_SpineAttachment_VmCai.h"
 #include "rndm.h"
 
+#include "SegmentDescriptor.h"
 #include "MaxComputeOrder.h"
 
 class SpineAttachment_VmCai : public CG_SpineAttachment_VmCai
@@ -50,6 +51,7 @@ class SpineAttachment_VmCai : public CG_SpineAttachment_VmCai
   private:
   dyn_var_t* _ri;
   bool _gotAssigned;
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

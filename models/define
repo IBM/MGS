@@ -1,7 +1,11 @@
 #!/bin/bash
 
 sed '/\\/p' $1 | sed 's/#include "/cd /g' | sed 's/\// ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd .. ;/g' > defineModels1.sh;
-awk 'NF { print "if [ '$1' -ot " $2 "/" $5 " ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
+if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
+  awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
+else
+  awk 'NF { print "if [ '$1' -ot " $2 "/" $5 " ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
+fi
 source defineModels2.sh;
 touch $1;
 rm -f defineModels1.sh;

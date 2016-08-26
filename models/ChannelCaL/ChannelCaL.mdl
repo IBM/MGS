@@ -10,6 +10,7 @@
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 //   High-voltage activated
+//  including Ca2+ Lv1.2, N, P/Q, R
 Node ChannelCaHVA Implements 
     ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
     CaCurrentArrayProducer, //HH-based to Ca2+

@@ -6,4 +6,47 @@
 5. copy the spines folder to the main folder
 6. move the neurons.txt file (inside spines folder) to the main folder
 7. configure the GSL (stimulus, I/O, params)
+ 7.1. update 'morph' 
+ 7.2. configure other parameters
 8. run the simulation 
+9. analyze the data
+
+NOTE: prblem with ChannelNat-ColbertPan 
+  use Hay2011 Nat for now
+
+Run;
+ w4: hay2spines with revised Cm=0.01
+
+
+--------------------------------------------
+AUG-16:
+Step 1:
+   add Nat, Kv31 to  AXON/AIS
+   switch Nat gbar between SOMA vs. AIS  --> activate AIS first; 
+   :but AP too long
+Step 2:
+   add SK, Cah to AIS
+
+--> Adjust HCN to make sure follow uniform 
+ --> density 1.13pS/um^2, instead of the estimated value 60pS/um^2
+--> basal density: 0.0015
+    soma/AIS: 0.0025
+   (higher than the value being used)
+--> ErevHCN = -30; instead of -45mV being used
+THEY ALL helps to bring proper resting membrane potential
+--------------------------------
+AUG-17:
+  Adjust Na+ at AxonHillock and AIS
+  AxonHillock: using gbar_dist={30}; gbar_values={10.6,1.6}
+  Soma: gbar=1.4
+  --> GOAL: hope to bring more peak at SOMA; while keeping Nat+ at soma low
+  AIS Na+: 21.6; with Vmh_shift=-7; Vhh_shift=-3
+--> BAD
+-------------------------------------------
+AUG-18:
+  AXONHILLOCK must have High Na+ --> IMPORTANT
+-------------------------------
+AUG-19:
+   Cah = 0.00229 (from 0.00099)
+   Cal = 0.02093 (from 0.00094)
+ 
