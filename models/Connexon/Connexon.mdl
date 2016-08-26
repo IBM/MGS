@@ -51,7 +51,10 @@ Node Connexon Implements
 
   Shared {
     dyn_var_t []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     int []* countGapJunctionConnect;
+#endif
   }
 
   InitPhase produceInitialVoltage(Vi
