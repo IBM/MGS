@@ -16,6 +16,9 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 // This is an implementation of the "KAs potassium current
 //
 #if CHANNEL_KAs == KAs_WOLF_2005
+//  Inactivation from
+//  Activation from
+//    1. Shen et al. (2004)
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -27.0
@@ -69,7 +72,7 @@ void ChannelKAs::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+#if CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
     { 
     dyn_var_t minf = 1.0/(1.0 + exp(-(v + IMV)/IMD));
     dyn_var_t taum;
@@ -91,11 +94,18 @@ void ChannelKAs::update(RNG& rng)
 #elif CHANNEL_KAs == KAs_WOLF_2005
     {
     // NOTE: Some models use m_inf and tau_m to estimate m
-    dyn_var_t tau_m = 0.378 + 9.91 * exp(-pow((v + 34.3) / 30.1, 2));
+    //mtau = taum0  +  Cm * exp( - ((v-vthm)/vtcm)^2 )
+
+    //left = alpha * exp( -(v-vth1-htaushift)/vtc1 )  : originally exp((v-vth1)/vtc1)
+    //right = beta * exp( (v-vth2-htaushift)/vtc2 ) : originally exp(-(v-vth2)/vtc2)
+    //htau = Ch  /  ( left + right )
+    //dyn_var_t tau_m = 0.378 + 9.91 * exp(-pow((v + 34.3) / 30.1, 2)); //at 35^C
+    dyn_var_t tau_m = 3.4 + 89.2 * exp(-pow((v + 34.3) / 30.1, 2));
     dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
     dyn_var_t h_a = AHC * exp(-(v + AHV) / AHD);
     dyn_var_t h_b = BHC * exp(-(v + BHV) / BHD);
-    dyn_var_t tau_h = 1097.4 / (h_a + h_b);
+    //dyn_var_t tau_h = 1097.4 / (h_a + h_b);
+    dyn_var_t tau_h = 9876.6 / (h_a + h_b);
     dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
@@ -119,6 +129,7 @@ void ChannelKAs::update(RNG& rng)
 #elif CHANNEL_KAs == KAs_WOLF_2005
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -198,7 +209,7 @@ void ChannelKAs::initialize(RNG& rng)
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
-#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+#elif CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
     m[i] = 1.0/(1.0 + exp(-(v + IMV)/IMD));
     h[i] = 1.0/(1.0 + exp((v + IHV)/IHD));
     g[i] = gbar[i]*m[i]*m[i]*h[i];

@@ -133,9 +133,10 @@ Node ChannelCaLVA Implements
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
   CaCurrentArrayProducer.currents << &I_Ca;
+  IOCurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
-  IOCurrentArrayProducer.currents << &Iion;
+  //IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {
     string identifier;

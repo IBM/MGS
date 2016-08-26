@@ -108,6 +108,22 @@ Interface CaERConcentrationArrayProducer {
    dyn_var_t []* CaConcentrations;
 }
 
+Interface IP3ConcentrationArrayProducer {
+   dyn_var_t []* IP3Concentrations;
+}
+
+Interface IP3ConcentrationProducer {
+   dyn_var_t* IP3;
+}
+
+Interface IP3CurrentProducer {
+  dyn_var_t* current;
+}
+
+Interface IP3CurrentArrayProducer {
+  dyn_var_t []* currents;
+}
+
 Interface MgConcentrationProducer { 
    dyn_var_t* Mg;
 }
@@ -180,4 +196,21 @@ Constant ExtracellularMedium Implements NaConcentrationProducer,
   GlycineProducer.Glycine << &Glycine;
 }
 
+// for ionic fluxes across ER membrane 
+Interface CaFluxArrayProducer{
+  dyn_var_t []* fluxes; // [uM/msec] 
+}
+// for Synaptic Cleft
+Interface NeuroTransmitterConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface GlutamateConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface GABAConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface IP3FluxArrayProducer{
+  dyn_var_t []* fluxes; // [uM/msec] 
+}
 #endif

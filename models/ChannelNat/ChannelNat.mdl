@@ -22,8 +22,10 @@ Node ChannelNat Implements
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
-  float [] Vhalf_m_shift; // [mV]
-  float [] Vhalf_h_shift; // [mV]
+  //float [] Vhalf_m_shift; // [mV]
+  //float [] Vhalf_h_shift; // [mV]
+  float Vhalf_m_shift; // [mV]
+  float Vhalf_h_shift; // [mV]
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]

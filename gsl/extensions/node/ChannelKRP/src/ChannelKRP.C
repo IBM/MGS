@@ -5,6 +5,7 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -17,11 +18,15 @@ static pthread_once_t once_KRP = PTHREAD_ONCE_INIT;
 //                  KRP potassium current
 //
 #if CHANNEL_KRP == KRP_WOLF_2005
+// Inactivation from
+//   1. Nisenbaum et al. (1996), Fig. 9D = V1/2, slope; Fig. 9A = (35^C) fraction inactivation 
+// Activation from
+//   1. Nisenbaum et al. (1996), Fig. 6C
 // Model: partial inactivation
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -13.5
-#define k_M -11.8
+#define k_M -11.8  //NOTE: The Nisenbaum paper is 11.8
 #define VHALF_H -54.7
 #define k_H 18.6
 #define frac_inact 0.7  // 'a' term
@@ -68,14 +73,28 @@ void ChannelKRP::update(RNG& rng)
     int index = low - Vmrange_taum.begin();
     //-->tau_m[i] = taumKRP[index];
     // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumKRP[index] * 2);
+    //dyn_var_t qm = dt * getSharedMembers().Tadj / (taumKRP[index] * 2);
+    dyn_var_t taum;
+    if (index == 0)
+      taum = taumKRP[0];
+    else
+      taum = linear_interp(Vmrange_taum[index-1], taumKRP[index-1], 
+        Vmrange_taum[index], taumKRP[index], v);
+    dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
     /* no need to search as they both use the same Vmrange
      * IF NOT< make sure you add this code
     std::vector<dyn_var_t>::iterator low= std::lower_bound(Vmrange_tauh.begin(),
     Vmrange_tauh.end(), v);
     int index = low-Vmrange_tauh.begin();
     */
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhKRP[index] * 2);
+    //dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhKRP[index] * 2);
+    dyn_var_t tauh;
+    if (index == 0)
+      tauh = tauhKRP[0];
+    else
+      tauh = linear_interp(Vmrange_tauh[index-1], tauhKRP[index-1], 
+          Vmrange_tauh[index], tauhKRP[index], v);
+    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -89,15 +108,11 @@ void ChannelKRP::update(RNG& rng)
     if (m[i] < 0.0) { m[i] = 0.0; }
     else if (m[i] > 1.0) { m[i] = 1.0; }
     // trick to keep m in [0, 1]
-    if (h[i] < 0.0)
-    {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
-    }
+    if (h[i] < 0.0) { h[i] = 0.0; }
+    else if (h[i] > 1.0) { h[i] = 1.0; }
+
     g[i] = gbar[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -105,19 +120,16 @@ void ChannelKRP::initialize(RNG& rng)
 {
 
   pthread_once(&once_KRP, ChannelKRP::initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
   float gbar_default = gbar[0];
 	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
@@ -130,18 +142,18 @@ void ChannelKRP::initialize(RNG& rng)
   {
     if (gbar_dists.size() > 0) {
       unsigned int j;
-      assert(gbar_values.size() == gbar_dists.size());
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (gbar_values.size() - 1 != gbar_dists.size())
+      {
+        std::cerr << "gbar_values.size = " << gbar_values.size()
+          << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
+      }
+      assert(gbar_values.size() -1 == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
-      if (j < gbar_values.size()) 
-        gbar[i] = gbar_values[j];
-      else
-        gbar[i] = gbar_default;
+      gbar[i] = gbar_values[j];
     } 
-		/*else if (gbar_values.size() == 1) {
-      gbar[i] = gbar_values[0];
-    } */
 		else if (gbar_branchorders.size() > 0)
 		{
       unsigned int j;
@@ -169,10 +181,11 @@ void ChannelKRP::initialize(RNG& rng)
 #if CHANNEL_KRP == KRP_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    g[i] = gbar[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
 #else
     NOT IMPLEMENTED YET
 #endif
-    g[i] = gbar[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -183,17 +196,19 @@ void ChannelKRP::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);
     assert((sizeof(taumKRP) / sizeof(taumKRP[0])) == tmp.size());
-		Vmrange_taum.resize(tmp.size()-2);
-    for (unsigned long i = 1; i < tmp.size() - 1; i++)
-      Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+		//Vmrange_taum.resize(tmp.size()-2);
+    //for (unsigned long i = 1; i < tmp.size() - 1; i++)
+    //  Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+    Vmrange_taum = tmp;
   }
   {
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhKRP) / sizeof(tauhKRP[0]) == tmp.size());
-		Vmrange_tauh.resize(tmp.size()-2);
-    for (unsigned long i = 1; i < tmp.size() - 1; i++)
-      Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+		//Vmrange_tauh.resize(tmp.size()-2);
+    //for (unsigned long i = 1; i < tmp.size() - 1; i++)
+    //  Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+    Vmrange_tauh = tmp;
   }
 #endif
 }

@@ -946,6 +946,7 @@ FUNCTOR_MODULES := BinomialDist \\
       	TissueProbeFunctor \\
         UniformDiscreteDist \\
         GetNodeCoordFunctor \\
+        ExecuteShell \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build

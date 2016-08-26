@@ -372,13 +372,14 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
       #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then 
       cd $LENSROOT/extensions/variable
-      ./define variables.mdf
+      ./define variables.mdf  $REBUILD
       cd $LENSROOT/extensions/struct
-      ./define structs.mdf
+      ./define structs.mdf   $REBUILD
       cd $LENSROOT/extensions/functor
-      ./define functors.mdf
+      ./define functors.mdf  $REBUILD
       cd $NTSROOT/models
-      ./define compartmental.mdf
+      ./define compartmental.mdf $REBUILD
+
       cp Extensions.mk $LENSROOT/
       cd $NTSROOT
       touch .built && echo $NTSROOT > .built

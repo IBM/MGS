@@ -56,10 +56,22 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
   //  g = 1/R = A / (rho * l)
   assert(Raxial > MIN_RESISTANCE_VALUE);
   dyn_var_t A = std::abs(Ai - *Aj); //[um^2]
-  dyn_var_t len = (*leni + *lenj) / 2.0; //[um]
-  g = A / (Raxial * len);            // [nS]
-  Caconc2current = A * DCa * zCa * zF / (1000000.0*len);
-  CaERconc2current = A * DCaER * zCa * zF / (1000000.0*len);
+  dyn_var_t distance;
+  String typeDenShaft("den-shaft");
+  String typeSpineNeck("spine-neck");
+  if (typeCpt == typeDenShaft)
+  {
+   distance = (*leni + *lenj / 2.0); //[um]
+  }else{//connect to spine-neck
+   distance = (*leni / 2.0  + *lenj); //[um]
+  }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#else
+  g = A / (Raxial * distance);            // [nS]
+#endif
+  Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
+  CaERconc2current = A * DCaER * zCa * zF / (1000000.0*distance);
   //TUAN TODO: HERE we should take into account the cross-sectional difference
   //A for Vm
   //A for Cacyto
@@ -74,11 +86,23 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 {
 	//i = index of compartment this connexon is connecting to
 	//j = index of compartment from the other side
-  float V = *Vj - *Vi;
+  dyn_var_t V = *Vj - *Vi;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  I = g * V / *countSpineConnectedToCompartment_j;
+  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
+  I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_j;
+#else
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  //no need to update I(Vm), as it produces g, and Vj
+  I_Ca = Caconc2current * (*Caj - *Cai);
+  I_CaER = CaERconc2current * (*CaERj - *CaERi);
+#else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
   I_CaER = CaERconc2current * (*CaERj - *CaERi);
   //std::cout << *Cai << "  " << *Caj << "; ER " << *CaERi << " " << *CaERj << "\n";
+#endif
+#endif
 }
 
 void SpineAttachment_VmCaiCaER::setVoltagePointers(
@@ -98,6 +122,12 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
+#endif
 }
 
 void SpineAttachment_VmCaiCaER::setCaPointers(
@@ -161,6 +191,7 @@ void SpineAttachment_VmCaiCaER::set_A_and_len(
     // A2   = zero (from shaft-side)
     Ai = 0.0;
     leni = &(dimension->r);
+    typeCpt = typeDenShaft;
   }
   else if (cptType == typeSpineNeck)
   {
@@ -169,6 +200,10 @@ void SpineAttachment_VmCaiCaER::set_A_and_len(
     _ri = &(dimension->r);
     Ai = M_PI * (*_ri) * (*_ri);
     leni = &(dimension->length);
+    typeCpt = typeDenShaft;
+  }
+  else{//do not accept other names
+    assert(0);
   }
 }
 

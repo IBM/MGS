@@ -161,8 +161,9 @@ void ChannelHCN::initialize(RNG& rng)
   // initialize
   // NOTE: add the scaling_factor for testing channel easier
   //  Should be set to 1.0 by default
-  dyn_var_t scaling_factor = 1.0;
-  float gbar_default = gbar[0] * scaling_factor;
+  //dyn_var_t scaling_factor = 1.0;
+  //float gbar_default = gbar[0] * scaling_factor;
+  float gbar_default = gbar[0] ;
   //float gbar_default = gbar[0];
   if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
   {
@@ -189,7 +190,7 @@ void ChannelHCN::initialize(RNG& rng)
       {
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
-      gbar[i] = gbar_values[j] * scaling_factor;
+      gbar[i] = gbar_values[j] ;
     }
     else if (gbar_branchorders.size() > 0)
     {
@@ -205,10 +206,10 @@ void ChannelHCN::initialize(RNG& rng)
       if (j == gbar_branchorders.size() and
           gbar_branchorders[j - 1] == GlobalNTS::anybranch_at_end)
       {
-        gbar[i] = gbar_values[j - 1] * scaling_factor;
+        gbar[i] = gbar_values[j - 1] ;
       }
       else if (j < gbar_values.size())
-        gbar[i] = gbar_values[j] * scaling_factor;
+        gbar[i] = gbar_values[j] ;
       else
         gbar[i] = gbar_default;
     }
@@ -216,6 +217,8 @@ void ChannelHCN::initialize(RNG& rng)
     {
       gbar[i] = gbar_default;
     }
+
+    gbar[i] = gbar[i] * gbar_scale;
   }
 
   for (unsigned i = 0; i < size; ++i)

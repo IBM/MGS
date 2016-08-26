@@ -17,7 +17,10 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_05
+#define STIMULUS_CASE   CASE_01
+//#define morph ""
+#define morph "hay1_"
+//#define morph "hay2_"
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -51,24 +54,22 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //{{{ 1. Output Location
 //#define dataFolder "./"
 #define dataFolder "./data/"
-//#define morph ""
-#define morph "hay2_"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Jul25_rest"
+#define OutputFolderName dataFolder morph "Hay_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Jul25_triggersoma"
+#define OutputFolderName dataFolder morph "Hay_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Jul25_triggershaft"
+#define OutputFolderName dataFolder morph "Hay_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Jul25_triggerspine"
-//#define OutputFolderName dataFolder morph "Jul25_case03"
+#define OutputFolderName dataFolder morph "Hay_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Hay_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Jul25_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Hay_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Jul25_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Hay_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Jul25_case06"
+#define OutputFolderName dataFolder morph "Hay_case06" STR(EXTENSION)
 #endif
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
@@ -125,7 +126,9 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
+//#define Cacyto_EffectiveDiffusionConstant  0.004 // [um^2/ms] - block Ca2+ diffusion
 #define Cacyto_beta 0.05// unitless [Wagner and Keizer buffering constant]
+//#define Cacyto_beta 0.005// unitless 
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //SPECIFIC: HAY2011  (no need)
@@ -148,6 +151,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
+  //{{{ neuroransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
@@ -162,6 +166,7 @@ print("Case 00: resting");
 #else
 #define NTGABA_baseline 5.0  // [uM]
 #endif
+  //}}}
 //}}}
 
 //{{{ Conditions: axial conductance + temperature + Vrest + Eleak
@@ -1008,7 +1013,7 @@ Grid PyramidalL5_Neuron{
      //}}}
    InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
                   compartmentalize = { "gbar" },
-                  gbar = {0.0}
+                  gbar = {0.0}, gbar_scale=1.0
                   > ) );
 	 //{{{ K+ channels
    InitNodes ( .[].Layer(MKChannels), tissueFunctor("NodeInit", <

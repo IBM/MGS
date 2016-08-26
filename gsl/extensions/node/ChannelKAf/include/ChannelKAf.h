@@ -14,8 +14,8 @@
 #define BASED_TEMPERATURE 21.0  // Celcius
 #define Q10 2.3
 #elif CHANNEL_KAf == KAf_WOLF_2005
-#define BASED_TEMPERATURE 35.0  // Celcius
-#define Q10 3.0
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.3
 #endif
 
 #ifndef Q10 

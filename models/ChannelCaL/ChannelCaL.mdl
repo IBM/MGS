@@ -10,6 +10,7 @@
 // NOTE: This channel is modeled using HH formula; 
 // and get data from 2 compartment variables: Voltage + Calcium
 //   High-voltage activated
+//  including Ca2+ Lv1.2, N, P/Q, R
 Node ChannelCaHVA Implements 
     ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
     CaCurrentArrayProducer, //HH-based to Ca2+
@@ -329,7 +330,7 @@ Node ChannelCaLv13_GHK Implements
 	dyn_var_t [] m;
 	dyn_var_t [] h;
 	dyn_var_t [] I_Ca; // [pA/um^2]
-	dyn_var_t [] PCa;  // um/ms
+	dyn_var_t [] PCa;  // um/ms      [NOTE: 1cm/s = 10 um/ms]
 	dyn_var_t [] PCabar; // um/ms
 	// reference data
 	dyn_var_t []* V;//transmembrane voltage [mV]

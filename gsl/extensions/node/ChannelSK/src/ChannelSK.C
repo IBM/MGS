@@ -53,10 +53,11 @@
 
 #elif CHANNEL_SK == SK_WOLF_2005
 // The implementation is indeed from Moczydlowski - Latorre 1993
+//  Use Model 3 - Scheme 1 
 //    for Ca-dependent only K+ channel from rat skeletal muscle
 //    (single channel current)
 //
-//  Use Model 3 from the paper: C <->C.Ca <=> O.Ca <-> O.Ca2
+//               C <->C.Ca <=> O.Ca <-> O.Ca2
 //   C = C, C.Ca
 //   O = O.Ca, O.Ca2
 //  which is mapped to Hodgkin-Huxley-type formula using
@@ -77,14 +78,15 @@ NOT IMPLEMENTED YET
 #ifndef beta
 #define beta 0.000010  // [1/ms]
 #endif
-// GOAL: find K(V) = K(0) * exp(-zCa * delta * FV / (RT))
+// GOAL: find K(Vm) = K(0) * exp(-zCa * delta * F.Vm / (RT))
 //   - dissociation constant as a function of voltage
 // Unit on return: mM
-// k(mM), d=delta, v(mV)
+// k (mM), 
+// d=delta=fractional distance of the electric field that is felt by the ions
+// Vm (mV)
 // F=Faraday
 // R=universial constant
 // T=temperature
-// d=delta=fractional distance of the electric field that is felt by the ions
 dyn_var_t ChannelSK::KV(dyn_var_t k, dyn_var_t d, dyn_var_t v)
 {
   //const dyn_var_t zCa = 2;
@@ -135,18 +137,18 @@ void ChannelSK::update(RNG& rng)
     g[i] = gbar[i]*fO[i];
     }
 #elif CHANNEL_SK == SK_WOLF_2005
-	{//to group code
+    {//to group code
     // Rate k1-k2: unit 1/(ms)
-	dyn_var_t cai_mM = cai * uM2mM; //[mM]
+    dyn_var_t cai_mM = cai * uM2mM; //[mM]
 
-    dyn_var_t Oval = fO[i];  // temporary
-	// Rempe-Chopp 2006
-	dyn_var_t a = fwrate(v, cai_mM);
-	dyn_var_t sum = a+bwrate(v,cai_mM);
-	dyn_var_t tau = 1/(sum);
-	dyn_var_t Oinf = a/(sum); 
-	dyn_var_t Tscale_tau = dt  * getSharedMembers().Tadj /tau;
-	fO[i] = (Oinf * Tscale_tau + Oval * (1-Tscale_tau))/(1+Tscale_tau);
+    dyn_var_t a = fwrate(v, cai_mM);
+    dyn_var_t sum = a+bwrate(v,cai_mM);
+    dyn_var_t tau = 1/(sum);
+    dyn_var_t Oinf = a/(sum); 
+    dyn_var_t Tscale_tau = 0.5 * dt  * getSharedMembers().Tadj /tau;
+    //dO = (Oinf - O)/(tau/Tadj);
+    // Rempe-Chopp 2006
+    fO[i] = (2 * Oinf * Tscale_tau + fO[i] * (1-Tscale_tau))/(1+Tscale_tau);
 #ifdef DEBUG_ASSERT
     //assert(fabs(fO[0] + fC[0] - 1.0) < SMALL);  // conservation
 #endif
@@ -154,18 +156,12 @@ void ChannelSK::update(RNG& rng)
     if (fO[i] < 0.0) { fO[i] = 0.0; }
     else if (fO[i] > 1.0) { fO[i] = 1.0; }
     // trick to keep fC in [0, 1]
-    // if (fC[i] < 0.0)
-    //{
-    //	fC[i] = 0.0;
-    //}
-    // else if (fC[i] > 1.0)
-    //{
-    //	fC[i] = 1.0;
-    //}
+    // if (fC[i] < 0.0) {	fC[i] = 0.0;}
+    // else if (fC[i] > 1.0) {fC[i] = 1.0;}
     // fC[i] = ...
     // fC[i] = 1.0 - (fO[i]);  //no need
     g[i] = gbar[i] * fO[i] ;
-	}
+    }
 #elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT || \
 	  CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
   {
@@ -223,9 +219,6 @@ void ChannelSK::initialize(RNG& rng)
 			}
 			gbar[i] = gbar_values[j];
     } 
-		/*else if (gbar_values.size() == 1) {
-      gbar[i] = gbar_values[0];
-    } */
 		else if (gbar_branchorders.size() > 0)
 		{
       unsigned int j;
@@ -282,9 +275,10 @@ void ChannelSK::initialize(RNG& rng)
     dyn_var_t cai_mM = cai  * uM2mM; // [mM]
     dyn_var_t a = fwrate(v, cai_mM);
     dyn_var_t sum = a+bwrate(v,cai_mM);
-    dyn_var_t tau = 1/(sum);
-    dyn_var_t Oinf = a/(sum); 
-    fO[i] = Oinf;
+    //dyn_var_t tau = 1/(sum);
+    //dyn_var_t Oinf = a/(sum); 
+    //fO[i] = Oinf;
+    fO[i] = a/(sum); 
     g[i] = gbar[i]*fO[i];
     }
 #endif

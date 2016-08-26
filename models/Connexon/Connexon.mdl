@@ -7,33 +7,75 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+Interface CountProducer {
+   int * countGapJunction;
+}
+#endif
+
 // A Connexon is a gap junctionn
 //      bidirectional connection between
 //      2 compartmental branches
-Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer, 
+Node Connexon Implements 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+     ConductanceProducer,ReversalPotentialProducer,
+#else
+     CurrentProducer, 
+#endif
+     BranchDataProducer, IndexProducer, 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+     CountProducer,
+#endif
      VoltageProducer
 { // for historical purpose (we still keep it here; use Connexon_Vm instead)
 /*{{{*/
   dyn_var_t* Vi; //reference to the compartment representing the spine neck 
   dyn_var_t* Vj; //reference to the compartment representing the spine 'head'
   dyn_var_t I;   //the current [pA]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dyn_var_t g;   //the conductance [nS/um^2] that current from neck to shaft sense 
+#else
   dyn_var_t g;   //the conductance [nS] between the gap junction formed by 2 compartments
                  // .. from 2 different branches
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int *countGapJunctionConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countGapJunctionConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
 
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
   int index;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  DimensionStruct  dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+#endif
 
   Shared {
     dyn_var_t []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    int []* countGapJunctionConnect;
+#endif
   }
 
-  InitPhase produceInitialVoltage(Vi);
+  InitPhase produceInitialVoltage(Vi
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      , countGapJunctionConnectedToCompartment_i
+#endif
+             );
   RuntimePhase produceVoltage(Vi), computeState;
 
   VoltageProducer.voltage << Vi;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  ConductanceProducer.conductance << &g;
+  ReversalPotentialProducer.reversalPotential << Vj;
+#else
   CurrentProducer.current << &I;
+#endif
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  CountProducer.countGapJunction << countGapJunctionConnectedToCompartment_i;
+#endif
 
   InAttrPSet {
     string identifier;
@@ -43,16 +85,29 @@ Node Connexon Implements CurrentProducer, BranchDataProducer, IndexProducer,
   UserFunction setPointers;
   
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
-    VoltageArrayProducer, BranchDataProducer 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      CountInformationArrayProducer, 
+#endif
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
   {
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    CountInformationArrayProducer.countGapJunctionConnected >> Shared.countGapJunctionConnect;
+#endif
     setPointers();
   }
   Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    CountProducer,
+#endif
     VoltageProducer 
   {
     VoltageProducer.voltage >> Vj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    CountProducer.countGapJunction >> countGapJunctionConnectedToCompartment_j;
+#endif
   }
 /*}}}*/
 }

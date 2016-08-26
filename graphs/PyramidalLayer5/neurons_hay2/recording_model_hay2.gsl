@@ -1,5 +1,6 @@
-//#define DAT15 "Erevrec15.dat"
-//ReversalPotentialDisplay ReversalPotentialDisplay_0<fileName=PathFileCombine(DAT15)>;
+//NOTE: We use this to test if a site with a given radius can connect to something
+VoltageDisplay randomLocVoltageDisplay<fileName= PathFileCombine("randomLocV.dat")>;
+randomLocVoltageDisplay.dataCollection(<>) on recOn;
 
 //neuron
 //{{{
@@ -29,6 +30,15 @@ CalciumDisplay distalTuftedCalciumDisplay<fileName= PathFileCombine("distalTufte
 distalTuftedCalciumDisplay.dataCollection(<>) on recOn;
 AnyCurrentDisplay distalTuftedCurrentsDisplay<fileName= PathFileCombine("distalTuftedCurrents.dat")>;
 distalTuftedCurrentsDisplay.dataCollection(<>) on recOn;
+  //}}}
+
+  //{{{LOCATION 1b - nexus tuft
+VoltageDisplay nexusTuftedVoltageDisplay<fileName= PathFileCombine("nexusTuftedV.dat")>;
+nexusTuftedVoltageDisplay.dataCollection(<>) on recOn;
+CalciumDisplay nexusTuftedCalciumDisplay<fileName= PathFileCombine("nexusTuftedCa.dat")>;
+nexusTuftedCalciumDisplay.dataCollection(<>) on recOn;
+AnyCurrentDisplay nexusTuftedCurrentsDisplay<fileName= PathFileCombine("nexusTuftedCurrents.dat")>;
+nexusTuftedCurrentsDisplay.dataCollection(<>) on recOn;
   //}}}
 
   //{{{LOCATION 2 - proximal tuft

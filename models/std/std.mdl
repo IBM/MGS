@@ -49,18 +49,25 @@ Struct ChannelCaFluxes {
   dyn_var_t []* fluxes; // [uM/ms]
 }
 
-// for ionic fluxes across ER membrane 
-Interface CaFluxArrayProducer{
-  dyn_var_t []* fluxes; // [uM/msec] 
+
+// for modeling IP3 production via some injected current 
+Struct InjectedIP3Current {
+  dyn_var_t* current;  // [pA]
+  dyn_var_t currentToConc; // [uM] 
+  int index;
 }
-// for Synaptic Cleft
-Interface NeuroTransmitterConcentrationProducer{
-  dyn_var_t* NT; // [uM] neurotransmitter concentration
+// for modeling IP3 production via some 'channels' 
+Struct ChannelIP3Fluxes {
+  dyn_var_t []* fluxes; // [uM/ms]
 }
-Interface GlutamateConcentrationProducer{
-  dyn_var_t* NT; // [uM] neurotransmitter concentration
+
+// for modeling IP3-currents via receptors on SL membrane
+Struct ReceptorIP3Current {
+  dyn_var_t* current; // [pA/um^2]
+  int index; // index of compartment at which the receptor resides
 }
-Interface GABAConcentrationProducer{
-  dyn_var_t* NT; // [uM] neurotransmitter concentration
+// for modeling IP3-currents via channels on SL membrane
+Struct ChannelIP3Currents {
+  dyn_var_t []* currents; // [pA/um^2]
 }
 #endif

@@ -12,19 +12,20 @@
 #define Q10 3.0
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 #define BASED_TEMPERATURE 35.0  // Celcius
-#define Q10 3.0
+#define Q10 2.3
 #elif CHANNEL_NAT == NAT_TRAUB_1994
 #define BASED_TEMPERATURE 23  // Celcius
-#define Q10 3.0
+//TUAN TODO: maybe we need to update  all TRAUB model to 2.3
+#define Q10 2.3
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 #define BASED_TEMPERATURE 35.0  // Celcius
-#define Q10 3.0
+#define Q10 2.3
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 #define BASED_TEMPERATURE 23  // Celcius
 #define Q10 2.3
 #elif CHANNEL_NAT == NAT_WOLF_2005
-#define BASED_TEMPERATURE 33.0  // Celcius
-#define Q10 3.0
+#define BASED_TEMPERATURE 21.8  // Celcius
+#define Q10 2.3
 #elif CHANNEL_NAT == NAT_HAY_2011
 //Modified Colbert - Pan (2002) model
 #define BASED_TEMPERATURE 21  // Celcius
@@ -32,7 +33,7 @@
 #endif
 
 #ifndef Q10 
-#define Q10 3.0 //default
+#define Q10 2.3 //default
 #endif
 
 class ChannelNat : public CG_ChannelNat

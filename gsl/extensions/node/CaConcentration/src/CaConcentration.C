@@ -19,11 +19,17 @@
 #include "rndm.h"
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
+#include "GlobalNTSConfig.h"
 
+#include <iomanip>
+
+#define SMALL 1.0E-6
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
    (((a)->z - (b)->z) * ((a)->z - (b)->z)))
+
+SegmentDescriptor CaConcentration::_segmentDescriptor;
 
 // NOTE: value = 1e6/(zCa*Farad)
 // zCa = valence of Ca2+
@@ -264,8 +270,7 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   //  here all the data in vector-form are initialized to
   //  the same size as the number of compartments in a branch (i.e. branchData)
   unsigned size = branchData->size;  //# of compartments
-  SegmentDescriptor segmentDescriptor;
-  computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
+  computeOrder = _segmentDescriptor.getComputeOrder(branchData->key);
   if (isProximalCase2) assert(computeOrder == 0);
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
   assert(dimensions.size() == size);
@@ -309,30 +314,49 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 
   if (!isProximalCase0)
   {
-    Aip[size - 1] = -getLambda(proximalDimension, dimensions[size - 1]);
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    if (isProximalCase1)
+    {
+      Aip[size - 1] =
+        -getLambda(dimensions[size - 1], size-1);  // [nS/um^2]
+    }
+    else{
+      Aip[size - 1] =
+        -getLambda(dimensions[size - 1], proximalDimension, size-1, true);  // [nS/um^2]
+    }
+#else
+    Aip[size - 1] =
+        -getLambda(dimensions[size - 1], proximalDimension, size-1, true);  // [nS/um^2]
+    //Aip[size - 1] = -getLambda(dimensions[size - 1], proximalDimension, true);
+#endif
   }
 
   if (isDistalCase1 || isDistalCase2)
   {
-    //Aim[0] = -getLambda(distalDimensions[0], dimensions[0]);
-    Aim[0] = -getLambda(dimensions[0], distalDimensions[0]);
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    if (isDistalCase1)
+      Aim[0] = -getLambda(dimensions[0], 0);
+    else
+      Aim[0] = -getLambda(dimensions[0],distalDimensions[0], 0, true);
+#else
+    Aim[0] = -getLambda(dimensions[0],distalDimensions[0], 0, true);
+    //Aim[0] = -getLambda(dimensions[0], distalDimensions[0]);
+#endif
   }
 
   for (int i = 1; i < size; i++)
   {
-    //Aim[i] = -getLambda(dimensions[i - 1], dimensions[i]);
-    Aim[i] = -getLambda(dimensions[i], dimensions[i - 1]);
+    Aim[i] = -getLambda(dimensions[i], dimensions[i - 1], i);
   }
 
   for (int i = 0; i < size - 1; i++)
   {
-    Aip[i] = -getLambda(dimensions[i + 1], dimensions[i]);
+    Aip[i] = -getLambda(dimensions[i], dimensions[i + 1], i);
   }
 
   /* FIX */
   if (isDistalCase3)
   {
-	
     // Compute total volume of the junction...
     dyn_var_t volume = getVolume(0);
 
@@ -340,11 +364,24 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
     if (size == 1)
     {//branch has only 1 compartment, so get compartment in another branch
 			// which is referenced via proximalDimension
-      Aip[0] = -getAij(proximalDimension, dimensions[0], volume);
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+      //CHECK AGAIN
+      if (isProximalCase1)
+      {
+        Aip[0] =
+          -getLambda(dimensions[0], i);  // [nS/um^2]
+      }
+      else{
+        Aip[0] = -getAij(dimensions[0], proximalDimension, volume, true);
+      }
+#else
+      Aip[0] = -getAij(dimensions[0], proximalDimension, volume, true);
+      //Aip[0] = -getAij(dimensions[0], proximalDimension, volume, true);
+#endif
     }
     else
     {
-      Aip[0] = -getAij(dimensions[1], dimensions[0], volume);
+      Aip[0] = -getAij(dimensions[0], dimensions[1], volume);
     }
     /* reverted back to original approach
   //IMPORTANT CHANGE:
@@ -358,8 +395,13 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   */
     for (int n = 0; n < distalDimensions.size(); n++)
     {
-      //Aij.push_back(-getAij(distalDimensions[n], dimensions[0], volume));
-      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume));
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+      //CHECK AGAIN
+      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume, true));
+#else
+      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume, true));
+      //Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume, true));
+#endif
     }
   }
 #ifdef DEBUG_HH
@@ -370,32 +412,45 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 void CaConcentration::printDebugHH()
 {
   unsigned size = branchData->size;
-  SegmentDescriptor segmentDescriptor;
-	std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
-		<< "(neuronIdx, branchIdx, branchOrder) distalC0 | distalC1 | distalC2 |"
-		<< "distalC3 | proxC0 | proxC1 | proxC2 |"
-		<< "{x,y,z,r, dist2soma, surface_area, volume, length} Vm\n";
   for (int i = 0; i < size; ++i)
   {
-    std::cerr << getSimulation().getIteration()<<"," << 
-      dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " Ca_BRANCH"
-              << " [" << getSimulation().getRank() << "," << getNodeIndex()
-              << "," << getIndex() << "," << i << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ") |"
-              << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
-              << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
-              << isProximalCase1 << "|" << isProximalCase2 << "|"
-              << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << "," 
-							<< dimensions[i]->dist2soma  << ","
-              << dimensions[i]->surface_area << "," 
-              << dimensions[i]->volume << "," << dimensions[i]->length << ","
-							<< "} "
-							<< Ca_new[i]  << " " << std::endl;
+		this->printDebugHH(i);
   }
+}
+
+void CaConcentration::printDebugHH(int cptIndex)
+{
+  unsigned size = branchData->size;
+	if (cptIndex == 0)
+	{
+    std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
+      << "(neuronIdx, brIdx, brOrder, brType) distal(C0 | C1 | C2) |"
+      << "distalC3 | prox( C0 | C1 | C2) |"
+      << "{x,y,z,r, dist2soma, surface_area, volume, length} Cai\n";
+  }
+	int i  = cptIndex;
+	std::cerr << getSimulation().getIteration() << "," <<
+    dyn_var_t(getSimulation().getIteration()) *
+    *getSharedMembers().deltaT << "| BRANCH"
+    << " [" << getSimulation().getRank() << "," << getNodeIndex()
+    << "," << getIndex() << "," << i << "] "
+    << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+		<< std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+    << _segmentDescriptor.getBranchOrder(branchData->key) << ","
+    << _segmentDescriptor.getBranchType(branchData->key) << ") |"
+    << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
+    << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
+    << isProximalCase1 << "|" << isProximalCase2 << "|"
+		<< " {" 
+    << std::setprecision(3) << dimensions[i]->x << "," 
+    << std::setprecision(3) << dimensions[i]->y << ","
+		<< std::setprecision(3) << dimensions[i]->z << "," 
+    << std::setprecision(3) << dimensions[i]->r << " | " 
+		<< dimensions[i]->dist2soma  << ","
+		<< dimensions[i]->surface_area << "," 
+    << dimensions[i]->volume << "," << dimensions[i]->length 
+    << "} "
+    << Ca_new[i]  << " " << std::endl;
 }
 
 
@@ -468,6 +523,7 @@ void CaConcentration::doForwardSolve()
     }
   }
 
+	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
   Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
   for (; riter != rend; riter++)
@@ -476,6 +532,33 @@ void CaConcentration::doForwardSolve()
     RHS[i] -= currentToConc[i] * *(riter->current);
   }
 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();
   Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
   for (; iiter != iend; iiter++)
@@ -485,6 +568,11 @@ void CaConcentration::doForwardSolve()
   }
 
   /* * *  Forward Solve Ax = B * * */
+  /* Starting from distal-end (i=0)
+   * Eliminate Aim[?] by taking
+   * RHS -= Aim[?] * V[proximal]
+   * Aii = 
+   */
   if (isDistalCase1)
   {
     Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
@@ -534,51 +622,205 @@ void CaConcentration::doBackwardSolve()
 
 //GOAL: get coefficient of Aip or Aim
 //  DCa * (r_{i->j})^2 / (dist^2 * b->r^2)
-dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
+//NOTE: a is the current compartment, and
+//      b is the adjacent compartment (can be proximal or distal side)
+dyn_var_t CaConcentration::getLambda(DimensionStruct* a, 
+    DimensionStruct* b,
+    int index, 
+    bool connectJunction)
 {
-	dyn_var_t radius;// radius_middle ()
-	if (a->dist2soma == 0.0)//avoid the big soma
-	{
-		radius = b->r;
+	dyn_var_t Rb;// radius_middle ()
+#ifdef NEW_DISTANCE_NONUNIFORM_GRID 
+  dyn_var_t dsi = getHalfDistance(index);
+#else
+  dyn_var_t dsi = a->length;
+#endif
+  dyn_var_t distance;
+	if (a->dist2soma <= SMALL)//avoid the big soma
+	{//a  CAN't BE the compartment representing 'soma'
+    assert(0);
 	}
-	else if (b->dist2soma == 0.0)
-		radius = a->r;
+	else if (b->dist2soma <= SMALL)
+	{//b is the compartment representing 'soma'
+		Rb = a->r;
+      //TEST 
+			Rb /= SCALING_NECK_FROM_SOMA;
+      //END TEST
+#ifdef USE_SOMA_AS_POINT
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    distance = std::fabs(a->dist2soma);
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+      //TEST 
+      distance += STRETCH_SOMA_WITH;
+      //END TEST
+#endif
+  }
 	else
-		radius = 0.5 * (a->r + b->r);
-  //dyn_var_t lengthsq = DISTANCE_SQUARED(a, b);
-  //return (getSharedMembers().DCa * radius * radius /
-  //        (lengthsq * b->r * b->r)); /* needs fixing */
-  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
-  //return (getSharedMembers().DCa * radius * radius /
-  //        (length * length * b->r * b->r)); /* needs fixing */
-  return (DCa * radius * radius /
-          (length * length * b->r * b->r)); /* needs fixing */
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
+		Rb = 0.5 * (a->r + b->r);
+#endif
+    distance = std::fabs(b->dist2soma - a->dist2soma);
+  }
+  return (DCa * Rb * Rb /
+          (dsi * distance * a->r * a->r)); /* needs fixing */
 }
+//find the lambda between the terminal point of the 
+//compartment represented by 'a'
+//'a' can be cpt[0] (distal-end) or cpt[size-1] (proximal-end)
+dyn_var_t CaConcentration::getLambda(DimensionStruct* a, int index)
+{
+	dyn_var_t Rb ;// radius_middle ()
+  dyn_var_t distance;
+	if (a->dist2soma <= SMALL)
+	{//a  CAN't BE the compartment representing 'soma'
+    assert(0);
+	}
+	else
+  {
+    Rb = a->r;
+    distance = std::fabs(a->length/2.0);
+  }
+#ifdef NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
+  dyn_var_t dsi ;
+  if (index == 0)
+    dsi = (a->length/2.0 + std::abs(a->dist2soma - dimensions[1]->dist2soma));
+  else if (index == branchData->size-1)
+    dsi = (a->length/2.0 + std::abs(a->dist2soma - dimensions[index-2]->dist2soma));
+  else
+    assert(0);
+#else
+  dyn_var_t dsi  = distance;
+#endif
+  return (DCa * Rb * Rb /
+          (dsi * distance * a->r * a->r)); /* needs fixing */
+}
+//|dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
+//|{
+//|	dyn_var_t radius;// radius_middle ()
+//|  dyn_var_t distance;
+//|	if (a->dist2soma <= SMALL)//avoid the big soma
+//|	{//a is the compartment representing 'soma'
+//|		radius = b->r;
+//|    //distance = fabs(b->dist2soma + a->r );
+//|    //distance = std::fabs(b->dist2soma); //NOTE: The dist2soma of the first compartment stemming
+//|         // from soma is always the distance from the center of soma to the center
+//|         // of that compartment
+//|    distance = std::fabs(b->dist2soma - a->r); // SOMA is treated as a point source
+//|	}
+//|	else if (b->dist2soma <= SMALL)
+//|	{//b is the compartment representing 'soma'
+//|		radius = a->r;
+//|    //distance = fabs(b->r + a->dist2soma );
+//|    //distance = std::fabs(a->dist2soma);
+//|    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+//|  }
+//|	else
+//|  {
+//|		radius = 0.5 * (a->r + b->r);
+//|    distance = fabs(b->dist2soma - a->dist2soma);
+//|  }
+//|  //dyn_var_t distancesq = DISTANCE_SQUARED(a, b);
+//|  //return (getSharedMembers().DCa * radius * radius /
+//|  //        (distancesq * b->r * b->r)); /* needs fixing */
+//|  //dyn_var_t distance = fabs(b->dist2soma - a->dist2soma);
+//|  //return (getSharedMembers().DCa * radius * radius /
+//|  //        (distance * distance * b->r * b->r)); /* needs fixing */
+//|  return (DCa * radius * radius /
+//|          (distance * distance * b->r * b->r)); /* needs fixing */
+//|}
 
-// GOAL: Get coefficient of Ca(i=0,j=branch-index)
+// GOAL: Get coefficient of Aip[0] and Aim[size-1]
+//  for Cai(i=0,j=branch-index)
 // i.e. at implicit branch point
 //  DCa * (1/V) * PI * r_(i->j)^2 / (ds_(i->j))
 //   V = volume of cytosolic compartment
 //   DCa = diffusion constant of Ca(cyto)
+//  NOTE: 'a' is the distal-end compartment of the branch (i=0)
+//        serving as implicit branch 
 dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
-                                  dyn_var_t V)
+                                  dyn_var_t V, bool connectJunction)
 {
 	dyn_var_t Rb;
-	if (a->dist2soma == 0.0)
+  dyn_var_t distance;
+	if (a->dist2soma <= SMALL)
 	{
-		Rb = b->r;
+    assert(0); // a CANNOT be soma
 	}
-	else if (b->dist2soma == 0.0)
+	else if (b->dist2soma <= SMALL)
+  {
 		Rb = a->r;
+      //TEST 
+			Rb /= SCALING_NECK_FROM_SOMA;
+      //END TEST
+#ifdef USE_SOMA_AS_POINT
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    //distance = fabs(b->r + a->dist2soma );
+    distance = std::fabs(a->dist2soma);
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+      //TEST 
+      distance += STRETCH_SOMA_WITH; //similar to the 'base point of soma in NEURON'
+      //NOTE: The distance*sum(radius-each-branch) = NEURON(distance*sum(1/2(somaR+radius-each-branch)))
+      //END TEST
+#endif
+  }
 	else
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
 		Rb = 0.5 * (a->r + b->r);
-  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
-  //        (V * sqrt(DISTANCE_SQUARED(a, b))));
-  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
-  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
+#endif
+    distance = fabs(b->dist2soma - a->dist2soma);
+  }
   return (M_PI * Rb * Rb * DCa /
-          (V * length));
+          (V * distance));
 }
+
+//|dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
+//|                                  dyn_var_t V)
+//|{
+//|	dyn_var_t Rb;
+//|  dyn_var_t distance;
+//|	if (a->dist2soma <= SMALL)
+//|	{
+//|		Rb = b->r;
+//|    //distance = fabs(b->dist2soma + a->r );
+//|    //distance = std::fabs(b->dist2soma); //NOTE: The dist2soma of the first compartment stemming
+//|         // from soma is always the distance from the center of soma to the center
+//|         // of that compartment
+//|    distance = std::fabs(b->dist2soma - a->r); // SOMA is treated as a point source
+//|	}
+//|	else if (b->dist2soma <= SMALL)
+//|  {
+//|		Rb = a->r;
+//|    //distance = fabs(b->r + a->dist2soma );
+//|    //distance = std::fabs(a->dist2soma);
+//|    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+//|  }
+//|	else
+//|  {
+//|		Rb = 0.5 * (a->r + b->r);
+//|    distance = fabs(b->dist2soma - a->dist2soma);
+//|  }
+//|  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
+//|  //        (V * sqrt(DISTANCE_SQUARED(a, b))));
+//|  //dyn_var_t distance = fabs(b->dist2soma - a->dist2soma);
+//|  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
+//|  return (M_PI * Rb * Rb * DCa /
+//|          (V * distance));
+//|}
 
 void CaConcentration::setReceptorCaCurrent(
     const String& CG_direction, const String& CG_component,
@@ -592,6 +834,8 @@ void CaConcentration::setReceptorCaCurrent(
   receptorCaCurrents[receptorCaCurrents.size() - 1].index = CG_inAttrPset->idx;
 }
 
+// to be called at connection-setup time
+//    check MDL for what kind of connection then it is called
 void CaConcentration::setInjectedCaCurrent(
     const String& CG_direction, const String& CG_component,
     NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
@@ -602,7 +846,7 @@ void CaConcentration::setInjectedCaCurrent(
   assert(injectedCaCurrents.size() > 0);
 #endif
   TissueSite& site = CG_inAttrPset->site;
-  if (site.r != 0)// a sphere is provided, i.e. used for current injection
+  if (site.r != 0)  // a sphere is provided, i.e. used for current injection
   {//stimulate a region (any compartments fall within the sphere are affected)
     // go through all compartments
     for (int i = 0; i < dimensions.size(); ++i)
@@ -629,8 +873,8 @@ void CaConcentration::setInjectedCaCurrent(
       }
     }
   }
-  else if (CG_inAttrPset->idx < 0) // Can be used via 'Probe' of TissueFunctor
-  {//inject at all compartments of one or many branchs meet the condition 
+  else if (CG_inAttrPset->idx < 0)  // Can be used via 'Probe' of TissueFunctor
+  {//inject at all compartments of one or many branchs meet the condition
     injectedCaCurrents[injectedCaCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)
     {
@@ -638,8 +882,9 @@ void CaConcentration::setInjectedCaCurrent(
           dynamic_cast<CaCurrentProducer*>(CG_variable);
       if (CG_CaCurrentProducerPtr == 0)
       {
-        std::cerr << "Dynamic Cast of CurrentProducer failed in CaConcentration"
-                  << std::endl;
+        std::cerr
+          << "Dynamic Cast of CurrentProducer failed in CaConcentration"
+          << std::endl;
         exit(-1);
       }
       injectedCaCurrents.increase();
@@ -658,3 +903,95 @@ void CaConcentration::setInjectedCaCurrent(
 }
 
 CaConcentration::~CaConcentration() {}
+
+dyn_var_t CaConcentration::getHalfDistance (int index) 
+{
+  dyn_var_t halfDist = 0.0 ;
+  unsigned size = branchData->size;  //# of compartments
+  assert(index >=0 and index <= size-1);
+  if  (index == size-1)
+  {
+    if (! isProximalCase0)
+    {
+      if (proximalDimension->dist2soma <= SMALL)
+      {
+        if (size==1)
+        {
+          if (isDistalCase0)
+          {//no flux distal
+            halfDist = ( dimensions[index]->length/2 );
+          }
+          else if (isDistalCase1 or isDistalCase2)
+          {
+            halfDist = (
+                std::abs( dimensions[index]->length/2 )
+                +
+                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                )/ 2.0;
+          }
+        }
+        else
+        {
+          halfDist = (
+              std::abs( dimensions[index]->length/2 )
+              +
+              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              )/ 2.0;
+          //halfDist = (
+          //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          //    );
+
+        }
+      }
+      else{
+        if (size==1)
+        {
+          if (isDistalCase0)
+            halfDist = (
+                std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+                );
+          else if (isDistalCase1 or isDistalCase2)
+            halfDist = (
+                std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+                +
+                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                )/ 2.0;
+        }
+        else
+          halfDist = (
+              std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+              +
+              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              )/ 2.0;
+      }
+
+    }
+    else
+      halfDist = (
+          std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          );
+  }
+  else if (index == 0)
+    if (isDistalCase0)
+      halfDist = (
+          std::abs( dimensions[index]->dist2soma - dimensions[index+1]->dist2soma )
+          );
+    else if (isDistalCase1 or isDistalCase2)
+      halfDist = (
+          std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+          +
+          std::abs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
+          )/ 2.0;
+    else 
+    {// no use
+    }
+  else 
+  {
+    halfDist = (
+        std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+        +
+        std::abs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
+        )/ 2.0;
+  }
+  return halfDist;
+}
