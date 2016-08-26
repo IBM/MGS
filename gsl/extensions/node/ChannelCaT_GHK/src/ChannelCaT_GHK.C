@@ -5,6 +5,7 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -17,7 +18,10 @@ static pthread_once_t once_CaT_GHK = PTHREAD_ONCE_INIT;
 //              CaT_GHK current
 //
 #if CHANNEL_CaT == CaT_GHK_WOLF_2005
-// data from  ???
+//  Inactivation reference from
+//     1. Chirchill et al. (1998) (Fig. 3) 
+//  Activation reference from 
+//     1. McRoy et al. (2001) (Fig. 7)
 //
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
@@ -48,6 +52,7 @@ std::vector<dyn_var_t> ChannelCaT_GHK::Vmrange_tauh;
 NOT IMPLEMENTED YET
 #endif
 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 dyn_var_t ChannelCaT_GHK::vtrap(dyn_var_t x, dyn_var_t y)
 {
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
@@ -56,15 +61,11 @@ dyn_var_t ChannelCaT_GHK::vtrap(dyn_var_t x, dyn_var_t y)
 void ChannelCaT_GHK::initialize(RNG& rng)
 {
   pthread_once(&once_CaT_GHK, initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(PCabar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
@@ -83,19 +84,19 @@ void ChannelCaT_GHK::initialize(RNG& rng)
     if (Pbar_dists.size() > 0)
     {
       unsigned int j;
-			assert(Pbar_values.size() == Pbar_dists.size());
+			//NOTE: 'n' bins are splitted by (n-1) points
+			if (Pbar_values.size() - 1 != Pbar_dists.size())
+			{
+				std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+					<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+			}
+      assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
         if ((*dimensions)[i]->dist2soma < Pbar_dists[j]) break;
       }
-      if (j < Pbar_values.size())
-        PCabar[i] = Pbar_values[j];
-      else
-        PCabar[i] = PCabar_default;
+      PCabar[i] = Pbar_values[j];
     }
-    /*else if (Pbar_values.size() == 1) {
-PCabar[i] = Pbar_values[0];
-} */
     else if (Pbar_branchorders.size() > 0)
     {
       unsigned int j;
@@ -126,16 +127,24 @@ PCabar[i] = Pbar_values[0];
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
+    dyn_var_t cai = (*Ca_IC)[i];
 #if CHANNEL_CaT == CaT_GHK_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
-		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-		//NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-		//     R [mJ/(mol.K)]
-    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
-			v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
-			(1- tmp); // [pA/um^2]
+		//dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+		////NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+		////     R [mJ/(mol.K)]
+    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
+		//	v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
+		//	(1- tmp); // [pA/um^2]
+    //NOTE: Tuan added 0.314
+    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -148,7 +157,8 @@ void ChannelCaT_GHK::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_CaT == CaT_WOLF_2005
+    dyn_var_t cai = (*Ca_IC)[i];
+#if CHANNEL_CaT == CaT_GHK_WOLF_2005
     // NOTE: Some models use m_inf and tau_m to estimate m
     // tau_m in the lookup table
     std::vector<dyn_var_t>::iterator low =
@@ -156,14 +166,28 @@ void ChannelCaT_GHK::update(RNG& rng)
     int index = low - Vmrange_taum.begin();
     //-->tau_m[i] = taumCaT[index];
     // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumCaT[index] * 2);
+    //dyn_var_t qm = dt * getSharedMembers().Tadj / (taumCaT[index] * 2);
+    dyn_var_t taum;
+    if (index == 0)
+      taum = taumCaT[0];
+    else
+      taum = linear_interp(Vmrange_taum[index-1], taumCaT[index-1], 
+        Vmrange_taum[index], taumCaT[index], v);
+    dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
     /* no need to search as they both use the same Vmrange
      * IF NOT< make sure you add this code
     std::vector<dyn_var_t>::iterator low= std::lower_bound(Vmrange_tauh.begin(),
     Vmrange_tauh.end(), v);
     int index = low-Vmrange_tauh.begin();
     */
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhCaT[index] * 2);
+    //dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhCaT[index] * 2);
+    dyn_var_t tauh;
+    if (index == 0)
+      tauh = tauhCaT[0];
+    else
+      tauh = linear_interp(Vmrange_tauh[index-1], tauhCaT[index-1], 
+        Vmrange_tauh[index], tauhCaT[index], v);
+    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -173,12 +197,19 @@ void ChannelCaT_GHK::update(RNG& rng)
     //E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
     //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
-		dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-		//NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-		//     R [mJ/(mol.K)]
-    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
-			v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
-			(1- tmp); // [pA/um^2]
+		//dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+		////NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+		////     R [mJ/(mol.K)]
+    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
+		//	v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
+		//	(1- tmp); // [pA/um^2]
+    //NOTE: Tuan added 0.314
+    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
 #endif
   }
 }
@@ -190,17 +221,19 @@ void ChannelCaT_GHK::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);
     assert((sizeof(taumCaT) / sizeof(taumCaT[0])) == tmp.size());
-		Vmrange_taum.resize(tmp.size()-2);
-    for (unsigned long i = 1; i < tmp.size() - 1; i++)
-      Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+		//Vmrange_taum.resize(tmp.size()-2);
+    //for (unsigned long i = 1; i < tmp.size() - 1; i++)
+    //  Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+    Vmrange_taum = tmp;
   }
   {
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhCaT) / sizeof(tauhCaT[0]) == tmp.size());
-		Vmrange_tauh.resize(tmp.size()-2);
-    for (unsigned long i = 1; i < tmp.size() - 1; i++)
-      Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+		//Vmrange_tauh.resize(tmp.size()-2);
+    //for (unsigned long i = 1; i < tmp.size() - 1; i++)
+    //  Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+    Vmrange_tauh = tmp;
   }
 #endif
 }

@@ -5,6 +5,7 @@
 
 #include "MaxComputeOrder.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -19,6 +20,7 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 // This is an implementation of the "KAf potassium current
 //
 #if CHANNEL_KAf == KAf_TRAUB_1994
+//The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
 #define Eleak -65.0 //mV
 #define AMC -0.02
 #define AMV (13.1+Eleak)
@@ -55,6 +57,10 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 #define THD 23.0
 
 #elif CHANNEL_KAf == KAf_WOLF_2005
+//  Inactivation reference from 
+//    1. Tkatch et al. (2000) (V1/2: pg. 581, slope = Fig.3.B, tau: Fig.3C)
+//  Activation reference from 
+//     1. Tkatch et al. (2000) (V1/2: pg. 581, slope corrected -17.7)
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -10.0
@@ -67,7 +73,6 @@ const dyn_var_t ChannelKAf::_Vmrange_taum[] = {-40, -30, -20, -10, 0, 10,
 dyn_var_t ChannelKAf::taumKAf[] = {1.8, 1.1, 1.0, 1.0, 0.9, 0.8,
                                    0.9, 0.9, 0.9, 0.8, 0.8};
 std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
-//The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -105,6 +110,7 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t tauh = (THC + THF*exp(-pow((v + THV)/THD,2)))/getSharedMembers().Tadj;
     dyn_var_t pm = 0.5*dt/taum;
     dyn_var_t ph = 0.5*dt/tauh;
+	  // Rempe-Chopp 2006
     m[i] = (2.0*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
     h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     }
@@ -114,8 +120,16 @@ void ChannelKAf::update(RNG& rng)
     std::vector<dyn_var_t>::iterator low =
         std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
     int index = low - Vmrange_taum.begin();
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (taumKAf[index] * 2);
-    const dyn_var_t tau_h = 4.67;
+    //dyn_var_t qm = dt * getSharedMembers().Tadj / (taumKAf[index] * 2);
+    dyn_var_t taum;
+    if (index == 0)
+      taum = taumKAf[0];
+    else
+      taum = linear_interp(Vmrange_taum[index-1], taumKAf[index-1], 
+        Vmrange_taum[index], taumKAf[index], v);
+    dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
+    //const dyn_var_t tau_h = 4.67; // for 35^C
+    const dyn_var_t tau_h = 14.0; 
     dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
@@ -184,9 +198,6 @@ void ChannelKAf::initialize(RNG& rng)
       }
       gbar[i] = gbar_values[j];
     } 
-		/*else if (gbar_values.size() == 1) {
-      gbar[i] = gbar_values[0];
-    } */
 		else if (gbar_branchorders.size() > 0)
 		{
       unsigned int j;
@@ -247,9 +258,10 @@ void ChannelKAf::initialize_others()
 #if CHANNEL_KAf == KAf_WOLF_2005
   std::vector<dyn_var_t> tmp(_Vmrange_taum, _Vmrange_taum + LOOKUP_TAUM_LENGTH);
   assert(sizeof(taumKAf) / sizeof(taumKAf[0]) == tmp.size());
-	Vmrange_taum.resize(tmp.size()-2);
-  for (unsigned long i = 1; i < tmp.size() - 1; i++)
-    Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+	//Vmrange_taum.resize(tmp.size()-2);
+  //for (unsigned long i = 1; i < tmp.size() - 1; i++)
+  //  Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+  Vmrange_taum = tmp;
 #endif
 }
 

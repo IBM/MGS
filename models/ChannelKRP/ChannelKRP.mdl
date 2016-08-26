@@ -8,7 +8,9 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-     BranchDataProducer, DimensionArrayProducer 
+     BranchDataProducer, 
+     IOCurrentArrayProducer,
+     DimensionArrayProducer 
 {
 /*{{{*/
   //DATA
@@ -20,6 +22,7 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
   dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
   BranchDataStruct* branchData; 
@@ -68,8 +71,9 @@ Node ChannelKRP Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
-  DimensionArrayProducer.dimensionArray << dimensions;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
+  IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {//information of the incoming connection
     string identifier; //name of the compartment variable

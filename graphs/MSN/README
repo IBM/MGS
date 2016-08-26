@@ -18,4 +18,9 @@ a tissue file, that lists a 'real' MSN + thousands of 'bouton' neuron
 
 * D2-type
 
+CURRENT STATUS: 
+ We first test by blocking diffusion, and inject the same currrent into the system
+ Erev K+ = -80mV is important for the Wolf 2005 behavior
+ Something wrong with Na+ model, so I'm testing using Nat from Hay2011 model
+
 

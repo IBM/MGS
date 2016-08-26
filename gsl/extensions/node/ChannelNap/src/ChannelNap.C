@@ -5,6 +5,7 @@
 
 #include "MaxComputeOrder.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -50,10 +51,11 @@ static pthread_once_t once_Nap = PTHREAD_ONCE_INIT;
 //#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 #elif CHANNEL_NAP == NAP_WOLF_2005
 // data
-//    activation : from entorhinal cortical stellate cell (Magistretti-Alonso,
-//    1999)
-//    inactivation: from computational model of Layer2/3 pyramidal neuron
-//    (Traub, 2003)
+//    Activation : from 
+//      1. Magistretti-Alonso(1999) entorhinal cortical stellate cell  (Fig. 4)
+//      2. Traub (2003) computational model of Layer2/3 pyramidal neuron - tau_m (Table A2)
+//    Inactivation: from 
+//      1. Magistretti-Alonso (1999)
 //     recorded at 22-24C and then mapped to 35C using Q10 = 3
 //
 // model is used for simulation NAc nucleus accumbens (medium-sized spiny MSN
@@ -98,7 +100,14 @@ void ChannelNap::update(RNG& rng)
     std::vector<dyn_var_t>::iterator low =
         std::lower_bound(Vmrange_tauh.begin(), Vmrange_tauh.end(), v);
     int index = low - Vmrange_tauh.begin();
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNap[index] * 2);
+    //dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNap[index] * 2);
+    dyn_var_t tauh;
+    if (index == 0)
+     tauh = tauhNap[0];
+    else
+     tauh = linear_interp(Vmrange_tauh[index-1], tauhNap[index-1], 
+        Vmrange_tauh[index], tauhNap[index], v);
+    dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -223,6 +232,7 @@ void ChannelNap::initialize(RNG& rng)
 #else
     NOT IMPLEMENTED YET
 #endif
+		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
 
@@ -231,9 +241,10 @@ void ChannelNap::initialize_others()
 #if CHANNEL_NAP == NAP_WOLF_2005
   std::vector<dyn_var_t> tmp(_Vmrange_tauh, _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
   assert((sizeof(tauhNap) / sizeof(tauhNap[0])) == tmp.size());
-	Vmrange_tauh.resize(tmp.size()-2);
-  for (unsigned long i = 1; i < tmp.size() - 1; i++)
-    Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+	//Vmrange_tauh.resize(tmp.size()-2);
+  //for (unsigned long i = 1; i < tmp.size() - 1; i++)
+  //  Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
+  Vmrange_tauh = tmp;
 #endif
 }
 

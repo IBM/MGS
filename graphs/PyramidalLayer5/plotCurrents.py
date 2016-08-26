@@ -1475,7 +1475,11 @@ def plot_case9_adv():
     mpl.rcParams['lines.linewidth'] = 2
 
 
+    ##########################################################
+    ### Page 1
     ############################
+    f1, axarr1 = plt.subplots(3, 2)
+    axarr = axarr1
     ### row 1
     ## For 1 file
     myFile = folder+'/'+getFile(folder,'somaCurrents.dat')
