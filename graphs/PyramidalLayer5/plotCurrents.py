@@ -20,6 +20,21 @@ import argparse
 import fnmatch
 from mpldatacursor import datacursor
 
+class PlotMultipleFolders(argparse.Action):
+    """
+    Read a file, each line is a folder name
+    plot all of the non-commented lines (comment using #)
+    """
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(PlotMultipleFolders, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print '%r %r %r' % (namespace, values, option_string)
+        setattr(namespace, self.dest, values)
+
+
 def getFile(folder,fileNamePrefix):
     for file in os.listdir(folder):
         if fnmatch.fnmatch(file, fileNamePrefix+'*'):
@@ -587,8 +602,10 @@ def parse():
 #### TODO: Implement the function that read each line, ignore comment line
 ### and call the apropriate plotting functions for files in that folder
   parser_folder = subparsers.add_parser('file')
-  parser_folder.add_argument("fileName", default=".fileListFilder", help="the name of the file")
-  parser_folder.set_defaults(which='plotAllFoldersInFile')
+  parser_folder.add_argument("fileName", default=".fileListFilder",
+                             action=PlotMultipleFolders,
+                             help="the name of the file")
+  ##parser_folder.set_defaults(which='plotAllFoldersInFile')
 
   #global args
   args = parser.parse_args()
@@ -1613,6 +1630,7 @@ def plot_case9_adv():
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
         #print len(t), len(ydata)
         i += 1
+        break #only 1 column
     #print i
     #print minVal, maxVal
     axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
@@ -2199,6 +2217,7 @@ def plot_case9_adv():
            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
            #print len(t), len(ydata)
            i += 1
+           break # 1 column plot
        print i
        print minVal, maxVal
        axarr[gr, gc].set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
@@ -2259,6 +2278,7 @@ def plot_case9_adv():
            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
            #print len(t), len(ydata)
            i += 1
+           break # 1 column plot
        #s2 = np.sin(2*np.pi*t)
        #ax2.plot(t, s2, 'r.')
        #ax2.set_ylabel('sin', color='r')
