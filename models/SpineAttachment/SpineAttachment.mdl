@@ -62,7 +62,7 @@ Node SpineAttachment_Vm Implements
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
   int index;//index of the compartment that this SpineAttachment node associates with
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
-  DimensionStruct  dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+  DimensionStruct * dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
 #endif
 
   Shared {
