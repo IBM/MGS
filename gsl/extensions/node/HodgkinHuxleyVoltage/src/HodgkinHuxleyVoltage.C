@@ -1146,7 +1146,7 @@ dyn_var_t HodgkinHuxleyVoltage::getHalfDistance (int index)
   return halfDist;
 }
 
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 void HodgkinHuxleyVoltage::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset) 
 {
   unsigned size = branchData->size;  //# of compartments

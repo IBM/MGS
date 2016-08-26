@@ -46,7 +46,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
       CountInformationArrayProducer, 
 #endif
      NaConcentrationProducer, KConcentrationProducer 
@@ -96,7 +96,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
                    //  from distal to proximal: forwardSolve
                    //  from proximal to distal: backwardSolve
                    //  2. treat all junctions as explicit junction
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   int[] countSpineConnected;
   int[] countGapJunctionConnected;
 #endif
@@ -156,7 +156,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
   CountInformationArrayProducer.countGapJunctionConnected << &countGapJunctionConnected;
 #endif
@@ -165,7 +165,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   KConcentrationProducer.K << &Shared.K;
 	//}}}
 
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   UserFunction updateSpineCount, updateGapJunctionCount;
 #endif
     // Phases methods
@@ -233,18 +233,26 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateGapJunctionCount();
 #endif
    }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+    ConductanceProducer.conductance >> receptorCurrents.conductance;
+    ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
+    setReceptorCurrent();
+   }
+#else
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
 #endif
    }
+#endif
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
     ConductanceProducer.conductance >> receptorCurrents.conductance;
     ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
@@ -345,7 +353,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
       CountInformationArrayProducer, 
 #endif
 	 NaConcentrationProducer, KConcentrationProducer 
@@ -368,7 +376,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
   DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
   BranchDataStruct* [] branchDataInputs;  // 
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   int []countSpineConnected;
   int []countGapJunctionConnected;
 #endif
@@ -421,7 +429,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
   CountInformationArrayProducer.countGapJunctionConnected << &countGapJunctionConnected;
 #endif
@@ -430,7 +438,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   KConcentrationProducer.K << &Shared.K;
 
    //{{{ Phases 
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   UserFunction updateSpineCount, updateGapJunctionCount;
 #endif
   InitPhase initializeJunction;
@@ -474,17 +482,24 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateGapJunctionCount();
 #endif
    }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+    ConductanceProducer.conductance >> receptorConductances;
+    ReversalPotentialProducer.reversalPotential >> receptorReversalPotentials;
+   }
+#else
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
 #endif
    }
+#endif
 
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, 
     ReversalPotentialProducer {

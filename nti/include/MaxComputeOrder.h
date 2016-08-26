@@ -133,6 +133,12 @@
 
 #define NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
 //       dsi = (dx1 + dx2)/2 - Check Mascagni (1995, pg 33)
-#define CONSIDER_MANYSPINE_EFFECT // if defined, the new codes that handle the case when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ propagate to the nneck needs to be equally divided  (this is important for numerical stability)
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION1 // if defined, the new codes that handle the case when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ propagate to the nneck needs to be equally divided  (this is important for numerical stability)
+       // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION2
 
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2 //option 2 means we convert into 
+       // ConductanceProducer and ReversalPotential producer
+       // (instead of injectedCurrent producer)
+       // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION1
+       
 #endif //_MAXCOMPUTEORDER_H

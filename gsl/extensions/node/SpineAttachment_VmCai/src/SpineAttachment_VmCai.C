@@ -70,7 +70,11 @@ void SpineAttachment_VmCai::computeInitialState(RNG& rng)
   }else{//connect to spine-neck
    distance = (*leni / 2.0  + *lenj); //[um]
   }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#else
   g = A / (Raxial * distance);            // [nS]
+#endif
   Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
 }
 
@@ -88,12 +92,17 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
 	//i = index of compartment this connexon is connecting to
 	//j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   I = g * V / *countSpineConnectedToCompartment_j;
   I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
 #else
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  //no need to update I(Vm), as it produces g, and Vj
+  I_Ca = Caconc2current * (*Caj - *Cai);
+#else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
+#endif
 #endif
 }
 
@@ -113,7 +122,10 @@ void SpineAttachment_VmCai::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif
 }

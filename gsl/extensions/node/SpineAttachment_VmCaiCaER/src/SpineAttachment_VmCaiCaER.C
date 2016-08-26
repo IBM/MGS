@@ -65,7 +65,11 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
   }else{//connect to spine-neck
    distance = (*leni / 2.0  + *lenj); //[um]
   }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#else
   g = A / (Raxial * distance);            // [nS]
+#endif
   Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
   CaERconc2current = A * DCaER * zCa * zF / (1000000.0*distance);
   //TUAN TODO: HERE we should take into account the cross-sectional difference
@@ -83,15 +87,21 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 	//i = index of compartment this connexon is connecting to
 	//j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   I = g * V / *countSpineConnectedToCompartment_j;
   I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
   I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_j;
+#else
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  //no need to update I(Vm), as it produces g, and Vj
+  I_Ca = Caconc2current * (*Caj - *Cai);
+  I_CaER = CaERconc2current * (*CaERj - *CaERi);
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
   I_CaER = CaERconc2current * (*CaERj - *CaERi);
   //std::cout << *Cai << "  " << *Caj << "; ER " << *CaERi << " " << *CaERj << "\n";
+#endif
 #endif
 }
 
@@ -112,7 +122,10 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif
 }
@@ -179,7 +192,7 @@ void SpineAttachment_VmCaiCaER::set_A_and_len(
     Ai = 0.0;
     leni = &(dimension->r);
     typeCpt = typeDenShaft;
- }
+  }
   else if (cptType == typeSpineNeck)
   {
     // len1 = 1/2 spineneck (from spineneck-side)

@@ -20,6 +20,11 @@
 
 void Connexon::produceInitialVoltage(RNG& rng) 
 {
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  g = g / (dimension->surface_area);            // [nS/um^2]
+#else
+  //g = A / (Raxial * distance);            // [nS]  -- provided by the user via parameter
+#endif
 }
 
 void Connexon::produceVoltage(RNG& rng) 
@@ -28,10 +33,14 @@ void Connexon::produceVoltage(RNG& rng)
 
 void Connexon::computeState(RNG& rng) 
 {
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   I=g*(*Vj-*Vi) / *countGapJunctionConnectedToCompartment_j;//TUAN TODO TO BE REVISED
 #else
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  //no need to update I(Vm), as it produces g, and Vj
+#else
   I=g*(*Vj-*Vi);
+#endif
 #endif
 }
 
@@ -41,9 +50,12 @@ void Connexon::setPointers(const String& CG_direction, const String& CG_componen
   assert(getSharedMembers().voltageConnect);
   assert(index>=0 && index<getSharedMembers().voltageConnect->size());    
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   countGapJunctionConnectedToCompartment_i = 
     &((*(getSharedMembers().countGapJunctionConnect))[index]);
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
 #endif
 }
 

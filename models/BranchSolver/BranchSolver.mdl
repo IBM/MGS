@@ -67,7 +67,7 @@ Interface SolutionProducer {
 	dyn_var_t* solution;
 }
 
-#ifdef CONSIDER_MANYSPINE_EFFECT
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 Interface CountInformationArrayProducer {
   int []* countSpineConnected;
   int []* countGapJunctionConnected;

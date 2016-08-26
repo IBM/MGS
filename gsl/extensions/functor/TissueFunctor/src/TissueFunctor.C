@@ -4845,6 +4845,107 @@ void TissueFunctor::doConnector(LensContext* lc)
               Capsule* capsneck = (keyneck == key1) ? preCapsule : postCapsule;
               assert((keyneck == key1) || keyneck == key2);
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+              //order is important:
+              //preCpt - spineattach1
+              //postCpt - spineattach2
+              //spineattach1-spineattach2
+              //spineattach2-spineattach1
+              //spineattach1 - preCpt
+              //spineattach2 - postCpt
+              {
+              if (keyneck == key1)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mcpt2spineattach.replace("idx", preIdx);
+              connect(sim, connector, preCpt, preSpineConnexon,
+                      Mcpt2spineattach);
+                
+              }
+              {
+              if (keyneck == key2)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mcpt2spineattach.replace("idx", postIdx);
+              connect(sim, connector, postCpt, postSpineConnexon,
+                      Mcpt2spineattach);
+
+              }
+              {
+              //connect 2 spineattachment nodes together
+              connect(sim, connector, preSpineConnexon, postSpineConnexon,
+                      Mspineattach2spineattach);
+              connect(sim, connector, postSpineConnexon, preSpineConnexon,
+                      Mspineattach2spineattach);
+
+              }
+              {
+              if (keyneck == key1)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mspineattach2cpt.replace("idx", preIdx);
+              connect(sim, connector, preSpineConnexon, preCpt,
+                      Mspineattach2cpt);
+
+              }
+              {
+              if (keyneck == key2)
+              {
+                std::string name("typeCpt");
+                std::string value("spine-neck");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "spine-neck"));
+              }
+              else
+              {
+                std::string name("typeCpt");
+                std::string value("den-shaft");
+                assert(Mcpt2spineattach.replace(name, value));
+                // assert(Mcpt2spineattach.replace("typeCpt", "den-shaft"));
+              }
+
+              Mspineattach2cpt.replace("idx", postIdx);
+              connect(sim, connector, postSpineConnexon, postCpt,
+                      Mspineattach2cpt);
+              }
+
+#else
               if (keyneck == key1)
               {
                 std::string name("typeCpt");
@@ -4893,6 +4994,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                       Mspineattach2spineattach);
               connect(sim, connector, postSpineConnexon, preSpineConnexon,
                       Mspineattach2spineattach);
+#endif
             }
           }
           typeCounter[synapseType]++;
