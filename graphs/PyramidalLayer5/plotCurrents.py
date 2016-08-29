@@ -1473,10 +1473,10 @@ def plot_case9_adv():
     #print(args)
 
     print ("Working on: ", folder)
-    timeStart = 0.0
-    #timeStart = 200.0
-    timeEnd = -1.0
-    #timeEnd = 470.0
+    #timeStart = 0.0
+    timeStart = 200.0
+    #timeEnd = -1.0
+    timeEnd = 270.0
     #timeStart = 270.0
     #timeEnd = 380.0
 
@@ -2753,10 +2753,11 @@ def plot_case9_adv():
        axarr[gr, gc].set_ylabel(YLABEL)
 
 
-       ############################
-       ## For 1 file
-       ### first y-axis (Voltage)
-       myFile = folder+'/'+getFile(folder,'nexusTuftedV.dat')
+    ############################
+    ## For 1 file
+    ### first y-axis (Voltage)
+    myFile = folder+'/'+getFile(folder,'nexusTuftedV.dat')
+    if (os.path.isfile(myFile)):
        #file=open(myFile)
        #lines=file.readlines()
        #channelNames = re.split(",",lines[1])
@@ -2767,7 +2768,7 @@ def plot_case9_adv():
        nCols = len(channelNames)
 
        arrays = np.loadtxt(myFile,
-                           skiprows=1,
+                           skiprows=2,
                          # usecols=(0, 1)
                           )
        arraysT = np.transpose(arrays)
@@ -2817,66 +2818,67 @@ def plot_case9_adv():
        for tl in axarr[gr, gc].get_yticklabels():
            tl.set_color(color)
        ax1 = axarr[gr, gc]
-       ### second y-axis
-       ## Calcium
-       myFile = folder+'/'+getFile(folder,'nexusTuftedCa.dat')
-       channelNames=["Ca"]
-       nCols = len(channelNames)
+    ### second y-axis
+    ## Calcium
+    myFile = folder+'/'+getFile(folder,'nexusTuftedCa.dat')
+    if (os.path.isfile(myFile)):
+        channelNames=["Ca"]
+        nCols = len(channelNames)
 
-       arrays = np.loadtxt(myFile,
-                           skiprows=2,
-                         # usecols=(0, 1)
-                          )
-       arraysT = np.transpose(arrays)
-       t = arraysT[0]
-       #############
-       # Define time range
-       idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
-       if (timeEnd == -1.0):
-         idxEnd = len(t)-1
-         timeEnd = t[idxEnd]
-       else:
-           try:
-               idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
-           except StopIteration as e:
-               idxEnd = len(t)-1
-       #END
-       #################
-       arraysT = np.delete(arraysT, 0, 0)
-       #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
-       #print arr
-       #arr = np.delete(arr,0,1)
-       #print arr
-       #return
-       #print t
-       #print nCols
-       minVal = 200000000.0
-       maxVal = -minVal
-       i =0
-       #gr = 0; gc = 1 # graph row, col
-       ax2 = ax1.twinx()
-       for ydata in arraysT:
-           #plot (t, col)
-           # legend(time, channelNames[i])
-           color = colors[(i+1)%len(colors)]
-           marker = linestyles[((i/len(colors))%len(linestyles))]
-           #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
-           #axarr[gr, gc].legend()
-           ax2.plot(t, ydata , color, label=channelNames[i%len(channelNames)])
-           ax2.legend(loc=0)
-           minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
-           maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
-           #print len(t), len(ydata)
-           i += 1
-       #s2 = np.sin(2*np.pi*t)
-       #ax2.plot(t, s2, 'r.')
-       #ax2.set_ylabel('sin', color='r')
-       ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
-       ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
-       ax2.set_xlim(left=timeStart, right=timeEnd)
-       for tl in ax2.get_yticklabels():
-           tl.set_color(color)
-       print minVal, maxVal
+        arrays = np.loadtxt(myFile,
+                            skiprows=2,
+                            # usecols=(0, 1)
+                            )
+        arraysT = np.transpose(arrays)
+        t = arraysT[0]
+        #############
+        # Define time range
+        idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+        if (timeEnd == -1.0):
+            idxEnd = len(t)-1
+            timeEnd = t[idxEnd]
+        else:
+            try:
+                idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+            except StopIteration as e:
+                idxEnd = len(t)-1
+        #END
+        #################
+        arraysT = np.delete(arraysT, 0, 0)
+        #arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+        #print arr
+        #arr = np.delete(arr,0,1)
+        #print arr
+        #return
+        #print t
+        #print nCols
+        minVal = 200000000.0
+        maxVal = -minVal
+        i =0
+        #gr = 0; gc = 1 # graph row, col
+        ax2 = ax1.twinx()
+        for ydata in arraysT:
+            #plot (t, col)
+            # legend(time, channelNames[i])
+            color = colors[(i+1)%len(colors)]
+            marker = linestyles[((i/len(colors))%len(linestyles))]
+            #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+            #axarr[gr, gc].legend()
+            ax2.plot(t, ydata , color, label=channelNames[i%len(channelNames)])
+            ax2.legend(loc=0)
+            minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
+            maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
+            #print len(t), len(ydata)
+            i += 1
+        #s2 = np.sin(2*np.pi*t)
+        #ax2.plot(t, s2, 'r.')
+        #ax2.set_ylabel('sin', color='r')
+        ax2.set_ylim(bottom=minVal - 0.05*max(0.1,abs(minVal)))
+        ax2.set_ylim(top=maxVal + 0.05*max(0.1,abs(maxVal)))
+        ax2.set_xlim(left=timeStart, right=timeEnd)
+        for tl in ax2.get_yticklabels():
+            tl.set_color(color)
+        print minVal, maxVal
 
 
 
