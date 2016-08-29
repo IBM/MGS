@@ -29,6 +29,9 @@
 //       making the frequency-dependent broadening of AP is less thann observed
 //
 //  Markov-based model with 3-state (C,O,I)
+// C <-> O   [k3, k4]
+// O <-> I   [k1, 0.0]
+// I <-> C   [k2, 0.0]
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -61,31 +64,29 @@ dyn_var_t ChannelBKalphabeta::alp(dyn_var_t tmin, dyn_var_t v, dyn_var_t vhalf,
 
 void ChannelBKalphabeta::initialize(RNG& rng)
 {
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned int size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size() == size);
   assert(V->size() == size);
-#endif
   // allocate
   if (g.size() != size) g.increaseSizeTo(size);
   if (fO.size() != size) fO.increaseSizeTo(size);
   if (fI.size() != size) fI.increaseSizeTo(size);
   if (fC.size() != size) fC.increaseSizeTo(size);
+  if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
 	fI[0] = fO[0]= 0.0;
   assert(fabs(fI[0] + fO[0] + fC[0] - 1.0) < SMALL);  // conservation
   for (unsigned i = 0; i < size; ++i)
   {
+    dyn_var_t v = (*V)[i];      //[mV]
     gbar[i] = gbar[0];
     fI[i] = fI[0];
     fO[i] = fO[0];
     fC[i] = fI[0];
-    //dyn_var_t v = (*V)[i];
     g[i] = gbar[i] * fO[i];
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -114,8 +115,8 @@ void ChannelBKalphabeta::update(RNG& rng)
     dyn_var_t v = (*V)[i];      //[mV]
 		// IMPORTANT: Make sure to convert [Ca]cyto from [uM] to [mM]
 #if SIMULATION_INVOLVE  == VMONLY
-		dyn_var_t Cai_base = 0.1e-3; // [mM]
-    dyn_var_t cai = Cai_base;
+		dyn_var_t Cai_base = 0.1; // [uM]
+    dyn_var_t cai = Cai_base * uM2mM;
 #else
     dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]
 #endif
@@ -135,7 +136,7 @@ void ChannelBKalphabeta::update(RNG& rng)
     dyn_var_t Oval = fO[i], Cval = fC[i], Ival = fI[i];  // temp
                                                          // Rempe-Chopp 2006
     // dfO[i] = Cval*kCO-Oval*(kOC+kOI);
-    dyn_var_t Tscale = dt * getSharedMembers().Tadj;
+    dyn_var_t Tscale = dt ;// * getSharedMembers().Tadj;
     fO[i] = ((Cval * kCO - Oval * (kOC + kOI) / 2) * Tscale + Oval) /
             (1 + (kOC + kOI) / 2 * Tscale);
     // dfI[i] = Oval*kOI-Ival*kIC;
@@ -148,24 +149,11 @@ void ChannelBKalphabeta::update(RNG& rng)
     if (fO[i] < 0.0) { fO[i] = 0.0; }
     else if (fO[i] > 1.0) { fO[i] = 1.0; }
     // trick to keep fI in [0, 1]
-    if (fI[i] < 0.0)
-    {
-      fI[i] = 0.0;
-    }
-    else if (fI[i] > 1.0)
-    {
-      fI[i] = 1.0;
-    }
+    if (fI[i] < 0.0) { fI[i] = 0.0; }
+    else if (fI[i] > 1.0) { fI[i] = 1.0; }
     // trick to keep fC in [0, 1]
-    // if (fC[i] < 0.0)
-    //{
-    //	fC[i] = 0.0;
-    //}
-    // else if (fC[i] > 1.0)
-    //{
-    //	fC[i] = 1.0;
-    //}
-    // fC[i] = ...
+    //if (fC[i] < 0.0) { fC[i] = 0.0; }
+    //else if (fC[i] > 1.0) { fC[i] = 1.0; }
     fC[i] = 1.0 - (fO[i] + fI[i]);
 #ifdef DEBUG_LOOPS
 #ifdef DEBUG_HH 
@@ -179,6 +167,7 @@ void ChannelBKalphabeta::update(RNG& rng)
     assert(fabs(fI[i] + fO[i] + fC[i] - 1.0) < SMALL);  // conservation
 #endif
     g[i] = gbar[i] * fO[i] ;
+		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 

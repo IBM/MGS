@@ -1030,6 +1030,11 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     touchDetectTissueSlicer->addTolerance(
         glomeruliDetector->getGlomeruliSpacing());
 #endif
+    ////TUAN TESTING
+    //touchDetectTissueSlicer->addTolerance(
+    //    20.0);
+    ////END TUAN TESTING
+    
     touchDetector->setPass(TissueContext::FIRST_PASS);
     // touchDetector->unique(true);
     touchDetector->unique(false);

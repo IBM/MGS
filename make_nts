@@ -237,41 +237,41 @@ fi
 ### MDL code ###
 #{{{
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-cd $MDLROOT
+  cd $MDLROOT
 
-touch mdl.make.mark
-if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-  if [ "$CLEAN" == "-clean" ]; then
-    make clean;
-  fi
-  if [ "$REBUILD" == "-rebuild" ]; then
-    make clean;
+  touch mdl.make.mark
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$CLEAN" == "-clean" ]; then
+      make clean;
+    fi
+    if [ "$REBUILD" == "-rebuild" ]; then
+      make clean;
+      make -j $NPROCS
+      if [ `ls $MDLROOT/bin/mdlparser` ]; then 
+        echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
+      fi
+    fi
+  else
     make -j $NPROCS
     if [ `ls $MDLROOT/bin/mdlparser` ]; then 
       echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
     fi
   fi
-else
-	make -j $NPROCS
-  if [ `ls $MDLROOT/bin/mdlparser` ]; then 
-    echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
+  if [ "$CLEAN" != "-clean" ] ; then 
+    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
+      rm mdl.make.mark
+      cd $NTSROOT
+      echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
+      exit; 
+    fi
+    if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$MCO" == "-MCO" ]; then
+      cd $NTSROOT
+      find . -name *.mdf -exec touch '{}' \;
+      cd $MDLROOT
+    fi
+    rm -f mdl.make.mark
+    cd $NTSROOT
   fi
-fi
-if [ "$CLEAN" != "-clean" ] ; then 
-	if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
-		rm mdl.make.mark
-		cd $NTSROOT
-		echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
-		exit; 
-	fi
-	if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$MCO" == "-MCO" ]; then
-		cd $NTSROOT
-		find . -name *.mdf -exec touch '{}' \;
-		cd $MDLROOT
-	fi
-	rm -f mdl.make.mark
-	cd $NTSROOT
-fi
 fi
 #}}}
 
@@ -279,34 +279,34 @@ fi
 ### COMMON code ###
 #{{{
 if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-cd $NTSROOT/common
-sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
-elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-fi
-if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-  if [ "$CLEAN" == "-clean" ] ; then
-    make realclean;
-    echo "${cc_blue}Removed COMMON code successful.${cc_normal}"
+  cd $NTSROOT/common
+  sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+  elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   fi
-  if [ "$REBUILD" == "-rebuild" ] ; then
-    make realclean;
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$CLEAN" == "-clean" ] ; then
+      make realclean;
+      echo "${cc_blue}Removed COMMON code successful.${cc_normal}"
+    fi
+    if [ "$REBUILD" == "-rebuild" ] ; then
+      make realclean;
+      make -j $NPROCS
+      echo "${cc_blue}Build COMMON code successful.${cc_normal}"
+    fi
+  else
     make -j $NPROCS
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
-else
-    make -j $NPROCS
-    echo "${cc_blue}Build COMMON code successful.${cc_normal}"
-fi
-#if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
-#    cd $NTSROOT
-#    echo nti make failed!;
-#    exit; 
-#fi
-cd $NTSROOT
+  #if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+  #    cd $NTSROOT
+  #    echo nti make failed!;
+  #    exit; 
+  #fi
+  cd $NTSROOT
 fi
 #}}}
 
@@ -314,36 +314,37 @@ fi
 ### NTI code ###
 #{{{
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-cd $NTSROOT/nti
-if [ "$MCO" == "-MCO" ]; then
-   #TODO: Find out what is $3 here to replace it
-  sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
-fi
-sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
-elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
-fi
-if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-  if [ "$CLEAN" == "-clean" ] ; then
-    make realclean;
+  cd $NTSROOT/nti
+  if [ "$MCO" == "-MCO" ]; then
+    #TODO: Find out what is $3 here to replace it
+    sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
   fi
-  if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-    make realclean;
-    make -j $NPROCS $NTI_BUILD_MODE 
+  sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile; 
+  elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   fi
-else
-	make -j $NPROCS $NTI_BUILD_MODE
-	if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
-			cd $NTSROOT
+
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$CLEAN" == "-clean" ] ; then
+      make realclean;
+    fi
+    if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
+      make realclean;
+      make -j $NPROCS $NTI_BUILD_MODE 
+    fi
+  else
+    make -j $NPROCS $NTI_BUILD_MODE
+    if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+      cd $NTSROOT
       echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
-			exit; 
-	fi
-	cd $NTSROOT
-	echo "${cc_blue}Complete build NTI code${cc_normal}"
-fi
+      exit; 
+    fi
+    cd $NTSROOT
+    echo "${cc_blue}Complete build NTI code${cc_normal}"
+  fi
 fi
 #}}}
 
@@ -351,42 +352,41 @@ fi
 ### GSL code ###
 #{{{
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  cd $LENSROOT
-  chmod +x ./build_gsl
-  if [ "$CLEAN" == "-clean" ] ; then
-    ./build_gsl -p $PLATFORM --clean  
-    rm $NTSROOT/models/Extensions.mk
-    find . -iname "CG_*" | xargs -I{} rm {}
-    find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-    rm $NTSROOT/.built
-  fi
-  if [ "$REBUILD" == "-rebuild" ] ;then
-#  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
-#  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then 
-    cd $LENSROOT/extensions/variable
-    ./define variables.mdf  $REBUILD
-    cd $LENSROOT/extensions/struct
-    ./define structs.mdf   $REBUILD
-    cd $LENSROOT/extensions/functor
-    ./define functors.mdf  $REBUILD
-    cd $NTSROOT/models
-    ./define compartmental.mdf $REBUILD
-    cp Extensions.mk $LENSROOT/
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    cd $LENSROOT
+    chmod +x ./build_gsl
+    if [ "$CLEAN" == "-clean" ] ; then
+      ./build_gsl -p $PLATFORM --clean  
+      rm $NTSROOT/models/Extensions.mk
+      find . -iname "CG_*" | xargs -I{} rm {}
+      find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
+      rm $NTSROOT/.built
+    elif [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE
+    else # -s or -singlethread
+      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE
+    fi
+
     cd $NTSROOT
-    touch .built && echo $NTSROOT > .built
-  fi
+    if [ "$REBUILD" == "-rebuild" ] ;then
+      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
+      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then 
+      cd $LENSROOT/extensions/variable
+      ./define variables.mdf  $REBUILD
+      cd $LENSROOT/extensions/struct
+      ./define structs.mdf   $REBUILD
+      cd $LENSROOT/extensions/functor
+      ./define functors.mdf  $REBUILD
+      cd $NTSROOT/models
+      ./define compartmental.mdf $REBUILD
 
-  cd $LENSROOT
-  chmod +x ./build_gsl
-  if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-    ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE
-  else # -s or -singlethread
-    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE
-  fi
+      cp Extensions.mk $LENSROOT/
+      cd $NTSROOT
+      touch .built && echo $NTSROOT > .built
+    fi
 
-  cd $NTSROOT
-  #if { [ "$CLEAN" != "-clean" ] ;} ; then 
-  if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+  fi
+  if { [ "$CLEAN" != "-clean" ] ;} ; then 
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then 
       echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS...${cc_normal}
 

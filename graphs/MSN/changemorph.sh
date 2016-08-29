@@ -13,13 +13,15 @@ clean_all() {
   rm_if_link connect_stimulus_model.gsl
   rm_if_link stimulus_model.gsl
   rm_if_link model.gsl
+  rm_if_link neurons.txt 
 }
 
 ModelFolder=systems
+authorName=""
 
 if [ "$#" == "0" ]; then
   echo "$0 <morph_suffix> [author_suffix] "
-  echo "    <prefix> is the prefix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
+  echo "    <morph_suffix> is the suffix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
   echo "  e.g. msn0, unknown"
   echo "NOTE: $0 clean "
   echo "   to clean the symbolic links"
@@ -35,6 +37,7 @@ else
   if [ "$#" == "2" ]; then
     ln -s neurons_$1/params_$2 params
     ln -s $ModelFolder/model_$2.gsl model.gsl
+    authorName=$2
   else
     #paramFold = ($(find -maxdepth 1 -type d -name 'params_*'))
     paramFold=($(find neurons_$1 -maxdepth 1 -type d -name 'params_*'))
@@ -65,4 +68,5 @@ else
   ln -s neurons/recording_model_$1.gsl recording_model.gsl
   ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
   ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
+  ln -s neurons/neurons_$authorName.txt neurons.txt
 fi

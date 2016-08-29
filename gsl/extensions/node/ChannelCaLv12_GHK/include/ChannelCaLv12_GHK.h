@@ -8,11 +8,11 @@
 #include "MaxComputeOrder.h"
 
 #if CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
-#define BASED_TEMPERATURE 35.0 //Celcius
-#define Q10 3.0
+#define BASED_TEMPERATURE 22.0 //Celcius
+#define Q10 2.3
 #elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
 #define BASED_TEMPERATURE 35.0 //Celcius
-#define Q10 3.0
+#define Q10 2.3
 #endif
 
 #ifndef Q10 

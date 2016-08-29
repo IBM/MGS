@@ -77,7 +77,8 @@
 Node ChannelCaPQ_GHK Implements 
      CurrentArrayProducer, //GHK-based to Vm, GHK-based to I/O
      CaCurrentArrayProducer, //GHK-based to Ca2+
-		 BranchDataProducer
+		 BranchDataProducer,
+     DimensionArrayProducer
 {
 /*{{{*/
 	//DATA
@@ -138,6 +139,7 @@ Node ChannelCaPQ_GHK Implements
 	CaCurrentArrayProducer.currents << &I_Ca;
 	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node
