@@ -361,12 +361,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
       rm $NTSROOT/.built
-    elif [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE
-    else # -s or -singlethread
-      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE
     fi
-
+    cd -
     cd $NTSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
       #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
@@ -384,7 +380,17 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $NTSROOT
       touch .built && echo $NTSROOT > .built
     fi
-
+    cd -
+    cd $LENSROOT
+    if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE
+    fi
+    cd -
+  else
+    # -s or -singlethread
+    cd $LENSROOT
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE
+    cd -
   fi
   if { [ "$CLEAN" != "-clean" ] ;} ; then 
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then 
