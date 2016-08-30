@@ -498,6 +498,8 @@
 //}}}
 
 #elif MODEL_TO_USE == _PYRAMIDAL_L5b_2016_TUAN_JAMES
+//#define STRETCH_SOMA_WITH 0.0    // MUST be non-zero and positive
+#define STRETCH_SOMA_WITH 20.0    //seem ok  value if used
   //#define SCALING_NECK_FROM_SOMA 2.0  //>1: make neck smaller
   #define SCALING_NECK_FROM_SOMA 2.2  //>1: make neck smaller
   //#define SCALING_NECK_FROM_SOMA 2.35  //>1: make neck smaller

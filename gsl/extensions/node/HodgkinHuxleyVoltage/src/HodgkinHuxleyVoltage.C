@@ -465,8 +465,8 @@ void HodgkinHuxleyVoltage::printDebugHH(int cptIndex)
 	if (cptIndex == 0)
 	{
 		std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
-			<< "(neuronIdx, brIdx, brOrder, brType) | distal(C0 | C1 | C2) |"
-			<< "distalC3 | prox(C0 | C1 | C2) |"
+			<< "(neuronIdx, brIdx, brOrder, brType) | distal(C0 | C1 | C2 | C3) :"
+			<< " prox(C0 | C1 | C2) |"
 			<< "{x,y,z,r | dist2soma, surface_area, volume, length} Vm\n";
 	}
 	int i  = cptIndex;

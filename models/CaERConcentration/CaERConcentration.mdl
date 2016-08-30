@@ -71,6 +71,10 @@ Node CaERConcentration Implements SolutionArrayProducer,
   // 1. current from spine-ER to shaft-ER and vice versa
   // 2. user-defined stimulus current
   InjectedCaCurrent [] injectedCaCurrents; // [pA]
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  TargetAttachCaConcentration [] targetAttachCaConcentration;  // [uM]
+#endif
 	/*}}}*/
 
    // design : anything currently not part of the spatial 
@@ -139,6 +143,9 @@ Node CaERConcentration Implements SolutionArrayProducer,
 
   //UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
   UserFunction setInjectedCaCurrent, setProximalJunction;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  UserFunction  setTargetAttachCaConcentration;
+#endif
   // Connection setup
   //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
@@ -162,10 +169,20 @@ Node CaERConcentration Implements SolutionArrayProducer,
   //  setInjectedCaCurrent();
   // }
 
-  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects CaCurrentProducer {
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+             ReversalCaERProducer, InverseTimeCaERProducer{
+    ReversalCaERProducer.Ca >> targetAttachCaConcentration.Ca ;
+    InverseTimeCaERProducer.inverseTime >> targetAttachCaConcentration.inverseTime;
+    setTargetAttachCaConcentration();
+   }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+     CaCurrentProducer {
     CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
+#endif
   //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
   //  CaCurrentProducer.current >> receptorCaCurrents.current;
   //  setReceptorCaCurrent();
@@ -260,6 +277,11 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
 /*{{{*/
   BranchDataStruct* branchData;
   DimensionStruct* [] dimensions;
+    //{{{data members: internal, but for solver
+  dyn_var_t* [] CaConcentrationInputs;
+  DimensionStruct* [] dimensionInputs;
+    //}}}
+	//{{{data members: internal
   dyn_var_t volume;
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t Ca_cur;
@@ -270,7 +292,7 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
   dyn_var_t fractionVolumeER;
 
-  // currents
+  //{{{ ionic currents
   //ChannelCaCurrents [] channelCaCurrents;
   //CONVENTION:  the fluxs flowing toward the ER get negative 
   ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
@@ -280,8 +302,12 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
   // 2. user-defined stimulus current
   dyn_var_t* [] injectedCaCurrents; // [pA]
 
-  dyn_var_t* [] CaConcentrationInputs;
-  DimensionStruct* [] dimensionInputs;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  dyn_var_t* [] targetReversalCaConcentration;
+  dyn_var_t* [] targetInverseTimeCaConcentration;
+#endif
+  //}}}
+
 
   Shared {
     dyn_var_t* deltaT;
@@ -295,6 +321,7 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
 
     InitPhase deriveParameters;  
   }
+  //}}}
 
   //CaERConcentrationArrayProducer.CaConcentrations << &Ca_new;
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
@@ -329,9 +356,18 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
   //  CaCurrentProducer.current >> injectedCaCurrents;
   //}
 
-  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects CaCurrentProducer {
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+    ReversalCaERProducer, InverseTimeCaERProducer{
+    ReversalCaERProducer.Ca >> targetReversalCaConcentration;
+    InverseTimeCaERProducer.inverseTime >> targetInverseTimeCaConcentration;
+  }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+    CaCurrentProducer {
     CaCurrentProducer.current >> injectedCaCurrents;
   }
+#endif
 
   //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
   //  CaCurrentProducer.current >> receptorCaCurrents;

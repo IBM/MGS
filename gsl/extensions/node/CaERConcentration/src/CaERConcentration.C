@@ -532,6 +532,20 @@ void CaERConcentration::doForwardSolve()
     Aii[i] -= Aim[i] * Aip[i - 1] / Aii[i - 1];
     RHS[i] -= Aim[i] * RHS[i - 1] / Aii[i - 1];
   }
+
+    // 1.c. HH-like of concentration diffusion
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+		Array<TargetAttachCaConcentration >::iterator ciiter = targetAttachCaConcentration.begin();
+		Array<TargetAttachCaConcentration >::iterator ciend = targetAttachCaConcentration.end();
+    //dyn_var_t invTime = 1.0/(getSharedMembers().dt;
+		for (; ciiter != ciend; ciiter++)
+		{
+      int i = (ciiter)->index;
+			RHS[i] += (*(ciiter->inverseTime)) * (*(ciiter->Ca)); //[uM/ms]
+			Aii[i] += (*(ciiter->inverseTime)) ; //[1/ms]
+		}
+#endif
+  
 }
 
 // Update; Ca_new[]
@@ -682,3 +696,14 @@ void CaERConcentration::setInjectedCaCurrent(
 }
 
 CaERConcentration::~CaERConcentration() {}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+void CaERConcentration::setTargetAttachCaConcentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaERConcentrationInAttrPSet* CG_inAttrPset, CG_CaERConcentrationOutAttrPSet* CG_outAttrPset)
+{
+#ifdef DEBUG_ASSERT
+  assert(targetAttachCaConcentration.size() > 0);
+#endif
+  targetAttachCaConcentration[targetAttachCaConcentration.size() - 1].index = CG_inAttrPset->idx;
+
+}
+#endif

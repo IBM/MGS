@@ -70,4 +70,10 @@ Struct ReceptorIP3Current {
 Struct ChannelIP3Currents {
   dyn_var_t []* currents; // [pA/um^2]
 }
+
+Struct TargetAttachCaConcentration{
+  dyn_var_t* Ca;  // [uM]
+  dyn_var_t* inverseTime;  // [1/ms]
+  int index; // index of compartment at which the spine attach (or the shaft attach) 
+}
 #endif

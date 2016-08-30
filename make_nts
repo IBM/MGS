@@ -230,6 +230,7 @@ if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
   if  [ "$NTSROOT" != "$line" ]; then
     echo "Please run: source setenv_nts"
+    rm .built
     exit
   fi
 fi
