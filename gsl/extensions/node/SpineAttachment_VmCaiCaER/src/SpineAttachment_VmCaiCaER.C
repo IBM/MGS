@@ -20,7 +20,9 @@
 #include <cmath>
 #include <cfloat>
 #include "NTSMacros.h"
+#include "Branch.h"
 
+SegmentDescriptor SpineAttachment_VmCaiCaER::_segmentDescriptor;
 
 SpineAttachment_VmCaiCaER::SpineAttachment_VmCaiCaER() 
 {
@@ -70,8 +72,26 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
 #else
   g = A / (Raxial * distance);            // [nS]
 #endif
+  // TUAN TODO: do we need to consider smaller cross-sectional area for cyto or ER?
+  //---> not incorporated yet
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  invTimeCacyto = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_CYTO ) / 
+    ((dimension->volume * FRACTIONVOLUME_CYTO) * distance); //[1/ms]
+#else
   Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {  // soma:
+    invTimeCaER = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_RoughER ) / 
+      ((dimension->volume * FRACTIONVOLUME_RoughER) * distance); //[1/ms]
+  }else{
+    invTimeCaER = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_SmoothER ) / 
+      ((dimension->volume * FRACTIONVOLUME_SmoothER) * distance); //[1/ms]
+  }
+#else
   CaERconc2current = A * DCaER * zCa * zF / (1000000.0*distance);
+#endif
   //TUAN TODO: HERE we should take into account the cross-sectional difference
   //A for Vm
   //A for Cacyto
@@ -92,10 +112,11 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
   I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
   I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_j;
 #else
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO) || \
+  defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER)
   //no need to update I(Vm), as it produces g, and Vj
-  I_Ca = Caconc2current * (*Caj - *Cai);
-  I_CaER = CaERconc2current * (*CaERj - *CaERi);
+  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
+  //no need to update CaER, as it produces invTimeCaER, and CaERj
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
@@ -122,9 +143,7 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
-#endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif

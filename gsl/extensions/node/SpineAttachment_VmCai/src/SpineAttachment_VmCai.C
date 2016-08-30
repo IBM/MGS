@@ -75,7 +75,13 @@ void SpineAttachment_VmCai::computeInitialState(RNG& rng)
 #else
   g = A / (Raxial * distance);            // [nS]
 #endif
-  Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
+  //TUAN TODO: we haven't consider the effect of smaller cross-sectional area for cyto yet
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  invTimeCacyto = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_CYTO ) / 
+    ((dimension->volume * FRACTIONVOLUME_CYTO) * distance); //[1/ms]
+#else
+  Caconc2current = A * DCa * zCa * zF / (1000000.0*distance); //[pA/uM]
+#endif
 }
 
 void SpineAttachment_VmCai::produceState(RNG& rng) {}
@@ -93,12 +99,12 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
 	//j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
-  I = g * V / *countSpineConnectedToCompartment_j;
-  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
+  I = g * V / *countSpineConnectedToCompartment_j; //[pA]
+  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j; //[pA]
 #else
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   //no need to update I(Vm), as it produces g, and Vj
-  I_Ca = Caconc2current * (*Caj - *Cai);
+  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
@@ -122,9 +128,7 @@ void SpineAttachment_VmCai::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
-#endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif

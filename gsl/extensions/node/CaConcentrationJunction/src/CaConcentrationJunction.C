@@ -176,6 +176,16 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
     RHS += **iter * currentToConc / getArea();
   }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
+  Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
+  int i = 0;
+  for (; titer != tend; ++titer, ++i)
+  {
+    RHS += *targetInverseTimeCaConcentration[i] * **titer;
+  }
+#endif
+
   Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
   Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
   for (; xiter != xend; ++xiter, ++viter)
@@ -249,6 +259,17 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
     LHS += (*xiter);
     RHS += (*xiter) * (**viter);
   }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
+  Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
+  Array<dyn_var_t*>::iterator tviter = targetInverseTimeCaConcentration.begin();
+  for (; titer != tend; ++titer, ++tviter)
+  {
+    RHS += **tviter * **titer;
+    LHS += **tviter ;
+  }
+#endif
 
   Ca_new[0] = RHS / LHS;
 

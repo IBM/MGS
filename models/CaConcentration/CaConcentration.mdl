@@ -83,6 +83,10 @@ Node CaConcentration Implements SolutionArrayProducer,
   // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
   // 2. user-defined stimulus current
   InjectedCaCurrent [] injectedCaCurrents; // [pA]
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  TargetAttachCaConcentration [] targetAttachCaConcentration;  // [uM]
+#endif
 	/*}}}*/
 
    // design : anything currently not part of the spatial 
@@ -154,6 +158,9 @@ Node CaConcentration Implements SolutionArrayProducer,
   //                      connection (e.g. electrical-synapse or spine-neck)
   //               2. a stimulus current is injected
   UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  UserFunction  setTargetAttachCaConcentration;
+#endif
   // Connection setup
   //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
@@ -194,10 +201,19 @@ OPTION 3:
   //  setInjectedCaCurrent();
   // }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects 
+             ReversalCaProducer, InverseTimeCaProducer{
+    ReversalCaProducer.Ca >> targetAttachCaConcentration.Ca ;
+    InverseTimeCaProducer.inverseTime >> targetAttachCaConcentration.inverseTime;
+    setTargetAttachCaConcentration();
+   }
+#else
   Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects CaCurrentProducer {
     CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
+#endif
 
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
     // for receptors like NMDAR
@@ -318,6 +334,10 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
   // 2. user-defined stimulus current
   dyn_var_t* [] injectedCaCurrents;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t* [] targetReversalCaConcentration;
+  dyn_var_t* [] targetInverseTimeCaConcentration;
+#endif
   //}}}
 
 
@@ -379,9 +399,17 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   //  CaCurrentProducer.current >> injectedCaCurrents;
   //}
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects 
+    ReversalCaProducer, InverseTimeCaProducer{
+    ReversalCaProducer.Ca >> targetReversalCaConcentration ;
+    InverseTimeCaProducer.inverseTime >> targetInverseTimeCaConcentration;
+  }
+#else
   Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects CaCurrentProducer {
     CaCurrentProducer.current >> injectedCaCurrents;
   }
+#endif
 
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
     CaCurrentProducer.current >> receptorCaCurrents;

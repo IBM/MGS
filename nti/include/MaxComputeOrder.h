@@ -142,5 +142,7 @@
        // ConductanceProducer and ReversalPotential producer
        // (instead of injectedCurrent producer)
        // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION1
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO 
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
        
 #endif //_MAXCOMPUTEORDER_H

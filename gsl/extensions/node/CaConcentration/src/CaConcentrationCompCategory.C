@@ -18,6 +18,7 @@
 #include "NDPairList.h"
 #include "CG_CaConcentrationCompCategory.h"
 #include <math.h>
+#include <mpi.h>
 //#define DEBUG_HH
 
 CaConcentrationCompCategory::CaConcentrationCompCategory(
@@ -26,10 +27,11 @@ CaConcentrationCompCategory::CaConcentrationCompCategory(
 {
 }
 
-//GOAL: get any derived parameters
+// GOAL: get any derived parameters
 //  1. the bmt = 1/(beta * (dt/2))
 //     beta = bufferingFactor = fast-buffering factor [Wagner-Keizer,1994]
-//     beta = 1/(1 + [Bm]total * Km / (Km + Cacyto)^2 + [Bs]total * Ks / (Ks + Cacyto)^2)
+//     beta = 1/(1 + [Bm]total * Km / (Km + Cacyto)^2 + [Bs]total * Ks / (Ks +
+//     Cacyto)^2)
 void CaConcentrationCompCategory::deriveParameters(RNG& rng)
 {
   if (getSharedMembers().deltaT)
@@ -37,14 +39,16 @@ void CaConcentrationCompCategory::deriveParameters(RNG& rng)
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
     getSharedMembers().bmt =
         2.0 / (getSharedMembers().beta * *(getSharedMembers().deltaT));
+#else
+    assert(0);
 #endif
 
 #ifdef DEBUG_HH
-    //std::cerr << getSimulation().getRank()
-    //          << " : CaConcentrations : " << _nodes.size() << " [ ";
-    //for (int i = 0; i < _nodes.size(); ++i)
-    //  std::cerr << _nodes[i].getSize() << " ";
-    //std::cerr << " ]" << std::endl;
+// std::cerr << getSimulation().getRank()
+//          << " : CaConcentrations : " << _nodes.size() << " [ ";
+// for (int i = 0; i < _nodes.size(); ++i)
+//  std::cerr << _nodes[i].getSize() << " ";
+// std::cerr << " ]" << std::endl;
 #endif
   }
 }
