@@ -146,9 +146,14 @@ Node SpineAttachment_VmCai Implements
      BranchDataProducer, IndexProducer,
      VoltageProducer, 
      SurfaceAreaLengthProducer,
-//continue for Ca2+ here for CONSIDER_MANYSPINE_EFFECT_OPTION2 as well
      CaConcentrationProducer, 
+//continue for Ca2+ here for CONSIDER_MANYSPINE_EFFECT_OPTION2 as well
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+     InverseTimeCaProducer, 
+     ReversalCaProducer
+#else
      CaCurrentProducer
+#endif
 {
 /*{{{*/
 	//DATA
@@ -177,8 +182,12 @@ Node SpineAttachment_VmCai Implements
 #endif
   dyn_var_t* Cai;
   dyn_var_t* Caj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t invTimeCacyto; // [1/ms]
+#else
+  dyn_var_t Caconc2current; // [pA/uM]
   dyn_var_t I_Ca;//the current [pA]  TUAN TOTHINK: should we use the fluxes???? J_Ca like RyR
-  dyn_var_t Caconc2current;
+#endif
   string typeCpt; //"spine-neck" or "den-shaft"
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
@@ -191,10 +200,7 @@ Node SpineAttachment_VmCai Implements
   int index;//index of the compartment that this SpineAttachment node associates with
   BranchDataStruct* branchDataOther; // reference to the branch of the SpineAttachment this
                             // ... SpineAttachment is paired with
-
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   DimensionStruct * dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
-#endif
 
   Shared {
     /*{{{*/
@@ -230,7 +236,12 @@ Node SpineAttachment_VmCai Implements
   CurrentProducer.current << &I;
 #endif
   CaConcentrationProducer.Ca << Cai;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  ReversalCaProducer.Ca << Caj;
+  InverseTimeCaProducer.inverseTime << &invTimeCacyto;
+#else
   CaCurrentProducer.current << &I_Ca;
+#endif
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
   //}}}
@@ -302,8 +313,20 @@ Node SpineAttachment_VmCaiCaER Implements
      VoltageProducer, 
      SurfaceAreaLengthProducer,
 //continue for Ca2+ here for CONSIDER_MANYSPINE_EFFECT_OPTION2 as well
-     CaConcentrationProducer, CaCurrentProducer,
-     CaERConcentrationProducer, CaERCurrentProducer
+     CaConcentrationProducer, 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+     InverseTimeCaProducer, 
+     ReversalCaProducer,
+#else
+     CaCurrentProducer,
+#endif
+     CaERConcentrationProducer, 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+     InverseTimeCaERProducer, 
+     ReversalCaERProducer
+#else
+     CaERCurrentProducer
+#endif
 {
 /*{{{*/
 	//DATA
@@ -333,12 +356,20 @@ Node SpineAttachment_VmCaiCaER Implements
 #endif
   dyn_var_t* Cai;
   dyn_var_t* Caj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t invTimeCacyto; // [1/ms]
+#else
   dyn_var_t I_Ca;
-  dyn_var_t Caconc2current;
+  dyn_var_t Caconc2current; // [pA/uM]
+#endif
   dyn_var_t* CaERi;
   dyn_var_t* CaERj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  dyn_var_t invTimeCaER; // [1/ms]
+#else
   dyn_var_t I_CaER;
   dyn_var_t CaERconc2current;
+#endif
   string typeCpt; //"spine-neck" or "den-shaft"
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
@@ -349,9 +380,7 @@ Node SpineAttachment_VmCaiCaER Implements
 
   BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
   int index;//index of the compartment that this SpineAttachment node associates with
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   DimensionStruct * dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
-#endif
 
   Shared {
     /*{{{*/
@@ -386,9 +415,19 @@ Node SpineAttachment_VmCaiCaER Implements
   CurrentProducer.current << &I;
 #endif
   CaConcentrationProducer.Ca << Cai;
-  CaCurrentProducer.current << &I_Ca;
   CaERConcentrationProducer.Ca << CaERi;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  ReversalCaProducer.Ca << Caj;
+  InverseTimeCaProducer.inverseTime << &invTimeCacyto;
+#else
+  CaCurrentProducer.current << &I_Ca;
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  ReversalCaERProducer.Ca << CaERj;
+  InverseTimeCaERProducer.inverseTime << &invTimeCaER;
+#else
   CaERCurrentProducer.current << &I_CaER;
+#endif
 
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;

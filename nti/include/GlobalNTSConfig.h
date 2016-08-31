@@ -5,6 +5,7 @@
 class GlobalNTS{
 	public:
 	static const int anybranch_at_end = -1;
+  static const float shellDepth ; //[um]
 };
 
 #endif

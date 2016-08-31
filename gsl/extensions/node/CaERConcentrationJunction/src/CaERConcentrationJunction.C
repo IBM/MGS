@@ -161,6 +161,16 @@ void CaERConcentrationJunction::predictJunction(RNG& rng)
     RHS += (*xiter) * ((**viter) - Ca_cur);
   }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
+  Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
+  int i = 0;
+  for (; titer != tend; ++titer, ++i)
+  {
+    RHS += *targetInverseTimeCaConcentration[i] * **titer;
+  }
+#endif
+
   Ca_new[0] = RHS / LHS;
 
 #ifdef DEBUG_HH
@@ -224,6 +234,17 @@ void CaERConcentrationJunction::correctJunction(RNG& rng)
     LHS += (*xiter);
     RHS += (*xiter) * (**viter);
   }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
+  Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
+  int i = 0;
+  for (; titer != tend; ++titer, ++i)
+  {
+    RHS += *targetInverseTimeCaConcentration[i] * **titer;
+    LHS += *targetInverseTimeCaConcentration[i] ;
+  }
+#endif
 
   Ca_new[0] = RHS / LHS;
 

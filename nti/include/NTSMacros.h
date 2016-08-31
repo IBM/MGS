@@ -507,6 +507,19 @@
 //}}}
 
 #elif MODEL_TO_USE == _PYRAMIDAL_L5b_2016_TUAN_JAMES
+//#define STRETCH_SOMA_WITH 0.0    // NOT WORKING
+//#define STRETCH_SOMA_WITH 10.0    //seem ok  value if used
+#define STRETCH_SOMA_WITH 20.0    // GOOD VALUE - time2AP is long enough so that AP can stop
+             //after the 5ms stim; and then can end properly without generating the doublets
+//#define STRETCH_SOMA_WITH 30.0    //seem ok  value if used
+//#define STRETCH_SOMA_WITH 35.0    // (DEFAULT) working to trigger AP 
+  //#define SCALING_NECK_FROM_SOMA 2.0  //>1: make neck smaller
+  #define SCALING_NECK_FROM_SOMA 2.2  //>1: make neck smaller
+  //#define SCALING_NECK_FROM_SOMA 2.35  //>1: make neck smaller
+  //#define SCALING_NECK_FROM_SOMA 3.0  //>1: make neck smaller
+  //#define SCALING_NECK_FROM_SOMA 4.0  //>1: make neck smaller
+  //#define SCALING_NECK_FROM_SOMA 8.0  //>1: make neck smaller
+  //#define SCALING_NECK_FROM_SOMA 6.0  //>1: make neck smaller
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   //#define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define GLUTAMATE_UPDATE_METHOD  NEUROTRANSMITTER_BIEXPONENTIAL

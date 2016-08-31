@@ -44,6 +44,7 @@ class CaConcentration : public CG_CaConcentration
         NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
         Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset,
         CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
+      virtual void setTargetAttachCaConcentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
     virtual bool checkSite(const String& CG_direction, const String& CG_component,
         NodeDescriptor* CG_node, Edge* CG_edge,
         VariableDescriptor* CG_variable, Constant* CG_constant,

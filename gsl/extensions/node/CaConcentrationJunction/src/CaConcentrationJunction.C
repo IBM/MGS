@@ -20,6 +20,7 @@
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
 #include "Branch.h"
+#include "GlobalNTSConfig.h"
 
 //#define DEBUG_HH
 #include <iomanip>
@@ -80,7 +81,24 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
   volume = getVolume();
 
   float Pdov = M_PI * DCa / volume;
-  currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {
+    //for soma: due to large volume, we scale up the [Ca2+]
+    // shell volume = 4/3 * pi * (rsoma^3 - (rsoma-d)^3)
+    // with d = shell depth
+    // RATIO = somaVolume / shellVolume;
+    // currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
+    // TUAN TODO - 
+    dyn_var_t d = 1.0; //[um] - shell depth (default)
+    if (GlobalNTS::shellDepth > 0.0)
+      d = GlobalNTS::shellDepth;
+    dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
+      (pow(dimension->r,3) - pow(dimension->r - d, 3));
+    currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
+
+  }
+  else
+    currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
                                     dend = dimensionInputs.end();
@@ -176,6 +194,16 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
     RHS += **iter * currentToConc / getArea();
   }
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
+  Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
+  int i = 0;
+  for (; titer != tend; ++titer, ++i)
+  {
+    RHS += *targetInverseTimeCaConcentration[i] * **titer;
+  }
+#endif
+
   Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
   Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
   for (; xiter != xend; ++xiter, ++viter)
@@ -249,6 +277,17 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
     LHS += (*xiter);
     RHS += (*xiter) * (**viter);
   }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
+  Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
+  Array<dyn_var_t*>::iterator tviter = targetInverseTimeCaConcentration.begin();
+  for (; titer != tend; ++titer, ++tviter)
+  {
+    RHS += **tviter * **titer;
+    LHS += **tviter ;
+  }
+#endif
 
   Ca_new[0] = RHS / LHS;
 

@@ -45,6 +45,7 @@ class SpineAttachment_VmCaiCaER : public CG_SpineAttachment_VmCaiCaER
   private:
   dyn_var_t* _ri;
   bool _gotAssigned;
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

@@ -213,4 +213,19 @@ Interface GABAConcentrationProducer{
 Interface IP3FluxArrayProducer{
   dyn_var_t []* fluxes; // [uM/msec] 
 }
+
+Interface InverseTimeCaProducer {
+  dyn_var_t* inverseTime; //[1/ms]
+}
+Interface ReversalCaProducer{
+// which is used similar to the concept of reversal potential 
+  dyn_var_t* Ca; //[uM]
+}
+Interface InverseTimeCaERProducer {
+  dyn_var_t* inverseTime; //[1/ms]
+}
+Interface ReversalCaERProducer{
+// which is used similar to the concept of reversal potential 
+  dyn_var_t* Ca; //[uM]
+}
 #endif

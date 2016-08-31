@@ -424,8 +424,8 @@ void CaConcentration::printDebugHH(int cptIndex)
 	if (cptIndex == 0)
 	{
     std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
-      << "(neuronIdx, brIdx, brOrder, brType) distal(C0 | C1 | C2) |"
-      << "distalC3 | prox( C0 | C1 | C2) |"
+      << "(neuronIdx, brIdx, brOrder, brType) distal(C0 | C1 | C2 | C3) :"
+      << " prox( C0 | C1 | C2) |"
       << "{x,y,z,r, dist2soma, surface_area, volume, length} Cai\n";
   }
 	int i  = cptIndex;
@@ -492,6 +492,7 @@ void CaConcentration::doForwardSolve()
      * needed. */
     // TUAN: need to be updated to take into account PMCA
     //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
+    
   }
 
   /* FIX */
@@ -521,6 +522,7 @@ void CaConcentration::doForwardSolve()
     {
       RHS[0] +=  (*fiter->fluxes)[0];
     }
+
   }
 
 	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
@@ -532,24 +534,18 @@ void CaConcentration::doForwardSolve()
     RHS[i] -= currentToConc[i] * *(riter->current);
   }
 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+    // 1.c. HH-like of concentration diffusion
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+		Array<TargetAttachCaConcentration >::iterator ciiter = targetAttachCaConcentration.begin();
+		Array<TargetAttachCaConcentration >::iterator ciend = targetAttachCaConcentration.end();
+    //dyn_var_t invTime = 1.0/(getSharedMembers().dt;
+		for (; ciiter != ciend; ciiter++)
+		{
+      int i = (ciiter)->index;
+			RHS[i] += (*(ciiter->inverseTime)) * (*(ciiter->Ca)); //[uM/ms]
+			Aii[i] += (*(ciiter->inverseTime)) ; //[1/ms]
+		}
+#endif
   
   
   
@@ -671,6 +667,10 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a,
   }
   return (DCa * Rb * Rb /
           (dsi * distance * a->r * a->r)); /* needs fixing */
+  /* NOTE: ideally
+  return (DCa  /
+          (dsi * distance )); 
+          */
 }
 //find the lambda between the terminal point of the 
 //compartment represented by 'a'
@@ -701,6 +701,10 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, int index)
 #endif
   return (DCa * Rb * Rb /
           (dsi * distance * a->r * a->r)); /* needs fixing */
+  /* NOTE: ideally
+  return (DCa  /
+          (dsi * distance )); 
+          */
 }
 //|dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 //|{
@@ -995,3 +999,16 @@ dyn_var_t CaConcentration::getHalfDistance (int index)
   }
   return halfDist;
 }
+
+
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+void CaConcentration::setTargetAttachCaConcentration(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset)
+{
+#ifdef DEBUG_ASSERT
+  assert(targetAttachCaConcentration.size() > 0);
+#endif
+  targetAttachCaConcentration[targetAttachCaConcentration.size() - 1].index = CG_inAttrPset->idx;
+
+}
+#endif
