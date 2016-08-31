@@ -8,6 +8,4 @@ class GlobalNTS{
   static const float shellDepth ; //[um]
 };
 
-const float GlobalNTS::shellDepth = 0.0 ; //[um]
-//NOTE: shellDepth <= 0.0 which means it use the default value defined in CaConcentrationJunction
 #endif
