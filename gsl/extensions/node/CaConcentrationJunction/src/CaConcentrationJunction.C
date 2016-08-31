@@ -20,6 +20,7 @@
 #include "GridLayerDescriptor.h"
 #include "MaxComputeOrder.h"
 #include "Branch.h"
+#include "GlobalNTSConfig.h"
 
 //#define DEBUG_HH
 #include <iomanip>
@@ -80,7 +81,24 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
   volume = getVolume();
 
   float Pdov = M_PI * DCa / volume;
-  currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {
+    //for soma: due to large volume, we scale up the [Ca2+]
+    // shell volume = 4/3 * pi * (rsoma^3 - (rsoma-d)^3)
+    // with d = shell depth
+    // RATIO = somaVolume / shellVolume;
+    // currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
+    // TUAN TODO - 
+    dyn_var_t d = 1.0; //[um] - shell depth (default)
+    if (GlobalNTS::shellDepth > 0.0)
+      d = GlobalNTS::shellDepth;
+    dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
+      (pow(dimension->r,3) - pow(dimension->r - d, 3));
+    currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
+
+  }
+  else
+    currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
                                     dend = dimensionInputs.end();
