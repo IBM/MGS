@@ -173,6 +173,7 @@ TouchVector.cxx \
 Translation.cxx \
 ZeroTouchAnalysis.cxx \
 TissueContext.cxx \
+GlobalNTSConfig.cxx \
 
 TISSUE_LIB_SOURCES = CompartmentKey.cxx \
 

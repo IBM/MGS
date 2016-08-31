@@ -109,18 +109,18 @@
 //#define TOUCHDETECT_SINGLENEURON_SPINES
 //#define RESAMPLING_SPACE_VOLUME
 //#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as a single point
-#ifndef STRETCH_SOMA_WITH
+#ifndef STRETCH_SOMA_WITH   // only work when disable USE_SOMA_AS_POINT
 #define STRETCH_SOMA_WITH 35.0    //seem ok  value if used
+//#define STRETCH_SOMA_WITH 050.0 
 //#define STRETCH_SOMA_WITH 40.0 // [um] - make soma longer (hoping to make diffusion slower)
 //#define STRETCH_SOMA_WITH 0.0 
 //#define STRETCH_SOMA_WITH 130.0 
 //#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 25.0    
-//#define STRETCH_SOMA_WITH 050.0 
 #endif
 #ifndef SCALING_NECK_FROM_SOMA
-//#define SCALING_NECK_FROM_SOMA 10.0  //>1: make neck smaller
 #define SCALING_NECK_FROM_SOMA 1.0  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 10.0  //>1: make neck smaller
 #endif
 #define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
                         // if not; then Rb = ((*diter)->r + dimension->r)/2
