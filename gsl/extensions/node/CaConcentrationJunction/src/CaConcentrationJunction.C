@@ -81,7 +81,10 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
   volume = getVolume();
 
   float Pdov = M_PI * DCa / volume;
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+#define THRESHOLD_SIZE_R_SOMA 2.0 // um (micrometer)
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+      dimension->r > THRESHOLD_SIZE_R_SOMA // to avoid the confusing of spine head
+      )//TUAN TODO: consider fixing this
   {
     //for soma: due to large volume, we scale up the [Ca2+]
     // shell volume = 4/3 * pi * (rsoma^3 - (rsoma-d)^3)
@@ -89,12 +92,17 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
     // RATIO = somaVolume / shellVolume;
     // currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
     // TUAN TODO - 
-    dyn_var_t d = 1.0; //[um] - shell depth (default)
+    //dyn_var_t d = 1.0; //[um] - shell depth (default)
+    dyn_var_t d = 0.5; //[um] - shell depth (default)
+    //dyn_var_t d = 0.2; //[um] - shell depth (default)
     if (GlobalNTS::shellDepth > 0.0)
       d = GlobalNTS::shellDepth;
     dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
-      (pow(dimension->r,3) - pow(dimension->r - d, 3));
+      (pow(dimension->r,3) - pow(dimension->r - d, 3)) * FRACTIONVOLUME_CYTO;
     currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
+    std::cerr << "Cyto total vol: " << volume << "; shell volume: " << shellVolume << std::endl;
+    
+    Pdov = M_PI * DCa / shellVolume;
 
   }
   else
