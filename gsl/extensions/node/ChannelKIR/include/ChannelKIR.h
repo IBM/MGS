@@ -8,8 +8,8 @@
 #include "MaxComputeOrder.h"
 
 #if CHANNEL_KIR  == KIR_WOLF_2005
-#define BASED_TEMPERATURE 43.0  // Celcius - in vitro
-#define Q10 2.3
+#define BASED_TEMPERATURE 43.320  // Celcius - in vitro
+#define Q10 2.3    //to return qfact=0.5
 #endif
 
 #ifndef Q10 

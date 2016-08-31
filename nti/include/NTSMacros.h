@@ -379,6 +379,15 @@
 //  2.a select what compartmental variables to use
 //  2.b to disable any channel from the model, just comment it out
 #if MODEL_TO_USE == _MSN_2005_WOLF
+#define STRETCH_SOMA_WITH 105 //#135.0    
+#define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 7.0  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 6.5  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 6.2  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 6.15  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 6.0  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 5.0  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA 4.5  //>1: make neck smaller
 //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define SIMULATION_INVOLVE VM_CACYTO
