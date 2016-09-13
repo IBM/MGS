@@ -80,6 +80,22 @@ unsigned GridLayerDescriptor::getMinDensity()
    return rval;
 }
 
+void GridLayerDescriptor::replaceDensityVector(unsigned* replacement, int size)
+{
+  assert(size>0);
+  if (size==1) {
+    _uniformDensity=replacement[0];
+    _densityVector.push_back(_uniformDensity);
+  }
+  else {
+    assert(size==_densityVector.size());
+    for (int i=0; i<size; ++i) {
+      _uniformDensity=0;
+      _densityVector[i]=replacement[i];
+    }
+  }
+}
+
 void GridLayerDescriptor::setNodeAccessor(std::auto_ptr<NodeAccessor>& na)
 {
    _nodeAccessor = na.release();

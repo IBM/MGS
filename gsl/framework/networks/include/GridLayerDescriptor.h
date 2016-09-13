@@ -78,6 +78,8 @@ class GridLayerDescriptor
 	 return _granuleMapperIndex;
       }
 
+      void replaceDensityVector(unsigned* replacement, int uniform);
+
    private:
       GridLayerDescriptor(Grid* grid, const std::vector<int>& densityVector, 
 			  std::string name, NodeType* nt, 
