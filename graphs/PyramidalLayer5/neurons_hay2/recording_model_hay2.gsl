@@ -92,6 +92,85 @@ axonAISCurrentsDisplay.dataCollection(<>) on recOn;
 //}}}
 
 //spine
+//{{{ nexusTufted
+//{{{current
+CaCurrentDisplay currentNMDARDisplay_nexusTufted<fileName= PathFileCombine("spineNMDAR_nexusTufted.dat")>;
+currentNMDARDisplay_nexusTufted.dataCollection(<>) on recOn;
+
+CurrentDisplay currentAMPARDisplay_nexusTufted<fileName= PathFileCombine("spineAMPAR_nexusTufted.dat")>;
+currentAMPARDisplay_nexusTufted.dataCollection(<>) on recOn;
+//}}}
+//{{{Vm+Ca
+VoltageDisplay spineVoltageDisplay_nexusTufted<fileName=PathFileCombine("spineV_nexusTufted.dat")>;
+spineVoltageDisplay_nexusTufted.dataCollection(<>) on recOn;
+
+CalciumDisplay spineCalciumDisplay_nexusTufted<fileName=PathFileCombine("spineCa_nexusTufted.dat")>;
+spineCalciumDisplay_nexusTufted.dataCollection(<>) on recOn;
+
+VoltageDisplay proximalSpineVoltageDisplay_nexusTufted<fileName=PathFileCombine("proximalSpineV_nexusTufted.dat")>;
+proximalSpineVoltageDisplay_nexusTufted.dataCollection(<>) on recOn;
+
+CalciumDisplay proximalSpineCalciumDisplay_nexusTufted<fileName=PathFileCombine("proximalSpineCa_nexusTufted.dat")>;
+proximalSpineCalciumDisplay_nexusTufted.dataCollection(<>) on recOn;
+
+VoltageDisplay distalSpineVoltageDisplay_nexusTufted<fileName=PathFileCombine("distalSpineV_nexusTufted.dat")>;
+distalSpineVoltageDisplay_nexusTufted.dataCollection(<>) on recOn;
+
+CalciumDisplay distalSpineCalciumDisplay_nexusTufted<fileName=PathFileCombine("distalSpineCa_nexusTufted.dat")>;
+distalSpineCalciumDisplay_nexusTufted.dataCollection(<>) on recOn;
+//}}}
+//{{{NT
+//ConcentrationDisplay cleftConcentrationDisplay_nexusTufted<fileName=PathFileCombine("cleftNT_nexusTufted.dat")>;
+//cleftConcentrationDisplay_nexusTufted.dataCollection(<>) on recOn;
+//}}}
+//}}}
+//{{{ proximalTufted 
+//{{{current
+CaCurrentDisplay currentNMDARDisplay_proximalTufted<fileName= PathFileCombine("spineNMDAR_proximalTufted.dat")>;
+currentNMDARDisplay_proximalTufted.dataCollection(<>) on recOn;
+
+CurrentDisplay currentAMPARDisplay_proximalTufted<fileName= PathFileCombine("spineAMPAR_proximalTufted.dat")>;
+currentAMPARDisplay_proximalTufted.dataCollection(<>) on recOn;
+//}}}
+//{{{Vm+Ca
+VoltageDisplay spineVoltageDisplay_proximalTufted<fileName=PathFileCombine("spineV_proximalTufted.dat")>;
+spineVoltageDisplay_proximalTufted.dataCollection(<>) on recOn;
+
+CalciumDisplay spineCalciumDisplay_proximalTufted<fileName=PathFileCombine("spineCa_proximalTufted.dat")>;
+spineCalciumDisplay_proximalTufted.dataCollection(<>) on recOn;
+
+VoltageDisplay proximalSpineVoltageDisplay_proximalTufted<fileName=PathFileCombine("proximalSpineV_proximalTufted.dat")>;
+proximalSpineVoltageDisplay_proximalTufted.dataCollection(<>) on recOn;
+
+CalciumDisplay proximalSpineCalciumDisplay_proximalTufted<fileName=PathFileCombine("proximalSpineCa_proximalTufted.dat")>;
+proximalSpineCalciumDisplay_proximalTufted.dataCollection(<>) on recOn;
+
+VoltageDisplay distalSpineVoltageDisplay_proximalTufted<fileName=PathFileCombine("distalSpineV_proximalTufted.dat")>;
+distalSpineVoltageDisplay_proximalTufted.dataCollection(<>) on recOn;
+
+CalciumDisplay distalSpineCalciumDisplay_proximalTufted<fileName=PathFileCombine("distalSpineCa_proximalTufted.dat")>;
+distalSpineCalciumDisplay_proximalTufted.dataCollection(<>) on recOn;
+//}}}
+//{{{NT
+//ConcentrationDisplay cleftConcentrationDisplay_proximalTufted<fileName=PathFileCombine("cleftNT_proximalTufted.dat")>;
+//cleftConcentrationDisplay_proximalTufted.dataCollection(<>) on recOn;
+//}}}
+//}}}
+
+//presynapticSoma
+//{{{soma
+VoltageDisplay presynapticSomaDisplayVm<fileName= PathFileCombine("presynapticSomaVm.dat")>;
+presynapticSomaDisplayVm.dataCollection(<>) on recOn;
+//}}}
+
+
+//CalciumDisplay calciumSomaERDisplay<fileName= PathFileCombine("somaCaER.dat")>;
+//calciumSomaERDisplay.dataCollection(<>) on recOn;
+/*
+CalciumDisplay synapseCalciumDisplay_0<fileName=PathFileCombine("synapseC0.dat")>;
+synapseCalciumDisplay_0.dataCollection(<>) on recOn;
+*/
+//spine
 //{{{
 //{{{current
 CaCurrentDisplay currentNMDARDisplay<fileName= PathFileCombine("spineNMDAR.dat")>;
@@ -125,16 +204,3 @@ distalSpineCalciumDisplay.dataCollection(<>) on recOn;
 //}}}
 //}}}
 
-//presynapticSoma
-//{{{soma
-VoltageDisplay presynapticSomaDisplayVm<fileName= PathFileCombine("presynapticSomaVm.dat")>;
-presynapticSomaDisplayVm.dataCollection(<>) on recOn;
-//}}}
-
-
-//CalciumDisplay calciumSomaERDisplay<fileName= PathFileCombine("somaCaER.dat")>;
-//calciumSomaERDisplay.dataCollection(<>) on recOn;
-/*
-CalciumDisplay synapseCalciumDisplay_0<fileName=PathFileCombine("synapseC0.dat")>;
-synapseCalciumDisplay_0.dataCollection(<>) on recOn;
-*/

@@ -23,7 +23,7 @@
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //inject  distal to AIS 
-#define STIMULUS_CASE   CASE_07
+#define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "hay2_"
 //#define morph "hay2NormalCm_"
@@ -120,7 +120,8 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          350.1      // [ms]
+	#define TimeEnd          250.1      // [ms]
+	//#define TimeEnd          0.009      // [ms]
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -133,6 +134,7 @@ print("Case 00: resting");
 #endif
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 	#define RecordInterval   0.10   //  [ms]
+	//#define RecordInterval   0.0030   //  [ms]
   #define TimeStartRecord  100.0 // [ms]
 #elif  SIMULATION_STOP == BASED_ON_ITERATIONS
 	#define RecordInterval   10   // every ... timesteps
@@ -200,7 +202,8 @@ print("Case 00: resting");
 //#define R_NECK 0.001     // [GOhm*um] --> g~150 nS = 150x10^-9 (S)--> 6.6x10^6 (Ohm) = 6.6 MOhm
 //#define R_NECK 0.005     // [GOhm*um] --> g~
 #define R_NECK 0.012     // [GOhm*um] --> g~12 nS ~  66 MOhm
-//#define R_NECK 0.112     // [GOhm*um] --> g~1.2 nS ~ 0.8 GOhm
+//#define R_NECK 0.09     // [GOhm*um] -->  ~ 495 MOhm
+//#define R_NECK 0.112     // [GOhm*um] --> g~1.2 nS ~ 0.616 GOhm ~ 616 MOhm
 //#define R_NECK 1.112     // [GOhm*um] --> g~12e-2 nS ~ 8.0 GOhm
 //#define R_NECK 100.112     // [GOhm*um] --> g~12e-4 nS ~ 800 GOhm
 
@@ -1160,23 +1163,23 @@ Grid PyramidalL5_Neuron{
 		//{{{
 #if SIMULATION_INVOLVE == VMONLY
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
+				//I = 0.0,
 				Raxial = R_NECK // [Gohm.um] 
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
+				//I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
-				I_Ca = 0, 
+				//I_Ca = 0, 
         DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #elif SIMULATION_INVOLVE == VM_CACYTO_CAER || SIMULATION_INVOLVE == VM_CACYTO_CAER_DOPA
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
+				//I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
-				I_Ca = 0, 
+				//I_Ca = 0, 
         DCa = Cacyto_DiffusionConstant_SpineNeck, //[um^2/ms]
-				I_CaER = 0,
+				//I_CaER = 0,
         DCaER = CaER_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #endif
@@ -1194,6 +1197,7 @@ Grid PyramidalL5_Neuron{
     /*}}}*/
     /*}}}*/
     /*}}}*/
+   /*}}}*/
 
 	// GRID - CONNECT LAYERS with ...
     /*{{{*/
@@ -1266,7 +1270,6 @@ Grid PyramidalL5_Neuron{
 
 	/*{{{ reserved for extra code*/ 
 	/*}}}*/
-/*}}}*/
 /*}}}*/
 }; //end grid
 

@@ -92,9 +92,9 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
     // RATIO = somaVolume / shellVolume;
     // currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
     // TUAN TODO - 
-    //dyn_var_t d = 1.0; //[um] - shell depth (default)
-    dyn_var_t d = 0.5; //[um] - shell depth (default)
-    //dyn_var_t d = 0.2; //[um] - shell depth (default)
+    dyn_var_t d = 1.0; //[um] - shell depth (default) 
+    //dyn_var_t d = 0.5; //[um]  
+    //dyn_var_t d = 0.2; //[um]  
     if (GlobalNTS::shellDepth > 0.0)
       d = GlobalNTS::shellDepth;
     dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
