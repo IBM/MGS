@@ -141,6 +141,7 @@
 #include <math.h>
 #include <memory>
 #include <algorithm>
+#include <numeric>
 #include <string>
 
 #ifdef USING_CVC

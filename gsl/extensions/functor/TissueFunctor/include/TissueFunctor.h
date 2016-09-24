@@ -51,7 +51,6 @@ class NodeAccessor;
 
 class TissueFunctor : public CG_TissueFunctorBase 
 {
-<<<<<<< HEAD
   friend class TissueLayoutFunctor;
   friend class TissueNodeInitFunctor;
   friend class TissueConnectorFunctor;

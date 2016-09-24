@@ -18,6 +18,8 @@
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define STIMULUS_CASE   CASE_00
+//#define morph ""
+#define morph "traub_"
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -42,6 +44,9 @@ PolyConnectorFunctor polyConnect();
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
+#ifndef MODEL_TO_USE
+print("WARNING: You haven't selected MODEL_TO_USE")
+#endif
 
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
@@ -49,27 +54,22 @@ ServiceConnectorFunctor serviceConnect();
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder "out2_Jun23_rest"
+#define OutputFolderName dataFolder morph "Traub_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma"
+#define OutputFolderName dataFolder morph "Traub_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder "out2_Jun23_triggershaft"
+#define OutputFolderName dataFolder morph "Traub_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder "out2_Jun23_triggerspine"
-//#define OutputFolderName dataFolder "out2_Jun23_case03"
+#define OutputFolderName dataFolder morph "Traub_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Traub_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder "out2_Jun23_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Traub_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Traub_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder "out2_Jun23_case06"
+#define OutputFolderName dataFolder morph "Traub_case06" STR(EXTENSION)
 #endif
-//#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
-//#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
-//#define OutputFolderName dataFolder "out2_May27_trigger_distal"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma_distal"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -152,6 +152,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
+  //{{{ neuroransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
@@ -166,6 +167,7 @@ print("Case 00: resting");
 #else
 #define NTGABA_baseline 5.0  // [uM]
 #endif
+  //}}}
 //}}}
 
 //{{{ Conditions: conductance (axial resistance) + temperature + Vrest + Eleak
@@ -478,7 +480,7 @@ NodeType CaConcentrationJunctionPoint {
 NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelNat_AIS { computeE->initialize2, initialize->initialize3, update->solveChannels };
    /* Persistent Na+ current */
-//NodeType ChannelHayNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
+//NodeType ChannelTraubNap { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 //K+ currents
 /*{{{*/
@@ -489,12 +491,12 @@ NodeType ChannelBK { computeE->initialize2, initialize->initialize3, update->sol
 NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->solveChannels };
 /*}}}*/
 // HCN current
-//NodeType ChannelHayHCN (< E_h = {Erev_HCN} >) { initialize->initialize3, update->solveChannels };
+//NodeType ChannelTraubHCN (< E_h = {Erev_HCN} >) { initialize->initialize3, update->solveChannels };
 //NodeType ChannelHCN (< E_h = {Erev_HCN} >) { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //Ca2+ currents
 /*{{{*/
 NodeType ChannelCaHVA { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
-//NodeType ChannelHayCaLVA { initialize->initialize3, update->solveChannels };
+//NodeType ChannelTraubCaLVA { initialize->initialize3, update->solveChannels };
 /*}}}*/
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(
@@ -829,9 +831,9 @@ Grid InterNeuron{
      //{{{ Na channels
    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
    Layer(Nat_AISChannels, ChannelNat_AIS, tissueFunctor("Layout", < nodekind="Channels[Nat_AIS]" >), < nodekind="Channels[Nat_AIS]" >, tissueGM);
-//   Layer(NapChannels, ChannelHayNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
+//   Layer(NapChannels, ChannelTraubNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
-   //Layer(HCNChannels, ChannelHayHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
+   //Layer(HCNChannels, ChannelTraubHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //{{{ K+ channels
    Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
    Layer(KDR_AISChannels, ChannelKDR_AIS, tissueFunctor("Layout", < nodekind="Channels[KDR_AIS]" >), < nodekind="Channels[KDR_AIS]" >, tissueGM);
@@ -844,7 +846,7 @@ Grid InterNeuron{
     //{{{ Ca2+ channels
 #if SIMULATION_INVOLVE >= VM_CACYTO
    Layer(CaHVAChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
-   //Layer(CalChannels, ChannelHayCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
+   //Layer(CalChannels, ChannelTraubCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
 #endif
      //}}}
 	/*}}}*/

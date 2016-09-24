@@ -169,7 +169,8 @@ print("Case 00: resting");
   //}}}
 //}}}
 
-//{{{ Conditions: axial conductance + temperature + Vrest + Eleak
+//{{{ Conditions: conductance (axial resistance) + temperature + Vrest + Eleak
+//NOTE: 1 Ohm.cm = 10^-5 GOhm*um
 #define Ra_value 0.001     // [GOhm*um] 
 //#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
@@ -1148,6 +1149,7 @@ Grid PyramidalL5_Neuron{
     /*}}}*/
     /*}}}*/
     /*}}}*/
+  /*}}}*/
 
 	// GRID - CONNECT LAYERS with ...
     /*{{{*/
@@ -1220,7 +1222,6 @@ Grid PyramidalL5_Neuron{
 
 	/*{{{ reserved for extra code*/ 
 	/*}}}*/
-/*}}}*/
 /*}}}*/
 }; //end grid
 

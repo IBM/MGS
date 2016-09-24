@@ -53,7 +53,7 @@ void NodeSetSPMVariable::dca(Trigger* trigger, NDPairList* ndPairList)
    outfileName<<fileName<<"_"<<iteration<<".spm";
    FILE* outfile = fopen(outfileName.str().c_str(), "wt");
    if (outfile==0) {
-     std::cerr<<"Could not open file \""<<outfileName<<"\" !"<<std::endl;
+     std::cerr<<"Could not open file \""<<outfileName.str()<<"\" !"<<std::endl;
      exit(0);
    }
    fprintf(outfile, "%d\t%d\n", dimx, dimy);

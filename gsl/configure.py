@@ -924,7 +924,6 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstScaledGaussianWeightModifier \\
        	IsoSampler \\
         Exp \\
-        GetNodeCoordFunctor \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\
