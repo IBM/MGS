@@ -42,10 +42,10 @@ void ChannelBK::update(RNG& rng)
     for (unsigned i = 0; i < branchData->size; ++i)
     {
         dyn_var_t v = (*V)[i];
-#if SIMULATION_INVOLVE == VMONLY
-        dyn_var_t cai = Cai_base;            
-#else
+#if defined(SIMULATE_CACYTO)
         dyn_var_t cai = (*Cai)[i]; // [uM]
+#else
+        dyn_var_t cai = Cai_base;            
 #endif
 
 #if CHANNEL_BK == BK_TRAUB_1994
@@ -129,11 +129,11 @@ void ChannelBK::initialize(RNG& rng)
   }
 
   for (unsigned i = 0; i < size; ++i) {
-#if SIMULATION_INVOLVE == VMONLY
-    dyn_var_t cai = Cai_base;            
-#else
+#if defined(SIMULATE_CACYTO)
     assert(Cai);
     dyn_var_t cai = (*Cai)[i]; // [uM]
+#else
+    dyn_var_t cai = Cai_base;            
 #endif
 
 #if CHANNEL_BK == BK_TRAUB_1994

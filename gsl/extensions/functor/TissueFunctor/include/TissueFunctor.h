@@ -248,7 +248,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
 
   // NOTE: While parsing GSL, each layer is given an index,
-  //                   starting from 0 for the first Layer
+  //                   starting from 0 for the first Layer in A GRID
+  // (each grid has its own indexing, i.e. indices are reset)
   //[index-layer][density-index-of-node-that-channel-getinputs]
 	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >

@@ -1,0 +1,466 @@
+#ifndef IP3Concentration_MDL
+#define IP3Concentration_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../LaboratoryTools/LaboratoryTools.mdl"
+
+
+//NOTE: We have IP3Clearance [1/ms] to model the removal of IP3 back to the basal level IP3Baseline
+
+// It represents one branch (which comprises regular compartments + implicit junctions)
+Node IP3Concentration Implements SolutionArrayProducer, 
+     DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer, 
+     IP3ConcentrationArrayProducer
+{
+// Regular-branch: represent the diffusion of IP3(cyto) along branch with no explicit junction
+/*{{{*/
+	//DATA
+    /*{{{*/
+	//data members: reference
+       // pointer to array of branch
+       // help to identify the branch a IP3(cyto)-compartment belong to 
+  BranchDataStruct* branchData; // pointer to branch's data
+  DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
+	//data members: internal, but for solver
+    //{{{
+	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  dyn_var_t [] Aii; // TODO unit
+  dyn_var_t [] Aip; // TODO unit
+  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
+
+  dyn_var_t [] RHS; // TODO unit
+  dyn_var_t [] Aij; // TODO unit
+  
+  dyn_var_t  IP3Clearance; // [1/ms]
+
+  dyn_var_t* proximalIP3Concentration; // TODO unit
+  dyn_var_t* [] distalAiis;
+  dyn_var_t* [] distalAips;
+  dyn_var_t* [] distalInputs;
+  //dyn_var_t[] * valCur;//pointer to an array
+  //dyn_var_t[] * valNew;
+  DimensionStruct* [] distalDimensions;
+  DimensionStruct* proximalDimension;
+
+  bool proximalJunction;// true = real-branching point, 
+                        //..false=implicit-cut (i.e. cut along the branch)
+  int computeOrder;// TissueFunctor will assign the value to each branch 
+                   // (the range of values from [0..MAX_COMPUTE_ORDER-1])
+                   // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
+                   // computing of branches of the same computeOrder
+                   // If MAX_COMPUTE_ORDER=0, then 
+                   // solve all branches sequentially 
+                   //  from distal to proximal: forwardSolve
+                   //  from proximal to distal: backwardSolve
+       //}}}
+	//data members: internal
+  dyn_var_t [] IP3_cur; // intracellular concentrations expressed by ion name alone
+  dyn_var_t [] IP3_new;
+  dyn_var_t [] currentToConc;
+
+    // currents
+  //CONVENTION: the currents flowing toward the cytosol get negative value
+  // yet it contribute positive to the increase of [IP32+](cyto)
+  // so dIP3/dt = - Icurrent * A/(zIP3*F*Vcyto)
+  //     A = surface area Cyto = surface area SL
+  // so dIP3/dt = - Icurrent * A/(zIP3*F*Vcyto)
+  //     A = surface area ER
+  // In the case of IP32+ channels (L,N,PQ,R,T), 
+  //      if channel current is negative (which means IP32+ influx), 
+  //            so IIP3(channel) is the same as chanel current (i.e. negative)
+  // In the case of NCX, 
+  //      if INCX is negative (which means IP32+ extrude), 
+  //            so IIP3(NCX) must be positive
+  ChannelIP3Currents [] channelIP3Currents;  // [pA/um^2]
+  //CONVENTION:  the fluxs flowing toward the cytosol get positive
+  // and it contributes positive to the increase of [IP32+](cyto)
+  ChannelIP3Fluxes [] channelIP3Fluxes; // [uM/msec]
+  //CONVENTION: the currents flowing toward the cytosol get negative
+  // yet it contribute positive to the increase of [IP32+](cyto)
+  ReceptorIP3Current [] receptorIP3Currents; // [pA/um^2]
+  //CONVENTION: the currents flowing toward the cytosol get positive
+  // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
+  // 2. user-defined stimulus current
+  InjectedIP3Current [] injectedIP3Currents; // [pA]
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  TargetAttachIP3Concentration [] targetAttachIP3Concentration;  // [uM]
+#endif
+	/*}}}*/
+
+   // design : anything currently not part of the spatial 
+   //          is put here
+  Shared {
+    /*{{{*/
+    dyn_var_t* deltaT;
+    dyn_var_t D_IP3; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t D_IP3eff; //effective diffusion constant of IP3 [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t IP3Baseline; // [uM]
+
+    InitPhase deriveParameters;  
+    /*}}}*/
+  }
+
+	//output
+	//{{{
+  IP3ConcentrationArrayProducer.IP3Concentrations << &IP3_new;
+  SolutionArrayProducer.solutionArray << &IP3_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+  ForwardSolutionArrayProducer.AiiArray << &Aii;
+  ForwardSolutionArrayProducer.AipArray << &Aip;
+  ForwardSolutionArrayProducer.RHSArray << &RHS;
+	//}}}
+
+    // Phases methods
+    /*{{{*/
+  InitPhase initializeCompartmentData;
+
+  #if MAX_COMPUTE_ORDER>0
+  RuntimePhase forwardSolve1, backwardSolve1; 
+  #endif
+  #if MAX_COMPUTE_ORDER>1
+  RuntimePhase forwardSolve2, backwardSolve2; 
+  #endif
+  #if MAX_COMPUTE_ORDER>2
+  RuntimePhase forwardSolve3, backwardSolve3; 
+  #endif
+  #if MAX_COMPUTE_ORDER>3
+  RuntimePhase forwardSolve4, backwardSolve4; 
+  #endif
+  #if MAX_COMPUTE_ORDER>4
+  RuntimePhase forwardSolve5, backwardSolve5; 
+  #endif
+  #if MAX_COMPUTE_ORDER>5
+  RuntimePhase forwardSolve6, backwardSolve6; 
+  #endif
+  #if MAX_COMPUTE_ORDER>6
+  RuntimePhase forwardSolve7, backwardSolve7; 
+  #endif
+
+  RuntimePhase solve, finish;
+    /*}}}*/
+
+  InAttrPSet {	
+    string identifier;
+    TissueSite site;
+    int idx;
+  }
+
+  // d^2 IP3/dx^2 = dIP3/dt + IIP3leak + IIP3inject + (IIP3syn+IIP3ion)
+  // injectedCurrent  = (to a compartment) only if 2 scenarios
+  //               1. it forms an bi-directional
+  //                      connection (e.g. electrical-synapse or spine-neck)
+  //               2. a stimulus current is injected
+  UserFunction setReceptorIP3Current, setInjectedIP3Current, setProximalJunction;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  UserFunction  setTargetAttachIP3Concentration;
+#endif
+  // Connection setup
+  //{{{ 
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+   }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  //Trans-plasma-membrane IP32+ channel produce current
+  Connection Pre Node (PSet.identifier=="channels[IP3]") Expects IP3CurrentArrayProducer {
+    IP3CurrentArrayProducer.currents >> channelIP3Currents.currents;
+   }
+  //TUAN; TODO how to project RYR, Ip3r calcium from calciumer
+/*
+OPTIION 1: use as ionic current (pA/um^2)
+  Connection Pre Node (PSet.identifier=="channels[IP3]") Expects IP3ERCurrentArrayProducer {
+    IP3ERCurrentArrayProducer.currents >> channelER_IP3Currents.currents;
+    IP3ERCurrentArrayProducer.areas >> channelER_IP3Currents.areas;
+   }
+and we treat them differently in IP3Concentration when mapping from currents to 
+[IP32+](cyto)
+as they have different surface area
+
+OPTION 3:
+   Use as injectedCurrent (pA)
+*/
+
+// OPTION 2: channel produce flux JIP3 (uM/msec) instead of current IIP3 (pA/um^2)
+  //Trans-ER-membrane IP32+ channel produce flux 
+  Connection Pre Node (PSet.identifier=="channels[IP3]") Expects IP3FluxArrayProducer {
+    IP3FluxArrayProducer.fluxes >> channelIP3Fluxes.fluxes;
+   }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[IP3]") Expects IP3CurrentProducer {
+  //  IP3CurrentProducer.current >> injectedIP3Currents.current;
+  //  setInjectedIP3Current();
+  // }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Connection Pre Node (PSet.identifier=="spineAttachment[IP3]") Expects 
+             ReversalIP3Producer, InverseTimeIP3Producer{
+    ReversalIP3Producer.IP3 >> targetAttachIP3Concentration.IP3 ;
+    InverseTimeIP3Producer.inverseTime >> targetAttachIP3Concentration.inverseTime;
+    setTargetAttachIP3Concentration();
+   }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[IP3]") Expects IP3CurrentProducer {
+    IP3CurrentProducer.current >> injectedIP3Currents.current;
+    setInjectedIP3Current();
+   }
+#endif
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[IP3]") Expects IP3CurrentProducer {
+    // for receptors like NMDAR
+    IP3CurrentProducer.current >> receptorIP3Currents.current;
+    setReceptorIP3Current();
+   }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects IP3CurrentProducer {
+    IP3CurrentProducer.current >> injectedIP3Currents.current;
+    setInjectedIP3Current();
+   }
+
+  Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects IP3ConcentrationProducer, DimensionProducer {
+    IP3ConcentrationProducer.IP3 >> proximalIP3Concentration;
+    DimensionProducer.dimension >> proximalDimension;
+    setProximalJunction();
+  }
+
+  Connection Pre Node (PSet.identifier=="backwardSolvePoint") Expects SolutionProducer, DimensionProducer {
+    SolutionProducer.solution >> proximalIP3Concentration;
+    DimensionProducer.dimension >> proximalDimension;
+  }
+
+  Connection Pre Node (PSet.identifier=="distalJunctionPoint") Expects IP3ConcentrationProducer, DimensionProducer {
+    IP3ConcentrationProducer.IP3 >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="forwardSolvePoint") Expects ForwardSolutionProducer, DimensionProducer {
+    ForwardSolutionProducer.Aii >> distalAiis;
+    ForwardSolutionProducer.Aip >> distalAips;
+    ForwardSolutionProducer.RHS >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+  //}}}
+/*}}}*/
+}
+
+// represent an end-point (i.e. last compartment in the series of compartments along a branch)
+// thus don't hold real data, just a reference to that last segment
+Node IP3ConcentrationEndPoint Implements IP3ConcentrationProducer, DimensionProducer
+{
+// For each regular compute-branch (i.e. not a junction), represented by IP3Concentration 
+// we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
+/*{{{*/
+	// single value
+  dyn_var_t* IP3Concentration; // reference to the IP3(cyto) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
+  DimensionStruct* dimension; //reference to the struct representing the compartment
+
+  Shared {
+    // so the two instances share the Branch's data
+		// an array but indeed is a scalar
+    dyn_var_t []* IP3ConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+    //output
+  IP3ConcentrationProducer.IP3 << IP3Concentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {//attribute of the incoming MDL component, e.g. node
+    string identifier;
+  }
+
+  UserFunction setPointers;// which is called to create the proper memory reference for 'IP3(cyto)' of the end-point component which
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
+
+  // Connection setup (i.e. input)
+  Connection Pre Node () Expects IP3ConcentrationArrayProducer, DimensionArrayProducer {
+    IP3ConcentrationArrayProducer.IP3Concentrations >> Shared.IP3ConcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+	// as end-point, so we use 'produce' prefix for kernels
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedIP3Concentration(IP3Concentration);
+  RuntimePhase produceFinishedIP3Concentration(IP3Concentration);
+/*}}}*/
+}
+
+// It represents one (exlicit) junction branch (which comprise half regular compartments)
+Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
+     IP3ConcentrationArrayProducer 
+{
+/*{{{*/
+	//DATA
+  //{{{
+  BranchDataStruct* branchData; // the proximal-side regular-branch's data
+  DimensionStruct* [] dimensions;
+    //{{{data members: internal, but for solver
+  dyn_var_t* [] IP3ConcentrationInputs;
+  DimensionStruct* [] dimensionInputs;
+  BranchDataStruct* [] branchDataInputs;  // 
+    //}}}
+	//{{{data members: internal
+  dyn_var_t volume;
+  dyn_var_t [] fAxial; //axial-flux
+  dyn_var_t IP3_cur;
+  dyn_var_t [] IP3_new;
+  dyn_var_t currentToConc;
+  dyn_var_t  IP3Clearance; // [1/ms]
+
+  //{{{ ionic currents
+  //CONVENTION: the currents flowing toward the cytosol get negative value
+  // yet it contribute positive to the increase of [IP32+](cyto)
+  ChannelIP3Currents [] channelIP3Currents;
+  //CONVENTION:  the fluxs flowing toward the cytosol get positive
+  // and it contributes positive to the increase of [IP32+](cyto)
+  ChannelIP3Fluxes [] channelIP3Fluxes; // [uM/msec]
+  //CONVENTION: the currents flowing toward the cytosol get negative
+  // yet it contribute positive to the increase of [IP32+](cyto)
+  dyn_var_t* [] receptorIP3Currents;
+  //CONVENTION: the currents flowing toward the cytosol get positive
+  // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
+  // 2. user-defined stimulus current
+  dyn_var_t* [] injectedIP3Currents;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t* [] targetReversalIP3Concentration;
+  dyn_var_t* [] targetInverseTimeIP3Concentration;
+#endif
+  //}}}
+
+
+  Shared {
+	  //{{{
+    dyn_var_t* deltaT;
+    dyn_var_t D_IP3; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t D_IP3eff; //effective diffusion constant of IP3 [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t IP3Baseline; // [uM]
+
+    InitPhase deriveParameters;  
+    //}}}
+  }
+  //}}}
+
+  IP3ConcentrationArrayProducer.IP3Concentrations << &IP3_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+
+  InitPhase initializeJunction;
+  RuntimePhase predictJunction, correctJunction;
+
+  InAttrPSet {
+    string identifier;
+    TissueSite site;
+    int idx;
+  }	
+
+  //input
+  // the junction-branch connects to regular-branch through the regular-branch's endpoints
+  Connection Pre Node (PSet.identifier=="endpoint") Expects IP3ConcentrationProducer, 
+    DimensionProducer, BranchDataProducer  {
+    IP3ConcentrationProducer.IP3 >> IP3ConcentrationInputs;
+    DimensionProducer.dimension >> dimensionInputs;
+    BranchDataProducer.branchData >> branchDataInputs;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+  }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[IP3]") Expects IP3CurrentArrayProducer {
+    IP3CurrentArrayProducer.currents >> channelIP3Currents.currents;
+  }
+
+  Connection Pre Node (PSet.identifier=="channels[IP3]") Expects IP3FluxArrayProducer {
+    IP3FluxArrayProducer.fluxes >> channelIP3Fluxes.fluxes;
+   }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[IP3]") Expects IP3CurrentProducer {
+  //  IP3CurrentProducer.current >> injectedIP3Currents;
+  //}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Connection Pre Node (PSet.identifier=="spineAttachment[IP3]") Expects 
+    ReversalIP3Producer, InverseTimeIP3Producer{
+    ReversalIP3Producer.IP3 >> targetReversalIP3Concentration ;
+    InverseTimeIP3Producer.inverseTime >> targetInverseTimeIP3Concentration;
+  }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[IP3]") Expects IP3CurrentProducer {
+    IP3CurrentProducer.current >> injectedIP3Currents;
+  }
+#endif
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[IP3]") Expects IP3CurrentProducer {
+    IP3CurrentProducer.current >> receptorIP3Currents;
+  }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects IP3CurrentProducer {
+    IP3CurrentProducer.current >> injectedIP3Currents;
+   }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+/*}}}*/
+}
+
+Node IP3ConcentrationJunctionPoint Implements IP3ConcentrationProducer, DimensionProducer
+{
+// For each junction-branch, represented by HodgkinHuxleyVoltageJunction
+// we need 1 associated JunctionPoints that reference to the end...
+/*{{{*/
+  dyn_var_t* IP3Concentration;
+  DimensionStruct* dimension;
+
+  Shared {
+    dyn_var_t []* IP3ConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  IP3ConcentrationProducer.IP3 << IP3Concentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects IP3ConcentrationArrayProducer, DimensionArrayProducer {
+    IP3ConcentrationArrayProducer.IP3Concentrations >> Shared.IP3ConcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceIP3Concentration(IP3Concentration);
+/*}}}*/
+}
+
+#endif

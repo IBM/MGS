@@ -120,8 +120,8 @@ CalciumDisplay distalSpineCalciumDisplay_nexusTufted<fileName=PathFileCombine("d
 distalSpineCalciumDisplay_nexusTufted.dataCollection(<>) on recOn;
 //}}}
 //{{{NT
-//ConcentrationDisplay cleftConcentrationDisplay_nexusTufted<fileName=PathFileCombine("cleftNT_nexusTufted.dat")>;
-//cleftConcentrationDisplay_nexusTufted.dataCollection(<>) on recOn;
+AnyConcentrationDisplay cleftConcentrationDisplay_nexusTufted<fileName=PathFileCombine("cleftNT_nexusTufted.dat")>;
+cleftConcentrationDisplay_nexusTufted.dataCollection(<>) on recOn;
 //}}}
 //}}}
 //{{{ proximalTufted 
@@ -152,8 +152,8 @@ CalciumDisplay distalSpineCalciumDisplay_proximalTufted<fileName=PathFileCombine
 distalSpineCalciumDisplay_proximalTufted.dataCollection(<>) on recOn;
 //}}}
 //{{{NT
-//ConcentrationDisplay cleftConcentrationDisplay_proximalTufted<fileName=PathFileCombine("cleftNT_proximalTufted.dat")>;
-//cleftConcentrationDisplay_proximalTufted.dataCollection(<>) on recOn;
+AnyConcentrationDisplay cleftConcentrationDisplay_proximalTufted<fileName=PathFileCombine("cleftNT_proximalTufted.dat")>;
+cleftConcentrationDisplay_proximalTufted.dataCollection(<>) on recOn;
 //}}}
 //}}}
 
@@ -199,8 +199,8 @@ CalciumDisplay distalSpineCalciumDisplay<fileName=PathFileCombine("distalSpineCa
 distalSpineCalciumDisplay.dataCollection(<>) on recOn;
 //}}}
 //{{{NT
-//ConcentrationDisplay cleftConcentrationDisplay<fileName=PathFileCombine("cleftNT.dat")>;
-//cleftConcentrationDisplay.dataCollection(<>) on recOn;
+ConcentrationDisplay cleftConcentrationDisplay<fileName=PathFileCombine("cleftNT.dat")>;
+cleftConcentrationDisplay.dataCollection(<>) on recOn;
 //}}}
 //}}}
 

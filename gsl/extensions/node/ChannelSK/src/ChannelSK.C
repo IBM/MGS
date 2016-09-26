@@ -120,7 +120,7 @@ void ChannelSK::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];      //[mV]
-#if SIMULATION_INVOLVE  == VMONLY
+#if ! defined(SIMULATE_CACYTO)
     dyn_var_t cai = Cai_base;
 #else
     dyn_var_t cai = (*Cai)[i] ;  //[uM]
@@ -247,7 +247,7 @@ void ChannelSK::initialize(RNG& rng)
     dyn_var_t v = (*V)[i];
     //g[i] = gbar[i] * fO[i];
     //fO[i] = fO[0];
-#if SIMULATION_INVOLVE  == VMONLY
+#if ! defined(SIMULATE_CACYTO)
     dyn_var_t cai = Cai_base;
 #else
     dyn_var_t cai = (*Cai)[i]; // [uM]

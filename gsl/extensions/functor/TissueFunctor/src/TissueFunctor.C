@@ -140,6 +140,7 @@
 #include <math.h>
 #include <memory>
 #include <algorithm>
+#include <numeric>
 #include <string>
 
 #ifdef USING_CVC
@@ -2612,7 +2613,9 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   //     cpt<--[connexon]-->cpt
   //     cpt<--[spineconnexon]--><--[spineconnexon]-->cpt
   //     bouton --[presynapticpoint]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  //                                ?(pass Vpre) 
   //     bouton --[synapticCleft]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  //                              ?(pass [NT])
   //  Here, one or two instances may needed be created using one or two sides of a Touch
   //  then find the preCapsule and postCapsule for each Touch
   //  identify the grid-index (indexPre) to which preCapsule belongs
@@ -3513,7 +3516,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   }
 
   if (_preSynapticPointLayers.size() > 0 && _synapticCleftLayers.size() > 0)
-  {
+  {//validation check
     std::cerr << "We cannot have both PreSynapticPoints and SynapticClefts"
               << " in the system\n";
     exit(EXIT_FAILURE);
@@ -4846,7 +4849,11 @@ void TissueFunctor::doConnector(LensContext* lc)
                   spineattach2spineattach[*etiter];
 
               key_size_t keyneck = 0;
-              (*titer).hasSpineNeck(keyneck);
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+              (*titer).hasSpineNeck(keyneck, _tissueParams);
+#else
+              (*titer).hasSpineNeck(keyneck);//obsolete
+#endif
               Capsule* capsneck = (keyneck == key1) ? preCapsule : postCapsule;
               assert((keyneck == key1) || keyneck == key2);
 
@@ -5113,7 +5120,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                             _compartmentSize) -
                            1;*/
 #ifdef IDEA1
-                preIdx = _tissueContext->getCptIndex(preCapsule, *titer);
+                  preIdx = _tissueContext->getCptIndex(preCapsule, *titer);
 #else
                   preIdx = getCptIndex(preCapsule);
 #endif
@@ -5513,13 +5520,17 @@ void TissueFunctor::doConnector(LensContext* lc)
 //    e.g. nodekind="Channels[Nat]",
 //                           then the name to be used is 'Nat'
 //  NOTE:  for BRANCH, use name passed in 'CompartmentVariables[]'
-//         for JUNCTION, use name passed in 'Junctions[]'
-//         for CHANNEL, use name passed in 'Channels[]'
+//         for JUNCTION, use name passed in 'Junctions[]' (i.e. name of compartmental variables)
+//         for CHANNEL, use name passed in 'Channels[]' (i.e. names of channels)
 //         for SYNAPSE, use name passed in 'ElectricalSynapses[]' or
-//         'ChemicalSynapses[]'
-//    3. NEURON_INDEX (an integer, maybe optional) which is the index of the
-//    neuron based on the order given in neurons.txt
-// NOTE: only required if CATEGORY is BRANCH, JUNCTION, or CHANNEL
+//                      'ChemicalSynapses[]' (which means name of receptors)
+//         for CLEFT, use name passed in 'SynapticClefts[]'  (which means name of receptors)
+//    3. extra information about locations of data
+//        NOTE: only required if CATEGORY is BRANCH, JUNCTION, or CHANNEL
+//    e.g. 
+//      NEURON_INDEX (an integer, maybe optional) which is the index of the
+//                    neuron based on the order given in neurons.txt
+//
 // NOTE: It is mainly used identify the data (to be recorded) 
 void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 {
@@ -5632,21 +5643,21 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     }
     typeIdx = typeIter->second;
   }
-	else if (category == "CLEFT")
+  //bool preSynPoint = false;
+	if (category == "CLEFT")
   {//NOT COMPLETED YET
-    assert(0);
     typeIter = _synapticCleftTypesMap.find(type);
-    if (typeIter == _synapticCleftTypesMap.end())
-    {
-      //typeIter = _electricalSynapseTypesMap.find(type);
-      //if (typeIter == _electricalSynapseTypesMap.end())
-      {
-        std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-                  << std::endl;
-        esyn = true;
-        exit(EXIT_FAILURE);
-      }
-    }
+    //if (typeIter == _synapticCleftTypesMap.end())
+    //{
+    //  //typeIter = _preSynapticPointTypesMap.find(type);
+    //  //if (typeIter == _preSynapticPointTypesMap.end())
+    //  {
+    //    std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
+    //              << std::endl;
+    //    preSynPoint = true;
+    //    exit(EXIT_FAILURE);
+    //  }
+    //}
     typeIdx = typeIter->second;
   }
 
@@ -5761,6 +5772,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   }
 	else if (category == "CLEFT")
   {
+    //layer = preSynPoints ? _preSynapticPointLayers[typeIdx]
+    //             : _synapticCleftLayers[typeIdx];
     layer = _synapticCleftLayers[typeIdx];
     assert(layer);
     int density = layer->getDensity(_rank);
@@ -6180,7 +6193,11 @@ bool TissueFunctor::setGenerated(
       key_size_t key1 = (*titer).getKey1();
       key_size_t key2 = (*titer).getKey2();
       key_size_t key_spineneck = -1.0;
-      newTouchIsNeckDenShaft = (*titer).hasSpineNeck(key_spineneck);
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+      newTouchIsNeckDenShaft = (*titer).isSpineNeck_n_DenShaft(key_spineneck, _tissueParams);
+#else
+      newTouchIsNeckDenShaft = (*titer).hasSpineNeck(key_spineneck); //obsolete
+#endif
       double propSpineNeck = 0;
       propSpineNeck =
           (key1 == key_spineneck) ? (*titer).getProp1() : (*titer).getProp2();
@@ -6222,7 +6239,11 @@ bool TissueFunctor::setGenerated(
           key_size_t key1_inloop = (*touch).getKey1();
           key_size_t key2_inloop = (*touch).getKey2();
           key_size_t key_inloop_spineneck = +1.0;
-          (*touch).hasSpineNeck(key_inloop_spineneck);
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+          (*touch).hasSpineNeck(key_inloop_spineneck, _tissueParams);
+#else
+          (*touch).hasSpineNeck(key_inloop_spineneck);//obsolete
+#endif
           propSpineNeck_inloop = (key1_inloop == key_inloop_spineneck)
                                      ? (*touch).getProp1()
                                      : (*touch).getProp2();
@@ -6393,7 +6414,11 @@ bool TissueFunctor::setGenerated(
         key_size_t key1 = (*titer).getKey1();
         key_size_t key2 = (*titer).getKey2();
         key_size_t key_spinehead = -1.0;
-        newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+        newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead, _tissueParams);
+#else
+        newTouchIsChemSynapse = (*titer).hasSpineHead(key_spinehead);//obsolete
+#endif
         double propBouton =
             (key1 == key_spinehead) ? (*titer).getProp2() : (*titer).getProp1();
 
@@ -6421,7 +6446,11 @@ bool TissueFunctor::setGenerated(
             key_size_t key1_inloop = (*touch).getKey1();
             key_size_t key2_inloop = (*touch).getKey2();
             key_size_t key_inloop_spinehead = +1.0;
-            (*touch).hasSpineHead(key_inloop_spinehead);
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+            (*touch).hasSpineHead(key_inloop_spinehead, _tissueParams);
+#else
+            (*touch).hasSpineHead(key_inloop_spinehead);//obsolete
+#endif
             propBouton_inloop = (key1_inloop == key_inloop_spinehead)
                                     ? (*touch).getProp2()
                                     : (*touch).getProp1();

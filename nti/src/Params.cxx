@@ -77,9 +77,15 @@ Params::Params()
       _electricalSynapses(false),
       _chemicalSynapses(false),
       _bidirectionalConnections(false)
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+      //TODO - rearrange them once we are done (memory alignment)
+      , _passedInSpineHead(false), _passedInSpineNeck(false),
+      _spineHeadMask(0), _spineNeckMask(0)
+#endif
 {
 }
 
+//copy construct
 Params::Params(Params const& p)
     : _bondK0(0),
       _bondR0(0),
@@ -134,6 +140,11 @@ Params::Params(Params const& p)
       _electricalSynapses(p._electricalSynapses),
       _chemicalSynapses(p._chemicalSynapses),
 			_bidirectionalConnections(p._bidirectionalConnections),
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+      _passedInSpineHead(p._passedInSpineHead), _passedInSpineNeck(p._passedInSpineNeck),
+      _spineHeadMask(p._spineHeadMask), _spineNeckMask(p._spineNeckMask),
+      _spineHeadsMap(p._spineHeadsMap), _spineNecksMap(p._spineNecksMap),
+#endif
       _segmentDescriptor(p._segmentDescriptor)
 {
   _bondK0 = new double[_nBondTypes];
@@ -200,6 +211,9 @@ Params::Params(Params& p)
       _electricalSynapseTargetsMap(p._electricalSynapseTargetsMap),
 			_bidirectionalConnectionTargetsMap(p._bidirectionalConnectionTargetsMap),
       _chemicalSynapseTargetsMap(p._chemicalSynapseTargetsMap),
+      //TUAN TODO: to remove _preSynapticPointTargetsMap
+      //as it is not being used anywhere else
+      //(think a reason to keep it)
       _preSynapticPointTargetsMap(p._preSynapticPointTargetsMap),
       _preSynapticPointSynapseMap(p._preSynapticPointSynapseMap),
       _compartmentVariableCostsMap(p._compartmentVariableCostsMap),
@@ -213,6 +227,11 @@ Params::Params(Params& p)
       _electricalSynapses(p._electricalSynapses),
       _chemicalSynapses(p._chemicalSynapses),
 			_bidirectionalConnections(p._bidirectionalConnections),
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+      _passedInSpineHead(p._passedInSpineHead), _passedInSpineNeck(p._passedInSpineNeck),
+      _spineHeadMask(p._spineHeadMask), _spineNeckMask(p._spineNeckMask),
+      _spineHeadsMap(p._spineHeadsMap), _spineNecksMap(p._spineNecksMap),
+#endif
       _segmentDescriptor(p._segmentDescriptor)
 {
   _bondK0 = new double[_nBondTypes];
@@ -327,24 +346,64 @@ void Params::readCptParams(const std::string& fname)
 	}
   bool result;
   skipHeader(fpF);
-  result = (readCompartmentVariableTargets(fpF));
-  if (! result)
+
+  std::string keyword;
+  keyword = std::string("COMPARTMENT_SPINE_NECK");
+  if (isGivenKeywordNext(fpF, keyword))
   {
-    std::cerr << "ERROR: reading file " << fname << " at section Compartmental variable" << std::endl;
-    assert(result);
+    result = (readCriteriaSpineNeck(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(result);
+    }
   }
-  result = (readCompartmentVariableCosts(fpF));
-  if (! result)
+  keyword = std::string("COMPARTMENT_SPINE_HEAD");
+  if (isGivenKeywordNext(fpF, keyword))
   {
-    std::cerr << "ERROR: reading file " << fname << " at section Compartmental cost" << std::endl;
-    assert(result);
+    result = (readCriteriaSpineHead(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(result);
+    }
   }
-  result = readModelParams(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
-                  _compartmentParamsMap, _compartmentArrayParamsMap);
-  if (! result)
+
+  keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
+  if (isGivenKeywordNext(fpF, keyword))
   {
-    std::cerr << "ERROR: reading file " << fname << " at section for Compartmental data" << std::endl;
-    assert(result);
+    result = (readCompartmentVariableTargets(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(result);
+    }
+
+  }
+
+  keyword = std::string("COMPARTMENT_VARIABLE_COSTS");
+  if (isGivenKeywordNext(fpF, keyword))
+  {
+    result = (readCompartmentVariableCosts(fpF));
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(result);
+    }
+  }
+
+  keyword = std::string("COMPARTMENT_VARIABLE_PARAMS");
+  if (isGivenKeywordNext(fpF, keyword))
+  {
+    //result = readModelParams(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
+    //                _compartmentParamsMap, _compartmentArrayParamsMap);
+    result = readModelParams2(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
+        _compartmentParamsMap, _compartmentArrayParamsMap);
+    if (! result)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(result);
+    }
   }
   fclose(fpF);
 }
@@ -360,7 +419,8 @@ void Params::readChanParams(const std::string& fname)
 	}
   bool result;
   skipHeader(fpF);
-  result = readChannelTargets(fpF);
+  //result = readChannelTargets(fpF);
+  result = readChannelTargets2(fpF);
   if (! result)
   {
     std::cerr << "ERROR: reading file " << fname << " at section Channel Target " << std::endl;
@@ -373,10 +433,14 @@ void Params::readChanParams(const std::string& fname)
     assert(result);
   }
 #ifdef NEWIDEA
-  result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+  //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+  //                _channelArrayParamsMap);
+  result = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
                   _channelArrayParamsMap);
 #else
-  result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+  //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+  //                _channelArrayParamsMap);
+  result = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
                   _channelArrayParamsMap);
 #endif
   if (! result)
@@ -403,7 +467,8 @@ void Params::readSynParams(const std::string& fname)
   keyword = std::string("ELECTRICAL_SYNAPSE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    result = (readElectricalSynapseTargets(fpF));
+    //result = (readElectricalSynapseTargets(fpF));
+    result = (readElectricalSynapseTargets_vector2(fpF));
     if (! result)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse Target" << std::endl;
@@ -419,7 +484,8 @@ void Params::readSynParams(const std::string& fname)
   keyword = std::string("BIDIRECTIONAL_CONNECTION_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    result = (readBidirectionalConnectionTargets(fpF));
+    //result = (readBidirectionalConnectionTargets(fpF));
+    result = (readBidirectionalConnectionTargets_vector2(fpF));
     if (! result)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection Target" << std::endl;
@@ -435,7 +501,8 @@ void Params::readSynParams(const std::string& fname)
   keyword = std::string("CHEMICAL_SYNAPSE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    result = (readChemicalSynapseTargets(fpF));
+    //result = (readChemicalSynapseTargets(fpF));
+    result = (readChemicalSynapseTargets_vector2(fpF));
     if (! result)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse Target" << std::endl;
@@ -454,6 +521,7 @@ void Params::readSynParams(const std::string& fname)
   // readBidirectionalConnectionCosts(fpF);
   // readChemicalSynapseTargets(fpF);
   // readChemicalSynapseCosts(fpF);
+//TUAN TODO " remove this section - not being used"
   result = (readPreSynapticPointTargets(fpF));
   if (! result)
   {
@@ -1702,14 +1770,6 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
                                            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-            {
-              assert(0);
-            }
-            else if (isBracket(fpF, lval, hval))
-            {
-            }
-                                                */
             // make sure the BRANCHTYPE is 0-based
             for (std::vector<int>::iterator it = values.begin();
                  it != values.end(); ++it)
@@ -1827,8 +1887,195 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
   return _compartmentVariables;
 }
 
+bool Params::readCompartmentVariableTargets2(FILE* fpF)
+{//any key field with array-form
+  int errorCode;
+  bool rval = true;
+  _compartmentVariables = false;
+  _compartmentVariableTargetsMask = 0;
+  _compartmentVariableTargetsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {
+    std::string btype(tokS);
+    std::string expected_btype("COMPARTMENT_VARIABLE_TARGETS");
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+      rval = false;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+    _compartmentVariableTargetsMask = resetMask(fpF, maskVector);
+    unsigned int sz = maskVector.size();
+    assert(sz);
+		for (unsigned int j = 0; j < sz; ++j)
+		{
+			if (maskVector[j] == SegmentDescriptor::segmentIndex)
+			{
+				std::cerr << "Params : Targeting compartmentVariables to individual "
+					"compartments not supported!" << std::endl;
+				return false;
+				//exit(EXIT_FAILURE);
+			}
+		}
+
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      std::vector<unsigned int*> v_ids;
+      std::vector<int> columns_found;
+      if (checkForSpecialCases(fpF, sz, columns_found))
+			{// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;//each element holds all possible value for that column
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {//array-form (single or many values)
+            getListofValues(fpF, values);  // assume the next data to read is in
+                                           // the form  [...] and it occurs for
+            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
+            {
+
+            }
+            
+          }
+          else
+          {//single value
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        {// generate all array elements in the vector
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                    iterstart = v_ids.begin() + xx,
+                    iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+			}
+			else
+			{ 
+				unsigned int* ids = new unsigned int[sz]();
+				for (unsigned int j = 0; j < sz; ++j)
+				{
+					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+					if (maskVector[j] == SegmentDescriptor::branchType)
+						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+				}
+        // put into v_ids
+        v_ids.push_back(ids);
+			}
+
+			assert(!feof(fpF));
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);
+      //std::istringstream is(myBuf);
+      /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      std::istringstream is(bufS);*/
+			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+			buildCompartmentVariableTargetsMap(maskVector, v_ids, myBuf);
+      // memory clean v_ids
+      for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+           it != v_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v_ids.clear();
+    }
+    //delete[] ids;
+  }
+  else
+    rval = false;
+  _compartmentVariables = rval;
+  return _compartmentVariables;
+}
+
 bool Params::readChannelTargets(FILE* fpF)
-{
+{//array-form only BRANCHTYPE
   /* Example:
   CHANNEL_TARGETS 8
   BRANCHTYPE MTYPE
@@ -2038,6 +2285,198 @@ bool Params::readChannelTargets(FILE* fpF)
   return _channels;
 }
 
+bool Params::readChannelTargets2(FILE* fpF)
+{//array-form for any key field
+  /* Example:
+  CHANNEL_TARGETS 8
+  BRANCHTYPE MTYPE
+  1 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage]
+  */
+  int errorCode;
+  _channels = false;
+  bool rval = true;
+  _channelTargetsMask = 0;
+  _channelTargetsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {  // read 'n'
+    std::string btype(tokS);
+    std::string expected_btype("CHANNEL_TARGETS");
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+      rval = false;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+    _channelTargetsMask = resetMask(fpF, maskVector);
+    unsigned int sz = maskVector.size();
+    assert(sz);
+    for (unsigned int j = 0; j < sz; j++)
+    {  // validate
+      if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      {
+        std::cerr << "Params : Targeting channels to individual compartments "
+                     "not supported!" << std::endl;
+        return false;
+        // exit(EXIT_FAILURE);
+      }
+    }
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      std::vector<unsigned int*> v_ids;
+      std::vector<int> columns_found;
+      if (checkForSpecialCases(fpF, sz, columns_found))
+      {// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {//array-form (single or many values)
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+          }
+          else
+          {//single value
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                    iterstart = v_ids.begin() + xx,
+                    iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        // v_ids[0] = new unsigned int [sz];
+        // unsigned int* ids = v_ids[0];
+        unsigned int* ids = new unsigned int[sz]();
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector[j] == SegmentDescriptor::branchType)
+          {
+            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          }
+        }
+        // put into v_ids
+        v_ids.push_back(ids);
+      }
+      assert(!feof(fpF));
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);
+      //std::istringstream is(myBuf);
+      /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      std::istringstream is(bufS);
+                        */
+      //buildChannelTargetsMap(maskVector, v_ids, is);
+      buildChannelTargetsMap(maskVector, v_ids, myBuf);
+      // memory clean v_ids
+      for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+           it != v_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v_ids.clear();
+    }
+    // delete[] ids;
+  }
+  else
+    rval = false;
+
+  _channels = rval;
+  return _channels;
+}
+
 bool Params::readElectricalSynapseTargets(FILE* fpF)
 {
   int errorCode;
@@ -2167,6 +2606,289 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
     }
     delete[] ids1;
     delete[] ids2;
+  }
+  else
+    rval = false;
+  _electricalSynapses = rval;
+  return _electricalSynapses;
+}
+
+bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
+{
+  int errorCode;
+  bool rval = true;
+  _electricalSynapses = false;
+  _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
+  _electricalSynapseTargetsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX];
+  std::string tokS;
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "ELECTRICAL_SYNAPSE_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
+    _electricalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
+    unsigned int sz1 = maskVector1.size();
+    assert(sz1);
+    _electricalSynapseTargetsMask2 = resetMask(fpF, maskVector2);
+    unsigned int sz2 = maskVector2.size();
+    assert(sz2);
+
+    std::vector<unsigned int*> v1_ids;
+    std::vector<unsigned int*> v2_ids;
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      // one line:
+      // 2 2     2 0   DenSpine [Voltage] 1.0
+      std::vector<int> columns_found;
+      //std::vector<unsigned int*> v_ids;
+      if (checkForSpecialCases(fpF, sz1, columns_found))
+      {// check if a special case is used
+        int sz = sz1;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector1;
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v1_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            //v_ids.push_back(ids);
+            v1_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v1_ids.begin() + xx,
+                  iterend = v1_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        unsigned int* ids = new unsigned int[sz1]();
+        std::vector<int> values;
+        int val = 0;
+        for (unsigned int j = 0; j < sz1; ++j)
+        {
+					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }
+        v1_ids.push_back(ids);
+      }
+
+      if (checkForSpecialCases(fpF, sz2, columns_found))
+      {
+        int sz = sz2;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector2;
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            ////pids[jj] = new unsigned int[sz]();
+            ////v2_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            ////v_ids.push_back(ids);
+            v2_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v2_ids.begin() + xx,
+                  iterend = v2_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else{
+        unsigned int* ids = new unsigned int[sz2];
+        for (unsigned int j = 0; j < sz2; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          { 
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }          
+        v2_ids.push_back(ids);
+      }
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);// read-in DenSpine [Voltage] 1.0
+
+      buildElectricalSynapseConnectionMap(maskVector1, maskVector2, v1_ids, v2_ids, 
+          myBuf 
+          );
+
+      //clean data
+      for (std::vector<unsigned int*>::const_iterator it = v1_ids.begin();
+          it != v1_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v1_ids.clear();
+      for (std::vector<unsigned int*>::const_iterator it = v2_ids.begin();
+          it != v2_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v2_ids.clear();
+    }
   }
   else
     rval = false;
@@ -2648,6 +3370,304 @@ BRANCHTYPE MTYPE
   return _bidirectionalConnections;
 }
 
+bool Params::readBidirectionalConnectionTargets_vector2(FILE* fpF)
+{
+	/*
+BIDIRECTIONAL_CONNECTION_TARGETS 2
+BRANCHTYPE MTYPE
+BRANCHTYPE MTYPE 
+3 2     3 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
+	 */
+  int errorCode;
+  bool rval = true;
+  _bidirectionalConnections = false;
+  _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
+      0;
+  _bidirectionalConnectionTargetsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX];
+  std::string tokS;
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
+    _bidirectionalConnectionTargetsMask1 = resetMask(fpF, maskVector1);
+    unsigned int sz1 = maskVector1.size();
+    assert(sz1);
+    _bidirectionalConnectionTargetsMask2 = resetMask(fpF, maskVector2);
+    unsigned int sz2 = maskVector2.size();
+    assert(sz2);
+
+    std::vector<unsigned int*> v1_ids;
+    std::vector<unsigned int*> v2_ids;
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      // one line:
+      // 2 2     2 0   DenSpine [Voltage, Calcium] 1.0
+      std::vector<int> columns_found;
+      if (checkForSpecialCases(fpF, sz1, columns_found))
+      {// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+        int sz = sz1;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector1;
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+          }
+          else
+          {//regular
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v1_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v1_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v1_ids.begin() + xx,
+                  iterend = v1_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        unsigned int* ids1 = new unsigned int[sz1]();
+        for (unsigned int j = 0; j < sz1; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids1[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 2
+        v1_ids.push_back(ids1);
+      }
+
+      if (checkForSpecialCases(fpF, sz2, columns_found))
+      {// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+        int sz = sz2;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector2;
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v2_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v2_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v2_ids.begin() + xx,
+                  iterend = v2_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        unsigned int* ids2 = new unsigned int[sz2];
+        for (unsigned int j = 0; j < sz2; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }                           // read-in 2 0
+        v2_ids.push_back(ids2);
+      }
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);// read-in DenSpine [Voltage] 1.0
+
+      buildBidirectionalConnectionMap(maskVector1, maskVector2, v1_ids, v2_ids, 
+          //_bidirectionalConnectionTargetsMask1, 
+          //_bidirectionalConnectionTargetsMask2,
+          myBuf 
+          //modelID, paramsMap, arrayParamsMap
+          );
+
+      //clean data
+      for (std::vector<unsigned int*>::const_iterator it = v1_ids.begin();
+          it != v1_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v1_ids.clear();
+      for (std::vector<unsigned int*>::const_iterator it = v2_ids.begin();
+          it != v2_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v2_ids.clear();
+    }
+  }
+  else
+    rval = false;
+  _bidirectionalConnections = rval;
+  return _bidirectionalConnections;
+}
+
 bool Params::readChemicalSynapseTargets(FILE* fpF)
 {
   /*
@@ -2864,6 +3884,289 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
   return _chemicalSynapses;
 }
 
+bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
+{//support array-form all key fields
+  /*
+   * CHEMICAL_SYNAPSE_TARGETS 1
+   * BRANCHTYPE MTYPE ETYPE
+   * BRANCHTYPE MTYPE
+   * 1 1 0   0 2   [AMPA NMDA] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]
+   * 1.0
+   */
+  int errorCode;
+  bool rval = true;
+  _chemicalSynapses = false;
+  _chemicalSynapseTargetsMask1 = _chemicalSynapseTargetsMask2 = 0;
+  _chemicalSynapseTargetsMap.clear();
+  skipHeader(fpF);
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX];
+  std::string tokS;
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  std::istringstream is(bufS);
+  is >> tokS;
+  if (tokS == "CHEMICAL_SYNAPSE_TARGETS")
+  {
+    is >> n;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector1, maskVector2;
+    _chemicalSynapseTargetsMask1 = resetMask(fpF, maskVector1);
+    unsigned int sz1 = maskVector1.size();
+    assert(sz1);
+    _chemicalSynapseTargetsMask2 = resetMask(fpF, maskVector2);
+    unsigned int sz2 = maskVector2.size();
+    assert(sz2);
+
+    std::vector<unsigned int*> v1_ids;
+    std::vector<unsigned int*> v2_ids;
+
+    for (int i = 0; i < n; i++)
+    {
+      jumpOverCommentLine(fpF);
+      std::vector<int> columns_found;
+      std::vector<unsigned int*> v_ids;
+      if (checkForSpecialCases(fpF, sz1, columns_found))
+      {// check if a special case is used
+        int sz = sz1;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector1;
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v1_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v1_ids.begin() + xx,
+                  iterend = v1_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else{
+        unsigned int* ids1 = new unsigned int[sz1]();
+        for (unsigned int j = 0; j < sz1; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids1[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector1[j] == SegmentDescriptor::branchType)
+            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }
+        v1_ids.push_back(ids1);
+      }
+
+      if (checkForSpecialCases(fpF, sz2, columns_found))
+      {// check if a special case is used
+        int sz = sz2;
+        std::vector<SegmentDescriptor::SegmentKeyData>& maskVector= maskVector2;
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {
+            getListofValues(fpF, values);  // assume the next data to read is in
+            if (maskVector[j] == SegmentDescriptor::branchType)
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            
+          }
+          else
+          {
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v2_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v2_ids.begin() + xx,
+                  iterend = v2_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else{
+        unsigned int* ids2 = new unsigned int[sz2];
+        for (unsigned int j = 0; j < sz2; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          if (maskVector2[j] == SegmentDescriptor::branchType)
+            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        }
+        v2_ids.push_back(ids2);
+      }
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);// read-in DenSpine [Voltage] 1.0
+      buildChemicalSynapseConnectionMap(maskVector1, maskVector2, v1_ids, v2_ids, 
+          myBuf 
+          );
+
+      //clean data
+      for (std::vector<unsigned int*>::const_iterator it = v1_ids.begin();
+          it != v1_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v1_ids.clear();
+      for (std::vector<unsigned int*>::const_iterator it = v2_ids.begin();
+          it != v2_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v2_ids.clear();
+    }
+  }
+  else
+    rval = false;
+  _chemicalSynapses = rval;
+  return _chemicalSynapses;
+}
+
 bool Params::readPreSynapticPointTargets(FILE* fpF)
 {
   /* Example:
@@ -2901,8 +4204,8 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
       if (2 == sscanf(bufS, "%s %s ", tokS, tokS2))
       {
-        std::string synID(tokS);
-        std::string targetID(tokS2);
+        std::string synID(tokS);         //e.g. AMPAmush
+        std::string targetID(tokS2);     //e.g. Voltage
         _preSynapticPointTargetsMap[synID] = targetID;
         _preSynapticPointSynapseMap[targetID].push_back(synID);
       }
@@ -3099,7 +4402,7 @@ bool Params::readModelParams(
         std::map<key_size_t, std::list<std::pair<std::string,
                                                  std::vector<dyn_var_t> > > > >&
         arrayParamsMap)
-{
+{//LIMIT: only BRANCHTYPE can have array-form
   /* Example of input from fpF
 	 * NOTE: id = COMPARTMENT_VARIABLE_PARAMS
    * Here, there are 2 sub-groups
@@ -3378,6 +4681,280 @@ BRANCHTYPE MTYPE
   return rval;
 }
 
+bool Params::readModelParams2(
+    FILE* fpF, const std::string& id,
+    std::map<std::string, unsigned long long>& paramsMasks,
+    std::map<
+        std::string,
+        std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+        paramsMap,
+    std::map<
+        std::string,
+        std::map<key_size_t, std::list<std::pair<std::string,
+                                                 std::vector<dyn_var_t> > > > >&
+        arrayParamsMap)
+{//any key field can be in array-form
+  /* Example of input from fpF
+	 * NOTE: id = COMPARTMENT_VARIABLE_PARAMS
+   * Here, there are 2 sub-groups
+COMPARTMENT_VARIABLE_PARAMS 2
+Voltage 3
+MTYPE BRANCHTYPE
+0 1 <Cm=0.01>
+0 1 <gLeak=0.000338>
+0 2 <Cm=0.01>
+Calcium 3
+MTYPE BRANCHTYPE
+0 1 <CaClearance=1.1>
+0 3 <CaClearance=4.2>
+0 4 <CaClearance=4.2>
+Cah 8
+BRANCHTYPE MTYPE
+1 0 <gbar={0.00992}>
+3 0 <gbar={0.00992}>
+4 0 <gbar_dists={380.0,480.0}>
+4 0 <gbar_values={0.000555,0.00555,0.000555}>
+1 2 <gbar={0.00992}>
+   */
+  int errorCode;
+  bool rval = true;
+  paramsMasks.clear();
+  paramsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {  // find number of subgroups
+		//read line:   COMPARTMENT_VARIABLE_PARAMS 2
+    std::string btype(tokS);
+    std::string expected_btype(id);
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+    {
+      std::cerr << "ERROR in file " << _currentFName << std::endl;
+      std::cerr << ".. unmatch section: expect " << expected_btype << ", while given "
+        << btype << std::endl;
+      rval = false;
+    }
+  }
+  else
+  {
+    std::cerr << "ERROR in file " << _currentFName << std::endl;
+    std::cerr << " Expect a string and a number ... line"
+      << bufS << std::endl;
+    rval = false;
+  }
+
+  if (n > 0)
+  {
+    for (int i = 0; i < n; i++)  // for each subgroup
+    {
+      /* Two examples:
+			 * One group for compartment
+Calcium 3
+MTYPE BRANCHTYPE
+0 1 <CaClearance=1.1>
+0 3 <CaClearance=4.2>
+0 4 <CaClearance=4.2; other=5>
+
+        One group for channel
+Cah 8
+BRANCHTYPE MTYPE
+1 0 <gbar={0.00992}>
+3 0 <gbar={0.00992}; other = 5>
+4 0 <gbar_dists={380.0,480.0}>
+4 0 <gbar_values={0.000555,0.00555,0.000555}>
+1 2 <gbar={0.00992}>
+       */
+      jumpOverCommentLine(fpF);
+      int p;
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      if (2 == sscanf(bufS, "%s %d ", tokS, &p))  // e.g.: Calcium 3
+      {
+        std::string modelID(tokS);
+        std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+        paramsMasks[modelID] = resetMask(fpF, maskVector);
+        unsigned int sz = maskVector.size();
+        if (sz == 0)
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+          std::cerr << "IMPROPER  number of key-fields for vector mask ... line\n" <<
+            bufS << std::endl;
+          assert(sz);
+        }
+				for (unsigned int k = 0; k < sz; ++k)
+				{  // validate
+					if (maskVector[k] == SegmentDescriptor::segmentIndex)
+					{
+						std::cerr << "Params : Targeting channel parameters to "
+							"individual compartments not supported!"
+							<< std::endl;
+						return false;
+						//exit(EXIT_FAILURE);
+					}
+				}	
+
+        //unsigned int* ids = new unsigned int[sz]();
+				for (int j = 0; j < p;
+						j++)  // for each line (in the current subgroup), not counting comment-line
+				{
+					jumpOverCommentLine(fpF);
+          if (feof(fpF))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Unexpected reaching EOF"  << std::endl;
+            assert(!feof(fpF));
+          }
+					std::vector<unsigned int*> v_ids;
+          std::vector<int> columns_found;
+					if (checkForSpecialCases(fpF, sz, columns_found))
+					{// check if a special case is used
+						// then, create a vector of v_ids
+						// NOTE: We planed to support
+						//      asterisk *
+						//  but then it requires implicit knowledge of the range of value
+						//  so we don't support it now
+
+						//unsigned int* ids = new unsigned int[sz];
+						std::vector<std::vector<int> > vect_values;
+						int total_vect = 1;
+						for (unsigned int j = 0; j < sz; ++j)
+						{
+							std::vector<int> values;
+							int val = 0;
+              if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+              {//array-form (single or many values)
+								getListofValues(fpF, values);  // assume the next data to read is in
+                if (maskVector[j] == SegmentDescriptor::branchType)
+                {
+                  // make sure the BRANCHTYPE is 0-based
+                  for (std::vector<int>::iterator it = values.begin();
+                      it != values.end(); ++it)
+                  {
+                    *it -= 1;
+                  }
+                }
+              }
+							else
+              {//single value
+								if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+                {
+                  std::cerr << "ERROR in file " << _currentFName << std::endl;
+                  if (errorCode == EOF)
+                  {
+                    std::cerr << " Unexpected reaching EOF"  << std::endl;
+                  }
+                  else{
+                    c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                    std::cerr << "Expect an integer number after line\n" <<
+                      bufS << std::endl;
+                  }
+                  assert(0);
+                }
+								values.push_back(val);
+							}
+							vect_values.push_back(values);
+							total_vect *= values.size();
+						}
+						// generate all array elements in the vector
+						{
+							//unsigned int** pids = new unsigned int* [total_vect];
+							for (int jj = 0; jj < total_vect; ++jj)
+							{
+								//pids[jj] = new unsigned int[sz]();
+								//v_ids.push_back(pids[jj]);
+                unsigned int *ids = new unsigned int[sz]();
+                v_ids.push_back(ids);
+							}
+
+							// fill the data
+							for (unsigned int jj = 0; jj < sz; jj++)
+							{
+								int num2clone = 1;
+								for (unsigned int xx = jj + 1; xx < sz; xx++)
+									num2clone *= vect_values[xx].size();
+								int gap = num2clone * vect_values[jj].size();
+
+								for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+								{
+									for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+									{
+										std::vector<unsigned int*>::iterator iter,
+											iterstart = v_ids.begin() + xx,
+											iterend = v_ids.begin() + xx + num2clone - 1;
+										for (iter = iterstart; iter <= iterend; iter++)
+											(*iter)[jj] = vect_values[jj][kk];
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						// v_ids[0] = new unsigned int [sz];
+						// unsigned int* ids = v_ids[0];
+						unsigned int* ids = new unsigned int[sz]();
+						for (unsigned int kk = 0; kk < sz; ++kk)
+						{// read vector mask part
+							if (1 != (errorCode = fscanf(fpF, "%d", &ids[kk])))
+              {
+                std::cerr << "ERROR in file " << _currentFName << std::endl;
+                if (errorCode == EOF)
+                {
+                  std::cerr << " Unexpected reaching EOF"  << std::endl;
+                }
+                else{
+                  c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                  std::cerr << "Expect an integer number after line\n" <<
+                    bufS << std::endl;
+                }
+                assert(0);
+              }
+							if (maskVector[kk] == SegmentDescriptor::branchType)
+							{
+								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
+							}
+						}
+						// put into v_ids
+						v_ids.push_back(ids);
+					}
+
+					std::string myBuf("");
+					readMultiLine(myBuf, fpF);
+					/*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+          std::istringstream is(bufS);*/
+          //buildParamsMap(maskVector, v_ids, is, modelID, paramsMap, arrayParamsMap);
+          buildParamsMap(maskVector, v_ids, myBuf, modelID, paramsMap, arrayParamsMap);
+					// memory clean v_ids
+					for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+							it != v_ids.end(); it++)
+					{
+						delete *it;
+					}
+					v_ids.clear();
+				}
+				//delete[] ids;
+      }
+      else
+      {
+        rval = false;
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect something like 'Calcium 4'... line\n" <<
+          bufS << std::endl;
+        assert(0);
+      }
+    }
+  }
+  else
+    rval = false;
+  return rval;
+}
+
 bool Params::readElectricalSynapseCosts(FILE* fpF)
 {
   bool rval = true;
@@ -3515,6 +5092,10 @@ bool Params::readChemicalSynapseCosts(FILE* fpF)
   return rval;
 }
 
+//GOAL: read a single line
+//   and find out the vector-mask
+//ASSUMP: The whole line only contains space-delimited name of key field 
+//  (check SegmentDescriptor.h for names)
 unsigned long long Params::resetMask(
     FILE* fpF, std::vector<SegmentDescriptor::SegmentKeyData>& maskVector)
 {
@@ -3526,18 +5107,11 @@ unsigned long long Params::resetMask(
    */
   maskVector.clear();
   char bufS[LENGTH_LINE_MAX];
-  jumpOverCommentLine(fpF);
-  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  std::istringstream is(bufS);
-  std::string tokS;
-  is >> tokS;
-  while (!is.eof())
-  {
-    maskVector.push_back(_segmentDescriptor.getSegmentKeyData(tokS));
-    is >> tokS;
-  }
-  return _segmentDescriptor.getMask(maskVector);
+  unsigned long long result = resetMask(fpF, maskVector, bufS);
+  
+  return result;
 }
+
 // INPUT:
 //  fpF  = file pointer (FILE*) to the opening parameter file
 // OUTPUT:
@@ -3942,6 +5516,257 @@ void Params::buildBidirectionalConnectionMap(
 	}
 }
 
+void Params::buildChemicalSynapseConnectionMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector1,
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector2,
+    std::vector<unsigned int*>& v1_ids, 
+    std::vector<unsigned int*>& v2_ids, 
+//    unsigned long long bidirectionalConnectionTargetsMask1,
+//    unsigned long long bidirectionalConnectionTargetsMask2,
+		const std::string& myBuf 
+/*		std::string & modelID,
+		std::map<std::string,
+		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+		paramsMap,
+		std::map<
+		std::string,
+		std::map<key_size_t,
+		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+		arrayParamsMap
+    */
+		)
+{
+  std::vector<unsigned int*>::const_iterator iter = v1_ids.begin(),
+                                             iterend = v1_ids.end();
+	for (; iter < iterend; iter++)
+	{//for each element in v_ids, apply the same read-in data to it
+		unsigned int* ids1 = *iter;
+
+    //specific-code for the function
+    std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >&
+      targetsMap =
+      _chemicalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+          maskVector1, &ids1[0])];
+    //end-specific
+
+    std::vector<unsigned int*>::const_iterator iter2 = v2_ids.begin(),
+      iter2end = v2_ids.end();
+    for (; iter2 < iter2end; iter2++)
+    {
+      unsigned int* ids2 = *iter2;
+      std::istringstream is(myBuf);
+      //specific-code for the function
+      std::list<Params::ChemicalSynapseTarget>& targets =
+          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+
+      Params::ChemicalSynapseTarget st;
+      st._parameter = -1.0;
+
+      std::vector<std::string> types;
+
+      while (is.get() != '[')
+      {
+        if (not is.good())
+        {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a '[' symbol ... line\n" <<
+            //bufS << std::endl;
+            myBuf << std::endl;
+        }
+        assert(is.good());
+      }
+      char buf1[LENGTH_IDNAME_MAX];
+	  assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+      //is.get(buf1, LENGTH_IDNAME_MAX, ']');
+      std::string stringbuf(buf1);
+      std::vector<std::string> tokens;
+      StringUtils::Tokenize(stringbuf, tokens, " ,");
+      for (std::vector<std::string>::iterator ii = tokens.begin(),
+                                              end = tokens.end();
+           ii != end; ++ii)
+      {
+        types.push_back(*ii);
+      }
+      /*
+      char* tok = strtok(buf1, " ,");
+      while (tok != 0) {
+          types.push_back(std::string(tok));
+          tok = strtok(0, " ,");
+      }
+      */
+      if (is.get() != ']') assert(0);
+
+      for (std::vector<int>::size_type ii = 0; ii < types.size(); ++ii)
+      {
+        while (is.get() != '[')
+        {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              //bufS << std::endl;
+              myBuf << std::endl;
+          }
+          assert(is.good());
+        }
+        char buf1[LENGTH_IDNAME_MAX];
+		assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf1, LENGTH_IDNAME_MAX, ']');
+        std::string stringbuf(buf1);
+        std::vector<std::string> tokens;
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator j = tokens.begin(),
+                                                end = tokens.end();
+             j != end; ++j)
+        {
+          st.addTarget1(types[ii], *j);
+        }
+        /*
+        char* tok1 = strtok(buf1, " ,");
+        while (tok1 != 0) {
+            st.addTarget1(types[ii], std::string(tok1));
+            tok1 = strtok(0, " ,");
+        }*/
+        if (is.get() != ']') {
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a ']' symbol ... line\n" <<
+            //bufS << std::endl;
+            myBuf << std::endl;
+          assert(0);
+        }
+        while (is.get() != '[')
+        {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              //bufS << std::endl;
+              myBuf << std::endl;
+          }
+          assert(is.good());
+        }
+        char buf2[LENGTH_IDNAME_MAX];
+		assert(StringUtils::streamGet(is, buf2, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf2, LENGTH_IDNAME_MAX, ']');
+        if (is.get() != ']') 
+        { 
+          std::cerr << "ERROR in file " << _currentFName << std::endl;
+          std::cerr << " Expect a ']' symbol ... line\n" <<
+            //bufS << std::endl;
+            myBuf << std::endl;
+          assert(0); 
+        }
+        stringbuf = std::string(buf2);
+        // std::vector<std::string> tokens;
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator j = tokens.begin(),
+                                                end = tokens.end();
+             j != end; ++j)
+        {
+          st.addTarget2(types[ii], *j);
+        }
+        /*
+        char* tok2 = strtok(buf2, " ,");
+        while (tok2 != 0) {
+            st.addTarget2(types[ii], std::string(tok2));
+            tok2 = strtok(0, " ,");
+        }*/
+      }
+      is >> st._parameter;
+      targets.push_back(st);
+      st.clear();
+      targets.sort();
+    }
+	}
+}
+
+void Params::buildElectricalSynapseConnectionMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector1,
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector2,
+    std::vector<unsigned int*>& v1_ids, 
+    std::vector<unsigned int*>& v2_ids, 
+//    unsigned long long bidirectionalConnectionTargetsMask1,
+//    unsigned long long bidirectionalConnectionTargetsMask2,
+		const std::string& myBuf 
+/*		std::string & modelID,
+		std::map<std::string,
+		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+		paramsMap,
+		std::map<
+		std::string,
+		std::map<key_size_t,
+		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+		arrayParamsMap
+    */
+		)
+{
+  std::vector<unsigned int*>::const_iterator iter = v1_ids.begin(),
+                                             iterend = v1_ids.end();
+	for (; iter < iterend; iter++)
+	{//for each element in v_ids, apply the same read-in data to it
+		unsigned int* ids1 = *iter;
+
+    //specific-code for the function
+    std::map<key_size_t, std::list<Params::ElectricalSynapseTarget> >&
+      targetsMap =
+      _electricalSynapseTargetsMap[_segmentDescriptor.getSegmentKey(
+          maskVector1, &ids1[0])];
+    //end-specific
+
+    std::vector<unsigned int*>::const_iterator iter2 = v2_ids.begin(),
+      iter2end = v2_ids.end();
+    for (; iter2 < iter2end; iter2++)
+    {
+      unsigned int* ids2 = *iter2;
+      std::istringstream is(myBuf);
+      //specific-code for the function
+      std::list<Params::ElectricalSynapseTarget>& targets =
+          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+
+      Params::ElectricalSynapseTarget st;
+      st._parameter = -1.0;
+      while (is >> st._type)
+      {
+        while (is.get() != '[')
+        {
+          if (not is.good())
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            std::cerr << " Expect a '[' symbol ... line\n" <<
+              //bufS << std::endl;
+              myBuf << std::endl;
+          }
+          assert(is.good());
+        }
+        char buf[LENGTH_IDNAME_MAX];
+        assert(StringUtils::streamGet(is, buf, LENGTH_IDNAME_MAX, ']'));
+        //is.get(buf, LENGTH_IDNAME_MAX, ']');
+        std::string stringbuf(buf);
+        std::vector<std::string> tokens;  // extract 'Voltage' as token
+        StringUtils::Tokenize(stringbuf, tokens, " ,");
+        for (std::vector<std::string>::iterator i = tokens.begin(),
+                                                end = tokens.end();
+             i != end; ++i)
+        {
+          st.addTarget(*i);
+        }
+        /*
+                 char* tok = strtok(buf, " ,");
+                 while (tok != 0) {
+                 st.addTarget(std::string(tok));
+                 tok = strtok(0, " ,");
+                 }*/
+        if (is.get() != ']') assert(0);
+        is >> st._parameter;
+        targets.push_back(st);
+        st.clear();
+      }
+      targets.sort();
+    }
+	}
+}
+
+
 // GOAL: check if the next 'sz' space-separated words
 //     are all numerics or not
 //  true = all are numerics
@@ -3949,7 +5774,31 @@ void Params::buildBidirectionalConnectionMap(
 //  1 4 5 6  --> true
 //  1 [4,6] 5 6 --> false
 //  * 4 5 6  --> false
-bool Params::checkForSpecialCases(FILE* fpF, int sz)
+// A special case can be either:
+//      range [2, 5]
+//      range [2:5]
+//      range [2,5:7]
+bool Params::checkForSpecialCases(FILE* fpF, int sz, std::vector<int>& columns_found)
+{
+  bool rval = false;
+  fpos_t fpos;
+  fgetpos(fpF, &fpos);
+  int ival;
+	char oneword[LENGTH_TOKEN_MAX];
+  columns_found.clear();
+  for (unsigned int j = 0; j < sz; ++j)
+  {
+		int errorCode = fscanf(fpF, " %s", oneword);
+    if (oneword[0] == '[' || oneword[0] == '*')
+    {
+      rval = true;
+      columns_found.push_back(j);
+    }
+  }
+  fsetpos(fpF, &fpos);
+  return rval;
+}
+bool Params::checkForSpecialCases(FILE* fpF, int sz, int& firstcolumn_found)
 {
   bool rval = false;
   fpos_t fpos;
@@ -3962,11 +5811,19 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz)
     if (oneword[0] == '[' || oneword[0] == '*')
     {
       rval = true;
+      firstcolumn_found = j;
       break;
     }
   }
   fsetpos(fpF, &fpos);
   return rval;
+
+}
+bool Params::checkForSpecialCases(FILE* fpF, int sz)
+{
+  int dummy;
+  return checkForSpecialCases(fpF, sz, dummy);
+
 }
 
 // SCENARIO: the next character in file pointed by fpF
@@ -4438,4 +6295,450 @@ void Params::getCompactK(
 		}
 		}
 	}
+}
+
+
+bool Params::readCriteriaSpineHead(FILE* fpF)
+{//any key field with array-form
+  std::string expected_btype("COMPARTMENT_SPINE_HEAD");
+  int errorCode;
+  bool rval = true;
+  _passedInSpineHead= false;
+  _spineHeadMask = 0;
+  _spineHeadsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {
+    std::string btype(tokS);
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+      rval = false;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+    _spineHeadMask = resetMask(fpF, maskVector);
+    unsigned int sz = maskVector.size();
+    assert(sz);
+		for (unsigned int j = 0; j < sz; ++j)
+		{
+			if (maskVector[j] == SegmentDescriptor::segmentIndex)
+			{
+        std::cerr << "ERROR in file " << _currentFName << 
+          ": section " << expected_btype << std::endl;
+				std::cerr << "Params : Targeting to individual "
+					"compartments not supported!" << std::endl;
+				return false;
+				//exit(EXIT_FAILURE);
+			}
+		}
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      std::vector<unsigned int*> v_ids;
+      std::vector<int> columns_found;
+      if (checkForSpecialCases(fpF, sz, columns_found))
+			{// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {//array-form (single or many values)
+            getListofValues(fpF, values);  // assume the next data to read is in
+                                           // the form  [...] and it occurs for
+            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
+            {
+
+            }
+            
+          }
+          else
+          {//single value
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        {// generate all array elements in the vector
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                    iterstart = v_ids.begin() + xx,
+                    iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+			}
+			else
+			{ 
+				unsigned int* ids = new unsigned int[sz]();
+				for (unsigned int j = 0; j < sz; ++j)
+				{
+					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+					if (maskVector[j] == SegmentDescriptor::branchType)
+						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+				}
+        // put into v_ids
+        v_ids.push_back(ids);
+			}
+
+			assert(!feof(fpF));
+      /*
+      //std::string myBuf("");
+      //readMultiLine(myBuf, fpF);
+      //std::istringstream is(myBuf);
+			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+			//buildSpinesMap(maskVector, v_ids, myBuf);
+      */
+			buildSpinesMap(maskVector, v_ids, _spineHeadsMap);
+      // memory clean v_ids
+      for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+           it != v_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v_ids.clear();
+    }
+    //delete[] ids;
+  }
+  else
+    rval = false;
+  _passedInSpineHead = rval;
+  return _passedInSpineHead;
+}
+
+bool Params::readCriteriaSpineNeck(FILE* fpF)
+{//any key field with array-form
+  std::string expected_btype("COMPARTMENT_SPINE_NECK");
+  int errorCode;
+  bool rval = true;
+  _passedInSpineNeck= false;
+  _spineNeckMask = 0;
+  _spineNecksMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {
+    std::string btype(tokS);
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+      rval = false;
+  }
+  else
+    rval = false;
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+    _spineNeckMask = resetMask(fpF, maskVector);
+    unsigned int sz = maskVector.size();
+    assert(sz);
+		for (unsigned int j = 0; j < sz; ++j)
+		{
+			if (maskVector[j] == SegmentDescriptor::segmentIndex)
+			{
+        std::cerr << "ERROR in file " << _currentFName << 
+          ": section " << expected_btype << std::endl;
+				std::cerr << "Params : Targeting to individual "
+					"compartments not supported!" << std::endl;
+				return false;
+				//exit(EXIT_FAILURE);
+			}
+		}
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      std::vector<unsigned int*> v_ids;
+      std::vector<int> columns_found;
+      if (checkForSpecialCases(fpF, sz, columns_found))
+			{// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {//array-form (single or many values)
+            getListofValues(fpF, values);  // assume the next data to read is in
+                                           // the form  [...] and it occurs for
+            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
+            {
+              // make sure the BRANCHTYPE is 0-based
+              for (std::vector<int>::iterator it = values.begin();
+                  it != values.end(); ++it)
+              {
+                *it -= 1;
+              }
+              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
+              // });
+            }
+            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
+            {
+
+            }
+            
+          }
+          else
+          {//single value
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        {// generate all array elements in the vector
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                    iterstart = v_ids.begin() + xx,
+                    iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+			}
+			else
+			{ 
+				unsigned int* ids = new unsigned int[sz]();
+				for (unsigned int j = 0; j < sz; ++j)
+				{
+					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+					if (maskVector[j] == SegmentDescriptor::branchType)
+						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+				}
+        // put into v_ids
+        v_ids.push_back(ids);
+			}
+
+			assert(!feof(fpF));
+      /*
+      //std::string myBuf("");
+      //readMultiLine(myBuf, fpF);
+      //std::istringstream is(myBuf);
+			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+			//buildSpinesMap(maskVector, v_ids, myBuf);
+      */
+			buildSpinesMap(maskVector, v_ids, _spineNecksMap);
+      // memory clean v_ids
+      for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+           it != v_ids.end(); it++)
+      {
+        delete *it;
+      }
+      v_ids.clear();
+    }
+    //delete[] ids;
+  }
+  else
+    rval = false;
+  _passedInSpineNeck = rval;
+  return _passedInSpineNeck;
+}
+
+// Given a vector v_ids whose element is a vector of matched pattern
+// Given a string of compartments' names
+// GOAL: create _compartmentVariableTargetsMap
+void Params::buildSpinesMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+    std::vector<unsigned int*>& v_ids, 
+    //std::set<key_size_t>& mymap
+    std::vector<key_size_t>& mymap
+		//std::istringstream& is
+		//const std::string &myBuf
+		)
+{
+  mymap.clear();
+  std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
+                                             iterend = v_ids.end();
+	for (; iter < iterend; iter++)
+	{
+		unsigned int* ids = *iter;
+		//std::list<std::string> targets;
+		//std::string type;
+		//std::istringstream is(myBuf);
+		//while (is >> type)
+		//{
+		//	targets.push_back(type);
+		//}
+		//targets.sort();
+		mymap.push_back(_segmentDescriptor.getSegmentKey(
+				maskVector, &ids[0]));
+	}
+}
+
+bool Params::isGivenKeySpineNeck(key_size_t key) 
+{
+  bool result = false;
+  //std::set<key_size_t>::const_iterator iter, 
+  std::vector<key_size_t>::const_iterator iter, 
+    iterbegin = _spineNecksMap.begin(),
+    iterend = _spineNecksMap.end();
+  for (iter = iterbegin; iter != iterend; ++iter)
+  {
+    if (*iter == _segmentDescriptor.getSegmentKey(key, _spineNeckMask) )
+    {
+      result = true;
+      break;
+    }
+  }
+  return result;
+}
+
+bool Params::isGivenKeySpineHead(key_size_t key) 
+{
+  bool result = false;
+  //std::set<key_size_t>::const_iterator iter, 
+  std::vector<key_size_t>::const_iterator iter, 
+    iterbegin = _spineHeadsMap.begin(),
+    iterend = _spineHeadsMap.end();
+  for (iter = iterbegin; iter != iterend; ++iter)
+  {
+    if (*iter == _segmentDescriptor.getSegmentKey(key, _spineNeckMask) )
+    {
+      result = true;
+      break;
+    }
+  }
+  return result;
 }

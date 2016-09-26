@@ -1,12 +1,12 @@
    polyConnect(timeStep, voltageDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0>), voltageDisplay, <>, <>);
 
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumSomaDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0>), calciumSomaDisplay, <>, <>);
 #endif
 
-#if SIMULATION_INVOLVE >= VM_CACYTO_CAER
+#if defined(SIMULATE_CAER)
    polyConnect(timeStep, calciumSomaERDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="CalciumER", BRANCHORDER=0>), calciumSomaERDisplay, <>, <>);
 #endif
@@ -15,7 +15,7 @@
 	TissueSite synapseSite_0( -41.813, 175.470, -0.645, 7.0 );
 	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
 	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite_0>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
 	polyConnect(timeStep, synapseCalciumDisplay0, <>, <>);
 	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite_0>);
 #endif
@@ -28,7 +28,7 @@
    
    polyConnect(timeStep, voltageDisplay_synapse_{{name}}, <>, <>);
    polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumDisplay_synapse_{{name}}, <>, <>);
    polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), calciumDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
 #endif
@@ -37,7 +37,7 @@
    {{#spine_include}}
    polyConnect(timeStep, voltageDisplay_spine_{{name}}, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{spine_index}}>), voltageDisplay_spine_{{name}}, <>, <>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumDisplay_spine_{{name}}, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{spine_index}}>), calciumDisplay_spine_{{name}}, <>, <>);
 #endif
@@ -46,7 +46,7 @@
    {{#bouton_include}}
    polyConnect(timeStep, voltageDisplay_bouton_{{name}}, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), voltageDisplay_bouton_{{name}}, <>, <>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumDisplay_bouton_{{name}}, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), calciumDisplay_bouton_{{name}}, <>, <>);
 #endif
@@ -60,7 +60,7 @@
 
    polyConnect(timeStep, voltageDisplay_synapse_{{name}}, <>, <>);
    polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumDisplay_synapse_{{name}}, <>, <>);
    polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), calciumDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
 #endif
@@ -69,7 +69,7 @@
    {{#bouton_include}}
    polyConnect(timeStep, voltageDisplay_bouton_{{name}}, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), voltageDisplay_bouton_{{name}}, <>, <>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumDisplay_bouton_{{name}}, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), calciumDisplay_bouton_{{name}}, <>, <>);
 #endif
