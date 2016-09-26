@@ -55,4 +55,12 @@ graphs/**/*backup*/**
 graphs/**/*ongoing*/**
 graphs/**/*test*/**
 graphs/**/data/**
+graphs/**/.tmp
+graphs/**/tmp
+graphs/**/stats
 .built
+nti/include/Model2Use.h
+models/copyModules
+models/Extensions.mk
+gsl/Makefile
+gsl/Extensions.mk
