@@ -1,7 +1,8 @@
 #Tim's version of the Traub interneuron
 # Only in 2D - in the 0 plane of the z-axis
 # First point of each dendrite is on the surface of the soma
-1 1 0.0 0.0 0.0 8.6581 -1
+#1 1 0.0 0.0 0.0 8.6581 -1
+1 1 0.0 0.0 0.0 7.6581 -1
 2 3 -7.8006 3.7566 0.0 1.5 1
 3 3 -52.8490 25.449 0.0 1.5 2
 4 3 -5.3982 6.7692 0.0 1.5 1
