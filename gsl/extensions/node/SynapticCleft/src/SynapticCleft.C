@@ -88,7 +88,7 @@ void SynapticCleft::setPointers(const String& CG_direction, const String& CG_com
     Vpre = &((*(getSharedMembers().voltageConnect))[index]);
 
 #ifdef KEEP_PAIR_PRE_POST
-    //do nothing
+    indexPrePost.push_back(index);
 #else
     if (getSharedMembers().branchDataConnect) branchDataPre=*(getSharedMembers().branchDataConnect);
     assert(0);//not completed yet for this mode of macro
@@ -96,8 +96,9 @@ void SynapticCleft::setPointers(const String& CG_direction, const String& CG_com
   }
   else if (CG_inAttrPset->side=="post")
   {
+    int index=CG_inAttrPset->idx + getSharedMembers().voltageConnect->size();
 #ifdef KEEP_PAIR_PRE_POST
-    //do nothing
+    indexPrePost.push_back(index); 
 #else
     if (getSharedMembers().branchDataConnect) branchDataPost=*(getSharedMembers().branchDataConnect);
 #endif

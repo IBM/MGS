@@ -39,18 +39,18 @@ Node PreSynapticPoint Implements BranchDataProducer, IndexProducer
   IndexProducer.index << &index;
   //}}}
 
-  InAttrPSet {
-    string identifier;
-    int idx;
-  }
-
   //{{{Phases
   //NOTE: As voltage is used by receptors which can be in another process, 
   // it needs to be sync to proxy node
   InitPhase produceInitialState(voltage, branchData, index);
   RuntimePhase produceState(voltage);
-  UserFunction setPointers;
   //}}}
+  UserFunction setPointers;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
 
   //{{{Input (Connection setup)
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer
@@ -74,10 +74,11 @@ Node SynapticCleft Implements
 #if SUPPORT_MODULABLE_CLEFT
     , DopamineConcentrationProducer, SerotonineConcentrationProducer
 #endif
+    , NameProducer
 #ifdef KEEP_PAIR_PRE_POST
     , DimensionArrayProducer //for pre and post, in that order
     , BranchDataArrayProducer
-    , IndexArrayProducer
+    , DirectIndexArrayProducer
 #else
    //NOT SUPPORT  (to be removed this option as it's not worthy)
     //BranchDataProducer
@@ -88,7 +89,7 @@ Node SynapticCleft Implements
 {
 /*{{{*/
   //{{{DATA
-  string name;// name of SynapticCleft
+  string cleftName;// name of SynapticCleft - NOTE: TUAN TODO not being used right now-will be passed in via the pre-compartment connection; which is identified via the Touch* and associated map structure - this will be used for enhanced Probe purpose, i.e. 'site', 'side' and 'name' attributes
   //{{{cleft-info
   dyn_var_t Glut; // [uM]  Glutamate concentration
   dyn_var_t GABA; // [uM]  GABA concentration
@@ -103,7 +104,7 @@ Node SynapticCleft Implements
   //int index; //index of compartment in Presynaptic-side (i.e. bouton)
   //}}}
   //{{{both-side
-  int* [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
+  int [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
   BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
   DimensionStruct * [] dimensionsPrePost; // array of 2n elements; in pair (preBD, postBD)
   //}}}
@@ -160,15 +161,10 @@ Node SynapticCleft Implements
   //BranchDataProducerPre.branchData << &branchDataPre;
   //BranchDataProducerPost.branchData << &branchDataPost;
   BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
-  IndexArrayProducer.indexArray << &indexPrePost;
+  DirectIndexArrayProducer.indexArray << &indexPrePost;
   DimensionArrayProducer.dimensionArray << &dimensionsPrePost;
+  NameProducer.name << &cleftName;
   //}}}
-
-  InAttrPSet {
-    string identifier;
-    int idx;
-    string side; // 'pre' or 'post'
-  }
 
   //{{{Phases 
   //NOTE: As neurotransmitter is used by receptors which can be in another process, 
@@ -187,12 +183,19 @@ Node SynapticCleft Implements
   //}}}
   UserFunction setPointers;
 
+  InAttrPSet {
+    string identifier;
+    int idx;
+    string side; // 'pre' or 'post'
+  }
+
   // Input (Connection setup)
   // CURRENTLY it is always from the pre-side
   // TUAN TODO: We need to provide another attribute (to like SpineAttachment) 
   //      to know if it froms pre- (axonal) or post- (shaft)
   Connection Pre Node ((PSet.identifier=="compartment[Voltage]") 
-                       && (PSet.side=="pre")) Expects VoltageArrayProducer
+                       && (PSet.side=="pre")) Expects 
+       VoltageArrayProducer
        , BranchDataProducer 
        , DimensionArrayProducer
   {//from pre-side (i.e. axonal terminal)
@@ -205,7 +208,8 @@ Node SynapticCleft Implements
     //}}}
   }
   Connection Pre Node ((PSet.identifier=="compartment[Voltage]") 
-                      && (PSet.side=="post")) Expects BranchDataProducer 
+                      && (PSet.side=="post")) Expects 
+       BranchDataProducer 
        , DimensionArrayProducer
   {//from post-side 
     //{{{ 

@@ -2,8 +2,7 @@
 VoltageDisplay randomLocVoltageDisplay<fileName= PathFileCombine("randomLocV.dat")>;
 randomLocVoltageDisplay.dataCollection(<>) on recOn;
 
-//neuron
-//{{{
+//{{{ neuron
 //{{{soma
 VoltageDisplay somaVoltageDisplay<fileName= PathFileCombine("somaV.dat")>;
 somaVoltageDisplay.dataCollection(<>) on recOn;
@@ -91,7 +90,16 @@ axonAISCurrentsDisplay.dataCollection(<>) on recOn;
 //}}}
 //}}}
 
-//spine
+//{{{cleft-level
+AnyConcentrationDisplay cleftConcentrationDisplay_proximalTufted<fileName=PathFileCombine("cleftNT_proximalTufted.dat")>;
+cleftConcentrationDisplay_proximalTufted.dataCollection(<>) on recOn;
+AnyConcentrationDisplay cleftConcentrationDisplay_nexusTufted<fileName=PathFileCombine("cleftNT_nexusTufted.dat")>;
+cleftConcentrationDisplay_nexusTufted.dataCollection(<>) on recOn;
+ConcentrationDisplay cleftConcentrationDisplay<fileName=PathFileCombine("cleftNT.dat")>;
+cleftConcentrationDisplay.dataCollection(<>) on recOn;
+//}}}
+
+//{{{ spine-level
 //{{{ nexusTufted
 //{{{current
 CaCurrentDisplay currentNMDARDisplay_nexusTufted<fileName= PathFileCombine("spineNMDAR_nexusTufted.dat")>;
@@ -118,10 +126,6 @@ distalSpineVoltageDisplay_nexusTufted.dataCollection(<>) on recOn;
 
 CalciumDisplay distalSpineCalciumDisplay_nexusTufted<fileName=PathFileCombine("distalSpineCa_nexusTufted.dat")>;
 distalSpineCalciumDisplay_nexusTufted.dataCollection(<>) on recOn;
-//}}}
-//{{{NT
-AnyConcentrationDisplay cleftConcentrationDisplay_nexusTufted<fileName=PathFileCombine("cleftNT_nexusTufted.dat")>;
-cleftConcentrationDisplay_nexusTufted.dataCollection(<>) on recOn;
 //}}}
 //}}}
 //{{{ proximalTufted 
@@ -151,9 +155,6 @@ distalSpineVoltageDisplay_proximalTufted.dataCollection(<>) on recOn;
 CalciumDisplay distalSpineCalciumDisplay_proximalTufted<fileName=PathFileCombine("distalSpineCa_proximalTufted.dat")>;
 distalSpineCalciumDisplay_proximalTufted.dataCollection(<>) on recOn;
 //}}}
-//{{{NT
-AnyConcentrationDisplay cleftConcentrationDisplay_proximalTufted<fileName=PathFileCombine("cleftNT_proximalTufted.dat")>;
-cleftConcentrationDisplay_proximalTufted.dataCollection(<>) on recOn;
 //}}}
 //}}}
 
@@ -164,6 +165,7 @@ presynapticSomaDisplayVm.dataCollection(<>) on recOn;
 //}}}
 
 
+//{{{unused
 //CalciumDisplay calciumSomaERDisplay<fileName= PathFileCombine("somaCaER.dat")>;
 //calciumSomaERDisplay.dataCollection(<>) on recOn;
 /*
@@ -198,9 +200,6 @@ distalSpineVoltageDisplay.dataCollection(<>) on recOn;
 CalciumDisplay distalSpineCalciumDisplay<fileName=PathFileCombine("distalSpineCa.dat")>;
 distalSpineCalciumDisplay.dataCollection(<>) on recOn;
 //}}}
-//{{{NT
-ConcentrationDisplay cleftConcentrationDisplay<fileName=PathFileCombine("cleftNT.dat")>;
-cleftConcentrationDisplay.dataCollection(<>) on recOn;
-//}}}
 //}}}
 
+//}}}

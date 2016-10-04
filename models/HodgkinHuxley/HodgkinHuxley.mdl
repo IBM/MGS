@@ -172,6 +172,10 @@ Interface IndexArrayProducer {
    int* []* indexArray;
 }
 
+Interface DirectIndexArrayProducer {
+   int []* indexArray;
+}
+
 Interface GlycineProducer {
    dyn_var_t* Glycine;
 }
@@ -234,5 +238,9 @@ Interface InverseTimeIP3Producer {
 Interface ReversalIP3Producer{
 // which is used similar to the concept of reversal potential 
   dyn_var_t* IP3; //[uM]
+}
+
+Interface NameProducer{
+   string* name;
 }
 #endif
