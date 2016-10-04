@@ -58,16 +58,16 @@ class TissueFunctor : public CG_TissueFunctorBase
   friend class TissueMGSifyFunctor;
 
   public:
-  //void userInitialize(LensContext* CG_c, String& commandLineArgs1,
-  //                    String& commandLineArgs2, String& compartmentParamFile,
-  //                    String& channelParamFile, String& synapseParamFile,
-  //                    Functor*& layoutFunctor, Functor*& nodeInitFunctor,
-  //                    Functor*& connectorFunctor, Functor*& probeFunctor);
-   void userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
-		       String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
-		       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
-		       Functor*& connectorFunctor, Functor*& probeFunctor,
-		       Functor*& MGSifyFunctor);
+  void userInitialize(LensContext* CG_c, String& commandLineArgs1,
+                      String& commandLineArgs2, String& compartmentParamFile,
+                      String& channelParamFile, String& synapseParamFile,
+                      Functor*& layoutFunctor, Functor*& nodeInitFunctor,
+                      Functor*& connectorFunctor, Functor*& probeFunctor);
+  // void userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
+	//	       String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+	//	       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
+	//	       Functor*& connectorFunctor, Functor*& probeFunctor,
+	//	       Functor*& MGSifyFunctor); //idea abandoned - JamesK.
   std::auto_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
                                      NDPairList*& params);
 
@@ -92,6 +92,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getNumCompartments(ComputeBranch* branch);
   int getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch);
 #endif
+
   // perform neuron generating from a given set of parameters
   void neuroGen(Params* params, LensContext* CG_c);
   // perform neuron development
@@ -108,6 +109,7 @@ class TissueFunctor : public CG_TissueFunctorBase
                        int nodeIndex, int densityIndex);
   //
   std::vector<DataItem*> const* extractCompartmentalization(NDPairList* params);
+
   // get StructDataItem
   // from a given point (represented by coordinate  (a pointer to double which
   // is expected to be 3-element array)+ radius + distance to soma)
@@ -118,11 +120,11 @@ class TissueFunctor : public CG_TissueFunctorBase
                                dyn_var_t radius, dyn_var_t dist2soma,
                                dyn_var_t surface_area, dyn_var_t volume,
                                dyn_var_t length);
-  // get the list of name of nodes (passed in GSL via nodekind)
-  // from a list of layers represented as NDPairList*
+  //parse the string 'nodekind=....'
   void getNodekind(const NDPairList* layerNdpl,
                    std::vector<std::string>& nodekind);
   // perform the connection between 2 set of nodetypes from 2 layers
+  // using the given InAttrPSet ndpl
   void connect(Simulation* sim, Connector* connector, NodeDescriptor* from,
                NodeDescriptor* to, NDPairList& ndpl);
 
@@ -334,6 +336,13 @@ class TissueFunctor : public CG_TissueFunctorBase
       _generatedBidirectionalConnections;
   // std::map<Touch*, std::list<std::pair<int, int> > >
   // _generatedSpineBranch;
+ 
+  //vector-index = layerindex-of-type-CHEMICALSYNAPSE-receptor
+  //Touch* = touch
+  //int    = density-index of that Receptor for the current _rank
+  std::vector<std::map<Touch*, int> > _synapseReceptorMaps; 
+  //vector-index = layerindex-of-type-SYNAPTICCLEFT
+  std::vector<std::map<Touch*, int> > _synapticCleftMaps; 
 
   // NOTE:
   // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>

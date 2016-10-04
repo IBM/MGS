@@ -372,7 +372,8 @@ void Params::readCptParams(const std::string& fname)
   keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    result = (readCompartmentVariableTargets(fpF));
+    //result = (readCompartmentVariableTargets(fpF));
+    result = (readCompartmentVariableTargets2(fpF));
     if (! result)
     {
       std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;

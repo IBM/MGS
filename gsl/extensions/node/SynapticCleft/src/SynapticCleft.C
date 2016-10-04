@@ -16,11 +16,19 @@
 //   width = cleft width = 20 +/- 2.8 nm
 //   depth = width = 20
 
+#define Glut_max (getSharedMembers().Glut_max)
+#define Vp_Glut (getSharedMembers().Vp_Glut)
+#define Kp_Glut (getSharedMembers().Kp_Glut)
+#define dt (*(getSharedMembers().deltaT))
+
 void SynapticCleft::produceInitialState(RNG& rng) 
 {
-  if (branchDataConnect) branchData=*branchDataConnect;
 	Glut = (getSharedMembers().Glut_baseline);
 	GABA = (getSharedMembers().GABA_baseline);
+#if SUPPORT_MODULABLE_CLEFT
+	DA = (getSharedMembers().DA_baseline);
+	Ser = (getSharedMembers().Ser_baseline);
+#endif
 //#if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
 //	GLUTAMATE_UPDATE_METHOD ==  NEUROTRANSMITTER_BIEXPONENTIAL
 //  Glut = 0.0;
@@ -36,13 +44,12 @@ void SynapticCleft::produceState(RNG& rng)
 	dyn_var_t* V = Vpre;
 	{//Glut
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-		Glut =  (getSharedMembers().Glut_max/(1.0 + exp(-(*V - getSharedMembers().Vp_Glut)/getSharedMembers().Kp_Glut)));
+		Glut =  (Glut_max/(1.0 + exp(-(*V - Vp_Glut)/Kp_Glut)));
 #elif GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
-		dyn_var_t dt = *(getSharedMembers().deltaT);
 		float J_decay = 1.0 / ((getSharedMembers().tau_Glut)) * (
 												Glut - getSharedMembers().Glut_baseline);  // [uM/msec]
 		Glut = Glut + dt *( 
-				(getSharedMembers().Glut_max/(1.0 + exp(-(*V - getSharedMembers().Vp_Glut)/getSharedMembers().Kp_Glut)))
+				(Glut_max/(1.0 + exp(-(*V - Vp_Glut)/Kp_Glut)))
 				- J_decay);
 #else
 		 // may be dynamics true concentration of Glut
@@ -63,14 +70,41 @@ void SynapticCleft::produceState(RNG& rng)
 		NOT IMPLEMENTED YET
 #endif
 	}
+#if SUPPORT_MODULABLE_CLEFT
+  {//DA
+  }
+  {//Ser
+  }
+#endif
 }
 
 void SynapticCleft::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SynapticCleftInAttrPSet* CG_inAttrPset, CG_SynapticCleftOutAttrPSet* CG_outAttrPset) 
 {
-  index=CG_inAttrPset->idx;
-  assert(getSharedMembers().voltageConnect);
-  assert(index>=0 && index<getSharedMembers().voltageConnect->size());    
-  Vpre = &((*(getSharedMembers().voltageConnect))[index]);
+  if (CG_inAttrPset->side=="pre")
+  {
+    int index=CG_inAttrPset->idx;
+    assert(getSharedMembers().voltageConnect);
+    assert(index>=0 && index<getSharedMembers().voltageConnect->size());    
+    Vpre = &((*(getSharedMembers().voltageConnect))[index]);
+
+#ifdef KEEP_PAIR_PRE_POST
+    //do nothing
+#else
+    if (getSharedMembers().branchDataConnect) branchDataPre=*(getSharedMembers().branchDataConnect);
+    assert(0);//not completed yet for this mode of macro
+#endif
+  }
+  else if (CG_inAttrPset->side=="post")
+  {
+#ifdef KEEP_PAIR_PRE_POST
+    //do nothing
+#else
+    if (getSharedMembers().branchDataConnect) branchDataPost=*(getSharedMembers().branchDataConnect);
+#endif
+  }
+  else{
+    assert(0);
+  }
 }
 
 SynapticCleft::~SynapticCleft() 

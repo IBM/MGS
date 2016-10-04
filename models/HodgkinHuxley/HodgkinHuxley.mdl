@@ -228,4 +228,11 @@ Interface ReversalCaERProducer{
 // which is used similar to the concept of reversal potential 
   dyn_var_t* Ca; //[uM]
 }
+Interface InverseTimeIP3Producer {
+  dyn_var_t* inverseTime; //[1/ms]
+}
+Interface ReversalIP3Producer{
+// which is used similar to the concept of reversal potential 
+  dyn_var_t* IP3; //[uM]
+}
 #endif

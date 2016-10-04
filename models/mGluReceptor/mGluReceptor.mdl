@@ -7,9 +7,16 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node mGluReceptorType1 Implements 
-            IP3CurrentProducer, 
-            BranchDataArrayProducer, IndexArrayProducer
-//, WeightProducer 
+            IP3CurrentProducer 
+#ifdef KEEP_PAIR_PRE_POST
+            , BranchDataArrayProducer, IndexArrayProducer //for both pre- and post- side
+#else
+//Change this to Pre and Post
+            //-->removed, BranchDataArrayProducer, IndexArrayProducer //for pre-only
+            , BranchDataProducerPre, IndexProducerPre  // for pre-only
+            , BranchDataProducerPost, IndexProducerPost  // for post-only
+#endif
+            , DimensionArrayProducer //for post
 {
 /*{{{*/
 	//DATA
@@ -27,17 +34,45 @@ Node mGluReceptorType1 Implements
   //dyn_var_t tp; // TUAN: why we have 'tp' here?
   //}}}
 
-  //reference data
-  //{{{only use with preSynapticPoint
-  //dyn_var_t* Vpre;// [mV] preSynaptic voltage
-  //}}}
+  //{{{cleft-info
   dyn_var_t* Glut; //[uM] concentration
-  //dyn_var_t []* Vpost;
-  //dyn_var_t []* IP3_IC; // [uM]
-  int indexPost; //index of compartment in post-synaptic side (i.e. spine head)
-  int* [] indexPrePost; // index of compartment in pre-synaptic side (i.e. bouton)
-
-  BranchDataStruct* [] branchDataPrePost;
+  //}}}
+  //{{{pre-side info
+//NOTE: Even though there is only 1 pre and 1 post for 1 synaptic-receptor
+//  Due to the constraint of interfaces, we have to use array
+  //{{{only use with preSynapticPoint
+  dyn_var_t* Vpre;  // [mV] preSynaptic voltage
+  //}}}
+#ifdef KEEP_PAIR_PRE_POST
+  //nothing
+#else
+  //[REMOVED]int* [] indexPre; // NOTE: only 1-element array
+  //[REMOVED]BranchDataStruct* [] branchDataPre; //only 1-element array
+  int  indexPre; // NOTE: only 1-element array
+  BranchDataStruct*  branchDataPre; //only 1-element array
+#endif
+  //}}}
+  //{{{both-side
+#ifdef KEEP_PAIR_PRE_POST
+//TUAN TODO: to be removed KEEP_PAIR_PRE_POST
+// Indeed, n = 1 only
+  int* [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
+  BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
+#endif
+  //}}}
+  //{{{post-side info
+  //and only 1 post-side
+  //  Due to the constraint of interfaces, we have to use array
+  //dyn_var_t []* Vpost; // [mV]
+  //dyn_var_t []* Ca_IC; // [uM]
+  int indexPost;
+#ifdef KEEP_PAIR_PRE_POST
+  //do nothing
+#else
+  BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
+  DimensionStruct* []* dimensions;
+  //}}}
   //}}}
 
   Shared {
@@ -76,12 +111,19 @@ Node mGluReceptorType1 Implements
     //dyn_var_t deltamGluR;
     //dyn_var_t alphaBuffer;
     //dyn_var_t tauBuffer;
+#ifdef KEEP_PAIR_PRE_POST
+    //do nothing
+#else
+    int* IntTmpConnect;
+#endif
     ////}}}
    }
 
+  //{{{Phases 
   InitPhase initialize;
   RuntimePhase update(I_IP3);
   //RuntimePhase updatemGluDepPlasticity;
+  //}}}
 
   // Output
 	//{{{
@@ -89,8 +131,18 @@ Node mGluReceptorType1 Implements
   //MaximumConductanceProducer.maximumConductance << &w;
   //ReversalPotentialProducer.reversalPotential << &Shared.E;
   IP3CurrentProducer.current << &I_IP3;
+#ifdef KEEP_PAIR_PRE_POST
   BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
   IndexArrayProducer.indexArray << &indexPrePost;
+#else
+  //BranchDataArrayProducer.branchDataArray << &branchDataPre;
+  //IndexArrayProducer.indexArray << &indexPre;
+  BranchDataProducer.branchData << branchDataPre;
+  IndexProducerPre.index << &indexPre;
+  BranchDataProducer.branchData << branchDataPost;
+  IndexProducerPost.index << &indexPost;
+#endif
+  DimensionArrayProducer.dimensionArray << dimensions;
   //WeightProducer.w << &w; //Repeated in MaxConductanceProducer?
   //}}}
 
@@ -101,26 +153,67 @@ Node mGluReceptorType1 Implements
   }
 
   UserFunction setPostIndex;
+#ifdef KEEP_PAIR_PRE_POST
+  //do nothing
+#else
+  UserFunction setPreIndex;
+#endif
 
   // Connection (input)
 	//{{{
-  //Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, 
-  //   BranchDataProducer, IndexProducer {//the info from presynaptic-side is passed to receptor via this
-  //    // intermediate nodetype
-	//	//{{{
-  //  VoltageProducer.voltage >> Vpre;
-  //  BranchDataProducer.branchData >> branchDataPrePost;
-  //  IndexProducer.index >> indexPrePost;
-  //  //}}}
-  //}
-
-  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer,
-     BranchDataProducer, IndexProducer {
-    GlutamateConcentrationProducer.NT >> Glut;
+  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer
+     , BranchDataProducer, IndexProducer {//the info from presynaptic-side is passed to receptor via this
+      // intermediate nodetype
+		//{{{
+    VoltageProducer.voltage >> Vpre;
+#ifdef KEEP_PAIR_PRE_POST
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPre;
+    IndexProducer.index >> Shared.IntTmpConnect;
+    setPreIndex();  
+#endif
+    //}}}
   }
 
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer
+     , BranchDataProducer, IndexProducer {
+  //{{{
+    GlutamateConcentrationProducer.NT >> Glut;
+#ifdef KEEP_PAIR_PRE_POST
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+#else
+    //[REMOVED]BranchDataProducer.branchData >> branchDataPre;
+    //[REMOVED]IndexProducer.index >> indexPre;
+    IndexProducer.index >> Shared.IntTmpConnect;
+    setPreIndex();  
+#endif
+  //}}}
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[IP3]") Expects 
+     //IP3ConcentrationArrayProducer 
+     DimensionArrayProducer
+     , BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
+    //{{{
+    //REMEMBER: When use in C++ code, only use IP3_IC[indexPost]
+    //IP3ConcentrationArrayProducer.IP3Concentrations >> IP3_IC;
+#ifdef KEEP_PAIR_PRE_POST
+    BranchDataProducer.branchData >> branchDataPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPost;
+#endif
+    //REMEMBER: When use in C++ code, only use IP3_post[indexPost]
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    setPostIndex(); 
+    //}}}
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
   //Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
   //  //VoltageArrayProducer, 
   //   BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
@@ -128,11 +221,6 @@ Node mGluReceptorType1 Implements
   //  //VoltageArrayProducer.voltageArray >> Vpost;
   //  BranchDataProducer.branchData >> branchDataPrePost;
   //  setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
-  //}
-
-  //Connection Pre Node (PSet.identifier=="IC[IP3]") Expects IP3ConcentrationArrayProducer {
-  //  //REMEMBER: When use in C++ code, only use IP3_IC[indexPost]
-  //  IP3ConcentrationArrayProducer.IP3Concentrations >> IP3_IC;
   //}
 
   //Connection Pre Constant (PSet.identifier=="EC") Expects 
@@ -149,9 +237,6 @@ Node mGluReceptorType1 Implements
   //  //}}}
   //}
 
-  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
-    TimeStepProducer.deltaT >> Shared.deltaT;
-  }
   //}}}
 
 /*}}}*/

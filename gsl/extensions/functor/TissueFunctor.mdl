@@ -2,7 +2,8 @@
 #define TissueFunctor_MDL
 
 Framework Functor TissueFunctor Category "FUNCTOR" {
-   Initialize(string commandLineArgs1, string commandLineArgs2, string compartmentParamFile, string channelParamFile, string synapseParamFile, Functor* layoutFunctor, Functor* nodeInitFunctor, Functor* connectorFunctor, Functor* probeFunctor, Functor* MGSifyFunctor);
+   //Initialize(string commandLineArgs1, string commandLineArgs2, string compartmentParamFile, string channelParamFile, string synapseParamFile, Functor* layoutFunctor, Functor* nodeInitFunctor, Functor* connectorFunctor, Functor* probeFunctor, Functor* MGSifyFunctor);
+   Initialize(string commandLineArgs1, string commandLineArgs2, string compartmentParamFile, string channelParamFile, string synapseParamFile, Functor* layoutFunctor, Functor* nodeInitFunctor, Functor* connectorFunctor, Functor* probeFunctor);
    Functor* Execute(string tissueElement, NDPairList* params);
 }
 

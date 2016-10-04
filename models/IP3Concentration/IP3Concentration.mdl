@@ -308,8 +308,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
      IP3ConcentrationArrayProducer 
 {
 /*{{{*/
-	//DATA
-  //{{{
+  //{{{ DATA
   BranchDataStruct* branchData; // the proximal-side regular-branch's data
   DimensionStruct* [] dimensions;
     //{{{data members: internal, but for solver
@@ -324,6 +323,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
   dyn_var_t [] IP3_new;
   dyn_var_t currentToConc;
   dyn_var_t  IP3Clearance; // [1/ms]
+  //}}}
 
   //{{{ ionic currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
@@ -375,7 +375,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
     int idx;
   }	
 
-  //input
+  //{{{input
   // the junction-branch connects to regular-branch through the regular-branch's endpoints
   Connection Pre Node (PSet.identifier=="endpoint") Expects IP3ConcentrationProducer, 
     DimensionProducer, BranchDataProducer  {
@@ -429,6 +429,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
 /*}}}*/
 }
 

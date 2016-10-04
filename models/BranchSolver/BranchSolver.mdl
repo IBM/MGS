@@ -23,6 +23,26 @@ Interface BranchDataArrayProducer {
 	BranchDataStruct* []*  branchDataArray;
 }
 
+#ifdef KEEP_PAIR_PRE_POST
+ //do nothing
+#else 
+//deisgn for the case of a synapticCleft
+// that produce both from pre-side and post-side
+Interface BranchDataProducerPre {
+	BranchDataStruct*  branchData;
+}
+Interface BranchDataProducerPost {
+	BranchDataStruct*  branchData;
+}
+
+Interface IndexProducerPre {
+   int* index;
+}
+Interface IndexProducerPost {
+   int* index;
+}
+#endif
+
 Struct DimensionStruct {
 	dyn_var_t x;
 	dyn_var_t y;

@@ -239,7 +239,9 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
                                 CG_NMDAReceptorOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
+#ifdef KEEP_PAIR_PRE_POST
   indexPrePost.push_back(&indexPost);
+#endif
 }
 
 dyn_var_t NMDAReceptor::sigmoid(dyn_var_t alpha, dyn_var_t beta)

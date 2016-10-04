@@ -233,6 +233,8 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _backwardSolvePointTypeCounter(f._backwardSolvePointTypeCounter),
       _tissueParams(f._tissueParams),
       _synapseGeneratorMap(f._synapseGeneratorMap),
+      _synapseReceptorMaps(f._synapseReceptorMaps),
+      _synapticCleftMaps(f._synapticCleftMaps),
       _compartmentVariableTypes(f._compartmentVariableTypes),
       _electricalSynapseTypesMap(f._electricalSynapseTypesMap),
       _bidirectionalConnectionTypesMap(f._bidirectionalConnectionTypesMap),
@@ -272,11 +274,157 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
 //     2.  detect touches
 //     3.  generate spines
 //  based on the inputs passed to the object
-void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
-				   String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
-				   Functor*& layoutFunctor, Functor*& nodeInitFunctor, 
-				   Functor*& connectorFunctor, Functor*& probeFunctor,
-				   Functor*& MGSifyFunctor)
+//!void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
+//!				   String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+//!				   Functor*& layoutFunctor, Functor*& nodeInitFunctor, 
+//!				   Functor*& connectorFunctor, Functor*& probeFunctor,
+//!				   Functor*& MGSifyFunctor)
+//!{
+//!#ifdef HAVE_MPI
+//!  _size = CG_c->sim->getNumProcesses();
+//!  _rank = CG_c->sim->getRank();
+//!#endif
+//!  layoutFunctor->duplicate(_layoutFunctor);
+//!  nodeInitFunctor->duplicate(_nodeInitFunctor);
+//!  connectorFunctor->duplicate(_connectorFunctor);
+//!  probeFunctor->duplicate(_probeFunctor);
+//!  MGSifyFunctor->duplicate(_MGSifyFunctor);
+//!
+//!  // Validate inputs
+//!  {
+//!    TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
+//!    if (element == 0)
+//!    {
+//!      std::cerr << "Functor passed to TissueFunctor as argument 4 is not a "
+//!                   "TissueElement!" << std::endl;
+//!      exit(-1);
+//!    }
+//!  }
+//!  {
+//!    TissueElement* element =
+//!        dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
+//!    if (element == 0)
+//!    {
+//!      std::cerr << "Functor passed to TissueFunctor as argument 5 is not a "
+//!                   "TissueElement!" << std::endl;
+//!      exit(-1);
+//!    }
+//!  }
+//!  {
+//!    TissueElement* element =
+//!        dynamic_cast<TissueElement*>(_connectorFunctor.get());
+//!    if (element == 0)
+//!    {
+//!      std::cerr << "Functor passed to TissueFunctor as argument 6 is not a "
+//!                   "TissueElement!" << std::endl;
+//!      exit(-1);
+//!    }
+//!  }
+//!  {
+//!    TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
+//!    if (element == 0)
+//!    {
+//!      std::cerr << "Functor passed to TissueFunctor as argument 7 is not a "
+//!                   "TissueElement!" << std::endl;
+//!      exit(-1);
+//!    }
+//!  }
+//!
+//!#ifdef HAVE_MPI
+//!  String command = "NULL ";
+//!  command += commandLineArgs1;
+//!  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
+//!  {
+//!    std::cerr << "Error in simulation specification's commandLineArgs1 string "
+//!                 "argument, TissueFunctor:" << std::endl;
+//!    std::cerr << commandLineArgs1 << std::endl;
+//!    exit(EXIT_FAILURE);
+//!  }
+//!#endif
+//!
+//!  std::string paramFilename(_tissueContext->_commandLine.getParamFileName());
+//!  _tissueParams.readDevParams(paramFilename);
+//!  _compartmentSize = _tissueContext->_commandLine.getCapsPerCpt();
+//!
+//!  // OPTION-1: re-read data structure from binary file
+//!  FILE* data = NULL;
+//!  if (_tissueContext->_commandLine.getBinaryFileName() != "" &&
+//!      !_tissueContext->isInitialized())
+//!  {
+//!    if ((data = fopen(_tissueContext->_commandLine.getBinaryFileName().c_str(),
+//!                      "rb")) != NULL)
+//!    {
+//!#ifdef HAVE_MPI
+//!      _readFromFile = true;
+//!      _tissueContext->_decomposition =
+//!          new VolumeDecomposition(_rank, data, _size, _tissueContext->_tissue,
+//!                                  _tissueContext->_commandLine.getX(),
+//!                                  _tissueContext->_commandLine.getY(),
+//!                                  _tissueContext->_commandLine.getZ());
+//!      _tissueContext->readFromFile(data, _size, _rank);
+//!      _tissueContext->setUpCapsules(_tissueContext->_nCapsules,
+//!                                    TissueContext::NOT_SET, _rank,
+//!                                    MAX_COMPUTE_ORDER);
+//!      _tissueContext->setInitialized();
+//!      fclose(data);
+//!#endif
+//!    }
+//!  }
+//!
+//!  _tissueContext->seed(_rank);
+//!
+//!  // OPTION-2: regenerate data structure from .swc file
+//!  if (!_tissueContext->isInitialized())
+//!  {
+//!    neuroGen(&_tissueParams, CG_c);
+//!    MPI_Barrier(MPI_COMM_WORLD);
+//!    neuroDev(&_tissueParams, CG_c);
+//!  }
+//!
+//!#ifdef HAVE_MPI
+//!  command = "NULL ";
+//!  command += commandLineArgs2;
+//!  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
+//!  {
+//!    std::cerr << "Error in simulation specification's commandLineArgs2 string "
+//!                 "argument, TissueFunctor:" << std::endl;
+//!    std::cerr << commandLineArgs2 << std::endl;
+//!    exit(EXIT_FAILURE);
+//!  }
+//!#endif
+//!
+//!  paramFilename = _tissueContext->_commandLine.getParamFileName();
+//!  /*strcpy(paramFilename,
+//!         _tissueContext->_commandLine.getParamFileName().c_str());*/
+//!  _tissueParams.readDetParams(paramFilename);
+//!  _tissueParams.readCptParams(compartmentParamFile.c_str());
+//!  _tissueParams.readChanParams(channelParamFile.c_str());
+//!  _tissueParams.readSynParams(synapseParamFile.c_str());
+//!
+//!  if (!_tissueContext->isInitialized())
+//!  {
+//!    touchDetect(&_tissueParams, CG_c);
+//!    createSpines(&_tissueParams, CG_c);  // need to create spines here
+//!    _tissueContext->setInitialized();
+//!  }
+//!
+//!  if ((_tissueContext->_commandLine.getOutputFormat() == "b" ||
+//!       _tissueContext->_commandLine.getOutputFormat() == "bt") &&
+//!      _tissueContext->_commandLine.getBinaryFileName() != "" &&
+//!      !_readFromFile && CG_c->sim->isSimulatePass())
+//!  {
+//!#ifdef HAVE_MPI
+//!    MPI_Barrier(MPI_COMM_WORLD);
+//!    _tissueContext->writeToFile(_size, _rank);
+//!#endif
+//!  }
+//!}
+void TissueFunctor::userInitialize(
+    LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2,
+    String& compartmentParamFile, String& channelParamFile,
+    String& synapseParamFile, Functor*& layoutFunctor,
+    Functor*& nodeInitFunctor, Functor*& connectorFunctor,
+    Functor*& probeFunctor)
 {
 #ifdef HAVE_MPI
   _size = CG_c->sim->getNumProcesses();
@@ -286,7 +434,6 @@ void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, 
   nodeInitFunctor->duplicate(_nodeInitFunctor);
   connectorFunctor->duplicate(_connectorFunctor);
   probeFunctor->duplicate(_probeFunctor);
-  MGSifyFunctor->duplicate(_MGSifyFunctor);
 
   // Validate inputs
   {
@@ -417,151 +564,6 @@ void TissueFunctor::userInitialize(LensContext* CG_c, String& commandLineArgs1, 
 #endif
   }
 }
-//void TissueFunctor::userInitialize(
-//    LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2,
-//    String& compartmentParamFile, String& channelParamFile,
-//    String& synapseParamFile, Functor*& layoutFunctor,
-//    Functor*& nodeInitFunctor, Functor*& connectorFunctor,
-//    Functor*& probeFunctor)
-//{
-//#ifdef HAVE_MPI
-//  _size = CG_c->sim->getNumProcesses();
-//  _rank = CG_c->sim->getRank();
-//#endif
-//  layoutFunctor->duplicate(_layoutFunctor);
-//  nodeInitFunctor->duplicate(_nodeInitFunctor);
-//  connectorFunctor->duplicate(_connectorFunctor);
-//  probeFunctor->duplicate(_probeFunctor);
-//
-//  // Validate inputs
-//  {
-//    TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
-//    if (element == 0)
-//    {
-//      std::cerr << "Functor passed to TissueFunctor as argument 4 is not a "
-//                   "TissueElement!" << std::endl;
-//      exit(-1);
-//    }
-//  }
-//  {
-//    TissueElement* element =
-//        dynamic_cast<TissueElement*>(_nodeInitFunctor.get());
-//    if (element == 0)
-//    {
-//      std::cerr << "Functor passed to TissueFunctor as argument 5 is not a "
-//                   "TissueElement!" << std::endl;
-//      exit(-1);
-//    }
-//  }
-//  {
-//    TissueElement* element =
-//        dynamic_cast<TissueElement*>(_connectorFunctor.get());
-//    if (element == 0)
-//    {
-//      std::cerr << "Functor passed to TissueFunctor as argument 6 is not a "
-//                   "TissueElement!" << std::endl;
-//      exit(-1);
-//    }
-//  }
-//  {
-//    TissueElement* element = dynamic_cast<TissueElement*>(_probeFunctor.get());
-//    if (element == 0)
-//    {
-//      std::cerr << "Functor passed to TissueFunctor as argument 7 is not a "
-//                   "TissueElement!" << std::endl;
-//      exit(-1);
-//    }
-//  }
-//
-//#ifdef HAVE_MPI
-//  String command = "NULL ";
-//  command += commandLineArgs1;
-//  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
-//  {
-//    std::cerr << "Error in simulation specification's commandLineArgs1 string "
-//                 "argument, TissueFunctor:" << std::endl;
-//    std::cerr << commandLineArgs1 << std::endl;
-//    exit(EXIT_FAILURE);
-//  }
-//#endif
-//
-//  std::string paramFilename(_tissueContext->_commandLine.getParamFileName());
-//  _tissueParams.readDevParams(paramFilename);
-//  _compartmentSize = _tissueContext->_commandLine.getCapsPerCpt();
-//
-//  // OPTION-1: re-read data structure from binary file
-//  FILE* data = NULL;
-//  if (_tissueContext->_commandLine.getBinaryFileName() != "" &&
-//      !_tissueContext->isInitialized())
-//  {
-//    if ((data = fopen(_tissueContext->_commandLine.getBinaryFileName().c_str(),
-//                      "rb")) != NULL)
-//    {
-//#ifdef HAVE_MPI
-//      _readFromFile = true;
-//      _tissueContext->_decomposition =
-//          new VolumeDecomposition(_rank, data, _size, _tissueContext->_tissue,
-//                                  _tissueContext->_commandLine.getX(),
-//                                  _tissueContext->_commandLine.getY(),
-//                                  _tissueContext->_commandLine.getZ());
-//      _tissueContext->readFromFile(data, _size, _rank);
-//      _tissueContext->setUpCapsules(_tissueContext->_nCapsules,
-//                                    TissueContext::NOT_SET, _rank,
-//                                    MAX_COMPUTE_ORDER);
-//      _tissueContext->setInitialized();
-//      fclose(data);
-//#endif
-//    }
-//  }
-//
-//  _tissueContext->seed(_rank);
-//
-//  // OPTION-2: regenerate data structure from .swc file
-//  if (!_tissueContext->isInitialized())
-//  {
-//    neuroGen(&_tissueParams, CG_c);
-//    MPI_Barrier(MPI_COMM_WORLD);
-//    neuroDev(&_tissueParams, CG_c);
-//  }
-//
-//#ifdef HAVE_MPI
-//  command = "NULL ";
-//  command += commandLineArgs2;
-//  if (_tissueContext->_commandLine.parse(command.c_str()) == false)
-//  {
-//    std::cerr << "Error in simulation specification's commandLineArgs2 string "
-//                 "argument, TissueFunctor:" << std::endl;
-//    std::cerr << commandLineArgs2 << std::endl;
-//    exit(EXIT_FAILURE);
-//  }
-//#endif
-//
-//  paramFilename = _tissueContext->_commandLine.getParamFileName();
-//  /*strcpy(paramFilename,
-//         _tissueContext->_commandLine.getParamFileName().c_str());*/
-//  _tissueParams.readDetParams(paramFilename);
-//  _tissueParams.readCptParams(compartmentParamFile.c_str());
-//  _tissueParams.readChanParams(channelParamFile.c_str());
-//  _tissueParams.readSynParams(synapseParamFile.c_str());
-//
-//  if (!_tissueContext->isInitialized())
-//  {
-//    touchDetect(&_tissueParams, CG_c);
-//    createSpines(&_tissueParams, CG_c);  // need to create spines here
-//    _tissueContext->setInitialized();
-//  }
-//
-//  if ((_tissueContext->_commandLine.getOutputFormat() == "b" ||
-//       _tissueContext->_commandLine.getOutputFormat() == "bt") &&
-//      _tissueContext->_commandLine.getBinaryFileName() != "" &&
-//      !_readFromFile && CG_c->sim->isSimulatePass())
-//  {
-//#ifdef HAVE_MPI
-//    MPI_Barrier(MPI_COMM_WORLD);
-//    _tissueContext->writeToFile(_size, _rank);
-//#endif
-//  }
-//}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -2269,6 +2271,11 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds1,
                       length);
 }
 
+//GOAL: 
+//suppose the NDPairList ndpl has one NDpair as:
+//  nodekind=someCategory[name1][name2][name3]
+//return: a vector holding (somecategory, name1, name2, name3)
+// using '[' and ']' as separators
 void TissueFunctor::getNodekind(const NDPairList* ndpl,
                                 std::vector<std::string>& nodekind)
 {
@@ -2557,7 +2564,9 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
     element->setTissueFunctor(this);
     _probeFunctor->duplicate(rval);
   }
-  else if (tissueElement=="MGSify") {
+  else if (tissueElement=="MGSify") 
+  {
+    assert(0); // not support
     TissueElement* element=dynamic_cast<TissueElement*>(_MGSifyFunctor.get());
     if (element==0) {
       std::cerr<<"Functor passed to TissueFunctor as argument 8 is not a TissueElement!"<<std::endl;
@@ -2569,7 +2578,9 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
   else if (tissueElement=="Connect") {
     doConnector(CG_c);
   }
-  else if (tissueElement=="Tissue->MGS") {
+  else if (tissueElement=="Tissue->MGS") 
+  {
+    assert(0); //not support
     doMGSify(CG_c);
   }
   else {
@@ -2742,6 +2753,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
   else if (chemical)
   {
     _chemicalSynapseTypesMap[nodeType] = counter = _chemicalSynapseTypeCounter;
+     assert(_chemicalSynapseTypeCounter == _synapseReceptorMaps.size());
+    _synapseReceptorMaps.push_back(std::map<Touch*, int>());
   }
   else if (point)
   {
@@ -2757,6 +2770,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
       assert(_synapticCleftTypesMap.find(nodeType) ==
              _synapticCleftTypesMap.end());
       _synapticCleftTypesMap[nodeType] = counter = _synapticCleftTypeCounter;
+      assert(_synapticCleftTypeCounter == _synapticCleftMaps.size());
+      _synapticCleftMaps.push_back(std::map<Touch*, int>());
     }
   }
 
@@ -2978,6 +2993,8 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
                 else
                   _capsuleCptPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
+                if (indexPre == _rank)
+                  _synapticCleftMaps[counter][&*titer] = rval[_rank];
                 rval[indexPre]++;
               }
             }
@@ -3040,7 +3057,9 @@ ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
                   if (probabilities[i] >=
                       drandom(findSynapseGenerator(indexPre, indexPost)))
                   {
-                    //NOTE: Assumpe postCapsule is always postsynaptic side (SynParam.par)
+                    if (indexPost == _rank)
+                      _synapseReceptorMaps[counter][&*titer] = rval[_rank];
+                    //NOTE: Assume postCapsule is always postsynaptic side (SynParam.par)
                     //for receptors, create on the postSynaptic side
                     rval[indexPost]++;
                     setGenerated(_generatedChemicalSynapses, titer, counter, i,
@@ -3921,6 +3940,9 @@ void TissueFunctor::doConnector(LensContext* lc)
   // Example: "Voltage", <"identifier"="compartment[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> cpt2syn;
+  // Example: "Voltage", <"identifier"="compartment[Voltage]",
+  //                   "idx"=0>
+  std::map<std::string, NDPairList> cpt2cleft;
   // Example: "Voltage", <"identifier"="channels[Voltage]">
   std::map<std::string, NDPairList> chan2cpt;
   // Example: "Voltage", <"identifier"="electricalSynapse[Voltage]",
@@ -3970,6 +3992,12 @@ void TissueFunctor::doConnector(LensContext* lc)
     Mcpt2syn.push_back(new NDPair("identifier", os.str()));
     Mcpt2syn.push_back(new NDPair("idx", 0));
     cpt2syn[cptVarTypesIter->first] = Mcpt2syn;
+
+    NDPairList Mcpt2cleft;
+    Mcpt2cleft.push_back(new NDPair("identifier", os.str()));
+    Mcpt2cleft.push_back(new NDPair("idx", 0));
+    Mcpt2cleft.push_back(new NDPair("side", "")); 
+    cpt2cleft[cptVarTypesIter->first] = Mcpt2cleft;
 
     NDPairList Mcpt2spineattach;
     Mcpt2spineattach.push_back(new NDPair("identifier", os.str()));
@@ -5325,21 +5353,21 @@ void TissueFunctor::doConnector(LensContext* lc)
                   std::map<std::string, int>::iterator tmapiter =
                       _synapticCleftTypesMap.find(synapticCleftType);
                   assert(tmapiter != _synapticCleftTypesMap.end());
-                  unsigned int preSynPointType = (tmapiter->second);
-                  if (synapticCleftNodes[preSynPointType] == 0)
+                  unsigned int cleftType = (tmapiter->second);
+                  if (synapticCleftNodes[cleftType] == 0)
                   {
-                    assert(synapticCleftAccessors.size() > preSynPointType);
+                    assert(synapticCleftAccessors.size() > cleftType);
                     synapticCleftAccessor =
-                        synapticCleftAccessors[preSynPointType];
+                        synapticCleftAccessors[cleftType];
                     if (preJunction)
                     {
 #ifdef IDEA1
-                      synapticCleftNodes[preSynPointType] =
+                      synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][jctCapsulePostCapsule]);
 #else
-                      synapticCleftNodes[preSynPointType] =
+                      synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][preCapsule]);
@@ -5347,17 +5375,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                     }
                     else
                     {
-                      synapticCleftNodes[preSynPointType] =
+                      synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleCptPointIndexMap
                                             [synapticCleftType][preCapsule]);
                     }
                   }
-                  NDPairList Mcpt2syn = cpt2syn[*ctiter];
-                  Mcpt2syn.replace("idx", preIdx);
+                  NDPairList Mcpt2cleft = cpt2cleft[*ctiter];
+                  Mcpt2cleft.replace("idx", preIdx);
+                  Mcpt2cleft.replace("side", "pre");
                   connect(sim, connector, preCpt,
-                          synapticCleftNodes[preSynPointType], Mcpt2syn);
-                  connect(sim, connector, synapticCleftNodes[preSynPointType],
+                          synapticCleftNodes[cleftType], Mcpt2cleft);
+                  connect(sim, connector, synapticCleftNodes[cleftType],
                           receptor, synCleft);
                 }
               }
@@ -5420,16 +5449,39 @@ void TissueFunctor::doConnector(LensContext* lc)
                   postIdx = getCptIndex(postCapsule);
 #endif
                 }
+                //receptor->post
                 NDPairList Mcsyn2cpt = csyn2cpt[*ctiter];
                 Mcsyn2cpt.replace("idx", postIdx);
                 connect(sim, connector, receptor, postCpt, Mcsyn2cpt);
 
+                //post->receptor
                 NDPairList Mcpt2syn = cpt2syn[*ctiter];
                 Mcpt2syn.replace("idx", postIdx);
                 NDPairList Mic2syn = ic2syn[*ctiter];
                 Mic2syn.replace("idx", postIdx);
                 connect(sim, connector, postCpt, receptor, Mcpt2syn);
                 connect(sim, connector, postCpt, receptor, Mic2syn);
+
+                //post->cleft
+                if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  //TUAN TODO: update when 'tight' and 'bulk'
+                  ////with new syntax is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                    _tissueParams.getPreSynapticPointTarget(
+                        targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                    _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+
+                  NDPairList Mcpt2cleft = cpt2cleft[*ctiter];
+                  Mcpt2cleft.replace("idx", postIdx);
+                  Mcpt2cleft.replace("side", "post");
+                  connect(sim, connector, postCpt,
+                      synapticCleftNodes[cleftType], Mcpt2cleft);
+                }  
               }
             }
             typeCounter[synapseType]++;
@@ -5792,7 +5844,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   }
   //bool preSynPoint = false;
 	if (category == "CLEFT")
-  {//NOT COMPLETED YET
+  {//Done
     typeIter = _synapticCleftTypesMap.find(type);
     //if (typeIter == _synapticCleftTypesMap.end())
     //{
@@ -5809,7 +5861,6 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   }
 
 
-  unsigned int* ids = new unsigned int[_params->size() - 2];
   unsigned int idx = -1;
 
   --ndpiter;
@@ -5817,8 +5868,11 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   unsigned long long mask = 0;
   double targetKey = 0;
 
-  if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL")
-  {
+  if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL"
+      || category == "SYNAPSE" || category == "CLEFT"
+      )
+  {//find: mask + targetKey
+    unsigned int* ids = new unsigned int[_params->size() - 2];
     for (; ndpiter != ndpend_reverse; --ndpiter)
     {
       NumericDataItem* ndi =
@@ -5911,23 +5965,87 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
                  : _chemicalSynapseLayers[typeIdx];
     assert(layer);
     int density = layer->getDensity(_rank);
-    for (int i = 0; i < density; ++i)
+
+    if (maskVector.size() == 0)
     {
-      nodeDescriptors.push_back(
-          layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+      for (int i = 0; i < density; ++i)
+      {
+        nodeDescriptors.push_back(
+            layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+      }
+    }
+    //else{//not an option to use
+    //  for (int i = 0; i < density; ++i)
+    //  {
+    //    //process the check here
+    //    //
+    //    NodeDescriptor* nd = layer->getNodeAccessor()->getNodeDescriptor(_rank, i);
+    //    ShallowArray< BranchDataStruct* >* 
+    //      bdsArray = 
+    //      (dynamic_cast<BranchDataArrayProducer>(nd))->CG_get_BranchDataArrayProducer_branchDataArray();
+
+    //    BranchDataStruct* postSide = bdsArray[1];
+
+    //    key_size_t key = postSide->key;
+    //    if ((mapiter->second)[0] == _rank &&
+    //        _segmentDescriptor.getSegmentKey(key, mask) == targetKey)
+    //    {
+    //      nodeDescriptors.push_back(
+    //          layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+    //    }
+    //  }
+    //}
+    else{
+      std::map<Touch*, int>& tmap = _synapseReceptorMaps[typeIdx];
+      std::map<Touch*, int>::iterator siter,
+        siend = tmap.end();
+      for (siter = tmap.begin(); siter != siend; siter++)
+      {
+        //Post-side
+        key_size_t key = (*siter).first->getKey2();
+        if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey)
+        {
+          int i = (*siter).second;
+          nodeDescriptors.push_back(
+              layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+        }
+      }
     }
   }
 	else if (category == "CLEFT")
   {
-    //layer = preSynPoints ? _preSynapticPointLayers[typeIdx]
-    //             : _synapticCleftLayers[typeIdx];
-    layer = _synapticCleftLayers[typeIdx];
-    assert(layer);
-    int density = layer->getDensity(_rank);
-    for (int i = 0; i < density; ++i)
+    if (maskVector.size() == 0)
     {
-      nodeDescriptors.push_back(
-          layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+      //layer = preSynPoints ? _preSynapticPointLayers[typeIdx]
+      //             : _synapticCleftLayers[typeIdx];
+      layer = _synapticCleftLayers[typeIdx];
+      assert(layer);
+      int density = layer->getDensity(_rank);
+      for (int i = 0; i < density; ++i)
+      {
+        nodeDescriptors.push_back(
+            layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+      }
+
+    }
+    else{
+      std::map<Touch*, int>& tmap = _synapticCleftMaps[typeIdx];
+      std::map<Touch*, int>::iterator siter,
+        siend = tmap.end();
+      for (siter = tmap.begin(); siter != siend; siter++)
+      {
+        // Pre-side and Post-side
+        key_size_t key1= (*siter).first->getKey1();
+        key_size_t key2= (*siter).first->getKey2();
+        if (_segmentDescriptor.getSegmentKey(key1, mask) == targetKey
+           || _segmentDescriptor.getSegmentKey(key2, mask) == targetKey 
+            )
+        {
+          int i = (*siter).second;
+          nodeDescriptors.push_back(
+              layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+        }
+      }
     }
   }
 

@@ -22,6 +22,7 @@
 #include "GlobalNTSConfig.h"
 
 #include <iomanip>
+#include <cmath>
 
 #define SMALL 1.0E-6
 #define DISTANCE_SQUARED(a, b)               \
@@ -691,9 +692,9 @@ dyn_var_t IP3Concentration::getLambda(DimensionStruct* a, int index)
 #ifdef NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
   dyn_var_t dsi ;
   if (index == 0)
-    dsi = (a->length/2.0 + std::abs(a->dist2soma - dimensions[1]->dist2soma));
+    dsi = (a->length/2.0 + std::fabs(a->dist2soma - dimensions[1]->dist2soma));
   else if (index == branchData->size-1)
-    dsi = (a->length/2.0 + std::abs(a->dist2soma - dimensions[index-2]->dist2soma));
+    dsi = (a->length/2.0 + std::fabs(a->dist2soma - dimensions[index-2]->dist2soma));
   else
     assert(0);
 #else
@@ -928,21 +929,21 @@ dyn_var_t IP3Concentration::getHalfDistance (int index)
           else if (isDistalCase1 or isDistalCase2)
           {
             halfDist = (
-                std::abs( dimensions[index]->length/2 )
+                std::fabs( dimensions[index]->length/2 )
                 +
-                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                std::fabs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
                 )/ 2.0;
           }
         }
         else
         {
           halfDist = (
-              std::abs( dimensions[index]->length/2 )
+              std::fabs( dimensions[index]->length/2 )
               +
-              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              std::fabs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
               )/ 2.0;
           //halfDist = (
-          //    std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          //    std::fabs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
           //    );
 
         }
@@ -952,39 +953,39 @@ dyn_var_t IP3Concentration::getHalfDistance (int index)
         {
           if (isDistalCase0)
             halfDist = (
-                std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+                std::fabs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
                 );
           else if (isDistalCase1 or isDistalCase2)
             halfDist = (
-                std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+                std::fabs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
                 +
-                std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+                std::fabs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
                 )/ 2.0;
         }
         else
           halfDist = (
-              std::abs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
+              std::fabs( dimensions[index]->dist2soma - proximalDimension->dist2soma )
               +
-              std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+              std::fabs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
               )/ 2.0;
       }
 
     }
     else
       halfDist = (
-          std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+          std::fabs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
           );
   }
   else if (index == 0)
     if (isDistalCase0)
       halfDist = (
-          std::abs( dimensions[index]->dist2soma - dimensions[index+1]->dist2soma )
+          std::fabs( dimensions[index]->dist2soma - dimensions[index+1]->dist2soma )
           );
     else if (isDistalCase1 or isDistalCase2)
       halfDist = (
-          std::abs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
+          std::fabs( dimensions[index]->dist2soma - distalDimensions[0]->dist2soma )
           +
-          std::abs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
+          std::fabs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
           )/ 2.0;
     else 
     {// no use
@@ -992,9 +993,9 @@ dyn_var_t IP3Concentration::getHalfDistance (int index)
   else 
   {
     halfDist = (
-        std::abs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
+        std::fabs( dimensions[index]->dist2soma - dimensions[index-1]->dist2soma )
         +
-        std::abs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
+        std::fabs( dimensions[index+1]->dist2soma - dimensions[index]->dist2soma )
         )/ 2.0;
   }
   return halfDist;
