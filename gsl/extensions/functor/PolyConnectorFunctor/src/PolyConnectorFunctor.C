@@ -54,6 +54,7 @@ void PolyConnectorFunctor::userInitialize(LensContext* CG_c)
 
 void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end) 
 {
+  CG_c->connectionContext->reset();
 #ifdef DEBUG
    int mySpaceId;
    MPI_Comm_rank(MPI_COMM_WORLD, &mySpaceId);
@@ -174,7 +175,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
    } else if (CG_c->sim->isSimulatePass()) {
      lc=&_lensConnector;
    } else {
-     std::cerr<<"Error, ConnectSets3Functor : no connection context set!"<<std::endl;
+     std::cerr<<"Error, PolyConnectorFunctor: no connection context set!"<<std::endl;
      exit(0);
    }
 

@@ -25,6 +25,7 @@
 #include "Receiver.h"
 #include "TouchVector.h"
 #include "TissueContext.h"
+#include "ComputeBranch.h"
 
 #include <iostream>
 #include <stdio.h>

@@ -1,0 +1,9 @@
+#ifndef Zipper_MDL
+#define Zipper_MDL
+
+Framework Functor Zipper Category "CONNECTOR" {
+   Initialize();
+   void Execute (...);
+}
+
+#endif

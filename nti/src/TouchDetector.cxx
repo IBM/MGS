@@ -70,6 +70,7 @@
 #include "NTSMacros.h"
 #include "MaxComputeOrder.h"
 #include "VolumeDecomposition.h"
+#include "ComputeBranch.h"
 
 #include <cassert>
 #include <algorithm>

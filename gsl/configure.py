@@ -947,6 +947,7 @@ FUNCTOR_MODULES := BinomialDist \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
 	    TissueMGSifyFunctor \\
+        Zipper \\
         UniformDiscreteDist \\
         GetNodeCoordFunctor \\
         ExecuteShell \\

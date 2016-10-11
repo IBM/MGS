@@ -33,16 +33,16 @@ class ComputeBranch
 #ifdef IDEA1
   , _configuredCompartment(false)
 #endif
-    {};
+  {};
+  Capsule& lastCapsule();
+  //DATA
   Capsule* _capsules;
   int _nCapsules;
+
   ComputeBranch* _parent;
   std::list<ComputeBranch*> _daughters; //TUAN: GPU port TODO: try to use contiguous array??
-  Capsule& lastCapsule()
-  {
-    assert(_nCapsules > 0);
-    return _capsules[_nCapsules - 1];
-  }
+  dyn_var_t getSurfaceArea();
+
 #ifdef IDEA1
   std::pair<float, float> 
       _numCapsulesEachSideForBranchPoint;  // keep info. to

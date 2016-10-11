@@ -21,7 +21,11 @@
 #include "LensContext.h"
 #include "NodeSet.h"
 #include "TissueElement.h"
+#include "NodeDescriptor.h"
+#include "Grid.h"
 #include <memory>
+
+class Grid;
 
 class TissueProbeFunctor : public CG_TissueProbeFunctorBase, public TissueElement
 {
@@ -29,6 +33,7 @@ class TissueProbeFunctor : public CG_TissueProbeFunctorBase, public TissueElemen
       void userInitialize(LensContext* CG_c);
       std::auto_ptr<NodeSet> userExecute(LensContext* CG_c);
       TissueProbeFunctor();
+      TissueProbeFunctor(TissueProbeFunctor*);
       virtual ~TissueProbeFunctor();
       virtual void duplicate(std::auto_ptr<TissueProbeFunctor>& dup) const;
       virtual void duplicate(std::auto_ptr<Functor>& dup) const;
@@ -37,6 +42,8 @@ class TissueProbeFunctor : public CG_TissueProbeFunctorBase, public TissueElemen
 
    private:
       TissueFunctor* _tissueFunctor;
+      Grid* _grid;
+      std::vector<NodeDescriptor*> _nodeDescriptors;
 };
 
 #endif
