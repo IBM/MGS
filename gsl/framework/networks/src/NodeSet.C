@@ -41,6 +41,8 @@ NodeSet::NodeSet(NodeDescriptor* n)
 NodeSet::NodeSet(Grid* grid, std::vector<NodeDescriptor*> nodes)
   : GridSet(grid), _allLayers(false), _allIndices(false)
 {
+  //IMPORTANT: If there are more than one time a NodeDescriptor* present in the list
+  //    ONLY ONE is added to the nodeset (using unique)
   _allCoords=false;
   sort(nodes.begin(), nodes.end());
   std::vector<NodeDescriptor*>::iterator newEnd=unique(nodes.begin(), nodes.end());

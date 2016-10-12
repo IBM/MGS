@@ -125,6 +125,7 @@ ND_SHARED_SOURCES = Branch.cxx \
 SegmentKeySegmentSpace.cxx \
 NeuroDevCommandLine.cxx \
 Capsule.cxx \
+ComputeBranch.cxx \
 Communicator.cxx \
 Director.cxx \
 History.cxx \

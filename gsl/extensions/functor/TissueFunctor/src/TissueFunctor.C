@@ -235,6 +235,8 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _synapseGeneratorMap(f._synapseGeneratorMap),
       _synapseReceptorMaps(f._synapseReceptorMaps),
       _synapticCleftMaps(f._synapticCleftMaps),
+      _probedLayoutsMap(f._probedLayoutsMap),
+      _probedNodesMap(f._probedNodesMap),
       _compartmentVariableTypes(f._compartmentVariableTypes),
       _electricalSynapseTypesMap(f._electricalSynapseTypesMap),
       _bidirectionalConnectionTypesMap(f._bidirectionalConnectionTypesMap),
@@ -2540,9 +2542,29 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 
   if (tissueElement == "Layout")
   {
-    TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
-    element->setTissueFunctor(this);
-    _layoutFunctor->duplicate(rval);
+    NDPairList* ndpl=_params.get();
+    assert(ndpl);
+    assert(ndpl->size()>0);
+    NDPair* ndp=ndpl->back();
+    if (ndp->getName()!="PROBED") {
+      //normal NTS "Layout"
+      TissueElement* element = dynamic_cast<TissueElement*>(_layoutFunctor.get());
+      element->setTissueFunctor(this);
+      _layoutFunctor->duplicate(rval);
+    }
+    else {
+      //special "Layout" for being used in Zipper
+      //do both: Layout, store and Probe  
+      //NOTE: A Layout has a unique name given via 'PROBED=name'
+      // it basically do layout inside probe (which store Grid*, NodeDescriptor*)
+      // and the Layout to find the probed Grid; 
+      std::vector<NodeDescriptor*> nodeDescriptors;
+      Grid* grid = doProbe(CG_c, nodeDescriptors);
+
+      TissueElement* element=dynamic_cast<TissueElement*>(_layoutFunctor.get());
+      element->setTissueFunctor(this);
+      _layoutFunctor->duplicate(rval);
+    }
   }
   else if (tissueElement == "NodeInit")
   {
@@ -2597,13 +2619,59 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
 //    Shallow<int> rval;
 //    with rval.size() == _nbrGridNodes
 //       rval.assign(_nbrGridNodes, 0);
+ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
+{
+  NDPairList* ndpl=_params.get();
+  NDPair* ndp=ndpl->back();
+  assert(ndpl);
+  assert(ndpl->size()>0);
+
+  // rval[gridnode-index] = how-many-capsules-in-that-gridnode
+  ShallowArray<int> rval;
+
+  if (ndp->getName()=="PROBED") {
+    rval = doLayoutHybrid(lc);
+  }
+  else
+  {//"CATEGORY"
+    rval = doLayoutNTS(lc);
+  }
+  return rval;
+}
+
+ShallowArray<int> TissueFunctor::doLayoutHybrid(LensContext* lc)
+{
+  NDPairList* ndpl=_params.get();
+  NDPair* ndp=ndpl->back();
+  std::map<std::string, ShallowArray<int> >::iterator 
+    miter=_probedLayoutsMap.end();
+
+  ShallowArray<int> rval;
+  assert(ndp->getName()=="PROBED");
+
+  if (ndp->getName()=="PROBED") {
+    StringDataItem* prDI = dynamic_cast<StringDataItem*>(ndp->getDataItem());
+    if (prDI == 0) {
+      std::cerr<<"TissueFunctor: probed parameter is not a string!"<<std::endl;
+      exit(-1);
+    }
+    miter=_probedLayoutsMap.find(prDI->getString());
+    if (miter==_probedLayoutsMap.end()) {
+      std::cerr<<"PROBED identifier not recognized on Layout!"<<std::endl;
+      exit(-1);
+    }
+    rval=miter->second;
+  }
+  return rval;
+}
+
 // NOTE:
 //  Example: Layer (..., <nodekind="SynapticClefts[Voltage][2]">, ...)
 //  then
 //   nodeCategory = "SynapticClefts"
 //   nodeType  = "Voltage"
 //   nodeComputeOrder = 2
-ShallowArray<int> TissueFunctor::doLayout(LensContext* lc)
+ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 {
   assert(_params.get());
 
@@ -5754,14 +5822,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     exit(EXIT_FAILURE);
   }
   std::string category = categoryDI->getString();
-  if (category != "BRANCH" && category != "JUNCTION" && category != "CHANNEL" &&
-      category != "SYNAPSE" && 
-			category != "CLEFT")
-  {
-    std::cerr << "Unrecognized CATEGORY during TissueProbe : " << category
-              << " !" << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  std::string task(("TissueProbe"));
+  assert(isValidCategoryString(category, task));
   
   --ndpiter;
 
@@ -5780,93 +5842,15 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   std::string type = typeDI->getString();
 
   int typeIdx;
-  std::map<std::string, int>::iterator typeIter;
-  if (category == "BRANCH")
-  {
-    typeIter = _compartmentVariableTypesMap.find(type);
-    if (typeIter == _compartmentVariableTypesMap.end())
-    {
-      std::cerr << "Unrecognized TYPE TissueProbe : " << type << " !"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    typeIdx = typeIter->second;
-  }
-  if (category == "JUNCTION")
-  {
-    typeIter = _junctionTypesMap.find(type);
-    if (typeIter == _junctionTypesMap.end())
-    {
-      std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    typeIdx = typeIter->second;
-  }
-  if (category == "CHANNEL")
-  {
-    typeIter = _channelTypesMap.find(type);
-    if (typeIter == _channelTypesMap.end())
-    {
-      std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    typeIdx = typeIter->second;
-  }
-  //if (category == "CHANNEL")
-  //{
-  //  typeIter = _channelTypesMap.find(type);
-  //  if (typeIter == _channelTypesMap.end())
-  //  {
-  //    std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-  //              << std::endl;
-  //    exit(EXIT_FAILURE);
-  //  }
-  //  typeIdx = typeIter->second;
-  //}
-  bool esyn = false;
-  if (category == "SYNAPSE")
-  {
-    typeIter = _chemicalSynapseTypesMap.find(type);
-    if (typeIter == _chemicalSynapseTypesMap.end())
-    {
-      typeIter = _electricalSynapseTypesMap.find(type);
-      if (typeIter == _electricalSynapseTypesMap.end())
-      {
-        std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-                  << std::endl;
-        esyn = true;
-        exit(EXIT_FAILURE);
-      }
-    }
-    typeIdx = typeIter->second;
-  }
-  //bool preSynPoint = false;
-	if (category == "CLEFT")
-  {//Done
-    typeIter = _synapticCleftTypesMap.find(type);
-    //if (typeIter == _synapticCleftTypesMap.end())
-    //{
-    //  //typeIter = _preSynapticPointTypesMap.find(type);
-    //  //if (typeIter == _preSynapticPointTypesMap.end())
-    //  {
-    //    std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
-    //              << std::endl;
-    //    preSynPoint = true;
-    //    exit(EXIT_FAILURE);
-    //  }
-    //}
-    typeIdx = typeIter->second;
-  }
-
+  bool esyn;
+  typeIdx = getTypeLayerIdx(category, type, esyn);
 
   unsigned int idx = -1;
 
   --ndpiter;
 
   unsigned long long mask = 0;
-  double targetKey = 0;
+  key_size_t targetKey = 0;
 
   if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL"
       || category == "SYNAPSE" || category == "CLEFT"
@@ -5877,7 +5861,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     {
       NumericDataItem* ndi =
           dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
-      if (ndi == 0)
+      if (ndi <= 0)
       {
         std::cerr << "TissueProbe parameter specification must comprise "
                      "unsigned integers!" << std::endl;
@@ -6062,6 +6046,306 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     ns->empty();
   }
   rval.reset(ns);
+}
+Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors)
+{
+  Grid* rval=0;
+  std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+  NDPairList::iterator ndpiter=_params->end(), ndpend_reverse=_params->begin();
+  --ndpiter;
+  --ndpend_reverse;
+
+  std::string layout="NO_LAYOUT_ID_SPECIFIED";
+  int remaining=_params->size();
+  int N=-1;
+  assert((*ndpiter)->getName()=="PROBED");
+  StringDataItem* layoutDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  layout=layoutDI->getString();
+
+  --ndpiter;
+  --remaining;
+  if (ndpiter!=ndpend_reverse && (*ndpiter)->getName()=="N") {
+    NumericDataItem* nDI = dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
+    if (nDI==0) {
+      std::cerr<<"N parameter of TissueProbe must be a number!"<<std::endl;
+      exit(0);
+    }
+    N=nDI->getInt();
+    --ndpiter;
+    --remaining;
+  }
+  
+  std::map<std::string, std::map<std::pair<std::string, std::string>, std::pair<Grid*, std::vector<NodeDescriptor*> > > > ::iterator miter=_probedNodesMap.end();
+  if (layout!="NO_LAYOUT_ID_SPECIFIED") miter=_probedNodesMap.find(layout);
+
+  if (miter!=_probedNodesMap.end()) {
+    //PROBE-name exist, reuse them
+    if (remaining<2)
+    {
+      if (_rank == 0){
+        std::cerr<<"Error on TissueFunctor Probe! No mask specified!"<<std::endl;
+        std::cerr<<".... at least CATEGORY and TYPE."<<std::endl;
+      }
+      assert(0);
+    }
+
+    std::pair<std::string, std::string> cattype=getCategoryTypePair(ndpiter, remaining);
+    std::map<std::pair<std::string, std::string>, 
+      std::pair<Grid*, std::vector<NodeDescriptor*> > > ::iterator 
+        mmiter = miter->second.find(cattype);
+    if (mmiter!=miter->second.end()) {
+      rval = mmiter->second.first;
+      nodeDescriptors = mmiter->second.second;
+    }
+    else {
+      //existing PROBE-name; but pass in different (CATEGORY,TYPE) selection criteria
+      // It means we need to get nodes in that layer but keep using the same index
+      // IMPORTANT: any value of N=? is ignored
+      nodeDescriptors.clear();
+      std::string category=cattype.first;
+      std::string type=cattype.second;
+      bool esyn=false;
+      int typeIdx=getTypeLayerIdx(category, type, esyn);
+      GridLayerDescriptor* layer=0;
+      layer = getGridLayerDescriptor(category, typeIdx, esyn);
+      assert(layer);
+
+      rval = layer->getGrid();
+
+      std::vector<NodeDescriptor*>& pattern=miter->second.begin()->second.second;
+      std::vector<NodeDescriptor*>::iterator vend=pattern.end(), viter;
+      //if (N != pattern->size())
+      //{//we cannot check, as N is splitted across processes
+      //  std::cerr << "WARNING: Please make sure you use the same N's value for the same PROBED name " << std::endl;
+      //  assert(0);
+
+      //}
+      for (viter=pattern.begin(); viter!=vend; ++viter) {
+        NodeDescriptor* nd = *viter;
+        nodeDescriptors.push_back(layer->getNodeAccessor()->
+            getNodeDescriptor(nd->getNodeIndex(), nd->getDensityIndex()));
+      }
+    }
+  }
+  else {
+    //first time use the PROBE-name or we use non-PROBE-layer
+    nodeDescriptors.clear();
+    if (remaining<2)
+      std::cerr<<"Error on TissueFunctor Probe! No mask specified!"<<std::endl;
+
+    std::pair<std::string, std::string> cattype=getCategoryTypePair(ndpiter, remaining);
+    std::string category = cattype.first;
+    std::string type = cattype.second;
+
+    bool esyn=false;
+    int typeIdx=getTypeLayerIdx(category, type, esyn);
+
+    --ndpiter;
+    --remaining;
+
+    unsigned long long mask=0;
+    key_size_t targetKey=0;
+
+    //TUAN ADD PROBE SYNAPSERECEPTOR + CLEFT
+    //if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL"
+    //    || category == "SYNAPSE" || category == "CLEFT"
+    //   )
+    if (category=="BRANCH" || category=="JUNCTION" || category=="CHANNEL") 
+    {
+      //find: mask + targetKey
+      unsigned int* ids=new unsigned int[remaining];
+      unsigned int idx=-1;
+      for (; ndpiter!=ndpend_reverse; --ndpiter, --remaining) {
+        NumericDataItem* ndi=dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
+        if (ndi<=0) {
+          std::cerr<<"TissueProbe parameter specification must comprise unsigned integers!"<<std::endl;
+          exit(0);
+        }
+        maskVector.push_back(_segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
+        ids[++idx]=ndi->getUnsignedInt();
+      }
+
+      mask=_segmentDescriptor.getMask(maskVector);
+      targetKey=_segmentDescriptor.getSegmentKey(maskVector, ids);
+      delete ids;
+    }
+
+    //SELECTION PROCESS
+    std::vector<double> surfaceAreas;
+    GridLayerDescriptor* layer=0;
+    std::map<ComputeBranch*, std::vector<int> >* indexMap;
+
+    //Step 1 (case 1): any things associated with a given branch (e.g. CB or Junction)
+    //             density assignment based on surfaceArea of all matched-compartment area
+    if (category=="BRANCH") {
+      layer=_compartmentVariableLayers[typeIdx];
+      assert(layer);
+      std::map<ComputeBranch*, std::vector<int> >::iterator mapiter, mapend=_branchIndexMap[type].end();
+      for (mapiter=_branchIndexMap[type].begin(); mapiter!=mapend; ++mapiter) {
+        key_size_t key=mapiter->first->_capsules->getKey();
+        if ( (mapiter->second)[0]==_rank && _segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->
+              getNodeDescriptor((mapiter->second)[0], (mapiter->second)[1]));
+          if (N>=0) surfaceAreas.push_back(mapiter->first->getSurfaceArea());
+        }
+      }
+    }
+    if (category=="JUNCTION") {
+      layer=_junctionLayers[typeIdx];
+      assert(layer);
+      std::map<Capsule*, std::vector<int> >::iterator mapiter, mapend=_junctionIndexMap[type].end();
+      for (mapiter=_junctionIndexMap[type].begin(); mapiter!=mapend; ++mapiter) {
+        key_size_t key=mapiter->first->getKey();
+        if ( (mapiter->second)[0]==_rank && _segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->
+              getNodeDescriptor((mapiter->second)[0], (mapiter->second)[1]));
+          if (N>=0) surfaceAreas.push_back(mapiter->first->getEndSphereSurfaceArea());
+        }
+      }
+    }
+    if (category=="CHANNEL") {
+      //NOTE: The density of channels come from  (1) those associated with CBs;
+      //               and then (2) those associated with Junctions
+      layer=_channelLayers[typeIdx];
+      assert(layer);
+      int density=layer->getDensity(_rank);
+      int nChannelBranches=_channelBranchIndices1[typeIdx].size(); 
+      key_size_t key;
+      for (int i=0; i<density; ++i) {
+        double surfaceArea=0;
+        if (i<nChannelBranches) {
+          std::pair<int, int>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
+          ComputeBranch* branch=findBranch(_rank, channelBranchIndexPair.first, _compartmentVariableTypes[channelBranchIndexPair.second]);
+          key=branch->_capsules[0].getKey();
+          if (N>=0) surfaceArea=branch->getSurfaceArea();
+        }
+        else {
+          std::pair<int, int>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
+          Capsule* junction=findJunction(_rank, channelJunctionIndexPair.first, _compartmentVariableTypes[channelJunctionIndexPair.second]);
+          key=junction->getKey();
+          if (N>=0) surfaceArea=junction->getEndSphereSurfaceArea();
+        }
+        if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+          if (N>=0) surfaceAreas.push_back(surfaceArea);
+        }
+      }
+    }
+    //Step 1 (case 2): any things independent from a neuron (e.g. synapse, cleft)
+    //            density assignment based on counts (i.e. same surface Area)
+    if (category=="SYNAPSE") {
+      //use Post-side
+      layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
+      assert(layer);
+      int density=layer->getDensity(_rank);
+      std::map<Touch*, int> mymap = _synapseReceptorMaps[typeIdx]; 
+      for (auto const &entity : mymap )
+      {
+        Touch* touch = entity.first;
+        int i = entity.second;
+        key_size_t key = touch->getKey2();
+        if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+          if (N>=0) surfaceAreas.push_back(1.0);
+        }
+      }
+      //for (int i=0; i<density; ++i) {
+      //  nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+      //}
+    }
+    if (category=="CLEFT") {
+      //use Pre-side 
+      layer = _synapticCleftLayers[typeIdx] ;
+      assert(layer);
+      int density=layer->getDensity(_rank);
+      std::map<Touch*, int> mymap = _synapticCleftMaps[typeIdx]; 
+      for (auto const &entity : mymap )
+      {
+        Touch* touch = entity.first;
+        int i = entity.second;
+        key_size_t key = touch->getKey1();
+        if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+          if (N>=0) surfaceAreas.push_back(1.0);
+        }
+      }
+      //for (int i=0; i<density; ++i) {
+      //  nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+      //}
+    }
+
+    rval = layer->getGrid();
+    int nds=nodeDescriptors.size();
+
+    if (layout!="NO_LAYOUT_ID_SPECIFIED") {
+      ShallowArray< int > lytr; //keep the density
+      int* lytc = new int[_size]();
+      MPI_Allgather(&nds, 1, MPI_INT, lytc, 1, MPI_INT, MPI_COMM_WORLD);
+
+      if (N>=0) {
+        RNG rng;
+        rng.reSeedShared(layout[0]);
+        int seed=lrandom(rng);
+        for (int n=1; n<layout.size(); ++n) {
+          rng.reSeedShared(seed+layout[n]);
+          seed=lrandom(rng);
+        }
+        rng.reSeedShared(seed);
+
+        int totalNodes=0;
+        int hi, lo;
+        for (int n=0; n<_size; ++n) { 
+          if (n==_rank)	lo=totalNodes;
+          totalNodes+=lytc[n];
+          if (n==_rank) hi=totalNodes;
+        }
+        double localMaxSA=0, globalMaxSA=0;
+        assert(nds==surfaceAreas.size());
+        for (int n=0; n<nds; ++n) 
+          if (surfaceAreas[n]>localMaxSA) localMaxSA=surfaceAreas[n];
+        MPI_Allreduce(&localMaxSA, &globalMaxSA, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);      
+        //normalized all SurfaceArea (SA) [0..1]
+        double* saR = new double[nds]();
+        for (int n=0; n<nds; ++n) saR[n]=surfaceAreas[n]/globalMaxSA;
+
+        //get all normalized SA
+        double* saRT = new double[totalNodes]();
+        int* rdispls = new int[_size]();
+        rdispls[0]=0;
+        for (int n=1; n<_size; ++n) rdispls[n]=rdispls[n-1]+lytc[n-1];
+        MPI_Allgatherv(saR, nds, MPI_DOUBLE, saRT, lytc, rdispls, MPI_DOUBLE, MPI_COMM_WORLD);
+        std::vector<NodeDescriptor*> survivors;
+        int count=0;
+        while (count<N) {
+          std::map<double, int> shuffle;
+          for (int n=0; n<totalNodes; ++n) 
+            if (drandom(rng)<saRT[n]) shuffle[drandom(rng)]=n;
+          std::map<double, int>::iterator miter, mend=shuffle.end();
+          for (miter=shuffle.begin(); miter!=mend && count<N; ++miter) {
+            ++count;
+            int nidx=miter->second;
+            if (nidx>=lo && nidx<hi) 
+              survivors.push_back(nodeDescriptors[miter->second-lo]);
+          }
+        }
+        delete [] saR;
+        delete [] saRT;
+        delete [] rdispls;
+
+        nodeDescriptors=survivors;
+        nds = nodeDescriptors.size();
+        MPI_Allgather(&nds, 1, MPI_INT, lytc, 1, MPI_INT, MPI_COMM_WORLD);
+      }
+
+      for (int n=0; n<_size; ++n) 
+        lytr.push_back(lytc[n]);
+      delete [] lytc;
+      _probedLayoutsMap[layout]=lytr;
+      _probedNodesMap[layout][cattype]=std::pair<Grid*, std::vector<NodeDescriptor*> >
+        (rval, nodeDescriptors);
+    }
+  }
+  return rval;
 }
 
 void TissueFunctor::doMGSify(LensContext* lc)
@@ -7730,5 +8014,145 @@ std::pair<float, float> TissueFunctor::getMeanSTD(int brType,
 //      result = true;
 //  return result;
 //}
-
 #endif
+
+//GOAL: return the name associated with an NTS-specific Layer defined via TissueFunctor
+//  which include <category, name>
+//Example: category = Compartment  |  Channel | ...
+//         name     = Voltage 
+std::pair<std::string, std::string> TissueFunctor::getCategoryTypePair(NDPairList::iterator& ndpiter, int& remaining)
+{
+  if ((*ndpiter)->getName()!="CATEGORY") {
+    std::cerr<<"First parameter of TissueProbe must be PROBED or CATEGORY!"<<std::endl;
+    exit(0);
+  }
+  StringDataItem* categoryDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  if (categoryDI==0) {
+    std::cerr<<"CATEGORY parameter of TissueProbe must be a string!"<<std::endl;
+    exit(0);
+  }
+  std::string category=categoryDI->getString();
+  std::string task(("TissueProbe"));
+  assert(isValidCategoryString(category, task));
+
+  int typeIdx;
+  --ndpiter;
+  --remaining;
+
+  if ((*ndpiter)->getName()!="TYPE") {
+    std::cerr<<"Second parameter of TissueProbe must be TYPE!"<<std::endl;
+    exit(0);
+  }
+  StringDataItem* typeDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
+  if (typeDI==0) {
+    std::cerr<<"TYPE parameter of TissueProbe must be a string!"<<std::endl;
+    exit(0);
+  }  
+  std::string type=typeDI->getString();
+
+  return std::pair<std::string, std::string>(category, type);
+}
+
+//GOAL: return the NTS-layer-index(category-dependent) based on the criteria passed in
+//    which include CATEGORY, TYPE
+// OUTPUT: esyn = True if electrical-synapse layer
+int TissueFunctor::getTypeLayerIdx(std::string category, std::string type, bool& esyn)
+{
+  int typeIdx=-1;
+  std::map<std::string, int>::iterator typeIter;
+  esyn=false;
+  if (category=="BRANCH") {
+    typeIter=_compartmentVariableTypesMap.find(type);
+    if (typeIter==_compartmentVariableTypesMap.end()) {
+      std::cerr<<"Unrecognized TYPE TissueProbe : "<<type<<" !"<<std::endl;
+      exit(0);
+    }
+    typeIdx=typeIter->second;
+  }
+  else if (category=="JUNCTION") {
+    typeIter=_junctionTypesMap.find(type);
+    if (typeIter==_junctionTypesMap.end()) {
+      std::cerr<<"Unrecognized TYPE during TissueProbe : "<<type<<" !"<<std::endl;
+      exit(0);
+    }
+    typeIdx=typeIter->second;
+  }
+  else if (category=="CHANNEL") {
+    typeIter=_channelTypesMap.find(type);
+    if (typeIter==_channelTypesMap.end()) {
+      std::cerr<<"Unrecognized TYPE during TissueProbe : "<<type<<" !"<<std::endl;
+      exit(0);
+    }
+    typeIdx=typeIter->second;
+  }
+  else if (category=="CHANNEL") {
+    typeIter=_channelTypesMap.find(type);
+    if (typeIter==_channelTypesMap.end()) {
+      std::cerr<<"Unrecognized TYPE during TissueProbe : "<<type<<" !"<<std::endl;
+      exit(0);
+    }
+    typeIdx=typeIter->second;
+  }
+  else if (category=="SYNAPSE") {
+    typeIter=_chemicalSynapseTypesMap.find(type);
+    if (typeIter==_chemicalSynapseTypesMap.end()) {
+      typeIter=_electricalSynapseTypesMap.find(type);
+      if (typeIter==_electricalSynapseTypesMap.end()) {
+        std::cerr<<"Unrecognized TYPE during TissueProbe : "<<type<<" !"<<std::endl;
+        esyn=true;
+        exit(0);
+      }
+    }
+    typeIdx=typeIter->second;
+  }
+	else if (category == "CLEFT")
+  {//Done
+    typeIter = _synapticCleftTypesMap.find(type);
+    //if (typeIter == _synapticCleftTypesMap.end())
+    //{
+    //  //typeIter = _preSynapticPointTypesMap.find(type);
+    //  //if (typeIter == _preSynapticPointTypesMap.end())
+    //  {
+    //    std::cerr << "Unrecognized TYPE during TissueProbe : " << type << " !"
+    //              << std::endl;
+    //    preSynPoint = true;
+    //    exit(EXIT_FAILURE);
+    //  }
+    //}
+    typeIdx = typeIter->second;
+  }
+  else {
+    std::cerr<<"Unrecognized CATEGORY on TissueFunctor : "<<category<<" !"<<std::endl;
+    exit(0);
+  }
+  return typeIdx;
+}
+
+bool TissueFunctor::isValidCategoryString(std::string category, std::string task)
+{
+  bool result=true;
+  if (category != "BRANCH" && category != "JUNCTION" && category != "CHANNEL" &&
+      category != "SYNAPSE" && 
+			category != "CLEFT")
+    result = false;
+  if (! result and _rank == 0)
+  {
+    std::cerr<<"Unrecognized CATEGORY during " << task <<": "<<category<<" !"<<std::endl;
+  }
+ return result; 
+}
+
+//GOAL: based on the category of layer, and index of layer in that category
+//   return the Layer data (i.e. GridLayerDescriptor*)
+GridLayerDescriptor* TissueFunctor::getGridLayerDescriptor(std::string category, int typeIdx, bool esyn)
+{
+  GridLayerDescriptor* layer;
+  if (category=="BRANCH") layer=_compartmentVariableLayers[typeIdx];
+  else if (category=="JUNCTION") layer=_junctionLayers[typeIdx];
+  else if (category=="CHANNEL") layer=_channelLayers[typeIdx];
+  else if (category=="SYNAPSE") layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
+	else if (category == "CLEFT")
+      layer = _synapticCleftLayers[typeIdx];
+
+  return layer;
+}

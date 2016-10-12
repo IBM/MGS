@@ -2,8 +2,14 @@
 #define IsoSampler_MDL
 
 Framework Functor IsoSampler Category "SAMPFCTR2" {
+//enforce index the same between one source-node and one dest-node
    Initialize();
    void Execute();
 }
 
+Framework Functor IsoSamplerHybrid Category "SAMPFCTR2" {
+//DO NOT require index the same between one source-node and one dest-node
+   Initialize();
+   void Execute();
+}
 #endif
