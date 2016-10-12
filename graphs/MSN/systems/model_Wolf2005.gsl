@@ -16,7 +16,7 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_00
+#define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "msn0_"
 //#define morph "msn0spines_"
@@ -57,27 +57,22 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //#define dataFolder "./"
 #define dataFolder "./data/"
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Jun23Wolf_rest"
+#define OutputFolderName dataFolder morph "Wolf_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Jun23Wolf_triggersoma"
+#define OutputFolderName dataFolder morph "Wolf_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Jun23Wolf_triggershaft"
+#define OutputFolderName dataFolder morph "Wolf_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Jun23Wolf_triggerspine"
-//#define OutputFolderName dataFolder morph "Jun23Wolf_case03"
+#define OutputFolderName dataFolder morph "Wolf_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Wolf_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Jun23Wolf_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Wolf_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Jun23Wolf_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Wolf_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Jun23Wolf_case06"
+#define OutputFolderName dataFolder morph "Wolf_case06" STR(EXTENSION)
 #endif
-//#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
-//#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
-//#define OutputFolderName dataFolder "out2_May27_trigger_distal"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma_distal"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -104,7 +99,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          600      // [ms]
+	#define TimeEnd          1300      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
@@ -159,7 +154,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
-//{{{neurotransmitter
+  //{{{ neurotransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 
@@ -176,7 +171,7 @@ print("Case 00: resting");
 #else
 #define NTGABA_baseline 5.0  // [uM]
 #endif
-//}}}
+  //}}}
 //}}}
 
 //{{{ Conditions: axial conductance + temperature + Vrest + Eleak
@@ -330,9 +325,11 @@ TissueProbeFunctor tissueProbeFunctor();
 Functor TissueFunctor(string commandLine, string commandLineModification, 
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
+#define tissueFile "neurons.txt"
 //NOTE: -r #capsules-per-cpt
-#define strArg1 "neurons.txt -p params/DevParams.par"
-#define strArg1_supplement "-p params/DetParams.par -n cost-volume"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" // -g 4"
+
+#define strArg1_supplement "-p params/DetParams.par -m 0 -n cost-volume"
 #define strArg3 "params/ChanParams.par"
 #if SIMULATION_INVOLVE == VMONLY
 #define  strArg2 "params/CptParams.par"
@@ -1284,7 +1281,7 @@ Grid MSN_D1Neuron{
 	//{{{ Na+ channels
 	InitNodes ( .[].Layer(NatChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
-				gbar = {0.0} 
+				gbar = {0.0}, Vhalf_m_shift = 0, Vhalf_h_shift = 0 
 				> ) ); 
 
 	InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
