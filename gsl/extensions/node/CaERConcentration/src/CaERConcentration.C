@@ -22,6 +22,7 @@
 
 #include "Branch.h"
 #include "StringUtils.h"
+#include <cmath>
 
 SegmentDescriptor CaERConcentration::_segmentDescriptor;
 

@@ -146,6 +146,7 @@ public:
 			//          with a pair of 'inputs', 'outputs'
 			//   'inputs' = list of nodekind's value as input to the receptor above 
 			//   'outputs' = list of nodekind's value as output of the receptor above
+      //e.g. map<"AMPAR", pair<list{Voltage, Calcium}, list{Voltage}>
     std::map<std::string, std::pair<std::list<std::string>,
                                     std::list<std::string> > > _targets;
     double _parameter;//the probability for forming the synapse
@@ -312,6 +313,9 @@ public:
   bool isCommentLine(std::string& line);
   void jumpOverCommentLine(FILE* fpF);
 
+  bool isGivenKeySpineNeck(key_size_t key) ;
+  bool isGivenKeySpineHead(key_size_t key) ;
+
   private:
 	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
 	std::string findNextKeyword(FILE* fpF);
@@ -352,20 +356,41 @@ public:
       //    unsigned long long bidirectionalConnectionTargetsMask2,
       const std::string& myBuf 
       );
+  void buildElectricalSynapseConnectionMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector1,
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector2,
+    std::vector<unsigned int*>& v1_ids, 
+    std::vector<unsigned int*>& v2_ids, 
+		const std::string& myBuf 
+		);
+  void buildChemicalSynapseConnectionMap(
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector1,
+    std::vector<SegmentDescriptor::SegmentKeyData>& maskVector2,
+    std::vector<unsigned int*>& v1_ids, 
+    std::vector<unsigned int*>& v2_ids, 
+		const std::string& myBuf 
+		);
 	bool checkForSpecialCases(FILE* fpF, int sz);
+  bool checkForSpecialCases(FILE* fpF, int sz, std::vector<int>& columns_found);
+  bool checkForSpecialCases(FILE* fpF, int sz, int& firstcolumn_found);
 	bool readBondParams(FILE* fpF);
   bool readAngleParams(FILE* fpF);
   bool readLJParams(FILE* fpF);
   bool readRadii(FILE* fpF);
   bool readTouchTables(FILE* fpF);
   bool readSIParams(FILE* fpF);
-  bool readCompartmentVariableTargets(FILE* fpF);
+  bool readCompartmentVariableTargets(FILE* fpF);//support array-form only BRANCHTYPE 
+  bool readCompartmentVariableTargets2(FILE* fpF);// support array-form for any 
   bool readBranchPointTargets(FILE* fpF);
-  bool readChannelTargets(FILE* fpF);
+  bool readChannelTargets(FILE* fpF); // obsolete
+  bool readChannelTargets2(FILE* fpF); //support array-form for all
   bool readElectricalSynapseTargets(FILE* fpF);
+  bool readElectricalSynapseTargets_vector2(FILE* fpF);//support array-form for all
   bool readBidirectionalConnectionTargets(FILE* fpF);
-  bool readBidirectionalConnectionTargets_vector(FILE* fpF);
+  bool readBidirectionalConnectionTargets_vector(FILE* fpF);//array-form for only BRANCHTYPE
+  bool readBidirectionalConnectionTargets_vector2(FILE* fpF); //support array-form for all
   bool readChemicalSynapseTargets(FILE* fpF);
+  bool readChemicalSynapseTargets_vector2(FILE* fpF);//support array-form for all
   bool readPreSynapticPointTargets(FILE* fpF);
 
   unsigned long long readNamedParam(FILE* fpF, std::string name,
@@ -379,6 +404,17 @@ public:
   // bool readChannelParams(FILE* fpF);
 
   bool readModelParams(
+      FILE* fpF, const std::string& id,
+      std::map<std::string, unsigned long long>& masks,
+      std::map<std::string,
+               std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+          paramsMap,
+      std::map<
+          std::string,
+          std::map<key_size_t,
+                   std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+          arrayParamsMap);
+  bool readModelParams2(
       FILE* fpF, const std::string& id,
       std::map<std::string, unsigned long long>& masks,
       std::map<std::string,
@@ -511,6 +547,21 @@ public:
   bool _SIParams, _compartmentVariables, _channels, _electricalSynapses,
       _chemicalSynapses;
 	bool _bidirectionalConnections;
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+  bool _passedInSpineHead, _passedInSpineNeck; 
+  unsigned long long _spineHeadMask, _spineNeckMask;
+  //std::set<key_size_t>  _spineHeadsMap, _spineNecksMap;
+  std::vector<key_size_t>  _spineHeadsMap, _spineNecksMap;
+#endif
+  bool readCriteriaSpineHead(FILE* fpF);// support array-form for any 
+  bool readCriteriaSpineNeck(FILE* fpF);// support array-form for any 
+	void buildSpinesMap(
+			std::vector<SegmentDescriptor::SegmentKeyData>& maskVector,
+			std::vector<unsigned int*>& v_ids, 
+      std::vector<key_size_t>& mymap
+			//std::istringstream &is
+			//const std::string & myBuf
+			);
 
   SegmentDescriptor _segmentDescriptor;
   std::string _currentFName;

@@ -114,7 +114,7 @@ void ChannelBKalphabeta::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];      //[mV]
 		// IMPORTANT: Make sure to convert [Ca]cyto from [uM] to [mM]
-#if SIMULATION_INVOLVE  == VMONLY
+#if ! defined(SIMULATE_CACYTO)
 		dyn_var_t Cai_base = 0.1; // [uM]
     dyn_var_t cai = Cai_base * uM2mM;
 #else

@@ -55,6 +55,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   friend class TissueNodeInitFunctor;
   friend class TissueConnectorFunctor;
   friend class TissueProbeFunctor;
+  friend class TissueMGSifyFunctor;
 
   public:
   void userInitialize(LensContext* CG_c, String& commandLineArgs1,
@@ -62,6 +63,11 @@ class TissueFunctor : public CG_TissueFunctorBase
                       String& channelParamFile, String& synapseParamFile,
                       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
                       Functor*& connectorFunctor, Functor*& probeFunctor);
+  // void userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
+	//	       String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+	//	       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
+	//	       Functor*& connectorFunctor, Functor*& probeFunctor,
+	//	       Functor*& MGSifyFunctor); //idea abandoned - JamesK.
   std::auto_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
                                      NDPairList*& params);
 
@@ -86,6 +92,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getNumCompartments(ComputeBranch* branch);
   int getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch);
 #endif
+
   // perform neuron generating from a given set of parameters
   void neuroGen(Params* params, LensContext* CG_c);
   // perform neuron development
@@ -102,6 +109,7 @@ class TissueFunctor : public CG_TissueFunctorBase
                        int nodeIndex, int densityIndex);
   //
   std::vector<DataItem*> const* extractCompartmentalization(NDPairList* params);
+
   // get StructDataItem
   // from a given point (represented by coordinate  (a pointer to double which
   // is expected to be 3-element array)+ radius + distance to soma)
@@ -112,11 +120,11 @@ class TissueFunctor : public CG_TissueFunctorBase
                                dyn_var_t radius, dyn_var_t dist2soma,
                                dyn_var_t surface_area, dyn_var_t volume,
                                dyn_var_t length);
-  // get the list of name of nodes (passed in GSL via nodekind)
-  // from a list of layers represented as NDPairList*
+  //parse the string 'nodekind=....'
   void getNodekind(const NDPairList* layerNdpl,
                    std::vector<std::string>& nodekind);
   // perform the connection between 2 set of nodetypes from 2 layers
+  // using the given InAttrPSet ndpl
   void connect(Simulation* sim, Connector* connector, NodeDescriptor* from,
                NodeDescriptor* to, NDPairList& ndpl);
 
@@ -124,6 +132,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   void doNodeInit(LensContext* lc);
   void doConnector(LensContext* lc);
   void doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval);
+  void doMGSify(LensContext* lc);
   ComputeBranch* findBranch(int nodeIndex, int densityIndex,
                             std::string const& cptVariableType);
   std::vector<int>& findBranchIndices(ComputeBranch*,
@@ -248,7 +257,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
 
   // NOTE: While parsing GSL, each layer is given an index,
-  //                   starting from 0 for the first Layer
+  //                   starting from 0 for the first Layer in A GRID
+  // (each grid has its own indexing, i.e. indices are reset)
   //[index-layer][density-index-of-node-that-channel-getinputs]
 	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
@@ -280,6 +290,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::auto_ptr<Functor> _nodeInitFunctor;
   std::auto_ptr<Functor> _connectorFunctor;
   std::auto_ptr<Functor> _probeFunctor;
+  std::auto_ptr<Functor> _MGSifyFunctor;
   std::auto_ptr<NDPairList> _params;
   Params _tissueParams;
 
@@ -325,6 +336,13 @@ class TissueFunctor : public CG_TissueFunctorBase
       _generatedBidirectionalConnections;
   // std::map<Touch*, std::list<std::pair<int, int> > >
   // _generatedSpineBranch;
+ 
+  //vector-index = layerindex-of-type-CHEMICALSYNAPSE-receptor
+  //Touch* = touch
+  //int    = density-index of that Receptor for the current _rank
+  std::vector<std::map<Touch*, int> > _synapseReceptorMaps; 
+  //vector-index = layerindex-of-type-SYNAPTICCLEFT
+  std::vector<std::map<Touch*, int> > _synapticCleftMaps; 
 
   // NOTE:
   // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>

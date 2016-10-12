@@ -20,7 +20,6 @@
 
 void PreSynapticPoint::produceInitialState(RNG& rng) 
 {
-  if (branchDataConnect) branchData=*branchDataConnect;
 }
 
 void PreSynapticPoint::produceState(RNG& rng) 
@@ -33,6 +32,7 @@ void PreSynapticPoint::setPointers(const String& CG_direction, const String& CG_
   assert(getSharedMembers().voltageConnect);
   assert(index>=0 && index<getSharedMembers().voltageConnect->size());    
   voltage = &((*(getSharedMembers().voltageConnect))[index]);
+  if (getSharedMembers().branchDataConnect) branchData=*(getSharedMembers().branchDataConnect);
 }
 
 PreSynapticPoint::~PreSynapticPoint() 

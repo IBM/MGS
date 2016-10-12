@@ -144,5 +144,33 @@
        // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION1
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+
+
+#define IP3_DIFFUSIONAL_VAR 3
+// rather than modeling IP3 as a diffusional variable; we can 
+// ...just consider it is a scalar variable
+// ...and then either put IP3 into 
+#define IP3_INSIDE_IP3R 1
+#define IP3_INSIDE_CLEFT 2
+#define IP3_LOCATION IP3_DIFFUSIONAL_VAR
+#if IP3_LOCATION == IP3_INSIDE_IP3R
+// [IP3] is part of the channels
+//            to avoid modeling IP3 production, IP3 as a compartmental variable
+//     As IP3 production is a function of mGluR activation
+//       as we already have [Glut] - in the cleft - whose dynamics affect mGluR activation
+#ifdef IP3_MODELAS_FUNCTION_GLUT
+//     We model [IP3] ~ f([Glut])
+#endif
+//#define IP3_MODELAS_FUNCTION_GLUT // this is used in ChannelIP3 model which avoid having IP3 as explicit compartmental variable & the [IP3] is a function of [Glut] in the synapse
+//    ALWAYS DISABLE this for now
+#endif
+
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
+#define KEEP_PAIR_PRE_POST   // this ensure a receptor always produce the pre- and post- branch information via only 1 interface; 
+ // ..  rather than 2 separate set of interface 
+ // .. ALWAYS ENABLE THIS: as we haven't made produce post-index available yet 
+ // NOTE: This is 2-element array: with pre-side first then post-side
+//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
+
 #endif //_MAXCOMPUTEORDER_H

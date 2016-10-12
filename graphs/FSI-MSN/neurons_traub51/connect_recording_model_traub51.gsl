@@ -5,7 +5,7 @@
  //{{{soma
   polyConnect(timeStep, voltageSomaDisplay, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), voltageSomaDisplay, <>, <>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, calciumSomaDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), calciumSomaDisplay, <>, <>);
 #endif
@@ -39,7 +39,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANC
   TissueSite distalDenSite(52.1606, 65.4064, 0.0, 5.0); //75um to soma radius = 1.165um
   polyConnect(timeStep, voltageDisplay_den_distal, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_distal, <>, <site=distalDenSite>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
   polyConnect(timeStep, calciumDisplay_den_distal, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_distal, <>, <site=distalDenSite>);
 #endif
@@ -48,7 +48,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANC
   TissueSite middleDenSite2(107.6503, 148.4564, 0.0, 5.0); //125um to soma
   polyConnect(timeStep, voltageDisplay_den_middle, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_den_middle, <>, <site=middleDenSite2>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
   polyConnect(timeStep, calciumDisplay_den_middle, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_den_middle, <>, <site=middleDenSite2>);
 #endif
@@ -57,7 +57,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANC
   TissueSite perisomaticApicalDenSite2(193.2848, 230.79, 0.0, 5.0);  //225 uma, radius=1.605
   polyConnect(timeStep, voltageDisplay_perisomaticApicalDen, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_perisomaticApicalDen, <>, <site=perisomaticApicalDenSite2>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
   polyConnect(timeStep, calciumDisplay_perisomaticApicalDen, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_perisomaticApicalDen, <>, <site=perisomaticApicalDenSite2>);
 #endif
@@ -66,7 +66,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANC
   TissueSite perisomaticBasalDenSite2(191.4915, 208.6959, 0.0, 5.0); // 225 um, radius = 0.585um
   polyConnect(timeStep, voltageDisplay_perisomaticBasalDen, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_perisomaticBasalDen, <>, <site=perisomaticBasalDenSite2>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
   polyConnect(timeStep, calciumDisplay_perisomaticBasalDen, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_perisomaticBasalDen, <>, <site=perisomaticBasalDenSite2>);
 #endif
@@ -77,7 +77,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANC
   TissueSite AIS_site1(-40.0, 0.0, 0.0, 15.0); // 
   polyConnect(timeStep, voltageDisplay_ais, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_ais, <>, <site=AIS_site1>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //  polyConnect(timeStep, calciumDisplay_ais, <>, <>);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_ais, <>, <site=AIS_Site1>);
 //#endif
@@ -96,7 +96,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
   TissueSite axon_site1(-189.7241, 37.5, 0.0, 15.0); // distal most compartment of axon in Traub's 1995 
   polyConnect(timeStep, voltageDisplay_axonDistal, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), voltageDisplay_axonDistal, <>, <site=axon_site1>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //  polyConnect(timeStep, calciumDisplay_axonDistal, <>, <>);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), calciumDisplay_axonDistal, <>, <site=AIS_Site1>);
 //#endif
@@ -126,7 +126,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //  polyConnect(timeStep, spineVoltageDisplay, <>, <>);
 //  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=mushSpineIndex>), spineVoltageDisplay, <>, <>);
 //  polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, NEURON_INDEX=mushSpineIndex>), spineVoltageDisplay, <>, <>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //   polyConnect(timeStep, spineCalciumDisplay, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=mushSpineIndex>), spineCalciumDisplay, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=1, NEURON_INDEX=mushSpineIndex>), spineCalciumDisplay, <>, <>);
@@ -143,7 +143,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //  //{{{bouton
 //  polyConnect(timeStep, presynapticSomaDisplayVm, <>, <>);
 //  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=preMushSynIndex>), presynapticSomaDisplayVm, <>, <>);
-////#if SIMULATION_INVOLVE >= VM_CACYTO
+////#if defined(SIMULATE_CACYTO)
 ////   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
 ////   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=preMushSynIndex>), calciumSomaDisplay, <>, <>);
 ////#endif
@@ -153,14 +153,14 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //  TissueSite proximalSpineSite(-42.74, 233.06, 6.34, 5.0); //right at spine
 //  polyConnect(timeStep, proximalSpineVoltageDisplay, <>, <>);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), proximalSpineVoltageDisplay, <>, <site=proximalSpineSite>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //  polyConnect(timeStep, proximalSpineCalciumDisplay, <>, <>);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), proximalSpineCalciumDisplay, <>, <site=proximalSpineSite>);
 //#endif
 //  //TissueSite proximalSpineSite_2(-74.59, 227.03, 12.57, 5.0); //-25um
 //  TissueSite proximalSpineSite_2(-34.62, 240.18, 3.67, 7.0); //-10um
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), proximalSpineVoltageDisplay, <>, <site=proximalSpineSite_2>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), proximalSpineCalciumDisplay, <>, <site=proximalSpineSite_2>);
 //#endif
 //  //}}}
@@ -168,13 +168,13 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //  TissueSite distalSpineSite(-75.2, 201.48, 9.28, 5.0);
 //  polyConnect(timeStep, distalSpineVoltageDisplay, <>, <>);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distalSpineVoltageDisplay, <>, <site=distalSpineSite>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //  polyConnect(timeStep, distalSpineCalciumDisplay, <>, <>);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distalSpineCalciumDisplay, <>, <site=distalSpineSite>);
 //#endif
 //  TissueSite distalSpineSite_2(-55.98, 216.19, 9.62, 5.0);
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distalSpineVoltageDisplay, <>, <site=distalSpineSite_2>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distalSpineCalciumDisplay, <>, <site=distalSpineSite_2>);
 //#endif
 //  //}}}
@@ -192,7 +192,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //polyConnect(timeStep, spineVoltageDisplay, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=3>), spineVoltageDisplay, <>, <site=mushSpine>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, MTYPE=3>), spineVoltageDisplay, <>, <site=mushSpine>);
-//f SIMULATION_INVOLVE >= VM_CACYTO
+//f defined(SIMULATE_CACYTO)
 // polyConnect(timeStep, spineCalciumDisplay, <>, <>);
 // polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, MTYPE=3>), spineCalciumDisplay, <>, <site=mushSpine>);
 //ndif
@@ -208,7 +208,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 ////{{{bouton
 //polyConnect(timeStep, presynapticSomaDisplayVm, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=5>), presynapticSomaDisplayVm, <>, <site=>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=preMushSynIndex>), calciumSomaDisplay, <>, <>);
 //#endif
@@ -216,24 +216,24 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 ////{{{ 2 proximal sites of spine: at 50um and 25um apart
 //polyConnect(timeStep, proximalSpineVoltageDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), proximalSpineVoltageDisplay, <>, <site=proximalSpineSite>);
-//f SIMULATION_INVOLVE >= VM_CACYTO
+//f defined(SIMULATE_CACYTO)
 //polyConnect(timeStep, proximalSpineCalciumDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), proximalSpineCalciumDisplay, <>, <site=proximalSpineSite>);
 //ndif
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), proximalSpineVoltageDisplay, <>, <site=proximalSpineSite_2>);
-//f SIMULATION_INVOLVE >= VM_CACYTO
+//f defined(SIMULATE_CACYTO)
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), proximalSpineCalciumDisplay, <>, <site=proximalSpineSite_2>);
 //ndif
 ////}}}
 ////{{{ 2 distal sites of spine: at 50um and 25um apart
 //polyConnect(timeStep, distalSpineVoltageDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distalSpineVoltageDisplay, <>, <site=distalSpineSite>);
-//f SIMULATION_INVOLVE >= VM_CACYTO
+//f defined(SIMULATE_CACYTO)
 //polyConnect(timeStep, distalSpineCalciumDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distalSpineCalciumDisplay, <>, <site=distalSpineSite>);
 //ndif
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distalSpineVoltageDisplay, <>, <site=distalSpineSite_2>);
-//f SIMULATION_INVOLVE >= VM_CACYTO
+//f defined(SIMULATE_CACYTO)
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distalSpineCalciumDisplay, <>, <site=distalSpineSite_2>);
 //ndif
 ////}}}
@@ -251,7 +251,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //polyConnect(timeStep, spineVoltageDisplay, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=3>), spineVoltageDisplay, <>, <site=mushSpine>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, MTYPE=3>), spineVoltageDisplay, <>, <site=mushSpine>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 // polyConnect(timeStep, spineCalciumDisplay, <>, <>);
 // polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, MTYPE=3>), spineCalciumDisplay, <>, <site=mushSpine>);
 //#endif
@@ -267,7 +267,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 //////{{{bouton
 ////polyConnect(timeStep, presynapticSomaDisplayVm, <>, <>);
 ////polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=5>), presynapticSomaDisplayVm, <>, <site=>);
-////#if SIMULATION_INVOLVE >= VM_CACYTO
+////#if defined(SIMULATE_CACYTO)
 ////   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
 ////   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=preMushSynIndex>), calciumSomaDisplay, <>, <>);
 ////#endif
@@ -275,24 +275,24 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 ////{{{ 2 proximal sites of spine: at 50um and 25um apart
 //polyConnect(timeStep, proximalSpineVoltageDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), proximalSpineVoltageDisplay, <>, <site=proximalSpineSite>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //polyConnect(timeStep, proximalSpineCalciumDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), proximalSpineCalciumDisplay, <>, <site=proximalSpineSite>);
 //#endif
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), proximalSpineVoltageDisplay, <>, <site=proximalSpineSite_2>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), proximalSpineCalciumDisplay, <>, <site=proximalSpineSite_2>);
 //#endif
 ////}}}
 ////{{{ 2 distal sites of spine: at 50um and 25um apart
 //polyConnect(timeStep, distalSpineVoltageDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distalSpineVoltageDisplay, <>, <site=distalSpineSite>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //polyConnect(timeStep, distalSpineCalciumDisplay, <>, <>);
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distalSpineCalciumDisplay, <>, <site=distalSpineSite>);
 //#endif
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), distalSpineVoltageDisplay, <>, <site=distalSpineSite_2>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), distalSpineCalciumDisplay, <>, <site=distalSpineSite_2>);
 //#endif
 ////}}}
@@ -307,7 +307,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
   polyConnect(timeStep, spineVoltageDisplay, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, spineCalciumDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineCalciumDisplay, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=1, NEURON_INDEX=spineIndex>), spineVoltageDisplay, <>, <>);
@@ -324,7 +324,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
   //{{{bouton
   polyConnect(timeStep, presynapticSomaDisplayVm, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), presynapticSomaDisplayVm, <>, <>);
-//#if SIMULATION_INVOLVE >= VM_CACYTO
+//#if defined(SIMULATE_CACYTO)
 //   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=boutonIndex>), calciumSomaDisplay, <>, <>);
 //#endif
@@ -336,7 +336,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  NEURON_
 	TissueSite synapseSite_0( -41.813, 175.470, -0.645, 7.0 );
 	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
 	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite_0>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO)
 	polyConnect(timeStep, synapseCalciumDisplay0, <>, <>);
 	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite_0>);
 #endif

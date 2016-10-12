@@ -8,9 +8,21 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 // NOTE: This channel get data from 2 compartment variables: CalciumER + Calcium
-//  We may need to add IP3R concentration somehow???
-Node SingleChannelIP3R Implements ConductanceArrayProducer, BranchDataProducer,
-   CaCurrentArrayProducer
+//  We may need to add IP3 concentration somehow???
+//NOTE: IP3 is a diffusional variable now
+#ifdef IP3_LOCATION == IP3_INSIDE_IP3R
+//[NOT BEING USED] --> IF [IP3] is part of the channels
+//            to avoid modeling IP3 production, IP3 as a compartmental variable
+//     As IP3 production is a function of mGluR activation
+//       as we already have [Glut] - in the cleft - whose dynamics affect mGluR activation
+#ifdef IP3_MODELAS_FUNCTION_GLUT
+//     We model [IP3] ~ f([Glut])
+#endif
+Node SingleChannelIP3R Implements BranchDataProducer,
+   , CaCurrentArrayProducer // to Calcium, to CalciumER
+   , CurrentArrayProducer, //  to I/O 
+   , DimensionArrayProducer
+   //, ConductanceArrayProducer 
 {
 	/*{{{*/
 	//DATA
@@ -25,6 +37,11 @@ Node SingleChannelIP3R Implements ConductanceArrayProducer, BranchDataProducer,
 	dyn_var_t [] gbar; // nS/um^2
 	dyn_var_t [] E_Ca; // [mV]
 	dyn_var_t [] I_Ca; // [pA/um^2]
+#if IP3_LOCATION == IP3_INSIDE_IP3R && \
+  defined(IP3_MODELAS_FUNCTION_GLUT)
+  dyn_var_t IP3; // [uM]
+  dyn_var_t * Glut; // [uM]
+#endif
 	// reference data
 	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 	dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
@@ -48,9 +65,11 @@ Node SingleChannelIP3R Implements ConductanceArrayProducer, BranchDataProducer,
 	RuntimePhase update();
 	InitPhase initialize;
 
-	ConductanceArrayProducer.conductanceArray << &g;
-	CaCurrentArrayProducer.CaCurrents << &I_Ca;
+	//ConductanceArrayProducer.conductanceArray << &g;
+	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node
@@ -76,79 +95,116 @@ Node SingleChannelIP3R Implements ConductanceArrayProducer, BranchDataProducer,
 	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> Shared.deltaT;
 	}
+
+#if defined(IP3_MODELAS_FUNCTION_GLUT) && \
+    defined(IP3_INSIDE_IP3R)
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer 
+//, BranchDataProducer, IndexProducer 
+  {
+    GlutamateConcentrationProducer.NT >> Glut;
+ //   BranchDataProducer.branchData >> branchDataPrePost;
+ //   IndexProducer.index >> indexPrePost;
+  }
+#endif
 	/*}}}*/
 }
 
+// NOTE: This channel get data from 2 compartment variables: CalciumER + Calcium
 // deterministic
-//Node ChannelIP3R Implements ConductanceArrayProducer, BranchDataProducer,
-//   CaCurrentArrayProducer
-//{
-//	/*{{{*/
-//	//DATA
-//	//{{{ 
-//	// Hodgkin-Huxley-based formula
-//	//{{{
-//	//internal data
-//  // 
-//	dyn_var_t [] m;
-//	dyn_var_t [] h;
-//	dyn_var_t [] g;  // nS/um^2
-//	dyn_var_t [] gbar; // nS/um^2
-//	dyn_var_t [] E_Ca; // [mV]
-//	dyn_var_t [] I_Ca; // [pA/um^2]
-//	// reference data
-//	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
-//	dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
-//	BranchDataStruct* branchData; 
-//	DimensionStruct* []* dimensions;
-//	//}}}
-//
-//	//SHARED DATA
-//	Shared {//in xxxCompCategory.C
-//		//{{{
-//		dyn_var_t* deltaT; // [ms]
-//		dyn_var_t* T;     // [K]
-//		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
-//		//   and tempt. used for the simulation 
-//		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
-//		InitPhase computeTadj; 
-//		//}}}
-//	}
-//	//}}}
-//
-//	RuntimePhase update();
-//	InitPhase initialize;
-//
-//	ConductanceArrayProducer.conductanceArray << &g;
-//	CaCurrentArrayProducer.CaCurrents << &I_Ca;
-//	BranchDataProducer.branchData << branchData;
-//
-//	InAttrPSet {//information of the incoming connection
-//		string identifier; // name of the incoming node
-//		int idx;   // if identifier = name of the compartment variable 
-//		// then idx = index of the compartment on a branch
-//	}
-//
-//	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-//            BranchDataProducer, DimensionArrayProducer 
-//  {
-//		BranchDataProducer.branchData >> branchData;
-//		DimensionArrayProducer.dimensionArray >> dimensions;
-//	}
-//
-//	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
-//		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
-//	}
-//
-//	Connection Pre Node (PSet.identifier=="IC[CalciumER]") Expects CaConcentrationArrayProducer {
-//		CaConcentrationArrayProducer.CaConcentrations >> Ca_ER;
-//	}
-//
-//	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
-//		TimeStepProducer.deltaT >> Shared.deltaT;
-//	}
-//	/*}}}*/
-//}
-//
+Node ChannelIP3R Implements BranchDataProducer,
+   , CaCurrentArrayProducer // to Calcium, to CalciumER
+   , CurrentArrayProducer, //  to I/O 
+   , DimensionArrayProducer
+   //, ConductanceArrayProducer 
+{
+	/*{{{*/
+	//DATA
+	//{{{ 
+	// Hodgkin-Huxley-based formula
+	//{{{
+	//internal data
+  // 
+	dyn_var_t [] m;
+	dyn_var_t [] h;
+	dyn_var_t [] g;  // nS/um^2
+	dyn_var_t [] gbar; // nS/um^2
+	dyn_var_t [] E_Ca; // [mV]
+	dyn_var_t [] I_Ca; // [pA/um^2]
+#if IP3_LOCATION == IP3_INSIDE_IP3R && \
+  defined(IP3_MODELAS_FUNCTION_GLUT)
+  dyn_var_t IP3; // [uM]
+  dyn_var_t * Glut; // [uM]
+#endif
+	// reference data
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+	dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
+	BranchDataStruct* branchData; 
+	DimensionStruct* []* dimensions;
+	//}}}
+
+	//SHARED DATA
+	Shared {//in xxxCompCategory.C
+		//{{{
+		dyn_var_t* deltaT; // [ms]
+		dyn_var_t* T;     // [K]
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+		InitPhase computeTadj; 
+		//}}}
+	}
+	//}}}
+
+	RuntimePhase update();
+	InitPhase initialize;
+
+  //{{{output
+	ConductanceArrayProducer.conductanceArray << &g;
+	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
+	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
+  //}}}
+
+	InAttrPSet {//information of the incoming connection
+		string identifier; // name of the incoming node
+		int idx;   // if identifier = name of the compartment variable 
+		// then idx = index of the compartment on a branch
+	}
+
+  //{{incoming connections
+	Connection Pre Node (PSet.identifier=="compartment[IP3]") Expects 
+           BranchDataProducer, DimensionArrayProducer 
+  {
+		BranchDataProducer.branchData >> branchData;
+		DimensionArrayProducer.dimensionArray >> dimensions;
+	}
+
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer   {
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+	}
+
+	Connection Pre Node (PSet.identifier=="IC[CalciumER]") Expects CaConcentrationArrayProducer {
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_ER;
+	}
+
+	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+		TimeStepProducer.deltaT >> Shared.deltaT;
+	}
+
+#if IP3_LOCATION == IP3_INSIDE_IP3R && \
+  defined(IP3_MODELAS_FUNCTION_GLUT)
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer
+//, BranchDataProducer, IndexProducer {
+  {
+    GlutamateConcentrationProducer.NT >> Glut;
+  //  BranchDataProducer.branchData >> branchDataPrePost;
+  //  IndexProducer.index >> indexPrePost;
+  }
+#endif
+  //}}
+	/*}}}*/
+}
+
 
 #endif

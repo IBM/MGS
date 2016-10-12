@@ -20,6 +20,7 @@
 #include <vector>
 #include <string.h>
 
+#include "Params.h"
 #include "SegmentDescriptor.h"
 #include "NTSMacros.h"
 #include "MaxComputeOrder.h"
@@ -101,10 +102,13 @@ class Touch
 
 	//if the touch has one side is spine-neck then return 'true'
 	//  and pass the key of the capsule as spine-neck out via argument
-	bool hasSpineNeck(key_size_t& key);
+	bool hasSpineNeck(key_size_t& key);//obsolete
+	bool hasSpineNeck(key_size_t& key, Params& params);
 	//if the touch has one side is spine-head then return 'true'
 	//  and pass the key of the capsule as spine-head out via argument
-	bool hasSpineHead(key_size_t& key);
+	bool hasSpineHead(key_size_t& key);//obsolete
+	bool hasSpineHead(key_size_t& key, Params& params);
+	bool isSpineNeck_n_DenShaft(key_size_t& key, Params& params);
 	// return the axon_key
 	bool isSpineless(key_size_t& axon_key);
  private:
