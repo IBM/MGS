@@ -332,15 +332,19 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 
 #define strArg1_supplement "-p params/DetParams.par -n cost-volume"
 #define strArg3 "params/ChanParams.par"
+#if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) \\
+  && defined(SIMULATE_CAER) && defined(SIMULATE_IP3)
+  #define  strArg2 "params/CptParams-VmCaiCaERIP3.par"
+  #define  strArg4 "params/SynParams-VmCaiCaERIP3.par"
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
-#define  strArg2 "params/CptParams-VmCaiCaER.par"
-#define  strArg4 "params/SynParams-VmCaiCaER.par"
+  #define  strArg2 "params/CptParams-VmCaiCaER.par"
+  #define  strArg4 "params/SynParams-VmCaiCaER.par"
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
-#define  strArg2 "params/CptParams-VmCai.par"
-#define  strArg4 "params/SynParams-VmCai.par"
+  #define  strArg2 "params/CptParams-VmCai.par"
+  #define  strArg4 "params/SynParams-VmCai.par"
 #elif defined(SIMULATE_VM)
-#define  strArg2 "params/CptParams.par"
-#define  strArg4 "params/SynParams.par"
+  #define  strArg2 "params/CptParams.par"
+  #define  strArg4 "params/SynParams.par"
 #endif
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -532,14 +536,15 @@ NodeType DopamineConcentrationJunction (<
                         DopaBaseline=DA_o_value // uM
         >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 NodeType DopamineConcentrationJunctionPoint { 
-         produceInitialState->initialize1, produceDopaConcentration->predictJunction };
+         produceInitialState->initialize1, 
+         produceDopaConcentration->predictJunction };
 #endif
 /*}}}*/
 //   1.5. - [IP3]
 /*{{{*/
 #if defined(SIMULATE_IP3)
 NodeType IP3Concentration (<
-                        DiffusionConst=IP3_DiffusionConstant, // [um^2/ms] unbuffered
+                        D_IP3 =IP3_DiffusionConstant, // [um^2/ms] unbuffered
                       //  //{{{ only used for fast-buffering assumption 
                       //  DCaeff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
                       //  beta=IP3_beta, // dimensionless
@@ -556,7 +561,7 @@ NodeType IP3ConcentrationEndPoint { produceInitialState->initialize1,
         produceFinishedIP3Concentration->finish
       };
 NodeType IP3ConcentrationJunction (<
-                        DiffusionConst=IP3_DiffusionConstant, // [um^2/ms] unbuffered
+                        D_IP3 =IP3_DiffusionConstant, // [um^2/ms] unbuffered
                         ////{{{ only used for fast-buffering assumption 
                         //DCaeff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
                         //beta=IP3_beta, // dimensionless
@@ -565,7 +570,7 @@ NodeType IP3ConcentrationJunction (<
         >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 NodeType IP3ConcentrationJunctionPoint { 
          produceInitialState->initialize1, 
-         produceConcentration->predictJunction };
+         produceIP3Concentration->predictJunction };
 
 #endif
 /*}}}*/
@@ -628,7 +633,7 @@ NodeType SingleChannelRYR(
     >
 		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
-NodeType ChannelIP3R { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelIP3R {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(

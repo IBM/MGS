@@ -18,6 +18,7 @@
 #define d5  0.08234 //[uM]
 #define a2  0.2e-3  // [1/(uM.ms)]
 #define d2  1.049 // [uM]
+#define d3 0.9434 // [uM]
 #endif
 
 dyn_var_t ChannelIP3R::vtrap(dyn_var_t x, dyn_var_t y) {
@@ -31,13 +32,14 @@ void ChannelIP3R::update(RNG& rng)
   {
     dyn_var_t cai = (*Ca_IC)[i];   //[uM]
     dyn_var_t casr = (*Ca_ER)[i];  //[uM]
+    dyn_var_t ip3 = (*IP3)[i];  //[uM]
     dyn_var_t g=0;
 #if CHANNEL_IP3R == IP3R_LI_RINZEL_1994
 
-    mInf[i] = (IP3[i])/(IP3[i]+d1) ;
+    mInf[i] = (ip3)/(ip3+d1) ;
     nInf[i] = (cai)/(cai + d5);
 
-    dyn_var_t ah = a2 * d2 * (IP3[i] + d1) / (IP3[i] + d3 );
+    dyn_var_t ah = a2 * d2 * (ip3 + d1) / (ip3 + d3 );
     dyn_var_t bh = a2 * cai;
     dyn_var_t ph = 0.5 * dt * (ah + bh);
     //see Rempe-Chomp (2006)
@@ -130,13 +132,14 @@ void ChannelIP3R::initialize(RNG& rng)
   {
     dyn_var_t cai = (*Ca_IC)[i];   //[uM]
     dyn_var_t casr = (*Ca_ER)[i];  //[uM]
+    dyn_var_t ip3 = (*IP3)[i];  //[uM]
     dyn_var_t g=0;
 #if CHANNEL_IP3R == IP3R_LI_RINZEL_1994
 
-    mInf[i] = (IP3[i])/(IP3[i]+d1) ;
+    mInf[i] = (ip3)/(ip3+d1) ;
     nInf[i] = (cai)/(cai + d5);
 
-    dyn_var_t ah = a2 * d2 * (IP3[i] + d1) / (IP3[i] + d3 );
+    dyn_var_t ah = a2 * d2 * (ip3 + d1) / (ip3 + d3 );
     dyn_var_t bh = a2 * cai;
     dyn_var_t ph = 0.5 * dt * (ah + bh);
     //see Rempe-Chomp (2006)

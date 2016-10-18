@@ -91,7 +91,7 @@ Kv31    0.254051
 #}}}
 
 
-CHANNEL_PARAMS 25
+CHANNEL_PARAMS 26
 #{{{neuron 15
 #{{{Nat 
 # {{{Wolf-2005
@@ -141,15 +141,10 @@ KAf 3
 MTYPE BRANCHTYPE 
 0 1        <gbar={2.25}>     
 0 [2,5,7]  <gbar={2.25}>
-0 [3,4,6]    <gbar={2.25}>
+#0 [3,4,6]    <gbar={2.25}>
 #PLAN: to use till_end instead of -1
 #0 [2:6]  <gbar_branchorders={0, 1, till_end}>
-#0 2  <gbar_branchorders={1, 2, -1}>
-#0 2  <gbar_values={2.25, 0.21, 0.21}>
-0 [2:6] <gbar_branchorders={1, 2, -1}>
-0 [2:6] <gbar_values={2.25, 0.21, 0.21}>
-1 [1,2] <gbar={0.000138}>
-2 [1,3] <gbar={0.000138}>
+0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={2.25, 0.21, 0.21}>
 #}}}
 #}}}
 #{{{ KAs
@@ -251,7 +246,7 @@ BRANCHTYPE MTYPE
 [1,3] 2 <PCabar={0.000004}>
 #}}}
 #{{{ PMCA
-PMCA 8
+PMCA 6
 #{{{
 # tau ~ [ms]
 BRANCHTYPE MTYPE 
@@ -268,7 +263,7 @@ BRANCHTYPE MTYPE
 #}}}
 #}}}
 #}}}
-#{{{ spines 2
+#{{{ spines 3
 RYR 2
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={0.0004}> 
@@ -276,6 +271,10 @@ MTYPE BRANCHTYPE
 IP3R 2
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={0.0004}> 
+[2, 3] 3       <gbar={0.00000138}>
+KAf 2
+MTYPE BRANCHTYPE 
+[2, 3] 1       <gbar={0.000138}>
 [2, 3] 3       <gbar={0.00000138}>
 #}}}
 #{{{Glutamatergic bouton 4
@@ -292,13 +291,13 @@ MTYPE BRANCHTYPE
 [4,5] 2 <gbar={0.00000138}>
 #}}}
 #{{{ KAs
-KAs 3
+KAs 2
 MTYPE BRANCHTYPE
 [4,5] 1  <gbar={0.00138}>  
 [4,5] 2  <gbar={0.00138}>
 #}}}
 #{{{PMCA
-PMCA 1
+PMCA 2
 # tau ~ [ms]
 MTYPE BRANCHTYPE 
 [4, 5] 1 <tau={1.9}>
@@ -319,13 +318,13 @@ MTYPE BRANCHTYPE
 1 2 <gbar={0.00000138}>
 #}}}
 #{{{ KAs
-KAs 3
+KAs 2
 MTYPE BRANCHTYPE
 1 1       <gbar={0.00138}>  
 1 2       <gbar={0.00138}>  
 #}}}
 #{{{PMCA
-PMCA 1
+PMCA 2
 # tau ~ [ms]
 MTYPE BRANCHTYPE
 1 1 <tau={1.9}>
