@@ -270,7 +270,7 @@ Node ChannelIP3R Implements BranchDataProducer
 }
 
 //Isoform 1
-Node ChannelIP3RIso1 Implements BranchDataProducer
+Node ChannelIP3RType1 Implements BranchDataProducer
    //, CaCurrentArrayProducer // to Calcium, to CalciumER
    //, CurrentArrayProducer //  to I/O 
    , CaFluxArrayProducer  // to Calcium, to CalciumER
