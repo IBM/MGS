@@ -20,6 +20,12 @@ NPROCS=$(( $NPROCS*2/3 ))
 #########################################
 #   PRINT HELP
 #{{{
+rm_ifexist() {
+ if [ -f "$1" ] ; then
+   rm -v "$1"
+ fi
+}
+
 function print_help {
 	echo -e "\n\n${cc_blue}Make NTS...${cc_normal} \n\nOption include : \n\n  
   -p [LINUX|BGL|BGP|BGQ]    default = LINUX  build to run on what platform
@@ -359,10 +365,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
       ./build_gsl -p $PLATFORM --clean  
-      rm $NTSROOT/models/Extensions.mk
+      rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      rm $NTSROOT/.built
+      rm_ifexist $NTSROOT/.built
     fi
     cd -
     cd $NTSROOT
