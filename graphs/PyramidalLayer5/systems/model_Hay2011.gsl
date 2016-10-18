@@ -151,7 +151,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
-  //{{{ neuroransmitters
+  //{{{ neurotransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \

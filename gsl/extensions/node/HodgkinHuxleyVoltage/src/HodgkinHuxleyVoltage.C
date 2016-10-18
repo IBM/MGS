@@ -1025,8 +1025,9 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
       }
     }
   }
-  else if (CG_inAttrPset->idx < 0)  // Can be used via 'Probe' of TissueFunctor
-  {//inject at all compartments of one or many branchs meet the condition
+  else if (CG_inAttrPset->idx < 0)  // if we pass in the InAttrPset with 'idx' attribute 
+  {//with a negative value, i.e. [passed via 'Probe' of TissueFunctor] 
+     // then inject at all compartments in that ComputeBranch (CB)
 		injectedCurrents[injectedCurrents.size() - 1].index = 0;
     for (int i = 1; i < branchData->size; ++i)
     {

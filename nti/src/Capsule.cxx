@@ -18,6 +18,8 @@
 #include "VecPrim.h"
 #include <algorithm>
 
+#define SMALL_FLT 0.000001
+
 SegmentDescriptor Capsule::_segmentDescriptor;
 
 Capsule::Capsule() : _branch(0)
@@ -117,11 +119,27 @@ dyn_var_t Capsule::getLength()
       sqrt(SqDist(this->getBeginCoordinates(), this->getEndCoordinates()));
 	return h;
 }
+
 dyn_var_t Capsule::getSurfaceArea()
-{
-  // NOTE: treat as a sphere if two points are the same <--not implemented here
-	
-  //2.0 * M_PI * r * h
-	dyn_var_t area = 2.0 * M_PI * getRadius() * getLength();
-	
+{//treat as either a cylinder or a sphere
+  //For a real-capsule, we may want to consider half-sphere surface area at each end
+	dyn_var_t  area;
+  if (getLength() < SMALL_FLT)
+  {
+  // NOTE: treat as a sphere if two points are the same 
+    double r=getRadius();
+    area = (4.0*M_PI*r*r);
+  }
+  else{
+    //2.0 * M_PI * r * h
+    area = 2.0 * M_PI * getRadius() * getLength();
+  }
+  return area;
 }
+
+dyn_var_t Capsule::getEndSphereSurfaceArea()
+{
+  double r=getRadius();
+  return (4.0*M_PI*r*r);
+}
+

@@ -1,0 +1,108 @@
+Functor Print;
+Print print();
+
+NodeInitializer Same(Pset); // Functor that just provide parameter set argument
+
+NodeInitializer NodeDefault; // Functor that gives default parameter set for a node
+NodeDefault nodeDef(); // instance
+
+EdgeInitializer EdgeDefault; // Functor that gives default parameter set for an edge
+EdgeDefault edgeDef();   // instance
+
+Functor InAttrDefault; //  Functor that gives default in attribute Pset for a node
+InAttrDefault inAttrDef();
+
+InAttrInitializer NdplInAttrInit(NDPairListFunctor);
+
+Functor OutAttrDefault; //  Functor that gives default out attribute Pset for a node
+OutAttrDefault outAttrDef();
+
+Functor ReSeedRandom;
+
+Layout UniformLayout(int); // Functor provides uniform density vector for grid layers
+//UniformLayout uniform();
+
+Layout OpenCircleLayout(int nPos); // Functor provides circle of 1 densities among zeroes for a unique
+// number of positions on the circle
+
+
+Functor Gaussian(float mean,float stddev); // provide float from distribution upon execute
+Functor UniformDist(float min,float max); // provide float from distribution upon execute
+
+// RangePassThru calls a functor and returns the float if it satisfies the predicate
+Functor RangePassThru(float value1, string op1, Functor testvalue, string op2, float value3);
+
+// BindNameFunctor takes a name and a functor returning a float value and returns a name value pair
+NDPairListFunctor BindName
+{
+  Initialize(string name, Functor value); 
+  Initialize(string name, float value); 
+};
+
+//NOTE: Don't use it here, put inside the main's GSL
+//ReSeedRandom reSeed(13);
+//ReSeedRandom reSeed(13,25);
+
+// BindBack takes a functor instance and other arguments in its constructor. It then post-pends the 
+// other arguments to its execute arguments and calls execute on the input functor. It returns the 
+// return values of the input functor
+Functor BindBack(Functor inputFunctor, ...);
+
+// NvplModifier gets a parameter set from a functor and modifies it using the name value pair list
+// it returns the modified parameter set
+Functor NdplModifier(Functor psetGenerator, list<NDPair> modifiers);
+
+// NvplEdgeInit gets default edge init parameter set and modifies it using the name value pair list
+// it returns the modified parameter set
+EdgeInitializer NdplEdgeInit(NDPairListFunctor);
+
+// NvplNodeInit gets default edge init parameter set and modifies it using the name value pair list
+// it returns the modified parameter set
+NodeInitializer NdplNodeInit(NDPairListFunctor);
+
+// unique calls a sampling functor repeatedly until the two nodes are unique. It returns the unique nodes
+SamplingFctr2 Unique(SamplingFctr2 sf);
+
+// Multi purpose Connectors
+Connector PolyConnectorFunctor();
+PolyConnectorFunctor polyConnect();
+
+Connector ConnectNodeSetsFunctor();
+ConnectNodeSetsFunctor connectNodeSets();
+
+SamplingFctr2 IsoSampler();
+IsoSampler isoSampler();
+
+SamplingFctr2 IsoSamplerHybrid();
+IsoSamplerHybrid isoSamplerHybrid();
+
+Connector ServiceConnectorFunctor();
+ServiceConnectorFunctor serviceConnect();
+
+Functor GetNodeCoordFunctor();
+
+// ManhatGokhanGokhan	+905327233474	+905327233474GokhanGokhan	+905327233474	+905327233474tanRing returns pairs of nodes according to a distribution described by the list<int>, where
+// the position in the list corresponds to Manhattan distance on a grid and the number corresponds to the 
+// number of samples taken from nodes at that distance, 
+SamplingFctr1 ManhattanRing(list<int>);
+SamplingFctr1 EachAvg(float avg);
+SamplingFctr1 RadialHistoSampler(int nbrSamples, float radialScale, list<float> radialHistSampleFunction);
+SamplingFctr1 RadialDensitySampler(int nbrSamples, float radialScale, list<float> radialDensitySampleFunction);
+SamplingFctr1 RadialSampler(float radius, int borderTolerance);
+
+SamplingFctr2 EachSrc(SamplingFctr1 sf1);
+SamplingFctr2 EachDst(SamplingFctr1 sf1);
+
+SamplingFctr2 EachDstPropSrc(SamplingFctr1 sf1);
+
+// sum adds up the numbers and a list and returns the sum 
+Functor Sum
+{
+ // handles ints and floats
+ Function(list<int>); // returns
+ Return(int);
+
+ Function(list<float>); // returns
+ Return(float);
+};
+Sum sum();

@@ -1632,8 +1632,8 @@ def plot_case9_adv():
         #plot (t, col)
         # legend(time, channelNames[i])
         color = colors[i%len(colors)]
-        marker = linestyles[((i/len(colors))%len(linestyles))]
-        axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
+        style = linestyles[((i/len(colors))%len(linestyles))]
+        axarr[gr, gc].plot(t, ydata , linestyle=style, color=color, label=channelNames[i])
         axarr[gr, gc].legend(loc=4)
         minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
@@ -1691,10 +1691,10 @@ def plot_case9_adv():
         #plot (t, col)
         # legend(time, channelNames[i])
         color = colors[(i+1)%len(colors)]
-        marker = linestyles[((i/len(colors))%len(linestyles))]
+        style = linestyles[((i/len(colors))%len(linestyles))]
         #axarr[gr, gc].plot(t, ydata , color, label=channelNames[i])
         #axarr[gr, gc].legend()
-        ax2.plot(t, ydata , color, label=channelNames[i])
+        ax2.plot(t, ydata, linestyle=style, color=color, label=channelNames[i])
         ax2.legend(loc=0)
         minVal = min(np.amin(ydata[idxStart:idxEnd]), minVal)
         maxVal = max(np.amax(ydata[idxStart:idxEnd]), maxVal)
@@ -1715,6 +1715,8 @@ def plot_case9_adv():
     ## For 1 file
     myFile = folder+'/'+getFile(folder,'axonAISCurrents.dat')
     YLABEL = "axon-AIS"
+    if (os.path.isfile(myFile)):
+        pass
     file=open(myFile)
     lines=file.readlines()
     #channelNames = re.split(",",lines[1])

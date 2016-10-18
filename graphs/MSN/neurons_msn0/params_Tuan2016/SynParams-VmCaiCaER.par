@@ -94,10 +94,10 @@ GABAA 0.149978
 
 # NOTE: no need for probabilities, it is implicitly assigned as 1.0
 PRESYNAPTIC_POINT_TARGETS 5
-#AMPA Voltage
-#NMDA Voltage
-AMPAmush Voltage
-AMPAthin Voltage
-NMDAmush Voltage
-NMDAthin Voltage
-GABAA Voltage
+#AMPA tight
+#NMDA tight
+AMPAmush tight
+AMPAthin tight
+NMDAmush tight
+NMDAthin tight
+GABAA tight

@@ -206,8 +206,12 @@ if [ "$CLEAN" == "-clean" ] || \
    ] ) ; then 
   if [ "$CLEAN" == "-clean" ] ; then
     echo "clean-up GSL"
-    make clean
-    rm Makefile
+    if [ -f Makefile ]; then 
+      make clean
+      rm Makefile
+    else
+      echo -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
+    fi
   fi
   if [ "$REBUILD" == "-rebuild" ] || \
     [ "$REMAKE" == "-remake" ] ; then 
@@ -219,7 +223,9 @@ if [ "$CLEAN" == "-clean" ] || \
       make clean
       make -j $NPROCS;
     else
-      rm Makefile
+      if [ -f Makefile ]; then 
+        rm Makefile
+      fi
       # Generate Makefile
       createMakeFile
       echo "${cc_green}Recreate the Makefile only${cc_normal}"
@@ -238,6 +244,9 @@ if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser
   exit; 
 elif [ "$CLEAN" == "-clean" ]; then 
   echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
+  if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
+    echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
+  fi
 else
   echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
 fi
