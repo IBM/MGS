@@ -581,7 +581,7 @@ NodeType DopamineConcentrationJunctionPoint {
 /*{{{*/
 #if defined(SIMULATE_IP3)
 NodeType IP3Concentration (<
-                        DiffusionConst=IP3_DiffusionConstant, // [um^2/ms] unbuffered
+                        D_IP3=IP3_DiffusionConstant, // [um^2/ms] unbuffered
                       //  //{{{ only used for fast-buffering assumption 
                       //  DCaeff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
                       //  beta=IP3_beta, // dimensionless
@@ -591,14 +591,14 @@ NodeType IP3Concentration (<
 
 NodeType IP3ConcentrationEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
-        produceSolvedConcentration-> CCAT(backwardSolve,MAX_COMPUTE_ORDER),
+        produceSolvedIP3Concentration-> CCAT(backwardSolve,MAX_COMPUTE_ORDER),
 #else
-        produceSolvedConcentration->solve,
+        produceSolvedIP3Concentration->solve,
 #endif
-        produceFinishedConcentration->finish
+        produceFinishedIP3Concentration->finish
       };
 NodeType IP3ConcentrationJunction (<
-                        DiffusionConst=IP3_DiffusionConstant, // [um^2/ms] unbuffered
+                        D_IP3=IP3_DiffusionConstant, // [um^2/ms] unbuffered
                         ////{{{ only used for fast-buffering assumption 
                         //DCaeff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
                         //beta=IP3_beta, // dimensionless

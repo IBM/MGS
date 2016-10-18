@@ -85,7 +85,7 @@ Node PumpSERCA Implements
 	}
 
   //Input (Connection setup)
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer,
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer,
 	   BranchDataProducer, DimensionArrayProducer 
   {
 		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
@@ -93,7 +93,7 @@ Node PumpSERCA Implements
 			DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="IC[CalciumER]") Expects CaConcentrationArrayProducer {
+	Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects CaConcentrationArrayProducer {
 		CaConcentrationArrayProducer.CaConcentrations >> Ca_ER;
 	}
 
@@ -202,11 +202,11 @@ Node PumpSERCA Implements
 //			DimensionArrayProducer.dimensionArray >> dimensions;
 //	}
 //
-//	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+//	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer {
 //		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
 //	}
 //
-//	Connection Pre Node (PSet.identifier=="IC[CaM]") Expects CaCaMConcentrationArrayProducer {
+//	Connection Pre Node (PSet.identifier=="compartment[CaM]") Expects CaCaMConcentrationArrayProducer {
 //		CaMConcentrationArrayProducer.CaCaMConcentrations >> CaCaM;
 //	}
 //

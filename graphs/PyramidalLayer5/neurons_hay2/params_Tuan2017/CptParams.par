@@ -14,7 +14,7 @@ MTYPE BRANCHTYPE
 # and then incorporate that into 
 # Touch::hasSpineNeck(out: keyneck) //return key of the neck if the touch has one capsule is the neck and one capsule is the shaft
 
-COMPARTMENT_VARIABLE_TARGETS 6
+COMPARTMENT_VARIABLE_TARGETS 7
 BRANCHTYPE MTYPE
 #{{{
 1 [1:10] Voltage Calcium  CalciumER IP3
