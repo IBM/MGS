@@ -110,7 +110,7 @@
 //#define RESAMPLING_SPACE_VOLUME
 //#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as a single point
 #ifndef STRETCH_SOMA_WITH   // only work when disable USE_SOMA_AS_POINT
-#define STRETCH_SOMA_WITH 35.0    //seem ok  value if used
+#define STRETCH_SOMA_WITH 00.0    
 //#define STRETCH_SOMA_WITH 050.0 
 //#define STRETCH_SOMA_WITH 40.0 // [um] - make soma longer (hoping to make diffusion slower)
 //#define STRETCH_SOMA_WITH 0.0 
@@ -152,7 +152,9 @@
 // ...and then either put IP3 into 
 #define IP3_INSIDE_IP3R 1
 #define IP3_INSIDE_CLEFT 2
+//CHOICE
 #define IP3_LOCATION IP3_DIFFUSIONAL_VAR
+
 #if IP3_LOCATION == IP3_INSIDE_IP3R
 // [IP3] is part of the channels
 //            to avoid modeling IP3 production, IP3 as a compartmental variable
@@ -165,7 +167,7 @@
 //    ALWAYS DISABLE this for now
 #endif
 
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
+//#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
 #define KEEP_PAIR_PRE_POST   // this ensure a receptor always produce the pre- and post- branch information via only 1 interface; 
  // ..  rather than 2 separate set of interface 

@@ -33,6 +33,7 @@ RunSim()
    cp *.gsl $OutputFolderName/ -L -r
    cp neurons.txt $OutputFolderName/ -L -r
    cp neurons/neuron.swc $OutputFolderName/ -L -r
+   cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/Model2Use.h $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/NTSMacros.h  $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/MaxComputeOrder.h $OutputFolderName/ -L -r
@@ -41,6 +42,7 @@ RunSim()
    echo "----> RESULT: " >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
+   echo "Output Folder: " $OutputFolderName
    mpiexec -n 2  ../../gsl/bin/gslparser $temp_file -t 4
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
@@ -61,8 +63,23 @@ DoFinish()
 }
 #///}}}
 
+
 #########################
-## CHECK ARGS
+## PROCESS
+#########################
+#########################
+## 1. CREATE FILE/FOLDER
+TMPDIR=`pwd`/.tmp
+if [ ! -d $TMPDIR ]; then
+  mkdir $TMPDIR
+fi
+FILENAME_PREVIOUSRUN=$TMPDIR/previousRun
+if [ ! -f $FILENAME_PREVIOUSRUN ]; then
+  touch $FILENAME_PREVIOUSRUN
+fi
+temp_file=`mktemp --tmpdir=$TMPDIR`
+
+## 2. CHECK ARGS
 ##{{{
 if [ "$#" == "0" ]; then
   echo "$0 <extension> "
@@ -76,17 +93,22 @@ if [ "$#" == "0" ]; then
 fi
 if [ "$1" == "-unique" ]; then
   uniqueName=-`date +'%Y-%m-%d-%s'`
+  echo $uniqueName > $FILENAME_PREVIOUSRUN
+elif [ "$1" == "-reuse" ]; then
+  line=$(head -n 1 $FILENAME_PREVIOUSRUN)
+  if [ -z $line  ]; then
+    echo "No previous runs yet !"
+    exit
+  else
+    uniqueName=$line
+  fi
 else
   uniqueName=-$1
 fi
 #}}}
+
 #########################
-##
-TMPDIR=`pwd`/.tmp
-if [ ! -d $TMPDIR ]; then
-  mkdir $TMPDIR
-fi
-temp_file=`mktemp --tmpdir=$TMPDIR`
+## 3. CHECK MACROS
 cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
 ###cpp -dU -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
 ##awk -F '/^#define[[:space:]]+morph/{ printf "%s | %s \n", $2, $3 }' < ${temp_file}
@@ -112,12 +134,7 @@ if [ ! -d $OutputFolderName ]; then
   mkdir $OutputFolderName
   RunSim
 else
-  if [[ "$#" == "2" &&  "$2" == "-y" ]] ; then
-    # no question just overwrite
-    RunSim
-  else
-    Yes_No_RunSim
-  fi
+  Yes_No_RunSim
 fi
 
 DoFinish

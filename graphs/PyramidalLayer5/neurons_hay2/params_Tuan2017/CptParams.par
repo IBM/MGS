@@ -1,7 +1,8 @@
+# NOTE: No ER on axon branch
 # MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)
 #       = 4 or 5 (thin or mush bouton)
 # BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
-### PLAN TODO : add a new section that helps to tell 
+#NOTE: this sections tells 
 # 1. how a cpt is a spine neck
 # 2. how a cpt is a spine head
 COMPARTMENT_SPINE_NECK 1
@@ -11,8 +12,6 @@ COMPARTMENT_SPINE_HEAD 2
 MTYPE BRANCHTYPE
 2     1
 3     1
-# and then incorporate that into 
-# Touch::hasSpineNeck(out: keyneck) //return key of the neck if the touch has one capsule is the neck and one capsule is the shaft
 
 COMPARTMENT_VARIABLE_TARGETS 6
 BRANCHTYPE MTYPE

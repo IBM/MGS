@@ -923,6 +923,7 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstScaledContractedGaussianWeightModifier \\
        	DstScaledGaussianWeightModifier \\
        	IsoSampler \\
+       	IsoSamplerHybrid \\
         Exp \\
         Log \\
         ModifyParameterSet \\

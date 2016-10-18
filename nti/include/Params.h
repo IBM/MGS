@@ -481,14 +481,17 @@ public:
            std::map<key_size_t, std::list<std::pair<std::string, std::string> > > >
       _channelParamsMapGeneric;
 #else
+  //map<NaT, map<keymask, list-of-pairs{gbar=value}>
   std::map<std::string,
            std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
       _channelParamsMap;
 #endif
+  //map<NaT, map<keymask, list-of-pairs{gbar,{val1, val2, ..., valn}}>
   std::map<std::string,
            std::map<key_size_t,
                     std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
       _channelArrayParamsMap;
+
   std::map<std::string, unsigned long long> _compartmentParamsMasks;
 #ifdef NEWIDEA
 	//TEST NEW IDEA

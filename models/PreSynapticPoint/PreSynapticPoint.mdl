@@ -73,6 +73,8 @@ Node SynapticCleft Implements
     GlutamateConcentrationProducer, GABAConcentrationProducer
 #if SUPPORT_MODULABLE_CLEFT
     , DopamineConcentrationProducer, SerotonineConcentrationProducer
+    , AchetylcholineConcentrationProducer
+//TUAN TODO: add ACh, as FSI producing ACh is common in MSN
 #endif
     , NameProducer
 #ifdef KEEP_PAIR_PRE_POST
