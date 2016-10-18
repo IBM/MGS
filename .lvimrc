@@ -31,6 +31,7 @@ au BufNewFile,BufRead *.gsl setlocal ft=gsl foldmethod=marker
 au BufNewFile,BufRead *.mdl setlocal ft=mdl foldmethod=marker
 au BufNewFile,BufRead NTSMacros.h setlocal foldmethod=marker
 au BufNewFile,BufRead *.par setlocal foldmethod=marker
+au BufNewFile,BufRead *.mk setlocal foldmethod=marker
 au BufNewFile,BufRead make_nts setlocal foldmethod=marker
 au BufNewFile,BufRead build_gsl setlocal foldmethod=marker
 "noremap <leader>f <Esc>:syn region myFold start="/*{{{*/" end="/*}}}*/" transparent fold<CR>
