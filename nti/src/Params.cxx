@@ -348,6 +348,7 @@ void Params::readCptParams(const std::string& fname)
   skipHeader(fpF);
 
   std::string keyword;
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   keyword = std::string("COMPARTMENT_SPINE_NECK");
   if (isGivenKeywordNext(fpF, keyword))
   {
@@ -368,6 +369,7 @@ void Params::readCptParams(const std::string& fname)
       assert(result);
     }
   }
+#endif
 
   keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
   if (isGivenKeywordNext(fpF, keyword))
@@ -6299,6 +6301,7 @@ void Params::getCompactK(
 }
 
 
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 bool Params::readCriteriaSpineHead(FILE* fpF)
 {//any key field with array-form
   std::string expected_btype("COMPARTMENT_SPINE_HEAD");
@@ -6743,3 +6746,4 @@ bool Params::isGivenKeySpineHead(key_size_t key)
   }
   return result;
 }
+#endif

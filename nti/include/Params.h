@@ -313,8 +313,10 @@ public:
   bool isCommentLine(std::string& line);
   void jumpOverCommentLine(FILE* fpF);
 
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   bool isGivenKeySpineNeck(key_size_t key) ;
   bool isGivenKeySpineHead(key_size_t key) ;
+#endif
 
   private:
 	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
@@ -555,7 +557,6 @@ public:
   unsigned long long _spineHeadMask, _spineNeckMask;
   //std::set<key_size_t>  _spineHeadsMap, _spineNecksMap;
   std::vector<key_size_t>  _spineHeadsMap, _spineNecksMap;
-#endif
   bool readCriteriaSpineHead(FILE* fpF);// support array-form for any 
   bool readCriteriaSpineNeck(FILE* fpF);// support array-form for any 
 	void buildSpinesMap(
@@ -565,6 +566,7 @@ public:
 			//std::istringstream &is
 			//const std::string & myBuf
 			);
+#endif
 
   SegmentDescriptor _segmentDescriptor;
   std::string _currentFName;
