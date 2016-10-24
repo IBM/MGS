@@ -5,14 +5,27 @@ from genSpines import SomeClass
 ################
 #spines = SomeClass("neurons/neuron_test.swc")
 #spines = SomeClass("neurons/neuron.swc")
-targetDir = "neurons_msn0"
-modelFile = "model_Tuan2016.gsl"
-tissueFile = "neurons_msn.txt"
-spines = SomeClass(targetDir +"/neuron.swc")
-#spines.genSpine_MSN_branchorder_based()
-#spines.genSpine_at_branchpoint()
-spines.genSpine_MSN_distance_based()
-#spines.genSpine_PyramidalL5()  #better
+
+### IMPORTANT: use genSpine_MSN_distance_based or genSpine_PyramidalL5
+cond = 2
+if (cond==1):
+    targetDir = "neurons_msn0"
+    modelFile = "model_Tuan2016.gsl"
+    tissueFile = "neurons_msn.txt"
+    spines = SomeClass(targetDir +"/neuron.swc")
+    #spines.genSpine_MSN_branchorder_based()
+    #spines.genSpine_at_branchpoint()
+    spines.genSpine_MSN_distance_based()
+    #spines.genSpine_PyramidalL5()  #better
+elif (cond==2):
+    targetDir = "neurons_msn0"
+    modelFile = "model_Tuan2016.gsl"
+    tissueFile = "neurons_msn.txt"
+    spines = SomeClass(targetDir +"/MSN_denda_0_1180.swc")
+    #spines.genSpine_PyramidalL5()  #better
+    #spines.genSpine_MSN_branchorder_based()
+    spines.genSpine_MSN_distance_based()
+    #spines.genSpine_at_branchpoint()
 
 #spines.rotateSpines()
 #spines.saveSpines()  # default:spines.txt
