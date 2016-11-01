@@ -32,7 +32,9 @@
 #include "Constants.h"
 
 extern int mdlparse(void*);
+#if YYDEBUG
 extern int yydebug;
+#endif
 
 Initializer::Initializer(int argc, char** argv)
    : _argc(argc), _argv(argv)
@@ -53,9 +55,9 @@ bool Initializer::execute()
    char const * infilename = fileName.c_str();
    std::istream *infile;
    std::ostream *outfile = &std::cout;
-
+#if YYDEBUG
    yydebug = 0;
-
+#endif
    char temporaryName[256] = "/tmp/bc_mpp.XXXXXX";             // modified by Jizhu Lu on 01/10/2006
 
    std::ostringstream command;
@@ -78,7 +80,7 @@ bool Initializer::execute()
       }
 
       system(command.str().c_str());
-      infile = new ifstream(temporaryName);
+      infile = new std::ifstream(temporaryName);
    }
    else {
       std::cerr << "Unable to open temporary file, cpp problem, aborting..." 
@@ -173,14 +175,18 @@ void Initializer::generateMakefileExtension()
 	    type[i] += 'A' - 'a';
 	 }
       }
+
+      os << "#{{{" << type << "\n";
+      //std::endl;
       os << type << "_MODULES += ";
       std::vector<std::string>::iterator it2, end2 = it->second.end();
       for (it2 = it->second.begin(); it2 != end2; ++it2) {
-	 if (it2 != it->second.begin()) {
-	    os << "\t";
-	 }
-	 os << *it2 << " \\\n";
+        if (it2 != it->second.begin()) {
+          os << "\t";
+        }
+        os << *it2 << " \\\n";
       }
+      os << "#}}}\n";
       os << "\n";
    }   
    std::ofstream fs("Extensions.mk");
@@ -195,19 +201,21 @@ void Initializer::generateCopyModules()
    std::map<std::string, std::vector<std::string> >::iterator it, 
       end = _copyModules.end();
    for(it = _copyModules.begin(); it != end; ++it) {
-      os << "cp -r ";
-      std::vector<std::string>::iterator it2, end2 = it->second.end();
-      for (it2 = it->second.begin(); it2 != end2; ++it2) {
-	 if (it2 != it->second.begin()) {
-	    os << " ";
-	 }
-	 os << *it2 << " ";
-      }
-      os << " $LENSROOT/extensions/" << it->first << "\n";
+     os << "cp -r ";
+     std::vector<std::string>::iterator it2, end2 = it->second.end();
+     for (it2 = it->second.begin(); it2 != end2; ++it2) {
+       if (it2 != it->second.begin()) {
+         os << " ";
+       }
+       os << *it2 << " ";
+     }
+     os << " $LENSROOT/extensions/" << it->first << "\n";
    }   
-   os << "touch $LENSROOT/Extensions.mk\n";
-   os << "cp $LENSROOT/Extensions.mk $LENSROOT/Extensions.mk.bak\n";
-   os << "cp Extensions.mk $LENSROOT/\n";
+   //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
+   // this can be done (if needed), by calling via the ../define script
+   //os << "touch $LENSROOT/Extensions.mk\n";
+   //os << "cp $LENSROOT/Extensions.mk $LENSROOT/Extensions.mk.bak\n";
+   //os << "cp Extensions.mk $LENSROOT/\n";
    std::ofstream fs("copyModules");
    fs << os.str();
    fs.close();

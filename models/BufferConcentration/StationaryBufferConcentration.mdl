@@ -1,0 +1,323 @@
+#ifndef StationaryBufferConcentrationcentration_MDL
+#define StationaryBufferConcentrationcentration_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../LaboratoryTools/LaboratoryTools.mdl"
+
+// It represents one branch (which comprises regular compartments + implicit junctions)
+Node StationaryBufferConcentrationcentration Implements SolutionArrayProducer, 
+     DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer, 
+     CaBufferConcentrationcentrationArrayProducer
+{
+// Regular-branch: represent the diffusion of a buffer along branch with no explicit junction
+/*{{{*/
+	//DATA
+    /*{{{*/
+	//data members: reference
+       // pointer to array of branch
+       // help to identify the branch a Calcium(cyto)-compartment belong to 
+  BranchDataStruct* branchData; // pointer to branch's data
+  DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
+	//data members: internal, but for solver
+    //{{{
+  bool proximalJunction;// true = real-branching point, 
+                        //..false=implicit-cut (i.e. cut along the branch)
+       //}}}
+	//data members: internal
+  dyn_var_t [] Val_cur; // [uM]  concentration of stationary buffer at compartments of a given branch
+  dyn_var_t [] Val_new;
+  dyn_var_t [] kon;
+  dyn_var_t [] koff;  
+  dyn_var_t BaselineConcentration; // [uM]
+
+    // and all compartments on the same branch share the same value
+  dyn_var_t ClearanceRate; // removing factor (same for all compartment of the same branch)
+	/*}}}*/
+
+   // design : anything currently not part of the spatial 
+   //          is put here
+  Shared {
+    /*{{{*/
+    dyn_var_t* deltaT;
+    InitPhase deriveParameters;  
+    /*}}}*/
+  }
+
+	//output
+	//{{{
+  CaBufferConcentrationcentrationArrayProducer.CaBufferConcentrationcentrations << &Val_new;
+  SolutionArrayProducer.solutionArray << &Val_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+  ForwardSolutionArrayProducer.AiiArray << &Aii;
+  ForwardSolutionArrayProducer.AipArray << &Aip;
+  ForwardSolutionArrayProducer.RHSArray << &RHS;
+	//}}}
+
+    // Phases methods
+    /*{{{*/
+  InitPhase initializeCompartmentData;
+
+  #if MAX_COMPUTE_ORDER>0
+  RuntimePhase forwardSolve1, backwardSolve1; 
+  #endif
+  #if MAX_COMPUTE_ORDER>1
+  RuntimePhase forwardSolve2, backwardSolve2; 
+  #endif
+  #if MAX_COMPUTE_ORDER>2
+  RuntimePhase forwardSolve3, backwardSolve3; 
+  #endif
+  #if MAX_COMPUTE_ORDER>3
+  RuntimePhase forwardSolve4, backwardSolve4; 
+  #endif
+  #if MAX_COMPUTE_ORDER>4
+  RuntimePhase forwardSolve5, backwardSolve5; 
+  #endif
+  #if MAX_COMPUTE_ORDER>5
+  RuntimePhase forwardSolve6, backwardSolve6; 
+  #endif
+  #if MAX_COMPUTE_ORDER>6
+  RuntimePhase forwardSolve7, backwardSolve7; 
+  #endif
+
+  RuntimePhase solve, finish;
+    /*}}}*/
+
+  InAttrPSet {	
+    string identifier;
+    TissueSite site;
+    int idx;
+  }
+
+  // d^2 Ca/dx^2 = dCa/dt + ICaleak + ICainject + (ICasyn+ICaion)
+  // injectedCurrent  = (to a compartment) only if 2 scenarios
+  //               1. it forms an bi-directional
+  //                      connection (e.g. electrical-synapse or spine-neck)
+  //               2. a stimulus current is injected
+  UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
+  // Connection setup
+  //{{{ 
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+   }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
+    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+   }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> injectedCaCurrents.current;
+  //  setInjectedCaCurrent();
+  // }
+
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents.current;
+    setInjectedCaCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+    // for receptors like NMDAR
+    CaCurrentProducer.current >> receptorCaCurrents.current;
+    setReceptorCaCurrent();
+   }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents.current;
+    setInjectedCaCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects CaBufferConcentrationcentrationProducer, DimensionProducer {
+    CaBufferConcentrationcentrationProducer.Ca >> proximalCaBufferConcentrationcentration;
+    DimensionProducer.dimension >> proximalDimension;
+    setProximalJunction();
+  }
+
+  Connection Pre Node (PSet.identifier=="backwardSolvePoint") Expects SolutionProducer, DimensionProducer {
+    SolutionProducer.solution >> proximalCaBufferConcentrationcentration;
+    DimensionProducer.dimension >> proximalDimension;
+  }
+
+  Connection Pre Node (PSet.identifier=="distalJunctionPoint") Expects CaBufferConcentrationcentrationProducer, DimensionProducer {
+    CaBufferConcentrationcentrationProducer.Ca >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="forwardSolvePoint") Expects ForwardSolutionProducer, DimensionProducer {
+    ForwardSolutionProducer.Aii >> distalAiis;
+    ForwardSolutionProducer.Aip >> distalAips;
+    ForwardSolutionProducer.RHS >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+  //}}}
+/*}}}*/
+}
+
+// represent an end-point (i.e. last compartment in the series of compartments along a branch)
+// thus don't hold real data, just a reference to that last segment
+Node StationaryBufferConcentrationcentrationEndPoint Implements CaBufferConcentrationcentrationProducer, DimensionProducer
+{
+// For each regular compute-branch (i.e. not a junction), represented by CaBufferConcentrationcentration 
+// we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
+/*{{{*/
+	// single value
+  dyn_var_t* CaBufferConcentrationcentration; // reference to the Ca(cyto) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
+  DimensionStruct* dimension; //reference to the struct representing the compartment
+
+  Shared {
+    // so the two instances share the Branch's data
+		// an array but indeed is a scalar
+    dyn_var_t []* CaBufferConcentrationcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+    //output
+  CaBufferConcentrationcentrationProducer.Ca << CaBufferConcentrationcentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {//attribute of the incoming MDL component, e.g. node
+    string identifier;
+  }
+
+  UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(cyto)' of the end-point component which
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
+
+  // Connection setup (i.e. input)
+  Connection Pre Node () Expects CaBufferConcentrationcentrationArrayProducer, DimensionArrayProducer {
+    CaBufferConcentrationcentrationArrayProducer.CaBufferConcentrationcentrations >> Shared.CaBufferConcentrationcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+	// as end-point, so we use 'produce' prefix for kernels
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedCaBufferConcentrationcentration(CaBufferConcentrationcentration);
+  RuntimePhase produceFinishedCaBufferConcentrationcentration(CaBufferConcentrationcentration);
+/*}}}*/
+}
+
+// It represents one (exlicit) junction branch (which comprise half regular compartments)
+Node StationaryBufferConcentrationcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
+     CaBufferConcentrationcentrationArrayProducer 
+{
+/*{{{*/
+  BranchDataStruct* branchData;
+  DimensionStruct* [] dimensions;
+  dyn_var_t volume;
+  dyn_var_t Val_cur;
+  dyn_var_t [] Val_new;
+  dyn_var_t kon;
+  dyn_var_t koff;  
+  dyn_var_t BaselineConcentration; // [uM]
+
+  dyn_var_t ClearanceRate; // removing factor (same for all compartment of the same branch)
+
+  // currents
+  ChannelCaCurrents [] channelCaCurrents;
+  dyn_var_t* [] receptorCaCurrents;
+  dyn_var_t* [] injectedCaCurrents;
+
+  dyn_var_t* [] CaBufferConcentrationcentrationInputs;
+  DimensionStruct* [] dimensionInputs;
+
+  Shared {
+    dyn_var_t* deltaT;
+    InitPhase deriveParameters;  
+  }
+
+  CaBufferConcentrationcentrationArrayProducer.CaBufferConcentrationcentrations << &Val_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+
+  InitPhase initializeJunction;
+  RuntimePhase predictJunction, correctJunction;
+
+  InAttrPSet {
+    string identifier;
+    TissueSite site;
+    int idx;
+  }	
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+  }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
+    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> injectedCaCurrents;
+  //}
+
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents;
+  }
+
+  //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> receptorCaCurrents;
+  //}
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents;
+   }
+
+  Connection Pre Node (PSet.identifier=="endpoint") Expects CaBufferConcentrationcentrationProducer, DimensionProducer  {
+    CaBufferConcentrationcentrationProducer.Ca >> CaBufferConcentrationcentrationInputs;
+    DimensionProducer.dimension >> dimensionInputs;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+/*}}}*/
+}
+
+Node StationaryBufferConcentrationcentrationJunctionPoint Implements CaBufferConcentrationcentrationProducer, DimensionProducer
+{
+/*{{{*/
+  dyn_var_t* CaBufferConcentrationcentration;
+  DimensionStruct* dimension;
+
+  Shared {
+    dyn_var_t []* CaBufferConcentrationcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+  CaBufferConcentrationcentrationProducer.Ca << CaBufferConcentrationcentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects CaBufferConcentrationcentrationArrayProducer, DimensionArrayProducer {
+    CaBufferConcentrationcentrationArrayProducer.CaBufferConcentrationcentrations >> Shared.CaBufferConcentrationcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceCaBufferConcentrationcentration(CaBufferConcentrationcentration);
+/*}}}*/
+}
+
+#endif

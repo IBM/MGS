@@ -1,6 +1,11 @@
 # Run this file through gnu make, /usr/gnu/bin/make 
 
-default: bin/mdlparser
+default: final 
+
+OBJS_DIR=obj
+SOURCES_DIRS=src
+BIN_DIR=bin
+EXE_FILE=mdlparser
 
 # To compile with xlC_r edit this or use CC=xlC_r at command line.
 CC := g++
@@ -16,13 +21,14 @@ OBJECTONLYFLAGS :=
 
 # Look for include files in each of the modules
 #  This will append CFLAGS with a string like '-Idir1/include -Idir2/include'
-CFLAGS := -Iinclude -Iparser
+CFLAGS := -Iinclude -Iparser 
 
 # Create a variable 'ADDCFLAGS' that you can use to add to the CFLAGS from the
 # command line option of gmake if necessary
 # e.g. Use gmake ADDCFLAGS='-g' if you want to compile with the -g option.
 ADDCFLAGS :=
 CFLAGS += $(ADDCFLAGS)
+
 
 OPERATING_SYSTEM = $(shell uname)
 
@@ -67,46 +73,52 @@ endif
 
 #Optimization
 #CFLAGS += -O2
+vpath %.C $(SOURCES_DIRS)
 
 # include sources
 include sources.mk
 
-# Parser targets
-mdl.tab.h: parser/mdl.y
-	cd parser; bison -v -d  mdl.y; mv mdl.tab.c mdl.tab.C; cd ..
 
-parser/mdl.tab.C: parser/mdl.y
-	cd parser; bison -v -d  mdl.y; mv mdl.tab.c mdl.tab.C; cd ..
+#depend: $(SRCS)
+#	rm -f ./.depend
+#	$(CC) $(CFLAGS) -MM $^>>./.depend;
+#
+#-include .depend
+
+# Parser targets
+mdl.tab.h:  parser/mdl.y
+	cd parser; bison -v -d -b mdl mdl.y; cd ..
+
+#parser/mdl.tab.c: parser/mdl.y
+#	cd parser; bison -v -d -b mdl mdl.y; cd ..
 
 # Scanner targets
 ifeq ($(FLEXFIXER), True)
-scanner/lex.yy.C: scanner/mdl.l
-	flex -+ scanner/mdl.l
+scanner/lex.yy.cc: scanner/mdl.l
+	flex  scanner/mdl.l
 	sed "s/class istream;/#include <FlexFixer.h>/" \
 	lex.yy.cc > lex.yy.cc.edited 
-	mv -f lex.yy.cc.edited scanner/lex.yy.C
+	mv -f lex.yy.cc.edited scanner/lex.yy.cc
 	- rm lex.yy.cc
 else
-scanner/lex.yy.C: scanner/mdl.l
-	flex -+ scanner/mdl.l
-	mv -f lex.yy.cc scanner/lex.yy.C
+scanner/lex.yy.cc: scanner/mdl.l
+	flex  scanner/mdl.l
+	mv -f lex.yy.cc scanner/lex.yy.cc
 endif
 
-scanner/lex.yy.o: scanner/lex.yy.C scanner/mdl.l
+scanner/lex.yy.o: scanner/lex.yy.cc scanner/mdl.l
 	$(CC) -c $< $(CFLAGS) -o $@
 
 # Include the C include dependencies
-include $(OBJS:.o=.d)
+#include $(OBJS:.o=.d)
 
 # Our Suffix rules
-%.d: 
-	scripts/depend.sh ${*F} $(CFLAGS) > $@
+#%.d: 
+#	scripts/depend.sh ${*F} $(CFLAGS) > $@
 
-.C:
-	true	
+$(OBJS_DIR)/%.o : %.C
+	$(CC) $(CFLAGS)  $(OBJECTONLYFLAGS) -c $< -o $@
 
-.h:
-	true
 
 lib/libmdl.a: $(OBJS)
 	ar rvu $@ $(OBJS)
@@ -115,18 +127,18 @@ lib/libmdl.a: $(OBJS)
 LIBS += lib/libmdl.a
 
 
-bin/mdlparser: parser/mdl.tab.C lib/libmdl.a scanner/lex.yy.C
-	$(CC) $(CFLAGS) parser/mdl.tab.C scanner/lex.yy.C $(LIBS) \
-           $(XLINKER) -DYYDEBUG -o $@ $(FINAL_TARGET_FLAG)
+final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
+	-rm $(BIN_DIR)/$(EXE_FILE)
+	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
+           $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
 .PHONY: clean
 clean:
-	- find . -name "*\.o" -exec /bin/rm {} \;
-	- find . -name "*\.a" -exec /bin/rm {} \;
-	- find . -name "*\.d" -exec /bin/rm {} \;
-	- rm bin/mdlparser
-	- rm parser/mdl.output
-	- rm parser/mdl.tab.C
-	- rm parser/mdl.tab.h
-	- rm scanner/lex.yy.C
+	-rm $(OBJS_DIR)/*
+	-rm $(BIN_DIR)/$(EXE_FILE)
+	-rm parser/mdl.output
+	-rm parser/mdl.tab.c
+	-rm parser/mdl.tab.h
+	-rm scanner/lex.yy.cc
+
 

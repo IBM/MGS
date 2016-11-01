@@ -6,25 +6,25 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node ChannelSchweighoferCah Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, CaCurrentArrayProducer, BranchDataProducer {
-  float [] m;
-  float [] g;
-  float [] gbar;
-  float [] E_Ca;
-  float [] I_Ca;
+  dyn_var_t [] m;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
+  dyn_var_t [] E_Ca;
+  dyn_var_t [] I_Ca;
 
-  float [] gbar_dists;
-  float [] gbar_values;
+  dyn_var_t [] gbar_dists;
+  dyn_var_t [] gbar_values;
 
-  float []* V;
-  float []* Ca_IC;
+  dyn_var_t []* V;
+  dyn_var_t []* Ca_IC;
 
   BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
 
   Shared {		
-    float* Ca_EC;
-    float* deltaT;
-    float* T;
+    dyn_var_t* Ca_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
   }
 
   RuntimePhase update;	
@@ -32,7 +32,7 @@ Node ChannelSchweighoferCah Implements ConductanceArrayProducer, ReversalPotenti
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
-  CaCurrentArrayProducer.CaCurrents << &I_Ca;
+  CaCurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
 
   InAttrPSet {

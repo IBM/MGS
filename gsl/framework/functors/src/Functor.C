@@ -16,33 +16,19 @@
 #include "Functor.h"
 #include <iostream>
 
-const char * Functor::_category = "FUNCTOR";
+const std::string Functor::_category = "FUNCTOR";
 
-Functor::Functor()
-{
+Functor::Functor() {}
+
+const std::string& Functor::getCategory() const { return _category; }
+
+void Functor::initialize(LensContext* c, const std::vector<DataItem*>& args) {
+  doInitialize(c, args);
 }
 
-
-const char * Functor::getCategory()
-{
-   return _category;
+void Functor::execute(LensContext* c, const std::vector<DataItem*>& args,
+                      std::auto_ptr<DataItem>& rvalue) {
+  doExecute(c, args, rvalue);
 }
 
-
-void Functor::initialize(LensContext *c, const std::vector<DataItem*>& args)
-{
-   doInitialize(c, args);
-}
-
-
-void Functor::execute(LensContext *c, 
-		      const std::vector<DataItem*>& args, 
-		      std::auto_ptr<DataItem>& rvalue)
-{
-   doExecute(c, args, rvalue);
-}
-
-
-Functor::~Functor()
-{
-}
+Functor::~Functor() {}

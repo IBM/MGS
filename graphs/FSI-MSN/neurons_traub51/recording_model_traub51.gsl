@@ -1,0 +1,144 @@
+//#define DAT15 "Erevrec15.dat"
+//ReversalPotentialDisplay ReversalPotentialDisplay_0<fileName=PathFileCombine(DAT15)>;
+
+//neuron
+//{{{
+//{{{soma
+VoltageDisplay voltageSomaDisplay<fileName= PathFileCombine("somaV.dat")>;
+voltageSomaDisplay.dataCollection(<>) on recOn;
+//voltageDisplay.dataCollection(<>) on recOnPassTime;
+
+CalciumDisplay calciumSomaDisplay<fileName= PathFileCombine("somaCa.dat")>;
+calciumSomaDisplay.dataCollection(<>) on recOn;
+//calciumSomaDisplay.dataCollection(<>) on recOnPassTime;
+
+//CurrentDisplay current_somaNa<fileName= PathFileCombine("current_somaNa.dat")>;
+//ConductanceDisplay current_somaNa<fileName= PathFileCombine("current_somaNa.dat")>;
+//current_somaNa.dataCollection(<>) on recOn;
+//current_somaNa.dataCollection(<>) on recOnPassTime;
+
+//CurrentDisplay current_somaK<fileName= PathFileCombine("current_somaK.dat")>;
+//ConductanceDisplay g_somaK<fileName= PathFileCombine("g_somaK.dat")>;
+//g_somaK.dataCollection(<>) on recOn;
+////g_somaK.dataCollection(<>) on recOnPassTime;
+
+AnyCurrentDisplay currentSomaDisplay<fileName= PathFileCombine("currentsSoma.dat")>;
+currentSomaDisplay.dataCollection(<>) on recOn;
+//currentDisplay.dataCollection(<>) on recOnPassTime;
+//}}}
+//{{{dendritic shaft
+//VoltageDisplay voltageDisplay_den<fileName= PathFileCombine("dendriticV.dat")>;
+//voltageDisplay_den.dataCollection(<>) on recOn;
+////voltageDisplay_den.dataCollection(<>) on recOnPassTime;
+//CalciumDisplay calciumDisplay_den<fileName= PathFileCombine("dendriticCa.dat")>;
+//calciumDisplay_den.dataCollection(<>) on recOn;
+////calciumDisplay_den.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay voltageDisplay_den_distal<fileName= PathFileCombine("distaldendriticV.dat")>;
+voltageDisplay_den_distal.dataCollection(<>) on recOn;
+//voltageDisplay_den_distal.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_den_distal<fileName= PathFileCombine("distaldendriticCa.dat")>;
+calciumDisplay_den_distal.dataCollection(<>) on recOn;
+//calciumDisplay_den_distal.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay voltageDisplay_den_middle<fileName= PathFileCombine("middledendriticV.dat")>;
+voltageDisplay_den_middle.dataCollection(<>) on recOn;
+//voltageDisplay_den_middle.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_den_middle<fileName= PathFileCombine("middledendriticCa.dat")>;
+calciumDisplay_den_middle.dataCollection(<>) on recOn;
+//calciumDisplay_den_middle.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay voltageDisplay_perisomaticApicalDen<fileName= PathFileCombine("perisomaticApicalDenV.dat")>;
+voltageDisplay_perisomaticApicalDen.dataCollection(<>) on recOn;
+//voltageDisplay_perisomaticApicalDen.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_perisomaticApicalDen<fileName= PathFileCombine("perisomaticApicalDenCa.dat")>;
+calciumDisplay_perisomaticApicalDen.dataCollection(<>) on recOn;
+//calciumDisplay_perisomaticApicalDen.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay voltageDisplay_perisomaticBasalDen<fileName= PathFileCombine("perisomaticBasalDenV.dat")>;
+voltageDisplay_perisomaticBasalDen.dataCollection(<>) on recOn;
+//voltageDisplay_perisomaticBasalDen.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_perisomaticBasalDen<fileName= PathFileCombine("perisomaticBasalDenCa.dat")>;
+calciumDisplay_perisomaticBasalDen.dataCollection(<>) on recOn;
+//calciumDisplay_perisomaticBasalDen.dataCollection(<>) on recOnPassTime;
+//}}}
+//{{{ axon AIS
+VoltageDisplay voltageDisplay_ais<fileName= PathFileCombine("axonAISV.dat")>;
+voltageDisplay_ais.dataCollection(<>) on recOn;
+//voltageDisplay_ais.dataCollection(<>) on recOnPassTime;
+CalciumDisplay calciumDisplay_ais<fileName= PathFileCombine("axonAISCa.dat")>;
+calciumDisplay_ais.dataCollection(<>) on recOn;
+//calciumDisplay_ais.dataCollection(<>) on recOnPassTime;
+AnyCurrentDisplay currentAISDisplay<fileName= PathFileCombine("currentsAIS.dat")>;
+currentAISDisplay.dataCollection(<>) on recOn;
+//}}}
+//{{{ distal axon 
+//VoltageDisplay voltageDisplay_axonDistal<indices={1,4},fileName= PathFileCombine("axonDistalV.dat")>;
+VoltageDisplay voltageDisplay_axonDistal<fileName= PathFileCombine("axonDistalV.dat")>;
+voltageDisplay_axonDistal.dataCollection(<>) on recOn;
+//voltageDisplay_axonDistal.dataCollection(<>) on recOnPassTime;
+//CalciumDisplay calciumDisplay_axonDistal<fileName= PathFileCombine("axonDistalCa.dat")>;
+//calciumDisplay_axonDistal.dataCollection(<>) on recOn;
+//calciumDisplay_ais.dataCollection(<>) on recOnPassTime;
+AnyCurrentDisplay currentDistalAxonDisplay<fileName= PathFileCombine("currentsDistalAxon.dat")>;
+currentDistalAxonDisplay.dataCollection(<>) on recOn;
+//}}}
+//}}}
+
+//spine
+//{{{
+//{{{current
+CaCurrentDisplay currentNMDARDisplay<fileName= PathFileCombine("spineNMDAR.dat")>;
+currentNMDARDisplay.dataCollection(<>) on recOn;
+//currentNMDARDisplay.dataCollection(<>) on recOnPassTime;
+
+CurrentDisplay currentAMPARDisplay<fileName= PathFileCombine("spineAMPAR.dat")>;
+currentAMPARDisplay.dataCollection(<>) on recOn;
+//currentAMPARDisplay.dataCollection(<>) on recOnPassTime;
+//}}}
+//{{{Vm+Ca
+VoltageDisplay spineVoltageDisplay<fileName=PathFileCombine("spineV.dat")>;
+spineVoltageDisplay.dataCollection(<>) on recOn;
+//spineVoltageDisplay.dataCollection(<>) on recOnPassTime;
+
+CalciumDisplay spineCalciumDisplay<fileName=PathFileCombine("spineCa.dat")>;
+spineCalciumDisplay.dataCollection(<>) on recOn;
+//spineCalciumDisplay.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay proximalSpineVoltageDisplay<fileName=PathFileCombine("proximalSpineV.dat")>;
+proximalSpineVoltageDisplay.dataCollection(<>) on recOn;
+//proximalSpineVoltageDisplay.dataCollection(<>) on recOnPassTime;
+
+CalciumDisplay proximalSpineCalciumDisplay<fileName=PathFileCombine("proximalSpineCa.dat")>;
+proximalSpineCalciumDisplay.dataCollection(<>) on recOn;
+//proximalSpineCalciumDisplay.dataCollection(<>) on recOnPassTime;
+
+VoltageDisplay distalSpineVoltageDisplay<fileName=PathFileCombine("distalSpineV.dat")>;
+distalSpineVoltageDisplay.dataCollection(<>) on recOn;
+//distalSpineVoltageDisplay.dataCollection(<>) on recOnPassTime;
+
+CalciumDisplay distalSpineCalciumDisplay<fileName=PathFileCombine("distalSpineCa.dat")>;
+distalSpineCalciumDisplay.dataCollection(<>) on recOn;
+//distalSpineCalciumDisplay.dataCollection(<>) on recOnPassTime;
+//}}}
+//{{{NT
+//ConcentrationDisplay cleftConcentrationDisplay<fileName=PathFileCombine("cleftNT.dat")>;
+//cleftConcentrationDisplay.dataCollection(<>) on recOn;
+////cleftConcentrationDisplay.dataCollection(<>) on recOnPassTime;
+//}}}
+//}}}
+
+//presynapticSoma
+//{{{soma
+VoltageDisplay presynapticSomaDisplayVm<fileName= PathFileCombine("presynapticSomaVm.dat")>;
+presynapticSomaDisplayVm.dataCollection(<>) on recOn;
+//}}}
+
+
+//CalciumDisplay calciumSomaERDisplay<fileName= PathFileCombine("somaCaER.dat")>;
+//calciumSomaERDisplay.dataCollection(<>) on recOn;
+//calciumSomaERDisplay.dataCollection(<>) on recOnPassTime;
+/*
+CalciumDisplay synapseCalciumDisplay_0<fileName=PathFileCombine("synapseC0.dat")>;
+synapseCalciumDisplay_0.dataCollection(<>) on recOn;
+*/

@@ -1,40 +1,294 @@
 #ifndef AMPAReceptor_MDL
 #define AMPAReceptor_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer, ReversalPotentialProducer, BranchDataArrayProducer, IndexArrayProducer {
-  float g;
-  float gbar;
-  float r;
+// Simplified 2-state model 
+// Pure Vm-dependent and [Glut]-dependent
+Node AMPAReceptor Implements ConductanceProducer, ReversalPotentialProducer
+     , MaximumConductanceProducer
+     , CurrentProducer
+#ifdef KEEP_PAIR_PRE_POST
+     , BranchDataArrayProducer, IndexArrayProducer //for both pre- and post- side
+#else
+//TUAN TODO: not completed yet, follow mGluR1
+     , BranchDataProducerPre, IndexProducerPre //for pre-only
+     , BranchDataProducerPost, IndexProducerPost  // for post-only
+#endif
+     , DimensionArrayProducer //for post
+{
+/*{{{*/
+  //DATA
+	//{{{
+  dyn_var_t g;  //[nS/um^2]
+  dyn_var_t gbar; // [nS/um^2]
+  dyn_var_t r; // fraction of opening receptors
+  dyn_var_t I; // [pA/um^2] 
 
-  float* V;
-  float* w;
+  //{{{cleft-info
+  dyn_var_t* Glut; //[uM] concentration
+  //}}}
+
+  //{{{pre-side info
+//NOTE: Even though there is only 1 pre and 1 post for 1 synaptic-receptor
+//  Due to the constraint of interfaces, we have to use array
+  //{{{only use with preSynapticPoint
+  dyn_var_t* Vpre;  // [mV] preSynaptic voltage
+  //}}}
+#ifdef KEEP_PAIR_PRE_POST
+  //nothing
+#else
+  int* [] indexPre; // NOTE: only 1-element array
+  BranchDataStruct* [] branchDataPre; //only 1-element array
+#endif
+  //}}}
+  //{{{both-side
+#ifdef KEEP_PAIR_PRE_POST
+//TUAN TODO: to be removed KEEP_PAIR_PRE_POST
+// Indeed, n = 1 only
+  int* [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
+  BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
+#endif
+  //}}}
+  //{{{post-side info
+  //and only 1 post-side
+  //  Due to the constraint of interfaces, we have to use array
+  dyn_var_t []* Vpost;
   int indexPost;
-  int* [] indexPrePost;
- 
-  BranchDataStruct* [] branchDataPrePost;
+#ifdef KEEP_PAIR_PRE_POST
+  //do nothing
+#else
+  BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
+  DimensionStruct* []* dimensions;
+  dyn_var_t* w; //weighting factor from another receptor to emulate plasticity
+                // ... (here is NMDAR modulate AMPAR)
+  //}}}
+  //}}}
 
   Shared {
-    float* deltaT;
-    float E;
-    float alpha;
-    float beta;
-    float Tmax;
-    float Vp;
-    float Kp;
+		//{{{
+    dyn_var_t alpha; // uM^-1 msec^-1
+    dyn_var_t beta;  // msec^-1
+		//{{{ only used with preSynapticPoint
+    dyn_var_t NTmax; // [uM] maximum concentration of NeuroTransmitter Glutamate
+    dyn_var_t Vp; // [mV]  voltage at which concentration of Glutamate is at half-peak
+    dyn_var_t Kp; // [mV]  the steepness of the curve of Glutamate = f(Vm)
+	  //}}}
+    dyn_var_t E; // [mV]
+
+    dyn_var_t* deltaT;
+    dyn_var_t *T;   // [K]
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+		InitPhase computeTadj;  
+    //}}}
    }
 
-  RuntimePhase updateAMPA;
+  //{{{Phases 
   InitPhase initializeAMPA;
+  RuntimePhase updateAMPA;
+  //}}}
 
+  //{{{Output 
   ConductanceProducer.conductance << &g;
-  MaximumConductanceProducer.maximumConductance << &gbar;
   ReversalPotentialProducer.reversalPotential << &Shared.E;
+  MaximumConductanceProducer.maximumConductance << &gbar;
+#ifdef KEEP_PAIR_PRE_POST
   BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
   IndexArrayProducer.indexArray << &indexPrePost;
+#else
+  BranchDataArrayProducer.branchDataArray << &branchDataPre;
+  IndexArrayProducer.indexArray << &indexPre;
+  BranchDataProducer.branchData << branchDataPost;
+#endif
+  CurrentProducer.current << &I;
+  DimensionArrayProducer.dimensionArray << dimensions;
+  //}}} 
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  UserFunction setPostIndex;
+
+  // Input (Connection setting)
+  //{{{
+  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer
+         , BranchDataProducer, IndexProducer {
+  //{{{
+    VoltageProducer.voltage >> Vpre;
+#ifdef KEEP_PAIR_PRE_POST
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPre;
+    IndexProducer.index >> indexPre;
+#endif
+  //}}}
+  }
+
+/*TUAN TODO: Think about using this as a strategy to split synapticCleft
+to have only "*NT"
+instead of 'Glut' and 'Gaba'
+This will enable having only 1 neurotransmitter variable in SynapticCleft
+
+ Connection Pre Node (PSet.identifier=="synapticCleft[GLUT]") Expects GlutamateConcentrationProducer, BranchDataProducer, IndexProducer {
+*/
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer
+         , BranchDataProducer, IndexProducer {
+  //{{{
+    GlutamateConcentrationProducer.NT >> Glut;
+#ifdef KEEP_PAIR_PRE_POST
+    BranchDataProducer.branchData >> branchDataPrePost;
+    IndexProducer.index >> indexPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPre;
+    IndexProducer.index >> indexPre;
+#endif
+  //}}}
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer
+           , DimensionArrayProducer
+           , BranchDataProducer {//post-side
+  //{{{
+#ifdef KEEP_PAIR_PRE_POST
+    BranchDataProducer.branchData >> branchDataPrePost; //- old design
+#else
+    BranchDataProducer.branchData >> branchDataPost;
+#endif
+    //REMEMBER: When use in C++ code, only use Vpost[indexPost]
+    VoltageArrayProducer.voltageArray >> Vpost;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
+  //}}}
+  }
+
+  Connection Pre Node (PSet.identifier=="receptor") Expects WeightProducer {
+    WeightProducer.w >> w;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+    Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+  //}}}
+/*}}}*/
+}
+
+// Markov-based model
+Node AMPAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProducer
+     , MaximumConductanceProducer
+     , CurrentProducer
+#ifdef KEEP_PAIR_PRE_POST
+     , BranchDataArrayProducer, IndexArrayProducer //for both pre- and post- side
+#else
+//TUAN TODO: not completed yet, follow mGluR1
+     , BranchDataProducerPre, IndexProducerPre //for pre-only
+     , BranchDataProducerPost, IndexProducerPost  // for post-only
+#endif
+     , DimensionArrayProducer //for post
+{
+/*{{{*/
+  //DATA
+	//{{{
+  dyn_var_t g;  //[nS/um^2]
+  dyn_var_t gbar; // [nS/um^2]
+  dyn_var_t fC0, fC1, fD1, fC2, fD2, fO;//Markov-states (fraction)
+  dyn_var_t I; // [pA/um^2] 
+
+  //{{{cleft-info
+  dyn_var_t* Glut; // [uM]
+  //}}}
+  //{{{pre-side info
+  //{{{only use with preSynapticPoint
+  dyn_var_t* Vpre;
+  //}}}
+#ifdef KEEP_PAIR_PRE_POST
+  //nothing
+#else
+  int* [] indexPre; // NOTE: only 1-element array
+  BranchDataStruct* [] branchDataPre; //only 1-element array
+#endif
+  //}}}
+  //{{{both-side
+#ifdef KEEP_PAIR_PRE_POST
+//TUAN TODO: to be removed KEEP_PAIR_PRE_POST
+// Indeed, n = 1 only
+  int* [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
+  BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
+#endif
+  //}}}
+  //{{{post-side info
+  dyn_var_t []* Vpost;
+  int indexPost;
+#ifdef KEEP_PAIR_PRE_POST
+  //do nothing
+#else
+  BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
+ 
+  DimensionStruct* []* dimensions;
+  dyn_var_t* w; //weighting factor from another receptor to emulate plasticity
+                // ... (here is NMDAR modulate AMPAR)
+  //}}}
+  //}}}
+
+  Shared {
+		//{{{
+    dyn_var_t Rb;// uM^-1 msec^-1
+    dyn_var_t Ru1;// msec^-1
+    dyn_var_t Ru2;// msec^-1
+    dyn_var_t alpha; // msec^-1, which is Ro
+    dyn_var_t beta;// msec^-1,   which is Rc
+    dyn_var_t Rr;// msec^-1
+    dyn_var_t Rd;// msec^-1
+		//{{{ only used with preSynapticPoint
+    dyn_var_t NTmax; // [uM] maximum concentration of NeuroTransmitter Glutamate
+    dyn_var_t Vp; // [mV]  voltage at which concentration of Glutamate is at half-peak
+    dyn_var_t Kp; // [mV]  the steepness of the curve of Glutamate = f(Vm)
+    //}}}
+    dyn_var_t E; // [mV]
+
+    dyn_var_t* deltaT;
+    dyn_var_t *T;   // [K]
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+		InitPhase computeTadj;  
+    //}}}
+   }
+
+  //{{{Phases
+  InitPhase initializeAMPA;
+  RuntimePhase updateAMPA;
+  //}}}
+
+  // Output
+  //{{{
+  ConductanceProducer.conductance << &g;
+  ReversalPotentialProducer.reversalPotential << &Shared.E;
+  MaximumConductanceProducer.maximumConductance << &gbar;
+#ifdef KEEP_PAIR_PRE_POST
+  BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
+  IndexArrayProducer.indexArray << &indexPrePost;
+#else
+  BranchDataArrayProducer.branchDataArray << &branchDataPre;
+  IndexArrayProducer.indexArray << &indexPre;
+  BranchDataProducer.branchData << branchDataPost;
+//problem - we have no index to the compartment in post-branch
+#endif
+  CurrentProducer.current << &I;
+  DimensionArrayProducer.dimensionArray << dimensions;
+  //}}}
 
   InAttrPSet {
     string identifier;
@@ -44,24 +298,66 @@ Node AMPAReceptor Implements ConductanceProducer, MaximumConductanceProducer, Re
 
   UserFunction setPostIndex;
 
-  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, BranchDataProducer, IndexProducer {
-    VoltageProducer.voltage >> V;
+  // Input (Connection setting)
+  //{{{
+  Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer, 
+          BranchDataProducer, IndexProducer {
+            //{{{
+    VoltageProducer.voltage >> Vpre;
+#ifdef KEEP_PAIR_PRE_POST
     BranchDataProducer.branchData >> branchDataPrePost;
     IndexProducer.index >> indexPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPre;
+    IndexProducer.index >> indexPre;
+#endif
+            //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer, 
+          BranchDataProducer, IndexProducer {
+            //{{{
+    GlutamateConcentrationProducer.NT >> Glut;
+#ifdef KEEP_PAIR_PRE_POST
     BranchDataProducer.branchData >> branchDataPrePost;
-    setPostIndex();
+    IndexProducer.index >> indexPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPre;
+    IndexProducer.index >> indexPre;
+#endif
+            //}}}
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer
+           , DimensionArrayProducer
+           , BranchDataProducer {//post-side
+            //{{{
+#ifdef KEEP_PAIR_PRE_POST
+    BranchDataProducer.branchData >> branchDataPrePost;
+#else
+    BranchDataProducer.branchData >> branchDataPost;
+#endif
+    //REMEMBER: When use in C++ code, only use Vpost[indexPost]
+    VoltageArrayProducer.voltageArray >> Vpost;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
+            //}}}
   }
 
   Connection Pre Node (PSet.identifier=="receptor") Expects WeightProducer {
     WeightProducer.w >> w;
   }
 
+  Connection Pre Constant (PSet.identifier=="EC") 
+    Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
+/*}}}*/
 }
 
 #endif

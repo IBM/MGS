@@ -1,0 +1,70 @@
+Requirement: passing a predicate 
+  1. if no predicate match, e.g. IC[Calcium], it's OK
+  2. if predicate match, 
+     2.1. if there is one 'if' for that predicate, make sure dynamic_cast SUCCESS
+     2.2a. if there are multiple 'if' for that predicate, make sure AT LEAST one dynamic_cast SUCCESS  --> it's easy
+	 2.2b. if there are multiple 'if' for that predicate, make sure ONE one dynamic_cast SUCCESS  [mutually exclusive] --> it's order dependent
+
+CASE 2.2b
+ 	 bool noPredicateMatch = true;
+	 bool matchPredicateAndCast = false;
+	 bool castMatchLocal;
+	 
+  if (predicate----Match---){	 
+	  castMatchLocal = true;
+      noPredicateMatch= false;
+      if (CG_ConductanceArrayProducerPtr == 0) {
+         std::cerr << "Dynamic Cast of ConductanceArrayProducer failed in HodgkinHuxleyVoltage" << std::endl;
+         castMatchLocal = false;
+      }
+
+      if (CG_ReversalPotentialArrayProducerPtr == 0) {
+         std::cerr << "Dynamic Cast of ReversalPotentialArrayProducer failed in HodgkinHuxleyVoltage" << std::endl;
+         castMatchLocal = false;
+      }
+
+      if (castMatchLocal) { 
+         //castMatch = true; 
+		 if (matchPredicateAndCast)
+				 {
+					 std::cerr << "WARNING: You already have a cast match of predicate" << predicate;
+					 assert(0);
+				 }
+
+				 matchPredicateAndCast=true;
+      }
+	}
+	
+	...//another if
+	 
+	 
+	  assert(noPredicateMatch || matchPredicateAndCast);
+
+CASE 2.2a
+ 	 bool noPredicateMatch = true;
+	 bool matchPredicateAndCast = false;
+	 bool castMatchLocal;
+	 
+  if (predicate----Match---){	 
+	  castMatchLocal = true;
+      noPredicateMatch= false;
+      if (CG_ConductanceArrayProducerPtr == 0) {
+         std::cerr << "Dynamic Cast of ConductanceArrayProducer failed in HodgkinHuxleyVoltage" << std::endl;
+         castMatchLocal = false;
+      }
+
+      if (CG_ReversalPotentialArrayProducerPtr == 0) {
+         std::cerr << "Dynamic Cast of ReversalPotentialArrayProducer failed in HodgkinHuxleyVoltage" << std::endl;
+         castMatchLocal = false;
+      }
+
+      if (castMatchLocal) { 
+         //castMatch = true; 
+         matchPredicateAndCast=true;
+      }
+	}
+	
+	...//another if
+	 
+	 
+	  assert(noPredicateMatch || matchPredicateAndCast);

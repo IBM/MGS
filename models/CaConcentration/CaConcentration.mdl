@@ -1,68 +1,117 @@
 #ifndef CaConcentration_MDL
 #define CaConcentration_MDL
 
-#include "../../nti/MaxComputeOrder.h"
+#include "../../nti/include/MaxComputeOrder.h"
 
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
-Struct ChannelCaCurrents {
-  float []* currents;
-}
+//NOTE: We had CaClearance [1/ms] to model the removal of Ca2+ back to the basal level CaBaseline
+//      This is replaced by CaRemoval mechanism or PMCA pump with tau [ms]
 
-Struct ReceptorCaCurrent {
-  float* current;
-  int index;
-}
+// It represents one branch (which comprises regular compartments + implicit junctions)
+Node CaConcentration Implements SolutionArrayProducer, 
+     DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer, 
+     CaConcentrationArrayProducer
+{
+// Regular-branch: represent the diffusion of Calcium(cyto) along branch with no explicit junction
+/*{{{*/
+	//DATA
+    /*{{{*/
+	//data members: reference
+       // pointer to array of branch
+       // help to identify the branch a Calcium(cyto)-compartment belong to 
+  BranchDataStruct* branchData; // pointer to branch's data
+  DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
+	//data members: internal, but for solver
+    //{{{
+	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  dyn_var_t [] Aii; // TODO unit
+  dyn_var_t [] Aip; // TODO unit
+  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
 
-Struct InjectedCaCurrent {
-  float* current;
-  float currentToConc;
-  int index;
-}
+  dyn_var_t [] RHS; // TODO unit
+  dyn_var_t [] Aij; // TODO unit
 
-Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProducer, DimensionArrayProducer, BranchDataProducer,
-     ForwardSolutionArrayProducer {
-  DimensionStruct* [] dimensions;
-  BranchDataStruct* branchData;
-  float [] Ca_cur; // intracellular concentrations expressed by ion name alone
-  float [] Ca_new;
-  float [] currentToConc;
+  //dyn_var_t  CaClearance; // [1/ms]
 
-  float [] Aii;
-  float [] Aip;
-  float [] Aim; // branch's distalmost compartment to junction coupling coefficient
-  float [] RHS;
-  float [] Aij;
-
-  float CaClearance;
-
-  // currents
-  ChannelCaCurrents [] channelCaCurrents;
-  ReceptorCaCurrent [] receptorCaCurrents;
-  InjectedCaCurrent [] injectedCaCurrents;
-
-  float* proximalCaConcentration;
-  float* [] distalAiis;
-  float* [] distalAips;
-  float* [] distalInputs;
+  dyn_var_t* proximalCaConcentration; // TODO unit
+  dyn_var_t* [] distalAiis;
+  dyn_var_t* [] distalAips;
+  dyn_var_t* [] distalInputs;
+  //dyn_var_t[] * valCur;//pointer to an array
+  //dyn_var_t[] * valNew;
   DimensionStruct* [] distalDimensions;
   DimensionStruct* proximalDimension;
-  bool proximalJunction;
-  int computeOrder;
 
+  bool proximalJunction;// true = real-branching point, 
+                        //..false=implicit-cut (i.e. cut along the branch)
+  int computeOrder;// TissueFunctor will assign the value to each branch 
+                   // (the range of values from [0..MAX_COMPUTE_ORDER-1])
+                   // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
+                   // computing of branches of the same computeOrder
+                   // If MAX_COMPUTE_ORDER=0, then 
+                   // solve all branches sequentially 
+                   //  from distal to proximal: forwardSolve
+                   //  from proximal to distal: backwardSolve
+       //}}}
+	//data members: internal
+  dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
+  dyn_var_t [] Ca_new;
+  dyn_var_t [] currentToConc;
+
+    // currents
+  //CONVENTION: the currents flowing toward the cytosol get negative value
+  // yet it contribute positive to the increase of [Ca2+](cyto)
+  // so dCa/dt = - Icurrent * A/(zCa*F*Vcyto)
+  //     A = surface area Cyto = surface area SL
+  // so dCa/dt = - Icurrent * A/(zCa*F*Vcyto)
+  //     A = surface area ER
+  // In the case of Ca2+ channels (L,N,PQ,R,T), 
+  //      if channel current is negative (which means Ca2+ influx), 
+  //            so ICa(channel) is the same as chanel current (i.e. negative)
+  // In the case of NCX, 
+  //      if INCX is negative (which means Ca2+ extrude), 
+  //            so ICa(NCX) must be positive
+  ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+  //CONVENTION:  the fluxs flowing toward the cytosol get positive
+  // and it contributes positive to the increase of [Ca2+](cyto)
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //CONVENTION: the currents flowing toward the cytosol get negative
+  // yet it contribute positive to the increase of [Ca2+](cyto)
+  ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //CONVENTION: the currents flowing toward the cytosol get positive
+  // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
+  // 2. user-defined stimulus current
+  InjectedCaCurrent [] injectedCaCurrents; // [pA]
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  TargetAttachCaConcentration [] targetAttachCaConcentration;  // [uM]
+#endif
+	/*}}}*/
+
+   // design : anything currently not part of the spatial 
+   //          is put here
   Shared {
-    float* deltaT;
-    float DCa;
-    float bmt;
-    float beta;                    // Wagner and Keizer buffering constant
-    float CaBaseline;
+    /*{{{*/
+    dyn_var_t* deltaT;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t CaBaseline; // [uM]
 
     InitPhase deriveParameters;  
+    /*}}}*/
   }
 
+	//output
+	//{{{
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
   SolutionArrayProducer.solutionArray << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
@@ -70,8 +119,12 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   ForwardSolutionArrayProducer.AiiArray << &Aii;
   ForwardSolutionArrayProducer.AipArray << &Aip;
   ForwardSolutionArrayProducer.RHSArray << &RHS;
+	//}}}
 
-  InitPhase initializeCaConcentration;
+    // Phases methods
+    /*{{{*/
+  InitPhase initializeCompartmentData;
+
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
   #endif
@@ -93,7 +146,9 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   #if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
   #endif
+
   RuntimePhase solve, finish;
+    /*}}}*/
 
   InAttrPSet {	
     string identifier;
@@ -102,8 +157,17 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
     float branchProp;
   }
 
+  // d^2 Ca/dx^2 = dCa/dt + ICaleak + ICainject + (ICasyn+ICaion)
+  // injectedCurrent  = (to a compartment) only if 2 scenarios
+  //               1. it forms an bi-directional
+  //                      connection (e.g. electrical-synapse or spine-neck)
+  //               2. a stimulus current is injected
   UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
-
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  UserFunction  setTargetAttachCaConcentration;
+#endif
+  // Connection setup
+  //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
     DimensionProducer.dimension >> dimensions;
    }
@@ -112,23 +176,59 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
     BranchDataProducer.branchData >> branchData;
    }
 
+  //Trans-plasma-membrane Ca2+ channel produce current
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
-    CaCurrentArrayProducer.CaCurrents >> channelCaCurrents.currents;
+    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+   }
+  //TUAN; TODO how to project RYR, Ip3r calcium from calciumer
+/*
+OPTIION 1: use as ionic current (pA/um^2)
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaERCurrentArrayProducer {
+    CaERCurrentArrayProducer.currents >> channelER_CaCurrents.currents;
+    CaERCurrentArrayProducer.areas >> channelER_CaCurrents.areas;
+   }
+and we treat them differently in CaConcentration when mapping from currents to 
+[Ca2+](cyto)
+as they have different surface area
+
+OPTION 3:
+   Use as injectedCurrent (pA)
+*/
+
+// OPTION 2: channel produce flux JCa (uM/msec) instead of current ICa (pA/um^2)
+  //Trans-ER-membrane Ca2+ channel produce flux 
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
    }
 
-  Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> injectedCaCurrents.current;
+  //  setInjectedCaCurrent();
+  // }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects 
+             ReversalCaProducer, InverseTimeCaProducer{
+    ReversalCaProducer.Ca >> targetAttachCaConcentration.Ca ;
+    InverseTimeCaProducer.inverseTime >> targetAttachCaConcentration.inverseTime;
+    setTargetAttachCaConcentration();
+   }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
+#endif
 
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> receptorCaCurrents.current;
+    // for receptors like NMDAR
+    CaCurrentProducer.current >> receptorCaCurrents.current;
     setReceptorCaCurrent();
    }
 
   PredicateFunction checkSite;
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
-    CaCurrentProducer.CaCurrent >> injectedCaCurrents.current;
+    CaCurrentProducer.current >> injectedCaCurrents.current;
     setInjectedCaCurrent();
    }
 
@@ -159,14 +259,190 @@ Node CaConcentration Implements CaConcentrationArrayProducer, SolutionArrayProdu
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
+/*}}}*/
 }
 
+// represent an end-point (i.e. last compartment in the series of compartments along a branch)
+// thus don't hold real data, just a reference to that last segment
 Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProducer
 {
-  float* CaConcentration;
-  DimensionStruct* dimension;
+// For each regular compute-branch (i.e. not a junction), represented by CaConcentration 
+// we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
+/*{{{*/
+	// single value
+  dyn_var_t* CaConcentration; // reference to the Ca(cyto) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
+  DimensionStruct* dimension; //reference to the struct representing the compartment
+
   Shared {
-    float []* CaConcentrationConnect;
+    // so the two instances share the Branch's data
+		// an array but indeed is a scalar
+    dyn_var_t []* CaConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+    //output
+  CaConcentrationProducer.Ca << CaConcentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {//attribute of the incoming MDL component, e.g. node
+    string identifier;
+  }
+
+  UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(cyto)' of the end-point component which
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
+
+  // Connection setup (i.e. input)
+  Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+	// as end-point, so we use 'produce' prefix for kernels
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedCaConcentration(CaConcentration);
+  RuntimePhase produceFinishedCaConcentration(CaConcentration);
+/*}}}*/
+}
+
+// It represents one (exlicit) junction branch (which comprise half regular compartments)
+Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
+     CaConcentrationArrayProducer 
+{
+/*{{{*/
+	//DATA
+  //{{{
+  BranchDataStruct* branchData; // the proximal-side regular-branch's data
+  DimensionStruct* [] dimensions;
+    //{{{data members: internal, but for solver
+  dyn_var_t* [] CaConcentrationInputs;
+  DimensionStruct* [] dimensionInputs;
+  BranchDataStruct* [] branchDataInputs;  // 
+    //}}}
+	//{{{data members: internal
+  dyn_var_t volume;
+  dyn_var_t [] fAxial; //axial-flux
+  dyn_var_t Ca_cur;
+  dyn_var_t [] Ca_new;
+  dyn_var_t currentToConc;
+  //dyn_var_t  CaClearance; // [1/ms]
+
+  //{{{ ionic currents
+  //CONVENTION: the currents flowing toward the cytosol get negative value
+  // yet it contribute positive to the increase of [Ca2+](cyto)
+  ChannelCaCurrents [] channelCaCurrents;
+  //CONVENTION:  the fluxs flowing toward the cytosol get positive
+  // and it contributes positive to the increase of [Ca2+](cyto)
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //CONVENTION: the currents flowing toward the cytosol get negative
+  // yet it contribute positive to the increase of [Ca2+](cyto)
+  dyn_var_t* [] receptorCaCurrents;
+  //CONVENTION: the currents flowing toward the cytosol get positive
+  // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
+  // 2. user-defined stimulus current
+  dyn_var_t* [] injectedCaCurrents;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t* [] targetReversalCaConcentration;
+  dyn_var_t* [] targetInverseTimeCaConcentration;
+#endif
+  //}}}
+
+
+  Shared {
+	  //{{{
+    dyn_var_t* deltaT;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t CaBaseline; // [uM]
+
+    InitPhase deriveParameters;  
+    //}}}
+  }
+  //}}}
+
+  CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+
+  InitPhase initializeJunction;
+  RuntimePhase predictJunction, correctJunction;
+
+  InAttrPSet {
+    string identifier;
+    TissueSite site;
+    int idx;
+  }	
+
+  //input
+  // the junction-branch connects to regular-branch through the regular-branch's endpoints
+  Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, 
+    DimensionProducer, BranchDataProducer  {
+    CaConcentrationProducer.Ca >> CaConcentrationInputs;
+    DimensionProducer.dimension >> dimensionInputs;
+    BranchDataProducer.branchData >> branchDataInputs;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+  }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
+    CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  }
+
+  Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
+   }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> injectedCaCurrents;
+  //}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects 
+    ReversalCaProducer, InverseTimeCaProducer{
+    ReversalCaProducer.Ca >> targetReversalCaConcentration ;
+    InverseTimeCaProducer.inverseTime >> targetInverseTimeCaConcentration;
+  }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents;
+  }
+#endif
+
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+    CaCurrentProducer.current >> receptorCaCurrents;
+  }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents;
+   }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+/*}}}*/
+}
+
+Node CaConcentrationJunctionPoint Implements CaConcentrationProducer, DimensionProducer
+{
+// For each junction-branch, represented by HodgkinHuxleyVoltageJunction
+// we need 1 associated JunctionPoints that reference to the end...
+/*{{{*/
+  dyn_var_t* CaConcentration;
+  DimensionStruct* dimension;
+
+  Shared {
+    dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
   }
   CaConcentrationProducer.Ca << CaConcentration;
@@ -184,8 +460,8 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
     setPointers();
   }
   InitPhase produceInitialState(dimension);
-  RuntimePhase produceSolvedCaConcentration(CaConcentration);
-  RuntimePhase produceFinishedCaConcentration(CaConcentration);
+  RuntimePhase produceCaConcentration(CaConcentration);
+/*}}}*/
 }
 
 #endif

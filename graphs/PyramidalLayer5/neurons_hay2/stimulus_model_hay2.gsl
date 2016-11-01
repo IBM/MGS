@@ -1,0 +1,78 @@
+///////////////////////
+/// DEFINE STIMULATION DATA
+//////////////////////
+#if STIMULUS_CASE == CASE_01 || \
+    STIMULUS_CASE == CASE_05 || \
+    STIMULUS_CASE == CASE_06
+//NOTE: Unit of current injection is [pA]
+// match the experiment  inject 1.9nA for 5ms at soma
+//{{{
+
+#if STIMULUS_CASE == CASE_06
+#define timeDelay 200
+#else
+//#define timeDelay 200
+#define timeDelay 150
+#define timeDelaySomma timeDelay 
+#endif
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1600.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0>; //Hay et al 2011 - low Rneck
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1500.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0>; //Hay et al 2011 - high Rneck
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0>; //GOOD
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=2000.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOO1999D
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1000.0, duration=10, period=510, delay=timeDelay, last=500, inc=0>; //Larkum-Sakmann (1999)
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1200.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=600.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=600.0, duration=3.5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
+//}}}
+#endif
+ 
+#if STIMULUS_CASE == CASE_02 || \
+    STIMULUS_CASE == CASE_05 
+//{{{
+//NOTE: Lakrum-Zhu-Sakmann (2001)  tested with decayTime=4*riseTime
+//      and riseTime = 2,5,10,50 ms accodingly at location 930um to soma at peak 2nA
+//          riseTime = 0.5ms                               750um to soma at peak 5nA
+//          riseTime = 10.ms                               750um to soma at peak 2nA
+//          riseTime = 3.2ms  (intermediate)
+// 0.5ms rise time, 5ms decay time Iinj = 0.5 nA
+// check EPSP there is 15mV 
+//#define timeDelay 400
+#define timeDelay 150
+#if  STIMULUS_CASE == CASE_05 
+//#define timeDelay 405 //after soma 5ms
+#define timeDelay 155 //after soma 5ms
+#endif
+//CurrentPulseGenerator shaftStimInj<pattern="dualexp", peak=500.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0, riseTime=0.5, decayTime=5.0>; // EPSP-like
+CurrentPulseGenerator shaftStimInj<pattern="dualexp", peak=2500.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0, riseTime=0.5, decayTime=5.0>; //Intense
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_03 
+//{{{
+#define timeDelay 400
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=1510, delay=timeDelay, last=1500, inc=0>; //GOOD
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_04 || \
+    STIMULUS_CASE == CASE_06
+//{{{
+// stimulus a wide region at distal apical ends, i.e. many spines at distal
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=510, delay=50, last=500, inc=0>; //GOOD
+
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_07
+//{{{
+//#define timeDelay 200
+#define timeDelay 150
+#define timeDelaySomma timeDelay 
+//NOTE: Unit of current injection is [pA]
+// match the experiment  inject 1.9nA for 5ms at soma
+//CurrentPulseGenerator distalAISStimInj<pattern="periodic", peak=1900.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0>; //GOOD
+CurrentPulseGenerator distalAISStimInj<pattern="periodic", peak=1000.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0>; 
+//CurrentPulseGenerator distalAISStimInj<pattern="periodic", peak=1500.0, duration=5, period=1510, delay=timeDelay, last=1500, inc=0>; 
+//}}}
+#endif
+

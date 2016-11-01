@@ -1,0 +1,21 @@
+	polyConnect(timeStep, synapseStimInj_0, <>, <>);
+	polyConnect(synapseStimInj_0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), <>, <identifier="stimulation">);
+
+
+//   TissueSite currentStimSite_0( 0, 0, 0, 1.0 );
+//   polyConnect(currentStimInj_0, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite_0>);
+//
+//   TissueSite currentStimSite_1( 0, 0, 0, 1.0 );
+//   polyConnect(currentStimInj1, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), <>, <identifier="stimulation", site=currentStimSite_1>);
+
+{{#inputs}}
+   polyConnect(timeStep, synapseStimInj_{{name}}, <>, <>);
+   polyConnect(synapseStimInj_{{name}}, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), <>, <identifier="stimulation">);
+     
+{{/inputs}}
+
+{{#inputsInhibitory}}
+   polyConnect(timeStep, synapseStimInj_{{name}}, <>, <>);
+   polyConnect(synapseStimInj_{{name}}, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), <>, <identifier="stimulation">);
+     
+{{/inputsInhibitory}}

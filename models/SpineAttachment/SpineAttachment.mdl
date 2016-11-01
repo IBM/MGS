@@ -1,0 +1,506 @@
+#ifndef SpineAttachment_MDL
+#define SpineAttachment_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Interface SurfaceAreaLengthProducer {
+	dyn_var_t* A; // [um^2]
+	dyn_var_t* len; // [um]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int * spineCount;
+#endif
+}
+
+// A SpineAttachment is a bidirectional connection between
+//   a compartment in one neuron (serve as a spine neck)
+//   to another compartment in another neuron (serve as dendritic compartment)
+//Node SpineAttachment Implements CurrentProducer, BranchDataProducer, IndexProducer, 
+//     VoltageProducer
+Node SpineAttachment_Vm Implements 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+     ConductanceProducer,ReversalPotentialProducer,
+#else
+     CurrentProducer, 
+#endif
+     BranchDataProducer, IndexProducer, 
+     VoltageProducer,
+     SurfaceAreaLengthProducer
+{
+/*{{{*/
+	//{{{ need user-input
+  dyn_var_t Raxial;   // [Gohm.um] 
+  //}}}
+  //{{{ internal calculation
+    //either the 'i'-part or the 'j'-part will
+    //  reference to 1. spine-neck
+    //               2. den-shaft 
+	//{{{ help finding the conductance 'g' as a function of necklength and neck-radius
+  dyn_var_t *leni; //[um]
+  dyn_var_t Ai;   //[um^2]
+  dyn_var_t *lenj;
+  dyn_var_t *Aj;
+   //}}}
+  dyn_var_t* Vi;  // [mV]
+  dyn_var_t* Vj; 
+  dyn_var_t I;   //the current [pA]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dyn_var_t g;   //the conductance [nS/um^2] that current from neck to shaft sense 
+#else
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
+#endif
+  string typeCpt; //"spine-neck" or "den-shaft"
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
+  //}}}
+
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;//index of the compartment that this SpineAttachment node associates with
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  DimensionStruct * dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+#endif
+
+  Shared {
+	  dyn_var_t []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    int []* countSpineConnect;
+#endif
+  }
+
+  InitPhase produceInitialState(Vi, leni
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      , countSpineConnectedToCompartment_i
+#endif
+         ), computeInitialState(); // IMPORTANT: a treat - whenever a pointer to something else 
+                       // is passed out via the Interface, make sure you pass it to the 
+                       // InitPhase's method and RuntimePhase's method that synchronize data
+  RuntimePhase produceState(Vi), computeState;
+
+  // Output
+  VoltageProducer.voltage << Vi;
+  SurfaceAreaLengthProducer.A << &Ai;
+  SurfaceAreaLengthProducer.len << leni;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  ConductanceProducer.conductance << &g;
+  ReversalPotentialProducer.reversalPotential << Vj;
+#else
+  CurrentProducer.current << &I;
+#endif
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx; //the index of the compartment in the compute-branch that connect to 
+             // this SpineAttachment node
+    string typeCpt; //"spine-neck" or "den-shaft"
+  }
+
+  UserFunction setVoltagePointers;
+  UserFunction set_A_and_len;
+  
+  // Input (Connection setting)
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      CountInformationArrayProducer, 
+#endif
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
+  {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    BranchDataProducer.branchData >> branchData;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
+#endif
+    setVoltagePointers(); //set Vi
+    set_A_and_len();//set Ai, leni
+  }
+  Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
+    VoltageProducer, SurfaceAreaLengthProducer
+  {
+	  VoltageProducer.voltage >> Vj;
+	  SurfaceAreaLengthProducer.A >> Aj;
+	  SurfaceAreaLengthProducer.len >> lenj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+#endif
+  }
+/*}}}*/
+}
+
+Node SpineAttachment_VmCai Implements 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+     ConductanceProducer,ReversalPotentialProducer,
+#else
+     CurrentProducer, 
+#endif
+     BranchDataProducer, IndexProducer,
+     VoltageProducer, 
+     SurfaceAreaLengthProducer,
+     CaConcentrationProducer, 
+//continue for Ca2+ here for CONSIDER_MANYSPINE_EFFECT_OPTION2 as well
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+     InverseTimeCaProducer, 
+     ReversalCaProducer
+#else
+     CaCurrentProducer
+#endif
+{
+/*{{{*/
+	//DATA
+    /*{{{*/
+	//{{{ need user-input
+  dyn_var_t Raxial;   // [Gohm.um] 
+  dyn_var_t DCa; // diffusion constant [um^2/ms]
+  //}}}
+  //{{{ internal calculation
+    //either the 'i'-part or the 'j'-part will
+    //  reference to 1. spine-neck
+    //               2. den-shaft 
+	//{{{ help finding the conductance 'g' as a function of necklength and neck-radius
+  dyn_var_t *leni; //[um]
+  dyn_var_t Ai;   //[um^2]
+  dyn_var_t *lenj;
+  dyn_var_t *Aj;
+   //}}}
+  dyn_var_t* Vi;  // [mV]
+  dyn_var_t* Vj; 
+  dyn_var_t I;   //the current [pA]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dyn_var_t g;   //the conductance [nS/um^2] that current from neck to shaft sense 
+#else
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
+#endif
+  dyn_var_t* Cai;
+  dyn_var_t* Caj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t invTimeCacyto; // [1/ms]
+#else
+  dyn_var_t Caconc2current; // [pA/uM]
+  dyn_var_t I_Ca;//the current [pA]  TUAN TOTHINK: should we use the fluxes???? J_Ca like RyR
+#endif
+  string typeCpt; //"spine-neck" or "den-shaft"
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
+  //}}}
+    /*}}}*/
+
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;//index of the compartment that this SpineAttachment node associates with
+  BranchDataStruct* branchDataOther; // reference to the branch of the SpineAttachment this
+                            // ... SpineAttachment is paired with
+  DimensionStruct * dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+
+  Shared {
+    /*{{{*/
+    dyn_var_t* T;
+    dyn_var_t []* voltageConnect;
+    dyn_var_t []* CaConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    int []* countSpineConnect;
+#endif
+    /*}}}*/
+  }
+
+  InitPhase produceInitialState(Vi, Cai, leni
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      , countSpineConnectedToCompartment_i
+#endif
+           ), computeInitialState();
+  RuntimePhase produceState(Vi, Cai), computeState;
+
+  //Output
+  //{{{
+  VoltageProducer.voltage << Vi;
+  SurfaceAreaLengthProducer.A << &Ai;
+  SurfaceAreaLengthProducer.len << leni;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  ConductanceProducer.conductance << &g;
+  ReversalPotentialProducer.reversalPotential << Vj;
+#else
+  CurrentProducer.current << &I;
+#endif
+  CaConcentrationProducer.Ca << Cai;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  ReversalCaProducer.Ca << Caj;
+  InverseTimeCaProducer.inverseTime << &invTimeCacyto;
+#else
+  CaCurrentProducer.current << &I_Ca;
+#endif
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+  //}}}
+
+  InAttrPSet {
+    string identifier;
+    int idx; //the index of the compartment in the compute-branch that connect to 
+             // this SpineAttachment node
+    string typeCpt; //"spine-neck" or "den-shaft"
+  }
+
+  UserFunction setVoltagePointers; 
+  UserFunction setCaPointers;
+  UserFunction set_A_and_len;
+ 
+  // Input (Connection setting)
+  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      CountInformationArrayProducer, 
+#endif
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
+  {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    BranchDataProducer.branchData >> branchData;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
+#endif
+    setVoltagePointers(); //set Vi
+    set_A_and_len();//set Ai, leni
+  }
+  Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
+    VoltageProducer, SurfaceAreaLengthProducer, BranchDataProducer
+  {
+    VoltageProducer.voltage >> Vj;
+    SurfaceAreaLengthProducer.A >> Aj;
+    SurfaceAreaLengthProducer.len >> lenj;
+    BranchDataProducer.branchData >> branchDataOther;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+#endif
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    setCaPointers();
+  }
+  Connection Pre Node (PSet.identifier=="spineConnexon[Calcium]") Expects 
+    CaConcentrationProducer 
+  {
+    CaConcentrationProducer.Ca >> Caj;
+  }
+/*}}}*/
+}
+
+Node SpineAttachment_VmCaiCaER Implements 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+     ConductanceProducer,ReversalPotentialProducer,
+#else
+     CurrentProducer, 
+#endif
+     BranchDataProducer, IndexProducer,
+     VoltageProducer, 
+     SurfaceAreaLengthProducer,
+//continue for Ca2+ here for CONSIDER_MANYSPINE_EFFECT_OPTION2 as well
+     CaConcentrationProducer, 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+     InverseTimeCaProducer, 
+     ReversalCaProducer,
+#else
+     CaCurrentProducer,
+#endif
+     CaERConcentrationProducer, 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+     InverseTimeCaERProducer, 
+     ReversalCaERProducer
+#else
+     CaERCurrentProducer
+#endif
+{
+/*{{{*/
+	//DATA
+  /*{{{*/
+	//{{{ need user-input
+  dyn_var_t Raxial;   // [Gohm.um] 
+  dyn_var_t DCa; // diffusion constant [um^2/ms]
+  dyn_var_t DCaER; // diffusion constant [um^2/ms]
+  //}}}
+  //{{{ internal calculation
+    //either the 'i'-part or the 'j'-part will
+    //  reference to 1. spine-neck
+    //               2. den-shaft 
+	//{{{ help finding the conductance 'g' as a function of necklength and neck-radius
+  dyn_var_t *leni; //[um]
+  dyn_var_t Ai;   //[um^2]
+  dyn_var_t *lenj;
+  dyn_var_t *Aj;
+   //}}}
+  dyn_var_t* Vi;  // [mV]
+  dyn_var_t* Vj; 
+  dyn_var_t I;   //the current [pA]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  dyn_var_t g;   //the conductance [nS/um^2] that current from neck to shaft sense 
+#else
+  dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
+#endif
+  dyn_var_t* Cai;
+  dyn_var_t* Caj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  dyn_var_t invTimeCacyto; // [1/ms]
+#else
+  dyn_var_t I_Ca;
+  dyn_var_t Caconc2current; // [pA/uM]
+#endif
+  dyn_var_t* CaERi;
+  dyn_var_t* CaERj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  dyn_var_t invTimeCaER; // [1/ms]
+#else
+  dyn_var_t I_CaER;
+  dyn_var_t CaERconc2current;
+#endif
+  string typeCpt; //"spine-neck" or "den-shaft"
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+  int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+#endif
+  //}}}
+  /*}}}*/
+
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;//index of the compartment that this SpineAttachment node associates with
+  DimensionStruct * dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+
+  Shared {
+    /*{{{*/
+    dyn_var_t* T;
+    dyn_var_t []* voltageConnect;
+    dyn_var_t []* CaConcentrationConnect;
+    dyn_var_t []* CaERConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    int []* countSpineConnect;
+#endif
+    /*}}}*/
+  }
+
+  InitPhase produceInitialState(Vi, Cai, CaERi, leni
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      , countSpineConnectedToCompartment_i
+#endif
+          ), computeInitialState();
+  RuntimePhase produceState(Vi, Cai, CaERi), computeState;
+
+  VoltageProducer.voltage << Vi;
+  SurfaceAreaLengthProducer.A << &Ai;
+  SurfaceAreaLengthProducer.len << leni;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  ConductanceProducer.conductance << &g;
+  ReversalPotentialProducer.reversalPotential << Vj;
+#else
+  CurrentProducer.current << &I;
+#endif
+  CaConcentrationProducer.Ca << Cai;
+  CaERConcentrationProducer.Ca << CaERi;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  ReversalCaProducer.Ca << Caj;
+  InverseTimeCaProducer.inverseTime << &invTimeCacyto;
+#else
+  CaCurrentProducer.current << &I_Ca;
+#endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  ReversalCaERProducer.Ca << CaERj;
+  InverseTimeCaERProducer.inverseTime << &invTimeCaER;
+#else
+  CaERCurrentProducer.current << &I_CaER;
+#endif
+
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx; //the index of the compartment in the compute-branch that connect to 
+             // this SpineAttachment node
+    string typeCpt; //help to identify the compartment: "spine-neck" or "den-shaft"
+  }
+
+  UserFunction setVoltagePointers; 
+  UserFunction setCaPointers;
+  UserFunction setCaERPointers;
+  UserFunction set_A_and_len;
+ 
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+      CountInformationArrayProducer, 
+#endif
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
+  {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    BranchDataProducer.branchData >> branchData;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+    CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
+#endif
+    setVoltagePointers(); //set Vi
+    set_A_and_len();//set Ai, leni
+  }
+  Connection Pre Node (PSet.identifier=="spineConnexon[Voltage]") Expects 
+    VoltageProducer, SurfaceAreaLengthProducer
+  {
+    VoltageProducer.voltage >> Vj;
+    SurfaceAreaLengthProducer.A >> Aj;
+    SurfaceAreaLengthProducer.len >> lenj;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+#endif
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    setCaPointers();
+  }
+
+  Connection Pre Node (PSet.identifier=="spineConnexon[Calcium]") Expects 
+    CaConcentrationProducer 
+  {
+    CaConcentrationProducer.Ca >> Caj;
+  }
+
+  //Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects CaERConcentrationArrayProducer {
+  Connection Pre Node (PSet.identifier=="compartment[CalciumER]") Expects 
+    CaConcentrationArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaERConcentrationConnect;
+    setCaERPointers();
+  }
+
+  Connection Pre Node (PSet.identifier=="spineConnexon[CalciumER]") Expects 
+    CaERConcentrationProducer 
+  {
+    CaERConcentrationProducer.Ca >> CaERj;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") Expects TemperatureProducer {
+    TemperatureProducer.T >> Shared.T;
+  }
+/*}}}*/
+}
+
+#endif

@@ -19,6 +19,16 @@
 #include "Lens.h"
 #include "CG_GABAAReceptor.h"
 #include "rndm.h"
+#include "MaxComputeOrder.h"
+
+#if RECEPTOR_GABAA == GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#define BASED_TEMPERATURE 35.0  // Celcius
+#define Q10 3.0
+#elif RECEPTOR_GABAA == GABAAR_POINTPROCESS
+#define BASED_TEMPERATURE 35.0  // Celcius
+#define Q10 3.0
+#endif
+
 
 class GABAAReceptor : public CG_GABAAReceptor
 {

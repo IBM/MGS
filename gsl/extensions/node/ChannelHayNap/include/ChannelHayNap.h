@@ -16,6 +16,8 @@
 #ifndef ChannelHayNap_H
 #define ChannelHayNap_H
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #include "Lens.h"
 #include "CG_ChannelHayNap.h"
 #include "rndm.h"
@@ -27,7 +29,7 @@ class ChannelHayNap : public CG_ChannelHayNap
       void initialize(RNG& rng);
       virtual ~ChannelHayNap();
    private:
-      float vtrap(float x, float y);
+      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

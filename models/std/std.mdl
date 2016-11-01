@@ -1,46 +1,84 @@
 #ifndef std_MDL
 #define std_MDL
+#include "../../nti/include/MaxComputeOrder.h"
 
-Interface AmplitudeProducer {
-  float* amplitude;
-}
-
-Interface PreviousAmplitudeProducer {
-  float* previousAmplitude;
-}
-
-Interface BufferedAmplitudeProducer {
-//  float []* amplitude;
-  float* currentAmplitude;
-  float* delayedAmplitude;
-}
 
 Interface TimeProducer {
-  float* pulseTime;
+	dyn_var_t* pulseTime;
 }
 
 Interface UnspecifiedConnection {
-  bool b;
-}
-
-Interface BufferedTimeProducer {
-  float []* pulseTime;
-  float* currentPulseTime;
-  float* delayedPulseTime;
+	bool b;
 }
 
 Interface TimeStepProducer {
-   float* deltaT;
+	dyn_var_t* deltaT;
 }
 
 Constant TimeStep Implements TimeStepProducer {
-  float deltaT;
-  TimeStepProducer.deltaT << &deltaT;
+	//data members
+	dyn_var_t deltaT;
+	//output
+	TimeStepProducer.deltaT << &deltaT;
 }
 
 Struct ModificationStruct {
-   int iteration;
-   NDPairList* list;
+	int iteration;
+	NDPairList* list;
 }
 
+// for modeling Ca-currents via channels on SL membrane
+Struct ChannelCaCurrents {
+  dyn_var_t []* currents; // [pA/um^2]
+}
+
+// for modeling Ca-currents via receptors on SL membrane
+Struct ReceptorCaCurrent {
+  dyn_var_t* current; // [pA/um^2]
+  int index; // index of compartment at which the receptor resides
+}
+
+Struct InjectedCaCurrent {
+  dyn_var_t* current;  // [pA]
+  dyn_var_t currentToConc; // [uM] 
+  int index;
+}
+
+// for modeling Ca-currents via channels on ER membrane
+Struct ChannelCaFluxes {
+  dyn_var_t []* fluxes; // [uM/ms]
+}
+
+
+// for modeling IP3 production via some injected current 
+Struct InjectedIP3Current {
+  dyn_var_t* current;  // [pA]
+  dyn_var_t currentToConc; // [uM] 
+  int index;
+}
+// for modeling IP3 production via some 'channels' 
+Struct ChannelIP3Fluxes {
+  dyn_var_t []* fluxes; // [uM/ms]
+}
+
+// for modeling IP3-currents via receptors on SL membrane
+Struct ReceptorIP3Current {
+  dyn_var_t* current; // [pA/um^2]
+  int index; // index of compartment at which the receptor resides
+}
+// for modeling IP3-currents via channels on SL membrane
+Struct ChannelIP3Currents {
+  dyn_var_t []* currents; // [pA/um^2]
+}
+
+Struct TargetAttachCaConcentration{
+  dyn_var_t* Ca;  // [uM]
+  dyn_var_t* inverseTime;  // [1/ms]
+  int index; // index of compartment at which the spine attach (or the shaft attach) 
+}
+Struct TargetAttachIP3Concentration{
+  dyn_var_t* IP3;  // [uM]
+  dyn_var_t* inverseTime;  // [1/ms]
+  int index; // index of compartment at which the spine attach (or the shaft attach) 
+}
 #endif

@@ -1,35 +1,47 @@
 #ifndef CahChannel_MDL
 #define CahChannel_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node CahChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, CaCurrentArrayProducer, BranchDataProducer {
-  float [] r;
-  float [] g;
-  float [] gbar;
-  float [] E_Ca;
-  float [] I_Ca;
+  //DATA
+  //{{{ 
+  // Hodgkin-Huxley-based formula
+  //{{{
+  //internal data
+  dyn_var_t [] r;
+  dyn_var_t [] g;  // nS/um^2
+  dyn_var_t [] gbar; // nS/um^2
+  dyn_var_t [] E_Ca;
+  dyn_var_t [] I_Ca;
 
-  float []* V;
-  float []* Ca_IC;
-
+  // reference data
+  dyn_var_t []* V;
+  dyn_var_t []* Ca_IC;
   BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
+  //}}}
 
-  Shared {		
-    float* Ca_EC;
-    float* deltaT;
-    float* T;
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+  //{{{
+    dyn_var_t* Ca_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
+  //}}}
   }
+  //}}}
 
   RuntimePhase update;	
-  InitPhase initializeCahChannels;
+  InitPhase initialize;
 
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
-  CaCurrentArrayProducer.CaCurrents << &I_Ca;
+  CaCurrentArrayProducer.currents << &I_Ca;
   BranchDataProducer.branchData << branchData;
 
   InAttrPSet {

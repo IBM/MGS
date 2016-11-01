@@ -1,0 +1,4 @@
+directory $cdir:$cwd:/data/tmhoangt/nts/test:/data/tmhoangt/nts/nti/src/Params.cxx:/data/tmhoangt/nts/common/src
+b main()
+b Params::readMarkovModel
+r

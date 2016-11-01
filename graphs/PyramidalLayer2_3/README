@@ -1,0 +1,20 @@
+STEP
+1. reduce number of data points: run simulation with "-g #NUM"
+  try to play with #NUM
+ and check neuron_0.developped.swc 
+GOOD NUMBER: 1000-2000 data points
+
+2. revise the SWC structure (remove 5=fork point, 6=endpoint)
+ python reviseNeuron.py
+
+3. add necessary structure, e.g. AIS, tufted-apical-den
+
+4. generate spines
+ python mainGenSpines.py
+
+5. configure I/O, stimulus
+
+6. run simulation using only "-r #num"
+GOOD NUMBER: 400-600 compartments
+
+

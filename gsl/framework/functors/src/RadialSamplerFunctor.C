@@ -139,30 +139,30 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
    }
 
    if (cc->restart) {
-      std::vector<int> coords, begincoords, endcoords, 
-	 mincoords, maxcoords, gridSize;
-      mincoords = source->getBeginCoords();
-      maxcoords = source->getEndCoords();
-      gridSize =  source->getGrid()->getSize();
-      int min, max, minTolerated, maxTolerated, absMax;
-      for(unsigned i=0;i<_refcoords.size();++i) {
-         min = _refcoords[i] - int(ceil(_radius));
-         max = _refcoords[i] + int(ceil(_radius));
-	 minTolerated = mincoords[i]-_borderTolerance;
-	 maxTolerated = maxcoords[i]+_borderTolerance;
-	 absMax = gridSize[i]-1;
-	 
-	 min = (min<0)? 0:min;
-	 max = (max>absMax)? absMax:max;
-         begincoords.push_back((min<minTolerated)? minTolerated:min);
-         endcoords.push_back((max>maxTolerated)? maxTolerated:max);
-      }
-      
-      NodeSet ns(*source);
-      ns.setCoords(begincoords, endcoords);
-      ns.getNodes(_nodes);
-      _currentNode = 0;
-      _nbrNodes = _nodes.size();
+     std::vector<int> coords, begincoords, endcoords, 
+       mincoords, maxcoords, gridSize;
+     mincoords = source->getBeginCoords();
+     maxcoords = source->getEndCoords();
+     gridSize =  source->getGrid()->getSize();
+     int min, max, minTolerated, maxTolerated, absMax;
+     for(unsigned i=0;i<_refcoords.size();++i) {
+       min = _refcoords[i] - int(ceil(_radius));
+       max = _refcoords[i] + int(ceil(_radius));
+       minTolerated = mincoords[i]-_borderTolerance;
+       maxTolerated = maxcoords[i]+_borderTolerance;
+       absMax = gridSize[i]-1;
+
+       min = (min<0)? 0:min;
+       max = (max>absMax)? absMax:max;
+       begincoords.push_back((min<minTolerated)? minTolerated:min);
+       endcoords.push_back((max>maxTolerated)? maxTolerated:max);
+     }
+
+     NodeSet ns(*source);
+     ns.setCoords(begincoords, endcoords);
+     ns.getNodes(_nodes);
+     _currentNode = 0;
+     _nbrNodes = _nodes.size();
    }
     
    if (_currentNode==_nbrNodes) {

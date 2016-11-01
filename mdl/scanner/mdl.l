@@ -17,6 +17,7 @@
 
 %option c++
 %option yyclass="MdlLexer"
+%option noyywrap
 
 /* Digits, letters and alphanums */
 D       [0-9]
@@ -29,7 +30,7 @@ U       [a-zA-Z0-9_]
 #include <iostream>
 #include <string>
 #include "MdlLexer.h"
-
+using namespace std;
 %}
 
 %%
@@ -395,8 +396,4 @@ Threads {
    return (yytext[0]); 
 }
 %%
-
-int yywrap(void) {
- return 1;
-}
 

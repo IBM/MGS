@@ -1,0 +1,9 @@
+#FILENAME LAYER MTYPE ETYPE XOFFSET YOFFSET ZOFFSET OFFSET_TYPE AXON_PAR BASAL_PAR APICAL_PAR
+neurons/neuron.swc 1 0 0 0.0 0.0 0.0 R NULL NULL NULL
+{{#inputs}}
+{{boutonFileName}} 1 {{boutonMType}} 0 {{siteX}} {{siteY}} {{siteZ}} R NULL NULL NULL
+{{spineFileName}} 1 {{spineMType}} 0 {{siteX}} {{siteY}} {{siteZ}} R NULL NULL NULL
+{{/inputs}}
+{{#inputsInhibitory}}
+{{boutonFileName}} 1 {{boutonMType}} 1 {{siteX}} {{siteY}} {{siteZ}} R NULL NULL NULL
+{{/inputsInhibitory}}

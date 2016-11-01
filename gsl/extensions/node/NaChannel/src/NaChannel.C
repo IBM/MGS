@@ -18,8 +18,13 @@
 #include "CG_NaChannel.h"
 #include "rndm.h"
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #define SMALL 1.0E-6
 
+// There are two models are defined
+// Na channel from Hodgkin-Huxley (1952)
+//                 Schweighofer-Doya-Kawato (1994) based on Rush-Rinzel (1994)
 #define HH_1952
 //#define SCHWEIGHOFER_1999
 
@@ -54,33 +59,34 @@
 #define BHD 10.0
 #endif 
 
-float NaChannel::vtrap(float x, float y) {
+dyn_var_t NaChannel::vtrap(dyn_var_t x, dyn_var_t y) {
   return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
 }
 
 void NaChannel::update(RNG& rng)
 {
-  float dt = *(getSharedMembers().deltaT);
+  dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i=0; i<branchData->size; ++i) {
-    float v=(*V)[i];
-    float am = AMC*vtrap(-(v + AMV), AMD);
-    float bm = BMC*exp(-(v + BMV)/BMD);
-    float ah = AHC*exp(-(v + AHV)/AHD);
+    dyn_var_t v=(*V)[i];
+    dyn_var_t am = AMC*vtrap(-(v + AMV), AMD);
+    dyn_var_t bm = BMC*exp(-(v + BMV)/BMD);
+    dyn_var_t ah = AHC*exp(-(v + AHV)/AHD);
 #ifdef HH_1952
-    float bh = BHC/(1.0 + exp(-(v + BHV)/BHD));
+    dyn_var_t bh = BHC/(1.0 + exp(-(v + BHV)/BHD));
 #endif
 #ifdef SCHWEIGHOFER_1999
-    float bh = BHC*vtrap(-(v + BHV), BHD);
+    dyn_var_t bh = BHC*vtrap(-(v + BHV), BHD);
 #endif
 
 #ifdef HH_1952
-    float pm = 0.5*dt*(am + bm);
+    dyn_var_t pm = 0.5*dt*(am + bm);
     m[i] = (dt*am + m[i]*(1.0 - pm))/(1.0 + pm);
 #endif
 #ifdef SCHWEIGHOFER_1999
+		//TUAN: NOTE Bug in the implementation
     m[i] = am/(am + bm);
 #endif
-    float ph = 0.5*dt*(ah + bh);
+    dyn_var_t ph = 0.5*dt*(ah + bh);
     h[i] = (dt*ah + h[i]*(1.0 - ph))/(1.0 + ph);
     g[i] = gbar[i]*m[i]*m[i]*m[i]*h[i];
   }
@@ -88,25 +94,31 @@ void NaChannel::update(RNG& rng)
 
 void NaChannel::initializeNaChannels(RNG& rng)
 {
+#ifdef DEBUG_ASSERT
   assert(branchData);
+#endif
   unsigned size=branchData->size;
+#ifdef DEBUG_ASSERT
   assert(V);
   assert(gbar.size()==size);
   assert(V->size()==size);
+#endif
+  // allocate 
   if (g.size()!=size) g.increaseSizeTo(size);
   if (m.size()!=size) m.increaseSizeTo(size);
   if (h.size()!=size) h.increaseSizeTo(size);
+  // initialize
   for (unsigned i=0; i<size; ++i) {
     gbar[i]=gbar[0];
-    float v=(*V)[i];
-    float am = AMC*vtrap(-(v + AMV), AMD);
-    float bm = BMC*exp(-(v + BMV)/BMD);
-    float ah = AHC*exp(-(v + AHV)/AHD);
+    dyn_var_t v=(*V)[i];
+    dyn_var_t am = AMC*vtrap(-(v + AMV), AMD);
+    dyn_var_t bm = BMC*exp(-(v + BMV)/BMD);
+    dyn_var_t ah = AHC*exp(-(v + AHV)/AHD);
 #ifdef HH_1952
-    float bh = BHC/(1.0 + exp(-(v + BHV)/BHD));
+    dyn_var_t bh = BHC/(1.0 + exp(-(v + BHV)/BHD));
 #endif
 #ifdef SCHWEIGHOFER_1999
-    float bh = BHC*vtrap(-(v + BHV), BHD);
+    dyn_var_t bh = BHC*vtrap(-(v + BHV), BHD);
 #endif
     m[i] = am/(am + bm);
     h[i] = ah/(ah + bh);

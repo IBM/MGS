@@ -121,7 +121,8 @@ class CommunicationEngine
 	for (d=mpptr->origDispls; d!=dend; ++d) { 
 	  src+=*d;
 	  for (p=pbeg; p!=pend; ++p) {	    
-	    memcpy(buff, src+*p, *(++p));
+	    //memcpy(buff, src+*p, *(++p));
+		  std::copy(src+*p, src+*p+(*(++p)), buff);
 	    buff+=*p;
 	  }
 	}
@@ -142,6 +143,10 @@ class CommunicationEngine
       /* MPI_W begin: measure MPI collective communication */
       now = MPI_Wtime();
 #endif
+	  //TUAN DEBUG MSG
+	  //if (getRank()==0)
+	  //	  std::cerr << "current phase name: " << phaseName << std::endl; 
+	  //END 
       MPI_Alltoallv((void*)_vsbuff, snd->counts, snd->displs, MPI_CHAR,
 		    (void*)_vrbuff, rcv->counts, rcv->displs, MPI_CHAR, _phaseCommunicators[phaseName]);
 
@@ -162,7 +167,8 @@ class CommunicationEngine
 	for (d=mpptr->origDispls; d!=dend; ++d) { 
 	  dst+=*d;
 	  for (p=pbeg; p!=pend; ++p) {
-	    memcpy(dst+*p, buff, *(++p));
+	    //memcpy(dst+*p, buff, *(++p));
+		  std::copy(buff, buff+(*(++p)), dst+*p);
 	    buff+=*p;
 	  }
 	}

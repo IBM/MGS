@@ -15,9 +15,6 @@
 
 #include "LayoutFunctor.h"
 
-const char * LayoutFunctor::_category = "LAYOUT";
+const std::string LayoutFunctor::_category = "LAYOUT";
 
-const char * LayoutFunctor::getCategory()
-{
-   return _category;
-}
+const std::string& LayoutFunctor::getCategory() const { return _category; }

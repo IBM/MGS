@@ -22,11 +22,14 @@
 
 class NDPairList;
 
-class GABAAReceptorCompCategory : public CG_GABAAReceptorCompCategory, public CountableModel
+class GABAAReceptorCompCategory : public CG_GABAAReceptorCompCategory,
+                                  public CountableModel
 {
-   public:
-      GABAAReceptorCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+  public:
+  GABAAReceptorCompCategory(Simulation& sim, const std::string& modelName,
+                            const NDPairList& ndpList);
+  void computeTadj(RNG& rng);
+  void count();
 };
 
 #endif

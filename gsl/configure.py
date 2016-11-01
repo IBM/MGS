@@ -3,7 +3,7 @@
 import os
 import sys
 import popen2
-import string
+#import string
 import getopt
 import os.path
 
@@ -63,6 +63,12 @@ O2_OPTIMIZATION_FLAG = "-O2"
 O3_OPTIMIZATION_FLAG = "-O3"
 O4_OPTIMIZATION_FLAG = "-O4"
 O5_OPTIMIZATION_FLAG = "-O5"
+
+DEBUG_ASSERT = "-DDEBUG_ASSERT"
+DEBUG_HH = "-DDEBUG_HH"
+DEBUG_LOOPS = "-DDEBUG_LOOPS"
+DEBUG_CPTS = "-DDEBUG_CPTS"
+NOWARNING_DYNAMICCAST = "-DNOWARNING_DYNAMICCAST"
 
 COMMON_DX_CFLAGS = " -I . -I$(DX_INCLUDE) -I$(DX_BASE)/include $(MAKE64)"
 AIX_DX_CFLAGS = "-O -Dibm6000 " + COMMON_DX_CFLAGS
@@ -219,14 +225,19 @@ class Options:
         self.compilationMode = "undefined" # 32, 64, undefined
         self.withDX = UNDEF # USE, DONTUSE, UNDEF
         self.compiler = "undefined" # gcc, xl, undefined
-	self.silent = False # True, False
-	self.verbose = False # True, False
+        self.silent = False # True, False
+        self.verbose = False # True, False
         self.extMode = False  # True, False
         self.debug = DONTUSE # USE, DONTUSE, UNDEF
+        self.debug_assert = False # True, False
+        self.debug_hh = False # True, False
+        self.debug_loops = False # True, False
+        self.debug_cpts = False # True, False
+        self.nowarning_dynamiccast = False # True, False
         self.profile = DONTUSE # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE # USE, DONTUSE, UNDEF
-	self.optimization = "undefined" # O1, O2, O3, undefined
+        self.optimization = "undefined" # O1, O2, O3, undefined
         self.dynamicLoading = False # True, False
         self.domainLibrary = False # True, False
         self.pthreads = True # True, False
@@ -253,7 +264,11 @@ class Options:
                            ("O4", "optimize at level 4"),
                            ("O5", "optimize at level 5"),
                            ("debug", "compile with debugging flags"),
-                           ("profile", "compile with profile flags"),
+                           ("debug_assert", "compile with debugging flags for assert"),
+                           ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
+                           ("debug_loops", "compile with debugging flags for methods to be called iteratively (time loop)"),
+                           ("debug_cpts", "compile with debugging flags to print out the information for every compartments"),
+                           ("nowarning_dynamiccast", "disable printing out Dynamic Cast failed warning messages"),
                            ("tvMemDebug", "enable totalview memory debugging for parallel jobs (perfomance impact)"),
                            ("mpiTrace", "enable mpiTrace profiling (for BG)"),
                            ("enable-dl", "enable dynamic loading, else everything is statically linked"),
@@ -344,6 +359,16 @@ class Options:
                         raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
                 if o == "--debug":
                     self.debug = USE
+                if o == "--debug_assert":
+                    self.debug_assert = True
+                if o == "--debug_hh":
+                    self.debug_hh = True
+                if o == "--debug_loops":
+                    self.debug_loops = True
+                if o == "--debug_cpts":
+                    self.debug_cpts = True
+                if o == "--nowarning_dynamiccast":
+                    self.nowarning_dynamiccast = True
                 if o == "--profile":
                     self.profile = USE
                 if o == "--tvMemDebug":
@@ -401,7 +426,6 @@ class Options:
                 print
                 self.optimization = "O3"
 
-
             if self.withMpi == True and self.dynamicLoading == True:
                 printFeedback("Dynamic loading will be disabled due to existence of MPI.")
                 self.dynamicLoading = False
@@ -413,7 +437,7 @@ class Options:
                 self.dynamicLoading = False
                 self.withDX = DONTUSE
                 self.compilationMode = "32"
-		self.silent = True
+                self.silent = True
                 self.optimization = "O3"
 
             if self.blueGeneP == True:
@@ -423,7 +447,7 @@ class Options:
                 self.dynamicLoading = False
                 self.withDX = DONTUSE
                 self.compilationMode = "32"
-		self.silent = True
+                self.silent = True
                 self.optimization = "O3"
 
             if self.blueGeneQ == True:
@@ -433,7 +457,7 @@ class Options:
                 self.dynamicLoading = False
                 self.withDX = DONTUSE
                 self.compilationMode = "32"
-		self.silent = True
+                self.silent = True
                 self.optimization = "O3"
 
         except getopt.GetoptError:
@@ -506,18 +530,18 @@ class BuildSetup:
         retStr += TAB + "C++ compiler: " + self.cppCompiler + "\n"
 
         retStr += TAB + "Silent mode: "
-	if self.options.silent == True:
-	    retStr += "On"
+        if self.options.silent == True:
+            retStr += "On"
         else :
-	    retStr += "Off"
-	retStr += "\n"
+            retStr += "Off"
+        retStr += "\n"
 
         retStr += TAB + "Verbose mode: "
-	if self.options.verbose == True:
-	    retStr += "On"
+        if self.options.verbose == True:
+            retStr += "On"
         else :
-	    retStr += "Off"
-	retStr += "\n"
+            retStr += "Off"
+        retStr += "\n"
 
         retStr += TAB + "Extensions mode: "
         if self.options.extMode == True:
@@ -528,10 +552,18 @@ class BuildSetup:
 
         retStr += TAB + "Debugging: "
         if self.options.debug == True:
-            retStr += "On"
+            retStr += "On\n"
+            if self.options.debug_assert == True:
+              retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
+            if self.options.debug_hh == True:
+              retStr += TAB + TAB + "- DEBUG_HH : YES\n"
+            if self.options.debug_loops == True:
+              retStr += TAB + TAB + "- DEBUG_LOOPS : YES\n"
+            if self.options.debug_cpts == True:
+              retStr += TAB + TAB + "- DEBUG_CPTS : YES\n"
         else :
-            retStr += "Off"
-        retStr += "\n"
+            retStr += "Off\n"
+        #retStr += "\n"
 
         retStr += TAB + "Profiling: "
         if self.options.profile == USE:
@@ -647,12 +679,14 @@ class BuildSetup:
             os.system("mv -f framework/networks/include/pthread.h framework/networks/include/pthread.h.bak > /dev/null 2>&1")
 
         if self.options.rebuild == True:
-            print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
-            os.system(CLEAN_SCRIPT)
+            #print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
+            #os.system(CLEAN_SCRIPT)
+            os.system("make LINUX clean")
 
         createConfigHeader()
         touchExtensionsMk()
 
+        #self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
         if self.options.rebuild == True:
@@ -748,14 +782,12 @@ class BuildSetup:
 BIN_DIR?=./bin
 EXE_FILE=gslparser
 
+NTI_DIR=../nti
+NTI_OBJ_DIR=$(NTI_DIR)/obj
+NTI_INC_DIR=$(NTI_DIR)/include
 
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
-
-NTI_DIR=$(shell pwd)/../nti
-NTI_OBJ_DIR=$(NTI_DIR)/obj
-NTI_INC_DIR=$(NTI_DIR)/
-default: all
 
 LENSROOT = $(shell pwd)
 OPERATING_SYSTEM = $(shell uname)
@@ -768,24 +800,24 @@ PARSER_GENERATED := $(PARSER_PATH)/generated
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
+"""
 #DCA_OBJ := framework/dca/obj
 #DCA_SRC := framework/dca/src
 
 # Each module adds to these initial empty definitions
-SRC :=
-OBJS :=
-SHARED_OBJECTS :=
-BASE_OBJECTS :=
-DEF_SYMBOLS := $(SO_DIR)/main.def
-UNDEF_SYMBOLS :=
+#SRC :=
+#OBJS :=
+#SHARED_OBJECTS :=
+#BASE_OBJECTS :=
+#DEF_SYMBOLS := $(SO_DIR)/main.def
+#UNDEF_SYMBOLS :=
+#
+## EXTENSION_OBJECTS is the generated modules that must be linked in statically
+#EXTENSION_OBJECTS :=
+#
+## GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
+#GENERATED_DL_OBJECTS :=
 
-# EXTENSION_OBJECTS is the generated modules that must be linked in statically
-EXTENSION_OBJECTS :=
-
-# GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
-GENERATED_DL_OBJECTS :=
-
-"""
         # BlueGene MPI flags
         if self.options.blueGeneL == True:
             retStr += \
@@ -817,7 +849,7 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         if self.options.pthreads == True:
             retStr += "HAVE_PTHREADS := 1\n"
         if self.options.profile == USE:
-	    retStr += "PROFILING := 1\n"
+            retStr += "PROFILING := 1\n"
         return retStr
 
     def getMake64(self):
@@ -874,49 +906,52 @@ INTERFACE_MODULES :=
 
 NODE_MODULES :=
 
-STRUCT_MODULES := CoordsStruct \
+STRUCT_MODULES := CoordsStruct \\
 
-TRIGGER_MODULES :=
+TRIGGER_MODULES := UnsignedServiceTrigger \\
 
 VARIABLE_MODULES := BasicNodeSetVariable \\
-	NodeSetSPMVariable \\
+       	NodeSetSPMVariable \\
 
 FUNCTOR_MODULES := BinomialDist \\
         CombineNVPairs \\
         ConnectNodeSetsFunctor \\
-	DstDimensionConstrainedSampler \\
-	DstRefDistanceModifier \\
-	DstRefGaussianWeightModifier \\
-	DstRefSumRsqrdInvWeightModifier \\
-	DstScaledContractedGaussianWeightModifier \\
-	DstScaledGaussianWeightModifier \\
-	Exp \\
-	GetNodeCoordFunctor \\
-	IsoSampler \\
-	Log \\
+       	DstDimensionConstrainedSampler \\
+       	DstRefDistanceModifier \\
+       	DstRefGaussianWeightModifier \\
+       	DstRefSumRsqrdInvWeightModifier \\
+       	DstScaledContractedGaussianWeightModifier \\
+       	DstScaledGaussianWeightModifier \\
+       	IsoSampler \\
+       	IsoSamplerHybrid \\
+        Exp \\
+        Log \\
         ModifyParameterSet \\
         NameReturnValue \\
-	PolyConnectorFunctor \\
-	RefAngleModifier \\
-	RefDistanceModifier \\
-	ReversedDstRefGaussianWeightModifier \\
-	ReversedSrcRefGaussianWeightModifier \\
-	ReverseFunctor \\
-	ServiceConnectorFunctor \\
-	SrcDimensionConstrainedSampler \\
-	SrcRefDistanceModifier \\
-	SrcRefGaussianWeightModifier \\
-	SrcRefPeakedWeightModifier \\
-	SrcRefSumRsqrdInvWeightModifier \\
-	SrcScaledContractedGaussianWeightModifier \\
-	SrcScaledGaussianWeightModifier \\
-	TissueConnectorFunctor \\
-	TissueFunctor \\
-	TissueLayoutFunctor \\
-	TissueNodeInitFunctor \\
-	TissueProbeFunctor \\
-        UniformDiscreteDist \\
+      	PolyConnectorFunctor \\
+      	RefAngleModifier \\
+      	RefDistanceModifier \\
+      	ReversedDstRefGaussianWeightModifier \\
+      	ReversedSrcRefGaussianWeightModifier \\
+      	ReverseFunctor \\
+      	ServiceConnectorFunctor \\
+      	SrcDimensionConstrainedSampler \\
+      	SrcRefDistanceModifier \\
+      	SrcRefGaussianWeightModifier \\
+      	SrcRefPeakedWeightModifier \\
+      	SrcRefSumRsqrdInvWeightModifier \\
+      	SrcScaledContractedGaussianWeightModifier \\
+      	SrcScaledGaussianWeightModifier \\
+      	TissueConnectorFunctor \\
+      	TissueFunctor \\
+      	TissueLayoutFunctor \\
+      	TissueNodeInitFunctor \\
+      	TissueProbeFunctor \\
+	    TissueMGSifyFunctor \\
         Zipper \\
+        UniformDiscreteDist \\
+        GetNodeCoordFunctor \\
+        ExecuteShell \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -932,6 +967,7 @@ EXTENSION_MODULES += $(patsubst %,struct/%,$(STRUCT_MODULES))
 EXTENSION_MODULES += $(patsubst %,trigger/%,$(TRIGGER_MODULES))
 EXTENSION_MODULES += $(patsubst %,variable/%,$(VARIABLE_MODULES))
 
+# those with only header files
 SPECIAL_EXTENSION_MODULES += $(patsubst %,interface/%,$(INTERFACE_MODULES))
 
 EXTENSION_MODULES := $(patsubst %,extensions/%,$(EXTENSION_MODULES))
@@ -939,10 +975,6 @@ SPECIAL_EXTENSION_MODULES := $(patsubst %,extensions/%,$(SPECIAL_EXTENSION_MODUL
 
 MODULES := $(BASE_MODULES)
 MODULES += $(EXTENSION_MODULES)
-
-NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
-TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
-NTI_OBJS := $(TEMP)
 
 SOURCES_DIRS := $(patsubst %,%/src, $(MODULES))
 MYSOURCES := $(foreach dir,$(SOURCES_DIRS),$(wildcard $(dir)/*.C))
@@ -957,6 +989,9 @@ MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 	       done)
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
+NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
+TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
+NTI_OBJS := $(TEMP)
 
 COMMON_DIR := ../common/obj
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
@@ -995,11 +1030,9 @@ $(OBJS_DIR):
     def getCFlags(self):
         retStr = \
 """\
-CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
-            $(patsubst %,-I%/generated,$(PARSER_PATH)) \
-            $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
-            -DLINUX -O3 -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-CFLAGS += -I../common/include \
+OTHER_LIBS :=-lgmp
+CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 """
 ##CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
 #$(patsubst %,-I%/generated,$(PARSER_PATH)) \
@@ -1032,7 +1065,22 @@ CFLAGS += -I../common/include \
             elif self.options.compiler == "xl":
                 retStr += " " + XL_DEBUGGING_FLAG
             else:
-                retStr += " -g"
+                retStr += " -g -fno-inline -fno-eliminate-unused-debug-types"
+
+        if self.options.debug_assert == True:
+            retStr += " " + DEBUG_ASSERT
+
+        if self.options.debug_hh == True:
+            retStr += " " + DEBUG_HH
+
+        if self.options.debug_loops == True:
+            retStr += " " + DEBUG_LOOPS
+
+        if self.options.debug_cpts == True:
+            retStr += " " + DEBUG_CPTS
+
+        if self.options.nowarning_dynamiccast == True:
+            retStr += " " + NOWARNING_DYNAMICCAST
 
         if self.options.profile == USE:
             retStr += " " + PROFILING_FLAGS
@@ -1094,12 +1142,12 @@ CFLAGS += -I../common/include \
     def getLensLibs(self):
         retStr = "LENS_LIBS := "
 	if self.options.domainLibrary == True :
-            retStr += "lib/liblensdomain.a "
-	retStr += "lib/liblens.a\n"
+            #retStr += "lib/liblensdomain.a "
+		retStr += "lib/liblens.a\n"
         return retStr
 
     def getLibs(self):
-        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) #lib/liblensext.a\n"
+        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
         retStr += "LIBS := "
         if self.options.dynamicLoading == True:
             retStr += "-ldl "
@@ -1254,7 +1302,7 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
         return retStr
 
@@ -1342,14 +1390,16 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         return retStr
 
     def getAllTarget(self):
+        retStr = "cleanfirst:\n"
+        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
         #retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
-        retStr = "final: speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
+        retStr += "final: cleanfirst speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
         if self.options.dynamicLoading == True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) -o bin/gslparser"
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -1401,7 +1451,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         return retStr
 
     def getLensparserTarget(self):
-        retStr = "$(BIN_DIR)/$(EXE_FILE): "
+        retStr = "$(BIN_DIR)/$(EXE_FILE): cleanfirst "
 
         if self.operatingSystem == "AIX":
             retStr += LENSPARSER_TARGETS
@@ -1460,7 +1510,7 @@ clean:
 	-rm -f dx/EdgeSetSubscriberSocket
 	-rm -f dx/NodeSetSubscriberSocket
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
-	-rm -f bin/createDF
+	-rm -f $(BIN_DIR)/createDF
 	-rm -f lib/liblens.a
 	-rm -f lib/liblensext.a
 	-rm -f $(SO_DIR)/Dependfile

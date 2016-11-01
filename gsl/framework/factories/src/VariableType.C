@@ -25,114 +25,156 @@
 #include "Simulation.h"
 #include "ConnectionIncrement.h"
 
-VariableType::VariableType()
-   : InstanceFactory()
+VariableType::VariableType() : InstanceFactory()
 {
+  _instanceAtEachMPIProcess = false;
 }
 
-void VariableType::getInstance(std::auto_ptr<DataItem> & adi, 
-			       std::vector<DataItem*> const * args, 
-			       LensContext* c)
+void VariableType::getInstance(std::auto_ptr<DataItem>& adi,
+                               std::vector<DataItem*> const* args,
+                               LensContext* c)
 {
-   VariableDataItem* vdi = new VariableDataItem;
-   VariableInstanceAccessor* via = new VariableInstanceAccessor;
-   Variable* av;
-   unsigned variableIndex;
-   if (c->sim->isGranuleMapperPass() || c->sim->isCostAggregationPass()) {
-      variableIndex = c->sim->incrementCurrentVariableId();
-      ConnectionIncrement* computeCost = 0;
+  VariableDataItem* vdi = new VariableDataItem;
+  VariableInstanceAccessor* via = new VariableInstanceAccessor;
+  Variable* av;
+  unsigned variableIndex;
+  if (c->sim->isGranuleMapperPass() || c->sim->isCostAggregationPass())
+  {
+    variableIndex = c->sim->incrementCurrentVariableId();
+    ConnectionIncrement* computeCost = 0;
+    av = allocateVariable();
+    via->setVariableIndex(variableIndex);
+    via->setVariable(av);
+    via->setVariableType(getCompCategoryBase());
+    via->setVariableIndex(variableIndex);
+    av->setVariableDescriptor(via);
+    av->initialize(c, *args);
+    computeCost = new ConnectionIncrement();
+    computeCost->_computationTime = 1.;
+    computeCost->_memoryBytes = 4;
+    computeCost->_communicationBytes = 4;
+    if (c->sim->isGranuleMapperPass())
+      addGranuleToSimulation(*(c->sim), computeCost, variableIndex);
+  }
+  else
+  {
+    variableIndex = c->sim->incrementCurrentVariableId();
+    c->sim->incrementGranuleMapperCountOnceForVariable();
+    GranuleMapper* vgm = c->sim->getVariableGranuleMapper();
+    unsigned currentSpaceId = c->sim->getRank();
+    // TUAN: the problem is it always return zero for
+    // vgm->getGranule(variableIndex)->getPartitionId()
+    // so only rank 0 MPI process get created
+    // BUG TODO
+    if (this->_instanceAtEachMPIProcess == true)
+    {
       av = allocateVariable();
       via->setVariableIndex(variableIndex);
       via->setVariable(av);
       via->setVariableType(getCompCategoryBase());
-      via->setVariableIndex(variableIndex);
       av->setVariableDescriptor(via);
       av->initialize(c, *args);
-      computeCost = new ConnectionIncrement();
-      computeCost->_computationTime = 1.;
-      computeCost->_memoryBytes = 4;
-      computeCost->_communicationBytes = 4;
-      if (c->sim->isGranuleMapperPass()) addGranuleToSimulation(*(c->sim), computeCost, variableIndex);
-
-   } else {
-      variableIndex = c->sim->incrementCurrentVariableId();
-      c->sim->incrementGranuleMapperCountOnceForVariable();
-      GranuleMapper* vgm = c->sim->getVariableGranuleMapper();
-      unsigned currentSpaceId = c->sim->getRank();
-      if (vgm->getGranule(variableIndex)->getPartitionId() == currentSpaceId) {
-         av = allocateVariable();
-         via->setVariableIndex(variableIndex);
-         via->setVariable(av);
-	 via->setVariableType(getCompCategoryBase());
-	 av->setVariableDescriptor(via);
-         av->initialize(c, *args);
-      } else {
-         av = 0;
-	 via->setVariableIndex(variableIndex);
-         via->setVariable(av);
-	 via->setVariableType(getCompCategoryBase());
+    }
+    else
+    {
+      if (vgm->getGranule(variableIndex)->getPartitionId() == currentSpaceId)
+      {
+        av = allocateVariable();
+        via->setVariableIndex(variableIndex);
+        via->setVariable(av);
+        via->setVariableType(getCompCategoryBase());
+        av->setVariableDescriptor(via);
+        av->initialize(c, *args);
       }
-   }
-   vdi->setVariable(via);
-   adi.reset(vdi);
+      else
+      {
+        av = 0;
+        via->setVariableIndex(variableIndex);
+        via->setVariable(av);
+        via->setVariableType(getCompCategoryBase());
+      }
+    }
+  }
+  vdi->setVariable(via);
+  adi.reset(vdi);
 }
 
-void VariableType::getInstance(std::auto_ptr<DataItem> & adi, 
-			       const NDPairList& ndplist,
-			       LensContext* c)
+void VariableType::getInstance(std::auto_ptr<DataItem>& adi,
+                               const NDPairList& ndplist, LensContext* c)
 {
-   VariableDataItem* vdi = new VariableDataItem;
-   VariableInstanceAccessor* via = new VariableInstanceAccessor;
-   Variable* av;
-   unsigned variableIndex;
-   if (c->sim->isGranuleMapperPass() || c->sim->isCostAggregationPass()) {
-      variableIndex = c->sim->incrementCurrentVariableId();
-      ConnectionIncrement* computeCost = 0;
+  VariableDataItem* vdi = new VariableDataItem;
+  VariableInstanceAccessor* via = new VariableInstanceAccessor;
+  Variable* av;
+  unsigned variableIndex;
+  if (c->sim->isGranuleMapperPass() || c->sim->isCostAggregationPass())
+  {
+    variableIndex = c->sim->incrementCurrentVariableId();
+    ConnectionIncrement* computeCost = 0;
+    av = allocateVariable();
+    via->setVariableIndex(variableIndex);
+    via->setVariable(av);
+    via->setVariableType(getCompCategoryBase());
+    via->setVariableIndex(variableIndex);
+    av->setVariableDescriptor(via);
+    av->initialize(ndplist);
+    computeCost = new ConnectionIncrement();
+    computeCost->_computationTime = 1;
+    computeCost->_memoryBytes = 4;
+    computeCost->_communicationBytes = 4;
+    if (c->sim->isGranuleMapperPass())
+      addGranuleToSimulation(*(c->sim), computeCost, variableIndex);
+  }
+  else
+  {
+    variableIndex = c->sim->incrementCurrentVariableId();
+    c->sim->incrementGranuleMapperCountOnceForVariable();
+    GranuleMapper* vgm = c->sim->getVariableGranuleMapper();
+    unsigned currentSpaceId = c->sim->getRank();
+    // TUAN: the problem is it always return zero for
+    // vgm->getGranule(variableIndex)->getPartitionId()
+    // so only VariableTypes in rank 0 MPI process get created
+    // BUG TODO
+    if (this->_instanceAtEachMPIProcess == true)
+    {
       av = allocateVariable();
       via->setVariableIndex(variableIndex);
       via->setVariable(av);
       via->setVariableType(getCompCategoryBase());
-      via->setVariableIndex(variableIndex);
       av->setVariableDescriptor(via);
       av->initialize(ndplist);
-      computeCost = new ConnectionIncrement();
-      computeCost->_computationTime = 1;
-      computeCost->_memoryBytes = 4;
-      computeCost->_communicationBytes = 4;
-      if (c->sim->isGranuleMapperPass()) addGranuleToSimulation(*(c->sim), computeCost, variableIndex);
-
-   } else {
-      variableIndex = c->sim->incrementCurrentVariableId();
-      c->sim->incrementGranuleMapperCountOnceForVariable();
-      GranuleMapper* vgm = c->sim->getVariableGranuleMapper();
-      unsigned currentSpaceId = c->sim->getRank();
-      if (vgm->getGranule(variableIndex)->getPartitionId() == currentSpaceId) {
-         av = allocateVariable();
-         via->setVariableIndex(variableIndex);
-         via->setVariable(av);
-	 via->setVariableType(getCompCategoryBase());
-	 av->setVariableDescriptor(via);
-         av->initialize(ndplist);
-      } else {
-         av = 0;
-	 via->setVariableIndex(variableIndex);
-         via->setVariable(av);
-	 via->setVariableType(getCompCategoryBase());
-      }    
-   }
-   vdi->setVariable(via);
-   adi.reset(vdi);
+    }
+    else
+    {
+      if (vgm->getGranule(variableIndex)->getPartitionId() == currentSpaceId)
+      {
+        av = allocateVariable();
+        via->setVariableIndex(variableIndex);
+        via->setVariable(av);
+        via->setVariableType(getCompCategoryBase());
+        av->setVariableDescriptor(via);
+        av->initialize(ndplist);
+      }
+      else
+      {
+        av = 0;
+        via->setVariableIndex(variableIndex);
+        via->setVariable(av);
+        via->setVariableType(getCompCategoryBase());
+      }
+    }
+  }
+  vdi->setVariable(via);
+  adi.reset(vdi);
 }
 
-VariableType::~VariableType()
-{  
-}
+VariableType::~VariableType() {}
 
-
-void VariableType::addGranuleToSimulation(
-   Simulation& sim, ConnectionIncrement* computeCost, unsigned variableIndex) const
+void VariableType::addGranuleToSimulation(Simulation& sim,
+                                          ConnectionIncrement* computeCost,
+                                          unsigned variableIndex) const
 {
-  if (!sim.hasVariableGranuleMapper()) {
+  if (!sim.hasVariableGranuleMapper())
+  {
     std::auto_ptr<GranuleMapper> granuleMapper;
     GranuleMapper* gm = new VariableGranuleMapper(&sim);
     granuleMapper.reset(gm);

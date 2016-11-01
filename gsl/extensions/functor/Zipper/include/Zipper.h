@@ -41,7 +41,8 @@ class Zipper : public CG_ZipperBase
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;
       LensConnector* _lensConnector;
-      std::map<std::string, std::vector<double> > _branchPropListMap;
+      //map < name-passed-at-last-argument, vector<giving proportional value along branches being used
+      std::map<std::string, std::vector<double> > _branchPropListMap; //keep the list 
 };
 
 #endif

@@ -1,0 +1,426 @@
+#ifndef CaERConcentration_MDL
+#define CaERConcentration_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+#include "../LaboratoryTools/LaboratoryTools.mdl"
+
+
+// It represents one branch (which comprises regular compartments + implicit junctions)
+Node CaERConcentration Implements SolutionArrayProducer, 
+     DimensionArrayProducer, BranchDataProducer,
+     ForwardSolutionArrayProducer, 
+     //CaERConcentrationArrayProducer,
+     CaConcentrationArrayProducer
+{
+// Regular-branch: represent the diffusion of Calcium(ER) along branch with no explicit junction
+/*{{{*/
+  //DATA
+    /*{{{*/
+	//data members: reference
+       // pointer to array of branch
+       // help to identify the branch a Calcium(cyto)-compartment belong to 
+  BranchDataStruct* branchData; // pointer to branch's data
+  DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
+	//data members: internal, but for solver
+    //{{{
+	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  dyn_var_t [] Aii; // TODO unit
+  dyn_var_t [] Aip; // TODO unit
+  dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
+
+  dyn_var_t [] RHS; // TODO unit
+  dyn_var_t [] Aij; // TODO unit
+
+  dyn_var_t* proximalCaConcentration; // TODO unit
+  dyn_var_t* [] distalAiis;
+  dyn_var_t* [] distalAips;
+  dyn_var_t* [] distalInputs;
+  DimensionStruct* [] distalDimensions;
+  DimensionStruct* proximalDimension;
+
+  bool proximalJunction;// true = real-branching point, 
+                        //..false=implicit-cut (i.e. cut along the branch)
+  int computeOrder;// TissueFunctor will assign the value to each branch 
+                   // (the range of values from [0..MAX_COMPUTE_ORDER-1])
+                   // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
+                   // computing of branches of the same computeOrder
+                   // If MAX_COMPUTE_ORDER=0, then 
+                   // solve all branches sequentially 
+                   //  from distal to proximal: forwardSolve
+                   //  from proximal to distal: backwardSolve
+       //}}}
+	//data members: internal
+  dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
+  dyn_var_t [] Ca_new;
+  dyn_var_t [] currentToConc;
+
+    // and all compartments on the same branch share the same value
+  //dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
+  dyn_var_t fractionVolumeER;
+    // currents
+  //ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+  //CONVENTION:  the fluxs flowing toward the ER get negative 
+  // yet contribute positive to the [Ca2+](ER)
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //CONVENTION: the flux flowing toward the ER get positive
+  // 1. current from spine-ER to shaft-ER and vice versa
+  // 2. user-defined stimulus current
+  InjectedCaCurrent [] injectedCaCurrents; // [pA]
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  TargetAttachCaConcentration [] targetAttachCaConcentration;  // [uM]
+#endif
+	/*}}}*/
+
+   // design : anything currently not part of the spatial 
+   //          is put here
+  Shared {
+    /*{{{*/
+    dyn_var_t* deltaT;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t CaBaseline; // [uM]
+
+    InitPhase deriveParameters;  
+    /*}}}*/
+  }
+
+	//output
+	//{{{
+  CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  //CaERConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  SolutionArrayProducer.solutionArray << &Ca_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+  ForwardSolutionArrayProducer.AiiArray << &Aii;
+  ForwardSolutionArrayProducer.AipArray << &Aip;
+  ForwardSolutionArrayProducer.RHSArray << &RHS;
+	//}}}
+
+    // Phases methods
+    /*{{{*/
+  InitPhase initializeCompartmentData;
+
+  #if MAX_COMPUTE_ORDER>0
+  RuntimePhase forwardSolve1, backwardSolve1; 
+  #endif
+  #if MAX_COMPUTE_ORDER>1
+  RuntimePhase forwardSolve2, backwardSolve2; 
+  #endif
+  #if MAX_COMPUTE_ORDER>2
+  RuntimePhase forwardSolve3, backwardSolve3; 
+  #endif
+  #if MAX_COMPUTE_ORDER>3
+  RuntimePhase forwardSolve4, backwardSolve4; 
+  #endif
+  #if MAX_COMPUTE_ORDER>4
+  RuntimePhase forwardSolve5, backwardSolve5; 
+  #endif
+  #if MAX_COMPUTE_ORDER>5
+  RuntimePhase forwardSolve6, backwardSolve6; 
+  #endif
+  #if MAX_COMPUTE_ORDER>6
+  RuntimePhase forwardSolve7, backwardSolve7; 
+  #endif
+
+  RuntimePhase solve, finish;
+    /*}}}*/
+
+  InAttrPSet {	
+    string identifier;
+    TissueSite site;
+    int idx;
+  }
+
+  //UserFunction setReceptorCaCurrent, setInjectedCaCurrent, setProximalJunction;
+  UserFunction setInjectedCaCurrent, setProximalJunction;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  UserFunction  setTargetAttachCaConcentration;
+#endif
+  // Connection setup
+  //{{{ 
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+   }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  //Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
+  //  CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  // }
+
+  Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
+   }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> injectedCaCurrents.current;
+  //  setInjectedCaCurrent();
+  // }
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+             ReversalCaERProducer, InverseTimeCaERProducer{
+    ReversalCaERProducer.Ca >> targetAttachCaConcentration.Ca ;
+    InverseTimeCaERProducer.inverseTime >> targetAttachCaConcentration.inverseTime;
+    setTargetAttachCaConcentration();
+   }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+     CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents.current;
+    setInjectedCaCurrent();
+   }
+#endif
+  //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> receptorCaCurrents.current;
+  //  setReceptorCaCurrent();
+  // }
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents.current;
+    setInjectedCaCurrent();
+   }
+
+  Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects CaConcentrationProducer, DimensionProducer {
+    CaConcentrationProducer.Ca >> proximalCaConcentration;
+    DimensionProducer.dimension >> proximalDimension;
+    setProximalJunction();
+  }
+
+  Connection Pre Node (PSet.identifier=="backwardSolvePoint") Expects SolutionProducer, DimensionProducer {
+    SolutionProducer.solution >> proximalCaConcentration;
+    DimensionProducer.dimension >> proximalDimension;
+  }
+
+  Connection Pre Node (PSet.identifier=="distalJunctionPoint") Expects CaConcentrationProducer, DimensionProducer {
+    CaConcentrationProducer.Ca >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="forwardSolvePoint") Expects ForwardSolutionProducer, DimensionProducer {
+    ForwardSolutionProducer.Aii >> distalAiis;
+    ForwardSolutionProducer.Aip >> distalAips;
+    ForwardSolutionProducer.RHS >> distalInputs;
+    DimensionProducer.dimension >> distalDimensions;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+  //}}}
+/*}}}*/
+}
+
+// represent an end-point (i.e. last compartment in the series of compartments along a branch)
+// thus don't hold real data, just a reference to that last segment
+Node CaERConcentrationEndPoint Implements DimensionProducer,
+		 //CaERConcentrationProducer,
+		 CaConcentrationProducer
+{
+// For each regular compute-branch (i.e. not a junction), represented by CaERConcentration 
+// we need 2 associated EndPoints instances, one references to 'distalEnd' and the other to 'proximalEnd'
+/*{{{*/
+	// single value
+  dyn_var_t* CaConcentration; // reference to the Ca(ER) of the compartment at either 'distalEnd' or 'proximalEnd' end-point compartment
+  DimensionStruct* dimension; //reference to the struct representing the compartment
+
+  Shared {
+    // so the two instances share the Branch's data
+		// an array but indeed is a scalar
+    dyn_var_t []* CaConcentrationConnect;
+    DimensionStruct* []* dimensionsConnect;
+  }
+    //output
+  CaConcentrationProducer.Ca << CaConcentration;
+  //CaERConcentrationProducer.Ca << CaConcentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {//attribute of the incoming MDL component, e.g. node
+    string identifier;
+  }
+
+  UserFunction setPointers;// which is called to create the proper memory reference for 'Ca(ER)' of the end-point component which
+            // can be 'distalEnd' or 'proximalEnd' depending upon the incoming node's InAttrPset's identifier's value
+
+	//input
+  Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+	// as end-point, so we use 'produce' prefix for kernels
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceSolvedCaConcentration(CaConcentration);
+  RuntimePhase produceFinishedCaConcentration(CaConcentration);
+/*}}}*/
+}
+
+// It represents one (exlicit) junction branch (which comprise half regular compartments)
+Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
+     //CaERConcentrationArrayProducer,
+     CaConcentrationArrayProducer 
+{
+/*{{{*/
+  BranchDataStruct* branchData;
+  DimensionStruct* [] dimensions;
+    //{{{data members: internal, but for solver
+  dyn_var_t* [] CaConcentrationInputs;
+  DimensionStruct* [] dimensionInputs;
+    //}}}
+	//{{{data members: internal
+  dyn_var_t volume;
+  dyn_var_t [] fAxial; //axial-flux
+  dyn_var_t Ca_cur;
+  dyn_var_t [] Ca_new;
+  dyn_var_t currentToConc;
+
+    // and all compartments on the same branch share the same value
+  dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
+  dyn_var_t fractionVolumeER;
+
+  //{{{ ionic currents
+  //ChannelCaCurrents [] channelCaCurrents;
+  //CONVENTION:  the fluxs flowing toward the ER get negative 
+  ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+  //ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
+  //CONVENTION: the flux flowing toward the ER get positive
+  // 1. current from spine-ER to shaft-ER and vice versa
+  // 2. user-defined stimulus current
+  dyn_var_t* [] injectedCaCurrents; // [pA]
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  dyn_var_t* [] targetReversalCaConcentration;
+  dyn_var_t* [] targetInverseTimeCaConcentration;
+#endif
+  //}}}
+
+
+  Shared {
+    dyn_var_t* deltaT;
+    dyn_var_t DCa; // diffusion constant [um^2/ms]
+    //{{{ used only for fast-buffering assumption 
+    dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
+    dyn_var_t beta;   // Wagner and Keizer buffering constant
+    dyn_var_t bmt; // value derived from beta 
+    //}}}
+    dyn_var_t CaBaseline; // [uM]
+
+    InitPhase deriveParameters;  
+  }
+  //}}}
+
+  //CaERConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
+  DimensionArrayProducer.dimensionArray << &dimensions;
+  BranchDataProducer.branchData << branchData;
+
+  InitPhase initializeJunction;
+  RuntimePhase predictJunction, correctJunction;
+
+  InAttrPSet {
+    string identifier;
+    TissueSite site;
+    int idx;
+  }	
+
+  Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
+    DimensionProducer.dimension >> dimensions;
+  }
+
+  Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
+    BranchDataProducer.branchData >> branchData;
+   }
+
+  //Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaCurrentArrayProducer {
+  //  CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+  //}
+  Connection Pre Node (PSet.identifier=="channels[CalciumER]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
+   }
+
+  //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> injectedCaCurrents;
+  //}
+
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+    ReversalCaERProducer, InverseTimeCaERProducer{
+    ReversalCaERProducer.Ca >> targetReversalCaConcentration;
+    InverseTimeCaERProducer.inverseTime >> targetInverseTimeCaConcentration;
+  }
+#else
+  Connection Pre Node (PSet.identifier=="spineAttachment[CalciumER]") Expects 
+    CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents;
+  }
+#endif
+
+  //Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
+  //  CaCurrentProducer.current >> receptorCaCurrents;
+  //}
+
+  PredicateFunction checkSite;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+    CaCurrentProducer.current >> injectedCaCurrents;
+   }
+
+  Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, DimensionProducer  {
+    CaConcentrationProducer.Ca >> CaConcentrationInputs;
+    DimensionProducer.dimension >> dimensionInputs;
+  }
+
+  PredicateFunction confirmUniqueDeltaT;
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+/*}}}*/
+}
+
+Node CaERConcentrationJunctionPoint Implements DimensionProducer,
+		 //CaERConcentrationProducer
+		 CaConcentrationProducer
+{
+/*{{{*/
+  dyn_var_t* CaConcentration;
+  DimensionStruct* dimension;
+
+	Shared {
+		dyn_var_t []* CaConcentrationConnect;
+		DimensionStruct* []* dimensionsConnect;
+	}
+
+  //CaERConcentrationProducer.Ca << CaConcentration;
+  CaConcentrationProducer.Ca << CaConcentration;
+  DimensionProducer.dimension << dimension;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  UserFunction setPointers;
+
+  Connection Pre Node () Expects CaConcentrationArrayProducer, DimensionArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Shared.CaConcentrationConnect;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+  InitPhase produceInitialState(dimension);
+  RuntimePhase produceCaConcentration(CaConcentration);
+/*}}}*/
+}
+
+#endif

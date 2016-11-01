@@ -1,0 +1,271 @@
+#ifndef ChannelCaT_MDL
+#define ChannelCaT_MDL
+
+#include "../../nti/include/MaxComputeOrder.h"
+
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+//// NOTE: This channel is modeled using HH formula; 
+//// and get data from 2 compartment variables: Voltage + Calcium
+//Node ChannelCaT Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+//    CurrentArrayProducer,
+//    CaCurrentArrayProducer, BranchDataProducer 
+//{
+////{{{
+//  dyn_var_t [] g;
+//  dyn_var_t [] k;
+//  dyn_var_t [] l;
+//  dyn_var_t [] gbar;
+//  dyn_var_t [] E_Ca;
+//  dyn_var_t [] I_Ca;
+//
+//  dyn_var_t []* V;
+//  dyn_var_t []* Ca_IC;
+// 
+//  BranchDataStruct* branchData; 
+//
+//  Shared {		
+//    dyn_var_t* Ca_EC;
+//    dyn_var_t* deltaT;
+//    dyn_var_t* T;
+//  }
+//
+//  RuntimePhase update;
+//   InitPhase initializeCalChannels;
+//
+//  ConductanceArrayProducer.conductanceArray << &g;
+//  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
+//  CaCurrentArrayProducer.currents << &I_Ca;
+//  CurrentArrayProducer.currents << &I_Ca;
+//  BranchDataProducer.branchData << branchData;
+//
+//  InAttrPSet {
+//    string identifier;
+//    int idx;	
+//  }
+//
+//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
+//    VoltageArrayProducer.voltageArray >> V;
+//    BranchDataProducer.branchData >> branchData;
+//  }
+//
+//
+//  Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+//    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+//  }
+//
+//  Connection Pre Constant (PSet.identifier=="EC") 
+//	Expects CaConcentrationProducer, TemperatureProducer {
+//    CaConcentrationProducer.Ca >> Shared.Ca_EC;
+//    TemperatureProducer.T >> Shared.T;
+//  }
+//
+//  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+//    TimeStepProducer.deltaT >> Shared.deltaT;
+//  }
+////}}}
+//}
+
+// Low-voltage activated Ca2+ channel
+// NOTE: This channel is modeled using HH formula; 
+// and get data from 2 compartment variables: Voltage + Calcium
+Node ChannelCaLVA Implements 
+    ConductanceArrayProducer, ReversalPotentialArrayProducer, //HH-based to Vm
+    CaCurrentArrayProducer,  //HH-based to Ca2+
+    IOCurrentArrayProducer, //HH-based to I/O 
+    BranchDataProducer, 
+    DimensionArrayProducer
+{
+//{{{
+// Hodgkin-Huxley-based formula
+  //{{{ internal data
+  dyn_var_t [] g;
+  dyn_var_t [] m;
+  dyn_var_t [] h;
+  dyn_var_t [] gbar;
+  dyn_var_t [] E_Ca;
+  dyn_var_t [] I_Ca;
+  dyn_var_t [] Iion;
+  //}}}
+
+  //{{{ external data
+  dyn_var_t []* V;
+  dyn_var_t []* Ca_IC;
+ 
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_values;// ... having the corresponding gbar conductance
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3 
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //}}}
+
+  Shared {		
+    //{{{
+    dyn_var_t* Ca_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		InitPhase computeTadj; // [mV]
+    //}}}
+  }
+
+  RuntimePhase update;
+  InitPhase initialize;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &E_Ca;
+  CaCurrentArrayProducer.currents << &I_Ca;
+  IOCurrentArrayProducer.currents << &I_Ca;
+  BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
+  //IOCurrentArrayProducer.currents << &Iion;
+
+  InAttrPSet {
+    string identifier;
+    int idx;	
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+  }
+
+
+  Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+	Expects CaConcentrationProducer, TemperatureProducer {
+    CaConcentrationProducer.Ca >> Shared.Ca_EC;
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+//}}}
+}
+
+// NOTE: This channel is modeled using GHK formula; 
+// and get data from 2 compartment variables: Voltage + Calcium
+Node ChannelCaT_GHK Implements 
+     CurrentArrayProducer, //GHK-based to VM, GHK-based to I/O
+     CaCurrentArrayProducer, //GHK-based to Ca2+
+		 BranchDataProducer, 
+     DimensionArrayProducer
+{
+/*{{{*/
+	//DATA
+	//{{{ 
+	// GHK formula with Hodgkin-Huxley-based gating variable
+	//{{{
+	//internal data
+	dyn_var_t [] m;
+	dyn_var_t [] h;
+	dyn_var_t [] I_Ca; // [pA/um^2]
+	dyn_var_t [] PCa;  // um/ms
+	dyn_var_t [] PCabar; // um/ms
+	// reference data
+	dyn_var_t []* V;//transmembrane voltage [mV]
+	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+	BranchDataStruct* branchData; 
+	DimensionStruct* []* dimensions;
+	//int index; //index of the compartment in branch
+
+	//data mainly used to dynamically assign different conductance on different location
+	//NOTE: In SynParams.par file
+	//    Use either gbar_dists or gbar_branch
+	//      and combine with gbar_values
+	dyn_var_t [] Pbar_dists; // an array that indicate the threshold-distance (in micrometer)
+	dyn_var_t [] Pbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+	dyn_var_t [] Pbar_values;// ... having the corresponding Pbar conductance [um/ms]
+	// Example:
+	// CHANNEL_PARAMS 2
+	// Cah 3
+	// BRANCHTYPE MTYPE
+	// 1 0 <gbar={0.00992}>
+	// 4 0 <gbar_dists={380.0,480.0, 590}> 
+	// 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+	// Nat 3 
+	// BRANCHTYPE MTYPE
+	// 1 0 <gbar={0.00992}>
+	// 4 0 <gbar_branchorders={0, 1, 2}> 
+	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
+	//}}}
+
+	//SHARED DATA
+	Shared {//in xxxCompCategory.C
+		//{{{
+		dyn_var_t* Ca_EC; // [uM]
+		dyn_var_t* deltaT; // [ms]
+		dyn_var_t* T;     // [K]
+		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+		//   and tempt. used for the simulation 
+		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+		InitPhase computeTadj; 
+		//}}}
+	}
+	//}}}
+
+	RuntimePhase update();
+	InitPhase initialize;
+
+	CaCurrentArrayProducer.currents << &I_Ca;
+	CurrentArrayProducer.currents << &I_Ca;
+	BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
+
+	InAttrPSet {//information of the incoming connection
+		string identifier; // name of the incoming node
+		int idx;   // if identifier = name of the compartment variable 
+		// then idx = index of the compartment on a branch
+	}
+
+  //Connection setup (input)
+	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+	BranchDataProducer, DimensionArrayProducer 
+						 {
+							 VoltageArrayProducer.voltageArray >> V;
+							 BranchDataProducer.branchData >> branchData;
+							 DimensionArrayProducer.dimensionArray >> dimensions;
+						 }
+
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+	}
+
+	Connection Pre Constant (PSet.identifier=="EC") 
+		Expects CaConcentrationProducer, TemperatureProducer 
+		{
+			CaConcentrationProducer.Ca >> Shared.Ca_EC;
+			TemperatureProducer.T >> Shared.T;
+		}
+
+	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+		TimeStepProducer.deltaT >> Shared.deltaT;
+	}
+/*}}}*/
+}
+
+
+#endif

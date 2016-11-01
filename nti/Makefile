@@ -1,8 +1,20 @@
+
+.DEFAULT_GOAL:=target
+
+SRC_DIR :=./src
+OBJ_DIR :=./obj
+HEADER_DIR:=./include
+
+vpath %.h $(HEADER_DIR)
+vpath %.cxx $(SRC_DIR)
+
 FOR_BLUEGENE_P=0
 FOR_BLUEGENE_L=0
 FOR_BLUEGENE_Q=0
 FOR_AIX=0
 A2AW=0
+
+BIN_DIR=./bin
 
 
 ifeq ($(A2AW), 1)
@@ -10,6 +22,8 @@ ifeq ($(A2AW), 1)
 A2A = -DA2AW
 
 endif
+
+
 
 ifeq ($(FOR_BLUEGENE_Q), 1)
 
@@ -62,9 +76,10 @@ CXX=mpiCC
 LD=mpiCC
 #LDFLAGS = -L$(CVC)/lib/CVC
 #EXTRA_LD = -lcvcmc -lcvct
-CFLAGS = $(A2A) #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
+CFLAGS = $(A2A)  #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
 #CFLAGS = -DUSING_BLUEGENE -I$(CVC)/include/CVC -DVERBOSE
 #CVCSRC = cvc.cxx
+CFLAGS  += -MMD
 
 endif
 
@@ -73,18 +88,33 @@ endif
 endif
 
 endif
+
+STD_UTILS_OBJ_PATH := ../gsl/utils/std/obj
+STD_UTILS_INC_PATH := ../gsl/utils/std/include/
+CFLAGS += -I$(HEADER_DIR) 
+#Add support for GMP library
+CFLAGS += -lgmp -std=c++11 
+LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
+					 -I../gsl/framework/factories/include/
+
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
-OPT=-O3
+ifeq ($(debug), yes)
+OPT=
 DEBUG=-g
-UTILS=-I../gsl/utils/std/include
+else
+OPT=-O3
+DEBUG=
+endif
+
+UTILS=-I../gsl/utils/std/include -I../common/include/
 COPYRIGHT=-I../gsl/framework/factories/include
 
 NG_SHARED_SOURCES = CompositeSwc.cxx \
 
 NG_UNSHARED_SOURCES = neuroGen.cxx \
 
-NG_SOURCES = Neurogenesis.cxx\
+NG_SOURCES = Neurogenesis.cxx \
 NeurogenParams.cxx \
 NeurogenSegment.cxx \
 NeurogenBranch.cxx \
@@ -95,6 +125,7 @@ ND_SHARED_SOURCES = Branch.cxx \
 SegmentKeySegmentSpace.cxx \
 NeuroDevCommandLine.cxx \
 Capsule.cxx \
+ComputeBranch.cxx \
 Communicator.cxx \
 Director.cxx \
 History.cxx \
@@ -118,6 +149,7 @@ NeuroDevTissueSlicer.cxx \
 SegmentForce.cxx \
 SegmentForceAggregator.cxx \
 SegmentForceDetector.cxx \
+Touch.cxx \
 
 TD_UNSHARED_SOURCES = touchDetect.cxx \
 
@@ -142,21 +174,46 @@ TouchVector.cxx \
 Translation.cxx \
 ZeroTouchAnalysis.cxx \
 TissueContext.cxx \
+GlobalNTSConfig.cxx \
 
 TISSUE_LIB_SOURCES = CompartmentKey.cxx \
 
-ND_SHARED_OBJECTS = ${ND_SHARED_SOURCES:.cxx=.o}
-NG_SHARED_OBJECTS = ${NG_SHARED_SOURCES:.cxx=.o}
-NG_OBJECTS = $(NG_SHARED_OBJECTS) ${NG_UNSHARED_SOURCES:.cxx=.o} ${NG_SOURCES:.cxx=.o}
-ND_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) ${ND_UNSHARED_SOURCES:.cxx=.o} ${ND_SOURCES:.cxx=.o}
-TD_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) ${TD_UNSHARED_SOURCES:.cxx=.o} ${TD_SOURCES:.cxx=.o}
-TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) ${NG_SOURCES:.cxx=.o} ${ND_SOURCES:.cxx=.o} ${TD_SOURCES:.cxx=.o} ${TISSUE_LIB_SOURCES:.cxx=.o}
+ND_SHARED_OBJECTS = $(patsubst %, $(OBJ_DIR)/%, ${ND_SHARED_SOURCES:.cxx=.o})
+
+NG_SHARED_OBJECTS = $(patsubst %, $(OBJ_DIR)/%, ${NG_SHARED_SOURCES:.cxx=.o})
+
+NG_OBJECTS = $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%,${NG_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${NG_SOURCES:.cxx=.o})
+
+ND_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${ND_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${ND_SOURCES:.cxx=.o})
+
+TD_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${TD_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o})
+
+TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${NG_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${ND_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TISSUE_LIB_SOURCES:.cxx=.o})
+
+COMMON_DIR=../common/obj/
+COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 
 TISSUE_LIB = ../gsl/lib/liblensdomain.a
 #TISSUE_LIB = ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 
-all: $(TARGETS)
+create_file: 
+	@if [ ! -f ./include/Model2Use.h ]; then \
+		touch include/Model2Use.h; \
+		echo "//Please consider to define the following option, with MODEL_TO_USE is required" > include/Model2Use.h; \
+		echo "//IMPORTANT: any change is expected to have full rebuild" >> include/Model2Use.h; \
+		echo "//#define MODEL_TO_USE <value>" >> include/Model2Use.h; \
+		echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> include/Model2Use.h; \
+		echo "//#define USE_DOUBLES   [to enable double-precision]" >> include/Model2Use.h; \
+    echo "//#define WAIT_FOR_REST" >> include/Model2Use.h; \
+		echo "#ifdef WAIT_FOR_REST" >> include/Model2Use.h; \
+		echo "#define NOGATING_TIME 20.0 //ms" >> include/Model2Use.h; \
+		echo "#else " >> include/Model2Use.h; \
+		echo "#define NOGATING_TIME 0.0 //ms" >> include/Model2Use.h; \
+		echo "#endif" >> include/Model2Use.h; \
+	fi; 
+
+target: create_file $(TARGETS) 
 
 depend: ; makedepend $(ND_SOURCES)
 
@@ -164,33 +221,52 @@ uninstall:
 
 install: all
 
-clean: ; rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o
+clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o  $(BIN_DIR)/neuroGen $(BIN_DIR)/neuroDev $(BIN_DIR)/touchDetect $(OBJ_DIR)/*
 realclean: clean
-	rm -f $(TARGETS) 
+	-rm -f $(TARGETS) 
 
-.SUFFIXES: .cxx .cpp .c .h .o
+#.SUFFIXES: .cxx .cpp .c .h .o
+# Include the C include dependencies
+-include $(OBJS:.o=.d)
 
-.cxx.o: ;
-	$(CXX) -I. -c $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) $*.cxx
 
-.C.o: ;
-	$(CXX) -I. -c $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o ../gsl/utils/std/src $*.C
+$(OBJ_DIR): 
+	mkdir -p $(OBJ_DIR)
+
+$(OBJ_DIR)/%.o : %.cxx | $(OBJ_DIR)
+	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o $@
+
+%.o : %.C  | $(OBJ_DIR)
+	$(CXX) -I. -c $< $(DEBUG) $(OPT) $(CFLAGS) $(UTILS) $(COPYRIGHT) $(MAKE64) -o ../gsl/utils/std/src $*.C
+
+%.cxx : | $(SRC_DIR)
+
+$(NG_OBJECTS): | $(OBJ_DIR)
+
+$(ND_OBJECTS): | $(OBJ_DIR)
+
+$(TD_OBJECTS): | $(OBJ_DIR)
 
 neuroGen: $(NG_OBJECTS)
-	$(LD) $(MAKE64) $(DEBUG) -o neuroGen $(OPT) \
+	mkdir -p $(BIN_DIR)
+	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroGen $(OPT) \
 		$(NG_OBJECTS) \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 neuroDev: $(ND_OBJECTS)
-	$(LD) $(MAKE64) $(DEBUG) -o neuroDev $(OPT) \
+	mkdir -p $(BIN_DIR)
+	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroDev $(OPT) \
 		$(ND_OBJECTS) \
+		$(COMMON_OBJS)\
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 
 touchDetect: $(TD_OBJECTS)
-	$(LD) $(MAKE64) $(DEBUG) -o touchDetect $(OPT) \
+	mkdir -p $(BIN_DIR)
+	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/touchDetect $(OPT) \
 		$(TD_OBJECTS) \
+		$(COMMON_OBJS) \
 		$(LDFLAGS) \
 		$(EXTRA_LD) $(MPI_LIBS)
 

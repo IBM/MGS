@@ -18,10 +18,9 @@
 #include "Copyright.h"
 
 #include "Functor.h"
-class NodeInitializerFunctor : public Functor
-{
-   public:
-      virtual  const char * getCategory();
-      static const char* _category;
+class NodeInitializerFunctor : public Functor {
+  public:
+  virtual const std::string& getCategory() const;
+  static const std::string _category;
 };
 #endif

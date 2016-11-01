@@ -16,7 +16,8 @@ Node LifeNode Implements ValueProducer {
 
    InitPhase initialize();
    RuntimePhase update();
-   RuntimePhase copy(publicValue);
+   RuntimePhase copy(publicValue);//values passed to here will be marshalled-demarshalled 
+                     // if the two neighbors are on different memory spaces
 
    ValueProducer.value << &publicValue;
    

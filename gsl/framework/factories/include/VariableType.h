@@ -52,10 +52,12 @@ class VariableType : public InstanceFactory
  			       const NDPairList& ndplist,
 			       LensContext* c);
 //      virtual ConnectionIncrement* getComputeCost() = 0;
+     void setCreatingInstanceAtEachMPIProcess() { _instanceAtEachMPIProcess=true; };
    protected:
       DuplicatePointerArray<Variable> _variableList;
    private:
       inline void addGranuleToSimulation(
 	 Simulation& sim, ConnectionIncrement* computeCost, unsigned variableIndex) const;
+	  bool _instanceAtEachMPIProcess;
 };
 #endif

@@ -84,7 +84,7 @@ std::auto_ptr<ParameterSet> ReversedDstRefGaussianWeightModifier::userExecute(Le
       Grid *g = n2->getGridLayerDescriptor()->getGrid();
       gridSize = g->getSize();
       for (i1=coords1.begin(),i2=coords2.begin(),i3=gridSize.begin();i1!=end1;++i1, ++i2, ++i3){
-         ddist = abs(*i1 - *i2);
+         ddist = std::abs(*i1 - *i2);
          if (ddist > *i3/2) ddist = *i3 - ddist;
          distance += ddist*ddist;
       }

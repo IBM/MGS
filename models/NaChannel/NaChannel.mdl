@@ -1,26 +1,28 @@
 #ifndef NaChannel_MDL
 #define NaChannel_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node NaChannel Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
-  float [] m;
-  float [] h;
-  float [] g;
-  float [] gbar;
+  dyn_var_t [] m;
+  dyn_var_t [] h;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
 
-  float []* V;
+  dyn_var_t []* V;//transmembrane voltage
 
   BranchDataStruct* branchData; 
 
   Shared {
-    float* Na_IC;
-    float* Na_EC;
-    float* deltaT;
-    float* T;
-    float [] E_Na;
+    dyn_var_t* Na_IC;//[Na]_intracellular
+    dyn_var_t* Na_EC;// [Na]_extracellular
+    dyn_var_t* deltaT;
+    dyn_var_t* T; // absolute temperature [K]
+    dyn_var_t [] E_Na; //reversal potential
     InitPhase computeE_Na;
   }
 

@@ -6,21 +6,21 @@
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node KDRChannel_IO Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
-  float [] g;
-  float [] n;
-  float [] p;
-  float [] gbar;
+  dyn_var_t [] g;
+  dyn_var_t [] n;
+  dyn_var_t [] p;
+  dyn_var_t [] gbar;
 
-  float []* V;
+  dyn_var_t []* V;
  
   BranchDataStruct* branchData; 
 
   Shared {		
-    float* K_IC;
-    float* K_EC;
-    float* deltaT;
-    float* T;
-    float [] E_K;
+    dyn_var_t* K_IC;
+    dyn_var_t* K_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
+    dyn_var_t [] E_K;
     InitPhase computeE_KDR;
   }
 

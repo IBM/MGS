@@ -66,7 +66,7 @@ void EachAvgFunctor::doInitialize(LensContext *c,
       throw SyntaxErrorException(
 	 "EachAvg: argument 1 is not a NumericDataItem");
    }
-   _avg=avgDI->getFloat();
+   float _avg=avgDI->getFloat();
    _nbrReps=int(_avg);
    _remainingProb=_avg-float(_nbrReps);
 }
@@ -117,45 +117,45 @@ void EachAvgFunctor::doExecute(LensContext *c,
    }
 
    if (_phase == _REPETITIONS) {
-      // still doing reps
-      if (_nbrReps > _nbrRepsDone) {
-	 ++_nbrRepsDone;
-      } else {
-	 // done with this set of reps for this node (
-	 // since _nbrReps>_nbrRepsDone),
-	 // or no reps necessary (since _nbrReps==_nbrRepsDone==0)
+     // still doing reps
+     if (_nbrReps > _nbrRepsDone) {
+       ++_nbrRepsDone;
+     } else {
+       // done with this set of reps for this node (
+       // since _nbrReps>_nbrRepsDone),
+       // or no reps necessary (since _nbrReps==_nbrRepsDone==0)
 
-         // so increment the node iterator
-         ++_nodesIter;           
-	 
-	 // and reset the reps counter to 1, since a node will be returned
-         _nbrRepsDone = 1;         
+       // so increment the node iterator
+       ++_nodesIter;           
 
-	 // but if all reps for all nodes are done, or no reps are necessary
-         if ( (_nodesIter == _nodesEnd) || (_nbrReps == 0) ) {     
-	    // check if there's no need for probabilistic 
-	    // sampling (i.e., you're done)
-            if (_remainingProb == 0) {
-	       _phase = _DONE;
-            } else {
-	       // if there is a need, set it up
-               _phase = _PROBABILISTIC;
-	    }
+       // and reset the reps counter to 1, since a node will be returned
+       _nbrRepsDone = 1;         
+
+       // but if all reps for all nodes are done, or no reps are necessary
+       if ( (_nodesIter == _nodesEnd) || (_nbrReps == 0) ) {     
+         // check if there's no need for probabilistic 
+         // sampling (i.e., you're done)
+         if (_remainingProb == 0) {
+           _phase = _DONE;
+         } else {
+           // if there is a need, set it up
+           _phase = _PROBABILISTIC;
          }
-      }
+       }
+     }
    }
 
    if (_phase == _PROBABILISTIC) { 
-      // can only enter this if the *_nodesBegin has already been sample
-      // probabilistically during last pass
-      // increment nodes iterator along a comb sample w/o replacement
-      _nodesIter = _nodesBegin + int(_combOffset + _count / _remainingProb);
-      // check if you're at or past end of comb, if so you're done
-      if (_nodesIter >= _nodesEnd) {
-	 _phase = _DONE;
-      }
-      // increment the counter for number of probabilistic samples
-      ++_count;                  
+     // can only enter this if the *_nodesBegin has already been sample
+     // probabilistically during last pass
+     // increment nodes iterator along a comb sample w/o replacement
+     _nodesIter = _nodesBegin + int(_combOffset + _count / _remainingProb);
+     // check if you're at or past end of comb, if so you're done
+     if (_nodesIter >= _nodesEnd) {
+       _phase = _DONE;
+     }
+     // increment the counter for number of probabilistic samples
+     ++_count;                  
    }
 
    if (_phase != _DONE) {

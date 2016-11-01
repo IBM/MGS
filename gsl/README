@@ -1,0 +1,7 @@
+-DDEBUG   
+-DDEBUG_ASSERT
+
+UNITS:
+  Voltage (V)                [mV]
+  Reversal potential (Erev)  [mV]
+  conductance (g,gbar)       [pS/um^2] 

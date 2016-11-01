@@ -1,0 +1,65 @@
+# MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush bouton)
+# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
+COMPARTMENT_VARIABLE_TARGETS 6
+BRANCHTYPE
+1 Voltage Calcium
+2 Voltage Calcium
+3 Voltage Calcium
+4 Voltage Calcium
+5 Voltage Calcium
+6 Voltage Calcium
+
+COMPARTMENT_VARIABLE_COSTS 2
+Voltage 1.0
+Calcium 1.0
+
+COMPARTMENT_VARIABLE_PARAMS 1
+Voltage 16
+MTYPE BRANCHTYPE
+# Cm ~ [pF/um^2]
+# gLeak ~ [nS/um^2]
+# Vnew ~ [mV]
+## NOTE: Make sure semi-colon separated
+#{{{
+#{{{neuron
+0 1 <Cm=0.01; gLeak=0.0002>
+0 2 <Cm=0.01; gLeak=0.000325>
+0 5 <Cm=0.01; gLeak=0.000325>
+0 3 <Cm=0.01; gLeak=0.000234>
+0 4 <Cm=0.01; gLeak=0.000295>
+0 6 <Cm=0.01; gLeak=0.000295>
+# NOTE: for non-uniform gLeak; the authors confirmed that we need non-uniform Eleak (page 12 column 1)
+#}}}
+#{{{ GABAergic bouton
+1 1 <Cm=0.01; gLeak=0.000295>
+1 2 <Cm=0.01; gLeak=0.000295>
+#}}}
+#{{{ spines
+2 1 <Cm=0.01; gLeak=0.000138>
+2 3 <Cm=0.01; gLeak=0.000138>
+3 1 <Cm=0.01; gLeak=0.000138>
+3 3 <Cm=0.01; gLeak=0.000138>
+#}}}
+#{{{ Glutamatergic bouton
+## leak -89.52mV for 0.000295
+4 1 <Cm=0.01; gLeak=0.000138; Vnew={-70.0}>
+4 2 <Cm=0.01; gLeak=0.000138; Vnew={-70.0}>
+5 1 <Cm=0.01; gLeak=0.000138; Vnew={-70.0}>
+5 2 <Cm=0.01; gLeak=0.000138; Vnew={-70.0}>
+#}}}
+#}}}
+
+### PLAN TODO : add a new section that helps to tell 
+# 1. how a cpt is a spine neck
+# 2. how a cpt is a spine head
+# COMPARTMENT_SPINE_NECK 1
+# MTYPE BRANCHTYPE
+# [2, 3]     3
+# COMPARTMENT_SPINE_HEAD 2
+# MTYPE BRANCHTYPE
+# 2     1
+# 3     1
+#
+# and then incorporate that into 
+# Touch::hasSpineNeck(out: keyneck) //return key of the neck if the touch has one capsule is the neck and one capsule is the shaft

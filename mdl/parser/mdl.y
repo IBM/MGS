@@ -75,11 +75,16 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdio.h>
+
+using namespace std;
 
 #define USABLE
 #define YYPARSE_PARAM parm
 #define YYLEX_PARAM parm
+#ifndef YYDEBUG
 #define YYDEBUG 1
+#endif
 #define CONTEXT ((MdlContext *) parm)
 #define yyparse mdlparse
 #define yyerror mdlerror
@@ -87,7 +92,9 @@
 #define CURRENTFILE (((MdlContext *) parm)->_lexer)->currentFileName
 #define CURRENTLINE (((MdlContext *) parm)->_lexer)->lineCount
 
+
    void mdlerror(const char *s);
+   void mdlerror(YYLTYPE*, void*, const char *s);
    int mdllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
 
    inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
@@ -124,8 +131,11 @@
    }
 %}
 
-%pure_parser
+%pure-parser
 %locations
+%parse-param       {void * YYPARSE_PARAM}
+%lex-param       {void * YYLEX_PARAM}
+/*%param { void * context} */
 
 %{
 #ifndef YYSTYPE_DEFINITION
@@ -1546,3 +1556,7 @@ void mdlerror(const char *s)
    fprintf(stderr,"%s\n",s);
 }
 
+void mdlerror(YYLTYPE*, void*, const char *s)
+{
+   fprintf(stderr, "%s\n", s);
+}

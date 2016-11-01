@@ -22,11 +22,14 @@
 
 class NDPairList;
 
-class NMDAReceptorCompCategory : public CG_NMDAReceptorCompCategory, public CountableModel
+class NMDAReceptorCompCategory : public CG_NMDAReceptorCompCategory,
+                                 public CountableModel
 {
-   public:
-      NMDAReceptorCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void count();
+  public:
+  NMDAReceptorCompCategory(Simulation& sim, const std::string& modelName,
+                           const NDPairList& ndpList);
+  void computeTadj(RNG& rng);
+  void count();
 };
 
 #endif

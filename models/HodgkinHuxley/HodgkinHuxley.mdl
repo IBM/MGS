@@ -1,80 +1,147 @@
 #ifndef HodgkinHuxley_MDL
 #define HodgkinHuxley_MDL
+#include "../../nti/include/MaxComputeOrder.h"
+
+Interface BufferedAmplitudeProducer {
+	//  dyn_var_t []* amplitude;
+	dyn_var_t* currentAmplitude;
+	dyn_var_t* delayedAmplitude;
+}
+
+Interface BufferedTimeProducer {
+	dyn_var_t []* pulseTime;
+	dyn_var_t* currentPulseTime;
+	dyn_var_t* delayedPulseTime;
+}
+
+Interface AmplitudeProducer {
+	dyn_var_t* amplitude;
+}
+
+Interface PreviousAmplitudeProducer {
+	dyn_var_t* previousAmplitude;
+}
 
 Interface CurrentProducer {
-  float* current;
+  dyn_var_t* current;
 }
 
 Interface CurrentArrayProducer {
-  float []* currents;
+  dyn_var_t []* currents;
+}
+
+Interface IOCurrentArrayProducer {
+//designed for I/O purpose
+// This is to avoid the case when HH-channel produces (conductanceArray,ErevArray)
+//                    to be conflict with GHK-channel produces (CurrentArrayProducer)
+  dyn_var_t []* currents;
 }
 
 Interface CaCurrentProducer {
-  float* CaCurrent;
+  dyn_var_t* current;
 }
 
 Interface CaCurrentArrayProducer {
-  float []* CaCurrents;
+  dyn_var_t []* currents;
 }
 
+Interface CaERCurrentProducer {
+  dyn_var_t* current;
+}
+
+Interface CaERCurrentArrayProducer {
+  dyn_var_t []* currents;
+}
 Interface ReversalPotentialProducer {
-  float* reversalPotential;
+  dyn_var_t* reversalPotential;
 }
 
 Interface ReversalPotentialArrayProducer {
-  float []* reversalPotentials;
+  dyn_var_t []* reversalPotentials;
 }
 
 Interface ConductanceProducer {
-  float* conductance;
+  dyn_var_t* conductance;
 }
 
 Interface ConductanceArrayProducer {
-  float []* conductanceArray;
-}
-
-Interface MaximumConductanceArrayProducer {
-  float []* maximumConductanceArray;
+  dyn_var_t []* conductanceArray;
 }
 
 Interface MaximumConductanceProducer {
-  float* maximumConductance;
+  dyn_var_t* maximumConductance;
+}
+
+Interface MaximumConductanceArrayProducer {
+  dyn_var_t []* maximumConductanceArray;
 }
 
 Interface VoltageProducer {
-   float* voltage;
+   dyn_var_t* voltage;
 }
 
 Interface VoltageArrayProducer {
-   float []* voltageArray;
+   dyn_var_t []* voltageArray;
+}
+
+Interface AnyConcentrationProducer {
+//this is help to output data using the same I/O variable
+   dyn_var_t* AnyConc;
+}
+Interface AnyConcentrationArrayProducer {
+   dyn_var_t []* AnyConcs;
 }
 
 Interface CaConcentrationProducer {
-   float* Ca;
-}
-
-Interface MgConcentrationProducer { 
-   float* Mg;
+   dyn_var_t* Ca;
 }
 
 Interface CaConcentrationArrayProducer {
-   float []* CaConcentrations;
+   dyn_var_t []* CaConcentrations;
+}
+
+Interface CaERConcentrationProducer {
+   dyn_var_t* Ca;
+}
+
+Interface CaERConcentrationArrayProducer {
+   dyn_var_t []* CaConcentrations;
+}
+
+Interface IP3ConcentrationArrayProducer {
+   dyn_var_t []* IP3Concentrations;
+}
+
+Interface IP3ConcentrationProducer {
+   dyn_var_t* IP3;
+}
+
+Interface IP3CurrentProducer {
+  dyn_var_t* current;
+}
+
+Interface IP3CurrentArrayProducer {
+  dyn_var_t []* currents;
+}
+
+Interface MgConcentrationProducer { 
+   dyn_var_t* Mg;
 }
 
 Interface NaConcentrationProducer {
-   float* Na;
+   dyn_var_t* Na;
 }
 
 Interface KConcentrationProducer {
-   float* K;
+   dyn_var_t* K;
 }
 
 Interface WeightProducer {
-   float* w;
+   dyn_var_t* w;
 }
 
 Interface PlasticityProducer {
-   float* w;
+   dyn_var_t* w;
 }
 
 Interface PlasticityToggleProducer {
@@ -82,19 +149,19 @@ Interface PlasticityToggleProducer {
 }
 
 Interface TemperatureProducer {
-   float* T;
+   dyn_var_t* T;
 }
 
 Interface KetamineProducer {
-   float* Ketamine;
+   dyn_var_t* Ketamine;
 }
 
 Interface SurfaceAreaProducer {
-   float* surfaceArea;
+   dyn_var_t* surfaceArea; // [um^2]
 }
 
 Interface ConnectionSurfaceAreaProducer {
-   float* surfaceArea;
+   dyn_var_t* surfaceArea; // [um^2]
 }
 
 Interface IndexProducer {
@@ -105,19 +172,75 @@ Interface IndexArrayProducer {
    int* []* indexArray;
 }
 
-Constant ExtracellularMedium Implements NaConcentrationProducer, KConcentrationProducer, CaConcentrationProducer, MgConcentrationProducer, TemperatureProducer, KetamineProducer {
-  float Na; // intracellular concetrations expressed by ion name alone
-  float K;
-  float Ca;
-  float Mg;
-  float T;
-  float Ketamine;
+Interface DirectIndexArrayProducer {
+   int []* indexArray;
+}
+
+Interface GlycineProducer {
+   dyn_var_t* Glycine;
+}
+
+Constant ExtracellularMedium Implements NaConcentrationProducer, 
+    KConcentrationProducer, CaConcentrationProducer, MgConcentrationProducer, 
+    TemperatureProducer, KetamineProducer, GlycineProducer
+{// NOTE: Be careful when modifying the unit
+  dyn_var_t Na; // [mM] extracellular concetrations expressed by ion name alone
+  dyn_var_t K;  // [mM]
+  dyn_var_t Mg; // [mM]
+  dyn_var_t T;  // [K]
+  dyn_var_t Ketamine; // 0 .. 1 (fraction of ketamine block)
+  dyn_var_t Ca; // [uM]
+  dyn_var_t Glycine; // [uM]
   NaConcentrationProducer.Na << &Na;
   KConcentrationProducer.K << &K;
   CaConcentrationProducer.Ca << &Ca;
   MgConcentrationProducer.Mg << &Mg;
   TemperatureProducer.T << &T;
   KetamineProducer.Ketamine << &Ketamine;
+  GlycineProducer.Glycine << &Glycine;
 }
 
+// for ionic fluxes across ER membrane 
+Interface CaFluxArrayProducer{
+  dyn_var_t []* fluxes; // [uM/msec] 
+}
+// for Synaptic Cleft
+Interface NeuroTransmitterConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface GlutamateConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface GABAConcentrationProducer{
+  dyn_var_t* NT; // [uM] neurotransmitter concentration
+}
+Interface IP3FluxArrayProducer{
+  dyn_var_t []* fluxes; // [uM/msec] 
+}
+
+Interface InverseTimeCaProducer {
+  dyn_var_t* inverseTime; //[1/ms]
+}
+Interface ReversalCaProducer{
+// which is used similar to the concept of reversal potential 
+  dyn_var_t* Ca; //[uM]
+}
+Interface InverseTimeCaERProducer {
+  dyn_var_t* inverseTime; //[1/ms]
+}
+Interface ReversalCaERProducer{
+// which is used similar to the concept of reversal potential 
+  dyn_var_t* Ca; //[uM]
+}
+Interface InverseTimeIP3Producer {
+  dyn_var_t* inverseTime; //[1/ms]
+}
+Interface ReversalIP3Producer{
+// which is used similar to the concept of reversal potential 
+  dyn_var_t* IP3; //[uM]
+}
+
+Interface NameProducer{
+   string* name;
+}
 #endif

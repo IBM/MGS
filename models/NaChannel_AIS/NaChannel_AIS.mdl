@@ -1,36 +1,38 @@
 #ifndef NaChannel_AIS_MDL
 #define NaChannel_AIS_MDL
 
+#include "../../nti/include/MaxComputeOrder.h"
+
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
 Node NaChannel_AIS Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
-  float [] h;
-  float [] g;
-  float [] gbar;
-  float [] hrv;
-  float [] trc;
+  dyn_var_t [] h;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
+  dyn_var_t [] hrv;
+  dyn_var_t [] trc;
 
-  float []* V;
+  dyn_var_t []* V;
 
   BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
 
   Shared {
-    float gbar_0;
-    float gbar_AIS;
-    float hrv_0;
-    float hrv_AIS;
-    float trc_0;
-    float trc_AIS;
-    float d_AIS;
+    dyn_var_t gbar_0;
+    dyn_var_t gbar_AIS;
+    dyn_var_t hrv_0;
+    dyn_var_t hrv_AIS;
+    dyn_var_t trc_0;
+    dyn_var_t trc_AIS;
+    dyn_var_t d_AIS;
 
-    float* Na_IC;
-    float* Na_EC;
-    float* deltaT;
-    float* T;
-    float [] E_Na;   
+    dyn_var_t* Na_IC;
+    dyn_var_t* Na_EC;
+    dyn_var_t* deltaT;
+    dyn_var_t* T;
+    dyn_var_t [] E_Na;   
     InitPhase computeE_Na;
   }
 

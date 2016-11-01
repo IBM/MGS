@@ -21,6 +21,8 @@
 #include "LensContext.h"
 #include "NodeSet.h"
 #include "TissueElement.h"
+#include "NodeDescriptor.h"
+#include "Grid.h"
 #include <memory>
 
 class Grid;

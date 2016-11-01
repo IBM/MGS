@@ -19,16 +19,38 @@
 #include "Lens.h"
 #include "CG_HodgkinHuxleyVoltageJunction.h"
 #include "rndm.h"
+#include "MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
 
 class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
 {
-   public:
-      void initializeJunction(RNG& rng);
-      void predictJunction(RNG& rng);
-      void correctJunction(RNG& rng);
-      virtual bool checkSite(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
-      virtual bool confirmUniqueDeltaT(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
-      virtual ~HodgkinHuxleyVoltageJunction();
+  public:
+  void initializeJunction(RNG& rng);
+  void predictJunction(RNG& rng);
+  void correctJunction(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  virtual void updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
+#endif
+  virtual bool checkSite(
+      const String& CG_direction, const String& CG_component,
+      NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+      Constant* CG_constant,
+      CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset,
+      CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
+  virtual bool confirmUniqueDeltaT(
+      const String& CG_direction, const String& CG_component,
+      NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+      Constant* CG_constant,
+      CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset,
+      CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
+  virtual ~HodgkinHuxleyVoltageJunction();
+  // user-defined functions
+  // junction designed as 1-compartment always, there is no need for index
+  dyn_var_t getArea();
+	void printDebugHH(std::string phase="JUNCTION_CORRECT");
+	private:
+  static SegmentDescriptor _segmentDescriptor;
 };
 
 #endif

@@ -1,0 +1,47 @@
+
+#if STIMULUS_CASE == CASE_01 || \
+    STIMULUS_CASE == CASE_05 || \
+    STIMULUS_CASE == CASE_06
+#if STIMULUS_CASE == CASE_06
+#define timeDelay 100
+#else
+#define timeDelay 100
+#endif
+//NOTE: Unit of current injection is [pA]
+//NOTE: MSN requires long stimulation due to the long shunt in the first AP
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=270.0, duration=600, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=230.0, duration=1000, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=10, period=510, delay=timeDelay, last=500, inc=0>; //Larkum-Sakmann (1999)
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1200.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=600.0, duration=3.5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
+#endif
+ 
+#if STIMULUS_CASE == CASE_02
+//NOTE: Lakrum-Zhu-Sakmann (2001)  tested with decayTime=4*riseTime
+//      and riseTime = 2,5,10,50 ms accodingly at location 930um to soma at peak 2nA
+//          riseTime = 0.5ms                               750um to soma at peak 5nA
+//          riseTime = 10.ms                               750um to soma at peak 2nA
+//          riseTime = 3.2ms  (intermediate)
+// 0.5ms rise time, 5ms decay time Iinj = 0.5 nA
+// check EPSP there is 15mV 
+CurrentPulseGenerator shaftStimInj<pattern="dualexp", peak=500.0, duration=5, period=510, delay=50, last=500, inc=0, riseTime=0.5, decayTime=5.0>; //GOOD
+#endif
+
+#if STIMULUS_CASE == CASE_03 
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=510, delay=50, last=500, inc=0>; //GOOD
+#endif
+
+#if STIMULUS_CASE == CASE_04 || \
+    STIMULUS_CASE == CASE_05 || \
+    STIMULUS_CASE == CASE_06
+// stimulus a wide region at distal apical ends, i.e. many spines at distal
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=510, delay=50, last=500, inc=0>; //GOOD
+
+#endif
+
+//CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=100.0, duration=5, period=100, delay=10, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=20.0, duration=5, period=100, delay=10, last=500, inc=0>;
+ 
+//CurrentPulseGenerator synapseStimInj_0<pattern="periodic", peak=0.1, duration=1, delay=200, period=600, last=3600, inc=0>;
+//CurrentPulseGenerator currentStimInj_0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
+//CurrentPulseGenerator currentStimInj_1<pattern="periodic", peak=2000, duration=3, period=5000, delay=400, last=3600, inc=0>; 

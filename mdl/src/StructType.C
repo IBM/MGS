@@ -300,7 +300,8 @@ void StructType::generateFlatDemarshaller()
    demarshallMethodFB << TAB << TAB << TAB << "if (!done()) {\n";
    demarshallMethodFB << TAB << TAB << TAB << TAB << "int bytesRemaining = sizeof("+getTypeName()+"Data_LensReserved) - _offset;\n";
    demarshallMethodFB << TAB << TAB << TAB << TAB << "int toTransfer = (bytesRemaining<size)?bytesRemaining:size;\n";
-   demarshallMethodFB << TAB << TAB << TAB << TAB << "memcpy(_destination+_offset, buffer, toTransfer);\n";
+   //demarshallMethodFB << TAB << TAB << TAB << TAB << "memcpy(_destination+_offset, buffer, toTransfer);\n";
+   demarshallMethodFB << TAB << TAB << TAB << TAB << "std::copy(buffer, buffer + toTransfer,  _destination+_offset);\n";
    demarshallMethodFB << TAB << TAB << TAB << TAB << "_offset += toTransfer;\n";
    demarshallMethodFB << TAB << TAB << TAB << TAB << "retval = size - toTransfer;\n";
    demarshallMethodFB << TAB << TAB << TAB << "}\n";

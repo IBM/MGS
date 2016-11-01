@@ -153,23 +153,32 @@ std::string RegularConnection::getConnectionCode(
       psetName += OUTATTRPSETNAME;
    }
    std::string tab;   
+   std::string predicateString;   
    if (_predicate) {
       tab = TAB + TAB;
       os << TAB << "if (";
       if (_predicate) {
-	 os << _predicate->getName();
+       	 os << _predicate->getName();
+				 predicateString = (_predicate->getName());
+				 //predicateString = (_predicate->getPredicate1Name());
       }
       os << ") {\n";
+//      os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
    } else {
       tab = TAB;
+//      os << getCommonConnectionCode(tab, name);
    }
-   os << getCommonConnectionCode(tab, name);
-   if (_userFunctionCalls) {
-      std::vector<UserFunctionCall*>::const_iterator it, 
-	 end = _userFunctionCalls->end();
-      for (it = _userFunctionCalls->begin();  it != end; ++it) {
-	 os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
-      }
+	 //os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
+	 os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicateString);
+	 if (_userFunctionCalls) {
+     os << tab <<  "if (castMatchLocal) { \n";
+     std::vector<UserFunctionCall*>::const_iterator it, 
+       end = _userFunctionCalls->end();
+     for (it = _userFunctionCalls->begin();  it != end; ++it) {
+       //os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
+       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
+     }
+     os << tab << "}; \n";
    }
    if (_predicate) {
       os << TAB << "}\n";      

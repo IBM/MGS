@@ -4,23 +4,24 @@
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
+#include "../../nti/include/MaxComputeOrder.h"
 
 Node ChannelHayHCN Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer {
-  float [] m;
-  float [] g;
-  float [] gbar;
+  dyn_var_t [] m;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
 
-  float [] gbar_dists;
-  float [] gbar_values;
+  dyn_var_t [] gbar_dists;
+  dyn_var_t [] gbar_values;
 
-  float []* V;
+  dyn_var_t []* V;
 
   BranchDataStruct* branchData; 
   DimensionStruct* []* dimensions;
 
   Shared {
-    float* deltaT;
-    float [] E_h;
+    dyn_var_t* deltaT;
+    dyn_var_t [] E_h;
   }
 
   RuntimePhase update;

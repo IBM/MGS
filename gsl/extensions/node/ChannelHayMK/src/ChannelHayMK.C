@@ -20,6 +20,8 @@
 
 #define SMALL 1.0E-6
 
+// Muscarinic-activated K+ outward current
+//
 #define AMC 0.0033
 #define AMV 35.0
 #define AMD 0.1

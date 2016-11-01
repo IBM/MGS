@@ -1,0 +1,79 @@
+   polyConnect(timeStep, voltageDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0>), voltageDisplay, <>, <>);
+
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, calciumSomaDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0>), calciumSomaDisplay, <>, <>);
+#endif
+
+#if defined(SIMULATE_CAER)
+   polyConnect(timeStep, calciumSomaERDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="CalciumER", BRANCHORDER=0>), calciumSomaERDisplay, <>, <>);
+#endif
+
+/*
+	TissueSite synapseSite_0( -41.813, 175.470, -0.645, 7.0 );
+	polyConnect(timeStep, synapseVoltageDisplay0, <>, <>);
+	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), synapseVoltageDisplay0, <>, <site=synapseSite_0>);
+#if defined(SIMULATE_CACYTO)
+	polyConnect(timeStep, synapseCalciumDisplay0, <>, <>);
+	polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), synapseCalciumDisplay0, <>, <site=synapseSite_0>);
+#endif
+
+*/
+
+{{#inputs}}
+   {{#synapse_include}}
+   TissueSite synapseSite_{{name}}( {{siteX}}, {{ siteY}}, {{siteZ}}, {{siteR}} );
+   
+   polyConnect(timeStep, voltageDisplay_synapse_{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, calciumDisplay_synapse_{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), calciumDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
+#endif
+   
+   {{/synapse_include}}
+   {{#spine_include}}
+   polyConnect(timeStep, voltageDisplay_spine_{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{spine_index}}>), voltageDisplay_spine_{{name}}, <>, <>);
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, calciumDisplay_spine_{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{spine_index}}>), calciumDisplay_spine_{{name}}, <>, <>);
+#endif
+
+   {{/spine_include}}
+   {{#bouton_include}}
+   polyConnect(timeStep, voltageDisplay_bouton_{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), voltageDisplay_bouton_{{name}}, <>, <>);
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, calciumDisplay_bouton_{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), calciumDisplay_bouton_{{name}}, <>, <>);
+#endif
+
+   {{/bouton_include}}
+{{/inputs}}
+
+{{#inputsInhibitory}}
+   {{#synapse_include}}
+   TissueSite synapseSite_{{name}}( {{siteX}}, {{ siteY}}, {{siteZ}}, {{siteR}} );
+
+   polyConnect(timeStep, voltageDisplay_synapse_{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, calciumDisplay_synapse_{{name}}, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=0>), calciumDisplay_synapse_{{name}}, <>, <site=synapseSite_{{name}}>);
+#endif
+  
+   {{/synapse_include}}
+   {{#bouton_include}}
+   polyConnect(timeStep, voltageDisplay_bouton_{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), voltageDisplay_bouton_{{name}}, <>, <>);
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, calciumDisplay_bouton_{{name}}, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX={{bouton_index}}>), calciumDisplay_bouton_{{name}}, <>, <>);
+#endif
+
+   {{/bouton_include}}
+{{/inputsInhibitory}}
+

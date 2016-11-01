@@ -175,7 +175,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
    } else if (CG_c->sim->isSimulatePass()) {
      lc=&_lensConnector;
    } else {
-     std::cerr<<"Error, PolyConnectFunctor!"<<std::endl;
+     std::cerr<<"Error, PolyConnectorFunctor: no connection context set!"<<std::endl;
      exit(0);
    }
 

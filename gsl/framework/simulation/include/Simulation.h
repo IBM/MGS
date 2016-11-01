@@ -31,7 +31,7 @@
 #ifdef WITH_XLC
 #include <lib_lock.h>
 #endif
-#endif //  DISABLE_PTHREADS
+#endif  //  DISABLE_PTHREADS
 
 #include "SysTimer.h"
 #include "Publishable.h"
@@ -40,7 +40,7 @@
 #include <deque>
 #include <memory>
 #include <vector>
-#include <cstring>
+//#include <cstring>
 #include <cstdlib>
 
 #include "TypeManager.h"
@@ -63,7 +63,7 @@
 #include "OutputStream.h"
 #include "IIterator.h"
 #include <mpi.h>
-#endif // HAVE_MPI
+#endif  // HAVE_MPI
 
 #include <limits.h>
 
@@ -76,7 +76,7 @@ class EdgeCompCategoryBase;
 
 #ifndef DISABLE_PTHREADS
 class ThreadPool;
-#endif // DISABLE_PTHREADS
+#endif  // DISABLE_PTHREADS
 
 class Pauser;
 class Stopper;
@@ -99,405 +99,337 @@ class ISender;
 class IReceiver;
 #endif
 
-class Simulation : public Publishable
-{
-   friend class SimulationPublisher;
-   friend class ISender;
-   friend class IReceiver;
+class Simulation : public Publishable {
+  friend class SimulationPublisher;
+  friend class ISender;
+  friend class IReceiver;
 
-   public:
-      enum StateType {_UNUSED, _RUN, _STOP, _PAUSE, _TERMINATE};
-      enum PassType {_GRANULE_MAPPER_PASS, _COST_AGGREGATION_PASS, _SIMULATE_PASS};
+  public:
+  enum StateType {
+    _UNUSED,
+    _RUN,
+    _STOP,
+    _PAUSE,
+    _TERMINATE
+  };
+  enum PassType {
+    _GRANULE_MAPPER_PASS,
+    _COST_AGGREGATION_PASS,
+    _SIMULATE_PASS
+  };
 
 #ifndef DISABLE_PTHREADS
-      Simulation(int N, bool bindThreadsToCpus, int numWorkUnits);
+  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits);
 #else
-      Simulation(int numWorkUnits);
-#endif // DISABLE_PTHREADS
+  Simulation(int numWorkUnits);
+#endif  // DISABLE_PTHREADS
 
 #ifdef HAVE_MPI
-      OutputStream* getOutputStream(int pid);
-      bool P2P() {return _P2P;}
-      bool AllToAllW() {return _alltoallw;}
-      bool AllToAllV() {return _alltoallv;}
+  OutputStream* getOutputStream(int pid);
+  bool P2P() { return _P2P; }
+  bool AllToAllW() { return _alltoallw; }
+  bool AllToAllV() { return _alltoallv; }
 #endif
 
-      // Functions due to being publishable
-      virtual const char* getServiceName(void* data) const;
-      virtual const char* getServiceDescription(void* data) const;
-      Publisher* getPublisher() {
-	 return _publisher;
-      }
-      
-      // Compcategory entry point
-      void registerCompCat(CompCategory* c);
-      void registerDistCompCat(DistributableCompCategoryBase* c);
-      void registerEdgeCompCat(EdgeCompCategoryBase* c);
+  // Functions due to being publishable
+  virtual const char* getServiceName(void* data) const;
+  virtual const char* getServiceDescription(void* data) const;
+  Publisher* getPublisher() { return _publisher; }
 
-      // Type loaders or retrievers
-      TriggerType* getTriggerType(const std::string& typeName) {
-	 return _triggerRegistry->getType(*this, *_dependencyParser, typeName);
-      }
-      PublisherRegistry* getPublisherRegistry() {
-	 return _publisherRegistry;
-      }
-      GranuleMapperType* getGranuleMapperType(const std::string& typeName) {
-	 return _granuleMapperRegistry->getType(
-	    *this, *_dependencyParser, typeName);
-      }
-      int getNumberOfGranuleMappers() {return _granuleMappers.size();}
-      GranuleMapper* getGranuleMapper(unsigned gmIndex) {
-	return _granuleMappers[gmIndex];
-      }
-      FunctorType* getFunctorType(const std::string& typeName) {
-	 return _functorRegistry->getType(
-	    *this, *_dependencyParser, typeName);
-      }
-      StructType* getStructType(const std::string& typeName) {
-	 return _structRegistry->getType(
-	    *this, *_dependencyParser, typeName);
-      }
-      ConstantType* getConstantType(const std::string& typeName) {
-	 return _constantRegistry->getType(
-	    *this, *_dependencyParser, typeName);
-      }
-      VariableType* getVariableType(const std::string& typeName) {
-	 return _variableRegistry->getType(
-	    *this, *_dependencyParser, typeName);
-      }
-      NodeType* getNodeType(const std::string& typeName, 
-				   const NDPairList& ndpList) {
-	 return _ntm->getType(*this, *_dependencyParser, typeName, ndpList);
-      }
-      EdgeType* getEdgeType(const std::string& typeName, 
-				   const NDPairList& ndpList) {
-	 return _etm->getType(*this, *_dependencyParser, typeName, ndpList);
-      }
+  // Compcategory entry point
+  void registerCompCat(CompCategory* c);
+  void registerDistCompCat(DistributableCompCategoryBase* c);
+  void registerEdgeCompCat(EdgeCompCategoryBase* c);
 
-      DependencyParser* getDependencyParser() {
-	 return _dependencyParser;
-      }
-      Pauser* getPauser() {
-	 return _pauser;
-      }
-      Stopper* getStopper() {
-	 return _stopper;
-      }
-      Repertoire* getRootRepertoire() {
-	 return _root;
-      }
-      UserInterface* getUI() {
-	 return _ui;
-      }
-      TriggeredPauseAction* getTriggeredPauseAction() {
-	 return _triggeredPauseAction;
-      }
-      const std::vector<InstanceFactoryRegistry*>& 
-      getInstanceFactoryRegistries() {
-	 return _instanceFactoryRegistries;
-      }
-      int getIteration() {
-	 return _iteration;
-      }
+  // Type loaders or retrievers
+  TriggerType* getTriggerType(const std::string& typeName) {
+    return _triggerRegistry->getType(*this, *_dependencyParser, typeName);
+  }
+  PublisherRegistry* getPublisherRegistry() { return _publisherRegistry; }
+  GranuleMapperType* getGranuleMapperType(const std::string& typeName) {
+    return _granuleMapperRegistry->getType(*this, *_dependencyParser, typeName);
+  }
+  int getNumberOfGranuleMappers() { return _granuleMappers.size(); }
+  GranuleMapper* getGranuleMapper(unsigned gmIndex) {
+    return _granuleMappers[gmIndex];
+  }
+  FunctorType* getFunctorType(const std::string& typeName) {
+    return _functorRegistry->getType(*this, *_dependencyParser, typeName);
+  }
+  StructType* getStructType(const std::string& typeName) {
+    return _structRegistry->getType(*this, *_dependencyParser, typeName);
+  }
+  ConstantType* getConstantType(const std::string& typeName) {
+    return _constantRegistry->getType(*this, *_dependencyParser, typeName);
+  }
+  VariableType* getVariableType(const std::string& typeName) {
+    return _variableRegistry->getType(*this, *_dependencyParser, typeName);
+  }
+  NodeType* getNodeType(const std::string& typeName,
+                        const NDPairList& ndpList) {
+    return _ntm->getType(*this, *_dependencyParser, typeName, ndpList);
+  }
+  EdgeType* getEdgeType(const std::string& typeName,
+                        const NDPairList& ndpList) {
+    return _etm->getType(*this, *_dependencyParser, typeName, ndpList);
+  }
 
-      std::vector<std::string> const & getPhaseNames() {
-	 return _phaseNames;
-      }
+  DependencyParser* getDependencyParser() { return _dependencyParser; }
+  Pauser* getPauser() { return _pauser; }
+  Stopper* getStopper() { return _stopper; }
+  Repertoire* getRootRepertoire() { return _root; }
+  UserInterface* getUI() { return _ui; }
+  TriggeredPauseAction* getTriggeredPauseAction() {
+    return _triggeredPauseAction;
+  }
+  const std::vector<InstanceFactoryRegistry*>& getInstanceFactoryRegistries() {
+    return _instanceFactoryRegistries;
+  }
+  int getIteration() { return _iteration; }
 
-      int getNumWorkUnits() {
-         return _numWorkUnits;
-      }
+  std::vector<std::string> const& getPhaseNames() { return _phaseNames; }
 
-      int getNumGranules() {
-         return _numGranules;
-      }
+  int getNumWorkUnits() { return _numWorkUnits; }
 
-      float getTime();
-      RNG& getWorkUnitRandomSeedGenerator() {return _rng;}
-      RNG& getSharedWorkUnitRandomSeedGenerator() {return _rngShared;}
+  int getNumGranules() { return _numGranules; }
+
+  float getTime();
+  RNG& getWorkUnitRandomSeedGenerator() { return _rng; }
+  RNG& getSharedWorkUnitRandomSeedGenerator() { return _rngShared; }
 
 #ifndef DISABLE_PTHREADS
-      int getNumCPUs() {
-	 return _numCpus;
-      }
-      int getNumThreads() {
-	 return _numThreads;
-      }
+  int getNumCPUs() { return _numCpus; }
+  int getNumThreads() { return _numThreads; }
 #else
-      int getNumCPUs() {
-         return 1;
-      }
-      int getNumThreads() {
-         return 1;
-      }
-#endif // DISABLE_PTHREADS
+  int getNumCPUs() { return 1; }
+  int getNumThreads() { return 1; }
+#endif  // DISABLE_PTHREADS
 
-      bool getPauserStatus() {
-	 return _pauserStatus;
-      }
-      std::string getName() {
-	 return "Simulation";
-      }
-      bool isEdgeRelationalDataEnabled() {
-	 return _erd;
-      }
+  bool getPauserStatus() { return _pauserStatus; }
+  std::string getName() { return "Simulation"; }
+  bool isEdgeRelationalDataEnabled() { return _erd; }
 
-      // Two pass related functions [begin|sgc]
+  // Two pass related functions [begin|sgc]
 
-      PassType getPassType() const {
-	 return _passType;
-      }
-      void setCostAggregationPass() {
-	 _passType = _COST_AGGREGATION_PASS;
-      }
-      void setSimulatePass() {
-	 _passType = _SIMULATE_PASS;
-      }
-      bool isGranuleMapperPass() const {
-	return (_passType == _GRANULE_MAPPER_PASS);
-      }
-      bool isCostAggregationPass() const {
-	return (_passType == _COST_AGGREGATION_PASS) ;
-      }
-      bool isSimulatePass() const {
-	return (_passType == _SIMULATE_PASS);
-      }
-      unsigned getGranuleMapperCount() {
-	 return _granuleMapperCount;
-      }
-      void incrementGranuleMapperCount() {
-	 _granuleMapperCount++;
-      }
+  PassType getPassType() const { return _passType; }
+  void setCostAggregationPass() { _passType = _COST_AGGREGATION_PASS; }
+  void setSimulatePass() { _passType = _SIMULATE_PASS; }
+  bool isGranuleMapperPass() const {
+    return (_passType == _GRANULE_MAPPER_PASS);
+  }
+  bool isCostAggregationPass() const {
+    return (_passType == _COST_AGGREGATION_PASS);
+  }
+  bool isSimulatePass() const { return (_passType == _SIMULATE_PASS); }
+  unsigned getGranuleMapperCount() { return _granuleMapperCount; }
+  void incrementGranuleMapperCount() { _granuleMapperCount++; }
 
-      void incrementGranuleMapperCountOnceForVariable() {
-         if (!_variableGranuleMapperAlreadyAdded) {
-            _granuleMapperCount++;
-            _variableGranuleMapperAlreadyAdded = true;
-         }
-      }
-      void setGraph();
-      void setPartitioner(Partitioner* partitioner) {_partitioner=partitioner;}
-      Partitioner* getPartitioner() {return _partitioner;}
-      
-      // This function resets the effects of parsing the network specification
-      // language tree. It is intended to be used by the two pass system.
-      void resetInternals();
-      
-      void addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper); 
+  void incrementGranuleMapperCountOnceForVariable() {
+    if (!_variableGranuleMapperAlreadyAdded) {
+      _granuleMapperCount++;
+      _variableGranuleMapperAlreadyAdded = true;
+    }
+  }
+  void setGraph();
+  void setPartitioner(Partitioner* partitioner) { _partitioner = partitioner; }
+  Partitioner* getPartitioner() { return _partitioner; }
 
+  // This function resets the effects of parsing the network specification
+  // language tree. It is intended to be used by the two pass system.
+  void resetInternals();
 
-      void setVariableGranuleMapperIndex(unsigned idx) {
-	 _variableGranuleMapperIndex = idx;
-      }
+  void addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper);
 
-      GranuleMapper* getVariableGranuleMapper() {
-	 return _granuleMappers[_variableGranuleMapperIndex];
-      }
+  void setVariableGranuleMapperIndex(unsigned idx) {
+    _variableGranuleMapperIndex = idx;
+  }
 
-      bool hasVariableGranuleMapper() {
-	 return (_variableGranuleMapperIndex != UINT_MAX);
-      }
+  GranuleMapper* getVariableGranuleMapper() {
+    return _granuleMappers[_variableGranuleMapperIndex];
+  }
 
-      unsigned incrementCurrentVariableId() {
-	return _variableGlobalId++;
-      }
+  bool hasVariableGranuleMapper() {
+    return (_variableGranuleMapperIndex != UINT_MAX);
+  }
 
-      Granule* getGranule(const NodeDescriptor& node);
-      Granule* getGranule(const VariableDescriptor& vd);
-      Granule* getGranule(const unsigned granuleId);
-      void getGranules(NodeSet& nodeSet, GranuleSet& granuleSet);
+  unsigned incrementCurrentVariableId() { return _variableGlobalId++; }
 
-      void addUnseparableGranuleSet(const GranuleSet& granules);
+  Granule* getGranule(const NodeDescriptor& node);
+  Granule* getGranule(const VariableDescriptor& vd);
+  Granule* getGranule(const unsigned granuleId);
+  void getGranules(NodeSet& nodeSet, GranuleSet& granuleSet);
 
-      void setSeparationGranules();
+  void addUnseparableGranuleSet(const GranuleSet& granules);
 
-      // Two pass related functions [end|sgc]
+  void setSeparationGranules();
 
-      bool isFinished() {
-	 return (_state == _STOP); 
-      };
+  // Two pass related functions [end|sgc]
 
-      // Simulation driving functions
-      bool start();
-      void pause();
-      void resume();
-      void stop();
-      void run();
+  bool isFinished() {
+    return (_state == _STOP);
+  };
 
-      void setUI(UserInterface* ui) {
-	 _ui = ui;
-      }
-      void disableEdgeRelationalData() {
-	 _erd=false;
-      }
-      void setPauserStatus(bool pauserStatus) {
-	 _pauserStatus = pauserStatus;
-      }
-      void addSocket(int fd);
-      void addInitPhase(const std::string& name);
-      void addRuntimePhase(const std::string& name);
-      void addLoadPhase(const std::string& name);
-      void addFinalPhase(const std::string& name);
-      
-      void addWorkUnits(const std::string& name, 
-			std::deque<WorkUnit*>& workUnits);
-      void addTrigger(const std::string& name, Trigger* trigger);
+  // Simulation driving functions
+  bool start();
+  void pause();
+  void resume();
+  void stop();
+  void run();
 
-      std::string findLaterPhase(const std::string& first, 
-				 const std::string& second);
+  void setUI(UserInterface* ui) { _ui = ui; }
+  void disableEdgeRelationalData() { _erd = false; }
+  void setPauserStatus(bool pauserStatus) { _pauserStatus = pauserStatus; }
+  void addSocket(int fd);
+  void addInitPhase(const std::string& name);
+  void addRuntimePhase(const std::string& name);
+  void addLoadPhase(const std::string& name);
+  void addFinalPhase(const std::string& name);
 
-      std::string getFinalRuntimePhaseName();
-      void detachUserInterface() {
-	 _detachUserInterface = true;
-      }
-      virtual ~Simulation();
+  void addWorkUnits(const std::string& name, std::deque<WorkUnit*>& workUnits);
+  void addTrigger(const std::string& name, Trigger* trigger);
 
-      int getRank() const {
-	 return _rank;
-      }
+  std::string findLaterPhase(const std::string& first,
+                             const std::string& second);
 
-      int getNumProcesses() const {
-	 return _nump;
-      }
-  
-      const std::string & getPhaseName() const{
-         return _phaseName;
-      }
+  std::string getFinalRuntimePhaseName();
+  void detachUserInterface() { _detachUserInterface = true; }
+  virtual ~Simulation();
 
-      const std::list<CompCategory*>& getCatList() const {
-         return _catList;
-      }
+  int getRank() const { return _rank; }
 
-      const std::list<DistributableCompCategoryBase*>& getDistCatList() const {
-         return _distCatList;
-      }
+  int getNumProcesses() const { return _nump; }
 
+  const std::string& getPhaseName() const { return _phaseName; }
 
-      const std::list<EdgeCompCategoryBase*>& getEdgeCatList() const {
-         return _edgeCatList;
-      }
+  const std::list<CompCategory*>& getCatList() const { return _catList; }
 
-   private:
-      StateType _state;
-      unsigned _iteration;
-      TypeManager<NodeType>* _ntm;
-      TypeManager<EdgeType>* _etm;
-      SysTimer _simTimer;
-      float _mark;
-      Repertoire* _root;
+  const std::list<DistributableCompCategoryBase*>& getDistCatList() const {
+    return _distCatList;
+  }
+
+  const std::list<EdgeCompCategoryBase*>& getEdgeCatList() const {
+    return _edgeCatList;
+  }
+
+  private:
+  StateType _state;
+  unsigned _iteration;
+  TypeManager<NodeType>* _ntm;
+  TypeManager<EdgeType>* _etm;
+  SysTimer _simTimer;
+  float _mark;
+  Repertoire* _root;
 
 #ifndef DISABLE_PTHREADS
-      // mutex to protect changes to 'state' variable
-      pthread_mutex_t _stateMutex;
-      pthread_mutex_t _timerMutex;
-      pthread_mutex_t _socketsMutex;
-#endif // DISABLE_PTHREADS
+  // mutex to protect changes to 'state' variable
+  pthread_mutex_t _stateMutex;
+  pthread_mutex_t _timerMutex;
+  pthread_mutex_t _socketsMutex;
+#endif  // DISABLE_PTHREADS
 
-      TypeRegistry<TriggerType>* _triggerRegistry;
-      PublisherRegistry* _publisherRegistry;
-      TypeRegistry<GranuleMapperType>* _granuleMapperRegistry;
-      TypeRegistry<FunctorType>* _functorRegistry;
-      TypeRegistry<StructType>* _structRegistry;
-      TypeRegistry<ConstantType>* _constantRegistry;
-      TypeRegistry<VariableType>* _variableRegistry;
-      UserInterface* _ui;
-      TriggeredPauseAction* _triggeredPauseAction;
+  TypeRegistry<TriggerType>* _triggerRegistry;
+  PublisherRegistry* _publisherRegistry;
+  TypeRegistry<GranuleMapperType>* _granuleMapperRegistry;
+  TypeRegistry<FunctorType>* _functorRegistry;
+  TypeRegistry<StructType>* _structRegistry;
+  TypeRegistry<ConstantType>* _constantRegistry;
+  TypeRegistry<VariableType>* _variableRegistry;
+  UserInterface* _ui;
+  TriggeredPauseAction* _triggeredPauseAction;
 
 #ifndef DISABLE_PTHREADS
-      int _numThreads;
-      ThreadPool *_threadPool;
-      int _numCpus;
-#endif // DISABLE_PTHREADS
+  int _numThreads;
+  ThreadPool* _threadPool;
+  int _numCpus;
+#endif  // DISABLE_PTHREADS
 
-      bool _pauserStatus;
-      Pauser* _pauser;
-      Stopper* _stopper;
-      bool _erd;
+  bool _pauserStatus;
+  Pauser* _pauser;
+  Stopper* _stopper;
+  bool _erd;
 
-      // Two pass related members [begin|sgc]
-      
-      PassType _passType;
-      // It is important to have this separate and not use the arrays size
-      // because, this is going to be resetted for the second pass
-      unsigned _granuleMapperCount;
+  // Two pass related members [begin|sgc]
 
-      unsigned _variableGranuleMapperIndex;
-      unsigned _variableGlobalId;
-      bool _variableGranuleMapperAlreadyAdded;
+  PassType _passType;
+  // It is important to have this separate and not use the arrays size
+  // because, this is going to be resetted for the second pass
+  unsigned _granuleMapperCount;
 
-      // This is used to assign a new id to each granule. This is done 
-      // because the smaller id is used in the algorithm that determines
-      // the graph id after dependency resolution.
-      unsigned _globalGranuleId;
+  unsigned _variableGranuleMapperIndex;
+  unsigned _variableGlobalId;
+  bool _variableGranuleMapperAlreadyAdded;
 
-      // Graph size shows how many vertices will be in the graph, this might
-      // be different from the number of granules due to the dependency 
-      // constraints on nodesets.
-      unsigned _graphSize;
+  // This is used to assign a new id to each granule. This is done
+  // because the smaller id is used in the algorithm that determines
+  // the graph id after dependency resolution.
+  unsigned _globalGranuleId;
 
-      // The graph is used to figure out the memory space to which granules belong. 
-      Graph* _graph;
-      
-      std::vector<GranuleMapper*> _granuleMappers;
+  // Graph size shows how many vertices will be in the graph, this might
+  // be different from the number of granules due to the dependency
+  // constraints on nodesets.
+  unsigned _graphSize;
 
-      std::list<SeparationConstraint*> _separationConstraints;
+  // The graph is used to figure out the memory space to which granules belong.
+  Graph* _graph;
 
-      // Can be used like this, only because it will be resized at the 
-      // beginning, we couldn't do this if something was added later on.
-      std::vector<Granule> _separationGranules;
+  std::vector<GranuleMapper*> _granuleMappers;
 
-      // Two pass related members [end|sgc]
+  std::list<SeparationConstraint*> _separationConstraints;
 
-      // Publisher is constructed in Simulation constructor and ownership 
-      // handed off to PublisherRegistry
-      Publisher* _publisher;
-      // The Dynamic (shared object) loader
-      DependencyParser* _dependencyParser;
-      bool _detachUserInterface;
-      
+  // Can be used like this, only because it will be resized at the
+  // beginning, we couldn't do this if something was added later on.
+  std::vector<Granule> _separationGranules;
 
-      std::vector<InstanceFactoryRegistry*> _instanceFactoryRegistries;
-      std::list<CompCategory*> _catList;
-      std::list<DistributableCompCategoryBase*> _distCatList;
-      std::list<EdgeCompCategoryBase*> _edgeCatList;
-      std::list<int> _socketsInUse;
-      std::deque<PhaseElement> _initPhases;
-      std::deque<PhaseElement> _runtimePhases;
-      std::deque<PhaseElement> _loadPhases;
-      std::deque<PhaseElement> _finalPhases;
-      std::map<std::string, bool> _communicatingPhases;
-      int _rank;
-      int _nump;
-      std::string _phaseName;
-      
+  // Two pass related members [end|sgc]
+
+  // Publisher is constructed in Simulation constructor and ownership
+  // handed off to PublisherRegistry
+  Publisher* _publisher;
+  // The Dynamic (shared object) loader
+  DependencyParser* _dependencyParser;
+  bool _detachUserInterface;
+
+  std::vector<InstanceFactoryRegistry*> _instanceFactoryRegistries;
+  std::list<CompCategory*> _catList;
+  std::list<DistributableCompCategoryBase*> _distCatList;
+  std::list<EdgeCompCategoryBase*> _edgeCatList;
+  std::list<int> _socketsInUse;
+  std::deque<PhaseElement> _initPhases;
+  std::deque<PhaseElement> _runtimePhases;
+  std::deque<PhaseElement> _loadPhases;
+  std::deque<PhaseElement> _finalPhases;
+  std::map<std::string, bool> _communicatingPhases;
+  int _rank;
+  int _nump;
+  std::string _phaseName;
 
 #ifdef HAVE_MPI
-      std::vector<OutputStream*> _outputStreams;
-      std::map<int, int> _pidsVsOrders;
-      static int P2P_TAG;            
+  std::vector<OutputStream*> _outputStreams;
+  std::map<int, int> _pidsVsOrders;
+  static int P2P_TAG;
 
-      IIterator <ISender> *_iSenders;
-      IIterator <IReceiver> *_iReceivers;
-      CommunicationEngine* _commEngine;
+  IIterator<ISender>* _iSenders;
+  IIterator<IReceiver>* _iReceivers;
+  CommunicationEngine* _commEngine;
 
-      bool _P2P;
-      bool _alltoallw;
-      bool _alltoallv;
+  bool _P2P;
+  bool _alltoallw;
+  bool _alltoallv;
 
-#endif // HAVE_MPI
-      std::vector<std::string> _phaseNames;
+#endif  // HAVE_MPI
+  std::vector<std::string> _phaseNames;
 
-      void pauseHandler();
-      void resumeHandler();
-      void stopHandler();
-      void updateAll();
-      inline void runPhases(std::deque<PhaseElement>& phases);
-      PhaseElement& getPhaseElement(const std::string& name);
-      RNG _rng;
-      RNG _rngShared;
-      int _numWorkUnits;
-      int _numGranules;
-      Partitioner* _partitioner;
+  void pauseHandler();
+  void resumeHandler();
+  void stopHandler();
+  void updateAll();
+  inline void runPhases(std::deque<PhaseElement>& phases);
+  PhaseElement& getPhaseElement(const std::string& name);
+  RNG _rng;
+  RNG _rngShared;
+  int _numWorkUnits;
+  int _numGranules;
+  Partitioner* _partitioner;
 };
 
 #endif

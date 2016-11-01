@@ -18,10 +18,9 @@
 #include "Copyright.h"
 
 #include "Functor.h"
-class LayoutFunctor : public Functor
-{
-   public:
-      virtual  const char * getCategory();
-      static const char* _category;
+class LayoutFunctor : public Functor {
+  public:
+  virtual const std::string& getCategory() const;
+  static const std::string _category;
 };
 #endif

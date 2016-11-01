@@ -23,25 +23,27 @@
 class DataItem;
 class LensContext;
 
-class Functor
-{
-   public:
-      Functor();
-      virtual const char * getCategory();
-      void initialize(LensContext *c, const std::vector<DataItem*>& args);
-      void execute(LensContext *c, const std::vector<DataItem*>& args
-		   , std::auto_ptr<DataItem>& rvalue);
-      Functor(const Functor& rv) {};
-      Functor& operator=(const Functor& rv) {return *this;};
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const=0;
-      virtual ~Functor();
-   protected:
-      virtual void doInitialize(LensContext *c, 
-				const std::vector<DataItem*>& args)=0;
-      virtual void doExecute(LensContext *c, 
-			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue)=0;
-   public:
-      static const char* _category;
+class Functor {
+  public:
+  Functor();
+  virtual const std::string& getCategory() const;
+  void initialize(LensContext* c, const std::vector<DataItem*>& args);
+  void execute(LensContext* c, const std::vector<DataItem*>& args,
+               std::auto_ptr<DataItem>& rvalue);
+  Functor(const Functor& rv) {};
+  Functor& operator=(const Functor& rv) {
+    return *this;
+  };
+  virtual void duplicate(std::auto_ptr<Functor>& fap) const = 0;
+  virtual ~Functor();
+
+  protected:
+  virtual void doInitialize(LensContext* c,
+                            const std::vector<DataItem*>& args) = 0;
+  virtual void doExecute(LensContext* c, const std::vector<DataItem*>& args,
+                         std::auto_ptr<DataItem>& rvalue) = 0;
+
+  public:
+  static const std::string _category;
 };
 #endif

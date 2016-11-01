@@ -52,6 +52,12 @@ class Predicate {
       std::string getName() const;
       void setName(const std::string& name);
       void operate();
+			std::string getPredicate1Name(){
+			return	_predicate1->getName();
+			};
+			std::string getPredicate2Name(){
+			return	_predicate2->getName();
+			};
       
    protected:
       std::string _type;

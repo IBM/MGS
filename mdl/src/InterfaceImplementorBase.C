@@ -785,6 +785,39 @@ void InterfaceImplementorBase::addExtraOptionalServiceHeaders(
 std::string InterfaceImplementorBase::getInstanceServices(
    const std::string& tab) const
 {
+	//TUAN: IDEA - currently the body is generated as a sequence of 'if-statement'
+	//        which requires so many 'conditional-test' while only once is 'true'
+	// E.g.:CG_HodgkinHuxleyVoltageJunctionPublisher.C
+	/*
+   Service* rval = 0;
+   if (serviceRequested == "dimensions") {
+      rval = new GenericService< ShallowArray< DimensionStruct* > >(_data, &(_data->dimensions));
+      _services.push_back(rval);
+      return rval;
+   }
+   if (serviceRequested == "area") {
+      rval = new GenericService< float >(_data, &(_data->area));
+      _services.push_back(rval);
+      return rval;
+   }
+   if (serviceRequested == "gAxial") {
+      rval = new GenericService< ShallowArray< float > >(_data, &(_data->gAxial));
+      _services.push_back(rval);
+      return rval;
+   }
+   if (serviceRequested == "Vcur") {
+      rval = new GenericService< float >(_data, &(_data->Vcur));
+      _services.push_back(rval);
+      return rval;
+   }
+   if (serviceRequested == "Vnew") {
+      rval = new GenericService< ShallowArray< float > >(_data, &(_data->Vnew));
+      _services.push_back(rval);
+      return rval;
+   }
+	*/
+	// Can we automate the code generation using
+	// 'dictionary' or 'switch statement' here?
    return createServices(_instances, tab);
 }
 
@@ -1034,6 +1067,8 @@ std::string InterfaceImplementorBase::getAddConnectionFunctionBody(
 					   componentName, psetType, psetName);
    os << TAB << "checkAndAdd" << connectionAdd << "(" 
       << componentName << ");\n";
+	 if (connectionAdd == "PreNode" )
+   	 os << TAB << "assert(noPredicateMatch || matchPredicateAndCast);\n";
    return os.str();
 }
 
