@@ -75,18 +75,6 @@ std::auto_ptr<NodeSet> TissueProbeFunctor::userExecute(LensContext* CG_c)
   return rval;
 }
 
-TissueProbeFunctor::TissueProbeFunctor() 
-   : CG_TissueProbeFunctorBase(), _tissueFunctor(0), _grid(0)
-{
-}
-
-TissueProbeFunctor::TissueProbeFunctor(TissueProbeFunctor* tpf)
-  : CG_TissueProbeFunctorBase(), _tissueFunctor(tpf->_tissueFunctor), 
-    _grid(tpf->_grid), _nodeDescriptors(tpf->_nodeDescriptors)
-{
-}
-
-
 TissueProbeFunctor::~TissueProbeFunctor() 
 {
 }
@@ -95,17 +83,6 @@ TissueProbeFunctor::TissueProbeFunctor(TissueProbeFunctor* tpf)
   : CG_TissueProbeFunctorBase(), _tissueFunctor(tpf->_tissueFunctor), 
     _grid(tpf->_grid), _nodeDescriptors(tpf->_nodeDescriptors)
 {
-}
-
-
-void TissueProbeFunctor::duplicate(std::auto_ptr<TissueProbeFunctor>& dup) const
-{
-   dup.reset(new TissueProbeFunctor(*this));
-}
-
-void TissueProbeFunctor::duplicate(std::auto_ptr<Functor>& dup) const
-{
-   dup.reset(new TissueProbeFunctor(*this));
 }
 
 void TissueProbeFunctor::duplicate(std::auto_ptr<CG_TissueProbeFunctorBase>& dup) const

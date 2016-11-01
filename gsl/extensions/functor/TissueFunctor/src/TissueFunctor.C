@@ -2597,27 +2597,6 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
     element->setTissueFunctor(this);
     _MGSifyFunctor->duplicate(rval);
   }
-  else if (tissueElement=="ProbedLayout") {
-    NDPairList* ndpl=_params.get();
-    assert(ndpl);
-    assert(ndpl->size()>0);
-    NDPair* ndp=ndpl->back();
-    if (ndp->getName()!="PROBED") {
-      std::cerr<<"PROBED identifier must be specified in ProbedLayout!"<<std::endl;
-      exit(-1);
-    }
-
-    std::vector<NodeDescriptor*> nodeDescriptors;
-    Grid* grid = doProbe(CG_c, nodeDescriptors);
-
-    TissueElement* element=dynamic_cast<TissueElement*>(_layoutFunctor.get());
-    if (element==0) {
-      std::cerr<<"Functor passed to TissueFunctor as argument 4 is not a TissueElement!"<<std::endl;
-      exit(-1);
-    }
-    element->setTissueFunctor(this);
-    _layoutFunctor->duplicate(rval);
-  }
   else if (tissueElement=="Connect") {
     doConnector(CG_c);
   }
@@ -5822,7 +5801,6 @@ void TissueFunctor::doConnector(LensContext* lc)
 // NOTE: It is mainly used identify the data (to be recorded) 
 void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 {
-  Grid* rval=0;
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
   NDPairList::iterator ndpiter = _params->end(),
                        ndpend_reverse = _params->begin();
@@ -6067,7 +6045,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     ns = new NodeSet(layer->getGrid());
     ns->empty();
   }
-  return typeIdx;
+  rval.reset(ns);
 }
 Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors)
 {

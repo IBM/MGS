@@ -41,7 +41,7 @@ GNU_WARNING_FLAGS = "-Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align"
 LINUX_EXTRA_FLAGS = "-DLINUX"
 LINUX_SHARED_PFIX = "-shared -Wl,--export-dynamic -Wl,-soname,lib$(notdir $@)"
 LINUX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^)"
-LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic -I../nti"
+LINUX_FINAL_TARGET_FLAG = "-Wl,--export-dynamic"
 
 AIX_GNU_MINIMAL_TOC_FLAG = "-mminimal-toc"
 

@@ -54,7 +54,6 @@ public:
   double* getEndCoordinates() {return &_capsuleData._data[CAP_END_COORD];}
   Sphere& getSphere() {return _capsuleData._sphere;}
   void getEndSphere(Sphere& sphere);
-  int getEndSphereSurfaceArea();
   ComputeBranch* getBranch() {return _branch;}
   void setBranch(ComputeBranch* branch) {_branch=branch;}
   double getEndProp();

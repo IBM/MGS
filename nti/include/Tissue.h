@@ -74,6 +74,7 @@ class Tissue {
 
   void updateBranchRoots(int frontNumber);
   void updateFront(int frontNumber);
+  void resetSegments(std::vector<Segment>& segments, bool resampled);
   void writeSegmentCounts(FILE*, PosType bin_start_pos);
   void writeCoordinates(FILE*, PosType bin_start_pos);
   void generateBins(double*&, int*&, double*&, double*&, double*&);
@@ -151,3 +152,4 @@ class Tissue {
 };
 
 #endif
+

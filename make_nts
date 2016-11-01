@@ -383,7 +383,6 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       ./define functors.mdf  $REBUILD
       cd $NTSROOT/models
       ./define compartmental.mdf $REBUILD
->>>>>>> origin/msn-tuan-testnewidea
 
       cp Extensions.mk $LENSROOT/
       cd $NTSROOT

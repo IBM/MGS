@@ -130,6 +130,7 @@ public:
   int getMaxBranchOrder(int threadID);
 
   BoundingVolume* NeuronBoundary;
+  int totalBifurcations;
   int _neuronBegin;
   NeurogenParams** _neurogenParams;
   std::vector<std::string> _neurogenFileNames;
@@ -148,3 +149,4 @@ public:
 };
 
 #endif /* NEUROGEN_H_ */
+
