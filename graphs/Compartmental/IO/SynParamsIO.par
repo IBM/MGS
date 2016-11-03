@@ -7,9 +7,9 @@ DenDenGap 0.005309
 CHEMICAL_SYNAPSE_TARGETS 3
 BRANCHTYPE MTYPE
 BRANCHTYPE MTYPE
-1 1 0 0 [GABAA] [Voltage] [Voltage] 0.1667
-1 1 2 0 [GABAA] [Voltage] [Voltage] 0.1667
-1 1 0 0 [AMPA] [Voltage] [Voltage] 1.0
+2 1 1 0 [GABAA] [Voltage] [Voltage] 0.1667
+2 1 3 0 [GABAA] [Voltage] [Voltage] 0.1667
+2 1 1 0 [AMPA] [Voltage] [Voltage] 1.0
 CHEMICAL_SYNAPSE_COSTS 2
 AMPA 0.296407
 GABAA 0.149978
