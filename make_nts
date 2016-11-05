@@ -241,6 +241,13 @@ if [  -f ".built"  ]; then
     exit
   fi
 fi
+if [ "$CLEAN" == "-clean" ] ; then
+  rm_ifexist $NTSROOT/.built
+fi
+if [ "$REBUILD" == "-rebuild" ] ;then
+  cd $NTSROOT
+  touch .built && echo $NTSROOT > .built
+fi
 ################################################
 ### MDL code ###
 #{{{
@@ -368,7 +375,6 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      rm_ifexist $NTSROOT/.built
     fi
     cd -
     cd $NTSROOT
@@ -386,7 +392,6 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
 
       cp Extensions.mk $LENSROOT/
       cd $NTSROOT
-      touch .built && echo $NTSROOT > .built
     fi
     cd -
     cd $LENSROOT

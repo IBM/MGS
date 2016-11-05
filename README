@@ -8,3 +8,5 @@ GSL:
 
 
 NTI:
+ make debug=yes    debug
+ make              release

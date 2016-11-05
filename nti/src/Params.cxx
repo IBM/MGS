@@ -463,7 +463,7 @@ void Params::readSynParams(const std::string& fname)
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
-  bool result;
+  ErrorCode result;
   skipHeader(fpF);
 
   std::string keyword;
@@ -472,16 +472,16 @@ void Params::readSynParams(const std::string& fname)
   {
     //result = (readElectricalSynapseTargets(fpF));
     result = (readElectricalSynapseTargets_vector2(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse Target" << std::endl;
-      assert(result);
+      assert(0);
     }
     result = (readElectricalSynapseCosts(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse cost" << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   keyword = std::string("BIDIRECTIONAL_CONNECTION_TARGETS");
@@ -489,16 +489,16 @@ void Params::readSynParams(const std::string& fname)
   {
     //result = (readBidirectionalConnectionTargets(fpF));
     result = (readBidirectionalConnectionTargets_vector2(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection Target" << std::endl;
-      assert(result);
+      assert(0);
     }
     result = (readBidirectionalConnectionCosts(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection cost" << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   keyword = std::string("CHEMICAL_SYNAPSE_TARGETS");
@@ -506,16 +506,16 @@ void Params::readSynParams(const std::string& fname)
   {
     //result = (readChemicalSynapseTargets(fpF));
     result = (readChemicalSynapseTargets_vector2(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse Target" << std::endl;
-      assert(result);
+      assert(0);
     }
     result = (readChemicalSynapseCosts(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse cost" << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   // readElectricalSynapseTargets(fpF);
@@ -526,10 +526,10 @@ void Params::readSynParams(const std::string& fname)
   // readChemicalSynapseCosts(fpF);
 //TUAN TODO " remove this section - not being used"
   result = (readPreSynapticPointTargets(fpF));
-  if (! result)
+  if (result == ErrorCode::SECTION_INVALID)
   {
     std::cerr << "ERROR: reading file " << fname << " at section Presynaptic Target" << std::endl;
-    assert(result);
+    assert(0);
   }
   fclose(fpF);
 }
@@ -1265,13 +1265,15 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
     }
     else
     {
-      std::cerr << "Expected: " << keyword << ", but Found: " << btype
+      std::cerr << "File " << _currentFName << ": " ;
+      std::cerr << "WARNING: Expected: " << keyword << ", but Found: " << btype
+        << " at line: " << line 
                 << std::endl;
     }
   }
   else
   {
-    std::cerr << "Syntax of SynParam invalid: expect \n SOME_KEYWORD num-column"
+    std::cerr << "Syntax of Param file " << _currentFName << " invalid: expect \n SOME_KEYWORD num-column"
               << std::endl;
     std::cerr << "Read line: " << line << std::endl;
   }
@@ -2616,10 +2618,56 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
   return _electricalSynapses;
 }
 
-bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
+void Params::skipSection(FILE *fpF)
+{
+  std::vector<std::string> tokensList{
+    "COMPARTMENT_VARIABLE_TARGETS", 
+      "COMPARTMENT_VARIABLE_COSTS", 
+      "COMPARTMENT_VARIABLE_PARAMS",
+      "ELECTRICAL_SYNAPSE_TARGETS",
+      "ELECTRICAL_SYNAPSE_COSTS",
+      "CHEMICAL_SYNAPSE_TARGETS",
+      "CHEMICAL_SYNAPSE_COSTS",
+      "PRESYNAPTIC_POINT_TARGETS",
+      "CHANNEL_TARGETS",
+      "CHANNEL_COSTS", 
+      "CHANNEL_PARAMS"
+  };
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  int n = 0;
+  std::string nextToken("");
+
+  fpos_t fpos;
+  fgetpos(fpF, &fpos);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  while (c != NULL)
+  {
+    if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+    {
+      std::string btype(tokS);
+      nextToken = btype;
+      if (std::find(std::begin(tokensList), std::end(tokensList), nextToken) != std::end(tokensList))
+      {
+        fsetpos(fpF, &fpos);
+        break;
+      }
+      else{
+        fgetpos(fpF, &fpos);
+        c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      }
+    }
+    else{
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+    }
+  }
+    // myinput is included in tokensList.
+}
+
+Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
 {
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _electricalSynapses = false;
   _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
   _electricalSynapseTargetsMap.clear();
@@ -2635,7 +2683,10 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
     is >> n;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
 
   if (n > 0)
   {
@@ -2894,9 +2945,15 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
     }
   }
   else
-    rval = false;
-  _electricalSynapses = rval;
-  return _electricalSynapses;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  if (rval == ErrorCode::SECTION_VALID)
+    _electricalSynapses = true;
+
+  return rval;
 }
 
 bool Params::readBidirectionalConnectionTargets(FILE* fpF)
@@ -3373,7 +3430,7 @@ BRANCHTYPE MTYPE
   return _bidirectionalConnections;
 }
 
-bool Params::readBidirectionalConnectionTargets_vector2(FILE* fpF)
+Params::ErrorCode Params::readBidirectionalConnectionTargets_vector2(FILE* fpF)
 {
 	/*
 BIDIRECTIONAL_CONNECTION_TARGETS 2
@@ -3383,7 +3440,7 @@ BRANCHTYPE MTYPE
 3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
 	 */
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _bidirectionalConnections = false;
   _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
       0;
@@ -3400,7 +3457,10 @@ BRANCHTYPE MTYPE
     is >> n;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
 
   if (n > 0)
   {
@@ -3666,9 +3726,14 @@ BRANCHTYPE MTYPE
     }
   }
   else
-    rval = false;
-  _bidirectionalConnections = rval;
-  return _bidirectionalConnections;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  if (rval == ErrorCode::SECTION_VALID)
+    _bidirectionalConnections = true;
+  return rval;
 }
 
 bool Params::readChemicalSynapseTargets(FILE* fpF)
@@ -3887,7 +3952,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
   return _chemicalSynapses;
 }
 
-bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
+Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
 {//support array-form all key fields
   /*
    * CHEMICAL_SYNAPSE_TARGETS 1
@@ -3897,7 +3962,7 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
    * 1.0
    */
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _chemicalSynapses = false;
   _chemicalSynapseTargetsMask1 = _chemicalSynapseTargetsMask2 = 0;
   _chemicalSynapseTargetsMap.clear();
@@ -3914,7 +3979,10 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
     is >> n;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
 
   if (n > 0)
   {
@@ -4165,12 +4233,17 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
     }
   }
   else
-    rval = false;
-  _chemicalSynapses = rval;
-  return _chemicalSynapses;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  if (rval == ErrorCode::SECTION_VALID)
+    _chemicalSynapses = true;
+  return rval;
 }
 
-bool Params::readPreSynapticPointTargets(FILE* fpF)
+Params::ErrorCode Params::readPreSynapticPointTargets(FILE* fpF)
 {
   /* Example:
    * PRESYNAPTIC_POINT_TARGETS 3
@@ -4178,7 +4251,7 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
    * NMDA Voltage
    * GABAA Voltage
    */
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _preSynapticPointTargetsMap.clear();
   _preSynapticPointSynapseMap.clear();
   skipHeader(fpF);
@@ -4195,10 +4268,11 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
   }
   else
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
+
   if (n > 0)
   {
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
@@ -4214,13 +4288,16 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+  }
   return rval;
 }
 
@@ -4958,9 +5035,9 @@ BRANCHTYPE MTYPE
   return rval;
 }
 
-bool Params::readElectricalSynapseCosts(FILE* fpF)
+Params::ErrorCode Params::readElectricalSynapseCosts(FILE* fpF)
 {
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _electricalSynapseCostsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -4975,10 +5052,10 @@ bool Params::readElectricalSynapseCosts(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
   }
   else
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
 
   if (n > 0)
   {
@@ -4994,19 +5071,24 @@ bool Params::readElectricalSynapseCosts(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+
   return rval;
 }
 
-bool Params::readBidirectionalConnectionCosts(FILE* fpF)
+Params::ErrorCode Params::readBidirectionalConnectionCosts(FILE* fpF)
 {
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _bidirectionalConnectionCostsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -5021,10 +5103,12 @@ bool Params::readBidirectionalConnectionCosts(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+    {
+      rval = ErrorCode::SECTION_INVALID;
+    }
   }
   else
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
 
   if (n > 0)
   {
@@ -5040,18 +5124,22 @@ bool Params::readBidirectionalConnectionCosts(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
   return rval;
 }
-bool Params::readChemicalSynapseCosts(FILE* fpF)
+Params::ErrorCode Params::readChemicalSynapseCosts(FILE* fpF)
 {
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _chemicalSynapseCostsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -5066,11 +5154,12 @@ bool Params::readChemicalSynapseCosts(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
   }
   else
-    rval = false;
-  if (n > 0 and rval)
+    rval = ErrorCode::SECTION_INVALID;
+
+  if (n > 0)
   {
     double cost;
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
@@ -5084,14 +5173,17 @@ bool Params::readChemicalSynapseCosts(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
-    rval = true;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
   return rval;
 }
 
@@ -6746,4 +6838,5 @@ bool Params::isGivenKeySpineHead(key_size_t key)
   }
   return result;
 }
+
 #endif

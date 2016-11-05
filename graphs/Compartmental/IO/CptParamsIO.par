@@ -3,6 +3,8 @@ BRANCHTYPE
 1 Voltage Calcium
 2 Voltage
 3 Voltage Calcium
+
 COMPARTMENT_VARIABLE_COSTS 2
 Voltage 1.0
 Calcium 1.0
+

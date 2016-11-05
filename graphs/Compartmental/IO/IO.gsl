@@ -77,7 +77,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 TissueFunctor tissueFunctor("-i IO_5_neurons_sorted.txt -j 1 -a 1.0 -u bt -o IO_5_neurons_sorted_developed.txt -g 50.0 -r 1 -p DevParamsIO.par -x " 
 	      		    STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0", 
 			    "-p DetParamsIO.par -m 1 -n cost-volume",
-			    "CptParamsIO.par", "ChanParamsIO.par", "SynParamsIO.par",
+			    "CptParamsTest.par", "ChanParamsIO.par", "SynParamsIO.par",
 			    tissueLayoutFunctor, tissueNodeInitFunctor, 
                             tissueConnectorFunctor, tissueProbeFunctor);
 
@@ -138,12 +138,12 @@ NodeType HodgkinHuxleyVoltage (<
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
 			E_leak=V_E_LEAK		// mV
-			     >) { initializeVoltage->initialize2 };
+			     >) { initializeCompartmentData->initialize2 };
 
 NodeType CaConcentration (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
                         beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
-		     >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
+		     >) { initializeCompartmentData->initialize2, deriveParameters->initialize2 };
 
 NodeType VoltageEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
