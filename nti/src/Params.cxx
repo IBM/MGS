@@ -344,57 +344,65 @@ void Params::readCptParams(const std::string& fname)
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
-  bool result;
   skipHeader(fpF);
 
   std::string keyword;
 #ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
-  keyword = std::string("COMPARTMENT_SPINE_NECK");
-  if (isGivenKeywordNext(fpF, keyword))
   {
-    result = (readCriteriaSpineNeck(fpF));
-    if (! result)
+    bool result;
+    keyword = std::string("COMPARTMENT_SPINE_NECK");
+    if (isGivenKeywordNext(fpF, keyword))
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      result = (readCriteriaSpineNeck(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
     }
-  }
-  keyword = std::string("COMPARTMENT_SPINE_HEAD");
-  if (isGivenKeywordNext(fpF, keyword))
-  {
-    result = (readCriteriaSpineHead(fpF));
-    if (! result)
+    keyword = std::string("COMPARTMENT_SPINE_HEAD");
+    if (isGivenKeywordNext(fpF, keyword))
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      result = (readCriteriaSpineHead(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
     }
+
   }
 #endif
 
-  keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
-  if (isGivenKeywordNext(fpF, keyword))
   {
-    //result = (readCompartmentVariableTargets(fpF));
-    result = (readCompartmentVariableTargets2(fpF));
-    if (! result)
+    bool result;
+    keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
+    if (isGivenKeywordNext(fpF, keyword))
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      //result = (readCompartmentVariableTargets(fpF));
+      result = (readCompartmentVariableTargets2(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
+
+    }
+
+    keyword = std::string("COMPARTMENT_VARIABLE_COSTS");
+    if (isGivenKeywordNext(fpF, keyword))
+    {
+      result = (readCompartmentVariableCosts(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
     }
 
   }
 
-  keyword = std::string("COMPARTMENT_VARIABLE_COSTS");
-  if (isGivenKeywordNext(fpF, keyword))
-  {
-    result = (readCompartmentVariableCosts(fpF));
-    if (! result)
-    {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
-    }
-  }
-
+  bool result;
   keyword = std::string("COMPARTMENT_VARIABLE_PARAMS");
   if (isGivenKeywordNext(fpF, keyword))
   {
@@ -1256,7 +1264,7 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   std::string line(bufS);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (c != NULL and 2 == sscanf(bufS, "%s %d ", tokS, &n))
   {
     std::string btype(tokS);
     if (btype == keyword)
