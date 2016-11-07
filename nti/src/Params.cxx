@@ -1279,6 +1279,11 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
                 << std::endl;
     }
   }
+  else if (c == NULL)
+  {
+    std::cerr << "End-of-File at Param file " << _currentFName 
+              << std::endl;
+  }
   else
   {
     std::cerr << "Syntax of Param file " << _currentFName << " invalid: expect \n SOME_KEYWORD num-column"
