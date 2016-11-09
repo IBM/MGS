@@ -117,16 +117,20 @@ Node CaExtrusion  Implements
 	}
 
   //Connection setup (input)
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-	BranchDataProducer, DimensionArrayProducer 
+	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer
+   , BranchDataProducer, DimensionArrayProducer 
 	{
-			VoltageArrayProducer.voltageArray >> V;
-			BranchDataProducer.branchData >> branchData;
-			DimensionArrayProducer.dimensionArray >> dimensions;
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer
+    , BranchDataProducer, DimensionArrayProducer 
+  {
 		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
 	Connection Pre Constant (PSet.identifier=="EC") 

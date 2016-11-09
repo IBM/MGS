@@ -782,6 +782,10 @@
 #define PUMP_SERCA _SERCA_DEFAULT
 #endif
 
+#ifndef CHANNEL_HCN
+  #define CHANNEL_HCN _HCN_DEFAULT
+#endif
+
 #ifndef MODEL_TO_USE
 #define MODEL_TO_USE _MODEL_NOT_DEFINED
 #endif
