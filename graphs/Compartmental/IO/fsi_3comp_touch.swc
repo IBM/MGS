@@ -1,0 +1,8 @@
+# 3 compartment FSI morphology (upside-down version of the MSN morphology)
+# 5 data points: 1 for the soma, then 1 for start of axon and 1 for end of axon, and the same for the dendrite
+# overlapping with the msn_3comp_touch file at point (0.0,20.0), which is 15 um along the dendrite
+1 1 55.0 20.0 0.0 10.0 -1
+2 2 53.0 20.0 0.0 1.0 1
+3 2 0.0 20.0 0.0 1.0 2
+4 3 55.0 18.0 0.0 2.0 1
+5 3 55.0 185.0 0.0 2.0 4

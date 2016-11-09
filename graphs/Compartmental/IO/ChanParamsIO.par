@@ -1,16 +1,17 @@
 CHANNEL_TARGETS 3
 BRANCHTYPE
-1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium]
+1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium] CaEx [Calcium] [Calcium]
 2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
-3 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium]
+3 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] CaEx [Calcium] [Calcium]
 
-CHANNEL_COSTS 6
+CHANNEL_COSTS 7
 Na 0.414243
 KDR 0.254051
 KCa 0.254051
 HCN 0.254051
 Cal 0.254051
 Cah 0.254051
+CaEx 0.254051
 
 CHANNEL_PARAMS 4
 Na 2

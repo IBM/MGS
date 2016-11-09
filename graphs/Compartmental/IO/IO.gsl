@@ -9,34 +9,34 @@
 #define DAT0 "rec0.dat"
 #define DAT1 "rec1.dat"
 #define DAT2 "rec2.dat"
-#define DAT3 "rec3.dat"
-#define DAT4 "rec4.dat"
-#define DAT5 "rec5.dat"
-#define DAT6 "rec6.dat"
-#define DAT7 "rec7.dat"
-#define DAT8 "rec8.dat"
-#define DAT9 "rec9.dat"
-#define DAT10 "rec10.dat"
-#define DAT11 "rec11.dat"
-#define DAT12 "rec12.dat"
-#define DAT13 "rec13.dat"
-#define DAT14 "rec14.dat"
-
-#define DAT20 "rec20.dat"
-#define DAT21 "rec21.dat"
-#define DAT22 "rec22.dat"
-#define DAT23 "rec23.dat"
-#define DAT24 "rec24.dat"
-#define DAT25 "rec25.dat"
-#define DAT26 "rec26.dat"
-#define DAT27 "rec27.dat"
-#define DAT28 "rec28.dat"
-#define DAT29 "rec29.dat"
-#define DAT30 "rec30.dat"
-#define DAT31 "rec31.dat"
-#define DAT32 "rec32.dat"
-#define DAT33 "rec33.dat"
-#define DAT34 "rec34.dat"
+//#define DAT3 "rec3.dat"
+//#define DAT4 "rec4.dat"
+//#define DAT5 "rec5.dat"
+//#define DAT6 "rec6.dat"
+//#define DAT7 "rec7.dat"
+//#define DAT8 "rec8.dat"
+//#define DAT9 "rec9.dat"
+//#define DAT10 "rec10.dat"
+//#define DAT11 "rec11.dat"
+//#define DAT12 "rec12.dat"
+//#define DAT13 "rec13.dat"
+//#define DAT14 "rec14.dat"
+//
+//#define DAT20 "rec20.dat"
+//#define DAT21 "rec21.dat"
+//#define DAT22 "rec22.dat"
+//#define DAT23 "rec23.dat"
+//#define DAT24 "rec24.dat"
+//#define DAT25 "rec25.dat"
+//#define DAT26 "rec26.dat"
+//#define DAT27 "rec27.dat"
+//#define DAT28 "rec28.dat"
+//#define DAT29 "rec29.dat"
+//#define DAT30 "rec30.dat"
+//#define DAT31 "rec31.dat"
+//#define DAT32 "rec32.dat"
+//#define DAT33 "rec33.dat"
+//#define DAT34 "rec34.dat"
 
 #define CA_BETA 0.05
 #define CA_CLEARANCE 0.025
@@ -74,7 +74,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		      string channelParamaterFile, string synapseParameteurFile,
 		      Functor, Functor, Functor, Functor, Functor);
 
-TissueFunctor tissueFunctor("-i IO_5_neurons_sorted.txt -j 1 -a 1.0 -u bt -o IO_5_neurons_sorted_developed.txt -g 50.0 -r 1 -p DevParamsIO.par -x " 
+TissueFunctor tissueFunctor("-i single_neuron.txt -j 1 -a 1.0 -u bt -o single_neuron_developed.txt -r 1 -p DevParamsIO.par -x " 
 	      		    STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0", 
 			    "-p DetParamsIO.par -m 1 -n cost-volume",
 			    "CptParamsIO.par", "ChanParamsIO.par", "SynParamsIO.par",
@@ -246,6 +246,7 @@ NodeType ChannelHCN (< E_HCN = {-43.0} >) {computeTadj->initialize2, initialize-
 NodeType CalChannel { initializeCalChannels->initialize3, update->solveChannels };
 
 NodeType CahChannel { initialize->initialize3, update->solveChannels };
+NodeType CaExtrusion { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 NodeType CaConnexon { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 
@@ -331,73 +332,73 @@ pointCalciumSource.setCaCurrent(<
 			     >) on calciumOff;
 
 VariableType VoltageDisplay{ initialize->initialize1 };
-VoltageDisplay voltageDisplay0<fileName=DAT0>;
+//VoltageDisplay voltageDisplay0<fileName=DAT0>;
 VoltageDisplay voltageDisplay1<fileName=DAT1>;
 VoltageDisplay voltageDisplay2<fileName=DAT2>;
-VoltageDisplay voltageDisplay3<fileName=DAT3>;
-VoltageDisplay voltageDisplay4<fileName=DAT4>;
-VoltageDisplay voltageDisplay5<fileName=DAT5>;
-VoltageDisplay voltageDisplay6<fileName=DAT6>;
-VoltageDisplay voltageDisplay7<fileName=DAT7>;
-VoltageDisplay voltageDisplay8<fileName=DAT8>;
-VoltageDisplay voltageDisplay9<fileName=DAT9>;
-VoltageDisplay voltageDisplay10<fileName=DAT10>;
-VoltageDisplay voltageDisplay11<fileName=DAT11>;
-VoltageDisplay voltageDisplay12<fileName=DAT12>;
-VoltageDisplay voltageDisplay13<fileName=DAT13>;
-VoltageDisplay voltageDisplay14<fileName=DAT14>;
+//VoltageDisplay voltageDisplay3<fileName=DAT3>;
+//VoltageDisplay voltageDisplay4<fileName=DAT4>;
+//VoltageDisplay voltageDisplay5<fileName=DAT5>;
+//VoltageDisplay voltageDisplay6<fileName=DAT6>;
+//VoltageDisplay voltageDisplay7<fileName=DAT7>;
+//VoltageDisplay voltageDisplay8<fileName=DAT8>;
+//VoltageDisplay voltageDisplay9<fileName=DAT9>;
+//VoltageDisplay voltageDisplay10<fileName=DAT10>;
+//VoltageDisplay voltageDisplay11<fileName=DAT11>;
+//VoltageDisplay voltageDisplay12<fileName=DAT12>;
+//VoltageDisplay voltageDisplay13<fileName=DAT13>;
+//VoltageDisplay voltageDisplay14<fileName=DAT14>;
 
 
-VariableType CalciumDisplay{ initialize->initialize1 };
-CalciumDisplay CalciumDisplay20<fileName=DAT20>;
-CalciumDisplay CalciumDisplay21<fileName=DAT21>;
-CalciumDisplay CalciumDisplay22<fileName=DAT22>;
-CalciumDisplay CalciumDisplay23<fileName=DAT23>;
-CalciumDisplay CalciumDisplay24<fileName=DAT24>;
-CalciumDisplay CalciumDisplay25<fileName=DAT25>;
-CalciumDisplay CalciumDisplay26<fileName=DAT26>;
-CalciumDisplay CalciumDisplay27<fileName=DAT27>;
-CalciumDisplay CalciumDisplay28<fileName=DAT28>;
-CalciumDisplay CalciumDisplay29<fileName=DAT29>;
-CalciumDisplay CalciumDisplay30<fileName=DAT30>;
-CalciumDisplay CalciumDisplay31<fileName=DAT31>;
-CalciumDisplay CalciumDisplay32<fileName=DAT32>;
-CalciumDisplay CalciumDisplay33<fileName=DAT33>;
-CalciumDisplay CalciumDisplay34<fileName=DAT34>;
+//VariableType CalciumDisplay{ initialize->initialize1 };
+//CalciumDisplay CalciumDisplay20<fileName=DAT20>;
+//CalciumDisplay CalciumDisplay21<fileName=DAT21>;
+//CalciumDisplay CalciumDisplay22<fileName=DAT22>;
+//CalciumDisplay CalciumDisplay23<fileName=DAT23>;
+//CalciumDisplay CalciumDisplay24<fileName=DAT24>;
+//CalciumDisplay CalciumDisplay25<fileName=DAT25>;
+//CalciumDisplay CalciumDisplay26<fileName=DAT26>;
+//CalciumDisplay CalciumDisplay27<fileName=DAT27>;
+//CalciumDisplay CalciumDisplay28<fileName=DAT28>;
+//CalciumDisplay CalciumDisplay29<fileName=DAT29>;
+//CalciumDisplay CalciumDisplay30<fileName=DAT30>;
+//CalciumDisplay CalciumDisplay31<fileName=DAT31>;
+//CalciumDisplay CalciumDisplay32<fileName=DAT32>;
+//CalciumDisplay CalciumDisplay33<fileName=DAT33>;
+//CalciumDisplay CalciumDisplay34<fileName=DAT34>;
 
 
-voltageDisplay0.dataCollection(<>) on recOn;
+//voltageDisplay0.dataCollection(<>) on recOn;
 voltageDisplay1.dataCollection(<>) on recOn;
 voltageDisplay2.dataCollection(<>) on recOn;
-voltageDisplay3.dataCollection(<>) on recOn;
-voltageDisplay4.dataCollection(<>) on recOn;
-voltageDisplay5.dataCollection(<>) on recOn;
-voltageDisplay6.dataCollection(<>) on recOn;
-voltageDisplay7.dataCollection(<>) on recOn;
-voltageDisplay8.dataCollection(<>) on recOn;
-voltageDisplay9.dataCollection(<>) on recOn;
-voltageDisplay10.dataCollection(<>) on recOn;
-voltageDisplay11.dataCollection(<>) on recOn;
-voltageDisplay12.dataCollection(<>) on recOn;
-voltageDisplay13.dataCollection(<>) on recOn;
-voltageDisplay14.dataCollection(<>) on recOn;
+//voltageDisplay3.dataCollection(<>) on recOn;
+//voltageDisplay4.dataCollection(<>) on recOn;
+//voltageDisplay5.dataCollection(<>) on recOn;
+//voltageDisplay6.dataCollection(<>) on recOn;
+//voltageDisplay7.dataCollection(<>) on recOn;
+//voltageDisplay8.dataCollection(<>) on recOn;
+//voltageDisplay9.dataCollection(<>) on recOn;
+//voltageDisplay10.dataCollection(<>) on recOn;
+//voltageDisplay11.dataCollection(<>) on recOn;
+//voltageDisplay12.dataCollection(<>) on recOn;
+//voltageDisplay13.dataCollection(<>) on recOn;
+//voltageDisplay14.dataCollection(<>) on recOn;
 
 
-CalciumDisplay20.dataCollection(<>) on recOn;
-CalciumDisplay21.dataCollection(<>) on recOn;
-CalciumDisplay22.dataCollection(<>) on recOn;
-CalciumDisplay23.dataCollection(<>) on recOn;
-CalciumDisplay24.dataCollection(<>) on recOn;
-CalciumDisplay25.dataCollection(<>) on recOn;
-CalciumDisplay26.dataCollection(<>) on recOn;
-CalciumDisplay27.dataCollection(<>) on recOn;
-CalciumDisplay28.dataCollection(<>) on recOn;
-CalciumDisplay29.dataCollection(<>) on recOn;
-CalciumDisplay30.dataCollection(<>) on recOn;
-CalciumDisplay31.dataCollection(<>) on recOn;
-CalciumDisplay32.dataCollection(<>) on recOn;
-CalciumDisplay33.dataCollection(<>) on recOn;
-CalciumDisplay34.dataCollection(<>) on recOn;
+//CalciumDisplay20.dataCollection(<>) on recOn;
+//CalciumDisplay21.dataCollection(<>) on recOn;
+//CalciumDisplay22.dataCollection(<>) on recOn;
+//CalciumDisplay23.dataCollection(<>) on recOn;
+//CalciumDisplay24.dataCollection(<>) on recOn;
+//CalciumDisplay25.dataCollection(<>) on recOn;
+//CalciumDisplay26.dataCollection(<>) on recOn;
+//CalciumDisplay27.dataCollection(<>) on recOn;
+//CalciumDisplay28.dataCollection(<>) on recOn;
+//CalciumDisplay29.dataCollection(<>) on recOn;
+//CalciumDisplay30.dataCollection(<>) on recOn;
+//CalciumDisplay31.dataCollection(<>) on recOn;
+//CalciumDisplay32.dataCollection(<>) on recOn;
+//CalciumDisplay33.dataCollection(<>) on recOn;
+//CalciumDisplay34.dataCollection(<>) on recOn;
 
 
 Grid Tissue
@@ -473,6 +474,7 @@ Grid Tissue
    Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
    Layer(CalChannels, CalChannel, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
    Layer(CahChannels, CahChannel, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
+   Layer(CaExChannels, CaExtrusion, tissueFunctor("Layout", < nodekind="Channels[CaEx]" >), < nodekind="Channels[CaEx]" >, tissueGM);
 
   
 
@@ -505,8 +507,8 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
 											    "Aip", 
 											    "RHS"
 											   },
-									Ca_new = {0.1},
-									CaClearance=CA_CLEARANCE    // s^-1
+									Ca_new = {0.1}
+								//	CaClearance=CA_CLEARANCE    // s^-1
 								      > ) );
 
    InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
@@ -557,7 +559,7 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
 								 Cm=V_CM,		// pF/um^2
 								 gLeak=V_GLEAK 		// nS/um^2, Hines used 0.0003 S/cm^2
 								> ) );
-   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1}, CaClearance=CA_CLEARANCE > ) );
+   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1} > ) );
    InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(junctionPoints_Ca), tissueFunctor("NodeInit", <> ) );
 
@@ -594,6 +596,10 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
 //									, gbar = {0.4}
 								 > ) );
 
+   InitNodes ( .[].Layer(CaExChannels), tissueFunctor("NodeInit", <
+									compartmentalize = { "tau" }
+									, tau = {4.0}
+								 > ) );
    InitNodes ( .[].Layer(DendroDendriticGapJunctions), tissueFunctor("NodeInit", <
 									I = 0,
 									g = 0.5
@@ -615,75 +621,75 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
 
    tissueFunctor("Connect", <> );	
 
-   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
-   polyConnect(pointCalciumSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+   polyConnect(pointCalciumSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
 
-   polyConnect(timeStep, voltageDisplay0, <>, <>);
+   //polyConnect(timeStep, voltageDisplay0, <>, <>);
    polyConnect(timeStep, voltageDisplay1, <>, <>);
    polyConnect(timeStep, voltageDisplay2, <>, <>);
-   polyConnect(timeStep, voltageDisplay3, <>, <>);
-   polyConnect(timeStep, voltageDisplay4, <>, <>);
-   polyConnect(timeStep, voltageDisplay5, <>, <>);
-   polyConnect(timeStep, voltageDisplay6, <>, <>);
-   polyConnect(timeStep, voltageDisplay7, <>, <>);
-   polyConnect(timeStep, voltageDisplay8, <>, <>);	
-   polyConnect(timeStep, voltageDisplay9, <>, <>);	
-   polyConnect(timeStep, voltageDisplay10, <>, <>);	
-   polyConnect(timeStep, voltageDisplay11, <>, <>);	
-   polyConnect(timeStep, voltageDisplay12, <>, <>);	
-   polyConnect(timeStep, voltageDisplay13, <>, <>);	
-   polyConnect(timeStep, voltageDisplay14, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay3, <>, <>);
+   //polyConnect(timeStep, voltageDisplay4, <>, <>);
+   //polyConnect(timeStep, voltageDisplay5, <>, <>);
+   //polyConnect(timeStep, voltageDisplay6, <>, <>);
+   //polyConnect(timeStep, voltageDisplay7, <>, <>);
+   //polyConnect(timeStep, voltageDisplay8, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay9, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay10, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay11, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay12, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay13, <>, <>);	
+   //polyConnect(timeStep, voltageDisplay14, <>, <>);	
 
-   polyConnect(timeStep, CalciumDisplay20, <>, <>);
-   polyConnect(timeStep, CalciumDisplay21, <>, <>);
-   polyConnect(timeStep, CalciumDisplay22, <>, <>);
-   polyConnect(timeStep, CalciumDisplay23, <>, <>);
-   polyConnect(timeStep, CalciumDisplay24, <>, <>);
-   polyConnect(timeStep, CalciumDisplay25, <>, <>);
-   polyConnect(timeStep, CalciumDisplay26, <>, <>);
-   polyConnect(timeStep, CalciumDisplay27, <>, <>);
-   polyConnect(timeStep, CalciumDisplay28, <>, <>);
-   polyConnect(timeStep, CalciumDisplay29, <>, <>);
-   polyConnect(timeStep, CalciumDisplay30, <>, <>);
-   polyConnect(timeStep, CalciumDisplay31, <>, <>);
-   polyConnect(timeStep, CalciumDisplay32, <>, <>);
-   polyConnect(timeStep, CalciumDisplay33, <>, <>);
-   polyConnect(timeStep, CalciumDisplay34, <>, <>);
-
-
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay3, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), voltageDisplay4, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), voltageDisplay5, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=2>), voltageDisplay6, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=2>), voltageDisplay7, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=2>), voltageDisplay8, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=3>), voltageDisplay9, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=3>), voltageDisplay10, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=3>), voltageDisplay11, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=4>), voltageDisplay12, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=4>), voltageDisplay13, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=4>), voltageDisplay14, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay20, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay21, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay22, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay23, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay24, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay25, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay26, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay27, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay28, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay29, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay30, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay31, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay32, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay33, <>, <>);
+   //polyConnect(timeStep, CalciumDisplay34, <>, <>);
 
 
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=0>), CalciumDisplay20, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=0>), CalciumDisplay21, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=0>), CalciumDisplay22, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=1>), CalciumDisplay23, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), CalciumDisplay24, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), CalciumDisplay25, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=2>), CalciumDisplay26, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=2>), CalciumDisplay27, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=2>), CalciumDisplay28, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=3>), CalciumDisplay29, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=3>), CalciumDisplay30, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=3>), CalciumDisplay31, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=4>), CalciumDisplay32, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=4>), CalciumDisplay33, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=4>), CalciumDisplay34, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=1, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay3, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), voltageDisplay4, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), voltageDisplay5, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=2>), voltageDisplay6, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=2>), voltageDisplay7, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=2>), voltageDisplay8, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=3>), voltageDisplay9, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=3>), voltageDisplay10, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=3>), voltageDisplay11, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=4>), voltageDisplay12, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=4>), voltageDisplay13, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=4>), voltageDisplay14, <>, <>);
+//
+//
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=0>), CalciumDisplay20, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=0>), CalciumDisplay21, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=0>), CalciumDisplay22, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=1>), CalciumDisplay23, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), CalciumDisplay24, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), CalciumDisplay25, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=2>), CalciumDisplay26, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=2>), CalciumDisplay27, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=2>), CalciumDisplay28, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=3>), CalciumDisplay29, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=3>), CalciumDisplay30, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=3>), CalciumDisplay31, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=4>), CalciumDisplay32, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=4>), CalciumDisplay33, <>, <>);
+//   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=4>), CalciumDisplay34, <>, <>);
 };
 
 Tissue tissue;
