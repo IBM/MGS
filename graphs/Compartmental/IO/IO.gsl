@@ -613,8 +613,8 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
    
   
 
-   polyConnect(timeStep, .[].Layer(branches, junctions, branches_Ca, junctions_Ca, NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels), <>, <identifier="dt">);
-   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, DendroDendriticGapJunctions
+   polyConnect(timeStep, .[].Layer(branches, junctions, branches_Ca, junctions_Ca, NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, CaExChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, CaExChannels, DendroDendriticGapJunctions
    ), <>, <identifier="EC">);
    polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
