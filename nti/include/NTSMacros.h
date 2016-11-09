@@ -201,6 +201,8 @@
 #define HCN_VANDERGIESSEN_DEZEEUW_2008 2
 #define HCN_KOLE_2006 3
 #define HCN_HAY_2011 4
+
+#define _HCN_DEFAULT HCN_HUGUENARD_MCCORMICK_1992
 //}}}
 
 //{{{ Ca-models
@@ -778,6 +780,10 @@
 #endif
 #ifndef PUMP_SERCA
 #define PUMP_SERCA _SERCA_DEFAULT
+#endif
+
+#ifndef CHANNEL_HCN
+  #define CHANNEL_HCN _HCN_DEFAULT
 #endif
 
 #ifndef MODEL_TO_USE
