@@ -6,9 +6,9 @@
 #define CCAT(x,y) _CCAT(x,y)
 #define _STR(x) #x 
 #define STR(x) _STR(x)
-#define DAT0 "IOXXXXrec0.dat"
-#define DAT1 "soma_voltage.dat"
-#define DAT2 "axon_voltage.dat"
+#define DAT0 "soma_voltage.dat"
+#define DAT1 "axon_voltage.dat"
+#define DAT2 "dend_voltage.dat"
 //#define DAT3 "rec3.dat"
 //#define DAT4 "rec4.dat"
 //#define DAT5 "rec5.dat"
@@ -659,8 +659,8 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
 
 
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=1, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay3, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), voltageDisplay4, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), voltageDisplay5, <>, <>);
