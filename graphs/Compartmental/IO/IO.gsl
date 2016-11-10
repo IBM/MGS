@@ -367,7 +367,7 @@ VoltageDisplay voltageDisplay2<fileName=DAT2>;
 //CalciumDisplay CalciumDisplay34<fileName=DAT34>;
 
 
-//voltageDisplay0.dataCollection(<>) on recOn;
+voltageDisplay0.dataCollection(<>) on recOn;
 voltageDisplay1.dataCollection(<>) on recOn;
 voltageDisplay2.dataCollection(<>) on recOn;
 //voltageDisplay3.dataCollection(<>) on recOn;
