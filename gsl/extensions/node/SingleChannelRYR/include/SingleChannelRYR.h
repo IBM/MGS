@@ -12,7 +12,7 @@
 #endif
 
 #ifndef Q10
-#define Q10 3.0  // default
+#define Q10 2.3  // default
 #endif
 class SingleChannelRYR : public CG_SingleChannelRYR
 {
@@ -21,6 +21,7 @@ class SingleChannelRYR : public CG_SingleChannelRYR
   void initialize(RNG& rng);
   virtual ~SingleChannelRYR();
 
+  //user-defined
   void updateChannelTransitionRate(dyn_var_t*& matChannelTransitionRate,
                                    int cptIdx);
 

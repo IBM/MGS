@@ -53,7 +53,7 @@
 #define pStart (getSharedMembers().plasticityStartAt)
 #define pStop (getSharedMembers().plasticityStopAt)
 
-#if SIMULATION_INVOLVE  == VMONLY
+#if ! defined(SIMULATE_CACYTO)
 //NOTE: TAU = time-constant for learning
 //       i.e. Ca2+-dependent learning rate is 1/TAU
   #define Cai_base  0.1 // [uM]
@@ -109,7 +109,7 @@ void NMDAReceptor::initializeNMDA(RNG& rng)
   assert(Vpre);
 #endif
   assert(Vpost);
-#if SIMULATION_INVOLVE  != VMONLY
+#if  defined(SIMULATE_CACYTO)
   assert(Ca_IC);
 #endif
   assert(getSharedMembers().T != 0 && getSharedMembers().Ca_EC != 0 &&
@@ -155,7 +155,7 @@ void NMDAReceptor::updateNMDA(RNG& rng)
   g = gbar * MGBLOCK * r * (1 - KETAMINE) ;
 //  if (getSimulation().getIteration().(*(getSharedMembers().deltaT))
 
-#if SIMULATION_INVOLVE  == VMONLY
+#if ! defined(SIMULATE_CACYTO)
     dyn_var_t cai = Cai_base;
 #else
 		dyn_var_t cai = (*Ca_IC)[indexPost];
@@ -180,7 +180,7 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 
 void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
 {
-#if SIMULATION_INVOLVE  == VMONLY
+#if ! defined(SIMULATE_CACYTO)
     dyn_var_t cai = Cai_base;
 #else
 		dyn_var_t cai = (*Ca_IC)[indexPost];
@@ -239,7 +239,9 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
                                 CG_NMDAReceptorOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
+#ifdef KEEP_PAIR_PRE_POST
   indexPrePost.push_back(&indexPost);
+#endif
 }
 
 dyn_var_t NMDAReceptor::sigmoid(dyn_var_t alpha, dyn_var_t beta)

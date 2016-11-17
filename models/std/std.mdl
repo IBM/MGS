@@ -76,4 +76,9 @@ Struct TargetAttachCaConcentration{
   dyn_var_t* inverseTime;  // [1/ms]
   int index; // index of compartment at which the spine attach (or the shaft attach) 
 }
+Struct TargetAttachIP3Concentration{
+  dyn_var_t* IP3;  // [uM]
+  dyn_var_t* inverseTime;  // [1/ms]
+  int index; // index of compartment at which the spine attach (or the shaft attach) 
+}
 #endif

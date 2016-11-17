@@ -133,7 +133,7 @@ double Touch::getProp(key_size_t key) {
 // TODO: change the way we determine in the coming future
 //       where the spine head+neck is not passed in via tissue file
 //       but automatically generated
-bool Touch::hasSpineNeck(key_size_t& key)
+bool Touch::hasSpineNeck(key_size_t& key)//obsolete
 {
 	//TUAN TODO POTENTIAL BUG
 	//right now, for single neuron scenario, 
@@ -169,6 +169,89 @@ bool Touch::hasSpineNeck(key_size_t& key)
 	return rval;
 
 }
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+bool Touch::hasSpineNeck(key_size_t& key, Params& params)
+{
+	//TUAN TODO POTENTIAL BUG
+	//right now, for single neuron scenario, 
+	// if one-side MTYPE > 0 and the other-side MTYPE=0
+	// indicate a spine-denshaft touch
+	//     
+	bool rval=false;
+
+	key_size_t tkey1 = getKey1();
+	//NOTE: uf0 = MTYPE
+	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	unsigned int brchtype1 = _segmentDescriptor.getBranchType(tkey1);
+	key_size_t tkey2 = getKey2();
+	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
+	unsigned int brchtype2 = _segmentDescriptor.getBranchType(tkey2);
+
+  if (params.isGivenKeySpineNeck(tkey1))
+  //if (mtype1 > 0 && mtype2 == 0 && brchtype1 == Branch::_BASALDEN)
+  //if (mtype1 > 0 && mtype2 == 0)
+	{
+		rval = true;
+		key = tkey1;
+		//std::cout << brchtype1+1 << brchtype2+1<< " ";
+	}
+  if (params.isGivenKeySpineNeck(tkey2))
+	//if (mtype1 == 0 && mtype2 > 0 && brchtype2 == Branch::_BASALDEN)
+	//if (mtype1 == 0 && mtype2 > 0)
+	{
+		rval = true;
+		key = tkey2;
+		//std::cout << brchtype2+1  << brchtype1+1<< " ";
+	}
+
+	return rval;
+
+}
+
+bool Touch::isSpineNeck_n_DenShaft(key_size_t& key, Params& params)
+{
+	//TUAN TODO POTENTIAL BUG
+	//right now, for single neuron scenario, 
+	// if one-side MTYPE > 0 and the other-side MTYPE=0
+	// indicate a spine-denshaft touch
+	//     
+	bool rval=false;
+
+	key_size_t tkey1 = getKey1();
+	//NOTE: uf0 = MTYPE
+	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	unsigned int brchtype1 = _segmentDescriptor.getBranchType(tkey1);
+	key_size_t tkey2 = getKey2();
+	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
+	unsigned int brchtype2 = _segmentDescriptor.getBranchType(tkey2);
+
+  if (params.isGivenKeySpineNeck(tkey1) && 
+      (brchtype1 == Branch::_BASALDEN || 
+       brchtype1 == Branch::_APICALDEN || 
+       brchtype1 == Branch::_TUFTEDDEN  
+       )
+     )
+	{
+		rval = true;
+		key = tkey1;
+		//std::cout << brchtype1+1 << brchtype2+1<< " ";
+	}
+  if (params.isGivenKeySpineNeck(tkey2) && 
+      (brchtype1 == Branch::_BASALDEN || 
+       brchtype1 == Branch::_APICALDEN || 
+       brchtype1 == Branch::_TUFTEDDEN  
+       )
+     )
+	{
+		rval = true;
+		key = tkey2;
+		//std::cout << brchtype2+1  << brchtype1+1<< " ";
+	}
+
+	return rval;
+
+}
+#endif
 
 //GOAL: 
 // A touch has 2 capsule
@@ -177,7 +260,7 @@ bool Touch::hasSpineNeck(key_size_t& key)
 // TODO: change the way we determine in the coming future
 //       where the spine head+neck is not passed in via tissue file
 //       but automatically generated
-bool Touch::hasSpineHead(key_size_t& key)
+bool Touch::hasSpineHead(key_size_t& key)//obsolete
 {
 	//right now, for single neuron scenario, 
 	// a spine-bouton touch
@@ -209,6 +292,44 @@ bool Touch::hasSpineHead(key_size_t& key)
 	}
 	return rval;
 }
+
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+bool Touch::hasSpineHead(key_size_t& key, Params& params) 
+{
+	//right now, for single neuron scenario, 
+	// a spine-bouton touch
+	// if 
+	//   1. one-side MTYPE > 0 and the other-side MTYPE>0
+	//   2. the neuron index difference == 1
+	//     
+	bool rval=false;
+
+	key_size_t tkey1 = getKey1();
+	//NOTE: uf0 = MTYPE
+	unsigned int mtype1 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey1);
+	key_size_t tkey2 = getKey2();
+	unsigned int mtype2 = _segmentDescriptor.getValue(SegmentDescriptor::uf0, tkey2);
+	unsigned int brtype1 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey1);
+	unsigned int brtype2 = _segmentDescriptor.getValue(SegmentDescriptor::branchType, tkey2);
+	unsigned int neuronIdx1 = _segmentDescriptor.getValue(SegmentDescriptor::neuronIndex, tkey1);
+	unsigned int neuronIdx2 = _segmentDescriptor.getValue(SegmentDescriptor::neuronIndex, tkey2);
+	bool isChemSynapsePair = (brtype1 == Branch::_AXON and brtype2 == Branch::_SOMA) ||
+		(brtype2 == Branch::_AXON and brtype1 == Branch::_SOMA) ;
+  if (params.isGivenKeySpineHead(tkey1))
+	//if (mtype1 > 0 && mtype2 > 0 and std::abs((int)neuronIdx1-(int)neuronIdx2) ==1 and
+	//  isChemSynapsePair)
+	{
+		rval = true;
+    key = tkey1;
+	}
+  if (params.isGivenKeySpineHead(tkey2))
+  {
+		rval = true;
+    key = tkey2;
+  }
+	return rval;
+}
+#endif
 
 //GOAL: 
 // A touch has 2 capsule

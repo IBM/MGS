@@ -175,14 +175,18 @@ void Initializer::generateMakefileExtension()
 	    type[i] += 'A' - 'a';
 	 }
       }
+
+      os << "#{{{" << type << "\n";
+      //std::endl;
       os << type << "_MODULES += ";
       std::vector<std::string>::iterator it2, end2 = it->second.end();
       for (it2 = it->second.begin(); it2 != end2; ++it2) {
-	 if (it2 != it->second.begin()) {
-	    os << "\t";
-	 }
-	 os << *it2 << " \\\n";
+        if (it2 != it->second.begin()) {
+          os << "\t";
+        }
+        os << *it2 << " \\\n";
       }
+      os << "#}}}\n";
       os << "\n";
    }   
    std::ofstream fs("Extensions.mk");

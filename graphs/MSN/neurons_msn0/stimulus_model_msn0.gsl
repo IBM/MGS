@@ -3,17 +3,16 @@
     STIMULUS_CASE == CASE_05 || \
     STIMULUS_CASE == CASE_06
 #if STIMULUS_CASE == CASE_06
-#define timeDelay 58
+#define timeDelay 100
 #else
-#define timeDelay 30
+#define timeDelay 100
 #endif
 //NOTE: Unit of current injection is [pA]
-// match the experiment  inject 1.9nA for 5ms at soma
-//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=5, period=510, delay=150, last=500, inc=0>; //GOOD
-//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=2000.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOO1999D
-CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1000.0, duration=10, period=510, delay=timeDelay, last=500, inc=0>; //Larkum-Sakmann (1999)
+//NOTE: MSN requires long stimulation due to the long shunt in the first AP
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=270.0, duration=600, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=230.0, duration=1000, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=10, period=510, delay=timeDelay, last=500, inc=0>; //Larkum-Sakmann (1999)
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1200.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
-//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=600.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=600.0, duration=3.5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
 #endif
  

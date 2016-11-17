@@ -33,15 +33,17 @@ RunSim()
    cp *.gsl $OutputFolderName/ -L -r
    cp neurons.txt $OutputFolderName/ -L -r
    cp neurons/neuron.swc $OutputFolderName/ -L -r
+   cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
    #cp spines $OutputFolderName/ -L -r
    echo "----> $OutputFolderName" >> SIM_LOG
    echo "----> RESULT: " >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
-   mpiexec -n 1  ../../gsl/bin/gslparser $temp_file -t 4
+   echo "Output Folder: " $OutputFolderName
+   mpiexec -n 2  ../../gsl/bin/gslparser $temp_file -t 4
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
-   ./doPlot.sh  ${uniqueName:1}
+   ./doPlot.sh  ${uniqueName:1} ${runCaseNumber}
   #}}}
 }
 
@@ -92,6 +94,8 @@ morph=`awk  '/^#define morph/{print $3}' < ${temp_file}`
 #dataFolder=`awk  '/^#define dataFolder/{printf "%s\n", $3}' < ${temp_file}`
 dataFolder=`awk  '/^#define dataFolder/{print $3}' < ${temp_file}`
 suffix=`awk  '/^#define OutputFolderName/{ printf "%s \n", $5 }' < ${temp_file}`
+runCaseName=`awk  '/^#define STIMULUS_CASE/{ print $3 }' < ${temp_file}`
+runCaseNumber=`awk  '/^#define '${runCaseName}'/{ print $3 }' < ${temp_file}`
 OutputFolderName=`echo $dataFolder | sed -e 's/^"//' -e 's/"$//'`
 OutputFolderName+=`echo $morph | sed -e 's/^"//' -e 's/"$//'`
 OutputFolderName+=`echo $suffix | sed -e 's/^"//' -e 's/"$//'`

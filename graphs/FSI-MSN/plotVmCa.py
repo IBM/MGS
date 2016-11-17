@@ -9,12 +9,20 @@ import matplotlib
 import matplotlib as mpl
 #matplotlib.use('pdf')
 matplotlib.use('gtk')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os.path
 import csv
 import sys
 import argparse
+import fnmatch
+
+def getFile(folder,fileNamePrefix):
+    for file in os.listdir(folder):
+        if fnmatch.fnmatch(file, fileNamePrefix+'*'):
+            return file
+    return ""
 
 def plot_case0():
     # only neuron (no spine/bouton)
@@ -956,6 +964,56 @@ def plot_case9a(args):
 
 def plot_case9():
     #more comprehensive deal with multiple processes I/O
+    # with spines
+    #folder='./out2_May16'
+    #somaMPIprocess=10
+    #middledenMPIprocess=16
+    #distaldenMPIprocess=23
+    #thinSpineMPIprocess=15
+    #folder='./out2_May16spines'
+    #folder='./out2'
+    #somaMPIprocess=0
+    #middledenMPIprocess=1
+    #distaldenMPIprocess=1
+    #thinSpineMPIprocess=0
+    #folder='./out2_May17triggersoma'
+    #folder='./out2_May18'
+    #somaMPIprocess=0
+    #middledenMPIprocess=1
+    #distaldenMPIprocess=1
+    #thinSpineMPIprocess=0
+    #perisomaticApicalDenMPIprocess=0
+    #perisomaticBasalDenMPIprocess=0
+    #axonAISMPIprocess = 0
+    #folder='./out2_May19'
+    #somaMPIprocess=0
+    #middledenMPIprocess=1
+    #distaldenMPIprocess=1
+    #thinSpineMPIprocess=1
+    #perisomaticApicalDenMPIprocess=0
+    #perisomaticBasalDenMPIprocess=0
+    #axonAISMPIprocess = 0
+    #folder='./out2_May20'
+    #somaMPIprocess=0
+    #middledenMPIprocess=1
+    #distaldenMPIprocess=1
+    #thinSpineMPIprocess=1
+    #perisomaticApicalDenMPIprocess=0
+    #perisomaticBasalDenMPIprocess=0
+    #axonAISMPIprocess = 0
+    #folder='./out2_May24'
+    #folder='./out2_May24_triggerdistal'
+    #folder='./out2_May25'
+    #folder='./out2_May25_pairpulse'
+    #timeStart = 145.0
+    #timeEnd = 180.0
+    #somaMPIprocess=0
+    #middledenMPIprocess=1
+    #distaldenMPIprocess=1
+    #thinSpineMPIprocess=1
+    #perisomaticApicalDenMPIprocess=0
+    #perisomaticBasalDenMPIprocess=0
+    #axonAISMPIprocess = 0
 
     args = parse()
     print (args.subparsers_name)
@@ -1037,13 +1095,13 @@ def plot_case9():
     timeEnd = -1.0
     #timeStart = 270.0
     #timeEnd = 380.0
-    somaMPIprocess=0
-    middledenMPIprocess=0
-    distaldenMPIprocess=0
-    thinSpineMPIprocess=0
-    perisomaticApicalDenMPIprocess=0
+    somaMPIprocess=2
+    middledenMPIprocess=3
+    distaldenMPIprocess=1
+    thinSpineMPIprocess=1
+    perisomaticApicalDenMPIprocess=3
     perisomaticBasalDenMPIprocess=0
-    axonAISMPIprocess = 0
+    axonAISMPIprocess = 2
     somaColor = 'blue'
     middledenColor= 'red'
     distaldenColor= 'green'
@@ -1328,6 +1386,411 @@ def plot_case9():
     axarr[2, 1].legend()
     if (os.path.isfile(folder + '/proximalSpineCa.dat'+str(thinSpineMPIprocess))):
         t, v1,v2 = np.loadtxt(folder + '/proximalSpineCa.dat'+str(thinSpineMPIprocess),
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1, 2))
+        #axarr[2, 1].plot(t, v1, 'black', label='-50 um')
+        #axarr[2, 1].plot(t, v2, 'blue', label='-25 um')
+        axarr[2, 1].plot(t, v1, 'black', label='0 um')
+        axarr[2, 1].plot(t, v2, 'blue', label='-10 um')
+    plt.show()
+
+def plot_case9_adv():
+    #more comprehensive deal with multiple processes I/O
+    # with spines
+
+    args = parse()
+    print (args.subparsers_name)
+    print(args)
+    #mainFolder="./"
+    mainFolder="./data/"
+    if (args.subparsers_name == 'folder'):
+      folder = mainFolder + args.folderName
+    elif (args.subparsers_name == 'protocol'):
+      folder='./out2_May27_fullspine'
+      folder='./out2_May27'
+      mapFolders = {}
+      mapFolders[0] = mainFolder + 'out2_May29_rest'
+      mapFolders[1] = mainFolder + 'out2_May29_triggersoma'
+      mapFolders[2] = mainFolder + 'out2_May29_triggershaft'
+      mapFolders[3] = mainFolder + 'out2_May29_triggerspine'
+      mapFolders[4] = mainFolder + 'out2_May29_triggerdistalspines'
+      mapFolders[5] = mainFolder + 'out2_May29_triggersoma_then_distalspines'
+      mapFolders[6] = mainFolder + 'out2_May29_case06'
+      tmpMap = {}
+      date = args.date
+      protocol = args.number
+      for key,val in mapFolders.iteritems():
+        #print(val.replace('May29',date))
+        tmpMap[key] = val.replace('May29',date)
+      mapFolders = tmpMap
+      # create folder purpose (if not exist)
+      for key,value in mapFolders.iteritems():
+        if not os.path.exists(value):
+          os.makedirs(value)
+      if int(protocol) == -1:#first arg should be the protocol
+        sys.exit("Folders created")
+      folder = mapFolders[int(protocol)]
+      print("Plot folder " + folder)
+    else:
+      print("Unknown method")
+      sys.exit("")
+    #print(args)
+
+    #folder='./out2_May26'
+    #kfolder='./out2_May27_trigger_soma'
+    #folder='./out2_May27_fullspine'
+    #folder='./out2_May27'
+    #mapFolders = {}
+    #mapFolders[0] = 'out2_May29_rest'
+    #mapFolders[1] = 'out2_May29_triggersoma'
+    #mapFolders[2] = 'out2_May29_triggershaft'
+    #mapFolders[3] = 'out2_May29_triggerspine'
+    #mapFolders[4] = 'out2_May29_triggerdistalspines'
+    #mapFolders[5] = 'out2_May29_triggersoma_then_distalspines'
+    #mapFolders[6] = 'out2_May29_case06'
+    #tmpMap = {}
+    #if len(sys.argv) == 1:
+    #  print("Help: python " + sys.argv[0] + " <number> <date>")
+    #  print("  <number> = index of simulating protocol (use -1 if you only want to create folders)")
+    #  print("  <date>   = the date of data, e.g. May28")
+    #  sys.exit("")
+
+    #if len(sys.argv) > 2:#second arg should be the day (e.g. May29)
+    #  for key,val in mapFolders.iteritems():
+    #    print(val.replace('May29',sys.argv[2]))
+    #    tmpMap[key] = val.replace('May29',sys.argv[2])
+    #  mapFolders = tmpMap
+
+    ## create folder purpose (if not exist)
+    #for key,value in mapFolders.iteritems():
+    #  if not os.path.exists(value):
+    #    os.makedirs(value)
+
+    #if len(sys.argv) > 1 and int(sys.argv[1]) == -1:#first arg should be the protocol
+    #  sys.exit("Folders created")
+
+    #if len(sys.argv) > 1:#first arg should be the protocol
+    #  folder = mapFolders[int(sys.argv[1])]
+
+    #timeStart = 28.0
+    timeStart = 0.0
+    #timeEnd = 60.0
+    timeEnd = -1.0
+    #timeStart = 270.0
+    #timeEnd = 380.0
+    somaMPIprocess=2
+    somaColor = 'blue'
+    middledenColor= 'red'
+    distaldenColor= 'green'
+    tufteddenColor= 'black'
+    perisomaticApicalDenColor= 'orange'
+    perisomaticBasalDenColor= 'violet'
+    axonAISColor = 'black'
+    spineColor = 'magenta'
+    preNeuronColor = 'brown'
+    f, axarr = plt.subplots(3, 2)
+    mpl.rcParams['lines.linewidth'] = 2
+    myFile = folder+'/'+getFile(folder,'somaCa.dat')
+    t, v0 = np.loadtxt(myFile,
+                       unpack=True, skiprows=1,
+                       usecols=(0, 1))
+    idxStart = next(x[0] for x in enumerate(t) if x[1] >= timeStart)
+    if (timeEnd == -1.0):
+      idxEnd = len(t)-1
+      timeEnd = t[idxEnd]
+    else:
+      idxEnd = next(x[0] for x in enumerate(t) if x[1] >= timeEnd)
+
+    minCa = np.amin(v0)
+    maxCa = np.amax(v0)
+    # f, axarr = plt.subplots(3, sharex=True)
+    axarr[0, 0].plot(t, v0, somaColor, label='soma')
+    # axarr[0, 0].plot(t, v1, 'red', label='bouton')
+    # axarr[0, 0].plot(t, v2, 'green', label='spinehead')
+
+    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[0, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        axarr[0, 0].legend()
+        minCa = min(np.amin(v1), minCa)
+        maxCa = max(np.amax(v1), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[0, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
+        axarr[0, 0].legend()
+        minCa = min(np.amin(v1), minCa)
+        maxCa = max(np.amax(v1), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'distaldendriticCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[0, 0].plot(t, v1, distaldenColor, label='distal-den')
+        axarr[0, 0].legend()
+        minCa = min(np.amin(v1), minCa)
+        maxCa = max(np.amax(v1), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'middledendriticCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[0, 0].plot(t, v1, middledenColor, label='middle-den')
+        axarr[0, 0].legend()
+        minCa = min(np.amin(v1), minCa)
+        maxCa = max(np.amax(v1), maxCa)
+
+    myFile = folder+'/'+getFile(folder,'axonAISCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[0, 0].plot(t, v1, axonAISColor, label='AIS')
+        axarr[0, 0].legend()
+        minCa = min(np.amin(v1), minCa)
+        maxCa = max(np.amax(v1), maxCa)
+
+    axarr[0, 0].set_ylim(bottom=minCa - 0.5)
+    axarr[0, 0].set_ylim(top=maxCa + 0.5)
+    axarr[0, 0].set_xlim(left=timeStart, right=timeEnd)
+    axarr[0, 0].set_title("[Ca2+] (uM)")
+    # axarr[0].set_xlim(left=0);
+    # axarr[0].set_xlim(right=60);
+    myFile = folder+'/'+getFile(folder,'somaV.dat')
+    t, v0 = np.loadtxt(myFile,
+                       unpack=True, skiprows=1,
+                       usecols=(0, 1))
+    axarr[1, 0].plot(t, v0, somaColor, label='soma')
+    # axarr[1, 0].plot(t, v1, 'red', label='bouton')
+    # axarr[1, 0].plot(t, v2, 'green', label='spinehead')
+    minVm = (np.amin(v0[idxStart:idxEnd]))
+    maxVm = (np.amax(v0[idxStart:idxEnd]))
+    #print(idxStart, idxEnd)
+    #print(t[idxStart], t[idxEnd])
+    #print(maxVm)
+    axarr[1, 0].set_ylim(bottom=minVm - 0.5)
+    axarr[1, 0].set_ylim(top=maxVm + 0.5)
+    axarr[1, 0].set_xlim(left=timeStart, right=timeEnd)
+    axarr[1, 0].set_title("Vm (mV)")
+    #axarr[2, 0].plot(t, v3, 'red', label='bouton')
+    #axarr[2, 0].plot(t, v4, 'green', label='spinehead')
+    #axarr[2, 0].set_title("Vm (mV)")
+    # axarr[2, 0].set_ylim(bottom=min(np.amin(v3),np.amin(v4))-0.5);
+    # axarr[2, 0].set_ylim(top=max(np.amax(v3),np.amax(v4))+0.5);
+
+    myFile = folder+'/'+getFile(folder,'perisomaticApicalDenV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[1, 0].plot(t, v1, perisomaticApicalDenColor, label='perisomatic-ApicalDen')
+        #axarr[1, 0].legend()
+        minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
+        maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
+
+    myFile = folder+'/'+getFile(folder,'perisomaticBasalDenV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[1, 0].plot(t, v1, perisomaticBasalDenColor, label='perisomatic-BasalDen')
+        #axarr[1, 0].legend()
+        minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
+        maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
+
+    myFile = folder+'/'+getFile(folder,'axonAISV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[1, 0].plot(t, v1, axonAISColor, label='AIS')
+        minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
+        maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
+
+    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[1, 0].plot(t, v1, middledenColor, label='middle-den')
+        axarr[1, 0].legend()
+        minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
+        maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
+    axarr[1, 0].legend()
+    axarr[1, 0].set_ylim(bottom=minVm-0.5);
+    axarr[1, 0].set_ylim(top=maxVm+0.5);
+    axarr[1, 0].set_xlim(left=timeStart, right=timeEnd)
+
+    myFile = folder+'/'+getFile(folder,'distaldendriticV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[2, 0].plot(t, v1, distaldenColor, label='distal-den')
+    axarr[2, 0].legend()
+
+    myFile = folder+'/'+getFile(folder,'tufteddendriticV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[2, 0].plot(t, v1, tufteddenColor, label='tufted-den')
+    axarr[2, 0].legend()
+
+    myFile = folder+'/'+getFile(folder,'middledendriticV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[2, 0].plot(t, v1, middledenColor, label='middle-den')
+        axarr[2, 0].legend()
+        minVm = min(np.amin(v1[idxStart:idxEnd]), minVm)
+        maxVm = max(np.amax(v1[idxStart:idxEnd]), maxVm)
+
+    myFile = folder+'/'+getFile(folder,'spineV.dat')
+    if (os.path.isfile(myFile)):
+        with open(myFile, 'rb') as f:
+            lines = [f.readline()]
+            lines = [f.readline()]
+        numCols = len(np.loadtxt(lines, dtype='float'))#.shape[1]
+        if (numCols == 2):
+            t, v1 = np.loadtxt(myFile,
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1))
+        else:
+            t, v1,v2 = np.loadtxt(myFile,
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1,2))
+        axarr[2, 0].plot(t, v1, spineColor, label='head-V')
+        #jaxarr[2, 0].plot(t, v2, spineColor, linestyle='dashdot', label='neck-V')
+        if (numCols > 2):
+            axarr[2, 0].plot(t, v2, 'black', linestyle='dashdot', label='neck-V')
+    axarr[2, 0].set_xlim(left=timeStart, right=timeEnd)
+    axarr[2, 0].legend()
+
+    myFile = folder+'/'+getFile(folder,'proximalSpineV.dat')
+    if (os.path.isfile(myFile)):
+        t, v1,v2 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1, 2))
+        #axarr[2, 0].plot(t, v1, 'black', label='-50 um')
+        axarr[2, 0].plot(t, v1, 'black', label='0 um')
+        #axarr[2, 0].plot(t, v2, 'blue', label='-25 um')
+        axarr[2, 0].plot(t, v2, 'blue', label='-10 um')
+
+    myFile = folder+'/'+getFile(folder,'presynapticSomaVm.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                        unpack=True, skiprows=1,
+                        usecols=(0, 1))
+        axarr[2, 0].plot(t, v1, preNeuronColor, label='presyn-Soma-V')
+    axarr[2, 0].set_xlim(left=timeStart, right=timeEnd)
+    axarr[2, 0].legend()
+
+    spinehead_area = 0.20 # um^2
+    myFile = folder+'/'+getFile(folder,'spineNMDAR.dat')
+    if (os.path.isfile(myFile)):
+        with open(myFile) as f:
+          reader = csv.reader(f, delimiter='\t')
+          reader.next()  # skip first line
+          validrow = next(reader)
+          numcols = len(validrow)
+
+        if (numcols == 3):
+          t, v1, v2 = np.loadtxt(myFile,
+                               unpack=True,skiprows=1,
+                               usecols=(0,1,2))
+          v1 = v1 * spinehead_area
+          v2 = v2 * spinehead_area
+          axarr[0, 1].plot(t, v1, 'red', label='I_NMDAR')
+          axarr[0, 1].plot(t, v2, 'green', label='I_NMDAR')
+        elif (numcols ==2):
+          t, v1 = np.loadtxt(myFile,
+                                unpack=True,skiprows=1,
+                                usecols=(0,1))
+          v1 = v1 * spinehead_area
+          axarr[0, 1].plot(t, v1, 'red', label='I_NMDAR (pA)')
+        axarr[0, 1].set_xlim(left=timeStart, right=timeEnd)
+        axarr[0, 1].set_title("I_NMDAR (pA)");
+
+    myFile = folder+'/'+getFile(folder,'spineAMPAR.dat')
+    if (os.path.isfile(myFile)):
+        t, v1 = np.loadtxt(myFile,
+                               unpack=True,skiprows=1,
+                                usecols=(0,1))
+        #axarr[2, 1].plot(t, v1, 'red', label='I_AMPAR')
+        #axarr[2, 1].plot(t, v2, 'green', label='I_AMPAR')
+        #axarr[2, 1].set_title("I_AMPAR (pA/um^2)");
+        v1 = v1 * spinehead_area
+        axarr[0, 1].plot(t, v1, 'green', linestyle='--', label='I_AMPAR (pA)')
+    axarr[0,1].legend()
+
+    myFile = folder+'/'+getFile(folder,'spineAMPAR.dat')
+    if (os.path.isfile(myFile)):
+        with open(myFile) as f:
+          reader = csv.reader(f, delimiter='\t')
+          reader.next()  # skip first line
+          validrow = next(reader)
+          numcols = len(validrow)
+
+        if (numcols >= 3):
+          t, v1, v2 = np.loadtxt(myFile,
+                                unpack=True,skiprows=1,
+                                  usecols=(0,1,2))
+          #axarr[2, 1].plot(t, v1, 'red', label='I_AMPAR')
+          #axarr[2, 1].plot(t, v2, 'green', label='I_AMPAR')
+          #axarr[2, 1].set_title("I_AMPAR (pA/um^2)");
+          v1 = v1 * spinehead_area
+          v2 = v2 * spinehead_area
+          axarr[1, 1].plot(t, v1, 'red', label='I_AMPAR')
+          axarr[1, 1].plot(t, v2, 'green', label='I_AMPAR')
+          minCurrent = min(np.amin(v1[idxStart:idxEnd]),np.amin(v2[idxStart:idxEnd]))
+          maxCurrent = max(np.amax(v1[idxStart:idxEnd]),np.amax(v2[idxStart:idxEnd]))
+        elif (numcols == 2):
+          t, v1 = np.loadtxt(myFile,
+                                unpack=True,skiprows=1,
+                                  usecols=(0,1))
+          v1 = v1 * spinehead_area
+          axarr[1, 1].plot(t, v1, 'red', label='I_AMPAR')
+          minCurrent = (np.amin(v1[idxStart:idxEnd]))
+          maxCurrent = (np.amax(v1[idxStart:idxEnd]))
+        axarr[1, 1].set_title("I_AMPAR (pA)");
+        axarr[1, 1].set_ylim(bottom=minCurrent-0.5);
+        axarr[1, 1].set_ylim(top=maxCurrent+0.5);
+        axarr[1, 1].set_xlim(left=timeStart, right=timeEnd)
+    # plt.legend(bbox_to_anchor=(1,1), loc=2)
+
+    myFile = folder+'/'+getFile(folder,'spineCa.dat')
+    if (os.path.isfile(myFile)):
+        with open(myFile, 'rb') as f:
+            lines = [f.readline()]
+            lines = [f.readline()]
+        numCols = len(np.loadtxt(lines, dtype='float'))#.shape[1]
+        if (numCols == 2):
+            t, v1 = np.loadtxt(folder + '/spineCa.dat'+str(thinSpineMPIprocess),
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1))
+        else:
+            t, v1,v2 = np.loadtxt(folder + '/spineCa.dat'+str(thinSpineMPIprocess),
+                            unpack=True, skiprows=1,
+                            usecols=(0, 1,2))
+        axarr[2, 1].plot(t, v1, spineColor, label='spine-Ca')
+        #axarr[2, 1].plot(t, v2, spineColor, linestyle='dashdot', label='neck-Ca')
+        if (numCols > 2):
+            axarr[2, 1].plot(t, v2, 'black', linestyle='dashdot', label='neck-Ca')
+    axarr[2, 1].set_xlim(left=timeStart, right=timeEnd)
+    axarr[2, 1].legend()
+    myFile = folder+'/'+getFile(folder,'proximalSpineCa.dat')
+    if (os.path.isfile(myFile)):
+        t, v1,v2 = np.loadtxt(myFile,
                         unpack=True, skiprows=1,
                         usecols=(0, 1, 2))
         #axarr[2, 1].plot(t, v1, 'black', label='-50 um')
@@ -1910,6 +2373,7 @@ if (__name__ == "__main__"):
     elif (case == 9):
         #deal with MPIprocess (neuron + spines)
         # here we fix to 24 MPI processes
-        plot_case9()
+        #plot_case9()
+        plot_case9_adv()
     elif (case == 10):
         simpleSpine()

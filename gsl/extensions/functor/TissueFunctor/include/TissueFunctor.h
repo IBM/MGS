@@ -55,13 +55,20 @@ class TissueFunctor : public CG_TissueFunctorBase
   friend class TissueNodeInitFunctor;
   friend class TissueConnectorFunctor;
   friend class TissueProbeFunctor;
+  friend class TissueMGSifyFunctor;//abandoned idea - J.K.
 
   public:
+  //NDPairList* getParams(){ return _params; };
   void userInitialize(LensContext* CG_c, String& commandLineArgs1,
                       String& commandLineArgs2, String& compartmentParamFile,
                       String& channelParamFile, String& synapseParamFile,
                       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
                       Functor*& connectorFunctor, Functor*& probeFunctor);
+  // void userInitialize(LensContext* CG_c, String& commandLineArgs1, String& commandLineArgs2, 
+	//	       String& compartmentParamFile, String& channelParamFile, String& synapseParamFile,
+	//	       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
+	//	       Functor*& connectorFunctor, Functor*& probeFunctor,
+	//	       Functor*& MGSifyFunctor); //idea abandoned - JamesK.
   std::auto_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
                                      NDPairList*& params);
 
@@ -75,6 +82,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   private:
   dyn_var_t getFractionCapsuleVolumeFromPre(ComputeBranch* branch);
   dyn_var_t getFractionCapsuleVolumeFromPost(ComputeBranch* branch);
+  bool isValidCategoryString(std::string category, std::string task);
 #ifdef IDEA1
   //int getNumCompartments(ComputeBranch* branch,
   //                       std::vector<int>& cptsizes_in_branch);
@@ -86,6 +94,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   int getNumCompartments(ComputeBranch* branch);
   int getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch);
 #endif
+
   // perform neuron generating from a given set of parameters
   void neuroGen(Params* params, LensContext* CG_c);
   // perform neuron development
@@ -102,6 +111,7 @@ class TissueFunctor : public CG_TissueFunctorBase
                        int nodeIndex, int densityIndex);
   //
   std::vector<DataItem*> const* extractCompartmentalization(NDPairList* params);
+
   // get StructDataItem
   // from a given point (represented by coordinate  (a pointer to double which
   // is expected to be 3-element array)+ radius + distance to soma)
@@ -112,18 +122,27 @@ class TissueFunctor : public CG_TissueFunctorBase
                                dyn_var_t radius, dyn_var_t dist2soma,
                                dyn_var_t surface_area, dyn_var_t volume,
                                dyn_var_t length);
-  // get the list of name of nodes (passed in GSL via nodekind)
-  // from a list of layers represented as NDPairList*
+  //parse the string 'nodekind=....'
   void getNodekind(const NDPairList* layerNdpl,
                    std::vector<std::string>& nodekind);
   // perform the connection between 2 set of nodetypes from 2 layers
+  // using the given InAttrPSet ndpl
   void connect(Simulation* sim, Connector* connector, NodeDescriptor* from,
                NodeDescriptor* to, NDPairList& ndpl);
 
   ShallowArray<int> doLayout(LensContext* lc);
+  ShallowArray<int> doLayoutNTS(LensContext* lc);
+  ShallowArray<int> doLayoutHybrid(LensContext* lc);
   void doNodeInit(LensContext* lc);
   void doConnector(LensContext* lc);
   void doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval);
+  //Zipper purpose
+  Grid* doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
+  std::pair<std::string, std::string> getCategoryTypePair(NDPairList::iterator& ndpiter, int & remaining);
+  int getTypeLayerIdx(std::string category, std::string type, bool& esyn);
+  GridLayerDescriptor* getGridLayerDescriptor(std::string category, int typeIdx, bool esyn);
+  //end Zipper
+  void doMGSify(LensContext* lc);
   ComputeBranch* findBranch(int nodeIndex, int densityIndex,
                             std::string const& cptVariableType);
   std::vector<int>& findBranchIndices(ComputeBranch*,
@@ -248,7 +267,8 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
 
   // NOTE: While parsing GSL, each layer is given an index,
-  //                   starting from 0 for the first Layer
+  //                   starting from 0 for the first Layer in A GRID
+  // (each grid has its own indexing, i.e. indices are reset)
   //[index-layer][density-index-of-node-that-channel-getinputs]
 	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
@@ -280,6 +300,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::auto_ptr<Functor> _nodeInitFunctor;
   std::auto_ptr<Functor> _connectorFunctor;
   std::auto_ptr<Functor> _probeFunctor;
+  std::auto_ptr<Functor> _MGSifyFunctor;
   std::auto_ptr<NDPairList> _params;
   Params _tissueParams;
 
@@ -325,6 +346,24 @@ class TissueFunctor : public CG_TissueFunctorBase
       _generatedBidirectionalConnections;
   // std::map<Touch*, std::list<std::pair<int, int> > >
   // _generatedSpineBranch;
+ 
+  //vector-index = layerindex-of-type-CHEMICALSYNAPSE-receptor
+  //Touch* = touch
+  //int    = density-index of that Receptor for the current _rank
+  std::vector<std::map<Touch*, int> > _synapseReceptorMaps; 
+  //vector-index = layerindex-of-type-SYNAPTICCLEFT
+  std::vector<std::map<Touch*, int> > _synapticCleftMaps; 
+
+  //Zipper purpose
+  // map<"PROBED-name", vector-holding-#instances-at-each-gridIndex >
+  //                 NOTE: the index of the vector is also the gridIndex
+  std::map<std::string, ShallowArray<int> > _probedLayoutsMap;
+  // map<"PROBED-name", map< pair{category, typename }, pair{ Grid*, vector<ND*>} > >
+  // So: this Probe-layer indeed holds vector of NodeDescriptor* to 
+  //            one of the NTS-layer as defined 
+  //            which can be tracked using <Grid*, vector<ND*>>
+  std::map<std::string, std::map<std::pair<std::string, std::string>, std::pair<Grid*, std::vector<NodeDescriptor*> > > > _probedNodesMap;
+  //end Zipper
 
   // NOTE:
   // <key=lower-MPI-rank, map<key=higher-MPI-rank, RNG>>

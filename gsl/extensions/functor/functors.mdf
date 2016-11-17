@@ -33,6 +33,8 @@
 #include "TissueConnectorFunctor.mdl"
 #include "TissueFunctor.mdl"
 #include "TissueLayoutFunctor.mdl"
+#include "TissueMGSifyFunctor.mdl"
 #include "TissueNodeInitFunctor.mdl"
 #include "TissueProbeFunctor.mdl"
 #include "UniformDiscreteDist.mdl"
+#include "Zipper.mdl"

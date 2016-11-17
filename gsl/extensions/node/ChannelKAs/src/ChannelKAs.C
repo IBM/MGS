@@ -15,24 +15,7 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 //
 // This is an implementation of the "KAs potassium current
 //
-#if CHANNEL_KAs == KAs_WOLF_2005
-//  Inactivation from
-//  Activation from
-//    1. Shen et al. (2004)
-// minf(Vm) = 1/(1+exp((Vm-Vh)/k))
-// hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
-#define VHALF_M -27.0
-#define k_M -16.0
-#define VHALF_H -33.5
-#define k_H 21.5
-#define frac_inact 0.996  // 'a' term
-#define AHC 1.0
-#define AHV 90.96
-#define AHD 29.01
-#define BHC 1.0
-#define BHV 90.96
-#define BHD 100
-#elif CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
+#if CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
 // Korngreen - Sakmann (2000) Vm-gated K+ channels in PL5 neocortical young rat
 // recorded in soma using nucleated outside-out patches
 //          ... dendrite up to 430 um from soma using cell-attached recording
@@ -57,6 +40,24 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 #define THV2 85.0
 #define THD 48.0
 //#define T_ADJ 2.9529 // 2.3^((34-21)/10)
+
+#elif CHANNEL_KAs == KAs_WOLF_2005
+//  Inactivation from
+//  Activation from
+//    1. Shen et al. (2004)
+// minf(Vm) = 1/(1+exp((Vm-Vh)/k))
+// hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
+#define VHALF_M -27.0
+#define k_M -16.0
+#define VHALF_H -33.5
+#define k_H 21.5
+#define frac_inact 0.996  // 'a' term
+#define AHC 1.0
+#define AHV 90.96
+#define AHD 29.01
+#define BHC 1.0
+#define BHV 90.96
+#define BHD -100
 #else
 NOT IMPLEMENTED YET
 #endif

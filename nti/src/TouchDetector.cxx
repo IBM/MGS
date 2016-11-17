@@ -70,6 +70,7 @@
 #include "NTSMacros.h"
 #include "MaxComputeOrder.h"
 #include "VolumeDecomposition.h"
+#include "ComputeBranch.h"
 
 #include <cassert>
 #include <algorithm>
@@ -990,7 +991,11 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
             //  capsule falls into the current rank
             //
             key_size_t key_spineneck = -1.0;
-            bool newTouchIsNeckDenShaft = touch.hasSpineNeck(key_spineneck);
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+            bool newTouchIsNeckDenShaft = touch.hasSpineNeck(key_spineneck, *_params);
+#else
+            bool newTouchIsNeckDenShaft = touch.hasSpineNeck(key_spineneck);//obsolete
+#endif
             if (newTouchIsNeckDenShaft)
             {
               int sidNeck = (s1Key == key_spineneck) ? sid : sid2;
@@ -1020,7 +1025,11 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
             numTouchesForThisCapsule += 1;
             touchingCapsules.push_back(s2Key);
             key_size_t dummy;
-            touchingSpineNeck.push_back(touch.hasSpineNeck(dummy));
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+            touchingSpineNeck.push_back(touch.hasSpineNeck(dummy, *_params));
+#else
+            touchingSpineNeck.push_back(touch.hasSpineNeck(dummy));//obsolete
+#endif
             neuronWithTouch.insert(segDesc.getNeuronIndex(s1Key));
 #endif
             if (_writeToFile)

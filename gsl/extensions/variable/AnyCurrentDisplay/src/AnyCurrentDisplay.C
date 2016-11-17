@@ -52,7 +52,7 @@ void AnyCurrentDisplay::initialize(RNG& rng)
     if (I_synapse.size() > 0)
     {  // via ion-permeable receptor at synapse
       if (connexonBranchData.size() > 0)
-      {
+      {//gap-junction current
         for (unsigned int i = 0; i < I_synapse.size(); ++i)
         {
           (*outFile) << std::fixed << " ["
@@ -62,7 +62,7 @@ void AnyCurrentDisplay::initialize(RNG& rng)
               os2 << strChannelTypeOnSynapse[i] << ", "; 
         }
       }
-      else
+      else//synaptic-receptor current
       {
         for (unsigned int i = 0; i < I_synapse.size(); ++i)
         {

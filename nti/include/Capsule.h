@@ -61,6 +61,7 @@ public:
   void writeToFile(FILE* dataFile);
 	dyn_var_t getLength();
 	dyn_var_t getSurfaceArea();
+  dyn_var_t getEndSphereSurfaceArea();
 
 private:
   //when the capsule represent a soma, then Sphere is used

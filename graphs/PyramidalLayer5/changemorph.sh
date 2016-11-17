@@ -8,9 +8,9 @@ rm_if_link(){ [ ! -L "$1" ] || rm -v "$1"; }
 clean_all() {
   rm_if_link neurons
   rm_if_link params
-  rm_if_link connect_recording_model.gsl
+  #rm_if_link connect_recording_model.gsl
   rm_if_link recording_model.gsl
-  rm_if_link connect_stimulus_model.gsl
+  #rm_if_link connect_stimulus_model.gsl
   rm_if_link stimulus_model.gsl
   rm_if_link model.gsl
   rm_if_link neurons.txt 
@@ -59,11 +59,17 @@ ChangeSWC ()
   rm_if_link neurons/neuron.swc 2>&1 >/dev/null
   cd neurons;ln -s $arg2 neuron.swc; cd -
   spineFolder=$(echo $swcFile | cut -f 1 -d '.')"_spines"
+  extMorph=$(echo $swcFile | cut -f 1 -d '.')
+  echo "Spines folder:  neurons/$spineFolder"
   if [ -d neurons/"$spineFolder" ]; then
     rm_if_link spines 2>&1 >/dev/null
     ln -s neurons/$spineFolder spines
     rm_if_link neurons.txt
     ln -s spines/neurons.txt neurons.txt
+    rm_if_link connect_recording_model.gsl
+    ln -s neurons/connect_recording_model_$extMorph.gsl connect_recording_model.gsl
+    rm_if_link connect_stimulus_model.gsl
+    ln -s neurons/connect_stimulus_model_$extMorph.gsl  connect_stimulus_model.gsl
   else 
     echo "$spineFolder not found"
     rm_if_link neurons.txt
@@ -119,9 +125,9 @@ else
     authorName=`echo $arg2 | cut -d'_' -f 3`
     ln -s $ModelFolder/model_$authorName.gsl model.gsl
   fi
-  ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
+  #ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
   ln -s neurons/recording_model_$1.gsl recording_model.gsl
-  ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
+  #ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
   ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
   ln -s neurons/neurons_$authorName.txt neurons.txt
 

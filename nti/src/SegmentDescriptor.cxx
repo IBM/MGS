@@ -237,6 +237,7 @@ key_size_t SegmentDescriptor::getSegmentKey(std::vector<SegmentKeyData> const & 
   return sid.collapsed;
 }
 
+//GOAL: the returned value called 'mask': will be used by getSegmentKey(true-key, mask)
 unsigned long long SegmentDescriptor::getMask(std::vector<SegmentKeyData> const &  maskVector)
 {
   unsigned long long mask = 0;
@@ -245,6 +246,8 @@ unsigned long long SegmentDescriptor::getMask(std::vector<SegmentKeyData> const 
   return mask;
 }
 
+//GOAL: build an abstract-key based on the true key 'segmentKey' 
+//          and the mask value returned from getMask() 
 key_size_t SegmentDescriptor::getSegmentKey(key_size_t segmentKey, unsigned long long mask)
 {
   sid.collapsed = segmentKey;

@@ -71,6 +71,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHC 4.0
 #define BHV (40.0+Eleak)
 #define BHD -5.0
+
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 // Developed for IO cell (inferior olive)
 //     adapted from Rush-Rinzel (1994) thalamic neuron
@@ -91,6 +92,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHV -50.0
 #define BHD 10.0
 //#endif
+
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 // Kinetics data for Layer V5 pyramidal neuron
 //       recorded at room tempt.(23-degree C)
@@ -111,6 +113,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHC 0.015
 #define BHV -66.0
 #define BHD 6.0
+
 #elif CHANNEL_NAT == NAT_WOLF_2005
 // data from rat CA1 hippocampal pyramidal neuron
 //     recorded at 22-24C and then mapped to 35C using Q10 = 3
@@ -167,6 +170,8 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHC 0.015
 #define BHV -66.0
 #define BHD 6.0
+#else
+  NOT IMPLEMENTED YET
 #endif
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)

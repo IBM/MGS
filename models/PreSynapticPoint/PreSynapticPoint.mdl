@@ -15,17 +15,22 @@
 
 // PreSynapticPoint is used as an intermediate node connecting
 //   pre-Compartment[Node]  --> PreSynapticPoint --> one-or-many Receptor(Synapse)
-Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProducer
+//NOTE: obsolete feature TO BE REMOVED
+Node PreSynapticPoint Implements BranchDataProducer, IndexProducer
+   , VoltageProducer 
 {
 /*{{{*/
+  //{{{DATA
+  //{{{pre-side
   dyn_var_t* voltage;
+  BranchDataStruct branchData;//data that branchDataConnect point to
   int index; //index of compartment in Presynaptic-side (i.e. bouton)
+  //}}}
   Shared {
     dyn_var_t []* voltageConnect;
+    BranchDataStruct* branchDataConnect;//point to preSynaptic compartment's branch
   }
-
-  BranchDataStruct* branchDataConnect;
-  BranchDataStruct branchData;
+  //}}}
 
   // Output
   //{{{ 
@@ -34,90 +39,185 @@ Node PreSynapticPoint Implements VoltageProducer, BranchDataProducer, IndexProdu
   IndexProducer.index << &index;
   //}}}
 
+  //{{{Phases
+  //NOTE: As voltage is used by receptors which can be in another process, 
+  // it needs to be sync to proxy node
+  InitPhase produceInitialState(voltage, branchData, index);
+  RuntimePhase produceState(voltage);
+  //}}}
+  UserFunction setPointers;
+
   InAttrPSet {
     string identifier;
     int idx;
   }
 
-  //NOTE: As voltage is used by receptors which can be in another process, 
-  // it needs to be sync to proxy node
-  InitPhase produceInitialState(voltage, branchData, index);
-  RuntimePhase produceState(voltage);
-  UserFunction setPointers;
-
-  // Input (Connection setup)
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-        BranchDataProducer 
+  //{{{Input (Connection setup)
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer
+        , BranchDataProducer 
   {
     //{{{ 
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
-    BranchDataProducer.branchData >> branchDataConnect;
+    BranchDataProducer.branchData >> Shared.branchDataConnect;
     setPointers();
     //}}}
   }
+  //}}} 
 /*}}}*/
 }
 
 // It is used as an intermediate node connecting
 //   pre-Compartment[Node]  --> SynapticCleft --> Receptor(Synapse)
 // However, here it has the states
-Node SynapticCleft Implements BranchDataProducer, IndexProducer,
-    GlutamateConcentrationProducer, GABAConcentrationProducer,
-    AnyConcentrationProducer
+Node SynapticCleft Implements 
+    GlutamateConcentrationProducer, GABAConcentrationProducer
+#if SUPPORT_MODULABLE_CLEFT
+    , DopamineConcentrationProducer, SerotonineConcentrationProducer
+    , AchetylcholineConcentrationProducer
+//TUAN TODO: add ACh, as FSI producing ACh is common in MSN
+#endif
+    , NameProducer
+#ifdef KEEP_PAIR_PRE_POST
+    , DimensionArrayProducer //for pre and post, in that order
+    , BranchDataArrayProducer
+    , DirectIndexArrayProducer
+#else
+   //NOT SUPPORT  (to be removed this option as it's not worthy)
+    //BranchDataProducer
+    //, IndexProducerPre, IndexProducerPost
+    //, BranchDataProducerPre, BranchDataProducerPost
+    //, AnyConcentrationProducer
+#endif
 {
 /*{{{*/
-  dyn_var_t* Vpre; //presynaptic voltage Vpre
-  int index; //index of compartment in Presynaptic-side (i.e. bouton)
+  //{{{DATA
+  string cleftName;// name of SynapticCleft - NOTE: TUAN TODO not being used right now-will be passed in via the pre-compartment connection; which is identified via the Touch* and associated map structure - this will be used for enhanced Probe purpose, i.e. 'site', 'side' and 'name' attributes
+  //{{{cleft-info
   dyn_var_t Glut; // [uM]  Glutamate concentration
   dyn_var_t GABA; // [uM]  GABA concentration
+#if SUPPORT_MODULABLE_CLEFT
+  dyn_var_t DA; // [uM]    Dopamine concentration
+  dyn_var_t Ser; // [uM]   Serotonin concentration
+#endif
+  //dyn_var_t IP3; // [uM]  IP3 concentration - consider here or inside IP3R channels
+  //}}} 
+  //{{{pre-side info
+  dyn_var_t* Vpre; //presynaptic voltage Vpre
+  //int index; //index of compartment in Presynaptic-side (i.e. bouton)
+  //}}}
+  //{{{both-side
+  int [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
+  BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
+  DimensionStruct * [] dimensionsPrePost; // array of 2n elements; in pair (preBD, postBD)
+  //}}}
+  //BranchDataStruct branchDataPre;//data that branchDataConnect point to
+  //BranchDataStruct branchDataPost;//data  from Post-side (NOT being used now - see TUAN TODO)
+  //}}}
 
   Shared {
-    dyn_var_t []* voltageConnect;
+    //{{{
     dyn_var_t Glut_baseline;
-    dyn_var_t GABA_baseline;
     dyn_var_t Glut_max;
+    dyn_var_t GABA_baseline;
     dyn_var_t GABA_max;
+#if SUPPORT_MODULABLE_CLEFT
+    dyn_var_t DA_baseline;
+    dyn_var_t DA_max;
+    dyn_var_t Ser_baseline;
+    dyn_var_t Ser_max;
+#endif
 				//{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth sigmoid curve
     dyn_var_t Vp_Glut;        // mV   half-max of Glut
     dyn_var_t Kp_Glut;        // mV   steepness of Glut increase
+    dyn_var_t tau_Glut; // [ms] time constant for uptake Glu
     dyn_var_t Vp_GABA;        // mV
     dyn_var_t Kp_GABA;        // mV
-    dyn_var_t* deltaT; // [ms]
-    dyn_var_t tau_Glut; // [ms] time constant for uptake Glu
     dyn_var_t tau_GABA; // [ms] time constant for uptake GABA
+#if SUPPORT_MODULABLE_CLEFT
+    dyn_var_t Vp_DA;        // mV   half-max of DA
+    dyn_var_t Kp_DA;        // mV   steepness of DA increase
+    dyn_var_t tau_DA; // [ms] time constant for uptake DA
+    dyn_var_t Vp_Ser;        // mV
+    dyn_var_t Kp_Ser;        // mV
+    dyn_var_t tau_Ser; // [ms] time constant for uptake Ser
+#endif
         //}}}
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t []* voltageConnect; //temporary use
+    //BranchDataStruct* branchDataConnect;//temporary use 
+          //can point to preSynaptic cpt's branch or postSynaptic cpt's branch
+    //}}}
   }
-
-  BranchDataStruct* branchDataConnect; //of the presynaptic compartment's branch
-  BranchDataStruct branchData;
 
   // Output
   //{{{ 
   GlutamateConcentrationProducer.NT << &Glut;
-  AnyConcentrationProducer.AnyConc << &Glut;
   GABAConcentrationProducer.NT << &GABA;
-  BranchDataProducer.branchData << &branchData;
-  IndexProducer.index << &index;
+  //AnyConcentrationProducer.AnyConc << &Glut;
+#if SUPPORT_MODULABLE_CLEFT
+  DopamineConcentrationProducer.NT << &DA;
+  SerotonineConcentrationProducer.NT << &Ser;
+#endif
+  //IndexProducer.index << &index; //pre-synaptic Index
+  //BranchDataProducer.branchData << &branchDataPre; //default is from Pre-synaptic side
+  //BranchDataProducerPre.branchData << &branchDataPre;
+  //BranchDataProducerPost.branchData << &branchDataPost;
+  BranchDataArrayProducer.branchDataArray << &branchDataPrePost;
+  DirectIndexArrayProducer.indexArray << &indexPrePost;
+  DimensionArrayProducer.dimensionArray << &dimensionsPrePost;
+  NameProducer.name << &cleftName;
   //}}}
+
+  //{{{Phases 
+  //NOTE: As neurotransmitter is used by receptors which can be in another process, 
+  // it needs to be sync to proxy node
+  //InitPhase produceInitialState(Glut, GABA, branchDataPre, branchDataPost, index);
+  InitPhase produceInitialState(Glut, GABA 
+#if SUPPORT_MODULABLE_CLEFT
+       , DA, Ser
+#endif
+      );
+  RuntimePhase produceState(Glut, GABA
+#if SUPPORT_MODULABLE_CLEFT
+       , DA, Ser
+#endif
+      );
+  //}}}
+  UserFunction setPointers;
 
   InAttrPSet {
     string identifier;
     int idx;
+    string side; // 'pre' or 'post'
   }
 
-  //NOTE: As neurotransmitter is used by receptors which can be in another process, 
-  // it needs to be sync to proxy node
-  InitPhase produceInitialState(Glut, GABA, branchData, index);
-  RuntimePhase produceState(Glut, GABA);
-  UserFunction setPointers;
-
   // Input (Connection setup)
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-        BranchDataProducer 
-  {
+  // CURRENTLY it is always from the pre-side
+  // TUAN TODO: We need to provide another attribute (to like SpineAttachment) 
+  //      to know if it froms pre- (axonal) or post- (shaft)
+  Connection Pre Node ((PSet.identifier=="compartment[Voltage]") 
+                       && (PSet.side=="pre")) Expects 
+       VoltageArrayProducer
+       , BranchDataProducer 
+       , DimensionArrayProducer
+  {//from pre-side (i.e. axonal terminal)
     //{{{ 
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
-    BranchDataProducer.branchData >> branchDataConnect;
+    //BranchDataProducer.branchData >> Shared.branchDataConnect;
+    BranchDataProducer.branchData >> branchDataPrePost;
+    DimensionArrayProducer.dimensionArray >> dimensionsPrePost;
+    setPointers();
+    //}}}
+  }
+  Connection Pre Node ((PSet.identifier=="compartment[Voltage]") 
+                      && (PSet.side=="post")) Expects 
+       BranchDataProducer 
+       , DimensionArrayProducer
+  {//from post-side 
+    //{{{ 
+    //BranchDataProducer.branchData >> Shared.branchDataConnect;
+    BranchDataProducer.branchData >> branchDataPrePost;
+    DimensionArrayProducer.dimensionArray >> dimensionsPrePost;
     setPointers();
     //}}}
   }

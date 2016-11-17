@@ -5,6 +5,7 @@
 #include "HodgkinHuxleyVoltage/HodgkinHuxleyVoltage.mdl"
 
 #include "CaConcentration/CaConcentration.mdl"
+#include "IP3Concentration/IP3Concentration.mdl"
 #include "CaERConcentration/CaERConcentration.mdl"
 #include "SpineAttachment/SpineAttachment.mdl"
 #include "Connexon/Connexon.mdl"
@@ -32,11 +33,13 @@
 #include "GABAAReceptor/GABAAReceptor.mdl"
 #include "AMPAReceptor/AMPAReceptor.mdl"
 #include "NMDAReceptor/NMDAReceptor.mdl"
+#include "mGluReceptor/mGluReceptor.mdl"
 
 #include "Exchanger/NCX.mdl"
 #include "Pump/PMCA.mdl"
 #include "Pump/SERCA.mdl"
 #include "ChannelRYR/ChannelRYR.mdl"
+#include "ChannelIP3R/ChannelIP3R.mdl"
 
 #include "Life/Life.mdl"
 

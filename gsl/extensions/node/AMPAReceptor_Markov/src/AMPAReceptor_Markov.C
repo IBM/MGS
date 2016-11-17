@@ -38,9 +38,9 @@
 #define BETA (getSharedMembers().beta)
 // dynamics of neurotransmitter
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-#define NEUROTRANSMITTER      \
-  (getSharedMembers().NTmax / \
-   (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
+  #define NEUROTRANSMITTER      \
+    (getSharedMembers().NTmax / \
+     (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 // NOTE: (should be updated in SynapticCleft nodetype)
 #define NEUROTRANSMITTER      *Glut
@@ -104,6 +104,7 @@ void AMPAReceptor_Markov::updateAMPA(RNG& rng)
   else{
     g = (*w)*gbar*fO;
   }
+  I = g * ((*Vpost)[indexPost] - getSharedMembers().E);
 }
 
 void AMPAReceptor_Markov::setPostIndex(
@@ -112,6 +113,10 @@ void AMPAReceptor_Markov::setPostIndex(
     Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset,
     CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset)
 {
+  indexPost = CG_inAttrPset->idx;
+#ifdef KEEP_PAIR_PRE_POST
+  indexPrePost.push_back(&indexPost);
+#endif
 }
 
 AMPAReceptor_Markov::~AMPAReceptor_Markov() {}

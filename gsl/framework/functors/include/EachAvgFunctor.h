@@ -29,30 +29,34 @@ class Functor;
 class NodeDescriptor;
 class NodeSet;
 
-class EachAvgFunctor: public SampFctr1Functor
+class EachAvgFunctor : public SampFctr1Functor
 {
-   public:
-      enum SamplingPhase {_REPETITIONS, _PROBABILISTIC, _DONE};
-      EachAvgFunctor();
-      EachAvgFunctor(const EachAvgFunctor&);
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
-      virtual ~EachAvgFunctor();
-   protected:
-      virtual void doInitialize(LensContext *c, 
-				const std::vector<DataItem*>& args);
-      virtual void doExecute(LensContext *c, 
-			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
-   private:
-      std::vector<NodeDescriptor*> _nodes;
-      std::vector<NodeDescriptor*>::iterator _nodesIter, 
-	 _nodesBegin, _nodesEnd;
-      float _avg;
-      int _nbrReps;
-      float _remainingProb;
-      int _nbrRepsDone;
-      int _count;
-      float _combOffset;
-      SamplingPhase _phase;
+  public:
+  enum SamplingPhase
+  {
+    _REPETITIONS,
+    _PROBABILISTIC,
+    _DONE
+  };
+  EachAvgFunctor();
+  EachAvgFunctor(const EachAvgFunctor&);
+  virtual void duplicate(std::auto_ptr<Functor>& fap) const;
+  virtual ~EachAvgFunctor();
+
+  protected:
+  virtual void doInitialize(LensContext* c, const std::vector<DataItem*>& args);
+  virtual void doExecute(LensContext* c, const std::vector<DataItem*>& args,
+                         std::auto_ptr<DataItem>& rvalue);
+
+  private:
+  std::vector<NodeDescriptor*> _nodes;
+  std::vector<NodeDescriptor*>::iterator _nodesIter, _nodesBegin, _nodesEnd;
+  //float _avg;
+  int _nbrReps;
+  float _remainingProb;
+  int _nbrRepsDone;
+  int _count;
+  float _combOffset;
+  SamplingPhase _phase;
 };
 #endif

@@ -113,7 +113,9 @@ void AMPAReceptor::setPostIndex(const String& CG_direction,
                                 CG_AMPAReceptorOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
+#ifdef KEEP_PAIR_PRE_POST
   indexPrePost.push_back(&indexPost);
+#endif
 }
 
 AMPAReceptor::~AMPAReceptor() {}

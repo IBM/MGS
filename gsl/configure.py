@@ -923,6 +923,9 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstScaledContractedGaussianWeightModifier \\
        	DstScaledGaussianWeightModifier \\
        	IsoSampler \\
+       	IsoSamplerHybrid \\
+        Exp \\
+        Log \\
         ModifyParameterSet \\
         NameReturnValue \\
       	PolyConnectorFunctor \\
@@ -944,6 +947,8 @@ FUNCTOR_MODULES := BinomialDist \\
       	TissueLayoutFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
+	    TissueMGSifyFunctor \\
+        Zipper \\
         UniformDiscreteDist \\
         GetNodeCoordFunctor \\
         ExecuteShell \\

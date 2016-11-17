@@ -8,6 +8,8 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
+//NOTE: We had CaClearance [1/ms] to model the removal of Ca2+ back to the basal level CaBaseline
+//      This is replaced by CaRemoval mechanism or PMCA pump with tau [ms]
 
 // It represents one branch (which comprises regular compartments + implicit junctions)
 Node CaConcentration Implements SolutionArrayProducer, 
@@ -33,6 +35,8 @@ Node CaConcentration Implements SolutionArrayProducer,
 
   dyn_var_t [] RHS; // TODO unit
   dyn_var_t [] Aij; // TODO unit
+
+  //dyn_var_t  CaClearance; // [1/ms]
 
   dyn_var_t* proximalCaConcentration; // TODO unit
   dyn_var_t* [] distalAiis;
@@ -319,6 +323,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
   dyn_var_t currentToConc;
+  //dyn_var_t  CaClearance; // [1/ms]
 
   //{{{ ionic currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
