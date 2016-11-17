@@ -1226,7 +1226,11 @@ Grid PyramidalL5_Neuron{
 #endif
 
    //Synaptic Cleft
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+   polyConnect(timeStep, .[].Layer(PreSynapticPoints), <>, <identifier="dt">);
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
    polyConnect(timeStep, .[].Layer(SynapticClefts), <>, <identifier="dt">);
+#endif
    // Synapse Receptors
    polyConnect(timeStep, .[].Layer(NMDASynapsesMush), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(NMDASynapsesThin), <>, <identifier="dt">);
