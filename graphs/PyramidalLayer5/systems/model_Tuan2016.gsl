@@ -14,6 +14,7 @@
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
 #define CASE_VIVO 1000 // random input at all spines
+#define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
@@ -70,7 +71,17 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //{{{
 //{{{ 1. Output Location
 //#define dataFolder "./"
+//#define dataFolder "./data/"
+#ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
+#else
+#define dataFolder OUTPUTFOLDER
+#endif
+#ifndef PARAMFOLDER
+#define paramFolder ./params/
+#else
+#define paramFolder PARAMFOLDER
+#endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
@@ -89,6 +100,8 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_07
 #define OutputFolderName dataFolder morph "Tuan_triggeraxon"  STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
+#define OutputFolderName  STR(EXTENSION)
 #else
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
@@ -195,6 +208,7 @@ print("Case 00: resting");
 //}}}
 
 //{{{ Conditions: axial conductance + temperature + Vrest + Eleak + resistance
+//NOTE: 1 Ohm.cm = 10^-5 GOhm*um
 #define Ra_value 0.001     // [GOhm*um] 
 //#define Ra_value 0.0008     // [GOhm*um] 
   //across the spine-neck to shaft
@@ -372,11 +386,10 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 //#else
 #define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 "//" -g 5"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-#define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
-#define strArg2  "params/CptParams.par"
-#define strArg3 "params/ChanParams.par"
-#define strArg4 "params/SynParams.par"
-//#endif
+#define strArg1_supplement " -p " STR(paramFolder) "/DetParams.par -m 0 -n cost-volume"
+#define strArg2  STR(paramFolder) "/CptParams.par"
+#define strArg3 STR(paramFolder) "/ChanParams.par"
+#define strArg4 STR(paramFolder) "/SynParams.par"
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,

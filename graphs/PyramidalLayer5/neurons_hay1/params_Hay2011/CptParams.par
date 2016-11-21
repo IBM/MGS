@@ -17,12 +17,12 @@ Calcium 1.0
 COMPARTMENT_VARIABLE_PARAMS 1
 Voltage 6
 MTYPE BRANCHTYPE
+#{{{    
 # Cm ~ [pF/um^2]
 # gLeak ~ [nS/um^2]
 # Vnew ~ [mV]
 ## NOTE: Make sure semi-colon separated
-#{{{
-#{{{neuron
+#{{{neuron  6
 0 1 <Cm=0.01; gLeak=0.0002>
 0 2 <Cm=0.01; gLeak=0.000325>
 0 5 <Cm=0.01; gLeak=0.000325>
@@ -31,11 +31,11 @@ MTYPE BRANCHTYPE
 0 6 <Cm=0.02; gLeak=0.000295>
 # NOTE: for non-uniform gLeak; the authors confirmed that we need non-uniform Eleak (page 12 column 1)
 #}}}
-#{{{ GABAergic bouton
+#{{{ GABAergic bouton   0
 #}}}
-#{{{ spines
+#{{{ spines   0
 #}}}
-#{{{ Glutamatergic bouton
+#{{{ Glutamatergic bouton  0
 ## leak -89.52mV for 0.000295
 #}}}
 #}}}

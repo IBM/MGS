@@ -83,6 +83,9 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Hay_case06" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
+#else
+  print("NOT DEFINED STIMULUS_CASE .... ")
+  WRONG
 #endif
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
