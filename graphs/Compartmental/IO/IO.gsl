@@ -49,8 +49,8 @@
 #define V_GLEAK 0.00015
 #define V_E_LEAK -10.0
 
-#define PRMASK0 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, MTYPE=0, NEURON_INDEX=0
-#define PRMASK1 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, MTYPE=0, NEURON_INDEX=1
+#define PRMASK0 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, MTYPE=0, NEURON_INDEX=0
+#define PRMASK1 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, MTYPE=0, NEURON_INDEX=1
 
 Connector Zipper();
 Zipper zipper();
@@ -288,10 +288,10 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string
 
 UnsignedTrigger currentOn("Iteration Trigger : == 100000", 
  			 ::Iteration, "==", 100000, 0, solveChannels );
-
+//SA: Changed 10,200 to 12000
 UnsignedTrigger currentMod("Iteration Trigger : == 102000", 
  			 ::Iteration, "==", 102000, 0, solveChannels );
-
+//SA: Changed 10,400 to 14000
 UnsignedTrigger currentOff("Iteration Trigger : == 104000", 
  			 ::Iteration, "==", 104000, 0, solveChannels );
 
@@ -312,7 +312,7 @@ pointCurrentSource.setCurrent(<
 			     >) on currentOn;
 
 pointCurrentSource.setCurrent(<						
-				I = 0.0                      	// pA
+				I = 2.0                      	// pA
 			     >) on currentMod;
 
 pointCurrentSource.setCurrent(<						
@@ -622,7 +622,7 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
    tissueFunctor("Connect", <> );	
 
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
-   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
+   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
    polyConnect(pointCalciumSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
 
    polyConnect(timeStep, voltageDisplay0, <>, <>);
@@ -658,9 +658,9 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
    //polyConnect(timeStep, CalciumDisplay34, <>, <>);
 
 
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), voltageDisplay0, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay0, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay3, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), voltageDisplay4, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), voltageDisplay5, <>, <>);
