@@ -894,7 +894,10 @@ class SomeClass(object):
                 if (float(r) > maxR):
                     maxR= float(r)
                     point =[dist2soma, x,y,z,r]
-                    hwpoint = [dist2soma-gap/2, halfwayX, halfwayY, halfwayZ]
+                    hwpoint = [round(dist2soma-gap/2,3),
+                               round(halfwayX,3),
+                               round(halfwayY,3),
+                               round(halfwayZ,3)]
         ##Point with largest radius (mostlikely the main branch)
         print("Apical Final: ", point)
         print(".... halfway: ", hwpoint)

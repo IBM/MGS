@@ -42,6 +42,7 @@ CHEMICAL_SYNAPSE_TARGETS 5
 BRANCHTYPE MTYPE ETYPE
 BRANCHTYPE MTYPE
 #{{{bouton-spine
+#NOTE: currently it means 'pre' (only incoming connection) and 'post' (both in/out)
 2 5 0   1 3   [AMPAmush NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium] 1.0
 2 4 0   1 2   [AMPAthin NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium] 1.0
 # disable NMDAR
@@ -65,8 +66,8 @@ NMDAthin 0.296407
 GABAA 0.149978
 
 PRESYNAPTIC_POINT_TARGETS 5
-AMPAmush Voltage
-AMPAthin Voltage
-NMDAmush Voltage
-NMDAthin Voltage
-GABAA Voltage
+AMPAmush tight
+AMPAthin tight
+NMDAmush tight
+NMDAthin tight
+GABAA tight
