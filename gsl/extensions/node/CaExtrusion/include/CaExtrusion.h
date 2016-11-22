@@ -12,7 +12,7 @@
 #endif
 
 #ifndef Q10 
-#define Q10 3.0 //default
+#define Q10 2.3 //default
 #endif
 // This is a simple implementation of Ca2+(cyto) extrusion
 class CaExtrusion : public CG_CaExtrusion
@@ -22,6 +22,7 @@ class CaExtrusion : public CG_CaExtrusion
       void initialize(RNG& rng);
       virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaExtrusionInAttrPSet* CG_inAttrPset, CG_CaExtrusionOutAttrPSet* CG_outAttrPset);
       virtual ~CaExtrusion();
+      virtual void doSomething(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaExtrusionInAttrPSet* CG_inAttrPset, CG_CaExtrusionOutAttrPSet* CG_outAttrPset);
 	 private:
 			int _cptindex;// index of the associated compartment
 };
