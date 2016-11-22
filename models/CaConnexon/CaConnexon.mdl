@@ -36,6 +36,7 @@ Node CaConnexon Implements VoltageProducer, CaConcentrationProducer, CurrentProd
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   UserFunction setCaPointers;

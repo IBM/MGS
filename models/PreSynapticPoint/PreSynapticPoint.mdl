@@ -50,6 +50,7 @@ Node PreSynapticPoint Implements BranchDataProducer, IndexProducer
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   //{{{Input (Connection setup)

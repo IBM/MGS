@@ -33,6 +33,7 @@ NodeCompCategoryBase::NodeCompCategoryBase(
    _modelName(modelName)
 
 {
+  _gridLayerDataOffsets.push_back(0);
 }
 
 NodeCompCategoryBase::~NodeCompCategoryBase()

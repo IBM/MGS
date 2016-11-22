@@ -101,7 +101,7 @@ LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PA
 DEFINES = #-DVERBOSE -DBINARY64BITS
 ifeq ($(debug), yes)
 OPT=
-DEBUG=-g
+DEBUG=-g -ggdb
 else
 OPT=-O3
 DEBUG=

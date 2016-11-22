@@ -80,6 +80,7 @@ Node Connexon Implements
   InAttrPSet {
     string identifier;
     int idx;
+    float branchProp;
   }
 
   UserFunction setPointers;

@@ -46,9 +46,14 @@ void Connexon::computeState(RNG& rng)
 
 void Connexon::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ConnexonInAttrPSet* CG_inAttrPset, CG_ConnexonOutAttrPSet* CG_outAttrPset) 
 {
-  index=CG_inAttrPset->idx;
+  if (CG_inAttrPset->idx>=0) {
+    index=CG_inAttrPset->idx;
+  }
+  else if (CG_inAttrPset->idx==-1) {
+    index=int(float(branchData->size)*CG_inAttrPset->branchProp);
+  }
   assert(getSharedMembers().voltageConnect);
-  assert(index>=0 && index<getSharedMembers().voltageConnect->size());    
+  assert(index>=0 && index<getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   countGapJunctionConnectedToCompartment_i = 

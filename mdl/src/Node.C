@@ -327,12 +327,12 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       "GridLayerDescriptor* gridLayerDescriptor");
    std::ostringstream getNodeAccessorMethodFB;   
    getNodeAccessorMethodFB 
-      << TAB << "std::auto_ptr<GridLayerData> gridLayerDataAP;\n"
       << TAB << getGridLayerDataName()
       << "* currentGridLayerData = new " << getGridLayerDataName() 
       << "(this, gridLayerDescriptor, _gridLayerDataArraySize);\n"
       << TAB << "_gridLayerDataList.push_back(currentGridLayerData);\n"
       << TAB << "_gridLayerDataArraySize++;\n"
+      << TAB << "_gridLayerDataOffsets.push_back(_gridLayerDataOffsets.back()+currentGridLayerData->getNbrUnits());\n"
       << TAB << "nodeAccessor.reset(new " << getNodeAccessorName() 
       << "(getSimulation(), gridLayerDescriptor, currentGridLayerData));\n";
    getNodeAccessorMethod->setFunctionBody(getNodeAccessorMethodFB.str());

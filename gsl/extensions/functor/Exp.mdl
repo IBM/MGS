@@ -1,0 +1,9 @@
+#ifndef Exp_MDL
+#define Exp_MDL
+
+Framework Functor Exp {
+   Initialize(Functor* f);
+   double Execute();
+}
+
+#endif

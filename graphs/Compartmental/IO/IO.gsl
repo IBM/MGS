@@ -1,4 +1,5 @@
-#include "../../../nti/MaxComputeOrder.h"
+#include "../../../nti/include/MaxComputeOrder.h"
+#include "../../std/std.gsl"
 #include "Topology.h"
 
 #define _CCAT(x,y) x ## y 
@@ -48,17 +49,11 @@
 #define V_GLEAK 0.00015
 #define V_E_LEAK -10.0
 
-Functor Print;
-Print print();
+#define PRMASK0 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, MTYPE=0, NEURON_INDEX=0
+#define PRMASK1 CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, MTYPE=0, NEURON_INDEX=1
 
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();		
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();
+Connector Zipper();
+Zipper zipper();
 
 Layout TissueLayoutFunctor();
 		TissueLayoutFunctor tissueLayoutFunctor();		
@@ -77,13 +72,14 @@ TissueMGSifyFunctor tissueMGSifyFunctor();
 
 Functor TissueFunctor(string commandLine, string commandLineModification,	
 		      string channelParamaterFile, string synapseParameteurFile,
-		      Functor, Functor, Functor, Functor, Functor, int compartmentSize);
+		      Functor, Functor, Functor, Functor, Functor);
 
-TissueFunctor tissueFunctor("-i IO_5_neurons_sorted.txt -j 1 -a 1.0 -u bt -o IO_5_neurons_sorted_developed.txt -g 50.0 -r 1 -p DevParamsIO.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) 
-			    " -e 0.001 -t 0.01 -m 0", "-i IO_5_neurons_sorted_developed.txt -p DetParamsIO.par -m 1 -n cost-volume",
+TissueFunctor tissueFunctor("-i IO_5_neurons_sorted.txt -j 1 -a 1.0 -u bt -o IO_5_neurons_sorted_developed.txt -g 50.0 -r 1 -p DevParamsIO.par -x " 
+	      		    STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0", 
+			    "-p DetParamsIO.par -m 1 -n cost-volume",
 			    "CptParamsIO.par", "ChanParamsIO.par", "SynParamsIO.par",
 			    tissueLayoutFunctor, tissueNodeInitFunctor, 
-                            tissueConnectorFunctor, tissueProbeFunctor, tissueMGSifyFunctor);
+                            tissueConnectorFunctor, tissueProbeFunctor);
 
 GranuleMapper GridGranuleMapper(string description, list<int> dimensions, list<int> densityVector);
 GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ }, {1});
@@ -142,13 +138,12 @@ NodeType HodgkinHuxleyVoltage (<
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
 			E_leak=V_E_LEAK		// mV
-			     >) { initializeVoltage->initialize2, deriveParameters->initialize2 };
+			     >) { initializeCompartmentData->initialize2 };
 
 NodeType CaConcentration (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,               // dimensionless, Wagner and Keizer buffering constant
-                        CaClearance=CA_CLEARANCE    // s^-1
-			     >) { initializeCaConcentration->initialize2, deriveParameters->initialize2 };
+                        beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
+		     >) { initializeCompartmentData->initialize2, deriveParameters->initialize2 };
 
 NodeType VoltageEndPoint { produceInitialState->initialize1,
 #if MAX_COMPUTE_ORDER>0
@@ -230,12 +225,11 @@ NodeType HodgkinHuxleyVoltageJunction (<
 			Na=V_NACONC, 		// mM
 			K=V_KCONC,		// mM	
 			E_leak=V_E_LEAK		// mV
- 		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
+ 		    >) { initializeJunction->initialize2 };
 
 NodeType CaConcentrationJunction (<
                         DCa=CA_DCA,                 // um^2/ms unbuffered
-                        beta=CA_BETA,               // dimensionless, Wagner and Keizer buffering constant
-                        CaClearance=CA_CLEARANCE    // s^-1
+                        beta=CA_BETA                // dimensionless, Wagner and Keizer buffering constant
  		    >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 
 NodeType VoltageJunctionPoint { produceInitialState->initialize1, produceVoltage->predictJunction };
@@ -243,15 +237,15 @@ NodeType CaConcentrationJunctionPoint { produceInitialState->initialize1, produc
 
 NodeType NaChannel { computeE_Na->initialize2, initializeNaChannels->initialize3, update->solveChannels };
 
-NodeType KDRChannel { computeE_KDR->initialize2, initializeKDRChannels->initialize3, update->solveChannels };
+NodeType KDRChannel_IO { computeE_KDR->initialize2, initializeKDRChannels->initialize3, update->solveChannels };
 
 NodeType KCaChannel { computeE_K->initialize2, initializeKCaChannels->initialize3, update->solveChannels };
 
-NodeType HCNChannel (< E_h = {-43.0} >) { initializeHCNChannels->initialize3, update->solveChannels };
+NodeType ChannelHCN (< E_HCN = {-43.0} >) {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 NodeType CalChannel { initializeCalChannels->initialize3, update->solveChannels };
 
-NodeType CahChannel { initializeCahChannels->initialize3, update->solveChannels };
+NodeType CahChannel { initialize->initialize3, update->solveChannels };
 
 NodeType CaConnexon { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 
@@ -261,19 +255,19 @@ NodeType AMPAReceptor (<
 			    E=0,	  // mV
 			    alpha=0.0011, // uM^-1 msec^-1
 			    beta=0.19,    // msec^1
-			    Tmax=180,     // 160-190 uM
+			    NTmax=180,     // 160-190 uM
 			    Vp=2.0,       // mV
 			    Kp=5.0        // mV
-		      >) { initializeAMPA->initialize3, updateAMPA->solveChannels };
+		      >) { computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
 
 NodeType GABAAReceptor (<
 			    E=-80,	  // mV
 			    alpha=0.005,  // uM^-1 msec^-1
 			    beta=0.18,    // msec^1
-			    Tmax=185,     // 185 um
+			    NTmax=185,     // 185 um
 			    Vp=2.0,       // mV
 			    Kp=5.0        // mV
-		      >) { initializeGABAA->initialize3, updateGABAA->solveChannels };
+		      >) { computeTadj->initialize2, initializeGABAA->initialize3, updateGABAA->solveChannels };
 
 NodeType PreSynapticPoint { produceInitialState->initialize2, produceState->finish };
 
@@ -414,6 +408,11 @@ Grid Tissue
    Layer(branches_Ca, CaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Calcium]">), <nodekind="CompartmentVariables[Calcium]">, tissueGM);
    Layer(endPoints, VoltageEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Voltage]">), <nodekind="EndPoints[Voltage]">, tissueGM);
    Layer(endPoints_Ca, CaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Calcium]">), <nodekind="EndPoints[Calcium]">, tissueGM);
+
+
+
+
+
 #if MAX_COMPUTE_ORDER>0
    Layer(fwdSolvePoints1, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][1]">), <nodekind="ForwardSolvePoints[Voltage][1]">, tissueGM);
    Layer(fwdSolvePoints1_Ca, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][1]">), <nodekind="ForwardSolvePoints[Calcium][1]">, tissueGM);
@@ -459,20 +458,30 @@ Grid Tissue
 
    Layer(junctions, HodgkinHuxleyVoltageJunction, tissueFunctor("Layout", <nodekind="Junctions[Voltage]">), <nodekind="Junctions[Voltage]">, tissueGM);
    Layer(junctions_Ca, CaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Calcium]">), <nodekind="Junctions[Calcium]">, tissueGM);
+
    Layer(junctionPoints, VoltageJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Voltage]">), <nodekind="JunctionPoints[Voltage]">, tissueGM);
    Layer(junctionPoints_Ca, CaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Calcium]">), <nodekind="JunctionPoints[Calcium]">, tissueGM);
 
+ Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+
+ 
+
+
    Layer(NaChannels, NaChannel, tissueFunctor("Layout", < nodekind="Channels[Na]" >), < nodekind="Channels[Na]" >, tissueGM);
-   Layer(KDRChannels, KDRChannel, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
+   Layer(KDRChannels, KDRChannel_IO, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
    Layer(KCaChannels, KCaChannel, tissueFunctor("Layout", < nodekind="Channels[KCa]" >), < nodekind="Channels[KCa]" >, tissueGM);
-   Layer(HCNChannels, HCNChannel, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
+   Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
    Layer(CalChannels, CalChannel, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
    Layer(CahChannels, CahChannel, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
 
-   Layer(DendroDendriticGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[DenDenGap]" >), < nodekind="ElectricalSynapses[DenDenGap]" >, tissueGM);
+  
+
    Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
    Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
-   Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+  
+
+Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[DenDenGap]" >), < nodekind="ElectricalSynapses[DenDenGap]" >, tissueGM);
+
 
    InitNodes ( .[].Layer(branches), tissueFunctor("NodeInit", <
 									compartmentalize = {"Vnew", 
@@ -496,7 +505,8 @@ Grid Tissue
 											    "Aip", 
 											    "RHS"
 											   },
-									Ca_new = {0.1}
+									Ca_new = {0.1},
+									CaClearance=CA_CLEARANCE    // s^-1
 								      > ) );
 
    InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
@@ -547,9 +557,13 @@ Grid Tissue
 								 Cm=V_CM,		// pF/um^2
 								 gLeak=V_GLEAK 		// nS/um^2, Hines used 0.0003 S/cm^2
 								> ) );
-   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1} > ) );
+   InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {0.1}, CaClearance=CA_CLEARANCE > ) );
    InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(junctionPoints_Ca), tissueFunctor("NodeInit", <> ) );
+
+
+ InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
+
 
    InitNodes ( .[].Layer(NaChannels), tissueFunctor("NodeInit", <
 									compartmentalize = { "gbar" }
@@ -591,15 +605,15 @@ Grid Tissue
 									gbar = 0.1
 								  > ) );	
    
-   InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
+  
 
    polyConnect(timeStep, .[].Layer(branches, junctions, branches_Ca, junctions_Ca, NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels), <>, <identifier="dt">);
-   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, DendroDendriticGapJunctions), <>, <identifier="EC">);
+   polyConnect(extracellularMedium, .[].Layer(NaChannels, KDRChannels, KCaChannels, HCNChannels, CalChannels, CahChannels, DendroDendriticGapJunctions
+   ), <>, <identifier="EC">);
    polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
 
    tissueFunctor("Connect", <> );	
-
 
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
@@ -670,13 +684,50 @@ Grid Tissue
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=4>), CalciumDisplay32, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=4>), CalciumDisplay33, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=4>), CalciumDisplay34, <>, <>);
-
 };
 
 Tissue tissue;
 
+Grid Adaptor
+{
+   Dimension( _X_ , _Y_ , _Z_ );
+   Layer(DendroDendriticGapJunctionConnexons0, Connexon, tissueFunctor("Layout", <PROBED="pr0", N=6, PRMASK0>), <>, tissueGM);
+   Layer(DendroDendriticGapJunctionConnexons1, Connexon, tissueFunctor("Layout", <PROBED="pr1", N=6, PRMASK1>), <>, tissueGM);
+
+   
+
+
+   BindName cnnxn ("I", 0, "g", 0.5);
+   NdplNodeInit Mcnnxn(cnnxn);
+
+   InitNodes ( .[].Layer(DendroDendriticGapJunctionConnexons0), Mcnnxn );
+   InitNodes ( .[].Layer(DendroDendriticGapJunctionConnexons1), Mcnnxn );
+
+   BindName cpt2cnnxn("idx", -1,
+   	 	      "identifier", "compartment[Voltage]");
+   NdplInAttrInit Mcpt2cnnxn(cpt2cnnxn);
+
+   BindName cnnxn2cpt("idx", -1,
+   	 	      "identifier", "electricalSynapse[Voltage]");
+   NdplInAttrInit Mcnnxn2cpt(cnnxn2cpt);
+
+   BindName cnnxn2cnnxn("identifier", "connexon[Voltage]");
+   NdplInAttrInit Mcnnxn2cnnxn(cnnxn2cnnxn);
+
+   zipper(tissueFunctor("Probe", <PROBED="pr0", PRMASK0>), .[].Layer(DendroDendriticGapJunctionConnexons0), outAttrDef, Mcpt2cnnxn, "ids0");
+   zipper(tissueFunctor("Probe", <PROBED="pr1", PRMASK1>), .[].Layer(DendroDendriticGapJunctionConnexons1), outAttrDef, Mcpt2cnnxn, "ids1");
+
+   zipper(.[].Layer(DendroDendriticGapJunctionConnexons0), tissueFunctor("Probe", <PROBED="pr0", PRMASK0>), outAttrDef, Mcnnxn2cpt, "ids0");
+   zipper(.[].Layer(DendroDendriticGapJunctionConnexons1), tissueFunctor("Probe", <PROBED="pr1", PRMASK1>), outAttrDef, Mcnnxn2cpt, "ids1");
+
+   connectNodeSets(.[].Layer(DendroDendriticGapJunctionConnexons0), .[].Layer(DendroDendriticGapJunctionConnexons1), isoSampler, outAttrDef, Mcnnxn2cnnxn);
+   connectNodeSets(.[].Layer(DendroDendriticGapJunctionConnexons1), .[].Layer(DendroDendriticGapJunctionConnexons0), isoSampler, outAttrDef, Mcnnxn2cnnxn);
+};
+
+//Adaptor adaptor;
+
 // DCA directives here
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 300000, 0, correctJunction);
+			 ::Iteration, "==", 30000, 0, correctJunction);
 Stop on endTrig;

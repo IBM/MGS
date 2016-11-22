@@ -44,8 +44,8 @@ void IsoSampler::userExecute(LensContext* CG_c)
   cc->sourceNode=_srcNodes[_nodeIndex];
   cc->destinationNode=_dstNodes[_nodeIndex];
   
-  assert(cc->sourceNode->getIndex()==cc->destinationNode->getIndex());
-  assert(cc->sourceNode->getNodeIndex()==cc->destinationNode->getNodeIndex());
+  //assert(cc->sourceNode->getIndex()==cc->destinationNode->getIndex());
+  //assert(cc->sourceNode->getNodeIndex()==cc->destinationNode->getNodeIndex());
 			 
   if (++_nodeIndex==_nbrNodes) _done=true;
 

@@ -200,6 +200,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     string identifier;
     TissueSite site;
     int idx;
+    float branchProp;
   }
   // d^2 V/dx^2 = dV/dt + Ileak + Iinject + (Isyn+Iion)
   // injectedCurrent  = (to a compartment) only if 2 scenarios

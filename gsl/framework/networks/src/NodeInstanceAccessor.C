@@ -19,6 +19,7 @@
 #include "Grid.h"
 #include "GridLayerData.h"
 #include "GridLayerDescriptor.h"
+#include "NodeCompCategoryBase.h"
 
 NodeInstanceAccessor::NodeInstanceAccessor()
    : _gridLayerData(0), _node(0), _nodeIndex(0), _index(0)
@@ -94,6 +95,13 @@ int  NodeInstanceAccessor::getIndex() const {
   
 void NodeInstanceAccessor::setIndex(int pos) { 
   _index = pos;
+}
+
+int NodeInstanceAccessor::getGlobalIndex() const
+{
+  return getGridLayerData()->getNodeCompCategoryBase()->
+    getGridLayerDataOffsets()[getGridLayerData()->getGridLayerIndex()] +
+    getNodeIndex();
 }
 
 NodeInstanceAccessor::~NodeInstanceAccessor()

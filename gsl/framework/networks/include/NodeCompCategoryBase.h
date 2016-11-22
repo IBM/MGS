@@ -53,7 +53,10 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       virtual void getOutAttrParameterSet(
 	 std::auto_ptr<ParameterSet>& outAttrPSet) = 0;
       virtual std::string getModelName() {
-	 return _modelName;
+	return _modelName;
+      }
+      virtual std::deque<int> const & getGridLayerDataOffsets() {
+	return _gridLayerDataOffsets;
       }
 
       // virtual void store(std::ostream&) =0;
@@ -73,6 +76,7 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
 
       // Initialization time Single Threaded
       std::deque<GridLayerData*> _gridLayerDataList;
+      std::deque<int> _gridLayerDataOffsets;
 
       // Run time Multi Threaded
       GridLayerData** _gridLayerDataArray;

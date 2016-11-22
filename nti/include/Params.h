@@ -181,6 +181,13 @@ public:
     CHANNEL,
     SYNAPSE
   } ModelType;
+  enum class ErrorCode
+  {
+    SECTION_IGNORED,
+    SECTION_INVALID,
+    SECTION_VALID
+    
+  } ;
 
   void readDevParams(const std::string& fname);
   void readDetParams(const std::string& fname);
@@ -387,22 +394,23 @@ public:
   bool readChannelTargets(FILE* fpF); // obsolete
   bool readChannelTargets2(FILE* fpF); //support array-form for all
   bool readElectricalSynapseTargets(FILE* fpF);
-  bool readElectricalSynapseTargets_vector2(FILE* fpF);//support array-form for all
+  ErrorCode readElectricalSynapseTargets_vector2(FILE* fpF);//support array-form for all
   bool readBidirectionalConnectionTargets(FILE* fpF);
   bool readBidirectionalConnectionTargets_vector(FILE* fpF);//array-form for only BRANCHTYPE
-  bool readBidirectionalConnectionTargets_vector2(FILE* fpF); //support array-form for all
+  ErrorCode readBidirectionalConnectionTargets_vector2(FILE* fpF); //support array-form for all
   bool readChemicalSynapseTargets(FILE* fpF);
-  bool readChemicalSynapseTargets_vector2(FILE* fpF);//support array-form for all
-  bool readPreSynapticPointTargets(FILE* fpF);
+  ErrorCode readChemicalSynapseTargets_vector2(FILE* fpF);//support array-form for all
+  ErrorCode readPreSynapticPointTargets(FILE* fpF);
+  void skipSection(FILE* fpF);
 
   unsigned long long readNamedParam(FILE* fpF, std::string name,
                                     std::map<key_size_t, double>& namedParamsMap);
 
   bool readCompartmentVariableCosts(FILE* fpF);
   bool readChannelCosts(FILE* fpF);
-  bool readElectricalSynapseCosts(FILE* fpF);
-  bool readBidirectionalConnectionCosts(FILE* fpF);
-  bool readChemicalSynapseCosts(FILE* fpF);
+  ErrorCode readElectricalSynapseCosts(FILE* fpF);
+  ErrorCode readBidirectionalConnectionCosts(FILE* fpF);
+  ErrorCode readChemicalSynapseCosts(FILE* fpF);
   // bool readChannelParams(FILE* fpF);
 
   bool readModelParams(
