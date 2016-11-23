@@ -43,14 +43,10 @@
 void PumpPMCA::initialize(RNG& rng)
 {
 //  pthread_once(&once_Pump_PMCA, initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
   assert(V);
   assert(V->size() == size);
-#endif
 // allocate
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
     PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
