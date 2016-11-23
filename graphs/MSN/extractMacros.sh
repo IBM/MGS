@@ -88,6 +88,7 @@ if [ "$#" == "0" ]; then
     then the script generate a unique name using `date +'%Y-%m-%d-%s'` which evoke the date"
   echo "Example: "
   echo " $0 -unique"
+  echo " $0 -reuse"
   echo " $0 abc"
   exit
 fi
