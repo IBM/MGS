@@ -659,9 +659,9 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
    //polyConnect(timeStep, CalciumDisplay34, <>, <>);
 
 
-   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay0, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=0, NEURON_INDEX=0>), voltageDisplay0, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  BRANCHTYPE=1, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay3, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), voltageDisplay4, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), voltageDisplay5, <>, <>);
