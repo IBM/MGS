@@ -136,8 +136,8 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     dyn_var_t* deltaT; // [milisecond] = [ms]
     dyn_var_t Ra; //axial resistance [GOhm.um]
     // intracellular concentrations expressed by ion name alone
-    dyn_var_t Na; // [mM]
-    dyn_var_t K;  // [mM]
+    dyn_var_t Na; // [mM] - intracellular
+    dyn_var_t K;  // [mM] - intracellular
     dyn_var_t E_leak;  // [miliVolt] = [mV]
     /*}}}*/
   }

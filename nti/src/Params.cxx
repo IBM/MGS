@@ -1075,13 +1075,13 @@ void Params::getModelParams(
 #else
 void Params::getModelParams(
     ModelType modelType, std::string nodeType, key_size_t key,
-    std::list<std::pair<std::string, dyn_var_t> >& modelParams)
+    std::list<std::pair<std::string, float> >& modelParams)
 #endif
 {
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<
       std::string,
-      std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >*
+      std::map<key_size_t, std::list<std::pair<std::string, float> > > >*
       modelParamsMap;
 
   switch (modelType)
@@ -1099,7 +1099,7 @@ void Params::getModelParams(
   modelParams.clear();
   std::map<std::string,
            std::map<key_size_t,
-                    std::list<std::pair<std::string, dyn_var_t> > > >::iterator
+                    std::list<std::pair<std::string, float > > > >::iterator
       iter1 = modelParamsMap->find(nodeType);
   if (iter1 != modelParamsMap->end())
   {
@@ -1107,7 +1107,7 @@ void Params::getModelParams(
         modelParamsMasks->find(nodeType);
     assert(miter != modelParamsMasks->end());
     std::map<key_size_t,
-             std::list<std::pair<std::string, dyn_var_t> > >::iterator iter2 =
+             std::list<std::pair<std::string, float > > >::iterator iter2 =
         (iter1->second)
             .find(_segmentDescriptor.getSegmentKey(key, miter->second));
     if (iter2 != (iter1->second).end())
@@ -1169,14 +1169,14 @@ void Params::getModelParams(
 
 void Params::getModelArrayParams(
     ModelType modelType, std::string nodeType, key_size_t key,
-    std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+    std::list<std::pair<std::string, std::vector<float> > >&
         modelArrayParams)
 {
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<
       std::string,
       std::map<key_size_t,
-               std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >*
+               std::list<std::pair<std::string, std::vector<float> > > > >*
       modelArrayParamsMap;
 
   switch (modelType)
@@ -1195,7 +1195,7 @@ void Params::getModelArrayParams(
   std::map<
       std::string,
       std::map<key_size_t,
-               std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >::
+               std::list<std::pair<std::string, std::vector<float> > > > >::
       iterator iter1 = modelArrayParamsMap->find(nodeType);
   if (iter1 != modelArrayParamsMap->end())
   {
@@ -1204,7 +1204,7 @@ void Params::getModelArrayParams(
     assert(miter != modelParamsMasks->end());
     std::map<
         key_size_t,
-        std::list<std::pair<std::string, std::vector<dyn_var_t> > > >::iterator
+        std::list<std::pair<std::string, std::vector<float> > > >::iterator
         iter2 = (iter1->second)
                     .find(_segmentDescriptor.getSegmentKey(key, miter->second));
     if (iter2 != (iter1->second).end())
@@ -4488,12 +4488,12 @@ bool Params::readModelParams(
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<
         std::string,
-        std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+        std::map<key_size_t, std::list<std::pair<std::string, float > > > >&
         paramsMap,
     std::map<
         std::string,
         std::map<key_size_t, std::list<std::pair<std::string,
-                                                 std::vector<dyn_var_t> > > > >&
+                                                 std::vector<float> > > > >&
         arrayParamsMap)
 {//LIMIT: only BRANCHTYPE can have array-form
   /* Example of input from fpF
@@ -4779,12 +4779,12 @@ bool Params::readModelParams2(
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<
         std::string,
-        std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+        std::map<key_size_t, std::list<std::pair<std::string, float > > > >&
         paramsMap,
     std::map<
         std::string,
         std::map<key_size_t, std::list<std::pair<std::string,
-                                                 std::vector<dyn_var_t> > > > >&
+                                                 std::vector<float> > > > >&
         arrayParamsMap)
 {//any key field can be in array-form
   /* Example of input from fpF
@@ -5387,12 +5387,12 @@ void Params::buildParamsMap(
 		const std::string& myBuf, 
 		std::string & modelID,
 		std::map<std::string,
-		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+		std::map<key_size_t, std::list<std::pair<std::string, float> > > >&
 		paramsMap,
 		std::map<
 		std::string,
 		std::map<key_size_t,
-		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+		std::list<std::pair<std::string, std::vector<float> > > > >&
 		arrayParamsMap
 		)
 {
@@ -5401,10 +5401,10 @@ void Params::buildParamsMap(
 	for (; iter < iterend; iter++)
 	{//for each element in v_ids, apply the same read-in data to it
 		unsigned int* ids = *iter;
-		std::list<std::pair<std::string, dyn_var_t> >& params =
+		std::list<std::pair<std::string, float> >& params =
 			paramsMap[modelID][_segmentDescriptor.getSegmentKey(maskVector,
 					&ids[0])];
-		std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+		std::list<std::pair<std::string, std::vector<float> > >&
 			arrayParams =
 			arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
 					maskVector, &ids[0])];
@@ -5455,12 +5455,12 @@ NOTE: must starts with '<' and ends with'>'
 			std::istringstream is2(tok2);
 			if (is2.get() != '{')
 			{  // single value
-				dyn_var_t value = atof(tok2.c_str());
-				params.push_back(std::pair<std::string, dyn_var_t>(name, value));
+				float value = atof(tok2.c_str());
+				params.push_back(std::pair<std::string, float>(name, value));
 			}
 			else
 			{  // contain multiple values (comma-separated)
-				std::vector<dyn_var_t> value;
+				std::vector<float> value;
 				char buf2[LENGTH_LINE_MAX];
 				/* NOTE: This code is potentialy bug when token info is too long
 				is2.get(buf2, LENGTH_IDNAME_MAX, '}');
@@ -5477,7 +5477,7 @@ NOTE: must starts with '<' and ends with'>'
 					value.push_back(atof((*jj).c_str()));
 				}
 				arrayParams.push_back(
-						std::pair<std::string, std::vector<dyn_var_t> >(name, value));
+						std::pair<std::string, std::vector<float> >(name, value));
 			}
 		}
 		/*
