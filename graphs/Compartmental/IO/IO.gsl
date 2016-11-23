@@ -74,7 +74,7 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		      string channelParamaterFile, string synapseParameteurFile,
 		      Functor, Functor, Functor, Functor, Functor);
 
-TissueFunctor tissueFunctor("-i single_neuron.txt -j 1 -a 1.0 -u bt -o single_neuron_developed.txt -r 1 -p DevParamsIO.par -x " 
+TissueFunctor tissueFunctor("-i IO_5_neurons_sorted.txt -j 1 -a 1.0 -u bt -o single_neuron_developed.txt -r 1 -p DevParamsIO.par -x " 
 	      		    STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0", 
 			    "-p DetParamsIO.par -m 1 -n cost-volume",
 			    "CptParamsIO.par", "ChanParamsIO.par", "SynParamsIO.par",
@@ -246,7 +246,7 @@ NodeType ChannelHCN (< E_HCN = {-43.0} >) {computeTadj->initialize2, initialize-
 NodeType CalChannel { initializeCalChannels->initialize3, update->solveChannels };
 
 NodeType CahChannel { initialize->initialize3, update->solveChannels };
-NodeType CaExtrusion (<tau_pump = 40 >) { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+NodeType CaExtrusion (<tau_pump = 140, Ca_equil=0.1 >) { computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 NodeType CaConnexon { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 
@@ -278,7 +278,8 @@ ExtracellularMedium extracellularMedium<	Na=540.0, 	// uM
 					 	Ca=750.0,      // uM
 						T=310.15>;      // degK  
 ConstantType TimeStep;
-TimeStep timeStep<				deltaT=0.010    // msec
+//TimeStep timeStep<				deltaT=0.010    // msec - crash
+TimeStep timeStep<				deltaT=0.005    // msec
 		>;
 
 
@@ -660,7 +661,7 @@ Layer(DendroDendriticGapJunctions,Connexon, tissueFunctor("Layout", < nodekind="
 
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", NEURON_INDEX=0>), voltageDisplay0, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay1, <>, <>);
-   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=2, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), voltageDisplay2, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=1>), voltageDisplay3, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=1, NEURON_INDEX=1>), voltageDisplay4, <>, <>);
 //   polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHORDER=3, BRANCHTYPE=2, NEURON_INDEX=1>), voltageDisplay5, <>, <>);

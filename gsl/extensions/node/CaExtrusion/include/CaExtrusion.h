@@ -22,7 +22,6 @@ class CaExtrusion : public CG_CaExtrusion
       void initialize(RNG& rng);
       virtual void setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaExtrusionInAttrPSet* CG_inAttrPset, CG_CaExtrusionOutAttrPSet* CG_outAttrPset);
       virtual ~CaExtrusion();
-      virtual void doSomething(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaExtrusionInAttrPSet* CG_inAttrPset, CG_CaExtrusionOutAttrPSet* CG_outAttrPset);
 	 private:
 			int _cptindex;// index of the associated compartment
 };
