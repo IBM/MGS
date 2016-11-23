@@ -169,6 +169,7 @@ bool Touch::hasSpineNeck(key_size_t& key)//obsolete
 	return rval;
 
 }
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 bool Touch::hasSpineNeck(key_size_t& key, Params& params)
 {
 	//TUAN TODO POTENTIAL BUG
@@ -250,6 +251,7 @@ bool Touch::isSpineNeck_n_DenShaft(key_size_t& key, Params& params)
 	return rval;
 
 }
+#endif
 
 //GOAL: 
 // A touch has 2 capsule
@@ -291,6 +293,7 @@ bool Touch::hasSpineHead(key_size_t& key)//obsolete
 	return rval;
 }
 
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 bool Touch::hasSpineHead(key_size_t& key, Params& params) 
 {
 	//right now, for single neuron scenario, 
@@ -326,6 +329,7 @@ bool Touch::hasSpineHead(key_size_t& key, Params& params)
   }
 	return rval;
 }
+#endif
 
 //GOAL: 
 // A touch has 2 capsule

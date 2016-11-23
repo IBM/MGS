@@ -103,12 +103,16 @@ class Touch
 	//if the touch has one side is spine-neck then return 'true'
 	//  and pass the key of the capsule as spine-neck out via argument
 	bool hasSpineNeck(key_size_t& key);//obsolete
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 	bool hasSpineNeck(key_size_t& key, Params& params);
+#endif
 	//if the touch has one side is spine-head then return 'true'
 	//  and pass the key of the capsule as spine-head out via argument
 	bool hasSpineHead(key_size_t& key);//obsolete
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 	bool hasSpineHead(key_size_t& key, Params& params);
 	bool isSpineNeck_n_DenShaft(key_size_t& key, Params& params);
+#endif
 	// return the axon_key
 	bool isSpineless(key_size_t& axon_key);
  private:

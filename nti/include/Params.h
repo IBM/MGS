@@ -260,12 +260,12 @@ public:
   double getChemicalSynapseCost(std::string chemicalSynapseId);
 
   void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
-                      std::list<std::pair<std::string, dyn_var_t> >& modelParams);
+                      std::list<std::pair<std::string, float> >& modelParams);
   void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
                       std::list<std::pair<std::string, std::string> >& modelParams);
   void getModelArrayParams(
       ModelType modelType, std::string nodeType, key_size_t key,
-      std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+      std::list<std::pair<std::string, std::vector<float> > >&
           modelArrayParams);
   void getTouchTableMasks(
       std::vector<std::vector<SegmentDescriptor::SegmentKeyData> >& masks)
@@ -313,8 +313,10 @@ public:
   bool isCommentLine(std::string& line);
   void jumpOverCommentLine(FILE* fpF);
 
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   bool isGivenKeySpineNeck(key_size_t key) ;
   bool isGivenKeySpineHead(key_size_t key) ;
+#endif
 
   private:
 	bool isGivenKeywordNext(FILE* fpF, std::string& keyword);
@@ -339,12 +341,12 @@ public:
 			const std::string & myBuf,
 			std::string & modelID,
 			std::map<std::string,
-			std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+			std::map<key_size_t, std::list<std::pair<std::string, float> > > >&
 			paramsMap,
 			std::map<
 			std::string,
 			std::map<key_size_t,
-			std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+			std::list<std::pair<std::string, std::vector<float> > > > >&
 			arrayParamsMap
 			);
   void buildBidirectionalConnectionMap(
@@ -407,23 +409,23 @@ public:
       FILE* fpF, const std::string& id,
       std::map<std::string, unsigned long long>& masks,
       std::map<std::string,
-               std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+               std::map<key_size_t, std::list<std::pair<std::string, float> > > >&
           paramsMap,
       std::map<
           std::string,
           std::map<key_size_t,
-                   std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+                   std::list<std::pair<std::string, std::vector<float> > > > >&
           arrayParamsMap);
   bool readModelParams2(
       FILE* fpF, const std::string& id,
       std::map<std::string, unsigned long long>& masks,
       std::map<std::string,
-               std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+               std::map<key_size_t, std::list<std::pair<std::string, float > > > >&
           paramsMap,
       std::map<
           std::string,
           std::map<key_size_t,
-                   std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+                   std::list<std::pair<std::string, std::vector<float> > > > >&
           arrayParamsMap);
 
   unsigned long long resetMask(
@@ -483,13 +485,13 @@ public:
 #else
   //map<NaT, map<keymask, list-of-pairs{gbar=value}>
   std::map<std::string,
-           std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
+           std::map<key_size_t, std::list<std::pair<std::string, float > > > >
       _channelParamsMap;
 #endif
   //map<NaT, map<keymask, list-of-pairs{gbar,{val1, val2, ..., valn}}>
   std::map<std::string,
            std::map<key_size_t,
-                    std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
+                    std::list<std::pair<std::string, std::vector<float> > > > >
       _channelArrayParamsMap;
 
   std::map<std::string, unsigned long long> _compartmentParamsMasks;
@@ -500,12 +502,12 @@ public:
       _compartmentParamsMapGeneric;
 #else
   std::map<std::string,
-           std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
+           std::map<key_size_t, std::list<std::pair<std::string, float > > > >
       _compartmentParamsMap;
 #endif
   std::map<std::string,
            std::map<key_size_t,
-                    std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
+                    std::list<std::pair<std::string, std::vector<float> > > > >
       _compartmentArrayParamsMap;
    //define mapping a compartment of a given key (1st arg)
    //    to a second compartment of a given key (1st arg_level2)
@@ -555,7 +557,6 @@ public:
   unsigned long long _spineHeadMask, _spineNeckMask;
   //std::set<key_size_t>  _spineHeadsMap, _spineNecksMap;
   std::vector<key_size_t>  _spineHeadsMap, _spineNecksMap;
-#endif
   bool readCriteriaSpineHead(FILE* fpF);// support array-form for any 
   bool readCriteriaSpineNeck(FILE* fpF);// support array-form for any 
 	void buildSpinesMap(
@@ -565,6 +566,7 @@ public:
 			//std::istringstream &is
 			//const std::string & myBuf
 			);
+#endif
 
   SegmentDescriptor _segmentDescriptor;
   std::string _currentFName;

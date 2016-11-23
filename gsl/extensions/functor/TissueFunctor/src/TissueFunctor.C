@@ -6411,9 +6411,9 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 {
   // NOTE: Currently for compartment data, e.g. Cm, gLeak
   // it is limited to have single value for all compartments in 1 branch
-  std::list<std::pair<std::string, dyn_var_t> > compartmentParams;
+  std::list<std::pair<std::string, float> > compartmentParams;
   _tissueParams.getModelParams(modelType, nodeType, key, compartmentParams);
-  std::list<std::pair<std::string, dyn_var_t> >::iterator
+  std::list<std::pair<std::string, float> >::iterator
       cpiter = compartmentParams.begin(),
       cpend = compartmentParams.end();
   for (; cpiter != cpend; ++cpiter)
@@ -6423,6 +6423,8 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     std::vector<std::string> tokens;
     std::string delimiters = ":";
     StringUtils::Tokenize(mystring, tokens, delimiters);
+    if (tokens.size() != 1 && tokens.size() != 2)
+      std::cerr << " ERROR at modelType =" << modelType << ": "<< mystring << " \n .. if you want explicit data type, use say 'float:gbar={10.0}' , i.e. maximum one semicolon (:) " << std::endl;
     assert(tokens.size() == 1 || tokens.size() == 2);
     std::string varName = tokens[tokens.size() - 1];
 
@@ -6502,11 +6504,11 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
   // NOTE: for channel data, e.g. gbar
   // we can have different values for different compatments in 1 branch
   // that's why we use std:vector<dyn_var_t>  here
-  std::list<std::pair<std::string, std::vector<dyn_var_t> > >
+  std::list<std::pair<std::string, std::vector<float> > >
       compartmentArrayParams;
   _tissueParams.getModelArrayParams(modelType, nodeType, key,
                                     compartmentArrayParams);
-  std::list<std::pair<std::string, std::vector<dyn_var_t> > >::iterator
+  std::list<std::pair<std::string, std::vector<float> > >::iterator
       capiter = compartmentArrayParams.begin(),
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
@@ -6522,7 +6524,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     if (tokens.size() == 1 || tokens[0] == "float")
     {
       ShallowArray<float> farr;
-      std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
+      std::vector<float>::iterator viter = capiter->second.begin(),
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
@@ -6537,7 +6539,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     else if (tokens[0] == "int")
     {
       ShallowArray<int> farr;
-      std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
+      std::vector<float>::iterator viter = capiter->second.begin(),
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       IntArrayDataItem* paramDI = new IntArrayDataItem(farr);
