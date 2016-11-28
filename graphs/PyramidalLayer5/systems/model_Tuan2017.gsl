@@ -612,7 +612,7 @@ NodeType IP3ConcentrationJunction (<
         >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 NodeType IP3ConcentrationJunctionPoint { 
          produceInitialState->initialize1, 
-         produceConcentration->predictJunction };
+         produceIP3Concentration->predictJunction };
 
 #endif
 /*}}}*/
@@ -656,7 +656,7 @@ NodeType SingleChannelRYR(
     >
 		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
-NodeType ChannelIP3R { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelIP3R {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(

@@ -10,3 +10,9 @@ GSL:
 NTI:
  make debug=yes    debug
  make              release
+
+
+External library:
+  bison 
+  flex
+  lgmp

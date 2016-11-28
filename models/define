@@ -8,8 +8,9 @@ fi
 source defineModels2.sh;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
-if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
-touch define;
+#if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+#touch define;
+$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct
 touch $LENSROOT/Extensions.mk
 cp $LENSROOT/Extensions.mk{,.bak}
 cp Extensions.mk $LENSROOT

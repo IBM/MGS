@@ -15,6 +15,7 @@
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
 #define CASE_VIVO 1000 // random input at all spines
+#define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
@@ -27,6 +28,13 @@
 #define morph "msn0_"
 //}}}
 
+//OTHERS FUNCTORS
+/*{{{*/
+ReSeedRandom reSeed(243);
+/*}}}*/
+#ifndef MODEL_TO_USE
+print("WARNING: You haven't selected MODEL_TO_USE")
+#endif
 
 //SECTIONZ: Modify the data in this section for general setting
 // Wolf et al. 
@@ -34,8 +42,16 @@
 // 
 //{{{
 //{{{ 1. Output Location
-//#define dataFolder "./"
+#ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
+#else
+#define dataFolder OUTPUTFOLDER
+#endif
+#ifndef PARAMFOLDER
+#define paramFolder ./params/
+#else
+#define paramFolder PARAMFOLDER
+#endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
@@ -52,6 +68,11 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Tuan_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
 #define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
+#define OutputFolderName  STR(EXTENSION)
+#else
+  print("NOT DEFINED STIMULUS_CASE .... ")
+  WRONG
 #endif
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
@@ -160,6 +181,7 @@ print("Case 00: resting");
 //}}}
 
 //{{{ Conditions: axial conductance + temperature + Vrest + Eleak + resistance
+//NOTE: 1 Ohm.cm = 10^-5 GOhm*um
 #define Ra_value 0.001     // [GOhm*um] 
   //across the spine-neck to shaft
 //#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
@@ -298,16 +320,6 @@ GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ 
 
 
 
-//FUNCTOR
-//{{{
-//OTHERS FUNCTORS
-/*{{{*/
-ReSeedRandom reSeed(243);
-/*}}}*/
-#ifndef MODEL_TO_USE
-print("WARNING: You haven't selected MODEL_TO_USE")
-#endif
-
 //TISSUE FUNCTOR
 /*{{{*/
 //FUNCTORS DEFINITION
@@ -328,23 +340,23 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 #define tissueFile "neurons.txt"
 //NOTE: -r #capsules-per-cpt
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 1" 
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p " STR(paramFolder)"/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 1" 
 
-#define strArg1_supplement "-p params/DetParams.par -n cost-volume"
-#define strArg3 "params/ChanParams.par"
+#define strArg1_supplement "-p " STR(paramFolder) "/DetParams.par -n cost-volume"
+#define strArg3 STR(paramFolder) "/ChanParams.par"
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) \\
   && defined(SIMULATE_CAER) && defined(SIMULATE_IP3)
-  #define  strArg2 "params/CptParams-VmCaiCaERIP3.par"
-  #define  strArg4 "params/SynParams-VmCaiCaERIP3.par"
+  #define  strArg2 STR(paramFolder) "/CptParams-VmCaiCaERIP3.par"
+  #define  strArg4 STR(paramFolder) "/SynParams-VmCaiCaERIP3.par"
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
-  #define  strArg2 "params/CptParams-VmCaiCaER.par"
-  #define  strArg4 "params/SynParams-VmCaiCaER.par"
+  #define  strArg2 STR(paramFolder) "/CptParams-VmCaiCaER.par"
+  #define  strArg4 STR(paramFolder) "/SynParams-VmCaiCaER.par"
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
-  #define  strArg2 "params/CptParams-VmCai.par"
-  #define  strArg4 "params/SynParams-VmCai.par"
+  #define  strArg2 STR(paramFolder) "/CptParams-VmCai.par"
+  #define  strArg4 STR(paramFolder) "/SynParams-VmCai.par"
 #elif defined(SIMULATE_VM)
-  #define  strArg2 "params/CptParams.par"
-  #define  strArg4 "params/SynParams.par"
+  #define  strArg2 STR(paramFolder) "/CptParams.par"
+  #define  strArg4 STR(paramFolder) "/SynParams.par"
 #endif
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,

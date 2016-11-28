@@ -1549,8 +1549,7 @@ bool Params::readRadii(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector[j] == SegmentDescriptor::branchType)
-          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids[j],  maskVector[j]);
       }  // these values help to identify which branch in which neuron to get
       // the paramater mapping
 
@@ -1674,8 +1673,7 @@ bool Params::readSIParams(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector[j] == SegmentDescriptor::branchType)
-          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids[j],  maskVector[j]);
       }  // these values help to identify which branch in which neuron to get
       // the paramater mapping
 
@@ -1788,14 +1786,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
                                            // BRANCHTYPE
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                 it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -1815,11 +1806,6 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             }
             values.push_back(val);
           }
-          /*
-                   if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-                   if (maskVector[j] == SegmentDescriptor::branchType)
-                   ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-    */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -1874,8 +1860,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -1972,22 +1957,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
-            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
-            {
-
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -2061,8 +2031,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j], maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -2170,22 +2139,7 @@ bool Params::readChannelTargets(FILE* fpF)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
                                            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-            {
-              assert(0);
-            }
-            else if (isBracket(fpF, lval, hval))
-            {
-            }
-                                                */
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                 it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+            Params::reviseParamValues(values, maskVector[j]);
           }
           else
           {
@@ -2209,11 +2163,6 @@ bool Params::readChannelTargets(FILE* fpF)
             }
             values.push_back(val);
           }
-          /*
-                   if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-                   if (maskVector[j] == SegmentDescriptor::branchType)
-                   ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-    */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -2269,10 +2218,7 @@ bool Params::readChannelTargets(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector[j] == SegmentDescriptor::branchType)
-          {
-            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-          }
+          Params::reviseParamValue(ids[j],  maskVector[j]);
         }
         // put into v_ids
         v_ids.push_back(ids);
@@ -2374,17 +2320,7 @@ bool Params::readChannelTargets2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -2461,10 +2397,7 @@ bool Params::readChannelTargets2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector[j] == SegmentDescriptor::branchType)
-          {
-            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-          }
+          Params::reviseParamValue(ids[j],  maskVector[j]);
         }
         // put into v_ids
         v_ids.push_back(ids);
@@ -2550,9 +2483,8 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector1[j] == SegmentDescriptor::branchType)
-          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
-      }                           // read-in 2 2
+        Params::reviseParamValue(ids1[j],  maskVector1[j]);
+      }      
       for (unsigned int j = 0; j < sz2; ++j)
       {
         if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
@@ -2569,9 +2501,8 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector2[j] == SegmentDescriptor::branchType)
-          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
-      }                           // read-in 2 0
+        Params::reviseParamValue(ids2[j],  maskVector2[j]);
+      }
       assert(!feof(fpF));
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
       std::istringstream is(bufS);
@@ -2735,18 +2666,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -2824,8 +2744,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector1[j]);
         }
         v1_ids.push_back(ids);
       }
@@ -2844,18 +2763,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -2930,8 +2838,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector2[j]);
         }          
         v2_ids.push_back(ids);
       }
@@ -3032,8 +2939,7 @@ BRANCHTYPE MTYPE
           }
           assert(0);
         }
-        if (maskVector1[j] == SegmentDescriptor::branchType)
-          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids1[j],  maskVector1[j]);
       }                           // read-in 2 2
       for (unsigned int j = 0; j < sz2; ++j)
       {
@@ -3051,8 +2957,7 @@ BRANCHTYPE MTYPE
           }
           assert(0);
         }
-        if (maskVector2[j] == SegmentDescriptor::branchType)
-          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids2[j],  maskVector2[j]);
       }                           // read-in 2 0
       assert(!feof(fpF));
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
@@ -3185,24 +3090,9 @@ BRANCHTYPE MTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            // the form  [...] and it occurs for
-            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-                {
-                assert(0);
-                }
-                else if (isBracket(fpF, lval, hval))
-                {
-                }
-                */
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -3222,11 +3112,6 @@ BRANCHTYPE MTYPE
             }
             values.push_back(val);
           }
-          /*
-             if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-             if (maskVector[j] == SegmentDescriptor::branchType)
-             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-             */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -3280,8 +3165,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids1[j],  maskVector1[j]);
         }                           // read-in 2 2
         v1_ids.push_back(ids1);
       }
@@ -3311,24 +3195,9 @@ BRANCHTYPE MTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            // the form  [...] and it occurs for
-            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-                {
-                assert(0);
-                }
-                else if (isBracket(fpF, lval, hval))
-                {
-                }
-                */
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -3348,11 +3217,6 @@ BRANCHTYPE MTYPE
             }
             values.push_back(val);
           }
-          /*
-             if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-             if (maskVector[j] == SegmentDescriptor::branchType)
-             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-             */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -3407,8 +3271,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids2[j],  maskVector2[j]);
         }                           // read-in 2 0
         v2_ids.push_back(ids2);
       }
@@ -3513,17 +3376,7 @@ BRANCHTYPE MTYPE
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//regular
@@ -3598,8 +3451,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids1[j],  maskVector1[j]);
         }                           // read-in 2 2
         v1_ids.push_back(ids1);
       }
@@ -3623,17 +3475,7 @@ BRANCHTYPE MTYPE
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -3708,8 +3550,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids2[j],  maskVector2[j]);
         }                           // read-in 2 0
         v2_ids.push_back(ids2);
       }
@@ -3810,8 +3651,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector1[j] == SegmentDescriptor::branchType)
-          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids1[j],  maskVector1[j]);
       }
       for (unsigned int j = 0; j < sz2; ++j)
       {
@@ -3829,8 +3669,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector2[j] == SegmentDescriptor::branchType)
-          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids2[j],  maskVector2[j]);
       }
       assert(!feof(fpF));
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -4029,18 +3868,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -4114,8 +3942,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids1[j],  maskVector1[j]);
         }
         v1_ids.push_back(ids1);
       }
@@ -4134,18 +3961,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -4219,8 +4035,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids2[j],  maskVector2[j]);
         }
         v2_ids.push_back(ids2);
       }
@@ -4378,8 +4193,7 @@ unsigned long long Params::readNamedParam(
         }
         assert(0);
       }
-      if (maskVector[j] == SegmentDescriptor::branchType)
-        ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      Params::reviseParamValue(ids[j],  maskVector[j]);
     }
     assert(!feof(fpF));
     c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -4637,24 +4451,9 @@ BRANCHTYPE MTYPE
 							if (maskVector[j] == SegmentDescriptor::branchType)
 							{
 								getListofValues(fpF, values);  // assume the next data to read is in
-								// the form  [...] and it occurs for
-								// BRANCHTYPE
-								/*  if (isAsterisk(fpF))
-										{
-										assert(0);
-										}
-										else if (isBracket(fpF, lval, hval))
-										{
-										}
-										*/
-								// make sure the BRANCHTYPE is 0-based
-								for (std::vector<int>::iterator it = values.begin();
-										it != values.end(); ++it)
-								{
-									*it -= 1;
-								}
-								// std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-								// });
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+                Params::reviseParamValues(values,  maskVector[j]);
 							}
 							else
 							{
@@ -4674,11 +4473,6 @@ BRANCHTYPE MTYPE
                 }
 								values.push_back(val);
 							}
-							/*
-								 if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-								 if (maskVector[j] == SegmentDescriptor::branchType)
-								 ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-								 */
 							vect_values.push_back(values);
 							total_vect *= values.size();
 						}
@@ -4734,10 +4528,7 @@ BRANCHTYPE MTYPE
                 }
                 assert(0);
               }
-							if (maskVector[kk] == SegmentDescriptor::branchType)
-							{
-								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
-							}
+              Params::reviseParamValue(ids[kk],  maskVector[kk]);
 						}
 						// put into v_ids
 						v_ids.push_back(ids);
@@ -4923,15 +4714,7 @@ BRANCHTYPE MTYPE
               if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
               {//array-form (single or many values)
 								getListofValues(fpF, values);  // assume the next data to read is in
-                if (maskVector[j] == SegmentDescriptor::branchType)
-                {
-                  // make sure the BRANCHTYPE is 0-based
-                  for (std::vector<int>::iterator it = values.begin();
-                      it != values.end(); ++it)
-                  {
-                    *it -= 1;
-                  }
-                }
+                Params::reviseParamValues(values,  maskVector[j]);
               }
 							else
               {//single value
@@ -5008,10 +4791,7 @@ BRANCHTYPE MTYPE
                 }
                 assert(0);
               }
-							if (maskVector[kk] == SegmentDescriptor::branchType)
-							{
-								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
-							}
+              Params::reviseParamValue(ids[kk],  maskVector[kk]);
 						}
 						// put into v_ids
 						v_ids.push_back(ids);
@@ -6475,22 +6255,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
-            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
-            {
-
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -6564,8 +6329,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -6664,22 +6428,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
-            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
-            {
-
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -6753,8 +6502,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -6850,6 +6598,58 @@ bool Params::isGivenKeySpineHead(key_size_t key)
     }
   }
   return result;
+}
+
+
+void Params::reviseParamValue(unsigned int& fieldVal, const int& fieldIdx)
+{
+  if (fieldIdx == SegmentDescriptor::branchType)
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
+  }
+}
+void Params::reviseParamValue(unsigned int& fieldVal, const std::string& fieldName)
+{
+  SegmentDescriptor segDesc;
+  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
+  }
+}
+void Params::reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx)
+{
+  if (fieldIdx == SegmentDescriptor::branchType)
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    for (std::vector<int>::iterator it = fieldVals.begin();
+        it != fieldVals.end(); ++it)
+    {
+      *it -= 1;
+    }
+  }
+  else if (fieldIdx == SegmentDescriptor::uf0) // MTYPE
+  {
+
+  }
+}
+void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName)
+{
+  SegmentDescriptor segDesc;
+  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    for (std::vector<int>::iterator it = fieldVals.begin();
+        it != fieldVals.end(); ++it)
+    {
+      *it -= 1;
+    }
+  }
+  else if (fieldName == segDesc.getFieldName(SegmentDescriptor::uf0)) // MTYPE
+  {
+
+  }
 }
 
 #endif
