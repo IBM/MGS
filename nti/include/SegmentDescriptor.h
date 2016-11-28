@@ -102,6 +102,7 @@ class SegmentDescriptor {
   unsigned int getBranchIndex(key_size_t segmentKey);
   unsigned int getSegmentIndex(key_size_t segmentKey);
   bool getFlag(key_size_t segmentKey);
+  std::string getFieldName(const int& fieldValue);
 
   private:
   static unsigned int pow2(int n);
