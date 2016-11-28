@@ -164,34 +164,42 @@ bool Initializer::execute()
 
 void Initializer::generateMakefileExtension()
 {   
-   std::ostringstream os;
-   
-   std::map<std::string, std::vector<std::string> >::iterator it, 
-      end = _extensionModules.end();
-   for(it = _extensionModules.begin(); it != end; ++it) {
-      std::string type = it->first;
-      for(unsigned int i = 0; i < type.size(); ++i) {
-	 if ((type[i] >= 'a') && (type[i] <= 'z')) {
-	    type[i] += 'A' - 'a';
-	 }
-      }
+  std::ostringstream os;
 
-      os << "#{{{" << type << "\n";
-      //std::endl;
-      os << type << "_MODULES += ";
-      std::vector<std::string>::iterator it2, end2 = it->second.end();
-      for (it2 = it->second.begin(); it2 != end2; ++it2) {
-        if (it2 != it->second.begin()) {
-          os << "\t";
-        }
-        os << *it2 << " \\\n";
+  std::map<std::string, std::vector<std::string> >::iterator it, 
+    end = _extensionModules.end();
+  for(it = _extensionModules.begin(); it != end; ++it) {
+    std::string type = it->first;
+    for(unsigned int i = 0; i < type.size(); ++i) {
+      if ((type[i] >= 'a') && (type[i] <= 'z')) {
+        type[i] += 'A' - 'a';
       }
-      os << "#}}}\n";
-      os << "\n";
-   }   
-   std::ofstream fs("Extensions.mk");
-   fs << os.str();
-   fs.close();
+    }
+
+    os << "#{{{" << type << "\n";
+    //std::endl;
+    os << type << "_MODULES += ";
+    std::vector<std::string>::iterator it2, end2 = it->second.end();
+    for (it2 = it->second.begin(); it2 != end2; ++it2) {
+      if (it2 != it->second.begin()) {
+        os << "\t";
+      }
+      os << *it2 << " \\\n";
+    }
+    os << "#}}}\n";
+    os << "\n";
+  }   
+  std::ofstream fs("Extensions.mk");
+  if (fs.is_open())
+  {
+    fs << os.str();
+    fs.close();
+  }
+  else
+  {
+    std::cerr << "Cannot create/open Extensions.mk file" << std::endl;
+    assert(0);
+  }
 }
 
 void Initializer::generateCopyModules()
@@ -217,10 +225,17 @@ void Initializer::generateCopyModules()
    //os << "cp $LENSROOT/Extensions.mk $LENSROOT/Extensions.mk.bak\n";
    //os << "cp Extensions.mk $LENSROOT/\n";
    std::ofstream fs("copyModules");
-   fs << os.str();
-   fs.close();
-   system("sh copyModules");
-
+   if (fs.is_open())
+   {
+     fs << os.str();
+     fs.close();
+     system("sh copyModules");
+   }
+   else
+   {
+     std::cerr << "Cannot create/open copyModules file" << std::endl;
+     assert(0);
+   }
 }
 
 void Initializer::generateCopyModulesPy()

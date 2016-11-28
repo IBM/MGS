@@ -6,6 +6,12 @@
 #include "Topology.h"
 
 #include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.gsl"
+
+#define _CCAT(x,y) x ## y 
+#define CCAT(x,y) _CCAT(x,y)
+#define _STR(x) #x 
+#define STR(x) _STR(x)
 
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
@@ -24,27 +30,9 @@
 //#define morph "hay2_"
 //}}}
 
-#define _CCAT(x,y) x ## y 
-#define CCAT(x,y) _CCAT(x,y)
-#define _STR(x) #x 
-#define STR(x) _STR(x)
-
-//CONNECTOR FUNCTOR
+//OTHERS FUNCTORS
 /*{{{*/
-//defined in std.gsl
-//Connector PolyConnectorFunctor();   
-//PolyConnectorFunctor polyConnect();
-Functor Print;
-Print print();
-  
-Functor ReSeedRandom;
 ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();   
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
 #ifndef MODEL_TO_USE
 print("WARNING: You haven't selected MODEL_TO_USE")
@@ -990,7 +978,7 @@ Grid PyramidalL5_Neuron{
 	InitNodes ( .[].Layer(junctions), tissueFunctor("NodeInit", < Vnew = {Vrest_value}  > ) );
 	InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
      /*}}}*/
-    // 1.2. - [Ca]intrcellular
+    // 1.2. - [Ca]intracellular
     /*{{{*/
 #if defined(SIMULATE_CACYTO)
 	InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
@@ -1131,23 +1119,17 @@ Grid PyramidalL5_Neuron{
 		//{{{
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
-				I_Ca = 0, 
         DCa = Cacyto_DiffusionConstant_SpineNeck, //[um^2/ms]
-				I_CaER = 0,
         DCaER = CaER_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
-				I_Ca = 0, 
         DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #elif defined(SIMULATE_VM)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
 				Raxial = R_NECK // [Gohm.um] 
 				> ) );
 #endif

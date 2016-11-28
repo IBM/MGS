@@ -5,6 +5,7 @@
 #include "Topology.h"
 
 #include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.gsl"
 
 #define _CCAT(x,y) x ## y 
 #define CCAT(x,y) _CCAT(x,y)
@@ -41,27 +42,9 @@
 //#define morph "hay2trimmedspinesNormalCmErevHCN30Harnett_"
 //}}}
 
-//Functor ExecuteShell;
-//ExecuteShell shellcommand();
-//#define command "mkdir " morph
-//shellcommand(command);
-
-//CONNECTOR FUNCTOR
+//OTHERS FUNCTORS
 /*{{{*/
-//defined in std.gsl
-//Connector PolyConnectorFunctor();   
-//PolyConnectorFunctor polyConnect();
-Functor Print;
-Print print();
-  
-Functor ReSeedRandom;
 ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();   
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
 #ifndef MODEL_TO_USE
 print("WARNING: You haven't selected MODEL_TO_USE")
@@ -189,7 +172,7 @@ print("Case 00: resting");
 
 #define Dopa_value   0.0   // [uM]
 
-//{{{ neurotransmitters
+  //{{{ neurotransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
@@ -376,16 +359,8 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 #define tissueFile "neurons.txt"
 //#endif
 
-//#ifdef ALLSPINES
-//#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" //" -g 18"
-////#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params_allspines/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-//#define strArg1_supplement " -p params_allspines/DetParams.par -m 0 -n cost-volume"
-//#define strArg2  "params_allspines/CptParams.par"
-//#define strArg3 "params_allspines/ChanParams.par"
-//#define strArg4 "params_allspines/SynParams.par"
-//#else
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 "//" -g 5"
-//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p " STR(paramFolder) "/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1 "//" -g 5"
+//#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p " STR(paramFolder) "/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
 #define strArg1_supplement " -p " STR(paramFolder) "/DetParams.par -m 0 -n cost-volume"
 #define strArg2  STR(paramFolder) "/CptParams.par"
 #define strArg3 STR(paramFolder) "/ChanParams.par"
@@ -1135,7 +1110,7 @@ Grid PyramidalL5_Neuron{
 #endif
 		/*}}}*/
 
-	// 3. SYNAPSES NODES 
+	  // 3. SYNAPSES NODES 
     /*{{{*/ 
     // 3.1. PRE-SYNAPSE
     /*{{{*/

@@ -5869,7 +5869,15 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
       }
       maskVector.push_back(
           _segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
-      ids[++idx] = ndi->getUnsignedInt();
+
+      int val = ndi->getUnsignedInt();
+      Params::reviseParamValue((unsigned int&)val, (*ndpiter)->getName());
+      if (val < 0)
+      {
+        std::cerr << "ERROR: The value of " << (*ndpiter)->getName() << " is in invalid range" << std::endl;
+        assert(val >= 0);
+      }
+      ids[++idx] = val; 
     }
 
     mask = _segmentDescriptor.getMask(maskVector);
@@ -6162,7 +6170,15 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
           exit(0);
         }
         maskVector.push_back(_segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
-        ids[++idx]=ndi->getUnsignedInt();
+        int val = ndi->getUnsignedInt();
+        std::string fieldName ((*ndpiter)->getName());
+        Params::reviseParamValue((unsigned int&)val, fieldName);
+        if (val < 0)
+        {
+          std::cerr << "ERROR: The value of " << (*ndpiter)->getName() << " is in invalid range" << std::endl;
+          assert(val >= 0);
+        }
+        ids[++idx] = val; 
       }
 
       mask=_segmentDescriptor.getMask(maskVector);
