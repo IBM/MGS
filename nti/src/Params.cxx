@@ -51,6 +51,57 @@
 // the maximum length of the name given to each "Type" in GSL
 #define LENGTH_IDNAME_MAX 256
 
+void Params::reviseParamValue(unsigned int& fieldVal, const int& fieldIdx)
+{
+  if (fieldIdx == SegmentDescriptor::branchType)
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
+  }
+}
+void Params::reviseParamValue(unsigned int& fieldVal, const std::string& fieldName)
+{
+  SegmentDescriptor segDesc;
+  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
+  }
+}
+void Params::reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx)
+{
+  if (fieldIdx == SegmentDescriptor::branchType)
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    for (std::vector<int>::iterator it = fieldVals.begin();
+        it != fieldVals.end(); ++it)
+    {
+      *it -= 1;
+    }
+  }
+  else if (fieldIdx == SegmentDescriptor::uf0) // MTYPE
+  {
+
+  }
+}
+void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName)
+{
+  SegmentDescriptor segDesc;
+  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    for (std::vector<int>::iterator it = fieldVals.begin();
+        it != fieldVals.end(); ++it)
+    {
+      *it -= 1;
+    }
+  }
+  else if (fieldName == segDesc.getFieldName(SegmentDescriptor::uf0)) // MTYPE
+  {
+
+  }
+}
+
 Params::Params()
     : _bondK0(0),
       _bondR0(0),
@@ -6600,56 +6651,5 @@ bool Params::isGivenKeySpineHead(key_size_t key)
   return result;
 }
 
-
-void Params::reviseParamValue(unsigned int& fieldVal, const int& fieldIdx)
-{
-  if (fieldIdx == SegmentDescriptor::branchType)
-  {
-    //NOTE: User-input is 1-based; but simulator-value is 0-based
-    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
-  }
-}
-void Params::reviseParamValue(unsigned int& fieldVal, const std::string& fieldName)
-{
-  SegmentDescriptor segDesc;
-  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
-  {
-    //NOTE: User-input is 1-based; but simulator-value is 0-based
-    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
-  }
-}
-void Params::reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx)
-{
-  if (fieldIdx == SegmentDescriptor::branchType)
-  {
-    //NOTE: User-input is 1-based; but simulator-value is 0-based
-    for (std::vector<int>::iterator it = fieldVals.begin();
-        it != fieldVals.end(); ++it)
-    {
-      *it -= 1;
-    }
-  }
-  else if (fieldIdx == SegmentDescriptor::uf0) // MTYPE
-  {
-
-  }
-}
-void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName)
-{
-  SegmentDescriptor segDesc;
-  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
-  {
-    //NOTE: User-input is 1-based; but simulator-value is 0-based
-    for (std::vector<int>::iterator it = fieldVals.begin();
-        it != fieldVals.end(); ++it)
-    {
-      *it -= 1;
-    }
-  }
-  else if (fieldName == segDesc.getFieldName(SegmentDescriptor::uf0)) // MTYPE
-  {
-
-  }
-}
 
 #endif
