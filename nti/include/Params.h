@@ -578,5 +578,8 @@ public:
 
   SegmentDescriptor _segmentDescriptor;
   std::string _currentFName;
+  public:
+  static void reviseParamValue(unsigned int& fieldVal, const int& fieldName);
+  static void reviseParamValues(std::vector<int>& fieldVals, const int& fieldName);
 };
 #endif
