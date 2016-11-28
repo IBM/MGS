@@ -67,14 +67,6 @@ BRANCHTYPE MTYPE
     MK [Voltage] [Voltage] \
     HCN [Voltage] [Voltage] 
 #}}}
-#{{{GABAergic bouton
-1 1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-2 1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
-    Kv31 [Voltage] [Voltage]
-#}}} 
 #{{{  spines (spine-head need PMCA to counteract with NMDA)
 #no active process
 1 2 \
@@ -130,6 +122,14 @@ BRANCHTYPE MTYPE
 ##    SK [Calcium] [Voltage]  PMCA [Voltage, Calcium] [Calcium] \
 ##    Cah [Voltage] [Voltage, Calcium] Cal [Voltage] [Voltage, Calcium]
 #}}}
+#{{{GABAergic bouton
+1 1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
+    Kv31 [Voltage] [Voltage]
+2 1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+    Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
+    Kv31 [Voltage] [Voltage]
+#}}} 
 #{{{ Glutamatergic bouton
 1 4 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
     Kp [Voltage] [Voltage] Kt [Voltage] [Voltage] \
