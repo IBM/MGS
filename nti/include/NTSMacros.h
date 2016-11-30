@@ -388,7 +388,7 @@
 // MODEL DESIGN
 // IMPORTANT: try not to modify an existing one, instead create a new one
 //           by copying an existing model, and define a new name
-//           in section MODE_TO_USE macro 
+//           in section MODEL_TO_USE macro 
 //           user are free to work on section _MODEL_TESTING
 // 2. configure each model
 //  2.a select what compartmental variables to use
@@ -668,10 +668,14 @@
 #elif MODEL_TO_USE == _INFERIOR_OLIVE_1999_SCHWEIGHOER
 //{{{
   #define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+#define SIMULATE_VM
+#define SIMULATE_CACYTO
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
 //{{{
   #define CHANNEL_NAT NAT_SCHWEIGHOFER_1999
   #define CHANNEL_HCN HCN_HUGUENARD_MCCORMICK_1992 
-  #define CHANNEL_KDR KDR_SCHWEIGHOFER_1999
+  //#define CHANNEL_KDR KDR_SCHWEIGHOFER_1999 //wrong model implementation, it used A-type model
+  #define CHANNEL_KDR KDR_TRAUB_1994
   #define CHANNEL_CaL CaL
   #define CHANNEL_CaH CaHVA_TRAUB_1994
   #define RECEPTOR_AMPA AMPAR_POINTPROCESS
