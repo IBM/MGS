@@ -50,6 +50,7 @@
 #include "StringDataItem.h"
 #include "StringArrayDataItem.h"
 #include <mpi.h>
+#include <typeinfo>
 
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
@@ -1783,6 +1784,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     }
 
     const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
+    if (cpt->size()  < 0)
+    {
+      std::cerr << "ERROR: Expect at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
+      assert(0);
+    }
     // for parameters for the nodeType and are defined inside
     // 'compartmentalize='
     // arguments,
@@ -1796,6 +1802,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       bool foundNDP = false;
       for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
       {//for each data member
+        std::string mydata = (*cptiter)->getString();//DEBUG purpose
         if ((*ndpiter)->getName() == (*cptiter)->getString())
         {//if the data member is part of 'compartmentalize' declaration
           //...adjust the size of the data member vector to the #cpts on that branch

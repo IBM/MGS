@@ -21,6 +21,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 // rapidly-inactivating
 //         Vm-gated Na^+ current, I_Nat (or I_Naf)".
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+// Gate: m^3 * h
 // data measured from squid giant axon
 //   at temperature = 6.3-degree celcius
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
@@ -45,7 +46,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 // Rush-Rinzel (1994) thalamic neuron
 // adopted from HH-1952 data with
-//  the kinetics has been adjusted to 35-degree C using Q10=3
+//  the kinetics has been adjusted to 35-degree C using Q10-factor=3
 // NOTE:
 // the channel model is almost fully inactivate (h~0.1 at -65mV)
 // and it requires the cell to be hyperpolarized a certain amount of time
@@ -53,7 +54,24 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 // NOTE: Use original HH-1952, but shift V-dependent upward along voltage-axis
 //    hNa is replaced by a linear function of potassium inactivation hNa=0.85-n
 //    to approximate sodium activation 'm'
+//  with 'n' comes from KDR channel
     assert(0);
+//#define Vmshift 10.3  //positive = shift to right-side
+//#define AMC 0.1
+//#define AMV (-35 + Vmshift)
+//#define AMD 10.0
+//#define BMC 4.0
+//#define BMV (-60 + Vmshift)
+//#define BMD 20.0
+//// This is 5/170 to account for the 170 in \tau_h
+//#define AHC 0.029411764705882
+//#define AHV -60.0
+//#define AHD 15.0
+//// This is 1/170 to account for the 170 in \tau_h
+//#define BHC 0.005882352941176
+//#define BHV -50.0
+//#define BHD 10.0
+////#endif
 #elif CHANNEL_NAT == NAT_TRAUB_1994
 //Developed for Gamagenesis in interneurons
 //All above conventions for a_m, a_h, b_h remain the same as above except b_m below
@@ -73,6 +91,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHD -5.0
 
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
+// Gate: m_inf^3 * h
 // Developed for IO cell (inferior olive)
 //     adapted from Rush-Rinzel (1994) thalamic neuron
 //     to give long-lasting inactivation component
@@ -217,7 +236,7 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
     dyn_var_t bh = BHC * vtrap(-(v - BHV), BHD);
-		m[i] = am/(am+bm); // assumption of instantaneous
+		m[i] = am/(am+bm); // m = m_inf assumption of instantaneous
     // see Rempe-Chomp (2006)
     //dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     //m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
