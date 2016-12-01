@@ -4,7 +4,7 @@
 //    which regulate synapse [K+]_o and branch [K+]_o
 //    or emulate the effect of increasing [K+]_o
 
-#include "../../../nti/include/MaxComputeOrder.h"
+#include "../../nti/include/MaxComputeOrder.h"
 
 #define V_CM 0.01
 #define V_RA 0.001
@@ -113,7 +113,7 @@ print("Case 00: resting");
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
-	#define NumIterationsUntilEnd   90000   // unitless
+	#define NumIterationsUntilEnd   30000   // unitless
 	//#define NumIterationsUntilEnd   1000000   // unitless
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
@@ -206,12 +206,14 @@ print("Case 00: resting");
 #define Temperature_value  310.15 // [K] Kelvin
 //#define Vrest_value  -85.0 // [mV]
 #define Vrest_value  -64.12350 // [mV]
-#define E_leak_value -90.0 // [mV]
 #define V_E_LEAK -10.0
-#define E_leak_value Vrest_value
-//#define E_leak_value V_E_LEAK
+//#define E_leak_value -90.0 // [mV]
+//#define E_leak_value Vrest_value
+#define E_leak_value V_E_LEAK
 //#define Erev_HCN  -45.0 // [mV]
-#define Erev_HCN  -30.0 // [mV]
+//#define Erev_HCN  -30.0 // [mV]
+#define Erev_HCN  -43.0 // [mV] - Schweighofer
+
 //}}}
 
 //{{{ Time constant
@@ -241,7 +243,8 @@ print("Case 00: resting");
 #define GABAAR_CONDUCTANCE 0.50 // nS/um^2
 //}}}
 //{{{ PMCA
-#define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
+//#define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
+#define tau_PMCA_Calciumclearance   40.0  // [msec],e.g. 0.9-2 [msec]
 //#define Km_PMCA 0.5   // 0.5-1.0 [uM] concentration of Ca2+ at half-saturation 
 //}}}
 
@@ -560,34 +563,42 @@ NodeType DopamineConcentrationJunctionPoint {
 
 // 2.1 RECEPTOR/CHANNEL NODE
 /*{{{*/
-//Na+ currents
-/*{{{*/
+/*{{{//Na+ currents*/
    /* Fast-inactivating (transient) Na+ */
 NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels};
    /* Persistent Na+ current */
 NodeType ChannelNap { computeE->initialize2, initialize->initialize3, update->solveChannels};
 /*}}}*/
-//K+ currents
-/*{{{*/
+/*{{{//K+ currents*/
+  //{{{A-type
   /* KAf - fast-inactivating 'A'-type K+ Kv4.2 data */
 NodeType ChannelKDR { computeE->initialize2, initialize->initialize3, update->solveChannels };
 NodeType ChannelKAf { computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* KAs - slow-inactivating 'A'-type K+ Kv1.2 data */
 NodeType ChannelKAs { computeE->initialize2, initialize->initialize3, update->solveChannels };
+  //}}}
   /* KRP 4-AP resistent persistent K+ current */
 NodeType ChannelKRP { computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* KIR - inward-rectifying K+  */
 NodeType ChannelKIR { computeE->initialize2, initialize->initialize3, update->solveChannels };
+  //{{{Ca-dependent K+
   /* large-conductance BK Ca2+-dependent K+ current */
   /* type-I alpha+beta subunits: fast-activating + inactivating */
 NodeType ChannelBKalphabeta { computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* small-conductance SK Ca2+-dependent K+ current */
   /* SK only present on secondary and tertary dendrites only */
 NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType KCaChannel { computeE_K->initialize2, initializeKCaChannels->initialize3, update->solveChannels };
+   //}}}
 /*}}}*/
-//Ca2+ currents
-/*{{{*/
+   //{{{HCN
+NodeType ChannelHCN (< E_HCN = {Erev_HCN} >) {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+   //}}}
+/*{{{//Ca2+ currents*/
 #if defined(SIMULATE_CACYTO)
+NodeType CalChannel { initializeCalChannels->initialize3, update->solveChannels };
+NodeType CahChannel { initialize->initialize3, update->solveChannels };
+
   /* NOTE: L-type Cav1.1, Cav1.2, Cav1.3, Cav1.4 */
   /* L-type Ca2+ Cav1.2 and Cav1.3 (high-voltage activated)*/
 //NodeType ChannelCaL { initialize->initialize3, update->solveChannels };
@@ -1057,9 +1068,16 @@ Grid MSN_D1Neuron{
 	Layer(KIRChannels, ChannelKIR, tissueFunctor("Layout", < nodekind="Channels[KIR]" >), < nodekind="Channels[KIR]" >, tissueGM);
 	Layer(BKalphabetaChannels, ChannelBKalphabeta,  tissueFunctor("Layout", < nodekind="Channels[BK]" >), < nodekind="Channels[BK]" >, tissueGM);
 	Layer(SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
+  Layer(KCaChannels, KCaChannel, tissueFunctor("Layout", < nodekind="Channels[KCa]" >), < nodekind="Channels[KCa]" >, tissueGM);
+     //}}}
+     //{{{HCN
+     Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //}}}
     //{{{ Ca2+ channels
 #if defined(SIMULATE_CACYTO)
+   Layer(CalChannels, CalChannel, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
+   Layer(CahChannels, CahChannel, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
+
 	Layer(CaLv12Channels, ChannelCaLv12_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
 	Layer(CaLv13Channels, ChannelCaLv13_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
 	Layer(CaNChannels, ChannelCaN_GHK, tissueFunctor("Layout", < nodekind="Channels[CaN]" >), < nodekind="Channels[CaN]" >, tissueGM);
@@ -1370,9 +1388,29 @@ Grid MSN_D1Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0}
 				> ) );
+   InitNodes ( .[].Layer(KCaChannels), tissueFunctor("NodeInit", <
+									compartmentalize = {  "gbar" }
+//									, gbar = {3.5}
+								 > ) );
     //}}}
+  //{{{HCN 
+   InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
+									compartmentalize = {  "gbar" },
+									gbar = {0.85}
+								 > ) );
+  //}}}
 	//{{{ Ca2+ channels
 #if defined(SIMULATE_CACYTO)
+   InitNodes ( .[].Layer(CalChannels), tissueFunctor("NodeInit", <
+									compartmentalize = { "gbar" },
+									gbar = {1.5}
+								 > ) );
+
+   InitNodes ( .[].Layer(CahChannels), tissueFunctor("NodeInit", <
+									compartmentalize = { "gbar" }
+//									, gbar = {0.4}
+								 > ) );
+
 	InitNodes ( .[].Layer(CaLv12Channels), tissueFunctor("NodeInit", <
 				compartmentalize = { "PCabar" },
 				PCabar = {0.0}
@@ -1513,8 +1551,9 @@ Grid MSN_D1Neuron{
 
 	// GRID - CONNECT LAYERS with ...
     /*{{{*/
-	// 1. with CONSTANTS
+	// 1. with CONSTANTS (time-steps, extracellular medium)
 	/*{{{*/
+   //{{{compartments
    polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
 #if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, .[].Layer(branches_Ca, junctions_Ca), <>, <identifier="dt">);
@@ -1525,19 +1564,30 @@ Grid MSN_D1Neuron{
 #if defined(SIMULATE_DOPA)
 	polyConnect(timeStep, .[].Layer(branches_Dopa, junctions_Dopa), <>, <identifier="dt">);
 #endif
-   // Na+ channels
+   //}}}
+   //{{{ionic channels
+   //{{{ Na+ channels
    polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
+   //}}}
 
-  // K+ channels
+  //{{{ K+ channels
    polyConnect(timeStep, .[].Layer(KDRChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(KDRChannels), <>, <identifier="EC">);
+
 	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
+
+   polyConnect(timeStep, .[].Layer(KCaChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(KCaChannels), <>, <identifier="EC">);
+  //}}}
 
 
 	//{{{connect Ca2+(cyto)
 #if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, .[].Layer(CalChannels, CahChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(CalChannels, CahChannels), <>, <identifier="EC">);
+
 	polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
 
@@ -1551,7 +1601,12 @@ Grid MSN_D1Neuron{
 	//polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 #endif
   //}}}
-
+   //{{{HCN
+   polyConnect(timeStep, .[].Layer(HCNChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(HCNChannels), <>, <identifier="EC">);
+   //}}}
+   //}}}
+   //{{{receptors
 	polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(AMPASynapses), <>, <identifier="EC">);
 
@@ -1562,8 +1617,7 @@ Grid MSN_D1Neuron{
 	polyConnect(extracellularMedium, .[].Layer(GABAASynapses), <>, <identifier="EC">);
 
 	polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
-
-
+   //}}}
 	//{{{ connect Ca2+(ER)
 #if defined(SIMULATE_CAER)
 	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
