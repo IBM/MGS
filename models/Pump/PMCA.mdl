@@ -272,8 +272,12 @@ Node PumpPMCA Implements
 			DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
-		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer,
+	BranchDataProducer, DimensionArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
 	Connection Pre Constant (PSet.identifier=="EC") 
