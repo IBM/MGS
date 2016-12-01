@@ -17,7 +17,7 @@
 static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 
 //
-// This is an implementation of the "KAf potassium current
+// This is an implementation of the fast component of A-type (KAf, KAt) potassium current
 //
 #if CHANNEL_KAf == KAf_TRAUB_1994
 //The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
