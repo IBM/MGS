@@ -424,7 +424,7 @@ public:
           std::map<key_size_t,
                    std::list<std::pair<std::string, std::vector<float> > > > >&
           arrayParamsMap);
-  bool readModelParams2(
+  ErrorCode readModelParams2(
       FILE* fpF, const std::string& id,
       std::map<std::string, unsigned long long>& masks,
       std::map<std::string,

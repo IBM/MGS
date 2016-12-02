@@ -279,11 +279,11 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
       exit; 
     fi
-    if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$MCO" == "-MCO" ]; then
-      cd $NTSROOT
-      find . -name *.mdf -exec touch '{}' \;
-      cd $MDLROOT
-    fi
+    ##NEED TO BE REMOVED#if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$MCO" == "-MCO" ]; then
+    ###  cd $NTSROOT
+    ###  find . -name *.mdf -exec touch '{}' \;
+    ###  cd $MDLROOT
+    ###fi
     rm -f mdl.make.mark
     cd $NTSROOT
   fi
@@ -400,6 +400,17 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     fi
     cd -
   else
+    cd $LENSROOT/extensions/variable
+    ./define variables.mdf  $REBUILD
+    cd $LENSROOT/extensions/struct
+    ./define structs.mdf   $REBUILD
+    cd $LENSROOT/extensions/functor
+    ./define functors.mdf  $REBUILD
+    cd $NTSROOT/models
+    ./define compartmental.mdf $REBUILD
+
+    cp Extensions.mk $LENSROOT/
+    cd $NTSROOT
     # -s or -singlethread
     cd $LENSROOT
     ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE

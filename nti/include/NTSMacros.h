@@ -366,7 +366,7 @@
 #define _MSN_2005_WOLF        2 
 #define _MSN_2016_TUAN_JAMES  3
 #define _PYRAMIDAL_2011_HAY  4
-#define _INFERIOR_OLIVE_1999_SCHWEIGHOER 5
+#define _INFERIOR_OLIVE_1999_SCHWEIGHFOER 5
 #define _PYRAMIDAL_L5b_2016_TUAN_JAMES 6
 #define _INTERNEURON_TRAUB_1995 7
 #define _PYRAMIDAL_L5b_2017_TUAN_JAMES 8
@@ -388,7 +388,7 @@
 // MODEL DESIGN
 // IMPORTANT: try not to modify an existing one, instead create a new one
 //           by copying an existing model, and define a new name
-//           in section MODE_TO_USE macro 
+//           in section MODEL_TO_USE macro 
 //           user are free to work on section _MODEL_TESTING
 // 2. configure each model
 //  2.a select what compartmental variables to use
@@ -665,20 +665,12 @@
 //}}}
 
 //}}}
-#elif MODEL_TO_USE == _INFERIOR_OLIVE_1999_SCHWEIGHOER
+#elif MODEL_TO_USE == _INFERIOR_OLIVE_1999_SCHWEIGHOFER
 //{{{
   #define IDEA_DYNAMIC_INITIALVOLTAGE
   #define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
-  //#define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
-  //#define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  //#define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
-//REMIND: SWITCH to _PYRAMIDAL_2011_HAY bring back oscillation
-//REMIND: KDR_SCHWEIGHOFER_1999 is the problem
-//   switch to KDR_TRAUB_1994 works
-//STRET_SOMA_WITH is not the factor lead to proper behavior
-//#define STRETCH_SOMA_WITH 35.0    //seem ok  value if used
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
 //{{{
   #define CHANNEL_NAT NAT_SCHWEIGHOFER_1999 //ok perfect
