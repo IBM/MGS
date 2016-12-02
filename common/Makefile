@@ -2,7 +2,7 @@ OBJDIR= ./obj
 SRCDIR= ./src
 INCDIR= ./include
 CC=g++
-CFLAGS=-I$(INCDIR) -g -Wall -O3 -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
+CFLAGS=-I$(INCDIR) -g -ggdb -Wall -O3 -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
 
 .DEFAULT_GOAL := final
 

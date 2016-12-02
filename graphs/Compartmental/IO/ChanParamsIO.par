@@ -1,37 +1,43 @@
-CHANNEL_TARGETS 3
+CHANNEL_TARGETS 2
 BRANCHTYPE
-0 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium]
-1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
-2 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium]
+#1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium] Cah [Voltage] [Voltage, Calcium]
+1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] 
+2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+#3 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium]
 
-CHANNEL_COSTS 6
+CHANNEL_COSTS 2
 Na 0.414243
 KDR 0.254051
-KCa 0.254051
-HCN 0.254051
-Cal 0.254051
-Cah 0.254051
+#KCa 0.254051
+#HCN 0.254051
+#Cal 0.254051
+#Cah 0.254051
+#PMCA 0.254051
 
-CHANNEL_PARAMS 4
+CHANNEL_PARAMS 2
 Na 2
 BRANCHTYPE
-0 <gbar={4.75}>
-1 <gbar={1.0}>
+1 <gbar={4.75}>
+2 <gbar={1.0}>
 KDR 2
 BRANCHTYPE
-0 <gbar={1.0}>
-1 <gbar={0.4}>
-KCa 5
-BRANCHORDER
-1 <gbar={0.0}>
-2 <gbar={2.0}>
-3 <gbar={1.0>
-4 <gbar={0.5}>
-5 <gbar={0.25}>
-Cah 5
-BRANCHORDER
-1 <gbar={0.0}>
-2 <gbar={0.05}>
-3 <gbar={0.025}>
-4 <gbar={0.0125}>
-5 <gbar={0.00625}>
+1 <gbar={1.0}>
+2 <gbar={0.4}>
+#KCa 5
+#BRANCHORDER
+#1 <gbar={0.0}>
+#2 <gbar={2.0}>
+#3 <gbar={1.0>
+#4 <gbar={0.5}>
+#5 <gbar={0.25}>
+#Cah 5
+#BRANCHORDER
+#1 <gbar={0.0}>
+#2 <gbar={0.05}>
+#3 <gbar={0.025}>
+#4 <gbar={0.0125}>
+#5 <gbar={0.00625}>
+#PMCA 2
+#BRANCHORDER 
+#1 <tau={40.0}>
+#3 <tau={40.0}>

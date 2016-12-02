@@ -54,6 +54,7 @@ class NodeInstanceAccessor : public NodeDescriptor
       virtual void setNodeIndex(int pos);
       virtual int getIndex() const;
       virtual void setIndex(int pos);
+      virtual int getGlobalIndex() const;
 
       virtual ~NodeInstanceAccessor();
 

@@ -26,7 +26,7 @@ CompositeTrigger::CompositeTrigger(Simulation& sim,
 				   std::vector<DataItem*> const & args)
    : _sim(sim)
 {
-   if ((args.size() != 5) || (args.size() != 5)) {
+   if ((args.size() != 5) && (args.size() != 8)) {
       std::cerr<<"Composite trigger accepts 5 or 8 arguments!"<<std::endl;
       exit(-1);
    }

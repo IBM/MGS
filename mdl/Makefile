@@ -25,7 +25,7 @@ CFLAGS := -Iinclude -Iparser
 
 # Create a variable 'ADDCFLAGS' that you can use to add to the CFLAGS from the
 # command line option of gmake if necessary
-# e.g. Use gmake ADDCFLAGS='-g' if you want to compile with the -g option.
+# e.g. Use gmake ADDCFLAGS='-g -ggdb' if you want to compile with the -g option.
 ADDCFLAGS :=
 CFLAGS += $(ADDCFLAGS)
 
@@ -41,7 +41,7 @@ SRCS :=
 FINAL_TARGET_FLAG := 
 
 ifeq ($(CC), g++)
-  CFLAGS += -g -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align
+  CFLAGS += -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align
 endif
 
 ifeq ($(OPERATING_SYSTEM), Linux)
@@ -65,7 +65,7 @@ endif
 
 #For debugging
 ifeq ($(CC), g++)
-   CFLAGS += -ggdb
+   CFLAGS += -ggdb -g
 endif
 ifeq ($(CC), xlC_r)
    CFLAGS += -g

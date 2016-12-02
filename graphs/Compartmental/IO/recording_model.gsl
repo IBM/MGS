@@ -1,0 +1,96 @@
+//{{{voltage
+#define DAT0 "soma_voltage.dat"
+#define DAT1 "axon_voltage.dat"
+#define DAT2 "dend_voltage.dat"
+VoltageDisplay voltageDisplay0<fileName=DAT0>;
+voltageDisplay0.dataCollection(<>) on recOn;
+VoltageDisplay voltageDisplay1<fileName=DAT1>;
+voltageDisplay1.dataCollection(<>) on recOn;
+VoltageDisplay voltageDisplay2<fileName=DAT2>;
+voltageDisplay2.dataCollection(<>) on recOn;
+//VoltageDisplay voltageDisplay3<fileName=DAT3>;
+//VoltageDisplay voltageDisplay4<fileName=DAT4>;
+//VoltageDisplay voltageDisplay5<fileName=DAT5>;
+//VoltageDisplay voltageDisplay6<fileName=DAT6>;
+//VoltageDisplay voltageDisplay7<fileName=DAT7>;
+//VoltageDisplay voltageDisplay8<fileName=DAT8>;
+//VoltageDisplay voltageDisplay9<fileName=DAT9>;
+//VoltageDisplay voltageDisplay10<fileName=DAT10>;
+//VoltageDisplay voltageDisplay11<fileName=DAT11>;
+//VoltageDisplay voltageDisplay12<fileName=DAT12>;
+//VoltageDisplay voltageDisplay13<fileName=DAT13>;
+//VoltageDisplay voltageDisplay14<fileName=DAT14>;
+
+//#define DAT3 "rec3.dat"
+//#define DAT4 "rec4.dat"
+//#define DAT5 "rec5.dat"
+//#define DAT6 "rec6.dat"
+//#define DAT7 "rec7.dat"
+//#define DAT8 "rec8.dat"
+//#define DAT9 "rec9.dat"
+//#define DAT10 "rec10.dat"
+//#define DAT11 "rec11.dat"
+//#define DAT12 "rec12.dat"
+//#define DAT13 "rec13.dat"
+//#define DAT14 "rec14.dat"
+//voltageDisplay3.dataCollection(<>) on recOn;
+//voltageDisplay4.dataCollection(<>) on recOn;
+//voltageDisplay5.dataCollection(<>) on recOn;
+//voltageDisplay6.dataCollection(<>) on recOn;
+//voltageDisplay7.dataCollection(<>) on recOn;
+//voltageDisplay8.dataCollection(<>) on recOn;
+//voltageDisplay9.dataCollection(<>) on recOn;
+//voltageDisplay10.dataCollection(<>) on recOn;
+//voltageDisplay11.dataCollection(<>) on recOn;
+//voltageDisplay12.dataCollection(<>) on recOn;
+//voltageDisplay13.dataCollection(<>) on recOn;
+//voltageDisplay14.dataCollection(<>) on recOn;
+//}}}
+
+//{{{calcium
+//#define DAT20 "rec20.dat"
+//#define DAT21 "rec21.dat"
+//#define DAT22 "rec22.dat"
+//#define DAT23 "rec23.dat"
+//#define DAT24 "rec24.dat"
+//#define DAT25 "rec25.dat"
+//#define DAT26 "rec26.dat"
+//#define DAT27 "rec27.dat"
+//#define DAT28 "rec28.dat"
+//#define DAT29 "rec29.dat"
+//#define DAT30 "rec30.dat"
+//#define DAT31 "rec31.dat"
+//#define DAT32 "rec32.dat"
+//#define DAT33 "rec33.dat"
+//#define DAT34 "rec34.dat"
+//CalciumDisplay calciumDisplay20<fileName=DAT20>;
+//CalciumDisplay calciumDisplay21<fileName=DAT21>;
+//CalciumDisplay calciumDisplay22<fileName=DAT22>;
+//CalciumDisplay calciumDisplay23<fileName=DAT23>;
+//CalciumDisplay calciumDisplay24<fileName=DAT24>;
+//CalciumDisplay calciumDisplay25<fileName=DAT25>;
+//CalciumDisplay calciumDisplay26<fileName=DAT26>;
+//CalciumDisplay calciumDisplay27<fileName=DAT27>;
+//CalciumDisplay calciumDisplay28<fileName=DAT28>;
+//CalciumDisplay calciumDisplay29<fileName=DAT29>;
+//CalciumDisplay calciumDisplay30<fileName=DAT30>;
+//CalciumDisplay calciumDisplay31<fileName=DAT31>;
+//CalciumDisplay calciumDisplay32<fileName=DAT32>;
+//CalciumDisplay calciumDisplay33<fileName=DAT33>;
+//CalciumDisplay calciumDisplay34<fileName=DAT34>;
+//calciumDisplay20.dataCollection(<>) on recOn;
+//calciumDisplay21.dataCollection(<>) on recOn;
+//calciumDisplay22.dataCollection(<>) on recOn;
+//calciumDisplay23.dataCollection(<>) on recOn;
+//calciumDisplay24.dataCollection(<>) on recOn;
+//calciumDisplay25.dataCollection(<>) on recOn;
+//calciumDisplay26.dataCollection(<>) on recOn;
+//calciumDisplay27.dataCollection(<>) on recOn;
+//calciumDisplay28.dataCollection(<>) on recOn;
+//calciumDisplay29.dataCollection(<>) on recOn;
+//calciumDisplay30.dataCollection(<>) on recOn;
+//calciumDisplay31.dataCollection(<>) on recOn;
+//calciumDisplay32.dataCollection(<>) on recOn;
+//calciumDisplay33.dataCollection(<>) on recOn;
+//calciumDisplay34.dataCollection(<>) on recOn;
+//}}}

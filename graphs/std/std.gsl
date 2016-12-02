@@ -39,9 +39,8 @@ NDPairListFunctor BindName
   Initialize(string name, float value); 
 };
 
-//NOTE: Don't use it here, put inside the main's GSL
 //ReSeedRandom reSeed(13);
-//ReSeedRandom reSeed(13,25);
+ReSeedRandom reSeed(13,25);
 
 // BindBack takes a functor instance and other arguments in its constructor. It then post-pends the 
 // other arguments to its execute arguments and calls execute on the input functor. It returns the 
@@ -72,9 +71,6 @@ ConnectNodeSetsFunctor connectNodeSets();
 
 SamplingFctr2 IsoSampler();
 IsoSampler isoSampler();
-
-SamplingFctr2 IsoSamplerHybrid();
-IsoSamplerHybrid isoSamplerHybrid();
 
 Connector ServiceConnectorFunctor();
 ServiceConnectorFunctor serviceConnect();

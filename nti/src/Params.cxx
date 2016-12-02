@@ -51,6 +51,57 @@
 // the maximum length of the name given to each "Type" in GSL
 #define LENGTH_IDNAME_MAX 256
 
+void Params::reviseParamValue(unsigned int& fieldVal, const int& fieldIdx)
+{
+  if (fieldIdx == SegmentDescriptor::branchType)
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
+  }
+}
+void Params::reviseParamValue(unsigned int& fieldVal, const std::string& fieldName)
+{
+  SegmentDescriptor segDesc;
+  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    fieldVal -= 1;  // make sure the BRANCHTYPE is 0-based
+  }
+}
+void Params::reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx)
+{
+  if (fieldIdx == SegmentDescriptor::branchType)
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    for (std::vector<int>::iterator it = fieldVals.begin();
+        it != fieldVals.end(); ++it)
+    {
+      *it -= 1;
+    }
+  }
+  else if (fieldIdx == SegmentDescriptor::uf0) // MTYPE
+  {
+
+  }
+}
+void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName)
+{
+  SegmentDescriptor segDesc;
+  if (fieldName == segDesc.getFieldName(SegmentDescriptor::branchType))
+  {
+    //NOTE: User-input is 1-based; but simulator-value is 0-based
+    for (std::vector<int>::iterator it = fieldVals.begin();
+        it != fieldVals.end(); ++it)
+    {
+      *it -= 1;
+    }
+  }
+  else if (fieldName == segDesc.getFieldName(SegmentDescriptor::uf0)) // MTYPE
+  {
+
+  }
+}
+
 Params::Params()
     : _bondK0(0),
       _bondR0(0),
@@ -344,57 +395,65 @@ void Params::readCptParams(const std::string& fname)
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
-  bool result;
   skipHeader(fpF);
 
   std::string keyword;
 #ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
-  keyword = std::string("COMPARTMENT_SPINE_NECK");
-  if (isGivenKeywordNext(fpF, keyword))
   {
-    result = (readCriteriaSpineNeck(fpF));
-    if (! result)
+    bool result;
+    keyword = std::string("COMPARTMENT_SPINE_NECK");
+    if (isGivenKeywordNext(fpF, keyword))
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      result = (readCriteriaSpineNeck(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
     }
-  }
-  keyword = std::string("COMPARTMENT_SPINE_HEAD");
-  if (isGivenKeywordNext(fpF, keyword))
-  {
-    result = (readCriteriaSpineHead(fpF));
-    if (! result)
+    keyword = std::string("COMPARTMENT_SPINE_HEAD");
+    if (isGivenKeywordNext(fpF, keyword))
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      result = (readCriteriaSpineHead(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
     }
+
   }
 #endif
 
-  keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
-  if (isGivenKeywordNext(fpF, keyword))
   {
-    //result = (readCompartmentVariableTargets(fpF));
-    result = (readCompartmentVariableTargets2(fpF));
-    if (! result)
+    bool result;
+    keyword = std::string("COMPARTMENT_VARIABLE_TARGETS");
+    if (isGivenKeywordNext(fpF, keyword))
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      //result = (readCompartmentVariableTargets(fpF));
+      result = (readCompartmentVariableTargets2(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
+
+    }
+
+    keyword = std::string("COMPARTMENT_VARIABLE_COSTS");
+    if (isGivenKeywordNext(fpF, keyword))
+    {
+      result = (readCompartmentVariableCosts(fpF));
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+        assert(result);
+      }
     }
 
   }
 
-  keyword = std::string("COMPARTMENT_VARIABLE_COSTS");
-  if (isGivenKeywordNext(fpF, keyword))
-  {
-    result = (readCompartmentVariableCosts(fpF));
-    if (! result)
-    {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
-    }
-  }
-
+  ErrorCode result;
   keyword = std::string("COMPARTMENT_VARIABLE_PARAMS");
   if (isGivenKeywordNext(fpF, keyword))
   {
@@ -402,10 +461,10 @@ void Params::readCptParams(const std::string& fname)
     //                _compartmentParamsMap, _compartmentArrayParamsMap);
     result = readModelParams2(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
         _compartmentParamsMap, _compartmentArrayParamsMap);
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   fclose(fpF);
@@ -435,21 +494,25 @@ void Params::readChanParams(const std::string& fname)
     std::cerr << "ERROR: reading file " << fname << " at section Channel cost" << std::endl;
     assert(result);
   }
+  {
+  ErrorCode result2;
 #ifdef NEWIDEA
   //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
   //                _channelArrayParamsMap);
-  result = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
                   _channelArrayParamsMap);
 #else
   //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
   //                _channelArrayParamsMap);
-  result = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
                   _channelArrayParamsMap);
 #endif
-  if (! result)
+  if (result2 == ErrorCode::SECTION_INVALID)
   {
     std::cerr << "ERROR: reading file " << fname << " at section Channel data" << std::endl;
-    assert(result);
+    assert(0);
+  }
+
   }
   fclose(fpF);
 }
@@ -463,7 +526,7 @@ void Params::readSynParams(const std::string& fname)
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
-  bool result;
+  ErrorCode result;
   skipHeader(fpF);
 
   std::string keyword;
@@ -472,16 +535,16 @@ void Params::readSynParams(const std::string& fname)
   {
     //result = (readElectricalSynapseTargets(fpF));
     result = (readElectricalSynapseTargets_vector2(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse Target" << std::endl;
-      assert(result);
+      assert(0);
     }
     result = (readElectricalSynapseCosts(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Electrical Synapse cost" << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   keyword = std::string("BIDIRECTIONAL_CONNECTION_TARGETS");
@@ -489,16 +552,16 @@ void Params::readSynParams(const std::string& fname)
   {
     //result = (readBidirectionalConnectionTargets(fpF));
     result = (readBidirectionalConnectionTargets_vector2(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection Target" << std::endl;
-      assert(result);
+      assert(0);
     }
     result = (readBidirectionalConnectionCosts(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Bidirectional Connection cost" << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   keyword = std::string("CHEMICAL_SYNAPSE_TARGETS");
@@ -506,16 +569,16 @@ void Params::readSynParams(const std::string& fname)
   {
     //result = (readChemicalSynapseTargets(fpF));
     result = (readChemicalSynapseTargets_vector2(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse Target" << std::endl;
-      assert(result);
+      assert(0);
     }
     result = (readChemicalSynapseCosts(fpF));
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section Chemical Synapse cost" << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   // readElectricalSynapseTargets(fpF);
@@ -526,10 +589,10 @@ void Params::readSynParams(const std::string& fname)
   // readChemicalSynapseCosts(fpF);
 //TUAN TODO " remove this section - not being used"
   result = (readPreSynapticPointTargets(fpF));
-  if (! result)
+  if (result == ErrorCode::SECTION_INVALID)
   {
     std::cerr << "ERROR: reading file " << fname << " at section Presynaptic Target" << std::endl;
-    assert(result);
+    assert(0);
   }
   fclose(fpF);
 }
@@ -1067,13 +1130,13 @@ void Params::getModelParams(
 #else
 void Params::getModelParams(
     ModelType modelType, std::string nodeType, key_size_t key,
-    std::list<std::pair<std::string, dyn_var_t> >& modelParams)
+    std::list<std::pair<std::string, float> >& modelParams)
 #endif
 {
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<
       std::string,
-      std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >*
+      std::map<key_size_t, std::list<std::pair<std::string, float> > > >*
       modelParamsMap;
 
   switch (modelType)
@@ -1091,7 +1154,7 @@ void Params::getModelParams(
   modelParams.clear();
   std::map<std::string,
            std::map<key_size_t,
-                    std::list<std::pair<std::string, dyn_var_t> > > >::iterator
+                    std::list<std::pair<std::string, float > > > >::iterator
       iter1 = modelParamsMap->find(nodeType);
   if (iter1 != modelParamsMap->end())
   {
@@ -1099,7 +1162,7 @@ void Params::getModelParams(
         modelParamsMasks->find(nodeType);
     assert(miter != modelParamsMasks->end());
     std::map<key_size_t,
-             std::list<std::pair<std::string, dyn_var_t> > >::iterator iter2 =
+             std::list<std::pair<std::string, float > > >::iterator iter2 =
         (iter1->second)
             .find(_segmentDescriptor.getSegmentKey(key, miter->second));
     if (iter2 != (iter1->second).end())
@@ -1161,14 +1224,14 @@ void Params::getModelParams(
 
 void Params::getModelArrayParams(
     ModelType modelType, std::string nodeType, key_size_t key,
-    std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+    std::list<std::pair<std::string, std::vector<float> > >&
         modelArrayParams)
 {
   std::map<std::string, unsigned long long>* modelParamsMasks;
   std::map<
       std::string,
       std::map<key_size_t,
-               std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >*
+               std::list<std::pair<std::string, std::vector<float> > > > >*
       modelArrayParamsMap;
 
   switch (modelType)
@@ -1187,7 +1250,7 @@ void Params::getModelArrayParams(
   std::map<
       std::string,
       std::map<key_size_t,
-               std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >::
+               std::list<std::pair<std::string, std::vector<float> > > > >::
       iterator iter1 = modelArrayParamsMap->find(nodeType);
   if (iter1 != modelArrayParamsMap->end())
   {
@@ -1196,7 +1259,7 @@ void Params::getModelArrayParams(
     assert(miter != modelParamsMasks->end());
     std::map<
         key_size_t,
-        std::list<std::pair<std::string, std::vector<dyn_var_t> > > >::iterator
+        std::list<std::pair<std::string, std::vector<float> > > >::iterator
         iter2 = (iter1->second)
                     .find(_segmentDescriptor.getSegmentKey(key, miter->second));
     if (iter2 != (iter1->second).end())
@@ -1256,7 +1319,7 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   std::string line(bufS);
-  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  if (c != NULL and 2 == sscanf(bufS, "%s %d ", tokS, &n))
   {
     std::string btype(tokS);
     if (btype == keyword)
@@ -1265,13 +1328,20 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
     }
     else
     {
-      std::cerr << "Expected: " << keyword << ", but Found: " << btype
+      std::cerr << "File " << _currentFName << ": " ;
+      std::cerr << "WARNING: Expected: " << keyword << ", but Found: " << btype
+        << " at line: " << line 
                 << std::endl;
     }
   }
+  else if (c == NULL)
+  {
+    std::cerr << "End-of-File at Param file " << _currentFName 
+              << std::endl;
+  }
   else
   {
-    std::cerr << "Syntax of SynParam invalid: expect \n SOME_KEYWORD num-column"
+    std::cerr << "Syntax of Param file " << _currentFName << " invalid: expect \n SOME_KEYWORD num-column"
               << std::endl;
     std::cerr << "Read line: " << line << std::endl;
   }
@@ -1534,8 +1604,7 @@ bool Params::readRadii(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector[j] == SegmentDescriptor::branchType)
-          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids[j],  maskVector[j]);
       }  // these values help to identify which branch in which neuron to get
       // the paramater mapping
 
@@ -1659,8 +1728,7 @@ bool Params::readSIParams(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector[j] == SegmentDescriptor::branchType)
-          ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids[j],  maskVector[j]);
       }  // these values help to identify which branch in which neuron to get
       // the paramater mapping
 
@@ -1773,14 +1841,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
                                            // BRANCHTYPE
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                 it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -1800,11 +1861,6 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             }
             values.push_back(val);
           }
-          /*
-                   if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-                   if (maskVector[j] == SegmentDescriptor::branchType)
-                   ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-    */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -1859,8 +1915,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -1957,22 +2012,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
-            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
-            {
-
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -2046,8 +2086,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j], maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -2155,22 +2194,7 @@ bool Params::readChannelTargets(FILE* fpF)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
                                            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-            {
-              assert(0);
-            }
-            else if (isBracket(fpF, lval, hval))
-            {
-            }
-                                                */
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                 it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+            Params::reviseParamValues(values, maskVector[j]);
           }
           else
           {
@@ -2194,11 +2218,6 @@ bool Params::readChannelTargets(FILE* fpF)
             }
             values.push_back(val);
           }
-          /*
-                   if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-                   if (maskVector[j] == SegmentDescriptor::branchType)
-                   ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-    */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -2254,10 +2273,7 @@ bool Params::readChannelTargets(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector[j] == SegmentDescriptor::branchType)
-          {
-            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-          }
+          Params::reviseParamValue(ids[j],  maskVector[j]);
         }
         // put into v_ids
         v_ids.push_back(ids);
@@ -2359,17 +2375,7 @@ bool Params::readChannelTargets2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -2446,10 +2452,7 @@ bool Params::readChannelTargets2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector[j] == SegmentDescriptor::branchType)
-          {
-            ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-          }
+          Params::reviseParamValue(ids[j],  maskVector[j]);
         }
         // put into v_ids
         v_ids.push_back(ids);
@@ -2535,9 +2538,8 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector1[j] == SegmentDescriptor::branchType)
-          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
-      }                           // read-in 2 2
+        Params::reviseParamValue(ids1[j],  maskVector1[j]);
+      }      
       for (unsigned int j = 0; j < sz2; ++j)
       {
         if (1 != (errorCode = fscanf(fpF, "%d", &ids2[j])))
@@ -2554,9 +2556,8 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector2[j] == SegmentDescriptor::branchType)
-          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
-      }                           // read-in 2 0
+        Params::reviseParamValue(ids2[j],  maskVector2[j]);
+      }
       assert(!feof(fpF));
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
       std::istringstream is(bufS);
@@ -2616,10 +2617,60 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
   return _electricalSynapses;
 }
 
-bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
+void Params::skipSection(FILE *fpF)
+{
+  std::vector<std::string> tokensList{
+      "COMPARTMENT_SPINE_NECK",
+      "COMPARTMENT_SPINE_HEAD",
+      "COMPARTMENT_VARIABLE_TARGETS", 
+      "COMPARTMENT_VARIABLE_COSTS", 
+      "COMPARTMENT_VARIABLE_PARAMS",
+      "ELECTRICAL_SYNAPSE_TARGETS",
+      "ELECTRICAL_SYNAPSE_COSTS",
+      "BIDIRECTIONAL_CONNECTION_TARGETS",
+      "BIDIRECTIONAL_CONNECTION_COSTS",
+      "CHEMICAL_SYNAPSE_TARGETS",
+      "CHEMICAL_SYNAPSE_COSTS",
+      "PRESYNAPTIC_POINT_TARGETS",
+      "CHANNEL_TARGETS",
+      "CHANNEL_COSTS", 
+      "CHANNEL_PARAMS"
+  };
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  int n = 0;
+  std::string nextToken("");
+
+  fpos_t fpos;
+  fgetpos(fpF, &fpos);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  while (c != NULL)
+  {
+    if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+    {
+      std::string btype(tokS);
+      nextToken = btype;
+      if (std::find(std::begin(tokensList), std::end(tokensList), nextToken) != std::end(tokensList))
+      {
+        fsetpos(fpF, &fpos);
+        break;
+      }
+      else{
+        fgetpos(fpF, &fpos);
+        c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+      }
+    }
+    else{
+      fgetpos(fpF, &fpos);
+      c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+    }
+  }
+    // myinput is included in tokensList.
+}
+
+Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
 {
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _electricalSynapses = false;
   _electricalSynapseTargetsMask1 = _electricalSynapseTargetsMask2 = 0;
   _electricalSynapseTargetsMap.clear();
@@ -2635,7 +2686,10 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
     is >> n;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
 
   if (n > 0)
   {
@@ -2671,18 +2725,7 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -2760,8 +2803,7 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector1[j]);
         }
         v1_ids.push_back(ids);
       }
@@ -2780,18 +2822,7 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -2866,8 +2897,7 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector2[j]);
         }          
         v2_ids.push_back(ids);
       }
@@ -2894,9 +2924,15 @@ bool Params::readElectricalSynapseTargets_vector2(FILE* fpF)
     }
   }
   else
-    rval = false;
-  _electricalSynapses = rval;
-  return _electricalSynapses;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  if (rval == ErrorCode::SECTION_VALID)
+    _electricalSynapses = true;
+
+  return rval;
 }
 
 bool Params::readBidirectionalConnectionTargets(FILE* fpF)
@@ -2962,8 +2998,7 @@ BRANCHTYPE MTYPE
           }
           assert(0);
         }
-        if (maskVector1[j] == SegmentDescriptor::branchType)
-          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids1[j],  maskVector1[j]);
       }                           // read-in 2 2
       for (unsigned int j = 0; j < sz2; ++j)
       {
@@ -2981,8 +3016,7 @@ BRANCHTYPE MTYPE
           }
           assert(0);
         }
-        if (maskVector2[j] == SegmentDescriptor::branchType)
-          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids2[j],  maskVector2[j]);
       }                           // read-in 2 0
       assert(!feof(fpF));
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);  // read-in DenSpine [Voltage] 1.0
@@ -3115,24 +3149,9 @@ BRANCHTYPE MTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            // the form  [...] and it occurs for
-            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-                {
-                assert(0);
-                }
-                else if (isBracket(fpF, lval, hval))
-                {
-                }
-                */
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -3152,11 +3171,6 @@ BRANCHTYPE MTYPE
             }
             values.push_back(val);
           }
-          /*
-             if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-             if (maskVector[j] == SegmentDescriptor::branchType)
-             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-             */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -3210,8 +3224,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids1[j],  maskVector1[j]);
         }                           // read-in 2 2
         v1_ids.push_back(ids1);
       }
@@ -3241,24 +3254,9 @@ BRANCHTYPE MTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            // the form  [...] and it occurs for
-            // BRANCHTYPE
-            /*  if (isAsterisk(fpF))
-                {
-                assert(0);
-                }
-                else if (isBracket(fpF, lval, hval))
-                {
-                }
-                */
-            // make sure the BRANCHTYPE is 0-based
-            for (std::vector<int>::iterator it = values.begin();
-                it != values.end(); ++it)
-            {
-              *it -= 1;
-            }
-            // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-            // });
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -3278,11 +3276,6 @@ BRANCHTYPE MTYPE
             }
             values.push_back(val);
           }
-          /*
-             if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-             if (maskVector[j] == SegmentDescriptor::branchType)
-             ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-             */
           vect_values.push_back(values);
           total_vect *= values.size();
         }
@@ -3337,8 +3330,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids2[j],  maskVector2[j]);
         }                           // read-in 2 0
         v2_ids.push_back(ids2);
       }
@@ -3373,7 +3365,7 @@ BRANCHTYPE MTYPE
   return _bidirectionalConnections;
 }
 
-bool Params::readBidirectionalConnectionTargets_vector2(FILE* fpF)
+Params::ErrorCode Params::readBidirectionalConnectionTargets_vector2(FILE* fpF)
 {
 	/*
 BIDIRECTIONAL_CONNECTION_TARGETS 2
@@ -3383,24 +3375,25 @@ BRANCHTYPE MTYPE
 3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
 	 */
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _bidirectionalConnections = false;
   _bidirectionalConnectionTargetsMask1 = _bidirectionalConnectionTargetsMask2 =
       0;
   _bidirectionalConnectionTargetsMap.clear();
   int n = 0;
-  char bufS[LENGTH_LINE_MAX];
-  std::string tokS;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  std::istringstream is(bufS);
-  is >> tokS;
-  if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
   {
-    is >> n;
+    std::string btype(tokS);
+    assert(btype == "BIDIRECTIONAL_CONNECTION_TARGETS");
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
 
   if (n > 0)
   {
@@ -3440,17 +3433,7 @@ BRANCHTYPE MTYPE
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//regular
@@ -3525,8 +3508,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids1[j],  maskVector1[j]);
         }                           // read-in 2 2
         v1_ids.push_back(ids1);
       }
@@ -3550,17 +3532,7 @@ BRANCHTYPE MTYPE
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -3635,8 +3607,7 @@ BRANCHTYPE MTYPE
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids2[j],  maskVector2[j]);
         }                           // read-in 2 0
         v2_ids.push_back(ids2);
       }
@@ -3666,9 +3637,14 @@ BRANCHTYPE MTYPE
     }
   }
   else
-    rval = false;
-  _bidirectionalConnections = rval;
-  return _bidirectionalConnections;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  if (rval == ErrorCode::SECTION_VALID)
+    _bidirectionalConnections = true;
+  return rval;
 }
 
 bool Params::readChemicalSynapseTargets(FILE* fpF)
@@ -3732,8 +3708,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector1[j] == SegmentDescriptor::branchType)
-          ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids1[j],  maskVector1[j]);
       }
       for (unsigned int j = 0; j < sz2; ++j)
       {
@@ -3751,8 +3726,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
           }
           assert(0);
         }
-        if (maskVector2[j] == SegmentDescriptor::branchType)
-          ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+        Params::reviseParamValue(ids2[j],  maskVector2[j]);
       }
       assert(!feof(fpF));
       c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -3887,7 +3861,7 @@ bool Params::readChemicalSynapseTargets(FILE* fpF)
   return _chemicalSynapses;
 }
 
-bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
+Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
 {//support array-form all key fields
   /*
    * CHEMICAL_SYNAPSE_TARGETS 1
@@ -3897,7 +3871,7 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
    * 1.0
    */
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _chemicalSynapses = false;
   _chemicalSynapseTargetsMask1 = _chemicalSynapseTargetsMask2 = 0;
   _chemicalSynapseTargetsMap.clear();
@@ -3914,7 +3888,10 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
     is >> n;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
 
   if (n > 0)
   {
@@ -3948,18 +3925,7 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -4033,8 +3999,7 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector1[j] == SegmentDescriptor::branchType)
-            ids1[j] = ids1[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids1[j],  maskVector1[j]);
         }
         v1_ids.push_back(ids1);
       }
@@ -4053,18 +4018,7 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
-            if (maskVector[j] == SegmentDescriptor::branchType)
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {
@@ -4138,8 +4092,7 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
             }
             assert(0);
           }
-          if (maskVector2[j] == SegmentDescriptor::branchType)
-            ids2[j] = ids2[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids2[j],  maskVector2[j]);
         }
         v2_ids.push_back(ids2);
       }
@@ -4165,12 +4118,17 @@ bool Params::readChemicalSynapseTargets_vector2(FILE* fpF)
     }
   }
   else
-    rval = false;
-  _chemicalSynapses = rval;
-  return _chemicalSynapses;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  if (rval == ErrorCode::SECTION_VALID)
+    _chemicalSynapses = true;
+  return rval;
 }
 
-bool Params::readPreSynapticPointTargets(FILE* fpF)
+Params::ErrorCode Params::readPreSynapticPointTargets(FILE* fpF)
 {
   /* Example:
    * PRESYNAPTIC_POINT_TARGETS 3
@@ -4178,7 +4136,7 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
    * NMDA Voltage
    * GABAA Voltage
    */
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _preSynapticPointTargetsMap.clear();
   _preSynapticPointSynapseMap.clear();
   skipHeader(fpF);
@@ -4195,10 +4153,11 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
   }
   else
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
+
   if (n > 0)
   {
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
@@ -4214,13 +4173,16 @@ bool Params::readPreSynapticPointTargets(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+  }
   return rval;
 }
 
@@ -4288,8 +4250,7 @@ unsigned long long Params::readNamedParam(
         }
         assert(0);
       }
-      if (maskVector[j] == SegmentDescriptor::branchType)
-        ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+      Params::reviseParamValue(ids[j],  maskVector[j]);
     }
     assert(!feof(fpF));
     c = fgets(bufS, LENGTH_LINE_MAX, fpF);
@@ -4398,12 +4359,12 @@ bool Params::readModelParams(
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<
         std::string,
-        std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+        std::map<key_size_t, std::list<std::pair<std::string, float > > > >&
         paramsMap,
     std::map<
         std::string,
         std::map<key_size_t, std::list<std::pair<std::string,
-                                                 std::vector<dyn_var_t> > > > >&
+                                                 std::vector<float> > > > >&
         arrayParamsMap)
 {//LIMIT: only BRANCHTYPE can have array-form
   /* Example of input from fpF
@@ -4547,24 +4508,9 @@ BRANCHTYPE MTYPE
 							if (maskVector[j] == SegmentDescriptor::branchType)
 							{
 								getListofValues(fpF, values);  // assume the next data to read is in
-								// the form  [...] and it occurs for
-								// BRANCHTYPE
-								/*  if (isAsterisk(fpF))
-										{
-										assert(0);
-										}
-										else if (isBracket(fpF, lval, hval))
-										{
-										}
-										*/
-								// make sure the BRANCHTYPE is 0-based
-								for (std::vector<int>::iterator it = values.begin();
-										it != values.end(); ++it)
-								{
-									*it -= 1;
-								}
-								// std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-								// });
+                                           // the form  [...] and it occurs for
+                                           // BRANCHTYPE
+                Params::reviseParamValues(values,  maskVector[j]);
 							}
 							else
 							{
@@ -4584,11 +4530,6 @@ BRANCHTYPE MTYPE
                 }
 								values.push_back(val);
 							}
-							/*
-								 if (1 != fscanf(fpF, "%d", &ids[j])) assert(0);
-								 if (maskVector[j] == SegmentDescriptor::branchType)
-								 ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
-								 */
 							vect_values.push_back(values);
 							total_vect *= values.size();
 						}
@@ -4644,10 +4585,7 @@ BRANCHTYPE MTYPE
                 }
                 assert(0);
               }
-							if (maskVector[kk] == SegmentDescriptor::branchType)
-							{
-								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
-							}
+              Params::reviseParamValue(ids[kk],  maskVector[kk]);
 						}
 						// put into v_ids
 						v_ids.push_back(ids);
@@ -4684,17 +4622,17 @@ BRANCHTYPE MTYPE
   return rval;
 }
 
-bool Params::readModelParams2(
+Params::ErrorCode Params::readModelParams2(
     FILE* fpF, const std::string& id,
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<
         std::string,
-        std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+        std::map<key_size_t, std::list<std::pair<std::string, float > > > >&
         paramsMap,
     std::map<
         std::string,
         std::map<key_size_t, std::list<std::pair<std::string,
-                                                 std::vector<dyn_var_t> > > > >&
+                                                 std::vector<float> > > > >&
         arrayParamsMap)
 {//any key field can be in array-form
   /* Example of input from fpF
@@ -4720,7 +4658,7 @@ BRANCHTYPE MTYPE
 1 2 <gbar={0.00992}>
    */
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   paramsMasks.clear();
   paramsMap.clear();
   int n = 0;
@@ -4741,7 +4679,8 @@ BRANCHTYPE MTYPE
       std::cerr << "ERROR in file " << _currentFName << std::endl;
       std::cerr << ".. unmatch section: expect " << expected_btype << ", while given "
         << btype << std::endl;
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
+      return rval;
     }
   }
   else
@@ -4749,7 +4688,8 @@ BRANCHTYPE MTYPE
     std::cerr << "ERROR in file " << _currentFName << std::endl;
     std::cerr << " Expect a string and a number ... line"
       << bufS << std::endl;
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
   }
 
   if (n > 0)
@@ -4797,7 +4737,8 @@ BRANCHTYPE MTYPE
 						std::cerr << "Params : Targeting channel parameters to "
 							"individual compartments not supported!"
 							<< std::endl;
-						return false;
+            rval = ErrorCode::SECTION_INVALID;
+            return rval;
 						//exit(EXIT_FAILURE);
 					}
 				}	
@@ -4833,15 +4774,7 @@ BRANCHTYPE MTYPE
               if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
               {//array-form (single or many values)
 								getListofValues(fpF, values);  // assume the next data to read is in
-                if (maskVector[j] == SegmentDescriptor::branchType)
-                {
-                  // make sure the BRANCHTYPE is 0-based
-                  for (std::vector<int>::iterator it = values.begin();
-                      it != values.end(); ++it)
-                  {
-                    *it -= 1;
-                  }
-                }
+                Params::reviseParamValues(values,  maskVector[j]);
               }
 							else
               {//single value
@@ -4918,10 +4851,7 @@ BRANCHTYPE MTYPE
                 }
                 assert(0);
               }
-							if (maskVector[kk] == SegmentDescriptor::branchType)
-							{
-								ids[kk] = ids[kk] - 1;  // make sure the BRANCHTYPE is 0-based
-							}
+              Params::reviseParamValue(ids[kk],  maskVector[kk]);
 						}
 						// put into v_ids
 						v_ids.push_back(ids);
@@ -4945,22 +4875,26 @@ BRANCHTYPE MTYPE
       }
       else
       {
-        rval = false;
         std::cerr << "ERROR in file " << _currentFName << std::endl;
         std::cerr << " Expect something like 'Calcium 4'... line\n" <<
           bufS << std::endl;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
   return rval;
 }
 
-bool Params::readElectricalSynapseCosts(FILE* fpF)
+Params::ErrorCode Params::readElectricalSynapseCosts(FILE* fpF)
 {
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _electricalSynapseCostsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -4975,10 +4909,10 @@ bool Params::readElectricalSynapseCosts(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
   }
   else
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
 
   if (n > 0)
   {
@@ -4994,19 +4928,24 @@ bool Params::readElectricalSynapseCosts(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+
   return rval;
 }
 
-bool Params::readBidirectionalConnectionCosts(FILE* fpF)
+Params::ErrorCode Params::readBidirectionalConnectionCosts(FILE* fpF)
 {
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _bidirectionalConnectionCostsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -5021,10 +4960,12 @@ bool Params::readBidirectionalConnectionCosts(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+    {
+      rval = ErrorCode::SECTION_INVALID;
+    }
   }
   else
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
 
   if (n > 0)
   {
@@ -5040,18 +4981,22 @@ bool Params::readBidirectionalConnectionCosts(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
   return rval;
 }
-bool Params::readChemicalSynapseCosts(FILE* fpF)
+Params::ErrorCode Params::readChemicalSynapseCosts(FILE* fpF)
 {
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   _chemicalSynapseCostsMap.clear();
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
@@ -5066,11 +5011,12 @@ bool Params::readChemicalSynapseCosts(FILE* fpF)
       // do nothing
     }
     else
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
   }
   else
-    rval = false;
-  if (n > 0 and rval)
+    rval = ErrorCode::SECTION_INVALID;
+
+  if (n > 0)
   {
     double cost;
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
@@ -5084,14 +5030,17 @@ bool Params::readChemicalSynapseCosts(FILE* fpF)
       }
       else
       {
-        rval = false;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
-    rval = true;
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
   return rval;
 }
 
@@ -5282,12 +5231,12 @@ void Params::buildParamsMap(
 		const std::string& myBuf, 
 		std::string & modelID,
 		std::map<std::string,
-		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+		std::map<key_size_t, std::list<std::pair<std::string, float> > > >&
 		paramsMap,
 		std::map<
 		std::string,
 		std::map<key_size_t,
-		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+		std::list<std::pair<std::string, std::vector<float> > > > >&
 		arrayParamsMap
 		)
 {
@@ -5296,10 +5245,10 @@ void Params::buildParamsMap(
 	for (; iter < iterend; iter++)
 	{//for each element in v_ids, apply the same read-in data to it
 		unsigned int* ids = *iter;
-		std::list<std::pair<std::string, dyn_var_t> >& params =
+		std::list<std::pair<std::string, float> >& params =
 			paramsMap[modelID][_segmentDescriptor.getSegmentKey(maskVector,
 					&ids[0])];
-		std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+		std::list<std::pair<std::string, std::vector<float> > >&
 			arrayParams =
 			arrayParamsMap[modelID][_segmentDescriptor.getSegmentKey(
 					maskVector, &ids[0])];
@@ -5350,12 +5299,12 @@ NOTE: must starts with '<' and ends with'>'
 			std::istringstream is2(tok2);
 			if (is2.get() != '{')
 			{  // single value
-				dyn_var_t value = atof(tok2.c_str());
-				params.push_back(std::pair<std::string, dyn_var_t>(name, value));
+				float value = atof(tok2.c_str());
+				params.push_back(std::pair<std::string, float>(name, value));
 			}
 			else
 			{  // contain multiple values (comma-separated)
-				std::vector<dyn_var_t> value;
+				std::vector<float> value;
 				char buf2[LENGTH_LINE_MAX];
 				/* NOTE: This code is potentialy bug when token info is too long
 				is2.get(buf2, LENGTH_IDNAME_MAX, '}');
@@ -5372,7 +5321,7 @@ NOTE: must starts with '<' and ends with'>'
 					value.push_back(atof((*jj).c_str()));
 				}
 				arrayParams.push_back(
-						std::pair<std::string, std::vector<dyn_var_t> >(name, value));
+						std::pair<std::string, std::vector<float> >(name, value));
 			}
 		}
 		/*
@@ -6370,22 +6319,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
-            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
-            {
-
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -6459,8 +6393,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -6559,22 +6492,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
                                            // the form  [...] and it occurs for
-            if (maskVector[j] == SegmentDescriptor::branchType) //BRANCHTYPE
-            {
-              // make sure the BRANCHTYPE is 0-based
-              for (std::vector<int>::iterator it = values.begin();
-                  it != values.end(); ++it)
-              {
-                *it -= 1;
-              }
-              // std::for_each(values.begin(), values.end(), [](int & d) { d-=1;
-              // });
-            }
-            else if (maskVector[j] == SegmentDescriptor::uf0) // MTYPE
-            {
-
-            }
-            
+            Params::reviseParamValues(values,  maskVector[j]);
           }
           else
           {//single value
@@ -6648,8 +6566,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
             }
             assert(0);
           }
-					if (maskVector[j] == SegmentDescriptor::branchType)
-						ids[j] = ids[j] - 1;  // make sure the BRANCHTYPE is 0-based
+          Params::reviseParamValue(ids[j],  maskVector[j]);
 				}
         // put into v_ids
         v_ids.push_back(ids);
@@ -6746,4 +6663,6 @@ bool Params::isGivenKeySpineHead(key_size_t key)
   }
   return result;
 }
+
+
 #endif

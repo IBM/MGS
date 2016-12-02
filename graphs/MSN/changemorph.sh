@@ -39,7 +39,7 @@ Yes_No_ChangeSWC ()
 }
 ChangeSWC ()
 {
-  paramFold=($(find neurons/ -maxdepth 1 -type f -name '*.swc' ! -name 'neuron.swc' -printf "%f\n"))
+  paramFold=($(find neurons/ -maxdepth 1 -type f -name '*.swc' ! -name 'neuron.swc' ! -name '*developed.swc' -printf "%f\n"))
   echo "SUGGEST: neurons.swc_tufted.swc_reviseRadius.swc for hay1"
   echo "Select one of this:"
   arrSize=${#paramFold[@]}

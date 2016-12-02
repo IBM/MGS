@@ -65,7 +65,8 @@ class NodeBase : public Node
       virtual void setNodeIndex(int pos);
       virtual int getIndex() const;
       virtual void setIndex(int pos);
- 
+      virtual int getGlobalIndex() const;
+
       virtual void setNodeDescriptor(NodeDescriptor* nodeDescriptor) {
 	_nodeInstanceAccessor = nodeDescriptor;
       }

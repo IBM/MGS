@@ -446,5 +446,8 @@ unsigned long long SegmentDescriptor::getLongKey(key_size_t key)
 
 SegmentDescriptor _SegmentDescriptor;
 
-
+std::string SegmentDescriptor::getFieldName(const int & fieldValue)
+{ 
+	return _fields[fieldValue];
+}
 

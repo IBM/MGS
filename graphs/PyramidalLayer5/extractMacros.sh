@@ -34,6 +34,9 @@ RunSim()
    cp neurons.txt $OutputFolderName/ -L -r
    cp neurons/neuron.swc $OutputFolderName/ -L -r
    cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
+   cp $NTSROOT/nti/include/Model2Use.h $OutputFolderName/ -L -r
+   cp $NTSROOT/nti/include/NTSMacros.h  $OutputFolderName/ -L -r
+   cp $NTSROOT/nti/include/MaxComputeOrder.h $OutputFolderName/ -L -r
    #cp spines $OutputFolderName/ -L -r
    echo "----> $OutputFolderName" >> SIM_LOG
    echo "----> RESULT: " >> SIM_LOG
@@ -60,8 +63,23 @@ DoFinish()
 }
 #///}}}
 
+
 #########################
-## CHECK ARGS
+## PROCESS
+#########################
+#########################
+## 1. CREATE FILE/FOLDER
+TMPDIR=`pwd`/.tmp
+if [ ! -d $TMPDIR ]; then
+  mkdir $TMPDIR
+fi
+FILENAME_PREVIOUSRUN=$TMPDIR/previousRun
+if [ ! -f $FILENAME_PREVIOUSRUN ]; then
+  touch $FILENAME_PREVIOUSRUN
+fi
+temp_file=`mktemp --tmpdir=$TMPDIR`
+
+## 2. CHECK ARGS
 ##{{{
 if [ "$#" == "0" ]; then
   echo "$0 <extension> "
@@ -70,22 +88,28 @@ if [ "$#" == "0" ]; then
     then the script generate a unique name using `date +'%Y-%m-%d-%s'` which evoke the date"
   echo "Example: "
   echo " $0 -unique"
+  echo " $0 -reuse"
   echo " $0 abc"
   exit
 fi
 if [ "$1" == "-unique" ]; then
   uniqueName=-`date +'%Y-%m-%d-%s'`
+  echo $uniqueName > $FILENAME_PREVIOUSRUN
+elif [ "$1" == "-reuse" ]; then
+  line=$(head -n 1 $FILENAME_PREVIOUSRUN)
+  if [ -z $line  ]; then
+    echo "No previous runs yet !"
+    exit
+  else
+    uniqueName=$line
+  fi
 else
   uniqueName=-$1
 fi
 #}}}
+
 #########################
-##
-TMPDIR=`pwd`/.tmp
-if [ ! -d $TMPDIR ]; then
-  mkdir $TMPDIR
-fi
-temp_file=`mktemp --tmpdir=$TMPDIR`
+## 3. CHECK MACROS
 cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
 ###cpp -dU -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
 ##awk -F '/^#define[[:space:]]+morph/{ printf "%s | %s \n", $2, $3 }' < ${temp_file}

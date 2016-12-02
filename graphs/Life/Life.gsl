@@ -1,4 +1,4 @@
-#include "std.gsl"
+#include "../std/std.gsl"
 InitPhases = { initialize };
 RuntimePhases = { dataCollect, update, copy, lastPhase };
 FinalPhases = { finalize };
@@ -7,10 +7,10 @@ NodeType LifeNode(< tooSparse=1, tooCrowded=4 >);
 
 Grid World
 {
-   Dimension(100,100);
+   Dimension(1000,1000);
    Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
-   InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
+   InitNodes ( .[250:750, 250:750].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
+   InitNodes ( .[400:600, 400:600].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
    NodeSet all(.[].Layer(nodes));
    connectNodeSets(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
 };

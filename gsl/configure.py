@@ -1043,7 +1043,6 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 """\
 -MMD \
 """
-
         if self.options.compiler == "gcc":
             if self.options.withMpi == True:
                 retStr += "-I$(LAMHOME)/include"
@@ -1061,7 +1060,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             raise InternalError("Unknown OS " + self.operatingSystem)
 
         if self.options.debug == USE:
-            if self.options.compiler == "gcc":
+            if self.options.compiler in ["gcc", "g++", "mpicc", "mpiCC"]:
                 retStr += " " + GNU_DEBUGGING_FLAG
             elif self.options.compiler == "xl":
                 retStr += " " + XL_DEBUGGING_FLAG
@@ -1400,7 +1399,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.dx.exists == True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -1467,22 +1466,22 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         if self.options.dynamicLoading == True:
             retStr += " $(SHARED_OBJECTS)"
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(CFLAGS) $(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o "
-	retStr += "$(LIBS) "
-	if self.options.tvMemDebug == True and self.operatingSystem != "AIX":
-	    printWarning("Totalview memory debugging not available.")
-	elif self.options.tvMemDebug == True:
-	    if self.objectMode == "64":
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o "
+        retStr += "$(LIBS) "
+        if self.options.tvMemDebug == True and self.operatingSystem != "AIX":
+            printWarning("Totalview memory debugging not available.")
+        elif self.options.tvMemDebug == True:
+            if self.objectMode == "64":
                 retStr += "-L$(TOTALVIEW_LIBPATH) -L$(TOTALVIEW_LIBPATH) $(TOTALVIEW_LIBPATH)/aix_malloctype64_5.o "
-	    else:
-		retStr += "-L$(TOTALVIEW_LIBPATH) -L$(TOTALVIEW_LIBPATH) $(TOTALVIEW_LIBPATH)/aix_malloctype.o "
-	if self.dx.exists == True:
-            retStr += "$(DX_LITELIBS)"
+            else:
+                retStr += "-L$(TOTALVIEW_LIBPATH) -L$(TOTALVIEW_LIBPATH) $(TOTALVIEW_LIBPATH)/aix_malloctype.o "
+        if self.dx.exists == True:
+                retStr += "$(DX_LITELIBS)"
         if self.operatingSystem == "AIX":
             retStr += "$(XLINKER)"
-	if self.options.profile == USE :
-	    retStr += PROFILING_FLAGS
-        retStr += " -o $(BIN_DIR)/$(EXE_FILE)\n"
+        if self.options.profile == USE :
+            retStr += PROFILING_FLAGS
+            retStr += "$(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE)\n"
         return retStr
 
     def getSocketTarget(self):
@@ -1573,8 +1572,9 @@ clean:
             fileBody += "\n"
         fileBody += self.getLibLensTarget()
         fileBody += "\n"
-        fileBody += self.getMainDefTarget()
-        fileBody += "\n"
+        if self.options.dynamicLoading == True:
+            fileBody += self.getMainDefTarget()
+            fileBody += "\n"
         fileBody += self.getLensparserTarget()
         fileBody += "\n"
         fileBody += self.getSocketTarget()

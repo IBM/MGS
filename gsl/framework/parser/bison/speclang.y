@@ -41,7 +41,7 @@ using namespace std;
 #define PRCRLMISMATCH "possible curly brackets mismatch use Declarator { GridDefinitionBody } or Declarator { GridDefinitionBody } Declarator"
 #define EXPDECLBEFCURL "expecting a declarator before {"
    
-   void lenserror(char *s);
+   void lenserror(const char *s);
    int lenslex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
    inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
 	 l->checkChildren();
@@ -2958,7 +2958,7 @@ int main(int argc, char** argv)
    }
 }
 
-void lenserror(char *s)
+void lenserror(const char *s)
 {
    fprintf(stderr,"%s\n",s);
 }

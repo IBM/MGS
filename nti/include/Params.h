@@ -181,6 +181,13 @@ public:
     CHANNEL,
     SYNAPSE
   } ModelType;
+  enum class ErrorCode
+  {
+    SECTION_IGNORED,
+    SECTION_INVALID,
+    SECTION_VALID
+    
+  } ;
 
   void readDevParams(const std::string& fname);
   void readDetParams(const std::string& fname);
@@ -260,12 +267,12 @@ public:
   double getChemicalSynapseCost(std::string chemicalSynapseId);
 
   void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
-                      std::list<std::pair<std::string, dyn_var_t> >& modelParams);
+                      std::list<std::pair<std::string, float> >& modelParams);
   void getModelParams(ModelType modelType, std::string nodeType, key_size_t key,
                       std::list<std::pair<std::string, std::string> >& modelParams);
   void getModelArrayParams(
       ModelType modelType, std::string nodeType, key_size_t key,
-      std::list<std::pair<std::string, std::vector<dyn_var_t> > >&
+      std::list<std::pair<std::string, std::vector<float> > >&
           modelArrayParams);
   void getTouchTableMasks(
       std::vector<std::vector<SegmentDescriptor::SegmentKeyData> >& masks)
@@ -341,12 +348,12 @@ public:
 			const std::string & myBuf,
 			std::string & modelID,
 			std::map<std::string,
-			std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+			std::map<key_size_t, std::list<std::pair<std::string, float> > > >&
 			paramsMap,
 			std::map<
 			std::string,
 			std::map<key_size_t,
-			std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+			std::list<std::pair<std::string, std::vector<float> > > > >&
 			arrayParamsMap
 			);
   void buildBidirectionalConnectionMap(
@@ -387,45 +394,46 @@ public:
   bool readChannelTargets(FILE* fpF); // obsolete
   bool readChannelTargets2(FILE* fpF); //support array-form for all
   bool readElectricalSynapseTargets(FILE* fpF);
-  bool readElectricalSynapseTargets_vector2(FILE* fpF);//support array-form for all
+  ErrorCode readElectricalSynapseTargets_vector2(FILE* fpF);//support array-form for all
   bool readBidirectionalConnectionTargets(FILE* fpF);
   bool readBidirectionalConnectionTargets_vector(FILE* fpF);//array-form for only BRANCHTYPE
-  bool readBidirectionalConnectionTargets_vector2(FILE* fpF); //support array-form for all
+  ErrorCode readBidirectionalConnectionTargets_vector2(FILE* fpF); //support array-form for all
   bool readChemicalSynapseTargets(FILE* fpF);
-  bool readChemicalSynapseTargets_vector2(FILE* fpF);//support array-form for all
-  bool readPreSynapticPointTargets(FILE* fpF);
+  ErrorCode readChemicalSynapseTargets_vector2(FILE* fpF);//support array-form for all
+  ErrorCode readPreSynapticPointTargets(FILE* fpF);
+  void skipSection(FILE* fpF);
 
   unsigned long long readNamedParam(FILE* fpF, std::string name,
                                     std::map<key_size_t, double>& namedParamsMap);
 
   bool readCompartmentVariableCosts(FILE* fpF);
   bool readChannelCosts(FILE* fpF);
-  bool readElectricalSynapseCosts(FILE* fpF);
-  bool readBidirectionalConnectionCosts(FILE* fpF);
-  bool readChemicalSynapseCosts(FILE* fpF);
+  ErrorCode readElectricalSynapseCosts(FILE* fpF);
+  ErrorCode readBidirectionalConnectionCosts(FILE* fpF);
+  ErrorCode readChemicalSynapseCosts(FILE* fpF);
   // bool readChannelParams(FILE* fpF);
 
   bool readModelParams(
       FILE* fpF, const std::string& id,
       std::map<std::string, unsigned long long>& masks,
       std::map<std::string,
-               std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+               std::map<key_size_t, std::list<std::pair<std::string, float> > > >&
           paramsMap,
       std::map<
           std::string,
           std::map<key_size_t,
-                   std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+                   std::list<std::pair<std::string, std::vector<float> > > > >&
           arrayParamsMap);
-  bool readModelParams2(
+  ErrorCode readModelParams2(
       FILE* fpF, const std::string& id,
       std::map<std::string, unsigned long long>& masks,
       std::map<std::string,
-               std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+               std::map<key_size_t, std::list<std::pair<std::string, float > > > >&
           paramsMap,
       std::map<
           std::string,
           std::map<key_size_t,
-                   std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+                   std::list<std::pair<std::string, std::vector<float> > > > >&
           arrayParamsMap);
 
   unsigned long long resetMask(
@@ -485,13 +493,13 @@ public:
 #else
   //map<NaT, map<keymask, list-of-pairs{gbar=value}>
   std::map<std::string,
-           std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
+           std::map<key_size_t, std::list<std::pair<std::string, float > > > >
       _channelParamsMap;
 #endif
   //map<NaT, map<keymask, list-of-pairs{gbar,{val1, val2, ..., valn}}>
   std::map<std::string,
            std::map<key_size_t,
-                    std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
+                    std::list<std::pair<std::string, std::vector<float> > > > >
       _channelArrayParamsMap;
 
   std::map<std::string, unsigned long long> _compartmentParamsMasks;
@@ -502,12 +510,12 @@ public:
       _compartmentParamsMapGeneric;
 #else
   std::map<std::string,
-           std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >
+           std::map<key_size_t, std::list<std::pair<std::string, float > > > >
       _compartmentParamsMap;
 #endif
   std::map<std::string,
            std::map<key_size_t,
-                    std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >
+                    std::list<std::pair<std::string, std::vector<float> > > > >
       _compartmentArrayParamsMap;
    //define mapping a compartment of a given key (1st arg)
    //    to a second compartment of a given key (1st arg_level2)
@@ -570,5 +578,10 @@ public:
 
   SegmentDescriptor _segmentDescriptor;
   std::string _currentFName;
+  public:
+  static void reviseParamValue(unsigned int& fieldVal, const int& fieldIdx);
+  static void reviseParamValue(unsigned int& fieldVal, const std::string& fieldName);
+  static void reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx);
+  static void reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName);
 };
 #endif

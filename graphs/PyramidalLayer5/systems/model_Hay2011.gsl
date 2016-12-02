@@ -6,10 +6,17 @@
 #include "Topology.h"
 
 #include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.gsl"
+
+#define _CCAT(x,y) x ## y 
+#define CCAT(x,y) _CCAT(x,y)
+#define _STR(x) #x 
+#define STR(x) _STR(x)
 
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
 #define CASE_VIVO 1000 // random input at all spines
+#define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
@@ -23,27 +30,9 @@
 //#define morph "hay2_"
 //}}}
 
-#define _CCAT(x,y) x ## y 
-#define CCAT(x,y) _CCAT(x,y)
-#define _STR(x) #x 
-#define STR(x) _STR(x)
-
-//CONNECTOR FUNCTOR
+//OTHERS FUNCTORS
 /*{{{*/
-//defined in std.gsl
-//Connector PolyConnectorFunctor();   
-//PolyConnectorFunctor polyConnect();
-Functor Print;
-Print print();
-  
-Functor ReSeedRandom;
 ReSeedRandom reSeed(243);
-
-Connector PolyConnectorFunctor();   
-PolyConnectorFunctor polyConnect();
-
-Connector ServiceConnectorFunctor();
-ServiceConnectorFunctor serviceConnect();   
 /*}}}*/
 #ifndef MODEL_TO_USE
 print("WARNING: You haven't selected MODEL_TO_USE")
@@ -53,7 +42,17 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //{{{
 //{{{ 1. Output Location
 //#define dataFolder "./"
+//#define dataFolder "./data/"
+#ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
+#else
+#define dataFolder OUTPUTFOLDER
+#endif
+#ifndef PARAMFOLDER
+#define paramFolder ./params/
+#else
+#define paramFolder PARAMFOLDER
+#endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "Hay_rest" STR(EXTENSION)
 print("Case 00: resting");
@@ -70,6 +69,11 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Hay_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
 #define OutputFolderName dataFolder morph "Hay_case06" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
+#define OutputFolderName  STR(EXTENSION)
+#else
+  print("NOT DEFINED STIMULUS_CASE .... ")
+  WRONG
 #endif
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
@@ -326,12 +330,12 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 #define tissueFile "neurons.txt"
 
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" // -g 4"
+#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p " STR(paramFolder) "/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" // -g 4"
 //#define strArg1 "neurons.txt -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p params/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 2"
-#define strArg1_supplement " -p params/DetParams.par -m 0 -n cost-volume"
-#define strArg2  "params/CptParams.par"
-#define strArg3 "params/ChanParams.par"
-#define strArg4 "params/SynParams.par"
+#define strArg1_supplement " -p " STR(paramFolder) "/DetParams.par -m 0 -n cost-volume"
+#define strArg2  STR(paramFolder) "/CptParams.par"
+#define strArg3 STR(paramFolder) "/ChanParams.par"
+#define strArg4 STR(paramFolder) "/SynParams.par"
 
 TissueFunctor  tissueFunctor(strArg1,
 		strArg1_supplement,
@@ -438,7 +442,7 @@ NodeType VoltageJunctionPoint {
 /*}}}*/
 //   1.2. - [Ca]intracellular
 /*{{{*/
-#if SIMULATE_CACYTO 
+#if defined(SIMULATE_CACYTO) 
 NodeType CaConcentration (<
                         DCa=Cacyto_DiffusionConstant, // [um^2/ms] unbuffered
                         //{{{ only used for fast-buffering assumption 
@@ -503,7 +507,7 @@ NodeType ChannelCaLVA {computeTadj->initialize2, initialize->initialize3, update
 /*}}}*/
 // 2.2. PUMP + EXCHANGER NODE
 //{{{
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO) 
 //NodeType CaExtrusion (
 //   < 
 //   //Km = Km_PMCA,   // [uM]
@@ -632,8 +636,8 @@ NodeType GABAAReceptor (<
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
 NodeType SpineAttachment_VmCaiCaER { produceInitialState->initialize2, computeInitialState->initialize3, produceState->finish, computeState->solveChannels };
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
-//NodeType SpineAttachment_VmCai { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 NodeType SpineAttachment_VmCai { produceInitialState->initialize2, computeInitialState->initialize3, produceState->finish, computeState->solveChannels };
+//NodeType SpineAttachment_VmCai { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 #elif defined(SIMULATE_VM)
 NodeType SpineAttachment_Vm { produceInitialState->initialize2, computeInitializeState->initialize3, produceState->finish, computeState->solveChannels };
 #endif
@@ -749,7 +753,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>0
 	Layer(fwdSolvePoints1, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][1]">), <nodekind="ForwardSolvePoints[Voltage][1]">, tissueGM);
 	Layer(bwdSolvePoints0, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][0]">), <nodekind="BackwardSolvePoints[Voltage][0]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints1_Ca, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][1]">), <nodekind="ForwardSolvePoints[Calcium][1]">, tissueGM);
 	Layer(bwdSolvePoints0_Ca, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][0]">), <nodekind="BackwardSolvePoints[Calcium][0]">, tissueGM);
 #endif
@@ -757,7 +761,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>1
 	Layer(fwdSolvePoints2, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][2]">), <nodekind="ForwardSolvePoints[Voltage][2]">, tissueGM);
 	Layer(bwdSolvePoints1, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][1]">), <nodekind="BackwardSolvePoints[Voltage][1]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints2_Ca, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][2]">), <nodekind="ForwardSolvePoints[Calcium][2]">, tissueGM);
 	Layer(bwdSolvePoints1_Ca, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][1]">), <nodekind="BackwardSolvePoints[Calcium][1]">, tissueGM);
 #endif
@@ -765,7 +769,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>2
 	Layer(fwdSolvePoints3, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][3]">), <nodekind="ForwardSolvePoints[Voltage][3]">, tissueGM);
 	Layer(bwdSolvePoints2, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][2]">), <nodekind="BackwardSolvePoints[Voltage][2]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints3_Ca, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][3]">), <nodekind="ForwardSolvePoints[Calcium][3]">, tissueGM);
 	Layer(bwdSolvePoints2_Ca, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][2]">), <nodekind="BackwardSolvePoints[Calcium][2]">, tissueGM);
 #endif
@@ -773,7 +777,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>3
 	Layer(fwdSolvePoints4, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][4]">), <nodekind="ForwardSolvePoints[Voltage][4]">, tissueGM);
 	Layer(bwdSolvePoints3, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][3]">), <nodekind="BackwardSolvePoints[Voltage][3]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints4_Ca, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][4]">), <nodekind="ForwardSolvePoints[Calcium][4]">, tissueGM);
 	Layer(bwdSolvePoints3_Ca, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][3]">), <nodekind="BackwardSolvePoints[Calcium][3]">, tissueGM);
 #endif
@@ -781,7 +785,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>4
 	Layer(fwdSolvePoints5, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][5]">), <nodekind="ForwardSolvePoints[Voltage][5]">, tissueGM);
 	Layer(bwdSolvePoints4, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][4]">), <nodekind="BackwardSolvePoints[Voltage][4]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints5_Ca, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][5]">), <nodekind="ForwardSolvePoints[Calcium][5]">, tissueGM);
 	Layer(bwdSolvePoints4_Ca, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][4]">), <nodekind="BackwardSolvePoints[Calcium][4]">, tissueGM);
 #endif
@@ -789,7 +793,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>5
 	Layer(fwdSolvePoints6, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][6]">), <nodekind="ForwardSolvePoints[Voltage][6]">, tissueGM);
 	Layer(bwdSolvePoints5, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][5]">), <nodekind="BackwardSolvePoints[Voltage][5]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints6_Ca, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][6]">), <nodekind="ForwardSolvePoints[Calcium][6]">, tissueGM);
 	Layer(bwdSolvePoints5_Ca, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][5]">), <nodekind="BackwardSolvePoints[Calcium][5]">, tissueGM);
 #endif
@@ -797,7 +801,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>6
 	Layer(fwdSolvePoints7, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][7]">), <nodekind="ForwardSolvePoints[Voltage][7]">, tissueGM);
 	Layer(bwdSolvePoints6, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][6]">), <nodekind="BackwardSolvePoints[Voltage][6]">, tissueGM);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	Layer(fwdSolvePoints7_Ca, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][7]">), <nodekind="ForwardSolvePoints[Calcium][7]">, tissueGM);
 	Layer(bwdSolvePoints6_Ca, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][6]">), <nodekind="BackwardSolvePoints[Calcium][6]">, tissueGM);
 #endif
@@ -817,7 +821,7 @@ Grid PyramidalL5_Neuron{
       /*}}}*/
       //  1.2. - [Ca]intracellular
       /*{{{*/
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    Layer(branches_Ca, CaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Calcium]">), <nodekind="CompartmentVariables[Calcium]">, tissueGM);
    Layer(endPoints_Ca, CaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Calcium]">), <nodekind="EndPoints[Calcium]">, tissueGM);
    Layer(junctions_Ca, CaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Calcium]">), <nodekind="Junctions[Calcium]">, tissueGM);
@@ -842,7 +846,7 @@ Grid PyramidalL5_Neuron{
    Layer(SKChannels, ChannelSK, tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
      //}}}
     //{{{ Ca2+ channels
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    Layer(CahChannels, ChannelCaHVA, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
    Layer(CalChannels, ChannelCaLVA, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
 #endif
@@ -850,7 +854,7 @@ Grid PyramidalL5_Neuron{
 	/*}}}*/
 			// 2.1. PUMPS 
 			/*{{{*/
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 // PMCA
 	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
 #endif
@@ -861,11 +865,11 @@ Grid PyramidalL5_Neuron{
       // 3.1. PRE-SYNAPSE (get Voltage from bouton-side)
 	/*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[tight]" >), < nodekind="PreSynapticPoints[tight]" >, tissueGM);
 //or
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
 // TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
-	Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
+	Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[tight]" >), < nodekind="SynapticClefts[tight]" >, tissueGM);
 #endif
 	/*}}}*/
       // 3.2. CHEMICAL SYNAPSE RECEPTORS
@@ -904,7 +908,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>0
    InitNodes ( .[].Layer(fwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints0), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints1_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints0_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -912,7 +916,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>1
    InitNodes ( .[].Layer(fwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints2_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints1_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -920,7 +924,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>2
    InitNodes ( .[].Layer(fwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints3_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints2_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -928,7 +932,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>3
    InitNodes ( .[].Layer(fwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints4_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints3_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -936,7 +940,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>4
    InitNodes ( .[].Layer(fwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints5_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints4_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -944,7 +948,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>5
    InitNodes ( .[].Layer(fwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints5_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -952,7 +956,7 @@ Grid PyramidalL5_Neuron{
 #if MAX_COMPUTE_ORDER>6
    InitNodes ( .[].Layer(fwdSolvePoints7), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(fwdSolvePoints7_Ca), tissueFunctor("NodeInit", <> ) );
    InitNodes ( .[].Layer(bwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
@@ -974,9 +978,9 @@ Grid PyramidalL5_Neuron{
 	InitNodes ( .[].Layer(junctions), tissueFunctor("NodeInit", < Vnew = {Vrest_value}  > ) );
 	InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
      /*}}}*/
-    // 1.2. - [Ca]intrcellular
+    // 1.2. - [Ca]intracellular
     /*{{{*/
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 	InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
 				compartmentalize = {"Ca_new", 
 				"Ca_cur", 
@@ -1043,7 +1047,7 @@ Grid PyramidalL5_Neuron{
          > ) );
     //}}}
 	//{{{ Ca2+ channels
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(CahChannels), tissueFunctor("NodeInit", <
          compartmentalize = { "gbar" },
          gbar = {0.0}
@@ -1058,7 +1062,7 @@ Grid PyramidalL5_Neuron{
 	/*}}}*/
 		// 2.1. PUMPS 
 		/*{{{*/
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
 // PMCA
 //{{{
 	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
@@ -1115,23 +1119,17 @@ Grid PyramidalL5_Neuron{
 		//{{{
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
-				I_Ca = 0, 
         DCa = Cacyto_DiffusionConstant_SpineNeck, //[um^2/ms]
-				I_CaER = 0,
         DCaER = CaER_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
 				Raxial = R_NECK, // [Gohm.um] 
-				I_Ca = 0, 
         DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
 				> ) );
 #elif defined(SIMULATE_VM)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				I = 0.0,
 				Raxial = R_NECK // [Gohm.um] 
 				> ) );
 #endif
@@ -1156,7 +1154,7 @@ Grid PyramidalL5_Neuron{
 	// 1. with CONSTANTS
 	/*{{{*/
    polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, .[].Layer(branches_Ca, junctions_Ca), <>, <identifier="dt">);
 #endif
    // Na+ channels
@@ -1176,13 +1174,17 @@ Grid PyramidalL5_Neuron{
    // NMDASynapsesMush, NMDASynapsesThin, CahChannels, CalChannels, SKChannels), <>, <identifier="EC">);
 
    // Ca2+ channels
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, .[].Layer(CahChannels, CalChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(CahChannels, CalChannels), <>, <identifier="EC">);
 #endif
 
    //Synaptic Cleft
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+   polyConnect(timeStep, .[].Layer(PreSynapticPoints), <>, <identifier="dt">);
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
    polyConnect(timeStep, .[].Layer(SynapticClefts), <>, <identifier="dt">);
+#endif
    // Synapse Receptors
    polyConnect(timeStep, .[].Layer(NMDASynapsesMush), <>, <identifier="dt">);
    polyConnect(timeStep, .[].Layer(NMDASynapsesThin), <>, <identifier="dt">);
@@ -1192,7 +1194,7 @@ Grid PyramidalL5_Neuron{
    polyConnect(extracellularMedium, .[].Layer(AMPASynapsesMush, AMPASynapsesThin), <>, <identifier="EC">);
    polyConnect(timeStep, .[].Layer(GABAASynapses), <>, <identifier="dt">);
 
-#if SIMULATE_CACYTO
+#if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
 #endif

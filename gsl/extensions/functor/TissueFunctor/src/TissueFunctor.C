@@ -50,6 +50,7 @@
 #include "StringDataItem.h"
 #include "StringArrayDataItem.h"
 #include <mpi.h>
+#include <typeinfo>
 
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
@@ -1783,6 +1784,11 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     }
 
     const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
+    if (cpt->size()  < 0)
+    {
+      std::cerr << "ERROR: Expect at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
+      assert(0);
+    }
     // for parameters for the nodeType and are defined inside
     // 'compartmentalize='
     // arguments,
@@ -1796,6 +1802,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       bool foundNDP = false;
       for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
       {//for each data member
+        std::string mydata = (*cptiter)->getString();//DEBUG purpose
         if ((*ndpiter)->getName() == (*cptiter)->getString())
         {//if the data member is part of 'compartmentalize' declaration
           //...adjust the size of the data member vector to the #cpts on that branch
@@ -5869,7 +5876,15 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
       }
       maskVector.push_back(
           _segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
-      ids[++idx] = ndi->getUnsignedInt();
+
+      int val = ndi->getUnsignedInt();
+      Params::reviseParamValue((unsigned int&)val, (*ndpiter)->getName());
+      if (val < 0)
+      {
+        std::cerr << "ERROR: The value of " << (*ndpiter)->getName() << " is in invalid range" << std::endl;
+        assert(val >= 0);
+      }
+      ids[++idx] = val; 
     }
 
     mask = _segmentDescriptor.getMask(maskVector);
@@ -6162,7 +6177,15 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
           exit(0);
         }
         maskVector.push_back(_segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
-        ids[++idx]=ndi->getUnsignedInt();
+        int val = ndi->getUnsignedInt();
+        std::string fieldName ((*ndpiter)->getName());
+        Params::reviseParamValue((unsigned int&)val, fieldName);
+        if (val < 0)
+        {
+          std::cerr << "ERROR: The value of " << (*ndpiter)->getName() << " is in invalid range" << std::endl;
+          assert(val >= 0);
+        }
+        ids[++idx] = val; 
       }
 
       mask=_segmentDescriptor.getMask(maskVector);
@@ -6388,9 +6411,9 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
 {
   // NOTE: Currently for compartment data, e.g. Cm, gLeak
   // it is limited to have single value for all compartments in 1 branch
-  std::list<std::pair<std::string, dyn_var_t> > compartmentParams;
+  std::list<std::pair<std::string, float> > compartmentParams;
   _tissueParams.getModelParams(modelType, nodeType, key, compartmentParams);
-  std::list<std::pair<std::string, dyn_var_t> >::iterator
+  std::list<std::pair<std::string, float> >::iterator
       cpiter = compartmentParams.begin(),
       cpend = compartmentParams.end();
   for (; cpiter != cpend; ++cpiter)
@@ -6400,6 +6423,8 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     std::vector<std::string> tokens;
     std::string delimiters = ":";
     StringUtils::Tokenize(mystring, tokens, delimiters);
+    if (tokens.size() != 1 && tokens.size() != 2)
+      std::cerr << " ERROR at modelType =" << modelType << ": "<< mystring << " \n .. if you want explicit data type, use say 'float:gbar={10.0}' , i.e. maximum one semicolon (:) " << std::endl;
     assert(tokens.size() == 1 || tokens.size() == 2);
     std::string varName = tokens[tokens.size() - 1];
 
@@ -6479,11 +6504,11 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
   // NOTE: for channel data, e.g. gbar
   // we can have different values for different compatments in 1 branch
   // that's why we use std:vector<dyn_var_t>  here
-  std::list<std::pair<std::string, std::vector<dyn_var_t> > >
+  std::list<std::pair<std::string, std::vector<float> > >
       compartmentArrayParams;
   _tissueParams.getModelArrayParams(modelType, nodeType, key,
                                     compartmentArrayParams);
-  std::list<std::pair<std::string, std::vector<dyn_var_t> > >::iterator
+  std::list<std::pair<std::string, std::vector<float> > >::iterator
       capiter = compartmentArrayParams.begin(),
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
@@ -6499,7 +6524,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     if (tokens.size() == 1 || tokens[0] == "float")
     {
       ShallowArray<float> farr;
-      std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
+      std::vector<float>::iterator viter = capiter->second.begin(),
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
@@ -6514,7 +6539,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     else if (tokens[0] == "int")
     {
       ShallowArray<int> farr;
-      std::vector<dyn_var_t>::iterator viter = capiter->second.begin(),
+      std::vector<float>::iterator viter = capiter->second.begin(),
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       IntArrayDataItem* paramDI = new IntArrayDataItem(farr);

@@ -154,6 +154,7 @@ Node CaConcentration Implements SolutionArrayProducer,
     string identifier;
     TissueSite site;
     int idx;
+    float branchProp;
   }
 
   // d^2 Ca/dx^2 = dCa/dt + ICaleak + ICainject + (ICasyn+ICaion)

@@ -43,11 +43,9 @@
 void PumpPMCA::initialize(RNG& rng)
 {
 //  pthread_once(&once_Pump_PMCA, initialize_others);
-#ifdef DEBUG_ASSERT
   assert(branchData);
-#endif
   unsigned size = branchData->size;
-#ifdef DEBUG_ASSERT
+#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   assert(V);
   assert(V->size() == size);
 #endif
@@ -56,7 +54,9 @@ void PumpPMCA::initialize(RNG& rng)
     PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);
- #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS 
+ #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+  if (tau.size() != size) tau.increaseSizeTo(size);
   assert(tau.size() == size);
   float tau_default = tau[0];
   for (unsigned i = 0; i < size; ++i)
@@ -64,9 +64,6 @@ void PumpPMCA::initialize(RNG& rng)
       tau[i] = tau_default;
   }
  
- #endif
- #if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION 
-  if (tau.size() != size) tau.increaseSizeTo(size);
  #endif
 #else
   assert(IPMCAbar.size() == size);
@@ -132,7 +129,10 @@ IPMCAbar[i] = IPMCAbar_values[0];
 
   for (unsigned i = 0; i < size; ++i)
   {
+#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     dyn_var_t v = (*V)[i];  // mV
+#endif
+
 // IMPORTANT: positive flux helps increase dCa/dt
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997
@@ -175,7 +175,10 @@ void PumpPMCA::update(RNG& rng)
 {
   for (unsigned i = 0; i < branchData->size; ++i)
   {
+#if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     dyn_var_t v = (*V)[i];  // mV
+#endif
+
 // IMPORTANT: positive flux helps increase dCa/dt
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT
     // PMCA_Traub_Llinas_1997

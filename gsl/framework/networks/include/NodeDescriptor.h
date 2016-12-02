@@ -41,6 +41,7 @@ class NodeDescriptor : public Publishable
       virtual void setNodeIndex(int pos) = 0;
       virtual int getIndex() const = 0;
       virtual void setIndex(int pos) = 0;
+      virtual int getGlobalIndex() const = 0;
 };
 
 

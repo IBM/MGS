@@ -9,8 +9,8 @@
 
 Node ChannelKDR Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 //{{{
-/*{{{*/
-  //DATA
+/*{{{ DATA*/
+  //PRIVATE DATA
 	//{{{
   // Hodgkin-Huxley-based formula
   //{{{
@@ -59,7 +59,7 @@ Node ChannelKDR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     InitPhase computeE; // [mV]
   //}}}
   }
-  //}}}
+/*}}}*/
 
   RuntimePhase update;
   InitPhase initialize;

@@ -1,0 +1,9 @@
+#ifndef Log_MDL
+#define Log_MDL
+
+Framework Functor Log {
+   Initialize(Functor* f);
+   double Execute();
+}
+
+#endif

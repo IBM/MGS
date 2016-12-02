@@ -12,7 +12,7 @@
 #endif
 
 #ifndef Q10 
-#define Q10 3.0 //default
+#define Q10 2.3 //default
 #endif
 // This is a simple implementation of Ca2+(cyto) extrusion
 class CaExtrusion : public CG_CaExtrusion

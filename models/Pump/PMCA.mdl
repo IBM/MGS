@@ -81,10 +81,9 @@ Node CaExtrusion  Implements
 	//DATA
 	//{{{
 	//internal data
-	dyn_var_t [] J_Ca; // [uA/ms]
-	dyn_var_t [] tau;
+  dyn_var_t [] J_Ca; // [pA/um^2]
+  dyn_var_t [] tau; // [msec] - time constant of pumping Ca2+ out of the cell 
 	// reference data
-	dyn_var_t []* V;//transmembrane voltage [mV]
 	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
 	BranchDataStruct* branchData; 
 	DimensionStruct* []* dimensions;
@@ -117,16 +116,13 @@ Node CaExtrusion  Implements
 	}
 
   //Connection setup (input)
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-	BranchDataProducer, DimensionArrayProducer 
-	{
-			VoltageArrayProducer.voltageArray >> V;
-			BranchDataProducer.branchData >> branchData;
-			DimensionArrayProducer.dimensionArray >> dimensions;
-	}
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer
+    , BranchDataProducer, DimensionArrayProducer 
+  {
 		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
 	Connection Pre Constant (PSet.identifier=="EC") 
@@ -268,16 +264,22 @@ Node PumpPMCA Implements
 	}
 
   //Connection setup (input)
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-	BranchDataProducer, DimensionArrayProducer 
+	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, 
+    BranchDataProducer, DimensionArrayProducer 
 	{
 			VoltageArrayProducer.voltageArray >> V;
 			BranchDataProducer.branchData >> branchData;
 			DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
-		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer,
+    BranchDataProducer, DimensionArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
 	Connection Pre Constant (PSet.identifier=="EC") 
@@ -287,7 +289,9 @@ Node PumpPMCA Implements
 			TemperatureProducer.T >> Shared.T;
 	}
 
-	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+	Connection Pre Constant (PSet.identifier=="dt") Expects 
+    TimeStepProducer 
+  {
 		TimeStepProducer.deltaT >> Shared.deltaT;
 	}
 /*}}}*/

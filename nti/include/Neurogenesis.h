@@ -149,3 +149,4 @@ public:
 };
 
 #endif /* NEUROGEN_H_ */
+

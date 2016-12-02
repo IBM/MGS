@@ -201,6 +201,8 @@
 #define HCN_VANDERGIESSEN_DEZEEUW_2008 2
 #define HCN_KOLE_2006 3
 #define HCN_HAY_2011 4
+
+#define _HCN_DEFAULT HCN_HUGUENARD_MCCORMICK_1992
 //}}}
 
 //{{{ Ca-models
@@ -364,7 +366,7 @@
 #define _MSN_2005_WOLF        2 
 #define _MSN_2016_TUAN_JAMES  3
 #define _PYRAMIDAL_2011_HAY  4
-#define _INFERIOR_OLIVE_1999_SCHWEIGHOER 5
+#define _INFERIOR_OLIVE_1999_SCHWEIGHOFER 5
 #define _PYRAMIDAL_L5b_2016_TUAN_JAMES 6
 #define _INTERNEURON_TRAUB_1995 7
 #define _PYRAMIDAL_L5b_2017_TUAN_JAMES 8
@@ -386,7 +388,7 @@
 // MODEL DESIGN
 // IMPORTANT: try not to modify an existing one, instead create a new one
 //           by copying an existing model, and define a new name
-//           in section MODE_TO_USE macro 
+//           in section MODEL_TO_USE macro 
 //           user are free to work on section _MODEL_TESTING
 // 2. configure each model
 //  2.a select what compartmental variables to use
@@ -663,32 +665,25 @@
 //}}}
 
 //}}}
-#elif MODEL_TO_USE == _INFERIOR_OLIVE_1999_SCHWEIGHOER
+#elif MODEL_TO_USE == _INFERIOR_OLIVE_1999_SCHWEIGHOFER
 //{{{
+  #define IDEA_DYNAMIC_INITIALVOLTAGE
   #define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
-  //#define SIMULATION_INVOLVE VM_CACYTO
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 //{{{
-  #define CHANNEL_NAT NAT_WOLF_2005
-  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_NAT NAT_SCHWEIGHOFER_1999 //ok perfect
+  //#define CHANNEL_NAT NAT_HODGKINHUXLEY_1952 //ok yet soma activation is lower
+  //#define CHANNEL_NAT NAT_HAY_2011 //ok
   #define CHANNEL_HCN HCN_HUGUENARD_MCCORMICK_1992 
-  #define CHANNEL_KAf KAf_WOLF_2005
-  #define CHANNEL_KAs KAs_WOLF_2005
-  #define CHANNEL_KIR KIR_WOLF_2005
-  #define CHANNEL_KRP KRP_WOLF_2005
-  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
-  #define CHANNEL_SK SK_WOLF_2005
-  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
-  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
-  #define CHANNEL_CaN CaN_GHK_WOLF_2005
-  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
-  #define CHANNEL_CaR CaR_GHK_WOLF_2005
-  #define CHANNEL_CaT CaT_GHK_WOLF_2005
-  #define RECEPTOR_AMPA AMPAR_POINTPROCESS
-  #define RECEPTOR_NMDA NMDAR_POINTPROCESS
+  #define CHANNEL_KDR KDR_SCHWEIGHOFER_1999 //failed 
+  //#define CHANNEL_KDR KDR_HODGKINHUXLEY_1952 
+  //#define CHANNEL_KDR  KDR_TRAUB_1994 //ok perfect
+  #define CHANNEL_CaL CaL
+  #define CHANNEL_CaH CaHVA_TRAUB_1994
+  //#define PUMP_PMCA PMCA_PUMPRATE_CONSTANT
+  #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS
 //}}}
 //}}}
 #endif
@@ -793,6 +788,10 @@
 #endif
 #ifndef PUMP_SERCA
 #define PUMP_SERCA _SERCA_DEFAULT
+#endif
+
+#ifndef CHANNEL_HCN
+  #define CHANNEL_HCN _HCN_DEFAULT
 #endif
 
 #ifndef MODEL_TO_USE
