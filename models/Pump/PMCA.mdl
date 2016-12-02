@@ -264,16 +264,18 @@ Node PumpPMCA Implements
 	}
 
   //Connection setup (input)
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-	BranchDataProducer, DimensionArrayProducer 
+	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, 
+    BranchDataProducer, DimensionArrayProducer 
 	{
 			VoltageArrayProducer.voltageArray >> V;
 			BranchDataProducer.branchData >> branchData;
 			DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer,
-	BranchDataProducer, DimensionArrayProducer 
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer,
+    BranchDataProducer, DimensionArrayProducer 
   {
     CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
     BranchDataProducer.branchData >> branchData;
@@ -287,7 +289,9 @@ Node PumpPMCA Implements
 			TemperatureProducer.T >> Shared.T;
 	}
 
-	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+	Connection Pre Constant (PSet.identifier=="dt") Expects 
+    TimeStepProducer 
+  {
 		TimeStepProducer.deltaT >> Shared.deltaT;
 	}
 /*}}}*/
