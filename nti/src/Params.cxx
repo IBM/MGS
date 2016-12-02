@@ -453,7 +453,7 @@ void Params::readCptParams(const std::string& fname)
 
   }
 
-  bool result;
+  ErrorCode result;
   keyword = std::string("COMPARTMENT_VARIABLE_PARAMS");
   if (isGivenKeywordNext(fpF, keyword))
   {
@@ -461,10 +461,10 @@ void Params::readCptParams(const std::string& fname)
     //                _compartmentParamsMap, _compartmentArrayParamsMap);
     result = readModelParams2(fpF, "COMPARTMENT_VARIABLE_PARAMS", _compartmentParamsMasks,
         _compartmentParamsMap, _compartmentArrayParamsMap);
-    if (! result)
+    if (result == ErrorCode::SECTION_INVALID)
     {
       std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
-      assert(result);
+      assert(0);
     }
   }
   fclose(fpF);
@@ -494,21 +494,25 @@ void Params::readChanParams(const std::string& fname)
     std::cerr << "ERROR: reading file " << fname << " at section Channel cost" << std::endl;
     assert(result);
   }
+  {
+  ErrorCode result2;
 #ifdef NEWIDEA
   //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
   //                _channelArrayParamsMap);
-  result = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
                   _channelArrayParamsMap);
 #else
   //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
   //                _channelArrayParamsMap);
-  result = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
                   _channelArrayParamsMap);
 #endif
-  if (! result)
+  if (result2 == ErrorCode::SECTION_INVALID)
   {
     std::cerr << "ERROR: reading file " << fname << " at section Channel data" << std::endl;
-    assert(result);
+    assert(0);
+  }
+
   }
   fclose(fpF);
 }
@@ -2616,11 +2620,15 @@ bool Params::readElectricalSynapseTargets(FILE* fpF)
 void Params::skipSection(FILE *fpF)
 {
   std::vector<std::string> tokensList{
-    "COMPARTMENT_VARIABLE_TARGETS", 
+      "COMPARTMENT_SPINE_NECK",
+      "COMPARTMENT_SPINE_HEAD",
+      "COMPARTMENT_VARIABLE_TARGETS", 
       "COMPARTMENT_VARIABLE_COSTS", 
       "COMPARTMENT_VARIABLE_PARAMS",
       "ELECTRICAL_SYNAPSE_TARGETS",
       "ELECTRICAL_SYNAPSE_COSTS",
+      "BIDIRECTIONAL_CONNECTION_TARGETS",
+      "BIDIRECTIONAL_CONNECTION_COSTS",
       "CHEMICAL_SYNAPSE_TARGETS",
       "CHEMICAL_SYNAPSE_COSTS",
       "PRESYNAPTIC_POINT_TARGETS",
@@ -3373,15 +3381,13 @@ BRANCHTYPE MTYPE
       0;
   _bidirectionalConnectionTargetsMap.clear();
   int n = 0;
-  char bufS[LENGTH_LINE_MAX];
-  std::string tokS;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  std::istringstream is(bufS);
-  is >> tokS;
-  if (tokS == "BIDIRECTIONAL_CONNECTION_TARGETS")
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
   {
-    is >> n;
+    std::string btype(tokS);
+    assert(btype == "BIDIRECTIONAL_CONNECTION_TARGETS");
   }
   else
   {
@@ -4616,7 +4622,7 @@ BRANCHTYPE MTYPE
   return rval;
 }
 
-bool Params::readModelParams2(
+Params::ErrorCode Params::readModelParams2(
     FILE* fpF, const std::string& id,
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<
@@ -4652,7 +4658,7 @@ BRANCHTYPE MTYPE
 1 2 <gbar={0.00992}>
    */
   int errorCode;
-  bool rval = true;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
   paramsMasks.clear();
   paramsMap.clear();
   int n = 0;
@@ -4673,7 +4679,8 @@ BRANCHTYPE MTYPE
       std::cerr << "ERROR in file " << _currentFName << std::endl;
       std::cerr << ".. unmatch section: expect " << expected_btype << ", while given "
         << btype << std::endl;
-      rval = false;
+      rval = ErrorCode::SECTION_INVALID;
+      return rval;
     }
   }
   else
@@ -4681,7 +4688,8 @@ BRANCHTYPE MTYPE
     std::cerr << "ERROR in file " << _currentFName << std::endl;
     std::cerr << " Expect a string and a number ... line"
       << bufS << std::endl;
-    rval = false;
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
   }
 
   if (n > 0)
@@ -4729,7 +4737,8 @@ BRANCHTYPE MTYPE
 						std::cerr << "Params : Targeting channel parameters to "
 							"individual compartments not supported!"
 							<< std::endl;
-						return false;
+            rval = ErrorCode::SECTION_INVALID;
+            return rval;
 						//exit(EXIT_FAILURE);
 					}
 				}	
@@ -4866,16 +4875,20 @@ BRANCHTYPE MTYPE
       }
       else
       {
-        rval = false;
         std::cerr << "ERROR in file " << _currentFName << std::endl;
         std::cerr << " Expect something like 'Calcium 4'... line\n" <<
           bufS << std::endl;
+        rval = ErrorCode::SECTION_INVALID;
         assert(0);
       }
     }
   }
   else
-    rval = false;
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
   return rval;
 }
 
