@@ -1,10 +1,5 @@
 #include "Topology.h"
-/// PLAN
-// Add astrocyte as a new neuron with Kir4.1
-//    which regulate synapse [K+]_o and branch [K+]_o
-//    or emulate the effect of increasing [K+]_o
-
-#include "../../nti/include/MaxComputeOrder.h"
+#include "../../../nti/include/MaxComputeOrder.h"
 
 #define V_CM 0.01
 #define V_RA 0.001
@@ -206,10 +201,8 @@ print("Case 00: resting");
 #define Temperature_value  310.15 // [K] Kelvin
 //#define Vrest_value  -85.0 // [mV]
 #define Vrest_value  -64.12350 // [mV]
-#define V_E_LEAK -10.0
 //#define E_leak_value -90.0 // [mV]
-//#define E_leak_value Vrest_value
-#define E_leak_value V_E_LEAK
+#define E_leak_value Vrest_value
 //#define Erev_HCN  -45.0 // [mV]
 //#define Erev_HCN  -30.0 // [mV]
 #define Erev_HCN  -43.0 // [mV] - Schweighofer
@@ -767,7 +760,7 @@ NodeType SpineAttachment_VmCaiCaER { produceInitialState->initialize2, computeIn
 //NodeType SpineAttachment_VmCai { produceInitialState->initialize2, produceState->finish, computeState->solveChannels };
 NodeType SpineAttachment_VmCai { produceInitialState->initialize2, computeInitialState->initialize3, produceState->finish, computeState->solveChannels };
 #elif defined(SIMULATE_VM)
-NodeType SpineAttachment_Vm { produceInitialState->initialize2, computeInitializeState->initialize3, produceState->finish, computeState->solveChannels };
+NodeType SpineAttachment_Vm { produceInitialState->initialize2, computeInitialState->initialize3, produceState->finish, computeState->solveChannels };
 #endif
 /*}}}*/
 // 3.4. CONNEXON - electrical synapse
@@ -823,14 +816,14 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string
   #endif
 
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
-UnsignedTrigger currentOn("Iteration Trigger : == 100000", 
- 			 ::Iteration, "==", 1000, 0, solveChannels );
+UnsignedTrigger currentOn("Iteration Trigger : == 10000", 
+ 			 ::Iteration, "==", 10000, 0, solveChannels );
 //SA: Changed 10,200 to 12000
-UnsignedTrigger currentMod("Iteration Trigger : == 102000", 
+UnsignedTrigger currentMod("Iteration Trigger : == 12000", 
  			 ::Iteration, "==", 12000, 0, solveChannels );
 //SA: Changed 10,400 to 14000
-UnsignedTrigger currentOff("Iteration Trigger : == 104000", 
- 			 ::Iteration, "==", 104000, 0, solveChannels );
+UnsignedTrigger currentOff("Iteration Trigger : == 40000", 
+ 			 ::Iteration, "==", 40000, 0, solveChannels );
 
 UnsignedTrigger calciumOn("Iteration Trigger : == 1", 
  			 ::Iteration, "==", 1, 0, solveChannels );
