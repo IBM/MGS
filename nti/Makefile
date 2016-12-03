@@ -1,3 +1,10 @@
+SHELL := /bin/bash
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
 
 .DEFAULT_GOAL:=target
 
@@ -196,22 +203,34 @@ COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 TISSUE_LIB = ../gsl/lib/liblensdomain.a
 #TISSUE_LIB = ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
+ccred:=$(shell echo -e "\033[0;31m")
+ccnormal:=$(shell echo -e "\033[0m")
+Model2Use:=$(shell pwd)/include/Model2Use.h
 
+#a:=$(awk '/^[ ]*#define/{ print $$2 }' < $${Model2Use} )
 create_file: 
-	@if [ ! -f ./include/Model2Use.h ]; then \
-		touch include/Model2Use.h; \
-		echo "//Please consider to define the following option, with MODEL_TO_USE is required" > include/Model2Use.h; \
-		echo "//IMPORTANT: any change is expected to have full rebuild" >> include/Model2Use.h; \
-		echo "//#define MODEL_TO_USE <value>" >> include/Model2Use.h; \
-		echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> include/Model2Use.h; \
-		echo "//#define USE_DOUBLES   [to enable double-precision]" >> include/Model2Use.h; \
-    echo "//#define WAIT_FOR_REST" >> include/Model2Use.h; \
-		echo "#ifdef WAIT_FOR_REST" >> include/Model2Use.h; \
-		echo "#define NOGATING_TIME 20.0 //ms" >> include/Model2Use.h; \
-		echo "#else " >> include/Model2Use.h; \
-		echo "#define NOGATING_TIME 0.0 //ms" >> include/Model2Use.h; \
-		echo "#endif" >> include/Model2Use.h; \
-	fi; 
+ifeq (,$(wildcard $(Model2Use)))
+	@touch ${Model2Use}
+	@echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
+	@echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
+	@echo "//--------------------" >> ${Model2Use}
+	@echo "//#define MODEL_TO_USE <value> //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
+	@echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
+	@echo "//#define USE_DOUBLES   [to enable double-precision]" >> ${Model2Use} 
+	@echo "//#define WAIT_FOR_REST" >> ${Model2Use}
+	@echo "#ifdef WAIT_FOR_REST" >> ${Model2Use} 
+	@echo "#define NOGATING_TIME 20.0 //ms" >> ${Model2Use} 
+	@echo "#else " >> ${Model2Use} 
+	@echo "#define NOGATING_TIME 0.0 //ms" >> ${Model2Use} 
+	@echo "#endif" >> ${Model2Use} 
+	#$(shell echo -e "$(ccred) Please open and revise ${Model2Use} \033[0m")
+	$(echo  "$(ccred) Please open and revise ${Model2Use} \033[0m")
+else
+	@if [[ x$(g++ -DMODEL_TO_USE ${Model2Use}) = x ]]; then \
+echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; \
+fi
+endif
+	exit 1
 
 target: create_file $(TARGETS) 
 
