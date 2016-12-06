@@ -97,7 +97,7 @@ print("Case 00: resting");
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
 //#define TimeStep_value   0.0030 // [ms]
-#define TimeStep_value   0.0200 // [ms]
+#define TimeStep_value   0.0100 // [ms]
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
@@ -108,7 +108,7 @@ print("Case 00: resting");
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
-	#define NumIterationsUntilEnd   500000   // unitless
+	#define NumIterationsUntilEnd   1000000   // unitless
 	//#define NumIterationsUntilEnd   1000000   // unitless
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}

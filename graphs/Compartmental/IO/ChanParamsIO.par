@@ -26,7 +26,7 @@ BRANCHTYPE
 KCa 5
 BRANCHORDER
 1 <gbar={0.0}>
-2 <gbar={0.5}>
+2 <gbar={0.25}>
 3 <gbar={1.0>
 4 <gbar={0.5}>
 5 <gbar={0.25}>
