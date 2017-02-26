@@ -4623,7 +4623,7 @@ BRANCHTYPE MTYPE
 }
 
 Params::ErrorCode Params::readModelParams2(
-    FILE* fpF, const std::string& id,
+    FILE* fpF, const std::string& expected_btype,
     std::map<std::string, unsigned long long>& paramsMasks,
     std::map<
         std::string,
@@ -4669,7 +4669,6 @@ BRANCHTYPE MTYPE
   {  // find number of subgroups
 		//read line:   COMPARTMENT_VARIABLE_PARAMS 2
     std::string btype(tokS);
-    std::string expected_btype(id);
     if (btype == expected_btype)
     {
       // do nothing

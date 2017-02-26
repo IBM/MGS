@@ -207,7 +207,7 @@ ccred:=$(shell echo -e "\033[0;31m")
 ccnormal:=$(shell echo -e "\033[0m")
 Model2Use:=$(shell pwd)/include/Model2Use.h
 
-DETECTMODELCHOSEN:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | grep "warning") 
+FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
 #a:=$(awk '/^[ ]*#define/{ print $$2 }' < $${Model2Use} )
 create_file: 
 ifeq (,$(wildcard $(Model2Use)))
@@ -226,8 +226,8 @@ ifeq (,$(wildcard $(Model2Use)))
 	@echo "#endif" >> ${Model2Use} 
 	#$(shell echo -e "$(ccred) Please open and revise ${Model2Use} \033[0m")
 	$(echo  "$(ccred) Please open and revise ${Model2Use} \033[0m")
-else
-	@if [[ x"${DETECTMODELCHOSEN}"  = "x " ]]; then \
+	echo ${FoundModel2Use}
+	@if [[ "x${FoundModel2Use}" = x ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; \
 exit 1; \
 fi

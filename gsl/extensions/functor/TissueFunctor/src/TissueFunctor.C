@@ -2462,7 +2462,8 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
   if (mapiter1 == _junctionIndexMap.end())
   {
     std::cerr << "Tissue Functor::findJunctionIndices, junction type not found "
-                 "in Junction Index Map! rank=" << _rank << std::endl;
+                 "in Junction Index Map! rank=" << _rank 
+                 << ", nodeType=" << nodeType << std::endl;
     exit(EXIT_FAILURE);
   }
   std::map<Capsule*, std::vector<int> >::iterator mapiter2 =
@@ -2470,7 +2471,8 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
   if (mapiter2 == mapiter1->second.end())
   {
     std::cerr << "Tissue Functor::findJunction, junction not found in Junction "
-                 "Index Map! rank=" << _rank << std::endl;
+                 "Index Map! rank=" << _rank 
+                 << ", nodeType=" << nodeType << std::endl;
     exit(EXIT_FAILURE);
   }
   return mapiter2->second;

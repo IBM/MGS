@@ -29,7 +29,7 @@ CalciumER 1.0
 IP3 1.0
 
 COMPARTMENT_VARIABLE_PARAMS 1
-Voltage 20
+Voltage 17
 MTYPE BRANCHTYPE
 # Cm ~ [pF/um^2]
 # gLeak ~ [nS/um^2]
@@ -37,7 +37,7 @@ MTYPE BRANCHTYPE
 ## NOTE: Make sure semi-colon separated
 ## higher gLeak; the more negative Vm at rest
 #{{{
-#{{{neuron
+#{{{neurono 7
 0 1 <Cm=0.01; gLeak=0.0002>
 0 2 <Cm=0.01; gLeak=0.000325>
 0 5 <Cm=0.01; gLeak=0.000325>
@@ -46,17 +46,17 @@ MTYPE BRANCHTYPE
 0 4 <Cm=0.02; gLeak=0.000295>
 0 6 <Cm=0.01; gLeak=0.000138>
 #}}}
-##{{{ GABAergic bouton
+##{{{ GABAergic bouton 2
 1 1 <Cm=0.01; gLeak=0.000295>
 1 2 <Cm=0.01; gLeak=0.000295>
 ##}}}
-#{{{ spines
+#{{{ spines  4
 2 1 <Cm=0.01; gLeak=0.000295>
 2 3 <Cm=0.01; gLeak=0.000295>
 3 1 <Cm=0.01; gLeak=0.000295>
 3 3 <Cm=0.01; gLeak=0.000295>
 #}}}
-#{{{ Glutamatergic bouton
+#{{{ Glutamatergic bouton 4
 4 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
 4 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
 5 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
