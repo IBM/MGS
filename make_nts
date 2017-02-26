@@ -388,6 +388,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $LENSROOT/extensions/functor
       ./define functors.mdf  $REBUILD
       cd $NTSROOT/models
+      touch compartmental.mdf
       ./define compartmental.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
@@ -407,6 +408,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT/extensions/functor
     ./define functors.mdf  $REBUILD
     cd $NTSROOT/models
+    if [ ! -f Extensions.mk ]; then touch compartmental.mdf; fi
     ./define compartmental.mdf $REBUILD
 
     cp Extensions.mk $LENSROOT/
