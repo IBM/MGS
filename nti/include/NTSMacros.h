@@ -292,15 +292,15 @@
 //{{{ Sarcolema membrane exchanger/pump
 // PMCA       PUMP_PMCA:
 //{{{
-  // all branches have the same clearance rate
+  // PUMPRATE_CONSTANT = all branches have the same clearance rate
 #define PMCA_PUMPRATE_CONSTANT 1
-#define PMCA_Traub_Llinas_1997 PMCA_PUMPRATE_CONSTANT  
-#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 2 
-#define PMCA_Zador_Koch_Brown_1990 PMCA_PUMPRATE_VOLTAGE_FUNCTION 
-#define PMCA_Jafri_Rice_Winslow_1998 3
-#define PMCA_Greenstein_Winslow_2002       4
   // each branch has a different clearance rate
-#define PMCA_PUMPRATE_CONSTANT_DYNAMICS 5
+#define PMCA_PUMPRATE_CONSTANT_DYNAMICS 2
+#define PMCA_Traub_Llinas_1997 PMCA_PUMPRATE_CONSTANT  
+#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 3 
+#define PMCA_Zador_Koch_Brown_1990 PMCA_PUMPRATE_VOLTAGE_FUNCTION 
+#define PMCA_Jafri_Rice_Winslow_1998 4
+#define PMCA_Greenstein_Winslow_2002       5
 
 #define _PMCA_DEFAULT PMCA_PUMPRATE_CONSTANT
 //}}}
@@ -491,7 +491,11 @@
   #define CHANNEL_CaT CaT_GHK_WOLF_2005
 
   #define EXCHANGER_NCX  NCX_Weber_Bers_2001
-  #define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
+  #define PUMP_PMCA  PMCA_PUMPRATE_CONSTANT_DYNAMICS
+  //NOTE: When switching to the below model
+  //we no longer use 'tau' but Ipmcabar
+  // which need tobe updated in the ChanParams.par
+  //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 
   #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
@@ -500,8 +504,6 @@
   #define CHANNEL_RYR RYR2_WILLIAMS_JAFRI_2011
   //#define CHANNEL_IP3R  IP3R_ULLAH_MAK_PEARSON_2012
   #define CHANNEL_IP3R  IP3R_LI_RINZEL_1994
-  #define EXCHANGER_NCX  NCX_Weber_Bers_2001
-  #define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
   #define PUMP_SERCA  SERCA_Tran_Crampin_2009
 //}}}
 

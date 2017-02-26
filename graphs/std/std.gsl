@@ -40,7 +40,7 @@ NDPairListFunctor BindName
 };
 
 //ReSeedRandom reSeed(13);
-ReSeedRandom reSeed(13,25);
+//ReSeedRandom reSeed(13,25);
 
 // BindBack takes a functor instance and other arguments in its constructor. It then post-pends the 
 // other arguments to its execute arguments and calls execute on the input functor. It returns the 
