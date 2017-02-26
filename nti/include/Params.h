@@ -393,6 +393,7 @@ public:
   bool readBranchPointTargets(FILE* fpF);
   bool readChannelTargets(FILE* fpF); // obsolete
   bool readChannelTargets2(FILE* fpF); //support array-form for all
+  ErrorCode readChannelTargets3(FILE* fpF); //support array-form for all
   bool readElectricalSynapseTargets(FILE* fpF);
   ErrorCode readElectricalSynapseTargets_vector2(FILE* fpF);//support array-form for all
   bool readBidirectionalConnectionTargets(FILE* fpF);
