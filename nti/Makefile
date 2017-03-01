@@ -199,9 +199,9 @@ TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(O
 
 COMMON_DIR=../common/obj/
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
-
+ERROR_MARKER=.build_error
 TISSUE_LIB = ../gsl/lib/liblensdomain.a
-#TISSUE_LIB = ../lib/libTissueSim.a
+#TISSUE_LIB ERROR_MARKER== ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 ccred:=$(shell echo -e "\033[0;31m")
 ccnormal:=$(shell echo -e "\033[0m")
@@ -230,11 +230,13 @@ target:
 	@if [[ "x${FoundModel2Use}" = x ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
+	@touch $(ERROR_MARKER)
 else ifeq ("x${FoundModel2Use}","x ")
 target:
 	@if [[ "x${FoundModel2Use}" = "x " ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
+	@touch $(ERROR_MARKER)
 
 else
 target: $(TARGETS) 

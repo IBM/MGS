@@ -330,6 +330,7 @@ fi
 #{{{
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   cd $NTSROOT/nti
+  if [ -f .build_error ]; then rm .build_error; fi
   if [ "$MCO" == "-MCO" ]; then
     #TODO: Find out what is $3 here to replace it
     sed 's/#define MAX_COMPUTE_ORDER .*$/#define MAX_COMPUTE_ORDER '$3'/g' MaxComputeOrder.h > tmp.mco; mv tmp.mco MaxComputeOrder.h;
@@ -352,6 +353,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
   else
     make -j $NPROCS $NTI_BUILD_MODE
+    if [ -f .build_error ]; then exit ; fi
     if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
       cd $NTSROOT
       echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
