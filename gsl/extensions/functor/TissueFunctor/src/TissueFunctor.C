@@ -3182,7 +3182,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
       Capsule* branchCapsules = (*iter)->_capsules;
       int nCapsules = (*iter)->_nCapsules;
 
-      unsigned int index, indexJct;
+      volatile unsigned int index, indexJct;
 
       key_size_t key = branchCapsules[0].getKey();
       // find out if the first capsule in that branch that match the key-mask
@@ -3511,7 +3511,9 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
              // of the ComputeBranch under investigation
             if (nodeCategory == "Junctions")
             {
-              assert(indexJct != _rank);
+              if (_segmentDescriptor.getBranchType((*iter)->lastCapsule().getKey()) !=
+                  Branch::_SOMA)  // not soma - to handle soma-only model
+                assert(indexJct != _rank);
               _indexJunctionMap[nodeType][indexJct][rval[indexJct]] =
                   &((*iter)->lastCapsule());
               std::vector<int> indices;
@@ -3638,7 +3640,9 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
              // of the ComputeBranch under investigation
             if (nodeCategory == "Junctions")
             {
-              assert(indexJct != _rank);
+              if (_segmentDescriptor.getBranchType((*iter)->lastCapsule().getKey()) !=
+                  Branch::_SOMA)  // not soma - to handle soma-only model
+                assert(indexJct != _rank);
               _indexJunctionMap[nodeType][indexJct][rval[indexJct]] =
                   &((*iter)->lastCapsule());
               std::vector<int> indices;

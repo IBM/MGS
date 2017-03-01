@@ -470,6 +470,52 @@ void Params::readCptParams(const std::string& fname)
   fclose(fpF);
 }
 
+//void Params::readChanParams(const std::string& fname)
+//{
+//  FILE* fpF = fopen(fname.c_str(), "r");
+//  _currentFName = fname;
+//	if (fpF == NULL)
+//	{
+//		std::cerr << "File " << fname << " not found.\n";
+//		assert(fpF);
+//	}
+//  skipHeader(fpF);
+//  bool result;
+//  //result = readChannelTargets(fpF);
+//  result = readChannelTargets2(fpF);
+//  if (! result)
+//  {
+//    std::cerr << "ERROR: reading file " << fname << " at section Channel Target " << std::endl;
+//    assert(result);
+//  }
+//  result = readChannelCosts(fpF);
+//  if (! result)
+//  {
+//    std::cerr << "ERROR: reading file " << fname << " at section Channel cost" << std::endl;
+//    assert(result);
+//  }
+//  {
+//  ErrorCode result2;
+//#ifdef NEWIDEA
+//  //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+//  //                _channelArrayParamsMap);
+//  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+//                  _channelArrayParamsMap);
+//#else
+//  //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+//  //                _channelArrayParamsMap);
+//  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+//                  _channelArrayParamsMap);
+//#endif
+//  if (result2 == ErrorCode::SECTION_INVALID)
+//  {
+//    std::cerr << "ERROR: reading file " << fname << " at section Channel data" << std::endl;
+//    assert(0);
+//  }
+//
+//  }
+//  fclose(fpF);
+//}
 void Params::readChanParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
@@ -479,20 +525,32 @@ void Params::readChanParams(const std::string& fname)
 		std::cerr << "File " << fname << " not found.\n";
 		assert(fpF);
 	}
-  bool result;
   skipHeader(fpF);
-  //result = readChannelTargets(fpF);
-  result = readChannelTargets2(fpF);
-  if (! result)
+  ErrorCode result;
+  std::string keyword;
+  keyword = std::string("CHANNEL_TARGETS");
+  if (isGivenKeywordNext(fpF, keyword))
   {
-    std::cerr << "ERROR: reading file " << fname << " at section Channel Target " << std::endl;
-    assert(result);
-  }
-  result = readChannelCosts(fpF);
-  if (! result)
-  {
-    std::cerr << "ERROR: reading file " << fname << " at section Channel cost" << std::endl;
-    assert(result);
+    result = readChannelTargets3(fpF);
+    if (result == ErrorCode::SECTION_INVALID)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(0);
+    }
+    else if (result == ErrorCode::SECTION_IGNORED)
+    {
+      //do nothing - exit reading
+      return;
+    }
+    else{
+      bool result;
+      result = readChannelCosts(fpF);
+      if (! result)
+      {
+        std::cerr << "ERROR: reading file " << fname << " at section Channel cost" << std::endl;
+        assert(result);
+      }
+    }
   }
   {
   ErrorCode result2;
@@ -2481,6 +2539,194 @@ bool Params::readChannelTargets2(FILE* fpF)
 
   _channels = rval;
   return _channels;
+}
+
+Params::ErrorCode Params::readChannelTargets3(FILE* fpF)
+{//array-form for any key field
+  /* Example:
+  CHANNEL_TARGETS 8
+  BRANCHTYPE MTYPE
+  1 0 HCN [Voltage] [Voltage] Nat [Voltage] [Voltage]
+  */
+  int errorCode;
+  _channels = false;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
+  _channelTargetsMask = 0;
+  _channelTargetsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {  // read 'n'
+    std::string btype(tokS);
+    std::string expected_btype("CHANNEL_TARGETS");
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+      rval = ErrorCode::SECTION_INVALID;
+  }
+  else
+  {
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
+
+  if (n > 0)
+  {
+    std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+    _channelTargetsMask = resetMask(fpF, maskVector);
+    unsigned int sz = maskVector.size();
+    assert(sz);
+    for (unsigned int j = 0; j < sz; j++)
+    {  // validate
+      if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      {
+        std::cerr << "Params : Targeting channels to individual compartments "
+          "not supported!" << std::endl;
+        rval = ErrorCode::SECTION_INVALID;
+        return rval;
+      }
+    }
+
+    for (int i = 0; i < n; i++)  // for each line, not counting comment-line
+    {
+      jumpOverCommentLine(fpF);
+      std::vector<unsigned int*> v_ids;
+      std::vector<int> columns_found;
+      if (checkForSpecialCases(fpF, sz, columns_found))
+      {// check if a special case is used
+        // then, create a vector of v_ids
+        // NOTE: We planed to support
+        //      asterisk *
+        //  but then it requires implicit knowledge of the range of value
+        //  so we don't support it now
+
+        //unsigned int* ids = new unsigned int[sz];
+        std::vector<std::vector<int> > vect_values;
+        int total_vect = 1;
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          std::vector<int> values;
+          int val = 0;
+          if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
+          {//array-form (single or many values)
+            getListofValues(fpF, values);  // assume the next data to read is in
+            Params::reviseParamValues(values,  maskVector[j]);
+          }
+          else
+          {//single value
+            if (1 != (errorCode = fscanf(fpF, "%d", &val)))
+            {
+              std::cerr << "ERROR in file " << _currentFName << std::endl;
+              if (errorCode == EOF)
+              {
+                std::cerr << " Unexpected reaching EOF"  << std::endl;
+              }
+              else{
+                c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+                std::cerr << "Expect an integer number after line\n" <<
+                  bufS << std::endl;
+              }
+              assert(0);
+            }
+            values.push_back(val);
+          }
+          vect_values.push_back(values);
+          total_vect *= values.size();
+        }
+        // generate all array elements in the vector
+        {
+          //unsigned int** pids = new unsigned int* [total_vect];
+          for (int jj = 0; jj < total_vect; ++jj)
+          {
+            //pids[jj] = new unsigned int[sz]();
+            //v_ids.push_back(pids[jj]);
+            unsigned int *ids = new unsigned int[sz]();
+            v_ids.push_back(ids);
+          }
+
+          // fill the data
+          for (unsigned int jj = 0; jj < sz; jj++)
+          {
+            int num2clone = 1;
+            for (unsigned int xx = jj + 1; xx < sz; xx++)
+              num2clone *= vect_values[xx].size();
+            int gap = num2clone * vect_values[jj].size();
+
+            for (unsigned int kk = 0; kk < vect_values[jj].size(); kk++)
+            {
+              for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
+              {
+                std::vector<unsigned int*>::iterator iter,
+                  iterstart = v_ids.begin() + xx,
+                  iterend = v_ids.begin() + xx + num2clone - 1;
+                for (iter = iterstart; iter <= iterend; iter++)
+                  (*iter)[jj] = vect_values[jj][kk];
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        // v_ids[0] = new unsigned int [sz];
+        // unsigned int* ids = v_ids[0];
+        unsigned int* ids = new unsigned int[sz]();
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+          {
+            std::cerr << "ERROR in file " << _currentFName << std::endl;
+            if (errorCode == EOF)
+            {
+              std::cerr << " Unexpected reaching EOF"  << std::endl;
+            }
+            else{
+              c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+              std::cerr << "Expect an integer number after line\n" <<
+                bufS << std::endl;
+            }
+            assert(0);
+          }
+          Params::reviseParamValue(ids[j],  maskVector[j]);
+        }
+        // put into v_ids
+        v_ids.push_back(ids);
+      }
+      assert(!feof(fpF));
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);
+      //std::istringstream is(myBuf);
+      /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+        std::istringstream is(bufS);
+        */
+            //buildChannelTargetsMap(maskVector, v_ids, is);
+            buildChannelTargetsMap(maskVector, v_ids, myBuf);
+            // memory clean v_ids
+            for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
+                it != v_ids.end(); it++)
+            {
+              delete *it;
+            }
+            v_ids.clear();
+    }
+    // delete[] ids;
+  }
+  else
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+
+  _channels = false;
+  if (rval == ErrorCode::SECTION_VALID)
+    _channels = true;
+  return rval;
 }
 
 bool Params::readElectricalSynapseTargets(FILE* fpF)

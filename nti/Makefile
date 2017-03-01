@@ -199,9 +199,9 @@ TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(O
 
 COMMON_DIR=../common/obj/
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
-
+ERROR_MARKER=.build_error
 TISSUE_LIB = ../gsl/lib/liblensdomain.a
-#TISSUE_LIB = ../lib/libTissueSim.a
+#TISSUE_LIB ERROR_MARKER== ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 ccred:=$(shell echo -e "\033[0;31m")
 ccnormal:=$(shell echo -e "\033[0m")
@@ -209,8 +209,8 @@ Model2Use:=$(shell pwd)/include/Model2Use.h
 
 FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
 #a:=$(awk '/^[ ]*#define/{ print $$2 }' < $${Model2Use} )
-create_file: 
 ifeq (,$(wildcard $(Model2Use)))
+target:
 	@touch ${Model2Use}
 	@echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
 	@echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
@@ -228,12 +228,20 @@ ifeq (,$(wildcard $(Model2Use)))
 	$(echo  "$(ccred) Please open and revise ${Model2Use} \033[0m")
 	echo ${FoundModel2Use}
 	@if [[ "x${FoundModel2Use}" = x ]]; then \
-echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; \
-exit 1; \
+echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
+	@touch $(ERROR_MARKER)
+else ifeq ("x${FoundModel2Use}","x ")
+target:
+	@if [[ "x${FoundModel2Use}" = "x " ]]; then \
+echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
+fi
+	@touch $(ERROR_MARKER)
+
+else
+target: $(TARGETS) 
 endif
 
-target: create_file $(TARGETS) 
 
 depend: ; makedepend $(ND_SOURCES)
 
