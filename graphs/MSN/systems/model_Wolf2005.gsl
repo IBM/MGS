@@ -54,8 +54,16 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 // 
 //{{{
 //{{{ 1. Output Location
-//#define dataFolder "./"
+#ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
+#else
+#define dataFolder STR(OUTPUTFOLDER)
+#endif
+#ifndef PARAMFOLDER
+#define paramFolder ./params/
+#else
+#define paramFolder STR(PARAMFOLDER)
+#endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "Wolf_rest" STR(EXTENSION)
 print("Case 00: resting");

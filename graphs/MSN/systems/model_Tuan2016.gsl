@@ -47,12 +47,12 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
 #else
-#define dataFolder OUTPUTFOLDER
+#define dataFolder STR(OUTPUTFOLDER)
 #endif
 #ifndef PARAMFOLDER
 #define paramFolder ./params/
 #else
-#define paramFolder PARAMFOLDER
+#define paramFolder STR(PARAMFOLDER)
 #endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "Tuan_rest" STR(EXTENSION)

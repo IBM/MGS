@@ -83,7 +83,7 @@ authorName=""
 if [ "$#" == "0" ]; then
   echo "$0 <morph_suffix> [author_suffix] "
   echo "    <morph_suffix> is the suffix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
-  echo "  e.g. msn0, unknown"
+  echo "  e.g. msn0, d1d2"
   echo "NOTE: $0 clean "
   echo "   to clean the symbolic links"
   exit

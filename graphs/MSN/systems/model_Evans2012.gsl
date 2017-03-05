@@ -18,6 +18,8 @@
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define STIMULUS_CASE   CASE_00
+//#define morph ""
+#define morph "msn0_"
 //}}}
 
 #define _CCAT(x,y) x ## y 
@@ -47,29 +49,38 @@ ServiceConnectorFunctor serviceConnect();
 //{{{
 //{{{ 1. Output Location
 //#define dataFolder "./"
+#ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
+#else
+#define dataFolder STR(OUTPUTFOLDER)
+#endif
+#ifndef PARAMFOLDER
+#define paramFolder ./params/
+#else
+#define paramFolder STR(PARAMFOLDER)
+#endif
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder "out2_Jun23_rest"
+#define OutputFolderName dataFolder morph "Evans_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma"
+#define OutputFolderName dataFolder morph "Evans_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder "out2_Jun23_triggershaft"
+#define OutputFolderName dataFolder morph "Evans_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder "out2_Jun23_triggerspine"
-//#define OutputFolderName dataFolder "out2_Jun23_case03"
+#define OutputFolderName dataFolder morph "Evans_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Evans_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder "out2_Jun23_triggerdistalspines"
+#define OutputFolderName dataFolder morph "Evans_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder "out2_Jun23_triggersoma_then_distalspines"
+#define OutputFolderName dataFolder morph "Evans_triggersoma_then_distalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder "out2_Jun23_case06"
+#define OutputFolderName dataFolder morph "Evans_case06" STR(EXTENSION)
 #endif
-//#define OutputFolderName dataFolder "out2_May24_triggersoma_distal"
-//#define OutputFolderName dataFolder "out2_May26_triggersoma_allspines"
-//#define OutputFolderName dataFolder "out2_May27_trigger_distal"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma"
-//#define OutputFolderName dataFolder "out2_May27_trigger_soma_distal"
+//#define OutputFolderName dataFolder morph "Evans__May24_triggersoma_distal"
+//#define OutputFolderName dataFolder morph "Evans__May26_triggersoma_allspines"
+//#define OutputFolderName dataFolder morph "Evans__May27_trigger_distal"
+//#define OutputFolderName dataFolder morph "Evans__May27_trigger_soma"
+//#define OutputFolderName dataFolder morph "Evans__May27_trigger_soma_distal"
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
