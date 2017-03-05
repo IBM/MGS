@@ -39,7 +39,7 @@ BRANCHTYPE MTYPE
      CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 
-CHANNEL_COSTS 15
+CHANNEL_COSTS 17
 Nat     0.414243
 Nap     0.414243
 KAf     0.254051
@@ -55,6 +55,8 @@ CaPQ    0.254051
 CaR     0.254051
 CaT     0.254051
 PMCA    0.254051
+Kv31    0.254051
+MK      0.254051
 
 CHANNEL_PARAMS 15
 # Wolf-2005 
