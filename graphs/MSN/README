@@ -23,4 +23,29 @@ CURRENT STATUS:
  Erev K+ = -80mV is important for the Wolf 2005 behavior
  Something wrong with Na+ model, so I'm testing using Nat from Hay2011 model
 
+===============================================================
+MORPHOLOGY
+  The name will be used by ./changemorph.sh script 
+  | ----name-----|----explaination----|
+     d1d2         'computerized' MSN no spines
+     msn0         'computerized' MSN with spines from Klapstein - ... - Michael Levine (2001)
 
+  NOTE: There can be different 'resolution' for one morphology, e.g. number of data points
+  E.g. 
+  neurons_msn0/MSN_denda0_1180.swc  (1180  data points) with spines
+  neurons_msn0/MSN_denda0.swc       (594   data points) with spines
+  neurons_msn0/MSN_denda0_1180nospine.swc  (1180  data points) no spines
+
+===============================================================
+SIMULATION
+
+Step 1: untar the spines data (if use)
+
+Step 2: choose the morphology
+./changemorph <morph-name>
+
+
+Step 3: unblock input (axonal terminal) if needed
+
+Step 4: run the simulation
+./extractMacros.sh 

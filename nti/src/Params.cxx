@@ -835,6 +835,11 @@ std::list<std::string>& Params::getPreSynapticPointSynapseTypes(
 {
   std::map<std::string, std::list<std::string> >::iterator iter =
       _preSynapticPointSynapseMap.find(targetType);
+  if(iter == _preSynapticPointSynapseMap.end())
+  {
+    std::cerr << "ERROR in SynParam file: " << _currentFName << std::endl;
+    std::cerr << " ..... there is no PreSynapticPoint of name : " << targetType << std::endl;
+  }
   assert(iter != _preSynapticPointSynapseMap.end());
   return iter->second;
 }
@@ -1892,7 +1897,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           // LIMIT: current only support  special case for BRANCHTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
@@ -1917,6 +1922,7 @@ bool Params::readCompartmentVariableTargets(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -2065,7 +2071,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -2088,6 +2094,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -2245,7 +2252,7 @@ bool Params::readChannelTargets(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           // LIMIT: current only support  special case for BRANCHTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
@@ -2274,6 +2281,7 @@ bool Params::readChannelTargets(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -2429,7 +2437,7 @@ bool Params::readChannelTargets2(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -2451,6 +2459,7 @@ bool Params::readChannelTargets2(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -2611,7 +2620,7 @@ Params::ErrorCode Params::readChannelTargets3(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -2633,6 +2642,7 @@ Params::ErrorCode Params::readChannelTargets3(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -2967,7 +2977,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -2989,6 +2999,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -3064,7 +3075,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -3086,6 +3097,7 @@ Params::ErrorCode Params::readElectricalSynapseTargets_vector2(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -3390,7 +3402,7 @@ BRANCHTYPE MTYPE
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           // LIMIT: current only support  special case for BRANCHTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
@@ -3415,6 +3427,7 @@ BRANCHTYPE MTYPE
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -3495,7 +3508,7 @@ BRANCHTYPE MTYPE
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           // LIMIT: current only support  special case for BRANCHTYPE
           if (maskVector[j] == SegmentDescriptor::branchType)
           {
@@ -3520,6 +3533,7 @@ BRANCHTYPE MTYPE
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -3675,7 +3689,7 @@ BRANCHTYPE MTYPE
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -3697,6 +3711,7 @@ BRANCHTYPE MTYPE
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -3774,7 +3789,7 @@ BRANCHTYPE MTYPE
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -3796,6 +3811,7 @@ BRANCHTYPE MTYPE
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -4167,7 +4183,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -4189,6 +4205,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -4260,7 +4277,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -4282,6 +4299,7 @@ Params::ErrorCode  Params::readChemicalSynapseTargets_vector2(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -4749,7 +4767,7 @@ BRANCHTYPE MTYPE
 						for (unsigned int j = 0; j < sz; ++j)
 						{
 							std::vector<int> values;
-							int val = 0;
+							unsigned int val = 0;
 							// LIMIT: current only support  special case for BRANCHTYPE
 							if (maskVector[j] == SegmentDescriptor::branchType)
 							{
@@ -4774,6 +4792,7 @@ BRANCHTYPE MTYPE
                   }
                   assert(0);
                 }
+                Params::reviseParamValue(val,  maskVector[j]);
 								values.push_back(val);
 							}
 							vect_values.push_back(values);
@@ -5015,7 +5034,7 @@ BRANCHTYPE MTYPE
 						for (unsigned int j = 0; j < sz; ++j)
 						{
 							std::vector<int> values;
-							int val = 0;
+							unsigned int val = 0;
               if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
               {//array-form (single or many values)
 								getListofValues(fpF, values);  // assume the next data to read is in
@@ -5037,6 +5056,7 @@ BRANCHTYPE MTYPE
                   }
                   assert(0);
                 }
+                Params::reviseParamValue(val,  maskVector[j]);
 								values.push_back(val);
 							}
 							vect_values.push_back(values);
@@ -6559,7 +6579,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -6582,6 +6602,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);
@@ -6732,7 +6753,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
         for (unsigned int j = 0; j < sz; ++j)
         {
           std::vector<int> values;
-          int val = 0;
+          unsigned int val = 0;
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
@@ -6755,6 +6776,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
               }
               assert(0);
             }
+            Params::reviseParamValue(val,  maskVector[j]);
             values.push_back(val);
           }
           vect_values.push_back(values);

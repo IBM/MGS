@@ -1,7 +1,24 @@
 #!/bin/bash
 #author  = Hoang Trong Minh Tuan (@IBM - 2016)
 #version = 1.0
-#///{{{
+
+#{{{USER-SETTING
+NUMPROCESSES=4
+NUMTHREADS=4
+OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
+if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
+#}}}
+#{{{ Non-modified parts
+#Escape code
+esc=`echo -en "\033"`
+
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
+
 Yes_No_RunSim()
 {
   #{{{
@@ -43,7 +60,8 @@ RunSim()
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
    echo "Output Folder: " $OutputFolderName
-   mpiexec -n 2  ../../gsl/bin/gslparser $temp_file -t 4
+   echo "GSL file: " $temp_file
+   mpiexec -n ${NUMPROCESSES}  ../../gsl/bin/gslparser $temp_file -t ${NUMTHREADS}
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
    ./doPlot.sh  ${uniqueName:1} ${runCaseNumber}
@@ -68,7 +86,7 @@ DoFinish()
 ## PROCESS
 #########################
 #########################
-## 1. CREATE FILE/FOLDER
+#{{{ 1. CREATE FILE/FOLDER
 TMPDIR=`pwd`/.tmp
 if [ ! -d $TMPDIR ]; then
   mkdir $TMPDIR
@@ -78,18 +96,40 @@ if [ ! -f $FILENAME_PREVIOUSRUN ]; then
   touch $FILENAME_PREVIOUSRUN
 fi
 temp_file=`mktemp --tmpdir=$TMPDIR`
+#}}}
 
-## 2. CHECK ARGS
-##{{{
+##{{{ 2. CHECK ARGS
 if [ "$#" == "0" ]; then
-  echo "$0 <extension> "
-  echo "    <extension> somename to make the output folder unique"
-  echo "     You can pass something like -unique 
-    then the script generate a unique name using `date +'%Y-%m-%d-%s'` which evoke the date"
+  echo -e "${cc_red}IMPORTANT${cc_normal}:  When using this script, you can modify the session 'USER-SETTING'
+which include 1. num-processes, 2. num-threads; 3. location of output (OUTPUTFOLDER)
+       "
+  echo " Data output folder (a subfolder inside \${OUTPUTFOLDER}): "
+  echo -e "     ${cc_blue}\${morph}${cc_red}\${model_specific}${cc_blue}\${EXTENSION}${cc_normal}"
+  echo ""
+  echo " \${morph}          value is defined inside model.gsl. E.g.: 'msn_'"
+  echo " \${model_specific} value is defined inside model.gsl, and is named with 2 parts
+            1. authorName
+            2. simulation condition
+          E.g. Tuan_rest   or Tuan_triggersoma"
+  echo " \${EXTENSION} is a value defined based on the choice of <extension> to $0"
+  echo ""
+  echo "SYNTAX:"
+  echo -e "${cc_blue} $0 <extension> ${cc_normal}"
+  echo "OPTIONS:"
+  echo " <extension> somename to make the output folder unique"
+  echo " <extension>: "
+  echo "     -unique    : then the script generate a unique name using 'date +'%Y-%m-%d-%s'' which evoke the date"
+  echo "     -reuse     : then the simulation overwrite the folder previously used"
+  echo "     abc        : then the simulation assign 'abc' to \${EXTENSION}"
   echo "Example: "
   echo " $0 -unique"
   echo " $0 -reuse"
   echo " $0 abc"
+  echo ""
+  echo "NOTE: GSL specific"
+  echo " \${dataFolder}   : DEFAULT is './data' [can be modified if you use this script]"
+  echo " \${paramFolder}  : DEFAULT is './params' [can be modified if you use this script]"
+
   exit
 fi
 if [ "$1" == "-unique" ]; then
@@ -109,14 +149,21 @@ fi
 #}}}
 
 #########################
-## 3. CHECK MACROS
-cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
+##{{{ 3. CHECK MACROS
+## NOTE: accepted macros
+## -DOUTPUTFOLDER=location where all output should be'
+## -DPARAMFOLDER=location of the parameters to the simulation
+## -DEXTENSION=a prefix that helps to make unique output folder
+#Simplest-one: 
+# cpp -dU -P model.gsl -DEXTENSION=$uniqueName > ${temp_file} 2> /dev/null
+cpp -dU -P model.gsl -DEXTENSION=$uniqueName -DOUTPUTFOLDER="${OUTPUTFOLDER}" > ${temp_file} 2> /dev/null
 ###cpp -dU -P model.gsl -DEXTENSION=$uniqueName > out.txt 2> /dev/null
 ##awk -F '/^#define[[:space:]]+morph/{ printf "%s | %s \n", $2, $3 }' < ${temp_file}
 #morph=`awk  '/^#define morph/{printf "%s\n", $3}' < ${temp_file}`
 morph=`awk  '/^#define morph/{print $3}' < ${temp_file}`
 #dataFolder=`awk  '/^#define dataFolder/{printf "%s\n", $3}' < ${temp_file}`
-dataFolder=`awk  '/^#define dataFolder/{print $3}' < ${temp_file}`
+#dataFolder=`awk  '/^#define dataFolder/{print $3}' < ${temp_file}`
+dataFolder=`awk  '/^#define OUTPUTFOLDER/{print $3}' < ${temp_file}`
 suffix=`awk  '/^#define OutputFolderName/{ printf "%s \n", $5 }' < ${temp_file}`
 runCaseName=`awk  '/^#define STIMULUS_CASE/{ print $3 }' < ${temp_file}`
 runCaseNumber=`awk  '/^#define '${runCaseName}'/{ print $3 }' < ${temp_file}`
@@ -129,8 +176,10 @@ OutputFolderName+=$uniqueName
 #echo $dataFolder
 #echo $suffix
 mv $OutputFolderName $TMPDIR/
+#}}}
 
 ###########################
+#{{{ 4. Final step
 if [ ! -d $OutputFolderName ]; then
   mkdir $OutputFolderName
   RunSim
@@ -140,3 +189,4 @@ fi
 
 DoFinish
 rm ${temp_file}
+#}}}
