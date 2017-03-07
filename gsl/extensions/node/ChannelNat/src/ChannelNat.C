@@ -251,13 +251,15 @@ void ChannelNat::update(RNG& rng)
         std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
     int index = low - Vmrange_taum.begin();
 assert(index>=0);
-assert(Vmrange_taum[index-1] <= v and v <= Vmrange_taum[index]);
+//assert(Vmrange_taum[index-1] <= v and v <= Vmrange_taum[index]);
     dyn_var_t taum;
     if (index == 0)
       taum = taumNat[0];
-    else
+    else if (index < LOOKUP_TAUM_LENGTH)
      taum = linear_interp(Vmrange_taum[index-1], taumNat[index-1], 
         Vmrange_taum[index], taumNat[index], v);
+    else //assume saturation in taum when Vm > max-value
+     taum = taumNat[index-1];
     //-->tau_m[i] = taumNat[index];
     // NOTE: dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m[i] * 2);
     //dyn_var_t qm = dt * getSharedMembers().Tadj / (taumNat[index] * 2);
