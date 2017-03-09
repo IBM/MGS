@@ -100,7 +100,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
     dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
       (pow(dimension->r,3) - pow(dimension->r - d, 3)) * FRACTIONVOLUME_CYTO;
     currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
-    std::cerr << "Cyto total vol: " << volume << "; shell volume: " << shellVolume << std::endl;
+    //std::cerr << "Cyto total vol: " << volume << "; shell volume: " << shellVolume << std::endl;
     
     Pdov = M_PI * D_IP3 / shellVolume;
 

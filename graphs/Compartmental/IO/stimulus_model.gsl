@@ -1,11 +1,11 @@
 PointCurrentSource pointCurrentSource<>;
 
 pointCurrentSource.setCurrent(<						
-				I = 100.0                      	// pA
+				I = 0.0                      	// pA
 			     >) on currentOn;
 
 pointCurrentSource.setCurrent(<						
-				I = 200.0                      	// pA
+				I = 0.0                      	// pA
 			     >) on currentMod;
 
 pointCurrentSource.setCurrent(<						

@@ -70,7 +70,7 @@ void CaConcentrationCompCategory::count()
                 MPI_COMM_WORLD);
   float std = sqrt(totalVar / getSimulation().getNumProcesses());
   if (getSimulation().getRank() == 0)
-    printf("Total CaConcentration = %lld, Mean = %lf, StDev = %lf\n",
+    printf("Total CaConcentration (ComputeBranches) = %lld, Mean = %lf, StDev = %lf\n",
            totalCount, mean, std);
 
   ////
