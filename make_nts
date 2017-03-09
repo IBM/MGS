@@ -353,15 +353,15 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
   else
     make -j $NPROCS $NTI_BUILD_MODE
-    if [ -f .build_error ]; then exit ; fi
-    if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
-      cd $NTSROOT
-      echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
-      exit; 
-    fi
-    cd $NTSROOT
-    echo "${cc_blue}Complete build NTI code${cc_normal}"
   fi
+  if [ -f .build_error ]; then exit ; fi
+  if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+    cd $NTSROOT
+    echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
+    exit; 
+  fi
+  cd $NTSROOT
+  echo "${cc_blue}Complete build NTI code${cc_normal}"
 fi
 #}}}
 
