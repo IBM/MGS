@@ -108,7 +108,7 @@ print("Case 00: resting");
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
-	#define NumIterationsUntilEnd   30000   // unitless
+	#define NumIterationsUntilEnd   1000000   // unitless
 	//#define NumIterationsUntilEnd   1000000   // unitless
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
 //}}}
@@ -1389,14 +1389,14 @@ Grid MSN_D1Neuron{
   //{{{HCN 
    InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
 									compartmentalize = {  "gbar" },
-									gbar = {0.85}
+									gbar = {6.0}
 								 > ) );
   //}}}
 	//{{{ Ca2+ channels
 #if defined(SIMULATE_CACYTO)
    InitNodes ( .[].Layer(CalChannels), tissueFunctor("NodeInit", <
 									compartmentalize = { "gbar" },
-									gbar = {1.5}
+									gbar = {0.05}
 								 > ) );
 
    InitNodes ( .[].Layer(CahChannels), tissueFunctor("NodeInit", <

@@ -44,7 +44,7 @@ void HodgkinHuxleyVoltageCompCategory::count()
                 MPI_COMM_WORLD);
   float std = sqrt(totalVar / getSimulation().getNumProcesses());
   if (getSimulation().getRank() == 0)
-    printf("Total HodgkinHuxleyVoltage (represent a ComputeBranch) = %lld, Mean = %lf, StDev = %lf\n",
+    printf("Total HodgkinHuxleyVoltage (ComputeBranches) = %lld, Mean = %lf, StDev = %lf\n",
            totalCount, mean, std);
 
   totalCount = localCount = 0;
