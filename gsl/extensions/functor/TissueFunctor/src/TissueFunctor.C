@@ -3652,7 +3652,9 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
             }
             rval[indexJct]++;
           }
-          else if (nodeCategory == "Channels")
+          else if ((nodeCategory == "Channels") && 
+            (_segmentDescriptor.getBranchType((*iter)->lastCapsule().getKey()) ==
+                  Branch::_SOMA))
           {//handle some-only model
             if (channelTarget && indexJct == _rank)
             {
