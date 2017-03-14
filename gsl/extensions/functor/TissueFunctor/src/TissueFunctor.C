@@ -3283,7 +3283,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 
         if (nodeCategory != "CompartmentVariables" &&
             nodeCategory != "ForwardSolvePoints")
-        {//Junctions, JunctionPoints, EndPoints
+        {//Junctions, JunctionPoints, EndPoints, ...
 #ifdef IDEA1
             {
                 //NO need to add code here
@@ -3651,6 +3651,83 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
               _junctionIndexMap[nodeType][&((*iter)->lastCapsule())] = indices;
             }
             rval[indexJct]++;
+          }
+          else if ((nodeCategory == "Channels") && 
+            (_segmentDescriptor.getBranchType((*iter)->lastCapsule().getKey()) ==
+                  Branch::_SOMA))
+          {//handle some-only model
+            if (channelTarget && indexJct == _rank)
+            {
+              std::list<Params::ChannelTarget>* targets =
+                _tissueParams.getChannelTargets(key);
+              if (targets)
+              {
+                std::list<Params::ChannelTarget>::iterator
+                  iiter = targets->begin(),
+                        iend = targets->end();
+                for (; iiter != iend; ++iiter)
+                {
+                  if (iiter->_type == nodeType)
+                  {
+                    rval[indexJct]++;
+                    std::vector<std::pair<int, int> > targetVector;
+                    std::list<std::string>::iterator viter,
+                      vend = iiter->_target1.end();
+                    assert(iiter->_target1.size() > 0);
+                    for (viter = iiter->_target1.begin(); viter != vend;
+                        ++viter)
+                    {
+                      std::map<std::string,
+                        std::map<Capsule*, std::vector<int> > >::
+                          iterator jmapiter1 =
+                          _junctionIndexMap.find(*viter);
+                      std::map<Capsule*, std::vector<int> >::iterator
+                        jmapiter2;
+                      if (jmapiter1 != _junctionIndexMap.end() &&
+                          (jmapiter2 = jmapiter1->second.find(
+                                                              &(*iter)->lastCapsule())) !=
+                          jmapiter1->second.end())
+                      {
+                        std::vector<int>& junctionIndices =
+                          jmapiter2->second;
+                        targetVector.push_back(std::pair<int, int>(
+                              junctionIndices[1],
+                              _compartmentVariableTypesMap[*viter]));
+                      }
+                    }
+                    _channelJunctionIndices1[_channelTypeCounter].push_back(
+                        targetVector);
+                    targetVector.clear();
+                    vend = iiter->_target2.end();
+                    assert(iiter->_target2.size() > 0);
+                    for (viter = iiter->_target2.begin(); viter != vend;
+                        ++viter)
+                    {
+                      std::map<std::string,
+                        std::map<Capsule*, std::vector<int> > >::
+                          iterator jmapiter1 =
+                          _junctionIndexMap.find(*viter);
+                      std::map<Capsule*, std::vector<int> >::iterator
+                        jmapiter2;
+                      if (jmapiter1 != _junctionIndexMap.end() &&
+                          (jmapiter2 = jmapiter1->second.find(
+                                                              &(*iter)->lastCapsule())) !=
+                          jmapiter1->second.end())
+                      {
+                        std::vector<int>& junctionIndices =
+                          jmapiter2->second;
+                        targetVector.push_back(std::pair<int, int>(
+                              junctionIndices[1],
+                              _compartmentVariableTypesMap[*viter]));
+                      }
+                    }
+                    _channelJunctionIndices2[_channelTypeCounter].push_back(
+                        targetVector);
+                  }
+                }
+              }
+            }
+
           }
 
 #endif
