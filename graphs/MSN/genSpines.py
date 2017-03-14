@@ -4536,6 +4536,119 @@ class SomeClass(object):
         np.savetxt(PL5bFileName, lineArray, fmt='%s')
         print("Write to file: ", PL5bFileName)
 
+    def removeBranchTooFarFromSoma(self, branchType2Find, distance_criteria,
+                                    write2File=True,
+                                    fileSuffix='_trimmedBranchMaxDistance.swc'):
+      """
+        Remove all points in apical (tufted as well) if it is farther form the soma
+        at a given max-distance (but only remove starting from the first branchpoints)
+      """
+      listPointToDeletes = []
+      listPointExamines = []
+      subList = []
+      for ix in range(len(self.point_lookup)):
+          #### Get terminal end points
+          id = str(ix+1)
+          parent_id = self.point_lookup[id]['parent']
+          brType =self.point_lookup[id]['type']
+          x =float(self.point_lookup[id]['siteX'])
+          y =float(self.point_lookup[id]['siteY'])
+          z =float(self.point_lookup[id]['siteZ'])
+          r =float(self.point_lookup[id]['siteR'])
+          numChildren = self.point_lookup[id]["numChildren"]
+          if (int(parent_id) != -1):
+            parent_info = self.point_lookup[parent_id]
+            parent_x = float(parent_info['siteX'])
+            parent_y = float(parent_info['siteY'])
+            parent_z = float(parent_info['siteZ'])
+            dist2soma= self.point_lookup[id]['dist2soma']
+            distance = sqrt((x - parent_x)**2 + (y - parent_y)**2 +
+                            (z - parent_z)**2)
+            vol = math.pi * math.pow(r, 2) * distance
+            if (not int(brType) in branchType2Find):
+                continue
+            if (int(numChildren) != 0):
+                continue
+            proxid = self.getPointsInBranchFartherThan(id, distance_criteria, subList)
+            if (subList):
+                listPointToDeletes.extend(subList)
+                listPointExamines.append(str(proxid))
+      self.listPointToDeletes= list(set(listPointToDeletes))
+      self.listPointExamines= list(set(listPointExamines))
+      print("Trim the tree (distance criteria)------")
+      print("Before delete: ", len(self.point_lookup), " points")
+      mapNewId = {}
+      while (self.listPointExamines):
+        if (self.listPointToDeletes):
+              mapNewId = self.removeBranch(self.listPointToDeletes, write2File=False, internalCall=True)
+              for (i, id) in enumerate(self.listPointExamines):
+                  if id in mapNewId:
+                      self.listPointExamines[i] = str(mapNewId[id])
+                  else:
+                      pass
+                    #print id, "aaaaaaa", type(id)
+        #print "=================================================="
+        listPointToDeletes = []
+        listPointExamines = []
+        for id in self.listPointExamines:
+            #print id, type(id)
+            if (not id in self.point_lookup):
+                continue
+            brType =self.point_lookup[id]['type']
+            if (not int(brType) in branchType2Find):
+                continue
+            proxid = self.getPointsInBranchFartherThan(id, distance_criteria, subList)
+            if (subList):
+                listPointToDeletes.extend(subList)
+                listPointExamines.append(proxid)
+        self.listPointToDeletes= list(set(listPointToDeletes))
+        self.listPointExamines= list(set(listPointExamines))
+
+      if (write2File):
+        self.removeBranch(self.listPointToDeletes, write2File=True,
+                          fileSuffix=fileSuffix, internalCall=True)
+      print("After delete: ", len(self.point_lookup), " points")
+
+    def getPointsInBranchFartherThan(self, id, dist_criteria, listPoints):
+        """
+        Find all points in the branch having id as distal end
+        and return the list of points  from id to the branchpoint 'proxid'
+        IF the dist2soma of proxid is > dist_criteria
+        RETURN : proxid
+        """
+        del listPoints[:]
+        proxid = -1
+        while True:
+          id = str(id)
+          parent_id = self.point_lookup[id]['parent']
+          if (int(parent_id) == -1):
+              break
+          brType =self.point_lookup[id]['type']
+          x =self.point_lookup[id]['siteX']
+          y =self.point_lookup[id]['siteY']
+          z =self.point_lookup[id]['siteZ']
+          r =self.point_lookup[id]['siteR']
+          dist2soma= self.point_lookup[id]['dist2soma']
+          dist2branchPoint = self.point_lookup[id]['dist2branchPoint']
+          branchOrder = self.point_lookup[id]['branchOrder']
+          parent_numChildren = self.point_lookup[parent_id]['numChildren']
+          parent_brType =self.point_lookup[parent_id]['type']
+          if ((int(parent_numChildren) > 1) or\
+                  (brType != parent_brType)) and \
+                  float(dist2soma) < dist_criteria:
+              break
+          if ((int(parent_numChildren) > 1) or\
+                  (brType != parent_brType)) and \
+                  float(dist2soma) >= dist_criteria:
+            listPoints.append(id)
+            proxid = parent_id
+            break
+          if (int(parent_id) == -1):
+              break
+          id = parent_id
+        return proxid
+        #####end
+
     def removeGivenPoints(self, lineIndex, write2File=True,
                            fileSuffix='_trimmedPoints.swc'):
       """
@@ -4791,17 +4904,26 @@ class SomeClass(object):
         print("Write to file: ", PL5bFileName)
         print("IMPORTANT: Please revise the coordinate and radius of the soma point")
 
-    def removeBranch(self, lineIndex, write2File=True, fileSuffix="_trimmed.swc"):
+    def removeBranch(self, lineIndex, write2File=True, fileSuffix="_trimmed.swc",
+                     internalCall=False):
       """
-      Remove a branch starting from the given line index
+      Remove one or more branches starting from the given line index
       """
       lines2Delete = []
-      lines2Delete.extend(lineIndex)
-      tmpPointLookup = deepcopy(self.point_lookup)
-      print("Before delete: ", len(self.point_lookup), " points")
+      if (isinstance(lineIndex, list)):
+        lines2Delete.extend(lineIndex)
+      else:
+        lines2Delete.append(lineIndex)
+      tmp = [int(x) for x in lines2Delete]
+      lines2Delete  = tmp
+      #tmpPointLookup = deepcopy(self.point_lookup)
+      if (not internalCall):
+        print("=======================Remove Branch")
+        print("Before delete: ", len(self.point_lookup), " points")
       lineArray = []
       index = 0
       mapNewId = {}
+      tmpPointLookup = {}
       for ix in range(len(self.point_lookup)):
           id = str(ix+1)
           parent_id = self.point_lookup[id]['parent']
@@ -4817,7 +4939,7 @@ class SomeClass(object):
           if ((int(id) in lines2Delete) or
              (int(parent_id) in lines2Delete)):
             # start to delete from this line
-            del tmpPointLookup[id]
+            #del tmpPointLookup[id]
             lines2Delete.append(int(id))
           else:
             index += 1
@@ -4831,13 +4953,15 @@ class SomeClass(object):
                                      'siteX': x,
                                      'siteY': y,
                                      'siteZ': z,
-                                     'siteR': r, 'parent': str(parent_id),
+                                     'siteR': r,
+                                     'parent': str(parent_id),
                                      'dist2soma': dist2soma,
                                      'dist2branchPoint': dist2branchPoint,
                                      'branchOrder': branchOrder,
                                      'numChildren': numChildren}
 
-      print("After delete: ", len(tmpPointLookup), " points")
+      if (not internalCall):
+        print("After delete: ", len(tmpPointLookup), " points")
       self.point_lookup = tmpPointLookup
       #idx = 0
       #for ix in range(len(tmpPointLookup)):
@@ -4860,6 +4984,7 @@ class SomeClass(object):
         PL5bFileName = self.swc_filename+fileSuffix
         np.savetxt(PL5bFileName, lineArray, fmt='%s')
         print("Write to file: ", PL5bFileName)
+      return mapNewId
 
     def removeTerminalPoints(self,write2File=True, fileSuffix="_trimmedTerminalPoints.swc"):
       """

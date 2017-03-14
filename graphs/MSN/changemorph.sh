@@ -56,12 +56,13 @@ ChangeSWC ()
         fi;
       fi
   done
+  swcFile=$arg2
   rm_if_link neurons/neuron.swc 2>&1 >/dev/null
   cd neurons;ln -s $arg2 neuron.swc; cd -
   spineFolder=$(echo $swcFile | cut -f 1 -d '.')"_spines"
   extMorph=$(echo $swcFile | cut -f 1 -d '.')
   echo "Spines folder:  neurons/$spineFolder"
-  if [ -d neurons/"$spineFolder" ]; then
+  if [ -d "neurons/$spineFolder" ]; then
     rm_if_link spines 2>&1 >/dev/null
     ln -s neurons/$spineFolder spines
     rm_if_link neurons.txt
@@ -74,6 +75,10 @@ ChangeSWC ()
     echo "$spineFolder not found"
     rm_if_link neurons.txt
     ln -s single_neuron.txt neurons.txt
+    rm_if_link connect_recording_model.gsl
+    ln -s neurons/connect_recording_model_$extMorph.gsl connect_recording_model.gsl
+    rm_if_link connect_stimulus_model.gsl
+    ln -s neurons/connect_stimulus_model_$extMorph.gsl  connect_stimulus_model.gsl
   fi
 }
 

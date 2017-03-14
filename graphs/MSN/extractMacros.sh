@@ -3,11 +3,19 @@
 #version = 1.0
 
 #{{{USER-SETTING
-NUMPROCESSES=4
-NUMTHREADS=4
+_X_=1
+_Y_=1
+_Z_=1
+NUMTHREADS=1
+
+NUMPROCESSES=$(( _X_ * _Y_ * _Z_))
 OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
 if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
 #}}}
+
+numArgs=$#
+secondArg=$2
+
 #{{{ Non-modified parts
 #Escape code
 esc=`echo -en "\033"`
@@ -55,16 +63,27 @@ RunSim()
    cp $NTSROOT/nti/include/NTSMacros.h  $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/MaxComputeOrder.h $OutputFolderName/ -L -r
    #cp spines $OutputFolderName/ -L -r
+   SWC_FILENAME=`readlink -f ./neurons/neuron.swc`
    echo "----> $OutputFolderName" >> SIM_LOG
    echo "----> RESULT: " >> SIM_LOG
+   echo "... using swc file: ${SWC_FILENAME}"
+   echo "... using swc file: ${SWC_FILENAME}" >> SIM_LOG
+   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
    echo "Output Folder: " $OutputFolderName
    echo "GSL file: " $temp_file
+   cp Topology.h .Topology_backup.h
+   echo "#define _X_ $_X_" > Topology.h
+   echo "#define _Y_ $_Y_" >> Topology.h
+   echo "#define _Z_ $_Z_" >> Topology.h
    mpiexec -n ${NUMPROCESSES}  ../../gsl/bin/gslparser $temp_file -t ${NUMTHREADS}
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
-   ./doPlot.sh  ${uniqueName:1} ${runCaseNumber}
+   if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
+     ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+   fi
+   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
   #}}}
 }
 
@@ -80,7 +99,6 @@ DoFinish()
   #}}}
 }
 #///}}}
-
 
 #########################
 ## PROCESS
@@ -114,7 +132,7 @@ which include 1. num-processes, 2. num-threads; 3. location of output (OUTPUTFOL
   echo " \${EXTENSION} is a value defined based on the choice of <extension> to $0"
   echo ""
   echo "SYNTAX:"
-  echo -e "${cc_blue} $0 <extension> ${cc_normal}"
+  echo -e "${cc_blue} $0 <extension> [-noplot] ${cc_normal}"
   echo "OPTIONS:"
   echo " <extension> somename to make the output folder unique"
   echo " <extension>: "
@@ -125,6 +143,7 @@ which include 1. num-processes, 2. num-threads; 3. location of output (OUTPUTFOL
   echo " $0 -unique"
   echo " $0 -reuse"
   echo " $0 abc"
+  echo "When -noplot is used; then no plotting is called after the simulation"
   echo ""
   echo "NOTE: GSL specific"
   echo " \${dataFolder}   : DEFAULT is './data' [can be modified if you use this script]"
