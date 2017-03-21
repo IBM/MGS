@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -119,9 +119,9 @@ class Simulation : public Publishable {
   };
 
 #ifndef DISABLE_PTHREADS
-  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits);
-#else
-  Simulation(int numWorkUnits);
+  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed);
+#else // DISABLE_PTHREADS
+  Simulation(int numWorkUnits, unsigned seed);
 #endif  // DISABLE_PTHREADS
 
 #ifdef HAVE_MPI
@@ -185,7 +185,7 @@ class Simulation : public Publishable {
   const std::vector<InstanceFactoryRegistry*>& getInstanceFactoryRegistries() {
     return _instanceFactoryRegistries;
   }
-  int getIteration() { return _iteration; }
+  unsigned getIteration() { return _iteration; }
 
   std::vector<std::string> const& getPhaseNames() { return _phaseNames; }
 
@@ -196,7 +196,11 @@ class Simulation : public Publishable {
   float getTime();
   RNG& getWorkUnitRandomSeedGenerator() { return _rng; }
   RNG& getSharedWorkUnitRandomSeedGenerator() { return _rngShared; }
-
+  RNG_ns& getFunctorRandomSeedGenerator() { return _rng; }
+  RNG_ns& getSharedFunctorRandomSeedGenerator() { return _rngShared; }
+  unsigned getRandomSeed() { return _rngSeed; }
+  
+  
 #ifndef DISABLE_PTHREADS
   int getNumCPUs() { return _numCpus; }
   int getNumThreads() { return _numThreads; }
@@ -319,7 +323,7 @@ class Simulation : public Publishable {
   SysTimer _simTimer;
   float _mark;
   Repertoire* _root;
-
+  
 #ifndef DISABLE_PTHREADS
   // mutex to protect changes to 'state' variable
   pthread_mutex_t _stateMutex;
@@ -427,6 +431,7 @@ class Simulation : public Publishable {
   PhaseElement& getPhaseElement(const std::string& name);
   RNG _rng;
   RNG _rngShared;
+  unsigned _rngSeed;  
   int _numWorkUnits;
   int _numGranules;
   Partitioner* _partitioner;

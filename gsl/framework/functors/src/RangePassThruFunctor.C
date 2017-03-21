@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -88,7 +88,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
 
    if ( (_left_oper == "<=")  && (_right_oper == "<=") ) {
       if ( _left_limit >= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 
@@ -106,7 +106,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == "<")  && (_right_oper == "<=") ) {
       if ( _left_limit >= _right_limit )
-         std::cout << "Warning: Possible mismatch of limits in RangePassThru" << std::endl;
+         std::cerr << "Warning: Possible mismatch of limits in RangePassThru" << std::endl;
 
       for ( ;; ) {
          _testFunct->execute(c, nullArgs, rval_ap);
@@ -121,7 +121,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == "<")  && (_right_oper == "<") ) {
       if ( _left_limit >= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 
@@ -139,7 +139,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == "<=")  && (_right_oper == "<") ) {
       if ( _left_limit >= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 
@@ -157,7 +157,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == ">=")  && (_right_oper == ">=") ) {
       if ( _left_limit <= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 
@@ -175,7 +175,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == ">")  && (_right_oper == ">=") ) {
       if ( _left_limit <= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 
@@ -193,7 +193,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == ">")  && (_right_oper == ">") ) {
       if ( _left_limit <= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 
@@ -210,7 +210,7 @@ void RangePassThruFunctor::doExecute(LensContext *c,
    }
    else if ( (_left_oper == ">=")  && (_right_oper == ">") ) {
       if ( _left_limit <= _right_limit )
-         std::cout 
+         std::cerr 
 	    << "Warning: Possible mismatch of limits in RangePassThru" 
 	    << std::endl;
 

@@ -1,0 +1,130 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+//RuntimePhases = { dataCollect, update, threshold, outputWeightsShared, lastPhase };
+RuntimePhases = { dataCollect, updateInputState, update, updateOutputs, lastPhase };
+FinalPhases = { finalize };
+
+
+#define SIZE 576
+
+
+#define CONPROBXX 0.1
+#define WEILOXX 0.512 //0.64 
+#define WEIHIXX 0.768 //0.96 
+
+
+#define INPLOXX 4.51 //4.51
+#define INPHIXX 4.81 //5.51
+
+#define DELTAT 0.05
+
+
+NodeType IzhikUnit(<
+		       Ek = -90, 
+		       Ena = 60.0, 
+		       El = -80.0, 
+		       gk = -10, 
+		       gna = -20, 
+		       gl = -8, 
+		       C = 1,
+		       
+		       mv12 = -20.0,
+		       mk = 15,
+		       nv12 = -25, 
+		       nk = 5,
+		       tau_n = 1.0,
+		      
+		       tau_g = 50.0,
+		       spikethresh = -20.0,
+		       Vconnectsyn = -65,
+		       deltaT = DELTAT >);
+
+
+NodeType SwitchInput(<
+		     period = 200.0,
+		     refract = 2000000000.0,		       
+		     deltaT = DELTAT >);
+
+
+BindName initN("V_init", UniformDist(-80, -50), "g_init", 0.0, "n_init", 0.0);
+BindName initS("inplo",  INPLOXX, "inphi", INPHIXX);
+NdplNodeInit heterN(initN);
+NdplNodeInit heterS(initS);
+
+
+BindName RECW("weight", Neg(UniformDist(WEILOXX,WEIHIXX)), "identifier", "MSN");
+NdplInAttrInit recW(RECW);
+
+BindName IN("weight", Neg(UniformDist(WEILOXX,WEIHIXX)),
+	 	      "identifier", "MSN",
+		      "connectionFraction", CONPROBXX,
+		      "connectionSeed", 123456789);
+NdplInAttrInit lateral(IN);
+
+BindName INPW("identifier", "SWITCHINP");
+NdplInAttrInit inpW(INPW);
+
+//list<float> uniformDensity = {1.0};
+//EachDstPropSrc recC(RadialDensitySampler(50, 5, uniformDensity, 5));
+
+
+Grid IAF
+{
+   Dimension(24,24);
+   Layer(nodes, IzhikUnit, UniformLayout(1), < nodekind="Nodes" >);
+   Layer(inps, SwitchInput, UniformLayout(1), < nodekind="Nodes" >);
+
+   InitNodes( .[].Layer(nodes), heterN);
+   InitNodes( .[].Layer(inps), heterS);
+
+   connectNodeSets(.[].Layer(nodes), .[].Layer(nodes), 
+		   Unique(EachDst(EachAvg(CONPROBXX))), outAttrDef, recW);
+   //Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+
+   connectNodeSets(.[].Layer(inps), .[].Layer(nodes), 
+		   IsoSampler(), outAttrDef, inpW);
+
+};
+
+IAF iaf;
+
+// DCA directives here
+
+
+
+VariableType IzhikUnitDataCollector;
+IzhikUnitDataCollector collector<fileName="Output.dat", deltaT = DELTAT, maxoutnum = 10>;
+
+polyConnect(iaf[].Layer(nodes), collector, <>, <>);
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+//Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 4196304, 0, lastPhase); 
+
+//collector.dataCollection() on iterTrig;
+
+collector.dataCollectionSpike() on iterTrig;
+
+Stop on endTrig;
+

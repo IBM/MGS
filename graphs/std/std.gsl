@@ -1,3 +1,18 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
 Functor Print;
 Print print();
 
@@ -16,8 +31,6 @@ InAttrInitializer NdplInAttrInit(NDPairListFunctor);
 
 Functor OutAttrDefault; //  Functor that gives default out attribute Pset for a node
 OutAttrDefault outAttrDef();
-
-Functor ReSeedRandom;
 
 Layout UniformLayout(int); // Functor provides uniform density vector for grid layers
 //UniformLayout uniform();
@@ -39,15 +52,12 @@ NDPairListFunctor BindName
   Initialize(string name, float value); 
 };
 
-//ReSeedRandom reSeed(13);
-//ReSeedRandom reSeed(13,25);
-
 // BindBack takes a functor instance and other arguments in its constructor. It then post-pends the 
 // other arguments to its execute arguments and calls execute on the input functor. It returns the 
 // return values of the input functor
 Functor BindBack(Functor inputFunctor, ...);
 
-// NvplModifier gets a parameter set from a functor and modifies it using the name value pair list
+// NdplModifier gets a parameter set from a functor and modifies it using the name value pair list
 // it returns the modified parameter set
 Functor NdplModifier(Functor psetGenerator, list<NDPair> modifiers);
 
@@ -90,6 +100,33 @@ SamplingFctr2 EachSrc(SamplingFctr1 sf1);
 SamplingFctr2 EachDst(SamplingFctr1 sf1);
 
 SamplingFctr2 EachDstPropSrc(SamplingFctr1 sf1);
+
+// the following four functors modify a parameter set based on node coords gotten from the connection context
+
+Functor SrcRefDistanceModifier(Functor PsetGenerator); // sets "distance" parameter
+Functor DstRefDistanceModifier(Functor PsetGenerator); // sets "distance" parameter
+Functor SrcRefGaussianWeightModifier(Functor PsetGenerator, float sigma, float max, int setDistance); // sets "weight" and if desired, "distance" parameter
+Functor SrcRefDoGWeightModifier(Functor PsetGenerator, float sigma1, float max1, float sigma2, float max2, int setDistance); // sets "weight" and if desired, "distance" parameter
+Functor DstRefGaussianWeightModifier(Functor PsetGenerator, float sigma, float max, int setDistance); // sets "weight" and if desired, "distance" parameter
+Functor ReversedSrcRefGaussianWeightModifier(Functor PsetGenerator, float sigma, float max, int setDistance); // sets "weight" and if desired, "distance" parameter
+Functor ReversedDstRefGaussianWeightModifier(Functor PsetGenerator, float sigma, float max, int setDistance); // sets "weight" and if desired, "distance" parameter
+Functor SrcScaledGaussianWeightModifier(Functor PsetGenerator, float sigma, float max); // sets "weight" and if desired, "distance" parameter
+Functor DstScaledGaussianWeightModifier(Functor PsetGenerator, float sigma, float max); // sets "weight" and if desired, "distance" parameter
+Functor SrcScaledContractedGaussianWeightModifier(Functor PsetGenerator, float sigma, float max, float contract); // sets "weight" and if desired, "distance" parameter
+Functor DstScaledContractedGaussianWeightModifier(Functor PsetGenerator, float sigma, float max, float contract); // sets "weight" and if desired, "distance" parameter
+Functor SrcRefSumRsqrdInvWeightModifier(Functor PsetGenerator, int maxDim, int setDistance); // sets "weight" and if desired, "distance" parameter
+Functor DstRefSumRsqrdInvWeightModifier(Functor PsetGenerator, int maxDim, int setDistance); // sets "weight" and if desired, "distance" parameter
+
+Functor Exp(Functor);
+Functor Log(Functor);
+Functor Neg(Functor);
+Functor Scale(Functor);
+Functor Threshold(Functor sample, float threshold);
+Layout RandomDispersalLayout(int totalToDisperse);
+Functor UniformDiscreteDist(float n1, float n2);
+
+SamplingFctr2 IsoSampler();
+IsoSampler isoSampler();
 
 // sum adds up the numbers and a list and returns the sum 
 Functor Sum

@@ -1,0 +1,86 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef BOUTONIAFUNIT_MDL
+#define BOUTONIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProducer,
+  Cb1RIAFProducer, SpikeProducer
+{
+  SpikeInput [] spikeInput;    // input of spike
+  bool spike;                  // local copy of input spike for spine to access
+  double glutamate;            // current output of glutamate
+  double availableGlutamate;   // amount of glutamate available to be released
+  double maxGlutamate;         // maximum amount of glutamate to recovery to
+
+  ECBIAFInput [] ECBinput;     // input of edogenous cannabinoid
+  double Cb1Rrise;             // rise current of Cannabinoid receptor
+  double Cb1Rcurrent;          // fall current of Cannabinoid receptor
+
+  Shared
+    {
+      double glutamateAdaptRate;    // Rate of surpression of glutamate release
+      double glutamateRecoverTau;   // Rate of recovery from suppression
+
+      double Cb1RriseTau;           // rise time constant of Cb1R
+      double Cb1RfallTau;           // fall time constant of Cb1R
+
+      double deltaT;                // in s
+
+      string sharedDirectory;
+      string sharedFileExt;
+
+      InitPhase initializeShared;
+
+      // Flags
+      bool op_saveIndexs;
+    }
+
+  InAttrPSet
+    {
+      string identifier;
+      double weight;           // potentially for structural plasticity
+    }
+
+  InitPhase initialize();
+
+  RuntimePhase update(glutamate, availableGlutamate, Cb1Rcurrent);
+  RuntimePhase copy(spike);
+
+  GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
+  AvailableGlutamateIAFProducer.availableGlutamate << &availableGlutamate; // available glutamate
+  SpikeProducer.spike << &spike; // local copy of input spike for spine to access
+  Cb1RIAFProducer.Cb1Rcurrent << &Cb1Rcurrent; // Cb1R current
+
+  UserFunction setSpikeIndices;
+  UserFunction setECBIndices;
+
+  Connection Pre Node (PSet.identifier=="inputSpikes") Expects SpikeProducer
+  {
+    SpikeProducer.spike >> spikeInput.spike;
+    PSet.weight >> spikeInput.weight;
+    setSpikeIndices();
+  }
+
+  Connection Pre Node (PSet.identifier=="ECBinput") Expects ECBIAFProducer
+  {
+    ECBIAFProducer.ECB >> ECBinput.ECB;
+    PSet.weight >> ECBinput.weight;
+    setECBIndices();
+  }
+}
+
+#endif

@@ -1,0 +1,65 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { dataCollect, update, threshold, outputWeightsShared, lastPhase };
+FinalPhases = { finalize };
+
+NodeType MihalasNieburIAFUnit(< 
+		b = 10.0,                // s^-1
+		GoC = 50.0,              // s^-1
+		C = 1.0,
+		k = {200.0, 20.0},       // s^-1
+		Theta_inf = -0.05,       // V
+		R = {0.0, 1.0},
+		E_L = -0.07,             // V
+		V_r = -0.07,             // V
+		Theta_r = -0.06,         // V
+		a = 5.0,                 // s^-1
+		A = {5.0, -0.3},         // V/s
+		deltaT = 0.001,          // s
+		np = 0
+	 >);
+	 
+BindName DR("weight", -2.25, "identifier", "driver");
+NdplInAttrInit driver(DR);
+
+Grid IAF
+{
+   Dimension(2,1);
+   Layer(nodes, MihalasNieburIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), Same(Pset < MihalasNieburIAFUnit , NodeInit >(<>) ) );
+};
+
+IAF iaf;
+
+// DCA directives here
+
+VariableType MihalasNieburIAFUnitDataCollector;
+MihalasNieburIAFUnitDataCollector collector<fileName="DAOutput.txt">;
+
+polyConnect(iaf[].Layer(nodes), collector, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 1000, 0, lastPhase); 
+collector.dataCollection() on iterTrig;
+Stop on endTrig;

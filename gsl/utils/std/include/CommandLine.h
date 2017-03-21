@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -43,6 +43,10 @@ class CommandLine
   }
 #endif // DISABLE_PTHREADS
 
+  unsigned getSeed() const {
+    return _seed;
+  }
+
   const std::string& getGslFile() const {
     return _gslFile;
   }
@@ -75,7 +79,7 @@ class CommandLine
   int _guiPort;
   bool _bindCpus;
 #endif // DISABLE_PTHREADS
-
+  unsigned _seed;
   std::string _gslFile;
   bool _enableErd;
   int _numWorkUnits;

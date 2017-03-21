@@ -1,0 +1,64 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef LFPDATAANALYZERS_MDL
+#define LFPDATAANALYZERS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable LFPDataAnalyzer
+{
+  string directory;
+  string fileExt;
+  int [] rows;
+  int [] cols;
+  int [] slices;
+  int mxslice;
+  // In data
+  double* [] LFPs_individual;
+  // Parameters about the size of LFP data to analyze
+  int Xdim;
+  int Ydim;
+  int Zdim;
+  bool dimSet;
+  // Parameters about the LFP recording profile
+  int elecRadius;        // radius of electrode's recording tissue
+  double elecSigma;      // the standard deviation of the 3D Gaussian recording profile
+  // Parameters about where the location of the LFP electrodes are
+  int numElecPerDimX;    // number of electrodes in the X dimension, ...
+  int numElecPerDimY;    // Y dimension, ...
+  int numElecPerDimZ;    // and, Z dimension.
+  double [] elecCenterX; // center of the electrodes in the X dimension, ...
+  double [] elecCenterY; // Y dimension, ...
+  double [] elecCenterZ; // and Z dimension.
+  // Actual electrode LFPs
+  double [] LFPs;
+  
+  UserFunction getNodeIndices;
+   
+  // Flags
+  bool op_saveLFPs;
+   
+  Connection Pre Node () Expects LFPProducer
+  {
+    LFPProducer.LFP >> LFPs_individual;
+    getNodeIndices();
+  }
+ 
+  InitPhase initialize;
+  TriggeredFunction dataCollection;
+  FinalPhase finalize;
+}
+
+#endif

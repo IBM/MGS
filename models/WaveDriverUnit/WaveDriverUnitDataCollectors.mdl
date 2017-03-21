@@ -1,0 +1,45 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef WAVEDRIVERUNITDATACOLLECTORS_MDL
+#define WAVEDRIVERUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable WaveDriverUnitDataCollector
+{
+  string directory;
+  string fileExt;
+  int [] rows;
+  int [] cols;
+  int [] slices;
+  int mxslice;
+  double* [] waves;
+  UserFunction getNodeIndices;
+   
+  // Flags
+  bool op_saveWaves;
+   
+  Connection Pre Node () Expects WaveProducer
+  {
+    WaveProducer.wave >> waves;
+    getNodeIndices();
+  }
+ 
+  InitPhase initialize;
+  TriggeredFunction dataCollection;
+  FinalPhase finalize;
+}
+
+#endif

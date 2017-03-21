@@ -47,9 +47,6 @@ GaussianFunctorFactory.C \
 UniformDistFunctor.C \
 UniformDistFunctorType.C \
 UniformDistFunctorFactory.C \
-ReSeedRandomFunctor.C \
-ReSeedRandomFunctorType.C \
-ReSeedRandomFunctorFactory.C \
 InAttrDefaultFunctor.C \
 InAttrDefaultFunctorType.C \
 InAttrDefaultFunctorFactory.C \

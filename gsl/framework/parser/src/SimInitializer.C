@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -216,9 +216,9 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #endif /* PROFILING */
    
 #ifndef DISABLE_PTHREADS
-   sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits()));
-#else
-   sim.reset(new Simulation(commandLine.getWorkUnits()));
+   sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed()));
+#else // DISABLE_PTHREADS
+   sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed());
 #endif // DISABLE_PTHREADS
 
    if (!commandLine.getEnableErd()) sim->disableEdgeRelationalData();
@@ -423,13 +423,13 @@ bool SimInitializer::runSimulationAndUI(
 	     &uiThread, NULL, UI_thread_function, (void*)sim.get())) != 0) {
 	 switch(error) {
          case EAGAIN: 
-	    std::cout << "Thread creation error, EAGAIN" << std::endl << std::endl;
+	    std::cerr << "Thread creation error, EAGAIN" << std::endl << std::endl;
 	    break;
          case EINVAL: 
-	    std::cout << "Thread creation error, EINVAL" << std::endl << std::endl;
+	    std::cerr << "Thread creation error, EINVAL" << std::endl << std::endl;
 	    break;
          case ENOMEM: 
-	    std::cout << "Thread creation error, ENOMEM" << std::endl << std::endl;
+	    std::cerr << "Thread creation error, ENOMEM" << std::endl << std::endl;
 	    break;
 	 }
 	 return false;

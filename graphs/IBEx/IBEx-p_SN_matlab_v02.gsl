@@ -1,0 +1,422 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+
+InitPhases = { initializeShared, initialize };
+RuntimePhases = {  dataCollect, run1, run2, lastPhase };
+FinalPhases = { finalize };
+
+NodeType LinskerInfomaxUnit (<
+	period = 6,  //for thalamic sampling, doesnt exist in matlab
+	betaC = 0.0007,
+	betaW0 = 0.0007,
+	betaQ = 0.0021,
+        weightsFileName = "Weights",
+	collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000}
+>) { outputWeightsShared->dataCollect, copy->run1, update->run2 };
+
+NodeType ZhengSORNExcUnit(< 
+       eta_IP = 0.01,
+       TE_max = 1.0,
+       mu_IP = 0.1,
+       sigma_HIP = 0.0,
+       sigma2_chi = 0.01,
+       eta_inhib = 0.001,
+       eta_STDP = 0.004,
+       mu_iSTDP = 0.1,
+       p_c = 0.00004,  // probability of new connection at each time step
+       Ach = 1.0,
+       weightsFileName = "Weights",
+       collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000, 
+       			      600000, 700000, 800000, 900000, 1000000}
+       >) { outputWeightsShared->dataCollect, fire->run1, update->run2 };
+
+NodeType ZhengSORNInhUnit(< 
+        TI_max = 1.0,
+        sigma2_chi = 0.01
+        >) {fire->run1, update->run2};
+
+NodeType GatedThalamoCorticalUnit (<
+	alpha = 0.0,
+	betaY0 = 0.0001,
+        betaZ0 = 0.0001,
+	tauZ = 100,
+        weightsFileName = "Weights",
+	collectWeightsOn = {1}
+>) { inputWeightsShared->dataCollect, outputWeightsShared->dataCollect, update->run2 };
+
+NodeType RabinovichWinnerlessUnit(< 
+     	a=0.7,
+     	b=0.8,
+     	nu=-1.5,
+	phi=0,
+	GABAtD1=0.00707,     // Threshold for GABAup in D1
+	GABAtD2=0.00707,     // Threshold for GABAup in D2
+	etaW = 0.002,	     // Corticostriatal synapse plasticity
+	p_c = 0.00004,       // Probability of new connection
+     	deltaT=0.01,
+     	tau1=0.08,
+     	tau2=4.1,
+	tauDA=25,
+	Dstim=1,
+	assymetric=1,
+	weightsFileName = "Weights",
+        collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000, 
+       			       600000, 700000, 800000, 900000, 1000000}
+	 >) {outputWeightsShared->dataCollect, copy->run1, update->run2};
+
+NodeType MihalasNieburIAFUnit(< 
+	b = 10.0,                // s^-1
+	GoC = 50.0,              // s^-1
+	C = 1.0,
+	k = {200.0, 20.0},       // s^-1
+	Theta_inf = -0.05,       // V
+	R = {0.0, 1.0},
+	E_L = -0.07,             // V
+	V_r = -0.07,             // V
+	Theta_r = -0.06,         // V
+	a = 5.0,                 // s^-1
+	A = {5.0, -0.3},         // V/s
+	deltaT = 0.001,          // s
+	np = 0,
+	weightsFileName = "SN_Weights",
+	collectWeightsOn = {1}
+	>) {outputWeightsShared->dataCollect, threshold->run1, update->run2};
+
+BindName lateralNetwork("identifier", "LN");
+NdplInAttrInit LN(lateralNetwork);
+
+Grid Supragranular
+{
+	Dimension (100, 1);
+	Layer(II_III, LinskerInfomaxUnit, UniformLayout(1), < nodekind="mc" >);
+	InitNodes ( .[].Layer(II_III), Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=0.000001>))); // e: element of Q's first eigenvector (largest eigenvalue) 
+	InitNodes ( .[0,0].Layer(II_III), Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=1.0>)));
+
+	NodeSet all(.[].Layer(II_III) );
+	//connectNodeSets(all, all, EachDstPropSrc(RadialSampler(200.0)), outAttrDef, LN); //RadialSampler(200) is huge for the size of the grid no?
+	connectNodeSets(all, all, EachDst(EachAvg(1.0)), outAttrDef, LN); //replaced RadialSampler(200)
+	
+};
+
+BindName Exc2Exc("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc",
+                 "conditionalFraction", 0.25,
+                 "condition", UniformDist(0.0,1.0)
+        	 );  // if condition<conditionalFraction synapse=true else weight=0 ; here 25% connectivity
+NdplInAttrInit E2E(Exc2Exc);
+
+BindName Exc2Inh("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc"
+        	 );
+NdplInAttrInit E2I(Exc2Inh);
+
+BindName Inh2Exc("weight", UniformDist(0.0,1.0),
+             "identifier", "lateralInh");
+NdplInAttrInit I2E(Inh2Exc);
+
+Grid SORN_E
+{
+	Dimension(100,1);
+	Layer(V_exc, ZhengSORNExcUnit, UniformLayout(1), < nodekind="Excitatory" >);
+	InitNodes( .[].Layer(V_exc), nodeDef);
+	NodeSet all(.[].Layer(V_exc) );
+	//connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, E2E); //no intracortical connections in SORN
+};
+
+Grid SORN_I
+{
+	Dimension(80,1);
+	Layer(inh, ZhengSORNInhUnit, UniformLayout(1), < nodekind="Inhibitory" >);
+	InitNodes( .[].Layer(inh), nodeDef);
+};
+
+Composite Infragranular
+{
+	SORN_E M1;
+	SORN_E Msup;
+	SORN_E Ssec;
+	SORN_E S1;
+	SORN_I TRN;
+
+	//EXC-EXC (FB)
+	connectNodeSets(M1[].Layer(V_exc), Msup[].Layer(V_exc),
+					       EachDst(EachAvg(1.0)), outAttrDef, E2E);
+	connectNodeSets(Msup[].Layer(V_exc), Ssec[].Layer(V_exc),
+					       EachDst(EachAvg(1.0)), outAttrDef, E2E);
+	connectNodeSets(Ssec[].Layer(V_exc), S1[].Layer(V_exc),
+					       EachDst(EachAvg(1.0)), outAttrDef, E2E);
+	connectNodeSets(S1[].Layer(V_exc), M1[].Layer(V_exc),
+					       EachDst(EachAvg(1.0)), outAttrDef, E2E);
+	
+	//INH-EXC
+	connectNodeSets(TRN[].Layer(inh), M1[].Layer(V_exc), 
+					       EachDst(EachAvg(0.2)), outAttrDef, I2E);
+	connectNodeSets(TRN[].Layer(inh), Msup[].Layer(V_exc), 
+					       EachDst(EachAvg(0.2)), outAttrDef, I2E);
+	connectNodeSets(TRN[].Layer(inh), Ssec[].Layer(V_exc), 
+					       EachDst(EachAvg(0.2)), outAttrDef, I2E);
+	connectNodeSets(TRN[].Layer(inh), S1[].Layer(V_exc), 
+					       EachDst(EachAvg(0.2)), outAttrDef, I2E);
+	
+	//EXC-INH
+	connectNodeSets(M1[].Layer(V_exc), TRN[].Layer(inh), 
+					       EachDst(EachAvg(1.0)), outAttrDef, E2I);
+	connectNodeSets(Msup[].Layer(V_exc), TRN[].Layer(inh), 
+					       EachDst(EachAvg(1.0)), outAttrDef, E2I);
+	connectNodeSets(Ssec[].Layer(V_exc), TRN[].Layer(inh), 
+					       EachDst(EachAvg(1.0)), outAttrDef, E2I);
+	connectNodeSets(S1[].Layer(V_exc), TRN[].Layer(inh), 
+					       EachDst(EachAvg(1.0)), outAttrDef, E2I);
+};
+
+BindName modulation("identifier", "modulatory");
+NdplInAttrInit MOD(modulation);
+
+Composite Cortex
+{
+	Infragranular infragranular;
+	Supragranular M1;
+	Supragranular Msup;
+	Supragranular Ssec;
+	Supragranular S1;
+	
+	//Connect L2/3 to L5 within one cortical area 
+	connectNodeSets(M1[].Layer(II_III), infragranular/M1[].Layer(V_exc), 
+	       EachDstPropSrc(RadialSampler(0.5,0)), outAttrDef, MOD); //RadialSampler(radius, borderTolerance), when radius < 1, same as IsoSampler
+	connectNodeSets(Msup[].Layer(II_III), infragranular/Msup[].Layer(V_exc), 
+	       EachDstPropSrc(RadialSampler(0.5,0)), outAttrDef, MOD);
+	connectNodeSets(Ssec[].Layer(II_III), infragranular/Ssec[].Layer(V_exc), 
+	       EachDstPropSrc(RadialSampler(0.5,0)), outAttrDef, MOD);
+	connectNodeSets(S1[].Layer(II_III), infragranular/S1[].Layer(V_exc), 
+	       EachDstPropSrc(RadialSampler(0.5,0)), outAttrDef, MOD);
+};
+
+Grid Thalamus
+{
+	Dimension ( 100, 1 );
+        Layer(relayNeurons, GatedThalamoCorticalUnit, UniformLayout(1), < nodekind="Relay" >);
+	InitNodes ( .[], nodeDef );
+};
+
+/*BindName IN("weight", UniformDist(1.0,2.0),
+	 	      "identifier", "lateral",
+		      "connectionFraction", 0.0,
+		      "connectionSeed", 123456789);*/
+BindName IN("weight", UniformDist(0.0,0.25),
+	 	      "identifier", "lateral",
+		      "connectionFraction", 0.35,
+		      //"condition", UniformDist(0.0,1.0),
+		      "connectionSeed", 123456789, 
+	   );
+NdplInAttrInit lateral(IN);
+
+BindName d1("x", -1.2, "y", -0.62, "z", 0.0, "D", 1);
+NdplNodeInit D1(d1);
+BindName d2("x", -1.2, "y", -0.62, "z", 0.0, "D", 2);
+NdplNodeInit D2(d2);
+
+Grid Striatum
+{
+	Dimension(50,1);
+	Layer(D1, RabinovichWinnerlessUnit, UniformLayout(1), < nodekind="MSN" >);
+	Layer(D2, RabinovichWinnerlessUnit, UniformLayout(1), < nodekind="MSN" >);
+	InitNodes( .[].Layer(D1), D1);
+	InitNodes( .[].Layer(D2), D2);
+	NodeSet all(.[]);
+	connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+	//connectNodeSets(all, all, EachDst(EachAvg(0.05)), outAttrDef, lateral);
+};
+
+Grid SubstantiaNigraC
+{
+	Dimension(20,1);
+	Layer(nodes, MihalasNieburIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+	InitNodes( .[].Layer(nodes), Same(Pset < MihalasNieburIAFUnit , NodeInit >(<>) ) );
+};
+
+BindName wnl2iaf("identifier", "driver",
+	         "weight", -2.25);
+NdplInAttrInit STR(wnl2iaf);
+
+BindName iaf2wnl("identifier", "dopamine", "weight", 1.0); //weight is just to know if there is connection or not
+NdplInAttrInit DA(iaf2wnl);
+
+Composite BasalGanglia
+{
+	Striatum striatum;
+	SubstantiaNigraC SNc;
+	connectNodeSets(striatum[], SNc[], EachDst(EachAvg(0.2)), outAttrDef, STR);
+	connectNodeSets(SNc[], striatum[], EachDst(EachAvg(1.0)), outAttrDef, DA);
+};
+
+
+Composite IBEx
+{
+	Cortex cortex;	
+	Thalamus VL;
+	Thalamus VA;
+	Thalamus VPL;
+	Thalamus VPN;
+	BasalGanglia basalGanglia;
+
+	//FFwd Thalamo-cortical connections
+	BindName th2ctx("weight", Gaussian(0.0,0.25), "identifier", "TH"); //Gaussian(mean, std) : std not very important here because the weights are normalized at initialization phase
+	NdplInAttrInit T2C(th2ctx);
+	connectNodeSets(VL[].Layer(relayNeurons), cortex/M1[].Layer(II_III), 
+		//isoSampler, outAttrDef, T2C);  //use of isoSampler in previous tests, aborted
+		EachDst(EachAvg(1.0)), outAttrDef, T2C);
+	connectNodeSets(VA[].Layer(relayNeurons), cortex/Msup[].Layer(II_III),
+		//isoSampler, outAttrDef, T2C);
+		EachDst(EachAvg(1.0)), outAttrDef, T2C);
+	connectNodeSets(VPL[].Layer(relayNeurons), cortex/Ssec[].Layer(II_III),
+		//isoSampler, outAttrDef, T2C);
+		EachDst(EachAvg(1.0)), outAttrDef, T2C);
+	connectNodeSets(VPN[].Layer(relayNeurons), cortex/S1[].Layer(II_III),
+		//isoSampler, outAttrDef, T2C);
+		EachDst(EachAvg(1.0)), outAttrDef, T2C);
+
+        //FFwd Cortico-thalamic connections
+	BindName ctx2th("weight", Exp(Gaussian(1.0,1.0)), "identifier", "L5FF"); //lognormal distrib Exp(Gaussian(0,1.0)) replaced by (1,1)
+	NdplInAttrInit C2T(ctx2th);
+	connectNodeSets(cortex/infragranular/M1[].Layer(V_exc), 
+		VPN[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2T);
+	connectNodeSets(cortex/infragranular/Msup[].Layer(V_exc), 
+		VL[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2T);
+	connectNodeSets(cortex/infragranular/Ssec[].Layer(V_exc), 
+		VA[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2T);
+	connectNodeSets(cortex/infragranular/S1[].Layer(V_exc), 
+		VPL[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2T);
+
+	//FB Cortico-Cortical connections (L5 projecting to L2/3)
+	BindName ctx2ctx("weight", Exp(Gaussian(1.0,1.0)), "identifier", "L5FB");
+	NdplInAttrInit C2C(ctx2ctx); 
+	connectNodeSets(cortex/infragranular/M1[].Layer(V_exc), 
+		VA[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2C);
+	connectNodeSets(cortex/infragranular/Msup[].Layer(V_exc), 
+		VPL[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2C);
+	connectNodeSets(cortex/infragranular/Ssec[].Layer(V_exc), 
+		VPN[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2C);
+	connectNodeSets(cortex/infragranular/S1[].Layer(V_exc), 
+		VL[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2C);
+
+	//Striato-thalamic connections
+	BindName d12th("identifier", "gateOpen");
+	NdplInAttrInit D12TH(d12th);
+	BindName d22th("identifier", "gateClosed");
+	NdplInAttrInit D22TH(d22th);
+	connectNodeSets(basalGanglia/striatum[].Layer(D1), VL[], EachDst(EachAvg(0.11)), 
+		outAttrDef, D12TH);
+	connectNodeSets(basalGanglia/striatum[].Layer(D2), VL[], EachDst(EachAvg(0.11)), 
+		outAttrDef, D22TH);
+	connectNodeSets(basalGanglia/striatum[].Layer(D1), VA[], EachDst(EachAvg(0.11)), 
+		outAttrDef, D12TH);
+	connectNodeSets(basalGanglia/striatum[].Layer(D2), VA[], EachDst(EachAvg(0.11)), 
+		outAttrDef, D22TH);
+
+	//Cortico-striatal connections (in matlab, each striatal neuron receives 20 inputs from the cortical areas to which it is connected)
+	BindName CS(	"weight", 0.05, 
+		    	"identifier", "Cx2Str", 
+			"connection", UniformDist(0.0,1.0),
+			"connectionFraction", 0.066); // if connection<connectionFraction synapse=true else weight=0 ; here 6.6% connectivity
+	NdplInAttrInit Cx2Str(CS);
+	connectNodeSets(cortex/infragranular/M1[].Layer(V_exc), basalGanglia/striatum[], 
+		EachDst(EachAvg(1.0)), outAttrDef, Cx2Str);
+	connectNodeSets(cortex/infragranular/Msup[].Layer(V_exc), basalGanglia/striatum[], 
+		EachDst(EachAvg(1.0)), outAttrDef, Cx2Str);
+	connectNodeSets(cortex/infragranular/S1[].Layer(V_exc), basalGanglia/striatum[25:49,0].Layer(D1,D2), 
+		EachDst(EachAvg(1.0)), outAttrDef, Cx2Str);
+	connectNodeSets(cortex/infragranular/Ssec[].Layer(V_exc), basalGanglia/striatum[0:24,0].Layer(D1,D2), 
+		EachDst(EachAvg(1.0)), outAttrDef, Cx2Str);
+
+};
+IBEx ibex;
+
+// DCA directives here
+VariableType LinskerInfomaxUnitDataCollector;
+LinskerInfomaxUnitDataCollector collector_M1s <fileName="M1s.txt">;
+polyConnect(ibex/cortex/M1[].Layer(II_III), collector_M1s, <>, <>);
+LinskerInfomaxUnitDataCollector collector_Msups <fileName="Msups.txt">;
+polyConnect(ibex/cortex/Msup[].Layer(II_III), collector_Msups, <>, <>);
+LinskerInfomaxUnitDataCollector collector_Ssecs <fileName="Ssecs.txt">;
+polyConnect(ibex/cortex/Ssec[].Layer(II_III), collector_Ssecs, <>, <>);
+LinskerInfomaxUnitDataCollector collector_S1s <fileName="S1s.txt">;
+polyConnect(ibex/cortex/S1[].Layer(II_III), collector_S1s, <>, <>);
+
+VariableType ZhengSORNUnitDataCollector;
+ZhengSORNUnitDataCollector collector_M1i <fileName="M1i.txt", deltaT=0.001>;
+polyConnect(ibex/cortex/infragranular/M1[].Layer(V_exc),
+	collector_M1i, <>, <>);
+ZhengSORNUnitDataCollector collector_Msupi <fileName="Msupi.txt", deltaT=0.001>;
+polyConnect(ibex/cortex/infragranular/Msup[].Layer(V_exc),
+	collector_Msupi, <>, <>);
+ZhengSORNUnitDataCollector collector_Sseci <fileName="Sseci.txt", deltaT=0.001>;
+polyConnect(ibex/cortex/infragranular/Ssec[].Layer(V_exc),
+	collector_Sseci, <>, <>);
+ZhengSORNUnitDataCollector collector_S1i <fileName="S1i.txt", deltaT=0.001>;
+polyConnect(ibex/cortex/infragranular/S1[].Layer(V_exc),
+	collector_S1i, <>, <>);
+
+ZhengSORNUnitDataCollector collector_TRN<fileName="TRN.txt", deltaT=0.001>;
+polyConnect(ibex/cortex/infragranular/TRN[].Layer(inh),
+	collector_TRN, <>, <>);
+
+VariableType GatedThalamoCorticalUnitDataCollector;
+GatedThalamoCorticalUnitDataCollector collector_VL <fileName="VL.txt">;
+polyConnect(ibex/VL[].Layer(relayNeurons), collector_VL, <>, <>);
+GatedThalamoCorticalUnitDataCollector collector_VA <fileName="VA.txt">;
+polyConnect(ibex/VA[].Layer(relayNeurons), collector_VA, <>, <>);
+GatedThalamoCorticalUnitDataCollector collector_VPL <fileName="VPL.txt">;
+polyConnect(ibex/VPL[].Layer(relayNeurons), collector_VPL, <>, <>);
+GatedThalamoCorticalUnitDataCollector collector_VPN <fileName="VPN.txt">;
+polyConnect(ibex/VPN[].Layer(relayNeurons), collector_VPN, <>, <>);
+
+VariableType RabinovichWinnerlessUnitDataCollector;
+RabinovichWinnerlessUnitDataCollector collector_D1<fileName="D1.txt">;
+polyConnect(ibex/basalGanglia/striatum[].Layer(D1), collector_D1, <>, <>);
+RabinovichWinnerlessUnitDataCollector collector_D2<fileName="D2.txt">;
+polyConnect(ibex/basalGanglia/striatum[].Layer(D2), collector_D2, <>, <>);
+
+VariableType MihalasNieburIAFUnitDataCollector;
+MihalasNieburIAFUnitDataCollector collector_DA<fileName="DA.txt">;
+polyConnect(ibex/basalGanglia/SNc[].Layer(nodes), collector_DA, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger", 
+ 			 ::Iteration, ">", 800000, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, ">", 1000000, 0, lastPhase); 
+
+collector_M1s.dataCollection() on iterTrig;
+collector_Msups.dataCollection() on iterTrig;
+collector_S1s.dataCollection() on iterTrig;
+collector_Ssecs.dataCollection() on iterTrig;
+collector_M1i.dataCollection() on iterTrig;
+collector_Msupi.dataCollection() on iterTrig;
+collector_S1i.dataCollection() on iterTrig;
+collector_Sseci.dataCollection() on iterTrig;
+collector_TRN.dataCollection() on iterTrig;
+collector_VA.dataCollection() on iterTrig;
+collector_VL.dataCollection() on iterTrig;
+collector_VPL.dataCollection() on iterTrig;
+collector_VPN.dataCollection() on iterTrig;
+collector_D1.dataCollection() on iterTrig;
+collector_D2.dataCollection() on iterTrig;
+collector_DA.dataCollection() on iterTrig;
+
+Stop on endTrig;

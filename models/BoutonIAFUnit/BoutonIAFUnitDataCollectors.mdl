@@ -1,0 +1,52 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef BOUTONIAFUNITDATACOLLECTORS_MDL
+#define BOUTONIAFUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable BoutonIAFUnitDataCollector
+{
+  string directory;
+  string fileExt;
+  int [] rows;
+  int [] cols;
+  int [] slices;
+  int mxslice;
+  double* [] glutamate;
+  double* [] availableGlutamate;
+  double* [] Cb1Rcurrent;
+  UserFunction getNodeIndices;
+
+  // Flags
+  bool op_saveGlutamate;
+  bool op_saveAvailableGlutamate;
+  bool op_saveCb1R;
+
+  Connection Pre Node () Expects GlutamateIAFProducer, AvailableGlutamateIAFProducer,
+    Cb1RIAFProducer
+  {
+    GlutamateIAFProducer.glutamate >> glutamate;
+    AvailableGlutamateIAFProducer.availableGlutamate >> availableGlutamate;
+    Cb1RIAFProducer.Cb1Rcurrent >> Cb1Rcurrent;
+    getNodeIndices();
+  }
+
+  InitPhase initialize;
+  TriggeredFunction dataCollection;
+  FinalPhase finalize;
+}
+
+#endif

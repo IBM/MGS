@@ -1,0 +1,58 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef SPINEIAFUNITDATACOLLECTORS_MDL
+#define SPINEIAFUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable SpineIAFUnitDataCollector
+{
+  string directory;
+  string fileExt;
+  int [] rows;
+  int [] cols;
+  int [] slices;
+  int mxslice;
+  double* [] AMPAcurrent;
+  double* [] mGluRcurrent;
+  double* [] Ca;
+  double* [] ECB;
+  UserFunction getNodeIndices;
+
+  // Paramaters
+  double ECBprodC; // ECB production function - steepness
+  double ECBprodD; // ECB production function - shifts
+
+  // Flags
+  bool op_saveAMPA;
+  bool op_savemGluR;
+  bool op_saveCa;
+  bool op_saveECB;
+
+  Connection Pre Node () Expects SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
+  {
+    SynapticCurrentIAFProducer.AMPAcurrent >> AMPAcurrent;
+    SynapticCurrentIAFProducer.mGluRcurrent >> mGluRcurrent;
+    CaIAFProducer.Ca >> Ca;
+    ECBIAFProducer.ECB >> ECB;
+    getNodeIndices();
+  }
+
+  InitPhase initialize;
+  TriggeredFunction dataCollection;
+  FinalPhase finalize;
+}
+
+#endif

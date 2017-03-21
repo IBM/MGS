@@ -1,0 +1,119 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// Us Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef IZHIKUNIT_MDL
+#define IZHIKUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+
+Node IzhikUnit Implements OutputProducer, VoltageProducer, SpikeProducer 
+{
+
+  double g_out;
+  float V_out;  
+  Input [] MSNNetInps;
+  double [] nodeVars;
+  double V_init, g_init, n_init;
+  //double [] drivinps;
+  double * drivinp;	
+  bool spike;
+  //double inplo, inphi;
+
+
+  Shared {
+
+    double Ek;//-90 mV
+    double Ena; //60.0
+    double El; //-80.0
+    double gk; //-10
+    double gna;//-20
+    double gl;//-8
+
+    double C;//1.0
+
+    double mv12;//-20.0
+    double mk;//15
+    double nv12;//-25, -45
+    double nk;//5
+    double tau_n;//1.0, 0.16, 0.152
+
+    //double ltau;
+    //double Vinpsyn;
+    //double congtsyn;
+
+    double tau_g; //50.0 mV
+    float spikethresh; //-40.0 ms
+    double Vconnectsyn; //-65
+    
+    
+    double deltaT;          // ms
+
+
+    //int np;                 // number of numerical fixed point iterations
+    
+    //Initphase initializeShared;
+     // RuntimePhase outputWeightsShared;
+    
+    //string weightsFileName;
+
+    /*
+    unsigned [] stateseq;
+    double [] stateswitchtimes; 
+    unsigned currentstate;
+    unsigned statenum;
+    unsigned seqlen;
+    double refract;
+    double period;
+    */
+
+    //InitPhase initializeShared;
+    //RuntimePhase updateInputState;
+
+  }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update();
+   RuntimePhase updateOutputs(g_out,V_out,spike);
+  
+   OutputProducer.output << &g_out;
+   VoltageProducer.voltage << &V_out;
+   SpikeProducer.spike << &spike;
+
+   UserFunction setIndices;   
+
+   Connection Pre Node (PSet.identifier == "MSN") Expects OutputProducer {
+     OutputProducer.output >> MSNNetInps.input;
+     PSet.weight >> MSNNetInps.weight;
+     setIndices();
+   }
+
+
+   Connection Pre Node (PSet.identifier == "SWITCHINP") Expects OutputProducer {
+     OutputProducer.output >> drivinp;
+   }
+
+}
+
+#endif
+
+
+
