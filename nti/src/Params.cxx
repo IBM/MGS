@@ -102,6 +102,39 @@ void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& f
   }
 }
 
+/* It is designed for support Calcium microdomain feature
+ *   BKCa [Voltage, Calcium(domain1)] [Voltage]
+ *   CaN  [Voltage, Calcium(domain1)] [Voltage, Calcium(domain1)]
+ *  Parameters:
+ *   compartmentNameWithOptionalMicrodomainName = "Calcium(domain1)" or "Calcium" or "Calcium()"
+ *   Expect output:
+ *   If input = "Calcium(domain1)" --> arg2 = "Calcium", arg3 = "domain1"
+ *   If input = "Calcium" --> arg2 = "Calcium", arg3 = ""
+ *   If input = "Calcium()" --> arg2 = "Calcium", arg3 = ""
+ */
+
+#ifdef MICRODOMAIN_CALCIUM
+void Params::separateCompartmentName_and_microdomainName(std::string compartmentNameWithOptionalMicrodomainName, std::string& compartmentNameOnly, std::string& microdomainName)
+{
+  std::string delimiter = "(";
+  std::string myStr = compartmentNameWithOptionalMicrodomainName;
+  size_t pos = myStr.find(delimiter);
+  compartmentNameOnly = myStr.substr(0, pos);
+  microdomainName = "";
+  if (pos != std::string::npos)
+  {
+    microdomainName = myStr.substr(myStr.find(delimiter), myStr.length());
+    StringUtils::trim(microdomainName);
+    if (microdomainName.length() != 0)
+    {
+      assert(microdomainName[0] == '(');
+      assert(microdomainName.back() == ')');
+      microdomainName = microdomainName.substr(1, microdomainName.size()-2);
+    }
+  }
+}
+#endif
+
 Params::Params()
     : _bondK0(0),
       _bondR0(0),
@@ -572,6 +605,31 @@ void Params::readChanParams(const std::string& fname)
   }
 
   }
+
+#ifdef MICRODOMAIN_CALCIUM
+#if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+  keyword = std::string("MICRODOMAIN_PARAMS");
+  if (isGivenKeywordNext(fpF, keyword))
+  {
+    //result = (readMicrodomainData(fpF));
+    result2 = readModelParams2(fpF, "MICRODOMAIN_PARAMS", _microdomainParamsMasks, _microdomainParamsMap,
+                  _microdomainArrayParamsMap);
+    if (result == ErrorCode::SECTION_INVALID)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      assert(0);
+    }
+    else if (result == ErrorCode::SECTION_IGNORED)
+    {
+      std::cerr << "ERROR: cannot ignore - reading file " << fname << " at section " << keyword << std::endl;
+      assert(0);
+    }
+  }
+  else{
+    assert(0);
+  }
+#endif
+#endif
   fclose(fpF);
 }
 
@@ -2550,8 +2608,10 @@ bool Params::readChannelTargets2(FILE* fpF)
   return _channels;
 }
 
+//NOTE: An ignored section is the section with '0' as value
+//  indicating the number of lines
 Params::ErrorCode Params::readChannelTargets3(FILE* fpF)
-{//array-form for any key field
+{//array-form for any key field - support reading an ignored section
   /* Example:
   CHANNEL_TARGETS 8
   BRANCHTYPE MTYPE

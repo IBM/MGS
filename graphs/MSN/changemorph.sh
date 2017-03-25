@@ -8,9 +8,9 @@ rm_if_link(){ [ ! -L "$1" ] || rm -v "$1"; }
 clean_all() {
   rm_if_link neurons
   rm_if_link params
-  #rm_if_link connect_recording_model.gsl
+  rm_if_link connect_recording_model.gsl
   rm_if_link recording_model.gsl
-  #rm_if_link connect_stimulus_model.gsl
+  rm_if_link connect_stimulus_model.gsl
   rm_if_link stimulus_model.gsl
   rm_if_link model.gsl
   rm_if_link neurons.txt 

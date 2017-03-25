@@ -52,7 +52,16 @@ void ChannelCaR_GHK::initialize(RNG& rng)
   pthread_once(&once_CaR_GHK, initialize_others);
   assert(branchData);
   unsigned size = branchData->size;
-  assert(V);
+  if (not V)
+  {
+    std::cerr << typeid(*this).name() << " needs Voltage as input in ChanParam\n";
+    assert(V);
+  }
+  if (not Ca_IC)
+  {
+    std::cerr << typeid(*this).name() << " needs Calcium as input in ChanParam\n";
+    assert(Ca_IC);
+  }
   assert(PCabar.size() == size);
   assert(V->size() == size);
   // allocate
@@ -119,7 +128,12 @@ void ChannelCaR_GHK::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
+#ifdef MICRODOMAIN_CALCIUM
+    dyn_var_t cai = (*Ca_IC)[i+_offset]; // [uM]
+#else
     dyn_var_t cai = (*Ca_IC)[i];
+#endif
+
 #if CHANNEL_CaR == CaR_GHK_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -150,7 +164,12 @@ void ChannelCaR_GHK::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
+#ifdef MICRODOMAIN_CALCIUM
+    dyn_var_t cai = (*Ca_IC)[i+_offset]; // [uM]
+#else
     dyn_var_t cai = (*Ca_IC)[i];
+#endif
+
 #if CHANNEL_CaR == CaR_GHK_WOLF_2005
     // NOTE: Some models use m_inf and tau_m to estimate m
     //dyn_var_t tau_m = 1.6;  // msec - in paper (which assume 35^C)
@@ -211,3 +230,16 @@ void ChannelCaR_GHK::initialize_others()
 }
 
 ChannelCaR_GHK::~ChannelCaR_GHK() {}
+
+#ifdef MICRODOMAIN_CALCIUM
+void ChannelCaR_GHK::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelCaR_GHKInAttrPSet* CG_inAttrPset, CG_ChannelCaR_GHKOutAttrPSet* CG_outAttrPset) 
+{
+  microdomainName = CG_inAttrPset->domainName;
+  int idxFound = 0;
+  while((*(getSharedMembers().tmp_microdomainNames))[idxFound] != microdomainName)
+  {
+    idxFound++;
+  }
+  _offset = idxFound * branchData->size;
+}
+#endif

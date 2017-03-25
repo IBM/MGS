@@ -203,6 +203,7 @@ void InterfaceImplementorBase::createPSetClass(
    instance->addHeader("\"NDPairList.h\"");
    instance->addHeader("\"SyntaxErrorException.h\"");
    instance->addHeader("<memory>");
+   instance->addHeader("<typeinfo>");
    instance->addExtraSourceHeader("<sstream>");
    instance->addAttributes(members);
 
