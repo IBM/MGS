@@ -41,8 +41,6 @@
 #include "ChannelRYR/ChannelRYR.mdl"
 #include "ChannelIP3R/ChannelIP3R.mdl"
 
-#include "Life/Life.mdl"
-
 #include "NaChannel/NaChannel.mdl"
 #include "NaChannel_AIS/NaChannel_AIS.mdl"
 #include "ChannelKDR/ChannelKDR.mdl"
