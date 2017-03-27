@@ -43,6 +43,28 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define BHC 1.0
 #define BHV -35.0
 #define BHD 10.0
+#elif CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+// Data from neostriatum neurons in guinea pig 200g
+//    either sex (male/female)
+//[Ogata, Tatebayashi, 1990]
+//    Sodium current kinetics in isolated neostriatal neurons in adult guinea pig
+//
+#define VHALF_M -25
+#define k_M -9.2
+#define VHALF_H -62
+#define k_H 6
+#define LOOKUP_TAUM_LENGTH 16  // size of the below array
+const dyn_var_t ChannelNat::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -40, -30,
+                                   -20,  -10, 0,   10,  20,  30,  40,  50};
+dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3162, 0.4074, 0.6166, 0.3548, 0.2399, 0.1585,
+                       0.1047, 0.0871, 0.0851, 0.0813, 0.0832, 0.0832, 0.0832, 0.0832};
+#define LOOKUP_TAUH_LENGTH 16  // size of the below array
+const dyn_var_t ChannelNat::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
+                                   -20,  -10, 0,   10,  20,  30,  40,  50};
+dyn_var_t ChannelNat::tauhNat[] = {1.5,  1.5, 1.5,  1.5,  1.5,  1.5,  1.5136,  0.6761,
+                       0.5129, 0.4365, 0.3715, 0.3388, 0.2951, 0.2884, 0.2754, 0.2754};
+std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
+std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 // Rush-Rinzel (1994) thalamic neuron
 // adopted from HH-1952 data with
@@ -150,7 +172,8 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 //    at 35.0 Celcius
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
-#define VHALF_M -23.9
+//#define VHALF_M -23.9  //original Wolf
+#define VHALF_M -30.9
 #define k_M -11.8
 #define VHALF_H -62.9
 #define k_H 10.7
@@ -243,7 +266,8 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
-#elif CHANNEL_NAT == NAT_WOLF_2005
+#elif CHANNEL_NAT == NAT_WOLF_2005 || \
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
     {
     // NOTE: Some models use m_inf and tau_m to estimate m
     // tau_m in the lookup table
@@ -465,7 +489,8 @@ void ChannelNat::initialize(RNG& rng)
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
     }
-#elif CHANNEL_NAT == NAT_WOLF_2005
+#elif CHANNEL_NAT == NAT_WOLF_2005 || \
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 #else
@@ -483,7 +508,8 @@ void ChannelNat::initialize(RNG& rng)
 
 void ChannelNat::initialize_others()
 {
-#if CHANNEL_NAT == NAT_WOLF_2005
+#if CHANNEL_NAT == NAT_WOLF_2005 || \
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
   {
     //NOTE: 
     //  0 <= i < size-1: _Vmrange_tauh[i] << Vm << _Vmrange_tauh[i+1]

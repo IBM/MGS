@@ -56,8 +56,27 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 #define THV 83.0
 #define THD 23.0
 
+#elif CHANNEL_KAf == KAf_EVANS_2012
+//  Inactivation reference from  Tkatch - Surmeier (2000) 
+//     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
+//     assume Kv4.2 subunits forming the channel
+#define Eleak 0.0
+#define AMC 1.5
+#define AMV (4.0+Eleak)
+#define AMD -17
+#define BMC 0.6
+#define BMV (10.0+Eleak)
+#define BMD 9.0
+#define AHC 0.105
+#define AHV (-121.0+Eleak)
+#define AHD 22
+#define BHC 0.065
+#define BHV (-55.0+Eleak)
+#define BHD -11.0
 #elif CHANNEL_KAf == KAf_WOLF_2005
-//  Inactivation reference from 
+//  Inactivation reference from  Tkatch - Surmeier (2000) 
+//     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
+//     assume Kv4.2 subunits forming the channel
 //    1. Tkatch et al. (2000) (V1/2: pg. 581, slope = Fig.3.B, tau: Fig.3C)
 //  Activation reference from 
 //     1. Tkatch et al. (2000) (V1/2: pg. 581, slope corrected -17.7)
@@ -114,6 +133,17 @@ void ChannelKAf::update(RNG& rng)
     m[i] = (2.0*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
     h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     }
+#elif CHANNEL_KAf == KAf_EVANS_2012
+    {
+    dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
+    dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
+    dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
+    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
+    dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
+    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
 #elif CHANNEL_KAf == KAf_WOLF_2005
     {
     // NOTE: Some models use m_inf and tau_m to estimate m
@@ -154,6 +184,8 @@ void ChannelKAf::update(RNG& rng)
     g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
     g[i] = gbar[i]*m[i]*m[i]*m[i]*m[i]*h[i];
+#elif CHANNEL_KAf == KAf_EVANS_2012
+    g[i] = gbar[i]*m[i]*m[i]*h[i];
 #elif CHANNEL_KAf == KAf_WOLF_2005
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #endif
@@ -239,6 +271,14 @@ void ChannelKAf::initialize(RNG& rng)
     m[i] = 1.0/(1.0 + exp(-(v + IMV)/IMD));
     h[i] = 1.0/(1.0 + exp((v + IHV)/IHD));
     g[i] = gbar[i]*m[i]*m[i]*m[i]*m[i]*h[i];
+#elif CHANNEL_KAf == KAf_EVANS_2012
+    dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
+    dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
+    dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
+    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+    m[i] = am / (am + bm);  // steady-state value
+    h[i] = ah / (ah + bh);
+    g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
