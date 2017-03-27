@@ -1118,15 +1118,18 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
         if (tokens[ii] == "domain1")
         {
-          volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN1;
+          //volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN1;
+          volume_microdomain[offset+jj] = dimensions[jj]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN1 * DEPTH_MICRODOMAIN1 * 1e-3;  // [um^3]
         }
         if (tokens[ii] == "domain2")
         {
-          volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN2;
+          //volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN2;
+          volume_microdomain[offset+jj] = dimensions[jj]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN2 * DEPTH_MICRODOMAIN2 * 1e-3;  // [um^3]
         }
         if (tokens[ii] == "domain3")
         {
-          volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN3;
+          //volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN3;
+          volume_microdomain[offset+jj] = dimensions[jj]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN3 * DEPTH_MICRODOMAIN3 * 1e-3;  // [um^3]
         }
 #endif
       }

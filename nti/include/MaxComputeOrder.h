@@ -217,7 +217,7 @@
 //#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
 
 //{{{ MICRODOMAIN_CALCIUM
-#define MICRODOMAIN_CALCIUM  //if defined, then the system enable the capability to model microdomain calcium volume where ion can flow into this first before going to the cytosolic bath --> maybe we can use this to avoid the sub-shell feature
+//#define MICRODOMAIN_CALCIUM  //if defined, then the system enable the capability to model microdomain calcium volume where ion can flow into this first before going to the cytosolic bath --> maybe we can use this to avoid the sub-shell feature
 // LIMITATION: Only accept 'Channels' to connect to 'Compartments[Calcium]' or 'Junctions[Calcium]'
 //         Channels can produce HH-current or GHK-current 
 //      Do not accept Receptor connecting to microdomain
@@ -240,15 +240,17 @@
 //#define GENERATE_V_EFFLUX(Argument V_EFFLUX_##Argument
 //default value if MICRODOMAIN_DATA_FROM_NTSMACRO is used
 //#define V_EFFLUX  0.1    //[1/ms]
-//#define VOLUME_MICRODOMAIN  0.02  //[% of cytosolic volume]
 //Here, we assume maximum 3 microdomains on 1 branch/junction
 //                and the microdomains must be named using 'domain1', 'domain2', 'domain3'
 #define V_EFFLUX_DOMAIN1  0.1    //[1/ms]
 #define V_EFFLUX_DOMAIN2  0.1    //[1/ms]
 #define V_EFFLUX_DOMAIN3  0.1    //[1/ms]
-#define VOLUME_MICRODOMAIN1  0.02  //[% of cytosolic volume]
-#define VOLUME_MICRODOMAIN2  0.02  //[% of cytosolic volume]
-#define VOLUME_MICRODOMAIN3 0.02  //[% of cytosolic volume]
+#define DEPTH_MICRODOMAIN1  10.0  //[nanometer]
+#define DEPTH_MICRODOMAIN2  10.0  //[nanometer]
+#define DEPTH_MICRODOMAIN3  10.0  //[nanometer]
+#define FRACTION_SURFACEAREA_MICRODOMAIN1 1.0  //[% of membrane surface area]
+#define FRACTION_SURFACEAREA_MICRODOMAIN2 1.0  //[% of membrane surface area]
+#define FRACTION_SURFACEAREA_MICRODOMAIN3 1.0  //[% of membrane surface area]
 //}}}
 
 //#define DEBUG_CPTS  //this option should be set via gsl/configure.py

@@ -491,17 +491,20 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
       if (tokens[ii] == "domain1")
       {
         v_efflux[ii] = V_EFFLUX_DOMAIN1;
-        volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN1;
+        //volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN1;
+        volume_microdomain[ii] = dimensions[0]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN1 * DEPTH_MICRODOMAIN1 * 1e-3;  // [um^3]
       }
       if (tokens[ii] == "domain2")
       {
         v_efflux[ii] = V_EFFLUX_DOMAIN2;
-        volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN2;
+        //volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN2;
+        volume_microdomain[ii] = dimensions[0]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN2 * DEPTH_MICRODOMAIN2 * 1e-3;  // [um^3]
       }
       if (tokens[ii] == "domain3")
       {
         v_efflux[ii] = V_EFFLUX_DOMAIN3;
-        volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN3;
+        //volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN3;
+        volume_microdomain[ii] = dimensions[0]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN3 * DEPTH_MICRODOMAIN3 * 1e-3;  // [um^3]
       }
 #endif
     }
