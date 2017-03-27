@@ -23,6 +23,10 @@ class ChannelCaR_GHK : public CG_ChannelCaR_GHK
       void initialize(RNG& rng);
 			static void initialize_others();
       virtual ~ChannelCaR_GHK();
+#ifdef MICRODOMAIN_CALCIUM
+      virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelCaR_GHKInAttrPSet* CG_inAttrPset, CG_ChannelCaR_GHKOutAttrPSet* CG_outAttrPset);
+      int _offset; //the offset due to the presence of different Ca2+-microdomain
+#endif
 	 private:
 			dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 #if CHANNEL_CaR == CaR_GHK_WOLF_2005

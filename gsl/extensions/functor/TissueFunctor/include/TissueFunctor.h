@@ -38,6 +38,8 @@
 #include <vector>
 #include <utility>
 #include <map>
+#include <tuple>
+#include <set>
 
 class NDPairList;
 class NodeDescriptor;
@@ -238,6 +240,8 @@ class TissueFunctor : public CG_TissueFunctorBase
       _indexBranchMap;
   // <"Voltage", <ComputeBranch* the associated branch,
 	//     vector2element{gridnode, array-element-index} > >
+  //  NOTE: gridnode == MPI-rank
+  //  array-element-index == get direct access to the 'Voltage'-compartment instance associated with that given ComputeBranch*
   std::map<std::string, std::map<ComputeBranch*, std::vector<int> > >
       _branchIndexMap;
 
@@ -268,15 +272,29 @@ class TissueFunctor : public CG_TissueFunctorBase
 
   // NOTE: While parsing GSL, each layer is given an index,
   //                   starting from 0 for the first Layer in A GRID
-  // (each grid has its own indexing, i.e. indices are reset)
+  // (each grid has its own indexing, i.e. layer indices are reset)
   //[index-layer][density-index-of-node-that-channel-getinputs]
-	//[branch-index]<node-index,  layer-index>
+	//[branch-index]<node-index,  layer-index-of-Layer-holding-the-proper-cpt(e.g.Voltage)-NodeType-which-will-we-need-to-create-InputConnection>
+#ifdef MICRODOMAIN_CALCIUM
+  //TUAN TODO - add these to the Constructors as well
+  //
+  //in the tuple: std::string ~ CalciumMicrodomainName(if empty, then it behaves as the original std::pair<int, int> data)
+  std::vector<std::vector<std::vector<std::tuple<int, int, std::string> > > >
+      _channelBranchIndices1, _channelJunctionIndices1;
+  std::vector<std::vector<std::vector<std::tuple<int, int, std::string> > > >
+      _channelBranchIndices2, _channelJunctionIndices2;
+  void checkValidUseMicrodomain(std::string compartmentNameOnly, std::string microdomainName);
+  bool nodeTypeWithAllowedMicrodomain(std::string nodetype);
+  std::map<ComputeBranch*, std::set< std::string> > _microdomainOnBranch;
+  std::map<Capsule*, std::set< std::string> > _microdomainOnJunction;
+#else
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
       _channelBranchIndices1, _channelJunctionIndices1;
   //[index-layer][density-index-of-node-that-channel-produceoutputs]
 	//[branch-index]<node-index,  layer-index>
   std::vector<std::vector<std::vector<std::pair<int, int> > > >
       _channelBranchIndices2, _channelJunctionIndices2;
+#endif
 
   // keep tracks of the current number of layers being declared for nodetype of
   // the associated type (e.g. channel, bidirectionalsynapse, ...)
@@ -375,7 +393,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::vector<std::string> _compartmentVariableTypes;
 
   // map the name of nodeType
-  //     to its associated index (based on the order of Layer adding in GSL)
+  //     to its associated layer-index (based on the order of Layer adding in GSL)
   //     (such information is extracted from Layer statements
   //     where The name of nodeType is passed inside
   //   the square bracket of the associated components of <nodekind="...">

@@ -100,6 +100,14 @@ Interface CaConcentrationArrayProducer {
    dyn_var_t []* CaConcentrations;
 }
 
+Interface CaMicrodomainConcentrationArrayProducer {
+   dyn_var_t []* CaConcentrations;
+}
+
+Interface CaMicrodomainNameArrayProducer {
+   string []* microdomainNames;
+}
+
 Interface CaERConcentrationProducer {
    dyn_var_t* Ca;
 }
