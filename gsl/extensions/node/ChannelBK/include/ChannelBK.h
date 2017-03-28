@@ -22,6 +22,10 @@ class ChannelBK : public CG_ChannelBK
       void update(RNG& rng);
       void initialize(RNG& rng);
       virtual ~ChannelBK();
+#ifdef MICRODOMAIN_CALCIUM
+      virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelBKInAttrPSet* CG_inAttrPset, CG_ChannelBKOutAttrPSet* CG_outAttrPset);
+      int _offset; //the offset due to the presence of different Ca2+-microdomain
+#endif
 };
 
 #endif

@@ -18,47 +18,64 @@ Struct TissueSite {
 //{{{
 Variable VoltageClamp Implements CurrentProducer
 {
-//{{{
-	dyn_var_t command; 						// Declare command voltage
-	dyn_var_t Igen;							// Declare the feedback current applied to hold voltage constant
-	dyn_var_t [] waveform;						// Declare an array for the waveform
-	int waveformIdx;						// Declare index of the waveform array
-	dyn_var_t Vprev;							// Declare voltage from previous iteration for calculating dV
-	dyn_var_t Cm;							// Declare membrane capacitance
-	dyn_var_t []* V; // array of pointers for the voltage measured at the cell that is input to the tool
-	dyn_var_t beta;
-	dyn_var_t* surfaceArea;
-	int idx;
-	dyn_var_t* deltaT;
-	bool isOn;
-	string fileName; 
+  //{{{
+  //{{{ Data
+  dyn_var_t command; 						// Declare command voltage
+  dyn_var_t Igen;							// Declare the feedback current applied to hold voltage constant
+  dyn_var_t [] waveform;						// Declare an array for the waveform
+  int waveformIdx;						// Declare index of the waveform array
+  dyn_var_t Vprev;							// Declare voltage from previous iteration for calculating dV
+  dyn_var_t Cm;							// Declare membrane capacitance
+  dyn_var_t []* V; // array of pointers for the voltage measured at the cell that is input to the tool
+  dyn_var_t beta;
+  dyn_var_t* surfaceArea;
+  int idx;  // not being used yet especially when connecting to ComputeBranch is added
+  dyn_var_t* deltaT;
+  bool isOn;
+  string fileName; 
+  DimensionStruct* [] dimensions; //points from different compartments on different branches
+  //}}}
 
-	TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
-	TriggeredFunction setCommand;					// a single command like a step
-	TriggeredFunction toggle;
+  TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
+  TriggeredFunction setCommand;					// a single command like a step
+  TriggeredFunction toggle;
 
-	InitPhase initialize;
-	RuntimePhase updateI;
-	FinalPhase finalize;
+  InitPhase initialize;
+  RuntimePhase updateI;
+  FinalPhase finalize;
 
-	CurrentProducer.current << &Igen;	// Describes the output of the function which is the current Igen
+  CurrentProducer.current << &Igen;	// Describes the output of the function which is the current Igen
 
-	InAttrPSet {
-		string identifier;
-	}
+  InAttrPSet {
+    string identifier;
+  }
 
-	Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
-		VoltageArrayProducer.voltageArray >> V;
-		ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
-	}
-	Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, SurfaceAreaProducer {		// 
-		VoltageArrayProducer.voltageArray >> V;
-		SurfaceAreaProducer.surfaceArea >> surfaceArea;
-	}
-	Connection Pre Constant () Expects TimeStepProducer {
-		TimeStepProducer.deltaT >> deltaT;
-	}
-//}}}
+  //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
+  //  VoltageArrayProducer.voltageArray >> V;
+  //  ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
+  //}
+  //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, DimensionArrayProducer{
+  ////NOTE:  Not support 'ComputeBranch' yet, as it needs to produce CurrentArrayProducer
+  ////NOTE: As the connection between VC and HHVoltage should be bi-directional
+  ////   there is a chance of error when user not doing this properly, i.e. maybe we should let TissueFunctor 
+  ////   does the job
+  //  VoltageArrayProducer.voltageArray >> V;
+  //  //ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
+  //  DimensionArrayProducer.dimensionArray >> dimensions;   
+  //}
+  //Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, SurfaceAreaProducer {
+  //	VoltageArrayProducer.voltageArray >> V;
+  //	SurfaceAreaProducer.surfaceArea >> surfaceArea;
+  //}
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
+    VoltageArrayProducer.voltageArray >> V;
+    //SurfaceAreaProducer.surfaceArea >> surfaceArea;
+    DimensionArrayProducer.dimensionArray >> dimensions;   
+  }
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
 }
 
 Variable PointCurrentSource Implements CurrentProducer
@@ -83,30 +100,32 @@ Variable PointCalciumSource Implements CaCurrentProducer
 
 Variable CurrentPulseGenerator Implements CurrentProducer
 {
-//{{{
-	dyn_var_t I; // [pA]
-	dyn_var_t peak;
-	dyn_var_t period;
-	dyn_var_t duration;
-	dyn_var_t delay;
-	dyn_var_t last;
-	dyn_var_t inc;
-	string pattern;
-	//{{{ use with dualexp
+  //{{{
+  //{{{Data
+  dyn_var_t I; // [pA]
+  dyn_var_t peak;
+  dyn_var_t period;
+  dyn_var_t duration;
+  dyn_var_t delay;
+  dyn_var_t last;
+  dyn_var_t inc;
+  string pattern;
+  //{{{ use with dualexp
   dyn_var_t riseTime; //[ms]
   dyn_var_t decayTime; //[ms]
   //}}}
 
-	dyn_var_t* deltaT;
+  dyn_var_t* deltaT;
+  //}}}
 
-	InitPhase initialize(I);
-	RuntimePhase update(I);
+  InitPhase initialize(I);
+  RuntimePhase update(I);
 
-	CurrentProducer.current << &I;
-	Connection Pre Constant () Expects TimeStepProducer {
-		TimeStepProducer.deltaT >> deltaT;
-	}
-//}}}
+  CurrentProducer.current << &I;
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
 }
 //}}}
 

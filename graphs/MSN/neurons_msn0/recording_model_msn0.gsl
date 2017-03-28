@@ -124,7 +124,7 @@ basalDen21xbrOrder5CalciumDisplay.dataCollection(<>) on recOn;
 AnyCurrentDisplay basalDen21xbrOrder5CurrentsDisplay<fileName= PathFileCombine("basalDen21xbrOrder5Currents.dat")>;
 basalDen21xbrOrder5CurrentsDisplay.dataCollection(<>) on recOn;
   //}}}
-  //{{{LOCATION 7 - brOrder = 1
+  //{{{LOCATION 7 - brOrder = 1  [NOTE: 05x means about 050-059 micrometer apart from soma]
 VoltageDisplay basalDen05xbrOrder1VoltageDisplay<fileName= PathFileCombine("basalDen05xbrOrder1V.dat")>;
 basalDen05xbrOrder1VoltageDisplay.dataCollection(<>) on recOn;
 CalciumDisplay basalDen05xbrOrder1CalciumDisplay<fileName= PathFileCombine("basalDen05xbrOrder1Ca.dat")>;

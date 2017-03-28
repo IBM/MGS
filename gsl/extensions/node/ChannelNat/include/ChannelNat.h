@@ -10,6 +10,9 @@
 #if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
 #define BASED_TEMPERATURE 6.3  // Celcius
 #define Q10 3.0
+#elif CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.3
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 2.3
@@ -46,7 +49,8 @@ class ChannelNat : public CG_ChannelNat
 
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
-#if CHANNEL_NAT == NAT_WOLF_2005
+#if CHANNEL_NAT == NAT_WOLF_2005 || \
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
 	const static dyn_var_t _Vmrange_taum[];
 	const static dyn_var_t _Vmrange_tauh[];
 	static dyn_var_t taumNat[];

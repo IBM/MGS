@@ -16,6 +16,7 @@ static pthread_once_t once_KRP = PTHREAD_ONCE_INIT;
 //
 // This is an implementation of the "4-AP resistant persistent 
 //                  KRP potassium current
+// 4-AP-(r)esistant, (p)ersistent K+ current: KRP or Krp
 //
 #if CHANNEL_KRP == KRP_WOLF_2005
 // Inactivation from

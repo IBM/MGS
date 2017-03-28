@@ -8,6 +8,7 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
+
 //NOTE: We had CaClearance [1/ms] to model the removal of Ca2+ back to the basal level CaBaseline
 //      This is replaced by CaRemoval mechanism or PMCA pump with tau [ms]
 
@@ -16,6 +17,10 @@ Node CaConcentration Implements SolutionArrayProducer,
      DimensionArrayProducer, BranchDataProducer,
      ForwardSolutionArrayProducer, 
      CaConcentrationArrayProducer
+#ifdef MICRODOMAIN_CALCIUM
+     , CaMicrodomainConcentrationArrayProducer
+     , CaMicrodomainNameArrayProducer
+#endif
 {
 // Regular-branch: represent the diffusion of Calcium(cyto) along branch with no explicit junction
 /*{{{*/
@@ -33,7 +38,7 @@ Node CaConcentration Implements SolutionArrayProducer,
   dyn_var_t [] Aip; // TODO unit
   dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
 
-  dyn_var_t [] RHS; // TODO unit
+  dyn_var_t [] RHS; // [uM/ms]
   dyn_var_t [] Aij; // TODO unit
 
   //dyn_var_t  CaClearance; // [1/ms]
@@ -62,6 +67,40 @@ Node CaConcentration Implements SolutionArrayProducer,
   dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] Ca_new;
   dyn_var_t [] currentToConc;
+
+  //{{{microdomain
+#ifdef MICRODOMAIN_CALCIUM
+//NOTE: first [] = number of compartments per compute-branch
+//     second [] = number of microdomain type as we can have 
+//             microdomain between BK(Ca) and CaN/P
+//             microdomain between SK(Ca) and CaLv1.2
+//Suppose a ComputeBranch has 'x' compartments and 'y' microdomain per cpt
+//CHOICE 1:
+//  so: y-element volume_microdomain (i.e. all domains of same type have the same volumes along 1 ComputeBranch)
+//      y-element v_efflux (i.e. all domains of same type have the same efflux-rate)
+//      (x*y)-element Ca_microdomain;
+//      (x*y)-element channelCaCurrents_microdomain;
+  dyn_var_t [] Ca_microdomain; //[uM] - concentration of calcium in the domain - assume instantaneous
+  dyn_var_t [] Ca_microdomain_cur; //[uM] - concentration of calcium in the domain - assume instantaneous
+  dyn_var_t [] volume_microdomain; //[um^3] - volume of the microdomain
+  dyn_var_t []v_efflux;  //[1/ms] - transfer rate from microdomain to cytosolic bath
+  ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
+  //string[] microdomainAssociatedWithChannelCaCurrents;
+//      y-element microdomainNames array
+  string [] microdomainNames;
+  dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
+  dyn_var_t [] currentToConc_microdomain;
+
+//CHOICE 2:
+//      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
+//      y-element(row) * x-element(col) channelCaCurrents_microdomain
+//  CalciumMicrodomain [] Ca_microdomain; //[uM] - concentration of calcium in the domain
+//  ChannelCaCurrents [][] channelCaCurrents_microdomain;  // [pA/um^2]
+////      y-element microdomainNames array
+//  string [] microdomainNames;
+
+#endif
+  //}}}
 
     // currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
@@ -97,12 +136,12 @@ Node CaConcentration Implements SolutionArrayProducer,
    //          is put here
   Shared {
     /*{{{*/
-    dyn_var_t* deltaT;
+    dyn_var_t* deltaT; // time-step [ms]
     dyn_var_t DCa; // diffusion constant [um^2/ms]
     //{{{ used only for fast-buffering assumption 
     dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
     dyn_var_t beta;   // Wagner and Keizer buffering constant
-    dyn_var_t bmt; // value derived from beta 
+    dyn_var_t bmt; // value derived from beta  [1/ms]
     //}}}
     dyn_var_t CaBaseline; // [uM]
 
@@ -110,8 +149,11 @@ Node CaConcentration Implements SolutionArrayProducer,
     /*}}}*/
   }
 
-	//output
-	//{{{
+	//{{{output data
+#ifdef MICRODOMAIN_CALCIUM
+  CaMicrodomainConcentrationArrayProducer.CaConcentrations << &Ca_microdomain;
+  CaMicrodomainNameArrayProducer.microdomainNames << &microdomainNames;
+#endif
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
   SolutionArrayProducer.solutionArray << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
@@ -121,9 +163,13 @@ Node CaConcentration Implements SolutionArrayProducer,
   ForwardSolutionArrayProducer.RHSArray << &RHS;
 	//}}}
 
-    // Phases methods
-    /*{{{*/
+    /*{{{ Phases methods*/
   InitPhase initializeCompartmentData;
+#ifdef MICRODOMAIN_CALCIUM
+//TUAN MICRODOMAIN
+//TODO: how to define v_efflux  and volume
+// for each microdomain
+#endif
 
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
@@ -155,6 +201,9 @@ Node CaConcentration Implements SolutionArrayProducer,
     TissueSite site;
     int idx;
     float branchProp;
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //empty means current going straight to well-mixed cytosol
+#endif
   }
 
   // d^2 Ca/dx^2 = dCa/dt + ICaleak + ICainject + (ICasyn+ICaion)
@@ -166,21 +215,43 @@ Node CaConcentration Implements SolutionArrayProducer,
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   UserFunction  setTargetAttachCaConcentration;
 #endif
-  // Connection setup
-  //{{{ 
+
+  //{{{Connection setup 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
     DimensionProducer.dimension >> dimensions;
    }
 
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction createMicroDomainData;
+#endif
   Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
     BranchDataProducer.branchData >> branchData;
+#ifdef MICRODOMAIN_CALCIUM
+    createMicroDomainData();
+#endif
    }
 
+#ifdef MICRODOMAIN_CALCIUM
+//  UserFunction createMicroDomainData; -- not a selected approach (use via branchData connection)
+//  Connection Pre Node (PSet.identifier=="makeDomain") Expects CaCurrentArrayProducer {
+//    //CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+//    createMicroDomainData();
+//  }
+  UserFunction setupCurrent2Microdomain;
+  Connection Pre Node (PSet.identifier=="channels[Calcium(domain)]") Expects 
+    CaCurrentArrayProducer 
+  {
+    CaCurrentArrayProducer.currents >> channelCaCurrents_microdomain.currents;
+//TUAN: put to the microdomain Ca2+ data
+    setupCurrent2Microdomain();
+  }
+#endif
   //Trans-plasma-membrane Ca2+ channel produce current
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
     CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
    }
-  //TUAN; TODO how to project RYR, Ip3r calcium from calciumer
+
+  //TUAN; TODO how to project RYR, IP3R calcium from CalciumER
 /*
 OPTIION 1: use as ionic current (pA/um^2)
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaERCurrentArrayProducer {
@@ -307,8 +378,12 @@ Node CaConcentrationEndPoint Implements CaConcentrationProducer, DimensionProduc
 // It represents one (exlicit) junction branch (which comprise half regular compartments)
 Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProducer,
      CaConcentrationArrayProducer 
+#ifdef MICRODOMAIN_CALCIUM
+     , CaMicrodomainConcentrationArrayProducer
+     , CaMicrodomainNameArrayProducer
+#endif
 {
-/*{{{*/
+/*{{{single-compartment CB*/ 
 	//DATA
   //{{{
   BranchDataStruct* branchData; // the proximal-side regular-branch's data
@@ -325,6 +400,40 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t [] Ca_new;
   dyn_var_t currentToConc;
   //dyn_var_t  CaClearance; // [1/ms]
+  //{{{microdomain
+#ifdef MICRODOMAIN_CALCIUM
+//NOTE: first [] = number of compartments per compute-branch
+//     second [] = number of microdomain type as we can have 
+//             microdomain between BK(Ca) and CaN/P
+//             microdomain between SK(Ca) and CaLv1.2
+//Suppose a ComputeBranch has 'x' compartments and 'y' microdomain per cpt
+//CHOICE 1:
+//  so: y-element volume_microdomain (i.e. all domains of same type have the same volumes along 1 ComputeBranch)
+//      y-element v_efflux (i.e. all domains of same type have the same efflux-rate)
+//      (x*y)-element Ca_microdomain;
+//      (x*y)-element channelCaCurrents_microdomain;
+  dyn_var_t [] Ca_microdomain; //[uM] - concentration of calcium in the domain - assume instantaneous
+  dyn_var_t [] Ca_microdomain_cur; //[uM] - concentration of calcium in the domain - assume instantaneous
+  dyn_var_t [] Jefflux_microdomain ; // [um/ms] - to support the solver
+  dyn_var_t [] volume_microdomain; //[um^3] - volume of the microdomain
+  dyn_var_t []v_efflux;  //[1/ms] - transfer rate from microdomain to cytosolic bath
+  ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
+ // string[] microdomainAssociatedWithChannelCaCurrents;
+//      y-element microdomainNames array
+  string [] microdomainNames;
+  dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
+  dyn_var_t [] currentToConc_microdomain;
+
+//CHOICE 2:
+//      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
+//      y-element(row) * x-element(col) channelCaCurrents_microdomain
+//  CalciumMicrodomain [] Ca_microdomain; //[uM] - concentration of calcium in the domain
+//  ChannelCaCurrents [][] channelCaCurrents_microdomain;  // [pA/um^2]
+////      y-element microdomainNames array
+//  string [] microdomainNames;
+
+#endif
+  //}}}
 
   //{{{ ionic currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
@@ -345,6 +454,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t* [] targetInverseTimeCaConcentration;
 #endif
   //}}}
+  //}}}
 
 
   Shared {
@@ -363,20 +473,31 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   }
   //}}}
 
+  //{{{output data
+#ifdef MICRODOMAIN_CALCIUM
+  CaMicrodomainConcentrationArrayProducer.CaConcentrations << &Ca_microdomain;
+  CaMicrodomainNameArrayProducer.microdomainNames << &microdomainNames;
+#endif
   CaConcentrationArrayProducer.CaConcentrations << &Ca_new;
   DimensionArrayProducer.dimensionArray << &dimensions;
   BranchDataProducer.branchData << branchData;
+  //}}}
 
+  //{{{Phases methods
   InitPhase initializeJunction;
   RuntimePhase predictJunction, correctJunction;
+  //}}}
 
   InAttrPSet {
     string identifier;
     TissueSite site;
     int idx;
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //empty means current going straight to well-mixed cytosol
+#endif
   }	
 
-  //input
+  //{{{Connection setup 
   // the junction-branch connects to regular-branch through the regular-branch's endpoints
   Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, 
     DimensionProducer, BranchDataProducer  {
@@ -389,10 +510,31 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     DimensionProducer.dimension >> dimensions;
   }
 
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction createMicroDomainData;
+#endif
   Connection Pre Constant (PSet.identifier=="branchData") Expects BranchDataProducer {
     BranchDataProducer.branchData >> branchData;
+#ifdef MICRODOMAIN_CALCIUM
+    createMicroDomainData();
+#endif
    }
 
+#ifdef MICRODOMAIN_CALCIUM
+//  UserFunction createMicroDomainData; -- not a selected approach (use via branchData connection)
+//  Connection Pre Node (PSet.identifier=="makeDomain") Expects CaCurrentArrayProducer {
+//    //CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+//    createMicroDomainData();
+//  }
+  UserFunction setupCurrent2Microdomain;
+  Connection Pre Node (PSet.identifier=="channels[Calcium(domain)]") Expects 
+    CaCurrentArrayProducer 
+  {
+    CaCurrentArrayProducer.currents >> channelCaCurrents_microdomain.currents;
+//TUAN: put to the microdomain Ca2+ data
+    setupCurrent2Microdomain();
+  }
+#endif
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaCurrentArrayProducer {
     CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
   }
@@ -422,14 +564,19 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   }
 
   PredicateFunction checkSite;
-  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CaCurrentProducer {
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CaCurrentProducer 
+  {
     CaCurrentProducer.current >> injectedCaCurrents;
-   }
+  }
 
   PredicateFunction confirmUniqueDeltaT;
-  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {
+  Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects 
+    TimeStepProducer 
+  {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
 /*}}}*/
 }
 
