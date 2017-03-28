@@ -5,6 +5,14 @@
  //{{{soma
   polyConnect(timeStep, somaVoltageDisplay, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaVoltageDisplay, <>, <>);
+
+#if STIMULUS_CASE == CASE_07
+  polyConnect(timeStep, somaClamp, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaClamp, <>, <identifier="JUNCTION">);
+  polyConnect( somaClamp, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation">);
+
+#endif
+
 #if defined(SIMULATE_CACYTO)
    polyConnect(timeStep, somaCalciumDisplay, <>, <>);
    polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCalciumDisplay, <>, <>);

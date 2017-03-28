@@ -1,3 +1,13 @@
+#if STIMULUS_CASE == CASE_07
+VoltageClamp somaClamp<>;
+
+somaClamp.setCommand( < 
+   command = 0.0
+   > ) on voltageClampOn;
+
+somaClamp.toggle() on voltageClampOff;
+
+#endif
 
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
@@ -9,7 +19,7 @@
 #endif
 //NOTE: Unit of current injection is [pA]
 //NOTE: MSN requires long stimulation due to the long shunt in the first AP
-CurrentPulseGenerator somaStimInj<pattern="periodic", peak=270.0, duration=600, period=5100, delay=timeDelay, last=50000, inc=0>; 
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=230.0, duration=1000, period=5100, delay=timeDelay, last=50000, inc=0>; 
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=10, period=510, delay=timeDelay, last=500, inc=0>; //Larkum-Sakmann (1999)
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1200.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD
