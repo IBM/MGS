@@ -104,6 +104,9 @@
 #define NAT_SCHWEIGHOFER_1999   4
 #define NAT_COLBERT_PAN_2002    5
 #define NAT_TRAUB_1994          6
+#define NAT_OGATA_TATEBAYASHI_1990  7
+
+#define _NAT_DEFAULT NAT_HODGKIN_HUXLEY_1952
 
 //NAT_AIS Channel Channel_NAT_AIS macro
 #define NAT_AIS_TRAUB_1994     1     
@@ -469,8 +472,8 @@
 
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
-#define SIMULATE_CAER
-#define SIMULATE_IP3
+//#define SIMULATE_CAER
+//#define SIMULATE_IP3
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
   #define IP3_CYTO_DYNAMICS FAST_BUFFERING
@@ -688,6 +691,10 @@
   #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS
 //}}}
 //}}}
+#elif MODEL_TO_USE == _MODEL_TESTING
+//#include "ModelTesting.h"
+#define SIMULATE_VM
+#define SIMULATE_CACYTO
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -695,7 +702,7 @@
 //
 //{{{
 #ifndef CHANNEL_NAT
-  #define CHANNEL_NAT _COMPONENT_UNDEFINED
+  #define CHANNEL_NAT _NAT_DEFAULT
 #endif
 #ifndef CHANNEL_NAT_AIS
   #define CHANNEL_NAT_AIS _NAT_AIS_DEFAULT
