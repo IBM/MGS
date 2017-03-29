@@ -20,8 +20,11 @@
 
 void VoltageClamp::initialize(RNG& rng) 
 {
-  outFile = new std::ofstream(fileName.c_str());
-  (*outFile)<<"# Time\tCurrent\n";
+  if (type == 1)
+  {
+    outFile = new std::ofstream(fileName.c_str());
+    (*outFile)<<"# Time\tCurrent\n";
+  }
   assert(deltaT);
 
 
@@ -49,15 +52,26 @@ void VoltageClamp::updateI(RNG& rng)
     inject=true;
   }
   if (inject) {
-    Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
-    (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen<<" "<<Cm<<" "<<targetV<<" "<<(*V)[idx]<<" "<<*deltaT<<"\n";
+    if (type == 1)
+    {
+      Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
+      (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen<<" "<<Cm<<" "<<targetV<<" "<<(*V)[idx]<<" "<<*deltaT<<"\n";
+    }
+    else if (type == 2)
+    {
+      (*V)[idx] = targetV;
+    }
+    else{
+      std::cerr << "Unsupported VoltgeClamp type" << std::endl;
+    }
   }
   Vprev = (*V)[idx];
 }
 
 void VoltageClamp::finalize(RNG& rng) 
 {
-  outFile->close();
+  if (type == 1)
+    outFile->close();
 }
 
 void VoltageClamp::startWaveform(Trigger* trigger, NDPairList* ndPairList) 

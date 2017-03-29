@@ -26,8 +26,12 @@ SemaphoreTrigger::SemaphoreTrigger(Simulation& sim,
 				   std::vector<DataItem*> const & args)
    : _sim(sim)
 {
-   if ((args.size() != 5) && (args.size() != 8)) {
-      std::cerr<<"Semaphore trigger accepts 5 or 8 arguments!"<<std::endl;
+//   if ((args.size() != 5) && (args.size() != 8)) {
+//      std::cerr<<"Semaphore trigger accepts 5 or 8 arguments!"<<std::endl;
+//      exit(-1);
+//   }
+   if ((args.size() != 5) ) {
+      std::cerr<<"Semaphore trigger accepts 5 arguments!"<<std::endl;
       exit(-1);
    }
    std::vector<DataItem*>::const_iterator iter = args.begin();
@@ -53,7 +57,7 @@ SemaphoreTrigger::SemaphoreTrigger(Simulation& sim,
    _criterionA = criterionADI->getBool();
    ++iter;
 
-//   if (args.size() == 8) {
+   if (args.size() == 8) {
 //      StringDataItem* opDI = dynamic_cast<StringDataItem*>(*iter);
 //      if (opDI == 0) {
 //	 std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on SemaphoreTrigger!"<<std::endl;
@@ -75,12 +79,12 @@ SemaphoreTrigger::SemaphoreTrigger(Simulation& sim,
 //      }
 //      _criterionB = criterionBDI->getBool();
 //      ++iter;
-//   } else {
-//      _op = "single";
-//      _triggerB = 0;
-//      _criterionB = 1;
-//   }
-//
+   } else {
+      _op = "single";
+      _triggerB = 0;
+      _criterionB = 1;
+   }
+
    NumericDataItem* delayDI = dynamic_cast<NumericDataItem*>(*iter);
    if (delayDI == 0) {
       std::cerr<<"Dynamic cast of DataItem to NumericDataItem failed on SemaphoreTrigger!"<<std::endl;
@@ -153,6 +157,10 @@ bool SemaphoreTrigger::status()
       }
       if (_state)
 	 _semaphore = true;
+   }
+   else
+   {
+      _state = false;
    }
    return _state;
 }

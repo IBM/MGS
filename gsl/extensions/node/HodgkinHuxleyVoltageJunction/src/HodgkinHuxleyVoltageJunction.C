@@ -198,7 +198,8 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 #endif
   //END TUAN DEBUG
   dyn_var_t conductance = cmt;
-  dyn_var_t current = cmt * Vcur;
+  //dyn_var_t current = cmt * Vcur;
+  dyn_var_t current = cmt * Vnew[0];
 
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;

@@ -303,24 +303,24 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)  // TUAN: checked
       }
       Vcur[i] = Vm_values[j];
     }
-		else if (Vm_branchorders.size() > 0)
-		{
+    else if (Vm_branchorders.size() > 0)
+    {
       unsigned int j;
       assert(Vm_values.size() == Vm_branchorders.size());
       SegmentDescriptor segmentDescriptor;
       for (j=0; j<Vm_branchorders.size(); ++j) {
-        if (segmentDescriptor.getBranchOrder(branchData->key) == Vm_branchorders[j]) break;
+	if (segmentDescriptor.getBranchOrder(branchData->key) == Vm_branchorders[j]) break;
       }
-			if (j == Vm_branchorders.size() and Vm_branchorders[j-1] == GlobalNTS::anybranch_at_end)
-			{
-				Vcur[i] = Vm_values[j-1];
-			}
-			else if (j < Vm_values.size()) 
-        Vcur[i] = Vm_values[j];
+      if (j == Vm_branchorders.size() and Vm_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+      {
+	Vcur[i] = Vm_values[j-1];
+      }
+      else if (j < Vm_values.size()) 
+	Vcur[i] = Vm_values[j];
       else
-        Vcur[i] = Vm_default;
-		}
-		else {
+	Vcur[i] = Vm_default;
+    }
+    else {
       Vcur[i] = Vm_default;
     }
   }
@@ -534,7 +534,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   for (int i = 0; i < size; i++)  // for each compartment on that branch
   {
     Aii[i] = cmt - Aim[i] - Aip[i] + gLeak;
-    RHS[i] = cmt * Vcur[i] + gLeak * getSharedMembers().E_leak;
+    RHS[i] = cmt * Vnew[i] + gLeak * getSharedMembers().E_leak;
     /* * * Sum Currents * * */
     // loop through different kinds of currents (Kv, Nav1.6, ...)
 	  //  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
@@ -553,19 +553,19 @@ void HodgkinHuxleyVoltage::doForwardSolve()
       Aii[i] += (*conductances)[i];
     }
 
-	  //  1.b. ionic currents using GHK equations (-Iion)
-		Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
-		Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
-		for (; iiter != iend; iiter++)
-		{//IMPORTANT: subtraction is used
-			RHS[i] -=  (*(iiter->currents))[i]; //[pA/um^2]
-		}
+    //  1.b. ionic currents using GHK equations (-Iion)
+    Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+    Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+    for (; iiter != iend; iiter++)
+    {//IMPORTANT: subtraction is used
+      RHS[i] -=  (*(iiter->currents))[i]; //[pA/um^2]
+    }
   }
   // JMW 07/10/2009 CHECKED AND LOOKS RIGHT
   if (isDistalCase3)
   {
     Aii[0] = cmt - Aip[0] + gLeak;                               //[nS/um^2]
-    RHS[0] = cmt * Vcur[0] + gLeak * getSharedMembers().E_leak;  //[pA/um^2]
+    RHS[0] = cmt * Vnew[0] + gLeak * getSharedMembers().E_leak;  //[pA/um^2]
 #ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
     //no change to Aii[0]
     for (int n = 0; n < distalInputs.size(); n++)
