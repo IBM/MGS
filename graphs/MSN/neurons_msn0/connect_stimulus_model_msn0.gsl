@@ -1,4 +1,9 @@
 
+#if STIMULUS_CASE == CASE_08
+polyConnect(timeStep, somaClamp, <>, <>);
+polyConnect(somaClamp, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), somaClamp, <>, <identifier="JUNCTION">);
+#endif
 // NOTE: Check definition in model*.gsl file
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
