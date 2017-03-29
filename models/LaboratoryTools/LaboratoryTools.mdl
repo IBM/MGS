@@ -1078,21 +1078,21 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 
 Variable SimulationInfo 
 {
-	//{{{
+  //{{{
   //NOTE: make sure it has to be 'float'
   // to be able to absorved by FloatTrigger
   float currentTime;    //[ms]
   float recordIntervalInTime; //[ms]
   int recordIntervalInIterations; 
 
-	dyn_var_t* deltaT;
+  dyn_var_t* deltaT;
 
-	InitPhase initialize;
+  InitPhase initialize;
   RuntimePhase calculateInfo; //estimate the current time
 
-	Connection Pre Constant () Expects TimeStepProducer {
-		TimeStepProducer.deltaT >> deltaT;
-	}
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
   //}}}
 }
 
