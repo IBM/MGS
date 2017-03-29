@@ -5,20 +5,23 @@
 
 void SimulationInfo::initialize(RNG& rng) 
 {
-	assert(deltaT);
-	assert(recordIntervalInTime > 0 || recordIntervalInIterations > 0);
-	if (recordIntervalInTime > 0)
-		recordIntervalInIterations = (int)(recordIntervalInTime / (*deltaT));
-	if (recordIntervalInIterations == 0)
-	{
-		std::cerr << "Record interval cannot be zero. Make sure recordIntervalInTimes > deltaT\n";
-		assert(0);
-	}
+   assert(deltaT);
+   assert(recordIntervalInTime > 0 || recordIntervalInIterations > 0);
+   if (recordIntervalInTime > 0)
+      recordIntervalInIterations = (int)(recordIntervalInTime / (*deltaT));
+   else if (recordIntervalInIterations > 0)
+      recordIntervalInTime = (float)(recordIntervalInIterations * (*deltaT));
+
+   if (recordIntervalInIterations == 0)
+   {
+      std::cerr << "Record interval cannot be zero. Make sure recordIntervalInTimes > deltaT\n";
+      assert(0);
+   }
 }
 
 void SimulationInfo::calculateInfo(RNG& rng) 
 {
-	currentTime = (*deltaT) * getSimulation().getIteration();
+   currentTime = (*deltaT) * getSimulation().getIteration();
 }
 
 SimulationInfo::SimulationInfo() 

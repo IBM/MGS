@@ -32,7 +32,7 @@
 // b_m  = BMC * exp( (V - BMV)/BMD )
 // a_h  = AHC * exp( (V - AHV)/AHD )
 // b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
-#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952
+#if CHANNEL_KDR == KDR_HODGKIN_HUXLEY_1952
 // data measured from squid giant axon
 #define ANC 0.01
 #define ANV -55.0
@@ -76,7 +76,7 @@ void ChannelKDR::update(RNG& rng)
   for (unsigned i=0; i<branchData->size; ++i) 
   {
     dyn_var_t v=(*V)[i];
-#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952  
+#if CHANNEL_KDR == KDR_HODGKIN_HUXLEY_1952  
     dyn_var_t an = ANC*vtrap(-(v - ANV), AND);
     dyn_var_t bn = BNC*exp(-(v - BNV)/BND);
 		// see Rempe-Chomp (2006)
@@ -182,7 +182,7 @@ void ChannelKDR::initialize(RNG& rng)
   for (unsigned i=0; i<size; ++i) 
   {
     dyn_var_t v=(*V)[i];
-#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952 
+#if CHANNEL_KDR == KDR_HODGKIN_HUXLEY_1952 
     dyn_var_t an = ANC*vtrap(-(v - ANV), AND);
     dyn_var_t bn = BNC*exp(-(v - BNV)/BND);
     n[i] = an/(an + bn); // steady-state value

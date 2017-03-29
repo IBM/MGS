@@ -23,8 +23,9 @@
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define CASE_07  7   //voltage clamp
-#define STIMULUS_CASE   CASE_01
+#define CASE_07  7   //trigger axon/AIS
+#define CASE_08  8   //voltage clamp
+#define STIMULUS_CASE   CASE_08
 //#define morph ""
 #define morph "msn0_"
 //}}}
@@ -72,6 +73,8 @@ print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_06
 #define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_07
+#define OutputFolderName dataFolder morph "Tuan_triggeraxon" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_08
 #define OutputFolderName dataFolder morph "Tuan_Vclamp" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
@@ -105,8 +108,8 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          400      // [ms]
-	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+  #define TimeEnd          400      // [ms]
+  //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
   #define TimeStartVClamp    20    // [ms]
   #define TimeOffVClamp      400   // [ms]
 //}}}
@@ -889,19 +892,32 @@ Service ImplicitRecordInterval (simInfo, "recordIntervalInIterations");
 //}}}
 // 5. TRIGGER
 /*{{{*/
+//NOTE: delay is in 'number of iterations'
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
 Trigger UnsignedServiceTrigger(string description, Service svc, string operator, Service svc2, int delay, string phaseName);
 Trigger FloatTrigger(string description, Service svc, string operator, float criterion, int delay, string phaseName);
+//NOTE: critA and critB should be either 0 (False) or 1 (True)
+// (triggerA == critA) 'operator' (triggerB == critB)   [after a 'delay' number of times]
+//check if result(triggerA) == critA  [after a 'delay' number of times]
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
+
+//return True if triggerA is TRUE and _semaphore is not set 
+Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int delay, string phaseName);
+//Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
   #if SIMULATION_RECORD == _SR_FROM_BEGINNING
   UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) " [ms]", 
-            ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
-  UnsignedTrigger voltaggeClampOn("Iteration Trigger : == " STR(TimeStartVClamp) " [ms]", 
-    ::Iteration, ">=", TimeStartVClamp, 0, solveChannels );
-  UnsignedTrigger voltaggeClampOff("Iteration Trigger : == " STR(TimeOffVClamp) " [ms]", 
-    ::Iteration, ">=", TimeOffVClamp, 0, solveChannels );
+      ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
+
+  FloatTrigger voltageClampOn("Iteration Trigger : >= " STR(TimeStartVClamp) " [ms]", 
+      CurrentTime, ">=", TimeStartVClamp, 0, solveChannels );
+  FloatTrigger voltageClampOff("Iteration Trigger : >= " STR(TimeOffVClamp) " [ms]", 
+      CurrentTime, ">=", TimeOffVClamp, 0, solveChannels );
+  SemaphoreTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
+  SemaphoreTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
+  //CompositeTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
+  //CompositeTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
 
   #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
   FloatTrigger recOn("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
@@ -909,7 +925,7 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string
   #endif
 
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
-UnsignedTrigger voltaggeClampOn("Iteration Trigger : == 10000", 
+UnsignedTrigger voltageClampOn("Iteration Trigger : == 10000", 
  			 ::Iteration, "==", 1000, 0, solveChannels );
 
 UnsignedTrigger currentOn("Iteration Trigger : == 10000", 
@@ -941,7 +957,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
 VariableType PointCurrentSource { stimulate->solveChannels };
 VariableType PointCalciumSource { stimulate->solveChannels };
-VariableType VoltageClamp {initialize->initialize1, updateI->solveChannel};
+VariableType VoltageClamp {initialize->initialize1, updateI->finish};
 
 #include "stimulus_model.gsl"
 //}}}

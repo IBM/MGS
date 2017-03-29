@@ -20,7 +20,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 // This is an implementation of the "TTX-sensitive rapidly-activating, and
 // rapidly-inactivating
 //         Vm-gated Na^+ current, I_Nat (or I_Naf)".
-#if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+#if CHANNEL_NAT == NAT_HODGKIN_HUXLEY_1952
 // Gate: m^3 * h
 // data measured from squid giant axon
 //   at temperature = 6.3-degree celcius
@@ -228,7 +228,7 @@ void ChannelNat::update(RNG& rng)
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+#if CHANNEL_NAT == NAT_HODGKIN_HUXLEY_1952
     {
     // NOTE: Some models use alpha_m and beta_m to estimate m
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
@@ -446,7 +446,7 @@ void ChannelNat::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+#if CHANNEL_NAT == NAT_HODGKIN_HUXLEY_1952
     {
     dyn_var_t am = AMC * vtrap(-(v - AMV), AMD);
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);

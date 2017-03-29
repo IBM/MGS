@@ -20,18 +20,24 @@ Variable VoltageClamp Implements CurrentProducer
 {
   //{{{
   //{{{ Data
-  dyn_var_t command; 						// Declare command voltage
-  dyn_var_t Igen;							// Declare the feedback current applied to hold voltage constant
-  dyn_var_t [] waveform;						// Declare an array for the waveform
-  int waveformIdx;						// Declare index of the waveform array
-  dyn_var_t Vprev;							// Declare voltage from previous iteration for calculating dV
-  dyn_var_t Cm;							// Declare membrane capacitance
+  dyn_var_t command; 	// Declare command voltage
+  dyn_var_t [] waveform;// Declare an array for the waveform
+  int waveformIdx;	// Declare index of the waveform array
   dyn_var_t []* V; // array of pointers for the voltage measured at the cell that is input to the tool
-  dyn_var_t beta;
-  dyn_var_t* surfaceArea;
   int idx;  // not being used yet especially when connecting to ComputeBranch is added
-  dyn_var_t* deltaT;
   bool isOn;
+  dyn_var_t* deltaT;
+  int type; // type = 1 or 2 is supported [1 = emulate inject current compensation; 2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm]
+  //{{{type = 1
+  dyn_var_t Igen;	// Declare the feedback current applied to hold voltage constant
+  dyn_var_t Vprev;	// Declare voltage from previous iteration for calculating dV
+  dyn_var_t Cm;		// Declare membrane capacitance
+  dyn_var_t beta; // headstage gain
+  dyn_var_t* surfaceArea;
+  //}}}
+  //{{{ type = 2
+  float gainTime ; // [ms] - typically 0.05 ms or 50 microseconds is the type to reach 99% value of Vc in experiment
+  //}}}
   string fileName; 
   DimensionStruct* [] dimensions; //points from different compartments on different branches
   //}}}
@@ -1097,21 +1103,21 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 
 Variable SimulationInfo 
 {
-	//{{{
+  //{{{
   //NOTE: make sure it has to be 'float'
   // to be able to absorved by FloatTrigger
   float currentTime;    //[ms]
   float recordIntervalInTime; //[ms]
   int recordIntervalInIterations; 
 
-	dyn_var_t* deltaT;
+  dyn_var_t* deltaT;
 
-	InitPhase initialize;
+  InitPhase initialize;
   RuntimePhase calculateInfo; //estimate the current time
 
-	Connection Pre Constant () Expects TimeStepProducer {
-		TimeStepProducer.deltaT >> deltaT;
-	}
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
   //}}}
 }
 
