@@ -52,7 +52,7 @@ static pthread_once_t once_Nap = PTHREAD_ONCE_INIT;
 #elif CHANNEL_NAP == NAP_WOLF_2005
 // data
 //    Activation : from 
-//      1. Magistretti-Alonso(1999) entorhinal cortical stellate cell  (Fig. 4)
+//      1. Magistretti-Alonso(1999) entorhinal cortical Layer-II stellate cell  (Fig. 4)
 //      2. Traub (2003) computational model of Layer2/3 pyramidal neuron - tau_m (Table A2)
 //    Inactivation: from 
 //      1. Magistretti-Alonso (1999)

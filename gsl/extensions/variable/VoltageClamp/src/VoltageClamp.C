@@ -23,6 +23,12 @@ void VoltageClamp::initialize(RNG& rng)
   outFile = new std::ofstream(fileName.c_str());
   (*outFile)<<"# Time\tCurrent\n";
   assert(deltaT);
+
+
+  //TUAN NOTE: This only works for SOMA JUNCTION for now
+  idx = 0;
+  surfaceArea = &(dimensions[idx]->surface_area);
+
   Vprev = (*V)[idx];
   waveformIdx = waveform.size();
 }

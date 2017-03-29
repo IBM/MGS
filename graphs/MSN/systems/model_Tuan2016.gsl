@@ -17,13 +17,14 @@
 #define CASE_VIVO 1000 // random input at all spines
 #define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
-#define CASE_01  1   //inject soma
+#define CASE_01  1   //inject soma [square pulse current]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
-#define STIMULUS_CASE   CASE_00
+#define CASE_07  7   //voltage clamp
+#define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "msn0_"
 //}}}
@@ -70,6 +71,8 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Tuan_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
 #define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_07
+#define OutputFolderName dataFolder morph "Tuan_Vclamp" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
 #else
@@ -96,14 +99,16 @@ print("Case 00: resting");
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0100 // [ms]
+#define TimeStep_value   0.0100 // [ms] - standard
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          200      // [ms]
+	#define TimeEnd          400      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+  #define TimeStartVClamp    20    // [ms]
+  #define TimeOffVClamp      400   // [ms]
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -342,7 +347,9 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
 		Functor, Functor, Functor, Functor, int compartmentSize);
 #define tissueFile "neurons.txt"
 //NOTE: -r #capsules-per-cpt
-#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p " STR(paramFolder)"/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 1" 
+//      -u bt -o neurons_developed.txt  : only use when we -resample (but can create huge number of spine*developed.swc file)
+//#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 1 -q 51 -a 1.0 -p " STR(paramFolder)"/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 1" 
+#define strArg1 tissueFile " -j 1 -q 51 -a 1.0 -p " STR(paramFolder)"/DevParams.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_) " -e 0.001 -t 0.01 -m 0 -r 1" 
 
 #define strArg1_supplement "-p " STR(paramFolder) "/DetParams.par -n cost-volume"
 #define strArg3 STR(paramFolder) "/ChanParams.par"
@@ -889,14 +896,22 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
   #if SIMULATION_RECORD == _SR_FROM_BEGINNING
-  UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
+  UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) " [ms]", 
             ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
+  UnsignedTrigger voltaggeClampOn("Iteration Trigger : == " STR(TimeStartVClamp) " [ms]", 
+    ::Iteration, ">=", TimeStartVClamp, 0, solveChannels );
+  UnsignedTrigger voltaggeClampOff("Iteration Trigger : == " STR(TimeOffVClamp) " [ms]", 
+    ::Iteration, ">=", TimeOffVClamp, 0, solveChannels );
+
   #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
   FloatTrigger recOn("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
             CurrentTime, ">=", TimeStartRecord, 0, solveChannels ); //Record only after it passes
   #endif
 
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+UnsignedTrigger voltaggeClampOn("Iteration Trigger : == 10000", 
+ 			 ::Iteration, "==", 1000, 0, solveChannels );
+
 UnsignedTrigger currentOn("Iteration Trigger : == 10000", 
  			 ::Iteration, "==", 1000, 0, solveChannels );
 //SA: Changed 10,200 to 12000
@@ -926,6 +941,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
 VariableType PointCurrentSource { stimulate->solveChannels };
 VariableType PointCalciumSource { stimulate->solveChannels };
+VariableType VoltageClamp {initialize->initialize1, updateI->solveChannel};
 
 #include "stimulus_model.gsl"
 //}}}
@@ -1878,14 +1894,19 @@ Grid Adaptor
    connectNodeSets(.[].Layer(DendroDendriticGapJunctionConnexons1), .[].Layer(DendroDendriticGapJunctionConnexons0), isoSampler, outAttrDef, Mcnnxn2cnnxn);
 //}}}
 };
-//Adaptor adaptor;
+
+//Adaptor adaptor; //NOTE: uncomment this to use Adaptor
+
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
   //criteria is evaluated at any time correctJunction is called 
 FloatTrigger endTrig("Time Trigger to end or stop", 
 		CurrentTime , ">=", TimeEnd, 0, correctJunction); 
+
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
 		::Iteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
+
 #endif
 
 Stop on endTrig;
