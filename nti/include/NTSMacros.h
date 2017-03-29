@@ -124,6 +124,7 @@
 #define KAf_WOLF_2005          2
 #define KAf_TRAUB_1994         3
 #define KAf_KORNGREEN_SAKMANN_2000 4
+#define KAf_EVANS_2012         5
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
 //}}}
@@ -363,16 +364,22 @@
 ///////////////////////////////////////////////////////////////////////
 /// Define what models are available here
 //    MODEL_TO_USE macro
+//  NOTE: Code-based is 
+//     1xx ~ Pyramidal
+//     2xx ~ MSN
+//     3xx ~ Interneuron
+//     4xx ~ IO                  
 //{{{
 #define _MODEL_NOT_DEFINED    0 
 #define _MODEL_TESTING        1
-#define _MSN_2005_WOLF        2 
-#define _MSN_2016_TUAN_JAMES  3
-#define _PYRAMIDAL_2011_HAY  4
-#define _INFERIOR_OLIVE_1999_SCHWEIGHOFER 5
-#define _PYRAMIDAL_L5b_2016_TUAN_JAMES 6
-#define _INTERNEURON_TRAUB_1995 7
-#define _PYRAMIDAL_L5b_2017_TUAN_JAMES 8
+#define _PYRAMIDAL_2011_HAY  100
+#define _PYRAMIDAL_L5b_2016_TUAN_JAMES 101
+#define _PYRAMIDAL_L5b_2017_TUAN_JAMES 102
+#define _MSN_2005_WOLF        200 
+#define _MSN_2016_TUAN_JAMES  201
+#define _MSN_2012_EVANS_BLACKWELL 202
+#define _INFERIOR_OLIVE_1999_SCHWEIGHOFER 400
+#define _INTERNEURON_TRAUB_1995 300
 //}}}
 // define 
 
@@ -465,7 +472,7 @@
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
 //{{{
 //#define STRETCH_SOMA_WITH 105 //#135.0    
-//#define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
+#define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
@@ -479,8 +486,10 @@
   #define IP3_CYTO_DYNAMICS FAST_BUFFERING
 //{{{//list channels
   #define CHANNEL_NAT NAT_WOLF_2005
+  //#define CHANNEL_NAT NAT_OGATA_TATEBAYASHI_1990
   #define CHANNEL_NAP NAP_WOLF_2005
   #define CHANNEL_KAf KAf_WOLF_2005
+  //#define CHANNEL_KAf KAf_EVANS_2012
   #define CHANNEL_KAs KAs_WOLF_2005
   #define CHANNEL_KIR KIR_WOLF_2005
   #define CHANNEL_KRP KRP_WOLF_2005
@@ -508,6 +517,54 @@
   //#define CHANNEL_IP3R  IP3R_ULLAH_MAK_PEARSON_2012
   #define CHANNEL_IP3R  IP3R_LI_RINZEL_1994
   #define PUMP_SERCA  SERCA_Tran_Crampin_2009
+//}}}
+
+//}}}
+#elif MODEL_TO_USE == _MSN_2012_EVANS_BLACKWELL
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+//{{{
+//#define STRETCH_SOMA_WITH 105 //#135.0    
+//#define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
+  #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+  #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+
+#define SIMULATE_VM
+#define SIMULATE_CACYTO
+  #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
+  #define IP3_CYTO_DYNAMICS FAST_BUFFERING
+//{{{//list channels
+  #define CHANNEL_NAT NAT_OGATA_TATEBAYASHI_1990
+  //notuse#define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_KAf KAf_EVANS_2012
+  //#define CHANNEL_KAs KAs_WOLF_2005
+  //#define CHANNEL_KIR KIR_WOLF_2005
+  //#define CHANNEL_KRP KRP_WOLF_2005
+  //#define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  //#define CHANNEL_SK SK_WOLF_2005
+  //#define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  //#define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  //#define CHANNEL_CaN CaN_GHK_WOLF_2005
+  //#define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  //#define CHANNEL_CaR CaR_GHK_WOLF_2005
+  //#define CHANNEL_CaT CaT_GHK_WOLF_2005
+
+  //#define EXCHANGER_NCX  NCX_Weber_Bers_2001
+  //#define PUMP_PMCA  PMCA_PUMPRATE_CONSTANT_DYNAMICS
+  ////NOTE: When switching to the below model
+  ////we no longer use 'tau' but Ipmcabar
+  //// which need tobe updated in the ChanParams.par
+  ////#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
+
+  //#define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+  //#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
+  //#define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
+
+  //#define CHANNEL_RYR RYR2_WILLIAMS_JAFRI_2011
+  ////#define CHANNEL_IP3R  IP3R_ULLAH_MAK_PEARSON_2012
+  //#define CHANNEL_IP3R  IP3R_LI_RINZEL_1994
+  //#define PUMP_SERCA  SERCA_Tran_Crampin_2009
 //}}}
 
 //}}}

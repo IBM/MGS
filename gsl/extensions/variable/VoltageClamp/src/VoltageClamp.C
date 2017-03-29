@@ -28,6 +28,7 @@ void VoltageClamp::initialize(RNG& rng)
   //TUAN NOTE: This only works for SOMA JUNCTION for now
   idx = 0;
   surfaceArea = &(dimensions[idx]->surface_area);
+  isOn = false;
 
   Vprev = (*V)[idx];
   waveformIdx = waveform.size();

@@ -2,10 +2,27 @@
 VoltageClamp somaClamp<>;
 
 somaClamp.setCommand( < 
-   command = 0.0
-   > ) on voltageClampOn;
+   command = 0.0   // [mV]  - a command Voltage
+   > ) on voltageClampOn; //but NOT trigger clamping
+somaClamp.toggle() on voltageClampOnSem; //toggle clamping
+somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 
-somaClamp.toggle() on voltageClampOff;
+#define t0 0.0 //[ms]
+#define t1 10.0 // [ms]
+#define t2 30.0  //[ms]
+#define t3 50.0 //[ms]
+#define Vc0 -80.0 //[ms]
+#define Vc1 20.0  //[ms]
+#define Vc2 -100.0 //[ms]
+#define Vc3 -80.0 //[ms]
+
+//current use:
+// somaClamp.startWaveform( < waveform={data-for-every-time-step-starting-from-the-time-toggle-is-triggered}>;
+//plan to change:
+//somaClamp.startWaveform( < 
+//   time     = { t0, t1, t2, t3 }, 
+//   commands = {Vc0, Vc1, Vc2, Vc3}
+//   > ) on voltageClampOn;
 
 #endif
 
