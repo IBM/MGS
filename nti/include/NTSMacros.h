@@ -679,11 +679,11 @@
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
 //{{{
   #define CHANNEL_NAT NAT_SCHWEIGHOFER_1999 //ok perfect
-  //#define CHANNEL_NAT NAT_HODGKINHUXLEY_1952 //ok yet soma activation is lower
+  //#define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952 //ok yet soma activation is lower
   //#define CHANNEL_NAT NAT_HAY_2011 //ok
   #define CHANNEL_HCN HCN_HUGUENARD_MCCORMICK_1992 
   //#define CHANNEL_KDR KDR_SCHWEIGHOFER_1999 //failed 
-  //#define CHANNEL_KDR KDR_HODGKINHUXLEY_1952 
+  //#define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952 
   #define CHANNEL_KDR  KDR_TRAUB_1994 //ok perfect
   #define CHANNEL_CaL CaL
   #define CHANNEL_CaH CaHVA_TRAUB_1994
