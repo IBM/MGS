@@ -110,7 +110,10 @@ print("Case 00: resting");
 //{{{
   #define TimeEnd          400      // [ms]
   //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
-  #define TimeStartVClamp    20    // [ms]
+  #define TimeVClampSet1    20    // [ms]
+  #define TimeVClampSet2    100    // [ms]
+  #define TimeVClampSet3    200    // [ms]
+  #define TimeStartVClamp    20   // [ms]
   #define TimeOffVClamp      400   // [ms]
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
@@ -910,14 +913,22 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
   UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) " [ms]", 
       ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
 
+  FloatTrigger voltageClampSet1("Iteration Trigger : >= " STR(TimeVClampSet1) " [ms]", 
+      CurrentTime, ">=", TimeVClampSet1, 0, solveChannels );
+  SemaphoreTrigger voltageClampSet1Sem("Nothing", voltageClampSet1, 1, 0, solveChannels);
+  FloatTrigger voltageClampSet2("Iteration Trigger : >= " STR(TimeVClampSet2) " [ms]", 
+      CurrentTime, ">=", TimeVClampSet2, 0, solveChannels );
+  SemaphoreTrigger voltageClampSet2Sem("Nothing", voltageClampSet2, 1, 0, solveChannels);
+  FloatTrigger voltageClampSet3("Iteration Trigger : >= " STR(TimeVClampSet3) " [ms]", 
+      CurrentTime, ">=", TimeVClampSet3, 0, solveChannels );
+  SemaphoreTrigger voltageClampSet3Sem("Nothing", voltageClampSet3, 1, 0, solveChannels);
+
   FloatTrigger voltageClampOn("Iteration Trigger : >= " STR(TimeStartVClamp) " [ms]", 
       CurrentTime, ">=", TimeStartVClamp, 0, solveChannels );
   FloatTrigger voltageClampOff("Iteration Trigger : >= " STR(TimeOffVClamp) " [ms]", 
       CurrentTime, ">=", TimeOffVClamp, 0, solveChannels );
   SemaphoreTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
   SemaphoreTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
-  //CompositeTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
-  //CompositeTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
 
   #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
   FloatTrigger recOn("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",

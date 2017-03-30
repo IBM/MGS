@@ -24,6 +24,7 @@
 class VoltageClamp : public CG_VoltageClamp
 {
    public:
+      enum VCLAMP_SLOPE { SLOPE_ON=0, FLAT_ZONE = 1, SLOPE_OFF=2, NO_CLAMP=3 };
       void initialize(RNG& rng);
       void updateI(RNG& rng);
       void finalize(RNG& rng);
@@ -37,6 +38,11 @@ class VoltageClamp : public CG_VoltageClamp
       virtual void duplicate(std::auto_ptr<CG_VoltageClamp>& dup) const;
    private:
       std::ofstream* outFile;
+      float _timeStart; //time point when start Vclamp
+      float _Vstart;  //voltage at timeStart
+      int _status; // 
+      bool _isOn;
+      float _Vprev;	// Declare voltage from previous iteration for calculating dV
 };
 
 #endif
