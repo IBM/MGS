@@ -1,4 +1,4 @@
-#if STIMULUS_CASE == CASE_07
+#if STIMULUS_CASE == CASE_08
   polyConnect(timeStep, somaClamp, <>, <>);
   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaClamp, <>, <identifier="JUNCTION">);
   polyConnect( somaClamp, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), <>, <identifier="stimulation">);

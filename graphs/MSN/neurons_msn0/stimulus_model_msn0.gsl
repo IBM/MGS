@@ -1,12 +1,29 @@
 #if STIMULUS_CASE == CASE_08
+//NOTE: User can define 'idx' to specify compartment index (default is 0)
 //VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
-VoltageClamp somaClamp<type=2, command = 10.0, gainTime=0.05>;
+//NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
+VoltageClamp somaClamp<type=2, command = 10.0, gainTime=0.05>; //TimeSetVClamp1
 
-//somaClamp.setCommand( < 
-//   command = 0.0   // [mV]  - a command Voltage
-//   > ) on voltageClampOn; //but NOT trigger clamping
-somaClamp.toggle(<toggle=1>) on voltageClampOnSem; //toggle clamping
-somaClamp.toggle(<toggle=1>) on voltageClampOffSem; //toggle clamping
+//NOTE: You have up to 3 time points to set different Vclamp values
+somaClamp.setCommand( < 
+   command = -20.0   // [mV]  - a command Voltage
+   > ) on voltageClampSet2Sem; //TimeSetVClamp2
+somaClamp.setCommand( < 
+   command = +20.0   // [mV]  - a command Voltage
+   > ) on voltageClampSet3Sem; //TimeSetVClamp3
+///somaClamp.startWaveform( <
+///   waveform = {val1, val2, val3, val4} 
+///   > ) on voltageClampSet1;
+///somaClamp.startWaveform( <
+///   waveformFile = "2column-(time-Vm)-filename.txt"
+///   > ) on voltageClampSet1;
+
+//NOTE: Default initial is OFF
+somaClamp.toggle() on voltageClampOnSem; //toggle clamping
+somaClamp.toggle() on voltageClampOffSem; //toggle clamping
+//Old use
+//somaClamp.toggle(<toggle=1>) on voltageClampOnSem; //toggle clamping
+//somaClamp.toggle(<toggle=1>) on voltageClampOffSem; //toggle clamping
 
 #define t0 0.0 //[ms]
 #define t1 10.0 // [ms]
