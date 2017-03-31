@@ -3,11 +3,10 @@
 sed '/\\/p' $1 | sed 's/#include "/cp $LENSROOT\/Extensions.mk $LENSROOT\/Extensions.mk.bak ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; cp $LENSROOT\/Extensions.mk.bak $LENSROOT\/Extensions.mk ;/g' > defineModels1.sh;
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
   awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
-uelse
+else
   awk '{ print "if [ '$1' -ot " $6" ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
 fi
-
-source defineModels2.sh;
+source defineModels2.sh;	
 touch $1;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;

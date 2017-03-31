@@ -242,8 +242,6 @@ class Options:
         self.domainLibrary = False # True, False
         self.pthreads = True # True, False
         self.withMpi = False # True, False
-        self.withGPU = False # True, False
-        self.withArma = False # True, False
         self.blueGeneL = False # True, False
         self.blueGeneP = False # True, False
         self.blueGeneQ = False # True, False
@@ -277,8 +275,6 @@ class Options:
                            ("domainLib", "link to domain specific library"),
                            ("disable-pthreads", "disable pthreads, there will be a single thread"),
                            ("with-mpi", "enables mpi"),
-                           ("with-GPU", "enables GPU"),
-                           ("with-Arma", "enables Armadillo"),
                            ("blueGeneL", "configures for blueGeneL environment"),
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
@@ -387,10 +383,6 @@ class Options:
                     self.pthreads = False
                 if o == "--with-mpi":
                     self.withMpi = True
-                if o == "--with-GPU":
-                    self.withGPU = True
-                if o == "--with-Arma":
-                    self.withArma = True
                 if o == "--silent":
                     self.silent = True
                 if o == "--verbose":
@@ -625,20 +617,6 @@ class BuildSetup:
             retStr += "Not used"
         retStr += "\n"
 
-        retStr += TAB + "GPU: "
-        if self.options.withGPU == True:
-            retStr += "Used"
-        else :
-            retStr += "Not used"
-        retStr += "\n"
-
-        retStr += TAB + "Arma: "
-        if self.options.withArma == True:
-            retStr += "Used"
-        else :
-            retStr += "Not used"
-        retStr += "\n"
-
         retStr += TAB + "DX: "
 
         if self.dx.exists == True:
@@ -704,14 +682,11 @@ class BuildSetup:
             #print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
             #os.system(CLEAN_SCRIPT)
             os.system("make LINUX clean")
-# <<<OLD_MGS
-#            print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
-#            os.system(CLEAN_SCRIPT)
-#    OLD_MGS>>>
 
         createConfigHeader()
         touchExtensionsMk()
 
+        #self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
         if self.options.rebuild == True:
@@ -825,29 +800,23 @@ PARSER_GENERATED := $(PARSER_PATH)/generated
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
-# <<<OLD_MGS
 """
-#    OLD_MGS>>>
-
 #DCA_OBJ := framework/dca/obj
 #DCA_SRC := framework/dca/src
 
-# <<<OLD_MGS
+# Each module adds to these initial empty definitions
 #SRC :=
 #OBJS :=
 #SHARED_OBJECTS :=
 #BASE_OBJECTS :=
 #DEF_SYMBOLS := $(SO_DIR)/main.def
 #UNDEF_SYMBOLS :=
-
-# EXTENSION_OBJECTS is the generated modules that must be linked in statically
+#
+## EXTENSION_OBJECTS is the generated modules that must be linked in statically
 #EXTENSION_OBJECTS :=
-
-# GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
+#
+## GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
 #GENERATED_DL_OBJECTS :=
-
-#"""
-#    OLD_MGS>>>        
 
         # BlueGene MPI flags
         if self.options.blueGeneL == True:
@@ -871,10 +840,6 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi == True:
             retStr += "HAVE_MPI := 1\n"
-        if self.options.withGPU == True:
-            retStr += "HAVE_GPU := 1\n"
-        if self.options.withArma == True:
-            retStr += "HAVE_ARMA := 1\n"
         if self.options.silent == True:
             retStr += "SILENT_MODE := 1\n"
         if self.options.verbose == True:
@@ -957,14 +922,11 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstRefSumRsqrdInvWeightModifier \\
        	DstScaledContractedGaussianWeightModifier \\
        	DstScaledGaussianWeightModifier \\
-        ExecuteShell \\
-        Exp \\
-	GetNodeCoordFunctor \\
        	IsoSampler \\
        	IsoSamplerHybrid \\
+        Exp \\
         Log \\
         ModifyParameterSet \\
-        Neg \\
         NameReturnValue \\
       	PolyConnectorFunctor \\
       	RefAngleModifier \\
@@ -972,25 +934,24 @@ FUNCTOR_MODULES := BinomialDist \\
       	ReversedDstRefGaussianWeightModifier \\
       	ReversedSrcRefGaussianWeightModifier \\
       	ReverseFunctor \\
-        Scale \\
       	ServiceConnectorFunctor \\
       	SrcDimensionConstrainedSampler \\
       	SrcRefDistanceModifier \\
       	SrcRefGaussianWeightModifier \\
-	SrcRefDoGWeightModifier \\
       	SrcRefPeakedWeightModifier \\
       	SrcRefSumRsqrdInvWeightModifier \\
       	SrcScaledContractedGaussianWeightModifier \\
       	SrcScaledGaussianWeightModifier \\
-        Threshold \\
       	TissueConnectorFunctor \\
       	TissueFunctor \\
       	TissueLayoutFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
-        TissueMGSifyFunctor \\
-        UniformDiscreteDist \\
+	    TissueMGSifyFunctor \\
         Zipper \\
+        UniformDiscreteDist \\
+        GetNodeCoordFunctor \\
+        ExecuteShell \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -1028,11 +989,9 @@ MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 	       done)
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
-# <<<OLD_MGS; comment these
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
 TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
 NTI_OBJS := $(TEMP)
-#    OLD_MGS>>>
 
 COMMON_DIR := ../common/obj
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
@@ -1147,12 +1106,6 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " -DHAVE_MPI"
             if self.options.compiler == "gcc":
                retStr += " -DLAM_BUILDING"
-               
-        if self.options.withGPU == True:
-            retStr += " -DHAVE_GPU"
-
-	if self.options.withArma == True:
-            retStr += " -DHAVE_ARMA"
 
         if self.options.profile == USE:
             retStr += " -DPROFILING"
@@ -1189,8 +1142,8 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
     def getLensLibs(self):
         retStr = "LENS_LIBS := "
 	if self.options.domainLibrary == True :
-            #retStr += "lib/liblensdomain.a " # OLD_MGS uncomment this
-	    retStr += "lib/liblens.a\n"
+            #retStr += "lib/liblensdomain.a "
+		retStr += "lib/liblens.a\n"
         return retStr
 
     def getLibs(self):
@@ -1226,12 +1179,6 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.compiler == "gcc":
            if self.options.withMpi == True:
               retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
-
-        if self.options.withGPU == True:
-            retStr += " -lcudart -lcurand"
-	
-	if self.options.withArma == True:
-            retStr += " -llapack -lopenblas -larmadillo"
 
         retStr += "\n"
         return retStr
@@ -1486,8 +1433,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         retStr += "\tranlib $@\n\n"
         retStr += "lib/liblensext.a: $(EXTENSION_OBJECTS) $(LENS_LIBS)"
         if self.options.dynamicLoading == False:
-            retStr += " $(GENERATED_DL_OBJECTS)" # OLD_MGS; comment this
-#            retStr += "$(GENERATED_DL_OBJECTS)" # OLD_MGS; uncomment this
+            retStr += " $(GENERATED_DL_OBJECTS)"
         retStr += "\n"
         retStr += arCmd + " $(EXTENSION_OBJECTS)\n"
         if self.options.dynamicLoading == False:
