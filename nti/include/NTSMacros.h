@@ -752,6 +752,11 @@
 //#include "ModelTesting.h"
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
+#define ADAPTIVE_IO
+//{{{
+  #define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952 
+  #define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952 
+//}}}
 #endif
 
 //////////////////////////////////////////////////////////////////////
