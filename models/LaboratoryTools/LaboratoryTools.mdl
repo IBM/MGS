@@ -450,7 +450,7 @@ Variable AnyCurrentDisplay
 
 	InAttrPSet {
 		string identifier;//CHANNEL, BRANCH, JUNCTION, SYNAPSE, CONNEXON
-    string type;//Nat, Cah
+		string type;//Nat, Cah
 #ifdef IDEA_CURRENTONCOMPT
 		TissueSite site;
 #endif

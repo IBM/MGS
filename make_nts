@@ -421,7 +421,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE
     cd -
   fi
-  if { [ "$CLEAN" != "-clean" ] ;} ; then 
+  if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then 
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then 
       echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS...${cc_normal}
 

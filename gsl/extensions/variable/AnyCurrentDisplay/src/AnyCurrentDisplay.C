@@ -3,6 +3,7 @@
 #include "CG_AnyCurrentDisplay.h"
 #include "MaxComputeOrder.h"
 #include <memory>
+#include "TissueSite.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
