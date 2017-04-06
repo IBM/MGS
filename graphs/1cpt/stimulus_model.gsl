@@ -1,0 +1,23 @@
+PointCurrentSource pointCurrentSource<>;
+
+pointCurrentSource.setCurrent(<						
+				I = 100.0                      	// pA
+			     >) on currentOn;
+
+pointCurrentSource.setCurrent(<						
+				I = 0 //200.0                      	// pA
+			     >) on currentMod;
+
+pointCurrentSource.setCurrent(<						
+				I = 0.0            	        // pA
+			     >) on currentOff;
+
+PointCalciumSource pointCalciumSource<>;
+
+pointCalciumSource.setCaCurrent(<						
+				I_Ca = 0.0                 	// pA_Ca
+			     >) on calciumOn;
+
+pointCalciumSource.setCaCurrent(<						
+				I_Ca = 0.0                 	// pA_Ca
+			     >) on calciumOff;
