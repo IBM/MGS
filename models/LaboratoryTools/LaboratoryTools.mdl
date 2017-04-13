@@ -154,7 +154,6 @@ Variable VoltageDisplay
 	dyn_var_t []* []  V;// each element is a reference to 
                    // a vector of data to record on 1 ComputeBranch
 	dyn_var_t []* V_connect;
-
 	DimensionStruct* []* [] dimensions;
 	DimensionStruct* []* dimensions_connect;
 
@@ -450,7 +449,7 @@ Variable AnyCurrentDisplay
 
 	InAttrPSet {
 		string identifier;//CHANNEL, BRANCH, JUNCTION, SYNAPSE, CONNEXON
-    string type;//Nat, Cah
+		string type;//Nat, Cah
 #ifdef IDEA_CURRENTONCOMPT
 		TissueSite site;
 #endif
@@ -1102,13 +1101,19 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 Variable SimulationInfo 
 {
   //{{{
+  //{{{DATA
+  //{{{passed by user (either of this)
+  float recordIntervalInTime; //[ms]
+  int recordIntervalInIterations; 
+  //}}}
+  //{{{internal/reference
   //NOTE: make sure it has to be 'float'
   // to be able to absorved by FloatTrigger
   float currentTime;    //[ms]
-  float recordIntervalInTime; //[ms]
-  int recordIntervalInIterations; 
-
   dyn_var_t* deltaT;
+  unsigned iterationCount; // zero-based, unlike ::Iteration is 1-based
+  //}}}
+  //}}}
 
   InitPhase initialize;
   RuntimePhase calculateInfo; //estimate the current time
@@ -1119,4 +1124,136 @@ Variable SimulationInfo
   //}}}
 }
 
+
+Variable DetectDataChangeOneCompartment
+{
+//GOAL: Detect the change in data (e.g. Voltage, Calcium)  in a Junction, e.g. Soma or Spine-Head
+//LIMITATION: Limit to 1 Junction only
+  //{{{
+  //{{{passed by user
+  float  criteria; // should be in the range 0.0 to 1.0 (percent of change threshold)
+  //}}}
+  //{{{internal/reference
+  dyn_var_t* deltaT;
+  dyn_var_t []* data_connect;
+  DimensionStruct* []* dimensions_connect;
+  BranchDataStruct* branchData_connect;
+  dyn_var_t []*  data;
+  float  data_prev;
+  float slope; // slope of change = dA/dt
+  float slope_absolute; // absolute value of 'slope'
+  float  value_prev;  //  update when slope_absolute > criteria
+  float timeWindow ;  // time duration from last update to now
+  unsigned triggerWrite; // (1)True when slope_absolute > criteria //Cannot use bool due to limitation of Service* accepted data
+  //}}}
+
+  InitPhase initialize;
+  RuntimePhase calculateInfo; //estimate the slope of change dV/dt = ((*V)[0]-V_prev)/deltaT
+  UserFunction setUpPointers;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
+    CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+    DimensionArrayProducer.dimensionArray >> dimensions_connect;
+    BranchDataProducer.branchData >> branchData_connect;
+    setUpPointers();
+  }
+  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> data_connect; 
+    DimensionArrayProducer.dimensionArray >> dimensions_connect;
+    BranchDataProducer.branchData >> branchData_connect;
+    setUpPointers();
+  }
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
+}
+
+//Variable DetectDataChangeOneBranch
+//{
+////GOAL: Detect the change in data (e.g. Voltage, Calcium)  in a single ComputeBranch
+////LIMITATION: Limit to 1 branch only
+//  //{{{
+//  dyn_var_t* deltaT;
+//  dyn_var_t []* data_connect;
+//  DimensionStruct* []* dimensions_connect;
+//  BranchDataStruct* branchData_connect;
+//  dyn_var_t []*  data;
+//  float slope;
+//  //NOTE: If we use this then slope = min(slope_arr)
+//  float[]  data_prev;
+//  float[] slope_arr;
+//
+//  InitPhase initialize;
+//  RuntimePhase calculateInfo; //estimate the slope of change dV/dt = ((*V)[0]-V_prev)/deltaT
+//  UserFunction setUpPointers;
+//
+//  InAttrPSet {
+//    string identifier;
+//  }
+//
+//  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
+//    CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+//    DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//    BranchDataProducer.branchData >> branchData_connect;
+//    setUpPointers();
+//  }
+//  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+//    VoltageArrayProducer.voltageArray >> data_connect; 
+//    DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//    BranchDataProducer.branchData >> branchData_connect;
+//    setUpPointers();
+//  }
+//  Connection Pre Constant () Expects TimeStepProducer {
+//    TimeStepProducer.deltaT >> deltaT;
+//  }
+//  //}}}
+//}
+//Variable DetectDataChangeAny
+//{
+////GOAL: Detect the change in data (e.g. Voltage, Calcium)  in a single ComputeBranch
+////LIMITATION: Limit to 1 branch only
+//  //{{{
+//  dyn_var_t* deltaT;
+//  dyn_var_t []* data_connect;
+//  DimensionStruct* []* dimensions_connect;
+//  BranchDataStruct* branchData_connect;
+//
+//  DimensionStruct* []* [] dimensions;
+//  DimensionStruct* []* dimensions_connect;
+//  dyn_var_t []* []  data;// each element is a reference to 
+//  float slope;
+//  //NOTE: If we use this then slope = min(slope_arr)
+//  float [] []  data_prev;// each element is a reference to 
+//  float[] slope_arr;
+//
+//  InitPhase initialize;
+//  RuntimePhase calculateInfo; //estimate the slope of change dV/dt = ((*V)[0]-V_prev)/deltaT
+//  UserFunction setUpPointers;
+//
+//  InAttrPSet {
+//    string identifier;
+//  }
+//
+//  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
+//    CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+//    DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//    BranchDataProducer.branchData >> branchData_connect;
+//    setUpPointers();
+//  }
+//  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+//    VoltageArrayProducer.voltageArray >> data_connect; 
+//    DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//    BranchDataProducer.branchData >> branchData_connect;
+//    setUpPointers();
+//  }
+//  Connection Pre Constant () Expects TimeStepProducer {
+//    TimeStepProducer.deltaT >> deltaT;
+//  }
+//  //}}}
+//}
 #endif

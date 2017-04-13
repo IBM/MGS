@@ -5,6 +5,10 @@
 
 void SimulationInfo::initialize(RNG& rng) 
 {
+   if (not deltaT)
+   {
+      std::cerr << "ERROR: Please connect deltaT to " << typeid(*this).name() << std::endl;
+   }
    assert(deltaT);
    assert(recordIntervalInTime > 0 || recordIntervalInIterations > 0);
    if (recordIntervalInTime > 0)
@@ -17,11 +21,13 @@ void SimulationInfo::initialize(RNG& rng)
       std::cerr << "Record interval cannot be zero. Make sure recordIntervalInTimes > deltaT\n";
       assert(0);
    }
+   iterationCount = 0;
 }
 
 void SimulationInfo::calculateInfo(RNG& rng) 
 {
    currentTime = (*deltaT) * getSimulation().getIteration();
+   iterationCount  = getSimulation().getIteration() - 1;
 }
 
 SimulationInfo::SimulationInfo() 

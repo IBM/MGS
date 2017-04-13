@@ -60,6 +60,7 @@ graphs/**/tmp
 graphs/**/stats
 .built
 nti/include/Model2Use.h
+nti/include/Model2Use.gch
 models/copyModules
 models/Extensions.mk
 gsl/Makefile

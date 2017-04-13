@@ -25,7 +25,7 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define STIMULUS_CASE   CASE_08
+#define STIMULUS_CASE   CASE_00
 //#define morph ""
 #define morph "msn0_"
 //}}}
@@ -57,25 +57,25 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #define paramFolder STR(PARAMFOLDER)
 #endif
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Tuan_rest" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Tuan_triggersoma" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Tuan_triggershaft" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Tuan_triggerspine" STR(EXTENSION)
-//#define OutputFolderName dataFolder morph "Tuan_case03"
+#define OutputFolderName dataFolder morph "Spine_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph "Spine_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Tuan_triggerdistalspines" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Tuan_case05" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_case06" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_07
-#define OutputFolderName dataFolder morph "Tuan_triggeraxon" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_triggeraxon" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_08
-#define OutputFolderName dataFolder morph "Tuan_Vclamp" STR(EXTENSION)
+#define OutputFolderName dataFolder morph "Spine_Vclamp" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
 #else
@@ -879,27 +879,19 @@ TimeStep timeStep< deltaT=TimeStep_value >; // msec
 //{{{
 //Service Provider to Simulation Info
 // NOTE: Use global is critical to ensure each MPI rank has a copy 
-VariableType SimulationInfo(global) {initialize->initialize4, calculateInfo->updateNMDADepPlasticity};
+VariableType SimulationInfo(global) {initialize->initialize4, calculateInfo->finish};
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 SimulationInfo simInfo<recordIntervalInTime=RecordInterval>;
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 SimulationInfo simInfo<recordIntervalInIterations=RecordInterval>;
-#endif
-#ifdef ADAPTIVE_IO
-VariableType DetectDataChangeOneCompartment {initialize->initialize4, calculateInfo->updateNMDADepPlasticity};
-DetectDataChangeOneCompartment somaVoltageDetect<criteria=0.010>; //record with change > x% previous value
 #endif
 //Service <serviceAccessorName> (service)
 // service = query_path_product | declarator ','  string_literal_list
 // query_path_product = query_path::declerator | ::declarator 
 // NOTE: 'declarator' =  the name of variableType/NodeType instance/ConstantType instance
 //      string_literal_list = the data member name in string
-Service RuntimePhaseIteration(simInfo, "iterationCount"); 
 Service CurrentTime (simInfo, "currentTime"); 
 Service ImplicitRecordInterval (simInfo, "recordIntervalInIterations"); 
-#ifdef ADAPTIVE_IO
-Service AdaptWriteSomaVoltage(somaVoltageDetect, "triggerWrite"); 
-#endif
 //}}}
 // 5. TRIGGER
 /*{{{*/
@@ -911,7 +903,6 @@ Trigger FloatTrigger(string description, Service svc, string operator, float cri
 // (triggerA == critA) 'operator' (triggerB == critB)   [after a 'delay' number of times]
 //check if result(triggerA) == critA  [after a 'delay' number of times]
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
-Trigger CompositeTriggerServiceTrigger(string description, Trigger triggerA, int critA, string operator, Service triggerB, int critB, int delay, string phaseName);
 
 //return True if triggerA is TRUE and _semaphore is not set 
 Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int delay, string phaseName);
@@ -919,15 +910,8 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
   #if SIMULATION_RECORD == _SR_FROM_BEGINNING
-  #ifdef ADAPTIVE_IO
-    UnsignedServiceTrigger recOnPriorCond("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-              RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
-    CompositeTriggerServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-              recOnPriorCond, 1,  "||", AdaptWriteSomaVoltage, 1 , 0, updateNMDADepPlasticity); //Record every ms
-  #else
-    UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-              RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
-  #endif
+  UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) " [ms]", 
+      ::Iteration, "!%", ImplicitRecordInterval, 0, solveChannels ); //Record every ms
 
   FloatTrigger voltageClampSet1("Iteration Trigger : >= " STR(TimeVClampSet1) " [ms]", 
       CurrentTime, ">=", TimeVClampSet1, 0, solveChannels );
@@ -947,45 +931,33 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
   SemaphoreTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
 
   #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
-  FloatTrigger delayStartRecord("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
-            CurrentTime, ">=", TimeStartRecord, 0, updateNMDADepPlasticity); //Record only after it passes
-  CompositeTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms] after a delay " STR(TimeStartRecord) " [ms]", 
-            recOn, 1, "&&", delayStartRecord, 1, 0, updateNMDADepPlasticity); //Record every ms after it passes certain time
+  FloatTrigger recOn("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
+            CurrentTime, ">=", TimeStartRecord, 0, solveChannels ); //Record only after it passes
   #endif
-FloatTrigger currentOn("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
-FloatTrigger currentMod("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 30, 0, updateNMDADepPlasticity);
-FloatTrigger currentOff("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
-FloatTrigger calciumOn("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
-FloatTrigger calciumOff("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
 
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 UnsignedTrigger voltageClampOn("Iteration Trigger : == 10000", 
- 			 RuntimePhaseIteration, "==", 1000, 0, updateNMDADepPlasticity);
+ 			 ::Iteration, "==", 1000, 0, solveChannels );
 
 UnsignedTrigger currentOn("Iteration Trigger : == 10000", 
- 			 RuntimePhaseIteration, "==", 1000, 0, solveChannels );
+ 			 ::Iteration, "==", 1000, 0, solveChannels );
 //SA: Changed 10,200 to 12000
 UnsignedTrigger currentMod("Iteration Trigger : == 12000", 
- 			 RuntimePhaseIteration, "==", 12000, 0, solveChannels );
+ 			 ::Iteration, "==", 12000, 0, solveChannels );
 //SA: Changed 10,400 to 14000
 UnsignedTrigger currentOff("Iteration Trigger : == 40000", 
- 			 RuntimePhaseIteration, "==", 40000, 0, solveChannels );
+ 			 ::Iteration, "==", 40000, 0, solveChannels );
 
 UnsignedTrigger calciumOn("Iteration Trigger : == 1", 
- 			 RuntimePhaseIteration, "==", 1, 0, solveChannels );
+ 			 ::Iteration, "==", 1, 0, solveChannels );
 
 UnsignedTrigger calciumOff("Iteration Trigger : == 50000", 
- 			 RuntimePhaseIteration, "==", 50000, 0, solveChannels );
+ 			 ::Iteration, "==", 50000, 0, solveChannels );
 	
 //UnsignedTrigger recOn("Iteration Trigger : !% 50", 
-// 			 RuntimePhaseIteration, "!%", 50, 0, solveChannels );
+// 			 ::Iteration, "!%", 50, 0, solveChannels );
 UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval), 
-          RuntimePhaseIteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
+          ::Iteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
 #endif
 /*}}}*/
 
@@ -1228,10 +1200,10 @@ Grid MSN_D1Neuron{
       //  1.5. - [IP3]
       /*{{{*/
 #if defined(SIMULATE_IP3)
-  Layer(branches_IP3, IP3Concentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[IP3]">), <nodekind="CompartmentVariables[IP3]">, tissueGM);
-  Layer(endPoints_IP3, IP3ConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[IP3]">), <nodekind="EndPoints[IP3]">, tissueGM);
+	Layer(branches_IP3, IP3Concentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[IP3]">), <nodekind="CompartmentVariables[IP3]">, tissueGM);
+	Layer(endPoints_IP3, IP3ConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[IP3]">), <nodekind="EndPoints[IP3]">, tissueGM);
   Layer(junctions_IP3, IP3ConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[IP3]">), <nodekind="Junctions[IP3]">, tissueGM);
-  Layer(junctionPoints_IP3, IP3ConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[IP3]">), <nodekind="JunctionPoints[IP3]">, tissueGM);
+	Layer(junctionPoints_IP3, IP3ConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[IP3]">), <nodekind="JunctionPoints[IP3]">, tissueGM);
 #endif
       /*}}}*/
     /*}}}*/
@@ -1899,10 +1871,6 @@ Grid MSN_D1Neuron{
 #include "connect_stimulus_model.gsl"
   //}}}
 	polyConnect(timeStep, simInfo, <>, <>);
-#ifdef  ADAPTIVE_IO
-	polyConnect(timeStep, somaVoltageDetect, <>, <>);
-        polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=1, NEURON_INDEX=0>), somaVoltageDetect, <>, <identifier="JUNCTION">);
-#endif
 	/*}}}*/
 
   /*}}}*/
@@ -1964,7 +1932,7 @@ FloatTrigger endTrig("Time Trigger to end or stop",
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-		RuntimePhaseIteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
+		::Iteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
 
 #endif
 

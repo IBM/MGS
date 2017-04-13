@@ -25,7 +25,7 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define STIMULUS_CASE   CASE_08
+#define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "msn0_"
 //}}}
@@ -663,12 +663,12 @@ NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, upda
 //RYR
 NodeType SingleChannelRYR(
     <
-				SingleChannelModelFileName = RYRMarkovFilename,
-        iryr = RYRSingleChannelCurrent,
-        channelDensity = RYRChannelDensity,
-        useExplicitNumberofChannels = RYRUseExplicitNumChan
+    SingleChannelModelFileName = RYRMarkovFilename,
+    iryr = RYRSingleChannelCurrent,
+    channelDensity = RYRChannelDensity,
+    useExplicitNumberofChannels = RYRUseExplicitNumChan
     >
-		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
+    ) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
 NodeType ChannelIP3R {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
