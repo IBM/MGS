@@ -48,8 +48,8 @@ MTYPE BRANCHTYPE
 0 2 <Cm=0.01; gLeak=0.000325>
 0 5 <Cm=0.01; gLeak=0.000325>
 0 7 <Cm=0.01; gLeak=0.000325>
-0 3 <Cm=0.02; gLeak=0.000295>
-0 4 <Cm=0.02; gLeak=0.000295>
+0 3 <Cm=0.01; gLeak=0.000295>
+0 4 <Cm=0.01; gLeak=0.000295>
 0 6 <Cm=0.01; gLeak=0.000138>
 #}}}
 ##{{{ GABAergic bouton 2

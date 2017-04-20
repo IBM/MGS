@@ -24,16 +24,16 @@ Node CaConcentration Implements SolutionArrayProducer,
 {
 // Regular-branch: represent the diffusion of Calcium(cyto) along branch with no explicit junction
 /*{{{*/
-	//DATA
-    /*{{{*/
-	//data members: reference
-       // pointer to array of branch
-       // help to identify the branch a Calcium(cyto)-compartment belong to 
+  //DATA
+  /*{{{*/
+  //data members: reference
+  // pointer to array of branch
+  // help to identify the branch a Calcium(cyto)-compartment belong to 
   BranchDataStruct* branchData; // pointer to branch's data
   DimensionStruct* [] dimensions; // each branch has many compartments (whose center point represented by DimensionStruct)
-	//data members: internal, but for solver
-    //{{{
-	//NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  //data members: internal, but for solver
+  //{{{
+  //NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
   dyn_var_t [] Aii; // TODO unit
   dyn_var_t [] Aip; // TODO unit
   dyn_var_t [] Aim; // branch's distalmost compartment to junction coupling coefficient
@@ -53,56 +53,60 @@ Node CaConcentration Implements SolutionArrayProducer,
   DimensionStruct* proximalDimension;
 
   bool proximalJunction;// true = real-branching point, 
-                        //..false=implicit-cut (i.e. cut along the branch)
+  //..false=implicit-cut (i.e. cut along the branch)
   int computeOrder;// TissueFunctor will assign the value to each branch 
-                   // (the range of values from [0..MAX_COMPUTE_ORDER-1])
-                   // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
-                   // computing of branches of the same computeOrder
-                   // If MAX_COMPUTE_ORDER=0, then 
-                   // solve all branches sequentially 
-                   //  from distal to proximal: forwardSolve
-                   //  from proximal to distal: backwardSolve
-       //}}}
-	//data members: internal
+  // (the range of values from [0..MAX_COMPUTE_ORDER-1])
+  // By choosing MAX_COMPUTE_ORDER>0, we enable the parallel 
+  // computing of branches of the same computeOrder
+  // If MAX_COMPUTE_ORDER=0, then 
+  // solve all branches sequentially 
+  //  from distal to proximal: forwardSolve
+  //  from proximal to distal: backwardSolve
+  //}}}
+  //data members: internal
   dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] Ca_new;
   dyn_var_t [] currentToConc;
+#ifdef  USE_CALCIUM_INDICATOR
+  dyn_var_t [] Fluo;  //[uM]
+  dyn_var_t [] FluoCa;// Ca2+-bound [uM]
+#endif
 
   //{{{microdomain
 #ifdef MICRODOMAIN_CALCIUM
-//NOTE: first [] = number of compartments per compute-branch
-//     second [] = number of microdomain type as we can have 
-//             microdomain between BK(Ca) and CaN/P
-//             microdomain between SK(Ca) and CaLv1.2
-//Suppose a ComputeBranch has 'x' compartments and 'y' microdomain per cpt
-//CHOICE 1:
-//  so: y-element volume_microdomain (i.e. all domains of same type have the same volumes along 1 ComputeBranch)
-//      y-element v_efflux (i.e. all domains of same type have the same efflux-rate)
-//      (x*y)-element Ca_microdomain;
-//      (x*y)-element channelCaCurrents_microdomain;
+  //NOTE: first [] = number of compartments per compute-branch
+  //     second [] = number of microdomain type as we can have 
+  //             microdomain between BK(Ca) and CaN/P
+  //             microdomain between SK(Ca) and CaLv1.2
+  //Suppose a ComputeBranch has 'x' compartments and 'y' microdomain per cpt
+  //CHOICE 1:
+  //  so: y-element volume_microdomain (i.e. all domains of same type have the same volumes along 1 ComputeBranch)
+  //      y-element v_efflux (i.e. all domains of same type have the same efflux-rate)
+  //      (x*y)-element Ca_microdomain;
+  //      (x*y)-element channelCaCurrents_microdomain;
   dyn_var_t [] Ca_microdomain; //[uM] - concentration of calcium in the domain - assume instantaneous
   dyn_var_t [] Ca_microdomain_cur; //[uM] - concentration of calcium in the domain - assume instantaneous
   dyn_var_t [] volume_microdomain; //[um^3] - volume of the microdomain
-  dyn_var_t []v_efflux;  //[1/ms] - transfer rate from microdomain to cytosolic bath
+  dyn_var_t [] v_efflux;  //[1/ms] - transfer rate from microdomain to cytosolic bath
   ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
   //string[] microdomainAssociatedWithChannelCaCurrents;
-//      y-element microdomainNames array
+  //      y-element microdomainNames array
   string [] microdomainNames;
   dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
-  dyn_var_t [] currentToConc_microdomain;
+  //dyn_var_t [] currentToConc_microdomain;
 
-//CHOICE 2:
-//      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
-//      y-element(row) * x-element(col) channelCaCurrents_microdomain
-//  CalciumMicrodomain [] Ca_microdomain; //[uM] - concentration of calcium in the domain
-//  ChannelCaCurrents [][] channelCaCurrents_microdomain;  // [pA/um^2]
-////      y-element microdomainNames array
-//  string [] microdomainNames;
+  //CHOICE 2:
+  //      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
+  //      y-element(row) * x-element(col) channelCaCurrents_microdomain
+  //  CalciumMicrodomain [] Ca_microdomain; //[uM] - concentration of calcium in the domain
+  //  ChannelCaCurrents [][] channelCaCurrents_microdomain;  // [pA/um^2]
+  ////      y-element microdomainNames array
+  //  string [] microdomainNames;
 
 #endif
   //}}}
 
-    // currents
+  // currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
   // yet it contribute positive to the increase of [Ca2+](cyto)
   // so dCa/dt = - Icurrent * A/(zCa*F*Vcyto)
@@ -130,7 +134,7 @@ Node CaConcentration Implements SolutionArrayProducer,
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   TargetAttachCaConcentration [] targetAttachCaConcentration;  // [uM]
 #endif
-	/*}}}*/
+  /*}}}*/
 
    // design : anything currently not part of the spatial 
    //          is put here
@@ -145,6 +149,11 @@ Node CaConcentration Implements SolutionArrayProducer,
     //}}}
     dyn_var_t CaBaseline; // [uM]
 
+#ifdef  USE_CALCIUM_INDICATOR
+    dyn_var_t FluoT; // total concentration [uM]
+    dyn_var_t kon_Fluo; // 1/msec * uM
+    dyn_var_t koff_Fluo;  // 1/msec
+#endif
     InitPhase deriveParameters;  
     /*}}}*/
   }
@@ -422,7 +431,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
 //      y-element microdomainNames array
   string [] microdomainNames;
   dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
-  dyn_var_t [] currentToConc_microdomain;
+  //dyn_var_t [] currentToConc_microdomain;
 
 //CHOICE 2:
 //      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)

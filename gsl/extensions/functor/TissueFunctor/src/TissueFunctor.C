@@ -4228,8 +4228,27 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
+          {
+            std::map<ComputeBranch*,
+              std::vector<CG_CompartmentDimension*> >::iterator miter =
+                _tissueContext->_branchDimensionsMap.find(branch);
+            assert(miter != _tissueContext->_branchDimensionsMap.end());
+            std::vector<CG_CompartmentDimension*>& dimensions = miter->second;
+            std::vector<CG_CompartmentDimension*>::iterator diter,
+              dend = dimensions.end();
+            // step 1: connect every DimensionStruct element into the array
+            // 'dimensions'
+            //  of each HHVoltage node instance, for example
+            //  REMEMBER: Even one is element, one is array,
+            //   the connection is established in such a way that the
+            //   first connection fills into the first position in the array
+            //   next connection fills into the next position in the array
+            for (diter = dimensions.begin(); diter != dend; ++diter)
+              _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
+                  &dim2cpt);
+          }
 #ifdef MICRODOMAIN_CALCIUM
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
           //  NOTE: Here we also put the information about the list of all microdomain
           //   to 'Calcium' compartment
@@ -4253,29 +4272,12 @@ void TissueFunctor::doNodeInit(LensContext* lc)
                 &brd2cpt);
           }
 #else
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt);
 #endif
 
-          std::map<ComputeBranch*,
-                   std::vector<CG_CompartmentDimension*> >::iterator miter =
-              _tissueContext->_branchDimensionsMap.find(branch);
-          assert(miter != _tissueContext->_branchDimensionsMap.end());
-          std::vector<CG_CompartmentDimension*>& dimensions = miter->second;
-          std::vector<CG_CompartmentDimension*>::iterator diter,
-              dend = dimensions.end();
-          // step 2: connect every DimensionStruct element into the array
-          // 'dimensions'
-          //  of each HHVoltage node instance, for example
-          //  REMEMBER: Even one is element, one is array,
-          //   the connection is established in such a way that the
-          //   first connection fills into the first position in the array
-          //   next connection fills into the next position in the array
-          for (diter = dimensions.begin(); diter != dend; ++diter)
-            _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
-                                          &dim2cpt);
         }
         else
         {  // explicit Junctions
@@ -4310,8 +4312,23 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
+          {
+            std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
+              _tissueContext->_junctionDimensionMap.find(junctionCapsule);
+            assert(miter != _tissueContext->_junctionDimensionMap.end());
+            // step 1: connect every DimensionStruct element into the array
+            // 'dimensions'
+            //  of each HHVoltageJunction node instance, for example
+            //  REMEMBER: Even one is element, one is array,
+            //   the connection is established in such a way that the
+            //   first connection fills into the first position in the array
+            //   next connection fills into the next position in the array
+            _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
+                &dim2cpt);
+          }
+
 #ifdef MICRODOMAIN_CALCIUM
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
           //  NOTE: Here we also put the information about the list of all microdomain
           //   to 'Calcium' compartment
@@ -4335,24 +4352,12 @@ void TissueFunctor::doNodeInit(LensContext* lc)
                 &brd2cpt);
           }
 #else
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt);
 #endif
 
-          std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
-              _tissueContext->_junctionDimensionMap.find(junctionCapsule);
-          assert(miter != _tissueContext->_junctionDimensionMap.end());
-          // step 2: connect every DimensionStruct element into the array
-          // 'dimensions'
-          //  of each HHVoltageJunction node instance, for example
-          //  REMEMBER: Even one is element, one is array,
-          //   the connection is established in such a way that the
-          //   first connection fills into the first position in the array
-          //   next connection fills into the next position in the array
-          _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
-                                        &dim2cpt);
         }
       }
       else if (nodeCategory == "Channels")
@@ -8496,7 +8501,10 @@ int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
       float dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
       if (branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() <= somaR)
       {
-        std::cerr << "The first ComputeBranch falls within the soma" << std::endl;
+        std::cerr << "The first ComputeBranch falls within the soma on BRCHTYPE " << 
+          _segmentDescriptor.getBranchType(branch->_capsules[ncaps-1].getKey())+ 1
+          << " (NOTE: adjusted +1)"
+          << std::endl;
         assert(branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() > somaR);
       }
       while (

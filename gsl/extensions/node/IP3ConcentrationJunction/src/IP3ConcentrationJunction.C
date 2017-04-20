@@ -51,7 +51,11 @@ SegmentDescriptor IP3ConcentrationJunction::_segmentDescriptor;
 dyn_var_t IP3ConcentrationJunction::getArea() // Tuan: check ok
 {
   dyn_var_t area= 0.0;
+#if defined (USE_SOMA_AS_POINT)
+  area = 1.0 * FRACTION_SURFACEAREA_CYTO; // [um^2]
+#else
   area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_CYTO;
+#endif
 	return area;
 }
 
@@ -59,15 +63,19 @@ dyn_var_t IP3ConcentrationJunction::getArea() // Tuan: check ok
 dyn_var_t IP3ConcentrationJunction::getVolume() // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
+#if defined (USE_SOMA_AS_POINT)
+  volume = 1.0 * FRACTIONVOLUME_CYTO; // [um^3]
+#else
   volume = dimensions[0]->volume * FRACTIONVOLUME_CYTO;
-	return volume;
+#endif
+  return volume;
 }
 
 void IP3ConcentrationJunction::initializeJunction(RNG& rng)
 {// explicit junction (which can be soma (with branches are axon/dendrite
   // trees)
   // or a cut point junction 
-	// or a branching point junction with 3 or more branches (one from main, 2+ for children
+  // or a branching point junction with 3 or more branches (one from main, 2+ for children
   // branches))
   assert(IP3_new.size() == 1);
   assert(dimensions.size() == 1);
@@ -84,7 +92,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
 #define THRESHOLD_SIZE_R_SOMA 2.0 // um (micrometer)
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
       dimension->r > THRESHOLD_SIZE_R_SOMA // to avoid the confusing of spine head
-      )//TUAN TODO: consider fixing this
+     )//TUAN TODO: consider fixing this
   {
     //for soma: due to large volume, we scale up the [IP3]
     // shell volume = 4/3 * pi * (rsoma^3 - (rsoma-d)^3)
@@ -101,7 +109,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
       (pow(dimension->r,3) - pow(dimension->r - d, 3)) * FRACTIONVOLUME_CYTO;
     currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
     //std::cerr << "Cyto total vol: " << volume << "; shell volume: " << shellVolume << std::endl;
-    
+
     Pdov = M_PI * D_IP3 / shellVolume;
 
   }
@@ -109,52 +117,52 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
     currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
-                                    dend = dimensionInputs.end();
+    dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
-	  //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
-	  //      in calculating the cross-sectional area
-		dyn_var_t Rb;
+    //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
+    //      in calculating the cross-sectional area
+    dyn_var_t Rb;
     dyn_var_t distance;
-		if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
-		{
-		  //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
+    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    {
+      //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
       //  NOTE: should be applied for Axon hillock only
-			Rb = ((*diter)->r );
+      Rb = ((*diter)->r );
       //TEST 
-			Rb /= SCALING_NECK_FROM_SOMA;
+      Rb /= SCALING_NECK_FROM_SOMA;
       //END TEST
-#ifdef USE_SOMA_AS_POINT
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
       distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
 #else
-		  //distance= std::fabs((*diter)->dist2soma + dimension->r );
+      //distance= std::fabs((*diter)->dist2soma + dimension->r );
       distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
-         // from soma is always the distance from the center of soma to the center
-         // of that compartment
+      // from soma is always the distance from the center of soma to the center
+      // of that compartment
       //TEST 
       distance += STRETCH_SOMA_WITH;
       //END TEST
 #endif
       if (distance <= 0)
-        std::cerr << "distance = " << distance << ": " << (*diter)->dist2soma << ","<< dimension->r << std::endl;
+	std::cerr << "distance = " << distance << ": " << (*diter)->dist2soma << ","<< dimension->r << std::endl;
       assert(distance > 0);
-		}else{
+    }else{
 #ifdef NEW_RADIUS_CALCULATION_JUNCTION
-		  Rb = ((*diter)->r); //the small diameter of the branch means small current pass to it
+      Rb = ((*diter)->r); //the small diameter of the branch means small current pass to it
 #else
-			Rb = 0.5 * ((*diter)->r + dimension->r);
+      Rb = 0.5 * ((*diter)->r + dimension->r);
 #endif
-		  distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
+      distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
       assert(distance > 0);
-		}
+    }
     //fAxial.push_back(Pdov * Rb * Rb /
     //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-		//dyn_var_t distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
-		fAxial.push_back(Pdov * Rb * Rb / distance );
-	}
+    //dyn_var_t distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
+    fAxial.push_back(Pdov * Rb * Rb / distance );
+  }
 #ifdef DEBUG_HH
   std::cerr << "CA_JUNCTION (" << dimension->x << "," << dimension->y << ","
-            << dimension->z << "," << dimension->r << ")" << std::endl;
+    << dimension->z << "," << dimension->r << ")" << std::endl;
 #endif
 }
 

@@ -58,11 +58,34 @@ somaCalciumDisplay.dataCollection(<>) on recOn;
 
 AnyCurrentDisplay somaCurrentsDisplay<fileName= PathFileCombine("somaCurrents.dat")>;
 somaCurrentsDisplay.dataCollection(<>) on recOn;
+
+AnyFluxDisplay somaFluxesDisplay<fileName= PathFileCombine("somaFluxes.dat")>;
+somaFluxesDisplay.dataCollection(<>) on recOn;
 //}}}
+//{{{dendrite
 VoltageDisplay basalDenVoltageDisplay<fileName= PathFileCombine("basalDenV.dat")>;
 basalDenVoltageDisplay.dataCollection(<>) on recOn;
+
 CalciumDisplay basalDenCalciumDisplay<fileName= PathFileCombine("basalDenCa.dat")>;
 basalDenCalciumDisplay.dataCollection(<>) on recOn;
+
 AnyCurrentDisplay basalDenCurrentsDisplay<fileName= PathFileCombine("basalDenCurrents.dat")>;
 basalDenCurrentsDisplay.dataCollection(<>) on recOn;
+
+CalciumDomainDisplay basalDenCalciumDomainDisplay<fileName= PathFileCombine("basalDenCaDomain.dat")>;
+basalDenCalciumDomainDisplay.dataCollection(<>) on recOn;
+//}}}
+//{{{AIS
+VoltageDisplay AISVoltageDisplay<fileName= PathFileCombine("AISV.dat")>;
+AISVoltageDisplay.dataCollection(<>) on recOn;
+
+CalciumDisplay AISCalciumDisplay<fileName= PathFileCombine("AISCa.dat")>;
+AISCalciumDisplay.dataCollection(<>) on recOn;
+
+AnyCurrentDisplay AISCurrentsDisplay<fileName= PathFileCombine("AISCurrents.dat")>;
+AISCurrentsDisplay.dataCollection(<>) on recOn;
+
+CalciumDomainDisplay AISCalciumDomainDisplay<fileName= PathFileCombine("AISCaDomain.dat")>;
+AISCalciumDomainDisplay.dataCollection(<>) on recOn;
+//}}}
 //}}}

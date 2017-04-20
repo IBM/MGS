@@ -12,8 +12,9 @@
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+#include <typeinfo>
 
-#define Cai_base 0.1e-6 // [uM]
+#define Cai_base 0.1 // [uM]
 //
 // Implementation of the KCa potassium current
 //  Voltage and Calcium dependent Potassium
@@ -179,7 +180,7 @@ void ChannelBK::initialize(RNG& rng)
 #if CHANNEL_BK == BK_TRAUB_1994
     g[i] = gbar[i]*fO[i]*CaGate;
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 

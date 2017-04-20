@@ -12,6 +12,8 @@
 #define _STR(x) #x 
 #define STR(x) _STR(x)
 
+#define ADAPTIVE_IO
+
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
 #define CASE_VIVO 1000 // random input at all spines
@@ -25,9 +27,10 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define STIMULUS_CASE   CASE_01
+#define CASE_01b  9   //inject soma [brief train of AP]
+#define STIMULUS_CASE   CASE_08
 //#define morph ""
-#define morph "msn0_"
+#define morph "msnNodomain_"   // must end with '_' for non-empty string
 //}}}
 
 //OTHERS FUNCTORS
@@ -57,25 +60,26 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #define paramFolder STR(PARAMFOLDER)
 #endif
 #if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Tuan_rest" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
-#elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Tuan_triggersoma" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_01 || \
+      STIMULUS_CASE == CASE_01b
+#define OutputFolderName dataFolder morph  "Tuan_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Tuan_triggershaft" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Tuan_triggerspine" STR(EXTENSION)
-//#define OutputFolderName dataFolder morph "Tuan_case03"
+#define OutputFolderName dataFolder morph  "Tuan_triggerspine" STR(EXTENSION)
+//#define OutputFolderName dataFolder morph  "Tuan_case03"
 #elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Tuan_triggerdistalspines" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_triggerdistalspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Tuan_case05" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Tuan_case06" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_case06" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_07
-#define OutputFolderName dataFolder morph "Tuan_triggeraxon" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_triggeraxon" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_08
-#define OutputFolderName dataFolder morph "Tuan_Vclamp" STR(EXTENSION)
+#define OutputFolderName dataFolder morph  "Tuan_Vclamp" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
 #else
@@ -100,21 +104,30 @@ print("Case 00: resting");
 
 //}}}
 
-//{{{ 3. Simulation configuration:  time + time-step + I/O
+//{{{ 3. Simulation configuration:  time + time-step + I/O interval
+//{{{
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
 #define TimeStep_value   0.0100 // [ms] - standard
+//#define TimeStep_value   0.0250 // [ms]  - used by NEURON
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
+//}}}
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-  #define TimeEnd          400      // [ms]
+  #define TimeEnd          1000      // [ms]
   //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+  #define TimeVClampSet0    0    // [ms]
   #define TimeVClampSet1    20    // [ms]
   #define TimeVClampSet2    100    // [ms]
   #define TimeVClampSet3    200    // [ms]
   #define TimeStartVClamp    20   // [ms]
   #define TimeOffVClamp      400   // [ms]
+//{{{ Stimulus-specific running time
+#if STIMULUS_CASE == CASE_08
+#define TimeEnd          25      // [ms]
+#endif
+//}}}
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -124,14 +137,21 @@ print("Case 00: resting");
 #else
   assert(0);
 #endif
+
+
+  //{{{recording-interval (I/O)
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 	#define RecordInterval   0.10   //  [ms]
-  #define TimeStartRecord  100.0 // [ms]
+   #if STIMULUS_CASE == CASE_08
+	#define RecordInterval   0.020   //  [ms]  - more I/O for V-clamp only
+   #endif
+        #define TimeStartRecord  100.0 // [ms]
 #elif  SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 	#define RecordInterval   10   // every ... timesteps
 #else
   assert(0);
 #endif
+  //}}}
 //}}}
 
 //{{{ Diffusion + Fast-buffering constants
@@ -146,7 +166,8 @@ print("Case 00: resting");
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-#define Cacyto_beta 0.05 // unitless [Wagner and Keizer buffering constant]
+//#define Cacyto_beta 0.05 // unitless [Wagner and Keizer buffering constant]
+#define Cacyto_beta 0.25 
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
 //}}}
@@ -211,7 +232,8 @@ print("Case 00: resting");
   //              20.0-22.0-degree Celcius (room)
   //       281K = 7.85-degree Celcius (cold)
 #define Temperature_value  308.15 // [K] Kelvin
-#define Vrest_value  -85.0 // [mV]
+//#define Temperature_value  295.0 // [K] Kelvin
+#define Vrest_value  -75.0 // [mV]
 //#define E_leak_value -90.0 // [mV]
 #define E_leak_value Vrest_value
 //#define Erev_HCN  -45.0 // [mV]
@@ -929,6 +951,10 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
               RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
   #endif
 
+  FloatTrigger voltageClampSet0("Iteration Trigger : >= " STR(TimeVClampSet0) " [ms]", 
+      CurrentTime, ">=", TimeVClampSet0, 0, solveChannels );
+  SemaphoreTrigger voltageClampSet0Sem("Nothing", voltageClampSet0, 1, 0, solveChannels);
+
   FloatTrigger voltageClampSet1("Iteration Trigger : >= " STR(TimeVClampSet1) " [ms]", 
       CurrentTime, ">=", TimeVClampSet1, 0, solveChannels );
   SemaphoreTrigger voltageClampSet1Sem("Nothing", voltageClampSet1, 1, 0, solveChannels);
@@ -941,9 +967,10 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
 
   FloatTrigger voltageClampOn("Iteration Trigger : >= " STR(TimeStartVClamp) " [ms]", 
       CurrentTime, ">=", TimeStartVClamp, 0, solveChannels );
+  SemaphoreTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
+
   FloatTrigger voltageClampOff("Iteration Trigger : >= " STR(TimeOffVClamp) " [ms]", 
       CurrentTime, ">=", TimeOffVClamp, 0, solveChannels );
-  SemaphoreTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
   SemaphoreTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
 
   #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
@@ -996,7 +1023,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
 VariableType PointCurrentSource { stimulate->solveChannels };
 VariableType PointCalciumSource { stimulate->solveChannels };
-VariableType VoltageClamp {initialize->initialize1, updateI->finish};
+VariableType VoltageClamp {initialize->initialize1, updateI->solveChannels};
 
 #include "stimulus_model.gsl"
 //}}}
@@ -1010,10 +1037,12 @@ VariableType VoltageDisplay{ initialize->initialize1 };
 VariableType CurrentDisplay{ initialize->initialize4 };
 VariableType CaCurrentDisplay{ initialize->initialize4 };
 VariableType AnyCurrentDisplay{ initialize->initialize4 }; //Na/Ca/K/...
+VariableType AnyFluxDisplay{ initialize->initialize4 }; //Na/Ca/K/...
 VariableType ConductanceDisplay{ initialize->initialize4 };
 
 VariableType CalciumDisplay{ initialize->initialize4 };
 VariableType AnyConcentrationDisplay{ initialize->initialize4 }; //[Ca](cyto)/[Ca](ER)/[Glut]/[GABA]/...
+VariableType CalciumDomainDisplay{ initialize->initialize4 }; //[Ca](cyto)/[Ca](ER)/[Glut]/[GABA]/...
 
 #include "recording_model.gsl"
 

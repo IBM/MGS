@@ -297,44 +297,44 @@ Node ChannelBK Implements
 #endif
   //}}}
 
-	//SHARED DATA
-	Shared {//in xxxCompCategory.C
-		//{{{
-		dyn_var_t* K_IC; // [mM]
-		dyn_var_t* K_EC; // [mM]
-		dyn_var_t* deltaT; // [ms]
-		dyn_var_t* T;     // [K]
-		dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-		//   and tempt. used for the simulation 
-		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
-		dyn_var_t [] E_K; // [mV]
-		InitPhase computeE; // [mV]
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+    //{{{
+    dyn_var_t* K_IC; // [mM]
+    dyn_var_t* K_EC; // [mM]
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t* T;     // [K]
+    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
+    //   and tempt. used for the simulation 
+    //dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+    dyn_var_t [] E_K; // [mV]
+    InitPhase computeE; // [mV]
 #ifdef MICRODOMAIN_CALCIUM
     string [] * tmp_microdomainNames;
 #endif
-		//}}}
-	}
+    //}}}
+  }
 
-	//{{{output data
-	ConductanceArrayProducer.conductanceArray << &g;
-	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
-	BranchDataProducer.branchData << branchData;
+  //{{{output data
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
+  BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
   //}}}
 
   //{{{Phases methods
-	RuntimePhase update();
-	InitPhase initialize;
+  RuntimePhase update();
+  InitPhase initialize;
   //}}}
 
-	InAttrPSet {//information of the incoming connection
-		string identifier; //name of the compartment variable
-		int idx;   // index of the compartment on a branch
+  InAttrPSet {//information of the incoming connection
+    string identifier; //name of the compartment variable
+    int idx;   // index of the compartment on a branch
 #ifdef MICRODOMAIN_CALCIUM
     string domainName; //empty means current going straight to well-mixed cytosol
 #endif
-	}
+  }
 
   //{{{Connection setup 
 	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer 

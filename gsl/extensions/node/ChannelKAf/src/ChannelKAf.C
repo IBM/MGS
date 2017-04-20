@@ -96,6 +96,10 @@ std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
 NOT IMPLEMENTED YET
 #endif
 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
+// b_m  = BMC * exp( (V - BMV)/BMD )
+// a_h  = AHC * exp( (V - AHV)/AHD )
 dyn_var_t ChannelKAf::vtrap(dyn_var_t x, dyn_var_t y)
 {
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
@@ -198,7 +202,11 @@ void ChannelKAf::initialize(RNG& rng)
   pthread_once(&once_KAf, ChannelKAf::initialize_others);
   assert(branchData);
   unsigned size = branchData->size;
-  assert(V);
+  if (not V)
+  {
+    std::cerr << typeid(*this).name() << " needs Voltage as input in ChanParam\n";
+    assert(V);
+  }
   assert(gbar.size() == size);
   assert(V->size() == size);
   // allocate
@@ -208,12 +216,12 @@ void ChannelKAf::initialize(RNG& rng)
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
   float gbar_default = gbar[0];
-	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
-	{
+  if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
+  {
     std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels KAf (KAt) Param"
-			<< std::endl;
-		assert(0);
-	}
+      << std::endl;
+    assert(0);
+  }
   for (unsigned i = 0; i < size; ++i)
   {
     if (gbar_dists.size() > 0) {
@@ -230,32 +238,32 @@ void ChannelKAf::initialize(RNG& rng)
       }
       gbar[i] = gbar_values[j];
     } 
-		else if (gbar_branchorders.size() > 0)
-		{
+    else if (gbar_branchorders.size() > 0)
+    {
       unsigned int j;
       if (gbar_values.size() != gbar_branchorders.size())
       {
-        std::cerr << "gbar_values.size = " << gbar_values.size()
-          << "; gbar_branchorders.size = " << gbar_branchorders.size() << std::endl;
+	std::cerr << "gbar_values.size = " << gbar_values.size()
+	  << "; gbar_branchorders.size = " << gbar_branchorders.size() << std::endl;
       }
       assert(gbar_values.size() == gbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
       for (j=0; j<gbar_branchorders.size(); ++j) {
-        if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
+	if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
       }
-			if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
-			{
-				gbar[i] = gbar_values[j-1];
-			}
-			else if (j < gbar_values.size()) 
-        gbar[i] = gbar_values[j];
+      if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+      {
+	gbar[i] = gbar_values[j-1];
+      }
+      else if (j < gbar_values.size()) 
+	gbar[i] = gbar_values[j];
       else
-        gbar[i] = gbar_default;
-		}
-		else {
+	gbar[i] = gbar_default;
+    }
+    else {
       gbar[i] = gbar_default;
     }
-	}
+  }
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];

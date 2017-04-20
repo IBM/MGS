@@ -246,7 +246,11 @@ void IP3Concentration::finish(RNG& rng)
 dyn_var_t IP3Concentration::getArea(int i) // Tuan: check ok
 {
   dyn_var_t area= 0.0;
+#if defined (USE_SOMA_AS_POINT)
+  area = 1.0 * FRACTION_SURFACEAREA_CYTO; // [um^2]
+#else
   area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_CYTO;
+#endif
 	return area;
 }
 
@@ -255,7 +259,11 @@ dyn_var_t IP3Concentration::getArea(int i) // Tuan: check ok
 dyn_var_t IP3Concentration::getVolume(int i) // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
+#if defined (USE_SOMA_AS_POINT)
+  volume = 1.0 * FRACTIONVOLUME_CYTO; // [um^3]
+#else
   volume = dimensions[i]->volume * FRACTIONVOLUME_CYTO;
+#endif
 	return volume;
 }
 //}}} //end Conserved region
@@ -643,7 +651,7 @@ dyn_var_t IP3Concentration::getLambda(DimensionStruct* a,
       //TEST 
 			Rb /= SCALING_NECK_FROM_SOMA;
       //END TEST
-#ifdef USE_SOMA_AS_POINT
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
 #else
     distance = std::fabs(a->dist2soma);
@@ -765,7 +773,7 @@ dyn_var_t IP3Concentration::getAij(DimensionStruct* a, DimensionStruct* b,
       //TEST 
 			Rb /= SCALING_NECK_FROM_SOMA;
       //END TEST
-#ifdef USE_SOMA_AS_POINT
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
 #else
     //distance = fabs(b->r + a->dist2soma );

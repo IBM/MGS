@@ -74,67 +74,70 @@
 // or(not implemented)
 //          PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
 Node CaExtrusion  Implements
-		 BranchDataProducer, 
-     CaFluxArrayProducer
+     BranchDataProducer, 
+     CaFluxArrayProducer,
+     DimensionArrayProducer
 {
-/*{{{*/
-	//DATA
-	//{{{
-	//internal data
-  dyn_var_t [] J_Ca; // [pA/um^2]
+  /*{{{*/
+  //DATA
+  //{{{
+  //internal data
+  dyn_var_t [] J_Ca; // [uM/ms]
   dyn_var_t [] tau; // [msec] - time constant of pumping Ca2+ out of the cell 
-	// reference data
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
-	BranchDataStruct* branchData; 
-	DimensionStruct* []* dimensions;
-	//int index; //index of the compartment in branch
+  // reference data
+  dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //int index; //index of the compartment in branch
 
-	//SHARED DATA
-	Shared {//in xxxCompCategory.C
-		//{{{
-		dyn_var_t* T;     // [K]
-		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
-		//   and tempt. used for the simulation 
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+    //{{{
+    dyn_var_t* T;     // [K]
+    dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+    //   and tempt. used for the simulation 
     dyn_var_t Ca_equil; // [uM]
     dyn_var_t tau_pump; // [msec] - time constant of pumping Ca2+ out of the cell 
-                       // this lumps together many different mechanisms causing a reduction in [Ca]cyto
-		InitPhase computeTadj; 
-		//}}}
-	}
-	//}}}
+    // this lumps together many different mechanisms causing a reduction in [Ca]cyto
+    InitPhase computeTadj; 
+    //}}}
+  }
+  //}}}
 
-	RuntimePhase update();
-	InitPhase initialize;
+  RuntimePhase update();
+  InitPhase initialize;
 
-	CaFluxArrayProducer.fluxes << &J_Ca;
-	BranchDataProducer.branchData << branchData;
+  CaFluxArrayProducer.fluxes << &J_Ca;
+  BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
 
-	InAttrPSet {//information of the incoming connection
-		string identifier; // name of the incoming node
-		int idx;   // if identifier = name of the compartment variable 
-		// then idx = index of the compartment on a branch
-	}
+  InAttrPSet {//information of the incoming connection
+    string identifier; // name of the incoming node
+    int idx;   // if identifier = name of the compartment variable 
+    // then idx = index of the compartment on a branch
+  }
 
   //Connection setup (input)
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer
+  Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects 
+    CaConcentrationArrayProducer
     , BranchDataProducer, DimensionArrayProducer 
-  {
-		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
-    BranchDataProducer.branchData >> branchData;
-    DimensionArrayProducer.dimensionArray >> dimensions;
-	}
+    {
+      CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+      BranchDataProducer.branchData >> branchData;
+      DimensionArrayProducer.dimensionArray >> dimensions;
+    }
 
-	Connection Pre Constant (PSet.identifier=="EC") 
-		Expects TemperatureProducer 
-	{
-			TemperatureProducer.T >> Shared.T;
-	}
+  Connection Pre Constant (PSet.identifier=="EC") 
+    Expects TemperatureProducer 
+    {
+      TemperatureProducer.T >> Shared.T;
+    }
 
-	//Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
-	//	TimeStepProducer.deltaT >> Shared.deltaT;
-	//}
-/*}}}*/
+  //Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+  //	TimeStepProducer.deltaT >> Shared.deltaT;
+  //}
+  /*}}}*/
 }
 
 // NOTE: PMCA is a Ca-extrusion mechanism that utilize ATP as an energy source
@@ -148,42 +151,42 @@ Node CaExtrusion  Implements
 // Rate: each PMCA molecule pumps
 //       30-100 ions per second (high-affinity, low capacity) or 30-100 Hz
 Node PumpPMCA Implements 
-		 BranchDataProducer, 
+     BranchDataProducer, 
      DimensionArrayProducer,
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
     PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
-     CaFluxArrayProducer
+     CaFluxArrayProducer  // to Ca2+, to I/O
 #else
      CurrentArrayProducer, // to Vm, and to I/O 
      CaCurrentArrayProducer // to Ca2+
 #endif
 {
-/*{{{*/
-	//DATA
-	//{{{ 
-	//{{{
+  /*{{{*/
+  //DATA
+  //{{{ 
+  //{{{
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
-    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
-    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION 
-	//internal data
+  PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+  PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION 
+  //internal data
   // J_Ca = ([Ca]equil - Cai) / tau;
-  dyn_var_t [] J_Ca; // [pA/um^2]
+  dyn_var_t [] J_Ca; // [uM/msec]
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
-     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+  PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   //can be user-input for *CONSTANT_DYNAMICS
   dyn_var_t [] tau; // [msec] - time constant of pumping Ca2+ out of the cell 
 #endif
 #else
-	//{{{
+  //{{{
   // user-input
   dyn_var_t [] IPMCAbar; // [pA/um^2]
-	//internal data
+  //internal data
   //FORMULA: I_Ca = IPMCAbar * (Cai^eta_pmca) / (Km^eta_pmca + Cai^eta_pmca)
-	dyn_var_t [] I_Ca; // [pA/um^2]
+  dyn_var_t [] I_Ca; // [pA/um^2]
   //   I_PMCA = 0 // due to 2H+ counter transport
-	dyn_var_t [] I_PMCA; // [pA/um^2]
-	//{{{
+  dyn_var_t [] I_PMCA; // [pA/um^2]
+  //{{{
   // NOTE: Ipmcabar = zCa * zF * Vmax
   //   Vmax [(mole of Ca2+) /(cm^2.msec)] - taking into account the surface density of PMCA
   //       = 30 (ions /sec) * PMCA_density (1/um^2) / N_A
@@ -192,109 +195,109 @@ Node PumpPMCA Implements
   //   zCa = valence Calcium
   //   zF  = Faraday constant
   //}}}
-	//data mainly used to dynamically assign different conductance on different location
-	//NOTE: In SynParams.par file
-	//    Use either gbar_dists or gbar_branch
-	//      and combine with gbar_values
-	dyn_var_t [] IPMCAbar_dists; // an array that indicate the threshold-distance (in micrometer)
-	dyn_var_t [] IPMCAbar_branchorders;// an array that indicate the branch-order (zero-based integer)
-	dyn_var_t [] IPMCAbar_values;// ... having the corresponding IPMCAbar conductance [um/ms]
-// Example:
-	// CHANNEL_PARAMS 2
-	// Cah 3
-	// BRANCHTYPE MTYPE
-	// 1 0 <gbar={0.00992}>
-	// 4 0 <gbar_dists={380.0,480.0, 590}> 
-	// 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-	// Nat 3 
-	// BRANCHTYPE MTYPE
-	// 1 0 <gbar={0.00992}>
-	// 4 0 <gbar_branchorders={0, 1, 2}> 
-	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  dyn_var_t [] IPMCAbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  dyn_var_t [] IPMCAbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  dyn_var_t [] IPMCAbar_values;// ... having the corresponding IPMCAbar conductance [um/ms]
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3 
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
   //}}}
 #endif
-	// reference data
-	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
-	BranchDataStruct* branchData; 
-	DimensionStruct* []* dimensions;
-	//int index; //index of the compartment in branch
+  // reference data
+  dyn_var_t []* V;//transmembrane voltage [mV]
+  dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //int index; //index of the compartment in branch
 
-	//}}}
+  //}}}
 
-	//SHARED DATA
-	Shared {//in xxxCompCategory.C
-		//{{{
-		dyn_var_t* Ca_EC; // [uM]
-		dyn_var_t* deltaT; // [ms]
-		dyn_var_t* T;     // [K]
-		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
-		//   and tempt. used for the simulation 
-		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
-		InitPhase computeTadj; 
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+    //{{{
+    dyn_var_t* Ca_EC; // [uM]
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t* T;     // [K]
+    dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+    //   and tempt. used for the simulation 
+    //dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+    InitPhase computeTadj; 
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
     PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
     PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     dyn_var_t Ca_equil; // [uM]
     dyn_var_t tau_pump; // [msec] - time constant of pumping Ca2+ out of the cell 
 #endif
-		//}}}
-	}
-	//}}}
+    //}}}
+  }
+  //}}}
 
-	RuntimePhase update();
-	InitPhase initialize;
+  RuntimePhase update();
+  InitPhase initialize;
 
   // Output 
 #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
-    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
-    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+  PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+  PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
   CaFluxArrayProducer.fluxes << &J_Ca;
 #else
-	CurrentArrayProducer.currents << &I_PMCA;
-	CaCurrentArrayProducer.currents << &I_Ca;
+  CurrentArrayProducer.currents << &I_PMCA;
+  CaCurrentArrayProducer.currents << &I_Ca;
 #endif
-	BranchDataProducer.branchData << branchData;
+  BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
 
-	InAttrPSet {//information of the incoming connection
-		string identifier; // name of the incoming node
-		int idx;   // if identifier = name of the compartment variable 
-		// then idx = index of the compartment on a branch
-	}
+  InAttrPSet {//information of the incoming connection
+    string identifier; // name of the incoming node
+    int idx;   // if identifier = name of the compartment variable 
+    // then idx = index of the compartment on a branch
+  }
 
   //Connection setup (input)
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
     VoltageArrayProducer, 
     BranchDataProducer, DimensionArrayProducer 
-	{
-			VoltageArrayProducer.voltageArray >> V;
-			BranchDataProducer.branchData >> branchData;
-			DimensionArrayProducer.dimensionArray >> dimensions;
-	}
+    {
+      VoltageArrayProducer.voltageArray >> V;
+      BranchDataProducer.branchData >> branchData;
+      DimensionArrayProducer.dimensionArray >> dimensions;
+    }
 
-	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
     CaConcentrationArrayProducer,
     BranchDataProducer, DimensionArrayProducer 
-  {
-    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
-    BranchDataProducer.branchData >> branchData;
-    DimensionArrayProducer.dimensionArray >> dimensions;
-	}
+    {
+      CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+      BranchDataProducer.branchData >> branchData;
+      DimensionArrayProducer.dimensionArray >> dimensions;
+    }
 
-	Connection Pre Constant (PSet.identifier=="EC") 
-		Expects CaConcentrationProducer, TemperatureProducer 
-	{
-			CaConcentrationProducer.Ca >> Shared.Ca_EC;
-			TemperatureProducer.T >> Shared.T;
-	}
+  Connection Pre Constant (PSet.identifier=="EC") 
+    Expects CaConcentrationProducer, TemperatureProducer 
+    {
+      CaConcentrationProducer.Ca >> Shared.Ca_EC;
+      TemperatureProducer.T >> Shared.T;
+    }
 
-	Connection Pre Constant (PSet.identifier=="dt") Expects 
+  Connection Pre Constant (PSet.identifier=="dt") Expects 
     TimeStepProducer 
-  {
-		TimeStepProducer.deltaT >> Shared.deltaT;
-	}
-/*}}}*/
+    {
+      TimeStepProducer.deltaT >> Shared.deltaT;
+    }
+  /*}}}*/
 }
 
 

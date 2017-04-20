@@ -112,7 +112,8 @@
 
 //{{{ different strategy when modeling soma
 // STRATEGY 01 - simply treate as a single point (i.e. no volume is considered)
-//#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as a single point
+#define USE_SOMA_AS_ISOPOTENTIAL //enable this when we want to simulate the soma as a well-mixed iso-potential compartment - so that the distance from the first-proximal compartment to soma is actually the half-length of that compartment
+//#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as 1um^2 surface-area
 
 // STRATEGY 02 - adjust the soma to consider 'effect' in that the real-shape soma may obstruct the
 //               propagation of electrical signal than the spherical one
@@ -157,7 +158,7 @@
 //#define USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION //if defined, then 
          // (suppose Vm[size-1]) instead of using proximalVoltage, and the distance between them
          // it use V0 (or Vterminal_proximal) and distance as length/2
-         // and Vterminal_proximal is estiamted using algebraic equation
+         // and Vterminal_proximal is estimated using algebraic equation
          // Vterminal_proximal= (w1 * proximalVm + w2 * Vm[size-1])
          //  with weight is inverse of distance
          //     w1 = 1/(proximalDimension->length)
@@ -241,10 +242,14 @@
 //default value if MICRODOMAIN_DATA_FROM_NTSMACRO is used
 //#define V_EFFLUX  0.1    //[1/ms]
 //Here, we assume maximum 3 microdomains on 1 branch/junction
-//                and the microdomains must be named using 'domain1', 'domain2', 'domain3'
+//               and the microdomains must be named using 'domain1', 'domain2', 'domain3'
+//NOTE: v_efflux in Ca-subspace use 0.25 [1/ms]
 #define V_EFFLUX_DOMAIN1  0.1    //[1/ms]
 #define V_EFFLUX_DOMAIN2  0.1    //[1/ms]
 #define V_EFFLUX_DOMAIN3  0.1    //[1/ms]
+//#define V_EFFLUX_DOMAIN1  0.00    //[1/ms] - make small to emulate sustain Ca2+ binding to KChIP (should move to parameter file)
+//#define V_EFFLUX_DOMAIN2  0.00    //[1/ms]
+//#define V_EFFLUX_DOMAIN3  0.00    //[1/ms]
 #define DEPTH_MICRODOMAIN1  10.0  //[nanometer]
 #define DEPTH_MICRODOMAIN2  10.0  //[nanometer]
 #define DEPTH_MICRODOMAIN3  10.0  //[nanometer]
