@@ -81,7 +81,6 @@ void Params::reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx)
   }
   else if (fieldIdx == SegmentDescriptor::uf0) // MTYPE
   {
-
   }
 }
 void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName)
@@ -98,20 +97,20 @@ void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& f
   }
   else if (fieldName == segDesc.getFieldName(SegmentDescriptor::uf0)) // MTYPE
   {
-
   }
 }
 
-/* It is designed for support Calcium microdomain feature
- *   BKCa [Voltage, Calcium(domain1)] [Voltage]
- *   CaN  [Voltage, Calcium(domain1)] [Voltage, Calcium(domain1)]
- *  Parameters:
- *   compartmentNameWithOptionalMicrodomainName = "Calcium(domain1)" or "Calcium" or "Calcium()"
- *   Expect output:
- *   If input = "Calcium(domain1)" --> arg2 = "Calcium", arg3 = "domain1"
- *   If input = "Calcium" --> arg2 = "Calcium", arg3 = ""
- *   If input = "Calcium()" --> arg2 = "Calcium", arg3 = ""
- */
+/**
+ It is designed for support Calcium microdomain feature
+   BKCa [Voltage, Calcium(domain1)] [Voltage]
+   CaN  [Voltage, Calcium(domain1)] [Voltage, Calcium(domain1)]
+  Parameters:
+   compartmentNameWithOptionalMicrodomainName = "Calcium(domain1)" or "Calcium" or "Calcium()"
+   Expect output:
+   If input = "Calcium(domain1)" --> arg2 = "Calcium", arg3 = "domain1"
+   If input = "Calcium" --> arg2 = "Calcium", arg3 = ""
+   If input = "Calcium()" --> arg2 = "Calcium", arg3 = ""
+*/
 
 #ifdef MICRODOMAIN_CALCIUM
 void Params::separateCompartmentName_and_microdomainName(std::string compartmentNameWithOptionalMicrodomainName, std::string& compartmentNameOnly, std::string& microdomainName)
@@ -1051,7 +1050,7 @@ bool Params::isBidirectionalConnectionTarget(key_size_t key1, key_size_t key2,
   /* key_size_t tmp = key1;
    key1 = key2;
    key2 = tmp;
- }*/
+  */
   return rval;
 }
 
@@ -5447,16 +5446,18 @@ void Params::readMultiLine(std::string& out_bufS, FILE* fpF)
       std::string tmp(bufS);
       if (bufS[strlen(bufS) - i] == '\\')
       {//automatically ignore the last backslash character
-				out_bufS.append(tmp.substr(0, strlen(bufS) - i)); 
-				jumpOverCommentLine(fpF);
+        out_bufS.append(tmp.substr(0, strlen(bufS) - i)); 
+        jumpOverCommentLine(fpF);
         c = fgets(bufS, sizeof(bufS), fpF);
       }
       else
-			{
-				out_bufS.append(tmp.substr(0, strlen(bufS) - i+1)); 
+      {
+        out_bufS.append(tmp.substr(0, strlen(bufS) - i+1)); 
         itsok = false;
       }
     }
+    else
+      itsok = false;
   } while (itsok);
 }
 
@@ -6044,28 +6045,35 @@ void Params::buildElectricalSynapseConnectionMap(
 }
 
 
-// GOAL: check if the next 'sz' space-separated words
-//     are all numerics or not
-//  true = all are numerics
-//  SCENARIO:   sz = 4
-//  1 4 5 6  --> true
-//  1 [4,6] 5 6 --> false
-//  * 4 5 6  --> false
-// A special case can be either:
-//      range [2, 5]
-//      range [2:5]
-//      range [2,5:7]
+/**
+ GOAL: check if the next 'sz' space-separated words
+     are all numerics or not
+  true = all are numerics
+  SCENARIO:   sz = 4
+  1 4 5 6  --> true
+  1 [4,6] 5 6 --> false
+  * 4 5 6  --> false
+ A special case can be either:
+      range [2, 5]
+      range [2:5]
+      range [2,5:7]
+
+  @param fpF the pointer to file handler of current opening param file
+  @param sz  the number of columns to read
+  @return columns_found the index of the columns containing values of special case
+*/
 bool Params::checkForSpecialCases(FILE* fpF, int sz, std::vector<int>& columns_found)
 {
   bool rval = false;
   fpos_t fpos;
   fgetpos(fpF, &fpos);
   int ival;
-	char oneword[LENGTH_TOKEN_MAX];
+  char oneword[LENGTH_TOKEN_MAX];
   columns_found.clear();
   for (unsigned int j = 0; j < sz; ++j)
   {
-		int errorCode = fscanf(fpF, " %s", oneword);
+    //int errorCode = fscanf(fpF, " %s", oneword);
+    int errorCode = StringUtils::readOneWord(fpF, oneword);
     if (oneword[0] == '[' || oneword[0] == '*')
     {
       rval = true;
@@ -6081,10 +6089,11 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz, int& firstcolumn_found)
   fpos_t fpos;
   fgetpos(fpF, &fpos);
   int ival;
-	char oneword[LENGTH_TOKEN_MAX];
+  char oneword[LENGTH_TOKEN_MAX];
   for (unsigned int j = 0; j < sz; ++j)
   {
-		int errorCode = fscanf(fpF, " %s", oneword);
+    //int errorCode = fscanf(fpF, " %s", oneword);
+    int errorCode = StringUtils::readOneWord(fpF, oneword);
     if (oneword[0] == '[' || oneword[0] == '*')
     {
       rval = true;
@@ -6094,7 +6103,6 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz, int& firstcolumn_found)
   }
   fsetpos(fpF, &fpos);
   return rval;
-
 }
 bool Params::checkForSpecialCases(FILE* fpF, int sz)
 {
@@ -6102,6 +6110,7 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz)
   return checkForSpecialCases(fpF, sz, dummy);
 
 }
+
 
 // SCENARIO: the next character in file pointed by fpF
 //   should be a string in such forms
@@ -6113,37 +6122,37 @@ bool Params::checkForSpecialCases(FILE* fpF, int sz)
 void Params::getListofValues(FILE* fpF, std::vector<int>& values)
 {
   char ch;
-	bool readOK = true;
-	values.clear();//reset data first
+  bool readOK = true;
+  values.clear();//reset data first
 
   while ((ch = fgetc(fpF)) != '[')
   {
   }
-	if (feof(fpF))
-	{
-		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
-		exit(-1);
-	}
+  if (feof(fpF))
+  {
+    std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
+    exit(-1);
+  }
   ch = fgetc(fpF);//read character after '['
   while (ch != ']' and readOK and !feof(fpF))
   {
     //char str[LENGTH_TOKEN_MAX];
-		std::string str("");
+    std::string str("");
     //int i = 0;
     do
     {
       //str[i] = ch;
-			str.push_back(ch);
+      str.push_back(ch);
       //i++;
       ch = fgetc(fpF);
     } while (ch != ',' and ch != ']' and ch != ':' and !feof(fpF));
-		if (feof(fpF))
-		{
-			readOK = false;
-			break;
-		}
+    if (feof(fpF))
+    {
+      readOK = false;
+      break;
+    }
     //str[i] = '\0';
-		
+
     if (ch == ',')
     {
       values.push_back(atoi(str.c_str()));
@@ -6153,12 +6162,12 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
       int val1 = atoi(str.c_str());
       ch = fgetc(fpF);
       //i = 0;
-			str.clear();
+      str.clear();
       do
       {
         //str[i] = ch;
         //i++;
-			  str.push_back(ch);
+        str.push_back(ch);
         ch = fgetc(fpF);
         if (ch == ':') assert(0);//we cann't have two ':' at the same time, e.g. 2:3:5
       } while (ch != ',' and ch != ']' and !feof(fpF));
@@ -6168,112 +6177,112 @@ void Params::getListofValues(FILE* fpF, std::vector<int>& values)
       for (int i = val1; i <= val2; i++) values.push_back(i);
     }
     else if (ch == ']')
-		{
-			if (str.length() > 0)
-				values.push_back(atoi(str.c_str()));
+    {
+      if (str.length() > 0)
+        values.push_back(atoi(str.c_str()));
       break;
-		}
-		if (ch != ']')
-			ch = fgetc(fpF);
+    }
+    if (ch != ']')
+      ch = fgetc(fpF);
   }
-	if (!readOK)
-	{
-		std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
-		exit(-1);
-	}
+  if (!readOK)
+  {
+    std::cerr << "Syntax error of parameter file: expect range, e.g. [val1,val2] or [val1:val2]" << std::endl;
+    exit(-1);
+  }
 }
 
 ///NOTE: Accept traditional ** array
 void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRateConstant,
-		int &numChanStates, int* &vChannelStates, int &initialstate)
+    int &numChanStates, int* &vChannelStates, int &initialstate)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
   _currentFName = fname;
   char bufS[LENGTH_LINE_MAX];
-	if (fpF == NULL)
-	{
-		std::cerr << "File " << fname << " not found.\n";
-		assert(fpF);
-	}
-	//read in the number of states
-	jumpOverCommentLine(fpF);
+  if (fpF == NULL)
+  {
+    std::cerr << "File " << fname << " not found.\n";
+    assert(fpF);
+  }
+  //read in the number of states
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (1 != sscanf(bufS, "%d ", &numChanStates))
-	{
+  {
     std::cerr << "Syntax of Markov-model file invalid: expect \n #-states" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+    exit(EXIT_FAILURE);
+  }
 
-	//read in which state(s) is open-state
-	jumpOverCommentLine(fpF);
+  //read in which state(s) is open-state
+  jumpOverCommentLine(fpF);
   vChannelStates =	new int[numChanStates]();
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	std::string str(bufS);
-	std::vector<std::string> tokens;
-	std::string delimiters(",");
-	StringUtils::Tokenize(str, tokens, delimiters);
-	if ((int)tokens.size() != numChanStates)
-	{
-		std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
-	}
-	for (int ii = 0; ii < numChanStates; ++ii )
-	{
-		vChannelStates[ii] = (int) atoi(tokens[ii].c_str());
-	}
+  std::string str(bufS);
+  std::vector<std::string> tokens;
+  std::string delimiters(",");
+  StringUtils::Tokenize(str, tokens, delimiters);
+  if ((int)tokens.size() != numChanStates)
+  {
+    std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
+  }
+  for (int ii = 0; ii < numChanStates; ++ii )
+  {
+    vChannelStates[ii] = (int) atoi(tokens[ii].c_str());
+  }
 
-	// read in which state should be the initial state
-	// ASSUMPTION: All channels having the same initial state
-	jumpOverCommentLine(fpF);
+  // read in which state should be the initial state
+  // ASSUMPTION: All channels having the same initial state
+  jumpOverCommentLine(fpF);
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (1 == sscanf(bufS, "%d ", &initialstate))
-	{
-		if (initialstate < 1 or initialstate > numChanStates)
-		{
-			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
-			std::cerr << " to be in the range [1, " << numChanStates << "]\n";
-			exit(EXIT_FAILURE);
-		}
-		// map to zero-based
-		initialstate--;
-	}
-	else{
-		std::cerr << "Please input only 1 value for channel's initial-state in Markov file\n";
-		exit(EXIT_FAILURE);
-	}
-	
+  {
+    if (initialstate < 1 or initialstate > numChanStates)
+    {
+      std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
+      std::cerr << " to be in the range [1, " << numChanStates << "]\n";
+      exit(EXIT_FAILURE);
+    }
+    // map to zero-based
+    initialstate--;
+  }
+  else{
+    std::cerr << "Please input only 1 value for channel's initial-state in Markov file\n";
+    exit(EXIT_FAILURE);
+  }
 
-	// read in transition rate matrix
-	matChannelRateConstant = new dyn_var_t*[numChanStates];
-	for(int i = 0; i < numChanStates; ++i) {
-		matChannelRateConstant[i] = new dyn_var_t[numChanStates]();
-	}
-	
-	bool isOK = true;
-	jumpOverCommentLine(fpF);
+
+  // read in transition rate matrix
+  matChannelRateConstant = new dyn_var_t*[numChanStates];
+  for(int i = 0; i < numChanStates; ++i) {
+    matChannelRateConstant[i] = new dyn_var_t[numChanStates]();
+  }
+
+  bool isOK = true;
+  jumpOverCommentLine(fpF);
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   while (!feof(fpF))
-	{
-		int ifrom, ito;
-		float rate;
-		if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
-		{
-			isOK = false;
-			break;
-		}
-		if (ifrom < 1 or ifrom > numChanStates or ito < 1 or ito > numChanStates )
-		{
-			isOK = false;
-			break;
-		}
-		matChannelRateConstant[ifrom-1][ito-1] = rate;
-		jumpOverCommentLine(fpF);
-		c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	}
-	if (!isOK)
-	{
-		std::cerr << "Error at reading matrix of rate-constants" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+  {
+    int ifrom, ito;
+    float rate;
+    if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
+    {
+      isOK = false;
+      break;
+    }
+    if (ifrom < 1 or ifrom > numChanStates or ito < 1 or ito > numChanStates )
+    {
+      isOK = false;
+      break;
+    }
+    matChannelRateConstant[ifrom-1][ito-1] = rate;
+    jumpOverCommentLine(fpF);
+    c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  }
+  if (!isOK)
+  {
+    std::cerr << "Error at reading matrix of rate-constants" << std::endl;
+    exit(EXIT_FAILURE);
+  }
   fclose(fpF);
 }
 
@@ -6282,92 +6291,92 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t** &matChannelRa
 // vChannelStates = [numChanStates] vector telling which state is conducting
 // initialstate = value telling which state is the initial state for all channels in the cluster
 void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRateConstant,
-		int &numChanStates, int* &vChannelStates, int &initialstate)
+    int &numChanStates, int* &vChannelStates, int &initialstate)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
   _currentFName = fname;
   char bufS[LENGTH_LINE_MAX];
-	if (fpF == NULL)
-	{
-		std::cerr << "File " << fname << " not found.\n";
-		assert(fpF);
-	}
-	//read in the number of states
-	jumpOverCommentLine(fpF);
+  if (fpF == NULL)
+  {
+    std::cerr << "File " << fname << " not found.\n";
+    assert(fpF);
+  }
+  //read in the number of states
+  jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (1 != sscanf(bufS, "%d ", &numChanStates))
-	{
+  {
     std::cerr << "Syntax of Markov-model file invalid: expect \n #-states" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+    exit(EXIT_FAILURE);
+  }
 
-	//read in which state(s) is open-state
-	jumpOverCommentLine(fpF);
+  //read in which state(s) is open-state
+  jumpOverCommentLine(fpF);
   vChannelStates =	new int[numChanStates]();
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	std::string str(bufS);
-	std::vector<std::string> tokens;
-	std::string delimiters(",");
-	StringUtils::Tokenize(str, tokens, delimiters);
-	if ((int)tokens.size() != numChanStates)
-	{
-		std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
-	}
-	for (int ii = 0; ii < numChanStates; ++ii )
-	{
-		vChannelStates[ii] = (int) atoi(tokens[ii].c_str());
-	}
+  std::string str(bufS);
+  std::vector<std::string> tokens;
+  std::string delimiters(",");
+  StringUtils::Tokenize(str, tokens, delimiters);
+  if ((int)tokens.size() != numChanStates)
+  {
+    std::cerr << "Expect a vector of 0s or 1s with "<< numChanStates << " elements" << std::endl;
+  }
+  for (int ii = 0; ii < numChanStates; ++ii )
+  {
+    vChannelStates[ii] = (int) atoi(tokens[ii].c_str());
+  }
 
-	// read in which state should be the initial state
-	// ASSUMPTION: All channels having the same initial state
-	jumpOverCommentLine(fpF);
+  // read in which state should be the initial state
+  // ASSUMPTION: All channels having the same initial state
+  jumpOverCommentLine(fpF);
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   if (1 == sscanf(bufS, "%d ", &initialstate))
-	{
-		if (initialstate < 1 or initialstate > numChanStates)
-		{
-			std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
-			std::cerr << " to be in the range [1, " << numChanStates << "]\n";
-			exit(EXIT_FAILURE);
-		}
-		// map to zero-based
-		initialstate--;
-	}
-	else{
-		std::cerr << "Please input only 1 value for channel's initial-state in Markov file\n";
-		exit(EXIT_FAILURE);
-	}
-	
+  {
+    if (initialstate < 1 or initialstate > numChanStates)
+    {
+      std::cerr << "Syntax of Markov-model file invalid: expect \n index-of-initial-state" << std::endl;
+      std::cerr << " to be in the range [1, " << numChanStates << "]\n";
+      exit(EXIT_FAILURE);
+    }
+    // map to zero-based
+    initialstate--;
+  }
+  else{
+    std::cerr << "Please input only 1 value for channel's initial-state in Markov file\n";
+    exit(EXIT_FAILURE);
+  }
 
-	// read in transition rate matrix
-	matChannelRateConstant = new dyn_var_t[numChanStates* numChanStates]();
-	
-	bool isOK = true;
-	jumpOverCommentLine(fpF);
+
+  // read in transition rate matrix
+  matChannelRateConstant = new dyn_var_t[numChanStates* numChanStates]();
+
+  bool isOK = true;
+  jumpOverCommentLine(fpF);
   c = fgets(bufS, LENGTH_LINE_MAX, fpF);
   while (!feof(fpF))
-	{
-		int ifrom, ito;
-		float rate;
-		if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
-		{
-			isOK = false;
-			break;
-		}
-		if (ifrom < 1 or ifrom > numChanStates or ito < 1 or ito > numChanStates )
-		{
-			isOK = false;
-			break;
-		}
-		matChannelRateConstant[Map1Dindex(ifrom-1,ito-1,numChanStates)] = rate;
-		jumpOverCommentLine(fpF);
-		c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-	}
-	if (!isOK)
-	{
-		std::cerr << "Error at reading matrix of rate-constants" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+  {
+    int ifrom, ito;
+    float rate;
+    if (3 != sscanf(bufS, "%d, %d, %f ", &ifrom, &ito, &rate))
+    {
+      isOK = false;
+      break;
+    }
+    if (ifrom < 1 or ifrom > numChanStates or ito < 1 or ito > numChanStates )
+    {
+      isOK = false;
+      break;
+    }
+    matChannelRateConstant[Map1Dindex(ifrom-1,ito-1,numChanStates)] = rate;
+    jumpOverCommentLine(fpF);
+    c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  }
+  if (!isOK)
+  {
+    std::cerr << "Error at reading matrix of rate-constants" << std::endl;
+    exit(EXIT_FAILURE);
+  }
   fclose(fpF);
 }
 
@@ -6396,182 +6405,182 @@ void Params::readMarkovModel(const std::string& fname, dyn_var_t* &matChannelRat
 //               which can be used to trace 
 //               to the next state using indexK[val][?]
 void Params::setupCluster(
-		dyn_var_t* const &matChannelRateConstant,
-		const int &numChan, const int &numChanStates, int* const &vChannelStates, 
-		//output
+    dyn_var_t* const &matChannelRateConstant,
+    const int &numChan, const int &numChanStates, int* const &vChannelStates, 
+    //output
     int & numClusterStates, 
-		int* &matClusterStateInfo, 
-		int* &vClusterNumOpenChan,
-		int &maxNumNeighbors,
-		//Combined2MarkovState_t* &matK_channelstate_fromto, long * &matK_indx
-		long* &matK_channelstate_fromto, ClusterStateIndex_t * &matK_indx
-		)
+    int* &matClusterStateInfo, 
+    int* &vClusterNumOpenChan,
+    int &maxNumNeighbors,
+    //Combined2MarkovState_t* &matK_channelstate_fromto, long * &matK_indx
+    long* &matK_channelstate_fromto, ClusterStateIndex_t * &matK_indx
+    )
 {
-	// Step 1. find numClusterStates, matClusterStateInfo
-	int balls = numChan;
-	int bins = numChanStates;
-	// how many ways to put balls
-	// into bins
-	// regardless of which balls
-    //CALL count_ball2bin(balls, bins, matClusterStateInfo, numClusterStates, icols)
-		//matClusterStateInfo [0..ClusterNumStates-1,0..numChanStates-1]
-		//each row of matClusterStateInfo represent each cluster-state, i.e. it tells
-		//the information of Channels distribution to each Markov-state
-	int rows, cols;
-	count_ball2bin(balls, bins, matClusterStateInfo, rows, cols);
-	numClusterStates = rows;
-	assert(bins=cols);
+  // Step 1. find numClusterStates, matClusterStateInfo
+  int balls = numChan;
+  int bins = numChanStates;
+  // how many ways to put balls
+  // into bins
+  // regardless of which balls
+  //CALL count_ball2bin(balls, bins, matClusterStateInfo, numClusterStates, icols)
+  //matClusterStateInfo [0..ClusterNumStates-1,0..numChanStates-1]
+  //each row of matClusterStateInfo represent each cluster-state, i.e. it tells
+  //the information of Channels distribution to each Markov-state
+  int rows, cols;
+  count_ball2bin(balls, bins, matClusterStateInfo, rows, cols);
+  numClusterStates = rows;
+  assert(bins=cols);
 
-	// Step 2. Find vClusterNumOpenChan
+  // Step 2. Find vClusterNumOpenChan
   // + vector that tells how many conducting channels in each cluster-state
-	vClusterNumOpenChan = new int[numClusterStates]();
+  vClusterNumOpenChan = new int[numClusterStates]();
 
-	for (unsigned int ii=0; ii < numClusterStates; ii++)
-	{
-		for (unsigned int jj=0; jj< numChanStates; jj++)
-		{
-			int OpenState = 1;
-			if (vChannelStates[jj] == OpenState)
-			{
-				vClusterNumOpenChan[ii] += matClusterStateInfo[Map1Dindex(ii,jj, numChanStates)];
-			}
-		}
-	}
-	
-	// Step 3. find maxNumNeighbors, matK_channelstate_fromto, matK_indx
-/*
-    !size (numClusterStates,0:maxnkL..) :: compK_L..
-    !size (numClusterStates,0:maxnkL..) :: idxK_L..
-    ! NOTE: The zero-th column keeps the 'true' number of non-zero elements in the row
-    !       However, it's does't mean anything here as non-zero elements are not consecutives all the time
-    CALL getcompK_5(channel_cMat, mL, matClusterStateInfo, numClusterStates, N_L, matK_channelstate_fromto, matK_indx, maxNumNeighbors)
-*/
+  for (unsigned int ii=0; ii < numClusterStates; ii++)
+  {
+    for (unsigned int jj=0; jj< numChanStates; jj++)
+    {
+      int OpenState = 1;
+      if (vChannelStates[jj] == OpenState)
+      {
+        vClusterNumOpenChan[ii] += matClusterStateInfo[Map1Dindex(ii,jj, numChanStates)];
+      }
+    }
+  }
 
-	getCompactK(matChannelRateConstant, 
-			numChanStates,
-			numChan, 
-			matClusterStateInfo, 
-			numClusterStates,
-			//output
-			maxNumNeighbors,
-			matK_channelstate_fromto,
-			matK_indx
-			);
+  // Step 3. find maxNumNeighbors, matK_channelstate_fromto, matK_indx
+  /*
+     !size (numClusterStates,0:maxnkL..) :: compK_L..
+     !size (numClusterStates,0:maxnkL..) :: idxK_L..
+     ! NOTE: The zero-th column keeps the 'true' number of non-zero elements in the row
+     !       However, it's does't mean anything here as non-zero elements are not consecutives all the time
+     CALL getcompK_5(channel_cMat, mL, matClusterStateInfo, numClusterStates, N_L, matK_channelstate_fromto, matK_indx, maxNumNeighbors)
+     */
+
+  getCompactK(matChannelRateConstant, 
+      numChanStates,
+      numChan, 
+      matClusterStateInfo, 
+      numClusterStates,
+      //output
+      maxNumNeighbors,
+      matK_channelstate_fromto,
+      matK_indx
+      );
 }
 
 //NOTE:
 //matK_channelstate_fromto[..][..] = numClusterStates * maxNumNeighbors
 //matK_indx[..][..] = of the same size
 void Params::getCompactK(
-	dyn_var_t* const & matChannelRateConstant,
-  const int & numChanStates,
-  const int & numChan,
-  int* const &matClusterStateInfo,
-  const int & numClusterStates,
-	 // output
-  int & maxNumNeighbors,
-  long* & matK_channelstate_fromto,
-  ClusterStateIndex_t* & matK_indx
-		)
+    dyn_var_t* const & matChannelRateConstant,
+    const int & numChanStates,
+    const int & numChan,
+    int* const &matClusterStateInfo,
+    const int & numClusterStates,
+    // output
+    int & maxNumNeighbors,
+    long* & matK_channelstate_fromto,
+    ClusterStateIndex_t* & matK_indx
+    )
 {
-	// Step 1. Find maximum # of possible neighbors
-	// which is equal to # of non-zero non-diagonal elements
-	unsigned int icount = 0;
-	if (numChan > numChanStates)
-	{
-		for (int ii=0; ii< numChanStates; ii++)
-		{
-			int offset = Map1Dindex(ii,0, numChanStates);
-			icount += count_nonzero(matChannelRateConstant, offset, numChanStates );
-		}
-	}
-	else{
-		//a more general case 
-		//which requires sorting
-		//and takes only the sum of the min(numChanStates,numChan) rows of the most non-zero elements
-		std::vector<int> vcount;
-		for (int ii = 0; ii< numChanStates; ii++)
-		{
-			int offset = Map1Dindex(ii,0, numChanStates);
-			int icount = count_nonzero(matChannelRateConstant, offset, numChanStates );
-			vcount.push_back(icount);
-		}
-		std::sort(vcount.begin(), vcount.end(), std::greater<int>());//descending
-		icount = 0;
-		for(int ii=0; ii < std::min(numChanStates, numChan); ii++)
-			icount  += vcount[ii];
-	}
-	maxNumNeighbors = icount;
+  // Step 1. Find maximum # of possible neighbors
+  // which is equal to # of non-zero non-diagonal elements
+  unsigned int icount = 0;
+  if (numChan > numChanStates)
+  {
+    for (int ii=0; ii< numChanStates; ii++)
+    {
+      int offset = Map1Dindex(ii,0, numChanStates);
+      icount += count_nonzero(matChannelRateConstant, offset, numChanStates );
+    }
+  }
+  else{
+    //a more general case 
+    //which requires sorting
+    //and takes only the sum of the min(numChanStates,numChan) rows of the most non-zero elements
+    std::vector<int> vcount;
+    for (int ii = 0; ii< numChanStates; ii++)
+    {
+      int offset = Map1Dindex(ii,0, numChanStates);
+      int icount = count_nonzero(matChannelRateConstant, offset, numChanStates );
+      vcount.push_back(icount);
+    }
+    std::sort(vcount.begin(), vcount.end(), std::greater<int>());//descending
+    icount = 0;
+    for(int ii=0; ii < std::min(numChanStates, numChan); ii++)
+      icount  += vcount[ii];
+  }
+  maxNumNeighbors = icount;
 
-	// Step 2. Find big K matrice in compact form
+  // Step 2. Find big K matrice in compact form
   matK_channelstate_fromto = new long[numClusterStates * maxNumNeighbors]();
-	//matK_indx = new int[numClusterStates * maxNumNeighbors]();
-	matK_indx = new ClusterStateIndex_t[numClusterStates * maxNumNeighbors]();
+  //matK_indx = new int[numClusterStates * maxNumNeighbors]();
+  matK_indx = new ClusterStateIndex_t[numClusterStates * maxNumNeighbors]();
 
-	long fromto;
-	for (int ii=0; ii < numClusterStates; ii++)
-	{
-		int icount = 0;
-		//	std::valarray<int> v1(matClusterStateInfo + Map1Dindex(ii,0,numChanStates), numChanStates);
-		std::vector<int> v1(matClusterStateInfo + Map1Dindex(ii,0, numChanStates), 
-				matClusterStateInfo + Map1Dindex(ii,0, numChanStates) + numChanStates 
-				);
-/*		std::cout << "v1: ";
-		for (int jj = 0; jj < v1.size(); jj++)
-			std::cout << v1[jj] << ",";
-		std::cout << std::endl;
-		*/
-		for (int jj=0; jj < numClusterStates; jj++)
-		{
-//			//std::valarray<int> v2(matClusterStateInfo + Map1Dindex(jj,0,numChanStates), numChanStates);
-			std::vector<int> v2(matClusterStateInfo + Map1Dindex(jj,0,numChanStates), 
-					matClusterStateInfo + Map1Dindex(jj,0,numChanStates) + numChanStates);
-//			//std::valarray<int> res = (v2 - v1);
-			std::vector<int> res;
-			res.reserve(v1.size());
-			//std::transform(v2.begin(), v2.end(), v1.begin(), res.begin(), std::minus<int>());
-			std::transform(v2.begin(), v2.end(), v1.begin(), std::back_inserter(res), std::minus<int>());
-			// int sumval = std::abs(res.sum());
-			int sumval = std::accumulate(res.begin(), res.end(), 0, [](int a, int b){ return std::abs(a)+std::abs(b); });
-/*		std::cout << "v2: ";
-		for (int jj = 0; jj < v2.size(); jj++)
-			std::cout << v2[jj] << ",";
-		std::cout << std::endl;
-		std::cout << "--- v2-v1: ";
-		for (int jj = 0; jj < res.size(); jj++)
-			std::cout << res[jj] << ",";
-		std::cout << std::endl;
-		std::cout << "sumval = " << sumval ;
-		std::cin.get();
-		*/
-		if (sumval == 2) // eligible for two neighbor cluster-states
-		{
-			//				//int initial_state = std::distance(res, std::max_element(std::begin(res), res.size())); //location of element with value 1;
-			//				//int final_state = std::distance(res, std::min_element(res, res.size())) //location of element with value -1;
-			int initial_state = std::distance(res.begin(), std::max_element(res.begin(), res.end())); //location of element with value 1;
-			int final_state = std::distance(res.begin(), std::min_element(res.begin(), res.end())); //location of element with value -1;
-			if (initial_state > MAXRANGE_MARKOVSTATE or final_state > MAXRANGE_MARKOVSTATE)
-			{
-				std::cerr << "The Markov-model should not have more than " << MAXRANGE_MARKOVSTATE << " states\n";
-				exit(EXIT_FAILURE);
-			}
-			//std::cout << "from, to = " << initial_state << ", " << final_state << std::endl;
-			if (matChannelRateConstant[Map1Dindex(initial_state, final_state, numChanStates)] > 0.0)
-			{
-/*
-               fromto = IOR(ISHFT(INT(initial_state), bitshift), final_state)
-                ChannelStateFromTo(ii, icount) = fromto ![initial_state,final_state]
-                idxK(ii, icount) = jj
-*/
- 
-				fromto = final_state | (initial_state << BITSHIFT_MARKOV);
-				matK_channelstate_fromto[Map1Dindex(ii, icount, maxNumNeighbors)] = fromto;
-				matK_indx[Map1Dindex(ii, icount, maxNumNeighbors)] = jj;
-				icount++;
-			}
-		}
-		}
-	}
+  long fromto;
+  for (int ii=0; ii < numClusterStates; ii++)
+  {
+    int icount = 0;
+    //	std::valarray<int> v1(matClusterStateInfo + Map1Dindex(ii,0,numChanStates), numChanStates);
+    std::vector<int> v1(matClusterStateInfo + Map1Dindex(ii,0, numChanStates), 
+        matClusterStateInfo + Map1Dindex(ii,0, numChanStates) + numChanStates 
+        );
+    /*		std::cout << "v1: ";
+                for (int jj = 0; jj < v1.size(); jj++)
+                std::cout << v1[jj] << ",";
+                std::cout << std::endl;
+                */
+    for (int jj=0; jj < numClusterStates; jj++)
+    {
+      //			//std::valarray<int> v2(matClusterStateInfo + Map1Dindex(jj,0,numChanStates), numChanStates);
+      std::vector<int> v2(matClusterStateInfo + Map1Dindex(jj,0,numChanStates), 
+          matClusterStateInfo + Map1Dindex(jj,0,numChanStates) + numChanStates);
+      //			//std::valarray<int> res = (v2 - v1);
+      std::vector<int> res;
+      res.reserve(v1.size());
+      //std::transform(v2.begin(), v2.end(), v1.begin(), res.begin(), std::minus<int>());
+      std::transform(v2.begin(), v2.end(), v1.begin(), std::back_inserter(res), std::minus<int>());
+      // int sumval = std::abs(res.sum());
+      int sumval = std::accumulate(res.begin(), res.end(), 0, [](int a, int b){ return std::abs(a)+std::abs(b); });
+      /*		std::cout << "v2: ";
+                        for (int jj = 0; jj < v2.size(); jj++)
+                        std::cout << v2[jj] << ",";
+                        std::cout << std::endl;
+                        std::cout << "--- v2-v1: ";
+                        for (int jj = 0; jj < res.size(); jj++)
+                        std::cout << res[jj] << ",";
+                        std::cout << std::endl;
+                        std::cout << "sumval = " << sumval ;
+                        std::cin.get();
+                        */
+      if (sumval == 2) // eligible for two neighbor cluster-states
+      {
+        //				//int initial_state = std::distance(res, std::max_element(std::begin(res), res.size())); //location of element with value 1;
+        //				//int final_state = std::distance(res, std::min_element(res, res.size())) //location of element with value -1;
+        int initial_state = std::distance(res.begin(), std::max_element(res.begin(), res.end())); //location of element with value 1;
+        int final_state = std::distance(res.begin(), std::min_element(res.begin(), res.end())); //location of element with value -1;
+        if (initial_state > MAXRANGE_MARKOVSTATE or final_state > MAXRANGE_MARKOVSTATE)
+        {
+          std::cerr << "The Markov-model should not have more than " << MAXRANGE_MARKOVSTATE << " states\n";
+          exit(EXIT_FAILURE);
+        }
+        //std::cout << "from, to = " << initial_state << ", " << final_state << std::endl;
+        if (matChannelRateConstant[Map1Dindex(initial_state, final_state, numChanStates)] > 0.0)
+        {
+          /*
+             fromto = IOR(ISHFT(INT(initial_state), bitshift), final_state)
+             ChannelStateFromTo(ii, icount) = fromto ![initial_state,final_state]
+             idxK(ii, icount) = jj
+             */
+
+          fromto = final_state | (initial_state << BITSHIFT_MARKOV);
+          matK_channelstate_fromto[Map1Dindex(ii, icount, maxNumNeighbors)] = fromto;
+          matK_indx[Map1Dindex(ii, icount, maxNumNeighbors)] = jj;
+          icount++;
+        }
+      }
+    }
+  }
 }
 
 
@@ -6607,18 +6616,18 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
     _spineHeadMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
-		for (unsigned int j = 0; j < sz; ++j)
-		{
-			if (maskVector[j] == SegmentDescriptor::segmentIndex)
-			{
+    for (unsigned int j = 0; j < sz; ++j)
+    {
+      if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      {
         std::cerr << "ERROR in file " << _currentFName << 
           ": section " << expected_btype << std::endl;
-				std::cerr << "Params : Targeting to individual "
-					"compartments not supported!" << std::endl;
-				return false;
-				//exit(EXIT_FAILURE);
-			}
-		}
+        std::cerr << "Params : Targeting to individual "
+          "compartments not supported!" << std::endl;
+        return false;
+        //exit(EXIT_FAILURE);
+      }
+    }
 
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
     {
@@ -6626,7 +6635,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
       std::vector<unsigned int*> v_ids;
       std::vector<int> columns_found;
       if (checkForSpecialCases(fpF, sz, columns_found))
-			{// check if a special case is used
+      {// check if a special case is used
         // then, create a vector of v_ids
         // NOTE: We planed to support
         //      asterisk *
@@ -6643,7 +6652,7 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
-                                           // the form  [...] and it occurs for
+            // the form  [...] and it occurs for
             Params::reviseParamValues(values,  maskVector[j]);
           }
           else
@@ -6691,21 +6700,21 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
               for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
               {
                 std::vector<unsigned int*>::iterator iter,
-                    iterstart = v_ids.begin() + xx,
-                    iterend = v_ids.begin() + xx + num2clone - 1;
+                  iterstart = v_ids.begin() + xx,
+                  iterend = v_ids.begin() + xx + num2clone - 1;
                 for (iter = iterstart; iter <= iterend; iter++)
                   (*iter)[jj] = vect_values[jj][kk];
               }
             }
           }
         }
-			}
-			else
-			{ 
-				unsigned int* ids = new unsigned int[sz]();
-				for (unsigned int j = 0; j < sz; ++j)
-				{
-					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+      }
+      else
+      { 
+        unsigned int* ids = new unsigned int[sz]();
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
           {
             std::cerr << "ERROR in file " << _currentFName << std::endl;
             if (errorCode == EOF)
@@ -6720,23 +6729,23 @@ bool Params::readCriteriaSpineHead(FILE* fpF)
             assert(0);
           }
           Params::reviseParamValue(ids[j],  maskVector[j]);
-				}
+        }
         // put into v_ids
         v_ids.push_back(ids);
-			}
+      }
 
-			assert(!feof(fpF));
+      assert(!feof(fpF));
       /*
       //std::string myBuf("");
       //readMultiLine(myBuf, fpF);
       //std::istringstream is(myBuf);
-			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
-			//buildSpinesMap(maskVector, v_ids, myBuf);
+      //buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+      //buildSpinesMap(maskVector, v_ids, myBuf);
       */
-			buildSpinesMap(maskVector, v_ids, _spineHeadsMap);
+      buildSpinesMap(maskVector, v_ids, _spineHeadsMap);
       // memory clean v_ids
       for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
-           it != v_ids.end(); it++)
+          it != v_ids.end(); it++)
       {
         delete *it;
       }
@@ -6781,18 +6790,18 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
     _spineNeckMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
-		for (unsigned int j = 0; j < sz; ++j)
-		{
-			if (maskVector[j] == SegmentDescriptor::segmentIndex)
-			{
+    for (unsigned int j = 0; j < sz; ++j)
+    {
+      if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      {
         std::cerr << "ERROR in file " << _currentFName << 
           ": section " << expected_btype << std::endl;
-				std::cerr << "Params : Targeting to individual "
-					"compartments not supported!" << std::endl;
-				return false;
-				//exit(EXIT_FAILURE);
-			}
-		}
+        std::cerr << "Params : Targeting to individual "
+          "compartments not supported!" << std::endl;
+        return false;
+        //exit(EXIT_FAILURE);
+      }
+    }
 
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
     {
@@ -6800,7 +6809,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
       std::vector<unsigned int*> v_ids;
       std::vector<int> columns_found;
       if (checkForSpecialCases(fpF, sz, columns_found))
-			{// check if a special case is used
+      {// check if a special case is used
         // then, create a vector of v_ids
         // NOTE: We planed to support
         //      asterisk *
@@ -6817,7 +6826,7 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
           if (std::find(columns_found.begin(), columns_found.end(), j) != columns_found.end())
           {//array-form (single or many values)
             getListofValues(fpF, values);  // assume the next data to read is in
-                                           // the form  [...] and it occurs for
+            // the form  [...] and it occurs for
             Params::reviseParamValues(values,  maskVector[j]);
           }
           else
@@ -6865,21 +6874,21 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
               for (int xx = (num2clone) * (kk); xx < total_vect; xx += gap)
               {
                 std::vector<unsigned int*>::iterator iter,
-                    iterstart = v_ids.begin() + xx,
-                    iterend = v_ids.begin() + xx + num2clone - 1;
+                  iterstart = v_ids.begin() + xx,
+                  iterend = v_ids.begin() + xx + num2clone - 1;
                 for (iter = iterstart; iter <= iterend; iter++)
                   (*iter)[jj] = vect_values[jj][kk];
               }
             }
           }
         }
-			}
-			else
-			{ 
-				unsigned int* ids = new unsigned int[sz]();
-				for (unsigned int j = 0; j < sz; ++j)
-				{
-					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+      }
+      else
+      { 
+        unsigned int* ids = new unsigned int[sz]();
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
           {
             std::cerr << "ERROR in file " << _currentFName << std::endl;
             if (errorCode == EOF)
@@ -6894,23 +6903,23 @@ bool Params::readCriteriaSpineNeck(FILE* fpF)
             assert(0);
           }
           Params::reviseParamValue(ids[j],  maskVector[j]);
-				}
+        }
         // put into v_ids
         v_ids.push_back(ids);
-			}
+      }
 
-			assert(!feof(fpF));
+      assert(!feof(fpF));
       /*
       //std::string myBuf("");
       //readMultiLine(myBuf, fpF);
       //std::istringstream is(myBuf);
-			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
-			//buildSpinesMap(maskVector, v_ids, myBuf);
+      //buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+      //buildSpinesMap(maskVector, v_ids, myBuf);
       */
-			buildSpinesMap(maskVector, v_ids, _spineNecksMap);
+      buildSpinesMap(maskVector, v_ids, _spineNecksMap);
       // memory clean v_ids
       for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
-           it != v_ids.end(); it++)
+          it != v_ids.end(); it++)
       {
         delete *it;
       }
@@ -6932,27 +6941,27 @@ void Params::buildSpinesMap(
     std::vector<unsigned int*>& v_ids, 
     //std::set<key_size_t>& mymap
     std::vector<key_size_t>& mymap
-		//std::istringstream& is
-		//const std::string &myBuf
-		)
+    //std::istringstream& is
+    //const std::string &myBuf
+    )
 {
   mymap.clear();
   std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
-                                             iterend = v_ids.end();
-	for (; iter < iterend; iter++)
-	{
-		unsigned int* ids = *iter;
-		//std::list<std::string> targets;
-		//std::string type;
-		//std::istringstream is(myBuf);
-		//while (is >> type)
-		//{
-		//	targets.push_back(type);
-		//}
-		//targets.sort();
-		mymap.push_back(_segmentDescriptor.getSegmentKey(
-				maskVector, &ids[0]));
-	}
+    iterend = v_ids.end();
+  for (; iter < iterend; iter++)
+  {
+    unsigned int* ids = *iter;
+    //std::list<std::string> targets;
+    //std::string type;
+    //std::istringstream is(myBuf);
+    //while (is >> type)
+    //{
+    //	targets.push_back(type);
+    //}
+    //targets.sort();
+    mymap.push_back(_segmentDescriptor.getSegmentKey(
+          maskVector, &ids[0]));
+  }
 }
 
 bool Params::isGivenKeySpineNeck(key_size_t key) 

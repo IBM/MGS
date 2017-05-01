@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <string.h>
 
 class StringUtils
 {
@@ -32,6 +33,7 @@ class StringUtils
 	  StringUtils::trim(s);
 	  return s;
   }
+  static int readOneWord(FILE* fpF, char* oneword);
 };
 
 #endif
