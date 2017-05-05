@@ -507,7 +507,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   }	
 
   //{{{Connection setup 
-  // the junction-branch connects to regular-branch through the regular-branch's endpoints
+  // junction-branch connects to regular-branch through the regular-branch's endpoints
   Connection Pre Node (PSet.identifier=="endpoint") Expects CaConcentrationProducer, 
     DimensionProducer, BranchDataProducer  {
     CaConcentrationProducer.Ca >> CaConcentrationInputs;

@@ -53,6 +53,10 @@
 // the maximum length of the name given to each "Type" in GSL
 #define LENGTH_IDNAME_MAX 256
 
+std::map< std::string,
+  std::map<std::string, std::vector<float> > > 
+  Params::_microdomainArrayParamsMap; 
+
 void Params::reviseParamValue(unsigned int& fieldVal, const int& fieldIdx)
 {
   if (fieldIdx == SegmentDescriptor::branchType)
@@ -156,8 +160,8 @@ Params::Params()
       _nonTouchableTargetsMask2(0),
       _chemicalSynapseTargetsMask1(0),
       _chemicalSynapseTargetsMask2(0),
-			_bidirectionalConnectionTargetsMask1(0),
-			_bidirectionalConnectionTargetsMask2(0),
+      _bidirectionalConnectionTargetsMask1(0),
+      _bidirectionalConnectionTargetsMask2(0),
       _SIParams(false),
       _compartmentVariables(false),
       _channels(false),
@@ -207,6 +211,7 @@ Params::Params(Params const& p)
       _channelParamsMap(p._channelParamsMap),
 #endif
       _channelArrayParamsMap(p._channelArrayParamsMap),
+      //_microdomainArrayParamsMap(p._microdomainArrayParamsMap),
       _compartmentParamsMasks(p._compartmentParamsMasks),
 #ifdef NEWIDEA
       _compartmentParamsMapGeneric(p._compartmentParamsMapGeneric),
@@ -295,6 +300,7 @@ Params::Params(Params& p)
       _channelParamsMap(p._channelParamsMap),
 #endif
       _channelArrayParamsMap(p._channelArrayParamsMap),
+      //_microdomainArrayParamsMap(p._microdomainArrayParamsMap),
       _compartmentParamsMasks(p._compartmentParamsMasks),
 #ifdef NEWIDEA
       _compartmentParamsMapGeneric(p._compartmentParamsMapGeneric),
@@ -618,25 +624,29 @@ void Params::readChanParams(const std::string& fname)
       }
     }
   }
+  keyword = std::string("CHANNEL_PARAMS");
+  if (isGivenKeywordNext(fpF, keyword))
   {
-  ErrorCode result2;
+    ErrorCode result2;
 #ifdef NEWIDEA
-  //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
-  //                _channelArrayParamsMap);
-  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
-                  _channelArrayParamsMap);
+    //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+    //                _channelArrayParamsMap);
+    result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMapGeneric,
+                    _channelArrayParamsMap);
 #else
-  //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
-  //                _channelArrayParamsMap);
-  result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
-                  _channelArrayParamsMap);
+    //result = readModelParams(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+    //                _channelArrayParamsMap);
+    result2 = readModelParams2(fpF, "CHANNEL_PARAMS", _channelParamsMasks, _channelParamsMap,
+                    _channelArrayParamsMap);
 #endif
-  if (result2 == ErrorCode::SECTION_INVALID)
-  {
-    std::cerr << "ERROR: reading file " << fname << " at section Channel data" << std::endl;
-    assert(0);
+    if (result2 == ErrorCode::SECTION_INVALID)
+    {
+      std::cerr << "ERROR: reading file " << fname << " at section Channel data" << std::endl;
+      assert(0);
+    }
   }
-
+  else{
+    assert(0); //must have the section defined
   }
 
 #ifdef MICRODOMAIN_CALCIUM
@@ -644,18 +654,21 @@ void Params::readChanParams(const std::string& fname)
   keyword = std::string("MICRODOMAIN_PARAMS");
   if (isGivenKeywordNext(fpF, keyword))
   {
-    //result = (readMicrodomainData(fpF));
-    result2 = readModelParams2(fpF, "MICRODOMAIN_PARAMS", _microdomainParamsMasks, _microdomainParamsMap,
-                  _microdomainArrayParamsMap);
+    result = (readMicrodomainData(fpF, keyword, _microdomainArrayParamsMap));
+    //result2 = readModelParams2(fpF, "MICRODOMAIN_PARAMS", 
+    //    _microdomainParamsMasks, _microdomainParamsMap,
+    //    _microdomainArrayParamsMap);
     if (result == ErrorCode::SECTION_INVALID)
     {
-      std::cerr << "ERROR: reading file " << fname << " at section " << keyword << std::endl;
+      std::cerr << "ERROR: reading file " << fname << " at section " << keyword 
+        << std::endl;
       assert(0);
     }
     else if (result == ErrorCode::SECTION_IGNORED)
     {
-      std::cerr << "ERROR: cannot ignore - reading file " << fname << " at section " << keyword << std::endl;
-      assert(0);
+      //std::cerr << "ERROR: cannot ignore - reading file " << fname << " at section " 
+      //  << keyword << std::endl;
+      //assert(0);
     }
   }
   else{
@@ -2360,16 +2373,16 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
     _compartmentVariableTargetsMask = resetMask(fpF, maskVector);
     unsigned int sz = maskVector.size();
     assert(sz);
-		for (unsigned int j = 0; j < sz; ++j)
-		{
-			if (maskVector[j] == SegmentDescriptor::segmentIndex)
-			{
-				std::cerr << "Params : Targeting compartmentVariables to individual "
-					"compartments not supported!" << std::endl;
-				return false;
-				//exit(EXIT_FAILURE);
-			}
-		}
+    for (unsigned int j = 0; j < sz; ++j)
+    {
+      if (maskVector[j] == SegmentDescriptor::segmentIndex)
+      {
+        std::cerr << "Params : Targeting compartmentVariables to individual "
+          "compartments not supported!" << std::endl;
+        return false;
+        //exit(EXIT_FAILURE);
+      }
+    }
 
 
     for (int i = 0; i < n; i++)  // for each line, not counting comment-line
@@ -2378,7 +2391,7 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
       std::vector<unsigned int*> v_ids;
       std::vector<int> columns_found;
       if (checkForSpecialCases(fpF, sz, columns_found))
-			{// check if a special case is used
+      {// check if a special case is used
         // then, create a vector of v_ids
         // NOTE: We planed to support
         //      asterisk *
@@ -2451,13 +2464,13 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
             }
           }
         }
-			}
-			else
-			{ 
-				unsigned int* ids = new unsigned int[sz]();
-				for (unsigned int j = 0; j < sz; ++j)
-				{
-					if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
+      }
+      else
+      { 
+        unsigned int* ids = new unsigned int[sz]();
+        for (unsigned int j = 0; j < sz; ++j)
+        {
+          if (1 != (errorCode = fscanf(fpF, "%d", &ids[j])))
           {
             std::cerr << "ERROR in file " << _currentFName << std::endl;
             if (errorCode == EOF)
@@ -2472,19 +2485,19 @@ bool Params::readCompartmentVariableTargets2(FILE* fpF)
             assert(0);
           }
           Params::reviseParamValue(ids[j], maskVector[j]);
-				}
+        }
         // put into v_ids
         v_ids.push_back(ids);
-			}
+      }
 
-			assert(!feof(fpF));
+      assert(!feof(fpF));
       std::string myBuf("");
       readMultiLine(myBuf, fpF);
       //std::istringstream is(myBuf);
       /*c = fgets(bufS, LENGTH_LINE_MAX, fpF);
       std::istringstream is(bufS);*/
-			//buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
-			buildCompartmentVariableTargetsMap(maskVector, v_ids, myBuf);
+      //buildCompartmentVariableTargetsMap(maskVector, v_ids, is);
+      buildCompartmentVariableTargetsMap(maskVector, v_ids, myBuf);
       // memory clean v_ids
       for (std::vector<unsigned int*>::const_iterator it = v_ids.begin();
            it != v_ids.end(); it++)
@@ -6164,6 +6177,7 @@ NOTE: must starts with '<' and ends with'>'
       delimiter = " =";
       pos = (*ii).find(delimiter);
       std::string tok2 = (*ii).substr(0, pos);
+      StringUtils::trim(tok2);
 
       std::istringstream is2(tok2);
       if (is2.get() != '{')
@@ -6340,24 +6354,24 @@ void Params::buildChemicalSynapseConnectionMap(
     std::vector<unsigned int*>& v2_ids, 
 //    unsigned long long bidirectionalConnectionTargetsMask1,
 //    unsigned long long bidirectionalConnectionTargetsMask2,
-		const std::string& myBuf 
-/*		std::string & modelID,
-		std::map<std::string,
-		std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
-		paramsMap,
-		std::map<
-		std::string,
-		std::map<key_size_t,
-		std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
-		arrayParamsMap
-    */
-		)
+    const std::string& myBuf 
+    /*		std::string & modelID,
+                std::map<std::string,
+                std::map<key_size_t, std::list<std::pair<std::string, dyn_var_t> > > >&
+                paramsMap,
+                std::map<
+                std::string,
+                std::map<key_size_t,
+                std::list<std::pair<std::string, std::vector<dyn_var_t> > > > >&
+                arrayParamsMap
+                */
+    )
 {
   std::vector<unsigned int*>::const_iterator iter = v1_ids.begin(),
-                                             iterend = v1_ids.end();
-	for (; iter < iterend; iter++)
-	{//for each element in v_ids, apply the same read-in data to it
-		unsigned int* ids1 = *iter;
+  iterend = v1_ids.end();
+  for (; iter < iterend; iter++)
+  {//for each element in v_ids, apply the same read-in data to it
+    unsigned int* ids1 = *iter;
 
     //specific-code for the function
     std::map<key_size_t, std::list<Params::ChemicalSynapseTarget> >&
@@ -6374,7 +6388,7 @@ void Params::buildChemicalSynapseConnectionMap(
       std::istringstream is(myBuf);
       //specific-code for the function
       std::list<Params::ChemicalSynapseTarget>& targets =
-          targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
+        targetsMap[_segmentDescriptor.getSegmentKey(maskVector2, &ids2[0])];
 
       Params::ChemicalSynapseTarget st;
       st._parameter = -1.0;
@@ -6393,24 +6407,24 @@ void Params::buildChemicalSynapseConnectionMap(
         assert(is.good());
       }
       char buf1[LENGTH_IDNAME_MAX];
-	  assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+      assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
       //is.get(buf1, LENGTH_IDNAME_MAX, ']');
       std::string stringbuf(buf1);
       std::vector<std::string> tokens;
       StringUtils::Tokenize(stringbuf, tokens, " ,");
       for (std::vector<std::string>::iterator ii = tokens.begin(),
-                                              end = tokens.end();
-           ii != end; ++ii)
+          end = tokens.end();
+          ii != end; ++ii)
       {
         types.push_back(*ii);
       }
       /*
-      char* tok = strtok(buf1, " ,");
-      while (tok != 0) {
-          types.push_back(std::string(tok));
-          tok = strtok(0, " ,");
-      }
-      */
+         char* tok = strtok(buf1, " ,");
+         while (tok != 0) {
+         types.push_back(std::string(tok));
+         tok = strtok(0, " ,");
+         }
+         */
       if (is.get() != ']') assert(0);
 
       for (std::vector<int>::size_type ii = 0; ii < types.size(); ++ii)
@@ -6427,23 +6441,23 @@ void Params::buildChemicalSynapseConnectionMap(
           assert(is.good());
         }
         char buf1[LENGTH_IDNAME_MAX];
-		assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
+        assert(StringUtils::streamGet(is, buf1, LENGTH_IDNAME_MAX, ']'));
         //is.get(buf1, LENGTH_IDNAME_MAX, ']');
         std::string stringbuf(buf1);
         std::vector<std::string> tokens;
         StringUtils::Tokenize(stringbuf, tokens, " ,");
         for (std::vector<std::string>::iterator j = tokens.begin(),
-                                                end = tokens.end();
-             j != end; ++j)
+            end = tokens.end();
+            j != end; ++j)
         {
           st.addTarget1(types[ii], *j);
         }
         /*
-        char* tok1 = strtok(buf1, " ,");
-        while (tok1 != 0) {
-            st.addTarget1(types[ii], std::string(tok1));
-            tok1 = strtok(0, " ,");
-        }*/
+           char* tok1 = strtok(buf1, " ,");
+           while (tok1 != 0) {
+           st.addTarget1(types[ii], std::string(tok1));
+           tok1 = strtok(0, " ,");
+           }*/
         if (is.get() != ']') {
           std::cerr << "ERROR in file " << _currentFName << std::endl;
           std::cerr << " Expect a ']' symbol ... line\n" <<
@@ -6463,7 +6477,7 @@ void Params::buildChemicalSynapseConnectionMap(
           assert(is.good());
         }
         char buf2[LENGTH_IDNAME_MAX];
-		assert(StringUtils::streamGet(is, buf2, LENGTH_IDNAME_MAX, ']'));
+        assert(StringUtils::streamGet(is, buf2, LENGTH_IDNAME_MAX, ']'));
         //is.get(buf2, LENGTH_IDNAME_MAX, ']');
         if (is.get() != ']') 
         { 
@@ -6477,24 +6491,24 @@ void Params::buildChemicalSynapseConnectionMap(
         // std::vector<std::string> tokens;
         StringUtils::Tokenize(stringbuf, tokens, " ,");
         for (std::vector<std::string>::iterator j = tokens.begin(),
-                                                end = tokens.end();
-             j != end; ++j)
+            end = tokens.end();
+            j != end; ++j)
         {
           st.addTarget2(types[ii], *j);
         }
         /*
-        char* tok2 = strtok(buf2, " ,");
-        while (tok2 != 0) {
-            st.addTarget2(types[ii], std::string(tok2));
-            tok2 = strtok(0, " ,");
-        }*/
+           char* tok2 = strtok(buf2, " ,");
+           while (tok2 != 0) {
+           st.addTarget2(types[ii], std::string(tok2));
+           tok2 = strtok(0, " ,");
+           }*/
       }
       is >> st._parameter;
       targets.push_back(st);
       st.clear();
       targets.sort();
     }
-	}
+  }
 }
 
 void Params::buildElectricalSynapseConnectionMap(
@@ -7511,7 +7525,7 @@ void Params::buildSpinesMap(
     //const std::string &myBuf
     )
 {
-  mymap.clear();
+  //mymap.clear();
   std::vector<unsigned int*>::const_iterator iter = v_ids.begin(),
     iterend = v_ids.end();
   for (; iter < iterend; iter++)
@@ -7557,7 +7571,7 @@ bool Params::isGivenKeySpineHead(key_size_t key)
     iterend = _spineHeadsMap.end();
   for (iter = iterbegin; iter != iterend; ++iter)
   {
-    if (*iter == _segmentDescriptor.getSegmentKey(key, _spineNeckMask) )
+    if (*iter == _segmentDescriptor.getSegmentKey(key, _spineHeadMask) )
     {
       result = true;
       break;
@@ -7583,3 +7597,153 @@ bool Params::isNonTouchableTargets(key_size_t key1, key_size_t key2)
   return is_in;
 }
 
+Params::ErrorCode Params::readMicrodomainData(
+    FILE* fpF, const std::string& expected_btype,
+    std::map< std::string,
+        std::map<std::string, std::vector<float> > > &
+        arrayParamsMap)
+{
+  /* Example of input from fpF
+     * NOTE: id = COMPARTMENT_VARIABLE_PARAMS
+MICRODOMAIN_PARAMS 1
+domain1  <v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
+   */
+  int errorCode;
+  ErrorCode rval = ErrorCode::SECTION_VALID;
+  //paramsMasks.clear();
+  //paramsMap.clear();
+  int n = 0;
+  char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
+  jumpOverCommentLine(fpF);
+  char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
+  if (2 == sscanf(bufS, "%s %d ", tokS, &n))
+  {  // find number of lines defined data for microdomain
+    //read line:   MICRODOMAIN_PARAMS 1
+    //and 'n' get value of '1' 
+    std::string btype(tokS);
+    if (btype == expected_btype)
+    {
+      // do nothing
+    }
+    else
+    {
+      std::cerr << "ERROR in file " << _currentFName << std::endl;
+      std::cerr << ".. unmatch section: expect " << expected_btype << ", while given "
+        << btype << std::endl;
+      rval = ErrorCode::SECTION_INVALID;
+      return rval;
+    }
+  }
+  else
+  {
+    std::cerr << "ERROR in file " << _currentFName << std::endl;
+    std::cerr << " Expect a string and a number ... line"
+      << bufS << std::endl;
+    rval = ErrorCode::SECTION_INVALID;
+    return rval;
+  }
+
+  if (n > 0)
+  {
+    for (int i = 0; i < n; i++)  
+    {
+      jumpOverCommentLine(fpF);
+      
+      char oneword[LENGTH_TOKEN_MAX];
+      int errorCode = fscanf(fpF, " %s", oneword);
+      std::string domainName(oneword);
+      std::string myBuf("");
+      readMultiLine(myBuf, fpF);
+      extractMicrodomainData(myBuf, arrayParamsMap, domainName);
+    }
+  }
+  else
+  {
+    rval = ErrorCode::SECTION_IGNORED;
+    skipSection(fpF);
+    return rval;
+  }
+  return rval;
+}
+
+
+/*
+ * Given the string 
+ * @arg myBuf : string to be parsed; put data into 'arrayParamsMap'
+ * @arg arrayParamsMap : key is defined by @arg domainName
+ * @arg domainName     : the key
+ *
+ * Example of myBuf:
+ * <v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
+ */
+void Params::extractMicrodomainData(
+    const std::string& myBuf,
+    std::map< std::string,
+    std::map<std::string, std::vector<float> > > &
+    arrayParamsMap, 
+    std::string domainName)
+{
+    std::map<std::string, std::vector<float> >&
+      arrayParams = arrayParamsMap[domainName];
+
+    std::istringstream is(myBuf);
+    while (is.get() != '<')
+    {
+      if (not is.good())
+      {
+        std::cerr << "ERROR in file " << _currentFName << std::endl;
+        std::cerr << " Expect a '<' symbol ... line\n" <<
+          myBuf << std::endl;
+      }
+      assert(is.good());
+    }
+    char buf1[LENGTH_LINE_MAX];
+    assert(StringUtils::streamGet(is, buf1, LENGTH_LINE_MAX, '>'));
+    std::string stringbuf1(buf1);  // to replace the code below
+    std::vector<std::string> tokens1;
+    StringUtils::Tokenize(stringbuf1, tokens1, ";");
+    for (std::vector<std::string>::iterator ii = tokens1.begin(),
+        end1 = tokens1.end();
+        ii != end1; ++ii)
+    {
+      std::string delimiter = "=";
+      size_t pos = (*ii).find(delimiter);
+      std::string name = (*ii).substr(0, pos);
+      StringUtils::trim(name);
+      (*ii).erase(0, pos + delimiter.length());
+
+      delimiter = " =";
+      pos = (*ii).find(delimiter);
+      std::string tok2 = (*ii).substr(0, pos);
+      StringUtils::trim(tok2);
+
+      std::istringstream is2(tok2);
+      if (is2.get() != '{')
+      {  // single value - but still put into array
+        //float value = atof(tok2.c_str());
+        //params.push_back(std::pair<std::string, float>(name, value));
+        std::vector<float> value {float(atof(tok2.c_str()))};
+        arrayParams[name] =  value;
+      }
+      else
+      {  // contain multiple values (comma-separated)
+        std::vector<float> value;
+        char buf2[LENGTH_LINE_MAX];
+        /* NOTE: This code is potentialy bug when token info is too long
+           is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+           */
+        assert(StringUtils::streamGet(is2, buf2, LENGTH_LINE_MAX, '}'));
+        std::string stringbuf(buf2);
+        std::vector<std::string> tokens;
+        StringUtils::Tokenize(stringbuf, tokens, ",");
+        for (std::vector<std::string>::iterator jj = tokens.begin(),
+            end = tokens.end();
+            jj != end; ++jj)
+        {
+          // assume input values are numerics
+          value.push_back(float(atof((*jj).c_str())));
+        }
+        arrayParams[name] = value;
+      }
+    }
+}

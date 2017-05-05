@@ -29,6 +29,7 @@
 #include "SegmentDescriptor.h"
 #include "Branch.h"
 #include "StringUtils.h"
+#include "Params.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
@@ -486,7 +487,6 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
         }
       }
     }
-
 #endif
     
     for (unsigned ii = 0; ii < numMicrodomains; ++ii)
@@ -494,6 +494,33 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
       String domainName(tokens[ii].c_str());
       microdomainNames[ii] = domainName;
       int offset = ii * numCpts;
+#if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+      //domain3  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
+      std::map<std::string, std::vector<float> > 
+        domainData = Params::_microdomainArrayParamsMap[tokens[ii]]; 
+      if (domainData.count("depth_microdomain") == 0 or 
+          domainData.count("fraction_surface") == 0)
+      {
+        std::cerr << "microdomain " << tokens[ii] << " does not have either depth_microdomain or 'fraction_surface' defined" << std::endl; 
+        assert(0); 
+      }
+      if (domainData.count("v_efflux") == 0)
+      {
+        std::cerr << "microdomain " << tokens[ii] << " does not have 'v_efflux' defined" << std::endl; 
+        assert(0); 
+      }
+      if (domainData["depth_microdomain"].size() > 1 or 
+          domainData["fraction_surface"].size() > 1)
+      {
+        std::cerr << "microdomain " << tokens[ii] << ": use ONLY 1 value for 'depth_microdomain' and 'fraction_surface' " << std::endl; 
+        assert(0); 
+      }
+      if (domainData["v_efflux"].size() > 1)
+      {
+        std::cerr << "microdomain " << tokens[ii] << ": use ONLY 1 value for 'v_efflux'" << std::endl; 
+        assert(0); 
+      }
+#endif
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
       //v_efflux[ii] = V_EFFLUX;
       //VOLUME_MICRODOMAIN
@@ -515,6 +542,9 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
         //volume_microdomain[ii] = dimensions[0]->volume * VOLUME_MICRODOMAIN3;
         volume_microdomain[ii] = dimensions[0]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN3 * DEPTH_MICRODOMAIN3 * 1e-3;  // [um^3]
       }
+#elif MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+      volume_microdomain[ii] = dimensions[0]->surface_area * domainData["fraction_surface"][0] * domainData["depth_microdomain"][0] * 1e-3;  // [um^3]
+      v_efflux[ii] = domainData["v_efflux"][0];
 #endif
     }
   }
@@ -599,6 +629,5 @@ void  CaConcentrationJunction::updateMicrodomains_Ca()
     //  (LHS + v_efflux[ii]/2.0);
      Ca_microdomain[offset] = (RHS_microdomain[offset] / LHS) ;
   }
-  
 }
 #endif

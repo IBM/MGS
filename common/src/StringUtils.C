@@ -116,11 +116,22 @@ void StringUtils::trim(std::string &s)
     while (oneword[ii] == ' ' and ii < strlen(oneword)) {
       ii++;
     }
+    unsigned int jj = strlen(oneword)-1;
+    while (oneword[jj] == ' ' and jj > 0) {
+      jj--;
+    }
     strOneWord.append((oneword));
     if (oneword[ii] == '[') 
     {
-      errorCode = fscanf(fpF, " %s", oneword);
-      strOneWord.append((oneword));
+      while (oneword[jj] != ']')
+      {
+	errorCode = fscanf(fpF, " %s", oneword);
+	strOneWord.append((oneword));
+	jj = strlen(oneword)-1;
+	while (oneword[jj] == ' ' and jj > 0) {
+	  jj--;
+	}
+      }
     }
     std::size_t length = strOneWord.copy(oneword, strOneWord.length());
     oneword[length] = '\0';

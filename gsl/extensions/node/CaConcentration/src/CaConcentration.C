@@ -21,6 +21,7 @@
 #include "MaxComputeOrder.h"
 #include "GlobalNTSConfig.h"
 #include "StringUtils.h"
+#include "Params.h"
 
 #include <iomanip>
 #include <cmath>
@@ -1079,6 +1080,7 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
     microdomainNames.increaseSizeTo(numMicrodomains);
     v_efflux.increaseSizeTo(numMicrodomains);
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
+    //checking only
     if (numMicrodomains > 3)
     {
       std::cerr << "ERROR: With _MICRODOMAIN_DATA_FROM_NTSMACRO; we currently support maximum 3 microdomains"
@@ -1099,7 +1101,6 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
         }
       }
     }
-
 #endif
 
     int numCpts = branchData->size;
@@ -1114,6 +1115,33 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
       String domainName(tokens[ii].c_str());
       microdomainNames[ii] = domainName;
       int offset = ii * numCpts;
+#if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+      //domain3  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
+      std::map<std::string, std::vector<float> > 
+        domainData = Params::_microdomainArrayParamsMap[tokens[ii]]; 
+      if (domainData.count("depth_microdomain") == 0 or 
+          domainData.count("fraction_surface") == 0)
+      {
+        std::cerr << "microdomain " << tokens[ii] << " does not have either depth_microdomain or 'fraction_surface' defined" << std::endl; 
+        assert(0); 
+      }
+      if (domainData.count("v_efflux") == 0)
+      {
+        std::cerr << "microdomain " << tokens[ii] << " does not have 'v_efflux' defined" << std::endl; 
+        assert(0); 
+      }
+      if (domainData["depth_microdomain"].size() > 1 or 
+          domainData["fraction_surface"].size() > 1)
+      {
+        std::cerr << "microdomain " << tokens[ii] << ": use ONLY 1 value for 'depth_microdomain' and 'fraction_surface' " << std::endl; 
+        assert(0); 
+      }
+      if (domainData["v_efflux"].size() > 1)
+      {
+        std::cerr << "microdomain " << tokens[ii] << ": use ONLY 1 value for 'v_efflux'" << std::endl; 
+        assert(0); 
+      }
+#endif
       for (int jj = 0; jj < numCpts; jj++ )
       {
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
@@ -1132,6 +1160,8 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
           //volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN3;
           volume_microdomain[offset+jj] = dimensions[jj]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN3 * DEPTH_MICRODOMAIN3 * 1e-3;  // [um^3]
         }
+#elif MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+        volume_microdomain[offset+jj] = dimensions[jj]->surface_area * domainData["fraction_surface"][0] * domainData["depth_microdomain"][0] * 1e-3;  // [um^3]
 #endif
       }
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
@@ -1149,6 +1179,8 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
       {
         v_efflux[ii] = V_EFFLUX_DOMAIN3;
       }
+#elif MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+      v_efflux[ii] = domainData["v_efflux"][0];
 #endif
     }
   }

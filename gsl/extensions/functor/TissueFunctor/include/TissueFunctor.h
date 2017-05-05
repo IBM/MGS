@@ -285,6 +285,7 @@ class TissueFunctor : public CG_TissueFunctorBase
       _channelBranchIndices2, _channelJunctionIndices2;
   void checkValidUseMicrodomain(std::string compartmentNameOnly, std::string microdomainName);
   bool nodeTypeWithAllowedMicrodomain(std::string nodetype);
+  //hold the names of all microdomain on every ComputeBranch and Junction
   std::map<ComputeBranch*, std::set< std::string> > _microdomainOnBranch;
   std::map<Capsule*, std::set< std::string> > _microdomainOnJunction;
 #else

@@ -516,6 +516,12 @@ class Params
                     std::list<std::pair<std::string, std::vector<float> > > > >
       _channelArrayParamsMap;
 
+  public:
+  static std::map< std::string,
+    std::map<std::string, std::vector<float> > >
+      _microdomainArrayParamsMap; //to hold microdomain data
+
+  private:
   std::map<std::string, unsigned long long> _compartmentParamsMasks;
 #ifdef NEWIDEA
   // TEST NEW IDEA
@@ -619,6 +625,17 @@ class Params
   static void separateCompartmentName_and_microdomainName(
       std::string compartmentNameWithOptionalMicrodomainName,
       std::string& compartmentNameOnly, std::string& microdomainName);
+  ErrorCode readMicrodomainData(
+      FILE* fpF, const std::string& expected_btype,
+      std::map< std::string,
+      std::map<std::string, std::vector<float> > >&
+      arrayParamsMap);
+  void extractMicrodomainData(
+      const std::string& myBuf,
+      std::map< std::string,
+      std::map<std::string, std::vector<float> > >&
+      arrayParamsMap,
+      std::string domainName);
 #endif
 };
 #endif

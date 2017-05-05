@@ -108,6 +108,8 @@
 //#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
 //#define TOUCHDETECT_SINGLENEURON_SPINES
 //#define RESAMPLING_SPACE_VOLUME
+//#define TD_DEBUG  //put inside TouchDetector.cxx - to debug find what Segments has multiple touches with Spines(head/neck)
+//#define SPINE_HEAD_UNIQUE_TOUCH // put inside TouchDetector.cxx - to ensure 1 spine head get 1 synaptic cleft
 
 
 //{{{ different strategy when modeling soma
@@ -215,6 +217,10 @@
  // ..  rather than 2 separate set of interface 
  // .. ALWAYS ENABLE THIS: as we haven't made produce post-index available yet 
  // NOTE: This is 2-element array: with pre-side first then post-side
+// The reason to have this is to enable AnyConcentrationDisplay to be able to 
+//   capture [NT] of a particular type of Neurotransmitter (e.g. Glut, GABA)
+// We also needs to update Synapse-receptors's Interfaces
+
 //#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
 
 //{{{ MICRODOMAIN_CALCIUM
@@ -225,7 +231,7 @@
 // Now we need to decide where to pass in data for v_efflux and volume_microdomain
 #define _MICRODOMAIN_DATA_FROM_NTSMACRO   0 
 #define _MICRODOMAIN_DATA_FROM_CHANPARAM  1
-#define MICRODOMAIN_DATA_FROM _MICRODOMAIN_DATA_FROM_NTSMACRO
+#define MICRODOMAIN_DATA_FROM _MICRODOMAIN_DATA_FROM_CHANPARAM
 // This needs to be implemented in ChanParam if _MICRODOMAIN_DATA_FROM_CHANPARAM is used
 //#MICRODOMAIN_PARAMS 2
 //## v_efflux in [1/ms]
@@ -244,6 +250,7 @@
 //Here, we assume maximum 3 microdomains on 1 branch/junction
 //               and the microdomains must be named using 'domain1', 'domain2', 'domain3'
 //NOTE: v_efflux in Ca-subspace use 0.25 [1/ms]
+// the rate also reflect the binding affinity (indirectly)
 #define V_EFFLUX_DOMAIN1  0.1    //[1/ms]
 #define V_EFFLUX_DOMAIN2  0.1    //[1/ms]
 #define V_EFFLUX_DOMAIN3  0.1    //[1/ms]

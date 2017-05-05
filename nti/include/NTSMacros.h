@@ -874,6 +874,7 @@
 #define IP3_CYTO_DYNAMICS FAST_BUFFERING
 //#define SCALING_NECK_FROM_SOMA 0.20  //>1: make neck smaller
 
+#define TOUCHDETECT_SINGLENEURON_SPINES
 #define MICRODOMAIN_CALCIUM
 //{{{//list channels
 //#define CHANNEL_NAT NAT_WOLF_2005
