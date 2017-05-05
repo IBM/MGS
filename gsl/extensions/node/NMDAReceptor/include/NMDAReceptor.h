@@ -44,6 +44,7 @@ class NMDAReceptor : public CG_NMDAReceptor
       void updateNMDADepPlasticity(RNG& rng);
       void initializeNMDA(RNG& rng);
       virtual void setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset);
+      virtual void setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset);
       dyn_var_t sigmoid(dyn_var_t alpha, dyn_var_t beta);
       virtual ~NMDAReceptor();
 };

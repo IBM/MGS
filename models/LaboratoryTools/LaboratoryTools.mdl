@@ -466,6 +466,8 @@ Variable AnyCurrentDisplay
 
   UserFunction setUpPointers;
 
+  //{{{Inputs
+  //{{{leak in BRANCH
 #ifdef IDEA_ILEAK
   Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, 
        ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  
@@ -482,6 +484,8 @@ Variable AnyCurrentDisplay
      ReversalPotentialProducer.reversalPotential >> Eleak;
      setUpPointers();
    }
+  //}}}
+  //{{{leak in JUNCTION
   Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, 
       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer 
 #ifdef IDEA_CURRENTONCOMPT
@@ -498,7 +502,8 @@ Variable AnyCurrentDisplay
      setUpPointers();
    }
 #endif
-
+  //}}}
+  //{{{current via CHANNEL
   //Use for GHK-based current formula
   Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer 
 #ifdef IDEA_CURRENTONCOMPT
@@ -525,6 +530,7 @@ Variable AnyCurrentDisplay
 #endif
       setUpPointers();
     }
+  //{{{old
   //	//Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer 
   //#ifdef IDEA_CURRENTONCOMPT
   //  , DimensionArrayProducer 
@@ -537,6 +543,9 @@ Variable AnyCurrentDisplay
   //#endif
   //		setUpPointers();
   //	}
+  //}}}
+  //}}}
+  //{{{current via receptor (at SYNAPSE)
   Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
     CurrentProducer.current >> I_synapse;
     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
@@ -549,6 +558,8 @@ Variable AnyCurrentDisplay
     IndexArrayProducer.indexArray >> synapseIndicesConnect;
     setUpPointers();
   }
+  //}}}
+  //{{{current via CONNEXON
   Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
     CurrentProducer.current >> I_synapse;
     BranchDataProducer.branchData >> connexonBranchData;
@@ -557,6 +568,8 @@ Variable AnyCurrentDisplay
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;
   }
+  //}}}
+  //}}}
   //}}}
 } 
 Variable AnyFluxDisplay
@@ -622,6 +635,7 @@ Variable AnyFluxDisplay
 
   UserFunction setUpPointers;
 
+//{{{obsolete
 //#ifdef IDEA_ILEAK
 //  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, 
 //       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  
@@ -654,7 +668,10 @@ Variable AnyFluxDisplay
 //     setUpPointers();
 //   }
 //#endif
+//}}}
 
+  //{{{Inputs
+  //{{{flux via CHANNEL
   //Use for flux producer current formula
   Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaFluxArrayProducer, BranchDataProducer 
 #ifdef IDEA_CURRENTONCOMPT
@@ -668,6 +685,12 @@ Variable AnyFluxDisplay
 #endif
       setUpPointers();
     }
+  //}}}
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
+  //{{{Non-supported
 //  //Use for HH-based current formula
 //  Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer
 //#ifdef IDEA_CURRENTONCOMPT
@@ -698,9 +721,7 @@ Variable AnyFluxDisplay
 //    BranchDataProducer.branchData >> connexonBranchData;
 //    IndexProducer.index >> connexonIndices;
 //  }
-  Connection Pre Constant () Expects TimeStepProducer {
-    TimeStepProducer.deltaT >> deltaT;
-  }
+  //}}}
   //}}}
 } 
 //}}}
@@ -931,7 +952,8 @@ Variable AnyConcentrationDisplay
 
   UserFunction setUpPointers;
 
-  //{{{from branches & junctions
+  //{{{Inputs 
+  //{{{concentrations from branches & junctions
   Connection Pre Node (PSet.identifier=="BRANCH") Expects CaConcentrationArrayProducer, 
 	     BranchDataProducer, DimensionArrayProducer {
 	       CaConcentrationArrayProducer.CaConcentrations >> concentrations_connect;
@@ -946,6 +968,7 @@ Variable AnyConcentrationDisplay
 	       BranchDataProducer.branchData >> branchData_connect;
 	       setUpPointers();
 	     }
+  //{{{obsolete
   //Connection Pre Node (PSet.identifier=="BRANCH[Calcium]") Expects CaConcentrationArrayProducer, 
   //          BranchDataProducer, DimensionArrayProducer {
   //	CaConcentrationArrayProducer.CaConcentrations >> compartment_connect;
@@ -960,6 +983,7 @@ Variable AnyConcentrationDisplay
   //	BranchDataProducer.branchData >> branchData_connect;
   //	setUpPointers();
   //}
+  //}}}
   Connection Pre Node (PSet.identifier=="JUNCTION") Expects CaConcentrationArrayProducer, 
 	     BranchDataProducer, DimensionArrayProducer {
 	       CaConcentrationArrayProducer.CaConcentrations >> concentrations_connect;
@@ -989,7 +1013,7 @@ Variable AnyConcentrationDisplay
   //	setUpPointers();
   //}
   //}}}
-  //{{{from clefts
+  //{{{NT concentrations from clefts
 #ifdef KEEP_PAIR_PRE_POST
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Glut")
       ) Expects 
@@ -1111,6 +1135,7 @@ Variable AnyConcentrationDisplay
     TimeStepProducer.deltaT >> deltaT;
   }
   //}}}
+  //}}}
 } 
 //}}}
 
@@ -1223,7 +1248,9 @@ Variable AnyConcentrationDisplay
 //} 
 
 
-
+///////////////////////////////////////////////
+//Variable collect data to support visualization 
+//{{{
 Variable CalciumVisualization
 {
   //{{{
@@ -1291,9 +1318,11 @@ Variable VoltageVisualization
 	}
 //}}}
 } 
+//}}}
+
 
 Variable SimulationSetter Implements PlasticityToggleProducer
-{
+{//turn on/off a single value
 //{{{
 	int plasticityToggle;
 

@@ -114,9 +114,21 @@ void AMPAReceptor_Markov::setPostIndex(
     CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
+  if (indexPrePost.size() % 2)
+  {//it means that PreSynapticPoint is being used
 #ifdef KEEP_PAIR_PRE_POST
-  indexPrePost.push_back(&indexPost);
+    indexPrePost.push_back(&indexPost);
 #endif
+  }
 }
 
 AMPAReceptor_Markov::~AMPAReceptor_Markov() {}
+void AMPAReceptor_Markov::setPrePostIndex(
+    const String& CG_direction, const String& CG_component,
+    NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable,
+    Constant* CG_constant, CG_AMPAReceptor_MarkovInAttrPSet* CG_inAttrPset,
+    CG_AMPAReceptor_MarkovOutAttrPSet* CG_outAttrPset)
+{
+  indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[0]);
+  indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[1]);
+}

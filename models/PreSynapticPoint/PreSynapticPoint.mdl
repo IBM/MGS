@@ -12,6 +12,23 @@
 //          and then decide what to do with it
 // 2. SynapticCleft    -- if the receptor want to get the concentration of neurotransmitter
 //          and then decide what to do with it
+// ALSO, note there are two implementation of Synapse/MixedSynapse
+// MixedSynapse ~ A receptor (e.g. NMDAR) exerts an effect on the other receptor on the same Synapse (e.g. emulate plasticity effect)
+// IMPLEMENTATION 1 ~  RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+//     originally design for PreSynapticPoint 
+//     the receptor receives directly the compartment (e.g. Voltage, Calcium)
+//     AMPAR [Voltage, Calcium] [Voltage] 
+//            \____pre ______ / \ post  /
+//             as in/out        as in/out
+//     This enable the receptor to be on pre-side or post-side
+// IMPLEMENTATION 2
+//     designed for SynapticCleft
+//     the receptor receives directly the compartment (e.g. Voltage, Calcium)
+//         on Post-side
+//         and implicitly the proper neurotransmitter from SynapticCleft
+//     AMPAR [Voltage, Calcium] [Voltage] 
+//            \____post ______ / \ post  /
+//             as input           as output
 
 // PreSynapticPoint is used as an intermediate node connecting
 //   pre-Compartment[Node]  --> PreSynapticPoint --> one-or-many Receptor(Synapse)
@@ -67,9 +84,23 @@ Node PreSynapticPoint Implements BranchDataProducer, IndexProducer
 /*}}}*/
 }
 
+// A Cleft instance is uniquely identified by 
+//             a single post-side with one-or-many pre-side
+//             So, the spine-head key is used to identify how many cleft to created
+//      LIMITATION: Currently only support 1pre-side as *Vpre is a single pointer
 // It is used as an intermediate node connecting
 //   pre-Compartment[Node]  --> SynapticCleft --> Receptor(Synapse)
-// However, here it has the states
+// However, here it has the states where NT is/are computed
+// NOTE: 
+//  There is no option to specify nodeType (e.g. Voltage) from pre-Compartment
+//  (ASSUME always 'Voltage' receive) - Check TissueFunctor
+//  There is no capability to specify 'receptor' on pre-side only
+//  (ASSUME always on post-side)
+//  The original approach 'unintentionally enable' receptor on post-side and pre-side
+//    with the limitation always assume the receptor receive and produce
+//    the same information ()
+//    though we need to have different name, and it is error prone (or not biological)
+//    to have a receptor that receives from both pre-side and post-side
 Node SynapticCleft Implements 
     GlutamateConcentrationProducer, GABAConcentrationProducer
 #if SUPPORT_MODULABLE_CLEFT
@@ -79,7 +110,7 @@ Node SynapticCleft Implements
 #endif
     , NameProducer
 #ifdef KEEP_PAIR_PRE_POST
-    , DimensionArrayProducer //for pre and post, in that order
+    , DimensionArrayProducer //for pre and post, in that order (used for I/O purpose)
     , BranchDataArrayProducer
     , DirectIndexArrayProducer
 #else
@@ -104,7 +135,8 @@ Node SynapticCleft Implements
   //}}} 
   //{{{pre-side info
   dyn_var_t* Vpre; //presynaptic voltage Vpre
-  //int index; //index of compartment in Presynaptic-side (i.e. bouton)
+  //int index; //index of compartment in Presynaptic-side (i.e. bouton) - no longer needed as the information is the first element every 2-element tuple in indexPrePost
+  //  This is to enable a cleft formed by multiple pre-post pair
   //}}}
   //{{{both-side
   int [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
@@ -192,10 +224,7 @@ Node SynapticCleft Implements
     string side; // 'pre' or 'post'
   }
 
-  // Input (Connection setup)
-  // CURRENTLY it is always from the pre-side
-  // TUAN TODO: We need to provide another attribute (to like SpineAttachment) 
-  //      to know if it froms pre- (axonal) or post- (shaft)
+  //{{{ Input (Connection setup)
   Connection Pre Node ((PSet.identifier=="compartment[Voltage]") 
                        && (PSet.side=="pre")) Expects 
        VoltageArrayProducer
@@ -225,6 +254,7 @@ Node SynapticCleft Implements
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
 /*}}}*/
 }
 #endif

@@ -239,14 +239,28 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
                                 CG_NMDAReceptorOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
+  if (indexPrePost.size() % 2)
+  {//it means that PreSynapticPoint is being used
 #ifdef KEEP_PAIR_PRE_POST
   indexPrePost.push_back(&indexPost);
 #endif
+  }
 }
 
 dyn_var_t NMDAReceptor::sigmoid(dyn_var_t alpha, dyn_var_t beta)
-{
+{//TUAN TODO move to an external NumberUtility with Template
   return exp(beta * alpha) / (1 + exp(beta * alpha));
 }
 
 NMDAReceptor::~NMDAReceptor() {}
+void NMDAReceptor::setPrePostIndex(const String& CG_direction,
+                                const String& CG_component,
+                                NodeDescriptor* CG_node, Edge* CG_edge,
+                                VariableDescriptor* CG_variable,
+                                Constant* CG_constant,
+                                CG_NMDAReceptorInAttrPSet* CG_inAttrPset,
+                                CG_NMDAReceptorOutAttrPSet* CG_outAttrPset)
+{
+  indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[0]);
+  indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[1]);
+}

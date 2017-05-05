@@ -181,6 +181,8 @@ Interface IndexArrayProducer {
 }
 
 Interface DirectIndexArrayProducer {
+  //NOTE: This is different from IndexArrayProducer
+  //as it provides reference directly to an array
    int []* indexArray;
 }
 
