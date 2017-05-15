@@ -7597,6 +7597,8 @@ bool Params::isNonTouchableTargets(key_size_t key1, key_size_t key2)
   return is_in;
 }
 
+
+#ifdef MICRODOMAIN_CALCIUM
 Params::ErrorCode Params::readMicrodomainData(
     FILE* fpF, const std::string& expected_btype,
     std::map< std::string,
@@ -7747,3 +7749,4 @@ void Params::extractMicrodomainData(
       }
     }
 }
+#endif
