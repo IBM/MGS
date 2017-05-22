@@ -131,6 +131,32 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   }
   //}}}
 }
+Variable RampCurrentGenerator Implements CurrentProducer
+{
+  //{{{
+  //{{{Data
+  dyn_var_t I; // [pA]
+  dyn_var_t Istart;
+  dyn_var_t Iend;
+  dyn_var_t period;
+  dyn_var_t duration;
+  dyn_var_t delay;
+  dyn_var_t last;
+  dyn_var_t inc;
+  string pattern; //(ramp)
+
+  dyn_var_t* deltaT;
+  //}}}
+
+  InitPhase initialize(I);
+  RuntimePhase update(I);
+
+  CurrentProducer.current << &I;
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
+}
 //}}}
 
 ///////////////////////////////////////////////

@@ -44,6 +44,11 @@ somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 
 #endif
 
+#if STIMULUS_CASE == CASE_09
+#define timeDelay 100
+RampCurrentGenerator somaStimInj<pattern="ramp", Istart=0.0, Iend=500.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
+#endif
+
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
     STIMULUS_CASE == CASE_06

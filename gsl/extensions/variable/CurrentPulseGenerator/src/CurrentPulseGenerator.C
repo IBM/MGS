@@ -19,12 +19,12 @@
 void CurrentPulseGenerator::initialize(RNG& rng)
 {
 #ifdef WAIT_FOR_REST
-		if (delay < NOGATING_TIME)
-		{
-			std::cerr << "ERROR : delay is smaller than NOGATING_TIME" << std::endl;
-			std::cerr << "Either disable WAIT_FOR_REST or make delay longer" << std::endl;
-			assert(0);
-		}
+  if (delay < NOGATING_TIME)
+  {
+    std::cerr << "ERROR : delay is smaller than NOGATING_TIME" << std::endl;
+    std::cerr << "Either disable WAIT_FOR_REST or make delay longer" << std::endl;
+    assert(0);
+  }
 #endif
   assert(deltaT);
   if (pattern == "periodic")
@@ -63,11 +63,11 @@ void CurrentPulseGenerator::update(RNG& rng)
   }
   else if (currentTime >= nextPulse && currentTime <= last)
   {//having pulse
-		float dt = currentTime - nextPulse;
+    float dt = currentTime - nextPulse;
     if ((pattern == "periodic") || (pattern == "poisson"))
-			I = peakInc;
-		else if (pattern == "dualexp")
-			I = peakInc * (1- exp(-dt/riseTime)) * (exp(-dt/decayTime));
+      I = peakInc;
+    else if (pattern == "dualexp")
+      I = peakInc * (1- exp(-dt/riseTime)) * (exp(-dt/decayTime));
   }
 }
 

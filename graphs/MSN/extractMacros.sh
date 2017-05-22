@@ -68,7 +68,7 @@ RunSim()
    echo "----> RESULT: " >> SIM_LOG
    echo "... using swc file: ${SWC_FILENAME}"
    echo "... using swc file: ${SWC_FILENAME}" >> SIM_LOG
-   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} >> SIM_LOG
+   echo ./NTS_plotting/doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
    echo "Output Folder: " $OutputFolderName
@@ -81,7 +81,7 @@ RunSim()
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
    if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
-     ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+     cd NTS_plotting;./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}; cd -
    fi
    echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
   #}}}
