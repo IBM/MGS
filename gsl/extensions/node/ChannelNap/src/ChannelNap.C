@@ -104,9 +104,12 @@ void ChannelNap::update(RNG& rng)
     dyn_var_t tauh;
     if (index == 0)
      tauh = tauhNap[0];
-    else
+    else if (index < LOOKUP_TAUH_LENGTH)
      tauh = linear_interp(Vmrange_tauh[index-1], tauhNap[index-1], 
         Vmrange_tauh[index], tauhNap[index], v);
+    else //assume saturation in taum when Vm > max-value
+     tauh = tauhNap[index-1];
+
     dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));

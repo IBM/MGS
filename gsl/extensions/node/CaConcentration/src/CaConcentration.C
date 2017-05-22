@@ -21,6 +21,7 @@
 #include "MaxComputeOrder.h"
 #include "GlobalNTSConfig.h"
 #include "StringUtils.h"
+#include "Params.h"
 
 #include <iomanip>
 #include <cmath>
@@ -227,7 +228,7 @@ void CaConcentration::finish(RNG& rng)
 {
   unsigned size = branchData->size;
 #ifdef DEBUG_HH
-	printDebugHH();
+  printDebugHH();
 #endif
   for (int i = 0; i < size; ++i)
   {
@@ -261,7 +262,7 @@ dyn_var_t CaConcentration::getArea(int i) // Tuan: check ok
 {
   dyn_var_t area= 0.0;
   area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_CYTO;
-	return area;
+  return area;
 }
 
 // Get cytoplasmic volume (um^3) 
@@ -270,7 +271,7 @@ dyn_var_t CaConcentration::getVolume(int i) // Tuan: check ok
 {
   dyn_var_t volume = 0.0;
   volume = dimensions[i]->volume * FRACTIONVOLUME_CYTO;
-	return volume;
+  return volume;
 }
 //}}} //end Conserved region
 
@@ -326,15 +327,15 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
     currentToConc[i] = getArea(i) * uM_um_cubed_per_pA_msec / getVolume(i);
   }
 #ifdef MICRODOMAIN_CALCIUM
-  for (unsigned int ii=0; ii < microdomainNames.size(); ++ii)
-  {
-    int offset = ii * numCpts;
-    for (int jj = 0; jj < numCpts; jj++ )
-    {
-      currentToConc_microdomain[offset+jj] = getArea(jj) * uM_um_cubed_per_pA_msec / 
-        volume_microdomain[offset+jj];
-    }
-  }
+  //for (unsigned int ii=0; ii < microdomainNames.size(); ++ii)
+  //{
+  //  int offset = ii * numCpts;
+  //  for (int jj = 0; jj < numCpts; jj++ )
+  //  {
+  //    currentToConc_microdomain[offset+jj] = getArea(jj) * uM_um_cubed_per_pA_msec / 
+  //      volume_microdomain[offset+jj];
+  //  }
+  //}
 #endif
 
   // go through different kinds of injected Calcium currents
@@ -500,8 +501,8 @@ void CaConcentration::doForwardSolve()
 {
   unsigned numCpts = branchData->size;
 
-	//Find A[ii]i and RHS[ii]  
-	//  1. ionic currents 
+  //Find A[ii]i and RHS[ii]  
+  //  1. ionic currents 
   for (int i = 0; i < numCpts; i++)
   {
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
@@ -674,35 +675,35 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a,
     int index, 
     bool connectJunction)
 {
-	dyn_var_t Rb;// radius_middle ()
+  dyn_var_t Rb;// radius_middle ()
 #ifdef NEW_DISTANCE_NONUNIFORM_GRID 
   dyn_var_t dsi = getHalfDistance(index);
 #else
   dyn_var_t dsi = a->length;
 #endif
   dyn_var_t distance;
-	if (a->dist2soma <= SMALL)//avoid the big soma
-	{//a  CAN't BE the compartment representing 'soma'
+  if (a->dist2soma <= SMALL)//avoid the big soma
+  {//a  CAN't BE the compartment representing 'soma'
     assert(0);
-	}
-	else if (b->dist2soma <= SMALL)
-	{//b is the compartment representing 'soma'
-		Rb = a->r;
-      //TEST 
-			Rb /= SCALING_NECK_FROM_SOMA;
-      //END TEST
-#ifdef USE_SOMA_AS_POINT
+  }
+  else if (b->dist2soma <= SMALL)
+  {//b is the compartment representing 'soma'
+    Rb = a->r;
+    //TEST 
+    Rb /= SCALING_NECK_FROM_SOMA;
+    //END TEST
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
 #else
     distance = std::fabs(a->dist2soma);
     //  distance += 50.0;//TUAN TESTING - make soma longer
     //distance = std::fabs(b->r + a->dist2soma);
-      //TEST 
-      distance += STRETCH_SOMA_WITH;
-      //END TEST
+    //TEST 
+    distance += STRETCH_SOMA_WITH;
+    //END TEST
 #endif
   }
-	else
+  else
   {
 #ifdef NEW_RADIUS_CALCULATION_JUNCTION
     if (connectJunction)
@@ -710,29 +711,29 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a,
     else
       Rb = 0.5 * (a->r + b->r);
 #else
-		Rb = 0.5 * (a->r + b->r);
+    Rb = 0.5 * (a->r + b->r);
 #endif
     distance = std::fabs(b->dist2soma - a->dist2soma);
   }
   return (DCa * Rb * Rb /
-          (dsi * distance * a->r * a->r)); /* needs fixing */
+      (dsi * distance * a->r * a->r)); /* needs fixing */
   /* NOTE: ideally
-  return (DCa  /
-          (dsi * distance )); 
-          */
+     return (DCa  /
+     (dsi * distance )); 
+     */
 }
 //find the lambda between the terminal point of the 
 //compartment represented by 'a'
 //'a' can be cpt[0] (distal-end) or cpt[size-1] (proximal-end)
 dyn_var_t CaConcentration::getLambda(DimensionStruct* a, int index)
 {
-	dyn_var_t Rb ;// radius_middle ()
+  dyn_var_t Rb ;// radius_middle ()
   dyn_var_t distance;
-	if (a->dist2soma <= SMALL)
-	{//a  CAN't BE the compartment representing 'soma'
+  if (a->dist2soma <= SMALL)
+  {//a  CAN't BE the compartment representing 'soma'
     assert(0);
-	}
-	else
+  }
+  else
   {
     Rb = a->r;
     distance = std::fabs(a->length/2.0);
@@ -749,11 +750,11 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, int index)
   dyn_var_t dsi  = distance;
 #endif
   return (DCa * Rb * Rb /
-          (dsi * distance * a->r * a->r)); /* needs fixing */
+      (dsi * distance * a->r * a->r)); /* needs fixing */
   /* NOTE: ideally
-  return (DCa  /
-          (dsi * distance )); 
-          */
+     return (DCa  /
+     (dsi * distance )); 
+     */
 }
 //|dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
 //|{
@@ -799,33 +800,33 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, int index)
 //  NOTE: 'a' is the distal-end compartment of the branch (i=0)
 //        serving as implicit branch 
 dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
-                                  dyn_var_t V, bool connectJunction)
+    dyn_var_t V, bool connectJunction)
 {
-	dyn_var_t Rb;
+  dyn_var_t Rb;
   dyn_var_t distance;
-	if (a->dist2soma <= SMALL)
-	{
-    assert(0); // a CANNOT be soma
-	}
-	else if (b->dist2soma <= SMALL)
+  if (a->dist2soma <= SMALL)
   {
-		Rb = a->r;
-      //TEST 
-			Rb /= SCALING_NECK_FROM_SOMA;
-      //END TEST
-#ifdef USE_SOMA_AS_POINT
+    assert(0); // a CANNOT be soma
+  }
+  else if (b->dist2soma <= SMALL)
+  {
+    Rb = a->r;
+    //TEST 
+    Rb /= SCALING_NECK_FROM_SOMA;
+    //END TEST
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
 #else
     //distance = fabs(b->r + a->dist2soma );
     distance = std::fabs(a->dist2soma);
     //  distance += 50.0;//TUAN TESTING - make soma longer
-      //TEST 
-      distance += STRETCH_SOMA_WITH; //similar to the 'base point of soma in NEURON'
-      //NOTE: The distance*sum(radius-each-branch) = NEURON(distance*sum(1/2(somaR+radius-each-branch)))
-      //END TEST
+    //TEST 
+    distance += STRETCH_SOMA_WITH; //similar to the 'base point of soma in NEURON'
+    //NOTE: The distance*sum(radius-each-branch) = NEURON(distance*sum(1/2(somaR+radius-each-branch)))
+    //END TEST
 #endif
   }
-	else
+  else
   {
 #ifdef NEW_RADIUS_CALCULATION_JUNCTION
     if (connectJunction)
@@ -833,12 +834,12 @@ dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
     else
       Rb = 0.5 * (a->r + b->r);
 #else
-		Rb = 0.5 * (a->r + b->r);
+    Rb = 0.5 * (a->r + b->r);
 #endif
     distance = fabs(b->dist2soma - a->dist2soma);
   }
   return (M_PI * Rb * Rb * DCa /
-          (V * distance));
+      (V * distance));
 }
 
 //|dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
@@ -1079,6 +1080,7 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
     microdomainNames.increaseSizeTo(numMicrodomains);
     v_efflux.increaseSizeTo(numMicrodomains);
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
+    //checking only
     if (numMicrodomains > 3)
     {
       std::cerr << "ERROR: With _MICRODOMAIN_DATA_FROM_NTSMACRO; we currently support maximum 3 microdomains"
@@ -1099,13 +1101,13 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
         }
       }
     }
-
 #endif
 
     int numCpts = branchData->size;
     Ca_microdomain.increaseSizeTo(numMicrodomains * numCpts);
+    Ca_microdomain_cur.increaseSizeTo(numMicrodomains * numCpts);
     RHS_microdomain.increaseSizeTo(numMicrodomains * numCpts);
-    currentToConc_microdomain.increaseSizeTo(numMicrodomains * numCpts);
+    //currentToConc_microdomain.increaseSizeTo(numMicrodomains * numCpts);
     volume_microdomain.increaseSizeTo(numMicrodomains * numCpts);
     
     for (unsigned ii = 0; ii < numMicrodomains; ++ii)
@@ -1113,6 +1115,33 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
       String domainName(tokens[ii].c_str());
       microdomainNames[ii] = domainName;
       int offset = ii * numCpts;
+#if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+      //domain3  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
+      std::map<std::string, std::vector<float> > 
+        domainData = Params::_microdomainArrayParamsMap[tokens[ii]]; 
+      if (domainData.count("depth_microdomain") == 0 or 
+          domainData.count("fraction_surface") == 0)
+      {
+        std::cerr << "microdomain " << tokens[ii] << " does not have either depth_microdomain or 'fraction_surface' defined" << std::endl; 
+        assert(0); 
+      }
+      if (domainData.count("v_efflux") == 0)
+      {
+        std::cerr << "microdomain " << tokens[ii] << " does not have 'v_efflux' defined" << std::endl; 
+        assert(0); 
+      }
+      if (domainData["depth_microdomain"].size() > 1 or 
+          domainData["fraction_surface"].size() > 1)
+      {
+        std::cerr << "microdomain " << tokens[ii] << ": use ONLY 1 value for 'depth_microdomain' and 'fraction_surface' " << std::endl; 
+        assert(0); 
+      }
+      if (domainData["v_efflux"].size() > 1)
+      {
+        std::cerr << "microdomain " << tokens[ii] << ": use ONLY 1 value for 'v_efflux'" << std::endl; 
+        assert(0); 
+      }
+#endif
       for (int jj = 0; jj < numCpts; jj++ )
       {
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
@@ -1131,6 +1160,8 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
           //volume_microdomain[offset+jj] = dimensions[jj]->volume * VOLUME_MICRODOMAIN3;
           volume_microdomain[offset+jj] = dimensions[jj]->surface_area * FRACTION_SURFACEAREA_MICRODOMAIN3 * DEPTH_MICRODOMAIN3 * 1e-3;  // [um^3]
         }
+#elif MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+        volume_microdomain[offset+jj] = dimensions[jj]->surface_area * domainData["fraction_surface"][0] * domainData["depth_microdomain"][0] * 1e-3;  // [um^3]
 #endif
       }
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
@@ -1148,6 +1179,8 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
       {
         v_efflux[ii] = V_EFFLUX_DOMAIN3;
       }
+#elif MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_CHANPARAM
+      v_efflux[ii] = domainData["v_efflux"][0];
 #endif
     }
   }
@@ -1155,7 +1188,6 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
 
 void CaConcentration::setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
 {//this current is supposed to project into the Ca-domain with name defined in 'CG_inAttrPset->domainName'
-
   //put channel producing Ca2+ influx to the right location
   //from that we can update the [Ca2+] in the associated microdomain
   String microdomainName = CG_inAttrPset->domainName;
@@ -1166,9 +1198,12 @@ void CaConcentration::setupCurrent2Microdomain(const String& CG_direction, const
   }
   _mapCurrentToMicrodomainIndex[channelCaCurrents_microdomain.size()-1] = ii;
 }
+//forward
 void CaConcentration::updateMicrodomains()
-{//Update RHS[] and RHS_microdomain[]
-  float LHS = getSharedMembers().bmt; // [1/ms]
+{//Update Aii[] using v_efflux          [1/ms]
+  //      RHS[] using v_efflux * Ca_ds  [uM/ms]
+  //      and RHS_microdomain[]
+  //float LHS = getSharedMembers().bmt; // [1/ms]
   int numCpts = branchData->size;
   unsigned int ii = 0;
   for (ii = 0; ii < microdomainNames.size(); ii++)
@@ -1177,7 +1212,8 @@ void CaConcentration::updateMicrodomains()
     for (int jj = 0; jj < numCpts; jj++)
     {
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
-      RHS_microdomain[jj+offset] = getSharedMembers().bmt * Ca_microdomain[jj+offset];  // [uM/ms]
+      RHS_microdomain[jj+offset] = ((getSharedMembers().bmt * volume_microdomain[ii] / dimensions[jj]->volume) *
+         Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj];  // [uM/ms]
 #elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
       assert(0); // need to implement
 #endif
@@ -1193,7 +1229,8 @@ void CaConcentration::updateMicrodomains()
     int offset = _mapCurrentToMicrodomainIndex[ii] * numCpts;
     for (int jj = 0; jj < numCpts; jj++)
     {
-      RHS_microdomain[offset+jj] -= currentToConc_microdomain[offset+jj] * (*(citer->currents))[jj];  //[uM/ms]
+      //wrong->RHS_microdomain[offset+jj] -= currentToConc_microdomain[offset+jj] * (*(citer->currents))[jj];  //[uM/ms]
+      RHS_microdomain[offset+jj] -= currentToConc[jj] * (*(citer->currents))[jj];  //[uM/ms]
     }
   }
   // ... (continue with similar above code for other type of Ca2+ influx
@@ -1211,16 +1248,20 @@ void CaConcentration::updateMicrodomains()
       //Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] - 
       //    v_efflux[ii]/2.0 * (Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj]) 
       //  / (LHS + v_efflux[ii]/2.0);
-      RHS[jj] += v_efflux[ii] * (Ca_microdomain[jj+offset] - Ca_new[jj]);
+      //REVISED FORMULA : Tuan - 04/20/2017
+      RHS[jj] += v_efflux[ii] * Ca_microdomain[jj+offset];
+      Aii[jj] += v_efflux[ii];
+      //RHS_microdomain[offset+jj] -= v_efflux[ii] * (Ca_microdomain[jj+offset] - Ca_new[jj]);
     }
   }
 }
+//backward
 void CaConcentration::updateMicrodomains_Ca()
 {//Update Ca_microdomain[]
-  float LHS = getSharedMembers().bmt; // [1/ms]
+  float bmt = getSharedMembers().bmt; // [1/ms] -- TUAN TODO - plan to use a different buffering for the microdomain
   int numCpts = branchData->size;
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
-  {//calculate RHS[] and Ca_microdomain[]
+  {
     int offset = ii * numCpts;
     for (int jj = 0; jj < numCpts; jj++ )
     {
@@ -1229,9 +1270,13 @@ void CaConcentration::updateMicrodomains_Ca()
       //  Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] + v_efflux[ii] * Ca_new[jj]) 
       //    / (LHS + v_efflux[ii]);
       ////option2 to calculate Ca_microdomain
-      Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] - 
-          v_efflux[ii]/2.0 * (Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj]) 
-        / (LHS + v_efflux[ii]/2.0);
+     //double LHS = bmt * volume_microdomain[ii] / dimensions[jj]->volume; 
+     // Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] - 
+     //     v_efflux[ii]/2.0 * (Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj]) 
+     //   / (LHS + v_efflux[ii]/2.0);
+      double LHS = getSharedMembers().bmt * volume_microdomain[ii] / dimensions[jj]->volume +
+          v_efflux[ii];
+     Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] / LHS) ;
     }
   }
 }

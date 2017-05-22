@@ -45,7 +45,7 @@ class CaConcentrationJunction : public CG_CaConcentrationJunction
   virtual void setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   std::map<int, int> _mapCurrentToMicrodomainIndex; // first 'int' = index in channelCaCurrents_microdomain
   //second 'int' = index of Ca_microdomain that this current is supposed to project to
-  void updateMicrodomains(float& RHS);
+  void updateMicrodomains(double& LHS, double& RHS);
   void updateMicrodomains_Ca();
 #endif
   // user-defined functions

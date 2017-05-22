@@ -12,7 +12,7 @@
 #define Q10 3.0
 #elif CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
 #define BASED_TEMPERATURE 22.0  // Celcius
-#define Q10 2.3
+#define Q10 2.92
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 2.3
@@ -51,10 +51,10 @@ class ChannelNat : public CG_ChannelNat
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 #if CHANNEL_NAT == NAT_WOLF_2005 || \
     CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
-	const static dyn_var_t _Vmrange_taum[];
-	const static dyn_var_t _Vmrange_tauh[];
-	static dyn_var_t taumNat[];
-	static dyn_var_t tauhNat[];
+  const static dyn_var_t _Vmrange_taum[];
+  const static dyn_var_t _Vmrange_tauh[];
+  static dyn_var_t taumNat[];
+  static dyn_var_t tauhNat[];
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif

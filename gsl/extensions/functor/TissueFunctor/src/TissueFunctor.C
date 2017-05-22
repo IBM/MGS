@@ -2084,9 +2084,9 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
         assert(dist2soma>0.0);
       }
 #ifdef DEBUG_CPTS
-              currentBranch = branch_parent;
+      currentBranch = branch_parent;
 #endif
-              //LOC 2 - explicit junction
+      //LOC 2 - explicit junction
       StructDataItem* dimsDI =
         getDimension(lc, junctionCapsule->getEndCoordinates(),
             (dyn_var_t)junctionCapsule->getRadius(),
@@ -3300,9 +3300,9 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                   for (viter = iiter->_target1.begin(); viter != vend; ++viter)
                   {
 #ifdef MICRODOMAIN_CALCIUM
-                    //find out a Channel-branch associate input connection 
-                    // to what (can be many )compartment-branch (e.g. Voltage, Calcium)
-                    //  --> _channelBranchIndices1
+                    //NOTE: As the name may contains domain names
+                    // Calcium(domain1, domainA)
+                    // we need to split them
                     std::string compartmentNameWithOptionalMicrodomainName(*viter);
                     std::string compartmentNameOnly("");
                     std::string microdomainName("");
@@ -3310,6 +3310,9 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                     checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
                     if (not microdomainName.empty())
                       _microdomainOnBranch[*iter].insert(microdomainName);
+                    //find out a Channel-branch associate input connection 
+                    // to what (can be many )compartment-branch (e.g. Voltage, Calcium)
+                    //  --> _channelBranchIndices1
                     std::vector<int>& branchIndices =
                         findBranchIndices(*iter, compartmentNameOnly);
                     assert(branchIndices[0] == _rank);
@@ -4053,8 +4056,8 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 //         + via data in *params.par files
 void TissueFunctor::doNodeInit(LensContext* lc)
 {
-	//NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
-	// statement
+  //NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
+  // statement
   assert(_params.get());
   std::auto_ptr<ParameterSet> initPset;
   std::vector<NodeDescriptor*> nodes;  // pointer to instances of nodes in grids
@@ -4113,6 +4116,9 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   else if (nodeCategory == "ChemicalSynapses")
   {
     _chemicalSynapseLayers.push_back(*gld);
+    //TUAN TODO BUG: there is a potential bug at all locations like this
+    //when the InitNode of Layers is declared not the same order as Layer defined
+    //for a particular type of Layer
   }
   else if (nodeCategory == "PreSynapticPoints")
   {
@@ -4228,8 +4234,27 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
+          {
+            std::map<ComputeBranch*,
+              std::vector<CG_CompartmentDimension*> >::iterator miter =
+                _tissueContext->_branchDimensionsMap.find(branch);
+            assert(miter != _tissueContext->_branchDimensionsMap.end());
+            std::vector<CG_CompartmentDimension*>& dimensions = miter->second;
+            std::vector<CG_CompartmentDimension*>::iterator diter,
+              dend = dimensions.end();
+            // step 1: connect every DimensionStruct element into the array
+            // 'dimensions'
+            //  of each HHVoltage node instance, for example
+            //  REMEMBER: Even one is element, one is array,
+            //   the connection is established in such a way that the
+            //   first connection fills into the first position in the array
+            //   next connection fills into the next position in the array
+            for (diter = dimensions.begin(); diter != dend; ++diter)
+              _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
+                  &dim2cpt);
+          }
 #ifdef MICRODOMAIN_CALCIUM
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
           //  NOTE: Here we also put the information about the list of all microdomain
           //   to 'Calcium' compartment
@@ -4253,29 +4278,12 @@ void TissueFunctor::doNodeInit(LensContext* lc)
                 &brd2cpt);
           }
 #else
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt);
 #endif
 
-          std::map<ComputeBranch*,
-                   std::vector<CG_CompartmentDimension*> >::iterator miter =
-              _tissueContext->_branchDimensionsMap.find(branch);
-          assert(miter != _tissueContext->_branchDimensionsMap.end());
-          std::vector<CG_CompartmentDimension*>& dimensions = miter->second;
-          std::vector<CG_CompartmentDimension*>::iterator diter,
-              dend = dimensions.end();
-          // step 2: connect every DimensionStruct element into the array
-          // 'dimensions'
-          //  of each HHVoltage node instance, for example
-          //  REMEMBER: Even one is element, one is array,
-          //   the connection is established in such a way that the
-          //   first connection fills into the first position in the array
-          //   next connection fills into the next position in the array
-          for (diter = dimensions.begin(); diter != dend; ++diter)
-            _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
-                                          &dim2cpt);
         }
         else
         {  // explicit Junctions
@@ -4310,8 +4318,23 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
+          {
+            std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
+              _tissueContext->_junctionDimensionMap.find(junctionCapsule);
+            assert(miter != _tissueContext->_junctionDimensionMap.end());
+            // step 1: connect every DimensionStruct element into the array
+            // 'dimensions'
+            //  of each HHVoltageJunction node instance, for example
+            //  REMEMBER: Even one is element, one is array,
+            //   the connection is established in such a way that the
+            //   first connection fills into the first position in the array
+            //   next connection fills into the next position in the array
+            _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
+                &dim2cpt);
+          }
+
 #ifdef MICRODOMAIN_CALCIUM
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
           //  NOTE: Here we also put the information about the list of all microdomain
           //   to 'Calcium' compartment
@@ -4335,24 +4358,12 @@ void TissueFunctor::doNodeInit(LensContext* lc)
                 &brd2cpt);
           }
 #else
-          // step 1: connect branchData to the data member 'branchData'
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt);
 #endif
 
-          std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
-              _tissueContext->_junctionDimensionMap.find(junctionCapsule);
-          assert(miter != _tissueContext->_junctionDimensionMap.end());
-          // step 2: connect every DimensionStruct element into the array
-          // 'dimensions'
-          //  of each HHVoltageJunction node instance, for example
-          //  REMEMBER: Even one is element, one is array,
-          //   the connection is established in such a way that the
-          //   first connection fills into the first position in the array
-          //   next connection fills into the next position in the array
-          _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
-                                        &dim2cpt);
         }
       }
       else if (nodeCategory == "Channels")
@@ -5327,7 +5338,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     //      synapse, i.e. bidirecitonal flow
     for (; titer != tend; ++titer)
     {
-	  //Check to make sure only consider the touch with at least 
+      //Check to make sure only consider the touch with at least 
       //one capsule supposed to be handled
       //by the current MPI process
       if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
@@ -5933,9 +5944,9 @@ void TissueFunctor::doConnector(LensContext* lc)
           std::vector<NodeDescriptor*> mixedSynapse;
           for (targetsIter = csiter->_targets.begin();
                targetsIter != targetsEnd; ++targetsIter)
-          {
+          {//loops through 'AMPAmush', 'NMDAmush' (this name is mapped to targetsIter->first)
             std::map<std::string, int>::iterator miter =
-                _chemicalSynapseTypesMap.find(targetsIter->first);
+                _chemicalSynapseTypesMap.find(targetsIter->first); //GOAL: get to the layer-index for layer of, say 'AMPAmush'
             // miter --> check if there is a layer name, say
             // 'ChemicalSynapses[AMPAmush]'
             assert(miter != _chemicalSynapseTypesMap.end());
@@ -5950,6 +5961,13 @@ void TissueFunctor::doConnector(LensContext* lc)
                   chemicalSynapseAccessors[synapseType]->getNodeDescriptor(
                       indexPost, getCountAndIncrement(ccounts, indexPost));
               mixedSynapse.push_back(receptor);
+//#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+#ifdef  RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+              //Here, the line [[original implementation]]
+              // AMPAmush [Voltage] [Voltage, Calcium]
+              // means [Voltage] <-- from pre-capsule, and play as input 
+              // and   [Voltage, Calcium] <-- from post-capsule, and play as both input/output
+              
               // Pre
               std::list<std::string>::iterator
                   ctiter = targetsIter->second.first.begin(),
@@ -6194,6 +6212,442 @@ void TissueFunctor::doConnector(LensContext* lc)
                       synapticCleftNodes[cleftType], Mcpt2cleft);
                 }  
               }
+#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
+  //NOTE: In this mode, the receptor receives the proper Neurotransmitter
+  //from the SynapticCleft
+  //and compartment name such as Voltage, Calcium always refers to post-side
+              //Here, the line [[new implementation]]
+              // AMPAmush [Voltage] [Voltage, Calcium]
+              // means [Voltage] <-- from post-capsule, and play as input 
+              // and   [Voltage, Calcium] <-- from post-capsule, and play as output
+              
+              // Pre - as input to the cleft/presynapticPoint
+              std::list<std::string> preData;
+              //TUAN TODO : add a section to define what pre-data to be obsorved by 
+              //the PreSynapticPoint or SynapticCleft
+              //Here we assume always 'Voltage' only
+              preData.push_front("Voltage");
+              std::list<std::string>::iterator
+                  ctiter = preData.begin(),
+                  ctend = preData.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//Pre-compartment(presume only Voltage-pre) project to SynapticCleft/PreSynapticPoint
+                NodeDescriptor* preCpt = 0;
+                int preIdx = 0;
+                if (preJunction)
+                {  // presynaptic-compartment is a junction branch
+                   // as the junction is always a single-compartment structure
+                   //  the preIdx = 0 always
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePreCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  preCpt = junctionAccessors
+                               [cptVarJctTypeMap
+                                    [_compartmentVariableTypesMap[*ctiter]]]
+                                   ->getNodeDescriptor(junctionIndices[0],
+                                                       junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(preCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  preCpt = junctionAccessors
+                               [cptVarJctTypeMap
+                                    [_compartmentVariableTypesMap[*ctiter]]]
+                                   ->getNodeDescriptor(junctionIndices[0],
+                                                       junctionIndices[1]);
+#endif
+                }
+                else
+                {  // presynaptic-compartment is part of a regular branch
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(preCapsule->getBranch(), *ctiter);
+                  preCpt = compartmentVariableAccessors
+                               [_compartmentVariableTypesMap[*ctiter]]
+                                   ->getNodeDescriptor(branchIndices[0],
+                                                       branchIndices[1]);
+                  /*preIdx = N_COMPARTMENTS(preCapsule->getBranch()->_nCapsules)
+                     -
+                           ((preCapsule - preCapsule->getBranch()->_capsules) /
+                            _compartmentSize) -
+                           1;*/
+#ifdef IDEA1
+                  preIdx = _tissueContext->getCptIndex(preCapsule, *titer);
+#else
+                  preIdx = getCptIndex(preCapsule);
+#endif
+                }
+                if (_preSynapticPointTypeCounter > 0)
+                {  // PreSynapticPoint layer is used
+                  NodeAccessor* preSynapticPointAccessor = 0;
+                  std::string preSynapticPointType =
+                      _tissueParams.getPreSynapticPointTarget(
+                          targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                      _preSynapticPointTypesMap.find(preSynapticPointType);
+                  assert(tmapiter != _preSynapticPointTypesMap.end());
+                  unsigned int preSynPointType = (tmapiter->second);
+                  if (preSynPoints[preSynPointType] == 0)
+                  {
+                    assert(preSynapticPointAccessors.size() > preSynPointType);
+                    preSynapticPointAccessor =
+                        preSynapticPointAccessors[preSynPointType];
+                    if (preJunction)
+                    {
+#ifdef IDEA1
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][jctCapsulePreCapsule]);
+#else
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+#endif
+                    }
+                    else
+                    {
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleCptPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+                    }
+                  }
+                  NDPairList Mcpt2syn = cpt2syn[*ctiter];
+                  Mcpt2syn.replace("idx", preIdx);
+                  connect(sim, connector, preCpt, preSynPoints[preSynPointType],
+                          Mcpt2syn);
+                }
+                else if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                      _tissueParams.getPreSynapticPointTarget(
+                          targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                      _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+                  if (synapticCleftNodes[cleftType] == 0)
+                  {
+                    assert(synapticCleftAccessors.size() > cleftType);
+                    synapticCleftAccessor =
+                        synapticCleftAccessors[cleftType];
+                    if (preJunction)
+                    {
+#ifdef IDEA1
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][jctCapsulePostCapsule]);
+#else
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][preCapsule]);
+#endif
+                    }
+                    else
+                    {
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleCptPointIndexMap
+                                            [synapticCleftType][preCapsule]);
+                    }
+                  }
+                  NDPairList Mcpt2cleft = cpt2cleft[*ctiter];
+                  Mcpt2cleft.replace("idx", preIdx);
+                  Mcpt2cleft.replace("side", "pre");
+                  connect(sim, connector, preCpt,
+                          synapticCleftNodes[cleftType], Mcpt2cleft);
+                }
+              }
+
+              // Post - as input to cleft/presynapticPoint
+              //std::list<std::string>::iterator
+              ctiter = targetsIter->second.first.begin(),
+                     ctend = targetsIter->second.first.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//input to cleft/presynapticPoint
+                NodeDescriptor* postCpt = 0;
+                int postIdx = 0;
+                if (postJunction)
+                {
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePostCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[*ctiter]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(postCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[*ctiter]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#endif
+                }
+                else
+                {
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(postCapsule->getBranch(), *ctiter);
+                  postCpt = compartmentVariableAccessors
+                                [_compartmentVariableTypesMap[*ctiter]]
+                                    ->getNodeDescriptor(branchIndices[0],
+                                                        branchIndices[1]);
+                  /*postIdx =
+                      N_COMPARTMENTS(postCapsule->getBranch()->_nCapsules) -
+                      ((postCapsule - postCapsule->getBranch()->_capsules) /
+                       _compartmentSize) -
+                      1;*/
+#ifdef IDEA1
+                  postIdx = _tissueContext->getCptIndex(postCapsule, *titer);
+#else
+                  postIdx = getCptIndex(postCapsule);
+#endif
+                }
+
+                //post->cleft
+                if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  //TUAN TODO: update when 'tight' and 'bulk'
+                  ////with new syntax is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                    _tissueParams.getPreSynapticPointTarget(
+                        targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                    _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+
+                  NDPairList Mcpt2cleft = cpt2cleft[*ctiter];
+                  Mcpt2cleft.replace("idx", postIdx);
+                  Mcpt2cleft.replace("side", "post");
+                  connect(sim, connector, postCpt,
+                      synapticCleftNodes[cleftType], Mcpt2cleft);
+                }  
+              }
+
+
+              
+              {//connect synapticCleft/preSynapticPoint to all receptors 
+                if (_preSynapticPointTypeCounter > 0)
+                {  // PreSynapticPoint layer is used
+                  NodeAccessor* preSynapticPointAccessor = 0;
+                  std::string preSynapticPointType =
+                      _tissueParams.getPreSynapticPointTarget(
+                          targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                      _preSynapticPointTypesMap.find(preSynapticPointType);
+                  assert(tmapiter != _preSynapticPointTypesMap.end());
+                  unsigned int preSynPointType = (tmapiter->second);
+                  if (preSynPoints[preSynPointType] == 0)
+                  {
+                    assert(preSynapticPointAccessors.size() > preSynPointType);
+                    preSynapticPointAccessor =
+                        preSynapticPointAccessors[preSynPointType];
+                    if (preJunction)
+                    {
+#ifdef IDEA1
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][jctCapsulePreCapsule]);
+#else
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+#endif
+                    }
+                    else
+                    {
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleCptPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+                    }
+                  }
+                  connect(sim, connector, preSynPoints[preSynPointType],
+                          receptor, presynpt);
+                }
+                else if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  //TUAN TODO: update when 'tight' and 'bulk'
+                  ////with new syntax is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                    _tissueParams.getPreSynapticPointTarget(
+                        targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                    _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+                  connect(sim, connector, synapticCleftNodes[cleftType],
+                          receptor, synCleft);
+                }
+              }
+              // Post - as input to receptor
+              //std::list<std::string>::iterator
+              ctiter = targetsIter->second.first.begin(),
+                     ctend = targetsIter->second.first.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//input to receptor
+                NodeDescriptor* postCpt = 0;
+                int postIdx = 0;
+                if (postJunction)
+                {
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePostCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[*ctiter]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(postCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[*ctiter]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#endif
+                }
+                else
+                {
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(postCapsule->getBranch(), *ctiter);
+                  postCpt = compartmentVariableAccessors
+                                [_compartmentVariableTypesMap[*ctiter]]
+                                    ->getNodeDescriptor(branchIndices[0],
+                                                        branchIndices[1]);
+                  /*postIdx =
+                      N_COMPARTMENTS(postCapsule->getBranch()->_nCapsules) -
+                      ((postCapsule - postCapsule->getBranch()->_capsules) /
+                       _compartmentSize) -
+                      1;*/
+#ifdef IDEA1
+                  postIdx = _tissueContext->getCptIndex(postCapsule, *titer);
+#else
+                  postIdx = getCptIndex(postCapsule);
+#endif
+                }
+
+                //post->receptor
+                NDPairList Mcpt2syn = cpt2syn[*ctiter];
+                Mcpt2syn.replace("idx", postIdx);
+                NDPairList Mic2syn = ic2syn[*ctiter];
+                Mic2syn.replace("idx", postIdx);
+                connect(sim, connector, postCpt, receptor, Mcpt2syn);
+                connect(sim, connector, postCpt, receptor, Mic2syn);
+
+              }
+              // Post - receptor output data to Post
+              ctiter = targetsIter->second.second.begin(),
+              ctend = targetsIter->second.second.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//receptor output to Post-compartments
+                NodeDescriptor* postCpt = 0;
+                int postIdx = 0;
+                if (postJunction)
+                {
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePostCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[*ctiter]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(postCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[*ctiter]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#endif
+                }
+                else
+                {
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(postCapsule->getBranch(), *ctiter);
+                  postCpt = compartmentVariableAccessors
+                                [_compartmentVariableTypesMap[*ctiter]]
+                                    ->getNodeDescriptor(branchIndices[0],
+                                                        branchIndices[1]);
+                  /*postIdx =
+                      N_COMPARTMENTS(postCapsule->getBranch()->_nCapsules) -
+                      ((postCapsule - postCapsule->getBranch()->_capsules) /
+                       _compartmentSize) -
+                      1;*/
+#ifdef IDEA1
+                  postIdx = _tissueContext->getCptIndex(postCapsule, *titer);
+#else
+                  postIdx = getCptIndex(postCapsule);
+#endif
+                }
+                //receptor->post
+                NDPairList Mcsyn2cpt = csyn2cpt[*ctiter];
+                Mcsyn2cpt.replace("idx", postIdx);
+                connect(sim, connector, receptor, postCpt, Mcsyn2cpt);
+              }
+#endif
             }
             typeCounter[synapseType]++;
           }
@@ -8496,7 +8950,10 @@ int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
       float dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
       if (branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() <= somaR)
       {
-        std::cerr << "The first ComputeBranch falls within the soma" << std::endl;
+        std::cerr << "The first ComputeBranch falls within the soma on BRCHTYPE " << 
+          _segmentDescriptor.getBranchType(branch->_capsules[ncaps-1].getKey())+ 1
+          << " (NOTE: adjusted +1)"
+          << std::endl;
         assert(branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() > somaR);
       }
       while (

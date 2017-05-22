@@ -63,7 +63,11 @@ void VoltageClamp::updateI(RNG& rng)
   if (inject) {
     if (type == 1)
     {
-      Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
+      float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
+      //float goal = targetV; //wrong 
+      Igen = beta * Cm * ( ( goal - (*V)[idx] ) / (*deltaT/2) ) * *surfaceArea;
+      //Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
+      //Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / (*deltaT/2) ) * *surfaceArea;
       (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen<<" "<<Cm<<" "<<targetV<<" "<<(*V)[idx]<<" "<<*deltaT<<"\n";
     }
     else if (type == 2)

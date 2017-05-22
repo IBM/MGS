@@ -21,10 +21,12 @@ void DetectDataChangeOneCompartment::initialize(RNG& rng)
 void DetectDataChangeOneCompartment::calculateInfo(RNG& rng) 
 {
    //slope = ((*data)[0] - data_prev)/(timeWindow);
+   float prev_slope = slope;
    slope = ((*data)[0] - data_prev)/(data_prev);
    slope_absolute = fabs(slope);
-   if (slope_absolute > criteria)
-   {
+   if (slope_absolute > criteria or 
+         (prev_slope*slope < 0.0f))
+   {// greater than threshold or 'pass a peak/nadir'
       data_prev = (*data)[0];
       timeWindow = 0.0;
       triggerWrite = 1;

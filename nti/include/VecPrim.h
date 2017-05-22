@@ -16,7 +16,7 @@
 #ifndef _INCLUDED_VECPRIM__
 #define _INCLUDED_VECPRIM__
 
-#include <math.h>
+#include <cmath>
 #include <cassert>
 
 static inline
@@ -48,7 +48,7 @@ double Angle3(double* A, double* B, double* C)
   double a=SqDist(B,C);
   double c=SqDist(A,B);
   double rval= acos((SqDist(A,C)-c-a)/(-2.0*sqrt(c*a)));
-  assert(!isnan(rval));
+  assert(!std::isnan(rval));
   return rval;
 }
 #endif

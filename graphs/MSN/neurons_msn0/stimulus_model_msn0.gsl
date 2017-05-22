@@ -1,4 +1,5 @@
 #if STIMULUS_CASE == CASE_08
+//{{{voltage-clamp
 //NOTE: User can define 'idx' to specify compartment index (default is 0)
 //VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
 //NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
@@ -41,7 +42,7 @@ somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 //   time     = { t0, t1, t2, t3 }, 
 //   commands = {Vc0, Vc1, Vc2, Vc3}
 //   > ) on voltageClampOn;
-
+//}}}
 #endif
 
 #if STIMULUS_CASE == CASE_09

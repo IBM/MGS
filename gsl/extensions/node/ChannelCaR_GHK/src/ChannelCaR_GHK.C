@@ -75,7 +75,7 @@ void ChannelCaR_GHK::initialize(RNG& rng)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
                  "GHK-formula Ca2+ channel "
-                 "Channels Param" << std::endl;
+                 "Channels Param for " << typeid(*this).name() << std::endl;
     assert(0);
   }
   for (unsigned i = 0; i < size; ++i)

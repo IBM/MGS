@@ -84,6 +84,8 @@
 #include <set>
 static std::set<int> neuronWithTouch;
 #endif
+#define SPINE_HEAD_UNIQUE_TOUCH // enable this to ensure only 1 touch is formed for 1 spinehead
+
 
 TouchDetector::TouchDetector(
     const int rank, const int nSlicers, const int nTouchDetectors,
@@ -790,7 +792,6 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
 void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
                                Mutex* mutex)
 {
-
   Params* params = data->_parms[threadID];
   TouchVector& touchVector = _threadUserData->_touchVectors[threadID];
   RNG& rng = _threadUserData->_rangens[threadID];
@@ -815,15 +816,16 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
   std::vector<key_size_t> touchingCapsules;
   std::vector<bool> touchingSpineNeck;
   SegmentDescriptor segDesc;
+  std::vector<std::vector<float>> dataOfTouches;
 #endif
   key_size_t s1Key = caps[sid].getKey();
-  for (int sid2 = 0; sid2 < _numberOfCapsules; ++sid2)
   // for (int sid2 = sid+1; sid2 < _numberOfCapsules; ++sid2) --> wrong
   // check prob. for forming a touch
   // BUG
   // TUAN TODO: should be inside (only when a valid touch is detected, then
   // use the probability for determining of creating a touch or ot)
   // if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate)
+  for (int sid2 = 0; sid2 < _numberOfCapsules; ++sid2)
   {
     key_size_t s2Key;  //, s1Key = caps[sid].getKey();
     double* s1begin = caps[sid].getBeginCoordinates();
@@ -849,7 +851,6 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
     //                            OR                'chemicalSynapse'
     if (detectionTouchSpace->areInSpace(s1Key, s2Key))
     {
-
       double* s2begin = caps[sid2].getBeginCoordinates();
       double* s2end = caps[sid2].getEndCoordinates();
       s2Ar = caps[sid2].getRadius() + params->getRadius(s2Key);
@@ -911,7 +912,6 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
           {
 // The following code ensures global non-redundant touches by setting
 // the boolean "countTouch"
-
 #if 1
             ShallowArray<int, MAXRETURNRANKS, 100> ranks1, ranks2;
             decomposition->getRanks(&caps[sid].getSphere(),
@@ -996,6 +996,7 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
 #else
             bool newTouchIsNeckDenShaft = touch.hasSpineNeck(key_spineneck);//obsolete
 #endif
+
             if (newTouchIsNeckDenShaft)
             {
               int sidNeck = (s1Key == key_spineneck) ? sid : sid2;
@@ -1004,10 +1005,23 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
                   (dynamic_cast<VolumeDecomposition*>(decomposition))
                       ->getRank(sEndNeck);
               // make sure only check for
-              if (rankEndNeck != _rank) countTouch = false;
+              if (rankEndNeck != _rank) 
+              {
+                countTouch = false;
+              }
               double propSpineNeck = (s1Key == key_spineneck) ? sc : tc;
-              if (propSpineNeck < 0.9999) countTouch = false;
-              if (dist > 0.00000001) countTouch = false;
+        #define THRESHOLD_TOUCHING_END_POINT  0.999
+              //if (propSpineNeck < 0.9999)  countTouch = false;
+              if (propSpineNeck < THRESHOLD_TOUCHING_END_POINT) 
+              {
+                countTouch = false;
+              }
+              //if (dist > 0.00000001) countTouch = false;
+        #define THRESHOLD_DISTANCE_SAFE_TOUCH  1.e-5
+              if (dist > THRESHOLD_DISTANCE_SAFE_TOUCH) 
+              {
+                countTouch = false;
+              }
               // if (countTouch) std::cout << dist << " ";
               // SegmentDescriptor seg;
               // std::cout <<   seg.getNeuronIndex(key_spineneck) << std::endl;
@@ -1016,6 +1030,47 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
               //...
             }
             // END ADDITIONAL CHECK
+            // Additional step with NON_TOUCH_TARGETS
+            if (_params->isNonTouchableTargets(s1Key, s2Key)) 
+            {
+              countTouch = false;
+            }
+#ifdef SPINE_HEAD_UNIQUE_TOUCH
+            key_size_t key_spinehead = -1.0;
+#ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
+            bool newTouchHasSpineHead = touch.hasSpineHead(key_spinehead, *_params);
+#else
+            bool newTouchHasSpineHead = touch.hasSpineHead(key_spinehead); //obsolete
+#endif
+            if (newTouchHasSpineHead)
+            //if (0)
+            {
+              int sidHead = (s1Key == key_spinehead) ? sid : sid2;
+              double* sEndHead = caps[sidHead].getEndCoordinates();
+              int rankEndHead =
+                  (dynamic_cast<VolumeDecomposition*>(decomposition))
+                      ->getRank(sEndHead);
+              // make sure only check for
+              if (rankEndHead != _rank) 
+              {
+                countTouch = false;
+              }
+              //NOTE: get the prop from Semgent that is not spine-head
+              double propNonSpineHead = (s1Key == key_spinehead) ? tc : sc ;
+        #define THRESHOLD_TOUCHING_END_POINT_HEAD  0.94
+              //if (propSpineHead < 0.9999)  countTouch = false;
+              if (propNonSpineHead < THRESHOLD_TOUCHING_END_POINT_HEAD) 
+              {
+                countTouch = false;
+              }
+              //if (dist > 0.00000001) countTouch = false;
+        #define THRESHOLD_DISTANCE_SAFE_TOUCH  1.e-5
+              if (dist > THRESHOLD_DISTANCE_SAFE_TOUCH) 
+              {
+                countTouch = false;
+              }
+            }
+#endif
           }
           if (countTouch)
           {  // finally, accept the touch
@@ -1024,6 +1079,10 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
 #ifdef TD_DEBUG
             numTouchesForThisCapsule += 1;
             touchingCapsules.push_back(s2Key);
+            {
+              std::vector<float> values {sc, tc, dist};
+              dataOfTouches.push_back(values);
+            }
             key_size_t dummy;
 #ifdef SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
             touchingSpineNeck.push_back(touch.hasSpineNeck(dummy, *_params));
@@ -1056,11 +1115,16 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
               << numTouchesForThisCapsule << " touches with neurons"
               << std::endl;
     for (int i = 0; i < touchingCapsules.size(); i++)
+    {
       std::cerr << " " << segDesc.getNeuronIndex(touchingCapsules[i])
                 << " branchOrder="
                 << segDesc.getBranchOrder(touchingCapsules[i])
                 << "segIdx=" << segDesc.getSegmentIndex(touchingCapsules[i])
                 << "neck=" << touchingSpineNeck[i] << ";";
+      std::cerr << " --> (sc, tc, dist) = " << dataOfTouches[i][0] << "," <<
+        dataOfTouches[i][1] << "," << dataOfTouches[i][2] << "___";
+
+    }
     std::cerr << std::endl;
 
     //". It is a spineneck? " << tc.hasSpineNeck() << std::endl;

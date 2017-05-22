@@ -6,12 +6,19 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
+//IMPORTANT:
+//  The term post-side or postsynaptic-side refers to the side at which the receptor
+//    reside (not necessary means the postsynaptic neuron)
+//  There are scenarios in that the receptor reside on pre-synaptic neuron, and in
+//  such case, the membrane of the pre-synaptic neuron before the post-side (or 
+//  postsynaptic-side) of the receptor
 Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
             , MaximumConductanceProducer 
             , CaCurrentProducer
 #ifdef KEEP_PAIR_PRE_POST
-            , BranchDataArrayProducer, IndexArrayProducer //for both pre- and post- side
+            , BranchDataArrayProducer, IndexArrayProducer //for both pre- and post- side - needed I/O purpose
 #else
+            //{{{ not supposed to be used
 //TUAN TODO: not completed yet, follow mGluR1
             //, BranchDataArrayProducer, IndexArrayProducer //for pre-only
             //, BranchDataProducer  // for post-only
@@ -19,16 +26,17 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
             //-->removed, BranchDataArrayProducer, IndexArrayProducer //for pre-only
             , BranchDataProducerPre, IndexProducerPre  // for pre-only
             , BranchDataProducerPost, IndexProducerPost  // for post-only
+            //}}}
 #endif
             , DimensionArrayProducer //for post
             , WeightProducer 
 {
 /*{{{*/
-	//DATA
-	//{{{ 
-	// Hodgkin-Huxley-based formula 
-	//internal data
-	//{{{
+  //DATA
+  //{{{ 
+  // Hodgkin-Huxley-based formula 
+  //internal data
+  //{{{
   dyn_var_t g;     // [nS/um^2]
   dyn_var_t gbar;  // [nS/um^2]
   dyn_var_t gbar0;
@@ -58,8 +66,8 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   //}}}
   //{{{both-side
 #ifdef KEEP_PAIR_PRE_POST
-//TUAN TODO: to be removed KEEP_PAIR_PRE_POST
-// Indeed, n = 1 only
+  //NOTE: This information is provided via connecting from SynapticCleft
+  // Indeed, n = 1 only (see text at the beginning of SynapticCleft)
   int* [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
   BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
 #endif
@@ -93,9 +101,9 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
 
     dyn_var_t* deltaT;
     dyn_var_t* T;
-		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+    dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
 		//   and tempt. used for the simulation 
-		InitPhase computeTadj;  
+    InitPhase computeTadj;  
     dyn_var_t* Mg_EC; // [mM]
     dyn_var_t* Ketamine; // 0..1 (fraction of Ketamine block)
     dyn_var_t* Ca_EC; // [uM]
@@ -117,6 +125,7 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     dyn_var_t alphaBuffer;
     dyn_var_t tauBuffer;
     //}}}
+    int[] * indexPrePost_connect;
    }
 
   //{{{Phases 
@@ -125,8 +134,7 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   RuntimePhase updateNMDADepPlasticity;
   //}}}
 
-  // Output
-	//{{{
+  //{{{ Output
   ConductanceProducer.conductance << &g;
   ReversalPotentialProducer.reversalPotential << &Shared.E;
   MaximumConductanceProducer.maximumConductance << &gbar;
@@ -140,7 +148,7 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   BranchDataProducer.branchData << branchDataPost;
 #endif
   DimensionArrayProducer.dimensionArray << dimensions;
-  WeightProducer.w << &w; 
+  WeightProducer.w << &w;  // for mixed-synapse (NMDAR on AMPAR)
   //}}}
 
   InAttrPSet {//information of the incoming connection
@@ -150,13 +158,14 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   }
 
   UserFunction setPostIndex;
+  UserFunction setPrePostIndex;
 
-  // Connection (input)
-	//{{{
+  //{{{ Connection (input)
   Connection Pre Node (PSet.identifier=="preSynapticPoint") Expects VoltageProducer
-           , BranchDataProducer, IndexProducer {//the info from presynaptic-side is passed to receptor via this
+    , BranchDataProducer, IndexProducer 
+  {//the info from presynaptic-side is passed to receptor via this
       // intermediate nodetype
-		//{{{
+      //{{{
     VoltageProducer.voltage >> Vpre;
 #ifdef KEEP_PAIR_PRE_POST
     BranchDataProducer.branchData >> branchDataPrePost;
@@ -168,13 +177,21 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="synapticCleft") Expects GlutamateConcentrationProducer
-           , BranchDataProducer, IndexProducer {
-  //{{{
+  Connection Pre Node (PSet.identifier=="synapticCleft") Expects 
+    GlutamateConcentrationProducer
+#ifdef KEEP_PAIR_PRE_POST
+    , DirectIndexArrayProducer
+    , BranchDataArrayProducer
+#else
+    , BranchDataProducer, IndexProducer 
+#endif
+  {
+  //{{{NOTE: The information from both sides (pre-side, post-side) are provided
     GlutamateConcentrationProducer.NT >> Glut;
 #ifdef KEEP_PAIR_PRE_POST
-    BranchDataProducer.branchData >> branchDataPrePost;
-    IndexProducer.index >> indexPrePost;
+    BranchDataArrayProducer.branchDataArray >> branchDataPrePost;
+    DirectIndexArrayProducer.indexArray >> Shared.indexPrePost_connect;
+    setPrePostIndex();
 #else
     BranchDataProducer.branchData >> branchDataPre;
     IndexProducer.index >> indexPre;
@@ -182,9 +199,10 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer
-           , DimensionArrayProducer
-           ,  BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer
+    , DimensionArrayProducer
+    ,  BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
   //{{{
 #ifdef KEEP_PAIR_PRE_POST
     BranchDataProducer.branchData >> branchDataPrePost;
@@ -194,21 +212,31 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     //REMEMBER: When use in C++ code, only use Vpost[indexPost]
     VoltageArrayProducer.voltageArray >> Vpost;
     DimensionArrayProducer.dimensionArray >> dimensions;
-    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
+    //NOTE: Internally, it only update indexPrePost when PreSynapticPoint is used
+    setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index
   //}}}
   }
 
-  Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
+    CaConcentrationArrayProducer {
     //REMEMBER: When use in C++ code, only use Ca_IC[indexPost]
     CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    //{{{IMPORTANT NOTE
 //TUAN TODO: add the tracker in the code (some channel has already been implemented - find it out)
+//TUAN TODO BUG: potential bug if the receptor only sense Calcium; but not Voltage
+// and is used with SynapticPoint
+// which in turns require calling this
     //setPostIndex(); // so that Vpost[indexPost] point to the voltage in the proper compartment index 
+// but if we call this, it is resolved; However, it requires
+//   PreSynapticPoint to connect first, to ensure the case when both Calcium and Voltage
+//   are connected; only one actually updates indexPrePost
+    //}}}
   }
 
   Connection Pre Constant (PSet.identifier=="EC") Expects CaConcentrationProducer, 
         MgConcentrationProducer, TemperatureProducer, KetamineProducer, GlycineProducer 
   {
-		//{{{
+    //{{{
     CaConcentrationProducer.Ca >> Shared.Ca_EC;
     MgConcentrationProducer.Mg >> Shared.Mg_EC;
     TemperatureProducer.T >> Shared.T;

@@ -103,3 +103,37 @@ void StringUtils::trim(std::string &s)
 	StringUtils::ltrim(s);
 	StringUtils::rtrim(s);   
 }
+  /**
+   The word is  (in descending order of priority)
+   1. fully enclosed by square bracket [   ]
+   2. space-delimited 
+   */
+  int StringUtils::readOneWord(FILE* fpF, char* oneword)
+  {
+    std::string strOneWord("");
+    int errorCode = fscanf(fpF, " %s", oneword);
+    unsigned int ii = 0;
+    while (oneword[ii] == ' ' and ii < strlen(oneword)) {
+      ii++;
+    }
+    unsigned int jj = strlen(oneword)-1;
+    while (oneword[jj] == ' ' and jj > 0) {
+      jj--;
+    }
+    strOneWord.append((oneword));
+    if (oneword[ii] == '[') 
+    {
+      while (oneword[jj] != ']')
+      {
+	errorCode = fscanf(fpF, " %s", oneword);
+	strOneWord.append((oneword));
+	jj = strlen(oneword)-1;
+	while (oneword[jj] == ' ' and jj > 0) {
+	  jj--;
+	}
+      }
+    }
+    std::size_t length = strOneWord.copy(oneword, strOneWord.length());
+    oneword[length] = '\0';
+    return errorCode;
+  }

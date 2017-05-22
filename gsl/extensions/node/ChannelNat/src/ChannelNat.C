@@ -50,7 +50,7 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 //    Sodium current kinetics in isolated neostriatal neurons in adult guinea pig
 //
 #define VHALF_M -25
-#define k_M -9.2
+#define k_M -10.0
 #define VHALF_H -62
 #define k_H 6
 #define LOOKUP_TAUM_LENGTH 16  // size of the below array
@@ -274,8 +274,8 @@ void ChannelNat::update(RNG& rng)
     std::vector<dyn_var_t>::iterator low =
         std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
     int index = low - Vmrange_taum.begin();
-assert(index>=0);
-//assert(Vmrange_taum[index-1] <= v and v <= Vmrange_taum[index]);
+    assert(index>=0);
+    //assert(Vmrange_taum[index-1] <= v and v <= Vmrange_taum[index]);
     dyn_var_t taum;
     if (index == 0)
       taum = taumNat[0];
@@ -297,9 +297,11 @@ assert(index>=0);
     dyn_var_t tauh;
     if (index == 0)
       tauh = tauhNat[0];
-    else
+    else if (index < LOOKUP_TAUH_LENGTH)
       tauh = linear_interp(Vmrange_tauh[index-1], tauhNat[index-1], 
         Vmrange_tauh[index], tauhNat[index], v);
+    else //assume saturation in taum when Vm > max-value
+     tauh = tauhNat[index-1];
     //dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNat[index] * 2);
     dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
