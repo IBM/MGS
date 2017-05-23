@@ -23,7 +23,6 @@ void RampCurrentGenerator::initialize(RNG& rng)
   }
 #endif
   assert(deltaT);
-  assert(tstart < tend);
   first_enter_pulse = true;
   if (pattern == "ramp")
   {
@@ -42,6 +41,7 @@ void RampCurrentGenerator::initialize(RNG& rng)
                  "period\n";
     assert(duration < period);
   }
+  assert(tstart < tend);
   if (write_to_file == 1)
   {
     std::ostringstream os;
@@ -53,6 +53,12 @@ void RampCurrentGenerator::initialize(RNG& rng)
       io_interval = DEFAULT_IO_INTERVAL;
     time_write_data = 0.0 ; 
   }
+}
+void RampCurrentGenerator::dataCollection(float currentTime)
+{
+    (*outFile) <<  currentTime;
+    (*outFile) << std::fixed << fieldDelimiter << I;
+    (*outFile) << "\n";
 }
 
 void RampCurrentGenerator::update(RNG& rng) 

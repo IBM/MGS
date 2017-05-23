@@ -4,12 +4,14 @@
 #include "Lens.h"
 #include "CG_RampCurrentGenerator.h"
 #include <memory>
+#include <fstream>
 
 class RampCurrentGenerator : public CG_RampCurrentGenerator
 {
    public:
       void initialize(RNG& rng);
       void update(RNG& rng);
+      void finalize(RNG& rng);
       RampCurrentGenerator();
       virtual ~RampCurrentGenerator();
       virtual void duplicate(std::auto_ptr<RampCurrentGenerator>& dup) const;
@@ -22,7 +24,7 @@ class RampCurrentGenerator : public CG_RampCurrentGenerator
       bool first_enter_pulse;
       std::ofstream* outFile;
       float time_write_data; // [ms]
-      void (CurrentPulseGenerator::*fpt_update)(RNG& rng, float currentTime) = NULL;
+      void (RampCurrentGenerator::*fpt_update)(RNG& rng, float currentTime) = NULL;
       void dataCollection(float currentTime);
 };
 
