@@ -153,12 +153,16 @@ Variable RampCurrentGenerator Implements CurrentProducer
   dyn_var_t last;
   dyn_var_t inc;
   string pattern; //(ramp)
+  int write_to_file; // YES or NO
+  string fileName; // fileName if 'write_to_file = 1'
+  float io_interval; //[ms] - default is 1.0 [ms]
 
   dyn_var_t* deltaT;
   //}}}
 
   InitPhase initialize(I);
   RuntimePhase update(I);
+  FinalPhase finalize();
 
   CurrentProducer.current << &I;
   Connection Pre Constant () Expects TimeStepProducer {
