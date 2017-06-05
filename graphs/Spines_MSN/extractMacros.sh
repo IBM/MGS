@@ -169,6 +169,10 @@ fi
 
 #########################
 ##{{{ 3. CHECK MACROS
+if [ ! -f model.gsl ]; then
+  echo "Please run changeMorph.sh or check if model.gsl is available"
+  exit 1 
+fi
 ## NOTE: accepted macros
 ## -DOUTPUTFOLDER=location where all output should be'
 ## -DPARAMFOLDER=location of the parameters to the simulation
