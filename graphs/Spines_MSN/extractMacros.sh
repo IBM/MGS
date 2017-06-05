@@ -9,7 +9,8 @@ _Z_=1
 NUMTHREADS=1
 
 NUMPROCESSES=$(( _X_ * _Y_ * _Z_))
-OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
+#OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
+OUTPUTFOLDER=/data/tmhoangt/NTS_OUTPUT/
 if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
 #}}}
 
@@ -68,6 +69,7 @@ RunSim()
    echo "----> RESULT: " >> SIM_LOG
    echo "... using swc file: ${SWC_FILENAME}"
    echo "... using swc file: ${SWC_FILENAME}" >> SIM_LOG
+   plotscriptFolder="./NTS_plotting"
    echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
@@ -81,9 +83,9 @@ RunSim()
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
    if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
-     ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+     cd ${plotscriptFolder} && ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
    fi
-   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+   echo ${plotscriptFolder}/doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
   #}}}
 }
 
