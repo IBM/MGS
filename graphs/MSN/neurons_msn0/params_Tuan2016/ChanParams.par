@@ -19,7 +19,7 @@ MTYPE BRANCHTYPE
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
-     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 0 [3:4]  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
      KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
@@ -27,7 +27,7 @@ MTYPE BRANCHTYPE
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
-     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 0 [2, 5, 7]  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
      KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
@@ -35,7 +35,7 @@ MTYPE BRANCHTYPE
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
-     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 #     PMCA [Voltage, Calcium] [Calcium] \
 #     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
 #     CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
@@ -59,7 +59,7 @@ MTYPE BRANCHTYPE
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
-     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 #}}}
 #{{{GABAergic bouton 1
@@ -68,7 +68,7 @@ MTYPE BRANCHTYPE
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
-     CaR [Voltage] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 #}}}
 

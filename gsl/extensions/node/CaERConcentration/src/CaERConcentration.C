@@ -22,6 +22,8 @@
 
 #include "Branch.h"
 #include "StringUtils.h"
+#include "Params.h"
+#include <iomanip>
 #include <cmath>
 
 SegmentDescriptor CaERConcentration::_segmentDescriptor;
@@ -410,31 +412,45 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
 void CaERConcentration::printDebugHH()
 {
   unsigned size = branchData->size;
-  SegmentDescriptor segmentDescriptor;
-  std::cerr << "time| BRANCH [rank, nodeIndex, layerIndex, cptIndex]"
-            << "(neuronIdx, brIdx, brOrder, brType)| distalCase(C0,C1,C2,C3) |"
-            << "prox(C0,C1,C2) |"
-            << "{x,y,z,r, dist2soma, surface_area, volume, length} CaER\n";
   for (int i = 0; i < size; ++i)
   {
-    std::cerr << dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " | CAER_BRANCH "
-              << " [" << getSimulation().getRank() << "," << getNodeIndex()
-              << "," << getIndex() << "," << i << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ","
-              << segmentDescriptor.getBranchType(branchData->key) 
-              << ") |"
-              << "(" << isDistalCase0 << "," << isDistalCase1 << "," << isDistalCase2
-              << "," << isDistalCase3 << ")|(" << isProximalCase0 << ","
-              << isProximalCase1 << "," << isProximalCase2 << ")|"
-              << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << ","
-              << dimensions[i]->dist2soma << "," << dimensions[i]->surface_area
-              << "," << dimensions[i]->volume << "," << dimensions[i]->length
-              << "} " << Ca_new[i] << " " << std::endl;
+    this->printDebugHH(i);
   }
+}
+
+void CaERConcentration::printDebugHH(int cptIndex)
+{
+  unsigned size = branchData->size;
+  if (cptIndex == 0)
+  {
+    std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
+      << "(neuronIdx, brIdx, brOrder, brType) distal(C0 | C1 | C2 | C3) :"
+      << " prox( C0 | C1 | C2) |"
+      << "{x,y,z,r, dist2soma, surface_area, volume, length} CaER\n";
+  }
+  int i  = cptIndex;
+  std::cerr << getSimulation().getIteration() << "," <<
+    dyn_var_t(getSimulation().getIteration()) *
+    *getSharedMembers().deltaT << "| BRANCH"
+    << " [" << getSimulation().getRank() << "," << getNodeIndex()
+    << "," << getIndex() << "," << i << "] "
+    << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+    << std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+    << _segmentDescriptor.getBranchOrder(branchData->key) << ","
+    << _segmentDescriptor.getBranchType(branchData->key) << ") |"
+    << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
+    << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
+    << isProximalCase1 << "|" << isProximalCase2 << "|"
+    << " {" 
+    << std::setprecision(3) << dimensions[i]->x << "," 
+    << std::setprecision(3) << dimensions[i]->y << ","
+    << std::setprecision(3) << dimensions[i]->z << "," 
+    << std::setprecision(3) << dimensions[i]->r << " | " 
+    << dimensions[i]->dist2soma  << ","
+    << dimensions[i]->surface_area << "," 
+    << dimensions[i]->volume << "," << dimensions[i]->length 
+    << "} "
+    << Ca_new[i]  << " " << std::endl;
 }
 
 // Update: RHS[], Aii[]
@@ -448,12 +464,8 @@ void CaERConcentration::doForwardSolve()
 	//  1. ionic currents 
   for (int i = 0; i < size; i++)
   {
-#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
-#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-    assert(0);  // need to implement
-#endif
     /* * * Sum Currents * * */
     //    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
     //    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
@@ -475,12 +487,8 @@ void CaERConcentration::doForwardSolve()
   /* FIX */
   if (isDistalCase3)
   {
-#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * Ca_cur[0];
-#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-    assert(0);  // need to implement
-#endif
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];

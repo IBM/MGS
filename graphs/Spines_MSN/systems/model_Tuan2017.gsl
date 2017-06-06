@@ -37,7 +37,7 @@ Zipper zipper();
 ReSeedRandom reSeed(243);
 /*}}}*/
 #ifndef MODEL_TO_USE
-print("WARNING: You haven't selected MODEL_TO_USE")
+print("WARNING: You haven't selected MODEL_TO_USE");
 #endif
 
 //SECTIONZ: Modify the data in this section for general setting
@@ -172,6 +172,8 @@ print("Case 00: resting");
 //              to as much as 12-fold increase
 //The decay of IP3 seems to be slow (in cardiac ~10s min)
 #define IP3_DiffusionConstant 0.4  //  [um^2/ms]
+#define IP3_EffectiveDiffusionConstant 0.4  //  [um^2/ms]
+#define IP3_beta 0.05 // unitless [buffering constant]
 
   //{{{ neurotransmitters
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
@@ -572,10 +574,10 @@ NodeType DopamineConcentrationJunctionPoint {
 #if defined(SIMULATE_IP3)
 NodeType IP3Concentration (<
                         D_IP3 =IP3_DiffusionConstant, // [um^2/ms] unbuffered
-                      //  //{{{ only used for fast-buffering assumption 
-                      //  DCaeff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
-                      //  beta=IP3_beta, // dimensionless
-                      //  //}}}
+                        //{{{ only used for fast-buffering assumption 
+                        D_IP3eff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
+                        beta=IP3_beta, // dimensionless
+                        //}}}
                         IP3Baseline=IP3cyto_value      // [uM]
            >) { initializeCompartmentData->initialize2, deriveParameters->initialize2 };
 
@@ -589,10 +591,10 @@ NodeType IP3ConcentrationEndPoint { produceInitialState->initialize1,
       };
 NodeType IP3ConcentrationJunction (<
                         D_IP3 =IP3_DiffusionConstant, // [um^2/ms] unbuffered
-                        ////{{{ only used for fast-buffering assumption 
-                        //DCaeff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
-                        //beta=IP3_beta, // dimensionless
-                        ////}}}
+                        //{{{ only used for fast-buffering assumption 
+                        D_IP3eff = IP3_EffectiveDiffusionConstant, // [um^2/ms]
+                        beta=IP3_beta, // dimensionless
+                        //}}}
                         IP3Baseline=IP3cyto_value      // [uM]
         >) { deriveParameters->initialize2, initializeJunction->initialize2 };
 NodeType IP3ConcentrationJunctionPoint { 
@@ -632,6 +634,8 @@ NodeType ChannelBKalphabeta { computeE->initialize2, initialize->initialize3, up
   /* small-conductance SK Ca2+-dependent K+ current */
   /* SK only present on secondary and tertary dendrites only */
 NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->solveChannels };
+   /* generate fast-spiking in FSI */
+NodeType ChannelKv31 { computeE->initialize2, initialize->initialize3, update->solveChannels };
    //}}}
 /*}}}*/
    //{{{HCN
@@ -663,12 +667,12 @@ NodeType ChannelCaT_GHK {computeTadj->initialize2, initialize->initialize3, upda
 //RYR
 NodeType SingleChannelRYR(
     <
-				SingleChannelModelFileName = RYRMarkovFilename,
-        iryr = RYRSingleChannelCurrent,
-        channelDensity = RYRChannelDensity,
-        useExplicitNumberofChannels = RYRUseExplicitNumChan
+    SingleChannelModelFileName = RYRMarkovFilename,
+    iryr = RYRSingleChannelCurrent,
+    channelDensity = RYRChannelDensity,
+    useExplicitNumberofChannels = RYRUseExplicitNumChan
     >
-		) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
+    ) {computeTadj->initialize2, setupChannel->initialize2, initialize->initialize3, update->solveChannels };
 //IP3R
 NodeType ChannelIP3R {computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
@@ -982,10 +986,12 @@ VariableType VoltageDisplay{ initialize->initialize1 };
 VariableType CurrentDisplay{ initialize->initialize4 };
 VariableType CaCurrentDisplay{ initialize->initialize4 };
 VariableType AnyCurrentDisplay{ initialize->initialize4 }; //Na/Ca/K/...
+VariableType AnyFluxDisplay{ initialize->initialize4 }; //Na/Ca/K/...
 VariableType ConductanceDisplay{ initialize->initialize4 };
 
 VariableType CalciumDisplay{ initialize->initialize4 };
 VariableType AnyConcentrationDisplay{ initialize->initialize4 }; //[Ca](cyto)/[Ca](ER)/[Glut]/[GABA]/...
+VariableType CalciumDomainDisplay{ initialize->initialize4 }; //[Ca](cyto)/[Ca](ER)/[Glut]/[GABA]/...
 
 #include "recording_model.gsl"
 
@@ -1224,6 +1230,7 @@ Grid MSN_D1Neuron{
 	Layer(KIRChannels, ChannelKIR, tissueFunctor("Layout", < nodekind="Channels[KIR]" >), < nodekind="Channels[KIR]" >, tissueGM);
 	Layer(BKalphabetaChannels, ChannelBKalphabeta,  tissueFunctor("Layout", < nodekind="Channels[BK]" >), < nodekind="Channels[BK]" >, tissueGM);
 	Layer(SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
+        Layer(Kv31Channels, ChannelKv31, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
      //}}}
      //{{{HCN
      Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
@@ -1244,7 +1251,8 @@ Grid MSN_D1Neuron{
 		 //{{{ RYR, IP3R
 #if defined(SIMULATE_CAER)
      //RYR
-	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+	Layer(RYR1Channels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR1]" >), < nodekind="Channels[RYR1]" >, tissueGM);
+	Layer(RYR2Channels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
      //IP3R
 	Layer(IP3RChannels, ChannelIP3R, tissueFunctor("Layout", < nodekind="Channels[IP3R]" >), < nodekind="Channels[IP3R]" >, tissueGM);
 
@@ -1285,6 +1293,8 @@ Grid MSN_D1Neuron{
       /*{{{*/
 	Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
 	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
+	Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
+	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
 	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
    Layer(mGluRType1Synapses, mGluReceptorType1, tissueFunctor("Layout", < nodekind="ChemicalSynapses[mGluR]" >), < nodekind="ChemicalSynapses[mGluR]" >, tissueGM);
       /*}}}*/
@@ -1594,7 +1604,10 @@ Grid MSN_D1Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0}
 				> ) );
-    //}}}
+        InitNodes ( .[].Layer(Kv31Channels), tissueFunctor("NodeInit", <
+              compartmentalize = { "gbar" },
+              gbar = {0.0}
+              > ) );
 
   //{{{HCN 
    InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
@@ -1645,19 +1658,24 @@ Grid MSN_D1Neuron{
 		//{{{RYR, IP3R, LeakER
 #if defined(SIMULATE_CAER)
   //RYR
-	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "int:numChan", "Ej" },
-				numChan = {1},
-        Ej = {0.0}
-     > ) );
+	InitNodes ( .[].Layer(RYR1Channels), tissueFunctor("NodeInit", <
+              compartmentalize = { "int:numChan", "Ej" },
+              numChan = {1},
+              Ej = {0.0}
+              > ) );
+	InitNodes ( .[].Layer(RYR2Channels), tissueFunctor("NodeInit", <
+              compartmentalize = { "int:numChan", "Ej" },
+              numChan = {1},
+              Ej = {0.0}
+              > ) );
    //IP3R
 	InitNodes ( .[].Layer(IP3RChannels), tissueFunctor("NodeInit", <
-				///compartmentalize = { "gbar" },
-				///gbar = {0.0}
-				compartmentalize = { "v_IP3R" },
-        v_IP3R = {0.0}
-//        Vhalf_m_shift = 0.0, Vhalf_h_shift = 0.0
-				> ) ); 
+              ///compartmentalize = { "gbar" },
+              ///gbar = {0.0}
+              compartmentalize = { "v_IP3R" },
+              v_IP3R = {0.0}
+              //        Vhalf_m_shift = 0.0, Vhalf_h_shift = 0.0
+              > ) ); 
 
    //LeakER
 #endif
@@ -1668,9 +1686,9 @@ Grid MSN_D1Neuron{
 		/*{{{*/
 #if defined(SIMULATE_CACYTO)
 	InitNodes ( .[].Layer(CaExtrusions), tissueFunctor("NodeInit", <
-				compartmentalize = { "tau" },
-        tau = {tau_PMCA_Calciumclearance}
-				> ) ); 
+              compartmentalize = { "tau" },
+              tau = {tau_PMCA_Calciumclearance}
+              > ) ); 
 //{{{ PMCA
 	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
 #if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION || \
@@ -1798,6 +1816,8 @@ Grid MSN_D1Neuron{
 
   polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
   polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(Kv31Channels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(Kv31Channels), <>, <identifier="EC">);
   //}}}
 
    //{{{HCN
@@ -1842,8 +1862,10 @@ Grid MSN_D1Neuron{
 	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
+	polyConnect(timeStep, .[].Layer(RYR1Channels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(RYR1Channels), <>, <identifier="EC">);
+	polyConnect(timeStep, .[].Layer(RYR1Channels), <>, <identifier="dt">);
+	polyConnect(extracellularMedium, .[].Layer(RYR2Channels), <>, <identifier="EC">);
   //IP3R
 	polyConnect(timeStep, .[].Layer(IP3RChannels), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(IP3RChannels), <>, <identifier="EC">);

@@ -39,9 +39,15 @@ void CaConcentrationCompCategory::deriveParameters(RNG& rng)
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
     getSharedMembers().bmt =
         2.0 / (getSharedMembers().beta * *(getSharedMembers().deltaT));
+#elif CALCIUM_CYTO_DYNAMICS ==  REGULAR_DYNAMICS
+    getSharedMembers().bmt =
+        2.0 / ( *(getSharedMembers().deltaT));
 #else
     assert(0);
 #endif
+    assert(getSharedMembers().bmt > 0);
+    getSharedMembers().x_bmt =
+        2.0 / ( *(getSharedMembers().deltaT));
 
 #ifdef DEBUG_HH
 // std::cerr << getSimulation().getRank()

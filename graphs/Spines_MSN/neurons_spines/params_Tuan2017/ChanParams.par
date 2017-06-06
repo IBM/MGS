@@ -44,12 +44,14 @@ MTYPE BRANCHTYPE
 #{{{spine 2
 [2,3] 1  KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
      RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
-     IP3R [IP3] [Calcium, IP3] \
+     IP3R [IP3, Calcium, CalciumER] [IP3, Calcium, CalciumER] \
+     SERCA [Calcium, CalciumER] [Calcium, CalciumER] \
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
 [2,3] 3 KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
      RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
-     IP3R [IP3] [Calcium, IP3]  \
+     IP3R [IP3, Calcium, CalciumER] [IP3, Calcium, CalciumER] \
+     SERCA [Calcium, CalciumER] [Calcium, CalciumER] \
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
 #}}}
@@ -61,6 +63,7 @@ MTYPE BRANCHTYPE
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
      CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
+#     SERCA [Calcium, CalciumER] [Calcium, CalciumER] \
 #}}}
 #{{{GABAergic bouton 1
 1 [1,2] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
@@ -70,9 +73,10 @@ MTYPE BRANCHTYPE
      CaN    [Voltage] [Voltage, Calcium] CaPQ   [Voltage] [Voltage, Calcium] \
      CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage] [Voltage, Calcium] 
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
+#     SERCA [Calcium, CalciumER] [Calcium, CalciumER] \
 #}}}
 
-CHANNEL_COSTS 18
+CHANNEL_COSTS 22
 #{{{
 Nat     0.414243
 Nap     0.414243
@@ -91,11 +95,15 @@ CaT     0.254051
 PMCA    0.254051
 Kv31    0.254051
 IP3R    0.254051
+SERCA   0.254051
 RYR1    0.254051
+RYR2    0.254051
+NCX     0.254051
+MK     0.254051
 #}}}
 
 
-CHANNEL_PARAMS 26
+CHANNEL_PARAMS 28
 #{{{neuron 15
 #{{{Nat 
 # {{{Wolf-2005
@@ -267,19 +275,45 @@ BRANCHTYPE MTYPE
 #}}}
 #}}}
 #}}}
-#{{{ spines 3
-RYR 2
+#{{{ spines 5
+RYR1 3
+#{{{
 MTYPE BRANCHTYPE 
-[2, 3] 1       <gbar={0.0004}> 
-[2, 3] 3       <gbar={0.00000138}>
+[2, 3] 1       <v_ryr={4.28e-5}> 
+[2, 3] 3       <v_ryr={4.28e-5}>
+[2, 3] [1,3]   <int:numChan={49}, Ej={0.0714}>
+#}}}
+RYR2   3
+#{{{
+MTYPE BRANCHTYPE 
+[2, 3] 1       <v_ryr={4.28e-5}> 
+[2, 3] 3       <v_ryr={4.28e-5}>
+#0 [1,3:6] <Ej={0.0714}>
+#1 1       <Ej={0.0714}>
+#2 [1,3]   <Ej={0.0714}>
+# 0 [1,3:6] <int:numChan={49}, Ej={0.0714}>
+# 1 1       <int:numChan={49}, Ej={0.0714}>
+[2, 3] [1,3]   <int:numChan={49}, Ej={0.0714}>
+#}}}
 IP3R 2
+#{{{
 MTYPE BRANCHTYPE 
-[2, 3] 1       <gbar={0.0004}> 
-[2, 3] 3       <gbar={0.00000138}>
+[2, 3] 1       <v_IP3R={0.004}> 
+[2, 3] 3       <v_IP3R={0.004}>
+#}}}
 KAf 2
+#{{{
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={0.000138}>
 [2, 3] 3       <gbar={0.00000138}>
+#}}}
+SERCA  2
+#{{{
+MTYPE BRANCHTYPE 
+# [uM]
+2 [1,3] <SERCAConc={220}>
+3 [1,3] <SERCAConc={220}>
+#}}}
 #}}}
 #{{{Glutamatergic bouton 4
 #{{{ Nat

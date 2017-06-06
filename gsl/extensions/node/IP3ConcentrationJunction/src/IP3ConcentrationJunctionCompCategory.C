@@ -28,7 +28,14 @@ IP3ConcentrationJunctionCompCategory::IP3ConcentrationJunctionCompCategory(Simul
 void IP3ConcentrationJunctionCompCategory::deriveParameters(RNG& rng) 
 {
   if (getSharedMembers().deltaT) {
+#if IP3_CYTO_DYNAMICS == FAST_BUFFERING
     getSharedMembers().bmt = 2.0 / (getSharedMembers().beta * *(getSharedMembers().deltaT)) ;
+#elif IP3_CYTO_DYNAMICS == REGULAR_DYNAMICS
+    getSharedMembers().bmt = 2.0 / (*(getSharedMembers().deltaT)) ;
+#else
+    assert(0);
+#endif
+
 #ifdef DEBUG_HH
     std::cerr<<getSimulation().getRank()<<" : IP3ConcentrationJunctions : "<<_nodes.size()<<std::endl;
 #endif

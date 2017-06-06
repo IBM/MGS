@@ -55,11 +55,12 @@ RunSim()
 {
   #{{{
    echo "Output Folder: " $OutputFolderName
+   cp RYR_Markov_Williams2012.conf $OutputFolderName/ -L -r
    cp params $OutputFolderName/ -L -r
    cp *.gsl $OutputFolderName/ -L -r
    cp neurons.txt $OutputFolderName/ -L -r
    cp neurons/neuron.swc $OutputFolderName/ -L -r
-   cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
+   # cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/Model2Use.h $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/NTSMacros.h  $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/MaxComputeOrder.h $OutputFolderName/ -L -r

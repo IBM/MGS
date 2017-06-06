@@ -10,32 +10,33 @@ MTYPE BRANCHTYPE
 2     1
 3     1
 
-COMPARTMENT_VARIABLE_TARGETS 7
+COMPARTMENT_VARIABLE_TARGETS 4
 BRANCHTYPE MTYPE
 #{{{
-1 [1:10] Voltage Calcium  CalciumER IP3
-1 0      Voltage Calcium  CalciumER 
-2 [0:10] Voltage Calcium
-3 [0:10] Voltage Calcium  CalciumER  
-4 [0:10] Voltage Calcium  CalciumER
-5 [0:10] Voltage Calcium  CalciumER
-6 [0:10] Voltage Calcium  CalciumER
+[1,3] [2,3] Voltage Calcium  CalciumER IP3
+[1:7] [4,5] Voltage Calcium  
+[1,3,4,6] 0 Voltage Calcium  CalciumER 
+[2,5,7] 0   Voltage Calcium  
 #}}}
 
 COMPARTMENT_VARIABLE_COSTS 4
+#{{{
 Voltage 1.0
 Calcium 1.0
 CalciumER 1.0
 IP3 1.0
+#}}}
 
-COMPARTMENT_VARIABLE_PARAMS 1
+COMPARTMENT_VARIABLE_PARAMS 2
 Voltage 17
 MTYPE BRANCHTYPE
+#{{{units
 # Cm ~ [pF/um^2]
 # gLeak ~ [nS/um^2]
 # Vnew ~ [mV]
 ## NOTE: Make sure semi-colon separated
 ## higher gLeak; the more negative Vm at rest
+#}}}
 #{{{
 #{{{neurono 7
 0 1 <Cm=0.01; gLeak=0.0002>
@@ -61,4 +62,14 @@ MTYPE BRANCHTYPE
 4 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
 5 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
 5 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
+#}}}
+#}}}
+IP3 2
+MTYPE BRANCHTYPE
+#{{{units
+# IP3Clearance = [1/ms]
+#}}}
+#{{{ spines  2
+2 [1,3] <IP3Clearance=0.01>
+3 [1,3] <IP3Clearance=0.01>
 #}}}

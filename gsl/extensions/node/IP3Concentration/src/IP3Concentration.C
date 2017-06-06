@@ -474,12 +474,8 @@ void IP3Concentration::doForwardSolve()
 	//  1. ionic currents 
   for (int i = 0; i < size; i++)
   {
-#if IP3_CYTO_DYNAMICS == FAST_BUFFERING
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * IP3_cur[i];
-#elif IP3_CYTO_DYNAMICS == REGULAR_BUFFERING
-	assert(0); // need to implement
-#endif
     /* * * Sum Currents * * */
     // loop through different kinds of IP3 currents (LCCv12, LCCv13, R-type, ...)
 		// 1.a. producing I_IP3 [pA/um^2]
@@ -507,12 +503,8 @@ void IP3Concentration::doForwardSolve()
   /* FIX */
   if (isDistalCase3)
   {
-#if IP3_CYTO_DYNAMICS == FAST_BUFFERING
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * IP3_cur[0];
-#elif IP3_CYTO_DYNAMICS == REGULAR_BUFFERING
-	assert(0); // need to implement
-#endif
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];

@@ -104,55 +104,55 @@ void SingleChannelRYR::initialize(RNG& rng)
   Params param;
   for (unsigned i = 0; i < size; ++i)
   {
-		if (getSharedMembers().useExplicitNumberofChannels == false)
-			numChan[i] =std::ceil(ChanDenbar[i] * (*dimensions)[i]->surface_area);
-		else
-			numChan[i] = numChan_default;
-		assert(numChan[i]>0);
+    if (getSharedMembers().useExplicitNumberofChannels == false)
+      numChan[i] =std::ceil(ChanDenbar[i] * (*dimensions)[i]->surface_area);
+    else
+      numChan[i] = numChan_default;
+    assert(numChan[i]>0);
     /*
      * N_L = numChannels
      * mL  = numStates
 CALL: setup_LCC_Sun2000(lcc_matChannelRateConstant, N_L, mL, vOpenStates, &
-                           lcc_stateFromTo, lcc_indxK, &
-                                                    vClusterNumOpenChan, irow_L,
+lcc_stateFromTo, lcc_indxK, &
+vClusterNumOpenChan, irow_L,
 lcc_StateSpace, lcc_maxNumNeighbors)
 DEFINE: setup_LCC_Sun2000(channel_cMat, N_L, mL, vOpenStates, &
-   matK_channelstate_fromto, indxK, vClusterNumOpenChan, irow_L,
+matK_channelstate_fromto, indxK, vClusterNumOpenChan, irow_L,
 matClusterStateInfo_LCC, maxNumNeighbors) RESULT(res)
-                     channel_cMat[1..mL, 1..mL]
-                     vOpenStates [1..mL] =
-                                                                            */
+channel_cMat[1..mL, 1..mL]
+vOpenStates [1..mL] =
+*/
     param.setupCluster(
-        getSharedMembers().matChannelRateConstant, numChan[i],
-        getSharedMembers().numChanStates, getSharedMembers().vOpenStates,
-				//output
-				numClusterStates[i],
-        matClusterStateInfo[i], 
-				vClusterNumOpenChan[i],
-				maxNumNeighbors[i],
-				matK_channelstate_fromto[i], matK_indx[i]);
+	getSharedMembers().matChannelRateConstant, numChan[i],
+	getSharedMembers().numChanStates, getSharedMembers().vOpenStates,
+	//output
+	numClusterStates[i],
+	matClusterStateInfo[i], 
+	vClusterNumOpenChan[i],
+	maxNumNeighbors[i],
+	matK_channelstate_fromto[i], matK_indx[i]);
 
-		for (int ii = 0; ii < numClusterStates[i]; ii++)
-		{//initial cluster-state
-			if (matClusterStateInfo[i][Map1Dindex(ii,getSharedMembers().initialstate, getSharedMembers().numChanStates)] == numChan[i])
-			{
-				currentStateIndex[i] = ii;
-			}
-		}
+    for (int ii = 0; ii < numClusterStates[i]; ii++)
+    {//initial cluster-state
+      if (matClusterStateInfo[i][Map1Dindex(ii,getSharedMembers().initialstate, getSharedMembers().numChanStates)] == numChan[i])
+      {
+	currentStateIndex[i] = ii;
+      }
+    }
 
     // the matrix that keep update the true transition rate
     matChannelTransitionRate[i] =
-        new dyn_var_t[getSharedMembers().numChanStates *
-                      getSharedMembers().numChanStates]();
+      new dyn_var_t[getSharedMembers().numChanStates *
+      getSharedMembers().numChanStates]();
     updateChannelTransitionRate(matChannelTransitionRate[i], i);
 
     probStateTransition[i] =
-        new dyn_var_t[maxNumNeighbors[i]]();
+      new dyn_var_t[maxNumNeighbors[i]]();
 
-		dyn_var_t Caer0 = 1000.0 ; //[uM]
-		dyn_var_t Cacyto0 = 0.1; //[uM]
-		dyn_var_t zCaF = zCa * zF; 
-		v_ryr[i] = getSharedMembers().iryr *1e9 / (zCaF * (*dimensions)[i]->volume * FRACTIONVOLUME_CYTO * (Caer0 - Cacyto0)); // [ms^-1]
+    dyn_var_t Caer0 = 1000.0 ; //[uM]
+    dyn_var_t Cacyto0 = 0.1; //[uM]
+    dyn_var_t zCaF = zCa * zF; 
+    v_ryr[i] = getSharedMembers().iryr *1e9 / (zCaF * (*dimensions)[i]->volume * FRACTIONVOLUME_CYTO * (Caer0 - Cacyto0)); // [ms^-1]
   }
 }
 
