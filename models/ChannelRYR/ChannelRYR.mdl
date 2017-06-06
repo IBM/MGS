@@ -55,6 +55,9 @@ Node SingleChannelRYR Implements BranchDataProducer,
   // 4 0 <ChanDenbar_dists={380.0,480.0, 590}> 
   // 4 0 <ChanDenbar_values={0.000555,0.00555,0.000555}>
   //}}}
+  #ifdef MICRODOMAIN_CALCIUM
+  string microdomainName; //default is empty, i.e. see cytosolic Ca2+
+  #endif
   // reference data
   dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
   dyn_var_t []* Ca_ER; // ER Ca2+ concentration [uM]
@@ -89,6 +92,9 @@ Node SingleChannelRYR Implements BranchDataProducer,
      */
     InitPhase computeTadj; 
     InitPhase setupChannel;
+  #ifdef MICRODOMAIN_CALCIUM
+  string [] * tmp_microdomainNames;
+  #endif
     //}}}
   }
   //}}}
@@ -105,9 +111,26 @@ Node SingleChannelRYR Implements BranchDataProducer,
     string identifier; // name of the incoming node
     int idx;   // if identifier = name of the compartment variable 
     // then idx = index of the compartment on a branch
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //default is empty, i.e. Ca2+ from cytosolic volume
+#endif
   }
 
-  //Input (Connection setup)
+  //{{{Input (Connection setup)
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setCalciumMicrodomain;
+  Connection Pre Node (PSet.identifier=="compartment[Calcium(domain)]") Expects 
+  CaMicrodomainConcentrationArrayProducer
+  , CaMicrodomainNameArrayProducer
+  , BranchDataProducer, DimensionArrayProducer
+  {
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    CaMicrodomainConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    CaMicrodomainNameArrayProducer.microdomainNames >> Shared.tmp_microdomainNames;
+    setCalciumMicrodomain();
+  }
+#endif
   //Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer,
   Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer,
 	     BranchDataProducer, DimensionArrayProducer 
@@ -129,6 +152,7 @@ Node SingleChannelRYR Implements BranchDataProducer,
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
     TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
   /*}}}*/
 }
 

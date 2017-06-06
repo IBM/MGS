@@ -78,7 +78,14 @@ void CurrentDisplay::initialize(RNG& rng)
       {
         for (unsigned int i = 0; i < I_synapse.size(); ++i)
         {
-          assert(synapseBranchData[i]->size() == 2);
+          //NOTE: As the connectionn preCpt-SynapticCleft-postCpt
+          // is established for every receptor on that SynapticCleft
+          // then SynapticCleft->branchDataPrePost->size() is a multiple of 2
+          //  times number of receptor-type on that cleft
+          //  So we should not check this
+          //assert(synapseBranchData[i]->size() == 2);
+          //  But this is the right one
+          assert(synapseBranchData[i]->size() % 2 == 0);
           assert(synapseIndices[i].size() == 2);
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(

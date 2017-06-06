@@ -24,6 +24,11 @@ class SingleChannelRYR : public CG_SingleChannelRYR
   //user-defined
   void updateChannelTransitionRate(dyn_var_t*& matChannelTransitionRate,
                                    int cptIdx);
+  #ifdef MICRODOMAIN_CALCIUM
+  virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SingleChannelRYRInAttrPSet* CG_inAttrPset, CG_SingleChannelRYROutAttrPSet* CG_outAttrPset);
+  int _offset; //the offset due to the presence of different Ca2+-microdomain
+  #endif
+
 
   private:
 };

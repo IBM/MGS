@@ -1394,7 +1394,7 @@ Variable SimulationInfo
 Variable DetectDataChangeOneCompartment
 {
 //GOAL: Detect the change in data (e.g. Voltage, Calcium)  in a Junction, e.g. Soma or Spine-Head
-//LIMITATION: Limit to 1 Junction only
+//LIMITATION: With _MULTIPLE_SENSORS_DETECT_CHANGE  we don't have Limit to 1 Junction only
   //{{{
   //{{{passed by user
   float  criteria; // should be in the range 0.0 to 1.0 (percent of change threshold)
@@ -1402,13 +1402,19 @@ Variable DetectDataChangeOneCompartment
   //{{{internal/reference
   dyn_var_t* deltaT;
   dyn_var_t []* data_connect;
+#if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
   DimensionStruct* []* dimensions_connect;
   BranchDataStruct* branchData_connect;
   dyn_var_t []*  data;
-  float  data_prev;
+  float  data_prev;//  update when slope_absolute > criteria
   float slope; // slope of change = dA/dt
+#else
+  dyn_var_t []*[]  data;
+  float [] data_prev;//  update when slope_absolute > criteria
+  float [] slope; // slope of change = dA/dt
+#endif
   float slope_absolute; // absolute value of 'slope'
-  float  value_prev;  //  update when slope_absolute > criteria
+  //float  value_prev;  //  update when slope_absolute > criteria
   float timeWindow ;  // time duration from last update to now
   unsigned triggerWrite; // (1)True when slope_absolute > criteria //Cannot use bool due to limitation of Service* accepted data
   //}}}
@@ -1421,16 +1427,30 @@ Variable DetectDataChangeOneCompartment
     string identifier;
   }
 
-  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
+  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer
+#if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
+    , BranchDataProducer, DimensionArrayProducer 
+#endif
+  {
     CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+#if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
     DimensionArrayProducer.dimensionArray >> dimensions_connect;
     BranchDataProducer.branchData >> branchData_connect;
+#else
+#endif
     setUpPointers();
   }
-  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer
+#if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
+    , BranchDataProducer, DimensionArrayProducer 
+#endif
+  {
     VoltageArrayProducer.voltageArray >> data_connect; 
+#if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
     DimensionArrayProducer.dimensionArray >> dimensions_connect;
     BranchDataProducer.branchData >> branchData_connect;
+#else
+#endif
     setUpPointers();
   }
   Connection Pre Constant () Expects TimeStepProducer {

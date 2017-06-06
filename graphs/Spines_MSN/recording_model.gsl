@@ -225,8 +225,14 @@ spineneckFluxesDisplay.dataCollection(<>) on recOn;
 
 //presynapticSoma
 //{{{soma
-VoltageDisplay presynapticSomaDisplayVm<fileName= PathFileCombine("presynapticSomaVm.dat")>;
-presynapticSomaDisplayVm.dataCollection(<>) on recOn;
+VoltageDisplay presynapticSomaVmDisplay<fileName= PathFileCombine("presynapticSomaVm.dat")>;
+presynapticSomaVmDisplay.dataCollection(<>) on recOn;
+
+AnyCurrentDisplay presynapticSomaCurrentsDisplay<fileName= PathFileCombine("presynapticSomaCurrents.dat")>;
+presynapticSomaCurrentsDisplay.dataCollection(<>) on recOn;
+
+AnyFluxDisplay presynapticSomaFluxesDisplay<fileName= PathFileCombine("spineheadFluxes.dat")>;
+presynapticSomaFluxesDisplay.dataCollection(<>) on recOn;
 //}}}
 
 

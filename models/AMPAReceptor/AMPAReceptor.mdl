@@ -168,7 +168,8 @@ This will enable having only 1 neurotransmitter variable in SynapticCleft
   {//post-side
   //{{{
 #ifdef KEEP_PAIR_PRE_POST
-    BranchDataProducer.branchData >> branchDataPrePost; //- old design
+    //no-need as we already have this information from 'synapticCleft' connection
+    //BranchDataProducer.branchData >> branchDataPrePost; //- old design
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif
@@ -354,7 +355,8 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
   {//post-side
     //{{{
 #ifdef KEEP_PAIR_PRE_POST
-    BranchDataProducer.branchData >> branchDataPrePost;
+    //no-need as we already have this information from 'synapticCleft' connection
+    //BranchDataProducer.branchData >> branchDataPrePost;
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif

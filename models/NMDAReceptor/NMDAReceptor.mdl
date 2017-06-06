@@ -86,6 +86,9 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   DimensionStruct* []* dimensions;
   //}}}
   //}}}
+#ifdef MICRODOMAIN_CALCIUM
+  string microdomainName; //default is empty, i.e. see cytosolic Ca2+
+#endif
 
   Shared {
     //{{{ 
@@ -110,6 +113,7 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     dyn_var_t* Glycine; // [uM]
 
     //Plasticity params
+    //{{{
     int plasticityOn;
     int plasticityStartAt;
     int plasticityStopAt;
@@ -119,11 +123,17 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     dyn_var_t gamma_p;
     dyn_var_t tau;
     dyn_var_t w_th;
+    //}}}
 
     //Meta-plasticity NMDAR
+    //{{{
     dyn_var_t deltaNMDAR;
     dyn_var_t alphaBuffer;
     dyn_var_t tauBuffer;
+    //}}}
+#ifdef MICRODOMAIN_CALCIUM
+    string [] * tmp_microdomainNames;
+#endif
     //}}}
     int[] * indexPrePost_connect;
    }
@@ -155,6 +165,9 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     string identifier; 
     int idx;   // index of the compartment on a branch
           // if identifier is the name of the compartment variable
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //empty means current going straight to well-mixed cytosol
+#endif
   }
 
   UserFunction setPostIndex;
@@ -205,7 +218,8 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     ,  BranchDataProducer {//the info from postsynaptic-side is passed to receptor directly
   //{{{
 #ifdef KEEP_PAIR_PRE_POST
-    BranchDataProducer.branchData >> branchDataPrePost;
+    //no-need as we already have this information from 'synapticCleft' connection
+    //BranchDataProducer.branchData >> branchDataPrePost;
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif
@@ -217,6 +231,20 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   //}}}
   }
 
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setCalciumMicrodomain;
+  Connection Pre Node (PSet.identifier=="compartment[Calcium(domain)]") Expects 
+    CaMicrodomainConcentrationArrayProducer
+    , CaMicrodomainNameArrayProducer
+    //, BranchDataProducer, DimensionArrayProducer
+  {
+      //BranchDataProducer.branchData >> branchData;
+      //DimensionArrayProducer.dimensionArray >> dimensions;
+      CaMicrodomainConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+      CaMicrodomainNameArrayProducer.microdomainNames >> Shared.tmp_microdomainNames;
+      setCalciumMicrodomain();
+  }
+#endif
   Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
     CaConcentrationArrayProducer {
     //REMEMBER: When use in C++ code, only use Ca_IC[indexPost]
