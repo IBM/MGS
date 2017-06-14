@@ -26,7 +26,7 @@ class AnyCurrentDisplay : public CG_AnyCurrentDisplay
   virtual void duplicate(std::auto_ptr<CG_AnyCurrentDisplay>& dup) const;
 
   private:
-  std::ofstream* outFile;
+  std::ofstream* outFile = 0;
 };
 
 #endif

@@ -25,7 +25,7 @@ class AnyConcentrationDisplay : public CG_AnyConcentrationDisplay
   virtual void duplicate(std::auto_ptr<CG_AnyConcentrationDisplay>& dup) const;
 
   private:
-  std::ofstream* outFile;
+  std::ofstream* outFile = 0;
 };
 
 #endif

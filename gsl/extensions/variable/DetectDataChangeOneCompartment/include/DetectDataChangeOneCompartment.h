@@ -19,6 +19,8 @@ class DetectDataChangeOneCompartment : public CG_DetectDataChangeOneCompartment
       virtual void duplicate(std::auto_ptr<DetectDataChangeOneCompartment>& dup) const;
       virtual void duplicate(std::auto_ptr<Variable>& dup) const;
       virtual void duplicate(std::auto_ptr<CG_DetectDataChangeOneCompartment>& dup) const;
+   private:
+      //bool pass_nadir_or_peak(false);
 };
 
 #endif

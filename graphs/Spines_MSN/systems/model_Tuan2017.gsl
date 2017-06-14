@@ -215,7 +215,7 @@ print("Case 00: resting");
   //              20.0-22.0-degree Celcius (room)
   //       281K = 7.85-degree Celcius (cold)
 #define Temperature_value  308.15 // [K] Kelvin
-#define Vrest_value  -74.0 // [mV]
+#define Vrest_value  -79.50 // [mV] -- medium-sized spiny neuron
 //#define E_leak_value -90.0 // [mV]
 #define E_leak_value Vrest_value
 //#define Erev_HCN  -45.0 // [mV]
@@ -764,10 +764,12 @@ NodeType SynapticCleft(
         Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
         Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
 #elif GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
-        Glut_max= NTGlutamate_max,  
+        //Glut_max= NTGlutamate_max,  
+        //Glut_max= 50.0,  //peak is 400uM
+        Glut_max= 110.0,  
         Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
         Kp_Glut=5.0,        // mV   steepness of Glut increase as a function of Vpre
-        tau_Glut = 1.0,  // [ms]  //dont make it bigger
+        tau_Glut = 1.0,  // [ms]  //dont make it bigger than 1.0ms
 #endif
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
         GABA_max= NTGABA_max,  
@@ -894,7 +896,7 @@ SimulationInfo simInfo<recordIntervalInIterations=RecordInterval>;
 
 #ifdef ADAPTIVE_IO
 VariableType DetectDataChangeOneCompartment {initialize->initialize4, calculateInfo->updateNMDADepPlasticity};
-DetectDataChangeOneCompartment somaVoltageDetect<criteria=0.010>; //record with change > x% previous value
+DetectDataChangeOneCompartment somaVoltageDetect<criteria=0.010, temporal_resolution=0.05>; //record with change > x% previous value, and max-temporal-resolution is in 'ms', i.e. 0.0212 millisecond maps to 47KHz
 #endif
 //Service <serviceAccessorName> (service)
 // service = query_path_product | declarator ','  string_literal_list

@@ -34,7 +34,7 @@ class CaCurrentDisplay : public CG_CaCurrentDisplay
       virtual void duplicate(std::auto_ptr<Variable>& dup) const;
       virtual void duplicate(std::auto_ptr<CG_CaCurrentDisplay>& dup) const;
    private:
-      std::ofstream* outFile;
+      std::ofstream* outFile = 0;
 };
 
 #endif

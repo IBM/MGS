@@ -701,6 +701,18 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", NEURON
 #endif
   //}}}
   //{{{head
+  //{{{Vm+Ca
+  polyConnect(timeStep, spineheadVoltageDisplay, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineheadVoltageDisplay, <>, <>);
+#if defined(SIMULATE_CACYTO)
+   polyConnect(timeStep, spineheadCalciumDisplay, <>, <>);
+   polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineheadCalciumDisplay, <>, <>);
+#endif
+#if defined(SIMULATE_CAER)
+   polyConnect(timeStep, spineheadCalciumERDisplay, <>, <>);
+   polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="CalciumER", BRANCHORDER=0, NEURON_INDEX=spineIndex>), spineheadCalciumERDisplay, <>, <>);
+#endif
+  //}}}
 //{{{all-in-one-file - currents
 polyConnect(timeStep, spineheadCurrentsDisplay, <>, <>);
 #ifdef IDEA_ILEAK
@@ -767,6 +779,10 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", NEURON
 //}}}
   //}}}
   //{{{neck
+  //}}}
+  //{{{neurotransmitter
+  polyConnect(timeStep, synapseConcentrationDisplay, <>, <>);
+  polyConnect( tissueFunctor("Probe", <CATEGORY="CLEFT", TYPE="tight", BRANCHORDER=0, NEURON_INDEX=spineIndex>), synapseConcentrationDisplay, <>, <identifier="CLEFT", type="Glut">);
   //}}}
   //}}}
   //{{{bouton

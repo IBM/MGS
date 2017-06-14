@@ -21,6 +21,7 @@
 #include "math.h"
 #include <limits>
 #include "NTSMacros.h"
+#include "NumberUtils.h"
 
 // Destexhe-Mainen-Sejnowski (1994)
 // The Glutamate neurotransmitter concentration, i.e. [NT]
@@ -41,6 +42,7 @@
 
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 #define NEUROTRANSMITTER      *Glut
+
 #endif
 
 #define DT (*(getSharedMembers().deltaT))
@@ -57,7 +59,6 @@
 //NOTE: TAU = time-constant for learning
 //       i.e. Ca2+-dependent learning rate is 1/TAU
   #define Cai_base  0.1 // [uM]
-#else
 #endif
 
 #if RECEPTOR_NMDA == NMDAR_BEHABADI_2012
@@ -90,9 +91,11 @@
 //#define MGBLOCK 1.0/(1.0 +
 // exp(-0.122*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57)
 ////Adjusted sigmoid to not get calcium transients at -60mV
+
 #elif RECEPTOR_NMDA == NMDAR_POINTPROCESS
 // No Mg2+ blocks
 #define MGBLOCK  1
+
 #endif
 
 void NMDAReceptor::initializeNMDA(RNG& rng)
@@ -155,7 +158,9 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 #else
     dyn_var_t cai = (*Ca_IC)[indexPost];
 #endif
+
 #endif
+
   // Updates the channel reversal potential
   // RT/(zCa*F) * ln(Cao/Cai)
   E_Ca = (R_zCaF * *(getSharedMembers().T) *
@@ -226,8 +231,8 @@ void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
       {  // Shouval & Bear & Cooper 2002 PNAS
   #define TAU (100.0 / (100.0 / 0.001 + pow(cai, 3)) + 1000.0)
   #define CAFUN                                       \
-  	(0.25 + sigmoid(cai - 0.55, 80) - \
-  	 0.25 * sigmoid(cai - 0.35, 80))
+  	(0.25 + sigmoid(cai - 0.55, 80.0) - \
+  	 0.25 * sigmoid(cai - 0.35, 80.0))
         w = w + (1.0 / TAU) * (CAFUN - w);
       }
     }
@@ -251,10 +256,6 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
   }
 }
 
-dyn_var_t NMDAReceptor::sigmoid(dyn_var_t alpha, dyn_var_t beta)
-{//TUAN TODO move to an external NumberUtility with Template
-  return exp(beta * alpha) / (1 + exp(beta * alpha));
-}
 
 NMDAReceptor::~NMDAReceptor() {}
 void NMDAReceptor::setPrePostIndex(const String& CG_direction,

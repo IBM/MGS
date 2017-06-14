@@ -108,6 +108,10 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   //{{{Data
   dyn_var_t I; // [pA]
   dyn_var_t peak;
+  //{{{for white-noise
+  dyn_var_t mean; 
+  dyn_var_t sd;
+  //}}}
   dyn_var_t period;
   dyn_var_t duration;
   dyn_var_t delay;
@@ -1398,6 +1402,8 @@ Variable DetectDataChangeOneCompartment
   //{{{
   //{{{passed by user
   float  criteria; // should be in the range 0.0 to 1.0 (percent of change threshold)
+  float  temporal_resolution; // (millisecond) the maximum temporal resolution that the machine can do I/O
+     // e.g. 47KHz sampling frequency maps to 0.0212 (ms)
   //}}}
   //{{{internal/reference
   dyn_var_t* deltaT;

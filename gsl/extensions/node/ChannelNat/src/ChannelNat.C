@@ -93,7 +93,7 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 //#define BHC 0.005882352941176
 //#define BHV -50.0
 //#define BHD 10.0
-////#endif
+
 #elif CHANNEL_NAT == NAT_TRAUB_1994
 //Developed for Gamagenesis in interneurons
 //All above conventions for a_m, a_h, b_h remain the same as above except b_m below
@@ -172,8 +172,8 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 //    at 35.0 Celcius
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
-//#define VHALF_M -23.9  //original Wolf
-#define VHALF_M -30.9
+#define VHALF_M -23.9  //original Wolf
+//#define VHALF_M -30.9
 #define k_M -11.8
 #define VHALF_H -62.9
 #define k_H 10.7

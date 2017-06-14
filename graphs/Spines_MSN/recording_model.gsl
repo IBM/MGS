@@ -184,6 +184,9 @@ spineCalciumDisplay.dataCollection(<>) on recOn;
 
 CalciumDisplay spineCalciumERDisplay<fileName=PathFileCombine("spineCalciumER.dat")>;
 spineCalciumERDisplay.dataCollection(<>) on recOn;
+
+AnyConcentrationDisplay synapseConcentrationDisplay<fileName=PathFileCombine("synapseConcentration.dat")>;
+synapseConcentrationDisplay.dataCollection(<>) on recOn;
 //}}}
 //{{{NT
 //ConcentrationDisplay cleftConcentrationDisplay<fileName=PathFileCombine("cleftNT.dat")>;
@@ -231,7 +234,7 @@ presynapticSomaVmDisplay.dataCollection(<>) on recOn;
 AnyCurrentDisplay presynapticSomaCurrentsDisplay<fileName= PathFileCombine("presynapticSomaCurrents.dat")>;
 presynapticSomaCurrentsDisplay.dataCollection(<>) on recOn;
 
-AnyFluxDisplay presynapticSomaFluxesDisplay<fileName= PathFileCombine("spineheadFluxes.dat")>;
+AnyFluxDisplay presynapticSomaFluxesDisplay<fileName= PathFileCombine("presynapticSomaFluxes.dat")>;
 presynapticSomaFluxesDisplay.dataCollection(<>) on recOn;
 //}}}
 

@@ -37,7 +37,7 @@ class VoltageClamp : public CG_VoltageClamp
       virtual void duplicate(std::auto_ptr<Variable>& dup) const;
       virtual void duplicate(std::auto_ptr<CG_VoltageClamp>& dup) const;
    private:
-      std::ofstream* outFile;
+      std::ofstream* outFile = 0;
       float _timeStart; //time point when start Vclamp
       float _Vstart;  //voltage at timeStart
       int _status; // 

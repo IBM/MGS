@@ -41,7 +41,7 @@ class CalciumDisplay : public CG_CalciumDisplay
   virtual void duplicate(std::auto_ptr<CG_CalciumDisplay>& dup) const;
 
   private:
-  std::ofstream* outFile;
+  std::ofstream* outFile = 0;
 };
 
 #endif

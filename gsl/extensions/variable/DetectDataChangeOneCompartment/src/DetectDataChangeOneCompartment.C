@@ -40,9 +40,10 @@ bool DetectDataChangeOneCompartment::check_one_sensor(int ii)
          (prev_slope*slope[ii] < 0.0f))
    {// greater than threshold or 'pass a peak/nadir'
       sensor_triggered = true;
+      //if (prev_slope*slope[ii] < 0.0f)
+      //   pass_nadir_or_peak = true;
    }
    return sensor_triggered;
-
 }
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
 void DetectDataChangeOneCompartment::calculateInfo(RNG& rng) 
@@ -73,12 +74,15 @@ void DetectDataChangeOneCompartment::calculateInfo(RNG& rng)
       if (sensor_triggered)
          break;
    }
+   //if (sensor_triggered and (pass_nadir_or_peak or timeWindow >= temporal_resolution))
+   //if (sensor_triggered and (timeWindow >= temporal_resolution))
    if (sensor_triggered)
    {// greater than threshold or 'pass a peak/nadir'
       for (int ii = 0; ii < data.size(); ii++)
          data_prev[ii] = (*(data[ii]))[0];
       timeWindow = 0.0;
       triggerWrite = 1;
+      //pass_nadir_or_peak = false;
    }
    else{
       triggerWrite = 0;

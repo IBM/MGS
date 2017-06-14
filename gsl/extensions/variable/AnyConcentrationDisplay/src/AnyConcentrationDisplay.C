@@ -253,6 +253,7 @@ void AnyConcentrationDisplay::setUpPointers(const String& CG_direction, const St
       cleftBranchData.push_back((*cleftBranchDataConnect)[0]);
     }
     strConcentrationTypeOnCleft.push_back(type);
+    cleftIndices = ind;
   }
   dimensions_connect = 0;
 }

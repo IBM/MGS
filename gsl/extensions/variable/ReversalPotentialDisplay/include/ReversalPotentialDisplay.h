@@ -40,7 +40,7 @@ class ReversalPotentialDisplay : public CG_ReversalPotentialDisplay
   virtual void duplicate(std::auto_ptr<CG_ReversalPotentialDisplay>& dup) const;
 
   private:
-  std::ofstream* outFile;
+  std::ofstream* outFile = 0;
 };
 
 #endif
