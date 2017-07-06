@@ -42,9 +42,10 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 //#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
 #elif CHANNEL_KAs == KAs_WOLF_2005
-//  Inactivation from
+//  Inactivation from young adult (3-4 weeks) Sprague-Dawley rat
+//      - attributed to Kv1.2 subunits
 //  Activation from
-//    1. Shen et al. (2004)
+//    1. Shen et al. (2004) 
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -27.0

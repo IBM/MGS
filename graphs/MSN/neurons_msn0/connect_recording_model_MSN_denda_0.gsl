@@ -1,5 +1,5 @@
 
- //neuron 
+ //{{{neuron 
  //{{{
 #define neuronIndex 0
  //{{{soma
@@ -426,7 +426,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaT", NEURON_INDE
   TissueSite basalDen05xbrOrder1_site(43.87, 17.24, -12.84, 4.0); // 054 um, radius = 2.23um
   polyConnect(timeStep, basalDen05xbrOrder1VoltageDisplay, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", NEURON_INDEX=neuronIndex>), basalDen05xbrOrder1VoltageDisplay, <>, <site=basalDen05xbrOrder1_site>);
-#if SIMULATION_INVOLVE >= VM_CACYTO
+#if defined(SIMULATE_CACYTO) 
   polyConnect(timeStep, basalDen05xbrOrder1CalciumDisplay, <>, <>);
   polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", NEURON_INDEX=neuronIndex>), basalDen05xbrOrder1CalciumDisplay, <>, <site=basalDen05xbrOrder1_site>);
 #endif

@@ -82,7 +82,7 @@ void CoordsStruct::doInitialize(const NDPairList& ndplist)
       }
       if (!CG_found) {
          std::ostringstream os;
-         os << (*it)->getName() << " can not be handled.";
+         os << (*it)->getName() << " can not be handled in " << typeid(*this).name();
          os << " HINTS: the data member name is not available but you may be using it somewhere (e.g. in GSL file or the parameter file)";
          throw SyntaxErrorException(os.str());
       }

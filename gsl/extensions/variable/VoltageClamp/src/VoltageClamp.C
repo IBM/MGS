@@ -17,13 +17,32 @@
 #include "VoltageClamp.h"
 #include "CG_VoltageClamp.h"
 #include <memory>
+#include <typeinfo>
 
 void VoltageClamp::initialize(RNG& rng) 
 {
-  outFile = new std::ofstream(fileName.c_str());
-  (*outFile)<<"# Time\tCurrent\n";
+  if (type == 1)
+  {
+    outFile = new std::ofstream(fileName.c_str());
+    (*outFile)<<"# Time\tCurrent\n";
+  }
+  if (not deltaT)
+  {
+    std::cerr << "ERROR: Please connect deltaT to " << typeid(*this).name() << std::endl;
+  }
+  if (not V)
+  {
+    std::cerr << "ERROR: Please connect Voltage to be clamped to " << typeid(*this).name() << std::endl;
+  }
   assert(deltaT);
-  Vprev = (*V)[idx];
+  assert(V);
+
+  //NOTE: If not defined, idx=0 default
+  surfaceArea = &(dimensions[idx]->surface_area);
+  _isOn = false;
+  _status = VoltageClamp::NO_CLAMP;
+
+  _Vprev = (*V)[idx];
   waveformIdx = waveform.size();
 }
 
@@ -32,7 +51,7 @@ void VoltageClamp::updateI(RNG& rng)
   Igen = 0;
   bool inject=false;
   float targetV=0;
-  if (isOn) {
+  if (_isOn) {
     targetV=command;
     inject=true;
   }
@@ -42,15 +61,48 @@ void VoltageClamp::updateI(RNG& rng)
     inject=true;
   }
   if (inject) {
-    Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
-    (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen<<" "<<Cm<<" "<<targetV<<" "<<(*V)[idx]<<" "<<*deltaT<<"\n";
+    if (type == 1)
+    {
+      Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
+      (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen<<" "<<Cm<<" "<<targetV<<" "<<(*V)[idx]<<" "<<*deltaT<<"\n";
+    }
+    else if (type == 2)
+    {
+      (*V)[idx] = targetV;
+      if (_status == VoltageClamp::SLOPE_ON)
+      {
+        float currentTime = getSimulation().getIteration() * (*deltaT);
+        if (currentTime < _timeStart + gainTime)
+        {
+          (*V)[idx] = _Vstart + (currentTime - _timeStart)/(gainTime) * (targetV - _Vstart) ;
+        }
+        else{
+          _status = VoltageClamp::FLAT_ZONE;
+        }
+      }
+      else if (_status == VoltageClamp::SLOPE_OFF)
+      {
+        float currentTime = getSimulation().getIteration() * (*deltaT);
+        if (currentTime < _timeStart + gainTime)
+        {
+          (*V)[idx] = targetV + (_timeStart + gainTime - currentTime )/(gainTime) * (_Vstart - targetV) ;
+        }
+        else{
+          _status = VoltageClamp::FLAT_ZONE;
+        }
+      }
+    }
+    else{
+      std::cerr << "Unsupported VoltgeClamp type" << std::endl;
+    }
   }
-  Vprev = (*V)[idx];
+  _Vprev = (*V)[idx];
 }
 
 void VoltageClamp::finalize(RNG& rng) 
 {
-  outFile->close();
+  if (type == 1)
+    outFile->close();
 }
 
 void VoltageClamp::startWaveform(Trigger* trigger, NDPairList* ndPairList) 
@@ -65,18 +117,49 @@ void VoltageClamp::setCommand(Trigger* trigger, NDPairList* ndPairList)
   for (; iter!=end; ++iter) {
     if ( (*iter)->getName() == "command" ) {
       command = static_cast<NumericDataItem*>((*iter)->getDataItem())->getFloat();
+      _timeStart = getSimulation().getIteration() * (*deltaT);
+      _Vstart = (*V)[idx];
+      if (_Vprev < command)
+      {
+        _status = VoltageClamp::SLOPE_ON;
+      }
+      else{
+        _status = VoltageClamp::SLOPE_OFF;
+      }
     }
   }
 }
 
 void VoltageClamp::toggle(Trigger* trigger, NDPairList* ndPairList) 
 {
-  NDPairList::iterator iter=ndPairList->begin();
-  NDPairList::iterator end=ndPairList->end();
-  for (; iter!=end; ++iter) {
-    if ( (*iter)->getName() == "toggle" ) {
-      isOn = (static_cast<NumericDataItem*>((*iter)->getDataItem())->getInt()>0) ? true : false;
+  if (ndPairList == 0)
+  {
+    _isOn = not _isOn;
+  }
+  else{
+    NDPairList::iterator iter=ndPairList->begin();
+    NDPairList::iterator end=ndPairList->end();
+    for (; iter!=end; ++iter) {
+      if ( (*iter)->getName() == "toggle" ) {
+        _isOn = (static_cast<NumericDataItem*>((*iter)->getDataItem())->getInt()>0) ? true : false;
+      }
     }
+
+  }
+  if (_isOn)
+  {
+    _timeStart = getSimulation().getIteration() * (*deltaT);
+    _Vstart = (*V)[idx];
+    if (_Vprev < command)
+    {
+      _status = VoltageClamp::SLOPE_ON;
+    }
+    else{
+      _status = VoltageClamp::SLOPE_OFF;
+    }
+  }
+  else{
+    _status = VoltageClamp::NO_CLAMP;
   }
   waveformIdx=waveform.size();
 }

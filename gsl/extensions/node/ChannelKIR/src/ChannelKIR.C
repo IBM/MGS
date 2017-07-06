@@ -18,6 +18,10 @@ static pthread_once_t once_KIR = PTHREAD_ONCE_INIT;
 //
 #if CHANNEL_KIR == KIR_WOLF_2005
 //  Kir2.1 
+//  non-inactivating KIR current ~ KIR2 family (here is Kir2.1)
+//     as found in substance P-expressing MSN in NAc [Mermelstein et al., 1998]
+//  steady-state activation curve: use KIR channel (Kir2.1) data from 
+//     human embryonic kidney cells [Kubo, Murata, 2001]
 /* Mermelstein PG, Song WJ, Tkatch T, Yan Z, Surmeier DJ (1998) Inwardly
 rectifying potassium (IRK) currents are correlated with IRK subunit
 expression in rat nucleus accumbens medium spiny neurons. J Neurosci

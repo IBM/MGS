@@ -49,6 +49,9 @@ TriggerWorkUnit.C \
 UnsignedTrigger.C \
 UnsignedTriggerDescriptor.C \
 UnsignedTriggerFactory.C \
+SemaphoreTrigger.C \
+SemaphoreTriggerDescriptor.C \
+SemaphoreTriggerFactory.C \
 
 # define the full pathname for each file
 SRC_$(THIS_STEM) = $(patsubst %,$(SRC_PREFIX)/%, $(SOURCES))

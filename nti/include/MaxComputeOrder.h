@@ -108,7 +108,14 @@
 //#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
 //#define TOUCHDETECT_SINGLENEURON_SPINES
 //#define RESAMPLING_SPACE_VOLUME
+
+
+//{{{ different strategy when modeling soma
+// STRATEGY 01 - simply treate as a single point (i.e. no volume is considered)
 //#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as a single point
+
+// STRATEGY 02 - adjust the soma to consider 'effect' in that the real-shape soma may obstruct the
+//               propagation of electrical signal than the spherical one
 #ifndef STRETCH_SOMA_WITH   // only work when disable USE_SOMA_AS_POINT
 #define STRETCH_SOMA_WITH 00.0    
 //#define STRETCH_SOMA_WITH 050.0 
@@ -118,12 +125,35 @@
 //#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 25.0    
 #endif
+
+// STRATEGY 03 - make the neck smaller is another way to treat if real-shape soma obstruct the 
+//               propagation of electrical signal than the spherical one
+//{{{
 #ifndef SCALING_NECK_FROM_SOMA
 #define SCALING_NECK_FROM_SOMA 1.0  //>1: make neck smaller
 //#define SCALING_NECK_FROM_SOMA 10.0  //>1: make neck smaller
 #endif
+//}}}
+
+// STRATEGY for Calcium in Soma calculation
+//{{{ decide if we want to simulate Ca2+ in soma as the concentration in sub-shell volume or not
+//  here it use 2 parameters
+//      1. SHELL_DEPTH - the depth of the cell from the bio-membrane
+//      2. THRESHOLD_SIZE_R_SOMA - the minimal size to consider soma-Neuron 
+//                       to distinguish from 'soma'-spineHead
+//#define USE_SUBSHELL_FOR_SOMA
+#ifdef USE_SUBSHELL_FOR_SOMA
+#define SHELL_DEPTH  1.0  // [um]
+#define THRESHOLD_SIZE_R_SOMA  2.0 // [um]
+#endif
+//}}}
+//}}}
+
+// STRATEGY for 'junction' compartment
 #define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
                         // if not; then Rb = ((*diter)->r + dimension->r)/2
+                        
+//{{{
 //#define USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION //if defined, then 
          // (suppose Vm[size-1]) instead of using proximalVoltage, and the distance between them
          // it use V0 (or Vterminal_proximal) and distance as length/2
@@ -132,10 +162,18 @@
          //  with weight is inverse of distance
          //     w1 = 1/(proximalDimension->length)
          //     w2 = 1/(dimensions[size-1]->length)
+//}}}
 
+//{{{ switch between Kozloski-2011 implementation of discritization vs. original paper's method
+// The Mascagni (1995) is supposed to be the right version
 #define NEW_DISTANCE_NONUNIFORM_GRID //if defined, then ensure 
 //       dsi = (dx1 + dx2)/2 - Check Mascagni (1995, pg 33)
-//#define CONSIDER_MANYSPINE_EFFECT_OPTION1 // if defined, the new codes that handle the case when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ propagate to the nneck needs to be equally divided  (this is important for numerical stability)
+//}}}
+
+//{{{ choices for how data is exchanged when we couple spines to shaft
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION1 // if defined, the new codes that handle the case 
+//   when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ 
+//   propagate to the nneck needs to be equally divided  (this is important for numerical stability)
        // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION2
 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2 //option 2 means we convert into 
@@ -144,8 +182,10 @@
        // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION1
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+//}}}
 
 
+//{{{ modeling IP3 concentration
 #define IP3_DIFFUSIONAL_VAR 3
 // rather than modeling IP3 as a diffusional variable; we can 
 // ...just consider it is a scalar variable
@@ -166,6 +206,7 @@
 //#define IP3_MODELAS_FUNCTION_GLUT // this is used in ChannelIP3 model which avoid having IP3 as explicit compartmental variable & the [IP3] is a function of [Glut] in the synapse
 //    ALWAYS DISABLE this for now
 #endif
+//}}}
 
 //#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
@@ -174,5 +215,53 @@
  // .. ALWAYS ENABLE THIS: as we haven't made produce post-index available yet 
  // NOTE: This is 2-element array: with pre-side first then post-side
 //#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
+
+//{{{ MICRODOMAIN_CALCIUM
+//#define MICRODOMAIN_CALCIUM  //if defined, then the system enable the capability to model microdomain calcium volume where ion can flow into this first before going to the cytosolic bath --> maybe we can use this to avoid the sub-shell feature
+// LIMITATION: Only accept 'Channels' to connect to 'Compartments[Calcium]' or 'Junctions[Calcium]'
+//         Channels can produce HH-current or GHK-current 
+//      Do not accept Receptor connecting to microdomain
+// Now we need to decide where to pass in data for v_efflux and volume_microdomain
+#define _MICRODOMAIN_DATA_FROM_NTSMACRO   0 
+#define _MICRODOMAIN_DATA_FROM_CHANPARAM  1
+#define MICRODOMAIN_DATA_FROM _MICRODOMAIN_DATA_FROM_NTSMACRO
+// This needs to be implemented in ChanParam if _MICRODOMAIN_DATA_FROM_CHANPARAM is used
+//#MICRODOMAIN_PARAMS 2
+//## v_efflux in [1/ms]
+//## volume_microdomain in [% of cytosolic-Ca2+]
+//#domain 1
+//#BRANCHTYPE
+//#[1:2]  <v_efflux=1.4; volume_microdomain=0.2>
+//#domain2 1
+//#BRANCHTYPE
+//#[1:2]  <v_efflux=1.4; volume_microdomain=0.02>
+
+//NOTE: Use this if _MICRODOMAIN_DATA_FROM_NTSMACRO is used
+//#define GENERATE_V_EFFLUX(Argument V_EFFLUX_##Argument
+//default value if MICRODOMAIN_DATA_FROM_NTSMACRO is used
+//#define V_EFFLUX  0.1    //[1/ms]
+//Here, we assume maximum 3 microdomains on 1 branch/junction
+//                and the microdomains must be named using 'domain1', 'domain2', 'domain3'
+#define V_EFFLUX_DOMAIN1  0.1    //[1/ms]
+#define V_EFFLUX_DOMAIN2  0.1    //[1/ms]
+#define V_EFFLUX_DOMAIN3  0.1    //[1/ms]
+#define DEPTH_MICRODOMAIN1  10.0  //[nanometer]
+#define DEPTH_MICRODOMAIN2  10.0  //[nanometer]
+#define DEPTH_MICRODOMAIN3  10.0  //[nanometer]
+#define FRACTION_SURFACEAREA_MICRODOMAIN1 1.0  //[% of membrane surface area]
+#define FRACTION_SURFACEAREA_MICRODOMAIN2 1.0  //[% of membrane surface area]
+#define FRACTION_SURFACEAREA_MICRODOMAIN3 1.0  //[% of membrane surface area]
+//}}}
+
+//#define DEBUG_CPTS  //this option should be set via gsl/configure.py
+//   It tells to generate code that print out 
+//   statistical data about mean +/- SD of
+//     1. surfaceArea
+//     2. volume
+//     3. length
+//  in the following branch-types
+//     A. AXON
+//     B. BASALDEN
+//     C. APICALDEN
 
 #endif //_MAXCOMPUTEORDER_H

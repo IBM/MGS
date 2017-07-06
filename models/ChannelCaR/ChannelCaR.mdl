@@ -114,7 +114,11 @@ Node ChannelCaR_GHK Implements
 	// 1 0 <gbar={0.00992}>
 	// 4 0 <gbar_branchorders={0, 1, 2}> 
 	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
+#ifdef MICRODOMAIN_CALCIUM
+  string microdomainName; //default is empty, i.e. see cytosolic Ca2+
+#endif
 	//}}}
+
 
 	//SHARED DATA
 	Shared {//in xxxCompCategory.C
@@ -126,47 +130,73 @@ Node ChannelCaR_GHK Implements
 		//   and tempt. used for the simulation 
 		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
 		InitPhase computeTadj; 
+#ifdef MICRODOMAIN_CALCIUM
+    string [] * tmp_microdomainNames;
+#endif
 		//}}}
 	}
 	//}}}
 
-	RuntimePhase update();
-	InitPhase initialize;
-
+  //{{{output data
 	CaCurrentArrayProducer.currents << &I_Ca;
 	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
+  //}}}
+
+  //{{{Phases methods
+	RuntimePhase update();
+	InitPhase initialize;
+  //}}}
+
 
 	InAttrPSet {//information of the incoming connection
 		string identifier; // name of the incoming node
 		int idx;   // if identifier = name of the compartment variable 
 		// then idx = index of the compartment on a branch
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //default is empty, i.e. Ca2+ from cytosolic volume
+#endif
 	}
 
-  //Connection setup (input)
+  //{{{Connection setup (input)
 	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-	BranchDataProducer, DimensionArrayProducer 
-						 {
-							 VoltageArrayProducer.voltageArray >> V;
-							 BranchDataProducer.branchData >> branchData;
-							 DimensionArrayProducer.dimensionArray >> dimensions;
-						 }
+             BranchDataProducer, DimensionArrayProducer 
+	{
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+	}
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setCalciumMicrodomain;
+	Connection Pre Node (PSet.identifier=="compartment[Calcium(domain)]") Expects 
+      CaMicrodomainConcentrationArrayProducer
+      , CaMicrodomainNameArrayProducer
+      , BranchDataProducer 
+  {
+		BranchDataProducer.branchData >> branchData;
+    CaMicrodomainConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    CaMicrodomainNameArrayProducer.microdomainNames >> Shared.tmp_microdomainNames;
+    setCalciumMicrodomain();
+	}
+#endif
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer 
+  {
 		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
 	}
 
 	Connection Pre Constant (PSet.identifier=="EC") 
 		Expects CaConcentrationProducer, TemperatureProducer 
-		{
+	{
 			CaConcentrationProducer.Ca >> Shared.Ca_EC;
 			TemperatureProducer.T >> Shared.T;
-		}
+	}
 
 	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> Shared.deltaT;
 	}
+  //}}}
 /*}}}*/
 }
 

@@ -584,5 +584,8 @@ public:
   static void reviseParamValue(unsigned int& fieldVal, const std::string& fieldName);
   static void reviseParamValues(std::vector<int>& fieldVals, const int& fieldIdx);
   static void reviseParamValues(std::vector<int>& fieldVals, const std::string& fieldName);
+#ifdef MICRODOMAIN_CALCIUM
+  static void separateCompartmentName_and_microdomainName(std::string compartmentNameWithOptionalMicrodomainName, std::string& compartmentNameOnly, std::string& microdomainName);
+#endif
 };
 #endif
