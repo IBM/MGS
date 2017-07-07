@@ -61,8 +61,6 @@
 Functor Print;
 Print print();
 
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
 
 Connector PolyConnectorFunctor();		
 PolyConnectorFunctor polyConnect();
