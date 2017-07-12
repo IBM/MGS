@@ -29,15 +29,10 @@ class TraubIAFUnitCompCategory : public CG_TraubIAFUnitCompCategory
       void outputPSPsShared(RNG& rng);
  private:
       std::ofstream* weight_file;      
-<<<<<<< HEAD
-      std::ofstream* psp_file;
-      std::ostringstream os_weight;        
-=======
       std::ofstream* GJ_file;      
       std::ofstream* psp_file;
       std::ostringstream os_weight;        
       std::ostringstream os_GJ;        
->>>>>>> origin/team-A
       std::ostringstream os_psp;
 };
 

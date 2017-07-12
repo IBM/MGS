@@ -31,11 +31,7 @@ double Neg::userExecute(LensContext* CG_c)
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
   if (ndi==0) {
-<<<<<<< HEAD
-    throw SyntaxErrorException("Log, second argument: functor did not return a number");
-=======
     throw SyntaxErrorException("Neg, second argument: functor did not return a number");
->>>>>>> origin/team-A
   }
   return -ndi->getDouble();
 }

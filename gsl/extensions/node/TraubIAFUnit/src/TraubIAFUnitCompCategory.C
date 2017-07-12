@@ -68,8 +68,6 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
         MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
       }
     }
-<<<<<<< HEAD
-=======
   if (SHD.op_saveGJs)
     {
       n=0;
@@ -100,7 +98,6 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
         MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
       }
     }
->>>>>>> origin/team-A
   if (SHD.op_savePSPs)
     {
       // If saving PSPs, take it in turn to create the stream

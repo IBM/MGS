@@ -74,16 +74,6 @@ void SwitchInputCompCategory::updateInputState(RNG& rng)
 {
 
   if (ITER*SHD.deltaT >= SHD.stateswitchtimes[SHD.currentstate]) 
-<<<<<<< HEAD
-    {
-      SHD.currentstate++;
-      
-      ShallowArray<SwitchInput>::iterator it = _nodes.begin();
-      ShallowArray<SwitchInput>::iterator end = _nodes.end();
-      for (; it != end; ++it) (*it).drivinp = (*it).drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
-      
-    }
-=======
     
       SHD.currentstate++;
       
@@ -93,7 +83,6 @@ void SwitchInputCompCategory::updateInputState(RNG& rng)
       for (; it != end; ++it) (*it).drivinp = (*it).drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
   */  
     
->>>>>>> origin/team-A
 
 }
 

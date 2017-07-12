@@ -2,11 +2,7 @@
 #include "IzhikUnit.h"
 #include "CG_IzhikUnit.h"
 #include "rndm.h"
-<<<<<<< HEAD
-#include "NumInt.h"
-=======
 //#include "NumIntNoPhase.h"
->>>>>>> origin/team-A
 
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()

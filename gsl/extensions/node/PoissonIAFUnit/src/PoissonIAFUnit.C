@@ -31,11 +31,7 @@ void PoissonIAFUnit::update(RNG& rng)
   spike = (drandom(rng) <= (Hz / (1. / SHD.deltaT)));
 
   // If the simulation has reached a certain period, apply a perturbation
-<<<<<<< HEAD
-  if (ITER == 5000000)
-=======
   if (SHD.op_perturbation && ITER == SHD.perturbationT)
->>>>>>> origin/team-A
     Hz = drandom(0.0, 150.0, rng);
 }
 

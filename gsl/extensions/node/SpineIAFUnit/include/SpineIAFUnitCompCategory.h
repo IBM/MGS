@@ -26,10 +26,7 @@ class SpineIAFUnitCompCategory : public CG_SpineIAFUnitCompCategory
  public:
   SpineIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
   void initializeShared(RNG& rng);
-<<<<<<< HEAD
-=======
   void outputWeightsShared(RNG& rng);
->>>>>>> origin/team-A
  private:
   std::ofstream* weights_file;
   std::ostringstream os_weights;

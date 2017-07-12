@@ -28,30 +28,17 @@ void SpineIAFUnit::initialize(RNG& rng)
   // Default starting values
   AMPArise = 0.0;
   AMPAcurrent = 0.0;
-<<<<<<< HEAD
-  mGluRrise = 0.0;
-  mGluRcurrent = 0.0;
-=======
   mGluR5rise = 0.0;
   mGluR5current = 0.0;
->>>>>>> origin/team-A
   Ca = 0.0;
   ECB = 0.0;
 }
 
 void SpineIAFUnit::update(RNG& rng)
 {
-<<<<<<< HEAD
-  /*
-  // If the simulation has reached a certain period, apply a perturbation
-  if (ITER == 750000)
-    AMPAweight = drandom(0.0, 150.0, rng);
-  */
-=======
   // If the simulation has reached a certain period, apply a perturbation
   if (SHD.op_perturbation && ITER == SHD.perturbationT)
     AMPAweight = drandom(0.0, 1.5, rng);
->>>>>>> origin/team-A
 
   // ##### Vars needed #####
   double glutamate;
@@ -74,20 +61,6 @@ void SpineIAFUnit::update(RNG& rng)
 
 
 
-<<<<<<< HEAD
-  // ##### mGluR #####
-  // mGluR input is any excess glutamate bigger than AMPA weight
-  double mGluRinput = 0.0;
-  if (glutamate > AMPAweight)
-    mGluRinput = (glutamate - AMPAweight) * SHD.mGluRsensitivity; // adjust the sensitivity as well
-
-  // Update mGluR rise with the mGluR activity
-  mGluRrise += ((-mGluRrise + mGluRinput) / SHD.mGluRriseTau ) * SHD.deltaT;
-  // Update mGluR current (fall) with the mGluR rise
-  mGluRcurrent += ((-mGluRcurrent + mGluRrise) / SHD.mGluRfallTau) * SHD.deltaT;
-
-
-=======
   // ##### mGluR5 #####
   // mGluR5 input is any excess glutamate bigger than AMPA weight
   double mGluR5input = 0.0;
@@ -100,7 +73,6 @@ void SpineIAFUnit::update(RNG& rng)
   mGluR5current += ((-mGluR5current + mGluR5rise) / SHD.mGluR5fallTau) * SHD.deltaT;
 
   
->>>>>>> origin/team-A
 
   // ##### Ca2+ #####
   // Ca2+ input
@@ -109,19 +81,11 @@ void SpineIAFUnit::update(RNG& rng)
     CaVSCCinput = SHD.CaVSCC * pow(AMPAweight, SHD.CaVSCCpow);
   else
     CaVSCCinput = SHD.CaVSCC;
-<<<<<<< HEAD
-  if (postSpikeInput.size() > 0)
-    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
-
-  double CaInput = CaVSCCinput * AMPAcurrent;
-  CaInput = CaVSCCinput * (glutamate > 0.0 ? 1.0 : 0.0);
-=======
   //  if (postSpikeInput.size() > 0)
   //    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
 
   double CaInput = CaVSCCinput * AMPAcurrent;
   //  double CaInput = CaVSCCinput * (glutamate > 0.0 ? 1.0 : 0.0);
->>>>>>> origin/team-A
 
   // Update Ca2+ rise with VSCC and BP
   Carise += ((-Carise + CaInput) / SHD.CariseTau) * SHD.deltaT;
@@ -132,13 +96,8 @@ void SpineIAFUnit::update(RNG& rng)
 
   // ##### endocannabinoids #####
   // Update ECB (is always in the range 0 to 1)
-<<<<<<< HEAD
-  // with Ca2+ and the mGluR modulation (AND gate)
-  ECB = ECBproduction(Ca * mGluRmodulation(mGluRcurrent));
-=======
   // with Ca2+ and the mGluR5 modulation (AND gate)
   ECB = ECBproduction(Ca * mGluR5modulation(mGluR5current));
->>>>>>> origin/team-A
 }
 
 void SpineIAFUnit::outputWeights(std::ofstream& fs)
@@ -185,14 +144,8 @@ double SpineIAFUnit::ECBproduction(double Ca)
   return ECB;
 }
 
-<<<<<<< HEAD
-double SpineIAFUnit::mGluRmodulation(double mGluR)
-{
-  return ECBproduction(mGluR); // just use the same modified sigmoid
-=======
 double SpineIAFUnit::mGluR5modulation(double mGluR5)
 {
   return ECBproduction(mGluR5); // just use the same modified sigmoid
->>>>>>> origin/team-A
 }
 

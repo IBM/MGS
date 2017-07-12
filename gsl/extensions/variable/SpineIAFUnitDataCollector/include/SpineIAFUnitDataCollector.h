@@ -36,23 +36,14 @@ class SpineIAFUnitDataCollector : public CG_SpineIAFUnitDataCollector
   virtual void duplicate(std::auto_ptr<CG_SpineIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* AMPA_file;
-<<<<<<< HEAD
-  std::ofstream* mGluR_file;
-  std::ofstream* mGluRmodulation_file;
-=======
   std::ofstream* mGluR5_file;
   std::ofstream* mGluR5modulation_file;
->>>>>>> origin/team-A
   std::ofstream* Ca_file;
   std::ofstream* ECBproduction_file; // just for the production function
   std::ofstream* ECB_file;
   double ECBsigmoid(double Ca);
   double ECBproduction(double Ca);
-<<<<<<< HEAD
-  double mGluRmodulation(double mGluR);
-=======
   double mGluR5modulation(double mGluR5);
->>>>>>> origin/team-A
 };
 
 #endif

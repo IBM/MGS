@@ -121,20 +121,14 @@ Functor Exp(Functor);
 Functor Log(Functor);
 Functor Neg(Functor);
 Functor Scale(Functor);
-<<<<<<< HEAD:graphs/std/std.gsl
-=======
 Functor Round(Functor);
->>>>>>> origin/team-A:graphs/std/std.gsl
 Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
 Functor UniformDiscreteDist(float n1, float n2);
 
-<<<<<<< HEAD:graphs/std/std.gsl
-=======
 SamplingFctr2 IsoSampler();
 IsoSampler isoSampler();
 
->>>>>>> origin/team-A:graphs/std/std.gsl
 // sum adds up the numbers and a list and returns the sum 
 Functor Sum
 {

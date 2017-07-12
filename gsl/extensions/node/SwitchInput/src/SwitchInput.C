@@ -23,20 +23,6 @@ void SwitchInput::initialize(RNG& rng)
 
 }
 
-<<<<<<< HEAD
-/*
-void SwitchInput::update(RNG& rng) 
-{
-
- if (ITER*SHD.deltaT >= SHD.stateswitchtimes[SHD.currentstate]) 
-    {
-      SHD.currentstate++;
-      drivinp = & drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
-      
-    }
-}
-*/
-=======
 
 void SwitchInput::update(RNG& rng) 
 {
@@ -47,7 +33,6 @@ void SwitchInput::update(RNG& rng)
  
 }
 
->>>>>>> origin/team-A
 
 SwitchInput::~SwitchInput() 
 {

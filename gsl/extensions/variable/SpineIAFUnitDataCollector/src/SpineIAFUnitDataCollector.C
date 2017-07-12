@@ -42,11 +42,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
   assert(slices.size()==AMPAcurrent.size());
-<<<<<<< HEAD
-  assert(slices.size()==mGluRcurrent.size());
-=======
   assert(slices.size()==mGluR5current.size());
->>>>>>> origin/team-A
   assert(slices.size()==Ca.size());
   assert(slices.size()==ECB.size());
   int sz=AMPAcurrent.size();
@@ -55,11 +51,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
   for (int j=0; j<sz; ++j)
     {
       sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(
-<<<<<<< HEAD
-                                                         std::make_pair(AMPAcurrent[j], mGluRcurrent[j]),
-=======
                                                          std::make_pair(AMPAcurrent[j], mGluR5current[j]),
->>>>>>> origin/team-A
                                                          std::make_pair(Ca[j], ECB[j])
                                                          );
       if (mxrow<rows[j]) mxrow=rows[j];
@@ -67,11 +59,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
       if (mxslice<slices[j]) mxslice=slices[j];
     }
   AMPAcurrent.clear();
-<<<<<<< HEAD
-  mGluRcurrent.clear();
-=======
   mGluR5current.clear();
->>>>>>> origin/team-A
   Ca.clear();
   ECB.clear();
   std::map<unsigned,
@@ -105,11 +93,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
           for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
             {
               AMPAcurrent.push_back(miter3->second.first.first);
-<<<<<<< HEAD
-              mGluRcurrent.push_back(miter3->second.first.second);
-=======
               mGluR5current.push_back(miter3->second.first.second);
->>>>>>> origin/team-A
               Ca.push_back(miter3->second.second.first);
               ECB.push_back(miter3->second.second.second);
             }
@@ -127,11 +111,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
 
-<<<<<<< HEAD
-  std::ostringstream os_AMPA, os_mGluR, os_mGluRmodulation, os_Ca, os_ECBproduction, os_ECB;
-=======
   std::ostringstream os_AMPA, os_mGluR5, os_mGluR5modulation, os_Ca, os_ECBproduction, os_ECB;
->>>>>>> origin/team-A
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
@@ -147,32 +127,6 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
       AMPA_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
-<<<<<<< HEAD
-  if (op_savemGluR)
-    {
-      // Save the mGluR modulation function first
-      os_mGluRmodulation<<directory<<"mGluRmodulation"<<fileExt;
-      mGluRmodulation_file=new std::ofstream(os_mGluRmodulation.str().c_str(),
-                                       std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      double mGluR = 0.0;
-      float CaModulation = 0.0;
-      for (int i=0; i <= 2000; i++)
-        {
-          CaModulation = (float) mGluRmodulation(mGluR);
-          mGluRmodulation_file->write(reinterpret_cast<char *>(&CaModulation), sizeof(CaModulation));
-          mGluR += 1.0 / 1000.0;
-        }
-      mGluRmodulation_file->close();
-      delete mGluRmodulation_file;
-
-      // Now the actual mGluR file
-      os_mGluR<<directory<<"mGluR"<<fileExt;
-      mGluR_file=new std::ofstream(os_mGluR.str().c_str(),
-                                       std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      mGluR_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      mGluR_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      mGluR_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
-=======
   if (op_savemGluR5)
     {
       // Save the mGluR5 modulation function first
@@ -197,7 +151,6 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
       mGluR5_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
       mGluR5_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
       mGluR5_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
->>>>>>> origin/team-A
     }
 
   if (op_saveCa)
@@ -245,17 +198,10 @@ void SpineIAFUnitDataCollector::finalize(RNG& rng)
       AMPA_file->close();
       delete AMPA_file;
     }
-<<<<<<< HEAD
-  if (op_savemGluR)
-    {
-      mGluR_file->close();
-      delete mGluR_file;
-=======
   if (op_savemGluR5)
     {
       mGluR5_file->close();
       delete mGluR5_file;
->>>>>>> origin/team-A
     }
   if (op_saveCa)
     {
@@ -284,18 +230,6 @@ void SpineIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndP
         }
     }
 
-<<<<<<< HEAD
-  if (op_savemGluR)
-    {
-      ShallowArray<double*>::iterator iter, end;
-      float temp = 0.;
-      iter=mGluRcurrent.begin();
-      end=mGluRcurrent.end();
-      for (int n=0; iter!=end; ++iter)
-        {
-          temp = (float) **iter;
-          mGluR_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
-=======
   if (op_savemGluR5)
     {
       ShallowArray<double*>::iterator iter, end;
@@ -306,7 +240,6 @@ void SpineIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndP
         {
           temp = (float) **iter;
           mGluR5_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
->>>>>>> origin/team-A
         }
     }
 
@@ -395,14 +328,8 @@ double SpineIAFUnitDataCollector::ECBproduction(double Ca)
   return ECB;
 }
 
-<<<<<<< HEAD
-double SpineIAFUnitDataCollector::mGluRmodulation(double mGluR)
-{
-  return ECBproduction(mGluR); // just use the same modified sigmoid
-=======
 double SpineIAFUnitDataCollector::mGluR5modulation(double mGluR5)
 {
   return ECBproduction(mGluR5); // just use the same modified sigmoid
->>>>>>> origin/team-A
 }
 

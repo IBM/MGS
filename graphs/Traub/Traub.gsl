@@ -15,33 +15,17 @@
 
 #include "../std/std.gsl"
 InitPhases = { initializeShared, initialize };
-<<<<<<< HEAD
-RuntimePhases = { dataCollect, update, threshold, outputPSPsShared,
-                  lastPhase };
-=======
 RuntimePhases = { dataCollect, update, threshold, lastPhase };
->>>>>>> origin/team-A
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
 #define FILE_EXTENSION ".dat"
-<<<<<<< HEAD
-
-=======
 #define DELTA_T 0.0001
->>>>>>> origin/team-A
 
 
 // ##### Driving wave input from cortex #####
 // Node parameters
 NodeType WaveDriverUnit(<
-<<<<<<< HEAD
-                        deltaT = 0.0001        // in s
-                        >);
-
-// Connectivity and weights
-//EachSrcPropDst ctx_2_fsi(RadialSampler(5.66.0, 4.0)); // radius of 5.66 reaches a square (plus potentiall 1)
-=======
                         deltaT = DELTA_T        // in s
                         >) {update->dataCollect} ;
 
@@ -53,32 +37,16 @@ NodeType FileDriverUnit(<
                         >) {readInputFile->dataCollect, updateOutput->threshold};
 
 // Connectivity and weights
->>>>>>> origin/team-A
 EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
 BindName CTXw("weight", 1.0, "identifier", "driver");
 NdplInAttrInit ctxW(CTXw);
 
 // Initialize waves
-<<<<<<< HEAD
-#define AMPMIN 0.0
-#define AMPMAX 1.5
-BindName initWave("Hz", 1.5,
-                  "phase", Gaussian(0.0,0.174533), // in rad
-                  "amplitude", UniformDist(AMPMIN, AMPMAX),
-                  "op_modulateAmplitude", 1,
-                  "amplitudeMin", AMPMIN,
-                  "amplitudeMax", AMPMAX,
-                  "amplitudeModRate", 0.005,
-                  "op_modulateAmplitudeWeight", 1,                  
-                  "amplitudeA", 0.1,
-                  "amplitudeB", 0.5);
-=======
 #define AMPMIN 1.0
 #define AMPMAX 1.5
 BindName initWave("Hz", Gaussian(3.0,0.1),
                   "phase", Gaussian(0.0,6.28319), // in rad (360 = 6.28319)
                   "amplitude", UniformDist(AMPMIN, AMPMAX));
->>>>>>> origin/team-A
 NdplNodeInit heterWave(initWave);
 
 
@@ -90,10 +58,6 @@ NodeType TraubIAFUnit(<
                       GoC = 50.0,              // s^-1
                       C = 1.0,
                       k = {200.0, 20.0},       // s^-1
-<<<<<<< HEAD
-                      Theta_inf = -0.05,       // V
-=======
->>>>>>> origin/team-A
                       R = {0.0, 1.0},
                       E_L = -0.07,             // V
                       V_r = -0.07,             // V
@@ -102,24 +66,15 @@ NodeType TraubIAFUnit(<
                       A = {0.0, 0},            // V/s
                       s_tauR = 0.0008,         // s
                       s_tauF = 0.012,          // s
-<<<<<<< HEAD
-                      deltaT = 0.0001,         // s
-=======
                       deltaT = DELTA_T,         // s
->>>>>>> origin/team-A
                       spike_cntMax = 0.001,    // s
                       np = 0,
                       V_max = 0.04,
                       sharedDirectory = DIRECTORY,
                       sharedFileExt = FILE_EXTENSION,
-<<<<<<< HEAD
-                      op_saveWeights = 1
-                      >);
-=======
                       op_saveWeights = 1,
                       op_saveGJs = 1
                       >) {outputPSPsShared->dataCollect} ;
->>>>>>> origin/team-A
 
 // Synaptic connectivity
 list<float> uniformDensity = {1.0};
@@ -134,20 +89,12 @@ NdplInAttrInit ipsp(IPSP);
 EachDstPropSrc gj_fsi(RadialDensitySampler(9, 1.415, uniformDensity, 1.415));
 
 // Gap junctions weights
-<<<<<<< HEAD
-BindName GJ("conductance", UniformDiscreteDist(0.0,44.0), "identifier", "gj");
-NdplInAttrInit gj(GJ);
-
-// Initialize neurons
-BindName initN("V", UniformDist(-0.07,-0.06)); // Uniform from reset to thresh
-=======
 BindName GJ("conductance", 22.0, "identifier", "gj");
 NdplInAttrInit gj(GJ);
 
 // Initialize neurons
 BindName initN("V", UniformDist(-0.07,-0.05), // Uniform from reset to mean threshold
                "Theta_inf", Neg(Gaussian(0.05,0.001))); // Gaussian around -0.05
->>>>>>> origin/team-A
 NdplNodeInit heterN(initN);
 
 
@@ -158,13 +105,10 @@ Grid CTX
   Dimension(3,3,3);
   Layer(LayerV, WaveDriverUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(LayerV), heterWave);
-<<<<<<< HEAD
-=======
   /*
   Layer(LayerV, FileDriverUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(LayerV), nodeDef);
   */
->>>>>>> origin/team-A
 };
 
 Grid FSI
@@ -192,11 +136,6 @@ CortexFSI iaf;
 
 // ##### Setup data collectors and analyzers #####
 VariableType WaveDriverUnitDataCollector;
-<<<<<<< HEAD
-WaveDriverUnitDataCollector CTXcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveWaves=1>;
-polyConnect(iaf/ctx[].Layer(LayerV), CTXcollector, <>, <>);
-=======
 WaveDriverUnitDataCollector CTXWcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
   op_saveWaves=1>;
 polyConnect(iaf/ctx[].Layer(LayerV), CTXWcollector, <>, <>);
@@ -206,7 +145,6 @@ FileDriverUnitDataCollector CTXFcollector<directory=DIRECTORY, fileExt=FILE_EXTE
   op_saveOutputs=1>;
 polyConnect(iaf/ctx[].Layer(LayerV), CTXFcollector, <>, <>);
 */
->>>>>>> origin/team-A
 
 VariableType TraubIAFUnitDataCollector;
 TraubIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
@@ -215,10 +153,6 @@ polyConnect(iaf/fsi[].Layer(FSIs), FSIcollector, <>, <>);
 
 VariableType LFPDataAnalyzer;
 LFPDataAnalyzer LFPanalyzer<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-<<<<<<< HEAD
-  elecRadius=4, elecSigma=1.8, numElecPerDimX=8, numElecPerDimY=8, numElecPerDimZ=8,
-  op_saveLFPs=1>;
-=======
   elecRadius=13.27, elecSigma=2.65, numElecPerDimX=4, numElecPerDimY=4, numElecPerDimZ=4,
   op_saveLFPs=1>;
 // LFP spacing and size is calculated as below
@@ -228,7 +162,6 @@ LFPDataAnalyzer LFPanalyzer<directory=DIRECTORY, fileExt=FILE_EXTENSION,
 // radius 1500 um / 113 um = 13.27 grid units
 // sigma 300 um (middle of literature range of 200-400um) / 113 um = 2.65 grid units
 
->>>>>>> origin/team-A
 polyConnect(iaf/fsi[].Layer(FSIs), LFPanalyzer, <>, <>);
 
 
@@ -246,16 +179,10 @@ UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 50",
                                 ::Iteration, "!%", 50, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-<<<<<<< HEAD
-                        ::Iteration, "==", 100000, 0, lastPhase); // in dt
-                     
-CTXcollector.dataCollection() on iterTrigSampled;
-=======
                         ::Iteration, "==", 10000, 0, lastPhase); // in dt
                      
 CTXWcollector.dataCollection() on iterTrigSampled;                     
 //CTXFcollector.dataCollection() on iterTrigSampled;
->>>>>>> origin/team-A
 FSIcollector.dataCollectionSpikes() on iterTrig;
 FSIcollector.dataCollectionOther() on iterTrigSampled;
 LFPanalyzer.dataCollection() on iterTrigSampled;

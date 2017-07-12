@@ -32,11 +32,7 @@ class SpineIAFUnit : public CG_SpineIAFUnit
  private:
   double ECBsigmoid(double Ca);
   double ECBproduction(double Ca);
-<<<<<<< HEAD
-  double mGluRmodulation(double mGluR);
-=======
   double mGluR5modulation(double mGluR5);
->>>>>>> origin/team-A
 };
 
 #endif

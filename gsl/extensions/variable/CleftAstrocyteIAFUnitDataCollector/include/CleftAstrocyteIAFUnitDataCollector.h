@@ -34,10 +34,7 @@ class CleftAstrocyteIAFUnitDataCollector : public CG_CleftAstrocyteIAFUnitDataCo
   virtual void duplicate(std::auto_ptr<CG_CleftAstrocyteIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* glutamate_file;
-<<<<<<< HEAD
-=======
   std::ofstream* ECB_file;
->>>>>>> origin/team-A
 };
 
 #endif
