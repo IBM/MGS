@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -45,8 +45,11 @@ class NMDAReceptor : public CG_NMDAReceptor
       void initializeNMDA(RNG& rng);
       virtual void setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset);
       virtual void setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset);
-      dyn_var_t sigmoid(dyn_var_t alpha, dyn_var_t beta);
       virtual ~NMDAReceptor();
+  #ifdef MICRODOMAIN_CALCIUM
+      virtual void setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset);
+      int _offset; //the offset due to the presence of different Ca2+-microdomain
+  #endif
 };
 
 #endif

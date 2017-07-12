@@ -1,0 +1,130 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef RABINOVICHWINNERLESSUNIT_MDL
+#define RABINOVICHWINNERLESSUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node RabinovichWinnerlessUnit Implements OutputProducer {
+   double x; // These variable names are according to Rabinovich et al. 2001
+   double burstPrev;
+   double y;
+   double z;
+   double burst; // output
+   double P0; // personal copy of plasticity trace
+   double P1; // data independent copy of personal plasticity trace
+   double R; // Static input, bias
+   int Cstim; // random stimuli index
+   double [] stim; // random stimuli
+   int D; // 1:=D1, direct pathway MSN; 2:=D2, indirect pathway MSN
+   double GABAt;
+   //   double prePlastic; // TODO: plasticity?
+
+   //PlasticInput [] lateralInputs; // TODO: needed for plasticity
+   StructuralInput [] lateralInputs;
+   ModulatedSynapseInput [] corticalInputs;
+   SpikeInput [] dopamineInputs;
+   
+   Shared {
+     double a;
+     double b;
+     double nu;
+     double deltaT;
+     double tau1;
+     double tau2;
+     double tauP;
+     //     double thetaP0; // TODO: plasticity?
+     //     double thetaP1; // TODO: plasticity?
+     double phi;
+     bool Bstim; // whether "internal" stimulus is used or not
+     int Dstim; // random stimulus duty cycle
+     int Nstim; // number of random stimulii
+     double GABAtD1;
+     double GABAtD2;
+     double etaW;
+     double p_c;
+     double step1;
+     double step2;
+     double step3;
+     double tauDA;
+     //     double eta_inhib; // TODO: plasticity?
+     //     double eta_disinhib; // TODO: plasticity?
+     
+     bool assymetric;
+     bool lateralPlasticity;
+     bool corticostriatalPlasticity;
+
+     string sharedDirectory;
+     string sharedFileExt;     
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     bool saveBinary;
+     
+     InitPhase initializeShared;
+     RuntimePhase outputWeightsShared;
+   }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     double connection;
+     double connectionFraction;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update;
+   RuntimePhase copy(burst);
+   //RuntimePhase copy(burst, P1);
+
+   OutputProducer.output << &burst;
+
+   //PlasticOutputProducer.output << &burst;
+   //PlasticOutputProducer.P1 << &P1;
+   //PlasticOutputProducer.prePlastic << &prePlastic;
+
+   UserFunction setLateralIndices;
+   UserFunction setModulatoryIndices;
+   UserFunction checkForCorticalSynapse;
+   UserFunction assymetric;
+
+/*   Connection Pre Node ( (Assymetric()) && (PSet.identifier=="lateral")) Expects PlasticOutputProducer {
+      PlasticOutputProducer.output >> lateralInputs.input;
+      PlasticOutputProducer.P1 >> lateralInputs.P1;
+      PlasticOutputProducer.prePlastic >> lateralInputs.prePlastic;
+      PSet.weight >> lateralInputs.weight;
+      setIndices();
+   }
+*/
+   Connection Pre Node (PSet.identifier=="lateral") Expects OutputProducer {
+      OutputProducer.output >> lateralInputs.input;
+      PSet.weight >> lateralInputs.weight;
+      assymetric();
+      setLateralIndices();
+   }
+
+   Connection Pre Node (PSet.identifier=="Cx2Str") Expects SpikeProducer {
+      SpikeProducer.spike >> corticalInputs.spike;
+      PSet.weight >> corticalInputs.weight;      
+      checkForCorticalSynapse();
+   }
+
+   Connection Pre Node (PSet.identifier=="dopamine") Expects SpikeProducer {
+      SpikeProducer.spike >> dopamineInputs.spike;
+      PSet.weight >> dopamineInputs.weight;      
+      setModulatoryIndices();
+   }
+}
+#endif

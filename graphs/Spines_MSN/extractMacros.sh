@@ -6,10 +6,11 @@
 _X_=1
 _Y_=1
 _Z_=1
-NUMTHREADS=1
+NUMTHREADS=8
 
 NUMPROCESSES=$(( _X_ * _Y_ * _Z_))
-OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
+#OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
+OUTPUTFOLDER=/data/tmhoangt/NTS_OUTPUT/
 if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
 #}}}
 
@@ -54,11 +55,12 @@ RunSim()
 {
   #{{{
    echo "Output Folder: " $OutputFolderName
+   cp RYR_Markov_Williams2012.conf $OutputFolderName/ -L -r
    cp params $OutputFolderName/ -L -r
    cp *.gsl $OutputFolderName/ -L -r
    cp neurons.txt $OutputFolderName/ -L -r
    cp neurons/neuron.swc $OutputFolderName/ -L -r
-   cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
+   # cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/Model2Use.h $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/NTSMacros.h  $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/MaxComputeOrder.h $OutputFolderName/ -L -r
@@ -68,6 +70,7 @@ RunSim()
    echo "----> RESULT: " >> SIM_LOG
    echo "... using swc file: ${SWC_FILENAME}"
    echo "... using swc file: ${SWC_FILENAME}" >> SIM_LOG
+   plotscriptFolder="./NTS_plotting"
    echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
@@ -81,9 +84,9 @@ RunSim()
    echo "Output Folder: " $OutputFolderName
    ## NOTE: comment out if we don't want to plot
    if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
-     ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+     cd ${plotscriptFolder} && ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
    fi
-   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+   echo ${plotscriptFolder}/doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
   #}}}
 }
 
@@ -169,6 +172,10 @@ fi
 
 #########################
 ##{{{ 3. CHECK MACROS
+if [ ! -f model.gsl ]; then
+  echo "Please make sure model.gsl exist, e.g. run changemorph.sh"
+  exit 1
+fi
 ## NOTE: accepted macros
 ## -DOUTPUTFOLDER=location where all output should be'
 ## -DPARAMFOLDER=location of the parameters to the simulation

@@ -153,6 +153,9 @@ Node SynapticCleft Implements
     dyn_var_t Glut_max;
     dyn_var_t GABA_baseline;
     dyn_var_t GABA_max;
+    dyn_var_t numGlutperVesicle;
+    dyn_var_t numGABAperVesicle;
+    dyn_var_t cleftVolume; // um^3
 #if SUPPORT_MODULABLE_CLEFT
     dyn_var_t DA_baseline;
     dyn_var_t DA_max;

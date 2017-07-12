@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -25,6 +25,7 @@
 #include "FunctorDataItem.h"
 #include "NumericDataItem.h"
 #include "SyntaxErrorException.h"
+#include "Simulation.h"
 
 EachAvgFunctor::EachAvgFunctor()
    : _nbrReps(0), _remainingProb(0), _nbrRepsDone(0), _count(0), 
@@ -101,14 +102,13 @@ void EachAvgFunctor::doExecute(LensContext *c,
       _nodesEnd = _nodes.end();
       _nbrRepsDone = 0;
       _count = 0;
-//      _combOffset = Rangen.drandom32(0, 1.0 / _remainingProb);
-      _combOffset = drandom(0, 1.0 / _remainingProb);
+      _combOffset = drandom(0, 1.0 / _remainingProb, c->sim->getSharedFunctorRandomSeedGenerator());
       _phase = _REPETITIONS;
       if (_remainingProb > 0) {    
          // shuffle
          for (int sz = _nodes.size() - 1; sz > 0; --sz) {
-//            int draw = Rangen.irandom32(0, sz);
-            int draw = irandom(0, sz);
+//            int draw = Rangen.irandom32(0, sz, c->sim->getFunctorRandomSeedGenerator());
+           int draw = irandom(0, sz, c->sim->getSharedFunctorRandomSeedGenerator());
             NodeDescriptor* n = _nodes[sz];
             _nodes[sz] = _nodes[draw];
             _nodes[draw] = n;

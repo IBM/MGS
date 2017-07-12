@@ -1,3 +1,18 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
 #ifndef rndm_h
 #define rndm_h
 
@@ -7,37 +22,42 @@
 
 #include "RNG.h"
 
-inline double drandom(RNG& rangen=getRangen())
+inline double drandom(RNG_ns& rangen)
 {
    return rangen.drandom32();
 }
 
-inline double drandom(double min, double max, RNG& rangen=getRangen())
+inline double drandom(double min, double max, RNG_ns& rangen)
 {
    return ((max-min)*drandom(rangen) + min);
 }
 
-inline long lrandom(RNG& rangen=getRangen())
+inline long lrandom(RNG_ns& rangen)
 {
    return rangen.irandom32();
 }
 
-inline long lrandom(long min, long max, RNG& rangen=getRangen())
+inline long lrandom(long min, long max, RNG_ns& rangen)
 {
    return long(floor(drandom(double(min) ,double(max+1), rangen)));
 }
 
-inline int irandom(RNG& rangen=getRangen())
+inline int irandom(RNG_ns& rangen)
 {
    return int(rangen.drandom32()* INT_MAX);
 }
 
-inline int irandom(int min, int max, RNG& rangen=getRangen())
-{
+inline int irandom(int min, int max, RNG_ns& rangen)
+{  
   return int(floor(drandom(double(min), double(max+1), rangen)));
 }
 
-inline double gaussian(RNG& rangen=getRangen())
+inline int urandom(RNG_ns& rangen)
+{
+   return unsigned(rangen.drandom32()* UINT_MAX);
+}
+
+inline double gaussian(RNG_ns& rangen)
 {
    static int gaussian_flag = 0;
    static double gaussian_deviate;
@@ -60,7 +80,7 @@ inline double gaussian(RNG& rangen=getRangen())
    }
 }
 
-inline double expondev (RNG& rangen=getRangen())
+inline double expondev (RNG_ns& rangen)
 {
    double tmp;
    do {
@@ -69,12 +89,12 @@ inline double expondev (RNG& rangen=getRangen())
    return -log(tmp);
 }
 
-inline double expondev (double g, RNG& rangen=getRangen())
+inline double expondev (double g, RNG_ns& rangen)
 {
    return expondev(rangen) /g;
 }
 
-inline double gaussian(double mean, double sd, RNG& rangen=getRangen())
+inline double gaussian(double mean, double sd, RNG_ns& rangen)
 {
    return (sd*gaussian(rangen) + mean);
 }

@@ -22,6 +22,8 @@ class CurrentPulseGenerator : public CG_CurrentPulseGenerator
       void update_DualExpProtocol(RNG& , float currentTime);
       void update_PoissonProtocol(RNG& , float currentTime);
       void update_PeriodicTrainProtocol(RNG& , float currentTime);
+      void update_WhiteNoiseProtocol(RNG& rng, float currentTime);
+
       float nextPulse; //[ms]
       float peakInc; //[pA]
       int   num_completed_trains; //[number of completed trains]
@@ -29,7 +31,7 @@ class CurrentPulseGenerator : public CG_CurrentPulseGenerator
       void (CurrentPulseGenerator::*fpt_update)(RNG& rng, float currentTime) = NULL;
       void dataCollection(float currentTime);
       float time_start_train;  //[ms]
-      std::ofstream* outFile;
+      std::ofstream* outFile = 0;
       float time_write_data; // [ms]
 };
 

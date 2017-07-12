@@ -1,29 +1,34 @@
 #!/usr/bin/python
+"""
+help to generate Makefile
+"""
 
+from __future__ import print_function
 import os
+import os.path
 import sys
 import popen2
-#import string
+# import string
 import getopt
-import os.path
 
 # If we decide to put modules in the scripts directory use the following to
 # be able to import modules
 # sys.path.append("scripts/")
 
+# pylint:ignore=invalid-name
 # Constants
 USE = 1
 DONTUSE = 0
 UNDEF = -1
 
-PROJECT_NAME= "Lens"
+PROJECT_NAME = "Lens"
 CONFIG_HEADER = "framework/factories/include/LensRootConfig.h"
 EXTENSIONS_MK = "./Extensions.mk"
 CLEAN_SCRIPT = "./clean.sh"
 CONFIG_LOG = "./config.log"
 TAB = "   "
 
-AIX_GNU_CPP_COMPILER = "g++"  #-3.2.3"
+AIX_GNU_CPP_COMPILER = "g++"  # -3.2.3"
 AIX_GNU_C_COMPILER = "gcc"
 AIX_XL_CPP_COMPILER = "xlC_r"
 AIX_XL_C_COMPILER = "xlc_r"
@@ -82,45 +87,54 @@ EXTRA_PARSER_TARGERS_FOR_DX = "$(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeS
 
 LENSPARSER_TARGETS = "$(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o $(BASE_OBJECTS) "
 
-# Pre python 2.3 compatibility
-True = 1
-False = 0
+# # Pre python 2.3 compatibility
+# True = 1
+# False = 0
+
 
 class FatalError(Exception):
-    def __init__(self, value = ""):
+    def __init__(self, value=""):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
     def printError(self):
         if self.value != "":
-            print "Fatal error:", error
+            print("Fatal error:", error)
+
 
 class InternalError(Exception):
-    def __init__(self, value = ""):
+    def __init__(self, value=""):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
 
+
 def printWarning(warning):
-    print "Warning:", warning, "\n"
+    print("Warning:", warning, "\n")
 
-def printFeedback(feedback, extraLine = False):
-    print feedback
-    if extraLine == True:
-        print
 
-def findFile(name, required = False):
+def printFeedback(feedback, extraLine=False):
+    print(feedback)
+    if extraLine is True:
+        print()
+
+
+def findFile(name, required=False):
     cmd = "which " + name
     (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
     stdout = stdoutFile.read()
     stderr = stderrFile.read()
     if stderr != "" or stdout.find(" ") != -1:
-        if required == True:
+        if required is True:
             raise FatalError("Required file " + name + " could not be found.")
         return ""
     # strip the \n at the end
     stdout = stdout.rstrip()
     return stdout
+
 
 def getFileStatus(name):
     retStr = ""
@@ -128,7 +142,8 @@ def getFileStatus(name):
         retStr = os.path.basename(name) + " is found at: " + os.path.dirname(name)
     return retStr
 
-def addUnderScore(name, scoreChar = '='):
+
+def addUnderScore(name, scoreChar='='):
     retStr = name + "\n"
     if name != "":
         for i in xrange(len(name)):
@@ -136,9 +151,11 @@ def addUnderScore(name, scoreChar = '='):
         retStr += "\n"
     return retStr
 
+
 def getFirst(a):
     (first, second) = a
     return first
+
 
 def createConfigHeader():
     rootDir = os.getcwd()
@@ -150,14 +167,14 @@ def createConfigHeader():
         begin = line.find('"') + 1
         end = line.find('"', begin)
         if not (begin == -1 or end == -1):
-            currentDir =  line[begin:end]
+            currentDir = line[begin:end]
             if currentDir == rootDir:
                 create = False
     except:
         pass
 
-    if create == True:
-        cmd =  "#include <string>\n\n"
+    if create is True:
+        cmd = "#include <string>\n\n"
         cmd += "const std::string LENSROOT = \"" + rootDir + "\";\n"
         header = open(CONFIG_HEADER, "w")
         header.write(cmd)
@@ -165,31 +182,33 @@ def createConfigHeader():
     else:
         printFeedback(CONFIG_HEADER + " looks up to date, not overwriting", True)
 
+
 def touchExtensionsMk():
     if os.path.isfile(EXTENSIONS_MK) == False:
         f = open(EXTENSIONS_MK, "w")
         f.close()
 
+
 class DxInfo:
 
     def __init__(self):
 
-        self.bin      = ""
-        self.exists   = False
-        self.binPath  = ""
+        self.bin = ""
+        self.exists = False
+        self.binPath = ""
         self.mainPath = ""
-        self.liteLib  = ""
-        self.include  = ""
+        self.liteLib = ""
+        self.include = ""
 
     def setup(self, operatingSystem):
         self.bin = findFile("dx")
         if self.bin == "":
-            print "DX is not found", self.mainPath
+            print("DX is not found", self.mainPath)
             return
         self.binPath = os.path.dirname(self.bin)
         self.mainPath = os.path.dirname(self.binPath) + "/dx"
         if os.path.isdir(self.mainPath) != True:
-            print "DX main path could not be found at", self.mainPath
+            print("DX main path could not be found at", self.mainPath)
             return
 
         self.liteLib = self.mainPath
@@ -200,12 +219,12 @@ class DxInfo:
 
         self.liteLib += "libDXlite.a"
         if os.path.isfile(self.liteLib) != True:
-            print "libDXlite.a could not be found at", self.liteLib
+            print("libDXlite.a could not be found at", self.liteLib)
             return
 
-        self.include =  self.mainPath + "/include/dx/dx.h"
+        self.include = self.mainPath + "/include/dx/dx.h"
         if os.path.isfile(self.include) != True:
-            print "dx.h could not be found at", self.include
+            print("dx.h could not be found at", self.include)
             return
 
         self.exists = True
@@ -217,37 +236,38 @@ class DxInfo:
         retStr += TAB + "DX include file is found at" + self.include + "\n"
         return retStr
 
+
 class Options:
 
     def __init__(self, argv):
 
         # options
-        self.compilationMode = "undefined" # 32, 64, undefined
-        self.withDX = UNDEF # USE, DONTUSE, UNDEF
-        self.compiler = "undefined" # gcc, xl, undefined
-        self.silent = False # True, False
-        self.verbose = False # True, False
+        self.compilationMode = "undefined"  # 32, 64, undefined
+        self.withDX = UNDEF  # USE, DONTUSE, UNDEF
+        self.compiler = "undefined"  # gcc, xl, undefined
+        self.silent = False  # True, False
+        self.verbose = False  # True, False
         self.extMode = False  # True, False
-        self.debug = DONTUSE # USE, DONTUSE, UNDEF
-        self.debug_assert = False # True, False
-        self.debug_hh = False # True, False
-        self.debug_loops = False # True, False
-        self.debug_cpts = False # True, False
-        self.nowarning_dynamiccast = False # True, False
-        self.profile = DONTUSE # USE, DONTUSE, UNDEF
-        self.tvMemDebug = DONTUSE # USE, DONTUSE, UNDEF
-        self.mpiTrace = DONTUSE # USE, DONTUSE, UNDEF
-        self.optimization = "undefined" # O1, O2, O3, undefined
-        self.dynamicLoading = False # True, False
-        self.domainLibrary = False # True, False
-        self.pthreads = True # True, False
-        self.withMpi = False # True, False
-        self.blueGeneL = False # True, False
-        self.blueGeneP = False # True, False
-        self.blueGeneQ = False # True, False
-        self.blueGene = False # True, False
-        self.rebuild = False # True, False
-        self.help = False # True, False
+        self.debug = DONTUSE  # USE, DONTUSE, UNDEF
+        self.debug_assert = False  # True, False
+        self.debug_hh = False  # True, False
+        self.debug_loops = False  # True, False
+        self.debug_cpts = False  # True, False
+        self.nowarning_dynamiccast = False  # True, False
+        self.profile = DONTUSE  # USE, DONTUSE, UNDEF
+        self.tvMemDebug = DONTUSE  # USE, DONTUSE, UNDEF
+        self.mpiTrace = DONTUSE  # USE, DONTUSE, UNDEF
+        self.optimization = "undefined"  # O1, O2, O3, undefined
+        self.dynamicLoading = False  # True, False
+        self.domainLibrary = False  # True, False
+        self.pthreads = True  # True, False
+        self.withMpi = False  # True, False
+        self.blueGeneL = False  # True, False
+        self.blueGeneP = False  # True, False
+        self.blueGeneQ = False  # True, False
+        self.blueGene = False  # True, False
+        self.rebuild = False  # True, False
+        self.help = False  # True, False
 
         self.cmdOptions = [("32-bit", "32 bit compilation mode"),
                            ("64-bit", "64 bit compilation mode"),
@@ -287,10 +307,10 @@ class Options:
         return map(getFirst, self.cmdOptions)
 
     def usage(self, argv):
-        print addUnderScore("Possible command line options:"),
+        print(addUnderScore("Possible command line options:"))
         for i in self.cmdOptions:
-            str = TAB + "--" + i[0] + ": " + i[1]
-            print str
+            m_str = TAB + "--" + i[0] + ": " + i[1]
+            print(m_str)
 
     def parseOptions(self, argv):
         try:
@@ -399,11 +419,11 @@ class Options:
                     self.help = True
 
             # Just display help and return
-            if self.help == True:
+            if self.help is True:
                 self.usage(argv)
                 return
 
-            if self.extMode == True and self.rebuild == True:
+            if self.extMode is True and self.rebuild is True:
                 raise FatalError("Do not rebuild with the ext-mode turned on.")
 
             if self.debug == USE and self.optimization != "O":
@@ -416,7 +436,7 @@ class Options:
                              self.optimization + ".\nSetting optimization to --O")
                 self.optimization = "O"
 
-            #if self.profile == USE and self.debug != USE:
+            # if self.profile == USE and self.debug != USE:
             #    printWarning("Profiling is turned on so debugging turned on by default.")
             #    self.debug = USE
 
@@ -426,11 +446,11 @@ class Options:
                 print
                 self.optimization = "O3"
 
-            if self.withMpi == True and self.dynamicLoading == True:
+            if self.withMpi is True and self.dynamicLoading is True:
                 printFeedback("Dynamic loading will be disabled due to existence of MPI.")
                 self.dynamicLoading = False
 
-            if self.blueGeneL == True:
+            if self.blueGeneL is True:
                 self.blueGene = True
                 self.withMpi = True
                 self.pthreads = False
@@ -440,7 +460,7 @@ class Options:
                 self.silent = True
                 self.optimization = "O3"
 
-            if self.blueGeneP == True:
+            if self.blueGeneP is True:
                 self.blueGene = True
                 self.withMpi = True
                 self.pthreads = True
@@ -450,7 +470,7 @@ class Options:
                 self.silent = True
                 self.optimization = "O3"
 
-            if self.blueGeneQ == True:
+            if self.blueGeneQ is True:
                 self.blueGene = True
                 self.withMpi = True
                 self.pthreads = True
@@ -465,22 +485,23 @@ class Options:
             self.usage(argv)
             raise FatalError
 
+
 class BuildSetup:
 
     def __init__(self):
 
         # System defining variables
         self.operatingSystem = ""
-        self.hostName        = ""
-        self.architecture    = ""
-        self.objectMode      = ""
-        self.numCPUs         = os.sysconf("SC_NPROCESSORS_ONLN")
+        self.hostName = ""
+        self.architecture = ""
+        self.objectMode = ""
+        self.numCPUs = os.sysconf("SC_NPROCESSORS_ONLN")
 
         # Binaries
-        self.bisonBin   = ""
-        self.flexBin    = ""
-        self.grepBin    = ""
-        self.makeBin    = ""
+        self.bisonBin = ""
+        self.flexBin = ""
+        self.grepBin = ""
+        self.makeBin = ""
 
         # versions
         self.bisonVersion = ""
@@ -530,59 +551,59 @@ class BuildSetup:
         retStr += TAB + "C++ compiler: " + self.cppCompiler + "\n"
 
         retStr += TAB + "Silent mode: "
-        if self.options.silent == True:
+        if self.options.silent is True:
             retStr += "On"
-        else :
+        else:
             retStr += "Off"
         retStr += "\n"
 
         retStr += TAB + "Verbose mode: "
-        if self.options.verbose == True:
+        if self.options.verbose is True:
             retStr += "On"
-        else :
+        else:
             retStr += "Off"
         retStr += "\n"
 
         retStr += TAB + "Extensions mode: "
-        if self.options.extMode == True:
+        if self.options.extMode is True:
             retStr += "On"
-        else :
+        else:
             retStr += "Off"
         retStr += "\n"
 
         retStr += TAB + "Debugging: "
-        if self.options.debug == True:
+        if self.options.debug is True:
             retStr += "On\n"
-            if self.options.debug_assert == True:
-              retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
-            if self.options.debug_hh == True:
-              retStr += TAB + TAB + "- DEBUG_HH : YES\n"
-            if self.options.debug_loops == True:
-              retStr += TAB + TAB + "- DEBUG_LOOPS : YES\n"
-            if self.options.debug_cpts == True:
-              retStr += TAB + TAB + "- DEBUG_CPTS : YES\n"
-        else :
+            if self.options.debug_assert is True:
+                retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
+            if self.options.debug_hh is True:
+                retStr += TAB + TAB + "- DEBUG_HH : YES\n"
+            if self.options.debug_loops is True:
+                retStr += TAB + TAB + "- DEBUG_LOOPS : YES\n"
+            if self.options.debug_cpts is True:
+                retStr += TAB + TAB + "- DEBUG_CPTS : YES\n"
+        else:
             retStr += "Off\n"
-        #retStr += "\n"
+        # retStr += "\n"
 
         retStr += TAB + "Profiling: "
         if self.options.profile == USE:
             retStr += "On"
-        else :
+        else:
             retStr += "Off"
         retStr += "\n"
 
         retStr += TAB + "Totalview Memory Debugging: "
-        if self.options.tvMemDebug == True:
+        if self.options.tvMemDebug is True:
             retStr += "On"
-        else :
+        else:
             retStr += "Off"
         retStr += "\n"
 
         retStr += TAB + "MPI Trace Profiling: "
-        if self.options.mpiTrace == True:
+        if self.options.mpiTrace is True:
             retStr += "On"
-        else :
+        else:
             retStr += "Off"
         retStr += "\n"
 
@@ -590,36 +611,36 @@ class BuildSetup:
             retStr += TAB + "Optimization level: " + self.options.optimization + "\n"
 
         retStr += TAB + "Dynamic loading: "
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             retStr += "Enabled"
-        else :
+        else:
             retStr += "Disabled"
         retStr += "\n"
 
         retStr += TAB + "Domain specific library: "
-        if self.options.domainLibrary == True:
+        if self.options.domainLibrary is True:
             retStr += "Enabled"
-        else :
+        else:
             retStr += "Disabled"
         retStr += "\n"
 
         retStr += TAB + "Pthreads: "
-        if self.options.pthreads == True:
+        if self.options.pthreads is True:
             retStr += "Enabled"
-        else :
+        else:
             retStr += "Disabled"
         retStr += "\n"
 
         retStr += TAB + "MPI: "
-        if self.options.withMpi == True:
+        if self.options.withMpi is True:
             retStr += "Used"
-        else :
+        else:
             retStr += "Not used"
         retStr += "\n"
 
         retStr += TAB + "DX: "
 
-        if self.dx.exists == True:
+        if self.dx.exists is True:
             retStr += "Used\n"
         else:
             retStr += "Not used\n"
@@ -631,7 +652,7 @@ class BuildSetup:
         retStr += TAB + getFileStatus(self.grepBin) + "\n"
         retStr += TAB + getFileStatus(self.makeBin) + "\n"
 
-        if self.dx.exists == True:
+        if self.dx.exists is True:
             retStr += self.dx.getInfo()
 
         return retStr
@@ -662,36 +683,36 @@ class BuildSetup:
         self.bisonVersion = tokens[-1]
 
     def main(self):
-        if self.options.help == True:
+        if self.options.help is True:
             return
 
         self.setCompilers()
         self.setDX()
         self.bisonVersionFinder()
-        print self.getSystemInfo()
+        print(self.getSystemInfo())
 
-        ## At this point if there has been no FatalError, the environment
-        ## and the options are ok, so create the config log before doing
-        ## any more work.
+        # At this point if there has been no FatalError, the environment
+        # and the options are ok, so create the config log before doing
+        # any more work.
         self.createLog()
 
-        if self.options.blueGene == True or self.operatingSystem == "Linux":
+        if self.options.blueGene is True or self.operatingSystem == "Linux":
             os.system("mv -f framework/networks/include/pthread.h framework/networks/include/pthread.h.bak > /dev/null 2>&1")
 
-        if self.options.rebuild == True:
-            #print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
-            #os.system(CLEAN_SCRIPT)
+        if self.options.rebuild is True:
+            # print "Cleaning the project using:", CLEAN_SCRIPT, "\n"
+            # os.system(CLEAN_SCRIPT)
             os.system("make LINUX clean")
 
         createConfigHeader()
         touchExtensionsMk()
 
-        #self.generateMakefile("Makefile_NTS")
+        # self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
-        if self.options.rebuild == True:
+        if self.options.rebuild is True:
             cmd = "make -j " + str(self.numCPUs)
-            print "Starting the make process with:", cmd
+            print("Starting the make process with:", cmd)
             os.system(cmd)
 
     def setDX(self):
@@ -702,11 +723,11 @@ class BuildSetup:
                 raise FatalError("DX can not be enabled in 64 bit object mode")
         else:
             if self.options.withDX == UNDEF:
-#                printFeedback(
-#                    "Usage of dx not specified, checking if it exists.")
-#                self.dx.setup(self.operatingSystem)
-#                if self.dx.exists == True:
-#                    printFeedback("DX found, using...\n")
+                # printFeedback(
+                #     "Usage of dx not specified, checking if it exists.")
+                # self.dx.setup(self.operatingSystem)
+                # if self.dx.exists is True:
+                #     printFeedback("DX found, using...\n")
                 self.options.withDX = DONTUSE
             elif self.options.withDX == USE:
                 self.dx.setup(self.operatingSystem)
@@ -715,42 +736,42 @@ class BuildSetup:
 
     def setCompilers(self):
 
-        if self.options.withMpi == True:
+        if self.options.withMpi is True:
             if self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
-                   self.options.compiler = "gcc"
-                   self.cCompiler = findFile("gcc", True)
-                   findFile("gcc", True)
-                   self.cppCompiler = findFile("g++", True)
+                    self.options.compiler = "gcc"
+                    self.cCompiler = findFile("gcc", True)
+                    findFile("gcc", True)
+                    self.cppCompiler = findFile("g++", True)
                 else:
-                   self.options.compiler = "xl"
-                   self.cCompiler = findFile("xlc_r", True)
-                   # xlC_r is internally required for mpCC_r
-                   findFile("xlC_r", True)
-                   self.cppCompiler = findFile("mpCC_r", True)
+                    self.options.compiler = "xl"
+                    self.cCompiler = findFile("xlc_r", True)
+                    # xlC_r is internally required for mpCC_r
+                    findFile("xlC_r", True)
+                    self.cppCompiler = findFile("mpCC_r", True)
             else:
-                if self.options.blueGeneL == True:
-                   self.options.compiler = "xl"
-                   self.cCompiler = findFile("/opt/ibmcmp/vac/bg/9.0/bin/blrts_xlc", True)
-                   self.cppCompiler = findFile("/opt/ibmcmp/vacpp/bg/9.0/bin/blrts_xlC", True)
+                if self.options.blueGeneL is True:
+                    self.options.compiler = "xl"
+                    self.cCompiler = findFile("/opt/ibmcmp/vac/bg/9.0/bin/blrts_xlc", True)
+                    self.cppCompiler = findFile("/opt/ibmcmp/vacpp/bg/9.0/bin/blrts_xlC", True)
                 else:
-                   if self.options.blueGeneP == True:
-                      self.options.compiler = "xl"
-                      self.cCompiler = findFile("mpixlc_r", True)
-                      self.cppCompiler = findFile("mpixlcxx_r", True)
-                   else:
-                      if self.options.blueGeneQ == True:
-                         self.options.compiler = "xl"
-                         self.cCompiler = findFile("mpixlc_r", True)
-                         self.cppCompiler = findFile("mpixlcxx_r", True)
-                      else:
-                         if self.operatingSystem == "Linux":
-                            self.options.compiler = "mpicc"
-                            self.cCompiler = findFile("mpicc", True)
-                            findFile("mpicc", True)
-                            self.cppCompiler = findFile("mpiCC", True)
-                            findFile("mpiCC", True)
-                   #raise FatalError("Currently MPI is only used by AIX")
+                    if self.options.blueGeneP is True:
+                        self.options.compiler = "xl"
+                        self.cCompiler = findFile("mpixlc_r", True)
+                        self.cppCompiler = findFile("mpixlcxx_r", True)
+                    else:
+                        if self.options.blueGeneQ is True:
+                            self.options.compiler = "xl"
+                            self.cCompiler = findFile("mpixlc_r", True)
+                            self.cppCompiler = findFile("mpixlcxx_r", True)
+                        else:
+                            if self.operatingSystem == "Linux":
+                                self.options.compiler = "mpicc"
+                                self.cCompiler = findFile("mpicc", True)
+                                findFile("mpicc", True)
+                                self.cppCompiler = findFile("mpiCC", True)
+                                findFile("mpiCC", True)
+                                # raise FatalError("Currently MPI is only used by AIX")
             return # important do not continue this function after here.
 
         if not (self.options.compiler == "xl" or self.options.compiler == "gcc"):
@@ -819,7 +840,7 @@ TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 #GENERATED_DL_OBJECTS :=
 
         # BlueGene MPI flags
-        if self.options.blueGeneL == True:
+        if self.options.blueGeneL is True:
             retStr += \
 """\
 BGL_ROOT=/bgl/BlueLight/ppcfloor
@@ -828,7 +849,7 @@ MPI_TRACE_LIBS = /bgl/local/lib/libmpitrace.a
 MPI_INC = -I$(BGL_ROOT)/bglsys/include
 
 """
-        if self.options.blueGeneP == True:
+        if self.options.blueGeneP is True:
             retStr += \
 """\
 BGP_ROOT=/bgsys/drivers/ppcfloor
@@ -838,15 +859,15 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 
         retStr += "CC := " + self.cppCompiler + "\n"
         retStr += "C_COMP := " + self.cCompiler + "\n"
-        if self.options.withMpi == True:
+        if self.options.withMpi is True:
             retStr += "HAVE_MPI := 1\n"
-        if self.options.silent == True:
+        if self.options.silent is True:
             retStr += "SILENT_MODE := 1\n"
-        if self.options.verbose == True:
+        if self.options.verbose is True:
             retStr += "VERBOSE := 1\n"
-        if self.options.blueGene == True:
+        if self.options.blueGene is True:
             retStr += "USING_BLUEGENE := 1\n"
-        if self.options.pthreads == True:
+        if self.options.pthreads is True:
             retStr += "HAVE_PTHREADS := 1\n"
         if self.options.profile == USE:
             retStr += "PROFILING := 1\n"
@@ -885,7 +906,7 @@ FRAMEWORK_MODULES := dca \\
 UTILS_MODULES := std \\
 		img \\
 """
-        if self.options.withMpi == True:
+        if self.options.withMpi is True:
             retStr += \
 """\
 		streams \\
@@ -922,13 +943,17 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstRefSumRsqrdInvWeightModifier \\
        	DstScaledContractedGaussianWeightModifier \\
        	DstScaledGaussianWeightModifier \\
+        ExecuteShell \\
+        GetNodeCoordFunctor \\
        	IsoSampler \\
        	IsoSamplerHybrid \\
         Exp \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\
+        Neg \\
       	PolyConnectorFunctor \\
+        RandomDispersalLayout \\
       	RefAngleModifier \\
       	RefDistanceModifier \\
       	ReversedDstRefGaussianWeightModifier \\
@@ -942,6 +967,9 @@ FUNCTOR_MODULES := BinomialDist \\
       	SrcRefSumRsqrdInvWeightModifier \\
       	SrcScaledContractedGaussianWeightModifier \\
       	SrcScaledGaussianWeightModifier \\
+        SrcRefDoGWeightModifier \\
+        Scale \\
+        Threshold \\
       	TissueConnectorFunctor \\
       	TissueFunctor \\
       	TissueLayoutFunctor \\
@@ -950,8 +978,6 @@ FUNCTOR_MODULES := BinomialDist \\
 	    TissueMGSifyFunctor \\
         Zipper \\
         UniformDiscreteDist \\
-        GetNodeCoordFunctor \\
-        ExecuteShell \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -1016,11 +1042,11 @@ $(OBJS_DIR):
         if self.objectMode == "64":
             retStr += " $(MAKE64)"
         if self.options.compiler == "xl":
-            if self.options.blueGene == True:
+            if self.options.blueGene is True:
                 retStr += " " + XL_BG_RUNTIME_TYPE_INFO_FLAG
-                if self.options.blueGeneP == True:
+                if self.options.blueGeneP is True:
                     retStr += " " + BGP_FLAGS
-                if self.options.blueGeneQ == True:
+                if self.options.blueGeneQ is True:
                     retStr += " " + BGQ_FLAGS
             else:
                 retStr += " " + XL_RUNTIME_TYPE_INFO_FLAG
@@ -1044,7 +1070,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 -MMD \
 """
         if self.options.compiler == "gcc":
-            if self.options.withMpi == True:
+            if self.options.withMpi is True:
                 retStr += "-I$(LAMHOME)/include"
             retStr += " " + GNU_WARNING_FLAGS
 
@@ -1067,19 +1093,19 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             else:
                 retStr += " -g -fno-inline -fno-eliminate-unused-debug-types"
 
-        if self.options.debug_assert == True:
+        if self.options.debug_assert is True:
             retStr += " " + DEBUG_ASSERT
 
-        if self.options.debug_hh == True:
+        if self.options.debug_hh is True:
             retStr += " " + DEBUG_HH
 
-        if self.options.debug_loops == True:
+        if self.options.debug_loops is True:
             retStr += " " + DEBUG_LOOPS
 
-        if self.options.debug_cpts == True:
+        if self.options.debug_cpts is True:
             retStr += " " + DEBUG_CPTS
 
-        if self.options.nowarning_dynamiccast == True:
+        if self.options.nowarning_dynamiccast is True:
             retStr += " " + NOWARNING_DYNAMICCAST
 
         if self.options.profile == USE:
@@ -1102,7 +1128,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.pthreads == False:
             retStr += " -DDISABLE_PTHREADS"
 
-        if self.options.withMpi == True:
+        if self.options.withMpi is True:
             retStr += " -DHAVE_MPI"
             if self.options.compiler == "gcc":
                retStr += " -DLAM_BUILDING"
@@ -1110,30 +1136,30 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.profile == USE:
             retStr += " -DPROFILING"
 
-        if self.options.silent == True:
+        if self.options.silent is True:
             retStr += " -DSILENT_MODE"
 
-        if self.options.verbose == True:
+        if self.options.verbose is True:
             retStr += " -DVERBOSE"
 
         if self.options.compiler == "gcc":
             retStr += " -DWITH_GCC"
 
-        if self.options.blueGene == True:
+        if self.options.blueGene is True:
             retStr += " -DUSING_BLUEGENE"
 
-        if self.options.blueGeneL == True:
+        if self.options.blueGeneL is True:
             retStr += " -DUSING_BLUEGENEL"
             retStr += " -DMPICH_IGNORE_CXX_SEEK"
-	    retStr += " -DMPICH_SKIP_MPICXX"
+        retStr += " -DMPICH_SKIP_MPICXX"
 
-        if self.options.blueGeneP == True:
+        if self.options.blueGeneP is True:
             retStr += " -DUSING_BLUEGENEP"
 
-        if self.options.blueGeneQ == True:
+        if self.options.blueGeneQ is True:
             retStr += " -DUSING_BLUEGENEQ"
 
-        if self.options.blueGene == True:
+        if self.options.blueGene is True:
             retStr += " $(MPI_INC)"
 
         retStr += "\n"
@@ -1141,24 +1167,24 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 
     def getLensLibs(self):
         retStr = "LENS_LIBS := "
-	if self.options.domainLibrary == True :
-            #retStr += "lib/liblensdomain.a "
-		retStr += "lib/liblens.a\n"
+        if self.options.domainLibrary is True :
+            # retStr += "lib/liblensdomain.a "
+            retStr += "lib/liblens.a\n"
         return retStr
 
     def getLibs(self):
         retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
         retStr += "LIBS := "
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             retStr += "-ldl "
-        if self.options.pthreads == True:
+        if self.options.pthreads is True:
             retStr += "-lpthread "
-	if self.architecture == "ppc32":
-	    retStr += "-lmass "
-	elif self.architecture == "ppc64":
-	    retStr += "-lmass "
-	else:
-	    retStr += "-lm "
+        if self.architecture == "ppc32":
+            retStr += "-lmass "
+        elif self.architecture == "ppc64":
+            retStr += "-lmass "
+        else:
+            retStr += "-lm "
         if self.operatingSystem == "AIX":
             retStr += "$(LENS_LIBS_EXT) "
         elif self.operatingSystem == "Linux":
@@ -1168,16 +1194,16 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
 
-	if self.options.mpiTrace == True and self.options.blueGene != True:
-	    printWarning("MPI Trace profiling not available.")
-	elif self.options.mpiTrace == True:
-	    retStr += " $(MPI_TRACE_LIBS)"
+        if self.options.mpiTrace is True and self.options.blueGene != True:
+            printWarning("MPI Trace profiling not available.")
+        elif self.options.mpiTrace is True:
+            retStr += " $(MPI_TRACE_LIBS)"
 
-        if self.options.blueGene == True:
+        if self.options.blueGene is True:
             retStr += " $(MPI_LIBS)"
 
         if self.options.compiler == "gcc":
-           if self.options.withMpi == True:
+           if self.options.withMpi is True:
               retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
 
         retStr += "\n"
@@ -1219,7 +1245,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "AIX":
 
-            if self.options.dynamicLoading == True:
+            if self.options.dynamicLoading is True:
                 retStr += " -Wl,-bnoautoexp -Wl,-bE:$(SO_DIR)/main.def"
             if self.options.compiler == "gcc":
                 retStr += " " + AIX_GNU_FINAL_TARGET_FLAG
@@ -1326,7 +1352,7 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 """\
 # Include the description of each module.
 # This will be in the root/project, where root is the root subdir (E.g. dir1)
-#include $(patsubst %,%/module.mk,$(MODULES))
+# include $(patsubst %,%/module.mk,$(MODULES))
 
 # Include the C include dependencies
 -include $(OBJS:.o=.d)
@@ -1392,11 +1418,11 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
     def getAllTarget(self):
         retStr = "cleanfirst:\n"
         retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
-        #retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
+        # retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
         retStr += "final: cleanfirst speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
-        if self.dx.exists == True:
+        if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
@@ -1404,7 +1430,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
 
     def getDependfileTarget(self):
         retStr = "$(SO_DIR)/Dependfile: $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF\n"
-        if self.options.extMode == True:
+        if self.options.extMode is True:
             retStr += "\techo DependFile not generated, working in EXT_MODE"
         else:
             retStr += "\t$(BIN_DIR)/createDF $(SO_DIR) > $@"
@@ -1421,7 +1447,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         retStr += "lib/liblens.a: $(BASE_OBJECTS)\n"
         moduleList = ["parser", "dca", "dataitems", "factories", "networks",
                       "simulation", "functors", "std", "img"]
-        if self.options.withMpi == True:
+        if self.options.withMpi is True:
             moduleList.append("streams")
 
         extraToken = ""
@@ -1455,7 +1481,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
 
         if self.operatingSystem == "AIX":
             retStr += LENSPARSER_TARGETS
-            if self.options.dynamicLoading == True:
+            if self.options.dynamicLoading is True:
                 retStr += "$(SO_DIR)/main.def "
             else:
                 retStr += "$(LENS_LIBS_EXT) "
@@ -1463,19 +1489,19 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             retStr += LENSPARSER_TARGETS + "$(LENS_LIBS_EXT) "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             retStr += " $(SHARED_OBJECTS)"
         retStr += "\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o "
         retStr += "$(LIBS) "
-        if self.options.tvMemDebug == True and self.operatingSystem != "AIX":
+        if self.options.tvMemDebug is True and self.operatingSystem != "AIX":
             printWarning("Totalview memory debugging not available.")
-        elif self.options.tvMemDebug == True:
+        elif self.options.tvMemDebug is True:
             if self.objectMode == "64":
                 retStr += "-L$(TOTALVIEW_LIBPATH) -L$(TOTALVIEW_LIBPATH) $(TOTALVIEW_LIBPATH)/aix_malloctype64_5.o "
             else:
                 retStr += "-L$(TOTALVIEW_LIBPATH) -L$(TOTALVIEW_LIBPATH) $(TOTALVIEW_LIBPATH)/aix_malloctype.o "
-        if self.dx.exists == True:
+        if self.dx.exists is True:
                 retStr += "$(DX_LITELIBS)"
         if self.operatingSystem == "AIX":
             retStr += "$(XLINKER)"
@@ -1487,7 +1513,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
     def getSocketTarget(self):
         retStr = "socket.o: "
 
-        if self.dx.exists == True:
+        if self.dx.exists is True:
             retStr += "socket.c\n"
         else:
             retStr += "fakesocket.c\n"
@@ -1495,7 +1521,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         retStr += "\t$(C_COMP)"
         if self.objectMode == "64":
             retStr += " $(MAKE64)"
-        if self.dx.exists == True:
+        if self.dx.exists is True:
             retStr += " $(DX_CFLAGS) -c $< "
         else:
             retStr += " -c $<"
@@ -1543,11 +1569,11 @@ clean:
 
         fileBody += self.getCFlags()
         fileBody += "\n"
-	fileBody += self.getLensLibs()
+        fileBody += self.getLensLibs()
         fileBody += self.getLibs()
         fileBody += "\n"
 
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             fileBody += self.getSharedPFix()
             fileBody += self.getSharedCC()
 
@@ -1556,23 +1582,23 @@ clean:
         fileBody += "\n"
         fileBody += self.getSuffixRules()
         # getCreateDFTargets() has to be before getModuleAndObjectIncludes()
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             fileBody += self.getCreateDFTargets()
         fileBody += self.getModuleAndObjectIncludes()
 
-        if self.dx.exists == True:
+        if self.dx.exists is True:
             fileBody += self.getDXSpecificCode()
 
         fileBody += self.getParserTargets()
         fileBody += self.getScannerTargets()
         fileBody += self.getAllTarget()
         fileBody += "\n"
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             fileBody += self.getDependfileTarget()
             fileBody += "\n"
         fileBody += self.getLibLensTarget()
         fileBody += "\n"
-        if self.options.dynamicLoading == True:
+        if self.options.dynamicLoading is True:
             fileBody += self.getMainDefTarget()
             fileBody += "\n"
         fileBody += self.getLensparserTarget()
@@ -1590,7 +1616,7 @@ if __name__ == "__main__":
     try:
         buildSetup = BuildSetup()
         buildSetup.main()
-    except FatalError, error:
+    except FatalError as error:
         error.printError()
         sys.exit(-1)
 

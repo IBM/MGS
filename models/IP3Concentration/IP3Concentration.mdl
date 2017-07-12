@@ -316,7 +316,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
   DimensionStruct* [] dimensionInputs;
   BranchDataStruct* [] branchDataInputs;  // 
     //}}}
-	//{{{data members: internal
+    //{{{data members: internal
   dyn_var_t volume;
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t IP3_cur;

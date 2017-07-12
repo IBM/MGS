@@ -146,6 +146,7 @@ Node CaConcentration Implements SolutionArrayProducer,
     dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
     dyn_var_t beta;   // Wagner and Keizer buffering constant
     dyn_var_t bmt; // value derived from beta  [1/ms]
+    dyn_var_t x_bmt; // value derived [1/ms] - no buffer
     //}}}
     dyn_var_t CaBaseline; // [uM]
 
@@ -474,6 +475,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
     dyn_var_t beta;   // Wagner and Keizer buffering constant
     dyn_var_t bmt; // value derived from beta 
+    dyn_var_t x_bmt; // value derived [1/ms] - no buffer
     //}}}
     dyn_var_t CaBaseline; // [uM]
 

@@ -1,0 +1,61 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef LEAKYIAFUNIT_MDL
+#define LEAKYIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Node LeakyIAFUnit Implements VoltageProducer, SpikeProducer
+{
+  SpikeInput [] inputs; // recurrent incoming spikes
+  float V;              // membrane potential
+  bool spike;           // current spike status
+  
+  Shared
+    {
+      double driver;     // common input to all neurons
+      double tau;        // leak decay time constant in s
+      double threshold;  // spiking threshold
+      double deltaT;     // in s
+     
+      InitPhase initializeShared;
+    }
+
+  InAttrPSet 
+    {
+      string identifier;
+      double weight;
+    }
+  
+  InitPhase initialize();  
+  RuntimePhase update(V); // only V is chnaged by this phase
+  RuntimePhase threshold(spike); // only spike is chnaged by this phase  
+
+  // Setup outgoing connections
+  VoltageProducer.voltage << &V; // the voltage output
+  SpikeProducer.spike << &spike; // the spike output
+
+  // Setup incoming connections
+   Connection Pre Node (PSet.identifier=="recW") Expects SpikeProducer {
+     SpikeProducer.spike >> inputs.spike;
+     PSet.weight >> inputs.weight;
+   }  
+  
+  UserFunction setIndices;
+}
+
+#endif
+ 

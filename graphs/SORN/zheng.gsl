@@ -1,0 +1,97 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initialize };
+RuntimePhases = { dataCollect, update, fire, outputWeightsShared, lastPhase };
+FinalPhases = { finalize };
+
+NodeType ZhengSORNExcUnit(< 
+       eta_IP = 0.01,
+       TE_max = 1.0,
+       mu_IP = 0.1,
+       sigma_HIP = 0.0,
+       sigma2_chi = 0.01,
+       eta_inhib = 0.001,
+       eta_STDP = 0.004,
+       mu_iSTDP = 0.1,
+       p_c = 0.00004,
+       Ach = 0.5,
+       weightsFileName = "Weights",
+       collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000}       
+       >) {initializeShared->initialize};
+
+NodeType ZhengSORNInhUnit(< 
+        TI_max = 1.0,
+        sigma2_chi = 0.01
+        >) {initializeShared->initialize};
+
+BindName Exc2Exc("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc",
+                 "conditionalFraction", 0.1,
+                 "condition", UniformDist(0.0,1.0)
+        	 );
+NdplInAttrInit E2E(Exc2Exc);
+
+BindName Exc2Inh("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc"
+        	 );
+NdplInAttrInit E2I(Exc2Inh);
+
+BindName Inh2Exc("weight", UniformDist(0.0,1.0),
+             "identifier", "lateralInh");
+NdplInAttrInit I2E(Inh2Exc);
+
+Grid SORN_E
+{
+   Dimension(20,20);
+   Layer(exc, ZhengSORNExcUnit, UniformLayout(1), < nodekind="Excitatory" >);
+   InitNodes( .[].Layer(exc), nodeDef);
+   NodeSet all(.[].Layer(exc) );
+   connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, E2E);
+};
+SORN_E sorn_E;
+
+Grid SORN_I
+{
+   Dimension(8,10);
+   Layer(inh, ZhengSORNInhUnit, UniformLayout(1), < nodekind="Inhibitory" >);
+   InitNodes( .[].Layer(inh), nodeDef);
+};
+SORN_I sorn_I;
+
+connectNodeSets(sorn_I[].Layer(inh), sorn_E[].Layer(exc), EachDst(EachAvg(0.2)), outAttrDef, I2E);
+connectNodeSets(sorn_E[].Layer(exc), sorn_I[].Layer(inh), EachDst(EachAvg(1.0)), outAttrDef, E2I);
+
+// DCA directives here
+
+VariableType ZhengSORNUnitDataCollector;
+ZhengSORNUnitDataCollector collector_E <fileName="SORN-EOutput.txt", deltaT=0.001>;
+polyConnect(sorn_E[].Layer(exc), collector_E, <>, <>);
+
+ZhengSORNUnitDataCollector collector_I<fileName="SORN-IOutput.txt", deltaT=0.001>;
+polyConnect(sorn_I[].Layer(inh), collector_I, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 500000, 0, lastPhase); 
+
+collector_E.dataCollection() on iterTrig;
+collector_I.dataCollection() on iterTrig;
+Stop on endTrig;

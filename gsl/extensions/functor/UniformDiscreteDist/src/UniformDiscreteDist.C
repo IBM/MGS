@@ -1,8 +1,24 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
 #include "Lens.h"
 #include "UniformDiscreteDist.h"
 #include "CG_UniformDiscreteDistBase.h"
 #include "LensContext.h"
 #include "rndm.h"
+#include "Simulation.h"
 #include <memory>
 
 void UniformDiscreteDist::userInitialize(LensContext* CG_c, double& n1, double& n2) 
@@ -11,7 +27,7 @@ void UniformDiscreteDist::userInitialize(LensContext* CG_c, double& n1, double& 
 
 int UniformDiscreteDist::userExecute(LensContext* CG_c) 
 {
-  return irandom(int(init.n1), int(init.n2));
+  return irandom(int(init.n1), int(init.n2), CG_c->sim->getSharedFunctorRandomSeedGenerator());
 }
 
 UniformDiscreteDist::UniformDiscreteDist() 

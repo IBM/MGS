@@ -70,7 +70,8 @@ BRANCHTYPE MTYPE ETYPE
 BRANCHTYPE MTYPE
 #{{{bouton-spine
 2 5 0   1 3   [AMPAmush, NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
-2 4 0   1 2   [AMPAthin, NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+2 4 0   1 2   [AMPAthin] [Voltage] [Voltage]   1.0
+#2 4 0   1 2   [AMPAthin, NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
 # disable NMDAR
 #2 5 0   1 3   [AMPAmush] [Voltage] [Voltage] 1.0
 #2 4 0   1 2   [AMPAthin] [Voltage] [Voltage] 1.0

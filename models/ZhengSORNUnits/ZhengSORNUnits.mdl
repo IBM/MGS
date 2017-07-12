@@ -1,0 +1,152 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef ZHENGSORNUNITS_MDL
+#define ZHENGSORNUNITS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
+   double x; // These variable names are according to Zheng et al. 2015
+   bool spike;
+   bool spikePrev;
+   double HIP;
+   double TE;
+   SORNSynapseInput [] lateralExcInputs;
+   //SpikeInput [] lateralInhInputs;
+   SORNSynapseInput [] lateralInhInputs;
+   Input modulatoryInput;
+
+   Shared {	
+     double eta_IP;
+     double TE_max;
+     double mu_IP;
+     double sigma_HIP;
+     double sigma2_chi;
+     double eta_inhib;
+     double eta_STDP;
+     double mu_iSTDP;
+     double eta_iSTDP;
+     double eta_iLTP;
+     double p_c;
+     double Ach;
+     int Ach_time;  // time at which Ach is turned ON
+     InitPhase initializeShared();
+     
+     string weightsFileName;
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     RuntimePhase outputWeightsShared;
+     int [] loadWeightsOn;
+     int loadWeightsNext;
+     RuntimePhase inputWeightsShared;
+    }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     double conditionalFraction;
+     double condition;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update(x);
+   RuntimePhase fire(spike, spikePrev);
+
+   SORNSpikeProducer.spikePrev << &spikePrev;   
+   SORNSpikeProducer.spike << &spike;   
+   SpikeProducer.spike << &spike;   
+   OutputProducer.output << &x;   
+
+   UserFunction checkForSynapse;
+   UserFunction checkForInhSynapse;
+   UserFunction setE2EIndices;
+   UserFunction setI2EIndices;
+
+   Connection Pre Node (PSet.identifier=="lateralExc") Expects SORNSpikeProducer {
+      SORNSpikeProducer.spikePrev >> lateralExcInputs.spikePrev;
+      SORNSpikeProducer.spike >> lateralExcInputs.spike;
+      PSet.weight >> lateralExcInputs.weight;      
+      checkForSynapse();
+      setE2EIndices();
+   }
+
+   Connection Pre Node (PSet.identifier=="lateralInh") Expects SORNSpikeProducer {
+      SORNSpikeProducer.spikePrev >> lateralInhInputs.spikePrev;
+      SORNSpikeProducer.spike >> lateralInhInputs.spike;
+      PSet.weight >> lateralInhInputs.weight; 
+      checkForInhSynapse(); 
+      setI2EIndices();     
+   }
+   
+   Connection Pre Node (PSet.identifier=="modulatory") Expects OutputProducer {
+      OutputProducer.output >> modulatoryInput.input;
+   }
+
+}
+
+Node ZhengSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
+   double y; // These variable names are according to Zheng et al. 2015
+   bool spike;
+   bool spikePrev;
+   double TI;
+   SpikeInput [] lateralExcInputs;
+   Input modulatoryInput;
+   
+   Shared {
+     //double eta_IP;  // not used in inh units: no threshold adaptation
+     double TI_max;
+     double sigma2_chi;
+
+     InitPhase initializeShared();
+     
+     string weightsFileName;
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     RuntimePhase outputWeightsShared;
+     int [] loadWeightsOn;
+     int loadWeightsNext;
+     RuntimePhase inputWeightsShared;
+}
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update(y);
+   RuntimePhase fire(spike, spikePrev);
+
+   SpikeProducer.spike << &spike;
+   SORNSpikeProducer.spike << &spike;   
+   SORNSpikeProducer.spikePrev << &spikePrev;   
+   OutputProducer.output << &y;   
+   
+   UserFunction setIndices;
+  
+   Connection Pre Node (PSet.identifier=="lateralExc") Expects SpikeProducer {
+      SpikeProducer.spike >> lateralExcInputs.spike;
+      PSet.weight >> lateralExcInputs.weight;
+      setIndices();
+   }
+
+   Connection Pre Node (PSet.identifier=="modulatory") Expects OutputProducer {
+      OutputProducer.output >> modulatoryInput.input;
+   }
+}
+
+#endif

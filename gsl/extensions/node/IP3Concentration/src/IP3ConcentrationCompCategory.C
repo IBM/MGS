@@ -36,9 +36,11 @@ void IP3ConcentrationCompCategory::deriveParameters(RNG& rng)
 {
   if (getSharedMembers().deltaT)
   {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
+#if IP3_CYTO_DYNAMICS == FAST_BUFFERING
     getSharedMembers().bmt =
         2.0 / (getSharedMembers().beta * *(getSharedMembers().deltaT));
+#elif IP3_CYTO_DYNAMICS == REGULAR_DYNAMICS
+    getSharedMembers().bmt = 2.0 / (*(getSharedMembers().deltaT)) ;
 #else
     assert(0);
 #endif

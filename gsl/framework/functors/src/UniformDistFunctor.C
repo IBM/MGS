@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -25,6 +25,7 @@
 #include "FunctorDataItem.h"
 #include "SyntaxErrorException.h"
 #include "rndm.h"
+#include "Simulation.h"
 
 class FunctorType;
 class Simulation;
@@ -59,8 +60,7 @@ void UniformDistFunctor::doExecute(LensContext *c,
 {
    FloatDataItem fdi;
 
-//   float genNum = _minLim + ( _maxLim - _minLim ) * RNG;
-   float genNum = drandom(_minLim, _maxLim);
+   float genNum = drandom(_minLim, _maxLim,c->sim->getSharedFunctorRandomSeedGenerator());
 
    fdi.setFloat(genNum);
 

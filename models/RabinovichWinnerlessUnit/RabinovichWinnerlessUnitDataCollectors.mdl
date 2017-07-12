@@ -1,0 +1,52 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef RABINOVICHWINNERLESSUNITDATACOLLECTORS_MDL
+#define RABINOVICHWINNERLESSUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable RabinovichWinnerlessUnitDataCollector
+{
+   bool binary;
+   string directory;
+   string fileExt;
+   int [] rows;
+   int [] cols;
+   int [] slices;
+   int mxcol;
+   int mxslice; // when binary can be 3D
+   double* [] x;
+   UserFunction getNodeIndices;
+
+   bool op_saveX;
+   
+/*   Connection Pre Node () Expects PlasticOutputProducer
+   {
+      PlasticOutputProducer.output >> x;
+      getNodeIndices();
+   }
+*/  
+     Connection Pre Node () Expects OutputProducer
+   {
+      OutputProducer.output >> x;
+      getNodeIndices();
+   }
+
+   InitPhase initialize; 
+   TriggeredFunction dataCollection;
+   FinalPhase finalize;
+}
+
+#endif

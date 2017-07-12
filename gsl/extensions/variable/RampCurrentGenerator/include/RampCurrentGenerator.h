@@ -22,7 +22,7 @@ class RampCurrentGenerator : public CG_RampCurrentGenerator
       float tstart, tend; //[ms]
       float nextPulse; //[ms]
       bool first_enter_pulse;
-      std::ofstream* outFile;
+      std::ofstream* outFile = 0;
       float time_write_data; // [ms]
       void (RampCurrentGenerator::*fpt_update)(RNG& rng, float currentTime) = NULL;
       void dataCollection(float currentTime);

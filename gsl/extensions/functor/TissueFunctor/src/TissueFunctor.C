@@ -7120,14 +7120,14 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
       }
     }
   }
-	else if (category == "CLEFT")
+  else if (category == "CLEFT" and _synapticCleftLayers.size() > 0)
   {
+    layer = _synapticCleftLayers[typeIdx];
+    assert(layer);
     if (maskVector.size() == 0)
-    {
+    {//get all layers
       //layer = preSynPoints ? _preSynapticPointLayers[typeIdx]
       //             : _synapticCleftLayers[typeIdx];
-      layer = _synapticCleftLayers[typeIdx];
-      assert(layer);
       int density = layer->getDensity(_rank);
       for (int i = 0; i < density; ++i)
       {
@@ -7146,8 +7146,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
         key_size_t key1= (*siter).first->getKey1();
         key_size_t key2= (*siter).first->getKey2();
         if (_segmentDescriptor.getSegmentKey(key1, mask) == targetKey
-           || _segmentDescriptor.getSegmentKey(key2, mask) == targetKey 
-            )
+            || _segmentDescriptor.getSegmentKey(key2, mask) == targetKey 
+           )
         {
           int i = (*siter).second;
           nodeDescriptors.push_back(

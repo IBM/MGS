@@ -132,13 +132,8 @@ void CaERConcentrationJunction::initializeJunction(RNG& rng)
 
 void CaERConcentrationJunction::predictJunction(RNG& rng)
 {
-  assert(getSharedMembers().bmt > 0);
-#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
   float LHS = getSharedMembers().bmt;
   float RHS = getSharedMembers().bmt * Ca_cur ;
-#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-  do something here
-#endif
 
     //  Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
     //  Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
@@ -205,13 +200,8 @@ void CaERConcentrationJunction::predictJunction(RNG& rng)
 
 void CaERConcentrationJunction::correctJunction(RNG& rng)
 {
-#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
-  assert(getSharedMembers().bmt > 0);
   float LHS = getSharedMembers().bmt;
   float RHS = getSharedMembers().bmt * Ca_cur;
-#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-  do something here
-#endif
 
     //  Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
     //  Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();

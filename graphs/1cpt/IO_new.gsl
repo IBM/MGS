@@ -25,6 +25,7 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
+#define CASE_09  9   //inject soma [current clamp]
 #define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "msn0_"
@@ -41,8 +42,6 @@ Zipper zipper();
 Functor Print;
 Print print();
   
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
 
 Connector PolyConnectorFunctor();   
 PolyConnectorFunctor polyConnect();

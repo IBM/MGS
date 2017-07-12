@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -453,40 +453,40 @@ void CaConcentration::printDebugHH()
   unsigned size = branchData->size;
   for (int i = 0; i < size; ++i)
   {
-		this->printDebugHH(i);
+    this->printDebugHH(i);
   }
 }
 
 void CaConcentration::printDebugHH(int cptIndex)
 {
   unsigned size = branchData->size;
-	if (cptIndex == 0)
-	{
+  if (cptIndex == 0)
+  {
     std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
       << "(neuronIdx, brIdx, brOrder, brType) distal(C0 | C1 | C2 | C3) :"
       << " prox( C0 | C1 | C2) |"
       << "{x,y,z,r, dist2soma, surface_area, volume, length} Cai\n";
   }
-	int i  = cptIndex;
-	std::cerr << getSimulation().getIteration() << "," <<
+  int i  = cptIndex;
+  std::cerr << getSimulation().getIteration() << "," <<
     dyn_var_t(getSimulation().getIteration()) *
     *getSharedMembers().deltaT << "| BRANCH"
     << " [" << getSimulation().getRank() << "," << getNodeIndex()
     << "," << getIndex() << "," << i << "] "
     << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
-		<< std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+    << std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
     << _segmentDescriptor.getBranchOrder(branchData->key) << ","
     << _segmentDescriptor.getBranchType(branchData->key) << ") |"
     << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
     << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
     << isProximalCase1 << "|" << isProximalCase2 << "|"
-		<< " {" 
+    << " {" 
     << std::setprecision(3) << dimensions[i]->x << "," 
     << std::setprecision(3) << dimensions[i]->y << ","
-		<< std::setprecision(3) << dimensions[i]->z << "," 
+    << std::setprecision(3) << dimensions[i]->z << "," 
     << std::setprecision(3) << dimensions[i]->r << " | " 
-		<< dimensions[i]->dist2soma  << ","
-		<< dimensions[i]->surface_area << "," 
+    << dimensions[i]->dist2soma  << ","
+    << dimensions[i]->surface_area << "," 
     << dimensions[i]->volume << "," << dimensions[i]->length 
     << "} "
     << Ca_new[i]  << " " << std::endl;
@@ -505,12 +505,8 @@ void CaConcentration::doForwardSolve()
   //  1. ionic currents 
   for (int i = 0; i < numCpts; i++)
   {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
-#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
-    assert(0); // need to implement
-#endif
     /* * * Sum Currents * * */
     // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
 		// 1.a. producing I_Ca [pA/um^2]
@@ -538,12 +534,8 @@ void CaConcentration::doForwardSolve()
   /* FIX */
   if (isDistalCase3)
   {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * Ca_cur[0];
-#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
-	assert(0); // need to implement
-#endif
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];
@@ -1204,6 +1196,7 @@ void CaConcentration::updateMicrodomains()
   //      RHS[] using v_efflux * Ca_ds  [uM/ms]
   //      and RHS_microdomain[]
   //float LHS = getSharedMembers().bmt; // [1/ms]
+  dyn_var_t bmt= getSharedMembers().x_bmt; // [1/ms]
   int numCpts = branchData->size;
   unsigned int ii = 0;
   for (ii = 0; ii < microdomainNames.size(); ii++)
@@ -1211,12 +1204,8 @@ void CaConcentration::updateMicrodomains()
     int offset = ii * numCpts;
     for (int jj = 0; jj < numCpts; jj++)
     {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
-      RHS_microdomain[jj+offset] = ((getSharedMembers().bmt * volume_microdomain[ii] / dimensions[jj]->volume) *
+      RHS_microdomain[jj+offset] = ((bmt * volume_microdomain[ii] / dimensions[jj]->volume) *
          Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj];  // [uM/ms]
-#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
-      assert(0); // need to implement
-#endif
     }
   }
   Array<ChannelCaCurrents>::iterator citer = channelCaCurrents_microdomain.begin();
@@ -1258,7 +1247,7 @@ void CaConcentration::updateMicrodomains()
 //backward
 void CaConcentration::updateMicrodomains_Ca()
 {//Update Ca_microdomain[]
-  float bmt = getSharedMembers().bmt; // [1/ms] -- TUAN TODO - plan to use a different buffering for the microdomain
+  dyn_var_t bmt = getSharedMembers().x_bmt; // [1/ms] -- use a different buffering for the microdomain
   int numCpts = branchData->size;
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
   {
@@ -1274,7 +1263,7 @@ void CaConcentration::updateMicrodomains_Ca()
      // Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] - 
      //     v_efflux[ii]/2.0 * (Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj]) 
      //   / (LHS + v_efflux[ii]/2.0);
-      double LHS = getSharedMembers().bmt * volume_microdomain[ii] / dimensions[jj]->volume +
+      double LHS = bmt * volume_microdomain[ii] / dimensions[jj]->volume +
           v_efflux[ii];
      Ca_microdomain[jj+offset] = (RHS_microdomain[jj+offset] / LHS) ;
     }

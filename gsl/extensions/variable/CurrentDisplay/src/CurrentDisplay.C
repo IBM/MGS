@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -78,7 +78,14 @@ void CurrentDisplay::initialize(RNG& rng)
       {
         for (unsigned int i = 0; i < I_synapse.size(); ++i)
         {
-          assert(synapseBranchData[i]->size() == 2);
+          //NOTE: As the connectionn preCpt-SynapticCleft-postCpt
+          // is established for every receptor on that SynapticCleft
+          // then SynapticCleft->branchDataPrePost->size() is a multiple of 2
+          //  times number of receptor-type on that cleft
+          //  So we should not check this
+          //assert(synapseBranchData[i]->size() == 2);
+          //  But this is the right one
+          assert(synapseBranchData[i]->size() % 2 == 0);
           assert(synapseIndices[i].size() == 2);
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(

@@ -304,7 +304,7 @@ SegmentDescriptor::SegmentKeyData SegmentDescriptor::getSegmentKeyData(std::stri
   std::map<std::string, SegmentDescriptor::SegmentKeyData>::iterator miter=_fieldMap.find(fieldName);
   if (miter==_fieldMap.end()) {
     std::cerr<<"Unrecognized Segment Key field name: "<<fieldName<<std::endl;
-    exit(0);
+    exit(1);
   }
   return miter->second;
 }
