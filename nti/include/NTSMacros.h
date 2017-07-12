@@ -16,7 +16,7 @@
 #define e0  1.602e-19   // Coulomb = [C] - the elementary charge for 1 univalent ion
 #define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant - total charges for 1 mole 
                         // of univalent ion
-#define zR  8.314472e3 //[mJ/(K.mol)] - universal constant
+#define zR  8.314472e3 //[mJ/(K.mol)] - universal gas constant
 #define zCa 2          // valance of Ca2+ ions
 #define zNa 1          // valence of Na+ ions
 #define zK  1          // valence of K+ ions
@@ -32,6 +32,8 @@
 #define MIN_RESISTANCE_VALUE 0.0001  //[GOhm*um] - keep this for numerical stability
 
 #define AvogN  (6.0223*1e23)     // Avogadro number
+
+#define TKelvin 273.15          //[celcius] - absolute temperature
 //}}}
 
 ///////////////////////////////////////////////////////////////////////

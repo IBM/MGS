@@ -27,7 +27,9 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define STIMULUS_CASE   CASE_00
+#define CASE_09  9   //inject pre-syn soma [random noise current]
+#define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
+#define STIMULUS_CASE   CASE_10
 //#define morph ""
 #define morph "msn0_"
 //}}}
@@ -78,6 +80,10 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Spine_triggeraxon" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_08
 #define OutputFolderName dataFolder morph "Spine_Vclamp" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_09
+#define OutputFolderName dataFolder morph "soma_noise" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_10
+#define OutputFolderName dataFolder morph "uncagesoma_noise" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
 #else
@@ -110,7 +116,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-  #define TimeEnd          1100      // [ms]
+  #define TimeEnd          120      // [ms]
   //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
   #define TimeVClampSet1    20    // [ms]
   #define TimeVClampSet2    100    // [ms]
@@ -181,19 +187,9 @@ print("Case 00: resting");
 #define NTGlutamate_max      180.0  // [uM]   // 160-190 uM
 #define NTGABA_max      185.0  // [uM]  
 
-#if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
-    GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
-#define NTGlutamate_baseline 0.0  // [uM]
-#else
-#define NTGlutamate_baseline 5.0  // [uM]
-#endif
+#define NTGlutamate_baseline 0.00  // [uM]
 
-#if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994 || \
-    GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
 #define NTGABA_baseline 0.0  // [uM]
-#else
-#define NTGABA_baseline 5.0  // [uM]
-#endif
   //}}}
 //}}}
 
@@ -201,8 +197,11 @@ print("Case 00: resting");
 //NOTE: 1 Ohm.cm = 10^-5 GOhm*um
 #define Ra_value 0.001     // [GOhm*um] 
   //across the spine-neck to shaft
-//#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
-#define R_NECK 0.012     // [GOhm*um] --> g~12 nS
+#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
+//#define R_NECK 0.010     // [GOhm*um] --> g~15 nS
+//#define R_NECK 0.050     // [GOhm*um] 
+//#define R_NECK 0.100     // [GOhm*um] 
+//#define R_NECK 0.012     // [GOhm*um] --> g~12 nS
 //#define R_NECK 0.09     // [GOhm*um] -->  ~ 495 MOhm
 //#define R_NECK 0.112     // [GOhm*um] --> g~1.2 nS ~ 0.616 GOhm ~ 616 MOhm
 //#define R_NECK 1.112     // [GOhm*um] --> g~12e-2 nS ~ 8.0 GOhm
@@ -228,7 +227,12 @@ print("Case 00: resting");
 //{{{ AMPAR
 // AMPA unitary condutance < 1 pS  [Smith et al., 2000]
 // total ~ 11 pS
-#define AMPAR_CONDUCTANCE 0.5 // 2.2223 nS/um^2
+// Sahara et al., (2001) assuming single channel conductance 20.4pS --> a single quantum vesicle open 22 AMPAR on average
+// NOTE: surface area (r=0.33 --> A = 1.37 um^2
+// NOTE: surface area (r=0.30 --> A = 1.13 um^2
+// Behabadi (2012) gAMPAR = 1.5 nS
+//#define AMPAR_CONDUCTANCE 1.5 // 2.2223 nS/um^2
+#define AMPAR_CONDUCTANCE 10.5 
 //#define AMPAR_CONDUCTANCE 2.5 // 2.2223 nS/um^2
 //}}}
 //{{{ NMDAR (g = conductance via NMDAR)
@@ -240,8 +244,8 @@ print("Case 00: resting");
 //NOTE: Dexteshe et al. gNMDAR(total) ~ 0.01 to 0.6 nS
 //NOTE: A good estimate of gNMDAR(total) ~ 0.875 nS
 //  A typical spinehead as a sphere with r=0.1255 (um)
-//#define NMDAR_CONDUCTANCE 4.42  //  nS/um^2  
-#define NMDAR_CONDUCTANCE 0.000  //  nS/um^2  
+#define NMDAR_CONDUCTANCE 0.42  //  nS/um^2  
+//#define NMDAR_CONDUCTANCE 0.000  //  nS/um^2  
 //}}}
 //{{{ GABAR
 //NOTE: gGABAA(total) ~ 0.25 to 1.2 nS
@@ -758,6 +762,9 @@ NodeType SynapticCleft(
 //Ser      = ???
         Glut_baseline = NTGlutamate_baseline, //[uM]
         GABA_baseline = NTGABA_baseline,   // [uM]
+        numGlutperVesicle = 2000, //don't adjust - affect AMPAR
+        numGABAperVesicle = 2000,
+        cleftVolume = 3.56e-3, // um^3
         //{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth curve
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
         Glut_max= NTGlutamate_max,  
@@ -801,20 +808,92 @@ NodeType SynapticCleft(
           //}}}
           >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };*/
 NodeType AMPAReceptor_Markov (<
+//{{{
 // based on Destexhe-Mainen-Sejnowski-1994 (Chap.1 - Methods in Neuron Modeling)
-          E=0.0,        // mV
-          Rb=0.013, // uM^-1 .msec^-1
-          Ru1=0.0059, // msec^-1
-          Ru2=86.0, //msec^-1
-          Rd=0.9, //msec^-1
-          Rr=0.064, //msec^-1
-          alpha=2.7, // uM^-1 msec^-1  //Ro
-          beta=0.2    // msec^1        //Rc
+//        E=0.0,        // mV
+//        Rb=0.013, // uM^-1 .msec^-1
+//        Ru1=0.0059, // msec^-1
+//        Ru2=86.0, //msec^-1
+//        Rd=0.9, //msec^-1
+//        Rr=0.064, //msec^-1
+//        //alpha=2.7, // uM^-1 msec^-1  //Ro
+//        alpha=17.7, // uM^-1 msec^-1  //Ro
+//        beta=0.2    // msec^1        //Rc
+
+//GluR1-AMPAR
+//        Rb=0.013, // uM^-1 .msec^-1
+//        Ru1=0.0059, // msec^-1
+//        Ru2=86.0, //msec^-1
+//        Rd=0.9, //msec^-1
+//        //Rd=0.2, //msec^-1
+//        Rr=0.064, //msec^-1
+//        //Rr=0.664, //msec^-1
+//        //alpha=2.7, // uM^-1 msec^-1  //Ro
+//        alpha=17.7, // uM^-1 msec^-1  //Ro ---> Po = 0.6
+//        //NOTE: Based on Koike, Ozawa (2000) Po~ 0.32 for 1mM Glutamate, 0.68 for 10mM Glutamate
+//        //alpha=10.7, // uM^-1 msec^-1  //Ro 
+//        beta=0.2    // msec^1        //Rc
+
+//GluR2-AMPAR
+          //Rb=0.013, // uM^-1 .msec^-1
+          Rb=0.0043, // uM^-1 .msec^-1
+          //Ru1=0.0059, // msec^-1
+          Ru1=0.0759, // msec^-1
+          //Ru2=86.0, //msec^-1
+          Ru2=3.60, //msec^-1
+          //Rd=0.9, //msec^-1
+          Rd=0.09, //msec^-1
+          //Rr=0.064, //msec^-1
+          Rr=0.84, //msec^-1
+          //alpha=2.7, // uM^-1 msec^-1  //Ro
+          alpha=17.7, // uM^-1 msec^-1  //Ro
+          //beta=0.2    // msec^1        //Rc
+          beta=10.1    // msec^1        //Rc
+//}}}
           >) {computeTadj->initialize2, initializeAMPA->initialize3, updateAMPA->solveChannels };
-NodeType NMDAReceptor (<
+//NodeType NMDAReceptor (<
+//          E = 0.0,       // mV
+//          //{{{two-state model
+//          //NT + C <==>[alpha][beta] O.NT
+//          alpha=0.000512,  // uM^-1 msec^-1
+//          beta=0.053,     // msec^1
+//          //}}}
+//          //{{{ older preSynapticPoint
+//          NTmax=NTGlutamate_max,     // 160-190 uM
+//          Vp=2.0,       // mV
+//          Kp=5.0,        // mV
+//          //}}}
+//          plasticityOn = NMDAR_PLASTICITY_RULE, //
+//          plasticityStartAt = 0, //ms
+//          plasticityStopAt = 100000, //ms
+//          theta_d = 1.0,
+//          theta_p = 1.3,
+//          gamma_d = 100, // 331.9,
+//          gamma_p = 125, // 725.085,
+//          tau = 34600.3615, //ms
+//          w_th = 0.5,
+//          deltaNMDAR = 0, // Turns on/off changes in NMDARs
+//          alphaBuffer = 0.0175,
+//          tauBuffer = 3000
+// >) {computeTadj->initialize2, initializeNMDA->initialize3, updateNMDA->solveChannels };
+////           plasticityOn = 1, theta_d = 1.0, theta_p = 1.3, gamma_d = 241.356, gamma_p = 150.0, tau = 150000.0, w_th = 0.5 >) { initializeNMDA->initialize3, updateNMDA->solveChannels, updateNMDADepPlasticity->solveChannels };
+NodeType NMDAReceptor_Markov (<
+//{{{
           E = 0.0,       // mV
-          alpha=0.000512,  // uM^-1 msec^-1
-          beta=0.053,     // msec^1
+          //{{{two-state model
+          //NT + C <==>[alpha][beta] O.NT
+          //Rb=0.005, // uM^-1 .msec^-1
+          Rb=0.00015, // uM^-1 .msec^-1
+          cRb=0.01359, // msec^-1
+          Ru=0.0159, // msec^-1
+          Rd=0.0084, //msec^-1
+          //Rr=0.064, //msec^-1
+          Rr=0.064, //msec^-1
+          //alpha=0.0465, // msec^-1  //Ro
+          alpha=1.265, // msec^-1  //Ro
+          //beta=0.0738,    // msec^1        //Rc
+          beta=2.138,    // msec^1        //Rc
+          //}}}
           //{{{ older preSynapticPoint
           NTmax=NTGlutamate_max,     // 160-190 uM
           Vp=2.0,       // mV
@@ -832,6 +911,7 @@ NodeType NMDAReceptor (<
           deltaNMDAR = 0, // Turns on/off changes in NMDARs
           alphaBuffer = 0.0175,
           tauBuffer = 3000
+//}}}
  >) {computeTadj->initialize2, initializeNMDA->initialize3, updateNMDA->solveChannels };
 //           plasticityOn = 1, theta_d = 1.0, theta_p = 1.3, gamma_d = 241.356, gamma_p = 150.0, tau = 150000.0, w_th = 0.5 >) { initializeNMDA->initialize3, updateNMDA->solveChannels, updateNMDADepPlasticity->solveChannels };
 
@@ -1242,6 +1322,7 @@ Grid MSN_D1Neuron{
      //{{{ Na channels
 	Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
 	Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
+	Layer(NatChannels_PL5, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat_PL5]" >), < nodekind="Channels[Nat_PL5]" >, tissueGM);
      //}}}
      //{{{ K+ channels
   Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
@@ -1313,9 +1394,9 @@ Grid MSN_D1Neuron{
       // 3.2. CHEMICAL SYNAPSE RECEPTORS
       /*{{{*/
 	Layer(AMPAthinSynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
-	Layer(NMDAthinSynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
+	Layer(NMDAthinSynapses, NMDAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
 	Layer(AMPAmushSynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
-	Layer(NMDAmushSynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
+	Layer(NMDAmushSynapses, NMDAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
 	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
         Layer(mGluRType1Synapses, mGluReceptorType1, tissueFunctor("Layout", < nodekind="ChemicalSynapses[mGluR]" >), < nodekind="ChemicalSynapses[mGluR]" >, tissueGM);
       /*}}}*/
@@ -1593,6 +1674,11 @@ Grid MSN_D1Neuron{
 				compartmentalize = { "gbar" },
 				gbar = {0.0} 
 				> ) ); 
+
+	InitNodes ( .[].Layer(NatChannels_PL5), tissueFunctor("NodeInit", <
+				compartmentalize = { "gbar" },
+				gbar = {0.0}, Vhalf_m_shift = -7.0, Vhalf_h_shift = 0.0
+				> ) ); 
      //}}}
 
 	 //{{{ K+ channels
@@ -1836,6 +1922,8 @@ Grid MSN_D1Neuron{
   polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
   polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
 
+  polyConnect(timeStep, .[].Layer(NatChannels_PL5), <>, <identifier="dt">);
+  polyConnect(extracellularMedium, .[].Layer(NatChannels_PL5), <>, <identifier="EC">);
    //}}}
 
   //{{{ K+ channels
