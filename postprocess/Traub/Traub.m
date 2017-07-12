@@ -119,7 +119,6 @@ for vX=vX_range
                     threshold = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
-k
                 if (postprocess_SpikeVoltages)
                     fid = fopen([directory,'SpikeVoltage',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
