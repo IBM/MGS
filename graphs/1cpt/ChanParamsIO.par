@@ -1,9 +1,12 @@
 CHANNEL_TARGETS 2
-BRANCHTYPE
-#1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium] Cah [Voltage] [Voltage, Calcium]
-1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] 
-2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
-#3 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium]
+#BRANCHTYPE
+##1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium] Cah [Voltage] [Voltage, Calcium]
+#1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] 
+#2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+##3 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium]
+MTYPE BRANCHTYPE
+[5, 1] 1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] 
+[5, 1] 2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
 
 CHANNEL_COSTS 2
 Na 0.414243
