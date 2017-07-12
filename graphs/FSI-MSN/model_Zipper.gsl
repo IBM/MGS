@@ -293,8 +293,6 @@ GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ 
 Functor Print;
 Print print();
   
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
 
 Connector PolyConnectorFunctor();   
 PolyConnectorFunctor polyConnect();

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -59,12 +59,11 @@ inline unsigned rol( const unsigned n, const unsigned long s )
   return( ( n << s ) | ( n >> ( 8*sizeof(unsigned) - s ) ) );
 }
 
+// Non-reseedable version
 class MRG32k3a
 {
-private:
-  
-  // data
-
+  // data:
+ protected:
   double mX0_N0;
   double mX0_N1;
   double mX0_N2;
@@ -73,63 +72,19 @@ private:
   double mX1_N2;
 
   // methods:
-
-public:
+ public:
 
   MRG32k3a()
-  {
-    mX0_N0 = 12345;
-    mX0_N1 = 12345;
-    mX0_N2 = 12345;
-    mX1_N0 = 12345;
-    mX1_N1 = 12345;
-    mX1_N2 = 12345;
-  }
-
-  MRG32k3a(const class MRG32k3a& rv)
-  {
-    mX0_N0 = rv.mX0_N0;
-    mX0_N1 = rv.mX0_N1;
-    mX0_N2 = rv.mX0_N2;
-    mX1_N0 = rv.mX1_N0;
-    mX1_N1 = rv.mX1_N1;
-    mX1_N2 = rv.mX1_N2;
-  }
+    {
+      mX0_N0 = 12345;
+      mX0_N1 = 12345;
+      mX0_N2 = 12345;
+      mX1_N0 = 12345;
+      mX1_N1 = 12345;
+      mX1_N2 = 12345;
+    }
 
   MRG32k3a& operator=(const MRG32k3a& rv);
-
-  void reSeed(unsigned seed, unsigned rank) {
-    seed+=rank;
-    reSeedShared(seed);
-  }
-
-  void reSeedShared(unsigned seed) {
-    // A better way to handle this would be to use the seed as the
-    // index of the substream to be used--that would guarantee no 
-    // overlap between between engines initialized with different
-    // seeds (at least for less than 2**76 iterations)
-    mX0_N0 = 12345;
-    mX0_N1 = 12345;
-    mX0_N2 = 12345;
-    mX1_N0 = 12345;
-    mX1_N1 = 12345;
-    mX1_N2 = 12345;
-    
-    if ( seed == 0 ) return;
-    
-    unsigned mask = rol( seed, 5 );
-    mX0_N0 = static_cast<const double>(static_cast<const uint32_t>(mX0_N0) ^ mask);
-    mask = rol( seed, 10 );
-    mX0_N1 = static_cast<const double>(static_cast<const uint32_t>(mX0_N1) ^ mask);
-    mask = rol( seed, 15 );
-    mX0_N2 = static_cast<const double>(static_cast<const uint32_t>(mX0_N2) ^ mask);
-    mask = rol( seed, 20 );
-    mX1_N0 = static_cast<const double>(static_cast<const uint32_t>(mX0_N0) ^ mask);
-    mask = rol( seed, 25 );
-    mX1_N1 = static_cast<const double>(static_cast<const uint32_t>(mX0_N1) ^ mask);
-    mask = rol( seed, 30 );
-    mX1_N2 = static_cast<const double>(static_cast<const uint32_t>(mX0_N2) ^ mask);
-  }
 
   double drandom32(void)
   {
@@ -156,6 +111,7 @@ public:
 	    ( s0 - s1 + CM0 )*CNORM :
 	    ( s0 - s1 )*CNORM );
   }
+  
   inline unsigned long irandom32(void)
   {
     return long(floor( LONG_MAX * drandom32() ) );
@@ -177,5 +133,45 @@ inline MRG32k3a& MRG32k3a::operator=(const MRG32k3a& rv)
 
   return *this;
 }
+
+// Reseedable version
+  class MRG32k3a_S: public MRG32k3a
+  {
+    // methods
+  public:
+    
+    void reSeed(unsigned seed, unsigned rank) {
+      seed+=rank;
+      reSeedShared(seed);
+    }
+
+    void reSeedShared(unsigned seed) {
+      // A better way to handle this would be to use the seed as the
+      // index of the substream to be used--that would guarantee no 
+      // overlap between between engines initialized with different
+      // seeds (at least for less than 2**76 iterations)
+      mX0_N0 = 12345;
+      mX0_N1 = 12345;
+      mX0_N2 = 12345;
+      mX1_N0 = 12345;
+      mX1_N1 = 12345;
+      mX1_N2 = 12345;
+    
+      if ( seed == 0 ) return;
+
+      unsigned mask = rol( seed, 5 );
+      mX0_N0 = static_cast<const double>(static_cast<const uint32_t>(mX0_N0) ^ mask);
+      mask = rol( seed, 10 );
+      mX0_N1 = static_cast<const double>(static_cast<const uint32_t>(mX0_N1) ^ mask);
+      mask = rol( seed, 15 );
+      mX0_N2 = static_cast<const double>(static_cast<const uint32_t>(mX0_N2) ^ mask);
+      mask = rol( seed, 20 );
+      mX1_N0 = static_cast<const double>(static_cast<const uint32_t>(mX0_N0) ^ mask);
+      mask = rol( seed, 25 );
+      mX1_N1 = static_cast<const double>(static_cast<const uint32_t>(mX0_N1) ^ mask);
+      mask = rol( seed, 30 );
+      mX1_N2 = static_cast<const double>(static_cast<const uint32_t>(mX0_N2) ^ mask);
+    }
+  };
 
 #endif

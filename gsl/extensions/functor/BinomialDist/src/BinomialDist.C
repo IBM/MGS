@@ -1,18 +1,34 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
 #include "Lens.h"
 #include "BinomialDist.h"
 #include "CG_BinomialDistBase.h"
 #include "LensContext.h"
+#include "Simulation.h"
 #include <memory>
 
 void BinomialDist::userInitialize(LensContext* CG_c, double& probOfN1, double& n1, double& n2, unsigned& seed) 
 {
-  _rng.reSeedShared(seed);
+  //  _rng.reSeedShared(seed);
 }
 
 double BinomialDist::userExecute(LensContext* CG_c) 
 {
   double rval=init.n2;
-  if (drandom(0, 1.0, _rng)<init.probOfN1) {
+  if (drandom(0, 1.0, CG_c->sim->getSharedFunctorRandomSeedGenerator())<init.probOfN1) {
     rval=init.n1;
   }
   return rval;
@@ -24,7 +40,7 @@ BinomialDist::BinomialDist()
 }
 
 BinomialDist::BinomialDist(const BinomialDist& rv)
-  : CG_BinomialDistBase(), _rng(rv._rng)
+//  : CG_BinomialDistBase(), _rng(rv._rng)
 {
 }
 

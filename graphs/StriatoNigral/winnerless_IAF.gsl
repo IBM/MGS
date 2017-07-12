@@ -1,0 +1,111 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { dataCollect, update, copy, outputWeights, lastPhase };
+FinalPhases = { finalize };
+
+NodeType RabinovichWinnerlessUnit(< 
+     	a=0.7,
+     	b=0.8,
+     	nu=-1.5,
+	phi=0.0001,
+     	deltaT=0.01,
+     	tau1=0.08,
+     	tau2=4.1,
+	tauDA=100,
+	Dstim=1,
+	weightsFileName = "Weights",
+	collectWeightsOn = {1}
+	>){outputWeightsShared->outputWeights};
+
+NodeType MihalasNieburIAFUnit(< 
+	b = 10.0,                // s^-1
+	GoC = 50.0,              // s^-1
+	C = 1.0,
+	k = {200.0, 20.0},       // s^-1
+	Theta_inf = -0.05,       // V
+	R = {0.0, 1.0},
+	E_L = -0.07,             // V
+	V_r = -0.07,             // V
+	Theta_r = -0.06,         // V
+	a = 5.0,                 // s^-1
+	A = {5.0, -0.3},         // V/s
+	deltaT = 0.001,          // s
+	np = 0,
+	weightsFileName = "SN_Weights",
+	collectWeightsOn = {1}
+	>) {threshold->copy, outputWeightsShared->outputWeights};
+
+BindName IN("weight", UniformDist(1.0,2.0),
+	    "identifier", "lateral",
+	    "connectionFraction", 0.35,
+	    "connection", UniformDist(0.0,1.0),
+	    "connectionSeed", 123456789);
+NdplInAttrInit lateral(IN);
+
+BindName R("R", UniformDist(0.0,0.5), "x", -1.2, "y", -0.62, "z", 0.0, "D", 1);
+NdplNodeInit RabinovichNodeInit(R);
+
+Grid Winnerless
+{
+   Dimension(10,10);
+   Layer(nodes, RabinovichWinnerlessUnit, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), RabinovichNodeInit);
+   NodeSet all(.[].Layer(nodes) );
+   connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+};
+
+Grid IAF
+{
+   Dimension(5,4);
+   Layer(nodes, MihalasNieburIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), Same(Pset < MihalasNieburIAFUnit , NodeInit >(<>) ) );
+};
+
+BindName wnl2iaf("identifier", "driver",
+		 "weight", -2.25);
+NdplInAttrInit SN(wnl2iaf);
+
+Composite StriatoNigral
+{
+   Winnerless winnerless;
+   IAF iaf;
+   connectNodeSets(winnerless[], iaf[], EachDst(EachAvg(1.0)), outAttrDef, SN);
+};
+StriatoNigral striatoNigral;
+
+// DCA directives here
+
+VariableType RabinovichWinnerlessUnitDataCollector;
+RabinovichWinnerlessUnitDataCollector winnerlessCollector<fileName="WinnerlessOutput.txt">;
+polyConnect(striatoNigral/winnerless[].Layer(nodes), winnerlessCollector, <>, <>);
+
+VariableType MihalasNieburIAFUnitDataCollector;
+MihalasNieburIAFUnitDataCollector DACollector<fileName="DAOutput.txt">;
+polyConnect(striatoNigral/iaf[].Layer(nodes), DACollector, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 10000, 0, lastPhase); 
+winnerlessCollector.dataCollection() on iterTrig;
+DACollector.dataCollection() on iterTrig;
+Stop on endTrig;

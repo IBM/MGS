@@ -37,7 +37,6 @@
 /*{{{*/
 Connector Zipper();
 Zipper zipper();
-ReSeedRandom reSeed(243);
 /*}}}*/
 #ifndef MODEL_TO_USE
 print("WARNING: You haven't selected MODEL_TO_USE")

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -14,16 +14,15 @@
 // =================================================================
 
 #include "ShuffleDeck.h"
-#include "rndm.h"
 
-ShuffleDeck::ShuffleDeck(int size)
+ShuffleDeck::ShuffleDeck(int size, RNG& rng)
    : _current(0), _size(size)
 {
    _data = new int[_size];
    for (int i=0; i<_size; i++) {
       _data[i]= i;
    }     
-   shuffle();
+   shuffle(rng);
 }
 
 ShuffleDeck::ShuffleDeck(ShuffleDeck const *rval)  
@@ -42,22 +41,22 @@ ShuffleDeck::~ShuffleDeck()
    delete _data;
 }
 
-int ShuffleDeck::getNext()
+int ShuffleDeck::getNext(RNG& rng)
 {
    if (_current == _size) {
-      shuffle();
+      shuffle(rng);
    }
    return _data[_current++];
 
 }
 
-void ShuffleDeck::shuffle()
+void ShuffleDeck::shuffle(RNG& rng)
 {
    int picked;
    int tmp;
    for (int i=_size-1; i > 0; i--) {
 //      picked = _random.irandom32(0, i);
-      picked = irandom(0, i);
+     picked = irandom(0, i,rng);
       tmp = _data[i];
       _data[i] = _data[picked];
       _data[picked] = tmp;

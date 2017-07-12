@@ -1,0 +1,55 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef BITMAPPHENOTYPE_MDL
+#define BITMAPPHENOTYPE_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node BitmapPhenotype Implements OutputProducer {
+ double x;
+ double x0;
+
+ int r;
+ int c;
+
+ Shared {
+    string [] imageFiles;
+    int nbrImages          : "number of images (same for all grids)";
+    bool imagesInitialized;
+
+    int imageNbr           : "currently selected image";
+    int* imgRows           : "number of rows in each image";
+    int* imgCols           : "number of columns in each image";
+    int row                : "row of origin in currently selected image";
+    int col                : "col of origin in currently selected image";
+
+    int gridMaxL     : "maximum grid length";
+    int gridMaxW     : "maximum grid width";
+
+    int period       : "stimulus period (duration per image)";
+
+    double betaX0;
+
+    InitPhase initializeShared;
+    RuntimePhase updateShared;
+ }
+
+ OutputProducer.output << &x;
+
+ InitPhase initialize;
+ RuntimePhase update(x);
+}
+
+#endif

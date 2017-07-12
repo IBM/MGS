@@ -1,0 +1,57 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef MIHALASNIEBURSYNAPSEIAFUNITDATACOLLECTORS_MDL
+#define MIHALASNIEBURSYNAPSEIAFUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Variable MihalasNieburSynapseIAFUnitDataCollector
+{
+  string directory;
+  string fileExt;
+  int [] rows;
+  int [] cols;
+  int [] slices;
+  int mxslice;
+  double* [] voltages;
+  double* [] thresholds;
+  bool* [] spikes;
+  float* [] spikevoltages;
+  UserFunction getNodeIndices;
+   
+  // Flags
+  bool op_saveVoltages;
+  bool op_saveThresholds;
+  bool op_saveSpikes;
+  bool op_saveSpikeVoltages;
+   
+  Connection Pre Node () Expects OutputProducer, ThresholdProducer,
+    SpikeProducer, VoltageProducer
+    {
+      OutputProducer.output >> voltages;
+      ThresholdProducer.threshold >> thresholds;
+      SpikeProducer.spike >> spikes;
+      VoltageProducer.voltage >> spikevoltages;
+      getNodeIndices();
+    }
+ 
+  InitPhase initialize;
+  TriggeredFunction dataCollectionSpikes;
+  TriggeredFunction dataCollectionOther;
+  FinalPhase finalize;
+}
+
+#endif

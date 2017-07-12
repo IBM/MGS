@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -26,6 +26,7 @@
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
 #include "SyntaxErrorException.h"
+#include "Simulation.h"
 class FunctorType;
 class Simulation;
 
@@ -53,7 +54,7 @@ void GaussianFunctor::doExecute(LensContext *c,
 				std::auto_ptr<DataItem>& rvalue)
 {
    FloatDataItem fdi;
-   fdi.setFloat(gaussian(_mean,_stddev));
+   fdi.setFloat(gaussian(_mean,_stddev,c->sim->getSharedFunctorRandomSeedGenerator()));
 
    rvalue.reset(new FloatDataItem(fdi));
 }

@@ -1,8 +1,21 @@
-#include "../../gsl/extensions/struct/CoordsStruct.mdl"
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
 
-Interface ValueProducer {
-   int *value;
-}
+#ifndef LIFENODE_MDL
+#define LIFENODE_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Node LifeNode Implements ValueProducer {
    int value;
@@ -26,24 +39,4 @@ Node LifeNode Implements ValueProducer {
       ValueProducer.value >> neighbors;
    }
 }
-
-Variable LifeDataCollector
-{
-   string fileName;
-   int [] rows;
-   int [] cols;
-   int mxcol;
-   int* [] vals;
-   UserFunction getNodeIndices;
-
-   Connection Pre Node () Expects ValueProducer
-   {
-      ValueProducer.value >> vals;
-      getNodeIndices();
-   }
- 
-   InitPhase initialize;
-   TriggeredFunction dataCollection;
-   FinalPhase finalize;
-}
-
+#endif

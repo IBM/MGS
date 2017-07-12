@@ -1,0 +1,39 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef LIFENODEDATACOLLECTORS_MDL
+#define LIFENODEDATACOLLECTORS_MDL
+
+Variable LifeDataCollector
+{
+   string fileName;
+   int [] rows;
+   int [] cols;
+   int mxcol;
+   int* [] vals;
+   UserFunction getNodeIndices;
+
+   Connection Pre Node () Expects ValueProducer
+   {
+      ValueProducer.value >> vals;
+      getNodeIndices();
+   }
+ 
+   InitPhase initialize;
+   TriggeredFunction dataCollection;
+   FinalPhase finalize;
+}
+
+#endif

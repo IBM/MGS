@@ -1,0 +1,13 @@
+./images/1.bmp
+./images/2.bmp
+./images/3.bmp
+./images/4.bmp
+./images/5.bmp
+./images/6.bmp
+./images/7.bmp
+./images/8.bmp
+./images/9.bmp
+./images/10.bmp
+./images/11.bmp
+./images/12.bmp
+./images/13.bmp

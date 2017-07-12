@@ -173,8 +173,8 @@ fi
 #########################
 ##{{{ 3. CHECK MACROS
 if [ ! -f model.gsl ]; then
-  echo "Please run changeMorph.sh or check if model.gsl is available"
-  exit 1 
+  echo "Please make sure model.gsl exist, e.g. run changemorph.sh"
+  exit 1
 fi
 ## NOTE: accepted macros
 ## -DOUTPUTFOLDER=location where all output should be'

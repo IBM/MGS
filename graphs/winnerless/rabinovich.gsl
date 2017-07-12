@@ -1,0 +1,96 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initialize };
+RuntimePhases = { dataCollect, update, copy, outputWeightsShared, lastPhase };
+FinalPhases = { finalize };
+
+#define DIRECTORY "./"
+#define FILE_EXTENSION ".dat"
+#define BINARY 1
+
+NodeType RabinovichWinnerlessUnit(<
+     	a=0.7,
+     	b=0.8,
+     	nu=-1.5,
+        Bstim=0,
+	phi=0.001,
+        Dstim=10000,
+	Nstim=10,
+        deltaT=0.01,
+        tau1=0.08,
+        tau2=4.1,
+	tauP=0.99,
+        assymetric=1,
+        lateralPlasticity=0,
+        corticostriatalPlasticity=0,
+	p_c = 0.00004,
+        //	eta_inhib = 0.000025, // TODO: plasticity?
+        //       	eta_disinhib = 0.000005, // TODO: plasticity?
+        //	thetaP0 = 10.0, // TODO: plasticity?
+        //	thetaP1 = 50.0, // TODO: plasticity?
+        sharedDirectory = DIRECTORY,
+        sharedFileExt = FILE_EXTENSION,
+        saveBinary = BINARY,
+        collectWeightsOn = {1}
+	 >) {initializeShared->initialize};
+/*
+  TODO: missing from above
+  GABAtD1 used in .c
+  GABAtD2 used in .c
+  etaW used in .c
+  step1 in compCategory, all OK
+  step2 in compCategory, all OK
+  step3 in compCategory, all OK
+  tauDA used in .c
+*/
+
+BindName IN("weight", UniformDist(0.0001,0.01),
+            "identifier", "lateral",
+            "connectionFraction", 0.35);
+NdplInAttrInit lateral(IN);
+
+//BindName R("R", UniformDist(0.02,0.025), "x", -1.2, "y", -0.62, "z", 0.0, "D", 1);
+BindName R("R", UniformDist(0.0,0.01), "x", -1.2, "y", -0.62, "z", 0.0, "D", 1);
+NdplNodeInit RabinovichNodeInit(R);
+
+Grid Winnerless
+{
+   Dimension(10,10,10);
+   Layer(nodes, RabinovichWinnerlessUnit, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), RabinovichNodeInit);
+   connectNodeSets(.[].Layer(nodes), .[].Layer(nodes), Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+};
+
+Winnerless winnerless;
+
+// DCA directives here
+VariableType RabinovichWinnerlessUnitDataCollector;
+RabinovichWinnerlessUnitDataCollector collector<binary=BINARY, directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveX=1>;
+
+polyConnect(winnerless[].Layer(nodes), collector, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ",
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
+UnsignedTrigger endTrig("Iteration Trigger to end or stop",
+			 ::Iteration, "==", 1000000, 0, lastPhase);
+collector.dataCollection() on iterTrig;
+Stop on endTrig;
+

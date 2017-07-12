@@ -1,0 +1,55 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef CLEFTASTROCYTEIAFUNIT_MDL
+#define CLEFTASTROCYTEIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer
+{
+  GlutamateIAFInput [] glutamateInput; // input of spike
+  double glutamate;                    // current glutamate concentration
+
+  Shared
+    {
+      double glutamateDecayTau;        // glutamate decay tau (i.e. glutamate reuptake via GLT-1) in s
+
+      double deltaT;                   // in s
+
+      InitPhase initializeShared;
+    }
+
+  InAttrPSet
+    {
+      string identifier;
+      double weight;                   // potentially for structural plasticity
+    }
+
+  InitPhase initialize();
+
+  RuntimePhase update(glutamate);
+
+  GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
+
+  UserFunction setGlutamateIndices;
+
+  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer
+  {
+    GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
+    PSet.weight >> glutamateInput.weight;
+  }
+}
+
+#endif
