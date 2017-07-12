@@ -21,10 +21,18 @@
 #include <sstream>
 
 #define SHD getSharedMembers()
+<<<<<<< HEAD
+=======
+#define ITER getSimulation().getIteration()
+>>>>>>> origin/team-A
 
 SpineIAFUnitCompCategory::SpineIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList)
   : CG_SpineIAFUnitCompCategory(sim, modelName, ndpList)
 {
+<<<<<<< HEAD
+=======
+  SHD.collectWeightsNext = 0;
+>>>>>>> origin/team-A
 }
 
 void SpineIAFUnitCompCategory::initializeShared(RNG& rng)
@@ -36,6 +44,7 @@ void SpineIAFUnitCompCategory::initializeShared(RNG& rng)
     if (systemRet == -1)
       throw;
   } catch(...) {};
+<<<<<<< HEAD
   int rank=getSimulation().getRank();
   int n=0;
   if (SHD.op_saveWeights)
@@ -69,3 +78,66 @@ void SpineIAFUnitCompCategory::initializeShared(RNG& rng)
     }
 }
 
+=======
+  if (SHD.op_saveWeights)
+    {
+      int rank=getSimulation().getRank();
+      int n=SHD.collectWeightsOn.size();
+      if (n>0)
+        {
+          for (int i=0; i<n; i++)
+            {
+              int r=0;
+              while (r<getSimulation().getNumProcesses())
+                {
+                  if (r==rank)
+                    {
+                      os_weights.str(std::string());
+                      os_weights<<SHD.sharedDirectory<<"AMPAWeights_"<<SHD.collectWeightsOn[i]
+                                <<SHD.sharedFileExt;
+                      weights_file=new std::ofstream(os_weights.str().c_str(),
+                                                     std::ofstream::out | std::ofstream::trunc
+                                                     | std::ofstream::binary);
+                      weights_file->close();
+                    }
+                  ++r;
+                  MPI::COMM_WORLD.Barrier(); // wait node creating the stream to finish
+                }
+            }
+        }
+    }
+}
+
+void SpineIAFUnitCompCategory::outputWeightsShared(RNG& rng)
+{
+  if (SHD.op_saveWeights)
+    {
+      int n=SHD.collectWeightsOn.size();
+      if (SHD.collectWeightsOn[SHD.collectWeightsNext]==ITER)
+        {
+          os_weights.str(std::string());
+          os_weights<<SHD.sharedDirectory<<"AMPAWeights_"
+                    <<SHD.collectWeightsOn[SHD.collectWeightsNext]
+                    <<SHD.sharedFileExt;
+          if (SHD.collectWeightsOn.size()-1 > SHD.collectWeightsNext)
+            SHD.collectWeightsNext++;
+          int rank=getSimulation().getRank();
+          int r=0;
+          while (r<getSimulation().getNumProcesses())
+            {
+              if (r==rank) {
+                ShallowArray<SpineIAFUnit>::iterator it = _nodes.begin();
+                ShallowArray<SpineIAFUnit>::iterator end = _nodes.end();
+                weights_file->open(os_weights.str().c_str(),
+                                   std::ofstream::out | std::ofstream::app | std::ofstream::binary);
+                for (; it != end; ++it)
+                  (*it).outputWeights(*weights_file);
+                weights_file->close();
+              }
+              ++r;
+              MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
+            }
+        }
+    }
+}
+>>>>>>> origin/team-A

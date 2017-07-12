@@ -23,6 +23,7 @@ void SwitchInput::initialize(RNG& rng)
 
 }
 
+<<<<<<< HEAD
 /*
 void SwitchInput::update(RNG& rng) 
 {
@@ -35,6 +36,18 @@ void SwitchInput::update(RNG& rng)
     }
 }
 */
+=======
+
+void SwitchInput::update(RNG& rng) 
+{
+
+ 
+  drivinp = drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
+      
+ 
+}
+
+>>>>>>> origin/team-A
 
 SwitchInput::~SwitchInput() 
 {

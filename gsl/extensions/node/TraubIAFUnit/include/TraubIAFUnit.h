@@ -29,6 +29,10 @@ class TraubIAFUnit : public CG_TraubIAFUnit
       void threshold(RNG& rng);
       void outputPSPs(std::ofstream& fs);
       void outputWeights(std::ofstream& fs);
+<<<<<<< HEAD
+=======
+      void outputGJs(std::ofstream& fs);
+>>>>>>> origin/team-A
       virtual void setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset);
       virtual ~TraubIAFUnit();
 };

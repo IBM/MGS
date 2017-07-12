@@ -40,6 +40,14 @@ void ZhengSORNExcUnit::initialize(RNG& rng)
   for (iter=lateralInhInputs.begin(); iter!=end; ++iter) {
     if (sumI!=0 && iter->synapse) (iter->weight)/=sumI;	
   }
+<<<<<<< HEAD
+=======
+  
+  if (normalizedThInput.input){
+    normalizedThInput.minVal = 0.0;
+    normalizedThInput.maxVal = 1.0;
+  }
+>>>>>>> origin/team-A
 }
 
 void ZhengSORNExcUnit::update(RNG& rng) 
@@ -56,9 +64,22 @@ void ZhengSORNExcUnit::update(RNG& rng)
       if (*(iter->spike)) sumE += iter->weight;
     }
   }
+<<<<<<< HEAD
   // modulation from L2/3
   if (modulatoryInput.input && ITER > SHD.Ach_time) 
     sumE *= (1-SHD.Ach*(1-*(modulatoryInput.input)))/(1.0-SHD.Ach/2.0);
+=======
+  // modulation from L2/3 or Thalamus
+  if (modulatoryInput.input && ITER > SHD.Ach_time) { 
+    sumE *= (1-SHD.Ach*(1-*(modulatoryInput.input)))/(1.0-SHD.Ach/2.0);
+  } else {
+    if (normalizedThInput.input && ITER > SHD.Ach_time) {
+      if(*(normalizedThInput.input) < normalizedThInput.minVal) normalizedThInput.minVal = *(normalizedThInput.input);
+      if(*(normalizedThInput.input) > normalizedThInput.maxVal) normalizedThInput.maxVal = *(normalizedThInput.input);
+      sumE *= (1-SHD.Ach*(1-((*(normalizedThInput.input)-normalizedThInput.minVal)/normalizedThInput.maxVal)))/(1.0-SHD.Ach/2.0);
+    }
+  }
+>>>>>>> origin/team-A
   // Sum of L5 Inh inputs
   //sumW = 0;
   double sumI = 0;

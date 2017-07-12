@@ -3,21 +3,36 @@ set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
+<<<<<<< HEAD
 T=10; % Length of simulation time saving data (excluding spikes) in s
+=======
+T=1; % Length of simulation time saving data (excluding spikes) in s
+>>>>>>> origin/team-A
 Tmin=0; Tmax=T; % default
 TminZoom=0; TmaxZoom=T;
 loadData = true;
 parameterSearch = false;
 animatedVisualization = false;
 postprocess_CortexInput = true;
+<<<<<<< HEAD
 postprocess_Spikes = false;
+=======
+postprocess_Spikes = true;
+>>>>>>> origin/team-A
 postprocess_Voltages = false;
 postprocess_Thresholds = false;
 postprocess_SpikeVoltages = false;
 postprocess_LFPs = true;
 postprocess_LFP_FSIsynapses = false;
+<<<<<<< HEAD
 postprocess_weights = false;
 postprocess_PSPs = false;
+=======
+postprocess_weights = true;
+postprocess_GJs = true;
+postprocess_PSPs = false;
+postprocess_PlotAll = false;
+>>>>>>> origin/team-A
 directory='../../graphs/Traub/';
 fileExt='.dat';
 % for no parameter search just set to all ranges to zero
@@ -91,7 +106,10 @@ for vX=vX_range
                     end
                     clear temp temp_i spikesN;
                 end
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/team-A
                 if (postprocess_Voltages)
                     fid = fopen([directory,'Voltage',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
@@ -105,7 +123,10 @@ for vX=vX_range
                     voltage = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/team-A
                 if (postprocess_Thresholds)
                     fid = fopen([directory,'Threshold',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
@@ -119,7 +140,10 @@ for vX=vX_range
                     threshold = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/team-A
                 if (postprocess_SpikeVoltages)
                     fid = fopen([directory,'SpikeVoltage',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
@@ -133,7 +157,10 @@ for vX=vX_range
                     spikeVoltage = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/team-A
                 if (postprocess_LFPs)
                     fid = fopen([directory,'LFP',fileExt],'r');
                     XdimLFP = fread(fid, 1, 'int');
@@ -147,7 +174,10 @@ for vX=vX_range
                     LFPs = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/team-A
                 if (postprocess_LFP_FSIsynapses)
                     fid = fopen([directory,'LFP_FSIsynapses',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
@@ -161,7 +191,10 @@ for vX=vX_range
                     LFPs_FSIsynapses = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/team-A
                 if (postprocess_weights)
                     warning('Code needs updating to be efficient');
                     if (~postprocess_Spikes && ~postprocess_Voltages && ~postprocess_Thresholds ...
@@ -171,16 +204,43 @@ for vX=vX_range
                         return;
                     end
                     fid = fopen([directory,'Weights',fileExt],'r');
+<<<<<<< HEAD
                     numSynapses = zeros(1,XdimStr*YdimStr*ZdimStr);
                     weights = cell(1,XdimStr*YdimStr*ZdimStr);
                     for i=1:XdimStr*YdimStr*ZdimStr
+=======
+                    numSynapses = zeros(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
+                    weights = cell(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
+                    for i=1:XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes
+>>>>>>> origin/team-A
                         numSynapses(i) = fread(fid, 1, 'int');
                         weights{i} = fread(fid, numSynapses(i), 'float')';
                     end
                     fclose(fid);
                     clear fid;
                 end
+<<<<<<< HEAD
 
+=======
+                if (postprocess_GJs)
+                    warning('Code needs updating to be efficient');
+                    if (~postprocess_Spikes && ~postprocess_Voltages && ~postprocess_Thresholds ...
+                        && ~postprocess_SpikeVoltages && ~postprocess_LFP_FSIsynapses)
+                        warning(['To process GJs at least one other set of data should also ', ...
+                            'be processed.']);
+                        return;
+                    end
+                    fid = fopen([directory,'GJs',fileExt],'r');
+                    numGJs = zeros(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
+                    GJs = cell(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
+                    for i=1:XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes
+                        numGJs(i) = fread(fid, 1, 'int');
+                        GJs{i} = fread(fid, numGJs(i), 'float')';
+                    end
+                    fclose(fid);
+                    clear fid;
+                end
+>>>>>>> origin/team-A
                 % one cell per neurons, where each cell contains 1 row per dt, where
                 % columns are synapses
                 if (postprocess_PSPs)
@@ -213,7 +273,11 @@ for vX=vX_range
             end
             %% Plot parameters
             Nstr=5; % Number of plots for each dimension in the striatum data
+<<<<<<< HEAD
             pmtmNW=4; % The time-halfbandwidth for the PMTM
+=======
+            pmtmNW=4;%1.25;%4; % The time-halfbandwidth for the PMTM
+>>>>>>> origin/team-A
             if (postprocess_CortexInput)
                 XminCtx=1; XmaxCtx=XdimCtx;
                 YminCtx=1; YmaxCtx=YdimCtx;
@@ -235,6 +299,7 @@ for vX=vX_range
             %% Plot
             if (postprocess_CortexInput)
                 figure(1); clf; % Cortex input
+<<<<<<< HEAD
                 i=1;
                 for x=1:XdimCtx
                     for y=1:YdimCtx
@@ -246,12 +311,40 @@ for vX=vX_range
                             i=i+1;
                         end
                     end
+=======
+                if (postprocess_PlotAll)
+                    i=1;
+                    for x=1:XdimCtx
+                        for y=1:YdimCtx
+                            for z=1:ZdimCtx
+                                subplot(XdimCtx*YdimCtx, ZdimCtx, i);
+                                plot(cortex(:,x,y,z)); 
+%                                 title('Cortex input');
+                                xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                                i=i+1;
+                            end
+                        end
+                    end
+                else
+                    plot(cortex(:,1,1,1)); 
+                    title('Cortex input');
+                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+>>>>>>> origin/team-A
                 end
                 print([directory,'cortex'],'-dpng');
             end
             if (postprocess_Spikes)
+<<<<<<< HEAD
                 figure(2); clf; % Spikes - just one segment cortex projects to
                 segmentDim=XdimStrSpikes;%XdimStr/XdimCtx;
+=======
+                figure(2); clf; % Spikes
+                if (postprocess_PlotAll)
+                    segmentDim=XdimStrSpikes;
+                else
+                    segmentDim=XdimStrSpikes/XdimCtx;
+                end
+>>>>>>> origin/team-A
                 Nspikes=segmentDim^3; % Number of neurons in one segment
                 maxSpikes=round(maxSpikes/1); % can be used to shrink if too large
                 temp = zeros(maxSpikes*Nspikes,2);
@@ -269,7 +362,12 @@ for vX=vX_range
                 end
                 scatter(temp(:,2),temp(:,1));
                 xlim([Tmin*(1/dt) Tmax*(1/dt)]);
+<<<<<<< HEAD
                 title('Spiking activity');
+=======
+                ylim([0 Nspikes]);
+                title('Spiking activity (one "segment" of striatum)');
+>>>>>>> origin/team-A
                 temp2 = temp(1:maxSpikes*100,:);
                 save([directory,'Spike.txt'],'-ascii','temp2');
                 print([directory,'spikes'],'-dpng');
@@ -277,11 +375,19 @@ for vX=vX_range
                 print([directory,'spikes_zoom'],'-dpng');
                 clear temp temp2 i segmentDim Nspikes;
             end
+<<<<<<< HEAD
             Drange = [XmaxStr-XminStr,YmaxStr-YminStr,ZmaxStr-ZminStr];
             points = rand(Nstr*3,3);
             points = bsxfun(@times,Drange,points);
             Dmin = [XminStr,YminStr,ZminStr];
             points = round(bsxfun(@plus,Dmin,points));
+=======
+%             Drange = [XmaxStr-XminStr,YmaxStr-YminStr,ZmaxStr-ZminStr];
+%             points = rand(Nstr*3,3);
+%             points = bsxfun(@times,Drange,points);
+%             Dmin = [XminStr,YminStr,ZminStr];
+%             points = round(bsxfun(@plus,Dmin,points));
+>>>>>>> origin/team-A
             if (postprocess_Voltages)
                 figure(3); clf; % Sub-threshold voltage
                 for i=1:Nstr*3
@@ -344,7 +450,11 @@ for vX=vX_range
                 plot(f,10*log10(pxx))
                 hold on
                 plot(f,10*log10(pxxc),'r-.')
+<<<<<<< HEAD
                 xlim([0 60])
+=======
+                xlim([0 100])
+>>>>>>> origin/team-A
                 xlabel('Hz')
                 ylabel('dB')
                 title('Multitaper PSD Estimate with 95%-Confidence Bounds')
@@ -353,6 +463,7 @@ for vX=vX_range
             end
             if (postprocess_LFPs)
                 figure(10); clf; % LFP electrodes
+<<<<<<< HEAD
                 i=1;
                 for x=1:XdimLFP
                     for y=1:YdimLFP
@@ -364,10 +475,29 @@ for vX=vX_range
                         end
                     end
                 end
+=======
+                if (postprocess_PlotAll)
+                    i=1;
+                    for x=1:XdimLFP
+                        for y=1:YdimLFP
+                            for z=1:ZdimLFP
+                                subplot(XdimLFP*YdimLFP, ZdimLFP, i);
+                                plot(LFPs(:,x,y,z)); 
+                                xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                                i=i+1;
+                            end
+                        end
+                    end
+                else
+                    plot(LFPs(:,1,1,1)); 
+                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                end                    
+>>>>>>> origin/team-A
                 print([directory,'LFPs'],'-dpng');
                 inc = size(LFPs,1);
                 Tlfp = zeros(inc*XdimLFP*YdimLFP*ZdimLFP,1);
                 i=1; % stitch the electrodes together to analyze all at once
+<<<<<<< HEAD
                 for x=1:XdimLFP
                     for y=1:YdimLFP
                         for z=1:ZdimLFP
@@ -381,11 +511,35 @@ for vX=vX_range
 %                     Tlfp=sum(Tlfp,2);
 %                     Tlfp=LFPs(:,1,1,1);
 %                     size(Tlfp)
+=======
+                if (postprocess_PlotAll)
+                    for x=1:XdimLFP
+                        for y=1:YdimLFP
+                            for z=1:ZdimLFP
+                                Tlfp((inc*(i-1))+1:inc*i) = LFPs(:,x,y,z);
+                                i=i+1;
+                            end
+                        end
+                    end
+                else
+                    Tlfp = LFPs(:,1,1,1);
+                end
+                size(Tlfp)
+%                 Tlfp=sum(LFPs,4);
+%                 Tlfp=sum(Tlfp,3);
+%                 Tlfp=sum(Tlfp,2);
+%                 Tlfp=LFPs(:,1,1,1);
+%                 size(Tlfp)
+>>>>>>> origin/team-A
                 figure(11); clf; % Frequency analysis
                 [pxx,f] = pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf,'unity');
                 temp = [f,10*log10(pxx)];
                 save([directory,'PMTM.txt'],'-ascii','temp');
                 pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf,'unity');
+<<<<<<< HEAD
+=======
+                xlim([0 100])
+>>>>>>> origin/team-A
                 print([directory,'pmtm'],'-dpng');
                 figure(12); clf;
                 [pks, locs] = findpeaks(log10(pxx),f,'MinPeakProminence',0.5);
@@ -397,7 +551,11 @@ for vX=vX_range
                 plot(f,10*log10(pxx))
                 hold on
                 plot(f,10*log10(pxxc),'r-.')
+<<<<<<< HEAD
                 xlim([0 60])
+=======
+                xlim([0 100])
+>>>>>>> origin/team-A
                 xlabel('Hz')
                 ylabel('dB')
                 title('Multitaper PSD Estimate with 95%-Confidence Bounds')
@@ -408,7 +566,11 @@ for vX=vX_range
                 warning('Code needs updating to be efficient');
                 figure(13); clf;
                 temp = [];
+<<<<<<< HEAD
                 for i=1:YdimStr*XdimStr*ZdimStr
+=======
+                for i=1:YdimStrSpikes*XdimStrSpikes*ZdimStrSpikes
+>>>>>>> origin/team-A
                     temp = [temp, weights{i}];
                 end
                 histogram(temp(:));
@@ -416,9 +578,27 @@ for vX=vX_range
                 print([directory,'weights'],'-dpng');
                 clear temp;
             end
+<<<<<<< HEAD
             if (postprocess_PSPs)
                 warning('Code needs updating to be efficient');
                 figure(14); clf;
+=======
+            if (postprocess_GJs)
+                warning('Code needs updating to be efficient');
+                figure(14); clf;
+                temp = [];
+                for i=1:YdimStrSpikes*XdimStrSpikes*ZdimStrSpikes
+                    temp = [temp, GJs{i}];
+                end
+                histogram(temp(:));
+                title('Gap junction conductances');
+                print([directory,'GJs'],'-dpng');
+                clear temp;
+            end
+            if (postprocess_PSPs)
+                warning('Code needs updating to be efficient');
+                figure(15); clf;
+>>>>>>> origin/team-A
                 i=1;
                 for x=rowMin:rowMax
                     for y=1:colMin:colMax
@@ -440,7 +620,11 @@ for vX=vX_range
                     LFPs_FSIsynapses = mat2gray(LFPs_FSIsynapses);
                     LFPs_FSIsynapses = 1-LFPs_FSIsynapses;
                     %% Animated LFP time series
+<<<<<<< HEAD
                     fig = figure(15); clf;
+=======
+                    fig = figure(16); clf;
+>>>>>>> origin/team-A
                     fig.Color = 'black';
                     fig.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_ts.avi']);
@@ -473,7 +657,11 @@ for vX=vX_range
                     close(vid);
                     clear fig vid frameRate N n temp frame;
                     %% Animated 3D LFP
+<<<<<<< HEAD
                     fig = figure(16); clf;
+=======
+                    fig = figure(17); clf;
+>>>>>>> origin/team-A
                     fig.Color = 'black';
                     fig.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_3D.avi']);

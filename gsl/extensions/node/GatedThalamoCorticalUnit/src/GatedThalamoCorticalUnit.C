@@ -27,6 +27,7 @@ void GatedThalamoCorticalUnit::initialize(RNG& rng)
 void GatedThalamoCorticalUnit::update(RNG& rng) 
 {
   // Phenotypic inputs
+<<<<<<< HEAD
   double y = 0;
   ShallowArray<Input>::iterator iter, end=phenotypicInputs.end();
   for (iter=phenotypicInputs.begin(); iter!=end; ++iter) { 
@@ -34,6 +35,23 @@ void GatedThalamoCorticalUnit::update(RNG& rng)
     y0 += SHD.betaY0 * (y - y0);
     y -= y0;
   }
+=======
+  y = 0;
+  ShallowArray<Input>::iterator iter, end=phenotypicInputs.end();
+  for (iter=phenotypicInputs.begin(); iter!=end; ++iter) { 
+    y += iter->weight * *(iter->input);
+    //y0 += SHD.betaY0 * (y - y0);
+    //y -= y0;
+  }
+  
+  // Lateral inhibition 
+  ShallowArray<Input>::iterator iter5, end5=RF_Inputs.end();
+  for (iter5=RF_Inputs.begin(); iter5!=end5; ++iter5) {
+    y -= (*(iter5->input) * iter5->weight)>0 ? (*(iter5->input) * iter5->weight):0.0;
+  }
+  y *= (y+1>0) ? 1.0:0.0;
+  
+>>>>>>> origin/team-A
   // L5 inputs (FFwd)
   double L5FF = 0;
   ShallowArray<SpikeInput>::iterator iter2, end2=L5FFInputs.end();
@@ -57,10 +75,16 @@ void GatedThalamoCorticalUnit::update(RNG& rng)
   //x = z+SHD.alpha*(y-z); // TODO:add phenotypic input here
   
   // Temporal averaging 
+<<<<<<< HEAD
   z += SHD.alphaZ*(L5FF+L5FB-z);
   z0 += SHD.betaZ0 * (z - z0);
   z -= z0;
   
+=======
+  z += SHD.alphaZ*(L5FF*(y+1)+L5FB-z);
+  z0 += SHD.betaZ0 * (z - z0);
+  z -= z0;
+>>>>>>> origin/team-A
 }
 
 void GatedThalamoCorticalUnit::whiten(RNG& rng){
@@ -90,6 +114,13 @@ void GatedThalamoCorticalUnit::setIndices(const String& CG_direction, const Stri
     lateralInputs[lateralInputs.size()-1].row = row;
     lateralInputs[lateralInputs.size()-1].col = col;
   } 
+<<<<<<< HEAD
+=======
+  else if (CG_inAttrPset->identifier=="RF_GTCU") {
+    RF_Inputs[RF_Inputs.size()-1].row = row;
+    RF_Inputs[RF_Inputs.size()-1].col = col;
+  }
+>>>>>>> origin/team-A
   else assert(0);
 }
 

@@ -24,6 +24,10 @@ void CleftAstrocyteIAFUnit::initialize(RNG& rng)
 {
   // Default starting values
   glutamate = 0.0;
+<<<<<<< HEAD
+=======
+  ECB = 0.0;
+>>>>>>> origin/team-A
 }
 
 void CleftAstrocyteIAFUnit::update(RNG& rng)
@@ -33,6 +37,13 @@ void CleftAstrocyteIAFUnit::update(RNG& rng)
     glutamate += *(glutamateInput[0].glutamate) * glutamateInput[0].weight; // only consider first one, weight is structural plasticity
   // Astrocyte reuptake of glutamate with GLT-1
   glutamate += (-glutamate / SHD.glutamateDecayTau) * SHD.deltaT;
+<<<<<<< HEAD
+=======
+
+  // ECB diffuses really quickly, so this level is equal to that produced by the spine
+  if (ECBInput.size() > 0)
+    ECB = *(ECBInput[0].ECB) * ECBInput[0].weight; // only consider first one, weight is structural plasticity
+>>>>>>> origin/team-A
 }
 
 void CleftAstrocyteIAFUnit::setGlutamateIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
@@ -41,6 +52,15 @@ void CleftAstrocyteIAFUnit::setGlutamateIndices(const String& CG_direction, cons
   glutamateInput[glutamateInput.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
+<<<<<<< HEAD
+=======
+void CleftAstrocyteIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
+{
+  ECBInput[ECBInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
+  ECBInput[ECBInput.size()-1].col = CG_node->getGlobalIndex()+1;
+}
+
+>>>>>>> origin/team-A
 CleftAstrocyteIAFUnit::~CleftAstrocyteIAFUnit()
 {
 }

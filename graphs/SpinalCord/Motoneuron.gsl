@@ -1,0 +1,153 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { dataCollect, run1, lastPhase };
+FinalPhases = { finalize };
+
+// ##### Common parameters #####
+#define false 0
+#define true 1
+#define DIRECTORY "./"
+#define FILE_EXTENSION ".dat"
+#define DELTAT 0.005 // in ms
+//#define DELTAT 0.0005 // in ms
+//#define NAFFERENTS 300
+#define XDIM 1 //100
+#define YDIM 1
+#define ZDIM 1
+
+
+
+// ##### Nodes #####
+NodeType MotoneuronUnit(< // parameter values from from (Powers et al., J Neurophysiol., 2012)
+                          // and (McIntyre and Grill, J. Neurophysiol., 2002)                        
+                        Cm = 0.02,                  // in uF/cm^2
+                        V_rest = -70.0,             // in mV
+                        dsi_E_Na = 50.0,            // in mV
+                        dsi_E_K = -80.0,            // in mV
+                        dsi_E_leak = -70.0,         // in mV
+                        d_length = 6500,            // in um (smallest=5800, largest=7200)
+                        d_diameter = {35.0, 42.0, 21.0}, // in um, {proximal (smallest=35, largest=45),
+                                                         // medial (smallest=37, largest=47), distal (to zero,
+                                                         // so took mean of medial and zero)f}
+                        d_segmentsProp = {0.2, 0.3, 0.5}, // in %, {proximal, medial, distal}
+                        d_g_leak = 0.0002,          // in S/cm^2
+                        s_diameter = 55.0,          // in um (smallest=45, largest=65)
+                        s_g_Naf = 0.044,            // in S/cm^2 (smallest=0.044, largest=0.044)
+                        s_g_Kdr = 0.07,             // in S/cm^2 (smallest=70, largest=70)
+                        s_g_CaN = 0.05,             // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        s_g_CaL = 0.0001,           // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        s_g_KCa = 0.0076,           // in S/cm^2 (smallest=0.0076, largest=0.0076)
+                        s_g_leak = 0.002,           // in S/cm^2
+                        i_length = 10.0,            // in um (no smallest or largest so from McIntyre and Grill)
+                        i_diameter = 3.9,           // in um (smallest 3.4, largest=4.4)
+                        i_g_Naf = 0.65,             // in S/cm^2 (smallest=0.55, largest=0.75)
+                        i_g_Nap = 0.013,            // in S/cm^2 (smallest=0.011, largest=0.015)
+                        i_g_Kdr = 0.4,              // in S/cm^2 (smallest=0.4, largest=0.4)
+                        i_g_leak = 0.01,            // in S/cm^2
+                        /*
+                        a_node_length = 1.0,        // in um (no smallest or largest so from McIntyre and Grill)
+                        a_node_diameter = 3.7,      // in um (no smallest or largest so from McIntyre and Grill)
+                        a_MYSA_length = 3.0,        // in um (no smallest or largest so from McIntyre and Grill)
+                        a_MYSA_diameter = 3.7,      // in um (no smallest or largest so from McIntyre and Grill)
+                        a_FLUT_STIN_length = {113.5, 113.5, 113.5, 113.5, 240.4, 240.5, 240.5, 240.5, 240.5, 240.5}, // in um N.B. all taken as the longer STIN from the paper, (no smallest or largest so from McIntyre and Grill)
+                        a_FLUT_STIN_diameter = 8.1, // in um (no smallest or largest so from McIntyre and Grill)
+                        a_nodeN = 10,
+                        a_g_Naf = 3.0,              // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        a_g_Nap = 0.01,             // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        a_g_Ks = 0.08,              // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        a_g_leak = 0.007,           // in S/cm^2
+                        a_E_Na = 60.0,              // in mV
+                        a_E_K = -80.0,              // in mV
+                        a_node_E_leak = -80.0,      // in mV
+                        a_g_MYSA = 0.001,           // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        a_g_FLUT_STIN = 0.0001,     // in S/cm^2 (no smallest or largest so from McIntyre and Grill)
+                        a_internode_E_leak = -70.0, // in mV
+                        */
+                        deltaT = DELTAT,            // in ms
+                        op_d_ramp = false,          // whether to ramp up/down the input or not on the dendrite
+                        op_s_ramp = false,          // whether to ramp up/down the input or not on the soma
+                        rampMiddle = 5000.0,        // when to ramp down in ms
+                        rampMax = -0.000045         // value at the peak of the ramp
+                        >) { update->run1 };
+
+
+
+// ##### Initialize nodes #####
+BindName initMotoneuron("ind_size", 1.0, "d_I_in", -0.000150, // N.B. input to distal segment of dendrite
+                        "s_Ca_i", 0.0001, "s_I_in", -0.0);//Neg(UniformDist(0.0, 0.000045)));
+NdplNodeInit heterMotoneuron(initMotoneuron);
+
+
+
+/*
+// ##### Weights scales between nodes #####
+// Spike weights between Poisson input and boutons, structural plasticity
+BindName IN_W("weight", 1.0, "identifier", "inputSpikes");
+NdplInAttrInit inW(IN_W);
+*/
+
+
+
+// ##### Setup and connect the grids #####
+Grid Motoneurons
+{
+  Dimension(XDIM,YDIM,ZDIM);
+  Layer(motoneurons, MotoneuronUnit, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(motoneurons), heterMotoneuron);
+};
+Motoneurons MN;
+
+
+
+// ##### Data collectors #####
+VariableType MotoneuronUnitDataCollector;
+MotoneuronUnitDataCollector motoneuronCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_save_d_V_m_last=1, op_save_d_I_in=1, op_save_d_EverythingElse=1,
+  op_save_s_V_m=1, op_save_s_I_in=1, op_save_s_EverythingElse=1,
+  op_save_i_V_m=1, op_save_i_EverythingElse=1>;//,
+//  op_save_a_V_m_node_last=1, op_save_a_EverythingElse=1>;
+polyConnect(MN[].Layer(motoneurons), motoneuronCollector, <>, <>);
+
+
+
+// ##### Triggers #####
+Trigger UnsignedTrigger(string description, Service svc, string operator,
+                        int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
+                         string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ",
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20",
+ 			 ::Iteration, "!%", 20, 0, dataCollect);
+
+CompositeTrigger iterTrigSampled("Iteration Trigger: (!%20) && (>= 0)",
+                                 iterTrig, 1, "&&",
+                                 iterTrigSF, 1, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop",
+                        ::Iteration, "==", 200000, 0, lastPhase); // in dt
+//                        ::Iteration, "==", 2000000, 0, lastPhase); // in dt
+//                        ::Iteration, "==", 4000000, 0, lastPhase); // in dt
+//                        ::Iteration, "==", 200000, 0, lastPhase); // in dt
+
+motoneuronCollector.dataCollection() on iterTrigSampled;
+
+Stop on endTrig;

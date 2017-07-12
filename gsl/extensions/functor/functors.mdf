@@ -25,6 +25,7 @@
 #include "ReversedDstRefGaussianWeightModifier.mdl"
 #include "ReversedSrcRefGaussianWeightModifier.mdl"
 #include "ReverseFunctor.mdl"
+#include "Round.mdl"
 #include "ServiceConnectorFunctor.mdl"
 #include "Scale.mdl"
 #include "SrcDimensionConstrainedSampler.mdl"
@@ -35,12 +36,15 @@
 #include "SrcRefSumRsqrdInvWeightModifier.mdl"
 #include "SrcScaledContractedGaussianWeightModifier.mdl"
 #include "SrcScaledGaussianWeightModifier.mdl"
+<<<<<<< HEAD
 #include "TissueConnectorFunctor.mdl"
 #include "TissueFunctor.mdl"
 #include "TissueLayoutFunctor.mdl"
 #include "TissueMGSifyFunctor.mdl"
 #include "TissueNodeInitFunctor.mdl"
 #include "TissueProbeFunctor.mdl"
+=======
+>>>>>>> origin/team-A
 #include "Threshold.mdl"
 #include "ToroidalRadialSampler.mdl"
 #include "UniformDiscreteDist.mdl"

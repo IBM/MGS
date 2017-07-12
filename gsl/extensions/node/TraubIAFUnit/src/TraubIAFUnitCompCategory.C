@@ -68,6 +68,39 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
         MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
       }
     }
+<<<<<<< HEAD
+=======
+  if (SHD.op_saveGJs)
+    {
+      n=0;
+      // Take it in turn opening and creating the file to create the stream on each node
+      while (n<getSimulation().getNumProcesses()) {
+        if (n==rank) {  
+          os_GJ<<SHD.sharedDirectory<<"GJs"<<SHD.sharedFileExt;
+          GJ_file=new std::ofstream(os_GJ.str().c_str(),
+                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+          GJ_file->close();
+        }
+        ++n;
+        MPI::COMM_WORLD.Barrier(); // wait node creating the stream to finish
+      }
+      // Now take it in turn writing to the file, where rank 0 also clears the file.
+      n=0;
+      while (n<getSimulation().getNumProcesses()) {
+        if (n==rank) {
+          ShallowArray<TraubIAFUnit>::iterator it = _nodes.begin();
+          ShallowArray<TraubIAFUnit>::iterator end = _nodes.end();
+          GJ_file->open(os_GJ.str().c_str(),
+                            std::ofstream::out | std::ofstream::app | std::ofstream::binary);
+          for (; it != end; ++it)
+            (*it).outputGJs(*GJ_file);
+          GJ_file->close();
+        }
+        ++n;    
+        MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
+      }
+    }
+>>>>>>> origin/team-A
   if (SHD.op_savePSPs)
     {
       // If saving PSPs, take it in turn to create the stream

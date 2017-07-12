@@ -28,7 +28,12 @@
 void TraubIAFUnit::initialize(RNG& rng) 
 {
   spike=false;
+<<<<<<< HEAD
   Theta=SHD.Theta_inf;
+=======
+  //  Theta=SHD.Theta_inf;
+  Theta=Theta_inf;
+>>>>>>> origin/team-A
   V_spike=V;
   int nI=SHD.k.size();
   I.increaseSizeTo(nI);
@@ -38,8 +43,15 @@ void TraubIAFUnit::initialize(RNG& rng)
   dI.increaseSizeTo(nI);
   V_p.increaseSizeTo(2);
   Theta_p.increaseSizeTo(2);
+<<<<<<< HEAD
   for (int n=0; n<nI; ++n) I[n]=I_p[0][n]=I_p[1][n]=dI[n]=0;
   for (int n=0; n<2; ++n) V_p[n]=Theta_p[n]=0;
+=======
+  for (int n=0; n<nI; ++n)
+    I[n]=I_p[0][n]=I_p[1][n]=dI[n]=0;
+  for (int n=0; n<2; ++n)
+    V_p[n]=Theta_p[n]=0;
+>>>>>>> origin/team-A
   // If this node receives multiple cortical inputs, they should
   // be weighted accordingly so they contribute the same as another
   // node which only receives one.
@@ -50,10 +62,17 @@ void TraubIAFUnit::update(RNG& rng)
 {
   // Cortex input
   double driver = 0.0;
+<<<<<<< HEAD
   ShallowArray<WaveInput>::iterator iterWave, endWave=ctxInputs.end();
   for (iterWave=ctxInputs.begin(); iterWave!=endWave; ++iterWave)
     driver += (*(iterWave->wave) * iterWave->weight) * ctxInputWeight;
     
+=======
+  ShallowArray<Input>::iterator iterDriver, endDriver=ctxInputs.end();
+  for (iterDriver=ctxInputs.begin(); iterDriver!=endDriver; ++iterDriver)
+    driver += (*(iterDriver->input) * iterDriver->weight) * ctxInputWeight;
+  
+>>>>>>> origin/team-A
   // Synapses
   double s_total = 0.0;
   ShallowArray<PSPInput>::iterator iterIPSP, endPSP=lateralInputs.end();
@@ -91,7 +110,11 @@ void TraubIAFUnit::update(RNG& rng)
   }
   double dV = (1/SHD.C*(I_e+I_sum)-SHD.G*(V-SHD.E_L))*SHD.deltaT;
   V_p[ip] = V + dV; 
+<<<<<<< HEAD
   double dTheta = (SHD.a*(V-SHD.E_L)-SHD.b*(Theta-SHD.Theta_inf))*SHD.deltaT;
+=======
+  double dTheta = (SHD.a*(V-SHD.E_L)-SHD.b*(Theta-Theta_inf))*SHD.deltaT;
+>>>>>>> origin/team-A
   Theta_p[ip] = Theta + dTheta;
   /* Fixed Point Iteration */
   for (int p=0; p<SHD.np; ++p) {
@@ -103,7 +126,11 @@ void TraubIAFUnit::update(RNG& rng)
       I_psum = I_psum + I_p[ip_prime][n];
     }
     V_p[ip] = V + 0.5*(dV + (1/SHD.C*(I_e+I_sum-SHD.G*(V_p[ip_prime]-SHD.E_L)))*SHD.deltaT);
+<<<<<<< HEAD
     Theta_p[ip] = Theta + 0.5*(dTheta + (SHD.a*(V_p[ip_prime]-SHD.E_L)-SHD.b*(Theta_p[ip_prime]-SHD.Theta_inf))*SHD.deltaT);
+=======
+    Theta_p[ip] = Theta + 0.5*(dTheta + (SHD.a*(V_p[ip_prime]-SHD.E_L)-SHD.b*(Theta_p[ip_prime]-Theta_inf))*SHD.deltaT);
+>>>>>>> origin/team-A
   }
   for (int n=0; n<nI; ++n)
     I[n]=I_p[ip][n];
@@ -166,13 +193,48 @@ void TraubIAFUnit::outputWeights(std::ofstream& fs)
     }
 }
 
+<<<<<<< HEAD
 void TraubIAFUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
 {
   lateralInputs[lateralInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
   lateralInputs[lateralInputs.size()-1].col = CG_node->getGlobalIndex()+1;   
+=======
+void TraubIAFUnit::outputGJs(std::ofstream& fs)
+{
+  ShallowArray<GJInput>::iterator iter, end=gjInputs.end();
+  int temp = gjInputs.size();
+  fs.write(reinterpret_cast<char *>(&temp), sizeof(temp));  
+  float temp2 = 0.;
+  for (iter=gjInputs.begin(); iter!=end; ++iter)
+    {
+      temp2 = (float) iter->conductance;
+      fs.write(reinterpret_cast<char *>(&temp2), sizeof(temp2));
+    }
+}
+ 
+void TraubIAFUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
+{
+  if (CG_inAttrPset->identifier=="driver") {
+    ctxInputs[ctxInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
+    ctxInputs[ctxInputs.size()-1].col = CG_node->getGlobalIndex()+1;   
+  } else {
+    lateralInputs[lateralInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
+    lateralInputs[lateralInputs.size()-1].col = CG_node->getGlobalIndex()+1;   
+  }
+>>>>>>> origin/team-A
 }
 
 TraubIAFUnit::~TraubIAFUnit() 
 {
 }
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+
+
+>>>>>>> origin/team-A

@@ -5,7 +5,11 @@
 #include "CG_IzhikUnit.h"
 #include "rndm.h"
 #include <fstream>
+<<<<<<< HEAD
 #include "NumInt.h"
+=======
+#include "NumIntNoPhase.h"
+>>>>>>> origin/team-A
 
 class IzhikUnit : public CG_IzhikUnit, public RK4
 {
