@@ -16,7 +16,6 @@
 #ifndef IZHIKUNITDATACOLLECTORS_MDL
 #define IZHIKUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable IzhikUnitDataCollector
 {
@@ -32,11 +31,11 @@ Variable IzhikUnitDataCollector
 
    UserFunction getNodeIndices;
 
-   Connection Pre Node () Expects OutputProducer, VoltageProducer, SpikeProducer
+   Connection Pre Node () Expects OutputProducer, VoltageIAFProducer, SpikeProducer
    {
      SpikeProducer.spike >> spikes;
      OutputProducer.output >> g;
-     VoltageProducer.voltage >> V;
+     VoltageIAFProducer.voltage >> V;
      getNodeIndices();
    }
  

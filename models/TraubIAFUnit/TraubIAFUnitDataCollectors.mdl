@@ -16,7 +16,6 @@
 #ifndef TRAUBIAFUNITDATACOLLECTORS_MDL
 #define TRAUBIAFUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable TraubIAFUnitDataCollector
 {
@@ -50,12 +49,12 @@ Variable TraubIAFUnitDataCollector
    bool op_saveLFPs;
    
    Connection Pre Node () Expects OutputProducer, ThresholdProducer,
-     SpikeProducer, VoltageProducer, LFPProducer
+     SpikeProducer, VoltageIAFProducer, LFPProducer
    {
       OutputProducer.output >> voltages;
       ThresholdProducer.threshold >> thresholds;
       SpikeProducer.spike >> spikes;
-      VoltageProducer.voltage >> spikevoltages;
+      VoltageIAFProducer.voltage >> spikevoltages;
       LFPProducer.LFP >> LFP_synapses;
       getNodeIndices();
    }

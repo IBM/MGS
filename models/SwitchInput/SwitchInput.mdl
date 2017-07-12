@@ -16,7 +16,6 @@
 #ifndef SWITCHINPUT_MDL
 #define SWITCHINPUT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Node SwitchInput Implements OutputProducer 
 {

@@ -26,7 +26,7 @@ Variable SpineIAFUnitDataCollector
   int [] slices;
   int mxslice;
   double* [] AMPAcurrent;
-  double* [] mGluRcurrent;
+  double* [] mGluR5current;
   double* [] Ca;
   double* [] ECB;
   UserFunction getNodeIndices;
@@ -37,14 +37,14 @@ Variable SpineIAFUnitDataCollector
 
   // Flags
   bool op_saveAMPA;
-  bool op_savemGluR;
+  bool op_savemGluR5;
   bool op_saveCa;
   bool op_saveECB;
 
   Connection Pre Node () Expects SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
   {
     SynapticCurrentIAFProducer.AMPAcurrent >> AMPAcurrent;
-    SynapticCurrentIAFProducer.mGluRcurrent >> mGluRcurrent;
+    SynapticCurrentIAFProducer.mGluR5current >> mGluR5current;
     CaIAFProducer.Ca >> Ca;
     ECBIAFProducer.ECB >> ECB;
     getNodeIndices();

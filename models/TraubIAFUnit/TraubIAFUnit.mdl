@@ -16,10 +16,9 @@
 #ifndef TRAUBIAFUNIT_MDL
 #define TRAUBIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Node TraubIAFUnit Implements SpikeProducer, OutputProducer, ThresholdProducer,
-  VoltageProducer, LFPProducer {
+  VoltageIAFProducer, LFPProducer {
    double [] I; // These variable names are according to Mihalas and Niebur, 2009
    double [] [] I_p;
    double [] dI;
@@ -91,7 +90,7 @@ Node TraubIAFUnit Implements SpikeProducer, OutputProducer, ThresholdProducer,
    OutputProducer.output << &V;
    ThresholdProducer.threshold << &Theta;
    SpikeProducer.spike << &spike;
-   VoltageProducer.voltage << &V_spike;
+   VoltageIAFProducer.voltage << &V_spike;
    LFPProducer.LFP << &LFP_synapses;
    
    UserFunction setIndices;   
@@ -107,8 +106,8 @@ Node TraubIAFUnit Implements SpikeProducer, OutputProducer, ThresholdProducer,
       PSet.weight >> lateralInputs.weight;
    }
    
-   Connection Pre Node (PSet.identifier=="gj") Expects VoltageProducer {
-     VoltageProducer.voltage >> gjInputs.voltage;
+   Connection Pre Node (PSet.identifier=="gj") Expects VoltageIAFProducer {
+     VoltageIAFProducer.voltage >> gjInputs.voltage;
      PSet.conductance >> gjInputs.conductance;
    }   
 }
