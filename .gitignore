@@ -58,3 +58,4 @@ models/copyModules
 models/Extensions.mk
 gsl/Makefile
 gsl/Extensions.mk
+*.directory

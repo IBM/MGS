@@ -43,15 +43,16 @@ function print_help {
 	echo "SYNTAX: $0 
   -p <$SUPPORTED_PLATFORMS>    [default: LINUX]
   [--clean | --rebuild | --remake]
-  -j <n>                  with <n> is num-processes [default: 2/3 total cores]
-  --release | <empty>   [default: (empty)]
+  -j <n>               with <n> is num-processes [default: 2/3 total cores]
+  --release | <empty>  [default: (empty)]
   -d 1                 [default: debug_assert]
   -d 2                 [debug_hh] --> print debugs for Initialize() methods
   -d 3                 [debug_in_loops] --> print debugs inside Loops
   -d 4                 [debug_cpts] --> print compartmental information 
-     	--release: O3 with debug_assert
-     	--loglevel 1: debug with debug_assert and debug_hh for initialize methods
-     	--loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
+
+  --release: O3 with debug_assert
+  --loglevel 1: debug with debug_assert and debug_hh for initialize methods
+  --loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
   "
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
@@ -112,8 +113,8 @@ while getopts "$optspec" optchar; do
               NPROCS=1
               ;;
           release) # release
-            GSL_BUILD_MODE="-release"
-            ;;
+              GSL_BUILD_MODE="-release"
+              ;;
           loglevel=*)
             val=${OPTARG#*=}
             opt=${OPTARG%=$val}
@@ -149,6 +150,7 @@ while getopts "$optspec" optchar; do
       echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
+    # TODO: remove?
 #    :)
 #      echo "Option -$OPTARG requires an argument." >&2
 #      exit 1
@@ -160,7 +162,8 @@ done
 PLATFORM_OPTS="--domainLib  "
 case $PLATFORM in
   LINUX )
-    PLATFORM_OPTS+="--with-mpi "
+      PLATFORM_OPTS+="--with-mpi "
+      # TODO: remove?
 	#if [ "$GSL_BUILD_MODE" == "-release" ]; then 
      PLATFORM_OPTS+=" --nowarning_dynamiccast "
     #fi
@@ -232,11 +235,10 @@ if [ "$CLEAN" == "-clean" ] || \
     fi
   fi
 else
-
   if [ ! -f Makefile ]; then
     createMakeFile
   fi
-	make -j $NPROCS;
+  make -j $NPROCS;
 fi
 
 if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 

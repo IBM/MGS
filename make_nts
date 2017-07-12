@@ -11,10 +11,6 @@ cc_yellow="${esc}[0;33m"
 cc_blue="${esc}[0;34m"
 cc_normal=`echo -en "${esc}[m\017"`
 
-#NTSROOT=`pwd`
-#LENSROOT=$NTSROOT/gsl
-#MDLROOT=$NTSROOT/mdl
-
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 NPROCS=$(( $NPROCS*2/3 ))
 #########################################
@@ -45,10 +41,10 @@ Other options:\n
   --rebuild           to clean and rebuild
   --mco         
   -s|--singlethread   to build in single thread 
-	--loglevel [1|2]    determine the log-level 
-	                    [by default: build with -g information, but not printing out any thing]
-											log1 = print out DEBUG_HH and DEBUG_ASSERT 
-											log2 = print out ... during loops
+  --loglevel [1|2]    determine the log-level 
+                      [by default: build with -g information, but not printing out any thing]
+                        log1 = print out DEBUG_HH and DEBUG_ASSERT 
+                        log2 = print out ... during loops
 \n\n"; exit;
 }
 
@@ -104,13 +100,13 @@ while getopts "$optspec" optchar; do
                 mco)
                     MCO="-MCO"
                     ;;
-			          release) # release
-			          	NTI_BUILD_MODE=""  #keep empty
-                  GSL_BUILD_MODE="--release"
-			          	;;
+		release) # release
+		    NTI_BUILD_MODE=""  #keep empty
+                    GSL_BUILD_MODE="--release"
+		    ;;
                 loglevel)
                   val="${!OPTIND}"
-									GSL_BUILD_MODE="--loglevel $val" 
+		  GSL_BUILD_MODE="--loglevel $val" 
                   ;;
                 someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
@@ -131,6 +127,7 @@ while getopts "$optspec" optchar; do
       echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
+    #TODO: remove?
 #    :)
 #      echo "Option -$OPTARG requires an argument." >&2
 #      exit 1
@@ -138,6 +135,7 @@ while getopts "$optspec" optchar; do
   esac
 done
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+#TODO: remove?
 #[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && echo 'right platform' || { echo "wrong-platform $PLATFORM"; exit; }
 [[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
 
@@ -316,6 +314,7 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     make -j $NPROCS
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
+  # TODO: remove?
   #if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
   #    cd $NTSROOT
   #    echo nti make failed!;
@@ -373,7 +372,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
-      ./build_gsl -p $PLATFORM --clean  
+      ./build_gsl -p $PLATFORM --clean
       rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
@@ -382,8 +381,9 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
     cd $NTSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
+        # TODO: remove?
       #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
-      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then 
+        #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then
       cd $LENSROOT/extensions/variable
       ./define variables.mdf  $REBUILD
       cd $LENSROOT/extensions/struct

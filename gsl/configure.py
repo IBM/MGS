@@ -975,7 +975,7 @@ FUNCTOR_MODULES := BinomialDist \\
       	TissueLayoutFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
-	    TissueMGSifyFunctor \\
+	TissueMGSifyFunctor \\
         Zipper \\
         UniformDiscreteDist \\
 
