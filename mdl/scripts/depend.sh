@@ -1,4 +1,5 @@
 #!/bin/bash
+#TODO: used?
 ARG1=$1
 shift
 DFILE=obj/${ARG1}.d

@@ -72,6 +72,7 @@ ifeq ($(CC), xlC_r)
 endif
 
 #Optimization
+#TODO: check optimization with debug options
 #CFLAGS += -O2
 vpath %.C $(SOURCES_DIRS)
 
