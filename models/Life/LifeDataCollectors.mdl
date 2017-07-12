@@ -15,10 +15,7 @@
 
 #ifndef LIFENODEDATACOLLECTORS_MDL
 #define LIFENODEDATACOLLECTORS_MDL
-
-Interface ValueProducer {
-   int *value;
-}
+#include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Variable LifeDataCollector
 {
@@ -34,7 +31,7 @@ Variable LifeDataCollector
       ValueProducer.value >> vals;
       getNodeIndices();
    }
- 
+
    InitPhase initialize;
    TriggeredFunction dataCollection;
    FinalPhase finalize;

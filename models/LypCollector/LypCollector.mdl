@@ -16,7 +16,6 @@
 #ifndef LYPCOLLECTOR_MDL
 #define LYPCOLLECTOR_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Interface LypFeed {
   double * x;

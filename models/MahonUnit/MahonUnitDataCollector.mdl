@@ -16,7 +16,6 @@
 #ifndef MAHONUNITDATACOLLECTOR_MDL
 #define MAHONUNITDATACOLLECTOR_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "MahonUnit.mdl"
 
 Variable MahonUnitDataCollector
@@ -42,7 +41,7 @@ Variable MahonUnitDataCollector
      DataFeed.x3 >> x3;
      SpikeProducer.spike >> spikes;
      //     OutputProducer.output >> g;
-     //VoltageProducer.voltage >> V;
+     //VoltageIAFProducer.voltage >> V;
      getNodeIndices();
    }
  

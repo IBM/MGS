@@ -15,8 +15,7 @@
 
 #ifndef LIFENODE_MDL
 #define LIFENODE_MDL
-
-#include "LifeDataCollectors.mdl"
+#include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Node LifeNode Implements ValueProducer {
    int value;

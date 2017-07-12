@@ -16,7 +16,6 @@
 #ifndef MIHALASNIEBURSYNAPSEIAFUNITDATACOLLECTORS_MDL
 #define MIHALASNIEBURSYNAPSEIAFUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable MihalasNieburSynapseIAFUnitDataCollector
 {
@@ -39,12 +38,12 @@ Variable MihalasNieburSynapseIAFUnitDataCollector
   bool op_saveSpikeVoltages;
    
   Connection Pre Node () Expects OutputProducer, ThresholdProducer,
-    SpikeProducer, VoltageProducer
+    SpikeProducer, VoltageIAFProducer
     {
       OutputProducer.output >> voltages;
       ThresholdProducer.threshold >> thresholds;
       SpikeProducer.spike >> spikes;
-      VoltageProducer.voltage >> spikevoltages;
+      VoltageIAFProducer.voltage >> spikevoltages;
       getNodeIndices();
     }
  

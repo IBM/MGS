@@ -16,7 +16,6 @@
 #ifndef MAHONUNIT_MDL
 #define MAHONUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../LypCollector/LypCollector.mdl"
 
 
@@ -79,7 +78,7 @@ Node MahonUnit Implements OutputProducer, SpikeProducer, DataFeed, LypFeed
    DataFeed.x3 << &var3;
  
    OutputProducer.output << &g_out;
-   //VoltageProducer.voltage << &V_out;
+   //VoltageIAFProducer.voltage << &V_out;
    SpikeProducer.spike << &spike;
 
    LypFeed.x << &lypsumsqr;
