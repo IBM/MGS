@@ -9,34 +9,40 @@
 //
 // US Government Users Restricted Rights 
 // Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
+// Gsa ADP Schedule Contract with IBM Corp.
 //
 // =================================================================
 
-#ifndef IZHIKUNITDATACOLLECTORS_MDL
-#define IZHIKUNITDATACOLLECTORS_MDL
+#ifndef MAHONUNITDATACOLLECTOR_MDL
+#define MAHONUNITDATACOLLECTOR_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "MahonUnit.mdl"
 
-Variable IzhikUnitDataCollector
+Variable MahonUnitDataCollector
 {
    string fileName;
    int [] rows;
    int [] cols;
    int mxcol;
-   float* [] V;
-   double* [] g;
+   double* [] x1;
+   double* [] x2;
+   double* [] x3;
    bool* [] spikes;   
    double deltaT;
    int maxoutnum;
+   
 
    UserFunction getNodeIndices;
 
-   Connection Pre Node () Expects OutputProducer, VoltageProducer, SpikeProducer
+   Connection Pre Node () Expects SpikeProducer, DataFeed
    {
+     DataFeed.x1 >> x1;
+     DataFeed.x2 >> x2;
+     DataFeed.x3 >> x3;
      SpikeProducer.spike >> spikes;
-     OutputProducer.output >> g;
-     VoltageProducer.voltage >> V;
+     //     OutputProducer.output >> g;
+     //VoltageProducer.voltage >> V;
      getNodeIndices();
    }
  

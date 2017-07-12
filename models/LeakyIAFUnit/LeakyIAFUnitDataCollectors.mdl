@@ -16,6 +16,7 @@
 #ifndef LEAKYIAFUNITDATACOLLECTORS_MDL
 #define LEAKYIAFUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable LeakyIAFUnitDataCollector
 {
@@ -33,9 +34,9 @@ Variable LeakyIAFUnitDataCollector
   bool op_saveVoltages;
   bool op_saveSpikes;
    
-  Connection Pre Node () Expects VoltageIAFProducer, SpikeProducer
+  Connection Pre Node () Expects VoltageProducer, SpikeProducer
   {
-    VoltageIAFProducer.voltage >> voltages;
+    VoltageProducer.voltage >> voltages;
     SpikeProducer.spike >> spikes;
     getNodeIndices();
   }

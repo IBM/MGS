@@ -15,7 +15,10 @@
 
 #ifndef LIFENODEDATACOLLECTORS_MDL
 #define LIFENODEDATACOLLECTORS_MDL
-#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Interface ValueProducer {
+   int *value;
+}
 
 Variable LifeDataCollector
 {

@@ -31,9 +31,9 @@ Variable WaveDriverUnitDataCollector
   // Flags
   bool op_saveWaves;
    
-  Connection Pre Node () Expects WaveProducer
+  Connection Pre Node () Expects OutputProducer
   {
-    WaveProducer.wave >> waves;
+    OutputProducer.output >> waves;
     getNodeIndices();
   }
  

@@ -13,11 +13,11 @@
 //
 // =================================================================
 
-#ifndef CLEFTASTROCYTEIAFUNITDATACOLLECTORS_MDL
-#define CLEFTASTROCYTEIAFUNITDATACOLLECTORS_MDL
+#ifndef FILEDRIVERUNITDATACOLLECTORS_MDL
+#define FILEDRIVERUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Variable CleftAstrocyteIAFUnitDataCollector
+Variable FileDriverUnitDataCollector
 {
   string directory;
   string fileExt;
@@ -25,21 +25,18 @@ Variable CleftAstrocyteIAFUnitDataCollector
   int [] cols;
   int [] slices;
   int mxslice;
-  double* [] glutamate;
-  double* [] ECB;
+  double* [] outputs;
   UserFunction getNodeIndices;
    
   // Flags
-  bool op_saveGlutamate;
-  bool op_saveECB;
-  
-  Connection Pre Node () Expects GlutamateIAFProducer, ECBIAFProducer
+  bool op_saveOutputs;
+   
+  Connection Pre Node () Expects OutputProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamate;
-    ECBIAFProducer.ECB >> ECB;
+    OutputProducer.output >> outputs;
     getNodeIndices();
   }
-  
+ 
   InitPhase initialize;
   TriggeredFunction dataCollection;
   FinalPhase finalize;

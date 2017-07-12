@@ -13,36 +13,41 @@
 //
 // =================================================================
 
-#ifndef POISSONIAFUNIT_MDL
-#define POISSONIAFUNIT_MDL
+#ifndef TONEUNIT_MDL
+#define TONEUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node PoissonIAFUnit Implements SpikeProducer
+Node ToneUnit Implements OutputProducer
 {
-  double Hz;         // rate to fire at
-  bool spike;        // current spike status
-
+  // Parameters set by the user
+  // Parameters used by the wave update function
+  double tone;             // actual tone
+ 
   Shared
     {
+      int start_time;
+      int stop_time;
+      int duration;
+      int interval;
+      double amplitude;
+ 
       double deltaT; // in s
-      unsigned perturbationT; // when to perturb
-
+     
       InitPhase initializeShared;
-
-      // Flags
-      bool op_perturbation;
     }
 
-  InAttrPSet
+  InAttrPSet 
     {
       string identifier;
     }
-
+  
   InitPhase initialize();
 
-  RuntimePhase update(spike);
+  RuntimePhase update(tone);
 
-  SpikeProducer.spike << &spike; // the spike output
+  OutputProducer.output << &tone; // the tone output  
+  
+  UserFunction setIndices;
 }
 
 #endif

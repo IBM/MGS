@@ -16,9 +16,10 @@
 #ifndef IZHIKUNIT_MDL
 #define IZHIKUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 
-Node IzhikUnit Implements OutputProducer, VoltageIAFProducer, SpikeProducer 
+Node IzhikUnit Implements OutputProducer, VoltageProducer, SpikeProducer 
 {
 
   double g_out;
@@ -94,7 +95,7 @@ Node IzhikUnit Implements OutputProducer, VoltageIAFProducer, SpikeProducer
    RuntimePhase updateOutputs(g_out,V_out,spike);
   
    OutputProducer.output << &g_out;
-   VoltageIAFProducer.voltage << &V_out;
+   VoltageProducer.voltage << &V_out;
    SpikeProducer.spike << &spike;
 
    UserFunction setIndices;   

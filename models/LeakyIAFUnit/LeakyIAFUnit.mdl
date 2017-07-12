@@ -16,8 +16,9 @@
 #ifndef LEAKYIAFUNIT_MDL
 #define LEAKYIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Node LeakyIAFUnit Implements VoltageIAFProducer, SpikeProducer
+Node LeakyIAFUnit Implements VoltageProducer, SpikeProducer
 {
   SpikeInput [] inputs; // recurrent incoming spikes
   float V;              // membrane potential
@@ -44,7 +45,7 @@ Node LeakyIAFUnit Implements VoltageIAFProducer, SpikeProducer
   RuntimePhase threshold(spike); // only spike is chnaged by this phase  
 
   // Setup outgoing connections
-  VoltageIAFProducer.voltage << &V; // the voltage output
+  VoltageProducer.voltage << &V; // the voltage output
   SpikeProducer.spike << &spike; // the spike output
 
   // Setup incoming connections

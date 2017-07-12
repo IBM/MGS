@@ -21,24 +21,28 @@ Struct GTCU_LN_Input {
   double* input;
   double covWeight;
   double whitWeight;
+  double weight;
   int row;
   int col;
   int slice;
 }
 
-Node GatedThalamoCorticalUnit Implements OutputProducer, FiringRateProducer {
+Node GatedThalamoCorticalUnit Implements OutputProducer, FiringRateProducer, ReceptiveFieldProducer {
   double x;	   // Sum of spiking L5 and phenotypic inputs
+  double y;        // instantaneous sensory thalamic activity for lateral inh
   double z; 	   // Autoregressive average spike rate over tauZ
   double y0;       // mean of phenotypic inputs
   double z0;       // mean of time averaged spiking of L5 inputs  
   double D;	   // time averaged combined drive (phenotypic and L5)
 
   Input [] phenotypicInputs;
+  Input [] RF_Inputs;
   SpikeInput [] L5FFInputs;
   SpikeInput [] L5FBInputs;
   double* [] gateOpenInputs;
   double* [] gateClosedInputs;
   GTCU_LN_Input [] lateralInputs;     // input structure for covariance
+  
 
   Shared {
     double alpha;  // proportion of drive derived from phenotype
@@ -56,7 +60,6 @@ Node GatedThalamoCorticalUnit Implements OutputProducer, FiringRateProducer {
     RuntimePhase inputWeightsShared;
     
     RuntimePhase updateWhitMatrixShared;
-    int periodWhitening;
     bool whitening;
   }
   InAttrPSet {
@@ -100,11 +103,18 @@ Node GatedThalamoCorticalUnit Implements OutputProducer, FiringRateProducer {
     setIndices();
   }
 
+  Connection Pre Node ( PSet.identifier=="RF_GTCU") Expects ReceptiveFieldProducer {
+    ReceptiveFieldProducer.output >> RF_Inputs.input;
+    PSet.weight >> RF_Inputs.weight;
+    setIndices();
+  }
+
   OutputProducer.output << &x;
   FiringRateProducer.output << &z;
+  ReceptiveFieldProducer.output << &y;
 
   InitPhase initialize;
-  RuntimePhase update(z);
+  RuntimePhase update(z,y);
   RuntimePhase whiten(x);
 }
 #endif

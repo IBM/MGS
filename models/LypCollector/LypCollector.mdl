@@ -13,43 +13,38 @@
 //
 // =================================================================
 
-#ifndef SWITCHINPUT_MDL
-#define SWITCHINPUT_MDL
+#ifndef LYPCOLLECTOR_MDL
+#define LYPCOLLECTOR_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Node SwitchInput Implements OutputProducer 
-{
-  double [] drivinps;
-  double drivinp;	
-  double inplo, inphi;
-
-  Shared {
-    
-    double deltaT; 
-
-    unsigned [] stateseq;
-    double [] stateswitchtimes; //end time of current state.
-    unsigned currentstate;
-    unsigned statenum;
-
-    unsigned seqlen;
-    double refract;
-    double period;
-
-    InitPhase initializeShared;
-    RuntimePhase updateInputState;
-
+Interface LypFeed {
+  double * x;
   }
 
+Node LypCollector Implements OutputProducer 
+{
+  double * [] inputs;   
+  double output;
+
+  InitPhase initialize();
    
+  RuntimePhase update(output);
+  
+  UserFunction setIndices;   
 
-   InitPhase initialize();
+  OutputProducer.output << &output;
 
-   RuntimePhase update(drivinp);
+  InAttrPSet {
+     string identifier;
+   }
+
+  Connection Pre Node (PSet.identifier == "MSN") Expects LypFeed {
+   LypFeed.x >> inputs;
+   setIndices();
+   }
 
 
-   OutputProducer.output << &drivinp;
 
 }
 

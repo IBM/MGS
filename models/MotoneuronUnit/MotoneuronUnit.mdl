@@ -1,0 +1,328 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef MOTONEURONUNIT_MDL
+#define MOTONEURONUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+#define saveSimple 0
+
+#if saveSimple == 1
+Node MotoneuronUnit Implements MotoneuronSimpleProducer
+#else
+Node MotoneuronUnit Implements MotoneuronProducer
+#endif // saveSimple
+
+{
+  // ##### WHOLE NEURON #####
+  // Geometry, individual versions - ***: N.B. average set in GSL to shared version
+  double ind_size;                  // in a.u. Scales the following
+  
+  double [] ind_d_length;           // in um ***
+  double [] ind_d_diameter;         // in um ***
+  double [] ind_d_surfaceArea;      // in cm^2 ***
+
+  double ind_s_diameter;            // in um ***
+  double ind_s_surfaceArea;         // in cm^2 ***
+  
+  double ind_i_length;              // in um ***
+  double ind_i_diameter;            // in um ***
+
+  /*
+  double ind_a_node_length;         // in um ***
+  double ind_a_node_diameter;       // in um ***
+  double ind_a_MYSA_length;         // in um ***
+  double ind_a_MYSA_diameter;       // in um ***
+  double [] ind_a_FLUT_STIN_length; // in um ***
+  double ind_a_FLUT_STIN_diameter;  // in um ***  
+  */
+  
+  // ##### DENDRITE #####
+  // Membrane potential
+  double [] d_V_m;    // in mV
+  double d_V_m_last;  // in mV  
+  // Ionic currents
+  double [] d_I_leak;
+  double d_I_leak_last;
+  // Axial current
+  double d_I_sd; // N.B. others defined locally in update() to save memory
+  // Input
+  double d_I_in;   // in mA N.B. input to distal segment of dendrite
+  
+  // ##### SOMA #####
+  // Membrane potential
+  double s_V_m;    // in mV
+  // Maximum conductance of ion channels
+  double ind_s_g_Naf; // in S/cm^2
+  double ind_s_g_Kdr; // in S/cm^2
+  double ind_s_g_CaN; // in S/cm^2
+  double ind_s_g_CaL; // in S/cm^2
+  double ind_s_g_KCa; // in S/cm^2
+  // Ionic currents
+  double s_I_Naf;  // in mA/cm^2
+  double s_I_Kdr;  // in mA/cm^2
+  double s_I_CaN;  // in mA/cm^2
+  double s_I_CaL;  // in mA/cm^2
+  double s_I_KCa;  // in mA/cm^2
+  double s_I_leak; // in mA/cm^2
+  // Axial currents
+  double s_I_ds;
+  double s_I_is;
+  // Activation and inactivation variables
+  double s_m_Naf;
+  double s_h_Naf;
+  double s_n_Kdr;
+  double s_m_CaN;
+  double s_h_CaN;
+  double s_p_CaL;
+  // Calcium dynamics
+  double s_Ca_i;
+  double s_E_Ca;
+  // Input
+  double s_I_in;   // in mA
+
+  // #### IAS #####
+  // Membrane potential
+  double i_V_m;    // in mV
+  // Maximum conductance of ion channels
+  double ind_i_g_Naf; // in S/cm^2
+  double ind_i_g_Nap; // in S/cm^2
+  double ind_i_g_Kdr; // in S/cm^2
+  // Ionic currents
+  double i_I_Naf;  // in mA/cm^2
+  double i_I_Nap;  // in mA/cm^2
+  double i_I_Kdr;  // in mA/cm^2
+  double i_I_leak; // in mA/cm^2
+  // Axial current
+  double i_I_si;
+  double i_I_ai;
+  // Activation and inactivation variables
+  double i_m_Naf;
+  double i_h_Naf;
+  double i_p_Nap;
+  double i_n_Kdr;
+
+  /*
+  // ##### AXON #####
+  // Membrane potential for both node and internode segments
+  double [] a_V_m_node;        // in mV
+  double [] a_V_m_MYSA_1;      // in mV
+  double [] a_V_m_FLUT_STIN;   // in mV
+  double [] a_V_m_MYSA_2;      // in mV
+  // N.B. Leaks are defined locally in update() to save memory
+  double a_V_m_node_last;      // in mV. N.B. V_m of just the last segment
+  // Maximum conductance of ion channels
+  double ind_a_g_Naf; // in S/cm^2
+  double ind_a_g_Nap; // in S/cm^2
+  double ind_a_g_Ks;  // in S/cm^2
+  double ind_a_g_MYSA; // in S/cm^2
+  double ind_a_g_FLUT_STIN; // in S/cm^2
+  // Ionic currents for node segments
+  double [] a_I_Naf;    // in mA/cm^2
+  double [] a_I_Nap;    // in mA/cm^2
+  double [] a_I_Ks;     // in mA/cm^2
+  double [] a_I_leak;   // in mA/cm^2
+  double a_I_Naf_last;  // in mA/cm^2
+  double a_I_Nap_last;  // in mA/cm^2
+  double a_I_Ks_last;   // in mA/cm^2
+  double a_I_leak_last; // in mA/cm^2
+  // Axial currents
+  // N.B. These are defined locally in update() to save memory
+  // Activation and inactivation variables for node segments
+  double [] a_m_Naf;
+  double [] a_h_Naf;
+  double [] a_p_Nap;
+  double [] a_s_Ks;
+  double a_m_Naf_last;
+  double a_h_Naf_last;
+  double a_p_Nap_last;
+  double a_s_Ks_last;
+  */
+  
+  Shared
+    {
+      // General electrical parameters
+      double Cm;     // specific capacitance in Farad/cm^2
+      double V_rest; // neuron rest potential
+      // Geometry, shared versions - N.B. used to set the scaled individual versions
+      double d_length;          // in um
+      double [] d_diameter;        // in um
+      double [] d_segmentsProp;    // in %, proportion of distal, proximal etc.
+
+      double s_diameter;           // in um
+      
+      double i_length;             // in um
+      double i_diameter;           // in um
+
+      /*
+      double a_node_length;        // in um
+      double a_node_diameter;      // in um
+      double a_MYSA_length;        // in um
+      double a_MYSA_diameter;      // in um
+      double [] a_FLUT_STIN_length;   // in um
+      double a_FLUT_STIN_diameter; // in um      
+      unsigned a_nodeN;     // number of nodes
+      */
+      
+      // ##### DENDRITE, SOMA, and IAS #####
+      // Reversal potentials
+      double dsi_E_Na;   // in mV
+      double dsi_E_K;    // in mV
+      double dsi_E_leak; // in mV
+      // #### DENDRITE ####
+      double d_g_leak;   // in mV
+      // ##### SOMA #####
+      // Maximum conductance of ion channels
+      double s_g_Naf;    // in S/cm^2
+      double s_g_Kdr;    // in S/cm^2
+      double s_g_CaN;    // in S/cm^2
+      double s_g_CaL;    // in S/cm^2
+      double s_g_KCa;    // in S/cm^2
+      double s_g_leak;   // in S/cm^2
+      // ##### IAS #####
+      // Maximum conductance of ion channels
+      double i_g_Naf;    // in S/cm^2
+      double i_g_Nap;    // in S/cm^2
+      double i_g_Kdr;    // in S/cm^2
+      double i_g_leak;   // in S/cm^2
+      /*
+      // ##### AXON #####
+      // Maximum conductance of ion channels for node segments
+      double a_g_Naf;    // in S/cm^2
+      double a_g_Nap;    // in S/cm^2
+      double a_g_Ks;     // in S/cm^2
+      double a_g_leak;   // in S/cm^2
+      // Reversal potentials for node segments
+      double a_E_Na;     // in mV
+      double a_E_K;      // in mV
+      double a_node_E_leak; // in mV
+      // Internode segments' parameters
+      double a_g_MYSA;   // in S/cm^2
+      double a_g_FLUT_STIN; // in S/cm^2
+      double a_internode_E_leak; // in mV
+      */
+      
+      double deltaT;     // in s
+
+      // Options
+      bool op_d_ramp;    // whether to ramp up/down the input or not on the dendrite
+      bool op_s_ramp;    // whether to ramp up/down the input or not on the soma
+      double rampMiddle; // if ramping, when to start to ramp down, in ms
+      double rampMax;    // value at the peak of the ramp
+      
+      InitPhase initializeShared;
+    }
+
+  InAttrPSet
+    {
+      string identifier;
+    }
+
+  InitPhase initialize();
+
+#if saveSimple == 1
+  //  RuntimePhase update(d_V_m_last, d_I_in, s_V_m, s_I_in, i_V_m, a_V_m_node_last);
+  RuntimePhase update(d_V_m_last, d_I_in, s_V_m, s_I_in, i_V_m);
+  // Dendrite
+  MotoneuronSimpleProducer.d_V_m_last <<&d_V_m_last;
+  MotoneuronSimpleProducer.d_I_in <<&d_I_in;
+  // Soma
+  MotoneuronSimpleProducer.s_V_m <<&s_V_m;
+  MotoneuronSimpleProducer.s_I_in <<&s_I_in;
+  // IAS
+  MotoneuronSimpleProducer.i_V_m <<&i_V_m;
+  /*
+  // Axon
+  MotoneuronSimpleProducer.a_V_m_node_last <<&a_V_m_node_last;
+  */
+#else
+  /*
+  RuntimePhase update(d_V_m_last, d_I_in,
+                      s_V_m, s_I_in,
+                      s_I_Naf, s_I_Kdr, s_I_CaN, s_I_CaL, s_I_KCa, s_I_leak,
+                      s_m_Naf, s_h_Naf, s_n_Kdr, s_m_CaN, s_h_CaN, s_p_CaL,
+                      s_Ca_i, s_E_Ca,
+                      i_V_m,
+                      i_I_Naf, i_I_Nap, i_I_Kdr, i_I_leak,
+                      i_m_Naf, i_h_Naf, i_p_Nap, i_n_Kdr,
+                      a_V_m_node_last,
+                      a_I_Naf_last, a_I_Nap_last, a_I_Ks_last, a_I_leak_last,
+                      a_m_Naf_last, a_h_Naf_last, a_p_Nap_last, a_s_Ks_last);
+  */
+  RuntimePhase update(d_V_m_last, d_I_in,
+                      s_V_m, s_I_in,
+                      s_I_Naf, s_I_Kdr, s_I_CaN, s_I_CaL, s_I_KCa, s_I_leak,
+                      s_m_Naf, s_h_Naf, s_n_Kdr, s_m_CaN, s_h_CaN, s_p_CaL,
+                      s_Ca_i, s_E_Ca,
+                      i_V_m,
+                      i_I_Naf, i_I_Nap, i_I_Kdr, i_I_leak,
+                      i_m_Naf, i_h_Naf, i_p_Nap, i_n_Kdr);
+
+  // Dendrite
+  MotoneuronProducer.d_V_m_last <<&d_V_m_last;
+  MotoneuronProducer.d_I_in <<&d_I_in;
+  
+  // Soma
+  MotoneuronProducer.s_V_m <<&s_V_m;
+  MotoneuronProducer.s_I_in <<&s_I_in;
+  
+  MotoneuronProducer.s_I_Naf <<&s_I_Naf;
+  MotoneuronProducer.s_I_Kdr <<&s_I_Kdr;
+  MotoneuronProducer.s_I_CaN <<&s_I_CaN;
+  MotoneuronProducer.s_I_CaL <<&s_I_CaL;
+  MotoneuronProducer.s_I_KCa <<&s_I_KCa;
+  MotoneuronProducer.s_I_leak <<&s_I_leak;
+  
+  MotoneuronProducer.s_m_Naf <<&s_m_Naf;
+  MotoneuronProducer.s_h_Naf <<&s_h_Naf;
+  MotoneuronProducer.s_n_Kdr <<&s_n_Kdr;
+  MotoneuronProducer.s_m_CaN <<&s_m_CaN;
+  MotoneuronProducer.s_h_CaN <<&s_h_CaN;
+  MotoneuronProducer.s_p_CaL <<&s_p_CaL;
+  
+  MotoneuronProducer.s_Ca_i <<&s_Ca_i;
+  MotoneuronProducer.s_E_Ca <<&s_E_Ca;
+  
+  // IAS
+  MotoneuronProducer.i_V_m <<&i_V_m;
+
+  MotoneuronProducer.i_I_Naf <<&i_I_Naf;
+  MotoneuronProducer.i_I_Nap <<&i_I_Nap;
+  MotoneuronProducer.i_I_Kdr <<&i_I_Kdr;
+  MotoneuronProducer.i_I_leak <<&i_I_leak;
+    
+  MotoneuronProducer.i_m_Naf <<&i_m_Naf;
+  MotoneuronProducer.i_h_Naf <<&i_h_Naf;
+  MotoneuronProducer.i_p_Nap <<&i_p_Nap;
+  MotoneuronProducer.i_n_Kdr <<&i_n_Kdr;      
+
+  /*
+  // Axon
+  MotoneuronProducer.a_V_m_node_last <<&a_V_m_node_last;
+
+  MotoneuronProducer.a_I_Naf_last <<&a_I_Naf_last;
+  MotoneuronProducer.a_I_Nap_last <<&a_I_Nap_last;
+  MotoneuronProducer.a_I_Ks_last <<&a_I_Ks_last;
+  MotoneuronProducer.a_I_leak_last <<&a_I_leak_last;
+    
+  MotoneuronProducer.a_m_Naf_last <<&a_m_Naf_last;
+  MotoneuronProducer.a_h_Naf_last <<&a_h_Naf_last;
+  MotoneuronProducer.a_p_Nap_last <<&a_p_Nap_last;
+  MotoneuronProducer.a_s_Ks_last <<&a_s_Ks_last;  
+  */
+#endif // saveSimple  
+}
+
+#endif

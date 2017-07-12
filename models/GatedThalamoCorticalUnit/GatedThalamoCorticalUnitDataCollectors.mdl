@@ -20,19 +20,22 @@
 Variable GatedThalamoCorticalUnitDataCollector
 {
    string fileName;
+   string yfileName;
    int [] rows;
    int [] cols;
    int mxcol;
    double* [] vals;
+   double* [] yvals;
    UserFunction getNodeIndices;
    double deltaT;
 
-   Connection Pre Node () Expects OutputProducer
+   Connection Pre Node () Expects OutputProducer, ReceptiveFieldProducer
    {
       OutputProducer.output >> vals;
+      ReceptiveFieldProducer.output >> yvals;
       getNodeIndices();
    }
- 
+
    InitPhase initialize;
    TriggeredFunction dataCollection;
    FinalPhase finalize;
