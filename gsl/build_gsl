@@ -29,9 +29,17 @@ return 1
 function createMakeFile(){
       if [ "$GSL_BUILD_MODE" == "-release" ]; then 
         ## detect if -release is used
-        ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
+        if [ "$NTI" == "-nti" ]; then
+          ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS --with-nti
+        else
+          ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
+        fi
       else
-        ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
+        if [ "$NTI" == "-nti" ]; then
+          ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS --with-nti
+        else
+          ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
+        fi
       fi
 }
 
@@ -53,6 +61,7 @@ function print_help {
   --release: O3 with debug_assert
   --loglevel 1: debug with debug_assert and debug_hh for initialize methods
   --loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
+  --with-nti: build/configure with NTI
   "
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
@@ -72,6 +81,7 @@ CLEAN=""
 REBUILD=""
 REMAKE=""
 GSL_BUILD_MODE=""
+NTI=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 if [ "$#" -gt 2 ] ; then
@@ -131,6 +141,9 @@ while getopts "$optspec" optchar; do
                 ;;
             esac
             ;;
+          with-nti) # with NTI
+              NTI="-nti"
+              ;;
           someloglevel)
               val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
               echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;

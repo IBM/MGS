@@ -267,6 +267,7 @@ class Options:
         self.blueGeneQ = False  # True, False
         self.blueGene = False  # True, False
         self.rebuild = False  # True, False
+        self.withNti = False # True, False
         self.help = False  # True, False
 
         self.cmdOptions = [("32-bit", "32 bit compilation mode"),
@@ -299,6 +300,7 @@ class Options:
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
                            ("rebuild", "rebuilds the project"),
+                           ("with-nti", "configures with nti"),
                            ("help", "displays the available options")]
 
         self.parseOptions(argv)
@@ -415,6 +417,8 @@ class Options:
                     self.blueGeneQ = True
                 if o == "--rebuild":
                     self.rebuild = True
+                if o == "--with-nti":
+                    self.withNti = True
                 if o == "--help":
                     self.help = True
 
@@ -638,6 +642,13 @@ class BuildSetup:
             retStr += "Not used"
         retStr += "\n"
 
+        retStr += TAB + "NTI: "
+        if self.options.withNti is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"        
+
         retStr += TAB + "DX: "
 
         if self.dx.exists is True:
@@ -707,7 +718,6 @@ class BuildSetup:
         createConfigHeader()
         touchExtensionsMk()
 
-        # self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
         if self.options.rebuild is True:
@@ -803,10 +813,17 @@ class BuildSetup:
 BIN_DIR?=./bin
 EXE_FILE=gslparser
 
+"""
+        if self.options.withNti is True:
+            retStr += \
+"""\
 NTI_DIR=../nti
 NTI_OBJ_DIR=$(NTI_DIR)/obj
 NTI_INC_DIR=$(NTI_DIR)/include
 
+"""
+        retStr += \
+"""\
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
 
@@ -822,6 +839,7 @@ STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
 """
+
 #DCA_OBJ := framework/dca/obj
 #DCA_SRC := framework/dca/src
 
@@ -970,12 +988,19 @@ FUNCTOR_MODULES := BinomialDist \\
         SrcRefDoGWeightModifier \\
         Scale \\
         Threshold \\
+"""
+        if self.options.withNti is True:
+            retStr += \
+"""\
       	TissueConnectorFunctor \\
       	TissueFunctor \\
       	TissueLayoutFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
 	TissueMGSifyFunctor \\
+"""
+        retStr += \
+"""\
         Zipper \\
         UniformDiscreteDist \\
 
@@ -1015,10 +1040,17 @@ MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 	       done)
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
+"""        
+        if self.options.withNti is True:
+            retStr += \
+"""\
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
 TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
 NTI_OBJS := $(TEMP)
 
+"""
+        retStr += \
+"""\
 COMMON_DIR := ../common/obj
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 
@@ -1328,7 +1360,10 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+	$(CC) $(CFLAGS) """
+        if self.options.withNti is True:
+            retStr += "-I$(NTI_INC_DIR) "
+        retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
         return retStr
 
@@ -1425,7 +1460,10 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) "
+        if self.options.withNti is True:
+            retStr += "$(NTI_OBJS) "
+        retStr += "$(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
