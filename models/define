@@ -17,9 +17,3 @@ touch $LENSROOT/Extensions.mk
 cp $LENSROOT/Extensions.mk{,.bak}
 cp Extensions.mk $LENSROOT
 
-# TODO: remove?
-# <<<OLD_MGS; uncomment these
-#touch define;
-#touch $1;
-#    OLD_MGS>>>
-

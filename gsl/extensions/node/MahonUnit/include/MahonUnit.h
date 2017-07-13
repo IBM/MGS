@@ -7,7 +7,7 @@
 #include <fstream>
 #include "NumInt.h"
 
-class MahonUnit : public CG_MahonUnit, public RK4Phased
+class MahonUnit : public CG_MahonUnit, public RK4
 {
    public:
       void initialize(RNG& rng);
