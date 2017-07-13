@@ -24,27 +24,27 @@ rm_ifexist() {
 
 function print_help {
 	echo -e "\n\n${cc_blue}Make NTS...${cc_normal} \n\nOption include : \n\n  
-  -p [LINUX|BGL|BGP|BGQ]    default = LINUX  build to run on what platform
-  -c [all|common|mdl|gsl|nti]      default = all    what components to build
-  -r|--release              to build in release mode [default: debug mode]
-  -j <n>                   with <n> is number of processes [default: 2/3 of total cores]
+  -p [LINUX|BGL|BGP|BGQ]        default = LINUX  build to run on what platform
+  -c [all|common|mdl|gsl|nti]   default = all    what components to build
+  -r|--release                  to build in release mode [default: debug mode]
+  -j <n>                        with <n> is number of processes [default: 2/3 of total cores]
   --clean
-  --mco                    <max-compute-order>
+  --mco                         <max-compute-order>
 
 Example: 
-1) make_nts -p LINUX : builds NTS in a LINUX environment using MPI 
-2) make_nts -p BGL : makes NTS on Blue Gene/L
-3) make_nts -p BGP : makes NTS on Blue Gene/P 
-4) make_nts -p BGQ : make NTS on Blue Gene/Q\n 
+1) make_nts -p LINUX :          builds NTS in a LINUX environment using MPI 
+2) make_nts -p BGL :            makes NTS on Blue Gene/L
+3) make_nts -p BGP :            makes NTS on Blue Gene/P 
+4) make_nts -p BGQ :            make NTS on Blue Gene/Q\n 
 Other options:\n 
-  --clean             to clean everything
-  --rebuild           to clean and rebuild
+  --clean                       to clean everything
+  --rebuild                     to clean and rebuild
   --mco         
-  -s|--singlethread   to build in single thread 
-  --loglevel [1|2]    determine the log-level 
-                      [by default: build with -g information, but not printing out any thing]
-                        log1 = print out DEBUG_HH and DEBUG_ASSERT 
-                        log2 = print out ... during loops
+  -s|--singlethread             to build in single thread 
+  --loglevel [1|2]              determine the log-level 
+                                [by default: build with -g information, but not printing out any thing]
+                                  log1 = print out DEBUG_HH and DEBUG_ASSERT 
+                                  log2 = print out ... during loops
 \n\n"; exit;
 }
 
@@ -127,16 +127,9 @@ while getopts "$optspec" optchar; do
       echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
-    #TODO: remove?
-#    :)
-#      echo "Option -$OPTARG requires an argument." >&2
-#      exit 1
-#      ;;
   esac
 done
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
-#TODO: remove?
-#[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && echo 'right platform' || { echo "wrong-platform $PLATFORM"; exit; }
 [[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
 
 SUPPORTED_COMPONENTS="all common mdl gsl nti"
@@ -277,11 +270,6 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
       exit; 
     fi
-    ##NEED TO BE REMOVED#if [ mdl.make.mark -ot bin/mdlparser ] ||  [ "$MCO" == "-MCO" ]; then
-    ###  cd $NTSROOT
-    ###  find . -name *.mdf -exec touch '{}' \;
-    ###  cd $MDLROOT
-    ###fi
     rm -f mdl.make.mark
     cd $NTSROOT
   fi
@@ -314,12 +302,6 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     make -j $NPROCS
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
-  # TODO: remove?
-  #if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
-  #    cd $NTSROOT
-  #    echo nti make failed!;
-  #    exit; 
-  #fi
   cd $NTSROOT
 fi
 #}}}
@@ -372,7 +354,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
-      ./build_gsl -p $PLATFORM --clean --with-nti
+      ./build_gsl -p $PLATFORM --clean --as-Nts
       rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
@@ -381,9 +363,6 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
     cd $NTSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
-        # TODO: remove?
-      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
-        #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then
       cd $LENSROOT/extensions/variable
       ./define variables.mdf  $REBUILD
       cd $LENSROOT/extensions/struct
@@ -401,7 +380,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --with-nti
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Nts
     fi
     cd -
   else
@@ -420,7 +399,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $NTSROOT
     # -s or -singlethread
     cd $LENSROOT
-    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --with-nti
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Nts
     cd -
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then 

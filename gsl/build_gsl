@@ -26,20 +26,22 @@ return 1
 
 }
 
-function createMakeFile(){
-      if [ "$GSL_BUILD_MODE" == "-release" ]; then 
-        ## detect if -release is used
-        if [ "$NTI" == "-nti" ]; then
-          ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS --with-nti
-        else
-          ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
-        fi
+function createMakeFile(){        
+    ## detect if -release is used
+    if [ "$GSL_BUILD_MODE" == "-release" ]; then
+        ## detect if building as NTS, MGS, or both
+        case $AS in
+            "-as-Nts") ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS --as-Nts;;
+            "-as-Mgs") ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS --as-Mgs;;
+            "-as-both-Nts-Mgs") ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS --as-both-Nts-Mgs;;
+        esac
       else
-        if [ "$NTI" == "-nti" ]; then
-          ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS --with-nti
-        else
-          ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
-        fi
+        ## detect if building as NTS, MGS, or both
+        case $AS in
+            "-as-Nts") ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS --as-Nts;;
+            "-as-Mgs") ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS --as-Mgs;;
+            "-as-both-Nts-Mgs") ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS --as-both-Nts-Mgs;;
+        esac
       fi
 }
 
@@ -61,7 +63,10 @@ function print_help {
   --release: O3 with debug_assert
   --loglevel 1: debug with debug_assert and debug_hh for initialize methods
   --loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
-  --with-nti: build/configure with NTI
+
+  --as-Nts:            build/configure as NTS
+  --as-Mgs:            build/configure as MGS
+  --as-both-Nts-Mgs:   build/configure as both NTS and MGS
   "
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
@@ -81,7 +86,7 @@ CLEAN=""
 REBUILD=""
 REMAKE=""
 GSL_BUILD_MODE=""
-NTI=""
+AS=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 if [ "$#" -gt 2 ] ; then
@@ -141,8 +146,14 @@ while getopts "$optspec" optchar; do
                 ;;
             esac
             ;;
-          with-nti) # with NTI
-              NTI="-nti"
+          as-Nts) # as NTS
+              AS="-as-Nts"
+              ;;
+          as-Mgs) # as MGS
+              AS="-as-Mgs"
+              ;;
+          as-both-Nts-Mgs) # as both NTS and MGS
+              AS="-as-both-Nts-Mgs"
               ;;
           someloglevel)
               val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))

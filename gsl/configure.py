@@ -267,7 +267,9 @@ class Options:
         self.blueGeneQ = False  # True, False
         self.blueGene = False  # True, False
         self.rebuild = False  # True, False
-        self.withNti = False # True, False
+        self.asNts = False # True, False
+        self.asMgs = False # True, False
+        self.asBoth = False # True, False
         self.help = False  # True, False
 
         self.cmdOptions = [("32-bit", "32 bit compilation mode"),
@@ -300,7 +302,9 @@ class Options:
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
                            ("rebuild", "rebuilds the project"),
-                           ("with-nti", "configures with nti"),
+                           ("as-Nts", "configures as NTS"),
+                           ("as-Mgs", "configures as MGS"),
+                           ("as-both-Nts-Mgs", "configures as both NTS and MGS"),
                            ("help", "displays the available options")]
 
         self.parseOptions(argv)
@@ -417,8 +421,12 @@ class Options:
                     self.blueGeneQ = True
                 if o == "--rebuild":
                     self.rebuild = True
-                if o == "--with-nti":
-                    self.withNti = True
+                if o == "--as-Nts":
+                    self.asNts = True
+                if o == "--as-Mgs":
+                    self.asMgs = True
+                if o == "--as-both-Nts-Mgs":
+                    self.asBoth = True
                 if o == "--help":
                     self.help = True
 
@@ -643,7 +651,7 @@ class BuildSetup:
         retStr += "\n"
 
         retStr += TAB + "NTI: "
-        if self.options.withNti is True:
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += "Used"
         else:
             retStr += "Not used"
@@ -814,7 +822,7 @@ BIN_DIR?=./bin
 EXE_FILE=gslparser
 
 """
-        if self.options.withNti is True:
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += \
 """\
 NTI_DIR=../nti
@@ -961,11 +969,14 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstRefSumRsqrdInvWeightModifier \\
        	DstScaledContractedGaussianWeightModifier \\
        	DstScaledGaussianWeightModifier \\
-        ExecuteShell \\
+        Exp \\
+        GetDstNodeCoordFunctor \\
         GetNodeCoordFunctor \\
+        GetPostNodeCoordFunctor \\
+        GetPreNodeCoordFunctor \\
+        GetPreNodeIndex \\
        	IsoSampler \\
        	IsoSamplerHybrid \\
-        Exp \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\
@@ -977,32 +988,43 @@ FUNCTOR_MODULES := BinomialDist \\
       	ReversedDstRefGaussianWeightModifier \\
       	ReversedSrcRefGaussianWeightModifier \\
       	ReverseFunctor \\
+      	Round \\
+      	Scale \\
       	ServiceConnectorFunctor \\
       	SrcDimensionConstrainedSampler \\
       	SrcRefDistanceModifier \\
+      	SrcRefDOGWeightModifier \\
       	SrcRefGaussianWeightModifier \\
       	SrcRefPeakedWeightModifier \\
       	SrcRefSumRsqrdInvWeightModifier \\
       	SrcScaledContractedGaussianWeightModifier \\
       	SrcScaledGaussianWeightModifier \\
-        SrcRefDoGWeightModifier \\
-        Scale \\
         Threshold \\
+        ToroidalRadialSampler \\
+        UniformDiscreteDist \\
 """
-        if self.options.withNti is True:
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += \
 """\
       	TissueConnectorFunctor \\
       	TissueFunctor \\
       	TissueLayoutFunctor \\
+	TissueMGSifyFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
-	TissueMGSifyFunctor \\
+"""
+        if (self.options.asMgs is True) or (self.options.asBoth is True):
+            retStr += \
+"""\
+
+"""
+        if self.options.asBoth is True:
+            retStr += \
+"""\
+        Zipper \\
 """
         retStr += \
 """\
-        Zipper \\
-        UniformDiscreteDist \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -1041,7 +1063,7 @@ MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
 """        
-        if self.options.withNti is True:
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += \
 """\
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
@@ -1361,7 +1383,7 @@ DX_INCLUDE := framework/dca/include
 
 $(OBJS_DIR)/%.o : %.C
 	$(CC) $(CFLAGS) """
-        if self.options.withNti is True:
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += "-I$(NTI_INC_DIR) "
         retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
@@ -1461,7 +1483,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) "
-        if self.options.withNti is True:
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += "$(NTI_OBJS) "
         retStr += "$(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
