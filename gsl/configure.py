@@ -976,7 +976,6 @@ FUNCTOR_MODULES := BinomialDist \\
         GetPreNodeCoordFunctor \\
         GetPreNodeIndex \\
        	IsoSampler \\
-       	IsoSamplerHybrid \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\

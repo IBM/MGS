@@ -1,0 +1,4 @@
+export MGSROOT=`pwd`
+export LENSROOT=$MGSROOT/gsl
+export MDLROOT=$MGSROOT/mdl
+export PATH=$MGSROOT/gsl/bin:$PATH

@@ -1,0 +1,375 @@
+#!/bin/bash
+set -e
+
+#Escape code
+esc=`echo -en "\033"`
+
+# Set colors
+cc_red="${esc}[0;31m"
+cc_green="${esc}[0;32m"
+cc_yellow="${esc}[0;33m"
+cc_blue="${esc}[0;34m"
+cc_normal=`echo -en "${esc}[m\017"`
+
+NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
+NPROCS=$(( $NPROCS*2/3 ))
+#########################################
+#   PRINT HELP
+#{{{
+rm_ifexist() {
+ if [ -f "$1" ] ; then
+   rm -v "$1"
+ fi
+}
+
+#TODO: look at loglevel
+#TODO: GPU
+function print_help {
+	echo -e "\n\n${cc_blue}Make MGS...${cc_normal} \n\nOption include : \n\n
+  -p [LINUX|BGL|BGP|BGQ]        default = LINUX  build to run on what platform
+  -c [all|common|mdl|gsl]       default = all    what components to build
+  -r|--release                  to build in release mode [default: debug mode]
+  -j <n>                        with <n> is number of processes [default: 2/3 of total cores]
+  --clean
+
+Example:
+1) make_mgs -p LINUX :          builds MGS in a LINUX environment using MPI
+2) make_mgs -p BGL :            makes MGS on Blue Gene/L
+3) make_mgs -p BGP :            makes MGS on Blue Gene/P
+4) make_mgs -p BGQ :            make MGS on Blue Gene/Q\n
+Other options:\n
+  --clean                       to clean everything
+  --rebuild                     to clean and rebuild
+  -s|--singlethread             to build in single thread
+  --loglevel [1|2]              determine the log-level
+                                [by default: build with -g information, but not printing out any thing]
+                                  log1 = print out DEBUG_HH and DEBUG_ASSERT
+                                  log2 = print out ... during loops
+\n\n"; exit;
+}
+
+if [ "$1" == "--help" ] || [ $# == 0 ]; then
+  print_help
+fi
+#}}}
+
+
+##########################################
+## Detect what need to be built
+#{{{
+PLATFORM="LINUX"
+WHAT_TO_BUILD="all"
+CLEAN=""
+REBUILD=""
+GSL_BUILD_MODE=""
+optspec=":c:p:sr-:j:"
+while getopts "$optspec" optchar; do
+  case $optchar in
+    p)
+      echo "Platform: $OPTARG" >&2
+      PLATFORM=$OPTARG
+      ;;
+    c)
+      echo "Build: $OPTARG"
+      WHAT_TO_BUILD=$OPTARG
+      ;;
+    j)
+      echo "Num-processes: $OPTARG"
+      NPROCS=$OPTARG
+      ;;
+    s)
+      NPROCS=1
+      ;;
+    r) # release
+      NTI_BUILD_MODE=""
+      GSL_BUILD_MODE="--release"
+      ;;
+    -)  #parse long-option
+            case "${OPTARG}" in
+                clean)
+                    CLEAN="-clean"
+                    ;;
+                rebuild)
+                    REBUILD="-rebuild"
+                    ;;
+                singlethread)
+                    NPROCS=1
+                    ;;
+                release) # release
+                    NTI_BUILD_MODE=""  #keep empty
+                    GSL_BUILD_MODE="--release"
+                    ;;
+                loglevel)
+                  val="${!OPTIND}"
+                  GSL_BUILD_MODE="--loglevel $val"
+                  ;;
+                someloglevel)
+                    val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                    echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+                    ;;
+                =*)
+                    val=${OPTARG#*=}
+                    opt=${OPTARG%=$val}
+                    echo "parsing option: '--${opt}', value: '${val}'" >&2
+                    ;;
+                *)
+                    if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                        echo "unknown option --${OPTARG}" >&2
+                    fi
+                    ;;
+            esac;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+
+SUPPORTED_COMPONENTS="all common mdl gsl"
+[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
+
+#}}}
+
+########################################
+### Check required tools ###
+## 1. MPI library
+## 2. Bison
+## 3. Flex
+## 4. Python
+#{{{
+if [ "$PLATFORM" == "LINUX" ]; then
+  if which mpiexec | grep -q1 /\mpiexec; then
+    echo mpi found...; else echo mpi not found!; exit; fi
+fi
+
+if which bison | grep -q1 /\bison; then
+    echo bison found...; else echo bison not found!; exit; fi
+
+VALID_BISON_VERSION=2.3
+BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
+echo version $BISON_VERSION...
+read c_major c_minor c_rev<<EOF
+ `echo ${VALID_BISON_VERSION} | tr "." " "`
+EOF
+if ! [[ "$c_rev" =~ [0-9]+$ ]]; then c_rev=0; fi
+read n_major n_minor n_rev << EOF
+`echo ${BISON_VERSION} | tr "." " "`
+EOF
+if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
+if [ "$n_major" -lt "$c_major" ]; then
+    echo bison version $VALID_BISON_VERSION or greater required!
+    exit;
+fi
+if [ "$n_major" -eq "$c_major" ] && [ "$n_minor" -lt "$c_minor" ]; then
+    echo bison version $VALID_BISON_VERSION or greater required!
+    exit;
+fi
+if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
+    echo bison version $VALID_BISON_VERSION or greater required!
+    exit;
+fi
+
+if which flex | grep -q1 /\flex; then
+    echo flex found...; else echo flex not found!; exit; fi
+
+VALID_FLEX_VERSION=2.5.4
+FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
+echo version $FLEX_VERSION...
+read c_major c_minor c_rev << EOF
+`echo ${VALID_FLEX_VERSION} | tr "." " "`
+EOF
+if ! [[ "$c_rev" =~ [0-9]+$ ]]; then c_rev=0; fi
+read n_major n_minor n_rev << EOF
+`echo ${FLEX_VERSION} | tr "." " "`
+EOF
+if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
+if [ "$n_major" -ne "$c_major" ]; then
+    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+    if [ "$PLATFORM" == "LINUX" ]; then
+	exit;
+    fi
+fi
+if [ "$n_major" -eq "$c_major" ] &&  [ "$n_minor" -ne "$c_minor" ]; then
+    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+    if [ "$PLATFORM" == "LINUX" ]; then
+	exit;
+    fi
+fi
+if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -ne "$c_rev" ]; then
+    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+    if [ "$PLATFORM" == "LINUX" ]; then
+	exit;
+    fi
+fi
+
+if which python | grep -q1 /\python; then
+    echo python found...; else echo python not found!;
+	exit;
+fi
+#}}}
+
+if [ "$MGSROOT" == "" ]; then
+  echo "Please run: source setenv_mgs"
+  exit
+fi
+if [ ! -f ".built" ] && [ "$REBUILD" != "-rebuild" ]; then
+  echo "First build. Please run with --rebuild"
+  exit
+fi
+
+if [  -f ".built"  ]; then
+  line=$(head -n 1 ".built")
+  if  [ "$MGSROOT" != "$line" ]; then
+    echo "Please run: source setenv_mgs"
+    rm .built
+    exit
+  fi
+fi
+if [ "$CLEAN" == "-clean" ] ; then
+  rm_ifexist $MGSROOT/.built
+fi
+if [ "$REBUILD" == "-rebuild" ] ;then
+  cd $MGSROOT
+  touch .built && echo $MGSROOT > .built
+fi
+################################################
+### MDL code ###
+#{{{
+if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  cd $MDLROOT
+
+  touch mdl.make.mark
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$CLEAN" == "-clean" ]; then
+      make clean;
+    fi
+    if [ "$REBUILD" == "-rebuild" ]; then
+      make clean;
+      make -j $NPROCS
+      if [ `ls $MDLROOT/bin/mdlparser` ]; then
+        echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
+      fi
+    fi
+  else
+    make -j $NPROCS
+    if [ `ls $MDLROOT/bin/mdlparser` ]; then
+      echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
+    fi
+  fi
+  if [ "$CLEAN" != "-clean" ] ; then
+    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then
+      rm mdl.make.mark
+      cd $MGSROOT
+      echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
+      exit;
+    fi
+    rm -f mdl.make.mark
+    cd $MGSROOTl
+  fi
+fi
+#}}}
+
+################################################
+### COMMON code ###
+#{{{
+if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  cd $MGSROOT/common
+  sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  if [ "$PLATFORM" == "BGL" ]; then sed 's/FOR_BLUEGENE_L=0/FOR_BLUEGENE_L=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  elif [ "$PLATFORM" == "BGP" ]; then sed 's/FOR_BLUEGENE_P=0/FOR_BLUEGENE_P=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  elif [ "$PLATFORM" == "BGQ" ]; then sed 's/FOR_BLUEGENE_Q=0/FOR_BLUEGENE_Q=1/g' Makefile > tmp.mk; mv tmp.mk Makefile;
+  fi
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$CLEAN" == "-clean" ] ; then
+      make realclean;
+      echo "${cc_blue}Removed COMMON code successful.${cc_normal}"
+    fi
+    if [ "$REBUILD" == "-rebuild" ] ; then
+      make realclean;
+      make -j $NPROCS
+      echo "${cc_blue}Build COMMON code successful.${cc_normal}"
+    fi
+  else
+    make -j $NPROCS
+    echo "${cc_blue}Build COMMON code successful.${cc_normal}"
+  fi
+  cd $MGSROOT
+fi
+#}}}
+
+##########################################
+### GSL code ###
+#{{{
+if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    cd $LENSROOT
+    chmod +x ./build_gsl
+    if [ "$CLEAN" == "-clean" ] ; then
+      ./build_gsl -p $PLATFORM --clean --as-Mgs
+      rm_ifexist $MGSROOT/models/Extensions.mk
+      find . -iname "CG_*" | xargs -I{} rm {}
+      find $MGSROOT/models -iname "CG_*" | xargs -I{} rm {}
+      touch $MGSROOT/models/mgs.mdf
+    fi
+    cd -
+    cd $MGSROOT
+    if [ "$REBUILD" == "-rebuild" ] ;then
+      cd $LENSROOT/extensions/variable
+      ./define variables.mdf  $REBUILD
+      cd $LENSROOT/extensions/struct
+      ./define structs.mdf   $REBUILD
+      cd $LENSROOT/extensions/functor
+      ./define functors_common.mdf  $REBUILD
+      ./define functors_mgs.mdf  $REBUILD
+      cd $MGSROOT/models
+      touch mgs.mdf
+      ./define mgs.mdf $REBUILD
+
+      cp Extensions.mk $LENSROOT/
+      cd $MGSROOT
+    fi
+    cd -
+    cd $LENSROOT
+    if [ "$REBUILD" == "-rebuild" ]; then
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Mgs
+    fi
+    cd -
+  else
+    cd $LENSROOT/extensions/variable
+    ./define variables.mdf  $REBUILD
+    cd $LENSROOT/extensions/struct
+    ./define structs.mdf   $REBUILD
+    cd $LENSROOT/extensions/functor
+    ./define functors_common.mdf  $REBUILD
+    ./define functors_mgs.mdf  $REBUILD
+    cd $MGSROOT/models
+    if [ ! -f Extensions.mk ]; then touch mgs.mdf; fi
+    ./define mgs.mdf $REBUILD
+
+    cp Extensions.mk $LENSROOT/
+    cd $MGSROOT
+    # -s or -singlethread
+    cd $LENSROOT
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Mgs
+    cd -
+  fi
+  if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
+    if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
+      echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS and MGS...${cc_normal}
+
+    To run a test simulation :
+
+      1) type \"cd graphs/IAF\"
+      2) type \"mpiexec -n 1 ../../gsl/bin/gslparser -t 4 -f leakyIAF.gsl -s \`date +%s\`\"
+      3) type \"cd ../../postprocess/IAF/\"
+      4) run the MATLAB script \"leakyIAF.m\"
+      \n\n"
+    fi
+  fi
+fi
+#}}}
+
