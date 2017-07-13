@@ -358,7 +358,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $NTSROOT/models/compartmental.mdf
+      touch $NTSROOT/models/nts.mdf
     fi
     cd -
     cd $NTSROOT
@@ -371,8 +371,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       ./define functors_common.mdf  $REBUILD
       ./define functors_nts.mdf  $REBUILD
       cd $NTSROOT/models
-      touch compartmental.mdf
-      ./define compartmental.mdf $REBUILD
+      touch nts.mdf
+      ./define nts.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $NTSROOT
@@ -392,8 +392,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     ./define functors_common.mdf  $REBUILD
     ./define functors_nts.mdf  $REBUILD
     cd $NTSROOT/models
-    if [ ! -f Extensions.mk ]; then touch compartmental.mdf; fi
-    ./define compartmental.mdf $REBUILD
+    if [ ! -f Extensions.mk ]; then touch nts.mdf; fi
+    ./define nts.mdf $REBUILD
 
     cp Extensions.mk $LENSROOT/
     cd $NTSROOT
