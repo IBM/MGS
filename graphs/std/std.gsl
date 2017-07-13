@@ -126,8 +126,9 @@ Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
 Functor UniformDiscreteDist(float n1, float n2);
 
-SamplingFctr2 IsoSampler();
-IsoSampler isoSampler();
+// TODO: duplicate?
+//SamplingFctr2 IsoSampler();
+//IsoSampler isoSampler();
 
 // sum adds up the numbers and a list and returns the sum 
 Functor Sum

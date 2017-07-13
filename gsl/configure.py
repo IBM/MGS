@@ -993,7 +993,7 @@ FUNCTOR_MODULES := BinomialDist \\
       	ServiceConnectorFunctor \\
       	SrcDimensionConstrainedSampler \\
       	SrcRefDistanceModifier \\
-      	SrcRefDOGWeightModifier \\
+      	SrcRefDoGWeightModifier \\
       	SrcRefGaussianWeightModifier \\
       	SrcRefPeakedWeightModifier \\
       	SrcRefSumRsqrdInvWeightModifier \\
@@ -1016,7 +1016,6 @@ FUNCTOR_MODULES := BinomialDist \\
         if (self.options.asMgs is True) or (self.options.asBoth is True):
             retStr += \
 """\
-
 """
         if self.options.asBoth is True:
             retStr += \
