@@ -389,7 +389,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $LENSROOT/extensions/struct
       ./define structs.mdf   $REBUILD
       cd $LENSROOT/extensions/functor
-      ./define functors.mdf  $REBUILD
+      ./define functors_common.mdf  $REBUILD
+      ./define functors_nts.mdf  $REBUILD
       cd $NTSROOT/models
       touch compartmental.mdf
       ./define compartmental.mdf $REBUILD
@@ -409,7 +410,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT/extensions/struct
     ./define structs.mdf   $REBUILD
     cd $LENSROOT/extensions/functor
-    ./define functors.mdf  $REBUILD
+    ./define functors_common.mdf  $REBUILD
+    ./define functors_nts.mdf  $REBUILD
     cd $NTSROOT/models
     if [ ! -f Extensions.mk ]; then touch compartmental.mdf; fi
     ./define compartmental.mdf $REBUILD
