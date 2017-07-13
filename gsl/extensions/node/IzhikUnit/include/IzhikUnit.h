@@ -5,7 +5,7 @@
 #include "CG_IzhikUnit.h"
 #include "rndm.h"
 #include <fstream>
-#include "NumIntNoPhase.h"
+#include "NumInt.h"
 
 class IzhikUnit : public CG_IzhikUnit, public RK4
 {
