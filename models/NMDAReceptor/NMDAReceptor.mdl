@@ -371,11 +371,11 @@ Node NMDAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
     dyn_var_t beta;// msec^-1,   which is Rc
     dyn_var_t Rr;// msec^-1
     dyn_var_t Rd;// msec^-1
-		//{{{ only used with preSynapticPoint
+    //{{{ only used with preSynapticPoint
     dyn_var_t NTmax; // [uM] maximum concentration of NeuroTransmitter Glutamate
     dyn_var_t Vp; // [mV]  voltage at which concentration of Glutamate is at half-peak
     dyn_var_t Kp; // [mV]  the steepness of the curve of Glutamate = f(Vm)
-	  //}}}
+    //}}}
     dyn_var_t E;  //reversal potential of NMDAR
 
     dyn_var_t* deltaT;

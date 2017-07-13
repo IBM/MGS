@@ -119,6 +119,9 @@ void Params::reviseParamValues(std::vector<int>& fieldVals, const std::string& f
 */
 
 #ifdef MICRODOMAIN_CALCIUM
+/*
+ * GOAL: split the microdomain name, if present, out of the compartment name
+ */
 void Params::separateCompartmentName_and_microdomainName(std::string compartmentNameWithOptionalMicrodomainName, std::string& compartmentNameOnly, std::string& microdomainName)
 {
   std::string delimiter = "(";
@@ -135,6 +138,12 @@ void Params::separateCompartmentName_and_microdomainName(std::string compartment
       assert(microdomainName[0] == '(');
       assert(microdomainName.back() == ')');
       microdomainName = microdomainName.substr(1, microdomainName.size()-2);
+      if (microdomainName.find_first_of(",") != std::string::npos)
+      {
+        std::cerr << "ERROR: no comma (,) is accepted in microdomain name " 
+          << microdomainName << std::endl;
+        assert(0);
+      }
     }
   }
 }
@@ -683,11 +692,11 @@ void Params::readSynParams(const std::string& fname)
 {
   FILE* fpF = fopen(fname.c_str(), "r");
   _currentFName = fname;
-	if (fpF == NULL)
-	{
-		std::cerr << "File " << fname << " not found.\n";
-		assert(fpF);
-	}
+  if (fpF == NULL)
+  {
+    std::cerr << "File " << fname << " not found.\n";
+    assert(fpF);
+  }
   ErrorCode result;
   skipHeader(fpF);
 
@@ -7602,14 +7611,17 @@ bool Params::isNonTouchableTargets(key_size_t key1, key_size_t key2)
 Params::ErrorCode Params::readMicrodomainData(
     FILE* fpF, const std::string& expected_btype,
     std::map< std::string,
-        std::map<std::string, std::vector<float> > > &
-        arrayParamsMap)
+    std::map<std::string, std::vector<float> > > &
+    arrayParamsMap)
 {
-  /* Example of input from fpF
-     * NOTE: id = COMPARTMENT_VARIABLE_PARAMS
-MICRODOMAIN_PARAMS 1
-domain1  <v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
-   */
+#ifdef COMMENT
+  // Example of input from fpF
+  //  NOTE: id = COMPARTMENT_VARIABLE_PARAMS
+  // MICRODOMAIN_PARAMS 1
+  // domain1  <v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
+  // 
+#endif
+
   int errorCode;
   ErrorCode rval = ErrorCode::SECTION_VALID;
   //paramsMasks.clear();
@@ -7669,15 +7681,17 @@ domain1  <v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
 }
 
 
-/*
- * Given the string 
- * @arg myBuf : string to be parsed; put data into 'arrayParamsMap'
- * @arg arrayParamsMap : key is defined by @arg domainName
- * @arg domainName     : the key
- *
- * Example of myBuf:
- * <v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
- */
+#ifdef COMMENT
+//
+//Given the string 
+//@arg myBuf : string to be parsed; put data into 'arrayParamsMap'
+//@arg arrayParamsMap : key is defined by @arg domainName
+//@arg domainName     : the domain name, to be used as key in arrayParamsMap
+//
+//Example of @arg myBuf:
+//<v_efflux={0.003}, depth_microdomain={10}, fraction_surface={1.0}>
+//
+#endif
 void Params::extractMicrodomainData(
     const std::string& myBuf,
     std::map< std::string,
@@ -7685,68 +7699,68 @@ void Params::extractMicrodomainData(
     arrayParamsMap, 
     std::string domainName)
 {
-    std::map<std::string, std::vector<float> >&
-      arrayParams = arrayParamsMap[domainName];
+  std::map<std::string, std::vector<float> >&
+    arrayParams = arrayParamsMap[domainName];
 
-    std::istringstream is(myBuf);
-    while (is.get() != '<')
+  std::istringstream is(myBuf);
+  while (is.get() != '<')
+  {
+    if (not is.good())
     {
-      if (not is.good())
+      std::cerr << "ERROR in file " << _currentFName << std::endl;
+      std::cerr << " Expect a '<' symbol ... line\n" <<
+        myBuf << std::endl;
+    }
+    assert(is.good());
+  }
+  char buf1[LENGTH_LINE_MAX];
+  assert(StringUtils::streamGet(is, buf1, LENGTH_LINE_MAX, '>'));
+  std::string stringbuf1(buf1);  // to replace the code below
+  std::vector<std::string> tokens1;
+  StringUtils::Tokenize(stringbuf1, tokens1, ";");
+  for (std::vector<std::string>::iterator ii = tokens1.begin(),
+      end1 = tokens1.end();
+      ii != end1; ++ii)
+  {
+    std::string delimiter = "=";
+    size_t pos = (*ii).find(delimiter);
+    std::string name = (*ii).substr(0, pos);
+    StringUtils::trim(name);
+    (*ii).erase(0, pos + delimiter.length());
+
+    delimiter = " =";
+    pos = (*ii).find(delimiter);
+    std::string tok2 = (*ii).substr(0, pos);
+    StringUtils::trim(tok2);
+
+    std::istringstream is2(tok2);
+    if (is2.get() != '{')
+    {  // single value - but still put into array
+      //float value = atof(tok2.c_str());
+      //params.push_back(std::pair<std::string, float>(name, value));
+      std::vector<float> value {float(atof(tok2.c_str()))};
+      arrayParams[name] =  value;
+    }
+    else
+    {  // contain multiple values (comma-separated)
+      std::vector<float> value;
+      char buf2[LENGTH_LINE_MAX];
+      // NOTE: This code is potentialy bug when token info is too long
+      //   is2.get(buf2, LENGTH_IDNAME_MAX, '}');
+      //
+      assert(StringUtils::streamGet(is2, buf2, LENGTH_LINE_MAX, '}'));
+      std::string stringbuf(buf2);
+      std::vector<std::string> tokens;
+      StringUtils::Tokenize(stringbuf, tokens, ",");
+      for (std::vector<std::string>::iterator jj = tokens.begin(),
+          end = tokens.end();
+          jj != end; ++jj)
       {
-        std::cerr << "ERROR in file " << _currentFName << std::endl;
-        std::cerr << " Expect a '<' symbol ... line\n" <<
-          myBuf << std::endl;
+        // assume input values are numerics
+        value.push_back(float(atof((*jj).c_str())));
       }
-      assert(is.good());
+      arrayParams[name] = value;
     }
-    char buf1[LENGTH_LINE_MAX];
-    assert(StringUtils::streamGet(is, buf1, LENGTH_LINE_MAX, '>'));
-    std::string stringbuf1(buf1);  // to replace the code below
-    std::vector<std::string> tokens1;
-    StringUtils::Tokenize(stringbuf1, tokens1, ";");
-    for (std::vector<std::string>::iterator ii = tokens1.begin(),
-        end1 = tokens1.end();
-        ii != end1; ++ii)
-    {
-      std::string delimiter = "=";
-      size_t pos = (*ii).find(delimiter);
-      std::string name = (*ii).substr(0, pos);
-      StringUtils::trim(name);
-      (*ii).erase(0, pos + delimiter.length());
-
-      delimiter = " =";
-      pos = (*ii).find(delimiter);
-      std::string tok2 = (*ii).substr(0, pos);
-      StringUtils::trim(tok2);
-
-      std::istringstream is2(tok2);
-      if (is2.get() != '{')
-      {  // single value - but still put into array
-        //float value = atof(tok2.c_str());
-        //params.push_back(std::pair<std::string, float>(name, value));
-        std::vector<float> value {float(atof(tok2.c_str()))};
-        arrayParams[name] =  value;
-      }
-      else
-      {  // contain multiple values (comma-separated)
-        std::vector<float> value;
-        char buf2[LENGTH_LINE_MAX];
-        /* NOTE: This code is potentialy bug when token info is too long
-           is2.get(buf2, LENGTH_IDNAME_MAX, '}');
-           */
-        assert(StringUtils::streamGet(is2, buf2, LENGTH_LINE_MAX, '}'));
-        std::string stringbuf(buf2);
-        std::vector<std::string> tokens;
-        StringUtils::Tokenize(stringbuf, tokens, ",");
-        for (std::vector<std::string>::iterator jj = tokens.begin(),
-            end = tokens.end();
-            jj != end; ++jj)
-        {
-          // assume input values are numerics
-          value.push_back(float(atof((*jj).c_str())));
-        }
-        arrayParams[name] = value;
-      }
-    }
+  }
 }
 #endif
