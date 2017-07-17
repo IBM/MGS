@@ -677,14 +677,14 @@ class BuildSetup:
             retStr += "Used"
         else:
             retStr += "Not used"
-        retStr += "\n"                
+        retStr += "\n"
 
         retStr += TAB + "NTI: "
         if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += "Used"
         else:
             retStr += "Not used"
-        retStr += "\n"        
+        retStr += "\n"
 
         retStr += TAB + "DX: "
 
@@ -1041,9 +1041,10 @@ FUNCTOR_MODULES := BinomialDist \\
       	TissueConnectorFunctor \\
       	TissueFunctor \\
       	TissueLayoutFunctor \\
-	TissueMGSifyFunctor \\
+        TissueMGSifyFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
+        Zipper \\
 """
         if (self.options.asMgs is True) or (self.options.asBoth is True):
             retStr += \
@@ -1052,7 +1053,6 @@ FUNCTOR_MODULES := BinomialDist \\
         if self.options.asBoth is True:
             retStr += \
 """\
-        Zipper \\
 """
         retStr += \
 """\
@@ -1093,7 +1093,7 @@ MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 	       done)
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
-"""        
+"""
         if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += \
 """\
