@@ -1,4 +1,6 @@
 ./make_nts  [print out help instruction]
+./make_mgs  [print out help instruction]
+./make_both  [print out help instruction]
 
 
 GSL:
