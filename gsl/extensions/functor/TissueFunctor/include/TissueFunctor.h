@@ -274,7 +274,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   //                   starting from 0 for the first Layer in A GRID
   // (each grid has its own indexing, i.e. layer indices are reset)
   //[index-layer][density-index-of-node-that-channel-getinputs]
-	//[branch-index]<node-index,  layer-index-of-Layer-holding-the-proper-cpt(e.g.Voltage)-NodeType-which-will-we-need-to-create-InputConnection>
+  //[branch-index]<node-index,  layer-index-of-Layer-holding-the-proper-cpt(e.g.Voltage)-NodeType-which-will-we-need-to-create-InputConnection>
 #ifdef MICRODOMAIN_CALCIUM
   //TUAN TODO - add these to the Constructors as well
   //

@@ -627,7 +627,8 @@ void CaConcentration::doForwardSolve()
 
 #ifdef MICRODOMAIN_CALCIUM
   //must put here
-  updateMicrodomains();
+  if (microdomainNames.size() > 0)
+    updateMicrodomains();
 #endif
 }
 
@@ -654,7 +655,8 @@ void CaConcentration::doBackwardSolve()
   }
 #ifdef MICRODOMAIN_CALCIUM
   //must put here
-  updateMicrodomains_Ca();
+  if (microdomainNames.size() > 0)
+    updateMicrodomains_Ca();
 #endif
 }
 
@@ -1190,6 +1192,18 @@ void CaConcentration::setupCurrent2Microdomain(const String& CG_direction, const
   }
   _mapCurrentToMicrodomainIndex[channelCaCurrents_microdomain.size()-1] = ii;
 }
+void CaConcentration::setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset) 
+{//this current is supposed to project into the Ca-domain with name defined in 'CG_inAttrPset->domainName'
+  //put channel producing Ca2+ influx to the right location
+  //from that we can update the [Ca2+] in the associated microdomain
+  String microdomainName = CG_inAttrPset->domainName;
+  int ii = 0;
+  while (microdomainNames[ii] != microdomainName)
+  {
+    ii++;
+  }
+  _mapFluxToMicrodomainIndex[channelCaFluxes_microdomain.size()-1] = ii;
+}
 //forward
 void CaConcentration::updateMicrodomains()
 {//Update Aii[] using v_efflux          [1/ms]
@@ -1222,6 +1236,17 @@ void CaConcentration::updateMicrodomains()
       RHS_microdomain[offset+jj] -= currentToConc[jj] * (*(citer->currents))[jj];  //[uM/ms]
     }
   }
+  Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes_microdomain.begin();
+  Array<ChannelCaFluxes>::iterator fend = channelCaFluxes_microdomain.end();
+  for (; fiter != fend; fiter++)
+  {
+    int offset = _mapFluxToMicrodomainIndex[ii] * numCpts;
+    for (int jj = 0; jj < numCpts; jj++)
+    {
+      RHS_microdomain[offset+jj] += (*(fiter->fluxes))[jj];  //[uM/ms]
+    }
+  }
+
   // ... (continue with similar above code for other type of Ca2+ influx
   //      e.g. )
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)

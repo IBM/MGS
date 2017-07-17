@@ -1381,7 +1381,7 @@ Grid MSN_D1Neuron{
       // 3.1. PRE-SYNAPSE (get Voltage from bouton-side)
 	/*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[tight]" >), < nodekind="PreSynapticPoints[tight]" >, tissueGM);
 //or
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
 // TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
@@ -1958,7 +1958,9 @@ Grid MSN_D1Neuron{
   //}}}
 
    //{{{receptors/Synaptic Cleft
+#if SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
   polyConnect(timeStep, .[].Layer(SynapticClefts), <>, <identifier="dt">);
+#endif
   // Synapse Receptors
   polyConnect(timeStep, .[].Layer(AMPAthinSynapses), <>, <identifier="dt">);
   polyConnect(extracellularMedium, .[].Layer(AMPAthinSynapses), <>, <identifier="EC">);

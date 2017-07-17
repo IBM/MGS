@@ -74,8 +74,9 @@ class CaConcentration : public CG_CaConcentration
   std::map<int, int>
       _mapCurrentToMicrodomainIndex;  // first 'int' = index in
                                       // channelCaCurrents_microdomain
-// second 'int' = index of Ca_microdomain that this current is supposed to
-// project to
+// second 'int' = index of Ca_microdomain that this current is supposed to project to
+  std::map<int, int> _mapFluxToMicrodomainIndex; // first 'int' = index in channelCaFluxes_microdomain
+  virtual void setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationInAttrPSet* CG_inAttrPset, CG_CaConcentrationOutAttrPSet* CG_outAttrPset);
   void updateMicrodomains();
   void updateMicrodomains_Ca();
 #endif

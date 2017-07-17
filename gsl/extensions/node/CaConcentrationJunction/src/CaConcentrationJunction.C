@@ -194,8 +194,11 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
 
 #ifdef MICRODOMAIN_CALCIUM
   //predict at time (t + dt/2)
-  updateMicrodomains(LHS, RHS);
-  updateMicrodomains_Ca();
+  if (microdomainNames.size() > 0)
+  {
+    updateMicrodomains(LHS, RHS);
+    updateMicrodomains_Ca();
+  }
 #endif
 
   Array<ChannelCaCurrents>::iterator citer;
@@ -278,7 +281,8 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
 
 #ifdef MICRODOMAIN_CALCIUM
   //correct at time (t + dt/2)
-  updateMicrodomains(LHS, RHS);
+  if (microdomainNames.size() > 0)
+    updateMicrodomains(LHS, RHS);
 #endif
 
   Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
@@ -331,19 +335,23 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
   Ca_new[0] = RHS / LHS; //corrected value at (t + dt/2)
 #ifdef MICRODOMAIN_CALCIUM
   //correct at time (t + dt/2)
-  updateMicrodomains_Ca();
+  if (microdomainNames.size() > 0)
+    updateMicrodomains_Ca();
 #endif
 
   // This is the swap phase
   Ca_cur = Ca_new[0] = 2.0 * Ca_new[0] - Ca_cur;//value at (t+dt)
 #ifdef MICRODOMAIN_CALCIUM
   //update at time (t + dt)
-  updateMicrodomains_Ca();
-  int numCpts = branchData->size;
-  for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
-  {//calculate RHS[] and Ca_microdomain[]
-    int offset = ii * numCpts;
-    Ca_microdomain_cur[offset] = Ca_microdomain[offset] = 2 * Ca_microdomain[offset] - Ca_microdomain_cur[offset];
+  if (microdomainNames.size() > 0)
+  {
+    updateMicrodomains_Ca();
+    int numCpts = branchData->size;
+    for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
+    {//calculate RHS[] and Ca_microdomain[]
+      int offset = ii * numCpts;
+      Ca_microdomain_cur[offset] = Ca_microdomain[offset] = 2 * Ca_microdomain[offset] - Ca_microdomain_cur[offset];
+    }
   }
 #endif
 
@@ -551,6 +559,32 @@ void CaConcentrationJunction::setupCurrent2Microdomain(const String& CG_directio
   _mapCurrentToMicrodomainIndex[channelCaCurrents_microdomain.size()-1] = ii;
 }
 
+void CaConcentrationJunction::setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  //put channel producing Ca2+ influx to the right location
+  //from that we can update the [Ca2+] in the associated microdomain
+  String microdomainName = CG_inAttrPset->domainName;
+  int ii = 0;
+  while (microdomainNames[ii] != microdomainName)
+  {
+    ii++;
+  }
+  _mapFluxToMicrodomainIndex[channelCaFluxes_microdomain.size()-1] = ii;
+}
+
+void CaConcentrationJunction::setupReceptorCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  //put channel producing Ca2+ influx to the right location
+  //from that we can update the [Ca2+] in the associated microdomain
+  String microdomainName = CG_inAttrPset->domainName;
+  int ii = 0;
+  while (microdomainNames[ii] != microdomainName)
+  {
+    ii++;
+  }
+  _mapReceptorCurrentToMicrodomainIndex[receptorCaCurrents_microdomain.size()-1] = ii;
+}
+
 void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
 {//update RHS[], RHS_microdomain[], Ca_microdomain[] at time (t + dt/2)
   Array<ChannelCaCurrents>::iterator citer;
@@ -569,7 +603,7 @@ void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
   }
   citer = channelCaCurrents_microdomain.begin();
   cend = channelCaCurrents_microdomain.end();
-  // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
+  // loop through different kinds of Ca2+ currents via channels (LCCv12, LCCv13, R-type, ...)
   //  I_Ca [pA/um^2]
   ii = 0;
   for (; citer != cend; ++citer, ++ii)
@@ -578,6 +612,31 @@ void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
     for (int jj = 0; jj < numCpts; jj++)
     {
       RHS_microdomain[offset+jj] -= currentToConc * (*(citer->currents))[jj];  //[uM/ms]
+    }
+  }
+  Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes_microdomain.begin();
+  Array<ChannelCaFluxes>::iterator fend = channelCaFluxes_microdomain.end();
+  for (; fiter != fend; fiter++)
+  {
+    int offset = _mapFluxToMicrodomainIndex[ii] * numCpts;
+    for (int jj = 0; jj < numCpts; jj++)
+    {
+      RHS_microdomain[offset+jj] += (*(fiter->fluxes))[jj];  //[uM/ms]
+    }
+  }
+
+  Array<dyn_var_t*>::iterator riter = receptorCaCurrents_microdomain.begin();
+  Array<dyn_var_t*>::iterator rend = receptorCaCurrents_microdomain.end();
+  // loop through different kinds of Ca2+ currents via receptors (NMDAR, ...)
+  //  I_Ca [pA/um^2]
+  ii = 0;
+  for (; riter!= rend; ++riter, ++ii)
+  {
+    int offset = _mapReceptorCurrentToMicrodomainIndex[ii] * numCpts;
+    for (int jj = 0; jj < numCpts; jj++)
+    {
+      RHS_microdomain[offset+jj] -= currentToConc * (*(*riter));  //[uM/ms]
+      //RHS_microdomain[offset+jj] -= currentToConc * (*(*riter))[jj];  //[uM/ms]
     }
   }
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)

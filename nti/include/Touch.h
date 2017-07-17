@@ -24,6 +24,7 @@
 #include "SegmentDescriptor.h"
 #include "NTSMacros.h"
 #include "MaxComputeOrder.h"
+#include "NTSMacros.h"
 
 //#define LTWT_TOUCH (moved to NTSMacro.h)
 
