@@ -83,7 +83,7 @@ while getopts "$optspec" optchar; do
       NPROCS=1
       ;;
     r) # release
-      RELEASE="--release"
+      RELEASE="-release"
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
@@ -100,7 +100,7 @@ while getopts "$optspec" optchar; do
                     MCO="-MCO"
                     ;;
 		release) # release
-                    RELEASE="--release"
+                    RELEASE="-release"
 		    ;;
                 loglevel)
                   val="${!OPTIND}"
