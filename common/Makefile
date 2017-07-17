@@ -2,7 +2,21 @@ OBJDIR= ./obj
 SRCDIR= ./src
 INCDIR= ./include
 CC=g++
-CFLAGS=-I$(INCDIR) -g -ggdb -Wall -O3 -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
+CFLAGS=-I$(INCDIR) -Wall -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
+
+RELEASE?="" # Potentially set by make_XXX or the user from the command line
+
+# Check if release mode
+ifeq ($(RELEASE), -release)
+   # No debugging
+   # Yes optimization
+   CFLAGS += -O3
+else
+   # Yes debugging
+   CFLAGS += -ggdb -g
+   # Minimal optimization
+   CFLAGS += -Og
+endif
 
 .DEFAULT_GOAL := final
 
@@ -18,7 +32,7 @@ $(OBJS): | $(OBJDIR)
 
 $(OBJDIR): 
 	mkdir -p $(OBJDIR)
-	
+
 final: $(OBJS)
 #final: 
 	echo $(OBJS)

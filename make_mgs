@@ -22,8 +22,6 @@ rm_ifexist() {
  fi
 }
 
-#TODO: look at loglevel
-#TODO: GPU
 function print_help {
 	echo -e "\n\n${cc_blue}Make MGS...${cc_normal} \n\nOption include : \n\n
   -p [LINUX|BGL|BGP|BGQ]        default = LINUX  build to run on what platform
@@ -61,6 +59,7 @@ PLATFORM="LINUX"
 WHAT_TO_BUILD="all"
 CLEAN=""
 REBUILD=""
+RELEASE=""
 GSL_BUILD_MODE=""
 optspec=":c:p:sr-:j:"
 while getopts "$optspec" optchar; do
@@ -81,8 +80,7 @@ while getopts "$optspec" optchar; do
       NPROCS=1
       ;;
     r) # release
-      NTI_BUILD_MODE=""
-      GSL_BUILD_MODE="--release"
+      RELEASE="--release"
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
@@ -96,8 +94,7 @@ while getopts "$optspec" optchar; do
                     NPROCS=1
                     ;;
                 release) # release
-                    NTI_BUILD_MODE=""  #keep empty
-                    GSL_BUILD_MODE="--release"
+                    RELEASE="--release"
                     ;;
                 loglevel)
                   val="${!OPTIND}"
@@ -247,13 +244,21 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make -j $NPROCS
+      if [ "$RELEASE" == "-release" ]; then
+          make -j $NPROCS RELEASE="-release"
+      else
+          make -j $NPROCS RELEASE=""
+      fi
       if [ `ls $MDLROOT/bin/mdlparser` ]; then
         echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
       fi
     fi
   else
-    make -j $NPROCS
+    if [ "$RELEASE" == "-release" ]; then
+        make -j $NPROCS RELEASE="-release"
+    else
+        make -j $NPROCS RELEASE=""
+    fi
     if [ `ls $MDLROOT/bin/mdlparser` ]; then
       echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
     fi
@@ -290,11 +295,19 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
       make realclean;
-      make -j $NPROCS
+      if [ "$RELEASE" == "-release" ]; then
+          make -j $NPROCS RELEASE="-release"
+      else
+          make -j $NPROCS RELEASE=""
+      fi
       echo "${cc_blue}Build COMMON code successful.${cc_normal}"
     fi
   else
-    make -j $NPROCS
+    if [ "$RELEASE" == "-release" ]; then
+        make -j $NPROCS RELEASE="-release"
+    else
+        make -j $NPROCS RELEASE=""
+    fi
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
   cd $MGSROOT
@@ -335,7 +348,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ]; then
-      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Mgs
+      if [ "$RELEASE" == "-release" ]; then
+        ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --release --as-Mgs
+      else
+        ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Mgs
+      fi
     fi
     cd -
   else
@@ -354,7 +371,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $MGSROOT
     # -s or -singlethread
     cd $LENSROOT
-    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Mgs
+    if [ "$RELEASE" == "-release" ]; then
+      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --release --as-Mgs
+    else
+      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Mgs
+    fi
     cd -
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then

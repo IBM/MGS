@@ -58,7 +58,7 @@ AIX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^) $(shell grep -A 1 
 AIX_GNU_FINAL_TARGET_FLAG = "$(MAKE64) "
 AIX_XL_FINAL_TARGET_FLAG = AIX_GNU_FINAL_TARGET_FLAG + " " + XL_RUNTIME_TYPE_INFO_FLAG
 
-GNU_DEBUGGING_FLAG = "-ggdb"
+GNU_DEBUGGING_FLAG = "-ggdb -g"
 XL_DEBUGGING_FLAG = "-g"
 
 PROFILING_FLAGS = "-pg"
@@ -68,6 +68,7 @@ O2_OPTIMIZATION_FLAG = "-O2"
 O3_OPTIMIZATION_FLAG = "-O3"
 O4_OPTIMIZATION_FLAG = "-O4"
 O5_OPTIMIZATION_FLAG = "-O5"
+OG_OPTIMIZATION_FLAG = "-Og"
 
 DEBUG_ASSERT = "-DDEBUG_ASSERT"
 DEBUG_HH = "-DDEBUG_HH"
@@ -257,7 +258,7 @@ class Options:
         self.profile = DONTUSE  # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE  # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE  # USE, DONTUSE, UNDEF
-        self.optimization = "undefined"  # O1, O2, O3, undefined
+        self.optimization = "undefined"  # O, O2, O3, O4, O5, Og, undefined
         self.dynamicLoading = False  # True, False
         self.domainLibrary = False  # True, False
         self.pthreads = True  # True, False
@@ -286,6 +287,7 @@ class Options:
                            ("O3", "optimize at level 3"),
                            ("O4", "optimize at level 4"),
                            ("O5", "optimize at level 5"),
+                           ("Og", "optimize with debug information"),
                            ("debug", "compile with debugging flags"),
                            ("debug_assert", "compile with debugging flags for assert"),
                            ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
@@ -362,27 +364,32 @@ class Options:
                     if self.optimization == "undefined":
                         self.optimization = "O"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O2":
                     if self.optimization == "undefined":
                         self.optimization = "O2"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O3":
                     if self.optimization == "undefined":
                         self.optimization = "O3"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O4":
                     if self.optimization == "undefined":
                         self.optimization = "O4"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O5":
                     if self.optimization == "undefined":
                         self.optimization = "O5"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
+                if o == "--Og":
+                    if self.optimization == "undefined":
+                        self.optimization = "Og"
+                    else:
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--debug":
                     self.debug = USE
                 if o == "--debug_assert":
@@ -438,15 +445,15 @@ class Options:
             if self.extMode is True and self.rebuild is True:
                 raise FatalError("Do not rebuild with the ext-mode turned on.")
 
-            if self.debug == USE and self.optimization != "O":
+            if self.debug == USE and self.optimization != "Og":
                 printWarning("Debugging is turned on even though optimization is " +
-                             self.optimization + ".\nSetting optimization to --O")
-                self.optimization = "O"
+                             self.optimization + ".\nSetting optimization to --Og")
+                self.optimization = "Og"
 
-            if self.profile == USE and self.optimization != "O":
+            if self.profile == USE and self.optimization != "Og":
                 printWarning("Profiling is turned on even though optimization is " +
-                             self.optimization + ".\nSetting optimization to --O")
-                self.optimization = "O"
+                             self.optimization + ".\nSetting optimization to --Og")
+                self.optimization = "Og"
 
             # if self.profile == USE and self.debug != USE:
             #    printWarning("Profiling is turned on so debugging turned on by default.")
@@ -584,7 +591,7 @@ class BuildSetup:
         retStr += "\n"
 
         retStr += TAB + "Debugging: "
-        if self.options.debug is True:
+        if self.options.debug == USE:
             retStr += "On\n"
             if self.options.debug_assert is True:
                 retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
@@ -1173,6 +1180,8 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " " + O4_OPTIMIZATION_FLAG
         if self.options.optimization == "O5":
             retStr += " " + O5_OPTIMIZATION_FLAG
+        if self.options.optimization == "Og":
+            retStr += " " + OG_OPTIMIZATION_FLAG
 
         if self.options.dynamicLoading == False:
             retStr += " -DDISABLE_DYNAMIC_LOADING"
