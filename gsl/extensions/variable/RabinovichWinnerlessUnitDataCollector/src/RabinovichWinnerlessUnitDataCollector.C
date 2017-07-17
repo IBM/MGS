@@ -186,7 +186,7 @@ void RabinovichWinnerlessUnitDataCollector::getNodeIndices(const String& CG_dire
     {
       ShallowArray<unsigned,3,2> coords;
       CG_node->getNode()->getNodeCoords(coords);
-      assert(coords.size()==2);
+      assert(coords.size()==3);
       rows.push_back(coords[0]);
       cols.push_back(coords[1]);
     }
