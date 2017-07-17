@@ -1,6 +1,5 @@
 #include "PointNeuronTools/PointNeuronTools.mdl"
 
-## Models
 #include "BitMapPhenotype/BitmapPhenotype.mdl"
 #include "BoutonIAFUnit/BoutonIAFUnit.mdl"
 #include "CleftAstrocyteIAFUnit/CleftAstrocyteIAFUnit.mdl"
@@ -25,7 +24,6 @@
 #include "WaveDriverUnit/WaveDriverUnit.mdl"
 #include "ZhengSORNUnits/ZhengSORNUnits.mdl"
 
-## Data Collectors
 #include "BoutonIAFUnit/BoutonIAFUnitDataCollectors.mdl"
 #include "CleftAstrocyteIAFUnit/CleftAstrocyteIAFUnitDataCollectors.mdl"
 #include "FileDriverUnit/FileDriverUnitDataCollectors.mdl"
@@ -47,6 +45,5 @@
 #include "WaveDriverUnit/WaveDriverUnitDataCollectors.mdl"
 #include "ZhengSORNUnits/ZhengSORNUnitDataCollectors.mdl"
 
-## Data Analyzers
 #include "Analyzers/LFPDataAnalyzers.mdl"
 
