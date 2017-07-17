@@ -61,6 +61,9 @@ function print_help {
   -d 3                  [debug_in_loops] --> print debugs inside Loops
   -d 4                  [debug_cpts] --> print compartmental information 
 
+  --gpu                 build/configure with GPU extensions
+  --arma                build/configure with Armadillo extensions
+
   --release:            to build in release mode [default: debug mode]
   --loglevel 1:         debug with debug_assert and debug_hh for initialize methods
   --loglevel 2:         debug with debug_assert and debug_hh and print out debug for loops
@@ -87,6 +90,8 @@ CLEAN=""
 REBUILD=""
 GSL_BUILD_MODE=""
 RELEASE=""
+GPU=""
+ARMA=""
 AS=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
@@ -127,6 +132,12 @@ while getopts "$optspec" optchar; do
               ;;
           release) # release
               RELEASE="-release"
+              ;;
+          gpu) # GPU extensions
+              GPU="-gpu"
+              ;;
+          arma) # Armadillo extensions
+              ARMA="-arma"
               ;;
           loglevel=*)
             val=${OPTARG#*=}
@@ -199,6 +210,14 @@ case $PLATFORM in
     PLATFORM_OPTS+=" --blueGeneQ "
     ;;
 esac
+
+if [ "$GPU" == "-gpu" ]; then
+    PLATFORM_OPTS+=" --with-gpu "
+fi
+
+if [ "$ARMA" == "-arma" ]; then
+    PLATFORM_OPTS+=" --with-arma "
+fi
 
 DEBUGMACROS="--debug_assert "
 for val in "${DEBUGOPTS[@]}"; do

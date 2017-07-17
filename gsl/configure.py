@@ -263,6 +263,8 @@ class Options:
         self.domainLibrary = False  # True, False
         self.pthreads = True  # True, False
         self.withMpi = False  # True, False
+        self.withGpu = False  # True, False
+        self.withArma = False  # True, False
         self.blueGeneL = False  # True, False
         self.blueGeneP = False  # True, False
         self.blueGeneQ = False  # True, False
@@ -300,6 +302,8 @@ class Options:
                            ("domainLib", "link to domain specific library"),
                            ("disable-pthreads", "disable pthreads, there will be a single thread"),
                            ("with-mpi", "enables mpi"),
+                           ("with-gpu", "enables gpu extensions"),
+                           ("with-arma", "enables Armadillo extensions"),
                            ("blueGeneL", "configures for blueGeneL environment"),
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
@@ -416,6 +420,10 @@ class Options:
                     self.pthreads = False
                 if o == "--with-mpi":
                     self.withMpi = True
+                if o == "--with-gpu":
+                    self.withGpu = True
+                if o == "--with-arma":
+                    self.withArma = True
                 if o == "--silent":
                     self.silent = True
                 if o == "--verbose":
@@ -657,6 +665,20 @@ class BuildSetup:
             retStr += "Not used"
         retStr += "\n"
 
+        retStr += TAB + "GPU: "
+        if self.options.withGpu is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
+        retStr += TAB + "Armadillo: "
+        if self.options.withArma is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"                
+
         retStr += TAB + "NTI: "
         if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += "Used"
@@ -894,6 +916,10 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
             retStr += "HAVE_MPI := 1\n"
+        if self.options.withGpu is True:
+            retStr += "HAVE_GPU := 1\n"
+        if self.options.withArma is True:
+            retStr += "HAVE_ARMA := 1\n"
         if self.options.silent is True:
             retStr += "SILENT_MODE := 1\n"
         if self.options.verbose is True:
@@ -1194,6 +1220,12 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             if self.options.compiler == "gcc":
                retStr += " -DLAM_BUILDING"
 
+        if self.options.withGpu is True:
+            retStr += " -DHAVE_GPU"
+
+        if self.options.withArma is True:
+            retStr += " -DHAVE_ARMA"
+
         if self.options.profile == USE:
             retStr += " -DPROFILING"
 
@@ -1266,6 +1298,12 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.compiler == "gcc":
            if self.options.withMpi is True:
               retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
+
+        if self.options.withGpu is True:
+            retStr += " -lcudart -lcurand"
+
+        if self.options.withArma is True:
+            retStr += " -llapack -lopenblas -larmadillo"
 
         retStr += "\n"
         return retStr
