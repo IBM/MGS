@@ -324,20 +324,25 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if [ "$CLEAN" == "-clean" ] ; then
       ./build_gsl -p $PLATFORM --clean --as-Mgs
       rm_ifexist $MGSROOT/models/Extensions.mk
+      rm_ifexist $MGSROOT/models/all.mdf
+      rm_ifexist $MGSROOT/models/all_test.mdf
+      rm_ifexist $LENSROOT/extensions/functor/all.mdf
+      rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
       find $MGSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $MGSROOT/models/mgs.mdf
     fi
     cd -
     cd $MGSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
       cd $LENSROOT/extensions/variable
-      ./define variables.mdf  $REBUILD
+      ./define variables.mdf $REBUILD
       cd $LENSROOT/extensions/struct
-      ./define structs.mdf   $REBUILD
+      ./define structs.mdf $REBUILD
       cd $LENSROOT/extensions/functor
-      ./define functors_common.mdf  $REBUILD
-      ./define functors_mgs.mdf  $REBUILD
+      rm_ifexist all.mdf
+      cat functors_common.mdf >> all.mdf
+      cat functors_mgs.mdf >> all.mdf
+      ./define all.mdf $REBUILD
       cd $MGSROOT/models
       touch mgs.mdf
       ./define mgs.mdf $REBUILD
@@ -357,12 +362,18 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
   else
     cd $LENSROOT/extensions/variable
-    ./define variables.mdf  $REBUILD
+    ./define variables.mdf $REBUILD
     cd $LENSROOT/extensions/struct
-    ./define structs.mdf   $REBUILD
+    ./define structs.mdf $REBUILD
     cd $LENSROOT/extensions/functor
-    ./define functors_common.mdf  $REBUILD
-    ./define functors_mgs.mdf  $REBUILD
+    cat functors_common.mdf >> all_test.mdf
+    cat functors_mgs.mdf >> all_test.mdf
+    if ! diff -q all_test.mdf all.mdf &>/dev/null; then
+      mv all_test.mdf all.mdf
+      ./define all.mdf $REBUILD
+    else
+      rm_ifexist all_test.mdf
+    fi
     cd $MGSROOT/models
     if [ ! -f Extensions.mk ]; then touch mgs.mdf; fi
     ./define mgs.mdf $REBUILD

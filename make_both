@@ -378,28 +378,32 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if [ "$CLEAN" == "-clean" ] ; then
       ./build_gsl -p $PLATFORM --clean --as-both-Nts-Mgs
       rm_ifexist $NTSMGSROOT/models/Extensions.mk
+      rm_ifexist $NTSMGSROOT/models/all.mdf
+      rm_ifexist $NTSMGSROOT/models/all_test.mdf
+      rm_ifexist $LENSROOT/extensions/functor/all.mdf
+      rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSMGSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $NTSMGSROOT/models/nts.mdf
-      touch $NTSMGSROOT/models/mgs.mdf
     fi
     cd -
     cd $NTSMGSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
       cd $LENSROOT/extensions/variable
-      ./define variables.mdf  $REBUILD
+      ./define variables.mdf $REBUILD
       cd $LENSROOT/extensions/struct
-      ./define structs.mdf   $REBUILD
+      ./define structs.mdf $REBUILD
       cd $LENSROOT/extensions/functor
-      ./define functors_common.mdf  $REBUILD
-      ./define functors_nts.mdf  $REBUILD
-      ./define functors_mgs.mdf  $REBUILD
-      ./define functors_both.mdf  $REBUILD
+      rm_ifexist all.mdf
+      cat functors_common.mdf >> all.mdf
+      cat functors_nts.mdf >> all.mdf
+      cat functors_mgs.mdf >> all.mdf
+      cat functors_both.mdf >> all.mdf
+      ./define all.mdf $REBUILD
       cd $NTSMGSROOT/models
-      touch nts.mdf
-      ./define nts.mdf $REBUILD
-      touch mgs.mdf
-      ./define mgs.mdf $REBUILD
+      rm_ifexist all.mdf
+      cat nts.mdf >> all.mdf
+      cat mgs.mdf >> all.mdf
+      ./define all.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $NTSMGSROOT
@@ -416,19 +420,33 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
   else
     cd $LENSROOT/extensions/variable
-    ./define variables.mdf  $REBUILD
+    ./define variables.mdf $REBUILD
     cd $LENSROOT/extensions/struct
-    ./define structs.mdf   $REBUILD
+    ./define structs.mdf $REBUILD
     cd $LENSROOT/extensions/functor
-    ./define functors_common.mdf  $REBUILD
-    ./define functors_nts.mdf  $REBUILD
-    ./define functors_mgs.mdf  $REBUILD
-    ./define functors_both.mdf  $REBUILD
+    cat functors_common.mdf >> all_test.mdf
+    cat functors_nts.mdf >> all_test.mdf
+    cat functors_mgs.mdf >> all_test.mdf
+    cat functors_both.mdf >> all_test.mdf
+    if ! diff -q all_test.mdf all.mdf &>/dev/null; then
+      mv all_test.mdf all.mdf
+      ./define all.mdf $REBUILD
+    else
+      rm_ifexist all_test.mdf
+    fi
     cd $NTSMGSROOT/models
-    if [ ! -f Extensions.mk ]; then touch nts.mdf; fi
-    ./define nts.mdf $REBUILD
-    if [ ! -f Extensions.mk ]; then touch mgs.mdf; fi
-    ./define mgs.mdf $REBUILD
+    if [ ! -f Extensions.mk ]; then
+      touch nts.mdf;
+      touch mgs.mdf;
+    fi
+    cat nts.mdf >> all_test.mdf
+    cat mgs.mdf >> all_test.mdf
+    if ! diff -q all_test.mdf all.mdf &>/dev/null; then
+      mv all_test.mdf all.mdf
+      ./define all.mdf $REBUILD
+    else
+      rm_ifexist all_test.mdf
+    fi
 
     cp Extensions.mk $LENSROOT/
     cd $NTSMGSROOT
