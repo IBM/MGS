@@ -2,7 +2,7 @@
 ####
 # This script was written to enable quicly switching from one morphology to another
 #  and one model to another
-# author: Tuan M. Hoang Trong (IBM, @2016)
+# author: Tuan M. Hoang Trong (IBM, @2016-2017)
 #
 rm_if_link(){ [ ! -L "$1" ] || rm -v "$1"; }
 clean_all() {

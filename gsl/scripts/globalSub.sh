@@ -4,3 +4,4 @@ awk '{print "sed '"'"'s/'$1'/'$2'/g'"'"' "  $1 " > tmp.mdl; mv tmp.mdl " $1;}' t
 rm -f tmp.sh
 source ./tmp2.sh
 rm -f tmp2.sh
+
