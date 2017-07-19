@@ -33,6 +33,7 @@ core
 *.std
 *.ASC
 *.DAT
+*.dat
 LensRootConfig.h
 .ropeproject
 gsl/extensions/interface/*
