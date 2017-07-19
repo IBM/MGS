@@ -61,8 +61,11 @@ dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3162, 0.4074, 0.6166, 0.354
 #define LOOKUP_TAUH_LENGTH 16  // size of the below array
 const dyn_var_t ChannelNat::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
-dyn_var_t ChannelNat::tauhNat[] = {1.5,  1.5, 1.5,  1.5,  1.5,  1.5,  1.5136,  0.6761,
-                       0.5129, 0.4365, 0.3715, 0.3388, 0.2951, 0.2884, 0.2754, 0.2754};
+dyn_var_t ChannelNat::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.9111, 1.4907, 0.6596,
+                       0.5101, 0.4267, 0.3673, 0.3370, 0.3204, 0.3177, 0.3151, 0.3142};
+//Below used in Evans et al. (2012)
+//dyn_var_t ChannelNat::tauhNat[] = {1.5,  1.5, 1.5,  1.5,  1.5,  1.5,  1.5136,  0.6761,
+//                       0.5129, 0.4365, 0.3715, 0.3388, 0.2951, 0.2884, 0.2754, 0.2754};
 std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
 std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
