@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -40,25 +40,25 @@ static int report_on_error(int status,const char *str);
 int report_on_error(int status,const char *str)
 {
    if(status != 0) {
-      std::cout <<"Error, status = "<<status<< str <<" "<<std::endl;
+      std::cerr <<"Error, status = "<<status<< str <<" "<<std::endl;
       switch (status) {
          case EINVAL:
-            std::cout << "EINVAL" << std::endl;
+            std::cerr << "EINVAL" << std::endl;
             break;
          case ESRCH:
-            std::cout << "ESRCH" << std::endl;
+            std::cerr << "ESRCH" << std::endl;
             break;
          case EDEADLK:
-            std::cout << "EDEADLK" << std::endl;
+            std::cerr << "EDEADLK" << std::endl;
             break;
          case EAGAIN:
-            std::cout << "EAGAIN" << std::endl;
+            std::cerr << "EAGAIN" << std::endl;
             break;
          case ENOMEM:
-            std::cout << "ENOMEM" << std::endl;
+            std::cerr << "ENOMEM" << std::endl;
             break;
          case EPERM:
-            std::cout << "EPERM" << std::endl;
+            std::cerr << "EPERM" << std::endl;
             break;
       }
    }

@@ -1,0 +1,79 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef GATEDTHALAMICUNIT_MDL
+#define GATEDTHALAMICUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node GatedThalamicUnit Implements OutputProducer {
+  double x;	   // Sum of spiking L5 and phenotypic inputs
+  double z; 	   // Autoregressive average spike rate over tauZ
+  double y0;       // mean of phenotypic inputs
+  double z0;       // mean of time averaged spiking of L5 inputs  
+  double D;	   // time averaged combined drive (phenotypic and L5)
+
+  Input [] phenotypicInputs;
+  SpikeInput [] L5Inputs;
+  double* [] gateOpenInputs;
+  double* [] gateClosedInputs;
+
+  Shared {
+    double alpha;  // proportion of drive derived from phenotype
+    double betaY0;
+    double betaZ0;
+    int tauZ;      // integration window size of L5 inputs
+    double alphaZ;
+    string weightsFileName;
+    int [] loadWeightsOn;
+    int loadWeightsNext;
+    int [] collectWeightsOn;
+    int collectWeightsNext;
+    InitPhase initializeShared();
+    RuntimePhase outputWeightsShared;
+    RuntimePhase inputWeightsShared;
+  }
+  InAttrPSet {
+    string identifier;
+    double weight;
+    double distance;
+  }
+
+  UserFunction setIndices;
+
+  Connection Pre Node (PSet.identifier=="phenotypic") Expects OutputProducer {
+    OutputProducer.output >> phenotypicInputs.input;
+    PSet.weight >> phenotypicInputs.weight;
+    setIndices();
+  }
+
+  Connection Pre Node ( PSet.identifier=="L5") Expects SpikeProducer {
+    SpikeProducer.spike >> L5Inputs.spike;
+    PSet.weight >> L5Inputs.weight;
+  } 
+
+  Connection Pre Node ( PSet.identifier=="gateOpen") Expects OutputProducer {
+    OutputProducer.output >> gateOpenInputs;
+  } 
+
+  Connection Pre Node ( PSet.identifier=="gateClosed") Expects OutputProducer {
+    OutputProducer.output >> gateClosedInputs;
+  } 
+
+  OutputProducer.output << &x;
+
+  InitPhase initialize;
+  RuntimePhase update(x);
+}
+#endif

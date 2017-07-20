@@ -25,6 +25,7 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
+#define CASE_09  9   //inject soma [current clamp]
 #define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "msn0_"
@@ -41,8 +42,6 @@ Zipper zipper();
 Functor Print;
 Print print();
   
-Functor ReSeedRandom;
-ReSeedRandom reSeed(243);
 
 Connector PolyConnectorFunctor();   
 PolyConnectorFunctor polyConnect();
@@ -125,6 +124,12 @@ print("Case 00: resting");
 //{{{
 	#define TimeEnd          30      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+  #define TimeVClampSet0    0    // [ms]
+  #define TimeVClampSet1    20    // [ms]
+  #define TimeVClampSet2    100    // [ms]
+  #define TimeVClampSet3    200    // [ms]
+  #define TimeStartVClamp    20   // [ms]
+  #define TimeOffVClamp      400   // [ms]
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -1177,7 +1182,15 @@ Grid MSN_D1Neuron{
 	Layer(junctionPoints_Dopa, DopaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Dopa]">), <nodekind="JunctionPoints[Dopa]">, tissueGM);
 #endif
       /*}}}*/
-
+      //  1.5. - [IP3]
+      /*{{{*/
+#if defined(SIMULATE_IP3)
+  Layer(branches_IP3, IP3Concentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[IP3]">), <nodekind="CompartmentVariables[IP3]">, tissueGM);
+  Layer(endPoints_IP3, IP3ConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[IP3]">), <nodekind="EndPoints[IP3]">, tissueGM);
+  Layer(junctions_IP3, IP3ConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[IP3]">), <nodekind="Junctions[IP3]">, tissueGM);
+  Layer(junctionPoints_IP3, IP3ConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[IP3]">), <nodekind="JunctionPoints[IP3]">, tissueGM);
+#endif
+      /*}}}*/
     /*}}}*/
       // 2. RECEPTOR/CHANNEL    
 	/*{{{*/

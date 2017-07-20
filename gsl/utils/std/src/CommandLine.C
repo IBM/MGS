@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //   
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -31,7 +31,7 @@ CommandLine::CommandLine(bool verbose)
   _threads(0), _userInterface("none"), _guiPort(4000), _bindCpus(false),
   
 #endif // DISABLE_PTHREADS
-  
+  _seed(12345), // default seed
   _gslFile(""), _enableErd(false), _numWorkUnits(0), _readGraph(false), _outputGraph(false), _simulate(true), _verbose(verbose)
  
 {
@@ -58,7 +58,7 @@ bool CommandLine::parse(int argc, char** argv)
   parser.addOption(Parser::Option('b', "bindCpus", Parser::Option::TYPE_NONE));
 
 #endif // DISABLE_PTHREADS
-
+  parser.addOption(Parser::Option('s', "seedRng", Parser::Option::TYPE_REQUIRED));
   parser.addOption(Parser::Option('r', "readGraph", Parser::Option::TYPE_NONE));
   parser.addOption(Parser::Option('o', "outputGraph", Parser::Option::TYPE_NONE));
   parser.addOption(Parser::Option('m', "suppressSimulation", Parser::Option::TYPE_NONE));
@@ -102,6 +102,14 @@ bool CommandLine::parse(int argc, char** argv)
 	if (_verbose) std::cout << "Bind CPUs was set.\n";
 	_bindCpus = true;
 #endif
+      } else if (option.getShortName() == 's') {
+	if (_verbose) std::cout << "Seed was set by user.\n";
+	_seed = strtoul(value.c_str(), NULL, 0);
+        if (_seed < 1)
+          {
+            std::cerr << "Exception: seed must be >= 1 ...exiting...\n";
+            exit(0);
+          }
       } else if (option.getShortName() == 'r') {
 	if (_verbose) std::cout << "Read graph partitioning was set.\n";
 	_readGraph = true;
@@ -113,6 +121,9 @@ bool CommandLine::parse(int argc, char** argv)
 	_simulate = false;
       }
     }
+#ifdef HAVE_GPU
+    if (_verbose) std::cout << "Utilizing the GPU.\n";
+#endif // HAVE_GPU          
   } catch (Parser::Exception exception) {
     std::cerr << "Exception: " << exception.getMessage() << "...exiting...\n";
     exit(0);
@@ -145,6 +156,7 @@ bool CommandLine::parse(int argc, char** argv)
       
 #endif // DISABLE_PTHREADS
       
+	      << "\t" <<"RNGseed = " << _seed << "\n"
 	      << "\t" <<"readGraph = " << (_readGraph ? "true" : "false") << "\n"
 	      << "\t" <<"outputGraph = " << (_outputGraph ? "true" : "false") << "\n"
 	      << "\t" <<"suppressSimulation = " << (_simulate ? "false" : "true") << "\n"

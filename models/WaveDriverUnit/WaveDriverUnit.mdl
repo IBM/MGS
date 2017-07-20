@@ -1,0 +1,76 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef WAVEDRIVERUNIT_MDL
+#define WAVEDRIVERUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node WaveDriverUnit Implements WaveProducer
+{
+  // Parameters set by the user
+  double Hz;               // Hz of the wave
+  double HzMin;            // when modulating Hz, the minimum value
+  double HzMax;            // when modulating Hz, the maximum value
+  double HzModRate;        // when modulating Hz, the modulation rate
+  double HzA;              // when modulating with a weight, the A of the line
+  double HzB;              // when modulating with a weight, the B of the line
+  
+  double phase;            // phase of the wave - in radians
+  double phaseMin;         // when modulating phase, the minimum value
+  double phaseMax;         // when modulating phase, the maximum value
+  double phaseModRate;     // when modulating phase, the modulation rate
+  double phaseA;           // when modulating with a weight, the A of the line
+  double phaseB;           // when modulating with a weight, the B of the line
+  
+  double amplitude;        // amplitude of the wave
+  double amplitudeMin;     // when modulating amplitude, the minimum value
+  double amplitudeMax;     // when modulating amplitude, the maximum value
+  double amplitudeModRate; // when modulating amplitude, the modulation rate
+  double amplitudeA;              // when modulating with a weight, the A of the line
+  double amplitudeB;              // when modulating with a weight, the B of the line
+
+  // Parameters used by the wave update function
+  double wave;             // actual wave
+  
+  // Options - whether to modulate parameters over time
+  bool op_modulateHz;
+  bool op_modulateHzWeight;
+  bool op_modulatePhase;
+  bool op_modulatePhaseWeight;
+  bool op_modulateAmplitude;
+  bool op_modulateAmplitudeWeight;
+  
+  Shared
+    {
+      double deltaT; // in s
+     
+      InitPhase initializeShared;
+    }
+
+  InAttrPSet 
+    {
+      string identifier;
+    }
+  
+  InitPhase initialize();
+
+  RuntimePhase update(wave);
+
+  WaveProducer.wave << &wave; // the wave output  
+  
+  UserFunction setIndices;
+}
+
+#endif

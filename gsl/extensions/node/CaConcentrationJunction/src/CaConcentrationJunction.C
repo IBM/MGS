@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -189,19 +189,16 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 //GOAL: predict Canew[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
 void CaConcentrationJunction::predictJunction(RNG& rng)
 {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
-  assert(getSharedMembers().bmt > 0);
   double LHS = getSharedMembers().bmt; // [1/ms]
   double RHS = getSharedMembers().bmt * Ca_cur ;  // [uM/ms]
-#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
-  //do something here
-  assert(0);
-#endif
 
 #ifdef MICRODOMAIN_CALCIUM
   //predict at time (t + dt/2)
-  updateMicrodomains(LHS, RHS);
-  updateMicrodomains_Ca();
+  if (microdomainNames.size() > 0)
+  {
+    updateMicrodomains(LHS, RHS);
+    updateMicrodomains_Ca();
+  }
 #endif
 
   Array<ChannelCaCurrents>::iterator citer;
@@ -279,18 +276,13 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
 //  2. update Cacur, and Canew[0] at (t+dt) 
 void CaConcentrationJunction::correctJunction(RNG& rng)
 {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
-  assert(getSharedMembers().bmt > 0);
   double LHS = getSharedMembers().bmt;
   double RHS = getSharedMembers().bmt * Ca_cur;
-#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
-  //do something here
-  assert(0);
-#endif
 
 #ifdef MICRODOMAIN_CALCIUM
   //correct at time (t + dt/2)
-  updateMicrodomains(LHS, RHS);
+  if (microdomainNames.size() > 0)
+    updateMicrodomains(LHS, RHS);
 #endif
 
   Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
@@ -343,19 +335,23 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
   Ca_new[0] = RHS / LHS; //corrected value at (t + dt/2)
 #ifdef MICRODOMAIN_CALCIUM
   //correct at time (t + dt/2)
-  updateMicrodomains_Ca();
+  if (microdomainNames.size() > 0)
+    updateMicrodomains_Ca();
 #endif
 
   // This is the swap phase
   Ca_cur = Ca_new[0] = 2.0 * Ca_new[0] - Ca_cur;//value at (t+dt)
 #ifdef MICRODOMAIN_CALCIUM
   //update at time (t + dt)
-  updateMicrodomains_Ca();
-  int numCpts = branchData->size;
-  for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
-  {//calculate RHS[] and Ca_microdomain[]
-    int offset = ii * numCpts;
-    Ca_microdomain_cur[offset] = Ca_microdomain[offset] = 2 * Ca_microdomain[offset] - Ca_microdomain_cur[offset];
+  if (microdomainNames.size() > 0)
+  {
+    updateMicrodomains_Ca();
+    int numCpts = branchData->size;
+    for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
+    {//calculate RHS[] and Ca_microdomain[]
+      int offset = ii * numCpts;
+      Ca_microdomain_cur[offset] = Ca_microdomain[offset] = 2 * Ca_microdomain[offset] - Ca_microdomain_cur[offset];
+    }
   }
 #endif
 
@@ -563,28 +559,51 @@ void CaConcentrationJunction::setupCurrent2Microdomain(const String& CG_directio
   _mapCurrentToMicrodomainIndex[channelCaCurrents_microdomain.size()-1] = ii;
 }
 
+void CaConcentrationJunction::setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  //put channel producing Ca2+ influx to the right location
+  //from that we can update the [Ca2+] in the associated microdomain
+  String microdomainName = CG_inAttrPset->domainName;
+  int ii = 0;
+  while (microdomainNames[ii] != microdomainName)
+  {
+    ii++;
+  }
+  _mapFluxToMicrodomainIndex[channelCaFluxes_microdomain.size()-1] = ii;
+}
+
+void CaConcentrationJunction::setupReceptorCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset) 
+{
+  //put channel producing Ca2+ influx to the right location
+  //from that we can update the [Ca2+] in the associated microdomain
+  String microdomainName = CG_inAttrPset->domainName;
+  int ii = 0;
+  while (microdomainNames[ii] != microdomainName)
+  {
+    ii++;
+  }
+  _mapReceptorCurrentToMicrodomainIndex[receptorCaCurrents_microdomain.size()-1] = ii;
+}
+
 void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
 {//update RHS[], RHS_microdomain[], Ca_microdomain[] at time (t + dt/2)
   Array<ChannelCaCurrents>::iterator citer;
   Array<ChannelCaCurrents>::iterator cend ;
   int numCpts = branchData->size;//only 1 compartment in Junction
   unsigned int ii = 0;
+  dyn_var_t bmt= getSharedMembers().x_bmt; // [1/ms]
   for (ii = 0; ii < microdomainNames.size(); ii++)
   {
     int offset = ii * numCpts;
     for (int jj = 0; jj < numCpts; jj++ )
     {
-#if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
-      RHS_microdomain[jj+offset] = ((getSharedMembers().bmt * volume_microdomain[ii] / dimensions[jj]->volume) *
+      RHS_microdomain[jj+offset] = ((bmt * volume_microdomain[ii] / dimensions[jj]->volume) *
          Ca_microdomain[jj+offset]) + v_efflux[ii] * Ca_new[jj];  // [uM/ms]
-#elif CALCIUM_CYTO_DYNAMICS == REGULAR_BUFFERING
-      assert(0); // need to implement
-#endif
     }
   }
   citer = channelCaCurrents_microdomain.begin();
   cend = channelCaCurrents_microdomain.end();
-  // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
+  // loop through different kinds of Ca2+ currents via channels (LCCv12, LCCv13, R-type, ...)
   //  I_Ca [pA/um^2]
   ii = 0;
   for (; citer != cend; ++citer, ++ii)
@@ -593,6 +612,31 @@ void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
     for (int jj = 0; jj < numCpts; jj++)
     {
       RHS_microdomain[offset+jj] -= currentToConc * (*(citer->currents))[jj];  //[uM/ms]
+    }
+  }
+  Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes_microdomain.begin();
+  Array<ChannelCaFluxes>::iterator fend = channelCaFluxes_microdomain.end();
+  for (; fiter != fend; fiter++)
+  {
+    int offset = _mapFluxToMicrodomainIndex[ii] * numCpts;
+    for (int jj = 0; jj < numCpts; jj++)
+    {
+      RHS_microdomain[offset+jj] += (*(fiter->fluxes))[jj];  //[uM/ms]
+    }
+  }
+
+  Array<dyn_var_t*>::iterator riter = receptorCaCurrents_microdomain.begin();
+  Array<dyn_var_t*>::iterator rend = receptorCaCurrents_microdomain.end();
+  // loop through different kinds of Ca2+ currents via receptors (NMDAR, ...)
+  //  I_Ca [pA/um^2]
+  ii = 0;
+  for (; riter!= rend; ++riter, ++ii)
+  {
+    int offset = _mapReceptorCurrentToMicrodomainIndex[ii] * numCpts;
+    for (int jj = 0; jj < numCpts; jj++)
+    {
+      RHS_microdomain[offset+jj] -= currentToConc * (*(*riter));  //[uM/ms]
+      //RHS_microdomain[offset+jj] -= currentToConc * (*(*riter))[jj];  //[uM/ms]
     }
   }
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
@@ -613,7 +657,7 @@ void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
 }
 void  CaConcentrationJunction::updateMicrodomains_Ca()
 { 
-  float bmt = getSharedMembers().bmt; // [1/ms]
+  dyn_var_t bmt = getSharedMembers().x_bmt; // [1/ms]
   int numCpts = branchData->size;
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)
   {//calculate RHS[] and Ca_microdomain[]
@@ -623,7 +667,7 @@ void  CaConcentrationJunction::updateMicrodomains_Ca()
     //  Ca_microdomain[ii] = (RHS_microdomain[ii] + v_efflux[ii] * Ca_new[0]) 
     //    / (LHS + v_efflux[ii]);
     ////option2 to calculate Ca_microdomain
-    double LHS = getSharedMembers().bmt * volume_microdomain[ii] / dimensions[0]->volume + v_efflux[ii];
+    double LHS = bmt * volume_microdomain[ii] / dimensions[0]->volume + v_efflux[ii];
     //Ca_microdomain[offset] = (RHS_microdomain[offset] - 
     //    v_efflux[ii]/2.0 * (Ca_microdomain[offset]) + v_efflux[ii] * Ca_new[0]) /
     //  (LHS + v_efflux[ii]/2.0);

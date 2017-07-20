@@ -48,10 +48,10 @@ void ChannelIP3R::update(RNG& rng)
     dyn_var_t VolumeRatio = 0.185; // VolER / VolCyto
     g = VolumeRatio * v_IP3R[i] * pow(mInf[i],3) 
       * pow(nInf[i], 3) * pow(h[i], 3);
-		J_Ca[i] = g * (casr - cai); // [uM/ms]
+    J_Ca[i] = g * (casr - cai); // [uM/ms]
 #else
     assert(0);
-		//NOT IMPLEMENTED YET
+    //NOT IMPLEMENTED YET
 #endif
   }
 }
@@ -142,13 +142,13 @@ void ChannelIP3R::initialize(RNG& rng)
     dyn_var_t ah = a2 * d2 * (ip3 + d1) / (ip3 + d3 );
     dyn_var_t bh = a2 * cai;
     dyn_var_t ph = 0.5 * dt * (ah + bh);
-    //see Rempe-Chomp (2006)
-    h[i] = (dt*ah + h[i]*(1.0 - ph))/(1.0 + ph);
+    //inf-value
+    h[i] = d2 / (cai + d2);
 
     dyn_var_t VolumeRatio = 0.185; // VolER / VolCyto
     g = VolumeRatio * v_IP3R[i] * pow(mInf[i],3) 
       * pow(nInf[i], 3) * pow(h[i], 3);
-		J_Ca[i] = g * (casr - cai); // [uM/ms]
+    J_Ca[i] = g * (casr - cai); // [uM/ms]
 #endif
   }
 }

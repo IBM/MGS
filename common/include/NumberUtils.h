@@ -65,4 +65,14 @@ T linear_interp( T x0, T y0, T x1, T y1, T x )
   T y = a * x + b;
   return y;
 }
+
+/*
+* Sigmoidal function
+*/
+template<typename T>
+T sigmoid(T alpha, T beta)
+{
+  return exp(beta * alpha) / (1 + exp(beta * alpha));
+}
+
 #endif

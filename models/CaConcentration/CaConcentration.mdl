@@ -88,7 +88,6 @@ Node CaConcentration Implements SolutionArrayProducer,
   dyn_var_t [] Ca_microdomain_cur; //[uM] - concentration of calcium in the domain - assume instantaneous
   dyn_var_t [] volume_microdomain; //[um^3] - volume of the microdomain
   dyn_var_t [] v_efflux;  //[1/ms] - transfer rate from microdomain to cytosolic bath
-  ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
   //string[] microdomainAssociatedWithChannelCaCurrents;
   //      y-element microdomainNames array
   string [] microdomainNames;
@@ -120,9 +119,15 @@ Node CaConcentration Implements SolutionArrayProducer,
   //      if INCX is negative (which means Ca2+ extrude), 
   //            so ICa(NCX) must be positive
   ChannelCaCurrents [] channelCaCurrents;  // [pA/um^2]
+#ifdef MICRODOMAIN_CALCIUM
+  ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
+#endif
   //CONVENTION:  the fluxs flowing toward the cytosol get positive
   // and it contributes positive to the increase of [Ca2+](cyto)
   ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+#ifdef MICRODOMAIN_CALCIUM
+  ChannelCaFluxes [] channelCaFluxes_microdomain;  // [pA/um^2]
+#endif
   //CONVENTION: the currents flowing toward the cytosol get negative
   // yet it contribute positive to the increase of [Ca2+](cyto)
   ReceptorCaCurrent [] receptorCaCurrents; // [pA/um^2]
@@ -146,6 +151,7 @@ Node CaConcentration Implements SolutionArrayProducer,
     dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
     dyn_var_t beta;   // Wagner and Keizer buffering constant
     dyn_var_t bmt; // value derived from beta  [1/ms]
+    dyn_var_t x_bmt; // value derived [1/ms] - no buffer
     //}}}
     dyn_var_t CaBaseline; // [uM]
 
@@ -280,6 +286,15 @@ OPTION 3:
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
     CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
    }
+
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setupFlux2Microdomain;
+  Connection Pre Node (PSet.identifier=="channels[Calcium(domain)]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes_microdomain.fluxes;
+//TUAN: put to the microdomain Ca2+ data
+    setupFlux2Microdomain();
+   }
+#endif
 
   //Connection Pre Node (PSet.identifier=="electricalSynapse[Calcium]") Expects CaCurrentProducer {
   //  CaCurrentProducer.current >> injectedCaCurrents.current;
@@ -426,7 +441,6 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t [] Jefflux_microdomain ; // [um/ms] - to support the solver
   dyn_var_t [] volume_microdomain; //[um^3] - volume of the microdomain
   dyn_var_t []v_efflux;  //[1/ms] - transfer rate from microdomain to cytosolic bath
-  ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
  // string[] microdomainAssociatedWithChannelCaCurrents;
 //      y-element microdomainNames array
   string [] microdomainNames;
@@ -448,12 +462,21 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   //CONVENTION: the currents flowing toward the cytosol get negative value
   // yet it contribute positive to the increase of [Ca2+](cyto)
   ChannelCaCurrents [] channelCaCurrents;
+#ifdef MICRODOMAIN_CALCIUM
+  ChannelCaCurrents [] channelCaCurrents_microdomain;  // [pA/um^2]
+#endif
   //CONVENTION:  the fluxs flowing toward the cytosol get positive
   // and it contributes positive to the increase of [Ca2+](cyto)
   ChannelCaFluxes [] channelCaFluxes; // [uM/msec]
+#ifdef MICRODOMAIN_CALCIUM
+  ChannelCaFluxes [] channelCaFluxes_microdomain;  // [pA/um^2]
+#endif
   //CONVENTION: the currents flowing toward the cytosol get negative
   // yet it contribute positive to the increase of [Ca2+](cyto)
   dyn_var_t* [] receptorCaCurrents;
+#ifdef MICRODOMAIN_CALCIUM
+  dyn_var_t* [] receptorCaCurrents_microdomain;
+#endif
   //CONVENTION: the currents flowing toward the cytosol get positive
   // 1. current from spine-(cyto) to shaft-(cyto) and vice versa
   // 2. user-defined stimulus current
@@ -474,6 +497,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     dyn_var_t DCaeff; //effective diffusion constant of Ca [um^2/ms]
     dyn_var_t beta;   // Wagner and Keizer buffering constant
     dyn_var_t bmt; // value derived from beta 
+    dyn_var_t x_bmt; // value derived [1/ms] - no buffer
     //}}}
     dyn_var_t CaBaseline; // [uM]
 
@@ -548,6 +572,14 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
   }
 
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setupFlux2Microdomain;
+  Connection Pre Node (PSet.identifier=="channels[Calcium(domain)]") Expects CaFluxArrayProducer {
+    CaFluxArrayProducer.fluxes >> channelCaFluxes_microdomain.fluxes;
+//TUAN: put to the microdomain Ca2+ data
+    setupFlux2Microdomain();
+   }
+#endif
   Connection Pre Node (PSet.identifier=="channels[Calcium]") Expects CaFluxArrayProducer {
     CaFluxArrayProducer.fluxes >> channelCaFluxes.fluxes;
    }
@@ -571,6 +603,21 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium]") Expects CaCurrentProducer {
     CaCurrentProducer.current >> receptorCaCurrents;
   }
+#ifdef MICRODOMAIN_CALCIUM
+//  UserFunction createMicroDomainData; -- not a selected approach (use via branchData connection)
+//  Connection Pre Node (PSet.identifier=="makeDomain") Expects CaCurrentArrayProducer {
+//    //CaCurrentArrayProducer.currents >> channelCaCurrents.currents;
+//    createMicroDomainData();
+//  }
+  UserFunction setupReceptorCurrent2Microdomain;
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Calcium(domain)]") Expects 
+    CaCurrentProducer 
+  {
+    CaCurrentProducer.current >> receptorCaCurrents_microdomain;
+//TUAN: put to the microdomain Ca2+ data
+    setupReceptorCurrent2Microdomain();
+  }
+#endif
 
   PredicateFunction checkSite;
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 

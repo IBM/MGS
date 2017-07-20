@@ -1,0 +1,81 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef MIHALASNIEBURIAFUNIT_MDL
+#define MIHALASNIEBURIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node MihalasNieburIAFUnit Implements SpikeProducer, OutputProducer, ThresholdProducer {
+   double [] I; // These variable names are according to Mihalas and Niebur, 2009
+   double [] [] I_p;
+   double [] dI;
+   double V;                 // V
+   double [] V_p;
+   double Theta;             // V
+   double [] Theta_p;
+   bool spike;
+
+   Input [] driverInputs;
+
+   Shared {
+     double b;               // s^-1
+     double G;
+     double C;
+     double GoC;             // s^-1
+     double [] k;            // s^-1
+     double Theta_inf;       // V
+     double [] R;
+     double E_L;             // V
+     double V_r;             // V
+     double Theta_r;         // V
+
+     double a;               // s^-1
+     double [] A;            // V/s
+
+     double deltaT;          // s
+     int np;                 // number of numerical fixed point iterations
+
+     string weightsFileName;
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+
+     InitPhase initializeShared;
+     RuntimePhase outputWeightsShared;
+   }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update(V, Theta);
+   RuntimePhase threshold(spike);
+
+   SpikeProducer.spike << &spike;
+   OutputProducer.output << &V;
+   ThresholdProducer.threshold << &Theta;
+
+   UserFunction setIndices;   
+
+   Connection Pre Node (PSet.identifier=="driver") Expects OutputProducer {
+      OutputProducer.output >> driverInputs.input;
+      PSet.weight >> driverInputs.weight;
+      setIndices();
+   }
+}
+
+#endif

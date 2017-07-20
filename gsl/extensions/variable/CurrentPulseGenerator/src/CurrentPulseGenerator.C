@@ -21,6 +21,7 @@
  *        NOTE: EPSP-like current injection
  *        Larkum - Zhu - Sakmann (2001) chose tauDecay=4*tauRise
  *                         tauRise = 2, 5, 10, or 50 [ms]
+ *  whitenoise = with [mean, SD]
  **/
 void CurrentPulseGenerator::initialize(RNG& rng)
 {
@@ -64,6 +65,12 @@ void CurrentPulseGenerator::initialize(RNG& rng)
     num_completed_pulses_per_train = 0;
     if (num_trains == 0)
       num_trains = (int)std::ceil(last/period);
+  }
+  else if (pattern == "whitenoise")
+  {
+    //need 'mean' and 'sd' values (in unit: pA)
+    //nextPulse = delay - log(drandom(rng)) * period;
+    fpt_update = &CurrentPulseGenerator::update_WhiteNoiseProtocol;
   }
   else 
   {
@@ -197,6 +204,20 @@ void CurrentPulseGenerator::update_PeriodicTrainProtocol(RNG& rng, float current
   //    intertrian
 }
 
+void CurrentPulseGenerator::update_WhiteNoiseProtocol(RNG& rng, float currentTime)
+{
+  I = 0.0;
+  if (currentTime >= (nextPulse + duration) && currentTime <= last)
+  {  // no pulse
+    I = 0.0;
+    peakInc += inc;
+    nextPulse += log(drandom(rng)) * period;
+  }
+  else if (currentTime >= nextPulse && currentTime <= last)
+  {  // having pulse
+    I = gaussian(mean, sd, rng);
+  }
+}
 CurrentPulseGenerator::CurrentPulseGenerator() : CG_CurrentPulseGenerator(), outFile(0) {}
 
 CurrentPulseGenerator::~CurrentPulseGenerator() { 

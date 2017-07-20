@@ -1,0 +1,99 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { dataCollect, update, threshold, lastPhase };
+FinalPhases = { finalize };
+
+#define DIRECTORY "./"
+#define FILE_EXTENSION ".dat"
+
+// First setup the node with appropriate parameters
+NodeType LeakyIAFUnit(<
+                      driver = 1.1,    // in arb. unit.
+                      tau = 0.010,     // in s
+                      threshold = 1.0, // in arb. unit.
+                      deltaT = 0.0001  // s
+                      >);
+
+// Setup recurrent connectivity between neurons ...
+// pick 50 neurons within a radius of 5 (~125 possible choices)
+// with a uniform density probability.
+list<float> uniformDensity = {1.0};
+EachDstPropSrc recC(RadialDensitySampler(50, 5, uniformDensity, 5));
+
+// Setup recurrent synaptic weights between neurons ...
+// with a Uniform distribution between -1 and 0, these are inhibitory.
+BindName RECW("weight", Neg(UniformDist(0.0, 10.0)), "identifier", "recW");
+NdplInAttrInit recW(RECW);
+
+// Initialize neurons with uniform membrane potentials
+BindName initN("V", UniformDist(0.0, 1.0));
+NdplNodeInit heterN(initN);
+
+// Setup and connect the grid with the above connectivity and weights
+Grid IAF
+{
+  Dimension(20,20,20);
+  Layer(nodes, LeakyIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes( .[].Layer(nodes), heterN);
+  connectNodeSets(.[].Layer(nodes), .[].Layer(nodes),
+                  recC, outAttrDef, recW);
+};
+IAF iaf;
+
+// Setup data collectors and ...
+VariableType LeakyIAFUnitDataCollector;
+LeakyIAFUnitDataCollector collector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveVoltages=1, op_saveSpikes=1>;
+
+// ... connect the data collector to the grid.
+polyConnect(iaf[].Layer(nodes), collector, <>, <>);
+
+// Setup triggers which determine when to finish the simulation and
+// when to save data.
+Trigger UnsignedTrigger(string description, Service svc, string operator,
+                        int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
+                         string operator, Trigger triggerB, int critB, int delay);
+
+// triggered when the simulation step is >= 0
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+// triggered when the simulation step is > 10000 (i.e. 1s with current dt set above)
+UnsignedTrigger iterTrigStable("Iteration Trigger : >= 10000 ", 
+                               ::Iteration, ">", 10000, 0, dataCollect);
+
+// triggered every 10 simulation steps (i.e. every 1ms with current dt set above)
+UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 10", 
+ 			 ::Iteration, "!%", 10, 0, dataCollect);
+
+// triggered when the above two triggers are both satisfied
+CompositeTrigger iterTrigStableSampled("Iteration Trigger: (>= 0) && (!% 10)",
+                                       iterTrigStable, 1, "&&",
+                                       iterTrigSampled, 1,
+                                       0, dataCollect);
+
+// triggered when the simulation step == 20000 (i.e. 2s with current dt set above)
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+                        ::Iteration, "==", 20000, 0, lastPhase); // in dt
+
+// Tell the data collector which collector functions to call for which triggers
+collector.dataCollectionSpikes() on iterTrig;
+collector.dataCollectionOther() on iterTrigStableSampled;
+
+Stop on endTrig;

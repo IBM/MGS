@@ -1,0 +1,103 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef SPINEIAFUNIT_MDL
+#define SPINEIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
+{
+  GlutamateIAFInput [] glutamateInput;     // glutamate input
+  double AMPAweight;                       // weight of AMPA, PSD surface area
+  double AMPArise;                         // rise current of AMPA
+  double AMPAcurrent;                      // fall current of AMPA
+
+  double mGluRrise;                        // rise current of mGluR
+  double mGluRcurrent;                     // fall current of mGluR
+
+  SpikeInput [] postSpikeInput;            // post-synaptic back propagating spike
+  double Carise;                           // rise of Ca2+
+  double Ca;                               // fall of Ca2+
+
+  double ECB;                              // endogenous cannabinoids
+
+  Shared
+    {
+      double AMPAriseTau;                  // rise time constant of AMPA
+      double AMPAfallTau;                  // fall time constant of AMPA
+
+      double mGluRriseTau;                 // rise time constant of mGluR
+      double mGluRfallTau;                 // fall time constant of mGluR
+      double mGluRsensitivity;             // weight of mGluR
+
+      double CariseTau;                    // rise time constant of Ca2+
+      double CafallTau;                    // fall time constant of Ca2+
+      bool op_CaVSCCdepend;                // whether the per VSCC activation Ca2+ is
+                                           // dependent on the size of the spine or not
+      double CaVSCC;                       // per VSCC activation, amount to increase Ca2+
+      double CaVSCCpow;                    // if dependent, CaVSCC*(AMPAweight^pow)
+      double CaBP;                         // per BP spike, amount to increase Ca2+
+
+      double ECBprodC;                     // ECB production function - steepness
+      double ECBprodD;                     // ECB production function - shifts
+
+      double deltaT;                       // in s
+
+      string sharedDirectory;
+      string sharedFileExt;
+
+      InitPhase initializeShared;
+
+      // Flags
+      bool op_saveWeights;
+    }
+
+  InAttrPSet
+    {
+      string identifier;
+      double weight;                       // potentially for structural plasticity
+    }
+
+  InitPhase initialize();
+
+  RuntimePhase update(AMPAweight, AMPAcurrent,
+                      mGluRcurrent,
+                      Ca, ECB);
+
+  SynapticCurrentIAFProducer.AMPAweight << &AMPAweight;             // the AMPA weight
+  SynapticCurrentIAFProducer.AMPAcurrent << &AMPAcurrent;           // the AMPA synaptic current output
+  SynapticCurrentIAFProducer.mGluRcurrent << &mGluRcurrent;         // the mGluR synaptic current output
+  CaIAFProducer.Ca << &Ca;                                          // Ca2+
+  ECBIAFProducer.ECB << &ECB;                                       // endogenous cannabinoid
+
+  UserFunction setGlutamateIndices;
+  UserFunction setPostSpikeIndices;
+
+  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer
+  {
+    GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
+    PSet.weight >> glutamateInput.weight;
+    setGlutamateIndices();
+  }
+
+  Connection Pre Node (PSet.identifier=="postSpikesInput") Expects SpikeProducer
+  {
+    SpikeProducer.spike >> postSpikeInput.spike;
+    PSet.weight >> postSpikeInput.weight;
+    setPostSpikeIndices();
+  }
+}
+
+#endif

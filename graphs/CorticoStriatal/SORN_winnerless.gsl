@@ -1,0 +1,159 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initialize };
+RuntimePhases = { dataCollect, update, copy, outputWeightsShared, lastPhase };
+FinalPhases = { finalize };
+
+NodeType ZhengSORNExcUnit(< 
+       eta_IP = 0.01,
+       TE_max = 1.0,
+       mu_IP = 0.1,
+       sigma_HIP = 0.0,
+       sigma2_chi = 0.01,
+       eta_inhib = 0.001,
+       eta_STDP = 0.004,
+       mu_iSTDP = 0.1,
+       p_c = 0.00004,
+       weightsFileName = "Weights",
+       collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000}       
+       >) {initializeShared->initialize, fire->copy};
+
+NodeType ZhengSORNInhUnit(< 
+        TI_max = 1.0,
+        sigma2_chi = 0.01
+        >) {initializeShared->initialize, fire->copy};
+
+NodeType RabinovichWinnerlessUnit(< 
+     	a=0.7,
+     	b=0.8,
+     	nu=-1.5,
+	phi=0,
+	GABAtD1=0.00707,     // Threshold for GABAup in D1
+	GABAtD2=0.00707,     // Threshold for GABAup in D2
+	etaW = 0.002,	     // Corticostriatal synapse plasticity
+	p_c = 0.00004,
+     	deltaT=0.01,
+     	tau1=0.08,
+     	tau2=4.1,
+	weightsFileName = "Weights",
+	collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000}       
+	 >) {initializeShared->initialize};
+
+BindName Exc2Exc("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc",
+                 "conditionalFraction", 0.1,
+                 "condition", UniformDist(0.0,1.0)
+        	 );
+NdplInAttrInit E2E(Exc2Exc);
+
+BindName Exc2Inh("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc"
+        	 );
+NdplInAttrInit E2I(Exc2Inh);
+
+BindName Inh2Exc("weight", UniformDist(0.0,1.0),
+             "identifier", "lateralInh");
+NdplInAttrInit I2E(Inh2Exc);
+
+BindName IN("weight", UniformDist(1.0,2.0),
+	 	      "identifier", "lateral",
+		      "connectionFraction", 0.35,
+		      "connectionSeed", 123456789);
+NdplInAttrInit lateral(IN);
+
+BindName d1("x", -1.2, "y", -0.62, "z", 0.0, "D", 1);
+NdplNodeInit D1(d1);
+BindName d2("x", -1.2, "y", -0.62, "z", 0.0, "D", 2);
+NdplNodeInit D2(d2);
+
+Grid SORN_E
+{
+   Dimension(20,20);
+   Layer(exc, ZhengSORNExcUnit, UniformLayout(1), < nodekind="Excitatory" >);
+   InitNodes( .[].Layer(exc), nodeDef);
+   NodeSet all(.[].Layer(exc) );
+   connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, E2E);
+};
+
+Grid SORN_I
+{
+   Dimension(8,10);
+   Layer(inh, ZhengSORNInhUnit, UniformLayout(1), < nodekind="Inhibitory" >);
+   InitNodes( .[].Layer(inh), nodeDef);
+};
+
+Composite SORN
+{
+  SORN_E sorn_E;
+  SORN_I sorn_I;
+  connectNodeSets(sorn_I[].Layer(inh), sorn_E[].Layer(exc), EachDst(EachAvg(0.2)), outAttrDef, I2E);
+  connectNodeSets(sorn_E[].Layer(exc), sorn_I[].Layer(inh), EachDst(EachAvg(1.0)), outAttrDef, E2I);
+};
+
+Grid Winnerless
+{
+   Dimension(10,10);
+   Layer(D1, RabinovichWinnerlessUnit, UniformLayout(1), < nodekind="MSN" >);
+   Layer(D2, RabinovichWinnerlessUnit, UniformLayout(1), < nodekind="MSN" >);
+   InitNodes( .[].Layer(D1), D1);
+   InitNodes( .[].Layer(D2), D2);
+   NodeSet all(.[]);
+   connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+};
+
+Composite CorticoStriatal
+{
+  SORN sorn;
+  Winnerless winnerless;
+  BindName CS("weight", 0.005,
+  	      "identifier", "driver",
+	      "connection", UniformDist(0.0, 1.0),
+	      "connectionFraction", 0.05);
+  NdplInAttrInit driver(CS);
+  connectNodeSets(sorn/sorn_E[], winnerless[], EachDst(EachAvg(1.0)), outAttrDef, driver);
+};
+CorticoStriatal corticoStriatal;
+
+// DCA directives here
+
+VariableType ZhengSORNUnitDataCollector;
+ZhengSORNUnitDataCollector collector_E <fileName="SORN-EOutput.txt", deltaT=0.001>;
+polyConnect(corticoStriatal/sorn/sorn_E[].Layer(exc), collector_E, <>, <>);
+
+ZhengSORNUnitDataCollector collector_I<fileName="SORN-IOutput.txt", deltaT=0.001>;
+polyConnect(corticoStriatal/sorn/sorn_I[].Layer(inh), collector_I, <>, <>);
+
+VariableType RabinovichWinnerlessUnitDataCollector;
+RabinovichWinnerlessUnitDataCollector collector_D1<fileName="D1Output.txt">;
+polyConnect(corticoStriatal/winnerless[].Layer(D1), collector_D1, <>, <>);
+RabinovichWinnerlessUnitDataCollector collector_D2<fileName="D2Output.txt">;
+polyConnect(corticoStriatal/winnerless[].Layer(D2), collector_D2, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 500000, 0, lastPhase); 
+
+collector_E.dataCollection() on iterTrig;
+collector_I.dataCollection() on iterTrig;
+collector_D1.dataCollection() on iterTrig;
+collector_D2.dataCollection() on iterTrig;
+
+Stop on endTrig;

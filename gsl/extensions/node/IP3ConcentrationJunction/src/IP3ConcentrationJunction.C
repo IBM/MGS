@@ -161,7 +161,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
     fAxial.push_back(Pdov * Rb * Rb / distance );
   }
 #ifdef DEBUG_HH
-  std::cerr << "CA_JUNCTION (" << dimension->x << "," << dimension->y << ","
+  std::cerr << "IP3_JUNCTION (" << dimension->x << "," << dimension->y << ","
     << dimension->z << "," << dimension->r << ")" << std::endl;
 #endif
 }
@@ -169,14 +169,8 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
 //GOAL: predict IP3_new[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
 void IP3ConcentrationJunction::predictJunction(RNG& rng)
 {
-#if IP3_CYTO_DYNAMICS == FAST_BUFFERING
-  assert(getSharedMembers().bmt > 0);
   float LHS = getSharedMembers().bmt;
   float RHS = getSharedMembers().bmt * IP3_cur ;
-#elif IP3_CYTO_DYNAMICS == REGULAR_BUFFERING
-		 do something here
-#endif
-
 
   Array<ChannelIP3Currents>::iterator citer = channelIP3Currents.begin();
   Array<ChannelIP3Currents>::iterator cend = channelIP3Currents.end();
@@ -231,7 +225,7 @@ void IP3ConcentrationJunction::predictJunction(RNG& rng)
 
 #ifdef DEBUG_HH
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
-            << " CA_JUNCTION PREDICT"
+            << " IP3_JUNCTION PREDICT"
             << " [" << getSimulation().getRank() << "," << getNodeIndex() << ","
             << getIndex() << "] "
             << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
@@ -250,13 +244,8 @@ void IP3ConcentrationJunction::predictJunction(RNG& rng)
 // and finally update at (t+dt) for IP3_cur, and IP3_new[0]
 void IP3ConcentrationJunction::correctJunction(RNG& rng)
 {
-#if IP3_CYTO_DYNAMICS == FAST_BUFFERING
-  assert(getSharedMembers().bmt > 0);
   float LHS = getSharedMembers().bmt;
   float RHS = getSharedMembers().bmt * IP3_cur;
-#elif IP3_CYTO_DYNAMICS == REGULAR_BUFFERING
-		 do something here
-#endif
 
   Array<ChannelIP3Currents>::iterator citer = channelIP3Currents.begin();
   Array<ChannelIP3Currents>::iterator cend = channelIP3Currents.end();

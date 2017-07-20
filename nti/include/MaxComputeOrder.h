@@ -225,9 +225,16 @@
 
 //{{{ MICRODOMAIN_CALCIUM
 //#define MICRODOMAIN_CALCIUM  //if defined, then the system enable the capability to model microdomain calcium volume where ion can flow into this first before going to the cytosolic bath --> maybe we can use this to avoid the sub-shell feature
-// LIMITATION: Only accept 'Channels' to connect to 'Compartments[Calcium]' or 'Junctions[Calcium]'
+// STATUS:
+//     The compartment needs to know how many 'microdomains' it contains and create them before any connection to/from channels
+//  LIMITATION:   --> it uses information from 'ChanParams.par' only
+//       ISSUE: if receptors can form the microdomain between them, i.e. no channel connect to such microdomain, then it fails
+//       PLAN-9.2.178.66:  add the capability --> read microdomain also from Synparams.par
+// STATUS: Only accept 'Channels' to connect to 'Compartments[Calcium]' or 'Junctions[Calcium]'
 //         Channels can produce HH-current or GHK-current 
-//      Do not accept Receptor connecting to microdomain
+//  ADDED:   --> accept Receptor connecting to microdomain
+//       DONE: allow receptor form microdomain with channels
+//       PLAN: allow receptor form microdomain with receptors (this require PLAN-9.2.178.66) 
 // Now we need to decide where to pass in data for v_efflux and volume_microdomain
 #define _MICRODOMAIN_DATA_FROM_NTSMACRO   0 
 #define _MICRODOMAIN_DATA_FROM_CHANPARAM  1
@@ -275,5 +282,23 @@
 //     A. AXON
 //     B. BASALDEN
 //     C. APICALDEN
+
+//NOTE: this is for adaptive I/O using sensor
+#define _SINGLE_SENSOR_DETECT_CHANGE  1
+#define _MULTIPLE_SENSORS_DETECT_CHANGE  2
+#define DETECT_CHANGE _MULTIPLE_SENSORS_DETECT_CHANGE
+
+
+//NOTE: This is for the choice of defining input to/output from SynapticReceptor
+//      inside TissueFunctor
+//  [NMDAR] [Voltage] [Voltage, Calcium]
+// case 1 (RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT)
+//   mean [Voltage(pre, input)] [Voltage(post,input+output), Calcium(post,input+output)]
+//#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+// case 2 (otherwise)
+//   mean [Voltage(post, input)] [Voltage(post,output), Calcium(post,output)]
+//#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
+//     In this case, the SynapticCleft is hardcoded to receive 'Voltage'
+//     which is used for calculating [NT]
 
 #endif //_MAXCOMPUTEORDER_H

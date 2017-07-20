@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -608,7 +608,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
       += "_compCategory(compCategory), _computeState(computeState)";
    constructor->setInitializationStr(initializationStr);
    std::ostringstream constructorFB;
-   constructorFB << TAB << "_rng.reSeed(irandom(INT_MIN,INT_MAX,_compCategory->getSimulation().getWorkUnitRandomSeedGenerator()), _compCategory->getSimulation().getRank());\n";   
+   constructorFB << TAB << "_rng.reSeed(urandom(_compCategory->getSimulation().getWorkUnitRandomSeedGenerator()), _compCategory->getSimulation().getRank());\n";      
    constructor->setFunctionBody(constructorFB.str());
    std::auto_ptr<Method> consToIns(constructor.release());
    instance->addMethod(consToIns);

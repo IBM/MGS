@@ -1,0 +1,178 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+
+InitPhases = { initializeShared, initialize };
+RuntimePhases = {  dataCollect, run1, run2, run3, lastPhase };
+FinalPhases = { finalize };
+
+NodeType GatedThalamicUnit (<
+	alpha = 0.0,
+	betaY0 = 0.0001,
+	betaZ0 = 0.0001,
+	tauZ = 100,
+        weightsFileName = "Weights",
+	collectWeightsOn = {2}
+>) { inputWeightsShared->run1, outputWeightsShared->run2, update->run3};
+
+NodeType LinskerInfomaxUnit (<
+	period = 6,
+	betaC = 0.0007,
+	betaW0 = 0.0007,
+	betaQ = 0.0021,
+        weightsFileName = "Weights",
+	collectWeightsOn = {1, 5000000, 10000000, 15000000, 20000000, 25000000, 30000000}
+>) { outputWeightsShared->run2, copy->run1, update->run3};
+
+NodeType ZhengSORNExcUnit(< 
+       eta_IP = 0.01,
+       TE_max = 1.0,
+       mu_IP = 0.1,
+       sigma_HIP = 0.0,
+       sigma2_chi = 0.01,
+       eta_inhib = 0.001,
+       eta_STDP = 0.004,
+       mu_iSTDP = 0.1,
+       p_c = 0.00004,
+       Ach = 0.5,
+       weightsFileName = "Weights",
+       collectWeightsOn = {1, 5000000, 10000000, 15000000, 20000000, 25000000, 30000000}
+       >) { outputWeightsShared->run1, fire->run1, update->run2 };
+
+NodeType ZhengSORNInhUnit(< 
+        TI_max = 1.0,
+        sigma2_chi = 0.01
+        >) {fire->run1, update->run2};
+
+Grid Thalamus
+{
+	Dimension ( 22, 22 );
+        Layer(relayNeurons, GatedThalamicUnit, UniformLayout(1), < nodekind="mc" >);
+	InitNodes ( .[], nodeDef );
+};
+
+BindName lateralNetwork("identifier", "LN");
+NdplInAttrInit LN(lateralNetwork);
+
+Grid Supragranular
+{
+	Dimension ( 22, 22 );
+	Layer(II_III, LinskerInfomaxUnit, UniformLayout(1), < nodekind="mc" >);
+	InitNodes ( .[], Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=0.000001>)));
+	InitNodes ( .[0,0], Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=1.0>)));
+
+	NodeSet all(.[].Layer(II_III) );
+	connectNodeSets(all, all, EachDstPropSrc(RadialSampler(200.0)), outAttrDef, LN);
+};
+
+BindName Exc2Exc("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc",
+                 "conditionalFraction", 0.1,
+                 "condition", UniformDist(0.0,1.0)
+        	 );
+NdplInAttrInit E2E(Exc2Exc);
+
+BindName Exc2Inh("weight", UniformDist(0.0,1.0), 
+                 "identifier", "lateralExc"
+        	 );
+NdplInAttrInit E2I(Exc2Inh);
+
+BindName Inh2Exc("weight", UniformDist(0.0,1.0),
+             "identifier", "lateralInh");
+NdplInAttrInit I2E(Inh2Exc);
+
+Grid SORN_E
+{
+	Dimension(20,20);
+	Layer(V_exc, ZhengSORNExcUnit, UniformLayout(1), < nodekind="Excitatory" >);
+	InitNodes( .[].Layer(V_exc), nodeDef);
+	NodeSet all(.[].Layer(V_exc) );
+	connectNodeSets(all, all, Unique(EachDst(EachAvg(1.0))), outAttrDef, E2E);
+};
+
+Grid SORN_I
+{
+	Dimension(8,10);
+	Layer(V_inh, ZhengSORNInhUnit, UniformLayout(1), < nodekind="Inhibitory" >);
+	InitNodes( .[].Layer(V_inh), nodeDef);
+};
+
+Composite Infragranular
+{
+	SORN_E sorn_E;
+	SORN_I sorn_I;
+	connectNodeSets(sorn_I[].Layer(V_inh), sorn_E[].Layer(V_exc), 
+					       EachDst(EachAvg(0.2)), outAttrDef, I2E);
+	connectNodeSets(sorn_E[].Layer(V_exc), sorn_I[].Layer(V_inh), 
+					       EachDst(EachAvg(1.0)), outAttrDef, E2I);
+};
+
+BindName modulation("identifier", "modulatory");
+NdplInAttrInit MOD(modulation);
+
+Composite Cortex
+{
+	Infragranular infragranular;
+	Supragranular supragranular;
+	connectNodeSets(supragranular[].Layer(II_III), infragranular/sorn_E[].Layer(V_exc), 
+	       EachDstPropSrc(RadialSampler(0.5,0)), outAttrDef, MOD);
+};
+
+Composite CorticoThalamoCortical
+{
+	Thalamus thalamus;
+	Cortex cortex;
+
+	BindName th2ctx("weight", Gaussian(0,1.0), "identifier", "TH");
+	NdplInAttrInit T2C(th2ctx);
+	connectNodeSets(thalamus[].Layer(relayNeurons), cortex/supragranular[].Layer(II_III),
+		EachDst(EachAvg(1.0)), outAttrDef, T2C);
+
+	BindName ctx2th("weight", Exp(Gaussian(0,1.0)), "identifier", "L5");
+	NdplInAttrInit C2T(ctx2th);
+	connectNodeSets(cortex/infragranular/sorn_E[].Layer(V_exc), 
+		thalamus[].Layer(relayNeurons), EachDst(EachAvg(1.0)), outAttrDef, C2T);
+
+};
+CorticoThalamoCortical corticoThalamoCortical;
+
+// DCA directives here
+
+VariableType LinskerInfomaxUnitDataCollector;
+LinskerInfomaxUnitDataCollector collector <fileName="InfomaxOutput.txt">;
+polyConnect(corticoThalamoCortical/cortex/supragranular[].Layer(II_III), collector, <>, <>);
+
+VariableType ZhengSORNUnitDataCollector;
+ZhengSORNUnitDataCollector collector_E <fileName="SORN-EOutput.txt", deltaT=0.001>;
+polyConnect(corticoThalamoCortical/cortex/infragranular/sorn_E[].Layer(V_exc),
+	collector_E, <>, <>);
+
+ZhengSORNUnitDataCollector collector_I<fileName="SORN-IOutput.txt", deltaT=0.001>;
+polyConnect(corticoThalamoCortical/cortex/infragranular/sorn_I[].Layer(V_inh),
+	collector_I, <>, <>);
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger", 
+ 			 ::Iteration, "!%", 10, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, ">", 30000000, 0, lastPhase); 
+
+collector.dataCollection() on iterTrig;
+collector_E.dataCollection() on iterTrig;
+collector_I.dataCollection() on iterTrig;
+Stop on endTrig;

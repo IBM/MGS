@@ -34,6 +34,7 @@ class StringUtils
 	  return s;
   }
   static int readOneWord(FILE* fpF, char* oneword);
+  static std::string random_string( size_t length );
 };
 
 #endif

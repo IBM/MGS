@@ -14,8 +14,16 @@ void CaERConcentrationJunctionCompCategory::deriveParameters(RNG& rng)
 {
   if (getSharedMembers().deltaT)
   {
+#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
     getSharedMembers().bmt =
         2.0 / (getSharedMembers().beta * *(getSharedMembers().deltaT));
+#elif CALCIUM_ER_DYNAMICS == REGULAR_DYNAMICS
+    getSharedMembers().bmt = 2.0 / (*(getSharedMembers().deltaT)) ;
+#else
+    assert(0);
+#endif
+    assert(getSharedMembers().bmt > 0);
+
 #ifdef DEBUG_HH
     std::cerr << getSimulation().getRank()
               << " : CaERConcentrationJunctions : " << _nodes.size()

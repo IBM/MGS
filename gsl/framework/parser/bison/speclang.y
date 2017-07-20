@@ -2943,7 +2943,7 @@ int main(int argc, char** argv)
           << ".                                                           .\n"
           << ".  \"Restricted Materials of IBM\"                            .\n"
           << ".                                                           .\n"
-          << ".  BMC-YKT-08-23-2011-2                                     .\n"
+          << ".  BCM-YKT-11-19-2015, Version 1.1.0                        .\n"
           << ".                                                           .\n"
           << ".  (C) Copyright IBM Corp. 2005-2016  All rights reserved   .\n"
           << ".                                                           .\n"

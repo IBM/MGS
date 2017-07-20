@@ -21,9 +21,9 @@
 
 #elif PUMP_SERCA == SERCA_Klein_Schneider_1991
    // NOTE: Klein - .... - Schneider (1991) Michaelis-Menten-based formula 
-	 //       derived for frog skeletal muscle 
-	 //       with 4Ca+ binding in cytosol for the pump to activate
-	 //       No [Ca]SR dependent
+   //       derived for frog skeletal muscle 
+   //       with 4Ca+ binding in cytosol for the pump to activate
+   //       No [Ca]SR dependent
 #define coupling_Ca   4   // 4-Ca2+ binding for the pump to do the job
 #define K_serca 0.28  // [uM] 
 #define v_max   0.208   // [uM/msec]
@@ -124,7 +124,7 @@ SERCAConc[i] = SERCAConc_values[0];
         Dcycle;                              // [1/msec]
     J_Ca[i] = - coupling_Ca * vcycle * SERCAConc[i];  // [uM/ms]
 #elif PUMP_SERCA == SERCA_Klein_Schneider_1991 
-		J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
+    J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
 #endif
   }
 }
@@ -148,7 +148,7 @@ void PumpSERCA::update(RNG& rng) {
         Dcycle;                              // [1/msec]
     J_Ca[i] = - coupling_Ca * vcycle * SERCAConc[i];  // [uM/ms]
 #elif PUMP_SERCA == SERCA_Klein_Schneider_1991 
-		J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
+    J_Ca[i] = - v_max * (pow(cai, coupling_Ca))/ (pow(cai, coupling_Ca) + pow(K_serca, coupling_Ca)); 
 #endif
   }
 }

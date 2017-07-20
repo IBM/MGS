@@ -1,0 +1,218 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef POINTNEURONTOOLS_MDL
+#define POINTNEURONTOOLS_MDL
+
+Interface ValueProducer {
+   int *value;
+}
+
+Interface OutputProducer {
+  double* output;
+}
+
+Interface PlasticOutputProducer {
+  double* output;
+  double* P1;
+  double* prePlastic;
+}
+
+Interface SpikeProducer {
+  bool* spike;
+}
+
+Interface PlasticSpikeProducer {
+  bool* spike;
+  double* P1;
+}
+
+Interface ThresholdProducer {
+  double* threshold;
+}
+
+Interface LFPProducer
+{
+  double* LFP;
+}
+
+Interface GlutamateIAFProducer
+{
+  double* glutamate;
+}
+
+Interface AvailableGlutamateIAFProducer
+{
+  double* availableGlutamate;
+}
+
+Interface SynapticCurrentIAFProducer
+{
+  double* AMPAweight;
+  double* AMPAcurrent;
+
+  double* mGluRcurrent;
+}
+
+Interface CaIAFProducer
+{
+  double* Ca;
+}
+
+Interface ECBIAFProducer
+{
+  double* ECB;
+}
+
+Interface Cb1RIAFProducer
+{
+  double* Cb1Rcurrent;
+}
+
+Interface SORNSpikeProducer {
+  bool* spikePrev;
+  bool* spike;
+}
+
+Interface WaveProducer
+{
+  double* wave;
+}
+
+Interface FiringRateProducer {
+  double* output;
+}
+
+Struct Input {
+  double* input;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct StructuralInput {
+  double* input;
+  double weight;
+  bool synapse; // whether is "functional" or not
+  int row;
+  int col;
+}
+
+Struct PlasticInput {
+  double* input;
+  double* P1;
+  double* prePlastic;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct SpikeInput {
+  bool* spike;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct SynapseInput {
+  bool* spike;
+  double weight;
+  bool synapse;
+  int row;
+  int col;
+}
+
+Struct SORNSynapseInput {
+  bool* spikePrev;
+  bool* spike;
+  double weight;
+  bool synapse;
+  int row;
+  int col;
+}
+
+Struct ModulatedSynapseInput {
+  bool* spike;
+  double weight;
+  bool synapse; // whether is "functional" or not
+  SpikeInput* modulator;
+  int row;
+  int col;
+}
+
+Struct GJInput {
+  float* voltage; // float because voltage producer is float
+  double conductance;
+  int row;
+  int col;
+}
+
+Struct PSPInput {
+  bool* spike;
+  double weight;
+  double s_r;
+  double s_f;
+  int row;
+  int col;
+}
+
+Struct PlasticPSPInput {
+  bool* spike;
+  double weight;
+  double* P1;
+  double s_r;
+  double s_f;
+  int row;
+  int col;
+}
+
+Struct GlutamateIAFInput
+{
+  double* glutamate;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct SynapticCurrentIAFInput
+{
+  double* AMPAcurrent;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct ECBIAFInput
+{
+  double* ECB;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct WaveInput
+{
+  double* wave;
+  double weight;
+  int row;
+  int col;
+}
+
+Constant PointNeuronStimulator Implements OutputProducer {
+  double output;
+  OutputProducer.output << &output;
+}
+
+#endif

@@ -11,7 +11,6 @@ BitMapHeader.C \
 CachedPrimeSieve.C \
 Connector.C \
 CommandLine.C \
-C_rand.C \
 GranuleConnector.C \
 MatrixParser.C \
 NoConnectConnector.C \

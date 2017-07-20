@@ -1,0 +1,106 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef LinskerInfomaxUnit_MDL
+#define LinskerInfomaxUnit_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Struct LinskerInfomaxUnit_THinput {
+   double* x;
+   double xPrev;
+   double weight;
+   double deltaW;
+   int row;
+   int col;
+}
+
+Struct LinskerInfomaxUnit_LNinput {
+  double* v;
+  double* e;
+  double weight;
+  int row;
+  int col;
+}
+
+Interface LinskerInfomaxUnit_LNOutputProducer {
+  double* v;
+  double* e;
+}
+
+Node LinskerInfomaxUnit Implements LinskerInfomaxUnit_LNOutputProducer, OutputProducer
+{ 
+  double ls                  : "locally computed learning signal"; // These variables are named as in Linsker, 1997
+  double u0                  : "intial u used to solve Qv=u";
+  double v                   : "iteratively derived internal amplitude";
+  double e                   : "element of Q's first eigenvector (largest eigenvalue)";
+  double y		     : "output of unit (Bell & Sejnowski)";
+  double y0		     : "initial y used to update input weights";
+
+  double vPublic             : "v to which other units have access";
+  double ePublic             : "e to which other units have access";
+
+  double w0                  : "adaptation term for u, based on y (Bell & Sejnowski)";
+  double alpha               : "scaling term for Q; ensures Jacobi convergence (Linsker '97; 1/lambda^+)";
+  double deltaW0;
+  
+  Shared {
+    double betaC             : "input weight learning rate";
+    double betaW0            : "w0 learning rate";
+    double betaQ             : "Q weight learning rate";
+    double betaW;
+    int period               : "period of thalamic sampling";
+    bool inversion_method; // 0 : Bell & Sejnowski algo ;   1 : Kozloski 2007 algo
+    string weightsFileName;
+    int [] collectWeightsOn;
+    int collectWeightsNext;
+    InitPhase initializeShared;
+    RuntimePhase outputWeightsShared;
+    RuntimePhase invertQmatrixShared;
+  }
+
+  LinskerInfomaxUnit_THinput [] TH;
+  LinskerInfomaxUnit_LNinput [] LN;
+
+  InAttrPSet {
+    string identifier;
+    double weight;
+    double deltaW; 
+  }
+
+  UserFunction setIndices;
+ 
+  Connection Pre Node (PSet.identifier=="TH") Expects OutputProducer { 
+    OutputProducer.output >> TH.x;
+    PSet.weight >> TH.weight;
+    PSet.deltaW >> TH.deltaW;
+    setIndices();
+  }
+
+  Connection Pre Node (PSet.identifier=="LN") Expects LinskerInfomaxUnit_LNOutputProducer { 
+    LinskerInfomaxUnit_LNOutputProducer.v >> LN.v;
+    LinskerInfomaxUnit_LNOutputProducer.e >> LN.e;
+    setIndices();
+  }
+
+  LinskerInfomaxUnit_LNOutputProducer.v << &vPublic;
+  LinskerInfomaxUnit_LNOutputProducer.e << &ePublic;
+  
+  OutputProducer.output << &y;
+
+  InitPhase initialize;
+  RuntimePhase update(y), copy(vPublic, ePublic);
+}
+#endif
+

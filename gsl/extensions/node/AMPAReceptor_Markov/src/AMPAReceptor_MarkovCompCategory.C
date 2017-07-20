@@ -45,6 +45,6 @@ void AMPAReceptor_MarkovCompCategory::count()
                 MPI_COMM_WORLD);
   float std = sqrt(totalVar / getSimulation().getNumProcesses());
   if (getSimulation().getRank() == 0)
-    printf("Total AMPA synapse = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total AMPA(Markov) synapse = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }

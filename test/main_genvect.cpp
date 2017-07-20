@@ -87,8 +87,8 @@ void genMatrix()
           viter_end = vect_values.end();
   for (; viter < viter_end; viter++)
   {
-
-  }*/
+  }
+  */
 }
 
 void genVector()
@@ -104,35 +104,32 @@ void genVector()
   std::string mystring = "[3:6] 0";   //expect 3,4,5,6
   //std::string mystring = "[3:5]";
 
-	std::cout <<  "content: " << mystring << std::endl;
+  std::cout <<  "content: " << mystring << std::endl;
 
   std::string filename = "outname.txt";
   {
-
     FILE* fPF = fopen(filename.c_str(), "w");
     fprintf(fPF, mystring.c_str(), "%s");
     fclose(fPF);
   }
 
   {
-
     FILE* fPF = fopen(filename.c_str(), "r");
     char input[2000];
+    /*
+     fgets(input, 2000, fPF);
+     std::cout << input << std::endl;
+    */
 
-		/*
-    fgets(input, 2000, fPF);
-    std::cout << input << std::endl;
-		*/
+    Params params;
+    std::vector<int> values;
+    params.getListofValues(fPF, values);
 
-		Params params;
-		std::vector<int> values;
-		params.getListofValues(fPF, values);
-		
     fclose(fPF);
-		std::vector<int>::iterator iter=values.begin(), iend = values.end();
-		for (; iter< iend;iter++)
-			std::cout << *iter << ",";
-		std::cout << std::endl;
+    std::vector<int>::iterator iter=values.begin(), iend = values.end();
+    for (; iter< iend;iter++)
+      std::cout << *iter << ",";
+    std::cout << std::endl;
   }
 }
 
@@ -143,6 +140,6 @@ int main()
 {  // check the code to generate an array of vectors from the range
   // [1:5] 5 --> would give 5 vectors (1,5)...,(5,5)
   // [1:3,5] 5 --> would give 4 vectors (1,5),(2,5),(3,5),(5,5)
-	genVector();
+  genVector();
 }
 // cd ../nti/;make clean; make debug=yes; cd -; mpic++ -g main_genVect.cpp ../nti/obj/Params.o ../nti/obj/SegmentDescriptor.o ../common/obj/StringUtils.o
