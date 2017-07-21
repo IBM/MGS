@@ -36,7 +36,8 @@ void FileDriverUnitCompCategory::initializeShared(RNG& rng)
 {
   // Setup period to load from file
   SHD.period = (unsigned) ((1.0 / SHD.deltaT) / (1.0 /SHD.sf));
-
+  SHD.userWarned = false;
+  
   // Setup input file stream
   std::ostringstream os;
   os.str("");
@@ -74,9 +75,10 @@ void FileDriverUnitCompCategory::readInputFile(RNG& rng) {
   if (ITER % SHD.period == 0)
     {
       // Check if at end of file
-      if (ITER >= SHD.total_time * SHD.period)
+      if ((ITER >= SHD.total_time * SHD.period) && (!SHD.userWarned))
         {
           std::cerr << "Error: Reached end of input file." << std::endl;
+          SHD.userWarned = true;
         }
       
       // Read next line and parse in to a string vector

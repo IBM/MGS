@@ -34,6 +34,8 @@ Node FileDriverUnit Implements OutputProducer
       unsigned period;      // Related to sf, how often to load. N.B. user doesn't have to set
       double scale;         // How much to scale the input by
       double [] input;      // Data read from the file (size=n_channels)
+
+      bool userWarned;      // Whether the user has been warned of EOF
       
       double deltaT;        // in s
      
