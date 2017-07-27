@@ -3,13 +3,15 @@ set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=1; % Length of simulation time saving data (excluding spikes) in s
+T=3; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
-TminZoom=0; TmaxZoom=T;
+TminZoom=1; TmaxZoom=2;
 loadData = true;
 parameterSearch = false;
 animatedVisualization = false;
 postprocess_CortexInput = true;
+postprocess_CortexInputWave = true;
+postprocess_CortexInputFile = false;
 postprocess_Spikes = true;
 postprocess_Voltages = false;
 postprocess_Thresholds = false;
@@ -19,7 +21,7 @@ postprocess_LFP_FSIsynapses = false;
 postprocess_weights = true;
 postprocess_GJs = true;
 postprocess_PSPs = false;
-postprocess_PlotAll = false;
+postprocess_PlotAll = true;
 directory='../../graphs/Traub/';
 fileExt='.dat';
 % for no parameter search just set to all ranges to zero
@@ -43,7 +45,11 @@ for vX=vX_range
             %% Load data
             if (loadData)
                 if (postprocess_CortexInput)
-                    fid = fopen([directory,'Wave',fileExt],'r');
+                    if (postprocess_CortexInputWave)
+                        fid = fopen([directory,'Wave',fileExt],'r');
+                    elseif (postprocess_CortexInputFile)
+                        fid = fopen([directory,'Ctx',fileExt],'r');
+                    end
                     XdimCtx = fread(fid, 1, 'int');
                     YdimCtx = fread(fid, 1, 'int');
                     ZdimCtx = fread(fid, 1, 'int');
@@ -145,7 +151,6 @@ for vX=vX_range
                     LFPs = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
-
                 if (postprocess_LFP_FSIsynapses)
                     fid = fopen([directory,'LFP_FSIsynapses',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
@@ -227,7 +232,8 @@ for vX=vX_range
             end
             %% Plot parameters
             Nstr=5; % Number of plots for each dimension in the striatum data
-            pmtmNW=4;%1.25;%4; % The time-halfbandwidth for the PMTM
+            pmtmNW=4; % The time-halfbandwidth for the PMTM
+            pmtmFrange=0.5:0.5:100;
             if (postprocess_CortexInput)
                 XminCtx=1; XmaxCtx=XdimCtx;
                 YminCtx=1; YmaxCtx=YdimCtx;
@@ -294,7 +300,11 @@ for vX=vX_range
                 scatter(temp(:,2),temp(:,1));
                 xlim([Tmin*(1/dt) Tmax*(1/dt)]);
                 ylim([0 Nspikes]);
-                title('Spiking activity (one "segment" of striatum)');
+                if (postprocess_PlotAll)
+                    title('Spiking activity (one "segment" of striatum)');
+                else
+                    title('Spiking activity (all "segments" of striatum)');
+                end
                 temp2 = temp(1:maxSpikes*100,:);
                 save([directory,'Spike.txt'],'-ascii','temp2');
                 print([directory,'spikes'],'-dpng');
@@ -354,16 +364,16 @@ for vX=vX_range
                 title('LFP - synapses');
                 print([directory,'LFP_synapses'],'-dpng');
                 figure(8); clf; % Frequency analysis
-                [pxx,f] = pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf,'unity');
+                [pxx,f] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
                 temp = [f,10*log10(pxx)];
                 save([directory,'PMTM.txt'],'-ascii','temp');
-                pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf,'unity');
+                pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
                 print([directory,'pmtm'],'-dpng');
                 figure(9); clf;
                 [pks, locs] = findpeaks(log10(pxx),f,'MinPeakProminence',0.5);
                 peakHz(vX==vX_range, vY==vY_range, t==t_range) = ...
                     locs(pks==max(pks));
-                [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf, ...
+                [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
                     'unity','ConfidenceLevel',0.95);
                 clf;
                 plot(f,10*log10(pxx))
@@ -377,6 +387,7 @@ for vX=vX_range
                 clear Tlfp pxx f temp;
             end
             if (postprocess_LFPs)
+                %%
                 figure(10); clf; % LFP electrodes
                 if (postprocess_PlotAll)
                     i=1;
@@ -396,49 +407,61 @@ for vX=vX_range
                 end                    
                 print([directory,'LFPs'],'-dpng');
                 inc = size(LFPs,1);
-                Tlfp = zeros(inc*XdimLFP*YdimLFP*ZdimLFP,1);
-                i=1; % stitch the electrodes together to analyze all at once
                 if (postprocess_PlotAll)
+                    i=1;
+                    pxx = zeros(XdimLFP*YdimLFP*ZdimLFP,size(pmtmFrange,2));
                     for x=1:XdimLFP
                         for y=1:YdimLFP
                             for z=1:ZdimLFP
-                                Tlfp((inc*(i-1))+1:inc*i) = LFPs(:,x,y,z);
+                                Tlfp = LFPs(:,x,y,z);
+                                [pxxTemp,f,pxxcTemp] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
+                                    'unity','ConfidenceLevel',0.95);
+                                pxx(i,:) = pxxTemp / sum(pxxTemp);
                                 i=i+1;
                             end
                         end
                     end
+                    pxxStd = std(pxx);
+                    pxxMean = mean(pxx);
+                    figure(11); clf; % Frequency analysis
+                    plot(0.5:0.5:100,10*log10(pxxMean))
+                    xlim([0 100])
+                    xlabel('Hz')
+                    ylabel('Averaged and normalized (dB/Hz)')
+                    title('Multitaper PSD Estimate')
+                    print([directory,'pmtm'],'-dpng');
+                    figure(12); clf;
+                    plot(f,10*log10(pxxMean))
+                    hold on
+                    plot(f,10*log10(pxxMean+(pxxStd./2)),'r-.')
+                    plot(f,10*log10(pxxMean-(pxxStd./2)),'r-.')
+                    xlim([0 100])
+                    xlabel('Hz')
+                    ylabel('Averaged and normalized (dB/Hz)')
+                    title('Multitaper PSD Estimate with $\pm\sigma$')
+                    print([directory,'pmtm_std'],'-dpng');
                 else
                     Tlfp = LFPs(:,1,1,1);
+                    [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
+                        'unity','ConfidenceLevel',0.95);
+                    figure(11); clf; % Frequency analysis
+                    plot(0.5:0.5:100,10*log10(pxx))
+                    xlim([0 100])
+                    xlabel('Hz')
+                    ylabel('Power/frequency (dB/Hz)')
+                    title('Multitaper PSD Estimate')
+                    print([directory,'pmtm'],'-dpng');
+                    plot(f,10*log10(pxx))
+                    hold on
+                    plot(f,10*log10(pxxc),'r-.')
+                    xlim([0 100])
+                    xlabel('Hz')
+                    ylabel('Averaged and normalized (dB/Hz)')
+                    title('Multitaper PSD Estimate with 95%-Confidence Bounds')
+                    print([directory,'pmtm_95'],'-dpng');
                 end
-                size(Tlfp)
-%                 Tlfp=sum(LFPs,4);
-%                 Tlfp=sum(Tlfp,3);
-%                 Tlfp=sum(Tlfp,2);
-%                 Tlfp=LFPs(:,1,1,1);
-%                 size(Tlfp)
-                figure(11); clf; % Frequency analysis
-                [pxx,f] = pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf,'unity');
-                temp = [f,10*log10(pxx)];
-                save([directory,'PMTM.txt'],'-ascii','temp');
-                pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf,'unity');
-                xlim([0 100])
-                print([directory,'pmtm'],'-dpng');
-                figure(12); clf;
-                [pks, locs] = findpeaks(log10(pxx),f,'MinPeakProminence',0.5);
-                peakHz(vX==vX_range, vY==vY_range, t==t_range) = ...
-                    locs(pks==max(pks));
-                [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,length(Tlfp),1/sf, ...
-                    'unity','ConfidenceLevel',0.95);
-                clf;
-                plot(f,10*log10(pxx))
-                hold on
-                plot(f,10*log10(pxxc),'r-.')
-                xlim([0 100])
-                xlabel('Hz')
-                ylabel('dB')
-                title('Multitaper PSD Estimate with 95%-Confidence Bounds')
-                print([directory,'pmtm_95'],'-dpng');
-                clear inc Tlfp pxx f temp;
+                %%
+                clear inc Tlfp pxx f pxxc temp;
             end
             if (postprocess_weights)
                 warning('Code needs updating to be efficient');
@@ -522,7 +545,7 @@ for vX=vX_range
                     clear fig vid frameRate N n temp frame;
                     %% Animated 3D LFP
                     fig = figure(17); clf;
-                   fig.Color = 'black';
+                    fig.Color = 'black';
                     fig.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_3D.avi']);
                     vid.FrameRate = 10;
