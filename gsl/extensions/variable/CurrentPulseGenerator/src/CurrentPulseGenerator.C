@@ -22,6 +22,7 @@
  *        Larkum - Zhu - Sakmann (2001) chose tauDecay=4*tauRise
  *                         tauRise = 2, 5, 10, or 50 [ms]
  *  whitenoise = with [mean, SD]
+ *  ramp      = gradually increase until rheobase is detected
  **/
 void CurrentPulseGenerator::initialize(RNG& rng)
 {
@@ -72,9 +73,16 @@ void CurrentPulseGenerator::initialize(RNG& rng)
     //nextPulse = delay - log(drandom(rng)) * period;
     fpt_update = &CurrentPulseGenerator::update_WhiteNoiseProtocol;
   }
+  else if (pattern == "ramp")
+  {
+    nextPulse = delay;
+    fpt_update = &CurrentPulseGenerator::update_RampProtocol;
+    last = delay + duration; // only 1 repeat is allowed here
+  }
   else 
   {
     std::cerr << typeid(*this).name() << " do not support this \"" << pattern << "\" protocol\n";
+    std::err << "Use either [periodic_train, periodic, poisson, dualexp, ramp]" << std::endl;
     assert(0);
   }
 
@@ -121,6 +129,11 @@ void CurrentPulseGenerator::finalize(RNG& rng)
   if (write_to_file == 1)
     outFile->close();
 }
+/*
+ * Sequence:
+ *     off_on(peak)_off_on(peak+inc)_off_on(peak+2*inc)_...
+ * I(t) = peak + inc * (iteration-1)
+ */
 void CurrentPulseGenerator::update_PeriodicProtocol(RNG& rng, float currentTime)
 {
   I = 0.0;
@@ -135,6 +148,9 @@ void CurrentPulseGenerator::update_PeriodicProtocol(RNG& rng, float currentTime)
     I = peakInc;
   }
 }
+/*
+ * same as 'periodic', except the 'on' time is random
+ */
 void CurrentPulseGenerator::update_PoissonProtocol(RNG& rng, float currentTime)
 {
   I = 0.0;
@@ -149,6 +165,11 @@ void CurrentPulseGenerator::update_PoissonProtocol(RNG& rng, float currentTime)
     I = peakInc;
   }
 }
+/*
+ * Sequence:
+ *     off_on(I(t))_off_on(I(t+1))_off_on(I(t+2))_...
+ * I(t+iteration) = (peak + inc * (iteration-1)) * dual_exp
+ */
 void CurrentPulseGenerator::update_DualExpProtocol(RNG& rng, float currentTime)
 {
   I = 0.0;
@@ -164,7 +185,48 @@ void CurrentPulseGenerator::update_DualExpProtocol(RNG& rng, float currentTime)
     I = peakInc * (1 - exp(-dt / riseTime)) * (exp(-dt / decayTime));
   }
 }
+/*
+ * No repeat:
+ *     _(delay)_0--(increase linearly)------------maxRamp
+ *              |                                 |
+ *            time_start                        total_ramp_time
+ *  delay = time until time_start
+ *  peak = maxRamp
+ *  duration = total_ramp_time
+ */
+void CurrentPulseGenerator::update_RampProtocol(RNG& rng, float currentTime)
+{
+  I = 0.0;
+  if (currentTime >= (nextPulse + duration) && currentTime <= last)
+  {  // no pulse
+    I = 0.0;
+    peakInc += inc;
+    nextPulse += period;
+  }
+  else if (currentTime >= nextPulse && currentTime <= last)
+  {  // having pulse
+    float dt = currentTime - nextPulse;
+    I = peakInc * dt / duration;
+  }
+}
 
+
+/*
+ * 1 train = _|||_
+ *      peak=200pA
+ *      duration=2ms
+ *      intratrain_gap=20ms (i.e. 50Hz)
+ *      num_pulses_per_train=3    (i.e. triplet)
+ * num_trains = 4
+ *      inter_train_gap=period=200ms    (i.e. 5Hz)
+ *      num_trains=4  repeat 4 times and time must be < last
+ *  _|||____|||___|||___|||
+ *NOTE: 
+ *___[ ]______[ ]______[ ]______[  ]
+ *delay
+ *   dura
+ *    intertrian
+ */
 void CurrentPulseGenerator::update_PeriodicTrainProtocol(RNG& rng, float currentTime)
 {
   I = 0.0;
@@ -197,20 +259,19 @@ void CurrentPulseGenerator::update_PeriodicTrainProtocol(RNG& rng, float current
       I = peakInc;
     }
   }
-  //NOTE: 
-  //___[ ]_____[ ]______[ ]___________[  ]
-  //  delay
-  //   dura
-  //    intertrian
 }
 
+/*
+ * the time of input is random 
+ * and once it is triggered, the current amplitude is also random as a function of 
+ *      Gaussian (mean, sd)
+ */
 void CurrentPulseGenerator::update_WhiteNoiseProtocol(RNG& rng, float currentTime)
 {
   I = 0.0;
   if (currentTime >= (nextPulse + duration) && currentTime <= last)
   {  // no pulse
     I = 0.0;
-    peakInc += inc;
     nextPulse += log(drandom(rng)) * period;
   }
   else if (currentTime >= nextPulse && currentTime <= last)

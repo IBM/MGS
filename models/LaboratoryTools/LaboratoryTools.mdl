@@ -117,7 +117,7 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   dyn_var_t delay;
   dyn_var_t last;
   dyn_var_t inc;
-  string pattern; // supported protocols [periodic_train, periodic, poisson, dualexp]
+  string pattern; // supported protocols [periodic_train, periodic, poisson, dualexp, ramp]
   int write_to_file; // YES or NO
   string fileName; // fileName if 'write_to_file = 1'
   float io_interval; //[ms] - default is 1.0 [ms]
