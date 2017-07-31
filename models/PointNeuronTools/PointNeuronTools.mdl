@@ -195,6 +195,16 @@ Interface DataFeed {
   double * x3;
 }
 
+Interface FieldProducer {
+  double* E;
+  double* I;
+}
+
+Interface DiffusionProducer {
+  double* E_diff;
+  double* I_diff;
+}
+
 Struct Input {
   double* input;
   double weight;

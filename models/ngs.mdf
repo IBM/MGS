@@ -3,9 +3,9 @@
 #include "Life/LifeDataCollectors.mdl"
 
 #include "PointNeuronTools/PointNeuronTools.mdl"
-
 #include "BengioRateInterneuron/BengioRateInterneuron.mdl"
 #include "BengioRatePyramidal/BengioRatePyramidal.mdl"
+#include "AtasoyNFUnit/AtasoyNFUnit.mdl"
 #include "BitMapPhenotype/BitmapPhenotype.mdl"
 #include "BoutonIAFUnit/BoutonIAFUnit.mdl"
 #include "CleftAstrocyteIAFUnit/CleftAstrocyteIAFUnit.mdl"
@@ -30,6 +30,7 @@
 #include "WaveDriverUnit/WaveDriverUnit.mdl"
 #include "ZhengSORNUnits/ZhengSORNUnits.mdl"
 
+#include "AtasoyNFUnit/AtasoyNFUnitDataCollectors.mdl"
 #include "BoutonIAFUnit/BoutonIAFUnitDataCollectors.mdl"
 #include "CleftAstrocyteIAFUnit/CleftAstrocyteIAFUnitDataCollectors.mdl"
 #include "FileDriverUnit/FileDriverUnitDataCollectors.mdl"

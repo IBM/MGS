@@ -1,0 +1,105 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef ATASOYNFUNIT_MDL
+#define ATASOYNFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Struct DiffusionInput {
+  double* E_diff;
+  double* I_diff;
+  double weight;
+  int row;
+  int col;
+}
+
+Struct FieldInput {
+  double* E_diff;
+  double* I_diff;
+  double weight;
+  int row;
+  int col;
+}
+
+Node AtasoyNFUnit Implements DiffusionProducer, FieldProducer {
+   double E; // These variable names are according to Atasoy et al. 2016
+   double I; 
+   double E_diff;
+   double I_diff;
+   double diff_E2E;
+   double diff_E2I;
+   double diff_I2E;
+   double diff_I2I;
+   int t_diff;
+
+   FieldInput [] F_in;   
+   DiffusionInput [] D_in;
+
+   Shared {	
+     double dE;
+     double dI;
+     double dt;
+     int t_diff_max;
+     double tau;
+     double alpha_E2E;
+     double alpha_I2E;
+     double alpha_E2I;
+     double alpha_I2I;
+     double sigma_E2E;
+     double sigma_E2I;
+     double sigma_I2E;
+     double sigma_I2I;
+     double t_diffE2E;
+     double t_diffE2I;
+     double t_diffI2E;
+     double t_diffI2I;
+
+     string laplacian_filename; 
+     int lineOffset;
+     
+     InitPhase initializeShared();
+     
+     string weightsFileName;
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     int [] loadWeightsOn;
+     int loadWeightsNext;
+   }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase diffusion(E_diff,I_diff);
+   RuntimePhase reaction(E,I, E_diff, I_diff);
+
+   DiffusionProducer.E_diff << &E_diff;   
+   DiffusionProducer.I_diff << &I_diff;   
+   FieldProducer.E << &E;   
+   FieldProducer.I << &I;   
+
+   PredicateFunction checkForConnection;
+
+   Connection Pre Node ((checkForConnection()) && (PSet.identifier=="diffusion")) Expects DiffusionProducer {
+      DiffusionProducer.E_diff >> D_in.E_diff;
+      DiffusionProducer.I_diff >> D_in.I_diff;
+   }
+}
+
+
+#endif
