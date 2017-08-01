@@ -27,7 +27,10 @@
 void FileDriverUnit::initialize(RNG& rng) 
 {
   // Set channels to node index, but adjust in case there are not enough channels
-  channel = getGlobalIndex() % SHD.n_channels;
+  if (SHD.op_random)
+    channel = irandom(0, SHD.n_channels - 1, rng);
+  else
+    channel = getGlobalIndex() % SHD.n_channels;  
 }
 
 void FileDriverUnit::updateOutput(RNG& rng)
