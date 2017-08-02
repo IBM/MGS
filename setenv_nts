@@ -2,7 +2,3 @@ export NTSROOT=`pwd`
 export LENSROOT=$NTSROOT/gsl
 export MDLROOT=$NTSROOT/mdl
 export PATH=$NTSROOT/gsl/bin:$PATH
-#touch gsl/extensions/variable/variables.mdf
-#touch gsl/extensions/struct/structs.mdf
-#touch gsl/extensions/functor/functors.mdf
-#touch models/compartmental.mdf

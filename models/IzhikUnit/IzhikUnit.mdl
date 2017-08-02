@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // Us Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -16,10 +16,9 @@
 #ifndef IZHIKUNIT_MDL
 #define IZHIKUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 
-Node IzhikUnit Implements OutputProducer, VoltageProducer, SpikeProducer 
+Node IzhikUnit Implements OutputProducer, VoltageIAFProducer, SpikeProducer 
 {
 
   double g_out;
@@ -95,7 +94,7 @@ Node IzhikUnit Implements OutputProducer, VoltageProducer, SpikeProducer
    RuntimePhase updateOutputs(g_out,V_out,spike);
   
    OutputProducer.output << &g_out;
-   VoltageProducer.voltage << &V_out;
+   VoltageIAFProducer.voltage << &V_out;
    SpikeProducer.spike << &spike;
 
    UserFunction setIndices;   

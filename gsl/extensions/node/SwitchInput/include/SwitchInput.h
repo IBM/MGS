@@ -11,7 +11,7 @@ class SwitchInput : public CG_SwitchInput
 {
    public:
       void initialize(RNG& rng);
-      //void update(RNG& rng);
+      void update(RNG& rng);
       void outputDrivInp(std::ofstream &);
       virtual ~SwitchInput();
 

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -36,14 +36,14 @@ class SpineIAFUnitDataCollector : public CG_SpineIAFUnitDataCollector
   virtual void duplicate(std::auto_ptr<CG_SpineIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* AMPA_file;
-  std::ofstream* mGluR_file;
-  std::ofstream* mGluRmodulation_file;
+  std::ofstream* mGluR5_file;
+  std::ofstream* mGluR5modulation_file;
   std::ofstream* Ca_file;
   std::ofstream* ECBproduction_file; // just for the production function
   std::ofstream* ECB_file;
   double ECBsigmoid(double Ca);
   double ECBproduction(double Ca);
-  double mGluRmodulation(double mGluR);
+  double mGluR5modulation(double mGluR5);
 };
 
 #endif

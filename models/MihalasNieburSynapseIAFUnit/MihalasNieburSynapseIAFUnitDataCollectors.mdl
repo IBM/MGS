@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -16,7 +16,6 @@
 #ifndef MIHALASNIEBURSYNAPSEIAFUNITDATACOLLECTORS_MDL
 #define MIHALASNIEBURSYNAPSEIAFUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable MihalasNieburSynapseIAFUnitDataCollector
 {
@@ -39,12 +38,12 @@ Variable MihalasNieburSynapseIAFUnitDataCollector
   bool op_saveSpikeVoltages;
    
   Connection Pre Node () Expects OutputProducer, ThresholdProducer,
-    SpikeProducer, VoltageProducer
+    SpikeProducer, VoltageIAFProducer
     {
       OutputProducer.output >> voltages;
       ThresholdProducer.threshold >> thresholds;
       SpikeProducer.spike >> spikes;
-      VoltageProducer.voltage >> spikevoltages;
+      VoltageIAFProducer.voltage >> spikevoltages;
       getNodeIndices();
     }
  

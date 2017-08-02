@@ -1,0 +1,53 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// Us Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef LYPCOLLECTOR_MDL
+#define LYPCOLLECTOR_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Interface LypFeed {
+  double * x;
+  }
+
+Node LypCollector Implements OutputProducer 
+{
+  double * [] inputs;   
+  double output;
+
+  InitPhase initialize();
+   
+  RuntimePhase update(output);
+  
+  UserFunction setIndices;   
+
+  OutputProducer.output << &output;
+
+  InAttrPSet {
+     string identifier;
+   }
+
+  Connection Pre Node (PSet.identifier == "MSN") Expects LypFeed {
+   LypFeed.x >> inputs;
+   setIndices();
+   }
+
+
+
+}
+
+#endif
+
+
+

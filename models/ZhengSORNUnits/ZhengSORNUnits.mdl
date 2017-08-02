@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,6 +17,12 @@
 #define ZHENGSORNUNITS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
+Struct NormalizedThalamicInput {
+  double* input;
+  double minVal;
+  double maxVal;
+}
+
 Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
    double x; // These variable names are according to Zheng et al. 2015
    bool spike;
@@ -27,6 +33,7 @@ Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
    //SpikeInput [] lateralInhInputs;
    SORNSynapseInput [] lateralInhInputs;
    Input modulatoryInput;
+   NormalizedThalamicInput normalizedThInput;
 
    Shared {	
      double eta_IP;
@@ -93,6 +100,10 @@ Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
    
    Connection Pre Node (PSet.identifier=="modulatory") Expects OutputProducer {
       OutputProducer.output >> modulatoryInput.input;
+   }
+
+   Connection Pre Node (PSet.identifier=="thalamic_modulatory") Expects OutputProducer {
+      OutputProducer.output >> normalizedThInput.input;
    }
 
 }

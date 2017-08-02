@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -31,12 +31,19 @@ FinalPhases = { finalize };
 #define YDIM_INNER 1
 #define ZDIM_INNER 1
 #define INNER_FRAC 0.002 // (N_INNER / XDIM_INNER)
+#define OP_T 10000000 //5000000
+#define OP_PERT_HZ 1 // to the perturb with a change in Hz the system or not
+#define OP_PERT_HZ_T 5000000 // if perturbing the system with a change in Hz, when
+#define OP_PERT_AMPA 1 // to the perturb with a change in AMPA weights the system or not
+#define OP_PERT_AMPA_T OP_PERT_HZ_T // if perturbing the system with a change in AMPA weights, when
 
 
 
 // ##### Nodes #####
 NodeType PoissonIAFUnit(<
-                        deltaT = DELTAT // in s
+                        deltaT = DELTAT, // in s
+                        op_perturbation = OP_PERT_HZ,
+                        perturbationT = OP_PERT_HZ_T
                         >) { update->run1 };
 
 NodeType BoutonIAFUnit(<
@@ -51,22 +58,22 @@ NodeType BoutonIAFUnit(<
                        >) { update->run2, copy->run2 };
 
 NodeType CleftAstrocyteIAFUnit(<
-                               glutamateDecayTau = 0.040, // in s (from Parsons et al., 2016; Sup Fig 6D, 1 pulse)
+                               glutamateDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
                                deltaT = DELTAT            // in s
                                >) { update->run3 };
 
 #define ECBPRODC 10.0
 #define ECBPRODD 0.5
 NodeType SpineIAFUnit(<
-                      AMPAriseTau = 0.004, // in s (from Fino et al., 2010; Fig 1B)
-                      AMPAfallTau = 0.030, // in s (from Fino et al., 2010; Fig 1B)
-                      mGluRriseTau = 0.25, // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
-                      mGluRfallTau = 0.25, // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
-                      mGluRsensitivity = 400.0, // mGlur sensitivity to excess glutamate; free parameter
+                      AMPAriseTau = 0.004, // in s (fitted to Fino et al., 2010; Fig 1B)
+                      AMPAfallTau = 0.030, // in s (fitted to Fino et al., 2010; Fig 1B)
+                      mGluR5riseTau = 0.25, // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
+                      mGluR5fallTau = 0.25, // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
+                      mGluR5sensitivity = 400.0, // mGlur sensitivity to excess glutamate; free parameter
                       CariseTau = 0.010,   // in s (fitted to Tuan's model)
                       CafallTau = 0.008,   // in s (fitted to Tuan's model)
                       op_CaVSCCdepend = 1, // CaVSCC Ca2+ is dependent on spine size
-                      CaVSCC = 90.0,       // in arb. unit; free parameter
+                      CaVSCC = 250.0,//90.0,       // in arb. unit; free parameter
                       CaVSCCpow = -0.5,    // CaVSCC*(AMPAweight^pow), in arb. unit
                       CaBP = 0.0,          // in arb. unit; free parameter
                       ECBprodC = ECBPRODC, // in arb. unit
@@ -74,8 +81,11 @@ NodeType SpineIAFUnit(<
                       deltaT = DELTAT,     // in s
                       sharedDirectory = DIRECTORY,
                       sharedFileExt = FILE_EXTENSION,
-                      op_saveWeights = 1   // whether to save the spine weights or not
-                      >) { update->run4 };
+                      op_saveWeights = 1,   // whether to save the spine weights or not
+                      op_perturbation = OP_PERT_AMPA,
+                      perturbationT = OP_PERT_AMPA_T,
+                      collectWeightsOn = {1,OP_PERT_AMPA_T} // when to save the spine weights
+                      >) { update->run4, outputWeightsShared->run5 };
 
 NodeType MihalasNieburSynapseIAFUnit(<
                                      b = 10.0,             // s^-1
@@ -105,7 +115,7 @@ BindName initInput("Hz", UniformDist(0,150));//Scale(Exp(RangePassThru(-100,"<="
 NdplNodeInit heterInput(initInput);
 
 // Initialize boutons
-//BindName initBoutons("availableGlutamate", UniformDist(0.0, 1.5), "maxGlutamate", 2.0); // arb. unit, arb. unit
+//BindName initBoutons("availableGlutamate", UniformDist(0.0, 2.0), "maxGlutamate", 2.0); // arb. unit, arb. unit
 BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0); // arb. unit, arb. unit
 NdplNodeInit heterBoutons(initBoutons);
 
@@ -145,8 +155,12 @@ BindName POST_W("weight", 0.0, "identifier", "postSpikesInput");
 NdplInAttrInit postW(POST_W);
 
 // Retrograde ECB weight between spines and boutons, structural plasticity
-BindName ECB_W("weight", 1.0, "identifier", "ECBinput");
-NdplInAttrInit ecbW(ECB_W);
+BindName ECB1_W("weight", 1.0, "identifier", "ECBinput");
+NdplInAttrInit ecb1W(ECB1_W);
+
+// Retrograde ECB weight between spines and clefts/atrocytes, structural plasticity
+BindName ECB2_W("weight", 1.0, "identifier", "ECBinput");
+NdplInAttrInit ecb2W(ECB2_W);
 
 
 
@@ -176,9 +190,13 @@ Grid Cannabinoid
   connectNodeSets(.[].Layer(boutons), .[].Layer(spines),
                   IsoSampler(), outAttrDef, preW);
 
-  // post -> spine
+  // spine -> bouton
   connectNodeSets(.[].Layer(spines), .[].Layer(boutons),
-                  IsoSampler(), outAttrDef, ecbW);
+                  IsoSampler(), outAttrDef, ecb1W);
+
+  // spine -> cleft
+  connectNodeSets(.[].Layer(spines), .[].Layer(cleftsAstrocytes),
+                  IsoSampler(), outAttrDef, ecb2W);  
 };
 
 Grid Output
@@ -224,12 +242,12 @@ polyConnect(CSC/cann[].Layer(boutons), boutonCollector, <>, <>);
 
 VariableType CleftAstrocyteIAFUnitDataCollector;
 CleftAstrocyteIAFUnitDataCollector cleftAstroCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=1>;
+  op_saveGlutamate=1, op_saveECB=0>;
 polyConnect(CSC/cann[].Layer(cleftsAstrocytes), cleftAstroCollector, <>, <>);
 
 VariableType SpineIAFUnitDataCollector;
 SpineIAFUnitDataCollector spineCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveAMPA=0, op_savemGluR=0, op_saveCa=0, op_saveECB=0, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
+  op_saveAMPA=0, op_savemGluR5=0, op_saveCa=0, op_saveECB=0, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
 polyConnect(CSC/cann[].Layer(spines), spineCollector, <>, <>);
 
 VariableType MihalasNieburSynapseIAFUnitDataCollector;
@@ -248,7 +266,7 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
 UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ",
  			 ::Iteration, ">", 0, 0, dataCollect);
 
-UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20", // if >1 glutamate spikes will not visualize!
+UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20", // if >1 glutamate spikes will not visualize! typically 20
  			 ::Iteration, "!%", 20, 0, dataCollect);
 
 CompositeTrigger iterTrigSampled("Iteration Trigger: (!%20) && (>= 0)",
@@ -256,7 +274,7 @@ CompositeTrigger iterTrigSampled("Iteration Trigger: (!%20) && (>= 0)",
                                  iterTrigSF, 1, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop",
-                        ::Iteration, "==", 10000000, 0, lastPhase); // in dt
+                        ::Iteration, "==", OP_T, 0, lastPhase); // in dt
 
 inputCollector.dataCollection() on iterTrig;
 boutonCollector.dataCollection() on iterTrigSampled;

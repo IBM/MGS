@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,11 +17,13 @@
 #define CLEFTASTROCYTEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer
+Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer, ECBIAFProducer
 {
   GlutamateIAFInput [] glutamateInput; // input of spike
   double glutamate;                    // current glutamate concentration
-
+  ECBIAFInput [] ECBInput;             // input of ECB
+  double ECB;                          // current endogenous cannabinoids concentration
+  
   Shared
     {
       double glutamateDecayTau;        // glutamate decay tau (i.e. glutamate reuptake via GLT-1) in s
@@ -39,17 +41,25 @@ Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer
 
   InitPhase initialize();
 
-  RuntimePhase update(glutamate);
+  RuntimePhase update(glutamate, ECB);
 
   GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
+  ECBIAFProducer.ECB << &ECB; // endogenous cannabinoids output
 
   UserFunction setGlutamateIndices;
+  UserFunction setECBIndices;  
 
-  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer
+  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer    
   {
     GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
     PSet.weight >> glutamateInput.weight;
   }
+
+  Connection Pre Node (PSet.identifier=="ECBinput") Expects ECBIAFProducer
+  {
+    ECBIAFProducer.ECB >> ECBInput.ECB;
+    PSet.weight >> ECBInput.weight;
+  }  
 }
 
 #endif

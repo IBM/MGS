@@ -9,7 +9,7 @@
 
 #define INDEX(x, y) (((y) * (infoHeader.width)) + (x))
 
-//#define BIGENDIAN // OLD_NTS; uncomment this
+#define BIGENDIAN
 
 BitMapHeader::BitMapHeader() {
   fileHeader.identifier[0] = 'B';
@@ -599,7 +599,7 @@ void BitMapHeader::readDataElement(FILE* in, T& elem) {
     size_t s = fread(((char*)&elem) + i, sizeof(char), 1, in);
   }
 #else
-  size_t s = fread(&elem, sizeof(elem), 1, in); // OLD_NTS; take out "size_t"
+  size_t s = fread(&elem, sizeof(elem), 1, in);
 #endif
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;

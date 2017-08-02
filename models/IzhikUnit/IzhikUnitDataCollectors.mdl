@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights 
 // Use, duplication or disclosure restricted by
@@ -16,7 +16,6 @@
 #ifndef IZHIKUNITDATACOLLECTORS_MDL
 #define IZHIKUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable IzhikUnitDataCollector
 {
@@ -32,11 +31,11 @@ Variable IzhikUnitDataCollector
 
    UserFunction getNodeIndices;
 
-   Connection Pre Node () Expects OutputProducer, VoltageProducer, SpikeProducer
+   Connection Pre Node () Expects OutputProducer, VoltageIAFProducer, SpikeProducer
    {
      SpikeProducer.spike >> spikes;
      OutputProducer.output >> g;
-     VoltageProducer.voltage >> V;
+     VoltageIAFProducer.voltage >> V;
      getNodeIndices();
    }
  

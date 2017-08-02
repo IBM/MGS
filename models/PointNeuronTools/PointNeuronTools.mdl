@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,7 +17,7 @@
 #define POINTNEURONTOOLS_MDL
 
 Interface ValueProducer {
-   int *value;
+  int *value;
 }
 
 Interface OutputProducer {
@@ -63,7 +63,7 @@ Interface SynapticCurrentIAFProducer
   double* AMPAweight;
   double* AMPAcurrent;
 
-  double* mGluRcurrent;
+  double* mGluR5current;
 }
 
 Interface CaIAFProducer
@@ -92,6 +92,83 @@ Interface WaveProducer
 }
 
 Interface FiringRateProducer {
+  double* output;
+}
+
+Interface VoltageIAFProducer {
+  float* voltage;
+}
+
+Interface MotoneuronSimpleProducer
+{
+  // Dendrite
+  double* d_V_m_last;
+  double* d_I_in;
+  // Soma
+  double* s_V_m;
+  double* s_I_in;
+  // IAS
+  double* i_V_m;
+  // Axon
+  //  double* a_V_m_node_last;
+}
+
+Interface MotoneuronProducer {
+  // Dendrite
+  double* d_V_m_last;
+  double* d_I_in;
+  
+  // Soma
+  double* s_V_m;
+  double* s_I_in;
+  
+  double* s_I_Naf;
+  double* s_I_Kdr;
+  double* s_I_CaN;
+  double* s_I_CaL;
+  double* s_I_KCa;
+  double* s_I_leak;
+  
+  double* s_m_Naf;
+  double* s_h_Naf;
+  double* s_n_Kdr;
+  double* s_m_CaN;
+  double* s_h_CaN;
+  double* s_p_CaL;
+
+  double* s_Ca_i;
+  double* s_E_Ca;
+
+  // IAS
+  double* i_V_m;
+
+  double* i_I_Naf;
+  double* i_I_Nap;
+  double* i_I_Kdr;
+  double* i_I_leak;
+  
+  double* i_m_Naf;
+  double* i_h_Naf;
+  double* i_p_Nap;
+  double* i_n_Kdr;  
+
+  /*
+  // Axon
+  double* a_V_m_node_last;
+
+  double* a_I_Naf_last;
+  double* a_I_Nap_last;
+  double* a_I_Ks_last;
+  double* a_I_leak_last;
+  
+  double* a_m_Naf_last;
+  double* a_h_Naf_last;
+  double* a_p_Nap_last;
+  double* a_s_Ks_last;  
+  */
+}
+
+Interface ReceptiveFieldProducer {
   double* output;
 }
 
@@ -206,6 +283,13 @@ Struct WaveInput
 {
   double* wave;
   double weight;
+  int row;
+  int col;
+}
+
+Struct VoltageIAFInput
+{
+  float* voltage;
   int row;
   int col;
 }

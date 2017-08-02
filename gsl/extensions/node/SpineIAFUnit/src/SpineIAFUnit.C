@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -28,19 +28,17 @@ void SpineIAFUnit::initialize(RNG& rng)
   // Default starting values
   AMPArise = 0.0;
   AMPAcurrent = 0.0;
-  mGluRrise = 0.0;
-  mGluRcurrent = 0.0;
+  mGluR5rise = 0.0;
+  mGluR5current = 0.0;
   Ca = 0.0;
   ECB = 0.0;
 }
 
 void SpineIAFUnit::update(RNG& rng)
 {
-  /*
   // If the simulation has reached a certain period, apply a perturbation
-  if (ITER == 750000)
-    AMPAweight = drandom(0.0, 150.0, rng);
-  */
+  if (SHD.op_perturbation && ITER == SHD.perturbationT)
+    AMPAweight = drandom(0.0, 1.5, rng);
 
   // ##### Vars needed #####
   double glutamate;
@@ -63,18 +61,18 @@ void SpineIAFUnit::update(RNG& rng)
 
 
 
-  // ##### mGluR #####
-  // mGluR input is any excess glutamate bigger than AMPA weight
-  double mGluRinput = 0.0;
+  // ##### mGluR5 #####
+  // mGluR5 input is any excess glutamate bigger than AMPA weight
+  double mGluR5input = 0.0;
   if (glutamate > AMPAweight)
-    mGluRinput = (glutamate - AMPAweight) * SHD.mGluRsensitivity; // adjust the sensitivity as well
+    mGluR5input = (glutamate - AMPAweight) * SHD.mGluR5sensitivity; // adjust the sensitivity as well
 
-  // Update mGluR rise with the mGluR activity
-  mGluRrise += ((-mGluRrise + mGluRinput) / SHD.mGluRriseTau ) * SHD.deltaT;
-  // Update mGluR current (fall) with the mGluR rise
-  mGluRcurrent += ((-mGluRcurrent + mGluRrise) / SHD.mGluRfallTau) * SHD.deltaT;
+  // Update mGluR5 rise with the mGluR5 activity
+  mGluR5rise += ((-mGluR5rise + mGluR5input) / SHD.mGluR5riseTau ) * SHD.deltaT;
+  // Update mGluR5 current (fall) with the mGluR5 rise
+  mGluR5current += ((-mGluR5current + mGluR5rise) / SHD.mGluR5fallTau) * SHD.deltaT;
 
-
+  
 
   // ##### Ca2+ #####
   // Ca2+ input
@@ -83,11 +81,11 @@ void SpineIAFUnit::update(RNG& rng)
     CaVSCCinput = SHD.CaVSCC * pow(AMPAweight, SHD.CaVSCCpow);
   else
     CaVSCCinput = SHD.CaVSCC;
-  if (postSpikeInput.size() > 0)
-    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
+  //  if (postSpikeInput.size() > 0)
+  //    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
 
   double CaInput = CaVSCCinput * AMPAcurrent;
-  CaInput = CaVSCCinput * (glutamate > 0.0 ? 1.0 : 0.0);
+  //  double CaInput = CaVSCCinput * (glutamate > 0.0 ? 1.0 : 0.0);
 
   // Update Ca2+ rise with VSCC and BP
   Carise += ((-Carise + CaInput) / SHD.CariseTau) * SHD.deltaT;
@@ -98,8 +96,8 @@ void SpineIAFUnit::update(RNG& rng)
 
   // ##### endocannabinoids #####
   // Update ECB (is always in the range 0 to 1)
-  // with Ca2+ and the mGluR modulation (AND gate)
-  ECB = ECBproduction(Ca * mGluRmodulation(mGluRcurrent));
+  // with Ca2+ and the mGluR5 modulation (AND gate)
+  ECB = ECBproduction(Ca * mGluR5modulation(mGluR5current));
 }
 
 void SpineIAFUnit::outputWeights(std::ofstream& fs)
@@ -146,8 +144,8 @@ double SpineIAFUnit::ECBproduction(double Ca)
   return ECB;
 }
 
-double SpineIAFUnit::mGluRmodulation(double mGluR)
+double SpineIAFUnit::mGluR5modulation(double mGluR5)
 {
-  return ECBproduction(mGluR); // just use the same modified sigmoid
+  return ECBproduction(mGluR5); // just use the same modified sigmoid
 }
 

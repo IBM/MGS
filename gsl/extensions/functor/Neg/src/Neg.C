@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -31,7 +31,7 @@ double Neg::userExecute(LensContext* CG_c)
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
   if (ndi==0) {
-    throw SyntaxErrorException("Log, second argument: functor did not return a number");
+    throw SyntaxErrorException("Neg, second argument: functor did not return a number");
   }
   return -ndi->getDouble();
 }

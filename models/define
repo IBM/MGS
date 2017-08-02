@@ -1,24 +1,25 @@
 #!/bin/bash
+
 sed '/\\/p' $1 | sed 's/#include "/cd /g' | sed 's/\// ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd .. ;/g' > defineModels1.sh;
+
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
   awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
 else
   awk 'NF { print "if [ '$1' -ot " $2 "/" $5 " ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
 fi
+
 source defineModels2.sh;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
-if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
-#$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct
-touch compartmental.mdf
+
+if [ define -ot $1 ]; then
+    $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+fi
+
+touch $1;
 sleep 2
 touch define;
 touch $LENSROOT/Extensions.mk
 cp $LENSROOT/Extensions.mk{,.bak}
 cp Extensions.mk $LENSROOT
-
-# <<<OLD_MGS; uncomment these
-#touch define;
-#touch $1;
-#    OLD_MGS>>>
 

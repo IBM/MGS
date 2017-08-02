@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -24,6 +24,7 @@ void CleftAstrocyteIAFUnit::initialize(RNG& rng)
 {
   // Default starting values
   glutamate = 0.0;
+  ECB = 0.0;
 }
 
 void CleftAstrocyteIAFUnit::update(RNG& rng)
@@ -33,12 +34,22 @@ void CleftAstrocyteIAFUnit::update(RNG& rng)
     glutamate += *(glutamateInput[0].glutamate) * glutamateInput[0].weight; // only consider first one, weight is structural plasticity
   // Astrocyte reuptake of glutamate with GLT-1
   glutamate += (-glutamate / SHD.glutamateDecayTau) * SHD.deltaT;
+
+  // ECB diffuses really quickly, so this level is equal to that produced by the spine
+  if (ECBInput.size() > 0)
+    ECB = *(ECBInput[0].ECB) * ECBInput[0].weight; // only consider first one, weight is structural plasticity
 }
 
 void CleftAstrocyteIAFUnit::setGlutamateIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
 {
   glutamateInput[glutamateInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
   glutamateInput[glutamateInput.size()-1].col = CG_node->getGlobalIndex()+1;
+}
+
+void CleftAstrocyteIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
+{
+  ECBInput[ECBInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
+  ECBInput[ECBInput.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
 CleftAstrocyteIAFUnit::~CleftAstrocyteIAFUnit()

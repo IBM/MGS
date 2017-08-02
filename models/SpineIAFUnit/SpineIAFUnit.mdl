@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -24,8 +24,8 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
   double AMPArise;                         // rise current of AMPA
   double AMPAcurrent;                      // fall current of AMPA
 
-  double mGluRrise;                        // rise current of mGluR
-  double mGluRcurrent;                     // fall current of mGluR
+  double mGluR5rise;                       // rise current of mGluR5
+  double mGluR5current;                    // fall current of mGluR5
 
   SpikeInput [] postSpikeInput;            // post-synaptic back propagating spike
   double Carise;                           // rise of Ca2+
@@ -38,9 +38,9 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
       double AMPAriseTau;                  // rise time constant of AMPA
       double AMPAfallTau;                  // fall time constant of AMPA
 
-      double mGluRriseTau;                 // rise time constant of mGluR
-      double mGluRfallTau;                 // fall time constant of mGluR
-      double mGluRsensitivity;             // weight of mGluR
+      double mGluR5riseTau;                // rise time constant of mGluR5
+      double mGluR5fallTau;                // fall time constant of mGluR5
+      double mGluR5sensitivity;            // weight of mGluR5
 
       double CariseTau;                    // rise time constant of Ca2+
       double CafallTau;                    // fall time constant of Ca2+
@@ -54,14 +54,19 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
       double ECBprodD;                     // ECB production function - shifts
 
       double deltaT;                       // in s
+      unsigned perturbationT;              // when to perturb
 
       string sharedDirectory;
       string sharedFileExt;
+      int [] collectWeightsOn;
+      int collectWeightsNext;
 
       InitPhase initializeShared;
+      RuntimePhase outputWeightsShared;
 
       // Flags
       bool op_saveWeights;
+      bool op_perturbation;
     }
 
   InAttrPSet
@@ -73,12 +78,12 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
   InitPhase initialize();
 
   RuntimePhase update(AMPAweight, AMPAcurrent,
-                      mGluRcurrent,
+                      mGluR5current,
                       Ca, ECB);
 
   SynapticCurrentIAFProducer.AMPAweight << &AMPAweight;             // the AMPA weight
   SynapticCurrentIAFProducer.AMPAcurrent << &AMPAcurrent;           // the AMPA synaptic current output
-  SynapticCurrentIAFProducer.mGluRcurrent << &mGluRcurrent;         // the mGluR synaptic current output
+  SynapticCurrentIAFProducer.mGluR5current << &mGluR5current;       // the mGluR5 synaptic current output
   CaIAFProducer.Ca << &Ca;                                          // Ca2+
   ECBIAFProducer.ECB << &ECB;                                       // endogenous cannabinoid
 

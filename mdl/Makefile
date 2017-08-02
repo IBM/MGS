@@ -7,6 +7,8 @@ SOURCES_DIRS=src
 BIN_DIR=bin
 EXE_FILE=mdlparser
 
+RELEASE?="" # Potentially set by make_XXX or the user from the command line
+
 # To compile with xlC_r edit this or use CC=xlC_r at command line.
 CC := g++
 
@@ -63,17 +65,24 @@ ifeq ($(OPERATING_SYSTEM), AIX)
    endif
 endif
 
-#For debugging
-ifeq ($(CC), g++)
-   CFLAGS += -ggdb -g
-endif
-ifeq ($(CC), xlC_r)
-   CFLAGS += -g
+# Check if release mode
+ifeq ($(RELEASE), -release)
+   # No debugging
+   # Yes optimization
+   CFLAGS += -O3
+else
+   # Yes debugging
+   ifeq ($(CC), g++)
+      CFLAGS += -ggdb -g
+   endif
+   ifeq ($(CC), xlC_r)
+      CFLAGS += -g
+   endif
+   # Minimal optimization
+   CFLAGS += -Og
 endif
 
-#Optimization
-#CFLAGS += -O2
-vpath %.C $(SOURCES_DIRS)
+vpath  %.C $(SOURCES_DIRS)
 
 # include sources
 include sources.mk

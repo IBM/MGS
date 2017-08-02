@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -34,6 +34,7 @@ class CleftAstrocyteIAFUnitDataCollector : public CG_CleftAstrocyteIAFUnitDataCo
   virtual void duplicate(std::auto_ptr<CG_CleftAstrocyteIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* glutamate_file;
+  std::ofstream* ECB_file;
 };
 
 #endif

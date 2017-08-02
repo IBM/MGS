@@ -6,7 +6,7 @@
 # 2. r(first compartment from soma) must be at least some minium value, e.g. 1um
 # 3. ...???
 __author__ = "Hoang Trong Minh Tuan"
-__copyright__ = "Copyright 2016, IBM"
+__copyright__ = "Copyright 2016-2017, IBM"
 __credits__ = []  # list of people who file pugs
 __version__ = "0.1"
 __maintainer__ = "Hoang Trong Minh Tuan"

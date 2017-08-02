@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -31,7 +31,7 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned,
-                             std::pair<double*, unsigned> // second.first <keep unsigned so can add later>
+                             std::pair<double*, double*> // second.first second.second
                              >
                     >
            >
@@ -39,21 +39,23 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
   assert(slices.size()==glutamate.size());
+  assert(slices.size()==ECB.size());
   int sz=glutamate.size();
   int mxrow=0;
   int mxcol=0;
   for (int j=0; j<sz; ++j)
     {
-      sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(glutamate[j], 0);
+      sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(glutamate[j], ECB[j]);
       if (mxrow<rows[j]) mxrow=rows[j];
       if (mxcol<cols[j]) mxcol=cols[j];
       if (mxslice<slices[j]) mxslice=slices[j];
     }
   glutamate.clear();
+  ECB.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned,
-                             std::pair<double*, unsigned>
+                             std::pair<double*, double*>
                              >
                     >
            >::iterator miter1, mend1=sorter.end();
@@ -61,16 +63,19 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
     {
       std::map<unsigned, 
                std::map<unsigned,
-                        std::pair<double*, unsigned>
+                        std::pair<double*, double*>
                         >
                >::iterator miter2, mend2=miter1->second.end();    
       for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2)
         {
           std::map<unsigned,
-                   std::pair<double*, unsigned>
+                   std::pair<double*, double*>
                    >::iterator miter3, mend3=miter2->second.end();
           for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
-            glutamate.push_back(miter3->second.first);
+            {
+              glutamate.push_back(miter3->second.first);
+              ECB.push_back(miter3->second.second);
+            }
         }
     }
 
@@ -85,7 +90,7 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
   
-  std::ostringstream os_glutamate;
+  std::ostringstream os_glutamate, os_ECB;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
@@ -99,7 +104,17 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
       glutamate_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
       glutamate_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
       glutamate_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
-    }    
+    }
+
+  if (op_saveECB)
+    {
+      os_ECB<<directory<<"CleftECB"<<fileExt;
+      ECB_file=new std::ofstream(os_ECB.str().c_str(),
+                                 std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+      ECB_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      ECB_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      ECB_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+    }      
 }
 
 void CleftAstrocyteIAFUnitDataCollector::finalize(RNG& rng) 
@@ -109,6 +124,11 @@ void CleftAstrocyteIAFUnitDataCollector::finalize(RNG& rng)
     {
       glutamate_file->close();
       delete glutamate_file;
+    }  
+  if (op_saveECB)
+    {
+      ECB_file->close();
+      delete ECB_file;
     }  
 }
 
@@ -124,6 +144,17 @@ void CleftAstrocyteIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPair
           glutamate_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));            
         }
     }
+
+  if (op_saveECB)
+    {
+      ShallowArray<double*>::iterator iter=ECB.begin(), end=ECB.end();
+      float temp = 0.;
+      for (int n=0; iter!=end; ++iter, n++)
+        {
+          temp = (float) **iter;
+          ECB_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));            
+        }
+    }  
 }
 
 void CleftAstrocyteIAFUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset) 

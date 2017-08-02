@@ -12,6 +12,8 @@ SRC_DIR :=./src
 OBJ_DIR :=./obj
 HEADER_DIR:=./include
 
+RELEASE?="" # Potentially set by make_XXX or the user from the command line
+
 vpath %.h $(HEADER_DIR)
 vpath %.cxx $(SRC_DIR)
 
@@ -39,7 +41,7 @@ LD=mpixlcxx_r
 BGQ_FLOOR = /bgsys/drivers/ppcfloor
 LDFLAGS = 
 CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEQ #-DDISABLE_PTHREADS 
-CFLAGS += -O2 -qarch=qp -qtune=qp -qdebug=unlimitin
+CFLAGS += -qarch=qp -qtune=qp -qdebug=unlimitin
 
 else
 
@@ -50,7 +52,7 @@ LD=mpixlcxx_r
 BGP_FLOOR = /bgsys/drivers/ppcfloor
 LDFLAGS = 
 CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEP #-DDISABLE_PTHREADS 
-CFLAGS += -I$(BGP_FLOOR)/arch/include -O2 -qarch=450 -qtune=450 -qdebug=unlimitin
+CFLAGS += -I$(BGP_FLOOR)/arch/include -qarch=450 -qtune=450 -qdebug=unlimitin
 
 else
 
@@ -106,12 +108,17 @@ LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PA
 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
-ifeq ($(debug), yes)
-OPT=
-DEBUG=-g -ggdb
+
+# Check if release mode
+ifeq ($(RELEASE), -release)
+   # No debugging
+   # Yes optimization
+   OPT = -O3
 else
-OPT=-O3
-DEBUG=
+   # Yes debugging
+   DEBUG += -ggdb -g
+   # Minimal optimization
+   OPT = -Og
 endif
 
 UTILS=-I../gsl/utils/std/include -I../common/include/

@@ -1,0 +1,113 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// Use Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef MAHONUNIT_MDL
+#define MAHONUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../LypCollector/LypCollector.mdl"
+
+
+Interface DataFeed {
+  double * x1;
+  double * x2;
+  double * x3;
+}
+
+
+Node MahonUnit Implements OutputProducer, SpikeProducer, DataFeed, LypFeed
+{
+
+  double g_out;
+  double var1, var2, var3;
+  //float V_out;  
+  Input [] MSNNetInps;
+  //double [] nodeVars;
+  double V_init, g_init;
+  double * drivinp;	
+  bool spike;
+  double injCur;
+  long connectionSeed;
+  double synb;
+  double * lypval1;
+  double lypsumsqr;
+
+  Shared {
+    double spikethresh;
+    double deltaT;
+      // ms
+  }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     double connectionProb;
+     //double connectionSeed;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update1();
+   RuntimePhase update2();
+   RuntimePhase update3();
+   RuntimePhase update4();
+
+   //RuntimePhase update(g_out,lypsumsqr);
+
+   //RuntimePhase flushVars(g_out);
+   RuntimePhase flushVars1(g_out);
+   RuntimePhase flushVars2(g_out);
+   RuntimePhase flushVars3(g_out);
+   RuntimePhase flushVars4(g_out,lypsumsqr);
+   RuntimePhase updateOutputs(spike,var1,var2,var3);
+   PredicateFunction ConnectP1;
+
+   DataFeed.x1 << &var1;
+   DataFeed.x2 << &var2;
+   DataFeed.x3 << &var3;
+ 
+   OutputProducer.output << &g_out;
+   //VoltageIAFProducer.voltage << &V_out;
+   SpikeProducer.spike << &spike;
+
+   LypFeed.x << &lypsumsqr;
+
+   UserFunction setIndices;   
+   UserFunction setLypIndices;
+
+   Connection Pre Node ((ConnectP1()) && (PSet.identifier == "MSN")) Expects OutputProducer {
+     OutputProducer.output >> MSNNetInps.input;
+     PSet.weight >> MSNNetInps.weight;
+     setIndices();
+   }
+
+
+   Connection Pre Node (PSet.identifier == "SWITCHINP") Expects OutputProducer {
+     OutputProducer.output >> drivinp;
+   }
+
+
+   Connection Pre Node (PSet.identifier == "LYPCOLLECTOR") Expects OutputProducer {
+     OutputProducer.output >> lypval1;
+     setLypIndices();
+   }
+
+
+
+}
+
+#endif
+
+
+

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,7 +17,7 @@
 #define WAVEDRIVERUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node WaveDriverUnit Implements WaveProducer
+Node WaveDriverUnit Implements OutputProducer
 {
   // Parameters set by the user
   double Hz;               // Hz of the wave
@@ -38,23 +38,24 @@ Node WaveDriverUnit Implements WaveProducer
   double amplitudeMin;     // when modulating amplitude, the minimum value
   double amplitudeMax;     // when modulating amplitude, the maximum value
   double amplitudeModRate; // when modulating amplitude, the modulation rate
-  double amplitudeA;              // when modulating with a weight, the A of the line
-  double amplitudeB;              // when modulating with a weight, the B of the line
+  double amplitudeA;       // when modulating with a weight, the A of the line
+  double amplitudeB;       // when modulating with a weight, the B of the line
 
   // Parameters used by the wave update function
   double wave;             // actual wave
   
-  // Options - whether to modulate parameters over time
-  bool op_modulateHz;
-  bool op_modulateHzWeight;
-  bool op_modulatePhase;
-  bool op_modulatePhaseWeight;
-  bool op_modulateAmplitude;
-  bool op_modulateAmplitudeWeight;
-  
   Shared
     {
       double deltaT; // in s
+
+      // Options - whether to modulate parameters over time
+      bool op_constant;
+      bool op_modulateHz;
+      bool op_modulateHzWeight;
+      bool op_modulatePhase;
+      bool op_modulatePhaseWeight;
+      bool op_modulateAmplitude;
+      bool op_modulateAmplitudeWeight;      
      
       InitPhase initializeShared;
     }
@@ -68,7 +69,7 @@ Node WaveDriverUnit Implements WaveProducer
 
   RuntimePhase update(wave);
 
-  WaveProducer.wave << &wave; // the wave output  
+  OutputProducer.output << &wave; // the wave output  
   
   UserFunction setIndices;
 }

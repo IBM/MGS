@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Configuration script to create LensRootConfig.h
+# Script to clean previous compile efforts
 
 find . -name "*\.o" -exec /bin/rm {} \;
 find . -name "*\.so" -exec /bin/rm {} \;

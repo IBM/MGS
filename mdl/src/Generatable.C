@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -113,9 +113,9 @@ void Generatable::generateModuleMk()
       << "#\n"
       << "# \"Restricted Materials of IBM\n"
       << "#\n"
-      << "# BCM-YKT-11-19-2015\n"
+      << "# BCM-YKT-07-18-2017\n"
       << "#\n"
-      << "# (C) Copyright IBM Corp. 2005-2015  All rights reserved\n"
+      << "# (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
       << "# US Government Users Restricted Rights -\n"
       << "# Use, duplication or disclosure restricted by\n"
       << "# GSA ADP Schedule Contract with IBM Corp.\n"

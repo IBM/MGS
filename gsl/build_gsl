@@ -27,38 +27,57 @@ return 1
 }
 
 function createMakeFile(){
-      if [ "$GSL_BUILD_MODE" == "-release" ]; then 
-        ## detect if -release is used
-        ./configure.py --O3 $DEBUGMACROS $PLATFORM_OPTS
-      else
-        ./configure.py --O --debug $DEBUGMACROS $PLATFORM_OPTS
-      fi
+    ## detect if -release is used for optimization and debugging options
+    if [ "$RELEASE" == "-release" ]; then
+      ## detect if building as NTS, MGS, or both
+      case $AS in
+          "-as-Nts") ./configure.py --O3 $PLATFORM_OPTS --as-Nts;;
+          "-as-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-Mgs;;
+          "-as-both-Nts-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-both-Nts-Mgs;;
+      esac
+    else
+      ## detect if building as NTS, MGS, or both
+      case $AS in
+          "-as-Nts") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Nts;;
+          "-as-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Mgs;;
+          "-as-both-Nts-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-both-Nts-Mgs;;
+      esac
+    fi
 }
 
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+
 #########################################
 #   PRINT HELP
 #{{{
 function print_help {
 	echo "SYNTAX: $0 
   -p <$SUPPORTED_PLATFORMS>    [default: LINUX]
-  [--clean | --rebuild | --remake]
-  -j <n>                  with <n> is num-processes [default: 2/3 total cores]
-  --release | <empty>   [default: (empty)]
-  -d 1                 [default: debug_assert]
-  -d 2                 [debug_hh] --> print debugs for Initialize() methods
-  -d 3                 [debug_in_loops] --> print debugs inside Loops
-  -d 4                 [debug_cpts] --> print compartmental information 
-     	--release: O3 with debug_assert
-     	--loglevel 1: debug with debug_assert and debug_hh for initialize methods
-     	--loglevel 2: debug with debug_assert and debug_hh and print out debug for loops
+  [--clean | --rebuild]
+  -j <n>                with <n> is num-processes [default: 2/3 total cores]
+  -r|--release|<empty>  [default: (empty)]
+  -d 1                  [default: debug_assert]
+  -d 2                  [debug_hh] --> print debugs for Initialize() methods
+  -d 3                  [debug_in_loops] --> print debugs inside Loops
+  -d 4                  [debug_cpts] --> print compartmental information 
+
+  --gpu                 build/configure with GPU extensions
+  --arma                build/configure with Armadillo extensions
+
+  --release:            to build in release mode [default: debug mode]
+  --loglevel 1:         debug with debug_assert and debug_hh for initialize methods
+  --loglevel 2:         debug with debug_assert and debug_hh and print out debug for loops
+
+  --as-Nts:             build/configure as NTS
+  --as-Mgs:             build/configure as MGS
+  --as-both-Nts-Mgs:    build/configure as both NTS and MGS
   "
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
 	exit;
 }
 
-if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then 
+if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ "$1" == "" ]; then 
   print_help
 fi
 #}}}
@@ -69,8 +88,11 @@ fi
 PLATFORM="LINUX"
 CLEAN=""
 REBUILD=""
-REMAKE=""
 GSL_BUILD_MODE=""
+RELEASE=""
+GPU=""
+ARMA=""
+AS=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 if [ "$#" -gt 2 ] ; then
@@ -92,7 +114,7 @@ while getopts "$optspec" optchar; do
       NPROCS=1
       ;;
     r) # release
-      GSL_BUILD_MODE="-release"
+      RELEASE="-release"
       ;;
     d) # log options
       DEBUGOPTS+=("$OPTARG")
@@ -105,15 +127,18 @@ while getopts "$optspec" optchar; do
           rebuild)
               REBUILD="-rebuild"
               ;;
-          remake)
-              REMAKE="-remake"
-              ;;
           singlethread)
               NPROCS=1
               ;;
           release) # release
-            GSL_BUILD_MODE="-release"
-            ;;
+              RELEASE="-release"
+              ;;
+          gpu) # GPU extensions
+              GPU="-gpu"
+              ;;
+          arma) # Armadillo extensions
+              ARMA="-arma"
+              ;;
           loglevel=*)
             val=${OPTARG#*=}
             opt=${OPTARG%=$val}
@@ -130,6 +155,15 @@ while getopts "$optspec" optchar; do
                 ;;
             esac
             ;;
+          as-Nts) # as NTS
+              AS="-as-Nts"
+              ;;
+          as-Mgs) # as MGS
+              AS="-as-Mgs"
+              ;;
+          as-both-Nts-Mgs) # as both NTS and MGS
+              AS="-as-both-Nts-Mgs"
+              ;;
           someloglevel)
               val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
               echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
@@ -149,6 +183,7 @@ while getopts "$optspec" optchar; do
       echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
+    # TODO: remove?
 #    :)
 #      echo "Option -$OPTARG requires an argument." >&2
 #      exit 1
@@ -160,10 +195,7 @@ done
 PLATFORM_OPTS="--domainLib  "
 case $PLATFORM in
   LINUX )
-    PLATFORM_OPTS+="--with-mpi "
-	#if [ "$GSL_BUILD_MODE" == "-release" ]; then 
-     PLATFORM_OPTS+=" --nowarning_dynamiccast "
-    #fi
+    PLATFORM_OPTS+="--with-mpi --nowarning_dynamiccast"
     ;;
   SMP )
     PLATFORM_OPTS+=""
@@ -178,6 +210,14 @@ case $PLATFORM in
     PLATFORM_OPTS+=" --blueGeneQ "
     ;;
 esac
+
+if [ "$GPU" == "-gpu" ]; then
+    PLATFORM_OPTS+=" --with-gpu "
+fi
+
+if [ "$ARMA" == "-arma" ]; then
+    PLATFORM_OPTS+=" --with-arma "
+fi
 
 DEBUGMACROS="--debug_assert "
 for val in "${DEBUGOPTS[@]}"; do
@@ -199,11 +239,8 @@ for val in "${DEBUGOPTS[@]}"; do
 done
 #}}}
 
-
 if [ "$CLEAN" == "-clean" ] || \
-   ( [ "$REBUILD" == "-rebuild" ] || \
-   [ "$REMAKE" == "-remake"  \
-   ] ) ; then 
+   [ "$REBUILD" == "-rebuild" ]; then \
   if [ "$CLEAN" == "-clean" ] ; then
     echo "clean-up GSL"
     if [ -f Makefile ]; then 
@@ -213,35 +250,26 @@ if [ "$CLEAN" == "-clean" ] || \
       echo -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
     fi
   fi
-  if [ "$REBUILD" == "-rebuild" ] || \
-    [ "$REMAKE" == "-remake" ] ; then 
-    if [ "$REMAKE" != "-remake" ]; then
-      echo "Rebuild GSL"
-      if [ ! -f Makefile ]; then
-        createMakeFile
-      fi
-      make clean
-      make -j $NPROCS;
-    else
-      if [ -f Makefile ]; then 
-        rm Makefile
-      fi
-      # Generate Makefile
-      createMakeFile
-      echo "${cc_green}Recreate the Makefile only${cc_normal}"
+  if [ "$REBUILD" == "-rebuild" ]; then \
+    echo "Rebuild GSL"
+    if [ -f Makefile ]; then 
+      rm Makefile
     fi
+    # Generate Makefile and make!
+    createMakeFile
+    make clean
+    make -j $NPROCS;
   fi
 else
-
   if [ ! -f Makefile ]; then
     createMakeFile
   fi
-	make -j $NPROCS;
+  make -j $NPROCS;
 fi
 
 if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
   echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
-  exit; 
+  exit;
 elif [ "$CLEAN" == "-clean" ]; then 
   echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
   if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 

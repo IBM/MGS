@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2006-2015  All rights reserved
+// (C) Copyright IBM Corp. 2006-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -40,6 +40,11 @@ void ZhengSORNExcUnit::initialize(RNG& rng)
   for (iter=lateralInhInputs.begin(); iter!=end; ++iter) {
     if (sumI!=0 && iter->synapse) (iter->weight)/=sumI;	
   }
+  
+  if (normalizedThInput.input){
+    normalizedThInput.minVal = 0.0;
+    normalizedThInput.maxVal = 1.0;
+  }
 }
 
 void ZhengSORNExcUnit::update(RNG& rng) 
@@ -56,9 +61,16 @@ void ZhengSORNExcUnit::update(RNG& rng)
       if (*(iter->spike)) sumE += iter->weight;
     }
   }
-  // modulation from L2/3
-  if (modulatoryInput.input && ITER > SHD.Ach_time) 
+  // modulation from L2/3 or Thalamus
+  if (modulatoryInput.input && ITER > SHD.Ach_time) { 
     sumE *= (1-SHD.Ach*(1-*(modulatoryInput.input)))/(1.0-SHD.Ach/2.0);
+  } else {
+    if (normalizedThInput.input && ITER > SHD.Ach_time) {
+      if(*(normalizedThInput.input) < normalizedThInput.minVal) normalizedThInput.minVal = *(normalizedThInput.input);
+      if(*(normalizedThInput.input) > normalizedThInput.maxVal) normalizedThInput.maxVal = *(normalizedThInput.input);
+      sumE *= (1-SHD.Ach*(1-((*(normalizedThInput.input)-normalizedThInput.minVal)/normalizedThInput.maxVal)))/(1.0-SHD.Ach/2.0);
+    }
+  }
   // Sum of L5 Inh inputs
   //sumW = 0;
   double sumI = 0;

@@ -33,6 +33,7 @@ core
 *.std
 *.ASC
 *.DAT
+*.dat
 LensRootConfig.h
 .ropeproject
 gsl/extensions/interface/*
@@ -58,3 +59,7 @@ models/copyModules
 models/Extensions.mk
 gsl/Makefile
 gsl/Extensions.mk
+*.directory
+gsl/extensions/functor/all.mdf
+models/all.mdf
+*.png

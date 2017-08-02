@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -186,7 +186,7 @@ void RabinovichWinnerlessUnitDataCollector::getNodeIndices(const String& CG_dire
     {
       ShallowArray<unsigned,3,2> coords;
       CG_node->getNode()->getNodeCoords(coords);
-      assert(coords.size()==2);
+      assert(coords.size()==3);
       rows.push_back(coords[0]);
       cols.push_back(coords[1]);
     }

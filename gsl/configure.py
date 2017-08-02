@@ -58,7 +58,7 @@ AIX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^) $(shell grep -A 1 
 AIX_GNU_FINAL_TARGET_FLAG = "$(MAKE64) "
 AIX_XL_FINAL_TARGET_FLAG = AIX_GNU_FINAL_TARGET_FLAG + " " + XL_RUNTIME_TYPE_INFO_FLAG
 
-GNU_DEBUGGING_FLAG = "-ggdb"
+GNU_DEBUGGING_FLAG = "-ggdb -g"
 XL_DEBUGGING_FLAG = "-g"
 
 PROFILING_FLAGS = "-pg"
@@ -68,6 +68,7 @@ O2_OPTIMIZATION_FLAG = "-O2"
 O3_OPTIMIZATION_FLAG = "-O3"
 O4_OPTIMIZATION_FLAG = "-O4"
 O5_OPTIMIZATION_FLAG = "-O5"
+OG_OPTIMIZATION_FLAG = "-Og"
 
 DEBUG_ASSERT = "-DDEBUG_ASSERT"
 DEBUG_HH = "-DDEBUG_HH"
@@ -257,16 +258,21 @@ class Options:
         self.profile = DONTUSE  # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE  # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE  # USE, DONTUSE, UNDEF
-        self.optimization = "undefined"  # O1, O2, O3, undefined
+        self.optimization = "undefined"  # O, O2, O3, O4, O5, Og, undefined
         self.dynamicLoading = False  # True, False
         self.domainLibrary = False  # True, False
         self.pthreads = True  # True, False
         self.withMpi = False  # True, False
+        self.withGpu = False  # True, False
+        self.withArma = False  # True, False
         self.blueGeneL = False  # True, False
         self.blueGeneP = False  # True, False
         self.blueGeneQ = False  # True, False
         self.blueGene = False  # True, False
         self.rebuild = False  # True, False
+        self.asNts = False # True, False
+        self.asMgs = False # True, False
+        self.asBoth = False # True, False
         self.help = False  # True, False
 
         self.cmdOptions = [("32-bit", "32 bit compilation mode"),
@@ -283,6 +289,7 @@ class Options:
                            ("O3", "optimize at level 3"),
                            ("O4", "optimize at level 4"),
                            ("O5", "optimize at level 5"),
+                           ("Og", "optimize with debug information"),
                            ("debug", "compile with debugging flags"),
                            ("debug_assert", "compile with debugging flags for assert"),
                            ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
@@ -295,10 +302,15 @@ class Options:
                            ("domainLib", "link to domain specific library"),
                            ("disable-pthreads", "disable pthreads, there will be a single thread"),
                            ("with-mpi", "enables mpi"),
+                           ("with-gpu", "enables gpu extensions"),
+                           ("with-arma", "enables Armadillo extensions"),
                            ("blueGeneL", "configures for blueGeneL environment"),
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
                            ("rebuild", "rebuilds the project"),
+                           ("as-Nts", "configures as NTS"),
+                           ("as-Mgs", "configures as MGS"),
+                           ("as-both-Nts-Mgs", "configures as both NTS and MGS"),
                            ("help", "displays the available options")]
 
         self.parseOptions(argv)
@@ -356,27 +368,32 @@ class Options:
                     if self.optimization == "undefined":
                         self.optimization = "O"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O2":
                     if self.optimization == "undefined":
                         self.optimization = "O2"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O3":
                     if self.optimization == "undefined":
                         self.optimization = "O3"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O4":
                     if self.optimization == "undefined":
                         self.optimization = "O4"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O5":
                     if self.optimization == "undefined":
                         self.optimization = "O5"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
+                if o == "--Og":
+                    if self.optimization == "undefined":
+                        self.optimization = "Og"
+                    else:
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--debug":
                     self.debug = USE
                 if o == "--debug_assert":
@@ -403,6 +420,10 @@ class Options:
                     self.pthreads = False
                 if o == "--with-mpi":
                     self.withMpi = True
+                if o == "--with-gpu":
+                    self.withGpu = True
+                if o == "--with-arma":
+                    self.withArma = True
                 if o == "--silent":
                     self.silent = True
                 if o == "--verbose":
@@ -415,6 +436,12 @@ class Options:
                     self.blueGeneQ = True
                 if o == "--rebuild":
                     self.rebuild = True
+                if o == "--as-Nts":
+                    self.asNts = True
+                if o == "--as-Mgs":
+                    self.asMgs = True
+                if o == "--as-both-Nts-Mgs":
+                    self.asBoth = True
                 if o == "--help":
                     self.help = True
 
@@ -426,15 +453,15 @@ class Options:
             if self.extMode is True and self.rebuild is True:
                 raise FatalError("Do not rebuild with the ext-mode turned on.")
 
-            if self.debug == USE and self.optimization != "O":
+            if self.debug == USE and self.optimization != "Og":
                 printWarning("Debugging is turned on even though optimization is " +
-                             self.optimization + ".\nSetting optimization to --O")
-                self.optimization = "O"
+                             self.optimization + ".\nSetting optimization to --Og")
+                self.optimization = "Og"
 
-            if self.profile == USE and self.optimization != "O":
+            if self.profile == USE and self.optimization != "Og":
                 printWarning("Profiling is turned on even though optimization is " +
-                             self.optimization + ".\nSetting optimization to --O")
-                self.optimization = "O"
+                             self.optimization + ".\nSetting optimization to --Og")
+                self.optimization = "Og"
 
             # if self.profile == USE and self.debug != USE:
             #    printWarning("Profiling is turned on so debugging turned on by default.")
@@ -572,7 +599,7 @@ class BuildSetup:
         retStr += "\n"
 
         retStr += TAB + "Debugging: "
-        if self.options.debug is True:
+        if self.options.debug == USE:
             retStr += "On\n"
             if self.options.debug_assert is True:
                 retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
@@ -633,6 +660,27 @@ class BuildSetup:
 
         retStr += TAB + "MPI: "
         if self.options.withMpi is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
+        retStr += TAB + "GPU: "
+        if self.options.withGpu is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
+        retStr += TAB + "Armadillo: "
+        if self.options.withArma is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
+        retStr += TAB + "NTI: "
+        if (self.options.asNts is True) or (self.options.asBoth is True):
             retStr += "Used"
         else:
             retStr += "Not used"
@@ -707,7 +755,6 @@ class BuildSetup:
         createConfigHeader()
         touchExtensionsMk()
 
-        # self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
         if self.options.rebuild is True:
@@ -803,10 +850,17 @@ class BuildSetup:
 BIN_DIR?=./bin
 EXE_FILE=gslparser
 
+"""
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += \
+"""\
 NTI_DIR=../nti
 NTI_OBJ_DIR=$(NTI_DIR)/obj
 NTI_INC_DIR=$(NTI_DIR)/include
 
+"""
+        retStr += \
+"""\
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
 
@@ -822,6 +876,7 @@ STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
 """
+
 #DCA_OBJ := framework/dca/obj
 #DCA_SRC := framework/dca/src
 
@@ -861,6 +916,10 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
             retStr += "HAVE_MPI := 1\n"
+        if self.options.withGpu is True:
+            retStr += "HAVE_GPU := 1\n"
+        if self.options.withArma is True:
+            retStr += "HAVE_ARMA := 1\n"
         if self.options.silent is True:
             retStr += "SILENT_MODE := 1\n"
         if self.options.verbose is True:
@@ -943,11 +1002,13 @@ FUNCTOR_MODULES := BinomialDist \\
        	DstRefSumRsqrdInvWeightModifier \\
        	DstScaledContractedGaussianWeightModifier \\
        	DstScaledGaussianWeightModifier \\
-        ExecuteShell \\
-        GetNodeCoordFunctor \\
-       	IsoSampler \\
-       	IsoSamplerHybrid \\
         Exp \\
+        GetDstNodeCoordFunctor \\
+        GetNodeCoordFunctor \\
+        GetPostNodeCoordFunctor \\
+        GetPreNodeCoordFunctor \\
+        GetPreNodeIndex \\
+       	IsoSampler \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\
@@ -959,25 +1020,42 @@ FUNCTOR_MODULES := BinomialDist \\
       	ReversedDstRefGaussianWeightModifier \\
       	ReversedSrcRefGaussianWeightModifier \\
       	ReverseFunctor \\
+      	Round \\
+      	Scale \\
       	ServiceConnectorFunctor \\
       	SrcDimensionConstrainedSampler \\
       	SrcRefDistanceModifier \\
+      	SrcRefDoGWeightModifier \\
       	SrcRefGaussianWeightModifier \\
       	SrcRefPeakedWeightModifier \\
       	SrcRefSumRsqrdInvWeightModifier \\
       	SrcScaledContractedGaussianWeightModifier \\
       	SrcScaledGaussianWeightModifier \\
-        SrcRefDoGWeightModifier \\
-        Scale \\
         Threshold \\
+        ToroidalRadialSampler \\
+        UniformDiscreteDist \\
+"""
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += \
+"""\
       	TissueConnectorFunctor \\
       	TissueFunctor \\
       	TissueLayoutFunctor \\
+        TissueMGSifyFunctor \\
       	TissueNodeInitFunctor \\
       	TissueProbeFunctor \\
-	    TissueMGSifyFunctor \\
         Zipper \\
-        UniformDiscreteDist \\
+"""
+        if (self.options.asMgs is True) or (self.options.asBoth is True):
+            retStr += \
+"""\
+"""
+        if self.options.asBoth is True:
+            retStr += \
+"""\
+"""
+        retStr += \
+"""\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -1015,10 +1093,17 @@ MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 	       done)
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
+"""
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += \
+"""\
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
 TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
 NTI_OBJS := $(TEMP)
 
+"""
+        retStr += \
+"""\
 COMMON_DIR := ../common/obj
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 
@@ -1121,6 +1206,8 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " " + O4_OPTIMIZATION_FLAG
         if self.options.optimization == "O5":
             retStr += " " + O5_OPTIMIZATION_FLAG
+        if self.options.optimization == "Og":
+            retStr += " " + OG_OPTIMIZATION_FLAG
 
         if self.options.dynamicLoading == False:
             retStr += " -DDISABLE_DYNAMIC_LOADING"
@@ -1132,6 +1219,12 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " -DHAVE_MPI"
             if self.options.compiler == "gcc":
                retStr += " -DLAM_BUILDING"
+
+        if self.options.withGpu is True:
+            retStr += " -DHAVE_GPU"
+
+        if self.options.withArma is True:
+            retStr += " -DHAVE_ARMA"
 
         if self.options.profile == USE:
             retStr += " -DPROFILING"
@@ -1205,6 +1298,12 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.compiler == "gcc":
            if self.options.withMpi is True:
               retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
+
+        if self.options.withGpu is True:
+            retStr += " -lcudart -lcurand"
+
+        if self.options.withArma is True:
+            retStr += " -llapack -lopenblas -larmadillo"
 
         retStr += "\n"
         return retStr
@@ -1328,7 +1427,10 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+	$(CC) $(CFLAGS) """
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += "-I$(NTI_INC_DIR) "
+        retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
         return retStr
 
@@ -1425,7 +1527,10 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) "
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += "$(NTI_OBJS) "
+        retStr += "$(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
