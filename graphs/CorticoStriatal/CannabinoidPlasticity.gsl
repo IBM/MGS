@@ -20,7 +20,7 @@ RuntimePhases = { dataCollect, run1, run2, run3, run4, run5, run6, lastPhase };
 FinalPhases = { finalize };
 
 // ##### Common parameters #####
-#define DIRECTORY "./" 
+#define DIRECTORY "./"
 #define FILE_EXTENSION ".dat"
 #define DELTAT 0.0001
 #define XDIM 500
