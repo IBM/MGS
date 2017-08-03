@@ -76,7 +76,7 @@ void LinskerInfomaxUnitCompCategory::outputWeightsShared(RNG& rng)
 	  fsLN.close();
 	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
@@ -129,7 +129,7 @@ void LinskerInfomaxUnitCompCategory::invertQmatrixShared(RNG& rng) {
 	    ofsW.close(); 
 	  }
 	  ++n;
-	  MPI::COMM_WORLD.Barrier();
+	  MPI_Barrier(MPI_COMM_WORLD);
 	}
 	
 	// populate matrix row by row by accessing node objects

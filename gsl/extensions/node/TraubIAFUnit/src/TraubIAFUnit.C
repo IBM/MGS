@@ -80,7 +80,7 @@ void TraubIAFUnit::update(RNG& rng)
 
   // The above access voltage of other nodes, but below updates it
   // so wait for all other nodes to finish first.
-  MPI::COMM_WORLD.Barrier();
+  MPI_Barrier(MPI_COMM_WORLD);
   
   // Neuron
   double I_e = driver + s_total + etonic; // total input

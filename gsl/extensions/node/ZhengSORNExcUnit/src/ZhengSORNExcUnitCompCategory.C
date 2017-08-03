@@ -73,7 +73,7 @@ void ZhengSORNExcUnitCompCategory::outputWeightsShared(RNG& rng)
 	  fsI2E.close();
 	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
@@ -152,7 +152,7 @@ void ZhengSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 	  os.str("");
       	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }

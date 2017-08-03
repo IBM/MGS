@@ -34,6 +34,8 @@ NodeType FileDriverUnit(<
 			sf = 0.001,
 			inputFileName = "WT45_09_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
                         scale = 1.0
+                        op_random = 1,
+                        scale = 1.0 //3.0
                         >) {readInputFile->dataCollect, updateOutput->threshold};
 
 // Connectivity and weights
@@ -179,7 +181,7 @@ UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 50",
                                 ::Iteration, "!%", 50, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-                        ::Iteration, "==", 10000, 0, lastPhase); // in dt
+                        ::Iteration, "==", 30000, 0, lastPhase); // in dt
                      
 CTXWcollector.dataCollection() on iterTrigSampled;                     
 //CTXFcollector.dataCollection() on iterTrigSampled;

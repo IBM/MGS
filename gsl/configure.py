@@ -1244,7 +1244,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.blueGeneL is True:
             retStr += " -DUSING_BLUEGENEL"
             retStr += " -DMPICH_IGNORE_CXX_SEEK"
-        retStr += " -DMPICH_SKIP_MPICXX"
+            retStr += " -DMPICH_SKIP_MPICXX"
 
         if self.options.blueGeneP is True:
             retStr += " -DUSING_BLUEGENEP"

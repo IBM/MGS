@@ -60,7 +60,7 @@ void SpineIAFUnitCompCategory::initializeShared(RNG& rng)
                       weights_file->close();
                     }
                   ++r;
-                  MPI::COMM_WORLD.Barrier(); // wait node creating the stream to finish
+                  MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
                 }
             }
         }
@@ -94,7 +94,7 @@ void SpineIAFUnitCompCategory::outputWeightsShared(RNG& rng)
                 weights_file->close();
               }
               ++r;
-              MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
+              MPI_Barrier(MPI_COMM_WORLD); // wait for node writing to finish
             }
         }
     }

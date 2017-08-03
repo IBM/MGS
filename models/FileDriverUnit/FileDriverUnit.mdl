@@ -35,6 +35,8 @@ Node FileDriverUnit Implements OutputProducer
       double scale;         // How much to scale the input by
       double [] input;      // Data read from the file (size=n_channels)
 
+      bool op_random;       // whether channels are assigned to units randomly or sequentially
+      
       bool userWarned;      // Whether the user has been warned of EOF
       
       double deltaT;        // in s
