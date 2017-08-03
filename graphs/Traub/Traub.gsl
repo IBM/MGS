@@ -34,6 +34,8 @@ NodeType FileDriverUnit(<
 			sf = 0.001,
 			inputFileName = "WT45_09_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
                         scale = 1.0
+                        op_random = 1,
+                        scale = 1.0 //3.0
                         >) {readInputFile->dataCollect, updateOutput->threshold};
 
 // Connectivity and weights

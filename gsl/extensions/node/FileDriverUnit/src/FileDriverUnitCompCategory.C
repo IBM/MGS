@@ -46,7 +46,7 @@ void FileDriverUnitCompCategory::initializeShared(RNG& rng)
   *ifs >> SHD.total_time >> SHD.n_channels;
   SHD.input.increaseSizeTo(SHD.n_channels);
   line = new std::string();
-
+  
   // Section stuff, include if needed
   /*
   // set offset to beginning of section of observations if section is specified
