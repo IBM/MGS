@@ -55,7 +55,7 @@ void GatedThalamoCorticalUnitCompCategory::outputWeightsShared(RNG& rng)
 	  fsPH.close();
 	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
@@ -96,7 +96,7 @@ void GatedThalamoCorticalUnitCompCategory::inputWeightsShared(RNG& rng)
 	  }
 	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
@@ -147,7 +147,7 @@ void GatedThalamoCorticalUnitCompCategory::updateWhitMatrixShared(RNG& rng)
 	  ofs.close(); 
    	}
         ++n;
-	MPI::COMM_WORLD.Barrier(); 
+	MPI_Barrier(MPI_COMM_WORLD); 
       }
       // Read file, inverse sqrt of matrix, and set new weight back in node
       std::ifstream ifs("whit.bin", std::ifstream::in); // | std::ifstream::binary);

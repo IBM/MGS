@@ -102,7 +102,7 @@ void RabinovichWinnerlessUnitCompCategory::outputWeightsShared(RNG& rng)
     	  fsNS.close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
