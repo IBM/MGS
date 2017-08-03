@@ -49,7 +49,7 @@ void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
           indexs_file->close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier(); // wait node creating the stream to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
       }
       // Now take it in turn writing to the file, where rank 0 also clears the file.
       n=0;
@@ -64,7 +64,7 @@ void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
           indexs_file->close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait for node writing to finish
       }
     }
 }

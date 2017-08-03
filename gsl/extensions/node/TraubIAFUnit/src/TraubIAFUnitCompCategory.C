@@ -50,7 +50,7 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
           weight_file->close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier(); // wait node creating the stream to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
       }
       // Now take it in turn writing to the file, where rank 0 also clears the file.
       n=0;
@@ -65,7 +65,7 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
           weight_file->close();
         }
         ++n;    
-        MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait for node writing to finish
       }
     }
   if (SHD.op_saveGJs)
@@ -80,7 +80,7 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
           GJ_file->close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier(); // wait node creating the stream to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
       }
       // Now take it in turn writing to the file, where rank 0 also clears the file.
       n=0;
@@ -95,7 +95,7 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
           GJ_file->close();
         }
         ++n;    
-        MPI::COMM_WORLD.Barrier(); // wait for node writing to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait for node writing to finish
       }
     }
   if (SHD.op_savePSPs)
@@ -110,7 +110,7 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
           psp_file->close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier(); // wait for node creating the stream to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait for node creating the stream to finish
       }
     }
 }
@@ -132,7 +132,7 @@ void TraubIAFUnitCompCategory::outputPSPsShared(RNG& rng)
           psp_file->close();
         }
         ++n;    
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
 }

@@ -66,7 +66,7 @@ void MihalasNieburIAFUnitCompCategory::outputWeightsShared(RNG& rng)
           fs.close();
         }
         ++n;
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
