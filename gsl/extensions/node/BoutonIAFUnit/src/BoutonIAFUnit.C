@@ -44,9 +44,9 @@ void BoutonIAFUnit::update(RNG& rng)
 
 
   // ##### Cb1R #####
+  double ECB = (*(ECBinput[0].ECB) * ECBinput[0].weight); // only consider first one, weight is structural plasticity
   if (ECBinput.size() > 0)
-    Cb1Rrise += ((-Cb1Rrise + (*(ECBinput[0].ECB) * ECBinput[0].weight)) // only consider first one, weight is structural plasticity
-                 / SHD.Cb1RriseTau) * SHD.deltaT;
+    Cb1Rrise += ((-Cb1Rrise + ECB) / SHD.Cb1RriseTau) * SHD.deltaT;
   else
     Cb1Rrise = 0.0;
   Cb1Rcurrent += ((-Cb1Rcurrent + Cb1Rrise) / SHD.Cb1RfallTau) * SHD.deltaT;
@@ -57,7 +57,7 @@ void BoutonIAFUnit::update(RNG& rng)
   // Recovery glutamate
   availableGlutamate += ((maxGlutamate - availableGlutamate) / SHD.glutamateRecoverTau) * SHD.deltaT;
   // Inhibit the glutamate release with the activity of Cb1R
-  availableGlutamate -= SHD.glutamateAdaptRate * Cb1Rcurrent;
+  availableGlutamate -= SHD.glutamateAdaptRate * ECB;
   // Limit glutamate to >= 0
   if (availableGlutamate < 0.0)
     availableGlutamate = 0.0;
