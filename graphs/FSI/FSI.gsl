@@ -25,6 +25,12 @@ FinalPhases = { finalize };
 
 // ##### Driving input from cortex #####
 // Node parameters
+
+NodeType WaveDriverUnit(<
+                        deltaT = DELTA_T        // in s
+                        op_constant = 1
+                        >) {update->dataCollect} ;
+
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
@@ -38,6 +44,14 @@ EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
 BindName CTXw("weight", 1.0, "identifier", "driver");
 NdplInAttrInit ctxW(CTXw);
 
+// Initialize waves
+#define AMPMIN 1.0
+#define AMPMAX 1.5
+BindName initWave("Hz", Gaussian(3.0,0.1),
+                  "phase", Gaussian(0.0,6.28319), // in rad (360 = 6.28319)
+                  "amplitude", UniformDist(AMPMIN, AMPMAX),
+                  "wave", UniformDist(AMPMIN, AMPMAX));
+NdplNodeInit heterWave(initWave);
 
 
 // ##### FSI network #####
