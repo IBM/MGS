@@ -25,7 +25,6 @@ class CleftAstrocyteIAFUnitCompCategory : public CG_CleftAstrocyteIAFUnitCompCat
 {
    public:
       CleftAstrocyteIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void initializeShared(RNG& rng);
 };
 
 #endif

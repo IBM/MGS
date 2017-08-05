@@ -25,7 +25,6 @@ class PoissonIAFUnitCompCategory : public CG_PoissonIAFUnitCompCategory
 {
  public:
   PoissonIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-  void initializeShared(RNG& rng);
 };
 
 #endif

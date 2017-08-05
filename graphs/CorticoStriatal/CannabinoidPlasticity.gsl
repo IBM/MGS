@@ -15,7 +15,7 @@
 
 #include "../std/std.gsl"
 
-InitPhases = { initializeShared, initialize };
+InitPhases = { init1, init2, initialize };
 RuntimePhases = { dataCollect, run1, run2, run3, run4, run5, run6, lastPhase };
 FinalPhases = { finalize };
 
@@ -55,7 +55,7 @@ NodeType BoutonIAFUnit(<
                        sharedDirectory = DIRECTORY,
                        sharedFileExt = FILE_EXTENSION,
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
-                       >) { update->run2, copy->run2 };
+                       >) { initializeShared->init1, update->run2, copy->run2 };
 
 NodeType CleftAstrocyteIAFUnit(<
                                glutamateDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
@@ -85,7 +85,7 @@ NodeType SpineIAFUnit(<
                       op_perturbation = OP_PERT_AMPA,
                       perturbationT = OP_PERT_AMPA_T,
                       collectWeightsOn = {1,OP_PERT_AMPA_T} // when to save the spine weights
-                      >) { update->run4, outputWeightsShared->run5 };
+                      >) { initializeShared->init2, update->run4, outputWeightsShared->run5 };
 
 NodeType MihalasNieburSynapseIAFUnit(<
                                      b = 10.0,             // s^-1
