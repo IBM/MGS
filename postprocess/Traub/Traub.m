@@ -506,10 +506,10 @@ for vX=vX_range
             %% Animate visualization
             if (animatedVisualization)
                 %% LFP
-                if (postprocess_LFP_FSIsynapses)
+                if (postprocess_LFPs)
                     %% Adjust and normalize the data ready for plotting
-                    LFPs_FSIsynapses = mat2gray(LFPs_FSIsynapses);
-                    LFPs_FSIsynapses = 1-LFPs_FSIsynapses;
+                    LFPs_animate = mat2gray(LFPs);
+                    LFPs_animate = 1-LFPs_animate;
                     %% Animated LFP time series
                     fig = figure(16); clf;
                     fig.Color = 'black';
@@ -520,11 +520,13 @@ for vX=vX_range
                     vid.Quality = 100;
                     open(vid);
                     Nstr = 20;
-                    n = randi(XmaxStr-XminStr,1,Nstr) + XminStr;
-                    temp = zeros(10,size(LFPs_FSIsynapses,1));
+                    XmaxLFP=XdimLFP;
+                    XminLFP=0;
+                    n = randi(XmaxLFP-XminLFP,1,Nstr) + XminLFP;
+                    temp = zeros(10,size(LFPs_animate,1));
                     % Get data
                     for i=1:Nstr
-                       temp(i,:) = LFPs_FSIsynapses(:,n(i),n(i),n(i));
+                       temp(i,:) = LFPs_animate(:,n(i),n(i),n(i));
                     end
                     % Normalize
                     temp = temp / max(temp(:));
@@ -544,6 +546,12 @@ for vX=vX_range
                     close(vid);
                     clear fig vid frameRate N n temp frame;
                     %% Animated 3D LFP
+                    XmaxLFP=XdimLFP;
+                    XminLFP=1;
+                    YmaxLFP=YdimLFP;
+                    YminLFP=1;
+                    ZmaxLFP=ZdimLFP;
+                    ZminLFP=1;
                     fig = figure(17); clf;
                     fig.Color = 'black';
                     fig.Position = [50 50 1280 720];%1920 1080];
@@ -551,8 +559,8 @@ for vX=vX_range
                     vid.FrameRate = 10;
                     vid.Quality = 100;
                     open(vid);
-                    sli = 1:1:27;
-                    i = linspace(1,27,5);%[1,25,50,75,27];
+                    sli = 0:1:5;%1:1:27;
+                    i = linspace(0,4,5);%1,27,5);%[1,25,50,75,27];
                     [X, Y] = meshgrid(i,i);                         
                     x = [X(:) X(:)]';                                
                     y = [Y(:) Y(:)]';
@@ -562,7 +570,7 @@ for vX=vX_range
                     for t=Tmin+1:Tmax/sf
                         clf; hold on;
                         % Slices
-                        h=slice(permute(LFPs_FSIsynapses(t,XminStr:XmaxStr,YminStr:YmaxStr,ZminStr:ZmaxStr),[2,3,4,1]),sli,sli,sli);
+                        h=slice(permute(LFPs_animate(t,XminLFP:XmaxLFP,YminLFP:YmaxLFP,ZminLFP:ZmaxLFP),[2,3,4,1]),sli,sli,sli);
                         for i=1:numel(sli)*3
                             cdata = get(h(i),'cdata');
                             set(h(i),'EdgeColor','none',...
@@ -570,7 +578,7 @@ for vX=vX_range
                                 'AlphaDataMappin','none','FaceAlpha','flat');
                         end
                         ax = gca; ax.XTick = []; ax.YTick = []; ax.ZTick = []; axis off;
-                        title(['LFP (time=',num2str(t/1000,'%01.3f'),'s)'],'FontSize',20);
+                        title(['LFP (time=',num2str(t/sf,'%01.3f'),'s)'],'FontSize',20);
                         % Grid
                         view(3);
                         plot3(x,y,z,col); plot3(y,z,x,col); plot3(z,x,y,col);
