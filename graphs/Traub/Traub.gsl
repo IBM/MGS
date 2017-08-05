@@ -14,8 +14,8 @@
 // =================================================================
 
 #include "../std/std.gsl"
-InitPhases = { initializeShared, initialize };
-RuntimePhases = { dataCollect, update, threshold, lastPhase };
+InitPhases = { init1, init2, initialize };
+RuntimePhases = { dataCollect, run1, run2, lastPhase };
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
@@ -36,7 +36,7 @@ NodeType FileDriverUnit(<
                         scale = 1.0
                         op_random = 1,
                         scale = 1.0 //3.0
-                        >) {readInputFile->dataCollect, updateOutput->threshold};
+                        >) {initializeShared->init1, readInputFile->dataCollect, updateOutput->run2};
 
 // Connectivity and weights
 EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
@@ -76,7 +76,7 @@ NodeType TraubIAFUnit(<
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 1,
                       op_saveGJs = 1
-                      >) {outputPSPsShared->dataCollect} ;
+                      >) {initializShared->init2, outputPSPsShared->dataCollect, update->run1, threshold->run2};
 
 // Synaptic connectivity
 list<float> uniformDensity = {1.0};

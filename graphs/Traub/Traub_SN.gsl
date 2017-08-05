@@ -14,7 +14,7 @@
 // =================================================================
 
 #include "../std/std.gsl"
-InitPhases = { initializeShared, initialize };
+InitPhases = { init1, init2, initialize };
 RuntimePhases = { dataCollect, update, threshold, outputPSPsShared,
                   lastPhase };
 FinalPhases = { finalize };
@@ -31,7 +31,7 @@ NodeType FileDriverUnit(<
 			sf = 0.001,
 			section = 1,
 			inputFileName = "/home/naze/Documents/Rebec_gamma_analysis/export/WT39_07_Delta_QuietRest_Str_zm_cutNeg_cwn.txt"
-                        >) {readInputFileShared->outputPSPsShared};
+                        >) {initializeShared->init1, readInputFileShared->outputPSPsShared};
 
 // Connectivity and weights
 //EachSrcPropDst ctx_2_fsi(RadialSampler(5.66.0, 4.0)); // radius of 5.66 reaches a square (plus potentiall 1)
@@ -79,7 +79,7 @@ NodeType TraubIAFUnit(<
                       sharedDirectory = DIRECTORY,
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 1
-                      >);
+                      >) {initializeShared->init2};
 
 // Synaptic connectivity
 list<float> uniformDensity = {1.0};

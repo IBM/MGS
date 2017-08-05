@@ -56,8 +56,6 @@ Node WaveDriverUnit Implements OutputProducer
       bool op_modulatePhaseWeight;
       bool op_modulateAmplitude;
       bool op_modulateAmplitudeWeight;      
-     
-      InitPhase initializeShared;
     }
 
   InAttrPSet 

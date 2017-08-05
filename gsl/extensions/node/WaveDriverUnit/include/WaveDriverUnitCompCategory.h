@@ -25,7 +25,6 @@ class WaveDriverUnitCompCategory : public CG_WaveDriverUnitCompCategory
 {
  public:
   WaveDriverUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-  void initializeShared(RNG& rng);
 };
 
 #endif
