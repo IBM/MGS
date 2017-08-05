@@ -36,10 +36,10 @@ void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
     if (systemRet == -1)
       throw;
   } catch(...) {};
-  int rank=getSimulation().getRank();
-  int n=0;
   if (SHD.op_saveIndexs)
     {
+      int rank=getSimulation().getRank();
+      int n=0;
       // Take it in turn opening and creating the file to create the stream on each node
       while (n<getSimulation().getNumProcesses()) {
         if (n==rank) {
@@ -49,9 +49,9 @@ void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
           indexs_file->close();
         }
         ++n;
-        MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
+        MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish        
       }
-      // Now take it in turn writing to the file, where rank 0 also clears the file.
+      // Now take it in turn writing to the file
       n=0;
       while (n<getSimulation().getNumProcesses()) {
         if (n==rank) {

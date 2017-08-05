@@ -29,8 +29,6 @@ Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer, ECBIAFProducer
       double glutamateDecayTau;        // glutamate decay tau (i.e. glutamate reuptake via GLT-1) in s
 
       double deltaT;                   // in s
-
-      InitPhase initializeShared;
     }
 
   InAttrPSet

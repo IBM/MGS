@@ -26,12 +26,13 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
 
   double mGluR5rise;                       // rise current of mGluR5
   double mGluR5current;                    // fall current of mGluR5
-
-  SpikeInput [] postSpikeInput;            // post-synaptic back propagating spike
+  
   double Carise;                           // rise of Ca2+
   double Ca;                               // fall of Ca2+
 
   double ECB;                              // endogenous cannabinoids
+
+  SpikeInput [] postSpikeInput;            // post-synaptic back propagating spike
 
   Shared
     {
