@@ -78,7 +78,7 @@ NodeType TraubIAFUnit(<
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 1,
                       op_saveGJs = 1
-                      >) {initializShared->init2, outputPSPsShared->dataCollect, update->run1, threshold->run2};
+                      >) {initializeShared->init2, outputPSPsShared->dataCollect, update->run1, threshold->run2};
 
 // Synaptic connectivity
 list<float> uniformDensity = {1.0};
