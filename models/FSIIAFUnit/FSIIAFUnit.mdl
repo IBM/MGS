@@ -101,8 +101,13 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
 
    InitPhase initialize();
 
+<<<<<<< HEAD:models/FSIIAFUnit/FSIIAFUnit.mdl
    RuntimePhase updateInput(synapses_total, drive_total, IPSC_total, GJ_total);
    RuntimePhase updateV(Theta, I_sum);
+=======
+   RuntimePhase updateInput(LFP_synapses);
+   RuntimePhase updateV(V, Theta);
+>>>>>>> Split Traub update() in to three stages:models/TraubIAFUnit/TraubIAFUnit.mdl
    RuntimePhase threshold(spike, V_spike);
    
    SpikeProducer.spike << &spike;

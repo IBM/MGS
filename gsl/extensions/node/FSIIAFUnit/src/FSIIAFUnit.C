@@ -92,6 +92,7 @@ void FSIIAFUnit::updateInput(RNG& rng)
   for (iterGJ=gjInputs.begin(); iterGJ!=endGJ; ++iterGJ) {
     etonic += (*(iterGJ->voltage)-V)*iterGJ->conductance;
   }
+<<<<<<< HEAD:gsl/extensions/node/FSIIAFUnit/src/FSIIAFUnit.C
 
   I_e = driver + s_total + etonic; // total input
   synapses_total = driver + s_total; // total synaptic input - excitatory drive and lateral inhibition
@@ -106,6 +107,15 @@ void FSIIAFUnit::updateInput(RNG& rng)
 void FSIIAFUnit::updateV(RNG& rng)
 {
   // Neuron
+=======
+  
+  I_e = driver + s_total + etonic; // total input
+  LFP_synapses = s_total;
+}
+
+void TraubIAFUnit::updateV(RNG& rng)
+{  // Neuron
+>>>>>>> Split Traub update() in to three stages:gsl/extensions/node/TraubIAFUnit/src/TraubIAFUnit.C
   int nI=I.size();
   I_sum = 0.0;
   int ip=0;
