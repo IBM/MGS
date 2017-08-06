@@ -24,7 +24,6 @@ class FileDriverUnit : public CG_FileDriverUnit
 {
  public:
   void initialize(RNG& rng);
-  void updateOutput(RNG& rng);
   virtual void setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FileDriverUnitInAttrPSet* CG_inAttrPset, CG_FileDriverUnitOutAttrPSet* CG_outAttrPset);
   virtual ~FileDriverUnit();
 };
