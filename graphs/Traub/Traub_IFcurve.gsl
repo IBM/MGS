@@ -15,8 +15,7 @@
 
 #include "../std/std.gsl"
 InitPhases = { initializeShared, initialize };
-RuntimePhases = { dataCollect, update, threshold, outputPSPsShared,
-                  lastPhase };
+RuntimePhases = { dataCollect, run1, run2, lastPhase };
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
@@ -28,7 +27,7 @@ FinalPhases = { finalize };
 NodeType WaveDriverUnit(<
                         deltaT = 0.0001,       // in s
                         op_constant = 1
-                        >);
+                        >) {update->run1};
 
 // Initialize neurons
 BindName initN("V", UniformDist(-0.07,-0.06)); // Uniform from reset to thresh
@@ -63,7 +62,7 @@ NodeType TraubIAFUnit(<
                       sharedDirectory = DIRECTORY,
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 0
-                      >);
+                      >) {outputPSPShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
 
 // Initialize waves
 BindName initWave("wave", UniformDist(0.0, 0.2));//1.0));//6.0));

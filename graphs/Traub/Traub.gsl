@@ -26,18 +26,17 @@ FinalPhases = { finalize };
 // ##### Driving wave input from cortex #####
 // Node parameters
 NodeType WaveDriverUnit(<
-                        deltaT = DELTA_T        // in s
-                        op_constant = 1
-                        >) {update->dataCollect} ;
+                        deltaT = DELTA_T,       // in s
+                        op_constant = 0
+                        >) {update->run1} ;
 
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
-			inputFileName = "WT45_09_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
-                        scale = 1.0
+			inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
                         op_random = 1,
-                        scale = 1.0 //3.0
-                        >) {initializeShared->init1, readInputFile->dataCollect, updateOutput->run2};
+                        scale = 0.8 //3.0
+                        >) {initializeShared->init1, readInputFile->run1};
 
 // Connectivity and weights
 EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
@@ -78,7 +77,7 @@ NodeType TraubIAFUnit(<
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 1,
                       op_saveGJs = 1
-                      >) {initializeShared->init2, outputPSPsShared->dataCollect, update->run1, threshold->run2};
+                      >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
 
 // Synaptic connectivity
 list<float> uniformDensity = {1.0};
