@@ -5,7 +5,8 @@
 ##########################
 # ### Parameters ###
 ##########################
-numMPI=8
+numMPI=2
+numThreads=8
 seed=10000
 trials=$(seq 0 1 0)
 changeFile="Traub.gsl"
@@ -17,8 +18,8 @@ additionalVariables_2=ERROR_is_2D
 additionalVariables_3=ERROR_is_2D
 
 # If 2D search - use ERROR_is_1D when is 1D or ERROR_not_in_use when not in use.
-variables_X=`echo $(seq 0.0 0.5 5.0)`
-variables_Y=`echo $(seq 0.0 10.0 100.0)`
+variables_X=`echo $(seq 0.00 0.25 2.50)`
+variables_Y=`echo $(seq 0.0 5.0 50.0)`
 additionalVariables_1_X=(ERROR_not_in_use) # These should be of same size as above. E.g. (`echo $(seq 0.0 0.08334 0.834)`)
 additionalVariables_2_X=(ERROR_not_in_use)
 additionalVariables_3_X=(ERROR_not_in_use)
@@ -117,7 +118,7 @@ if [ "$1" = "1" ]; then
                     esac
                 fi
                 # Run the simulation
-                mpiexec -n $numMPI ../../gsl/bin/gslparser -f $changeFile.run -s $seed
+                mpiexec -n $numMPI ../../gsl/bin/gslparser -f $changeFile.run -t $numThreads -s $seed
                 # Remove the temporary file
                 rm $changeFile.run;
                 # Increment the seed
@@ -203,7 +204,7 @@ if [ "$1" = "1" ]; then
                         esac                        
                     fi
                     # Run the simulation
-                    mpiexec -n $numMPI ../../gsl/bin/gslparser -f $changeFile.run -s $seed
+                    mpiexec -n $numMPI ../../gsl/bin/gslparser -f $changeFile.run -t $numThreads -s $seed
                     # Remove the temporary file
                     rm $changeFile.run;
                     # Increment the seed
@@ -249,7 +250,7 @@ if [ "$1" = "2" ]; then
 	done
         # Index them together with eacha trial getting a different index image
         for t in $trials; do
-            montage -density 640x480 -geometry 640x480 `ls -v index/*.png.$t` -tile 11x11 $file""_Index_t$t.png
+            montage -density 640x480 -geometry 640x480 `ls -v index/*.png.$t` -tile 24x30 $file""_Index_t$t.png
         done
         # Remove these temporary files
         rm -r index
