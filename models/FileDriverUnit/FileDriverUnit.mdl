@@ -20,7 +20,7 @@
 Node FileDriverUnit Implements OutputProducer
 {
   int channel;              // Channel index from this specific unit
-  double output;            // Output for this specific unit
+  double* output;           // Output for this specific unit
 
   // Parameters set by the user
   Shared
@@ -51,9 +51,8 @@ Node FileDriverUnit Implements OutputProducer
     }
   
   InitPhase initialize();
-  RuntimePhase updateOutput(output);
 
-  OutputProducer.output << &output;   
+  OutputProducer.output << output;   
   
   UserFunction setIndices;
 }
