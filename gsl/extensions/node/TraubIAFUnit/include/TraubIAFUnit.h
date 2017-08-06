@@ -25,7 +25,8 @@ class TraubIAFUnit : public CG_TraubIAFUnit
 {
    public:
       void initialize(RNG& rng);
-      void update(RNG& rng);
+      void updateInput(RNG& rng);
+      void updateV(RNG& rng);
       void threshold(RNG& rng);
       void outputPSPs(std::ofstream& fs);
       void outputWeights(std::ofstream& fs);

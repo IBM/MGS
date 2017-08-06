@@ -49,7 +49,7 @@ void TraubIAFUnit::initialize(RNG& rng)
   ctxInputWeight = 1.0 / (double) ctxInputs.size();  
 }
 
-void TraubIAFUnit::update(RNG& rng) 
+void TraubIAFUnit::updateInput(RNG& rng) 
 {
   // Cortex input
   double driver = 0.0;
@@ -70,20 +70,20 @@ void TraubIAFUnit::update(RNG& rng)
          * SHD.deltaT);
       s_total += iterIPSP->s_f * iterIPSP->weight;
     }
-
+  
   // Gap junctions
   ShallowArray<GJInput>::iterator iterGJ, endGJ=gjInputs.end();
   double etonic=0.;
   for (iterGJ=gjInputs.begin(); iterGJ!=endGJ; ++iterGJ) {
     etonic += (*(iterGJ->voltage)-V)*iterGJ->conductance;
   }
-
-  // The above access voltage of other nodes, but below updates it
-  // so wait for all other nodes to finish first.
-  MPI_Barrier(MPI_COMM_WORLD);
   
-  // Neuron
-  double I_e = driver + s_total + etonic; // total input
+  I_e = driver + s_total + etonic; // total input
+  LFP_synapses = s_total;
+}
+
+void TraubIAFUnit::updateV(RNG& rng)
+{  // Neuron
   int nI=I.size();
   double I_sum = 0.0;
   int ip=0;
@@ -112,9 +112,6 @@ void TraubIAFUnit::update(RNG& rng)
     I[n]=I_p[ip][n];
   V=V_p[ip];
   Theta=Theta_p[ip];
-
-  // LFP
-  LFP_synapses=s_total;
 }
 
 void TraubIAFUnit::threshold(RNG& rng) 
