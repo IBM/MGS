@@ -15,7 +15,6 @@
 
 #include "../std/std.gsl"
 InitPhases = { init1, init2, initialize };
-
 RuntimePhases = { dataCollect, run1, run2, lastPhase };
 FinalPhases = { finalize };
 
@@ -80,7 +79,6 @@ NodeType FSIIAFUnit(<
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 1
                       >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
-
 
 // Synaptic connectivity
 list<float> uniformDensity = {1.0};

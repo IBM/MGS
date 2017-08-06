@@ -27,9 +27,9 @@ FinalPhases = { finalize };
 // Node parameters
 
 NodeType WaveDriverUnit(<
-                        deltaT = DELTA_T        // in s
-                        op_constant = 1
-                        >) {update->dataCollect} ;
+                        deltaT = DELTA_T,       // in s
+                        op_constant = 0
+                        >) {update->run1} ;
 
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
