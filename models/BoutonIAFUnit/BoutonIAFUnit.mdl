@@ -18,10 +18,9 @@
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProducer,
-  Cb1RIAFProducer, SpikeProducer
+  Cb1RIAFProducer
 {
   SpikeInput [] spikeInput;    // input of spike
-  bool spike;                  // local copy of input spike for spine to access
   double glutamate;            // current output of glutamate
   double availableGlutamate;   // amount of glutamate available to be released
   double maxGlutamate;         // maximum amount of glutamate to recovery to
@@ -58,11 +57,9 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
   InitPhase initialize();
 
   RuntimePhase update(glutamate, availableGlutamate, Cb1Rcurrent);
-  RuntimePhase copy(spike);
 
   GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
   AvailableGlutamateIAFProducer.availableGlutamate << &availableGlutamate; // available glutamate
-  SpikeProducer.spike << &spike; // local copy of input spike for spine to access
   Cb1RIAFProducer.Cb1Rcurrent << &Cb1Rcurrent; // Cb1R current
 
   UserFunction setSpikeIndices;

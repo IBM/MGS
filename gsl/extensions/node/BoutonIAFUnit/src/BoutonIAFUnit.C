@@ -26,7 +26,6 @@ void BoutonIAFUnit::initialize(RNG& rng)
 {
   //std::cout << spikeInput.size() << std::endl;
   // Default starting values
-  spike = 0;
   glutamate = 0.0;
   Cb1Rrise = 0.0;
   Cb1Rcurrent = 0.0;
@@ -61,12 +60,6 @@ void BoutonIAFUnit::update(RNG& rng)
   // Limit glutamate to >= 0
   if (availableGlutamate < 0.0)
     availableGlutamate = 0.0;
-}
-
-void BoutonIAFUnit::copy(RNG& rng)
-{
-  if (spikeInput.size() > 0)
-    spike = *(spikeInput[0].spike); // only consider first one
 }
 
 void BoutonIAFUnit::outputIndexs(std::ofstream& fs)

@@ -16,7 +16,7 @@
 #include "../std/std.gsl"
 
 InitPhases = { init1, init2, initialize };
-RuntimePhases = { dataCollect, run1, run2, run3, run4, run5, run6, lastPhase };
+RuntimePhases = { dataCollect, run1, run2, lastPhase };
 FinalPhases = { finalize };
 
 // ##### Common parameters #####
@@ -44,7 +44,7 @@ NodeType PoissonIAFUnit(<
                         deltaT = DELTAT, // in s
                         op_perturbation = OP_PERT_HZ,
                         perturbationT = OP_PERT_HZ_T
-                        >) { update->run1 };
+                        >) {update->run1 };
 
 NodeType BoutonIAFUnit(<
                        glutamateAdaptRate = 0.00004,   // in arb. unit; free parameter
@@ -55,12 +55,12 @@ NodeType BoutonIAFUnit(<
                        sharedDirectory = DIRECTORY,
                        sharedFileExt = FILE_EXTENSION,
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
-                       >) { initializeShared->init1, update->run2, copy->run2 };
+                       >) {initializeShared->init1, update->run2};
 
 NodeType CleftAstrocyteIAFUnit(<
                                glutamateDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
                                deltaT = DELTAT            // in s
-                               >) { update->run3 };
+                               >) { update->run1};
 
 #define ECBPRODC 10.0
 #define ECBPRODD 0.5
@@ -85,7 +85,7 @@ NodeType SpineIAFUnit(<
                       op_perturbation = OP_PERT_AMPA,
                       perturbationT = OP_PERT_AMPA_T,
                       collectWeightsOn = {1,OP_PERT_AMPA_T} // when to save the spine weights
-                      >) { initializeShared->init2, update->run4, outputWeightsShared->run5 };
+                      >) {initializeShared->init2, update->run2, outputWeightsShared->dataCollect};
 
 NodeType MihalasNieburSynapseIAFUnit(<
                                      b = 10.0,             // s^-1
@@ -103,7 +103,7 @@ NodeType MihalasNieburSynapseIAFUnit(<
                                      spike_cntMax = 0.001, // s
                                      np = 0,
                                      V_max = 0.04
-                                     >) { update->run5, threshold->run6 };
+                                     >) {update->run1, threshold->run2};
 
 
 
