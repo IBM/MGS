@@ -82,7 +82,7 @@ void CurrentPulseGenerator::initialize(RNG& rng)
   else 
   {
     std::cerr << typeid(*this).name() << " do not support this \"" << pattern << "\" protocol\n";
-    std::err << "Use either [periodic_train, periodic, poisson, dualexp, ramp]" << std::endl;
+    std::cerr << "Use either [periodic_train, periodic, poisson, dualexp, ramp]" << std::endl;
     assert(0);
   }
 
@@ -181,18 +181,20 @@ void CurrentPulseGenerator::update_DualExpProtocol(RNG& rng, float currentTime)
   }
   else if (currentTime >= nextPulse && currentTime <= last)
   {  // having pulse
-    float dt = currentTime - nextPulse;
-    I = peakInc * (1 - exp(-dt / riseTime)) * (exp(-dt / decayTime));
+    float time_offset = currentTime - nextPulse;
+    I = peakInc * (1 - exp(-time_offset / riseTime)) * (exp(-time_offset / decayTime));
   }
 }
 /*
  * No repeat:
  *     _(delay)_0--(increase linearly)------------maxRamp
  *              |                                 |
- *            time_start                        total_ramp_time
+ *            time_start                        time_ramp_end
  *  delay = time until time_start
- *  peak = maxRamp
- *  duration = total_ramp_time
+ *  peak = maxRamp (Iend ~ peak ~ peakInc)
+ *  duration = total_ramp_time = time_ramp_end - time_start
+ *  ASSUMPTION: Istart = 0 
+ *              no repetition (i.e. single cycle), i.e. last=delay+duration
  */
 void CurrentPulseGenerator::update_RampProtocol(RNG& rng, float currentTime)
 {
@@ -205,8 +207,8 @@ void CurrentPulseGenerator::update_RampProtocol(RNG& rng, float currentTime)
   }
   else if (currentTime >= nextPulse && currentTime <= last)
   {  // having pulse
-    float dt = currentTime - nextPulse;
-    I = peakInc * dt / duration;
+    float time_offset = currentTime - nextPulse;
+    I = peakInc * time_offset / duration;
   }
 }
 

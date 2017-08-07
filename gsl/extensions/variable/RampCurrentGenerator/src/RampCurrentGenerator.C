@@ -22,8 +22,14 @@ void RampCurrentGenerator::initialize(RNG& rng)
     assert(0);
   }
 #endif
-  assert(deltaT);
+  if (not deltaT)
+  {
+    std::cerr << typeid(*this).name() << " needs time-step connected\n";
+    assert(deltaT);
+  }
   first_enter_pulse = true;
+  I = 0.0; // [pA]
+  peakInc = Iend;
   if (pattern == "ramp")
   {
     tstart = delay;
@@ -42,6 +48,12 @@ void RampCurrentGenerator::initialize(RNG& rng)
     assert(duration < period);
   }
   assert(tstart < tend);
+  if (tstart >= tend)
+  {
+    std::cerr << "The start of the stimulus 'tstart' should not be greater than tend"
+                 "\n";
+    assert(tstart < tend);
+  }
   if (write_to_file == 1)
   {
     std::ostringstream os;
@@ -63,7 +75,6 @@ void RampCurrentGenerator::dataCollection(float currentTime)
 
 void RampCurrentGenerator::update(RNG& rng) 
 {
-  I = 0.0;
   float currentTime = (getSimulation().getIteration() * (*deltaT));
   (*this.*fpt_update)(rng, currentTime);
   if (write_to_file and currentTime > time_write_data)
@@ -73,30 +84,40 @@ void RampCurrentGenerator::update(RNG& rng)
   }
 }
 
+/*
+ * No repeat:
+ *     _(delay)_Istart--(increase linearly)------------Iend
+ *              |                                 |
+ *            time_start                        time_ramp_end
+ *  delay = time until time_start
+ *  peak = maxRamp (Iend)
+ *  duration = total_ramp_time = time_ramp_end - time_start
+ *  NOTE: Generic version of CurrentPulseGenerator("ramp")
+ *     - Istart, Iend
+ *     - repetition is allowed, with 'inc' increase in Iend after each cycle
+ */
 void RampCurrentGenerator::update_RampProtocol(RNG& rng, float currentTime)
 {
-  if (currentTime >= (nextPulse + duration) && currentTime <= last)
-  {//no pulse
-    I = 0.0;
-    first_enter_pulse = true;
-    //peakInc += inc;
-    if (pattern == "ramp")
+  if (currentTime <= last)
+  {
+    if (currentTime >= (nextPulse + duration) )
+    {//no pulse
+      I = 0.0;
+      first_enter_pulse = true;
+      peakInc += inc;
       nextPulse += period;
-
-  }
-  else if (currentTime >= nextPulse && currentTime <= last)
-  {//having pulse
-    //float dt = currentTime - nextPulse;
-    if (first_enter_pulse)
-    {
-      tstart = nextPulse;
-      tend = tstart+duration;
-      first_enter_pulse = false;
     }
-    float time_ofset = currentTime - tstart;
-    if ((pattern == "ramp"))
-    {
-      I = Istart + Iend * (time_ofset/(tend-tstart));
+    else if (currentTime >= nextPulse )
+    {//having pulse
+      //float dt = currentTime - nextPulse;
+      if (first_enter_pulse)
+      {
+        tstart = nextPulse;
+        tend = tstart+duration;
+        first_enter_pulse = false;
+      }
+      float time_offset = currentTime - tstart;
+      I = Istart + (peakInc-Istart) * (time_offset/(duration));
     }
   }
 }

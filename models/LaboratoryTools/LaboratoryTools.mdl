@@ -18,17 +18,24 @@ Struct TissueSite {
 //{{{
 Variable VoltageClamp Implements CurrentProducer
 {
-  //{{{
+  //{{{HOWTOUSE: choose a voltage-clamp technique using 'type'
+  //  1.  set 'command' or 'waveform' voltage data by triggering either 'setCommand()' or 'startWaveform()'
+  //  2.  turn on/off by triggering 'toggle()'
+  //}}}
   //{{{ Data
-  dyn_var_t command; 	// Declare command voltage
-  dyn_var_t [] waveform;// Declare an array for the waveform
-  int waveformIdx;	// Declare index of the waveform array
-  dyn_var_t []* V; // array of pointers for the voltage measured at the cell that is input to the tool
-  int idx;  // user need to pass-in the idx (otherwise, use idx=0)
+  //{{{ reference data
+  dyn_var_t []* V; // array of pointers (an element represents 1 compartment in a branch) for the voltage measured at the cell that is input to the tool
+  //NOTE: idx is not user-definable so it should be internal
+  int idx;  // compartment-index where the voltage is clamped - user need to pass-in the idx (otherwise, use idx=0)
   dyn_var_t* deltaT;
+  DimensionStruct* [] dimensions; //points from different compartments on different branches
+  // }}}
+  dyn_var_t command; 	// Declare command voltage
+  dyn_var_t [] waveform;// Declare an array for the waveform (each index map to a single time-step clamped voltage)
+  //int waveformIdx;	// Declare index of the waveform array
   int type; // type = 1 or 2 is supported [1 = emulate inject current compensation; 2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm]
   //{{{type = 1
-  dyn_var_t Igen;	// Declare the feedback current applied to hold voltage constant
+  dyn_var_t Igen;	// (pA) current injection - Declare the feedback current applied to hold voltage constant
   dyn_var_t Cm;		// Declare membrane capacitance
   dyn_var_t beta; // headstage gain
   dyn_var_t* surfaceArea;
@@ -36,13 +43,12 @@ Variable VoltageClamp Implements CurrentProducer
   //{{{ type = 2
   float gainTime ; // [ms] - typically 0.05 ms or 50 microseconds is the type to reach 99% value of Vc in experiment
   //}}}
-  string fileName; 
-  DimensionStruct* [] dimensions; //points from different compartments on different branches
+  string fileName;  // [type=1,2][output] = hold time - Igen  
   //}}}
 
   TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
   TriggeredFunction setCommand;					// a single command like a step
-  TriggeredFunction toggle;
+  TriggeredFunction toggle; // switch on/off the Vc -- default is OFF
 
   InitPhase initialize;
   RuntimePhase updateI;
@@ -54,6 +60,7 @@ Variable VoltageClamp Implements CurrentProducer
     string identifier;
   }
 
+  //{{{Input Connections
   //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
   //  VoltageArrayProducer.voltageArray >> V;
   //  ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
@@ -79,6 +86,7 @@ Variable VoltageClamp Implements CurrentProducer
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;
   }
+  //}}}
   //}}}
 }
 
@@ -106,7 +114,7 @@ Variable CurrentPulseGenerator Implements CurrentProducer
 {
   //{{{
   //{{{Data
-  dyn_var_t I; // [pA]
+  //{{{user-input
   dyn_var_t peak;
   //{{{for white-noise
   dyn_var_t mean; 
@@ -130,7 +138,8 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   int num_pulses_per_train;
   float intra_train_gap;  //[ms]
   //}}}
-
+  //}}}
+  dyn_var_t I; // [pA]
   dyn_var_t* deltaT;
   //}}}
 
@@ -148,9 +157,9 @@ Variable RampCurrentGenerator Implements CurrentProducer
 {
   //{{{
   //{{{Data
-  dyn_var_t I; // [pA]
-  dyn_var_t Istart;
-  dyn_var_t Iend;
+  //{{{user-input
+  dyn_var_t Istart; // [pA]
+  dyn_var_t Iend;  // [pA]
   dyn_var_t period;
   dyn_var_t duration;
   dyn_var_t delay;
@@ -159,8 +168,9 @@ Variable RampCurrentGenerator Implements CurrentProducer
   string pattern; //(ramp)
   int write_to_file; // YES or NO
   string fileName; // fileName if 'write_to_file = 1'
-  float io_interval; //[ms] - default is 1.0 [ms]
-
+  float io_interval; //[ms] - minimal/default value is DEFAULT_IO_INTERVAL ~ 1.0 [ms]
+  //}}}
+  dyn_var_t I; // [pA]
   dyn_var_t* deltaT;
   //}}}
 
