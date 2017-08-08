@@ -83,7 +83,8 @@ void TraubIAFUnit::updateInput(RNG& rng)
 }
 
 void TraubIAFUnit::updateV(RNG& rng)
-{  // Neuron
+{
+  // Neuron
   int nI=I.size();
   double I_sum = 0.0;
   int ip=0;

@@ -3,15 +3,15 @@ set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=3; % Length of simulation time saving data (excluding spikes) in s
+T=10; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
 TminZoom=1; TmaxZoom=2;
 loadData = true;
 parameterSearch = false;
 animatedVisualization = false;
 postprocess_CortexInput = true;
-postprocess_CortexInputWave = true;
-postprocess_CortexInputFile = false;
+postprocess_CortexInputWave = false;
+postprocess_CortexInputFile = true;
 postprocess_Spikes = true;
 postprocess_Voltages = false;
 postprocess_Thresholds = false;
@@ -277,11 +277,11 @@ for vX=vX_range
             end
             if (postprocess_Spikes)
                 figure(2); clf; % Spikes
-                if (postprocess_PlotAll)
-                    segmentDim=XdimStrSpikes;
-                else
+%                 if (postprocess_PlotAll)
+%                     segmentDim=XdimStrSpikes;
+%                 else
                     segmentDim=XdimStrSpikes/XdimCtx;
-                end
+%                 end
                 Nspikes=segmentDim^3; % Number of neurons in one segment
                 maxSpikes=round(maxSpikes/1); % can be used to shrink if too large
                 temp = zeros(maxSpikes*Nspikes,2);
@@ -300,11 +300,11 @@ for vX=vX_range
                 scatter(temp(:,2),temp(:,1));
                 xlim([Tmin*(1/dt) Tmax*(1/dt)]);
                 ylim([0 Nspikes]);
-                if (postprocess_PlotAll)
+%                 if (postprocess_PlotAll)
+%                     title('Spiking activity (all "segments" of striatum)');
+%                 else
                     title('Spiking activity (one "segment" of striatum)');
-                else
-                    title('Spiking activity (all "segments" of striatum)');
-                end
+%                 end
                 temp2 = temp(1:maxSpikes*100,:);
                 save([directory,'Spike.txt'],'-ascii','temp2');
                 print([directory,'spikes'],'-dpng');
