@@ -1,3 +1,5 @@
+#if STIMULUS_CASE == CASE_01c
+//{{{
 PointCurrentSource pointCurrentSource<>;
 
 pointCurrentSource.setCurrent(<						
@@ -21,3 +23,148 @@ pointCalciumSource.setCaCurrent(<
 pointCalciumSource.setCaCurrent(<						
 				I_Ca = 0.0                 	// pA_Ca
 			     >) on calciumOff;
+//}}}
+#endif
+#if STIMULUS_CASE == CASE_08
+//{{{voltage-clamp
+//NOTE: User can define 'idx' to specify compartment index (default is 0)
+//VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
+//NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
+#define Vm_hold -100.0  // [mV]
+#define Vm_step -30.0     // [mV]
+VoltageClamp somaClamp<type=1, command = Vm_hold, beta=1.0, Cm =0.01, fileName=PathFileCombine("SEClamp.txt")>;
+//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.05>; //TimeSetVClamp1
+//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.025>; //TimeSetVClamp1
+//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.0>; //TimeSetVClamp1
+somaClamp.toggle() on voltageClampSet0Sem; //toggle clamping
+somaClamp.setCommand(<command = Vm_step>) on voltageClampSet1Sem; //TimeSetVClamp0
+
+////NOTE: You have up to 3 time points to set different Vclamp values
+//somaClamp.setCommand( < 
+//   command = -20.0   // [mV]  - a command Voltage
+//   > ) on voltageClampSet2Sem; //TimeSetVClamp2
+//somaClamp.setCommand( < 
+//   command = +20.0   // [mV]  - a command Voltage
+//   > ) on voltageClampSet3Sem; //TimeSetVClamp3
+///somaClamp.startWaveform( <
+///   waveform = {val1, val2, val3, val4} 
+///   > ) on voltageClampSet1;
+///somaClamp.startWaveform( <
+///   waveformFile = "2column-(time-Vm)-filename.txt"
+///   > ) on voltageClampSet1;
+
+//NOTE: Default initial is OFF
+//somaClamp.toggle() on voltageClampOnSem; //toggle clamping
+somaClamp.toggle() on voltageClampOffSem; //toggle clamping
+//Old use
+//somaClamp.toggle(<toggle=1>) on voltageClampOnSem; //toggle clamping
+//somaClamp.toggle(<toggle=1>) on voltageClampOffSem; //toggle clamping
+
+#define t0 0.0 //[ms]
+#define t1 10.0 // [ms]
+#define t2 30.0  //[ms]
+#define t3 50.0 //[ms]
+#define Vc0 -80.0 //[ms]
+#define Vc1 20.0  //[ms]
+#define Vc2 -100.0 //[ms]
+#define Vc3 -80.0 //[ms]
+
+//current use:
+// somaClamp.startWaveform( < waveform={data-for-every-time-step-starting-from-the-time-toggle-is-triggered}>;
+//plan to change:
+//somaClamp.startWaveform( < 
+//   time     = { t0, t1, t2, t3 }, 
+//   commands = {Vc0, Vc1, Vc2, Vc3}
+//   > ) on voltageClampOn;
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_01 || \
+    STIMULUS_CASE == CASE_05 || \
+    STIMULUS_CASE == CASE_06
+#if STIMULUS_CASE == CASE_06
+#define timeDelay 100
+#else
+#define timeDelay 100
+#endif
+//{{{
+//NOTE: Unit of current injection is [pA]
+//NOTE: MSN requires long stimulation due to the long shunt in the first AP
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=120.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//}}}
+#endif
+#if STIMULUS_CASE == CASE_01b
+#define timeDelay 40
+//(five bAP triplets, each; 50Hz intra train; 5 Hz between trains; in the ZFP experiments, bAP were
+//generated with a single 50Hz triplet).
+// 1pulse = 2ms with 200pA 
+// 3pulse at 50Hz = to generate spike
+// map to peak=200pA
+//        duration=2ms
+//        intratrain_gap=20ms (i.e. 50Hz)
+//        num_pulses_per_train=3    (i.e. triplet)
+//        inter_train_gap=period=200ms    (i.e. 5Hz)
+//        num_trains=5  //repeat 5 times and time must be < last
+//CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=200.0, duration=2, intra_train_gap=20, num_pulses_per_train=3, period=200, delay=timeDelay, last=50000, inc=0, write_to_file=1, fileName= PathFileCombine("Istim.dat")>; 
+CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=2000.0, duration=2, intra_train_gap=20, num_pulses_per_train=3, period=200, delay=timeDelay, num_trains=5, last=50000, inc=0, write_to_file=1, fileName= PathFileCombine("Istim.dat")>;  //ideal
+//CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=4000.0, duration=2, intra_train_gap=20, num_pulses_per_train=3, period=200, delay=timeDelay, num_trains=5, last=50000, inc=0, write_to_file=1, fileName= PathFileCombine("Istim.dat")>; 
+#endif
+ 
+#if STIMULUS_CASE == CASE_02
+//{{{
+//NOTE: Lakrum-Zhu-Sakmann (2001)  tested with decayTime=4*riseTime
+//      and riseTime = 2,5,10,50 ms accodingly at location 930um to soma at peak 2nA
+//          riseTime = 0.5ms                               750um to soma at peak 5nA
+//          riseTime = 10.ms                               750um to soma at peak 2nA
+//          riseTime = 3.2ms  (intermediate)
+// 0.5ms rise time, 5ms decay time Iinj = 0.5 nA
+// check EPSP there is 15mV 
+CurrentPulseGenerator shaftStimInj<pattern="dualexp", peak=500.0, duration=5, period=510, delay=50, last=500, inc=0, riseTime=0.5, decayTime=5.0>; //GOOD
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_03 
+//{{{
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=510, delay=50, last=500, inc=0>; //GOOD
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_04 || \
+    STIMULUS_CASE == CASE_05 || \
+    STIMULUS_CASE == CASE_06
+//{{{
+// stimulus a wide region at distal apical ends, i.e. many spines at distal
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=510, delay=50, last=500, inc=0>; //GOOD
+//}}}
+#endif
+
+//CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=100.0, duration=5, period=100, delay=10, last=500, inc=0>; //GOOD
+//CurrentPulseGenerator synapseStimInj_1<pattern="periodic", peak=20.0, duration=5, period=100, delay=10, last=500, inc=0>;
+ 
+//CurrentPulseGenerator synapseStimInj_0<pattern="periodic", peak=0.1, duration=1, delay=200, period=600, last=3600, inc=0>;
+//CurrentPulseGenerator currentStimInj_0<pattern="periodic", peak=2000, duration=3, period=620, delay=1785, last=3600, inc=0>; 
+//CurrentPulseGenerator currentStimInj_1<pattern="periodic", peak=2000, duration=3, period=5000, delay=400, last=3600, inc=0>; 
+//PointCurrentSource pointCurrentSource<>;
+//
+//pointCurrentSource.setCurrent(<						
+//				I = 100.0                      	// pA
+//			     >) on currentOn;
+//
+//pointCurrentSource.setCurrent(<						
+//				I = 200.0                      	// pA
+//			     >) on currentMod;
+//
+//pointCurrentSource.setCurrent(<						
+//				I = 0.0            	        // pA
+//			     >) on currentOff;
+//
+//PointCalciumSource pointCalciumSource<>;
+//
+//pointCalciumSource.setCaCurrent(<						
+//				I_Ca = 0.0                 	// pA_Ca
+//			     >) on calciumOn;
+//
+//pointCalciumSource.setCaCurrent(<						
+//				I_Ca = 0.0                 	// pA_Ca
+//			     >) on calciumOff;

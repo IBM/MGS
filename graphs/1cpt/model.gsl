@@ -18,6 +18,8 @@
 #define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma [square pulse current]
+#define CASE_01b  101   //inject soma [brief train of AP]
+#define CASE_01c  201   //inject soma [point current source]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -26,7 +28,8 @@
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
 #define CASE_09  9   //inject soma [current clamp]
-#define STIMULUS_CASE   CASE_01
+#define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
+#define STIMULUS_CASE   CASE_08
 //#define morph ""
 #define morph "msn0_"
 //#define morph "msn0spines_"
