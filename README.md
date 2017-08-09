@@ -84,12 +84,12 @@ See [this document](https://www.zenhub.com/github-project-management.pdf) for a 
 *product backlog*. Once you add a Milestone, they’re part of your *sprint backlog*.
 **In Progress**: What's being worked on right now.
 **Review/QA**: For Issues that are on hold as need review or QA. [Optional]
-**Done**: Finished! No further work required as part of this task. If it is `Target: Science` keep it here until the client 
-or community is aware through a report/publication. If it is either `Target: MGS` or `Target: NTS` keep it here for a while
-for all users to be aware of its completion.
-**Closed**: View your completed work. Drag issues here to close them for all users; dragging them out will re-open them. If it 
-is `Target: Science` move it here after the client or community is aware through a report/publication. If it is either 
-`Target: MGS` or `Target: NTS` move it here after all users are aware of its completion.
+
+**Done**: Finished! No further work required as part of this task. If it is `Target: Science` move it here when the client 
+or community is made aware through a meeting, report, or white paper, and all code has been committed to a branch. If it is either `Target: MGS` or `Target: NTS` put it here when a pull request is issued and code review is scheduled.
+
+**Closed**: View your completed work. Drag issues here to close them for all users; dragging them out will re-open them. If it is `Target: Science` move it here after the client or community is made aware through a peer reviewed publication, and all related code has been included and accepted in a pull request and merged into the master branch. If it is either 
+`Target: MGS` or `Target: NTS` move it here after the pull request has been accepted.
 
 ### What are the labels?
 The labels are split in to 5 groups, Client, Priority, Status, Target and Type. Descriptions of some labels follow.
@@ -103,10 +103,13 @@ The labels are split in to 5 groups, Client, Priority, Status, Target and Type. 
 
 **Target: MGS**: The task is targeted at MGS.
 **Target: NTS**: The task is targeted at NTS.
-**Target: Science**: The task is not specifically targeted at MGS or NTS but rather is a general scientific task.
+**Target: Science**: The task is an aspect of scientific research of general interest to the client or community.
 
-**Type: Research**: When the task is neither a bug, enhancement or maintenance of the code base but rather is a general 
-research task.
+
+**Type: Bug** A fix to code or a model/simulation result necessary for progress.
+**Type: Enhancement** An extension or modification to software that will facilitate progress.
+**Type: Research**: Background work, including testing, and generation of preliminary results needed for task completion.
+**Type: Maintenance**: Work intended to facilitate future reuse of code, model, or software.
 
 
 
