@@ -380,13 +380,13 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $NTSROOT/models/nts.mdf
+      touch $NTSROOT/models/all.mdf
     fi
     cd -
     cd $NTSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
       #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
-      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/nts.mdf ];  } ; then 
+      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/all.mdf ];  } ; then 
       cd $LENSROOT/extensions/variable
       ./define variables.mdf  $REBUILD
       cd $LENSROOT/extensions/struct
@@ -394,8 +394,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $LENSROOT/extensions/functor
       ./define functors.mdf  $REBUILD
       cd $NTSROOT/models
-      touch nts.mdf
-      ./define nts.mdf $REBUILD
+      touch all.mdf
+      ./define all.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $NTSROOT
@@ -414,8 +414,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT/extensions/functor
     ./define functors.mdf  $REBUILD
     cd $NTSROOT/models
-    if [ ! -f Extensions.mk ]; then touch nts.mdf; fi
-    ./define nts.mdf $REBUILD
+    if [ ! -f Extensions.mk ]; then touch all.mdf; fi
+    ./define all.mdf $REBUILD
 
     cp Extensions.mk $LENSROOT/
     cd $NTSROOT
