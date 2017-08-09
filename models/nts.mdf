@@ -57,3 +57,5 @@
 #include "ChannelSchweighoferKCa/ChannelSchweighoferKCa.mdl"
 #include "ChannelSchweighoferKDR/ChannelSchweighoferKDR.mdl"
 #include "ChannelSchweighoferNat/ChannelSchweighoferNat.mdl"
+//#include "LinskerInfomaxUnit/LinskerInfomaxUnit.mdl"
+//#include "MihalasNieburIAFUnit/MihalasNieburIAFUnit.mdl"
