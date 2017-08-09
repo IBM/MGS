@@ -112,7 +112,7 @@ while getopts "$optspec" optchar; do
                     GPU="-gpu"
                     GSL_BUILD_MODE="$GSL_BUILD_MODE --gpu"
 		    ;;
-		arma) # Armadaillo extensions
+		arma) # Armadillo extensions
                     ARMA="-arma"
                     GSL_BUILD_MODE="$GSL_BUILD_MODE --arma"
 		    ;;
