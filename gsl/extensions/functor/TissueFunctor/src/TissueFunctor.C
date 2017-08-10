@@ -1794,7 +1794,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     }
 
     const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
-    if (cpt->size()  <= 0)
+    if (cpt == NULL)
     {
       std::cerr << "WARNING: Check if we need at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
      // std::cerr << "ERROR: Expect at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
@@ -2128,7 +2128,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
     NDPairList* params)
 {
-  const std::vector<DataItem*>* cpt;
+  const std::vector<DataItem*>* cpt = NULL;
   NDPairList::iterator ndpiter, ndpend = params->end();
   for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
   {
@@ -7740,7 +7740,6 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
   {
-
     std::string mystring = (*capiter).first;
     std::vector<std::string> tokens;
     std::string delimiters = ": ";
@@ -8088,7 +8087,6 @@ bool TissueFunctor::setGenerated(
           {
             if (0)
             {  // debug purpose
-
               std::cout << "found " << key1 << " " << key2 << " "
                         << key_spineneck << " " << key1_inloop << " "
                         << key2_inloop << " " << key_inloop_spineneck << " "
