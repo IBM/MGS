@@ -35,7 +35,6 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
    Input [] ctxInputs;       // delta input from cortex
    double ctxInputWeight;    // if this node receives multiple ctx inputs
                              // they should be weighted accordingly.
- 
    double rho;	     	     // zenith (for spherical coordinates)
    double phi;		     // azimut (for spherical coordinates)
    
@@ -102,13 +101,8 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
 
    InitPhase initialize();
 
-<<<<<<< HEAD:models/FSIIAFUnit/FSIIAFUnit.mdl
    RuntimePhase updateInput(synapses_total, drive_total, IPSC_total, GJ_total);
    RuntimePhase updateV(Theta, I_sum);
-=======
-   RuntimePhase updateInput(LFP_synapses);
-   RuntimePhase updateV(V, Theta);
->>>>>>> Split Traub update() in to three stages:models/TraubIAFUnit/TraubIAFUnit.mdl
    RuntimePhase threshold(spike, V_spike);
    
    SpikeProducer.spike << &spike;

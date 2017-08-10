@@ -50,7 +50,6 @@ Node FileDriverUnit Implements OutputProducer
   
   InitPhase initialize();
   RuntimePhase updateOutput(output);
-
   OutputProducer.output << &output;
   UserFunction setIndices;
 }
