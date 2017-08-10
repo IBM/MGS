@@ -72,6 +72,9 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #else
 #define paramFolder STR(PARAMFOLDER)
 #endif
+#ifndef EXTENSION
+#define EXTENSION _
+#endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "1cpt_rest" STR(EXTENSION)
 print("Case 00: resting");
@@ -98,6 +101,7 @@ print("Case 00: resting");
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
 #endif
+print(OutputFolderName);
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -918,6 +922,10 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
               RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
   #endif
 
+  FloatTrigger voltageClampSet0("Iteration Trigger : >= " STR(TimeVClampSet0) " [ms]", 
+      CurrentTime, ">=", TimeVClampSet0, 0, solveChannels );
+  SemaphoreTrigger voltageClampSet0Sem("Nothing", voltageClampSet0, 1, 0, solveChannels);
+
   FloatTrigger voltageClampSet1("Iteration Trigger : >= " STR(TimeVClampSet1) " [ms]", 
       CurrentTime, ">=", TimeVClampSet1, 0, solveChannels );
   SemaphoreTrigger voltageClampSet1Sem("Nothing", voltageClampSet1, 1, 0, solveChannels);
@@ -985,6 +993,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% 50",
 VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
 VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity};
 VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity};
+VariableType VoltageClamp {initialize->initialize1, updateI->solveChannels};
 
 #include "stimulus_model.gsl"
 //}}}
@@ -1230,7 +1239,7 @@ Grid MSN_D1Neuron{
 		 //{{{ RYR, IP3R
 #if defined(SIMULATE_CAER)
      //RYR
-	//Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+     Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
      //IP3R
 
      //LeakER
@@ -1581,11 +1590,11 @@ Grid MSN_D1Neuron{
 		//{{{RYR, IP3R, LeakER
 #if defined(SIMULATE_CAER)
   //RYR
-	//InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
-	//			compartmentalize = { "int:numChan", "Ej" },
-	//			numChan = {1},
-  //      Ej = {0.0}
-  //   > ) );
+        InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
+              compartmentalize = { "int:numChan", "Ej" },
+              numChan = {1},
+              Ej = {0.0}
+              > ) );
    //IP3R
 
    //LeakER
