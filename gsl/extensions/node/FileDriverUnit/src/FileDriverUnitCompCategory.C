@@ -44,8 +44,12 @@ void FileDriverUnitCompCategory::initializeShared(RNG& rng)
   os << SHD.inputFileName;
   ifs = new std::ifstream(os.str().c_str());
   *ifs >> SHD.total_time >> SHD.n_channels;
-  SHD.input.increaseSizeTo(SHD.n_channels);
   line = new std::string();
+  
+  // Setup input array
+  SHD.input.increaseSizeTo(SHD.n_channels);
+  for (int i=0; i < SHD.n_channels; i++)
+    SHD.input[i] = 0.0;
   
   // Section stuff, include if needed
   /*

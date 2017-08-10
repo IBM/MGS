@@ -56,7 +56,7 @@ void TraubIAFUnit::updateInput(RNG& rng)
   ShallowArray<Input>::iterator iterDriver, endDriver=ctxInputs.end();
   for (iterDriver=ctxInputs.begin(); iterDriver!=endDriver; ++iterDriver)
     driver += (*(iterDriver->input) * iterDriver->weight) * ctxInputWeight;
-  
+
   // Synapses
   double s_total = 0.0;
   ShallowArray<PSPInput>::iterator iterIPSP, endPSP=lateralInputs.end();
@@ -79,7 +79,7 @@ void TraubIAFUnit::updateInput(RNG& rng)
   }
   
   I_e = driver + s_total + etonic; // total input
-  LFP_synapses = s_total;
+  LFP_synapses = s_total;  
 }
 
 void TraubIAFUnit::updateV(RNG& rng)

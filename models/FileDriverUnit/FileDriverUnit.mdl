@@ -51,7 +51,7 @@ Node FileDriverUnit Implements OutputProducer
     }
   
   InitPhase initialize();
-  RuntimePhase updateOutput();
+  RuntimePhase updateOutput(output);
   
   OutputProducer.output << &output;
   
