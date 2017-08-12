@@ -39,7 +39,7 @@ void SpineIAFUnit::update(RNG& rng)
   // If the simulation has reached a certain period, apply a perturbation
   if (SHD.op_perturbation && ITER == SHD.perturbationT)
     AMPAweight = drandom(0.0, 1.5, rng);
-
+  
   // ##### Vars needed #####
   double glutamate;
   if (glutamateInput.size() > 0)

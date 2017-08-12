@@ -13,9 +13,6 @@ HzMax=160; % limit for input Hz axes
 cbMax=100; % scaling of color bar for imagesc plots
 AMPAMax=1.5; % limit for AMPA axes
 directory='../../graphs/CorticoStriatal/';
-% directory='../../graphs/CorticoStriatal/HzPerturbation/';
-% directory='../../graphs/CorticoStriatal/AMPAPerturbation/';
-% directory='/home/jmhumble/Data/cannabinoids/00004_e1b77fc_XXX/bothPerturbation/9/';
 fileExt='.dat';
 % time frames
 T=0:499; % Length of simulation time saving data (excluding spikes) in s to load and process
@@ -469,7 +466,11 @@ for perturbation=0:postprocess_Perturbation
                         continue;
                     end
                 elseif (p==3)
-                    perturbationType = 'Both';
+                    if (postprocess_PerturbationHz && postprocess_PerturbationAMPA)
+                        perturbationType = 'Both';
+                    else
+                        continue;
+                    end
                 else
                     continue;
                 end

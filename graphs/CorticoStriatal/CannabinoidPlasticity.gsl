@@ -16,7 +16,7 @@
 #include "../std/std.gsl"
 
 InitPhases = { init1, init2, initialize };
-RuntimePhases = { dataCollect, run1, run2, lastPhase };
+RuntimePhases = { run1, run2, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
 // ##### Common parameters #####
