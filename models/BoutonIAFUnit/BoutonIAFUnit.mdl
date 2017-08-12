@@ -18,7 +18,7 @@
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProducer,
-  Cb1RIAFProducer
+  CB1RIAFProducer
 {
   SpikeInput [] spikeInput;    // input of spike
   double glutamate;            // current output of glutamate
@@ -26,16 +26,16 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
   double maxGlutamate;         // maximum amount of glutamate to recovery to
 
   ECBIAFInput [] ECBinput;     // input of edogenous cannabinoid
-  double Cb1Rrise;             // rise current of Cannabinoid receptor
-  double Cb1Rcurrent;          // fall current of Cannabinoid receptor
+  double CB1Rrise;             // rise current of Cannabinoid receptor
+  double CB1Rcurrent;          // fall current of Cannabinoid receptor
 
   Shared
     {
       double glutamateAdaptRate;    // Rate of surpression of glutamate release
       double glutamateRecoverTau;   // Rate of recovery from suppression
 
-      double Cb1RriseTau;           // rise time constant of Cb1R
-      double Cb1RfallTau;           // fall time constant of Cb1R
+      double CB1RriseTau;           // rise time constant of CB1R
+      double CB1RfallTau;           // fall time constant of CB1R
 
       double deltaT;                // in s
 
@@ -56,11 +56,11 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
 
   InitPhase initialize();
 
-  RuntimePhase update(glutamate, availableGlutamate, Cb1Rcurrent);
+  RuntimePhase update(glutamate, availableGlutamate, CB1Rcurrent);
 
   GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
   AvailableGlutamateIAFProducer.availableGlutamate << &availableGlutamate; // available glutamate
-  Cb1RIAFProducer.Cb1Rcurrent << &Cb1Rcurrent; // Cb1R current
+  CB1RIAFProducer.CB1Rcurrent << &CB1Rcurrent; // CB1R current
 
   UserFunction setSpikeIndices;
   UserFunction setECBIndices;

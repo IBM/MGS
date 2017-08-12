@@ -37,7 +37,7 @@ class BoutonIAFUnitDataCollector : public CG_BoutonIAFUnitDataCollector
  private:
   std::ofstream* glutamate_file;
   std::ofstream* availableGlutamate_file;
-  std::ofstream* Cb1R_file;
+  std::ofstream* CB1R_file;
 };
 
 #endif

@@ -42,7 +42,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
   assert(cols.size()==slices.size());
   assert(slices.size()==glutamate.size());
   assert(slices.size()==availableGlutamate.size());
-  assert(slices.size()==Cb1Rcurrent.size());
+  assert(slices.size()==CB1Rcurrent.size());
   int sz=glutamate.size();
   int mxrow=0;
   int mxcol=0;
@@ -50,14 +50,14 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
     {
       sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(
                                                          std::make_pair(glutamate[j], availableGlutamate[j]),
-                                                         Cb1Rcurrent[j]);
+                                                         CB1Rcurrent[j]);
       if (mxrow<rows[j]) mxrow=rows[j];
       if (mxcol<cols[j]) mxcol=cols[j];
       if (mxslice<slices[j]) mxslice=slices[j];
     }
   glutamate.clear();
   availableGlutamate.clear();
-  Cb1Rcurrent.clear();
+  CB1Rcurrent.clear();
   std::map<unsigned,
 	   std::map<unsigned,
                     std::map<unsigned,
@@ -90,7 +90,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
             {
               glutamate.push_back(miter3->second.first.first);
               availableGlutamate.push_back(miter3->second.first.second);
-              Cb1Rcurrent.push_back(miter3->second.second);
+              CB1Rcurrent.push_back(miter3->second.second);
             }
         }
     }
@@ -106,7 +106,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
 
-  std::ostringstream os_glutamate, os_availableGlutamate, os_Cb1R;
+  std::ostringstream os_glutamate, os_availableGlutamate, os_CB1R;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
@@ -132,14 +132,14 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
       availableGlutamate_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
-  if (op_saveCb1R)
+  if (op_saveCB1R)
     {
-      os_Cb1R<<directory<<"Cb1R"<<fileExt;
-      Cb1R_file=new std::ofstream(os_Cb1R.str().c_str(),
+      os_CB1R<<directory<<"CB1R"<<fileExt;
+      CB1R_file=new std::ofstream(os_CB1R.str().c_str(),
                                   std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      Cb1R_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      Cb1R_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      Cb1R_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+      CB1R_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      CB1R_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      CB1R_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 }
 
@@ -156,10 +156,10 @@ void BoutonIAFUnitDataCollector::finalize(RNG& rng)
       availableGlutamate_file->close();
       delete availableGlutamate_file;
     }
-  if (op_saveCb1R)
+  if (op_saveCB1R)
     {
-      Cb1R_file->close();
-      delete Cb1R_file;
+      CB1R_file->close();
+      delete CB1R_file;
     }
 }
 
@@ -191,16 +191,16 @@ void BoutonIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* nd
         }
     }
 
-  if (op_saveCb1R)
+  if (op_saveCB1R)
     {
       ShallowArray<double*>::iterator iter, end;
       float temp = 0.;
-      iter=Cb1Rcurrent.begin();
-      end=Cb1Rcurrent.end();
+      iter=CB1Rcurrent.begin();
+      end=CB1Rcurrent.end();
       for (int n=0; iter!=end; ++iter)
         {
           temp = (float) **iter;
-          Cb1R_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+          CB1R_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
         }
     }
 }

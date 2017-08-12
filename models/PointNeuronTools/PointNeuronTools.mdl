@@ -76,9 +76,9 @@ Interface ECBIAFProducer
   double* ECB;
 }
 
-Interface Cb1RIAFProducer
+Interface CB1RIAFProducer
 {
-  double* Cb1Rcurrent;
+  double* CB1Rcurrent;
 }
 
 Interface SORNSpikeProducer {

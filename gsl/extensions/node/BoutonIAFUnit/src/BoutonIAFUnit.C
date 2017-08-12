@@ -27,8 +27,8 @@ void BoutonIAFUnit::initialize(RNG& rng)
   //std::cout << spikeInput.size() << std::endl;
   // Default starting values
   glutamate = 0.0;
-  Cb1Rrise = 0.0;
-  Cb1Rcurrent = 0.0;
+  CB1Rrise = 0.0;
+  CB1Rcurrent = 0.0;
 }
 
 void BoutonIAFUnit::update(RNG& rng)
@@ -42,20 +42,20 @@ void BoutonIAFUnit::update(RNG& rng)
 
 
 
-  // ##### Cb1R #####
+  // ##### CB1R #####
   double ECB = (*(ECBinput[0].ECB) * ECBinput[0].weight); // only consider first one, weight is structural plasticity
   if (ECBinput.size() > 0)
-    Cb1Rrise += ((-Cb1Rrise + ECB) / SHD.Cb1RriseTau) * SHD.deltaT;
+    CB1Rrise += ((-CB1Rrise + ECB) / SHD.CB1RriseTau) * SHD.deltaT;
   else
-    Cb1Rrise = 0.0;
-  Cb1Rcurrent += ((-Cb1Rcurrent + Cb1Rrise) / SHD.Cb1RfallTau) * SHD.deltaT;
+    CB1Rrise = 0.0;
+  CB1Rcurrent += ((-CB1Rcurrent + CB1Rrise) / SHD.CB1RfallTau) * SHD.deltaT;
 
 
 
   // ##### Inhibit glutamate #####
   // Recovery glutamate
   availableGlutamate += ((maxGlutamate - availableGlutamate) / SHD.glutamateRecoverTau) * SHD.deltaT;
-  // Inhibit the glutamate release with the activity of Cb1R
+  // Inhibit the glutamate release with the activity of CB1R
   availableGlutamate -= SHD.glutamateAdaptRate * ECB;
   // Limit glutamate to >= 0
   if (availableGlutamate < 0.0)
