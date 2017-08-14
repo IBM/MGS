@@ -77,7 +77,6 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
     }
 
   InitPhase initialize();
-
   RuntimePhase update(AMPAweight, AMPAcurrent,
                       mGluR5current,
                       Ca, ECB);
