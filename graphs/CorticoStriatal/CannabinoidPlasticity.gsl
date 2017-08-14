@@ -57,6 +57,21 @@ NodeType BoutonIAFUnit(<
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
                        >) {initializeShared->init1, update->run2};
 
+#define X_INIT 0.0 // 0.01     // parameterized for CB1R ~= 0.1
+#define Y_INIT 0.0 //0.0998   // parameterized for CB1R ~= 0.1
+#define Z_INIT 0.0 //3.9819   // parameterized for CB1R ~= 0.1
+NodeType Goodwin(<
+                 K1 = 1.0,
+                 k1 = 1.0,
+                 k2 = 0.1,
+                 k3 = 1.0,
+                 k4 = 0.1,
+                 k5 = 1.0,
+                 k6 = 0.1,
+                 n = 5,
+                 deltaT = DELTAT     // in s
+                 >) {update->run1};
+
 NodeType CleftAstrocyteIAFUnit(<
                                glutamateDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
                                deltaT = DELTAT            // in s
@@ -115,9 +130,12 @@ BindName initInput("Hz", UniformDist(0,150));//Scale(Exp(RangePassThru(-100,"<="
 NdplNodeInit heterInput(initInput);
 
 // Initialize boutons
-//BindName initBoutons("availableGlutamate", UniformDist(0.0, 2.0), "maxGlutamate", 2.0); // arb. unit, arb. unit
 BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 1.0); // arb. unit, arb. unit, arb. unit
 NdplNodeInit heterBoutons(initBoutons);
+
+// Initialize Goodwin
+BindName initGoodwins("X", X_INIT, "Y", Y_INIT, "Z", Z_INIT); // arb. unit, arb. unit, arb. unit
+NdplNodeInit heterGoodwins(initGoodwins);
 
 // Initialize clefts/astrocytes
 BindName initCleftsAstrocytes(); // nothing to initialize
@@ -177,6 +195,8 @@ Grid Cannabinoid
   Dimension(XDIM_INNER,YDIM_INNER,ZDIM_INNER);
   Layer(boutons, BoutonIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(boutons), heterBoutons);
+  Layer(Goodwins, Goodwin, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(Goodwins), heterGoodwins);
   Layer(cleftsAstrocytes, CleftAstrocyteIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(cleftsAstrocytes), heterCleftsAstrocytes);
   Layer(spines, SpineIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
@@ -241,6 +261,11 @@ BoutonIAFUnitDataCollector boutonCollector<directory=DIRECTORY, fileExt=FILE_EXT
   op_saveCB1R=1, op_saveCB1Runbound=1, op_saveCB1Rcurrent=1>;
 polyConnect(CSC/cann[].Layer(boutons), boutonCollector, <>, <>);
 
+VariableType GoodwinDataCollector;
+GoodwinDataCollector GoodwinCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveX=1, op_saveY=1, op_saveZ=1>;
+polyConnect(CSC/cann[].Layer(Goodwins), GoodwinCollector, <>, <>);
+
 VariableType CleftAstrocyteIAFUnitDataCollector;
 CleftAstrocyteIAFUnitDataCollector cleftAstroCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
   op_saveGlutamate=1, op_saveECB=0>;
@@ -279,6 +304,7 @@ UnsignedTrigger endTrig("Iteration Trigger to end or stop",
 
 inputCollector.dataCollection() on iterTrig;
 boutonCollector.dataCollection() on iterTrigSampled;
+GoodwinCollector.dataCollection() on iterTrigSampled;
 cleftAstroCollector.dataCollection() on iterTrigSampled;
 spineCollector.dataCollection() on iterTrigSampled;
 outputCollector.dataCollectionSpikes() on iterTrig;

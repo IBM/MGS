@@ -1,0 +1,68 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef GOODWIN_MDL
+#define GOODWIN_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node Goodwin Implements GoodwinProducer
+{
+  double X;            // mRNA
+  double Y;            // protein
+  double Z;            // transcriptional inhibitor
+  
+  Input [] in;
+  
+  Shared
+    {
+      double K1;
+      double k1;
+      double k2;
+      double k3;
+      double k4;
+      double k5;
+      double k6;
+      double n;
+
+      double deltaT;   // in s
+      
+      // Model specific shared initialize phases
+      //InitPhase initializeShared_Cannabinoids;      
+    }
+
+  InAttrPSet
+    {
+      string identifier;
+      double weight;
+    }
+
+  RuntimePhase update(X, Y, Z);
+
+  GoodwinProducer.X << &X;
+  GoodwinProducer.Y << &Y;
+  GoodwinProducer.Z << &Z;
+
+  UserFunction setInIndices;
+
+  Connection Pre Node (PSet.identifier=="in") Expects OutputProducer
+  {
+    OutputProducer.output >> in.input;
+    PSet.weight >> in.weight;
+    setInIndices();
+  }
+  
+}
+
+#endif

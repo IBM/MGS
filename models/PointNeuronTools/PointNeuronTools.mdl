@@ -174,6 +174,13 @@ Interface ReceptiveFieldProducer {
   double* output;
 }
 
+Interface GoodwinProducer 
+{
+  double* X;
+  double* Y;
+  double* Z;
+}
+
 Struct Input {
   double* input;
   double weight;
@@ -292,6 +299,15 @@ Struct WaveInput
 Struct VoltageIAFInput
 {
   float* voltage;
+  int row;
+  int col;
+}
+
+Struct GoodwinInput
+{
+  double* X;
+  double* Y;
+  double* Z;
   int row;
   int col;
 }

@@ -44,6 +44,9 @@ postprocess_Ca = false;
 postprocess_ECB = false;
 postprocess_OutputSpikes = false;
 postprocess_mGluR5 = true;%false;
+postprocess_GoodwinX = true;%false;
+postprocess_GoodwinY = true;%false;
+postprocess_GoodwinZ = true;%false;
 postprocess_Headroom = true;
 postprocess_RiskySynapses = true;
 postprocess_Perturbation = true;
@@ -158,6 +161,21 @@ for perturbation=0:postprocess_Perturbation
             'Spike', fileExt, postprocess_OutputSpikesFilter, ...
             spikeTrange(1), spikeTrange(end), Trange(1), Trange(end), dt);
     end
+    if (postprocess_GoodwinX)
+        [GoodwinX, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'Goodwin_X', fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_GoodwinY)
+        [GoodwinY, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'Goodwin_Y', fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_GoodwinZ)
+        [GoodwinZ, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'Goodwin_Z', fileExt, Trange(1), ...
+            Trange(end), sf);
+    end    
     % Plot
     if (postprocess_InputSpikes)
         [~, figNum] = newFigure(figNum, false); % Population firing rate histogram over all time
@@ -172,7 +190,7 @@ for perturbation=0:postprocess_Perturbation
     synapse=randi(XdimInner,1,1); % only for Xdimension
     if (postprocess_InputSpikes)
         [~, figNum] = newFigure(figNum, false);
-        subplot(12,1,1); 
+        subplot(5,3,1); 
         scatter(inputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
             ones(numel(inputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
         title(['Components',perturbationString(perturbation,0,1)]); 
@@ -180,7 +198,7 @@ for perturbation=0:postprocess_Perturbation
         set(gca,'XTick',[]);
     end
     if (postprocess_Glutamate || postprocess_AvailableGlutamate)
-        subplot(12,1,2); hold on;
+        subplot(5,3,2); hold on;
         if (postprocess_Glutamate)
             plot(sfRange, glutamate(:,synapse,1,1));
         end
@@ -191,37 +209,55 @@ for perturbation=0:postprocess_Perturbation
         set(gca,'XTick',[]);
     end
     if (postprocess_CB1R)
-        subplot(12,1,3);
+        subplot(5,3,3);
         plot(sfRange, CB1R(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end 
     if (postprocess_CB1Runbound)
-        subplot(12,1,4);
+        subplot(5,3,4);
         plot(sfRange, CB1Runbound(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end 
     if (postprocess_CB1Rcurrent)
-        subplot(12,1,5);
+        subplot(5,3,5);
         plot(sfRange, CB1Rcurrent(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end 
+    if (postprocess_GoodwinX)
+        subplot(5,3,6);
+        plot(sfRange, GoodwinX(:,synapse,1,1));
+        xlim([Trange(1) Trange(end)]);
+        set(gca,'XTick',[]);
+    end 
+    if (postprocess_GoodwinY)
+        subplot(5,3,7);
+        plot(sfRange, GoodwinY(:,synapse,1,1));
+        xlim([Trange(1) Trange(end)]);
+        set(gca,'XTick',[]);
+    end 
+    if (postprocess_GoodwinZ)
+        subplot(5,3,8);
+        plot(sfRange, GoodwinZ(:,synapse,1,1));
+        xlim([Trange(1) Trange(end)]);
+        set(gca,'XTick',[]);
+    end 
     if (postprocess_CleftGlutamate)
-        subplot(12,1,6);
+        subplot(5,3,9);
         plot(sfRange, cleftGlutamate(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_CleftECB)
-        subplot(12,1,7);
+        subplot(5,3,10);
         plot(sfRange, cleftECB(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end    
     if (postprocess_AMPA || postprocess_AMPAWeights)
-        subplot(12,1,8); hold on;
+        subplot(5,3,11); hold on;
         if (postprocess_AMPAWeights)
             plot(sfRange, ones(1,numel(sfRange))*AMPAWeights(synapse,1,1));
             yyaxis right;
@@ -233,25 +269,25 @@ for perturbation=0:postprocess_Perturbation
         set(gca,'XTick',[]);
     end
     if (postprocess_mGluR5)
-        subplot(12,1,9);
+        subplot(5,3,12);
         plot(sfRange, mGluR5(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_Ca)
-        subplot(12,1,10);
+        subplot(5,3,13);
         plot(sfRange, Ca(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_ECB)
-        subplot(12,1,11);
+        subplot(5,3,14);
         plot(sfRange, ECB(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_OutputSpikes)
-        subplot(12,1,12);
+        subplot(5,3,15);
         scatter(outputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
             ones(numel(outputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
         xlim([Trange(1) Trange(end)]);
