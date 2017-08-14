@@ -36,7 +36,6 @@ Node PoissonIAFUnit Implements SpikeProducer
       string identifier;
     }
 
-  InitPhase initialize();
   RuntimePhase update(spike);
 
   SpikeProducer.spike << &spike; // the spike output
