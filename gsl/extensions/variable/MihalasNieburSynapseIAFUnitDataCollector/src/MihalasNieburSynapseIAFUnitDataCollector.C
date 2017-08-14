@@ -16,7 +16,6 @@
 #include "Lens.h"
 #include "MihalasNieburSynapseIAFUnitDataCollector.h"
 #include "CG_MihalasNieburSynapseIAFUnitDataCollector.h"
-#include "CG_TraubIAFUnitDataCollector.h"
 #include "NodeDescriptor.h"
 #include "Node.h"
 #include <map>
