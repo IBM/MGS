@@ -31,9 +31,18 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
   std::map<unsigned,
 	   std::map<unsigned,
                     std::map<unsigned,
-                             std::pair<
-                               std::pair<double*, double*>, // second.first.first second.first.second
-                               double*>                     // second.second
+                             std::pair< // second
+                               std::pair< // second.first
+                                 double*, // second.first.first
+                                 double*> // second.first.second
+                               ,
+                               std::pair< // second.second
+                                 std::pair< // second.second.first
+                                   double*, // second.second.first.first
+                                   double*> // second.second.first.second
+                                 , 
+                                 double*> // second.second.second
+                               >
                              >
                     >
            >
@@ -42,6 +51,8 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
   assert(cols.size()==slices.size());
   assert(slices.size()==glutamate.size());
   assert(slices.size()==availableGlutamate.size());
+  assert(slices.size()==CB1R.size());
+  assert(slices.size()==CB1Runbound.size());
   assert(slices.size()==CB1Rcurrent.size());
   int sz=glutamate.size();
   int mxrow=0;
@@ -49,21 +60,40 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
   for (int j=0; j<sz; ++j)
     {
       sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(
-                                                         std::make_pair(glutamate[j], availableGlutamate[j]),
-                                                         CB1Rcurrent[j]);
+                                                         std::make_pair(glutamate[j]
+                                                                        ,
+                                                                        availableGlutamate[j]
+                                                                        )
+                                                         ,
+                                                         std::make_pair(
+                                                                        std::make_pair(
+                                                                                       CB1R[j]
+                                                                                       ,
+                                                                                       CB1Runbound[j]
+                                                                                       )
+                                                                        ,
+                                                                        CB1Rcurrent[j]
+                                                                        )
+                                                         );
       if (mxrow<rows[j]) mxrow=rows[j];
       if (mxcol<cols[j]) mxcol=cols[j];
       if (mxslice<slices[j]) mxslice=slices[j];
     }
   glutamate.clear();
   availableGlutamate.clear();
+  CB1R.clear();
+  CB1Runbound.clear();
   CB1Rcurrent.clear();
   std::map<unsigned,
 	   std::map<unsigned,
                     std::map<unsigned,
                              std::pair<
                                std::pair<double*, double*>,
-                               double*
+                               std::pair<
+                                 std::pair<double*, double*>
+                                 ,
+                                 double*
+                                 >
                                >
                              >
                     >
@@ -74,7 +104,11 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
                std::map<unsigned,
                         std::pair<
                           std::pair<double*, double*>,
-                          double*
+                          std::pair<
+                            std::pair<double*, double*>
+                            ,
+                            double*
+                            >
                           >
                         >
                >::iterator miter2, mend2=miter1->second.end();
@@ -83,14 +117,20 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
           std::map<unsigned,
                    std::pair<
                      std::pair<double*, double*>,
-                     double*
+                     std::pair<
+                       std::pair<double*, double*>
+                       ,
+                       double*
+                       >
                      >
                    >::iterator miter3, mend3=miter2->second.end();
           for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
             {
               glutamate.push_back(miter3->second.first.first);
               availableGlutamate.push_back(miter3->second.first.second);
-              CB1Rcurrent.push_back(miter3->second.second);
+              CB1R.push_back(miter3->second.second.first.first);
+              CB1Runbound.push_back(miter3->second.second.first.second);
+              CB1Rcurrent.push_back(miter3->second.second.second);
             }
         }
     }
@@ -106,7 +146,8 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
 
-  std::ostringstream os_glutamate, os_availableGlutamate, os_CB1R;
+  std::ostringstream os_glutamate, os_availableGlutamate,
+    os_CB1R, os_CB1Runbound, os_CB1Rcurrent;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
@@ -141,6 +182,28 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
       CB1R_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
       CB1R_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
+
+    if (op_saveCB1Runbound)
+    {
+      os_CB1Runbound<<directory<<"CB1Runbound"<<fileExt;
+      CB1Runbound_file=new std::ofstream(os_CB1Runbound.str().c_str(),
+                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+      CB1Runbound_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      CB1Runbound_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      CB1Runbound_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+    }
+
+    
+
+      if (op_saveCB1Rcurrent)
+    {
+      os_CB1Rcurrent<<directory<<"CB1Rcurrent"<<fileExt;
+      CB1Rcurrent_file=new std::ofstream(os_CB1Rcurrent.str().c_str(),
+                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+      CB1Rcurrent_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      CB1Rcurrent_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      CB1Rcurrent_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+    }
 }
 
 void BoutonIAFUnitDataCollector::finalize(RNG& rng)
@@ -160,6 +223,16 @@ void BoutonIAFUnitDataCollector::finalize(RNG& rng)
     {
       CB1R_file->close();
       delete CB1R_file;
+    }
+  if (op_saveCB1Runbound)
+    {
+      CB1Runbound_file->close();
+      delete CB1Runbound_file;
+    }
+  if (op_saveCB1Rcurrent)
+    {
+      CB1Rcurrent_file->close();
+      delete CB1Rcurrent_file;
     }
 }
 
@@ -195,12 +268,40 @@ void BoutonIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* nd
     {
       ShallowArray<double*>::iterator iter, end;
       float temp = 0.;
+      iter=CB1R.begin();
+      end=CB1R.end();
+      for (int n=0; iter!=end; ++iter)
+        {
+          temp = (float) **iter;
+          CB1R_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+        }
+    }
+
+  
+  if (op_saveCB1Runbound)
+    {
+      ShallowArray<double*>::iterator iter, end;
+      float temp = 0.;
+      iter=CB1Runbound.begin();
+      end=CB1Runbound.end();
+      for (int n=0; iter!=end; ++iter)
+        {
+          temp = (float) **iter;
+          CB1Runbound_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+        }
+    }
+
+  
+  if (op_saveCB1Rcurrent)
+    {
+      ShallowArray<double*>::iterator iter, end;
+      float temp = 0.;
       iter=CB1Rcurrent.begin();
       end=CB1Rcurrent.end();
       for (int n=0; iter!=end; ++iter)
         {
           temp = (float) **iter;
-          CB1R_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+          CB1Rcurrent_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
         }
     }
 }

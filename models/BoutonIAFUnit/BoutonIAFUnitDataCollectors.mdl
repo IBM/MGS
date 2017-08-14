@@ -27,6 +27,8 @@ Variable BoutonIAFUnitDataCollector
   int mxslice;
   double* [] glutamate;
   double* [] availableGlutamate;
+  double* [] CB1R;
+  double* [] CB1Runbound;
   double* [] CB1Rcurrent;
   UserFunction getNodeIndices;
 
@@ -34,12 +36,16 @@ Variable BoutonIAFUnitDataCollector
   bool op_saveGlutamate;
   bool op_saveAvailableGlutamate;
   bool op_saveCB1R;
+  bool op_saveCB1Runbound;
+  bool op_saveCB1Rcurrent;
 
   Connection Pre Node () Expects GlutamateIAFProducer, AvailableGlutamateIAFProducer,
     CB1RIAFProducer
   {
     GlutamateIAFProducer.glutamate >> glutamate;
     AvailableGlutamateIAFProducer.availableGlutamate >> availableGlutamate;
+    CB1RIAFProducer.CB1R >> CB1R;
+    CB1RIAFProducer.CB1Runbound >> CB1Runbound;
     CB1RIAFProducer.CB1Rcurrent >> CB1Rcurrent;
     getNodeIndices();
   }

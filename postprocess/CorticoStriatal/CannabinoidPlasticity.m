@@ -33,7 +33,9 @@ postprocess_PreIndexs = true;
 postprocess_InputSpikes = true;
 postprocess_Glutamate = false;
 postprocess_AvailableGlutamate = true;
-postprocess_Cb1R = false;
+postprocess_CB1R = true;%false;
+postprocess_CB1Runbound = true;%false;
+postprocess_CB1Rcurrent = true;%false;
 postprocess_CleftGlutamate = true;
 postprocess_CleftECB = false;
 postprocess_AMPA = false;
@@ -50,8 +52,8 @@ postprocess_PerturbationAMPA = true;
 %%
 for perturbation=0:postprocess_Perturbation
     clear inputSpike glutamate availableGlutamate preIndexs preIndexs1D ...
-        Cb1R cleftGlutamate AMPA AMPAWeights AMPAWeights1D mGluR Ca ECB ...
-        outputSpike;
+        CB1R CB1Runbound CB1Rcurrent cleftGlutamate AMPA AMPAWeights ...
+        AMPAWeights1D mGluR5 Ca ECB outputSpike;
     % Change variables if a perturbation
     if (~perturbation)
         Trange=T;
@@ -83,9 +85,19 @@ for perturbation=0:postprocess_Perturbation
         [preIndexs, preIndexs1D] = load2D(directory, 'Indexs', ...
             fileExt, XdimInner, YdimInner, ZdimInner);
     end
-    if (postprocess_Cb1R)
-        [Cb1R, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'Cb1R', fileExt, Trange(1), ...
+    if (postprocess_CB1R)
+        [CB1R, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'CB1R', fileExt, Trange(1), ...
+            Trange(end), sf);
+    end 
+    if (postprocess_CB1Runbound)
+        [CB1Runbound, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'CB1Runbound', fileExt, Trange(1), ...
+            Trange(end), sf);
+    end 
+    if (postprocess_CB1Rcurrent)
+        [CB1Rcurrent, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'CB1Rcurrent', fileExt, Trange(1), ...
             Trange(end), sf);
     end 
     if (postprocess_CleftGlutamate)
@@ -160,7 +172,7 @@ for perturbation=0:postprocess_Perturbation
     synapse=randi(XdimInner,1,1); % only for Xdimension
     if (postprocess_InputSpikes)
         [~, figNum] = newFigure(figNum, false);
-        subplot(10,1,1); 
+        subplot(12,1,1); 
         scatter(inputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
             ones(numel(inputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
         title(['Components',perturbationString(perturbation,0,1)]); 
@@ -168,7 +180,7 @@ for perturbation=0:postprocess_Perturbation
         set(gca,'XTick',[]);
     end
     if (postprocess_Glutamate || postprocess_AvailableGlutamate)
-        subplot(10,1,2); hold on;
+        subplot(12,1,2); hold on;
         if (postprocess_Glutamate)
             plot(sfRange, glutamate(:,synapse,1,1));
         end
@@ -178,26 +190,38 @@ for perturbation=0:postprocess_Perturbation
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
-    if (postprocess_Cb1R)
-        subplot(10,1,3);
-        plot(sfRange, Cb1R(:,synapse,1,1));
+    if (postprocess_CB1R)
+        subplot(12,1,3);
+        plot(sfRange, CB1R(:,synapse,1,1));
+        xlim([Trange(1) Trange(end)]);
+        set(gca,'XTick',[]);
+    end 
+    if (postprocess_CB1Runbound)
+        subplot(12,1,4);
+        plot(sfRange, CB1Runbound(:,synapse,1,1));
+        xlim([Trange(1) Trange(end)]);
+        set(gca,'XTick',[]);
+    end 
+    if (postprocess_CB1Rcurrent)
+        subplot(12,1,5);
+        plot(sfRange, CB1Rcurrent(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end 
     if (postprocess_CleftGlutamate)
-        subplot(10,1,4);
+        subplot(12,1,6);
         plot(sfRange, cleftGlutamate(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_CleftECB)
-        subplot(10,1,5);
+        subplot(12,1,7);
         plot(sfRange, cleftECB(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end    
     if (postprocess_AMPA || postprocess_AMPAWeights)
-        subplot(10,1,6); hold on;
+        subplot(12,1,8); hold on;
         if (postprocess_AMPAWeights)
             plot(sfRange, ones(1,numel(sfRange))*AMPAWeights(synapse,1,1));
             yyaxis right;
@@ -209,32 +233,33 @@ for perturbation=0:postprocess_Perturbation
         set(gca,'XTick',[]);
     end
     if (postprocess_mGluR)
-        subplot(10,1,7);
         plot(sfRange, mGluR(:,synapse,1,1));
+        subplot(12,1,9);
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_Ca)
-        subplot(10,1,8);
+        subplot(12,1,10);
         plot(sfRange, Ca(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_ECB)
-        subplot(10,1,9);
+        subplot(12,1,11);
         plot(sfRange, ECB(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_OutputSpikes)
-        subplot(10,1,10);
+        subplot(12,1,12);
         scatter(outputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
             ones(numel(outputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
     if (postprocess_InputSpikes || postprocess_Glutamate ...
-            || postprocess_AvailableGlutamate || postprocess_Cb1R ...
+            || postprocess_AvailableGlutamate || postprocess_CB1R ...
+            || postprocess_CB1Runbound || postprocess_CB1Rcurrent ...
             || postprocess_CleftGlutamate || postprocess_AMPA ...
             || postprocess_AMPAWeights || postprocess_mGluR ...
             || postprocess_Ca || postprocess_ECB ...

@@ -38,6 +38,8 @@ class BoutonIAFUnitDataCollector : public CG_BoutonIAFUnitDataCollector
   std::ofstream* glutamate_file;
   std::ofstream* availableGlutamate_file;
   std::ofstream* CB1R_file;
+  std::ofstream* CB1Runbound_file;
+  std::ofstream* CB1Rcurrent_file;
 };
 
 #endif

@@ -116,7 +116,7 @@ NdplNodeInit heterInput(initInput);
 
 // Initialize boutons
 //BindName initBoutons("availableGlutamate", UniformDist(0.0, 2.0), "maxGlutamate", 2.0); // arb. unit, arb. unit
-BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0); // arb. unit, arb. unit
+BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 1.0); // arb. unit, arb. unit, arb. unit
 NdplNodeInit heterBoutons(initBoutons);
 
 // Initialize clefts/astrocytes
@@ -237,7 +237,8 @@ polyConnect(CSC/pre[].Layer(input), inputCollector, <>, <>);
 
 VariableType BoutonIAFUnitDataCollector;
 BoutonIAFUnitDataCollector boutonCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=0, op_saveAvailableGlutamate=1, op_saveCb1R=0>;
+  op_saveGlutamate=1, op_saveAvailableGlutamate=1,
+  op_saveCB1R=1, op_saveCB1Runbound=1, op_saveCB1Rcurrent=1>;
 polyConnect(CSC/cann[].Layer(boutons), boutonCollector, <>, <>);
 
 VariableType CleftAstrocyteIAFUnitDataCollector;

@@ -25,7 +25,9 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
   double availableGlutamate;   // amount of glutamate available to be released
   double maxGlutamate;         // maximum amount of glutamate to recovery to
 
-  ECBIAFInput [] ECBinput;     // input of edogenous cannabinoid
+  ECBIAFInput [] ECBinput;     // input of endogenous cannabinoid
+  double CB1R;                 // CB1R total quantity
+  double CB1Runbound;          // CB1R unbound quantity
   double CB1Rrise;             // rise current of Cannabinoid receptor
   double CB1Rcurrent;          // fall current of Cannabinoid receptor
 
@@ -56,12 +58,14 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
 
   InitPhase initialize();
 
-  RuntimePhase update(glutamate, availableGlutamate, CB1Rcurrent);
+  RuntimePhase update(glutamate, availableGlutamate, CB1R, CB1Runbound, CB1Rcurrent);
 
   GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
   AvailableGlutamateIAFProducer.availableGlutamate << &availableGlutamate; // available glutamate
+  CB1RIAFProducer.CB1R << &CB1R; // CB1R total quantity
+  CB1RIAFProducer.CB1Runbound << &CB1Runbound; // CB1R unbound quantity
   CB1RIAFProducer.CB1Rcurrent << &CB1Rcurrent; // CB1R current
-
+  
   UserFunction setSpikeIndices;
   UserFunction setECBIndices;
 
