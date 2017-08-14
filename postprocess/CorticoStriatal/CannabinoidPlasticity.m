@@ -40,10 +40,10 @@ postprocess_CleftGlutamate = true;
 postprocess_CleftECB = false;
 postprocess_AMPA = false;
 postprocess_AMPAWeights = true;
-postprocess_mGluR = false;
 postprocess_Ca = false;
 postprocess_ECB = false;
 postprocess_OutputSpikes = false;
+postprocess_mGluR5 = true;%false;
 postprocess_Headroom = true;
 postprocess_RiskySynapses = true;
 postprocess_Perturbation = true;
@@ -126,15 +126,15 @@ for perturbation=0:postprocess_Perturbation
                 ZdimInner);
         end
     end
-    if (postprocess_mGluR)
+    if (postprocess_mGluR5)
         if (~perturbation)
             [~, figNum] = newFigure(figNum, false);
-            plotModulation(directory, 'mGluRmodulation', fileExt, ...
-                'mGluR modulation function', 'mGluR', 'Ca2+', ...
-                'mGluRmodulation');
+            plotModulation(directory, 'mGluR5modulation', fileExt, ...
+                'mGluR5 modulation function', 'mGluR5', 'Ca2+', ...
+                'mGluR5modulation');
         end
-        [mGluR, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'mGluR', fileExt, Trange(1), ...
+        [mGluR5, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, 'mGluR5', fileExt, Trange(1), ...
             Trange(end), sf);
     end
     if (postprocess_Ca)
@@ -232,9 +232,9 @@ for perturbation=0:postprocess_Perturbation
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
-    if (postprocess_mGluR)
-        plot(sfRange, mGluR(:,synapse,1,1));
+    if (postprocess_mGluR5)
         subplot(12,1,9);
+        plot(sfRange, mGluR5(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
@@ -261,7 +261,7 @@ for perturbation=0:postprocess_Perturbation
             || postprocess_AvailableGlutamate || postprocess_CB1R ...
             || postprocess_CB1Runbound || postprocess_CB1Rcurrent ...
             || postprocess_CleftGlutamate || postprocess_AMPA ...
-            || postprocess_AMPAWeights || postprocess_mGluR ...
+            || postprocess_AMPAWeights || postprocess_mGluR5 ...
             || postprocess_Ca || postprocess_ECB ...
             || postprocess_OutputSpikes)
         print([directory,'components',perturbationString(perturbation,1,0)],'-dpng');
@@ -276,15 +276,15 @@ for perturbation=0:postprocess_Perturbation
         xlabel('Hz'); ylabel('count');
         print([directory,'outHz',perturbationString(perturbation,1,0)],'-dpng');
     end
-    if (postprocess_mGluR && postprocess_Ca && postprocess_ECB)
+    if (postprocess_mGluR5 && postprocess_Ca && postprocess_ECB)
         [~, figNum] = newFigure(figNum, false);
         Hrange = 0:3/50:3;
 
-        mGluRHist = hist3D(Hrange, mGluR);
+        mGluR5Hist = hist3D(Hrange, mGluR5);
         subplot(3,1,1);
-        imagesc([0 size(mGluR,1)],Hrange,mGluRHist);
-        title(['mGluR',perturbationString(perturbation,0,1)]); 
-        xlabel('time'); ylabel('mGluR');
+        imagesc([0 size(mGluR5,1)],Hrange,mGluR5Hist);
+        title(['mGluR5',perturbationString(perturbation,0,1)]); 
+        xlabel('time'); ylabel('mGluR5');
         colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
         set(gca,'ydir','normal');
 
@@ -303,8 +303,8 @@ for perturbation=0:postprocess_Perturbation
         xlabel('time'); ylabel('ECB');
         colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
         set(gca,'ydir','normal');
-        print([directory,'mGluR_Ca_ECB',perturbationString(perturbation,1,0)],'-dpng');
-        clear Hrange mGluRHist CaHist ECBHist;
+        print([directory,'mGluR5_Ca_ECB',perturbationString(perturbation,1,0)],'-dpng');
+        clear Hrange mGluR5Hist CaHist ECBHist;
     end 
     if (postprocess_AvailableGlutamate)
         Hrange = 0:0.01:2.1;
@@ -970,12 +970,12 @@ function [ret, ret1D] = load3D(directory, file, fileExt, XdimInner, ...
 end
 function plotModulation(directory, file, fileExt, titleStr, x, ...
     y, saveFile)
-    % mGluR modulation function only first
+    % mGluR5 modulation function only first
     fid = fopen([directory,file,fileExt],'r');
-    mGluRmodulation = fread(fid, Inf, 'float');
+    mGluR5modulation = fread(fid, Inf, 'float');
     fclose(fid);
     clear fid;
-    plot(0:1/1000:2, mGluRmodulation);
+    plot(0:1/1000:2, mGluR5modulation);
     title(titleStr);
     xlabel(x); ylabel(y);
     print([directory,saveFile],'-dpng');
