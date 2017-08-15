@@ -37,8 +37,8 @@ void Goodwin::update(RNG& rng)
       Y += ( (SHD.k3 * X) - (SHD.k4 * Y) ) * SHD.deltaT;
       Z += ( (k5_instance * Y) - (SHD.k6 * Z) ) * SHD.deltaT;
       if (in.size() > 0)
-        k5_instance -= (( ((0.1-(*(in[0].input) * in[0].weight))/SHD.k5tau) * // only consider first one, weight is structural plasticity
-                          (k5_instance-SHD.k5max) ) * SHD.deltaT);
+        k5_instance -= (( ((0.1-(*(in[0].input) * in[0].weight)) * // only consider first one, weight is structural plasticity
+                           (k5_instance-SHD.k5max)) / SHD.k5tau) * SHD.deltaT);
     }
   else
     {
