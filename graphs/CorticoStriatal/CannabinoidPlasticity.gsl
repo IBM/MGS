@@ -49,8 +49,8 @@ NodeType PoissonIAFUnit(<
 NodeType BoutonIAFUnit(<
                        glutamateAdaptRate = 0.00004,   // in arb. unit; free parameter
                        glutamateRecoverTau = 4.28,    // in s (from Pyott and Rosenmund, 2002; slow component)
-                       Cb1RriseTau = 4.0,             // in s (fitted to Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
-                       Cb1RfallTau = 22.5,            // in s (from Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
+                       CB1RriseTau = 4.0,             // in s (fitted to Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
+                       CB1RfallTau = 22.5,            // in s (from Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
                        deltaT = DELTAT,               // in s
                        sharedDirectory = DIRECTORY,
                        sharedFileExt = FILE_EXTENSION,
