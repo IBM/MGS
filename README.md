@@ -15,8 +15,8 @@ NTI:
 
 
 External library:
-  bison 
-  flex
+  bison v2.4.1
+  flex v2.5.4
   lgmp
 
 
