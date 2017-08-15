@@ -23,8 +23,9 @@ class NDPairList;
 
 class GoodwinCompCategory : public CG_GoodwinCompCategory
 {
-   public:
-      GoodwinCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+  public:
+    GoodwinCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+    void initializeShared_Cannabinoids_init_k5(RNG& rng);
 };
 
 #endif

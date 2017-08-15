@@ -37,9 +37,14 @@ Node Goodwin Implements GoodwinProducer
       double n;
 
       double deltaT;   // in s
+
+      // Model specific shared variables
+      double k5min;    // for paramaterizing for CB1R min
+      double k5max;    // for paramaterizing for CB1R max
+      double k5tau;    // k5 recovery/decay time constant
       
       // Model specific shared initialize phases
-      //InitPhase initializeShared_Cannabinoids;      
+      InitPhase initializeShared_Cannabinoids_init_k5;
     }
 
   InAttrPSet
@@ -49,7 +54,7 @@ Node Goodwin Implements GoodwinProducer
     }
 
   RuntimePhase update(X, Y, Z);
-
+  
   GoodwinProducer.X << &X;
   GoodwinProducer.Y << &Y;
   GoodwinProducer.Z << &Z;
