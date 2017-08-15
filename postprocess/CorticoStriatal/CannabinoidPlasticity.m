@@ -193,7 +193,7 @@ for perturbation=0:postprocess_Perturbation
         subplot(5,3,1); 
         scatter(inputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
             ones(numel(inputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
-        title(['Components',perturbationString(perturbation,0,1)]); 
+        title(['inputSpike',perturbationString(perturbation,0,1)]); 
         xlim([Trange(1) Trange(end)]);
         set(gca,'XTick',[]);
     end
@@ -206,54 +206,63 @@ for perturbation=0:postprocess_Perturbation
             plot(sfRange, availableGlutamate(:,synapse,1,1));
         end
         xlim([Trange(1) Trange(end)]);
+        title(['glutamate and availableGlutamate',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_CB1R)
         subplot(5,3,3);
         plot(sfRange, CB1R(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['CB1R',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_CB1Runbound)
         subplot(5,3,4);
         plot(sfRange, CB1Runbound(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['CB1Runbound',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_CB1Rcurrent)
         subplot(5,3,5);
         plot(sfRange, CB1Rcurrent(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['CB1Rcurrent',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_GoodwinX)
         subplot(5,3,6);
         plot(sfRange, GoodwinX(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['GoodwinX',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_GoodwinY)
         subplot(5,3,7);
         plot(sfRange, GoodwinY(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['GoodwinY',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_GoodwinZ)
         subplot(5,3,8);
         plot(sfRange, GoodwinZ(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['GoodwinZ',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_CleftGlutamate)
         subplot(5,3,9);
         plot(sfRange, cleftGlutamate(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['cleftGlutamate',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_CleftECB)
         subplot(5,3,10);
         plot(sfRange, cleftECB(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['cleftECB',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end    
     if (postprocess_AMPA || postprocess_AMPAWeights)
@@ -266,24 +275,28 @@ for perturbation=0:postprocess_Perturbation
             plot(sfRange, AMPA(:,synapse,1,1));  
         end
         xlim([Trange(1) Trange(end)]);
+        title(['AMPA and AMPAWeights',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_mGluR5)
         subplot(5,3,12);
         plot(sfRange, mGluR5(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['mGluR5',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_Ca)
         subplot(5,3,13);
         plot(sfRange, Ca(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['Ca',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_ECB)
         subplot(5,3,14);
         plot(sfRange, ECB(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
+        title(['ECB',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_OutputSpikes)
@@ -291,6 +304,7 @@ for perturbation=0:postprocess_Perturbation
         scatter(outputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
             ones(numel(outputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
         xlim([Trange(1) Trange(end)]);
+        title(['outputSpike',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end
     if (postprocess_InputSpikes || postprocess_Glutamate ...
