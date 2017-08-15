@@ -15,7 +15,7 @@
 
 #include "../std/std.gsl"
 InitPhases = { initialize };
-RuntimePhases = { dataCollect, update, copy, outputWeightsShared, lastPhase };
+RuntimePhases = { update, copy, outputWeightsShared, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
