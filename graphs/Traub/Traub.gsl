@@ -15,7 +15,7 @@
 
 #include "../std/std.gsl"
 InitPhases = { init1, init2, initialize };
-RuntimePhases = { dataCollect, run1, run2, lastPhase };
+RuntimePhases = { run1, run2, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
@@ -33,7 +33,7 @@ NodeType WaveDriverUnit(<
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
-			inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
+			inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
                         op_random = 1,
                         scale = 0.8 //3.0
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
@@ -164,7 +164,6 @@ LFPDataAnalyzer LFPanalyzer<directory=DIRECTORY, fileExt=FILE_EXTENSION,
 // 1 unit grid = 113 um
 // radius 1500 um / 113 um = 13.27 grid units
 // sigma 300 um (middle of literature range of 200-400um) / 113 um = 2.65 grid units
-
 polyConnect(iaf/fsi[].Layer(FSIs), LFPanalyzer, <>, <>);
 
 
