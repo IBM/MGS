@@ -355,7 +355,29 @@ for perturbation=0:postprocess_Perturbation
         set(gca,'ydir','normal');
         print([directory,'mGluR5_Ca_ECB',perturbationString(perturbation,1,0)],'-dpng');
         clear Hrange mGluR5Hist CaHist ECBHist;
-    end 
+    end
+    if (postprocess_CB1R && postprocess_CB1Runbound)
+        [~, figNum] = newFigure(figNum, false);
+        Hrange = 0:1/50:1;
+
+        CB1RHist = hist3D(Hrange, CB1R);
+        subplot(2,1,1);
+        imagesc([0 size(CB1R,1)],Hrange,CB1RHist);
+        title(['CB1R',perturbationString(perturbation,0,1)]); 
+        xlabel('time'); ylabel('CB1R');
+        colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
+        set(gca,'ydir','normal');
+
+        CB1RunboundHist = hist3D(Hrange, CB1Runbound);
+        subplot(2,1,2);
+        imagesc([0 size(CB1Runbound,1)],Hrange,CB1RunboundHist);
+        title(['Unbound CB1R',perturbationString(perturbation,0,1)]); 
+        xlabel('time'); ylabel('Unbound CB1R');
+        colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
+        set(gca,'ydir','normal');
+        print([directory,'CB1R_CB1Runbound',perturbationString(perturbation,1,0)],'-dpng');
+        clear Hrange CB1RHist CB1RunboundHist; 
+    end
     if (postprocess_AvailableGlutamate)
         Hrange = 0:0.01:2.1;
         availableGlutamateHist = hist3D(Hrange, availableGlutamate);
