@@ -31,6 +31,8 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
   double CB1Rrise;             // rise current of Cannabinoid receptor
   double CB1Rcurrent;          // fall current of Cannabinoid receptor
 
+  GoodwinInput [] CB1input;    // input of CB1R protein levels
+  
   Shared
     {
       double glutamateAdaptRate;    // Rate of surpression of glutamate release
@@ -79,6 +81,13 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
   {
     ECBIAFProducer.ECB >> ECBinput.ECB;
     PSet.weight >> ECBinput.weight;
+    setECBIndices();
+  }
+  
+  Connection Pre Node (PSet.identifier=="CB1input") Expects GoodwinProducer
+  {
+    GoodwinProducer.Y >> CB1input.Y; // only care about the amount of CB1, i.e. Y
+    PSet.weight >> CB1input.weight;
     setECBIndices();
   }
 }

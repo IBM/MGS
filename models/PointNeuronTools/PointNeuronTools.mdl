@@ -308,6 +308,7 @@ Struct GoodwinInput
   double* X;
   double* Y;
   double* Z;
+  double weight;
   int row;
   int col;
 }

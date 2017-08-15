@@ -57,24 +57,22 @@ NodeType BoutonIAFUnit(<
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
                        >) {initializeShared->init1, update->run2};
 
-//#define k5_MIN 3.99   // parameterized for CB1R ~= 0.1
-//#define k5_MAX 0.2507 // parameterized for CB1R ~= 1.0
 #define X_INIT 0.01     // parameterized for CB1R ~= 0.1
 #define Y_INIT 0.0998   // parameterized for CB1R ~= 0.1
 #define Z_INIT 3.9819   // parameterized for CB1R ~= 0.1
 NodeType Goodwin(<
                  K1 = 1.0,
-                 k1 = 1.0,
-                 k2 = 0.1,
-                 k3 = 1.0,
-                 k4 = 0.1,
-                 k5 = 1.0,
-                 k6 = 0.1,
+                 k1 = 200.0,
+                 k2 = 20.0,
+                 k3 = 200.0,
+                 k4 = 20.0,
+                 k5 = 200.0,
+                 k6 = 20.0,
                  n = 5,
                  deltaT = DELTAT,     // in s
-                 k5min = 3.99,        // parameterized for CB1R ~= 0.1
-                 k5min = 0.2507,      // parameterized for CB1R ~= 1.0
-                 k5tau = 100          // in s
+                 k5min = 3.99,        // parameterized for CB1R ~= 0.1; free parameter
+                 k5max = 0.2507,      // parameterized for CB1R ~= 1.0; free parameter
+                 k5tau = 0.1          // in s; free parameter
                  >) {initializeShared_Cannabinoids_init_k5->init1, update->run1};
 
 NodeType CleftAstrocyteIAFUnit(<
@@ -135,7 +133,7 @@ BindName initInput("Hz", UniformDist(0,150));//Scale(Exp(RangePassThru(-100,"<="
 NdplNodeInit heterInput(initInput);
 
 // Initialize boutons
-BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 1.0); // arb. unit, arb. unit, arb. unit
+BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 0.1); // arb. unit, arb. unit, arb. unit
 NdplNodeInit heterBoutons(initBoutons);
 
 // Initialize Goodwin
@@ -168,6 +166,10 @@ NdplInAttrInit glutW(GLUT_W);
 // Glutamate weights between boutons and spines, structural plasticity
 BindName PRE_W("weight", 1.0, "identifier", "glutamateInput");
 NdplInAttrInit preW(PRE_W);
+
+// Y weights between Goodwin and boutons, structural plasticity
+BindName IN_CB1("weight", 1.0, "identifier", "CB1input");
+NdplInAttrInit inCB1(IN_CB1);
 
 // AMPA weights between spines and output neurons, structural plasticity
 BindName AMPA_W("weight", 100.0, "identifier", "AMPAcurrentInputs");
@@ -221,7 +223,11 @@ Grid Cannabinoid
 
   // cleft -> bouton
   connectNodeSets(.[].Layer(cleftsAstrocytes), .[].Layer(boutons),
-                  IsoSampler(), outAttrDef, ecb2W);  
+                  IsoSampler(), outAttrDef, ecb2W);
+  
+  // Goodwin -> bouton
+  connectNodeSets(.[].Layer(Goodwins), .[].Layer(boutons),
+                  IsoSampler(), outAttrDef, inCB1);
 };
 
 Grid Output

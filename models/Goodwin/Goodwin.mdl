@@ -23,7 +23,10 @@ Node Goodwin Implements GoodwinProducer
   double Y;            // protein
   double Z;            // transcriptional inhibitor
   
-  Input [] in;
+  Input [] in;         // used by model specific phases
+
+  // Model specific instance variables
+  // none
   
   Shared
     {
