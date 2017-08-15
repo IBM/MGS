@@ -20,12 +20,33 @@
 
 #define SHD getSharedMembers()
 
+void Goodwin::initialize(RNG& rng)
+{
+  // Set up any model specific instance variables
+  if (SHD.op_Cannabinoids)
+    k5_instance = SHD.k5;
+}
+
 void Goodwin::update(RNG& rng) 
 {
-  // Typical equations for Goodwin model
-  X += ( (SHD.k1 / (SHD.K1 + pow(Z, SHD.n))) - (SHD.k2 * X) ) * SHD.deltaT;
-  Y += ( (SHD.k3 * X) - (SHD.k4 * Y) ) * SHD.deltaT;
-  Z += ( (SHD.k5 * Y) - (SHD.k6 * Z) ) * SHD.deltaT;  
+  if (SHD.op_Cannabinoids)
+    {      
+      // Use an instance version of k5 which is updated with the amount of
+      // unbound CB1R from the bouton
+      X += ( (SHD.k1 / (SHD.K1 + pow(Z, SHD.n))) - (SHD.k2 * X) ) * SHD.deltaT;
+      Y += ( (SHD.k3 * X) - (SHD.k4 * Y) ) * SHD.deltaT;
+      Z += ( (k5_instance * Y) - (SHD.k6 * Z) ) * SHD.deltaT;
+      if (in.size() > 0)
+        k5_instance -= (( ((0.1-(*(in[0].input) * in[0].weight))/SHD.k5tau) * // only consider first one, weight is structural plasticity
+                          (k5_instance-SHD.k5max) ) * SHD.deltaT);
+    }
+  else
+    {
+      // Typical equations for Goodwin model
+      X += ( (SHD.k1 / (SHD.K1 + pow(Z, SHD.n))) - (SHD.k2 * X) ) * SHD.deltaT;
+      Y += ( (SHD.k3 * X) - (SHD.k4 * Y) ) * SHD.deltaT;
+      Z += ( (SHD.k5 * Y) - (SHD.k6 * Z) ) * SHD.deltaT;  
+    }
 }
 
 void Goodwin::setInIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GoodwinInAttrPSet* CG_inAttrPset, CG_GoodwinOutAttrPSet* CG_outAttrPset) 

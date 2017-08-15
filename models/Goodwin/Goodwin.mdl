@@ -26,7 +26,7 @@ Node Goodwin Implements GoodwinProducer
   Input [] in;         // used by model specific phases
 
   // Model specific instance variables
-  // none
+  double k5_instance;
   
   Shared
     {
@@ -45,8 +45,11 @@ Node Goodwin Implements GoodwinProducer
       double k5min;    // for paramaterizing for CB1R min
       double k5max;    // for paramaterizing for CB1R max
       double k5tau;    // k5 recovery/decay time constant
+
+      // Model specific flags
+      bool op_Cannabinoids;
       
-      // Model specific shared initialize phases
+      // Model specific shared phases
       InitPhase initializeShared_Cannabinoids_init_k5;
     }
 
@@ -56,6 +59,7 @@ Node Goodwin Implements GoodwinProducer
       double weight;
     }
 
+  InitPhase initialize();
   RuntimePhase update(X, Y, Z);
   
   GoodwinProducer.X << &X;

@@ -72,7 +72,8 @@ NodeType Goodwin(<
                  deltaT = DELTAT,     // in s
                  k5min = 3.99,        // parameterized for CB1R ~= 0.1; free parameter
                  k5max = 0.2507,      // parameterized for CB1R ~= 1.0; free parameter
-                 k5tau = 0.1          // in s; free parameter
+                 k5tau = 0.3,         // in s; free parameter
+                 op_Cannabinoids = 1
                  >) {initializeShared_Cannabinoids_init_k5->init1, update->run1};
 
 NodeType CleftAstrocyteIAFUnit(<
@@ -91,7 +92,7 @@ NodeType SpineIAFUnit(<
                       CariseTau = 0.010,   // in s (fitted to Tuan's model)
                       CafallTau = 0.008,   // in s (fitted to Tuan's model)
                       op_CaVSCCdepend = 1, // CaVSCC Ca2+ is dependent on spine size
-                      CaVSCC = 250.0,//90.0,       // in arb. unit; free parameter
+                      CaVSCC = 250.0,      // in arb. unit; free parameter
                       CaVSCCpow = -0.5,    // CaVSCC*(AMPAweight^pow), in arb. unit
                       CaBP = 0.0,          // in arb. unit; free parameter
                       ECBprodC = ECBPRODC, // in arb. unit
@@ -99,7 +100,7 @@ NodeType SpineIAFUnit(<
                       deltaT = DELTAT,     // in s
                       sharedDirectory = DIRECTORY,
                       sharedFileExt = FILE_EXTENSION,
-                      op_saveWeights = 1,   // whether to save the spine weights or not
+                      op_saveWeights = 1,  // whether to save the spine weights or not
                       op_perturbation = OP_PERT_AMPA,
                       perturbationT = OP_PERT_AMPA_T,
                       collectWeightsOn = {1,OP_PERT_AMPA_T} // when to save the spine weights
@@ -168,8 +169,12 @@ BindName PRE_W("weight", 1.0, "identifier", "glutamateInput");
 NdplInAttrInit preW(PRE_W);
 
 // Y weights between Goodwin and boutons, structural plasticity
-BindName IN_CB1("weight", 1.0, "identifier", "CB1input");
-NdplInAttrInit inCB1(IN_CB1);
+BindName CB1_W("weight", 1.0, "identifier", "CB1input");
+NdplInAttrInit cb1W(CB1_W);
+
+// Unbound CB1R weights between boutons and Goodwin, structural plasticity
+BindName CB1RUNBOUND_W("weight", 1.0, "identifier", "in");
+NdplInAttrInit cb1runboundW(CB1RUNBOUND_W);
 
 // AMPA weights between spines and output neurons, structural plasticity
 BindName AMPA_W("weight", 100.0, "identifier", "AMPAcurrentInputs");
@@ -227,7 +232,11 @@ Grid Cannabinoid
   
   // Goodwin -> bouton
   connectNodeSets(.[].Layer(Goodwins), .[].Layer(boutons),
-                  IsoSampler(), outAttrDef, inCB1);
+                  IsoSampler(), outAttrDef, cb1W);
+  
+  // bouton -> Goodwin
+  connectNodeSets(.[].Layer(boutons), .[].Layer(Goodwins),
+                  IsoSampler(), outAttrDef, cb1runboundW);
 };
 
 Grid Output

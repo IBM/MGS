@@ -18,7 +18,7 @@
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProducer,
-  CB1RIAFProducer
+  CB1RIAFProducer, OutputProducer
 {
   SpikeInput [] spikeInput;    // input of spike
   double glutamate;            // current output of glutamate
@@ -66,6 +66,7 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
   CB1RIAFProducer.CB1R << &CB1R; // CB1R total quantity
   CB1RIAFProducer.CB1Runbound << &CB1Runbound; // CB1R unbound quantity
   CB1RIAFProducer.CB1Rcurrent << &CB1Rcurrent; // CB1R current
+  OutputProducer.output << &CB1Runbound; // CB1R unbound quantity for Goodwin model  
   
   UserFunction setSpikeIndices;
   UserFunction setECBIndices;
