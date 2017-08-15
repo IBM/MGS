@@ -15,15 +15,14 @@ NTI:
 
 
 External library:
-  bison 
-  flex
+  bison v2.4.1
+  flex v2.5.4
   lgmp
 
 
 
 # ZenHub
-The following is based on the reading of [ZenHub's documentation](https://www.zenhub.com/github-project-management.pdf) 
-and other tutorial and help guides.
+The following is based on the reading of [ZenHub's documentation](https://www.zenhub.com/github-project-management.pdf), [IBM's ZenHub documentation](https://pages.github.ibm.com/the-playbook/zenhub/) and other tutorial and help guides.
 
 ## ZenHub overview
 ZenHub extends GitHub's issues tool with extra features for Agile project management. 
@@ -78,38 +77,30 @@ When estimating, the units aren't time or effort etc. rather the number represen
 See [this document](https://www.zenhub.com/github-project-management.pdf) for a more in depth discussion.
 
 ### What are the pipelines?
-**New Issues**: New Issues land here automatically. They should be dragged to another pipeline as soon as possible.
-**Icebox**: Issues that *are not* a current focus, but you will act on them at some point.
-**Backlog**: Issues that *are* a current focus.  If they don’t have a GitHub milestone, consider them part of your
-*product backlog*. Once you add a Milestone, they’re part of your *sprint backlog*.
-**In Progress**: What's being worked on right now.
-**Review/QA**: For Issues that are on hold as need review or QA. [Optional]
-
-**Done**: Finished! No further work required as part of this task. If it is `Target: Science` move it here when the client 
-or community is made aware through a meeting, report, or white paper, and all code has been committed to a branch. If it is either `Target: MGS` or `Target: NTS` put it here when a pull request is issued and code review is scheduled.
-
-**Closed**: View your completed work. Drag issues here to close them for all users; dragging them out will re-open them. If it is `Target: Science` move it here after the client or community is made aware through a peer reviewed publication, and all related code has been included and accepted in a pull request and merged into the master branch. If it is either 
-`Target: MGS` or `Target: NTS` move it here after the pull request has been accepted.
+* **New Issues**: New Issues land here automatically. They should be dragged to another pipeline as soon as possible.
+* **Icebox**: Issues that *are not* a current focus, but you will act on them at some point.
+* **Backlog**: Issues that *are* a current focus.  If they don’t have a GitHub milestone, consider them part of your *product backlog*. Once you add a Milestone, they’re part of your *sprint backlog*.
+* **In Progress**: What's being worked on right now.
+* **Review/QA**: For Issues that are on hold as need review or QA. [Optional]
+* **Done**: Finished! No further work required as part of this task. If it is `Target: Science` move it here when the client or community is made aware through a meeting, report, or white paper, and all code has been committed to a branch *and* pushed to the remote repository. If it is either `Target: MGS` or `Target: NTS` put it here whenall code has been committed to a branch, pushed to the remote repository, and a pull request is issued and code review is scheduled. (It is suggested that before submitting a pull request, work in the master is [*merged or rebased*](https://www.atlassian.com/git/tutorials/merging-vs-rebasing) in to the branch to verify that any changes made to the master are not broken).
+* **Closed**: View your completed work. Drag issues here to close them for all users; dragging them out will re-open them. If it is `Target: Science` move it here after the client or community is made aware through a peer reviewed publication, and all related code has been included and accepted in a pull request and *merged* into the master branch. If it is either `Target: MGS` or `Target: NTS` move it here after the pull request has been accepted.
 
 ### What are the labels?
 The labels are split in to 5 groups, Client, Priority, Status, Target and Type. Descriptions of some labels follow.
 
-**Status: Coding**: Coding of the task is underway.
-**Status: Design**: Issue is still being designed.
-**Status: Discussion**: The issue is being discussed.
-**Status: Requirements**: Requirements analysis is underway.
-**Status: Results Analysis**: Scientific results from some simulations are being analysed.
-**Status: Simulating:**: Simulations are being run to address the task.
-
-**Target: MGS**: The task is targeted at MGS.
-**Target: NTS**: The task is targeted at NTS.
-**Target: Science**: The task is an aspect of scientific research of general interest to the client or community.
-
-
-**Type: Bug** A fix to code or a model/simulation result necessary for progress.
-**Type: Enhancement** An extension or modification to software that will facilitate progress.
-**Type: Research**: Background work, including testing, and generation of preliminary results needed for task completion.
-**Type: Maintenance**: Work intended to facilitate future reuse of code, model, or software.
+* **Status: Coding**: Coding of the task is underway.
+* **Status: Design**: Issue is still being designed.
+* **Status: Discussion**: The issue is being discussed.
+* **Status: Requirements**: Requirements analysis is underway.
+* **Status: Results Analysis**: Scientific results from some simulations are being analysed.
+* **Status: Simulating**: Simulations are being run to address the task.
+* **Target: MGS**: The task is targeted at MGS.
+* **Target: NTS**: The task is targeted at NTS.
+* **Target: Science**: The task is an aspect of scientific research of general interest to the client or community.
+* **Type: Bug**:A fix to code or a model/simulation result necessary for progress.
+* **Type: Enhancement**:An extension or modification to software that will facilitate progress.
+* **Type: Research**: Background work, including testing, and generation of preliminary results needed for task completion.
+* **Type: Maintenance**: Work intended to facilitate future reuse of code, model, or software.
 
 
 
