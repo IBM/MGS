@@ -359,8 +359,8 @@ TissueProbeFunctor tissueProbeFunctor();
 Functor TissueFunctor(string commandLine, string commandLineModification, 
 		string channelParamaterFile, string synapseParameteurFile,
 		Functor, Functor, Functor, Functor, int compartmentSize);
-//#define tissueFile "neurons.txt"
-#define tissueFile "IZ_1_neuron_sorted.txt"
+#define tissueFile "neurons.txt"
+//#define tissueFile "IZ_1_neuron_sorted.txt"
 //NOTE: -r #capsules-per-cpt
 //#define strArg1 tissueFile " -u bt -o neurons_developed.txt -j 2 -q 51 -a 1.0 -p DevParamsMSN.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" // -g 4"
 //#define strArg1 tissueFile " -j 2 -q 51 -a 1.0 -p DevParamsMSN.par -x " STR(_X_) " -y " STR(_Y_) " -z " STR(_Z_)  " -e 0.001 -t 0.01 -m 0 -r 1" // -g 4"
