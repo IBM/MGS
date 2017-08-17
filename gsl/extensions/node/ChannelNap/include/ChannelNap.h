@@ -14,6 +14,10 @@
 //NOTE: Hay et al. (2011) also use this model
 #define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.3
+#elif CHANNEL_NAP == NAP_MAHON_2000        
+#define BASED_TEMPERATURE 22.0  // Celcius 
+#define Q10 2.5                            
+
 #endif
 
 #ifndef Q10 

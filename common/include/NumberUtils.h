@@ -7,12 +7,15 @@
 #include <gmp.h>
 #include <iostream>
 #include <ostream>
+#include <algorithm>
+#include <math.h>
 
 //x = row, y=col
 //WIDTH=#col, HEIGHT=#row
 #ifndef Map1Dindex
 #define Map1Dindex(x, y, WIDTH) ((y) + (x) * (WIDTH))
 #endif
+#define SMALL 1.0E-6
 
 template <typename T>
 T Square(T x)
@@ -73,6 +76,17 @@ template<typename T>
 T sigmoid(T alpha, T beta)
 {
   return exp(beta * alpha) / (1 + exp(beta * alpha));
+}
+
+/* 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+Use in gating of Hodgkin-Huxley variable
+in case (x=0) --> L'hopital rule 
+*/
+template<typename T>
+T vtrap(T x, T y)
+{
+  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
 #endif

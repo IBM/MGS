@@ -109,6 +109,8 @@
 #define NAT_COLBERT_PAN_2002    5
 #define NAT_TRAUB_1994          6
 #define NAT_OGATA_TATEBAYASHI_1990  7
+#define NAT_WANG_BUSZAKI_1996  8
+#define NAT_MAHON_2000         9
 
 #define _NAT_DEFAULT NAT_HODGKIN_HUXLEY_1952
 
@@ -120,40 +122,54 @@
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
 #define _NAP_DEFAULT NAP_WOLF_2005
+
+#define NAS_MAHON_2000  2
+
+#define _NAS_DEFAULT NAS_MAHON_2000
+
 //}}}
 
 //{{{ K-models
 // KAf   CHANNEL_KAf macro
 //{{{
-#define KAf_WOLF_2005          2
-#define KAf_TRAUB_1994         3
+#define KAf_TRAUB_1994             2
+#define KAf_MAHON_2000             3
 #define KAf_KORNGREEN_SAKMANN_2000 4
-#define KAf_EVANS_2012         5
+#define KAf_WOLF_2005              5
+#define KAf_EVANS_2012             6
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
 //}}}
 // KAs   CHANNEL_KAs macro
 //{{{
-#define KAs_WOLF_2005          2
-#define KAs_KORNGREEN_SAKMANN_2000 4
+#define KAs_MAHON_2000             2 
+#define KAs_KORNGREEN_SAKMANN_2000 3
+#define KAs_WOLF_2005              4
+
 #define _KAs_DEFAULT           KAs_WOLF_2005
 //}}}
 // KIR   CHANNEL_KIR macro
 //{{{
-#define KIR_WOLF_2005          2
+#define KIR_MAHON_2000         2
+#define KIR_WOLF_2005          3
+
 #define _KIR_DEFAULT           KIR_WOLF_2005
 //}}}
 // KRP   CHANNEL_KRP macro
 //{{{
-#define KRP_WOLF_2005          2
+#define KRP_MAHON_2000         2 
+#define KRP_WOLF_2005          3
+
 #define _KRP_DEFAULT           KRP_WOLF_2005
 //}}}
 // KDR   CHANNEL_KDR macro
 //{{{
-#define KDR_HODGKIN_HUXLEY_1952 1
-#define KDR_SCHWEIGHOFER_1999   4
-#define KDR_TRAUB_1994          5
-#define KDR_TRAUB_1995          6
+#define KDR_HODGKIN_HUXLEY_1952 2
+#define KDR_TRAUB_1994          3
+#define KDR_TRAUB_1995          4
+#define KDR_WANG_BUSZAKI_1996   5
+#define KDR_SCHWEIGHOFER_1999   6
+#define KDR_MAHON_2000          7
 
 #define _KDR_DEFAULT KDR_TRAUB_1994
 
@@ -385,13 +401,15 @@
 #define _PYRAMIDAL_L5b_2016_TUAN_JAMES 101
 #define _PYRAMIDAL_L5b_2017_TUAN_JAMES 102
 
-#define _MSN_2005_WOLF        200 
-#define _MSN_2016_TUAN_JAMES  201
+#define _MSN_2005_WOLF            200    
+#define _MSN_2016_TUAN_JAMES      201
 #define _MSN_2012_EVANS_BLACKWELL 202
+#define _MSN_2000_MAHON           203
 
 #define _INFERIOR_OLIVE_1999_SCHWEIGHOFER 400
 
 #define _INTERNEURON_TRAUB_1995 300
+//TODO: #define _INTERNEURON_WANG_BUSZAKI_1996 301
 
 #define _SPINE_MSN_2017_TUAN_JAMES 500
 
@@ -420,7 +438,30 @@
 // 2. configure each model
 //  2.a select what compartmental variables to use
 //  2.b to disable any channel from the model, just comment it out
-#if   MODEL_TO_USE == _MSN_2005_WOLF
+#if MODEL_TO_USE == _MSN_MAHON_2000
+//{{{
+  //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SIMULATE_VM
+  //#define SIMULATE_CACYTO
+  //#define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+#define DEBUG_COMPARTMENT
+#define USE_SOMA_AS_POINT
+#define WRITE_GATES
+
+//{{{
+  #define CHANNEL_NAT NAT_MAHON_2000
+  #define CHANNEL_NAP NAP_MAHON_2000
+  #define CHANNEL_NAS NAS_MAHON_2000
+
+  #define CHANNEL_KIR KIR_MAHON_2000
+  #define CHANNEL_KDR KDR_MAHON_2000
+  #define CHANNEL_KAf KAf_MAHON_2000 
+  #define CHANNEL_KAs KAs_MAHON_2000
+  #define CHANNEL_KRP KRP_MAHON_2000
+
+//}}}
+//}}}
+#elif   MODEL_TO_USE == _MSN_2005_WOLF
 //{{{
 #define STRETCH_SOMA_WITH 105 //#135.0    
 #define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
@@ -950,6 +991,9 @@
 #endif
 #ifndef CHANNEL_NAP
 #define CHANNEL_NAP _NAP_DEFAULT
+#endif
+#ifndef CHANNEL_NAS
+#define CHANNEL_NAS _NAS_DEFAULT
 #endif
 #ifndef CHANNEL_KAf
 #define CHANNEL_KAf _KAf_DEFAULT

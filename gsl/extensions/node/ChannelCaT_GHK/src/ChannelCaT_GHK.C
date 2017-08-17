@@ -49,7 +49,7 @@ dyn_var_t ChannelCaT_GHK::tauhCaT[] = {
 std::vector<dyn_var_t> ChannelCaT_GHK::Vmrange_taum;
 std::vector<dyn_var_t> ChannelCaT_GHK::Vmrange_tauh;
 #else
-NOT IMPLEMENTED YET
+NOT IMPLEMENTED YET;
 #endif
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
@@ -58,6 +58,16 @@ dyn_var_t ChannelCaT_GHK::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
+//     Current is calculated v(t0) and gates(t0)
 void ChannelCaT_GHK::initialize(RNG& rng)
 {
   pthread_once(&once_CaT_GHK, initialize_others);
@@ -151,11 +161,14 @@ void ChannelCaT_GHK::initialize(RNG& rng)
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
 #endif
   }
 }
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2+dt)
+//   of second-order accuracy at time (t+dt/2+dt) using trapezoidal rule
 void ChannelCaT_GHK::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);

@@ -64,12 +64,39 @@
 #define BNC 0.25
 #define BNV (20+Eleak)
 #define BND 40
+
+#elif CHANNEL_KDR == KDR_WANG_BUSZAKI_1996
+// Equations from paper Wang_Buzsaki_1996 
+// IK = gK * n^4 (V-E)
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+#define Vshift 0 
+#define ANC -0.01                                                                  
+#define ANV (-34.0+Vshift) 
+#define AND -10.0                                                                  
+#define BNC 0.125                                                                  
+#define BNV (-44.0+Vshift)
+#define BND -80.0 
+
+#elif CHANNEL_KDR == KDR_MAHON_2000                                                
+// Equations from paper Wang_Buzsaki_1996, half activation voltages shifted by 7mV 
+#define Vshift 7.0 
+#define ANC -0.01                                                                  
+#define ANV (-34.0+Vshift) 
+#define AND -10.0                                                                  
+#define BNC 0.125                                                                  
+#define BNV (-44.0+Vshift)
+#define BND -80.0 
+                                                                                   
 #endif
 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 dyn_var_t ChannelKDR::vtrap(dyn_var_t x, dyn_var_t y) {
 	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
 }
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2)
+//   of second-order accuracy at time (t+dt/2) using trapezoidal rule
 void ChannelKDR::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
@@ -79,13 +106,13 @@ void ChannelKDR::update(RNG& rng)
 #if CHANNEL_KDR == KDR_HODGKIN_HUXLEY_1952  
     dyn_var_t an = ANC*vtrap(-(v - ANV), AND);
     dyn_var_t bn = BNC*exp(-(v - BNV)/BND);
-		// see Rempe-Chomp (2006)
+    // see Rempe-Chomp (2006)
     dyn_var_t pn = 0.5 * dt * (an + bn) * getSharedMembers().Tadj;
     n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn))/(1.0 + pn);
 
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
     //KDR = gKDR * n^4 * (Vm - Erev)
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
 
 #elif    CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
     dyn_var_t an = ANC * vtrap(-(v - ANV), AND);
@@ -95,28 +122,50 @@ void ChannelKDR::update(RNG& rng)
     n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);
     //KDR = gKDR * n^4 * (Vm - Erev)
     g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
 
 #elif CHANNEL_KDR == KDR_TRAUB_1994 || \
       CHANNEL_KDR == KDR_TRAUB_1995
     dyn_var_t an = ANC*vtrap((ANV - v), AND);
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
-		// see Rempe-Chomp (2006)
+    // see Rempe-Chomp (2006)
     dyn_var_t pn = 0.5*dt*(an + bn);
     n[i] = (dt*an + n[i]*(1.0 - pn))/(1.0 + pn);
     g[i] = gbar[i]*n[i]*n[i];
-#if CHANNEL_KDR == KDR_TRAUB_1994 
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
-#elif CHANNEL_KDR == KDR_TRAUB_1995
-#define Vshift 10.0 // [mV]
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0] - Vshift);
-#endif
+
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+
+#elif CHANNEL_KDR == KDR_MAHON_2000 || \
+      CHANNEL_KDR == KDR_WANG_BUSZAKI_1996                                       
+    dyn_var_t an = ANC*vtrap((v - ANV), AND);                              
+    dyn_var_t bn = BNC*exp((v - BNV)/BND);                                 
+                                                                           
+    //dyn_var_t n_inf = an / (an + bn);                                    
+                                                                           
+    dyn_var_t pn = 0.5 * dt * (an + bn) * getSharedMembers().Tadj;         
+    //dyn_var_t qn = 0.5 * dt * (an + bn) * getSharedMembers().Tadj;       
+    n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn)) / (1.0 + pn);   
+    //n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);                
+    //n[i] = phi * (an*(1-n[i])-bn*n[i]);                                  
+                                                                           
+    g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i]; 
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // at time (t+dt/2) 
+
 #else
-		NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET
 #endif
   }
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelKDR::initialize(RNG& rng)
 {
   assert(branchData);
@@ -198,8 +247,19 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t bn = BNC*exp((BNV - v)/BND);
     n[i] = an/(an + bn); // steady-state value
     g[i] = gbar[i]*n[i]*n[i];
+#elif CHANNEL_KDR == KDR_MAHON_2000 || \
+      CHANNEL_KDR == KDR_WANG_BUSZAKI_1996                   
+//v is at time (t0)
+// so m and h is also at time t0
+// however, as they are at steady-state, the value at time (t0+dt/2)
+// does not change
+    dyn_var_t an = ANC*vtrap((v - ANV), AND);          
+    dyn_var_t bn = BNC*exp((v - BNV)/BND);             
+    n[i] = an/(an + bn); // steady-state value         
+    g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];                  
+
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 

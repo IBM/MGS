@@ -20,9 +20,19 @@
 #define BASED_TEMPERATURE 23  // Celcius
 //TUAN TODO: maybe we need to update  all TRAUB model to 2.3
 #define Q10 2.3
+
+#elif CHANNEL_NAT == NAT_WANG_BUSZAKI_1996       
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.92 //To get a phi value = 5 
+
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 2.3
+
+#elif CHANNEL_NAT == NAT_MAHON_2000       
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.92 //To get a phi value = 5 at 37oC
+
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 #define BASED_TEMPERATURE 23  // Celcius
 #define Q10 2.3

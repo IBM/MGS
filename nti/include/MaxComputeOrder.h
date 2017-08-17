@@ -59,6 +59,7 @@
 //}}}
 
 // For Markov processing purpose
+//{{{
 #define BITSHIFT_MARKOV 16 // bits ~ 2bytes ~ short type
 #define MASK_MARKOV 0xffff
 //typedef int16_t MarkovState_t ;
@@ -81,9 +82,39 @@
 		}while (0)
 #endif
 
+//}}}
+
 //NOTE: disable this if we want 'distance' information is kept in Touch
 //  LTWT = light-weight    (NOTE: there is still bug with heavy-weight)
 #define LTWT_TOUCH
+
+//Debug purpose
+//{{{
+//  DEBUG_COMPARTMENT (if define, it helps to analyze when a cpt variable becomes NaN)
+//#define DEBUG_COMPARTMENT
+//
+//#define DEBUG_HH
+//// if enabled, print Hodgkin-Huxley information
+
+// if enabled, it always check for NaN or values outside the expected range
+#define DEBUG_ASSERT
+
+//  IDEA_DYNAMIC_INITIALVOLTAGE (if defined, it enables us to pass different voltage value at different location of branch tree - this helps to reach equilibrium faster on neuron where gradient voltage occurs)
+//#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
+
+//#define DEBUG_CPTS  //this option should be set via gsl/configure.py
+//   It tells to generate code that print out 
+//   statistical data about mean +/- SD of
+//     1. surfaceArea
+//     2. volume
+//     3. length
+//  in the following branch-types
+//     A. AXON
+//     B. BASALDEN
+//     C. APICALDEN
+     
+//#define TD_DEBUG  //put inside TouchDetector.cxx - to debug find what Segments has multiple touches with Spines(head/neck)
+//}}}
 
 //NOTE: 
 ///enable or disable the macro to turn on or off the option
@@ -92,50 +123,45 @@
 //  gbar = lineardistane(a,b) 
 //  gbar = linearbranchorder
 //  ...
-//  IDEA_ILEAK (if defined, the code that enable outputing Ileak is added to AnyCurrentDisplay via HodgkinHuxleyVoltage connection)
-//  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
-//  DEBUG_COMPARTMENT (if define, it helps to analyze when a cpt variable becomes NaN)
-//  IDEA_DYNAMIC_INITIALVOLTAGE (if defined, it enables us to pass different voltage value at different location of branch tree - this helps to reach equilibrium faster on neuron where gradient voltage occurs)
 //  TOUCHDETECT_SINGLENEURON_SPINES (if defined, it will use the strategy developed to ensure proper binding to the right location on the branch compartment) - DO NOT defined this when using full tissue 
 //#define RESAMPLING_SPACE_VOLUME (if defined, it resample based on a given space distance and volume for a given tolerance, i.e. (dist-space) < dist_tolerance, (volume-volCrit) < volTolerance)
 //#define IDEA1
 //#define NEWIDEA
-//#define IDEA_ILEAK
-//#define IDEA_CURRENTONCOMPT
 //#define SYNAPSE_PARAMS_TOUCH_DETECT
 //#define INFERIOR_OLIVE
-//#define DEBUG_COMPARTMENT
-//#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
 //#define TOUCHDETECT_SINGLENEURON_SPINES
 //#define RESAMPLING_SPACE_VOLUME
-//#define TD_DEBUG  //put inside TouchDetector.cxx - to debug find what Segments has multiple touches with Spines(head/neck)
 //#define SPINE_HEAD_UNIQUE_TOUCH // put inside TouchDetector.cxx - to ensure 1 spine head get 1 synaptic cleft
 
-
-//{{{ different strategy when modeling soma
+//different strategy when modeling soma
+//{{{
 // STRATEGY 01 - simply treate as a single point (i.e. no volume is considered)
-#define USE_SOMA_AS_ISOPOTENTIAL //enable this when we want to simulate the soma as a well-mixed iso-potential compartment - so that the distance from the first-proximal compartment to soma is actually the half-length of that compartment
-//#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as 1um^2 surface-area
+//  use either (but NOT both) USE_SOMA_AS_ISOPOTENTIAL or USE_SOMA_AS_POINT
+#define USE_SOMA_AS_ISOPOTENTIAL //enable this when we want to simulate the soma as a well-mixed iso-potential compartment - so that the distance from the first-proximal compartment to soma is actually the distance from center node to outer surface of the spherical soma, i.e. half-length of the dendritic/axonic compartment
 
-// STRATEGY 02 - adjust the soma to consider 'effect' in that the real-shape soma may obstruct the
+//#define USE_SOMA_AS_POINT   //enable this when we want to simulate the soma as 1um^2 surface-area regardless of area being used in the morphology
+
+// STRATEGY 02 [experimental] - adjust the soma to consider 'effect' in that the real-shape soma may obstruct the
 //               propagation of electrical signal than the spherical one
-#ifndef STRETCH_SOMA_WITH   // only work when disable USE_SOMA_AS_POINT
-#define STRETCH_SOMA_WITH 00.0    
-//#define STRETCH_SOMA_WITH 050.0 
+//#define USE_STRETCH_SOMA_RADIUS   //which use STRETCH_SOMA_RADIUS_WITH
+//#ifndef STRETCH_SOMA_WITH   // only work when disable STRATEGY 01 
+//#define STRETCH_SOMA_WITH 0.0    
+//#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 40.0 // [um] - make soma longer (hoping to make diffusion slower)
 //#define STRETCH_SOMA_WITH 0.0 
 //#define STRETCH_SOMA_WITH 130.0 
 //#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 25.0    
-#endif
+//#endif
 
-// STRATEGY 03 - make the neck smaller is another way to treat if real-shape soma obstruct the 
+// STRATEGY 03 [experimental]- make the neck smaller is another way to treat if real-shape soma obstruct the 
 //               propagation of electrical signal than the spherical one
 //{{{
-#ifndef SCALING_NECK_FROM_SOMA
-#define SCALING_NECK_FROM_SOMA 1.0  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 10.0  //>1: make neck smaller
-#endif
+//#define USE_SCALING_NECK_FROM_SOMA
+//#ifndef SCALING_NECK_FROM_SOMA_WITH
+//#define SCALING_NECK_FROM_SOMA_WITH 1.0  //>1: make neck smaller
+//#define SCALING_NECK_FROM_SOMA_WITH 10.0  //>1: make neck smaller
+//#endif
 //}}}
 
 // STRATEGY for Calcium in Soma calculation
@@ -152,8 +178,10 @@
 //}}}
 //}}}
 
+//numerics
+//{{{numerics
 // STRATEGY for 'junction' compartment
-#define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
+//#define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
                         // if not; then Rb = ((*diter)->r + dimension->r)/2
                         
 //{{{
@@ -173,6 +201,25 @@
 //       dsi = (dx1 + dx2)/2 - Check Mascagni (1995, pg 33)
 //}}}
 
+// When calculating ionic current that is non-linear of voltage Vm
+//   then I(t+dt/2)  ~  I(t) + di/dv * (V(t+dt/2) - V(t))
+// This is more accurate than just using I(t)
+#define CONSIDER_DI_DV      
+//}}}
+
+//point-process
+//{{{
+// as a point process - the injected current directly affect the center point, without distributing to all 
+//   locations on the compartment, i.e. no need to divide by the surface area
+// This is critical 
+//#define INJECTED_CURRENT_IS_POINT_PROCESS 
+//}}}
+
+//Spine options
+//{{{Spine options
+
+//#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
+       
 //{{{ choices for how data is exchanged when we couple spines to shaft
 //#define CONSIDER_MANYSPINE_EFFECT_OPTION1 // if defined, the new codes that handle the case 
 //   when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ 
@@ -186,8 +233,30 @@
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
 //}}}
+#define KEEP_PAIR_PRE_POST   // this ensure a receptor always produce the pre- and post- branch information via only 1 interface; 
+ // ..  rather than 2 separate set of interface 
+ // .. ALWAYS ENABLE THIS: as we haven't made produce post-index available yet 
+ // NOTE: This is 2-element array: with pre-side first then post-side
+// The reason to have this is to enable AnyConcentrationDisplay to be able to 
+//   capture [NT] of a particular type of Neurotransmitter (e.g. Glut, GABA)
+// We also needs to update Synapse-receptors's Interfaces
 
+//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
 
+//NOTE: This is for the choice of defining input to/output from SynapticReceptor
+//      inside TissueFunctor
+//  [NMDAR] [Voltage] [Voltage, Calcium]
+// case 1 (RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT)
+//   mean [Voltage(pre, input)] [Voltage(post,input+output), Calcium(post,input+output)]
+//#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+// case 2 (otherwise)
+//   mean [Voltage(post, input)] [Voltage(post,output), Calcium(post,output)]
+//#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
+//     In this case, the SynapticCleft is hardcoded to receive 'Voltage'
+//     which is used for calculating [NT]
+//}}}
+
+//IP3 modeling
 //{{{ modeling IP3 concentration
 #define IP3_DIFFUSIONAL_VAR 3
 // rather than modeling IP3 as a diffusional variable; we can 
@@ -211,18 +280,7 @@
 #endif
 //}}}
 
-//#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
-       
-#define KEEP_PAIR_PRE_POST   // this ensure a receptor always produce the pre- and post- branch information via only 1 interface; 
- // ..  rather than 2 separate set of interface 
- // .. ALWAYS ENABLE THIS: as we haven't made produce post-index available yet 
- // NOTE: This is 2-element array: with pre-side first then post-side
-// The reason to have this is to enable AnyConcentrationDisplay to be able to 
-//   capture [NT] of a particular type of Neurotransmitter (e.g. Glut, GABA)
-// We also needs to update Synapse-receptors's Interfaces
-
-//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
-
+//Microdomain calcium
 //{{{ MICRODOMAIN_CALCIUM
 //#define MICRODOMAIN_CALCIUM  //if defined, then the system enable the capability to model microdomain calcium volume where ion can flow into this first before going to the cytosolic bath --> maybe we can use this to avoid the sub-shell feature
 // STATUS:
@@ -272,33 +330,23 @@
 #define FRACTION_SURFACEAREA_MICRODOMAIN3 1.0  //[% of membrane surface area]
 //}}}
 
-//#define DEBUG_CPTS  //this option should be set via gsl/configure.py
-//   It tells to generate code that print out 
-//   statistical data about mean +/- SD of
-//     1. surfaceArea
-//     2. volume
-//     3. length
-//  in the following branch-types
-//     A. AXON
-//     B. BASALDEN
-//     C. APICALDEN
 
+//I/O options
+//{{{I/O options
 //NOTE: this is for adaptive I/O using sensor
 #define _SINGLE_SENSOR_DETECT_CHANGE  1
 #define _MULTIPLE_SENSORS_DETECT_CHANGE  2
 #define DETECT_CHANGE _MULTIPLE_SENSORS_DETECT_CHANGE
 
+//#define WRITE_GATES  --> if enable globally or within each ChannelXXX model
+//   we can trigger the writing out of the gates (m, h, n, ...) for model using
+//             Hodgkin-Huxley-based formula
+//   NOTE: currently supported in ChannelKAs
 
-//NOTE: This is for the choice of defining input to/output from SynapticReceptor
-//      inside TissueFunctor
-//  [NMDAR] [Voltage] [Voltage, Calcium]
-// case 1 (RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT)
-//   mean [Voltage(pre, input)] [Voltage(post,input+output), Calcium(post,input+output)]
-//#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
-// case 2 (otherwise)
-//   mean [Voltage(post, input)] [Voltage(post,output), Calcium(post,output)]
-//#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
-//     In this case, the SynapticCleft is hardcoded to receive 'Voltage'
-//     which is used for calculating [NT]
+//  IDEA_ILEAK (if defined, the code that enable outputing Ileak is added to AnyCurrentDisplay via HodgkinHuxleyVoltage connection)
+//  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
+//#define IDEA_ILEAK
+//#define IDEA_CURRENTONCOMPT
+//}}}
 
 #endif //_MAXCOMPUTEORDER_H

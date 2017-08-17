@@ -49,6 +49,13 @@ static pthread_once_t once_Nap = PTHREAD_ONCE_INIT;
 #define BHV 64.4
 #define BHD -2.63
 //#define T_ADJ 2.9529 // 2.3^((34-21)/10)
+
+#elif CHANNEL_NAP == NAP_MAHON_2000   
+//MAHON 2000 et al I_Nap = g_bar * m; 
+#define VHALF_M -47.8                 
+#define k_M -3.1                      
+#define tau_m 1                       
+
 #elif CHANNEL_NAP == NAP_WOLF_2005
 // data
 //    Activation : from 
@@ -82,6 +89,10 @@ dyn_var_t ChannelNap::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
+
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2)
+//   of second-order accuracy at time (t+dt/2) using trapezoidal rule
 void ChannelNap::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
@@ -133,6 +144,14 @@ void ChannelNap::update(RNG& rng)
     dyn_var_t ph = 0.5*dt*(ah + bh)*getSharedMembers().Tadj; 
     h[i] = (2*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);
     }
+
+#elif CHANNEL_NAP == NAP_MAHON_2000                            
+    {                                                          
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));    
+    dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2); 
+                                                               
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);      
+    }                                                          
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -149,17 +168,28 @@ void ChannelNap::update(RNG& rng)
     g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_NAP == NAP_MAGISTRETTI_1999
     g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];
+#elif CHANNEL_NAP == NAP_MAHON_2000   
+    g[i] = gbar[i] * m[i] ;           
 #endif
 #ifdef WAIT_FOR_REST
-		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
-		if (currentTime < NOGATING_TIME)
-			g[i]= 0.0;
+    float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+    if (currentTime < NOGATING_TIME)
+      g[i]= 0.0;
 #endif
     //common
-		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]); // at time (t+dt/2)
   }
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelNap::initialize(RNG& rng)
 {
   pthread_once(&once_Nap, ChannelNap::initialize_others);
@@ -232,10 +262,13 @@ void ChannelNap::initialize(RNG& rng)
     m[i] = 1/(1+exp((v + IMV)/IMD));
     h[i] = 1/(1+exp((v + IHV)/IHD));
     g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];
+#elif CHANNEL_NAP == NAP_MAHON_2000                 
+    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));    
+    g[i] = gbar[i] * m[i] ;   
 #else
     NOT IMPLEMENTED YET
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
 

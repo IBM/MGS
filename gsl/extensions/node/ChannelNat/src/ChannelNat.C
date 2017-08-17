@@ -57,8 +57,11 @@ static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
 #define LOOKUP_TAUM_LENGTH 16  // size of the below array
 const dyn_var_t ChannelNat::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
-dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3162, 0.4074, 0.6166, 0.3548, 0.2399, 0.1585,
+dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3512, 0.4474, 0.5566, 0.3548, 0.2399, 0.1585,
                        0.1047, 0.0871, 0.0851, 0.0813, 0.0832, 0.0832, 0.0832, 0.0832};
+//Below used in Evans et al. (2012)
+//dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3162, 0.4074, 0.6166, 0.3548, 0.2399, 0.1585,
+//                       0.1047, 0.0871, 0.0851, 0.0813, 0.0832, 0.0832, 0.0832, 0.0832};
 #define LOOKUP_TAUH_LENGTH 16  // size of the below array
 const dyn_var_t ChannelNat::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
@@ -113,6 +116,36 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHC 4.0
 #define BHV (40.0+Eleak)
 #define BHD -5.0
+#elif CHANNEL_NAT == NAT_WANG_BUSZAKI_1996
+// Wang, Buzsaki (1996) - Gamma oscillation by synaptic inhibition in hippocampal interneuron network model (paper has correction version)
+// model after interneuron in hippocampal (based on Hodgkin-Huxley formula
+// with the assumption fast-kinetic of 'm' gate, i.e. using m_infty)
+// Ina = gNa * m_infty^3 * h (Vm-Ena)
+// m_infty = a_m/(a_m + b_m)
+// a_m = -0.1 * (Vm + 35) /(exp(-0.1*(Vm+35)) - 1.0)
+// b_m = 4.0 * exp(-(Vm + 60)/18)
+// dh/dt = Phi * (a_h * (1-h) - b_h * h)
+// Phi = Q10^... = 5  --> temperature adjustment
+// a_h = 0.07 * exp(-(Vm + 58)/20)
+// b_h = 1.0/(exp(-0.1(Vm + 28)) + 1.0)
+// ENa = 55 (mV)
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+#define Vshift 0  // [mV]
+#define AMC -0.1        
+#define AMV (-35.0+Vshift)
+#define AMD -10          
+#define BMC 4.0         
+#define BMV (-60.0+Vshift) 
+#define BMD -18.0         
+#define AHC 0.07         
+#define AHV (-58.0+Vshift)
+#define AHD -20.0        
+#define BHC 1.0         
+#define BHV (-28.0+Vshift)
+#define BHD -10.0        
+
+// NOTE: Used by
+//    1. Mahon et al. (2000) for MSN - striatum with Vshift = 7.0 (mV)
 
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 // Gate: m_inf^3 * h
@@ -135,6 +168,34 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHV -50.0
 #define BHD 10.0
 //#endif
+
+#elif CHANNEL_NAT == NAT_MAHON_2000                                                 
+// Gate: m_inf^3 * h                                                                
+//Reference from Wang Buzsaki (FSI neuron in neocortex/hippocampus)                 
+//            but voltages shifted by 7mv,                                          
+//m is substitute by its steady state value as activation variable m is assumed fast
+// m_infty = a_m/(a_m + b_m)
+// dh/dt = Phi * (a_h * (1-h) - b_h * h)
+// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD  ) - 1.0  )                              
+// b_m  = BMC * exp( (V - BMV)/BMD  )                                                
+// a_h  = AHC * exp( (V - AHV)/AHD  )                                                
+// b_h  = BHC / (exp( (V - BHV)/BHD  ) + 1.0)                                        
+// NOTE: gNa = 1.20 nS/um^2 (equivalent to 120 mS/cm^2)                             
+//   can be used with Q10 = 3                                                       
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+#define Vshift 7  // [mV]                                                           
+#define AMC -0.1                                                                    
+#define AMV (-35.0+Vshift)                                                          
+#define AMD -10                                                                     
+#define BMC 4.0                                                                     
+#define BMV (-60.0+Vshift)                                                          
+#define BMD -18.0                                                                   
+#define AHC 0.07                                                                    
+#define AHV (-58.0+Vshift)                                                          
+#define AHD -20.0                                                                   
+#define BHC 1.0                                                                     
+#define BHV (-28.0+Vshift)                                                          
+#define BHD -10.0                                                                   
 
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 // Kinetics data for Layer V5 pyramidal neuron
@@ -224,12 +285,16 @@ dyn_var_t ChannelNat::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2+dt)
+//   of second-order accuracy at time (t+dt/2+dt) using trapezoidal rule
 void ChannelNat::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
+    Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]); // at time (t+dt/2)
 #if CHANNEL_NAT == NAT_HODGKIN_HUXLEY_1952
     {
     // NOTE: Some models use alpha_m and beta_m to estimate m
@@ -261,13 +326,27 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t bm = BMC * exp(-(v - BMV) / BMD);
     dyn_var_t ah = AHC * exp(-(v - AHV) / AHD);
     dyn_var_t bh = BHC * vtrap(-(v - BHV), BHD);
-		m[i] = am/(am+bm); // m = m_inf assumption of instantaneous
+    m[i] = am/(am+bm); // m = m_inf assumption of instantaneous
     // see Rempe-Chomp (2006)
     //dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     //m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
+
+#elif CHANNEL_NAT == NAT_MAHON_2000 || \
+      CHANNEL_NAT == NAT_WANG_BUSZAKI_1996
+    {                                                                           
+    // NOTE: Some models use alpha_m and beta_m to estimate m                   
+    dyn_var_t am = AMC * vtrap((v - AMV), AMD);                                 
+    dyn_var_t bm = BMC * exp((v - BMV) / BMD);                                  
+    m[i] = am / (am + bm);  // steady-state value 
+    dyn_var_t ah =  AHC * exp((v - AHV) / AHD);                                 
+    dyn_var_t bh =  BHC / (1.0 + exp((v - BHV) / BHD));                         
+    dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;              
+    h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
+
 #elif CHANNEL_NAT == NAT_WOLF_2005 || \
     CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
     {
@@ -353,14 +432,22 @@ void ChannelNat::update(RNG& rng)
 #endif
 
 #ifdef WAIT_FOR_REST
-		float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
-		if (currentTime < NOGATING_TIME)
-			g[i]= 0.0;
+    float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
+    if (currentTime < NOGATING_TIME)
+      g[i]= 0.0;
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
   }
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelNat::initialize(RNG& rng)
 {
   pthread_once(&once_Nat, initialize_others);
@@ -477,6 +564,21 @@ void ChannelNat::initialize(RNG& rng)
       m[i] = am / (am + bm);  // steady-state value
       h[i] = ah / (ah + bh);
     }
+#elif CHANNEL_NAT == NAT_MAHON_2000 || \
+      CHANNEL_NAT == NAT_WANG_BUSZAKI_1996
+    {                                                 
+//v is at time (t0)
+// so m and h is also at time t0
+// however, as they are at steady-state, the value at time (t0+dt/2)
+// does not change
+      dyn_var_t am = AMC * vtrap((v - AMV), AMD);       
+      dyn_var_t bm = BMC * exp((v - BMV) / BMD);        
+      dyn_var_t ah = AHC * exp((v - AHV) / AHD);        
+      dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+      m[i] = am / (am + bm);  // steady-state value     
+      h[i] = ah / (ah + bh);                            
+    }                                                 
+
 #elif CHANNEL_NAT == NAT_HAY_2011 || \
     CHANNEL_NAT == NAT_COLBERT_PAN_2002
     {
@@ -504,9 +606,9 @@ void ChannelNat::initialize(RNG& rng)
 #if CHANNEL_NAT == NAT_TRAUB_1994
     g[i] = gbar[i] * m[i] *  m[i] * h[i];
 #else 
-    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
+    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i]; // at time (t+dt/2) - 
 #endif
-    Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]); //using 'v' at time 't'; but gate(t0+dt/2)
   }
 }
 

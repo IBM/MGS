@@ -3,6 +3,7 @@
 #version = 1.0
 
 #{{{USER-SETTING
+PLOT_FOLDER=./NTS_plotting
 _X_=1
 _Y_=1
 _Z_=1
@@ -11,12 +12,35 @@ NUMTHREADS=1
 NUMPROCESSES=$(( _X_ * _Y_ * _Z_))
 OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
 if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
+
+
+DoPlot()
+{
+  ## Modify this function to do plotting for the output data
+  if [ "$RUNSIM_COMPLETED" == 1 ]; then
+    ## NOTE: comment out if we don't want to plot
+    if [ -d $PLOT_FOLDER ]; then 
+      if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
+        cd ${PLOT_FOLDER}/ && ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}  ${morph}
+      fi
+      echo ${PLOT_FOLDER}/doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}  ${morph}
+    else 
+      echo $PLOT_FOLDER "not exist"
+    fi
+
+    xmgrace -nxy  $OutputFolderName/somaV.dat0 &
+    if [ -f  $OutputFolderName/SEClamp.txt ]; then
+      xmgrace -block $OutputFolderName/SEClamp.txt  -bxy 1:2 & 
+    fi
+  fi
+}
 #}}}
 
 numArgs=$#
 secondArg=$2
 
 #{{{ Non-modified parts
+RUNSIM_COMPLETED=0
 #Escape code
 esc=`echo -en "\033"`
 
@@ -52,13 +76,15 @@ Yes_No_RunSim()
 
 RunSim()
 {
+#GSLPARSER=gslparser_regular
+GSLPARSER=../../gsl/bin/gslparser
   #{{{
    echo "Output Folder: " $OutputFolderName
    cp params $OutputFolderName/ -L -r
    cp *.gsl $OutputFolderName/ -L -r
    cp neurons.txt $OutputFolderName/ -L -r
    cp neurons/neuron.swc $OutputFolderName/ -L -r
-   cp ../../gsl/bin/gslparser $OutputFolderName/ -L -r
+   cp ${GSLPARSER}  $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/Model2Use.h $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/NTSMacros.h  $OutputFolderName/ -L -r
    cp $NTSROOT/nti/include/MaxComputeOrder.h $OutputFolderName/ -L -r
@@ -68,7 +94,7 @@ RunSim()
    echo "----> RESULT: " >> SIM_LOG
    echo "... using swc file: ${SWC_FILENAME}"
    echo "... using swc file: ${SWC_FILENAME}" >> SIM_LOG
-   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} >> SIM_LOG
+   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} ${morph} >> SIM_LOG
    echo "---------------------- " >> SIM_LOG
    cp SIM_LOG $OutputFolderName/ -L -r
    echo "Output Folder: " $OutputFolderName
@@ -77,13 +103,9 @@ RunSim()
    echo "#define _X_ $_X_" > Topology.h
    echo "#define _Y_ $_Y_" >> Topology.h
    echo "#define _Z_ $_Z_" >> Topology.h
-   mpiexec -n ${NUMPROCESSES}  ../../gsl/bin/gslparser $temp_file -t ${NUMTHREADS}
+   mpiexec -n ${NUMPROCESSES}  ${GSLPARSER} $temp_file -t ${NUMTHREADS}
    echo "Output Folder: " $OutputFolderName
-   ## NOTE: comment out if we don't want to plot
-   if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
-     ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
-   fi
-   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} 
+   RUNSIM_COMPLETED=1
   #}}}
 }
 
@@ -209,6 +231,8 @@ if [ ! -d $OutputFolderName ]; then
 else
   Yes_No_RunSim
 fi
+
+DoPlot
 
 DoFinish
 rm ${temp_file}

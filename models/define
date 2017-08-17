@@ -48,7 +48,7 @@ do
   touch $i
 done
 if [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
-touch all.mdf
+touch $1
 sleep 2
 touch define;
 touch $LENSROOT/Extensions.mk

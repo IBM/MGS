@@ -49,6 +49,11 @@ dyn_var_t ChannelKIR::taumKIR[] = {
     3.7313, 4.0000, 4.7170, 5.3763, 6.0606, 6.8966, 7.6923, 7.1429,
     5.8824, 4.4444, 4.0000, 4.0000, 4.0000, 4.0000, 4.0000, 4.0000};
 std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
+#elif CHANNEL_KIR == KIR_MAHON_2000  
+//assume activation is instantaneous
+#define VHALF_M -100 
+#define k_M 10 
+//#define TAUM 1 //ms                  
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -58,6 +63,9 @@ dyn_var_t ChannelKIR::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2)
+//   of second-order accuracy at time (t+dt/2) using trapezoidal rule
 void ChannelKIR::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
@@ -81,17 +89,31 @@ void ChannelKIR::update(RNG& rng)
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+#elif CHANNEL_KIR == KIR_MAHON_2000                          
+    //dyn_var_t qm = dt * getSharedMembers().Tadj / (TAUM * 2);
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M)); 
+    m[i] = m_inf;
 #else
     NOT IMPLEMENTED YET
 #endif
-    // trick to keep m in [0, 1]
-    if (m[i] < 0.0) { m[i] = 0.0; }
-    else if (m[i] > 1.0) { m[i] = 1.0; }
+    { // trick to keep m in [0, 1]
+      if (m[i] < 0.0) { m[i] = 0.0; }
+      else if (m[i] > 1.0) { m[i] = 1.0; }
+    }
     g[i] = gbar[i] * m[i];
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // at time (t+dt/2)
   }
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelKIR::initialize(RNG& rng)
 {
   pthread_once(&once_KIR, ChannelKIR::initialize_others);
@@ -157,12 +179,14 @@ void ChannelKIR::initialize(RNG& rng)
     dyn_var_t v = (*V)[i];
 #if CHANNEL_KIR == KIR_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+#elif CHANNEL_KIR == KIR_MAHON_2000              
+    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
 #else
     NOT IMPLEMENTED YET
 // m[i] = am / (am + bm); //steady-state value
 #endif
     g[i] = gbar[i] * m[i];
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 

@@ -13,6 +13,7 @@
 
 #include "ChannelNat/ChannelNat.mdl"
 #include "ChannelNap/ChannelNap.mdl"
+#include "ChannelNas/ChannelNas.mdl"
 #include "ChannelKAf/ChannelKAf.mdl"
 #include "ChannelKAs/ChannelKAs.mdl"
 #include "ChannelKIR/ChannelKIR.mdl"
