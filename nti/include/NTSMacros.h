@@ -438,7 +438,7 @@
 // 2. configure each model
 //  2.a select what compartmental variables to use
 //  2.b to disable any channel from the model, just comment it out
-#if MODEL_TO_USE == _MSN_MAHON_2000
+#if MODEL_TO_USE == _MSN_2000_MAHON
 //{{{
   //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SIMULATE_VM

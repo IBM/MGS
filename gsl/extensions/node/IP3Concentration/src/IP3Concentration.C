@@ -641,7 +641,7 @@ dyn_var_t IP3Concentration::getLambda(DimensionStruct* a,
 	{//b is the compartment representing 'soma'
 		Rb = a->r;
       //TEST 
-			Rb /= SCALING_NECK_FROM_SOMA;
+			Rb /= SCALING_NECK_FROM_SOMA_WITH;
       //END TEST
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
@@ -763,7 +763,7 @@ dyn_var_t IP3Concentration::getAij(DimensionStruct* a, DimensionStruct* b,
   {
 		Rb = a->r;
       //TEST 
-			Rb /= SCALING_NECK_FROM_SOMA;
+			Rb /= SCALING_NECK_FROM_SOMA_WITH;
       //END TEST
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source

@@ -150,7 +150,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
       //  NOTE: should be applied for Axon hillock only
       Rb = ((*diter)->r );
       //TEST 
-      Rb /= SCALING_NECK_FROM_SOMA;
+      Rb /= SCALING_NECK_FROM_SOMA_WITH;
       //END TEST
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
       distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
