@@ -31,9 +31,9 @@ FinalPhases = { finalize };
 #define YDIM_INNER 1
 #define ZDIM_INNER 1
 #define INNER_FRAC 0.002 // (N_INNER / XDIM_INNER)
-#define OP_T 10000000 //5000000
+#define OP_T 3000000
 #define OP_PERT_HZ 1 // to the perturb with a change in Hz the system or not
-#define OP_PERT_HZ_T 5000000 // if perturbing the system with a change in Hz, when
+#define OP_PERT_HZ_T 1500000 // if perturbing the system with a change in Hz, when
 #define OP_PERT_AMPA 1 // to the perturb with a change in AMPA weights the system or not
 #define OP_PERT_AMPA_T OP_PERT_HZ_T // if perturbing the system with a change in AMPA weights, when
 
@@ -47,7 +47,7 @@ NodeType PoissonIAFUnit(<
                         >) {update->run1 };
 
 NodeType BoutonIAFUnit(<
-                       glutamateAdaptRate = 0.00004,   // in arb. unit; free parameter
+                       glutamateAdaptRate = 0.000035, //0.000035,   // in arb. unit; free parameter
                        glutamateRecoverTau = 4.28,    // in s (from Pyott and Rosenmund, 2002; slow component)
                        CB1RriseTau = 4.0,             // in s (fitted to Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
                        CB1RfallTau = 22.5,            // in s (from Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
@@ -58,8 +58,9 @@ NodeType BoutonIAFUnit(<
                        >) {initializeShared->init1, update->run2};
 
 NodeType Goodwin(<
+                 tau = 1,                       // in arb. unit; free parameter
                  K1 = 1.0,                      // in arb. unit; free parameter
-                 k1 = 10.0,                     // in arb. unit; free parameter; WT max
+                 k1 = 10.0,                     // in arb. unit; free parameter; WT=10.0
                  k2 = 1.0,                      // in arb. unit; free parameter
                  k3 = 15.0,                     // in arb. unit; free parameter
                  k4 = 1.0,                      // in arb. unit; free parameter
@@ -130,7 +131,8 @@ BindName initInput("Hz", UniformDist(0,150));//Scale(Exp(RangePassThru(-100,"<="
 NdplNodeInit heterInput(initInput);
 
 // Initialize boutons
-BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 0.1); // arb. unit, arb. unit, arb. unit
+//BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0); // arb. unit, arb. unit, arb. unit
+BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 1.0); // arb. unit, arb. unit, arb. unit
 NdplNodeInit heterBoutons(initBoutons);
 
 // Initialize Goodwin
@@ -169,7 +171,7 @@ BindName CB1_W("weight", 0.0067, "identifier", "CB1input"); // parameterized fro
 NdplInAttrInit cb1W(CB1_W);
 
 // Unbound CB1R weights between boutons and Goodwin, structural plasticity
-BindName CB1RUNBOUND_W("weight", 300.0, "identifier", "in1"); // parameterized from MATLAB version
+BindName CB1RUNBOUND_W("weight", 400.0, "identifier", "in1"); // parameterized from MATLAB version
 NdplInAttrInit cb1runboundW(CB1RUNBOUND_W);
 
 // AMPA weights between spines and output neurons, structural plasticity
@@ -284,17 +286,17 @@ polyConnect(CSC/cann[].Layer(Goodwins), GoodwinCollector, <>, <>);
 
 VariableType CleftAstrocyteIAFUnitDataCollector;
 CleftAstrocyteIAFUnitDataCollector cleftAstroCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=1, op_saveECB=0>;
+  op_saveGlutamate=1, op_saveECB=1>;
 polyConnect(CSC/cann[].Layer(cleftsAstrocytes), cleftAstroCollector, <>, <>);
 
 VariableType SpineIAFUnitDataCollector;
 SpineIAFUnitDataCollector spineCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveAMPA=0, op_savemGluR5=0, op_saveCa=0, op_saveECB=0, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
+  op_saveAMPA=1, op_savemGluR5=1, op_saveCa=1, op_saveECB=1, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
 polyConnect(CSC/cann[].Layer(spines), spineCollector, <>, <>);
 
 VariableType MihalasNieburSynapseIAFUnitDataCollector;
 MihalasNieburSynapseIAFUnitDataCollector outputCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveSpikes=0>;
+  op_saveSpikes=1>;
 polyConnect(CSC/post[].Layer(output), outputCollector, <>, <>);
 
 
