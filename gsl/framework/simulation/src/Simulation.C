@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -87,11 +87,9 @@ int Simulation::P2P_TAG = 21;
 
 // Set states; _iteration to 1
 #ifndef DISABLE_PTHREADS
-Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits)
-#else
-
-Simulation::Simulation(int numWorkUnits)
-
+Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed)
+#else // DISABLE_PTHREADS
+Simulation::Simulation(int numWorkUnits, unsigned seed)
 #endif // DISABLE_PTHREADS
 
    :  _state(Simulation::_UNUSED), _iteration(0), _ntm(0), _etm(0), _root(0), 
@@ -164,6 +162,10 @@ Simulation::Simulation(int numWorkUnits)
    _nump=1;
 #endif // HAVE_MPI
 
+   // Seed the random number generator
+   _rng.reSeed(seed, _rank) ;  
+   _rngShared.reSeedShared(seed-1);
+   _rngSeed=seed;
 }
 
 void Simulation::pauseHandler()
@@ -529,6 +531,7 @@ Simulation::~Simulation()
    for (it2 = _outputStreams.begin(); it2 != end2; ++it2) {
       delete *it2;
    }
+   MPI_Barrier(MPI_COMM_WORLD);
 #endif // HAVE_MPI
 
    if (_rank==0) printf("Simulation destructed.\n");

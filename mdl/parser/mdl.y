@@ -4,9 +4,9 @@
 //                                                                 
 // "Restricted Materials of IBM"                                  
 //                                                               
-// BMC-YKT-03-01-2006-2                                         
+// BCM-YKT-11-19-2015                                         
 //                                                                  
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved          
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved          
 //                                                                  
 // US Government Users Restricted Rights -                         
 // Use, duplication or disclosure restricted by                    
@@ -1532,9 +1532,9 @@ std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
           << ".                                                           .\n"
           << ".  \"Restricted Materials of IBM\"                            .\n"
           << ".                                                           .\n"
-          << ".  BMC-YKT-03-01-2006-2                                     .\n"
+          << ".  BCM-YKT-11-19-2015                                     .\n"
           << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2014  All rights reserved   .\n"
+          << ".  (C) Copyright IBM Corp. 2005-2015  All rights reserved   .\n"
           << ".                                                           .\n"
           << ".                                                           .\n"
           << ".                                                           .\n"

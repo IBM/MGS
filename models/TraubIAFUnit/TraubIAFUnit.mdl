@@ -1,0 +1,116 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef TRAUBIAFUNIT_MDL
+#define TRAUBIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Node TraubIAFUnit Implements SpikeProducer, OutputProducer, ThresholdProducer,
+  VoltageProducer, LFPProducer {
+   double [] I; // These variable names are according to Mihalas and Niebur, 2009
+   double [] [] I_p;
+   double [] dI;
+   double V;                 // V
+   double [] V_p;
+   double Theta;             // V
+   double [] Theta_p;
+   bool spike;               // currentspike
+   float V_spike;            // V with spike
+   int spike_cnt;            // counts the duration of the spike
+
+   WaveInput [] ctxInputs;   // delta input from cortex
+   double ctxInputWeight;    // if this node receives multiple ctx inputs
+                             // they should be weighted accordingly.
+   
+   PSPInput [] lateralInputs;// lateral IPSPs
+   double LFP_synapses;      // total synaptic input - inhibitory LFP
+
+   GJInput [] gjInputs;      // lateral gap junctions
+   
+   Shared {
+     double b;               // s^-1
+     double G;
+     double C;
+     double GoC;             // s^-1
+     double [] k;            // s^-1
+     double Theta_inf;       // V
+     double [] R;
+     double E_L;             // V
+     double V_r;             // V
+     double Theta_r;         // V
+     float V_max;            // V
+
+     double a;               // s^-1
+     double [] A;            // V/s
+
+     double s_tauR;          // s
+     double s_tauF;          // s
+
+     double spike_cntMax;    // how long the spike should be (s)
+
+     double deltaT;          // s
+     int np;                 // number of numerical fixed point iterations
+
+     string sharedDirectory;
+     string sharedFileExt;
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+
+     InitPhase initializeShared;
+     RuntimePhase outputPSPsShared;
+     
+     // Flags
+     bool op_saveWeights;
+     bool op_savePSPs;
+   }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     double conductance;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update(V, Theta, LFP_synapses);
+   RuntimePhase threshold(spike, V_spike);
+   
+   OutputProducer.output << &V;
+   ThresholdProducer.threshold << &Theta;
+   SpikeProducer.spike << &spike;
+   VoltageProducer.voltage << &V_spike;
+   LFPProducer.LFP << &LFP_synapses;
+   
+   UserFunction setIndices;   
+
+   // can have predicate functions and multiple boolean nests here
+   Connection Pre Node (PSet.identifier=="driver") Expects WaveProducer {
+     WaveProducer.wave >> ctxInputs.wave;
+     PSet.weight >> ctxInputs.weight;
+   }
+
+   Connection Pre Node (PSet.identifier=="ipsp") Expects SpikeProducer {
+      SpikeProducer.spike >> lateralInputs.spike;
+      PSet.weight >> lateralInputs.weight;
+   }
+   
+   Connection Pre Node (PSet.identifier=="gj") Expects VoltageProducer {
+     VoltageProducer.voltage >> gjInputs.voltage;
+     PSet.conductance >> gjInputs.conductance;
+   }   
+}
+
+#endif

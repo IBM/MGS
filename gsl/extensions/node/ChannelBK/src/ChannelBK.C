@@ -12,8 +12,9 @@
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+#include <typeinfo>
 
-#define Cai_base 0.1e-6 // [uM]
+#define Cai_base 0.1 // [uM]
 //
 // Implementation of the KCa potassium current
 //  Voltage and Calcium dependent Potassium
@@ -43,7 +44,12 @@ void ChannelBK::update(RNG& rng)
     {
         dyn_var_t v = (*V)[i];
 #if defined(SIMULATE_CACYTO)
+        //TUAN TODO: put _offset+i instead of 'i' here for MICRODOMAIN_CALCIUM
+#ifdef MICRODOMAIN_CALCIUM
+        dyn_var_t cai = (*Cai)[i+_offset]; // [uM]
+#else
         dyn_var_t cai = (*Cai)[i]; // [uM]
+#endif
 #else
         dyn_var_t cai = Cai_base;            
 #endif
@@ -73,9 +79,20 @@ void ChannelBK::initialize(RNG& rng)
 {
   assert(branchData);
   unsigned size=branchData->size;
-  assert(V);
+  if (not V)
+  {
+    std::cerr << typeid(*this).name() << " needs Voltage as input in ChanParam\n";
+    assert(V);
+  }
   assert(gbar.size()==size);
   assert (V->size()==size);
+#if defined(SIMULATE_CACYTO)
+  if (not Cai)
+  {
+    std::cerr << typeid(*this).name() << " needs Calcium as input in ChanParam\n";
+    assert(Cai);
+  }
+#endif
   if (fO.size()!=size) fO.increaseSizeTo(size);
   if (g.size()!=size) g.increaseSizeTo(size);
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
@@ -85,7 +102,8 @@ void ChannelBK::initialize(RNG& rng)
   float gbar_default = gbar[0];
   if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
   {
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels BK Param"
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders in Param of " 
+      << typeid(*this).name() << " model"
       << std::endl;
     assert(0);
   }
@@ -130,8 +148,13 @@ void ChannelBK::initialize(RNG& rng)
 
   for (unsigned i = 0; i < size; ++i) {
 #if defined(SIMULATE_CACYTO)
-    assert(Cai);
+    //TUAN TODO: put _offset+i instead of 'i' here for MICRODOMAIN_CALCIUM
+#ifdef MICRODOMAIN_CALCIUM
+    dyn_var_t cai = (*Cai)[i+_offset]; // [uM]
+#else
     dyn_var_t cai = (*Cai)[i]; // [uM]
+#endif
+
 #else
     dyn_var_t cai = Cai_base;            
 #endif
@@ -157,11 +180,25 @@ void ChannelBK::initialize(RNG& rng)
 #if CHANNEL_BK == BK_TRAUB_1994
     g[i] = gbar[i]*fO[i]*CaGate;
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
 ChannelBK::~ChannelBK() 
 {
 }
+
+#ifdef MICRODOMAIN_CALCIUM
+void ChannelBK::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ChannelBKInAttrPSet* CG_inAttrPset, CG_ChannelBKOutAttrPSet* CG_outAttrPset) 
+{
+  microdomainName = CG_inAttrPset->domainName;
+  int idxFound = 0;
+  while((*(getSharedMembers().tmp_microdomainNames))[idxFound] != microdomainName)
+  {
+    idxFound++;
+  }
+  _offset = idxFound * branchData->size;
+
+}
+#endif
 

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -316,8 +316,7 @@ void RadialHistoSamplerFunctor::doExecute(
       unsigned pick;
       unsigned top = _sampleSpace.size() -1;
       while (top>0) {
-//         pick = Rangen.irandom32(0,top);
-         pick = irandom(0,top);
+         pick = irandom(0,top,c->sim->getSharedFunctorRandomSeedGenerator());
          tmp = _sampleSpace[top];
          _sampleSpace[top] = _sampleSpace[pick];
          _sampleSpace[pick] = tmp;
@@ -350,8 +349,7 @@ void RadialHistoSamplerFunctor::doExecute(
          unsigned pick;
          unsigned top = _sampleSpace.size() -1;
          while (top>0) {
-//            pick = Rangen.irandom32(0,top);
-            pick = irandom(0,top);
+            pick = irandom(0,top,c->sim->getSharedFunctorRandomSeedGenerator());
             tmp = _sampleSpace[top];
             _sampleSpace[top] = _sampleSpace[pick];
             _sampleSpace[pick] = tmp;

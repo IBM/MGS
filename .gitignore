@@ -13,14 +13,8 @@ bin
 *.swp
 *.bak
 *.log
-*/extensions/*/module.mk
-models/*/module.mk
-models/*/*/module.mk
-models/*/copyModules
-models/*/Extensions.mk
-gsl/*/module.mk
-gsl/*/*/*/module.mk
-gsl/*/*/*.mk
+**/copyModules
+**/*.mk
 lex.yy.C
 lex.yy.cc
 speclang.tab.C
@@ -28,7 +22,6 @@ speclang.tab.h
 mdl.output
 mdl.tab.c
 mdl.tab.h
-gsl/*/*/copyModules
 *.output
 *.a
 out.txt
@@ -60,6 +53,7 @@ graphs/**/tmp
 graphs/**/stats
 .built
 nti/include/Model2Use.h
+nti/include/Model2Use.gch
 models/copyModules
 models/Extensions.mk
 gsl/Makefile

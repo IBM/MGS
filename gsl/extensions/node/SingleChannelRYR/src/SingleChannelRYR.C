@@ -104,62 +104,66 @@ void SingleChannelRYR::initialize(RNG& rng)
   Params param;
   for (unsigned i = 0; i < size; ++i)
   {
-		if (getSharedMembers().useExplicitNumberofChannels == false)
-			numChan[i] =std::ceil(ChanDenbar[i] * (*dimensions)[i]->surface_area);
-		else
-			numChan[i] = numChan_default;
-		assert(numChan[i]>0);
+    if (getSharedMembers().useExplicitNumberofChannels == false)
+      numChan[i] =std::ceil(ChanDenbar[i] * (*dimensions)[i]->surface_area);
+    else
+      numChan[i] = numChan_default;
+    assert(numChan[i]>0);
     /*
      * N_L = numChannels
      * mL  = numStates
 CALL: setup_LCC_Sun2000(lcc_matChannelRateConstant, N_L, mL, vOpenStates, &
-                           lcc_stateFromTo, lcc_indxK, &
-                                                    vClusterNumOpenChan, irow_L,
+lcc_stateFromTo, lcc_indxK, &
+vClusterNumOpenChan, irow_L,
 lcc_StateSpace, lcc_maxNumNeighbors)
 DEFINE: setup_LCC_Sun2000(channel_cMat, N_L, mL, vOpenStates, &
-   matK_channelstate_fromto, indxK, vClusterNumOpenChan, irow_L,
+matK_channelstate_fromto, indxK, vClusterNumOpenChan, irow_L,
 matClusterStateInfo_LCC, maxNumNeighbors) RESULT(res)
-                     channel_cMat[1..mL, 1..mL]
-                     vOpenStates [1..mL] =
-                                                                            */
+channel_cMat[1..mL, 1..mL]
+vOpenStates [1..mL] =
+*/
     param.setupCluster(
-        getSharedMembers().matChannelRateConstant, numChan[i],
-        getSharedMembers().numChanStates, getSharedMembers().vOpenStates,
-				//output
-				numClusterStates[i],
-        matClusterStateInfo[i], 
-				vClusterNumOpenChan[i],
-				maxNumNeighbors[i],
-				matK_channelstate_fromto[i], matK_indx[i]);
+	getSharedMembers().matChannelRateConstant, numChan[i],
+	getSharedMembers().numChanStates, getSharedMembers().vOpenStates,
+	//output
+	numClusterStates[i],
+	matClusterStateInfo[i], 
+	vClusterNumOpenChan[i],
+	maxNumNeighbors[i],
+	matK_channelstate_fromto[i], matK_indx[i]);
 
-		for (int ii = 0; ii < numClusterStates[i]; ii++)
-		{//initial cluster-state
-			if (matClusterStateInfo[i][Map1Dindex(ii,getSharedMembers().initialstate, getSharedMembers().numChanStates)] == numChan[i])
-			{
-				currentStateIndex[i] = ii;
-			}
-		}
+    for (int ii = 0; ii < numClusterStates[i]; ii++)
+    {//initial cluster-state
+      if (matClusterStateInfo[i][Map1Dindex(ii,getSharedMembers().initialstate, getSharedMembers().numChanStates)] == numChan[i])
+      {
+	currentStateIndex[i] = ii;
+      }
+    }
 
     // the matrix that keep update the true transition rate
     matChannelTransitionRate[i] =
-        new dyn_var_t[getSharedMembers().numChanStates *
-                      getSharedMembers().numChanStates]();
+      new dyn_var_t[getSharedMembers().numChanStates *
+      getSharedMembers().numChanStates]();
     updateChannelTransitionRate(matChannelTransitionRate[i], i);
 
     probStateTransition[i] =
-        new dyn_var_t[maxNumNeighbors[i]]();
+      new dyn_var_t[maxNumNeighbors[i]]();
 
-		dyn_var_t Caer0 = 1000.0 ; //[uM]
-		dyn_var_t Cacyto0 = 0.1; //[uM]
-		dyn_var_t zCaF = zCa * zF; 
-		v_ryr[i] = getSharedMembers().iryr *1e9 / (zCaF * (*dimensions)[i]->volume * FRACTIONVOLUME_CYTO * (Caer0 - Cacyto0)); // [ms^-1]
+    dyn_var_t Caer0 = 1000.0 ; //[uM]
+    dyn_var_t Cacyto0 = 0.1; //[uM]
+    dyn_var_t zCaF = zCa * zF; 
+    v_ryr[i] = getSharedMembers().iryr *1e9 / (zCaF * (*dimensions)[i]->volume * FRACTIONVOLUME_CYTO * (Caer0 - Cacyto0)); // [ms^-1]
   }
 }
 
 void SingleChannelRYR::updateChannelTransitionRate(
     dyn_var_t*& matChannelTransitionRate, int cptIdx)
 {
+#ifdef MICRODOMAIN_CALCIUM
+  dyn_var_t cai = (*Ca_IC)[cptIdx+_offset]; // [uM]
+#else
   dyn_var_t cai = (*Ca_IC)[cptIdx];
+#endif
   dyn_var_t caer = (*Ca_ER)[cptIdx];
   const dyn_var_t eta_RyR = 2.2;
   const dyn_var_t Ecc = -0.92;  // unit [k_B*T] = ~1.381x10^{-20} [mJ]
@@ -208,66 +212,83 @@ void SingleChannelRYR::update(RNG& rng)
   dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i = 0; i < branchData->size; ++i)
   {
-		dyn_var_t cai = (*Ca_IC)[i];
-		dyn_var_t caer = (*Ca_ER)[i];
-		updateChannelTransitionRate(matChannelTransitionRate[i], i);
+#ifdef MICRODOMAIN_CALCIUM
+    dyn_var_t cai = (*Ca_IC)[i+_offset]; // [uM]
+#else
+    dyn_var_t cai = (*Ca_IC)[i];
+#endif
+    dyn_var_t caer = (*Ca_ER)[i];
+    updateChannelTransitionRate(matChannelTransitionRate[i], i);
 
-		std::fill(probStateTransition[i], probStateTransition[i] + maxNumNeighbors[i], 0.0);
-		dyn_var_t sumval = 0.0;
-		for (int jj = 0; jj < maxNumNeighbors[i]; jj++)
-		{
-			long offset = 	Map1Dindex(currentStateIndex[i],jj, maxNumNeighbors[i]);
-			short to = matK_channelstate_fromto[i][offset]  & MASK_MARKOV;
-			short from = (matK_channelstate_fromto[i][offset] >> BITSHIFT_MARKOV) & MASK_MARKOV;
- 
-			int chanoffset = Map1Dindex(from, to, getSharedMembers().numChanStates);
-			if (getSharedMembers().matChannelRateConstant[chanoffset] > 0.0)
-			{
-				dyn_var_t trans = vClusterNumOpenChan[i][currentStateIndex[i]] * matChannelTransitionRate[i][chanoffset];
-				probStateTransition[i][jj] = trans * dt;
+    std::fill(probStateTransition[i], probStateTransition[i] + maxNumNeighbors[i], 0.0);
+    dyn_var_t sumval = 0.0;
+    for (int jj = 0; jj < maxNumNeighbors[i]; jj++)
+    {
+      long offset = 	Map1Dindex(currentStateIndex[i],jj, maxNumNeighbors[i]);
+      short to = matK_channelstate_fromto[i][offset]  & MASK_MARKOV;
+      short from = (matK_channelstate_fromto[i][offset] >> BITSHIFT_MARKOV) & MASK_MARKOV;
 
-			}else
-			{
-				//probStateTransition[i][jj] = 0.0;
-			}
-			sumval += probStateTransition[i][jj];
-		}
+      int chanoffset = Map1Dindex(from, to, getSharedMembers().numChanStates);
+      if (getSharedMembers().matChannelRateConstant[chanoffset] > 0.0)
+      {
+	dyn_var_t trans = vClusterNumOpenChan[i][currentStateIndex[i]] * matChannelTransitionRate[i][chanoffset];
+	probStateTransition[i][jj] = trans * dt;
+
+      }else
+      {
+	//probStateTransition[i][jj] = 0.0;
+      }
+      sumval += probStateTransition[i][jj];
+    }
     /*
-          CALL update_SFU_Sun2000 <<<gridSize, blocksize>>> &
-                (X_r_dev((iinner-1)*NSFU+1:iinner*NSFU), &
-                dt, Vm, dp_arg1, dp_arg2, Ca_myo, Ca_nsr)
-     */
-		dyn_var_t compP = -sumval + 1.0;
-		assert (compP > 0.0); //make sure dt is small enough
-		dyn_var_t randval = rng.drandom32();
-		if (compP >= randval)
-		{
-			//no change in state	
-		}
-		else{
-			for (int jj=0; jj < maxNumNeighbors[i]; jj++)
-			{
-				compP += probStateTransition[i][jj];
-				if (compP >= randval)
-				{
-					//update new state
-					int offset = Map1Dindex(currentStateIndex[i],jj, maxNumNeighbors[i]);
-					currentStateIndex[i] = matClusterStateInfo[i][offset];
-					break;
-				}
-			}
-		}
-		J_Ca[i] = vClusterNumOpenChan[i][currentStateIndex[i]] * v_ryr[i] * (caer - cai);
-		//J_Ca = No * vryr * (Caer - Cacyto);  [uM/msec]
-		// No  = #open channels
-		// vryr   = iryr * 1e9 / (zCa * zF * Volcyto * (Caer0 - Cacyto0)) 
-		// i1ryr [pA] = 10^-9  A = 10^-9 [Coulomb/sec] = 10^-12 [C/ms]
-		// zCa = [unitless]
-		// zF  = [Coulomb/mole]
-		// Volcyto = [um^3]
-		// Ca..0 = [uM] = [10^-6 . mole / L] = [10^-6 . mole / (1^15 um^3) ]
+       CALL update_SFU_Sun2000 <<<gridSize, blocksize>>> &
+       (X_r_dev((iinner-1)*NSFU+1:iinner*NSFU), &
+       dt, Vm, dp_arg1, dp_arg2, Ca_myo, Ca_nsr)
+       */
+    dyn_var_t compP = -sumval + 1.0;
+    assert (compP > 0.0); //make sure dt is small enough
+    dyn_var_t randval = rng.drandom32();
+    if (compP >= randval)
+    {
+      //no change in state	
+    }
+    else{
+      for (int jj=0; jj < maxNumNeighbors[i]; jj++)
+      {
+	compP += probStateTransition[i][jj];
+	if (compP >= randval)
+	{
+	  //update new state
+	  int offset = Map1Dindex(currentStateIndex[i],jj, maxNumNeighbors[i]);
+	  currentStateIndex[i] = matClusterStateInfo[i][offset];
+	  break;
+	}
+      }
+    }
+    J_Ca[i] = vClusterNumOpenChan[i][currentStateIndex[i]] * v_ryr[i] * (caer - cai);
+    //J_Ca = No * vryr * (Caer - Cacyto);  [uM/msec]
+    // No  = #open channels
+    // vryr   = iryr * 1e9 / (zCa * zF * Volcyto * (Caer0 - Cacyto0)) 
+    // i1ryr [pA] = 10^-9  A = 10^-9 [Coulomb/sec] = 10^-12 [C/ms]
+    // zCa = [unitless]
+    // zF  = [Coulomb/mole]
+    // Volcyto = [um^3]
+    // Ca..0 = [uM] = [10^-6 . mole / L] = [10^-6 . mole / (1^15 um^3) ]
   }
 }
 
 
 SingleChannelRYR::~SingleChannelRYR() {}
+
+#ifdef MICRODOMAIN_CALCIUM
+void SingleChannelRYR::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SingleChannelRYRInAttrPSet* CG_inAttrPset, CG_SingleChannelRYROutAttrPSet* CG_outAttrPset) 
+{
+  microdomainName = CG_inAttrPset->domainName;
+  int idxFound = 0;
+  while((*(getSharedMembers().tmp_microdomainNames))[idxFound] != microdomainName)
+  {
+    idxFound++;
+  }
+  _offset = idxFound * branchData->size;
+}
+#endif

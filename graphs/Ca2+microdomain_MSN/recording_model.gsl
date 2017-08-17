@@ -1,0 +1,91 @@
+//{{{voltage
+#define DAT0 "soma_voltage.dat"
+VoltageDisplay voltageDisplay0<fileName=DAT0>;
+voltageDisplay0.dataCollection(<>) on recOn;
+#define DAT1 "axon_voltage.dat"
+VoltageDisplay voltageDisplay1<fileName=DAT1>;
+voltageDisplay1.dataCollection(<>) on recOn;
+#define DAT2 "dend_voltage.dat"
+VoltageDisplay voltageDisplay2<fileName=DAT2>;
+voltageDisplay2.dataCollection(<>) on recOn;
+//VoltageDisplay voltageDisplay3<fileName=DAT3>;
+//VoltageDisplay voltageDisplay4<fileName=DAT4>;
+//VoltageDisplay voltageDisplay5<fileName=DAT5>;
+//VoltageDisplay voltageDisplay6<fileName=DAT6>;
+//VoltageDisplay voltageDisplay7<fileName=DAT7>;
+//VoltageDisplay voltageDisplay8<fileName=DAT8>;
+//VoltageDisplay voltageDisplay9<fileName=DAT9>;
+//VoltageDisplay voltageDisplay10<fileName=DAT10>;
+//VoltageDisplay voltageDisplay11<fileName=DAT11>;
+//VoltageDisplay voltageDisplay12<fileName=DAT12>;
+//VoltageDisplay voltageDisplay13<fileName=DAT13>;
+//VoltageDisplay voltageDisplay14<fileName=DAT14>;
+
+//#define DAT3 "rec3.dat"
+//#define DAT4 "rec4.dat"
+//#define DAT5 "rec5.dat"
+//#define DAT6 "rec6.dat"
+//#define DAT7 "rec7.dat"
+//#define DAT8 "rec8.dat"
+//#define DAT9 "rec9.dat"
+//#define DAT10 "rec10.dat"
+//#define DAT11 "rec11.dat"
+//#define DAT12 "rec12.dat"
+//#define DAT13 "rec13.dat"
+//#define DAT14 "rec14.dat"
+//voltageDisplay3.dataCollection(<>) on recOn;
+//voltageDisplay4.dataCollection(<>) on recOn;
+//voltageDisplay5.dataCollection(<>) on recOn;
+//voltageDisplay6.dataCollection(<>) on recOn;
+//voltageDisplay7.dataCollection(<>) on recOn;
+//voltageDisplay8.dataCollection(<>) on recOn;
+//voltageDisplay9.dataCollection(<>) on recOn;
+//voltageDisplay10.dataCollection(<>) on recOn;
+//voltageDisplay11.dataCollection(<>) on recOn;
+//voltageDisplay12.dataCollection(<>) on recOn;
+//voltageDisplay13.dataCollection(<>) on recOn;
+//voltageDisplay14.dataCollection(<>) on recOn;
+//}}}
+
+//{{{ neuron
+//{{{soma
+VoltageDisplay somaVoltageDisplay<fileName= PathFileCombine("somaV.dat")>;
+somaVoltageDisplay.dataCollection(<>) on recOn;
+
+CalciumDisplay somaCalciumDisplay<fileName= PathFileCombine("somaCa.dat")>;
+somaCalciumDisplay.dataCollection(<>) on recOn;
+
+
+AnyCurrentDisplay somaCurrentsDisplay<fileName= PathFileCombine("somaCurrents.dat")>;
+somaCurrentsDisplay.dataCollection(<>) on recOn;
+
+AnyFluxDisplay somaFluxesDisplay<fileName= PathFileCombine("somaFluxes.dat")>;
+somaFluxesDisplay.dataCollection(<>) on recOn;
+//}}}
+//{{{dendrite
+VoltageDisplay basalDenVoltageDisplay<fileName= PathFileCombine("basalDenV.dat")>;
+basalDenVoltageDisplay.dataCollection(<>) on recOn;
+
+CalciumDisplay basalDenCalciumDisplay<fileName= PathFileCombine("basalDenCa.dat")>;
+basalDenCalciumDisplay.dataCollection(<>) on recOn;
+
+AnyCurrentDisplay basalDenCurrentsDisplay<fileName= PathFileCombine("basalDenCurrents.dat")>;
+basalDenCurrentsDisplay.dataCollection(<>) on recOn;
+
+CalciumDomainDisplay basalDenCalciumDomainDisplay<fileName= PathFileCombine("basalDenCaDomain.dat")>;
+basalDenCalciumDomainDisplay.dataCollection(<>) on recOn;
+//}}}
+//{{{AIS
+VoltageDisplay AISVoltageDisplay<fileName= PathFileCombine("AISV.dat")>;
+AISVoltageDisplay.dataCollection(<>) on recOn;
+
+CalciumDisplay AISCalciumDisplay<fileName= PathFileCombine("AISCa.dat")>;
+AISCalciumDisplay.dataCollection(<>) on recOn;
+
+AnyCurrentDisplay AISCurrentsDisplay<fileName= PathFileCombine("AISCurrents.dat")>;
+AISCurrentsDisplay.dataCollection(<>) on recOn;
+
+CalciumDomainDisplay AISCalciumDomainDisplay<fileName= PathFileCombine("AISCaDomain.dat")>;
+AISCalciumDomainDisplay.dataCollection(<>) on recOn;
+//}}}
+//}}}

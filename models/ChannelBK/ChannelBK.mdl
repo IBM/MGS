@@ -292,47 +292,76 @@ Node ChannelBK Implements
   // 1 0 <gbar={0.00992}>
   // 4 0 <gbar_branchorders={0, 1, 2}>
   // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+#ifdef MICRODOMAIN_CALCIUM
+  string microdomainName; //default is empty, i.e. see cytosolic Ca2+
+#endif
   //}}}
 
-	//SHARED DATA
-	Shared {//in xxxCompCategory.C
-		//{{{
-		dyn_var_t* K_IC; // [mM]
-		dyn_var_t* K_EC; // [mM]
-		dyn_var_t* deltaT; // [ms]
-		dyn_var_t* T;     // [K]
-		dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-		//   and tempt. used for the simulation 
-		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
-		dyn_var_t [] E_K; // [mV]
-		InitPhase computeE; // [mV]
-		//}}}
-	}
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+    //{{{
+    dyn_var_t* K_IC; // [mM]
+    dyn_var_t* K_EC; // [mM]
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t* T;     // [K]
+    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
+    //   and tempt. used for the simulation 
+    //dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+    dyn_var_t [] E_K; // [mV]
+    InitPhase computeE; // [mV]
+#ifdef MICRODOMAIN_CALCIUM
+    string [] * tmp_microdomainNames;
+#endif
+    //}}}
+  }
 
-	RuntimePhase update();
-	InitPhase initialize;
-
-	ConductanceArrayProducer.conductanceArray << &g;
-	ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
-	BranchDataProducer.branchData << branchData;
+  //{{{output data
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
+  BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
+  //}}}
 
-	InAttrPSet {//information of the incoming connection
-		string identifier; //name of the compartment variable
-		int idx;   // index of the compartment on a branch
-	}
+  //{{{Phases methods
+  RuntimePhase update();
+  InitPhase initialize;
+  //}}}
 
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-                      BranchDataProducer, DimensionArrayProducer {
+  InAttrPSet {//information of the incoming connection
+    string identifier; //name of the compartment variable
+    int idx;   // index of the compartment on a branch
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //empty means current going straight to well-mixed cytosol
+#endif
+  }
+
+  //{{{Connection setup 
+	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer 
+                      , BranchDataProducer, DimensionArrayProducer 
+  {
 		VoltageArrayProducer.voltageArray >> V;
 		BranchDataProducer.branchData >> branchData;
     DimensionArrayProducer.dimensionArray >> dimensions;
 	}
 
-	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer//,
-//                      BranchDataProducer 
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setCalciumMicrodomain;
+	Connection Pre Node (PSet.identifier=="compartment[Calcium(domain)]") Expects 
+      CaMicrodomainConcentrationArrayProducer
+      , CaMicrodomainNameArrayProducer
+      , BranchDataProducer 
   {
+    BranchDataProducer.branchData >> branchData;
+    CaMicrodomainConcentrationArrayProducer.CaConcentrations >> Cai;
+    CaMicrodomainNameArrayProducer.microdomainNames >> Shared.tmp_microdomainNames;
+    setCalciumMicrodomain();
+	}
+#endif
+
+	Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer
+    //, BranchDataProducer 
+  {//Assume channel 'MUST' depends on voltage, otherwise enable BranchDataProducer here
 		CaConcentrationArrayProducer.CaConcentrations >> Cai;
 		//BranchDataProducer.branchData >> branchData;
 	}
@@ -349,6 +378,7 @@ Node ChannelBK Implements
 	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
 		TimeStepProducer.deltaT >> Shared.deltaT;
 	}
+  //}}}
 	/*}}}*/
 }
 #endif

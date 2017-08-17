@@ -1,0 +1,116 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+
+InitPhases = { initializeShared, initialize };
+RuntimePhases = {  run1, run2, run3, run4, lastPhase };
+FinalPhases = { finalize };
+
+NodeType BitmapPhenotype(<
+        period = 12,
+	imageFiles = { "images.txt" },
+	betaX0 = 0.0001
+>) { updateShared->run1, update->run2 };
+
+NodeType GatedThalamicUnit (<
+	alpha = 1.0,
+	betaY0 = 0.0001,
+	betaZ0 = 0.0001,
+	tauZ = 100,
+        weightsFileName = "Weights",
+	loadWeightsOn = {1},
+	collectWeightsOn = {2}
+>) { inputWeightsShared->run1, outputWeightsShared->run2, update->run3 };
+
+NodeType LinskerInfomaxUnit (<
+	period = 12,
+	betaC = 0.0007,
+	betaW0 = 0.0007,
+	betaQ = 0.0021,
+        weightsFileName = "Weights",
+	collectWeightsOn = {1, 5000000, 10000000, 15000000, 20000000, 25000000, 30000000}
+>) { outputWeightsShared->run1, copy->run2, update->run4 };
+
+Grid Retina
+{
+	Dimension ( 11, 11 );
+        Layer(ganglionCells, BitmapPhenotype, UniformLayout(1), < nodekind="rgc" >);
+	InitNodes ( .[], nodeDef );
+};
+
+Grid Thalamus
+{
+	Dimension ( 11, 11 );
+        Layer(relayNeurons, GatedThalamicUnit, UniformLayout(1), < nodekind="mc" >);
+	InitNodes ( .[], nodeDef );
+};
+
+ConnectionScript LNconnect(NodeSet ns, float radius)
+{
+   NdplModifier lnc(inAttrDef, < identifier="LN">);
+   connectNodeSets(ns, ns, EachDstPropSrc(RadialSampler(radius)), outAttrDef, lnc);
+};
+LNconnect connectLN();
+
+Grid Cortex
+{
+	Dimension ( 11, 11 );
+        Layer(superficial, LinskerInfomaxUnit, UniformLayout(1), < nodekind="mc" >);
+	InitNodes ( .[], Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=0.000001>)));
+	InitNodes ( .[0,0], Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=1.0>)));
+	connectLN(.[], 200.0);
+};
+
+Composite EarlyVision
+{
+	Retina retina;
+	Thalamus thalamus;
+	Cortex cortex;
+
+	//NdplModifier rgc2th(inAttrDef, < identifier="phenotypic" >);
+	//SrcRefDoGWeightModifier R2T(rgc2th, 0.5, 48.0, 1.0, 24.0, 0);
+ 	BindName rgc2th("identifier", "phenotypic");
+	NdplInAttrInit R2T(rgc2th);
+   	connectNodeSets(retina[], thalamus[], EachDst(EachAvg(1.0)), outAttrDef, R2T);
+
+ 	BindName th2ctx("weight", Gaussian(0,1.0), "identifier", "TH");
+	NdplInAttrInit T2C(th2ctx);
+   	connectNodeSets(thalamus[], cortex[], EachDst(EachAvg(1.0)), outAttrDef, T2C);
+};
+EarlyVision earlyVision;
+
+// DCA directives here
+
+VariableType LinskerInfomaxUnitDataCollector;
+LinskerInfomaxUnitDataCollector collectorC <fileName="InfomaxOutput.txt">;
+polyConnect(earlyVision/cortex[].Layer(superficial), collectorC, <>, <>);
+
+VariableType GatedThalamicUnitDataCollector;
+GatedThalamicUnitDataCollector collectorT <fileName="ThalamicOutput.txt">;
+polyConnect(earlyVision/thalamus[].Layer(relayNeurons), collectorT, <>, <>);
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger", 
+ 			 ::Iteration, "!%", 10000, 0, run1);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, ">", 30000000, 0, lastPhase); 
+
+collectorC.dataCollection() on iterTrig;
+collectorT.dataCollection() on iterTrig;
+Stop on endTrig;

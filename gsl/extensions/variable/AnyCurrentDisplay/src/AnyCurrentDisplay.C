@@ -3,6 +3,7 @@
 #include "CG_AnyCurrentDisplay.h"
 #include "MaxComputeOrder.h"
 #include <memory>
+#include "TissueSite.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
@@ -71,7 +72,14 @@ void AnyCurrentDisplay::initialize(RNG& rng)
             std::cout << "WRONG: synapseIndice.size() is "
                       << synapseIndices[i].size() << std::endl;
           }
-          assert(synapseBranchData[i]->size() == 2);
+          //NOTE: As the connectionn preCpt-SynapticCleft-postCpt
+          // is established for every receptor on that SynapticCleft
+          // then SynapticCleft->branchDataPrePost->size() is a multiple of 2
+          //  times number of receptor-type on that cleft
+          //  So we should not check this
+          //assert(synapseBranchData[i]->size() == 2);
+          //  But this is the right one
+          assert(synapseBranchData[i]->size() % 2 == 0);
 
           assert(synapseIndices[i].size() == 2);
           (*outFile) << std::fixed << " ["

@@ -74,99 +74,127 @@
 Node ChannelCaR_GHK Implements 
      CurrentArrayProducer, //GHK-based to Vm, GHK-based to I/O
      CaCurrentArrayProducer, //GHK-based to Ca2+
-		 BranchDataProducer, 
+     BranchDataProducer, 
      DimensionArrayProducer
 {
 /*{{{*/
-	//DATA
-	//{{{ 
-	// GHK formula with Hodgkin-Huxley-based gating variable
-	//{{{
-	//internal data
-	dyn_var_t [] m;
-	dyn_var_t [] h;
-	dyn_var_t [] I_Ca; // [pA/um^2]
-	dyn_var_t [] PCa;  // um/ms
-	dyn_var_t [] PCabar; // um/ms
-	// reference data
-	dyn_var_t []* V;//transmembrane voltage [mV]
-	dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
-	BranchDataStruct* branchData; 
-	DimensionStruct* []* dimensions;
-	//int index; //index of the compartment in branch
+  //{{{DATA
+  // GHK formula with Hodgkin-Huxley-based gating variable
+  //{{{internal data
+  dyn_var_t [] m;
+  dyn_var_t [] h;
+  dyn_var_t [] I_Ca; // [pA/um^2]
+  dyn_var_t [] PCa;  // um/ms
+  dyn_var_t [] PCabar; // um/ms
+  // reference data
+  dyn_var_t []* V;//transmembrane voltage [mV]
+  dyn_var_t []* Ca_IC; // intracellular Ca2+ concentration [uM]
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //int index; //index of the compartment in branch
 
-	//data mainly used to dynamically assign different conductance on different location
-	//NOTE: In SynParams.par file
-	//    Use either gbar_dists or gbar_branch
-	//      and combine with gbar_values
-	dyn_var_t [] Pbar_dists; // an array that indicate the threshold-distance (in micrometer)
-	dyn_var_t [] Pbar_branchorders;// an array that indicate the branch-order (zero-based integer)
-	dyn_var_t [] Pbar_values;// ... having the corresponding Pbar conductance [um/ms]
-	// Example:
-	// CHANNEL_PARAMS 2
-	// Cah 3
-	// BRANCHTYPE MTYPE
-	// 1 0 <gbar={0.00992}>
-	// 4 0 <gbar_dists={380.0,480.0, 590}> 
-	// 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-	// Nat 3 
-	// BRANCHTYPE MTYPE
-	// 1 0 <gbar={0.00992}>
-	// 4 0 <gbar_branchorders={0, 1, 2}> 
-	// 4 0 <gbar_values={0.0555,0.555,0.000555}>
-	//}}}
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  dyn_var_t [] Pbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  dyn_var_t [] Pbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  dyn_var_t [] Pbar_values;// ... having the corresponding Pbar conductance [um/ms]
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3 
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+#ifdef MICRODOMAIN_CALCIUM
+  string microdomainName; //default is empty, i.e. see cytosolic Ca2+
+#endif
+  //}}}
 
-	//SHARED DATA
-	Shared {//in xxxCompCategory.C
-		//{{{
-		dyn_var_t* Ca_EC; // [uM]
-		dyn_var_t* deltaT; // [ms]
-		dyn_var_t* T;     // [K]
-		dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
-		//   and tempt. used for the simulation 
-		//dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
-		InitPhase computeTadj; 
-		//}}}
-	}
-	//}}}
 
-	RuntimePhase update();
-	InitPhase initialize;
+  //SHARED DATA
+  Shared {//in xxxCompCategory.C
+    //{{{
+    dyn_var_t* Ca_EC; // [uM]
+    dyn_var_t* deltaT; // [ms]
+    dyn_var_t* T;     // [K]
+    dyn_var_t Tadj;  // [unitless] kinetics adjustment based on recorded data 
+    //   and tempt. used for the simulation 
+    //dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
+    InitPhase computeTadj; 
+#ifdef MICRODOMAIN_CALCIUM
+    string [] * tmp_microdomainNames;
+#endif
+    //}}}
+  }
+  //}}}
 
+  //{{{output data
 	CaCurrentArrayProducer.currents << &I_Ca;
 	CurrentArrayProducer.currents << &I_Ca;
 	BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
+  //}}}
 
-	InAttrPSet {//information of the incoming connection
-		string identifier; // name of the incoming node
-		int idx;   // if identifier = name of the compartment variable 
-		// then idx = index of the compartment on a branch
-	}
+  //{{{Phases methods
+	RuntimePhase update();
+	InitPhase initialize;
+  //}}}
 
-  //Connection setup (input)
-	Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
-	BranchDataProducer, DimensionArrayProducer 
-						 {
-							 VoltageArrayProducer.voltageArray >> V;
-							 BranchDataProducer.branchData >> branchData;
-							 DimensionArrayProducer.dimensionArray >> dimensions;
-						 }
+  InAttrPSet {//information of the incoming connection
+    string identifier; // name of the incoming node
+    int idx;   // if identifier = name of the compartment variable 
+    // then idx = index of the compartment on a branch
+#ifdef MICRODOMAIN_CALCIUM
+    string domainName; //default is empty, i.e. Ca2+ from cytosolic volume
+#endif
+  }
 
-	Connection Pre Node (PSet.identifier=="IC[Calcium]") Expects CaConcentrationArrayProducer {
-		CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
-	}
+  //{{{Connection setup (input)
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+             BranchDataProducer, DimensionArrayProducer 
+  {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+  }
 
-	Connection Pre Constant (PSet.identifier=="EC") 
-		Expects CaConcentrationProducer, TemperatureProducer 
-		{
-			CaConcentrationProducer.Ca >> Shared.Ca_EC;
-			TemperatureProducer.T >> Shared.T;
-		}
+#ifdef MICRODOMAIN_CALCIUM
+  UserFunction setCalciumMicrodomain;
+  Connection Pre Node (PSet.identifier=="compartment[Calcium(domain)]") Expects 
+      CaMicrodomainConcentrationArrayProducer
+      , CaMicrodomainNameArrayProducer
+      , BranchDataProducer, DimensionArrayProducer
+  {
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    CaMicrodomainConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+    CaMicrodomainNameArrayProducer.microdomainNames >> Shared.tmp_microdomainNames;
+    setCalciumMicrodomain();
+  }
+#endif
+  Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects CaConcentrationArrayProducer 
+  {
+    CaConcentrationArrayProducer.CaConcentrations >> Ca_IC;
+  }
 
-	Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
-		TimeStepProducer.deltaT >> Shared.deltaT;
-	}
+  Connection Pre Constant (PSet.identifier=="EC") 
+    Expects CaConcentrationProducer, TemperatureProducer 
+  {
+      CaConcentrationProducer.Ca >> Shared.Ca_EC;
+      TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+  //}}}
 /*}}}*/
 }
 

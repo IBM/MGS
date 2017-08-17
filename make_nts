@@ -104,14 +104,14 @@ while getopts "$optspec" optchar; do
                 mco)
                     MCO="-MCO"
                     ;;
-			          release) # release
-			          	NTI_BUILD_MODE=""  #keep empty
-                  GSL_BUILD_MODE="--release"
-			          	;;
+                release) # release
+                    NTI_BUILD_MODE=""  #keep empty
+                    GSL_BUILD_MODE="--release"
+                    ;;
                 loglevel)
-                  val="${!OPTIND}"
-									GSL_BUILD_MODE="--loglevel $val" 
-                  ;;
+                    val="${!OPTIND}"
+                    GSL_BUILD_MODE="--loglevel $val" 
+                    ;;
                 someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
@@ -346,6 +346,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean;
+      echo "${cc_blue}Removed MDL code successful.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean;
@@ -355,13 +356,15 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     make -j $NPROCS $NTI_BUILD_MODE
   fi
   if [ -f .build_error ]; then exit ; fi
-  if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+  if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then 
+      cd $NTSROOT
+      echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
+      exit; 
+    fi
     cd $NTSROOT
-    echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
-    exit; 
+    echo "${cc_blue}Complete build NTI code${cc_normal}"
   fi
-  cd $NTSROOT
-  echo "${cc_blue}Complete build NTI code${cc_normal}"
 fi
 #}}}
 
@@ -369,21 +372,21 @@ fi
 ### GSL code ###
 #{{{
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-    cd $LENSROOT
+  if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then cd $LENSROOT
+    #{{{
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
       ./build_gsl -p $PLATFORM --clean  
       rm_ifexist $NTSROOT/models/Extensions.mk
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $NTSROOT/models/compartmental.mdf
+      touch $NTSROOT/models/nts.mdf
     fi
     cd -
     cd $NTSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
       #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
-      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/compartmental.mdf ];  } ; then 
+      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/nts.mdf ];  } ; then 
       cd $LENSROOT/extensions/variable
       ./define variables.mdf  $REBUILD
       cd $LENSROOT/extensions/struct
@@ -391,8 +394,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $LENSROOT/extensions/functor
       ./define functors.mdf  $REBUILD
       cd $NTSROOT/models
-      touch compartmental.mdf
-      ./define compartmental.mdf $REBUILD
+      touch nts.mdf
+      ./define nts.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $NTSROOT
@@ -403,6 +406,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE
     fi
     cd -
+    #}}}
   else
     cd $LENSROOT/extensions/variable
     ./define variables.mdf  $REBUILD
@@ -411,8 +415,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT/extensions/functor
     ./define functors.mdf  $REBUILD
     cd $NTSROOT/models
-    if [ ! -f Extensions.mk ]; then touch compartmental.mdf; fi
-    ./define compartmental.mdf $REBUILD
+    if [ ! -f Extensions.mk ]; then touch nts.mdf; fi
+    ./define nts.mdf $REBUILD
 
     cp Extensions.mk $LENSROOT/
     cd $NTSROOT
@@ -421,7 +425,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE
     cd -
   fi
-  if { [ "$CLEAN" != "-clean" ] ;} ; then 
+  if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then 
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then 
       echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS...${cc_normal}
 

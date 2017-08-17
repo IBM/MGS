@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -113,9 +113,9 @@ void Generatable::generateModuleMk()
       << "#\n"
       << "# \"Restricted Materials of IBM\n"
       << "#\n"
-      << "# BMC-YKT-08-23-2011-2\n"
+      << "# BCM-YKT-11-19-2015\n"
       << "#\n"
-      << "# (C) Copyright IBM Corp. 2005-2014  All rights reserved\n"
+      << "# (C) Copyright IBM Corp. 2005-2015  All rights reserved\n"
       << "# US Government Users Restricted Rights -\n"
       << "# Use, duplication or disclosure restricted by\n"
       << "# GSA ADP Schedule Contract with IBM Corp.\n"
@@ -435,7 +435,7 @@ std::string Generatable::getSetupFromNDPairListMethodBody(
    os << TAB << TAB << "if (!" << FOUND << ") {\n"
       << TAB << TAB << TAB << "std::ostringstream os;\n"
       << TAB << TAB << TAB << "os << (*it)->getName() << "
-      << "\" can not be handled.\";\n"
+      << "\" can not be handled in \" << typeid(*this).name();\n"
       << TAB << TAB << TAB << "os << \" HINTS: the data member name is not available but you may be using it somewhere (e.g. in GSL file or the parameter file)\";\n"
       << TAB << TAB << TAB << "throw SyntaxErrorException(os.str());\n"
       << TAB << TAB << "}\n"      

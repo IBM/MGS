@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -82,7 +82,7 @@ void CoordsStruct::doInitialize(const NDPairList& ndplist)
       }
       if (!CG_found) {
          std::ostringstream os;
-         os << (*it)->getName() << " can not be handled.";
+         os << (*it)->getName() << " can not be handled in " << typeid(*this).name();
          os << " HINTS: the data member name is not available but you may be using it somewhere (e.g. in GSL file or the parameter file)";
          throw SyntaxErrorException(os.str());
       }

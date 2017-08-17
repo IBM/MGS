@@ -65,13 +65,13 @@ UnsignedServiceTrigger::UnsignedServiceTrigger(Simulation& sim,
   }
   _op = opDI->getString();
   ++iter;
-	ServiceDataItem* ptrCriterionSvcDI = dynamic_cast<ServiceDataItem*>(*iter);
-	if (ptrCriterionSvcDI == 0)
-	{
-		std::cerr << "Expect a ServiceDataItem on 4th argument of "
-			"UnsignedServiceTrigger!" << std::endl;
-		exit(-1);
-	}
+  ServiceDataItem* ptrCriterionSvcDI = dynamic_cast<ServiceDataItem*>(*iter);
+  if (ptrCriterionSvcDI == 0)
+  {
+    std::cerr << "Expect a ServiceDataItem on 4th argument of "
+      "UnsignedServiceTrigger!" << std::endl;
+    exit(-1);
+  }
   ++iter;
   NumericDataItem* delayDI = dynamic_cast<NumericDataItem*>(*iter);
   if (delayDI == 0)
@@ -92,25 +92,25 @@ UnsignedServiceTrigger::UnsignedServiceTrigger(Simulation& sim,
   _phase = phaseDI->getPhase()->getName();
 
   setEvaluator(_op);
-	{
-		GenericService<unsigned>* service;
-		service = dynamic_cast<GenericService<unsigned>*>(ptrSvcDI->getService());
-		assert(service != 0);
-		// modification required to run in distributed computing environment -- Jizhu
-		// Lu - Tuan 
-		assert(service != NULL);
-		_service = service->getData();
+  {
+    GenericService<unsigned>* service;
+    service = dynamic_cast<GenericService<unsigned>*>(ptrSvcDI->getService());
+    assert(service != 0);
+    // modification required to run in distributed computing environment -- Jizhu
+    // Lu - Tuan 
+    assert(service != NULL);
+    _service = service->getData();
 
-	}
+  }
 
-	{
-		GenericService<int>* service;
-		service = 0;
-		service = dynamic_cast<GenericService<int>*>(ptrCriterionSvcDI->getService());
-		assert(service != 0);
-		assert(service != NULL);
-		_criterion = service->getData();
-	}
+  {
+    GenericService<int>* service;
+    service = 0;
+    service = dynamic_cast<GenericService<int>*>(ptrCriterionSvcDI->getService());
+    assert(service != 0);
+    assert(service != NULL);
+    _criterion = service->getData();
+  }
 
   _sim.addTrigger(_phase, this);
 }

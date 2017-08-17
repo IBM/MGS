@@ -66,7 +66,18 @@ void ChannelBKalphabeta::initialize(RNG& rng)
 {
   assert(branchData);
   unsigned int size = branchData->size;
-  assert(V);
+  if (not V)
+  {
+    std::cerr << typeid(*this).name() << " needs Voltage as input in ChanParam\n";
+    assert(V);
+  }
+#if defined(SIMULATE_CACYTO)
+  if (not Cai)
+  {
+    std::cerr << typeid(*this).name() << " needs Calcium as input in ChanParam\n";
+    assert(Cai);
+  }
+#endif
   assert(gbar.size() == size);
   assert(V->size() == size);
   // allocate
@@ -76,7 +87,7 @@ void ChannelBKalphabeta::initialize(RNG& rng)
   if (fC.size() != size) fC.increaseSizeTo(size);
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
-	fI[0] = fO[0]= 0.0;
+  fI[0] = fO[0]= 0.0;
   assert(fabs(fI[0] + fO[0] + fC[0] - 1.0) < SMALL);  // conservation
   for (unsigned i = 0; i < size; ++i)
   {
@@ -86,7 +97,7 @@ void ChannelBKalphabeta::initialize(RNG& rng)
     fO[i] = fO[0];
     fC[i] = fI[0];
     g[i] = gbar[i] * fO[i];
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
@@ -94,19 +105,19 @@ void ChannelBKalphabeta::update(RNG& rng)
 {
 #if CHANNEL_BKalphabeta == BKalphabeta_SHAO_1999 || \
 	CHANNEL_BKalphabeta == BKalphabeta_WOLF_2005
-	const dyn_var_t tminOI = 0.1; //msec
-	const dyn_var_t tminIC = 0.1; //msec
-	const dyn_var_t tminCO = 0.001; //msec
-	const dyn_var_t tminOC = 0.01; //msec
-	const dyn_var_t tmaxCO = 1.0; //msec
-	const dyn_var_t kV_OI = 1.0; //mV   = steepness of activation
-	const dyn_var_t kV_IC = -10.0; //mV
-	const dyn_var_t kV_CO = 7.0; //mV
-	const dyn_var_t kV_OC = -5.0; //mV
-	const dyn_var_t Vhalf_OI = -10.0; //mV
-	const dyn_var_t Vhalf_IC = -120.0; //mV
-	const dyn_var_t Vhalf_CO = -20.0; //mV
-	const dyn_var_t Vhalf_OC = -44.0; //mV
+  const dyn_var_t tminOI = 0.1; //msec
+  const dyn_var_t tminIC = 0.1; //msec
+  const dyn_var_t tminCO = 0.001; //msec
+  const dyn_var_t tminOC = 0.01; //msec
+  const dyn_var_t tmaxCO = 1.0; //msec
+  const dyn_var_t kV_OI = 1.0; //mV   = steepness of activation
+  const dyn_var_t kV_IC = -10.0; //mV
+  const dyn_var_t kV_CO = 7.0; //mV
+  const dyn_var_t kV_OC = -5.0; //mV
+  const dyn_var_t Vhalf_OI = -10.0; //mV
+  const dyn_var_t Vhalf_IC = -120.0; //mV
+  const dyn_var_t Vhalf_CO = -20.0; //mV
+  const dyn_var_t Vhalf_OC = -44.0; //mV
 #endif
 
   dyn_var_t dt = *(getSharedMembers().deltaT);
@@ -115,7 +126,7 @@ void ChannelBKalphabeta::update(RNG& rng)
     dyn_var_t v = (*V)[i];      //[mV]
 		// IMPORTANT: Make sure to convert [Ca]cyto from [uM] to [mM]
 #if ! defined(SIMULATE_CACYTO)
-		dyn_var_t Cai_base = 0.1; // [uM]
+    dyn_var_t Cai_base = 0.1; // [uM]
     dyn_var_t cai = Cai_base * uM2mM;
 #else
     dyn_var_t cai = (*Cai)[i] * uM2mM;  //[mM]

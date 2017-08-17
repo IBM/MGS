@@ -1,18 +1,70 @@
 #!/bin/bash
-sed '/\\/p' $1 | sed 's/#include "/cd /g' | sed 's/\// ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd .. ;/g' > defineModels1.sh;
+### UPDATE: 
+# (Aug-08-2017) 
+#  comment starting with // is allowed in *.mdf file
+#  MDL file in sub-folder is allowed now
+#  automatically detect change in MDL file
+#  all.mdf is the one used by the build-script in that user can add
+#       - mdl files
+#       - mdf files
+#   (NOTE: only all.mdf can contain MDF files)
+#  tolerate to non-existence MDF file
+### KNOWN LIMITATION:
+# 1. once a component in the MDL file is added/changed --> the whole MDL file is recompiled
+#       (so try not to put so many components in one MDL file)
+# 2. it doesn't automatically compile for #include MDL file (as the generated file is expected to be in a different location)
+
+temp_mdf_only=$(mktemp)
+temp_mdl_only=$(mktemp)
+grep  '^[^//]' $1 | awk '/mdf"/ {print}' > ${temp_mdf_only}
+grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_mdl_only}
+
+MDLFILES=()
+sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
+while read in; do 
+  file_name=`echo $in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+  if [ -f $file_name ]; then
+    cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
+    MDLFILES+=($file_name)
+  fi
+done < ${temp_mdf_only}
+
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
   awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
 else
-  awk 'NF { print "if [ '$1' -ot " $2 "/" $5 " ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
+  awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;
 fi
+
+set -e
 source defineModels2.sh;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
+##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
 if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
-#$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct
-touch compartmental.mdf
+RERUN=0
+for i in "${MDLFILES[@]}"
+do
+  if [ define -ot $i ]; then RERUN=1; fi
+  touch $i
+done
+if [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+touch $1
 sleep 2
 touch define;
 touch $LENSROOT/Extensions.mk
 cp $LENSROOT/Extensions.mk{,.bak}
 cp Extensions.mk $LENSROOT
+rm ${temp_mdf_only}
+rm ${temp_mdl_only}
+
+# <<<OLD_MGS; uncomment these
+#touch define;
+#touch $1;
+#    OLD_MGS>>>
+
+#grep  '^[^//]' $1 | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
+  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
+  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; if [ ! -d " $2 "/`awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1); exit;}}'"'"' " $2 "/" $5 "` ]; then " $0 " fi " }' defineModels1.sh > defineModels2.sh;
+  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;
+  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;
+  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;

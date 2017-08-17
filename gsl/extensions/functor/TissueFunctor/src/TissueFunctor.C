@@ -219,6 +219,10 @@ TissueFunctor::TissueFunctor(TissueFunctor const& f)
       _channelBranchIndices2(f._channelBranchIndices2),
       _channelJunctionIndices1(f._channelJunctionIndices1),
       _channelJunctionIndices2(f._channelJunctionIndices2),
+#ifdef MICRODOMAIN_CALCIUM
+      _microdomainOnBranch(f._microdomainOnBranch),
+      _microdomainOnJunction(f._microdomainOnJunction),
+#endif
       _channelTypeCounter(f._channelTypeCounter),
       _electricalSynapseTypeCounter(f._electricalSynapseTypeCounter),
       _bidirectionalConnectionTypeCounter(
@@ -1177,7 +1181,6 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
   if (commandLine.getDecomposition() == "volume" ||
       commandLine.getDecomposition() == "cost-volume")
   {
-
     touchDetectTissueSlicer->sendLostDaughters(false);
 #ifdef INFERIOR_OLIVE
     touchDetectTissueSlicer->addTolerance(
@@ -1267,7 +1270,6 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
   }
   else if (commandLine.getDecomposition() == "neuron")
   {
-
     touchDetectTissueSlicer->sendLostDaughters(false);
     touchDetectTissueSlicer->addCutPointJunctions(false);
     touchDetector->setPass(TissueContext::FIRST_PASS);
@@ -1467,11 +1469,19 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
         branch = findBranch(nodeIndex, densityIndex, nodeType);
       else
       {
+#ifdef MICRODOMAIN_CALCIUM
+        std::tuple<int, int, std::string >& channelBranchIndexPair =
+          _channelBranchIndices1[_channelLayers.size() - 1][densityIndex][0];
+        branch = findBranch(
+            nodeIndex, std::get<0>(channelBranchIndexPair),
+            _compartmentVariableTypes[std::get<1>(channelBranchIndexPair)]);
+#else
         std::pair<int, int>& channelBranchIndexPair =
           _channelBranchIndices1[_channelLayers.size() - 1][densityIndex][0];
         branch = findBranch(
             nodeIndex, channelBranchIndexPair.first,
             _compartmentVariableTypes[channelBranchIndexPair.second]);
+#endif
       }
       assert(branch);
 
@@ -1784,70 +1794,73 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     }
 
     const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
-    if (cpt->size()  < 0)
+    if (cpt == NULL)
     {
-      std::cerr << "ERROR: Expect at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
-      assert(0);
+      std::cerr << "WARNING: Check if we need at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
+     // std::cerr << "ERROR: Expect at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
+     // assert(0);
     }
-    // for parameters for the nodeType and are defined inside
-    // 'compartmentalize='
-    // arguments,
-    std::vector<DataItem*>::const_iterator cptiter, cptend = cpt->end();
-    //  ... make them an array of the same size as the #cpts in that
-    //  ComputeBranch
-    //   make the arrays of size = #-compartments in that ComputeBranch
-    NDPairList::iterator ndpiter, ndpend = params->end();
-    for (cptiter = cpt->begin(); cptiter != cptend; ++cptiter)
-    {
-      bool foundNDP = false;
-      for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
-      {//for each data member
-        std::string mydata = (*cptiter)->getString();//DEBUG purpose
-        if ((*ndpiter)->getName() == (*cptiter)->getString())
-        {//if the data member is part of 'compartmentalize' declaration
-          //...adjust the size of the data member vector to the #cpts on that branch
-          foundNDP = true;
-          ArrayDataItem* arrayDI =
-            dynamic_cast<ArrayDataItem*>((*ndpiter)->getDataItem());
-          if (arrayDI == 0)
-          {
-            std::cerr << "TissueFunctor: " << *(*cptiter)
-              << " comparmentalization can only be applied to an array "
-              "parameter!" << std::endl;
-            exit(-1);
-          }
-          arrayDI->setDimensions(size);
-          break;
-        }
-      }
-      if (!foundNDP)
+    else{
+      // for parameters for the nodeType and are defined inside
+      // 'compartmentalize='
+      // arguments,
+      std::vector<DataItem*>::const_iterator cptiter, cptend = cpt->end();
+      //  ... make them an array of the same size as the #cpts in that
+      //  ComputeBranch
+      //   make the arrays of size = #-compartments in that ComputeBranch
+      NDPairList::iterator ndpiter, ndpend = params->end();
+      for (cptiter = cpt->begin(); cptiter != cptend; ++cptiter)
       {
-        ArrayDataItem* arrayDI = 0;
-        std::string mystring = (*cptiter)->getString();
-        std::vector<std::string> tokens;
-        std::string delimiters = ":";
-        StringUtils::Tokenize(mystring, tokens, delimiters);
-        assert(tokens.size() == 1 || tokens.size() == 2);
-        if (tokens.size() == 1 || tokens[0] == "float")
-        {
-          arrayDI = new FloatArrayDataItem(size);
+        bool foundNDP = false;
+        for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
+        {//for each data member
+          std::string mydata = (*cptiter)->getString();//DEBUG purpose
+          if ((*ndpiter)->getName() == (*cptiter)->getString())
+          {//if the data member is part of 'compartmentalize' declaration
+            //...adjust the size of the data member vector to the #cpts on that branch
+            foundNDP = true;
+            ArrayDataItem* arrayDI =
+              dynamic_cast<ArrayDataItem*>((*ndpiter)->getDataItem());
+            if (arrayDI == 0)
+            {
+              std::cerr << "TissueFunctor: " << *(*cptiter)
+                << " comparmentalization can only be applied to an array "
+                "parameter!" << std::endl;
+              exit(-1);
+            }
+            arrayDI->setDimensions(size);
+            break;
+          }
         }
-        else if (tokens[0] == "int")
+        if (!foundNDP)
         {
-          arrayDI = new IntArrayDataItem(size);
-        }
-        else if (tokens[0] == "string")
-        {
-          arrayDI = new StringArrayDataItem(size);
-        }
-        assert(arrayDI);
-        std::string varName = tokens[tokens.size() - 1];
-        StringUtils::trim(varName);
-        // std::cerr << "varName = " << varName << std::endl;
+          ArrayDataItem* arrayDI = 0;
+          std::string mystring = (*cptiter)->getString();
+          std::vector<std::string> tokens;
+          std::string delimiters = ":";
+          StringUtils::Tokenize(mystring, tokens, delimiters);
+          assert(tokens.size() == 1 || tokens.size() == 2);
+          if (tokens.size() == 1 || tokens[0] == "float")
+          {
+            arrayDI = new FloatArrayDataItem(size);
+          }
+          else if (tokens[0] == "int")
+          {
+            arrayDI = new IntArrayDataItem(size);
+          }
+          else if (tokens[0] == "string")
+          {
+            arrayDI = new StringArrayDataItem(size);
+          }
+          assert(arrayDI);
+          std::string varName = tokens[tokens.size() - 1];
+          StringUtils::trim(varName);
+          // std::cerr << "varName = " << varName << std::endl;
 
-        std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
-        NDPair* ndp = new NDPair(varName, arrayDI_ap);
-        params->push_back(ndp);
+          std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
+          NDPair* ndp = new NDPair(varName, arrayDI_ap);
+          params->push_back(ndp);
+        }
       }
     }
   }
@@ -2069,9 +2082,9 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
         assert(dist2soma>0.0);
       }
 #ifdef DEBUG_CPTS
-              currentBranch = branch_parent;
+      currentBranch = branch_parent;
 #endif
-              //LOC 2 - explicit junction
+      //LOC 2 - explicit junction
       StructDataItem* dimsDI =
         getDimension(lc, junctionCapsule->getEndCoordinates(),
             (dyn_var_t)junctionCapsule->getRadius(),
@@ -2115,12 +2128,12 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
     NDPairList* params)
 {
-  const std::vector<DataItem*>* cpt;
+  const std::vector<DataItem*>* cpt = NULL;
   NDPairList::iterator ndpiter, ndpend = params->end();
   for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
   {
     if ((*ndpiter)->getName() == "compartmentalize")
-    {
+    {   
       DataItemArrayDataItem* cptDI =
           dynamic_cast<DataItemArrayDataItem*>((*ndpiter)->getDataItem());
       if (cptDI == 0)
@@ -2353,6 +2366,7 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
                  "Index Map! rank=" << _rank
               << ", nodeIndex (failed)=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<int, ComputeBranch*>::iterator mapiter3 =
@@ -2362,6 +2376,7 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
     std::cerr << "Tissue Functor::findBranch, branch density index not found "
                  "in Branch Map! rank=" << _rank << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   rval = mapiter3->second;
@@ -2370,8 +2385,10 @@ ComputeBranch* TissueFunctor::findBranch(int nodeIndex, int densityIndex,
 
 // GOAL:
 //   given nodeType (e.g. Calcium) and a given ComputeBranch 'b'
-//   return the vector of 2 elements {gridnode-index,
-//   index-of-element-in-that-gridnode}
+//   return the vector of 2 elements 
+//   {gridnode-index, //which is MPI-rank
+//    index-of-element-in-that-gridnode //which
+//   }
 std::vector<int>& TissueFunctor::findBranchIndices(ComputeBranch* b,
                                                    std::string const& nodeType)
 {
@@ -2385,7 +2402,11 @@ std::vector<int>& TissueFunctor::findBranchIndices(ComputeBranch* b,
               << nodeType << " not found in Branch Index Map! rank=" << _rank
               << std::endl;
     std::cerr << "HINTS: Maybe the nodeType " << nodeType
-              << " is not defined in GSL" << std::endl;
+              << " is not defined in COMPARTMENT_VARIABLE_TARGET section for BRANCHTYPE " 
+              << _segmentDescriptor.getBranchType(b->_capsules[0].getKey()) + 1
+              << " in CptParams file"
+              << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
@@ -2399,6 +2420,7 @@ std::vector<int>& TissueFunctor::findBranchIndices(ComputeBranch* b,
                  "depends on the nodeType" << nodeType << "; but\n"
               << " this nodeType is not associated with that branch. Check "
                  "COMPARTMENT_VARIABLE_TARGETS in CptParams files" << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   return mapiter2->second;
@@ -2425,6 +2447,7 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
   {
     std::cerr << "Tissue Functor::findJunction, junction node type " << nodeType
               << " not found in Junction Map! rank=" << _rank << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<int, std::map<int, Capsule*> >::iterator mapiter2 =
@@ -2434,6 +2457,7 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
     std::cerr << "Tissue Functor::findJunction, junction index not found in "
                  "Junction Map! rank=" << _rank << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<int, Capsule*>::iterator mapiter3 =
@@ -2444,6 +2468,7 @@ Capsule* TissueFunctor::findJunction(int nodeIndex, int densityIndex,
                  "found in Junction Map! rank=" << _rank
               << ", nodeIndex=" << nodeIndex
               << ", densityIndex=" << densityIndex << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   return mapiter3->second;
@@ -2464,6 +2489,7 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
     std::cerr << "Tissue Functor::findJunctionIndices, junction type not found "
                  "in Junction Index Map! rank=" << _rank 
                  << ", nodeType=" << nodeType << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<Capsule*, std::vector<int> >::iterator mapiter2 =
@@ -2473,6 +2499,7 @@ std::vector<int>& TissueFunctor::findJunctionIndices(
     std::cerr << "Tissue Functor::findJunction, junction not found in Junction "
                  "Index Map! rank=" << _rank 
                  << ", nodeType=" << nodeType << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   return mapiter2->second;
@@ -2488,6 +2515,7 @@ std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
     std::cerr << "Tissue Functor: forward solve point node type " << nodeType
               << " not found in Forward Solve Point Index Map! rank=" << _rank
               << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
@@ -2496,6 +2524,7 @@ std::vector<int>& TissueFunctor::findForwardSolvePointIndices(
   {
     std::cerr << "Tissue Functor: forward solve point index not found in "
                  "Forward Solve Point Index Map! rank=" << _rank << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   return mapiter2->second;
@@ -2511,6 +2540,7 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
     std::cerr << "Tissue Functor: backward solve point node type " << nodeType
               << " not found in Branch Backward Solve Point Index Map! rank="
               << _rank << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   std::map<ComputeBranch*, std::vector<int> >::iterator mapiter2 =
@@ -2520,6 +2550,7 @@ std::vector<int>& TissueFunctor::findBackwardSolvePointIndices(
     std::cerr << "Tissue Functor: backward solve point index not found in "
                  "Branch Backward Solve Point Index Map! rank=" << _rank
               << std::endl;
+    assert(0);
     exit(EXIT_FAILURE);
   }
   return mapiter2->second;
@@ -2683,7 +2714,6 @@ ShallowArray<int> TissueFunctor::doLayoutHybrid(LensContext* lc)
 ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 {
   assert(_params.get());
-
   std::vector<std::string> nodekind;
   getNodekind(_params.get(), nodekind);
   assert(nodekind.size() > 0);
@@ -2708,6 +2738,16 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 
   if (nodeCategory == "Channels")
   {  // create tracker mapping channel to branch and explicit junction
+#ifdef MICRODOMAIN_CALCIUM
+    _channelBranchIndices1.push_back(
+        std::vector<std::vector<std::tuple<int, int, std::string > > >());
+    _channelJunctionIndices1.push_back(
+        std::vector<std::vector<std::tuple<int, int, std::string > > >());
+    _channelBranchIndices2.push_back(
+        std::vector<std::vector<std::tuple<int, int, std::string > > >());
+    _channelJunctionIndices2.push_back(
+        std::vector<std::vector<std::tuple<int, int, std::string > > >());
+#else
     _channelBranchIndices1.push_back(
         std::vector<std::vector<std::pair<int, int> > >());
     _channelJunctionIndices1.push_back(
@@ -2716,6 +2756,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
         std::vector<std::vector<std::pair<int, int> > >());
     _channelJunctionIndices2.push_back(
         std::vector<std::vector<std::pair<int, int> > >());
+#endif
     if (_channelTypesMap.find(nodeType) != _channelTypesMap.end())
     {
       std::cerr << "Unrecognized " << nodeType << " on nodeCategory : "
@@ -2889,12 +2930,10 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 
     for (; titer != tend; ++titer)
     {//traverse all the recorded Touch(es)
-
-	  //Check to make sure only consider the touch with at least 
+      //Check to make sure only consider the touch with at least 
       //one capsule supposed to be handled
       //by the current MPI process
       //assert(_tissueContext->isLensTouch(*titer, _rank));
-
 #ifdef IDEA1
       ++mm;
       //if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
@@ -3013,17 +3052,17 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
         if (probabilities[i] > 0)
         {
 #ifdef IDEA1
-            if (_tissueContext->isPartOfExplicitJunction(*postCapsule, *titer, indexPost, &jctCapsulePostCapsule))
-            {
-                //if (jctCapsulePostCapsule == NULL)
-                //{
-                //    assert(indexPost != _rank);
-                //    continue;
-                //}
-                //if (indexPost != _rank)
-                //  continue;
-                postJunction = true;
-            }
+          if (_tissueContext->isPartOfExplicitJunction(*postCapsule, *titer, indexPost, &jctCapsulePostCapsule))
+          {
+            //if (jctCapsulePostCapsule == NULL)
+            //{
+            //    assert(indexPost != _rank);
+            //    continue;
+            //}
+            //if (indexPost != _rank)
+            //  continue;
+            postJunction = true;
+          }
 #else
           if (_tissueContext->isTouchToEnd(*postCapsule, *titer) &&
               _segmentDescriptor.getFlag(postCapsule->getKey()))
@@ -3059,19 +3098,26 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                                          counter, i, nodeCategory);
               if (result)
               {
-                if (preJunction)
 #ifdef IDEA1
+                if (preJunction)
                   _capsuleJctPointIndexMap[nodeType][jctCapsulePreCapsule] =
                       rval[indexPre];
-#else
-                  _capsuleJctPointIndexMap[nodeType][preCapsule] =
-                      rval[indexPre];
-#endif
                 else
                   _capsuleCptPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
-                if (indexPre == _rank)
-                  _synapticCleftMaps[counter][&*titer] = rval[_rank];
+#else
+                if (preJunction)
+                  _capsuleJctPointIndexMap[nodeType][preCapsule] =
+                      rval[indexPre];
+                else
+                  _capsuleCptPointIndexMap[nodeType][preCapsule] =
+                      rval[indexPre];
+#endif
+                if (nodeCategory == "SynapticClefts")
+                {
+                  if (indexPre == _rank)
+                    _synapticCleftMaps[counter][&*titer] = rval[_rank];
+                }
                 rval[indexPre]++;
               }
             }
@@ -3190,7 +3236,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
       if (nodeCategory == "Channels" ||
           // or if the compartment variable being layout is the target of any
           // channel
-          // on that Computebranch
+          // on that Compartment Computebranch (NOTE: not Junction ComputeBranch)
           _tissueParams.isCompartmentVariableTarget(key, nodeType))
       {  //  - if YES, then
         unsigned int computeOrder = _segmentDescriptor.getComputeOrder(key);
@@ -3245,18 +3291,45 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                 if (iiter->_type == nodeType)
                 {
                   rval[index]++;
+#ifdef MICRODOMAIN_CALCIUM
+                  std::vector<std::tuple<int, int, std::string> > targetVector;
+#else
                   std::vector<std::pair<int, int> > targetVector;
+#endif
                   std::list<std::string>::iterator viter,
                       vend = iiter->_target1.end();
-                  assert(iiter->_target1.size() > 0);
+                  assert(iiter->_target1.size() > 0); //channel must receive 'input', e.g. Na [input] [output]
                   for (viter = iiter->_target1.begin(); viter != vend; ++viter)
                   {
+#ifdef MICRODOMAIN_CALCIUM
+                    //NOTE: As the name may contains domain names
+                    // Calcium(domain1, domainA)
+                    // we need to split them
+                    std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                    std::string compartmentNameOnly("");
+                    std::string microdomainName("");
+                    Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                    checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                    if (not microdomainName.empty())
+                      _microdomainOnBranch[*iter].insert(microdomainName);
+                    //find out a Channel-branch associate input connection 
+                    // to what (can be many )compartment-branch (e.g. Voltage, Calcium)
+                    //  --> _channelBranchIndices1
+                    std::vector<int>& branchIndices =
+                        findBranchIndices(*iter, compartmentNameOnly);
+                    assert(branchIndices[0] == _rank);
+                    targetVector.push_back(std::tuple<int, int, std::string>(
+                        branchIndices[1],
+                        _compartmentVariableTypesMap[compartmentNameOnly],
+                        microdomainName));
+#else
                     std::vector<int>& branchIndices =
                         findBranchIndices(*iter, *viter);
                     assert(branchIndices[0] == _rank);
                     targetVector.push_back(std::pair<int, int>(
                         branchIndices[1],
                         _compartmentVariableTypesMap[*viter]));
+#endif
                   }
                   _channelBranchIndices1[_channelTypeCounter].push_back(
                       targetVector);
@@ -3266,12 +3339,32 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                   assert(iiter->_target2.size() > 0);
                   for (viter = iiter->_target2.begin(); viter != vend; ++viter)
                   {
+#ifdef MICRODOMAIN_CALCIUM
+                    //find out a Channel-branch associate output data
+                    // to what (can be many )compartment-branch (e.g. Voltage, Calcium)
+                    //  --> _channelBranchIndices2
+                    std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                    std::string compartmentNameOnly("");
+                    std::string microdomainName("");
+                    Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                    checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                    if (not microdomainName.empty())
+                      _microdomainOnBranch[*iter].insert(microdomainName);
+                    std::vector<int>& branchIndices =
+                        findBranchIndices(*iter, compartmentNameOnly);
+                    assert(branchIndices[0] == _rank);
+                    targetVector.push_back(std::tuple<int, int, std::string>(
+                        branchIndices[1],
+                        _compartmentVariableTypesMap[compartmentNameOnly],
+                        microdomainName));
+#else
                     std::vector<int>& branchIndices =
                         findBranchIndices(*iter, *viter);
                     assert(branchIndices[0] == _rank);
                     targetVector.push_back(std::pair<int, int>(
                         branchIndices[1],
                         _compartmentVariableTypesMap[*viter]));
+#endif
                   }
                   _channelBranchIndices2[_channelTypeCounter].push_back(
                       targetVector);
@@ -3434,13 +3527,48 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                       if (iiter->_type == nodeType)
                       {
                         rval[indexJct]++;
+#ifdef MICRODOMAIN_CALCIUM
+                        std::vector<std::tuple<int, int, std::string> > targetVector;
+#else
                         std::vector<std::pair<int, int> > targetVector;
+#endif
                         std::list<std::string>::iterator viter,
                             vend = iiter->_target1.end();
                         assert(iiter->_target1.size() > 0);
                         for (viter = iiter->_target1.begin(); viter != vend;
                              ++viter)
                         {
+#ifdef MICRODOMAIN_CALCIUM
+                          //NOTE: This is inside IDEA1
+                          //find out a Channel-branch associate output data
+                          // to what (can be many )junction-branch (e.g. Voltage, Calcium)
+                          //  --> _channelJunctionIndices1
+                          std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                          std::string compartmentNameOnly("");
+                          std::string microdomainName("");
+                          Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                          checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                          if (not microdomainName.empty())
+                            _microdomainOnJunction[&((*iter)->lastCapsule())].insert(microdomainName);
+                          std::map<std::string,
+                                   std::map<Capsule*, std::vector<int> > >::
+                              iterator jmapiter1 =
+                                  _junctionIndexMap.find(compartmentNameOnly);
+                          std::map<Capsule*, std::vector<int> >::iterator
+                              jmapiter2;
+                          if (jmapiter1 != _junctionIndexMap.end() &&
+                              (jmapiter2 = jmapiter1->second.find(
+                                   &(*iter)->lastCapsule())) !=
+                                  jmapiter1->second.end())
+                          {
+                            std::vector<int>& junctionIndices =
+                                jmapiter2->second;
+                            targetVector.push_back(std::tuple<int, int, std:string>(
+                                junctionIndices[1],
+                                _compartmentVariableTypesMap[compartmentNameOnly],
+                                microdomainName));
+                          }
+#else
                           std::map<std::string,
                                    std::map<Capsule*, std::vector<int> > >::
                               iterator jmapiter1 =
@@ -3458,6 +3586,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                                 junctionIndices[1],
                                 _compartmentVariableTypesMap[*viter]));
                           }
+#endif
                         }
                         _channelJunctionIndices1[_channelTypeCounter].push_back(
                             targetVector);
@@ -3467,6 +3596,37 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                         for (viter = iiter->_target2.begin(); viter != vend;
                              ++viter)
                         {
+#ifdef MICRODOMAIN_CALCIUM
+                          //NOTE: This is inside IDEA1
+                          //find out a Channel-branch associate output data
+                          // to what (can be many )junction-branch (e.g. Voltage, Calcium)
+                          //  --> _channelJunctionIndices2
+                          std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                          std::string compartmentNameOnly("");
+                          std::string microdomainName("");
+                          Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                          checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                          if (not microdomainName.empty())
+                            _microdomainOnJunction[&((*iter)->lastCapsule())].insert(microdomainName);
+                          std::map<std::string,
+                                   std::map<Capsule*, std::vector<int> > >::
+                              iterator jmapiter1 =
+                                  _junctionIndexMap.find(compartmentNameOnly);
+                          std::map<Capsule*, std::vector<int> >::iterator
+                              jmapiter2;
+                          if (jmapiter1 != _junctionIndexMap.end() &&
+                              (jmapiter2 = jmapiter1->second.find(
+                                   &(*iter)->lastCapsule())) !=
+                                  jmapiter1->second.end())
+                          {
+                            std::vector<int>& junctionIndices =
+                                jmapiter2->second;
+                            targetVector.push_back(std::tuple<int, int, std::string>(
+                                junctionIndices[1],
+                                _compartmentVariableTypesMap[compartmentNameOnly],
+                                microdomainName));
+                          }
+#else
                           std::map<std::string,
                                    std::map<Capsule*, std::vector<int> > >::
                               iterator jmapiter1 =
@@ -3484,6 +3644,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                                 junctionIndices[1],
                                 _compartmentVariableTypesMap[*viter]));
                           }
+#endif
                         }
                         _channelJunctionIndices2[_channelTypeCounter].push_back(
                             targetVector);
@@ -3563,13 +3724,47 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                       if (iiter->_type == nodeType)
                       {
                         rval[indexJct]++;
+#ifdef MICRODOMAIN_CALCIUM
+                        std::vector<std::tuple<int, int, std::string> > targetVector;
+#else
                         std::vector<std::pair<int, int> > targetVector;
+#endif
                         std::list<std::string>::iterator viter,
                             vend = iiter->_target1.end();
                         assert(iiter->_target1.size() > 0);
                         for (viter = iiter->_target1.begin(); viter != vend;
                              ++viter)
                         {
+#ifdef MICRODOMAIN_CALCIUM
+                          //find out a Channel-branch associate input connection 
+                          // to what (can be many )compartment-branch (e.g. Voltage, Calcium)
+                          //  --> _channelJunctionIndices1
+                          std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                          std::string compartmentNameOnly("");
+                          std::string microdomainName("");
+                          Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                          checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                          if (not microdomainName.empty())
+                            _microdomainOnJunction[&((*iter)->lastCapsule())].insert(microdomainName);
+                          std::map<std::string,
+                                   std::map<Capsule*, std::vector<int> > >::
+                              iterator jmapiter1 =
+                                  _junctionIndexMap.find(compartmentNameOnly);
+                          std::map<Capsule*, std::vector<int> >::iterator
+                              jmapiter2;
+                          if (jmapiter1 != _junctionIndexMap.end() &&
+                              (jmapiter2 = jmapiter1->second.find(
+                                   &(*iter)->lastCapsule())) !=
+                                  jmapiter1->second.end())
+                          {
+                            std::vector<int>& junctionIndices =
+                                jmapiter2->second;
+                            targetVector.push_back(std::tuple<int, int, std::string>(
+                                junctionIndices[1],
+                                _compartmentVariableTypesMap[compartmentNameOnly],
+                                microdomainName));
+                          }
+#else
                           std::map<std::string,
                                    std::map<Capsule*, std::vector<int> > >::
                               iterator jmapiter1 =
@@ -3587,6 +3782,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                                 junctionIndices[1],
                                 _compartmentVariableTypesMap[*viter]));
                           }
+#endif
                         }
                         _channelJunctionIndices1[_channelTypeCounter].push_back(
                             targetVector);
@@ -3596,6 +3792,36 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                         for (viter = iiter->_target2.begin(); viter != vend;
                              ++viter)
                         {
+#ifdef MICRODOMAIN_CALCIUM
+                          //find out a Channel-branch associate output data
+                          // to what (can be many )junction-branch (e.g. Voltage, Calcium)
+                          //  --> _channelJunctionIndices2
+                          std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                          std::string compartmentNameOnly("");
+                          std::string microdomainName("");
+                          Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                          checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                          if (not microdomainName.empty())
+                            _microdomainOnJunction[&((*iter)->lastCapsule())].insert(microdomainName);
+                          std::map<std::string,
+                                   std::map<Capsule*, std::vector<int> > >::
+                              iterator jmapiter1 =
+                                  _junctionIndexMap.find(compartmentNameOnly);
+                          std::map<Capsule*, std::vector<int> >::iterator
+                              jmapiter2;
+                          if (jmapiter1 != _junctionIndexMap.end() &&
+                              (jmapiter2 = jmapiter1->second.find(
+                                   &(*iter)->lastCapsule())) !=
+                                  jmapiter1->second.end())
+                          {
+                            std::vector<int>& junctionIndices =
+                                jmapiter2->second;
+                            targetVector.push_back(std::tuple<int, int, std::string>(
+                                junctionIndices[1],
+                                _compartmentVariableTypesMap[compartmentNameOnly],
+                                microdomainName));
+                          }
+#else
                           std::map<std::string,
                                    std::map<Capsule*, std::vector<int> > >::
                               iterator jmapiter1 =
@@ -3613,6 +3839,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                                 junctionIndices[1],
                                 _compartmentVariableTypesMap[*viter]));
                           }
+#endif
                         }
                         _channelJunctionIndices2[_channelTypeCounter].push_back(
                             targetVector);
@@ -3670,13 +3897,48 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                   if (iiter->_type == nodeType)
                   {
                     rval[indexJct]++;
+#ifdef MICRODOMAIN_CALCIUM
+                    std::vector<std::tuple<int, int, std::string> > targetVector;
+#else
                     std::vector<std::pair<int, int> > targetVector;
+#endif
                     std::list<std::string>::iterator viter,
                       vend = iiter->_target1.end();
                     assert(iiter->_target1.size() > 0);
                     for (viter = iiter->_target1.begin(); viter != vend;
                         ++viter)
                     {
+#ifdef MICRODOMAIN_CALCIUM
+                      //SOMA-only model case
+                      //find out a Channel-branch associate output data
+                      // to what (can be many )junction-branch (e.g. Voltage, Calcium)
+                      //  --> _channelJunctionIndices1
+                      std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                      std::string compartmentNameOnly("");
+                      std::string microdomainName("");
+                      Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                      checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                      if (not microdomainName.empty())
+                        _microdomainOnJunction[&((*iter)->lastCapsule())].insert(microdomainName);
+                      std::map<std::string,
+                        std::map<Capsule*, std::vector<int> > >::
+                          iterator jmapiter1 =
+                          _junctionIndexMap.find(compartmentNameOnly);
+                      std::map<Capsule*, std::vector<int> >::iterator
+                        jmapiter2;
+                      if (jmapiter1 != _junctionIndexMap.end() &&
+                          (jmapiter2 = jmapiter1->second.find(
+                                                              &(*iter)->lastCapsule())) !=
+                          jmapiter1->second.end())
+                      {
+                        std::vector<int>& junctionIndices =
+                          jmapiter2->second;
+                        targetVector.push_back(std::tuple<int, int, std::string>(
+                              junctionIndices[1],
+                              _compartmentVariableTypesMap[compartmentNameOnly],
+                              microdomainName));
+                      }
+#else
                       std::map<std::string,
                         std::map<Capsule*, std::vector<int> > >::
                           iterator jmapiter1 =
@@ -3694,6 +3956,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                               junctionIndices[1],
                               _compartmentVariableTypesMap[*viter]));
                       }
+#endif
                     }
                     _channelJunctionIndices1[_channelTypeCounter].push_back(
                         targetVector);
@@ -3703,6 +3966,37 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                     for (viter = iiter->_target2.begin(); viter != vend;
                         ++viter)
                     {
+#ifdef MICRODOMAIN_CALCIUM
+                      //SOMA-only model case
+                      //find out a Channel-branch associate output data
+                      // to what (can be many )junction-branch (e.g. Voltage, Calcium)
+                      //  --> _channelJunctionIndices2
+                      std::string compartmentNameWithOptionalMicrodomainName(*viter);
+                      std::string compartmentNameOnly("");
+                      std::string microdomainName("");
+                      Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                      checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+                      if (not microdomainName.empty())
+                        _microdomainOnJunction[&((*iter)->lastCapsule())].insert(microdomainName);
+                      std::map<std::string,
+                        std::map<Capsule*, std::vector<int> > >::
+                          iterator jmapiter1 =
+                          _junctionIndexMap.find(compartmentNameOnly);
+                      std::map<Capsule*, std::vector<int> >::iterator
+                        jmapiter2;
+                      if (jmapiter1 != _junctionIndexMap.end() &&
+                          (jmapiter2 = jmapiter1->second.find(
+                                                              &(*iter)->lastCapsule())) !=
+                          jmapiter1->second.end())
+                      {
+                        std::vector<int>& junctionIndices =
+                          jmapiter2->second;
+                        targetVector.push_back(std::tuple<int, int, std::string>(
+                              junctionIndices[1],
+                              _compartmentVariableTypesMap[compartmentNameOnly],
+                              microdomainName));
+                      }
+#else
                       std::map<std::string,
                         std::map<Capsule*, std::vector<int> > >::
                           iterator jmapiter1 =
@@ -3720,6 +4014,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                               junctionIndices[1],
                               _compartmentVariableTypesMap[*viter]));
                       }
+#endif
                     }
                     _channelJunctionIndices2[_channelTypeCounter].push_back(
                         targetVector);
@@ -3763,8 +4058,8 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 //         + via data in *params.par files
 void TissueFunctor::doNodeInit(LensContext* lc)
 {
-	//NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
-	// statement
+  //NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
+  // statement
   assert(_params.get());
   std::auto_ptr<ParameterSet> initPset;
   std::vector<NodeDescriptor*> nodes;  // pointer to instances of nodes in grids
@@ -3823,6 +4118,9 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   else if (nodeCategory == "ChemicalSynapses")
   {
     _chemicalSynapseLayers.push_back(*gld);
+    //TUAN TODO BUG: there is a potential bug at all locations like this
+    //when the InitNode of Layers is declared not the same order as Layer defined
+    //for a particular type of Layer
   }
   else if (nodeCategory == "PreSynapticPoints")
   {
@@ -3938,28 +4236,56 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
-          // step 1: connect branchData to the data member 'branchData'
+          {
+            std::map<ComputeBranch*,
+              std::vector<CG_CompartmentDimension*> >::iterator miter =
+                _tissueContext->_branchDimensionsMap.find(branch);
+            assert(miter != _tissueContext->_branchDimensionsMap.end());
+            std::vector<CG_CompartmentDimension*>& dimensions = miter->second;
+            std::vector<CG_CompartmentDimension*>::iterator diter,
+              dend = dimensions.end();
+            // step 1: connect every DimensionStruct element into the array
+            // 'dimensions'
+            //  of each HHVoltage node instance, for example
+            //  REMEMBER: Even one is element, one is array,
+            //   the connection is established in such a way that the
+            //   first connection fills into the first position in the array
+            //   next connection fills into the next position in the array
+            for (diter = dimensions.begin(); diter != dend; ++diter)
+              _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
+                  &dim2cpt);
+          }
+#ifdef MICRODOMAIN_CALCIUM
+          // step 2: connect branchData to the data member 'branchData'
+          //  of each HHVoltage node instance, for example
+          //  NOTE: Here we also put the information about the list of all microdomain
+          //   to 'Calcium' compartment
+          std::set< std::string>  setMicroDomains = _microdomainOnBranch[branch];
+          std::string result("");
+          if (setMicroDomains.size() > 0 and nodeTypeWithAllowedMicrodomain(nodeType))
+          {
+            std::ostringstream stream;
+            std::copy(setMicroDomains.begin(), setMicroDomains.end(), std::ostream_iterator<std::string>(stream, ","));
+            result = stream.str();
+            result.pop_back();
+            NDPairList brd2cptWithMicroDomainSupport = brd2cpt;
+            //NOTE: 'result' holds comma-separated string of name of all microdomains
+            brd2cptWithMicroDomainSupport.push_back(new NDPair("domainName", result));
+            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+                &brd2cptWithMicroDomainSupport);
+          }
+          else
+          {
+            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+                &brd2cpt);
+          }
+#else
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt);
+#endif
 
-          std::map<ComputeBranch*,
-                   std::vector<CG_CompartmentDimension*> >::iterator miter =
-              _tissueContext->_branchDimensionsMap.find(branch);
-          assert(miter != _tissueContext->_branchDimensionsMap.end());
-          std::vector<CG_CompartmentDimension*>& dimensions = miter->second;
-          std::vector<CG_CompartmentDimension*>::iterator diter,
-              dend = dimensions.end();
-          // step 2: connect every DimensionStruct element into the array
-          // 'dimensions'
-          //  of each HHVoltage node instance, for example
-          //  REMEMBER: Even one is element, one is array,
-          //   the connection is established in such a way that the
-          //   first connection fills into the first position in the array
-          //   next connection fills into the next position in the array
-          for (diter = dimensions.begin(); diter != dend; ++diter)
-            _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
-                                          &dim2cpt);
         }
         else
         {  // explicit Junctions
@@ -3994,23 +4320,52 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
           assert(branchData);
-          // step 1: connect branchData to the data member 'branchData'
+          {
+            std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
+              _tissueContext->_junctionDimensionMap.find(junctionCapsule);
+            assert(miter != _tissueContext->_junctionDimensionMap.end());
+            // step 1: connect every DimensionStruct element into the array
+            // 'dimensions'
+            //  of each HHVoltageJunction node instance, for example
+            //  REMEMBER: Even one is element, one is array,
+            //   the connection is established in such a way that the
+            //   first connection fills into the first position in the array
+            //   next connection fills into the next position in the array
+            _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
+                &dim2cpt);
+          }
+
+#ifdef MICRODOMAIN_CALCIUM
+          // step 2: connect branchData to the data member 'branchData'
+          //  of each HHVoltageJunction node instance, for example
+          //  NOTE: Here we also put the information about the list of all microdomain
+          //   to 'Calcium' compartment
+          std::set< std::string>  setMicroDomains = _microdomainOnJunction[junctionCapsule];
+          std::string result("");
+          if (setMicroDomains.size() > 0 and nodeTypeWithAllowedMicrodomain(nodeType))
+          {
+            std::ostringstream stream;
+            std::copy(setMicroDomains.begin(), setMicroDomains.end(), std::ostream_iterator<std::string>(stream, ","));
+            result = stream.str();
+            result.pop_back();
+            NDPairList brd2cptWithMicroDomainSupport = brd2cpt;
+            //NOTE: 'result' holds comma-separated string of name of all microdomains
+            brd2cptWithMicroDomainSupport.push_back(new NDPair("domainName", result));
+            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+                &brd2cptWithMicroDomainSupport);
+          }
+          else
+          {
+            _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
+                &brd2cpt);
+          }
+#else
+          // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
                                         &brd2cpt);
+#endif
 
-          std::map<Capsule*, CG_CompartmentDimension*>::iterator miter =
-              _tissueContext->_junctionDimensionMap.find(junctionCapsule);
-          assert(miter != _tissueContext->_junctionDimensionMap.end());
-          // step 2: connect every DimensionStruct element into the array
-          // 'dimensions'
-          //  of each HHVoltageJunction node instance, for example
-          //  REMEMBER: Even one is element, one is array,
-          //   the connection is established in such a way that the
-          //   first connection fills into the first position in the array
-          //   next connection fills into the next position in the array
-          _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
-                                        &dim2cpt);
         }
       }
       else if (nodeCategory == "Channels")
@@ -4026,6 +4381,16 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         if (densityIndex < nChannelBranches)
         {
           channelCategory = "BranchChannels";
+#ifdef MICRODOMAIN_CALCIUM
+          std::tuple<int, int, std::string>& channelBranchIndexPair =
+              _channelBranchIndices1[_channelLayers.size() -
+                                     1][densityIndex][0];
+          key = findBranch(
+                    nodeIndex, std::get<0>(channelBranchIndexPair),
+                    _compartmentVariableTypes[std::get<1>(channelBranchIndexPair)])
+                    ->_capsules[0]
+                    .getKey();
+#else
           std::pair<int, int>& channelBranchIndexPair =
               _channelBranchIndices1[_channelLayers.size() -
                                      1][densityIndex][0];
@@ -4034,10 +4399,20 @@ void TissueFunctor::doNodeInit(LensContext* lc)
                     _compartmentVariableTypes[channelBranchIndexPair.second])
                     ->_capsules[0]
                     .getKey();
+#endif
         }
         else
         {
           channelCategory = "JunctionChannels";
+#ifdef MICRODOMAIN_CALCIUM
+          std::tuple<int, int, std::string>& channelJunctionIndexPair =
+              _channelJunctionIndices1[_channelLayers.size() -
+                                       1][densityIndex - nChannelBranches][0];
+          key = findJunction(
+                    nodeIndex, std::get<0>(channelJunctionIndexPair),
+                    _compartmentVariableTypes[std::get<1>(channelJunctionIndexPair)])
+                    ->getKey();
+#else
           std::pair<int, int>& channelJunctionIndexPair =
               _channelJunctionIndices1[_channelLayers.size() -
                                        1][densityIndex - nChannelBranches][0];
@@ -4045,6 +4420,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
                     nodeIndex, channelJunctionIndexPair.first,
                     _compartmentVariableTypes[channelJunctionIndexPair.second])
                     ->getKey();
+#endif
         }
 
         std::list<std::pair<std::string, float> > channelParams;
@@ -4095,20 +4471,32 @@ void TissueFunctor::doConnector(LensContext* lc)
   //                channel|chemicalsynapse|electricalsynapse
   // Example: "Voltage", <"identifier"="compartment[Voltage]">
   std::map<std::string, NDPairList> cpt2chan;
+#ifdef MICRODOMAIN_CALCIUM
+  std::map<std::string, NDPairList> cptMicrodomain2chan;
+#endif
   // Example: "Voltage", <"identifier"="compartment[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> cpt2syn;
+#ifdef MICRODOMAIN_CALCIUM
+  std::map<std::string, NDPairList> cptMicrodomain2syn;
+#endif
   // Example: "Voltage", <"identifier"="compartment[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> cpt2cleft;
   // Example: "Voltage", <"identifier"="channels[Voltage]">
   std::map<std::string, NDPairList> chan2cpt;
+#ifdef MICRODOMAIN_CALCIUM
+  std::map<std::string, NDPairList> chan2cptMicrodomain;
+#endif
   // Example: "Voltage", <"identifier"="electricalSynapse[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> esyn2cpt;
   // Example: "Voltage", <"identifier"="chemicalSynapse[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> csyn2cpt;
+#ifdef MICRODOMAIN_CALCIUM
+  std::map<std::string, NDPairList> csyn2cptMicrodomain;
+#endif
   // Example: "Voltage", <"identifier"="IC[Voltage]",
   //                   "idx"=0>
   std::map<std::string, NDPairList> ic2syn;
@@ -4146,10 +4534,29 @@ void TissueFunctor::doConnector(LensContext* lc)
     Mcpt2chan.push_back(new NDPair("identifier", os.str()));
     cpt2chan[cptVarTypesIter->first] = Mcpt2chan;
 
+#ifdef MICRODOMAIN_CALCIUM
+    std::ostringstream osDomain;
+    NDPairList McptMicrodomain2chan;
+    osDomain << "compartment[" << cptVarTypesIter->first << "(domain)]";
+    McptMicrodomain2chan.push_back(new NDPair("identifier", osDomain.str()));
+    McptMicrodomain2chan.push_back(new NDPair("domainName", ""));
+    cptMicrodomain2chan[cptVarTypesIter->first] = McptMicrodomain2chan;
+#endif
+
     NDPairList Mcpt2syn;
     Mcpt2syn.push_back(new NDPair("identifier", os.str()));
     Mcpt2syn.push_back(new NDPair("idx", 0));
     cpt2syn[cptVarTypesIter->first] = Mcpt2syn;
+
+#ifdef MICRODOMAIN_CALCIUM
+    NDPairList McptMicrodomain2syn;
+    osDomain.str("");
+    osDomain << "compartment[" << cptVarTypesIter->first << "(domain)]";
+    McptMicrodomain2syn.push_back(new NDPair("identifier", osDomain.str()));
+    McptMicrodomain2syn.push_back(new NDPair("domainName", ""));
+    cptMicrodomain2syn[cptVarTypesIter->first] = McptMicrodomain2syn;
+#endif
+
 
     NDPairList Mcpt2cleft;
     Mcpt2cleft.push_back(new NDPair("identifier", os.str()));
@@ -4169,6 +4576,15 @@ void TissueFunctor::doConnector(LensContext* lc)
     Mchan2cpt.push_back(new NDPair("identifier", os.str()));
     chan2cpt[cptVarTypesIter->first] = Mchan2cpt;
 
+#ifdef MICRODOMAIN_CALCIUM
+    osDomain.str("");
+    NDPairList Mchan2cptMicrodomain;
+    osDomain << "channels[" << cptVarTypesIter->first << "(domain)]";
+    Mchan2cptMicrodomain.push_back(new NDPair("identifier", osDomain.str()));
+    Mchan2cptMicrodomain.push_back(new NDPair("domainName", ""));
+    chan2cptMicrodomain[cptVarTypesIter->first] = Mchan2cptMicrodomain;
+#endif
+
     os.str("");
     NDPairList Mesyn2cpt;
     os << "electricalSynapse[" << cptVarTypesIter->first << "]";
@@ -4182,6 +4598,14 @@ void TissueFunctor::doConnector(LensContext* lc)
     Mcsyn2cpt.push_back(new NDPair("identifier", os.str()));
     Mcsyn2cpt.push_back(new NDPair("idx", 0));
     csyn2cpt[cptVarTypesIter->first] = Mcsyn2cpt;
+#ifdef MICRODOMAIN_CALCIUM
+    osDomain.str("");
+    NDPairList Mcsyn2cptMicrodomain;
+    osDomain << "chemicalSynapse[" << cptVarTypesIter->first << "(domain)]";
+    Mcsyn2cptMicrodomain.push_back(new NDPair("identifier", osDomain.str()));
+    Mcsyn2cptMicrodomain.push_back(new NDPair("domainName", ""));
+    csyn2cptMicrodomain[cptVarTypesIter->first] = Mcsyn2cptMicrodomain;
+#endif
 
     os.str("");
     NDPairList Mic2syn;
@@ -4399,7 +4823,7 @@ void TissueFunctor::doConnector(LensContext* lc)
   //      Cpt1->EndPoint-->Junction-->JunctionPoint->Cpt2
   //      ImplicitJunction-->ForwardSolverPoint
   //      ImplicitJunction-->BackwardSolverPoint
-  // HOW: traverse each grid's node, 
+  // HOW: traverse each grid's node, (NOTE: one grid node ~ 1 MPI process)
   //   at each grid'node, traverse different compartment nodeType (e.g. Voltage, Calcium)
   //   and get the density
   //    which is the number of ComputeBranch on that grid's node
@@ -4552,12 +4976,59 @@ void TissueFunctor::doConnector(LensContext* lc)
   for (int ctype = 0; ctype < _channelTypeCounter; ++ctype)
   {
     int channelDensity = _channelLayers[ctype]->getDensity(i);
-    std::vector<std::vector<std::pair<int, int> > >::iterator
-        iter = _channelBranchIndices1[ctype].begin(),
-        end = _channelBranchIndices1[ctype].end();
+#ifdef MICRODOMAIN_CALCIUM
+    std::vector<std::vector<std::tuple<int, int, std::string> > >::iterator iter, end;
+#else
+    std::vector<std::vector<std::pair<int, int> > >::iterator iter, end;
+#endif
+    iter = _channelBranchIndices1[ctype].begin();
+    end = _channelBranchIndices1[ctype].end();
     // for a given channel, traverse all array elements
     // from the given grid's node index 'i'
     //      and density-index 'j'
+#ifdef MICRODOMAIN_CALCIUM
+    for (int j = 0; iter != end; ++iter, ++j)
+    {
+      NodeDescriptor* channel =
+          channelAccessors[ctype]->getNodeDescriptor(i, j);
+      NodeDescriptor* compartmentVariable = 0;
+      std::vector<std::tuple<int, int, std::string > >& channelBranchIndexPairs = (*iter);
+      std::vector<std::tuple<int, int, std::string > >::iterator
+          ctiter = channelBranchIndexPairs.begin(),
+          ctend = channelBranchIndexPairs.end();
+      for (; ctiter != ctend; ++ctiter)
+      {
+        assert(std::get<1>(*ctiter) < _compartmentVariableTypesMap.size());
+        compartmentVariable =
+            compartmentVariableAccessors[std::get<1>(*ctiter)]->getNodeDescriptor(
+                i, std::get<0>(*ctiter));
+        assert(compartmentVariable);
+        assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
+               _rank);
+        if (std::get<2>(*ctiter).empty())
+        {//well-mixed region
+          // connect to channel that use the compartment variable as 'IC[]'
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+          // connect to channel that use the compartment variable as
+          // 'compartment[]'
+          connect(sim, connector, compartmentVariable, channel,
+              cpt2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+        }
+        else{//if a compartment (e.g. Calcium) that allows microdomain
+          // connect to channel that use the compartment variable as 'IC[]'
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+          // connect to channel that use the compartment variable as
+          // 'compartment[]'
+          NDPairList McptMicrodomain2chan = cptMicrodomain2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]];
+          McptMicrodomain2chan.replace("domainName", std::get<2>(*ctiter));
+          connect(sim, connector, compartmentVariable, channel,
+              McptMicrodomain2chan);
+        }
+      }
+    }
+#else
     for (int j = 0; iter != end; ++iter, ++j)
     {
       NodeDescriptor* channel =
@@ -4585,10 +5056,48 @@ void TissueFunctor::doConnector(LensContext* lc)
                 cpt2chan[_compartmentVariableTypes[ctiter->second]]);
       }
     }
+#endif
 
     iter = _channelBranchIndices2[ctype].begin(),
     end = _channelBranchIndices2[ctype].end();
-    //
+    //channel affects branch-CB
+#ifdef MICRODOMAIN_CALCIUM
+    for (int j = 0; iter != end; ++iter, ++j)
+    {
+      NodeDescriptor* channel =
+          channelAccessors[ctype]->getNodeDescriptor(i, j);
+      NodeDescriptor* compartmentVariable = 0;
+      std::vector<std::tuple<int, int, std::string > >& channelBranchIndexPairs = (*iter);
+      std::vector<std::tuple<int, int, std::string > >::iterator
+          ctiter = channelBranchIndexPairs.begin(),
+          ctend = channelBranchIndexPairs.end();
+      for (; ctiter != ctend; ++ctiter)
+      {
+        assert(std::get<1>(*ctiter) < _compartmentVariableTypesMap.size());
+        compartmentVariable =
+            compartmentVariableAccessors[std::get<1>(*ctiter)]->getNodeDescriptor(
+                i, std::get<0>(*ctiter));
+        assert(compartmentVariable);
+        assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
+               _rank);
+        if (std::get<2>(*ctiter).empty())
+        {//well-mixed region
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+          connect(sim, connector, channel, compartmentVariable,
+              chan2cpt[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+        }
+        else{//if a branch (e.g. Calcium) that allows microdomain
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+          NDPairList Mchan2cptMicrodomain = chan2cptMicrodomain[_compartmentVariableTypes[std::get<1>(*ctiter)]];
+          Mchan2cptMicrodomain.replace("domainName", std::get<2>(*ctiter));
+          connect(sim, connector, channel, compartmentVariable,
+              Mchan2cptMicrodomain);
+        }
+      }
+    }
+#else
     for (int j = 0; iter != end; ++iter, ++j)
     {
       NodeDescriptor* channel =
@@ -4613,18 +5122,58 @@ void TissueFunctor::doConnector(LensContext* lc)
                 chan2cpt[_compartmentVariableTypes[ctiter->second]]);
       }
     }
+#endif
 
     iter = _channelJunctionIndices1[ctype].begin(),
     end = _channelJunctionIndices1[ctype].end();
+#ifdef MICRODOMAIN_CALCIUM
+    for (int j = _channelBranchIndices1[ctype].size(); iter != end; ++iter, ++j)
+    {
+      NodeDescriptor* channel =
+          channelAccessors[ctype]->getNodeDescriptor(i, j);
+      NodeDescriptor* compartmentVariable = 0;
+      std::vector<std::tuple<int, int, std::string> >& channelJunctionIndexPairs = (*iter);
+      std::vector<std::tuple<int, int, std::string> >::iterator ctiter, ctend;
+      ctiter = channelJunctionIndexPairs.begin();
+      ctend = channelJunctionIndexPairs.end();
+      for (; ctiter != ctend; ++ctiter)
+      {
+        assert(std::get<1>(*ctiter) < _compartmentVariableTypesMap.size());
+        compartmentVariable =
+            junctionAccessors[std::get<1>(*ctiter)]->getNodeDescriptor(i,
+                                                                 std::get<0>(*ctiter));
+        assert(compartmentVariable);
+        assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
+               _rank);
+        if (std::get<2>(*ctiter).empty())
+        {//well-mixed region
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+          connect(sim, connector, compartmentVariable, channel,
+              cpt2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+
+        }
+        else{//if a junction (e.g. Calcium) that allows microdomain
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+
+          NDPairList McptMicrodomain2chan = cptMicrodomain2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]];
+          McptMicrodomain2chan.replace("domainName", std::get<2>(*ctiter));
+          connect(sim, connector, compartmentVariable, channel,
+              McptMicrodomain2chan);
+        }
+      }
+    }
+#else
     for (int j = _channelBranchIndices1[ctype].size(); iter != end; ++iter, ++j)
     {
       NodeDescriptor* channel =
           channelAccessors[ctype]->getNodeDescriptor(i, j);
       NodeDescriptor* compartmentVariable = 0;
       std::vector<std::pair<int, int> >& channelJunctionIndexPairs = (*iter);
-      std::vector<std::pair<int, int> >::iterator
-          ctiter = channelJunctionIndexPairs.begin(),
-          ctend = channelJunctionIndexPairs.end();
+      std::vector<std::pair<int, int> >::iterator ctiter, ctend;
+      ctiter = channelJunctionIndexPairs.begin();
+      ctend = channelJunctionIndexPairs.end();
       for (; ctiter != ctend; ++ctiter)
       {
         assert(ctiter->second < _compartmentVariableTypesMap.size());
@@ -4640,8 +5189,48 @@ void TissueFunctor::doConnector(LensContext* lc)
                 cpt2chan[_compartmentVariableTypes[ctiter->second]]);
       }
     }
+#endif
+    //channel affects junctions-CB
     iter = _channelJunctionIndices2[ctype].begin(),
     end = _channelJunctionIndices2[ctype].end();
+#ifdef MICRODOMAIN_CALCIUM
+    for (int j = _channelBranchIndices2[ctype].size(); iter != end; ++iter, ++j)
+    {
+      NodeDescriptor* channel =
+          channelAccessors[ctype]->getNodeDescriptor(i, j);
+      NodeDescriptor* compartmentVariable = 0;
+      std::vector<std::tuple<int, int, std::string > >& channelJunctionIndexPairs = (*iter);
+      std::vector<std::tuple<int, int, std::string > >::iterator
+          ctiter = channelJunctionIndexPairs.begin(),
+          ctend = channelJunctionIndexPairs.end();
+      for (; ctiter != ctend; ++ctiter)
+      {
+        assert(std::get<1>(*ctiter) < _compartmentVariableTypesMap.size());
+        compartmentVariable =
+            junctionAccessors[std::get<1>(*ctiter)]->getNodeDescriptor(i,
+                                                                 std::get<0>(*ctiter));
+        assert(compartmentVariable);
+        assert(sim->getGranule(*compartmentVariable)->getPartitionId() ==
+               _rank);
+        if (std::get<2>(*ctiter).empty())
+        {//well-mixed region
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+          connect(sim, connector, channel, compartmentVariable,
+              chan2cpt[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+        }
+        else{//if a junction (e.g. Calcium) that allows microdomain
+          connect(sim, connector, compartmentVariable, channel,
+              ic2chan[_compartmentVariableTypes[std::get<1>(*ctiter)]]);
+
+          NDPairList Mchan2cptMicrodomain = chan2cptMicrodomain[_compartmentVariableTypes[std::get<1>(*ctiter)]];
+          Mchan2cptMicrodomain.replace("domainName", std::get<2>(*ctiter));
+          connect(sim, connector, channel,compartmentVariable, 
+              Mchan2cptMicrodomain);
+        }
+      }
+    }
+#else
     for (int j = _channelBranchIndices2[ctype].size(); iter != end; ++iter, ++j)
     {
       NodeDescriptor* channel =
@@ -4666,6 +5255,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                 chan2cpt[_compartmentVariableTypes[ctiter->second]]);
       }
     }
+#endif
   }
 
   // GOAL: connect compartment to ForwardSolver and BackwardSolver
@@ -4774,7 +5364,7 @@ void TissueFunctor::doConnector(LensContext* lc)
     //      synapse, i.e. bidirecitonal flow
     for (; titer != tend; ++titer)
     {
-	  //Check to make sure only consider the touch with at least 
+      //Check to make sure only consider the touch with at least 
       //one capsule supposed to be handled
       //by the current MPI process
       if (!_tissueContext->isLensTouch(*titer, _rank)) continue;
@@ -5380,9 +5970,9 @@ void TissueFunctor::doConnector(LensContext* lc)
           std::vector<NodeDescriptor*> mixedSynapse;
           for (targetsIter = csiter->_targets.begin();
                targetsIter != targetsEnd; ++targetsIter)
-          {
+          {//loops through 'AMPAmush', 'NMDAmush' (this name is mapped to targetsIter->first)
             std::map<std::string, int>::iterator miter =
-                _chemicalSynapseTypesMap.find(targetsIter->first);
+                _chemicalSynapseTypesMap.find(targetsIter->first); //GOAL: get to the layer-index for layer of, say 'AMPAmush'
             // miter --> check if there is a layer name, say
             // 'ChemicalSynapses[AMPAmush]'
             assert(miter != _chemicalSynapseTypesMap.end());
@@ -5397,6 +5987,15 @@ void TissueFunctor::doConnector(LensContext* lc)
                   chemicalSynapseAccessors[synapseType]->getNodeDescriptor(
                       indexPost, getCountAndIncrement(ccounts, indexPost));
               mixedSynapse.push_back(receptor);
+//#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+#ifdef  RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+              //NOTE: POST = postsynaptic side
+              //      PRE  = presynaptic side
+              //Here, the line [[original implementation]]
+              // AMPAmush [Voltage] [Voltage, Calcium]
+              // means [Voltage] <-- from pre-capsule, and play as input 
+              // and   [Voltage, Calcium] <-- from post-capsule, and play as both input/output
+              
               // Pre
               std::list<std::string>::iterator
                   ctiter = targetsIter->second.first.begin(),
@@ -5641,11 +6240,525 @@ void TissueFunctor::doConnector(LensContext* lc)
                       synapticCleftNodes[cleftType], Mcpt2cleft);
                 }  
               }
+#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
+              //NOTE: POST = postsynaptic side
+  //NOTE: In this mode, the receptor receives the proper Neurotransmitter
+  //from the SynapticCleft
+  //and compartment name such as Voltage, Calcium always refers to post-side
+              //Here, the line [[new implementation]]
+              // AMPAmush [Voltage] [Voltage, Calcium]
+              // means [Voltage] <-- from post-capsule, and play as input 
+              // and   [Voltage, Calcium] <-- from post-capsule, and play as output
+              
+              // Pre - as input to the cleft/presynapticPoint
+              std::list<std::string> preData;
+              //TUAN TODO : add a section to define what pre-data to be obsorved by 
+              //the PreSynapticPoint or SynapticCleft
+              //Here we assume always 'Voltage' only
+              //PLAN: We will use 'Calcium' when 'Calcium' is
+              //      used to calculate NT release
+              preData.push_front("Voltage");
+              //PLAN --> preData.push_front("Calcium");
+              std::list<std::string>::iterator
+                  ctiter = preData.begin(),
+                  ctend = preData.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//Pre-compartment(presume only Voltage-pre) project to SynapticCleft/PreSynapticPoint
+                NodeDescriptor* preCpt = 0;
+                int preIdx = 0;
+                if (preJunction)
+                {  // presynaptic-compartment is a junction branch
+                   // as the junction is always a single-compartment structure
+                   //  the preIdx = 0 always
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePreCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  preCpt = junctionAccessors
+                               [cptVarJctTypeMap
+                                    [_compartmentVariableTypesMap[*ctiter]]]
+                                   ->getNodeDescriptor(junctionIndices[0],
+                                                       junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(*ctiter);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(preCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  preCpt = junctionAccessors
+                               [cptVarJctTypeMap
+                                    [_compartmentVariableTypesMap[*ctiter]]]
+                                   ->getNodeDescriptor(junctionIndices[0],
+                                                       junctionIndices[1]);
+#endif
+                }
+                else
+                {  // presynaptic-compartment is part of a regular branch
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(preCapsule->getBranch(), *ctiter);
+                  preCpt = compartmentVariableAccessors
+                               [_compartmentVariableTypesMap[*ctiter]]
+                                   ->getNodeDescriptor(branchIndices[0],
+                                                       branchIndices[1]);
+                  /*preIdx = N_COMPARTMENTS(preCapsule->getBranch()->_nCapsules)
+                     -
+                           ((preCapsule - preCapsule->getBranch()->_capsules) /
+                            _compartmentSize) -
+                           1;*/
+#ifdef IDEA1
+                  preIdx = _tissueContext->getCptIndex(preCapsule, *titer);
+#else
+                  preIdx = getCptIndex(preCapsule);
+#endif
+                }
+                if (_preSynapticPointTypeCounter > 0)
+                {  // PreSynapticPoint layer is used
+                  NodeAccessor* preSynapticPointAccessor = 0;
+                  std::string preSynapticPointType =
+                      _tissueParams.getPreSynapticPointTarget(
+                          targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                      _preSynapticPointTypesMap.find(preSynapticPointType);
+                  assert(tmapiter != _preSynapticPointTypesMap.end());
+                  unsigned int preSynPointType = (tmapiter->second);
+                  if (preSynPoints[preSynPointType] == 0)
+                  {
+                    assert(preSynapticPointAccessors.size() > preSynPointType);
+                    preSynapticPointAccessor =
+                        preSynapticPointAccessors[preSynPointType];
+                    if (preJunction)
+                    {
+#ifdef IDEA1
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][jctCapsulePreCapsule]);
+#else
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+#endif
+                    }
+                    else
+                    {
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleCptPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+                    }
+                  }
+                  NDPairList Mcpt2syn = cpt2syn[*ctiter];
+                  Mcpt2syn.replace("idx", preIdx);
+                  connect(sim, connector, preCpt, preSynPoints[preSynPointType],
+                          Mcpt2syn);
+                }
+                else if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                      _tissueParams.getPreSynapticPointTarget(
+                          targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                      _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+                  if (synapticCleftNodes[cleftType] == 0)
+                  {
+                    assert(synapticCleftAccessors.size() > cleftType);
+                    synapticCleftAccessor =
+                        synapticCleftAccessors[cleftType];
+                    if (preJunction)
+                    {
+#ifdef IDEA1
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][jctCapsulePostCapsule]);
+#else
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][preCapsule]);
+#endif
+                    }
+                    else
+                    {
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleCptPointIndexMap
+                                            [synapticCleftType][preCapsule]);
+                    }
+                  }
+                  NDPairList Mcpt2cleft = cpt2cleft[*ctiter];
+                  Mcpt2cleft.replace("idx", preIdx);
+                  Mcpt2cleft.replace("side", "pre");
+                  connect(sim, connector, preCpt,
+                          synapticCleftNodes[cleftType], Mcpt2cleft);
+                }
+              }
+
+              // Post - as input to cleft/presynapticPoint
+              // IMPORTANT: This is not about passing voltage/calcium data, it pass 'information'
+              //            about 'compartment' on post-side
+              //std::list<std::string>::iterator
+              ctiter = targetsIter->second.first.begin(),
+                     ctend = targetsIter->second.first.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//input to cleft/presynapticPoint
+                //NOTE: As the name may contains domain names
+                // Calcium(domain1, domainA)
+                // we need to split them
+                std::string microdomainName("");
+#ifdef MICRODOMAIN_CALCIUM
+                std::string compartmentNameWithOptionalMicrodomainName(*ctiter);
+                std::string compartmentNameOnly("");
+                Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+#else
+                std::string compartmentNameOnly(*ctiter);
+#endif
+                NodeDescriptor* postCpt = 0;
+                int postIdx = 0;
+                if (postJunction)
+                {
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(compartmentNameOnly);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePostCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[compartmentNameOnly]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(compartmentNameOnly);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(postCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[compartmentNameOnly]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#endif
+                }
+                else
+                {
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(postCapsule->getBranch(), compartmentNameOnly);
+                  postCpt = compartmentVariableAccessors
+                                [_compartmentVariableTypesMap[compartmentNameOnly]]
+                                    ->getNodeDescriptor(branchIndices[0],
+                                                        branchIndices[1]);
+                  /*postIdx =
+                      N_COMPARTMENTS(postCapsule->getBranch()->_nCapsules) -
+                      ((postCapsule - postCapsule->getBranch()->_capsules) /
+                       _compartmentSize) -
+                      1;*/
+#ifdef IDEA1
+                  postIdx = _tissueContext->getCptIndex(postCapsule, *titer);
+#else
+                  postIdx = getCptIndex(postCapsule);
+#endif
+                }
+
+                //post->cleft
+                if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  //TUAN TODO: update when 'tight' and 'bulk'
+                  ////with new syntax is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                    _tissueParams.getPreSynapticPointTarget(
+                        targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                    _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+
+                  NDPairList Mcpt2cleft = cpt2cleft[compartmentNameOnly];
+                  Mcpt2cleft.replace("idx", postIdx);
+                  Mcpt2cleft.replace("side", "post");
+                  connect(sim, connector, postCpt,
+                      synapticCleftNodes[cleftType], Mcpt2cleft);
+                }  
+              }
+
+
+              
+              {//connect synapticCleft/preSynapticPoint to all receptors 
+                if (_preSynapticPointTypeCounter > 0)
+                {  // PreSynapticPoint layer is used
+                  NodeAccessor* preSynapticPointAccessor = 0;
+                  std::string preSynapticPointType =
+                      _tissueParams.getPreSynapticPointTarget(
+                          targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                      _preSynapticPointTypesMap.find(preSynapticPointType);
+                  assert(tmapiter != _preSynapticPointTypesMap.end());
+                  unsigned int preSynPointType = (tmapiter->second);
+                  if (preSynPoints[preSynPointType] == 0)
+                  {
+                    assert(preSynapticPointAccessors.size() > preSynPointType);
+                    preSynapticPointAccessor =
+                        preSynapticPointAccessors[preSynPointType];
+                    if (preJunction)
+                    {
+#ifdef IDEA1
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][jctCapsulePreCapsule]);
+#else
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+#endif
+                    }
+                    else
+                    {
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleCptPointIndexMap
+                                            [preSynapticPointType][preCapsule]);
+                    }
+                  }
+                  connect(sim, connector, preSynPoints[preSynPointType],
+                          receptor, presynpt);
+                }
+                else if (_synapticCleftTypeCounter > 0)
+                {  // SynapticCleft layer is used
+                  //TUAN TODO: update when 'tight' and 'bulk'
+                  ////with new syntax is used
+                  NodeAccessor* synapticCleftAccessor = 0;
+                  std::string synapticCleftType =
+                    _tissueParams.getPreSynapticPointTarget(
+                        targetsIter->first);
+                  std::map<std::string, int>::iterator tmapiter =
+                    _synapticCleftTypesMap.find(synapticCleftType);
+                  assert(tmapiter != _synapticCleftTypesMap.end());
+                  unsigned int cleftType = (tmapiter->second);
+                  connect(sim, connector, synapticCleftNodes[cleftType],
+                          receptor, synCleft);
+                }
+              }
+              // Post - as input to receptor
+              //std::list<std::string>::iterator
+              ctiter = targetsIter->second.first.begin(),
+                     ctend = targetsIter->second.first.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//input to receptor
+                //NOTE: As the name may contains domain names
+                // Calcium(domain1, domainA)
+                // we need to split them
+                std::string microdomainName("");
+#ifdef MICRODOMAIN_CALCIUM
+                std::string compartmentNameWithOptionalMicrodomainName(*ctiter);
+                std::string compartmentNameOnly("");
+                Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+#else
+                std::string compartmentNameOnly(*ctiter);
+#endif
+                NodeDescriptor* postCpt = 0;
+                int postIdx = 0;
+                if (postJunction)
+                {
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(compartmentNameOnly);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePostCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[compartmentNameOnly]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(compartmentNameOnly);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(postCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[compartmentNameOnly]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#endif
+                }
+                else
+                {
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(postCapsule->getBranch(), compartmentNameOnly);
+                  postCpt = compartmentVariableAccessors
+                                [_compartmentVariableTypesMap[compartmentNameOnly]]
+                                    ->getNodeDescriptor(branchIndices[0],
+                                                        branchIndices[1]);
+                  /*postIdx =
+                      N_COMPARTMENTS(postCapsule->getBranch()->_nCapsules) -
+                      ((postCapsule - postCapsule->getBranch()->_capsules) /
+                       _compartmentSize) -
+                      1;*/
+#ifdef IDEA1
+                  postIdx = _tissueContext->getCptIndex(postCapsule, *titer);
+#else
+                  postIdx = getCptIndex(postCapsule);
+#endif
+                }
+
+                //post->receptor
+#ifdef MICRODOMAIN_CALCIUM
+                if (not microdomainName.empty())
+                {
+                  NDPairList McptMicrodomain2syn = cptMicrodomain2syn[compartmentNameOnly];
+                  McptMicrodomain2syn.replace("domainName", microdomainName);
+                  McptMicrodomain2syn.replace("idx", postIdx);
+                  //NDPairList MicMicrodomain2syn = icMicrodomain2syn[compartmentNameOnly];
+                  //MicMicrodomain2csyn.replace("domainName", microdomainName);
+                  //MicMicrodomain2syn.replace("idx", postIdx);
+                  connect(sim, connector, postCpt, receptor, McptMicrodomain2syn);
+                  //connect(sim, connector, postCpt, receptor, MicMicrodomain2syn);
+                }
+                else{
+                  NDPairList Mcpt2syn = cpt2syn[compartmentNameOnly];
+                  Mcpt2syn.replace("idx", postIdx);
+                  NDPairList Mic2syn = ic2syn[compartmentNameOnly];
+                  Mic2syn.replace("idx", postIdx);
+                  connect(sim, connector, postCpt, receptor, Mcpt2syn);
+                  connect(sim, connector, postCpt, receptor, Mic2syn);
+                }
+#else
+                NDPairList Mcpt2syn = cpt2syn[compartmentNameOnly];
+                Mcpt2syn.replace("idx", postIdx);
+                NDPairList Mic2syn = ic2syn[compartmentNameOnly];
+                Mic2syn.replace("idx", postIdx);
+                connect(sim, connector, postCpt, receptor, Mcpt2syn);
+                connect(sim, connector, postCpt, receptor, Mic2syn);
+#endif
+
+              }
+              // Post - receptor output data to Post
+              ctiter = targetsIter->second.second.begin(),
+              ctend = targetsIter->second.second.end();
+              for (; ctiter != ctend; ++ctiter)
+              {//receptor output to Post-compartments
+                //NOTE: As the name may contains domain names
+                // Calcium(domain1, domainA)
+                // we need to split them
+                std::string microdomainName("");
+#ifdef MICRODOMAIN_CALCIUM
+                std::string compartmentNameWithOptionalMicrodomainName(*ctiter);
+                std::string compartmentNameOnly("");
+                Params::separateCompartmentName_and_microdomainName(compartmentNameWithOptionalMicrodomainName, compartmentNameOnly, microdomainName);
+                checkValidUseMicrodomain(compartmentNameOnly, microdomainName);
+#else
+                std::string compartmentNameOnly(*ctiter);
+#endif
+                
+                NodeDescriptor* postCpt = 0;
+                int postIdx = 0;
+                if (postJunction)
+                {
+#ifdef IDEA1
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(compartmentNameOnly);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(jctCapsulePostCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[compartmentNameOnly]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#else
+                  std::map<std::string,
+                           std::map<Capsule*, std::vector<int> > >::iterator
+                      jmapiter1 = _junctionIndexMap.find(compartmentNameOnly);
+                  assert(jmapiter1 != _junctionIndexMap.end());
+                  std::map<Capsule*, std::vector<int> >::iterator jmapiter2 =
+                      jmapiter1->second.find(postCapsule);
+                  assert(jmapiter2 != jmapiter1->second.end());
+                  std::vector<int>& junctionIndices = jmapiter2->second;
+                  postCpt = junctionAccessors
+                                [cptVarJctTypeMap
+                                     [_compartmentVariableTypesMap[compartmentNameOnly]]]
+                                    ->getNodeDescriptor(junctionIndices[0],
+                                                        junctionIndices[1]);
+#endif
+                }
+                else
+                {
+                  std::vector<int>& branchIndices =
+                      findBranchIndices(postCapsule->getBranch(), compartmentNameOnly);
+                  postCpt = compartmentVariableAccessors
+                                [_compartmentVariableTypesMap[compartmentNameOnly]]
+                                    ->getNodeDescriptor(branchIndices[0],
+                                                        branchIndices[1]);
+                  /*postIdx =
+                      N_COMPARTMENTS(postCapsule->getBranch()->_nCapsules) -
+                      ((postCapsule - postCapsule->getBranch()->_capsules) /
+                       _compartmentSize) -
+                      1;*/
+#ifdef IDEA1
+                  postIdx = _tissueContext->getCptIndex(postCapsule, *titer);
+#else
+                  postIdx = getCptIndex(postCapsule);
+#endif
+                }
+                //receptor->post
+                NDPairList Mcsyn2cpt = csyn2cpt[compartmentNameOnly];
+                Mcsyn2cpt.replace("idx", postIdx);
+#ifdef MICRODOMAIN_CALCIUM
+                if (not microdomainName.empty())
+                {
+                  NDPairList Mcsyn2cptMicrodomain = csyn2cptMicrodomain[compartmentNameOnly];
+                  Mcsyn2cptMicrodomain.replace("domainName", microdomainName);
+                  connect(sim, connector, receptor, postCpt, Mcsyn2cptMicrodomain);
+                }
+                else
+                {
+                  connect(sim, connector, receptor, postCpt, Mcsyn2cpt);
+                }
+#else
+                connect(sim, connector, receptor, postCpt, Mcsyn2cpt);
+#endif
+              }
+#endif
             }
             typeCounter[synapseType]++;
           }
           for (int i = 0; i < mixedSynapse.size(); ++i)
-          {
+          {//this is for plasticity
             for (int j = 0; j < mixedSynapse.size(); ++j)
             {
               if (i != j)
@@ -6019,6 +7132,15 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
     {
       if (i < nChannelBranches)
       {
+#ifdef MICRODOMAIN_CALCIUM
+        std::tuple<int, int, std::string>& channelBranchIndexPair =
+            _channelBranchIndices1[typeIdx][i][0];
+        key =
+            findBranch(_rank, std::get<0>(channelBranchIndexPair),
+                       _compartmentVariableTypes[std::get<1>(channelBranchIndexPair)])
+                ->_capsules[0]
+                .getKey();
+#else
         std::pair<int, int>& channelBranchIndexPair =
             _channelBranchIndices1[typeIdx][i][0];
         key =
@@ -6026,15 +7148,25 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
                        _compartmentVariableTypes[channelBranchIndexPair.second])
                 ->_capsules[0]
                 .getKey();
+#endif
       }
       else
       {
+#ifdef MICRODOMAIN_CALCIUM
+        std::tuple<int, int, std::string>& channelJunctionIndexPair =
+            _channelJunctionIndices1[typeIdx][i - nChannelBranches][0];
+        key = findJunction(
+                  _rank, std::get<0>(channelJunctionIndexPair),
+                  _compartmentVariableTypes[std::get<1>(channelJunctionIndexPair)])
+                  ->getKey();
+#else
         std::pair<int, int>& channelJunctionIndexPair =
             _channelJunctionIndices1[typeIdx][i - nChannelBranches][0];
         key = findJunction(
                   _rank, channelJunctionIndexPair.first,
                   _compartmentVariableTypes[channelJunctionIndexPair.second])
                   ->getKey();
+#endif
       }
       if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey)
         nodeDescriptors.push_back(
@@ -6094,14 +7226,14 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
       }
     }
   }
-	else if (category == "CLEFT")
+  else if (category == "CLEFT" and _synapticCleftLayers.size() > 0)
   {
+    layer = _synapticCleftLayers[typeIdx];
+    assert(layer);
     if (maskVector.size() == 0)
-    {
+    {//get all layers
       //layer = preSynPoints ? _preSynapticPointLayers[typeIdx]
       //             : _synapticCleftLayers[typeIdx];
-      layer = _synapticCleftLayers[typeIdx];
-      assert(layer);
       int density = layer->getDensity(_rank);
       for (int i = 0; i < density; ++i)
       {
@@ -6120,8 +7252,8 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
         key_size_t key1= (*siter).first->getKey1();
         key_size_t key2= (*siter).first->getKey2();
         if (_segmentDescriptor.getSegmentKey(key1, mask) == targetKey
-           || _segmentDescriptor.getSegmentKey(key2, mask) == targetKey 
-            )
+            || _segmentDescriptor.getSegmentKey(key2, mask) == targetKey 
+           )
         {
           int i = (*siter).second;
           nodeDescriptors.push_back(
@@ -6319,15 +7451,27 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
       key_size_t key;
       for (int i=0; i<density; ++i) {
         double surfaceArea=0;
-        if (i<nChannelBranches) {
+        if (i < nChannelBranches) {
+#ifdef MICRODOMAIN_CALCIUM
+          std::tuple<int, int, std::string>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
+          ComputeBranch* branch=findBranch(_rank, std::get<0>(channelBranchIndexPair), 
+              _compartmentVariableTypes[std::get<1>(channelBranchIndexPair)]);
+#else
           std::pair<int, int>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
           ComputeBranch* branch=findBranch(_rank, channelBranchIndexPair.first, _compartmentVariableTypes[channelBranchIndexPair.second]);
+#endif
           key=branch->_capsules[0].getKey();
           if (N>=0) surfaceArea=branch->getSurfaceArea();
         }
         else {
+#ifdef MICRODOMAIN_CALCIUM
+          std::tuple<int, int, std::string>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
+          Capsule* junction=findJunction(_rank, std::get<0>(channelJunctionIndexPair), 
+              _compartmentVariableTypes[std::get<1>(channelJunctionIndexPair)]);
+#else
           std::pair<int, int>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
           Capsule* junction=findJunction(_rank, channelJunctionIndexPair.first, _compartmentVariableTypes[channelJunctionIndexPair.second]);
+#endif
           key=junction->getKey();
           if (N>=0) surfaceArea=junction->getEndSphereSurfaceArea();
         }
@@ -6596,7 +7740,6 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
   {
-
     std::string mystring = (*capiter).first;
     std::vector<std::string> tokens;
     std::string delimiters = ": ";
@@ -6944,7 +8087,6 @@ bool TissueFunctor::setGenerated(
           {
             if (0)
             {  // debug purpose
-
               std::cout << "found " << key1 << " " << key2 << " "
                         << key_spineneck << " " << key1_inloop << " "
                         << key2_inloop << " " << key_inloop_spineneck << " "
@@ -7912,7 +9054,10 @@ int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
       float dist2somaEnd = dist2somaStart+branch->_capsules[i].getLength();
       if (branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() <= somaR)
       {
-        std::cerr << "The first ComputeBranch falls within the soma" << std::endl;
+        std::cerr << "The first ComputeBranch falls within the soma on BRCHTYPE " << 
+          _segmentDescriptor.getBranchType(branch->_capsules[ncaps-1].getKey())+ 1
+          << " (NOTE: adjusted +1)"
+          << std::endl;
         assert(branch->_capsules[ncaps-1].getDist2Soma() + branch->_capsules[ncaps-1].getLength() > somaR);
       }
       while (
@@ -8259,8 +9404,35 @@ GridLayerDescriptor* TissueFunctor::getGridLayerDescriptor(std::string category,
   else if (category=="JUNCTION") layer=_junctionLayers[typeIdx];
   else if (category=="CHANNEL") layer=_channelLayers[typeIdx];
   else if (category=="SYNAPSE") layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
-	else if (category == "CLEFT")
-      layer = _synapticCleftLayers[typeIdx];
+  else if (category == "CLEFT")
+    layer = _synapticCleftLayers[typeIdx];
 
   return layer;
 }
+
+
+#ifdef MICRODOMAIN_CALCIUM
+void TissueFunctor::checkValidUseMicrodomain(std::string compartmentNameOnly, std::string microdomainName)
+{
+  if (not microdomainName.empty())
+  {//TUAN TODO: put this ever where in doLayout
+    //if (compartmentNameOnly != "Calcium")
+    if (not nodeTypeWithAllowedMicrodomain(compartmentNameOnly))
+    {
+      std::cerr <<  "IMPORTANT: microdomain is only supported for 'Calcium' compartment. You use it for "
+        << compartmentNameOnly << std::endl;
+      assert(0);
+    }
+  }
+
+}
+bool TissueFunctor::nodeTypeWithAllowedMicrodomain(std::string nodeType)
+{
+  bool result = true;
+  if (nodeType!= "Calcium")
+  {
+    result = false;
+  }
+  return result;
+}
+#endif

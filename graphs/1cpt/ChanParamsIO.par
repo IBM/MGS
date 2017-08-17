@@ -1,0 +1,121 @@
+# MTYPE = 0 (neuron), = 1 (GABA axonal terminal), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush axonal terminal)
+# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
+CHANNEL_TARGETS 3
+#BRANCHTYPE
+##1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] HCN [Voltage] [Voltage] Cal [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium] Cah [Voltage] [Voltage, Calcium]
+#1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] 
+#2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+##3 KCa [Calcium] [Voltage] Cah [Voltage] [Voltage, Calcium] PMCA [Calcium] [Calcium]
+MTYPE BRANCHTYPE
+# [5, 1] 1 Na [Voltage] [Voltage] KDR [Voltage] [Voltage] 
+# [5, 1] 2 Na [Voltage] [Voltage] KDR [Voltage] [Voltage]
+#{{{neuron 3
+0 1  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
+     KRP [Voltage] [Voltage] \
+     BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage] \
+     PMCA [Voltage, Calcium] [Calcium] \
+     NCX [Voltage, Calcium] [Calcium] \
+     CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
+     CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+0 [3:4]  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
+     KRP [Voltage] [Voltage] \
+     BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
+     PMCA [Voltage, Calcium] [Calcium] \
+     NCX [Voltage, Calcium] [Calcium] \
+     CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
+     CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+0 [2, 5, 7]  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
+     KRP [Voltage] [Voltage] \
+     BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
+     PMCA [Voltage, Calcium] [Calcium] \
+     CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
+     CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+#}}}
+
+CHANNEL_COSTS 19
+#{{{ 19
+Nat     0.414243
+Nap     0.414243
+KAf     0.254051
+KAs     0.254051
+KIR     0.254051
+KRP     0.254051
+BK      0.254051
+SK      0.254051
+CaLv12  0.254051
+CaLv13  0.254051
+CaN     0.254051
+CaPQ    0.254051
+CaR     0.254051
+CaT     0.254051
+PMCA    0.254051
+Kv31    0.254051
+IP3R    0.254051
+RYR1    0.254051
+NCX     0.254051
+#}}}
+
+CHANNEL_PARAMS 3
+#{{{
+#{{{Na
+Na 2
+BRANCHTYPE
+1 <gbar={4.75}>
+2 <gbar={1.0}>
+#}}}
+#{{{KDR
+KDR 2
+BRANCHTYPE
+1 <gbar={1.0}>
+2 <gbar={0.4}>
+#}}}
+#KCa 5
+#BRANCHORDER
+#1 <gbar={0.0}>
+#2 <gbar={2.0}>
+#3 <gbar={1.0>
+#4 <gbar={0.5}>
+#5 <gbar={0.25}>
+#Cah 5
+#BRANCHORDER
+#1 <gbar={0.0}>
+#2 <gbar={0.05}>
+#3 <gbar={0.025}>
+#4 <gbar={0.0125}>
+#5 <gbar={0.00625}>
+#{{{ PMCA
+PMCA 6
+#{{{
+# tau ~ [ms]
+BRANCHTYPE MTYPE 
+## NOTE: large value of tau is important in keeping Ca-neck high
+1 0 <tau={1.9}>
+2 0 <tau={1.9}>
+5 0 <tau={1.9}>
+3 0 <tau={1.9}>
+4 0 <tau={1.9}>
+6 0 <tau={1.9}>
+#3 0 <tau={0.23}>
+#4 0 <tau={0.23}>
+#6 0 <tau={0.23}>
+#}}}
+#}}}
+#}}}
+
+# UNITS: 
+#  v_efflux = 1/ms
+#  depth    = nanometer
+#  fraction_surface = % [of membrane-surface-area]
+# IMPORTANT: ';' separated list of values
+MICRODOMAIN_PARAMS 3
+domain1  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
+domain2  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
+domain3  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>

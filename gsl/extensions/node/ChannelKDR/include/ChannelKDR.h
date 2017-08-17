@@ -22,7 +22,7 @@
 
 #include "MaxComputeOrder.h"
 
-#if CHANNEL_KDR == KDR_HODGKINHUXLEY_1952
+#if CHANNEL_KDR == KDR_HODGKIN_HUXLEY_1952
 #define BASED_TEMPERATURE 6.3  // Celcius
 #define Q10 3.0
 #elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
@@ -32,6 +32,12 @@
       CHANNEL_KDR == KDR_TRAUB_1995 //not being used for these models
 #define BASED_TEMPERATURE 23.0
 #define Q10 3.0
+
+#elif CHANNEL_KDR == KDR_MAHON_2000 || \
+      CHANNEL_KDR == KDR_WANG_BUSZAKI_1996                                    
+#define BASED_TEMPERATURE 22.0  // Celcius                                 
+#define Q10 2.92 //To get a phi value equivalent to 5 as used in the model 
+
 #endif
 
 #ifndef Q10 

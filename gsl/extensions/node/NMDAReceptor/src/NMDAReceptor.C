@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -21,6 +21,7 @@
 #include "math.h"
 #include <limits>
 #include "NTSMacros.h"
+#include "NumberUtils.h"
 
 // Destexhe-Mainen-Sejnowski (1994)
 // The Glutamate neurotransmitter concentration, i.e. [NT]
@@ -41,6 +42,7 @@
 
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
 #define NEUROTRANSMITTER      *Glut
+
 #endif
 
 #define DT (*(getSharedMembers().deltaT))
@@ -57,15 +59,6 @@
 //NOTE: TAU = time-constant for learning
 //       i.e. Ca2+-dependent learning rate is 1/TAU
   #define Cai_base  0.1 // [uM]
-  #define TAU (100.0 / (100.0 / 0.001 + pow(Cai_base, 3)) + 1000.0)
-  #define CAFUN                                       \
-  	(0.25 + sigmoid(Cai_base - 0.55, 80) - \
-  	 0.25 * sigmoid(Cai_base - 0.35, 80))
-#else
-#define TAU (100.0 / (100.0 / 0.001 + pow((*Ca_IC)[indexPost], 3)) + 1000.0)
-#define CAFUN                                       \
-  (0.25 + sigmoid((*Ca_IC)[indexPost] - 0.55, 80) - \
-   0.25 * sigmoid((*Ca_IC)[indexPost] - 0.35, 80))
 #endif
 
 #if RECEPTOR_NMDA == NMDAR_BEHABADI_2012
@@ -98,9 +91,11 @@
 //#define MGBLOCK 1.0/(1.0 +
 // exp(-0.122*((*Vpost)[indexPost]))*(*(getSharedMembers().Mg_EC))/3.57)
 ////Adjusted sigmoid to not get calcium transients at -60mV
+
 #elif RECEPTOR_NMDA == NMDAR_POINTPROCESS
 // No Mg2+ blocks
 #define MGBLOCK  1
+
 #endif
 
 void NMDAReceptor::initializeNMDA(RNG& rng)
@@ -158,8 +153,14 @@ void NMDAReceptor::updateNMDA(RNG& rng)
 #if ! defined(SIMULATE_CACYTO)
     dyn_var_t cai = Cai_base;
 #else
-		dyn_var_t cai = (*Ca_IC)[indexPost];
+#ifdef MICRODOMAIN_CALCIUM
+    dyn_var_t cai = (*Ca_IC)[indexPost+_offset]; // [uM]
+#else
+    dyn_var_t cai = (*Ca_IC)[indexPost];
 #endif
+
+#endif
+
   // Updates the channel reversal potential
   // RT/(zCa*F) * ln(Cao/Cai)
   E_Ca = (R_zCaF * *(getSharedMembers().T) *
@@ -183,7 +184,11 @@ void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
 #if ! defined(SIMULATE_CACYTO)
     dyn_var_t cai = Cai_base;
 #else
-		dyn_var_t cai = (*Ca_IC)[indexPost];
+#ifdef MICRODOMAIN_CALCIUM
+    dyn_var_t cai = (*Ca_IC)[indexPost+_offset]; // [uM]
+#else
+    dyn_var_t cai = (*Ca_IC)[indexPost];
+#endif
 #endif
   if (pOn)
   {
@@ -224,6 +229,10 @@ void NMDAReceptor::updateNMDADepPlasticity(RNG& rng)
       }
       else if (pOn == 2)
       {  // Shouval & Bear & Cooper 2002 PNAS
+  #define TAU (100.0 / (100.0 / 0.001 + pow(cai, 3)) + 1000.0)
+  #define CAFUN                                       \
+  	(0.25 + sigmoid(cai - 0.55, 80.0) - \
+  	 0.25 * sigmoid(cai - 0.35, 80.0))
         w = w + (1.0 / TAU) * (CAFUN - w);
       }
     }
@@ -239,14 +248,42 @@ void NMDAReceptor::setPostIndex(const String& CG_direction,
                                 CG_NMDAReceptorOutAttrPSet* CG_outAttrPset)
 {
   indexPost = CG_inAttrPset->idx;
+  if (indexPrePost.size() % 2)
+  {//it means that PreSynapticPoint is being used
 #ifdef KEEP_PAIR_PRE_POST
   indexPrePost.push_back(&indexPost);
 #endif
+  }
 }
 
-dyn_var_t NMDAReceptor::sigmoid(dyn_var_t alpha, dyn_var_t beta)
-{
-  return exp(beta * alpha) / (1 + exp(beta * alpha));
-}
 
 NMDAReceptor::~NMDAReceptor() {}
+void NMDAReceptor::setPrePostIndex(const String& CG_direction,
+                                const String& CG_component,
+                                NodeDescriptor* CG_node, Edge* CG_edge,
+                                VariableDescriptor* CG_variable,
+                                Constant* CG_constant,
+                                CG_NMDAReceptorInAttrPSet* CG_inAttrPset,
+                                CG_NMDAReceptorOutAttrPSet* CG_outAttrPset)
+{
+  indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[0]);
+  indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[1]);
+}
+
+
+#ifdef MICRODOMAIN_CALCIUM
+void NMDAReceptor::setCalciumMicrodomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NMDAReceptorInAttrPSet* CG_inAttrPset, CG_NMDAReceptorOutAttrPSet* CG_outAttrPset) 
+{
+  microdomainName = CG_inAttrPset->domainName;
+  int idxFound = 0;
+  while((*(getSharedMembers().tmp_microdomainNames))[idxFound] != microdomainName)
+  {
+    idxFound++;
+  }
+  //_offset = idxFound * branchData->size;
+  //NOTE: Receptors always reside on post-side (this does not necessary means
+  //   post-synaptic side. It is just the post-side in the pre-post touch)
+  _offset = idxFound * branchDataPrePost[1]->size;
+}
+#endif
+

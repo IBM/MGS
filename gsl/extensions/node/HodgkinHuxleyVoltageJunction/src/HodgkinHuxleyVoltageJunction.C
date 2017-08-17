@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -37,8 +37,12 @@ SegmentDescriptor HodgkinHuxleyVoltageJunction::_segmentDescriptor;
 dyn_var_t HodgkinHuxleyVoltageJunction::getArea() // Tuan: check ok
 {
   dyn_var_t area= 0.0;
+#if defined (USE_SOMA_AS_POINT)
+  area = 1.0; // [um^2]
+#else
   area = dimensions[0]->surface_area;
-	return area;
+#endif
+  return area;
 }
 
 
@@ -46,14 +50,14 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 { // explicit junction (which can be soma (with branches are axon/dendrite
   // trees)
   // or a cut point junction 
-	// or a branching point junction with 
+  // or a branching point junction with 
   //    either 3 or more branches (one from main, 2+ for children
   // branches)
   //    or 2 branches (one from main, one from children when there is branchType changing, 
   //    but not branchpoint), e.g. from prox-axon to AIS, or AIS to distal-axon on 1 branch
   //               or apical-trunk to apical-tuft
   // )
-  unsigned size = branchData->size;  //# of compartments
+  unsigned numCpts = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   assert(Vnew.size() == 1);
   assert(dimensions.size() == 1);
@@ -61,39 +65,39 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   dyn_var_t Vm_default = Vnew[0];
-  for (unsigned int i=0; i<size; ++i) {
+  for (unsigned int i=0; i<numCpts; ++i) {
     if (Vm_dists.size() > 0) {
       unsigned int j;
       //NOTE: 'n' bins are splitted by (n-1) points
       if (Vm_values.size() - 1 != Vm_dists.size())
       {
-        std::cerr << "Vm_values.size = " << Vm_values.size() 
-          << "; Vm_dists.size = " << Vm_dists.size() << std::endl; 
+	std::cerr << "Vm_values.size = " << Vm_values.size() 
+	  << "; Vm_dists.size = " << Vm_dists.size() << std::endl; 
       }
       assert(Vm_values.size() -1 == Vm_dists.size());
       for (j=0; j<Vm_dists.size(); ++j) {
-        if ((dimensions)[i]->dist2soma < Vm_dists[j]) break;
+	if ((dimensions)[i]->dist2soma < Vm_dists[j]) break;
       }
       Vnew[i] = Vm_values[j];
     }
-		else if (Vm_branchorders.size() > 0)
-		{
+    else if (Vm_branchorders.size() > 0)
+    {
       unsigned int j;
       assert(Vm_values.size() == Vm_branchorders.size());
       SegmentDescriptor segmentDescriptor;
       for (j=0; j<Vm_branchorders.size(); ++j) {
-        if (segmentDescriptor.getBranchOrder(branchData->key) == Vm_branchorders[j]) break;
+	if (segmentDescriptor.getBranchOrder(branchData->key) == Vm_branchorders[j]) break;
       }
-			if (j == Vm_branchorders.size() and Vm_branchorders[j-1] == GlobalNTS::anybranch_at_end)
-			{
-				Vnew[i] = Vm_values[j-1];
-			}
-			else if (j < Vm_values.size()) 
-        Vnew[i] = Vm_values[j];
+      if (j == Vm_branchorders.size() and Vm_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+      {
+	Vnew[i] = Vm_values[j-1];
+      }
+      else if (j < Vm_values.size()) 
+	Vnew[i] = Vm_values[j];
       else
-        Vnew[i] = Vm_default;
-		}
-		else {
+	Vnew[i] = Vm_default;
+    }
+    else {
       Vnew[i] = Vm_default;
     }
   }
@@ -103,7 +107,7 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   // which can be explicit cut-point junction or
   //              explicit branching-point junction
   DimensionStruct* dimension = dimensions[0];  
-                                             
+
   area = getArea();
 #ifdef DEBUG_HH
   // check 'bouton' neuron ???
@@ -114,55 +118,55 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   }
 #endif
 
-	//NOTE: Should not use the whole area here
+  //NOTE: Should not use the whole area here
   dyn_var_t Poar = M_PI / (area * getSharedMembers().Ra);  // Pi-over-(area *
-                                                           // axial-resistance)
+  // axial-resistance)
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
-                                    dend = dimensionInputs.end();
+    dend = dimensionInputs.end();
   for (; diter != dend; ++diter)
   {
-	  //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
-	  //      in calculating the cross-sectional area
-	  dyn_var_t Rb;
-	  dyn_var_t distance ;
-	  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
-	  {
-		  //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
+    //NOTE: if the junction is the SOMA, we should not use the radius of the SOMA
+    //      in calculating the cross-sectional area
+    dyn_var_t Rb;
+    dyn_var_t distance ;
+    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    {
+      //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
       //  NOTE: should be applied for Axon hillock only
-		  Rb = ((*diter)->r ) ;
+      Rb = ((*diter)->r ) ;
       //TEST 
-			Rb /= SCALING_NECK_FROM_SOMA;
+      Rb /= SCALING_NECK_FROM_SOMA;
       //END TEST
-#ifdef USE_SOMA_AS_POINT
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
       distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
 #else
       //distance = (*diter)->dist2soma + dimension->r;
       distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
-         // from soma is always the distance from the center of soma to the center
-         // of that compartment
+      // from soma is always the distance from the center of soma to the center
+      // of that compartment
       //distance += 50.0;//TUAN TESTING - make soma longer
       //TEST 
       distance += STRETCH_SOMA_WITH;
       //END TEST
 #endif
       assert(distance > 0);
-	  }else{
+    }else{
 #ifdef NEW_RADIUS_CALCULATION_JUNCTION
-		  Rb = ((*diter)->r); //the small diameter of the branch means small current pass to it
+      Rb = ((*diter)->r); //the small diameter of the branch means small current pass to it
 #else
-		  Rb = 0.5 * ((*diter)->r + dimension->r);
+      Rb = 0.5 * ((*diter)->r + dimension->r);
 #endif
-	    distance = fabs((*diter)->dist2soma - dimension->dist2soma);
+      distance = fabs((*diter)->dist2soma - dimension->dist2soma);
       assert(distance > 0);
-	  }
-//#define TEST_IDEA_R_HALF_SOMA
-//#ifdef TEST_IDEA_R_HALF_SOMA
-//		  Rb = 0.5 * ((*diter)->r + dimension->r);
-//#endif
+    }
+    //#define TEST_IDEA_R_HALF_SOMA
+    //#ifdef TEST_IDEA_R_HALF_SOMA
+    //		  Rb = 0.5 * ((*diter)->r + dimension->r);
+    //#endif
     if (distance <= 0) 
       std::cerr << "distance = " << distance << std::endl;
-	  assert(distance > 0);
-	  gAxial.push_back(Poar * Rb * Rb / distance);
+    assert(distance > 0);
+    gAxial.push_back(Poar * Rb * Rb / distance);
   }
   if (getSharedMembers().deltaT)
   {
@@ -171,18 +175,18 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   }
 #ifdef DEBUG_HH
   std::cerr << "JUNCTION (" << dimension->x << "," << dimension->y << ","
-		<< dimension->z << "," << dimension->r 
-		<< "," << dimension->surface_area 
-		<< "," << dimension->dist2soma
-		<< "," << dimension->length
-		<< ")" << std::endl;
+    << dimension->z << "," << dimension->r 
+    << "," << dimension->surface_area 
+    << "," << dimension->dist2soma
+    << "," << dimension->length
+    << ")" << std::endl;
 #endif
 #ifdef DEBUG_ASSERT
   if (cmt <= 0)
   {
-	  std::cout << "HINTS: Check CptParams...par file, maybe you're using the neurons with MTYPE"
-		  << " not defined in the param file\n";
-	  assert(cmt > 0);
+    std::cout << "HINTS: Check CptParams...par file, maybe you're using the neurons with MTYPE"
+      << " not defined in the param file\n";
+    assert(cmt > 0);
   }
 #endif
 }
@@ -198,7 +202,8 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 #endif
   //END TUAN DEBUG
   dyn_var_t conductance = cmt;
-  dyn_var_t current = cmt * Vcur;
+  //dyn_var_t current = cmt * Vcur;
+  dyn_var_t current = cmt * Vnew[0];
 
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
@@ -359,11 +364,11 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     std::cerr << "Iteration: " << getSimulation().getIteration() << std::endl;
 	  printDebugHH();
   }
-	assert(Vnew[0] == Vnew[0]);
+  assert(Vnew[0] == Vnew[0]);
 #endif
 
 #ifdef DEBUG_HH
-	printDebugHH();
+  printDebugHH();
 #endif
 }
 

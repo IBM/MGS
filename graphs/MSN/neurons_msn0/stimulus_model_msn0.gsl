@@ -1,3 +1,54 @@
+#if STIMULUS_CASE == CASE_08
+//{{{voltage-clamp
+//NOTE: User can define 'idx' to specify compartment index (default is 0)
+//VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
+//NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
+VoltageClamp somaClamp<type=2, command = 10.0, gainTime=0.05>; //TimeSetVClamp1
+
+//NOTE: You have up to 3 time points to set different Vclamp values
+somaClamp.setCommand( < 
+   command = -20.0   // [mV]  - a command Voltage
+   > ) on voltageClampSet2Sem; //TimeSetVClamp2
+somaClamp.setCommand( < 
+   command = +20.0   // [mV]  - a command Voltage
+   > ) on voltageClampSet3Sem; //TimeSetVClamp3
+///somaClamp.startWaveform( <
+///   waveform = {val1, val2, val3, val4} 
+///   > ) on voltageClampSet1;
+///somaClamp.startWaveform( <
+///   waveformFile = "2column-(time-Vm)-filename.txt"
+///   > ) on voltageClampSet1;
+
+//NOTE: Default initial is OFF
+somaClamp.toggle() on voltageClampOnSem; //toggle clamping
+somaClamp.toggle() on voltageClampOffSem; //toggle clamping
+//Old use
+//somaClamp.toggle(<toggle=1>) on voltageClampOnSem; //toggle clamping
+//somaClamp.toggle(<toggle=1>) on voltageClampOffSem; //toggle clamping
+
+#define t0 0.0 //[ms]
+#define t1 10.0 // [ms]
+#define t2 30.0  //[ms]
+#define t3 50.0 //[ms]
+#define Vc0 -80.0 //[ms]
+#define Vc1 20.0  //[ms]
+#define Vc2 -100.0 //[ms]
+#define Vc3 -80.0 //[ms]
+
+//current use:
+// somaClamp.startWaveform( < waveform={data-for-every-time-step-starting-from-the-time-toggle-is-triggered}>;
+//plan to change:
+//somaClamp.startWaveform( < 
+//   time     = { t0, t1, t2, t3 }, 
+//   commands = {Vc0, Vc1, Vc2, Vc3}
+//   > ) on voltageClampOn;
+//}}}
+#endif
+
+#if STIMULUS_CASE == CASE_09
+#define timeDelay 100
+RampCurrentGenerator somaStimInj<pattern="ramp", Istart=0.0, Iend=500.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
+#endif
 
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
@@ -9,7 +60,7 @@
 #endif
 //NOTE: Unit of current injection is [pA]
 //NOTE: MSN requires long stimulation due to the long shunt in the first AP
-CurrentPulseGenerator somaStimInj<pattern="periodic", peak=270.0, duration=600, period=5100, delay=timeDelay, last=50000, inc=0>; 
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=230.0, duration=1000, period=5100, delay=timeDelay, last=50000, inc=0>; 
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1900.0, duration=10, period=510, delay=timeDelay, last=500, inc=0>; //Larkum-Sakmann (1999)
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=1200.0, duration=5, period=510, delay=timeDelay, last=500, inc=0>; //GOOD

@@ -128,17 +128,17 @@ LIBS += lib/libmdl.a
 
 
 final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
-	-rm $(BIN_DIR)/$(EXE_FILE)
+	-rm -f $(BIN_DIR)/$(EXE_FILE)
 	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
            $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
 
 .PHONY: clean
 clean:
-	-rm $(OBJS_DIR)/*
-	-rm $(BIN_DIR)/$(EXE_FILE)
-	-rm parser/mdl.output
-	-rm parser/mdl.tab.c
-	-rm parser/mdl.tab.h
-	-rm scanner/lex.yy.cc
+	-rm -f $(OBJS_DIR)/*
+	-rm -f $(BIN_DIR)/$(EXE_FILE)
+	-rm -f parser/mdl.output
+	-rm -f parser/mdl.tab.c
+	-rm -f parser/mdl.tab.h
+	-rm -f scanner/lex.yy.cc
 
 

@@ -64,6 +64,7 @@ class CaERConcentration : public CG_CaERConcentration
   dyn_var_t getVolume(int i);
   dyn_var_t getArea(int i);
   void printDebugHH();
+  void printDebugHH(int i);
 
 // - common for all compartment variables
 #if MAX_COMPUTE_ORDER > 0

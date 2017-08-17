@@ -1,0 +1,59 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// Us Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef SWITCHINPUT_MDL
+#define SWITCHINPUT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Node SwitchInput Implements OutputProducer 
+{
+  double [] drivinps;
+  double drivinp;	
+  double inplo, inphi;
+
+  Shared {
+    
+    double deltaT; 
+
+    unsigned [] stateseq;
+    double [] stateswitchtimes; //end time of current state.
+    unsigned currentstate;
+    unsigned statenum;
+
+    unsigned seqlen;
+    double refract;
+    double period;
+
+    InitPhase initializeShared;
+    RuntimePhase updateInputState;
+
+  }
+
+   
+
+   InitPhase initialize();
+
+   //RuntimePhase update(drivinp);
+
+
+   OutputProducer.output << &drivinp;
+
+}
+
+#endif
+
+
+

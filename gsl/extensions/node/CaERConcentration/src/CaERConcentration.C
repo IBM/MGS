@@ -22,10 +22,13 @@
 
 #include "Branch.h"
 #include "StringUtils.h"
+#include "Params.h"
+#include <iomanip>
 #include <cmath>
 
 SegmentDescriptor CaERConcentration::_segmentDescriptor;
 
+#define SMALL 1.0E-6
 #define DISTANCE_SQUARED(a, b)               \
   ((((a)->x - (b)->x) * ((a)->x - (b)->x)) + \
    (((a)->y - (b)->y) * ((a)->y - (b)->y)) + \
@@ -252,7 +255,11 @@ dyn_var_t CaERConcentration::getArea(int i)  // Tuan: check ok
   dyn_var_t area = 0.0;
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {  // soma:
+#if defined (USE_SOMA_AS_POINT)
+    area = 1.0 * FRACTION_SURFACEAREA_RoughER; // [um^2]
+#else
     area = dimensions[i]->surface_area * FRACTION_SURFACEAREA_RoughER;
+#endif
   }
   else
   {
@@ -267,7 +274,11 @@ dyn_var_t CaERConcentration::getVolume(int i)  // Tuan: check ok
   dyn_var_t volume = 0.0;
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {  // soma:
+#if defined (USE_SOMA_AS_POINT)
+    volume = 1.0 * FRACTIONVOLUME_RoughER; // [um^3]
+#else
     volume = dimensions[i]->volume * FRACTIONVOLUME_RoughER;
+#endif
   }
   else
   {
@@ -287,24 +298,24 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   // for a given computing process:
   //  here all the data in vector-form are initialized to
   //  the same size as the number of compartments in a branch (i.e. branchData)
-  unsigned size = branchData->size;  //# of compartments
+  unsigned numCpts = branchData->size;  //# of compartments
   SegmentDescriptor segmentDescriptor;
   computeOrder = segmentDescriptor.getComputeOrder(branchData->key);
 #ifdef DEBUG_ASSERT
   if (isProximalCase2) assert(computeOrder == 0);
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
-  assert(dimensions.size() == size);
-  assert(Ca_new.size() == size);
+  assert(dimensions.size() == numCpts);
+  assert(Ca_new.size() == numCpts);
   assert(distalDimensions.size() == distalInputs.size());
 #endif
 
   // allocate data
-  if (Ca_cur.size() != size) Ca_cur.increaseSizeTo(size);
-  if (Aii.size() != size) Aii.increaseSizeTo(size);
-  if (Aip.size() != size) Aip.increaseSizeTo(size);
-  if (Aim.size() != size) Aim.increaseSizeTo(size);
-  if (RHS.size() != size) RHS.increaseSizeTo(size);
-  if (currentToConc.size() != size) currentToConc.increaseSizeTo(size);
+  if (Ca_cur.size() != numCpts) Ca_cur.increaseSizeTo(numCpts);
+  if (Aii.size() != numCpts) Aii.increaseSizeTo(numCpts);
+  if (Aip.size() != numCpts) Aip.increaseSizeTo(numCpts);
+  if (Aim.size() != numCpts) Aim.increaseSizeTo(numCpts);
+  if (RHS.size() != numCpts) RHS.increaseSizeTo(numCpts);
+  if (currentToConc.size() != numCpts) currentToConc.increaseSizeTo(numCpts);
 
   // get fraction volume
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
@@ -318,13 +329,13 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
 
   // initialize data
   Ca_cur[0] = Ca_new[0];
-  for (int i = 1; i < size; ++i)
+  for (int i = 1; i < numCpts; ++i)
   {
     Ca_new[i] = Ca_new[0];
     Ca_cur[i] = Ca_cur[0];
   }
   // go through each compartments in a branch
-  for (int i = 0; i < size; ++i)
+  for (int i = 0; i < numCpts; ++i)
   {
     Aii[i] = Aip[i] = Aim[i] = RHS[i] = 0.0;
     currentToConc[i] = getArea(i) * uM_um_cubed_per_pA_msec / getVolume(i);
@@ -336,15 +347,15 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
   for (; iiter != iend; iiter++)
   {
-    if (iiter->index < branchData->size)
+    if (iiter->index < numCpts)
       iiter->currentToConc = uM_um_cubed_per_pA_msec / getVolume(iiter->index);
   }
 
-  Aim[0] = Aip[size - 1] = 0;
+  Aim[0] = Aip[numCpts - 1] = 0;
 
   if (!isProximalCase0)
   {
-    Aip[size - 1] = -getLambda(proximalDimension, dimensions[size - 1]);
+    Aip[numCpts - 1] = -getLambda(proximalDimension, dimensions[numCpts - 1]);
   }
 
   if (isDistalCase1 || isDistalCase2)
@@ -352,12 +363,12 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
     Aim[0] = -getLambda(distalDimensions[0], dimensions[0]);
   }
 
-  for (int i = 1; i < size; i++)
+  for (int i = 1; i < numCpts; i++)
   {
     Aim[i] = -getLambda(dimensions[i - 1], dimensions[i]);
   }
 
-  for (int i = 0; i < size - 1; i++)
+  for (int i = 0; i < numCpts - 1; i++)
   {
     Aip[i] = -getLambda(dimensions[i + 1], dimensions[i]);
   }
@@ -365,12 +376,11 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   /* FIX */
   if (isDistalCase3)
   {
-
     // Compute total volume of the junction...
     dyn_var_t volume = getVolume(0);
 
     // Compute Aij[n] for the junction...one of which goes in Aip[0]...
-    if (size == 1)
+    if (numCpts == 1)
     {  // branch has only 1 compartment, so get compartment in another branch
       // which is referenced via proximalDimension
       Aip[0] = -getAij(proximalDimension, dimensions[0], volume);
@@ -395,38 +405,52 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
     }
   }
 #ifdef DEBUG_HH
-	printDebugHH();
+  printDebugHH();
 #endif
 }
 
 void CaERConcentration::printDebugHH()
 {
   unsigned size = branchData->size;
-  SegmentDescriptor segmentDescriptor;
-  std::cerr << "time| BRANCH [rank, nodeIndex, layerIndex, cptIndex]"
-            << "(neuronIdx, brIdx, brOrder, brType)| distalCase(C0,C1,C2,C3) |"
-            << "prox(C0,C1,C2) |"
-            << "{x,y,z,r, dist2soma, surface_area, volume, length} CaER\n";
   for (int i = 0; i < size; ++i)
   {
-    std::cerr << dyn_var_t(getSimulation().getIteration()) *
-                     *getSharedMembers().deltaT << " | CAER_BRANCH "
-              << " [" << getSimulation().getRank() << "," << getNodeIndex()
-              << "," << getIndex() << "," << i << "] "
-              << "(" << segmentDescriptor.getNeuronIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchIndex(branchData->key) << ","
-              << segmentDescriptor.getBranchOrder(branchData->key) << ","
-              << segmentDescriptor.getBranchType(branchData->key) 
-              << ") |"
-              << "(" << isDistalCase0 << "," << isDistalCase1 << "," << isDistalCase2
-              << "," << isDistalCase3 << ")|(" << isProximalCase0 << ","
-              << isProximalCase1 << "," << isProximalCase2 << ")|"
-              << " {" << dimensions[i]->x << "," << dimensions[i]->y << ","
-              << dimensions[i]->z << "," << dimensions[i]->r << ","
-              << dimensions[i]->dist2soma << "," << dimensions[i]->surface_area
-              << "," << dimensions[i]->volume << "," << dimensions[i]->length
-              << "} " << Ca_new[i] << " " << std::endl;
+    this->printDebugHH(i);
   }
+}
+
+void CaERConcentration::printDebugHH(int cptIndex)
+{
+  unsigned size = branchData->size;
+  if (cptIndex == 0)
+  {
+    std::cerr << "iter,time| BRANCH [rank, nodeIdx, layerIdx, cptIdx]"
+      << "(neuronIdx, brIdx, brOrder, brType) distal(C0 | C1 | C2 | C3) :"
+      << " prox( C0 | C1 | C2) |"
+      << "{x,y,z,r, dist2soma, surface_area, volume, length} CaER\n";
+  }
+  int i  = cptIndex;
+  std::cerr << getSimulation().getIteration() << "," <<
+    dyn_var_t(getSimulation().getIteration()) *
+    *getSharedMembers().deltaT << "| BRANCH"
+    << " [" << getSimulation().getRank() << "," << getNodeIndex()
+    << "," << getIndex() << "," << i << "] "
+    << "(" << _segmentDescriptor.getNeuronIndex(branchData->key) << ","
+    << std::setw(2) << _segmentDescriptor.getBranchIndex(branchData->key) << ","
+    << _segmentDescriptor.getBranchOrder(branchData->key) << ","
+    << _segmentDescriptor.getBranchType(branchData->key) << ") |"
+    << isDistalCase0 << "|" << isDistalCase1 << "|" << isDistalCase2
+    << "|" << isDistalCase3 << "|" << isProximalCase0 << "|"
+    << isProximalCase1 << "|" << isProximalCase2 << "|"
+    << " {" 
+    << std::setprecision(3) << dimensions[i]->x << "," 
+    << std::setprecision(3) << dimensions[i]->y << ","
+    << std::setprecision(3) << dimensions[i]->z << "," 
+    << std::setprecision(3) << dimensions[i]->r << " | " 
+    << dimensions[i]->dist2soma  << ","
+    << dimensions[i]->surface_area << "," 
+    << dimensions[i]->volume << "," << dimensions[i]->length 
+    << "} "
+    << Ca_new[i]  << " " << std::endl;
 }
 
 // Update: RHS[], Aii[]
@@ -440,12 +464,8 @@ void CaERConcentration::doForwardSolve()
 	//  1. ionic currents 
   for (int i = 0; i < size; i++)
   {
-#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
     Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
-#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-    assert(0);  // need to implement
-#endif
     /* * * Sum Currents * * */
     //    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
     //    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
@@ -467,12 +487,8 @@ void CaERConcentration::doForwardSolve()
   /* FIX */
   if (isDistalCase3)
   {
-#if CALCIUM_ER_DYNAMICS == FAST_BUFFERING
     Aii[0] = getSharedMembers().bmt - Aip[0];
     RHS[0] = getSharedMembers().bmt * Ca_cur[0];
-#elif CALCIUM_ER_DYNAMICS == REGULAR_BUFFERING
-    assert(0);  // need to implement
-#endif
     for (int n = 0; n < distalInputs.size(); n++)
     {
       Aii[0] -= Aij[n];
@@ -599,19 +615,30 @@ dyn_var_t CaERConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
                                     dyn_var_t V)
 {
   dyn_var_t Rb;
-  if (a->dist2soma == 0.0)
+  dyn_var_t distance;
+  distance = fabs(b->dist2soma - a->dist2soma);
+  if (a->dist2soma <= SMALL)
   {
     Rb = b->r;
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    distance = std::fabs(a->dist2soma - b->dist2soma); 
+#endif
   }
-  else if (b->dist2soma == 0.0)
+  else if (b->dist2soma <= SMALL)
+  {
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#endif
     Rb = a->r;
+  }
   else
     Rb = 0.5 * (a->r + b->r);
   // return (M_PI * Rb * Rb * getSharedMembers().DCa /
   //        (V * sqrt(DISTANCE_SQUARED(a, b))));
-  dyn_var_t length = fabs(b->dist2soma - a->dist2soma);
   //return (M_PI * Rb * Rb * getSharedMembers().DCa / (V * length));
-  return (M_PI * Rb * Rb * DCa / (V * length));
+  return (M_PI * Rb * Rb * DCa / (V * distance));
 }
 
 // void CaERConcentration::setReceptorCaCurrent(

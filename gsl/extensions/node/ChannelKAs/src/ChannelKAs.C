@@ -1,15 +1,16 @@
-#include "Lens.h"
-#include "ChannelKAs.h"
 #include "CG_ChannelKAs.h"
+#include "ChannelKAs.h"
+#include "Lens.h"
 #include "rndm.h"
 
-#include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "SegmentDescriptor.h"
+#include <pthread.h>
 
 #define SMALL 1.0E-6
-#include <math.h>
-#include <pthread.h>
-#include <algorithm>
+#define decimal_places 6     
+#define fieldDelimiter "\t"  
+
 static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 
 //
@@ -41,8 +42,24 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 #define THD 48.0
 //#define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
+#elif CHANNEL_KAs == KAs_MAHON_2000
+// Model adopted for MSN striatum
+// model parameters from mahon 2000 Table 1
+#define VHALF_M -25.6
+#define k_M -13.3
+#define VHALF_H -78.8
+#define k_H 10.4
+
+#define tau_M 131.4
+#define VHALF_TAUM -37.4
+#define k_TAUM 27.3
+
+#define VHALF_TAUH -38.2
+#define k_TAUH 28
+
 #elif CHANNEL_KAs == KAs_WOLF_2005
-//  Inactivation from
+//  Inactivation from young adult (3-4 weeks) Sprague-Dawley rat
+//      - attributed to Kv1.2 subunits
 //  Activation from
 //    1. Shen et al. (2004)
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
@@ -62,78 +79,145 @@ static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
 NOT IMPLEMENTED YET
 #endif
 
-dyn_var_t ChannelKAs::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2)
+//   of second-order accuracy at time (t+dt/2) using trapezoidal rule
 void ChannelKAs::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+#if defined(WRITE_GATES)                                                  
+  bool is_write = false;
+  float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+  if (currentTime >= _prevTime + IO_INTERVAL)                           
+  {                                                                     
+    (*outFile) << std::endl;                                            
+    (*outFile) <<  currentTime;                                         
+    _prevTime = currentTime;                                            
+    is_write = true;
+  }
+#endif
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
 #if CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
-    { 
-    dyn_var_t minf = 1.0/(1.0 + exp(-(v + IMV)/IMD));
-    dyn_var_t taum;
-    if (v < -60.0) {
-      //taum = (TMC + TMF1*exp(TMD1*(v + TMV)))/T_ADJ;
-      taum = (TMC + TMF1*exp(TMD1*(v + TMV)))/getSharedMembers().Tadj;
-    } else {
-      //taum = (TMC + TMF2*exp(TMD2*(v + TMV)))/T_ADJ;
-      taum = (TMC + TMF2*exp(TMD2*(v + TMV)))/getSharedMembers().Tadj;
-    }
-    dyn_var_t hinf = 1.0/(1.0 + exp((v + IHV)/IHD));
-    //dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v + THV2)/THD,2)))/T_ADJ;
-    dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v + THV2)/THD,2)))/getSharedMembers().Tadj;
-    dyn_var_t pm = 0.5*dt/taum;
-    dyn_var_t ph = 0.5*dt/tauh;
-    m[i] = (2.0*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
-    h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
-    }
-#elif CHANNEL_KAs == KAs_WOLF_2005
     {
-    // NOTE: Some models use m_inf and tau_m to estimate m
-    //mtau = taum0  +  Cm * exp( - ((v-vthm)/vtcm)^2 )
-
-    //left = alpha * exp( -(v-vth1-htaushift)/vtc1 )  : originally exp((v-vth1)/vtc1)
-    //right = beta * exp( (v-vth2-htaushift)/vtc2 ) : originally exp(-(v-vth2)/vtc2)
-    //htau = Ch  /  ( left + right )
-    //dyn_var_t tau_m = 0.378 + 9.91 * exp(-pow((v + 34.3) / 30.1, 2)); //at 35^C
-    dyn_var_t tau_m = 3.4 + 89.2 * exp(-pow((v + 34.3) / 30.1, 2));
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
-    dyn_var_t h_a = AHC * exp(-(v + AHV) / AHD);
-    dyn_var_t h_b = BHC * exp(-(v + BHV) / BHD);
-    //dyn_var_t tau_h = 1097.4 / (h_a + h_b);
-    dyn_var_t tau_h = 9876.6 / (h_a + h_b);
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
-
+      dyn_var_t minf = 1.0 / (1.0 + exp(-(v + IMV) / IMD));
+      dyn_var_t taum;
+      if (v < -60.0)
+      {
+        // taum = (TMC + TMF1*exp(TMD1*(v + TMV)))/T_ADJ;
+        taum = (TMC + TMF1 * exp(TMD1 * (v + TMV))) / getSharedMembers().Tadj;
+      }
+      else
+      {
+        // taum = (TMC + TMF2*exp(TMD2*(v + TMV)))/T_ADJ;
+        taum = (TMC + TMF2 * exp(TMD2 * (v + TMV))) / getSharedMembers().Tadj;
+      }
+      dyn_var_t hinf = 1.0 / (1.0 + exp((v + IHV) / IHD));
+      // dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v +
+      // THV2)/THD,2)))/T_ADJ;
+      dyn_var_t tauh =
+          (THC1 + (THC2 + THF * (v + THV1)) * exp(-pow((v + THV2) / THD, 2))) /
+          getSharedMembers().Tadj;
+      dyn_var_t pm = 0.5 * dt / taum;
+      dyn_var_t ph = 0.5 * dt / tauh;
+      m[i] = (2.0 * pm * minf + m[i] * (1.0 - pm)) / (1.0 + pm);
+      h[i] = (2.0 * ph * hinf + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
+#elif CHANNEL_KAs == KAs_MAHON_2000
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    dyn_var_t tau_m = (tau_M / (exp(-(v - VHALF_TAUM) / k_TAUM) +
+                                exp((v - VHALF_TAUM) / k_TAUM))) /
+                      getSharedMembers().Tadj;
+    dyn_var_t tau_h = (1790 +
+                       2930 * exp(-pow((v - VHALF_TAUH) / k_TAUH, 2)) *
+                           ((v - VHALF_TAUH) / k_TAUH)) /
+                      getSharedMembers().Tadj;
+    dyn_var_t pm = 0.5 * dt / tau_m;
+    dyn_var_t ph = 0.5 * dt / tau_h;
+    m[i] = (2.0 * pm * m_inf + m[i] * (1.0 - pm)) / (1.0 + pm);
+    h[i] = (2.0 * ph * h_inf + h[i] * (1.0 - ph)) / (1.0 + ph);
 
-    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
-    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+#elif CHANNEL_KAs == KAs_WOLF_2005
+    {
+      // NOTE: Some models use m_inf and tau_m to estimate m
+      // mtau = taum0  +  Cm * exp( - ((v-vthm)/vtcm)^2 )
+
+      // left = alpha * exp( -(v-vth1-htaushift)/vtc1 )  : originally
+      // exp((v-vth1)/vtc1)
+      // right = beta * exp( (v-vth2-htaushift)/vtc2 ) : originally
+      // exp(-(v-vth2)/vtc2)
+      // htau = Ch  /  ( left + right )
+      // dyn_var_t tau_m = 0.378 + 9.91 * exp(-pow((v + 34.3) / 30.1, 2)); //at
+      // 35^C
+      dyn_var_t tau_m = 3.4 + 89.2 * exp(-pow((v + 34.3) / 30.1, 2));
+      dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
+      dyn_var_t h_a = AHC * exp(-(v + AHV) / AHD);
+      dyn_var_t h_b = BHC * exp(-(v + BHV) / BHD);
+      // dyn_var_t tau_h = 1097.4 / (h_a + h_b);
+      dyn_var_t tau_h = 9876.6 / (h_a + h_b);
+      dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
+
+      dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+      dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+
+      m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+      h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
     }
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
 #endif
-    // trick to keep m in [0, 1]
-    if (m[i] < 0.0) { m[i] = 0.0; }
-    else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep h in [0, 1]
-    if (h[i] < 0.0) { h[i] = 0.0; }
-    else if (h[i] > 1.0) { h[i] = 1.0; }
+    {
+      // trick to keep m in [0, 1]
+      if (m[i] < 0.0)
+      {
+        m[i] = 0.0;
+      }
+      else if (m[i] > 1.0)
+      {
+        m[i] = 1.0;
+      }
+      // trick to keep h in [0, 1]
+      if (h[i] < 0.0)
+      {
+        h[i] = 0.0;
+      }
+      else if (h[i] > 1.0)
+      {
+        h[i] = 1.0;
+      }
+    }
 
 #if CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
-    g[i] = gbar[i]*m[i]*m[i]*h[i];
+    g[i] = gbar[i] * m[i] * m[i] * h[i];
+#elif CHANNEL_KAs == KAs_MAHON_2000
+    g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAs == KAs_WOLF_2005
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time (t+dt/2)
+#if defined(WRITE_GATES)                                                  
+    if (is_write)
+    {           
+      (*outFile) << std::fixed << fieldDelimiter << m[i];                 
+      (*outFile) << std::fixed << fieldDelimiter << h[i];                 
+    }                                                                     
+#endif                                                                    
   }
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE:
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is
+//            the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2
 void ChannelKAs::initialize(RNG& rng)
 {
   pthread_once(&once_KAs, ChannelKAs::initialize_others);
@@ -146,83 +230,116 @@ void ChannelKAs::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
-  if (Iion.size()!=size) Iion.increaseSizeTo(size);
+  if (Iion.size() != size) Iion.increaseSizeTo(size);
   // initialize
   float gbar_default = gbar[0];
-	if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
-	{
-    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on Channels KAs (KAp) Param"
-			<< std::endl;
-		assert(0);
-	}
+  if (gbar_dists.size() > 0 and gbar_branchorders.size() > 0)
+  {
+    std::cerr << "ERROR: Use either gbar_dists or gbar_branchorders on "
+                 "Channels KAs (KAp) Param"
+              << std::endl;
+    assert(0);
+  }
   for (unsigned i = 0; i < size; ++i)
   {
-    if (gbar_dists.size() > 0) {
+    if (gbar_dists.size() > 0)
+    {
       unsigned int j;
-      //NOTE: 'n' bins are splitted by (n-1) points
+      // NOTE: 'n' bins are splitted by (n-1) points
       if (gbar_values.size() - 1 != gbar_dists.size())
       {
         std::cerr << "gbar_values.size = " << gbar_values.size()
-          << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
+                  << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
       }
-      assert(gbar_values.size() -1 == gbar_dists.size());
-      for (j=0; j<gbar_dists.size(); ++j) {
+      assert(gbar_values.size() - 1 == gbar_dists.size());
+      for (j = 0; j < gbar_dists.size(); ++j)
+      {
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
-      if (j < gbar_values.size()) 
+      if (j < gbar_values.size())
         gbar[i] = gbar_values[j];
       else
         gbar[i] = gbar_default;
-    } 
-		/*else if (gbar_values.size() == 1) {
-      gbar[i] = gbar_values[0];
-    } */
-		else if (gbar_branchorders.size() > 0)
-		{
+    }
+    /*else if (gbar_values.size() == 1) {
+gbar[i] = gbar_values[0];
+} */
+    else if (gbar_branchorders.size() > 0)
+    {
       unsigned int j;
       if (gbar_values.size() != gbar_branchorders.size())
       {
         std::cerr << "gbar_values.size = " << gbar_values.size()
-          << "; gbar_branchorders.size = " << gbar_branchorders.size() << std::endl;
+                  << "; gbar_branchorders.size = " << gbar_branchorders.size()
+                  << std::endl;
       }
       assert(gbar_values.size() == gbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
-      for (j=0; j<gbar_branchorders.size(); ++j) {
-        if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
+      for (j = 0; j < gbar_branchorders.size(); ++j)
+      {
+        if (segmentDescriptor.getBranchOrder(branchData->key) ==
+            gbar_branchorders[j])
+          break;
       }
-			if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
-			{
-				gbar[i] = gbar_values[j-1];
-			}
-			else if (j < gbar_values.size()) 
+      if (j == gbar_branchorders.size() and
+          gbar_branchorders[j - 1] == GlobalNTS::anybranch_at_end)
+      {
+        gbar[i] = gbar_values[j - 1];
+      }
+      else if (j < gbar_values.size())
         gbar[i] = gbar_values[j];
       else
         gbar[i] = gbar_default;
-		}
-		else {
+    }
+    else
+    {
       gbar[i] = gbar_default;
     }
-	}
+  }
+#if defined(WRITE_GATES)                                      
+    std::ostringstream os;                                    
+    std::string fileName = "gates_KAs";                       
+    os << fileName << getSimulation().getRank();              
+    outFile = new std::ofstream(os.str().c_str());            
+    outFile->precision(decimal_places);                       
+    (*outFile) << "#Time" << fieldDelimiter << "gates: m, h [, m,h]*"; 
+    _prevTime = 0.0;                                          
+    float currentTime = 0.0;  // should also be (dt/2)                                 
+    (*outFile) << std::endl;                                  
+    (*outFile) <<  currentTime;                               
+#endif
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_KAs == KAs_WOLF_2005
+#if CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
+    m[i] = 1.0 / (1.0 + exp(-(v + IMV) / IMD));
+    h[i] = 1.0 / (1.0 + exp((v + IHV) / IHD));
+    g[i] = gbar[i] * m[i] * m[i] * h[i];
+#elif CHANNEL_KAs == KAs_MAHON_2000
+    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    g[i] = gbar[i] * m[i] * h[i];
+
+#elif CHANNEL_KAs == KAs_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
-#elif CHANNEL_KAs == KAs_KORNGREEN_SAKMANN_2000
-    m[i] = 1.0/(1.0 + exp(-(v + IMV)/IMD));
-    h[i] = 1.0/(1.0 + exp((v + IHV)/IHD));
-    g[i] = gbar[i]*m[i]*m[i]*h[i];
 #else
-    NOT IMPLEMENTED YET
-// m[i] = am / (am + bm); //steady-state value
-// h[i] = ah / (ah + bh);
+    NOT IMPLEMENTED YET;
 #endif
-		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time t0+dt/2
+#if defined(WRITE_GATES)                                      
+    (*outFile) << std::fixed << fieldDelimiter << m[i];       
+    (*outFile) << std::fixed << fieldDelimiter << h[i];       
+#endif                                                        
   }
 }
 
 void ChannelKAs::initialize_others() {}
 
-ChannelKAs::~ChannelKAs() {}
+ChannelKAs::~ChannelKAs() 
+{
+#if defined(WRITE_GATES)            
+  if (outFile) outFile->close();    
+#endif                              
+}

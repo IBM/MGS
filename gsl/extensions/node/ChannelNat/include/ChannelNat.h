@@ -7,9 +7,12 @@
 
 #include "MaxComputeOrder.h"
 
-#if CHANNEL_NAT == NAT_HODGKINHUXLEY_1952
+#if CHANNEL_NAT == NAT_HODGKIN_HUXLEY_1952
 #define BASED_TEMPERATURE 6.3  // Celcius
 #define Q10 3.0
+#elif CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.92
 #elif CHANNEL_NAT == NAT_RUSH_RINZEL_1994
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 2.3
@@ -17,9 +20,19 @@
 #define BASED_TEMPERATURE 23  // Celcius
 //TUAN TODO: maybe we need to update  all TRAUB model to 2.3
 #define Q10 2.3
+
+#elif CHANNEL_NAT == NAT_WANG_BUSZAKI_1996       
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.92 //To get a phi value = 5 
+
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 2.3
+
+#elif CHANNEL_NAT == NAT_MAHON_2000       
+#define BASED_TEMPERATURE 22.0  // Celcius
+#define Q10 2.92 //To get a phi value = 5 at 37oC
+
 #elif CHANNEL_NAT == NAT_COLBERT_PAN_2002
 #define BASED_TEMPERATURE 23  // Celcius
 #define Q10 2.3
@@ -46,11 +59,12 @@ class ChannelNat : public CG_ChannelNat
 
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
-#if CHANNEL_NAT == NAT_WOLF_2005
-	const static dyn_var_t _Vmrange_taum[];
-	const static dyn_var_t _Vmrange_tauh[];
-	static dyn_var_t taumNat[];
-	static dyn_var_t tauhNat[];
+#if CHANNEL_NAT == NAT_WOLF_2005 || \
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+  const static dyn_var_t _Vmrange_taum[];
+  const static dyn_var_t _Vmrange_tauh[];
+  static dyn_var_t taumNat[];
+  static dyn_var_t tauhNat[];
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif

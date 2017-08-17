@@ -5,6 +5,7 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -15,7 +16,8 @@ static pthread_once_t once_CaLv12_GHK = PTHREAD_ONCE_INIT;
 // This is an implementation of L-type alpha1.2 Ca2+ channel
 //              CaLv12_GHK current
 //
-#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option1 || \
+    CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option2
 //   Experimental data showed that Vm-dependent activation + inactivation
 //   is not enough to fit the data
 //    Ca2+-dependent activation + inactivation
@@ -27,6 +29,13 @@ static pthread_once_t once_CaLv12_GHK = PTHREAD_ONCE_INIT;
 //    gamma_i = gamma_o = 1
 //    Pcabar = 6*10^-5 cm/sec
 //NOTE: Later models use gamma_i = 1.0; gamma_o  = 0.341 (for Ca2+, Ba2+)
+#define AMC -0.013
+#define AMV -20
+#define AMD -3
+#define BMC 0.031
+#define BMV -20
+#define BMD -25
+#define K_h 1.0 // [uM]
 //#endif
 #elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
 //  The model still assume Vm-dependent activation and inactivation
@@ -142,8 +151,39 @@ void ChannelCaLv12_GHK::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
-    assert(0); //not implemented
+#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option1
+    {
+      //NOTE: assume 1 binding site; binding is sufficiently fast (i.e. treated instantaneous)
+      //   Ca + R <=>[K_h]  CaR   
+      //   NOTE: R = channel, CaR = inactivated channel
+      //   NOTE: K_h = alpha_h / beta_h
+      h[i] = K_h / (cai + K_h);
+      dyn_var_t am = AMC * vtrap((v - AMV), AMD);  // [1/ms]
+      dyn_var_t bm = BMC * (exp((v - BMV) / BMD)); // [1/ms]
+      m[i] = am / (am + bm);  // steady-state value
+      PCa[i] = PCabar[i] * pow(m[i],3) *  h[i];
+      dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+    }
+#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option2
+    {
+      //NOTE: assume 1 binding site; binding is sufficiently fast (i.e. treated instantaneous)
+      //   Ca + R <=>[K_h]  CaR   
+      //   NOTE: R = channel, CaR = inactivated channel
+      //   NOTE: K_h = alpha_h / beta_h
+      //   dh/dt = alpha_h * (1-h) - beta_h * [Ca2+] * h;
+      //h[i] = K_h / (cai + K_h);
+      assert(0) ; //not completed
+      dyn_var_t am = AMC * vtrap((v - AMV), AMD);  // [1/ms]
+      dyn_var_t bm = BMC * (exp((v - BMV) / BMD)); // [1/ms]
+      m[i] = am / (am + bm);  // steady-state value
+      PCa[i] = PCabar[i] * pow(m[i],3) *  h[i];
+      dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+
+    }
 #elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
     {
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
@@ -177,7 +217,24 @@ void ChannelCaLv12_GHK::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982
+#if CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option1
+    {
+      h[i] = K_h / (cai + K_h);
+      dyn_var_t am = AMC * vtrap((v - AMV), AMD);  // [1/ms]
+      dyn_var_t bm = BMC * (exp((v - BMV) / BMD)); // [1/ms]
+      dyn_var_t m_inf = am / (am + bm);  // steady-state value
+      dyn_var_t tau_m = 1.0 / (ma + mb);
+      dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
+      // see Rempe-Chopp (2006)
+      m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+
+      PCa[i] = PCabar[i] * pow(m[i],3) *  h[i];
+      dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+    }
+    assert(0);
+#elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option2
     assert(0);
 #elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
     {

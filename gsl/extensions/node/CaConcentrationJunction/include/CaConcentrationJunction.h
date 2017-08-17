@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -40,12 +40,25 @@ class CaConcentrationJunction : public CG_CaConcentrationJunction
       CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset,
       CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
   virtual ~CaConcentrationJunction();
+#ifdef MICRODOMAIN_CALCIUM
+  virtual void createMicroDomainData(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  virtual void setupCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  std::map<int, int> _mapCurrentToMicrodomainIndex; // first 'int' = index in channelCaCurrents_microdomain
+  //second 'int' = index of Ca_microdomain that this current is supposed to project to
+  std::map<int, int> _mapFluxToMicrodomainIndex; // first 'int' = index in channelCaFluxes_microdomain
+  virtual void setupFlux2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  void updateMicrodomains(double& LHS, double& RHS);
+  void updateMicrodomains_Ca();
+  virtual void setupReceptorCurrent2Microdomain(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CaConcentrationJunctionInAttrPSet* CG_inAttrPset, CG_CaConcentrationJunctionOutAttrPSet* CG_outAttrPset);
+  std::map<int, int> _mapReceptorCurrentToMicrodomainIndex; // first 'int' = index in receptorCaCurrents_microdomain
+  //second 'int' = index of Ca_microdomain that this current is supposed to project to
+#endif
   // user-defined functions
   // junction designed as 1-compartment always, there is no need for index
   dyn_var_t getVolume();
   dyn_var_t getArea();
-	void printDebugHH(std::string phase="JUNCTION_CORRECT");
-	private:
+  void printDebugHH(std::string phase="JUNCTION_CORRECT");
+  private:
   static SegmentDescriptor _segmentDescriptor;
 };
 

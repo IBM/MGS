@@ -82,10 +82,15 @@ class SegmentDescriptor {
   SegmentDescriptor(SegmentDescriptor&);
   ~SegmentDescriptor();
   key_size_t flipFlag(key_size_t key);
+  /* give the abstract key based on the vector of chosen key-fields */
   unsigned long long getMask(std::vector<SegmentKeyData> const& maskVector);
+  /* give the true key for a segment */
   key_size_t getSegmentKey(Segment* segment);
+  /* give the abstract key given the values for each given key-field */
   key_size_t getSegmentKey(std::vector<SegmentKeyData> const& maskVector,
                            unsigned int* ids);
+  /* give the abstract key from the real key by 
+   * picking out the values present in the 'mask' */
   key_size_t getSegmentKey(key_size_t segmentKey, unsigned long long mask);
   key_size_t modifySegmentKey(SegmentKeyData uf, unsigned int id,
                               key_size_t key);

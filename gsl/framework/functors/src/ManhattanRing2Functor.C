@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -144,8 +144,7 @@ void ManhattanRing2Functor::doExecute(LensContext *c,
       throw SyntaxErrorException(
 	 "ManhattanRing2: No nodes available at requested radius");
    }
-//   *slot = current[Rangen.irandom32(0, current.size() - 1)];
-   *slot = current[irandom(0, current.size() - 1)];
+   *slot = current[irandom(0, current.size() - 1,c->sim->getSharedFunctorRandomSeedGenerator())];
    cc->done = false;
 }
 

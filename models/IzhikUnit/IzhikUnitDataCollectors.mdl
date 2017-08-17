@@ -1,0 +1,50 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2015
+//
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+//
+// US Government Users Restricted Rights 
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef IZHIKUNITDATACOLLECTORS_MDL
+#define IZHIKUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+
+Variable IzhikUnitDataCollector
+{
+   string fileName;
+   int [] rows;
+   int [] cols;
+   int mxcol;
+   float* [] V;
+   double* [] g;
+   bool* [] spikes;   
+   double deltaT;
+   int maxoutnum;
+
+   UserFunction getNodeIndices;
+
+   Connection Pre Node () Expects OutputProducer, VoltageProducer, SpikeProducer
+   {
+     SpikeProducer.spike >> spikes;
+     OutputProducer.output >> g;
+     VoltageProducer.voltage >> V;
+     getNodeIndices();
+   }
+ 
+
+
+   InitPhase initialize;
+   TriggeredFunction dataCollection, dataCollectionSpike;
+   FinalPhase finalize;
+}
+
+#endif

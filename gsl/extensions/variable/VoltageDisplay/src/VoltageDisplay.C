@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -99,26 +99,25 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 {
   if (V.size() > 0)
   {
-
     float current_time = float(getSimulation().getIteration()) * *deltaT; // [msec]
     (*outFile) << current_time; 
     if (indices.size() == 0)
     {//perform I/O routine
       ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = V.begin(),
-                                                       end1 = V.end();
+        end1 = V.end();
       for (; it1 != end1; ++it1)
       {
         ShallowArray<dyn_var_t>::iterator it2 = (*it1)->begin(),
-                                          end2 = (*it1)->end();
+          end2 = (*it1)->end();
         for (; it2 != end2; ++it2) (*outFile) << std::fixed << fieldDelimiter << (*it2);
       }
     }
     else
     {
       ShallowArray<ShallowArray<dyn_var_t>*>::iterator it1 = V.begin(),
-                                                       end1 = V.end();
+        end1 = V.end();
       ShallowArray<ShallowArray<int> >::iterator it2 = indices.begin(),
-                                                 end2 = indices.end();
+        end2 = indices.end();
       for (; it1 != end1; ++it1, ++it2)
       {
         assert(it2 != end2);
@@ -130,20 +129,20 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         }
       }
     }
-		//if (every second )
-		// call flush
-		// else
+    //if (every second )
+    // call flush
+    // else
     (*outFile) << "\n";
   }
 }
 
 void VoltageDisplay::setUpPointers(const String& CG_direction,
-                                   const String& CG_component,
-                                   NodeDescriptor* CG_node, Edge* CG_edge,
-                                   VariableDescriptor* CG_variable,
-                                   Constant* CG_constant,
-                                   CG_VoltageDisplayInAttrPSet* CG_inAttrPset,
-                                   CG_VoltageDisplayOutAttrPSet* CG_outAttrPset)
+    const String& CG_component,
+    NodeDescriptor* CG_node, Edge* CG_edge,
+    VariableDescriptor* CG_variable,
+    Constant* CG_constant,
+    CG_VoltageDisplayInAttrPSet* CG_inAttrPset,
+    CG_VoltageDisplayOutAttrPSet* CG_outAttrPset)
 {
   TissueSite& site = CG_inAttrPset->site;
   bool record = true;
@@ -153,7 +152,7 @@ void VoltageDisplay::setUpPointers(const String& CG_direction,
     record = false;
     for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
     {//make sure it connect to the 'whatever-data' associated with the compartment within the 
-			// spherical range
+      // spherical range
       if ((site.r * site.r) >=
           DISTANCE_SQUARED(site, *((*dimensions_connect)[i])))
       {
@@ -168,7 +167,7 @@ void VoltageDisplay::setUpPointers(const String& CG_direction,
       ind.push_back(i);
   }
 
-	//now check
+  //now check
   if (record)
   {
     if (ind.size() > 0)
