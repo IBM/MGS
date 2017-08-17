@@ -44,13 +44,13 @@ void BoutonIAFUnit::update(RNG& rng)
   // ##### CB1R #####
   if (CB1input.size() > 0)
     {
-      CB1R = (*(CB1input[0].Y) * CB1input[0].weight); // only consider first one, weight is structural plasticity
-      if (CB1R > 1.0)
+      CB1R = (*(CB1input[0].Y) * CB1input[0].weight); // only consider first one, weight is scaling from Goodwin model Y
+      if (CB1R > 1.0) // bound just in case
         CB1R = 1.0;
       else if (CB1R < 0.0)
         CB1R = 0.0;
     }
-  double ECB = 0.0;
+  ECB = 0.0;
   if (ECBinput.size() > 0)
     {
       ECB = (*(ECBinput[0].ECB) * ECBinput[0].weight); // only consider first one, weight is structural plasticity

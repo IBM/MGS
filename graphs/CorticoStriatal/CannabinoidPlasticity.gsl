@@ -57,24 +57,20 @@ NodeType BoutonIAFUnit(<
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
                        >) {initializeShared->init1, update->run2};
 
-#define X_INIT 0.01     // parameterized for CB1R ~= 0.1
-#define Y_INIT 0.0998   // parameterized for CB1R ~= 0.1
-#define Z_INIT 3.9819   // parameterized for CB1R ~= 0.1
 NodeType Goodwin(<
-                 K1 = 1.0,
-                 k1 = 200.0,
-                 k2 = 20.0,
-                 k3 = 200.0,
-                 k4 = 20.0,
-                 k5 = 200.0,
-                 k6 = 20.0,
-                 n = 5,
-                 deltaT = DELTAT,     // in s
-                 k5min = 3.99,        // parameterized for CB1R ~= 0.1; free parameter
-                 k5max = 0.2507,      // parameterized for CB1R ~= 1.0; free parameter
-                 k5tau = 0.3,         // in s; free parameter
-                 op_Cannabinoids = 1
-                 >) {initializeShared_Cannabinoids_init_k5->init1, update->run1};
+                 K1 = 1.0,                      // in arb. unit; free parameter
+                 k1 = 10.0,                     // in arb. unit; free parameter; WT max
+                 k2 = 1.0,                      // in arb. unit; free parameter
+                 k3 = 15.0,                     // in arb. unit; free parameter
+                 k4 = 1.0,                      // in arb. unit; free parameter
+                 k5 = 15.0,                     // in arb. unit; free parameter
+                 k6 = 0.001,                    // in arb. unit; free parameter
+                 n = 0.5,                       // in arb. unit; free parameter
+                 deltaT = DELTAT,               // in s
+                 op_Cannabinoids = 1,
+                 Cannabinoids_sigmoid_C = 0.3,  // in arb. unit; free parameter
+                 Cannabinoids_sigmoid_D = 50.0  // in arb. unit; free parameter
+                 >) {update->run1};
 
 NodeType CleftAstrocyteIAFUnit(<
                                glutamateDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
@@ -138,7 +134,7 @@ BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0, "CB1R", 0.1
 NdplNodeInit heterBoutons(initBoutons);
 
 // Initialize Goodwin
-BindName initGoodwins("X", X_INIT, "Y", Y_INIT, "Z", Z_INIT); // arb. unit, arb. unit, arb. unit
+BindName initGoodwins();
 NdplNodeInit heterGoodwins(initGoodwins);
 
 // Initialize clefts/astrocytes
@@ -169,11 +165,11 @@ BindName PRE_W("weight", 1.0, "identifier", "glutamateInput");
 NdplInAttrInit preW(PRE_W);
 
 // Y weights between Goodwin and boutons, structural plasticity
-BindName CB1_W("weight", 1.0, "identifier", "CB1input");
+BindName CB1_W("weight", 0.0067, "identifier", "CB1input"); // parameterized from MATLAB version
 NdplInAttrInit cb1W(CB1_W);
 
 // Unbound CB1R weights between boutons and Goodwin, structural plasticity
-BindName CB1RUNBOUND_W("weight", 1.0, "identifier", "in");
+BindName CB1RUNBOUND_W("weight", 300.0, "identifier", "in1"); // parameterized from MATLAB version
 NdplInAttrInit cb1runboundW(CB1RUNBOUND_W);
 
 // AMPA weights between spines and output neurons, structural plasticity

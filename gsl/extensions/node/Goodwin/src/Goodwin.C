@@ -24,21 +24,21 @@ void Goodwin::initialize(RNG& rng)
 {
   // Set up any model specific instance variables
   if (SHD.op_Cannabinoids)
-    k5_instance = SHD.k5;
+    Cannabinoids_k1_instance = SHD.k1;
 }
 
 void Goodwin::update(RNG& rng) 
 {
   if (SHD.op_Cannabinoids)
     {      
-      // Use an instance version of k5 which is updated with the amount of
-      // unbound CB1R from the bouton
-      X += ( (SHD.k1 / (SHD.K1 + pow(Z, SHD.n))) - (SHD.k2 * X) ) * SHD.deltaT;
+      // Use the unbound CB1R (i.e. Y-ECB) as the coupling between Y and Z and an instance version
+      // of k1 which can be modified to change the CB1 mRNA max as observed in HD
+      X += ( (Cannabinoids_k1_instance / (SHD.K1 + pow(Z, SHD.n))) - (SHD.k2 * X) ) * SHD.deltaT;
       Y += ( (SHD.k3 * X) - (SHD.k4 * Y) ) * SHD.deltaT;
-      Z += ( (k5_instance * Y) - (SHD.k6 * Z) ) * SHD.deltaT;
-      if (in.size() > 0)
-        k5_instance -= (( ((0.1-(*(in[0].input) * in[0].weight)) * // only consider first one, weight is structural plasticity
-                           (k5_instance-SHD.k5max)) / SHD.k5tau) * SHD.deltaT);
+      double Y_minus_ECB = Y;
+      if (in1.size() > 0)
+        Y_minus_ECB = Cannabinoids_Y_minus_ECB_sigmoid(Y - (*(in1[0].input) * in1[0].weight)); // only consider first one, weight is scaling to Goodwin model 'ECB'
+      Z += ( (SHD.k5 * Y_minus_ECB) - (SHD.k6 * Z) ) * SHD.deltaT;  
     }
   else
     {
@@ -55,5 +55,10 @@ void Goodwin::setInIndices(const String& CG_direction, const String& CG_componen
 
 Goodwin::~Goodwin() 
 {
+}
+
+double Goodwin::Cannabinoids_Y_minus_ECB_sigmoid(double Y_minus_ECB)
+{
+  return 1.0 / ( 1.0 + exp(-SHD.Cannabinoids_sigmoid_C * (Y_minus_ECB - SHD.Cannabinoids_sigmoid_D)) );
 }
 

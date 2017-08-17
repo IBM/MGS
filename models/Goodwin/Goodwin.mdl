@@ -23,10 +23,11 @@ Node Goodwin Implements GoodwinProducer
   double Y;            // protein
   double Z;            // transcriptional inhibitor
   
-  Input [] in;         // used by model specific phases
+  Input [] in1;        // Used by model specific phases
 
   // Model specific instance variables
-  double k5_instance;
+  // Input [] in1; above is ECB concentration (scaled by in1.weight) used to calculate unbound Y
+  double Cannabinoids_k1_instance; // The max CB1 mRNA
   
   Shared
     {
@@ -42,15 +43,14 @@ Node Goodwin Implements GoodwinProducer
       double deltaT;   // in s
 
       // Model specific shared variables
-      double k5min;    // for paramaterizing for CB1R min
-      double k5max;    // for paramaterizing for CB1R max
-      double k5tau;    // k5 recovery/decay time constant
-
+      double Cannabinoids_sigmoid_C;   // Slope of Sigmoid for sigmoid(Y-ECB)
+      double Cannabinoids_sigmoid_D;   // Point of 0.5 of Sigmoid for sigmoid(Y-ECB)
+      
       // Model specific flags
       bool op_Cannabinoids;
       
       // Model specific shared phases
-      InitPhase initializeShared_Cannabinoids_init_k5;
+      // none
     }
 
   InAttrPSet
@@ -61,6 +61,8 @@ Node Goodwin Implements GoodwinProducer
 
   InitPhase initialize();
   RuntimePhase update(X, Y, Z);
+  // Model specific instance phases
+  // none
   
   GoodwinProducer.X << &X;
   GoodwinProducer.Y << &Y;
@@ -68,10 +70,10 @@ Node Goodwin Implements GoodwinProducer
 
   UserFunction setInIndices;
 
-  Connection Pre Node (PSet.identifier=="in") Expects OutputProducer
+  Connection Pre Node (PSet.identifier=="in1") Expects OutputProducer
   {
-    OutputProducer.output >> in.input;
-    PSet.weight >> in.weight;
+    OutputProducer.output >> in1.input;
+    PSet.weight >> in1.weight;
     setInIndices();
   }
   

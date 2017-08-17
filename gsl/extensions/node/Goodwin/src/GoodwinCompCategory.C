@@ -24,10 +24,3 @@ GoodwinCompCategory::GoodwinCompCategory(Simulation& sim, const std::string& mod
    : CG_GoodwinCompCategory(sim, modelName, ndpList)
 {
 }
-
-void GoodwinCompCategory::initializeShared_Cannabinoids_init_k5(RNG& rng)
-{
-  // Set k5 to start with CB1R ~= 0.1
-  SHD.k5 *= SHD.k5min;
-}
-
