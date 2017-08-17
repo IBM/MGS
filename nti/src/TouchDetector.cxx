@@ -53,6 +53,7 @@
 #include "NeuronPartitioner.h"
 #include "Tissue.h"
 #include "TouchAggregator.h"
+#include "Touch.h"
 #include "VecPrim.h"
 #include "Params.h"
 #include "Capsule.h"
