@@ -24,6 +24,13 @@
 
 void BoutonIAFUnit::initialize(RNG& rng)
 {
+  // Check if more than one input
+  if (spikeInput.size() > 1)
+    assert("BoutonIAFUnit: maximum spike inputs should be one.");
+  if (ECBinput.size() > 1)
+    assert("BoutonIAFUnit: maximum ECB inputs should be one.");
+  if (CB1input.size() > 1)
+    assert("BoutonIAFUnit: maximum Goodwin inputs should be one.");
   // Default starting values
   glutamate = 0.0;
   CB1Rrise = 0.0;

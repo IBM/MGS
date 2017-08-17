@@ -25,6 +25,11 @@
 
 void SpineIAFUnit::initialize(RNG& rng)
 {
+  // Check if more than one input
+  if (glutamateInput.size() > 1)
+    assert("SpineIAFUnit: maximum glutamate inputs should be one.");
+  if (postSpikeInput.size() > 1)
+    assert("SpineIAFUnit: maximum post-synaptic spike inputs should be one.");
   // Default starting values
   AMPArise = 0.0;
   AMPAcurrent = 0.0;
