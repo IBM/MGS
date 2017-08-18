@@ -32,7 +32,7 @@ done < ${temp_mdf_only}
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
   awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
 else
-  awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;
+  awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; if ! cmp --silent <(cpp " $2 "/" $5")   " $2 "/." $5 "; then cpp " $2 "/" $5 " >" $2 "/." $5 ";" $0 " fi" }' defineModels1.sh > defineModels2.sh;
 fi
 
 set -e
@@ -40,11 +40,12 @@ source defineModels2.sh;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
 ##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
-if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+#if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
 RERUN=0
 for i in "${MDLFILES[@]}"
 do
-  if [ define -ot $i ]; then RERUN=1; fi
+  if [ define -ot $i ]; then RERUN=1; cpp $i > .$i; fi
   touch $i
 done
 if [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi

@@ -45,7 +45,7 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
 #else
-#define dataFolder OUTPUTFOLDER
+#define dataFolder STR(OUTPUTFOLDER)
 #endif
 #ifndef PARAMFOLDER
 #define paramFolder ./params/
@@ -89,7 +89,7 @@ print("Case 00: resting");
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0030 // [ms]
+#define TimeStep_value   0.030 // [ms]
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
@@ -250,7 +250,7 @@ InitPhases = { initialize1, initialize2, initialize3, initialize4, initialize5, 
 
 RuntimePhases = {
 /*{{{*/
-updateNMDADepPlasticity, solveChannels, predictJunction,
+updateNMDADepPlasticity, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       forwardSolve7,
 #endif
@@ -294,7 +294,9 @@ updateNMDADepPlasticity, solveChannels, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
-      correctJunction, finish
+      correctJunction, 
+      finish,
+      solveChannels 
 /*}}}*/
  };
 

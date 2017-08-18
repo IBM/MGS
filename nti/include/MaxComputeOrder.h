@@ -218,7 +218,7 @@
 //Spine options
 //{{{Spine options
 
-//#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
 //{{{ choices for how data is exchanged when we couple spines to shaft
 //#define CONSIDER_MANYSPINE_EFFECT_OPTION1 // if defined, the new codes that handle the case 
