@@ -23,8 +23,8 @@
 void Goodwin::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (in1.size() > 1)
-    assert("Goodwin: maximum inputs should be one.");
+  if (in1.size() != 1)
+    assert("Goodwin: inputs should be one.");
   // Set up any model specific instance variables
   if (SHD.op_Cannabinoids)
     Cannabinoids_k1_instance = SHD.k1;

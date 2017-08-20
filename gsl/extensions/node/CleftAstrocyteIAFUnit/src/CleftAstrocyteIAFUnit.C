@@ -23,10 +23,10 @@
 void CleftAstrocyteIAFUnit::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (glutamateInput.size() > 1)
-    assert("CleftAstrocyteIAFUnit: maximum glutamate inputs should be one.");
-  if (ECBInput.size() > 1)
-    assert("CleftAstrocyteIAFUnit: maximum ECB inputs should be one.");
+  if (glutamateInput.size() != 1)
+    assert("CleftAstrocyteIAFUnit: glutamate inputs should be one.");
+  if (ECBInput.size() != 1)
+    assert("CleftAstrocyteIAFUnit: ECB inputs should be one.");
   // Default starting values
   glutamate = 0.0;
   ECB = 0.0;
