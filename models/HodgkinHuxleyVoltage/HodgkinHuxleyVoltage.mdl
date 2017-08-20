@@ -19,6 +19,7 @@ Struct ChannelCurrentsGHK {
 //use this for GHK equation
 // which is negative for inward currents
   dyn_var_t []* currents; // [pA/um^2]
+  dyn_var_t []* di_dv; // conductance [nS/um^2] - the change from V(t) to V(t+0.001)
 }
 
 Struct ReceptorCurrent {
@@ -62,16 +63,21 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   BranchDataStruct* branchData; // pointer to branch's data
   DimensionStruct* [] dimensions; // 1 branch = N compartments (represented by DimensionStruct)
     //{{{data members: internal, but for solver
-  //NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  //NOTE: array data of type dyn_var_t become ShallowArray<dyn_var_t> in C++ code
+  //NOTE: due to the way nodes/compartment are indexed in NTS (index=0 ~ distal node(child))
+  //      so as Aip[] attach to parent-node (it deals with node at index (i+1))
+  //      so as Aim[] attach to child-node (it deals with node at index (i-1))
   dyn_var_t [] Aii; //diagonal element of the matrix (A[i,i]) [nS/um^2]
-  dyn_var_t [] Aip; //right-side off-diagonal element         [nS/um^2]
-  dyn_var_t [] Aim; //left-side off-diagonal element          [nS/um^2] 
+  dyn_var_t [] Aip; //right-side off-diagonal element (parent nodes) [nS/um^2]
+  dyn_var_t [] Aim; //left-side off-diagonal element (children-node) [nS/um^2] 
        //... i.e. branch's distalmost compartment to junction coupling coefficient
-
-  dyn_var_t [] RHS; //RHS=right-hand side = current-density [pA/um^2]
-  dyn_var_t [] Aij; //a term as part of Aii[] when the comparment is branching
+       //when the node index=0 is the implicit junction compartment; then it does not have
+       //a single element Aim[0]; instead it is multiple Aij[]
+  dyn_var_t [] Aij; //a term used in place of Aip[0] when the comparment is branching
                     //.. at distal-side
                     //.. i.e. send/receive signals to/from multiple branches
+
+  dyn_var_t [] RHS; //RHS=right-hand side = current-density [pA/um^2]
   dyn_var_t* proximalVoltage; //reference to the voltage from the compartment
                     //.. on a different branch (on proximal side)
   dyn_var_t* [] distalAiis; // get Aii[] from multiple branches
