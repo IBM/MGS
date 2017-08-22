@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -28,18 +28,19 @@
 #include <cfloat>
 #include "SegmentDescriptor.h"
 #include "Branch.h"
+#include "StringUtils.h"
+#include "Params.h"
 
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
-
-SegmentDescriptor IP3ConcentrationJunction::_segmentDescriptor;
 
 // NOTE: value = 1e6/(zIP3*Farad)
 // zIP3 = valence of IP3 
 // Farad = Faraday's constant
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
+SegmentDescriptor IP3ConcentrationJunction::_segmentDescriptor;
 
 #if IP3_CYTO_DYNAMICS == FAST_BUFFERING
 #define D_IP3 (getSharedMembers().D_IP3eff)
@@ -56,7 +57,7 @@ dyn_var_t IP3ConcentrationJunction::getArea() // Tuan: check ok
 #else
   area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_CYTO;
 #endif
-	return area;
+  return area;
 }
 
 // Get cytoplasmic volume at the compartment i-th 
@@ -89,7 +90,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
   volume = getVolume();
 
   float Pdov = M_PI * D_IP3 / volume;
-#define THRESHOLD_SIZE_R_SOMA 2.0 // um (micrometer)
+#ifdef USE_SUBSHELL_FOR_SOMA
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
       dimension->r > THRESHOLD_SIZE_R_SOMA // to avoid the confusing of spine head
      )//TUAN TODO: consider fixing this
@@ -98,7 +99,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
     // shell volume = 4/3 * pi * (rsoma^3 - (rsoma-d)^3)
     // with d = shell depth
     // RATIO = somaVolume / shellVolume;
-    // currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
+    // currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
     // TUAN TODO - 
     dyn_var_t d = 1.0; //[um] - shell depth (default) 
     //dyn_var_t d = 0.5; //[um]  
@@ -107,14 +108,17 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
       d = GlobalNTS::shellDepth;
     dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
       (pow(dimension->r,3) - pow(dimension->r - d, 3)) * FRACTIONVOLUME_CYTO;
-    currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
+    currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
     //std::cerr << "Cyto total vol: " << volume << "; shell volume: " << shellVolume << std::endl;
 
     Pdov = M_PI * D_IP3 / shellVolume;
 
   }
   else
-    currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+    currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+#else
+  currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+#endif
 
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
     dend = dimensionInputs.end();
@@ -129,9 +133,12 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
       //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
       //  NOTE: should be applied for Axon hillock only
       Rb = ((*diter)->r );
+#ifdef USE_SCALING_NECK_FROM_SOMA
       //TEST 
-      Rb /= SCALING_NECK_FROM_SOMA;
+      Rb /= SCALING_NECK_FROM_SOMA_WITH;
       //END TEST
+#endif
+
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
       distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
 #else
@@ -139,9 +146,13 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
       distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
       // from soma is always the distance from the center of soma to the center
       // of that compartment
-      //TEST 
-      distance += STRETCH_SOMA_WITH;
-      //END TEST
+#ifdef USE_STRETCH_SOMA_RADIUS
+    //TEST 
+    distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+    //END TEST
+#endif
 #endif
       if (distance <= 0)
 	std::cerr << "distance = " << distance << ": " << (*diter)->dist2soma << ","<< dimension->r << std::endl;
@@ -155,9 +166,6 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
       distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
       assert(distance > 0);
     }
-    //fAxial.push_back(Pdov * Rb * Rb /
-    //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-    //dyn_var_t distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
     fAxial.push_back(Pdov * Rb * Rb / distance );
   }
 #ifdef DEBUG_HH
@@ -167,43 +175,80 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
 }
 
 //GOAL: predict IP3_new[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
+//    using IP3_branch(t) and IP3new[0](t)
 void IP3ConcentrationJunction::predictJunction(RNG& rng)
 {
-  float LHS = getSharedMembers().bmt;
-  float RHS = getSharedMembers().bmt * IP3_cur ;
+  //element-1
+  float LHS = getSharedMembers().bmt;   // [1/ms]
+  float RHS = getSharedMembers().bmt * IP3_cur ; // [uM/ms]
 
+  //element-2 
+  // integrated 'extrusion' 
+  RHS -= IP3Clearance * (IP3_cur - getSharedMembers().IP3Baseline);
+  
+  /* * * Sum Currents * * */
+  // 1.a. those produces I(t)  [pA/um^2]
   Array<ChannelIP3Currents>::iterator citer = channelIP3Currents.begin();
   Array<ChannelIP3Currents>::iterator cend = channelIP3Currents.end();
   for (; citer != cend; ++citer)
   {
-    RHS -= currentToConc * (*(citer->currents))[0];
+    RHS -= currentDensityToConc * (*(citer->currents))[0];
   }
 
-	Array<ChannelIP3Fluxes>::iterator fiter = channelIP3Fluxes.begin();
-	Array<ChannelIP3Fluxes>::iterator fend = channelIP3Fluxes.end();
-	for (; fiter != fend; fiter++)
-	{
-		RHS +=  (*fiter->fluxes)[0];
-	}
+  // 1.b. those produces J(t)  [uM/ms^2]
+  Array<ChannelIP3Fluxes>::iterator fiter = channelIP3Fluxes.begin();
+  Array<ChannelIP3Fluxes>::iterator fend = channelIP3Fluxes.end();
+  for (; fiter != fend; fiter++)
+  {
+    RHS +=  (*fiter->fluxes)[0];
+  }
 
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorIP3Currents.begin();
   Array<dyn_var_t*>::iterator end = receptorIP3Currents.end();
   for (; iter != end; ++iter)
   {
-    RHS -= currentToConc * **iter;
+    RHS -= currentDensityToConc * **iter;
   }
 
-	//  3. synapse receptor currents using GHK type equations (gV, gErev)
-	//  NOTE: Not available
+  //  3. synapse receptor currents using GHK type equations (gV, gErev)
+  //  NOTE: Not available
+  //{
+  //  Array<ReceptorIP3CurrentsGHK>::iterator riter = receptorIP3CurrentsGHK.begin();
+  //  Array<ReceptorIP3CurrentsGHK>::iterator rend = receptorIP3CurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        //RHS[i] += di_dv * Vcur[i]; 
+  //        //Aii[i] += di_dv;  
+  //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[pA/um^2]
+  //#endif
+  //  }
+  //}
 
-  //  4. injected currents
+  //  4. injected currents  [pA]
   iter = injectedIP3Currents.begin();
   end = injectedIP3Currents.end();
   for (; iter != end; ++iter)
   {
-    RHS += **iter * currentToConc / getArea();
+    RHS += **iter * currentDensityToConc / getArea();
   }
 
+  // 5. Concentration loss due to passive diffusion to adjacent compartments
+  Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
+  Array<dyn_var_t*>::iterator viter = IP3ConcentrationInputs.begin();
+  for (; xiter != xend; ++xiter, ++viter)
+  {
+    RHS += (*xiter) * ((**viter) - IP3_cur);
+  }
+
+  // 6. Concentration via spine neck 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   Array<dyn_var_t*>::iterator titer = targetReversalIP3Concentration.begin();
   Array<dyn_var_t*>::iterator tend = targetReversalIP3Concentration.end();
@@ -214,14 +259,7 @@ void IP3ConcentrationJunction::predictJunction(RNG& rng)
   }
 #endif
 
-  Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
-  Array<dyn_var_t*>::iterator viter = IP3ConcentrationInputs.begin();
-  for (; xiter != xend; ++xiter, ++viter)
-  {
-    RHS += (*xiter) * ((**viter) - IP3_cur);
-  }
-
-  IP3_new[0] = RHS / LHS;
+  IP3_new[0] = RHS / LHS;  //estimate at (t+dt/2)
 
 #ifdef DEBUG_HH
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
@@ -244,37 +282,69 @@ void IP3ConcentrationJunction::predictJunction(RNG& rng)
 // and finally update at (t+dt) for IP3_cur, and IP3_new[0]
 void IP3ConcentrationJunction::correctJunction(RNG& rng)
 {
-  float LHS = getSharedMembers().bmt;
-  float RHS = getSharedMembers().bmt * IP3_cur;
+  //element-1
+  float LHS = getSharedMembers().bmt;  // [1/ms]
+  float RHS = getSharedMembers().bmt * IP3_cur;  // [uM/ms]
 
+  //element-2 
+  // integrated 'extrusion' 
+  RHS -= IP3Clearance * (IP3_cur - getSharedMembers().IP3Baseline);
+
+  /* * * Sum Currents * * */
+  // 1.a. those produces I(t)  [pA/um^2]
   Array<ChannelIP3Currents>::iterator citer = channelIP3Currents.begin();
   Array<ChannelIP3Currents>::iterator cend = channelIP3Currents.end();
   for (; citer != cend; ++citer)
   {
-    RHS -= currentToConc * (*(citer->currents))[0];
+    RHS -= currentDensityToConc * (*(citer->currents))[0];
   }
 
-	Array<ChannelIP3Fluxes>::iterator fiter = channelIP3Fluxes.begin();
-	Array<ChannelIP3Fluxes>::iterator fend = channelIP3Fluxes.end();
-	for (; fiter != fend; fiter++)
-	{
-		RHS +=  (*fiter->fluxes)[0];
-	}
+  // 1.a. those produces J(t)  [uM/ms^2]
+  Array<ChannelIP3Fluxes>::iterator fiter = channelIP3Fluxes.begin();
+  Array<ChannelIP3Fluxes>::iterator fend = channelIP3Fluxes.end();
+  for (; fiter != fend; fiter++)
+  {
+    RHS +=  (*fiter->fluxes)[0];
+  }
 
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorIP3Currents.begin();
   Array<dyn_var_t*>::iterator end = receptorIP3Currents.end();
   for (; iter != end; ++iter)
   {
-    RHS -= currentToConc * **iter;
+    RHS -= currentDensityToConc * **iter;
   }
 
+  //  3. synapse receptor currents using GHK type equations 
+  //  NOTE: Not available
+  //{
+  //  Array<ReceptorIP3CurrentsGHK>::iterator riter = receptorIP3CurrentsGHK.begin();
+  //  Array<ReceptorIP3CurrentsGHK>::iterator rend = receptorIP3CurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        //RHS[i] += di_dv * Vcur[i]; 
+  //        //Aii[i] += di_dv;  
+  //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[pA/um^2]
+  //#endif
+  //  }
+  //}
+  
+  //  4. injected currents  [pA]
   iter = injectedIP3Currents.begin();
   end = injectedIP3Currents.end();
   for (; iter != end; ++iter)
   {
-    RHS += **iter * currentToConc / getArea();
+    RHS += **iter * currentDensityToConc / getArea();
   }
 
+  // 5. Concentration loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
   Array<dyn_var_t*>::iterator viter = IP3ConcentrationInputs.begin();
   for (; xiter != xend; ++xiter, ++viter)
@@ -283,6 +353,7 @@ void IP3ConcentrationJunction::correctJunction(RNG& rng)
     RHS += (*xiter) * (**viter);
   }
 
+  // 6. Concentration via spine neck 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   Array<dyn_var_t*>::iterator titer = targetReversalIP3Concentration.begin();
   Array<dyn_var_t*>::iterator tend = targetReversalIP3Concentration.end();
@@ -294,7 +365,7 @@ void IP3ConcentrationJunction::correctJunction(RNG& rng)
   }
 #endif
 
-  IP3_new[0] = RHS / LHS;
+  IP3_new[0] = RHS / LHS;  //corrected value at (t+dt/2)
 
   // This is the swap phase
   IP3_cur = IP3_new[0] = 2.0 * IP3_new[0] - IP3_cur;
@@ -306,8 +377,8 @@ void IP3ConcentrationJunction::correctJunction(RNG& rng)
 
 void IP3ConcentrationJunction::printDebugHH(std::string phase)
 {
-	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
-		"(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
+    "(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   assert(dimensions.size() == 1);
   DimensionStruct* dimension = dimensions[0];
   std::cerr << getSimulation().getIteration() << "," 
@@ -330,8 +401,8 @@ void IP3ConcentrationJunction::printDebugHH(std::string phase)
   Array<dyn_var_t*>::iterator vend = IP3ConcentrationInputs.end();
   int c = -1;
 
-	std::cerr << "JCT_INPUT_i " <<
-		"(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << "JCT_INPUT_i " <<
+    "(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   Array<dyn_var_t*>::iterator viter = IP3ConcentrationInputs.begin();
   for (viter = IP3ConcentrationInputs.begin(); viter != vend; ++viter, ++diter)
   {

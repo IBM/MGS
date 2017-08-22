@@ -87,11 +87,19 @@ class CaConcentration : public CG_CaConcentration
   // connectJunction=false);
   dyn_var_t getLambda(DimensionStruct* a, DimensionStruct* b, int index,
                       bool connectJunction = false);
+  dyn_var_t getLambda_parent(DimensionStruct* a, DimensionStruct* b, int index,
+                      bool connectJunction = false);
+  dyn_var_t getLambda_child(DimensionStruct* a, DimensionStruct* b, int index,
+                      bool connectJunction = false);
   // dyn_var_t getLambda(DimensionStruct* a);
   dyn_var_t getLambda(DimensionStruct* a, int index);
   dyn_var_t getHalfDistance(int index);
   dyn_var_t getArea(int i);
   dyn_var_t getAij(DimensionStruct* a, DimensionStruct* b, dyn_var_t volume,
+                   bool connectJunction = false);
+  dyn_var_t getAij_parent(DimensionStruct* a, DimensionStruct* b, dyn_var_t volume,
+                   bool connectJunction = false);
+  dyn_var_t getAij_child(DimensionStruct* a, DimensionStruct* b, dyn_var_t volume,
                    bool connectJunction = false);
   dyn_var_t getVolume(int i);
   void printDebugHH();

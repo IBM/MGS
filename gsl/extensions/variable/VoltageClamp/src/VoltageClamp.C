@@ -18,6 +18,7 @@
 #include "CG_VoltageClamp.h"
 #include <memory>
 #include <typeinfo>
+#include "MaxComputeOrder.h"
 
 void VoltageClamp::initialize(RNG& rng) 
 {
@@ -32,10 +33,16 @@ void VoltageClamp::initialize(RNG& rng)
   assert(deltaT);
   assert(V);
 
-  if (type == 1)
+  if (fileName.size() > 0)
   {
     outFile = new std::ofstream(fileName.c_str());
-    (*outFile)<<"# Time\tCurrent\n";
+    (*outFile)<<"# type = " << type << "\n";
+    //(*outFile)<<"# Time\tCurrent\n";
+#ifdef USE_SERIES_RESISTANCE
+    (*outFile)<<"# Time\tCurrent(pA)\tRs(GOhm)\ttargetV(mV)\tVoltage(mV)\n";
+#else
+    (*outFile)<<"# Time\tCurrent(pA)\tbeta\tCm(pF/um^2)\ttargetV(mV)\tVoltage(mV)\n";
+#endif
   }
 
   //NOTE: If not defined, idx=0 default
@@ -50,6 +57,9 @@ void VoltageClamp::initialize(RNG& rng)
 void VoltageClamp::updateI(RNG& rng) 
 {
   Igen = 0;
+#ifdef CONSIDER_DI_DV
+  conductance_didv = 0.0;
+#endif
   bool inject=false;
   float targetV=0;
   if (_isOn) {
@@ -62,14 +72,73 @@ void VoltageClamp::updateI(RNG& rng)
     inject=true;
   }
   if (inject) {
-    if (type == 1)
+    if (type == 1 or type == 3)
     {
-      float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
-      //float goal = targetV; //wrong 
+      float goal;
+      if (type == 1)
+      {
+        //float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
+        //NOTE: assume abrupt jump 
+        goal = targetV; 
+      }
+      else if (type == 3)
+      {
+        //NOTE: goal = must be Vc interpolated at time (t+dt/2)
+        // while (*V)[idx] is Vm at time (t) only
+         assert(0);
+         // update 'goal' here
+      }
+      double Igen_dv;
+      
+#ifdef USE_SERIES_RESISTANCE
+      //NOTE: do we need to multiply surface area?
+      //NOTE: V = I * R
+      //     Volt = Ampere * Ohm
+      //     mV   = Ampere * Ohm * 1e-3
+      //     mV   = pA     * Ohm * 1e-3 * 1e+12
+      //     mV   = pA     * GOhm * 1e-3 * 1e+12 * 1e-9
+      //     mV   = pA     * GOhm   <---- correct
+      // check unit
+      //   Vm (mV)
+      //   Igen (pA)
+      //   Rs  (GOhm)
+      Igen = ( ( goal - (*V)[idx] ) ) / Rs;
+      Igen_dv =  ( goal - ((*V)[idx]+0.001 ) ) / Rs;
+#else
+      // Cm = pF/um^2 
+      // I = dQ/dt = Q/t 
+      // Q = (Coulombs) electric charge transfered through surface area over a time 
+      // t = (second)
+      // I = ampere
+      // --> Ampere = Coulombs / second
+      // NOTE: Coulomb = Farad * Volt
+      //  -> Farad = Coulomb / Volt
+      //     Farad*1e-12 = Coulomb*1e-12 / (Volt*1e+3) * 1e+3
+      //     pF   = pico-Coulomb / (mV) * 1e+3
+      //     --> pF/um^2 = pico-Coulomb/(um^2 * mV) * 1e+3
+      //
+      //  Igen (pA) = pico-Coulomb / (second)
+      //            = pico-Coulomb / (ms) * 1e+3
+      //            = [pico-Coulomb / (um^2 * mV) * 1e+3] * [um^2 * mV / ms]
+      //            = Cm * (Voltage) / time_window * surface_area;
+      //  beta = headstage gain (unitless)
       Igen = beta * Cm * ( ( goal - (*V)[idx] ) / (*deltaT/2) ) * *surfaceArea;
-      //Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / *deltaT ) * *surfaceArea;
-      //Igen = beta * Cm * ( ( targetV - (*V)[idx] ) / (*deltaT/2) ) * *surfaceArea;
-      (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen<<" "<<Cm<<" "<<targetV<<" "<<(*V)[idx]<<" "<<*deltaT<<"\n";
+      Igen_dv = beta * Cm * ( ( goal - ((*V)[idx]+0.001) ) / (*deltaT/2) ) * *surfaceArea;
+#endif
+#ifdef CONSIDER_D
+      double dI = Igen_dv - Igen; 
+      conductance_didv = dI/(0.001);
+#endif
+      if (outFile)
+      {
+#ifdef USE_SERIES_RESISTANCE
+        (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen
+          <<"\t"<<Rs<<"\t"<<targetV<<"\t"<<(*V)[idx]<<"\n";
+#else
+        (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen
+          <<"\t"<<beta<<"\t"<<Cm<<"\t"<<targetV<<"\t"<<(*V)[idx]<<" "<<"\n";
+#endif
+      }
     }
     else if (type == 2)
     {
@@ -106,7 +175,7 @@ void VoltageClamp::updateI(RNG& rng)
 
 void VoltageClamp::finalize(RNG& rng) 
 {
-  if (type == 1)
+  if (outFile)
     outFile->close();
 }
 
@@ -170,12 +239,13 @@ void VoltageClamp::toggle(Trigger* trigger, NDPairList* ndPairList)
 }
 
 VoltageClamp::VoltageClamp() 
-  : CG_VoltageClamp()
+  : CG_VoltageClamp(), outFile(0)
 {
 }
 
 VoltageClamp::~VoltageClamp() 
 {
+  delete outFile;
 }
 
 void VoltageClamp::duplicate(std::auto_ptr<VoltageClamp>& dup) const

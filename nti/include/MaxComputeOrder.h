@@ -205,6 +205,9 @@
 //   then I(t+dt/2)  ~  I(t) + di/dv * (V(t+dt/2) - V(t))
 // This is more accurate than just using I(t)
 #define CONSIDER_DI_DV      
+// use  series resistance Rs in Voltage-clamp (i.e. ideal single-electrode clamp) 
+//      rather than (double-electrode clamp) using headstage-gain beta and specific membrane capacitance Cm
+#define USE_SERIES_RESISTANCE
 //}}}
 
 //point-process

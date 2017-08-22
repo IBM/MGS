@@ -30,14 +30,27 @@ pointCalciumSource.setCaCurrent(<
 //NOTE: User can define 'idx' to specify compartment index (default is 0)
 //VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
 //NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
+//NOTE: Default initial is OFF
 #define Vm_hold -100.0  // [mV]
 #define Vm_step -30.0     // [mV]
-VoltageClamp somaClamp<type=1, command = Vm_hold, beta=1.0, Cm =0.01, fileName=PathFileCombine("SEClamp.txt")>;
-//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.05>; //TimeSetVClamp1
-//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.025>; //TimeSetVClamp1
-//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.0>; //TimeSetVClamp1
-somaClamp.toggle() on voltageClampSet0Sem; //toggle clamping
+#ifdef USE_SERIES_RESISTANCE
+// Iinject = (Vc - Vm) / Rs;
+// Rs = [GOhm] -- default is 1.0 [MOhm] ~ 0.001 GOhm
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.1, fileName="SEClamp.txt">;
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.01, fileName="SEClamp.txt">;
+VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.001, fileName="SEClamp.txt">; //good
+#else
+//NOTE: User can define 'idx' to specify compartment index (default is 0)
+// Iinject = beta * Cm * (Vc - Vm) / (dt/2) * Area() ; //(pA) 
+VoltageClamp somaClamp<type=1, command = -80.0, beta=2.0, Cm =0.01>;
+#endif
+//VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.05, fileName=PathFileCombine("SEClamp.txt")>; //TimeSetVClamp1
+////VoltageClamp somaClamp<type=1, command = Vm_hold, beta=1.0, Cm =0.01, fileName=PathFileCombine("SEClamp.txt")>;
+////VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.025>; //TimeSetVClamp1
+////VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.0>; //TimeSetVClamp1
+somaClamp.toggle(<toggle=1>) on voltageClampSet0Sem; //turn on clamping
 somaClamp.setCommand(<command = Vm_step>) on voltageClampSet1Sem; //TimeSetVClamp0
+somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 
 ////NOTE: You have up to 3 time points to set different Vclamp values
 //somaClamp.setCommand( < 
@@ -53,9 +66,8 @@ somaClamp.setCommand(<command = Vm_step>) on voltageClampSet1Sem; //TimeSetVClam
 ///   waveformFile = "2column-(time-Vm)-filename.txt"
 ///   > ) on voltageClampSet1;
 
-//NOTE: Default initial is OFF
 //somaClamp.toggle() on voltageClampOnSem; //toggle clamping
-somaClamp.toggle() on voltageClampOffSem; //toggle clamping
+//somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 //Old use
 //somaClamp.toggle(<toggle=1>) on voltageClampOnSem; //toggle clamping
 //somaClamp.toggle(<toggle=1>) on voltageClampOffSem; //toggle clamping
@@ -75,6 +87,9 @@ somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 //somaClamp.startWaveform( < 
 //   time     = { t0, t1, t2, t3 }, 
 //   commands = {Vc0, Vc1, Vc2, Vc3}
+//   > ) on voltageClampOn;
+//somaClamp.startWaveform( < 
+//   fileName="file-2-columns-time-Voltage.txt", 
 //   > ) on voltageClampOn;
 //}}}
 #endif

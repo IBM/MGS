@@ -129,11 +129,11 @@ print(OutputFolderName);
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd          30      // [ms]
+  #define TimeEnd          40      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
   #define TimeVClampSet0    0    // [ms]
   #define TimeVClampSet1    20    // [ms]
-  #define TimeVClampSet2    100    // [ms]
+  #define TimeVClampSet2    30    // [ms]
   #define TimeVClampSet3    200    // [ms]
   #define TimeStartVClamp    20   // [ms]
   #define TimeOffVClamp      400   // [ms]
@@ -294,9 +294,16 @@ print(OutputFolderName);
 //PHASES DEFINITION
 /*{{{*/
 // order of initialization
-//  1. initial states for solvers, Voltage, Concentrations
+//  1. initial states for solvers, Voltage, Concentrations at time (t0)
 //  2. initial coefficients for solvers, derived parameters, Junctions' data, reversal potentials
-//  3. initial values of gating variables
+//  3. initial values of gating variables at time (t0+dt/2)
+//     if steady-state formula is used: gate_infty = ...
+//             gate(t0+dt/2) = gate(t0)
+//     otherwise if dgate/dt=f(gate) formula is used: 
+//             calculate gate(t0+dt/2) = gate(t0) + dgate/dt * (dt/2)
+//             i.e. gate(t0+dt/2) = gate(t0) + f(gate(t0)) * (dt/2)
+//  3.b. initial values of GHK currents at time (t0+dt/2)
+//        check page 169 NEURON book
 //  4. initial values of VariableTypes
 //  5. (not being used)  
 //  6. (not being used)
@@ -304,7 +311,25 @@ InitPhases = { initialize1, initialize2, initialize3, initialize4, initialize5, 
 
 RuntimePhases = {
 /*{{{*/
-updateNMDADepPlasticity, solveChannels, predictJunction,
+//fadvance() with assumption input (at the end of InitPhases): V(t), gates(t+dt/2)
+//   initialize1 --> sync data (e.g. dimension data)
+//   use t: calculate V(t) --> initialize2
+// REQUIRE: all values are at steady-state initially so gates(t+dt/2) = gates(t)
+// OTHERWISE: does update gates(t+dt/2) = gates(t) + dgate/dt * (dt/2) --> initialize3 ???
+//   initialize4 --> setup files for I/O 
+// -----------------
+// advance()
+//   updateNMDADepPlasticity--> record data V(t), gates(t+dt/2), Iion(t-dt/2)
+//   fadvance()
+//----------------
+// fadvance() - input is V(t), gates(t+dt/2)
+// it does :
+// solveChannels should produce data at time (t+dt/2) using V(t), gates(t-dt/2)
+// output: texit=t+dt
+//   V(t+dt) - is calculated
+//   gates(t+dt/2+dt)
+//   Iion(t+dt-dt/2) - using gates() and V(?)
+updateNMDADepPlasticity, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       forwardSolve7,
 #endif
@@ -348,7 +373,9 @@ updateNMDADepPlasticity, solveChannels, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
-      correctJunction, finish
+      correctJunction, 
+      finish,
+      solveChannels 
 /*}}}*/
  };
 
@@ -911,17 +938,22 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
 //Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+//{{{
   #if SIMULATION_RECORD == _SR_FROM_BEGINNING
-  #ifdef ADAPTIVE_IO
-    UnsignedServiceTrigger recOnPriorCond("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-              RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
-    CompositeTriggerServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-              recOnPriorCond, 1,  "||", AdaptWriteSomaVoltage, 1 , 0, updateNMDADepPlasticity); //Record every ms
-  #else
-    UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
-              RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
-  #endif
+  //{{{
 
+    #ifdef ADAPTIVE_IO
+      UnsignedServiceTrigger recOnPriorCond("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
+                RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
+      CompositeTriggerServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
+                recOnPriorCond, 1,  "||", AdaptWriteSomaVoltage, 1 , 0, updateNMDADepPlasticity); //Record every ms
+    #else
+      UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]", 
+                RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
+    #endif
+
+  //Voltage-clamp trigger criteria
+  //{{{
   FloatTrigger voltageClampSet0("Iteration Trigger : >= " STR(TimeVClampSet0) " [ms]", 
       CurrentTime, ">=", TimeVClampSet0, 0, solveChannels );
   SemaphoreTrigger voltageClampSet0Sem("Nothing", voltageClampSet0, 1, 0, solveChannels);
@@ -929,38 +961,46 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
   FloatTrigger voltageClampSet1("Iteration Trigger : >= " STR(TimeVClampSet1) " [ms]", 
       CurrentTime, ">=", TimeVClampSet1, 0, solveChannels );
   SemaphoreTrigger voltageClampSet1Sem("Nothing", voltageClampSet1, 1, 0, solveChannels);
+
   FloatTrigger voltageClampSet2("Iteration Trigger : >= " STR(TimeVClampSet2) " [ms]", 
       CurrentTime, ">=", TimeVClampSet2, 0, solveChannels );
   SemaphoreTrigger voltageClampSet2Sem("Nothing", voltageClampSet2, 1, 0, solveChannels);
+
   FloatTrigger voltageClampSet3("Iteration Trigger : >= " STR(TimeVClampSet3) " [ms]", 
       CurrentTime, ">=", TimeVClampSet3, 0, solveChannels );
   SemaphoreTrigger voltageClampSet3Sem("Nothing", voltageClampSet3, 1, 0, solveChannels);
 
   FloatTrigger voltageClampOn("Iteration Trigger : >= " STR(TimeStartVClamp) " [ms]", 
       CurrentTime, ">=", TimeStartVClamp, 0, solveChannels );
+  SemaphoreTrigger voltageClampOnSem("Event True only when changing status", voltageClampOn, 1, 0, solveChannels);
+
   FloatTrigger voltageClampOff("Iteration Trigger : >= " STR(TimeOffVClamp) " [ms]", 
       CurrentTime, ">=", TimeOffVClamp, 0, solveChannels );
-  SemaphoreTrigger voltageClampOnSem("Nothing", voltageClampOn, 1, 0, solveChannels);
-  SemaphoreTrigger voltageClampOffSem("Nothing", voltageClampOff, 1, 0, solveChannels);
+  SemaphoreTrigger voltageClampOffSem("Event True only when changing status", voltageClampOff, 1, 0, solveChannels);
+  //}}}
 
+  //}}}
   #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
-  FloatTrigger delayStartRecord("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
-            CurrentTime, ">=", TimeStartRecord, 0, updateNMDADepPlasticity); //Record only after it passes
-  CompositeTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms] after a delay " STR(TimeStartRecord) " [ms]", 
-            recOn, 1, "&&", delayStartRecord, 1, 0, updateNMDADepPlasticity); //Record every ms after it passes certain time
+    FloatTrigger delayStartRecord("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
+              CurrentTime, ">=", TimeStartRecord, 0, updateNMDADepPlasticity); //Record only after it passes
+    CompositeTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms] after a delay " STR(TimeStartRecord) " [ms]", 
+              recOn, 1, "&&", delayStartRecord, 1, 0, updateNMDADepPlasticity); //Record every ms after it passes certain time
   #endif
-FloatTrigger currentOn("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
-FloatTrigger currentMod("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 30, 0, updateNMDADepPlasticity);
-FloatTrigger currentOff("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
-FloatTrigger calciumOn("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
-FloatTrigger calciumOff("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
 
+  FloatTrigger currentOn("Iteration Trigger : >= " STR(CurrentTime), 
+                           CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
+  FloatTrigger currentMod("Iteration Trigger : >= " STR(CurrentTime), 
+                           CurrentTime, ">=", 30, 0, updateNMDADepPlasticity);
+  FloatTrigger currentOff("Iteration Trigger : >= " STR(CurrentTime), 
+                           CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
+  FloatTrigger calciumOn("Iteration Trigger : >= " STR(CurrentTime), 
+                           CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
+  FloatTrigger calciumOff("Iteration Trigger : >= " STR(CurrentTime), 
+                           CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
+
+//}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+//{{{
 UnsignedTrigger voltageClampOn("Iteration Trigger : == 10000", 
  			 RuntimePhaseIteration, "==", 1000, 0, updateNMDADepPlasticity);
 
@@ -983,6 +1023,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% 50",
  			 RuntimePhaseIteration, "!%", 50, 0, updateNMDADepPlasticity);
 //UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval), 
 //          RuntimePhaseIteration, "!%", RecordInterval, 0, updateNMDADepPlasticity); //Record every ms
+//}}}
 #endif
 /*}}}*/
 
@@ -993,7 +1034,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% 50",
 VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
 VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity};
 VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity};
-VariableType VoltageClamp {initialize->initialize1, updateI->solveChannels};
+VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasticity};
 
 #include "stimulus_model.gsl"
 //}}}

@@ -21,11 +21,18 @@ grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_mdl_only}
 
 MDLFILES=()
 sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
+while read mdl_in; do 
+  mdl_file_name=`echo $mdl_in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+  MDLFILES+=($mdl_file_name)
+done < $temp_mdl_only
 while read in; do 
   file_name=`echo $in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   if [ -f $file_name ]; then
     cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
-    MDLFILES+=($file_name)
+    while read mdl_in; do 
+      mdl_file_name=`echo $mdl_in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+      MDLFILES+=($mdl_file_name)
+    done < $file_name
   fi
 done < ${temp_mdf_only}
 
@@ -40,15 +47,15 @@ source defineModels2.sh;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
 ##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
-#if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
-$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+#$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
 RERUN=0
 for i in "${MDLFILES[@]}"
 do
-  if [ define -ot $i ]; then RERUN=1; cpp $i > .$i; fi
+  if [ define -ot $i ]; then RERUN=1; cpp $i > $(dirname "${i}")"/."$(basename "${i}"); fi
   touch $i
 done
-if [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+if [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; echo "REGENERATE Extension.mk"; fi
 touch $1
 sleep 2
 touch define;

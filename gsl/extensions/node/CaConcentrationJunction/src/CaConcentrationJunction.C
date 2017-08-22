@@ -35,13 +35,12 @@
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 
-SegmentDescriptor CaConcentrationJunction::_segmentDescriptor;
-
 // NOTE: value = 1e6/(zCa*Farad)
 // zCa = valence of Ca2+
 // Farad = Faraday's constant
 #define uM_um_cubed_per_pA_msec 5.18213484752067
 
+SegmentDescriptor CaConcentrationJunction::_segmentDescriptor;
 
 #if CALCIUM_CYTO_DYNAMICS == FAST_BUFFERING
 #define DCa (getSharedMembers().DCaeff)
@@ -58,7 +57,7 @@ dyn_var_t CaConcentrationJunction::getArea() // Tuan: check ok
 #else
   area = dimensions[0]->surface_area * FRACTION_SURFACEAREA_CYTO;
 #endif
-	return area;
+  return area;
 }
 
 // Get cytoplasmic volume at the compartment i-th 
@@ -77,7 +76,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 {// explicit junction (which can be soma (with branches are axon/dendrite
   // trees)
   // or a cut point junction 
-	// or a branching point junction with 3 or more branches (one from main, 2+ for children
+  // or a branching point junction with 3 or more branches (one from main, 2+ for children
   // branches))
   assert(Ca_new.size() == 1);
   assert(dimensions.size() == 1);
@@ -100,7 +99,6 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 
   float Pdov = M_PI * DCa / volume;
 #ifdef USE_SUBSHELL_FOR_SOMA
-//#define THRESHOLD_SIZE_R_SOMA 2.0 // um (micrometer)
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
       dimension->r > THRESHOLD_SIZE_R_SOMA // to avoid the confusing of spine head
       )//TUAN TODO: consider fixing this
@@ -109,7 +107,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
     // shell volume = 4/3 * pi * (rsoma^3 - (rsoma-d)^3)
     // with d = shell depth
     // RATIO = somaVolume / shellVolume;
-    // currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
+    // currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / volume * RATIO ;
     // TUAN TODO - 
     dyn_var_t d = 1.0; //[um] - shell depth (default) 
     //dyn_var_t d = 0.5; //[um]  
@@ -118,21 +116,21 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
       d = GlobalNTS::shellDepth;
     dyn_var_t shellVolume = 4.0 / 3.0 * M_PI * 
       (pow(dimension->r,3) - pow(dimension->r - d, 3)) * FRACTIONVOLUME_CYTO;
-    currentToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
+    currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / shellVolume;
     //std::cerr << "Cyto total vol: " << volume << "; shell volume: " << shellVolume << std::endl;
     
     Pdov = M_PI * DCa / shellVolume;
 
   }
   else
-    currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+    currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 #else
-    currentToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
+  currentDensityToConc = getArea() * uM_um_cubed_per_pA_msec / volume;
 #endif
 #ifdef MICRODOMAIN_CALCIUM
     //for (unsigned int ii=0; ii < microdomainNames.size(); ++ii)
     //{
-    //  currentToConc_microdomain[ii] = getArea() * uM_um_cubed_per_pA_msec / volume_microdomain[ii];
+    //  currentDensityToConc_microdomain[ii] = getArea() * uM_um_cubed_per_pA_msec / volume_microdomain[ii];
     //}
 #endif
 
@@ -149,9 +147,12 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
       //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
       //  NOTE: should be applied for Axon hillock only
       Rb = ((*diter)->r );
+#ifdef USE_SCALING_NECK_FROM_SOMA
       //TEST 
-      Rb /= SCALING_NECK_FROM_SOMA;
+      Rb /= SCALING_NECK_FROM_SOMA_WITH;
       //END TEST
+#endif
+
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
       distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
 #else
@@ -159,9 +160,13 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
       distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
       // from soma is always the distance from the center of soma to the center
       // of that compartment
+#ifdef USE_STRETCH_SOMA_RADIUS
       //TEST 
       distance += STRETCH_SOMA_WITH;
+      //  distance += 50.0;//TUAN TESTING - make soma longer
+      //distance = std::fabs(b->r + a->dist2soma);
       //END TEST
+#endif
 #endif
       if (distance <= 0)
         std::cerr << "distance = " << distance << ": " << (*diter)->dist2soma << ","<< dimension->r << std::endl;
@@ -175,9 +180,6 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
       distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
       assert(distance > 0);
     }
-    //fAxial.push_back(Pdov * Rb * Rb /
-    //                 sqrt(DISTANCE_SQUARED(**diter, *dimension)));
-    //dyn_var_t distance= std::fabs((*diter)->dist2soma - dimension->dist2soma);
     fAxial.push_back(Pdov * Rb * Rb / distance );
   }
 #ifdef DEBUG_HH
@@ -186,9 +188,11 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 #endif
 }
 
-//GOAL: predict Canew[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
+// GOAL: predict Canew[0] at offset time (t+dt/2) - Crank-Nicolson predictor-corrector scheme
+//    using Ca_branch(t) and Canew[0](t)
 void CaConcentrationJunction::predictJunction(RNG& rng)
 {
+  //element-1
   double LHS = getSharedMembers().bmt; // [1/ms]
   double RHS = getSharedMembers().bmt * Ca_cur ;  // [uM/ms]
 
@@ -201,15 +205,21 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
   }
 #endif
 
+  //element-2 
+  // no integrated 'extrusion' --> use explicit PMCA
+  
+  /* * * Sum Currents * * */
+  // 1.a. those produces I(t)  [pA/um^2]
   Array<ChannelCaCurrents>::iterator citer;
   Array<ChannelCaCurrents>::iterator cend ;
   citer = channelCaCurrents.begin();
   cend = channelCaCurrents.end();
   for (; citer != cend; ++citer)
   {
-    RHS -= currentToConc * (*(citer->currents))[0];
+    RHS -= currentDensityToConc * (*(citer->currents))[0];
   }
 
+  // 1.b. those produces J(t)  [uM/ms^2]
   Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
   Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
   for (; fiter != fend; fiter++)
@@ -217,24 +227,52 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
     RHS +=  (*fiter->fluxes)[0];
   }
 
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
   Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
   for (; iter != end; ++iter)
   {
-    RHS -= currentToConc * **iter;
+    RHS -= currentDensityToConc * **iter;
   }
 
-  //  3. synapse receptor currents using GHK type equations (gV, gErev)
+  //  3. synapse receptor currents using GHK type equations 
   //  NOTE: Not available
+  //{
+  //  Array<ReceptorCaCurrentsGHK>::iterator riter = receptorCaCurrentsGHK.begin();
+  //  Array<ReceptorCaCurrentsGHK>::iterator rend = receptorCaCurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        //RHS[i] += di_dv * Vcur[i]; 
+  //        //Aii[i] += di_dv;  
+  //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[pA/um^2]
+  //#endif
+  //  }
+  //}
 
-  //  4. injected currents
+  //  4. injected currents  [pA]
   iter = injectedCaCurrents.begin();
   end = injectedCaCurrents.end();
   for (; iter != end; ++iter)
   {
-    RHS += **iter * currentToConc / getArea();
+    RHS += **iter * currentDensityToConc / getArea();
   }
 
+  // 5. Concentration loss due to passive diffusion to adjacent compartments
+  Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
+  Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
+  for (; xiter != xend; ++xiter, ++viter)
+  {
+    RHS += (*xiter) * ((**viter) - Ca_cur);
+  }
+
+  // 6. Concentration via spine neck 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
   Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
@@ -245,14 +283,7 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
   }
 #endif
 
-  Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
-  Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
-  for (; xiter != xend; ++xiter, ++viter)
-  {
-    RHS += (*xiter) * ((**viter) - Ca_cur);
-  }
-
-  Ca_new[0] = RHS / LHS;
+  Ca_new[0] = RHS / LHS;  //estimate at (t+dt/2)
 
 #ifdef DEBUG_HH
   std::cerr << getSimulation().getIteration() * *getSharedMembers().deltaT
@@ -271,13 +302,14 @@ void CaConcentrationJunction::predictJunction(RNG& rng)
 #endif
 }
 
-//GOAL: do 2 things:
+// GOAL: do 2 things:
 //  1. correct Canew[0] at (t+dt/2) 
 //  2. update Cacur, and Canew[0] at (t+dt) 
 void CaConcentrationJunction::correctJunction(RNG& rng)
 {
-  double LHS = getSharedMembers().bmt;
-  double RHS = getSharedMembers().bmt * Ca_cur;
+  //element-1
+  double LHS = getSharedMembers().bmt; // [1/ms]
+  double RHS = getSharedMembers().bmt * Ca_cur;  // [uM/ms]
 
 #ifdef MICRODOMAIN_CALCIUM
   //correct at time (t + dt/2)
@@ -285,34 +317,65 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
     updateMicrodomains(LHS, RHS);
 #endif
 
+  //element-2 
+  // no integrated 'extrusion' --> use explicit PMCA
+  
+
+  /* * * Sum Currents * * */
+  // 1.a. those produces I(t)  [pA/um^2]
   Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
   Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
   for (; citer != cend; ++citer)
   {
-    RHS -= currentToConc * (*(citer->currents))[0];
+    RHS -= currentDensityToConc * (*(citer->currents))[0];
   }
 
-	Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
-	Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
-	for (; fiter != fend; fiter++)
-	{
-		RHS +=  (*fiter->fluxes)[0];
-	}
+  // 1.a. those produces J(t)  [uM/ms^2]
+  Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+  Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+  for (; fiter != fend; fiter++)
+  {
+    RHS +=  (*fiter->fluxes)[0];
+  }
 
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorCaCurrents.begin();
   Array<dyn_var_t*>::iterator end = receptorCaCurrents.end();
   for (; iter != end; ++iter)
   {
-    RHS -= currentToConc * **iter;
+    RHS -= currentDensityToConc * **iter;
   }
 
+  //  3. synapse receptor currents using GHK type equations 
+  //  NOTE: Not available
+  //{
+  //  Array<ReceptorCaCurrentsGHK>::iterator riter = receptorCaCurrentsGHK.begin();
+  //  Array<ReceptorCaCurrentsGHK>::iterator rend = receptorCaCurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        //RHS[i] += di_dv * Vcur[i]; 
+  //        //Aii[i] += di_dv;  
+  //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[pA/um^2]
+  //#endif
+  //  }
+  //}
+
+  //  4. injected currents  [pA]
   iter = injectedCaCurrents.begin();
   end = injectedCaCurrents.end();
   for (; iter != end; ++iter)
   {
-    RHS += **iter * currentToConc / getArea();
+    RHS += **iter * currentDensityToConc / getArea();
   }
 
+  // 5. Concentration loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = fAxial.begin(), xend = fAxial.end();
   Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
   for (; xiter != xend; ++xiter, ++viter)
@@ -321,6 +384,7 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
     RHS += (*xiter) * (**viter);
   }
 
+  // 6. Concentration via spine neck 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   Array<dyn_var_t*>::iterator titer = targetReversalCaConcentration.begin();
   Array<dyn_var_t*>::iterator tend = targetReversalCaConcentration.end();
@@ -362,8 +426,8 @@ void CaConcentrationJunction::correctJunction(RNG& rng)
 
 void CaConcentrationJunction::printDebugHH(std::string phase)
 {
-	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
-		"(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
+    "(neuronIdx,branchIdx,brchOrder){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   assert(dimensions.size() == 1);
   DimensionStruct* dimension = dimensions[0];
   std::cerr << getSimulation().getIteration() << "," 
@@ -386,8 +450,8 @@ void CaConcentrationJunction::printDebugHH(std::string phase)
   Array<dyn_var_t*>::iterator vend = CaConcentrationInputs.end();
   int c = -1;
 
-	std::cerr << "JCT_INPUT_i " <<
-		"(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << "JCT_INPUT_i " <<
+    "(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   Array<dyn_var_t*>::iterator viter = CaConcentrationInputs.begin();
   for (viter = CaConcentrationInputs.begin(); viter != vend; ++viter, ++diter)
   {
@@ -461,7 +525,7 @@ void CaConcentrationJunction::createMicroDomainData(const String& CG_direction, 
     Ca_microdomain_cur.increaseSizeTo(numMicrodomains* numCpts);
     RHS_microdomain.increaseSizeTo(numMicrodomains * numCpts);
     volume_microdomain.increaseSizeTo(numMicrodomains * numCpts);
-    //currentToConc_microdomain.increaseSizeTo(numMicrodomains * numCpts);
+    //currentDensityToConc_microdomain.increaseSizeTo(numMicrodomains * numCpts);
 #if MICRODOMAIN_DATA_FROM == _MICRODOMAIN_DATA_FROM_NTSMACRO
     if (numMicrodomains > 3)
     {
@@ -585,8 +649,9 @@ void CaConcentrationJunction::setupReceptorCurrent2Microdomain(const String& CG_
   _mapReceptorCurrentToMicrodomainIndex[receptorCaCurrents_microdomain.size()-1] = ii;
 }
 
+// GOAL: update RHS[], RHS_microdomain[], Ca_microdomain[] at time (t + dt/2)
 void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
-{//update RHS[], RHS_microdomain[], Ca_microdomain[] at time (t + dt/2)
+{
   Array<ChannelCaCurrents>::iterator citer;
   Array<ChannelCaCurrents>::iterator cend ;
   int numCpts = branchData->size;//only 1 compartment in Junction
@@ -611,7 +676,7 @@ void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
     int offset = _mapCurrentToMicrodomainIndex[ii] * numCpts;
     for (int jj = 0; jj < numCpts; jj++)
     {
-      RHS_microdomain[offset+jj] -= currentToConc * (*(citer->currents))[jj];  //[uM/ms]
+      RHS_microdomain[offset+jj] -= currentDensityToConc * (*(citer->currents))[jj];  //[uM/ms]
     }
   }
   Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes_microdomain.begin();
@@ -635,8 +700,8 @@ void CaConcentrationJunction::updateMicrodomains(double& LHS, double& RHS)
     int offset = _mapReceptorCurrentToMicrodomainIndex[ii] * numCpts;
     for (int jj = 0; jj < numCpts; jj++)
     {
-      RHS_microdomain[offset+jj] -= currentToConc * (*(*riter));  //[uM/ms]
-      //RHS_microdomain[offset+jj] -= currentToConc * (*(*riter))[jj];  //[uM/ms]
+      RHS_microdomain[offset+jj] -= currentDensityToConc * (*(*riter));  //[uM/ms]
+      //RHS_microdomain[offset+jj] -= currentDensityToConc * (*(*riter))[jj];  //[uM/ms]
     }
   }
   for (unsigned int ii = 0; ii < microdomainNames.size(); ii++)

@@ -315,7 +315,7 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   if (Aip.size() != numCpts) Aip.increaseSizeTo(numCpts);
   if (Aim.size() != numCpts) Aim.increaseSizeTo(numCpts);
   if (RHS.size() != numCpts) RHS.increaseSizeTo(numCpts);
-  if (currentToConc.size() != numCpts) currentToConc.increaseSizeTo(numCpts);
+  if (currentDensityToConc.size() != numCpts) currentDensityToConc.increaseSizeTo(numCpts);
 
   // get fraction volume
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
@@ -338,7 +338,7 @@ void CaERConcentration::initializeCompartmentData(RNG& rng)
   for (int i = 0; i < numCpts; ++i)
   {
     Aii[i] = Aip[i] = Aim[i] = RHS[i] = 0.0;
-    currentToConc[i] = getArea(i) * uM_um_cubed_per_pA_msec / getVolume(i);
+    currentDensityToConc[i] = getArea(i) * uM_um_cubed_per_pA_msec / getVolume(i);
   }
 
   // go through different kinds of injected Calcium currents
@@ -471,7 +471,7 @@ void CaERConcentration::doForwardSolve()
     //    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
     //    for (; iter != end; iter++)
     //    {
-    //      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
+    //      RHS[i] -= currentDensityToConc[i] * (*iter->currents)[i];
     //    }
     Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
@@ -498,7 +498,7 @@ void CaERConcentration::doForwardSolve()
     //    Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
     //    for (; citer != cend; citer++)
     //    {
-    //      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
+    //      RHS[0] -= currentDensityToConc[0] * (*citer->currents)[0];
     //    }
     Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
@@ -514,7 +514,7 @@ void CaERConcentration::doForwardSolve()
   //  for (; riter != rend; riter++)
   //  {
   //    int i = riter->index;
-  //    RHS[i] -= currentToConc[i] * *(riter->current);
+  //    RHS[i] -= currentDensityToConc[i] * *(riter->current);
   //  }
 
   Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();

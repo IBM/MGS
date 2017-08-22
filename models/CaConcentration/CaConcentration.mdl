@@ -66,7 +66,7 @@ Node CaConcentration Implements SolutionArrayProducer,
   //data members: internal
   dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] Ca_new;
-  dyn_var_t [] currentToConc;
+  dyn_var_t [] currentDensityToConc;
 #ifdef  USE_CALCIUM_INDICATOR
   dyn_var_t [] Fluo;  //[uM]
   dyn_var_t [] FluoCa;// Ca2+-bound [uM]
@@ -92,7 +92,7 @@ Node CaConcentration Implements SolutionArrayProducer,
   //      y-element microdomainNames array
   string [] microdomainNames;
   dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
-  //dyn_var_t [] currentToConc_microdomain;
+  //dyn_var_t [] currentDensityToConc_microdomain;
 
   //CHOICE 2:
   //      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
@@ -417,12 +417,12 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   DimensionStruct* [] dimensionInputs;
   BranchDataStruct* [] branchDataInputs;  // 
     //}}}
-	//{{{data members: internal
+    //{{{data members: internal
   dyn_var_t volume;
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
-  dyn_var_t currentToConc;
+  dyn_var_t currentDensityToConc;
   //dyn_var_t  CaClearance; // [1/ms]
   //{{{microdomain
 #ifdef MICRODOMAIN_CALCIUM
@@ -445,7 +445,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
 //      y-element microdomainNames array
   string [] microdomainNames;
   dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
-  //dyn_var_t [] currentToConc_microdomain;
+  //dyn_var_t [] currentDensityToConc_microdomain;
 
 //CHOICE 2:
 //      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
