@@ -144,24 +144,23 @@
 // STRATEGY 02 [experimental] - adjust the soma to consider 'effect' in that the real-shape soma may obstruct the
 //               propagation of electrical signal than the spherical one
 //#define USE_STRETCH_SOMA_RADIUS   //which use STRETCH_SOMA_RADIUS_WITH
-//#ifndef STRETCH_SOMA_WITH   // only work when disable STRATEGY 01 
-//#define STRETCH_SOMA_WITH 0.0    
-//#define STRETCH_SOMA_WITH 50.0 
+#ifndef STRETCH_SOMA_WITH   // only work when disable STRATEGY 01 
+#define STRETCH_SOMA_WITH 0.0    
 //#define STRETCH_SOMA_WITH 40.0 // [um] - make soma longer (hoping to make diffusion slower)
+//#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 0.0 
 //#define STRETCH_SOMA_WITH 130.0 
 //#define STRETCH_SOMA_WITH 50.0 
 //#define STRETCH_SOMA_WITH 25.0    
-//#endif
+#endif
 
 // STRATEGY 03 [experimental]- make the neck smaller is another way to treat if real-shape soma obstruct the 
 //               propagation of electrical signal than the spherical one
 //{{{
 //#define USE_SCALING_NECK_FROM_SOMA
-//#ifndef SCALING_NECK_FROM_SOMA_WITH
-//#define SCALING_NECK_FROM_SOMA_WITH 1.0  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA_WITH 10.0  //>1: make neck smaller
-//#endif
+#ifndef SCALING_NECK_FROM_SOMA_WITH
+#define SCALING_NECK_FROM_SOMA_WITH 1.0  //>1: make neck smaller
+#endif
 //}}}
 
 // STRATEGY for Calcium in Soma calculation

@@ -1024,7 +1024,7 @@ dyn_var_t HodgkinHuxleyVoltage::getLambda(DimensionStruct* a,
     Rb = a->r;
 #ifdef USE_SCALING_NECK_FROM_SOMA
     //TEST 
-    Rb /= SCALING_NECK_FROM_SOMA;
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
     //END TEST
 #endif
 
@@ -1112,7 +1112,7 @@ dyn_var_t HodgkinHuxleyVoltage::getAij(DimensionStruct* a, DimensionStruct* b,
     Rb = a->r;
 #ifdef USE_SCALING_NECK_FROM_SOMA
     //TEST 
-    Rb /= SCALING_NECK_FROM_SOMA;
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
     //END TEST
 #endif
 

@@ -796,7 +796,7 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a,
     Rb = a->r;
 #ifdef USE_SCALING_NECK_FROM_SOMA
     //TEST 
-    Rb /= SCALING_NECK_FROM_SOMA;
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
     //END TEST
 #endif
 
