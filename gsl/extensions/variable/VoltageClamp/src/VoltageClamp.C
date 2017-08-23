@@ -125,7 +125,7 @@ void VoltageClamp::updateI(RNG& rng)
       Igen = beta * Cm * ( ( goal - (*V)[idx] ) / (*deltaT/2) ) * *surfaceArea;
       Igen_dv = beta * Cm * ( ( goal - ((*V)[idx]+0.001) ) / (*deltaT/2) ) * *surfaceArea;
 #endif
-#ifdef CONSIDER_D
+#ifdef CONSIDER_DI_DV
       double dI = Igen_dv - Igen; 
       conductance_didv = dI/(0.001);
 #endif

@@ -5,6 +5,7 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -28,6 +29,8 @@ static pthread_once_t once_CaLv13_GHK = PTHREAD_ONCE_INIT;
 //     3. Kasai et al. (1992) tau_m  (Fig. 15)
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
+//malpha = c * (v-vm) / ( exp((v-vm)/k) - 1  )
+//mbeta = cpr * exp(v/kpr)    : Kasai 1992, fig 15
 #define VHALF_M -33.0
 #define k_M -6.7
 #define VHALF_H -13.4
@@ -41,8 +44,6 @@ static pthread_once_t once_CaLv13_GHK = PTHREAD_ONCE_INIT;
 #define BMC 0.99        // [1/ms]
 #define BMV 0.0
 #define BMD 31.4 
-//malpha = c * (v-vm) / ( exp((v-vm)/k) - 1  )
-//mbeta = cpr * exp(v/kpr)    : Kasai 1992, fig 15
 #else
 #define frac_inact  1.0
 NOT IMPLEMENTED YET
@@ -54,6 +55,15 @@ dyn_var_t ChannelCaLv13_GHK::vtrap(dyn_var_t x, dyn_var_t y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelCaLv13_GHK::initialize(RNG& rng) 
 {
   pthread_once(&once_CaLv13_GHK, initialize_others);
@@ -62,6 +72,7 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
   assert(V);
   assert(PCabar.size() == size);
   assert(V->size() == size);
+
   // allocate
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
@@ -72,7 +83,7 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
-                 "GHK-formula Ca2+ channel "
+                 "GHK-formula Ca2+ Lv13 channel "
                  "Channels Param" << std::endl;
     assert(0);
   }
@@ -145,11 +156,17 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
+#endif
+#ifdef CONSIDER_DI_DV
+    conductance_didv[i] = 0.0;
 #endif
   }
 }
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2+dt)
+//   of second-order accuracy at time (t+dt/2+dt) using trapezoidal rule
 void ChannelCaLv13_GHK::update(RNG& rng) 
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
@@ -190,6 +207,12 @@ void ChannelCaLv13_GHK::update(RNG& rng)
     //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+#ifdef CONSIDER_DI_DV
+      tmp = zCaF_R * (v+0.001) / (*getSharedMembers().T); 
+      dyn_var_t I_Ca_dv = 1e-6 * PCa[i] * zCa * zF * 
+        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+      conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
+#endif
 #endif
   }
 }

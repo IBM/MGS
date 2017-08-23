@@ -6,6 +6,7 @@
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
+#include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -76,6 +77,7 @@ void ChannelCaT_GHK::initialize(RNG& rng)
   assert(V);
   assert(PCabar.size() == size);
   assert(V->size() == size);
+
   // allocate
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
@@ -85,10 +87,11 @@ void ChannelCaT_GHK::initialize(RNG& rng)
   dyn_var_t PCabar_default = PCabar[0];
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
-    std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on GHK-formula Ca2+ channel "
+    std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on GHK-formula Ca2+ T-type channel "
                  "Channels Param for " << typeid(*this).name() << std::endl;
     assert(0);
   }
+  //initialize
   for (unsigned i = 0; i < size; ++i)
   {
     if (Pbar_dists.size() > 0)
@@ -97,8 +100,8 @@ void ChannelCaT_GHK::initialize(RNG& rng)
       //NOTE: 'n' bins are splitted by (n-1) points
       if (Pbar_values.size() - 1 != Pbar_dists.size())
       {
-	std::cerr << "Pbar_values.size = " << Pbar_values.size() 
-	<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+  std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+  << "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
       }
       assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
@@ -110,19 +113,19 @@ void ChannelCaT_GHK::initialize(RNG& rng)
     else if (Pbar_branchorders.size() > 0)
     {
       unsigned int j;
-			assert(Pbar_values.size() == Pbar_branchorders.size());
+      assert(Pbar_values.size() == Pbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
-		  //const special_value = -1; 
+      //const special_value = -1; 
       for (j = 0; j < Pbar_branchorders.size(); ++j)
       {
         if (segmentDescriptor.getBranchOrder(branchData->key) ==
             Pbar_branchorders[j])
-	break;
+  break;
       }
       //if (j == Pbar_branchorders.size() and Pbar_branchorders[j-1] == special_value)
       if (j == Pbar_branchorders.size() and Pbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
       {
-	PCabar[i] = Pbar_values[j-1];
+  PCabar[i] = Pbar_values[j-1];
       }
       else if (j < Pbar_values.size())
         PCabar[i] = Pbar_values[j];
@@ -134,6 +137,7 @@ void ChannelCaT_GHK::initialize(RNG& rng)
       PCabar[i] = PCabar_default;
     }
   }
+  //calculate at current at time t0
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -151,8 +155,8 @@ void ChannelCaT_GHK::initialize(RNG& rng)
     ////NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
     ////     R [mJ/(mol.K)]
     //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
-    //	v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
-    //	(1- tmp); // [pA/um^2]
+    //  v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
+    //  (1- tmp); // [pA/um^2]
     //NOTE: Tuan added 0.314
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
@@ -163,6 +167,10 @@ void ChannelCaT_GHK::initialize(RNG& rng)
 #else
     NOT IMPLEMENTED YET;
 #endif
+#ifdef CONSIDER_DI_DV
+    conductance_didv[i] = 0.0;
+#endif
+
   }
 }
 
@@ -220,12 +228,12 @@ void ChannelCaT_GHK::update(RNG& rng)
     //E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
     //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
-		//dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-		////NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-		////     R [mJ/(mol.K)]
+    //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+    ////NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+    ////     R [mJ/(mol.K)]
     //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * 
-		//	v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
-		//	(1- tmp); // [pA/um^2]
+    //  v * ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp)/
+    //  (1- tmp); // [pA/um^2]
     //NOTE: Tuan added 0.314
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
@@ -233,7 +241,24 @@ void ChannelCaT_GHK::update(RNG& rng)
     //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+#ifdef CONSIDER_DI_DV
+      tmp = zCaF_R * (v+0.001) / (*getSharedMembers().T); 
+      dyn_var_t I_Ca_dv = 1e-6 * PCa[i] * zCa * zF * 
+        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+      conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
 #endif
+#endif
+    /*
+     * TUAN TODO: think about stochastic modelling
+     * I_Ca[i] = Nopen * P_Ca_singlechannel * ...
+     * with Nopen is from 0 to ... Nchannelpercompartment
+     * Nchannelpercompartment = PCa*surfacearea_compartment/P_Ca_singlechannel
+     * And use the Markov-based model for a single channel to determine
+     * Nopen
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+              ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+              (1 - tmp);  // [pA/um^2]
+    */
   }
 }
 
@@ -244,7 +269,7 @@ void ChannelCaT_GHK::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);
     assert((sizeof(taumCaT) / sizeof(taumCaT[0])) == tmp.size());
-		//Vmrange_taum.resize(tmp.size()-2);
+    //Vmrange_taum.resize(tmp.size()-2);
     //for (unsigned long i = 1; i < tmp.size() - 1; i++)
     //  Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
     Vmrange_taum = tmp;
@@ -253,7 +278,7 @@ void ChannelCaT_GHK::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhCaT) / sizeof(tauhCaT[0]) == tmp.size());
-		//Vmrange_tauh.resize(tmp.size()-2);
+    //Vmrange_tauh.resize(tmp.size()-2);
     //for (unsigned long i = 1; i < tmp.size() - 1; i++)
     //  Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
     Vmrange_tauh = tmp;

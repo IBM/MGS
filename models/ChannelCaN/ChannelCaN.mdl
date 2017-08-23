@@ -75,7 +75,7 @@
 Node ChannelCaN_GHK Implements 
      CurrentArrayProducer, //GHK-based to Vm, GHK-based to I/O
      CaCurrentArrayProducer, //GHK-based to Ca2+
-		 BranchDataProducer, 
+     BranchDataProducer, 
      DimensionArrayProducer
 {
 /*{{{*/
@@ -87,6 +87,9 @@ Node ChannelCaN_GHK Implements
 	dyn_var_t [] m;
 	dyn_var_t [] h;
 	dyn_var_t [] I_Ca; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+	dyn_var_t [] conductance_didv; // [nS/um^2]
+#endif
 	dyn_var_t [] PCa;  // um/ms
 	dyn_var_t [] PCabar; // um/ms
 	// reference data
@@ -136,6 +139,9 @@ Node ChannelCaN_GHK Implements
 
 	CaCurrentArrayProducer.currents << &I_Ca;
 	CurrentArrayProducer.currents << &I_Ca;
+#ifdef CONSIDER_DI_DV
+	CurrentArrayProducer.di_dv << &conductance_didv;
+#endif
 	BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
 

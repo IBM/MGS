@@ -24,11 +24,11 @@ static pthread_once_t once_CaPQ_GHK = PTHREAD_ONCE_INIT;
 //
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
-#define VHALF_M -9.0
-#define k_M -6.6
 //#define VHALF_H -13.4
 //#define k_H 11.9
 //#define frac_inact  1
+#define VHALF_M -9.0
+#define k_M -6.6
 #else
 //#define frac_inact  1.0
 NOT IMPLEMENTED YET
@@ -57,10 +57,11 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
-                 "GHK-formula Ca2+ channel "
+                 "GHK-formula Ca2+ PQ-type channel "
                  "Channels Param" << std::endl;
     assert(0);
   }
+  //initialize Pbar
   for (unsigned i = 0; i < size; ++i)
   {
     if (Pbar_dists.size() > 0)
@@ -108,6 +109,7 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
       PCabar[i] = PCabar_default;
     }
   }
+  //calculate currents at time (t) and di_dv 
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -116,7 +118,7 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     //h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
 #endif
     PCa[i] = PCabar[i] * m[i] * m[i] ;
     //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
@@ -132,6 +134,9 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
     //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+#ifdef CONSIDER_DI_DV
+    conductance_didv[i] = 0.0;
+#endif
   }
 }
 
@@ -165,6 +170,12 @@ void ChannelCaPQ_GHK::update(RNG& rng)
     //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+#ifdef CONSIDER_DI_DV
+    tmp = zCaF_R * (v+0.001) / (*getSharedMembers().T); 
+    dyn_var_t I_Ca_dv = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+    conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
+#endif
 #endif
   }
 }

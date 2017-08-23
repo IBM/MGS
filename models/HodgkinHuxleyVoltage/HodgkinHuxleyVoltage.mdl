@@ -36,7 +36,7 @@ Struct InjectedCurrent {
   dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
   int index;     //  index of the compartment on a given branch to which the current is injected
 #ifdef CONSIDER_DI_DV
-  dyn_var_t* conductance_didv;  //the di/dv term to help estimate
+  dyn_var_t* conductance_didv;  //the di/dv term to help estimate [nS/um^2]
 #endif
 }
 //}}}

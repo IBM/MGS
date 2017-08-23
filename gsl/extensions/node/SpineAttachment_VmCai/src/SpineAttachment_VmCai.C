@@ -30,7 +30,6 @@ SpineAttachment_VmCai::SpineAttachment_VmCai()
 
 void SpineAttachment_VmCai::produceInitialState(RNG& rng)
 {
-
 }
 void SpineAttachment_VmCai::computeInitialState(RNG& rng)
 {
@@ -105,6 +104,8 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   //no need to update I(Vm), as it produces g, and Vj
   //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
+  {
+  }
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);

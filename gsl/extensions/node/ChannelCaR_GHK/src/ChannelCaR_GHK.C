@@ -74,7 +74,7 @@ void ChannelCaR_GHK::initialize(RNG& rng)
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
-                 "GHK-formula Ca2+ channel "
+                 "GHK-formula Ca2+ R-type channel "
                  "Channels Param for " << typeid(*this).name() << std::endl;
     assert(0);
   }
@@ -83,12 +83,12 @@ void ChannelCaR_GHK::initialize(RNG& rng)
     if (Pbar_dists.size() > 0)
     {
       unsigned int j;
-			//NOTE: 'n' bins are splitted by (n-1) points
-			if (Pbar_values.size() - 1 != Pbar_dists.size())
-			{
-				std::cerr << "Pbar_values.size = " << Pbar_values.size() 
-					<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
-			}
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (Pbar_values.size() - 1 != Pbar_dists.size())
+      {
+        std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+          << "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+      }
       assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
@@ -152,8 +152,14 @@ void ChannelCaR_GHK::initialize(RNG& rng)
     //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+#ifdef CONSIDER_DI_DV
+    tmp = zCaF_R * (v+0.001) / (*getSharedMembers().T); 
+    dyn_var_t I_Ca_dv = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
+    conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
+#endif
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
 #endif
   }
 }
@@ -220,13 +226,13 @@ void ChannelCaR_GHK::initialize_others()
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhCaR) / sizeof(tauhCaR[0]) == tmp.size());
-		//Vmrange_tauh.resize(tmp.size()-2);
+    //Vmrange_tauh.resize(tmp.size()-2);
     //for (int i = 1; i < tmp.size() - 1; i++)
     //  Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
     Vmrange_tauh = tmp;
   }
 #endif
-	
+  
 }
 
 ChannelCaR_GHK::~ChannelCaR_GHK() {}

@@ -27,8 +27,8 @@
 #define zCaF_R (zCa*zF/(zR))
 #define R_zCaF (zR/(zCa*zF))
 #define zF_RT (zF / (zR * *getSharedMembers().T))
-#define mM2uM 1e3   // conversion factor
-#define uM2mM 1e-3  // conversion factor
+#define mM2uM (1e3)  // conversion factor
+#define uM2mM (1e-3)  // conversion factor from microMolar to mimiMolar
 #define MIN_RESISTANCE_VALUE 0.0001  //[GOhm*um] - keep this for numerical stability
 
 #define AvogN  (6.0223*1e23)     // Avogadro number
@@ -331,8 +331,10 @@
 #define _PMCA_DEFAULT PMCA_PUMPRATE_CONSTANT
 //}}}
 // NCX        EXCHANGER_NCX
-#define NCX_Gabbiani_Midtgaard_Kopfel_1994 2
-#define NCX_Weber_Bers_2001  3
+#define NCX_Kimura_Miyamae_Noma_1987       2  
+#define NCX_Gabbiani_Midtgaard_Kopfel_1994 3
+#define NCX_Weber_Bers_2001                4
+
 
 #define _NCX_DEFAULT  NCX_Weber_Bers_2001
 //}}}

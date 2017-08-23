@@ -147,6 +147,9 @@ print(OutputFolderName);
 #else
   assert(0);
 #endif
+
+
+  //{{{recording-interval (I/O)
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 	#define RecordInterval   5.00   //  [ms]
   #define TimeStartRecord  100.0 // [ms]
@@ -155,6 +158,7 @@ print(OutputFolderName);
 #else
   assert(0);
 #endif
+  //}}}
 //}}}
 
 //{{{ Diffusion + Fast-buffering constants
@@ -774,7 +778,7 @@ NodeType SynapticCleft(
       <
         Glut_baseline = NTGlutamate_baseline, //[uM]
         GABA_baseline = NTGABA_baseline,   // [uM]
-				//{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth curve
+        //{{{ parameter using Destexhe-Mainen-Sejnowski-1994 smooth curve
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
         Glut_max= NTGlutamate_max,  
         Vp_Glut=2.0,        // mV   voltage Vpre at half-max of Glut
@@ -795,9 +799,9 @@ NodeType SynapticCleft(
         Kp_GABA=5.0,   // mV
         tau_GABA = 5.0  // [ms]
 #endif
-				//}}}
+        //}}}
       >
-		) { produceInitialState->initialize2, produceState->finish };
+      ) { produceInitialState->initialize2, produceState->finish };
 //}}}
 #endif
 /*}}}*/
@@ -1031,9 +1035,9 @@ UnsignedTrigger recOn("Iteration Trigger : !% 50",
 /*{{{*/
 //stimulus
 //{{{
-VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
-VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity};
-VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity};
+VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity };
+VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity };
+VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity };
 VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasticity};
 
 #include "stimulus_model.gsl"
@@ -1043,14 +1047,15 @@ VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasti
 //{{{
 
 VariableType VoltageDisplay{ initialize->initialize1 };
-
-VariableType CalciumDisplay{ initialize->initialize4 };
+//VariableType ReversalPotentialDisplay{ initialize->initialize4 };
 
 VariableType CurrentDisplay{ initialize->initialize4 };
 VariableType CaCurrentDisplay{ initialize->initialize4 };
 VariableType AnyCurrentDisplay{ initialize->initialize4 }; //Na/Ca/K/...
 VariableType ConductanceDisplay{ initialize->initialize4 };
-//VariableType ReversalPotentialDisplay{ initialize->initialize4 };
+
+VariableType CalciumDisplay{ initialize->initialize4 };
+
 
 #include "recording_model.gsl"
 
@@ -1483,7 +1488,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
 				compartmentalize = {"Ca_new", 
 				"Ca_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1502,7 +1507,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_CaER), tissueFunctor("NodeInit", <
 				compartmentalize = {"Ca_new", 
 				"Ca_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1521,7 +1526,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_Dopa), tissueFunctor("NodeInit", <
 				compartmentalize = {"Dopa_new", 
 				"Dopa_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1729,13 +1734,13 @@ Grid MSN_D1Neuron{
     // 4. CONNEXON 
     /*{{{*/
    InitNodes ( .[].Layer(AxoAxonicGapJunctions), tissueFunctor("NodeInit", <
-									I = 0,
-									g = 0.0495
-								  > ) );
+         I = 0,
+         g = 0.0495
+         > ) );
    InitNodes ( .[].Layer(DendroDendriticGapJunctions), tissueFunctor("NodeInit", <
-									I = 0,
-									g = 1.0
-								  > ) );
+         I = 0,
+         g = 1.0
+         > ) );
     /*}}}*/
 	/*}}}*/
     /*}}}*/
@@ -1893,10 +1898,12 @@ Grid Adaptor
   //criteria is evaluated at any time correctJunction is called 
 FloatTrigger endTrig("Time Trigger to end or stop", 
 		CurrentTime , ">=", TimeEnd, 0, correctJunction); 
+
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
 		RuntimePhaseIteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
+
 #endif
 
 Stop on endTrig;
-
