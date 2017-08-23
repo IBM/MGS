@@ -20,6 +20,8 @@
 #define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma [square pulse current]
+#define CASE_01b  101   //inject soma [brief train of AP]
+#define CASE_01c  201   //inject soma [point current source]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -27,7 +29,8 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define CASE_01b  9   //inject soma [brief train of AP]
+#define CASE_09  9   //inject soma [current clamp]
+#define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
 #define STIMULUS_CASE   CASE_01
 //#define morph ""
 #define morph "msnSpinesMicrodomain_"  // must end with '_' for non-empty string
@@ -37,7 +40,6 @@
 /*{{{*/
 Connector Zipper();
 Zipper zipper();
-ReSeedRandom reSeed(243);
 /*}}}*/
 #ifndef MODEL_TO_USE
 print("WARNING: You haven't selected MODEL_TO_USE")
@@ -58,6 +60,9 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #define paramFolder ./params/
 #else
 #define paramFolder STR(PARAMFOLDER)
+#endif
+#ifndef EXTENSION
+#define EXTENSION _
 #endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph  "Tuan_rest" STR(EXTENSION)
@@ -86,6 +91,7 @@ print("Case 00: resting");
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
 #endif
+print(OutputFolderName);
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -290,9 +296,16 @@ print("Case 00: resting");
 //PHASES DEFINITION
 /*{{{*/
 // order of initialization
-//  1. initial states for solvers, Voltage, Concentrations
+//  1. initial states for solvers, Voltage, Concentrations at time (t0)
 //  2. initial coefficients for solvers, derived parameters, Junctions' data, reversal potentials
-//  3. initial values of gating variables
+//  3. initial values of gating variables at time (t0+dt/2)
+//     if steady-state formula is used: gate_infty = ...
+//             gate(t0+dt/2) = gate(t0)
+//     otherwise if dgate/dt=f(gate) formula is used: 
+//             calculate gate(t0+dt/2) = gate(t0) + dgate/dt * (dt/2)
+//             i.e. gate(t0+dt/2) = gate(t0) + f(gate(t0)) * (dt/2)
+//  3.b. initial values of GHK currents at time (t0+dt/2)
+//        check page 169 NEURON book
 //  4. initial values of VariableTypes
 //  5. (not being used)  
 //  6. (not being used)
@@ -300,7 +313,25 @@ InitPhases = { initialize1, initialize2, initialize3, initialize4, initialize5, 
 
 RuntimePhases = {
 /*{{{*/
-updateNMDADepPlasticity, solveChannels, predictJunction,
+//fadvance() with assumption input (at the end of InitPhases): V(t), gates(t+dt/2)
+//   initialize1 --> sync data (e.g. dimension data)
+//   use t: calculate V(t) --> initialize2
+// REQUIRE: all values are at steady-state initially so gates(t+dt/2) = gates(t)
+// OTHERWISE: does update gates(t+dt/2) = gates(t) + dgate/dt * (dt/2) --> initialize3 ???
+//   initialize4 --> setup files for I/O 
+// -----------------
+// advance()
+//   updateNMDADepPlasticity--> record data V(t), gates(t+dt/2), Iion(t-dt/2)
+//   fadvance()
+//----------------
+// fadvance() - input is V(t), gates(t+dt/2)
+// it does :
+// solveChannels should produce data at time (t+dt/2) using V(t), gates(t-dt/2)
+// output: texit=t+dt
+//   V(t+dt) - is calculated
+//   gates(t+dt/2+dt)
+//   Iion(t+dt-dt/2) - using gates() and V(?)
+updateNMDADepPlasticity, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       forwardSolve7,
 #endif
@@ -344,7 +375,9 @@ updateNMDADepPlasticity, solveChannels, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
-      correctJunction, finish
+      correctJunction, 
+      finish,
+      solveChannels 
 /*}}}*/
  };
 
@@ -356,8 +389,6 @@ FinalPhases = { finalize };
 // b. instantiation
 GranuleMapper GridGranuleMapper(string description, list<int> dimensions, list<int> densityVector);
 GridGranuleMapper tissueGM("Tissue Grid's GridGranuleMapper", { _X_ , _Y_ , _Z_ }, {1});
-
-
 
 //TISSUE FUNCTOR
 /*{{{*/
@@ -408,7 +439,6 @@ TissueFunctor  tissueFunctor(strArg1,
 		tissueProbeFunctor
 		);
 /*}}}*/
-//}}}
 
 //NODETYPE DEFINITION
 /*{{{*/
@@ -1029,10 +1059,10 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 /*{{{*/
 //stimulus
 //{{{
-VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
-VariableType PointCurrentSource { stimulate->solveChannels };
-VariableType PointCalciumSource { stimulate->solveChannels };
-VariableType VoltageClamp {initialize->initialize1, updateI->finish};
+VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity };
+VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity };
+VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity };
+VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasticity};
 
 #include "stimulus_model.gsl"
 //}}}
@@ -1546,7 +1576,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
 				compartmentalize = {"Ca_new", 
 				"Ca_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1565,7 +1595,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_CaER), tissueFunctor("NodeInit", <
 				compartmentalize = {"Ca_new", 
 				"Ca_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1584,7 +1614,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_Dopa), tissueFunctor("NodeInit", <
 				compartmentalize = {"Dopa_new", 
 				"Dopa_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1603,7 +1633,7 @@ Grid MSN_D1Neuron{
 	InitNodes ( .[].Layer(branches_IP3), tissueFunctor("NodeInit", <
 				compartmentalize = {"IP3_new", 
 				"IP3_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 
@@ -1771,7 +1801,7 @@ Grid MSN_D1Neuron{
 #endif
 #if defined(SIMULATE_CAER)
 // SERCA
-	InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
+        InitNodes ( .[].Layer(PumpSERCAs), tissueFunctor("NodeInit", <
               compartmentalize = { "SERCAConc" },
               SERCAConc = {0.0} 
               > ) );
@@ -1793,24 +1823,24 @@ Grid MSN_D1Neuron{
     // 3.2. SYNAPSE RECEPTORS
     /*{{{*/
 	InitNodes ( .[].Layer(AMPASynapses), tissueFunctor("NodeInit", <
-				gbar =  AMPAR_CONDUCTANCE
-				> ) );
-	InitNodes ( .[].Layer(NMDASynapses), tissueFunctor("NodeInit", <
-				gbar = NMDAR_CONDUCTANCE, 
-                                w = 1.0 // 0.17 0.115 nS/um^2 // 
-				> ) );
+              gbar =  AMPAR_CONDUCTANCE
+              > ) );
+        InitNodes ( .[].Layer(NMDASynapses), tissueFunctor("NodeInit", <
+              gbar = NMDAR_CONDUCTANCE, 
+              w = 1.0 // 0.17 0.115 nS/um^2 // 
+              > ) );
 
-	InitNodes ( .[].Layer(AMPASynapsesMushroomSpine), tissueFunctor("NodeInit", <
-				gbar =  AMPAR_CONDUCTANCE
-				> ) );
-	InitNodes ( .[].Layer(NMDASynapsesMushroomSpine), tissueFunctor("NodeInit", <
-				gbar = NMDAR_CONDUCTANCE, 
-                                w = 1.0 // 0.17 0.115 nS/um^2 // 
-				> ) );
+        InitNodes ( .[].Layer(AMPASynapsesMushroomSpine), tissueFunctor("NodeInit", <
+              gbar =  AMPAR_CONDUCTANCE
+              > ) );
+        InitNodes ( .[].Layer(NMDASynapsesMushroomSpine), tissueFunctor("NodeInit", <
+              gbar = NMDAR_CONDUCTANCE, 
+              w = 1.0 // 0.17 0.115 nS/um^2 // 
+              > ) );
 
         InitNodes ( .[].Layer(GABAASynapses), tissueFunctor("NodeInit", <
-				gbar = GABAAR_CONDUCTANCE
-				> ) );  
+              gbar = GABAAR_CONDUCTANCE
+              > ) );  
         InitNodes ( .[].Layer(mGluRType1Synapses), tissueFunctor("NodeInit", <
               //gbar = NMDAR_CONDUCTANCE, 
               //w = 1.0
@@ -1826,13 +1856,13 @@ Grid MSN_D1Neuron{
 				> ) );
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				Raxial = R_NECK, // [Gohm.um] 
-        DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
-				> ) );
+          Raxial = R_NECK, // [Gohm.um] 
+          DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
+        > ) );
 #elif defined(SIMULATE_VM)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				Raxial = R_NECK // [Gohm.um] 
-				> ) );
+          Raxial = R_NECK // [Gohm.um] 
+          > ) );
 #endif
      //}}}
     /*}}}*/
@@ -1893,17 +1923,17 @@ Grid MSN_D1Neuron{
    polyConnect(extracellularMedium, .[].Layer(HCNChannels), <>, <identifier="EC">);
    //}}}
 
-	//{{{connect Ca2+(cyto)
+   //{{{connect Ca2+(cyto)
 #if defined(SIMULATE_CACYTO)
   // Ca2+ channels
   polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
   polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
+  polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
+  polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(CaExtrusions), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(CaExtrusions), <>, <identifier="EC">);
+  polyConnect(timeStep, .[].Layer(CaExtrusions), <>, <identifier="dt">);
+  polyConnect(extracellularMedium, .[].Layer(CaExtrusions), <>, <identifier="EC">);
 
   polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
   polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);

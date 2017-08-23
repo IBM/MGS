@@ -5,12 +5,14 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 #include "MaxComputeOrder.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
 static pthread_once_t once_CaLv13_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of L-type alpha1.2 Ca2+ channel
@@ -78,13 +80,16 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
   if (h.size() != size) h.increaseSizeTo(size);
   if (PCa.size() != size) PCa.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+#ifdef CONSIDER_DI_DV
+  if (conductance_didv.size() != size) conductance_didv.increaseSizeTo(size);
+#endif
   // initialize
   dyn_var_t PCabar_default = PCabar[0];
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
                  "GHK-formula Ca2+ Lv13 channel "
-                 "Channels Param" << std::endl;
+                 "Channels Param" << typeid(*this).name() << std::endl;
     assert(0);
   }
   for (unsigned i = 0; i < size; ++i)
@@ -92,12 +97,12 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
     if (Pbar_dists.size() > 0)
     {
       unsigned int j;
-			//NOTE: 'n' bins are splitted by (n-1) points
-			if (Pbar_values.size() - 1 != Pbar_dists.size())
-			{
-				std::cerr << "Pbar_values.size = " << Pbar_values.size() 
-					<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
-			}
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (Pbar_values.size() - 1 != Pbar_dists.size())
+      {
+        std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+          << "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+      }
       assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
@@ -134,27 +139,31 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
       PCabar[i] = PCabar_default;
     }
   }
+
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
 #if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
-    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
-    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
-    PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
-    //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-    ////     R [mJ/(mol.K)]
-    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-    //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-    //          (1 - tmp);  // [pA/um^2]
-    //NOTE: Tuan added 0.314
-    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    {
+      m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
+      h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+      PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+      //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+      //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+      ////     R [mJ/(mol.K)]
+      //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+      //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+      //          (1 - tmp);  // [pA/um^2]
+      ////NOTE: Tuan added 0.314
+      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
+    }
 #else
     NOT IMPLEMENTED YET;
 #endif
@@ -175,48 +184,61 @@ void ChannelCaLv13_GHK::update(RNG& rng)
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
 #if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
-    // NOTE: Some models use m_inf and tau_m to estimate m
-    //dyn_var_t ma = 0.1194 * (v + 8.124) / (exp((v + 8.124) / 9.005) - 1);
-    dyn_var_t ma = AMC * vtrap(v-AMV, AMD);
-    //dyn_var_t mb = 2.97 * exp((v) / 31.4);
-    dyn_var_t mb = BMC * exp((v-BMV) / BMD);
-    dyn_var_t tau_m = 1.0 / (ma + mb);
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
+    {
+      // NOTE: Some models use m_inf and tau_m to estimate m
+      //dyn_var_t ma = 0.1194 * (v + 8.124) / (exp((v + 8.124) / 9.005) - 1);
+      dyn_var_t ma = AMC * vtrap(v-AMV, AMD);
+      //dyn_var_t mb = 2.97 * exp((v) / 31.4);
+      dyn_var_t mb = BMC * exp((v-BMV) / BMD);
+      dyn_var_t tau_m = 1.0 / (ma + mb);
+      dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
 
-    //dyn_var_t tau_h = 14.77;  //[msec] - in paper (for 35^C)
-    dyn_var_t tau_h = 44.3;  //[msec] - in NEURON code (due to Q10fact =3.0 at 22^C)
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
+      //dyn_var_t tau_h = 14.77;  //[msec] - in paper (for 35^C)
+      dyn_var_t tau_h = 44.3;  //[msec] - in NEURON code (due to Q10fact =3.0 at 22^C)
+      dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+      dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+      dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 
-    // see Rempe-Chopp (2006)
-    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
-    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
-    PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
-    //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-    ////     R [mJ/(mol.K)]
-    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-    //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-    //          (1 - tmp);  // [pA/um^2]
-    //NOTE: Tuan added 0.314
-    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      // see Rempe-Chopp (2006)
+      m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+      h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+      PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
+      //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+      //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+      ////     R [mJ/(mol.K)]
+      //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+      //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+      //          (1 - tmp);  // [pA/um^2]
+      ////NOTE: Tuan added 0.314
+      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      I_Ca[i] = update_current(v, cai, i);  // at time (t)  [pA/um^2]
 #ifdef CONSIDER_DI_DV
-      tmp = zCaF_R * (v+0.001) / (*getSharedMembers().T); 
-      dyn_var_t I_Ca_dv = 1e-6 * PCa[i] * zCa * zF * 
-        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
-      conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
+      dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);
+      conductance_didv[i] = (I_Ca_dv-I_Ca[i])/(0.001);
 #endif
+    }
 #endif
   }
 }
 
+
+dyn_var_t ChannelCaLv13_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
+{// voltage v (mV) and return current density I_Ca(pA/um^2)
+    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * 
+    //                       *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    return result;
+}
 
 void ChannelCaLv13_GHK::initialize_others()
 {

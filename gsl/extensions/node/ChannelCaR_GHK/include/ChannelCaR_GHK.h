@@ -29,6 +29,7 @@ class ChannelCaR_GHK : public CG_ChannelCaR_GHK
   #endif
   private:
   dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
+  dyn_var_t update_current(dyn_var_t v, dyn_var_t cai, int i);
 #if CHANNEL_CaR == CaR_GHK_WOLF_2005
   const static dyn_var_t _Vmrange_taum[];
   const static dyn_var_t _Vmrange_tauh[];

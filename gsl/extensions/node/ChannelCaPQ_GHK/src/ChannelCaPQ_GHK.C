@@ -52,6 +52,9 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
   if (h.size() != size) h.increaseSizeTo(size);
   if (PCa.size() != size) PCa.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+#ifdef CONSIDER_DI_DV
+  if (conductance_didv.size() != size) conductance_didv.increaseSizeTo(size);
+#endif
   // initialize
   dyn_var_t PCabar_default = PCabar[0];
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
@@ -115,25 +118,29 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
 #if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005
-    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
-    //h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    {
+      m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
+      //h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+      PCa[i] = PCabar[i] * m[i] * m[i] ;
+      ////dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+      ////// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+      //////     R [mJ/(mol.K)]
+      ////I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+      ////          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+      ////          (1 - tmp);  // [pA/um^2]
+      ////NOTE: Tuan added 0.314
+      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+
+      I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
+    }
 #else
     NOT IMPLEMENTED YET;
 #endif
-    PCa[i] = PCabar[i] * m[i] * m[i] ;
-    //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-    ////     R [mJ/(mol.K)]
-    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-    //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-    //          (1 - tmp);  // [pA/um^2]
-    //NOTE: Tuan added 0.314
-    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
 #ifdef CONSIDER_DI_DV
     conductance_didv[i] = 0.0;
 #endif
@@ -148,36 +155,51 @@ void ChannelCaPQ_GHK::update(RNG& rng)
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
 #if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005
-    // NOTE: Some models use m_inf and tau_m to estimate m
-		//dyn_var_t tau_m = 0.377; //msec - in the paper (for 35^C)
-		dyn_var_t tau_m = 1.13; //msec - in NEURON code (for 22^C)
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    {
+      // NOTE: Some models use m_inf and tau_m to estimate m
+      //dyn_var_t tau_m = 0.377; //msec - in the paper (for 35^C)
+      dyn_var_t tau_m = 1.13; //msec - in NEURON code (for 22^C)
+      dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
+      dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
 
-    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+      m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
 
-    PCa[i] = PCabar[i] * m[i] * m[i] ;
-    //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-    ////     R [mJ/(mol.K)]
-    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-    //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-    //          (1 - tmp);  // [pA/um^2]
-    //NOTE: Tuan added 0.314
-    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      PCa[i] = PCabar[i] * m[i] * m[i] ;
+      ////dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+      ////// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+      //////     R [mJ/(mol.K)]
+      ////I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+      ////          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+      ////          (1 - tmp);  // [pA/um^2]
+      ////NOTE: Tuan added 0.314
+      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //  I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
+
 #ifdef CONSIDER_DI_DV
-    tmp = zCaF_R * (v+0.001) / (*getSharedMembers().T); 
-    dyn_var_t I_Ca_dv = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));  // [pA/um^2]
-    conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
+      dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);  // [pA/um^2]
+      conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
 #endif
+
+    }
 #endif
   }
+}
+
+dyn_var_t ChannelCaPQ_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
+{// voltage v (mV) and return current density I_Ca(pA/um^2)
+    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * 
+    //                       *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    return result;
 }
 
 

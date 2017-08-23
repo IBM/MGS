@@ -121,6 +121,9 @@ void ExchangerNCX::initialize(RNG& rng)
   // allocate
   if (I_NCX.size() != size) I_NCX.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+#ifdef CONSIDER_DI_DV
+  if (conductance_didv.size() != size) conductance_didv.increaseSizeTo(size);
+#endif
   // initialize
 #if EXCHANGER_NCX == NCX_Weber_Bers_2001
   if (INCXbar.size() != size) INCXbar.increaseSizeTo(size);
@@ -184,7 +187,9 @@ INCXbar[i] = INCXbar_values[0];
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];  // mV
+#ifdef CONSIDER_DI_DV
     conductance_didv[i] = 0;
+#endif
 #if EXCHANGER_NCX == NCX_Gabbiani_Midtgaard_Kopfel_1994 || \
     EXCHANGER_NCX == NCX_Kimura_Miyamae_Noma_1987
     I_NCX[i] = update_current(v, i);
@@ -215,24 +220,32 @@ void ExchangerNCX::update(RNG& rng)
     dyn_var_t v = (*V)[i];
 #if EXCHANGER_NCX == NCX_Gabbiani_Midtgaard_Kopfel_1994 || \
     EXCHANGER_NCX == NCX_Kimura_Miyamae_Noma_1987
-    // NOTE: k_NCX [pA. mM^-4 . um^-2], Vm [mV], Cai/o [uM], F [C/mol] or
-    // [mJ/(mV.mol)]
-    //     R [mJ/(mol.K)]
-    I_NCX[i] = update_current(v, i);
-    // must be opposite sign
-    I_Ca[i] = -NCX2Caconversion * I_NCX[i];  // [pA/um^2]
+    {
+      // NOTE: k_NCX [pA. mM^-4 . um^-2], Vm [mV], Cai/o [uM], F [C/mol] or
+      // [mJ/(mV.mol)]
+      //     R [mJ/(mol.K)]
+      I_NCX[i] = update_current(v, i);
+      // must be opposite sign
+      I_Ca[i] = -NCX2Caconversion * I_NCX[i];  // [pA/um^2]
 
-    dyn_var_t I_NCX_didv = update_current(v+0.001, i);
-    conductance_didv[i] = (I_NCX_didv-I_NCX[i])/(0.001);
+#ifdef CONSIDER_DI_DV
+      dyn_var_t I_NCX_dv = update_current(v+0.001, i);
+      conductance_didv[i] = (I_NCX_dv-I_NCX[i])/(0.001);
+#endif
 
+    }
 #elif EXCHANGER_NCX == NCX_Weber_Bers_2001
-    // The saturation is incorporated in the denominator of the formula
-    I_NCX[i] = update_current(v, i);
-    // must be opposite sign
-    I_Ca[i] = -NCX2Caconversion * I_NCX[i];  // [pA/um^2]
+    {
+      // The saturation is incorporated in the denominator of the formula
+      I_NCX[i] = update_current(v, i);
+      // must be opposite sign
+      I_Ca[i] = -NCX2Caconversion * I_NCX[i];  // [pA/um^2]
 
-    dyn_var_t I_NCX_didv = update_current(v+0.001, i);
-    conductance_didv[i] = (I_NCX_didv-I_NCX[i])/(0.001);
+#ifdef CONSIDER_DI_DV
+      dyn_var_t I_NCX_didv = update_current(v+0.001, i);
+      conductance_didv[i] = (I_NCX_didv-I_NCX[i])/(0.001);
+#endif
+    }
 #elif EXCHANGER_NCX == _COMPONENT_UNDEFINED
     // do nothing
 #endif

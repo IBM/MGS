@@ -240,6 +240,9 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
   {
     CurrentArrayProducer.currents >> channelCurrentsGHK.currents;
+#ifdef CONSIDER_DI_DV
+    CurrentArrayProducer.di_dv >> channelCurrentsGHK.di_dv;
+#endif
   }
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
@@ -501,6 +504,9 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
   {
     CurrentArrayProducer.currents >> channelCurrentsGHK.currents;
+#ifdef CONSIDER_DI_DV
+    CurrentArrayProducer.di_dv >> channelCurrentsGHK.di_dv;
+#endif
   }
 
 #ifdef CONSIDER_DI_DV

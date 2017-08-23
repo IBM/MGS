@@ -17,8 +17,11 @@
 // STIMULUS
 //{{{ see stimulus*.gsl and connect_stimulus*.gsl
 #define CASE_VIVO 1000 // random input at all spines
+#define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma [square pulse current]
+#define CASE_01b  101   //inject soma [brief train of AP]
+#define CASE_01c  201   //inject soma [point current source]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -26,7 +29,9 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define STIMULUS_CASE   CASE_01
+#define CASE_09  9   //inject pre-syn soma [random noise current]
+#define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
+#define STIMULUS_CASE   CASE_08
 //#define morph ""
 #define morph "msn0_"
 //#define morph "msn0spines_"
@@ -104,6 +109,9 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #else
   assert(0);
 #endif
+
+
+  //{{{recording-interval (I/O)
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 	//#define RecordInterval   0.1   //  [ms]
 	#define RecordInterval   TimeStep_value   //  [ms]
@@ -113,6 +121,7 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #else
   assert(0);
 #endif
+  //}}}
 //}}}
 
 
@@ -275,6 +284,7 @@ RuntimePhases = {
   //IMPORTANT: 'recON' - trigger I/O must be triggered at 'updateNMDADepPlasticity'
   //           which is when the system global time is 't' 
   //           but Iion is at value and also of second-order derivative at time (t-dt/2)
+  // discrete-events --> updateNMDADepPlasticity ( event(time <= t+dt/2) )
 updateNMDADepPlasticity, 
 predictJunction,
 #if MAX_COMPUTE_ORDER>6
@@ -296,12 +306,16 @@ predictJunction,
       forwardSolve2,
 #endif
 #if MAX_COMPUTE_ORDER>0 
-      forwardSolve1,  //from forwardSolve7 to here: update r.h.s. and 'd'
+      forwardSolve1,  //from forwardSolve7 to here: call :doForwardSolve() - update r.h.s. and 'd' at (t+dt/2) 
+                      //using g(t+dt/2) - H.Huxley; and di/dv quantity 
+                      // NOTE: --> I^*(t+dt/2)~I(t)+di/dv*(V(t+dt/2)-V(t))
 #endif
-      solve,   // (for branches with COMPUTE_ORDER=0) doForwardSolve()+doBackwardSolve() --> update r.h.s., d and solve v(?): input is v(t), gate(t+dt/2)
-               //      to produce output: v(t+dt/2)
+      solve,   // (for branches with COMPUTE_ORDER=0) doForwardSolve()+doBackwardSolve() 
+               // :doForwardSolve() --> update r.h.s., d and solve v(?): input is v(t), gate(t+dt/2)
+               //  :doBackwardSolve() --> produce output: v(t+dt/2)
+      //solveChannelCurrents, // produce Iion(t+dt/2)
 #if MAX_COMPUTE_ORDER>0 
-      backwardSolve1,  // just do doBackwardSolve() for branches with COMPUTE_ORDER=1
+      backwardSolve1,  // just do :doBackwardSolve() for branches with COMPUTE_ORDER=1
 #endif
 #if MAX_COMPUTE_ORDER>1
       backwardSolve2,
@@ -944,11 +958,13 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 /*{{{*/
 //stimulus
 //{{{
-VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
-VariableType PointCurrentSource { stimulate->solveChannels };
-VariableType PointCalciumSource { stimulate->solveChannels };
-
-VariableType VoltageClamp {initialize->initialize1, updateI->finish};
+//IMPORTANT: current stimulus is discrete event
+VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
+VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity};
+VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity};
+//                     I(t+dt/2)  ~ I(t) + di/dv * (V(t+dt/2) - V(t))
+// so updateI --> produce di/dv and I(t)
+VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasticity};
 #include "stimulus_model.gsl"
 //}}}
 
