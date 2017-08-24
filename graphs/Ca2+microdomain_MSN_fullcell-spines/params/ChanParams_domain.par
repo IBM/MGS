@@ -80,14 +80,22 @@ MTYPE BRANCHTYPE
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 #}}}
 
-CHANNEL_COSTS 20
+CHANNEL_COSTS 24
 #{{{
+#NOTE: Some of the names refer to the same channels, but we put here
+# though not affecting the simulation
 Nat     0.414243
 Nap     0.414243
 KAf     0.254051
+Kt      0.254051
 KAs     0.254051
-KIR     0.254051
+Ks      0.254051
 KRP     0.254051
+Kp      0.254051
+KIR     0.254051
+KDR     0.254051
+Kv31    0.254051
+MK      0.254051
 BK      0.254051
 SK      0.254051
 CaLv12  0.254051
@@ -97,11 +105,9 @@ CaPQ    0.254051
 CaR     0.254051
 CaT     0.254051
 PMCA    0.254051
-Kv31    0.254051
 IP3R    0.254051
 RYR1    0.254051
 NCX     0.254051
-MK     0.254051
 #}}}
 
 
@@ -352,20 +358,20 @@ BRANCHTYPE MTYPE
 #{{{ RYR 
 RYR 2
 MTYPE BRANCHTYPE 
-[2, 3] 1       <gbar={0.0004}> 
-[2, 3] 3       <gbar={0.00000138}>
+[2, 3] 1       <gbar={4.0e-4}> 
+[2, 3] 3       <gbar={4.0e-4}>
 #}}}
 #{{{IP3R 
 IP3R 2
 MTYPE BRANCHTYPE 
-[2, 3] 1       <gbar={0.0004}> 
-[2, 3] 3       <gbar={0.00000138}>
+[2, 3] 1       <gbar={4.0e-4}> 
+[2, 3] 3       <gbar={4.0e-5}>
 #}}}
 #{{{KAf 
 KAf 2
 MTYPE BRANCHTYPE 
-[2, 3] 1       <gbar={0.000138}>
-[2, 3] 3       <gbar={0.00000138}>
+[2, 3] 1       <gbar={1.38e-4}>
+[2, 3] 3       <gbar={1.38e-4}>
 #}}}
 #{{{ CaLv13
 CaLv13 2
@@ -396,8 +402,8 @@ MTYPE BRANCHTYPE
 #{{{ Nap
 Nap 2
 MTYPE BRANCHTYPE 
-[4,5] 1 <gbar={0.00000138}>
-[4,5] 2 <gbar={0.00000138}>
+[4,5] 1 <gbar={1.38e-6}>
+[4,5] 2 <gbar={1.38e-6}>
 #}}}
 #{{{ Kv31
 Kv31 2
@@ -408,8 +414,8 @@ MTYPE BRANCHTYPE
 #{{{ KAs
 KAs 2
 MTYPE BRANCHTYPE
-[4,5] 1  <gbar={0.00138}>  
-[4,5] 2  <gbar={0.00138}>
+[4,5] 1  <gbar={1.38e-3}>  
+[4,5] 2  <gbar={1.38e-3}>
 #}}}
 #{{{PMCA
 PMCA 2
@@ -465,12 +471,12 @@ BRANCHTYPE MTYPE
 
 
 # UNITS: 
-#  v_efflux = 1/ms
+#  v_efflux = 1/ms  [DEFAULT: 0.1 [ms^-1]]
 #  depth    = nanometer
 #  fraction_surface = % [of membrane-surface-area]
 # IMPORTANT: ';' separated list of values
 MICRODOMAIN_PARAMS 3
-domain1  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
-domain2  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
-domain3  <v_efflux={0.003}; depth_microdomain={10}; fraction_surface={1.0}>
+domain1  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain2  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain3  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
 

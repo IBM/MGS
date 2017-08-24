@@ -1,10 +1,20 @@
 
 #if STIMULUS_CASE == CASE_08
 //{{{
+#ifdef USE_SERIES_RESISTANCE
+// Iinject = (Vc - Vm) / Rs;
+// Rs = [GOhm] -- default is 1.0 [MOhm] ~ 0.001 GOhm
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.1, fileName="SEClamp.txt">;
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.01, fileName="SEClamp.txt">;
+VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.001, fileName="SEClamp.txt">;
+#else
 //NOTE: User can define 'idx' to specify compartment index (default is 0)
-//VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
+// Iinject = beta * Cm * (Vc - Vm) / (dt/2) * Area() ; //(pA) 
+VoltageClamp somaClamp<type=1, command = -80.0, beta=2.0, Cm =0.01>;
+#endif
 //NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
-VoltageClamp somaClamp<type=2, command = -100.0, gainTime=0.05>; // time 0
+//VoltageClamp somaClamp<type=2, command = -100.0, gainTime=0.05>; // time 0
+
 somaClamp.toggle() on voltageClampSet0Sem; 
 somaClamp.setCommand( < 
    command = 0.0   // [mV]  - a command Voltage

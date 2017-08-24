@@ -1,11 +1,27 @@
 #if STIMULUS_CASE == CASE_08
 //{{{voltage-clamp
 //NOTE: User can define 'idx' to specify compartment index (default is 0)
-//VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
-//NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
 #define Vm_hold -100.0  // [mV]
 #define Vm_step -30.0     // [mV]
+#ifdef USE_SERIES_RESISTANCE
+// Iinject = (Vc - Vm) / Rs;
+// Rs = [GOhm] -- default is 1.0 [MOhm] ~ 0.001 GOhm
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.1, fileName="SEClamp.txt">;
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.01, fileName="SEClamp.txt">;
+//VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.001, fileName="SEClamp.txt">;
+//VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.0001, fileName="SEClamp.txt">;
+VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.00008, fileName="SEClamp.txt">;
+//VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.00008, fileName="SEClamp.txt", gainTime=0.05>;
+//VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.00001, fileName="SEClamp.txt">;
+#else
+//VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
+// beta = headstage gain [unitless]
+//  Cm = pF/um^2
+// Iinject = beta * Cm * (Vc - Vm) / (dt/2) * Area() ; //(pA) 
 VoltageClamp somaClamp<type=1, command = Vm_hold, beta=1.0, Cm =0.01, fileName=PathFileCombine("SEClamp.txt")>;
+#endif
+//NOTE: Using type=2 is NOT recommended - a trick to directly play the voltage onto the Vm
+//NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
 //VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.05>; //TimeSetVClamp1
 //VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.025>; //TimeSetVClamp1
 //VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.0>; //TimeSetVClamp1
@@ -63,8 +79,8 @@ somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 //{{{
 //NOTE: Unit of current injection is [pA]
 //NOTE: MSN requires long stimulation due to the long shunt in the first AP
-//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
-CurrentPulseGenerator somaStimInj<pattern="periodic", peak=120.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=120.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
 //}}}
 #endif
 #if STIMULUS_CASE == CASE_01b

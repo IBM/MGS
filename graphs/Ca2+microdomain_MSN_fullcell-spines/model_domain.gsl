@@ -174,8 +174,8 @@ print(OutputFolderName);
  // use with fast-buffering assumption
 //#define Cacyto_EffectiveDiffusionConstant  4.4 // [um^2/ms] unbuffered+buffered
 #define Cacyto_EffectiveDiffusionConstant  0.4 // [um^2/ms] unbuffered+buffered
-//#define Cacyto_beta 0.05 // unitless [Wagner and Keizer buffering constant]
-#define Cacyto_beta 0.10 
+#define Cacyto_beta 0.05 // unitless [Wagner and Keizer buffering constant]
+//#define Cacyto_beta 0.10 
 //#define Cacyto_beta 0.25 
 #define CaER_EffectiveDiffusionConstant  1.0  // units???
 #define CaER_beta 0.05 // [Wagner and Keizer buffering constant]
@@ -295,6 +295,8 @@ print(OutputFolderName);
 
 //PHASES DEFINITION
 /*{{{*/
+//  At input: time t=t0=0
+//
 // order of initialization
 //  1. initial states for solvers, Voltage, Concentrations at time (t0)
 //  2. initial coefficients for solvers, derived parameters, Junctions' data, reversal potentials
@@ -306,13 +308,21 @@ print(OutputFolderName);
 //             i.e. gate(t0+dt/2) = gate(t0) + f(gate(t0)) * (dt/2)
 //  3.b. initial values of GHK currents at time (t0+dt/2)
 //        check page 169 NEURON book
-//  4. initial values of VariableTypes
+//       conductance at time (t0+dt/2)
+//       ionic current not available yet (or can use value at (t0+dt/2)) 
+//  4. initial values of VariableTypes, e.g. SimulationInfo, VoltageDisplay
 //  5. (not being used)  
 //  6. (not being used)
 InitPhases = { initialize1, initialize2, initialize3, initialize4, initialize5, initialize6 };
+//  NOTE: Time does not increase, i.e. at exit time is t=t0
 
 RuntimePhases = {
 /*{{{*/
+  //time input is t with data v(t), cai(t), gate(t+dt/2), Iion(t-dt/2) 
+  //IMPORTANT: 'recON' - trigger I/O must be triggered at 'updateNMDADepPlasticity'
+  //           which is when the system global time is 't' 
+  //           but Iion is at value and also of second-order derivative at time (t-dt/2)
+  // discrete-events --> updateNMDADepPlasticity ( event(time <= t+dt/2) )
 //fadvance() with assumption input (at the end of InitPhases): V(t), gates(t+dt/2)
 //   initialize1 --> sync data (e.g. dimension data)
 //   use t: calculate V(t) --> initialize2
@@ -351,11 +361,16 @@ updateNMDADepPlasticity, predictJunction,
       forwardSolve2,
 #endif
 #if MAX_COMPUTE_ORDER>0 
-      forwardSolve1,
+      forwardSolve1,  //from forwardSolve7 to here: call :doForwardSolve() - update r.h.s. and 'd' at (t+dt/2) 
+                      //using g(t+dt/2) - H.Huxley; and di/dv quantity 
+                      // NOTE: --> I^*(t+dt/2)~I(t)+di/dv*(V(t+dt/2)-V(t))
 #endif
-      solve, 
+      solve,   // (for branches with COMPUTE_ORDER=0) doForwardSolve()+doBackwardSolve() 
+               // :doForwardSolve() --> update r.h.s., d and solve v(?): input is v(t), gate(t+dt/2)
+               //  :doBackwardSolve() --> produce output: v(t+dt/2)
+      //solveChannelCurrents, // produce Iion(t+dt/2)
 #if MAX_COMPUTE_ORDER>0 
-      backwardSolve1,
+      backwardSolve1,  // just do :doBackwardSolve() for branches with COMPUTE_ORDER=1
 #endif
 #if MAX_COMPUTE_ORDER>1
       backwardSolve2,
@@ -375,10 +390,13 @@ updateNMDADepPlasticity, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
-      correctJunction, 
-      finish,
-      solveChannels 
+      correctJunction, // correct prediction of v(t+dt/2), ca(t+dt/2) using gate(t+dt/2)
+                       // ... then calculate v(t+dt), ca(t+dt)
+      finish,           // update v(t+dt) using v(t+dt/2)-> - this is WHEN the time is incremented
+      solveChannels   // update current first I(t+dt/2) using v(t+dt/2), gate(t+dt/2), 
+                       // update gate(t+dt/2+dt) using gate(t+dt/2), v(t+dt)
 /*}}}*/
+      //, and increase the time to (t+dt)
  };
 
 FinalPhases = { finalize };
@@ -1059,9 +1077,12 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 /*{{{*/
 //stimulus
 //{{{
+//IMPORTANT: current stimulus is discrete event
 VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity };
 VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity };
 VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity };
+//                     I(t+dt/2)  ~ I(t) + di/dv * (V(t+dt/2) - V(t))
+// so updateI --> produce di/dv and I(t)
 VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasticity};
 
 #include "stimulus_model.gsl"
@@ -1705,26 +1726,26 @@ Grid MSN_D1Neuron{
     //}}}
 
   //{{{HCN 
-   InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
-         compartmentalize = {  "gbar" },
-         //gbar = {0.45}
-         gbar = {0.85}
-         > ) );
-  //}}}
-	//{{{ Ca2+ channels
+        InitNodes ( .[].Layer(HCNChannels), tissueFunctor("NodeInit", <
+              compartmentalize = {  "gbar" },
+              //gbar = {0.45}
+              gbar = {0.85}
+              > ) );
+        //}}}
+        //{{{ Ca2+ channels
 #if defined(SIMULATE_CACYTO)
-   InitNodes ( .[].Layer(CalChannels), tissueFunctor("NodeInit", <
-         compartmentalize = { "gbar" },
-         gbar = {0.01}
-         //gbar = {0.1}
-         > ) );
+        InitNodes ( .[].Layer(CalChannels), tissueFunctor("NodeInit", <
+              compartmentalize = { "gbar" },
+              gbar = {0.01}
+              //gbar = {0.1}
+              > ) );
 
-   InitNodes ( .[].Layer(CahChannels), tissueFunctor("NodeInit", <
-         compartmentalize = { "gbar" }
-         //, gbar = {0.4}
-         > ) );
+        InitNodes ( .[].Layer(CahChannels), tissueFunctor("NodeInit", <
+              compartmentalize = { "gbar" }
+              //, gbar = {0.4}
+              > ) );
 
-	InitNodes ( .[].Layer(CaLv12Channels), tissueFunctor("NodeInit", <
+        InitNodes ( .[].Layer(CaLv12Channels), tissueFunctor("NodeInit", <
               compartmentalize = { "PCabar" },
               PCabar = {0.0}
               > ) );
@@ -1822,7 +1843,7 @@ Grid MSN_D1Neuron{
     /*}}}*/
     // 3.2. SYNAPSE RECEPTORS
     /*{{{*/
-	InitNodes ( .[].Layer(AMPASynapses), tissueFunctor("NodeInit", <
+        InitNodes ( .[].Layer(AMPASynapses), tissueFunctor("NodeInit", <
               gbar =  AMPAR_CONDUCTANCE
               > ) );
         InitNodes ( .[].Layer(NMDASynapses), tissueFunctor("NodeInit", <
@@ -1884,38 +1905,38 @@ Grid MSN_D1Neuron{
 	  // 1. with CONSTANTS
 	/*{{{*/
    //{{{compartments
-	polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
 #if defined(SIMULATE_CACYTO)
-	polyConnect(timeStep, .[].Layer(branches_Ca, junctions_Ca), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(branches_Ca, junctions_Ca), <>, <identifier="dt">);
 #endif
 #if defined(SIMULATE_CAER)
-	polyConnect(timeStep, .[].Layer(branches_CaER, junctions_CaER), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(branches_CaER, junctions_CaER), <>, <identifier="dt">);
 #endif
 #if defined(SIMULATE_DOPA)
-	polyConnect(timeStep, .[].Layer(branches_Dopa, junctions_Dopa), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(branches_Dopa, junctions_Dopa), <>, <identifier="dt">);
 #endif
 #if defined(SIMULATE_IP3)
-	polyConnect(timeStep, .[].Layer(branches_IP3, junctions_IP3), <>, <identifier="dt">);
+   polyConnect(timeStep, .[].Layer(branches_IP3, junctions_IP3), <>, <identifier="dt">);
 #endif
    //}}}
 
    //{{{ionic channels
    //{{{ Na+ channels
-  polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
 
    //}}}
 
   //{{{ K+ channels
-  polyConnect(timeStep, .[].Layer(KDRChannels), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(KDRChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(KDRChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(KDRChannels), <>, <identifier="EC">);
 
-  polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
-  polyConnect(timeStep, .[].Layer(MKChannels), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(MKChannels), <>, <identifier="EC">);
-  polyConnect(timeStep, .[].Layer(Kv31Channels), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(Kv31Channels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(MKChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(MKChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(Kv31Channels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(Kv31Channels), <>, <identifier="EC">);
   //}}}
 
    //{{{HCN
@@ -1925,18 +1946,18 @@ Grid MSN_D1Neuron{
 
    //{{{connect Ca2+(cyto)
 #if defined(SIMULATE_CACYTO)
-  // Ca2+ channels
-  polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
+   // Ca2+ channels
+   polyConnect(timeStep, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(CaLv12Channels, CaLv13Channels, CaNChannels, CaPQChannels, CaRChannels, CaTChannels), <>, <identifier="EC">);
 
-  polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(ExchangerNCXs), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(ExchangerNCXs), <>, <identifier="EC">);
 
-  polyConnect(timeStep, .[].Layer(CaExtrusions), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(CaExtrusions), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(CaExtrusions), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(CaExtrusions), <>, <identifier="EC">);
 
-  polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
-  polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(PumpPMCAs), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(PumpPMCAs), <>, <identifier="EC">);
 #endif
   //}}}
 
