@@ -18,7 +18,12 @@
 #include "CG_VoltageClamp.h"
 #include <memory>
 #include <typeinfo>
+#include <cmath>
 #include "MaxComputeOrder.h"
+
+#define SMALL 1.0e-6
+// use 0 or 1
+#define ABRUPT_JUMP_VOLTAGE 1
 
 void VoltageClamp::initialize(RNG& rng) 
 {
@@ -46,12 +51,31 @@ void VoltageClamp::initialize(RNG& rng)
   }
 
   //NOTE: If not defined, idx=0 default
+#ifdef USE_SERIES_RESISTANCE
+  //nothing to do
+#else
   surfaceArea = &(dimensions[idx]->surface_area);
+#endif
   _isOn = false;
   _status = VoltageClamp::NO_CLAMP;
 
   _Vprev = (*V)[idx];
   waveformIdx = waveform.size();
+  if (gainTime < SMALL)
+    gainTime = 0.005; // [ms]
+    //gainTime = 0.05; // [ms]
+  update_gainTime();
+}
+
+float VoltageClamp::getCurrentTime()
+{
+  return (getSimulation().getIteration()-1) * (*deltaT);
+}
+
+void VoltageClamp::update_gainTime()
+{
+#define DV_GAINTIME 100  // [mV] - the voltage change for the given 'gainTime'
+  _gainTime = std::fabs(command - _Vstart) / (DV_GAINTIME) * gainTime;
 }
 
 void VoltageClamp::updateI(RNG& rng) 
@@ -67,9 +91,13 @@ void VoltageClamp::updateI(RNG& rng)
     inject=true;
   }
   if (waveformIdx<waveform.size()) {
+    //assume each element map to the single time-step element
     targetV=waveform[waveformIdx];
     ++waveformIdx;
     inject=true;
+    //HOWVER: This is not good as the result changes with the chosen time-step 
+    //SO    : try type=3; where the dynamic voltage has associated time information so we can extrapolate the 
+    //        data point and give the same result regardless of time-step being used
   }
   if (inject) {
     if (type == 1 or type == 3)
@@ -78,8 +106,32 @@ void VoltageClamp::updateI(RNG& rng)
       if (type == 1)
       {
         //float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
+#if ABRUPT_JUMP_VOLTAGE == 1
         //NOTE: assume abrupt jump 
         goal = targetV; 
+#else
+        float currentTime = getCurrentTime();
+        if (_status == VoltageClamp::SLOPE_ON)
+        {
+          if (currentTime < _timeStart + _gainTime)
+          {
+            goal = _Vstart + (currentTime - _timeStart)/(_gainTime) * (targetV - _Vstart) ;
+          }
+          else{
+            _status = VoltageClamp::FLAT_ZONE;
+          }
+        }
+        else if (_status == VoltageClamp::SLOPE_OFF)
+        {
+          if (currentTime < _timeStart + _gainTime)
+          {
+            goal = targetV + (_timeStart + _gainTime - currentTime )/(_gainTime) * (_Vstart - targetV) ;
+          }
+          else{
+            _status = VoltageClamp::FLAT_ZONE;
+          }
+        }
+#endif
       }
       else if (type == 3)
       {
@@ -132,10 +184,10 @@ void VoltageClamp::updateI(RNG& rng)
       if (outFile)
       {
 #ifdef USE_SERIES_RESISTANCE
-        (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen
+        (*outFile)<<getCurrentTime()<<"\t"<<Igen
           <<"\t"<<Rs<<"\t"<<targetV<<"\t"<<(*V)[idx]<<"\n";
 #else
-        (*outFile)<<getSimulation().getIteration()* *deltaT<<"\t"<<Igen
+        (*outFile)<<getCurrentTime()<<"\t"<<Igen
           <<"\t"<<beta<<"\t"<<Cm<<"\t"<<targetV<<"\t"<<(*V)[idx]<<" "<<"\n";
 #endif
       }
@@ -143,12 +195,12 @@ void VoltageClamp::updateI(RNG& rng)
     else if (type == 2)
     {
       (*V)[idx] = targetV;
+      float currentTime = getCurrentTime();
       if (_status == VoltageClamp::SLOPE_ON)
       {
-        float currentTime = getSimulation().getIteration() * (*deltaT);
-        if (currentTime < _timeStart + gainTime)
+        if (currentTime < _timeStart + _gainTime)
         {
-          (*V)[idx] = _Vstart + (currentTime - _timeStart)/(gainTime) * (targetV - _Vstart) ;
+          (*V)[idx] = _Vstart + (currentTime - _timeStart)/(_gainTime) * (targetV - _Vstart) ;
         }
         else{
           _status = VoltageClamp::FLAT_ZONE;
@@ -156,10 +208,9 @@ void VoltageClamp::updateI(RNG& rng)
       }
       else if (_status == VoltageClamp::SLOPE_OFF)
       {
-        float currentTime = getSimulation().getIteration() * (*deltaT);
-        if (currentTime < _timeStart + gainTime)
+        if (currentTime < _timeStart + _gainTime)
         {
-          (*V)[idx] = targetV + (_timeStart + gainTime - currentTime )/(gainTime) * (_Vstart - targetV) ;
+          (*V)[idx] = targetV + (_timeStart + _gainTime - currentTime )/(_gainTime) * (_Vstart - targetV) ;
         }
         else{
           _status = VoltageClamp::FLAT_ZONE;
@@ -191,7 +242,7 @@ void VoltageClamp::setCommand(Trigger* trigger, NDPairList* ndPairList)
   for (; iter!=end; ++iter) {
     if ( (*iter)->getName() == "command" ) {
       command = static_cast<NumericDataItem*>((*iter)->getDataItem())->getFloat();
-      _timeStart = getSimulation().getIteration() * (*deltaT);
+      _timeStart = getCurrentTime();
       _Vstart = (*V)[idx];
       if (_Vprev < command)
       {
@@ -200,6 +251,7 @@ void VoltageClamp::setCommand(Trigger* trigger, NDPairList* ndPairList)
       else{
         _status = VoltageClamp::SLOPE_OFF;
       }
+      update_gainTime();
     }
   }
 }
@@ -222,7 +274,7 @@ void VoltageClamp::toggle(Trigger* trigger, NDPairList* ndPairList)
   }
   if (_isOn)
   {
-    _timeStart = getSimulation().getIteration() * (*deltaT);
+    _timeStart = getCurrentTime();
     _Vstart = (*V)[idx];
     if (_Vprev < command)
     {

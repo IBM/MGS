@@ -40,6 +40,9 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
     virtual bool checkSite(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
     virtual bool confirmUniqueDeltaT(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
     virtual ~HodgkinHuxleyVoltage();
+#ifdef CONSIDER_DI_DV 
+  virtual void add_zero_didv(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset);
+#endif
 
 
 
@@ -111,6 +114,10 @@ class HodgkinHuxleyVoltage : public CG_HodgkinHuxleyVoltage
     void doForwardSolve();
     void doBackwardSolve();
     static SegmentDescriptor _segmentDescriptor;
+#ifdef CONSIDER_DI_DV 
+    dyn_var_t _zero_conductance = 0.0;
+    int _tmp_index; // keep track the starting index to add zero-didv
+#endif
 };
 
 #endif

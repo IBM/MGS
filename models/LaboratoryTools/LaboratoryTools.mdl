@@ -54,11 +54,12 @@ Variable VoltageClamp Implements CurrentProducer
 #else
   dyn_var_t Cm;		// (pF/um^2) - specific membrane capacitance
   dyn_var_t beta; // headstage gain (unitless)
-#endif
   dyn_var_t* surfaceArea;
+#endif
   //}}}
-  //{{{ type = 2
-  float gainTime ; // [ms] - typically 0.05 ms or 50 microseconds is the type to reach 99% value of Vc in experiment
+  //{{{ type = 2 || type = 1
+  float gainTime ; // [ms] - the time to reach +100mV amplitude
+          //DEFAULT: 0.05 ms or 50 microseconds (the typical the time to reach 99% value of +100mV)
   //}}}
   //{{{ type = 3
   string tVm_file;  // [type=3][input] = hold time-Vm
@@ -87,7 +88,6 @@ Variable VoltageClamp Implements CurrentProducer
   //NOTE: Currently limited to junction (e.g. soma) only
   Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
     VoltageArrayProducer.voltageArray >> V;
-    //SurfaceAreaProducer.surfaceArea >> surfaceArea;
     DimensionArrayProducer.dimensionArray >> dimensions;   
   }
   //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 

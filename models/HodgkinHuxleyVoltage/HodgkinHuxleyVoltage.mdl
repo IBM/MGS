@@ -244,10 +244,17 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     CurrentArrayProducer.di_dv >> channelCurrentsGHK.di_dv;
 #endif
   }
-
+ 
+#ifdef CONSIDER_DI_DV
+  UserFunction add_zero_didv;
+#endif
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
+#ifdef CONSIDER_DI_DV
+    //must call after setInjectedCurrent();
+    add_zero_didv();
+#endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateGapJunctionCount();
 #endif
@@ -263,6 +270,10 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
+#ifdef CONSIDER_DI_DV
+    //must call after setInjectedCurrent();
+    add_zero_didv();
+#endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
 #endif
@@ -275,7 +286,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
    }
 
   PredicateFunction checkSite;
-  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+  Connection Pre Variable (PSet.identifier=="VClamp" && checkSite()) Expects 
       CurrentProducer 
 #ifdef CONSIDER_DI_DV
     , DIDV_ConductanceProducer
@@ -286,6 +297,17 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     DIDV_ConductanceProducer.conductance_didv >> injectedCurrents.conductance_didv;
 #endif
     setInjectedCurrent();
+   }
+
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentProducer
+   {
+    CurrentProducer.current >> injectedCurrents.current;
+    setInjectedCurrent();
+#ifdef CONSIDER_DI_DV
+    //must call after setInjectedCurrent();
+    add_zero_didv();
+#endif
    }
 
   Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects VoltageProducer, DimensionProducer {
@@ -546,7 +568,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
    }
 
   PredicateFunction checkSite;
-  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+  Connection Pre Variable (PSet.identifier=="VClamp" && checkSite()) Expects 
     CurrentProducer
 #ifdef CONSIDER_DI_DV
     , DIDV_ConductanceProducer
@@ -555,6 +577,15 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     CurrentProducer.current >> injectedCurrents;
 #ifdef CONSIDER_DI_DV
     DIDV_ConductanceProducer.conductance_didv >> injectedCurrents_conductance_didv;
+#endif
+   }
+
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentProducer
+   {
+    CurrentProducer.current >> injectedCurrents;
+#ifdef CONSIDER_DI_DV
+    add_zero_didv();
 #endif
    }
 

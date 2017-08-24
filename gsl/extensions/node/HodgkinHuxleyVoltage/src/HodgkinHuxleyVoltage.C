@@ -734,7 +734,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
       //RHS[i] += di_dv * Vcur[i]; 
       //Aii[i] += di_dv;  
       RHS[i] +=  (*(iiter->di_dv))[i] * Vcur[i]; //[pA/um^2]
-      Aii[i] +=  (*(iiter->di_dv))[i]; //[pA/um^2]
+      Aii[i] +=  (*(iiter->di_dv))[i]; //[nS/um^2]
 #endif
     }
   }
@@ -765,7 +765,7 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   //        //RHS[i] += di_dv * Vcur[i]; 
   //        //Aii[i] += di_dv;  
   //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
-  //        Aii[i] +=  (*(riter->di_dv))[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[nS/um^2]
   //#endif
   //  }
   //}
@@ -790,7 +790,17 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   for (; iiter != iend; iiter++)
   {
     if (iiter->index < branchData->size)
+    {
       RHS[iiter->index] += *(iiter->current) / iiter->area; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+      //take into account di/dv * Delta_V
+      //IMPORTANT: addition is used
+      //RHS[i] += di_dv * Vcur[i]; 
+      //Aii[i] += di_dv;  
+      RHS[iiter->index] +=  (*(iiter->conductance_didv)) * Vcur[iiter->index]; //[pA/um^2]
+      Aii[iiter->index] +=  (*(iiter->conductance_didv)); //[nS/um^2]
+#endif
+    }
   }
 
   //apply Gaussian elimination to remove Aim[] factors
@@ -1287,6 +1297,9 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
 #ifdef DEBUG_ASSERT
   assert(injectedCurrents.size() > 0);
 #endif
+#ifdef CONSIDER_DI_DV 
+    _tmp_index = injectedCurrents.size() - 1;
+#endif
   TissueSite& site = CG_inAttrPset->site;
   if (site.r != 0)  // a sphere is provided, i.e. used for current injection
   {//stimulate a region (any compartments fall within the sphere are affected)
@@ -1466,3 +1479,12 @@ void HodgkinHuxleyVoltage::updateGapJunctionCount(const String& CG_direction, co
 }
 #endif
 
+#ifdef CONSIDER_DI_DV 
+void HodgkinHuxleyVoltage::add_zero_didv(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageOutAttrPSet* CG_outAttrPset)
+{
+    for (int i = _tmp_index; i < injectedCurrents.size(); ++i)
+    {
+        injectedCurrents[i].conductance_didv = &_zero_conductance;
+    }
+}
+#endif

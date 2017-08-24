@@ -44,6 +44,9 @@ class VoltageClamp : public CG_VoltageClamp
       bool _isOn;
       float _Vprev;	// Declare voltage from previous iteration for calculating dV
       int waveformIdx;
+      float _gainTime; //[ms] the time to reach Vc2 from Vc1
+      float getCurrentTime();
+      void update_gainTime();
 };
 
 #endif
