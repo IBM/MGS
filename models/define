@@ -13,6 +13,8 @@
 # 1. once a component in the MDL file is added/changed --> the whole MDL file is recompiled
 #       (so try not to put so many components in one MDL file)
 # 2. it doesn't automatically compile for #include MDL file (as the generated file is expected to be in a different location)
+# HOW TO USE
+# ./define <file.mdf> [-rebuild]
 
 temp_mdf_only=$(mktemp)
 temp_mdl_only=$(mktemp)
@@ -36,8 +38,10 @@ while read in; do
   fi
 done < ${temp_mdf_only}
 
+RERUN=0
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
   awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
+  RERUN=1
 else
   awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; if ! cmp --silent <(cpp " $2 "/" $5")   " $2 "/." $5 "; then cpp " $2 "/" $5 " >" $2 "/." $5 ";" $0 " fi" }' defineModels1.sh > defineModels2.sh;
 fi
@@ -47,15 +51,15 @@ source defineModels2.sh;
 rm -f defineModels1.sh;
 rm -f defineModels2.sh;
 ##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
-if [ define -ot $1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; fi
+REGEN=0
+if [ define -ot $1 ] && [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; REGEN=1; fi
 #$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
-RERUN=0
 for i in "${MDLFILES[@]}"
 do
   if [ define -ot $i ]; then RERUN=1; cpp $i > $(dirname "${i}")"/."$(basename "${i}"); fi
   touch $i
 done
-if [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; echo "REGENERATE Extension.mk"; fi
+if [ "$RERUN" -eq 1 ]  && [ $REGEN -eq 0 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; REGEN=1; fi
 touch $1
 sleep 2
 touch define;
