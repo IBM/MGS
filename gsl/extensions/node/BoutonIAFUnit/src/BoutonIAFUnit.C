@@ -32,19 +32,19 @@ void BoutonIAFUnit::initialize(RNG& rng)
   if (CB1input.size() != 1)
     assert("BoutonIAFUnit: Goodwin inputs should be one.");
   // Default starting values
-  glutamate = 0.0;
+  neurotransmitter = 0.0;
   CB1Rrise = 0.0;
   CB1Rcurrent = 0.0;
 }
 
 void BoutonIAFUnit::update(RNG& rng)
 {
-  // ##### Glutamate release #####
-  // If there is a spike, release glutamate
+  // ##### Neurotransmitter release #####
+  // If there is a spike, release neurotransmitter
   if ((spikeInput.size() > 0) && (*(spikeInput[0].spike))) // only consider first one
-    glutamate = availableGlutamate * spikeInput[0].weight; // weight is structural plasticity
+    neurotransmitter = availableNeurotransmitter * spikeInput[0].weight; // weight is structural plasticity
   else
-    glutamate = 0.0;
+    neurotransmitter = 0.0;
 
 
 
@@ -75,14 +75,14 @@ void BoutonIAFUnit::update(RNG& rng)
 
 
 
-  // ##### Inhibit glutamate #####
-  // Recovery glutamate
-  availableGlutamate += ((maxGlutamate - availableGlutamate) / SHD.glutamateRecoverTau) * SHD.deltaT;
-  // Inhibit the glutamate release with the quantity of ECB and CB1R, i.e. the minimum
-  availableGlutamate -= SHD.glutamateAdaptRate * std::min(ECB, CB1R);
-  // Limit glutamate to >= 0
-  if (availableGlutamate < 0.0)
-    availableGlutamate = 0.0;
+  // ##### Inhibit neurotransmitter #####
+  // Recovery neurotransmitter
+  availableNeurotransmitter += ((maxNeurotransmitter - availableNeurotransmitter) / SHD.neurotransmitterRecoverTau) * SHD.deltaT;
+  // Inhibit the neurotransmitter release with the quantity of ECB and CB1R, i.e. the minimum
+  availableNeurotransmitter -= SHD.neurotransmitterAdaptRate * std::min(ECB, CB1R);
+  // Limit neurotransmitter to >= 0
+  if (availableNeurotransmitter < 0.0)
+    availableNeurotransmitter = 0.0;
 }
 
 void BoutonIAFUnit::outputIndexs(std::ofstream& fs)

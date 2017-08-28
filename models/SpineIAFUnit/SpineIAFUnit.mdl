@@ -19,7 +19,7 @@
 
 Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
 {
-  GlutamateIAFInput [] glutamateInput;     // glutamate input
+  NeurotransmitterIAFInput [] neurotransmitterInput; // neurotransmitter input
   double AMPAweight;                       // weight of AMPA, PSD surface area
   double AMPArise;                         // rise current of AMPA
   double AMPAcurrent;                      // fall current of AMPA
@@ -87,14 +87,14 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
   CaIAFProducer.Ca << &Ca;                                          // Ca2+
   ECBIAFProducer.ECB << &ECB;                                       // endogenous cannabinoid
 
-  UserFunction setGlutamateIndices;
+  UserFunction setNeurotransmitterIndices;
   UserFunction setPostSpikeIndices;
 
-  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer
+  Connection Pre Node (PSet.identifier=="neurotransmitterInput") Expects NeurotransmitterIAFProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
-    PSet.weight >> glutamateInput.weight;
-    setGlutamateIndices();
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitterInput.neurotransmitter;
+    PSet.weight >> neurotransmitterInput.weight;
+    setNeurotransmitterIndices();
   }
 
   Connection Pre Node (PSet.identifier=="postSpikesInput") Expects SpikeProducer

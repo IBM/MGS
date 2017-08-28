@@ -38,19 +38,19 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
     sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
-  assert(slices.size()==glutamate.size());
+  assert(slices.size()==neurotransmitter.size());
   assert(slices.size()==ECB.size());
-  int sz=glutamate.size();
+  int sz=neurotransmitter.size();
   int mxrow=0;
   int mxcol=0;
   for (int j=0; j<sz; ++j)
     {
-      sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(glutamate[j], ECB[j]);
+      sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(neurotransmitter[j], ECB[j]);
       if (mxrow<rows[j]) mxrow=rows[j];
       if (mxcol<cols[j]) mxcol=cols[j];
       if (mxslice<slices[j]) mxslice=slices[j];
     }
-  glutamate.clear();
+  neurotransmitter.clear();
   ECB.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
@@ -73,7 +73,7 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
                    >::iterator miter3, mend3=miter2->second.end();
           for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
             {
-              glutamate.push_back(miter3->second.first);
+              neurotransmitter.push_back(miter3->second.first);
               ECB.push_back(miter3->second.second);
             }
         }
@@ -90,25 +90,25 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
   
-  std::ostringstream os_glutamate, os_ECB;
+  std::ostringstream os_neurotransmitter, os_ECB;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
   int Zdim = (int) mxrow+1;
 
-  if (op_saveGlutamate)
+  if (op_saveNeurotransmitter)
     {
-      os_glutamate<<directory<<"CleftGlutamate"<<fileExt;
-      glutamate_file=new std::ofstream(os_glutamate.str().c_str(),
+      os_neurotransmitter<<directory<<"CleftNeurotransmitter"<<fileName<<fileExt;
+      neurotransmitter_file=new std::ofstream(os_neurotransmitter.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      glutamate_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      glutamate_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      glutamate_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+      neurotransmitter_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      neurotransmitter_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      neurotransmitter_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
   if (op_saveECB)
     {
-      os_ECB<<directory<<"CleftECB"<<fileExt;
+      os_ECB<<directory<<"CleftECB"<<fileName<<fileExt;
       ECB_file=new std::ofstream(os_ECB.str().c_str(),
                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       ECB_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -120,10 +120,10 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
 void CleftAstrocyteIAFUnitDataCollector::finalize(RNG& rng) 
 {
   // Close the output files...
-  if (op_saveGlutamate)
+  if (op_saveNeurotransmitter)
     {
-      glutamate_file->close();
-      delete glutamate_file;
+      neurotransmitter_file->close();
+      delete neurotransmitter_file;
     }  
   if (op_saveECB)
     {
@@ -134,14 +134,14 @@ void CleftAstrocyteIAFUnitDataCollector::finalize(RNG& rng)
 
 void CleftAstrocyteIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
 {
-  if (op_saveGlutamate)
+  if (op_saveNeurotransmitter)
     {
-      ShallowArray<double*>::iterator iter=glutamate.begin(), end=glutamate.end();
+      ShallowArray<double*>::iterator iter=neurotransmitter.begin(), end=neurotransmitter.end();
       float temp = 0.;
       for (int n=0; iter!=end; ++iter, n++)
         {
           temp = (float) **iter;
-          glutamate_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));            
+          neurotransmitter_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));            
         }
     }
 

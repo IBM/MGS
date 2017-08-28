@@ -20,30 +20,31 @@
 Variable BoutonIAFUnitDataCollector
 {
   string directory;
+  string fileName;
   string fileExt;
   int [] rows;
   int [] cols;
   int [] slices;
   int mxslice;
-  double* [] glutamate;
-  double* [] availableGlutamate;
+  double* [] neurotransmitter;
+  double* [] availableNeurotransmitter;
   double* [] CB1R;
   double* [] CB1Runbound;
   double* [] CB1Rcurrent;
   UserFunction getNodeIndices;
 
   // Flags
-  bool op_saveGlutamate;
-  bool op_saveAvailableGlutamate;
+  bool op_saveNeurotransmitter;
+  bool op_saveAvailableNeurotransmitter;
   bool op_saveCB1R;
   bool op_saveCB1Runbound;
   bool op_saveCB1Rcurrent;
 
-  Connection Pre Node () Expects GlutamateIAFProducer, AvailableGlutamateIAFProducer,
+  Connection Pre Node () Expects NeurotransmitterIAFProducer, AvailableNeurotransmitterIAFProducer,
     CB1RIAFProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamate;
-    AvailableGlutamateIAFProducer.availableGlutamate >> availableGlutamate;
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitter;
+    AvailableNeurotransmitterIAFProducer.availableNeurotransmitter >> availableNeurotransmitter;
     CB1RIAFProducer.CB1R >> CB1R;
     CB1RIAFProducer.CB1Runbound >> CB1Runbound;
     CB1RIAFProducer.CB1Rcurrent >> CB1Rcurrent;

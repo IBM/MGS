@@ -35,8 +35,8 @@ class BoutonIAFUnitDataCollector : public CG_BoutonIAFUnitDataCollector
   virtual void duplicate(std::auto_ptr<Variable>& dup) const;
   virtual void duplicate(std::auto_ptr<CG_BoutonIAFUnitDataCollector>& dup) const;
  private:
-  std::ofstream* glutamate_file;
-  std::ofstream* availableGlutamate_file;
+  std::ofstream* neurotransmitter_file;
+  std::ofstream* availableNeurotransmitter_file;
   std::ofstream* CB1R_file;
   std::ofstream* CB1Runbound_file;
   std::ofstream* CB1Rcurrent_file;

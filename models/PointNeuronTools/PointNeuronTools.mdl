@@ -48,14 +48,14 @@ Interface LFPProducer
   double* LFP;
 }
 
-Interface GlutamateIAFProducer
+Interface NeurotransmitterIAFProducer
 {
-  double* glutamate;
+  double* neurotransmitter;
 }
 
-Interface AvailableGlutamateIAFProducer
+Interface AvailableNeurotransmitterIAFProducer
 {
-  double* availableGlutamate;
+  double* availableNeurotransmitter;
 }
 
 Interface SynapticCurrentIAFProducer
@@ -264,9 +264,9 @@ Struct PlasticPSPInput {
   int col;
 }
 
-Struct GlutamateIAFInput
+Struct NeurotransmitterIAFInput
 {
-  double* glutamate;
+  double* neurotransmitter;
   double weight;
   int row;
   int col;

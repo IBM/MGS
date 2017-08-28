@@ -26,8 +26,8 @@
 void SpineIAFUnit::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (glutamateInput.size() != 1)
-    assert("SpineIAFUnit: glutamate inputs should be one.");
+  if (neurotransmitterInput.size() != 1)
+    assert("SpineIAFUnit: neurotransmitter inputs should be one.");
   if (postSpikeInput.size() != 1)
     assert("SpineIAFUnit: post-synaptic spike inputs should be one.");
   // Default starting values
@@ -46,18 +46,18 @@ void SpineIAFUnit::update(RNG& rng)
     AMPAweight = drandom(0.0, 1.5, rng);
   
   // ##### Vars needed #####
-  double glutamate;
-  if (glutamateInput.size() > 0)
-    glutamate = *(glutamateInput[0].glutamate) * glutamateInput[0].weight; // only consider first one, weight is structural plasticity
+  double neurotransmitter;
+  if (neurotransmitterInput.size() > 0)
+    neurotransmitter = *(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight; // only consider first one, weight is structural plasticity
   else
-    glutamate = 0.0;
+    neurotransmitter = 0.0;
 
 
 
   // ##### AMPA #####
-  // AMPA input is the minimum of AMPA weight and glutamate
+  // AMPA input is the minimum of AMPA weight and neurotransmitter
   // Only updated when there is a pre-spike
-  double AMPAinput = std::min(glutamate, AMPAweight);
+  double AMPAinput = std::min(neurotransmitter, AMPAweight);
 
   // Update AMPA rise with the AMPA activity
   AMPArise += ((-AMPArise + AMPAinput) / SHD.AMPAriseTau ) * SHD.deltaT;
@@ -67,10 +67,10 @@ void SpineIAFUnit::update(RNG& rng)
 
 
   // ##### mGluR5 #####
-  // mGluR5 input is any excess glutamate bigger than AMPA weight
+  // mGluR5 input is any excess neurotransmitter bigger than AMPA weight
   double mGluR5input = 0.0;
-  if (glutamate > AMPAweight)
-    mGluR5input = (glutamate - AMPAweight) * SHD.mGluR5sensitivity; // adjust the sensitivity as well
+  if (neurotransmitter > AMPAweight)
+    mGluR5input = (neurotransmitter - AMPAweight) * SHD.mGluR5sensitivity; // adjust the sensitivity as well
 
   // Update mGluR5 rise with the mGluR5 activity
   mGluR5rise += ((-mGluR5rise + mGluR5input) / SHD.mGluR5riseTau ) * SHD.deltaT;
@@ -90,7 +90,7 @@ void SpineIAFUnit::update(RNG& rng)
   //    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
 
   double CaInput = CaVSCCinput * AMPAcurrent;
-  //  double CaInput = CaVSCCinput * (glutamate > 0.0 ? 1.0 : 0.0);
+  //  double CaInput = CaVSCCinput * (neurotransmitter > 0.0 ? 1.0 : 0.0);
 
   // Update Ca2+ rise with VSCC and BP
   Carise += ((-Carise + CaInput) / SHD.CariseTau) * SHD.deltaT;
@@ -111,10 +111,10 @@ void SpineIAFUnit::outputWeights(std::ofstream& fs)
   fs.write(reinterpret_cast<char *>(&temp), sizeof(temp));
 }
 
-void SpineIAFUnit::setGlutamateIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
+void SpineIAFUnit::setNeurotransmitterIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  glutamateInput[glutamateInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  glutamateInput[glutamateInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  neurotransmitterInput[neurotransmitterInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
+  neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
 void SpineIAFUnit::setPostSpikeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)

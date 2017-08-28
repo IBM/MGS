@@ -49,20 +49,20 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
     sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
-  assert(slices.size()==glutamate.size());
-  assert(slices.size()==availableGlutamate.size());
+  assert(slices.size()==neurotransmitter.size());
+  assert(slices.size()==availableNeurotransmitter.size());
   assert(slices.size()==CB1R.size());
   assert(slices.size()==CB1Runbound.size());
   assert(slices.size()==CB1Rcurrent.size());
-  int sz=glutamate.size();
+  int sz=neurotransmitter.size();
   int mxrow=0;
   int mxcol=0;
   for (int j=0; j<sz; ++j)
     {
       sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(
-                                                         std::make_pair(glutamate[j]
+                                                         std::make_pair(neurotransmitter[j]
                                                                         ,
-                                                                        availableGlutamate[j]
+                                                                        availableNeurotransmitter[j]
                                                                         )
                                                          ,
                                                          std::make_pair(
@@ -79,8 +79,8 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
       if (mxcol<cols[j]) mxcol=cols[j];
       if (mxslice<slices[j]) mxslice=slices[j];
     }
-  glutamate.clear();
-  availableGlutamate.clear();
+  neurotransmitter.clear();
+  availableNeurotransmitter.clear();
   CB1R.clear();
   CB1Runbound.clear();
   CB1Rcurrent.clear();
@@ -126,8 +126,8 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
                    >::iterator miter3, mend3=miter2->second.end();
           for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
             {
-              glutamate.push_back(miter3->second.first.first);
-              availableGlutamate.push_back(miter3->second.first.second);
+              neurotransmitter.push_back(miter3->second.first.first);
+              availableNeurotransmitter.push_back(miter3->second.first.second);
               CB1R.push_back(miter3->second.second.first.first);
               CB1Runbound.push_back(miter3->second.second.first.second);
               CB1Rcurrent.push_back(miter3->second.second.second);
@@ -146,36 +146,36 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
 
-  std::ostringstream os_glutamate, os_availableGlutamate,
+  std::ostringstream os_neurotransmitter, os_availableNeurotransmitter,
     os_CB1R, os_CB1Runbound, os_CB1Rcurrent;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
   int Zdim = (int) mxrow+1;
 
-  if (op_saveGlutamate)
+  if (op_saveNeurotransmitter)
     {
-      os_glutamate<<directory<<"Glutamate"<<fileExt;
-      glutamate_file=new std::ofstream(os_glutamate.str().c_str(),
-                                       std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      glutamate_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      glutamate_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      glutamate_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+      os_neurotransmitter<<directory<<fileName<<fileExt;
+      neurotransmitter_file=new std::ofstream(os_neurotransmitter.str().c_str(),
+                                              std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+      neurotransmitter_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      neurotransmitter_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      neurotransmitter_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
-  if (op_saveAvailableGlutamate)
+  if (op_saveAvailableNeurotransmitter)
     {
-      os_availableGlutamate<<directory<<"AvailableGlutamate"<<fileExt;
-      availableGlutamate_file=new std::ofstream(os_availableGlutamate.str().c_str(),
-                                       std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      availableGlutamate_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      availableGlutamate_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      availableGlutamate_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+      os_availableNeurotransmitter<<directory<<"Available"<<fileName<<fileExt;
+      availableNeurotransmitter_file=new std::ofstream(os_availableNeurotransmitter.str().c_str(),
+                                                       std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+      availableNeurotransmitter_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      availableNeurotransmitter_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      availableNeurotransmitter_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
   if (op_saveCB1R)
     {
-      os_CB1R<<directory<<"CB1R"<<fileExt;
+      os_CB1R<<directory<<"CB1R"<<fileName<<fileExt;
       CB1R_file=new std::ofstream(os_CB1R.str().c_str(),
                                   std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       CB1R_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -183,11 +183,11 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
       CB1R_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
-    if (op_saveCB1Runbound)
+  if (op_saveCB1Runbound)
     {
-      os_CB1Runbound<<directory<<"CB1Runbound"<<fileExt;
+      os_CB1Runbound<<directory<<"CB1Runbound"<<fileName<<fileExt;
       CB1Runbound_file=new std::ofstream(os_CB1Runbound.str().c_str(),
-                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+                                         std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       CB1Runbound_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
       CB1Runbound_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
       CB1Runbound_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
@@ -195,11 +195,11 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 
     
 
-      if (op_saveCB1Rcurrent)
+  if (op_saveCB1Rcurrent)
     {
-      os_CB1Rcurrent<<directory<<"CB1Rcurrent"<<fileExt;
+      os_CB1Rcurrent<<directory<<"CB1Rcurrent"<<fileName<<fileExt;
       CB1Rcurrent_file=new std::ofstream(os_CB1Rcurrent.str().c_str(),
-                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+                                         std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       CB1Rcurrent_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
       CB1Rcurrent_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
       CB1Rcurrent_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
@@ -209,15 +209,15 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 void BoutonIAFUnitDataCollector::finalize(RNG& rng)
 {
   // Close the output files...
-  if (op_saveGlutamate)
+  if (op_saveNeurotransmitter)
     {
-      glutamate_file->close();
-      delete glutamate_file;
+      neurotransmitter_file->close();
+      delete neurotransmitter_file;
     }
-  if (op_saveAvailableGlutamate)
+  if (op_saveAvailableNeurotransmitter)
     {
-      availableGlutamate_file->close();
-      delete availableGlutamate_file;
+      availableNeurotransmitter_file->close();
+      delete availableNeurotransmitter_file;
     }
   if (op_saveCB1R)
     {
@@ -238,29 +238,29 @@ void BoutonIAFUnitDataCollector::finalize(RNG& rng)
 
 void BoutonIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 {
-  if (op_saveGlutamate)
+  if (op_saveNeurotransmitter)
     {
       ShallowArray<double*>::iterator iter, end;
       float temp = 0.;
-      iter=glutamate.begin();
-      end=glutamate.end();
+      iter=neurotransmitter.begin();
+      end=neurotransmitter.end();
       for (int n=0; iter!=end; ++iter)
         {
           temp = (float) **iter;
-          glutamate_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+          neurotransmitter_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
         }
     }
 
-  if (op_saveAvailableGlutamate)
+  if (op_saveAvailableNeurotransmitter)
     {
       ShallowArray<double*>::iterator iter, end;
       float temp = 0.;
-      iter=availableGlutamate.begin();
-      end=availableGlutamate.end();
+      iter=availableNeurotransmitter.begin();
+      end=availableNeurotransmitter.end();
       for (int n=0; iter!=end; ++iter)
         {
           temp = (float) **iter;
-          availableGlutamate_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+          availableNeurotransmitter_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
         }
     }
 
@@ -317,7 +317,7 @@ void BoutonIAFUnitDataCollector::getNodeIndices(const String& CG_direction, cons
 }
 
 BoutonIAFUnitDataCollector::BoutonIAFUnitDataCollector()
-   : CG_BoutonIAFUnitDataCollector()
+  : CG_BoutonIAFUnitDataCollector()
 {
 }
 
@@ -327,16 +327,16 @@ BoutonIAFUnitDataCollector::~BoutonIAFUnitDataCollector()
 
 void BoutonIAFUnitDataCollector::duplicate(std::auto_ptr<BoutonIAFUnitDataCollector>& dup) const
 {
-   dup.reset(new BoutonIAFUnitDataCollector(*this));
+  dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
 void BoutonIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
 {
-   dup.reset(new BoutonIAFUnitDataCollector(*this));
+  dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
 void BoutonIAFUnitDataCollector::duplicate(std::auto_ptr<CG_BoutonIAFUnitDataCollector>& dup) const
 {
-   dup.reset(new BoutonIAFUnitDataCollector(*this));
+  dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 

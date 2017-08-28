@@ -17,16 +17,16 @@
 #define CLEFTASTROCYTEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer, ECBIAFProducer
+Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, ECBIAFProducer
 {
-  GlutamateIAFInput [] glutamateInput; // input of spike
-  double glutamate;                    // current glutamate concentration
-  ECBIAFInput [] ECBInput;             // input of ECB
-  double ECB;                          // current endogenous cannabinoids concentration
+  NeurotransmitterIAFInput [] neurotransmitterInput; // input of spike
+  double neurotransmitter;                           // current neurotransmitter concentration
+  ECBIAFInput [] ECBInput;                           // input of ECB
+  double ECB;                                        // current endogenous cannabinoids concentration
   
   Shared
     {
-      double glutamateDecayTau;        // glutamate decay tau (i.e. glutamate reuptake via GLT-1) in s
+      double neurotransmitterDecayTau; // neurotransmitter decay tau (i.e. neurotransmitter reuptake via GLT-1) in s
 
       double deltaT;                   // in s
     }
@@ -38,18 +38,18 @@ Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer, ECBIAFProducer
     }
 
   InitPhase initialize();
-  RuntimePhase update(glutamate, ECB);
+  RuntimePhase update(neurotransmitter, ECB);
 
-  GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
+  NeurotransmitterIAFProducer.neurotransmitter << &neurotransmitter; // neurotransmitter output
   ECBIAFProducer.ECB << &ECB; // endogenous cannabinoids output
 
-  UserFunction setGlutamateIndices;
+  UserFunction setNeurotransmitterIndices;
   UserFunction setECBIndices;  
 
-  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer    
+  Connection Pre Node (PSet.identifier=="neurotransmitterInput") Expects NeurotransmitterIAFProducer    
   {
-    GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
-    PSet.weight >> glutamateInput.weight;
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitterInput.neurotransmitter;
+    PSet.weight >> neurotransmitterInput.weight;
   }
 
   Connection Pre Node (PSet.identifier=="ECBinput") Expects ECBIAFProducer
