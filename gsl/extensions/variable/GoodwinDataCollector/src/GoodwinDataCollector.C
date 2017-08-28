@@ -110,7 +110,7 @@ void GoodwinDataCollector::initialize(RNG& rng)
 
   if (op_saveX)
     {
-      os_X<<directory<<"Goodwin_X"<<fileExt;
+      os_X<<directory<<filePrep<<"Goodwin_X"<<fileApp<<fileExt;
       X_file=new std::ofstream(os_X.str().c_str(),
                                std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       X_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -120,7 +120,7 @@ void GoodwinDataCollector::initialize(RNG& rng)
 
   if (op_saveY)
     {  
-      os_Y<<directory<<"Goodwin_Y"<<fileExt;
+      os_Y<<directory<<filePrep<<"Goodwin_Y"<<fileApp<<fileExt;
       Y_file=new std::ofstream(os_Y.str().c_str(),
                                std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       Y_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -130,7 +130,7 @@ void GoodwinDataCollector::initialize(RNG& rng)
   
   if (op_saveZ)
     {
-      os_Z<<directory<<"Goodwin_Z"<<fileExt;
+      os_Z<<directory<<filePrep<<"Goodwin_Z"<<fileApp<<fileExt;
       Z_file=new std::ofstream(os_Z.str().c_str(),
                                std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       Z_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

@@ -93,7 +93,7 @@ void PoissonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveSpikes)
     {
-      os_spikes<<directory<<"PoissonSpikes"<<fileName<<fileExt;
+      os_spikes<<directory<<filePrep<<"PoissonSpikes"<<fileApp<<fileExt;
       spikes_file=new std::ofstream(os_spikes.str().c_str(),
                                     std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       spikes_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

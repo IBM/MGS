@@ -43,7 +43,8 @@ void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
       // Take it in turn opening and creating the file to create the stream on each node
       while (n<getSimulation().getNumProcesses()) {
         if (n==rank) {
-          os_indexs<<SHD.sharedDirectory<<"Indexs"<<SHD.sharedFileExt;
+          os_indexs<<SHD.sharedDirectory<<SHD.sharedFilePrep<<"BoutonIndexs"<<
+            SHD.sharedFileApp<<SHD.sharedFileExt;
           indexs_file=new std::ofstream(os_indexs.str().c_str(),
                                         std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
           indexs_file->close();

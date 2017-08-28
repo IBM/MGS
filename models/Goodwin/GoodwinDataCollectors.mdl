@@ -20,6 +20,8 @@
 Variable GoodwinDataCollector
 {
   string directory;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;

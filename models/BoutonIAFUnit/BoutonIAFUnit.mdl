@@ -45,6 +45,8 @@ Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmi
       double deltaT;                     // in s
 
       string sharedDirectory;
+      string sharedFilePrep;
+      string sharedFileApp;
       string sharedFileExt;
 
       InitPhase initializeShared;

@@ -20,7 +20,8 @@
 Variable PoissonIAFUnitDataCollector
 {
   string directory;
-  string fileName;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;

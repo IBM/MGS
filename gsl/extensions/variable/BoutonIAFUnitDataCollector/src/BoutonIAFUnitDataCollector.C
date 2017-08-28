@@ -155,7 +155,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveNeurotransmitter)
     {
-      os_neurotransmitter<<directory<<fileName<<fileExt;
+      os_neurotransmitter<<directory<<filePrep<<"BoutonNeurotransmitter"<<fileApp<<fileExt;
       neurotransmitter_file=new std::ofstream(os_neurotransmitter.str().c_str(),
                                               std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       neurotransmitter_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -165,7 +165,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveAvailableNeurotransmitter)
     {
-      os_availableNeurotransmitter<<directory<<"Available"<<fileName<<fileExt;
+      os_availableNeurotransmitter<<directory<<filePrep<<"BoutonAvailableNeurotransmitter"<<fileApp<<fileExt;
       availableNeurotransmitter_file=new std::ofstream(os_availableNeurotransmitter.str().c_str(),
                                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       availableNeurotransmitter_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -175,7 +175,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveCB1R)
     {
-      os_CB1R<<directory<<"CB1R"<<fileName<<fileExt;
+      os_CB1R<<directory<<filePrep<<"BoutonCB1R"<<fileApp<<fileExt;
       CB1R_file=new std::ofstream(os_CB1R.str().c_str(),
                                   std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       CB1R_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -185,7 +185,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveCB1Runbound)
     {
-      os_CB1Runbound<<directory<<"CB1Runbound"<<fileName<<fileExt;
+      os_CB1Runbound<<directory<<filePrep<<"BoutonCB1Runbound"<<fileApp<<fileExt;
       CB1Runbound_file=new std::ofstream(os_CB1Runbound.str().c_str(),
                                          std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       CB1Runbound_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -197,7 +197,7 @@ void BoutonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveCB1Rcurrent)
     {
-      os_CB1Rcurrent<<directory<<"CB1Rcurrent"<<fileName<<fileExt;
+      os_CB1Rcurrent<<directory<<filePrep<<"BoutonCB1Rcurrent"<<fileApp<<fileExt;
       CB1Rcurrent_file=new std::ofstream(os_CB1Rcurrent.str().c_str(),
                                          std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       CB1Rcurrent_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

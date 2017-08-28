@@ -98,7 +98,8 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveNeurotransmitter)
     {
-      os_neurotransmitter<<directory<<"CleftNeurotransmitter"<<fileName<<fileExt;
+      os_neurotransmitter<<directory<<filePrep<<"CleftAstrocyteNeurotransmitter"
+                         <<fileApp<<fileExt;
       neurotransmitter_file=new std::ofstream(os_neurotransmitter.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       neurotransmitter_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -108,7 +109,7 @@ void CleftAstrocyteIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveECB)
     {
-      os_ECB<<directory<<"CleftECB"<<fileName<<fileExt;
+      os_ECB<<directory<<filePrep<<"CleftAstrocyteECB"<<fileApp<<fileExt;
       ECB_file=new std::ofstream(os_ECB.str().c_str(),
                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       ECB_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

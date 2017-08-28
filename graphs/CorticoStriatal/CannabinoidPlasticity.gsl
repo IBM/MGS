@@ -22,6 +22,7 @@ FinalPhases = { finalize };
 // ##### Common parameters #####
 #define DIRECTORY "./"
 #define FILE_EXTENSION ".dat"
+#define GLUTAMATE_PREP "Glutamate_"
 #define DELTAT 0.0001
 #define XDIM 500
 #define YDIM 1
@@ -47,12 +48,13 @@ NodeType PoissonIAFUnit(<
                         >) {update->run1 };
 
 NodeType BoutonIAFUnit(<
-                       glutamateAdaptRate = 0.000035, //0.000035,   // in arb. unit; free parameter
-                       glutamateRecoverTau = 4.28,    // in s (from Pyott and Rosenmund, 2002; slow component)
+                       neurotransmitterAdaptRate = 0.000035, //0.000035,   // in arb. unit; free parameter
+                       neurotransmitterRecoverTau = 4.28,    // in s (from Pyott and Rosenmund, 2002; slow component)
                        CB1RriseTau = 4.0,             // in s (fitted to Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
                        CB1RfallTau = 22.5,            // in s (from Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
                        deltaT = DELTAT,               // in s
                        sharedDirectory = DIRECTORY,
+                       sharedFilePrep = GLUTAMATE_PREP,
                        sharedFileExt = FILE_EXTENSION,
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
                        >) {initializeShared->init1, update->run2};
@@ -74,7 +76,7 @@ NodeType Goodwin(<
                  >) {update->run1};
 
 NodeType CleftAstrocyteIAFUnit(<
-                               glutamateDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
+                               neurotransmitterDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
                                deltaT = DELTAT            // in s
                                >) { update->run1};
 
@@ -96,6 +98,7 @@ NodeType SpineIAFUnit(<
                       ECBprodD = ECBPRODD, // in arb. unit
                       deltaT = DELTAT,     // in s
                       sharedDirectory = DIRECTORY,
+                      sharedFilePrep = GLUTAMATE_PREP,
                       sharedFileExt = FILE_EXTENSION,
                       op_saveWeights = 1,  // whether to save the spine weights or not
                       op_perturbation = OP_PERT_AMPA,
@@ -159,11 +162,11 @@ BindName IN_W("weight", 1.0, "identifier", "inputSpikes");
 NdplInAttrInit inW(IN_W);
 
 // Glutamate weights between boutons and clefts/astrocytes, structural plasticity
-BindName GLUT_W("weight", 1.0, "identifier", "glutamateInput");
+BindName GLUT_W("weight", 1.0, "identifier", "neurotransmitterInput");
 NdplInAttrInit glutW(GLUT_W);
 
 // Glutamate weights between boutons and spines, structural plasticity
-BindName PRE_W("weight", 1.0, "identifier", "glutamateInput");
+BindName PRE_W("weight", 1.0, "identifier", "neurotransmitterInput");
 NdplInAttrInit preW(PRE_W);
 
 // Y weights between Goodwin and boutons, structural plasticity
@@ -269,34 +272,35 @@ CorticoStriatoCannabinoid CSC;
 
 // ##### Data collectors #####
 VariableType PoissonIAFUnitDataCollector;
-PoissonIAFUnitDataCollector inputCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveSpikes=1>;
+PoissonIAFUnitDataCollector inputCollector<directory=DIRECTORY, filePrep=GLUTAMATE_PREP,
+  fileExt=FILE_EXTENSION, op_saveSpikes=1>;
 polyConnect(CSC/pre[].Layer(input), inputCollector, <>, <>);
 
 VariableType BoutonIAFUnitDataCollector;
-BoutonIAFUnitDataCollector boutonCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=1, op_saveAvailableGlutamate=1,
-  op_saveCB1R=1, op_saveCB1Runbound=1, op_saveCB1Rcurrent=1>;
+BoutonIAFUnitDataCollector boutonCollector<directory=DIRECTORY, filePrep=GLUTAMATE_PREP,
+  fileExt=FILE_EXTENSION, op_saveNeurotransmitter=0, op_saveAvailableNeurotransmitter=1,
+  op_saveCB1R=1, op_saveCB1Runbound=1, op_saveCB1Rcurrent=0>;
 polyConnect(CSC/cann[].Layer(boutons), boutonCollector, <>, <>);
 
 VariableType GoodwinDataCollector;
-GoodwinDataCollector GoodwinCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveX=1, op_saveY=1, op_saveZ=1>;
+GoodwinDataCollector GoodwinCollector<directory=DIRECTORY, filePrep="Glutamate", 
+fileExt=FILE_EXTENSION, op_saveX=0, op_saveY=0, op_saveZ=0>;
 polyConnect(CSC/cann[].Layer(Goodwins), GoodwinCollector, <>, <>);
 
 VariableType CleftAstrocyteIAFUnitDataCollector;
-CleftAstrocyteIAFUnitDataCollector cleftAstroCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=1, op_saveECB=1>;
+CleftAstrocyteIAFUnitDataCollector cleftAstroCollector<directory=DIRECTORY, 
+  filePrep="Glutamate", fileExt=FILE_EXTENSION, op_saveNeurotransmitter=1, op_saveECB=0>;
 polyConnect(CSC/cann[].Layer(cleftsAstrocytes), cleftAstroCollector, <>, <>);
 
 VariableType SpineIAFUnitDataCollector;
-SpineIAFUnitDataCollector spineCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveAMPA=1, op_savemGluR5=1, op_saveCa=1, op_saveECB=1, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
+SpineIAFUnitDataCollector spineCollector<directory=DIRECTORY, filePrep="Glutamate",
+  fileExt=FILE_EXTENSION, op_saveAMPA=0, op_savemGluR5=0, op_saveCa=0,
+  op_saveECB=0, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
 polyConnect(CSC/cann[].Layer(spines), spineCollector, <>, <>);
 
 VariableType MihalasNieburSynapseIAFUnitDataCollector;
 MihalasNieburSynapseIAFUnitDataCollector outputCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveSpikes=1>;
+  op_saveSpikes=0>;
 polyConnect(CSC/post[].Layer(output), outputCollector, <>, <>);
 
 
@@ -310,7 +314,7 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
 UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ",
  			 ::Iteration, ">", 0, 0, dataCollect);
 
-UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20", // if >1 glutamate spikes will not visualize! typically 20
+UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20", // if >1 neurotransmitter spikes will not visualize! typically 20
  			 ::Iteration, "!%", 20, 0, dataCollect);
 
 CompositeTrigger iterTrigSampled("Iteration Trigger: (!%20) && (>= 0)",

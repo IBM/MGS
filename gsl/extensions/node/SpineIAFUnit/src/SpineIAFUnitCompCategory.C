@@ -52,8 +52,9 @@ void SpineIAFUnitCompCategory::initializeShared(RNG& rng)
                   if (r==rank)
                     {
                       os_weights.str(std::string());
-                      os_weights<<SHD.sharedDirectory<<"AMPAWeights_"<<SHD.collectWeightsOn[i]
-                                <<SHD.sharedFileExt;
+                      os_weights<<SHD.sharedDirectory<<SHD.sharedFilePrep
+                                <<"SpineAMPAWeights_"<<SHD.collectWeightsOn[i]
+                                <<SHD.sharedFileApp<<SHD.sharedFileExt;
                       weights_file=new std::ofstream(os_weights.str().c_str(),
                                                      std::ofstream::out | std::ofstream::trunc
                                                      | std::ofstream::binary);
@@ -75,9 +76,9 @@ void SpineIAFUnitCompCategory::outputWeightsShared(RNG& rng)
       if (SHD.collectWeightsOn[SHD.collectWeightsNext]==ITER)
         {
           os_weights.str(std::string());
-          os_weights<<SHD.sharedDirectory<<"AMPAWeights_"
-                    <<SHD.collectWeightsOn[SHD.collectWeightsNext]
-                    <<SHD.sharedFileExt;
+          os_weights<<SHD.sharedDirectory<<SHD.sharedFilePrep
+                    <<"SpineAMPAWeights_"<<SHD.collectWeightsOn[SHD.collectWeightsNext]
+                    <<SHD.sharedFileApp<<SHD.sharedFileExt;
           if (SHD.collectWeightsOn.size()-1 > SHD.collectWeightsNext)
             SHD.collectWeightsNext++;
           int rank=getSimulation().getRank();

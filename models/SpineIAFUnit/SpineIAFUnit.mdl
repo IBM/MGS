@@ -58,6 +58,8 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
       unsigned perturbationT;              // when to perturb
 
       string sharedDirectory;
+      string sharedFilePrep;
+      string sharedFileApp;
       string sharedFileExt;
       int [] collectWeightsOn;
       int collectWeightsNext;

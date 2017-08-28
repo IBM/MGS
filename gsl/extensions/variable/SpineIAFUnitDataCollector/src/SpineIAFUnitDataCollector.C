@@ -119,7 +119,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveAMPA)
     {
-      os_AMPA<<directory<<"AMPA"<<fileExt;
+      os_AMPA<<directory<<filePrep<<"SpineAMPA"<<fileApp<<fileExt;
       AMPA_file=new std::ofstream(os_AMPA.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       AMPA_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -130,7 +130,8 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
   if (op_savemGluR5)
     {
       // Save the mGluR5 modulation function first
-      os_mGluR5modulation<<directory<<"mGluR5modulation"<<fileExt;
+      os_mGluR5modulation<<directory<<filePrep<<"SpinemGluR5modulation"
+                         <<fileApp<<fileExt;
       mGluR5modulation_file=new std::ofstream(os_mGluR5modulation.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       double mGluR5 = 0.0;
@@ -145,7 +146,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
       delete mGluR5modulation_file;
 
       // Now the actual mGluR5 file
-      os_mGluR5<<directory<<"mGluR5"<<fileExt;
+      os_mGluR5<<directory<<filePrep<<"SpinemGluR5"<<fileApp<<fileExt;
       mGluR5_file=new std::ofstream(os_mGluR5.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       mGluR5_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -155,7 +156,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveCa)
     {
-      os_Ca<<directory<<"Ca"<<fileExt;
+      os_Ca<<directory<<filePrep<<"SpineCa"<<fileApp<<fileExt;
       Ca_file=new std::ofstream(os_Ca.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       Ca_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -166,7 +167,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
   if (op_saveECB)
     {
       // Save the ECB production function first
-      os_ECBproduction<<directory<<"ECBproduction"<<fileExt;
+      os_ECBproduction<<directory<<filePrep<<"SpineECBproduction"<<fileApp<<fileExt;
       ECBproduction_file=new std::ofstream(os_ECBproduction.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       double Ca = 0.0;
@@ -181,7 +182,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
       delete ECBproduction_file;
 
       // Now the actual ECB file
-      os_ECB<<directory<<"ECB"<<fileExt;
+      os_ECB<<directory<<filePrep<<"SpineECB"<<fileApp<<fileExt;
       ECB_file=new std::ofstream(os_ECB.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       ECB_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
