@@ -47,14 +47,14 @@ void CleftAstrocyteIAFUnit::update(RNG& rng)
 
 void CleftAstrocyteIAFUnit::setNeurotransmitterIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  neurotransmitterInput[neurotransmitterInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  neurotransmitterInput[neurotransmitterInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 void CleftAstrocyteIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  ECBInput[ECBInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  ECBInput[ECBInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  ECBInput[ECBInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  ECBInput[ECBInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 CleftAstrocyteIAFUnit::~CleftAstrocyteIAFUnit()

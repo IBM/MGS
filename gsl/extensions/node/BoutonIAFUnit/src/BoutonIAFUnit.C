@@ -106,14 +106,14 @@ void BoutonIAFUnit::outputIndexs(std::ofstream& fs)
 
 void BoutonIAFUnit::setSpikeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  spikeInput[spikeInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  spikeInput[spikeInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  spikeInput[spikeInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  spikeInput[spikeInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 void BoutonIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  ECBinput[ECBinput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  ECBinput[ECBinput.size()-1].col = CG_node->getGlobalIndex()+1;
+  ECBinput[ECBinput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  ECBinput[ECBinput.size()-1].col = CG_node->getIndex()+1;
 }
 
 BoutonIAFUnit::~BoutonIAFUnit()

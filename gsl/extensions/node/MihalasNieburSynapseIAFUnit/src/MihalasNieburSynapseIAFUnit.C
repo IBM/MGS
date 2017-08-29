@@ -109,8 +109,8 @@ void MihalasNieburSynapseIAFUnit::threshold(RNG& rng)
 
 void MihalasNieburSynapseIAFUnit::setAMPAIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburSynapseIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburSynapseIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].col = CG_node->getGlobalIndex()+1;
+  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].col = CG_node->getIndex()+1;
 }
 
 MihalasNieburSynapseIAFUnit::~MihalasNieburSynapseIAFUnit()
