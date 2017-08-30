@@ -25,11 +25,11 @@ void CleftAstrocyteIAFUnit::initialize(RNG& rng)
   // Check if more than one input
   if (neurotransmitterInput.size() != 1)
     assert("CleftAstrocyteIAFUnit: neurotransmitter inputs should be one.");
-  if (ECBInput.size() != 1)
-    assert("CleftAstrocyteIAFUnit: ECB inputs should be one.");
+  if (eCBInput.size() != 1)
+    assert("CleftAstrocyteIAFUnit: eCB inputs should be one.");
   // Default starting values
   neurotransmitter = 0.0;
-  ECB = 0.0;  
+  eCB = 0.0;  
 }
 
 void CleftAstrocyteIAFUnit::update(RNG& rng)
@@ -40,9 +40,9 @@ void CleftAstrocyteIAFUnit::update(RNG& rng)
   // Astrocyte reuptake of neurotransmitter with GLT-1
   neurotransmitter += (-neurotransmitter / SHD.neurotransmitterDecayTau[neurotransmitterType]) * SHD.deltaT;
 
-  // ECB diffuses really quickly, so this level is equal to that produced by the spine
-  if (ECBInput.size() > 0)
-    ECB = *(ECBInput[0].ECB) * ECBInput[0].weight; // only consider first one, weight is structural plasticity
+  // eCB diffuses really quickly, so this level is equal to that produced by the spine
+  if (eCBInput.size() > 0)
+    eCB = *(eCBInput[0].eCB) * eCBInput[0].weight; // only consider first one, weight is structural plasticity
 }
 
 void CleftAstrocyteIAFUnit::setNeurotransmitterIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
@@ -51,10 +51,10 @@ void CleftAstrocyteIAFUnit::setNeurotransmitterIndices(const String& CG_directio
   neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getIndex()+1;
 }
 
-void CleftAstrocyteIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
+void CleftAstrocyteIAFUnit::seteCBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  ECBInput[ECBInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
-  ECBInput[ECBInput.size()-1].col = CG_node->getIndex()+1;
+  eCBInput[eCBInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  eCBInput[eCBInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 CleftAstrocyteIAFUnit::~CleftAstrocyteIAFUnit()

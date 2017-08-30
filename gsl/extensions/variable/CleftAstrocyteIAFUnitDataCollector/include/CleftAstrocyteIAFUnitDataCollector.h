@@ -34,7 +34,7 @@ class CleftAstrocyteIAFUnitDataCollector : public CG_CleftAstrocyteIAFUnitDataCo
   virtual void duplicate(std::auto_ptr<CG_CleftAstrocyteIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* neurotransmitter_file;
-  std::ofstream* ECB_file;
+  std::ofstream* eCB_file;
 };
 
 #endif

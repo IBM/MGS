@@ -17,7 +17,7 @@
 #define SPINEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
+Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFProducer
 {
   NeurotransmitterIAFInput [] neurotransmitterInput; // neurotransmitter input
   double AMPAweight;                       // weight of AMPA, PSD surface area
@@ -30,7 +30,7 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
   double Carise;                           // rise of Ca2+
   double Ca;                               // fall of Ca2+
 
-  double ECB;                              // endogenous cannabinoids
+  double eCB;                              // endogenous cannabinoids
 
   SpikeInput [] postSpikeInput;            // post-synaptic back propagating spike
 
@@ -51,8 +51,8 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
       double CaVSCCpow;                    // if dependent, CaVSCC*(AMPAweight^pow)
       double CaBP;                         // per BP spike, amount to increase Ca2+
 
-      double ECBprodC;                     // ECB production function - steepness
-      double ECBprodD;                     // ECB production function - shifts
+      double eCBprodC;                     // eCB production function - steepness
+      double eCBprodD;                     // eCB production function - shifts
 
       double deltaT;                       // in s
       unsigned perturbationT;              // when to perturb
@@ -81,13 +81,13 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
   InitPhase initialize();
   RuntimePhase update(AMPAweight, AMPAcurrent,
                       mGluR5current,
-                      Ca, ECB);
+                      Ca, eCB);
 
   SynapticCurrentIAFProducer.AMPAweight << &AMPAweight;             // the AMPA weight
   SynapticCurrentIAFProducer.AMPAcurrent << &AMPAcurrent;           // the AMPA synaptic current output
   SynapticCurrentIAFProducer.mGluR5current << &mGluR5current;       // the mGluR5 synaptic current output
   CaIAFProducer.Ca << &Ca;                                          // Ca2+
-  ECBIAFProducer.ECB << &ECB;                                       // endogenous cannabinoid
+  eCBIAFProducer.eCB << &eCB;                                       // endogenous cannabinoid
 
   UserFunction setNeurotransmitterIndices;
   UserFunction setPostSpikeIndices;

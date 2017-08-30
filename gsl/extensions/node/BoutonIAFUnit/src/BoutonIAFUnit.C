@@ -27,8 +27,8 @@ void BoutonIAFUnit::initialize(RNG& rng)
   // Check if more than one input
   if (spikeInput.size() != 1)
     assert("BoutonIAFUnit: spike inputs should be one.");
-  if (ECBinput.size() != 1)
-    assert("BoutonIAFUnit: ECB inputs should be one.");
+  if (eCBinput.size() != 1)
+    assert("BoutonIAFUnit: eCB inputs should be one.");
   if (CB1input.size() != 1)
     assert("BoutonIAFUnit: Goodwin inputs should be one.");
   // Default starting values
@@ -57,14 +57,14 @@ void BoutonIAFUnit::update(RNG& rng)
       else if (CB1R < 0.0)
         CB1R = 0.0;
     }
-  ECB = 0.0;
-  if (ECBinput.size() > 0)
+  eCB = 0.0;
+  if (eCBinput.size() > 0)
     {
-      ECB = (*(ECBinput[0].ECB) * ECBinput[0].weight); // only consider first one, weight is structural plasticity
-      CB1Runbound = CB1R - ECB;
+      eCB = (*(eCBinput[0].eCB) * eCBinput[0].weight); // only consider first one, weight is structural plasticity
+      CB1Runbound = CB1R - eCB;
       if (CB1Runbound < 0.0)
         CB1Runbound = 0.0;
-      CB1Rrise += ((-CB1Rrise + ECB) / SHD.CB1RriseTau) * SHD.deltaT;
+      CB1Rrise += ((-CB1Rrise + eCB) / SHD.CB1RriseTau) * SHD.deltaT;
     }
   else
     {
@@ -79,8 +79,8 @@ void BoutonIAFUnit::update(RNG& rng)
   // Recovery neurotransmitter
   availableNeurotransmitter += ((maxNeurotransmitter - availableNeurotransmitter)
                                 / SHD.neurotransmitterRecoverTau[neurotransmitterType]) * SHD.deltaT;
-  // Inhibit the neurotransmitter release with the quantity of ECB and CB1R, i.e. the minimum
-  availableNeurotransmitter -= SHD.neurotransmitterAdaptRate[neurotransmitterType] * std::min(ECB, CB1R);
+  // Inhibit the neurotransmitter release with the quantity of eCB and CB1R, i.e. the minimum
+  availableNeurotransmitter -= SHD.neurotransmitterAdaptRate[neurotransmitterType] * std::min(eCB, CB1R);
   // Limit neurotransmitter to >= 0
   if (availableNeurotransmitter < 0.0)
     availableNeurotransmitter = 0.0;
@@ -111,10 +111,10 @@ void BoutonIAFUnit::setSpikeIndices(const String& CG_direction, const String& CG
   spikeInput[spikeInput.size()-1].col = CG_node->getIndex()+1;
 }
 
-void BoutonIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitOutAttrPSet* CG_outAttrPset)
+void BoutonIAFUnit::seteCBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  ECBinput[ECBinput.size()-1].row =  getIndex()+1; // +1 is for Matlab
-  ECBinput[ECBinput.size()-1].col = CG_node->getIndex()+1;
+  eCBinput[eCBinput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  eCBinput[eCBinput.size()-1].col = CG_node->getIndex()+1;
 }
 
 BoutonIAFUnit::~BoutonIAFUnit()

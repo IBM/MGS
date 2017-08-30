@@ -34,14 +34,14 @@ void Goodwin::update(RNG& rng)
 {
   if (SHD.op_Cannabinoids)
     {      
-      // Use the unbound CB1R (i.e. Y-ECB) as the coupling between Y and Z and an instance version
+      // Use the unbound CB1R (i.e. Y-eCB) as the coupling between Y and Z and an instance version
       // of k1 which can be modified to change the CB1 mRNA max as observed in HD
       X += ( ( (Cannabinoids_k1_instance / (SHD.K1 + pow(Z, SHD.n))) - (SHD.k2 * X) ) / SHD.tau ) * SHD.deltaT;
       Y += ( ( (SHD.k3 * X) - (SHD.k4 * Y) ) / SHD.tau ) * SHD.deltaT;
-      double Y_minus_ECB = Y;
+      double Y_minus_eCB = Y;
       if (in1.size() > 0)
-        Y_minus_ECB = Cannabinoids_Y_minus_ECB_sigmoid(Y - (*(in1[0].input) * in1[0].weight)); // only consider first one, weight is scaling to Goodwin model 'ECB'
-      Z += ( ( (SHD.k5 * Y_minus_ECB) - (SHD.k6 * Z) ) / SHD.tau ) * SHD.deltaT;  
+        Y_minus_eCB = Cannabinoids_Y_minus_eCB_sigmoid(Y - (*(in1[0].input) * in1[0].weight)); // only consider first one, weight is scaling to Goodwin model 'eCB'
+      Z += ( ( (SHD.k5 * Y_minus_eCB) - (SHD.k6 * Z) ) / SHD.tau ) * SHD.deltaT;  
     }
   else
     {
@@ -62,8 +62,8 @@ Goodwin::~Goodwin()
 {
 }
 
-double Goodwin::Cannabinoids_Y_minus_ECB_sigmoid(double Y_minus_ECB)
+double Goodwin::Cannabinoids_Y_minus_eCB_sigmoid(double Y_minus_eCB)
 {
-  return 1.0 / ( 1.0 + exp(-SHD.Cannabinoids_sigmoid_C * (Y_minus_ECB - SHD.Cannabinoids_sigmoid_D)) );
+  return 1.0 / ( 1.0 + exp(-SHD.Cannabinoids_sigmoid_C * (Y_minus_eCB - SHD.Cannabinoids_sigmoid_D)) );
 }
 

@@ -17,14 +17,14 @@
 #define CLEFTASTROCYTEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, ECBIAFProducer
+Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, eCBIAFProducer
 {
   int neurotransmitterType;                          // type of neurotransmitter
   
   NeurotransmitterIAFInput [] neurotransmitterInput; // input of spike
   double neurotransmitter;                           // current neurotransmitter concentration
-  ECBIAFInput [] ECBInput;                           // input of ECB
-  double ECB;                                        // current endogenous cannabinoids concentration
+  eCBIAFInput [] eCBInput;                           // input of eCB
+  double eCB;                                        // current endogenous cannabinoids concentration
   
   Shared
     {
@@ -40,13 +40,13 @@ Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, ECBIAFProduce
     }
 
   InitPhase initialize();
-  RuntimePhase update(neurotransmitter, ECB);
+  RuntimePhase update(neurotransmitter, eCB);
 
   NeurotransmitterIAFProducer.neurotransmitter << &neurotransmitter; // neurotransmitter output
-  ECBIAFProducer.ECB << &ECB; // endogenous cannabinoids output
+  eCBIAFProducer.eCB << &eCB; // endogenous cannabinoids output
 
   UserFunction setNeurotransmitterIndices;
-  UserFunction setECBIndices;  
+  UserFunction seteCBIndices;  
 
   Connection Pre Node (PSet.identifier=="neurotransmitterInput") Expects NeurotransmitterIAFProducer    
   {
@@ -54,10 +54,10 @@ Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, ECBIAFProduce
     PSet.weight >> neurotransmitterInput.weight;
   }
 
-  Connection Pre Node (PSet.identifier=="ECBinput") Expects ECBIAFProducer
+  Connection Pre Node (PSet.identifier=="eCBinput") Expects eCBIAFProducer
   {
-    ECBIAFProducer.ECB >> ECBInput.ECB;
-    PSet.weight >> ECBInput.weight;
+    eCBIAFProducer.eCB >> eCBInput.eCB;
+    PSet.weight >> eCBInput.weight;
   }  
 }
 

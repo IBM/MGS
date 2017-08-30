@@ -28,17 +28,17 @@ Variable CleftAstrocyteIAFUnitDataCollector
   int [] slices;
   int mxslice;
   double* [] neurotransmitter;
-  double* [] ECB;
+  double* [] eCB;
   UserFunction getNodeIndices;
    
   // Flags
   bool op_saveNeurotransmitter;
-  bool op_saveECB;
+  bool op_saveeCB;
   
-  Connection Pre Node () Expects NeurotransmitterIAFProducer, ECBIAFProducer
+  Connection Pre Node () Expects NeurotransmitterIAFProducer, eCBIAFProducer
   {
     NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitter;
-    ECBIAFProducer.ECB >> ECB;
+    eCBIAFProducer.eCB >> eCB;
     getNodeIndices();
   }
   

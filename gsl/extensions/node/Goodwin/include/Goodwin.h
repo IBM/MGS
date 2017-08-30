@@ -29,7 +29,7 @@ class Goodwin : public CG_Goodwin
       virtual ~Goodwin();
    // Model specific additional functions
    private:
-      double Cannabinoids_Y_minus_ECB_sigmoid(double Y_minus_ECB);
+      double Cannabinoids_Y_minus_eCB_sigmoid(double Y_minus_eCB);
 };
 
 #endif

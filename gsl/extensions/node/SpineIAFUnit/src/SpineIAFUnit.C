@@ -36,7 +36,7 @@ void SpineIAFUnit::initialize(RNG& rng)
   mGluR5rise = 0.0;
   mGluR5current = 0.0;
   Ca = 0.0;
-  ECB = 0.0;
+  eCB = 0.0;
 }
 
 void SpineIAFUnit::update(RNG& rng)
@@ -100,9 +100,9 @@ void SpineIAFUnit::update(RNG& rng)
 
 
   // ##### endocannabinoids #####
-  // Update ECB (is always in the range 0 to 1)
+  // Update eCB (is always in the range 0 to 1)
   // with Ca2+ and the mGluR5 modulation (AND gate)
-  ECB = ECBproduction(Ca * mGluR5modulation(mGluR5current));
+  eCB = eCBproduction(Ca * mGluR5modulation(mGluR5current));
 }
 
 void SpineIAFUnit::outputWeights(std::ofstream& fs)
@@ -127,30 +127,30 @@ SpineIAFUnit::~SpineIAFUnit()
 {
 }
 
-double SpineIAFUnit::ECBsigmoid(double Ca)
+double SpineIAFUnit::eCBsigmoid(double Ca)
 {
-  return 1.0 / ( 1.0 + exp(-SHD.ECBprodC * (Ca - SHD.ECBprodD)) );
+  return 1.0 / ( 1.0 + exp(-SHD.eCBprodC * (Ca - SHD.eCBprodD)) );
 }
 
-double SpineIAFUnit::ECBproduction(double Ca)
+double SpineIAFUnit::eCBproduction(double Ca)
 {
   // Computes the sigmoidal production of cannabinoids depending on Ca2+
   // NOTE: this is mirrored in SpineIAFUnitDataCollector. If changed here, change there too.
-  double ECB = 0.0;
+  double eCB = 0.0;
   // 1. the general sigmoid
-  ECB = ECBsigmoid(Ca);
-  // 2. make zero ECB at zero Ca2+
-  ECB -= ECBsigmoid(0.0);
-  // 3. Make one ECB at >= one Ca2+
-  ECB *= 1.0 / (ECBsigmoid(1.0) - ECBsigmoid(0.0));
-  if (ECB > 1.0)
-    ECB = 1.0;
+  eCB = eCBsigmoid(Ca);
+  // 2. make zero eCB at zero Ca2+
+  eCB -= eCBsigmoid(0.0);
+  // 3. Make one eCB at >= one Ca2+
+  eCB *= 1.0 / (eCBsigmoid(1.0) - eCBsigmoid(0.0));
+  if (eCB > 1.0)
+    eCB = 1.0;
 
-  return ECB;
+  return eCB;
 }
 
 double SpineIAFUnit::mGluR5modulation(double mGluR5)
 {
-  return ECBproduction(mGluR5); // just use the same modified sigmoid
+  return eCBproduction(mGluR5); // just use the same modified sigmoid
 }
 

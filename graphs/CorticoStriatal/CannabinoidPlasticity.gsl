@@ -80,8 +80,8 @@ NodeType CleftAstrocyteIAFUnit(<
                                deltaT = DELTAT            // in s
                                >) { update->run1};
 
-#define ECBPRODC 10.0
-#define ECBPRODD 0.5
+#define eCBPRODC 10.0
+#define eCBPRODD 0.5
 NodeType SpineIAFUnit(<
                       AMPAriseTau = 0.004, // in s (fitted to Fino et al., 2010; Fig 1B)
                       AMPAfallTau = 0.030, // in s (fitted to Fino et al., 2010; Fig 1B)
@@ -94,8 +94,8 @@ NodeType SpineIAFUnit(<
                       CaVSCC = 250.0,      // in arb. unit; free parameter
                       CaVSCCpow = -0.5,    // CaVSCC*(AMPAweight^pow), in arb. unit
                       CaBP = 0.0,          // in arb. unit; free parameter
-                      ECBprodC = ECBPRODC, // in arb. unit
-                      ECBprodD = ECBPRODD, // in arb. unit
+                      eCBprodC = eCBPRODC, // in arb. unit
+                      eCBprodD = eCBPRODD, // in arb. unit
                       deltaT = DELTAT,     // in s
                       sharedDirectory = DIRECTORY,
                       sharedFilePrep = GLUTAMATE_PREP,
@@ -185,12 +185,12 @@ NdplInAttrInit ampaW(AMPA_W);
 BindName POST_W("weight", 0.0, "identifier", "postSpikesInput");
 NdplInAttrInit postW(POST_W);
 
-// Retrograde ECB weight between spines and clefts/atrocytes, structural plasticity
-BindName ECB1_W("weight", 1.0, "identifier", "ECBinput");
+// Retrograde eCB weight between spines/dendrites and clefts/atrocytes, structural plasticity
+BindName ECB1_W("weight", 1.0, "identifier", "eCBinput");
 NdplInAttrInit ecb1W(ECB1_W);
 
-// Retrograde ECB weight between clefts/atrocytes and boutons, structural plasticity
-BindName ECB2_W("weight", 1.0, "identifier", "ECBinput");
+// Retrograde eCB weight between clefts/atrocytes and glutamatergic/GABAergic boutons, structural plasticity
+BindName ECB2_W("weight", 1.0, "identifier", "eCBinput");
 NdplInAttrInit ecb2W(ECB2_W);
 
 

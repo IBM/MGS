@@ -30,8 +30,8 @@ class SpineIAFUnit : public CG_SpineIAFUnit
   virtual void setPostSpikeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset);
   virtual ~SpineIAFUnit();
  private:
-  double ECBsigmoid(double Ca);
-  double ECBproduction(double Ca);
+  double eCBsigmoid(double Ca);
+  double eCBproduction(double Ca);
   double mGluR5modulation(double mGluR5);
 };
 

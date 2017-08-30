@@ -71,9 +71,9 @@ Interface CaIAFProducer
   double* Ca;
 }
 
-Interface ECBIAFProducer
+Interface eCBIAFProducer
 {
-  double* ECB;
+  double* eCB;
 }
 
 Interface CB1RIAFProducer
@@ -280,9 +280,9 @@ Struct SynapticCurrentIAFInput
   int col;
 }
 
-Struct ECBIAFInput
+Struct eCBIAFInput
 {
-  double* ECB;
+  double* eCB;
   double weight;
   int row;
   int col;

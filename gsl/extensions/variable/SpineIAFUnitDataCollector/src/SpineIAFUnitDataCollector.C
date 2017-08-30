@@ -44,7 +44,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
   assert(slices.size()==AMPAcurrent.size());
   assert(slices.size()==mGluR5current.size());
   assert(slices.size()==Ca.size());
-  assert(slices.size()==ECB.size());
+  assert(slices.size()==eCB.size());
   int sz=AMPAcurrent.size();
   int mxrow=0;
   int mxcol=0;
@@ -52,7 +52,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
     {
       sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(
                                                          std::make_pair(AMPAcurrent[j], mGluR5current[j]),
-                                                         std::make_pair(Ca[j], ECB[j])
+                                                         std::make_pair(Ca[j], eCB[j])
                                                          );
       if (mxrow<rows[j]) mxrow=rows[j];
       if (mxcol<cols[j]) mxcol=cols[j];
@@ -61,7 +61,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
   AMPAcurrent.clear();
   mGluR5current.clear();
   Ca.clear();
-  ECB.clear();
+  eCB.clear();
   std::map<unsigned,
 	   std::map<unsigned,
                     std::map<unsigned,
@@ -95,7 +95,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
               AMPAcurrent.push_back(miter3->second.first.first);
               mGluR5current.push_back(miter3->second.first.second);
               Ca.push_back(miter3->second.second.first);
-              ECB.push_back(miter3->second.second.second);
+              eCB.push_back(miter3->second.second.second);
             }
         }
     }
@@ -111,7 +111,7 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
     }
   catch(...) { };
 
-  std::ostringstream os_AMPA, os_mGluR5, os_mGluR5modulation, os_Ca, os_ECBproduction, os_ECB;
+  std::ostringstream os_AMPA, os_mGluR5, os_mGluR5modulation, os_Ca, os_eCBproduction, os_eCB;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
@@ -164,30 +164,30 @@ void SpineIAFUnitDataCollector::initialize(RNG& rng)
       Ca_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 
-  if (op_saveECB)
+  if (op_saveeCB)
     {
-      // Save the ECB production function first
-      os_ECBproduction<<directory<<filePrep<<"SpineECBproduction"<<fileApp<<fileExt;
-      ECBproduction_file=new std::ofstream(os_ECBproduction.str().c_str(),
+      // Save the eCB production function first
+      os_eCBproduction<<directory<<filePrep<<"SpineeCBproduction"<<fileApp<<fileExt;
+      eCBproduction_file=new std::ofstream(os_eCBproduction.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       double Ca = 0.0;
       float ecb = 0.0;
       for (int i=0; i <= 2000; i++)
         {
-          ecb = (float) ECBproduction(Ca);
-          ECBproduction_file->write(reinterpret_cast<char *>(&ecb), sizeof(ecb));
+          ecb = (float) eCBproduction(Ca);
+          eCBproduction_file->write(reinterpret_cast<char *>(&ecb), sizeof(ecb));
           Ca += 1.0 / 1000.0;
         }
-      ECBproduction_file->close();
-      delete ECBproduction_file;
+      eCBproduction_file->close();
+      delete eCBproduction_file;
 
-      // Now the actual ECB file
-      os_ECB<<directory<<filePrep<<"SpineECB"<<fileApp<<fileExt;
-      ECB_file=new std::ofstream(os_ECB.str().c_str(),
+      // Now the actual eCB file
+      os_eCB<<directory<<filePrep<<"SpineeCB"<<fileApp<<fileExt;
+      eCB_file=new std::ofstream(os_eCB.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      ECB_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      ECB_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      ECB_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+      eCB_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+      eCB_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+      eCB_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
 }
 
@@ -209,10 +209,10 @@ void SpineIAFUnitDataCollector::finalize(RNG& rng)
       Ca_file->close();
       delete Ca_file;
     }
-  if (op_saveECB)
+  if (op_saveeCB)
     {
-      ECB_file->close();
-      delete ECB_file;
+      eCB_file->close();
+      delete eCB_file;
     }
 }
 
@@ -257,17 +257,17 @@ void SpineIAFUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndP
         }
     }
 
-  if (op_saveECB)
+  if (op_saveeCB)
     {
       ShallowArray<double*>::iterator iter, end;
       float temp = 0.;
-      iter=ECB.begin();
-      end=ECB.end();
+      iter=eCB.begin();
+      end=eCB.end();
 
       for (int n=0; iter!=end; ++iter)
         {
           temp = (float) **iter;
-          ECB_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
+          eCB_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
         }
     }
 }
@@ -307,30 +307,30 @@ void SpineIAFUnitDataCollector::duplicate(std::auto_ptr<CG_SpineIAFUnitDataColle
 }
 
 
-double SpineIAFUnitDataCollector::ECBsigmoid(double Ca)
+double SpineIAFUnitDataCollector::eCBsigmoid(double Ca)
 {
-  return 1.0 / ( 1.0 + exp(-ECBprodC * (Ca - ECBprodD)) );
+  return 1.0 / ( 1.0 + exp(-eCBprodC * (Ca - eCBprodD)) );
 }
 
-double SpineIAFUnitDataCollector::ECBproduction(double Ca)
+double SpineIAFUnitDataCollector::eCBproduction(double Ca)
 {
   // Computes the sigmoidal production of cannabinoids depending on Ca2+
   // NOTE: this is mirrored in SpineIAFUnitDataCollector. If changed here, change there too.
-  double ECB = 0.0;
+  double eCB = 0.0;
   // 1. the general sigmoid
-  ECB = ECBsigmoid(Ca);
-  // 2. make zero ECB at zero Ca2+
-  ECB -= ECBsigmoid(0.0);
-  // 3. Make one ECB at >= one Ca2+
-  ECB *= 1.0 / (ECBsigmoid(1.0) - ECBsigmoid(0.0));
-  if (ECB > 1.0)
-    ECB = 1.0;
+  eCB = eCBsigmoid(Ca);
+  // 2. make zero eCB at zero Ca2+
+  eCB -= eCBsigmoid(0.0);
+  // 3. Make one eCB at >= one Ca2+
+  eCB *= 1.0 / (eCBsigmoid(1.0) - eCBsigmoid(0.0));
+  if (eCB > 1.0)
+    eCB = 1.0;
 
-  return ECB;
+  return eCB;
 }
 
 double SpineIAFUnitDataCollector::mGluR5modulation(double mGluR5)
 {
-  return ECBproduction(mGluR5); // just use the same modified sigmoid
+  return eCBproduction(mGluR5); // just use the same modified sigmoid
 }
 

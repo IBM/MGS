@@ -26,7 +26,7 @@ Node Goodwin Implements GoodwinProducer
   Input [] in1;        // Used by model specific phases
 
   // Model specific instance variables
-  // Input [] in1; above is ECB concentration (scaled by in1.weight) used to calculate unbound Y
+  // Input [] in1; above is eCB concentration (scaled by in1.weight) used to calculate unbound Y
   double Cannabinoids_k1_instance; // The max CB1 mRNA
   
   Shared
@@ -44,8 +44,8 @@ Node Goodwin Implements GoodwinProducer
       double deltaT;   // in s
 
       // Model specific shared variables
-      double Cannabinoids_sigmoid_C;   // Slope of Sigmoid for sigmoid(Y-ECB)
-      double Cannabinoids_sigmoid_D;   // Point of 0.5 of Sigmoid for sigmoid(Y-ECB)
+      double Cannabinoids_sigmoid_C;   // Slope of Sigmoid for sigmoid(Y-eCB)
+      double Cannabinoids_sigmoid_D;   // Point of 0.5 of Sigmoid for sigmoid(Y-eCB)
       
       // Model specific flags
       bool op_Cannabinoids;
