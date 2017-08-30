@@ -113,7 +113,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveVoltages)
     {
-      os_voltage<<directory<<filePrep<<"MihalasNieburVoltage"<<fileApp<<fileExt;
+      os_voltage<<directory<<filePrep<<"Voltages"<<fileApp<<fileExt;
       voltage_file=new std::ofstream(os_voltage.str().c_str(),
                                      std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       voltage_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -123,7 +123,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveThresholds)
     {  
-      os_threshold<<directory<<filePrep<<"MihalasNieburThreshold"<<fileApp<<fileExt;
+      os_threshold<<directory<<filePrep<<"Thresholds"<<fileApp<<fileExt;
       threshold_file=new std::ofstream(os_threshold.str().c_str(),
                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       threshold_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -133,7 +133,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
   
   if (op_saveSpikes)
     {
-      os_spike<<directory<<filePrep<<"MihalasNieburSpike"<<fileApp<<fileExt;
+      os_spike<<directory<<filePrep<<"Spikes"<<fileApp<<fileExt;
       spike_file=new std::ofstream(os_spike.str().c_str(),
                                    std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       spike_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
@@ -143,7 +143,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
   
   if (op_saveSpikeVoltages)
     {  
-      os_spikevoltage<<directory<<filePrep<<"MihalasNieburSpikeVoltage"<<fileApp<<fileExt;
+      os_spikevoltage<<directory<<filePrep<<"SpikeVoltages"<<fileApp<<fileExt;
       spikevoltage_file=new std::ofstream(os_spikevoltage.str().c_str(),
                                           std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       spikevoltage_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
