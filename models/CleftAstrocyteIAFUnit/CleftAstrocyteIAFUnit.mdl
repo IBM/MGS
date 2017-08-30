@@ -19,6 +19,8 @@
 
 Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, ECBIAFProducer
 {
+  int neurotransmitterType;                          // type of neurotransmitter
+  
   NeurotransmitterIAFInput [] neurotransmitterInput; // input of spike
   double neurotransmitter;                           // current neurotransmitter concentration
   ECBIAFInput [] ECBInput;                           // input of ECB
@@ -26,7 +28,7 @@ Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, ECBIAFProduce
   
   Shared
     {
-      double neurotransmitterDecayTau; // neurotransmitter decay tau (i.e. neurotransmitter reuptake via GLT-1) in s
+      double [] neurotransmitterDecayTau; // neurotransmitter decay tau
 
       double deltaT;                   // in s
     }

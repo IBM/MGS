@@ -29,7 +29,7 @@ void CleftAstrocyteIAFUnit::initialize(RNG& rng)
     assert("CleftAstrocyteIAFUnit: ECB inputs should be one.");
   // Default starting values
   neurotransmitter = 0.0;
-  ECB = 0.0;
+  ECB = 0.0;  
 }
 
 void CleftAstrocyteIAFUnit::update(RNG& rng)
@@ -38,7 +38,7 @@ void CleftAstrocyteIAFUnit::update(RNG& rng)
   if (neurotransmitterInput.size() > 0)
     neurotransmitter += *(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight; // only consider first one, weight is structural plasticity
   // Astrocyte reuptake of neurotransmitter with GLT-1
-  neurotransmitter += (-neurotransmitter / SHD.neurotransmitterDecayTau) * SHD.deltaT;
+  neurotransmitter += (-neurotransmitter / SHD.neurotransmitterDecayTau[neurotransmitterType]) * SHD.deltaT;
 
   // ECB diffuses really quickly, so this level is equal to that produced by the spine
   if (ECBInput.size() > 0)
