@@ -34,7 +34,7 @@ void BoutonIAFUnit::initialize(RNG& rng)
   // Default starting values
   neurotransmitter = 0.0;
   CB1Rrise = 0.0;
-  CB1Rcurrent = 0.0;
+  CB1Rcurrent = 0.0;  
 }
 
 void BoutonIAFUnit::update(RNG& rng)
@@ -77,9 +77,10 @@ void BoutonIAFUnit::update(RNG& rng)
 
   // ##### Inhibit neurotransmitter #####
   // Recovery neurotransmitter
-  availableNeurotransmitter += ((maxNeurotransmitter - availableNeurotransmitter) / SHD.neurotransmitterRecoverTau) * SHD.deltaT;
+  availableNeurotransmitter += ((maxNeurotransmitter - availableNeurotransmitter)
+                                / SHD.neurotransmitterRecoverTau[neurotransmitterType]) * SHD.deltaT;
   // Inhibit the neurotransmitter release with the quantity of ECB and CB1R, i.e. the minimum
-  availableNeurotransmitter -= SHD.neurotransmitterAdaptRate * std::min(ECB, CB1R);
+  availableNeurotransmitter -= SHD.neurotransmitterAdaptRate[neurotransmitterType] * std::min(ECB, CB1R);
   // Limit neurotransmitter to >= 0
   if (availableNeurotransmitter < 0.0)
     availableNeurotransmitter = 0.0;

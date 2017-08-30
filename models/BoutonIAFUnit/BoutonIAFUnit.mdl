@@ -20,11 +20,13 @@
 Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmitterIAFProducer,
   CB1RIAFProducer, OutputProducer
 {
+  int neurotransmitterType;         // type of neurotransmitter
+  
   SpikeInput [] spikeInput;         // input of spike
   double neurotransmitter;          // current output of neurotransmitter
   double availableNeurotransmitter; // amount of neurotransmitter available to be released
   double maxNeurotransmitter;       // maximum amount of neurotransmitter to recovery to
-
+  
   ECBIAFInput [] ECBinput;          // input of endogenous cannabinoid
   double ECB;                       // Local copy of the ECB concentration to pass to the Goodwin model
   double CB1R;                      // CB1R total quantity
@@ -36,8 +38,8 @@ Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmi
   
   Shared
     {
-      double neurotransmitterAdaptRate;  // Rate of surpression of neurotransmitter release
-      double neurotransmitterRecoverTau; // Rate of recovery from suppression
+      double [] neurotransmitterAdaptRate;  // Rate of surpression of neurotransmitter release
+      double [] neurotransmitterRecoverTau; // Rate of recovery from suppression
 
       double CB1RriseTau;                // rise time constant of CB1R
       double CB1RfallTau;                // fall time constant of CB1R
@@ -45,8 +47,8 @@ Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmi
       double deltaT;                     // in s
 
       string sharedDirectory;
-      string sharedFilePrep;
-      string sharedFileApp;
+      string [] sharedFilePrep;
+      string [] sharedFileApp;
       string sharedFileExt;
 
       InitPhase initializeShared;

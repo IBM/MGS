@@ -25,6 +25,8 @@
 BoutonIAFUnitCompCategory::BoutonIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList)
   : CG_BoutonIAFUnitCompCategory(sim, modelName, ndpList)
 {
+  indexs_file = new std::ofstream*[SHD.sharedFilePrep.size()];
+  os_indexs = new std::ostringstream[SHD.sharedFilePrep.size()];  
 }
 
 void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
@@ -42,28 +44,35 @@ void BoutonIAFUnitCompCategory::initializeShared(RNG& rng)
       int n=0;
       // Take it in turn opening and creating the file to create the stream on each node
       while (n<getSimulation().getNumProcesses()) {
-        if (n==rank) {
-          os_indexs<<SHD.sharedDirectory<<SHD.sharedFilePrep<<"BoutonIndexs"<<
-            SHD.sharedFileApp<<SHD.sharedFileExt;
-          indexs_file=new std::ofstream(os_indexs.str().c_str(),
-                                        std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-          indexs_file->close();
-        }
+        for (int t=0; t<SHD.sharedFilePrep.size(); t++)
+          {
+            if (n==rank) {
+              os_indexs[t]<<SHD.sharedDirectory<<SHD.sharedFilePrep[t]<<"BoutonIndexs"<<
+                SHD.sharedFileApp<<SHD.sharedFileExt;
+              indexs_file[t]=new std::ofstream(os_indexs[t].str().c_str(),
+                                            std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+              indexs_file[t]->close();
+            }
+          }
         ++n;
         MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish        
       }
       // Now take it in turn writing to the file
       n=0;
       while (n<getSimulation().getNumProcesses()) {
-        if (n==rank) {
-          ShallowArray<BoutonIAFUnit>::iterator it = _nodes.begin();
-          ShallowArray<BoutonIAFUnit>::iterator end = _nodes.end();
-          indexs_file->open(os_indexs.str().c_str(),
-                            std::ofstream::out | std::ofstream::app | std::ofstream::binary);
-          for (; it != end; ++it)
-            (*it).outputIndexs(*indexs_file);
-          indexs_file->close();
-        }
+        for (int t=0; t<SHD.sharedFilePrep.size(); t++)
+          {
+            if (n==rank) {
+              ShallowArray<BoutonIAFUnit>::iterator it = _nodes.begin();
+              ShallowArray<BoutonIAFUnit>::iterator end = _nodes.end();
+              indexs_file[t]->open(os_indexs[t].str().c_str(),
+                                   std::ofstream::out | std::ofstream::app | std::ofstream::binary);
+              for (; it != end; ++it)
+                if (it->neurotransmitterType == t)
+                  it->outputIndexs(*(indexs_file[t]));
+              indexs_file[t]->close();
+            }
+          }
         ++n;
         MPI_Barrier(MPI_COMM_WORLD); // wait for node writing to finish
       }
