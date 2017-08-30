@@ -22,9 +22,6 @@
 
 #define DEGRUIJL_2012
 
-float KDRChannel_IO::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void KDRChannel_IO::update(RNG& rng)
 {

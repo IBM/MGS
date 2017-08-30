@@ -27,7 +27,6 @@ class CahChannel : public CG_CahChannel
       void initialize(RNG& rng);
       virtual ~CahChannel();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

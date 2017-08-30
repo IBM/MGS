@@ -27,7 +27,6 @@ class ChannelSchweighoferNat : public CG_ChannelSchweighoferNat
       void initialize(RNG& rng);
       virtual ~ChannelSchweighoferNat();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

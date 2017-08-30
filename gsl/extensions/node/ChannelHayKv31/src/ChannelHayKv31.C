@@ -19,6 +19,7 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 #define SMALL 1.0E-6
 
 #define IMV -18.7
@@ -28,9 +29,6 @@
 #define TMD 44.14
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-float ChannelHayKv31::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHayKv31::update(RNG& rng)
 {

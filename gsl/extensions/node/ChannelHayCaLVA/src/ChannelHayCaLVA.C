@@ -17,6 +17,7 @@
 #include "ChannelHayCaLVA.h"
 #include "CG_ChannelHayCaLVA.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -34,9 +35,6 @@
 #define THD 7.0
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-float ChannelHayCaLVA::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(x/y/2 - 1) : x/(1 - exp(x/y)));
-}
 
 void ChannelHayCaLVA::update(RNG& rng)
 {

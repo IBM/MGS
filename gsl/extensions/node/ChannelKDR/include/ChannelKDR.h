@@ -51,7 +51,6 @@ class ChannelKDR : public CG_ChannelKDR
       void initialize(RNG& rng);
       virtual ~ChannelKDR();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

@@ -5,17 +5,29 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#define SMALL 1.0E-6
+
+#if CHANNEL_CaN == CaN_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaN == CaN_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#else
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
+
 static pthread_once_t once_CaN_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of L-type alpha1.2 Ca2+ channel
 //              CaN_GHK current
 //
-#if CHANNEL_CaN == CaN_GHK_WOLF_2005
+#if CHANNEL_CaN == CaN_GHK_WOLF_2005 || \
+    CHANNEL_CaN == CaN_GHK_TUAN_2017
 // same kinetics as that of CaLv13 of Wolf2005, just Vhalf-activated is higher
 //  Inactivation reference from 
 //     1. McNaughton et al. (1997) (Table 1, using tau1)
@@ -41,12 +53,6 @@ static pthread_once_t once_CaN_GHK = PTHREAD_ONCE_INIT;
 #define frac_inact  1.0
 NOT IMPLEMENTED YET
 #endif
-
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaN_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelCaN_GHK::initialize(RNG& rng) 
 {
@@ -123,24 +129,12 @@ void ChannelCaN_GHK::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaN == CaN_GHK_WOLF_2005
+#if CHANNEL_CaN == CaN_GHK_WOLF_2005 || \
+    CHANNEL_CaN == CaN_GHK_TUAN_2017
     {
       m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
       h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
       PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
-      ////dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-      ////// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-      //////     R [mJ/(mol.K)]
-      ////I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-      ////          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-      ////          (1 - tmp);  // [pA/um^2]
-      ////NOTE: Tuan added 0.314
-      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
       I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
     }
 #else
@@ -160,7 +154,8 @@ void ChannelCaN_GHK::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaN == CaN_GHK_WOLF_2005
+#if CHANNEL_CaN == CaN_GHK_WOLF_2005 || \
+    CHANNEL_CaN == CaN_GHK_TUAN_2017
     {
       // NOTE: Some models use m_inf and tau_m to estimate m
       dyn_var_t ma = AMC * vtrap(v-AMV, AMD);
@@ -176,22 +171,7 @@ void ChannelCaN_GHK::update(RNG& rng)
 
       m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
       h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
-      // E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
-      //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
       PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
-      ////dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-      ////// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-      //////     R [mJ/(mol.K)]
-      ////I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-      ////          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-      ////          (1 - tmp);  // [pA/um^2]
-      ////NOTE: Tuan added 0.314
-      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
       I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
 #ifdef CONSIDER_DI_DV
       dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);  // [pA/um^2]
@@ -204,14 +184,37 @@ void ChannelCaN_GHK::update(RNG& rng)
 
 dyn_var_t ChannelCaN_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
 {// voltage v (mV) and return current density I_Ca(pA/um^2)
+  //NOTE: [Ca2+] is in unit of uM
     ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * 
     //                       *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
     ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    ////  (cai * exp(tmp) - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    //NOTE: Both are the same, yet the second one requires less expensive calculation
+   /* //This assume non-unity partition coefficient ratio beta_o/beta_i --> which means 
+      // Reversial potential deviate from Nernst equation 
     dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * exp(tmp) - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1);
+    */  
+    dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai - bo_bi * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
+    /* NOTE: This formula assume beta_o/beta_i = 1
+    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    */
+      
     return result;
+      // E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
+      //           log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));
+      ////dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+      ////// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+      //////     R [mJ/(mol.K)]
+      ////I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+      ////          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+      ////          (1 - tmp);  // [pA/um^2]
+      ////NOTE: Tuan added 0.314
+      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
 }
 
 

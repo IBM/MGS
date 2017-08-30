@@ -29,7 +29,6 @@ class NaChannel : public CG_NaChannel
       void initializeNaChannels(RNG& rng);
       virtual ~NaChannel();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

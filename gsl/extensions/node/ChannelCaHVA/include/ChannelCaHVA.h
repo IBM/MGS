@@ -28,7 +28,6 @@ class ChannelCaHVA : public CG_ChannelCaHVA
       void update(RNG& rng);
       virtual ~ChannelCaHVA();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

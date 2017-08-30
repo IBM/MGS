@@ -7,6 +7,7 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -29,11 +30,6 @@
 #define BHD -5.0
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelNat_AIS::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelNat_AIS::update(RNG& rng) 
 {

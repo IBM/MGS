@@ -7,6 +7,7 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -21,9 +22,6 @@
 #define d3 0.9434 // [uM]
 #endif
 
-dyn_var_t ChannelIP3R::vtrap(dyn_var_t x, dyn_var_t y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelIP3R::update(RNG& rng) 
 {

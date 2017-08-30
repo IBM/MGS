@@ -19,7 +19,6 @@ class ChannelKv31 : public CG_ChannelKv31
     void initialize(RNG& rng);
     virtual ~ChannelKv31();
   private:
-    dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
 };
 
 #endif

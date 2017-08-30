@@ -20,6 +20,7 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 // This is an implementation of the fast component of A-type (KAf, KAt)
 // potassium current
 //
+
 #if CHANNEL_KAf == KAf_TRAUB_1994
 // The time constants in Traub's models is ~25 ms typically KAf ~ 30ms
 #define Eleak -65.0  // mV
@@ -68,23 +69,6 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 #define tau_m 1.0 //ms                    
 #define tau_h 25.0   // ms                 
 
-#elif CHANNEL_KAf == KAf_EVANS_2012
-//  Inactivation reference from  Tkatch - Surmeier (2000)
-//     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
-//     assume Kv4.2 subunits forming the channel
-#define Eleak 0.0
-#define AMC 1.5
-#define AMV (4.0 + Eleak)
-#define AMD -17
-#define BMC 0.6
-#define BMV (10.0 + Eleak)
-#define BMD 9.0
-#define AHC 0.105
-#define AHV (-121.0 + Eleak)
-#define AHD 22
-#define BHC 0.065
-#define BHV (-55.0 + Eleak)
-#define BHD -11.0
 #elif CHANNEL_KAf == KAf_WOLF_2005
 //  Inactivation reference from  Tkatch - Surmeier (2000)
 //     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
@@ -104,18 +88,27 @@ const dyn_var_t ChannelKAf::_Vmrange_taum[] = {-40, -30, -20, -10, 0, 10,
 dyn_var_t ChannelKAf::taumKAf[] = {1.8, 1.1, 1.0, 1.0, 0.9, 0.8,
                                    0.9, 0.9, 0.9, 0.8, 0.8};
 std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
+#elif CHANNEL_KAf == KAf_EVANS_2012
+//  Inactivation reference from  Tkatch - Surmeier (2000)
+//     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
+//     assume Kv4.2 subunits forming the channel
+#define Eleak 0.0
+#define AMC 1.5
+#define AMV (4.0 + Eleak)
+#define AMD -17
+#define BMC 0.6
+#define BMV (10.0 + Eleak)
+#define BMD 9.0
+#define AHC 0.105
+#define AHV (-121.0 + Eleak)
+#define AHD 22
+#define BHC 0.065
+#define BHV (-55.0 + Eleak)
+#define BHD -11.0
 #else
 NOT IMPLEMENTED YET
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
-// b_m  = BMC * exp( (V - BMV)/BMD )
-// a_h  = AHC * exp( (V - AHV)/AHD )
-dyn_var_t ChannelKAf::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)

@@ -58,7 +58,6 @@ class ChannelNat : public CG_ChannelNat
   static void initialize_others();
 
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 #if CHANNEL_NAT == NAT_WOLF_2005 || \
     CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
   const static dyn_var_t _Vmrange_taum[];

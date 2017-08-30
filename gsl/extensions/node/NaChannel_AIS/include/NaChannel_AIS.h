@@ -29,7 +29,6 @@ class NaChannel_AIS : public CG_NaChannel_AIS
       void initializeNaChannels(RNG& rng);
       virtual ~NaChannel_AIS();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

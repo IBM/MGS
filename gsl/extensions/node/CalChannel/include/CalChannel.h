@@ -27,7 +27,6 @@ class CalChannel : public CG_CalChannel
       void initializeCalChannels(RNG& rng);
       virtual ~CalChannel();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

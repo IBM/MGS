@@ -32,9 +32,6 @@
 #define QRD 4.0
 #endif
 
-float HCNChannel::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void HCNChannel::update(RNG& rng)
 {

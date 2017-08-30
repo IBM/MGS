@@ -22,6 +22,7 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -49,9 +50,6 @@
 
 //#define Vhalf_shift 7.0  // [mV]
 
-dyn_var_t ChannelCaLVA::vtrap(dyn_var_t x, dyn_var_t y) {
-  return(fabs(x/y) < SMALL ? y*(x/y/2 - 1) : x/(1 - exp(x/y)));
-}
 
 void ChannelCaLVA::update(RNG& rng)
 {

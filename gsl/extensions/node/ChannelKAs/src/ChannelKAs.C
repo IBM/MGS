@@ -296,6 +296,20 @@ gbar[i] = gbar_values[0];
       gbar[i] = gbar_default;
     }
   }
+
+  //NOTE: 
+  //scale_factor if NOT defined get the value of 1.0
+  // if defined; dont use a closed to zero value, i.e. > SMALL
+  if (scale_factor < SMALL)
+  {
+    scale_factor = 1.0;
+  }
+  else{
+    for (unsigned i = 0; i < size; ++i)
+    {
+      gbar[i] *= gbar[i];
+    }
+  }
 #if defined(WRITE_GATES)                                      
     std::ostringstream os;                                    
     std::string fileName = "gates_KAs";                       

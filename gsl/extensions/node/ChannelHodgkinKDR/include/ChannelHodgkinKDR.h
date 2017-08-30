@@ -27,7 +27,6 @@ class ChannelHodgkinKDR : public CG_ChannelHodgkinKDR
       void initialize(RNG& rng);
       virtual ~ChannelHodgkinKDR();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

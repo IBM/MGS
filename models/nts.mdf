@@ -22,6 +22,7 @@
 #include "ChannelSK/ChannelSK.mdl"
 #include "ChannelMK/ChannelMK.mdl"
 #include "ChannelKv31/ChannelKv31.mdl"
+#include "ChannelKCNK/ChannelKCNK.mdl"
 
 #include "ChannelCaL/ChannelCaL.mdl"
 #include "ChannelCaN/ChannelCaN.mdl"

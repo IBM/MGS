@@ -39,7 +39,6 @@ class ChannelKAf : public CG_ChannelKAf
   virtual ~ChannelKAf();
   static void initialize_others();  // new
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
 #if CHANNEL_KAf == KAf_WOLF_2005
   const static dyn_var_t _Vmrange_taum[];
   static dyn_var_t taumKAf[];

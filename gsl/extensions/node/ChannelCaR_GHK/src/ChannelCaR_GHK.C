@@ -7,16 +7,24 @@
 #include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#define SMALL 1.0E-6
+
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaR == CaR_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
 static pthread_once_t once_CaR_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of R-type Ca2+ channel
 //              CaR_GHK current
 //
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
 // same kinetics as that of CaLv12 of Wolf2005, just Vhalf-activated is lower
 //  Inactivation reference from 
 //     1. Foehring ... Surmeier (2000) - Unique properties R-type Ca2+ currents in neocortical and neostriatal neurons - J. Neurophysiol. Fig. 7C
@@ -41,11 +49,6 @@ std::vector<dyn_var_t> ChannelCaR_GHK::Vmrange_tauh;
 NOT IMPLEMENTED YET
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaR_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelCaR_GHK::initialize(RNG& rng)
 {
@@ -138,7 +141,8 @@ void ChannelCaR_GHK::initialize(RNG& rng)
     dyn_var_t cai = (*Ca_IC)[i];
 #endif
 
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
     {
       m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values (t0) or (t0+dt/2)
       h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -182,7 +186,8 @@ void ChannelCaR_GHK::update(RNG& rng)
     dyn_var_t cai = (*Ca_IC)[i];
 #endif
 
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
     // NOTE: Some models use m_inf and tau_m to estimate m
     //dyn_var_t tau_m = 1.6;  // msec - in paper (which assume 35^C)
     dyn_var_t tau_m = 5.1;  // msec - in NEURON code (due to Q10 =3.0 at 22^C)
@@ -233,13 +238,14 @@ dyn_var_t ChannelCaR_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
 {// voltage v (mV) and return current density I_Ca(pA/um^2)
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      (cai * tmp + (cai - bo_bi * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
     return result;
 }
 
 void ChannelCaR_GHK::initialize_others() 
 {
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
   {
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);

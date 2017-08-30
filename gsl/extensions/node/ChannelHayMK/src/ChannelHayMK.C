@@ -16,6 +16,7 @@
 #include "Lens.h"
 #include "ChannelHayMK.h"
 #include "CG_ChannelHayMK.h"
+#include "NumberUtils.h"
 #include "rndm.h"
 
 #define SMALL 1.0E-6
@@ -30,9 +31,6 @@
 #define BMD -0.1
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-float ChannelHayMK::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHayMK::update(RNG& rng)
 {

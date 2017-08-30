@@ -82,6 +82,7 @@ T sigmoid(T alpha, T beta)
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 Use in gating of Hodgkin-Huxley variable
 in case (x=0) --> L'hopital rule 
+Check Traub (1991) paper
 */
 template<typename T>
 T vtrap(T x, T y)

@@ -18,7 +18,8 @@
 #include "CG_NaChannel.h"
 #include "rndm.h"
 
-#include "../../nti/include/MaxComputeOrder.h"
+#include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -59,9 +60,6 @@
 #define BHD 10.0
 #endif 
 
-dyn_var_t NaChannel::vtrap(dyn_var_t x, dyn_var_t y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void NaChannel::update(RNG& rng)
 {

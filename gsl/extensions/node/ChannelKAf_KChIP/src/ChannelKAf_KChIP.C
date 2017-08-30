@@ -22,6 +22,10 @@
 
 static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
+// b_m  = BMC * exp( (V - BMV)/BMD )
+// a_h  = AHC * exp( (V - AHV)/AHD )
 //
 // This is an implementation of the fast component of A-type (KAf, KAt)
 // potassium current
@@ -114,14 +118,6 @@ std::vector<dyn_var_t> ChannelKAf_KChIP::Vmrange_taum;
 NOT IMPLEMENTED YET
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
-// b_m  = BMC * exp( (V - BMV)/BMD )
-// a_h  = AHC * exp( (V - AHV)/AHD )
-dyn_var_t ChannelKAf_KChIP::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)

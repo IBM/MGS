@@ -21,6 +21,7 @@
 #include "SegmentDescriptor.h"
 #include "Branch.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -49,9 +50,6 @@
 #define BHD 6.0
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-dyn_var_t ChannelHayNat::vtrap(dyn_var_t x, dyn_var_t y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHayNat::update(RNG& rng)
 {

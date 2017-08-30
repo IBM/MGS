@@ -34,7 +34,6 @@ class ChannelCaLVA : public CG_ChannelCaLVA
       void initialize(RNG& rng);
       virtual ~ChannelCaLVA();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

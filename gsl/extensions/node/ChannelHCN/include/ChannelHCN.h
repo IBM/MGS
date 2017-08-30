@@ -51,7 +51,6 @@ class ChannelHCN : public CG_ChannelHCN
   dyn_var_t conductance(int i);
 
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

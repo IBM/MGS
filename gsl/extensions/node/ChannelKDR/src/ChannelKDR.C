@@ -21,6 +21,7 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -60,16 +61,16 @@
 #define Eleak -65.0 //mV
 #define ANC 0.016
 #define ANV (35.1+Eleak)
-#define AND 5
+#define AND 5.0
 #define BNC 0.25
 #define BNV (20+Eleak)
-#define BND 40
+#define BND 40.0
 
 #elif CHANNEL_KDR == KDR_WANG_BUSZAKI_1996
 // Equations from paper Wang_Buzsaki_1996 
 // IK = gK * n^4 (V-E)
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-#define Vshift 0 
+#define Vshift 0.0
 #define ANC -0.01                                                                  
 #define ANV (-34.0+Vshift) 
 #define AND -10.0                                                                  
@@ -89,10 +90,6 @@
                                                                                    
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelKDR::vtrap(dyn_var_t x, dyn_var_t y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)

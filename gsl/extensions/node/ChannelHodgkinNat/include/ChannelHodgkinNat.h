@@ -27,7 +27,6 @@ class ChannelHodgkinNat : public CG_ChannelHodgkinNat
       void initialize(RNG& rng);
       virtual ~ChannelHodgkinNat();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

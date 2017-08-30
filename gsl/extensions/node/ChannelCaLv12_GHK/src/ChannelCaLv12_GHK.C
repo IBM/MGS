@@ -8,10 +8,18 @@
 #include "NumberUtils.h"
 #include "MaxComputeOrder.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#define SMALL 1.0E-6
+#if CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaLv12 == CaLv12_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#else
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
 
 static pthread_once_t once_CaLv12_GHK = PTHREAD_ONCE_INIT;
 
@@ -39,7 +47,8 @@ static pthread_once_t once_CaLv12_GHK = PTHREAD_ONCE_INIT;
 #define BMD -25
 #define K_h 1.0 // [uM]
 //#endif
-#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005 || \
+      CHANNEL_CaLv12 == CaLv12_GHK_TUAN_2017
 //  The model still assume Vm-dependent activation and inactivation
 //  Inactivation reference from 
 //     1. Bell - ... - Dolphin (2001) 
@@ -72,11 +81,6 @@ static pthread_once_t once_CaLv12_GHK = PTHREAD_ONCE_INIT;
 NOT IMPLEMENTED YET
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaLv12_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 // GOAL: To meet second-order derivative, the gates is calculated to 
 //     give the value at time (t0+dt/2) using data voltage v(t0)
@@ -193,7 +197,8 @@ void ChannelCaLv12_GHK::initialize(RNG& rng)
       PCa[i] = PCabar[i] * pow(m[i],3) *  h[i];
       I_Ca[i] = update_current(v, cai, i); // [pA/um^2]
     }
-#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005 || \
+      CHANNEL_CaLv12 == CaLv12_GHK_TUAN_2017
     {
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values time (t0) and (t0+dt/2) are the same
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -254,7 +259,8 @@ void ChannelCaLv12_GHK::update(RNG& rng)
     assert(0);
 #elif CHANNEL_CaLv12 == CaLv12_GHK_Standen_Stanfield_1982_option2
     assert(0);
-#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005
+#elif CHANNEL_CaLv12 == CaLv12_GHK_WOLF_2005 || \
+      CHANNEL_CaLv12 == CaLv12_GHK_TUAN_2017
     {
       // NOTE: Some models use m_inf and tau_m to estimate m
       //dyn_var_t ma = 0.1194 * (v + 8.124) / (exp((v + 8.124) / 9.005) - 1); //these values at at 35^C
@@ -276,19 +282,7 @@ void ChannelCaLv12_GHK::update(RNG& rng)
       h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
       PCa[i] = PCabar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
 
-      //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-      //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-      ////     R [mJ/(mol.K)]
-      //I_Ca[i] = PCa[i] * (zCa2F2_R / (*(getSharedMembers().T))) * v *
-      //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-      //          (1 - tmp);  // [pA/um^2]
-      //NOTE: Tuan added 0.314
-      dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-      I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-        (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
 
 #ifdef CONSIDER_DI_DV
       dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);  // [pA/um^2]
@@ -312,13 +306,9 @@ void ChannelCaLv12_GHK::update(RNG& rng)
 
 dyn_var_t ChannelCaLv12_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
 {// voltage v (mV) and return current density I_Ca(pA/um^2)
-    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * 
-    //                       *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      (cai * tmp + (cai - bo_bi * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
     return result;
 }
 

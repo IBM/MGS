@@ -29,7 +29,6 @@ class ChannelHayNat : public CG_ChannelHayNat
       void initialize(RNG& rng);
       virtual ~ChannelHayNat();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

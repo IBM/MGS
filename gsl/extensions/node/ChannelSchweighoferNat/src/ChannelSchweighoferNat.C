@@ -17,6 +17,7 @@
 #include "ChannelSchweighoferNat.h"
 #include "CG_ChannelSchweighoferNat.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -33,9 +34,6 @@
 #define BHV 50.0
 #define BHD 10.0
 
-float ChannelSchweighoferNat::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelSchweighoferNat::update(RNG& rng)
 {

@@ -27,7 +27,6 @@ class ChannelKIR : public CG_ChannelKIR
   virtual ~ChannelKIR();
   static void initialize_others();  // new
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
 #if CHANNEL_KIR == KIR_WOLF_2005
 	const static dyn_var_t _Vmrange_taum[];
 	static dyn_var_t taumKIR[];

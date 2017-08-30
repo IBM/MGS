@@ -17,6 +17,7 @@
 #include "ChannelSchweighoferCah.h"
 #include "CG_ChannelSchweighoferCah.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -27,9 +28,6 @@
 #define BMV 8.5
 #define BMD 5.0
 
-float ChannelSchweighoferCah::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelSchweighoferCah::update(RNG& rng)
 {

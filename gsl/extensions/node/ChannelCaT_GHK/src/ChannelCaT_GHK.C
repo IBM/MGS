@@ -8,17 +8,27 @@
 #include "NumberUtils.h"
 #include "MaxComputeOrder.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#define SMALL 1.0E-6
+
+#if CHANNEL_CaT == CaT_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaT == CaT_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#else
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
 
 static pthread_once_t once_CaT_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of T-type Ca2+ channel
 //              CaT_GHK current
 //
-#if CHANNEL_CaT == CaT_GHK_WOLF_2005
+#if CHANNEL_CaT == CaT_GHK_WOLF_2005 || \
+    CHANNEL_CaT == CaT_GHK_TUAN_2017
 //  Inactivation reference from
 //     1. Chirchill et al. (1998) (Fig. 3) 
 //  Activation reference from 
@@ -53,11 +63,6 @@ std::vector<dyn_var_t> ChannelCaT_GHK::Vmrange_tauh;
 NOT IMPLEMENTED YET;
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaT_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 // GOAL: To meet second-order derivative, the gates is calculated to 
 //     give the value at time (t0+dt/2) using data voltage v(t0)
@@ -150,7 +155,8 @@ void ChannelCaT_GHK::initialize(RNG& rng)
     dyn_var_t cai = (*Ca_IC)[i];
 #endif
 
-#if CHANNEL_CaT == CaT_GHK_WOLF_2005
+#if CHANNEL_CaT == CaT_GHK_WOLF_2005 || \
+    CHANNEL_CaT == CaT_GHK_TUAN_2017
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     PCa[i] = PCabar[i] * m[i] * m[i] * m[i] * h[i];
@@ -193,7 +199,8 @@ void ChannelCaT_GHK::update(RNG& rng)
     dyn_var_t cai = (*Ca_IC)[i];
 #endif
 
-#if CHANNEL_CaT == CaT_GHK_WOLF_2005
+#if CHANNEL_CaT == CaT_GHK_WOLF_2005 || \
+    CHANNEL_CaT == CaT_GHK_TUAN_2017
     {
       // NOTE: Some models use m_inf and tau_m to estimate m
       // tau_m in the lookup table
@@ -277,13 +284,14 @@ dyn_var_t ChannelCaT_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
     ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
     return result;
 }
 
 void ChannelCaT_GHK::initialize_others()
 {
-#if CHANNEL_CaT == CaT_GHK_WOLF_2005
+#if CHANNEL_CaT == CaT_GHK_WOLF_2005 || \
+    CHANNEL_CaT == CaT_GHK_TUAN_2017
   {
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);

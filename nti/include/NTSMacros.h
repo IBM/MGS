@@ -26,6 +26,9 @@
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
 #define R_zCaF (zR/(zCa*zF))
+#define zK2F2_R ((zK*zK)*(zF*zF)/(zR))
+#define zKF_R (zK*zF/(zR))
+#define R_zKF (zR/(zK*zF))
 #define zF_RT (zF / (zR * *getSharedMembers().T))
 #define mM2uM (1e3)  // conversion factor
 #define uM2mM (1e-3)  // conversion factor from microMolar to mimiMolar
@@ -152,6 +155,7 @@
 //{{{
 #define KIR_MAHON_2000         2
 #define KIR_WOLF_2005          3
+//#define KIR_
 
 #define _KIR_DEFAULT           KIR_WOLF_2005
 //}}}
@@ -217,6 +221,12 @@
 
 #define _Kv31_DEFAULT Kv31_RETTIG_1992
 //}}}
+// KCNK (background leak K+ current)
+//{{{
+#define  KCNK_GHK_TUAN_2017   1
+
+#define _KCNK_DEFAULT  KCNK_GHK_TUAN_2017
+//}}}
 //}}}
 
 //{{{ HCN-models
@@ -252,37 +262,43 @@
 //{{{
 #define CaLv12_GHK_Standen_Stanfield_1982_option1 3
 #define CaLv12_GHK_Standen_Stanfield_1982_option2 4
-#define CaLv12_GHK_WOLF_2005 2
+#define CaLv12_GHK_WOLF_2005                      5 
+#define CaLv12_GHK_TUAN_2017                      6 
 
 #define _CaLv12_DEFAULT      CaLv12_GHK_WOLF_2005
 //}}}
 // CaLv13 (HVA)  CHANNEL_CaLv13 macro
 //{{{
 #define CaLv13_GHK_WOLF_2005 2
+#define CaLv13_GHK_TUAN_2017 3
 
 #define _CaLv13_DEFAULT    CaLv13_GHK_WOLF_2005
 //}}}
 // CaN      CHANNEL_CaN macro
 //{{{
 #define CaN_GHK_WOLF_2005 2
+#define CaN_GHK_TUAN_2017 3
 
 #define _CaN_DEFAULT   CaN_GHK_WOLF_2005
 //}}}
 // CaPQ     CHANNEL_CaPQ macro
 //{{{
 #define CaPQ_GHK_WOLF_2005 2
+#define CaPQ_GHK_TUAN_2017 3
 
 #define _CaPQ_DEFAULT   CaPQ_GHK_WOLF_2005
 //}}}
 // CaR      CHANNEL_CaR macro
 //{{{
 #define CaR_GHK_WOLF_2005 2
+#define CaR_GHK_TUAN_2017 3
 
 #define _CaR_DEFAULT  CaR_GHK_WOLF_2005
 //}}}
 // CaT (LVA)      CHANNEL_CaT macro
 //{{{
 #define CaT_GHK_WOLF_2005 2
+#define CaT_GHK_TUAN_2017 3
 
 #define _CaT_DEFAULT CaT_GHK_WOLF_2005
 //}}}
@@ -923,6 +939,7 @@
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define  IDEA_CURRENTONCOMPT 
+#define IDEA_ILEAK
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 //#define SIMULATE_CAER
@@ -1032,6 +1049,9 @@
 #endif
 #ifndef CHANNEL_Kv31
 #define CHANNEL_Kv31 _Kv31_DEFAULT
+#endif
+#ifndef CHANNEL_KCNK
+  #define CHANNEL_KCNK _KCNK_DEFAULT
 #endif
 #ifndef CHANNEL_CaHVA
 #define CHANNEL_CaHVA _CaHVA_DEFAULT

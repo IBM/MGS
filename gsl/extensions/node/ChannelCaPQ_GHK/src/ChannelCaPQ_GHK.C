@@ -5,17 +5,28 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#define SMALL 1.0E-6
+
+#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaPQ == CaPQ_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#else
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
 static pthread_once_t once_CaPQ_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of L-type alpha1.2 Ca2+ channel
 //              CaPQ_GHK current
 //
-#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005
+#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005 || \
+    CHANNEL_CaPQ == CaPQ_GHK_TUAN_2017
 // same kinetics as that of CaLv12 of Wolf2005, just Vhalf-activated is lower
 // ONLY activation
 //  Activation reference from 
@@ -34,10 +45,6 @@ static pthread_once_t once_CaPQ_GHK = PTHREAD_ONCE_INIT;
 NOT IMPLEMENTED YET
 #endif
 
-dyn_var_t ChannelCaPQ_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelCaPQ_GHK::initialize(RNG& rng) 
 {
@@ -117,7 +124,8 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005
+#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005 || \
+    CHANNEL_CaPQ == CaPQ_GHK_TUAN_2017
     {
       m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
       //h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -154,7 +162,8 @@ void ChannelCaPQ_GHK::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005
+#if CHANNEL_CaPQ == CaPQ_GHK_WOLF_2005 || \
+    CHANNEL_CaPQ == CaPQ_GHK_TUAN_2017
     {
       // NOTE: Some models use m_inf and tau_m to estimate m
       //dyn_var_t tau_m = 0.377; //msec - in the paper (for 35^C)
@@ -192,13 +201,9 @@ void ChannelCaPQ_GHK::update(RNG& rng)
 
 dyn_var_t ChannelCaPQ_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
 {// voltage v (mV) and return current density I_Ca(pA/um^2)
-    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * 
-    //                       *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      (cai * tmp + (cai - bo_bi * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
     return result;
 }
 

@@ -18,6 +18,7 @@
 #include "CG_ChannelHayCaHVA.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -41,9 +42,6 @@
 //#define Vhalf_shift 5.0 // [mV]
 #define Vhalf_shift 0.0 // [mV]
 
-float ChannelHayCaHVA::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHayCaHVA::update(RNG& rng)
 {

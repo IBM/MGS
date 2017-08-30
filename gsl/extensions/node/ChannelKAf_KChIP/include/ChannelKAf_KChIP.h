@@ -54,7 +54,6 @@ class ChannelKAf_KChIP : public CG_ChannelKAf_KChIP
     return (1 + Vmax * pow(cai,n) / (pow(cai,n) + pow(Kd,n)));
   }
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
 #if CHANNEL_KAf == KAf_WOLF_2005
   const static dyn_var_t _Vmrange_taum[];
   static dyn_var_t taumKAf[];

@@ -13,12 +13,18 @@
 #include <pthread.h>
 #include <algorithm>
 
+#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaLv13 == CaLv13_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
 static pthread_once_t once_CaLv13_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of L-type alpha1.2 Ca2+ channel
 //              CaLv13_GHK current
 //
-#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
+#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005 || \
+    CHANNEL_CaLv13 == CaLv13_GHK_TUAN_2017
 //Iz = gzbar  * m^x * (a * h + (1-a) ) * (Vm - Ez)
 // same kinetics as that of CaLv12 of Wolf2005, just Vhalf-activated is lower
 //  Inactivation reference from 
@@ -51,11 +57,6 @@ static pthread_once_t once_CaLv13_GHK = PTHREAD_ONCE_INIT;
 NOT IMPLEMENTED YET
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaLv13_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 // GOAL: To meet second-order derivative, the gates is calculated to 
 //     give the value at time (t0+dt/2) using data voltage v(t0)
@@ -144,7 +145,8 @@ void ChannelCaLv13_GHK::initialize(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
+#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005 || \
+    CHANNEL_CaLv13 == CaLv13_GHK_TUAN_2017
     {
       m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
       h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -183,7 +185,8 @@ void ChannelCaLv13_GHK::update(RNG& rng)
   {
     dyn_var_t v = (*V)[i];
     dyn_var_t cai = (*Ca_IC)[i];
-#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005
+#if CHANNEL_CaLv13 == CaLv13_GHK_WOLF_2005 || \
+    CHANNEL_CaLv13 == CaLv13_GHK_TUAN_2017
     {
       // NOTE: Some models use m_inf and tau_m to estimate m
       //dyn_var_t ma = 0.1194 * (v + 8.124) / (exp((v + 8.124) / 9.005) - 1);
@@ -232,11 +235,13 @@ dyn_var_t ChannelCaLv13_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
 {// voltage v (mV) and return current density I_Ca(pA/um^2)
     ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * 
     //                       *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
     dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai - bo_bi * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
+    /* NOTE: This formula assume beta_o/beta_i = 1
+    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    */
     return result;
 }
 

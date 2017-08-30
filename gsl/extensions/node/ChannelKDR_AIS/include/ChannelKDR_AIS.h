@@ -24,7 +24,6 @@ class ChannelKDR_AIS : public CG_ChannelKDR_AIS
       void initialize(RNG& rng);
       virtual ~ChannelKDR_AIS();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

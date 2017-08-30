@@ -27,7 +27,6 @@ class ChannelSchweighoferCal : public CG_ChannelSchweighoferCal
       void initialize(RNG& rng);
       virtual ~ChannelSchweighoferCal();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

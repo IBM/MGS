@@ -58,10 +58,6 @@ std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 NOT IMPLEMENTED YET
 #endif
 
-dyn_var_t ChannelKIR::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)
