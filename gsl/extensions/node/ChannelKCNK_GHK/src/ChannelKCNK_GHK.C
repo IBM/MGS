@@ -50,6 +50,7 @@ void ChannelKCNK_GHK::update(RNG& rng)
 //      // E_Ca[i] = (0.04343 * *(getSharedMembers().T) *
 //      //           log(*(getSharedMembers().K_EC) / (*K_IC)[i]));
 //      P_K[i] = P_Kbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1.0 - frac_inact));
+      P_K[i] = P_Kbar[i];
       ////dyn_var_t tmp = exp(-v * zKF_R / (*getSharedMembers().T));
       ////// NOTE: P_K [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
       //////     R [mJ/(mol.K)]
@@ -71,7 +72,6 @@ void ChannelKCNK_GHK::update(RNG& rng)
     }
 #endif
   }
-
 }
 
 void ChannelKCNK_GHK::initialize(RNG& rng) 
@@ -147,7 +147,8 @@ void ChannelKCNK_GHK::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-    //dyn_var_t K_i = (*K_IC)[i];
+    P_K[i] = P_Kbar[i];
+    I_K[i] = update_current(v, K_i, i);  // [pA/um^2]
 #ifdef CONSIDER_DI_DV
     conductance_didv[i] = 0.0;
 #endif
@@ -169,7 +170,7 @@ dyn_var_t ChannelKCNK_GHK::update_current(dyn_var_t v, dyn_var_t conc_K_i, int i
     //  to study the effect of K_o when E_K is the same
     dyn_var_t tmp2 = zKF_R * (v - getSharedMembers().E_K[0]) / (*getSharedMembers().T); 
     dyn_var_t result = 1e-3 * P_K[i] * zK * zF * 
-      *(getSharedMembers().K_EC) * (tmp2 - bo_bi) * vtrap(tmp, 1.0);
+      *(getSharedMembers().K_EC) * (exp(tmp2) - bo_bi) * vtrap(tmp, 1.0);
 #endif
     return result;
 }
