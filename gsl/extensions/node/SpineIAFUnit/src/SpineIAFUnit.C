@@ -77,6 +77,18 @@ void SpineIAFUnit::update(RNG& rng)
   // Update mGluR5 current (fall) with the mGluR5 rise
   mGluR5current += ((-mGluR5current + mGluR5rise) / SHD.mGluR5fallTau) * SHD.deltaT;
 
+
+
+  // ##### NMDAR #####
+  double NMDARopenInput = 0.0;
+  if (neurotransmitterInput.size() > 0)
+    NMDARopenInput = (*(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight); // only going to be one, weight is structural plasticity; adjust the sensitivity as well
+  NMDARopen += ((-NMDARopen + NMDARopenInput) / SHD.NMDARopenTau) * SHD.deltaT;
+  NMDARCarise += ((-NMDARCarise + ((*(postSpikeInput[0].spike) * postSpikeInput[0].weight) // only going to be one, weight is structural plasticity
+                                   * NMDARopen * SHD.NMDARCasensitivity))
+                  / SHD.NMDARCariseTau) * SHD.deltaT;
+  NMDARCacurrent += ((-NMDARCacurrent + NMDARCarise) / SHD.NMDARCafallTau) * SHD.deltaT;  
+
   
 
   // ##### Ca2+ #####
@@ -86,11 +98,7 @@ void SpineIAFUnit::update(RNG& rng)
     CaVSCCinput = SHD.CaVSCC * pow(AMPAweight, SHD.CaVSCCpow);
   else
     CaVSCCinput = SHD.CaVSCC;
-  //  if (postSpikeInput.size() > 0)
-  //    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
-
-  double CaInput = CaVSCCinput * AMPAcurrent;
-  //  double CaInput = CaVSCCinput * (neurotransmitter > 0.0 ? 1.0 : 0.0);
+  double CaInput = (CaVSCCinput * AMPAcurrent) + NMDARCacurrent;
 
   // Update Ca2+ rise with VSCC and BP
   Carise += ((-Carise + CaInput) / SHD.CariseTau) * SHD.deltaT;

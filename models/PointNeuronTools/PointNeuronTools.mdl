@@ -64,6 +64,9 @@ Interface SynapticCurrentIAFProducer
   double* AMPAcurrent;
 
   double* mGluR5current;
+
+  double* NMDARopen;
+  double* NMDARCacurrent;
 }
 
 Interface CaIAFProducer

@@ -29,6 +29,8 @@ Variable SpineIAFUnitDataCollector
   int mxslice;
   double* [] AMPAcurrent;
   double* [] mGluR5current;
+  double* [] NMDARopen;
+  double* [] NMDARCacurrent;
   double* [] Ca;
   double* [] eCB;
   UserFunction getNodeIndices;
@@ -40,6 +42,8 @@ Variable SpineIAFUnitDataCollector
   // Flags
   bool op_saveAMPA;
   bool op_savemGluR5;
+  bool op_saveNMDARopen;
+  bool op_saveNMDARCacurrent;
   bool op_saveCa;
   bool op_saveeCB;
 
@@ -47,6 +51,8 @@ Variable SpineIAFUnitDataCollector
   {
     SynapticCurrentIAFProducer.AMPAcurrent >> AMPAcurrent;
     SynapticCurrentIAFProducer.mGluR5current >> mGluR5current;
+    SynapticCurrentIAFProducer.NMDARopen >> NMDARopen;
+    SynapticCurrentIAFProducer.NMDARCacurrent >> NMDARCacurrent;
     CaIAFProducer.Ca >> Ca;
     eCBIAFProducer.eCB >> eCB;
     getNodeIndices();

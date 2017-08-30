@@ -26,9 +26,13 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFPr
 
   double mGluR5rise;                       // rise current of mGluR5
   double mGluR5current;                    // fall current of mGluR5
+
+  double NMDARopen;                        // how much the NMDAR is open
+  double NMDARCarise;                      // rise current of NMDAR-mediated Ca2+
+  double NMDARCacurrent;                   // fall current of NMDAR-mediated Ca2+
   
-  double Carise;                           // rise of Ca2+
-  double Ca;                               // fall of Ca2+
+  double Carise;                           // rise of spine Ca2+
+  double Ca;                               // fall of spine Ca2+
 
   double eCB;                              // endogenous cannabinoids
 
@@ -43,13 +47,17 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFPr
       double mGluR5fallTau;                // fall time constant of mGluR5
       double mGluR5sensitivity;            // weight of mGluR5
 
-      double CariseTau;                    // rise time constant of Ca2+
-      double CafallTau;                    // fall time constant of Ca2+
+      double NMDARopenTau;                 // decay time constant of NMDAR open
+      double NMDARCariseTau;               // rise time constant of NMDAR-mediated Ca2+
+      double NMDARCafallTau;               // fall time constant of NMDAR-mediated Ca2+
+      double NMDARCasensitivity;           // weight of NMDAR
+
+      double CariseTau;                    // rise time constant of spine Ca2+
+      double CafallTau;                    // fall time constant of spine Ca2+
       bool op_CaVSCCdepend;                // whether the per VSCC activation Ca2+ is
                                            // dependent on the size of the spine or not
       double CaVSCC;                       // per VSCC activation, amount to increase Ca2+
       double CaVSCCpow;                    // if dependent, CaVSCC*(AMPAweight^pow)
-      double CaBP;                         // per BP spike, amount to increase Ca2+
 
       double eCBprodC;                     // eCB production function - steepness
       double eCBprodD;                     // eCB production function - shifts
@@ -81,11 +89,14 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFPr
   InitPhase initialize();
   RuntimePhase update(AMPAweight, AMPAcurrent,
                       mGluR5current,
+                      NMDARopen, NMDARCacurrent,
                       Ca, eCB);
 
   SynapticCurrentIAFProducer.AMPAweight << &AMPAweight;             // the AMPA weight
   SynapticCurrentIAFProducer.AMPAcurrent << &AMPAcurrent;           // the AMPA synaptic current output
   SynapticCurrentIAFProducer.mGluR5current << &mGluR5current;       // the mGluR5 synaptic current output
+  SynapticCurrentIAFProducer.NMDARopen << &NMDARopen;               // how much the NDMAR is open
+  SynapticCurrentIAFProducer.NMDARCacurrent << &NMDARCacurrent;     // the NMDAR synaptic current output
   CaIAFProducer.Ca << &Ca;                                          // Ca2+
   eCBIAFProducer.eCB << &eCB;                                       // endogenous cannabinoid
 
