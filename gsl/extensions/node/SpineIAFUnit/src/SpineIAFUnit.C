@@ -90,8 +90,10 @@ void SpineIAFUnit::update(RNG& rng)
   if (neurotransmitterInput.size() > 0)
     NMDARopenInput = (*(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight); // only going to be one, weight is structural plasticity; adjust the sensitivity as well
   NMDARopen += ((-NMDARopen + NMDARopenInput) / SHD.NMDARopenTau) * SHD.deltaT;
-  NMDARCarise += ((-NMDARCarise + ((*(postSpikeInput[0].spike) * postSpikeInput[0].weight) // only going to be one, weight is structural plasticity
-                                   * NMDARopen * SHD.NMDARCasensitivity))
+  double NMDARinput = 0.0;
+  if (postSpikeInput.size() > 0)
+    NMDARinput = *(postSpikeInput[0].spike) * postSpikeInput[0].weight; // only going to be one, weight is structural plasticity  
+  NMDARCarise += ((-NMDARCarise + (NMDARinput * NMDARopen * SHD.NMDARCasensitivity))
                   / SHD.NMDARCariseTau) * SHD.deltaT;
   NMDARCacurrent += ((-NMDARCacurrent + NMDARCarise) / SHD.NMDARCafallTau) * SHD.deltaT;  
 
