@@ -43,6 +43,10 @@ Node Goodwin Implements GoodwinProducer
 
       double deltaT;   // in s
 
+      // Flags
+      bool op_check_in1;
+      unsigned expected_in1N;
+      
       // Model specific shared variables
       double Cannabinoids_sigmoid_C;   // Slope of Sigmoid for sigmoid(Y-eCB)
       double Cannabinoids_sigmoid_D;   // Point of 0.5 of Sigmoid for sigmoid(Y-eCB)

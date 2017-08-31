@@ -31,6 +31,12 @@ Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, eCBIAFProduce
       double [] neurotransmitterDecayTau; // neurotransmitter decay tau
 
       double deltaT;                   // in s
+
+      // Flags
+      bool op_check_NeurotransmitterIAFInput;
+      unsigned expected_NeurotransmitterIAFInputN;
+      bool op_check_eCBIAFInput;
+      unsigned expected_eCBIAFInputN;      
     }
 
   InAttrPSet

@@ -23,8 +23,11 @@
 void Goodwin::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (in1.size() != 1)
-    assert("Goodwin: inputs should be one.");
+  if (SHD.op_check_in1
+      && in1.size() != SHD.expected_in1N)
+    std::cout << "Goodwin: Goodwin inputs should be "
+              << SHD.expected_in1N << ", but it is "
+              << in1.size() << "." << std::endl;
   // Set up any model specific instance variables
   if (SHD.op_Cannabinoids)
     Cannabinoids_k1_instance = SHD.k1;

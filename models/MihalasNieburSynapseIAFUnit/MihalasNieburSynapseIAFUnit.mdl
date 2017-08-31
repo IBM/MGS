@@ -52,6 +52,10 @@ Node MihalasNieburSynapseIAFUnit Implements SpikeProducer, OutputProducer, Thres
 
     double deltaT;          // s
     int np;                 // number of numerical fixed point iterations
+
+    // Flags
+    bool op_check_SynapticCurrentIAFInput;
+    unsigned expected_SynapticCurrentIAFInputN;
   }
 
   InAttrPSet {

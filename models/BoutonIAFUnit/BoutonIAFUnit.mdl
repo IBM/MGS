@@ -27,14 +27,14 @@ Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmi
   double availableNeurotransmitter; // amount of neurotransmitter available to be released
   double maxNeurotransmitter;       // maximum amount of neurotransmitter to recovery to
   
-  eCBIAFInput [] eCBinput;          // input of endogenous cannabinoid
+  eCBIAFInput [] eCBInput;          // input of endogenous cannabinoid
   double eCB;                       // Local copy of the eCB concentration to pass to the Goodwin model
   double CB1R;                      // CB1R total quantity
   double CB1Runbound;               // CB1R unbound quantity
   double CB1Rrise;                  // rise current of Cannabinoid receptor
   double CB1Rcurrent;               // fall current of Cannabinoid receptor
 
-  GoodwinInput [] CB1input;         // input of CB1R protein levels
+  GoodwinInput [] CB1Input;         // input of CB1R protein levels
   
   Shared
     {
@@ -55,6 +55,13 @@ Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmi
 
       // Flags
       bool op_saveIndexs;
+
+      bool op_check_SpikeInput;
+      unsigned expected_SpikeInputN;
+      bool op_check_eCBIAFInput;
+      unsigned expected_eCBIAFInputN;
+      bool op_check_GoodwinInput;
+      unsigned expected_GoodwinInputN;
     }
 
   InAttrPSet
@@ -85,15 +92,15 @@ Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmi
 
   Connection Pre Node (PSet.identifier=="eCBinput") Expects eCBIAFProducer
   {
-    eCBIAFProducer.eCB >> eCBinput.eCB;
-    PSet.weight >> eCBinput.weight;
+    eCBIAFProducer.eCB >> eCBInput.eCB;
+    PSet.weight >> eCBInput.weight;
     seteCBIndices();
   }
   
-  Connection Pre Node (PSet.identifier=="CB1input") Expects GoodwinProducer
+  Connection Pre Node (PSet.identifier=="CB1Input") Expects GoodwinProducer
   {
-    GoodwinProducer.Y >> CB1input.Y; // only care about the amount of CB1, i.e. Y
-    PSet.weight >> CB1input.weight;
+    GoodwinProducer.Y >> CB1Input.Y; // only care about the amount of CB1, i.e. Y
+    PSet.weight >> CB1Input.weight;
     seteCBIndices();
   }
 }

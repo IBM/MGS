@@ -22,7 +22,18 @@
 
 void MihalasNieburSynapseIAFUnit::initialize(RNG& rng)
 {
-  //  std::cout << AMPAcurrentInputs.size() << std::endl;
+  if (SHD.op_check_SynapticCurrentIAFInput
+      && AMPAcurrentInputs.size() != SHD.expected_SynapticCurrentIAFInputN)
+    std::cout << "MihalasNieburSynapseIAFUnit: synaptic current inputs should be "
+              << SHD.expected_SynapticCurrentIAFInputN << ", but it is "
+              << AMPAcurrentInputs.size() << "." << std::endl;
+
+  
+  std::cout << "Size: " << AMPAcurrentInputs.size() << std::endl;
+  for (int pre=0; pre<AMPAcurrentInputs.size(); pre++)
+    std::cout << AMPAcurrentInputs[pre].row << " " << AMPAcurrentInputs[pre].col << std::endl;;
+  
+  
   spike=false;
   V=SHD.V_r;
   Theta=SHD.Theta_inf;

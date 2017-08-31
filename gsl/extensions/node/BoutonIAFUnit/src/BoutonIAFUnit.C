@@ -25,12 +25,21 @@
 void BoutonIAFUnit::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (spikeInput.size() != 1)
-    assert("BoutonIAFUnit: spike inputs should be one.");
-  if (eCBinput.size() != 1)
-    assert("BoutonIAFUnit: eCB inputs should be one.");
-  if (CB1input.size() != 1)
-    assert("BoutonIAFUnit: Goodwin inputs should be one.");
+  if (SHD.op_check_SpikeInput
+      && spikeInput.size() != SHD.expected_SpikeInputN)
+    std::cout << "BoutonIAFUnit: spike inputs should be "
+              << SHD.expected_SpikeInputN << ", but it is "
+              << spikeInput.size() << "." << std::endl;
+  if (SHD.op_check_eCBIAFInput
+      && eCBInput.size() != SHD.expected_eCBIAFInputN)
+    std::cout << "BoutonIAFUnit: eCB inputs should be "
+              << SHD.expected_eCBIAFInputN << ", but it is "
+              << eCBInput.size() << "." << std::endl;
+  if (SHD.op_check_GoodwinInput
+      && CB1Input.size() != SHD.expected_GoodwinInputN)
+    std::cout << "BoutonIAFUnit: Goodwin inputs should be "
+              << SHD.expected_GoodwinInputN << ", but it is "
+              << CB1Input.size() << "." << std::endl;
   // Default starting values
   neurotransmitter = 0.0;
   CB1Rrise = 0.0;
@@ -49,18 +58,18 @@ void BoutonIAFUnit::update(RNG& rng)
 
 
   // ##### CB1R #####
-  if (CB1input.size() > 0)
+  if (CB1Input.size() > 0)
     {
-      CB1R = (*(CB1input[0].Y) * CB1input[0].weight); // only consider first one, weight is scaling from Goodwin model Y
+      CB1R = (*(CB1Input[0].Y) * CB1Input[0].weight); // only consider first one, weight is scaling from Goodwin model Y
       if (CB1R > 1.0) // bound just in case
         CB1R = 1.0;
       else if (CB1R < 0.0)
         CB1R = 0.0;
     }
   eCB = 0.0;
-  if (eCBinput.size() > 0)
+  if (eCBInput.size() > 0)
     {
-      eCB = (*(eCBinput[0].eCB) * eCBinput[0].weight); // only consider first one, weight is structural plasticity
+      eCB = (*(eCBInput[0].eCB) * eCBInput[0].weight); // only consider first one, weight is structural plasticity
       CB1Runbound = CB1R - eCB;
       if (CB1Runbound < 0.0)
         CB1Runbound = 0.0;
@@ -113,8 +122,8 @@ void BoutonIAFUnit::setSpikeIndices(const String& CG_direction, const String& CG
 
 void BoutonIAFUnit::seteCBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  eCBinput[eCBinput.size()-1].row =  getIndex()+1; // +1 is for Matlab
-  eCBinput[eCBinput.size()-1].col = CG_node->getIndex()+1;
+  eCBInput[eCBInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  eCBInput[eCBInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 BoutonIAFUnit::~BoutonIAFUnit()

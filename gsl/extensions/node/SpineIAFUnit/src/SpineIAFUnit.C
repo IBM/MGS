@@ -26,10 +26,16 @@
 void SpineIAFUnit::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (neurotransmitterInput.size() != 1)
-    assert("SpineIAFUnit: neurotransmitter inputs should be one.");
-  if (postSpikeInput.size() != 1)
-    assert("SpineIAFUnit: post-synaptic spike inputs should be one.");
+  if (SHD.op_check_NeurotransmitterIAFInput
+      && neurotransmitterInput.size() != SHD.expected_NeurotransmitterIAFInputN)
+    std::cout << "SpineIAFUnit: neurotransmitter inputs should be "
+              << SHD.expected_NeurotransmitterIAFInputN << ", but it is "
+              << neurotransmitterInput.size() << "." << std::endl;
+  if (SHD.op_check_SpikeInput
+      && postSpikeInput.size() != SHD.expected_SpikeInputN)
+    std::cout << "SpineIAFUnit: spike inputs should be "
+              << SHD.expected_SpikeInputN << ", but it is "
+              << postSpikeInput.size() << "." << std::endl;
   // Default starting values
   AMPArise = 0.0;
   AMPAcurrent = 0.0;

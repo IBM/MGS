@@ -23,10 +23,16 @@
 void CleftAstrocyteIAFUnit::initialize(RNG& rng)
 {
   // Check if more than one input
-  if (neurotransmitterInput.size() != 1)
-    assert("CleftAstrocyteIAFUnit: neurotransmitter inputs should be one.");
-  if (eCBInput.size() != 1)
-    assert("CleftAstrocyteIAFUnit: eCB inputs should be one.");
+  if (SHD.op_check_NeurotransmitterIAFInput
+      && neurotransmitterInput.size() != SHD.expected_NeurotransmitterIAFInputN)
+    std::cout << "CleftAstrocyteIAFUnit: neurotransmitter inputs should be "
+              << SHD.expected_NeurotransmitterIAFInputN << ", but it is "
+              << neurotransmitterInput.size() << "." << std::endl;
+  if (SHD.op_check_eCBIAFInput
+      && eCBInput.size() != SHD.expected_eCBIAFInputN)
+    std::cout << "CleftAstrocyteIAFUnit: eCB inputs should be "
+              << SHD.expected_eCBIAFInputN << ", but it is "
+              << eCBInput.size() << "." << std::endl;
   // Default starting values
   neurotransmitter = 0.0;
   eCB = 0.0;  

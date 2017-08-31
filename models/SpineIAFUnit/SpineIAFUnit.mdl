@@ -78,6 +78,11 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFPr
       // Flags
       bool op_saveWeights;
       bool op_perturbation;
+
+      bool op_check_NeurotransmitterIAFInput;
+      unsigned expected_NeurotransmitterIAFInputN;
+      bool op_check_SpikeInput;
+      unsigned expected_SpikeInputN;
     }
 
   InAttrPSet
