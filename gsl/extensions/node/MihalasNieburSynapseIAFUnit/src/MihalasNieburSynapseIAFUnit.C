@@ -27,13 +27,11 @@ void MihalasNieburSynapseIAFUnit::initialize(RNG& rng)
     std::cout << "MihalasNieburSynapseIAFUnit: synaptic current inputs should be "
               << SHD.expected_SynapticCurrentIAFInputN << ", but it is "
               << AMPAcurrentInputs.size() << "." << std::endl;
-
-  
-  std::cout << "Size: " << AMPAcurrentInputs.size() << std::endl;
-  for (int pre=0; pre<AMPAcurrentInputs.size(); pre++)
-    std::cout << AMPAcurrentInputs[pre].row << " " << AMPAcurrentInputs[pre].col << std::endl;;
-  
-  
+  /*
+  std::cout << "Neuron Input Size: " << AMPAcurrentInputs.size() << std::endl;
+  for (int i=0; i<AMPAcurrentInputs.size(); i++)
+    std::cout << "Spine:" << AMPAcurrentInputs[i].col << " Neuron:" << AMPAcurrentInputs[i].row << std::endl;
+  */  
   spike=false;
   V=SHD.V_r;
   Theta=SHD.Theta_inf;

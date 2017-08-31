@@ -36,6 +36,11 @@ void SpineIAFUnit::initialize(RNG& rng)
     std::cout << "SpineIAFUnit: spike inputs should be "
               << SHD.expected_SpikeInputN << ", but it is "
               << postSpikeInput.size() << "." << std::endl;
+  /*
+  std::cout << "Spine Input Size: " << postSpikeInput.size() << std::endl;
+  for (int i=0; i<postSpikeInput.size(); i++)
+    std::cout << "Neuron:" << postSpikeInput[i].col << " Spine:" << postSpikeInput[i].row << std::endl;
+  */
   // Default starting values
   AMPArise = 0.0;
   AMPAcurrent = 0.0;
