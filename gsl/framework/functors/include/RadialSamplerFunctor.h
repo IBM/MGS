@@ -49,6 +49,7 @@ class RadialSamplerFunctor: public SampFctr1Functor
       NodeDescriptor *_refNode;
       float _radius;
       int _borderTolerance;
+      int _direction;
       std::vector<NodeDescriptor*> _nodes;
       int _currentNode;
       int _nbrNodes;
