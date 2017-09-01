@@ -191,20 +191,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
    std::vector<int> coords;
    while (outside) {
      n = _nodes[_currentNode];
-     n->getNodeCoords(coords);
-
-     
-     /*
-     if ((coords[0] >= _refcoords[0])
-         && (coords[1] >= _refcoords[1])
-         && (coords[2] >= _refcoords[2]))
-       {
-     */
-     //     std::cout << _direction << std::endl;
-     
-     
-
-     
+     n->getNodeCoords(coords);     
      if (
          (_direction == 0) || // both direction
          ((_direction > 0) && // positive direction
