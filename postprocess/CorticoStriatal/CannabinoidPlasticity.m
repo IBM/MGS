@@ -1,5 +1,6 @@
 clear variables; %close all;
 set(0,'defaulttextinterpreter','latex'); rng('shuffle');
+fontsize=6;
 %% Parameters
 figNum=0;
 % general parameters
@@ -15,11 +16,11 @@ AMPAMax=1.5; % limit for AMPA axes
 directory='../../graphs/CorticoStriatal/';
 fileExt='.dat';
 % time frames
-T=0:149; % Length of simulation time saving data (excluding spikes) in s to load and process
-Tperturbation=150:300; % same as above but for a perturbation
+T=0:100; % Length of simulation time saving data (excluding spikes) in s to load and process
+Tperturbation=100:200; % same as above but for a perturbation
 postprocess_InputSpikesFilter=true; % whether to filter input spikes
-inputSpikeTimesT=99:T(end); % time window to filter
-inputSpikeTimesTperturbation=249:Tperturbation(end); % same as above but for a perturbation
+inputSpikeTimesT=49:T(end); % time window to filter
+inputSpikeTimesTperturbation=149:Tperturbation(end); % same as above but for a perturbation
 postprocess_OutputSpikesFilter=true; % whether to filter output spikes
 outputSpikeTimesT=inputSpikeTimesT; % time window to filter
 outputSpikeTimesTperturbation=inputSpikeTimesTperturbation; % same as above but for a perturbation
@@ -29,34 +30,46 @@ finalMeasurementTperturbation=inputSpikeTimesTperturbation; % same as above but 
 finalHeadroomStd=1; % accuracy of final headroom for determining time to headroom
 headroomRisk=0.4; % the headroom demarcation line for risky synapses
 %% Whether to load/process different data sources
+postprocess_Glutamate = true;
+glutamate_prep = 'Glutamate_';
 postprocess_PreIndexs = true;
 postprocess_InputSpikes = true;
-postprocess_Glutamate = false;
-postprocess_AvailableGlutamate = true;
+postprocess_Neurotransmitter = true;%false;
+postprocess_AvailableNeurotransmitter = true;
 postprocess_CB1R = true;
 postprocess_CB1Runbound = true;
-postprocess_CB1Rcurrent = false;
-postprocess_CleftGlutamate = true;
-postprocess_CleftECB = false;
-postprocess_AMPA = false;
-postprocess_AMPAWeights = true;
-postprocess_mGluR5 = false;
-postprocess_Ca = false;
-postprocess_ECB = false;
-postprocess_OutputSpikes = false;
+postprocess_CB1Rcurrent = true;%false;
 postprocess_GoodwinX = false;
 postprocess_GoodwinY = false;
 postprocess_GoodwinZ = false;
+postprocess_CleftAstrocyteNeurotransmitter = true;
+postprocess_CleftAstrocyteeCB = true;%false;
+postprocess_AMPAWeights = true;
+postprocess_AMPA = true;%false;
+postprocess_mGluR5 = true;%false;
+postprocess_NMDARopen = true;%false;
+postprocess_NMDARCacurrent = true;%false;
+postprocess_Ca = true;%false;
+postprocess_eCB = true;%false;
+postprocess_OutputSpikes = true;%false;
+
 postprocess_Headroom = true;
-postprocess_RiskySynapses = true;
-postprocess_Perturbation = true;
-postprocess_PerturbationHz = true;
-postprocess_PerturbationAMPA = true;
+postprocess_RiskySynapses = false;%true;
+
+postprocess_Perturbation = false;%true;
+postprocess_PerturbationHz = false;%true;
+postprocess_PerturbationAMPA = false;%true;
 %%
-for perturbation=0:postprocess_Perturbation
-    clear inputSpike glutamate availableGlutamate preIndexs preIndexs1D ...
-        CB1R CB1Runbound CB1Rcurrent cleftGlutamate AMPA AMPAWeights ...
-        AMPAWeights1D mGluR5 Ca ECB outputSpike;
+for perturbation=0:(1*postprocess_Perturbation)
+    clear glutamateInputSpike glutamateNeurotransmitter glutamateAvailableNeurotransmitter ...
+        glutamatePreIndexs glutamatePreIndexs1D glutamateCB1R glutamateCB1Runbound ...
+        glutamateCB1Rcurrent glutamateCleftGlutamate glutamateAMPA glutamateAMPAWeights ...
+        glutamateAMPAWeights1D glutamatemGluR5 glutamateCa glutamateeCB ...
+        GABAInputSpike GABANeurotransmitter GABAAvailableNeurotransmitter ...
+        GABAPreIndexs GABAPreIndexs1D GABACB1R GABACB1Runbound ...
+        GABACB1Rcurrent GABACleftGlutamate GABAAMPA GABAAMPAWeights ...
+        GABAAMPAWeights1D GABAmGluR5 GABACa GABAeCB ...
+        outputSpike;
     % Change variables if a perturbation
     if (~perturbation)
         Trange=T;
@@ -70,97 +83,53 @@ for perturbation=0:postprocess_Perturbation
     sfRange = Trange(1)+sf:sf:Trange(end);
     % Load data
     if (postprocess_InputSpikes)
-        [inputSpike, Xdim, Ydim, Zdim] = loadSpikes(directory, ...
-            'PoissonSpikes', fileExt, postprocess_InputSpikesFilter, ...
-            spikeTrange(1), spikeTrange(end), Trange(1), Trange(end), dt);
+        if (postprocess_Glutamate)
+            [glutamateInputSpike, Xdim, Ydim, Zdim] = loadSpikes(directory, ...
+                [glutamate_prep, 'PoissonSpikes'], fileExt, postprocess_InputSpikesFilter, ...
+                spikeTrange(1), spikeTrange(end), Trange(1), Trange(end), dt);
+        end
     end
-    if (postprocess_Glutamate)
-        [glutamate, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'Glutamate', fileExt, Trange(1), ...
-            Trange(end), sf);
+    if (postprocess_Neurotransmitter) % do before PreIndexs to get XdimInner etc.
+        if (postprocess_Glutamate)
+            [glutamateNeurotransmitter, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'BoutonNeurotransmitter'], ...
+                fileExt, Trange(1), Trange(end), sf);
+        end
     end 
-    if (postprocess_AvailableGlutamate)
-        [availableGlutamate, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'AvailableGlutamate', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end 
-    if (postprocess_PreIndexs)
-        [preIndexs, preIndexs1D] = load2D(directory, 'Indexs', ...
-            fileExt, XdimInner, YdimInner, ZdimInner);
+    if (postprocess_PreIndexs) % return to correct order
+        if (postprocess_Glutamate)
+            [glutamatePreIndexs, glutamatePreIndexs1D] = load2D(directory, ...
+                [glutamate_prep, 'BoutonIndexs'], fileExt, XdimInner, YdimInner, ZdimInner);
+        end
     end
+    if (postprocess_AvailableNeurotransmitter)
+        if (postprocess_Glutamate)
+            [glutamateAvailableNeurotransmitter, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'BoutonAvailableNeurotransmitter'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end
+    end 
     if (postprocess_CB1R)
-        [CB1R, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'CB1R', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end 
+        if (postprocess_Glutamate)
+            [glutamateCB1R, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'BoutonCB1R'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end 
+    end
     if (postprocess_CB1Runbound)
-        [CB1Runbound, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'CB1Runbound', fileExt, Trange(1), ...
-            Trange(end), sf);
+        if (postprocess_Glutamate)
+            [glutamateCB1Runbound, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'BoutonCB1Runbound'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end
     end 
     if (postprocess_CB1Rcurrent)
-        [CB1Rcurrent, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'CB1Rcurrent', fileExt, Trange(1), ...
-            Trange(end), sf);
+        if (postprocess_Glutamate)
+            [glutamateCB1Rcurrent, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'BoutonCB1Rcurrent'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end
     end 
-    if (postprocess_CleftGlutamate)
-        [cleftGlutamate, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'CleftGlutamate', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end 
-    if (postprocess_CleftECB)
-        [cleftECB, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'CleftECB', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end     
-    if (postprocess_AMPA)
-        [AMPA, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'AMPA', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end
-    if (postprocess_AMPAWeights)
-        if (perturbation && postprocess_PerturbationAMPA)
-            [AMPAWeights, AMPAWeights1D] = load3D(directory, ...
-                ['AMPAWeights_',num2str(Tperturbation(1)/dt)], fileExt, ...
-                XdimInner, YdimInner, ZdimInner);
-        else
-            [AMPAWeights, AMPAWeights1D] = load3D(directory, ...
-                'AMPAWeights_1', fileExt, XdimInner, YdimInner, ...
-                ZdimInner);
-        end
-    end
-    if (postprocess_mGluR5)
-        if (~perturbation)
-            [~, figNum] = newFigure(figNum, false);
-            plotModulation(directory, 'mGluR5modulation', fileExt, ...
-                'mGluR5 modulation function', 'mGluR5', 'Ca2+', ...
-                'mGluR5modulation');
-        end
-        [mGluR5, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'mGluR5', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end
-    if (postprocess_Ca)
-        [Ca, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'Ca', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end
-    if (postprocess_ECB)
-        if (~perturbation)
-            [~, figNum] = newFigure(figNum, false);
-            plotModulation(directory, 'ECBproduction', fileExt, ...
-                'ECB modulation function', 'Ca2+', 'ECB+', ...
-                'ECBproduction');
-        end
-        [ECB, XdimInner, YdimInner, ZdimInner] = ...
-            load4D(directory, 'ECB', fileExt, Trange(1), ...
-            Trange(end), sf);
-    end
-    if (postprocess_OutputSpikes)
-        [outputSpike, Xdim, Ydim, Zdim] = loadSpikes(directory, ...
-            'Spike', fileExt, postprocess_OutputSpikesFilter, ...
-            spikeTrange(1), spikeTrange(end), Trange(1), Trange(end), dt);
-    end
     if (postprocess_GoodwinX)
         [GoodwinX, XdimInner, YdimInner, ZdimInner] = ...
             load4D(directory, 'Goodwin_X', fileExt, Trange(1), ...
@@ -176,145 +145,288 @@ for perturbation=0:postprocess_Perturbation
             load4D(directory, 'Goodwin_Z', fileExt, Trange(1), ...
             Trange(end), sf);
     end    
+    if (postprocess_CleftAstrocyteNeurotransmitter)
+        if (postprocess_Glutamate)
+            [glutamateCleftAstrocyteNeurotransmitter, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'CleftAstrocyteNeurotransmitter'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end
+    end 
+    if (postprocess_CleftAstrocyteeCB)
+        if (postprocess_Glutamate)
+            [glutamateCleftAstrocyteeCB, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep, 'CleftAstrocyteeCB'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end
+    end  
+    if (postprocess_AMPAWeights && postprocess_Glutamate)
+        if (perturbation && postprocess_PerturbationAMPA)
+            [spineAMPAWeights, spineAMPAWeights1D] = load3D(directory, ...
+                [glutamate_prep,'SpineAMPAWeights_',num2str(Tperturbation(1)/dt)], fileExt, ...
+                XdimInner, YdimInner, ZdimInner);
+        else
+            [spineAMPAWeights, spineAMPAWeights1D] = load3D(directory, ...
+                [glutamate_prep,'SpineAMPAWeights_1'], fileExt, XdimInner, YdimInner, ...
+                ZdimInner);
+        end
+    end   
+    if (postprocess_AMPA && postprocess_Glutamate)
+        [spineAMPA, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, [glutamate_prep,'SpineAMPA'], fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_mGluR5 && postprocess_Glutamate)
+        if (~perturbation)
+            [~, figNum] = newFigure(figNum, false);
+            plotModulation(directory, [glutamate_prep,'SpinemGluR5modulation'], fileExt, ...
+                'Spine mGluR5 Modulation Function', 'mGluR5', 'Ca2+', ...
+                [glutamate_prep,'mGluR5modulation'], fontsize);
+        end
+        [spinemGluR5, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, [glutamate_prep,'SpinemGluR5'], fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_NMDARopen && postprocess_Glutamate)
+        [spinemNMDARopen, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, [glutamate_prep,'SpineNMDARopen'], fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_NMDARCacurrent && postprocess_Glutamate)
+        [spinemNMDARCacurrent, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, [glutamate_prep,'SpineNMDARCacurrent'], fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_Ca)
+        if (postprocess_Glutamate)
+            [spineCa, XdimInner, YdimInner, ZdimInner] = ...
+                load4D(directory, [glutamate_prep,'SpineCa'], fileExt, Trange(1), ...
+                Trange(end), sf);
+        end
+    end
+    if (postprocess_eCB)
+        if (~perturbation)
+            if (postprocess_Glutamate)
+                [~, figNum] = newFigure(figNum, false);
+                plotModulation(directory, [glutamate_prep,'SpineeCBproduction'], fileExt, ...
+                    'Spine eCB Modulation Function', 'Ca2+', 'eCB+', ...
+                    [glutamate_prep,'eCBproduction'], fontsize);
+            end
+        end
+        [spineeCB, XdimInner, YdimInner, ZdimInner] = ...
+            load4D(directory, [glutamate_prep,'SpineeCB'], fileExt, Trange(1), ...
+            Trange(end), sf);
+    end
+    if (postprocess_OutputSpikes)
+        [outputSpike, Xdim, Ydim, Zdim] = loadSpikes(directory, ...
+            'Output_Spikes', fileExt, postprocess_OutputSpikesFilter, ...
+            spikeTrange(1), spikeTrange(end), Trange(1), Trange(end), dt);
+    end
     % Plot
     if (postprocess_InputSpikes)
-        [~, figNum] = newFigure(figNum, false); % Population firing rate histogram over all time
-        inHz = calculateHz(inputSpike, spikeTrange(1), ...
-            spikeTrange(end), HzSf, Xdim, ...
-            Ydim, Zdim, dt);
-        histogram(mean(inHz(:),2));
-        title(['In Hz',perturbationString(perturbation,0,1)]); 
-        xlabel('Hz'); ylabel('count');
-        print([directory,'inHz',perturbationString(perturbation,1,0)],'-dpng');
+        if (postprocess_Glutamate)
+            [~, figNum] = newFigure(figNum, false); % Population firing rate histogram over all time
+            glutamateInHz = calculateHz(glutamateInputSpike, spikeTrange(1), ...
+                spikeTrange(end), HzSf, Xdim, ...
+                Ydim, Zdim, dt);
+            histogram(mean(glutamateInHz(:),2));
+            title(['Glutamate in Hz',perturbationString(perturbation,0,1)]); 
+            xlabel('Hz'); ylabel('count');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            print([directory,glutamate_prep,'inHz',perturbationString(perturbation,1,0)],'-dpng');
+        end
     end
     synapse=randi(XdimInner,1,1); % only for Xdimension
+    [~, figNum] = newFigure(figNum, false);
+    glutamateFigNum = figNum;
     if (postprocess_InputSpikes)
-        [~, figNum] = newFigure(figNum, false);
-        subplot(5,3,1); 
-        scatter(inputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
-            ones(numel(inputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
-        title(['inputSpike',perturbationString(perturbation,0,1)]); 
-        xlim([Trange(1) Trange(end)]);
-        set(gca,'XTick',[]);
-    end
-    if (postprocess_Glutamate || postprocess_AvailableGlutamate)
-        subplot(5,3,2); hold on;
         if (postprocess_Glutamate)
-            plot(sfRange, glutamate(:,synapse,1,1));
+            figure(glutamateFigNum);
+            subplot(5,4,1); 
+            scatter(glutamateInputSpike{glutamatePreIndexs(1,synapse,1,1),1,1}.*dt, ...
+                ones(numel(glutamateInputSpike{glutamatePreIndexs(1,synapse,1,1),1,1}),1),'.');
+            title(['Glutamate Input Spikes',perturbationString(perturbation,0,1)]); 
+            xlim([Trange(1) Trange(end)]);
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
         end
-        if (postprocess_AvailableGlutamate)
-            plot(sfRange, availableGlutamate(:,synapse,1,1));
+    end
+    if (postprocess_Neurotransmitter || postprocess_AvailableNeurotransmitter)
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,2); hold on;
+            if (postprocess_Neurotransmitter)
+                plot(sfRange, glutamateNeurotransmitter(:,synapse,1,1));
+            end
+            if (postprocess_AvailableNeurotransmitter)
+                plot(sfRange, glutamateAvailableNeurotransmitter(:,synapse,1,1));
+            end
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate and Available Glutamate',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
         end
-        xlim([Trange(1) Trange(end)]);
-        title(['glutamate and availableGlutamate',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+        end
     end
     if (postprocess_CB1R)
-        subplot(5,3,3);
-        plot(sfRange, CB1R(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['CB1R',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,3);
+            plot(sfRange, glutamateCB1R(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate CB1R',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end 
     if (postprocess_CB1Runbound)
-        subplot(5,3,4);
-        plot(sfRange, CB1Runbound(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['CB1Runbound',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,4);
+            plot(sfRange, glutamateCB1Runbound(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate CB1R unbound',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end 
     if (postprocess_CB1Rcurrent)
-        subplot(5,3,5);
-        plot(sfRange, CB1Rcurrent(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['CB1Rcurrent',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,5);
+            plot(sfRange, glutamateCB1Rcurrent(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate CB1R Current',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end 
     if (postprocess_GoodwinX)
-        subplot(5,3,6);
+        subplot(5,4,6);
         plot(sfRange, GoodwinX(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         title(['GoodwinX',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_GoodwinY)
-        subplot(5,3,7);
+        subplot(5,4,7);
         plot(sfRange, GoodwinY(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         title(['GoodwinY',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
     if (postprocess_GoodwinZ)
-        subplot(5,3,8);
+        subplot(5,4,8);
         plot(sfRange, GoodwinZ(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
         title(['GoodwinZ',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
     end 
-    if (postprocess_CleftGlutamate)
-        subplot(5,3,9);
-        plot(sfRange, cleftGlutamate(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['cleftGlutamate',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+    if (postprocess_CleftAstrocyteNeurotransmitter)
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,9);
+            plot(sfRange, glutamateCleftAstrocyteNeurotransmitter(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate Cleft',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end
-    if (postprocess_CleftECB)
-        subplot(5,3,10);
-        plot(sfRange, cleftECB(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['cleftECB',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+    if (postprocess_CleftAstrocyteeCB)
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,10);
+            plot(sfRange, glutamateCleftAstrocyteeCB(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate Cleft eCB',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end    
-    if (postprocess_AMPA || postprocess_AMPAWeights)
-        subplot(5,3,11); hold on;
+    if ((postprocess_AMPAWeights || postprocess_AMPA) && postprocess_Glutamate)
+        figure(glutamateFigNum);
+        subplot(5,4,11); hold on;
         if (postprocess_AMPAWeights)
-            plot(sfRange, ones(1,numel(sfRange))*AMPAWeights(synapse,1,1));
+            plot(sfRange, ones(1,numel(sfRange))*spineAMPAWeights(synapse,1,1));
             yyaxis right;
         end
         if (postprocess_AMPA)
-            plot(sfRange, AMPA(:,synapse,1,1));  
+            plot(sfRange, spineAMPA(:,synapse,1,1));  
         end
         xlim([Trange(1) Trange(end)]);
-        title(['AMPA and AMPAWeights',perturbationString(perturbation,0,1)]); 
+        title(['Spine AMPA/AMPAWeights',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     end
-    if (postprocess_mGluR5)
-        subplot(5,3,12);
-        plot(sfRange, mGluR5(:,synapse,1,1));
+    if (postprocess_mGluR5 && postprocess_Glutamate)
+        figure(glutamateFigNum);
+        subplot(5,4,12);
+        plot(sfRange, spinemGluR5(:,synapse,1,1));
         xlim([Trange(1) Trange(end)]);
-        title(['mGluR5',perturbationString(perturbation,0,1)]); 
+        title(['Spine mGluR5',perturbationString(perturbation,0,1)]); 
         set(gca,'XTick',[]);
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+    end
+    if ((postprocess_NMDARopen || postprocess_NMDARCacurrent) && postprocess_Glutamate)
+        figure(glutamateFigNum);
+        subplot(5,4,13);
+        if (postprocess_NMDARopen)
+            plot(sfRange, spinemNMDARopen(:,synapse,1,1));
+            yyaxis right;
+        end
+        if (postprocess_NMDARCacurrent)
+            plot(sfRange, spinemNMDARCacurrent(:,synapse,1,1));
+        end
+        xlim([Trange(1) Trange(end)]);
+        title(['Spine NMDARopen/NMDARCacurrent',perturbationString(perturbation,0,1)]);
+        set(gca,'XTick',[]);
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     end
     if (postprocess_Ca)
-        subplot(5,3,13);
-        plot(sfRange, Ca(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['Ca',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,14);
+            plot(sfRange, spineCa(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Spine Ca',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end
-    if (postprocess_ECB)
-        subplot(5,3,14);
-        plot(sfRange, ECB(:,synapse,1,1));
-        xlim([Trange(1) Trange(end)]);
-        title(['ECB',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+    if (postprocess_eCB)
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,15);
+            plot(sfRange, spineeCB(:,synapse,1,1));
+            xlim([Trange(1) Trange(end)]);
+            title(['Spine eCB',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end
     if (postprocess_OutputSpikes)
-        subplot(5,3,15);
-        scatter(outputSpike{preIndexs(1,synapse,1,1),1,1}.*dt, ...
-            ones(numel(outputSpike{preIndexs(1,synapse,1,1),1,1}),1),'.');
-        xlim([Trange(1) Trange(end)]);
-        title(['outputSpike',perturbationString(perturbation,0,1)]); 
-        set(gca,'XTick',[]);
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            subplot(5,4,16);
+            scatter(outputSpike{glutamatePreIndexs(1,synapse,1,1),1,1}.*dt, ...
+                ones(numel(outputSpike{glutamatePreIndexs(1,synapse,1,1),1,1}),1),'.');
+            xlim([Trange(1) Trange(end)]);
+            title(['Glutamate Output Spike',perturbationString(perturbation,0,1)]); 
+            set(gca,'XTick',[]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        end
     end
-    if (postprocess_InputSpikes || postprocess_Glutamate ...
-            || postprocess_AvailableGlutamate || postprocess_CB1R ...
+    if (postprocess_InputSpikes || postprocess_Neurotransmitter ...
+            || postprocess_AvailableNeurotransmitter || postprocess_CB1R ...
             || postprocess_CB1Runbound || postprocess_CB1Rcurrent ...
-            || postprocess_CleftGlutamate || postprocess_AMPA ...
+            || postprocess_CleftNeurotransmitter || postprocess_AMPA ...
             || postprocess_AMPAWeights || postprocess_mGluR5 ...
-            || postprocess_Ca || postprocess_ECB ...
+            || postprocess_Ca || postprocess_eCB ...
             || postprocess_OutputSpikes)
-        print([directory,'components',perturbationString(perturbation,1,0)],'-dpng');
+        if (postprocess_Glutamate)
+            figure(glutamateFigNum);
+            print([directory,glutamate_prep,'Components',perturbationString(perturbation,1,0)],'-dpng');
+        end
     end  
     if (postprocess_OutputSpikes)
         [~, figNum] = newFigure(figNum, false); % Population firing rate histogram over all time
@@ -324,107 +436,176 @@ for perturbation=0:postprocess_Perturbation
         histogram(mean(outHz(:),2));
         title(['Out Hz',perturbationString(perturbation,0,1)]); 
         xlabel('Hz'); ylabel('count');
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
         print([directory,'outHz',perturbationString(perturbation,1,0)],'-dpng');
     end
-    if (postprocess_mGluR5 && postprocess_Ca && postprocess_ECB)
+    if (postprocess_mGluR5 && postprocess_Ca && postprocess_eCB && postprocess_Glutamate)
         [~, figNum] = newFigure(figNum, false);
         Hrange = 0:3/50:3;
 
-        mGluR5Hist = hist3D(Hrange, mGluR5);
+        spinemGluR5Hist = hist3D(Hrange, spinemGluR5);
         subplot(3,1,1);
-        imagesc([0 size(mGluR5,1)],Hrange,mGluR5Hist);
-        title(['mGluR5',perturbationString(perturbation,0,1)]); 
+        imagesc([0 size(spinemGluR5,1)],Hrange,spinemGluR5Hist);
+        title(['Spine mGluR5',perturbationString(perturbation,0,1)]); 
         xlabel('time'); ylabel('mGluR5');
         colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
         set(gca,'ydir','normal');
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);        
 
-        CaHist = hist3D(Hrange, Ca);
+        spineCaHist = hist3D(Hrange, spineCa);
         subplot(3,1,2);
-        imagesc([0 size(Ca,1)],Hrange,CaHist);
-        title(['Ca2+',perturbationString(perturbation,0,1)]);
+        imagesc([0 size(spineCa,1)],Hrange,spineCaHist);
+        title(['Spine Ca2+',perturbationString(perturbation,0,1)]);
         xlabel('time'); ylabel('Ca2+');
         colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
         set(gca,'ydir','normal');
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
 
-        ECBHist = hist3D(Hrange, ECB);
+        spineeCBHist = hist3D(Hrange, spineeCB);
         subplot(3,1,3);
-        imagesc([0 size(ECB,1)],Hrange,ECBHist);
-        title(['ECB',perturbationString(perturbation,0,1)]);
-        xlabel('time'); ylabel('ECB');
+        imagesc([0 size(spineeCB,1)],Hrange,spineeCBHist);
+        title(['Spine eCB',perturbationString(perturbation,0,1)]);
+        xlabel('time'); ylabel('eCB'); ylim([0 1]);
         colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
         set(gca,'ydir','normal');
-        print([directory,'mGluR5_Ca_ECB',perturbationString(perturbation,1,0)],'-dpng');
-        clear Hrange mGluR5Hist CaHist ECBHist;
-    end
+        set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+        
+        print([directory,glutamate_prep,'spine_mGluR5_Ca_eCB',perturbationString(perturbation,1,0)],'-dpng');
+        clear Hrange spinemGluR5Hist spineCaHist spineeCBHist;
+    end    
     if (postprocess_CB1R && postprocess_CB1Runbound)
-        [~, figNum] = newFigure(figNum, false);
-        Hrange = 0:1/50:1;
+        if (postprocess_Glutamate)
+            [~, figNum] = newFigure(figNum, false);
+            Hrange = 0:1/50:1;
 
-        CB1RHist = hist3D(Hrange, CB1R);
-        subplot(2,1,1);
-        imagesc([0 size(CB1R,1)],Hrange,CB1RHist);
-        title(['CB1R',perturbationString(perturbation,0,1)]); 
-        xlabel('time'); ylabel('CB1R');
-        colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
-        set(gca,'ydir','normal');
+            glutamateCB1RHist = hist3D(Hrange, glutamateCB1R);
+            subplot(2,1,1);
+            imagesc([0 size(glutamateCB1R,1)],Hrange,glutamateCB1RHist);
+            title(['Glutamate CB1R',perturbationString(perturbation,0,1)]); 
+            xlabel('time'); ylabel('CB1R');
+            colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
 
-        CB1RunboundHist = hist3D(Hrange, CB1Runbound);
-        subplot(2,1,2);
-        imagesc([0 size(CB1Runbound,1)],Hrange,CB1RunboundHist);
-        title(['Unbound CB1R',perturbationString(perturbation,0,1)]); 
-        xlabel('time'); ylabel('Unbound CB1R');
-        colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
-        set(gca,'ydir','normal');
-        print([directory,'CB1R_CB1Runbound',perturbationString(perturbation,1,0)],'-dpng');
-        clear Hrange CB1RHist CB1RunboundHist; 
+            glutamateCB1RunboundHist = hist3D(Hrange, glutamateCB1Runbound);
+            subplot(2,1,2);
+            imagesc([0 size(glutamateCB1Runbound,1)],Hrange,glutamateCB1RunboundHist);
+            title(['Glutamate Unbound CB1R',perturbationString(perturbation,0,1)]); 
+            xlabel('time'); ylabel('Unbound CB1R');
+            colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            
+            print([directory,glutamate_prep,'CB1R_CB1Runbound',perturbationString(perturbation,1,0)],'-dpng');
+            clear Hrange glutamateCB1RHist glutamateCB1RunboundHist; 
+        end
+        if (postprocess_GABA)
+            [~, figNum] = newFigure(figNum, false);
+            Hrange = 0:1/50:1;
+
+            GABACB1RHist = hist3D(Hrange, GABACB1R);
+            subplot(2,1,1);
+            imagesc([0 size(GABACB1R,1)],Hrange,GABACB1RHist);
+            title(['GABA CB1R',perturbationString(perturbation,0,1)]); 
+            xlabel('time'); ylabel('CB1R');
+            colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+
+            GABACB1RunboundHist = hist3D(Hrange, GABACB1Runbound);
+            subplot(2,1,2);
+            imagesc([0 size(GABACB1Runbound,1)],Hrange,GABACB1RunboundHist);
+            title(['GABA Unbound CB1R',perturbationString(perturbation,0,1)]); 
+            xlabel('time'); ylabel('Unbound CB1R');
+            colormap(flipud(hot)); colorbar(); caxis([0 cbMax]);
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            
+            print([directory,GABA_prep,'CB1R_CB1Runbound',perturbationString(perturbation,1,0)],'-dpng');
+            clear Hrange GABACB1RHist GABACB1RunboundHist; 
+        end
     end
-    if (postprocess_AvailableGlutamate)
-        Hrange = 0:0.01:2.1;
-        availableGlutamateHist = hist3D(Hrange, availableGlutamate);
-        [~, figNum] = newFigure(figNum, false);
-        imagesc([0 size(availableGlutamate,1)],Hrange,availableGlutamateHist);
-        title(['Available Glutamate',perturbationString(perturbation,0,1)]);
-        xlabel('time'); 
-        ylabel('Available Glutamate');
-        colormap(flipud(hot)); colorbar(); caxis([0 cbMax/2]);
-        set(gca,'ydir','normal');
-        print([directory,'availableGlutamate_hist',perturbationString(perturbation,1,0)],'-dpng');
-        clear Hrange availableGlutamateHist;
+    if (postprocess_AvailableNeurotransmitter)
+        if (postprocess_Glutamate)
+            Hrange = 0:0.01:2.1;
+            glutamateAvailableNeurotransmitterHist = hist3D(Hrange, ...
+                glutamateAvailableNeurotransmitter);
+            [~, figNum] = newFigure(figNum, false);
+            imagesc([0 size(glutamateAvailableNeurotransmitter,1)]...
+                ,Hrange,glutamateAvailableNeurotransmitterHist);
+            title(['Glutamate Available Neurotransmitter',perturbationString(perturbation,0,1)]);
+            xlabel('time'); 
+            ylabel('Available Neurotransmitter');
+            colormap(flipud(hot)); colorbar(); caxis([0 cbMax/2]);
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            print([directory,glutamate_prep,'availableNeurotransmitter_hist',perturbationString(perturbation,1,0)],'-dpng');
+            clear Hrange glutamateAvailableNeurotransmitterHist;
+        end
+        if (postprocess_GABA)
+            Hrange = 0:0.01:2.1;
+            GABAAvailableNeurotransmitterHist = hist3D(Hrange, ...
+                GABAAvailableNeurotransmitter);
+            [~, figNum] = newFigure(figNum, false);
+            imagesc([0 size(GABAAvailableNeurotransmitter,1)]...
+                ,Hrange,GABAAvailableNeurotransmitterHist);
+            title(['GABA Available Neurotransmitter',perturbationString(perturbation,0,1)]);
+            xlabel('time'); 
+            ylabel('Available Neurotransmitter');
+            colormap(flipud(hot)); colorbar(); caxis([0 cbMax/2]);
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            print([directory,GABA_prep,'availableNeurotransmitter_hist',perturbationString(perturbation,1,0)],'-dpng');
+            clear Hrange GABAAvailableNeurotransmitterHist;
+        end
     end
     if (postprocess_Headroom)
-        Hrange = -2.1:0.01:2.1;
-        [~, figNum] = newFigure(figNum, false);
-        headroomH = histHeadroom3D(Hrange, availableGlutamate, ...
-            AMPAWeights1D);
-        imagesc([0 size(availableGlutamate,1)],Hrange,headroomH);
-        title(['Headroom',perturbationString(perturbation,0,1)]);
-        xlabel('time'); ylabel('headroom');
-        colormap(flipud(hot)); colorbar();
-        set(gca,'ydir','normal');
-        print([directory,'headroom',perturbationString(perturbation,1,0)],'-dpng');
-        [~, figNum] = newFigure(figNum, false);
-        plot(Hrange,headroomH(:,1));
-        title(['Headroom distribution - initial condition',perturbationString(perturbation,0,1)]);
-        xlabel('headroom'); ylabel('count');
-        xlim([Hrange(1) Hrange(end)]);
-        print([directory,'headroomDistInitialCondition',perturbationString(perturbation,1,0)],'-dpng');
-        [~, figNum] = newFigure(figNum, false);
-        plot(Hrange,headroomH(:,end));
-        title(['Headroom distribution - steady state',perturbationString(perturbation,0,1)]);
-        xlabel('headroom'); ylabel('count');
-        xlim([Hrange(1) Hrange(end)]);
-        print([directory,'headroomDistSteadyState',perturbationString(perturbation,1,0)],'-dpng');
-        clear Hrange headroomH;
-        % correlation of AMPA/Hz with headroom/timeToHeadroom
-        [headroomFinal, headroomFinalStd, HzFinal, timeToHeadroom, ...
-            timeToHeadroomConverged, figNum] = ...
-            plotComponentVsHeadroom(figNum, Xdim, Ydim, Zdim, ...
-                XdimInner, YdimInner, ZdimInner, ...
-                availableGlutamate, AMPAWeights, AMPAWeights1D, inHz, ...
-                preIndexs1D, measurementTrange, measurementTrange, ...
-                finalHeadroomStd, Trange(1), sf, HzSf, spikeTrange(1), ...
-                HzMax, AMPAMax, perturbationString(perturbation,0,1), ...
-                directory, perturbationString(perturbation,1,0));
+        if (postprocess_Glutamate)
+            Hrange = -2.1:0.01:2.1;
+            [~, figNum] = newFigure(figNum, false);
+            glutamateHeadroomH = histHeadroom3D(Hrange, glutamateAvailableNeurotransmitter, ...
+                spineAMPAWeights1D);
+            imagesc([0 size(glutamateAvailableNeurotransmitter,1)],Hrange,glutamateHeadroomH);
+            title(['Glutamate Excess Neurotransmitter',perturbationString(perturbation,0,1)]);
+            xlabel('time'); ylabel('excess neurotransmitter');
+            colormap(flipud(hot)); colorbar();
+            set(gca,'ydir','normal');
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            print([directory,glutamate_prep,'excessNeurotransmitter',...
+                perturbationString(perturbation,1,0)],'-dpng');
+            [~, figNum] = newFigure(figNum, false);
+            plot(Hrange,glutamateHeadroomH(:,1));
+            title(['Glutamate Excess Neurotransmitter Distribution - Initial Condition',...
+                perturbationString(perturbation,0,1)]);
+            xlabel('excess neurotransmitter'); ylabel('count');
+            xlim([Hrange(1) Hrange(end)]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            print([directory,glutamate_prep,'excessNeurotransmitterDistInitialCondition'...
+                ,perturbationString(perturbation,1,0)],'-dpng');
+            [~, figNum] = newFigure(figNum, false);
+            plot(Hrange,glutamateHeadroomH(:,end));
+            title(['Glutamate Excess Neurotransmitter Distribution - Steady State',...
+                perturbationString(perturbation,0,1)]);
+            xlabel('excess neurotransmitter'); ylabel('count');
+            xlim([Hrange(1) Hrange(end)]);
+            set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
+            print([directory,glutamate_prep,'excessNeurotransmitterDistSteadyState',...
+                perturbationString(perturbation,1,0)],'-dpng');
+            clear Hrange glutamateHeadroomH;
+            
+            % correlation of AMPA/Hz with headroom/timeToHeadroom
+            [glutamateHeadroomFinal, glutamateHeadroomFinalStd, glutamateHzFinal, glutamateTimeToHeadroom, ...
+                glutamateTimeToHeadroomConverged, figNum] = ...
+                plotComponentVsHeadroom(figNum, Xdim, Ydim, Zdim, ...
+                    XdimInner, YdimInner, ZdimInner, ...
+                    glutamateAvailableNeurotransmitter, spineAMPAWeights, ...
+                    spineAMPAWeights1D, glutamateInHz, ...
+                    glutamatePreIndexs1D, measurementTrange, measurementTrange, ...
+                    finalHeadroomStd, Trange(1), sf, HzSf, spikeTrange(1), ...
+                    HzMax, AMPAMax, perturbationString(perturbation,0,1), ...
+                    [directory,glutamate_prep], perturbationString(perturbation,1,0),...
+                    fontsize);
+        end
         if (postprocess_RiskySynapses)
             [~, figNum] = newFigure(figNum, true);
             h = scatterhist(headroomFinal(timeToHeadroomConverged), ...
@@ -462,7 +643,7 @@ for perturbation=0:postprocess_Perturbation
 
             hp2 = uipanel('position', [0.5 0.5 0.5 0.5]);
             tempHz = HzFinal(preIndexs1D);
-            scatterhist(AMPAWeights1D(timeToHeadroomConverged), ...
+            scatterhist(spineAMPAWeights1D(timeToHeadroomConverged), ...
                 tempHz(timeToHeadroomConverged), ...
                 'Group', riskyGroup(timeToHeadroomConverged), 'Kernel', 'on', 'Parent', hp2, ...
                 'Marker','.');
@@ -473,7 +654,7 @@ for perturbation=0:postprocess_Perturbation
             hp3 = uipanel('position', [0.0 0.0 0.5 0.5]);
             tempCleft = sum(cleftGlutamate((measurementTrange(1)/sf)-(Trange(1)/sf): ...
                 (measurementTrange(end)/sf)-(Trange(1)/sf),:,:,:));
-            scatterhist(AMPAWeights1D(timeToHeadroomConverged), ...
+            scatterhist(spineAMPAWeights1D(timeToHeadroomConverged), ...
                 tempCleft(timeToHeadroomConverged), ...
                 'Group', riskyGroup(timeToHeadroomConverged), 'Kernel', 'on', 'Parent', hp3, ...
                 'Marker','.');
@@ -514,7 +695,7 @@ for perturbation=0:postprocess_Perturbation
                 beforePerturbationHz = HzFinal;
             end
             if (postprocess_PerturbationAMPA)
-                beforePerturbationAMPAWeights1D = AMPAWeights1D;
+                beforePerturbationAMPAWeights1D = spineAMPAWeights1D;
             end
             beforeHeadroomFinal = headroomFinal;
             beforeTimeToHeadroom = timeToHeadroom;
@@ -550,7 +731,7 @@ for perturbation=0:postprocess_Perturbation
                     end
                 elseif (p==2)
                     if (postprocess_PerturbationAMPA)
-                        afterPerturbationAMPAWeights1D = AMPAWeights1D;
+                        afterPerturbationAMPAWeights1D = spineAMPAWeights1D;
                         diffPerturbationAMPA = afterPerturbationAMPAWeights1D - ...
                             beforePerturbationAMPAWeights1D;
                         perturbationType = 'AMPA';
@@ -1041,7 +1222,7 @@ function [ret, ret1D] = load3D(directory, file, fileExt, XdimInner, ...
     ret = reshape(ret1D, [XdimInner, YdimInner, ZdimInner]);
 end
 function plotModulation(directory, file, fileExt, titleStr, x, ...
-    y, saveFile)
+    y, saveFile, fontsize)
     % mGluR5 modulation function only first
     fid = fopen([directory,file,fileExt],'r');
     mGluR5modulation = fread(fid, Inf, 'float');
@@ -1050,6 +1231,7 @@ function plotModulation(directory, file, fileExt, titleStr, x, ...
     plot(0:1/1000:2, mGluR5modulation);
     title(titleStr);
     xlabel(x); ylabel(y);
+    set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     print([directory,saveFile],'-dpng');
 end
 function [ret] = calculateHz(input, Tmin, Tmax, HzSf, Xdim, ...
@@ -1094,7 +1276,7 @@ function [headroomFinal, headroomFinalStd, HzFinal, timeToHeadroom, ...
     availableGlutamate, AMPAWeights, AMPAWeights1D, inHz, ...
     preIndexs1D, finalHeadroomT, finalHzT, finalHeadroomStd, Tmin, sf, HzSf, ...
     inputSpikeTimesTmin, HzMax, AMPAMax, additionalTitle, ...
-    directory, additionalSave)  
+    directory, additionalSave, fontsize)  
     [~, figNum] = newFigure(figNum, true);   
     subplot(2,2,1);
     headroomFinal = zeros(1,XdimInner*YdimInner*ZdimInner);
@@ -1122,6 +1304,7 @@ function [headroomFinal, headroomFinalStd, HzFinal, timeToHeadroom, ...
     title(['AMPA vs headroom', additionalTitle, ...
         '(R squared= ', num2str(R_squared), ')']);
     xlabel('AMPA'); ylabel('headroom');
+    set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     clear i x y z tempAvailableGlutamate tempAMPA h R R_squared;
     
     subplot(2,2,2);
@@ -1145,6 +1328,7 @@ function [headroomFinal, headroomFinalStd, HzFinal, timeToHeadroom, ...
     title(['Input Hz vs headroom', additionalTitle, ...
         '(R squared= ', num2str(R_squared), ')']);
     xlabel('Hz'); ylabel('headroom');
+    set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     clear i x y z tempPreIndexs h R R_squared;
     
     % Time to headroom
@@ -1185,6 +1369,7 @@ function [headroomFinal, headroomFinalStd, HzFinal, timeToHeadroom, ...
     R_squared=R(2)^2;
     title(['AMPA vs time to headroom', additionalTitle, '(R squared= ', num2str(R_squared), ')']);
     xlabel('AMPA'); ylabel('time to headroom');
+    set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     clear i tempAvailableGlutamate tempHeadroom temp h R R_squared;
     
     subplot(2,2,4);
@@ -1203,6 +1388,7 @@ function [headroomFinal, headroomFinalStd, HzFinal, timeToHeadroom, ...
     title(['Input Hz vs time to headroom', additionalTitle, ...
         '(R squared= ', num2str(R_squared), ')']);
     xlabel('Hz'); ylabel('time to headroom');
+    set([gca; findall(gca, 'Type','text')], 'FontSize', fontsize);
     print([directory,'componentsVsHeadroomDynamics',additionalSave],'-dpng');
     clear h R R_squared;
 end
