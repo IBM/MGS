@@ -12,6 +12,9 @@
 #define fieldDelimiter "\t"  
 
 static pthread_once_t once_KAs = PTHREAD_ONCE_INIT;
+#if defined(WRITE_GATES)                                      
+SegmentDescriptor ChannelKAs::_segmentDescriptor;
+#endif
 
 //
 // This is an implementation of the "KAs potassium current
@@ -88,13 +91,16 @@ void ChannelKAs::update(RNG& rng)
   dyn_var_t dt = *(getSharedMembers().deltaT);
 #if defined(WRITE_GATES)                                                  
   bool is_write = false;
-  float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
-  if (currentTime >= _prevTime + IO_INTERVAL)                           
-  {                                                                     
-    (*outFile) << std::endl;                                            
-    (*outFile) <<  currentTime;                                         
-    _prevTime = currentTime;                                            
-    is_write = true;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+    if (currentTime >= _prevTime + IO_INTERVAL)                           
+    {                                                                     
+      (*outFile) << std::endl;                                            
+      (*outFile) <<  currentTime;                                         
+      _prevTime = currentTime;                                            
+      is_write = true;
+    }
   }
 #endif
   for (unsigned i = 0; i < branchData->size; ++i)
@@ -307,12 +313,14 @@ gbar[i] = gbar_values[0];
   else{
     for (unsigned i = 0; i < size; ++i)
     {
-      gbar[i] *= gbar[i];
+      gbar[i] *= scale_factor;
     }
   }
 #if defined(WRITE_GATES)                                      
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {
     std::ostringstream os;                                    
-    std::string fileName = "gates_KAs";                       
+    std::string fileName = "gates_KAs.txt";                       
     os << fileName << getSimulation().getRank();              
     outFile = new std::ofstream(os.str().c_str());            
     outFile->precision(decimal_places);                       
@@ -321,6 +329,7 @@ gbar[i] = gbar_values[0];
     float currentTime = 0.0;  // should also be (dt/2)                                 
     (*outFile) << std::endl;                                  
     (*outFile) <<  currentTime;                               
+  }
 #endif
   for (unsigned i = 0; i < size; ++i)
   {
@@ -343,8 +352,11 @@ gbar[i] = gbar_values[0];
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time t0+dt/2
 #if defined(WRITE_GATES)                                      
-    (*outFile) << std::fixed << fieldDelimiter << m[i];       
-    (*outFile) << std::fixed << fieldDelimiter << h[i];       
+    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << m[i];       
+      (*outFile) << std::fixed << fieldDelimiter << h[i];       
+    }
 #endif                                                        
   }
 }

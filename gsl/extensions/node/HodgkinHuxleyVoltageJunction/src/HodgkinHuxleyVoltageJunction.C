@@ -33,6 +33,9 @@
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
 
+//DEBUG ONLY when Vclamp type=3 is used
+//#define DEBUG_UNCOUPLE_CHANNEL_AND_USE_DIRECT_VOLTAGE_CLAMP
+
 SegmentDescriptor HodgkinHuxleyVoltageJunction::_segmentDescriptor;
 
 // Get biomembrane surface area at the compartment i-th 
@@ -202,9 +205,15 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 }
 
 //GOAL: predict Vnew[0] at offset time (t+dt/2) - Crank-Nicolson predictor-corrector scheme
-//     usig Vbranch(t) and Vnew[0](t)
+//     using Vbranch(t) and Vnew[0](t)
 void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 {
+#ifdef DEBUG_UNCOUPLE_CHANNEL_AND_USE_DIRECT_VOLTAGE_CLAMP
+  //Here, Vnew[0] and Vcur  does NOT change based on channel's current
+  //instead, Vnew[0] is updated via VoltageClamp type=2 or type=3
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    return;
+#endif
   //TUAN DEBUG
 #ifdef DEBUG_COMPARTMENT
   volatile int nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
@@ -338,6 +347,13 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 // NOTE: at entry, Vcur is not the same as Vnew[0]
 void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 {
+#ifdef DEBUG_UNCOUPLE_CHANNEL_AND_USE_DIRECT_VOLTAGE_CLAMP
+  //Here, Vnew[0] and Vcur  does NOT change based on channel's current
+  //instead, Vnew[0] is updated via VoltageClamp type=2 or type=3
+  //Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    return;
+#endif
   //TUAN DEBUG
 #ifdef DEBUG_COMPARTMENT
   volatile int nidx = _segmentDescriptor.getNeuronIndex(branchData->key);

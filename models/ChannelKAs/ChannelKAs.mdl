@@ -37,6 +37,7 @@ Node ChannelKAs Implements
   float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
   float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
   float [] gbar_values;// ... having the corresponding gbar conductance
+  float scale_factor; // used to apply inhibition fraction or enhancement by DRUG // should be 1 by default
   // Example:
   // CHANNEL_PARAMS 2
   // Cah 3

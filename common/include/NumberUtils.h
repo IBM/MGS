@@ -67,8 +67,9 @@ template<typename T>
 T linear_interp( T x0, T y0, T x1, T y1, T x )
 {
   T a = (y1-y0)/(x1-x0);//tan(alpha)
-  T b = -a*x0+y0;
-  T y = a * x + b;
+  //T b = -a*x0+y0;
+  //T y = a * x + b;
+  T y = y0 + a * (x - x0);
   return y;
 }
 

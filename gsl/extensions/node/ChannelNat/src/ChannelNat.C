@@ -10,11 +10,16 @@
 #include "NumberUtils.h"
 
 #define SMALL 1.0E-6
+#define decimal_places 6     
+#define fieldDelimiter "\t"  
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
 
 static pthread_once_t once_Nat = PTHREAD_ONCE_INIT;
+#if defined(WRITE_GATES)                                      
+SegmentDescriptor ChannelNat::_segmentDescriptor;
+#endif
 
 //
 // This is an implementation of the "TTX-sensitive rapidly-activating, and
@@ -275,6 +280,53 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHC 0.015
 #define BHV -66.0
 #define BHD 6.0
+#elif CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
+// combine data from Ogata-1990 and Martina (Wolf-2005)
+// data from rat CA1 hippocampal pyramidal neuron
+//     recorded at 22-24C and then mapped to 35C using Q10 = 3
+// REF: Martina M, Jonas P (1997). "Functional differences in na+ channel gating
+// between fast-spiking interneurons and principal neurons of rat hippocampus."
+// J Phys,
+// 505(3): 593-603.
+// Inactivation from
+//    1. Martina and Jonas (1997) - Table 1
+// Activation from
+//    1. Martina and Jonas (1997) - Table 1
+//
+// model is used for simulation NAc nucleus accumbens (medium-sized spiny MSN
+// cell)
+//    at 35.0 Celcius
+// minf(Vm) = 1/(1+exp((Vm-Vh)/k))
+// hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
+#define Vmshift -4  
+#define VHALF_M (-25 + Vmshift)
+#define k_M -11.8
+#define Vhshift 8
+#define VHALF_H (-62.9 + Vhshift)
+//#define k_H 10.7
+#define k_H 6
+#define LOOKUP_TAUM_LENGTH 16  // size of the below array
+const dyn_var_t ChannelNat::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -40, -30,
+                                   -20,  -10, 0,   10,  20,  30,  40,  50};
+// NOTE:
+// if (-100+(-90))/2 >= Vm               : tau_m = taumNat[1st-element]
+// if (-100+(-90))/2 < Vm < (-90+(-80))/2: tau_m = taumNat[2nd-element]
+//...
+//dyn_var_t ChannelNat::taumNat[] = {0.06, 0.06, 0.07, 0.09, 0.11, 0.13, 0.20, 0.32,
+//                       0.16, 0.15, 0.12, 0.08, 0.06, 0.06, 0.06, 0.06};
+dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3512, 0.4474, 0.5566, 0.3548, 0.2399, 0.1585,
+                       0.1047, 0.0871, 0.0851, 0.0813, 0.0832, 0.0832, 0.0832, 0.0832};
+#define LOOKUP_TAUH_LENGTH 16  // size of the below array
+// dyn_var_t _Vmrange_tauh[] = _Vmrange_taum;
+const dyn_var_t ChannelNat::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
+                                   -20,  -10, 0,   10,  20,  30,  40,  50};
+//dyn_var_t ChannelNat::tauhNat[] = {1.3,  1.3, 1.3,  1.3,  1.3,  1.3,  1.3,  1.3,
+//                       0.85, 0.5, 0.45, 0.32, 0.30, 0.28, 0.28, 0.28};
+dyn_var_t ChannelNat::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.9111, 1.4907, 0.6596,
+                       0.5101, 0.4267, 0.3673, 0.3370, 0.3204, 0.3177, 0.3151, 0.3142};
+std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
+std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
+
 #else
   NOT IMPLEMENTED YET
 #endif
@@ -286,6 +338,20 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 void ChannelNat::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+#if defined(WRITE_GATES)                                                  
+  bool is_write = false;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+    if (currentTime >= _prevTime + IO_INTERVAL)                           
+    {                                                                     
+      (*outFile) << std::endl;                                            
+      (*outFile) <<  currentTime;                                         
+      _prevTime = currentTime;                                            
+      is_write = true;
+    }
+  }
+#endif
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -343,7 +409,8 @@ void ChannelNat::update(RNG& rng)
     }
 
 #elif CHANNEL_NAT == NAT_WOLF_2005 || \
-    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990 || \
+    CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
     {
     // NOTE: Some models use m_inf and tau_m to estimate m
     // tau_m in the lookup table
@@ -391,7 +458,7 @@ void ChannelNat::update(RNG& rng)
       
     }
 #elif CHANNEL_NAT == NAT_HAY_2011 || \
-		  CHANNEL_NAT == NAT_COLBERT_PAN_2002
+      CHANNEL_NAT == NAT_COLBERT_PAN_2002
     {
     //dyn_var_t am = AMC * vtrap(-(v - AMV - Vhalf_m_shift[i]), AMD);
     //dyn_var_t bm = BMC * vtrap(-(v - BMV - Vhalf_m_shift[i]), BMD);  //(v+BMV)/(exp((v+BMV)/BMD)-1)
@@ -406,7 +473,6 @@ void ChannelNat::update(RNG& rng)
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
-
     }
 #else
     assert(0);
@@ -431,6 +497,13 @@ void ChannelNat::update(RNG& rng)
     if (currentTime < NOGATING_TIME)
       g[i]= 0.0;
 #endif
+#if defined(WRITE_GATES)                                                  
+    if (is_write)
+    {           
+      (*outFile) << std::fixed << fieldDelimiter << m[i];                 
+      (*outFile) << std::fixed << fieldDelimiter << h[i];                 
+    }                                                                     
+#endif                                                                    
   }
 }
 
@@ -529,6 +602,22 @@ void ChannelNat::initialize(RNG& rng)
       gbar[i] = gbar_default;
     }
   }
+
+#if defined(WRITE_GATES)                                      
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  {
+    std::ostringstream os;                                    
+    std::string fileName = "gates_Nat.txt";                       
+    os << fileName << getSimulation().getRank() ;              
+    outFile = new std::ofstream(os.str().c_str());            
+    outFile->precision(decimal_places);                       
+    (*outFile) << "#Time" << fieldDelimiter << "gates: m, h [, m,h]*"; 
+    _prevTime = 0.0;                                          
+    float currentTime = 0.0;  // should also be (dt/2)                                 
+    (*outFile) << std::endl;                                  
+    (*outFile) <<  currentTime;                               
+  }
+#endif
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -591,7 +680,8 @@ void ChannelNat::initialize(RNG& rng)
       h[i] = ah / (ah + bh);
     }
 #elif CHANNEL_NAT == NAT_WOLF_2005 || \
-    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990 || \
+    CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 #else
@@ -604,13 +694,21 @@ void ChannelNat::initialize(RNG& rng)
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i]; // at time (t+dt/2) - 
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]); //using 'v' at time 't'; but gate(t0+dt/2)
+#if defined(WRITE_GATES)                                      
+    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << m[i];       
+      (*outFile) << std::fixed << fieldDelimiter << h[i];       
+    }
+#endif                                                        
   }
 }
 
 void ChannelNat::initialize_others()
 {
 #if CHANNEL_NAT == NAT_WOLF_2005 || \
-    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990 || \
+    CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
   {
     //NOTE: 
     //  0 <= i < size-1: _Vmrange_tauh[i] << Vm << _Vmrange_tauh[i+1]
@@ -638,4 +736,9 @@ void ChannelNat::initialize_others()
 }
   
 
-ChannelNat::~ChannelNat() {}
+ChannelNat::~ChannelNat() {
+#if defined(WRITE_GATES)            
+  if (outFile) outFile->close();    
+#endif                              
+
+}

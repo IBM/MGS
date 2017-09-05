@@ -4,9 +4,10 @@
 #include "Lens.h"
 #include "CG_ChannelKAs.h"
 #include "rndm.h"
-#include <fstream>
 
 #include "MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
+#include <fstream>
 
 #if CHANNEL_KAs == KAs_WOLF_2005
 #define BASED_TEMPERATURE 15.0  // Celcius
@@ -35,6 +36,7 @@ class ChannelKAs : public CG_ChannelKAs
 #if defined(WRITE_GATES)      
   std::ofstream* outFile;     
   float _prevTime;            
+  static SegmentDescriptor _segmentDescriptor;
 #define IO_INTERVAL 0.1 // ms 
 #endif                        
 };

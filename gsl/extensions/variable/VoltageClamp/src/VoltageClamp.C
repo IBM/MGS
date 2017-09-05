@@ -131,7 +131,7 @@ void VoltageClamp::updateI_type3(RNG& rng)
   volatile float targetV=0.0;
   std::vector<float>::iterator low =
     std::lower_bound(data_timeVm["time"].begin(), data_timeVm["time"].end(), getCurrentTime());
-  int index = low - data_timeVm["time"].begin();
+  volatile int index = low - data_timeVm["time"].begin();
   assert(index>=0);
   if (index == 0)
     targetV = data_timeVm["Vm"][index];
@@ -141,7 +141,7 @@ void VoltageClamp::updateI_type3(RNG& rng)
   else //assume saturation in taum when Vm > max-value
      targetV = data_timeVm["Vm"][index-1];
   _Vprev = (*V)[idx];
-  //(*V)[idx] = targetV;
+  (*V)[idx] = targetV;
 
   do_IO(targetV);
   float goal = targetV;

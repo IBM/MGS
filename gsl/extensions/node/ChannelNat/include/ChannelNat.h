@@ -6,6 +6,8 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
+#include <fstream>
 
 #if CHANNEL_NAT == NAT_HODGKIN_HUXLEY_1952
 #define BASED_TEMPERATURE 6.3  // Celcius
@@ -43,11 +45,16 @@
 //Modified Colbert - Pan (2002) model
 #define BASED_TEMPERATURE 21  // Celcius
 #define Q10 2.3
+#elif CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
+#define BASED_TEMPERATURE 21.8  // Celcius
+#define Q10 2.3
 #endif
 
 #ifndef Q10 
 #define Q10 2.3 //default
 #endif
+
+//#define WRITE_GATES
 
 class ChannelNat : public CG_ChannelNat
 {
@@ -59,7 +66,8 @@ class ChannelNat : public CG_ChannelNat
 
   private:
 #if CHANNEL_NAT == NAT_WOLF_2005 || \
-    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990
+    CHANNEL_NAT == NAT_OGATA_TATEBAYASHI_1990 || \
+    CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
   const static dyn_var_t _Vmrange_taum[];
   const static dyn_var_t _Vmrange_tauh[];
   static dyn_var_t taumNat[];
@@ -67,6 +75,12 @@ class ChannelNat : public CG_ChannelNat
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
+#if defined(WRITE_GATES)      
+  std::ofstream* outFile;     
+  float _prevTime;            
+  static SegmentDescriptor _segmentDescriptor;
+#define IO_INTERVAL 0.1 // ms 
+#endif                        
 };
 
 #endif
