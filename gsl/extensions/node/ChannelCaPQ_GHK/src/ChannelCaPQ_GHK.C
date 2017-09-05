@@ -6,6 +6,7 @@
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
+#include "MaxComputeOrder.h"
 
 #include <math.h>
 #include <pthread.h>
@@ -46,6 +47,15 @@ NOT IMPLEMENTED YET
 #endif
 
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelCaPQ_GHK::initialize(RNG& rng) 
 {
   pthread_once(&once_CaPQ_GHK, initialize_others);
@@ -54,6 +64,7 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
   assert(V);
   assert(PCabar.size() == size);
   assert(V->size() == size);
+
   // allocate
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
@@ -68,7 +79,7 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
                  "GHK-formula Ca2+ PQ-type channel "
-                 "Channels Param" << std::endl;
+                 "Channels Param" << typeid(*this).name() << std::endl;
     assert(0);
   }
   //initialize Pbar
@@ -77,12 +88,12 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
     if (Pbar_dists.size() > 0)
     {
       unsigned int j;
-			//NOTE: 'n' bins are splitted by (n-1) points
-			if (Pbar_values.size() - 1 != Pbar_dists.size())
-			{
-				std::cerr << "Pbar_values.size = " << Pbar_values.size() 
-					<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
-			}
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (Pbar_values.size() - 1 != Pbar_dists.size())
+      {
+        std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+          << "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+      }
       assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
@@ -155,6 +166,9 @@ void ChannelCaPQ_GHK::initialize(RNG& rng)
   }
 }
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2+dt)
+//   of second-order accuracy at time (t+dt/2+dt) using trapezoidal rule
 void ChannelCaPQ_GHK::update(RNG& rng) 
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
@@ -187,15 +201,25 @@ void ChannelCaPQ_GHK::update(RNG& rng)
       ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
       //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
       //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-      //  I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
+      I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
 
 #ifdef CONSIDER_DI_DV
       dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);  // [pA/um^2]
       conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
 #endif
-
     }
 #endif
+    /*
+     * TUAN TODO: think about stochastic modelling
+     * I_Ca[i] = Nopen * P_Ca_singlechannel * ...
+     * with Nopen is from 0 to ... Nchannelpercompartment
+     * Nchannelpercompartment = PCa*surfacearea_compartment/P_Ca_singlechannel
+     * And use the Markov-based model for a single channel to determine
+     * Nopen
+    I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+              ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+              (1 - tmp);  // [pA/um^2]
+    */
   }
 }
 

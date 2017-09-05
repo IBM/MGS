@@ -164,7 +164,7 @@ void ChannelCaLv12_GHK::initialize(RNG& rng)
       PCabar[i] = PCabar_default;
     }
   }
-
+  //calculate currents at time (t) and di_dv 
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
