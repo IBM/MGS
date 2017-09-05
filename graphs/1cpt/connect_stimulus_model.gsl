@@ -6,7 +6,8 @@
 //}}}
 #endif
 
-#if STIMULUS_CASE == CASE_08
+#if STIMULUS_CASE == CASE_08 || \
+    STIMULUS_CASE == CASE_08b
 //{{{
 polyConnect(timeStep, somaClamp, <>, <>);
 polyConnect(somaClamp, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);

@@ -4,6 +4,7 @@
 #  and one model to another
 # author: Tuan M. Hoang Trong (IBM, @2016)
 #
+name_ext=""
 rm_if_link(){ [ ! -L "$1" ] || rm -v "$1"; }
 clean_all() {
   rm_if_link neurons
@@ -19,6 +20,7 @@ clean_all() {
 
 Yes_No_ChangeSWC ()
 {
+  #{{{
   # print question
   echo -n "Want to change SWC link ?(yes(y)/no(n)): "
 
@@ -36,10 +38,13 @@ Yes_No_ChangeSWC ()
     "n")  ;;
     *)      echo "Please answer yes(y) or no(n)" ; Yes_No_ChangeSWC ;;
   esac
+  #}}}
 }
 ChangeSWC ()
 {
+  #{{{
   paramFold=($(find neurons/ -maxdepth 1 -type f -name '*.swc' ! -name 'neuron.swc' ! -name '*developed.swc' -printf "%f\n"))
+  paramFold+=($name_ext)
   echo "SUGGEST: neurons.swc_tufted.swc_reviseRadius.swc for hay1"
   echo "Select one of this:"
   arrSize=${#paramFold[@]}
@@ -61,8 +66,10 @@ ChangeSWC ()
   cd neurons;ln -s $arg2 neuron.swc; cd -
   spineFolder=$(echo $swcFile | cut -f 1 -d '.')"_spines"
   extMorph=$(echo $swcFile | cut -f 1 -d '.')
+  echo "extMorph=$extMorph"
   echo "Spines folder:  neurons/$spineFolder"
   if [ -d "neurons/$spineFolder" ]; then
+    # if spines folder is found
     rm_if_link spines 2>&1 >/dev/null
     ln -s neurons/$spineFolder spines
     rm_if_link neurons.txt
@@ -80,6 +87,11 @@ ChangeSWC ()
   ln -s neurons/connect_recording_model_$extMorph.gsl connect_recording_model.gsl
   rm_if_link connect_stimulus_model.gsl
   ln -s neurons/connect_stimulus_model_$extMorph.gsl  connect_stimulus_model.gsl
+  rm_if_link recording_model.gsl
+  ln -s neurons/recording_model_$extMorph.gsl recording_model.gsl
+  rm_if_link stimulus_model.gsl
+  ln -s neurons/stimulus_model_$extMorph.gsl  stimulus_model.gsl
+  #}}}
 }
 
 ModelFolder=systems
@@ -88,7 +100,11 @@ authorName=""
 if [ "$#" == "0" ]; then
   echo "$0 <morph_suffix> [author_suffix] "
   echo "    <morph_suffix> is the suffix of the folder where (1) morphology, (2) params, (3) recording/stimulus sites for that morph are stored"
-  echo "  e.g. msn0, d1d2"
+  echo "  Example: msn0 --> neurons_msn0"
+  echo "      In this folder, there can be many parameters folder params_<author_suffix>"
+  echo "      If you don't specify in <arg2> then you will be asked to choose"
+  echo ""
+  echo "Available names: msn0, wtdApr26IR3h"
   echo "NOTE: $0 clean "
   echo "   to clean the symbolic links"
   exit
@@ -105,6 +121,7 @@ else
     ln -s $ModelFolder/model_$2.gsl model.gsl
     authorName=$2
   else
+    #{{{
     #paramFold = ($(find -maxdepth 1 -type d -name 'params_*'))
     paramFold=($(find neurons_$1 -maxdepth 1 -type d -name 'params_*'))
     echo "Select one of this:"
@@ -129,10 +146,13 @@ else
     ln -s $arg2 params
     authorName=`echo $arg2 | cut -d'_' -f 3`
     ln -s $ModelFolder/model_$authorName.gsl model.gsl
+    #}}}
   fi
-  #ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
+  name_ext=$1
+  # If 
+  ln -s neurons/connect_recording_model_$1.gsl connect_recording_model.gsl
   ln -s neurons/recording_model_$1.gsl recording_model.gsl
-  #ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
+  ln -s neurons/connect_stimulus_model_$1.gsl  connect_stimulus_model.gsl
   ln -s neurons/stimulus_model_$1.gsl stimulus_model.gsl
   ln -s neurons/neurons_$authorName.txt neurons.txt
   

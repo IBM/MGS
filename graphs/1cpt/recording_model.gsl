@@ -102,3 +102,9 @@ somaCalciumDisplay.dataCollection(<>) on recOn;
 //calciumDisplay33.dataCollection(<>) on recOn;
 //calciumDisplay34.dataCollection(<>) on recOn;
 //}}}
+
+//{{{soma currents
+
+AnyCurrentDisplay somaCurrentsDisplay<fileName= PathFileCombine("somaCurrents.dat")>;
+somaCurrentsDisplay.dataCollection(<>) on recOn;
+//}}}

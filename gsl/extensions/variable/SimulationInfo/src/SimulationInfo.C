@@ -39,7 +39,7 @@ void SimulationInfo::calculateInfo(RNG& rng)
                              // NOTE: Not all system has steady-states (e.g. those with oscillation)
                              // so this is not always useful
    // * getSimulation().getIteration();
-   iterationCount  = getSimulation().getIteration() - 1; //zero-based for RuntimePhase
+   iterationCount  = (double)getSimulation().getIteration() - 1; //zero-based for RuntimePhase
 }
 
 SimulationInfo::SimulationInfo() 

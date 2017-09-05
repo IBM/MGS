@@ -25,32 +25,45 @@ pointCalciumSource.setCaCurrent(<
 			     >) on calciumOff;
 //}}}
 #endif
+
+#if STIMULUS_CASE == CASE_08b
+VoltageClamp somaClamp<type=3, Rs=0.008, fileName="SEClamp.txt", tVm_file="D2-Cepeda-200pA.txt", fileName="SEClamp.txt" >; //TimeSetVClamp1
+#endif
+
 #if STIMULUS_CASE == CASE_08
 //{{{voltage-clamp
 //NOTE: User can define 'idx' to specify compartment index (default is 0)
 //VoltageClamp somaClamp<type=1, command = 00.0, beta=2.0, Cm =0.01>;
 //NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
 //NOTE: Default initial is OFF
-#define Vm_hold -100.0  // [mV]
-#define Vm_step -30.0     // [mV]
+#define Vm_hold -80.0  // [mV]
+#define Vm_step -10.0     // [mV]
+
+#if 1
+#define USE_SERIES_RESISTANCE 1
+//USE_SINGLE_ELECTRODE_CLAMP
 #ifdef USE_SERIES_RESISTANCE
 // Iinject = (Vc - Vm) / Rs;
 // Rs = [GOhm] -- default is 1.0 [MOhm] ~ 0.001 GOhm
 //(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.1, fileName="SEClamp.txt">;
 //(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.01, fileName="SEClamp.txt">;
-VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.001, fileName="SEClamp.txt">; //good
+VoltageClamp somaClamp<type=1, command = Vm_hold, Rs=0.0008, fileName="SEClamp.txt">; //good
 #else
 //NOTE: User can define 'idx' to specify compartment index (default is 0)
 // Iinject = beta * Cm * (Vc - Vm) / (dt/2) * Area() ; //(pA) 
-VoltageClamp somaClamp<type=1, command = -80.0, beta=2.0, Cm =0.01>;
+VoltageClamp somaClamp<type=1, command = Vm_hold, beta=2.0, Cm =0.01>;
 #endif
+#else
 //VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.05, fileName=PathFileCombine("SEClamp.txt")>; //TimeSetVClamp1
+VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.05, fileName="SEClamp.txt">; //TimeSetVClamp1
 ////VoltageClamp somaClamp<type=1, command = Vm_hold, beta=1.0, Cm =0.01, fileName=PathFileCombine("SEClamp.txt")>;
 ////VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.025>; //TimeSetVClamp1
 ////VoltageClamp somaClamp<type=2, command = Vm_hold, gainTime=0.0>; //TimeSetVClamp1
+#endif
 somaClamp.toggle(<toggle=1>) on voltageClampSet0Sem; //turn on clamping
 somaClamp.setCommand(<command = Vm_step>) on voltageClampSet1Sem; //TimeSetVClamp0
-somaClamp.toggle() on voltageClampOffSem; //toggle clamping
+somaClamp.setCommand(<command = Vm_hold>) on voltageClampOffSem; 
+//somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 
 ////NOTE: You have up to 3 time points to set different Vclamp values
 //somaClamp.setCommand( < 

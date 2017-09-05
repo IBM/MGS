@@ -1,6 +1,8 @@
 #include "Topology.h"
 #include "../../nti/include/MaxComputeOrder.h"
 
+#undef ADAPTIVE_IO
+
 #define V_CM 0.01
 #define V_RA 0.001
 #define V_GLEAK 0.00015
@@ -17,7 +19,7 @@
 #define CASE_VIVO 1000 // random input at all spines
 #define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
-#define CASE_01  1   //inject soma [square pulse current]
+#define CASE_01  1   //inject soma [current clamp ~ square pulse current]
 #define CASE_01b  101   //inject soma [brief train of AP]
 #define CASE_01c  201   //inject soma [point current source]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
@@ -27,9 +29,9 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define CASE_09  9   //inject soma [current clamp]
+#define CASE_08b 108   //dynamic voltage clamp
 #define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
-#define STIMULUS_CASE   CASE_08
+#define STIMULUS_CASE   CASE_08b
 //#define morph ""
 #define morph "msn0_"
 //#define morph "msn0spines_"
@@ -97,11 +99,12 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "1cpt_Vclamp" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_PARAMSEARCH
 #define OutputFolderName  STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_08b
+#define OutputFolderName dataFolder morph "1cpt_Vclampdynamic" STR(EXTENSION)
 #else
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
 #endif
-print(OutputFolderName);
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -129,7 +132,7 @@ print(OutputFolderName);
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-  #define TimeEnd          40      // [ms]
+  #define TimeEnd          540      // [ms]
 	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
   #define TimeVClampSet0    0    // [ms]
   #define TimeVClampSet1    20    // [ms]
@@ -151,7 +154,7 @@ print(OutputFolderName);
 
   //{{{recording-interval (I/O)
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
-	#define RecordInterval   5.00   //  [ms]
+	#define RecordInterval   0.100   //  [ms]
   #define TimeStartRecord  100.0 // [ms]
 #elif  SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 	#define RecordInterval   10   // every ... timesteps
@@ -243,12 +246,20 @@ print(OutputFolderName);
 #define Temperature_value  310.15 // [K] Kelvin
 //#define Vrest_value  -85.0 // [mV]
 #define Vrest_value  -64.12350 // [mV]
-//#define E_leak_value -90.0 // [mV]
-#define E_leak_value Vrest_value
+#define E_leak_value -80.0 // [mV]
+//#define E_leak_value Vrest_value
 //#define Erev_HCN  -45.0 // [mV]
 //#define Erev_HCN  -30.0 // [mV]
 #define Erev_HCN  -43.0 // [mV] - Schweighofer
+#define Erev_K -90.0   // [mV]
+#define Erev_Na 50.0   // [mV]
 
+  //{{{
+#define DEFINE_EXPLICITLY  0
+#define DEFINE_VIA_CONCENTRATION 1
+  //}}}
+#define CHOCE_REVERSIAL_POTENTIAL_SODIUM DEFINE_EXPLICITLY
+#define CHOCE_REVERSIAL_POTENTIAL_POTASSIUM DEFINE_EXPLICITLY
 //}}}
 
 //{{{ Time constant
@@ -663,30 +674,76 @@ NodeType IP3ConcentrationJunctionPoint {
 /*{{{*/
 /*{{{//Na+ currents*/
    /* Fast-inactivating (transient) Na+ */
-NodeType ChannelNat { computeE->initialize2, initialize->initialize3, update->solveChannels};
+NodeType ChannelNat 
+#if CHOCE_REVERSIAL_POTENTIAL_SODIUM == DEFINE_EXPLICITLY
+(<E_Na = {Erev_Na}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels};
    /* Persistent Na+ current */
-NodeType ChannelNap { computeE->initialize2, initialize->initialize3, update->solveChannels};
+NodeType ChannelNap 
+#if CHOCE_REVERSIAL_POTENTIAL_SODIUM == DEFINE_EXPLICITLY
+(<E_Na = {Erev_Na}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels};
 /*}}}*/
 /*{{{//K+ currents*/
   //{{{A-type
   /* KAf - fast-inactivating 'A'-type K+ Kv4.2 data */
-NodeType ChannelKDR { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType ChannelKAf { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKDR 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKAf 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* KAs - slow-inactivating 'A'-type K+ Kv1.2 data */
-NodeType ChannelKAs { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKAs 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
   //}}}
+  /* background leak K+ KCNK */
+NodeType ChannelKCNK_GHK 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeTadj->initialize2, initialize->initialize3, update->solveChannels };
   /* KRP 4-AP resistent persistent K+ current */
-NodeType ChannelKRP { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKRP 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* KIR - inward-rectifying K+  */
-NodeType ChannelKIR { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelKIR 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
   //{{{Ca-dependent K+
   /* large-conductance BK Ca2+-dependent K+ current */
   /* type-I alpha+beta subunits: fast-activating + inactivating */
-NodeType ChannelBKalphabeta { computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType ChannelBKalphabeta 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* small-conductance SK Ca2+-dependent K+ current */
   /* SK only present on secondary and tertary dendrites only */
-NodeType ChannelSK { computeE->initialize2, initialize->initialize3, update->solveChannels };
-NodeType KCaChannel { computeE_K->initialize2, initializeKCaChannels->initialize3, update->solveChannels };
+NodeType ChannelSK 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
+NodeType KCaChannel 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE_K->initialize2, initializeKCaChannels->initialize3, update->solveChannels };
    //}}}
 /*}}}*/
    //{{{HCN
@@ -1253,11 +1310,12 @@ Grid MSN_D1Neuron{
       // 2. RECEPTOR/CHANNEL    
 	/*{{{*/
      //{{{ Na channels
-	Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Na]" >), < nodekind="Channels[Na]" >, tissueGM);
+	Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Na]" >, tissueGM);
 	Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
      //{{{ K+ channels
-   Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
+	Layer(KCNKChannels, ChannelKCNK_GHK, tissueFunctor("Layout", < nodekind="Channels[KCNK]" >), < nodekind="Channels[KCNK]" >, tissueGM);
+        Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
 	Layer(KAfChannels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[KAf]" >), < nodekind="Channels[KAf]" >, tissueGM);
 	Layer(KAsChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[KAs]" >), < nodekind="Channels[KAs]" >, tissueGM);
 	Layer(KRPChannels, ChannelKRP, tissueFunctor("Layout", < nodekind="Channels[KRP]" >), < nodekind="Channels[KRP]" >, tissueGM);
@@ -1555,10 +1613,14 @@ Grid MSN_D1Neuron{
 				> ) ); 
      //}}}
 	 //{{{ K+ channels
-   InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
-         compartmentalize = { "gbar" },
-         gbar = {0.0}
-         > ) );
+        InitNodes ( .[].Layer(KCNKChannels), tissueFunctor("NodeInit", <
+              compartmentalize = { "P_Kbar" },
+              P_Kbar = {0.0}
+              > ) );
+        InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
+              compartmentalize = { "gbar" },
+              gbar = {0.0}
+              > ) );
 	InitNodes ( .[].Layer(KAfChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
 				gbar = {0.0}
@@ -1768,11 +1830,14 @@ Grid MSN_D1Neuron{
    //}}}
 
   //{{{ K+ channels
+   polyConnect(timeStep, .[].Layer(KCNKChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(KCNKChannels), <>, <identifier="EC">);
+
    polyConnect(timeStep, .[].Layer(KDRChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(KDRChannels), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(KAfChannels, KAsChannels, KRPChannels, BKalphabetaChannels, SKChannels, KIRChannels), <>, <identifier="EC">);
 
    polyConnect(timeStep, .[].Layer(KCaChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(KCaChannels), <>, <identifier="EC">);
@@ -1907,3 +1972,5 @@ UnsignedTrigger endTrig("Iteration Trigger to end or stop",
 #endif
 
 Stop on endTrig;
+/////////////////////////////////////////
+print("Output location: " OutputFolderName);

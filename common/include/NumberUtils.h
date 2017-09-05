@@ -59,7 +59,10 @@ unsigned int count_nonzero(T* vector, int offset, int range)
 	return count;
 }
 
-//GOAL: 
+//GOAL:  
+//   find y 
+//   associated with the value x
+//   given the linear interpolation of values at 2 ends (x0,y0)
 template<typename T>
 T linear_interp( T x0, T y0, T x1, T y1, T x )
 {

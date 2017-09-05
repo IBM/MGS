@@ -100,7 +100,7 @@ void VoltageDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   if (V.size() > 0)
   {
     //float current_time = float(getSimulation().getIteration()) * *deltaT; // [msec]
-    float current_time = float(getSimulation().getIteration()-1) * *deltaT; // [msec]
+    float current_time = ((double)getSimulation().getIteration()-1) * *deltaT; // [msec]
     current_time += (*deltaT)/2.0;  //second-order accuracy at time t+dt/2
     (*outFile) << current_time; 
     if (indices.size() == 0)
