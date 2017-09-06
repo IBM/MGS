@@ -88,8 +88,7 @@ Use in gating of Hodgkin-Huxley variable
 in case (x=0) --> L'hopital rule 
 Check Traub (1991) paper
 */
-template<typename T>
-template<typename T2>
+template<typename T, typename T2>
 T vtrap(T x, T2 y)
 {
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
