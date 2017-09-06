@@ -38,6 +38,13 @@
 #define BASED_TEMPERATURE 22.0  // Celcius                                 
 #define Q10 2.92 //To get a phi value equivalent to 5 as used in the model 
 
+#elif CHANNEL_KDR == KDR_MIGLIORE_1999
+#define BASED_TEMPERATURE 35.0  // Celcius                                 
+#define Q10 2.92 
+
+#elif CHANNEL_KDR == KDR_ERISIR_1999
+#define BASED_TEMPERATURE 23.0  // Celcius                                 
+#define Q10 2.92 
 #endif
 
 #ifndef Q10 

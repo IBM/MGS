@@ -23,6 +23,8 @@
 #include "MaxComputeOrder.h"
 #include "NumberUtils.h"
 
+// NOTE: play a major role in setting interspike interval under constant Iinject
+//       and shape late repolarization phase of AP --> prevent doublet
 #define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
@@ -33,8 +35,11 @@
 // b_m  = BMC * exp( (V - BMV)/BMD )
 // a_h  = AHC * exp( (V - AHV)/AHD )
 // b_h  = BHC / (exp( (V - BHV)/BHD ) + 1.0)
+
 #if CHANNEL_KDR == KDR_HODGKIN_HUXLEY_1952
 // data measured from squid giant axon
+// Formula:
+//    I = gbar * n^4 * (V-Erev)
 #define ANC 0.01
 #define ANV -55.0
 #define AND 10.0
@@ -42,6 +47,8 @@
 #define BNV -65.0
 #define BND 80.0
 #elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
+// Formula:
+//    I = gbar * n^4 * (V-Erev)
 // adapted from Rush-Rinzel (1994)
 // Rush-Rinzel (1994) thalamic neuron
 // adopted from HH-1952 data with
@@ -58,6 +65,8 @@
 
 #elif CHANNEL_KDR == KDR_TRAUB_1994 || \
       CHANNEL_KDR == KDR_TRAUB_1995
+// Formula:
+//    I = gbar * n^2 * (V-Erev)
 #define Eleak -65.0 //mV
 #define ANC 0.016
 #define ANV (35.1+Eleak)
@@ -68,8 +77,12 @@
 
 #elif CHANNEL_KDR == KDR_WANG_BUSZAKI_1996
 // Equations from paper Wang_Buzsaki_1996 
-// IK = gK * n^4 (V-E)
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+// Formula:
+//    I = gbar * n^4 * (V-Erev)
+// NOTE: 
+//   1. spike threshold ~ -55 mV
+//   2. two salient properties of hippocampal neurons + neocortical fast-spiking interneurons --> a brief AHP (about -15 mV measured from the spike threshold) --> Vm repolarized back to about -70mV rather than the E_K = - 90 mV
+//    --> KDR needs to be small maximal conductance, and fast gating process so that KDR deactivate quickly during repolarization
 #define Vshift 0.0
 #define ANC -0.01                                                                  
 #define ANV (-34.0+Vshift) 
@@ -79,6 +92,8 @@
 #define BND -80.0 
 
 #elif CHANNEL_KDR == KDR_MAHON_2000                                                
+// Formula:
+//    I = gbar * n^4 * (V-Erev)
 // Equations from paper Wang_Buzsaki_1996, half activation voltages shifted by 7mV 
 #define Vshift 7.0 
 #define ANC -0.01                                                                  
@@ -88,6 +103,28 @@
 #define BNV (-44.0+Vshift)
 #define BND -80.0 
                                                                                    
+#elif CHANNEL_KDR == KDR_MIGLIORE_1999
+// Migliore, Magee, Hoffman, Johnston (1999) - hippocampal pyramidal neuron
+// based on experimental finding in CA1 pyramidal neuron (Hoffman et al., 1997)
+// Formula - non-inactivating current
+//    I = gbar * n * (Vm - Erev)
+#define ANC  1.0
+#define ANV  13.0 // mV
+#define AND  -9.09  // mV
+#define BNC  1.0
+#define BNV  13.0  // mV
+#define BND  -12.5  // mV
+#elif CHANNEL_KDR == KDR_ERISIR_1999
+//Kv1.3 model derived from 'n' type current measured in human T-lymphocyte (Cahalan et al. 1985)
+//Formula
+//   I = gbar * n^4 
+#define ANC  -0.014
+#define ANV -44.0 // mV
+#define AND -2.3  // mV
+#define BNC 0.0043  
+#define BNV -44.0 // mV 
+#define BND 34.0  // mV
+
 #endif
 
 
@@ -107,7 +144,7 @@ void ChannelKDR::update(RNG& rng)
     dyn_var_t pn = 0.5 * dt * (an + bn) * getSharedMembers().Tadj;
     n[i] = (dt*an*getSharedMembers().Tadj + n[i]*(1.0 - pn))/(1.0 + pn);
 
-    g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
+    g[i] = gbar[i] * pow(n[i], 4);
     //KDR = gKDR * n^4 * (Vm - Erev)
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
 
@@ -118,7 +155,7 @@ void ChannelKDR::update(RNG& rng)
     dyn_var_t qn = 0.5 * dt * (an + bn) * getSharedMembers().Tadj;
     n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);
     //KDR = gKDR * n^4 * (Vm - Erev)
-    g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i];
+    g[i] = gbar[i] * pow(n[i], 4);
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
 
 #elif CHANNEL_KDR == KDR_TRAUB_1994 || \
@@ -145,11 +182,30 @@ void ChannelKDR::update(RNG& rng)
     //n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);                
     //n[i] = phi * (an*(1-n[i])-bn*n[i]);                                  
                                                                            
-    g[i] = gbar[i]*n[i]*n[i]*n[i]*n[i]; 
+    g[i] = gbar[i] * pow(n[i], 4);
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // at time (t+dt/2) 
 
+#elif CHANNEL_KDR == KDR_MIGLIORE_1999 
+    dyn_var_t an = ANC * exp( (v - ANV) / AND );
+    dyn_var_t bn = BNC * exp( (v - BNV) / BND );
+    dyn_var_t tau_n = max(2.0, 50.0 * bn / (bn + an));
+    dyn_var_t n_inf = 1.0 / (1 + an);
+    dyn_var_t qn = dt * getSharedMembers().Tadj / (tau_n * 2);         
+    n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);                
+    g[i] = gbar[i] * n; 
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+#elif CHANNEL_KDR == KDR_ERISIR_1999
+    dyn_var_t an = ANC * vtrap( v - ANV, AND);
+    dyn_var_t bn = BNC / (exp((v - BNV) / BND));
+    dyn_var_t tau_n = 1.0 / (an + bn);
+    dyn_var_t n_inf = an / (an + bn);
+    // m' = (m_inf - m ) / tau_m;
+    dyn_var_t qn = dt * getSharedMembers().Tadj / (tau_n * 2);
+    n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);                
+    g[i] = gbar[i] * pow(n[i], 4); 
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
 #endif
   }
 }
@@ -232,12 +288,12 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t an = ANC*vtrap(-(v - ANV), AND);
     dyn_var_t bn = BNC*exp(-(v - BNV)/BND);
     n[i] = an/(an + bn); // steady-state value
-    g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];
+    g[i]=gbar[i] * pow(n[i], 4);
 #elif CHANNEL_KDR == KDR_SCHWEIGHOFER_1999
     dyn_var_t an = ANC*vtrap(-(v - ANV), AND);
     dyn_var_t bn = BNC*exp(-(v - BNV)/BND);
     n[i] = an/(an + bn); // steady-state value
-    g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];
+    g[i]=gbar[i] * pow(n[i], 4);
 #elif CHANNEL_KDR == KDR_TRAUB_1994  || \
       CHANNEL_KDR == KDR_TRAUB_1995 
     dyn_var_t an = ANC*vtrap((ANV-v), AND);
@@ -253,8 +309,17 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t an = ANC*vtrap((v - ANV), AND);          
     dyn_var_t bn = BNC*exp((v - BNV)/BND);             
     n[i] = an/(an + bn); // steady-state value         
-    g[i]=gbar[i]*n[i]*n[i]*n[i]*n[i];                  
+    g[i]=gbar[i] * pow(n[i], 4);
 
+#elif CHANNEL_KDR == KDR_MIGLIORE_1999
+    dyn_var_t an = ANC * exp( (v - ANV) / AND );
+    n[i] = 1.0 / (1 + an);
+    g[i] = gbar[i] * n[i]; 
+#elif CHANNEL_KDR  == KDR_ERISIR_1999
+    dyn_var_t an = ANC * vtrap( v - ANV, AND);
+    dyn_var_t bn = BNC / (exp((v - BNV) / BND));
+    n[i] = an / (an + bn);
+    g[i] = gbar[i] * pow(n[i], 4); 
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
