@@ -7229,6 +7229,10 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   else if (category == "CLEFT" and _synapticCleftLayers.size() > 0)
   {
     layer = _synapticCleftLayers[typeIdx];
+    if (not layer)
+    {
+      std::cerr << "ERROR: there is no SynapticCleft of type " << type << std::endl;
+    }
     assert(layer);
     if (maskVector.size() == 0)
     {//get all layers
