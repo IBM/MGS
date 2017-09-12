@@ -223,17 +223,45 @@
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
 //{{{ choices for how data is exchanged when we couple spines to shaft
-//#define CONSIDER_MANYSPINE_EFFECT_OPTION1 // if defined, the new codes that handle the case 
+//BY DEFAULT: 
+//  the current between spine-neck and den-shaft is modeled as injectedCurrent producer
+//    Iinj(to-neck, time=t+dt/2) = g * (Vshaft(t) - Vneck(t)) 
+//  which is explicit method - and may crash when there are many spines onto a single compartment
+// Consider these different improvement below:
+
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION1 
+//  // if defined, the new codes handle the case 
 //   when there are many spines conntact to one compartment; and thus the amount of Vm or Ca2+ 
 //   propagate to the nneck needs to be equally divided  (this is important for numerical stability)
+//   HOWEVER: The method is explicit; and thus is not accurate as well
        // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION2
 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2 //option 2 means we convert into 
-       // ConductanceProducer and ReversalPotential producer
-       // (instead of injectedCurrent producer)
+// ConductanceProducer and ReversalPotential producer
+//    Ichannel(to-neck, time=t+dt/2) = g_density * (Vneck(t+dt/2) - Vshaft(t)) 
+//    Ichannel(to-shaft, time=t+dt/2) = g_density * (Vshaft(t+dt/2) - Vneck(t)) 
+// HOWEVER: the calculation may not be accurate due to the fact that 
        // NOTE: DO NOT use both with CONSIDER_MANYSPINE_EFFECT_OPTION1
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+     //When many spines connect to a single compartment
+
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised //option2 revised
+//  is the combination of OPTION2 and OPTION1
+//   1. the shaft's signal's loss is split across the many spines connecting to it
+//    Ichannel(to-neck, time=t+dt/2) = g_density_new * (Vneck(t+dt/2) - Vshaft(t)) 
+//   with g_density_new = g_density / num_spine_connecting_to_shaft
+//   --> 'rate' of signal loss is reduced
+//   NOTE: Require defining of OPTION2; and disable OPTION1
+
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR // NOT ready yet
+//  This need to combine with OPTION2 above
+//  Basically, for each compartment that has many spines
+//       it calculate Vnew_shaft[t+dt/2] using  Vspines[t]
+//       it calculate Vspine[t+dt/2] using  Vcur_shaft[t]
+//  Corrector:  
+//    Ichannel(to-neck, time=t+dt/2) = g_density * (Vneck(t+dt/2) - 1/2 * (Vshaft(t) + V^*shaft(t+dt/2))) 
+//    Ichannel(to-shaft, time=t+dt/2) = g_density * (Vshaft(t+dt/2) - 1/2 * (Vneck(t) + V^*neck(t+dt/2)) 
 //}}}
 #define KEEP_PAIR_PRE_POST   // this ensure a receptor always produce the pre- and post- branch information via only 1 interface; 
  // ..  rather than 2 separate set of interface 

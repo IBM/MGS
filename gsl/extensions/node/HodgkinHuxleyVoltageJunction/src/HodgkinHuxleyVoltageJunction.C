@@ -297,7 +297,11 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   end = injectedCurrents.end();
   for (; iter != end; ++iter)
   {
+#ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+    current += **iter;
+#else
     current += **iter / area; // at time (t+dt/2)
+#endif
   }
 
   // 5. Current loss due to passive diffusion to adjacent compartments
@@ -305,8 +309,14 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   for (; xiter != xend; ++xiter, ++viter)
   {
+#if 0
+    //original approach
     //current += (*xiter) * ((**viter) - Vcur);
     current += (*xiter) * ((**viter) - Vnew[0]);
+#else
+    current += (*xiter) * (**viter);
+    conductance += (*xiter);  
+#endif
   }
 
   //float Vold = Vnew[0];
@@ -433,7 +443,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
     current += **iter;
 #else
-    current += **iter / area;
+    current += **iter / area; // at time (t+dt/2)
 #endif
   }
 
@@ -553,7 +563,8 @@ void HodgkinHuxleyVoltageJunction::add_zero_didv(const String& CG_direction, con
   injectedCurrents_conductance_didv.push_back(&_zero_conductance);
 }
 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
 void HodgkinHuxleyVoltageJunction::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
 {
   unsigned size = branchData->size;  //# of compartments

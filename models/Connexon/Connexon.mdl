@@ -7,7 +7,8 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
 Interface CountProducer {
    int * countGapJunction;
 }
@@ -23,7 +24,8 @@ Node Connexon Implements
      CurrentProducer, 
 #endif
      BranchDataProducer, IndexProducer, 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
      CountProducer,
 #endif
      VoltageProducer
@@ -38,7 +40,8 @@ Node Connexon Implements
   dyn_var_t g;   //the conductance [nS] between the gap junction formed by 2 compartments
                  // .. from 2 different branches
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int *countGapJunctionConnectedToCompartment_i; //keep track how many spines attached to a compartment 
   int *countGapJunctionConnectedToCompartment_j; //keep track how many spines attached to a compartment 
 #endif
@@ -52,13 +55,15 @@ Node Connexon Implements
   Shared {
     dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     int []* countGapJunctionConnect;
 #endif
   }
 
   InitPhase produceInitialVoltage(Vi
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       , countGapJunctionConnectedToCompartment_i
 #endif
              );
@@ -73,7 +78,8 @@ Node Connexon Implements
 #endif
   BranchDataProducer.branchData << branchData;
   IndexProducer.index << &index;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   CountProducer.countGapJunction << countGapJunctionConnectedToCompartment_i;
 #endif
 
@@ -86,7 +92,8 @@ Node Connexon Implements
   UserFunction setPointers;
   
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
@@ -94,19 +101,22 @@ Node Connexon Implements
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountInformationArrayProducer.countGapJunctionConnected >> Shared.countGapJunctionConnect;
 #endif
     setPointers();
   }
   Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountProducer,
 #endif
     VoltageProducer 
   {
     VoltageProducer.voltage >> Vj;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountProducer.countGapJunction >> countGapJunctionConnectedToCompartment_j;
 #endif
   }

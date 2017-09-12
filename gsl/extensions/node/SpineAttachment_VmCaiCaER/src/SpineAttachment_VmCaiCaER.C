@@ -31,7 +31,6 @@ SpineAttachment_VmCaiCaER::SpineAttachment_VmCaiCaER()
 
 void SpineAttachment_VmCaiCaER::produceInitialState(RNG& rng)
 {
-
 }
 
 void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
@@ -69,6 +68,10 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
   }
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
+  //g = g / *countSpineConnectedToCompartment_j; 
+  g = g / *countSpineConnectedToCompartment_i; 
+#endif
 #else
   g = A / (Raxial * distance);            // [nS]
 #endif
@@ -77,9 +80,14 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
   invTimeCacyto = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_CYTO ) / 
     ((dimension->volume * FRACTIONVOLUME_CYTO) * distance); //[1/ms]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
+  //invTimeCacyto /= *countSpineConnectedToCompartment_j; 
+  invTimeCacyto /= *countSpineConnectedToCompartment_i; 
+#endif
 #else
   Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
 #endif
+
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {  // soma:
@@ -89,6 +97,10 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
     invTimeCaER = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_SmoothER ) / 
       ((dimension->volume * FRACTIONVOLUME_SmoothER) * distance); //[1/ms]
   }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
+  //invTimeCaER /= *countSpineConnectedToCompartment_j; 
+  invTimeCaER /= *countSpineConnectedToCompartment_i; 
+#endif
 #else
   CaERconc2current = A * DCaER * zCa * zF / (1000000.0*distance);
 #endif
@@ -97,26 +109,30 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
   //A for Cacyto
   //A for CaER
   //
-  
 }
 
 void SpineAttachment_VmCaiCaER::produceState(RNG& rng) {}
 
 void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 {
-	//i = index of compartment this connexon is connecting to
-	//j = index of compartment from the other side
+  //i = index of compartment this connexon is connecting to
+  //j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
-  I = g * V / *countSpineConnectedToCompartment_j;
-  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
-  I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_j;
+  //I = g * V / *countSpineConnectedToCompartment_j;
+  //I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j;
+  //I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_j;
+  I = g * V / *countSpineConnectedToCompartment_i;
+  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_i;
+  I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_i;
 #else
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO) || \
   defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER)
   //no need to update I(Vm), as it produces g, and Vj
   //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
   //no need to update CaER, as it produces invTimeCaER, and CaERj
+  {
+  }
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
@@ -143,8 +159,18 @@ void SpineAttachment_VmCaiCaER::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#endif
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+  unsigned size = getSharedMembers().voltageConnect->size() ;  //# of compartments
+  if ((*(getSharedMembers().countSpineConnect)).size() != size) 
+  {
+    (*(getSharedMembers().countSpineConnect)).increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      (*(getSharedMembers().countSpineConnect))[i] = 0;
+  }
   countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif
 }
