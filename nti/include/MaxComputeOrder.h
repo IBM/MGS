@@ -246,7 +246,7 @@
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
      //When many spines connect to a single compartment
 
-#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised //option2 revised
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised //option2 revised
 //  is the combination of OPTION2 and OPTION1
 //   1. the shaft's signal's loss is split across the many spines connecting to it
 //    Ichannel(to-neck, time=t+dt/2) = g_density_new * (Vneck(t+dt/2) - Vshaft(t)) 

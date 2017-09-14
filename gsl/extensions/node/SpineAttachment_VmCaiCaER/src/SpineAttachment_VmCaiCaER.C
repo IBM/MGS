@@ -67,28 +67,33 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
    distance = (*leni / 2.0  + *lenj); //[um]
   }
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  {
   g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
   //g = g / *countSpineConnectedToCompartment_j; 
   g = g / *countSpineConnectedToCompartment_i; 
 #endif
+  }
 #else
   g = A / (Raxial * distance);            // [nS]
 #endif
   // TUAN TODO: do we need to consider smaller cross-sectional area for cyto or ER?
   //---> not incorporated yet
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  {
   invTimeCacyto = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_CYTO ) / 
     ((dimension->volume * FRACTIONVOLUME_CYTO) * distance); //[1/ms]
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
   //invTimeCacyto /= *countSpineConnectedToCompartment_j; 
   invTimeCacyto /= *countSpineConnectedToCompartment_i; 
 #endif
+  }
 #else
   Caconc2current = A * DCa * zCa * zF / (1000000.0*distance);
 #endif
 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER
+  {
   if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {  // soma:
     invTimeCaER = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_RoughER ) / 
@@ -101,6 +106,7 @@ void SpineAttachment_VmCaiCaER::computeInitialState(RNG& rng)
   //invTimeCaER /= *countSpineConnectedToCompartment_j; 
   invTimeCaER /= *countSpineConnectedToCompartment_i; 
 #endif
+  }
 #else
   CaERconc2current = A * DCaER * zCa * zF / (1000000.0*distance);
 #endif
@@ -115,6 +121,14 @@ void SpineAttachment_VmCaiCaER::produceState(RNG& rng) {}
 
 void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
 {
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO) || \
+  defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER)
+  //no need to update I(Vm), as it produces g, and Vj
+  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
+  //no need to update CaER, as it produces invTimeCaER, and CaERj
+  {
+  }
+#else
   //i = index of compartment this connexon is connecting to
   //j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
@@ -125,14 +139,6 @@ void SpineAttachment_VmCaiCaER::computeState(RNG& rng)
   I = g * V / *countSpineConnectedToCompartment_i;
   I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_i;
   I_CaER = CaERconc2current * (*CaERj - *CaERi) / *countSpineConnectedToCompartment_i;
-#else
-#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO) || \
-  defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_CAER)
-  //no need to update I(Vm), as it produces g, and Vj
-  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
-  //no need to update CaER, as it produces invTimeCaER, and CaERj
-  {
-  }
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);

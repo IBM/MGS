@@ -160,6 +160,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
 #else
    _rank=0;
    _nump=1;
+   std::cerr << "You don't have MPI enabled" << std::endl;
 #endif // HAVE_MPI
 
    // Seed the random number generator

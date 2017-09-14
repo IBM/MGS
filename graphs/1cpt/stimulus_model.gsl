@@ -40,7 +40,6 @@ VoltageClamp somaClamp<type=3, Rs=0.008, fileName="SEClamp.txt", tVm_file="D2-Ce
 #define Vm_step -10.0     // [mV]
 
 #if 1
-#define USE_SERIES_RESISTANCE 1
 //USE_SINGLE_ELECTRODE_CLAMP
 #ifdef USE_SERIES_RESISTANCE
 // Iinject = (Vc - Vm) / Rs;
@@ -107,6 +106,11 @@ somaClamp.setCommand(<command = Vm_hold>) on voltageClampOffSem;
 //}}}
 #endif
 
+#if STIMULUS_CASE == CASE_01d
+#define timeDelay 100
+RampCurrentGenerator somaStimInj<pattern="ramp", Istart=0.0, Iend=500.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
+#endif
+
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
     STIMULUS_CASE == CASE_06
@@ -123,6 +127,7 @@ CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=200, 
 //}}}
 #endif
 #if STIMULUS_CASE == CASE_01b
+//{{{
 #define timeDelay 40
 //(five bAP triplets, each; 50Hz intra train; 5 Hz between trains; in the ZFP experiments, bAP were
 //generated with a single 50Hz triplet).
@@ -137,6 +142,7 @@ CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=200, 
 //CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=200.0, duration=2, intra_train_gap=20, num_pulses_per_train=3, period=200, delay=timeDelay, last=50000, inc=0, write_to_file=1, fileName= PathFileCombine("Istim.dat")>; 
 CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=2000.0, duration=2, intra_train_gap=20, num_pulses_per_train=3, period=200, delay=timeDelay, num_trains=5, last=50000, inc=0, write_to_file=1, fileName= PathFileCombine("Istim.dat")>;  //ideal
 //CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=4000.0, duration=2, intra_train_gap=20, num_pulses_per_train=3, period=200, delay=timeDelay, num_trains=5, last=50000, inc=0, write_to_file=1, fileName= PathFileCombine("Istim.dat")>; 
+//}}}
 #endif
  
 #if STIMULUS_CASE == CASE_02

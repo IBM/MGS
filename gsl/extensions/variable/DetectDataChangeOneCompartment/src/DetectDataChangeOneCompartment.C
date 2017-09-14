@@ -3,6 +3,8 @@
 #include "CG_DetectDataChangeOneCompartment.h"
 #include <memory>
 
+#define SOFT_CONSTRAINT
+
 void DetectDataChangeOneCompartment::initialize(RNG& rng) 
 {
    if (not deltaT)
@@ -11,27 +13,53 @@ void DetectDataChangeOneCompartment::initialize(RNG& rng)
    }
    assert(deltaT);
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
-   if (not data)
    {
-      std::cerr << "ERROR: Please connect Voltage|Calcium to " << typeid(*this).name() << std::endl;
+#ifdef SOFT_CONSTRAINT
+   if (! data)
+   {
+      std::cerr << "WARNING: Please connect Voltage | Calcium to " << typeid(*this).name() << std::endl;
+      return;
    }
+#else
+   //NOTE we set this to soft-constraint
+   if (! data)
+   {
+      std::cerr << "ERROR: Please connect Voltage | Calcium to " << typeid(*this).name() << std::endl;
+   }
+#endif
    assert(data);
    data_prev = (*data)[0];
+   }
+
+#else
+   {
+#ifdef SOFT_CONSTRAINT
+   if (data.size() == 0)
+   {
+      std::cerr << "WARNING: Please connect Voltage | Calcium to " << typeid(*this).name() << std::endl;
+      return;
+   }
 #else
    if (data.size() == 0)
    {
-      std::cerr << "ERROR: Please connect Voltage|Calcium to " << typeid(*this).name() << std::endl;
+      std::cerr << "ERROR: Please connect Voltage | Calcium to " << typeid(*this).name() << std::endl;
       assert(0);
    }
+#endif
    data_prev.increaseSizeTo(data.size());
    slope.increaseSizeTo(data.size());
    for (int ii = 0; ii < data.size(); ii++)
       data_prev[ii] = (*(data[ii]))[0];
+   }
 #endif
 }
 
 bool DetectDataChangeOneCompartment::check_one_sensor(int ii) 
 {
+#ifdef SOFT_CONSTRAINT
+   if (data.size() == 0)
+      return false;
+#endif
    bool sensor_triggered = false;
    float prev_slope = slope[ii];
    slope[ii] = ((*(data[ii]))[0] - data_prev[ii])/(data_prev[ii]);
@@ -48,6 +76,10 @@ bool DetectDataChangeOneCompartment::check_one_sensor(int ii)
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
 void DetectDataChangeOneCompartment::calculateInfo(RNG& rng) 
 {
+#ifdef SOFT_CONSTRAINT
+   if (! data)
+      return ;
+#endif
    //slope = ((*data)[0] - data_prev)/(timeWindow);
    float prev_slope = slope;
    slope = ((*data)[0] - data_prev)/(data_prev);
@@ -67,6 +99,10 @@ void DetectDataChangeOneCompartment::calculateInfo(RNG& rng)
 #else
 void DetectDataChangeOneCompartment::calculateInfo(RNG& rng) 
 {
+#ifdef SOFT_CONSTRAINT
+   if (data.size() == 0)
+      return ;
+#endif
    bool sensor_triggered = false;
    for (int ii = 0; ii < data.size(); ii++)
    {

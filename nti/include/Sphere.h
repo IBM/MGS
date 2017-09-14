@@ -21,6 +21,8 @@
 
 //TUAN
 //key_size_t : be careful to modify this accordingly if we change key_size_t
+//IMPORTANT: The value here represent the number of 'double' element
+//  which is important for mapping to MPI_DOUBLE for sending data
 #define N_SPHERE_DATA 6
 
 struct Sphere

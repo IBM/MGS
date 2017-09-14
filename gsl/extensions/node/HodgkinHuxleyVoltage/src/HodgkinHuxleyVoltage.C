@@ -60,6 +60,302 @@ SegmentDescriptor HodgkinHuxleyVoltage::_segmentDescriptor;
 //#define DEBUG_HH
 // Conserved region (only change ClassName)
 //{{{
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+//void HodgkinHuxleyVoltage::forwardSolve0(RNG& rng)
+//{
+//  if (computeOrder == 0)
+//  {
+//    doForwardSolve();
+//  }
+//}
+//void HodgkinHuxleyVoltage::backwardSolve0(RNG& rng)
+//{
+//  if (computeOrder == 0)
+//  {
+//    doBackwardSolve();
+//  }
+//}
+void HodgkinHuxleyVoltage::backwardSolve0_corrector(RNG& rng)
+{
+  if (computeOrder == 0)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve0_corrector(RNG& rng)
+{
+  if (computeOrder == 0)
+  {
+    doForwardSolve_corrector();
+  }
+}
+// NOTE: Vcur = Vm(t) at time (t = tentry)
+// IMPORTANT: Vnew[] has been changed from previous 'doFowardSolve, doBackwardSolve'
+//   so we need to use Vcur[] in this function
+// GOAL Recalculate: RHS[], Aii[] at time (t+dt/2)
+// Unit: RHS = current density (pA/um^2)
+//       Aii = conductance density (nS/um^2) data at time (t+dt/2)
+// Convert to upper triangular matrix  
+// Thomas algorithm forward step 
+//  /* * *  Forward Solve Ax = B * * */
+//  /* Starting from distal-end (i=0)
+//   * Eliminate Aim[?] by taking
+//   * RHS -= Aim[?] * V[proximal]
+//   * Aii = 
+//   */
+// 
+void HodgkinHuxleyVoltage::doForwardSolve_corrector()
+{
+  //TUAN DEBUG
+#ifdef DEBUG_COMPARTMENT
+  volatile unsigned nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
+  volatile unsigned bidx = _segmentDescriptor.getBranchIndex(branchData->key);
+  volatile unsigned iteration = getSimulation().getIteration();
+#endif
+  //END TUAN DEBUG
+  unsigned size = branchData->size;
+  //Find A[ii]i and RHS[ii]  
+  //  1. ionic currents 
+  for (int i = 0; i < size; i++)  // for each compartment on that branch
+  {
+    RHS[i] = cmt * Vcur[i] + gLeak * getSharedMembers().E_leak;   //[[pA/um^2]]
+    if (i == 0)
+    {
+      if ((isDistalCase3))
+      {//the node at index 0 is implicit junction
+        // series of Aij[..] is used in place of Aim[0]
+        Aii[i] = cmt + gLeak - Aip[i];    // [nS/um^2]
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+        ////no change to Aii[0]
+        /*
+        //for (int n = 0; n < distalInputs.size(); n++)
+        //{
+        //  Aii[0] -= Aij[n];
+        //  RHS[0] -= Aij[n] * *distalInputs[n];
+        //}
+        */
+        assert(0);
+#else
+        for (int n = 0; n < distalInputs.size(); n++)
+        {
+          Aii[0] -= Aij[n];
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+          assert(0);
+          Aii[0] -= Aij[n] ;
+          RHS[0] -= Aij[n] * *distalInputs[n] ;
+          RHS[0] /= Aii[0];
+          Aip[0] /= Aii[0];
+#else
+          Aii[0] -= Aij[n] * *distalAips[n] / *distalAiis[n];
+          RHS[0] -= Aij[n] * *distalInputs[n] / *distalAiis[n];
+#endif
+        }
+#endif
+      }
+      else{
+        Aii[i] = cmt + gLeak - Aim[i] - Aip[i];    // [nS/um^2]
+        if (isDistalCase1) {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+          assert(0);
+          //Aii[0] = 0; //-= Aim[0] * *distalAips[0] / *distalAiis[0];
+          dyn_var_t V1;
+          dyn_var_t w1 = 1.0/(distalDimensions[0]->length);
+          dyn_var_t w2 = 1.0/(dimensions[0]->length);
+          V1 = (w1 * *distalInputs[0] + w2 * Vcur[0])/(w1+w2);
+          //no change Aii[0]
+          RHS[0] -= Aim[0] * V1; 
+          RHS[0] /= Aii[0];
+          Aip[0] /= Aii[0];
+#else
+          //NOTE: distalAiis ~ conductance
+          //      distalAips ~ conductance
+          Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
+          RHS[0] -= Aim[0] * *distalInputs[0] / *distalAiis[0];
+#endif
+        }
+        else if (isDistalCase2)
+        {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+          assert(0);
+          RHS[0] -= Aim[0] * *distalInputs[0];
+          RHS[0] /= Aii[0];
+          Aip[0] /= Aii[0];
+#else
+          // not adjust Aii[0] - as the Jacobian matrix end at explicit junction
+          RHS[0] -= Aim[0] * *distalInputs[0];
+#endif
+        }
+      }
+    }
+    else{
+        Aii[i] = cmt + gLeak - Aim[i] - Aip[i];    // [nS/um^2]
+    }
+    //QUESTION: why not subtracting 
+    //     Aip[0]*proximalVoltage; // in RHS[0] here
+    //     Aip[i]*Vcur[i+1]; // in RHS[i] here
+    //ANSWER: this step convert to upper-triangular matrix
+    // so elimination Aip[] is done in :doBackwardSolve()
+    
+    /* * * Sum Currents * * */
+    // loop through different kinds of currents (Kv, Nav1.6, ...)
+    //  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
+    Array<ChannelCurrents>::iterator iter = channelCurrents.begin();
+    Array<ChannelCurrents>::iterator end = channelCurrents.end();
+    for (int k = 0; iter != end; iter++, ++k)
+    {
+      //NOTE: the conductance is already second-order accuracy at (tentry+dt/2)
+      ShallowArray<dyn_var_t>* conductances = iter->conductances;
+      // at each current type, there is an array of currents of that type,
+      //...each current element flows into one compartment
+      //BUG: As reversalPotential is on Shared, they are assumed the same for all ChannelNat
+      // so we cannot get the index based on the compartment-index
+#if 0
+      RHS[i] +=
+          (*conductances)[i] *
+          (*(iter->reversalPotentials))[(iter->reversalPotentials->size() == 1)
+                                            ? 0
+                                            : i];
+#else
+      // IMPORTANT: for now - assume (for each channel) all compartments of same branch has the same Erev 
+      RHS[i] +=
+          (*conductances)[i] *
+          (*(iter->reversalPotentials))[0];
+#endif
+
+      Aii[i] += (*conductances)[i];
+    }
+
+    //  1.b. ionic currents using GHK equations (-Iion)
+    Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+    Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+    for (; iiter != iend; iiter++)
+    {
+      //IMPORTANT: subtraction is used
+      RHS[i] -=  (*(iiter->currents))[i]; //[pA/um^2]
+#ifdef CONSIDER_DI_DV
+      //take into account di/dv * Delta_V
+      //IMPORTANT: addition is used
+      ////TODO IMPORTANT
+      //RHS[i] += di_dv * Vcur[i]; 
+      //Aii[i] += di_dv;  
+      RHS[i] +=  (*(iiter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+      Aii[i] +=  (*(iiter->di_dv))[i]; //[nS/um^2]
+#endif
+    }
+  }
+
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  //     This includes spine attachment (SpineAttachment)
+  Array<ReceptorCurrent>::iterator riter = receptorCurrents.begin();
+  Array<ReceptorCurrent>::iterator rend = receptorCurrents.end();
+  std::fill(current_index.begin(), current_index.end(), 0);
+  for (; riter != rend; riter++)
+  {
+    int i = riter->index;
+#if 0
+    //use V(t+dt/2) ~ 1/2 [V(t)+V_predict(t+dt/2)]
+    RHS[i] += *(riter->conductance) * 
+      0.5 * (*(riter->reversalPotential) +
+          spineNeck_PrevPotential[i][current_index[i]++] 
+          );
+#else
+    //use V(t+dt/2) ~ V(predict)
+    RHS[i] += *(riter->conductance) * 
+      (*(riter->reversalPotential));
+#endif
+    Aii[i] += *(riter->conductance);
+  }
+
+  //  3. receptor currents using GHK type equations (gV, gErev)
+  //  TUAN : TODO consider if this happens
+  //{
+  //  Array<ReceptorCurrentsGHK>::iterator riter = receptorCurrentsGHK.begin();
+  //  Array<ReceptorCurrentsGHK>::iterator rend = receptorCurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        //RHS[i] += di_dv * Vcur[i]; 
+  //        //Aii[i] += di_dv;  
+  //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[nS/um^2]
+  //#endif
+  //  }
+  //}
+
+  //  4. injected currents
+  /* Note: Injected currents comprise current interfaces produced by two
+     different
+     categories of models: 1) experimentally injected currents, as in a patch
+     clamp
+     electrode in current clamp mode, and 2) electrical synapse currents, as in
+     the
+     current injected from one compartment to another via a gap junction.
+
+     Since we think of injected currents as positive quantities with units of
+     pA,
+     the sign on injected currents is reversed, and the units are pA and not
+     pA/um^2,
+     even for electrical synapses.
+  */
+  Array<InjectedCurrent>::iterator iiter = injectedCurrents.begin();
+  Array<InjectedCurrent>::iterator iend = injectedCurrents.end();
+  for (; iiter != iend; iiter++)
+  {
+    if (iiter->index < branchData->size)
+    {
+      RHS[iiter->index] += *(iiter->current) / iiter->area; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+      //take into account di/dv * Delta_V
+      //IMPORTANT: addition is used
+      //RHS[i] += di_dv * Vcur[i]; 
+      //Aii[i] += di_dv;  
+      RHS[iiter->index] +=  (*(iiter->conductance_didv)) * Vcur[iiter->index]; //[pA/um^2]
+      Aii[iiter->index] +=  (*(iiter->conductance_didv)); //[nS/um^2]
+#endif
+    }
+  }
+
+  //apply Gaussian elimination to remove Aim[] factors
+  // distal toward proximal
+  for (int i = 1; i < size; i++)
+  {
+#ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
+    assert(0);
+    Aip[i] /= (Aii[i] - Aim[i] * Aip[i - 1] );
+    RHS[i] = (RHS[i] - Aim[i] * RHS[i-1]) / (Aii[i] - Aim[i] * Aip[i - 1]);
+#else
+    Aii[i] -= Aip[i - 1] * Aim[i] / Aii[i - 1];
+    RHS[i] -= RHS[i - 1] * Aim[i] / Aii[i - 1];
+#endif
+  }
+  //TUAN DEBUG TUAN 
+#if defined(DEBUG_COMPARTMENT) || defined(DEBUG_ASSERT) 
+  for (int i = 0; i < size; i++)  // for each compartment on that branch
+  {
+    if ((Aii[i] != Aii[i]) or (std::fabs(Aii[i]) < SMALL))
+    {
+      printDebugHH();
+      printDebugHHCurrent(i);
+      assert(0);
+    }
+    assert(Aii[i] == Aii[i]);
+    if (RHS[i] != RHS[i])
+    {
+      printDebugHH();
+      printDebugHHCurrent(i);
+    }
+    assert(RHS[i] == RHS[i]);
+  }
+#endif  //END DEBUG SECTION
+}  // end doForwardSolve_corrector
+
+//#else
+#endif
 void HodgkinHuxleyVoltage::solve(RNG& rng)
 {
   if (computeOrder == 0)
@@ -86,6 +382,22 @@ void HodgkinHuxleyVoltage::backwardSolve1(RNG& rng)
 {
   if (computeOrder == 1) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve1_corrector(RNG& rng)
+{
+  if (computeOrder == 1)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve1_corrector(RNG& rng)
+{
+  if (computeOrder == 1)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 1
@@ -101,6 +413,22 @@ void HodgkinHuxleyVoltage::backwardSolve2(RNG& rng)
 {
   if (computeOrder == 2) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve2_corrector(RNG& rng)
+{
+  if (computeOrder == 2)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve2_corrector(RNG& rng)
+{
+  if (computeOrder == 2)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 2
@@ -116,6 +444,22 @@ void HodgkinHuxleyVoltage::backwardSolve3(RNG& rng)
 {
   if (computeOrder == 3) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve3_corrector(RNG& rng)
+{
+  if (computeOrder == 3)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve3_corrector(RNG& rng)
+{
+  if (computeOrder == 3)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 3
@@ -131,6 +475,22 @@ void HodgkinHuxleyVoltage::backwardSolve4(RNG& rng)
 {
   if (computeOrder == 4) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve4_corrector(RNG& rng)
+{
+  if (computeOrder == 4)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve4_corrector(RNG& rng)
+{
+  if (computeOrder == 4)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 4
@@ -146,6 +506,22 @@ void HodgkinHuxleyVoltage::backwardSolve5(RNG& rng)
 {
   if (computeOrder == 5) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve5_corrector(RNG& rng)
+{
+  if (computeOrder == 5)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve5_corrector(RNG& rng)
+{
+  if (computeOrder == 5)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 5
@@ -161,6 +537,22 @@ void HodgkinHuxleyVoltage::backwardSolve6(RNG& rng)
 {
   if (computeOrder == 6) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve6_corrector(RNG& rng)
+{
+  if (computeOrder == 6)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve6_corrector(RNG& rng)
+{
+  if (computeOrder == 6)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 6
@@ -176,6 +568,22 @@ void HodgkinHuxleyVoltage::backwardSolve7(RNG& rng)
 {
   if (computeOrder == 7) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void HodgkinHuxleyVoltage::backwardSolve7_corrector(RNG& rng)
+{
+  if (computeOrder == 7)
+  {
+    doBackwardSolve();
+  }
+}
+void HodgkinHuxleyVoltage::forwardSolve7_corrector(RNG& rng)
+{
+  if (computeOrder == 7)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 bool HodgkinHuxleyVoltage::confirmUniqueDeltaT(
@@ -523,6 +931,23 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)
 #ifdef DEBUG_HH
   printDebugHH();
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  spineNeck_PrevPotential.resize(numCpts);
+  current_index.resize(numCpts);
+  std::fill(current_index.begin(), current_index.end(), 0);
+  for (int i = 0; i < numCpts; i++)  // for each compartment on that branch
+  {
+    Array<ReceptorCurrent>::iterator riter = receptorCurrents.begin();
+    Array<ReceptorCurrent>::iterator rend = receptorCurrents.end();
+    for (; riter != rend; riter++)
+    {
+      int i = riter->index;
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+      spineNeck_PrevPotential[i].push_back((*(riter->reversalPotential)));
+#endif
+    }
+  }
+#endif
 }
 
 void HodgkinHuxleyVoltage::printDebugHH()
@@ -705,17 +1130,18 @@ void HodgkinHuxleyVoltage::doForwardSolve()
       //...each current element flows into one compartment
       //BUG: As reversalPotential is on Shared, they are assumed the same for all ChannelNat
       // so we cannot get the index based on the compartment-index
-      /*
+#if 0
       RHS[i] +=
           (*conductances)[i] *
           (*(iter->reversalPotentials))[(iter->reversalPotentials->size() == 1)
                                             ? 0
                                             : i];
-      */
-      // Fixed - for now
+#else
+      // IMPORTANT: for now - assume (for each channel) all compartments of same branch has the same Erev 
       RHS[i] +=
           (*conductances)[i] *
           (*(iter->reversalPotentials))[0];
+#endif
 
       Aii[i] += (*conductances)[i];
     }
@@ -740,13 +1166,20 @@ void HodgkinHuxleyVoltage::doForwardSolve()
   }
 
   //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  //     This includes spine attachment (SpineAttachment)
   Array<ReceptorCurrent>::iterator riter = receptorCurrents.begin();
   Array<ReceptorCurrent>::iterator rend = receptorCurrents.end();
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  std::fill(current_index.begin(), current_index.end(), 0);
+#endif
   for (; riter != rend; riter++)
   {
     int i = riter->index;
     RHS[i] += *(riter->conductance) * *(riter->reversalPotential);
     Aii[i] += *(riter->conductance);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    spineNeck_PrevPotential[i][current_index[i]++] = (*(riter->reversalPotential));
+#endif
   }
 
   //  3. receptor currents using GHK type equations (gV, gErev)

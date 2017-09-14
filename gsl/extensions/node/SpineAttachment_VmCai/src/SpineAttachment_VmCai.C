@@ -95,8 +95,17 @@ void SpineAttachment_VmCai::computeInitialState(RNG& rng)
 #endif
 }
 
+// NOTICE: Behind the scene, it 'sync' voltage data if a proxy is used 
+// for cross-MPI process communication
 void SpineAttachment_VmCai::produceState(RNG& rng) {}
 
+// NOTICE: This does NOTHING for OPTION2
+//  Otherwise, compute 
+//    * I(inject) - original approach or OPTION1
+// NOTE: for OPTION2, it is treated as a receptor Hodgkin-Huxley current 
+//    * I(receptor)
+// with 'g' is pre-calculated
+// with Erev -> the voltage from the other side (and is updated via produceState)
 void SpineAttachment_VmCai::computeState(RNG& rng)
 {
 #ifdef DEBUG_COMPARTMENT
@@ -106,6 +115,12 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
   volatile unsigned nidxOther = _segmentDescriptor.getNeuronIndex(branchDataOther->key);
   volatile unsigned bidxOther = _segmentDescriptor.getBranchIndex(branchDataOther->key);
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  //no need to update I(Vm), as it produces g, and Vj
+  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
+  {
+  }
+#else
 	//i = index of compartment this connexon is connecting to
 	//j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
@@ -114,12 +129,6 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
   //I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j; //[pA]
   I = g * V / *countSpineConnectedToCompartment_i; //[pA]
   I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_i; //[pA]
-#else
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
-  //no need to update I(Vm), as it produces g, and Vj
-  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
-  {
-  }
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
