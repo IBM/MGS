@@ -11,8 +11,6 @@
 
 #define SMALL 1.0E-6
 #define decimal_places 6     
-#define scale_tau_m 1.0
-#define scale_tau_h 1.0 
 #define fieldDelimiter "\t"  
 #include <math.h>
 #include <pthread.h>
@@ -340,6 +338,12 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
   NOT IMPLEMENTED YET
 #endif
 
+#ifndef scale_tau_m
+#define scale_tau_m 1.0
+#endif
+#ifndef scale_tau_h
+#define scale_tau_h 1.0 
+#endif
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2+dt)

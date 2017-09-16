@@ -109,6 +109,12 @@ SegmentDescriptor ChannelKAs::_segmentDescriptor;
 NOT IMPLEMENTED YET
 #endif
 
+#ifndef scale_tau_m
+#define scale_tau_m 1.0
+#endif
+#ifndef scale_tau_h
+#define scale_tau_h 1.0 
+#endif
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)
