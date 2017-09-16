@@ -198,7 +198,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
 	 lc->constantToNodeSet(sourceConstantDI->getConstant(),
 			       destinationNodeSetDI->getNodeSet(),
 			       sourceOutAttr,
-			       destinationInAttr);
+			       destinationInAttr, CG_c->sim);
 	 break;
       case _EdgeSet:
 	 lc->constantToEdgeSet(sourceConstantDI->getConstant(),

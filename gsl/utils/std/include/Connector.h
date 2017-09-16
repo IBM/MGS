@@ -52,9 +52,9 @@ class Connector
 			      NDPairList* destinationInAttr);
       void constantToNodeSet(Constant* source, NodeSet* destination, 
 			     NDPairList* sourceOutAttr, 
-			     NDPairList* destinationInAttr);
+			     NDPairList* destinationInAttr, Simulation* sim);
       void constantToNode(Constant* source, NodeDescriptor* destination, NDPairList* sourceOutAttr, 
-			  NDPairList* destinationInAttr);
+			  NDPairList* destinationInAttr, Simulation* sim);
       void constantToEdgeSet(Constant* source, EdgeSet* destination, 
 			     NDPairList* sourceOutAttr, 
 			     NDPairList* destinationInAttr);
