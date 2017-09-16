@@ -5,6 +5,7 @@
 
 #include "GlobalNTSConfig.h"
 #include "SegmentDescriptor.h"
+#include "Branch.h"
 #include <pthread.h>
 
 #define SMALL 1.0E-6
@@ -72,12 +73,38 @@ SegmentDescriptor ChannelKAs::_segmentDescriptor;
 #define VHALF_H -33.5
 #define k_H 21.5
 #define frac_inact 0.996  // 'a' term
+
 #define AHC 1.0
-#define AHV 90.96
-#define AHD 29.01
+#define AHV -90.96
+#define AHD -29.01
 #define BHC 1.0
-#define BHV 90.96
-#define BHD -100
+#define BHV -90.96
+#define BHD 100
+#elif CHANNEL_KAs == KAs_EVANS_2012
+// Also use Kv1.2 data from Shen et al. (2004)
+//#define scale_tau_m  2.5
+//#define scale_tau_h 2.5
+#define scale_tau_m 1
+#define scale_tau_h 1
+#define VHALF_M -27.0
+#define k_M -16.0
+#define VHALF_H -33.5
+#define k_H 21.5
+#define frac_inact 1.0 //0.996  // 'a' term
+
+#define AMC 0.250 // [1/ms]
+#define AMV 50.0  // [mV]
+#define AMD -20.0  // [mV]
+#define BMC 0.05
+#define BMV -90.0
+#define BMD 35.0  //[mV]
+
+#define AHC 0.0025
+#define AHV -95
+#define AHD 16
+#define BHC 0.002
+#define BHV 50.0
+#define BHD -70
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -91,7 +118,8 @@ void ChannelKAs::update(RNG& rng)
   dyn_var_t dt = *(getSharedMembers().deltaT);
 #if defined(WRITE_GATES)                                                  
   bool is_write = false;
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
   {
     float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
     if (currentTime >= _prevTime + IO_INTERVAL)                           
@@ -158,17 +186,33 @@ void ChannelKAs::update(RNG& rng)
       // htau = Ch  /  ( left + right )
       // dyn_var_t tau_m = 0.378 + 9.91 * exp(-pow((v + 34.3) / 30.1, 2)); //at
       // 35^C
-      dyn_var_t tau_m = 3.4 + 89.2 * exp(-pow((v + 34.3) / 30.1, 2));
+      dyn_var_t tau_m = 3.4 + 89.2 * exp(-pow((v + 34.3) / 30.1, 2)); // at 15^Celcius
       dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
-      dyn_var_t h_a = AHC * exp(-(v + AHV) / AHD);
-      dyn_var_t h_b = BHC * exp(-(v + BHV) / BHD);
-      // dyn_var_t tau_h = 1097.4 / (h_a + h_b);
-      dyn_var_t tau_h = 9876.6 / (h_a + h_b);
+
+      dyn_var_t h_a = AHC * exp((v - AHV) / AHD);
+      dyn_var_t h_b = BHC * exp((v - BHV) / BHD);
+      // dyn_var_t tau_h = 1097.4 / (h_a + h_b); // at 35^Celcius
+      dyn_var_t tau_h = 9876.6 / (h_a + h_b); // at 15^Celcius
       dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
       dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
       dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 
+      m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+      h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    }
+#elif CHANNEL_KAs == KAs_EVANS_2012
+    {
+      dyn_var_t am = AMC / (1 + exp((v - AMV) / AMD));
+      dyn_var_t bm = BMC / (1 + exp((v - BMV) / BMD));
+      dyn_var_t ah = AHC / (1 + exp((v - AHV) / AHD));
+      dyn_var_t bh = BHC / (1 + exp((v - BHV) / BHD));
+      dyn_var_t m_inf = am / (am+bm);
+      dyn_var_t h_inf = ah / (ah+bh);
+      //dyn_var_t tau_m = scale_tau_m * 1.0 / (am + bm);
+      //dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2);
+      dyn_var_t qm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj / scale_tau_m;
+      dyn_var_t qh = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
       m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
       h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
     }
@@ -201,6 +245,8 @@ void ChannelKAs::update(RNG& rng)
 #elif CHANNEL_KAs == KAs_MAHON_2000
     g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAs == KAs_WOLF_2005
+    g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+#elif CHANNEL_KAs == KAs_EVANS_2012
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time (t+dt/2)
@@ -317,7 +363,8 @@ gbar[i] = gbar_values[0];
     }
   }
 #if defined(WRITE_GATES)                                      
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
   {
     std::ostringstream os;                                    
     std::string fileName = "gates_KAs.txt";                       
@@ -347,12 +394,23 @@ gbar[i] = gbar_values[0];
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+#elif CHANNEL_KAs == KAs_EVANS_2012
+    {
+      dyn_var_t am = AMC / (1 + exp((v - AMV) / AMD));
+      dyn_var_t bm = BMC / (1 + exp((v - BMV) / BMD));
+      dyn_var_t ah = AHC / (1 + exp((v - AHV) / AHD));
+      dyn_var_t bh = BHC / (1 + exp((v - BHV) / BHD));
+      m[i] = am / (am+bm);
+      h[i] = ah / (ah+bh);
+      g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
+    }
 #else
     NOT IMPLEMENTED YET;
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time t0+dt/2
 #if defined(WRITE_GATES)                                      
-    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
     {
       (*outFile) << std::fixed << fieldDelimiter << m[i];       
       (*outFile) << std::fixed << fieldDelimiter << h[i];       

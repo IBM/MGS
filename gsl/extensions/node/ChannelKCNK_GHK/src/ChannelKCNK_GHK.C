@@ -17,7 +17,7 @@
 #if CONC_K_IC == K_ION_FIXED
 #define K_i   (*(getSharedMembers().K_IC))
 #else
-//assuming index is 'i'
+//assuming compartment index is 'i'
 #define K_i   ((*K_IC)[i])
 #endif
 #define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
@@ -161,7 +161,7 @@ dyn_var_t ChannelKCNK_GHK::update_current(dyn_var_t v, dyn_var_t conc_K_i, int i
     ////I_K[i] = 1e-3 * P_K[i] * zK * zF * 
     ////  (conc_K_i * tmp + (conc_K_i - beta_o/beta_i * *(getSharedMembers().K_EC)) * vtrap(tmp, 1));
     dyn_var_t tmp = zKF_R * v / (*getSharedMembers().T); 
-#if 0
+#if 1
     dyn_var_t result = 1e-3 * P_K[i] * zK * zF * 
       (conc_K_i * tmp + (conc_K_i - bo_bi * *(getSharedMembers().K_EC)) * vtrap(tmp, 1.0));
 #else

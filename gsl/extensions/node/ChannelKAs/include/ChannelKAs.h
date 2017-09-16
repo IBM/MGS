@@ -20,6 +20,10 @@
 #elif CHANNEL_KAs == KAs_MAHON_2000        
 #define BASED_TEMPERATURE 22.0  // Celcius 
 #define Q10 2.5                            
+
+#elif CHANNEL_KAs == KAs_EVANS_2012
+#define BASED_TEMPERATURE 35.0  // Celcius 
+#define Q10 2.5                            
 #endif
 
 #ifndef Q10

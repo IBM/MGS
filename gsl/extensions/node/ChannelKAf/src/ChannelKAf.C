@@ -93,22 +93,30 @@ std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
 //     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
 //     assume Kv4.2 subunits forming the channel
 #define Eleak 0.0
-#define AMC 1.5
+#define AMC 1.5   // [1/ms]
 #define AMV (4.0 + Eleak)
 #define AMD -17
-#define BMC 0.6
+#define BMC 0.6   // [1/ms] - rate
 #define BMV (10.0 + Eleak)
 #define BMD 9.0
-#define AHC 0.105
+#define AHC 0.105  // [1/ms]
 #define AHV (-121.0 + Eleak)
 #define AHD 22
-#define BHC 0.065
+#define BHC 0.065  // [1/ms]
 #define BHV (-55.0 + Eleak)
 #define BHD -11.0
+#define scale_tau_m 1.5
+#define scale_tau_h 0.67 
 #else
 NOT IMPLEMENTED YET
 #endif
 
+#ifndef scale_tau_m
+#define scale_tau_m 1.0
+#endif
+#ifndef scale_tau_h
+#define scale_tau_h 1.0 
+#endif
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)
@@ -146,7 +154,6 @@ void ChannelKAf::update(RNG& rng)
     h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_MAHON_2000                                
-                                                                   
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));       
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));       
     
@@ -160,9 +167,11 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
     dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
     dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-    dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
+    //NOTE: pm = dt * Tadj / (tau_m * 2);
+    //and  tau_m = scale_tau_m * 1/ (am + bm)
+    dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj / scale_tau_m;
     m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
-    dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
+    dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
     h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_WOLF_2005
@@ -188,7 +197,6 @@ void ChannelKAf::update(RNG& rng)
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
-
     }
 
 #else
