@@ -188,26 +188,51 @@ Node CaConcentration Implements SolutionArrayProducer,
 
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve1_corrector, backwardSolve1_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>1
   RuntimePhase forwardSolve2, backwardSolve2; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve2_corrector, backwardSolve2_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>2
   RuntimePhase forwardSolve3, backwardSolve3; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve3_corrector, backwardSolve3_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>3
   RuntimePhase forwardSolve4, backwardSolve4; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve4_corrector, backwardSolve4_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>4
   RuntimePhase forwardSolve5, backwardSolve5; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve5_corrector, backwardSolve5_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>5
   RuntimePhase forwardSolve6, backwardSolve6; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve6_corrector, backwardSolve6_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve7_corrector, backwardSolve7_corrector; 
+#endif
   #endif
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  //RuntimePhase forwardSolve0, backwardSolve0; 
+  RuntimePhase forwardSolve0_corrector, backwardSolve0_corrector; 
+#endif
   RuntimePhase solve, finish;
     /*}}}*/
 

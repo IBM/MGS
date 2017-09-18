@@ -27,6 +27,15 @@ class CaConcentration : public CG_CaConcentration
 {
   public:
   void initializeCompartmentData(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    //void forwardSolve0(RNG& rng); //We don't need this, just use solve()
+    //void backwardSolve0(RNG& rng); //we don't need this, just use solve()
+    void backwardSolve0_corrector(RNG& rng);
+    void forwardSolve0_corrector(RNG& rng);
+    void doForwardSolve_corrector();
+//#else
+//    void solve(RNG& rng);
+#endif
   void solve(RNG& rng);
   void finish(RNG& rng);
   virtual void setReceptorCaCurrent(
@@ -109,30 +118,58 @@ class CaConcentration : public CG_CaConcentration
 #if MAX_COMPUTE_ORDER > 0
   void forwardSolve1(RNG& rng);
   void backwardSolve1(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve1_corrector(RNG& rng);
+    void backwardSolve1_corrector(RNG& rng);
+#endif
 #endif
 #if MAX_COMPUTE_ORDER > 1
   void forwardSolve2(RNG& rng);
   void backwardSolve2(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve2_corrector(RNG& rng);
+    void backwardSolve2_corrector(RNG& rng);
+#endif
 #endif
 #if MAX_COMPUTE_ORDER > 2
   void forwardSolve3(RNG& rng);
   void backwardSolve3(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve3_corrector(RNG& rng);
+    void backwardSolve3_corrector(RNG& rng);
+#endif
 #endif
 #if MAX_COMPUTE_ORDER > 3
   void forwardSolve4(RNG& rng);
   void backwardSolve4(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve4_corrector(RNG& rng);
+    void backwardSolve4_corrector(RNG& rng);
+#endif
 #endif
 #if MAX_COMPUTE_ORDER > 4
   void forwardSolve5(RNG& rng);
   void backwardSolve5(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve5_corrector(RNG& rng);
+    void backwardSolve5_corrector(RNG& rng);
+#endif
 #endif
 #if MAX_COMPUTE_ORDER > 5
   void forwardSolve6(RNG& rng);
   void backwardSolve6(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve6_corrector(RNG& rng);
+    void backwardSolve6_corrector(RNG& rng);
+#endif
 #endif
 #if MAX_COMPUTE_ORDER > 6
   void forwardSolve7(RNG& rng);
   void backwardSolve7(RNG& rng);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+    void forwardSolve7_corrector(RNG& rng);
+    void backwardSolve7_corrector(RNG& rng);
+#endif
 #endif
   private:
   void doForwardSolve();

@@ -66,6 +66,155 @@ SegmentDescriptor CaConcentration::_segmentDescriptor;
 //#define DEBUG_HH
 // Conserved region (only change ClassName)
 //{{{
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+//void CaConcentration::forwardSolve0(RNG& rng)
+//{
+//  if (computeOrder == 0)
+//  {
+//    doForwardSolve();
+//  }
+//}
+//void CaConcentration::backwardSolve0(RNG& rng)
+//{
+//  if (computeOrder == 0)
+//  {
+//    doBackwardSolve();
+//  }
+//}
+void CaConcentration::backwardSolve0_corrector(RNG& rng)
+{
+  if (computeOrder == 0)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve0_corrector(RNG& rng)
+{
+  if (computeOrder == 0)
+  {
+    doForwardSolve_corrector();
+  }
+}
+// Recalculate: RHS[], Aii[]  at time (t +dt/2)
+// Unit: RHS =  [uM/msec]
+//       Aii =  [1/msec]
+// Thomas algorithm forward step 
+// IMPORTANT: Ca_new[] has been changed from previous 'doFowardSolve, doBackwardSolve'
+//   so we need to use Ca_cur[] in this function
+void CaConcentration::doForwardSolve_corrector()
+{
+  unsigned numCpts = branchData->size;
+
+  //Find A[ii]i and RHS[ii]  
+  //  1. ionic currents 
+  for (int i = 0; i < numCpts; i++)
+  {
+    RHS[i] = getSharedMembers().bmt * Ca_cur[i];
+    if (i == 0)
+    {
+      if (isDistalCase3)
+      {
+        Aii[0] = getSharedMembers().bmt - Aip[0];
+        for (int n = 0; n < distalInputs.size(); n++)
+        {
+          //initial assign
+          Aii[0] -= Aij[n];
+
+          //this is part of removing lower part of matrix
+          Aii[0] -= Aij[n] * *distalAips[n] / *distalAiis[n];
+          RHS[0] -= Aij[n] * *distalInputs[n] / *distalAiis[n];
+        }
+      }
+      else{
+        Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
+        if (isDistalCase1)
+        {
+          Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
+          RHS[0] -= Aim[0] * *distalInputs[0] / *distalAiis[0];
+        }
+        else if (isDistalCase2)
+        {
+          // Why do we not adjust Aii[0]? Check.
+          RHS[0] -= Aim[0] * *distalInputs[0];
+        }
+      }
+    }
+    else{
+      Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
+    }
+    /* * * Sum Currents * * */
+    // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
+    // 1.a. producing I_Ca [pA/um^2]
+    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
+    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
+    for (; iter != end; iter++)
+    {
+      RHS[i] -= currentDensityToConc[i] * (*iter->currents)[i];
+    }
+
+    // 1.b. producing J_Ca [uM/msec]
+    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+    for (; fiter != fend; fiter++)
+    {
+      RHS[i] +=  (*fiter->fluxes)[i];
+    }
+    /* This is a simple implementation of calcium extrusion. To be elaborated as
+     * needed. */
+    // TUAN: need to be updated to take into account PMCA
+    //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
+  }
+
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
+  Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
+  for (; riter != rend; riter++)
+  {
+    int i = riter->index;
+    RHS[i] -= currentDensityToConc[i] * *(riter->current);
+  }
+
+    // 1.c. HH-like of concentration diffusion
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Array<TargetAttachCaConcentration >::iterator ciiter = targetAttachCaConcentration.begin();
+  Array<TargetAttachCaConcentration >::iterator ciend = targetAttachCaConcentration.end();
+  //dyn_var_t invTime = 1.0/(getSharedMembers().dt;
+  for (; ciiter != ciend; ciiter++)
+  {
+    int i = (ciiter)->index;
+    RHS[i] += (*(ciiter->inverseTime)) * (*(ciiter->Ca)); //[uM/ms]
+    Aii[i] += (*(ciiter->inverseTime)) ; //[1/ms]
+  }
+#endif
+  
+  //  4. injected currents (pA)
+  Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();
+  Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
+  for (; iiter != iend; iiter++)
+  {
+    if (iiter->index < numCpts)
+      RHS[iiter->index] += *(iiter->current)  * iiter->currentToConc;
+  }
+
+  /* * *  Forward Solve Ax = B * * */
+  /* Starting from distal-end (i=0)
+   * Eliminate Aim[?] by taking
+   * RHS -= Aim[?] * V[proximal]
+   * Aii = 
+   */
+  for (int i = 1; i < numCpts; i++)
+  {
+    Aii[i] -= Aip[i - 1] * Aim[i] / Aii[i - 1];
+    RHS[i] -= RHS[i - 1] * Aim[i] / Aii[i - 1];
+  }
+
+#ifdef MICRODOMAIN_CALCIUM
+  //must put here
+  if (microdomainNames.size() > 0)
+    updateMicrodomains();
+#endif
+}
+#endif
 void CaConcentration::solve(RNG& rng)
 {
   if (computeOrder == 0)
@@ -92,6 +241,22 @@ void CaConcentration::backwardSolve1(RNG& rng)
 {
   if (computeOrder == 1) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve1_corrector(RNG& rng)
+{
+  if (computeOrder == 1)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve1_corrector(RNG& rng)
+{
+  if (computeOrder == 1)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 1
@@ -107,6 +272,22 @@ void CaConcentration::backwardSolve2(RNG& rng)
 {
   if (computeOrder == 2) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve2_corrector(RNG& rng)
+{
+  if (computeOrder == 2)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve2_corrector(RNG& rng)
+{
+  if (computeOrder == 2)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 2
@@ -122,6 +303,22 @@ void CaConcentration::backwardSolve3(RNG& rng)
 {
   if (computeOrder == 3) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve3_corrector(RNG& rng)
+{
+  if (computeOrder == 3)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve3_corrector(RNG& rng)
+{
+  if (computeOrder == 3)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 3
@@ -137,6 +334,22 @@ void CaConcentration::backwardSolve4(RNG& rng)
 {
   if (computeOrder == 4) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve4_corrector(RNG& rng)
+{
+  if (computeOrder == 4)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve4_corrector(RNG& rng)
+{
+  if (computeOrder == 4)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 4
@@ -152,6 +365,22 @@ void CaConcentration::backwardSolve5(RNG& rng)
 {
   if (computeOrder == 5) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve5_corrector(RNG& rng)
+{
+  if (computeOrder == 5)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve5_corrector(RNG& rng)
+{
+  if (computeOrder == 5)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 5
@@ -167,6 +396,22 @@ void CaConcentration::backwardSolve6(RNG& rng)
 {
   if (computeOrder == 6) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve6_corrector(RNG& rng)
+{
+  if (computeOrder == 6)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve6_corrector(RNG& rng)
+{
+  if (computeOrder == 6)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 6
@@ -182,6 +427,22 @@ void CaConcentration::backwardSolve7(RNG& rng)
 {
   if (computeOrder == 7) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve7_corrector(RNG& rng)
+{
+  if (computeOrder == 7)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve7_corrector(RNG& rng)
+{
+  if (computeOrder == 7)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 bool CaConcentration::confirmUniqueDeltaT(
