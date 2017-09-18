@@ -1,0 +1,75 @@
+#{{{explains
+# NOTE: No ER on axon branch
+# MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush bouton)
+# BRANCHTYPE = 1=soma, 2=axon, 3=basal-den, 4=apical-den, 5=AIS, 6=tuft-den, 7=axonhillock
+#}}}
+COMPARTMENT_SPINE_NECK 1
+MTYPE BRANCHTYPE
+[2, 3]     3
+COMPARTMENT_SPINE_HEAD 2
+MTYPE BRANCHTYPE
+2     1
+3     1
+
+COMPARTMENT_VARIABLE_TARGETS 7
+BRANCHTYPE
+1 Voltage Calcium
+2 Voltage Calcium
+5 Voltage Calcium
+7 Voltage Calcium
+3 Voltage Calcium
+4 Voltage Calcium
+6 Voltage Calcium
+
+COMPARTMENT_VARIABLE_COSTS 2
+Voltage 1.0
+Calcium 1.0
+
+COMPARTMENT_VARIABLE_PARAMS 1
+Voltage 17
+MTYPE BRANCHTYPE
+# Cm ~ [pF/um^2]
+# gLeak ~ [nS/um^2]
+# Vnew ~ [mV]
+## NOTE: Make sure semi-colon separated
+## higher gLeak; the more negative Vm at rest
+#{{{
+#{{{neuron
+0 1 <Cm=0.01; gLeak=3.38e-4>
+0 2 <Cm=0.01; gLeak=3.25e-4>
+0 5 <Cm=0.01; gLeak=3.25e-4>
+0 7 <Cm=0.01; gLeak=3.25e-4>
+0 3 <Cm=0.02; gLeak=2.95e-4>
+0 4 <Cm=0.02; gLeak=2.95e-4>
+0 6 <Cm=0.01; gLeak=1.38e-4>
+#}}}
+##{{{ GABAergic bouton
+1 1 <Cm=0.01; gLeak=0.000295>
+1 2 <Cm=0.01; gLeak=0.000295>
+##}}}
+#{{{ spines
+2 1 <Cm=0.01; gLeak=0.000295>
+2 3 <Cm=0.01; gLeak=0.000295>
+3 1 <Cm=0.01; gLeak=0.000295>
+3 3 <Cm=0.01; gLeak=0.000295>
+#}}}
+#{{{ Glutamatergic bouton
+4 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
+4 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
+5 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
+5 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
+#}}}
+#Calcium 8
+#MTYPE BRANCHTYPE
+#0 1 <CaClearance=1.1>
+#0 3 <CaClearance=4.2>
+#0 4 <CaClearance=4.2>
+#1 1 <CaClearance=1.1>
+#2 1 <CaClearance=4.2>
+#2 3 <CaClearance=4.2>
+#3 1 <CaClearance=4.2>
+#3 3 <CaClearance=4.2>
+
+#### SCALING_NECK_FROM_SOMA
+#### STRETCH_SOMA_WITH
