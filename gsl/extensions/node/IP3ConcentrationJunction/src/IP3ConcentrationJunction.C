@@ -91,7 +91,7 @@ void IP3ConcentrationJunction::initializeJunction(RNG& rng)
 
   float Pdov = M_PI * D_IP3 / volume;
 #ifdef USE_SUBSHELL_FOR_SOMA
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
       dimension->r > THRESHOLD_SIZE_R_SOMA // to avoid the confusing of spine head
      )//TUAN TODO: consider fixing this
   {

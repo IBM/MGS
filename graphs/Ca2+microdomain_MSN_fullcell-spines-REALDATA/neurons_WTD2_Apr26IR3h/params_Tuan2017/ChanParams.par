@@ -40,9 +40,12 @@ MTYPE BRANCHTYPE
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
 #     NCX [Voltage, Calcium] [Calcium] \
-     CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
-     CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
-     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+     CaLv12 [Voltage, Calcium] [Voltage, Calcium] \
+     CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
+     CaN    [Voltage, Calcium] [Voltage, Calcium] \
+     CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium] 
 #}}}
 0 [5]  \
 #{{{
@@ -51,11 +54,15 @@ MTYPE BRANCHTYPE
      KCNK [Voltage] [Voltage] \
      KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
+     KDR [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
-     CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
-     CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
-     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+     CaLv12 [Voltage, Calcium] [Voltage, Calcium] \
+     CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
+     CaN    [Voltage, Calcium] [Voltage, Calcium] \
+     CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium] 
 #}}}
 0 [2, 7]  \
 #{{{
@@ -72,19 +79,27 @@ MTYPE BRANCHTYPE
 #}}}
 #}}}
 #{{{spine 2
-[2,3] 1  KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
-     Nat [Voltage] [Voltage] \
+[2,3] 1  \
+#KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
+#     Nat [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
 #     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
      IP3R [IP3] [Calcium, IP3] \
      PMCA [Voltage, Calcium] [Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium]  \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
-[2,3] 3 KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
-     Nat [Voltage] [Voltage] \
+[2,3] 3 \
+#KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
+#     Nat [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
 #     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
      IP3R [IP3] [Calcium, IP3]  \
      PMCA [Voltage, Calcium] [Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium]  \
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
 #}}}
 #{{{Glutamatergic bouton 1
@@ -116,6 +131,8 @@ KAs     0.254051
 KIR     0.254051
 KRP     0.254051
 KDR     0.254051
+Kv31    0.254051
+MK     0.254051
 BK      0.254051
 SK      0.254051
 CaLv12  0.254051
@@ -125,11 +142,9 @@ CaPQ    0.254051
 CaR     0.254051
 CaT     0.254051
 PMCA    0.254051
-Kv31    0.254051
 IP3R    0.254051
 RYR1    0.254051
 NCX     0.254051
-MK     0.254051
 #}}}
 
 
@@ -138,7 +153,7 @@ MK     0.254051
 # gbar [mS/cm^2] --> gbar/100 [nS/um^2]
 # gbar [S/cm^2]  --> 10*gbar  [nS/um^2]
 # Ibar [uA/cm^2] --> Ibar/100 [pA/um^2] 
-CHANNEL_PARAMS 31
+CHANNEL_PARAMS 37
 #{{{neuron 18
 #{{{Nat 
 # {{{Test
@@ -148,10 +163,12 @@ MTYPE BRANCHTYPE
 #0 1      <gbar={18.75}>  
 #0 1      <gbar={25}>  
 #0 1      <gbar={30}>  
-#0 1      <gbar={45}>   -too fast
+#0 1      <gbar={45}>  
 0 1      <gbar={105}>  
-#0 [5]  <gbar={185.245}>
-0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0}>
+#0 [5]  <gbar={125.245}>
+0 [5]  <gbar={105.245}>
+#0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0}>
+#0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0, Vhalf_h_shift=5.0}>
 0 [2,7]  <gbar={165.245, Vhalf_m_shift=-3.0}>
 0 [3,4,6]  <gbar={0.245}>
 # }}}
@@ -200,18 +217,20 @@ MTYPE BRANCHTYPE
 #{{{ KCNK
 KCNK 3
 BRANCHTYPE MTYPE
-[1:6] 0 <P_Kbar={2.25e-6}>
-[1,2] 1 <P_Kbar={2.25e-6}>
-[1,3] 2 <P_Kbar={2.25e-6}>
+[1:6] 0 <P_Kbar={1.45e-6}>
+[1,2] 1 <P_Kbar={1.45e-6}>
+[1,3] 2 <P_Kbar={1.45e-6}>
 #}}} 
 #{{{KAf
 #{{{Test
-KAf 3
-BRANCHTYPE MTYPE
-#1 0 <gbar={2.3}>
-1 0 <gbar={0.3}>
-[3,4,6] 0 <gbar_branchorders={1, 2, -1}>
-[3,4,6] 0 <gbar_values={1.0, 0.33, 0.33}>
+KAf 2
+MTYPE BRANCHTYPE
+#0 1 <gbar={2.3}>
+0 1      <gbar={0.3}>
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}>
+#0 [3,4,6] <gbar_values={1.0, 0.33, 0.33}>
+0 [3,4,6] <gbar_dists={50, 100}; \
+           gbar_values={1.0, 0.3, 0.3}}
 #}}}
 ##{{{Moyer
 #KAf 3
@@ -277,9 +296,9 @@ MTYPE BRANCHTYPE
 #{{{Wolf
 KIR 3
 MTYPE BRANCHTYPE 
-0 1       <gbar={1.4e-3}>   
-0 [2,5,7] <gbar={1.4e-3}>
-0 [3,4,6] <gbar={1.4e-3}>
+0 1       <gbar={1.8e-3}>   
+0 [2,5,7] <gbar={1.8e-3}>
+0 [3,4,6] <gbar={1.8e-3}>
 #}}}
 #}}}
 #{{{ KRP
@@ -293,15 +312,15 @@ MTYPE BRANCHTYPE
 #}}}
 #{{{KDR
 #{{{ Test
-KDR 5
+KDR 3
 MTYPE BRANCHTYPE 
 0 1 <gbar={1.0e-1}>
 0 5 <gbar={1.0e-1}>
 0 2 <gbar={1.0e-2}>
-0 3 <gbar_dists={50, 100, 150, 200, 250, 300}; \
-     gbar_values={5.0e-2, 5.0e-3, 1.0e-3, 1.0e-3, 0.0, 0.0, 0.0}}
-0 4 <gbar_dists={50, 100}; \
-     gbar_values={5.0e-3, 0.0, 0.0}}
+#0 3 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={1.0e-2, 5.0e-3, 1.0e-3, 1.0e-3, 0.0, 0.0, 0.0}}
+#0 4 <gbar_dists={50, 100}; \
+#     gbar_values={5.0e-3, 0.0, 0.0}}
 #}}}
 ##{{{ Traub 1994
 #KDR 4
@@ -365,17 +384,19 @@ MTYPE BRANCHTYPE
 #}}}
 #{{{ CaLv12
 CaLv12 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.7e-4}>
-[1,2] 1 <PCabar={6.7e-4}>
-[1,3] 2 <PCabar={6.7e-4}>
+MTYPE BRANCHTYPE 
+0 [1] <PCabar={6.7e-4}>
+0 [3,4,6] <PCabar={6.7e-4}>
+0 [2,5,7] <PCabar={6.7e-4}>
 #}}} 
 #{{{ CaLv13
 CaLv13 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.19e-4}>
-[1,2] 1 <PCabar={6.25e-4}>
-[1,3] 2 <PCabar={6.25e-4}>
+MTYPE BRANCHTYPE 
+#0 [1] <PCabar={6.19e-4}>
+#0 [3,4,6] <PCabar={6.25e-4}>
+0 [1] <PCabar={2.19e-3}>
+0 [3,4,6] <PCabar={2.25e-3}>
+0 [2,5,7] <PCabar={6.25e-4}>
 #}}}
 #{{{ CaN
 CaN 3
@@ -386,28 +407,32 @@ BRANCHTYPE MTYPE
 #}}}
 #{{{ CaPQ
 CaPQ 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.0e-4}>
-[1,2] 1 <PCabar={6.0e-4}>
-[1,3] 2 <PCabar={6.0e-4}>
+MTYPE BRANCHTYPE 
+0 [1] <PCabar={6.0e-4}>
+0 [3,4,6] <PCabar={6.0e-4}>
+0 [2,5,7] <PCabar={6.0e-4}>
 #}}}
 #{{{ CaR
 CaR 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={2.6e-3}>
-[1,2] 1 <PCabar={2.6e-3}>
-[1,3] 2 <PCabar={2.6e-3}>
+MTYPE BRANCHTYPE 
+0 [1] <PCabar={2.6e-3}>
+0 [3,4,6] <PCabar={2.6e-3}>
+0 [2,5,7] <PCabar={2.6e-3}>
 #}}}
 #{{{ CaT
 CaT 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={4.0e-5}>
-[1,2] 1 <PCabar={4.0e-5}>
-[1,3] 2 <PCabar={4.0e-5}>
+MTYPE BRANCHTYPE 
+0 [1]     <PCabar={4.0e-5}>
+0 [3,4,6] <PCabar={4.0e-5}>
+0 [2,5,7] <PCabar={4.0e-5}>
+#0 [1]     <PCabar={2.0e-3}>
+#0 [3,4,6] <PCabar={2.0e-3}>
+#0 [2,5,7] <PCabar={5.0e-4}>
 #}}}
 #{{{ PMCA
 PMCA 6
 #{{{
+#Carter, Sebastini (2004) tau = 25 ms --> delta(Ca) ~ 0.4 uM on dendrite at ~40um
 # tau ~ [ms]
 BRANCHTYPE MTYPE 
 ## NOTE: large value of tau is important in keeping Ca-neck high
@@ -430,7 +455,7 @@ BRANCHTYPE MTYPE
 #}}}
 #}}}
 #}}}
-#{{{ spines 5
+#{{{ spines 11
 #{{{ Nat
 Nat 2
 MTYPE BRANCHTYPE 
@@ -440,8 +465,8 @@ MTYPE BRANCHTYPE
 #{{{ KCNK
 KCNK 2
 MTYPE BRANCHTYPE 
-[2,3] 1 <P_Kbar={2.25e-6}>
-[2,3] 3 <P_Kbar={2.25e-6}>
+[2,3] 1 <P_Kbar={1.25e-6}>
+[2,3] 3 <P_Kbar={1.25e-6}>
 #}}} 
 #{{{RYR
 RYR 2
@@ -460,6 +485,44 @@ KAf 2
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={1.38e-4}>
 [2, 3] 3       <gbar={1.38e-5}>
+#}}}
+#{{{ KIR
+KIR 2
+MTYPE BRANCHTYPE 
+[2, 3] 1       <gbar={1.8e-3}>
+[2, 3] 3       <gbar={1.8e-3}>
+#}}}
+#{{{CaR
+CaR 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={2.6e-3}>
+[2,3] 3 <PCabar={2.6e-3}>
+#}}}
+#{{{CaLv12
+CaLv12 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={6.7e-4}>
+[2,3] 3 <PCabar={6.7e-4}>
+#}}}
+#{{{CaLv13
+CaLv13 2
+MTYPE BRANCHTYPE 
+[2:3] 1 <PCabar={6.19e-4}>
+[2,3] 3 <PCabar={6.25e-4}>
+#}}}
+#{{{CaPQ
+CaPQ 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={6.0e-4}>
+[2,3] 3 <PCabar={6.0e-4}>
+#}}}
+#{{{ CaT
+CaT 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={4.0e-5}>
+[2,3] 3 <PCabar={4.0e-5}>
+#[2,3] 1 <PCabar={2.0e-3}>
+##[2,3] 3 <PCabar={2.0e-3}>
 #}}}
 #}}}
 #{{{Glutamatergic bouton 4

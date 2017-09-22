@@ -18,6 +18,11 @@
 #elif CHANNEL_CaR == CaR_GHK_TUAN_2017
 #define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
 #endif
+
+#ifndef bo_bi
+#define bo_bi 1
+#endif
+
 static pthread_once_t once_CaR_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of R-type Ca2+ channel
@@ -29,14 +34,14 @@ static pthread_once_t once_CaR_GHK = PTHREAD_ONCE_INIT;
 //  Inactivation reference from 
 //     1. Foehring ... Surmeier (2000) - Unique properties R-type Ca2+ currents in neocortical and neostriatal neurons - J. Neurophysiol. Fig. 7C
 //  Activation reference from 
-//     1. Churchill et al. (1998) for slope (Fig. 7)
+//     1. Churchill et al. (1998) for slope (Fig. 7) rat NAc neuron
 //     2. Foehring et al. (2000) tau_m  (pg. 2230)
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -10.3
 #define k_M -6.6
 #define VHALF_H -33.3
-#define k_H 17
+#define k_H 17.0
 #define frac_inact  1
 
 #define LOOKUP_TAUH_LENGTH 6  // size of the below array

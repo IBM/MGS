@@ -295,29 +295,120 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
-  for (; iter != end; ++iter)
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  bool found_change = false;
+  //  4b. consider abrupt change in injected currents [pA]
+  Array<dyn_var_t>::iterator piter;
+  piter = previous_injectedCurrent.begin();
+#endif
+  for (; iter != end; ++iter
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+      , ++piter
+#endif
+      )
   {
-#ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
-    current += **iter;
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        && gAxial.size() > 2 /* to skip soma head*/)
+    {
+#if 1 // use this only
+#define STIM_CHANGE_THRESHOLD 10.0 // pA
+      if (std::fabs(**iter - *piter) > STIM_CHANGE_THRESHOLD )
+      {
+        found_change = true;
+        _count_timer = 1; //3; //6; //10;
+      }
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
 #else
-    current += **iter / area; // at time (t+dt/2)
+        std::cout << " GET INTO WRONG LOCATION " << std::endl;
+     #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+         current += **iter + ((**iter - *piter)/0.001 * Vcur);
+     #else
+         current += (**iter + ((**iter - *piter)/0.001 * Vcur)) / area; // at time (t+dt/2)
+     #endif
+#endif
+         *piter = **iter;
+    }
+#else
+    {
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
+    }
 #endif
   }
 
-  // 5. Current loss due to passive diffusion to adjacent compartments
-  Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
-  Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
-  for (; xiter != xend; ++xiter, ++viter)
+#if 0 
+//TUAN: test --> the current injection should be applied to changing Vm
+//  before it is taken out by diffusion
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {
+#if not defined(PREDICT_JUNCTION_IGNORE_AXIAL)
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+    for (; xiter != xend; ++xiter, ++viter)
+    {
 #if 0
-    //original approach
-    //current += (*xiter) * ((**viter) - Vcur);
-    current += (*xiter) * ((**viter) - Vnew[0]);
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
 #else
-    current += (*xiter) * (**viter);
-    conductance += (*xiter);  
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
+#endif
+    }
 #endif
   }
+  else{
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+    for (; xiter != xend; ++xiter, ++viter)
+    {
+#if 0
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
+#else
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
+#endif
+    }
+  }
+#else
+
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  if (not found_change and not (_count_timer > 0))
+  {
+    if (_count_timer >= 0)
+      _count_timer -= 1;
+#endif
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+    for (; xiter != xend; ++xiter, ++viter)
+    {
+#if 0
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
+#else
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
+#endif
+    }
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  }
+#endif
+#endif
+
 
   //float Vold = Vnew[0];
   Vnew[0] = current / conductance; //estimate at (t+dt/2)
@@ -438,12 +529,52 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
-  for (; iter != end; ++iter)
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  bool found_change = false;
+  //  4b. consider abrupt change in injected currents [pA]
+  Array<dyn_var_t>::iterator piter;
+  piter = previous_injectedCurrent.begin();
+#endif
+  for (; iter != end; ++iter
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+      , ++piter
+#endif
+      )
   {
-#ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
-    current += **iter;
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        && gAxial.size() > 2 /* to skip soma head*/)
+    {
+#if 1 // use this only
+#define STIM_CHANGE_THRESHOLD 10.0 // pA
+      //if (std::fabs(**iter - *piter) > STIM_CHANGE_THRESHOLD )
+      //{
+      //  found_change = true;
+      //  _count_timer = 10;
+      //}
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
 #else
-    current += **iter / area; // at time (t+dt/2)
+        std::cout << " GET INTO WRONG LOCATION " << std::endl;
+     #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+         current += **iter + ((**iter - *piter)/0.001 * Vcur);
+     #else
+         current += (**iter + ((**iter - *piter)/0.001 * Vcur)) / area; // at time (t+dt/2)
+     #endif
+#endif
+         *piter = **iter;
+    }
+#else
+    {
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
+    }
 #endif
   }
 
@@ -562,6 +693,15 @@ void HodgkinHuxleyVoltageJunction::add_zero_didv(const String& CG_direction, con
   _zero_conductance = 0;
   injectedCurrents_conductance_didv.push_back(&_zero_conductance);
 }
+
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+void HodgkinHuxleyVoltageJunction::update_stim_reference(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
+{
+  //this kep track the value of Istim in the previous time-step 
+  dyn_var_t value = 0.0; 
+  previous_injectedCurrent.push_back(value);
+}
+#endif
 
 //#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)

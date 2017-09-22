@@ -128,7 +128,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-  #define TimeEnd          500      // [ms]
+  #define TimeEnd          400      // [ms]
 //{{{ Stimulus-specific running time
 #if STIMULUS_CASE == CASE_08
 #define TimeEnd          40      // [ms]
@@ -190,16 +190,16 @@ print("Case 00: resting");
 //{{{ Concentration
 // Baseline values [NOTE: The unit differences]
 //Calcium
-#define Cacyto_value  0.1  // [uM]
-#define CaER_value    1.0e3    // [uM]
+#define Cacyto_value  0.1    // [uM]
+#define CaER_value    1.0e3  // [uM]
 #define Ca_o_value    1.8e3  // [uM]
 
-#define Mg_o_value   1.5    // [mM]
-#define Mg_i_value   0.8    // [mM]
-#define Na_i_value   22.0 //12.0  // [mM]
-#define Na_o_value   145.0 // [mM]
-#define K_i_value    140.0 //139.0 // [mM]
-#define K_o_value    5.0  // [mM]  4.1+/-1.8 mM
+#define Mg_o_value   1.5     // [mM]
+#define Mg_i_value   0.8     // [mM]
+#define Na_i_value   22.0    // [mM]   - other: 12.0
+#define Na_o_value   145.0   // [mM]
+#define K_i_value    140.0   // [mM]
+#define K_o_value    5.0     // [mM]  4.1+/-1.8 mM
 
 #define Dopa_value   0.0   // [uM]
 
@@ -236,9 +236,9 @@ print("Case 00: resting");
 // (intracellular resistivity R_i) = specific axial resistance = Ohm.cm
 //NOTE: 1 Ohm.cm = 10^-5 GOhm*um
 //STANDARD: 100 Ohm.cm ~ 0.001 GOhm*um
-//#define Ra_value 0.001     // [GOhm*um] 
+#define Ra_value 0.001     // [GOhm*um] 
 //#define Ra_value 0.0012     // [GOhm*um] 
-#define Ra_value 0.0014     // [GOhm*um] 
+//#define Ra_value 0.0014     // [GOhm*um] 
   //across the spine-neck to shaft
 //#define R_NECK 0.001     // [GOhm*um] --> g~150 nS
 #define R_NECK 0.012     // [GOhm*um] --> g~12 nS

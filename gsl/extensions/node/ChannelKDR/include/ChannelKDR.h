@@ -42,7 +42,8 @@
 #define BASED_TEMPERATURE 35.0  // Celcius                                 
 #define Q10 2.92 
 
-#elif CHANNEL_KDR == KDR_ERISIR_1999
+#elif CHANNEL_KDR == KDR_ERISIR_1999 || \
+      CHANNEL_KDR == KDR_TUAN_JAMES_2017
 #define BASED_TEMPERATURE 23.0  // Celcius                                 
 #define Q10 2.92 
 #endif

@@ -65,10 +65,10 @@ MTYPE BRANCHTYPE
 1 2 <Cm=0.01; gLeak=2.95e-4>
 ##}}}
 #{{{ spines 4
-2 1 <Cm=0.01; gLeak=5.45e-5>
-2 3 <Cm=0.01; gLeak=5.45e-5>
-3 1 <Cm=0.01; gLeak=5.45e-5>
-3 3 <Cm=0.01; gLeak=5.45e-5>
+2 1 <Cm=0.01; gLeak=1.25e-4>
+2 3 <Cm=0.01; gLeak=1.25e-4>
+3 1 <Cm=0.01; gLeak=1.25e-4>
+3 3 <Cm=0.01; gLeak=1.25e-4>
 #}}}
 #{{{ Glutamatergic bouton 4
 4 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>

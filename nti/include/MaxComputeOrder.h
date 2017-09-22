@@ -183,7 +183,28 @@
 //#define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
                         // if not; then Rb = ((*diter)->r + dimension->r)/2
                         
-//{{{
+//#define PREDICT_JUNCTION_IGNORE_AXIAL  // if defined; then the injected current is 
+//     applied to calculate Vpredict(junction) before axial-current is calculated
+//     This is important to help Iinject have strong enough effect on soma
+//     HOWEVER, BE CAUTIOUS, this may affect numerics of other junctions (under investigation)
+//     This is good for Voltage only
+//     NOTE: DO NOT USE THIS
+
+//#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+//  IN a real-world system, the current injected is 'sensed' by the soma first;
+//  before any significant propagation
+//  HOWVER, when modeling, by considering axial propagation and injected the current
+//  at the same time; may pose a challenging problem
+//  This can be solved using small time-step (or adaptive time-step with small 
+//  value whenever there is a current injection). 
+//  HOWVER, in fixed time-step system, this is quite challenge.
+//  Because of that, we can design a system to consider the change in current
+//  dI/dt 
+//  if dI/dt > threshold, ignore axial current in that estimation
+
+
+
+//{{{ terminal point
 //#define USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION //if defined, then 
          // (suppose Vm[size-1]) instead of using proximalVoltage, and the distance between them
          // it use V0 (or Vterminal_proximal) and distance as length/2

@@ -281,8 +281,9 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 #define BHV -66.0
 #define BHD -6.0
 #elif CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
-// combine data from Ogata-1990 and Martina (Wolf-2005)
-// data from rat CA1 hippocampal pyramidal neuron
+// combine data from Ogata-1990 (striatal neuron) 
+// and Martina (Wolf-2005)
+//       data from rat CA1 hippocampal pyramidal neuron
 //     recorded at 22-24C and then mapped to 35C using Q10 = 3
 // REF: Martina M, Jonas P (1997). "Functional differences in na+ channel gating
 // between fast-spiking interneurons and principal neurons of rat hippocampus."
@@ -293,13 +294,15 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 // Activation from
 //    1. Martina and Jonas (1997) - Table 1
 //
-// model is used for simulation NAc nucleus accumbens (medium-sized spiny MSN
+// model is used for simulation dorsal striatal (medium-sized spiny MSN
 // cell)
 //    at 35.0 Celcius
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -25
-#define k_M -10.0
+//#define k_M -10.0
+#define k_M -11.0
+//#define k_M -11.8
 #define VHALF_H -62
 #define k_H 6
 
@@ -311,7 +314,8 @@ std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 //#define k_H 10.7
 //#define k_H 6
 #define LOOKUP_TAUM_LENGTH 16  // size of the below array
-#define scale_tau_m 1.2 
+//#define scale_tau_m 1.2 
+//#define scale_tau_m 1.0 
 #define scale_tau_h 1.2 
 const dyn_var_t ChannelNat::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
@@ -319,18 +323,28 @@ const dyn_var_t ChannelNat::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -4
 // if (-100+(-90))/2 >= Vm               : tau_m = taumNat[1st-element]
 // if (-100+(-90))/2 < Vm < (-90+(-80))/2: tau_m = taumNat[2nd-element]
 //...
-dyn_var_t ChannelNat::taumNat[] = {0.06, 0.06, 0.07, 0.09, 0.11, 0.13, 0.20, 0.32,
+////#define TUAN
+//#ifdef TUAN
+dyn_var_t ChannelNat::taumNat[] = {0.01, 0.01, 0.01, 0.01, 0.11, 0.13, 0.20, 0.32,
                        0.16, 0.15, 0.12, 0.08, 0.06, 0.06, 0.06, 0.06};
+//#else
+//dyn_var_t ChannelNat::taumNat[] = {0.06, 0.06, 0.07, 0.09, 0.11, 0.13, 0.20, 0.32,
+//                       0.16, 0.15, 0.12, 0.08, 0.06, 0.06, 0.06, 0.06};
+//#endif
 //dyn_var_t ChannelNat::taumNat[] = {0.3162, 0.3162, 0.3512, 0.4474, 0.5566, 0.3548, 0.2399, 0.1585,
 //                       0.1047, 0.0871, 0.0851, 0.0813, 0.0832, 0.0832, 0.0832, 0.0832};
 #define LOOKUP_TAUH_LENGTH 16  // size of the below array
 // dyn_var_t _Vmrange_tauh[] = _Vmrange_taum;
 const dyn_var_t ChannelNat::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
+#if 0
 dyn_var_t ChannelNat::tauhNat[] = {1.3,  1.3, 1.3,  1.3,  1.3,  1.3,  1.3,  1.3,
                        0.85, 0.5, 0.45, 0.32, 0.30, 0.28, 0.28, 0.28};
-//dyn_var_t ChannelNat::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.9111, 1.4907, 0.6596,
-//                       0.5101, 0.4267, 0.3673, 0.3370, 0.3204, 0.3177, 0.3151, 0.3142};
+#else                       
+//#define scale_tau_h 0.8
+dyn_var_t ChannelNat::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.9111, 1.4907, 0.6596,
+                       0.5101, 0.4267, 0.3673, 0.3370, 0.3204, 0.3177, 0.3151, 0.3142};
+#endif
 std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
 std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
 
@@ -353,7 +367,7 @@ void ChannelNat::update(RNG& rng)
   dyn_var_t dt = *(getSharedMembers().deltaT);
 #if defined(WRITE_GATES)                                                  
   bool is_write = false;
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
       _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
   {
     float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
@@ -619,7 +633,7 @@ void ChannelNat::initialize(RNG& rng)
   }
 
 #if defined(WRITE_GATES)                                      
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
       _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
   {
     std::ostringstream os;                                    
@@ -705,7 +719,7 @@ void ChannelNat::initialize(RNG& rng)
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_Na[0]); //using 'v' at time 't'; but gate(t0+dt/2)
 #if defined(WRITE_GATES)                                      
-    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
         _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
     {
       (*outFile) << std::fixed << fieldDelimiter << m[i];       

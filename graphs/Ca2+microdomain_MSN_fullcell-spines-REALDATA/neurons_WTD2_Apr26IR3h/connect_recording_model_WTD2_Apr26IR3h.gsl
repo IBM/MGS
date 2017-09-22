@@ -1,7 +1,7 @@
 
 //{{{ proximal site 
 //NOTE: This target WTD2_Apr26IR3h.swc_ 
-TissueSite site_proximal_spine(-178.7, 110.4, -24.5, 5.0); // 42 um to soma
+TissueSite site_proximal_spine(-178.7, 110.4, -24.5, 3.0); // 42 um to soma
 //TissueSite site_proximal_spine(-190.450, 103.010, -19.790, 5.0); // 52 um to soma
 //{{{
 //{{{currents
@@ -699,13 +699,14 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaT", NEURON_INDE
   //}}}
 //{{{ proximal shaft
 //NOTE: This target WTD2_Apr26IR3h.swc_ 
-TissueSite site_proximal_shaft(-178.7, 110.4, -24.5, 5.0); // 42 um to soma
+TissueSite site_proximal_shaft(-178.7, 110.4, -24.5, 2.0); // 42 um to soma
 //TissueSite site_proximal_shaft(-190.450, 103.010, -19.790, 5.0); // 52 um to soma
 //{{{
 //{{{currents
 polyConnect(timeStep, proximal_shaftCurrentsDisplay, <>, <>);
 #ifdef IDEA_ILEAK
 polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",   MTYPE=0>), proximal_shaftCurrentsDisplay, <>, <identifier="BRANCH", site=site_proximal_shaft>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",   MTYPE=0>), proximal_shaftCurrentsDisplay, <>, <identifier="JUNCTION", site=site_proximal_shaft>);
 #endif
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat",  MTYPE=0>), proximal_shaftCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=site_proximal_shaft>);
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap",  MTYPE=0>), proximal_shaftCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=site_proximal_shaft>);
@@ -747,6 +748,7 @@ TissueSite site_distal_shaft(-178.7, 110.4, -24.5, 5.0); // 42 um to soma
 polyConnect(timeStep, distal_shaftCurrentsDisplay, <>, <>);
 #ifdef IDEA_ILEAK
 polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",   MTYPE=0>), distal_shaftCurrentsDisplay, <>, <identifier="BRANCH", site=site_distal_shaft>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",   MTYPE=0>), distal_shaftCurrentsDisplay, <>, <identifier="JUNCTION", site=site_distal_shaft>);
 #endif
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat",  MTYPE=0>), distal_shaftCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=site_distal_shaft>);
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap",  MTYPE=0>), distal_shaftCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=site_distal_shaft>);
@@ -778,6 +780,11 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage",  MTYPE=0
 //}}}
 //}}}
 //}}}
+
+//{{{ microomain Microdomain
+  polyConnect(timeStep, basalDenCalciumDomainDisplay, <>, <>);
+  polyConnect(tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Calcium", MTYPE=0>), basalDenCalciumDomainDisplay, <>, <domainName="domain1", site=site_proximal_shaft>);
+// }}}
   //}}}
 //	//{{{ axon
   //{{{LOCATION a1 - AIS 

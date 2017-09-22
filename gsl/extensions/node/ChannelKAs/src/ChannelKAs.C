@@ -124,7 +124,7 @@ void ChannelKAs::update(RNG& rng)
   dyn_var_t dt = *(getSharedMembers().deltaT);
 #if defined(WRITE_GATES)                                                  
   bool is_write = false;
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
       _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
   {
     float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
@@ -369,7 +369,7 @@ gbar[i] = gbar_values[0];
     }
   }
 #if defined(WRITE_GATES)                                      
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
       _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
   {
     std::ostringstream os;                                    
@@ -415,7 +415,7 @@ gbar[i] = gbar_values[0];
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time t0+dt/2
 #if defined(WRITE_GATES)                                      
-    if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
         _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
     {
       (*outFile) << std::fixed << fieldDelimiter << m[i];       

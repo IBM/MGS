@@ -148,6 +148,10 @@ distal_shaftCalciumDisplay.dataCollection(<>) on recOn;
 AnyCurrentDisplay distal_shaftCurrentsDisplay<fileName= PathFileCombine("distal_shaftCurrents.dat")>;
 distal_shaftCurrentsDisplay.dataCollection(<>) on recOn;
   //}}}
+//{{{microdomain Domain
+CalciumDomainDisplay basalDenCalciumDomainDisplay<fileName= PathFileCombine("basalDenCaDomain.dat")>;
+basalDenCalciumDomainDisplay.dataCollection(<>) on recOn;
+//}}}
 //}}}
 //{{{ axon 
 //{{{ AIS

@@ -1,4 +1,9 @@
 #x	200pA
+# NOTE: 
+#   line field names
+#   line number-of-columns 
+#time Vm
+#2
 -280	-80
 -275	-80
 -270.5	-80

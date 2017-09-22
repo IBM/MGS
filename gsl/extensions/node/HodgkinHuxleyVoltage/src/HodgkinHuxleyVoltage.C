@@ -678,7 +678,7 @@ inline dyn_var_t HodgkinHuxleyVoltage::getArea(int i)  // Tuan: check ok
 //       Aip[..] from proximal side
 void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng) 
 {
-  //NOTE: 
+  //NOTE: // current-clamp
   // 2 things to be updated
   //   For current induced by microelectrode impalement --> shunt is restricted to a small enough region
   //      So it is considered as a POINT process and is described as total current (or total resistance)
@@ -948,6 +948,19 @@ void HodgkinHuxleyVoltage::initializeCompartmentData(RNG& rng)
     }
   }
 #endif
+//#ifdef  CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+//CURRENTLY, we only consider for Junction e.g. soma, where current injection is done
+//  //  4. injected currents [pA]
+//  previous_injectedCurrent.resize(injectedCurrents.size());
+//  Array<dyn_var_t*>::iterator iter, end;
+//  iter = injectedCurrents.begin();
+//  end = injectedCurrents.end();
+//  piter = previous_injectedCurrents.begin();
+//  for (; iter != end; ++iter, ++piter)
+//  {
+//    **piter = **iter;
+//  }
+//#endif
 }
 
 void HodgkinHuxleyVoltage::printDebugHH()

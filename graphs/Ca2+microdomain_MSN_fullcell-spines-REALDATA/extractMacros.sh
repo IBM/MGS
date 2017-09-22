@@ -36,16 +36,18 @@ DoPlot()
     # fi
     python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  $OutputFolderName/ &
     python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  $OutputFolderName/ 
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_shaft &
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_spine &
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_spine
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_shaft &
+    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_shaft &
+    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_spine &
+    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_spine&
+    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_shaft &
   fi
 }
 #}}}
 
 numArgs=$#
 secondArg=$2
+thirdArg=$3
+COMMENT=""
 
 #{{{ Non-modified parts
 RUNSIM_COMPLETED=0
@@ -103,6 +105,7 @@ GSLPARSER=../../gsl/bin/gslparser
   echo "... using swc file: ${SWC_FILENAME}"
   echo "... using swc file: ${SWC_FILENAME}" >> SIM_LOG
   echo ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1} ${morph} >> SIM_LOG
+  echo ${COMMENT} >> SIM_LOG
   echo "---------------------- " >> SIM_LOG
   cp SIM_LOG $OutputFolderName/ -L -r
   echo "Output Folder: " $OutputFolderName
@@ -131,6 +134,83 @@ DoFinish()
   #}}}
 }
 #///}}}
+
+#########################
+## Detect options 
+#{{{
+PLATFORM="LINUX"
+WHAT_TO_BUILD="all"
+CLEAN=""
+REBUILD=""
+MCO=""
+NTI_BUILD_MODE="debug=yes"
+GSL_BUILD_MODE=""
+optspec=":c:p:sr-:j:"
+#/while getopts "$optspec" optchar; do
+#/  case $optchar in
+#/    p)
+#/      echo "Platform: $OPTARG" >&2
+#/      PLATFORM=$OPTARG
+#/      ;;
+#/    c)
+#/      echo "Build: $OPTARG"
+#/      WHAT_TO_BUILD=$OPTARG
+#/      ;;
+#/    j)
+#/      echo "Num-processes: $OPTARG"
+#/      NPROCS=$OPTARG
+#/      ;;
+#/    s)
+#/      NPROCS=1
+#/      ;;
+#/    r) # release
+#/      NTI_BUILD_MODE=""
+#/      GSL_BUILD_MODE="--release"
+#/      ;;
+#/    -)  #parse long-option
+#/            case "${OPTARG}" in
+#/                unique)
+#/                    uniqueName=-`date +'%Y-%m-%d-%s'`
+#/                    echo $uniqueName > $FILENAME_PREVIOUSRUN
+#/                    ;;
+#/                reuse)
+#/                  line=$(head -n 1 $FILENAME_PREVIOUSRUN)
+#/                  if [ -z $line  ]; then
+#/                    echo "No previous runs yet !"
+#/                    exit
+#/                  else
+#/                    uniqueName=$line
+#/                  fi
+#/                    ;;
+#/                =*)
+#/                    val=${OPTARG#*=}
+#/                    opt=${OPTARG%=$val}
+#/                    echo "parsing option: '--${opt}', value: '${val}'" >&2
+#/                    ;;
+#/                *)
+#/                    if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+#/                        echo "unknown option --${OPTARG}" >&2
+#/                    fi
+#/                    ;;
+#/            esac;;
+#/    \?)
+#/      echo "Invalid option: -$OPTARG" >&2
+#/      exit 1
+#/      ;;
+#/#    :)
+#/#      echo "Option -$OPTARG requires an argument." >&2
+#/#      exit 1
+#/#      ;;
+#/  esac
+#/done
+SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
+#[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && echo 'right platform' || { echo "wrong-platform $PLATFORM"; exit; }
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+
+SUPPORTED_COMPONENTS="all common mdl gsl nti"
+[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
+
+#}}}
 
 #########################
 ## PROCESS
@@ -240,6 +320,9 @@ mv .Topology_backup.h Topology.h
 
 ###########################
 #{{{ 4. Final step
+if [ "$secondArg" == "-comment" ]; then
+  COMMENT=$thirdArg
+fi
 if [ ! -d "$OutputFolderName" ]; then
   mkdir $OutputFolderName
   RunSim

@@ -129,31 +129,35 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t v = (*V)[i];
 #if CHANNEL_KAf == KAf_TRAUB_1994
     {
-    dyn_var_t am = AMC * vtrap((v - AMV), AMD);
-    dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
-    dyn_var_t ah = AHC * exp((v - AHV) / AHD);
-    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-    // Traub Models do not have temperature dependence and hence Tadj is not used
-    dyn_var_t pm = 0.5 * dt * (am + bm) ;
-    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
-    dyn_var_t ph = 0.5 * dt * (ah + bh) ;
-    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+      dyn_var_t am = AMC * vtrap((v - AMV), AMD);
+      //dyn_var_t bm = (BMC * (v - BMV)) / (exp((v - BMV) / BMD) - 1);
+      dyn_var_t bm = BMC * vtrp((v - BMV), BMD);
+      dyn_var_t ah = AHC * exp((v - AHV) / AHD);
+      dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+      // Traub Models do not have temperature dependence and hence Tadj is not used
+      dyn_var_t pm = 0.5 * dt * (am + bm);
+      m[i] = (dt * am + m[i] * (1.0 - pm)) / (1.0 + pm);
+      dyn_var_t ph = 0.5 * dt * (ah + bh);
+      h[i] = (dt * ah + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
     {
-    dyn_var_t minf = 1.0/(1.0 + exp(-(v + IMV)/IMD));
-    //dyn_var_t taum = (TMC + TMF*exp(-pow((v + TMV)/TMD,2)))/T_ADJ;
-    dyn_var_t taum = (TMC + TMF*exp(-pow((v + TMV)/TMD,2)))/getSharedMembers().Tadj;
-    dyn_var_t hinf = 1.0/(1.0 + exp((v + IHV)/IHD));
-    //dyn_var_t tauh = (THC + THF*exp(-pow((v + THV)/THD,2)))/T_ADJ;
-    dyn_var_t tauh = (THC + THF*exp(-pow((v + THV)/THD,2)))/getSharedMembers().Tadj;
-    dyn_var_t pm = 0.5*dt/taum;
-    dyn_var_t ph = 0.5*dt/tauh;
-	  // Rempe-Chopp 2006
-    m[i] = (2.0*pm*minf + m[i]*(1.0 - pm))/(1.0 + pm);
-    h[i] = (2.0*ph*hinf + h[i]*(1.0 - ph))/(1.0 + ph);
+      dyn_var_t minf = 1.0 / (1.0 + exp(-(v + IMV) / IMD));
+      // dyn_var_t taum = (TMC + TMF*exp(-pow((v + TMV)/TMD,2)))/T_ADJ;
+      dyn_var_t taum =
+        (TMC + TMF * exp(-pow((v + TMV) / TMD, 2))) / getSharedMembers().Tadj;
+      dyn_var_t hinf = 1.0 / (1.0 + exp((v + IHV) / IHD));
+      // dyn_var_t tauh = (THC + THF * exp(-pow((v + THV) / THD, 2))) / T_ADJ;
+      dyn_var_t tauh =
+        (THC + THF * exp(-pow((v + THV) / THD, 2))) / getSharedMembers().Tadj;
+      dyn_var_t pm = 0.5 * dt / taum;
+      dyn_var_t ph = 0.5 * dt / tauh;
+      // Rempe-Chopp 2006
+      m[i] = (2.0 * pm * minf + m[i] * (1.0 - pm)) / (1.0 + pm);
+      h[i] = (2.0 * ph * hinf + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_MAHON_2000                                
+    {
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));       
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));       
     
@@ -161,42 +165,44 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t ph = 0.5*dt*getSharedMembers().Tadj / tau_h;        
     m[i] = (2.0*pm*m_inf + m[i]*(1.0 - pm))/(1.0 + pm);            
     h[i] = (2.0*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);            
+    }
 #elif CHANNEL_KAf == KAf_EVANS_2012
     {
-    dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
-    dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
-    dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
-    dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-    //NOTE: pm = dt * Tadj / (tau_m * 2);
-    //and  tau_m = scale_tau_m * 1/ (am + bm)
-    dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj / scale_tau_m;
-    m[i] = (dt * am  + m[i] * (1.0 - pm)) / (1.0 + pm);
-    dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
-    h[i] = (dt * ah  + h[i] * (1.0 - ph)) / (1.0 + ph);
+      dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
+      dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
+      dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
+      dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+      //NOTE: pm = dt * Tadj / (tau_m * 2);
+      //and  tau_m = scale_tau_m * 1/ (am + bm)
+      dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj / scale_tau_m;
+      m[i] = (dt * am + m[i] * (1.0 - pm)) / (1.0 + pm);
+      dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
+      h[i] = (dt * ah + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_WOLF_2005
     {
-    // NOTE: Some models use m_inf and tau_m to estimate m
-    std::vector<dyn_var_t>::iterator low =
-        std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
-    int index = low - Vmrange_taum.begin();
-    //dyn_var_t qm = dt * getSharedMembers().Tadj / (taumKAf[index] * 2);
-    dyn_var_t taum;
-    if (index == 0)
-      taum = taumKAf[0];
-    else
-      taum = linear_interp(Vmrange_taum[index-1], taumKAf[index-1], 
-        Vmrange_taum[index], taumKAf[index], v);
-    dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
-    //const dyn_var_t tau_h = 4.67; // for 35^C
-    const dyn_var_t tau_h = 14.0; 
-    dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
+      // NOTE: Some models use m_inf and tau_m to estimate m
+      std::vector<dyn_var_t>::iterator low =
+          std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
+      int index = low - Vmrange_taum.begin();
+      //dyn_var_t qm = dt * getSharedMembers().Tadj / (taumKAf[index] * 2);
+      dyn_var_t taum;
+      if (index == 0)
+        taum = taumKAf[0];
+      else
+        taum = linear_interp(Vmrange_taum[index - 1], taumKAf[index - 1],
+          Vmrange_taum[index], taumKAf[index], v);
+      dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
+      //const dyn_var_t tau_h = 4.67; // for 35^C
+      const dyn_var_t tau_h = 14.0;
+      dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 
-    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
-    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+      dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+      dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+
+      m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+      h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
     }
 
 #else
@@ -289,19 +295,24 @@ void ChannelKAf::initialize(RNG& rng)
       }
       assert(gbar_values.size() == gbar_branchorders.size());
       SegmentDescriptor segmentDescriptor;
-      for (j=0; j<gbar_branchorders.size(); ++j) {
-	if (segmentDescriptor.getBranchOrder(branchData->key) == gbar_branchorders[j]) break;
-      }
-      if (j == gbar_branchorders.size() and gbar_branchorders[j-1] == GlobalNTS::anybranch_at_end)
+      for (j = 0; j < gbar_branchorders.size(); ++j)
       {
-	gbar[i] = gbar_values[j-1];
+        if (segmentDescriptor.getBranchOrder(branchData->key) ==
+            gbar_branchorders[j])
+          break;
       }
-      else if (j < gbar_values.size()) 
-	gbar[i] = gbar_values[j];
+      if (j == gbar_branchorders.size() and
+          gbar_branchorders[j - 1] == GlobalNTS::anybranch_at_end)
+      {
+        gbar[i] = gbar_values[j - 1];
+      }
+      else if (j < gbar_values.size())
+        gbar[i] = gbar_values[j];
       else
-	gbar[i] = gbar_default;
+        gbar[i] = gbar_default;
     }
-    else {
+    else
+    {
       gbar[i] = gbar_default;
     }
   }
@@ -351,7 +362,7 @@ void ChannelKAf::initialize_others()
 #if CHANNEL_KAf == KAf_WOLF_2005
   std::vector<dyn_var_t> tmp(_Vmrange_taum, _Vmrange_taum + LOOKUP_TAUM_LENGTH);
   assert(sizeof(taumKAf) / sizeof(taumKAf[0]) == tmp.size());
-	//Vmrange_taum.resize(tmp.size()-2);
+  //Vmrange_taum.resize(tmp.size()-2);
   //for (unsigned long i = 1; i < tmp.size() - 1; i++)
   //  Vmrange_taum[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
   Vmrange_taum = tmp;

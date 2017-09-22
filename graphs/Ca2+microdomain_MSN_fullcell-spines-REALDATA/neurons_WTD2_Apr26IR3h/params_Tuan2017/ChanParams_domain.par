@@ -1,7 +1,7 @@
 # MTYPE = 0 (neuron), = 1 (GABA axonal terminal), = 2 or 3 (thin or mush spine)
 #       = 4 or 5 (thin or mush axonal terminal)
-# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
-CHANNEL_TARGETS 7
+# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den), 7=axontal terminal - bouton
+CHANNEL_TARGETS 8
 MTYPE BRANCHTYPE 
 #{{{REF
 # need to define KIR KRP
@@ -14,7 +14,7 @@ MTYPE BRANCHTYPE
 0 1  \
 #{{{
      Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-#NOTE: Kv31 is KAf
+#NOTE: Kv31 is KAf (no domain in soma)
      Kv31 [Voltage] [Voltage]  \
      KAs [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
@@ -28,12 +28,16 @@ MTYPE BRANCHTYPE
      CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
      CaN    [Voltage, Calcium] [Voltage, Calcium] \
      CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
-     CaR [Voltage, Calcium] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium] 
+#NOTE: No CaT in soma and axon??
 #}}}
 0 [3:4]  \
 #{{{
-     Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \ 
-     KAf [Voltage, Calcium(domain1)] [Voltage] CaT [Voltage, Calcium(domain1)] [Voltage, Calcium(domain1)] \
+     Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+#     Kv31 [Voltage] [Voltage] \
+     KAf [Voltage, Calcium(domain1)] [Voltage] \
+     CaT [Voltage, Calcium(domain1)] [Voltage, Calcium(domain1)] \
 #     KAf [Voltage, Calcium] [Voltage] CaT [Voltage, Calcium] [Voltage, Calcium] \
      KAs [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
@@ -42,7 +46,7 @@ MTYPE BRANCHTYPE
      KDR [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
-     NCX [Voltage, Calcium] [Calcium] \
+#     NCX [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage, Calcium] [Voltage, Calcium] \
      CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
      CaN    [Voltage, Calcium] [Voltage, Calcium] \
@@ -52,22 +56,31 @@ MTYPE BRANCHTYPE
 0 [5]  \
 #{{{
      Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \
+#NOTE: Kv31 is KAf (no domain in soma)
+     Kv31 [Voltage] [Voltage]  \
+#     KAf [Voltage] [Voltage] \
+     KAs [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
      KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
+     KDR [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
-     CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
-     CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
-     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+     CaLv12 [Voltage, Calcium] [Voltage, Calcium] \
+     CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
+     CaN    [Voltage, Calcium] [Voltage, Calcium] \
+     CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium] 
 #}}}
 0 [2, 7]  \
 #{{{
      Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
 #     KAf [Voltage, Calcium(domain1)] [Voltage] CaT [Voltage, Calcium(domain1)] [Voltage, Calcium(domain1)] \
 #     KAf [Voltage, Calcium] [Voltage] CaT [Voltage, Calcium] [Voltage, Calcium] \
-     KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
+     KAs [Voltage] [Voltage] \
+     KCNK [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
@@ -77,23 +90,31 @@ MTYPE BRANCHTYPE
 #}}}
 #}}}
 #{{{spine 2
-[2,3] 1 \ 
-     KAf [Voltage] [Voltage] \
-#    KAs [Voltage] [Voltage] \ 
-     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
-     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium]  \
-     PMCA [Voltage, Calcium] [Calcium]  \
-     IP3R [IP3] [Calcium, IP3] 
-[2,3] 3  \
-     KAf [Voltage] [Voltage] \
-#     KAs [Voltage] [Voltage] \ 
-     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
-     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] \
-     PMCA [Voltage, Calcium] [Calcium]  \
-     IP3R [IP3] [Calcium, IP3]  
+[2,3] 1  \
+#KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
+#     Nat [Voltage] [Voltage] \
+     KCNK [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
+#     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
+     IP3R [IP3] [Calcium, IP3] \
+     PMCA [Voltage, Calcium] [Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium]  \
+     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
+[2,3] 3 \
+#KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \ 
+#     Nat [Voltage] [Voltage] \
+     KCNK [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
+#     RYR1 [Calcium, CalciumER] [Calcium, CalciumER]  \
+     IP3R [IP3] [Calcium, IP3]  \
+     PMCA [Voltage, Calcium] [Calcium] \
+     CaR [Voltage, Calcium] [Voltage, Calcium] \
+     CaT [Voltage, Calcium] [Voltage, Calcium]  \
+     CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
 #}}}
 #{{{Glutamatergic bouton 1
-[5, 4] [1, 2] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+[3,4,6] [1,2] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
      MK [Voltage] [Voltage] Kv31 [Voltage] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
@@ -111,19 +132,20 @@ MTYPE BRANCHTYPE
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 #}}}
 
-CHANNEL_COSTS 24
+CHANNEL_COSTS 25
 #{{{
 #NOTE: Some of the names refer to the same channels, but we put here
 # though not affecting the simulation
 Nat     0.414243
 Nap     0.414243
+KCNK     0.254051
 KAf     0.254051
 Kt      0.254051
 KAs     0.254051
 Ks      0.254051
+KIR     0.254051
 KRP     0.254051
 Kp      0.254051
-KIR     0.254051
 KDR     0.254051
 Kv31    0.254051
 MK      0.254051
@@ -149,68 +171,58 @@ NCX     0.254051
 # gbar [S/m^2]  --> 1e-3*gbar  [nS/um^2]
 # Ibar [uA/cm^2] --> Ibar/100 [pA/um^2] 
 #      [pA/pF]  = [uA/uF] = [uA/cm^2]
-CHANNEL_PARAMS 34
-#{{{neuron 16
+CHANNEL_PARAMS 42
+#{{{neuron 20
 #{{{Nat   Test
 # {{{Test
-Nat 3
+Nat 4
 MTYPE BRANCHTYPE 
-0 1      <gbar={95.0}>  # we need INap
-0 [2,5,7]  <gbar_dists={15, 20, 30, 50}; gbar_values={95.0, 95.0, 0.0, 5.0}>
-#0 [2,5,7]  <gbar={375.195}>
-#0 [2,5,7]  <gbar_dists={15, 30, 40}; gbar_values={25.0, 395.195, 5.0}>
-#0 1      <gbar={725.0}>
-#0 [2,5,7]  <gbar={725.195}>
-#0 [3,4,6]  <gbar={0.795}> 
-0 [3,4,6]  <gbar_dists={45, 55}; gbar_values={0.195, 0.05, 0.002}> 
+#0 1      <gbar={1}>  
+#0 1      <gbar={18.75}>  
+#0 1      <gbar={25}>  
+#0 1      <gbar={30}>  
+#0 1      <gbar={45}>  
+0 1      <gbar={105}>  
+#0 [5]  <gbar={125.245}>
+0 [5]  <gbar={105.245}>
+#0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0}>
+#0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0, Vhalf_h_shift=5.0}>
+0 [2,7]  <gbar={165.245, Vhalf_m_shift=-3.0}>
+0 [3,4,6]  <gbar={0.245}>
 # }}}
-# {{{ Evans 2012
-#Nat 3
-#MTYPE BRANCHTYPE 
-#0 1      <gbar={90.0}>
-#0 [2,5,7]  <gbar={90.0}>
-#0 [3,4,6]  <gbar={0.195}>
-#0 [3,4,6] <gbar_branchorders={1, 2, 3, -1}; gbar_values={2.73, 2.73, 0.975, 0.975}>
-# }}}
-# {{{Wolf
-#Nat 3
-#MTYPE BRANCHTYPE 
-#0 1      <gbar={15.0}>
-#0 [2,5,7]  <gbar={15.0}>
-#0 [3,4,6]  <gbar={0.195}>
-# }}}
-#{{{Moyer-2007
+#/#{{{Wolf-2005
+#/Nat 4 
+#/BRANCHTYPE MTYPE
+#/1      0 <gbar={15}>
+#/[2:6]  0 <gbar={0.195}>
+#/[1,2]  1 <gbar={0.244}>
+#/[1,3]  2 <gbar={0.244}>
+#/#}}}
+##{{{Moyer-2007
 #Nat 4
 #BRANCHTYPE MTYPE
 #1  0 <gbar={18.75}>
 #[2:4]  0 <gbar={0.244}>
 #[1,2]  1 <gbar={0.244}>
 #[1,3]  2 <gbar={0.244}>
-#}}}
-#{{{Hay-2011 Pyramidal
+##}}}
+##{{{Hay-2011 Pyramidal
 #Nat 5
 #BRANCHTYPE MTYPE
 #[1:2] 0 <gbar={20.4}>
 #[3:4] 0 <gbar={0.213}>
 #[1,2] 1 <gbar={20.4}>
 #[1,3] 2 <gbar={0.213}>
+##}}}
 #}}}
-#}}}
-#{{{Nap Test
-# {{{ Test
+#{{{Nap
+# {{{ Wolf-2005
 Nap 3
 MTYPE BRANCHTYPE 
-0 1       <gbar={0.00272}> 
-0 [2,5,7] <gbar={0.00272}>
-0 [3,4,6] <gbar={0.00272}>
+0 1         <gbar={4.0e-4}> 
+0 [2,5,7]   <gbar={1.38e-6}>
+0 [3,4,6]   <gbar={1.38e-6}>
 #}}}
-## {{{ Wolf-2005
-#Nap 3
-#MTYPE BRANCHTYPE 
-#0 1       <gbar={4e-4}> 
-#0 [2,5,7] <gbar={4e-4}>
-#0 [3,4,6]   <gbar={1.38e-6}>
-##}}}
 #{{{ Hay-2011 
 #Nap 4
 #BRANCHTYPE MTYPE
@@ -220,76 +232,195 @@ MTYPE BRANCHTYPE
 #2 1 <gbar={0.0172}>
 #}}}
 # }}}
-#{{{KAf
-#{{{KAf Test
-KAf 3
-MTYPE BRANCHTYPE 
-0 1        <gbar={3.6}>     
-0 [2,5,7]  <gbar={3.6}>
-#PLAN: to use till_end instead of -1
-#0 [2:6]  <gbar_branchorders={0, 1, till_end}>
-0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={3.6, 0.33, 0.33}>
+#{{{ KCNK
+KCNK 3
+BRANCHTYPE MTYPE
+[1:6] 0 <P_Kbar={1.45e-6}>
+[1,2] 1 <P_Kbar={1.45e-6}>
+[1,3] 2 <P_Kbar={1.45e-6}>
+#}}} 
+#{{{Kv31
+#{{{Test
+Kv31 1
+MTYPE BRANCHTYPE
+#0 1 <gbar={2.3}>
+0 1      <gbar={0.3}>
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}>
+#0 [3,4,6] <gbar_values={1.0, 0.33, 0.33}>
+#0 [3,4,6] <gbar_dists={50, 100}; \
+#           gbar_values={1.0, 0.3, 0.3}}
 #}}}
-##{{{KAf Moyer07
+##{{{Moyer
 #KAf 3
-#MTYPE BRANCHTYPE 
-#0 1        <gbar={3.6}>     
-#0 [2,5,7]  <gbar={3.6}>
-##0 [3,4,6]    <gbar={2.25}>
+#BRANCHTYPE MTYPE
+#1 0 <gbar={3.5}>
+#[2:6] 0 <gbar_branchorders={1, 2, -1}>
+#[2:6] 0 <gbar_values={3.5, 0.33, 0.33}>
 ##PLAN: to use till_end instead of -1
-##0 [2:6]  <gbar_branchorders={0, 1, till_end}>
-#0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={3.6, 0.33, 0.33}>
+##[2:6] 0 <gbar_branchorders={0, 1, till_end}>
+##2 0 <gbar_branchorders={1, 2, -1}>
+##2 0 <gbar_values={2.25, 0.21, 0.21}>
 ##}}}
-##{{{KAf Wolf05
+##{{{Wolf
 #KAf 3
-#MTYPE BRANCHTYPE 
-#0 1        <gbar={2.25}>     
-#0 [2,5,7]  <gbar={2.25}>
+#BRANCHTYPE MTYPE
+#1 0 <gbar={2.25}>
+#[2:6] 0 <gbar_branchorders={1, 2, -1}>
+#[2:6] 0 <gbar_values={2.25, 0.21, 0.21}>
 ##PLAN: to use till_end instead of -1
-#0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={2.25, 0.21, 0.21}>
+##[2:6] 0 <gbar_branchorders={0, 1, till_end}>
+##2 0 <gbar_branchorders={1, 2, -1}>
+##2 0 <gbar_values={2.25, 0.21, 0.21}>
+##}}}
+#}}}
+#{{{KAf
+#{{{Test
+KAf 2
+MTYPE BRANCHTYPE
+#0 1 <gbar={2.3}>
+0 1      <gbar={0.3}>
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}>
+#0 [3,4,6] <gbar_values={1.0, 0.33, 0.33}>
+0 [3,4,6] <gbar_dists={50, 100}; \
+           gbar_values={1.0, 0.3, 0.3}}
+#}}}
+##{{{Moyer
+#KAf 3
+#BRANCHTYPE MTYPE
+#1 0 <gbar={3.5}>
+#[2:6] 0 <gbar_branchorders={1, 2, -1}>
+#[2:6] 0 <gbar_values={3.5, 0.33, 0.33}>
+##PLAN: to use till_end instead of -1
+##[2:6] 0 <gbar_branchorders={0, 1, till_end}>
+##2 0 <gbar_branchorders={1, 2, -1}>
+##2 0 <gbar_values={2.25, 0.21, 0.21}>
+##}}}
+##{{{Wolf
+#KAf 3
+#BRANCHTYPE MTYPE
+#1 0 <gbar={2.25}>
+#[2:6] 0 <gbar_branchorders={1, 2, -1}>
+#[2:6] 0 <gbar_values={2.25, 0.21, 0.21}>
+##PLAN: to use till_end instead of -1
+##[2:6] 0 <gbar_branchorders={0, 1, till_end}>
+##2 0 <gbar_branchorders={1, 2, -1}>
+##2 0 <gbar_values={2.25, 0.21, 0.21}>
 ##}}}
 #}}}
 #{{{ KAs
-KAs 3
+#{{{Test
+KAs 2
 MTYPE BRANCHTYPE
 0  1  <gbar={0.104}>
+0 [3,4,6] <gbar_branchorders={1, 2, -1}; \
+        gbar_values={0.104, 9.51e-3, 9.51e-3}>
+#0 [2,5,7] <gbar_branchorders={1, 2, -1}; \
+#        gbar_values={0.104, 9.51e-3, 9.51e-3}>
 #PLAN: to use till_end instead of -1
 #0 [2:6] <gbar_branchorders={0, 1, till_end}>
 #0 2  <gbar_branchorders={1, 2, -1}>
 #0 2  <gbar_values={0.104, 0.00951, 0.00951}>
-0 [3,4,6] <gbar_branchorders={1, 2, -1}; \
-        gbar_values={0.104, 0.00951, 0.00951}>
-0 [2,5,7] <gbar_branchorders={1, 2, -1}; \
-        gbar_values={0.104, 0.00951, 0.00951}>
+#}}}
+##{{{Block
+#KAs 3
+#MTYPE BRANCHTYPE
+##\\#{{{//block them
+##\\0  1  <gbar={0.00}>
+##\\0 [3,4,6] <gbar={0.00}>
+##\\0 [2,5,7] <gbar={0.00}>
+##\\#}}}
+##}}}
+##{{{Wolf
+#KAs 3
+#MTYPE BRANCHTYPE
+#0  1  <gbar={0.104}>
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}; \
+#        gbar_values={0.104, 9.51e-3, 9.51e-3}>
+#0 [2,5,7] <gbar_branchorders={1, 2, -1}; \
+#        gbar_values={0.104, 9.51e-3, 9.51e-3}>
+##PLAN: to use till_end instead of -1
+##0 [2:6] <gbar_branchorders={0, 1, till_end}>
+##0 2  <gbar_branchorders={1, 2, -1}>
+##0 2  <gbar_values={0.104, 0.00951, 0.00951}>
+##}}}
 #}}}
 #{{{ KIR
+#{{{Wolf
 KIR 3
 MTYPE BRANCHTYPE 
-0 1       <gbar={0.0014}>   
-0 [2,5,7] <gbar={0.0014}>
-0 [3,4,6]   <gbar={0.0014}>
+0 1       <gbar={1.8e-3}>   
+0 [2,5,7] <gbar={1.8e-3}>
+0 [3,4,6] <gbar={1.8e-3}>
+#}}}
 #}}}
 #{{{ KRP
+#{{{Wolf
 KRP 3
-BRANCHTYPE MTYPE
-[1:6] 0 <gbar={0.01}>
-[1,2] 1 <gbar={0.01}>
-[1,3] 2 <gbar={0.01}>
+MTYPE BRANCHTYPE 
+0 1     <gbar={0.01}>
+0 [2,5] <gbar={0.01}>
+0 [3,4] <gbar={0.01}>
+#}}}
+#}}}
+#{{{KDR
+#{{{ Test
+KDR 3
+MTYPE BRANCHTYPE 
+0 1 <gbar={1.0e-1}>
+0 5 <gbar={1.0e-1}>
+0 2 <gbar={1.0e-2}>
+#0 3 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={1.0e-2, 5.0e-3, 1.0e-3, 1.0e-3, 0.0, 0.0, 0.0}}
+#0 4 <gbar_dists={50, 100}; \
+#     gbar_values={5.0e-3, 0.0, 0.0}}
+#}}}
+##{{{ Traub 1994
+#KDR 4
+#BRANCHTYPE MTYPE
+#1 0 <gbar={1.350}>
+#2 0 <gbar={2.5}>
+#3 0 <gbar_dists={50, 100, 150, 200, 250, 300}; \
+#     gbar_values={0.25, 0.25, 0.50, 0.25, 0.0, 0.0, 0.0}}
+#4 0 <gbar_dists={50, 100}; \
+#     gbar_values={0.15, 0.0, 0.0}}
+##}}}
 #}}}
 #{{{ BK
+#{{{Test
 BK 3
 BRANCHTYPE MTYPE
 [1:6] 0 <gbar={0.02}>
 [1,2] 1 <gbar={0.02}>
 [1,3] 2 <gbar={0.02}>
 #}}}
+#{{{Moyer 2007
+#BK 3
+#BRANCHTYPE MTYPE
+#[1:6] 0 <gbar={1.2}>
+#[1,2] 1 <gbar={1.2}>
+#[1,3] 2 <gbar={1.2}>
+#}}}
+#{{{Wolf
+#BK 3
+#BRANCHTYPE MTYPE
+#[1:6] 0 <gbar={0.01}>
+#[1,2] 1 <gbar={0.01}>
+#[1,3] 2 <gbar={0.01}>
+#}}}
+#}}}
 #{{{ SK
-#{{{ NOTE: data shows SK in soma is small
+#{{{Moyer 2007
+# NOTE: data shows SK in soma is small
 SK 3
 MTYPE BRANCHTYPE 
 0 1       <gbar={0.05}>
 0 [2,5,7] <gbar={1.885}>
 0 [3,4]   <gbar={1.885}>
+#}}}
+#{{{Wolf
+#SK 1
+#BRANCHTYPE MTYPE
+#[1:6] 0 <gbar={1.45}>
 #}}}
 #{{{ Hay-2011 
 #SK 7
@@ -304,14 +435,20 @@ MTYPE BRANCHTYPE
 #}}}
 #}}}
 #{{{ CaLv12
-CaLv12 1
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.7e-4}>
+CaLv12 3
+MTYPE BRANCHTYPE 
+0 [1] <PCabar={6.7e-4}>
+0 [3,4,6] <PCabar={6.7e-4}>
+0 [2,5,7] <PCabar={6.7e-4}>
 #}}} 
 #{{{ CaLv13
-CaLv13 1
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.19e-4}>
+CaLv13 3
+MTYPE BRANCHTYPE 
+#0 [1] <PCabar={6.19e-4}>
+#0 [3,4,6] <PCabar={6.25e-4}>
+0 [1] <PCabar={2.19e-3}>
+0 [3,4,6] <PCabar={2.25e-3}>
+0 [2,5,7] <PCabar={6.25e-4}>
 #}}}
 #{{{ CaN
 CaN 3
@@ -322,56 +459,43 @@ BRANCHTYPE MTYPE
 #}}}
 #{{{ CaPQ
 CaPQ 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.0e-4}>
-[1,2] 1 <PCabar={6.0e-4}>
-[1,3] 2 <PCabar={6.0e-4}>
+MTYPE BRANCHTYPE 
+0 [1] <PCabar={6.0e-4}>
+0 [3,4,6] <PCabar={6.0e-4}>
+0 [2,5,7] <PCabar={6.0e-4}>
 #}}}
 #{{{ CaR
-#{{{ CaR  Test
-CaR 2
+CaR 3
 MTYPE BRANCHTYPE 
+0 [1] <PCabar={2.6e-3}>
+0 [3,4,6] <PCabar={2.6e-3}>
 0 [2,5,7] <PCabar={2.6e-3}>
-0 [3,4,6] <Pbar_dists={80.0}; Pbar_values={0.0, 2.6e-3}>
 #}}}
-##{{{ CaR Moyer 07 - 10x than Wolf-05
-#CaR 3
-#BRANCHTYPE MTYPE
-#[1:6] 0 <PCabar={2.6e-3}>
-#[1,2] 1 <PCabar={2.6e-3}>
-#[1,3] 2 <PCabar={2.6e-3}>
-##}}}
-#}}}
-#{{{ CaT Test
-#{{{ CaT Test
-CaT 2
+#{{{ CaT
+CaT 3
 MTYPE BRANCHTYPE 
+0 [1]     <PCabar={4.0e-5}>
+0 [3,4,6] <PCabar={4.0e-5}>
 0 [2,5,7] <PCabar={4.0e-5}>
-0 [3,4,6] <Pbar_dists={80.0}; Pbar_values={0, 4.0e-4}>
-#0 [3,4,6] <Pbar_dists={50.0}; Pbar_values={0, 4.0e-3}> # D2-MSN
-#}}}
-##{{{ CaT Moyer 07 - 10x from Wolf05
-#CaT 3
-#BRANCHTYPE MTYPE
-#[1:6] 0 <PCabar={4.0e-5}>
-#[1,2] 1 <PCabar={4.0e-5}>
-#[1,3] 2 <PCabar={4.0e-5}>
-##}}}
+#0 [1]     <PCabar={2.0e-3}>
+#0 [3,4,6] <PCabar={2.0e-3}>
+#0 [2,5,7] <PCabar={5.0e-4}>
 #}}}
 #{{{ PMCA
 PMCA 6
 #{{{
+#Carter, Sebastini (2004) tau = 25 ms --> delta(Ca) ~ 0.4 uM on dendrite at ~40um
 # tau ~ [ms]
 BRANCHTYPE MTYPE 
 # Ca2+ removal in soma is faster
 # We may need to consider adding buffer_cap to map to different beta value for spine vs den vs soma
 ## NOTE: large value of tau is important in keeping Ca-neck high
-1 0 <tau={3.2}>
-2 0 <tau={30.9}>
-5 0 <tau={30.9}>
-3 0 <tau={30.9}>
-4 0 <tau={30.9}>
-6 0 <tau={30.9}>
+1 0 <tau={1.9}>
+2 0 <tau={1.9}>
+5 0 <tau={1.9}>
+3 0 <tau={1.9}>
+4 0 <tau={1.9}>
+6 0 <tau={1.9}>
 #3 0 <tau={0.23}>
 #4 0 <tau={0.23}>
 #6 0 <tau={0.23}>
@@ -385,42 +509,74 @@ BRANCHTYPE MTYPE
 #}}}
 #}}}
 #}}}
-#{{{ spines 6
-#{{{ RYR 
+#{{{ spines 11
+#{{{ Nat
+Nat 2
+MTYPE BRANCHTYPE 
+[2,3] 1  <gbar={0.245}>  
+[2,3] 3  <gbar={0.245}>
+#}}}
+#{{{ KCNK
+KCNK 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <P_Kbar={1.25e-6}>
+[2,3] 3 <P_Kbar={1.25e-6}>
+#}}} 
+#{{{RYR
 RYR 2
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={4.0e-4}> 
 [2, 3] 3       <gbar={4.0e-4}>
 #}}}
-#{{{IP3R 
+#{{{IP3R
 IP3R 2
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={4.0e-4}> 
 [2, 3] 3       <gbar={4.0e-5}>
 #}}}
-#{{{KAf 
+#{{{KAf
 KAf 2
 MTYPE BRANCHTYPE 
 [2, 3] 1       <gbar={1.38e-4}>
-[2, 3] 3       <gbar={1.38e-4}>
+[2, 3] 3       <gbar={1.38e-5}>
 #}}}
-#{{{ CaLv13
-CaLv13 2
-BRANCHTYPE MTYPE
-[1,3] 2 <PCabar={6.25e-4}>
-[1,3] 3 <PCabar={6.25e-4}>
-#}}}
-#{{{ CaLv12
-CaLv12 2
-BRANCHTYPE MTYPE
-[1,3] 2 <PCabar={6.7e-4}>
-[1,3] 3 <PCabar={6.7e-4}>
-#}}} 
-#{{{PMCA
-PMCA 1
-# tau ~ [ms]
+#{{{ KIR
+KIR 2
 MTYPE BRANCHTYPE 
-[2, 3] [1,3] <tau={1.9}>
+[2, 3] 1       <gbar={1.8e-3}>
+[2, 3] 3       <gbar={1.8e-3}>
+#}}}
+#{{{CaR
+CaR 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={2.6e-3}>
+[2,3] 3 <PCabar={2.6e-3}>
+#}}}
+#{{{CaLv12
+CaLv12 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={6.7e-4}>
+[2,3] 3 <PCabar={6.7e-4}>
+#}}}
+#{{{CaLv13
+CaLv13 2
+MTYPE BRANCHTYPE 
+[2:3] 1 <PCabar={6.19e-4}>
+[2,3] 3 <PCabar={6.25e-4}>
+#}}}
+#{{{CaPQ
+CaPQ 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={6.0e-4}>
+[2,3] 3 <PCabar={6.0e-4}>
+#}}}
+#{{{ CaT
+CaT 2
+MTYPE BRANCHTYPE 
+[2,3] 1 <PCabar={4.0e-5}>
+[2,3] 3 <PCabar={4.0e-5}>
+#[2,3] 1 <PCabar={2.0e-3}>
+##[2,3] 3 <PCabar={2.0e-3}>
 #}}}
 #}}}
 #{{{Glutamatergic bouton 5
@@ -507,7 +663,13 @@ BRANCHTYPE MTYPE
 #  fraction_surface = % [of membrane-surface-area]
 # IMPORTANT: ';' separated list of values
 MICRODOMAIN_PARAMS 3
-domain1  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
-domain2  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
-domain3  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+#domain1  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+#domain2  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+#domain3  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+#domain1  <v_efflux={0.02}; depth_microdomain={10}; fraction_surface={1.0}>
+#domain2  <v_efflux={0.02}; depth_microdomain={10}; fraction_surface={1.0}>
+#domain3  <v_efflux={0.02}; depth_microdomain={10}; fraction_surface={1.0}>
+domain1  <v_efflux={0.01}; depth_microdomain={10}; fraction_surface={1.0}>
+domain2  <v_efflux={0.01}; depth_microdomain={10}; fraction_surface={1.0}>
+domain3  <v_efflux={0.01}; depth_microdomain={10}; fraction_surface={1.0}>
 

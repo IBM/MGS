@@ -802,6 +802,12 @@ NodeType ChannelKAf
 (<E_K = {Erev_K}>)
 #endif
 { computeE->initialize2, initialize->initialize3, update->solveChannels };
+  /* KAf - fast-inactivating 'A'-type K+ Kv4.2 data */
+NodeType ChannelKAf_KChIP 
+#if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY
+(<E_K = {Erev_K}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels };
   /* KAs - slow-inactivating 'A'-type K+ Kv1.2 data */
 NodeType ChannelKAs 
 #if CHOCE_REVERSIAL_POTENTIAL_POTASSIUM == DEFINE_EXPLICITLY

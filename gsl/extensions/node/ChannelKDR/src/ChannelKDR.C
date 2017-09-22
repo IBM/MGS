@@ -95,6 +95,7 @@
 // Formula:
 //    I = gbar * n^4 * (V-Erev)
 // Equations from paper Wang_Buzsaki_1996, half activation voltages shifted by 7mV 
+//   designed for Hippocampal interneuron
 #define Vshift 7.0 
 #define ANC -0.01                                                                  
 #define ANV (-34.0+Vshift) 
@@ -115,9 +116,11 @@
 #define BNV  13.0  // mV
 #define BND  -12.5  // mV
 #elif CHANNEL_KDR == KDR_ERISIR_1999
-//Kv1.3 model derived from 'n' type current measured in human T-lymphocyte (Cahalan et al. 1985)
+// Designed to model fast-spiking neocortical interneuron 
+// Kv1.3 model derived from 'n' type current measured in human T-lymphocyte (Cahalan et al. 1985)
 //Formula
 //   I = gbar * n^4 
+// NOTE: 0.616/0.014 = 44
 #define ANC  -0.014
 #define ANV -44.0 // mV
 #define AND -2.3  // mV
@@ -125,8 +128,26 @@
 #define BNV -44.0 // mV 
 #define BND 34.0  // mV
 
+#elif CHANNEL_KDR == KDR_TUAN_JAMES_2017
+// Adopted from Erisir (1999)
+// Kv1.3 model derived from 'n' type current measured in human T-lymphocyte (Cahalan et al. 1985)
+// Adjusted Vh half-activation
+//Formula
+//   I = gbar * n^4 
+// NOTE: 0.616/0.014 = 44
+#define Vh_shift 0.0 //15.0 // mV
+//#define scale_tau_n 0.3 //0.4
+#define ANC  -0.014
+#define ANV (-44.0 + Vh_shift) // mV
+#define AND -2.3  // mV
+#define BNC 0.0043  
+#define BNV (-44.0 + Vh_shift) // mV 
+#define BND 34.0  // mV
 #endif
 
+#ifndef scale_tau_n
+#define scale_tau_n 1.0
+#endif
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
 //   --> output gate(t+dt/2)
@@ -188,16 +209,24 @@ void ChannelKDR::update(RNG& rng)
 #elif CHANNEL_KDR == KDR_MIGLIORE_1999 
     dyn_var_t an = ANC * exp( (v - ANV) / AND );
     dyn_var_t bn = BNC * exp( (v - BNV) / BND );
-    dyn_var_t tau_n = max(2.0, 50.0 * bn / (bn + an));
+    dyn_var_t tau_n = std::max(2.0, 50.0 * bn / (bn + an));
     dyn_var_t n_inf = 1.0 / (1 + an);
     dyn_var_t qn = dt * getSharedMembers().Tadj / (tau_n * 2);         
     n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);                
-    g[i] = gbar[i] * n; 
+    g[i] = gbar[i] * n[i]; 
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
-#elif CHANNEL_KDR == KDR_ERISIR_1999
+#elif CHANNEL_KDR == KDR_ERISIR_1999 || \
+      CHANNEL_KDR == KDR_TUAN_JAMES_2017
     dyn_var_t an = ANC * vtrap( v - ANV, AND);
     dyn_var_t bn = BNC / (exp((v - BNV) / BND));
-    dyn_var_t tau_n = 1.0 / (an + bn);
+    dyn_var_t tau_n = scale_tau_n * 1.0 / (an + bn);
+
+//#if  CHANNEL_KDR == KDR_TUAN_JAMES_2017
+//#define scale_tau_n_left_side 0.02
+//    if (v <= - 60.0)
+//      tau_n = tau_n * scale_tau_n_left_side;
+//#endif
+
     dyn_var_t n_inf = an / (an + bn);
     // m' = (m_inf - m ) / tau_m;
     dyn_var_t qn = dt * getSharedMembers().Tadj / (tau_n * 2);
@@ -315,7 +344,8 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t an = ANC * exp( (v - ANV) / AND );
     n[i] = 1.0 / (1 + an);
     g[i] = gbar[i] * n[i]; 
-#elif CHANNEL_KDR  == KDR_ERISIR_1999
+#elif CHANNEL_KDR  == KDR_ERISIR_1999 || \
+      CHANNEL_KDR == KDR_TUAN_JAMES_2017
     dyn_var_t an = ANC * vtrap( v - ANV, AND);
     dyn_var_t bn = BNC / (exp((v - BNV) / BND));
     n[i] = an / (an + bn);

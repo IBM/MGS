@@ -99,7 +99,7 @@ void CaConcentrationJunction::initializeJunction(RNG& rng)
 
   float Pdov = M_PI * DCa / volume;
 #ifdef USE_SUBSHELL_FOR_SOMA
-  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA &&
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
       dimension->r > THRESHOLD_SIZE_R_SOMA // to avoid the confusing of spine head
       )//TUAN TODO: consider fixing this
   {

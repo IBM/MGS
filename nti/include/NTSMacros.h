@@ -182,6 +182,7 @@
 #define KDR_MAHON_2000          7
 #define KDR_ERISIR_1999         9 
 #define KDR_MOYER_2007          KDR_ERISIR_1999 
+#define KDR_TUAN_JAMES_2017     10 
 
 #define _KDR_DEFAULT KDR_TRAUB_1994
 
@@ -964,6 +965,8 @@
 #define CHANNEL_KCNK KCNK_GHK_TUAN_2017
   //#define CHANNEL_KIR KIR_WOLF_2005
 #define CHANNEL_KIR KIR2_1_TUAN_JAMES_2017
+//#define PREDICT_JUNCTION_IGNORE_AXIAL  
+//#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
 
 //active
   //#define CHANNEL_NAT NAT_WOLF_2005
@@ -975,7 +978,9 @@
 //#define CHANNEL_KAs KAs_EVANS_2012
   #define CHANNEL_KRP KRP_WOLF_2005
 //#define CHANNEL_KDR  KDR_TRAUB_1995
-#define CHANNEL_KDR KDR_ERISIR_1999
+//#define CHANNEL_KDR KDR_ERISIR_1999 // long inactivation as Vh=-44
+#define CHANNEL_KDR KDR_TUAN_JAMES_2017 // try to shift Vh to -30 side 
+//#define CHANNEL_KDR KDR_MIGLIORE_1999  // turn off too early
   #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
   #define CHANNEL_SK SK_WOLF_2005
   #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
