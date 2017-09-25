@@ -21,11 +21,6 @@
 
 void VoltageClamp::initialize(RNG& rng) 
 {
-  if (type == 1)
-  {
-    outFile = new std::ofstream(fileName.c_str());
-    (*outFile)<<"# Time\tCurrent\n";
-  }
   if (not deltaT)
   {
     std::cerr << "ERROR: Please connect deltaT to " << typeid(*this).name() << std::endl;
@@ -36,6 +31,12 @@ void VoltageClamp::initialize(RNG& rng)
   }
   assert(deltaT);
   assert(V);
+
+  if (type == 1)
+  {
+    outFile = new std::ofstream(fileName.c_str());
+    (*outFile)<<"# Time\tCurrent\n";
+  }
 
   //NOTE: If not defined, idx=0 default
   surfaceArea = &(dimensions[idx]->surface_area);

@@ -43,6 +43,7 @@ class VoltageClamp : public CG_VoltageClamp
       int _status; // 
       bool _isOn;
       float _Vprev;	// Declare voltage from previous iteration for calculating dV
+      int waveformIdx;
 };
 
 #endif

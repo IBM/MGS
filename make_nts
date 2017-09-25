@@ -88,14 +88,13 @@ while getopts "$optspec" optchar; do
       ;;
     r) # release
       RELEASE="-release"
+      GSL_BUILD_MODE="--release"
       ;;
     g) # GPU extensions
-      GPU="-gpu"
-      GSL_BUILD_MODE="$GSL_BUILD_MODE --gpu"
+      GPU="--gpu"
       ;;
     a) # Armadillo extensions
-      ARMA="-arma"
-      GSL_BUILD_MODE="$GSL_BUILD_MODE --arma"
+      ARMA="--arma"
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
@@ -112,21 +111,19 @@ while getopts "$optspec" optchar; do
                     MCO="-MCO"
                     ;;
 		release) # release
-                    NTI_BUILD_MODE=""  #keep empty
+                    GSL_BUILD_MODE="--release"
                     RELEASE="-release"
 		    ;;
 		gpu) # GPU extensions
-                    GPU="-gpu"
-                    GSL_BUILD_MODE="$GSL_BUILD_MODE --gpu"
+                    GPU="--gpu"
 		    ;;
 		arma) # Armadillo extensions
-                    ARMA="-arma"
-                    GSL_BUILD_MODE="$GSL_BUILD_MODE --arma"
+                    ARMA="--arma"
 		    ;;
                 loglevel)
-                  val="${!OPTIND}"
-		  GSL_BUILD_MODE="$GSL_BUILD_MODE --loglevel $val" 
-                  ;;
+                    val="${!OPTIND}"
+                    GSL_BUILD_MODE="--loglevel $val" 
+                    ;;
                 someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
@@ -146,6 +143,10 @@ while getopts "$optspec" optchar; do
       echo "Invalid option: -$OPTARG" >&2
       exit 1
       ;;
+#    :)
+#      echo "Option -$OPTARG requires an argument." >&2
+#      exit 1
+#      ;;
   esac
 done
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
@@ -235,14 +236,14 @@ if which python | grep -q1 /\python; then
 	exit; 
 fi
 
-if [ "$GPU" == "-gpu" ]; then
+if [ "$GPU" == "--gpu" ]; then
     if which nvidia-smi | grep -q1 /\nvidia-smi; then
         echo CUDA probably found...; else echo CUDA potentially not found!;
                                           exit
     fi
 fi
 
-if [ "$ARMA" == "-arma" ]; then
+if [ "$ARMA" == "--arma" ]; then
     if `ldconfig -p | grep -q armadillo`; then
         echo Armadillo probably found...; else echo Armadillo potentially not found!;
                                           exit
@@ -284,24 +285,17 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ]; then
       make clean;
+      echo "${cc_blue}Removed MDL code successful.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
-        make clean;
-        if [ "$RELEASE" == "-release" ]; then
-            make -j $NPROCS RELEASE="-release"
-        else
-            make -j $NPROCS RELEASE=""
-        fi
+      make clean;
+      make -j $NPROCS RELEASE="$RELEASE"
       if [ `ls $MDLROOT/bin/mdlparser` ]; then 
         echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
       fi
     fi
   else
-    if [ "$RELEASE" == "-release" ]; then
-        make -j $NPROCS RELEASE="-release"
-    else
-        make -j $NPROCS RELEASE=""
-    fi
+    make -j $NPROCS RELEASE="$RELEASE"
     if [ `ls $MDLROOT/bin/mdlparser` ]; then 
       echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
     fi
@@ -338,19 +332,11 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
       make realclean;
-      if [ "$RELEASE" == "-release" ]; then        
-          make -j $NPROCS RELEASE="-release"
-      else
-          make -j $NPROCS RELEASE=""
-      fi
+      make -j $NPROCS RELEASE="$RELEASE"
       echo "${cc_blue}Build COMMON code successful.${cc_normal}"
     fi
   else
-    if [ "$RELEASE" == "-release" ]; then        
-        make -j $NPROCS RELEASE="-release"
-    else
-        make -j $NPROCS RELEASE=""
-    fi      
+    make -j $NPROCS RELEASE="$RELEASE"
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
   cd $NTSROOT
@@ -378,22 +364,14 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean;
-      echo "${cc_blue}Removed MDL code successful.${cc_normal}"
+      echo "${cc_blue}Removed NTI code successful.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean;
-      if [ "$RELEASE" == "-release" ]; then                
-        make -j $NPROCS RELEASE="-release"
-      else
-        make -j $NPROCS RELEASE=""
-      fi
+      make -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    if [ "$RELEASE" == "-release" ]; then                
-        make -j $NPROCS RELEASE="-release"
-    else
-        make -j $NPROCS RELEASE=""
-    fi
+    make -j $NPROCS RELEASE="$RELEASE"
   fi
   if [ -f .build_error ]; then exit ; fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
@@ -418,25 +396,38 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if [ "$CLEAN" == "-clean" ] ; then
       ./build_gsl -p $PLATFORM --clean --as-Nts
       rm_ifexist $NTSROOT/models/Extensions.mk
-      rm_ifexist $NTSROOT/models/all.mdf
-      rm_ifexist $NTSROOT/models/all_test.mdf
-      rm_ifexist $LENSROOT/extensions/functor/all.mdf
-      rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
+      #rm_ifexist $NTSROOT/models/all.mdf
+      #rm_ifexist $NTSROOT/models/all_test.mdf
+      #rm_ifexist $LENSROOT/extensions/functor/all.mdf
+      #rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
       find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
+      touch $NTSROOT/models/nts.mdf
     fi
     cd -
     cd $NTSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
+      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ; }; then
+      #  if [ "$REBUILD" == "-rebuild" ] || { [ ! -f $LENSROOT/extensions/variable/variables.mdf ] || [ ! -f $LENSROOT/extensions/struct/structs.mdf ] ||  [ ! -f $LENSROOT/extensions/functor/functors.mdf ] || [ ! -f $NTSROOT/models/all.mdf ];  } ; then 
       cd $LENSROOT/extensions/variable
       ./define variables.mdf $REBUILD
       cd $LENSROOT/extensions/struct
       ./define structs.mdf $REBUILD
       cd $LENSROOT/extensions/functor
-      rm_ifexist all.mdf
-      cat functors_common.mdf >> all.mdf
-      cat functors_nts.mdf >> all.mdf
-      ./define all.mdf $REBUILD
+      #rm_ifexist all.mdf
+      if [ ! -f all.mdf ]; then
+        cat functors_common.mdf > all.mdf
+        cat functors_nts.mdf >> all.mdf
+      fi
+      cat functors_common.mdf >> all_test.mdf
+      cat functors_nts.mdf >> all_test.mdf
+      if ! diff -q all_test.mdf all.mdf &>/dev/null; then
+        mv all_test.mdf all.mdf
+        ./define all.mdf $REBUILD
+      fi
+      rm_ifexist all_test.mdf
+      #./define all.mdf $REBUILD
+      #./define functors_nts.mdf $REBUILD
       cd $NTSROOT/models
       touch nts.mdf
       ./define nts.mdf $REBUILD
@@ -447,11 +438,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      if [ "$RELEASE" == "-release" ]; then                        
-        ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --release --as-Nts
-      else
-        ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Nts
-      fi
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA
     fi
     cd -
   else
@@ -465,9 +452,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if ! diff -q all_test.mdf all.mdf &>/dev/null; then
       mv all_test.mdf all.mdf
       ./define all.mdf $REBUILD
-    else
-      rm_ifexist all_test.mdf
     fi
+    rm_ifexist all_test.mdf
     cd $NTSROOT/models
     if [ ! -f Extensions.mk ]; then touch nts.mdf; fi
     ./define nts.mdf $REBUILD
@@ -476,11 +462,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $NTSROOT
     # -s or -singlethread
     cd $LENSROOT
-    if [ "$RELEASE" == "-release" ]; then                        
-      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --release --as-Nts
-    else
-      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Nts
-    fi
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA
     cd -
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then 

@@ -17,9 +17,11 @@
     // PMCA_Traub_Llinas_1997
 		// NOTE : a lumped mechanism with neutral effect on Vm
 		//        and constant rate
+                
 #elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
     // Enable the assignment of different rate on different branches
 	//  via the ChanParam.par file
+      
 #elif PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
     // PMCA_Zador_Koch_Brown_1990
 		// NOTE : a lumped mechanism with neutral effect on Vm
@@ -50,12 +52,14 @@ void PumpPMCA::initialize(RNG& rng)
   assert(V->size() == size);
 #endif
 // allocate
-#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT || \
-    PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
-    PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+#if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT 
   if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);
- #if PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
+
+#elif PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS || \
      PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION
+
+  if (J_Ca.size() != size) J_Ca.increaseSizeTo(size);
+
   if (tau.size() != size) tau.increaseSizeTo(size);
   assert(tau.size() == size);
   float tau_default = tau[0];
@@ -63,8 +67,7 @@ void PumpPMCA::initialize(RNG& rng)
   {
       tau[i] = tau_default;
   }
- 
- #endif
+
 #else
   assert(IPMCAbar.size() == size);
   if (I_PMCA.size() != size) I_PMCA.increaseSizeTo(size);
@@ -78,6 +81,7 @@ void PumpPMCA::initialize(RNG& rng)
                  "Channels Param" << std::endl;
     assert(0);
   }
+
   for (unsigned i = 0; i < size; ++i)
   {
     if (IPMCAbar_dists.size() > 0)
@@ -163,8 +167,7 @@ IPMCAbar[i] = IPMCAbar_values[0];
     I_Ca[i] = IPMCAbar[i] * (pow(cai, eta_pmca)) /
               (pow(Km_pmca, eta_pmca) + pow(cai, eta_pmca));
     I_PMCA[i] = I_Ca[i]; // 2Ca2+ out - 2H+ in --> 2charges out
-#elif PUMP_PMCA == _COMPONENT_UNDEFINED
-// do nothing
+
 #else
     NOT IMPLEMENTED YET
 #endif

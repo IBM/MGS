@@ -18,6 +18,8 @@
 #define CASE_PARAMSEARCH 10001
 #define CASE_00  0  //resting
 #define CASE_01  1   //inject soma [square pulse current]
+#define CASE_01b  101   //inject soma [brief train of AP]
+#define CASE_01c  201   //inject soma [point current source]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -26,7 +28,8 @@
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
 #define CASE_09  9   //inject soma [current clamp]
-#define STIMULUS_CASE   CASE_01
+#define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
+#define STIMULUS_CASE   CASE_08
 //#define morph ""
 #define morph "msn0_"
 //#define morph "msn0spines_"
@@ -69,6 +72,9 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #else
 #define paramFolder STR(PARAMFOLDER)
 #endif
+#ifndef EXTENSION
+#define EXTENSION _
+#endif
 #if STIMULUS_CASE ==  CASE_00
 #define OutputFolderName dataFolder morph "1cpt_rest" STR(EXTENSION)
 print("Case 00: resting");
@@ -95,6 +101,7 @@ print("Case 00: resting");
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
 #endif
+print(OutputFolderName);
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -915,6 +922,10 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
               RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
   #endif
 
+  FloatTrigger voltageClampSet0("Iteration Trigger : >= " STR(TimeVClampSet0) " [ms]", 
+      CurrentTime, ">=", TimeVClampSet0, 0, solveChannels );
+  SemaphoreTrigger voltageClampSet0Sem("Nothing", voltageClampSet0, 1, 0, solveChannels);
+
   FloatTrigger voltageClampSet1("Iteration Trigger : >= " STR(TimeVClampSet1) " [ms]", 
       CurrentTime, ">=", TimeVClampSet1, 0, solveChannels );
   SemaphoreTrigger voltageClampSet1Sem("Nothing", voltageClampSet1, 1, 0, solveChannels);
@@ -982,6 +993,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% 50",
 VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
 VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity};
 VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity};
+VariableType VoltageClamp {initialize->initialize1, updateI->solveChannels};
 
 #include "stimulus_model.gsl"
 //}}}
@@ -1227,7 +1239,7 @@ Grid MSN_D1Neuron{
 		 //{{{ RYR, IP3R
 #if defined(SIMULATE_CAER)
      //RYR
-	//Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+     Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
      //IP3R
 
      //LeakER
@@ -1578,11 +1590,11 @@ Grid MSN_D1Neuron{
 		//{{{RYR, IP3R, LeakER
 #if defined(SIMULATE_CAER)
   //RYR
-	//InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
-	//			compartmentalize = { "int:numChan", "Ej" },
-	//			numChan = {1},
-  //      Ej = {0.0}
-  //   > ) );
+        InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
+              compartmentalize = { "int:numChan", "Ej" },
+              numChan = {1},
+              Ej = {0.0}
+              > ) );
    //IP3R
 
    //LeakER
