@@ -32,6 +32,20 @@
       CHANNEL_KDR == KDR_TRAUB_1995 //not being used for these models
 #define BASED_TEMPERATURE 23.0
 #define Q10 3.0
+
+#elif CHANNEL_KDR == KDR_MAHON_2000 || \
+      CHANNEL_KDR == KDR_WANG_BUSZAKI_1996                                    
+#define BASED_TEMPERATURE 22.0  // Celcius                                 
+#define Q10 2.92 //To get a phi value equivalent to 5 as used in the model 
+
+#elif CHANNEL_KDR == KDR_MIGLIORE_1999
+#define BASED_TEMPERATURE 35.0  // Celcius                                 
+#define Q10 2.92 
+
+#elif CHANNEL_KDR == KDR_ERISIR_1999 || \
+      CHANNEL_KDR == KDR_TUAN_JAMES_2017
+#define BASED_TEMPERATURE 23.0  // Celcius                                 
+#define Q10 2.92 
 #endif
 
 #ifndef Q10 
@@ -45,7 +59,6 @@ class ChannelKDR : public CG_ChannelKDR
       void initialize(RNG& rng);
       virtual ~ChannelKDR();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

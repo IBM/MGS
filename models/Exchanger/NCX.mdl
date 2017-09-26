@@ -29,6 +29,9 @@ Node ExchangerNCX Implements
   //internal data
   //FORMULA: INCX = INCXbar * ... ;  
   dyn_var_t [] I_NCX; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+  dyn_var_t [] conductance_didv; // [nS/um^2]
+#endif
   dyn_var_t [] I_Ca; // [pA/um^2] = 2 * I_NCX
   //dyn_var_t [] I_Na; // [pA/um^2]  - not being used
 #if EXCHANGER_NCX == NCX_Weber_Bers_2001
@@ -101,6 +104,9 @@ Node ExchangerNCX Implements
   // Output
   CaCurrentArrayProducer.currents << &I_Ca;
   CurrentArrayProducer.currents << &I_NCX;
+#ifdef CONSIDER_DI_DV
+  CurrentArrayProducer.di_dv << &conductance_didv;
+#endif
   BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
 

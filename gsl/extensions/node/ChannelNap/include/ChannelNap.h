@@ -14,6 +14,10 @@
 //NOTE: Hay et al. (2011) also use this model
 #define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.3
+#elif CHANNEL_NAP == NAP_MAHON_2000        
+#define BASED_TEMPERATURE 22.0  // Celcius 
+#define Q10 2.5                            
+
 #endif
 
 #ifndef Q10 
@@ -29,7 +33,6 @@ class ChannelNap : public CG_ChannelNap
   static void initialize_others();//new
 
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y); //new
 #if CHANNEL_NAP == NAP_WOLF_2005
 	const static dyn_var_t _Vmrange_tauh[];
 	static dyn_var_t tauhNap[];

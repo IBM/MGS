@@ -17,6 +17,7 @@
 #include "ChannelSchweighoferKDR.h"
 #include "CG_ChannelSchweighoferKDR.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -27,9 +28,6 @@
 #define BMV 51.0
 #define BMD 80.0
 
-float ChannelSchweighoferKDR::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelSchweighoferKDR::update(RNG& rng)
 {

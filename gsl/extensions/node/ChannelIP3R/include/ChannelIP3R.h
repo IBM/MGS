@@ -21,7 +21,6 @@ class ChannelIP3R : public CG_ChannelIP3R
       void initialize(RNG& rng);
       virtual ~ChannelIP3R();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

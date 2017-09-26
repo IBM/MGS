@@ -17,6 +17,7 @@
 #include "ChannelSchweighoferCal.h"
 #include "CG_ChannelSchweighoferCal.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -25,9 +26,6 @@
 #define IHV 85.5
 #define IHD 8.5
 
-float ChannelSchweighoferCal::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(x/y/2 - 1) : x/(1 - exp(x/y)));
-}
 
 void ChannelSchweighoferCal::update(RNG& rng)
 {

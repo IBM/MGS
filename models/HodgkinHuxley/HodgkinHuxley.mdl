@@ -26,8 +26,18 @@ Interface CurrentProducer {
   dyn_var_t* current;
 }
 
+//#ifdef CONSIDER_DI_DV
+Interface DIDV_ConductanceProducer {
+  //the conductance correspond to small voltage change V(t) to V(t+0.001)
+  dyn_var_t* conductance_didv;
+}
+//#endif
+
 Interface CurrentArrayProducer {
-  dyn_var_t []* currents;
+  dyn_var_t []* currents; // [pA] - time (t)
+#ifdef CONSIDER_DI_DV
+  dyn_var_t []* di_dv; // conductance [nS/um^2] - the change from V(t) to V(t+0.001)
+#endif
 }
 
 Interface IOCurrentArrayProducer {

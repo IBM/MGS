@@ -19,7 +19,16 @@
 #include "ShallowArray.h"
 #include "rndm.h"
 
+#include "SegmentDescriptor.h"
+#include "Branch.h"
+#include "GlobalNTSConfig.h"
+#include "MaxComputeOrder.h"
+#include "NumberUtils.h"
+
 #define SMALL 1.0E-6
+#include <math.h>
+#include <pthread.h>
+#include <algorithm>
 
 #define DEGRUIJL_2012
 
@@ -37,9 +46,6 @@
 #define BND 80.0
 
 
-float KDRChannel_AIS::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void KDRChannel_AIS::update(RNG& rng)
 {

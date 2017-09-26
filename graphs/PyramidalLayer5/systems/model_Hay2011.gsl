@@ -33,10 +33,6 @@
 //OTHERS FUNCTORS
 /*{{{*/
 /*}}}*/
-#ifndef MODEL_TO_USE
-print("WARNING: You haven't selected MODEL_TO_USE")
-#endif
-
 //SECTIONZ: Modify the data in this section for general setting
 //{{{
 //{{{ 1. Output Location
@@ -45,35 +41,36 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #ifndef OUTPUTFOLDER
 #define dataFolder "./data/"
 #else
-#define dataFolder OUTPUTFOLDER
+#define dataFolder STR(OUTPUTFOLDER)
 #endif
 #ifndef PARAMFOLDER
 #define paramFolder ./params/
 #else
 #define paramFolder PARAMFOLDER
 #endif
-#if STIMULUS_CASE ==  CASE_00
-#define OutputFolderName dataFolder morph "Hay_rest" STR(EXTENSION)
-print("Case 00: resting");
-#elif STIMULUS_CASE ==  CASE_01
-#define OutputFolderName dataFolder morph "Hay_triggersoma" STR(EXTENSION)
-#elif STIMULUS_CASE ==  CASE_02
-#define OutputFolderName dataFolder morph "Hay_triggershaft" STR(EXTENSION)
-#elif STIMULUS_CASE ==  CASE_03
-#define OutputFolderName dataFolder morph "Hay_triggerspine" STR(EXTENSION)
-//#define OutputFolderName dataFolder morph "Hay_case03"
-#elif STIMULUS_CASE ==  CASE_04
-#define OutputFolderName dataFolder morph "Hay_triggerdistalspines" STR(EXTENSION)
-#elif STIMULUS_CASE ==  CASE_05
-#define OutputFolderName dataFolder morph "Hay_case05" STR(EXTENSION)
-#elif STIMULUS_CASE ==  CASE_06
-#define OutputFolderName dataFolder morph "Hay_case06" STR(EXTENSION)
-#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
-#define OutputFolderName  STR(EXTENSION)
-#else
-  print("NOT DEFINED STIMULUS_CASE .... ")
-  WRONG
-#endif
+#define OutputFolderName dataFolder 
+//#if STIMULUS_CASE ==  CASE_00
+//#define OutputFolderName dataFolder morph "Hay_rest" STR(EXTENSION)
+//print("Case 00: resting");
+//#elif STIMULUS_CASE ==  CASE_01
+//#define OutputFolderName dataFolder morph "Hay_triggersoma" STR(EXTENSION)
+//#elif STIMULUS_CASE ==  CASE_02
+//#define OutputFolderName dataFolder morph "Hay_triggershaft" STR(EXTENSION)
+//#elif STIMULUS_CASE ==  CASE_03
+//#define OutputFolderName dataFolder morph "Hay_triggerspine" STR(EXTENSION)
+////#define OutputFolderName dataFolder morph "Hay_case03"
+//#elif STIMULUS_CASE ==  CASE_04
+//#define OutputFolderName dataFolder morph "Hay_triggerdistalspines" STR(EXTENSION)
+//#elif STIMULUS_CASE ==  CASE_05
+//#define OutputFolderName dataFolder morph "Hay_case05" STR(EXTENSION)
+//#elif STIMULUS_CASE ==  CASE_06
+//#define OutputFolderName dataFolder morph "Hay_case06" STR(EXTENSION)
+//#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
+//#define OutputFolderName  STR(EXTENSION)
+//#else
+//  print("NOT DEFINED STIMULUS_CASE .... ")
+//  WRONG
+//#endif
 #define PathFileCombine(X) OutputFolderName"/"X
 //}}}
 
@@ -89,7 +86,7 @@ print("Case 00: resting");
 
 //{{{ 3. Simulation configuration:  time + time-step + I/O
 //#define TimeStep_value   0.000010 // [ms] -- safe timestep
-#define TimeStep_value   0.0030 // [ms]
+#define TimeStep_value   0.030 // [ms]
 //#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
 //#define TimeStep_value   0.00010 // [ms]
 
@@ -250,7 +247,7 @@ InitPhases = { initialize1, initialize2, initialize3, initialize4, initialize5, 
 
 RuntimePhases = {
 /*{{{*/
-updateNMDADepPlasticity, solveChannels, predictJunction,
+updateNMDADepPlasticity, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       forwardSolve7,
 #endif
@@ -294,7 +291,9 @@ updateNMDADepPlasticity, solveChannels, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
-      correctJunction, finish
+      correctJunction, 
+      finish,
+      solveChannels 
 /*}}}*/
  };
 
@@ -983,7 +982,7 @@ Grid PyramidalL5_Neuron{
 	InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
 				compartmentalize = {"Ca_new", 
 				"Ca_cur", 
-				"currentToConc",
+				"currentDensityToConc",
 				"Aii",
 				"Aim", 
 				"Aip", 

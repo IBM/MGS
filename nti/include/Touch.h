@@ -22,7 +22,6 @@
 
 #include "Params.h"
 #include "SegmentDescriptor.h"
-#include "NTSMacros.h"
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
 

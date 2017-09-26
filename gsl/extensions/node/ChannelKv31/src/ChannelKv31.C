@@ -5,13 +5,14 @@
 
 #include "MaxComputeOrder.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
+#include "SegmentDescriptor.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
 
-#include "SegmentDescriptor.h"
+#define SMALL 1.0E-6
 
 #if CHANNEL_Kv31 == Kv31_RETTIG_1992
 #define IMV -18.7

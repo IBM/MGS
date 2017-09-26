@@ -104,8 +104,11 @@ void Connector::constantToVariable(
 
 void Connector::constantToNodeSet(
    Constant* source, NodeSet* destination, NDPairList* sourceOutAttr, 
-   NDPairList* destinationInAttr)
+   NDPairList* destinationInAttr, Simulation* sim)
 {
+#ifdef HAVE_MPI                                                                                               
+   int myRank = sim->getRank();                                                                               
+#endif  
    std::vector<NodeDescriptor*> nodes;
    destination->getNodes(nodes);
    std::vector<NodeDescriptor*>::iterator it = nodes.begin(), 
@@ -118,21 +121,41 @@ void Connector::constantToNodeSet(
    for (; it != end; ++it) {      
       // @TODO Distributed local filter
       if ((*it)->getNode()) {     // added by Jizhu Lu on 12/04/2005
+#ifdef HAVE_MPI
+        int toPartitionId = sim->getGranule(*(*it))->getPartitionId();                                        
+        if (toPartitionId == myRank)                                                                          
+	{                                                                                                     
+	  (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);                  
+	  inAttrPSet->set(*destinationInAttr);                                                                
+	  node = (*it)->getNode();                                                                            
+	  source->addPostNode((*it), outAttrPSet.get());                                                      
+	  node->addPreConstant(source, inAttrPSet.get());                                                     
+	}                                                                                                     
+#else     
 	(*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);
 	inAttrPSet->set(*destinationInAttr);
 	node = (*it)->getNode();
 	source->addPostNode((*it), outAttrPSet.get());
 	node->addPreConstant(source, inAttrPSet.get());
+#endif
       }
    }
 }
 
 void Connector::constantToNode(
    Constant* source, NodeDescriptor* destination, NDPairList* sourceOutAttr, 
-   NDPairList* destinationInAttr)
+   NDPairList* destinationInAttr, Simulation* sim)
 {
-   Node* node;
-   if (node=destination->getNode()) {
+#ifdef HAVE_MPI                                                                                               
+   int myRank = sim->getRank();                                                                               
+   int toPartitionId = sim->getGranule(*destination)->getPartitionId();                                       
+#endif                                                                                                        
+   Node* node;                                                                                                
+   if ((node=destination->getNode())                                                                          
+#ifdef HAVE_MPI                                                                                               
+       && toPartitionId == myRank                                                                             
+#endif          
+      ){
      std::auto_ptr<ParameterSet> outAttrPSet;
      source->getOutAttrParameterSet(outAttrPSet);
      outAttrPSet->set(*sourceOutAttr);

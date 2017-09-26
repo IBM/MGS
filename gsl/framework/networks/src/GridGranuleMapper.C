@@ -68,7 +68,8 @@ GridGranuleMapper::GridGranuleMapper(Simulation& sim, std::vector<DataItem*> con
      numGranules*=*diter;
    }
    if (numGranules!=_sim.getNumProcesses()) {
-     std::cerr<<"Number of grid nodes does not equal number of processes on GridGranuleMapper!"<<std::endl;
+     std::cerr << "numGranule = " << numGranules << ", numProcesses = " << _sim.getNumProcesses() << std::endl;
+     std::cerr <<"Number of grid nodes does not equal number of processes on GridGranuleMapper!"<<std::endl;
      exit(-1);
    }
    _granules.resize(numGranules); // new Granules allocated here

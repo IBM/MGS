@@ -7,6 +7,7 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -41,11 +42,6 @@
 
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaHVA::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelCaHVA::initialize(RNG& rng) 
 {
@@ -124,8 +120,6 @@ void ChannelCaHVA::initialize(RNG& rng)
     E_Ca[i] = Erev_Ca ; //[mV]
     s[i] = am / (am + bm);  // steady-state value
     g[i] = gbar[i] * s[i] *  s[i];
-    //I_Ca[i] = g[i] * (v-E_Ca[i]);
-    //Iion[i] = g[i] * (v-E_Ca[i]);
 #elif CHANNEL_CaHVA == CaHVA_REUVENI_AMITAI_GUTNICK_1993 
     {
     //E_Ca[i]=(0.04343 * *(getSharedMembers().T) * log(*(getSharedMembers().Ca_EC) / (*Ca_IC)[i]));

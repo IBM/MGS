@@ -20,6 +20,7 @@
 #include "SegmentDescriptor.h"
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -37,9 +38,6 @@
 #define THD 23.0
 #define T_ADJ 2.9529 // 2.3^((34-21)/10)
 
-float ChannelHayKt::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHayKt::update(RNG& rng)
 {

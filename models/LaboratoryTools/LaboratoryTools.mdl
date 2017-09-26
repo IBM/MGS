@@ -17,10 +17,18 @@ Struct TissueSite {
 // GOAL: stimulus
 //{{{
 Variable VoltageClamp Implements CurrentProducer
+#ifdef CONSIDER_DI_DV
+     , DIDV_ConductanceProducer
+#endif
 {
-  //{{{HOWTOUSE: choose a voltage-clamp technique using 'type'
+  //{{{
+  //{{{HOWTOUSE: 
+  //  1. define the object: choose a voltage-clamp technique using 'type'
   //  1.  set 'command' or 'waveform' voltage data by triggering either 'setCommand()' or 'startWaveform()'
-  //  2.  turn on/off by triggering 'toggle()'
+  //             setCommand(command=40.0) # clamped voltage value
+  //  2.  turn on/off by triggering 'toggle()' - initially is OFF
+  //             toggle(toggle=1) --> explicit turn on
+  //             toggle(toggle=0) --> explicit turn off
   //}}}
   //{{{ Data
   //{{{ reference data
@@ -33,17 +41,30 @@ Variable VoltageClamp Implements CurrentProducer
   dyn_var_t command; 	// Declare command voltage
   dyn_var_t [] waveform;// Declare an array for the waveform (each index map to a single time-step clamped voltage)
   //int waveformIdx;	// Declare index of the waveform array
-  int type; // type = 1 or 2 is supported [1 = emulate inject current compensation; 2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm]
-  //{{{type = 1
+  int type; // type = [1 = emulate inject current compensation; 
+            //         2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm
+            //         3 = read from 'tVm_file' input file (2 columns: time-Vm)]
   dyn_var_t Igen;	// (pA) current injection - Declare the feedback current applied to hold voltage constant
-  dyn_var_t Cm;		// Declare membrane capacitance
-  dyn_var_t beta; // headstage gain
+#ifdef CONSIDER_DI_DV
+  dyn_var_t conductance_didv; // [nS/um^2] - conductance
+#endif
+  //{{{type = 1
+#ifdef USE_SERIES_RESISTANCE
+  dyn_var_t Rs; // series resistance  (GOhm) - default 10^6 (Ohm) ~ 0.001 (GOhm)
+#else
+  dyn_var_t Cm;		// (pF/um^2) - specific membrane capacitance
+  dyn_var_t beta; // headstage gain (unitless)
   dyn_var_t* surfaceArea;
+#endif
   //}}}
-  //{{{ type = 2
-  float gainTime ; // [ms] - typically 0.05 ms or 50 microseconds is the type to reach 99% value of Vc in experiment
+  //{{{ type = 2 || type = 1
+  float gainTime ; // [ms] - the time to reach +100mV amplitude
+          //DEFAULT: 0.05 ms or 50 microseconds (the typical the time to reach 99% value of +100mV)
   //}}}
-  string fileName;  // [type=1,2][output] = hold time - Igen  
+  //{{{ type = 3
+  string tVm_file;  // [type=3][input] = hold time-Vm
+  //}}}
+  string fileName;  // [type=1,3][output] = hold time - Igen
   //}}}
 
   TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
@@ -55,12 +76,20 @@ Variable VoltageClamp Implements CurrentProducer
   FinalPhase finalize;
 
   CurrentProducer.current << &Igen;	// Describes the output of the function which is the current Igen
+#ifdef CONSIDER_DI_DV
+  DIDV_ConductanceProducer.conductance_didv << &conductance_didv;
+#endif		
 
   InAttrPSet {
     string identifier;
   }
 
   //{{{Input Connections
+  //NOTE: Currently limited to junction (e.g. soma) only
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
+    VoltageArrayProducer.voltageArray >> V;
+    DimensionArrayProducer.dimensionArray >> dimensions;   
+  }
   //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
   //  VoltageArrayProducer.voltageArray >> V;
   //  ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
@@ -78,11 +107,6 @@ Variable VoltageClamp Implements CurrentProducer
   //	VoltageArrayProducer.voltageArray >> V;
   //	SurfaceAreaProducer.surfaceArea >> surfaceArea;
   //}
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
-    VoltageArrayProducer.voltageArray >> V;
-    //SurfaceAreaProducer.surfaceArea >> surfaceArea;
-    DimensionArrayProducer.dimensionArray >> dimensions;   
-  }
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;
   }
@@ -1391,7 +1415,7 @@ Variable SimulationInfo
   // to be able to absorved by FloatTrigger
   float currentTime;    //[ms]
   dyn_var_t* deltaT;
-  unsigned iterationCount; // zero-based, unlike ::Iteration is 1-based
+  unsigned iterationCount; // zero-based for RuntimePhase loop, unlike ::Iteration is 1-based (as it starts from InitPhase)
   //}}}
   //}}}
 

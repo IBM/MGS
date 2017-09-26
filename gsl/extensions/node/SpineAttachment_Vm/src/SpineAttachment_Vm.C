@@ -54,7 +54,13 @@ void SpineAttachment_Vm::computeInitialState(RNG& rng)
    distance = (*leni / 2.0  + *lenj); //[um]
   }
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  {
   g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
+  //g = g / *countSpineConnectedToCompartment_j; 
+  g = g / *countSpineConnectedToCompartment_i;  // we change the reduction from the side that has man contacts, e.g. den-shaft only
+#endif
+  }
 #else
   g = A / (Raxial * distance);            // [nS]
 #endif
@@ -68,7 +74,8 @@ void SpineAttachment_Vm::computeState(RNG& rng)
 	//j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
-  I = g * V / *countSpineConnectedToCompartment_j;
+  //I = g * V / *countSpineConnectedToCompartment_j;
+  I = g * V / *countSpineConnectedToCompartment_i; //[pA]
 #else
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   //no need to update I(Vm), as it produces g, and Vj
@@ -96,6 +103,17 @@ void SpineAttachment_Vm::setVoltagePointers(
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
+#endif
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+  unsigned size = getSharedMembers().voltageConnect->size() ;  //# of compartments
+  if ((*(getSharedMembers().countSpineConnect)).size() != size) 
+  {
+    (*(getSharedMembers().countSpineConnect)).increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      (*(getSharedMembers().countSpineConnect))[i] = 0;
+  }
+  countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif
 }
 

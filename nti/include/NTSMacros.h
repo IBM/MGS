@@ -26,9 +26,12 @@
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
 #define R_zCaF (zR/(zCa*zF))
+#define zK2F2_R ((zK*zK)*(zF*zF)/(zR))
+#define zKF_R (zK*zF/(zR))
+#define R_zKF (zR/(zK*zF))
 #define zF_RT (zF / (zR * *getSharedMembers().T))
-#define mM2uM 1e3   // conversion factor
-#define uM2mM 1e-3  // conversion factor
+#define mM2uM (1e3)  // conversion factor
+#define uM2mM (1e-3)  // conversion factor from microMolar to mimiMolar
 #define MIN_RESISTANCE_VALUE 0.0001  //[GOhm*um] - keep this for numerical stability
 
 #define AvogN  (6.0223*1e23)     // Avogadro number
@@ -109,6 +112,9 @@
 #define NAT_COLBERT_PAN_2002    5
 #define NAT_TRAUB_1994          6
 #define NAT_OGATA_TATEBAYASHI_1990  7
+#define NAT_WANG_BUSZAKI_1996  8
+#define NAT_MAHON_2000         9
+#define NAT_MSN_TUAN_JAMES_2017 10
 
 #define _NAT_DEFAULT NAT_HODGKIN_HUXLEY_1952
 
@@ -120,40 +126,63 @@
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
 #define _NAP_DEFAULT NAP_WOLF_2005
+
+#define NAS_MAHON_2000  2
+
+#define _NAS_DEFAULT NAS_MAHON_2000
+
 //}}}
 
 //{{{ K-models
 // KAf   CHANNEL_KAf macro
 //{{{
-#define KAf_WOLF_2005          2
-#define KAf_TRAUB_1994         3
+#define KAf_TRAUB_1994             2
+#define KAf_MAHON_2000             3
 #define KAf_KORNGREEN_SAKMANN_2000 4
-#define KAf_EVANS_2012         5
+#define KAf_WOLF_2005              5
+#define KAf_EVANS_2012             6
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
 //}}}
 // KAs   CHANNEL_KAs macro
 //{{{
-#define KAs_WOLF_2005          2
-#define KAs_KORNGREEN_SAKMANN_2000 4
+#define KAs_MAHON_2000             2 
+#define KAs_KORNGREEN_SAKMANN_2000 3
+#define KAs_WOLF_2005              4
+#define KAs_EVANS_2012             5
+
 #define _KAs_DEFAULT           KAs_WOLF_2005
 //}}}
 // KIR   CHANNEL_KIR macro
 //{{{
-#define KIR_WOLF_2005          2
+#define KIR_HAYASHI_FISHMAN_1988       6
+#define KIR_MAHON_2000                 2
+#define KIR_WOLF_2005                  3
+#define KIR_STEEPHEN_MANCHANDA_2009    4
+#define KIR2_1_STEEPHEN_MANCHANDA_2009 5
+#define KIR2_1_TUAN_JAMES_2017         7
+
 #define _KIR_DEFAULT           KIR_WOLF_2005
 //}}}
 // KRP   CHANNEL_KRP macro
 //{{{
-#define KRP_WOLF_2005          2
+#define KRP_MAHON_2000         2 
+#define KRP_WOLF_2005          3
+
 #define _KRP_DEFAULT           KRP_WOLF_2005
 //}}}
 // KDR   CHANNEL_KDR macro
 //{{{
-#define KDR_HODGKIN_HUXLEY_1952 1
-#define KDR_SCHWEIGHOFER_1999   4
-#define KDR_TRAUB_1994          5
-#define KDR_TRAUB_1995          6
+#define KDR_HODGKIN_HUXLEY_1952 2
+#define KDR_TRAUB_1994          3
+#define KDR_TRAUB_1995          4
+#define KDR_WANG_BUSZAKI_1996   5
+#define KDR_SCHWEIGHOFER_1999   6
+#define KDR_MIGLIORE_1999       8
+#define KDR_MAHON_2000          7
+#define KDR_ERISIR_1999         9 
+#define KDR_MOYER_2007          KDR_ERISIR_1999 
+#define KDR_TUAN_JAMES_2017     10 
 
 #define _KDR_DEFAULT KDR_TRAUB_1994
 
@@ -201,6 +230,12 @@
 
 #define _Kv31_DEFAULT Kv31_RETTIG_1992
 //}}}
+// KCNK (background leak K+ current)
+//{{{
+#define  KCNK_GHK_TUAN_2017   1
+
+#define _KCNK_DEFAULT  KCNK_GHK_TUAN_2017
+//}}}
 //}}}
 
 //{{{ HCN-models
@@ -236,37 +271,43 @@
 //{{{
 #define CaLv12_GHK_Standen_Stanfield_1982_option1 3
 #define CaLv12_GHK_Standen_Stanfield_1982_option2 4
-#define CaLv12_GHK_WOLF_2005 2
+#define CaLv12_GHK_WOLF_2005                      5 
+#define CaLv12_GHK_TUAN_2017                      6 
 
 #define _CaLv12_DEFAULT      CaLv12_GHK_WOLF_2005
 //}}}
 // CaLv13 (HVA)  CHANNEL_CaLv13 macro
 //{{{
 #define CaLv13_GHK_WOLF_2005 2
+#define CaLv13_GHK_TUAN_2017 3
 
 #define _CaLv13_DEFAULT    CaLv13_GHK_WOLF_2005
 //}}}
 // CaN      CHANNEL_CaN macro
 //{{{
 #define CaN_GHK_WOLF_2005 2
+#define CaN_GHK_TUAN_2017 3
 
 #define _CaN_DEFAULT   CaN_GHK_WOLF_2005
 //}}}
 // CaPQ     CHANNEL_CaPQ macro
 //{{{
 #define CaPQ_GHK_WOLF_2005 2
+#define CaPQ_GHK_TUAN_2017 3
 
 #define _CaPQ_DEFAULT   CaPQ_GHK_WOLF_2005
 //}}}
 // CaR      CHANNEL_CaR macro
 //{{{
 #define CaR_GHK_WOLF_2005 2
+#define CaR_GHK_TUAN_2017 3
 
 #define _CaR_DEFAULT  CaR_GHK_WOLF_2005
 //}}}
 // CaT (LVA)      CHANNEL_CaT macro
 //{{{
 #define CaT_GHK_WOLF_2005 2
+#define CaT_GHK_TUAN_2017 3
 
 #define _CaT_DEFAULT CaT_GHK_WOLF_2005
 //}}}
@@ -315,8 +356,10 @@
 #define _PMCA_DEFAULT PMCA_PUMPRATE_CONSTANT
 //}}}
 // NCX        EXCHANGER_NCX
-#define NCX_Gabbiani_Midtgaard_Kopfel_1994 2
-#define NCX_Weber_Bers_2001  3
+#define NCX_Kimura_Miyamae_Noma_1987       2  
+#define NCX_Gabbiani_Midtgaard_Kopfel_1994 3
+#define NCX_Weber_Bers_2001                4
+
 
 #define _NCX_DEFAULT  NCX_Weber_Bers_2001
 //}}}
@@ -385,13 +428,15 @@
 #define _PYRAMIDAL_L5b_2016_TUAN_JAMES 101
 #define _PYRAMIDAL_L5b_2017_TUAN_JAMES 102
 
-#define _MSN_2005_WOLF        200 
-#define _MSN_2016_TUAN_JAMES  201
+#define _MSN_2005_WOLF            200    
+#define _MSN_2016_TUAN_JAMES      201
 #define _MSN_2012_EVANS_BLACKWELL 202
+#define _MSN_2000_MAHON           203
 
 #define _INFERIOR_OLIVE_1999_SCHWEIGHOFER 400
 
 #define _INTERNEURON_TRAUB_1995 300
+//TODO: #define _INTERNEURON_WANG_BUSZAKI_1996 301
 
 #define _SPINE_MSN_2017_TUAN_JAMES 500
 
@@ -420,24 +465,45 @@
 // 2. configure each model
 //  2.a select what compartmental variables to use
 //  2.b to disable any channel from the model, just comment it out
-#if   MODEL_TO_USE == _MSN_2005_WOLF
+#if MODEL_TO_USE == _MSN_2000_MAHON
 //{{{
-#define STRETCH_SOMA_WITH 105 //#135.0    
-#define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 7.0  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 6.5  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 6.2  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 6.15  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 6.0  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 5.0  //>1: make neck smaller
-//#define SCALING_NECK_FROM_SOMA 4.5  //>1: make neck smaller
-//#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SIMULATE_VM
+  //#define SIMULATE_CACYTO
+  //#define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+#define DEBUG_COMPARTMENT
+#define USE_SOMA_AS_POINT
+#define WRITE_GATES
+#define IDEA_CURRENTONCOMPT 
+#define IDEA_ILEAK
+
+//{{{
+  #define CHANNEL_NAT NAT_MAHON_2000
+  #define CHANNEL_NAP NAP_MAHON_2000
+  #define CHANNEL_NAS NAS_MAHON_2000
+
+  #define CHANNEL_KIR KIR_MAHON_2000
+  #define CHANNEL_KDR KDR_MAHON_2000
+  #define CHANNEL_KAf KAf_MAHON_2000 
+  #define CHANNEL_KAs KAs_MAHON_2000
+  #define CHANNEL_KRP KRP_MAHON_2000
+
+//}}}
+//}}}
+#elif   MODEL_TO_USE == _MSN_2005_WOLF
+//{{{
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
+#define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
+#define IDEA_CURRENTONCOMPT 
+#define IDEA_ILEAK
 //  #define SIMULATION_INVOLVE VM_CACYTO
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
+  #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
 //{{{ list channels 
   #define CHANNEL_NAT NAT_WOLF_2005
   #define CHANNEL_NAP NAP_WOLF_2005
@@ -848,12 +914,12 @@
 #define CHANNEL_KRP KRP_WOLF_2005
 #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
 #define CHANNEL_SK SK_WOLF_2005
-#define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
-#define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
-#define CHANNEL_CaN CaN_GHK_WOLF_2005
-#define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
-#define CHANNEL_CaR CaR_GHK_WOLF_2005
-#define CHANNEL_CaT CaT_GHK_WOLF_2005
+#define CHANNEL_CaLv12 CaLv12_GHK_TUAN_2017
+#define CHANNEL_CaLv13 CaLv13_GHK_TUAN_2017
+#define CHANNEL_CaN CaN_GHK_TUAN_2017
+#define CHANNEL_CaPQ CaPQ_GHK_TUAN_2017
+#define CHANNEL_CaR CaR_GHK_TUAN_2017
+#define CHANNEL_CaT CaT_GHK_TUAN_2017
 
 #define EXCHANGER_NCX  NCX_Weber_Bers_2001
 #define PUMP_PMCA  PMCA_PUMPRATE_CONSTANT_DYNAMICS
@@ -875,11 +941,16 @@
 //#}}}
 #elif MODEL_TO_USE == _MICRODOMAIN_MSN_STRIATUM_NEURON_2017_TUAN_JAMES
 //#{{{
+//NOTE: Enable these two are important for having good accuracy with thousands of spines
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised 
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR 
+
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
 #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define  IDEA_CURRENTONCOMPT 
+#define IDEA_ILEAK
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 //#define SIMULATE_CAER
@@ -892,22 +963,50 @@
 #define TOUCHDETECT_SINGLENEURON_SPINES
 #define MICRODOMAIN_CALCIUM
 //{{{//list channels
-//#define CHANNEL_NAT NAT_WOLF_2005
-#define CHANNEL_NAT NAT_OGATA_TATEBAYASHI_1990
-#define CHANNEL_NAP NAP_WOLF_2005
-#define CHANNEL_KAf KAf_WOLF_2005
+//at rest
+#define CHANNEL_KCNK KCNK_GHK_TUAN_2017
+  //#define CHANNEL_KIR KIR_WOLF_2005
+#define CHANNEL_KIR KIR2_1_TUAN_JAMES_2017
+//#define PREDICT_JUNCTION_IGNORE_AXIAL  
+//#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+
+//active
+  //#define CHANNEL_NAT NAT_WOLF_2005
+#define CHANNEL_NAT NAT_MSN_TUAN_JAMES_2017
+  #define CHANNEL_NAP NAP_WOLF_2005
+  #define CHANNEL_KAf KAf_WOLF_2005
 //#define CHANNEL_KAf KAf_EVANS_2012
-#define CHANNEL_KAs KAs_WOLF_2005
-#define CHANNEL_KIR KIR_WOLF_2005
-#define CHANNEL_KRP KRP_WOLF_2005
-#define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
-#define CHANNEL_SK SK_WOLF_2005
-#define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
-#define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
-#define CHANNEL_CaN CaN_GHK_WOLF_2005
-#define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
-#define CHANNEL_CaR CaR_GHK_WOLF_2005
-#define CHANNEL_CaT CaT_GHK_WOLF_2005
+  #define CHANNEL_KAs KAs_WOLF_2005
+//#define CHANNEL_KAs KAs_EVANS_2012
+  #define CHANNEL_KRP KRP_WOLF_2005
+//#define CHANNEL_KDR  KDR_TRAUB_1995
+//#define CHANNEL_KDR KDR_ERISIR_1999 // long inactivation as Vh=-44
+#define CHANNEL_KDR KDR_TUAN_JAMES_2017 // try to shift Vh to -30 side 
+//#define CHANNEL_KDR KDR_MIGLIORE_1999  // turn off too early
+  #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+  #define CHANNEL_SK SK_WOLF_2005
+  #define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+  #define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+  #define CHANNEL_CaN CaN_GHK_WOLF_2005
+  #define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+  #define CHANNEL_CaR CaR_GHK_WOLF_2005
+  #define CHANNEL_CaT CaT_GHK_WOLF_2005
+////#define CHANNEL_NAT NAT_WOLF_2005
+////#define CHANNEL_NAT NAT_MSN_TUAN_JAMES_2017
+//#define CHANNEL_NAP NAP_WOLF_2005
+//#define CHANNEL_KAf KAf_WOLF_2005
+//#define CHANNEL_KAs KAs_WOLF_2005
+////#define CHANNEL_KIR KIR_WOLF_2005
+////#define CHANNEL_KIR KIR2_1_STEEPHEN_MANCHANDA_2009
+//#define CHANNEL_KRP KRP_WOLF_2005
+//#define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
+//#define CHANNEL_SK SK_WOLF_2005
+//#define CHANNEL_CaLv12 CaLv12_GHK_WOLF_2005
+//#define CHANNEL_CaLv13 CaLv13_GHK_WOLF_2005
+//#define CHANNEL_CaN CaN_GHK_WOLF_2005
+//#define CHANNEL_CaPQ CaPQ_GHK_WOLF_2005
+//#define CHANNEL_CaR CaR_GHK_WOLF_2005
+//#define CHANNEL_CaT CaT_GHK_WOLF_2005
 
 #define EXCHANGER_NCX  NCX_Weber_Bers_2001
 #define PUMP_PMCA  PMCA_PUMPRATE_CONSTANT_DYNAMICS
@@ -932,6 +1031,8 @@
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 #define ADAPTIVE_IO
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+
 //{{{
   #define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952 
   #define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952 
@@ -950,6 +1051,9 @@
 #endif
 #ifndef CHANNEL_NAP
 #define CHANNEL_NAP _NAP_DEFAULT
+#endif
+#ifndef CHANNEL_NAS
+#define CHANNEL_NAS _NAS_DEFAULT
 #endif
 #ifndef CHANNEL_KAf
 #define CHANNEL_KAf _KAf_DEFAULT
@@ -986,6 +1090,9 @@
 #endif
 #ifndef CHANNEL_Kv31
 #define CHANNEL_Kv31 _Kv31_DEFAULT
+#endif
+#ifndef CHANNEL_KCNK
+  #define CHANNEL_KCNK _KCNK_DEFAULT
 #endif
 #ifndef CHANNEL_CaHVA
 #define CHANNEL_CaHVA _CaHVA_DEFAULT

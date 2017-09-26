@@ -27,7 +27,6 @@ class KDRChannel_AIS : public CG_KDRChannel_AIS
       void initializeKDRChannels(RNG& rng);
       virtual ~KDRChannel_AIS();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

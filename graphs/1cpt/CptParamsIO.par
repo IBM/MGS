@@ -1,5 +1,7 @@
 #{{{explains
 # NOTE: No ER on axon branch
+# Key Masks: MTYPE ETYPE BRANCHTYPE  NEURON_INDEX
+# ASSUME: MTYPE = indicate 'morphology'-type
 # MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)
 #       = 4 or 5 (thin or mush bouton)
 # BRANCHTYPE = 1=soma, 2=axon, 3=basal-den, 4=apical-den, 5=AIS, 6=tuft-den, 7=axonhillock

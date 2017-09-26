@@ -39,7 +39,7 @@ Yes_No_ChangeSWC ()
 }
 ChangeSWC ()
 {
-  paramFold=($(find neurons/ -maxdepth 1 -type f -name '*.swc' ! -name 'neuron.swc' -printf "%f\n"))
+  paramFold=($(find neurons/ -maxdepth 1 -type f -name '*.swc' ! -name 'neuron.swc' ! -name '*developed.swc' -printf "%f\n"))
   echo "SUGGEST: neurons.swc_tufted.swc_reviseRadius.swc for hay1"
   echo "Select one of this:"
   arrSize=${#paramFold[@]}
@@ -66,15 +66,15 @@ ChangeSWC ()
     ln -s neurons/$spineFolder spines
     rm_if_link neurons.txt
     ln -s spines/neurons.txt neurons.txt
-    rm_if_link connect_recording_model.gsl
-    ln -s neurons/connect_recording_model_$extMorph.gsl connect_recording_model.gsl
-    rm_if_link connect_stimulus_model.gsl
-    ln -s neurons/connect_stimulus_model_$extMorph.gsl  connect_stimulus_model.gsl
   else 
     echo "$spineFolder not found"
     rm_if_link neurons.txt
     ln -s single_neuron.txt neurons.txt
   fi
+  rm_if_link connect_recording_model.gsl
+  ln -s neurons/connect_recording_model_$extMorph.gsl connect_recording_model.gsl
+  rm_if_link connect_stimulus_model.gsl
+  ln -s neurons/connect_stimulus_model_$extMorph.gsl  connect_stimulus_model.gsl
 }
 
 ModelFolder=systems

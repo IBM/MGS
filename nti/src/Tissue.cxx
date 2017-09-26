@@ -31,6 +31,8 @@
 #include <map>
 #include <cstdlib>
 
+#define FIRST_CAPSULE_CONSIDER_AT_SOMA_BORDER
+
 #define SUGGESTED_BIN_WIDTH 1.0
 #define MIN_COLUMN_DIM 0.000000000001
 //#define COMPOSITE_OUTPUT
@@ -551,6 +553,18 @@ void Tissue::setBranchOrders() {
         assert(proximalBranch);
         assert(branchOrder < 1000);
       }
+#ifdef FIRST_CAPSULE_CONSIDER_AT_SOMA_BORDER
+      //here no matter what physical location of the first capsule, we always treat its distance to soma is soma-radius
+      if (proximalBranch->getBranchType() == Branch::_SOMA)
+      {
+        dist2Soma += proximalBranch->getSegments()[0].getRadius();  
+      }
+      else{
+        dist2Soma += proximalBranch->getLength();
+      }
+#else
+      dist2Soma += proximalBranch->getLength();
+#endif
       branches[j].setBranchOrder(branchOrder);
       branches[j].setDist2Soma(dist2Soma);
       if (branchOrder > _maxBranchOrder) _maxBranchOrder = branchOrder;

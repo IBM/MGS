@@ -7,28 +7,41 @@
 #include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
 
-#define SMALL 1.0E-6
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#define SMALL 1.0E-6
+
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#define bo_bi   1   // ~ beta_o / beta_i  ~ partition coefficient 
+#elif CHANNEL_CaR == CaR_GHK_TUAN_2017
+#define bo_bi   0.314   // ~ beta_o / beta_i  ~ partition coefficient 
+#endif
+
+#ifndef bo_bi
+#define bo_bi 1
+#endif
+
 static pthread_once_t once_CaR_GHK = PTHREAD_ONCE_INIT;
 
 // This is an implementation of R-type Ca2+ channel
 //              CaR_GHK current
 //
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
 // same kinetics as that of CaLv12 of Wolf2005, just Vhalf-activated is lower
 //  Inactivation reference from 
 //     1. Foehring ... Surmeier (2000) - Unique properties R-type Ca2+ currents in neocortical and neostriatal neurons - J. Neurophysiol. Fig. 7C
 //  Activation reference from 
-//     1. Churchill et al. (1998) for slope (Fig. 7)
+//     1. Churchill et al. (1998) for slope (Fig. 7) rat NAc neuron
 //     2. Foehring et al. (2000) tau_m  (pg. 2230)
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
 #define VHALF_M -10.3
 #define k_M -6.6
 #define VHALF_H -33.3
-#define k_H 17
+#define k_H 17.0
 #define frac_inact  1
 
 #define LOOKUP_TAUH_LENGTH 6  // size of the below array
@@ -41,11 +54,6 @@ std::vector<dyn_var_t> ChannelCaR_GHK::Vmrange_tauh;
 NOT IMPLEMENTED YET
 #endif
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelCaR_GHK::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelCaR_GHK::initialize(RNG& rng)
 {
@@ -69,12 +77,16 @@ void ChannelCaR_GHK::initialize(RNG& rng)
   if (h.size() != size) h.increaseSizeTo(size);
   if (PCa.size() != size) PCa.increaseSizeTo(size);
   if (I_Ca.size() != size) I_Ca.increaseSizeTo(size);
+#ifdef CONSIDER_DI_DV
+  if (conductance_didv.size() != size) conductance_didv.increaseSizeTo(size);
+#endif
+
   // initialize
   dyn_var_t PCabar_default = PCabar[0];
   if (Pbar_dists.size() > 0 and Pbar_branchorders.size() > 0)
   {
     std::cerr << "ERROR: Use either Pbar_dists or Pbar_branchorders on "
-                 "GHK-formula Ca2+ channel "
+                 "GHK-formula Ca2+ R-type channel "
                  "Channels Param for " << typeid(*this).name() << std::endl;
     assert(0);
   }
@@ -83,12 +95,12 @@ void ChannelCaR_GHK::initialize(RNG& rng)
     if (Pbar_dists.size() > 0)
     {
       unsigned int j;
-			//NOTE: 'n' bins are splitted by (n-1) points
-			if (Pbar_values.size() - 1 != Pbar_dists.size())
-			{
-				std::cerr << "Pbar_values.size = " << Pbar_values.size() 
-					<< "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
-			}
+      //NOTE: 'n' bins are splitted by (n-1) points
+      if (Pbar_values.size() - 1 != Pbar_dists.size())
+      {
+        std::cerr << "Pbar_values.size = " << Pbar_values.size() 
+          << "; Pbar_dists.size = " << Pbar_dists.size() << std::endl; 
+      }
       assert(Pbar_values.size() -1 == Pbar_dists.size());
       for (j = 0; j < Pbar_dists.size(); ++j)
       {
@@ -134,27 +146,36 @@ void ChannelCaR_GHK::initialize(RNG& rng)
     dyn_var_t cai = (*Ca_IC)[i];
 #endif
 
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
-    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values
-    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
-    PCa[i] =
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
+    {
+      m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));  // steady-state values (t0) or (t0+dt/2)
+      h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+      PCa[i] =
         PCabar[i] * m[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
-    //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
-    //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
-    ////     R [mJ/(mol.K)]
-    //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
-    //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
-    //          (1 - tmp);  // [pA/um^2]
-    //NOTE: Tuan added 0.314
-    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //dyn_var_t tmp = exp(-v * zCaF_R / (*getSharedMembers().T));
+      //// NOTE: PCa [um/ms], Vm [mV], Cai/o [uM], F [C/mol] or [mJ/(mV.mol)]
+      ////     R [mJ/(mol.K)]
+      //I_Ca[i] = PCa[i] * zCa2F2_R / (*(getSharedMembers().T)) * v *
+      //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
+      //          (1 - tmp);  // [pA/um^2]
+      ////NOTE: Tuan added 0.314
+      //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+      ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+      //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+      //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1)); // time (t0)
+      I_Ca[i] = update_current(v, cai, i); // time (t0)
+    }
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
+
 #endif
+#ifdef CONSIDER_DI_DV
+    conductance_didv[i] = 0.0;
+#endif
+
   }
 }
 
@@ -170,7 +191,8 @@ void ChannelCaR_GHK::update(RNG& rng)
     dyn_var_t cai = (*Ca_IC)[i];
 #endif
 
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
     // NOTE: Some models use m_inf and tau_m to estimate m
     //dyn_var_t tau_m = 1.6;  // msec - in paper (which assume 35^C)
     dyn_var_t tau_m = 5.1;  // msec - in NEURON code (due to Q10 =3.0 at 22^C)
@@ -202,31 +224,44 @@ void ChannelCaR_GHK::update(RNG& rng)
     //          ((*Ca_IC)[i] - *(getSharedMembers().Ca_EC) * tmp) /
     //          (1 - tmp);  // [pA/um^2]
     //NOTE: Tuan added 0.314
-    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
-    //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+    //dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * (-(cai)* vtrap(-tmp, 1) - 0.314 * *(getSharedMembers().Ca_EC) * vtrap(tmp, 1));
+    ////I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
+    ////  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
     //I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-    //  (cai * tmp + (cai - 0.314 * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
-    I_Ca[i] = 1e-6 * PCa[i] * zCa * zF * 
-      (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    //  (cai * tmp + (cai -  *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1));
+    I_Ca[i] = update_current(v, cai, i);  // at time (t)  [pA/um^2]
+#ifdef CONSIDER_DI_DV
+    dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);
+    conductance_didv[i] = (I_Ca_dv-I_Ca[i])/(0.001);
+#endif
 #endif
   }
 }
 
+dyn_var_t ChannelCaR_GHK::update_current(dyn_var_t v, dyn_var_t cai, int i)
+{// voltage v (mV) and return current density I_Ca(pA/um^2)
+    dyn_var_t tmp = zCaF_R * v / (*getSharedMembers().T); 
+    dyn_var_t result = 1e-6 * PCa[i] * zCa * zF * 
+      (cai * tmp + (cai - bo_bi * *(getSharedMembers().Ca_EC)) * vtrap(tmp, 1.0));
+    return result;
+}
 
 void ChannelCaR_GHK::initialize_others() 
 {
-#if CHANNEL_CaR == CaR_GHK_WOLF_2005
+#if CHANNEL_CaR == CaR_GHK_WOLF_2005 || \
+    CHANNEL_CaR == CaR_GHK_TUAN_2017
   {
     std::vector<dyn_var_t> tmp(_Vmrange_tauh,
                                _Vmrange_tauh + LOOKUP_TAUH_LENGTH);
     assert(sizeof(tauhCaR) / sizeof(tauhCaR[0]) == tmp.size());
-		//Vmrange_tauh.resize(tmp.size()-2);
+    //Vmrange_tauh.resize(tmp.size()-2);
     //for (int i = 1; i < tmp.size() - 1; i++)
     //  Vmrange_tauh[i - 1] = (tmp[i - 1] + tmp[i + 1]) / 2;
     Vmrange_tauh = tmp;
   }
 #endif
-	
+  
 }
 
 ChannelCaR_GHK::~ChannelCaR_GHK() {}

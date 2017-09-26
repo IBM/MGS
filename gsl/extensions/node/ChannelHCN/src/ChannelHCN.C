@@ -20,6 +20,7 @@
 
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
+#include "NumberUtils.h"
 
 #include <math.h>
 #include <pthread.h>
@@ -100,11 +101,6 @@ dyn_var_t ChannelHCN::conductance(int i)
 
 
 
-// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
-dyn_var_t ChannelHCN::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
 void ChannelHCN::update(RNG& rng)
 {

@@ -27,7 +27,6 @@ class ChannelHayMK : public CG_ChannelHayMK
       void initialize(RNG& rng);
       virtual ~ChannelHayMK();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

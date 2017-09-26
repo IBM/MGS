@@ -28,7 +28,8 @@ class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
   void initializeJunction(RNG& rng);
   void predictJunction(RNG& rng);
   void correctJunction(RNG& rng);
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   virtual void updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
   virtual void updateGapJunctionCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
 #endif
@@ -45,12 +46,19 @@ class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
       CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset,
       CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
   virtual ~HodgkinHuxleyVoltageJunction();
+  virtual void add_zero_didv(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  virtual void update_stim_reference(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
+  int _count_timer = 0;
+#endif
+
   // user-defined functions
   // junction designed as 1-compartment always, there is no need for index
   dyn_var_t getArea();
-	void printDebugHH(std::string phase="JUNCTION_CORRECT");
-	private:
+  void printDebugHH(std::string phase="JUNCTION_CORRECT");
+  private:
   static SegmentDescriptor _segmentDescriptor;
+  dyn_var_t _zero_conductance = 0.0;
 };
 
 #endif

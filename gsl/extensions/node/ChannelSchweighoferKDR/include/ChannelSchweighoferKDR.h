@@ -27,7 +27,6 @@ class ChannelSchweighoferKDR : public CG_ChannelSchweighoferKDR
       void initialize(RNG& rng);
       virtual ~ChannelSchweighoferKDR();
    private:
-      float vtrap(float x, float y);
 };
 
 #endif

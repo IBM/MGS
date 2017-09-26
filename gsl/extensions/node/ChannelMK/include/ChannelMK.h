@@ -35,7 +35,6 @@ class ChannelMK : public CG_ChannelMK
       void initialize(RNG& rng);
       virtual ~ChannelMK();
    private:
-      dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);
 };
 
 #endif

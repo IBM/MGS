@@ -30,7 +30,6 @@ SpineAttachment_VmCai::SpineAttachment_VmCai()
 
 void SpineAttachment_VmCai::produceInitialState(RNG& rng)
 {
-
 }
 void SpineAttachment_VmCai::computeInitialState(RNG& rng)
 {
@@ -71,21 +70,42 @@ void SpineAttachment_VmCai::computeInitialState(RNG& rng)
    distance = (*leni / 2.0  + *lenj); //[um]
   }
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  {
   g = A / (Raxial * distance)/ (dimension->surface_area);            // [nS/um^2]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
+  //g = g / *countSpineConnectedToCompartment_j;  --> should not use (DON/t change spine-neck side)
+  g = g / *countSpineConnectedToCompartment_i;  // we change the reduction from the side that has man contacts, e.g. den-shaft only
+#endif
+  }
 #else
   g = A / (Raxial * distance);            // [nS]
 #endif
   //TUAN TODO: we haven't consider the effect of smaller cross-sectional area for cyto yet
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  {
   invTimeCacyto = A * DCa * (dimension->surface_area * FRACTION_SURFACEAREA_CYTO ) / 
     ((dimension->volume * FRACTIONVOLUME_CYTO) * distance); //[1/ms]
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
+    //invTimeCacyto /= *countSpineConnectedToCompartment_j; 
+    invTimeCacyto /= *countSpineConnectedToCompartment_i; 
+#endif
+  }
 #else
   Caconc2current = A * DCa * zCa * zF / (1000000.0*distance); //[pA/uM]
 #endif
 }
 
+// NOTICE: Behind the scene, it 'sync' voltage data if a proxy is used 
+// for cross-MPI process communication
 void SpineAttachment_VmCai::produceState(RNG& rng) {}
 
+// NOTICE: This does NOTHING for OPTION2
+//  Otherwise, compute 
+//    * I(inject) - original approach or OPTION1
+// NOTE: for OPTION2, it is treated as a receptor Hodgkin-Huxley current 
+//    * I(receptor)
+// with 'g' is pre-calculated
+// with Erev -> the voltage from the other side (and is updated via produceState)
 void SpineAttachment_VmCai::computeState(RNG& rng)
 {
 #ifdef DEBUG_COMPARTMENT
@@ -95,16 +115,20 @@ void SpineAttachment_VmCai::computeState(RNG& rng)
   volatile unsigned nidxOther = _segmentDescriptor.getNeuronIndex(branchDataOther->key);
   volatile unsigned bidxOther = _segmentDescriptor.getBranchIndex(branchDataOther->key);
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  //no need to update I(Vm), as it produces g, and Vj
+  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
+  {
+  }
+#else
 	//i = index of compartment this connexon is connecting to
 	//j = index of compartment from the other side
   dyn_var_t V = *Vj - *Vi;
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
-  I = g * V / *countSpineConnectedToCompartment_j; //[pA]
-  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j; //[pA]
-#else
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
-  //no need to update I(Vm), as it produces g, and Vj
-  //no need to update Cacyto, as it produces invTimeCacyto, and Cacytoj
+  //I = g * V / *countSpineConnectedToCompartment_j; //[pA]
+  //I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_j; //[pA]
+  I = g * V / *countSpineConnectedToCompartment_i; //[pA]
+  I_Ca = Caconc2current * (*Caj - *Cai)/ *countSpineConnectedToCompartment_i; //[pA]
 #else
   I = g * V;
   I_Ca = Caconc2current * (*Caj - *Cai);
@@ -128,8 +152,18 @@ void SpineAttachment_VmCai::setVoltagePointers(
   assert(getSharedMembers().voltageConnect);
   assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
   dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#endif
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+  unsigned size = getSharedMembers().voltageConnect->size() ;  //# of compartments
+  if ((*(getSharedMembers().countSpineConnect)).size() != size) 
+  {
+    (*(getSharedMembers().countSpineConnect)).increaseSizeTo(size);
+    for (int i = 0; i < size; i++)
+      (*(getSharedMembers().countSpineConnect))[i] = 0;
+  }
   countSpineConnectedToCompartment_i = &((*(getSharedMembers().countSpineConnect))[index]);
 #endif
 }

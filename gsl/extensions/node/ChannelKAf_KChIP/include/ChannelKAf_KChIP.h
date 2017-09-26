@@ -10,12 +10,19 @@
 #if CHANNEL_KAf == KAf_TRAUB_1994  // There is no temperature dependence
 #define BASED_TEMPERATURE 23.0     // Celcius
 #define Q10 3.0
+
 #elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
 #define BASED_TEMPERATURE 21.0  // Celcius
 #define Q10 2.3
+
+#elif CHANNEL_KAf == KAf_MAHON_2000           
+#define BASED_TEMPERATURE 22.0 // Celcius     
+#define Q10 2.5                               
+
 #elif CHANNEL_KAf == KAf_WOLF_2005
 #define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.3
+
 #elif CHANNEL_KAf == KAf_EVANS_2012
 #define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.3
@@ -47,7 +54,6 @@ class ChannelKAf_KChIP : public CG_ChannelKAf_KChIP
     return (1 + Vmax * pow(cai,n) / (pow(cai,n) + pow(Kd,n)));
   }
   private:
-  dyn_var_t vtrap(dyn_var_t x, dyn_var_t y);  // new
 #if CHANNEL_KAf == KAf_WOLF_2005
   const static dyn_var_t _Vmrange_taum[];
   static dyn_var_t taumKAf[];

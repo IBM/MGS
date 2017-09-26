@@ -28,7 +28,7 @@
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
 #define CASE_01b  9   //inject soma [brief train of AP]
-#define STIMULUS_CASE   CASE_08
+#define STIMULUS_CASE   CASE_01b
 //#define morph ""
 #define morph "msnNodomain_"   // must end with '_' for non-empty string
 //}}}
@@ -114,7 +114,7 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-  #define TimeEnd          1000      // [ms]
+  #define TimeEnd          100      // [ms]
   //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
   #define TimeVClampSet0    0    // [ms]
   #define TimeVClampSet1    20    // [ms]
@@ -122,11 +122,6 @@ print("Case 00: resting");
   #define TimeVClampSet3    200    // [ms]
   #define TimeStartVClamp    20   // [ms]
   #define TimeOffVClamp      400   // [ms]
-//{{{ Stimulus-specific running time
-#if STIMULUS_CASE == CASE_08
-#define TimeEnd          25      // [ms]
-#endif
-//}}}
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
@@ -295,7 +290,7 @@ InitPhases = { initialize1, initialize2, initialize3, initialize4, initialize5, 
 
 RuntimePhases = {
 /*{{{*/
-updateNMDADepPlasticity, solveChannels, predictJunction,
+updateNMDADepPlasticity, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       forwardSolve7,
 #endif
@@ -339,7 +334,8 @@ updateNMDADepPlasticity, solveChannels, predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
-      correctJunction, finish
+      correctJunction, finish,
+      solveChannels 
 /*}}}*/
  };
 
@@ -1019,10 +1015,10 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 /*{{{*/
 //stimulus
 //{{{
-VariableType CurrentPulseGenerator { initialize->initialize1, update->solveChannels };
-VariableType PointCurrentSource { stimulate->solveChannels };
-VariableType PointCalciumSource { stimulate->solveChannels };
-VariableType VoltageClamp {initialize->initialize1, updateI->solveChannels};
+VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity };
+VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity };
+VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity };
+VariableType VoltageClamp {initialize->initialize1, updateI->updateNMDADepPlasticity};
 
 #include "stimulus_model.gsl"
 //}}}

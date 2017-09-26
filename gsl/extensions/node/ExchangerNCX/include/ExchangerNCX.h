@@ -6,6 +6,7 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "NTSMacros.h"
 
 #ifndef BASED_TEMPERATURE 
 #define BASED_TEMPERATURE 35.0 //Celcius
@@ -20,7 +21,9 @@ class ExchangerNCX : public CG_ExchangerNCX
       void update(RNG& rng);
       void initialize(RNG& rng);
       virtual ~ExchangerNCX();
-	 private:
+   private:
+      // voltage v (mV) and return current density I_NCX(pA/um^2)
+      dyn_var_t update_current(dyn_var_t v, int cpt_index); 
 };
 
 #endif

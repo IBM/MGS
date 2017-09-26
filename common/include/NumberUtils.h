@@ -7,12 +7,15 @@
 #include <gmp.h>
 #include <iostream>
 #include <ostream>
+#include <algorithm>
+#include <math.h>
 
 //x = row, y=col
 //WIDTH=#col, HEIGHT=#row
 #ifndef Map1Dindex
 #define Map1Dindex(x, y, WIDTH) ((y) + (x) * (WIDTH))
 #endif
+#define SMALL 1.0E-6
 
 template <typename T>
 T Square(T x)
@@ -56,13 +59,17 @@ unsigned int count_nonzero(T* vector, int offset, int range)
 	return count;
 }
 
-//GOAL: 
+//GOAL:  
+//   find y 
+//   associated with the value x
+//   given the linear interpolation of values at 2 ends (x0,y0)
 template<typename T>
 T linear_interp( T x0, T y0, T x1, T y1, T x )
 {
   T a = (y1-y0)/(x1-x0);//tan(alpha)
-  T b = -a*x0+y0;
-  T y = a * x + b;
+  //T b = -a*x0+y0;
+  //T y = a * x + b;
+  T y = y0 + a * (x - x0);
   return y;
 }
 
@@ -73,6 +80,18 @@ template<typename T>
 T sigmoid(T alpha, T beta)
 {
   return exp(beta * alpha) / (1 + exp(beta * alpha));
+}
+
+/* 
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+Use in gating of Hodgkin-Huxley variable
+in case (x=0) --> L'hopital rule 
+Check Traub (1991) paper
+*/
+template<typename T, typename T2>
+T vtrap(T x, T2 y)
+{
+  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
 #endif
