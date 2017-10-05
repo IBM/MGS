@@ -29,6 +29,10 @@
 #include <cassert>
 #include <string.h>
 
+//IMPORTANT: 3 'double' elements - extra information for a Capsule
+//   - radius
+//   - key of capsulee
+//   - dist2soma
 #define N_CAP_DATA (N_SPHERE_DATA+3)
 #define CAP_END_COORD N_SPHERE_DATA
 

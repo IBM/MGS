@@ -18,6 +18,7 @@
 #include "CG_NaChannel_AIS.h"
 #include "ShallowArray.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -39,9 +40,6 @@
 #define TRV 40.0
 #define TRD 33.0
 
-dyn_var_t NaChannel_AIS::vtrap(dyn_var_t x, dyn_var_t y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void NaChannel_AIS::update(RNG& rng)
 {

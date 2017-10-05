@@ -8,9 +8,10 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Interface SurfaceAreaLengthProducer {
-	dyn_var_t* A; // [um^2]
-	dyn_var_t* len; // [um]
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+  dyn_var_t* A; // [um^2]
+  dyn_var_t* len; // [um]
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int * spineCount;
 #endif
 }
@@ -31,7 +32,7 @@ Node SpineAttachment_Vm Implements
      SurfaceAreaLengthProducer
 {
 /*{{{*/
-	//{{{ need user-input
+  //{{{ need user-input
   dyn_var_t Raxial;   // [Gohm.um] 
   //}}}
   //{{{ internal calculation
@@ -53,7 +54,8 @@ Node SpineAttachment_Vm Implements
   dyn_var_t g;   //the conductance [nS] between 'neck' compartment to 'dendrite' compartment
 #endif
   string typeCpt; //"spine-neck" or "den-shaft"
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1 
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
   int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
 #endif
@@ -66,15 +68,17 @@ Node SpineAttachment_Vm Implements
 #endif
 
   Shared {
-	  dyn_var_t []* voltageConnect;
+    dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     int []* countSpineConnect;
 #endif
   }
 
   InitPhase produceInitialState(Vi, leni
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       , countSpineConnectedToCompartment_i
 #endif
          ), computeInitialState(); // IMPORTANT: a treat - whenever a pointer to something else 
@@ -86,7 +90,8 @@ Node SpineAttachment_Vm Implements
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
 #endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
@@ -110,7 +115,7 @@ Node SpineAttachment_Vm Implements
   
   // Input (Connection setting)
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
@@ -118,7 +123,8 @@ Node SpineAttachment_Vm Implements
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
 #endif
     setVoltagePointers(); //set Vi
@@ -130,7 +136,8 @@ Node SpineAttachment_Vm Implements
 	  VoltageProducer.voltage >> Vj;
 	  SurfaceAreaLengthProducer.A >> Aj;
 	  SurfaceAreaLengthProducer.len >> lenj;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
 	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
 #endif
   }
@@ -189,7 +196,8 @@ Node SpineAttachment_VmCai Implements
   dyn_var_t I_Ca;//the current [pA]  TUAN TOTHINK: should we use the fluxes???? J_Ca like RyR
 #endif
   string typeCpt; //"spine-neck" or "den-shaft"
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
   int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
 #endif
@@ -208,14 +216,16 @@ Node SpineAttachment_VmCai Implements
     dyn_var_t []* voltageConnect;
     dyn_var_t []* CaConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     int []* countSpineConnect;
 #endif
     /*}}}*/
   }
 
   InitPhase produceInitialState(Vi, Cai, leni
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       , countSpineConnectedToCompartment_i
 #endif
            ), computeInitialState();
@@ -226,7 +236,8 @@ Node SpineAttachment_VmCai Implements
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
 #endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
@@ -263,7 +274,8 @@ Node SpineAttachment_VmCai Implements
   }
 
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
@@ -271,7 +283,8 @@ Node SpineAttachment_VmCai Implements
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
 #endif
     setVoltagePointers(); //set Vi
@@ -284,8 +297,9 @@ Node SpineAttachment_VmCai Implements
     SurfaceAreaLengthProducer.A >> Aj;
     SurfaceAreaLengthProducer.len >> lenj;
     BranchDataProducer.branchData >> branchDataOther;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
-	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+    SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
 #endif
   }
 
@@ -371,7 +385,8 @@ Node SpineAttachment_VmCaiCaER Implements
   dyn_var_t CaERconc2current;
 #endif
   string typeCpt; //"spine-neck" or "den-shaft"
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int *countSpineConnectedToCompartment_i; //keep track how many spines attached to a compartment 
   int *countSpineConnectedToCompartment_j; //keep track how many spines attached to a compartment 
 #endif
@@ -389,14 +404,16 @@ Node SpineAttachment_VmCaiCaER Implements
     dyn_var_t []* CaConcentrationConnect;
     dyn_var_t []* CaERConcentrationConnect;
     DimensionStruct* []* dimensionsConnect;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     int []* countSpineConnect;
 #endif
     /*}}}*/
   }
 
   InitPhase produceInitialState(Vi, Cai, CaERi, leni
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       , countSpineConnectedToCompartment_i
 #endif
           ), computeInitialState();
@@ -405,7 +422,8 @@ Node SpineAttachment_VmCaiCaER Implements
   VoltageProducer.voltage << Vi;
   SurfaceAreaLengthProducer.A << &Ai;
   SurfaceAreaLengthProducer.len << leni;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   SurfaceAreaLengthProducer.spineCount << countSpineConnectedToCompartment_i;
 #endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
@@ -445,7 +463,8 @@ Node SpineAttachment_VmCaiCaER Implements
   UserFunction set_A_and_len;
  
   Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
     VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer
@@ -453,7 +472,8 @@ Node SpineAttachment_VmCaiCaER Implements
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
     BranchDataProducer.branchData >> branchData;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountInformationArrayProducer.countSpineConnected >> Shared.countSpineConnect;
 #endif
     setVoltagePointers(); //set Vi
@@ -465,7 +485,8 @@ Node SpineAttachment_VmCaiCaER Implements
     VoltageProducer.voltage >> Vj;
     SurfaceAreaLengthProducer.A >> Aj;
     SurfaceAreaLengthProducer.len >> lenj;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
 	  SurfaceAreaLengthProducer.spineCount>> countSpineConnectedToCompartment_j;
 #endif
   }

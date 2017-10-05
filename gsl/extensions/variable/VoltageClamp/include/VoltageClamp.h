@@ -43,6 +43,16 @@ class VoltageClamp : public CG_VoltageClamp
       int _status; // 
       bool _isOn;
       float _Vprev;	// Declare voltage from previous iteration for calculating dV
+      int waveformIdx;
+      float _gainTime; //[ms] the time to reach Vc2 from Vc1
+      float getCurrentTime();
+      void update_gainTime();
+      std::map<std::string, std::vector<float> > data_timeVm;
+      unsigned int time_index;
+      void updateI_type3(RNG& rng);
+      unsigned int num_rows;
+      float _time_for_io;
+      void do_IO(float targetV);
 };
 
 #endif

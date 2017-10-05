@@ -70,7 +70,7 @@ MTYPE BRANCHTYPE
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 #}}}
 
-CHANNEL_COSTS 19
+CHANNEL_COSTS 20
 #{{{
 Nat     0.414243
 Nap     0.414243
@@ -91,6 +91,7 @@ Kv31    0.254051
 IP3R    0.254051
 RYR1    0.254051
 NCX     0.254051
+MK     0.254051
 #}}}
 
 

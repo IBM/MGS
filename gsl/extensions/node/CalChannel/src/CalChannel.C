@@ -17,6 +17,7 @@
 #include "CalChannel.h"
 #include "CG_CalChannel.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 //#define SCHWEIGHOFER_1999
@@ -31,9 +32,6 @@
 
 
 
-float CalChannel::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(x/y/2 - 1) : x/(1 - exp(x/y)));
-}
 
 void CalChannel::update(RNG& rng)
 {

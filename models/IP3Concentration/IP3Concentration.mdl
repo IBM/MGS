@@ -61,7 +61,7 @@ Node IP3Concentration Implements SolutionArrayProducer,
 	//data members: internal
   dyn_var_t [] IP3_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] IP3_new;
-  dyn_var_t [] currentToConc;
+  dyn_var_t [] currentDensityToConc;
 
     // currents
   //CONVENTION: the currents flowing toward the cytosol get negative value
@@ -321,7 +321,7 @@ Node IP3ConcentrationJunction Implements DimensionArrayProducer, BranchDataProdu
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t IP3_cur;
   dyn_var_t [] IP3_new;
-  dyn_var_t currentToConc;
+  dyn_var_t currentDensityToConc;
   dyn_var_t  IP3Clearance; // [1/ms]
   //}}}
 

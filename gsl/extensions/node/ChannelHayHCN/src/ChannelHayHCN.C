@@ -18,6 +18,7 @@
 #include "CG_ChannelHayHCN.h"
 #include "rndm.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -27,9 +28,6 @@
 #define BMC 0.193
 #define BMD 33.1
 
-dyn_var_t ChannelHayHCN::vtrap(dyn_var_t x, dyn_var_t y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHayHCN::update(RNG& rng)
 {

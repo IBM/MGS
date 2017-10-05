@@ -1,0 +1,103 @@
+# MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush bouton)
+# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
+ELECTRICAL_SYNAPSE_TARGETS 2
+BRANCHTYPE ETYPE
+BRANCHTYPE ETYPE
+2 0 2 0 AxAxGap [Voltage] 1.0
+#3 0 3 0 DenDenGap [Voltage] 1.0
+3 1 3 1 DenDenGap [Voltage] 1.0
+
+ELECTRICAL_SYNAPSE_COSTS 2
+AxAxGap 0.005309
+DenDenGap 0.005309
+
+#TUAN; everytime a chemical synapse is formed
+# a bidirectional connection must be created as well
+# so I suggest to remove the prob. out of bidirectional connection targets
+# Maybe part of the spinemush.spn
+# CONVENTION: always put spine first
+# as we use this assumption to ensure 1 spine-capsule connects with ONLY 1 denshaft capsule
+# yet 1 denshaft capsule can connect with MORE THAN 1 spine-capsule
+# TODO: a better strategy to avoid this assumption is to use Touch::hasSpineNeck()
+#  to see which side is the spine-neck. BUT, we need to come with 
+#  a solid convention of spineneck
+#  Currently, the convention for spineneck is non-zero neuron-index and BRANCHTYPE=3
+BIDIRECTIONAL_CONNECTION_TARGETS 6
+# formed between 3-branch in thin(2) or mush(3) spines
+# with any den(3,4,6) of main neuron(0)
+BRANCHTYPE MTYPE
+BRANCHTYPE MTYPE 
+3 2     3 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 3     3 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 2     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 3     4 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 2     6 0   DenSpine [Voltage Calcium CalciumER] 1.0
+3 3     6 0   DenSpine [Voltage Calcium CalciumER] 1.0
+
+BIDIRECTIONAL_CONNECTION_COSTS 1
+DenSpine 0.005309
+
+## TODO: separate CHEMICAL_SYNAPSE_TARGET into 2 sections
+#ASPINY_CHEMICAL_SYNAPSE_TARGETS 2
+#BRANCHTYPE MTYPE ETYPE
+#BRANCHTYPE MTYPE
+#2 1 0   1 3   [GABAA] [Voltage] [Voltage] 1.0
+#2 1 0   1 2   [GABAA] [Voltage] [Voltage] 1.0
+#
+#ASPINY_CHEMICAL_SYNAPSE_COSTS 1
+#GABAA 0.149978
+
+#SPINY_CHEMICAL_SYNAPSE_TARGETS 2
+# TOFIX: adjust AMPAmush --> AMPA
+#             NMDAmush --> NMDA
+#SPINY_CHEMICAL_SYNAPSE_TARGETS 2
+#CHEMICAL_SYNAPSE_TARGETS 2
+#BRANCHTYPE MTYPE ETYPE
+#BRANCHTYPE MTYPE
+#2 1 1   1 3   [GABAA] [Voltage] [Voltage] 1.0
+#2 1 1   1 2   [GABAA] [Voltage] [Voltage] 1.0
+
+#SPINY_CHEMICAL_SYNAPSE_COSTS 4
+#CHEMICAL_SYNAPSE_COSTS 4
+#AMPAmush 0.296407
+#AMPAthin 0.296407
+#NMDAmush 0.296407
+#NMDAthin 0.296407
+
+CHEMICAL_SYNAPSE_TARGETS 4
+BRANCHTYPE MTYPE ETYPE
+BRANCHTYPE MTYPE
+#{{{bouton-spine
+2 5 0   1 3   [AMPAmush, NMDAmush] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+2 4 0   1 2   [AMPAthin, NMDAthin] [Voltage] [Voltage] [Voltage] [Voltage, Calcium]  1.0
+# disable NMDAR
+#2 5 0   1 3   [AMPAmush] [Voltage] [Voltage] 1.0
+#2 4 0   1 2   [AMPAthin] [Voltage] [Voltage] 1.0
+# disable AMPAAR
+#2 5 0   1 3   [NMDAmush] [Voltage] [Voltage, Calcium] 1.0
+#2 4 0   1 2   [NMDAthin] [Voltage] [Voltage, Calcium] 1.0
+#}}}
+#{{{bouton-neuron
+2 1 1   3 0   [GABAA] [Voltage] [Voltage] 1.0
+2 1 1   4 0   [GABAA] [Voltage] [Voltage] 1.0
+#}}}
+
+CHEMICAL_SYNAPSE_COSTS 5
+#AMPA 0.296407
+#NMDA 0.296407
+AMPAmush 0.296407
+AMPAthin 0.296407
+NMDAmush 0.296407
+NMDAthin 0.296407
+GABAA 0.149978
+
+# NOTE: no need for probabilities, it is implicitly assigned as 1.0
+PRESYNAPTIC_POINT_TARGETS 5
+#AMPA tight
+#NMDA tight
+AMPAmush tight
+AMPAthin tight
+NMDAmush tight
+NMDAthin tight
+GABAA tight

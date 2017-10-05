@@ -23,6 +23,8 @@
 
 //#define DEBUG_HH
 #include <iomanip>
+#include <cmath>
+
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
 
@@ -30,6 +32,9 @@
 #define DISTANCE_SQUARED(a, b)                                                 \
   ((((a).x - (b).x) * ((a).x - (b).x)) + (((a).y - (b).y) * ((a).y - (b).y)) + \
    (((a).z - (b).z) * ((a).z - (b).z)))
+
+//DEBUG ONLY when Vclamp type=3 is used
+//#define DEBUG_UNCOUPLE_CHANNEL_AND_USE_DIRECT_VOLTAGE_CLAMP
 
 SegmentDescriptor HodgkinHuxleyVoltageJunction::_segmentDescriptor;
 
@@ -46,6 +51,9 @@ dyn_var_t HodgkinHuxleyVoltageJunction::getArea() // Tuan: check ok
 }
 
 
+// GOAL: get all axial resistance from the explicit junction to the 
+//    distal-cpt on parent branch
+//    proximal-cpt(s) on children branch(es)
 void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 { // explicit junction (which can be soma (with branches are axon/dendrite
   // trees)
@@ -113,12 +121,11 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   // check 'bouton' neuron ???
   if (_segmentDescriptor.getNeuronIndex(branchData->key) == 2)
   {
-    printf(" --> Area = %lf\n", area);
+    printf(" --> Area (of the 'soma' of the second .swc file)= %lf\n", area);
     // std::cerr << "area: " << area << std::endl;
   }
 #endif
 
-  //NOTE: Should not use the whole area here
   dyn_var_t Poar = M_PI / (area * getSharedMembers().Ra);  // Pi-over-(area *
   // axial-resistance)
   Array<DimensionStruct*>::iterator diter = dimensionInputs.begin(),
@@ -131,23 +138,29 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
     dyn_var_t distance ;
     if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
     {
+      Rb = ((*diter)->r ) ;
+#ifdef USE_SCALING_NECK_FROM_SOMA
       //Rb = ((*diter)->r ) * 1.5;  //scaling factor 1.5 means the bigger interface with soma
       //  NOTE: should be applied for Axon hillock only
-      Rb = ((*diter)->r ) ;
       //TEST 
-      Rb /= SCALING_NECK_FROM_SOMA;
+      Rb /= SCALING_NECK_FROM_SOMA_WITH;
       //END TEST
+#endif
+
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
-      distance = (*diter)->dist2soma - dimension->r; // SOMA is treated as a point source
+      distance = std::fabs((*diter)->dist2soma - dimension->r); // SOMA is treated as a point source
 #else
       //distance = (*diter)->dist2soma + dimension->r;
-      distance = (*diter)->dist2soma; //NOTE: The dist2soma of the first compartment stemming
+      distance = std::fabs((*diter)->dist2soma - dimension->dist2soma); //NOTE: The dist2soma of the first compartment stemming
       // from soma is always the distance from the center of soma to the center
       // of that compartment
-      //distance += 50.0;//TUAN TESTING - make soma longer
+#ifdef USE_STRETCH_SOMA_RADIUS
       //TEST 
       distance += STRETCH_SOMA_WITH;
+      //  distance += 50.0;//TUAN TESTING - make soma longer
+      //distance = std::fabs(b->r + a->dist2soma);
       //END TEST
+#endif
 #endif
       assert(distance > 0);
     }else{
@@ -167,11 +180,11 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
       std::cerr << "distance = " << distance << std::endl;
     assert(distance > 0);
     gAxial.push_back(Poar * Rb * Rb / distance);
+    //NOTE:Based on TissueFunctor's connection order; the last voltageInputs[last]  comes from proximal-branch
   }
   if (getSharedMembers().deltaT)
-  {
+  {// dt/2 jump
     cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
-    //cmt =  Cm / *(getSharedMembers().deltaT);
   }
 #ifdef DEBUG_HH
   std::cerr << "JUNCTION (" << dimension->x << "," << dimension->y << ","
@@ -191,9 +204,16 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
 #endif
 }
 
-//GOAL: predict Vnew[0] at offset time (n+1/2) - Crank-Nicolson predictor-corrector scheme
+//GOAL: predict Vnew[0] at offset time (t+dt/2) - Crank-Nicolson predictor-corrector scheme
+//     using Vbranch(t) and Vnew[0](t)
 void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 {
+#ifdef DEBUG_UNCOUPLE_CHANNEL_AND_USE_DIRECT_VOLTAGE_CLAMP
+  //Here, Vnew[0] and Vcur  does NOT change based on channel's current
+  //instead, Vnew[0] is updated via VoltageClamp type=2 or type=3
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    return;
+#endif
   //TUAN DEBUG
 #ifdef DEBUG_COMPARTMENT
   volatile int nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
@@ -201,74 +221,209 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   volatile int iteration = getSimulation().getIteration();
 #endif
   //END TUAN DEBUG
+  
+  //element-1
   dyn_var_t conductance = cmt;
-  //dyn_var_t current = cmt * Vcur;
-  dyn_var_t current = cmt * Vnew[0];
+  //dyn_var_t current = cmt * Vcur; //here Vcur and Vnew[0] are supposed to be the same
+  dyn_var_t current = cmt * Vnew[0]; //the reason to use this is to enable the trick in VoltageClamp type=2
 
+  //element-2
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
-	/* * * Sum Currents * * */
-	// loop through different kinds of currents (Kv, Nav1.6, ...)
-	//  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
+  /* * * Sum Currents * * */
+  // loop through different kinds of currents (Kv, Nav1.6, ...)
+  //  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
   Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
   Array<ChannelCurrents>::iterator cend = channelCurrents.end();
   for (; citer != cend; ++citer)
   {
     dyn_var_t gloc = (*(citer->conductances))[0];
-    conductance += gloc;
+    conductance += gloc; // at time (t+dt/2)
     current += gloc * (*(citer->reversalPotentials))[0];
   }
 
-	//  1.b. ionic currents using GHK equations (-Iion)
-	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
-	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
-	for (; iiter != iend; iiter++)
-	{//IMPORTANT: subtraction is used
-		current -=  (*(iiter->currents))[0]; //[pA/um^2]
-	}
+  //  1.b. ionic currents using GHK equations (-Iion)
+  Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+  Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+  for (; iiter != iend; iiter++)
+  {//IMPORTANT: subtraction is used
+    current -=  (*(iiter->currents))[0]; //[pA/um^2]
+#ifdef CONSIDER_DI_DV
+      //take into account di/dv * Delta_V
+      //IMPORTANT: addition is used
+      ////TODO IMPORTANT
+      //RHS[i] += di_dv * Vcur[i]; 
+      //Aii[i] += di_dv;  
+      //current += (*(iiter->di_dv))[i] * Vcur; //[pA/um^2]
+      current += (*(iiter->di_dv))[0] * Vnew[0]; //[pA/um^2] - again Vnew[0] and Vcur still the same
+      conductance +=  (*(iiter->di_dv))[0]; //[pA/um^2]
+#endif
+  }
 
-	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
   for (; iter != end; ++iter, ++giter)
   {
-    conductance += **giter;
+    conductance += **giter; //at time (t+dt/2)
     current += **iter * **giter;
   }
 
-	//  3. synapse receptor currents using GHK type equations (gV, gErev)
-	//  NOTE: Not available
+  //  3. synapse receptor currents using GHK type equations
+  //  NOTE: Not available
+  //{
+  //  Array<ReceptorCurrentsGHK>::iterator riter = receptorCurrentsGHK.begin();
+  //  Array<ReceptorCurrentsGHK>::iterator rend = receptorCurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        //RHS[i] += di_dv * Vcur[i]; 
+  //        //Aii[i] += di_dv;  
+  //        RHS[i] +=  (*(riter->di_dv))[i] * Vcur[i]; //[pA/um^2]
+  //        Aii[i] +=  (*(riter->di_dv))[i]; //[pA/um^2]
+  //#endif
+  //  }
+  //}
 
-  //  4. injected currents
+  //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
-  for (; iter != end; ++iter)
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  bool found_change = false;
+  //  4b. consider abrupt change in injected currents [pA]
+  Array<dyn_var_t>::iterator piter;
+  piter = previous_injectedCurrent.begin();
+#endif
+  for (; iter != end; ++iter
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+      , ++piter
+#endif
+      )
   {
-    current += **iter / area;
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        && gAxial.size() > 2 /* to skip soma head*/)
+    {
+#if 1 // use this only
+#define STIM_CHANGE_THRESHOLD 10.0 // pA
+      if (std::fabs(**iter - *piter) > STIM_CHANGE_THRESHOLD )
+      {
+        found_change = true;
+        _count_timer = 1; //3; //6; //10;
+      }
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
+#else
+        std::cout << " GET INTO WRONG LOCATION " << std::endl;
+     #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+         current += **iter + ((**iter - *piter)/0.001 * Vcur);
+     #else
+         current += (**iter + ((**iter - *piter)/0.001 * Vcur)) / area; // at time (t+dt/2)
+     #endif
+#endif
+         *piter = **iter;
+    }
+#else
+    {
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
+    }
+#endif
   }
 
-	// 5. Current loss due to passive diffusion to adjacent compartments
-  Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
-  Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
-  for (; xiter != xend; ++xiter, ++viter)
+#if 0 
+//TUAN: test --> the current injection should be applied to changing Vm
+//  before it is taken out by diffusion
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
   {
-    current += (*xiter) * ((**viter) - Vcur);
+#if not defined(PREDICT_JUNCTION_IGNORE_AXIAL)
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+    for (; xiter != xend; ++xiter, ++viter)
+    {
+#if 0
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
+#else
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
+#endif
+    }
+#endif
   }
+  else{
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+    for (; xiter != xend; ++xiter, ++viter)
+    {
+#if 0
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
+#else
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
+#endif
+    }
+  }
+#else
 
-	//float Vold = Vnew[0];
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  if (not found_change and not (_count_timer > 0))
+  {
+    if (_count_timer >= 0)
+      _count_timer -= 1;
+#endif
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+    for (; xiter != xend; ++xiter, ++viter)
+    {
+#if 0
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
+#else
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
+#endif
+    }
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  }
+#endif
+#endif
+
+
+  //float Vold = Vnew[0];
   Vnew[0] = current / conductance; //estimate at (t+dt/2)
 
 #ifdef DEBUG_ASSERT
   if (not (Vnew[0] == Vnew[0])
-//			or std::fabs(Vnew[0]-Vold)/(*getSharedMembers().deltaT)
-//			or Vnew[0]> 130.0
-		 )
-			{
-	  printDebugHH();
+      //			or std::fabs(Vnew[0]-Vold)/(*getSharedMembers().deltaT)
+      or Vnew[0]> 230.0
+      or Vnew[0] < -330.0
+     )
+  {
+    printDebugHH();
+    assert(0);
+    assert(Vnew[0] == Vnew[0]);
   }
-	assert(Vnew[0] == Vnew[0]);
 #endif
 
 #ifdef DEBUG_HH
@@ -288,12 +443,18 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 #endif
 }
 
-//GOAL: correct Vnew[0] at (t+dt/2) 
-// and finally update at (t+dt) for Vcur, and Vnew[0]
+//GOAL: recalculate using an updated 'Vnew', i.e. correct Vnew[0] at (t+dt/2) 
+// and finally update Vcur, and Vnew[0] at (t+dt)
+// NOTE: at entry, Vcur is not the same as Vnew[0]
 void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 {
-  dyn_var_t conductance = cmt;
-  dyn_var_t current = cmt * Vcur;
+#ifdef DEBUG_UNCOUPLE_CHANNEL_AND_USE_DIRECT_VOLTAGE_CLAMP
+  //Here, Vnew[0] and Vcur  does NOT change based on channel's current
+  //instead, Vnew[0] is updated via VoltageClamp type=2 or type=3
+  //Vcur = Vnew[0] = 2.0 * Vnew[0] - Vcur;
+  if (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA)
+    return;
+#endif
   //TUAN DEBUG
 #ifdef DEBUG_COMPARTMENT
   volatile int nidx = _segmentDescriptor.getNeuronIndex(branchData->key);
@@ -302,28 +463,41 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 #endif
   //END TUAN DEBUG
  
+  //element-1
+  dyn_var_t conductance = cmt;
+  dyn_var_t current = cmt * Vcur; //dont' use Vnew[0] 
+
+  //element-2
   conductance += gLeak;
   current += gLeak * getSharedMembers().E_leak;
 
-	//  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
+  /* * * Sum Currents * * */
+  // loop through different kinds of currents (Kv, Nav1.6, ...)
+  //  1.a. ionic currents using Hodgkin-Huxley type equations (+g*Erev)
   Array<ChannelCurrents>::iterator citer = channelCurrents.begin();
   Array<ChannelCurrents>::iterator cend = channelCurrents.end();
   for (; citer != cend; ++citer)
   {
     dyn_var_t gloc = (*(citer->conductances))[0];
-    conductance += gloc;
+    conductance += gloc; //should be at time (t+dt/2)
     current += gloc * (*(citer->reversalPotentials))[0];
   }
 
-	//  1.b. ionic currents using GHK equations (-Iion)
-	Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
-	Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
-	for (; iiter != iend; iiter++)
-	{//IMPORTANT: subtraction is used
-		current -=  (*(iiter->currents))[0]; //[pA/um^2]
-	}
+  //  1.b. ionic currents using GHK equations (-Iion)
+  Array<ChannelCurrentsGHK>::iterator iiter = channelCurrentsGHK.begin();
+  Array<ChannelCurrentsGHK>::iterator iend = channelCurrentsGHK.end();
+  for (; iiter != iend; iiter++)
+  {//IMPORTANT: subtraction is used
+    current -=  (*(iiter->currents))[0]; //[pA/um^2]
+#ifdef CONSIDER_DI_DV
+      //take into account di/dv * Delta_V
+      //IMPORTANT: addition is used
+      current += (*(iiter->di_dv))[0] * Vcur; //[pA/um^2] - don't use Vnew[0]
+      conductance +=  (*(iiter->di_dv))[0]; //[pA/um^2]
+#endif
+  }
 
-	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<dyn_var_t*>::iterator iter = receptorReversalPotentials.begin();
   Array<dyn_var_t*>::iterator end = receptorReversalPotentials.end();
   Array<dyn_var_t*>::iterator giter = receptorConductances.begin();
@@ -333,25 +507,86 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
     current += **iter * **giter;
   }
 
-	//  3. synapse receptor currents using GHK type equations (gV, gErev)
-	//  NOTE: Not available
+  //  3. synapse receptor currents using GHK type equations (gV, gErev)
+  //  NOTE: Not available
+  //{
+  //  Array<ReceptorCurrentsGHK>::iterator riter = receptorCurrentsGHK.begin();
+  //  Array<ReceptorCurrentsGHK>::iterator rend = receptorCurrentsGHK.end();
+  //  for (; riter != rend; riter++)
+  //  {//IMPORTANT: subtraction is used
+  //     int i = riter->index; 
+  //    RHS[i] -=  (*(riter->currents)); //[pA/um^2]
+  //#ifdef CONSIDER_DI_DV
+  //        //take into account di/dv * Delta_V
+  //        //IMPORTANT: addition is used
+  //        ////TODO IMPORTANT
+  //        current += (*(riter->di_dv))[0] * Vcur; //[pA/um^2] - don't use Vnew[0]
+  //        conductance +=  (*(riter->di_dv))[0]; //[pA/um^2]
+  //#endif
+  //  }
+  //}
 
   //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
-  for (; iter != end; ++iter)
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  bool found_change = false;
+  //  4b. consider abrupt change in injected currents [pA]
+  Array<dyn_var_t>::iterator piter;
+  piter = previous_injectedCurrent.begin();
+#endif
+  for (; iter != end; ++iter
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+      , ++piter
+#endif
+      )
   {
-    current += **iter / area;
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        && gAxial.size() > 2 /* to skip soma head*/)
+    {
+#if 1 // use this only
+#define STIM_CHANGE_THRESHOLD 10.0 // pA
+      //if (std::fabs(**iter - *piter) > STIM_CHANGE_THRESHOLD )
+      //{
+      //  found_change = true;
+      //  _count_timer = 10;
+      //}
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
+#else
+        std::cout << " GET INTO WRONG LOCATION " << std::endl;
+     #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+         current += **iter + ((**iter - *piter)/0.001 * Vcur);
+     #else
+         current += (**iter + ((**iter - *piter)/0.001 * Vcur)) / area; // at time (t+dt/2)
+     #endif
+#endif
+         *piter = **iter;
+    }
+#else
+    {
+    #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+        current += **iter;
+    #else
+        current += **iter / area; // at time (t+dt/2)
+    #endif
+    }
+#endif
   }
 
+  // 5. Current loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
-  int i =0;
+  //int i =0;
   for (; xiter != xend; ++xiter, ++viter)
   {
-    i++;
-    current += (*xiter) * (**viter);
-    conductance += (*xiter);
+    //i++;
+    current += (*xiter) * (**viter); //using V(t+dt/2) from adjacent compartments
+    conductance += (*xiter);  
   }
 
   Vnew[0] = current / conductance;
@@ -362,7 +597,7 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 #ifdef DEBUG_ASSERT
   if (not (Vnew[0] == Vnew[0])){
     std::cerr << "Iteration: " << getSimulation().getIteration() << std::endl;
-	  printDebugHH();
+    printDebugHH();
   }
   assert(Vnew[0] == Vnew[0]);
 #endif
@@ -374,8 +609,8 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 
 void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
 {
-	std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
-		"(neuronIdx,branchIdx,brchOrder,brType){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << "step,time|" << phase << " [rank,nodeIdx,instanceIdx] " <<
+    "(neuronIdx,branchIdx,brchOrder,brType){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   std::cerr << getSimulation().getIteration() << "," 
     <<  getSimulation().getIteration() * *getSharedMembers().deltaT
     << "|" << phase 
@@ -398,8 +633,8 @@ void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
   Array<dyn_var_t*>::iterator vend = voltageInputs.end();
   int c = -1;
 
-	std::cerr << "JCT_INPUT_i " <<
-		"(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
+  std::cerr << "JCT_INPUT_i " <<
+    "(neuronIdx,branchIdx,brchOrder, brType, COMPUTEORDER){x,y,z,r | dist2soma,surfarea,volume,len} Vm" << std::endl;
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   for (viter = voltageInputs.begin(); viter != vend; ++viter, ++diter)
   {
@@ -420,7 +655,7 @@ void HodgkinHuxleyVoltageJunction::printDebugHH(std::string phase)
       //<< (*diter)->dist2soma - (dimensions[0])->dist2soma << " "
       << *(*viter) << std::endl;
   }
-	
+
 }
 //TUAN: TODO challenge
 //   how to check for 2 sites overlapping
@@ -453,8 +688,23 @@ bool HodgkinHuxleyVoltageJunction::confirmUniqueDeltaT(
 }
 
 HodgkinHuxleyVoltageJunction::~HodgkinHuxleyVoltageJunction() {}
+void HodgkinHuxleyVoltageJunction::add_zero_didv(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
+{
+  _zero_conductance = 0;
+  injectedCurrents_conductance_didv.push_back(&_zero_conductance);
+}
 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+void HodgkinHuxleyVoltageJunction::update_stim_reference(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
+{
+  //this kep track the value of Istim in the previous time-step 
+  dyn_var_t value = 0.0; 
+  previous_injectedCurrent.push_back(value);
+}
+#endif
+
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
 void HodgkinHuxleyVoltageJunction::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 
 {
   unsigned size = branchData->size;  //# of compartments

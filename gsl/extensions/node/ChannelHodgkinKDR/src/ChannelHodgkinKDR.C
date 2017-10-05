@@ -17,6 +17,7 @@
 #include "ChannelHodgkinKDR.h"
 #include "CG_ChannelHodgkinKDR.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
@@ -27,9 +28,6 @@
 #define BMV 65.0
 #define BMD 80.0
 
-float ChannelHodgkinKDR::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelHodgkinKDR::update(RNG& rng)
 {

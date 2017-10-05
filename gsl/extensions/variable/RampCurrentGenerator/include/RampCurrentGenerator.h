@@ -21,6 +21,7 @@ class RampCurrentGenerator : public CG_RampCurrentGenerator
       void update_RampProtocol(RNG& , float currentTime);
       float tstart, tend; //[ms]
       float nextPulse; //[ms]
+      float peakInc; //[pA]
       bool first_enter_pulse;
       std::ofstream* outFile = 0;
       float time_write_data; // [ms]

@@ -40,9 +40,6 @@
 #define BND 80.0
 #endif
 
-float KDRChannel::vtrap(float x, float y) {
-	return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void KDRChannel::update(RNG& rng)
 {

@@ -7,6 +7,7 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 #include <math.h>
@@ -18,15 +19,12 @@
 #define Eleak -65.0 // [mV]
 #define ANC 0.03
 #define ANV (17.2+Eleak)
-#define AND 5
+#define AND 5.0
 #define BNC 0.45
 #define BNV (12+Eleak)
-#define BND 40
+#define BND 40.0
 #endif
 
-dyn_var_t ChannelKDR_AIS::vtrap(dyn_var_t x, dyn_var_t y) {
-    return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelKDR_AIS::update(RNG& rng) 
 {

@@ -66,7 +66,7 @@ Node CaConcentration Implements SolutionArrayProducer,
   //data members: internal
   dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] Ca_new;
-  dyn_var_t [] currentToConc;
+  dyn_var_t [] currentDensityToConc;
 #ifdef  USE_CALCIUM_INDICATOR
   dyn_var_t [] Fluo;  //[uM]
   dyn_var_t [] FluoCa;// Ca2+-bound [uM]
@@ -92,7 +92,7 @@ Node CaConcentration Implements SolutionArrayProducer,
   //      y-element microdomainNames array
   string [] microdomainNames;
   dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
-  //dyn_var_t [] currentToConc_microdomain;
+  //dyn_var_t [] currentDensityToConc_microdomain;
 
   //CHOICE 2:
   //      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)
@@ -188,26 +188,51 @@ Node CaConcentration Implements SolutionArrayProducer,
 
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve1_corrector, backwardSolve1_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>1
   RuntimePhase forwardSolve2, backwardSolve2; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve2_corrector, backwardSolve2_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>2
   RuntimePhase forwardSolve3, backwardSolve3; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve3_corrector, backwardSolve3_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>3
   RuntimePhase forwardSolve4, backwardSolve4; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve4_corrector, backwardSolve4_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>4
   RuntimePhase forwardSolve5, backwardSolve5; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve5_corrector, backwardSolve5_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>5
   RuntimePhase forwardSolve6, backwardSolve6; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve6_corrector, backwardSolve6_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve7_corrector, backwardSolve7_corrector; 
+#endif
   #endif
 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  //RuntimePhase forwardSolve0, backwardSolve0; 
+  RuntimePhase forwardSolve0_corrector, backwardSolve0_corrector; 
+#endif
   RuntimePhase solve, finish;
     /*}}}*/
 
@@ -417,12 +442,12 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   DimensionStruct* [] dimensionInputs;
   BranchDataStruct* [] branchDataInputs;  // 
     //}}}
-	//{{{data members: internal
+    //{{{data members: internal
   dyn_var_t volume;
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
-  dyn_var_t currentToConc;
+  dyn_var_t currentDensityToConc;
   //dyn_var_t  CaClearance; // [1/ms]
   //{{{microdomain
 #ifdef MICRODOMAIN_CALCIUM
@@ -445,7 +470,7 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
 //      y-element microdomainNames array
   string [] microdomainNames;
   dyn_var_t [] RHS_microdomain ; // [um/ms] - to support the solver
-  //dyn_var_t [] currentToConc_microdomain;
+  //dyn_var_t [] currentDensityToConc_microdomain;
 
 //CHOICE 2:
 //      y-element Ca_microdomain (i.e. all domains of same type have the same efflux-rate)

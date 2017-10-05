@@ -19,6 +19,9 @@ Struct ChannelCurrentsGHK {
 //use this for GHK equation
 // which is negative for inward currents
   dyn_var_t []* currents; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+  dyn_var_t []* di_dv; // conductance [nS/um^2] - the change from V(t) to V(t+0.001)
+#endif
 }
 
 Struct ReceptorCurrent {
@@ -32,6 +35,12 @@ Struct InjectedCurrent {
   dyn_var_t* current; // (pA)
   dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
   int index;     //  index of the compartment on a given branch to which the current is injected
+#ifdef CONSIDER_DI_DV
+  dyn_var_t* conductance_didv;  //the di/dv term to help estimate [nS/um^2]
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  float previous_current;
+#endif
 }
 //}}}
 
@@ -46,7 +55,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
      NaConcentrationProducer, KConcentrationProducer 
@@ -62,16 +71,21 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   BranchDataStruct* branchData; // pointer to branch's data
   DimensionStruct* [] dimensions; // 1 branch = N compartments (represented by DimensionStruct)
     //{{{data members: internal, but for solver
-  //NOTE: array data become ShallowArray<dyn_var_t> Aii in C++ code
+  //NOTE: array data of type dyn_var_t become ShallowArray<dyn_var_t> in C++ code
+  //NOTE: due to the way nodes/compartment are indexed in NTS (index=0 ~ distal node(child))
+  //      so as Aip[] attach to parent-node (it deals with node at index (i+1))
+  //      so as Aim[] attach to child-node (it deals with node at index (i-1))
   dyn_var_t [] Aii; //diagonal element of the matrix (A[i,i]) [nS/um^2]
-  dyn_var_t [] Aip; //right-side off-diagonal element         [nS/um^2]
-  dyn_var_t [] Aim; //left-side off-diagonal element          [nS/um^2] 
+  dyn_var_t [] Aip; //right-side off-diagonal element (parent nodes) [nS/um^2]
+  dyn_var_t [] Aim; //left-side off-diagonal element (children-node) [nS/um^2] 
        //... i.e. branch's distalmost compartment to junction coupling coefficient
-
-  dyn_var_t [] RHS; //RHS=right-hand side = current-density [pA/um^2]
-  dyn_var_t [] Aij; //a term as part of Aii[] when the comparment is branching
+       //when the node index=0 is the implicit junction compartment; then it does not have
+       //a single element Aim[0]; instead it is multiple Aij[]
+  dyn_var_t [] Aij; //a term used in place of Aip[0] when the comparment is branching
                     //.. at distal-side
                     //.. i.e. send/receive signals to/from multiple branches
+
+  dyn_var_t [] RHS; //RHS=right-hand side = current-density [pA/um^2]
   dyn_var_t* proximalVoltage; //reference to the voltage from the compartment
                     //.. on a different branch (on proximal side)
   dyn_var_t* [] distalAiis; // get Aii[] from multiple branches
@@ -96,7 +110,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
                    //  from distal to proximal: forwardSolve
                    //  from proximal to distal: backwardSolve
                    //  2. treat all junctions as explicit junction
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int[] countSpineConnected;
   int[] countGapJunctionConnected;
 #endif
@@ -156,7 +170,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
   CountInformationArrayProducer.countGapJunctionConnected << &countGapJunctionConnected;
 #endif
@@ -165,7 +179,7 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   KConcentrationProducer.K << &Shared.K;
   //}}}
 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   UserFunction updateSpineCount, updateGapJunctionCount;
 #endif
     // Phases methods
@@ -174,25 +188,50 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   
   #if MAX_COMPUTE_ORDER>0
   RuntimePhase forwardSolve1, backwardSolve1; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve1_corrector, backwardSolve1_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>1
   RuntimePhase forwardSolve2, backwardSolve2; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve2_corrector, backwardSolve2_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>2
   RuntimePhase forwardSolve3, backwardSolve3; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve3_corrector, backwardSolve3_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>3
   RuntimePhase forwardSolve4, backwardSolve4; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve4_corrector, backwardSolve4_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>4
   RuntimePhase forwardSolve5, backwardSolve5; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve5_corrector, backwardSolve5_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>5
   RuntimePhase forwardSolve6, backwardSolve6; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve6_corrector, backwardSolve6_corrector; 
+#endif
   #endif
   #if MAX_COMPUTE_ORDER>6
   RuntimePhase forwardSolve7, backwardSolve7; 
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  RuntimePhase forwardSolve7_corrector, backwardSolve7_corrector; 
+#endif
   #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+  //RuntimePhase forwardSolve0, backwardSolve0; 
+  RuntimePhase forwardSolve0_corrector, backwardSolve0_corrector; 
+#endif
   RuntimePhase solve, finish;
     /*}}}*/
 
@@ -208,6 +247,9 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   //                      connection (e.g. electrical-synapse or spine-neck)
   //               2. a stimulus current is injected
   UserFunction setReceptorCurrent, setInjectedCurrent, setProximalJunction;
+#ifdef CONSIDER_DI_DV
+  UserFunction add_zero_didv;
+#endif
   // Connection setup (i.e. input)
   //{{{ 
   Connection Pre Constant (PSet.identifier=="dimension") Expects DimensionProducer {
@@ -229,12 +271,23 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
   {
     CurrentArrayProducer.currents >> channelCurrentsGHK.currents;
+#ifdef CONSIDER_DI_DV
+    CurrentArrayProducer.di_dv >> channelCurrentsGHK.di_dv;
+#endif
   }
-
+ 
+//TODO: MAYBE we need to convert gapjunction current from Iinject(pA) 
+//          Iinject_to_sideB = g*(VsideA-VsideB)
+//  into 
+//   I_to_sideA=g*(VsideA - VsideB)
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#ifdef CONSIDER_DI_DV
+    //must call after setInjectedCurrent();
+    add_zero_didv();
+#endif
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     updateGapJunctionCount();
 #endif
    }
@@ -244,11 +297,19 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
     ConductanceProducer.conductance >> receptorCurrents.conductance;
     ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
     setReceptorCurrent();
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+    updateSpineCount();
+#endif
    }
 #else
+//NOTE: We probably won't be using this option for good
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
+#ifdef CONSIDER_DI_DV
+    //must call after setInjectedCurrent();
+    add_zero_didv();
+#endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
 #endif
@@ -261,9 +322,28 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
    }
 
   PredicateFunction checkSite;
-  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects CurrentProducer {
+  Connection Pre Variable (PSet.identifier=="VClamp" && checkSite()) Expects 
+      CurrentProducer 
+#ifdef CONSIDER_DI_DV
+    , DIDV_ConductanceProducer
+#endif
+   {
+    CurrentProducer.current >> injectedCurrents.current;
+#ifdef CONSIDER_DI_DV
+    DIDV_ConductanceProducer.conductance_didv >> injectedCurrents.conductance_didv;
+#endif
+    setInjectedCurrent();
+   }
+
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentProducer
+   {
     CurrentProducer.current >> injectedCurrents.current;
     setInjectedCurrent();
+#ifdef CONSIDER_DI_DV
+    //must call after setInjectedCurrent();
+    add_zero_didv();
+#endif
    }
 
   Connection Pre Node (PSet.identifier=="proximalJunctionPoint") Expects VoltageProducer, DimensionProducer {
@@ -354,7 +434,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
    NaConcentrationProducer, KConcentrationProducer 
@@ -377,7 +457,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t* [] voltageInputs; //voltage from different compartments in the junction-branch
   DimensionStruct* [] dimensionInputs; //points from different compartments on different branches
   BranchDataStruct* [] branchDataInputs;  // 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   int []countSpineConnected;
   int []countGapJunctionConnected;
 #endif
@@ -407,6 +487,12 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t* [] receptorConductances;
   dyn_var_t* [] receptorReversalPotentials;
   dyn_var_t* [] injectedCurrents;
+#ifdef CONSIDER_DI_DV
+  dyn_var_t* [] injectedCurrents_conductance_didv;
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  dyn_var_t [] previous_injectedCurrent;
+#endif
   //}}}
 
 
@@ -430,7 +516,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
   CountInformationArrayProducer.countGapJunctionConnected << &countGapJunctionConnected;
 #endif
@@ -439,8 +525,14 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   KConcentrationProducer.K << &Shared.K;
 
    //{{{ Phases 
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   UserFunction updateSpineCount, updateGapJunctionCount;
+#endif
+#ifdef CONSIDER_DI_DV
+  UserFunction add_zero_didv;
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  UserFunction update_stim_reference;
 #endif
   InitPhase initializeJunction;
    
@@ -479,12 +571,21 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   Connection Pre Node (PSet.identifier=="channels[Voltage]") Expects CurrentArrayProducer
   {
     CurrentArrayProducer.currents >> channelCurrentsGHK.currents;
+#ifdef CONSIDER_DI_DV
+    CurrentArrayProducer.di_dv >> channelCurrentsGHK.di_dv;
+#endif
   }
 
   Connection Pre Node (PSet.identifier=="electricalSynapse[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
+#ifdef CONSIDER_DI_DV
+    add_zero_didv();
+#endif
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     updateGapJunctionCount();
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    update_stim_reference();
 #endif
    }
 
@@ -492,12 +593,22 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
     ConductanceProducer.conductance >> receptorConductances;
     ReversalPotentialProducer.reversalPotential >> receptorReversalPotentials;
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+    updateSpineCount();
+#endif
    }
 #else
+//NOTE: We probably won't be using this option for good
   Connection Pre Node (PSet.identifier=="spineAttachment[Voltage]") Expects CurrentProducer {
     CurrentProducer.current >> injectedCurrents;
+#ifdef CONSIDER_DI_DV
+    add_zero_didv();
+#endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    update_stim_reference();
 #endif
    }
 #endif
@@ -509,9 +620,31 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
    }
 
   PredicateFunction checkSite;
-  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
-    CurrentProducer {
+  Connection Pre Variable (PSet.identifier=="VClamp" && checkSite()) Expects 
+    CurrentProducer
+#ifdef CONSIDER_DI_DV
+    , DIDV_ConductanceProducer
+#endif
+   {
     CurrentProducer.current >> injectedCurrents;
+#ifdef CONSIDER_DI_DV
+    DIDV_ConductanceProducer.conductance_didv >> injectedCurrents_conductance_didv;
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    update_stim_reference();
+#endif
+   }
+
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentProducer
+   {// current-clamp
+    CurrentProducer.current >> injectedCurrents;
+#ifdef CONSIDER_DI_DV
+    add_zero_didv();
+#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    update_stim_reference();
+#endif
    }
 
   PredicateFunction confirmUniqueDeltaT;

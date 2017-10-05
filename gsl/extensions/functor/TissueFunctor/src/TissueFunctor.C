@@ -1794,7 +1794,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     }
 
     const std::vector<DataItem*>* cpt = extractCompartmentalization(params);
-    if (cpt->size()  <= 0)
+    if (cpt == NULL)
     {
       std::cerr << "WARNING: Check if we need at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
      // std::cerr << "ERROR: Expect at least one argument (compartmentalize) at nodeType=" << nodeType << std::endl;
@@ -2128,7 +2128,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
 std::vector<DataItem*> const* TissueFunctor::extractCompartmentalization(
     NDPairList* params)
 {
-  const std::vector<DataItem*>* cpt;
+  const std::vector<DataItem*>* cpt = NULL;
   NDPairList::iterator ndpiter, ndpend = params->end();
   for (ndpiter = params->begin(); ndpiter != ndpend; ++ndpiter)
   {
@@ -4253,7 +4253,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             //   next connection fills into the next position in the array
             for (diter = dimensions.begin(); diter != dend; ++diter)
               _lensConnector.constantToNode(*diter, *node, &emptyOutAttr,
-                  &dim2cpt);
+                  &dim2cpt, lc->sim);
           }
 #ifdef MICRODOMAIN_CALCIUM
           // step 2: connect branchData to the data member 'branchData'
@@ -4272,18 +4272,18 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             //NOTE: 'result' holds comma-separated string of name of all microdomains
             brd2cptWithMicroDomainSupport.push_back(new NDPair("domainName", result));
             _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
-                &brd2cptWithMicroDomainSupport);
+                &brd2cptWithMicroDomainSupport, lc->sim);
           }
           else
           {
             _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
-                &brd2cpt);
+                &brd2cpt, lc->sim);
           }
 #else
           // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltage node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
-                                        &brd2cpt);
+                                        &brd2cpt, lc->sim);
 #endif
 
         }
@@ -4332,7 +4332,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             //   first connection fills into the first position in the array
             //   next connection fills into the next position in the array
             _lensConnector.constantToNode(miter->second, *node, &emptyOutAttr,
-                &dim2cpt);
+                &dim2cpt, lc->sim);
           }
 
 #ifdef MICRODOMAIN_CALCIUM
@@ -4352,18 +4352,18 @@ void TissueFunctor::doNodeInit(LensContext* lc)
             //NOTE: 'result' holds comma-separated string of name of all microdomains
             brd2cptWithMicroDomainSupport.push_back(new NDPair("domainName", result));
             _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
-                &brd2cptWithMicroDomainSupport);
+                &brd2cptWithMicroDomainSupport, lc->sim);
           }
           else
           {
             _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
-                &brd2cpt);
+                &brd2cpt, lc->sim);
           }
 #else
           // step 2: connect branchData to the data member 'branchData'
           //  of each HHVoltageJunction node instance, for example
           _lensConnector.constantToNode(branchData, *node, &emptyOutAttr,
-                                        &brd2cpt);
+                                        &brd2cpt, lc->sim);
 #endif
 
         }
@@ -7229,6 +7229,10 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   else if (category == "CLEFT" and _synapticCleftLayers.size() > 0)
   {
     layer = _synapticCleftLayers[typeIdx];
+    if (not layer)
+    {
+      std::cerr << "ERROR: there is no SynapticCleft of type " << type << std::endl;
+    }
     assert(layer);
     if (maskVector.size() == 0)
     {//get all layers
@@ -7740,7 +7744,6 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       capend = compartmentArrayParams.end();
   for (; capiter != capend; ++capiter)
   {
-
     std::string mystring = (*capiter).first;
     std::vector<std::string> tokens;
     std::string delimiters = ": ";
@@ -8088,7 +8091,6 @@ bool TissueFunctor::setGenerated(
           {
             if (0)
             {  // debug purpose
-
               std::cout << "found " << key1 << " " << key2 << " "
                         << key_spineneck << " " << key1_inloop << " "
                         << key2_inloop << " " << key_inloop_spineneck << " "

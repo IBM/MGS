@@ -56,7 +56,7 @@ Node CaERConcentration Implements SolutionArrayProducer,
 	//data members: internal
   dyn_var_t [] Ca_cur; // intracellular concentrations expressed by ion name alone
   dyn_var_t [] Ca_new;
-  dyn_var_t [] currentToConc;
+  dyn_var_t [] currentDensityToConc;
 
     // and all compartments on the same branch share the same value
   //dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)
@@ -286,7 +286,7 @@ Node CaERConcentrationJunction Implements DimensionArrayProducer, BranchDataProd
   dyn_var_t [] fAxial; //axial-flux
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
-  dyn_var_t currentToConc;
+  dyn_var_t currentDensityToConc;
 
     // and all compartments on the same branch share the same value
   dyn_var_t CaClearance; //[Ca] removing factor (same for all compartment of the same branch)

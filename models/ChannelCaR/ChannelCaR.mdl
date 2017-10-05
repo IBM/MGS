@@ -26,7 +26,7 @@
 // 
 //  BranchDataStruct* branchData; 
 //
-//  Shared {		
+//  Shared {    
 //    dyn_var_t* Ca_EC;
 //    dyn_var_t* deltaT;
 //    dyn_var_t* T;
@@ -43,7 +43,7 @@
 //
 //  InAttrPSet {
 //    string identifier;
-//    int idx;	
+//    int idx;  
 //  }
 //
 //  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer {
@@ -57,7 +57,7 @@
 //  }
 //
 //  Connection Pre Constant (PSet.identifier=="EC") 
-//	Expects CaConcentrationProducer, TemperatureProducer {
+//  Expects CaConcentrationProducer, TemperatureProducer {
 //    CaConcentrationProducer.Ca >> Shared.Ca_EC;
 //    TemperatureProducer.T >> Shared.T;
 //  }
@@ -84,6 +84,9 @@ Node ChannelCaR_GHK Implements
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] I_Ca; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+  dyn_var_t [] conductance_didv; // [nS/um^2]
+#endif
   dyn_var_t [] PCa;  // um/ms
   dyn_var_t [] PCabar; // um/ms
   // reference data
@@ -136,15 +139,18 @@ Node ChannelCaR_GHK Implements
   //}}}
 
   //{{{output data
-	CaCurrentArrayProducer.currents << &I_Ca;
-	CurrentArrayProducer.currents << &I_Ca;
-	BranchDataProducer.branchData << branchData;
+  CaCurrentArrayProducer.currents << &I_Ca;
+  CurrentArrayProducer.currents << &I_Ca;
+#ifdef CONSIDER_DI_DV
+  CurrentArrayProducer.di_dv << &conductance_didv;
+#endif
+  BranchDataProducer.branchData << branchData;
   DimensionArrayProducer.dimensionArray << dimensions;
   //}}}
 
   //{{{Phases methods
-	RuntimePhase update();
-	InitPhase initialize;
+  RuntimePhase update();
+  InitPhase initialize;
   //}}}
 
   InAttrPSet {//information of the incoming connection

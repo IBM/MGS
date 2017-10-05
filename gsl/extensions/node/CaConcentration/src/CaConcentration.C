@@ -66,6 +66,155 @@ SegmentDescriptor CaConcentration::_segmentDescriptor;
 //#define DEBUG_HH
 // Conserved region (only change ClassName)
 //{{{
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+//void CaConcentration::forwardSolve0(RNG& rng)
+//{
+//  if (computeOrder == 0)
+//  {
+//    doForwardSolve();
+//  }
+//}
+//void CaConcentration::backwardSolve0(RNG& rng)
+//{
+//  if (computeOrder == 0)
+//  {
+//    doBackwardSolve();
+//  }
+//}
+void CaConcentration::backwardSolve0_corrector(RNG& rng)
+{
+  if (computeOrder == 0)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve0_corrector(RNG& rng)
+{
+  if (computeOrder == 0)
+  {
+    doForwardSolve_corrector();
+  }
+}
+// Recalculate: RHS[], Aii[]  at time (t +dt/2)
+// Unit: RHS =  [uM/msec]
+//       Aii =  [1/msec]
+// Thomas algorithm forward step 
+// IMPORTANT: Ca_new[] has been changed from previous 'doFowardSolve, doBackwardSolve'
+//   so we need to use Ca_cur[] in this function
+void CaConcentration::doForwardSolve_corrector()
+{
+  unsigned numCpts = branchData->size;
+
+  //Find A[ii]i and RHS[ii]  
+  //  1. ionic currents 
+  for (int i = 0; i < numCpts; i++)
+  {
+    RHS[i] = getSharedMembers().bmt * Ca_cur[i];
+    if (i == 0)
+    {
+      if (isDistalCase3)
+      {
+        Aii[0] = getSharedMembers().bmt - Aip[0];
+        for (int n = 0; n < distalInputs.size(); n++)
+        {
+          //initial assign
+          Aii[0] -= Aij[n];
+
+          //this is part of removing lower part of matrix
+          Aii[0] -= Aij[n] * *distalAips[n] / *distalAiis[n];
+          RHS[0] -= Aij[n] * *distalInputs[n] / *distalAiis[n];
+        }
+      }
+      else{
+        Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
+        if (isDistalCase1)
+        {
+          Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
+          RHS[0] -= Aim[0] * *distalInputs[0] / *distalAiis[0];
+        }
+        else if (isDistalCase2)
+        {
+          // Why do we not adjust Aii[0]? Check.
+          RHS[0] -= Aim[0] * *distalInputs[0];
+        }
+      }
+    }
+    else{
+      Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
+    }
+    /* * * Sum Currents * * */
+    // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
+    // 1.a. producing I_Ca [pA/um^2]
+    Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
+    Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
+    for (; iter != end; iter++)
+    {
+      RHS[i] -= currentDensityToConc[i] * (*iter->currents)[i];
+    }
+
+    // 1.b. producing J_Ca [uM/msec]
+    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
+    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
+    for (; fiter != fend; fiter++)
+    {
+      RHS[i] +=  (*fiter->fluxes)[i];
+    }
+    /* This is a simple implementation of calcium extrusion. To be elaborated as
+     * needed. */
+    // TUAN: need to be updated to take into account PMCA
+    //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
+  }
+
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
+  Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
+  for (; riter != rend; riter++)
+  {
+    int i = riter->index;
+    RHS[i] -= currentDensityToConc[i] * *(riter->current);
+  }
+
+    // 1.c. HH-like of concentration diffusion
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
+  Array<TargetAttachCaConcentration >::iterator ciiter = targetAttachCaConcentration.begin();
+  Array<TargetAttachCaConcentration >::iterator ciend = targetAttachCaConcentration.end();
+  //dyn_var_t invTime = 1.0/(getSharedMembers().dt;
+  for (; ciiter != ciend; ciiter++)
+  {
+    int i = (ciiter)->index;
+    RHS[i] += (*(ciiter->inverseTime)) * (*(ciiter->Ca)); //[uM/ms]
+    Aii[i] += (*(ciiter->inverseTime)) ; //[1/ms]
+  }
+#endif
+  
+  //  4. injected currents (pA)
+  Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();
+  Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
+  for (; iiter != iend; iiter++)
+  {
+    if (iiter->index < numCpts)
+      RHS[iiter->index] += *(iiter->current)  * iiter->currentToConc;
+  }
+
+  /* * *  Forward Solve Ax = B * * */
+  /* Starting from distal-end (i=0)
+   * Eliminate Aim[?] by taking
+   * RHS -= Aim[?] * V[proximal]
+   * Aii = 
+   */
+  for (int i = 1; i < numCpts; i++)
+  {
+    Aii[i] -= Aip[i - 1] * Aim[i] / Aii[i - 1];
+    RHS[i] -= RHS[i - 1] * Aim[i] / Aii[i - 1];
+  }
+
+#ifdef MICRODOMAIN_CALCIUM
+  //must put here
+  if (microdomainNames.size() > 0)
+    updateMicrodomains();
+#endif
+}
+#endif
 void CaConcentration::solve(RNG& rng)
 {
   if (computeOrder == 0)
@@ -92,6 +241,22 @@ void CaConcentration::backwardSolve1(RNG& rng)
 {
   if (computeOrder == 1) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve1_corrector(RNG& rng)
+{
+  if (computeOrder == 1)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve1_corrector(RNG& rng)
+{
+  if (computeOrder == 1)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 1
@@ -107,6 +272,22 @@ void CaConcentration::backwardSolve2(RNG& rng)
 {
   if (computeOrder == 2) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve2_corrector(RNG& rng)
+{
+  if (computeOrder == 2)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve2_corrector(RNG& rng)
+{
+  if (computeOrder == 2)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 2
@@ -122,6 +303,22 @@ void CaConcentration::backwardSolve3(RNG& rng)
 {
   if (computeOrder == 3) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve3_corrector(RNG& rng)
+{
+  if (computeOrder == 3)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve3_corrector(RNG& rng)
+{
+  if (computeOrder == 3)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 3
@@ -137,6 +334,22 @@ void CaConcentration::backwardSolve4(RNG& rng)
 {
   if (computeOrder == 4) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve4_corrector(RNG& rng)
+{
+  if (computeOrder == 4)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve4_corrector(RNG& rng)
+{
+  if (computeOrder == 4)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 4
@@ -152,6 +365,22 @@ void CaConcentration::backwardSolve5(RNG& rng)
 {
   if (computeOrder == 5) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve5_corrector(RNG& rng)
+{
+  if (computeOrder == 5)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve5_corrector(RNG& rng)
+{
+  if (computeOrder == 5)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 5
@@ -167,6 +396,22 @@ void CaConcentration::backwardSolve6(RNG& rng)
 {
   if (computeOrder == 6) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve6_corrector(RNG& rng)
+{
+  if (computeOrder == 6)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve6_corrector(RNG& rng)
+{
+  if (computeOrder == 6)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 #if MAX_COMPUTE_ORDER > 6
@@ -182,6 +427,22 @@ void CaConcentration::backwardSolve7(RNG& rng)
 {
   if (computeOrder == 7) doBackwardSolve();
 }
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+void CaConcentration::backwardSolve7_corrector(RNG& rng)
+{
+  if (computeOrder == 7)
+  {
+    doBackwardSolve();
+  }
+}
+void CaConcentration::forwardSolve7_corrector(RNG& rng)
+{
+  if (computeOrder == 7)
+  {
+    doForwardSolve_corrector();
+  }
+}
+#endif
 #endif
 
 bool CaConcentration::confirmUniqueDeltaT(
@@ -287,6 +548,7 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   //  the same size as the number of compartments in a branch (i.e. branchData)
   unsigned numCpts = branchData->size;  //# of compartments
   computeOrder = _segmentDescriptor.getComputeOrder(branchData->key);
+
   if (isProximalCase2) assert(computeOrder == 0);
   if (isDistalCase2) assert(computeOrder == MAX_COMPUTE_ORDER);
   assert(dimensions.size() == numCpts);
@@ -299,7 +561,7 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   if (Aip.size() != numCpts) Aip.increaseSizeTo(numCpts);
   if (Aim.size() != numCpts) Aim.increaseSizeTo(numCpts);
   if (RHS.size() != numCpts) RHS.increaseSizeTo(numCpts);
-  if (currentToConc.size() != numCpts) currentToConc.increaseSizeTo(numCpts);
+  if (currentDensityToConc.size() != numCpts) currentDensityToConc.increaseSizeTo(numCpts);
 #ifdef MICRODOMAIN_CALCIUM
   //assert(0); //add data here Ca_microdomain
   //NOTE: already allocated in createMicrodomainData()
@@ -324,7 +586,7 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   for (int i = 0; i < numCpts; ++i)
   {
     Aii[i] = Aip[i] = Aim[i] = RHS[i] = 0.0;
-    currentToConc[i] = getArea(i) * uM_um_cubed_per_pA_msec / getVolume(i);
+    currentDensityToConc[i] = getArea(i) * uM_um_cubed_per_pA_msec / getVolume(i);
   }
 #ifdef MICRODOMAIN_CALCIUM
   //for (unsigned int ii=0; ii < microdomainNames.size(); ++ii)
@@ -332,7 +594,7 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   //  int offset = ii * numCpts;
   //  for (int jj = 0; jj < numCpts; jj++ )
   //  {
-  //    currentToConc_microdomain[offset+jj] = getArea(jj) * uM_um_cubed_per_pA_msec / 
+  //    currentDensityToConc_microdomain[offset+jj] = getArea(jj) * uM_um_cubed_per_pA_msec / 
   //      volume_microdomain[offset+jj];
   //  }
   //}
@@ -349,7 +611,6 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
   }
 
 
-  Aim[0] = Aip[numCpts - 1] = 0;
 
   if (!isProximalCase0)
   {
@@ -363,10 +624,10 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
       Aip[numCpts - 1] =
         -getLambda(dimensions[numCpts - 1], proximalDimension, numCpts-1, true);  // [nS/um^2]
     }
+    assert(0);
 #else
     Aip[numCpts - 1] =
-        -getLambda(dimensions[numCpts - 1], proximalDimension, numCpts-1, true);  // [nS/um^2]
-    //Aip[numCpts - 1] = -getLambda(dimensions[numCpts - 1], proximalDimension, true);
+        -getLambda_parent(dimensions[numCpts - 1], proximalDimension, numCpts-1, true);  // [nS/um^2]
 #endif
   }
 
@@ -377,20 +638,20 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
       Aim[0] = -getLambda(dimensions[0], 0);
     else
       Aim[0] = -getLambda(dimensions[0],distalDimensions[0], 0, true);
+    assert(0);
 #else
-    Aim[0] = -getLambda(dimensions[0],distalDimensions[0], 0, true);
-    //Aim[0] = -getLambda(dimensions[0], distalDimensions[0]);
+    Aim[0] = -getLambda_child(dimensions[0],distalDimensions[0], 0, true);
 #endif
   }
 
   for (int i = 1; i < numCpts; i++)
   {
-    Aim[i] = -getLambda(dimensions[i], dimensions[i - 1], i);
+    Aim[i] = -getLambda_child(dimensions[i], dimensions[i - 1], i);
   }
 
   for (int i = 0; i < numCpts - 1; i++)
   {
-    Aip[i] = -getLambda(dimensions[i], dimensions[i + 1], i);
+    Aip[i] = -getLambda_parent(dimensions[i], dimensions[i + 1], i);
   }
 
   /* FIX */
@@ -413,14 +674,15 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
       else{
         Aip[0] = -getAij(dimensions[0], proximalDimension, volume, true);
       }
+      assert(0);
 #else
-      Aip[0] = -getAij(dimensions[0], proximalDimension, volume, true);
+      Aip[0] = -getAij_parent(dimensions[0], proximalDimension, volume, true);
       //Aip[0] = -getAij(dimensions[0], proximalDimension, volume, true);
 #endif
     }
     else
     {
-      Aip[0] = -getAij(dimensions[0], dimensions[1], volume);
+      Aip[0] = -getAij_parent(dimensions[0], dimensions[1], volume);
     }
     /* reverted back to original approach
   //IMPORTANT CHANGE:
@@ -437,14 +699,27 @@ void CaConcentration::initializeCompartmentData(RNG& rng)
 #ifdef USE_TERMINALPOINTS_IN_DIFFUSION_ESTIMATION
       //CHECK AGAIN
       Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume, true));
+      assert(0);
 #else
-      Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume, true));
+      Aij.push_back(-getAij_child(dimensions[0], distalDimensions[n], volume, true));
       //Aij.push_back(-getAij(dimensions[0], distalDimensions[n], volume, true));
 #endif
     }
   }
+
+#ifdef SECOND_ORDER_SPATIAL
+  if (isProximalCase0)
+  {
+    Aim[numCpts-1] *= 2; 
+  }
+  if (isDistalCase0)
+  {
+    Aip[0] *= 2; 
+  }
+#endif
+
 #ifdef DEBUG_HH
-	printDebugHH();
+  printDebugHH();
 #endif
 }
 
@@ -505,19 +780,50 @@ void CaConcentration::doForwardSolve()
   //  1. ionic currents 
   for (int i = 0; i < numCpts; i++)
   {
-    Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
     RHS[i] = getSharedMembers().bmt * Ca_cur[i];
+    if (i == 0)
+    {
+      if (isDistalCase3)
+      {
+        Aii[0] = getSharedMembers().bmt - Aip[0];
+        for (int n = 0; n < distalInputs.size(); n++)
+        {
+          //initial assign
+          Aii[0] -= Aij[n];
+
+          //this is part of removing lower part of matrix
+          Aii[0] -= Aij[n] * *distalAips[n] / *distalAiis[n];
+          RHS[0] -= Aij[n] * *distalInputs[n] / *distalAiis[n];
+        }
+      }
+      else{
+        Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
+        if (isDistalCase1)
+        {
+          Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
+          RHS[0] -= Aim[0] * *distalInputs[0] / *distalAiis[0];
+        }
+        else if (isDistalCase2)
+        {
+          // Why do we not adjust Aii[0]? Check.
+          RHS[0] -= Aim[0] * *distalInputs[0];
+        }
+      }
+    }
+    else{
+      Aii[i] = getSharedMembers().bmt - Aim[i] - Aip[i];
+    }
     /* * * Sum Currents * * */
     // loop through different kinds of Ca2+ currents (LCCv12, LCCv13, R-type, ...)
-		// 1.a. producing I_Ca [pA/um^2]
+    // 1.a. producing I_Ca [pA/um^2]
     Array<ChannelCaCurrents>::iterator iter = channelCaCurrents.begin();
     Array<ChannelCaCurrents>::iterator end = channelCaCurrents.end();
     for (; iter != end; iter++)
     {
-      RHS[i] -= currentToConc[i] * (*iter->currents)[i];
+      RHS[i] -= currentDensityToConc[i] * (*iter->currents)[i];
     }
 
-		// 1.b. producing J_Ca [uM/msec]
+    // 1.b. producing J_Ca [uM/msec]
     Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
     Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
     for (; fiter != fend; fiter++)
@@ -528,71 +834,37 @@ void CaConcentration::doForwardSolve()
      * needed. */
     // TUAN: need to be updated to take into account PMCA
     //RHS[i] -= CaClearance * (Ca_cur[i] - getSharedMembers().CaBaseline);
-    
   }
 
-  /* FIX */
-  if (isDistalCase3)
-  {
-    Aii[0] = getSharedMembers().bmt - Aip[0];
-    RHS[0] = getSharedMembers().bmt * Ca_cur[0];
-    for (int n = 0; n < distalInputs.size(); n++)
-    {
-      Aii[0] -= Aij[n];
-    }
-    /* * * Sum Currents * * */
-    Array<ChannelCaCurrents>::iterator citer = channelCaCurrents.begin();
-    Array<ChannelCaCurrents>::iterator cend = channelCaCurrents.end();
-    for (; citer != cend; citer++)
-    {
-      RHS[0] -= currentToConc[0] * (*citer->currents)[0];
-    }
-
-    Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes.begin();
-    Array<ChannelCaFluxes>::iterator fend = channelCaFluxes.end();
-    for (; fiter != fend; fiter++)
-    {
-      RHS[0] +=  (*fiter->fluxes)[0];
-    }
-
-  }
-
-	//  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
+  //  2. synapse receptor currents using Hodgkin-Huxley type equations (gV, gErev)
   Array<ReceptorCaCurrent>::iterator riter = receptorCaCurrents.begin();
   Array<ReceptorCaCurrent>::iterator rend = receptorCaCurrents.end();
   for (; riter != rend; riter++)
   {
     int i = riter->index;
-    RHS[i] -= currentToConc[i] * *(riter->current);
+    RHS[i] -= currentDensityToConc[i] * *(riter->current);
   }
 
     // 1.c. HH-like of concentration diffusion
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_CACYTO
-		Array<TargetAttachCaConcentration >::iterator ciiter = targetAttachCaConcentration.begin();
-		Array<TargetAttachCaConcentration >::iterator ciend = targetAttachCaConcentration.end();
-    //dyn_var_t invTime = 1.0/(getSharedMembers().dt;
-		for (; ciiter != ciend; ciiter++)
-		{
-      int i = (ciiter)->index;
-			RHS[i] += (*(ciiter->inverseTime)) * (*(ciiter->Ca)); //[uM/ms]
-			Aii[i] += (*(ciiter->inverseTime)) ; //[1/ms]
-		}
+  Array<TargetAttachCaConcentration >::iterator ciiter = targetAttachCaConcentration.begin();
+  Array<TargetAttachCaConcentration >::iterator ciend = targetAttachCaConcentration.end();
+  //dyn_var_t invTime = 1.0/(getSharedMembers().dt;
+  for (; ciiter != ciend; ciiter++)
+  {
+    int i = (ciiter)->index;
+    RHS[i] += (*(ciiter->inverseTime)) * (*(ciiter->Ca)); //[uM/ms]
+    Aii[i] += (*(ciiter->inverseTime)) ; //[1/ms]
+  }
 #endif
   
-  
-  
-  
-  
-  
-  
-  
-  
+  //  4. injected currents (pA)
   Array<InjectedCaCurrent>::iterator iiter = injectedCaCurrents.begin();
   Array<InjectedCaCurrent>::iterator iend = injectedCaCurrents.end();
   for (; iiter != iend; iiter++)
   {
     if (iiter->index < numCpts)
-      RHS[iiter->index] += *(iiter->current) * iiter->currentToConc;
+      RHS[iiter->index] += *(iiter->current)  * iiter->currentToConc;
   }
 
   /* * *  Forward Solve Ax = B * * */
@@ -601,28 +873,10 @@ void CaConcentration::doForwardSolve()
    * RHS -= Aim[?] * V[proximal]
    * Aii = 
    */
-  if (isDistalCase1)
-  {
-    Aii[0] -= Aim[0] * *distalAips[0] / *distalAiis[0];
-    RHS[0] -= Aim[0] * *distalInputs[0] / *distalAiis[0];
-  }
-  else if (isDistalCase2)
-  {
-    // Why do we not adjust Aii[0]? Check.
-    RHS[0] -= Aim[0] * *distalInputs[0];
-  }
-  else if (isDistalCase3)
-  {
-    for (int n = 0; n < distalInputs.size(); n++)
-    {
-      Aii[0] -= Aij[n] * *distalAips[n] / *distalAiis[n];
-      RHS[0] -= Aij[n] * *distalInputs[n] / *distalAiis[n];
-    }
-  }
   for (int i = 1; i < numCpts; i++)
   {
-    Aii[i] -= Aim[i] * Aip[i - 1] / Aii[i - 1];
-    RHS[i] -= Aim[i] * RHS[i - 1] / Aii[i - 1];
+    Aii[i] -= Aip[i - 1] * Aim[i] / Aii[i - 1];
+    RHS[i] -= RHS[i - 1] * Aim[i] / Aii[i - 1];
   }
 
 #ifdef MICRODOMAIN_CALCIUM
@@ -663,6 +917,124 @@ void CaConcentration::doBackwardSolve()
 //GOAL: get coefficient of Aip or Aim
 //  DCa * (r_{i->j})^2 / (dist^2 * b->r^2)
 //NOTE: a is the current compartment, and
+//      b is the parent compartment (proximal side)
+//      index = index of 'a'
+dyn_var_t CaConcentration::getLambda_parent(DimensionStruct* a, 
+    DimensionStruct* b,
+    int index, 
+    bool connectJunction)
+{
+  dyn_var_t Rb;// radius_middle ()
+//#ifdef NEW_DISTANCE_NONUNIFORM_GRID 
+//  dyn_var_t dsi = getHalfDistance(index);
+//#else
+//  dyn_var_t dsi = a->length;
+//#endif
+  dyn_var_t distance;
+  dyn_var_t volume = getVolume(index);
+  if (a->dist2soma <= SMALL)//avoid the big soma
+  {//a  CAN't BE the compartment representing 'soma'
+    assert(0);
+  }
+  else if (b->dist2soma <= SMALL)
+  {//b is the compartment representing 'soma'
+    Rb = a->r;
+#ifdef USE_SCALING_NECK_FROM_SOMA
+    //TEST 
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
+    //END TEST
+#endif
+
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    distance = std::fabs(a->dist2soma - b->dist2soma);
+#ifdef USE_STRETCH_SOMA_RADIUS
+    //TEST 
+    distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+    //END TEST
+#endif
+#endif
+  }
+  else
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
+    Rb = 0.5 * (a->r + b->r);
+#endif
+    distance = std::fabs(b->dist2soma - a->dist2soma);
+  }
+  return (M_PI * Rb * Rb * DCa) / 
+      (volume * distance);
+}
+//GOAL: get coefficient of Aip or Aim
+//  DCa * (r_{i->j})^2 / (dist^2 * b->r^2)
+//NOTE: a is the current compartment, and
+//      b is the child compartment (distal side)
+//      index = index of 'a'
+dyn_var_t CaConcentration::getLambda_child(DimensionStruct* a, 
+    DimensionStruct* b,
+    int index, 
+    bool connectJunction)
+{
+  dyn_var_t Rb;// radius_middle ()
+//#ifdef NEW_DISTANCE_NONUNIFORM_GRID 
+//  dyn_var_t dsi = getHalfDistance(index);
+//#else
+//  dyn_var_t dsi = a->length;
+//#endif
+  dyn_var_t distance;
+  dyn_var_t volume = getVolume(index);
+  if (a->dist2soma <= SMALL)//avoid the big soma
+  {//a  CAN't BE the compartment representing 'soma'
+    assert(0);
+  }
+  else if (b->dist2soma <= SMALL)
+  {//b is the compartment representing 'soma'
+    Rb = a->r;
+#ifdef USE_SCALING_NECK_FROM_SOMA
+    //TEST 
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
+    //END TEST
+#endif
+
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    distance = std::fabs(a->dist2soma - b->dist2soma);
+#ifdef USE_STRETCH_SOMA_RADIUS
+    //TEST 
+    distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+    //END TEST
+#endif
+#endif
+  }
+  else
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
+    Rb = 0.5 * (a->r + b->r);
+#endif
+    distance = std::fabs(b->dist2soma - a->dist2soma);
+  }
+  return (M_PI * Rb * Rb * DCa) / 
+      (volume * distance);
+}
+//GOAL: get coefficient of Aip or Aim
+//  DCa * (r_{i->j})^2 / (dist^2 * b->r^2)
+//NOTE: a is the current compartment, and
 //      b is the adjacent compartment (can be proximal or distal side)
 dyn_var_t CaConcentration::getLambda(DimensionStruct* a, 
     DimensionStruct* b,
@@ -683,18 +1055,23 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a,
   else if (b->dist2soma <= SMALL)
   {//b is the compartment representing 'soma'
     Rb = a->r;
+#ifdef USE_SCALING_NECK_FROM_SOMA
     //TEST 
-    Rb /= SCALING_NECK_FROM_SOMA;
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
     //END TEST
+#endif
+
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
 #else
     distance = std::fabs(a->dist2soma);
-    //  distance += 50.0;//TUAN TESTING - make soma longer
-    //distance = std::fabs(b->r + a->dist2soma);
+#ifdef USE_STRETCH_SOMA_RADIUS
     //TEST 
     distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
     //END TEST
+#endif
 #endif
   }
   else
@@ -750,40 +1127,116 @@ dyn_var_t CaConcentration::getLambda(DimensionStruct* a, int index)
      (dsi * distance )); 
      */
 }
-//|dyn_var_t CaConcentration::getLambda(DimensionStruct* a, DimensionStruct* b)
-//|{
-//|	dyn_var_t radius;// radius_middle ()
-//|  dyn_var_t distance;
-//|	if (a->dist2soma <= SMALL)//avoid the big soma
-//|	{//a is the compartment representing 'soma'
-//|		radius = b->r;
-//|    //distance = fabs(b->dist2soma + a->r );
-//|    //distance = std::fabs(b->dist2soma); //NOTE: The dist2soma of the first compartment stemming
-//|         // from soma is always the distance from the center of soma to the center
-//|         // of that compartment
-//|    distance = std::fabs(b->dist2soma - a->r); // SOMA is treated as a point source
-//|	}
-//|	else if (b->dist2soma <= SMALL)
-//|	{//b is the compartment representing 'soma'
-//|		radius = a->r;
-//|    //distance = fabs(b->r + a->dist2soma );
-//|    //distance = std::fabs(a->dist2soma);
-//|    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
-//|  }
-//|	else
-//|  {
-//|		radius = 0.5 * (a->r + b->r);
-//|    distance = fabs(b->dist2soma - a->dist2soma);
-//|  }
-//|  //dyn_var_t distancesq = DISTANCE_SQUARED(a, b);
-//|  //return (getSharedMembers().DCa * radius * radius /
-//|  //        (distancesq * b->r * b->r)); /* needs fixing */
-//|  //dyn_var_t distance = fabs(b->dist2soma - a->dist2soma);
-//|  //return (getSharedMembers().DCa * radius * radius /
-//|  //        (distance * distance * b->r * b->r)); /* needs fixing */
-//|  return (DCa * radius * radius /
-//|          (distance * distance * b->r * b->r)); /* needs fixing */
-//|}
+
+// GOAL: Get coefficient of Aip[0] and Aim[size-1]
+//  for Cai(i=0,j=branch-index)
+// i.e. at implicit branch point
+//  DCa * (1/V) * PI * r_(i->j)^2 / (ds_(i->j))
+//   V = volume of cytosolic compartment
+//   DCa = diffusion constant of Ca(cyto)
+//  NOTE: 'a' is the current node;
+//        'b' is the proxomal-side node 
+dyn_var_t CaConcentration::getAij_parent(DimensionStruct* a, DimensionStruct* b,
+    dyn_var_t V, bool connectJunction)
+{
+  dyn_var_t Rb;
+  dyn_var_t distance;
+  if (a->dist2soma <= SMALL)
+  {
+    assert(0); // a CANNOT be soma
+  }
+  else if (b->dist2soma <= SMALL)
+  {
+    Rb = a->r;
+#ifdef USE_SCALING_NECK_FROM_SOMA
+    //TEST 
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
+    //END TEST
+#endif
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    //distance = fabs(b->r + a->dist2soma );
+    distance = std::fabs(a->dist2soma);
+#ifdef USE_STRETCH_SOMA_RADIUS
+    //TEST 
+    distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+    //END TEST
+#endif
+#endif
+  }
+  else
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
+    Rb = 0.5 * (a->r + b->r);
+#endif
+    distance = fabs(b->dist2soma - a->dist2soma);
+  }
+  return (M_PI * Rb * Rb * DCa /
+      (V * distance));
+}
+
+// GOAL: Get coefficient of Aip[0] and Aim[size-1]
+//  for Cai(i=0,j=branch-index)
+// i.e. at implicit branch point
+//  DCa * (1/V) * PI * r_(i->j)^2 / (ds_(i->j))
+//   V = volume of cytosolic compartment
+//   DCa = diffusion constant of Ca(cyto)
+//  NOTE: 'a' is the current node;
+//        'b' is the distal-side node 
+dyn_var_t CaConcentration::getAij_child(DimensionStruct* a, DimensionStruct* b,
+    dyn_var_t V, bool connectJunction)
+{
+  dyn_var_t Rb;
+  dyn_var_t distance;
+  if (a->dist2soma <= SMALL)
+  {
+    assert(0); // a CANNOT be soma
+  }
+  else if (b->dist2soma <= SMALL)
+  {
+    Rb = a->r;
+#ifdef USE_SCALING_NECK_FROM_SOMA
+    //TEST 
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
+    //END TEST
+#endif
+#ifdef USE_SOMA_AS_ISOPOTENTIAL
+    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
+#else
+    //distance = fabs(b->r + a->dist2soma );
+    distance = std::fabs(a->dist2soma);
+#ifdef USE_STRETCH_SOMA_RADIUS
+    //TEST 
+    distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
+    //END TEST
+#endif
+#endif
+  }
+  else
+  {
+#ifdef NEW_RADIUS_CALCULATION_JUNCTION
+    if (connectJunction)
+      Rb = b->r;
+    else
+      Rb = 0.5 * (a->r + b->r);
+#else
+    Rb = 0.5 * (a->r + b->r);
+#endif
+    distance = fabs(b->dist2soma - a->dist2soma);
+  }
+  return (M_PI * Rb * Rb * DCa /
+      (V * distance));
+}
 
 // GOAL: Get coefficient of Aip[0] and Aim[size-1]
 //  for Cai(i=0,j=branch-index)
@@ -805,19 +1258,23 @@ dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
   else if (b->dist2soma <= SMALL)
   {
     Rb = a->r;
+#ifdef USE_SCALING_NECK_FROM_SOMA
     //TEST 
-    Rb /= SCALING_NECK_FROM_SOMA;
+    Rb /= SCALING_NECK_FROM_SOMA_WITH;
     //END TEST
+#endif
 #ifdef USE_SOMA_AS_ISOPOTENTIAL
     distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
 #else
     //distance = fabs(b->r + a->dist2soma );
     distance = std::fabs(a->dist2soma);
-    //  distance += 50.0;//TUAN TESTING - make soma longer
+#ifdef USE_STRETCH_SOMA_RADIUS
     //TEST 
-    distance += STRETCH_SOMA_WITH; //similar to the 'base point of soma in NEURON'
-    //NOTE: The distance*sum(radius-each-branch) = NEURON(distance*sum(1/2(somaR+radius-each-branch)))
+    distance += STRETCH_SOMA_WITH;
+    //  distance += 50.0;//TUAN TESTING - make soma longer
+    //distance = std::fabs(b->r + a->dist2soma);
     //END TEST
+#endif
 #endif
   }
   else
@@ -836,39 +1293,6 @@ dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
       (V * distance));
 }
 
-//|dyn_var_t CaConcentration::getAij(DimensionStruct* a, DimensionStruct* b,
-//|                                  dyn_var_t V)
-//|{
-//|	dyn_var_t Rb;
-//|  dyn_var_t distance;
-//|	if (a->dist2soma <= SMALL)
-//|	{
-//|		Rb = b->r;
-//|    //distance = fabs(b->dist2soma + a->r );
-//|    //distance = std::fabs(b->dist2soma); //NOTE: The dist2soma of the first compartment stemming
-//|         // from soma is always the distance from the center of soma to the center
-//|         // of that compartment
-//|    distance = std::fabs(b->dist2soma - a->r); // SOMA is treated as a point source
-//|	}
-//|	else if (b->dist2soma <= SMALL)
-//|  {
-//|		Rb = a->r;
-//|    //distance = fabs(b->r + a->dist2soma );
-//|    //distance = std::fabs(a->dist2soma);
-//|    distance = std::fabs(a->dist2soma - b->r); // SOMA is treated as a point source
-//|  }
-//|	else
-//|  {
-//|		Rb = 0.5 * (a->r + b->r);
-//|    distance = fabs(b->dist2soma - a->dist2soma);
-//|  }
-//|  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
-//|  //        (V * sqrt(DISTANCE_SQUARED(a, b))));
-//|  //dyn_var_t distance = fabs(b->dist2soma - a->dist2soma);
-//|  //return (M_PI * Rb * Rb * getSharedMembers().DCa /
-//|  return (M_PI * Rb * Rb * DCa /
-//|          (V * distance));
-//|}
 
 void CaConcentration::setReceptorCaCurrent(
     const String& CG_direction, const String& CG_component,
@@ -1053,7 +1477,6 @@ void CaConcentration::setTargetAttachCaConcentration(const String& CG_direction,
   assert(targetAttachCaConcentration.size() > 0);
 #endif
   targetAttachCaConcentration[targetAttachCaConcentration.size() - 1].index = CG_inAttrPset->idx;
-
 }
 #endif
 
@@ -1101,7 +1524,7 @@ void CaConcentration::createMicroDomainData(const String& CG_direction, const St
     Ca_microdomain.increaseSizeTo(numMicrodomains * numCpts);
     Ca_microdomain_cur.increaseSizeTo(numMicrodomains * numCpts);
     RHS_microdomain.increaseSizeTo(numMicrodomains * numCpts);
-    //currentToConc_microdomain.increaseSizeTo(numMicrodomains * numCpts);
+    //currentDensityToConc_microdomain.increaseSizeTo(numMicrodomains * numCpts);
     volume_microdomain.increaseSizeTo(numMicrodomains * numCpts);
     
     for (unsigned ii = 0; ii < numMicrodomains; ++ii)
@@ -1232,8 +1655,8 @@ void CaConcentration::updateMicrodomains()
     int offset = _mapCurrentToMicrodomainIndex[ii] * numCpts;
     for (int jj = 0; jj < numCpts; jj++)
     {
-      //wrong->RHS_microdomain[offset+jj] -= currentToConc_microdomain[offset+jj] * (*(citer->currents))[jj];  //[uM/ms]
-      RHS_microdomain[offset+jj] -= currentToConc[jj] * (*(citer->currents))[jj];  //[uM/ms]
+      //wrong->RHS_microdomain[offset+jj] -= currentDensityToConc_microdomain[offset+jj] * (*(citer->currents))[jj];  //[uM/ms]
+      RHS_microdomain[offset+jj] -= currentDensityToConc[jj] * (*(citer->currents))[jj];  //[uM/ms]
     }
   }
   Array<ChannelCaFluxes>::iterator fiter = channelCaFluxes_microdomain.begin();
@@ -1294,5 +1717,6 @@ void CaConcentration::updateMicrodomains_Ca()
     }
   }
 }
+
 #endif
 

@@ -17,12 +17,10 @@
 #include "ChannelSchweighoferHCN.h"
 #include "CG_ChannelSchweighoferHCN.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
 
-float ChannelSchweighoferHCN::vtrap(float x, float y) {
-  return(fabs(x/y) < SMALL ? y*(1 - x/y/2) : x/(exp(x/y) - 1));
-}
 
 void ChannelSchweighoferHCN::update(RNG& rng)
 {

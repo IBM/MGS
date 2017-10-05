@@ -23,6 +23,7 @@ class CurrentPulseGenerator : public CG_CurrentPulseGenerator
       void update_PoissonProtocol(RNG& , float currentTime);
       void update_PeriodicTrainProtocol(RNG& , float currentTime);
       void update_WhiteNoiseProtocol(RNG& rng, float currentTime);
+      void update_RampProtocol(RNG& , float currentTime);
 
       float nextPulse; //[ms]
       float peakInc; //[pA]

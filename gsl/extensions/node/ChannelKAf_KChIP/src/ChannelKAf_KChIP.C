@@ -3,23 +3,29 @@
 #include "Lens.h"
 #include "rndm.h"
 
-#define SMALL 1.0E-6
-// unit conversion
-#define uM2mM 1e-3
-
-#include <algorithm>
 #include <math.h>
 #include <pthread.h>
+#include <algorithm>
 
-#include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
 #include "SegmentDescriptor.h"
 
-static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
-
+#define SMALL 1.0E-6
+// unit conversion
+#define uM2mM 1e-3
+//
 #define Cai_base 0.1  // [uM]
 
+
+
+static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
+
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+// a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
+// b_m  = BMC * exp( (V - BMV)/BMD )
+// a_h  = AHC * exp( (V - AHV)/AHD )
 //
 // This is an implementation of the fast component of A-type (KAf, KAt)
 // potassium current
@@ -61,6 +67,17 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 #define THV 83.0
 #define THD 23.0
 
+#elif CHANNEL_KAf == KAf_MAHON_2000   
+// Mahon 2000
+// IKAf = g * m * h * (V-E)
+#define VHALF_M -33.1                 
+#define k_M -7.5                       
+#define VHALF_H -70.4                 
+#define k_H 7.6                      
+
+#define tau_m 1.0 //ms                    
+#define tau_h 25.0   // ms                 
+
 #elif CHANNEL_KAf == KAf_EVANS_2012
 //  Inactivation reference from  Tkatch - Surmeier (2000)
 //     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
@@ -101,26 +118,39 @@ std::vector<dyn_var_t> ChannelKAf_KChIP::Vmrange_taum;
 NOT IMPLEMENTED YET
 #endif
 
-dyn_var_t ChannelKAf_KChIP::vtrap(dyn_var_t x, dyn_var_t y)
-{
-  return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
-}
 
+// GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
+//   --> output gate(t+dt/2)
+//   of second-order accuracy at time (t+dt/2) using trapezoidal rule
 void ChannelKAf_KChIP::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
+//#ifdef MICRODOMAIN_CALCIUM
+//    //TUAN TODO: put _offset+i instead of 'i' here for MICRODOMAIN_CALCIUM
+//    dyn_var_t cai = (*Cai)[i+_offset]; // [uM]
+//    //std::cout << "Please update strategy for using Cacyto into modulating Kv4.2 channel" << std::endl;
+//    //assert(0);
+//#else
+//    dyn_var_t cai = (*Cai)[i]; // [uM]
+//#endif
+//    float gbarAdj =  KChIP_Cav_on_conductance(cai);
+    dyn_var_t cai;
+    float vm_shift = 0;
+    float gbarAdj = 1.0;
+    float vm_slope_shift = 0;
 #ifdef MICRODOMAIN_CALCIUM
-    //TUAN TODO: put _offset+i instead of 'i' here for MICRODOMAIN_CALCIUM
-    dyn_var_t cai = (*Cai)[i+_offset]; // [uM]
-    //std::cout << "Please update strategy for using Cacyto into modulating Kv4.2 channel" << std::endl;
-    //assert(0);
-#else
-    dyn_var_t cai = (*Cai)[i]; // [uM]
+    if (Cai){
+      cai = (*Cai)[i+_offset]; // [uM]
+      gbarAdj = KChIP_Cav_on_conductance(cai);
+#define cads_max 30.0 
+      vm_shift = -5 * std::min(1.0, cai/cads_max);
+      vm_slope_shift = 5 * std::min(1.0, cai/cads_max);
+    }
+      //TUAN MODEL HACK
 #endif
-    float gbarAdj =  KChIP_Cav_on_conductance(cai);
 
 #if CHANNEL_KAf == KAf_TRAUB_1994
     {
@@ -151,6 +181,15 @@ void ChannelKAf_KChIP::update(RNG& rng)
       m[i] = (2.0 * pm * minf + m[i] * (1.0 - pm)) / (1.0 + pm);
       h[i] = (2.0 * ph * hinf + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
+#elif CHANNEL_KAf == KAf_MAHON_2000                                
+                                                                   
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));       
+    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));       
+    
+    dyn_var_t pm = 0.5*dt*getSharedMembers().Tadj / tau_m;        
+    dyn_var_t ph = 0.5*dt*getSharedMembers().Tadj / tau_h;        
+    m[i] = (2.0*pm*m_inf + m[i]*(1.0 - pm))/(1.0 + pm);            
+    h[i] = (2.0*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);            
 #elif CHANNEL_KAf == KAf_EVANS_2012
     {
       dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
@@ -180,7 +219,8 @@ void ChannelKAf_KChIP::update(RNG& rng)
       const dyn_var_t tau_h = 14.0;
       dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
-      dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+      dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - vm_shift) / (k_M - vm_slope_shift)));
+
       dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
 
       m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
@@ -188,34 +228,41 @@ void ChannelKAf_KChIP::update(RNG& rng)
     }
 
 #else
-    NOT IMPLEMENTED YET
+    NOT IMPLEMENTED YET;
 #endif
-    // trick to keep m in [0, 1]
-    if (m[i] < 0.0) { m[i] = 0.0; }
-    else if (m[i] > 1.0) { m[i] = 1.0; }
-    // trick to keep h in [0, 1]
-    if (h[i] < 0.0)
     {
-      h[i] = 0.0;
-    }
-    else if (h[i] > 1.0)
-    {
-      h[i] = 1.0;
+      // trick to keep m in [0, 1]
+      if (m[i] < 0.0) { m[i] = 0.0; }
+      else if (m[i] > 1.0) { m[i] = 1.0; }
+      // trick to keep h in [0, 1]
+      if (h[i] < 0.0) { h[i] = 0.0; }
+      else if (h[i] > 1.0) { h[i] = 1.0; }
     }
 
 #if CHANNEL_KAf == KAf_TRAUB_1994
     g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
     g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i] * h[i];
+#elif CHANNEL_KAf == KAf_MAHON_2000
+    g[i] = gbar[i] * m[i] * h[i];    
 #elif CHANNEL_KAf == KAf_EVANS_2012
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_WOLF_2005
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #endif
-    Iion[i] = g[i] * gbarAdj * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // at time (t+dt/2)
   }
 }
 
+// GOAL: To meet second-order derivative, the gates is calculated to 
+//     give the value at time (t0+dt/2) using data voltage v(t0)
+//  NOTE: 
+//    If steady-state formula is used, then the calculated value of gates
+//            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
+//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//        once gate(t0) is calculated using v(t0)
+//        we need to estimate gate(t0+dt/2)
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
 void ChannelKAf_KChIP::initialize(RNG& rng)
 {
   pthread_once(&once_KAf, ChannelKAf_KChIP::initialize_others);
@@ -231,8 +278,8 @@ void ChannelKAf_KChIP::initialize(RNG& rng)
   if (not Cai)
   {
     std::cerr << typeid(*this).name()
-              << " needs Calcium as input in ChanParam\n";
-    assert(Cai);
+              << " needs Calcium as input in ChanParam to simulate Ca(domain)\n";
+    //assert(Cai);
   }
 #endif
   assert(gbar.size() == size);
@@ -304,15 +351,23 @@ void ChannelKAf_KChIP::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
+//#ifdef MICRODOMAIN_CALCIUM
+//    //TUAN TODO: put _offset+i instead of 'i' here for MICRODOMAIN_CALCIUM
+//    dyn_var_t cai = (*Cai)[i+_offset]; // [uM]
+//    //std::cout << "Please update strategy for using Cacyto into modulating Kv4.2 channel" << std::endl;
+//    //assert(0);
+//#else
+//    dyn_var_t cai = (*Cai)[i]; // [uM]
+//#endif
+//    float gbarAdj = KChIP_Cav_on_conductance(cai);
+    float gbarAdj = 1.0;
 #ifdef MICRODOMAIN_CALCIUM
-    //TUAN TODO: put _offset+i instead of 'i' here for MICRODOMAIN_CALCIUM
-    dyn_var_t cai = (*Cai)[i+_offset]; // [uM]
-    //std::cout << "Please update strategy for using Cacyto into modulating Kv4.2 channel" << std::endl;
-    //assert(0);
-#else
-    dyn_var_t cai = (*Cai)[i]; // [uM]
+    dyn_var_t cai;
+    if (Cai){
+      cai = (*Cai)[i+_offset]; // [uM]
+      gbarAdj = KChIP_Cav_on_conductance(cai);
+    }
 #endif
-    float gbarAdj = KChIP_Cav_on_conductance(cai);
 
 #if CHANNEL_KAf == KAf_TRAUB_1994
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
@@ -326,6 +381,10 @@ void ChannelKAf_KChIP::initialize(RNG& rng)
     m[i] = 1.0 / (1.0 + exp(-(v + IMV) / IMD));
     h[i] = 1.0 / (1.0 + exp((v + IHV) / IHD));
     g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i] * h[i];
+#elif CHANNEL_KAf == KAf_MAHON_2000                  
+    m[i] = 1.0 / (1 + exp(-(v - VHALF_M) / k_M));    
+    h[i] = 1.0 / (1 + exp(-(v - VHALF_H) / k_H));    
+    g[i] = gbar[i] * m[i] * h[i];                    
 #elif CHANNEL_KAf == KAf_EVANS_2012
     dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
     dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
@@ -344,7 +403,7 @@ void ChannelKAf_KChIP::initialize(RNG& rng)
 // h[i] = ah / (ah + bh);
 #endif
 
-    Iion[i] = g[i] * gbarAdj * (v - getSharedMembers().E_K[0]);
+    Iion[i] = g[i] * gbarAdj * (v - getSharedMembers().E_K[0]); // time (t0+dt/2)
   }
 }
 

@@ -17,43 +17,79 @@ Struct TissueSite {
 // GOAL: stimulus
 //{{{
 Variable VoltageClamp Implements CurrentProducer
+#ifdef CONSIDER_DI_DV
+     , DIDV_ConductanceProducer
+#endif
 {
   //{{{
+  //{{{HOWTOUSE: 
+  //  1. define the object: choose a voltage-clamp technique using 'type'
+  //  1.  set 'command' or 'waveform' voltage data by triggering either 'setCommand()' or 'startWaveform()'
+  //             setCommand(command=40.0) # clamped voltage value
+  //  2.  turn on/off by triggering 'toggle()' - initially is OFF
+  //             toggle(toggle=1) --> explicit turn on
+  //             toggle(toggle=0) --> explicit turn off
+  //}}}
   //{{{ Data
-  dyn_var_t command; 	// Declare command voltage
-  dyn_var_t [] waveform;// Declare an array for the waveform
-  int waveformIdx;	// Declare index of the waveform array
-  dyn_var_t []* V; // array of pointers for the voltage measured at the cell that is input to the tool
-  int idx;  // user need to pass-in the idx (otherwise, use idx=0)
+  //{{{ reference data
+  dyn_var_t []* V; // array of pointers (an element represents 1 compartment in a branch) for the voltage measured at the cell that is input to the tool
+  //NOTE: idx is not user-definable so it should be internal
+  int idx;  // compartment-index where the voltage is clamped - user need to pass-in the idx (otherwise, use idx=0)
   dyn_var_t* deltaT;
-  int type; // type = 1 or 2 is supported [1 = emulate inject current compensation; 2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm]
-  //{{{type = 1
-  dyn_var_t Igen;	// Declare the feedback current applied to hold voltage constant
-  dyn_var_t Cm;		// Declare membrane capacitance
-  dyn_var_t beta; // headstage gain
-  dyn_var_t* surfaceArea;
-  //}}}
-  //{{{ type = 2
-  float gainTime ; // [ms] - typically 0.05 ms or 50 microseconds is the type to reach 99% value of Vc in experiment
-  //}}}
-  string fileName; 
   DimensionStruct* [] dimensions; //points from different compartments on different branches
+  // }}}
+  dyn_var_t command; 	// Declare command voltage
+  dyn_var_t [] waveform;// Declare an array for the waveform (each index map to a single time-step clamped voltage)
+  //int waveformIdx;	// Declare index of the waveform array
+  int type; // type = [1 = emulate inject current compensation; 
+            //         2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm
+            //         3 = read from 'tVm_file' input file (2 columns: time-Vm)]
+  dyn_var_t Igen;	// (pA) current injection - Declare the feedback current applied to hold voltage constant
+#ifdef CONSIDER_DI_DV
+  dyn_var_t conductance_didv; // [nS/um^2] - conductance
+#endif
+  //{{{type = 1
+#ifdef USE_SERIES_RESISTANCE
+  dyn_var_t Rs; // series resistance  (GOhm) - default 10^6 (Ohm) ~ 0.001 (GOhm)
+#else
+  dyn_var_t Cm;		// (pF/um^2) - specific membrane capacitance
+  dyn_var_t beta; // headstage gain (unitless)
+  dyn_var_t* surfaceArea;
+#endif
+  //}}}
+  //{{{ type = 2 || type = 1
+  float gainTime ; // [ms] - the time to reach +100mV amplitude
+          //DEFAULT: 0.05 ms or 50 microseconds (the typical the time to reach 99% value of +100mV)
+  //}}}
+  //{{{ type = 3
+  string tVm_file;  // [type=3][input] = hold time-Vm
+  //}}}
+  string fileName;  // [type=1,3][output] = hold time - Igen
   //}}}
 
   TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
   TriggeredFunction setCommand;					// a single command like a step
-  TriggeredFunction toggle;
+  TriggeredFunction toggle; // switch on/off the Vc -- default is OFF
 
   InitPhase initialize;
   RuntimePhase updateI;
   FinalPhase finalize;
 
   CurrentProducer.current << &Igen;	// Describes the output of the function which is the current Igen
+#ifdef CONSIDER_DI_DV
+  DIDV_ConductanceProducer.conductance_didv << &conductance_didv;
+#endif		
 
   InAttrPSet {
     string identifier;
   }
 
+  //{{{Input Connections
+  //NOTE: Currently limited to junction (e.g. soma) only
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
+    VoltageArrayProducer.voltageArray >> V;
+    DimensionArrayProducer.dimensionArray >> dimensions;   
+  }
   //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
   //  VoltageArrayProducer.voltageArray >> V;
   //  ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
@@ -71,14 +107,10 @@ Variable VoltageClamp Implements CurrentProducer
   //	VoltageArrayProducer.voltageArray >> V;
   //	SurfaceAreaProducer.surfaceArea >> surfaceArea;
   //}
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
-    VoltageArrayProducer.voltageArray >> V;
-    //SurfaceAreaProducer.surfaceArea >> surfaceArea;
-    DimensionArrayProducer.dimensionArray >> dimensions;   
-  }
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;
   }
+  //}}}
   //}}}
 }
 
@@ -106,7 +138,7 @@ Variable CurrentPulseGenerator Implements CurrentProducer
 {
   //{{{
   //{{{Data
-  dyn_var_t I; // [pA]
+  //{{{user-input
   dyn_var_t peak;
   //{{{for white-noise
   dyn_var_t mean; 
@@ -117,7 +149,7 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   dyn_var_t delay;
   dyn_var_t last;
   dyn_var_t inc;
-  string pattern; // supported protocols [periodic_train, periodic, poisson, dualexp]
+  string pattern; // supported protocols [periodic_train, periodic, poisson, dualexp, ramp]
   int write_to_file; // YES or NO
   string fileName; // fileName if 'write_to_file = 1'
   float io_interval; //[ms] - default is 1.0 [ms]
@@ -130,7 +162,8 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   int num_pulses_per_train;
   float intra_train_gap;  //[ms]
   //}}}
-
+  //}}}
+  dyn_var_t I; // [pA]
   dyn_var_t* deltaT;
   //}}}
 
@@ -148,9 +181,9 @@ Variable RampCurrentGenerator Implements CurrentProducer
 {
   //{{{
   //{{{Data
-  dyn_var_t I; // [pA]
-  dyn_var_t Istart;
-  dyn_var_t Iend;
+  //{{{user-input
+  dyn_var_t Istart; // [pA]
+  dyn_var_t Iend;  // [pA]
   dyn_var_t period;
   dyn_var_t duration;
   dyn_var_t delay;
@@ -159,8 +192,9 @@ Variable RampCurrentGenerator Implements CurrentProducer
   string pattern; //(ramp)
   int write_to_file; // YES or NO
   string fileName; // fileName if 'write_to_file = 1'
-  float io_interval; //[ms] - default is 1.0 [ms]
-
+  float io_interval; //[ms] - minimal/default value is DEFAULT_IO_INTERVAL ~ 1.0 [ms]
+  //}}}
+  dyn_var_t I; // [pA]
   dyn_var_t* deltaT;
   //}}}
 
@@ -1381,7 +1415,7 @@ Variable SimulationInfo
   // to be able to absorved by FloatTrigger
   float currentTime;    //[ms]
   dyn_var_t* deltaT;
-  unsigned iterationCount; // zero-based, unlike ::Iteration is 1-based
+  unsigned iterationCount; // zero-based for RuntimePhase loop, unlike ::Iteration is 1-based (as it starts from InitPhase)
   //}}}
   //}}}
 
