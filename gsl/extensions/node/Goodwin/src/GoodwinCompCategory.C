@@ -13,18 +13,14 @@
 //
 // =================================================================
 
-#ifndef MihalasNieburSynapseIAFUnitCompCategory_H
-#define MihalasNieburSynapseIAFUnitCompCategory_H
-
 #include "Lens.h"
-#include "CG_MihalasNieburSynapseIAFUnitCompCategory.h"
+#include "GoodwinCompCategory.h"
+#include "NDPairList.h"
+#include "CG_GoodwinCompCategory.h"
 
-class NDPairList;
+#define SHD getSharedMembers()
 
-class MihalasNieburSynapseIAFUnitCompCategory : public CG_MihalasNieburSynapseIAFUnitCompCategory
+GoodwinCompCategory::GoodwinCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
+   : CG_GoodwinCompCategory(sim, modelName, ndpList)
 {
- public:
-  MihalasNieburSynapseIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-};
-
-#endif
+}

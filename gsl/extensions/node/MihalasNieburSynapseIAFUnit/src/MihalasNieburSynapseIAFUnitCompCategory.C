@@ -23,7 +23,3 @@ MihalasNieburSynapseIAFUnitCompCategory::MihalasNieburSynapseIAFUnitCompCategory
 {
 }
 
-void MihalasNieburSynapseIAFUnitCompCategory::initializeShared(RNG& rng) 
-{
-}
-

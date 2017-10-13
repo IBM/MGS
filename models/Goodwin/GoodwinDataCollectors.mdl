@@ -13,11 +13,11 @@
 //
 // =================================================================
 
-#ifndef CLEFTASTROCYTEIAFUNITDATACOLLECTORS_MDL
-#define CLEFTASTROCYTEIAFUNITDATACOLLECTORS_MDL
+#ifndef GOODWINDATACOLLECTORS_MDL
+#define GOODWINDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Variable CleftAstrocyteIAFUnitDataCollector
+Variable GoodwinDataCollector
 {
   string directory;
   string filePrep;
@@ -27,21 +27,24 @@ Variable CleftAstrocyteIAFUnitDataCollector
   int [] cols;
   int [] slices;
   int mxslice;
-  double* [] neurotransmitter;
-  double* [] eCB;
+  double* [] X;
+  double* [] Y;
+  double* [] Z;
   UserFunction getNodeIndices;
-   
+
   // Flags
-  bool op_saveNeurotransmitter;
-  bool op_saveeCB;
-  
-  Connection Pre Node () Expects NeurotransmitterIAFProducer, eCBIAFProducer
+  bool op_saveX;
+  bool op_saveY;
+  bool op_saveZ;
+
+  Connection Pre Node () Expects GoodwinProducer
   {
-    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitter;
-    eCBIAFProducer.eCB >> eCB;
+    GoodwinProducer.X >> X;
+    GoodwinProducer.Y >> Y;
+    GoodwinProducer.Z >> Z;
     getNodeIndices();
   }
-  
+
   InitPhase initialize;
   TriggeredFunction dataCollection;
   FinalPhase finalize;

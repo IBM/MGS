@@ -48,14 +48,14 @@ Interface LFPProducer
   double* LFP;
 }
 
-Interface GlutamateIAFProducer
+Interface NeurotransmitterIAFProducer
 {
-  double* glutamate;
+  double* neurotransmitter;
 }
 
-Interface AvailableGlutamateIAFProducer
+Interface AvailableNeurotransmitterIAFProducer
 {
-  double* availableGlutamate;
+  double* availableNeurotransmitter;
 }
 
 Interface SynapticCurrentIAFProducer
@@ -64,6 +64,9 @@ Interface SynapticCurrentIAFProducer
   double* AMPAcurrent;
 
   double* mGluR5current;
+
+  double* NMDARopen;
+  double* NMDARCacurrent;
 }
 
 Interface CaIAFProducer
@@ -71,14 +74,16 @@ Interface CaIAFProducer
   double* Ca;
 }
 
-Interface ECBIAFProducer
+Interface eCBIAFProducer
 {
-  double* ECB;
+  double* eCB;
 }
 
-Interface Cb1RIAFProducer
+Interface CB1RIAFProducer
 {
-  double* Cb1Rcurrent;
+  double* CB1R;
+  double* CB1Runbound;
+  double* CB1Rcurrent;
 }
 
 Interface SORNSpikeProducer {
@@ -172,6 +177,13 @@ Interface ReceptiveFieldProducer {
   double* output;
 }
 
+Interface GoodwinProducer 
+{
+  double* X;
+  double* Y;
+  double* Z;
+}
+
 Struct Input {
   double* input;
   double weight;
@@ -255,9 +267,9 @@ Struct PlasticPSPInput {
   int col;
 }
 
-Struct GlutamateIAFInput
+Struct NeurotransmitterIAFInput
 {
-  double* glutamate;
+  double* neurotransmitter;
   double weight;
   int row;
   int col;
@@ -271,9 +283,9 @@ Struct SynapticCurrentIAFInput
   int col;
 }
 
-Struct ECBIAFInput
+Struct eCBIAFInput
 {
-  double* ECB;
+  double* eCB;
   double weight;
   int row;
   int col;
@@ -290,6 +302,16 @@ Struct WaveInput
 Struct VoltageIAFInput
 {
   float* voltage;
+  int row;
+  int col;
+}
+
+Struct GoodwinInput
+{
+  double* X;
+  double* Y;
+  double* Z;
+  double weight;
   int row;
   int col;
 }
