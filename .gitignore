@@ -67,5 +67,6 @@ models/all.mdf
 .*/
 .*
 !.gitignore
+*.eps
 *.mat
 
