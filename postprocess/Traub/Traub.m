@@ -216,15 +216,15 @@ for vX=vX_range
                     end
                     fid = fopen([directory,'PSPs',fileExt],'r');
                     PSPs = cell(1,XdimStr*YdimStr);
-                    t=1;
+                    ti=1;
                     while(~feof(fid))
                         for i=1:XdimStr*YdimStr
                             temp = fread(fid, numSynapses(i), 'float');
                             if (numel(temp) > 0)
-                                PSPs{i}(t,:) = temp;
+                                PSPs{i}(ti,:) = temp;
                             end
                         end
-                        t=t+1;
+                        ti=ti+1;
                     end
                     fclose(fid);
                     clear temp;
@@ -274,6 +274,7 @@ for vX=vX_range
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
                 print([directory,'cortex'],'-dpng');
+                print([directory,'cortex'],'-depsc');
             end
             if (postprocess_Spikes)
                 figure(2); clf; % Spikes
@@ -308,8 +309,10 @@ for vX=vX_range
                 temp2 = temp(1:maxSpikes*100,:);
                 save([directory,'Spike.txt'],'-ascii','temp2');
                 print([directory,'spikes'],'-dpng');
+                print([directory,'spikes'],'-depsc');
                 xlim([TminZoom*(1/dt) TmaxZoom*(1/dt)]);
                 print([directory,'spikes_zoom'],'-dpng');
+                print([directory,'spikes_zoom'],'-depsc');
                 clear temp temp2 i segmentDim Nspikes;
             end
 %             Drange = [XmaxStr-XminStr,YmaxStr-YminStr,ZmaxStr-ZminStr];
@@ -326,6 +329,7 @@ for vX=vX_range
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
                 print([directory,'sub-voltage'],'-dpng');
+                print([directory,'sub-voltage'],'-depsc');
             end
             if (postprocess_Thresholds)
                 figure(4); clf; % Threshold
@@ -336,6 +340,7 @@ for vX=vX_range
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
                 print([directory,'threshold'],'-dpng');
+                print([directory,'threshold'],'-depsc');
             end
             if (postprocess_SpikeVoltages)
                 figure(5); clf; % Voltage (with spikes)
@@ -346,6 +351,7 @@ for vX=vX_range
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
                 print([directory,'voltage'],'-dpng');
+                print([directory,'voltage'],'-depsc');
             end
             if (postprocess_LFP_FSIsynapses)
                 figure(6); clf; % LFPs - inhibitory - individual neurons
@@ -356,6 +362,7 @@ for vX=vX_range
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
                 print([directory,'LFP_synapses_ind'],'-dpng');
+                print([directory,'LFP_synapses_ind'],'-depsc');
                 figure(7); clf; % LFPs - inhibitory
                 Tlfp=sum(LFPs_FSIsynapses(:,XminStr:XmaxStr,YminStr:YmaxStr,ZminStr:ZmaxStr),4);
                 Tlfp=sum(Tlfp,3);
@@ -363,12 +370,14 @@ for vX=vX_range
                 plot(Tlfp);
                 title('LFP - synapses');
                 print([directory,'LFP_synapses'],'-dpng');
+                print([directory,'LFP_synapses'],'-depsc');
                 figure(8); clf; % Frequency analysis
                 [pxx,f] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
                 temp = [f,10*log10(pxx)];
                 save([directory,'PMTM.txt'],'-ascii','temp');
                 pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
                 print([directory,'pmtm'],'-dpng');
+                print([directory,'pmtm'],'-depsc');
                 figure(9); clf;
                 [pks, locs] = findpeaks(log10(pxx),f,'MinPeakProminence',0.5);
                 peakHz(vX==vX_range, vY==vY_range, t==t_range) = ...
@@ -384,6 +393,7 @@ for vX=vX_range
                 ylabel('dB')
                 title('Multitaper PSD Estimate with 95%-Confidence Bounds')
                 print([directory,'pmtm_95'],'-dpng');
+                print([directory,'pmtm_95'],'-depsc');
                 clear Tlfp pxx f temp;
             end
             if (postprocess_LFPs)
@@ -406,6 +416,7 @@ for vX=vX_range
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end                    
                 print([directory,'LFPs'],'-dpng');
+                print([directory,'LFPs'],'-depsc');
                 inc = size(LFPs,1);
                 if (postprocess_PlotAll)
                     i=1;
@@ -424,22 +435,16 @@ for vX=vX_range
                     pxxStd = std(pxx);
                     pxxMean = mean(pxx);
                     figure(11); clf; % Frequency analysis
-                    plot(0.5:0.5:100,10*log10(pxxMean))
-                    xlim([0 100])
-                    xlabel('Hz')
-                    ylabel('Averaged and normalized (dB/Hz)')
-                    title('Multitaper PSD Estimate')
-                    print([directory,'pmtm'],'-dpng');
-                    figure(12); clf;
-                    plot(f,10*log10(pxxMean))
-                    hold on
-                    plot(f,10*log10(pxxMean+(pxxStd./2)),'r-.')
-                    plot(f,10*log10(pxxMean-(pxxStd./2)),'r-.')
-                    xlim([0 100])
-                    xlabel('Hz')
-                    ylabel('Averaged and normalized (dB/Hz)')
-                    title('Multitaper PSD Estimate with $\pm\sigma$')
+                    X=[pmtmFrange,fliplr(pmtmFrange)];
+                    Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
+                    fill(X,Y,'r','LineStyle','none');
+                    hold on;
+                    plot(0.5:0.5:100,10*log10(pxxMean),'r','LineWidth',1.5);
+                    alpha(0.35);
+                    xlabel('Frequency (Hz)');
+                    ylabel('Channel-wise normalized Power Spectral Density');
                     print([directory,'pmtm_std'],'-dpng');
+                    print([directory,'pmtm_std'],'-depsc');
                 else
                     Tlfp = LFPs(:,1,1,1);
                     [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
@@ -451,6 +456,7 @@ for vX=vX_range
                     ylabel('Power/frequency (dB/Hz)')
                     title('Multitaper PSD Estimate')
                     print([directory,'pmtm'],'-dpng');
+                    print([directory,'pmtm'],'-depsc');
                     plot(f,10*log10(pxx))
                     hold on
                     plot(f,10*log10(pxxc),'r-.')
@@ -459,6 +465,7 @@ for vX=vX_range
                     ylabel('Averaged and normalized (dB/Hz)')
                     title('Multitaper PSD Estimate with 95%-Confidence Bounds')
                     print([directory,'pmtm_95'],'-dpng');
+                    print([directory,'pmtm_95'],'-depsc');
                 end
                 %%
                 clear inc Tlfp pxx f pxxc temp;
@@ -473,6 +480,7 @@ for vX=vX_range
                 histogram(temp(:));
                 title('Synaptic weights');
                 print([directory,'weights'],'-dpng');
+                print([directory,'weights'],'-depsc');
                 clear temp;
             end
             if (postprocess_GJs)
@@ -485,6 +493,7 @@ for vX=vX_range
                 histogram(temp(:));
                 title('Gap junction conductances');
                 print([directory,'GJs'],'-dpng');
+                print([directory,'GJs'],'-depsc');
                 clear temp;
             end
             if (postprocess_PSPs)
@@ -502,6 +511,7 @@ for vX=vX_range
                     end
                 end
                 print([directory,'PSPs'],'-dpng');
+                print([directory,'PSPs'],'-depsc');
             end
             %% Animate visualization
             if (animatedVisualization)
@@ -535,11 +545,11 @@ for vX=vX_range
                         temp(i,:) = temp(i,:) + i - 1;
                     end
                     % Animate
-                    for t=linspace(Tmin+2,size(temp,2),frameRate*Tmax)
-                        plot(temp(:,round(1:t))');
+                    for ti=linspace(Tmin+2,size(temp,2),frameRate*Tmax)
+                        plot(temp(:,round(1:ti))');
                         axis([0 size(temp,2) 0 Nstr]);
                         ax = gca; ax.XTick = []; ax.YTick = []; ax.ZTick = []; axis off;
-                        title(['EEG (time=',num2str(t/1000,'%01.3f'),'s)'],'FontSize',20);
+                        title(['EEG (time=',num2str(ti/1000,'%01.3f'),'s)'],'FontSize',20);
                         frame = getframe(fig);
                         writeVideo(vid,frame);
                     end        
@@ -567,10 +577,10 @@ for vX=vX_range
                     z = [repmat(i(1),1,length(x)); repmat(i(end),1,length(x))];
                     col = ':w';
                     r=0;
-                    for t=Tmin+1:Tmax/sf
+                    for ti=Tmin+1:Tmax/sf
                         clf; hold on;
                         % Slices
-                        h=slice(permute(LFPs_animate(t,XminLFP:XmaxLFP,YminLFP:YmaxLFP,ZminLFP:ZmaxLFP),[2,3,4,1]),sli,sli,sli);
+                        h=slice(permute(LFPs_animate(ti,XminLFP:XmaxLFP,YminLFP:YmaxLFP,ZminLFP:ZmaxLFP),[2,3,4,1]),sli,sli,sli);
                         for i=1:numel(sli)*3
                             cdata = get(h(i),'cdata');
                             set(h(i),'EdgeColor','none',...
@@ -578,7 +588,7 @@ for vX=vX_range
                                 'AlphaDataMappin','none','FaceAlpha','flat');
                         end
                         ax = gca; ax.XTick = []; ax.YTick = []; ax.ZTick = []; axis off;
-                        title(['LFP (time=',num2str(t/sf,'%01.3f'),'s)'],'FontSize',20);
+                        title(['LFP (time=',num2str(ti/sf,'%01.3f'),'s)'],'FontSize',20);
                         % Grid
                         view(3);
                         plot3(x,y,z,col); plot3(y,z,x,col); plot3(z,x,y,col);

@@ -85,14 +85,15 @@ EachDstPropSrc ipsp_fsi(RadialDensitySampler(72, 2.829, uniformDensity, 2.829));
 // (nbrConnections, radius, densityDistribution, boundaryMargin)
 
 // Synaptic weights 
-BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.75)), "identifier", "ipsp");
+BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.55)), "identifier", "ipsp");
 NdplInAttrInit ipsp(IPSP);
 
 // Gap junctions connectivity
 EachDstPropSrc gj_fsi(RadialDensitySampler(9, 1.415, uniformDensity, 1.415));
 
 // Gap junctions weights
-BindName GJ("conductance", 22.0, "identifier", "gj");
+BindName GJ("conductance", 20.0, "identifier", "gj");
+//BindName GJ("conductance", 0.0, "identifier", "gj");
 NdplInAttrInit gj(GJ);
 
 // Initialize neurons
