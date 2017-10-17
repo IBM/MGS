@@ -15,11 +15,7 @@
 
 #include "../std/std.gsl"
 InitPhases = { init1, init2, initialize };
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
 RuntimePhases = { setContributions, run1, run2, dataCollect, lastPhase };
-=======
-RuntimePhases = { run1, run2, dataCollect, lastPhase };
->>>>>>> Phase update. Data *.txt -> *.mat:graphs/Traub/Traub.gsl
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
@@ -38,17 +34,9 @@ NodeType WaveDriverUnit(<
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
 			inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
-=======
-			inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
->>>>>>> Phase update. Data *.txt -> *.mat:graphs/Traub/Traub.gsl
                         op_random = 1,
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
                         scale = 1.25
-=======
-                        scale = 0.8 //3.0
->>>>>>> Updated FileDriver output.:graphs/Traub/Traub.gsl
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
 
 // Connectivity and weights

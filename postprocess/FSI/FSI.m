@@ -336,6 +336,17 @@ for vX=vX_range
 %             points = bsxfun(@times,Drange,points);
 %             Dmin = [XminStr,YminStr,ZminStr];
 %             points = round(bsxfun(@plus,Dmin,points));
+            if (postprocess_Voltages)
+                figure(3); clf; % Sub-threshold voltage
+                for i=1:Nstr*3
+                    subplot(3, Nstr, i);
+                    plot(voltage(:,points(i,1),points(i,2),points(i,3)));
+                    title('Sub-threshold voltage');
+                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                end
+                print([directory,'sub-voltage'],'-dpng');
+                print([directory,'sub-voltage'],'-depsc');
+            end
             if (postprocess_Thresholds)
                 fig4=figure(4); clf; % Threshold
                 fig4.Renderer='Painters';
@@ -359,6 +370,49 @@ for vX=vX_range
                 end
                 print([directory,'voltage'],'-dpng');
                 print([directory,'voltage'],'-depsc');
+            end
+            if (postprocess_LFP_FSIsynapses)
+                figure(6); clf; % LFPs - inhibitory - individual neurons
+                for i=1:Nstr*3
+                    subplot(3, Nstr, i);
+                    plot(LFPs_FSIsynapses(:,points(i,1),points(i,2),points(i,3))); 
+                    title('LFP - synapses');
+                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                end
+                print([directory,'LFP_synapses_ind'],'-dpng');
+                print([directory,'LFP_synapses_ind'],'-depsc');
+                figure(7); clf; % LFPs - inhibitory
+                Tlfp=sum(LFPs_FSIsynapses(:,XminStr:XmaxStr,YminStr:YmaxStr,ZminStr:ZmaxStr),4);
+                Tlfp=sum(Tlfp,3);
+                Tlfp=sum(Tlfp,2);
+                plot(Tlfp);
+                title('LFP - synapses');
+                print([directory,'LFP_synapses'],'-dpng');
+                print([directory,'LFP_synapses'],'-depsc');
+                figure(8); clf; % Frequency analysis
+                [pxx,f] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
+                temp = [f,10*log10(pxx)];
+                save([directory,'PMTM.txt'],'-ascii','temp');
+                pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
+                print([directory,'pmtm'],'-dpng');
+                print([directory,'pmtm'],'-depsc');
+                figure(9); clf;
+                [pks, locs] = findpeaks(log10(pxx),f,'MinPeakProminence',0.5);
+                peakHz(vX==vX_range, vY==vY_range, t==t_range) = ...
+                    locs(pks==max(pks));
+                [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
+                    'unity','ConfidenceLevel',0.95);
+                clf;
+                plot(f,10*log10(pxx))
+                hold on
+                plot(f,10*log10(pxxc),'r-.')
+                xlim([0 100])
+                xlabel('Hz')
+                ylabel('dB')
+                title('Multitaper PSD Estimate with 95%-Confidence Bounds')
+                print([directory,'pmtm_95'],'-dpng');
+                print([directory,'pmtm_95'],'-depsc');
+                clear Tlfp pxx f temp;
             end
             if (postprocess_LFPs)
                 fig10=figure(10); clf; % LFP electrodes
@@ -389,6 +443,40 @@ for vX=vX_range
                             i=i+1;
                         end
                     end
+                    pxxStd = std(pxx);
+                    pxxMean = mean(pxx);
+                    figure(11); clf; % Frequency analysis
+                    X=[pmtmFrange,fliplr(pmtmFrange)];
+                    Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
+                    fill(X,Y,'r','LineStyle','none');
+                    hold on;
+                    plot(0.5:0.5:100,10*log10(pxxMean),'r','LineWidth',1.5);
+                    alpha(0.35);
+                    xlabel('Frequency (Hz)');
+                    ylabel('Channel-wise normalized Power Spectral Density');
+                    print([directory,'pmtm_std'],'-dpng');
+                    print([directory,'pmtm_std'],'-depsc');
+                else
+                    Tlfp = LFPs(:,1,1,1);
+                    [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
+                        'unity','ConfidenceLevel',0.95);
+                    figure(11); clf; % Frequency analysis
+                    plot(0.5:0.5:100,10*log10(pxx))
+                    xlim([0 100])
+                    xlabel('Hz')
+                    ylabel('Power/frequency (dB/Hz)')
+                    title('Multitaper PSD Estimate')
+                    print([directory,'pmtm'],'-dpng');
+                    print([directory,'pmtm'],'-depsc');
+                    plot(f,10*log10(pxx))
+                    hold on
+                    plot(f,10*log10(pxxc),'r-.')
+                    xlim([0 100])
+                    xlabel('Hz')
+                    ylabel('Averaged and normalized (dB/Hz)')
+                    title('Multitaper PSD Estimate with 95%-Confidence Bounds')
+                    print([directory,'pmtm_95'],'-dpng');
+                    print([directory,'pmtm_95'],'-depsc');
                 end
                 pxxStd = std(pxx);
                 pxxMean = mean(pxx);
@@ -524,7 +612,7 @@ for vX=vX_range
                     end
                     % Animate
                     for ti=linspace(Tmin+2,size(temp,2),frameRate*Tmax)
-                        plot(temp(:,round(1:ti))');
+                        plot(temp(:,round(1:ti)));
                         axis([0 size(temp,2) 0 Nstr]);
 %                         axis([0 size(temp,2)/10000 0 Nstr]);
                         ax = gca; ax.XTick = []; ax.YTick = []; ax.ZTick = []; axis off;
