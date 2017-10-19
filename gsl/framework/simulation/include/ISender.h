@@ -37,11 +37,12 @@ public:
    int getByteCount(std::string phaseName);
    int getPatternCount(std::string phaseName);
    bool getWSendType(std::string phaseName, MPI_Datatype* type);
-   void pack(OutputStream* os) {
+   bool pack(OutputStream* os) {
      std::list<DistributableCompCategoryBase*>::iterator it, end;
      end = _simulationPtr->_distCatList.end();
      for (it = _simulationPtr->_distCatList.begin(); it != end; ++it) 
        (*it)->send(_destination, os); 
+     return os->rebuildRequested();
    }
    void send() {
      /* enumerate each compcategory and invoke send method on them */

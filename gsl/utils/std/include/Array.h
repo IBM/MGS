@@ -71,6 +71,30 @@ class Array
       return _size;
     }
     
+    const unsigned & getCommunicatedSize() const {
+      return _communicatedSize;
+    }
+
+    unsigned & getCommunicatedSize() {
+      return _communicatedSize;
+    }
+
+    void setCommunicatedSize(int communicatedSize) {
+      _communicatedSize = communicatedSize;
+    }
+
+    const unsigned & getSizeToCommunicate() const {
+      return _sizeToCommunicate;
+    }
+
+    unsigned & getSizeToCommunicate() {
+      return _sizeToCommunicate;
+    }
+
+    void setSizeToCommunicate(int sizeToCommunicate) {
+      _sizeToCommunicate = sizeToCommunicate;
+    }
+
     iterator begin() {
       return iterator(&_blocksArray, 0, getBlockSize());
     }
@@ -100,7 +124,7 @@ class Array
       // a virtual method that is implemented by the inheriting classes,
       // copyContents is also called by the inheriting classes
       Array()    
-	 : _size(0), _activeBlocks(0), _activeBlocksSize(0), _blocksArray(0) {}
+	: _size(0), _communicatedSize(0),  _sizeToCommunicate(0), _activeBlocks(0), _activeBlocksSize(0), _blocksArray(0) {}
 
       virtual void internalCopy(T& lval, T& rval) = 0;
       virtual unsigned getBlockSize() const = 0;
@@ -111,6 +135,8 @@ class Array
 	  // NOTE: Arrays are organized in the form of multiple 'logical blocks'
 	  //       i.e. memory increase/reduced, in the form of one or many blocks
       unsigned _size; //the number of elements in the array containing data
+      unsigned _communicatedSize; //the number of elements MPI has communicated
+      unsigned _sizeToCommunicate; //the number of elements MPI is to communicate
       unsigned _activeBlocks; //the number of active 
                       	  //blocks in the array (those really containing data)
       unsigned _activeBlocksSize;//the maximum number of elements that the allocated array
@@ -120,7 +146,7 @@ class Array
 
 template <class T>
 Array<T>::Array(unsigned blockIncrementSize)
-   : _size(0), _activeBlocks(0), _activeBlocksSize(0), _blocksArray(0)
+   : _size(0), _communicatedSize(0), _sizeToCommunicate(0), _activeBlocks(0), _activeBlocksSize(0), _blocksArray(0)
 {
    _activeBlocksSize += blockIncrementSize;
    _blocksArray = new T*[_activeBlocksSize];
