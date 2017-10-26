@@ -103,7 +103,7 @@ class CommunicationEngine
 
   /* * * This is what is called by the simulation engine to do communication at this phase * * */
 
-  bool Communicate(bool state=false) {
+  bool Communicate() {
     bool rebuildRequested = false;
     if (_sim->AllToAllV()) {
 

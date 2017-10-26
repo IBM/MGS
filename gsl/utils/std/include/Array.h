@@ -79,7 +79,7 @@ class Array
       return _communicatedSize;
     }
 
-    void setCommunicatedSize(int communicatedSize) {
+    void setCommunicatedSize(unsigned communicatedSize) {
       _communicatedSize = communicatedSize;
     }
 
@@ -91,7 +91,7 @@ class Array
       return _sizeToCommunicate;
     }
 
-    void setSizeToCommunicate(int sizeToCommunicate) {
+    void setSizeToCommunicate(unsigned sizeToCommunicate) {
       _sizeToCommunicate = sizeToCommunicate;
     }
 

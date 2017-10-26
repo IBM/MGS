@@ -352,7 +352,7 @@ bool Simulation::start()
    if (_communicatingPhases[_phaseName]) {
      bool rebuildRequested = _commEngine->Communicate();
      unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
-     MPI_Allreduce(&rebuildRequested, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
+     MPI_Allreduce(&rebuild, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
      if (recommunicate) {
        delete _commEngine;
        _commEngine = new CommunicationEngine(_nump, _iSenders, _iReceivers, this);
@@ -664,7 +664,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	   bool rebuildRequested = _commEngine->Communicate();
 	   if (&phases == &_initPhases) {
 	     unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
-	     MPI_Allreduce(&rebuildRequested, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
+	     MPI_Allreduce(&rebuild, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
 	     if (recommunicate) {
 	       delete _commEngine;
 	       _commEngine = new CommunicationEngine(_nump, _iSenders, _iReceivers, this);
@@ -711,7 +711,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	   bool rebuildRequested = _commEngine->Communicate();
 	   if (&phases == &_initPhases) {
 	     unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
-	     MPI_Allreduce(&rebuildRequested, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
+	     MPI_Allreduce(&rebuild, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
 	     if (recommunicate) {
 	       delete _commEngine;
 	       _commEngine = new CommunicationEngine(_nump, _iSenders, _iReceivers, this);
