@@ -102,7 +102,7 @@ STD_UTILS_OBJ_PATH := ../gsl/utils/std/obj
 STD_UTILS_INC_PATH := ../gsl/utils/std/include/
 CFLAGS += -I$(HEADER_DIR) 
 #Add support for GMP library
-CFLAGS += -lgmp -std=c++11 
+CFLAGS += -lgmp -std=c++11 -Wno-deprecated-declarations
 LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
 					 -I../gsl/framework/factories/include/
 
@@ -222,7 +222,7 @@ target:
 	@echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
 	@echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
 	@echo "//--------------------" >> ${Model2Use}
-	@echo "//#define MODEL_TO_USE <value> //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
+	@echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
 	@echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
 	@echo "//#define USE_DOUBLES   [to enable double-precision]" >> ${Model2Use} 
 	@echo "//#define WAIT_FOR_REST" >> ${Model2Use}
