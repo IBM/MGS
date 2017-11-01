@@ -23,7 +23,3 @@ PoissonIAFUnitCompCategory::PoissonIAFUnitCompCategory(Simulation& sim, const st
 {
 }
 
-void PoissonIAFUnitCompCategory::initializeShared(RNG& rng) 
-{
-}
-

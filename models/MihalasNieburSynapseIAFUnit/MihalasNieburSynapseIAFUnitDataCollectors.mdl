@@ -20,6 +20,8 @@
 Variable MihalasNieburSynapseIAFUnitDataCollector
 {
   string directory;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;

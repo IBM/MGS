@@ -43,4 +43,4 @@ $(OBJDIR)/%.o: %.C
 clean: realclean
 
 realclean:
-	-rm $(OBJDIR)/*
+	-rm -f $(OBJDIR)/*

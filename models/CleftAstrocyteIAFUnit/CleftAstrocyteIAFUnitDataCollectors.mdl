@@ -20,23 +20,25 @@
 Variable CleftAstrocyteIAFUnitDataCollector
 {
   string directory;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;
   int [] slices;
   int mxslice;
-  double* [] glutamate;
-  double* [] ECB;
+  double* [] neurotransmitter;
+  double* [] eCB;
   UserFunction getNodeIndices;
    
   // Flags
-  bool op_saveGlutamate;
-  bool op_saveECB;
+  bool op_saveNeurotransmitter;
+  bool op_saveeCB;
   
-  Connection Pre Node () Expects GlutamateIAFProducer, ECBIAFProducer
+  Connection Pre Node () Expects NeurotransmitterIAFProducer, eCBIAFProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamate;
-    ECBIAFProducer.ECB >> ECB;
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitter;
+    eCBIAFProducer.eCB >> eCB;
     getNodeIndices();
   }
   

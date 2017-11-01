@@ -86,14 +86,13 @@ while getopts "$optspec" optchar; do
       ;;
     r) # release
       RELEASE="-release"
+      GSL_BUILD_MODE="--release"
       ;;
     g) # GPU extensions
-      GPU="-gpu"
-      GSL_BUILD_MODE="$GSL_BUILD_MODE --gpu"
+      GPU="--gpu"
       ;;
     a) # Armadillo extensions
-      ARMA="-arma"
-      GSL_BUILD_MODE="$GSL_BUILD_MODE --arma"
+      ARMA="--arma"
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
@@ -107,20 +106,19 @@ while getopts "$optspec" optchar; do
                     NPROCS=1
                     ;;
                 release) # release
+                    GSL_BUILD_MODE="--release"
                     RELEASE="-release"
                     ;;
 		gpu) # GPU extensions
-                    GPU="-gpu"
-                    GSL_BUILD_MODE="$GSL_BUILD_MODE --gpu"
+                    GPU="--gpu"
 		    ;;
 		arma) # Armadillo extensions
-                    ARMA="-arma"
-                    GSL_BUILD_MODE="$GSL_BUILD_MODE --arma"
+                    ARMA="--arma"
 		    ;;
                 loglevel)
-                  val="${!OPTIND}"
-		  GSL_BUILD_MODE="$GSL_BUILD_MODE --loglevel $val" 
-                  ;;
+                    val="${!OPTIND}"
+                    GSL_BUILD_MODE="--loglevel $val"
+                    ;;
                 someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
@@ -229,14 +227,14 @@ if which python | grep -q1 /\python; then
 	exit;
 fi
 
-if [ "$GPU" == "-gpu" ]; then
+if [ "$GPU" == "--gpu" ]; then
     if which nvidia-smi | grep -q1 /\nvidia-smi; then
         echo CUDA probably found...; else echo CUDA potentially not found!;
                                           exit
     fi
 fi
 
-if [ "$ARMA" == "-arma" ]; then
+if [ "$ARMA" == "--arma" ]; then
     if `ldconfig -p | grep -q armadillo`; then
         echo Armadillo probably found...; else echo Armadillo potentially not found!;
                                           exit
@@ -248,7 +246,7 @@ if [ "$MGSROOT" == "" ]; then
   echo "Please run: source setenv_mgs"
   exit
 fi
-if [ ! -f ".built" ] && [ "$REBUILD" != "-rebuild" ]; then
+if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
   echo "First build. Please run with --rebuild"
   exit
 fi
@@ -285,24 +283,17 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ]; then
       make clean;
+      echo "${cc_blue}Removed MDL code successful.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      if [ "$RELEASE" == "-release" ]; then
-          make -j $NPROCS RELEASE="-release"
-      else
-          make -j $NPROCS RELEASE=""
-      fi
+      make -j $NPROCS RELEASE="$RELEASE"
       if [ `ls $MDLROOT/bin/mdlparser` ]; then
         echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
       fi
     fi
   else
-    if [ "$RELEASE" == "-release" ]; then
-        make -j $NPROCS RELEASE="-release"
-    else
-        make -j $NPROCS RELEASE=""
-    fi
+    make -j $NPROCS RELEASE="$RELEASE"
     if [ `ls $MDLROOT/bin/mdlparser` ]; then
       echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
     fi
@@ -315,7 +306,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       exit;
     fi
     rm -f mdl.make.mark
-    cd $MGSROOTl
+    cd $MGSROOT
   fi
 fi
 #}}}
@@ -339,19 +330,11 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
       make realclean;
-      if [ "$RELEASE" == "-release" ]; then
-          make -j $NPROCS RELEASE="-release"
-      else
-          make -j $NPROCS RELEASE=""
-      fi
+      make -j $NPROCS RELEASE="$RELEASE"
       echo "${cc_blue}Build COMMON code successful.${cc_normal}"
     fi
   else
-    if [ "$RELEASE" == "-release" ]; then
-        make -j $NPROCS RELEASE="-release"
-    else
-        make -j $NPROCS RELEASE=""
-    fi
+    make -j $NPROCS RELEASE="$RELEASE"
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
   cd $MGSROOT
@@ -363,30 +346,47 @@ fi
 #{{{
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    #{{{
     cd $LENSROOT
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
+      #{{{
       ./build_gsl -p $PLATFORM --clean --as-Mgs
       rm_ifexist $MGSROOT/models/Extensions.mk
-      rm_ifexist $MGSROOT/models/all.mdf
-      rm_ifexist $MGSROOT/models/all_test.mdf
+      #rm_ifexist $MGSROOT/models/all.mdf
+      #rm_ifexist $MGSROOT/models/all_test.mdf
       rm_ifexist $LENSROOT/extensions/functor/all.mdf
       rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
       find $MGSROOT/models -iname "CG_*" | xargs -I{} rm {}
+      touch $NTSROOT/models/mgs.mdf
+      #}}}
     fi
     cd -
     cd $MGSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
+      #{{{
       cd $LENSROOT/extensions/variable
       ./define variables.mdf $REBUILD
       cd $LENSROOT/extensions/struct
       ./define structs.mdf $REBUILD
       cd $LENSROOT/extensions/functor
-      rm_ifexist all.mdf
-      cat functors_common.mdf >> all.mdf
-      cat functors_mgs.mdf >> all.mdf
-      ./define all.mdf $REBUILD
+      #rm_ifexist all.mdf
+      JUST_CREATE=0
+      if [ ! -f all.mdf ]; then
+        cat functors_common.mdf > all.mdf
+        cat functors_mgs.mdf >> all.mdf
+        JUST_CREATE=1
+      fi
+      cat functors_common.mdf >> all_test.mdf
+      cat functors_mgs.mdf >> all_test.mdf
+      if [ ! diff -q all_test.mdf all.mdf &>/dev/null ] || [ $JUST_CREATE -eq 1 ]; then
+        mv all_test.mdf all.mdf
+        ./define all.mdf $REBUILD
+      fi
+      rm_ifexist all_test.mdf
+      #./define all.mdf $REBUILD
+      #./define functors_mgs.mdf $REBUILD
       cd $MGSROOT/models
       if [ $PREV_TYPE != $TYPE ]; then
         if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
@@ -400,19 +400,18 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       ./define mgs.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
-      cd $MGSROOT
+      cd $NTSROOT
+      #}}}
     fi
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ]; then
-      if [ "$RELEASE" == "-release" ]; then
-        ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --release --as-Mgs
-      else
-        ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Mgs
-      fi
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Mgs $GPU  $ARMA
     fi
     cd -
+    #}}}
   else
+    #{{{
     cd $LENSROOT/extensions/variable
     ./define variables.mdf $REBUILD
     cd $LENSROOT/extensions/struct
@@ -441,20 +440,22 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     else
       rm_ifexist all_test.mdf
     fi
+    rm_ifexist all_test.mdf
     cd $MGSROOT/models
-    if [ ! -f Extensions.mk ]; then touch mgs.mdf; fi
-    ./define mgs.mdf $REBUILD
+    if [ ! -f Extensions.mk ]; then
+      touch mgs.mdf;
+      ./define mgs.mdf -force
+    else
+      ./define mgs.mdf $REBUILD
+    fi
 
     cp Extensions.mk $LENSROOT/
     cd $MGSROOT
     # -s or -singlethread
     cd $LENSROOT
-    if [ "$RELEASE" == "-release" ]; then
-      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --release --as-Mgs
-    else
-      ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Mgs
-    fi
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Mgs $GPU  $ARMA
     cd -
+    #}}}
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then

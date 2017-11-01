@@ -38,11 +38,13 @@ class SpineIAFUnitDataCollector : public CG_SpineIAFUnitDataCollector
   std::ofstream* AMPA_file;
   std::ofstream* mGluR5_file;
   std::ofstream* mGluR5modulation_file;
+  std::ofstream* NMDARopen_file;
+  std::ofstream* NMDARCacurrent_file;
   std::ofstream* Ca_file;
-  std::ofstream* ECBproduction_file; // just for the production function
-  std::ofstream* ECB_file;
-  double ECBsigmoid(double Ca);
-  double ECBproduction(double Ca);
+  std::ofstream* eCBproduction_file; // just for the production function
+  std::ofstream* eCB_file;
+  double eCBsigmoid(double Ca);
+  double eCBproduction(double Ca);
   double mGluR5modulation(double mGluR5);
 };
 

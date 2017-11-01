@@ -27,7 +27,7 @@ class BoutonIAFUnitCompCategory : public CG_BoutonIAFUnitCompCategory
   BoutonIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
   void initializeShared(RNG& rng);
  private:
-  std::ofstream* indexs_file;
-  std::ostringstream os_indexs;
+  std::ofstream** indexs_file;
+  std::ostringstream* os_indexs;
 };
 #endif

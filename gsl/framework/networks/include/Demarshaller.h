@@ -30,7 +30,7 @@ public:
      blengths.resize(1,0);
      blocs.resize(1,0);
    }
-   virtual int demarshall(const char * buffer, int size) = 0; // returns bytes remaining
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) = 0; // returns bytes remaining
    virtual ~Demarshaller() {}
 };
 #endif

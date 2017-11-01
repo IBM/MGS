@@ -17,36 +17,51 @@
 #define BOUTONIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProducer,
-  Cb1RIAFProducer, SpikeProducer
+Node BoutonIAFUnit Implements NeurotransmitterIAFProducer, AvailableNeurotransmitterIAFProducer,
+  CB1RIAFProducer, OutputProducer
 {
-  SpikeInput [] spikeInput;    // input of spike
-  bool spike;                  // local copy of input spike for spine to access
-  double glutamate;            // current output of glutamate
-  double availableGlutamate;   // amount of glutamate available to be released
-  double maxGlutamate;         // maximum amount of glutamate to recovery to
+  int neurotransmitterType;         // type of neurotransmitter
+  
+  SpikeInput [] spikeInput;         // input of spike
+  double neurotransmitter;          // current output of neurotransmitter
+  double availableNeurotransmitter; // amount of neurotransmitter available to be released
+  double maxNeurotransmitter;       // maximum amount of neurotransmitter to recovery to
+  
+  eCBIAFInput [] eCBInput;          // input of endogenous cannabinoid
+  double eCB;                       // Local copy of the eCB concentration to pass to the Goodwin model
+  double CB1R;                      // CB1R total quantity
+  double CB1Runbound;               // CB1R unbound quantity
+  double CB1Rrise;                  // rise current of Cannabinoid receptor
+  double CB1Rcurrent;               // fall current of Cannabinoid receptor
 
-  ECBIAFInput [] ECBinput;     // input of edogenous cannabinoid
-  double Cb1Rrise;             // rise current of Cannabinoid receptor
-  double Cb1Rcurrent;          // fall current of Cannabinoid receptor
-
+  GoodwinInput [] CB1Input;         // input of CB1R protein levels
+  
   Shared
     {
-      double glutamateAdaptRate;    // Rate of surpression of glutamate release
-      double glutamateRecoverTau;   // Rate of recovery from suppression
+      double [] neurotransmitterAdaptRate;  // Rate of surpression of neurotransmitter release
+      double [] neurotransmitterRecoverTau; // Rate of recovery from suppression
 
-      double Cb1RriseTau;           // rise time constant of Cb1R
-      double Cb1RfallTau;           // fall time constant of Cb1R
+      double CB1RriseTau;                // rise time constant of CB1R
+      double CB1RfallTau;                // fall time constant of CB1R
 
-      double deltaT;                // in s
+      double deltaT;                     // in s
 
       string sharedDirectory;
+      string [] sharedFilePrep;
+      string [] sharedFileApp;
       string sharedFileExt;
 
       InitPhase initializeShared;
 
       // Flags
       bool op_saveIndexs;
+
+      bool op_check_SpikeInput;
+      unsigned expected_SpikeInputN;
+      bool op_check_eCBIAFInput;
+      unsigned expected_eCBIAFInputN;
+      bool op_check_GoodwinInput;
+      unsigned expected_GoodwinInputN;
     }
 
   InAttrPSet
@@ -56,17 +71,17 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
     }
 
   InitPhase initialize();
+  RuntimePhase update(neurotransmitter, availableNeurotransmitter, CB1R, CB1Runbound, CB1Rcurrent);
 
-  RuntimePhase update(glutamate, availableGlutamate, Cb1Rcurrent);
-  RuntimePhase copy(spike);
-
-  GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
-  AvailableGlutamateIAFProducer.availableGlutamate << &availableGlutamate; // available glutamate
-  SpikeProducer.spike << &spike; // local copy of input spike for spine to access
-  Cb1RIAFProducer.Cb1Rcurrent << &Cb1Rcurrent; // Cb1R current
-
+  NeurotransmitterIAFProducer.neurotransmitter << &neurotransmitter; // neurotransmitter output
+  AvailableNeurotransmitterIAFProducer.availableNeurotransmitter << &availableNeurotransmitter; // available neurotransmitter
+  CB1RIAFProducer.CB1R << &CB1R; // CB1R total quantity
+  CB1RIAFProducer.CB1Runbound << &CB1Runbound; // CB1R unbound quantity
+  CB1RIAFProducer.CB1Rcurrent << &CB1Rcurrent; // CB1R current
+  OutputProducer.output << &eCB; // eCB concentration for Goodwin model  
+  
   UserFunction setSpikeIndices;
-  UserFunction setECBIndices;
+  UserFunction seteCBIndices;
 
   Connection Pre Node (PSet.identifier=="inputSpikes") Expects SpikeProducer
   {
@@ -75,11 +90,18 @@ Node BoutonIAFUnit Implements GlutamateIAFProducer, AvailableGlutamateIAFProduce
     setSpikeIndices();
   }
 
-  Connection Pre Node (PSet.identifier=="ECBinput") Expects ECBIAFProducer
+  Connection Pre Node (PSet.identifier=="eCBinput") Expects eCBIAFProducer
   {
-    ECBIAFProducer.ECB >> ECBinput.ECB;
-    PSet.weight >> ECBinput.weight;
-    setECBIndices();
+    eCBIAFProducer.eCB >> eCBInput.eCB;
+    PSet.weight >> eCBInput.weight;
+    seteCBIndices();
+  }
+  
+  Connection Pre Node (PSet.identifier=="CB1Input") Expects GoodwinProducer
+  {
+    GoodwinProducer.Y >> CB1Input.Y; // only care about the amount of CB1, i.e. Y
+    PSet.weight >> CB1Input.weight;
+    seteCBIndices();
   }
 }
 

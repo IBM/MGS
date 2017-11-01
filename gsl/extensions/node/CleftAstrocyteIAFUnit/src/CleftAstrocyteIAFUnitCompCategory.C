@@ -23,7 +23,3 @@ CleftAstrocyteIAFUnitCompCategory::CleftAstrocyteIAFUnitCompCategory(Simulation&
 {
 }
 
-void CleftAstrocyteIAFUnitCompCategory::initializeShared(RNG& rng) 
-{
-}
-

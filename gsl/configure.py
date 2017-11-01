@@ -1009,6 +1009,7 @@ FUNCTOR_MODULES := BinomialDist \\
         GetPreNodeCoordFunctor \\
         GetPreNodeIndex \\
        	IsoSampler \\
+        LoadMatrix \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\

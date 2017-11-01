@@ -22,6 +22,7 @@
 #include "ShallowArray.h"
 #include "DeepPointerArray.h"
 #include "NDPairList.h"
+#include "Simulation.h"
 #include <memory>
 #include <string.h>
 #include <string>
@@ -47,25 +48,24 @@ public:
       _offset  = 0;
    }
    virtual bool done() {
-       return (_offset == sizeof(T));
+     return (_offset == sizeof(T));
    }
    virtual void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs)
    {
      blengths.push_back(sizeof(T));
-     assert(sizeof(T)!=40);
      MPI_Aint blockAddress;
      MPI_Get_address(_destination, &blockAddress);
      blocs.push_back(blockAddress);
    } 
-   virtual int demarshall(const char * buffer, int size) // returns bytes remaining in the buffer
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) // returns bytes remaining in the buffer
    {
        int retval = size;
        if (!done()) {
           int bytesRemaining = sizeof(T) - _offset;
           int toTransfer = (bytesRemaining<size)?bytesRemaining:size;
           //memcpy(_destination+_offset, buffer, toTransfer);
-                  //TUAN updated
-		  std::copy(buffer, buffer+toTransfer, _destination+_offset);
+          //TUAN updated
+	  std::copy(buffer, buffer+toTransfer, _destination+_offset);
 	  _offset += toTransfer;
           retval = size - toTransfer;
        }
@@ -96,51 +96,57 @@ public:
    }
    virtual void reset() {
       _arrayIndex = 0;
+      _arraySize = _arrayDestination->size();
       _arraySizeDemarshaller.reset();
       _arrayElementDemarshaller->reset();
    }
    virtual bool done() {
-       if (_arraySize==0 && _arraySizeDemarshaller.done()) assert(_arrayElementDemarshaller->done());
-       return ( _arraySizeDemarshaller.done() && 
-		(_arrayIndex == _arraySize) && 
-		_arrayElementDemarshaller->done() );
-
+     return ( (_arraySize==0 || 
+	      ( _arrayIndex == _arraySize && 
+		_arrayElementDemarshaller->done() ) ) 
+	      && _arraySizeDemarshaller.done()
+	      );
    }
    virtual void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs)
    {
+     if (_arraySize < _arrayDestination->getSizeToCommunicate()) {
+       _arraySize = _arrayDestination->getSizeToCommunicate();
+       _arrayDestination->increaseSizeTo(_arraySize);
+     }
+     else if (_arraySize > _arrayDestination->getSizeToCommunicate()) {
+       _arraySize = _arrayDestination->getSizeToCommunicate();
+       _arrayDestination->decreaseSizeTo(_arraySize);
+     }
      typename Array<T>::iterator iter, end=_arrayDestination->end();
      for (iter=_arrayDestination->begin(); iter!=end; ++iter) {
        _arrayElementDemarshaller->setDestination(&(*iter));	     
        _arrayElementDemarshaller->getBlocks(blengths, blocs);
      }
+     _arraySizeDemarshaller.getBlocks(blengths, blocs);
    } 
-   virtual int demarshall(const char * buffer, int size) // returns bytes remaining in the buffer
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) // returns bytes remaining in the buffer
    {
-       const char* buff = buffer;
-       int buffSize = size;
-       if (!_arraySizeDemarshaller.done()) {
-	 buffSize = _arraySizeDemarshaller.demarshall(buffer, size);
-	 buff = buffer+(size-buffSize);
-	 if (_arraySizeDemarshaller.done()) {
-           if (_arraySize != _arrayDestination->size()){
-	      if (_arraySize < _arrayDestination->size()) _arrayDestination->clear();
-	      _arrayDestination->increaseSizeTo(_arraySize);	
-           }
-	   _arrayElementDemarshaller->setDestination(&(*_arrayDestination)[0]);
-	 }
-       }
-       if (!done() && buffSize!=0) {
-	 while (_arrayIndex<_arraySize && buffSize>0) {
-	   buffSize = _arrayElementDemarshaller->demarshall(buff, buffSize);
-	   buff = buffer+(size-buffSize);
-	   if (_arrayElementDemarshaller->done()) {
-	     ++_arrayIndex;
-	     if (_arrayIndex<_arraySize)
-	       _arrayElementDemarshaller->setDestination(&(*_arrayDestination)[_arrayIndex]);	     
-	   }
-	 }
-       }
-       return buffSize;
+     const char* buff = buffer;
+     int buffSize = size;
+     assert(buffSize>0);
+     while ( _arraySize>0 &&
+	     (_arrayIndex<_arraySize || !_arrayElementDemarshaller->done() ) ) {
+       _arrayElementDemarshaller->setDestination(&(*_arrayDestination)[_arrayIndex]);
+       buffSize = _arrayElementDemarshaller->demarshall(buff, buffSize, rebuildRequested);       
+       assert(buffSize>0);
+       buff = buffer+(size-buffSize);
+       if (_arrayElementDemarshaller->done()) ++_arrayIndex;
+     }
+     while (!_arraySizeDemarshaller.done()) {
+       buffSize = _arraySizeDemarshaller.demarshall(buff, buffSize, rebuildRequested);
+       buff = buffer+(size-buffSize);
+     }
+     if (_arraySize != _arrayDestination->size()) {
+       rebuildRequested = true;
+       _arrayDestination->setSizeToCommunicate(_arraySize);
+       _arraySize=_arrayDestination->size();
+     }
+     return buffSize;
    }
    ~DemarshallerInstance()
    {
@@ -150,9 +156,9 @@ public:
 private:
    Array<T>* _arrayDestination;
    int _arrayIndex;
-   int _arraySize;
+   unsigned _arraySize;
 
-   DemarshallerInstance<int> _arraySizeDemarshaller;
+   DemarshallerInstance<unsigned> _arraySizeDemarshaller;
    DemarshallerInstance<T>* _arrayElementDemarshaller;
 };
 
@@ -186,12 +192,12 @@ public:
        MPI_Get_address(const_cast<char*>(_stringDestination->c_str()), &blockAddress);
        blocs.push_back(blockAddress);
    } 
-   virtual int demarshall(const char * buffer, int size) // returns bytes remaining in the buffer
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) // returns bytes remaining in the buffer
    {
        const char* buff = buffer;
        int buffSize = size;
        if (!_stringSizeDemarshaller.done()) {
-         buffSize = _stringSizeDemarshaller.demarshall(buffer, size);
+         buffSize = _stringSizeDemarshaller.demarshall(buffer, size, rebuildRequested);
          buff = buffer+(size-buffSize);
          if (_stringSizeDemarshaller.done()) { 
 	   *_stringDestination="";

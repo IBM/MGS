@@ -29,7 +29,7 @@ public:
    virtual void reset();
    virtual bool done(); 
    virtual void getBlocks(std::vector<int> & blengths, std::vector<MPI_Aint> & blocs);
-   virtual int demarshall(const char * buffer, int size);
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested);
    ~StructDemarshallerBase();
 
 protected:
