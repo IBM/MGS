@@ -54,6 +54,7 @@ fi
 #}}}
 
 
+TYPE="MGS"  # NTS, MGS, BOTH
 ##########################################
 ## Detect what need to be built
 #{{{
@@ -257,6 +258,7 @@ if [  -f ".built"  ]; then
     rm .built
     exit
   fi
+  PREV_TYPE=$(sed '2q;d' ".built")
 fi
 if [ "$CLEAN" == "-clean" ] ; then
   rm_ifexist $MGSROOT/.built
@@ -264,6 +266,12 @@ fi
 if [ "$REBUILD" == "-rebuild" ] ;then
   cd $MGSROOT
   touch .built && echo $MGSROOT > .built
+  echo $TYPE >> .built # 2nd-line
+fi
+if [ "$TYPE" != "$PREV_TYPE" ]; then
+  gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
+  rm -f gsl/Makefile
+  touch models/mgs.mdf
 fi
 ################################################
 ### MDL code ###
@@ -380,6 +388,14 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #./define all.mdf $REBUILD
       #./define functors_mgs.mdf $REBUILD
       cd $MGSROOT/models
+      if [ $PREV_TYPE != $TYPE ]; then
+        if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
+          touch nts.mdf
+        fi
+        if [[ $TYPE == "BOTH" || $TYPE == "MGS" ]]; then
+          touch mgs.mdf
+        fi
+      fi
       touch mgs.mdf
       ./define mgs.mdf $REBUILD
 
@@ -406,6 +422,23 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if ! diff -q all_test.mdf all.mdf &>/dev/null; then
       mv all_test.mdf all.mdf
       ./define all.mdf $REBUILD
+    fi
+    rm_ifexist all_test.mdf
+    cd $MGSROOT/models
+    if [ $PREV_TYPE != $TYPE ]; then
+      if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
+        touch nts.mdf
+      fi
+      if [[ $TYPE == "BOTH" || $TYPE == "MGS" ]]; then
+        touch mgs.mdf
+      fi
+      rm Extensions.mk
+    fi
+    if [ ! -f Extensions.mk ]; then
+      touch mgs.mdf;
+      ./define mgs.mdf -force
+    else
+      rm_ifexist all_test.mdf
     fi
     rm_ifexist all_test.mdf
     cd $MGSROOT/models
