@@ -295,6 +295,7 @@ void StructType::generateFlatDemarshaller()
    demarshallMethod->setInline();
    demarshallMethod->addParameter("const char * buffer");
    demarshallMethod->addParameter("int size");
+   demarshallMethod->addParameter("bool& rebuildRequested");
    std::ostringstream demarshallMethodFB;
    demarshallMethodFB << TAB << TAB << TAB << "int retval = size;\n";
    demarshallMethodFB << TAB << TAB << TAB << "if (!done()) {\n";

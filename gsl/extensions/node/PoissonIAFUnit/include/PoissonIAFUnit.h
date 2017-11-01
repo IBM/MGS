@@ -23,7 +23,6 @@
 class PoissonIAFUnit : public CG_PoissonIAFUnit
 {
  public:
-  void initialize(RNG& rng);
   void update(RNG& rng);
   virtual ~PoissonIAFUnit();
 };

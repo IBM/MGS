@@ -53,7 +53,9 @@ Node MihalasNieburSynapseIAFUnit Implements SpikeProducer, OutputProducer, Thres
     double deltaT;          // s
     int np;                 // number of numerical fixed point iterations
 
-    InitPhase initializeShared;
+    // Flags
+    bool op_check_SynapticCurrentIAFInput;
+    unsigned expected_SynapticCurrentIAFInputN;
   }
 
   InAttrPSet {
@@ -62,7 +64,6 @@ Node MihalasNieburSynapseIAFUnit Implements SpikeProducer, OutputProducer, Thres
   }
 
   InitPhase initialize();
-
   RuntimePhase update(V, Theta);
   RuntimePhase threshold(spike, V_spike);
 

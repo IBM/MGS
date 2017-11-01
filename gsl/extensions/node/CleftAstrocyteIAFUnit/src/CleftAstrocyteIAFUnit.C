@@ -22,34 +22,45 @@
 
 void CleftAstrocyteIAFUnit::initialize(RNG& rng)
 {
+  // Check if more than one input
+  if (SHD.op_check_NeurotransmitterIAFInput
+      && neurotransmitterInput.size() != SHD.expected_NeurotransmitterIAFInputN)
+    std::cout << "CleftAstrocyteIAFUnit: neurotransmitter inputs should be "
+              << SHD.expected_NeurotransmitterIAFInputN << ", but it is "
+              << neurotransmitterInput.size() << "." << std::endl;
+  if (SHD.op_check_eCBIAFInput
+      && eCBInput.size() != SHD.expected_eCBIAFInputN)
+    std::cout << "CleftAstrocyteIAFUnit: eCB inputs should be "
+              << SHD.expected_eCBIAFInputN << ", but it is "
+              << eCBInput.size() << "." << std::endl;
   // Default starting values
-  glutamate = 0.0;
-  ECB = 0.0;
+  neurotransmitter = 0.0;
+  eCB = 0.0;  
 }
 
 void CleftAstrocyteIAFUnit::update(RNG& rng)
 {
-  // Increase glutamate concentration in the cleft due to pre-synaptic release
-  if (glutamateInput.size() > 0)
-    glutamate += *(glutamateInput[0].glutamate) * glutamateInput[0].weight; // only consider first one, weight is structural plasticity
-  // Astrocyte reuptake of glutamate with GLT-1
-  glutamate += (-glutamate / SHD.glutamateDecayTau) * SHD.deltaT;
+  // Increase neurotransmitter concentration in the cleft due to pre-synaptic release
+  if (neurotransmitterInput.size() > 0)
+    neurotransmitter += *(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight; // only consider first one, weight is structural plasticity
+  // Astrocyte reuptake of neurotransmitter with GLT-1
+  neurotransmitter += (-neurotransmitter / SHD.neurotransmitterDecayTau[neurotransmitterType]) * SHD.deltaT;
 
-  // ECB diffuses really quickly, so this level is equal to that produced by the spine
-  if (ECBInput.size() > 0)
-    ECB = *(ECBInput[0].ECB) * ECBInput[0].weight; // only consider first one, weight is structural plasticity
+  // eCB diffuses really quickly, so this level is equal to that produced by the spine
+  if (eCBInput.size() > 0)
+    eCB = *(eCBInput[0].eCB) * eCBInput[0].weight; // only consider first one, weight is structural plasticity
 }
 
-void CleftAstrocyteIAFUnit::setGlutamateIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
+void CleftAstrocyteIAFUnit::setNeurotransmitterIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  glutamateInput[glutamateInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  glutamateInput[glutamateInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  neurotransmitterInput[neurotransmitterInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getIndex()+1;
 }
 
-void CleftAstrocyteIAFUnit::setECBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
+void CleftAstrocyteIAFUnit::seteCBIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_CleftAstrocyteIAFUnitInAttrPSet* CG_inAttrPset, CG_CleftAstrocyteIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  ECBInput[ECBInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  ECBInput[ECBInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  eCBInput[eCBInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  eCBInput[eCBInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 CleftAstrocyteIAFUnit::~CleftAstrocyteIAFUnit()

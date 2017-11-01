@@ -37,28 +37,29 @@ void SpineIAFUnitCompCategory::initializeShared(RNG& rng)
     int systemRet = system(sysCall.str().c_str());
     if (systemRet == -1)
       throw;
-  } catch(...) {};
+  } catch(...) {};  
   if (SHD.op_saveWeights)
     {
-      int rank=getSimulation().getRank();
       int n=SHD.collectWeightsOn.size();
       if (n>0)
         {
+          int rank=getSimulation().getRank();          
           for (int i=0; i<n; i++)
             {
               int r=0;
               while (r<getSimulation().getNumProcesses())
-                {
+                {                  
                   if (r==rank)
                     {
                       os_weights.str(std::string());
-                      os_weights<<SHD.sharedDirectory<<"AMPAWeights_"<<SHD.collectWeightsOn[i]
-                                <<SHD.sharedFileExt;
+                      os_weights<<SHD.sharedDirectory<<SHD.sharedFilePrep
+                                <<"SpineAMPAWeights_"<<SHD.collectWeightsOn[i]
+                                <<SHD.sharedFileApp<<SHD.sharedFileExt;
                       weights_file=new std::ofstream(os_weights.str().c_str(),
                                                      std::ofstream::out | std::ofstream::trunc
                                                      | std::ofstream::binary);
                       weights_file->close();
-                    }
+                    }                  
                   ++r;
                   MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
                 }
@@ -75,9 +76,9 @@ void SpineIAFUnitCompCategory::outputWeightsShared(RNG& rng)
       if (SHD.collectWeightsOn[SHD.collectWeightsNext]==ITER)
         {
           os_weights.str(std::string());
-          os_weights<<SHD.sharedDirectory<<"AMPAWeights_"
-                    <<SHD.collectWeightsOn[SHD.collectWeightsNext]
-                    <<SHD.sharedFileExt;
+          os_weights<<SHD.sharedDirectory<<SHD.sharedFilePrep
+                    <<"SpineAMPAWeights_"<<SHD.collectWeightsOn[SHD.collectWeightsNext]
+                    <<SHD.sharedFileApp<<SHD.sharedFileExt;
           if (SHD.collectWeightsOn.size()-1 > SHD.collectWeightsNext)
             SHD.collectWeightsNext++;
           int rank=getSimulation().getRank();

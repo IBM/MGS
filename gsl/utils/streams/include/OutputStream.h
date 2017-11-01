@@ -25,8 +25,8 @@
 
 class OutputStream {
   public:
-  OutputStream() {}
-  OutputStream(char* buffer) : _buffer(buffer), _bufferPtr(buffer) {}
+  OutputStream() : _buffer(0), _bufferPtr(0), _rebuild(false) {}
+  OutputStream(char* buffer) : _buffer(buffer), _bufferPtr(buffer), _rebuild(false) {}
   virtual ~OutputStream() {}
 
   template <typename T>
@@ -42,7 +42,13 @@ class OutputStream {
     return *this;
   }
 
-  virtual void reset() { _bufferPtr = _buffer; }
+  virtual void reset() {
+    _bufferPtr = _buffer;
+    _rebuild = false;
+  }
+
+  void requestRebuild(bool rebuild) { _rebuild = rebuild; }
+  bool rebuildRequested() { return _rebuild; }
 
   protected:
   virtual inline void write(const char* data, int size) {
@@ -54,6 +60,7 @@ class OutputStream {
   private:
   char* _buffer;
   char* _bufferPtr;
+  bool _rebuild;
 };
 
 #endif

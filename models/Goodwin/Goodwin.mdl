@@ -1,0 +1,87 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef GOODWIN_MDL
+#define GOODWIN_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node Goodwin Implements GoodwinProducer
+{
+  double X;            // mRNA
+  double Y;            // protein
+  double Z;            // transcriptional inhibitor
+  
+  Input [] in1;        // Used by model specific phases
+
+  // Model specific instance variables
+  // Input [] in1; above is eCB concentration (scaled by in1.weight) used to calculate unbound Y
+  double Cannabinoids_k1_instance; // The max CB1 mRNA
+  
+  Shared
+    {
+      double tau;      // time constant for Goodwin model, in arb unit
+      double K1;
+      double k1;
+      double k2;
+      double k3;
+      double k4;
+      double k5;
+      double k6;
+      double n;
+
+      double deltaT;   // in s
+
+      // Flags
+      bool op_check_in1;
+      unsigned expected_in1N;
+      
+      // Model specific shared variables
+      double Cannabinoids_sigmoid_C;   // Slope of Sigmoid for sigmoid(Y-eCB)
+      double Cannabinoids_sigmoid_D;   // Point of 0.5 of Sigmoid for sigmoid(Y-eCB)
+      
+      // Model specific flags
+      bool op_Cannabinoids;
+      
+      // Model specific shared phases
+      // none
+    }
+
+  InAttrPSet
+    {
+      string identifier;
+      double weight;
+    }
+
+  InitPhase initialize();
+  RuntimePhase update(X, Y, Z);
+  // Model specific instance phases
+  // none
+  
+  GoodwinProducer.X << &X;
+  GoodwinProducer.Y << &Y;
+  GoodwinProducer.Z << &Z;
+
+  UserFunction setInIndices;
+
+  Connection Pre Node (PSet.identifier=="in1") Expects OutputProducer
+  {
+    OutputProducer.output >> in1.input;
+    PSet.weight >> in1.weight;
+    setInIndices();
+  }
+  
+}
+
+#endif

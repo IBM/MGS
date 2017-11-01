@@ -39,14 +39,14 @@
 
 RadialSamplerFunctor::RadialSamplerFunctor()
 : _responsibility(ConnectionContext::_BOTH), _refNode(0), _radius(0), 
-  _borderTolerance(0), _currentNode(0), _nbrNodes(0)
+  _borderTolerance(0), _direction(0), _currentNode(0), _nbrNodes(0)
 {
 }
 
 RadialSamplerFunctor::RadialSamplerFunctor(const RadialSamplerFunctor& rsf)
 : _responsibility(rsf._responsibility), _refNode(rsf._refNode), _radius(rsf._radius), 
-  _borderTolerance(rsf._borderTolerance), _currentNode(rsf._currentNode), 
-  _nbrNodes(rsf._nbrNodes)
+  _borderTolerance(rsf._borderTolerance), _direction(rsf._direction),
+  _currentNode(rsf._currentNode), _nbrNodes(rsf._nbrNodes)
 {
   _nodes=rsf._nodes;
   _refcoords=rsf._refcoords;
@@ -67,11 +67,12 @@ void RadialSamplerFunctor::doInitialize(LensContext *c,
 					const std::vector<DataItem*>& args)
 {
   int nbrArgs=args.size();
-  if (nbrArgs!=1 && nbrArgs !=2) {
+  if (nbrArgs!=1 && nbrArgs !=2 && nbrArgs !=3) {
       std::ostringstream msg;
       msg << "RadialSampler: invalid arguments!" << std::endl
 	  << "\texpected: RadialSampler(float radius) or" << std::endl
-	  << "\texpected: RadialSampler(float radius, int borderTolerance)" 
+	  << "\texpected: RadialSampler(float radius, int borderTolerance)" << std::endl      
+	  << "\texpected: RadialSampler(float radius, int borderTolerance, int direction)" 
 	  << std::endl;
       throw SyntaxErrorException(msg.str());
   }
@@ -99,8 +100,21 @@ void RadialSamplerFunctor::doInitialize(LensContext *c,
     }
     _borderTolerance=unsigned(borderToleranceDI->getInt());
   }
+  if (nbrArgs==3) {
+    NumericDataItem *directionDI = 
+      dynamic_cast<NumericDataItem*>(args[2]);
+    if (directionDI==0) {
+      std::ostringstream msg;
+      msg 
+        << "RadialSampler: argument 3 is not a NumericDataItem" 
+        << std::endl
+        << "\texpected: RadialSampler(float radius, int borderTolerance, int direction)."
+        << std::endl;
+      throw SyntaxErrorException(msg.str());
+    }    
+    _direction=unsigned(directionDI->getInt());
+  }
 }
-
 
 void RadialSamplerFunctor::doExecute(LensContext *c, 
 				     const std::vector<DataItem*>& args, 
@@ -177,13 +191,31 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
    std::vector<int> coords;
    while (outside) {
      n = _nodes[_currentNode];
-     n->getNodeCoords(coords);
-     distance = 0;
-     for(unsigned i=0;i<coords.size();++i) {
-       dd = _refcoords[i] - coords[i];
-       distance += dd*dd;
-     }
-     distance=sqrt(distance);
+     n->getNodeCoords(coords);     
+     if (
+         (_direction == 0) || // both direction
+         ((_direction > 0) && // positive direction
+          ((coords[0] >= _refcoords[0])
+           && (coords[1] >= _refcoords[1])
+           && (coords[2] >= _refcoords[2]))) ||
+         ((_direction < 0) && // negative direction
+          ((coords[0] <= _refcoords[0])
+           && (coords[1] <= _refcoords[1])
+           && (coords[2] <= _refcoords[2])))
+         )
+       {
+         
+         distance = 0;
+         for(unsigned i=0;i<coords.size();++i) {
+           dd = _refcoords[i] - coords[i];
+           distance += dd*dd;
+         }
+         distance=sqrt(distance);
+
+       }
+     else
+       distance = _radius + 1.0;
+     
      if (distance<=_radius) {
        outside=false;
        *slot = _nodes[_currentNode];

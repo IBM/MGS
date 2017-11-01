@@ -21,10 +21,6 @@
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
 
-void PoissonIAFUnit::initialize(RNG& rng)
-{
-}
-
 void PoissonIAFUnit::update(RNG& rng)
 {
   // Produce a spike with a Poisson distribution with the given firing rate

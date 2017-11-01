@@ -27,8 +27,6 @@ Node PoissonIAFUnit Implements SpikeProducer
       double deltaT; // in s
       unsigned perturbationT; // when to perturb
 
-      InitPhase initializeShared;
-
       // Flags
       bool op_perturbation;
     }
@@ -37,8 +35,6 @@ Node PoissonIAFUnit Implements SpikeProducer
     {
       string identifier;
     }
-
-  InitPhase initialize();
 
   RuntimePhase update(spike);
 

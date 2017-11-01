@@ -36,7 +36,7 @@ MemPattern* ISender::getMemPatterns(std::string phaseName, MemPattern* mpptr)
     if (nbytes) ++mpptr;
     total+=nbytes;
   }
-  //std::cerr<<_simulationPtr->getRank()<<" sends "<<total<<" to "<<_destination<<std::endl;
+  //std::cerr<<_simulationPtr->getRank()<<" sends "<<total<<" to "<<_destination<<" on "<<phaseName<<std::endl;
   return mpptr;
 }
 
@@ -53,7 +53,7 @@ int ISender::getByteCount(std::string phaseName)
       rval+=nBytes;
     }
   }
-  //std::cerr<<_simulationPtr->getRank()<<" sends "<<rval<<" to "<<_destination<<std::endl;
+  //std::cerr<<_simulationPtr->getRank()<<" sends "<<rval<<" to "<<_destination<<" on "<<phaseName<<std::endl;
   return rval;
 }
 

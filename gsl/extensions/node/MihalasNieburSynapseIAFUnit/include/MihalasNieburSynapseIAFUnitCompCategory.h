@@ -25,7 +25,6 @@ class MihalasNieburSynapseIAFUnitCompCategory : public CG_MihalasNieburSynapseIA
 {
  public:
   MihalasNieburSynapseIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-  void initializeShared(RNG& rng);
 };
 
 #endif
