@@ -160,7 +160,6 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
 #else
    _rank=0;
    _nump=1;
-   std::cerr << "You don't have MPI enabled" << std::endl;
 #endif // HAVE_MPI
 
    // Seed the random number generator
@@ -184,7 +183,7 @@ void Simulation::pauseHandler()
 
 void Simulation::updateAll()
 {
-   runPhases(_runtimePhases);
+  runPhases(_runtimePhases);
 }
 
 void Simulation::resumeHandler()
@@ -345,13 +344,21 @@ bool Simulation::start()
    if (_initPhases.size() > 0) {
       if (_rank==0) printf("Running Init Phases.\n\n");
       runPhases(_initPhases);
-   }
+   }   
 
 #ifdef HAVE_MPI
    if (_rank==0) printf("Flushing Proxies.\n\n");
    _phaseName =  "FLUSH_LENS";
    if (_communicatingPhases[_phaseName]) {
-     _commEngine->Communicate();
+     bool rebuildRequested = _commEngine->Communicate();
+     unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
+     MPI_Allreduce(&rebuild, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
+     if (recommunicate) {
+       delete _commEngine;
+       _commEngine = new CommunicationEngine(_nump, _iSenders, _iReceivers, this);
+       rebuildRequested = _commEngine->Communicate();
+       assert(!rebuildRequested);
+     }
      if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
    }
 #endif
@@ -651,11 +658,23 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	 for(it3 = it->getWorkUnits().begin(); it3 != end3; ++it3) {
 	    (*it3)->execute();
 	 }
+
 #ifdef HAVE_MPI
 	 if (_communicatingPhases[_phaseName]) {
-	   _commEngine->Communicate();
+	   bool rebuildRequested = _commEngine->Communicate();
+	   if (&phases == &_initPhases) {
+	     unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
+	     MPI_Allreduce(&rebuild, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
+	     if (recommunicate) {
+	       delete _commEngine;
+	       _commEngine = new CommunicationEngine(_nump, _iSenders, _iReceivers, this);
+	       rebuildRequested = _commEngine->Communicate();
+	       assert(!rebuildRequested);
+	     }
+	   }	     
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
+	 //if (&phases == &_initPhases && it==phases.begin()) while(1) {}
 #endif
       }
 
@@ -689,15 +708,23 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	 }
 #ifdef HAVE_MPI
 	 if (_communicatingPhases[_phaseName]) {
-	   _commEngine->Communicate();
+	   bool rebuildRequested = _commEngine->Communicate();
+	   if (&phases == &_initPhases) {
+	     unsigned rebuild = rebuildRequested ? 1 : 0, recommunicate=0;
+	     MPI_Allreduce(&rebuild, &recommunicate, 1, MPI_UNSIGNED, MPI_LOR, MPI_COMM_WORLD);
+	     if (recommunicate) {
+	       delete _commEngine;
+	       _commEngine = new CommunicationEngine(_nump, _iSenders, _iReceivers, this);
+	       rebuildRequested = _commEngine->Communicate();
+	       assert(!rebuildRequested);
+	     }
+	   }
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
 #endif
-      }
+     }
    }
-
 #endif // DISABLE_PTHREADS
-
 }
 
 std::string Simulation::findLaterPhase(const std::string& first, 

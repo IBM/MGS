@@ -48,11 +48,13 @@ class MarshallerInstance<std::string>
 {
 public:
    void marshall(OutputStream* stream, std::string const& data) {
-      int s = data.size();
-      *stream << s;
-      *stream << data;
+     assert(0); // Need to create our own string type to communicate size like Arrays: JK
+     int s = data.size();
+     *stream << s;
+     *stream << data;
    }
    void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, std::string const& data) {
+     assert(0); // Need to create our own string type to communicate size like Arrays: JK
      blengths.push_back(data.size());
      MPI_Aint blockAddress;
      MPI_Get_address(const_cast<char*>(data.c_str()), &blockAddress);
@@ -65,13 +67,11 @@ class MarshallerInstance<NDPairList*>
 {
 public:
    void marshall(OutputStream* stream, NDPairList* data) {
-     assert(0);
-     // UNFINISHED: DemarshallerInstance.h and MarshallCommon.h must also be modified
+     assert(0);  // Need to create our own string type to communicate size like Arrays: JK
      *stream << *data;
    }
-   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, NDPairList* data) {
-     assert(0);
-     // UNFINISHED: DemarshallerInstance.h and MarshallCommon.h must also be modified
+   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, NDPairList const * data) {
+     assert(0);  // Need to create our own string type to communicate size like Arrays: JK
    }
 };
 
@@ -79,18 +79,30 @@ template <class T>
 class MarshallerInstance<Array<T> >
 {
 public:
-   void marshall(OutputStream* stream, Array<T> const& data) {
-      int s = data.size();
-      *stream << s;
-      MarshallerInstance<T> mi;
-      for (int i=0; i < s; ++i)
-         mi.marshall(stream, data[i]);
+   void marshall(OutputStream* stream, Array<T> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     mi2.marshall(stream, data.size());
+     if (data.size() != data.getCommunicatedSize()) {
+       const_cast<Array<T>*>(&data)->setSizeToCommunicate(data.size());
+       stream->requestRebuild(true);
+     }
    }
-   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, Array<T> const& data) {
-     MarshallerInstance<T> mi;
-     typename Array<T>::const_iterator iter, end=data.end();
-     for (iter=data.begin(); iter!=end; ++iter)
-       mi.getBlocks(blengths, blocs, *iter);
+   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, Array<T> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+     const_cast<Array<T>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
    }
 };
 
@@ -98,37 +110,62 @@ template <class T>
 class MarshallerInstance<ShallowArray<T> >
 {
 public:
-   void marshall(OutputStream* stream, ShallowArray<T> const& data) {
-      int s = data.size();
-      *stream << s;
-      MarshallerInstance<T> mi;
-      for (int i=0; i < s; ++i)
-         mi.marshall(stream, data[i]);
+   void marshall(OutputStream* stream, ShallowArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     sz = data.size();
+     mi2.marshall(stream, sz);
+     if (sz != data.getCommunicatedSize()) {
+       const_cast<ShallowArray<T>*>(&data)->setSizeToCommunicate(sz);
+       stream->requestRebuild(true);
+     }
    }
-   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T> const& data) {
-     MarshallerInstance<T> mi;
-     typename ShallowArray<T>::const_iterator iter, end=data.end();
-     for (iter=data.begin(); iter!=end; ++iter)
-       mi.getBlocks(blengths, blocs, *iter);
+   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+     const_cast<ShallowArray<T>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
    }
 };
 
 template <class T>
-class MarshallerInstance<ShallowArray<T,3,2> > 
+class MarshallerInstance<ShallowArray<T,3,2> >
 {
 public:
-   void marshall(OutputStream* stream, ShallowArray<T,3,2> const& data) {
-      int s = data.size();
-      *stream << s;
-      MarshallerInstance<T> mi;
-      for (int i=0; i < s; ++i)
-         mi.marshall(stream, data[i]);
+  void marshall(OutputStream* stream, ShallowArray<T,3,2> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     mi2.marshall(stream, data.size());
+     if (data.size() != data.getCommunicatedSize()) {
+       const_cast<ShallowArray<T,3,2>*>(&data)->setSizeToCommunicate(data.size());
+       stream->requestRebuild(true);
+     }
    }
-   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T,3,2> const& data) {
-     MarshallerInstance<T> mi;
-     typename ShallowArray<T,3,2>::const_iterator iter, end=data.end();
-     for (iter=data.begin(); iter!=end; ++iter)
-       mi.getBlocks(blengths, blocs, *iter);
+  void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T,3,2> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+     const_cast<ShallowArray<T,3,2>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
    }
 };
 
@@ -136,20 +173,125 @@ template <class T>
 class MarshallerInstance<DeepPointerArray<T> >
 {
 public:
-   void marshall(OutputStream* stream, DeepPointerArray<T> const& data) {
-      int s = data.size();
-      *stream << s;
-      MarshallerInstance<T> mi;
-      for (int i=0; i < s; ++i)
-         mi.marshall(stream, data[i]);
+   void marshall(OutputStream* stream, DeepPointerArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     mi2.marshall(stream, data.size());
+     if (data.size() != data.getCommunicatedSize()) {
+       const_cast<DeepPointerArray<T>*>(&data)->setSizeToCommunicate(data.size());
+       stream->requestRebuild(true);
+     }
    }
-   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, DeepPointerArray<T> const& data) {
-     MarshallerInstance<T> mi;
-     typename DeepPointerArray<T>::const_iterator iter, end=data.end();
-     for (iter=data.begin(); iter!=end; ++iter)
-       mi.getBlocks(blengths, blocs, *iter);
+   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, DeepPointerArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+     const_cast<DeepPointerArray<T>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
+   }
+};
+/*
+template <class T>
+class MarshallerInstance<ShallowArray<T> >
+{
+public:
+   void marshall(OutputStream* stream, ShallowArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     mi2.marshall(stream, data.size());
+     if (data.size() != data.getCommunicatedSize()) {
+       stream->requestRebuild(true);
+       const_cast<ShallowArray<T>*>(&data)->setCommunicatedSize(data.size());
+     }
+   }
+   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getCommunicatedSize(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getCommunicatedSize());
    }
 };
 
+template <class T>
+class MarshallerInstance<ShallowArray<T,3,2> > 
+{
+public:
+  void marshall(OutputStream* stream, ShallowArray<T,3,2> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     mi2.marshall(stream, data.size());
+     if (data.size() != data.getCommunicatedSize()) {
+       stream->requestRebuild(true);
+       const_cast<ShallowArray<T,3,2>*>(&data)->setCommunicatedSize(data.size());
+     }
+   }
+  void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T,3,2> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getCommunicatedSize(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getCommunicatedSize());
+   }
+};
+
+template <class T>
+class MarshallerInstance<DeepPointerArray<T> >
+{
+public:
+   void marshall(OutputStream* stream, DeepPointerArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+     for (unsigned i=0; i < sz; ++i)
+       mi1.marshall(stream, data[i]);
+     if (sz<data.getCommunicatedSize()) {
+       T padding;
+       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+	 mi1.marshall(stream, padding);
+     }
+     MarshallerInstance<unsigned> mi2;
+     mi2.marshall(stream, data.size());
+     if (data.size() != data.getCommunicatedSize()) {
+       stream->requestRebuild(true);
+       const_cast<DeepPointerArray<T>*>(&data)->setCommunicatedSize(data.size());
+     }
+   }
+   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, DeepPointerArray<T> const & data) {
+     MarshallerInstance<T> mi1;
+     for (unsigned i=0; i < data.getCommunicatedSize(); ++i)
+       mi1.getBlocks(blengths, blocs, data[i]);
+     MarshallerInstance<unsigned> mi2;
+     mi2.getBlocks(blengths, blocs, data.getCommunicatedSize());
+   }
+};
+
+#endif
+#endif
+*/
 #endif
 #endif
