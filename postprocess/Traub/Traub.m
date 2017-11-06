@@ -3,9 +3,9 @@ set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=10; % Length of simulation time saving data (excluding spikes) in s
+T=500; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
-TminZoom=1; TmaxZoom=2;
+TminZoom=2; TmaxZoom=3;
 loadData = true;
 parameterSearch = false;
 animatedVisualization = false;
@@ -547,7 +547,8 @@ for vX=vX_range
                     % Animate
                     for ti=linspace(Tmin+2,size(temp,2),frameRate*Tmax)
                         plot(temp(:,round(1:ti))');
-                        axis([0 size(temp,2) 0 Nstr]);
+%                         axis([0 size(temp,2) 0 Nstr]);
+                        axis([0 size(temp,2)/10000 0 Nstr]);
                         ax = gca; ax.XTick = []; ax.YTick = []; ax.ZTick = []; axis off;
                         title(['EEG (time=',num2str(ti/1000,'%01.3f'),'s)'],'FontSize',20);
                         frame = getframe(fig);
