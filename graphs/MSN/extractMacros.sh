@@ -32,6 +32,7 @@ DoPlot()
     if [ -f  $OutputFolderName/SEClamp.txt ]; then
       xmgrace -block $OutputFolderName/SEClamp.txt  -bxy 1:2 & 
     fi
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  $OutputFolderName/
   fi
 }
 #}}}
@@ -229,7 +230,12 @@ if [ ! -d $OutputFolderName ]; then
   mkdir $OutputFolderName
   RunSim
 else
-  Yes_No_RunSim
+  if [ "$secondArg" != "-plot-only" ]; then
+    echo "second arg is $secondArg"
+    Yes_No_RunSim
+  else
+    RUNSIM_COMPLETED=1
+  fi
 fi
 
 DoPlot
