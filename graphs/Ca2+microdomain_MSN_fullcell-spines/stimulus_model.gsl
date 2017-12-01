@@ -10,7 +10,7 @@
 //(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.01, fileName="SEClamp.txt">;
 //VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.001, fileName="SEClamp.txt">;
 //VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.0001, fileName="SEClamp.txt">;
-VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.00008, fileName="SEClamp.txt">;
+VoltageClamp somaClamp<type=1, command = Vm_hold, Rs=0.00008, fileName="SEClamp.txt">;
 //VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.00008, fileName="SEClamp.txt", gainTime=0.05>;
 //VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.00001, fileName="SEClamp.txt">;
 #else
@@ -66,6 +66,11 @@ somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 //   commands = {Vc0, Vc1, Vc2, Vc3}
 //   > ) on voltageClampOn;
 //}}}
+#endif
+
+#if STIMULUS_CASE == CASE_01d
+#define timeDelay 100
+RampCurrentGenerator somaStimInj<pattern="ramp", Istart=0.0, Iend=500.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
 #endif
 
 #if STIMULUS_CASE == CASE_01 || \

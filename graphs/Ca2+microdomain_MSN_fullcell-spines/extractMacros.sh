@@ -12,12 +12,35 @@ NUMTHREADS=1
 NUMPROCESSES=$(( _X_ * _Y_ * _Z_))
 OUTPUTFOLDER=`echo $HOME`/NTS_OUTPUT/
 if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
+
+
+DoPlot()
+{
+  ## Modify this function to do plotting for the output data
+  if [ "$RUNSIM_COMPLETED" == 1 ]; then
+    ## NOTE: comment out if we don't want to plot
+    if [ -d $PLOT_FOLDER ]; then 
+      if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
+        cd ${PLOT_FOLDER}/ && ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}  ${morph}
+      fi
+      echo ${PLOT_FOLDER}/doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}  ${morph}
+    else 
+      echo $PLOT_FOLDER "not exist"
+    fi
+
+    xmgrace -nxy  $OutputFolderName/somaV.dat0 &
+    if [ -f  $OutputFolderName/SEClamp.txt ]; then
+      xmgrace -block $OutputFolderName/SEClamp.txt  -bxy 1:2 & 
+    fi
+  fi
+}
 #}}}
 
 numArgs=$#
 secondArg=$2
 
 #{{{ Non-modified parts
+RUNSIM_COMPLETED=0
 #Escape code
 esc=`echo -en "\033"`
 
@@ -82,11 +105,7 @@ GSLPARSER=../../gsl/bin/gslparser
    echo "#define _Z_ $_Z_" >> Topology.h
    mpiexec -n ${NUMPROCESSES}  ${GSLPARSER} $temp_file -t ${NUMTHREADS}
    echo "Output Folder: " $OutputFolderName
-   ## NOTE: comment out if we don't want to plot
-   if [ $numArgs -eq 1 ] || [ "$secondArg" != "-noplot" ]; then
-     cd ${PLOT_FOLDER}/ && ./doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}  ${morph}
-   fi
-   echo ${PLOT_FOLDER}/doPlot.sh  ${OUTPUTFOLDER} ${runCaseNumber} ${uniqueName:1}  ${morph}
+   RUNSIM_COMPLETED=1
   #}}}
 }
 
@@ -172,6 +191,10 @@ fi
 
 #########################
 ##{{{ 3. CHECK MACROS
+if [ ! -f model.gsl ]; then
+  echo "Please make sure model.gsl exist, e.g. run changemorph.sh"
+  exit 1
+fi
 ## NOTE: accepted macros
 ## -DOUTPUTFOLDER=location where all output should be'
 ## -DPARAMFOLDER=location of the parameters to the simulation
@@ -208,6 +231,8 @@ if [ ! -d $OutputFolderName ]; then
 else
   Yes_No_RunSim
 fi
+
+DoPlot
 
 DoFinish
 rm ${temp_file}

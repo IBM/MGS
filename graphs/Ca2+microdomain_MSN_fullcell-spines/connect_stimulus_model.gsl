@@ -9,8 +9,9 @@ polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHO
 // NOTE: Check definition in model*.gsl file
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
-    STIMULUS_CASE == CASE_06 || \
-    STIMULUS_CASE == CASE_01b
+    STIMULUS_CASE == CASE_01b || \
+    STIMULUS_CASE == CASE_01d || \
+    STIMULUS_CASE == CASE_06
 /// CASE 1: inject Soma
 //{{{
 polyConnect(timeStep, somaStimInj, <>, <>);
@@ -23,6 +24,8 @@ print ("Case 05: connect-stimulus ok");
 print ("Case 05: connect-stimulus ok");
 #elif STIMULUS_CASE == CASE_01b
 print ("Case 01b: connect-stimulus ok");
+#elif STIMULUS_CASE == CASE_01d
+print ("Case 01d: connect-stimulus ok");
 #endif
 /// END CASE 1
 //}}}

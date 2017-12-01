@@ -22,6 +22,7 @@
 #define CASE_01  1   //inject soma [square pulse current]
 #define CASE_01b  101   //inject soma [brief train of AP]
 #define CASE_01c  201   //inject soma [point current source]
+#define CASE_01d  301   //inject soma [ramp current]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -29,7 +30,7 @@
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
 #define CASE_08  8   //voltage clamp
-#define CASE_09  9   //inject soma [current clamp]
+#define CASE_09  9   //inject pre-syn soma [random noise current]
 #define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
 #define STIMULUS_CASE   CASE_01
 //#define morph ""
@@ -68,8 +69,10 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #define OutputFolderName dataFolder morph  "Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01 || \
-      STIMULUS_CASE == CASE_01b
-#define OutputFolderName dataFolder morph  "Tuan_triggersoma" STR(EXTENSION)
+      STIMULUS_CASE ==  CASE_01b || \
+      STIMULUS_CASE ==  CASE_01c || \
+      STIMULUS_CASE ==  CASE_01d 
+#define OutputFolderName dataFolder morph "Tuan_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
 #define OutputFolderName dataFolder morph  "Tuan_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
@@ -139,8 +142,8 @@ print(OutputFolderName);
 //}}}
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 //{{{
-	#define NumIterationsUntilEnd   10000   // unitless
-	//#define NumIterationsUntilEnd   1000000   // unitless
+    #define NumIterationsUntilEnd   10000   // unitless
+    //#define NumIterationsUntilEnd   1000000   // unitless
 //}}}
 #else
   assert(0);
@@ -149,13 +152,13 @@ print(OutputFolderName);
 
   //{{{recording-interval (I/O)
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
-	#define RecordInterval   0.10   //  [ms]
+    #define RecordInterval   0.10   //  [ms]
    #if STIMULUS_CASE == CASE_08
-	#define RecordInterval   0.020   //  [ms]  - more I/O for V-clamp only
+    #define RecordInterval   0.020   //  [ms]  - more I/O for V-clamp only
    #endif
         #define TimeStartRecord  100.0 // [ms]
 #elif  SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
-	#define RecordInterval   10   // every ... timesteps
+    #define RecordInterval   10   // every ... timesteps
 #else
   assert(0);
 #endif
@@ -424,8 +427,8 @@ Functor TissueProbeFunctor();
 TissueProbeFunctor tissueProbeFunctor();
 //TISSUEFUNCTOR DEFINITION
 Functor TissueFunctor(string commandLine, string commandLineModification, 
-		string channelParamaterFile, string synapseParameteurFile,
-		Functor, Functor, Functor, Functor, int compartmentSize);
+        string channelParamaterFile, string synapseParameteurFile,
+        Functor, Functor, Functor, Functor, int compartmentSize);
 #define tissueFile "neurons.txt"
 //NOTE: -r #capsules-per-cpt
 //      -u bt -o neurons_developed.txt  : only use when we -resample (but can create huge number of spine*developed.swc file)
@@ -449,14 +452,15 @@ Functor TissueFunctor(string commandLine, string commandLineModification,
   #define  strArg4 STR(paramFolder) "/SynParams.par"
 #endif
 TissueFunctor  tissueFunctor(strArg1,
-		strArg1_supplement,
-		strArg2,
-		strArg3,
-		strArg4,
-		tissueLayoutFunctor, tissueNodeInitFunctor, tissueConnectorFunctor,
-		tissueProbeFunctor
-		);
+        strArg1_supplement,
+        strArg2,
+        strArg3,
+        strArg4,
+        tissueLayoutFunctor, tissueNodeInitFunctor, tissueConnectorFunctor,
+        tissueProbeFunctor
+        );
 /*}}}*/
+//}}}
 
 //NODETYPE DEFINITION
 /*{{{*/
@@ -753,7 +757,7 @@ NodeType ChannelIP3R {computeTadj->initialize2, initialize->initialize3, update-
 
 //Non-specific leak (NOTE: not being used for now)
 //NodeType LeakER(
-//		){ initialize->initialize3, update->solveChannels };
+//        ){ initialize->initialize3, update->solveChannels };
 #endif
 //}}}
 /*}}}*/
@@ -767,7 +771,7 @@ NodeType CaExtrusion (
      tau_pump = tau_PMCA_Calciumclearance, // [msec]
      Ca_equil = Cacyto_value 
    >
-		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+        ){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 //{{{PMCA
 NodeType PumpPMCA (
    < 
@@ -781,7 +785,7 @@ NodeType PumpPMCA (
 #endif
    //}}}
    >
-		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+        ){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 //NodeType PumpPMCA_Markov (
 //   < 
@@ -791,7 +795,7 @@ NodeType PumpPMCA (
 //     Ca_equil = Cacyto_value 
 //   //}}}
 //   >
-//		){ initialize->initialize3, update->solveChannels };
+//        ){ initialize->initialize3, update->solveChannels };
 //}}}
 // NCX
 //{{{
@@ -804,14 +808,14 @@ NodeType ExchangerNCX(
    k_NCX = 4.677e-6   // [pA . mM^-4 . um^-2] // Original: 4.677.10^-4 (uA/(mM^4 . cm^2))
 #endif
    >
-		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+        ){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 
 //}}}
 #endif
 #if defined(SIMULATE_CAER)
 // SERCA
 NodeType PumpSERCA(
-		){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
+        ){computeTadj->initialize2, initialize->initialize3, update->solveChannels };
 #endif
 /*}}}*/
 
@@ -1037,37 +1041,37 @@ Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int de
             recOn, 1, "&&", delayStartRecord, 1, 0, updateNMDADepPlasticity); //Record every ms after it passes certain time
   #endif
 FloatTrigger currentOn("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
+              CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
 FloatTrigger currentMod("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 30, 0, updateNMDADepPlasticity);
+              CurrentTime, ">=", 30, 0, updateNMDADepPlasticity);
 FloatTrigger currentOff("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
+              CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
 FloatTrigger calciumOn("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
+              CurrentTime, ">=", 20, 0, updateNMDADepPlasticity);
 FloatTrigger calciumOff("Iteration Trigger : >= " STR(CurrentTime), 
- 			 CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
+              CurrentTime, ">=", 40, 0, updateNMDADepPlasticity);
 
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 UnsignedTrigger voltageClampOn("Iteration Trigger : == 10000", 
- 			 RuntimePhaseIteration, "==", 1000, 0, updateNMDADepPlasticity);
+              RuntimePhaseIteration, "==", 1000, 0, updateNMDADepPlasticity);
 
 UnsignedTrigger currentOn("Iteration Trigger : == 10000", 
- 			 RuntimePhaseIteration, "==", 1000, 0, solveChannels );
+              RuntimePhaseIteration, "==", 1000, 0, solveChannels );
 //SA: Changed 10,200 to 12000
 UnsignedTrigger currentMod("Iteration Trigger : == 12000", 
- 			 RuntimePhaseIteration, "==", 12000, 0, solveChannels );
+              RuntimePhaseIteration, "==", 12000, 0, solveChannels );
 //SA: Changed 10,400 to 14000
 UnsignedTrigger currentOff("Iteration Trigger : == 40000", 
- 			 RuntimePhaseIteration, "==", 40000, 0, solveChannels );
+              RuntimePhaseIteration, "==", 40000, 0, solveChannels );
 
 UnsignedTrigger calciumOn("Iteration Trigger : == 1", 
- 			 RuntimePhaseIteration, "==", 1, 0, solveChannels );
+              RuntimePhaseIteration, "==", 1, 0, solveChannels );
 
 UnsignedTrigger calciumOff("Iteration Trigger : == 50000", 
- 			 RuntimePhaseIteration, "==", 50000, 0, solveChannels );
-	
+              RuntimePhaseIteration, "==", 50000, 0, solveChannels );
+    
 //UnsignedTrigger recOn("Iteration Trigger : !% 50", 
-// 			 RuntimePhaseIteration, "!%", 50, 0, solveChannels );
+//              RuntimePhaseIteration, "!%", 50, 0, solveChannels );
 UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval), 
           RuntimePhaseIteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
 #endif
@@ -1118,200 +1122,200 @@ Struct TissueSite;
 Grid MSN_D1Neuron{
 /*{{{*/
 
-	// GRID DIMENSION
-	//_X_*_Y_*_Z_ = # processes in MPI
-	// i.e. each volume is handled by one process
-	Dimension( _X_, _Y_, _Z_ );
+    // GRID DIMENSION
+    //_X_*_Y_*_Z_ = # processes in MPI
+    // i.e. each volume is handled by one process
+    Dimension( _X_, _Y_, _Z_ );
 
-	// GRID LAYER
-	//LAYER(name_of_layer, NodesAssociatedWithTheGivenLayer |
-	//                     ConstantAssociatedWithTheGivenlayer |
-	//                     VariableAssociatedWithTheGivenlayer,
-	//     tissueFunctor("Layout", <nodekind="AValueIn") 
-	//     )
-	/*{{{*/
-  	  // 1. LAYER BRANCHES+JUNCTIONS (data as an array)
+    // GRID LAYER
+    //LAYER(name_of_layer, NodesAssociatedWithTheGivenLayer |
+    //                     ConstantAssociatedWithTheGivenlayer |
+    //                     VariableAssociatedWithTheGivenlayer,
+    //     tissueFunctor("Layout", <nodekind="AValueIn") 
+    //     )
+    /*{{{*/
+        // 1. LAYER BRANCHES+JUNCTIONS (data as an array)
      /*{{{*/
       //  1.0. - Compute Nodes
       /*{{{*/
 #if MAX_COMPUTE_ORDER>0
-	Layer(fwdSolvePoints1, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][1]">), <nodekind="ForwardSolvePoints[Voltage][1]">, tissueGM);
-	Layer(bwdSolvePoints0, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][0]">), <nodekind="BackwardSolvePoints[Voltage][0]">, tissueGM);
+    Layer(fwdSolvePoints1, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][1]">), <nodekind="ForwardSolvePoints[Voltage][1]">, tissueGM);
+    Layer(bwdSolvePoints0, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][0]">), <nodekind="BackwardSolvePoints[Voltage][0]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints1_Ca, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][1]">), <nodekind="ForwardSolvePoints[Calcium][1]">, tissueGM);
-	Layer(bwdSolvePoints0_Ca, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][0]">), <nodekind="BackwardSolvePoints[Calcium][0]">, tissueGM);
+    Layer(fwdSolvePoints1_Ca, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][1]">), <nodekind="ForwardSolvePoints[Calcium][1]">, tissueGM);
+    Layer(bwdSolvePoints0_Ca, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][0]">), <nodekind="BackwardSolvePoints[Calcium][0]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints1_CaER, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][1]">), <nodekind="ForwardSolvePoints[CalciumER][1]">, tissueGM);
-	Layer(bwdSolvePoints0_CaER, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][0]">), <nodekind="BackwardSolvePoints[CalciumER][0]">, tissueGM);
+    Layer(fwdSolvePoints1_CaER, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][1]">), <nodekind="ForwardSolvePoints[CalciumER][1]">, tissueGM);
+    Layer(bwdSolvePoints0_CaER, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][0]">), <nodekind="BackwardSolvePoints[CalciumER][0]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints1_Dopa, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][1]">), <nodekind="ForwardSolvePoints[Dopa][1]">, tissueGM);
-	Layer(bwdSolvePoints0_Dopa, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][0]">), <nodekind="BackwardSolvePoints[Dopa][0]">, tissueGM);
+    Layer(fwdSolvePoints1_Dopa, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][1]">), <nodekind="ForwardSolvePoints[Dopa][1]">, tissueGM);
+    Layer(bwdSolvePoints0_Dopa, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][0]">), <nodekind="BackwardSolvePoints[Dopa][0]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints1_IP3, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][1]">), <nodekind="ForwardSolvePoints[IP3][1]">, tissueGM);
-	Layer(bwdSolvePoints0_IP3, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][0]">), <nodekind="BackwardSolvePoints[IP3][0]">, tissueGM);
+    Layer(fwdSolvePoints1_IP3, ForwardSolvePoint1, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][1]">), <nodekind="ForwardSolvePoints[IP3][1]">, tissueGM);
+    Layer(bwdSolvePoints0_IP3, BackwardSolvePoint0, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][0]">), <nodekind="BackwardSolvePoints[IP3][0]">, tissueGM);
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>1
-	Layer(fwdSolvePoints2, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][2]">), <nodekind="ForwardSolvePoints[Voltage][2]">, tissueGM);
-	Layer(bwdSolvePoints1, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][1]">), <nodekind="BackwardSolvePoints[Voltage][1]">, tissueGM);
+    Layer(fwdSolvePoints2, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][2]">), <nodekind="ForwardSolvePoints[Voltage][2]">, tissueGM);
+    Layer(bwdSolvePoints1, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][1]">), <nodekind="BackwardSolvePoints[Voltage][1]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints2_Ca, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][2]">), <nodekind="ForwardSolvePoints[Calcium][2]">, tissueGM);
-	Layer(bwdSolvePoints1_Ca, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][1]">), <nodekind="BackwardSolvePoints[Calcium][1]">, tissueGM);
+    Layer(fwdSolvePoints2_Ca, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][2]">), <nodekind="ForwardSolvePoints[Calcium][2]">, tissueGM);
+    Layer(bwdSolvePoints1_Ca, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][1]">), <nodekind="BackwardSolvePoints[Calcium][1]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints2_CaER, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][2]">), <nodekind="ForwardSolvePoints[CalciumER][2]">, tissueGM);
-	Layer(bwdSolvePoints1_CaER, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][1]">), <nodekind="BackwardSolvePoints[CalciumER][1]">, tissueGM);
+    Layer(fwdSolvePoints2_CaER, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][2]">), <nodekind="ForwardSolvePoints[CalciumER][2]">, tissueGM);
+    Layer(bwdSolvePoints1_CaER, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][1]">), <nodekind="BackwardSolvePoints[CalciumER][1]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints2_Dopa, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][2]">), <nodekind="ForwardSolvePoints[Dopa][2]">, tissueGM);
-	Layer(bwdSolvePoints1_Dopa, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][1]">), <nodekind="BackwardSolvePoints[Dopa][1]">, tissueGM);
+    Layer(fwdSolvePoints2_Dopa, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][2]">), <nodekind="ForwardSolvePoints[Dopa][2]">, tissueGM);
+    Layer(bwdSolvePoints1_Dopa, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][1]">), <nodekind="BackwardSolvePoints[Dopa][1]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints2_IP3, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][2]">), <nodekind="ForwardSolvePoints[IP3][2]">, tissueGM);
-	Layer(bwdSolvePoints1_IP3, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][1]">), <nodekind="BackwardSolvePoints[IP3][1]">, tissueGM);
+    Layer(fwdSolvePoints2_IP3, ForwardSolvePoint2, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][2]">), <nodekind="ForwardSolvePoints[IP3][2]">, tissueGM);
+    Layer(bwdSolvePoints1_IP3, BackwardSolvePoint1, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][1]">), <nodekind="BackwardSolvePoints[IP3][1]">, tissueGM);
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>2
-	Layer(fwdSolvePoints3, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][3]">), <nodekind="ForwardSolvePoints[Voltage][3]">, tissueGM);
-	Layer(bwdSolvePoints2, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][2]">), <nodekind="BackwardSolvePoints[Voltage][2]">, tissueGM);
+    Layer(fwdSolvePoints3, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][3]">), <nodekind="ForwardSolvePoints[Voltage][3]">, tissueGM);
+    Layer(bwdSolvePoints2, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][2]">), <nodekind="BackwardSolvePoints[Voltage][2]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints3_Ca, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][3]">), <nodekind="ForwardSolvePoints[Calcium][3]">, tissueGM);
-	Layer(bwdSolvePoints2_Ca, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][2]">), <nodekind="BackwardSolvePoints[Calcium][2]">, tissueGM);
+    Layer(fwdSolvePoints3_Ca, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][3]">), <nodekind="ForwardSolvePoints[Calcium][3]">, tissueGM);
+    Layer(bwdSolvePoints2_Ca, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][2]">), <nodekind="BackwardSolvePoints[Calcium][2]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints3_CaER, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][3]">), <nodekind="ForwardSolvePoints[CalciumER][3]">, tissueGM);
-	Layer(bwdSolvePoints2_CaER, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][2]">), <nodekind="BackwardSolvePoints[CalciumER][2]">, tissueGM);
+    Layer(fwdSolvePoints3_CaER, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][3]">), <nodekind="ForwardSolvePoints[CalciumER][3]">, tissueGM);
+    Layer(bwdSolvePoints2_CaER, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][2]">), <nodekind="BackwardSolvePoints[CalciumER][2]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints3_Dopa, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][3]">), <nodekind="ForwardSolvePoints[Dopa][3]">, tissueGM);
-	Layer(bwdSolvePoints2_Dopa, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][2]">), <nodekind="BackwardSolvePoints[Dopa][2]">, tissueGM);
+    Layer(fwdSolvePoints3_Dopa, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][3]">), <nodekind="ForwardSolvePoints[Dopa][3]">, tissueGM);
+    Layer(bwdSolvePoints2_Dopa, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][2]">), <nodekind="BackwardSolvePoints[Dopa][2]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints3_IP3, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][3]">), <nodekind="ForwardSolvePoints[IP3][3]">, tissueGM);
-	Layer(bwdSolvePoints2_IP3, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][2]">), <nodekind="BackwardSolvePoints[IP3][2]">, tissueGM);
+    Layer(fwdSolvePoints3_IP3, ForwardSolvePoint3, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][3]">), <nodekind="ForwardSolvePoints[IP3][3]">, tissueGM);
+    Layer(bwdSolvePoints2_IP3, BackwardSolvePoint2, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][2]">), <nodekind="BackwardSolvePoints[IP3][2]">, tissueGM);
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>3
-	Layer(fwdSolvePoints4, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][4]">), <nodekind="ForwardSolvePoints[Voltage][4]">, tissueGM);
-	Layer(bwdSolvePoints3, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][3]">), <nodekind="BackwardSolvePoints[Voltage][3]">, tissueGM);
+    Layer(fwdSolvePoints4, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][4]">), <nodekind="ForwardSolvePoints[Voltage][4]">, tissueGM);
+    Layer(bwdSolvePoints3, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][3]">), <nodekind="BackwardSolvePoints[Voltage][3]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints4_Ca, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][4]">), <nodekind="ForwardSolvePoints[Calcium][4]">, tissueGM);
-	Layer(bwdSolvePoints3_Ca, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][3]">), <nodekind="BackwardSolvePoints[Calcium][3]">, tissueGM);
+    Layer(fwdSolvePoints4_Ca, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][4]">), <nodekind="ForwardSolvePoints[Calcium][4]">, tissueGM);
+    Layer(bwdSolvePoints3_Ca, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][3]">), <nodekind="BackwardSolvePoints[Calcium][3]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints4_CaER, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][4]">), <nodekind="ForwardSolvePoints[CalciumER][4]">, tissueGM);
-	Layer(bwdSolvePoints3_CaER, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][3]">), <nodekind="BackwardSolvePoints[CalciumER][3]">, tissueGM);
+    Layer(fwdSolvePoints4_CaER, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][4]">), <nodekind="ForwardSolvePoints[CalciumER][4]">, tissueGM);
+    Layer(bwdSolvePoints3_CaER, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][3]">), <nodekind="BackwardSolvePoints[CalciumER][3]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints4_Dopa, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][4]">), <nodekind="ForwardSolvePoints[Dopa][4]">, tissueGM);
-	Layer(bwdSolvePoints3_Dopa, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][3]">), <nodekind="BackwardSolvePoints[Dopa][3]">, tissueGM);
+    Layer(fwdSolvePoints4_Dopa, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][4]">), <nodekind="ForwardSolvePoints[Dopa][4]">, tissueGM);
+    Layer(bwdSolvePoints3_Dopa, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][3]">), <nodekind="BackwardSolvePoints[Dopa][3]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints4_IP3, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][4]">), <nodekind="ForwardSolvePoints[IP3][4]">, tissueGM);
-	Layer(bwdSolvePoints3_IP3, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][3]">), <nodekind="BackwardSolvePoints[IP3][3]">, tissueGM);
+    Layer(fwdSolvePoints4_IP3, ForwardSolvePoint4, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][4]">), <nodekind="ForwardSolvePoints[IP3][4]">, tissueGM);
+    Layer(bwdSolvePoints3_IP3, BackwardSolvePoint3, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][3]">), <nodekind="BackwardSolvePoints[IP3][3]">, tissueGM);
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>4
-	Layer(fwdSolvePoints5, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][5]">), <nodekind="ForwardSolvePoints[Voltage][5]">, tissueGM);
-	Layer(bwdSolvePoints4, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][4]">), <nodekind="BackwardSolvePoints[Voltage][4]">, tissueGM);
+    Layer(fwdSolvePoints5, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][5]">), <nodekind="ForwardSolvePoints[Voltage][5]">, tissueGM);
+    Layer(bwdSolvePoints4, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][4]">), <nodekind="BackwardSolvePoints[Voltage][4]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints5_Ca, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][5]">), <nodekind="ForwardSolvePoints[Calcium][5]">, tissueGM);
-	Layer(bwdSolvePoints4_Ca, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][4]">), <nodekind="BackwardSolvePoints[Calcium][4]">, tissueGM);
+    Layer(fwdSolvePoints5_Ca, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][5]">), <nodekind="ForwardSolvePoints[Calcium][5]">, tissueGM);
+    Layer(bwdSolvePoints4_Ca, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][4]">), <nodekind="BackwardSolvePoints[Calcium][4]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints5_CaER, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][5]">), <nodekind="ForwardSolvePoints[CalciumER][5]">, tissueGM);
-	Layer(bwdSolvePoints4_CaER, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][4]">), <nodekind="BackwardSolvePoints[CalciumER][4]">, tissueGM);
+    Layer(fwdSolvePoints5_CaER, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][5]">), <nodekind="ForwardSolvePoints[CalciumER][5]">, tissueGM);
+    Layer(bwdSolvePoints4_CaER, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][4]">), <nodekind="BackwardSolvePoints[CalciumER][4]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints5_Dopa, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][5]">), <nodekind="ForwardSolvePoints[Dopa][5]">, tissueGM);
-	Layer(bwdSolvePoints4_Dopa, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][4]">), <nodekind="BackwardSolvePoints[Dopa][4]">, tissueGM);
+    Layer(fwdSolvePoints5_Dopa, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][5]">), <nodekind="ForwardSolvePoints[Dopa][5]">, tissueGM);
+    Layer(bwdSolvePoints4_Dopa, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][4]">), <nodekind="BackwardSolvePoints[Dopa][4]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints5_IP3, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][5]">), <nodekind="ForwardSolvePoints[IP3][5]">, tissueGM);
-	Layer(bwdSolvePoints4_IP3, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][4]">), <nodekind="BackwardSolvePoints[IP3][4]">, tissueGM);
+    Layer(fwdSolvePoints5_IP3, ForwardSolvePoint5, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][5]">), <nodekind="ForwardSolvePoints[IP3][5]">, tissueGM);
+    Layer(bwdSolvePoints4_IP3, BackwardSolvePoint4, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][4]">), <nodekind="BackwardSolvePoints[IP3][4]">, tissueGM);
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>5
-	Layer(fwdSolvePoints6, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][6]">), <nodekind="ForwardSolvePoints[Voltage][6]">, tissueGM);
-	Layer(bwdSolvePoints5, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][5]">), <nodekind="BackwardSolvePoints[Voltage][5]">, tissueGM);
+    Layer(fwdSolvePoints6, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][6]">), <nodekind="ForwardSolvePoints[Voltage][6]">, tissueGM);
+    Layer(bwdSolvePoints5, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][5]">), <nodekind="BackwardSolvePoints[Voltage][5]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints6_Ca, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][6]">), <nodekind="ForwardSolvePoints[Calcium][6]">, tissueGM);
-	Layer(bwdSolvePoints5_Ca, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][5]">), <nodekind="BackwardSolvePoints[Calcium][5]">, tissueGM);
+    Layer(fwdSolvePoints6_Ca, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][6]">), <nodekind="ForwardSolvePoints[Calcium][6]">, tissueGM);
+    Layer(bwdSolvePoints5_Ca, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][5]">), <nodekind="BackwardSolvePoints[Calcium][5]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints6_CaER, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][6]">), <nodekind="ForwardSolvePoints[CalciumER][6]">, tissueGM);
-	Layer(bwdSolvePoints5_CaER, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][5]">), <nodekind="BackwardSolvePoints[CalciumER][5]">, tissueGM);
+    Layer(fwdSolvePoints6_CaER, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][6]">), <nodekind="ForwardSolvePoints[CalciumER][6]">, tissueGM);
+    Layer(bwdSolvePoints5_CaER, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][5]">), <nodekind="BackwardSolvePoints[CalciumER][5]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints6_Dopa, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][6]">), <nodekind="ForwardSolvePoints[Dopa][6]">, tissueGM);
-	Layer(bwdSolvePoints5_Dopa, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][5]">), <nodekind="BackwardSolvePoints[Dopa][5]">, tissueGM);
+    Layer(fwdSolvePoints6_Dopa, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][6]">), <nodekind="ForwardSolvePoints[Dopa][6]">, tissueGM);
+    Layer(bwdSolvePoints5_Dopa, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][5]">), <nodekind="BackwardSolvePoints[Dopa][5]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints6_IP3, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][6]">), <nodekind="ForwardSolvePoints[IP3][6]">, tissueGM);
-	Layer(bwdSolvePoints5_IP3, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][5]">), <nodekind="BackwardSolvePoints[IP3][5]">, tissueGM);
+    Layer(fwdSolvePoints6_IP3, ForwardSolvePoint6, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][6]">), <nodekind="ForwardSolvePoints[IP3][6]">, tissueGM);
+    Layer(bwdSolvePoints5_IP3, BackwardSolvePoint5, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][5]">), <nodekind="BackwardSolvePoints[IP3][5]">, tissueGM);
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>6
-	Layer(fwdSolvePoints7, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][7]">), <nodekind="ForwardSolvePoints[Voltage][7]">, tissueGM);
-	Layer(bwdSolvePoints6, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][6]">), <nodekind="BackwardSolvePoints[Voltage][6]">, tissueGM);
+    Layer(fwdSolvePoints7, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Voltage][7]">), <nodekind="ForwardSolvePoints[Voltage][7]">, tissueGM);
+    Layer(bwdSolvePoints6, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Voltage][6]">), <nodekind="BackwardSolvePoints[Voltage][6]">, tissueGM);
 #if defined(SIMULATE_CACYTO)
-	Layer(fwdSolvePoints7_Ca, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][7]">), <nodekind="ForwardSolvePoints[Calcium][7]">, tissueGM);
-	Layer(bwdSolvePoints6_Ca, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][6]">), <nodekind="BackwardSolvePoints[Calcium][6]">, tissueGM);
+    Layer(fwdSolvePoints7_Ca, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Calcium][7]">), <nodekind="ForwardSolvePoints[Calcium][7]">, tissueGM);
+    Layer(bwdSolvePoints6_Ca, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Calcium][6]">), <nodekind="BackwardSolvePoints[Calcium][6]">, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
-	Layer(fwdSolvePoints7_CaER, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][7]">), <nodekind="ForwardSolvePoints[CalciumER][7]">, tissueGM);
-	Layer(bwdSolvePoints6_CaER, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][6]">), <nodekind="BackwardSolvePoints[CalciumER][6]">, tissueGM);
+    Layer(fwdSolvePoints7_CaER, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[CalciumER][7]">), <nodekind="ForwardSolvePoints[CalciumER][7]">, tissueGM);
+    Layer(bwdSolvePoints6_CaER, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[CalciumER][6]">), <nodekind="BackwardSolvePoints[CalciumER][6]">, tissueGM);
 #endif
 #if defined(SIMULATE_DOPA)
-	Layer(fwdSolvePoints7_Dopa, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][7]">), <nodekind="ForwardSolvePoints[Dopa][7]">, tissueGM);
-	Layer(bwdSolvePoints6_Dopa, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][6]">), <nodekind="BackwardSolvePoints[Dopa][6]">, tissueGM);
+    Layer(fwdSolvePoints7_Dopa, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[Dopa][7]">), <nodekind="ForwardSolvePoints[Dopa][7]">, tissueGM);
+    Layer(bwdSolvePoints6_Dopa, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[Dopa][6]">), <nodekind="BackwardSolvePoints[Dopa][6]">, tissueGM);
 #endif
 #if defined(SIMULATE_IP3)
-	Layer(fwdSolvePoints7_IP3, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][7]">), <nodekind="ForwardSolvePoints[IP3][7]">, tissueGM);
-	Layer(bwdSolvePoints6_IP3, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][6]">), <nodekind="BackwardSolvePoints[IP3][6]">, tissueGM);
+    Layer(fwdSolvePoints7_IP3, ForwardSolvePoint7, tissueFunctor("Layout", <nodekind="ForwardSolvePoints[IP3][7]">), <nodekind="ForwardSolvePoints[IP3][7]">, tissueGM);
+    Layer(bwdSolvePoints6_IP3, BackwardSolvePoint6, tissueFunctor("Layout", <nodekind="BackwardSolvePoints[IP3][6]">), <nodekind="BackwardSolvePoints[IP3][6]">, tissueGM);
 #endif
 #endif
       /*}}}*/
       
       //  1.1. - Voltage
-	// NOTE: branches = a collection of branches, each branch is a multiple compartments variables
+    // NOTE: branches = a collection of branches, each branch is a multiple compartments variables
     //       endPoints = a collection of endPoint, each endPoint is treated as a single-compartment branch with data reference to the end-compartment of a branch
     //       junctions = a collection of junction, each is a single-compartment 
     //       junctionPoints = a collection of junctionPoint, each is a single-compartment reference to end-compartment of a junction
       /*{{{*/
-	Layer(branches, HodgkinHuxleyVoltage, tissueFunctor("Layout", <nodekind="CompartmentVariables[Voltage]">), <nodekind="CompartmentVariables[Voltage]">, tissueGM);
-	Layer(endPoints, VoltageEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Voltage]">), <nodekind="EndPoints[Voltage]">, tissueGM);
+    Layer(branches, HodgkinHuxleyVoltage, tissueFunctor("Layout", <nodekind="CompartmentVariables[Voltage]">), <nodekind="CompartmentVariables[Voltage]">, tissueGM);
+    Layer(endPoints, VoltageEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Voltage]">), <nodekind="EndPoints[Voltage]">, tissueGM);
   Layer(junctions, HodgkinHuxleyVoltageJunction, tissueFunctor("Layout", <nodekind="Junctions[Voltage]">), <nodekind="Junctions[Voltage]">, tissueGM);
   Layer(junctionPoints, VoltageJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Voltage]">), <nodekind="JunctionPoints[Voltage]">, tissueGM);
       /*}}}*/
       //  1.2. - [Ca]intracellular
       /*{{{*/
 #if defined(SIMULATE_CACYTO)
-	Layer(branches_Ca, CaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Calcium]">), <nodekind="CompartmentVariables[Calcium]">, tissueGM);
-	Layer(endPoints_Ca, CaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Calcium]">), <nodekind="EndPoints[Calcium]">, tissueGM);
+    Layer(branches_Ca, CaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Calcium]">), <nodekind="CompartmentVariables[Calcium]">, tissueGM);
+    Layer(endPoints_Ca, CaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Calcium]">), <nodekind="EndPoints[Calcium]">, tissueGM);
   Layer(junctions_Ca, CaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Calcium]">), <nodekind="Junctions[Calcium]">, tissueGM);
-	Layer(junctionPoints_Ca, CaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Calcium]">), <nodekind="JunctionPoints[Calcium]">, tissueGM);
+    Layer(junctionPoints_Ca, CaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Calcium]">), <nodekind="JunctionPoints[Calcium]">, tissueGM);
 #endif
       /*}}}*/
       //  1.3. - [Ca]ER
       /*{{{*/
 #if defined(SIMULATE_CAER)
-	Layer(branches_CaER, CaERConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[CalciumER]">), <nodekind="CompartmentVariables[CalciumER]">, tissueGM);
-	Layer(endPoints_CaER, CaERConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[CalciumER]">), <nodekind="EndPoints[CalciumER]">, tissueGM);
+    Layer(branches_CaER, CaERConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[CalciumER]">), <nodekind="CompartmentVariables[CalciumER]">, tissueGM);
+    Layer(endPoints_CaER, CaERConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[CalciumER]">), <nodekind="EndPoints[CalciumER]">, tissueGM);
   Layer(junctions_CaER, CaERConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[CalciumER]">), <nodekind="Junctions[CalciumER]">, tissueGM);
-	Layer(junctionPoints_CaER, CaERConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[CalciumER]">), <nodekind="JunctionPoints[CalciumER]">, tissueGM);
+    Layer(junctionPoints_CaER, CaERConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[CalciumER]">), <nodekind="JunctionPoints[CalciumER]">, tissueGM);
 #endif
       /*}}}*/
       //  1.4. - [Dopamine]extracellular
       /*{{{*/
 #if defined(SIMULATE_DOPA)
-	Layer(branches_Dopa, DopaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Dopa]">), <nodekind="CompartmentVariables[Dopa]">, tissueGM);
-	Layer(endPoints_Dopa, DopaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Dopa]">), <nodekind="EndPoints[Dopa]">, tissueGM);
+    Layer(branches_Dopa, DopaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Dopa]">), <nodekind="CompartmentVariables[Dopa]">, tissueGM);
+    Layer(endPoints_Dopa, DopaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Dopa]">), <nodekind="EndPoints[Dopa]">, tissueGM);
   Layer(junctions_Dopa, DopaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Dopa]">), <nodekind="Junctions[Dopa]">, tissueGM);
-	Layer(junctionPoints_Dopa, DopaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Dopa]">), <nodekind="JunctionPoints[Dopa]">, tissueGM);
+    Layer(junctionPoints_Dopa, DopaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Dopa]">), <nodekind="JunctionPoints[Dopa]">, tissueGM);
 #endif
       /*}}}*/
       //  1.5. - [IP3]
@@ -1326,22 +1330,22 @@ Grid MSN_D1Neuron{
     /*}}}*/
 
      // 2. RECEPTOR/CHANNEL/PUMPS
-	   /*{{{*/
+       /*{{{*/
      // 2.1 RECEPTOR/CHANNEL    
-	   /*{{{*/
+       /*{{{*/
      //{{{ Na channels
-	Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
-	Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
+    Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
+    Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
      //{{{ K+ channels
         Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
-	Layer(Kv31Channels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
-	Layer(KAfChannels, ChannelKAf_KChIP, tissueFunctor("Layout", < nodekind="Channels[KAf]" >), < nodekind="Channels[KAf]" >, tissueGM);
-	Layer(KAsChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[KAs]" >), < nodekind="Channels[KAs]" >, tissueGM);
-	Layer(KRPChannels, ChannelKRP, tissueFunctor("Layout", < nodekind="Channels[KRP]" >), < nodekind="Channels[KRP]" >, tissueGM);
-	Layer(KIRChannels, ChannelKIR, tissueFunctor("Layout", < nodekind="Channels[KIR]" >), < nodekind="Channels[KIR]" >, tissueGM);
-	Layer(BKalphabetaChannels, ChannelBKalphabeta,  tissueFunctor("Layout", < nodekind="Channels[BK]" >), < nodekind="Channels[BK]" >, tissueGM);
-	Layer(SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
+    Layer(Kv31Channels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[Kv31]" >), < nodekind="Channels[Kv31]" >, tissueGM);
+    Layer(KAfChannels, ChannelKAf_KChIP, tissueFunctor("Layout", < nodekind="Channels[KAf]" >), < nodekind="Channels[KAf]" >, tissueGM);
+    Layer(KAsChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[KAs]" >), < nodekind="Channels[KAs]" >, tissueGM);
+    Layer(KRPChannels, ChannelKRP, tissueFunctor("Layout", < nodekind="Channels[KRP]" >), < nodekind="Channels[KRP]" >, tissueGM);
+    Layer(KIRChannels, ChannelKIR, tissueFunctor("Layout", < nodekind="Channels[KIR]" >), < nodekind="Channels[KIR]" >, tissueGM);
+    Layer(BKalphabetaChannels, ChannelBKalphabeta,  tissueFunctor("Layout", < nodekind="Channels[BK]" >), < nodekind="Channels[BK]" >, tissueGM);
+    Layer(SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
         Layer(MKChannels, ChannelMK, tissueFunctor("Layout", < nodekind="Channels[MK]" >), < nodekind="Channels[MK]" >, tissueGM);
      //}}}
      //{{{HCN
@@ -1352,349 +1356,349 @@ Grid MSN_D1Neuron{
         Layer(CalChannels, CalChannel, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
         Layer(CahChannels, CahChannel, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
 
-	Layer(CaLv12Channels, ChannelCaLv12_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
-	Layer(CaLv13Channels, ChannelCaLv13_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
-	Layer(CaNChannels, ChannelCaN_GHK, tissueFunctor("Layout", < nodekind="Channels[CaN]" >), < nodekind="Channels[CaN]" >, tissueGM);
-	Layer(CaPQChannels, ChannelCaPQ_GHK, tissueFunctor("Layout", < nodekind="Channels[CaPQ]" >), < nodekind="Channels[CaPQ]" >, tissueGM);
-	Layer(CaRChannels, ChannelCaR_GHK, tissueFunctor("Layout", < nodekind="Channels[CaR]" >), < nodekind="Channels[CaR]" >, tissueGM);
-	Layer(CaTChannels, ChannelCaT_GHK, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
+    Layer(CaLv12Channels, ChannelCaLv12_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
+    Layer(CaLv13Channels, ChannelCaLv13_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
+    Layer(CaNChannels, ChannelCaN_GHK, tissueFunctor("Layout", < nodekind="Channels[CaN]" >), < nodekind="Channels[CaN]" >, tissueGM);
+    Layer(CaPQChannels, ChannelCaPQ_GHK, tissueFunctor("Layout", < nodekind="Channels[CaPQ]" >), < nodekind="Channels[CaPQ]" >, tissueGM);
+    Layer(CaRChannels, ChannelCaR_GHK, tissueFunctor("Layout", < nodekind="Channels[CaR]" >), < nodekind="Channels[CaR]" >, tissueGM);
+    Layer(CaTChannels, ChannelCaT_GHK, tissueFunctor("Layout", < nodekind="Channels[CaT]" >), < nodekind="Channels[CaT]" >, tissueGM);
 #endif
      //}}}
-		 //{{{ RYR, IP3R
+         //{{{ RYR, IP3R
 #if defined(SIMULATE_CAER)
      //RYR
-	Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
+    Layer(RYRChannels, SingleChannelRYR, tissueFunctor("Layout", < nodekind="Channels[RYR2]" >), < nodekind="Channels[RYR2]" >, tissueGM);
      //IP3R
-	Layer(IP3RChannels, ChannelIP3R, tissueFunctor("Layout", < nodekind="Channels[IP3R]" >), < nodekind="Channels[IP3R]" >, tissueGM);
+    Layer(IP3RChannels, ChannelIP3R, tissueFunctor("Layout", < nodekind="Channels[IP3R]" >), < nodekind="Channels[IP3R]" >, tissueGM);
 
      //LeakER
 #endif
      //}}}
-	/*}}}*/
+    /*}}}*/
       // 2.2. PUMPS  / Exchangers
         /*{{{*/
 #if defined(SIMULATE_CACYTO)
-	Layer(CaExtrusions, CaExtrusion, tissueFunctor("Layout", < nodekind="Channels[CaEx]" >), < nodekind="Channels[CaEx]" >, tissueGM);
+    Layer(CaExtrusions, CaExtrusion, tissueFunctor("Layout", < nodekind="Channels[CaEx]" >), < nodekind="Channels[CaEx]" >, tissueGM);
 // PMCA
-	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
+    Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
 //// NCX
-	Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
+    Layer(ExchangerNCXs, ExchangerNCX, tissueFunctor("Layout", < nodekind="Channels[NCX]" >), < nodekind="Channels[NCX]" >, tissueGM);
 #endif
 #if defined(SIMULATE_CAER)
 // SERCA
-	Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
+    Layer(PumpSERCAs, PumpSERCA, tissueFunctor("Layout", < nodekind="Channels[SERCA]" >), < nodekind="Channels[SERCA]" >, tissueGM);
 #endif
      /*}}}*/
   /*}}}*/
       // 3. SYNAPSES
       /*{{{*/
       // 3.1. PRE-SYNAPSE (get Voltage from bouton-side)
-	/*{{{*/
+    /*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
         Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
 //or
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
   // TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
   //TUAN TODO rename to 'tight' and update Synparams
-          //Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
-          Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[tight]" >), < nodekind="SynapticClefts[tight]" >, tissueGM);
-  #endif
-          /*}}}*/
+  //Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
+        Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[tight]" >), < nodekind="SynapticClefts[tight]" >, tissueGM);
+#endif
+        /*}}}*/
         // 3.2. CHEMICAL SYNAPSE RECEPTORS
         /*{{{*/
-          Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
-          Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
-          Layer(AMPASynapsesMushroomSpine, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
-          Layer(NMDASynapsesMushroomSpine, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
-          Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
-          Layer(mGluRType1Synapses, mGluReceptorType1, tissueFunctor("Layout", < nodekind="ChemicalSynapses[mGluR]" >), < nodekind="ChemicalSynapses[mGluR]" >, tissueGM);
+        Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
+        Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
+        Layer(AMPASynapsesMushroomSpine, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
+        Layer(NMDASynapsesMushroomSpine, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
+        Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
+        Layer(mGluRType1Synapses, mGluReceptorType1, tissueFunctor("Layout", < nodekind="ChemicalSynapses[mGluR]" >), < nodekind="ChemicalSynapses[mGluR]" >, tissueGM);
       /*}}}*/
 
       // 3.3. SpineAttachment
-	/*{{{*/
+    /*{{{*/
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
-	Layer(DendriticSpines, SpineAttachment_VmCaiCaER, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
+    Layer(DendriticSpines, SpineAttachment_VmCaiCaER, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
-	Layer(DendriticSpines, SpineAttachment_VmCai, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
+    Layer(DendriticSpines, SpineAttachment_VmCai, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
 #elif defined(SIMULATE_VM)
-	Layer(DendriticSpines, SpineAttachment_Vm, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
+    Layer(DendriticSpines, SpineAttachment_Vm, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
 #endif
-	/*}}}*/
+    /*}}}*/
      /*}}}*/
       // 4. CONNEXON (gap-junction)
       /*{{{*/
    Layer(AxoAxonicGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[AxAxGap]" >), < nodekind="ElectricalSynapses[AxAxGap]" >, tissueGM);
    Layer(DendroDendriticGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[DenDenGap]" >), < nodekind="ElectricalSynapses[DenDenGap]" >, tissueGM);
       /*}}}*/
-	/*}}}*/
+    /*}}}*/
 
-	// GRID - INIT NODES
-	/*{{{*/
- 	  // 1. BRANCHES NODES
-	/*{{{*/
+    // GRID - INIT NODES
+    /*{{{*/
+       // 1. BRANCHES NODES
+    /*{{{*/
     // 1.0 - Compute  (all branches nodetypes) [no need to change]
-	/*{{{*/
+    /*{{{*/
 #if MAX_COMPUTE_ORDER>0
-	InitNodes ( .[].Layer(fwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints0), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints0), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints1_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints0_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints1_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints0_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints1_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints0_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints1_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints0_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints1_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints0_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints1_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints0_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints1_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints0_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints1_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints0_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>1
-	InitNodes ( .[].Layer(fwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints1), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints2_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints1_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints2_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints1_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints2_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints1_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints2_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints1_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints2_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints1_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints2_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints1_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints2_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints1_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints2_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints1_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>2
-	InitNodes ( .[].Layer(fwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints2), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints3_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints2_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints3_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints2_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints3_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints2_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints3_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints2_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints3_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints2_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints3_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints2_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints3_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints2_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints3_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints2_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>3
-	InitNodes ( .[].Layer(fwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints3), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints4_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints3_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints4_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints3_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints4_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints3_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints4_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints3_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints4_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints3_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints4_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints3_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints4_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints3_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints4_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints3_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>4
-	InitNodes ( .[].Layer(fwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints4), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints5_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints4_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints5_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints4_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints5_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints4_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints5_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints4_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints5_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints4_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints5_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints4_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints5_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints4_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints5_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints4_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>5
-	InitNodes ( .[].Layer(fwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints5), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints5_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints5_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints6_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints5_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints6_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints5_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints6_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints5_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints6_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints5_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints6_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints5_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints6_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints5_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
 #if MAX_COMPUTE_ORDER>6
-	InitNodes ( .[].Layer(fwdSolvePoints7), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints7), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints6), tissueFunctor("NodeInit", <> ) );
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(fwdSolvePoints7_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints7_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints6_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(fwdSolvePoints7_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints6_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints7_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints6_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(fwdSolvePoints7_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints6_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints7_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints6_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(fwdSolvePoints7_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(bwdSolvePoints6_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(fwdSolvePoints7_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(bwdSolvePoints6_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
 #endif
     /*}}}*/
     // 1.1. - Voltage
     /*{{{*/
-	InitNodes ( .[].Layer(branches), tissueFunctor("NodeInit", <
-				compartmentalize = { "Vnew", 
-				"Vcur", 
-				"Aii", 
-				"Aim", 
-				"Aip", 
-				"RHS", 
-				},
-				Vnew = {Vrest_value}
-				> ) );
-	InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(junctions), tissueFunctor("NodeInit", < Vnew = {Vrest_value}  > ) );
-	InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(branches), tissueFunctor("NodeInit", <
+                compartmentalize = { "Vnew", 
+                "Vcur", 
+                "Aii", 
+                "Aim", 
+                "Aip", 
+                "RHS", 
+                },
+                Vnew = {Vrest_value}
+                > ) );
+    InitNodes ( .[].Layer(endPoints), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(junctions), tissueFunctor("NodeInit", < Vnew = {Vrest_value}  > ) );
+    InitNodes ( .[].Layer(junctionPoints), tissueFunctor("NodeInit", <> ) );
      /*}}}*/
     // 1.2. - [Ca]intracellular
     /*{{{*/
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
-				compartmentalize = {"Ca_new", 
-				"Ca_cur", 
-				"currentDensityToConc",
-				"Aii",
-				"Aim", 
-				"Aip", 
-				"RHS"
-				},
-				Ca_new = {Cacyto_value}
-				> ) );
-	InitNodes ( .[].Layer(endPoints_Ca), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {Cacyto_value} > ) ); 
-	InitNodes ( .[].Layer(junctionPoints_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(branches_Ca), tissueFunctor("NodeInit", <
+                compartmentalize = {"Ca_new", 
+                "Ca_cur", 
+                "currentDensityToConc",
+                "Aii",
+                "Aim", 
+                "Aip", 
+                "RHS"
+                },
+                Ca_new = {Cacyto_value}
+                > ) );
+    InitNodes ( .[].Layer(endPoints_Ca), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(junctions_Ca), tissueFunctor("NodeInit", < Ca_new = {Cacyto_value} > ) ); 
+    InitNodes ( .[].Layer(junctionPoints_Ca), tissueFunctor("NodeInit", <> ) );
 #endif
     /*}}}*/
     // 1.3. - [Ca]ER
     /*{{{*/
 #if defined(SIMULATE_CAER)
-	InitNodes ( .[].Layer(branches_CaER), tissueFunctor("NodeInit", <
-				compartmentalize = {"Ca_new", 
-				"Ca_cur", 
-				"currentDensityToConc",
-				"Aii",
-				"Aim", 
-				"Aip", 
-				"RHS"
-				},
-				Ca_new = {CaER_value} 
-				> ) );
-	InitNodes ( .[].Layer(endPoints_CaER), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(junctions_CaER), tissueFunctor("NodeInit", < Ca_new = {CaER_value} > ) ); 
-	InitNodes ( .[].Layer(junctionPoints_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(branches_CaER), tissueFunctor("NodeInit", <
+                compartmentalize = {"Ca_new", 
+                "Ca_cur", 
+                "currentDensityToConc",
+                "Aii",
+                "Aim", 
+                "Aip", 
+                "RHS"
+                },
+                Ca_new = {CaER_value} 
+                > ) );
+    InitNodes ( .[].Layer(endPoints_CaER), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(junctions_CaER), tissueFunctor("NodeInit", < Ca_new = {CaER_value} > ) ); 
+    InitNodes ( .[].Layer(junctionPoints_CaER), tissueFunctor("NodeInit", <> ) );
 #endif
     /*}}}*/
     // 1.4. - [Dopamine]extracellular
     /*{{{*/
 #if defined(SIMULATE_DOPA)
-	InitNodes ( .[].Layer(branches_Dopa), tissueFunctor("NodeInit", <
-				compartmentalize = {"Dopa_new", 
-				"Dopa_cur", 
-				"currentDensityToConc",
-				"Aii",
-				"Aim", 
-				"Aip", 
-				"RHS"
-				},
-				Dopa_new = {Dopa_value} 
-				> ) );
-	InitNodes ( .[].Layer(endPoints_Dopa), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(junctions_Dopa), tissueFunctor("NodeInit", < Dopa_new = {Dopa_value} > ) ); 
-	InitNodes ( .[].Layer(junctionPoints_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(branches_Dopa), tissueFunctor("NodeInit", <
+                compartmentalize = {"Dopa_new", 
+                "Dopa_cur", 
+                "currentDensityToConc",
+                "Aii",
+                "Aim", 
+                "Aip", 
+                "RHS"
+                },
+                Dopa_new = {Dopa_value} 
+                > ) );
+    InitNodes ( .[].Layer(endPoints_Dopa), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(junctions_Dopa), tissueFunctor("NodeInit", < Dopa_new = {Dopa_value} > ) ); 
+    InitNodes ( .[].Layer(junctionPoints_Dopa), tissueFunctor("NodeInit", <> ) );
 #endif
     /*}}}*/
     // 1.5. - [IP3]
     /*{{{*/
 #if defined(SIMULATE_IP3)
-	InitNodes ( .[].Layer(branches_IP3), tissueFunctor("NodeInit", <
-				compartmentalize = {"IP3_new", 
-				"IP3_cur", 
-				"currentDensityToConc",
-				"Aii",
-				"Aim", 
-				"Aip", 
-				"RHS"
-				},
-				IP3_new = {IP3cyto_value} 
-				> ) );
-	InitNodes ( .[].Layer(endPoints_IP3), tissueFunctor("NodeInit", <> ) );
-	InitNodes ( .[].Layer(junctions_IP3), tissueFunctor("NodeInit", < IP3_new = {IP3cyto_value} > ) ); 
-	InitNodes ( .[].Layer(junctionPoints_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(branches_IP3), tissueFunctor("NodeInit", <
+                compartmentalize = {"IP3_new", 
+                "IP3_cur", 
+                "currentDensityToConc",
+                "Aii",
+                "Aim", 
+                "Aip", 
+                "RHS"
+                },
+                IP3_new = {IP3cyto_value} 
+                > ) );
+    InitNodes ( .[].Layer(endPoints_IP3), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(junctions_IP3), tissueFunctor("NodeInit", < IP3_new = {IP3cyto_value} > ) ); 
+    InitNodes ( .[].Layer(junctionPoints_IP3), tissueFunctor("NodeInit", <> ) );
 #endif
     /*}}}*/
   /*}}}*/
 
-	  // 2. RECEPTORS/CHANNELS/PUMPS NODES
+      // 2. RECEPTORS/CHANNELS/PUMPS NODES
   //{{{
     // 2.1. RECEPTORS/CHANNELS
-	/*{{{*/
-	//{{{ Na+ channels
-	InitNodes ( .[].Layer(NatChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0}, Vhalf_m_shift = 0.0, Vhalf_h_shift = 0.0
-				> ) ); 
+    /*{{{*/
+    //{{{ Na+ channels
+    InitNodes ( .[].Layer(NatChannels), tissueFunctor("NodeInit", <
+                compartmentalize = { "gbar" },
+                gbar = {0.0}, Vhalf_m_shift = 0.0, Vhalf_h_shift = 0.0
+                > ) ); 
 
-	InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
-				compartmentalize = { "gbar" },
-				gbar = {0.0} 
-				> ) ); 
+    InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
+                compartmentalize = { "gbar" },
+                gbar = {0.0} 
+                > ) ); 
      //}}}
 
-	 //{{{ K+ channels
+     //{{{ K+ channels
         InitNodes ( .[].Layer(KDRChannels), tissueFunctor("NodeInit", <
               compartmentalize = { "gbar" },
               gbar = {0.0}
               > ) );
-	InitNodes ( .[].Layer(Kv31Channels), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(Kv31Channels), tissueFunctor("NodeInit", <
               compartmentalize = { "gbar" },
               gbar = {0.0}
               > ) );
-	InitNodes ( .[].Layer(KAfChannels), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(KAfChannels), tissueFunctor("NodeInit", <
               compartmentalize = { "gbar" },
               gbar = {0.0}
               > ) );
@@ -1749,7 +1753,7 @@ Grid MSN_D1Neuron{
               compartmentalize = { "PCabar" },
               PCabar = {0.0}
               > ) );
-	InitNodes ( .[].Layer(CaLv13Channels), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(CaLv13Channels), tissueFunctor("NodeInit", <
               compartmentalize = { "PCabar" },
               PCabar = {0.0}
               > ) );
@@ -1771,16 +1775,16 @@ Grid MSN_D1Neuron{
               > ) );
 #endif
     //}}}
-		//{{{RYR, IP3R, LeakER
+        //{{{RYR, IP3R, LeakER
 #if defined(SIMULATE_CAER)
   //RYR
-	InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(RYRChannels), tissueFunctor("NodeInit", <
               compartmentalize = { "int:numChan", "Ej" },
               numChan = {1},
               Ej = {0.0}
               > ) );
    //IP3R
-	InitNodes ( .[].Layer(IP3RChannels), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(IP3RChannels), tissueFunctor("NodeInit", <
               ///compartmentalize = { "gbar" },
               ///gbar = {0.0}
               compartmentalize = { "v_IP3R" },
@@ -1791,17 +1795,17 @@ Grid MSN_D1Neuron{
    //LeakER
 #endif
     //}}}
-	/*}}}*/
+    /*}}}*/
 
         // 2.2. PUMPS / Exchangers
         /*{{{*/
 #if defined(SIMULATE_CACYTO)
-	InitNodes ( .[].Layer(CaExtrusions), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(CaExtrusions), tissueFunctor("NodeInit", <
               compartmentalize = { "tau" },
               tau = {tau_PMCA_Calciumclearance}
               > ) ); 
 //{{{ PMCA
-	InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(PumpPMCAs), tissueFunctor("NodeInit", <
 #if PUMP_PMCA == PMCA_PUMPRATE_VOLTAGE_FUNCTION || \
     PUMP_PMCA == PMCA_PUMPRATE_CONSTANT_DYNAMICS
               compartmentalize = { "tau" },
@@ -1814,7 +1818,7 @@ Grid MSN_D1Neuron{
 //}}}
 //// NCX
 //{{{
-	InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
+    InitNodes ( .[].Layer(ExchangerNCXs), tissueFunctor("NodeInit", <
               compartmentalize = { "INCXbar" },
               INCXbar = {0.0} 
               > ) ); 
@@ -1827,18 +1831,18 @@ Grid MSN_D1Neuron{
               SERCAConc = {0.0} 
               > ) );
 #endif
-		/*}}}*/
-	/*}}}*/
+        /*}}}*/
+    /*}}}*/
 
-	  // 3. SYNAPSES NODES 
+      // 3. SYNAPSES NODES 
     /*{{{*/ 
     // 3.1. PRE-SYNAPSE
     /*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-	InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(PreSynapticPoints), tissueFunctor("NodeInit", <> ) );
 //or
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
-	InitNodes ( .[].Layer(SynapticClefts), tissueFunctor("NodeInit", <> ) );
+    InitNodes ( .[].Layer(SynapticClefts), tissueFunctor("NodeInit", <> ) );
 #endif
     /*}}}*/
     // 3.2. SYNAPSE RECEPTORS
@@ -1868,18 +1872,18 @@ Grid MSN_D1Neuron{
               > ) );
     /*}}}*/
     // 3.3. SpineAttachment 
-		//{{{
+        //{{{
 #if defined(SIMULATE_VM) && defined(SIMULATE_CACYTO) && defined(SIMULATE_CAER)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
-				Raxial = R_NECK, // [Gohm.um] 
-        DCa = Cacyto_DiffusionConstant_SpineNeck, //[um^2/ms]
-        DCaER = CaER_DiffusionConstant_SpineNeck //[um^2/ms]
-				> ) );
+          Raxial = R_NECK, // [Gohm.um] 
+          DCa = Cacyto_DiffusionConstant_SpineNeck, //[um^2/ms]
+          DCaER = CaER_DiffusionConstant_SpineNeck //[um^2/ms]
+                > ) );
 #elif defined(SIMULATE_VM) && defined(SIMULATE_CACYTO)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
           Raxial = R_NECK, // [Gohm.um] 
           DCa = Cacyto_DiffusionConstant_SpineNeck //[um^2/ms]
-        > ) );
+          > ) );
 #elif defined(SIMULATE_VM)
     InitNodes ( .[].Layer(DendriticSpines), tissueFunctor("NodeInit", <
           Raxial = R_NECK // [Gohm.um] 
@@ -1898,12 +1902,12 @@ Grid MSN_D1Neuron{
          g = 1.0
          > ) );
     /*}}}*/
-	/*}}}*/
+    /*}}}*/
 
-	// GRID - CONNECT LAYERS with ...
+    // GRID - CONNECT LAYERS with ...
   /*{{{*/
-	  // 1. with CONSTANTS
-	/*{{{*/
+      // 1. with CONSTANTS
+    /*{{{*/
    //{{{compartments
    polyConnect(timeStep, .[].Layer(branches, junctions), <>, <identifier="dt">);
 #if defined(SIMULATE_CACYTO)
@@ -1978,23 +1982,23 @@ Grid MSN_D1Neuron{
   polyConnect(timeStep, .[].Layer(mGluRType1Synapses), <>, <identifier="dt">);
    //}}}
 
-	//{{{ connect Ca2+(ER)
+    //{{{ connect Ca2+(ER)
 #if defined(SIMULATE_CAER)
-	polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
+    polyConnect(timeStep, .[].Layer(PumpSERCAs), <>, <identifier="dt">);
+    polyConnect(extracellularMedium, .[].Layer(PumpSERCAs), <>, <identifier="EC">);
 
-	polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
+    polyConnect(timeStep, .[].Layer(RYRChannels), <>, <identifier="dt">);
+    polyConnect(extracellularMedium, .[].Layer(RYRChannels), <>, <identifier="EC">);
   //IP3R
-	polyConnect(timeStep, .[].Layer(IP3RChannels), <>, <identifier="dt">);
-	polyConnect(extracellularMedium, .[].Layer(IP3RChannels), <>, <identifier="EC">);
+    polyConnect(timeStep, .[].Layer(IP3RChannels), <>, <identifier="dt">);
+    polyConnect(extracellularMedium, .[].Layer(IP3RChannels), <>, <identifier="EC">);
   //LeakER
 #endif
   //}}}
 
   // SpineAttachment
   polyConnect(extracellularMedium, .[].Layer(DendriticSpines), <>, <identifier="EC">);
-	/*}}}*/
+    /*}}}*/
   /*}}}*/
 
     //IMPORTANT: call this 
@@ -2003,7 +2007,7 @@ Grid MSN_D1Neuron{
    tissueFunctor("Connect", <> );  // This is important to perform automatic connections
 
     // 2. with VARIABLES (for I/O, stimulus)
-	/*{{{*/
+    /*{{{*/
   //{{{ I/O
 #include "connect_recording_model.gsl"
 
@@ -2011,17 +2015,17 @@ Grid MSN_D1Neuron{
   //{{{ Stimulus
 #include "connect_stimulus_model.gsl"
   //}}}
-	polyConnect(timeStep, simInfo, <>, <>);
+    polyConnect(timeStep, simInfo, <>, <>);
 #ifdef  ADAPTIVE_IO
-	polyConnect(timeStep, somaVoltageDetect, <>, <>);
+    polyConnect(timeStep, somaVoltageDetect, <>, <>);
         polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=1, NEURON_INDEX=0>), somaVoltageDetect, <>, <identifier="JUNCTION">);
 #endif
-	/*}}}*/
+    /*}}}*/
 
   /*}}}*/
 
-	/*{{{ reserved for extra code*/ 
-	/*}}}*/
+    /*{{{ reserved for extra code*/ 
+    /*}}}*/
 /*}}}*/
 }; //end grid
 
@@ -2046,11 +2050,11 @@ Grid Adaptor
    InitNodes ( .[].Layer(DendroDendriticGapJunctionConnexons1), Mcnnxn );
 
    BindName cpt2cnnxn("idx", -1,
-   	 	      "identifier", "compartment[Voltage]");
+                  "identifier", "compartment[Voltage]");
    NdplInAttrInit Mcpt2cnnxn(cpt2cnnxn);
 
    BindName cnnxn2cpt("idx", -1,
-   	 	      "identifier", "electricalSynapse[Voltage]");
+                  "identifier", "electricalSynapse[Voltage]");
    NdplInAttrInit Mcnnxn2cpt(cnnxn2cpt);
 
    BindName cnnxn2cnnxn("identifier", "connexon[Voltage]");
@@ -2072,12 +2076,12 @@ Grid Adaptor
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
   //criteria is evaluated at any time correctJunction is called 
 FloatTrigger endTrig("Time Trigger to end or stop", 
-		CurrentTime , ">=", TimeEnd, 0, correctJunction); 
+        CurrentTime , ">=", TimeEnd, 0, correctJunction); 
 
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-		RuntimePhaseIteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
+        RuntimePhaseIteration, "==", NumIterationsUntilEnd, 0, correctJunction); 
 
 #endif
 
