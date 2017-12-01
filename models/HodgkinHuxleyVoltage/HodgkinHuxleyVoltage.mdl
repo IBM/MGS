@@ -38,9 +38,6 @@ Struct InjectedCurrent {
 #ifdef CONSIDER_DI_DV
   dyn_var_t* conductance_didv;  //the di/dv term to help estimate [nS/um^2]
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  float previous_current;
-#endif
 }
 //}}}
 
@@ -490,9 +487,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef CONSIDER_DI_DV
   dyn_var_t* [] injectedCurrents_conductance_didv;
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  dyn_var_t [] previous_injectedCurrent;
-#endif
   //}}}
 
 
@@ -530,9 +524,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #endif
 #ifdef CONSIDER_DI_DV
   UserFunction add_zero_didv;
-#endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  UserFunction update_stim_reference;
 #endif
   InitPhase initializeJunction;
    
@@ -584,9 +575,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     updateGapJunctionCount();
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
-#endif
    }
 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
@@ -606,9 +594,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
-#endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
 #endif
    }
 #endif
@@ -630,9 +615,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef CONSIDER_DI_DV
     DIDV_ConductanceProducer.conductance_didv >> injectedCurrents_conductance_didv;
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
-#endif
    }
 
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
@@ -641,9 +623,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     CurrentProducer.current >> injectedCurrents;
 #ifdef CONSIDER_DI_DV
     add_zero_didv();
-#endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
 #endif
    }
 
