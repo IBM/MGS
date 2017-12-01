@@ -448,6 +448,10 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
   dyn_var_t Ca_cur;
   dyn_var_t [] Ca_new;
   dyn_var_t currentDensityToConc;
+#ifdef  USE_CALCIUM_INDICATOR
+  dyn_var_t Fluo;  //[uM]
+  dyn_var_t FluoCa;// Ca2+-bound [uM]
+#endif
   //dyn_var_t  CaClearance; // [1/ms]
   //{{{microdomain
 #ifdef MICRODOMAIN_CALCIUM
@@ -526,6 +530,11 @@ Node CaConcentrationJunction Implements DimensionArrayProducer, BranchDataProduc
     //}}}
     dyn_var_t CaBaseline; // [uM]
 
+#ifdef  USE_CALCIUM_INDICATOR
+    dyn_var_t FluoT; // total concentration [uM]
+    dyn_var_t kon_Fluo; // 1/msec * uM
+    dyn_var_t koff_Fluo;  // 1/msec
+#endif
     InitPhase deriveParameters;  
     //}}}
   }
