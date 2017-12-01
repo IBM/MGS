@@ -22,6 +22,8 @@
 #include "MaxComputeOrder.h"
 #include "SegmentDescriptor.h"
 
+#define DEBUG_COMPARTMENT
+
 class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
 {
   public:
@@ -47,10 +49,6 @@ class HodgkinHuxleyVoltageJunction : public CG_HodgkinHuxleyVoltageJunction
       CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
   virtual ~HodgkinHuxleyVoltageJunction();
   virtual void add_zero_didv(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  virtual void update_stim_reference(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset);
-  int _count_timer = 0;
-#endif
 
   // user-defined functions
   // junction designed as 1-compartment always, there is no need for index

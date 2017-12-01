@@ -103,8 +103,12 @@
 // list of paper models
 #define _COMPONENT_UNDEFINED    0
 //{{{
-//{{{ Na-models
+//Channels
+//{{{
+////Na-models
+//{{{
 //Na-transient   CHANNEL_NAT macro
+//{{{ 
 #define NAT_HODGKIN_HUXLEY_1952 1
 #define NAT_WOLF_2005           2
 #define NAT_HAY_2011            3
@@ -117,30 +121,48 @@
 #define NAT_MSN_TUAN_JAMES_2017 10
 
 #define _NAT_DEFAULT NAT_HODGKIN_HUXLEY_1952
+//}}}
 
 //NAT_AIS Channel Channel_NAT_AIS macro
+//{{{
 #define NAT_AIS_TRAUB_1994     1     
+#define NAT_AIS_MSN_TUAN_JAMES_2017 2
 
 #define _NAT_AIS_DEFAULT NAT_AIS_TRAUB_1994
+//}}}
+
 // Na-persistent CHANNEL_NAP macro
+//{{{
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
 #define _NAP_DEFAULT NAP_WOLF_2005
+//}}}
 
+// Nas
+//{{{
 #define NAS_MAHON_2000  2
 
 #define _NAS_DEFAULT NAS_MAHON_2000
-
+//}}}
 //}}}
 
-//{{{ K-models
+////K-models
+//{{{
 // KAf   CHANNEL_KAf macro
 //{{{
-#define KAf_TRAUB_1994             2
-#define KAf_MAHON_2000             3
-#define KAf_KORNGREEN_SAKMANN_2000 4
-#define KAf_WOLF_2005              5
-#define KAf_EVANS_2012             6
+//cell-type specific
+//Use these in Kv4p2 channels only
+#define Kv42_MSN_TKATCH_SURMEIER_2000       1
+#define Kv42_ChAT_str_TKATCH_SURMEIER_2000  2
+#define Kv42_ChAT_bf_TKATCH_SURMEIER_2000   3
+#define Kv42_GP_TKATCH_SURMEIER_2000        4
+// 
+#define KAf_TRAUB_1994             10
+#define KAf_MAHON_2000             11
+#define KAf_KORNGREEN_SAKMANN_2000 12
+#define KAf_WOLF_2005              13
+#define KAf_EVANS_2012             14
+
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
 //}}}
@@ -238,7 +260,8 @@
 //}}}
 //}}}
 
-//{{{ HCN-models
+////HCN-models
+//{{{ 
 // HCN   CHANNEL_HCN macro
 #define HCN_HUGUENARD_MCCORMICK_1992 1
 #define HCN_VANDERGIESSEN_DEZEEUW_2008 2
@@ -248,7 +271,8 @@
 #define _HCN_DEFAULT HCN_HUGUENARD_MCCORMICK_1992
 //}}}
 
-//{{{ Ca-models
+////Ca-models
+//{{{ 
 //CaHVA  CHANNEL_CaHVA
 //{{{
 #define CaHVA_TRAUB_1994  1
@@ -265,8 +289,8 @@
 //}}}
 // CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
 //{{{
-//}}}
 #define CaL_GENERAL    100
+//}}}
 // CaLv12 (HVA)   CHANNEL_CaLv12 macro
 //{{{
 #define CaLv12_GHK_Standen_Stanfield_1982_option1 3
@@ -312,9 +336,12 @@
 #define _CaT_DEFAULT CaT_GHK_WOLF_2005
 //}}}
 //}}}
+//}}}
 
-//{{{ Synapse Receptors
+////Synapse Receptors
+//{{{ 
 // NMDAR      RECEPTOR_NMDA macro 
+//{{{
 #define NMDAR_POINTPROCESS                    1
 #define NMDAR_BEHABADI_2012                   2
 #define NMDAR_JADI_2012                       3
@@ -323,24 +350,32 @@
 //#define NMDAR_Markov_DESTEXHE_MAINEN_SEJNOWSKI_1994     6
 
 #define _NMDAR_DEFAULT   NMDAR_POINTPROCESS
+//}}}
 // AMPAR      RECEPTOR_AMPA macro
+//{{{
 #define AMPAR_POINTPROCESS                    1
 #define AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
 //#define AMPAR_Markov_DESTEXHE_MAINEN_SEJNOWSKI_1994  4
 
 #define _AMPAR_DEFAULT AMPAR_POINTPROCESS
+//}}}
 // GABA_A     RECEPTOR_GABAA
+//{{{
 #define GABAAR_POINTPROCESS 1
 #define GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
 
 #define _GABAAR_DEFAULT GABAAR_POINTPROCESS
+//}}}
 // GABA_B     RECEPTOR_GABAB
+//{{{
 #define GABABR_DESTEXHE_SEJNOWSKI_1996  3
 
 #define _GABABR_DEFAULT GABABR_DESTEXHE_SEJNOWSKI_1996
 //}}}
+//}}}
 
-//{{{ Sarcolema membrane exchanger/pump
+//Plasma-membrane exchanger/pump
+//{{{ 
 // PMCA       PUMP_PMCA:
 //{{{
   // PUMPRATE_CONSTANT = all branches have the same clearance rate
@@ -356,33 +391,42 @@
 #define _PMCA_DEFAULT PMCA_PUMPRATE_CONSTANT
 //}}}
 // NCX        EXCHANGER_NCX
+// {{{
 #define NCX_Kimura_Miyamae_Noma_1987       2  
 #define NCX_Gabbiani_Midtgaard_Kopfel_1994 3
 #define NCX_Weber_Bers_2001                4
 
 
 #define _NCX_DEFAULT  NCX_Weber_Bers_2001
+// }}}
 //}}}
 
-//{{{ ER membrane channels/pump
+//ER membrane channels/pump
+//{{{ 
 // RYR       CHANNEL_RYR
+//{{{
 #define RYR2_WILLIAMS_JAFRI_2011 1
 
 #define _RYR_DEFAULT RYR2_WILLIAMS_JAFRI_2011
+//}}}
 
 // IP3R     CHANNEL_IP3R
+// {{{
 #define IP3R_ULLAH_MAK_PEARSON_2012 1
 #define IP3R_LI_RINZEL_1994         2
 #define IP3R_SMITH_2002             3
 #define IP3R_SNEYD_DUFOUR_2002      4
 
 #define _IP3R_DEFAULT IP3R_ULLAH_MAK_PEARSON_2012
+// }}}
 
 // SERCA    PUMP_SERCA
+// {{{
 #define SERCA_Klein_Schneider_1991 1
 #define SERCA_Tran_Crampin_2009  2
 
 #define _SERCA_DEFAULT SERCA_Tran_Crampin_2009
+// }}}
 
 //}}}
 //}}}
@@ -942,7 +986,7 @@
 #elif MODEL_TO_USE == _MICRODOMAIN_MSN_STRIATUM_NEURON_2017_TUAN_JAMES
 //#{{{
 //NOTE: Enable these two are important for having good accuracy with thousands of spines
-#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised 
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised 
 #define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR 
 
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
@@ -967,12 +1011,12 @@
 #define CHANNEL_KCNK KCNK_GHK_TUAN_2017
   //#define CHANNEL_KIR KIR_WOLF_2005
 #define CHANNEL_KIR KIR2_1_TUAN_JAMES_2017
-//#define PREDICT_JUNCTION_IGNORE_AXIAL  
-//#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
 
 //active
   //#define CHANNEL_NAT NAT_WOLF_2005
 #define CHANNEL_NAT NAT_MSN_TUAN_JAMES_2017
+#define CHANNEL_NAT_AIS NAT_AIS_MSN_TUAN_JAMES_2017
   #define CHANNEL_NAP NAP_WOLF_2005
   #define CHANNEL_KAf KAf_WOLF_2005
 //#define CHANNEL_KAf KAf_EVANS_2012

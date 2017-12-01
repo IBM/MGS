@@ -60,14 +60,15 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 
 #elif CHANNEL_KAf == KAf_MAHON_2000   
 // Mahon 2000
+// NOTE: Similar to Surmeier et al. (1989) estimation A-type LVA-neuron
 // IKAf = g * m * h * (V-E)
 #define VHALF_M -33.1                 
 #define k_M -7.5                       
-#define VHALF_H -70.4                 
-#define k_H 7.6                      
+#define VHALF_H -70.4 
+#define k_H 7.6
 
-#define tau_m 1.0 //ms                    
-#define tau_h 25.0   // ms                 
+#define TAU_M 1.0 //ms                    
+#define TAU_H 25.0   // ms                 
 
 #elif CHANNEL_KAf == KAf_WOLF_2005
 //  Inactivation reference from  Tkatch - Surmeier (2000)
@@ -88,6 +89,8 @@ const dyn_var_t ChannelKAf::_Vmrange_taum[] = {-40, -30, -20, -10, 0, 10,
 dyn_var_t ChannelKAf::taumKAf[] = {1.8, 1.1, 1.0, 1.0, 0.9, 0.8,
                                    0.9, 0.9, 0.9, 0.8, 0.8};
 std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
+
+#define TAU_H  14.0; // NOTE: this maps to 4.67 at 35oC
 #elif CHANNEL_KAf == KAf_EVANS_2012
 //  Inactivation reference from  Tkatch - Surmeier (2000)
 //     young adult rat (4-6 weeks postnatal) neostriatal spiny neuron
@@ -161,23 +164,10 @@ void ChannelKAf::update(RNG& rng)
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));       
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));       
     
-    dyn_var_t pm = 0.5*dt*getSharedMembers().Tadj / tau_m;        
-    dyn_var_t ph = 0.5*dt*getSharedMembers().Tadj / tau_h;        
+    dyn_var_t pm = 0.5*dt*getSharedMembers().Tadj / TAU_M;        
+    dyn_var_t ph = 0.5*dt*getSharedMembers().Tadj / TAU_H;        
     m[i] = (2.0*pm*m_inf + m[i]*(1.0 - pm))/(1.0 + pm);            
     h[i] = (2.0*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);            
-    }
-#elif CHANNEL_KAf == KAf_EVANS_2012
-    {
-      dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
-      dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
-      dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
-      dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
-      //NOTE: pm = dt * Tadj / (tau_m * 2);
-      //and  tau_m = scale_tau_m * 1/ (am + bm)
-      dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj / scale_tau_m;
-      m[i] = (dt * am + m[i] * (1.0 - pm)) / (1.0 + pm);
-      dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
-      h[i] = (dt * ah + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_WOLF_2005
     {
@@ -193,8 +183,7 @@ void ChannelKAf::update(RNG& rng)
         taum = linear_interp(Vmrange_taum[index - 1], taumKAf[index - 1],
           Vmrange_taum[index], taumKAf[index], v);
       dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
-      //const dyn_var_t tau_h = 4.67; // for 35^C
-      const dyn_var_t tau_h = 14.0;
+      const dyn_var_t tau_h = TAU_H;
       dyn_var_t qh = dt * getSharedMembers().Tadj / (tau_h * 2);
 
 
@@ -204,7 +193,19 @@ void ChannelKAf::update(RNG& rng)
       m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
       h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
     }
-
+#elif CHANNEL_KAf == KAf_EVANS_2012
+    {
+      dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
+      dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
+      dyn_var_t ah = AHC / (1.0 + exp((v - AHV) / AHD));
+      dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
+      //NOTE: pm = dt * Tadj / (tau_m * 2);
+      //and  tau_m = scale_tau_m * 1/ (am + bm)
+      dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj / scale_tau_m;
+      m[i] = (dt * am + m[i] * (1.0 - pm)) / (1.0 + pm);
+      dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
+      h[i] = (dt * ah + h[i] * (1.0 - ph)) / (1.0 + ph);
+    }
 #else
     NOT IMPLEMENTED YET;
 #endif
@@ -223,9 +224,9 @@ void ChannelKAf::update(RNG& rng)
     g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_MAHON_2000
     g[i] = gbar[i] * m[i] * h[i];    
-#elif CHANNEL_KAf == KAf_EVANS_2012
-    g[i] = gbar[i] * m[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_WOLF_2005
+    g[i] = gbar[i] * m[i] * m[i] * h[i];
+#elif CHANNEL_KAf == KAf_EVANS_2012
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // 'v'(t+dt/2) and gate(t+dt/2)
@@ -335,6 +336,10 @@ void ChannelKAf::initialize(RNG& rng)
     m[i] = 1.0 / (1 + exp(-(v - VHALF_M) / k_M));    
     h[i] = 1.0 / (1 + exp(-(v - VHALF_H) / k_H));    
     g[i] = gbar[i] * m[i] * h[i];                    
+#elif CHANNEL_KAf == KAf_WOLF_2005
+    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+    g[i] = gbar[i] * m[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_EVANS_2012
     dyn_var_t am = AMC / (1.0 + exp((v - AMV) / AMD));
     dyn_var_t bm = BMC / (1.0 + exp((v - BMV) / BMD));
@@ -342,10 +347,6 @@ void ChannelKAf::initialize(RNG& rng)
     dyn_var_t bh = BHC / (1.0 + exp((v - BHV) / BHD));
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
-    g[i] = gbar[i] * m[i] * h[i];
-#elif CHANNEL_KAf == KAf_WOLF_2005
-    m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
-    h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #else
     NOT IMPLEMENTED YET;
