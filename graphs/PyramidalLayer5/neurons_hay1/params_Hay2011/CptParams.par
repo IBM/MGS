@@ -34,12 +34,12 @@ MTYPE BRANCHTYPE
 # Vnew ~ [mV]
 ## NOTE: Make sure semi-colon separated
 #{{{neuron  6
-0 1 <Cm=0.01; gLeak=0.0002>
-0 2 <Cm=0.01; gLeak=0.000325>
-0 5 <Cm=0.01; gLeak=0.000325>
-0 3 <Cm=0.02; gLeak=0.000234>
-0 4 <Cm=0.02; gLeak=0.000295>
-0 6 <Cm=0.02; gLeak=0.000295>
+0 1 <Cm=0.01; gLeak=2.0e-4>
+0 2 <Cm=0.01; gLeak=3.25e-4>
+0 5 <Cm=0.01; gLeak=3.25e-4>
+0 3 <Cm=0.02; gLeak=2.34e-4>
+0 4 <Cm=0.02; gLeak=2.95e-4>
+0 6 <Cm=0.02; gLeak=2.95e-4>
 # NOTE: for non-uniform gLeak; the authors confirmed that we need non-uniform Eleak (page 12 column 1)
 #}}}
 #{{{ GABAergic bouton   0
