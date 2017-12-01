@@ -34,12 +34,14 @@ DoPlot()
     # if [ -f  "$OutputFolderName/SEClamp.txt" ]; then
     #   xmgrace -block $OutputFolderName/SEClamp.txt  -bxy 1:2 & 
     # fi
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  $OutputFolderName/ &
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  $OutputFolderName/ 
-    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_shaft &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  --folder $OutputFolderName/ &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  --folder $OutputFolderName/ 
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  --folder $OutputFolderName/ --absolute_current & 
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  --folder $OutputFolderName/ --absolute_current &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_shaft &
     #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_spine &
-    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_spine&
-    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_shaft &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_spine&
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_shaft &
   fi
 }
 #}}}

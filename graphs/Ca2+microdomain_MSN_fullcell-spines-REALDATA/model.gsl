@@ -23,6 +23,7 @@
 #define CASE_01b  101   //inject soma [brief train of AP]
 #define CASE_01c  201   //inject soma [point current source]
 #define CASE_01d  301   //inject soma [ramp current]
+#define CASE_01e  401   //inject soma [negative current --> calculate Rin]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -74,6 +75,8 @@ print("Case 00: resting");
       STIMULUS_CASE ==  CASE_01c || \
       STIMULUS_CASE ==  CASE_01d 
 #define OutputFolderName dataFolder morph "Tuan_triggersoma" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_01e
+#define OutputFolderName dataFolder morph "Tuan_measure_Rin" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
 #define OutputFolderName dataFolder morph "Tuan_triggershaft" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
@@ -128,12 +131,15 @@ print("Case 00: resting");
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-  #define TimeEnd          400      // [ms]
 //{{{ Stimulus-specific running time
-#if STIMULUS_CASE == CASE_08
-#define TimeEnd          40      // [ms]
-#elif STIMULUS_CASE == CASE_00
+#if STIMULUS_CASE == CASE_00
   #define TimeEnd          60      // [ms]
+#elif STIMULUS_CASE == CASE_01e
+  #define TimeEnd          340      // [ms]
+#elif STIMULUS_CASE == CASE_08
+#define TimeEnd          40      // [ms]
+#else
+  #define TimeEnd          170      // [ms]
 #endif
 //}}}
   //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
@@ -196,6 +202,8 @@ print("Case 00: resting");
 
 #define Mg_o_value   1.5     // [mM]
 #define Mg_i_value   0.8     // [mM]
+ // in striatal neurons: resting cell Na_i = 16 mM [Aizma, Aperia, 2000 Nature]
+ // in non-neuronal cell: Na_i 3-7 mM
 #define Na_i_value   22.0    // [mM]   - other: 12.0
 #define Na_o_value   145.0   // [mM]
 #define K_i_value    140.0   // [mM]
@@ -768,6 +776,11 @@ NodeType IP3ConcentrationJunctionPoint {
 /*{{{//Na+ currents*/
    /* Fast-inactivating (transient) Na+ */
 NodeType ChannelNat 
+#if CHOCE_REVERSIAL_POTENTIAL_SODIUM == DEFINE_EXPLICITLY
+(<E_Na = {Erev_Na}>)
+#endif
+{ computeE->initialize2, initialize->initialize3, update->solveChannels};
+NodeType ChannelNat_AIS
 #if CHOCE_REVERSIAL_POTENTIAL_SODIUM == DEFINE_EXPLICITLY
 (<E_Na = {Erev_Na}>)
 #endif
@@ -1487,6 +1500,7 @@ Grid MSN_D1Neuron{
        /*{{{*/
      //{{{ Na channels
     Layer(NatChannels, ChannelNat, tissueFunctor("Layout", < nodekind="Channels[Nat]" >), < nodekind="Channels[Nat]" >, tissueGM);
+   Layer(Nat_AISChannels, ChannelNat_AIS, tissueFunctor("Layout", < nodekind="Channels[Nat_AIS]" >), < nodekind="Channels[Nat_AIS]" >, tissueGM);
     Layer(NapChannels, ChannelNap, tissueFunctor("Layout", < nodekind="Channels[Nap]" >), < nodekind="Channels[Nap]" >, tissueGM);
      //}}}
      //{{{ K+ channels
@@ -1835,6 +1849,10 @@ Grid MSN_D1Neuron{
                 compartmentalize = { "gbar" },
                 gbar = {0.0}, Vhalf_m_shift = 0.0, Vhalf_h_shift = 0.0
                 > ) ); 
+    InitNodes ( .[].Layer(Nat_AISChannels), tissueFunctor("NodeInit", <
+	  compartmentalize = { "gbar" },
+	  gbar = {0.0} 
+	  > ) ); 
 
     InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
                 compartmentalize = { "gbar" },
@@ -2085,6 +2103,8 @@ Grid MSN_D1Neuron{
    //{{{ Na+ channels
    polyConnect(timeStep, .[].Layer(NatChannels, NapChannels), <>, <identifier="dt">);
    polyConnect(extracellularMedium, .[].Layer(NatChannels, NapChannels), <>, <identifier="EC">);
+   polyConnect(timeStep, .[].Layer(Nat_AISChannels), <>, <identifier="dt">);
+   polyConnect(extracellularMedium, .[].Layer(Nat_AISChannels), <>, <identifier="EC">);
 
    //}}}
 

@@ -18,6 +18,7 @@ polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHO
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_01b || \
     STIMULUS_CASE == CASE_01d || \
+    STIMULUS_CASE == CASE_01e || \
     STIMULUS_CASE == CASE_05 || \
     STIMULUS_CASE == CASE_06
 /// CASE 1: inject Soma
@@ -34,6 +35,8 @@ print ("Case 05: connect-stimulus ok");
 print ("Case 01b: connect-stimulus ok");
 #elif STIMULUS_CASE == CASE_01d
 print ("Case 01d: connect-stimulus ok");
+#elif STIMULUS_CASE == CASE_01e
+print ("Case 01e: connect-stimulus ok");
 #endif
 /// END CASE 1
 //}}}

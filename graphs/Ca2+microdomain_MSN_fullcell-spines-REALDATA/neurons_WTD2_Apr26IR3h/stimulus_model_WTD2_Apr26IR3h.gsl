@@ -108,6 +108,12 @@ somaClamp.toggle() on voltageClampOffSem; //toggle clamping
 RampCurrentGenerator somaStimInj<pattern="ramp", Istart=0.0, Iend=500.0, duration=200, period=5100, delay=timeDelay, last=50000, inc=0>; 
 #endif
 
+#if STIMULUS_CASE == CASE_01e
+#define timeDelay 10
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=-20.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>; 
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=-150.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>; //Gertler, Surmeier (2008)
+#endif
+
 #if STIMULUS_CASE == CASE_01 || \
     STIMULUS_CASE == CASE_05 || \
     STIMULUS_CASE == CASE_06
@@ -121,10 +127,13 @@ RampCurrentGenerator somaStimInj<pattern="ramp", Istart=0.0, Iend=500.0, duratio
 //NOTE: MSN requires long stimulation due to the long shunt in the first AP
 #if 0
 // quickly trigger AP
-CurrentPulseGenerator somaStimInj<pattern="periodic", peak=2000.0, duration=5, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//CurrentPulseGenerator somaStimInj<pattern="periodic", peak=2000.0, duration=5, period=5100, delay=timeDelay, last=50000, inc=0>; 
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=4000.0, duration=2, period=5100, delay=timeDelay, last=50000, inc=0>; 
 #else
 // with delay time-to-first spike
-CurrentPulseGenerator somaStimInj<pattern="periodic", peak=200.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>; 
+//We need 300.0 and scale is 4.0
+// or 200.0 and scale (4*1.5=6)
+CurrentPulseGenerator somaStimInj<pattern="periodic", peak=150.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>; 
 #endif
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=180.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>; 
 //CurrentPulseGenerator somaStimInj<pattern="periodic", peak=-180.0, duration=900, period=5100, delay=timeDelay, last=50000, inc=0>;  //hyperpolarized current
