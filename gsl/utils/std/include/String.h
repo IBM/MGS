@@ -93,13 +93,14 @@ class String
       // instance variables
       unsigned int _capacity;    // allocated capacity
       unsigned int _size;       // current size
-      char* _data;             // pointer to text
+      char* _data = 0;             // pointer to text
 
       // class constant
       static unsigned int AllocIncr;
 
       // private method used to shrink a string to its minimum allocation
       void shrink();
+      void reset();
 
 };
 
