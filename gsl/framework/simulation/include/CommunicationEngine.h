@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -18,6 +18,9 @@
 #include "Copyright.h"
 #ifdef HAVE_MPI
 
+// WARNING! : MEMCPY_MARSHALL is experimental and results are not correct
+// #define MEMCPY_MARSHALL
+
 #include <map>
 #include <vector>
 #include "IIterator.h"
@@ -28,9 +31,6 @@
 #include "OutputStream.h"
 #include "MemPattern.h"
 #define DIM 3
-
-// WARNING! : MEMCPY_MARSHALL is experimental and results are not correct
-// #define MEMCPY_MARSHALL
 
 typedef std::map<int,IReceiver*> ReceiverMap;
 typedef std::map<int,ISender*> SenderMap;
@@ -68,7 +68,7 @@ class CommunicationEngine
     };
 
   CommunicationEngine(int MachineNodeCount, IIterator<ISender> *Senders, IIterator<IReceiver> *Receivers, Simulation *sim) :
-    _nprocs(MachineNodeCount), _nsteps(0), _myrank(0), P2P_TAG(21), _receivermaps(0), _sendervectors(0), _wsndCounts(0), _wsndDispls(0), 
+  _nprocs(MachineNodeCount), _nsteps(0), _myrank(0), P2P_TAG(21), _senders(Senders), _receivers(Receivers), _receivermaps(0), _sendervectors(0), _wsndCounts(0), _wsndDispls(0), 
     _wrcvCounts(0), _wrcvDispls(0), _vsbuff(0), _vrbuff(0), _vOutputStream(0), _sim(sim)
     {
       _myrank = getRank();
@@ -103,14 +103,14 @@ class CommunicationEngine
 
   /* * * This is what is called by the simulation engine to do communication at this phase * * */
 
-  void Communicate() {
-
+  bool Communicate() {
+    bool rebuildRequested = false;
     if (_sim->AllToAllV()) {
+
       std::string phaseName = _sim->getPhaseName();      
       Args* snd = _vsndArgs[phaseName];
       Args* rcv = _vrcvArgs[phaseName];
       SenderMap::iterator send = _allsenders.end();
-
 #ifdef MEMCPY_MARSHALL
       char* buff=_vsbuff;
       MemPattern* mpsEnd = _sndPatternMap[phaseName]._memPatternsEnd;
@@ -122,7 +122,7 @@ class CommunicationEngine
 	  src+=*d;
 	  for (p=pbeg; p!=pend; ++p) {	    
 	    //memcpy(buff, src+*p, *(++p));
-		  std::copy(src+*p, src+*p+(*(++p)), buff);
+	    std::copy(src+*p, src+*p+(*(++p)), buff);
 	    buff+=*p;
 	  }
 	}
@@ -133,8 +133,10 @@ class CommunicationEngine
       for (SenderMap::iterator s = _allsenders.begin(); s != send; ++s) {
 	ISender* isndr = s->second;
 	int i=isndr->getRank();
-	if (snd->counts[i])
-	  isndr->pack(_vOutputStream);
+	if (snd->counts[i]>0) {
+	  bool req = isndr->pack(_vOutputStream);
+	  rebuildRequested = (rebuildRequested || req);
+	}
       }
 #endif
 
@@ -147,6 +149,7 @@ class CommunicationEngine
 	  //if (getRank()==0)
 	  //	  std::cerr << "current phase name: " << phaseName << std::endl; 
 	  //END 
+
       MPI_Alltoallv((void*)_vsbuff, snd->counts, snd->displs, MPI_CHAR,
 		    (void*)_vrbuff, rcv->counts, rcv->displs, MPI_CHAR, _phaseCommunicators[phaseName]);
 
@@ -168,7 +171,7 @@ class CommunicationEngine
 	  dst+=*d;
 	  for (p=pbeg; p!=pend; ++p) {
 	    //memcpy(dst+*p, buff, *(++p));
-		  std::copy(buff, buff+(*(++p)), dst+*p);
+	    std::copy(buff, buff+(*(++p)), dst+*p);
 	    buff+=*p;
 	  }
 	}
@@ -179,9 +182,10 @@ class CommunicationEngine
       for (ReceiverMap::iterator r = _allreceivers.begin(); r != rend; ++r) {
 	IReceiver* ircvr = r->second;
 	int i=ircvr->getRank();
-	if (rcv->counts[i]) {
+	if (rcv->counts[i]>0) {
 	  ircvr->reset();
-	  ircvr->receive(_vrbuff+rcv->displs[i], rcv->counts[i]);
+	  bool req = ircvr->receive(_vrbuff+rcv->displs[i], rcv->counts[i]);
+	  rebuildRequested = (rebuildRequested || req);
 	}
       }
 #endif
@@ -219,6 +223,7 @@ class CommunicationEngine
 	//MPI_Barrier(MPI_COMM_WORLD);  // use barrier outside CommunicationEngine to have loose synchronization
       }
     }
+    return rebuildRequested;
   }
     
   /* * * based on myrank - for this step, do I send first, or receive first? * * */
@@ -237,6 +242,7 @@ class CommunicationEngine
 
     int maxSendBuffSize=1;
     int maxRecvBuffSize=1;
+
     for (iter=phaseNames.begin(); iter!=end; ++iter) {
       _phaseCommunicators[*iter]=MPI_Comm();
       MPI_Comm_dup(MPI_COMM_WORLD, &_phaseCommunicators[*iter]);
@@ -255,27 +261,24 @@ class CommunicationEngine
 #ifdef MEMCPY_MARSHALL
         nSndPatterns += s->getPatternCount(*iter);
 #endif
-	//std::cerr<<*iter<<"Send : ";
 	buffsize+=(args->counts[rank] = s->getByteCount(*iter));
       }
-      
+
       for (int i=1; i<_nprocs; ++i)
 	args->displs[i]=args->displs[i-1]+args->counts[i-1];
       args->setBuffSize(buffsize);
       if (buffsize>maxSendBuffSize) maxSendBuffSize=buffsize;
       _vsndArgs[*iter]=args; 	
       args=new Args(_nprocs);
-      //std::cerr<<(*iter)<<" sendbuff("<<rank<<"): "<<buffsize<<std::endl;
       buffsize=0;
       rank=-1;
-      
+
       for (IReceiver *r = Receivers->getFirst(); r != NULL; r = Receivers->getNext()) {
 	assert(rank<r->getRank()); // necessary for correct displacement calculation below
 	rank=r->getRank();
 #ifdef MEMCPY_MARSHALL
 	nRcvPatterns += r->getPatternCount(*iter);
 #endif
-	//std::cerr<<*iter<<"Receive : ";
 	buffsize+=(args->counts[rank] = r->getByteCount(*iter));
       }
 
@@ -285,7 +288,6 @@ class CommunicationEngine
       if (buffsize>maxRecvBuffSize) maxRecvBuffSize=buffsize;
       _vrcvArgs[*iter]=args; 	
       args=new Args(_nprocs);
-      //std::cerr<<(*iter)<<" recvbuff("<<rank<<"): "<<buffsize<<std::endl;
       buffsize=0;
 
 
@@ -310,7 +312,9 @@ class CommunicationEngine
 	assert(mp==rmpptr._memPatternsEnd);
       }
 #endif
+
     }
+
     _vsbuff = new char[maxSendBuffSize];
     _vrbuff = new char[maxRecvBuffSize];
     _vOutputStream = new OutputStream(_vsbuff);
@@ -461,6 +465,7 @@ class CommunicationEngine
   };
 
   ~CommunicationEngine() {
+
     if (_sendervectors) delete [] _sendervectors;
     if (_receivermaps) delete [] _receivermaps;
 
@@ -471,8 +476,9 @@ class CommunicationEngine
 
     if (_vsbuff) delete [] _vsbuff;
     if (_vrbuff) delete [] _vrbuff;
-    delete _vOutputStream;
 
+    delete _vOutputStream;
+    
     std::map<std::string, MPI_Datatype*>::iterator iter=_wsndTypes.begin(), end=_wsndTypes.end();
     MPI_Datatype* typePtr;
     for (; iter!=end; ++iter) {
@@ -497,7 +503,6 @@ class CommunicationEngine
     iter2=_vrcvArgs.begin(), end2=_vrcvArgs.end();
     for (; iter2!=end2; ++iter2)
       delete (iter2->second);
-
     std::map<std::string, MPI_Comm>::iterator iter3=_phaseCommunicators.begin(), end3=_phaseCommunicators.end();
     for (; iter3!=end3; ++iter3) {
       MPI_Comm_free(&(iter3->second));
@@ -529,6 +534,8 @@ class CommunicationEngine
   int _nsteps;
   int _myrank;
   char _recbuffer[BUFFERSIZE];
+  IIterator<ISender>* _senders;
+  IIterator<IReceiver>* _receivers;
   ReceiverMap *_receivermaps;
   ReceiverMap _allreceivers;
   SenderVector *_sendervectors;

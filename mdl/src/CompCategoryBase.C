@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -990,7 +990,6 @@ std::string CompCategoryBase::getGetIndexedBlockFB() const
       << TAB << TAB << TAB << TAB << "MPI_Aint nodeAddress;\n"
       << TAB << TAB << TAB << TAB << "MPI_Get_address(*niter, &nodeAddress);\n"
       << TAB << TAB << TAB << TAB << "for (int i=0; i<npblocks; ++i) {\n"
-      << TAB << TAB << TAB << TAB << TAB << "nBytes += npls[i];\n"
       << TAB << TAB << TAB << TAB << TAB << "nplengths[i]=npls[i];\n"
       << TAB << TAB << TAB << TAB << TAB << "npdispls[i]=blocs[i]-nodeAddress;\n"
       << TAB << TAB << TAB << TAB << "}\n"
@@ -1001,11 +1000,15 @@ std::string CompCategoryBase::getGetIndexedBlockFB() const
       << TAB << TAB << TAB << TAB << "delete [] npdispls;\n\n"
 
       << TAB << TAB << TAB << TAB << "int nblocks=nodes.size();\n"
-      << TAB << TAB << TAB << TAB << "nBytes *= nblocks;\n"
       << TAB << TAB << TAB << TAB << "int* blengths = new int[nblocks];\n"
       << TAB << TAB << TAB << TAB << "MPI_Aint* bdispls = new MPI_Aint[nblocks];\n"      
       << TAB << TAB << TAB << TAB << "blockLocation=nodeAddress;\n"
       << TAB << TAB << TAB << TAB << "for (int i=0; i<nblocks; ++i, ++niter) {\n"
+      << TAB << TAB << TAB << TAB << TAB << "npls.clear();\n"
+      << TAB << TAB << TAB << TAB << TAB << "blocs.clear();\n"
+      << TAB << TAB << TAB << TAB << TAB << "((*niter)->*(function))(npls, blocs);\n"
+      << TAB << TAB << TAB << TAB << TAB << "npblocks=npls.size();\n"
+      << TAB << TAB << TAB << TAB << TAB << "for (int j=0; j<npblocks; ++j) nBytes += npls[j];\n"
       << TAB << TAB << TAB << TAB << TAB << "blengths[i]=1;\n"
       << TAB << TAB << TAB << TAB << TAB << "MPI_Get_address(*niter, &bdispls[i]);\n"
       << TAB << TAB << TAB << TAB << TAB << "bdispls[i]-=blockLocation;\n"
@@ -1401,7 +1404,6 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << TAB << TAB << TAB << "MPI_Aint nodeAddress;\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "MPI_Get_address(&(*niter), &nodeAddress);\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "for (int i=0; i<npblocks; ++i) {\n"
-       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "nBytes += npls[i];\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "nplengths[i]=npls[i];\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "npdispls[i]=blocs[i]-nodeAddress;\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "}\n"
@@ -1413,11 +1415,16 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << TAB << TAB << TAB << "delete [] npdispls;\n\n"
 
        << TAB << TAB << TAB << TAB << TAB << TAB << "int nblocks=_receiveList.size();\n"
-       << TAB << TAB << TAB << TAB << TAB << TAB << "nBytes *= nblocks;\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "int* blengths = new int[nblocks];\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "MPI_Aint* bdispls = new MPI_Aint[nblocks];\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "blockLocation=nodeAddress;\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "for (int i=0; i<nblocks; ++i, ++niter) {\n"
+       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "npls.clear();\n"
+       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "blocs.clear();\n"
+       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "dm->setDestination(&(*niter));\n"
+       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "dm->getBlocks(npls, blocs);\n"
+       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "npblocks=npls.size();\n"
+       << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "for (int j=0; j<npblocks; ++j) nBytes += npls[j];\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "blengths[i]=1;\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "MPI_Get_address(&(*niter), &bdispls[i]);\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << TAB << "bdispls[i]-=blockLocation;\n"
@@ -1440,7 +1447,7 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator nend = _receiveList.end();\n"
        << TAB << TAB << TAB << TAB << "const char* buff = buffer;\n"
        << TAB << TAB << TAB << TAB << "while (niter!=nend && buffSize!=0) {\n"
-       << TAB << TAB << TAB << TAB << TAB << "buffSize = dm->demarshall(buff, buffSize);\n"
+       << TAB << TAB << TAB << TAB << TAB << "buffSize = dm->demarshall(buff, buffSize, rebuildRequested);\n"
        << TAB << TAB << TAB << TAB << TAB << "buff = buffer+(size-buffSize);\n"
        << TAB << TAB << TAB << TAB << TAB << "if (buffSize!=0 || dm->done()) {\n"
        << TAB << TAB << TAB << TAB << TAB << TAB << "++niter;\n"
@@ -1497,6 +1504,7 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    demarshallMethod->setInline();
    demarshallMethod->addParameter("const char* buffer");
    demarshallMethod->addParameter("int size");
+   demarshallMethod->addParameter("bool& rebuildRequested");
    demarshallMethod->setFunctionBody(demarshallMethodFB.str());
    ccdemarshaller->addMethod(demarshallMethod);
 

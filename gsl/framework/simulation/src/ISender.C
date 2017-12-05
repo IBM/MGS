@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005, 2006  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -36,7 +36,7 @@ MemPattern* ISender::getMemPatterns(std::string phaseName, MemPattern* mpptr)
     if (nbytes) ++mpptr;
     total+=nbytes;
   }
-  //std::cerr<<_simulationPtr->getRank()<<" sends "<<total<<" to "<<_destination<<std::endl;
+  //std::cerr<<_simulationPtr->getRank()<<" sends "<<total<<" to "<<_destination<<" on "<<phaseName<<std::endl;
   return mpptr;
 }
 
@@ -53,7 +53,7 @@ int ISender::getByteCount(std::string phaseName)
       rval+=nBytes;
     }
   }
-  //std::cerr<<_simulationPtr->getRank()<<" sends "<<rval<<" to "<<_destination<<std::endl;
+  //std::cerr<<_simulationPtr->getRank()<<" sends "<<rval<<" to "<<_destination<<" on "<<phaseName<<std::endl;
   return rval;
 }
 

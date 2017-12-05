@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -37,11 +37,12 @@ public:
    int getByteCount(std::string phaseName);
    int getPatternCount(std::string phaseName);
    bool getWSendType(std::string phaseName, MPI_Datatype* type);
-   void pack(OutputStream* os) {
+   bool pack(OutputStream* os) {
      std::list<DistributableCompCategoryBase*>::iterator it, end;
      end = _simulationPtr->_distCatList.end();
      for (it = _simulationPtr->_distCatList.begin(); it != end; ++it) 
        (*it)->send(_destination, os); 
+     return os->rebuildRequested();
    }
    void send() {
      /* enumerate each compcategory and invoke send method on them */

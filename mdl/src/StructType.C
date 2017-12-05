@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -295,6 +295,7 @@ void StructType::generateFlatDemarshaller()
    demarshallMethod->setInline();
    demarshallMethod->addParameter("const char * buffer");
    demarshallMethod->addParameter("int size");
+   demarshallMethod->addParameter("bool& rebuildRequested");
    std::ostringstream demarshallMethodFB;
    demarshallMethodFB << TAB << TAB << TAB << "int retval = size;\n";
    demarshallMethodFB << TAB << TAB << TAB << "if (!done()) {\n";

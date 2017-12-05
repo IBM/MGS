@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -30,7 +30,7 @@ public:
      blengths.resize(1,0);
      blocs.resize(1,0);
    }
-   virtual int demarshall(const char * buffer, int size) = 0; // returns bytes remaining
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) = 0; // returns bytes remaining
    virtual ~Demarshaller() {}
 };
 #endif
