@@ -205,6 +205,9 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
     assert(cmt > 0);
   }
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  I_fromdend = 0.0;
+#endif
 }
 
 //GOAL: predict Vnew[0] at offset time (t+dt/2) - Crank-Nicolson predictor-corrector scheme
@@ -321,6 +324,10 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   // 5. Current loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+  //NOTE: No need to have it; we just put into correctJunction()
+//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+//  dyn_var_t temp = 0.0;
+//#endif
   for (; xiter != xend; ++xiter, ++viter)
   {
 #if 0
@@ -331,7 +338,15 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
     current += (*xiter) * (**viter);
     conductance += (*xiter);  
 #endif
+//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+////    = Area(soma) * SUM( {Vdend - Vsoma}/ (r_dend_soma) )
+////    = SUM( gAxial * {Vdend - Vsoma} )
+//    temp += (*xiter) * ((**viter) - Vnew[0]) //[pA/um^2]
+//#endif
   }
+//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+//  I_fromdend = area * temp; //[pA]
+//#endif
 
   //float Vold = Vnew[0];
   Vnew[0] = current / conductance; //estimate at (t+dt/2)
@@ -476,11 +491,22 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   // 5. Current loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
   Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  dyn_var_t temp = 0.0;
+#endif
   for (; xiter != xend; ++xiter, ++viter)
   {
     current += (*xiter) * (**viter); //using V(t+dt/2) from adjacent compartments
     conductance += (*xiter);  
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+//    = Area(soma) * SUM( {Vdend - Vsoma}/ (r_dend_soma) )
+//    = SUM( gAxial * {Vdend - Vsoma} )
+    temp += (*xiter) * ((**viter) - Vnew[0]); //[pA/um^2]
+#endif
   }
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  I_fromdend = area * temp; //[pA]
+#endif
 
   Vnew[0] = current / conductance;
 

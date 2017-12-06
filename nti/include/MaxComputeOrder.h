@@ -389,6 +389,11 @@
 //  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
 //#define IDEA_ILEAK
 //#define IDEA_CURRENTONCOMPT
+
+// RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT enable this if we want to track the total axial current 
+//    flowing into soma as (pA)
+//    = Area(soma) * SUM( {Vdend - Vsoma}/ (r_dend_soma) )
+//#define RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
 //}}}
 
 #endif //_MAXCOMPUTEORDER_H

@@ -431,20 +431,25 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+     IOCurrentProducer,
+#endif
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
    NaConcentrationProducer, KConcentrationProducer 
 {
-// Explicit junction branch: a branch comprised of half-compartments (or better half-capsules) 
-//   at a junction 
-//   All half-compartments (one from the parent compartment, and all others are from
-//          daughter branches) are assumed iso-potential (i.e. same Vm)
-// The diffusion between the half-compartments in junction-branch 
-//   is modeled as 'gAxial' and 
-//       cross-sectional area 'area'
-// NOTE: A soma is a special kind of junction-branch
-//   and its surface are is treated differently
+// Explicit junction branch: a single-compartment branch which represents either
+//        1. the soma
+//        2. a branching node between two compute_branch of compute-order MAX_COMPUTE_ORDER and 0 
+//   CASE 1: geometry is simply the whole-soma spherical capsule
+//   CASE 2: geometry is created by taking half-compartments (or better half-capsules) 
+//           (from the parent compartment, and all others are from
+//            daughter branches) 
+// The diffusion between this compartment (of junction branch) 
+//   and adjacent compartments (each from either parent-compute-branch or any of 
+//       the children compute-branches)
+//   is modeled as 'gAxial' and cross-sectional area 'area'
 /*{{{*/
   //DATA
   //{{{
@@ -468,6 +473,9 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t Cm; // [pF/um^2]
   dyn_var_t cmt; // intermediate value = 2*Cm/dt [pF/(um^2 . ms)]
   dyn_var_t gLeak; // [nS/um^2]
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  dyn_var_t I_fromdend; // [pA]
+#endif
   //}}}
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   //data mainly used to dynamically assign different conductance on different location
@@ -509,6 +517,9 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef IDEA_ILEAK
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  IOCurrentProducer.current << &I_fromdend;
 #endif
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
