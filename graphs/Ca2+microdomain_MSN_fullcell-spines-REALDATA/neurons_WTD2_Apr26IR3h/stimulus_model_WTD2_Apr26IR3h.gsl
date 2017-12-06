@@ -171,6 +171,11 @@ CurrentPulseGenerator somaStimInj<pattern="periodic_train", peak=2000.0, duratio
 CurrentPulseGenerator shaftStimInj<pattern="dualexp", peak=500.0, duration=5, period=510, delay=50, last=500, inc=0, riseTime=0.5, decayTime=5.0>; //GOOD
 //}}}
 #endif
+#if STIMULUS_CASE == CASE_02a
+//TOOMUCH:CurrentPulseGenerator spineHeadStimInj<pattern="dualexp", peak=015.0, duration=5, period=510, delay=10, last=500, inc=0, riseTime=0.5, decayTime=5.0>; //GOOD
+//OK:CurrentPulseGenerator spineHeadStimInj<pattern="dualexp", peak=010.0, duration=5, period=510, delay=10, last=500, inc=0, riseTime=0.5, decayTime=5.0>; //GOOD - peak of Vm spine: -6mV
+CurrentPulseGenerator spineHeadStimInj<pattern="dualexp", peak=010.0, duration=5, period=510, delay=10, last=500, inc=0, riseTime=0.5, decayTime=15.0>; //GOOD
+#endif
 
 #if STIMULUS_CASE == CASE_03 
 //{{{
@@ -184,6 +189,12 @@ CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, dur
 //{{{
 // stimulus a wide region at distal apical ends, i.e. many spines at distal
 CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=200.0, duration=2, period=510, delay=50, last=500, inc=0>; //GOOD
+//}}}
+#endif
+#if STIMULUS_CASE == CASE_04a
+//{{{
+// stimulus a wide region at distal apical ends, i.e. many spines at distal
+CurrentPulseGenerator presynapticSomaStimInj<pattern="periodic", peak=160.0, duration=2, period=510, delay=10, last=500, inc=0>; 
 //}}}
 #endif
 

@@ -25,8 +25,10 @@
 #define CASE_01d  301   //inject soma [ramp current]
 #define CASE_01e  401   //inject soma [negative current --> calculate Rin]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
+#define CASE_02a  102   //inject shaft with dual-exp EPSP-like current injection into spine head
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
+#define CASE_04a  104  //inject presynaptic neurons at distal region
 #define CASE_05  5   //trigger soma + distal end within 5ms
 #define CASE_06  6   //trigger soma then another spine 5ms later
 #define CASE_07  7   //trigger axon/AIS
@@ -34,7 +36,7 @@
 #define CASE_08b 108   //dynamic voltage clamp
 #define CASE_09  9   //inject pre-syn soma [random noise current]
 #define CASE_10  10   //inject pre-syn soma [random noise current] - multiple spines
-#define STIMULUS_CASE   CASE_01
+#define STIMULUS_CASE   CASE_04a
 //#define morph ""
 #define morph "msnSpinesNodomain_"   // must end with '_' for non-empty string
 //}}}
@@ -79,11 +81,15 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Tuan_measure_Rin" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
 #define OutputFolderName dataFolder morph "Tuan_triggershaft" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_02a
+#define OutputFolderName dataFolder morph "Tuan_triggerspineHead" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_03
 #define OutputFolderName dataFolder morph "Tuan_triggerspine" STR(EXTENSION)
 //#define OutputFolderName dataFolder morph "Tuan_case03"
 #elif STIMULUS_CASE ==  CASE_04
 #define OutputFolderName dataFolder morph "Tuan_triggerdistalspines" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_04a
+#define OutputFolderName dataFolder morph "Tuan_triggerspines" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_05
 #define OutputFolderName dataFolder morph "Tuan_case05" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_06
@@ -92,10 +98,14 @@ print("Case 00: resting");
 #define OutputFolderName dataFolder morph "Tuan_triggeraxon" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_08
 #define OutputFolderName dataFolder morph "Tuan_Vclamp" STR(EXTENSION)
-#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
-#define OutputFolderName  STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_08b
 #define OutputFolderName dataFolder morph "Tuan_Vclampdynamic" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_09
+#define OutputFolderName dataFolder morph "soma_noise" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_10
+#define OutputFolderName dataFolder morph "uncagesoma_noise" STR(EXTENSION)
+#elif STIMULUS_CASE ==  CASE_PARAMSEARCH
+#define OutputFolderName  STR(EXTENSION)
 #else
   print("NOT DEFINED STIMULUS_CASE .... ")
   WRONG
@@ -139,7 +149,7 @@ print("Case 00: resting");
 #elif STIMULUS_CASE == CASE_08
 #define TimeEnd          40      // [ms]
 #else
-  #define TimeEnd          170      // [ms]
+  #define TimeEnd          370      // [ms]
 #endif
 //}}}
   //#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
@@ -2190,12 +2200,12 @@ Grid MSN_D1Neuron{
 
     // 2. with VARIABLES (for I/O, stimulus)
     /*{{{*/
+  //{{{ Stimulus
+#include "connect_stimulus_model.gsl"
+  //}}}
   //{{{ I/O
 #include "connect_recording_model.gsl"
 
-  //}}}
-  //{{{ Stimulus
-#include "connect_stimulus_model.gsl"
   //}}}
     polyConnect(timeStep, simInfo, <>, <>);
 #ifdef  ADAPTIVE_IO

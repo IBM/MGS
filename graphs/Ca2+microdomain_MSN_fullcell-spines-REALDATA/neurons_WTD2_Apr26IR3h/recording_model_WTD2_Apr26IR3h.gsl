@@ -168,11 +168,13 @@ axonAISCurrentsDisplay.dataCollection(<>) on recOn;
 //spine + bouton (generic, any location)
 //{{{
 //{{{current
-CaCurrentDisplay spineNMDARDisplay<fileName= PathFileCombine("spineNMDAR.dat")>;
+AnyCurrentDisplay spineNMDARDisplay<fileName= PathFileCombine("spineNMDAR.dat")>;
 spineNMDARDisplay.dataCollection(<>) on recOn;
 
-CurrentDisplay spineAMPARDisplay<fileName= PathFileCombine("spineAMPAR.dat")>;
+AnyCurrentDisplay spineAMPARDisplay<fileName= PathFileCombine("spineAMPAR.dat")>;
 spineAMPARDisplay.dataCollection(<>) on recOn;
+AnyCurrentDisplay spineCurrentsDisplay<fileName= PathFileCombine("spineCurrents.dat")>;
+spineCurrentsDisplay.dataCollection(<>) on recOn;
 //}}}
 //{{{Vm+Ca
 VoltageDisplay spineVoltageDisplay<fileName=PathFileCombine("spineV.dat")>;

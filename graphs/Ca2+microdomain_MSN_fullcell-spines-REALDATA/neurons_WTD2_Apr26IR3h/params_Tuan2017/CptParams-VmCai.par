@@ -43,7 +43,7 @@ IP3 1.0
 COMPARTMENT_VARIABLE_PARAMS 1
 Voltage 17
 MTYPE BRANCHTYPE
-#{{{ 7
+#{{{ 17
 #{{{neuron  7
 0 1 <Cm=0.01; gLeak=1.65e-4>
 0 2 <Cm=0.01; gLeak=1.65e-4>
@@ -59,6 +59,13 @@ MTYPE BRANCHTYPE
 #0 3 <Cm=0.01; gLeak=8.95e-4>
 #0 4 <Cm=0.01; gLeak=8.95e-4>
 #0 6 <Cm=0.01; gLeak=8.38e-4>
+#0 1 <Cm=0.01; gLeak=0.0e-14>
+#0 2 <Cm=0.01; gLeak=0.0e-14>
+#0 5 <Cm=0.01; gLeak=0.0e-14>
+#0 7 <Cm=0.01; gLeak=0.0e-14>
+#0 3 <Cm=0.01; gLeak=0.0e-14>
+#0 4 <Cm=0.01; gLeak=0.0e-14>
+#0 6 <Cm=0.01; gLeak=0.0e-14>
 #}}}
 ##{{{ GABAergic bouton 2
 1 1 <Cm=0.01; gLeak=2.95e-4>
@@ -75,4 +82,5 @@ MTYPE BRANCHTYPE
 4 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
 5 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
 5 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
+#}}}
 #}}}
