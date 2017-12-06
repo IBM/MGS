@@ -392,6 +392,7 @@ Variable CurrentDisplay
 
 	InAttrPSet {
 		string identifier;
+    TissueSite site;
 	}
 
 	UserFunction setUpPointers;
@@ -445,6 +446,7 @@ Variable CaCurrentDisplay
 
   InAttrPSet {
     string identifier;
+    TissueSite site;
   }
 
   UserFunction setUpPointers;
@@ -483,7 +485,7 @@ Variable AnyCurrentDisplay
 #else
   int [] indices; //assume print out current on ALL compartments in a branch
 #endif
-  dyn_var_t []* [] I_channel;
+  dyn_var_t []* [] I_channel; // unit: (typically it's current density) [pA/um^2]
   dyn_var_t []* I_channelConnect;
   BranchDataStruct* [] channelBranchData;
 #ifdef IDEA_ILEAK
@@ -497,12 +499,16 @@ Variable AnyCurrentDisplay
   int [] [] indices_leak;
 #endif
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  dyn_var_t* [] I_junction; //[pA] - axial currents
+#endif
   string [] strChannelTypeOnCompt;
   //}}}
 
   //Synapse-receptor
   //{{{
   dyn_var_t* [] I_synapse;
+  dyn_var_t* I_synapse_connect;
   BranchDataStruct* []* [] synapseBranchData;     //the postsynaptic location
   BranchDataStruct* []* synapseBranchDataConnect;
   int* [] [] synapseIndices;
@@ -510,7 +516,9 @@ Variable AnyCurrentDisplay
   string [] strChannelTypeOnSynapse;
 
   BranchDataStruct* [] connexonBranchData;
+  BranchDataStruct* connexonBranchData_connect;
   int* [] connexonIndices;
+  int* connexonIndices_connect;
   //}}}
 
   dyn_var_t* deltaT;
@@ -525,18 +533,20 @@ Variable AnyCurrentDisplay
 #endif
 
   InAttrPSet {
+    //{{{
     string identifier;//CHANNEL, BRANCH, JUNCTION, SYNAPSE, CONNEXON
     string type;//Nat, Cah
 #ifdef IDEA_CURRENTONCOMPT
     TissueSite site;
 #endif
+    //}}}
   }
 
   UserFunction setUpPointers;
 
   //{{{Inputs
-  //{{{leak in BRANCH
 #ifdef IDEA_ILEAK
+  //{{{leak in BRANCH
   Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, 
        ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  
 #ifdef IDEA_CURRENTONCOMPT
@@ -554,23 +564,46 @@ Variable AnyCurrentDisplay
    }
   //}}}
   //{{{leak in JUNCTION
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, 
+  Connection Pre Node ((PSet.identifier=="JUNCTION") && (PSet.type !="axial")) Expects VoltageArrayProducer, 
       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer 
 #ifdef IDEA_CURRENTONCOMPT
       , DimensionArrayProducer 
 #endif
+//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+//      , IOCurrentProducer
+//#endif
    {		// 
      VoltageArrayProducer.voltageArray >> V_connect;
      ConductanceProducer.conductance >> gLeak;
      BranchDataProducer.branchData >> leakBranchData;
+//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+//     IOCurrentProducer.current >> I_junction;
+//#endif
 #ifdef IDEA_CURRENTONCOMPT
      DimensionArrayProducer.dimensionArray >> dimensions_connect;
 #endif
      ReversalPotentialProducer.reversalPotential >> Eleak;
      setUpPointers();
    }
-#endif
   //}}}
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  //{{{axial currents into JUNCTION
+  Connection Pre Node ((PSet.identifier=="JUNCTION") && (PSet.type=="axial")) Expects 
+      IOCurrentProducer
+//, BranchDataProducer
+//#ifdef IDEA_CURRENTONCOMPT
+//      , DimensionArrayProducer 
+//#endif
+   {		// 
+     IOCurrentProducer.current >> I_junction;
+//#ifdef IDEA_CURRENTONCOMPT
+//     DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//#endif
+//     setUpPointers();
+   }
+  //}}}
+#endif
   //{{{current via CHANNEL
   //Use for GHK-based current formula
   Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer 
@@ -614,24 +647,44 @@ Variable AnyCurrentDisplay
   //}}}
   //}}}
   //{{{current via receptor (at SYNAPSE)
-  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
-    CurrentProducer.current >> I_synapse;
+  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer
+    , BranchDataArrayProducer, IndexArrayProducer 
+    , DimensionArrayProducer 
+  {
+    CurrentProducer.current >> I_synapse_connect;
     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+    DimensionArrayProducer.dimensionArray >> dimensions_connect;
     setUpPointers();
   }
-  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
-    CaCurrentProducer.current >> I_synapse;
+  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer
+    , BranchDataArrayProducer, IndexArrayProducer 
+    , DimensionArrayProducer 
+  {
+    CaCurrentProducer.current >> I_synapse_connect;
     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+    DimensionArrayProducer.dimensionArray >> dimensions_connect;
     setUpPointers();
   }
   //}}}
   //{{{current via CONNEXON
-  Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
+  Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer
+    , BranchDataProducer, IndexProducer 
+#ifdef IDEA_CURRENTONCOMPT
+    , DimensionArrayProducer 
+#endif
+  {
+#ifdef IDEA_CURRENTONCOMPT
+    CurrentProducer.current >> I_synapse_connect;
+    BranchDataProducer.branchData >> connexonBranchData_connect;
+    IndexProducer.index >> connexonIndices_connect;
+    setUpPointers();
+#else
     CurrentProducer.current >> I_synapse;
     BranchDataProducer.branchData >> connexonBranchData;
     IndexProducer.index >> connexonIndices;
+#endif
   }
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;

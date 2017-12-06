@@ -19,6 +19,9 @@ void AnyCurrentDisplay::initialize(RNG& rng)
 #ifdef IDEA_ILEAK
       || V.size() > 0
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+      || I_junction.size() > 0
+#endif
       )
   {  // current via Ca2+/Na+/or K+ channel; or ion/Ca2+-permeable receptor at
      // synapse
@@ -82,6 +85,11 @@ void AnyCurrentDisplay::initialize(RNG& rng)
           assert(synapseBranchData[i]->size() % 2 == 0);
 
           assert(synapseIndices[i].size() == 2);
+          //TUAN TODO: if SynapticCleft is not on the same rank with receptor, then the data below is not available 
+          //  for the pre-synaptic side (at connection time)
+          //  so either (1) ignore the pre-side information
+          //     or     (2) update it at the first init-phase kernel
+    #if 0
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(
                             &((*synapseBranchData[i])[0]->key))) << ","
@@ -89,6 +97,12 @@ void AnyCurrentDisplay::initialize(RNG& rng)
                      << *(reinterpret_cast<unsigned long long*>(
                             &((*synapseBranchData[i])[1]->key))) << ","
                      << *(synapseIndices[i][1]) << "] ";
+#else
+          (*outFile) << std::fixed << " [post-side:"
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &((*synapseBranchData[i])[1]->key))) << ","
+                     << *(synapseIndices[i][1]) << "] ";
+#endif
           os2 << strChannelTypeOnSynapse[i] << ", "; 
         }
       }
@@ -117,6 +131,18 @@ void AnyCurrentDisplay::initialize(RNG& rng)
                      //<< (*dimensions[i])[j]->dist2soma << ") ";
               os2 << "leak" << ", "; 
         }
+      }
+    }
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+    if (I_junction.size() > 0)
+    {  // via axial-current to junction, e.g. soma 
+      ShallowArray<dyn_var_t*>::iterator it = I_junction.begin(), 
+        end = I_junction.end();
+      for (; it != end; ++it)
+      {
+          (*outFile) << std::fixed << " I_axial(pA), "; 
+          os2 << "I_junction" << ", "; 
       }
     }
 #endif
@@ -256,6 +282,13 @@ void AnyCurrentDisplay::initialize(RNG& rng)
 void AnyCurrentDisplay::finalize(RNG& rng)
 {
   if (outFile) outFile->close();
+//#ifdef __unix__ 
+//  found=fileName.find_last_of("/\\");
+//  path = fileName.substr(0, found) + "/done";
+//  //touch the file to update time-stamp
+//#elif defined(_WIN32) || defined(WIN32)     /* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+//  assert(0); // not supported
+//#endif
 }
 
 #ifdef IDEA_CURRENTONCOMPT
@@ -264,6 +297,9 @@ void AnyCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
   if (I_channel.size() > 0 || I_synapse.size() > 0
 #ifdef IDEA_ILEAK
       || V.size() > 0
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+      || I_junction.size() > 0
 #endif
       )
   {
@@ -311,6 +347,17 @@ void AnyCurrentDisplay::dataCollection(Trigger* trigger, NDPairList* ndPairList)
               (*outFile) << std::fixed << fieldDelimiter << Ileak ;
             }
         }
+      }
+    }
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+    if (I_junction.size() > 0)
+    {  // via axial-current to junction, e.g. soma 
+      ShallowArray<dyn_var_t*>::iterator it = I_junction.begin(), 
+        end = I_junction.end();
+      for (; it != end; ++it)
+      {
+        (*outFile) << std::fixed << fieldDelimiter << (**it);
       }
     }
 #endif
@@ -424,46 +471,46 @@ void AnyCurrentDisplay::setUpPointers(
   bool record = true;
   ShallowArray<int> ind;
   {//get the indices 'ind'
-  if (site.r != 0)
-  {//identify the indices of compartments inside a branch 
-    //to record based on distance criteria to a site
-    if (dimensions_connect == 0)
-    {
-      std::cerr << "ERROR: The incoming connection to AnyCurrentDisplay has a site to limit the nodes; but the nodes does not has the interface DimensionArrayProducer " << std::endl;
-      assert(0);
-    }
-    record = false;
-    for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
-    {//make sure it connect to the 'whatever-data' associated with 
-      //the compartment within the spherical range
-      if ((site.r * site.r) >=
-          DISTANCE_SQUARED(site, *((*dimensions_connect)[i])))
+    if (site.r != 0)
+    {//identify the indices of compartments inside a branch 
+      //to record based on distance criteria to a site
+      if (dimensions_connect == 0)
       {
-        ind.push_back(i);
-        record = true;
+        std::cerr << "ERROR: The incoming connection to AnyCurrentDisplay has a site to limit the nodes; but the nodes does not has the interface DimensionArrayProducer " << std::endl;
+        assert(0);
+      }
+      record = false;
+      for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
+      {//make sure it connect to the 'whatever-data' associated with 
+        //the compartment within the spherical range
+        if ((site.r * site.r) >=
+            DISTANCE_SQUARED(site, *((*dimensions_connect)[i])))
+        {
+          ind.push_back(i);
+          record = true;
+        }
       }
     }
-  }
-  else if (dimensions_connect != 0 and dimensions_connect->size() > 0)
-  {// record data from all compartments associated with the given ComputeBranch
-    for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
-      ind.push_back(i);
-  }
-  else {
-    if (CG_inAttrPset->identifier == "CHANNEL")
-    {
-      for (unsigned int i = 0; i < channelBranchData[channelBranchData.size()-1]->size; ++i)
+    else if (dimensions_connect != 0 and dimensions_connect->size() > 0)
+    {// record data from all compartments associated with the given ComputeBranch
+      for (unsigned int i = 0; i < dimensions_connect->size(); ++i)
         ind.push_back(i);
     }
+    else {
+      if (CG_inAttrPset->identifier == "CHANNEL")
+      {
+        for (unsigned int i = 0; i < channelBranchData[channelBranchData.size()-1]->size; ++i)
+          ind.push_back(i);
+      }
 #ifdef IDEA_ILEAK
-    else if (CG_inAttrPset->identifier == "BRANCH" or
-        CG_inAttrPset->identifier == "JUNCTION")
-    {
-      for (unsigned int i = 0; i < leakBranchData[leakBranchData.size()-1]->size; ++i)
-        ind.push_back(i);
-    }
+      else if (CG_inAttrPset->identifier == "BRANCH" or
+          CG_inAttrPset->identifier == "JUNCTION")
+      {
+        for (unsigned int i = 0; i < leakBranchData[leakBranchData.size()-1]->size; ++i)
+          ind.push_back(i);
+      }
 #endif
-  }
+    }
   }
   if (not record)
   {
@@ -507,9 +554,16 @@ void AnyCurrentDisplay::setUpPointers(
   }
   else if (CG_inAttrPset->identifier == "SYNAPSE")
   {
+    I_synapse.push_back(I_synapse_connect);
     synapseBranchData.push_back(synapseBranchDataConnect);
     synapseIndices.push_back(synapseIndicesConnect);
     strChannelTypeOnSynapse.push_back(type);
+  }
+  else if (CG_inAttrPset->identifier == "CONNEXON")
+  {
+    I_synapse.push_back(I_synapse_connect);
+    connexonBranchData.push_back(connexonBranchData_connect);
+    connexonIndices.push_back(connexonIndices_connect);
   }
   dimensions_connect = 0;
 }

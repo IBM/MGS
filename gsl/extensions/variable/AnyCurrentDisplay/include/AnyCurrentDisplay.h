@@ -27,6 +27,7 @@ class AnyCurrentDisplay : public CG_AnyCurrentDisplay
 
   private:
   std::ofstream* outFile = 0;
+  //std::string path;
 };
 
 #endif
