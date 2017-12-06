@@ -142,6 +142,7 @@ Node SynapticCleft Implements
   int [] indexPrePost; // array of 2n elements: in pair (preIdx,postIdx)
   BranchDataStruct* [] branchDataPrePost; // array of 2n elements; in pair (preBD, postBD)
   DimensionStruct * [] dimensionsPrePost; // array of 2n elements; in pair (preBD, postBD)
+//--> should dbe DimensionStruct*[] [] dimenionsPrePost; //if used (the above is wrong)
   //}}}
   //BranchDataStruct branchDataPre;//data that branchDataConnect point to
   //BranchDataStruct branchDataPost;//data  from Post-side (NOT being used now - see TUAN TODO)
@@ -182,6 +183,8 @@ Node SynapticCleft Implements
     dyn_var_t []* voltageConnect; //temporary use
     //BranchDataStruct* branchDataConnect;//temporary use 
           //can point to preSynaptic cpt's branch or postSynaptic cpt's branch
+    DimensionStruct*[]* dimensionsArray_connect;
+
     //}}}
   }
 
@@ -238,7 +241,8 @@ Node SynapticCleft Implements
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     //BranchDataProducer.branchData >> Shared.branchDataConnect;
     BranchDataProducer.branchData >> branchDataPrePost;
-    DimensionArrayProducer.dimensionArray >> dimensionsPrePost;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsArray_connect;
+    //DimensionArrayProducer.dimensionArray >> dimensionsPrePost;
     setPointers();
     //}}}
   }
@@ -250,8 +254,12 @@ Node SynapticCleft Implements
     //{{{ 
     //BranchDataProducer.branchData >> Shared.branchDataConnect;
     BranchDataProducer.branchData >> branchDataPrePost;
-    DimensionArrayProducer.dimensionArray >> dimensionsPrePost;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsArray_connect;
+    //DimensionArrayProducer.dimensionArray >> dimensionsPrePost;
     setPointers();
+//TUAN TODO: some problem here
+// as the SynapticCleft is always created on the rank having pre-side ComputeBranch
+//  at connection time, it may not have BranchDataProducer, DimensionArrayProducer of the Post-side ComputeBranch if the pre-side and post-side are not on the same rank
     //}}}
   }
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
