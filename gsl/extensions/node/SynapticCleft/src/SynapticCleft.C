@@ -4,6 +4,7 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "NodeProxyBase.h"
 
 //#define	Glut_max  *(getSharedMembers().Glut_baseline);
 //#define	GABA_max  *(getSharedMembers().GABA_baseline);
@@ -131,12 +132,16 @@ void SynapticCleft::setPointers(const String& CG_direction,
                                 CG_SynapticCleftInAttrPSet* CG_inAttrPset,
                                 CG_SynapticCleftOutAttrPSet* CG_outAttrPset)
 {
+#ifdef DEBUG
+  data_received.append(CG_inAttrPset->side.c_str());
+#endif
   if (CG_inAttrPset->side == "pre")
   {
     int index = CG_inAttrPset->idx;
     assert(getSharedMembers().voltageConnect);
     assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
     Vpre = &((*(getSharedMembers().voltageConnect))[index]);
+    dimensionsPrePost.push_back((*(getSharedMembers().dimensionsArray_connect))[index]);
 
 #ifdef KEEP_PAIR_PRE_POST
     indexPrePost.push_back(index);
@@ -148,7 +153,20 @@ void SynapticCleft::setPointers(const String& CG_direction,
   }
   else if (CG_inAttrPset->side == "post")
   {
-    int index = CG_inAttrPset->idx + getSharedMembers().voltageConnect->size();
+    //wrong: int index = CG_inAttrPset->idx + getSharedMembers().voltageConnect->size();
+    int index = CG_inAttrPset->idx;
+    NodeProxyBase* node = dynamic_cast<NodeProxyBase*>(CG_node->getNode());
+    if (node == 0)
+    {//not a proxy
+      dimensionsPrePost.push_back((*(getSharedMembers().dimensionsArray_connect))[index]);
+    }
+    else
+    {
+      //TUAN TODO: this is a temporary workaround solution
+      // i.e. use the location of the pre as the post 
+      // we need this to use for connection time 
+      dimensionsPrePost.push_back(dimensionsPrePost[0]);
+    }
 #ifdef KEEP_PAIR_PRE_POST
     indexPrePost.push_back(index);
 #else
