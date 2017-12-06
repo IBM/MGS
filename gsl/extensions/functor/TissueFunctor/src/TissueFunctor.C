@@ -2341,7 +2341,7 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
 }
 
 // GOAL: return the ComputeBranch of the branch
-//   nodeType     = string of nodetype (e.g. Calcium)
+//   nodeType     = string of nodetype (e.g. Calcium (if BRANCH), Nat (if JUNCTION))
 //   nodeIndex = grid's node
 //   densityIndex = index in that grid's node
 //   <"nodeType", <"nodeIndex", < density-index, ComputeBranch*>
@@ -2898,19 +2898,30 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
   //  i.e. not compartment variables
   //  then traverse the touchVectors to determine if an instance of such nodetype 
   //  should be created   (through the increase of rval[grid-index])
+  //   (and if created, create-on the MPI rank having pre-side Capsule)
   //  which is later can be used by ::doConnector() to establish connection
-  //     cpt<--[connexon]-->cpt
-  //     cpt<--[spineconnexon]--><--[spineconnexon]-->cpt
-  //     bouton --[presynapticpoint]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  //  NOTE: the symbol '|' represents MPI border if present
+  //     cpt<--[connexon]-->'|' cpt
+  //     cpt<--[spineconnexon]-->'|'<--[spineconnexon]-->cpt
+  //     bouton --[presynapticpoint]-->'|' one-or-many-ChemicalSynapses-receptors-on-spine-head
   //                                ?(pass Vpre) 
-  //     bouton --[synapticCleft]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  // IDEA: bouton --[synapticCleft]-->'|' one-or-many-ChemicalSynapses-receptors-on-spine-head
   //                              ?(pass [NT])
+  // ORDER:
+  //      preCpt -> synapticCleftNode  (always on the same rank)
+  //      postCpt -> synapticCleftNode (can be different rank)
+  //      synapticCleftNode -> receptor (can be different rank)
+  //      postCpt -> receptor
+  //      receptor -> postCpt 
+  //      receptorA -> receptorB (two receptors on the same synapse
+  //                             for plasticity purpose, i.e. mixed-synapse)
   //  Here, one or two instances may needed be created using one or two sides of a Touch
   //  then find the preCapsule and postCapsule for each Touch
   //  identify the grid-index (indexPre) to which preCapsule belongs
   //           the grid-index (indexPost) to which postCapsule belongs
   //  and decide if an instance for the NodeType to be created or not at indexPre
   //         and/or indexPost
+  //
   if (electrical || chemical || point || bidirectional)
   {
     // REMEBER that all the touches have been detected,
@@ -5961,6 +5972,7 @@ void TissueFunctor::doConnector(LensContext* lc)
             csend = csynTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_chemicalSynapseTypesMap.size(), 0);//number of Layers defined with "ChemicalSynapses"
+        bool first_receptor = true;
         for (csiter = csynTargets->begin(); csiter != csend; ++csiter)
         {
           std::map<std::string, std::pair<std::list<std::string>,
@@ -6262,7 +6274,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               std::list<std::string>::iterator
                   ctiter = preData.begin(),
                   ctend = preData.end();
-              for (; ctiter != ctend; ++ctiter)
+              for (; first_receptor && ctiter != ctend; ++ctiter)
               {//Pre-compartment(presume only Voltage-pre) project to SynapticCleft/PreSynapticPoint
                 NodeDescriptor* preCpt = 0;
                 int preIdx = 0;
@@ -6409,10 +6421,13 @@ void TissueFunctor::doConnector(LensContext* lc)
               // Post - as input to cleft/presynapticPoint
               // IMPORTANT: This is not about passing voltage/calcium data, it pass 'information'
               //            about 'compartment' on post-side
+              //            --> so need only once
+              //  (only Voltage is being used and this is enforced by SynapticCleft model)
+              //  --> so it won't work if a receptor doesn't have Voltage as input
               //std::list<std::string>::iterator
               ctiter = targetsIter->second.first.begin(),
                      ctend = targetsIter->second.first.end();
-              for (; ctiter != ctend; ++ctiter)
+              for (; first_receptor && ctiter != ctend; ++ctiter)
               {//input to cleft/presynapticPoint
                 //NOTE: As the name may contains domain names
                 // Calcium(domain1, domainA)
@@ -6562,6 +6577,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                 }
               }
               // Post - as input to receptor
+              // NMDAR [ Voltage, Calcium ] [...]
               //std::list<std::string>::iterator
               ctiter = targetsIter->second.first.begin(),
                      ctend = targetsIter->second.first.end();
@@ -6754,6 +6770,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 #endif
               }
 #endif
+              first_receptor = false;
             }
             typeCounter[synapseType]++;
           }
@@ -7168,9 +7185,19 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
                   ->getKey();
 #endif
       }
+//#ifdef MICRODOMAIN_CALCIUM
+////not implemented yet
+//      if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey &&
+//          layer->getNodeAccessor()->getNodeDescriptor(_rank, i))->microdomainName.size() > 0   //TUAN HERE
+//          )
+//        nodeDescriptors.push_back(
+//            layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+//#else
+//It's ok to print current that direct toward domain just by specifying the branch criteria
       if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey)
         nodeDescriptors.push_back(
             layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+//#endif
     }
   }
   if (category == "SYNAPSE")
