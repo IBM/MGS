@@ -71,3 +71,4 @@ models/all.mdf
 *.mat
 \#*\#
 .*.mdl
+*.txt
