@@ -3,7 +3,7 @@ set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=500; % Length of simulation time saving data (excluding spikes) in s
+T=10; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
 TminZoom=2; TmaxZoom=3;
 loadData = true;
@@ -16,7 +16,7 @@ postprocess_Spikes = true;
 postprocess_Thresholds = false;
 postprocess_SpikeVoltages = false;
 postprocess_LFPs = true;
-postprocess_weights = false;
+postprocess_weights = true;
 postprocess_GJs = true;
 postprocess_PSPs = false;
 postprocess_PlotAll = true;

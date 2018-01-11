@@ -35,7 +35,7 @@ NodeType FileDriverUnit(<
 			sf = 0.001,
 			inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
                         op_random = 1,
-                        scale = 0.8 //3.0
+                        scale = 1.0 //1.5
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
 
 // Connectivity and weights
@@ -44,8 +44,8 @@ BindName CTXw("weight", 1.0, "identifier", "driver");
 NdplInAttrInit ctxW(CTXw);
 
 // Initialize waves
-#define AMPMIN 1.0
-#define AMPMAX 1.5
+#define AMPMIN 0.5 //1.0
+#define AMPMAX 1.0 //1.5
 BindName initWave("Hz", Gaussian(3.0,0.1),
                   "phase", Gaussian(0.0,6.28319), // in rad (360 = 6.28319)
                   "amplitude", UniformDist(AMPMIN, AMPMAX),
@@ -68,7 +68,7 @@ NodeType TraubIAFUnit(<
                       a = 0.0,                 // s^-1
                       A = {0.0, 0},            // V/s
                       s_tauR = 0.0008,         // s
-                      s_tauF = 0.012,          // s
+                      s_tauF = 0.013,          // s
                       deltaT = DELTA_T,         // s
                       spike_cntMax = 0.001,    // s
                       np = 0,
@@ -89,12 +89,14 @@ BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),
 NdplInAttrInit ipsp(IPSP);
 
 // Gap junctions connectivity
-EachDstPropSrc gj_fsi(RadialDensitySampler(9, 1.415, uniformDensity, 1.415));
+//EachDstPropSrc gj_fsi(Unique(RadialDensitySampler(26, 1.415, uniformDensity, 1.415)));
+EachDstPropSrc gj_fsi(Unique(RadialSampler(1.733,2.0)));
 
 // Gap junctions weights
-BindName GJ("conductance", 20.0, "identifier", "gj");
-//BindName GJ("conductance", 0.0, "identifier", "gj");
-NdplInAttrInit gj(GJ);
+BindName GJ1("conductance", 15.0, "identifier", "gj1", "connectionFraction", 0.2263);//0.34615385);
+BindName GJ2("conductance", 15.0, "identifier", "gj2", "connectionFraction", 0.2263);//0.34615385);
+NdplInAttrInit gj1(GJ1);
+NdplInAttrInit gj2(GJ2);
 
 // Initialize neurons
 BindName initN("V", UniformDist(-0.07,-0.05), // Uniform from reset to mean threshold
@@ -123,7 +125,9 @@ Grid FSI
   connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
                   ipsp_fsi, outAttrDef, ipsp);
   connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
-                  gj_fsi, outAttrDef, gj);
+                  gj_fsi, outAttrDef, gj1);
+  connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
+                  gj_fsi, outAttrDef, gj2);
 };
 
 Composite CortexFSI

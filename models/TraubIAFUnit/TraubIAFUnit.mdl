@@ -84,6 +84,7 @@ Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProduce
      string identifier;
      double weight;
      double conductance;
+     double connectionFraction;
    }
 
    InitPhase initialize();
@@ -98,6 +99,8 @@ Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProduce
    OutputProducer.output << &synapses_total;
    
    UserFunction setIndices;
+   PredicateFunction bidirectional1;   
+   PredicateFunction bidirectional2;   
 
    // can have predicate functions and multiple boolean nests here
    Connection Pre Node (PSet.identifier=="driver") Expects OutputProducer {
@@ -109,10 +112,17 @@ Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProduce
       SpikeProducer.spike >> lateralInputs.spike;
       PSet.weight >> lateralInputs.weight;
    }
-   
-   Connection Pre Node (PSet.identifier=="gj") Expects VoltageIAFProducer {
-     VoltageIAFProducer.voltage >> gjInputs.voltage;
+
+   Connection Pre Node ( (bidirectional1()) && (PSet.identifier=="gj1") ) Expects VoltageIAFProducer {
+     VoltageIAFProducer.voltage >> gjInputs.voltage; // i.e. V_spike
      PSet.conductance >> gjInputs.conductance;
+     setIndices();
+   }
+
+   Connection Pre Node ( (bidirectional2()) && (PSet.identifier=="gj2") ) Expects VoltageIAFProducer {
+     VoltageIAFProducer.voltage >> gjInputs.voltage; // i.e. V_spike
+     PSet.conductance >> gjInputs.conductance;
+     setIndices();
    }   
 }
 

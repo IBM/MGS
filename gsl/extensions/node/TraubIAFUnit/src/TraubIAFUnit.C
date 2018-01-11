@@ -16,6 +16,7 @@
 #include "Lens.h"
 #include "TraubIAFUnit.h"
 #include "CG_TraubIAFUnit.h"
+#include "GridLayerData.h"
 #include "rndm.h"
 #include <fstream>
 #include <sstream>
@@ -187,6 +188,64 @@ void TraubIAFUnit::outputGJs(std::ofstream& fs)
       fs.write(reinterpret_cast<char *>(&temp2), sizeof(temp2));
       */
     }
+}
+
+bool TraubIAFUnit::bidirectional1(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
+{
+  
+  // N.B.: this function assumes both layers are in the same grid and therefore
+  // of the same size.
+
+  // Scoped variables
+  RNG rng; // use a temporary local version only here: TODO update, not efficient on the GPU.
+  unsigned connectionSeed=getSimulation().getRandomSeed();
+  // Properties of the node
+  unsigned n=getGridLayerData()->getNbrUnits();
+  unsigned inIdx=CG_node->getNode()->getIndex();
+  double frac = CG_inAttrPset->connectionFraction;
+  unsigned outIdx=getNode()->getIndex();
+  
+  // (seed for the in->out connection)
+  rng.reSeedShared(connectionSeed + (outIdx*n)+inIdx);
+  double in = drandom(rng);
+  if (in <= frac)
+    return true;
+  else
+    return false;
+}
+
+bool TraubIAFUnit::bidirectional2(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
+{
+  
+  // N.B.: this function assumes both layers are in the same grid and therefore
+  // of the same size.
+  
+  // Scoped variables
+  RNG rng; // use a temporary local version only here: TODO update, not efficient on the GPU.
+  unsigned connectionSeed=getSimulation().getRandomSeed();
+  // Properties of the node
+  unsigned n=getGridLayerData()->getNbrUnits();
+  unsigned inIdx=CG_node->getNode()->getIndex();
+  double frac = CG_inAttrPset->connectionFraction;
+  unsigned outIdx=getNode()->getIndex();
+  
+  // (seed for the out->in connection)
+  rng.reSeedShared(connectionSeed + (inIdx*n)+outIdx);
+  double in = drandom(rng);
+  
+  // If there should be an out->in connection (because there was an in->out) ...
+  if (in <= frac)
+    {
+      // If already bidirectional, don't connect
+      rng.reSeedShared(connectionSeed + (outIdx*n)+inIdx);
+      double in = drandom(rng);
+      if (in <= frac)
+        return false;
+      else
+        return true;
+    }
+  else
+    return false;
 }
  
 void TraubIAFUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
