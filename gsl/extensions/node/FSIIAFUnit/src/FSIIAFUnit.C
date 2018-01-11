@@ -60,8 +60,6 @@ void FSIIAFUnit::initialize(RNG& rng)
   if (SHD.mu_phi < -0.5) {
     phi = drandom(rng) * 2*M_PI;
   }
- 
-
 }
 
 void FSIIAFUnit::updateInput(RNG& rng) 

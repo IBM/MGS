@@ -41,7 +41,6 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
     sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
-  assert(slices.size()==voltages.size());
   assert(slices.size()==thresholds.size());
   assert(slices.size()==spikes.size());
   assert(slices.size()==spikevoltages.size());
@@ -57,7 +56,6 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
     if (mxcol<cols[j]) mxcol=cols[j];
     if (mxslice<slices[j]) mxslice=slices[j];
   }
-  voltages.clear();
   thresholds.clear();
   spikes.clear();
   spikevoltages.clear();
@@ -198,17 +196,6 @@ void MihalasNieburSynapseIAFUnitDataCollector::dataCollectionOther(Trigger* trig
 {
   ShallowArray<double*>::iterator iter, end;
   float temp = 0.;
-  if (op_saveVoltages)
-    {
-      iter=voltages.begin();
-      end=voltages.end();
-      for (int n=0; iter!=end; ++iter)
-        {
-          temp = (float) **iter;
-          voltage_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
-        }
-    }
-
   if (op_saveThresholds)
     {
       iter=thresholds.begin();
