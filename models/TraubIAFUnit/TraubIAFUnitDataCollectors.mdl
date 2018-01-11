@@ -25,11 +25,9 @@ Variable TraubIAFUnitDataCollector
    int [] cols;
    int [] slices;
    int mxslice;
-   double* [] voltages;
    double* [] thresholds;
    bool* [] spikes;
    float* [] spikevoltages;
-   double* [] LFP_synapses;
    UserFunction getNodeIndices;
 
    // Where to save
@@ -42,20 +40,15 @@ Variable TraubIAFUnitDataCollector
    int Zmax;
    
    // Flags
-   bool op_saveVoltages;
    bool op_saveThresholds;
    bool op_saveSpikes;
    bool op_saveSpikeVoltages;
-   bool op_saveLFPs;
    
-   Connection Pre Node () Expects OutputProducer, ThresholdProducer,
-     SpikeProducer, VoltageIAFProducer, LFPProducer
+   Connection Pre Node () Expects ThresholdProducer, SpikeProducer, VoltageIAFProducer
    {
-      OutputProducer.output >> voltages;
       ThresholdProducer.threshold >> thresholds;
       SpikeProducer.spike >> spikes;
       VoltageIAFProducer.voltage >> spikevoltages;
-      LFPProducer.LFP >> LFP_synapses;
       getNodeIndices();
    }
  

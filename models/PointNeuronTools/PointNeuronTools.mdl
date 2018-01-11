@@ -48,11 +48,6 @@ Interface ThresholdProducer {
   double* threshold;
 }
 
-Interface LFPProducer
-{
-  double* LFP;
-}
-
 Interface NeurotransmitterIAFProducer
 {
   double* neurotransmitter;

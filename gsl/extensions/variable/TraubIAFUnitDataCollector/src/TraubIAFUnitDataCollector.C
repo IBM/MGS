@@ -32,11 +32,9 @@ void TraubIAFUnitDataCollector::initialize(RNG& rng)
 	   std::map<unsigned, 
                     std::map<unsigned, 
                              std::pair< 
-                               std::pair<double*, double*>, // second.first.first, second.first.second
-                               std::pair<
-                                 std::pair<bool*, float*>, // second.second.first.first, second.second.first.second
-                                 double* // second.second.second
-                                 >
+                               std::pair<double*, bool*>, // second.first.first, second.first.second
+                               // second.second
+                               float*
                                >
                              >
                     >
@@ -44,40 +42,30 @@ void TraubIAFUnitDataCollector::initialize(RNG& rng)
     sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
-  assert(slices.size()==voltages.size());
   assert(slices.size()==thresholds.size());
   assert(slices.size()==spikes.size());
   assert(slices.size()==spikevoltages.size());
-  assert(slices.size()==LFP_synapses.size());
-  int sz=voltages.size();
+  int sz=thresholds.size();
   int mxrow=0;
   int mxcol=0;
   for (int j=0; j<sz; ++j) {
     sorter[rows[j]][cols[j]][slices[j]]=std::make_pair(
-                                                        std::make_pair(voltages[j], thresholds[j]),
-                                                        std::make_pair(
-                                                                       std::make_pair(spikes[j], spikevoltages[j]),
-                                                                       LFP_synapses[j]
-                                                                       )
-                                                        );
+                                                        std::make_pair(thresholds[j], spikes[j]),
+                                                        spikevoltages[j]
+                                                       );
     if (mxrow<rows[j]) mxrow=rows[j];
     if (mxcol<cols[j]) mxcol=cols[j];
     if (mxslice<slices[j]) mxslice=slices[j];
   }
-  voltages.clear();
   thresholds.clear();
   spikes.clear();
   spikevoltages.clear();
-  LFP_synapses.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned, 
                              std::pair< 
-                               std::pair<double*, double*>,
-                               std::pair<
-                                 std::pair<bool*, float*>,
-                                 double*
-                                 >
+                               std::pair<double*, bool*>,
+                               float*
                                >
                              >
                     >
@@ -86,30 +74,22 @@ void TraubIAFUnitDataCollector::initialize(RNG& rng)
     std::map<unsigned, 
              std::map<unsigned, 
                       std::pair< 
-                        std::pair<double*, double*>,
-                        std::pair<
-                          std::pair<bool*, float*>,
-                            double*
-                          >
+                        std::pair<double*, bool*>,
+                        float*
                         >
                       >
              >::iterator miter2, mend2=miter1->second.end();
     for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2) {
       std::map<unsigned, 
                std::pair< 
-                 std::pair<double*, double*>,
-                 std::pair<
-                   std::pair<bool*, float*>,
-                     double*
-                   >
+                 std::pair<double*, bool*>,
+                 float*
                  >
                >::iterator miter3, mend3=miter2->second.end();
       for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3) {
-        voltages.push_back(miter3->second.first.first);
-        thresholds.push_back(miter3->second.first.second);
-        spikes.push_back(miter3->second.second.first.first);
-        spikevoltages.push_back(miter3->second.second.first.second);
-        LFP_synapses.push_back(miter3->second.second.second);
+        thresholds.push_back(miter3->second.first.first);
+        spikes.push_back(miter3->second.first.second);
+        spikevoltages.push_back(miter3->second.second);
       }
     }
   }
@@ -123,22 +103,11 @@ void TraubIAFUnitDataCollector::initialize(RNG& rng)
       throw;
   } catch(...) {};
   
-  std::ostringstream os_voltage, os_threshold, os_spike, os_spikevoltage,
-    os_LFP_synapses;
+  std::ostringstream os_threshold, os_spike, os_spikevoltage;
 
   int Xdim = (int) mxslice+1;
   int Ydim = (int) mxcol+1;
   int Zdim = (int) mxrow+1;  
-
-  if (op_saveVoltages)
-    {
-      os_voltage<<directory<<"Voltage"<<fileExt;
-      voltage_file=new std::ofstream(os_voltage.str().c_str(),
-                                     std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      voltage_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      voltage_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
-      voltage_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
-    }
 
   if (op_saveThresholds)
     {  
@@ -169,26 +138,10 @@ void TraubIAFUnitDataCollector::initialize(RNG& rng)
       spikevoltage_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
       spikevoltage_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
     }
-
-  if (op_saveLFPs)
-    {  
-      os_LFP_synapses<<directory<<"LFP_FSIsynapses"<<fileExt;
-      LFP_synapses_file=new std::ofstream(os_LFP_synapses.str().c_str(),
-                                 std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
-      LFP_synapses_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
-      LFP_synapses_file->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));  
-      LFP_synapses_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
-    }
 }
 
 void TraubIAFUnitDataCollector::finalize(RNG& rng) 
-{
-  if (op_saveVoltages)
-    {
-      voltage_file->close();
-      delete voltage_file;
-    }
-  
+{  
   if (op_saveThresholds)
     {
       threshold_file->close();
@@ -205,12 +158,6 @@ void TraubIAFUnitDataCollector::finalize(RNG& rng)
     {
       spikevoltage_file->close();
       delete spikevoltage_file;
-    }
-  
-  if (op_saveLFPs)
-    {
-      LFP_synapses_file->close();
-      delete LFP_synapses_file;  
     }
 }
 
@@ -262,17 +209,6 @@ void TraubIAFUnitDataCollector::dataCollectionOther(Trigger* trigger, NDPairList
 {
   ShallowArray<double*>::iterator iter, end;
   float temp = 0.;
-  if (op_saveVoltages)
-    {
-      iter=voltages.begin();
-      end=voltages.end();
-      for (int n=0; iter!=end; ++iter)
-        {
-          temp = (float) **iter;
-          voltage_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
-        }
-    }
-
   if (op_saveThresholds)
     {
       iter=thresholds.begin();
@@ -289,17 +225,6 @@ void TraubIAFUnitDataCollector::dataCollectionOther(Trigger* trigger, NDPairList
       ShallowArray<float*>::iterator iter3=spikevoltages.begin(), end3=spikevoltages.end();
       for (int n=0; iter3!=end3; ++iter3)
         spikevoltage_file->write(reinterpret_cast<char *>(*iter3), sizeof(float));
-    }
-
-  if (op_saveLFPs)
-    {  
-      iter=LFP_synapses.begin();
-      end=LFP_synapses.end();
-      for (int n=0; iter!=end; ++iter)
-        {
-          temp = (float) **iter;
-          LFP_synapses_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
-        }
     }
 }
 

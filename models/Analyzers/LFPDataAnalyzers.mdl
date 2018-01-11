@@ -50,9 +50,9 @@ Variable LFPDataAnalyzer
   // Flags
   bool op_saveLFPs;
    
-  Connection Pre Node () Expects LFPProducer
+  Connection Pre Node () Expects OutputProducer
   {
-    LFPProducer.LFP >> LFPs_individual;
+    OutputProducer.output >> LFPs_individual;
     getNodeIndices();
   }
  

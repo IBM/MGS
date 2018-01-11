@@ -46,7 +46,10 @@ void TraubIAFUnit::initialize(RNG& rng)
   // If this node receives multiple cortical inputs, they should
   // be weighted accordingly so they contribute the same as another
   // node which only receives one.
-  ctxInputWeight = 1.0 / (double) ctxInputs.size();  
+  if (ctxInputs.size() > 1)
+    ctxInputWeight = 1.0 / (double) ctxInputs.size();
+  else
+    ctxInputWeight = 1.0;
 }
 
 void TraubIAFUnit::updateInput(RNG& rng) 
@@ -77,9 +80,9 @@ void TraubIAFUnit::updateInput(RNG& rng)
   for (iterGJ=gjInputs.begin(); iterGJ!=endGJ; ++iterGJ) {
     etonic += (*(iterGJ->voltage)-V)*iterGJ->conductance;
   }
-  
+
   I_e = driver + s_total + etonic; // total input
-  LFP_synapses = s_total;  
+  synapses_total = driver + s_total; // total synaptic input - excitatory drive and lateral inhibition
 }
 
 void TraubIAFUnit::updateV(RNG& rng)
@@ -130,7 +133,7 @@ void TraubIAFUnit::threshold(RNG& rng)
     }
   else if ((spike_cnt < (int) (SHD.spike_cntMax / SHD.deltaT)) 
            && (spike_cnt > 0))
-    {      
+    {
       V_spike=SHD.V_max;
       spike_cnt++;
     }
@@ -170,13 +173,19 @@ void TraubIAFUnit::outputWeights(std::ofstream& fs)
 void TraubIAFUnit::outputGJs(std::ofstream& fs)
 {
   ShallowArray<GJInput>::iterator iter, end=gjInputs.end();
-  int temp = gjInputs.size();
+  int temp = gjInputs.size();  
   fs.write(reinterpret_cast<char *>(&temp), sizeof(temp));  
   float temp2 = 0.;
   for (iter=gjInputs.begin(); iter!=end; ++iter)
     {
       temp2 = (float) iter->conductance;
       fs.write(reinterpret_cast<char *>(&temp2), sizeof(temp2));
+      /*
+      temp2 = (float) iter->row;
+      fs.write(reinterpret_cast<char *>(&temp2), sizeof(temp2));
+      temp2 = (float) iter->col;
+      fs.write(reinterpret_cast<char *>(&temp2), sizeof(temp2));
+      */
     }
 }
  
@@ -185,9 +194,12 @@ void TraubIAFUnit::setIndices(const String& CG_direction, const String& CG_compo
   if (CG_inAttrPset->identifier=="driver") {
     ctxInputs[ctxInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
     ctxInputs[ctxInputs.size()-1].col = CG_node->getGlobalIndex()+1;   
-  } else {
+  } else if (CG_inAttrPset->identifier=="ipsp") {
     lateralInputs[lateralInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
     lateralInputs[lateralInputs.size()-1].col = CG_node->getGlobalIndex()+1;   
+  } else if ((CG_inAttrPset->identifier=="gj1") || (CG_inAttrPset->identifier=="gj2")) {
+    gjInputs[gjInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
+    gjInputs[gjInputs.size()-1].col = CG_node->getGlobalIndex()+1;   
   }
 }
 

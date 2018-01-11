@@ -36,11 +36,9 @@ class TraubIAFUnitDataCollector : public CG_TraubIAFUnitDataCollector
       virtual void duplicate(std::unique_ptr<Variable>& dup) const;
       virtual void duplicate(std::unique_ptr<CG_TraubIAFUnitDataCollector>& dup) const;
  private:
-      std::ofstream* voltage_file;
       std::ofstream* threshold_file;
       std::ofstream* spike_file;
       std::ofstream* spikevoltage_file;
-      std::ofstream* LFP_synapses_file;      
 };
 
 #endif

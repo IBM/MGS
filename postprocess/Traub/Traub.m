@@ -13,12 +13,10 @@ postprocess_CortexInput = true;
 postprocess_CortexInputWave = false;
 postprocess_CortexInputFile = true;
 postprocess_Spikes = true;
-postprocess_Voltages = false;
 postprocess_Thresholds = false;
 postprocess_SpikeVoltages = false;
 postprocess_LFPs = true;
-postprocess_LFP_FSIsynapses = false;
-postprocess_weights = true;
+postprocess_weights = false;
 postprocess_GJs = true;
 postprocess_PSPs = false;
 postprocess_PlotAll = true;
@@ -99,19 +97,6 @@ for vX=vX_range
                     end
                     clear temp temp_i spikesN;
                 end
-                if (postprocess_Voltages)
-                    fid = fopen([directory,'Voltage',fileExt],'r');
-                    XdimStr = fread(fid, 1, 'int');
-                    YdimStr = fread(fid, 1, 'int');
-                    ZdimStr = fread(fid, 1, 'int');
-                    temp = fread(fid, (XdimStr*YdimStr*ZdimStr)*(T/sf), 'float');
-                    fclose(fid);
-                    clear fid;
-                    % 4D: time, X, Y, Z
-                    temp = reshape(temp, [XdimStr, YdimStr, ZdimStr, numel(temp)/(XdimStr*YdimStr*ZdimStr)]);
-                    voltage = permute(temp, [4, 1, 2, 3]);
-                    clear temp;
-                end
                 if (postprocess_Thresholds)
                     fid = fopen([directory,'Threshold',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
@@ -151,19 +136,6 @@ for vX=vX_range
                     LFPs = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
-                if (postprocess_LFP_FSIsynapses)
-                    fid = fopen([directory,'LFP_FSIsynapses',fileExt],'r');
-                    XdimStr = fread(fid, 1, 'int');
-                    YdimStr = fread(fid, 1, 'int');
-                    ZdimStr = fread(fid, 1, 'int');
-                    temp = fread(fid, (XdimStr*YdimStr*ZdimStr)*(T/sf), 'float');
-                    fclose(fid);
-                    clear fid;
-                    % 4D: time, X, Y, Z
-                    temp = reshape(temp, [XdimStr, YdimStr, ZdimStr, numel(temp)/(XdimStr*YdimStr*ZdimStr)]);
-                    LFPs_FSIsynapses = permute(temp, [4, 1, 2, 3]);
-                    clear temp;
-                end
                 if (postprocess_weights)
                     warning('Code needs updating to be efficient');
                     if (~postprocess_Spikes && ~postprocess_Voltages && ~postprocess_Thresholds ...
@@ -193,9 +165,15 @@ for vX=vX_range
                     fid = fopen([directory,'GJs',fileExt],'r');
                     numGJs = zeros(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
                     GJs = cell(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
+%                     rows = cell(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
+%                     cols = cell(1,XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes);
                     for i=1:XdimStrSpikes*YdimStrSpikes*ZdimStrSpikes
                         numGJs(i) = fread(fid, 1, 'int');
                         GJs{i} = fread(fid, numGJs(i), 'float')';
+%                         temp = fread(fid, numGJs(i)*3, 'float')';
+%                         GJs{i} = temp(1:3:end);
+%                         rows{i} = temp(2:3:end);
+%                         cols{i} = temp(3:3:end);
                     end
                     fclose(fid);
                     clear fid;
@@ -320,17 +298,6 @@ for vX=vX_range
 %             points = bsxfun(@times,Drange,points);
 %             Dmin = [XminStr,YminStr,ZminStr];
 %             points = round(bsxfun(@plus,Dmin,points));
-            if (postprocess_Voltages)
-                figure(3); clf; % Sub-threshold voltage
-                for i=1:Nstr*3
-                    subplot(3, Nstr, i);
-                    plot(voltage(:,points(i,1),points(i,2),points(i,3)));
-                    title('Sub-threshold voltage');
-                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
-                end
-                print([directory,'sub-voltage'],'-dpng');
-                print([directory,'sub-voltage'],'-depsc');
-            end
             if (postprocess_Thresholds)
                 figure(4); clf; % Threshold
                 for i=1:Nstr*3
@@ -352,49 +319,6 @@ for vX=vX_range
                 end
                 print([directory,'voltage'],'-dpng');
                 print([directory,'voltage'],'-depsc');
-            end
-            if (postprocess_LFP_FSIsynapses)
-                figure(6); clf; % LFPs - inhibitory - individual neurons
-                for i=1:Nstr*3
-                    subplot(3, Nstr, i);
-                    plot(LFPs_FSIsynapses(:,points(i,1),points(i,2),points(i,3))); 
-                    title('LFP - synapses');
-                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
-                end
-                print([directory,'LFP_synapses_ind'],'-dpng');
-                print([directory,'LFP_synapses_ind'],'-depsc');
-                figure(7); clf; % LFPs - inhibitory
-                Tlfp=sum(LFPs_FSIsynapses(:,XminStr:XmaxStr,YminStr:YmaxStr,ZminStr:ZmaxStr),4);
-                Tlfp=sum(Tlfp,3);
-                Tlfp=sum(Tlfp,2);
-                plot(Tlfp);
-                title('LFP - synapses');
-                print([directory,'LFP_synapses'],'-dpng');
-                print([directory,'LFP_synapses'],'-depsc');
-                figure(8); clf; % Frequency analysis
-                [pxx,f] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
-                temp = [f,10*log10(pxx)];
-                save([directory,'PMTM.txt'],'-ascii','temp');
-                pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf,'unity');
-                print([directory,'pmtm'],'-dpng');
-                print([directory,'pmtm'],'-depsc');
-                figure(9); clf;
-                [pks, locs] = findpeaks(log10(pxx),f,'MinPeakProminence',0.5);
-                peakHz(vX==vX_range, vY==vY_range, t==t_range) = ...
-                    locs(pks==max(pks));
-                [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
-                    'unity','ConfidenceLevel',0.95);
-                clf;
-                plot(f,10*log10(pxx))
-                hold on
-                plot(f,10*log10(pxxc),'r-.')
-                xlim([0 100])
-                xlabel('Hz')
-                ylabel('dB')
-                title('Multitaper PSD Estimate with 95%-Confidence Bounds')
-                print([directory,'pmtm_95'],'-dpng');
-                print([directory,'pmtm_95'],'-depsc');
-                clear Tlfp pxx f temp;
             end
             if (postprocess_LFPs)
                 %%
@@ -425,9 +349,9 @@ for vX=vX_range
                         for y=1:YdimLFP
                             for z=1:ZdimLFP
                                 Tlfp = LFPs(:,x,y,z);
-                                [pxxTemp,f,pxxcTemp] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
-                                    'unity','ConfidenceLevel',0.95);
-                                pxx(i,:) = pxxTemp / sum(pxxTemp);
+                                [pxxTemp,f,pxxcTemp] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf);
+%                                 pxx(i,:) = pxxTemp / sum(pxxTemp);
+                                pxx(i,:) = pxxTemp;
                                 i=i+1;
                             end
                         end
@@ -439,7 +363,7 @@ for vX=vX_range
                     Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
                     fill(X,Y,'r','LineStyle','none');
                     hold on;
-                    plot(0.5:0.5:100,10*log10(pxxMean),'r','LineWidth',1.5);
+                    plot(pmtmFrange,10*log10(pxxMean),'r','LineWidth',1.5);
                     alpha(0.35);
                     xlabel('Frequency (Hz)');
                     ylabel('Channel-wise normalized Power Spectral Density');
@@ -450,7 +374,7 @@ for vX=vX_range
                     [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
                         'unity','ConfidenceLevel',0.95);
                     figure(11); clf; % Frequency analysis
-                    plot(0.5:0.5:100,10*log10(pxx))
+                    plot(pmtmFrange,10*log10(pxx))
                     xlim([0 100])
                     xlabel('Hz')
                     ylabel('Power/frequency (dB/Hz)')
