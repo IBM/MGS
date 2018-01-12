@@ -35,13 +35,12 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
                                std::pair<double*, double*>, // second.first.first, second.first.second
                                std::pair<bool*, float*> // second.second.first, second.second.second
                                >
-                             >
-                    >
+                          >
+                   >
            >
     sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
-  assert(slices.size()==thresholds.size());
   assert(slices.size()==spikes.size());
   assert(slices.size()==spikevoltages.size());
   int sz=voltages.size();
@@ -56,9 +55,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
     if (mxcol<cols[j]) mxcol=cols[j];
     if (mxslice<slices[j]) mxslice=slices[j];
   }
-  thresholds.clear();
   spikes.clear();
-  spikevoltages.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned, 
@@ -166,14 +163,8 @@ void MihalasNieburSynapseIAFUnitDataCollector::finalize(RNG& rng)
   
   if (op_saveSpikes)
     {
-      spike_file->close();
-      delete spike_file;
-    }
-  
-  if (op_saveSpikeVoltages)
-    {
-      spikevoltage_file->close();
-      delete spikevoltage_file;
+      spikes_file->close();
+      delete spikes_file;
     }
 }
 

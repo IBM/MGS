@@ -389,40 +389,6 @@ for vX=vX_range
                             i=i+1;
                         end
                     end
-                    pxxStd = std(pxx);
-                    pxxMean = mean(pxx);
-                    figure(11); clf; % Frequency analysis
-                    X=[pmtmFrange,fliplr(pmtmFrange)];
-                    Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
-                    fill(X,Y,'r','LineStyle','none');
-                    hold on;
-                    plot(pmtmFrange,10*log10(pxxMean),'r','LineWidth',1.5);
-                    alpha(0.35);
-                    xlabel('Frequency (Hz)');
-                    ylabel('Channel-wise normalized Power Spectral Density');
-                    print([directory,'pmtm_std'],'-dpng');
-                    print([directory,'pmtm_std'],'-depsc');
-                else
-                    Tlfp = LFPs(:,1,1,1);
-                    [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
-                        'unity','ConfidenceLevel',0.95);
-                    figure(11); clf; % Frequency analysis
-                    plot(pmtmFrange,10*log10(pxx))
-                    xlim([0 100])
-                    xlabel('Hz')
-                    ylabel('Power/frequency (dB/Hz)')
-                    title('Multitaper PSD Estimate')
-                    print([directory,'pmtm'],'-dpng');
-                    print([directory,'pmtm'],'-depsc');
-                    plot(f,10*log10(pxx))
-                    hold on
-                    plot(f,10*log10(pxxc),'r-.')
-                    xlim([0 100])
-                    xlabel('Hz')
-                    ylabel('Averaged and normalized (dB/Hz)')
-                    title('Multitaper PSD Estimate with 95%-Confidence Bounds')
-                    print([directory,'pmtm_95'],'-dpng');
-                    print([directory,'pmtm_95'],'-depsc');
                 end
                 pxxStd = std(pxx);
                 pxxMean = mean(pxx);
