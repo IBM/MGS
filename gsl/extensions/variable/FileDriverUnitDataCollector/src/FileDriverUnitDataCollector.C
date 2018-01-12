@@ -89,7 +89,7 @@ void FileDriverUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveOutputs)
     {
-      os_file<<directory<<"Ctx"<<fileExt;
+      os_file<<directory<<"Drivers"<<fileExt;
       output_file=new std::ofstream(os_file.str().c_str(),
                                     std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       output_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

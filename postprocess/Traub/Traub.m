@@ -3,7 +3,7 @@ set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=10; % Length of simulation time saving data (excluding spikes) in s
+T=100; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
 TminZoom=2; TmaxZoom=3;
 loadData = true;
@@ -14,12 +14,14 @@ postprocess_CortexInputWave = false;
 postprocess_CortexInputFile = true;
 postprocess_Spikes = true;
 postprocess_Thresholds = false;
-postprocess_SpikeVoltages = false;
+postprocess_Voltages = false;
 postprocess_LFPs = true;
 postprocess_weights = true;
 postprocess_GJs = true;
 postprocess_PSPs = false;
-postprocess_PlotAll = true;
+postprocess_totalDriver = false;
+postprocess_totalIPSC = false;
+postprocess_totalGJ = false;
 directory='../../graphs/Traub/';
 fileExt='.dat';
 % for no parameter search just set to all ranges to zero
@@ -44,9 +46,9 @@ for vX=vX_range
             if (loadData)
                 if (postprocess_CortexInput)
                     if (postprocess_CortexInputWave)
-                        fid = fopen([directory,'Wave',fileExt],'r');
+                        fid = fopen([directory,'Waves',fileExt],'r');
                     elseif (postprocess_CortexInputFile)
-                        fid = fopen([directory,'Ctx',fileExt],'r');
+                        fid = fopen([directory,'Drivers',fileExt],'r');
                     end
                     XdimCtx = fread(fid, 1, 'int');
                     YdimCtx = fread(fid, 1, 'int');
@@ -60,7 +62,7 @@ for vX=vX_range
                     clear temp;
                 end
                 if (postprocess_Spikes)
-                    fid = fopen([directory,'Spike',fileExt],'r');
+                    fid = fopen([directory,'Spikes',fileExt],'r');
                     XdimStrSpikes = fread(fid, 1, 'int');
                     YdimStrSpikes = fread(fid, 1, 'int');
                     ZdimStrSpikes = fread(fid, 1, 'int'); % have to load all sadly
@@ -98,7 +100,7 @@ for vX=vX_range
                     clear temp temp_i spikesN;
                 end
                 if (postprocess_Thresholds)
-                    fid = fopen([directory,'Threshold',fileExt],'r');
+                    fid = fopen([directory,'Thresholds',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
                     YdimStr = fread(fid, 1, 'int');
                     ZdimStr = fread(fid, 1, 'int');
@@ -110,8 +112,8 @@ for vX=vX_range
                     threshold = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
-                if (postprocess_SpikeVoltages)
-                    fid = fopen([directory,'SpikeVoltage',fileExt],'r');
+                if (postprocess_Voltages)
+                    fid = fopen([directory,'Voltages',fileExt],'r');
                     XdimStr = fread(fid, 1, 'int');
                     YdimStr = fread(fid, 1, 'int');
                     ZdimStr = fread(fid, 1, 'int');
@@ -120,11 +122,11 @@ for vX=vX_range
                     clear fid;
                     % 4D: time, X, Y, Z
                     temp = reshape(temp, [XdimStr, YdimStr, ZdimStr, numel(temp)/(XdimStr*YdimStr*ZdimStr)]);
-                    spikeVoltage = permute(temp, [4, 1, 2, 3]);
+                    voltage = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
                 if (postprocess_LFPs)
-                    fid = fopen([directory,'LFP',fileExt],'r');
+                    fid = fopen([directory,'LFPs',fileExt],'r');
                     XdimLFP = fread(fid, 1, 'int');
                     YdimLFP = fread(fid, 1, 'int');
                     ZdimLFP = fread(fid, 1, 'int');
@@ -139,7 +141,7 @@ for vX=vX_range
                 if (postprocess_weights)
                     warning('Code needs updating to be efficient');
                     if (~postprocess_Spikes && ~postprocess_Voltages && ~postprocess_Thresholds ...
-                        && ~postprocess_SpikeVoltages && ~postprocess_LFP_FSIsynapses)
+                        && ~postprocess_Voltages && ~postprocess_LFP_FSIsynapses)
                         warning(['To process weights at least one other set of data should also ', ...
                             'be processed.']);
                         return;
@@ -157,7 +159,7 @@ for vX=vX_range
                 if (postprocess_GJs)
                     warning('Code needs updating to be efficient');
                     if (~postprocess_Spikes && ~postprocess_Voltages && ~postprocess_Thresholds ...
-                        && ~postprocess_SpikeVoltages && ~postprocess_LFP_FSIsynapses)
+                        && ~postprocess_Voltages && ~postprocess_LFP_FSIsynapses)
                         warning(['To process GJs at least one other set of data should also ', ...
                             'be processed.']);
                         return;
@@ -183,7 +185,7 @@ for vX=vX_range
                 if (postprocess_PSPs)
                     warning('Code needs updating to be efficient');
                     if (~postprocess_Spikes && ~postprocess_Voltages && ~postprocess_Thresholds ...
-                        && ~postprocess_SpikeVoltages && ~postprocess_LFP_FSIsynapses)
+                        && ~postprocess_Voltages && ~postprocess_LFP_FSIsynapses)
                         warning(['To process PSPs at least one other set of data should also ', ...
                             'be processed (in addition to weights).']);
                         return;
@@ -205,6 +207,45 @@ for vX=vX_range
                         ti=ti+1;
                     end
                     fclose(fid);
+                    clear temp;
+                end
+                if (postprocess_totalDriver)
+                    fid = fopen([directory,'TotalDriver',fileExt],'r');
+                    XdimStr = fread(fid, 1, 'int');
+                    YdimStr = fread(fid, 1, 'int');
+                    ZdimStr = fread(fid, 1, 'int');
+                    temp = fread(fid, (XdimStr*YdimStr*ZdimStr)*(T/sf), 'float');
+                    fclose(fid);
+                    clear fid;
+                    % 4D: time, X, Y, Z
+                    temp = reshape(temp, [XdimStr, YdimStr, ZdimStr, numel(temp)/(XdimStr*YdimStr*ZdimStr)]);
+                    totalDriver = permute(temp, [4, 1, 2, 3]);
+                    clear temp;
+                end
+                if (postprocess_totalIPSC)
+                    fid = fopen([directory,'TotalIPSC',fileExt],'r');
+                    XdimStr = fread(fid, 1, 'int');
+                    YdimStr = fread(fid, 1, 'int');
+                    ZdimStr = fread(fid, 1, 'int');
+                    temp = fread(fid, (XdimStr*YdimStr*ZdimStr)*(T/sf), 'float');
+                    fclose(fid);
+                    clear fid;
+                    % 4D: time, X, Y, Z
+                    temp = reshape(temp, [XdimStr, YdimStr, ZdimStr, numel(temp)/(XdimStr*YdimStr*ZdimStr)]);
+                    totalIPSC = permute(temp, [4, 1, 2, 3]);
+                    clear temp;
+                end
+                if (postprocess_totalGJ)
+                    fid = fopen([directory,'TotalGJ',fileExt],'r');
+                    XdimStr = fread(fid, 1, 'int');
+                    YdimStr = fread(fid, 1, 'int');
+                    ZdimStr = fread(fid, 1, 'int');
+                    temp = fread(fid, (XdimStr*YdimStr*ZdimStr)*(T/sf), 'float');
+                    fclose(fid);
+                    clear fid;
+                    % 4D: time, X, Y, Z
+                    temp = reshape(temp, [XdimStr, YdimStr, ZdimStr, numel(temp)/(XdimStr*YdimStr*ZdimStr)]);
+                    totalGJ = permute(temp, [4, 1, 2, 3]);
                     clear temp;
                 end
             end
@@ -233,23 +274,17 @@ for vX=vX_range
             %% Plot
             if (postprocess_CortexInput)
                 figure(1); clf; % Cortex input
-                if (postprocess_PlotAll)
-                    i=1;
-                    for x=1:XdimCtx
-                        for y=1:YdimCtx
-                            for z=1:ZdimCtx
-                                subplot(XdimCtx*YdimCtx, ZdimCtx, i);
-                                plot(cortex(:,x,y,z)); 
+                i=1;
+                for x=1:XdimCtx
+                    for y=1:YdimCtx
+                        for z=1:ZdimCtx
+                            subplot(XdimCtx*YdimCtx, ZdimCtx, i);
+                            plot(cortex(:,x,y,z)); 
 %                                 title('Cortex input');
-                                xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
-                                i=i+1;
-                            end
+                            xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                            i=i+1;
                         end
                     end
-                else
-                    plot(cortex(:,1,1,1)); 
-                    title('Cortex input');
-                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
                 print([directory,'cortex'],'-dpng');
                 print([directory,'cortex'],'-depsc');
@@ -309,11 +344,11 @@ for vX=vX_range
                 print([directory,'threshold'],'-dpng');
                 print([directory,'threshold'],'-depsc');
             end
-            if (postprocess_SpikeVoltages)
+            if (postprocess_Voltages)
                 figure(5); clf; % Voltage (with spikes)
                 for i=1:Nstr*3
                     subplot(3, Nstr, i);
-                    plot(spikeVoltage(:,points(i,1),points(i,2),points(i,3))); 
+                    plot(voltage(:,points(i,1),points(i,2),points(i,3))); 
                     title('Voltage');
                     xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
                 end
@@ -321,77 +356,47 @@ for vX=vX_range
                 print([directory,'voltage'],'-depsc');
             end
             if (postprocess_LFPs)
-                %%
                 figure(10); clf; % LFP electrodes
-                if (postprocess_PlotAll)
-                    i=1;
-                    for x=1:XdimLFP
-                        for y=1:YdimLFP
-                            for z=1:ZdimLFP
-                                subplot(XdimLFP*YdimLFP, ZdimLFP, i);
-                                plot(LFPs(:,x,y,z)); 
-                                xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
-                                i=i+1;
-                            end
+                i=1;
+                for x=1:XdimLFP
+                    for y=1:YdimLFP
+                        for z=1:ZdimLFP
+                            subplot(XdimLFP*YdimLFP, ZdimLFP, i);
+                            plot(LFPs(:,x,y,z)); 
+                            xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
+                            i=i+1;
                         end
                     end
-                else
-                    plot(LFPs(:,1,1,1)); 
-                    xlim([(Tmin*(1/dt))*(dt/sf) (Tmax*(1/dt))*(dt/sf)]);
-                end                    
+                end                 
                 print([directory,'LFPs'],'-dpng');
                 print([directory,'LFPs'],'-depsc');
                 inc = size(LFPs,1);
-                if (postprocess_PlotAll)
-                    i=1;
-                    pxx = zeros(XdimLFP*YdimLFP*ZdimLFP,size(pmtmFrange,2));
-                    for x=1:XdimLFP
-                        for y=1:YdimLFP
-                            for z=1:ZdimLFP
-                                Tlfp = LFPs(:,x,y,z);
-                                [pxxTemp,f,pxxcTemp] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf);
+                i=1;
+                pxx = zeros(XdimLFP*YdimLFP*ZdimLFP,size(pmtmFrange,2));
+                for x=1:XdimLFP
+                    for y=1:YdimLFP
+                        for z=1:ZdimLFP
+                            Tlfp = LFPs(:,x,y,z);
+                            [pxxTemp,f,pxxcTemp] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf);
 %                                 pxx(i,:) = pxxTemp / sum(pxxTemp);
-                                pxx(i,:) = pxxTemp;
-                                i=i+1;
-                            end
+                            pxx(i,:) = pxxTemp;
+                            i=i+1;
                         end
                     end
-                    pxxStd = std(pxx);
-                    pxxMean = mean(pxx);
-                    figure(11); clf; % Frequency analysis
-                    X=[pmtmFrange,fliplr(pmtmFrange)];
-                    Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
-                    fill(X,Y,'r','LineStyle','none');
-                    hold on;
-                    plot(pmtmFrange,10*log10(pxxMean),'r','LineWidth',1.5);
-                    alpha(0.35);
-                    xlabel('Frequency (Hz)');
-                    ylabel('Channel-wise normalized Power Spectral Density');
-                    print([directory,'pmtm_std'],'-dpng');
-                    print([directory,'pmtm_std'],'-depsc');
-                else
-                    Tlfp = LFPs(:,1,1,1);
-                    [pxx,f,pxxc] = pmtm(Tlfp,pmtmNW,pmtmFrange,1/sf, ...
-                        'unity','ConfidenceLevel',0.95);
-                    figure(11); clf; % Frequency analysis
-                    plot(pmtmFrange,10*log10(pxx))
-                    xlim([0 100])
-                    xlabel('Hz')
-                    ylabel('Power/frequency (dB/Hz)')
-                    title('Multitaper PSD Estimate')
-                    print([directory,'pmtm'],'-dpng');
-                    print([directory,'pmtm'],'-depsc');
-                    plot(f,10*log10(pxx))
-                    hold on
-                    plot(f,10*log10(pxxc),'r-.')
-                    xlim([0 100])
-                    xlabel('Hz')
-                    ylabel('Averaged and normalized (dB/Hz)')
-                    title('Multitaper PSD Estimate with 95%-Confidence Bounds')
-                    print([directory,'pmtm_95'],'-dpng');
-                    print([directory,'pmtm_95'],'-depsc');
                 end
-                %%
+                pxxStd = std(pxx);
+                pxxMean = mean(pxx);
+                figure(11); clf; % Frequency analysis
+                X=[pmtmFrange,fliplr(pmtmFrange)];
+                Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
+                fill(X,Y,'r','LineStyle','none');
+                hold on;
+                plot(pmtmFrange,10*log10(pxxMean),'r','LineWidth',1.5);
+                alpha(0.35);
+                xlabel('Frequency (Hz)');
+                ylabel('Channel-wise normalized Power Spectral Density');
+                print([directory,'pmtm_std'],'-dpng');
+                print([directory,'pmtm_std'],'-depsc');
                 clear inc Tlfp pxx f pxxc temp;
             end
             if (postprocess_weights)
@@ -437,6 +442,44 @@ for vX=vX_range
                 print([directory,'PSPs'],'-dpng');
                 print([directory,'PSPs'],'-depsc');
             end
+            if (postprocess_totalDriver && postprocess_totalIPSC && ...
+                    postprocess_totalGJ)
+                %%
+                % Main figure
+                figure(16); clf; hold on;
+                h1 = histogram(totalDriver(:));
+                h1.Normalization = 'probability';
+                h1.BinWidth = 0.03;
+                h2 = histogram(totalIPSC(:));
+                h2.Normalization = 'probability';
+                h2.BinWidth = 0.03;
+                h3 = histogram(totalGJ(:));
+                h3.Normalization = 'probability';
+                h3.BinWidth = 0.03;
+                xlim([-3 3]);
+                xlabel('Neuron input (a.u.)')
+                ylabel('PDF');
+                legend('driver','IPSC','GJ','location','northwest');
+                legend boxoff;
+                % Zoom inset
+                axes('Position',[.7 .7 .2 .2]);
+                hold on;
+                h1 = histogram(totalDriver(:));
+                h1.Normalization = 'probability';
+                h1.BinWidth = 0.0025;
+                h2 = histogram(totalIPSC(:));
+                h2.Normalization = 'probability';
+                h2.BinWidth = 0.0025;
+                h3 = histogram(totalGJ(:));
+                h3.Normalization = 'probability';
+                h3.BinWidth = 0.0025;
+                xlim([-0.1 0.1]);
+                ylim([0 0.05]);
+                xlabel('Neuron input (a.u.)')
+                ylabel('PDF');
+                print([directory,'totalInput'],'-dpng');
+                print([directory,'totalInput'],'-depsc');
+            end
             %% Animate visualization
             if (animatedVisualization)
                 %% LFP
@@ -445,7 +488,7 @@ for vX=vX_range
                     LFPs_animate = mat2gray(LFPs);
                     LFPs_animate = 1-LFPs_animate;
                     %% Animated LFP time series
-                    fig = figure(16); clf;
+                    fig = figure(17); clf;
                     fig.Color = 'black';
                     fig.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_ts.avi']);
@@ -487,7 +530,7 @@ for vX=vX_range
                     YminLFP=1;
                     ZmaxLFP=ZdimLFP;
                     ZminLFP=1;
-                    fig = figure(17); clf;
+                    fig = figure(18); clf;
                     fig.Color = 'black';
                     fig.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_3D.avi']);

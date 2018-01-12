@@ -28,6 +28,16 @@ Interface FloatProducer {
   float* value;
 }
 
+Interface Output2Producer {
+  double* output1;
+  double* output2;
+}
+
+Interface Output3Producer {
+  double* output1;
+  double* output2;
+  double* output3;
+}
 
 Interface PlasticOutputProducer {
   double* output;

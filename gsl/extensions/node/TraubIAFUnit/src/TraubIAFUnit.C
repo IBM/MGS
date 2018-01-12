@@ -84,6 +84,12 @@ void TraubIAFUnit::updateInput(RNG& rng)
 
   I_e = driver + s_total + etonic; // total input
   synapses_total = driver + s_total; // total synaptic input - excitatory drive and lateral inhibition
+  if (SHD.op_saveExtra)
+    {
+      drive_total = driver; // total excitatory input - excitatory drive
+      IPSC_total = s_total; // total IPSC input - lateral inhibition
+      GJ_total = etonic; // total GJ input - lateral GJs
+    }
 }
 
 void TraubIAFUnit::updateV(RNG& rng)

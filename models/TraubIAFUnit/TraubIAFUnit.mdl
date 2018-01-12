@@ -17,8 +17,8 @@
 #define TRAUBIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProducer,
-  OutputProducer {
+Node TraubIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
+  OutputProducer, Output3Producer {
    double [] I; // These variable names are according to Mihalas and Niebur, 2009
    double [] [] I_p;
    double [] dI;
@@ -41,6 +41,9 @@ Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProduce
    
    double I_e;               // total neuronal input
    double synapses_total;    // total synaptic input - excitatory drive and lateral inhibition
+   double drive_total;       // total excitatory input - excitatory drive
+   double IPSC_total;        // total IPSC input - lateral inhibition
+   double GJ_total;          // total GJ input - lateral GJs
    
    Shared {
      double b;               // s^-1
@@ -78,6 +81,7 @@ Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProduce
      bool op_saveWeights;
      bool op_saveGJs;
      bool op_savePSPs;
+     bool op_saveExtra;
    }
 
    InAttrPSet {
@@ -89,14 +93,17 @@ Node TraubIAFUnit Implements SpikeProducer, ThresholdProducer, VoltageIAFProduce
 
    InitPhase initialize();
 
-   RuntimePhase updateInput();
+   RuntimePhase updateInput(synapses_total, drive_total, IPSC_total, GJ_total);
    RuntimePhase updateV(Theta);
    RuntimePhase threshold(spike, V_spike);
    
-   ThresholdProducer.threshold << &Theta;
    SpikeProducer.spike << &spike;
    VoltageIAFProducer.voltage << &V_spike;
+   ThresholdProducer.threshold << &Theta;
    OutputProducer.output << &synapses_total;
+   Output3Producer.output1 << &drive_total;
+   Output3Producer.output2 << &IPSC_total;
+   Output3Producer.output3 << &GJ_total;
    
    UserFunction setIndices;
    PredicateFunction bidirectional1;   

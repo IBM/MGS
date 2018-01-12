@@ -50,6 +50,7 @@
 #include "SpineIAFUnit/SpineIAFUnitDataCollectors.mdl"
 #include "ToneUnit/ToneUnitDataCollectors.mdl"
 #include "TraubIAFUnit/TraubIAFUnitDataCollectors.mdl"
+#include "TraubIAFUnit/TraubIAFUnitExtraDataCollectors.mdl"
 #include "WaveDriverUnit/WaveDriverUnitDataCollectors.mdl"
 #include "ZhengSORNUnits/ZhengSORNUnitDataCollectors.mdl"
 

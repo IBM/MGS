@@ -115,7 +115,7 @@ void LFPDataAnalyzer::initialize(RNG& rng)
 
   if (op_saveLFPs)
     {
-      os_LFP<<directory<<"LFP"<<fileExt;
+      os_LFP<<directory<<"LFPs"<<fileExt;
       LFP_file=new std::ofstream(os_LFP.str().c_str(),
                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       LFP_file->write(reinterpret_cast<char *>(&numElecPerDimX), sizeof(numElecPerDimX));

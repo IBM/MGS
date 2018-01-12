@@ -13,11 +13,11 @@
 //
 // =================================================================
 
-#ifndef TRAUBIAFUNITDATACOLLECTORS_MDL
-#define TRAUBIAFUNITDATACOLLECTORS_MDL
+#ifndef TRAUBIAFUNITEXTRADATACOLLECTORS_MDL
+#define TRAUBIAFUNITEXTRADATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Variable TraubIAFUnitDataCollector
+Variable TraubIAFUnitExtraDataCollector
 {
    string directory;
    string fileExt;
@@ -25,24 +25,27 @@ Variable TraubIAFUnitDataCollector
    int [] cols;
    int [] slices;
    int mxslice;
-   bool* [] spikes;
+   float* [] voltages;
+   double* [] thresholds;
+   double* [] totalDriver;
+   double* [] totalIPSC;
+   double* [] totalGJ;
    UserFunction getNodeIndices;
 
-   // Where to save
-   bool op_saveSpikesAll;
-   int Xmin;
-   int Xmax;
-   int Ymin;
-   int Ymax;
-   int Zmin;
-   int Zmax;
-
    // Flags
-   bool op_saveSpikes;
+   bool op_saveVoltages;
+   bool op_saveThresholds;
+   bool op_saveTotalDriver;
+   bool op_saveTotalIPSC;
+   bool op_saveTotalGJ;
 
-   Connection Pre Node () Expects SpikeProducer
+   Connection Pre Node () Expects VoltageIAFProducer, ThresholdProducer, Output3Producer
    {
-      SpikeProducer.spike >> spikes;
+      VoltageIAFProducer.voltage >> voltages;
+      ThresholdProducer.threshold >> thresholds;
+      Output3Producer.output1 >> totalDriver;
+      Output3Producer.output2 >> totalIPSC;
+      Output3Producer.output3 >> totalGJ;
       getNodeIndices();
    }
 
