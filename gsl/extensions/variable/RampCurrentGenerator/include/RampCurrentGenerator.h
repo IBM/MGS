@@ -21,12 +21,16 @@ class RampCurrentGenerator : public CG_RampCurrentGenerator
       void update_RampProtocol(RNG& , float currentTime);
       float tstart, tend; //[ms]
       float nextPulse; //[ms]
-      float peakInc; //[pA]
       bool first_enter_pulse;
       std::ofstream* outFile = 0;
       float time_write_data; // [ms]
       void (RampCurrentGenerator::*fpt_update)(RNG& rng, float currentTime) = NULL;
       void dataCollection(float currentTime);
+      int n_timepoints;
+      int current_index; //keep track of index in time_points for the current period
+      float Istart;  // [pA]
+      float Iend;  // [pA]
+      float duration;
 };
 
 #endif

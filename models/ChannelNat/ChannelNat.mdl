@@ -22,10 +22,19 @@ Node ChannelNat Implements
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
-  //float [] Vhalf_m_shift; // [mV]
-  //float [] Vhalf_h_shift; // [mV]
-  float Vhalf_m_shift; // [mV]
-  float Vhalf_h_shift; // [mV]
+#if defined(TURN_ON_ADJUST_VHALF_COMPARTMENT)
+  float [] Vhalf_act_shift; // [mV]
+  float [] Vhalf_inact_shift; // [mV]
+#elif defined(TURN_ON_ADJUST_VHALF_SIMPLE)
+  float Vhalf_act_shift; // [mV]
+  float Vhalf_inact_shift; // [mV]
+#endif
+#if defined(TURN_ON_ADJUST_TIMECONSTANT)
+  float[] tau_act_Vm; //(ms) - the time constant of activating gate at different Vm given in Vm_tau_act
+  float[] Vm_tau_act; //(mV) - the array of major Vm points (e.g. -70, -60, ... )
+  float[] tau_inact_Vm; //(ms) - the time constant of inactivating gate at different Vm given in Vm_tau_inact
+  float[] Vm_tau_inact;
+#endif
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
@@ -119,9 +128,9 @@ Node ChannelNat Implements
 //  dyn_var_t [] h;
 //  dyn_var_t [] g;  // nS/um^2
 //  //dyn_var_t [] Vhalf_m; // [mV]
-//  dyn_var_t [] Vhalf_m_shift; // [mV]
+//  dyn_var_t [] Vhalf_act_shift; // [mV]
 //  //dyn_var_t [] Vhalf_h; // [mV]
-//  dyn_var_t [] Vhalf_h_shift; // [mV]
+//  dyn_var_t [] Vhalf_inact_shift; // [mV]
 //  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
 //  // reference data
 //  dyn_var_t []* V;//transmembrane voltage [mV]
@@ -214,6 +223,19 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
+#if defined(TURN_ON_ADJUST_VHALF_COMPARTMENT)
+  float [] Vhalf_act_shift; // [mV]
+  float [] Vhalf_inact_shift; // [mV]
+#elif defined(TURN_ON_ADJUST_VHALF_SIMPLE)
+  float Vhalf_act_shift; // [mV]
+  float Vhalf_inact_shift; // [mV]
+#endif
+#if defined(TURN_ON_ADJUST_TIMECONSTANT)
+  float[] tau_act_Vm; //(ms) - the time constant of activating gate at different Vm given in Vm_tau_act
+  float[] Vm_tau_act; //(mV) - the array of major Vm points (e.g. -70, -60, ... )
+  float[] tau_inact_Vm; //(ms) - the time constant of inactivating gate at different Vm given in Vm_tau_inact
+  float[] Vm_tau_inact;
+#endif
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]

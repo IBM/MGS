@@ -1776,23 +1776,31 @@ void HodgkinHuxleyVoltage::setInjectedCurrent(
   else if (CG_inAttrPset->idx < 0)  // if we pass in the InAttrPset with 'idx' attribute 
   {//with a negative value, i.e. [passed via 'Probe' of TissueFunctor] 
      // then inject at all compartments in that ComputeBranch (CB)
-    injectedCurrents[injectedCurrents.size() - 1].index = 0;
-    for (int i = 1; i < branchData->size; ++i)
+    if (CG_inAttrPset->identifier == "VClamp")
+    {//VClamp only target a single compartment then
+      //so if idx < 0, use the proximal-end compartment
+      injectedCurrents[injectedCurrents.size() - 1].index = dimensions.size()-1;
+    }
+    else
     {
-      CurrentProducer* CG_CurrentProducerPtr =
-          dynamic_cast<CurrentProducer*>(CG_variable);
-      if (CG_CurrentProducerPtr == 0)
+      injectedCurrents[injectedCurrents.size() - 1].index = 0;
+      for (int i = 1; i < branchData->size; ++i)
       {
-        std::cerr
-          << "Dynamic Cast of CurrentProducer failed in HodgkinHuxleyVoltage"
-          << std::endl;
-        exit(-1);
-      }
-      injectedCurrents.increase();
-      injectedCurrents[injectedCurrents.size() - 1].current =
+        CurrentProducer* CG_CurrentProducerPtr =
+          dynamic_cast<CurrentProducer*>(CG_variable);
+        if (CG_CurrentProducerPtr == 0)
+        {
+          std::cerr
+            << "Dynamic Cast of CurrentProducer failed in HodgkinHuxleyVoltage"
+            << std::endl;
+          exit(-1);
+        }
+        injectedCurrents.increase();
+        injectedCurrents[injectedCurrents.size() - 1].current =
           CG_CurrentProducerPtr->CG_get_CurrentProducer_current();
-      injectedCurrents[injectedCurrents.size() - 1].index = i;
-      checkAndAddPreVariable(CG_variable);
+        injectedCurrents[injectedCurrents.size() - 1].index = i;
+        checkAndAddPreVariable(CG_variable);
+      }
     }
   }
   else

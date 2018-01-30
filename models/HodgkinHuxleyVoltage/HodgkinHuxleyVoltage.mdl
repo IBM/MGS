@@ -312,7 +312,9 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 #endif
    }
 #endif
-  Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects 
+    ConductanceProducer, ReversalPotentialProducer 
+  {
     ConductanceProducer.conductance >> receptorCurrents.conductance;
     ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
     setReceptorCurrent();

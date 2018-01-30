@@ -301,25 +301,36 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
+  dyn_var_t area_used = 1.0; 
+#ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+  area_used = 1.0;
+#else 
+  #ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  if ((dimensionInputs.size() > 3) /* to skip soma head*/
+      && (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
+  {
+    area_used = (area / SOMA_AREA_SCALE_FACTOR) ; // at time (t+dt/2)
+  }else
+  {
+    area_used = area;
+  }
+  #else
+  area_used = area;
+  #endif
+#endif
   for (; iter != end; ++iter)
   {
-  #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
-    current += **iter;
-  #else
-   #ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    if ((dimensionInputs.size() > 3) /* to skip soma head*/
-       && (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
-    {
-        current += **iter / (area / SOMA_AREA_SCALE_FACTOR) ; // at time (t+dt/2)
-    }else
-    {
-        current += **iter / area; // at time (t+dt/2)
-    }
-   #else
-    current += **iter / area; // at time (t+dt/2)
-   #endif
-  #endif
+    current += **iter / area_used; // at time (t+dt/2)
   }
+//#ifdef CONSIDER_DI_DV
+//  iter = injectedCurrents_conductance_didv.begin();
+//  end = injectedCurrents_conductance_didv.end();
+//  for (; iter != end; ++iter)
+//  {
+//      current -= (**iter)/area_used * Vnew[0]; //[pA/um^2] - again Vnew[0] and Vcur still the same
+//      conductance -=  **iter/area_used; //[pA/um^2]
+//  }
+//#endif
 
   // 5. Current loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
@@ -466,27 +477,38 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   //}
 
   //  4. injected currents [pA]
+  dyn_var_t area_used = 1.0; 
+#ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
+  area_used = 1.0;
+#else 
+  #ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  if ((dimensionInputs.size() > 3) /* to skip soma head*/
+      && (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
+  {
+    area_used = (area / SOMA_AREA_SCALE_FACTOR) ; // at time (t+dt/2)
+  }else
+  {
+    area_used = area;
+  }
+  #else
+  area_used = area;
+  #endif
+#endif
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
   for (; iter != end; ++iter)
   {
-  #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
-    current += **iter;
-  #else
-   #ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    if ((dimensionInputs.size() > 3) /* to skip soma head*/
-       && (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
-    {
-        current += **iter / (area / SOMA_AREA_SCALE_FACTOR) ; // at time (t+dt/2)
-    }else
-    {
-        current += **iter / area; // at time (t+dt/2)
-    }
-   #else
-    current += **iter / area; // at time (t+dt/2)
-   #endif
-  #endif
+    current += **iter / area_used; // at time (t+dt/2)
   }
+//#ifdef CONSIDER_DI_DV
+//  iter = injectedCurrents_conductance_didv.begin();
+//  end = injectedCurrents_conductance_didv.end();
+//  for (; iter != end; ++iter)
+//  {
+//      current -= (**iter)/area_used * Vcur; //[pA/um^2] - don't use Vnew[0]
+//      conductance -=  **iter/area_used; //[pA/um^2]
+//  }
+//#endif
 
   // 5. Current loss due to passive diffusion to adjacent compartments
   Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();

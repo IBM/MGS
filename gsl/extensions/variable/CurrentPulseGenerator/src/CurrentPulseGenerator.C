@@ -47,7 +47,7 @@ void CurrentPulseGenerator::initialize(RNG& rng)
   }
   else if (pattern == "poisson")
   {
-    nextPulse = delay - log(drandom(rng)) * period;
+    nextPulse = delay + log(drandom(rng)) * period;
     fpt_update = &CurrentPulseGenerator::update_PoissonProtocol;
   }
   else if (pattern == "dualexp")
@@ -87,6 +87,8 @@ void CurrentPulseGenerator::initialize(RNG& rng)
   }
 
   peakInc = peak;
+  nextPulse += init_duration;  // the time during which assumed for system settle to equilibrium
+  last += init_duration;  // adjust the ending time
   if (duration > period)
   {
     std::cerr << "The duration of the stimulus should not be greater than the "
@@ -131,7 +133,10 @@ void CurrentPulseGenerator::finalize(RNG& rng)
 }
 /*
  * Sequence:
- *     off_on(peak)_off_on(peak+inc)_off_on(peak+2*inc)_...
+ *     init_off_on(peak)_off_on(peak+inc)_off_on(peak+2*inc)_... until 'last'
+ *  init = init_duration period
+ *  off  = delay 
+ *  on   = duration 
  * I(t) = peak + inc * (iteration-1)
  */
 void CurrentPulseGenerator::update_PeriodicProtocol(RNG& rng, float currentTime)

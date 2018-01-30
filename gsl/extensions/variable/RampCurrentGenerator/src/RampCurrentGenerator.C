@@ -12,6 +12,18 @@
 #define decimal_places 5
 #define fieldDelimiter "\t"
 
+/* NOTE:
+ * In Ramp we mainly use
+ *   _(delay)_Iramp[0]--(inc. linearly)---Iramp[1]
+ *              |                          ||
+ *            tpoints[0]                   tpoints[1] 
+ *   or
+ *   _(delay)_Iramp[0]--(inc. linearly)---Iramp[1]---(dec. linearly)--Iramp[2]
+ *              |                                 |                    |
+ *            tpoints[0]                        tpoints[1]          tpoints[2]
+ * So, a single period is most likely the case
+ *
+ */
 void RampCurrentGenerator::initialize(RNG& rng) 
 {
 #ifdef WAIT_FOR_REST
@@ -24,35 +36,67 @@ void RampCurrentGenerator::initialize(RNG& rng)
 #endif
   if (not deltaT)
   {
-    std::cerr << typeid(*this).name() << " needs time-step connected\n";
+    std::cerr << "ERROR: " << typeid(*this).name() << " needs time-step connected\n";
     assert(deltaT);
   }
   first_enter_pulse = true;
   I = 0.0; // [pA]
-  peakInc = Iend;
+  if (time_points.size() <= 1)
+  {
+    std::cerr << "ERROR: " << typeid(*this).name() 
+      << " needs time_points.size() >= 2\n";
+    assert(time_points.size() > 1);
+  }
+  if (time_points[0] < 0.0 or time_points[0] > 0.0)
+  {
+    std::cerr << "ERROR: " << typeid(*this).name() << " needs \n";
+    std::cerr << "   time_points[0] = 0.0; \n";
+    std::cerr << " .. and you can adjust 'delay' or 'init_duration' if needed " << std::endl;
+    assert(0);
+  }
+
+  n_timepoints = time_points.size();
+  for (int ii = 0; ii < n_timepoints-1; ii++)
+    assert(time_points[ii] < time_points[ii+1]);
+
+  current_index = 0;
+  float duration = time_points[current_index+1] - time_points[current_index];
+  //if (n_timepoints == 3 and Iramp[0] = 0.0 
+  //    and Iramp[1] > 0 and Iramp[3] = 0.0)
+  //{
+  //  // inc is used for the case inc. and dec. ramps
+  //  //with increasing peak - if multiple periods are used
+  //}else {
+  //  std::cerr << "WARNING: " << typeid(*this).name() << ":\n";
+  //  std::cerr << " ... 'inc' is used only when time_points.size() != 3, " 
+  //    << "Iramp[0] = 0.0 and ";
+  //    << "Iramp[1] > 0 and Iramp[3] = 0.0 \n";
+  //  inc = 0.0;
+  //} 
+  
   if (pattern == "ramp")
   {
     tstart = delay;
-    tend = delay + duration;
+    tend = delay + time_points[current_index+1];
+    duration = tend - tstart;
     nextPulse = delay;
     fpt_update = &RampCurrentGenerator::update_RampProtocol;
+    Istart = Iramp[0];
+    Iend = Iramp[1];
   }
   else{
     std::cerr << "Unsupported pattern: Use 'ramp'\n";
     assert(0);
   }
+  tstart += init_duration;
+  tend += init_duration;
+  last += init_duration;
+  nextPulse += init_duration;
   if (duration > period)
   {
-    std::cerr << "The duration of the stimulus should not be greater than the "
+    std::cerr << "The duration of the RampCurrentGenerator stimulus should not be greater than the "
                  "period\n";
     assert(duration < period);
-  }
-  assert(tstart < tend);
-  if (tstart >= tend)
-  {
-    std::cerr << "The start of the stimulus 'tstart' should not be greater than tend"
-                 "\n";
-    assert(tstart < tend);
   }
   if (write_to_file == 1)
   {
@@ -86,38 +130,60 @@ void RampCurrentGenerator::update(RNG& rng)
 
 /*
  * No repeat:
- *     _(delay)_Istart--(increase linearly)------------Iend
+ *   _(delay)_Istart--(increase linearly)------------Iend
  *              |                                 |
  *            time_start                        time_ramp_end
+ *   _(delay)_Iramp[0]--(inc. linearly)---Iramp[1]---(dec. linearly)--Iramp[2]
+ *              |                                 |                    |
+ *            tpoints[0]                        tpoints[1]          tpoints[2]
  *  delay = time until time_start
  *  peak = maxRamp (Iend)
- *  duration = total_ramp_time = time_ramp_end - time_start
  *  NOTE: Generic version of CurrentPulseGenerator("ramp")
  *     - Istart, Iend
  *     - repetition is allowed, with 'inc' increase in Iend after each cycle
  */
 void RampCurrentGenerator::update_RampProtocol(RNG& rng, float currentTime)
 {
+  I = 0.0;
   if (currentTime <= last)
   {
-    if (currentTime >= (nextPulse + duration) )
+    if (currentTime >= (nextPulse + time_points[n_timepoints-1]-time_points[0]) )
     {//no pulse
       I = 0.0;
       first_enter_pulse = true;
-      peakInc += inc;
+      //if (n_timepoints == 3 and current_index == 1)
+      //  Iend += inc;
       nextPulse += period;
+      current_index = 0;
     }
-    else if (currentTime >= nextPulse )
-    {//having pulse
-      //float dt = currentTime - nextPulse;
-      if (first_enter_pulse)
+    else if (currentTime >= nextPulse){
+      if (current_index < n_timepoints - 1)
       {
-        tstart = nextPulse;
-        tend = tstart+duration;
-        first_enter_pulse = false;
+        if (currentTime >= nextPulse )
+        {//having pulse
+          //float dt = currentTime - nextPulse;
+          if (first_enter_pulse)
+          {
+            tstart = time_points[current_index];
+            tend = tstart + duration; 
+            first_enter_pulse = false;
+            Iend = Iramp[current_index+1];
+            Istart = Iramp[current_index];
+          }
+          float time_offset = currentTime - tstart;
+          I = Istart + (Iend-Istart) * (time_offset/(duration));
+        }
+        if (currentTime + (*deltaT) >= nextPulse + time_points[current_index+1])
+        {
+          current_index += 1;
+          if (current_index < n_timepoints - 1)
+            duration = (time_points[current_index+1]-time_points[current_index]);
+          first_enter_pulse = true;
+        }
+      }else
+      {
+        //do nothing
       }
-      float time_offset = currentTime - tstart;
-      I = Istart + (peakInc-Istart) * (time_offset/(duration));
     }
   }
 }

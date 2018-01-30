@@ -2,8 +2,10 @@
 #include "SimulationInfo.h"
 #include "CG_SimulationInfo.h"
 #include <memory>
+#include <fstream>
+#include <string>
 
-void SimulationInfo::initialize(RNG& rng) 
+void SimulationInfo::initialize(RNG& rng)
 {
    if (not deltaT)
    {
@@ -28,26 +30,37 @@ void SimulationInfo::initialize(RNG& rng)
       assert(0);
    }
    iterationCount = 0;
+   isUserWantToHalt = 0; //False
 }
 
-void SimulationInfo::calculateInfo(RNG& rng) 
+void SimulationInfo::calculateInfo(RNG& rng)
 {
    //currentTime = (*deltaT) * getSimulation().getIteration();
-   currentTime += (*deltaT); //by doing this - we can configure a negative time and use this to 
+   currentTime += (*deltaT); //by doing this - we can configure a negative time and use this to
                              // set-up a way to run-until-steady-state before any data I/O
                              // is performed which use 0-based time as criteria
                              // NOTE: Not all system has steady-states (e.g. those with oscillation)
                              // so this is not always useful
    // * getSimulation().getIteration();
    iterationCount  = (double)getSimulation().getIteration() - 1; //zero-based for RuntimePhase
+   // check the content of the halt_file
+   // to see if user want to terminate
+   std::ifstream infile(halt_file.c_str());
+   std::string sLine="0";
+   if (infile.good())
+   {
+      std::getline(infile, sLine);
+   }
+   infile.close();
+   isUserWantToHalt = std::stoi(sLine);
 }
 
-SimulationInfo::SimulationInfo() 
+SimulationInfo::SimulationInfo()
    : CG_SimulationInfo()
 {
 }
 
-SimulationInfo::~SimulationInfo() 
+SimulationInfo::~SimulationInfo()
 {
 }
 

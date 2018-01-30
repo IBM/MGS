@@ -372,6 +372,20 @@
 #define FRACTION_SURFACEAREA_MICRODOMAIN3 1.0  //[% of membrane surface area]
 //}}}
 
+//Global parameters
+// //all compartments have the same Vhalf_(m/h)_adjust
+//#define TURN_ON_ADJUST_VHALF_SIMPLE
+// //each compartment may have the different Vhalf_(m/h)_adjust
+// (not implemented)
+//#define TURN_ON_ADJUST_VHALF_COMPARTMENT
+// // pass tau(Vm) as explicit parameters
+// // then each branch-type may have different tau(Vm)
+// // but all compartments in that branchtype receive same tau(Vm)
+//#define TURN_ON_ADJUST_TIMECONSTANT
+// // if defined, then the parameters (e.g. those in the ODE/PDE)
+// // are saved when an associated trigger is activated
+// // and then restore when an associated trigger is activated
+//#define ENABLE_STORE_AND_RESET_PARAMETERS
 
 //I/O options
 //{{{I/O options
