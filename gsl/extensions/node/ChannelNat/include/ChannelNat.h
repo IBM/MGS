@@ -23,15 +23,15 @@
 //TUAN TODO: maybe we need to update  all TRAUB model to 2.3
 #define Q10 2.3
 
-#elif CHANNEL_NAT == NAT_WANG_BUSZAKI_1996       
+#elif CHANNEL_NAT == NAT_WANG_BUSZAKI_1996
 #define BASED_TEMPERATURE 22.0  // Celcius
-#define Q10 2.92 //To get a phi value = 5 
+#define Q10 2.92 //To get a phi value = 5
 
 #elif CHANNEL_NAT == NAT_SCHWEIGHOFER_1999
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 2.3
 
-#elif CHANNEL_NAT == NAT_MAHON_2000       
+#elif CHANNEL_NAT == NAT_MAHON_2000
 #define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.92 //To get a phi value = 5 at 37oC
 
@@ -50,7 +50,7 @@
 #define Q10 2.3
 #endif
 
-#ifndef Q10 
+#ifndef Q10
 #define Q10 2.3 //default
 #endif
 
@@ -75,12 +75,12 @@ class ChannelNat : public CG_ChannelNat
   static std::vector<dyn_var_t> Vmrange_taum;
   static std::vector<dyn_var_t> Vmrange_tauh;
 #endif
-#if defined(WRITE_GATES)      
-  std::ofstream* outFile;     
-  float _prevTime;            
+#if defined(WRITE_GATES)
+  std::ofstream* outFile;
+  float _prevTime;
   static SegmentDescriptor _segmentDescriptor;
-#define IO_INTERVAL 0.1 // ms 
-#endif                        
+#define IO_INTERVAL 0.05 // ms
+#endif
 };
 
 #endif

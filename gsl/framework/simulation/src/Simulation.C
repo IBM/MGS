@@ -80,8 +80,8 @@ int Simulation::P2P_TAG = 21;
 
 #else
 
-#define LENS_PT_LOCK(x) 
-#define LENS_PT_UNLOCK(x) 
+#define LENS_PT_LOCK(x)
+#define LENS_PT_UNLOCK(x)
 
 #endif // DISABLE_PTHREADS
 
@@ -92,19 +92,19 @@ Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned
 Simulation::Simulation(int numWorkUnits, unsigned seed)
 #endif // DISABLE_PTHREADS
 
-   :  _state(Simulation::_UNUSED), _iteration(0), _ntm(0), _etm(0), _root(0), 
-      _triggerRegistry(0), _publisherRegistry(0), _granuleMapperRegistry(0), _functorRegistry(0), 
-      _structRegistry(0), _constantRegistry(0), _variableRegistry(0), _ui(0), 
+   :  _state(Simulation::_UNUSED), _iteration(0), _ntm(0), _etm(0), _root(0),
+      _triggerRegistry(0), _publisherRegistry(0), _granuleMapperRegistry(0), _functorRegistry(0),
+      _structRegistry(0), _constantRegistry(0), _variableRegistry(0), _ui(0),
       _triggeredPauseAction(0),
 
 #ifndef DISABLE_PTHREADS
-      _numThreads(N), _threadPool(0), _numCpus(0), 
+      _numThreads(N), _threadPool(0), _numCpus(0),
 #endif // DISABLE_PTHREADS
 
-      _pauserStatus(false), _pauser(0), _stopper(0), _erd(true), 
+      _pauserStatus(false), _pauser(0), _stopper(0), _erd(true),
 
-      _passType(_GRANULE_MAPPER_PASS), _granuleMapperCount(0), _variableGranuleMapperIndex(UINT_MAX), 
-      _variableGlobalId(0), _variableGranuleMapperAlreadyAdded(false), _globalGranuleId(0), 
+      _passType(_GRANULE_MAPPER_PASS), _granuleMapperCount(0), _variableGranuleMapperIndex(UINT_MAX),
+      _variableGlobalId(0), _variableGranuleMapperAlreadyAdded(false), _globalGranuleId(0),
       _graphSize(0), _graph(0), _publisher(0), _dependencyParser(0), _detachUserInterface(false)
 #ifdef  HAVE_MPI
       , _iSenders(0), _iReceivers(0), _commEngine(0), _P2P(false), _alltoallw(false), _alltoallv(true)
@@ -124,11 +124,11 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
    if (_numThreads == 0) _numThreads = _numCpus;
 
    if (_numThreads != 1) {
-      //Create a thread pool with the desired number of threads   
+      //Create a thread pool with the desired number of threads
       _threadPool = new ThreadPool(_numThreads, _numCpus, bindThreadsToCpus);
    }
 #endif // DISABLE_PTHREADS
-      
+
    _root = new Repertoire("Root");
    _publisher = new SimulationPublisher(*this);
    _pauser = new Pauser(*this);
@@ -151,7 +151,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
    LENS_PT_LOCK(_timerMutex);
    _simTimer.start();
    LENS_PT_UNLOCK(_timerMutex);
-   
+
 #ifdef HAVE_MPI
    _phaseNames.push_back("FLUSH_LENS");
    _communicatingPhases["FLUSH_LENS"]=true;
@@ -163,7 +163,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
 #endif // HAVE_MPI
 
    // Seed the random number generator
-   _rng.reSeed(seed, _rank) ;  
+   _rng.reSeed(seed, _rank) ;
    _rngShared.reSeedShared(seed-1);
    _rngSeed=seed;
 }
@@ -172,7 +172,7 @@ void Simulation::pauseHandler()
 {
    //now perform all the browsing operations
    _triggeredPauseAction->startAction();
-   
+
    LENS_PT_LOCK(_stateMutex);
    if (_state != _STOP) {
       _state = _RUN;
@@ -198,7 +198,7 @@ void Simulation::resumeHandler()
 	Kernel_GetMemorySize(KERNEL_MEMSIZE_HEAPAVAIL, &avail);
 	double localMemory = ((double) avail) / ((double) 1024*1024);
 	double globalMinMemory;
-	MPI_Allreduce(&localMemory, &globalMinMemory, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);      
+	MPI_Allreduce(&localMemory, &globalMinMemory, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 	if (_rank==0) {
 	  std::cout<<"On iteration "<<_iteration<<", min rank memory is "<<localMemory<<"."<<std::endl;
 	}
@@ -254,7 +254,7 @@ bool Simulation::start()
      }
      std::map<std::string, bool>::const_iterator pctit, pctend=(*ccit)->getPhaseCommunicationTable().end();
      for (pctit=(*ccit)->getPhaseCommunicationTable().begin(); pctit!=pctend; ++pctit) {
-       std::string simPhase=(*ccit)->getSimulationPhaseName(pctit->first); 
+       std::string simPhase=(*ccit)->getSimulationPhaseName(pctit->first);
        std::map<std::string, bool>::iterator cpiter=_communicatingPhases.find(simPhase);
        assert(cpiter!=_communicatingPhases.end());
        cpiter->second = cpiter->second || pctit->second;
@@ -274,8 +274,8 @@ bool Simulation::start()
 
 #endif
 
-   //this is so that the user can browse with the SBrowser (which 
-   // is a pauseActionable, and is only activated when the simulation 
+   //this is so that the user can browse with the SBrowser (which
+   // is a pauseActionable, and is only activated when the simulation
    // is paused) before the simulation is started.
    // DHC 8/03
 
@@ -306,9 +306,9 @@ bool Simulation::start()
 	 LENS_PT_LOCK(_stateMutex);
 	 simstate = _state;
 	 LENS_PT_UNLOCK(_stateMutex);
-	 
+	
       } while(simstate== _UNUSED);
-      
+
       if (simstate==_STOP) {
 	 return _detachUserInterface;
       }
@@ -344,7 +344,7 @@ bool Simulation::start()
    if (_initPhases.size() > 0) {
       if (_rank==0) printf("Running Init Phases.\n\n");
       runPhases(_initPhases);
-   }   
+   }
 
 #ifdef HAVE_MPI
    if (_rank==0) printf("Flushing Proxies.\n\n");
@@ -389,7 +389,7 @@ bool Simulation::start()
 	 resumeHandler();
 	 break;
       case (_UNUSED):
-      default: 
+      default:
 	 if (_rank==0) std::cerr << "Invalid state in Simulation::start!" << std::endl;
       }
    }
@@ -408,7 +408,7 @@ void Simulation::pause()
    _state = _PAUSE;
    LENS_PT_UNLOCK(_stateMutex);
    LENS_PT_LOCK(_timerMutex);
-   if (_rank==0) std::cout << std::endl << "Mark pause : t + " << _simTimer.lapWallTime() - _mark 
+   if (_rank==0) std::cout << std::endl << "Mark pause : t + " << _simTimer.lapWallTime() - _mark
 	     << std::endl << std::endl;
    LENS_PT_UNLOCK(_timerMutex);
 }
@@ -507,7 +507,7 @@ Simulation::~Simulation()
    delete _publisher;
    delete _dependencyParser;
    delete _pauser;
-   delete _stopper;   
+   delete _stopper;
    delete _ntm;
    delete _etm;
    delete _graph;
@@ -520,7 +520,7 @@ Simulation::~Simulation()
    }
    _socketsInUse.clear();
 
-   std::list<SeparationConstraint*>::iterator sIt, 
+   std::list<SeparationConstraint*>::iterator sIt,
       sEnd = _separationConstraints.end();
 
    for (sIt = _separationConstraints.begin(); sIt != sEnd; ++sIt) {
@@ -614,11 +614,11 @@ PhaseElement& Simulation::getPhaseElement(const std::string& name)
    }
    // should not reach here.
    if (_rank==0) std::cerr << name << " is not found as a valid phase." << std::endl;
-   exit(-1);   
+   exit(-1);
    return *(_initPhases.begin());
 }
 
-void Simulation::addWorkUnits(const std::string& name, 
+void Simulation::addWorkUnits(const std::string& name,
 			      std::deque<WorkUnit*>& workUnits)
 {
    std::deque<WorkUnit*>& pDeque = getPhaseElement(name).getWorkUnits();
@@ -636,9 +636,9 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
    std::deque<Trigger*>::iterator it2, end2;
 
 
-   // If threads are disabled, or even though threads are enabled 
+   // If threads are disabled, or even though threads are enabled
    // if there is only one thread; kernel will process serially otherwise
-   // it will be multi-threaded. 
+   // it will be multi-threaded.
 
 #ifndef DISABLE_PTHREADS
 
@@ -648,8 +648,8 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 
 
       for(it = phases.begin(); it != end; ++it) {
-         
-         _phaseName = it->getName(); 
+
+         _phaseName = it->getName();
 	 end2 = it->getTriggers().end();
 	 for(it2 = it->getTriggers().begin(); it2 != end2; ++it2) {
 	    (*it2)->conditionalFire();
@@ -671,7 +671,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	       rebuildRequested = _commEngine->Communicate();
 	       assert(!rebuildRequested);
 	     }
-	   }	     
+	   }	
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
 	 //if (&phases == &_initPhases && it==phases.begin()) while(1) {}
@@ -682,7 +682,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 
    } else { // Multi-threaded
       for(it = phases.begin(); it != end; ++it) {
-         _phaseName = it->getName(); 
+         _phaseName = it->getName();
 	 std::deque<WorkUnit*>::iterator wuEnd = it->getWorkUnits().end();
 	 end2 = it->getTriggers().end();
 	 for(it2 = it->getTriggers().begin(); it2 != end2; ++it2) {
@@ -692,13 +692,13 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	       if (workUnits.size() > 0) {
 		  // don't use wuEnd
 		  it->getWorkUnits().insert(
-		     it->getWorkUnits().end(), workUnits.begin(), 
+		     it->getWorkUnits().end(), workUnits.begin(),
 		     workUnits.end());
-	       }	          
+	       }	
 	    }
 	 }
 
-	 // if there is work to do 
+	 // if there is work to do
 	 if (it->getWorkUnits().size() > 0) {
 	    _threadPool->processQueue(it->getWorkUnits());
 	 }
@@ -727,7 +727,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 #endif // DISABLE_PTHREADS
 }
 
-std::string Simulation::findLaterPhase(const std::string& first, 
+std::string Simulation::findLaterPhase(const std::string& first,
 				       const std::string& second)
 {
    bool firstAppeared = false, secondAppeared = false;
@@ -801,7 +801,7 @@ std::string Simulation::findLaterPhase(const std::string& first,
       }
    }
    // should not reach here.
-   if (_rank==0) std::cerr << "Can not find the later phase of: " << first << " " 
+   if (_rank==0) std::cerr << "Can not find the later phase of: " << first << " "
 	     << second << std::endl;
    exit(-1);
    return first;
@@ -841,7 +841,7 @@ void Simulation::resetInternals()
    delete _root;
    delete _publisher;
    delete _pauser;
-   delete _stopper;   
+   delete _stopper;
    delete _ntm;
    delete _etm;
 
@@ -909,7 +909,7 @@ void Simulation::getGranules(NodeSet& nodeSet, GranuleSet& granuleSet)
 
    for (it = layers.begin(); it != end; ++it) {
       _granuleMappers[(*it)->getGranuleMapperIndex()]->getGranules(nodeSet, granuleSet);
-   }  
+   }
 }
 
 void Simulation::addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper)
@@ -955,10 +955,10 @@ void Simulation::addUnseparableGranuleSet(const GranuleSet& granules)
    if (!isCostAggregationPass()) {
       return;
    }
-   
+
    std::vector<SeparationConstraint*> matches;
 
-   std::list<SeparationConstraint*>::iterator it, 
+   std::list<SeparationConstraint*>::iterator it,
       end = _separationConstraints.end();
 
    for (it = _separationConstraints.begin(); it != end; ++it) {
@@ -966,13 +966,13 @@ void Simulation::addUnseparableGranuleSet(const GranuleSet& granules)
 	 matches.push_back(*it);
       }
    }
-   
+
    if (matches.empty()) {
       SeparationConstraint* constraint = new SeparationConstraint();
       _separationConstraints.push_back(constraint);
       matches.push_back(constraint);
    }
-   
+
    matches[0]->insertGranules(granules);
 
    std::vector<SeparationConstraint*>::iterator vIt, vEnd = matches.end();
@@ -988,11 +988,11 @@ void Simulation::setSeparationGranules()
 {
    _separationGranules.resize(_separationConstraints.size());
    std::vector<Granule>::iterator it, end = _separationGranules.end();
-   std::list<SeparationConstraint*>::iterator 
+   std::list<SeparationConstraint*>::iterator
       sit = _separationConstraints.begin();
 
    for (it = _separationGranules.begin(); it != end; ++it, ++sit) {
-      it->setGlobalGranuleId(_globalGranuleId++);      
+      it->setGlobalGranuleId(_globalGranuleId++);
       GranuleSet::const_iterator gIt, gEnd = (*sit)->getGranules().end();
       for (gIt = (*sit)->getGranules().begin(); gIt != gEnd; ++gIt) {
 	 (*gIt)->setDepends(&(*it));

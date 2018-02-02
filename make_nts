@@ -227,6 +227,9 @@ fi
 if [ "$NTSROOT" == "" ]; then
   echo "Please run: source setenv_nts"
   exit
+elif [ "$NTSROOT" != $(pwd) ]; then
+  echo "Please run: source set_env"
+  exit
 fi
 if [ ! -f ".built" ] && [ "$REBUILD" != "-rebuild" ]; then
   echo "First build. Please run with --rebuild"

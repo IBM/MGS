@@ -22,7 +22,7 @@
 #include "Phase.h"
 
 // default criterionA & criterionB is true
-CompositeTrigger::CompositeTrigger(Simulation& sim, 
+CompositeTrigger::CompositeTrigger(Simulation& sim,
 				   std::vector<DataItem*> const & args)
    : _sim(sim)
 {
@@ -100,9 +100,9 @@ CompositeTrigger::CompositeTrigger(Simulation& sim,
    _sim.addTrigger(_phase, this);
 }
 
-CompositeTrigger::CompositeTrigger(Simulation& sim, Trigger* t1, Trigger* t2, 
+CompositeTrigger::CompositeTrigger(Simulation& sim, Trigger* t1, Trigger* t2,
 				   std::string& op)
-   : _sim(sim), _triggerA(t1), _triggerB(t2), _op(op), _criterionA(1), 
+   : _sim(sim), _triggerA(t1), _triggerB(t2), _op(op), _criterionA(1),
      _criterionB(1)
 {
    _description = "Auto Generated Composite Trigger";
@@ -116,7 +116,7 @@ CompositeTrigger::CompositeTrigger(Simulation& sim, Trigger* t1, Trigger* t2,
 }
 
 CompositeTrigger::CompositeTrigger(Simulation& sim, Trigger* t1)
-   : _sim(sim), _triggerA(t1), _triggerB(0), _op("single"), 
+   : _sim(sim), _triggerA(t1), _triggerB(0), _op("single"),
      _criterionA(1), _criterionB(1)
 {
    _description = "Auto Generated Composite Trigger";
@@ -133,7 +133,7 @@ bool CompositeTrigger::status()
 {
    bool ste = false;
    ste = (*this.*_evaluator)();
-   
+
    if (_delay>0) {
       if (_stateHistory.size()<=_delay) {
 	 _stateHistory.push_front(ste);
@@ -174,23 +174,23 @@ void CompositeTrigger::setEvaluator()
 
 bool CompositeTrigger::isAnd()
 {
-   return ( (_triggerA->status() == _criterionA) && 
+   return ( (_triggerA->status() == _criterionA) &&
 	    (_triggerB->status() == _criterionB) );
 }
 
 
 bool CompositeTrigger::isOr()
 {
-   return ( (_triggerA->status() == _criterionA) || 
+   return ( (_triggerA->status() == _criterionA) ||
 	    (_triggerB->status() == _criterionB) );
 }
 
 
 bool CompositeTrigger::isXor()
 {
-   return ( ( (_triggerA->status() == _criterionA) && 
+   return ( ( (_triggerA->status() == _criterionA) &&
 	      (_triggerB->status() != _criterionB) ) ||
-	    ( (_triggerA->status() != _criterionA) && 
+	    ( (_triggerA->status() != _criterionA) &&
 	      (_triggerB->status() == _criterionB) ) );
 }
 

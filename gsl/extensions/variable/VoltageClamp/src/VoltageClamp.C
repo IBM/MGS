@@ -40,7 +40,7 @@
 // type = 2
 //
 // type = 3
-void VoltageClamp::initialize(RNG& rng) 
+void VoltageClamp::initialize(RNG& rng)
 {
   if (not deltaT)
   {
@@ -149,7 +149,7 @@ void VoltageClamp::updateI_type3(RNG& rng)
   if (index == 0)
     targetV = data_timeVm["Vm"][index];
   else if (index < num_rows)
-    targetV = linear_interp(data_timeVm["time"][index-1], data_timeVm["Vm"][index-1], 
+    targetV = linear_interp(data_timeVm["time"][index-1], data_timeVm["Vm"][index-1],
         data_timeVm["time"][index], data_timeVm["Vm"][index], getCurrentTime());
   else //assume saturation in taum when Vm > max-value
      targetV = data_timeVm["Vm"][index-1];
@@ -172,14 +172,14 @@ void VoltageClamp::updateI_type3(RNG& rng)
       //   Igen (pA)
       //   Rs  (GOhm)
       Igen = ( ( goal - (*V)[idx] ) ) / Rs;
-      //Ichan = Igen  
+      //Ichan = Igen
       //  - (surfaceArea * Csc * (goal - (*V)[idx]) / (*deltaT/2)) /*capacitive current*/
       //  - (surfaceArea * gLeak * ((*V)[idx] -Eleak)) /*leak current*/ ;
   }
 #else
-      // Cm = pF/um^2 
-      // I = dQ/dt = Q/t 
-      // Q = (Coulombs) electric charge transfered through surface area over a time 
+      // Cm = pF/um^2
+      // I = dQ/dt = Q/t
+      // Q = (Coulombs) electric charge transfered through surface area over a time
       // t = (second)
       // I = ampere
       // --> Ampere = Coulombs / second
@@ -198,7 +198,7 @@ void VoltageClamp::updateI_type3(RNG& rng)
       Igen_dv = beta * Cm * ( ( goal - ((*V)[idx]+dvx) ) / (*deltaT/2) ) * *surfaceArea;
 #endif
 #ifdef CONSIDER_DI_DV
-      //double dI = Igen_dv - Igen; 
+      //double dI = Igen_dv - Igen;
       //Igen_dv =  ( goal - ((*V)[idx]+dvx) ) / Rs;
       //conductance_didv = std::abs(dI/(dvx));
       conductance_didv = 1.0/ Rs;  // ((nS))
@@ -206,7 +206,7 @@ void VoltageClamp::updateI_type3(RNG& rng)
   return;
 }
 
-void VoltageClamp::updateI(RNG& rng) 
+void VoltageClamp::updateI(RNG& rng)
 {
   if (type == 3)
   {
@@ -229,8 +229,8 @@ void VoltageClamp::updateI(RNG& rng)
     targetV=waveform[waveformIdx];
     ++waveformIdx;
     inject=true;
-    //HOWVER: This is not good as the result changes with the chosen time-step 
-    //SO    : try type=3; where the dynamic voltage has associated time information so we can extrapolate the 
+    //HOWVER: This is not good as the result changes with the chosen time-step
+    //SO    : try type=3; where the dynamic voltage has associated time information so we can extrapolate the
     //        data point and give the same result regardless of time-step being used
   }
   if (inject) {
@@ -241,8 +241,8 @@ void VoltageClamp::updateI(RNG& rng)
       {
         //float goal = (*V)[idx] + (targetV - (*V)[idx])/2;
 #if ABRUPT_JUMP_VOLTAGE == 1
-        //NOTE: assume abrupt jump 
-        goal = targetV; 
+        //NOTE: assume abrupt jump
+        goal = targetV;
 #else
         float currentTime = getCurrentTime();
         if (_status == VoltageClamp::SLOPE_ON)
@@ -279,7 +279,7 @@ void VoltageClamp::updateI(RNG& rng)
       //   assert(0);
       //   // update 'goal' here
       //}
-      
+
 #ifdef USE_SERIES_RESISTANCE
       //NOTE: do we need to multiply surface area?
       //NOTE: V = I * R
@@ -295,9 +295,9 @@ void VoltageClamp::updateI(RNG& rng)
       //   Rs  (GOhm)
       Igen = ( ( goal - (*V)[idx] ) ) / Rs;  // (pA)
 #else
-      // Cm = pF/um^2 
-      // I = dQ/dt = Q/t 
-      // Q = (Coulombs) electric charge transfered through surface area over a time 
+      // Cm = pF/um^2
+      // I = dQ/dt = Q/t
+      // Q = (Coulombs) electric charge transfered through surface area over a time
       // t = (second)
       // I = ampere
       // --> Ampere = Coulombs / second
@@ -379,21 +379,21 @@ void VoltageClamp::updateI(RNG& rng)
   _Vprev = (*V)[idx];
 }
 
-void VoltageClamp::finalize(RNG& rng) 
+void VoltageClamp::finalize(RNG& rng)
 {
   if (outFile)
     outFile->close();
 }
 
-// GOAL: user pass in an array of Vm values, each value map to value for 
-// one iteration 
-void VoltageClamp::startWaveform(Trigger* trigger, NDPairList* ndPairList) 
+// GOAL: user pass in an array of Vm values, each value map to value for
+// one iteration
+void VoltageClamp::startWaveform(Trigger* trigger, NDPairList* ndPairList)
 {
   waveformIdx = 0;
 }
 
 // GOAL: passing a new VClamp value via the 'command' argument
-void VoltageClamp::setCommand(Trigger* trigger, NDPairList* ndPairList) 
+void VoltageClamp::setCommand(Trigger* trigger, NDPairList* ndPairList)
 {
   NDPairList::iterator iter=ndPairList->begin();
   NDPairList::iterator end=ndPairList->end();
@@ -417,7 +417,7 @@ void VoltageClamp::setCommand(Trigger* trigger, NDPairList* ndPairList)
 //GOAL : toggle the status of clamping ON/OF
 //   default: toggle the current status
 //   user can specify exactly what it should be via toggle=1 or toggle=0
-void VoltageClamp::toggle(Trigger* trigger, NDPairList* ndPairList) 
+void VoltageClamp::toggle(Trigger* trigger, NDPairList* ndPairList)
 {
   if (ndPairList == 0)
   {
@@ -451,7 +451,7 @@ void VoltageClamp::toggle(Trigger* trigger, NDPairList* ndPairList)
   waveformIdx=waveform.size();
 }
 
-VoltageClamp::VoltageClamp() 
+VoltageClamp::VoltageClamp()
   : CG_VoltageClamp(), outFile(0)
 {
 }
@@ -466,7 +466,7 @@ void VoltageClamp::do_IO(float targetV)
       {
         _time_for_io = getCurrentTime() + output_interval;
 #ifdef USE_SERIES_RESISTANCE
-        (*outFile) << std::fixed 
+        (*outFile) << std::fixed
           << std::setw(8) << getCurrentTime()<<"\t"
           << std::setw(8) << Igen <<"\t"
           //<< std::setw(8) << Ichan <<"\t"
@@ -506,7 +506,7 @@ void VoltageClamp::do_IO(float targetV)
   }
 }
 
-VoltageClamp::~VoltageClamp() 
+VoltageClamp::~VoltageClamp()
 {
   delete outFile;
 }
@@ -529,8 +529,8 @@ void VoltageClamp::duplicate(std::auto_ptr<CG_VoltageClamp>& dup) const
 void VoltageClamp::setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset)
 {
   idx = CG_inAttrPset->idx;
-  if (idx < 0 or 
-      idx >= dimensions.size())  // if we pass in the InAttrPset with 'idx' attribute 
+  if (idx < 0 or
+      idx >= dimensions.size())  // if we pass in the InAttrPset with 'idx' attribute
   {//with a negative value
      // then inject at the last compartment (i.e. the closest to the soma)
     idx = dimensions.size()-1;

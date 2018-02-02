@@ -97,7 +97,7 @@ UnsignedServiceTrigger::UnsignedServiceTrigger(Simulation& sim,
     service = dynamic_cast<GenericService<unsigned>*>(ptrSvcDI->getService());
     assert(service != 0);
     // modification required to run in distributed computing environment -- Jizhu
-    // Lu - Tuan 
+    // Lu - Tuan
     assert(service != NULL);
     _service = service->getData();
 
