@@ -4,6 +4,7 @@ help to generate Makefile
 """
 
 from __future__ import print_function
+from past.builtins import xrange
 import os
 import os.path
 import sys
@@ -101,7 +102,7 @@ class FatalError(Exception):
 
     def printError(self):
         if self.value != "":
-            print("Fatal error:", error)
+            print("Fatal error:", self.value)
 
 
 class InternalError(Exception):
@@ -170,7 +171,7 @@ def createConfigHeader():
             currentDir = line[begin:end]
             if currentDir == rootDir:
                 create = False
-    except:
+    except Exception:
         pass
 
     if create is True:
@@ -184,7 +185,7 @@ def createConfigHeader():
 
 
 def touchExtensionsMk():
-    if os.path.isfile(EXTENSIONS_MK) == False:
+    if os.path.isfile(EXTENSIONS_MK) is False:
         f = open(EXTENSIONS_MK, "w")
         f.close()
 
@@ -207,7 +208,7 @@ class DxInfo:
             return
         self.binPath = os.path.dirname(self.bin)
         self.mainPath = os.path.dirname(self.binPath) + "/dx"
-        if os.path.isdir(self.mainPath) != True:
+        if os.path.isdir(self.mainPath) is not True:
             print("DX main path could not be found at", self.mainPath)
             return
 
@@ -218,12 +219,12 @@ class DxInfo:
             self.liteLib += "/lib_linux/"
 
         self.liteLib += "libDXlite.a"
-        if os.path.isfile(self.liteLib) != True:
+        if os.path.isfile(self.liteLib) is not True:
             print("libDXlite.a could not be found at", self.liteLib)
             return
 
         self.include = self.mainPath + "/include/dx/dx.h"
-        if os.path.isfile(self.include) != True:
+        if os.path.isfile(self.include) is not True:
             print("dx.h could not be found at", self.include)
             return
 
@@ -312,7 +313,7 @@ class Options:
             m_str = TAB + "--" + i[0] + ": " + i[1]
             print(m_str)
 
-    def parseOptions(self, argv):
+    def parseOptions(self, argv):  # noqa
         try:
             opts, args = getopt.getopt(argv[1:], '', self.getOptionList())
             for o, a in opts:
@@ -540,7 +541,7 @@ class BuildSetup:
         self.grepBin = findFile("grep", True)
         self.makeBin = findFile("make", True)
 
-    def getSystemInfo(self):
+    def getSystemInfo(self):  # noqa
         retStr = addUnderScore("System information:")
         retStr += TAB + "Operating system: " + self.operatingSystem + "\n"
         retStr += TAB + "HostName: " + self.hostName + "\n"
@@ -731,10 +732,10 @@ class BuildSetup:
                 self.options.withDX = DONTUSE
             elif self.options.withDX == USE:
                 self.dx.setup(self.operatingSystem)
-                if self.dx.exists == False:
+                if self.dx.exists is False:
                     raise FatalError("DX requested but not found.")
 
-    def setCompilers(self):
+    def setCompilers(self):  # noqa
 
         if self.options.withMpi is True:
             if self.operatingSystem == "AIX":
@@ -772,7 +773,7 @@ class BuildSetup:
                                 self.cppCompiler = findFile("mpiCC", True)
                                 findFile("mpiCC", True)
                                 # raise FatalError("Currently MPI is only used by AIX")
-            return # important do not continue this function after here.
+            return  # important do not continue this function after here.
 
         if not (self.options.compiler == "xl" or self.options.compiler == "gcc"):
             printFeedback("XL or GNU is not selected as compiler, choosing default, gcc\n")
@@ -789,12 +790,12 @@ class BuildSetup:
                 self.cppCompiler = findFile("g++", True)
             else:
                 self.cppCompiler = findFile("g++", True)
-        else: # error condition
+        else:  # error condition
             raise InternalError("Should not have hit here in setCompilers")
 
     def getInitialValues(self):
         retStr = \
-"""\
+            """\
 # This is a code generated file, generated using configure.py
 # To change any options please rerun ./configure.py with the desired options.
 # To build the project execute make -j <number of processes>
@@ -822,27 +823,11 @@ STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
 """
-#DCA_OBJ := framework/dca/obj
-#DCA_SRC := framework/dca/src
-
-# Each module adds to these initial empty definitions
-#SRC :=
-#OBJS :=
-#SHARED_OBJECTS :=
-#BASE_OBJECTS :=
-#DEF_SYMBOLS := $(SO_DIR)/main.def
-#UNDEF_SYMBOLS :=
-#
-## EXTENSION_OBJECTS is the generated modules that must be linked in statically
-#EXTENSION_OBJECTS :=
-#
-## GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
-#GENERATED_DL_OBJECTS :=
 
         # BlueGene MPI flags
         if self.options.blueGeneL is True:
             retStr += \
-"""\
+                """\
 BGL_ROOT=/bgl/BlueLight/ppcfloor
 MPI_LIBS = -L$(BGL_ROOT)/bglsys/lib -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts
 MPI_TRACE_LIBS = /bgl/local/lib/libmpitrace.a
@@ -851,7 +836,7 @@ MPI_INC = -I$(BGL_ROOT)/bglsys/include
 """
         if self.options.blueGeneP is True:
             retStr += \
-"""\
+                """\
 BGP_ROOT=/bgsys/drivers/ppcfloor
 MPI_INC = -I$(BGP_ROOT)/arch/include
 
@@ -887,7 +872,7 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 
     def getModuleDefinitions(self):
         retStr = \
-"""\
+            """\
 ####################################################################
 # Name of all submodules we want to build
 # 1. modules from the GSL frameworks
@@ -896,25 +881,25 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 # part 1 --> which include framework/...
 #               utils/...
 FRAMEWORK_MODULES := dca \\
-		dataitems \\
-		factories \\
-		networks \\
-		parser \\
-		simulation \\
-	 	functors \\
+\t\tdataitems \\
+\t\tfactories \\
+\t\tnetworks \\
+\t\tparser \\
+\t\tsimulation \\
+\t \tfunctors \\
 
 UTILS_MODULES := std \\
-		img \\
+\t\timg \\
 """
         if self.options.withMpi is True:
             retStr += \
-"""\
-		streams \\
+                """\
+\t\tstreams \\
 
 """
 
         retStr += \
-"""\
+            """\
 
 BASE_MODULES := $(patsubst %,framework/%,$(FRAMEWORK_MODULES))
 BASE_MODULES += $(patsubst %,utils/%,$(UTILS_MODULES))
@@ -932,52 +917,52 @@ STRUCT_MODULES := CoordsStruct \\
 TRIGGER_MODULES := UnsignedServiceTrigger \\
 
 VARIABLE_MODULES := BasicNodeSetVariable \\
-       	NodeSetSPMVariable \\
+       NodeSetSPMVariable \\
 
 FUNCTOR_MODULES := BinomialDist \\
-        CombineNVPairs \\
-        ConnectNodeSetsFunctor \\
-       	DstDimensionConstrainedSampler \\
-       	DstRefDistanceModifier \\
-       	DstRefGaussianWeightModifier \\
-       	DstRefSumRsqrdInvWeightModifier \\
-       	DstScaledContractedGaussianWeightModifier \\
-       	DstScaledGaussianWeightModifier \\
-        ExecuteShell \\
-        GetNodeCoordFunctor \\
-       	IsoSampler \\
-       	IsoSamplerHybrid \\
-        Exp \\
-        Log \\
-        ModifyParameterSet \\
-        NameReturnValue \\
-        Neg \\
-      	PolyConnectorFunctor \\
-        RandomDispersalLayout \\
-      	RefAngleModifier \\
-      	RefDistanceModifier \\
-      	ReversedDstRefGaussianWeightModifier \\
-      	ReversedSrcRefGaussianWeightModifier \\
-      	ReverseFunctor \\
-      	ServiceConnectorFunctor \\
-      	SrcDimensionConstrainedSampler \\
-      	SrcRefDistanceModifier \\
-      	SrcRefGaussianWeightModifier \\
-      	SrcRefPeakedWeightModifier \\
-      	SrcRefSumRsqrdInvWeightModifier \\
-      	SrcScaledContractedGaussianWeightModifier \\
-      	SrcScaledGaussianWeightModifier \\
-        SrcRefDoGWeightModifier \\
-        Scale \\
-        Threshold \\
-      	TissueConnectorFunctor \\
-      	TissueFunctor \\
-      	TissueLayoutFunctor \\
-      	TissueNodeInitFunctor \\
-      	TissueProbeFunctor \\
-	    TissueMGSifyFunctor \\
-        Zipper \\
-        UniformDiscreteDist \\
+       CombineNVPairs \\
+       ConnectNodeSetsFunctor \\
+       DstDimensionConstrainedSampler \\
+       DstRefDistanceModifier \\
+       DstRefGaussianWeightModifier \\
+       DstRefSumRsqrdInvWeightModifier \\
+       DstScaledContractedGaussianWeightModifier \\
+       DstScaledGaussianWeightModifier \\
+       ExecuteShell \\
+       GetNodeCoordFunctor \\
+       IsoSampler \\
+       IsoSamplerHybrid \\
+       Exp \\
+       Log \\
+       ModifyParameterSet \\
+       NameReturnValue \\
+       Neg \\
+       PolyConnectorFunctor \\
+       RandomDispersalLayout \\
+       RefAngleModifier \\
+       RefDistanceModifier \\
+       ReversedDstRefGaussianWeightModifier \\
+       ReversedSrcRefGaussianWeightModifier \\
+       ReverseFunctor \\
+       ServiceConnectorFunctor \\
+       SrcDimensionConstrainedSampler \\
+       SrcRefDistanceModifier \\
+       SrcRefGaussianWeightModifier \\
+       SrcRefPeakedWeightModifier \\
+       SrcRefSumRsqrdInvWeightModifier \\
+       SrcScaledContractedGaussianWeightModifier \\
+       SrcScaledGaussianWeightModifier \\
+       SrcRefDoGWeightModifier \\
+       Scale \\
+       Threshold \\
+       TissueConnectorFunctor \\
+       TissueFunctor \\
+       TissueLayoutFunctor \\
+       TissueNodeInitFunctor \\
+       TissueProbeFunctor \\
+       TissueMGSifyFunctor \\
+       Zipper \\
+       UniformDiscreteDist \\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -1011,8 +996,8 @@ MYSOURCES := $(filter-out %MatrixParser.C %ReadImage.C %Ini.C %Img.C %Matrx.C %I
 HEADERS_DIRS := $(patsubst %,%/include, $(MODULES))
 
 MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
-	       echo $${file} ; \\
-	       done)
+\t       echo $${file} ; \\
+\t       done)
 PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
 
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
@@ -1032,7 +1017,7 @@ vpath %.h $(HEADERS_DIRS) framework/parser/generated
 $(OBJS) : | $(OBJS_DIR)
 
 $(OBJS_DIR):
-	mkdir $(OBJS_DIR)
+\tmkdir $(OBJS_DIR)
 """
         return retStr
 
@@ -1053,20 +1038,16 @@ $(OBJS_DIR):
         retStr += "\n"
         return retStr
 
-    def getCFlags(self):
+    def getCFlags(self):  # noqa
         retStr = \
-"""\
-OTHER_LIBS :=-lgmp
+            """\
+OTHER_LIBS :=-lgmp -lpython2.7
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 """
-##CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
-#$(patsubst %,-I%/generated,$(PARSER_PATH)) \
-#$(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
-#"""
-        if self.options.blueGene == False :
+        if self.options.blueGene is False:
             retStr += \
-"""\
+                """\
 -MMD \
 """
         if self.options.compiler == "gcc":
@@ -1122,16 +1103,16 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.optimization == "O5":
             retStr += " " + O5_OPTIMIZATION_FLAG
 
-        if self.options.dynamicLoading == False:
+        if self.options.dynamicLoading is False:
             retStr += " -DDISABLE_DYNAMIC_LOADING"
 
-        if self.options.pthreads == False:
+        if self.options.pthreads is False:
             retStr += " -DDISABLE_PTHREADS"
 
         if self.options.withMpi is True:
             retStr += " -DHAVE_MPI"
             if self.options.compiler == "gcc":
-               retStr += " -DLAM_BUILDING"
+                retStr += " -DLAM_BUILDING"
 
         if self.options.profile == USE:
             retStr += " -DPROFILING"
@@ -1167,7 +1148,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 
     def getLensLibs(self):
         retStr = "LENS_LIBS := "
-        if self.options.domainLibrary is True :
+        if self.options.domainLibrary is True:
             # retStr += "lib/liblensdomain.a "
             retStr += "lib/liblens.a\n"
         return retStr
@@ -1194,7 +1175,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
 
-        if self.options.mpiTrace is True and self.options.blueGene != True:
+        if self.options.mpiTrace is True and self.options.blueGene is not True:
             printWarning("MPI Trace profiling not available.")
         elif self.options.mpiTrace is True:
             retStr += " $(MPI_TRACE_LIBS)"
@@ -1203,8 +1184,8 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " $(MPI_LIBS)"
 
         if self.options.compiler == "gcc":
-           if self.options.withMpi is True:
-              retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
+            if self.options.withMpi is True:
+                retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
 
         retStr += "\n"
         return retStr
@@ -1273,7 +1254,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
 
     def getDXSpecificCode(self):
         retStr = \
-"""\
+            """\
 # Macros that are needed to compile DX modules
 DX_INCLUDE := framework/dca/include
 
@@ -1289,31 +1270,31 @@ DX_INCLUDE := framework/dca/include
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
 
-#        retStr += \
-#"""\
-#FILES_EDGESETSUBSCRIBERSOCKET = $(DCA_OBJ)/edgeSetOutboard.o $(DCA_OBJ)/EdgeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
-#FILES_NODESETSUBSCRIBERSOCKET = $(DCA_OBJ)/nodeSetOutboard.o $(DCA_OBJ)/NodeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
+#         retStr += \
+# """\
+# FILES_EDGESETSUBSCRIBERSOCKET = $(DCA_OBJ)/edgeSetOutboard.o $(DCA_OBJ)/EdgeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
+# FILES_NODESETSUBSCRIBERSOCKET = $(DCA_OBJ)/nodeSetOutboard.o $(DCA_OBJ)/NodeSetSubscriberSocket.o $(DCA_OBJ)/socket.o
 #
-#$(DCA_OBJ)/edgeSetOutboard.o: $(DCA_SRC)/outboard.c
-#	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_EdgeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/edgeSetOutboard.o
+# $(DCA_OBJ)/edgeSetOutboard.o: $(DCA_SRC)/outboard.c
+# 	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_EdgeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/edgeSetOutboard.o
 #
-#$(DCA_OBJ)/nodeSetOutboard.o: $(DCA_SRC)/outboard.c
-#	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_NodeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/nodeSetOutboard.o
+# $(DCA_OBJ)/nodeSetOutboard.o: $(DCA_SRC)/outboard.c
+# 	$(C_COMP) $(DX_CFLAGS) -DUSERMODULE=m_NodeWatchSocket -c $(DX_BASE)/lib/outboard.c -o $(DCA_OBJ)/nodeSetOutboard.o
 #
-#$(DX_DIR)/EdgeSetSubscriberSocket: $(DCA_OBJ)/edgeSetOutboard.o $(DCA_SRC)/EdgeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
-#	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/EdgeSetSubscriberSocket.c -o $(DCA_OBJ)/EdgeSetSubscriberSocket.o
-#	$(C_COMP) $(FILES_EDGESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/EdgeSetSubscriberSocket;
+# $(DX_DIR)/EdgeSetSubscriberSocket: $(DCA_OBJ)/edgeSetOutboard.o $(DCA_SRC)/EdgeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
+# 	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/EdgeSetSubscriberSocket.c -o $(DCA_OBJ)/EdgeSetSubscriberSocket.o
+# 	$(C_COMP) $(FILES_EDGESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/EdgeSetSubscriberSocket;
 #
-#$(DX_DIR)/NodeSetSubscriberSocket: $(DCA_OBJ)/nodeSetOutboard.o $(DCA_SRC)/NodeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
-#	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/NodeSetSubscriberSocket.c -o $(DCA_OBJ)/NodeSetSubscriberSocket.o
-#	$(C_COMP) $(FILES_NODESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/NodeSetSubscriberSocket;
+# $(DX_DIR)/NodeSetSubscriberSocket: $(DCA_OBJ)/nodeSetOutboard.o $(DCA_SRC)/NodeSetSubscriberSocket.c $(DCA_OBJ)/socket.o
+# 	$(C_COMP) $(DX_CFLAGS) -c $(DCA_SRC)/NodeSetSubscriberSocket.c -o $(DCA_OBJ)/NodeSetSubscriberSocket.o
+# 	$(C_COMP) $(FILES_NODESETSUBSCRIBERSOCKET) $(DX_LITELIBS) -o $(DX_DIR)/NodeSetSubscriberSocket;
 #
-#"""
+# """
         return retStr
 
     def getSuffixRules(self):
         retStr = \
-"""\
+            """\
 # clear all default suffixes
 .SUFFIXES:
 
@@ -1328,28 +1309,27 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-	$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+\t$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
         return retStr
 
     def getCreateDFTargets(self):
         retStr = \
-"""\
+            """\
 #For the DependFile Tool
 DEPENDFILE_OBJS := $(STD_UTILS_OBJ_PATH)/DependLine.o $(STD_UTILS_OBJ_PATH)/DependFile.o
 OBJS += $(DEPENDFILE_OBJS)
 
 $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
-	$(CC) $(MAKE64) -O2 -o $@ $^
-#	$(CC) $(CFLAGS) -o $@ $^
+\t$(CC) $(MAKE64) -O2 -o $@ $^
+#\t$(CC) $(CFLAGS) -o $@ $^
 
 """
         return retStr
 
-
     def getModuleAndObjectIncludes(self):
         retStr = \
-"""\
+            """\
 # Include the description of each module.
 # This will be in the root/project, where root is the root subdir (E.g. dir1)
 # include $(patsubst %,%/module.mk,$(MODULES))
@@ -1367,50 +1347,48 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
             bisonOutputPrefix = "framework/parser/bison/"
 
         retStr = \
-"""\
+            """\
 
 # Parser targets
 speclang.tab.h:
-	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
+\tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
+\tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-	$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
+\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
 
 """
-
         return retStr
 
     def getScannerTargets(self):
 
-        if self.options.blueGene == False:
+        if self.options.blueGene is False:
             retStr = \
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-	$(FLEX) -+ framework/parser/flex/speclang.l
-	sed 's/class istream;/#include <FlexFixer.h>/' \
+\t$(FLEX) -+ framework/parser/flex/speclang.l
+\tsed 's/class istream;/#include <FlexFixer.h>/' \
            lex.yy.cc > lex.yy.cc.edited
-	mv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
-	rm lex.yy.cc
+\tmv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
+\trm lex.yy.cc
 """
         else:
             retStr = \
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-	cp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
+\tcp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
 """
-
 
         retStr += \
-"""
+            """
 lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-	$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
+\t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
 """
         retStr += "\n"
         return retStr
@@ -1439,7 +1417,7 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
 
     def getLibLensTarget(self):
         retStr = \
-"""\
+            """\
 # I could not find a way to ar it in one time in AIX, the command gets too
 # long, also I cannot do this with the foreach loop using BASE_MODULES because
 # it concatenates into one single line.
@@ -1458,21 +1436,21 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
             retStr += arCmd + " $(OBJ_" + i + ")\n"
         retStr += "\tranlib $@\n\n"
         retStr += "lib/liblensext.a: $(EXTENSION_OBJECTS) $(LENS_LIBS)"
-        if self.options.dynamicLoading == False:
+        if self.options.dynamicLoading is False:
             retStr += " $(GENERATED_DL_OBJECTS)"
         retStr += "\n"
         retStr += arCmd + " $(EXTENSION_OBJECTS)\n"
-        if self.options.dynamicLoading == False:
+        if self.options.dynamicLoading is False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
         retStr += "\tranlib $@\n\n"
         return retStr
 
     def getMainDefTarget(self):
         retStr = \
-"""\
+            """\
 $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
-	echo \#\!. > $@
-	$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
+\techo \#\!. > $@
+\t$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
 """
         return retStr
 
@@ -1505,7 +1483,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
                 retStr += "$(DX_LITELIBS)"
         if self.operatingSystem == "AIX":
             retStr += "$(XLINKER)"
-        if self.options.profile == USE :
+        if self.options.profile == USE:
             retStr += PROFILING_FLAGS
             retStr += "$(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE)\n"
         return retStr
@@ -1530,33 +1508,24 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
 
     def getCleanTarget(self):
         retStr = \
-"""\
+            """\
 .PHONY: clean
 clean:
-	-rm -f dx/EdgeSetSubscriberSocket
-	-rm -f dx/NodeSetSubscriberSocket
-	-rm -f $(BIN_DIR)/$(EXE_FILE)
-	-rm -f $(BIN_DIR)/createDF
-	-rm -f lib/liblens.a
-	-rm -f lib/liblensext.a
-	-rm -f $(SO_DIR)/Dependfile
-	-rm -f framework/parser/bison/speclang.output
-	-rm -f framework/parser/generated/lex.yy.C
-	-rm -f framework/parser/generated/lex.yy.C
-	-rm -f framework/parser/generated/speclang.tab.C
-	-rm -f framework/parser/generated/speclang.tab.h
-	-rm -f $(OBJS_DIR)/*
+\t-rm -f dx/EdgeSetSubscriberSocket
+\t-rm -f dx/NodeSetSubscriberSocket
+\t-rm -f $(BIN_DIR)/$(EXE_FILE)
+\t-rm -f $(BIN_DIR)/createDF
+\t-rm -f lib/liblens.a
+\t-rm -f lib/liblensext.a
+\t-rm -f $(SO_DIR)/Dependfile
+\t-rm -f framework/parser/bison/speclang.output
+\t-rm -f framework/parser/generated/lex.yy.C
+\t-rm -f framework/parser/generated/lex.yy.C
+\t-rm -f framework/parser/generated/speclang.tab.C
+\t-rm -f framework/parser/generated/speclang.tab.h
+\t-rm -f $(OBJS_DIR)/*
 """
-#	-find . -name "*\.o" -exec /bin/rm {} \;
-#	-find . -name "*\.so" -exec /bin/rm {} \;
-#	-find . -name "*\.d" -exec /bin/rm {} \;
-#	-find . -name "*\.ld" -exec /bin/rm {} \;
-#	-find . -name "*\.yd" -exec /bin/rm {} \;
-#	-find . -name "*\.ad" -exec /bin/rm {} \;
-#	-find . -name "*\.def" -exec /bin/rm {} \;
-#	-find . -name "*\.undef" -exec /bin/rm {} \;
         return retStr
-
 
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
@@ -1619,6 +1588,3 @@ if __name__ == "__main__":
     except FatalError as error:
         error.printError()
         sys.exit(-1)
-
-
-

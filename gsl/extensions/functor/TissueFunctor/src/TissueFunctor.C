@@ -2924,7 +2924,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
   //
   if (electrical || chemical || point || bidirectional)
   {
-    // REMEBER that all the touches have been detected,
+    // REMEBER that all the touches (within the current MPI process) have been detected,
     // we just need to find out which compartment (from which branch) connect
     // to which compartment (in which branch)
     // and use the branches (as well as other keyfields, e.g. MTYPE) to
@@ -8041,6 +8041,10 @@ bool TissueFunctor::setGenerated(
   // endspecialTreatment
   bool alreadyThere = false;
   key_size_t dummy_key;
+  //ignore special treatment
+  if (_tissueParams._use_biological_constraint == 0)
+    specialTreatment = "";
+  ///////
   if (miter == smap.end())
   {
     if (specialTreatment == "BidirectionalConnections")

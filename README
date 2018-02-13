@@ -13,6 +13,6 @@ NTI:
 
 
 External library:
-  bison 
+  bison
   flex
   lgmp
