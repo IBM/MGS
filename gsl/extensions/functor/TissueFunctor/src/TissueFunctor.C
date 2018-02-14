@@ -1192,8 +1192,8 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     ////END TUAN TESTING
     
     touchDetector->setPass(TissueContext::FIRST_PASS);
-    // touchDetector->unique(true);
-    touchDetector->unique(false);
+    touchDetector->unique(true);
+    //touchDetector->unique(false);
 #ifdef SYNAPSE_PARAMS_TOUCH_DETECT
     _tissueContext->_decomposition->resetCriteria(&detectionTouchSpace);
 #endif
@@ -3011,11 +3011,18 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 #else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
-      {  // pre component is LENS junction
+      {  // pre component is LENS junction (i.e. explicit junction)
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+        if (point &&
+            _capsuleJctPointIndexMap[nodeType].find(std::make_pair(preCapsule, postCapsule)) !=
+                _capsuleJctPointIndexMap[nodeType].end())
+          continue;
+#else
         if (point &&
             _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
                 _capsuleJctPointIndexMap[nodeType].end())
           continue;
+#endif
         preJunction = true;
         indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
       }
@@ -3118,8 +3125,16 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                       rval[indexPre];
 #else
                 if (preJunction)
+                {
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                  _capsuleJctPointIndexMap[nodeType][std::make_pair(preCapsule, postCapsule)] =
+                      rval[indexPre];
+#else
                   _capsuleJctPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
+#endif
+
+                }
                 else
                   _capsuleCptPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
@@ -6092,10 +6107,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][jctCapsulePreCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       preSynPoints[preSynPointType] =
                           preSynapticPointAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6136,10 +6159,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][jctCapsulePostCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6354,10 +6385,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][jctCapsulePreCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       preSynPoints[preSynPointType] =
                           preSynapticPointAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6396,10 +6435,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][jctCapsulePostCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6543,10 +6590,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][jctCapsulePreCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       preSynPoints[preSynPointType] =
                           preSynapticPointAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -8830,6 +8885,7 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 // HISTORY:
 //   v.1.1 : update the distribution in step 2
 #ifdef IDEA1
+
 //int TissueFunctor::getNumCompartments(ComputeBranch* branch)
 //{
 //    std::vector<int> cptsizes_in_branch;
@@ -9071,6 +9127,7 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 //  rval = ncpts;
 //  return rval;
 //}
+
 #else
 int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
 {

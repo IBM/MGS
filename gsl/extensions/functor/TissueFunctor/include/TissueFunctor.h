@@ -268,7 +268,13 @@ class TissueFunctor : public CG_TissueFunctorBase
   // NOTE: density-index = index in the density array of Capsules for the
   // current gridnode
   std::map<std::string, std::map<Capsule*, int> > _capsuleCptPointIndexMap;
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+  //std::map<std::string, std::map<Touch*, int > > _capsuleJctPointIndexMap;
+  std::map<std::string, std::map<std::pair<Capsule*, Capsule*>, int > > _capsuleJctPointIndexMap;
+#else
+  //nodetype = 'tight' (SynapticCleft's name), 'Nat' (Channel's name)
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
+#endif
 
   // NOTE: While parsing GSL, each layer is given an index,
   //                   starting from 0 for the first Layer in A GRID

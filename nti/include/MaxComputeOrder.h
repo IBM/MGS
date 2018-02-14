@@ -234,7 +234,8 @@
 
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
-//{{{ choices for how data is exchanged when we couple spines to shaft
+//choices for how data is exchanged when we couple spines to shaft
+//{{{ 
 //BY DEFAULT: 
 //  the current between spine-neck and den-shaft is modeled as injectedCurrent producer
 //    Iinj(to-neck, time=t+dt/2) = g * (Vshaft(t) - Vneck(t)) 
@@ -283,7 +284,7 @@
 //   capture [NT] of a particular type of Neurotransmitter (e.g. Glut, GABA)
 // We also needs to update Synapse-receptors's Interfaces
 
-//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
+//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to have DA, Ser(otonin) as part of neurotransmitter in the SynapticCleft Node
 
 //NOTE: This is for the choice of defining input to/output from SynapticReceptor
 //      inside TissueFunctor
@@ -296,6 +297,11 @@
 //#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
 //     In this case, the SynapticCleft is hardcoded to receive 'Voltage'
 //     which is used for calculating [NT]
+
+//by default, a single capsule can be used to create a single SynapticCleft maximum. This is however, a limitation when we build a network of single-compartmental neuron
+//where we want a neuron can form multiple SynapticClefts with other neurons through its single capsule
+//#define SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE   //tell TissueFunctor to enable multiple SynapticCleft instances from a single junctional pre-capsule
+//TODO: may need to update for compartmental capsule? (currently not having a user-case)
 //}}}
 
 //IP3 modeling
