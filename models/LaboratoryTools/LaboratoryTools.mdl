@@ -7,12 +7,6 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Struct TissueSite {
-	dyn_var_t x;
-	dyn_var_t y;
-	dyn_var_t z;
-	dyn_var_t r;
-}
 
 // GOAL: stimulus
 //{{{

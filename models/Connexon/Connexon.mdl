@@ -53,16 +53,17 @@ Node Connexon Implements
 #endif
 
   Shared {
+    //{{{
     dyn_var_t []* voltageConnect;
     DimensionStruct* []* dimensionsConnect;
 //#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     int []* countGapJunctionConnect;
 #endif
+    //}}}
   }
 
   InitPhase produceInitialVoltage(Vi
-//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       , countGapJunctionConnectedToCompartment_i
 #endif
@@ -101,7 +102,6 @@ Node Connexon Implements
     VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
     BranchDataProducer.branchData >> branchData;
     DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
-//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountInformationArrayProducer.countGapJunctionConnected >> Shared.countGapJunctionConnect;
 #endif
@@ -115,7 +115,6 @@ Node Connexon Implements
     VoltageProducer 
   {
     VoltageProducer.voltage >> Vj;
-//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     CountProducer.countGapJunction >> countGapJunctionConnectedToCompartment_j;
 #endif
@@ -123,4 +122,49 @@ Node Connexon Implements
 /*}}}*/
 }
 
+Node VoltageAdapter Implements 
+     BranchDataProducer, IndexProducer, 
+     DimensionProducer,
+     VoltageProducer
+{ // for historical purpose (we still keep it here; use Connexon_Vm instead)
+/*{{{*/
+
+  dyn_var_t* Vi; 
+  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+  int index;
+  DimensionStruct*  dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+
+  Shared {
+    //{{{
+    dyn_var_t []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
+    //}}}
+  }
+
+  InitPhase produceInitialVoltage(Vi, dimension);
+  RuntimePhase produceVoltage(Vi);
+
+  DimensionProducer.dimension << dimension;
+  VoltageProducer.voltage << Vi;
+  BranchDataProducer.branchData << branchData;
+  IndexProducer.index << &index;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+    float branchProp;
+  }
+
+  UserFunction setPointers;
+  
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+    VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer 
+  {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+    setPointers();
+  }
+/*}}}*/
+}
 #endif

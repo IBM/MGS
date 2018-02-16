@@ -209,6 +209,7 @@ void Initializer::generateCopyModules()
    std::map<std::string, std::vector<std::string> >::iterator it, 
       end = _copyModules.end();
    for(it = _copyModules.begin(); it != end; ++it) {
+     os << "mkdir -p $LENSROOT/extensions/" << it->first << "\n";
      os << "cp -r ";
      std::vector<std::string>::iterator it2, end2 = it->second.end();
      for (it2 = it->second.begin(); it2 != end2; ++it2) {

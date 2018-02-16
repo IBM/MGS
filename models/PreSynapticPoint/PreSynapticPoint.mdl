@@ -268,4 +268,148 @@ Node SynapticCleft Implements
   //}}}
 /*}}}*/
 }
+
+/*
+Receive voltage from multiple neurons
+Produce: LFP
+*/
+Node VoltageMegaSynapticSpace Implements 
+     VoltageProducer
+{ 
+///*{{{*/
+  dyn_var_t* [] Vm; // reference to the voltage of the neurons
+  dyn_var_t LFP;  // aggregate Vm [mV] of all the neurons 
+
+  Shared {
+    BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+    double L0; //in meter
+    int[] gridSize;
+  }
+
+  InitPhase produceInitialVoltage(LFP);
+  RuntimePhase produceVoltage(LFP), computeState;
+
+  VoltageProducer.voltage << &LFP;
+
+  InAttrPSet {
+    string identifier;
+    int idx; //connect to either an exact compartment-index
+  }
+
+  
+  Connection Pre Node (PSet.identifier=="connexon") Expects 
+    VoltageProducer//, BranchDataProducer
+  {
+    VoltageProducer.voltage >> Vm;
+  }
+/*}}}*/
+}
+
+//NOTE: This is the version that accept Vm[] from a ComputeBranch
+// which is currently not being used
+Node MegaSynapticCleft Implements 
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+//     ConductanceProducer,ReversalPotentialProducer,
+//#else
+//     CurrentProducer, 
+//#endif
+//     BranchDataProducer, IndexProducer, 
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//     CountProducer,
+//#endif
+     VoltageProducer
+{ 
+///*{{{*/
+//  dyn_var_t* Vi; //reference to the compartment representing the spine neck 
+//  dyn_var_t* Vj; //reference to the compartment representing the spine 'head'
+  dyn_var_t* [] Vm; // reference to the voltage of the neurons
+  dyn_var_t LFP;  // aggregate Vm [mV] of all the neurons 
+//  dyn_var_t I;   //the current [pA]
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+//  dyn_var_t g;   //the conductance [nS/um^2] that current from neck to shaft sense 
+//#else
+//  dyn_var_t g;   //the conductance [nS] between the gap junction formed by 2 compartments
+//                 // .. from 2 different branches
+//#endif
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//  int *countGapJunctionConnectedToCompartment_i; //keep track how many spines attached to a compartment 
+//  int *countGapJunctionConnectedToCompartment_j; //keep track how many spines attached to a compartment 
+//#endif
+
+//  BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+//  int index;
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+//  DimensionStruct  dimension; // of the compartment (can be neck or shaft) that this SpineAttachment object connect to
+//#endif
+
+  Shared {
+    dyn_var_t []* voltageConnect;
+    DimensionStruct* []* dimensionsConnect;
+    BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//    int []* countGapJunctionConnect;
+//#endif
+  }
+
+  InitPhase produceInitialVoltage(LFP);
+//  InitPhase produceInitialVoltage(Vi
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//      , countGapJunctionConnectedToCompartment_i
+//#endif
+//             );
+  //RuntimePhase produceVoltage(Vi), computeState;
+  RuntimePhase produceVoltage(LFP), computeState;
+
+  //VoltageProducer.voltage << Vi;
+  VoltageProducer.voltage << &LFP;
+//#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+//  ConductanceProducer.conductance << &g;
+//  ReversalPotentialProducer.reversalPotential << Vj;
+//#else
+//  CurrentProducer.current << &I;
+//#endif
+//  BranchDataProducer.branchData << branchData;
+//  IndexProducer.index << &index;
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//  CountProducer.countGapJunction << countGapJunctionConnectedToCompartment_i;
+//#endif
+
+  InAttrPSet {
+    string identifier;
+    int idx; //connect to either an exact compartment-index
+    float branchProp; // or find the index from the 'ratio' of length from the pro-end
+  }
+
+  UserFunction setPointers;
+  
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects 
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//      CountInformationArrayProducer, 
+//#endif
+    VoltageArrayProducer, BranchDataProducer
+//, DimensionArrayProducer 
+  {
+    VoltageArrayProducer.voltageArray >> Shared.voltageConnect;
+    BranchDataProducer.branchData >> Shared.branchData;
+ //   BranchDataProducer.branchData >> branchData;
+ //   DimensionArrayProducer.dimensionArray >> Shared.dimensionsConnect;   
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//    CountInformationArrayProducer.countGapJunctionConnected >> Shared.countGapJunctionConnect;
+//#endif
+    setPointers();
+  }
+//  Connection Pre Node (PSet.identifier=="connexon[Voltage]") Expects 
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//    CountProducer,
+//#endif
+//    VoltageProducer 
+//  {
+//    VoltageProducer.voltage >> Vj;
+//#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
+//    CountProducer.countGapJunction >> countGapJunctionConnectedToCompartment_j;
+//#endif
+//  }
+/*}}}*/
+}
+
 #endif

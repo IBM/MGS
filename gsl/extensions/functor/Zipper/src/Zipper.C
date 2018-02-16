@@ -180,6 +180,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
   int sz=destinationNodes.size();
   if (sourceNodes.size()!=sz) {
     std::cerr<<"Something is wrong on Zipper. When used properly, source and destination NodeSets contain the same number of nodes!"<<std::endl;
+    std::cerr<< "Source: " << sourceNodes.size() << "; while Dest: " << sz << std::endl;
     exit(-1);
   }
 
@@ -227,7 +228,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
     if (inAttrPSetDI) {
       cc->inAttrPSet = inAttrPSetDI->getParameterSet();
       if (branchPropList!=0) {
-#if 0
+#if 1
         //James K.
         IntDataItem* idxDI=new IntDataItem(-1);
         std::auto_ptr<DataItem> paramDI_ap(idxDI);
@@ -251,13 +252,16 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
           bds;
         {
           nd = cc->sourceNode->getNode();
-            bds= 
-            (dynamic_cast<BranchDataProducer*>(nd))->CG_get_BranchDataProducer_branchData();
-          if (! bds)
+          if (nd)
           {
-            nd = cc->destinationNode->getNode();
             bds= 
               (dynamic_cast<BranchDataProducer*>(nd))->CG_get_BranchDataProducer_branchData();
+            if (! bds)
+            {
+              nd = cc->destinationNode->getNode();
+              bds= 
+                (dynamic_cast<BranchDataProducer*>(nd))->CG_get_BranchDataProducer_branchData();
+            }
           }
         }
         //end 1.b
@@ -318,6 +322,9 @@ Zipper::Zipper(Zipper const & z)
 
 Zipper::~Zipper() 
 {
+  if (_noConnector) delete _noConnector;
+  if (_granuleConnector) delete _granuleConnector;
+  if (_lensConnector) delete _lensConnector;
 }
 
 void Zipper::duplicate(std::auto_ptr<Zipper>& dup) const

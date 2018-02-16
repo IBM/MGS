@@ -4,19 +4,21 @@ help to generate Makefile
 """
 
 from __future__ import print_function
-from past.builtins import xrange
+# from contextlib import contextmanager
 import os
 import os.path
 import sys
 import popen2
 # import string
 import getopt
+from builtins import range
 
 # If we decide to put modules in the scripts directory use the following to
 # be able to import modules
 # sys.path.append("scripts/")
 
-# pylint:ignore=invalid-name
+# pylint:disable=invalid-name,
+# pylint:disable=C0301,too-many-branches
 # Constants
 USE = 1
 DONTUSE = 0
@@ -59,7 +61,7 @@ AIX_SHARED_CC = "$(CC) $(SHARED_PFIX) -o $@ $(filter %.o, $^) $(shell grep -A 1 
 AIX_GNU_FINAL_TARGET_FLAG = "$(MAKE64) "
 AIX_XL_FINAL_TARGET_FLAG = AIX_GNU_FINAL_TARGET_FLAG + " " + XL_RUNTIME_TYPE_INFO_FLAG
 
-GNU_DEBUGGING_FLAG = "-ggdb"
+GNU_DEBUGGING_FLAG = "-ggdb -g"
 XL_DEBUGGING_FLAG = "-g"
 
 PROFILING_FLAGS = "-pg"
@@ -69,6 +71,7 @@ O2_OPTIMIZATION_FLAG = "-O2"
 O3_OPTIMIZATION_FLAG = "-O3"
 O4_OPTIMIZATION_FLAG = "-O4"
 O5_OPTIMIZATION_FLAG = "-O5"
+OG_OPTIMIZATION_FLAG = "-Og"
 
 DEBUG_ASSERT = "-DDEBUG_ASSERT"
 DEBUG_HH = "-DDEBUG_HH"
@@ -84,9 +87,9 @@ COMMON_DX_LITELIBS = "-lDXlite -lm"
 AIX_DX_LITELIBS = "-L$(DX_BASE)/lib_ibm6000 " + COMMON_DX_LITELIBS
 LINUX_DX_LITELIBS = "-L$(DX_BASE)/lib_linux " + COMMON_DX_LITELIBS
 
-EXTRA_PARSER_TARGERS_FOR_DX = "$(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket $(DCA_OBJ)/socket.o"
+EXTRA_PARSER_TARGERS_FOR_DX = "$(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket $(OBJS_DIR)/socket.o"
 
-LENSPARSER_TARGETS = "$(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o $(BASE_OBJECTS) "
+LENSPARSER_TARGETS = "$(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(BASE_OBJECTS) "
 
 # # Pre python 2.3 compatibility
 # True = 1
@@ -94,19 +97,26 @@ LENSPARSER_TARGETS = "$(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex
 
 
 class FatalError(Exception):
+    """
+    class handle error
+    """
     def __init__(self, value=""):
+        super(FatalError, self).__init__()
         self.value = value
 
     def __str__(self):
         return repr(self.value)
 
     def printError(self):
+        """print msg"""
         if self.value != "":
             print("Fatal error:", self.value)
 
 
 class InternalError(Exception):
+    """internal error handling"""
     def __init__(self, value=""):
+        super(InternalError, self).__init__()
         self.value = value
 
     def __str__(self):
@@ -114,16 +124,21 @@ class InternalError(Exception):
 
 
 def printWarning(warning):
+    """print any message considered as warning"""
     print("Warning:", warning, "\n")
 
 
 def printFeedback(feedback, extraLine=False):
+    """print any message considered as feedback"""
     print(feedback)
     if extraLine is True:
         print()
 
 
 def findFile(name, required=False):
+    """
+    find file path
+    """
     cmd = "which " + name
     (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
     stdout = stdoutFile.read()
@@ -138,6 +153,7 @@ def findFile(name, required=False):
 
 
 def getFileStatus(name):
+    """return if file exists"""
     retStr = ""
     if name != "":
         retStr = os.path.basename(name) + " is found at: " + os.path.dirname(name)
@@ -145,20 +161,23 @@ def getFileStatus(name):
 
 
 def addUnderScore(name, scoreChar='='):
+    """add equal sign"""
     retStr = name + "\n"
     if name != "":
-        for i in xrange(len(name)):
+        for i in range(len(name)):
             retStr += scoreChar
         retStr += "\n"
     return retStr
 
 
 def getFirst(a):
+    """return first element in pair"""
     (first, second) = a
     return first
 
 
 def createConfigHeader():
+    """create config header"""
     rootDir = os.getcwd()
     create = True
     try:
@@ -185,15 +204,15 @@ def createConfigHeader():
 
 
 def touchExtensionsMk():
+    """ renew extension file"""
     if os.path.isfile(EXTENSIONS_MK) is False:
         f = open(EXTENSIONS_MK, "w")
         f.close()
 
 
 class DxInfo:
-
+    """ deal with DX"""
     def __init__(self):
-
         self.bin = ""
         self.exists = False
         self.binPath = ""
@@ -202,6 +221,7 @@ class DxInfo:
         self.include = ""
 
     def setup(self, operatingSystem):
+        """setup"""
         self.bin = findFile("dx")
         if self.bin == "":
             print("DX is not found", self.mainPath)
@@ -231,6 +251,7 @@ class DxInfo:
         self.exists = True
 
     def getInfo(self):
+        """return info """
         retStr = TAB + "DX executable is found at" + self.bin + "\n"
         retStr += TAB + "DX main path is found at" + self.mainPath + "\n"
         retStr += TAB + "DX library is found at" + self.liteLib + "\n"
@@ -239,9 +260,9 @@ class DxInfo:
 
 
 class Options:
-
+    """handle options"""
     def __init__(self, argv):
-
+        """init file"""
         # options
         self.compilationMode = "undefined"  # 32, 64, undefined
         self.withDX = UNDEF  # USE, DONTUSE, UNDEF
@@ -258,16 +279,22 @@ class Options:
         self.profile = DONTUSE  # USE, DONTUSE, UNDEF
         self.tvMemDebug = DONTUSE  # USE, DONTUSE, UNDEF
         self.mpiTrace = DONTUSE  # USE, DONTUSE, UNDEF
-        self.optimization = "undefined"  # O1, O2, O3, undefined
+        self.optimization = "undefined"  # O, O2, O3, O4, O5, Og, undefined
         self.dynamicLoading = False  # True, False
         self.domainLibrary = False  # True, False
         self.pthreads = True  # True, False
         self.withMpi = False  # True, False
+        self.withGpu = False  # True, False
+        self.withArma = False  # True, False
         self.blueGeneL = False  # True, False
         self.blueGeneP = False  # True, False
         self.blueGeneQ = False  # True, False
         self.blueGene = False  # True, False
         self.rebuild = False  # True, False
+        self.asNts = False  # True, False
+        self.asMgs = False  # True, False
+        self.asBoth = False  # True, False
+        self.colab = False  # True, False
         self.help = False  # True, False
 
         self.cmdOptions = [("32-bit", "32 bit compilation mode"),
@@ -284,6 +311,7 @@ class Options:
                            ("O3", "optimize at level 3"),
                            ("O4", "optimize at level 4"),
                            ("O5", "optimize at level 5"),
+                           ("Og", "optimize with debug information"),
                            ("debug", "compile with debugging flags"),
                            ("debug_assert", "compile with debugging flags for assert"),
                            ("debug_hh", "compile with debugging flags for Hodgkin-Huxley compartments"),
@@ -296,24 +324,35 @@ class Options:
                            ("domainLib", "link to domain specific library"),
                            ("disable-pthreads", "disable pthreads, there will be a single thread"),
                            ("with-mpi", "enables mpi"),
+                           ("with-gpu", "enables gpu extensions"),
+                           ("with-arma", "enables Armadillo extensions"),
                            ("blueGeneL", "configures for blueGeneL environment"),
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
                            ("rebuild", "rebuilds the project"),
+                           ("as-Nts", "configures as NTS"),
+                           ("as-Mgs", "configures as MGS"),
+                           ("colab", "build for collaborators"),
+                           ("as-both-Nts-Mgs", "configures as both NTS and MGS"),
                            ("help", "displays the available options")]
 
         self.parseOptions(argv)
 
     def getOptionList(self):
+        """return list of options"""
         return map(getFirst, self.cmdOptions)
 
     def usage(self, argv):
+        """how to use"""
         print(addUnderScore("Possible command line options:"))
         for i in self.cmdOptions:
             m_str = TAB + "--" + i[0] + ": " + i[1]
             print(m_str)
 
     def parseOptions(self, argv):  # noqa
+        """
+        parsing the command-line inputs
+        """
         try:
             opts, args = getopt.getopt(argv[1:], '', self.getOptionList())
             for o, a in opts:
@@ -357,37 +396,46 @@ class Options:
                     if self.optimization == "undefined":
                         self.optimization = "O"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O2":
                     if self.optimization == "undefined":
                         self.optimization = "O2"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O3":
                     if self.optimization == "undefined":
                         self.optimization = "O3"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O4":
                     if self.optimization == "undefined":
                         self.optimization = "O4"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--O5":
                     if self.optimization == "undefined":
                         self.optimization = "O5"
                     else:
-                        raise FatalError("O, O2, O3, O4, and/or O5 are used at the same time.")
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
+                if o == "--Og":
+                    if self.optimization == "undefined":
+                        self.optimization = "Og"
+                    else:
+                        raise FatalError("O, O2, O3, O4, O5, and/or Og are used at the same time.")
                 if o == "--debug":
                     self.debug = USE
                 if o == "--debug_assert":
                     self.debug_assert = True
+                    self.debug = USE
                 if o == "--debug_hh":
                     self.debug_hh = True
+                    self.debug = USE
                 if o == "--debug_loops":
                     self.debug_loops = True
+                    self.debug = USE
                 if o == "--debug_cpts":
                     self.debug_cpts = True
+                    self.debug = USE
                 if o == "--nowarning_dynamiccast":
                     self.nowarning_dynamiccast = True
                 if o == "--profile":
@@ -404,6 +452,10 @@ class Options:
                     self.pthreads = False
                 if o == "--with-mpi":
                     self.withMpi = True
+                if o == "--with-gpu":
+                    self.withGpu = True
+                if o == "--with-arma":
+                    self.withArma = True
                 if o == "--silent":
                     self.silent = True
                 if o == "--verbose":
@@ -416,6 +468,14 @@ class Options:
                     self.blueGeneQ = True
                 if o == "--rebuild":
                     self.rebuild = True
+                if o == "--as-Nts":
+                    self.asNts = True
+                if o == "--as-Mgs":
+                    self.asMgs = True
+                if o == "--as-both-Nts-Mgs":
+                    self.asBoth = True
+                if o == "--colab":
+                    self.colab = True
                 if o == "--help":
                     self.help = True
 
@@ -427,15 +487,15 @@ class Options:
             if self.extMode is True and self.rebuild is True:
                 raise FatalError("Do not rebuild with the ext-mode turned on.")
 
-            if self.debug == USE and self.optimization != "O":
+            if self.debug == USE and self.optimization != "Og":
                 printWarning("Debugging is turned on even though optimization is " +
-                             self.optimization + ".\nSetting optimization to --O")
-                self.optimization = "O"
+                             self.optimization + ".\nSetting optimization to --Og")
+                self.optimization = "Og"
 
-            if self.profile == USE and self.optimization != "O":
+            if self.profile == USE and self.optimization != "Og":
                 printWarning("Profiling is turned on even though optimization is " +
-                             self.optimization + ".\nSetting optimization to --O")
-                self.optimization = "O"
+                             self.optimization + ".\nSetting optimization to --Og")
+                self.optimization = "Og"
 
             # if self.profile == USE and self.debug != USE:
             #    printWarning("Profiling is turned on so debugging turned on by default.")
@@ -483,14 +543,15 @@ class Options:
 
         except getopt.GetoptError:
             # print help information and exit:
+            print("Error in parsing configure.py")
             self.usage(argv)
             raise FatalError
 
 
 class BuildSetup:
-
+    """to build"""
     def __init__(self):
-
+        """constructor"""
         # System defining variables
         self.operatingSystem = ""
         self.hostName = ""
@@ -542,6 +603,7 @@ class BuildSetup:
         self.makeBin = findFile("make", True)
 
     def getSystemInfo(self):  # noqa
+        """return sys info"""
         retStr = addUnderScore("System information:")
         retStr += TAB + "Operating system: " + self.operatingSystem + "\n"
         retStr += TAB + "HostName: " + self.hostName + "\n"
@@ -573,7 +635,7 @@ class BuildSetup:
         retStr += "\n"
 
         retStr += TAB + "Debugging: "
-        if self.options.debug is True:
+        if self.options.debug == USE:
             retStr += "On\n"
             if self.options.debug_assert is True:
                 retStr += TAB + TAB + "- DEBUG_ASSERT: YES\n"
@@ -639,6 +701,27 @@ class BuildSetup:
             retStr += "Not used"
         retStr += "\n"
 
+        retStr += TAB + "GPU: "
+        if self.options.withGpu is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
+        retStr += TAB + "Armadillo: "
+        if self.options.withArma is True:
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
+        retStr += TAB + "NTI: "
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += "Used"
+        else:
+            retStr += "Not used"
+        retStr += "\n"
+
         retStr += TAB + "DX: "
 
         if self.dx.exists is True:
@@ -659,6 +742,7 @@ class BuildSetup:
         return retStr
 
     def createLog(self):
+        """log file"""
         fStr = "Configure script is run as follows:\n"
         for i in sys.argv:
             fStr += i + " "
@@ -672,6 +756,7 @@ class BuildSetup:
         f.close()
 
     def bisonVersionFinder(self):
+        """bison version"""
         cmd = self.bisonBin + " --version"
         (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
         stderr = stderrFile.read()
@@ -684,6 +769,7 @@ class BuildSetup:
         self.bisonVersion = tokens[-1]
 
     def main(self):
+        """main action"""
         if self.options.help is True:
             return
 
@@ -717,6 +803,7 @@ class BuildSetup:
             os.system(cmd)
 
     def setDX(self):
+        """configure DX"""
         self.dx = DxInfo()
 
         if self.objectMode == "64":
@@ -736,7 +823,9 @@ class BuildSetup:
                     raise FatalError("DX requested but not found.")
 
     def setCompilers(self):  # noqa
-
+        """
+        options to GCC
+        """
         if self.options.withMpi is True:
             if self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
@@ -794,6 +883,7 @@ class BuildSetup:
             raise InternalError("Should not have hit here in setCompilers")
 
     def getInitialValues(self):
+        """get the init part to Makefile"""
         retStr = \
             """\
 # This is a code generated file, generated using configure.py
@@ -804,10 +894,17 @@ class BuildSetup:
 BIN_DIR?=./bin
 EXE_FILE=gslparser
 
+"""
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += \
+                """\
 NTI_DIR=../nti
 NTI_OBJ_DIR=$(NTI_DIR)/obj
 NTI_INC_DIR=$(NTI_DIR)/include
 
+"""
+        retStr += \
+            """\
 BISON=$(shell which bison)
 FLEX=$(shell which flex)
 
@@ -818,7 +915,6 @@ SCRIPTS_DIR := scripts
 DX_DIR := dx
 SO_DIR := $(LENSROOT)/so
 PARSER_PATH := framework/parser
-PARSER_GENERATED := $(PARSER_PATH)/generated
 STD_UTILS_OBJ_PATH := utils/std/obj
 TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
@@ -846,6 +942,10 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
             retStr += "HAVE_MPI := 1\n"
+        if self.options.withGpu is True:
+            retStr += "HAVE_GPU := 1\n"
+        if self.options.withArma is True:
+            retStr += "HAVE_ARMA := 1\n"
         if self.options.silent is True:
             retStr += "SILENT_MODE := 1\n"
         if self.options.verbose is True:
@@ -859,6 +959,7 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         return retStr
 
     def getMake64(self):
+        """check if 64-bit"""
         retStr = "MAKE64 = "
         if self.objectMode == "64":
             if self.options.compiler == "gcc":
@@ -870,7 +971,8 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         retStr += "\n"
         return retStr
 
-    def getModuleDefinitions(self):
+    def getModuleDefinitions(self):  # noqa
+        """get info of all modules"""
         retStr = \
             """\
 ####################################################################
@@ -880,17 +982,45 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 #
 # part 1 --> which include framework/...
 #               utils/...
-FRAMEWORK_MODULES := dca \\
+"""
+        _framework_modules = \
+            """\
+\t\tdca \\
 \t\tdataitems \\
 \t\tfactories \\
 \t\tnetworks \\
 \t\tparser \\
 \t\tsimulation \\
-\t \tfunctors \\
-
-UTILS_MODULES := std \\
+\t\tfunctors \\
+            """
+        if self.options.colab is False:
+            retStr += \
+                """\
+FRAMEWORK_MODULES := \\
+""" + _framework_modules
+        else:
+            retStr += \
+                """\
+COLAB_FRAMEWORK_MODULES := \\
+""" + _framework_modules
+        _utils_modules = \
+            """\
+\t\tstd \\
 \t\timg \\
 """
+        if self.options.colab is False:
+            retStr += \
+                """\
+
+UTILS_MODULES := \\
+""" + _utils_modules
+        else:
+            retStr += \
+                """
+
+COLAB_UTILS_MODULES := \\
+""" + _utils_modules
+
         if self.options.withMpi is True:
             retStr += \
                 """\
@@ -912,13 +1042,135 @@ INTERFACE_MODULES :=
 
 NODE_MODULES :=
 
+"""
+
+        if self.options.colab is True:
+            if (self.options.asNts is True) or (self.options.asBoth is True):
+                retStr += \
+                    """\
+COLAB_NODE_MODULES :=  \\
+        HodgkinHuxleyVoltage \\
+        VoltageEndPoint \\
+        HodgkinHuxleyVoltageJunction \\
+        VoltageJunctionPoint \\
+        IP3Concentration \\
+        IP3ConcentrationEndPoint \\
+        IP3ConcentrationJunction \\
+        IP3ConcentrationJunctionPoint \\
+        CaConcentration \\
+        CaConcentrationEndPoint \\
+        CaConcentrationJunction \\
+        CaConcentrationJunctionPoint \\
+        CaERConcentration \\
+        CaERConcentrationEndPoint \\
+        CaERConcentrationJunction \\
+        CaERConcentrationJunctionPoint \\
+        ForwardSolvePoint1  \\
+        ForwardSolvePoint2  \\
+        ForwardSolvePoint3  \\
+        ForwardSolvePoint4  \\
+        ForwardSolvePoint5  \\
+        ForwardSolvePoint6  \\
+        ForwardSolvePoint7  \\
+        BackwardSolvePoint0  \\
+        BackwardSolvePoint1  \\
+        BackwardSolvePoint2  \\
+        BackwardSolvePoint3  \\
+        BackwardSolvePoint4  \\
+        BackwardSolvePoint5  \\
+        BackwardSolvePoint6  \\
+        ChannelNat  \\
+        ChannelNap  \\
+        ChannelNas  \\
+        ChannelKIR  \\
+        ChannelKDR  \\
+        ChannelKAf  \\
+        ChannelKAs  \\
+        ChannelKRP  \\
+        ChannelBKalphabeta  \\
+        ChannelSK  \\
+        KCaChannel \\
+        CalChannel \\
+        CahChannel \\
+        ChannelHCN \\
+        ChannelCaLv12_GHK \\
+        ChannelCaLv13_GHK \\
+        ChannelCaN_GHK \\
+        ChannelCaPQ_GHK \\
+        ChannelCaR_GHK \\
+        ChannelCaT_GHK \\
+        PumpPMCA \\
+        SynapticCleft \\
+        PreSynapticPoint \\
+        AMPAReceptor \\
+        AMPAReceptor_Markov \\
+        NMDAReceptor \\
+        GABAAReceptor \\
+        SpineAttachment_Vm \\
+        SpineAttachment_VmCai \\
+        SpineAttachment_VmCaiCaER \\
+        Connexon \\
+
+"""
+        retStr += \
+            """\
+
 STRUCT_MODULES := CoordsStruct \\
 
+"""
+        if self.options.colab is True:
+            if (self.options.asNts is True) or (self.options.asBoth is True):
+                retStr += \
+                    """\
+COLAB_TRIGGER_MODULES := UnsignedServiceTrigger \\
+
+"""
+        else:
+                retStr += \
+                    """\
 TRIGGER_MODULES := UnsignedServiceTrigger \\
 
-VARIABLE_MODULES := BasicNodeSetVariable \\
-       NodeSetSPMVariable \\
+"""
 
+        if self.options.colab is False:
+            retStr += \
+                """\
+VARIABLE_MODULES := BasicNodeSetVariable \\
+        NodeSetSPMVariable \\
+
+"""
+
+        if self.options.colab is True:
+            if (self.options.asNts is True) or (self.options.asBoth is True):
+                retStr += \
+                    """\
+COLAB_VARIABLE_MODULES := BasicNodeSetVariable \\
+        NodeSetSPMVariable \\
+        VoltageClamp \\
+        PointCurrentSource \\
+        PointCalciumSource \\
+        CurrentPulseGenerator \\
+        RampCurrentGenerator \\
+        VoltageDisplay \\
+        ConductanceDisplay \\
+        ReversalPotentialDisplay \\
+        CurrentDisplay \\
+        CaCurrentDisplay \\
+        AnyCurrentDisplay \\
+        AnyFluxDisplay \\
+        CalciumDisplay \\
+        CalciumDomainDisplay \\
+        AnyConcentrationDisplay \\
+        CalciumVisualization \\
+        VoltageVisualization \\
+        SimulationSetter \\
+        SimulationInfo \\
+        DetectDataChangeOneCompartment \\
+
+"""
+        if self.options.colab is False:
+            retStr += \
+                """\
 FUNCTOR_MODULES := BinomialDist \\
        CombineNVPairs \\
        ConnectNodeSetsFunctor \\
@@ -929,10 +1181,14 @@ FUNCTOR_MODULES := BinomialDist \\
        DstScaledContractedGaussianWeightModifier \\
        DstScaledGaussianWeightModifier \\
        ExecuteShell \\
+       Exp \\
+       GetDstNodeCoordFunctor \\
        GetNodeCoordFunctor \\
+       GetPostNodeCoordFunctor \\
+       GetPreNodeCoordFunctor \\
+       GetPreNodeIndex \\
        IsoSampler \\
        IsoSamplerHybrid \\
-       Exp \\
        Log \\
        ModifyParameterSet \\
        NameReturnValue \\
@@ -944,6 +1200,8 @@ FUNCTOR_MODULES := BinomialDist \\
        ReversedDstRefGaussianWeightModifier \\
        ReversedSrcRefGaussianWeightModifier \\
        ReverseFunctor \\
+       Round \\
+       Scale \\
        ServiceConnectorFunctor \\
        SrcDimensionConstrainedSampler \\
        SrcRefDistanceModifier \\
@@ -953,16 +1211,81 @@ FUNCTOR_MODULES := BinomialDist \\
        SrcScaledContractedGaussianWeightModifier \\
        SrcScaledGaussianWeightModifier \\
        SrcRefDoGWeightModifier \\
-       Scale \\
        Threshold \\
+       ToroidalRadialSampler \\
+       UniformDiscreteDist \\
+"""
+        _tissuefunctor_modules = \
+            """\
        TissueConnectorFunctor \\
        TissueFunctor \\
        TissueLayoutFunctor \\
+       TissueMGSifyFunctor \\
        TissueNodeInitFunctor \\
        TissueProbeFunctor \\
-       TissueMGSifyFunctor \\
        Zipper \\
-       UniformDiscreteDist \\
+        """
+        if self.options.colab is False:
+            if (self.options.asNts is True) or (self.options.asBoth is True):
+                retStr += _tissuefunctor_modules
+        else:
+                retStr += """\
+COLAB_FUNCTOR_MODULES :=  \\
+""" + _tissuefunctor_modules + \
+                    """
+        BinomialDist \\
+        CombineNVPairs \\
+        ConnectNodeSetsFunctor \\
+        DstDimensionConstrainedSampler \\
+        DstRefDistanceModifier \\
+        DstRefGaussianWeightModifier \\
+        DstRefSumRsqrdInvWeightModifier \\
+        DstScaledContractedGaussianWeightModifier \\
+        DstScaledGaussianWeightModifier \\
+        Exp \\
+        GetDstNodeCoordFunctor \\
+        GetNodeCoordFunctor \\
+        GetPostNodeCoordFunctor \\
+        GetPreNodeCoordFunctor \\
+        GetPreNodeIndex \\
+        IsoSampler \\
+        Log \\
+        ModifyParameterSet \\
+        NameReturnValue \\
+        Neg \\
+        PolyConnectorFunctor \\
+        RandomDispersalLayout \\
+        RefAngleModifier \\
+        RefDistanceModifier \\
+        ReversedDstRefGaussianWeightModifier \\
+        ReversedSrcRefGaussianWeightModifier \\
+        ReverseFunctor \\
+        Round \\
+        Scale \\
+        ServiceConnectorFunctor \\
+        SrcDimensionConstrainedSampler \\
+        SrcRefDistanceModifier \\
+        SrcRefDoGWeightModifier \\
+        SrcRefGaussianWeightModifier \\
+        SrcRefPeakedWeightModifier \\
+        SrcRefSumRsqrdInvWeightModifier \\
+        SrcScaledContractedGaussianWeightModifier \\
+        SrcScaledGaussianWeightModifier \\
+        Threshold \\
+        ToroidalRadialSampler \\
+        UniformDiscreteDist \\
+
+"""
+        if (self.options.asMgs is True) or (self.options.asBoth is True):
+            retStr += \
+                """\
+"""
+        if self.options.asBoth is True:
+            retStr += \
+                """\
+"""
+        retStr += \
+            """\
 
 # part 2 --> extension/...
 # this files list all the modules we want to build
@@ -995,15 +1318,22 @@ MYSOURCES := $(foreach dir,$(SOURCES_DIRS),$(wildcard $(dir)/*.C))
 MYSOURCES := $(filter-out %MatrixParser.C %ReadImage.C %Ini.C %Img.C %Matrx.C %ImgUtil.C %Wbuf.C %Lzwbuf.C %Pal.C %Bitbuf.C , $(MYSOURCES))
 HEADERS_DIRS := $(patsubst %,%/include, $(MODULES))
 
-MYOBJS :=$(shell for file in $(notdir $(MYSOURCES)); do \\
+SOURCES_FILENAME_ONLY :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 \t       echo $${file} ; \\
 \t       done)
-PURE_OBJS := $(patsubst %.C, %.o, $(MYOBJS))
+PURE_OBJS := $(patsubst %.C, %.o, $(SOURCES_FILENAME_ONLY))
 
+"""
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += \
+                """\
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
 TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
 NTI_OBJS := $(TEMP)
 
+"""
+        retStr += \
+            """\
 COMMON_DIR := ../common/obj
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 
@@ -1018,6 +1348,41 @@ $(OBJS) : | $(OBJS_DIR)
 
 $(OBJS_DIR):
 \tmkdir $(OBJS_DIR)
+
+$(BIN_DIR):
+\tmkdir $(BIN_DIR)
+"""
+        if self.options.colab is True:
+            retStr += \
+                """
+COLAB_BASE_MODULES := $(patsubst %,framework/%,$(COLAB_FRAMEWORK_MODULES))
+COLAB_BASE_MODULES += $(patsubst %,utils/%,$(COLAB_UTILS_MODULES))
+COLAB_EXTENSION_MODULES += $(patsubst %,functor/%,$(COLAB_FUNCTOR_MODULES))
+COLAB_EXTENSION_MODULES += $(patsubst %,node/%,$(COLAB_NODE_MODULES))
+COLAB_EXTENSION_MODULES += $(patsubst %,trigger/%,$(COLAB_TRIGGER_MODULES))
+COLAB_EXTENSION_MODULES += $(patsubst %,variable/%,$(COLAB_VARIABLE_MODULES))
+COLAB_EXTENSION_MODULES := $(patsubst %,extensions/%,$(COLAB_EXTENSION_MODULES))
+
+COLAB_MODULES = $(COLAB_BASE_MODULES)
+COLAB_MODULES += $(COLAB_EXTENSION_MODULES)
+COLAB_HEADERS_DIRS := $(patsubst %,%/include, $(COLAB_MODULES))
+COLAB_SOURCES_DIRS := $(patsubst %,%/src, $(COLAB_MODULES))
+COLAB_MYSOURCES := $(foreach dir,$(COLAB_SOURCES_DIRS),$(wildcard $(dir)/*.C))
+COLAB_SOURCES_FILENAME_ONLY :=$(shell for file in $(notdir $(COLAB_MYSOURCES)); do \\
+\t       echo $${file} ; \\
+\t       done)
+COLAB_OBJS_FILENAME_ONLY := $(patsubst %.C, %.o, $(COLAB_SOURCES_FILENAME_ONLY))
+COLAB_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(COLAB_OBJS_FILENAME_ONLY))
+COLAB_OBJS += obj/socket.o obj/speclang.tab.o obj/lex.yy.o
+
+NEEDED_PURE_OBJS := $(filter-out $(foreach file, ${COLAB_OBJS_FILENAME_ONLY}, $(file)), $(PURE_OBJS))
+NEEDED_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(NEEDED_PURE_OBJS))
+
+COLAB_SOURCES_DIRS := $(patsubst %,%/src, $(COLAB_MODULES))
+vpath %.C $(COLAB_SOURCES_DIRS)
+vpath %.c $(COLAB_SOURCES_DIRS)
+vpath %.h $(COLAB_HEADERS_DIRS) framework/parser/generated
+COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
 """
         return retStr
 
@@ -1042,8 +1407,15 @@ $(OBJS_DIR):
         retStr = \
             """\
 OTHER_LIBS :=-lgmp -lpython2.7
+LDFLAGS := -shared
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
+CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+CFLAGS += -fPIC \
+"""
+        if self.options.colab is True:
+            retStr += \
+                """
+CFLAGS += $(COLAB_CFLAGS) \
 """
         if self.options.blueGene is False:
             retStr += \
@@ -1102,6 +1474,8 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " " + O4_OPTIMIZATION_FLAG
         if self.options.optimization == "O5":
             retStr += " " + O5_OPTIMIZATION_FLAG
+        if self.options.optimization == "Og":
+            retStr += " " + OG_OPTIMIZATION_FLAG
 
         if self.options.dynamicLoading is False:
             retStr += " -DDISABLE_DYNAMIC_LOADING"
@@ -1113,6 +1487,12 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += " -DHAVE_MPI"
             if self.options.compiler == "gcc":
                 retStr += " -DLAM_BUILDING"
+
+        if self.options.withGpu is True:
+            retStr += " -DHAVE_GPU"
+
+        if self.options.withArma is True:
+            retStr += " -DHAVE_ARMA"
 
         if self.options.profile == USE:
             retStr += " -DPROFILING"
@@ -1132,7 +1512,7 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.blueGeneL is True:
             retStr += " -DUSING_BLUEGENEL"
             retStr += " -DMPICH_IGNORE_CXX_SEEK"
-        retStr += " -DMPICH_SKIP_MPICXX"
+            retStr += " -DMPICH_SKIP_MPICXX"
 
         if self.options.blueGeneP is True:
             retStr += " -DUSING_BLUEGENEP"
@@ -1153,7 +1533,21 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
             retStr += "lib/liblens.a\n"
         return retStr
 
-    def getLibs(self):
+    def getLibs(self):  # noqa
+        retStr = ""
+        if self.options.colab is True:
+            if self.options.debug == USE:
+                retStr += \
+                    """
+NTS_LIBS := ${LENSROOT}/lib/libnts_db.so\n
+
+"""
+            else:
+                retStr += \
+                    """
+NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
+
+"""
         retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
         retStr += "LIBS := "
         if self.options.dynamicLoading is True:
@@ -1186,6 +1580,19 @@ CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations \
         if self.options.compiler == "gcc":
             if self.options.withMpi is True:
                 retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
+
+        if self.options.withGpu is True:
+            retStr += " -lcudart -lcurand"
+
+        if self.options.withArma is True:
+            retStr += " -llapack -lopenblas -larmadillo"
+
+        if self.options.colab is True:
+            if self.options.debug == USE:
+                retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti_db -lnts_db -lutils_db"
+            else:
+                retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti -lnts -lutils"
+        retStr += " $(OTHER_LIBS)"
 
         retStr += "\n"
         return retStr
@@ -1309,7 +1716,10 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-\t$(CC) $(CFLAGS) -I$(NTI_INC_DIR) $(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+\t$(CC) $(CFLAGS) $(COMMON_OBJS) """
+        if (self.options.asNts is True) or (self.options.asBoth is True):
+            retStr += "-I$(NTI_INC_DIR) "
+        retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
         return retStr
 
@@ -1358,10 +1768,11 @@ framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
 \tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
-speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
+$(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
+\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 
 """
+
         return retStr
 
     def getScannerTargets(self):
@@ -1387,23 +1798,35 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
 
         retStr += \
             """
-lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-\t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $(OBJS_DIR)/$@
+$(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
+\t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 """
         retStr += "\n"
         return retStr
 
     def getAllTarget(self):
         retStr = "cleanfirst:\n"
-        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n"
-        # retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
-        retStr += "final: cleanfirst speclang.tab.h $(OBJS)  speclang.tab.o lex.yy.o socket.o  $(LENS_LIBS_EXT) "
+        retStr += "\t-rm $(BIN_DIR)/$(EXE_FILE)\n\n"
+        if self.options.colab is True:
+            retStr += "final: cleanfirst $(OBJS) $(LENS_LIBS_EXT) "
+        else:
+            retStr += "final: cleanfirst speclang.tab.h $(OBJS)  $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o  $(LENS_LIBS_EXT) "
         if self.options.dynamicLoading is True:
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) $(LIBS) $(NTI_OBJS) $(COMMON_OBJS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
+        if self.options.colab is True:
+            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
+        else:
+            retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o $(OBJS) "
+        # retStr = "final: $(BASE_OBJECTS) $(LENS_LIBS_EXT) $(BIN_DIR)/$(EXE_FILE) $(DCA_OBJ)/socket.o $(OBJS) $(MODULE_MKS)"
+        if self.options.colab is True:
+            pass
+        else:
+            if (self.options.asNts is True) or (self.options.asBoth is True):
+                retStr += "$(NTI_OBJS) "
+        retStr += "$(COMMON_OBJS) $(LIBS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -1443,6 +1866,12 @@ lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
         if self.options.dynamicLoading is False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
         retStr += "\tranlib $@\n\n"
+        if self.options.colab is True:
+            retStr += \
+                """
+library: speclang.tab.h  $(COLAB_OBJS)
+\t$(CC) $(LDFLAGS) -o ${NTS_LIBS} ${COLAB_OBJS}
+"""
         return retStr
 
     def getMainDefTarget(self):
@@ -1470,8 +1899,8 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         if self.options.dynamicLoading is True:
             retStr += " $(SHARED_OBJECTS)"
         retStr += "\n"
-        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(PARSER_GENERATED)/speclang.tab.o $(PARSER_GENERATED)/lex.yy.o $(DCA_OBJ)/socket.o "
-        retStr += "$(LIBS) "
+        retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) $(COMMON_OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o "
+        retStr += "$(LIBS) -o $@"
         if self.options.tvMemDebug is True and self.operatingSystem != "AIX":
             printWarning("Totalview memory debugging not available.")
         elif self.options.tvMemDebug is True:
@@ -1489,7 +1918,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
         return retStr
 
     def getSocketTarget(self):
-        retStr = "socket.o: "
+        retStr = "$(OBJS_DIR)/socket.o: "
 
         if self.dx.exists is True:
             retStr += "socket.c\n"
@@ -1503,7 +1932,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             retStr += " $(DX_CFLAGS) -c $< "
         else:
             retStr += " -c $<"
-        retStr += " -o $(OBJS_DIR)/$@\n"
+        retStr += " -o $@\n"
         return retStr
 
     def getCleanTarget(self):
@@ -1565,7 +1994,7 @@ clean:
         if self.options.dynamicLoading is True:
             fileBody += self.getDependfileTarget()
             fileBody += "\n"
-        fileBody += self.getLibLensTarget()
+        # fileBody += self.getLibLensTarget()
         fileBody += "\n"
         if self.options.dynamicLoading is True:
             fileBody += self.getMainDefTarget()
@@ -1581,7 +2010,23 @@ clean:
         f.close()
 
 
+def prereq_packages():
+    """
+    this function install pre-requisite packages
+    """
+    # import pip
+
+    required_pkgs = ['builtins']
+
+    for package in required_pkgs:
+        try:
+            __import__(package)
+        except ImportError as e:
+            print("Please install: sudo pip install --user %s" % (package))
+
+
 if __name__ == "__main__":
+    prereq_packages()
     try:
         buildSetup = BuildSetup()
         buildSetup.main()
