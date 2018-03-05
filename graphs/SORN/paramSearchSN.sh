@@ -23,7 +23,6 @@ variable_2=(0.9)    # tauSTDP
 variable_3=(0.5)      # stimCfrac
 variable_4=(0.1)      # ratioDelay
 
-
 # If 2D search - use ERROR_is_1D when is 1D or ERROR_not_in_use when not in use.
 #variables_X=`echo $(seq 1.0 2.0 3.0 4.0)`
 #variables_Y=`echo $(seq 4.0 5.0 6.0 7.0)`

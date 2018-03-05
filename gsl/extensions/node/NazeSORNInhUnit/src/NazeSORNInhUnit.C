@@ -112,7 +112,11 @@ void NazeSORNInhUnit::outputWeights(std::ofstream& fsE2I)
 
 void NazeSORNInhUnit::inputWeights(std::ifstream& fsE2I, int col, float weight)
 {
+<<<<<<< HEAD
   ShallowArray<NazeSORNDelayedSynapseInput>::iterator E2Iiter, E2Iend=lateralExcInputs.end();
+=======
+  ShallowArray<SpikeInput>::iterator E2Iiter, E2Iend=lateralExcInputs.end();
+>>>>>>> New model NazeSORNUnit based on ZhengSORNUnit with new features (recurrent inh, adaptive inh thresholds, new data collectors, paramSpace scripts and analysis, etc..)
   for (E2Iiter=lateralExcInputs.begin(); E2Iiter!=E2Iend; ++E2Iiter) {
     if (E2Iiter->col==col) {
       E2Iiter->weight = static_cast<double>(weight);

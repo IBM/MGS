@@ -214,5 +214,3 @@ void NazeSORNExcUnitCompCategory::outputDelaysShared(RNG& rng)
     }
   }
 }
-
-

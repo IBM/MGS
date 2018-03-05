@@ -105,7 +105,6 @@ if meta_analysis
         
     end
     
-
     %% Plot global results
     if plot_figs
         corr_fig = figure('Position', [500 500 800 400], 'Name', 'Correlation');
@@ -129,6 +128,7 @@ if meta_analysis
                     ylabel({strcat(p1,'=', num2str(param1(out_row))); p3});
                     set(gca, 'YTick', 1:numel(param3));
                     set(gca, 'YTickLabel', param3);
+
                 else set(gca, 'YTickLabel', []); end
                 caxis([corr_min corr_max]);
                 colormap(flipud(bone));
