@@ -126,7 +126,7 @@ Functor FloatArrayMaker(Functor, int);
 Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
 Functor UniformDiscreteDist(float n1, float n2);
-
+Functor LoadSparseMatrix(string filename);
 // TODO: duplicate?
 //SamplingFctr2 IsoSampler();
 //IsoSampler isoSampler();

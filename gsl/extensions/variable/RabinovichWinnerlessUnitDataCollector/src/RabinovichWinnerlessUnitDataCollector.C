@@ -28,64 +28,36 @@
 void RabinovichWinnerlessUnitDataCollector::initialize(RNG& rng) 
 {
   int mxrow=0;
-  if (binary)
+  // Sort pointers by indices, row major
+  std::map<unsigned, std::map<unsigned, std::map<unsigned, double*> > >sorter;
+  assert(rows.size()==slices.size());
+  assert(cols.size()==slices.size());
+  assert(slices.size()==x.size());
+  int sz=x.size();
+  mxrow=0;
+  mxcol=0;
+  for (int j=0; j<sz; ++j)
     {
-      // Sort pointers by indices, row major
-      std::map<unsigned, std::map<unsigned, std::map<unsigned, double*> > >sorter;
-      assert(rows.size()==slices.size());
-      assert(cols.size()==slices.size());
-      assert(slices.size()==x.size());
-      int sz=x.size();
-      mxrow=0;
-      mxcol=0;
-      for (int j=0; j<sz; ++j)
-        {
-          sorter[rows[j]][cols[j]][slices[j]]=x[j];
-          if (mxrow<rows[j]) mxrow=rows[j];
-          if (mxcol<cols[j]) mxcol=cols[j];
-          if (mxslice<slices[j]) mxslice=slices[j];                    
-        }
-      x.clear();
-      std::map<unsigned, std::map<unsigned, std::map<unsigned, double*> > >::iterator miter1, mend1=sorter.end();
-      for (miter1=sorter.begin(); miter1!=mend1; ++miter1)
-        {
-          std::map<unsigned, std::map<unsigned, double*> >::iterator miter2, mend2=miter1->second.end();
-          for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2)
-            {
-              std::map<unsigned, double*>::iterator miter3, mend3=miter2->second.end();
-              for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
-                {
-                  x.push_back(miter3->second);
-                }
-            }
-      }
+      sorter[rows[j]][cols[j]][slices[j]]=x[j];
+      if (mxrow<rows[j]) mxrow=rows[j];
+      if (mxcol<cols[j]) mxcol=cols[j];
+      if (mxslice<slices[j]) mxslice=slices[j];                    
     }
-  else
+  x.clear();
+  std::map<unsigned, std::map<unsigned, std::map<unsigned, double*> > >::iterator miter1, mend1=sorter.end();
+  for (miter1=sorter.begin(); miter1!=mend1; ++miter1)
     {
-      // Sort pointers by indices, row major
-      std::map<unsigned, std::map<unsigned, double*> > sorter;
-      assert(rows.size()==cols.size());
-      assert(cols.size()==x.size());
-      int sz=x.size();
-      mxrow=0;
-      for (int j=0; j<sz; ++j)
-        {
-          sorter[rows[j]][cols[j]]=x[j];
-          if (mxrow<rows[j]) mxrow=rows[j];
-          if (mxcol<cols[j]) mxcol=cols[j];
-        }
-      x.clear();
-      std::map<unsigned, std::map<unsigned, double*> >::iterator miter1, mend1=sorter.end();
-      for (miter1=sorter.begin(); miter1!=mend1; ++miter1)
-        {
-          std::map<unsigned, double*>::iterator miter2, mend2=miter1->second.end();
-          for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2)
-            {
-              x.push_back(miter2->second);      
-            }
-        }
-    }
-  
+      std::map<unsigned, std::map<unsigned, double*> >::iterator miter2, mend2=miter1->second.end();
+      for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2)
+	{
+	  std::map<unsigned, double*>::iterator miter3, mend3=miter2->second.end();
+	  for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
+	    {
+	      x.push_back(miter3->second);
+	    }
+	}
+  }
+
   // Create the output file...
   std::ostringstream sysCall;
   sysCall<<"mkdir -p "<<directory.c_str()<<";";
@@ -104,7 +76,7 @@ void RabinovichWinnerlessUnitDataCollector::initialize(RNG& rng)
   
   if (op_saveX)
     {
-      os_X<<directory<<"MSNs"<<fileExt;
+      os_X<<directory<<fileName<<fileExt;
       if (binary)
         {          
           X_file=new std::ofstream(os_X.str().c_str(),
@@ -117,7 +89,7 @@ void RabinovichWinnerlessUnitDataCollector::initialize(RNG& rng)
         {
           X_file=new std::ofstream(os_X.str().c_str());
           std::ofstream& output=*X_file;
-          output<<mxrow+1<<" "<<mxcol+1<<std::endl<<std::endl;          
+          output<<mxrow+1<<" "<<mxcol+1<<" "<<mxslice+1<<std::endl<<std::endl;          
         }
     }
 }
@@ -157,39 +129,22 @@ void RabinovichWinnerlessUnitDataCollector::dataCollection(Trigger* trigger, NDP
           std::ofstream& output=*X_file;
           output<<getSimulation().getIteration()<<std::endl;
           ShallowArray<double*>::iterator iter=x.begin(), end=x.end();
-          for (int col=0; iter!=end; ++iter)
-            {
-              output<<**iter<<" ";
-              if (++col>mxcol)
-                {
-                  output<<std::endl;
-                  col=0;
-                }
-            }
-          output<<std::endl;
+          for (iter; iter!=end; iter++)
+	  { 
+            output << **iter << " ";
+          }
+ 	  output << std::endl << std::endl;
         }
     }
 }
-
 void RabinovichWinnerlessUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_RabinovichWinnerlessUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_RabinovichWinnerlessUnitDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
-  if (binary)
-    {
-      ShallowArray<unsigned,3,2> coords;
-      CG_node->getNode()->getNodeCoords(coords);
-      assert(coords.size()==3);
-      rows.push_back(coords[0]);
-      cols.push_back(coords[1]);
-      slices.push_back(coords[2]);
-    }
-  else
-    {
-      ShallowArray<unsigned,3,2> coords;
-      CG_node->getNode()->getNodeCoords(coords);
-      assert(coords.size()==3);
-      rows.push_back(coords[0]);
-      cols.push_back(coords[1]);
-    }
+    ShallowArray<unsigned,3,2> coords;
+    CG_node->getNode()->getNodeCoords(coords);
+    assert(coords.size()==3);
+    rows.push_back(coords[0]);
+    cols.push_back(coords[1]);
+    slices.push_back(coords[2]);
 }
 
 RabinovichWinnerlessUnitDataCollector::RabinovichWinnerlessUnitDataCollector() 

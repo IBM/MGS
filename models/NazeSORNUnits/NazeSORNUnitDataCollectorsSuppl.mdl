@@ -13,39 +13,31 @@
 //
 // =================================================================
 
-#ifndef RABINOVICHWINNERLESSUNITDATACOLLECTORS_MDL
-#define RABINOVICHWINNERLESSUNITDATACOLLECTORS_MDL
+#ifndef NAZESORNUNITSDATACOLLECTORSSUPPL_MDL
+#define NAZESORNUNITSDATACOLLECTORSSUPPL_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Variable RabinovichWinnerlessUnitDataCollector
+Variable NazeSORNUnitDataCollectorSuppl
 {
-   bool binary;
    string directory;
-   string fileExt;
    string fileName;
+   string fileExt;
    int [] rows;
    int [] cols;
-   int [] slices;
    int mxcol;
-   int mxslice; // when binary can be 3D
-   double* [] x;
+   double* [] thresholds;
    UserFunction getNodeIndices;
-
-   bool op_saveX;
-   
-/*   Connection Pre Node () Expects PlasticOutputProducer
+   double deltaT;
+   bool op_saveThresholds;
+   bool binary;
+ 
+    Connection Pre Node () Expects OutputProducer
    {
-      PlasticOutputProducer.output >> x;
+      OutputProducer.output >> thresholds;
       getNodeIndices();
    }
-*/  
-     Connection Pre Node () Expects OutputProducer
-   {
-      OutputProducer.output >> x;
-      getNodeIndices();
-   }
-
-   InitPhase initialize; 
+ 
+   InitPhase initialize;
    TriggeredFunction dataCollection;
    FinalPhase finalize;
 }

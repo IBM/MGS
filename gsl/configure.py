@@ -1251,6 +1251,7 @@ FUNCTOR_MODULES := BinomialDist \\
         IsoSampler \\
         IsoSamplerHybrid \\
         LoadMatrix \\
+	LoadSparseMatrix \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\

@@ -21,6 +21,7 @@
 #include "MihalasNieburIAFUnit/MihalasNieburIAFUnit.mdl"
 #include "MihalasNieburSynapseIAFUnit/MihalasNieburSynapseIAFUnit.mdl"
 #include "MotoneuronUnit/MotoneuronUnit.mdl"
+#include "NazeSORNUnits/NazeSORNUnits.mdl"
 #include "PoissonIAFUnit/PoissonIAFUnit.mdl"
 #include "RabinovichWinnerlessUnit/RabinovichWinnerlessUnit.mdl"
 #include "SpineIAFUnit/SpineIAFUnit.mdl"
@@ -45,6 +46,8 @@
 #include "MihalasNieburIAFUnit/MihalasNieburIAFUnitDataCollectors.mdl"
 #include "MihalasNieburSynapseIAFUnit/MihalasNieburSynapseIAFUnitDataCollectors.mdl"
 #include "MotoneuronUnit/MotoneuronUnitDataCollectors.mdl"
+#include "NazeSORNUnits/NazeSORNUnitDataCollectors.mdl"
+#include "NazeSORNUnits/NazeSORNUnitDataCollectorsSuppl.mdl"
 #include "PoissonIAFUnit/PoissonIAFUnitDataCollectors.mdl"
 #include "RabinovichWinnerlessUnit/RabinovichWinnerlessUnitDataCollectors.mdl"
 #include "SpineIAFUnit/SpineIAFUnitDataCollectors.mdl"
@@ -53,6 +56,7 @@
 #include "TraubIAFUnit/TraubIAFUnitExtraDataCollectors.mdl"
 #include "WaveDriverUnit/WaveDriverUnitDataCollectors.mdl"
 #include "ZhengSORNUnits/ZhengSORNUnitDataCollectors.mdl"
+#include "ZhengSORNUnits/ZhengSORNUnitDataCollectorsSuppl.mdl"
 
 #include "Analyzers/LFPDataAnalyzers.mdl"
 

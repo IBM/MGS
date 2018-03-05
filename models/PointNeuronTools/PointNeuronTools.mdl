@@ -99,6 +99,8 @@ Interface CB1RIAFProducer
 Interface SORNSpikeProducer {
   bool* spikePrev;
   bool* spike;
+  double* a;
+  double* aPrev;
 }
 
 Interface WaveProducer
@@ -252,6 +254,8 @@ Struct SynapseInput {
 Struct SORNSynapseInput {
   bool* spikePrev;
   bool* spike;
+  double* a;
+  double* aPrev;
   double weight;
   bool synapse;
   int row;
@@ -340,6 +344,12 @@ Struct GoodwinInput
   double weight;
   int row;
   int col;
+}
+
+Struct NormalizedThalamicInput {
+  double* input;
+  double minVal;
+  double maxVal;
 }
 
 Constant PointNeuronStimulator Implements OutputProducer {
