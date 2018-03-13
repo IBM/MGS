@@ -30,12 +30,16 @@
 #endif
 
 
+#ifndef Q10 
+#define Q10 3.0 //default
+#endif
 class GABAAReceptor : public CG_GABAAReceptor
 {
    public:
       void updateGABAA(RNG& rng);
       void initializeGABAA(RNG& rng);
       virtual void setPostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GABAAReceptorInAttrPSet* CG_inAttrPset, CG_GABAAReceptorOutAttrPSet* CG_outAttrPset);
+      virtual void setPrePostIndex(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GABAAReceptorInAttrPSet* CG_inAttrPset, CG_GABAAReceptorOutAttrPSet* CG_outAttrPset);
       virtual ~GABAAReceptor();
 };
 

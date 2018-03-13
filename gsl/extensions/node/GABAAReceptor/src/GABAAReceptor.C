@@ -17,6 +17,8 @@
 #include "GABAAReceptor.h"
 #include "CG_GABAAReceptor.h"
 #include "rndm.h"
+#include <iostream>
+#include "NodeProxyBase.h"
 
 // Destexhe-Mainen-Sejnowski (1994)
 // The Glutamate neurotransmitter concentration, i.e. [NT]
@@ -33,7 +35,7 @@
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
 #define NEUROTRANSMITTER      \
   (getSharedMembers().NTmax / \
-   (1.0 + exp(-(*V - getSharedMembers().Vp) / getSharedMembers().Kp)))
+   (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
 #define NEUROTRANSMITTER *GABA
 #endif
@@ -66,13 +68,44 @@ void GABAAReceptor::setPostIndex(const String& CG_direction,
                                  CG_GABAAReceptorInAttrPSet* CG_inAttrPset,
                                  CG_GABAAReceptorOutAttrPSet* CG_outAttrPset)
 {
-  if (CG_inAttrPset->idx>=0) {
-    indexPost = CG_inAttrPset->idx;
+  indexPost = CG_inAttrPset->idx;
+  if (indexPrePost.size() % 2)
+  {//it means that PreSynapticPoint is being used
+#ifdef KEEP_PAIR_PRE_POST
+    indexPrePost.push_back(&indexPost);
+#endif
   }
-  else if (CG_inAttrPset->idx==-1) {
-    indexPost=int(float(branchDataPrePost[branchDataPrePost.size()-1]->size)*CG_inAttrPset->branchProp);
+  if (indexPrePost.size() == 0)
+  {
+    //it means the SynapticCleft is on different rank
+    branchDataPrePost.increaseSizeTo(2);
+    branchDataPrePost[0] = (getSharedMembers().branchDataPost); // array of 2n elements; in pair (preBD, postBD)
+    branchDataPrePost[1] = (getSharedMembers().branchDataPost); // array of 2n elements; in pair (preBD, postBD)
+    indexPrePost.push_back(&indexPost);
+    indexPrePost.push_back(&indexPost);
   }
-  indexPrePost.push_back(&indexPost);
+}
+
+void GABAAReceptor::setPrePostIndex(const String& CG_direction,
+                                 const String& CG_component,
+                                 NodeDescriptor* CG_node, Edge* CG_edge,
+                                 VariableDescriptor* CG_variable,
+                                 Constant* CG_constant,
+                                 CG_GABAAReceptorInAttrPSet* CG_inAttrPset,
+                                 CG_GABAAReceptorOutAttrPSet* CG_outAttrPset)
+{
+  NodeProxyBase* node = dynamic_cast<NodeProxyBase*>(CG_node->getNode());
+  if (node == 0)
+  {//not a proxy
+    indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[0]);
+    indexPrePost.push_back(&(*(getSharedMembers().indexPrePost_connect))[1]);
+  }
+  else{
+    //TUAN TODO: how to handle this scenario
+    // when the SynapticCleft is not on the same rank
+    // current solution: append the post-side for the pre-side as done in 
+    //  setPostIndex() 
+  }
 }
 
 GABAAReceptor::~GABAAReceptor() {}
