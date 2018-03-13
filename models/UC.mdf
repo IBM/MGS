@@ -1,6 +1,7 @@
 #include "UC/NVU.mdl"
 #include "UC/Htree.mdl"
 #include "UC/UCInterfaces.mdl"
+#include "PointNeuronTools/PointNeuronTools.mdl"
 //#include "MegaSynapticSpace/MegaSynapticSpace.mdl"
 //#include "Adapters/Adapters.mdl"
 
