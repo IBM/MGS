@@ -31,6 +31,9 @@
 #define Vp_Glut (getSharedMembers().Vp_Glut)
 #define Kp_Glut (getSharedMembers().Kp_Glut)
 #define dt (*(getSharedMembers().deltaT))
+#define GABA_max (getSharedMembers().GABA_max)
+#define Vp_GABA (getSharedMembers().Vp_GABA)
+#define Kp_GABA (getSharedMembers().Kp_GABA)
 
 void SynapticCleft::produceInitialState(RNG& rng)
 {
@@ -79,9 +82,9 @@ void SynapticCleft::produceState(RNG& rng)
   }
   {  // GABA
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-    GABA = (getSharedMembers().GABA_max /
-            (1.0 + exp(-(*V - getSharedMembers().Vp_GABA) /
-                       getSharedMembers().Kp_GABA)));
+    GABA = (GABA_max /
+            (1.0 + exp(-(*V - Vp_GABA) /
+                       Kp_GABA)));
 #elif GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
     float J_decay = 1.0 / ((getSharedMembers().tau_GABA)) *
                     (GABA - getSharedMembers().GABA_baseline);  // [uM/msec]
@@ -121,6 +124,7 @@ void SynapticCleft::produceState(RNG& rng)
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
     Glut += (GlutperVesicle / AvogN) / (Cleft_Volume) * 1e6;
 #endif
+    GABA = (GABA_max / (1.0 + exp(-(*V - Vp_GABA) / Kp_GABA)));
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
     GABA += (GABAperVesicle / AvogN) / (Cleft_Volume) * 1e6;
 #endif
