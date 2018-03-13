@@ -355,6 +355,57 @@ predictJunction,
 #if MAX_COMPUTE_ORDER>6
       backwardSolve7,
 #endif
+#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
+      exchange_Predictor,
+      //{{{
+#if MAX_COMPUTE_ORDER>6
+      forwardSolve7_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>5
+      forwardSolve6_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>4
+      forwardSolve5_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>3
+      forwardSolve4_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>2
+      forwardSolve3_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>1
+      forwardSolve2_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>0
+      forwardSolve1_corrector,  //from forwardSolve7 to here: call :doForwardSolve() - update r.h.s. and 'd' at (t+dt/2)
+                      //using g(t+dt/2) - H.Huxley; and di/dv quantity
+                      // NOTE: --> I^*(t+dt/2)~I(t)+di/dv*(V(t+dt/2)-V(t))
+#endif
+      forwardSolve0_corrector,
+      backwardSolve0_corrector,
+#if MAX_COMPUTE_ORDER>0
+      backwardSolve1_corrector,  // just do :doBackwardSolve() for branches with COMPUTE_ORDER=1
+#endif
+#if MAX_COMPUTE_ORDER>1
+      backwardSolve2_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>2
+      backwardSolve3_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>3
+      backwardSolve4_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>4
+      backwardSolve5_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>5
+      backwardSolve6_corrector,
+#endif
+#if MAX_COMPUTE_ORDER>6
+      backwardSolve7_corrector,
+#endif
+      //}}}
+#endif
       correctJunction, // correct prediction of v(t+dt/2), ca(t+dt/2) using gate(t+dt/2)
                        // ... then calculate v(t+dt), ca(t+dt)
       finish,           // update v(t+dt) using v(t+dt/2)-> - this is WHEN the time is incremented
@@ -859,6 +910,10 @@ SimulationInfo simInfo<recordIntervalInTime=RecordInterval, currentTime=0>;
 #elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
 SimulationInfo simInfo<recordIntervalInIterations=RecordInterval>;
 #endif
+#ifdef ADAPTIVE_IO
+VariableType DetectDataChangeOneCompartment {initialize->initialize4, calculateInfo->updateNMDADepPlasticity};
+DetectDataChangeOneCompartment somaVoltageDetect<criteria=0.010>; //record with change > x% previous value
+#endif
 //Service <serviceAccessorName> (service)
 // service = query_path_product | declarator ','  string_literal_list
 // query_path_product = query_path::declerator | ::declarator
@@ -878,6 +933,7 @@ Trigger UnsignedTrigger(string description, Service svc, string operator, int cr
 Trigger UnsignedServiceTrigger(string description, Service svc, string operator, Service svc2, int delay, string phaseName);
 Trigger FloatTrigger(string description, Service svc, string operator, float criterion, int delay, string phaseName);
 Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
+Trigger CompositeTriggerServiceTrigger(string description, Trigger triggerA, int critA, string operator, Service triggerB, int critB, int delay, string phaseName);
 
 
 //return True if triggerA is TRUE and _semaphore is not set
@@ -1242,6 +1298,7 @@ Grid MSN_D1Neuron{
 	/*}}}*/
 			// 2.1. PUMPS
 			/*{{{*/
+// Na/K-ATPase
 #if defined(SIMULATE_CACYTO)
 // PMCA
 	Layer(PumpPMCAs, PumpPMCA, tissueFunctor("Layout", < nodekind="Channels[PMCA]" >), < nodekind="Channels[PMCA]" >, tissueGM);
@@ -1281,6 +1338,7 @@ Grid MSN_D1Neuron{
 	Layer(DendriticSpines, SpineAttachment_Vm, tissueFunctor("Layout", < nodekind="BidirectionalConnections[DenSpine]" >), < nodekind="BidirectionalConnections[DenSpine]" >, tissueGM);
 #endif
 	/*}}}*/
+     /*}}}*/
       // 4. CONNEXON (gap-junction)
       /*{{{*/
    Layer(AxoAxonicGapJunctions, Connexon, tissueFunctor("Layout", < nodekind="ElectricalSynapses[AxAxGap]" >), < nodekind="ElectricalSynapses[AxAxGap]" >, tissueGM);
@@ -1762,6 +1820,12 @@ Grid MSN_D1Neuron{
    //}}}
    //}}}
    //{{{receptors
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+  polyConnect(timeStep, .[].Layer(PreSynapticPoints), <>, <identifier="dt">);
+//or
+#elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+  polyConnect(timeStep, .[].Layer(SynapticClefts), <>, <identifier="dt">);
+#endif
 	polyConnect(timeStep, .[].Layer(AMPASynapses), <>, <identifier="dt">);
 	polyConnect(extracellularMedium, .[].Layer(AMPASynapses), <>, <identifier="EC">);
 
@@ -1797,6 +1861,11 @@ Grid MSN_D1Neuron{
   //{{{ Stimulus
 #include "connect_stimulus_model.gsl"
   //}}}
+	polyConnect(timeStep, simInfo, <>, <>);
+#ifdef  ADAPTIVE_IO
+	polyConnect(timeStep, somaVoltageDetect, <>, <>);
+        polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, BRANCHTYPE=1, NEURON_INDEX=0>), somaVoltageDetect, <>, <identifier="JUNCTION">);
+#endif
 	/*}}}*/
 
     /*}}}*/

@@ -72,7 +72,9 @@ def genNeuronFile(args):
 
                 scale_factor = 0.9  # <= 1 so that it is not too closed to the border
                 half = scale_factor * args.length
-                region = ((-half/2, +half/2), (-half/2, +half/2))
+                ix = int(half/2)
+                # region = ((-half/2, +half/2), (-half/2, +half/2))
+                region = ((-ix, +ix), (-ix, +ix))
                 min_distance = 3  # um
                 randPoints = gen_neurons_in_region(region, args.neuron_per_nvus, min_distance=min_distance)
                 for _i in range(0, args.neuron_per_nvus):
