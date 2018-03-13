@@ -399,7 +399,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
   fi
   if [ -f .build_error ]; then exit ; fi
-  if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/libnti.a` ]; then
+  if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/libnti.a $LENSROOT/lib/libnti_db.a` ]; then
     cd $NTSMGSROOT
     echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
     exit;
