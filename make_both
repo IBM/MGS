@@ -268,6 +268,10 @@ if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
   export PYTHON_INCLUDE_DIR=/usr/include/python2.7/
   exit
 fi
+if [[ -z "${SUITESPARSE}" ]]; then
+  echo "Please install (if needed) and run: export SUITESPARSE=/path/to/suitesparse"
+  exit
+fi
 #}}}
 
 if [ "$NTSMGSROOT" == "" ]; then
