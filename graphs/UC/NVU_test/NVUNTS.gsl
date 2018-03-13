@@ -1258,17 +1258,17 @@ Grid MSN_D1Neuron{
       // 3.1. PRE-SYNAPSE (get Voltage from bouton-side)
 	/*{{{*/
 #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
-	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[Voltage]" >), < nodekind="PreSynapticPoints[Voltage]" >, tissueGM);
+	Layer(PreSynapticPoints, PreSynapticPoint, tissueFunctor("Layout", < nodekind="PreSynapticPoints[tight]" >), < nodekind="PreSynapticPoints[tight]" >, tissueGM);
 //or
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
 // TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
-	Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
+	Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[tight]" >), < nodekind="SynapticClefts[tight]" >, tissueGM);
 #endif
 	/*}}}*/
       // 3.2. CHEMICAL SYNAPSE RECEPTORS
       /*{{{*/
-	Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
-	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
+	Layer(AMPASynapses, AMPAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPA]" >), < nodekind="ChemicalSynapses[AMPA]" >, tissueGM);
+	Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDA]" >), < nodekind="ChemicalSynapses[NMDA]" >, tissueGM);
 	Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
       /*}}}*/
       // 3.3. SpineAttachment
@@ -1494,7 +1494,12 @@ Grid MSN_D1Neuron{
 	//{{{ Na+ channels
 	InitNodes ( .[].Layer(NatChannels), tissueFunctor("NodeInit", <
 				compartmentalize = { "gbar" },
-				gbar = {0.0}, Vhalf_m_shift = 0, Vhalf_h_shift = 0
+				gbar = {0.0}
+#ifdef TURN_ON_ADJUST_VHALF_SIMPLE
+                                ,Vhalf_act_shift = 0, Vhalf_inact_shift = 0
+#elif defined(TURN_ON_ADJUST_VHALF_COMPARTMENT)
+                                ,Vhalf_act_shift = {0}, Vhalf_inact_shift = {0}
+#endif
 				> ) );
 
 	InitNodes ( .[].Layer(NapChannels), tissueFunctor("NodeInit", <
