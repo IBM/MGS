@@ -45,6 +45,9 @@
 
 void GABAAReceptor::initializeGABAA(RNG& rng)
 {
+#if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+  assert(Vpre);
+#endif
   dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
   r = ALPHANEUROTRANSMITTER / (BETA + ALPHANEUROTRANSMITTER);
   g = gbar * r;
@@ -52,11 +55,12 @@ void GABAAReceptor::initializeGABAA(RNG& rng)
 
 void GABAAReceptor::updateGABAA(RNG& rng)
 {
+  // Rempe-Chopp 2006
   dyn_var_t ALPHANEUROTRANSMITTER = ALPHA * NEUROTRANSMITTER;
-  dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA) / 2.0 * Tscale;
-  r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale) / tmp;
-  // dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
-  // r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
+  dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
+  r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
+  //dyn_var_t tmp = 1.0 + (ALPHANEUROTRANSMITTER + BETA) / 2.0 * Tscale;
+  //r = (r * tmp + ALPHANEUROTRANSMITTER * Tscale) / tmp;
   g = gbar * r;
   I = g * ((*Vpost)[indexPost] - getSharedMembers().E);
 }
