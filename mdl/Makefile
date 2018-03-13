@@ -141,4 +141,5 @@ clean:
 	-rm -f parser/mdl.tab.h
 	-rm -f scanner/lex.yy.cc
 
+library: final
 

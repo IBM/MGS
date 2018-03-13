@@ -53,6 +53,9 @@ void SynapticCleft::produceInitialState(RNG& rng)
 void SynapticCleft::produceState(RNG& rng)
 {
   dyn_var_t* V = Vpre;
+  if (Vpre == NULL)
+    //dummy SynapticCleft
+    return;
   float currentTime = dt * (getSimulation().getIteration());
   if (*V < Vthreshold)
   {

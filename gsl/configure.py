@@ -920,23 +920,6 @@ TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
 """
 
-# DCA_OBJ := framework/dca/obj
-# DCA_SRC := framework/dca/src
-
-#  Each module adds to these initial empty definitions
-# SRC :=
-# OBJS :=
-# SHARED_OBJECTS :=
-# BASE_OBJECTS :=
-# DEF_SYMBOLS := $(SO_DIR)/main.def
-# UNDEF_SYMBOLS :=
-#
-# # EXTENSION_OBJECTS is the generated modules that must be linked in statically
-# EXTENSION_OBJECTS :=
-#
-# # GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
-# GENERATED_DL_OBJECTS :=
-
         # BlueGene MPI flags
         if self.options.blueGeneL is True:
             retStr += \
@@ -1041,9 +1024,9 @@ COLAB_UTILS_MODULES := \\
         if self.options.withMpi is True:
             retStr += \
                 """\
-		streams \\
+\t\tstreams \\
 
-"""  # noqa
+"""
 
         retStr += \
             """\
@@ -1139,6 +1122,8 @@ STRUCT_MODULES := CoordsStruct \\
             if (self.options.asNts is True) or (self.options.asBoth is True):
                 retStr += \
                     """\
+TRIGGER_MODULES :=
+
 COLAB_TRIGGER_MODULES := UnsignedServiceTrigger \\
 
 """
@@ -1231,6 +1216,7 @@ FUNCTOR_MODULES := BinomialDist \\
        Threshold \\
        ToroidalRadialSampler \\
        UniformDiscreteDist \\
+       ConnectNodeSetsByVolumeFunctor \\
 """
         _tissuefunctor_modules = \
             """\
@@ -1240,57 +1226,60 @@ FUNCTOR_MODULES := BinomialDist \\
        TissueMGSifyFunctor \\
        TissueNodeInitFunctor \\
        TissueProbeFunctor \\
-       Zipper \\
-        """
+       Zipper \\"""
         if self.options.colab is False:
             if (self.options.asNts is True) or (self.options.asBoth is True):
-                retStr += _tissuefunctor_modules
+                retStr += _tissuefunctor_modules + \
+                    """
+
+"""
         else:
                 retStr += """\
 COLAB_FUNCTOR_MODULES :=  \\
 """ + _tissuefunctor_modules + \
                     """
-        BinomialDist \\
-        CombineNVPairs \\
-        ConnectNodeSetsFunctor \\
-        DstDimensionConstrainedSampler \\
-        DstRefDistanceModifier \\
-        DstRefGaussianWeightModifier \\
-        DstRefSumRsqrdInvWeightModifier \\
-        DstScaledContractedGaussianWeightModifier \\
-        DstScaledGaussianWeightModifier \\
-        Exp \\
-        GetDstNodeCoordFunctor \\
-        GetNodeCoordFunctor \\
-        GetPostNodeCoordFunctor \\
-        GetPreNodeCoordFunctor \\
-        GetPreNodeIndex \\
-        IsoSampler \\
-        Log \\
-        ModifyParameterSet \\
-        NameReturnValue \\
-        Neg \\
-        PolyConnectorFunctor \\
-        RandomDispersalLayout \\
-        RefAngleModifier \\
-        RefDistanceModifier \\
-        ReversedDstRefGaussianWeightModifier \\
-        ReversedSrcRefGaussianWeightModifier \\
-        ReverseFunctor \\
-        Round \\
-        Scale \\
-        ServiceConnectorFunctor \\
-        SrcDimensionConstrainedSampler \\
-        SrcRefDistanceModifier \\
-        SrcRefDoGWeightModifier \\
-        SrcRefGaussianWeightModifier \\
-        SrcRefPeakedWeightModifier \\
-        SrcRefSumRsqrdInvWeightModifier \\
-        SrcScaledContractedGaussianWeightModifier \\
-        SrcScaledGaussianWeightModifier \\
-        Threshold \\
-        ToroidalRadialSampler \\
-        UniformDiscreteDist \\
+       BinomialDist \\
+       CombineNVPairs \\
+       ConnectNodeSetsFunctor \\
+       DstDimensionConstrainedSampler \\
+       DstRefDistanceModifier \\
+       DstRefGaussianWeightModifier \\
+       DstRefSumRsqrdInvWeightModifier \\
+       DstScaledContractedGaussianWeightModifier \\
+       DstScaledGaussianWeightModifier \\
+       Exp \\
+       GetDstNodeCoordFunctor \\
+       GetNodeCoordFunctor \\
+       GetPostNodeCoordFunctor \\
+       GetPreNodeCoordFunctor \\
+       GetPreNodeIndex \\
+       IsoSampler \\
+       Log \\
+       ModifyParameterSet \\
+       NameReturnValue \\
+       Neg \\
+       PolyConnectorFunctor \\
+       RandomDispersalLayout \\
+       RefAngleModifier \\
+       RefDistanceModifier \\
+       ReversedDstRefGaussianWeightModifier \\
+       ReversedSrcRefGaussianWeightModifier \\
+       ReverseFunctor \\
+       Round \\
+       Scale \\
+       ServiceConnectorFunctor \\
+       SrcDimensionConstrainedSampler \\
+       SrcRefDistanceModifier \\
+       SrcRefDoGWeightModifier \\
+       SrcRefGaussianWeightModifier \\
+       SrcRefPeakedWeightModifier \\
+       SrcRefSumRsqrdInvWeightModifier \\
+       SrcScaledContractedGaussianWeightModifier \\
+       SrcScaledGaussianWeightModifier \\
+       Threshold \\
+       ToroidalRadialSampler \\
+       UniformDiscreteDist \\
+       ConnectNodeSetsByVolumeFunctor \\
 
 """
         if (self.options.asMgs is True) or (self.options.asBoth is True):
@@ -1420,11 +1409,11 @@ COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
         retStr += "\n"
         return retStr
 
-    def getCFlags(self):
+    def getCFlags(self):  # noqa
         retStr = \
             """\
-OTHER_LIBS :=-lgmp -lpython2.7
-# OTHER_LIBS :=-lgmp -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+# OTHER_LIBS :=-lgmp -lpython2.7
+OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7 -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
 LDFLAGS := -shared
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
@@ -1435,10 +1424,6 @@ CFLAGS += -fPIC \
                 """
 CFLAGS += $(COLAB_CFLAGS) \
 """
-        # #CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
-        # $(patsubst %,-I%/generated,$(PARSER_PATH)) \
-        # $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
-        # """
         if self.options.blueGene is False:
             retStr += \
                 """\
@@ -1556,7 +1541,7 @@ CFLAGS += $(COLAB_CFLAGS) \
         return retStr
 
     def getLibs(self):  # noqa
-        retStr = ""
+        retStr = "# add libs"
         if self.options.colab is True:
             if self.options.debug == USE:
                 retStr += \
@@ -1570,7 +1555,7 @@ NTS_LIBS := ${LENSROOT}/lib/libnts_db.so\n
 NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
 
 """
-        retStr = "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
+        # retStr += "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
         retStr += "LIBS := "
         if self.options.dynamicLoading is True:
             retStr += "-ldl "
@@ -1775,21 +1760,21 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 
     def getParserTargets(self):
         """docstring"""
-        bisonOutputPrefix = ""
-        if self.bisonVersion == "1.35":
-            bisonOutputPrefix = "framework/parser/bison/"
+        # bisonOutputPrefix = ""
+        # if self.bisonVersion == "1.35":
+        #     bisonOutputPrefix = "framework/parser/bison/"
 
         retStr = \
             """\
 
 # Parser targets
 speclang.tab.h:
-	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
+\tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
+\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
+\tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
@@ -1805,28 +1790,25 @@ $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-	$(FLEX) -+ framework/parser/flex/speclang.l
-	sed 's/class istream;/#include <FlexFixer.h>/' \
+\t$(FLEX) -+ framework/parser/flex/speclang.l
+\tsed 's/class istream;/#include <FlexFixer.h>/' \
            lex.yy.cc > lex.yy.cc.edited
-	mv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
-	rm lex.yy.cc
-"""  # noqa
+\tmv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
+\trm lex.yy.cc
+"""
         else:
             retStr = \
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-	cp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
-"""  # noqa
+\tcp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
+"""
 
         retStr += \
             """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
 \t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 """
-$(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-	$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
-"""  # noqa
         retStr += "\n"
         return retStr
 
@@ -1865,6 +1847,16 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         retStr += "\n"
         return retStr
 
+    def getLibsTarget(self):
+        retStr = ""
+        if self.options.colab is True:
+            retStr += \
+                """
+library: speclang.tab.h  $(COLAB_OBJS)
+\t$(CC) $(LDFLAGS) -o ${NTS_LIBS} ${COLAB_OBJS}
+"""
+        return retStr
+
     def getLibLensTarget(self):
         retStr = \
             """\
@@ -1893,21 +1885,15 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         if self.options.dynamicLoading is False:
             retStr += arCmd + " $(GENERATED_DL_OBJECTS)\n"
         retStr += "\tranlib $@\n\n"
-        if self.options.colab is True:
-            retStr += \
-                """
-library: speclang.tab.h  $(COLAB_OBJS)
-\t$(CC) $(LDFLAGS) -o ${NTS_LIBS} ${COLAB_OBJS}
-"""
         return retStr
 
     def getMainDefTarget(self):
         retStr = \
             """\
 $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
-	echo \#\!. > $@
-	$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
-"""  # noqa
+\techo \#\!. > $@
+\t$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
+"""
         return retStr
 
     def getLensparserTarget(self):
@@ -1940,7 +1926,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
                 retStr += "$(DX_LITELIBS)"
         if self.operatingSystem == "AIX":
             retStr += "$(XLINKER)"
-        if self.options.profile == USE :
+        if self.options.profile == USE:
             retStr += PROFILING_FLAGS
             retStr += "$(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE)\n"
         return retStr
@@ -1968,28 +1954,20 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             """\
 .PHONY: clean
 clean:
-	-@rm -f dx/EdgeSetSubscriberSocket
-	-@rm -f dx/NodeSetSubscriberSocket
-	-@rm -f $(BIN_DIR)/$(EXE_FILE)
-	-@rm -f $(BIN_DIR)/createDF
-	-@rm -f lib/liblens.a
-	-@rm -f lib/liblensext.a
-	-@rm -f $(SO_DIR)/Dependfile
-	-@rm -f framework/parser/bison/speclang.output
-	-@rm -f framework/parser/generated/lex.yy.C
-	-@rm -f framework/parser/generated/lex.yy.C
-	-@rm -f framework/parser/generated/speclang.tab.C
-	-@rm -f framework/parser/generated/speclang.tab.h
-	-@rm -f $(OBJS_DIR)/*
-"""  # noqa
-        #	-find . -name "*\.o" -exec /bin/rm {} \;
-        #	-find . -name "*\.so" -exec /bin/rm {} \;
-        #	-find . -name "*\.d" -exec /bin/rm {} \;
-        #	-find . -name "*\.ld" -exec /bin/rm {} \;
-        #	-find . -name "*\.yd" -exec /bin/rm {} \;
-        #	-find . -name "*\.ad" -exec /bin/rm {} \;
-        #	-find . -name "*\.def" -exec /bin/rm {} \;
-        #	-find . -name "*\.undef" -exec /bin/rm {} \;
+\t-rm -f dx/EdgeSetSubscriberSocket
+\t-rm -f dx/NodeSetSubscriberSocket
+\t-rm -f $(BIN_DIR)/$(EXE_FILE)
+\t-rm -f $(BIN_DIR)/createDF
+\t-rm -f lib/liblens.a
+\t-rm -f lib/liblensext.a
+\t-rm -f $(SO_DIR)/Dependfile
+\t-rm -f framework/parser/bison/speclang.output
+\t-rm -f framework/parser/generated/lex.yy.C
+\t-rm -f framework/parser/generated/lex.yy.C
+\t-rm -f framework/parser/generated/speclang.tab.C
+\t-rm -f framework/parser/generated/speclang.tab.h
+\t-rm -f $(OBJS_DIR)/*
+"""
         return retStr
 
     def generateMakefile(self, fileName):
@@ -2003,7 +1981,7 @@ clean:
 
         fileBody += self.getCFlags()
         fileBody += "\n"
-        fileBody += self.getLensLibs()
+        # fileBody += self.getLensLibs()
         fileBody += self.getLibs()
         fileBody += "\n"
 
@@ -2031,6 +2009,7 @@ clean:
             fileBody += self.getDependfileTarget()
             fileBody += "\n"
         # fileBody += self.getLibLensTarget()
+        fileBody += self.getLibsTarget()
         fileBody += "\n"
         if self.options.dynamicLoading is True:
             fileBody += self.getMainDefTarget()
@@ -2069,6 +2048,3 @@ if __name__ == "__main__":
     except FatalError as error:
         error.printError()
         sys.exit(-1)
-
-
-

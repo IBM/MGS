@@ -23,7 +23,7 @@ rm_ifexist() {
 }
 
 function print_help {
-	echo -e "\n\n${cc_blue}Make NTS...${cc_normal} \n\nOption include : \n\n
+	echo -e "\n\n${cc_blue}Make both NTS and MGS...${cc_normal} \n\nOption include : \n\n 
   -p [LINUX|BGL|BGP|BGQ]        default = LINUX  build to run on what platform
   -c [all|common|mdl|gsl|nti]   default = all    what components to build
   -r|--release                  to build in release mode [default: debug mode]
@@ -36,17 +36,20 @@ function print_help {
                                 [by default: build with -g information, but not printing out any thing]
                                   log1 = print out DEBUG_HH and DEBUG_ASSERT
                                   log2 = print out ... during loops
-  --colab                       build libraries for collaborators (gsl/lib) 
-  --regen                       regenerate gsl/Makefile  
   HETE ARCHITECTURE:
   -g|--gpu                      build with GPU extensions
   -a|--arma                     build with Armadillo extensions
 
 Example:
-1) make_nts -p LINUX :          builds NTS in a LINUX environment using MPI
-2) make_nts -p BGL :            makes NTS on Blue Gene/L
-3) make_nts -p BGP :            makes NTS on Blue Gene/P
-4) make_nts -p BGQ :            make NTS on Blue Gene/Q\n
+1) make_nts -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
+2) make_nts -p BGL :            makes both NTS and MGS on Blue Gene/L
+3) make_nts -p BGP :            makes both NTS and MGS on Blue Gene/P
+4) make_nts -p BGQ :            make both NTS and MGS on Blue Gene/Q\n
+\n
+Extra Libraries:
+  export SUITESPARSE=\`pwd\`/SuiteSparse/
+  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$SUITESPARSE/lib
+
 \n\n"; exit;
 }
 
@@ -54,11 +57,21 @@ if [ "$1" == "--help" ] || [ $# == 0 ]; then
   print_help
 fi
 #}}}
+function make_functor_mdf()
+{
+  cat functors_common.mdf > $1
+  #cat functors_both.mdf >> $1
+  cat functors_nts.mdf >> $1
+  #cat functors_mgs.mdf >> $1
+  if [ -f colab_functors.mdf ]; then
+    cat colab_functors.mdf >> $1
+  else
+    touch $1
+  fi
+}
 
-#########################################
-[ -z "$PYTHON_INCLUDE_DIR" ] && echo "Need to set PYTHON_INCLUDE_DIR" && exit 1;
 
-TYPE="NTS"  # NTS, MGS, BOTH
+TYPE="BOTH"  # NTS, MGS, BOTH
 ##########################################
 ## Detect what need to be built
 #{{{
@@ -70,9 +83,7 @@ MCO=""
 RELEASE=""
 GPU=""
 ARMA=""
-REGENMAKEFILE=""
 GSL_BUILD_MODE=""
-TARGET_BUILD=""
 optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
@@ -106,14 +117,8 @@ while getopts "$optspec" optchar; do
                 clean)
                     CLEAN="-clean"
                     ;;
-                colab)
-                    TARGET_BUILD="library"
-                    ;;
                 rebuild)
                     REBUILD="-rebuild"
-                    ;;
-                regen)
-                    REGENMAKEFILE="--regen"
                     ;;
                 singlethread)
                     NPROCS=1
@@ -258,43 +263,36 @@ if [ "$ARMA" == "--arma" ]; then
 fi
 #}}}
 
-#{{{pre-configure and testing
-if [ "$NTSROOT" == "" ]; then
-  echo "Please run: source setenv_nts"
-  exit
-elif [ "$NTSROOT" != $(pwd) ]; then
-  echo "Please run: source setenv_nts"
+if [ "$NTSMGSROOT" == "" ]; then
+  echo "Please run: source setenv_both"
   exit
 fi
 if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-  echo "First build. Auto run with --rebuild"
-  REBUILD="-rebuild"
+  echo "First build. Please run with --rebuild"
+  exit
 fi
 
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
-  if  [ "$NTSROOT" != "$line" ]; then
-    echo "Please run: source setenv_nts"
+  if  [ "$NTSMGSROOT" != "$line" ]; then
+    echo "Please run: source setenv_both"
     rm .built
     exit
   fi
   PREV_TYPE=$(sed '2q;d' ".built")
 fi
 if [ "$CLEAN" == "-clean" ] ; then
-  rm_ifexist $NTSROOT/.built
+  rm_ifexist $NTSMGSROOT/.built
 fi
 if [ "$REBUILD" == "-rebuild" ] ;then
-  cd $NTSROOT
-  touch .built && echo $NTSROOT > .built
+  cd $NTSMGSROOT
+  touch .built && echo $NTSMGSROOT > .built
   echo $TYPE >> .built # 2nd-line
 fi
 if [ "$TYPE" != "$PREV_TYPE" ]; then
   gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
-  touch models/nts.mdf 
 fi
-#}}}
-
 ################################################
 ### MDL code ###
 #{{{
@@ -309,26 +307,26 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+      make -j $NPROCS RELEASE="$RELEASE"
       if [ `ls $MDLROOT/bin/mdlparser` ]; then
         echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
       fi
     fi
   else
-    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+    make -j $NPROCS RELEASE="$RELEASE"
     if [ `ls $MDLROOT/bin/mdlparser` ]; then
       echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
     fi
   fi
   if [ "$CLEAN" != "-clean" ] ; then
-    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then 
+    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then
       rm mdl.make.mark
-      cd $NTSROOT
+      cd $NTSMGSROOT
       echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
-      exit; 
+      exit;
     fi
     rm -f mdl.make.mark
-    cd $NTSROOT
+    cd $NTSMGSROOT
   fi
 fi
 #}}}
@@ -337,8 +335,7 @@ fi
 ### COMMON code ###
 #{{{
 if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  echo "Start build COMMON"
-  cd $NTSROOT/common
+  cd $NTSMGSROOT/common
   sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
@@ -348,20 +345,19 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
   fi
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
-      make realclean RELEASE="$RELEASE";
+      make realclean;
       echo "${cc_blue}Removed COMMON code successful.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
-      make realclean RELEASE="$RELEASE";
-      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+      make realclean;
+      make -j $NPROCS RELEASE="$RELEASE"
       echo "${cc_blue}Build COMMON code successful.${cc_normal}"
     fi
   else
-    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+    make -j $NPROCS RELEASE="$RELEASE"
     echo "${cc_blue}Build COMMON code successful.${cc_normal}"
   fi
-  make -j $NPROCS RELEASE="$RELEASE"
-  cd $NTSROOT
+  cd $NTSMGSROOT
 fi
 #}}}
 
@@ -369,7 +365,7 @@ fi
 ### NTI code ###
 #{{{
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  cd $NTSROOT/nti
+  cd $NTSMGSROOT/nti
   if [ -f .build_error ]; then rm .build_error; fi
   if [ "$MCO" == "-MCO" ]; then
     #TODO: Find out what is $3 here to replace it
@@ -386,92 +382,79 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean;
-      echo "${cc_blue}Removed NTI code successful.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean;
-      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+      if [ "$RELEASE" == "-release" ]; then
+          make -j $NPROCS RELEASE="-release"
+      else
+          make -j $NPROCS RELEASE=""
+      fi
     fi
   else
-    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+    if [ "$RELEASE" == "-release" ]; then
+        make -j $NPROCS RELEASE="-release"
+    else
+        make -j $NPROCS RELEASE=""
+    fi
   fi
   if [ -f .build_error ]; then exit ; fi
-  if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-    SUCCESS=1
-    if [ "$RELEASE" == "-release" ]; then
-      if [ ! `ls $LENSROOT/lib/libnti.a` ]; then
-        SUCCESS=0
-      fi
-    else 
-      if [ ! `ls $LENSROOT/lib/libnti_db.a` ]; then
-        SUCCESS=0
-      fi
-    fi
-    if [ $SUCCESS -eq 0 ]; then
-      cd $NTSROOT
-      echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
-      exit;
-    fi
-    cd $NTSROOT
-    echo "${cc_blue}Complete build NTI code${cc_normal}"
+  if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/libnti.a` ]; then
+    cd $NTSMGSROOT
+    echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
+    exit;
   fi
+  cd $NTSMGSROOT
+  echo "${cc_blue}Complete build NTI code${cc_normal}"
 fi
 #}}}
 
 ##########################################
 ### GSL code ###
 #{{{
-EXTRA_ARGS=" ${REGENMAKEFILE}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  echo "Start build GSL"
-  if [ "$REGENMAKEFILE" == "--regen" ] ; then
-    cd $LENSROOT
-    ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA 
-    exit
-  fi
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     #{{{
     cd $LENSROOT
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
-      ./build_gsl -p $PLATFORM --clean --as-Nts
-      rm_ifexist $NTSROOT/models/Extensions.mk
-      #rm_ifexist $NTSROOT/models/all.mdf
-      #rm_ifexist $NTSROOT/models/all_test.mdf
+      ./build_gsl -p $PLATFORM --clean --as-both-Nts-Mgs
+      rm_ifexist $NTSMGSROOT/models/Extensions.mk
+      #rm_ifexist $NTSMGSROOT/models/all.mdf
+      #rm_ifexist $NTSMGSROOT/models/all_test.mdf
       rm_ifexist $LENSROOT/extensions/functor/all.mdf
       rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
-      find $NTSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $NTSROOT/models/nts.mdf
+      find $NTSMGSROOT/models -iname "CG_*" | xargs -I{} rm {}
+      touch $NTSMGSROOT/models/all.mdf
       #}}}
     fi
     cd -
-    cd $NTSROOT
+    cd $NTSMGSROOT
     if [ "$REBUILD" == "-rebuild" ] ;then
       #{{{
       cd $LENSROOT/extensions/variable
-      ./define variables.mdf  $REBUILD
+      ./define variables.mdf $REBUILD
       cd $LENSROOT/extensions/struct
-      ./define structs.mdf   $REBUILD
+      ./define structs.mdf $REBUILD
       cd $LENSROOT/extensions/functor
       #rm_ifexist all.mdf
       JUST_CREATE=0
       if [ ! -f all.mdf ]; then
-        cat functors_common.mdf > all.mdf
-        cat functors_nts.mdf >> all.mdf
         JUST_CREATE=1
+        make_functor_mdf all.mdf
       fi
-      cat functors_common.mdf >> all_test.mdf
-      cat functors_nts.mdf >> all_test.mdf
+      make_functor_mdf all_test.mdf
       if [ ! diff -q all_test.mdf all.mdf &>/dev/null ] || [ $JUST_CREATE -eq 1 ]; then
         mv all_test.mdf all.mdf
         ./define all.mdf $REBUILD
       fi
       rm_ifexist all_test.mdf
-      #./define all.mdf $REBUILD
-      #./define functors_nts.mdf $REBUILD
-      cd $NTSROOT/models
+      #rm_ifexist all.mdf
+      #cat nts.mdf >> all.mdf
+      #cat mgs.mdf >> all.mdf
+      cd $NTSMGSROOT/models
       if [ $PREV_TYPE != $TYPE ]; then
         if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
           touch nts.mdf
@@ -480,35 +463,34 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
           touch mgs.mdf
         fi
       fi
-      touch nts.mdf
-      ./define nts.mdf $REBUILD
+      touch all.mdf
+      ./define all.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
-      cd $NTSROOT
+      cd $NTSMGSROOT
       #}}}
     fi
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA
+      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-both-Nts-Mgs $GPU  $ARMA
     fi
     cd -
     #}}}
   else
     #{{{
     cd $LENSROOT/extensions/variable
-    ./define variables.mdf  $REBUILD
+    ./define variables.mdf $REBUILD
     cd $LENSROOT/extensions/struct
-    ./define structs.mdf   $REBUILD
+    ./define structs.mdf $REBUILD
     cd $LENSROOT/extensions/functor
-    cat functors_common.mdf >> all_test.mdf
-    cat functors_nts.mdf >> all_test.mdf
+    make_functor_mdf all_test.mdf
     if ! diff -q all_test.mdf all.mdf &>/dev/null; then
       mv all_test.mdf all.mdf
       ./define all.mdf $REBUILD
     fi
     rm_ifexist all_test.mdf
-    cd $NTSROOT/models
+    cd $NTSMGSROOT/models
     if [ $PREV_TYPE != $TYPE ]; then
       if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
         touch nts.mdf
@@ -519,23 +501,23 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       rm Extensions.mk
     fi
     if [ ! -f Extensions.mk ]; then
-      touch nts.mdf;
-      ./define nts.mdf -force
+      touch all.mdf;
+      ./define all.mdf -force
     else
-      ./define nts.mdf $REBUILD
+      ./define all.mdf $REBUILD
     fi
 
     cp Extensions.mk $LENSROOT/
-    cd $NTSROOT
+    cd $NTSMGSROOT
     # -s or -singlethread
     cd $LENSROOT
-    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-both-Nts-Mgs $GPU  $ARMA
     cd -
     #}}}
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
-      echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS...${cc_normal}
+      echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS and MGS...${cc_normal}
 
     To run the test NTS tissue simulation :
 

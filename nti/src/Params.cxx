@@ -153,7 +153,7 @@ Params::Params()
     : _bondK0(0),
       _bondR0(0),
       _nBondTypes(0),
-      _use_biological_constraint(1),
+      _use_biological_constraint(0),
       _angleK0(0),
       _angleR0(0),
       _nAngleTypes(0),
@@ -768,7 +768,7 @@ void Params::readSynParams(const std::string& fname)
     assert(0);
   }
   keyword = std::string("USE_BIOLOGICAL_CONSTRAINT");
-  _use_biological_constraint = 1; //default: follow biological rule
+  _use_biological_constraint = 0; //default: allow any connection to be defined 
   if (isGivenKeywordNext(fpF, keyword))
     result = (readExtraInfoSynParams(fpF));
   if (result == ErrorCode::SECTION_INVALID)
@@ -1529,7 +1529,7 @@ void Params::jumpOverCommentLine(FILE* fpF)
   fgetpos(fpF, &fpos);
   char bufS[LENGTH_LINE_MAX];
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-        assert(c != NULL);
+  //assert(c != NULL);
   std::string line(bufS);
   while ((bufS[0] == '\n' or isCommentLine(line)) and !feof(fpF))
   {
@@ -1554,7 +1554,7 @@ bool Params::isGivenKeywordNext(FILE* fpF, std::string& keyword)
   int n;
   jumpOverCommentLine(fpF);
   char* c = fgets(bufS, LENGTH_LINE_MAX, fpF);
-  assert(c != NULL);
+  //assert(c != NULL);
   std::string line(bufS);
   if (c != NULL and 2 == sscanf(bufS, "%s %d ", tokS, &n))
   {
@@ -5071,7 +5071,7 @@ Params::ErrorCode Params::readExtraInfoSynParams(FILE* fpF)
 {
   ErrorCode rval = ErrorCode::SECTION_VALID;
   skipHeader(fpF);
-  _use_biological_constraint = 1; 
+  _use_biological_constraint = 0;  //default setting
   int n = 0;
   char bufS[LENGTH_LINE_MAX], tokS[LENGTH_TOKEN_MAX];
   jumpOverCommentLine(fpF);

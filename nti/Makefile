@@ -193,7 +193,7 @@ TISSUE_LIB_OBJECTS_UNIQUE= $(shell echo "${TISSUE_LIB_OBJECTS}" |  xargs -n1 | s
 COMMON_DIR=../common/obj/
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 ERROR_MARKER=.build_error
-TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect library
+TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 ccred:=$(shell echo -e "\033[0;31m")
 ccnormal:=$(shell echo -e "\033[0m")
 Model2Use:=$(shell pwd)/include/Model2Use.h
@@ -209,7 +209,8 @@ target:
 	@echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
 	@echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
 	@echo "//#define USE_DOUBLES   [to enable double-precision]" >> ${Model2Use} 
-	@echo "//#define NVU_NTS_EXTENSION  //we need this to enable NTS to work with NVU" >> ${Model2Use}
+	@echo "#define NVU_NTS_EXTENSION  //we need this to enable NTS to work with NVU" >> ${Model2Use}
+	@echo "#define SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE " >> ${Model2Use}
 	@echo "//#define WAIT_FOR_REST" >> ${Model2Use}
 	@echo "#ifdef WAIT_FOR_REST" >> ${Model2Use} 
 	@echo "#define NOGATING_TIME 20.0 //ms" >> ${Model2Use} 
@@ -232,7 +233,7 @@ fi
 	@touch $(ERROR_MARKER)
 
 else
-target: $(TARGETS) 
+target: $(TARGETS)  library
 endif
 
 

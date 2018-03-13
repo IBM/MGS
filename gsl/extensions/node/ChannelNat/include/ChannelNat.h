@@ -54,7 +54,7 @@
 #define Q10 2.3 //default
 #endif
 
-#define WRITE_GATES
+//#define WRITE_GATES
 
 class ChannelNat : public CG_ChannelNat
 {

@@ -79,6 +79,9 @@ PolyConnectorFunctor polyConnect();
 Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
 
+Connector ConnectNodeSetsByVolumeFunctor();
+ConnectNodeSetsByVolumeFunctor connectNodeSetsByVolume();
+
 SamplingFctr2 IsoSampler();
 IsoSampler isoSampler();
 
@@ -121,6 +124,7 @@ Functor Exp(Functor);
 Functor Log(Functor);
 Functor Neg(Functor);
 Functor Scale(Functor);
+Functor Round(Functor);
 Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
 Functor UniformDiscreteDist(float n1, float n2);

@@ -4,6 +4,7 @@ INCDIR= ./include
 CC=g++
 CFLAGS=-I$(INCDIR) -Wall -Werror -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
 CFLAGS+= -fPIC 
+OTHER_LIBS := -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
 LDFLAGS+= -shared
 
 RELEASE?="" # Potentially set by make_XXX or the user from the command line
@@ -44,12 +45,12 @@ $(OBJS): | $(OBJDIR)
 
 $(OBJDIR): 
 	mkdir -p $(OBJDIR)
-	
-final: $(OBJS)
-	echo $(OBJS)
+
+final: $(OBJS) library
+	@echo $(OBJS)
 
 $(OBJDIR)/%.o: %.C 
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(OTHER_LIBS) $(CFLAGS) -c $< -o $@
 
 clean: 
 	-@rm -f $(OBJDIR)/*

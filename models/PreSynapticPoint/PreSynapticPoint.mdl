@@ -296,8 +296,9 @@ Node VoltageMegaSynapticSpace Implements
     int idx; //connect to either an exact compartment-index
   }
 
+  PredicateFunction isInRange;
   
-  Connection Pre Node (PSet.identifier=="connexon") Expects 
+  Connection Pre Node (PSet.identifier=="connexon" && isInRange()) Expects 
     VoltageProducer//, BranchDataProducer
   {
     VoltageProducer.voltage >> Vm;

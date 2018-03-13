@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BMC-YKT-08-23-2011-2
+// BMC-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2014  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -391,7 +391,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::vector<std::map<Touch*, int> > _synapticCleftMaps; 
 
   //Zipper purpose
-  // map<"PROBED-name", vector-holding-#instances-at-each-gridIndex >
+  // map<"PROBED-name", vector-holding-#instances-at-each-gridIndex(i.e.MPIrank) >
   //                 NOTE: the index of the vector is also the gridIndex
   std::map<std::string, ShallowArray<int> > _probedLayoutsMap;
   // map<"PROBED-name", map< pair{category, typename }, pair{ Grid*, vector<ND*>} > >
