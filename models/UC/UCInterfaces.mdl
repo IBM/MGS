@@ -1,0 +1,29 @@
+#ifndef uc_mdl
+#define uc_mdl
+
+Struct NVUinput {
+  double* radius;
+  double []* NVUstateVariables;
+  double []* NVUcoords;
+}
+
+Interface PressureArrayProducer {
+  double []* pressures;
+}
+
+Interface RadiusProducer {
+  double* radius;
+}
+Interface StateVariablesProducer {
+	double []* stateVariables;
+}
+Interface CoordsProducer {
+	double []* coords;
+}
+Interface CoordsArrayProducer {
+	double []* coordsArray;
+}
+// Interface FlowArray{
+//   double []* flow;
+// }
+#endif	

@@ -1,0 +1,56 @@
+#ifndef HTREE_MDL
+#define HTREE_MDL
+#include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.mdl"
+#include "UCInterfaces.mdl"
+
+Node Htree Implements PressureArrayProducer, CoordsArrayProducer {
+  double [] pressures;
+  int numberNVUs;
+  double dtWrite;
+  double [] coordsArray;
+  double L0;
+ 
+
+  NVUinput [] NVUinputs;
+
+  Shared {
+    dyn_var_t* deltaT;
+    int [] gridSize;
+
+    double []* tempStateVariables;
+    double []* tempNVUcoords;
+
+  }
+
+  PressureArrayProducer.pressures << &pressures;
+  CoordsArrayProducer.coordsArray << &coordsArray;
+
+
+  InitPhase initTree(pressures, coordsArray);
+  //InitPhase initialWrite();
+  RuntimePhase writeToFiles();
+  RuntimePhase updatePressures();
+  RuntimePhase copy(pressures);
+
+  FinalPhase finalize;
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  UserFunction setPointers;
+  Connection Pre Node (PSet.identifier=="NVU") Expects RadiusProducer, StateVariablesProducer, CoordsProducer
+  {
+    RadiusProducer.radius >> NVUinputs.radius; // auto adds an element for each connection (bumps the struct to one bigger)
+    StateVariablesProducer.stateVariables >> Shared.tempStateVariables;
+    CoordsProducer.coords >> Shared.tempNVUcoords;
+    setPointers();
+  }
+
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  };
+}
+#endif
