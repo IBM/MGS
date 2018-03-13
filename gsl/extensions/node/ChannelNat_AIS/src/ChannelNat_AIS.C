@@ -29,60 +29,60 @@
 #define BHV (42.0+Eleak)
 #define BHD -5.0
 #elif CHANNEL_NAT_AIS == NAT_AIS_MSN_TUAN_JAMES_2017
-// combine data from Ogata-1990 (striatal neuron) 
+// combine data from Ogata-1990 (striatal neuron)
 // Surmeier (1992)
 // model is used for simulation dorsal striatal (medium-sized spiny MSN
 // cell)
 //    at 35.0 Celcius
 // minf(Vm) = 1/(1+exp((Vm-Vh)/k))
 // hinf(Vm) = 1/(1+exp(Vm-Vh)/k)
-#define Vhalf_m_shift 0.0
-#define Vhalf_h_shift 0.0
+//#define Vhalf_act_shift 0.0
+//#define Vhalf_inact_shift 0.0
 #define OGATA_1990 1
 #define FRASER_1993 2
 #define SURMEIER_1992 3
 
 #define USE_ACT OGATA_1990
 
-#if USE_ACT == OGATA_1990 
+#if USE_ACT == OGATA_1990
 #define VHALF_M -25
 #define k_M -10.0
 #elif USE_ACT == FRASER_1993
 #define VHALF_M -28
-#define k_M -4.5 // D1-MSN 
+#define k_M -4.5 // D1-MSN
 #else
   NOT AVAILABLE
 #endif
 
 
-#define USE_INACT SURMEIER_1992
+#define USE_INACT OGATA_1990
 
-#if USE_INACT == OGATA_1990 
+#if USE_INACT == OGATA_1990
 #define VHALF_H -62
 #define k_H 6
-#elif USE_INACT == FRASER_1993 
+#elif USE_INACT == FRASER_1993
 #define Vhshift 8
 #define VHALF_H (-62.9 + Vhshift)
 #define k_H 6
 #elif USE_INACT == SURMEIER_1992
 #define VHALF_H (-54.6)
-#define k_H 5.4   // D2-MSN 
-//#define k_H 10.2   // D1-MSN 
+#define k_H 5.4   // D2-MSN
+//#define k_H 10.2   // D1-MSN
 #else
   NOT AVAILABLE
 #endif
 
 #define LOOKUP_TAUM_LENGTH 16  // size of the below array
-//#define scale_tau_m 1.2 
-//#define scale_tau_m 1.0 
-//#define scale_tau_h 1.2 
+//#define scale_tau_m 1.2
+//#define scale_tau_m 1.0
+//#define scale_tau_h 1.2
 const dyn_var_t ChannelNat_AIS::_Vmrange_taum[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20,  -10, 0,   10,  20,  30,  40,  50};
 // NOTE:
 // if (-100+(-90))/2 >= Vm               : tau_m = taumNat[1st-element]
 // if (-100+(-90))/2 < Vm < (-90+(-80))/2: tau_m = taumNat[2nd-element]
 //...
-#if 0
+#if 1
 dyn_var_t ChannelNat_AIS::taumNat[] = {0.060, 0.060, 0.070, 0.090, 0.110, 0.130, 0.200, 0.320,
                        0.160, 0.150, 0.120, 0.080, 0.060, 0.060, 0.060, 0.060};
 #else
@@ -93,9 +93,15 @@ dyn_var_t ChannelNat_AIS::taumNat[] = {0.316, 0.316, 0.351, 0.447, 0.556, 0.355,
 // dyn_var_t _Vmrange_tauh[] = _Vmrange_taum;
 const dyn_var_t ChannelNat_AIS::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -40, -30,
                                    -20, -15, -10, -5, 0, 5,  10,  20};
-//Nav1.6
+#if 0
+//Nav1.1
+dyn_var_t ChannelNat_AIS::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.9111, 1.4907, 1.2596,
+                       0.8101, 0.5267, 0.4673, 0.3370, 0.3204, 0.3177, 0.3151, 0.3142};
+#else
+//Nav1.6 - prevalence in AIS
 dyn_var_t ChannelNat_AIS::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.9111, 1.4907, 1.2596,
                        1.410, 1.127, 0.967, 0.857, 0.764, 0.700, 0.627, 0.600};
+#endif
 std::vector<dyn_var_t> ChannelNat_AIS::Vmrange_taum;
 std::vector<dyn_var_t> ChannelNat_AIS::Vmrange_tauh;
 
@@ -105,11 +111,11 @@ std::vector<dyn_var_t> ChannelNat_AIS::Vmrange_tauh;
 #define scale_tau_m 1.0
 #endif
 #ifndef scale_tau_h
-#define scale_tau_h 1.0 
+#define scale_tau_h 1.0
 #endif
 
 
-void ChannelNat_AIS::update(RNG& rng) 
+void ChannelNat_AIS::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
   for (unsigned i = 0; i < branchData->size; ++i)
@@ -141,7 +147,7 @@ void ChannelNat_AIS::update(RNG& rng)
     if (index == 0)
       taum = taumNat[0];
     else if (index < LOOKUP_TAUM_LENGTH)
-     taum = linear_interp(Vmrange_taum[index-1], taumNat[index-1], 
+     taum = linear_interp(Vmrange_taum[index-1], taumNat[index-1],
         Vmrange_taum[index], taumNat[index], v);
     else //assume saturation in taum when Vm > max-value
      taum = taumNat[index-1];
@@ -160,7 +166,7 @@ void ChannelNat_AIS::update(RNG& rng)
     if (index == 0)
       tauh = tauhNat[0];
     else if (index < LOOKUP_TAUH_LENGTH)
-      tauh = linear_interp(Vmrange_tauh[index-1], tauhNat[index-1], 
+      tauh = linear_interp(Vmrange_tauh[index-1], tauhNat[index-1],
         Vmrange_tauh[index], tauhNat[index], v);
     else //assume saturation in taum when Vm > max-value
      tauh = tauhNat[index-1];
@@ -168,10 +174,10 @@ void ChannelNat_AIS::update(RNG& rng)
     //dyn_var_t qh = dt * getSharedMembers().Tadj / (tauhNat[index] * 2);
     dyn_var_t qh = dt * getSharedMembers().Tadj / (tauh * 2);
 
-    //dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift[i]) / k_M));
-    //dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H - Vhalf_h_shift[i]) / k_H));
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift) / k_M));
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H - Vhalf_h_shift) / k_H));
+    //dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_act_shift[i]) / k_M));
+    //dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H - Vhalf_inact_shift[i]) / k_H));
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_act_shift) / k_M));
+    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H - Vhalf_inact_shift) / k_H));
 
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
@@ -193,7 +199,7 @@ void ChannelNat_AIS::update(RNG& rng)
 }
 
 
-void ChannelNat_AIS::initialize(RNG& rng) 
+void ChannelNat_AIS::initialize(RNG& rng)
 {
   assert(branchData);
   unsigned size = branchData->size;
@@ -222,15 +228,15 @@ void ChannelNat_AIS::initialize(RNG& rng)
       //NOTE: 'n' bins are splitted by (n-1) points
       if (gbar_values.size() - 1 != gbar_dists.size())
       {
-	std::cerr << "gbar_values.size = " << gbar_values.size() 
-	  << "; gbar_dists.size = " << gbar_dists.size() << std::endl; 
+	std::cerr << "gbar_values.size = " << gbar_values.size()
+	  << "; gbar_dists.size = " << gbar_dists.size() << std::endl;
       }
       assert(gbar_values.size() -1 == gbar_dists.size());
       for (j=0; j<gbar_dists.size(); ++j) {
 	if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
       gbar[i] = gbar_values[j];
-    } 
+    }
     /*else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];
       } */
@@ -246,7 +252,7 @@ void ChannelNat_AIS::initialize(RNG& rng)
       {
 	gbar[i] = gbar_values[j-1];
       }
-      else if (j < gbar_values.size()) 
+      else if (j < gbar_values.size())
 	gbar[i] = gbar_values[j];
       else
 	gbar[i] = gbar_default;
@@ -258,7 +264,7 @@ void ChannelNat_AIS::initialize(RNG& rng)
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994    
+#if CHANNEL_NAT_AIS == NAT_AIS_TRAUB_1994
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
     //dyn_var_t bm = (BMC * (v-BMV)) /  (exp((v - BMV) / BMD) - 1);
     dyn_var_t bm = BMC * vtrap((v - BMV), BMD);
@@ -268,9 +274,9 @@ void ChannelNat_AIS::initialize(RNG& rng)
     h[i] = ah / (ah + bh);
     g[i] = gbar[i] * m[i] *  m[i] * m[i] * h[i];
 #elif CHANNEL_NAT_AIS == NAT_AIS_MSN_TUAN_JAMES_2017
-    m[i] = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift) / k_M));
-    h[i] = 1.0 / (1 + exp((v - VHALF_H - Vhalf_h_shift) / k_H));
-    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i]; // at time (t+dt/2) - 
+    m[i] = 1.0 / (1 + exp((v - VHALF_M - Vhalf_act_shift) / k_M));
+    h[i] = 1.0 / (1 + exp((v - VHALF_H - Vhalf_inact_shift) / k_H));
+    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i]; // at time (t+dt/2) -
 #else
     NOT IMPLEMENTED;
 #endif
@@ -283,10 +289,10 @@ void ChannelNat_AIS::initialize_others()
 {
 #if CHANNEL_NAT_AIS == NAT_AIS_MSN_TUAN_JAMES_2017
   {
-    //NOTE: 
+    //NOTE:
     //  0 <= i < size-1: _Vmrange_tauh[i] << Vm << _Vmrange_tauh[i+1]
-    //  or 
-    //  i = size-1: _Vmrange_tauh[i] << Vm 
+    //  or
+    //  i = size-1: _Vmrange_tauh[i] << Vm
     //  then :  taum[i]
     std::vector<dyn_var_t> tmp(_Vmrange_taum,
                                _Vmrange_taum + LOOKUP_TAUM_LENGTH);
@@ -307,9 +313,9 @@ void ChannelNat_AIS::initialize_others()
   }
 #endif
 }
-  
 
-ChannelNat_AIS::~ChannelNat_AIS() 
+
+ChannelNat_AIS::~ChannelNat_AIS()
 {
 }
 

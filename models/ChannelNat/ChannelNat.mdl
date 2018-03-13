@@ -28,6 +28,8 @@ Node ChannelNat Implements
 #elif defined(TURN_ON_ADJUST_VHALF_SIMPLE)
   float Vhalf_act_shift; // [mV]
   float Vhalf_inact_shift; // [mV]
+  float k_act;   //adjust slope  [mV]
+  float k_inact; //adjust slope  [mV]
 #endif
 #if defined(TURN_ON_ADJUST_TIMECONSTANT)
   float[] tau_act_Vm; //(ms) - the time constant of activating gate at different Vm given in Vm_tau_act
@@ -74,6 +76,7 @@ Node ChannelNat Implements
                       //   and tempt. used for the simulation
     dyn_var_t [] E_Na; // [mV]
     InitPhase computeE; // [mV]
+    string data_path; //location where data (if internally written, should reside) - default: ./
   //}}}
   }
 
@@ -212,7 +215,7 @@ Node ChannelNat Implements
 
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
-Node ChannelNat_AIS Implements 
+Node ChannelNat_AIS Implements
      ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm
      IOCurrentArrayProducer, // to I/O
      BranchDataProducer, DimensionArrayProducer {

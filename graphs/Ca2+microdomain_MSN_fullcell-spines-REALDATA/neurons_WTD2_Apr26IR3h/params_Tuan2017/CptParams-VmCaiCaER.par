@@ -14,16 +14,17 @@ COMPARTMENT_SPINE_HEAD 1
 MTYPE BRANCHTYPE
 [2, 3]     1
 
-COMPARTMENT_VARIABLE_TARGETS 7
+COMPARTMENT_VARIABLE_TARGETS 8
 MTYPE BRANCHTYPE 
-#{{{ 7
-[2:3] 1       Voltage Calcium  CalciumER IP3
-0     1       Voltage Calcium  CalciumER 
-[1,4:10] 1     Voltage Calcium  CalciumER 
-[0:10] [2,5,7] Voltage Calcium
-[0:10] 3 Voltage Calcium  CalciumER  
-[0:10] 4 Voltage Calcium  CalciumER
-[0:10] 6 Voltage Calcium  CalciumER
+#{{{ 8
+0 1      Voltage Calcium  CalciumER 
+0 [2,5,7] Voltage Calcium  
+0 [3,4,6] Voltage Calcium  CalciumER 
+[2,3] 1      Voltage Calcium  CalciumER  IP3
+[2,3] 3      Voltage Calcium  CalciumER  IP3
+[4,5] 1      Voltage Calcium  CalciumER  
+[4,5] [2,5,7]      Voltage Calcium  
+[4,5] [3,4,6]      Voltage Calcium CalciumER  
 #}}}
 
 COMPARTMENT_VARIABLE_COSTS 4
@@ -46,27 +47,28 @@ Voltage 17
 MTYPE BRANCHTYPE
 #{{{ 17
 #{{{neuron 7
-0 1 <Cm=0.01; gLeak=0.0002>
-0 2 <Cm=0.01; gLeak=0.000325>
-0 5 <Cm=0.01; gLeak=0.000325>
-0 7 <Cm=0.01; gLeak=0.000325>
-0 3 <Cm=0.02; gLeak=0.000295>
-0 4 <Cm=0.02; gLeak=0.000295>
-0 6 <Cm=0.01; gLeak=0.000138>
+0 1 <Cm=0.01; gLeak=2.e-4>
+0 2 <Cm=0.01; gLeak=3.25e-4>
+0 5 <Cm=0.01; gLeak=3.25e-4>
+0 7 <Cm=0.01; gLeak=3.25e-4>
+0 3 <Cm=0.02; gLeak=2.95e-4>
+0 4 <Cm=0.02; gLeak=2.95e-4>
+0 6 <Cm=0.01; gLeak=1.38e-4>
 #}}}
 #{{{ spines 4
-2 1 <Cm=0.01; gLeak=0.000295>
-2 3 <Cm=0.01; gLeak=0.000295>
-3 1 <Cm=0.01; gLeak=0.000295>
-3 3 <Cm=0.01; gLeak=0.000295>
+2 1 <Cm=0.01; gLeak=2.95e-4>
+2 3 <Cm=0.01; gLeak=2.95e-4>
+3 1 <Cm=0.01; gLeak=2.95e-4>
+3 3 <Cm=0.01; gLeak=2.95e-4>
 #}}}
 #{{{ Glutamatergic bouton 4
-4 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
-4 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
-5 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
-5 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
+4 1 <Cm=0.01; gLeak=3.38e-4; Vnew={-70.0}>
+4 2 <Cm=0.01; gLeak=3.25e-4; Vnew={-70.0}>
+5 1 <Cm=0.01; gLeak=3.38e-4; Vnew={-70.0}>
+5 2 <Cm=0.01; gLeak=3.25e-4; Vnew={-70.0}>
 #}}}
 ##{{{ GABAergic bouton 2
 1 1 <Cm=0.01; gLeak=0.000295>
 1 2 <Cm=0.01; gLeak=0.000295>
 ##}}}
+#}}}

@@ -12,26 +12,31 @@ MTYPE BRANCHTYPE
 #}}}
 #{{{neuron 3
 0 1  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \
+     KAf [Voltage, Calcium] [Voltage]  \
+     KAs [Voltage] [Voltage] \
      KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage] \
      PMCA [Voltage, Calcium] [Calcium] \
-     NCX [Voltage, Calcium] [Calcium] \
+#     NCX [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
      CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
-     CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
+     CaR [Voltage, Calcium] [Voltage, Calcium] 
 0 [3:4]  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] \
+     KAs [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
-     NCX [Voltage, Calcium] [Calcium] \
+#     NCX [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
      CaN    [Voltage, Calcium] [Voltage, Calcium] CaPQ   [Voltage, Calcium] [Voltage, Calcium] \
      CaR [Voltage, Calcium] [Voltage, Calcium] CaT [Voltage, Calcium] [Voltage, Calcium] 
 0 [2, 5, 7]  Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KIR [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] \
+     KAs [Voltage] [Voltage] \
+     KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
      BK [Voltage, Calcium] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
@@ -98,16 +103,36 @@ NCX     0.254051
 # Pbar [cm/sec]  --> 100*Pbar [um/ms]
 # gbar [mS/cm^2] --> gbar/100 [nS/um^2]
 # gbar [S/cm^2]  --> 10*gbar  [nS/um^2]
+# gbar [S/m^2]  --> 1e-3*gbar  [nS/um^2]
 # Ibar [uA/cm^2] --> Ibar/100 [pA/um^2] 
+#      [pA/pF]  = [uA/uF] = [uA/cm^2]
 CHANNEL_PARAMS 27
 #{{{neuron 15
-#{{{Nat 
-# {{{Wolf-2005
+#{{{Nat   Test
+# {{{Test
 Nat 3
 MTYPE BRANCHTYPE 
-0 1      <gbar={10}>
-0 [2,5,7]  <gbar={0.195}>
-0 [3,4,6]  <gbar={0.195}>
+0 1      <gbar={75.0}>  # we need INap
+0 [2,5,7]  <gbar={105.195}>
+#0 1      <gbar={725.0}>
+#0 [2,5,7]  <gbar={725.195}>
+#0 [3,4,6]  <gbar={0.195}> 
+0 [3,4,6]  <gbar_dists={45, 55}; gbar_values={0.195, 0.00, 0.000}> 
+# }}}
+# {{{ Evans 2012
+#Nat 3
+#MTYPE BRANCHTYPE 
+#0 1      <gbar={90.0}>
+#0 [2,5,7]  <gbar={90.0}>
+#0 [3,4,6]  <gbar={0.195}>
+#0 [3,4,6] <gbar_branchorders={1, 2, 3, -1}; gbar_values={2.73, 2.73, 0.975, 0.975}>
+# }}}
+# {{{Wolf
+#Nat 3
+#MTYPE BRANCHTYPE 
+#0 1      <gbar={15.0}>
+#0 [2,5,7]  <gbar={15.0}>
+#0 [3,4,6]  <gbar={0.195}>
 # }}}
 #{{{Moyer-2007
 #Nat 4
@@ -126,14 +151,22 @@ MTYPE BRANCHTYPE
 #[1,3] 2 <gbar={0.213}>
 #}}}
 #}}}
-#{{{Nap
-# {{{ Wolf-2005
+#{{{Nap Test
+# {{{ Test
 Nap 3
 MTYPE BRANCHTYPE 
-0 1       <gbar={0.0004}> 
-0 [2,5,7] <gbar={0.00000138}>
-0 [3,4,6]   <gbar={0.00000138}>
+0 1       <gbar={0.00272}> 
+0 [2,5,7] <gbar={0.00272}>
+0 [3,4,6]  <gbar_dists={45, 65}; gbar_values={0.00272, 0.00, 0.000}> 
+#0 [3,4,6] <gbar={0.00272}>
 #}}}
+## {{{ Wolf-2005
+#Nap 3
+#MTYPE BRANCHTYPE 
+#0 1       <gbar={4e-4}> 
+#0 [2,5,7] <gbar={4e-4}>
+#0 [3,4,6]   <gbar={1.38e-6}>
+##}}}
 #{{{ Hay-2011 
 #Nap 4
 #BRANCHTYPE MTYPE
@@ -144,14 +177,34 @@ MTYPE BRANCHTYPE
 #}}}
 # }}}
 #{{{KAf
+#{{{KAf Test
 KAf 3
 MTYPE BRANCHTYPE 
 0 1        <gbar={3.6}>     
 0 [2,5,7]  <gbar={3.6}>
-#0 [3,4,6]    <gbar={2.25}>
 #PLAN: to use till_end instead of -1
 #0 [2:6]  <gbar_branchorders={0, 1, till_end}>
-0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={3.6, 0.33, 0.33}>
+0 [3,4,6] <gbar_dists={50, 85, 100}; gbar_values={3.6, 2.33, 4.0, 8.33}>
+#reference 0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={3.6, 0.33, 0.33}>
+#}}}
+##{{{KAf Moyer07
+#KAf 3
+#MTYPE BRANCHTYPE 
+#0 1        <gbar={3.6}>     
+#0 [2,5,7]  <gbar={3.6}>
+##0 [3,4,6]    <gbar={2.25}>
+##PLAN: to use till_end instead of -1
+##0 [2:6]  <gbar_branchorders={0, 1, till_end}>
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={3.6, 0.33, 0.33}>
+##}}}
+##{{{KAf Wolf05
+#KAf 3
+#MTYPE BRANCHTYPE 
+#0 1        <gbar={2.25}>     
+#0 [2,5,7]  <gbar={2.25}>
+##PLAN: to use till_end instead of -1
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}; gbar_values={2.25, 0.21, 0.21}>
+##}}}
 #}}}
 #{{{ KAs
 KAs 3
@@ -193,7 +246,8 @@ SK 3
 MTYPE BRANCHTYPE 
 0 1       <gbar={0.05}>
 0 [2,5,7] <gbar={1.885}>
-0 [3,4]   <gbar={1.885}>
+0 [3,4]   <gbar_dists={50}; gbar_values={1.8, 3.885}>
+# ref 0 [3,4]   <gbar={1.885}>
 #}}}
 #{{{ Hay-2011 
 #SK 7
@@ -215,11 +269,12 @@ BRANCHTYPE MTYPE
 [1,3] 2 <PCabar={6.7e-4}>
 #}}} 
 #{{{ CaLv13
-CaLv13 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={6.19e-4}>
-[1,2] 1 <PCabar={6.25e-4}>
-[1,3] 2 <PCabar={6.25e-4}>
+CaLv13 4
+MTYPE BRANCHTYPE 
+0 [2,5,7] <PCabar={6.19e-4}>
+0 [3,4] <PCabar={6.19e-4}>
+1 [1,2] <PCabar={6.25e-4}>
+2 [1,3] <PCabar={6.25e-4}>
 #}}}
 #{{{ CaN
 CaN 3
@@ -236,18 +291,35 @@ BRANCHTYPE MTYPE
 [1,3] 2 <PCabar={6.0e-4}>
 #}}}
 #{{{ CaR
-CaR 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={2.6e-3}>
-[1,2] 1 <PCabar={2.6e-3}>
-[1,3] 2 <PCabar={2.6e-3}>
+#{{{ CaR  Test
+CaR 2
+MTYPE BRANCHTYPE 
+0 [2,5,7] <PCabar={2.6e-3}>
+0 [3,4,6] <Pbar_dists={80.0}; Pbar_values={0.0, 2.6e-3}>
 #}}}
-#{{{ CaT
-CaT 3
-BRANCHTYPE MTYPE
-[1:6] 0 <PCabar={4.0e-5}>
-[1,2] 1 <PCabar={4.0e-5}>
-[1,3] 2 <PCabar={4.0e-5}>
+##{{{ CaR Moyer 07 - 10x than Wolf-05
+#CaR 3
+#BRANCHTYPE MTYPE
+#[1:6] 0 <PCabar={2.6e-3}>
+#[1,2] 1 <PCabar={2.6e-3}>
+#[1,3] 2 <PCabar={2.6e-3}>
+##}}}
+#}}}
+#{{{ CaT Test
+#{{{ CaT Test
+CaT 2
+MTYPE BRANCHTYPE 
+0 [2,5,7] <PCabar={4.0e-5}>
+0 [3,4,6] <Pbar_dists={80.0}; Pbar_values={0, 4.0e-4}>
+#0 [3,4,6] <Pbar_dists={50.0}; Pbar_values={0, 4.0e-3}> # D2-MSN
+#}}}
+##{{{ CaT Moyer 07 - 10x from Wolf05
+#CaT 3
+#BRANCHTYPE MTYPE
+#[1:6] 0 <PCabar={4.0e-5}>
+#[1,2] 1 <PCabar={4.0e-5}>
+#[1,3] 2 <PCabar={4.0e-5}>
+##}}}
 #}}}
 #{{{ PMCA
 PMCA 6
@@ -255,12 +327,12 @@ PMCA 6
 # tau ~ [ms]
 BRANCHTYPE MTYPE 
 ## NOTE: large value of tau is important in keeping Ca-neck high
-1 0 <tau={1.9}>
-2 0 <tau={1.9}>
-5 0 <tau={1.9}>
-3 0 <tau={1.9}>
-4 0 <tau={1.9}>
-6 0 <tau={1.9}>
+1 0 <tau={30.9}>
+2 0 <tau={30.9}>
+5 0 <tau={30.9}>
+3 0 <tau={30.9}>
+4 0 <tau={30.9}>
+6 0 <tau={30.9}>
 #3 0 <tau={0.23}>
 #4 0 <tau={0.23}>
 #6 0 <tau={0.23}>
@@ -342,3 +414,14 @@ MTYPE BRANCHTYPE
 1 2 <tau={1.9}>
 #}}}
 #}}}
+
+# UNITS: 
+#  v_efflux = 1/ms  [DEFAULT: 0.1 [ms^-1]]
+#  depth    = nanometer
+#  fraction_surface = % [of membrane-surface-area]
+# IMPORTANT: ';' separated list of values
+MICRODOMAIN_PARAMS 3
+domain1  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain2  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain3  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+

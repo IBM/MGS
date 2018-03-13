@@ -827,7 +827,7 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaT", BRANCHORDER
  //}}}
 
 //{{{currentStimSite_0
-//TissueSite spine_currentStimSite_0(-154.9, 144.5, -30.4, 15.0); //?? um to soma, radius = ?? um
+TissueSite currentStimSite_0(-154.9, 144.5, -30.4, 15.0); //?? um to soma, radius = ?? um
 polyConnect(timeStep, spineVoltageDisplay, <>, <>);
 //polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=2>), spineVoltageDisplay, <>, <site=spine_currentStimSite_0>);
 polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=2>), spineVoltageDisplay, <>, <site=currentStimSite_0>);

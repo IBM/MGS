@@ -139,7 +139,9 @@ void ChannelKAf_KChIP::update(RNG& rng)
     dyn_var_t vm_shift = 0;
     dyn_var_t gbarAdj = 1.0;
     dyn_var_t vm_slope_shift = 0;
+#ifdef MICRODOMAIN_CALCIUM
     KChIP_modulation(v, i, gbarAdj, vm_shift, vm_slope_shift);
+#endif
 
 #if CHANNEL_KAf == KAf_TRAUB_1994
     {
@@ -345,7 +347,9 @@ void ChannelKAf_KChIP::initialize(RNG& rng)
     dyn_var_t vm_shift = 0;
     dyn_var_t gbarAdj = 1.0;
     dyn_var_t vm_slope_shift = 0;
+#ifdef MICRODOMAIN_CALCIUM
     KChIP_modulation(v, i, gbarAdj, vm_shift, vm_slope_shift);
+#endif
 
 #if CHANNEL_KAf == KAf_TRAUB_1994
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);

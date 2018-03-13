@@ -2,6 +2,7 @@
 """
 help to generate Makefile
 """
+# pylint: disable=too-many-lines
 
 from __future__ import print_function
 # from contextlib import contextmanager
@@ -164,7 +165,7 @@ def addUnderScore(name, scoreChar='='):
     """add equal sign"""
     retStr = name + "\n"
     if name != "":
-        for i in range(len(name)):
+        for _i in range(len(name)):
             retStr += scoreChar
         retStr += "\n"
     return retStr
@@ -172,7 +173,7 @@ def addUnderScore(name, scoreChar='='):
 
 def getFirst(a):
     """return first element in pair"""
-    (first, second) = a
+    (first, _second) = a
     return first
 
 
@@ -794,7 +795,6 @@ class BuildSetup:
         createConfigHeader()
         touchExtensionsMk()
 
-        # self.generateMakefile("Makefile_NTS")
         self.generateMakefile("Makefile")
 
         if self.options.rebuild is True:
@@ -920,6 +920,23 @@ TOTALVIEW_LIBPATH := /opt/toolworks/totalview.8.4.1-7/rs6000/lib
 
 """
 
+# DCA_OBJ := framework/dca/obj
+# DCA_SRC := framework/dca/src
+
+#  Each module adds to these initial empty definitions
+# SRC :=
+# OBJS :=
+# SHARED_OBJECTS :=
+# BASE_OBJECTS :=
+# DEF_SYMBOLS := $(SO_DIR)/main.def
+# UNDEF_SYMBOLS :=
+#
+# # EXTENSION_OBJECTS is the generated modules that must be linked in statically
+# EXTENSION_OBJECTS :=
+#
+# # GENERATED_DL_OBJECTS will be added to liblens if dynamic loading is disabled.
+# GENERATED_DL_OBJECTS :=
+
         # BlueGene MPI flags
         if self.options.blueGeneL is True:
             retStr += \
@@ -1024,9 +1041,9 @@ COLAB_UTILS_MODULES := \\
         if self.options.withMpi is True:
             retStr += \
                 """\
-\t\tstreams \\
+		streams \\
 
-"""
+"""  # noqa
 
         retStr += \
             """\
@@ -1403,10 +1420,11 @@ COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
         retStr += "\n"
         return retStr
 
-    def getCFlags(self):  # noqa
+    def getCFlags(self):
         retStr = \
             """\
 OTHER_LIBS :=-lgmp -lpython2.7
+# OTHER_LIBS :=-lgmp -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
 LDFLAGS := -shared
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
@@ -1417,6 +1435,10 @@ CFLAGS += -fPIC \
                 """
 CFLAGS += $(COLAB_CFLAGS) \
 """
+        # #CFLAGS := $(patsubst %,-I%/include,$(MODULES)) \
+        # $(patsubst %,-I%/generated,$(PARSER_PATH)) \
+        # $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES)) \
+        # """
         if self.options.blueGene is False:
             retStr += \
                 """\
@@ -1731,13 +1753,14 @@ DEPENDFILE_OBJS := $(STD_UTILS_OBJ_PATH)/DependLine.o $(STD_UTILS_OBJ_PATH)/Depe
 OBJS += $(DEPENDFILE_OBJS)
 
 $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
-\t$(CC) $(MAKE64) -O2 -o $@ $^
-#\t$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(MAKE64) -O2 -o $@ $^
+#	$(CC) $(CFLAGS) -o $@ $^
 
-"""
+"""  # noqa
         return retStr
 
     def getModuleAndObjectIncludes(self):
+        """docstring"""
         retStr = \
             """\
 # Include the description of each module.
@@ -1751,7 +1774,7 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
         return retStr
 
     def getParserTargets(self):
-
+        """docstring"""
         bisonOutputPrefix = ""
         if self.bisonVersion == "1.35":
             bisonOutputPrefix = "framework/parser/bison/"
@@ -1761,12 +1784,12 @@ $(BIN_DIR)/createDF: $(DEPENDFILE_OBJS)
 
 # Parser targets
 speclang.tab.h:
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
+	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
+	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
-\tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
-\tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
+	cd framework/parser/bison; $(BISON) -v -d speclang.y; \\
+	mv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
@@ -1776,31 +1799,34 @@ $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/
         return retStr
 
     def getScannerTargets(self):
-
+        """docstring"""
         if self.options.blueGene is False:
             retStr = \
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-\t$(FLEX) -+ framework/parser/flex/speclang.l
-\tsed 's/class istream;/#include <FlexFixer.h>/' \
+	$(FLEX) -+ framework/parser/flex/speclang.l
+	sed 's/class istream;/#include <FlexFixer.h>/' \
            lex.yy.cc > lex.yy.cc.edited
-\tmv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
-\trm lex.yy.cc
-"""
+	mv -f lex.yy.cc.edited framework/parser/generated/lex.yy.C
+	rm lex.yy.cc
+"""  # noqa
         else:
             retStr = \
                    """\
 # Scanner targets
 framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
-\tcp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
-"""
+	cp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
+"""  # noqa
 
         retStr += \
             """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
 \t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 """
+$(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
+	$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
+"""  # noqa
         retStr += "\n"
         return retStr
 
@@ -1815,6 +1841,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
             retStr += " $(DEF_SYMBOLS) $(UNDEF_SYMBOLS) $(BIN_DIR)/createDF $(SHARED_OBJECTS) "
         if self.dx.exists is True:
             retStr += " $(DX_DIR)/EdgeSetSubscriberSocket $(DX_DIR)/NodeSetSubscriberSocket "
+        retStr += " | $(BIN_DIR)"
         retStr += "\n"
         if self.options.colab is True:
             retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) "
@@ -1878,9 +1905,9 @@ library: speclang.tab.h  $(COLAB_OBJS)
         retStr = \
             """\
 $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
-\techo \#\!. > $@
-\t$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
-"""
+	echo \#\!. > $@
+	$(SCRIPTS_DIR)/gen_def.sh $^ >> $@
+"""  # noqa
         return retStr
 
     def getLensparserTarget(self):
@@ -1898,6 +1925,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             raise InternalError("Unknown OS " + self.operatingSystem)
         if self.options.dynamicLoading is True:
             retStr += " $(SHARED_OBJECTS)"
+        retStr += " | $(BIN_DIR)"
         retStr += "\n"
         retStr += "\t$(CC) $(FINAL_TARGET_FLAG) $(NEEDED_OBJS) $(COMMON_OBJS) $(OBJS_DIR)/speclang.tab.o $(OBJS_DIR)/lex.yy.o $(OBJS_DIR)/socket.o "
         retStr += "$(LIBS) -o $@"
@@ -1912,7 +1940,7 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
                 retStr += "$(DX_LITELIBS)"
         if self.operatingSystem == "AIX":
             retStr += "$(XLINKER)"
-        if self.options.profile == USE:
+        if self.options.profile == USE :
             retStr += PROFILING_FLAGS
             retStr += "$(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE)\n"
         return retStr
@@ -1940,20 +1968,28 @@ $(SO_DIR)/main.def: $(LENS_LIBS_EXT)
             """\
 .PHONY: clean
 clean:
-\t-rm -f dx/EdgeSetSubscriberSocket
-\t-rm -f dx/NodeSetSubscriberSocket
-\t-rm -f $(BIN_DIR)/$(EXE_FILE)
-\t-rm -f $(BIN_DIR)/createDF
-\t-rm -f lib/liblens.a
-\t-rm -f lib/liblensext.a
-\t-rm -f $(SO_DIR)/Dependfile
-\t-rm -f framework/parser/bison/speclang.output
-\t-rm -f framework/parser/generated/lex.yy.C
-\t-rm -f framework/parser/generated/lex.yy.C
-\t-rm -f framework/parser/generated/speclang.tab.C
-\t-rm -f framework/parser/generated/speclang.tab.h
-\t-rm -f $(OBJS_DIR)/*
-"""
+	-@rm -f dx/EdgeSetSubscriberSocket
+	-@rm -f dx/NodeSetSubscriberSocket
+	-@rm -f $(BIN_DIR)/$(EXE_FILE)
+	-@rm -f $(BIN_DIR)/createDF
+	-@rm -f lib/liblens.a
+	-@rm -f lib/liblensext.a
+	-@rm -f $(SO_DIR)/Dependfile
+	-@rm -f framework/parser/bison/speclang.output
+	-@rm -f framework/parser/generated/lex.yy.C
+	-@rm -f framework/parser/generated/lex.yy.C
+	-@rm -f framework/parser/generated/speclang.tab.C
+	-@rm -f framework/parser/generated/speclang.tab.h
+	-@rm -f $(OBJS_DIR)/*
+"""  # noqa
+        #	-find . -name "*\.o" -exec /bin/rm {} \;
+        #	-find . -name "*\.so" -exec /bin/rm {} \;
+        #	-find . -name "*\.d" -exec /bin/rm {} \;
+        #	-find . -name "*\.ld" -exec /bin/rm {} \;
+        #	-find . -name "*\.yd" -exec /bin/rm {} \;
+        #	-find . -name "*\.ad" -exec /bin/rm {} \;
+        #	-find . -name "*\.def" -exec /bin/rm {} \;
+        #	-find . -name "*\.undef" -exec /bin/rm {} \;
         return retStr
 
     def generateMakefile(self, fileName):
@@ -2033,3 +2069,6 @@ if __name__ == "__main__":
     except FatalError as error:
         error.printError()
         sys.exit(-1)
+
+
+

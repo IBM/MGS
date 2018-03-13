@@ -1,0 +1,86 @@
+# MTYPE = 0 (neuron), = 1 (GABA axonal terminal), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush axonal terminal)
+# BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
+CHANNEL_TARGETS 2
+BRANCHTYPE
+#1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] Nas [Voltage] [Voltage] KDR [Voltage] [Voltage] KIR [Voltage] [Voltage] KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KRP [Voltage] [Voltage] 
+#1 Nat [Voltage] [Voltage] KDR [Voltage] [Voltage] KIR [Voltage] [Voltage]
+1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+  Nas [Voltage] [Voltage]  \
+  KDR [Voltage] [Voltage] KAf [Voltage] [Voltage] \
+  KAs [Voltage] [Voltage] \
+  KRP [Voltage] [Voltage] \
+  KIR [Voltage] [Voltage] 
+3 Nat [Voltage] [Voltage]
+#1 Nap [Voltage] [Voltage]
+#1 KDR [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+
+  CHANNEL_COSTS 8
+  Nas 0.414243
+  Nap 0.414243
+  Nat 0.254051
+  KDR 0.254051
+  KIR 0.254051
+  KAf 0.254051
+  KAs 0.254051
+  KRP 0.254051
+
+
+##NOTE:Unit conversion tips [right side is NTS's units]
+# Pbar [cm/sec]  --> 100*Pbar [um/ms] 
+# gbar [mS/cm^2] --> gbar/100 [nS/um^2]
+# gbar [S/cm^2]  --> 10*gbar  [nS/um^2]
+# Ibar [uA/cm^2] --> Ibar/100 [pA/um^2]
+  CHANNEL_PARAMS 8
+  Nat 1
+  BRANCHTYPE
+  1 <gbar={0.35}> 
+  #1 <gbar={0.0}> 
+  Nap 1
+  BRANCHTYPE
+  1 <gbar=0.0002}>
+  #1 <gbar=0.0}>
+  Nas 1
+# gbar [mS/cm^2] --> gbar/100 [nS/um^2]
+  BRANCHTYPE
+  1 <gbar={0.0011}>
+  #1 <gbar={0.0}>
+  KDR 1
+  BRANCHTYPE
+  1 <gbar={0.060}>
+  #1 <gbar={0.0}>
+  KIR 1
+  BRANCHTYPE
+  #1 <gbar={0.0015}>
+  1 <gbar={0.0032}> #higher conductance seems to delay first spike
+  #1 <gbar={0.0}>
+  KAf 1
+  BRANCHTYPE
+  1 <gbar={0.0009}>
+  #1 <gbar={0.0}> blocking this didn't do anything
+  KAs 1
+  BRANCHTYPE
+  #1 <gbar={0.0032}>  
+  1 <gbar={0.0026}> #0.0028 and kir 0.0021 gave same control as previous values 
+  #1 <gbar={0.0}>  blocking gave 4 spikes on each pulse
+  KRP 1
+  BRANCHTYPE
+  #1 <gbar={0.0042}>
+  1 <gbar={0.0036}>
+  #1 <gbar={0.0032}> #0.0032 on this and KAs 0.0026 and KIR 0.0038 gave 24ms t1-t2
+  #1 <gbar={0.00}> blocking this gave a lot of spoikes and a smooth after depolarization 
+
+# UNITS: 
+#  v_efflux = 1/ms  [DEFAULT: 0.1 [ms^-1]]
+#  depth    = nanometer
+#  fraction_surface = % [of membrane-surface-area]
+# IMPORTANT: ';' separated list of values
+MICRODOMAIN_PARAMS 3
+domain1  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain2  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain3  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+

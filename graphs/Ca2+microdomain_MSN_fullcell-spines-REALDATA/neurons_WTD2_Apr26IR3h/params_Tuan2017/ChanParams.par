@@ -14,7 +14,8 @@ MTYPE BRANCHTYPE
 0 1  \
 #{{{
      Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] \
+#     KAs [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
      KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
@@ -32,7 +33,8 @@ MTYPE BRANCHTYPE
 0 [3:4]  \
 #{{{
      Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] \
+#no Kv1.2 in dendrite [Day, Surmeier 2008] KAs [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
      KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
@@ -49,8 +51,9 @@ MTYPE BRANCHTYPE
 #}}}
 0 [5]  \
 #{{{
-     Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
-     KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] \
+     Nat_AIS [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+     KAf [Voltage] [Voltage] \
+#     KAs [Voltage] [Voltage] \
      KCNK [Voltage] [Voltage] \
      KIR [Voltage] [Voltage] \
      KRP [Voltage] [Voltage] \
@@ -103,7 +106,7 @@ MTYPE BRANCHTYPE
      CaLv12 [Voltage] [Voltage, Calcium] CaLv13 [Voltage] [Voltage, Calcium] 
 #}}}
 #{{{Glutamatergic bouton 1
-[3,4,6] [1,2] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
+[4,5] [1,2] Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] \
      MK [Voltage] [Voltage] Kv31 [Voltage] [Voltage] SK [Voltage, Calcium] [Voltage]  \
      PMCA [Voltage, Calcium] [Calcium] \
      CaLv12 [Voltage, Calcium] [Voltage, Calcium] CaLv13 [Voltage, Calcium] [Voltage, Calcium] \
@@ -121,9 +124,10 @@ MTYPE BRANCHTYPE
 #     IP3R [IP3, Calcium, CalciumER] [Calcium, CalciumER]
 #}}}
 
-CHANNEL_COSTS 22
+CHANNEL_COSTS 23
 #{{{
 Nat     0.414243
+Nat_AIS     0.414243
 Nap     0.414243
 KCNK     0.254051
 KAf     0.254051
@@ -153,24 +157,30 @@ NCX     0.254051
 # gbar [mS/cm^2] --> gbar/100 [nS/um^2]
 # gbar [S/cm^2]  --> 10*gbar  [nS/um^2]
 # Ibar [uA/cm^2] --> Ibar/100 [pA/um^2] 
-CHANNEL_PARAMS 37
+CHANNEL_PARAMS 38
 #{{{neuron 18
 #{{{Nat 
 # {{{Test
-Nat 4
+Nat 3
 MTYPE BRANCHTYPE 
 #0 1      <gbar={1}>  
 #0 1      <gbar={18.75}>  
-#0 1      <gbar={25}>  
+0 1      <gbar={70.31}>  
 #0 1      <gbar={30}>  
 #0 1      <gbar={45}>  
-0 1      <gbar={105}>  
-#0 [5]  <gbar={125.245}>
-0 [5]  <gbar={105.245}>
+#0 1      <gbar={105}>  
+#0 [5]   <gbar={1.245}>
+#0 [5]  <gbar={50.245}>
+#0 [5]  <gbar={75.245}>
+#0 [5]  <gbar={85.245}>
+#0 [5]  <gbar={105.245}>
 #0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0}>
 #0 [5]  <gbar={105.245, Vhalf_m_shift=-3.0, Vhalf_h_shift=5.0}>
 0 [2,7]  <gbar={165.245, Vhalf_m_shift=-3.0}>
-0 [3,4,6]  <gbar={0.245}>
+#0 [3,4,6]  <gbar={0.245}>
+##Michelle-&-Surmeier (2008) does not find Nat on distal dendrites 
+0 [3,4,6] <gbar_dists={10, 50}; \
+           gbar_values={1.0, 0.3, 0.03}}
 # }}}
 #/#{{{Wolf-2005
 #/Nat 4 
@@ -197,6 +207,11 @@ MTYPE BRANCHTYPE
 #[1,3] 2 <gbar={0.213}>
 ##}}}
 #}}}
+#{{{Nat_AIS (Nav1.6)
+Nat_AIS 1
+MTYPE BRANCHTYPE 
+0 5      <gbar={100.0}>  
+#}}}
 #{{{Nap
 # {{{ Wolf-2005
 Nap 3
@@ -216,17 +231,18 @@ MTYPE BRANCHTYPE
 # }}}
 #{{{ KCNK
 KCNK 3
-BRANCHTYPE MTYPE
-[1:6] 0 <P_Kbar={1.45e-6}>
-[1,2] 1 <P_Kbar={1.45e-6}>
-[1,3] 2 <P_Kbar={1.45e-6}>
+MTYPE BRANCHTYPE 
+0 1       <P_Kbar={1.45e-6}>
+0 [2,5,7] <P_Kbar={1.45e-6}>
+0 [3,4,6] <P_Kbar={1.45e-6}>
 #}}} 
 #{{{KAf
 #{{{Test
-KAf 2
+KAf 3
 MTYPE BRANCHTYPE
 #0 1 <gbar={2.3}>
-0 1      <gbar={0.3}>
+0 1 <gbar={3.3}>
+0 5 <gbar={3.3}>
 #0 [3,4,6] <gbar_branchorders={1, 2, -1}>
 #0 [3,4,6] <gbar_values={1.0, 0.33, 0.33}>
 0 [3,4,6] <gbar_dists={50, 100}; \
@@ -257,11 +273,13 @@ MTYPE BRANCHTYPE
 #}}}
 #{{{ KAs
 #{{{Test
+#KAs not present on dendrite
 KAs 2
 MTYPE BRANCHTYPE
 0  1  <gbar={0.104}>
-0 [3,4,6] <gbar_branchorders={1, 2, -1}; \
-        gbar_values={0.104, 9.51e-3, 9.51e-3}>
+0  5  <gbar={0.104}>
+#0 [3,4,6] <gbar_branchorders={1, 2, -1}; \
+#        gbar_values={0.104, 9.51e-3, 9.51e-3}>
 #0 [2,5,7] <gbar_branchorders={1, 2, -1}; \
 #        gbar_values={0.104, 9.51e-3, 9.51e-3}>
 #PLAN: to use till_end instead of -1
@@ -357,14 +375,23 @@ BRANCHTYPE MTYPE
 #}}}
 #}}}
 #{{{ SK
-#{{{Moyer 2007
+#{{{Test 2007
 # NOTE: data shows SK in soma is small
+# NOTE: The data in Moyer/Wolf are too big
 SK 3
 MTYPE BRANCHTYPE 
 0 1       <gbar={0.05}>
-0 [2,5,7] <gbar={1.885}>
-0 [3,4]   <gbar={1.885}>
+0 [2,5,7] <gbar={0.0885}>
+0 [3,4]   <gbar={0.0885}>
 #}}}
+##{{{Moyer 2007
+## NOTE: data shows SK in soma is small
+#SK 3
+#MTYPE BRANCHTYPE 
+#0 1       <gbar={0.05}>
+#0 [2,5,7] <gbar={1.885}>
+#0 [3,4]   <gbar={1.885}>
+##}}}
 #{{{Wolf
 #SK 1
 #BRANCHTYPE MTYPE

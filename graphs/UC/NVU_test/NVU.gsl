@@ -1,0 +1,92 @@
+#include "../../std/std.gsl"
+#define NVU_X 2
+#define NVU_Y 2
+#define NVU_Z 1
+
+#define L0_VALUE 200e-6 // length characteristic value for grid in  micro meters (for smallest vessel)
+
+InitPhases = { initParams, initialize1, initialize2, initialize3 };
+RuntimePhases = { writeData, update1, copy1, update2, copy2, lastPhase };
+FinalPhases = { finalize };
+
+NodeType NVUNode(< tooSparse=0, tooCrowded=3, L0 = L0_VALUE, gridSize={NVU_X, NVU_Y, NVU_Z} >) {
+	paramInitalize->initParams,
+  initStateVariables->initialize1,
+  initJacobian->initialize3,
+  update->update1,
+  copy->copy1
+};
+NodeType Htree(< gridSize={NVU_X, NVU_Y, NVU_Z} >) {
+	initTree->initialize2,
+	updatePressures->update2,
+  copy->copy2,
+
+  writeToFiles->writeData
+};
+
+ConstantType TimeStep;
+TimeStep timeStep< deltaT=1e-2 >; // ms - converted to s in nvu/htree
+
+BindName NVU_ATT("identifier", "NVU");
+NdplInAttrInit nvu_att(NVU_ATT);
+
+BindName TREE_ATT("identifier", "htree");
+NdplInAttrInit tree_att(TREE_ATT);
+
+//#include "model.gsl"
+
+Grid NVUGrid
+{
+  Dimension(NVU_X, NVU_Y, NVU_Z);
+//layers
+  Layer(NVUnodes, NVUNode, UniformLayout(1), < nodekind="Nodes" >);
+   
+//init
+  InitNodes ( .[].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> (< value = 0> ) ) );
+  //InitNodes ( .[0:0,0:0,0:0].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> (< value = 1> ) ) );
+  //InitNodes ( .[2:3,3:3,0:0].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> (< value = 1> ) ) );
+
+  //InitNodes ( .[0:7, 3:3, 0:0].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> (< value = 1 > ) ) );
+  //InitNodes ( .[3:4, 3:4, 0:0].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> ( < value = 0 > ) ) );
+
+   
+  NodeSet all(.[].Layer(NVUnodes));
+  connectNodeSets(all, all, EachDst(RadialSampler(1.0)), outAttrDef, nvu_att);
+
+	polyConnect(timeStep, .[].Layer(NVUnodes), <>, <identifier="dt">);
+
+};
+
+Grid HtreeGrid
+{
+	Dimension(1);
+	Layer(htree_layer, Htree, UniformLayout(1), < nodekind="Nodes" >);
+	InitNodes ( .[].Layer(htree_layer), Same( Pset<Htree, NodeInit> ( <dtWrite = 1.0, L0 = L0_VALUE> ) ) );
+	polyConnect(timeStep, .[].Layer(htree_layer), <>, <identifier="dt">);
+
+};
+
+Composite Brain
+{
+  NVUGrid NVUs;
+  HtreeGrid tree; 
+
+  connectNodeSets(tree[].Layer(htree_layer), NVUs[].Layer(NVUnodes), EachDst(EachAvg(1)), outAttrDef, tree_att);
+  connectNodeSets(NVUs[].Layer(NVUnodes), tree[].Layer(htree_layer), EachDst(EachAvg(1)), outAttrDef, nvu_att);
+
+};
+
+
+Brain world;
+
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+
+// UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
+//  			 ::Iteration, ">=", 1, 0, dataCollect);
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", 100000, 0, lastPhase); //1 sec = 100000
+//collector.dataCollection() on iterTrig;
+Stop on endTrig;

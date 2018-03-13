@@ -89,11 +89,11 @@ inline void String::reset()
 {
   /* free all memory
    */
-  if (_size>0) { 
-    delete[] _data; 
-    _data=0; 
+  if (_size>0) {
+    delete[] _data;
+    _data=0;
     _size=0;
-  } 
+  }
 }
 // value return methods
 unsigned int String::size() { return _size; }

@@ -63,10 +63,12 @@ polyConnect(shaftStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Volta
 //}}}
 #endif
 #if STIMULUS_CASE == CASE_02a
+//{{{
 //TissueSite currentStimSite_0(-178.7, 110.4, -24.6, 20.0); //42 um to soma, radius = ?? um
 TissueSite currentStimSite_0(-154.9, 144.5, -30.4, 30.0); //?? um to soma, radius = ?? um
 polyConnect(timeStep, spineHeadStimInj, <>, <>);
 polyConnect(spineHeadStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage">), <>, <identifier="stimulation", site=currentStimSite_0>);
+//}}}
 #endif
 
 #if STIMULUS_CASE == CASE_03 
@@ -97,6 +99,7 @@ polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION",
 //}}}
 #endif
 #if STIMULUS_CASE == CASE_04a
+//{{{
 //#define RADIUS 30.0
 TissueSite currentStimSite_0(-154.9, 144.5, -30.4, 20.0); //?? um to soma, radius = ?? um
 polyConnect(timeStep, presynapticSomaStimInj, <>, <>);
@@ -107,15 +110,10 @@ TissueSite currentStimSite_1(-142.1, 31.72, -32.5, 10.0); //?? um to soma, radiu
 polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", MTYPE =4>), <>, <identifier="stimulation", site=currentStimSite_1>);//, idx=0>);
 polyConnect(presynapticSomaStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", MTYPE =5>), <>, <identifier="stimulation", site=currentStimSite_1>);//, idx=0>);
 #endif
+//}}}
 #endif
 
 #if STIMULUS_CASE == CASE_VIVO
 #include "stimulus_invivo.gsl"
 #endif
 
-
-
-
-//   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
-//   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
-//   polyConnect(pointCalciumSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);

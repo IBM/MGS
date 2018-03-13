@@ -212,10 +212,7 @@ done
 PLATFORM_OPTS="--domainLib  "
 case $PLATFORM in
   LINUX )
-    PLATFORM_OPTS+="--with-mpi "
-	#if [ "$GSL_BUILD_MODE" == "-release" ]; then 
-     PLATFORM_OPTS+=" --nowarning_dynamiccast "
-    #fi
+    PLATFORM_OPTS+="--with-mpi --nowarning_dynamiccast"
     ;;
   SMP )
     PLATFORM_OPTS+=""

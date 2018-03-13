@@ -416,4 +416,8 @@
 //#define RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
 //}}}
 
+//Extension to other system
+//{{{ 
+//#define NVU_NTS_EXTENSION
+//}}}
 #endif //_MAXCOMPUTEORDER_H
