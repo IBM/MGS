@@ -262,6 +262,13 @@ if [ "$ARMA" == "--arma" ]; then
     fi
 fi
 #}}}
+#{{{ 
+if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
+  echo "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
+  export PYTHON_INCLUDE_DIR=/usr/include/python2.7/
+  exit
+fi
+#}}}
 
 if [ "$NTSMGSROOT" == "" ]; then
   echo "Please run: source setenv_both"
