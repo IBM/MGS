@@ -58,6 +58,7 @@ void GABAAReceptor::updateGABAA(RNG& rng)
   // dyn_var_t A = Tscale*(BETA + ALPHANEUROTRANSMITTER)/2.0;
   // r =  (Tscale*ALPHANEUROTRANSMITTER + r*(1.0 - A))/(1.0 + A);
   g = gbar * r;
+  I = g * ((*Vpost)[indexPost] - getSharedMembers().E);
 }
 
 void GABAAReceptor::setPostIndex(const String& CG_direction,
