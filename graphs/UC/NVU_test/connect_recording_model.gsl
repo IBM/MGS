@@ -2,7 +2,7 @@
 
  //neuron
  //{{{
-#if 0
+#if 1
 #define PRMASK0_REC  BRANCHORDER=0
 #else
 #define neuronIndex 0
@@ -27,6 +27,11 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KRP", PRMASK0_REC
 
  //}}}
 
+TissueSite currentStimSite_0(0.0, 0.0, 0.0, 10000); //?? um to soma, radius = ?? um
+polyConnect(timeStep, receptorDisplay, <>, <>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPA", PRMASK0_REC>), receptorDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDA", PRMASK0_REC>), receptorDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="GABAA", PRMASK0_REC>), receptorDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
 
 //{{{voltage
 #if 1

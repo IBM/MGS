@@ -18,6 +18,8 @@ AnyCurrentDisplay somaCurrentsDisplay<fileName= PathFileCombine("somaCurrents.da
 somaCurrentsDisplay.dataCollection(<>) on recOn;
 //}}}
 
+AnyCurrentDisplay receptorDisplay<fileName= PathFileCombine("receptor.dat")>;
+receptorDisplay.dataCollection(<>) on recOn;
 
 
 //{{{calcium
