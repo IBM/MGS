@@ -34,6 +34,7 @@ NodeType WaveDriverUnit(<
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
+<<<<<<< HEAD:graphs/FSI/FSI.gsl
 			inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
                         op_random = 1,
 <<<<<<< HEAD:graphs/FSI/FSI.gsl
@@ -41,6 +42,13 @@ NodeType FileDriverUnit(<
 =======
                         scale = 1.0 //1.5
 >>>>>>> GJs are not bidirectional.:graphs/Traub/Traub.gsl
+=======
+			//inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
+			//inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
+			inputFileName = "toUseWindow.mat",
+                        op_random = 1,
+                        scale = 2.0
+>>>>>>> Updated to use short LFP data.:graphs/Traub/Traub.gsl
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
 
 // Connectivity and weights
@@ -98,10 +106,14 @@ EachDstPropSrc ipsp_fsi(RadialDensitySampler(72, 2.829, uniformDensity, 2.829));
 
 // Synaptic weights 
 <<<<<<< HEAD:graphs/FSI/FSI.gsl
+<<<<<<< HEAD:graphs/FSI/FSI.gsl
 BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.375)), "identifier", "ipsp");
 =======
 BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.65)), "identifier", "ipsp");
 >>>>>>> Separated data collection in to two groups.:graphs/Traub/Traub.gsl
+=======
+BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.45)), "identifier", "ipsp");
+>>>>>>> Updated to use short LFP data.:graphs/Traub/Traub.gsl
 NdplInAttrInit ipsp(IPSP);
 
 // Gap junctions connectivity
@@ -113,9 +125,16 @@ BindName GJ1("conductance", 18.0, "identifier", "gj1", "connectionFraction", 0.2
 BindName GJ2("conductance", 18.0, "identifier", "gj2", "connectionFraction", 0.2263);
 =======
 // Gap junctions weights
+<<<<<<< HEAD:graphs/FSI/FSI.gsl
 BindName GJ1("conductance", 17.0, "identifier", "gj1", "connectionFraction", 0.2263);
 BindName GJ2("conductance", 17.0, "identifier", "gj2", "connectionFraction", 0.2263);
 >>>>>>> Separated data collection in to two groups.:graphs/Traub/Traub.gsl
+=======
+BindName GJ1("conductance", 16.0, "identifier", "gj1", "connectionFraction", 0.2263);
+BindName GJ2("conductance", 16.0, "identifier", "gj2", "connectionFraction", 0.2263);
+//BindName GJ1("conductance", 0.0, "identifier", "gj1", "connectionFraction", 0.2263);
+//BindName GJ2("conductance", 0.0, "identifier", "gj2", "connectionFraction", 0.2263);
+>>>>>>> Updated to use short LFP data.:graphs/Traub/Traub.gsl
 NdplInAttrInit gj1(GJ1);
 NdplInAttrInit gj2(GJ1);
 

@@ -1,9 +1,10 @@
+
 clear all; %close all; 
 set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=100; % Length of simulation time saving data (excluding spikes) in s
+T=5; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
 TminZoom=19.6; TmaxZoom=20.6;
 loadData = true;
