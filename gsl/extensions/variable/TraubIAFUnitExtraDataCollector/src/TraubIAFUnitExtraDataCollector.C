@@ -97,7 +97,7 @@ void TraubIAFUnitExtraDataCollector::initialize(RNG& rng)
                       >
              >::iterator miter2, mend2=miter1->second.end();
     for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2) {
-      std::map<unsigned, 
+      std::map<unsigned,      
                std::pair< 
                  std::pair<float*, double*>,
                  std::pair<
