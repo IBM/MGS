@@ -33,7 +33,7 @@ class ZhengSORNUnitDataCollector : public CG_ZhengSORNUnitDataCollector
       virtual void duplicate(std::unique_ptr<Variable>& dup) const;
       virtual void duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollector>& dup) const;
  private:
-      std::ofstream* file;
+      std::ofstream* spikesFile;
 };
 
 #endif

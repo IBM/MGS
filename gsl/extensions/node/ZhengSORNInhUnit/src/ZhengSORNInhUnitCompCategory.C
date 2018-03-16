@@ -37,7 +37,7 @@ void ZhengSORNInhUnitCompCategory::initializeShared(RNG& rng)
     for (int i=0; i<n; ++i) {
       std::ofstream fs; std::ostringstream os;
       os.str("");
-      os<<"E2I_"<<SHD.weightsFileName<<"_"<<SHD.collectWeightsOn[i]<<".dat";
+      os<<SHD.outDirectory<<"E2I_"<<SHD.outputWeightsFileName<<"_"<<SHD.collectWeightsOn[i]<<".dat";
       fs.open(os.str().c_str(), std::ofstream::trunc|std::ofstream::out);
       fs.close();
     }
@@ -56,7 +56,7 @@ void ZhengSORNInhUnitCompCategory::outputWeightsShared(RNG& rng)
 	  std::ofstream fsE2I; 
 	  std::ostringstream os;
 	  os.str("");
-          os<<"E2I_"<<SHD.weightsFileName<<"_"<<ITER<<".dat";
+          os<<SHD.outDirectory<<"E2I_"<<SHD.outputWeightsFileName<<"_"<<ITER<<".dat";
 	  fsE2I.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
 	  ShallowArray<ZhengSORNInhUnit>::iterator it = _nodes.begin();
 	  ShallowArray<ZhengSORNInhUnit>::iterator end = _nodes.end();
@@ -83,7 +83,7 @@ void ZhengSORNInhUnitCompCategory::inputWeightsShared(RNG& rng)
 	  std::ifstream fsE2I, fsTIs, fsYs;
 	  std::ostringstream os;
 	  os.str("");
-	  os<<"wie";
+	  os<<SHD.inDirectory<<SHD.inFiles[0]; //"wie";
 	  fsE2I.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
 	  if (fsE2I.good()) {
 	    int row, col; float weight;
@@ -102,27 +102,30 @@ void ZhengSORNInhUnitCompCategory::inputWeightsShared(RNG& rng)
 	  }
 	  os.str("");
 	  
-	  os<<"TIs";
-	  fsTIs.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
-	  if(fsTIs.good()){
-	    int idx; float val;
-	    ShallowArray<ZhengSORNInhUnit>::iterator it;
-	    while (!fsTIs.eof()) {
-		fsTIs>>idx>>val;
-		ShallowArray<ZhengSORNInhUnit>::iterator end = _nodes.end();
-		for (it = _nodes.begin(); it != end; ++it) {
-		  if (it->getGlobalIndex()+1==idx) {
-		    it->inputTI(val);
-		    break;
+          // Import thresholds
+	  if (SHD.inFiles.size()>1) {
+	    os<<SHD.inDirectory<<SHD.inFiles[1]; //"TIs";
+	    fsTIs.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
+	    if(fsTIs.good()){
+	      int idx; float val;
+	      ShallowArray<ZhengSORNInhUnit>::iterator it;
+	      while (!fsTIs.eof()) {
+		  fsTIs>>idx>>val;
+		  ShallowArray<ZhengSORNInhUnit>::iterator end = _nodes.end();
+		  for (it = _nodes.begin(); it != end; ++it) {
+		    if (it->getGlobalIndex()+1==idx) {
+		      it->inputTI(val);
+		      break;
+		    }
 		  }
-		}
+	        }
+	      fsTIs.close();
 	    }
-	    fsTIs.close();
+	    os.str("");	
 	  }
-	  os.str("");	
-	}
-      ++n;
-      MPI_Barrier(MPI_COMM_WORLD);
+        }  
+        ++n;
+        MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }

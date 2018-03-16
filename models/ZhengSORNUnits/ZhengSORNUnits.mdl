@@ -17,17 +17,14 @@
 #define ZHENGSORNUNITS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Struct NormalizedThalamicInput {
-  double* input;
-  double minVal;
-  double maxVal;
-}
-
 Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
    double x; // These variable names are according to Zheng et al. 2015
+   double a; // accumulator for tailed STDP function
+   double aPrev; 
    bool spike;
    bool spikePrev;
    double HIP;
+   double eta_IP;
    double TE;
    SORNSynapseInput [] lateralExcInputs;
    //SpikeInput [] lateralInhInputs;
@@ -36,22 +33,35 @@ Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
    NormalizedThalamicInput normalizedThInput;
 
    Shared {	
-     double eta_IP;
-     double TE_max;
+     //double eta_IP;
      double mu_IP;
+     double sigma_IP;
+     double ratio_IP;
+
+     double TE_max;
+
+     double mu_HIP;
      double sigma_HIP;
+     double ratio_HIP;
+
      double sigma2_chi;
      double eta_inhib;
      double eta_STDP;
      double mu_iSTDP;
      double eta_iSTDP;
      double eta_iLTP;
+     double tau_STDP;   // STDP accumulator time constant (i.e STDP window)
      double p_c;
      double Ach;
      int Ach_time;  // time at which Ach is turned ON
      InitPhase initializeShared();
      
-     string weightsFileName;
+     string inDirectory;
+     string outDirectory;
+     string outputWeightsFileName;
+     string [] inFiles;
+     float[] initWeights;
+
      int [] collectWeightsOn;
      int collectWeightsNext;
      RuntimePhase outputWeightsShared;
@@ -69,22 +79,27 @@ Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
 
    InitPhase initialize();
 
-   RuntimePhase update(x);
-   RuntimePhase fire(spike, spikePrev);
+   RuntimePhase update(TE);
+   RuntimePhase fire(spike, spikePrev, a, aPrev);
 
    SORNSpikeProducer.spikePrev << &spikePrev;   
    SORNSpikeProducer.spike << &spike;   
+   SORNSpikeProducer.a << &a;   
+   SORNSpikeProducer.aPrev << &aPrev;   
    SpikeProducer.spike << &spike;   
-   OutputProducer.output << &x;   
+   OutputProducer.output << &TE;   
 
    UserFunction checkForSynapse;
    UserFunction checkForInhSynapse;
    UserFunction setE2EIndices;
    UserFunction setI2EIndices;
+   PredicateFunction checkInitWeights;   
 
-   Connection Pre Node (PSet.identifier=="lateralExc") Expects SORNSpikeProducer {
+   Connection Pre Node ((checkInitWeights()) && (PSet.identifier=="lateralExc")) Expects SORNSpikeProducer {
       SORNSpikeProducer.spikePrev >> lateralExcInputs.spikePrev;
       SORNSpikeProducer.spike >> lateralExcInputs.spike;
+      SORNSpikeProducer.a >> lateralExcInputs.a;
+      SORNSpikeProducer.aPrev >> lateralExcInputs.aPrev;
       PSet.weight >> lateralExcInputs.weight;      
       checkForSynapse();
       setE2EIndices();
@@ -93,6 +108,7 @@ Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
    Connection Pre Node (PSet.identifier=="lateralInh") Expects SORNSpikeProducer {
       SORNSpikeProducer.spikePrev >> lateralInhInputs.spikePrev;
       SORNSpikeProducer.spike >> lateralInhInputs.spike;
+      SORNSpikeProducer.a >> lateralInhInputs.a;
       PSet.weight >> lateralInhInputs.weight; 
       checkForInhSynapse(); 
       setI2EIndices();     
@@ -110,6 +126,7 @@ Node ZhengSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
 
 Node ZhengSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
    double y; // These variable names are according to Zheng et al. 2015
+   double ya; // accumulator for tailed STDP
    bool spike;
    bool spikePrev;
    double TI;
@@ -120,10 +137,15 @@ Node ZhengSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
      //double eta_IP;  // not used in inh units: no threshold adaptation
      double TI_max;
      double sigma2_chi;
-
+     double tau_STDP;
      InitPhase initializeShared();
      
-     string weightsFileName;
+     string inDirectory;
+     string outDirectory;
+     string outputWeightsFileName;
+     string [] inFiles;
+     float[][] initWeights;
+     
      int [] collectWeightsOn;
      int collectWeightsNext;
      RuntimePhase outputWeightsShared;
@@ -140,14 +162,17 @@ Node ZhengSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProduce
    InitPhase initialize();
 
    RuntimePhase update(y);
-   RuntimePhase fire(spike, spikePrev);
+   RuntimePhase fire(spike, spikePrev, ya);
 
    SpikeProducer.spike << &spike;
    SORNSpikeProducer.spike << &spike;   
    SORNSpikeProducer.spikePrev << &spikePrev;   
+   SORNSpikeProducer.a << &ya;   
+   SORNSpikeProducer.aPrev << &ya;   
    OutputProducer.output << &y;   
    
    UserFunction setIndices;
+//   PredicateFunction checkInitWeights;   
   
    Connection Pre Node (PSet.identifier=="lateralExc") Expects SpikeProducer {
       SpikeProducer.spike >> lateralExcInputs.spike;

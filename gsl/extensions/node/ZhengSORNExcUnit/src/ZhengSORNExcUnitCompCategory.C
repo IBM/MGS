@@ -33,16 +33,19 @@ void ZhengSORNExcUnitCompCategory::initializeShared(RNG& rng)
 {
   SHD.eta_iSTDP = (1.0+1.0/SHD.mu_iSTDP);
   SHD.eta_iLTP = SHD.eta_inhib * (1.0-SHD.eta_iSTDP);
+  SHD.sigma_HIP = SHD.mu_HIP*SHD.ratio_HIP;
+  SHD.sigma_IP = SHD.mu_IP*SHD.ratio_IP;
+  SHD.eta_STDP = 4*SHD.eta_inhib;
   int n=SHD.collectWeightsOn.size();
   if (n>0) {
     for (int i=0; i<n; ++i) {
       std::ofstream fsE2E, fsI2E; std::ostringstream os;
       os.str("");
-      os<<"E2E_"<<SHD.weightsFileName<<"_"<<SHD.collectWeightsOn[i]<<".dat";
+      os<<SHD.outDirectory<<"E2E_"<<SHD.outputWeightsFileName<<"_"<<SHD.collectWeightsOn[i]<<".dat";
       fsE2E.open(os.str().c_str(), std::ofstream::trunc|std::ofstream::out);
       fsE2E.close();
       os.str(""); 
-      os<<"I2E_"<<SHD.weightsFileName<<"_"<<SHD.collectWeightsOn[i]<<".dat";
+      os<<SHD.outDirectory<<"I2E_"<<SHD.outputWeightsFileName<<"_"<<SHD.collectWeightsOn[i]<<".dat";
       fsI2E.open(os.str().c_str(), std::ofstream::trunc|std::ofstream::out);
       fsI2E.close();
     }
@@ -60,10 +63,10 @@ void ZhengSORNExcUnitCompCategory::outputWeightsShared(RNG& rng)
 	if (n==rank) {
 	  std::ofstream fsE2E, fsI2E; 
 	  std::ostringstream os;
-	  os<<"E2E_"<<SHD.weightsFileName<<"_"<<ITER<<".dat";
+	  os<<SHD.outDirectory<<"E2E_"<<SHD.outputWeightsFileName<<"_"<<ITER<<".dat";
 	  fsE2E.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
 	  os.str("");
-	  os<<"I2E_"<<SHD.weightsFileName<<"_"<<ITER<<".dat";
+	  os<<SHD.outDirectory<<"I2E_"<<SHD.outputWeightsFileName<<"_"<<ITER<<".dat";
 	  fsI2E.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
 	  
           ShallowArray<ZhengSORNExcUnit>::iterator it = _nodes.begin();
@@ -93,7 +96,7 @@ void ZhengSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 	    std::ostringstream os;
 	    os.str("");
 	    // Import E2E weights
-	    os<<"wee";
+	    os<<SHD.inDirectory<<SHD.inFiles[0]; //"wee"
 	    fsE2E.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
 	    if (fsE2E.good()) {
 	      //fsE2E.precision(8);
@@ -104,7 +107,7 @@ void ZhengSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 		ShallowArray<ZhengSORNExcUnit>::iterator end = _nodes.end();
 		for (it = _nodes.begin(); it != end; ++it) {
 		  if (it->getGlobalIndex()+1==row) {
-		    it->inputWeights(fsE2E, col, weight);
+		    it->inputWeights(col, weight);
 		    break;
 		  }
 		}
@@ -113,7 +116,7 @@ void ZhengSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 	    }
 	    os.str(""); 
 	    // Import I2E weights
-	    os<<"wei";
+	    os<<SHD.inDirectory<<SHD.inFiles[1]; //"wei"
 	    fsI2E.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
 	    if (fsI2E.good()) {
 	      int row, col; float weight;
@@ -123,7 +126,7 @@ void ZhengSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 		ShallowArray<ZhengSORNExcUnit>::iterator end2 = _nodes.end();
 		for (it2 = _nodes.begin(); it2 != end2; ++it2) {
 		  if (it2->getGlobalIndex()+1==row) {
-		    it2->inputI2EWeights(fsI2E, col, weight);
+		    it2->inputI2EWeights(col, weight);
 		    break;
 		  }
 		}
@@ -131,25 +134,28 @@ void ZhengSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 	      fsI2E.close();
 	    }
 	  os.str("");
-	  // Import thresholds
-	  os<<"TEs";
-	  fsTEs.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
-	  if(fsTEs.good()){
-	    int idx; float val;
-	    ShallowArray<ZhengSORNExcUnit>::iterator it;
-	    while (!fsTEs.eof()) {
-		fsTEs>>idx>>val;
-		ShallowArray<ZhengSORNExcUnit>::iterator end = _nodes.end();
-		for (it = _nodes.begin(); it != end; ++it) {
-		  if (it->getGlobalIndex()+1==idx) {
-		    it->inputTE(val);
-		    break;
+	  
+          if (SHD.inFiles.size()>2) {
+	    // Import thresholds
+	    os<<SHD.inDirectory<<SHD.inFiles[2]; //"TEs"
+	    fsTEs.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
+	    if(fsTEs.good()){
+	      int idx; float val;
+	      ShallowArray<ZhengSORNExcUnit>::iterator it;
+	      while (!fsTEs.eof()) {
+		  fsTEs>>idx>>val;
+		  ShallowArray<ZhengSORNExcUnit>::iterator end = _nodes.end();
+		  for (it = _nodes.begin(); it != end; ++it) {
+		    if (it->getGlobalIndex()+1==idx) {
+		      it->inputTE(val);
+		      break;
+		    }
 		  }
-		}
+	      }
+	      fsTEs.close();
 	    }
-	    fsTEs.close();
-	  }
 	  os.str("");
+	  }
       	}
 	++n;
 	MPI_Barrier(MPI_COMM_WORLD);

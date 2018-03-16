@@ -13,11 +13,11 @@
 //
 // =================================================================
 
-#ifndef ZHENGSORNUNITSDATACOLLECTORS_MDL
-#define ZHENGSORNUNITSDATACOLLECTORS_MDL
+#ifndef ZHENGSORNUNITSDATACOLLECTORSSUPPL_MDL
+#define ZHENGSORNUNITSDATACOLLECTORSSUPPL_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Variable ZhengSORNUnitDataCollector
+Variable ZhengSORNUnitDataCollectorSuppl
 {
    string directory;
    string fileName;
@@ -25,15 +25,15 @@ Variable ZhengSORNUnitDataCollector
    int [] rows;
    int [] cols;
    int mxcol;
-   bool* [] spikes;
+   double* [] thresholds;
    UserFunction getNodeIndices;
    double deltaT;
-   bool op_saveSpikes;
+   bool op_saveThresholds;
    bool binary;
  
-    Connection Pre Node () Expects SpikeProducer
+    Connection Pre Node () Expects OutputProducer
    {
-      SpikeProducer.spike >> spikes;
+      OutputProducer.output >> thresholds;
       getNodeIndices();
    }
  

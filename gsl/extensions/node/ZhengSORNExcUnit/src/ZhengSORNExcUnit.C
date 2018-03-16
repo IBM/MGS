@@ -29,7 +29,13 @@ void ZhengSORNExcUnit::initialize(RNG& rng)
 {
   spike=drandom(rng)>0.8;
   spikePrev=drandom(rng)>0.8;
-  HIP = SHD.mu_IP+gaussian(rng)*SHD.sigma_HIP;
+  a = drandom(rng) * ( (drandom(rng)>0.8) ? 1.0 : 0.0 );
+  aPrev = 0.0;
+  HIP = SHD.mu_HIP+gaussian(rng)*SHD.sigma_HIP;
+  if (HIP<0) HIP=0;
+  double  median = std::log(SHD.mu_IP);
+  double sigma = std::sqrt(std::log( std::pow(SHD.sigma_IP,2) / std::pow(SHD.mu_IP,2) + 1));
+  eta_IP = exp(median + sigma*std::abs(gaussian(rng)));
   TE = drandom(rng)*SHD.TE_max;
   // Normalization of I2E synaptic weights at initialization only
   double sumI=0;
@@ -89,16 +95,17 @@ void ZhengSORNExcUnit::update(RNG& rng)
   
   // integration of inputs
   x = sumE - sumI - TE + SHD.sigma2_chi*gaussian(rng);
-  // update threshold
   double newSpike = (x>0) ? 1.0 : 0.0;
-  TE = TE + SHD.eta_IP*(spike-HIP);
+  // update threshold
+  TE = TE + eta_IP*(spike-HIP);
   // update exc synapses (E2E)
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
     if (iter->synapse) {
       // NEW STDP RULE:
-      iter->weight += SHD.eta_STDP * ( spike * *(iter->spikePrev) - spikePrev * *(iter->spike) ); 
+      //iter->weight += SHD.eta_STDP * ( spike * *(iter->spikePrev) - spikePrev * *(iter->spike) ); 
+      iter->weight += SHD.eta_STDP * ( a * *(iter->aPrev) - aPrev * *(iter->a) ); 
       // pruning
-      if (iter->weight<0) {
+      if (iter->weight<0.0001) {
         iter->weight=0;
         iter->synapse=false;
       }
@@ -116,7 +123,8 @@ void ZhengSORNExcUnit::update(RNG& rng)
   for (iter2=lateralInhInputs.begin(); iter2!=end2; ++iter2) {
     if(iter2->synapse){
 	if (*(iter2->spikePrev)) {
-      	  iter2->weight -= (spike ? SHD.eta_iLTP : SHD.eta_inhib);  // eta_iLTP=-0.01; eta_inhib=0.001
+      	  //iter2->weight -= (spike ? SHD.eta_iLTP : SHD.eta_inhib);  // eta_iLTP=-0.01; eta_inhib=0.001
+      	  iter2->weight -= SHD.eta_inhib * (1.0 - newSpike*SHD.eta_iSTDP) * *(iter2->a);
         }
         if (iter2->weight<0.001) {
 	  iter2->weight=0.001;
@@ -134,8 +142,13 @@ void ZhengSORNExcUnit::update(RNG& rng)
 
 void ZhengSORNExcUnit::fire(RNG& rng) 
 {
+  // Spike update
   spikePrev=spike;
   spike=(x>0);
+  // STDP accumulator update
+  aPrev = a;
+  a = SHD.tau_STDP*a + ((x>0) ? 1.0 : 0.0);
+  a = (a>1.0) ? 1.0 : a;
 }
 
 void ZhengSORNExcUnit::checkForSynapse(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNExcUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNExcUnitOutAttrPSet* CG_outAttrPset) 
@@ -166,6 +179,27 @@ void ZhengSORNExcUnit::setI2EIndices(const String& CG_direction, const String& C
   lateralInhInputs[lateralInhInputs.size()-1].col = CG_node->getGlobalIndex()+1;
 }
 
+bool ZhengSORNExcUnit::checkInitWeights(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNExcUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNExcUnitOutAttrPSet* CG_outAttrPset) 
+{
+  if (SHD.initWeights.size()==0) return true;
+  else {
+    int outIdx = getNode()->getIndex();
+    int inIdx = CG_node->getNode()->getIndex();
+    ShallowArray<float>::const_iterator it = SHD.initWeights.begin();
+    ShallowArray<float>::const_iterator end = SHD.initWeights.end();
+    for (it; it<end; it+=3) {
+      if(outIdx == static_cast<int>(*it)) {   				//row
+	if(inIdx == static_cast<int>(*(it+1))) {  			//col
+	  CG_inAttrPset->weight = static_cast<double>(*(it+2));		//val
+	  std::cout << outIdx << " " << inIdx << " " << CG_inAttrPset->weight << std::endl;
+	  return true;
+	}
+      }
+    }
+    return false;
+  }
+}
+
 void ZhengSORNExcUnit::outputWeights(std::ofstream& fsE2E, std::ofstream& fsI2E)
 {
   ShallowArray<SORNSynapseInput>::iterator iter, end=lateralExcInputs.end();
@@ -179,7 +213,7 @@ void ZhengSORNExcUnit::outputWeights(std::ofstream& fsE2E, std::ofstream& fsI2E)
   }
 }
 
-void ZhengSORNExcUnit::inputWeights(std::ifstream& fsE2E, int col, float weight)
+void ZhengSORNExcUnit::inputWeights(int col, float weight)
 {
   ShallowArray<SORNSynapseInput>::iterator E2Eiter, E2Eend=lateralExcInputs.end();
   for (E2Eiter=lateralExcInputs.begin(); E2Eiter!=E2Eend; ++E2Eiter) {
@@ -191,7 +225,7 @@ void ZhengSORNExcUnit::inputWeights(std::ifstream& fsE2E, int col, float weight)
   }
 }
 
-void ZhengSORNExcUnit::inputI2EWeights(std::ifstream& fsI2E, int col, float weight)
+void ZhengSORNExcUnit::inputI2EWeights(int col, float weight)
 {
   ShallowArray<SORNSynapseInput>::iterator I2Eiter, I2Eend=lateralInhInputs.end();
   for (I2Eiter=lateralInhInputs.begin(); I2Eiter!=I2Eend; ++I2Eiter) {
