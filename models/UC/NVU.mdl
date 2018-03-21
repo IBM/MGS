@@ -30,8 +30,6 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
 
   Shared {
   //{{{
-    int [] gridSize;
-    
     double L0;
 
     // Timestep. Can be multiplied by number of simulation iterations to get current time.

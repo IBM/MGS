@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Coordinates.h"
 
 /**
@@ -7,24 +8,64 @@ grid dimensions.
 Currently the Z-dimension is not being used, so all coordinates are given a Z
 value of 0.0.
 */
-void calculateRealCoordinates(std::vector<int> indexCoordinate, double length,
+void _calculateRealCoordinates(std::vector<int> indexCoordinate, double length,
                               int xNumberNVUs, int yNumberNVUs, int zNumberNVUs,
                               std::vector<double> &realCoordinate)
 {
   double x, y, z;
 
-  x = indexCoordinate[0] * 2 * length - ((xNumberNVUs - 1) * length);
-  y = indexCoordinate[1] * 2 * length - ((yNumberNVUs - 1) * length);
+  x = indexCoordinate[0] * length - ((xNumberNVUs - 1) * length);
+  y = indexCoordinate[1] * length - ((yNumberNVUs - 1) * length);
+  z = indexCoordinate[2] * length - ((zNumberNVUs - 1) * length);
 
   realCoordinate.push_back(x);
   realCoordinate.push_back(y);
+  realCoordinate.push_back(z);
+}
 
-  // No real implementation for Z axis coordinates/3D simulations YET.
-  if (indexCoordinate.size() == 3)
-  {
-    z = 0.0;
-    realCoordinate.push_back(z);
-  }
+/*
+ -----------------------------------
+ |                                 |
+ |                                 |
+ |              *                  |
+ |                                 |
+ |_________________________________|
+ return coord of (*)
+ */
+void _calculateRealCoordinatesCenter(std::vector<int> indexCoordinate, double length,
+                              int xNumberNVUs, int yNumberNVUs, int zNumberNVUs,
+                              std::vector<double> &realCoordinate)
+{
+  double x, y, z;
+
+  x = indexCoordinate[0] * length - ((xNumberNVUs - 1) * length) + length/2;
+  y = indexCoordinate[1] * length - ((yNumberNVUs - 1) * length) + length/2;
+  z = indexCoordinate[2] * length - ((zNumberNVUs - 1) * length) + length/2;
+
+  realCoordinate.push_back(x);
+  realCoordinate.push_back(y);
+  realCoordinate.push_back(z);
+}
+
+/* 
+ * Information is passed in as (Z,Y,X) and returned as (X,Y,Z)
+ */
+/* return lower-left corner */
+void calculateRealCoordinatesNTS(std::vector<int> indexCoordinate, double length,
+                              int xNumberNVUs, int yNumberNVUs, int zNumberNVUs,
+                              std::vector<double> &realCoordinate)
+{
+  _calculateRealCoordinates(indexCoordinate, length, xNumberNVUs, yNumberNVUs, zNumberNVUs, realCoordinate);// grid's dimension is returned as (Z,Y,X)
+  std::reverse(realCoordinate.begin(),realCoordinate.end()); //to map to (X,Y,Z) the same as NTS
+}
+
+/* return center-point coordinate */
+void calculateRealCoordinatesCenterNTS(std::vector<int> indexCoordinate, double length,
+                              int xNumberNVUs, int yNumberNVUs, int zNumberNVUs,
+                              std::vector<double> &realCoordinate)
+{
+  _calculateRealCoordinatesCenter(indexCoordinate, length, xNumberNVUs, yNumberNVUs, zNumberNVUs, realCoordinate);// grid's dimension is returned as (Z,Y,X)
+  std::reverse(realCoordinate.begin(),realCoordinate.end()); //to map to (X,Y,Z) the same as NTS
 }
 
 /**

@@ -15,6 +15,8 @@
 #include "Coordinates.h"
 #include "VecPrim.h"
 #include "DimensionProducer.h"
+#include "Grid.h"
+#include "GridLayerDescriptor.h"
 
 #include <memory>
 
@@ -22,7 +24,7 @@ void ConnectNodeSetsByVolumeFunctor::userInitialize(LensContext* CG_c)
 {
 }
 
-void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, String& center, float& radius, float& scale, ShallowArray< int >& gridSize, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
+void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, String& center, float& radius, float& scale, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
   /*
    * NOTE: The problem is one nodeset uses Tissue-Coordinate
@@ -110,11 +112,24 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
   sampling->getNodes(sampleNodes);
   unsigned ctrs = centerNodes.size();
   unsigned smps = sampleNodes.size();
+
+  std::vector<int> gridSize;
+  gridSize = 
+    centerNodes[0]->getGridLayerDescriptor()->getGrid()->getSize();
   
   std::vector<char> adjacency(ctrs*smps,0);  
 
   int myRank = sim->getRank();
   double criterion = radius*radius;
+//#define DEBUG
+#ifdef DEBUG
+  int rank_2_use = 1;
+  if (myRank == rank_2_use){
+    std::cerr<< myRank<< " center-node size: " << ctrs << ", sample-node size: " << smps <<std::endl
+      << std::flush;
+    std::cerr<< "grid dim: " << gridSize[0]<<","<<gridSize[1]<<","<<gridSize[2]<<std::endl;
+  }
+#endif
 
   for (unsigned s=0; s<smps; ++s) {
     int smpRank = sim->getGranule(*sampleNodes[s])->getPartitionId();
@@ -128,6 +143,12 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       }
       DimensionStruct* dims = dimProducer->CG_get_DimensionProducer_dimension();
       std::vector<double> smpCtr({dims->x, dims->y, dims->z});      
+#ifdef DEBUG
+      if (myRank == rank_2_use){
+	std::cerr<< myRank<< " cpt-coord: " << dims->x << "," <<dims->y <<"," <<dims->z <<std::endl
+	  << std::flush;
+      }
+#endif
       char* a = &adjacency[s*ctrs];
       for (unsigned c=0; c<ctrs; ++c, ++a) {
 	std::vector<int> grdCtr;
@@ -137,9 +158,15 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 	  throw SyntaxErrorException(
 	     "ConnectNodeSetsByVolume: node coords have different dimensions than argument gridSize.");
 	}
-	std::vector<int> grdSz(3,1);
-	for (int i=0; i<gridSize.size(); ++i) grdSz[i]=gridSize[i];
-	calculateRealCoordinates(grdCtr, scale, grdSz[0], grdSz[1], grdSz[2], volCtr);
+	//calculateRealCoordinatesCenter(grdCtr, scale, gridSize[0], gridSize[1], gridSize[2], volCtr);// grid's dimension is returned as (Z,Y,X)
+	calculateRealCoordinatesCenterNTS(grdCtr, scale, gridSize[0], gridSize[1], gridSize[2], volCtr);// grid's dimension is returned as (X,Y,Z)
+#ifdef DEBUG
+      if (myRank == rank_2_use){
+	std::cerr<< "-- nvu info: length=" << scale << ", index = "<< grdCtr[0] <<"," << grdCtr[1] << "," << grdCtr[2] <<std::endl;
+	std::cerr<< myRank<< " NVU-center-coord: " << volCtr[0] << "," << volCtr[1] <<"," << volCtr[2] <<std::endl
+	  << std::flush;
+      }
+#endif
 	if (SqDist(&volCtr[0], &smpCtr[0])<criterion) *a=1;	
       }
     }
@@ -158,6 +185,18 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       if (*a) lc->nodeToNode(src, cc->outAttrPSet, dst, cc->inAttrPSet, sim);
     }
   }
+#define DEBUG
+#ifdef DEBUG
+  if (myRank == 0){
+    std::cerr << "Adjacency matrix of connection (row=source, col=dest)" << std::endl;
+    for (unsigned s=0; s<smps; ++s) {
+      for (unsigned c=0; c<ctrs; ++c) {
+	std::cerr<< int(adjacency[s*ctrs+c]) ;
+      }
+      std::cerr << std::endl;
+    }
+  }
+#endif
 }
 
 ConnectNodeSetsByVolumeFunctor::ConnectNodeSetsByVolumeFunctor() 

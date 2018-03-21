@@ -1,5 +1,4 @@
 import argparse
-import math
 
 delimiter = "\t"
 
@@ -14,17 +13,61 @@ apical_par = "NULL"
 z_nvus = 1
 
 
-def calculateRealCoordinates(index, length, total_nvus):
-    return index * 2 * length - ((math.sqrt(total_nvus) - 1) * length)
+# def calculateRealCoordinates(index, length, total_nvus):
+#     import math
+#     return index * length - ((math.sqrt(total_nvus) - 1) * length)
+
+def calculateRealCoordinatesLowerLeftCorner(index, length, nvu_dim):
+    """
+    index (int): index in the given dimension
+    length (float): length of each element in that dimention
+    nvu_dim (int): number of element in that dimension
+    """
+    return index * length - ((nvu_dim - 1) * length)
+
+
+def calculateRealCoordinatesCenter(index, length, nvu_dim):
+    """
+    index (int): index in the given dimension
+    length (float): length of each element in that dimention
+    nvu_dim (int): number of element in that dimension
+    """
+    return index * length - ((nvu_dim - 1) * length) + length/2
+
+
+# def calculateRealCoordinates3(indices, length,
+#                               NumberNVUs,
+#                               # xNumberNVUs, yNumberNVUs, zNumberNVUs
+#                               ):
+#     result = []
+#     for _i in len(indices):
+#         c = indices[_i] * 2 * length - (NumberNVUs[_i] - 1) * length
+#         result.append(c)
+#     return result
 
 
 def gen_neurons_in_region(region, num_neuron=1, min_distance=0):
-    """ generate 'num_neuron' neurons within the region (x,y,z) as tuple
-    each neuron should not be too-closed to each other, i.e. at least min_distane
+    """ generate 'num_neuron' neurons within the 2D region
+
+    region (tuple): (x_l, x_u), (y_l, y_u)
+
+    num_neuron (int): number of neurons in that region
+
+    min_distance (float):  each neuron should not be too-closed to each other, i.e. at least min_distane
     """
     radius = min_distance  # 2.0 # (um)
     rangeX = region[0]
     rangeY = region[1]
+
+    if num_neuron == 1:
+        # special case
+        randPoints = []
+        x_u = rangeX[1]
+        x_l = rangeX[0]
+        y_u = rangeY[1]
+        y_l = rangeY[0]
+        randPoints.append((x_l+(x_u-x_l)/2, y_l+(y_u-y_l)/2))
+        return randPoints
     # Generate a set of all points within 200 of the origin, to be used as offsets later
     # There's probably a more efficient way to do this.
     deltas = set()
@@ -46,7 +89,7 @@ def gen_neurons_in_region(region, num_neuron=1, min_distance=0):
         randPoints.append((x, y))
         i += 1
         excluded.update((x+dx, y+dy) for (dx, dy) in deltas)
-    print(randPoints)
+    # print(randPoints)
     return randPoints
 
 
@@ -61,14 +104,15 @@ def genNeuronFile(args):
 
     for x in range(0, args.x_nvus):  # at NVU x-th along x-axis
 
-        x_offset = calculateRealCoordinates(x, args.length, total_nvus)
+        x_offset = calculateRealCoordinatesCenter(x, args.length, args.x_nvus)
 
         for y in range(0, args.y_nvus):
 
-            y_offset = calculateRealCoordinates(y, args.length, total_nvus)
+            y_offset = calculateRealCoordinatesCenter(y, args.length, args.y_nvus)
 
             for z in range(0, z_nvus):
-                z_offset = 0.0
+                # z_offset = calculateRealCoordinatesCenter(z, args.length, args.z_nvus)
+                z_offset = calculateRealCoordinatesCenter(z, args.length, z_nvus)
 
                 scale_factor = 0.9  # <= 1 so that it is not too closed to the border
                 half = scale_factor * args.length
@@ -93,6 +137,10 @@ def genNeuronFile(args):
                         str(basal_par) + delimiter +
                         str(apical_par) + "\n"
                         )
+                    if (total_nvus * args.neuron_per_nvus < 10):
+                        print(x_offset, y_offset, z_offset)
+        if (total_nvus * args.neuron_per_nvus < 10):
+            print('---------')
     f.close()
 
 

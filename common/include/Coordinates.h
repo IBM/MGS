@@ -5,8 +5,20 @@
 #include <vector>
 
 
-void calculateRealCoordinates(std::vector<int> indexCoordinate, double length, int xNumberNVUs, int yNumberNVUs, 
+void _calculateRealCoordinates(std::vector<int> indexCoordinate, double length, int xNumberNVUs, int yNumberNVUs, 
 		int zNumberNVUs, std::vector<double> &realCoordinate);
+void _calculateRealCoordinatesCenter(
+		std::vector<int> indexCoordinate, double length, 
+		int xNumberNVUs, int yNumberNVUs, int zNumberNVUs, 
+		std::vector<double> &realCoordinate);
+void calculateRealCoordinatesNTS(
+		std::vector<int> indexCoordinate, double length, 
+		int xNumberNVUs, int yNumberNVUs, int zNumberNVUs, 
+		std::vector<double> &realCoordinate);
+void calculateRealCoordinatesCenterNTS(
+		std::vector<int> indexCoordinate, double length, 
+		int xNumberNVUs, int yNumberNVUs, int zNumberNVUs, 
+		std::vector<double> &realCoordinate);
 
 void calculateIndexCoordinates(std::vector<double> realCoordinate, double length, 
 		int xNumberNVUs, int yNumberNVUs, 

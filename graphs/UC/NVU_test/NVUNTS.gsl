@@ -1882,7 +1882,7 @@ MSN_D1Neuron msn;
 
 //{{{ NVU
 //{{{Nodes
-NodeType NVUNode(< tooSparse=1, tooCrowded=3, L0 = L0_VALUE, gridSize={NVU_X, NVU_Y, NVU_Z}>) {
+NodeType NVUNode(< tooSparse=1, tooCrowded=3, L0 = L0_VALUE>) {
   paramInitalize->initialize1,
   initStateVariables->initialize2,
   initJacobian->initialize4,
@@ -1979,7 +1979,7 @@ Grid Adaptor
 
 // 3.4. MegaSynapticCleft
 //{{{
-NodeType VoltageMegaSynapticSpace(<L0 = L0_VALUE, gridSize={NVU_X, NVU_Y, NVU_Z}>) { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
+NodeType VoltageMegaSynapticSpace(<L0 = L0_VALUE>) { produceInitialVoltage->initialize2, produceVoltage->finish, computeState->solveChannels };
 //}}}
 
 Grid NVU_NTS
@@ -2015,7 +2015,7 @@ Composite Brain
   NdplInAttrInit ADPT2MS(adpt2ms);
   NdplInAttrInit MS2NVU(ms2nvu);
   connectNodeSetsByVolume(adaptor[].Layer(VoltageAdapters), nvu_nts[].Layer(MegaSynapticSpaces),
-      "dest", L0_VALUE_MICROMETER, L0_VALUE_MICROMETER, {NVU_X, NVU_Y, NVU_Z}, outAttrDef,  ADPT2MS);
+      "dest", 200.0, L0_VALUE_MICROMETER, outAttrDef,  ADPT2MS);
   connectNodeSets(nvu_nts[].Layer(MegaSynapticSpaces), nvu_htree/NVUs[].Layer(NVUnodes), isoSampler, outAttrDef, MS2NVU);
   //}}}
 //}}}

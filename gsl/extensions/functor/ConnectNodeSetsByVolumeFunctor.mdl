@@ -4,7 +4,7 @@
 Framework Functor ConnectNodeSetsByVolumeFunctor Category "CONNECTOR" {
    Initialize();
    void Execute (NodeSet* source, NodeSet* destination, string center,  
-		 float radius, float scale, int [] gridSize, Functor* sourceOutAttr, 
+		 float radius, float scale, Functor* sourceOutAttr, 
 		 Functor* destinationInAttr);
 }
 

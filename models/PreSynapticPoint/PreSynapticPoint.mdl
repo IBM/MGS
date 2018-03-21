@@ -283,7 +283,6 @@ Node VoltageMegaSynapticSpace Implements
   Shared {
     BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
     double L0; //in meter
-    int[] gridSize;
   }
 
   InitPhase produceInitialVoltage(LFP);
@@ -296,9 +295,7 @@ Node VoltageMegaSynapticSpace Implements
     int idx; //connect to either an exact compartment-index
   }
 
-  PredicateFunction isInRange;
-  
-  Connection Pre Node (PSet.identifier=="connexon" && isInRange()) Expects 
+  Connection Pre Node (PSet.identifier=="connexon") Expects 
     VoltageProducer//, BranchDataProducer
   {
     VoltageProducer.voltage >> Vm;

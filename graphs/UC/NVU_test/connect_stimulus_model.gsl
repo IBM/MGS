@@ -9,7 +9,7 @@ polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHO
 
 #if STIMULUS_CASE == CASE_01
 //{{{
-#if 0
+#if 1
 #define PRMASK1_STIM  BRANCHORDER=0, BRANCHTYPE=1
 #else
 #define neuronIndex 0

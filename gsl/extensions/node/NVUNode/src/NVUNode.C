@@ -2,6 +2,9 @@
 #include "NVUNode.h"
 #include "CG_NVUNode.h"
 #include "rndm.h"
+#include "Grid.h"
+#include "GridLayerDescriptor.h"
+#include "Coordinates.h"
 
 /****** Model parameters ******/
 
@@ -246,8 +249,7 @@
 
 #define tau_diffusion (getSharedMembers().tau_diffusion) // for K+ ecs diff
 #define TStep (*(getSharedMembers().deltaT) * 1e-3)
-#define gridSize getSharedMembers().gridSize
-
+//#define DEBUG
 
 void NVUNode::initStateVariables(RNG& rng) 
 {
@@ -262,16 +264,21 @@ void NVUNode::initStateVariables(RNG& rng)
     std::vector<double> realCoordinate;
 
     // Set my own coordinates
-    // Get my coordinates and scale to physiological units based on grid size
+    // Get index-based coordinates and 
+    // scale to physiological units based on NVUNode's length
+    std::vector<int> gridSize = 
+	this->getGridLayerDescriptor()->getGrid()->getSize();
     getNodeCoords(indexCoordinate);
-    calculateRealCoordinates(indexCoordinate, getSharedMembers().L0, gridSize[0], gridSize[1], gridSize[2], realCoordinate);
+    calculateRealCoordinatesNTS(indexCoordinate, getSharedMembers().L0, gridSize[0], gridSize[1], gridSize[2], realCoordinate);
 
     // Copy from vector to shallow array defined in mdl
     for (int i = 0; i < realCoordinate.size(); i++)
     {
         coords.push_back(realCoordinate[i]);
     }
+#ifdef DEBUG
     printf("Node %d. x: %f, y: %f, z: %f\n",getNodeIndex(), coords[0], coords[1], coords[2]);
+#endif
 
     //Set up the stateVariables array for the H tree
     for (int i = 0; i < NEQ; i++)
@@ -1229,6 +1236,8 @@ given its own coordinates and the coordinates of all end-terminals from the H-tr
 */
 void NVUNode::calculate_pressure_index()
 {
+    std::vector<int> gridSize = 
+	this->getGridLayerDescriptor()->getGrid()->getSize();
     int numberNVUs = gridSize[0] * gridSize[1] * gridSize[2];
 
      // Put coords values into a double array for use with matrixOps function later.
