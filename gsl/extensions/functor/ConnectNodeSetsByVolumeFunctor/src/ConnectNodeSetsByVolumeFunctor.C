@@ -185,7 +185,6 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       if (*a) lc->nodeToNode(src, cc->outAttrPSet, dst, cc->inAttrPSet, sim);
     }
   }
-#define DEBUG
 #ifdef DEBUG
   if (myRank == 0){
     std::cerr << "Adjacency matrix of connection (row=source, col=dest)" << std::endl;

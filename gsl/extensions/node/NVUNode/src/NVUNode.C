@@ -253,10 +253,9 @@
 
 void NVUNode::initStateVariables(RNG& rng) 
 {
-	if (not getSharedMembers().deltaT)
-		std::cerr << "Please connect deltaT to NVU nodes";
-	assert(getSharedMembers().deltaT);
-
+    if (not getSharedMembers().deltaT)
+	std::cerr << "Please connect deltaT to NVU nodes";
+    assert(getSharedMembers().deltaT);
 
     solver_init(); // calls nvu_ics within
 
@@ -292,12 +291,8 @@ void NVUNode::initStateVariables(RNG& rng)
     state_r = workspace->y[i_radius];
 
     publicValue = value; // for LIFE
-    
-
-
 
 #if WRITE_STATE_VARS
-
     // Get the writer reader - open the state_var_file and write the column headings.
     if (getNodeIndex() == PLOTTING_NODE)    {
         printf("Writing State vars has been selected on node %d.\n",getNodeIndex());
@@ -306,30 +301,23 @@ void NVUNode::initStateVariables(RNG& rng)
     }
 #endif
 #if WRITE_FLUXES
-
     if (getNodeIndex() == PLOTTING_NODE)    {
         printf("Writing fluxes has been selected on node %d.\n",getNodeIndex());
     	workspace->fluxes_file = fopen("NVUOutputFluxes.csv", "w");
     	fprintf(workspace->fluxes_file, "#flu_pt,flu_P_str,flu_delta_p,flu_R_s,flu_N_Cl_s,flu_Na_s,flu_K_s,flu_HCO3_s,flu_Cl_s,flu_E_TRPV_k,flu_Na_k,flu_K_k,flu_HCO3_k,flu_Cl_k,flu_E_Na_k,flu_E_K_k,flu_E_Cl_k,flu_E_NBC_k,flu_E_BK_k,flu_J_NaK_k,flu_v_k,flu_J_KCC1_k,flu_J_NBC_k,flu_J_NKCC1_k,flu_J_Na_k,flu_J_K_k,flu_J_BK_k,flu_M,flu_h_r,flu_v_cpl_i,flu_c_cpl_i,flu_I_cpl_i,flu_rho_i,flu_ip3_i,flu_SRuptake_i,flu_CICR_i,flu_extrusion_i,flu_leak_i,flu_VOCC_i,flu_NaCa_i,flu_NaK_i,flu_Cl_i,flu_K_i,flu_degrad_i,flu_J_stretch_i,flu_v_KIR_i,flu_G_KIR_i,flu_J_KIR_i,flu_v_cpl_j,flu_c_cpl_j,flu_I_cpl_j,flu_rho_j,flu_O_j,flu_ip3_j,flu_ERuptake_j,flu_CICR_j,flu_extrusion_j,flu_leak_j,flu_cation_j,flu_BKCa_j,flu_SKCa_j,flu_K_j,flu_R_j,flu_degrad_j,flu_J_stretch_j,flu_K1_c,flu_K6_c,flu_F_r,flu_E,flu_R_0,flu_P_NR2AO,flu_P_NR2BO,flu_I_Ca,flu_CaM,flu_tau_w,flu_W_tau_w,flu_F_tau_w,flu_k4,flu_R_cGMP2,flu_K2_c,flu_K5_c,flu_c_w,flu_Kactivation_i,flu_E_5c,flu_V_max_pde,flu_rho,flu_ip3_k,flu_er_leak,flu_pump_k,flu_I_TRPV_k,flu_TRPV_k,flu_B_cyt,flu_G,flu_v_3,flu_w_inf,flu_phi_w,flu_H_Ca_k,flu_eta,flu_minf_k,flu_t_Ca_k,flu_VOCC_k,flu_K_input,flu_nvu_Glu,t\n");
     }
 #endif
-
 }
 
 void NVUNode::initJacobian(RNG& rng) 
 {
-
     calculate_pressure_index(); // Calculate my index in H tree coordinates array
 
     evaluate(workspace->t0, workspace->y, workspace->f);
 
-
     jacupdate(workspace->t0, workspace->y);
 
-
-
     workspace->S = newton_sparsity(workspace->J);
-
 
     newton_matrix();
     // from top of BE
@@ -343,8 +331,6 @@ void NVUNode::initJacobian(RNG& rng)
 
     workspace->jac_needed = 0; // flag to say that Jacobian is current
     workspace->converged = 0;
-
-
 }
 
  // Fixed step Backward Euler ODE solver for ONE iteration
@@ -354,7 +340,6 @@ void NVUNode::update(RNG& rng)
     workspace->counter++;
     if (workspace->counter >= LIFE_TIME * ITERATIONS_PER_SEC)
     {   
-
         int neighborCount=0;
         ShallowArray<int*>::iterator iter, end = neighbors.end();
         for (iter=neighbors.begin(); iter!=end; ++iter) {
@@ -363,21 +348,15 @@ void NVUNode::update(RNG& rng)
 
         if (neighborCount<= getSharedMembers().tooSparse || neighborCount>=getSharedMembers().tooCrowded) 
         {
-
-       	
             value=0;
-
         }
         else 
         {
             workspace->injectStart = workspace->t;
             value=1;
-
         }
-
         workspace->counter = 0;
     }
-
 
     // Perform a Jacobian update if necessary. This is in sync across
     if (workspace->jac_needed)
@@ -387,13 +366,10 @@ void NVUNode::update(RNG& rng)
         newton_matrix();
     }
 
-
-
     // Copy values from previous completed timestep
     dcopy(NEQ, workspace->y, workspace->beta);
     dcopy(NEQ, workspace->y, workspace->w);
     workspace->tnext = workspace->t + TStep;
-
 
     // TODO: This code is stupid (straight from parbrain). What was parbrain trying to do instead??
     // There will never be more than a single loop... In parbrain, it doesn't do anything other than
@@ -405,7 +381,6 @@ void NVUNode::update(RNG& rng)
     // Newton loop
     for (int k = 0; k < workspace->maxits; k++)
     {
-
         evaluate(workspace->tnext, workspace->w, workspace->f); // f = g(w)
 
         // yeah not sure about this one.. original check was if every process has converged right? Should be fine...?
@@ -427,7 +402,6 @@ void NVUNode::update(RNG& rng)
         workspace->converged = 1;
         lusoln(workspace->x);  // solve (workspace->x is now increment)
         daxpy(NEQ, -1, workspace->x, workspace->w); // update w with new value
-
     }
 
     if (!workspace->converged)
@@ -564,10 +538,8 @@ void NVUNode::nvu_ics()
 //      du      output vector, in the same order (already allocated)
 void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
 {
-
     double p = (*getSharedMembers().pressures)[workspace->pressuresIndex];
     assert(!isnan(p));
-
 
     // Fluxes:
 
@@ -582,17 +554,15 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     // SC fluxes
     fluxes[flu_R_s]        	    = R_tot - u[R_k];                            // u[R_k] is AC volume-area ratio, fluxes[flu_R_s] is SC   
 
-
     fluxes[flu_N_Cl_s]         	= u[N_Na_s] + u[N_K_s] - u[N_HCO3_s];  //
     fluxes[flu_Na_s]           	= u[N_Na_s] / fluxes[flu_R_s];                       //
-
 
     fluxes[flu_K_s]            	= u[N_K_s] / fluxes[flu_R_s];                        //
     fluxes[flu_HCO3_s]         	= u[N_HCO3_s] / fluxes[flu_R_s];                     //
     fluxes[flu_Cl_s]           	= fluxes[flu_N_Cl_s] / fluxes[flu_R_s];                         //
 
     // AC fluxes
-	fluxes[flu_E_TRPV_k]	= R_gas * Temp / (z_Ca * Farad) * log(u[ca_p] / u[ca_k]); // TRPV4 channel Nernst Potential
+    fluxes[flu_E_TRPV_k]	= R_gas * Temp / (z_Ca * Farad) * log(u[ca_p] / u[ca_k]); // TRPV4 channel Nernst Potential
 
     fluxes[flu_Na_k]           	= u[N_Na_k] / u[R_k];                     //
     fluxes[flu_K_k]            	= u[N_K_k] / u[R_k];                      //
@@ -661,47 +631,43 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_K1_c]         	= gam_cross * pow(u[ca_i],3);
     fluxes[flu_K6_c]        	= fluxes[flu_K1_c];
     fluxes[flu_F_r]			    = u[AMp] + u[AM];
-    
 
     fluxes[flu_E] 			    = EPASSIVE + fluxes[flu_F_r] * (EACTIVE - EPASSIVE);
     fluxes[flu_R_0] 			= R_0_passive_k + fluxes[flu_F_r] * (RSCALE - 1) * R_0_passive_k;
 
-
 // NO pathway fluxes
 
-	fluxes[flu_P_NR2AO]         = nvu_Glu(t) / (betA + nvu_Glu(t));
-	fluxes[flu_P_NR2BO]         = nvu_Glu(t) / (betB + nvu_Glu(t));
+    fluxes[flu_P_NR2AO]         = nvu_Glu(t) / (betA + nvu_Glu(t));
+    fluxes[flu_P_NR2BO]         = nvu_Glu(t) / (betB + nvu_Glu(t));
 
-	fluxes[flu_I_Ca]            = (-4 * v_n * G_M * P_Ca_P_M * (Ca_ex/const_M)) / (1+exp(-80*(v_n+0.02))) * (exp(2 * v_n * Farad / (R_gas * Temp))) / (1 - exp(2 * v_n * Farad / (R_gas * Temp))) * (0.63 * fluxes[flu_P_NR2AO] + 11 * fluxes[flu_P_NR2BO]);
-	fluxes[flu_CaM]             = u[ca_n] / const_m_c;                                      // concentration of calmodulin / calcium complexes ; (100)
+    fluxes[flu_I_Ca]            = (-4 * v_n * G_M * P_Ca_P_M * (Ca_ex/const_M)) / (1+exp(-80*(v_n+0.02))) * (exp(2 * v_n * Farad / (R_gas * Temp))) / (1 - exp(2 * v_n * Farad / (R_gas * Temp))) * (0.63 * fluxes[flu_P_NR2AO] + 11 * fluxes[flu_P_NR2BO]);
+    fluxes[flu_CaM]             = u[ca_n] / const_m_c;                                      // concentration of calmodulin / calcium complexes ; (100)
     fluxes[flu_tau_w]			= (R_0_passive_k * state_r) * fluxes[flu_delta_p] / (2*200e-6); // WSS using pressure from the H tree. L_0 = 200 um
 
-	fluxes[flu_W_tau_w]         = W_0 * pow((fluxes[flu_tau_w] + sqrt(16 * pow(delt_wss,2) + pow(fluxes[flu_tau_w],2)) - 4 * delt_wss),2) / (fluxes[flu_tau_w] + sqrt(16 * pow(delt_wss,2) + pow(fluxes[flu_tau_w],2))) ;  // - tick
-	fluxes[flu_F_tau_w]         = 1 / (1 + const_alp * exp(-fluxes[flu_W_tau_w])) - 1 / (1 + const_alp); // -(1/(1+alp)) was added to get no NO at 0 wss (!) - tick
-	fluxes[flu_k4]              = C_4 * pow(u[cGMP], const_m);
-	fluxes[flu_R_cGMP2]         = (pow(u[cGMP], 2)) / (pow(u[cGMP], 2) + pow(K_m_mlcp, 2)); // - tick
-	fluxes[flu_K2_c]            = 58.1395 * k_mlcp_b + 58.1395 * k_mlcp_c * fluxes[flu_R_cGMP2];  // Factor is chosen to relate two-state model of Yang2005 to Hai&Murphy model
-	fluxes[flu_K5_c]            = fluxes[flu_K2_c];
-	fluxes[flu_c_w]             = 1/2 * ( 1 + tanh( (u[cGMP] - 10.75) / 0.668 ) );
+    fluxes[flu_W_tau_w]         = W_0 * pow((fluxes[flu_tau_w] + sqrt(16 * pow(delt_wss,2) + pow(fluxes[flu_tau_w],2)) - 4 * delt_wss),2) / (fluxes[flu_tau_w] + sqrt(16 * pow(delt_wss,2) + pow(fluxes[flu_tau_w],2))) ;  // - tick
+    fluxes[flu_F_tau_w]         = 1 / (1 + const_alp * exp(-fluxes[flu_W_tau_w])) - 1 / (1 + const_alp); // -(1/(1+alp)) was added to get no NO at 0 wss (!) - tick
+    fluxes[flu_k4]              = C_4 * pow(u[cGMP], const_m);
+    fluxes[flu_R_cGMP2]         = (pow(u[cGMP], 2)) / (pow(u[cGMP], 2) + pow(K_m_mlcp, 2)); // - tick
+    fluxes[flu_K2_c]            = 58.1395 * k_mlcp_b + 58.1395 * k_mlcp_c * fluxes[flu_R_cGMP2];  // Factor is chosen to relate two-state model of Yang2005 to Hai&Murphy model
+    fluxes[flu_K5_c]            = fluxes[flu_K2_c];
+    fluxes[flu_c_w]             = 1/2 * ( 1 + tanh( (u[cGMP] - 10.75) / 0.668 ) );
 
-	fluxes[flu_Kactivation_i]   = pow((u[ca_i] + fluxes[flu_c_w]),2) / (pow((u[ca_i] + fluxes[flu_c_w]),2) + bet_i * exp(-(u[v_i] - v_Ca3) / R_K));
-	fluxes[flu_E_5c]				= 1 - u[E_b] - u[E_6c];
-	fluxes[flu_V_max_pde]			= k_pde * u[cGMP];
+    fluxes[flu_Kactivation_i]   = pow((u[ca_i] + fluxes[flu_c_w]),2) / (pow((u[ca_i] + fluxes[flu_c_w]),2) + bet_i * exp(-(u[v_i] - v_Ca3) / R_K));
+    fluxes[flu_E_5c]				= 1 - u[E_b] - u[E_6c];
+    fluxes[flu_V_max_pde]			= k_pde * u[cGMP];
 
-// AC Ca2+ fluxes
-	fluxes[flu_rho]				= 0.1 + 0.6/1846 * nvu_Glu(t);
-
-	
+    // AC Ca2+ fluxes
+    fluxes[flu_rho]				= 0.1 + 0.6/1846 * nvu_Glu(t);
 
     fluxes[flu_ip3_k] 		= J_max * pow(( u[ip3_k] / ( u[ip3_k] + K_I ) * u[ca_k] / ( u[ca_k] + const_K_act ) * u[h_k] ) , 3) * (1.0 - u[ca_k] / u[s_k]);
-	fluxes[flu_er_leak] 	= P_L * ( 1.0 - u[ca_k] / u[s_k] );
-	fluxes[flu_pump_k]  	= const_V_max * pow(u[ca_k], 2) / ( pow(u[ca_k], 2) + pow(k_pump, 2) );
-	fluxes[flu_I_TRPV_k]	= G_TRPV_k * u[m_k] * (fluxes[flu_v_k] - fluxes[flu_E_TRPV_k]) * unitcon;
-	fluxes[flu_TRPV_k]		= -0.5 * fluxes[flu_I_TRPV_k] / ( C_astr_k * gamma_k );
-	fluxes[flu_B_cyt] 			= 1.0 / (1.0 + BK_end + K_ex * B_ex / pow((K_ex + u[ca_k]), 2) );
-	fluxes[flu_G]				= ( fluxes[flu_rho] + const_delta ) / ( K_G + fluxes[flu_rho] + const_delta );
-	fluxes[flu_v_3]				= -v_5 / 2.0 * tanh((u[ca_k] - Ca_3) / Ca_4) + v_7;
-	fluxes[flu_w_inf]    	= 0.5 * ( 1 + tanh( ( fluxes[flu_v_k] + eet_shift * u[eet_k] - fluxes[flu_v_3] ) / v_4 ) );
+    fluxes[flu_er_leak] 	= P_L * ( 1.0 - u[ca_k] / u[s_k] );
+    fluxes[flu_pump_k]  	= const_V_max * pow(u[ca_k], 2) / ( pow(u[ca_k], 2) + pow(k_pump, 2) );
+    fluxes[flu_I_TRPV_k]	= G_TRPV_k * u[m_k] * (fluxes[flu_v_k] - fluxes[flu_E_TRPV_k]) * unitcon;
+    fluxes[flu_TRPV_k]		= -0.5 * fluxes[flu_I_TRPV_k] / ( C_astr_k * gamma_k );
+    fluxes[flu_B_cyt] 			= 1.0 / (1.0 + BK_end + K_ex * B_ex / pow((K_ex + u[ca_k]), 2) );
+    fluxes[flu_G]				= ( fluxes[flu_rho] + const_delta ) / ( K_G + fluxes[flu_rho] + const_delta );
+    fluxes[flu_v_3]				= -v_5 / 2.0 * tanh((u[ca_k] - Ca_3) / Ca_4) + v_7;
+    fluxes[flu_w_inf]    	= 0.5 * ( 1 + tanh( ( fluxes[flu_v_k] + eet_shift * u[eet_k] - fluxes[flu_v_3] ) / v_4 ) );
     fluxes[flu_phi_w]    	= psi_w * cosh( (fluxes[flu_v_k] - fluxes[flu_v_3]) / (2*v_4) );
     fluxes[flu_H_Ca_k]			= u[ca_k] / gam_cai_k + u[ca_p] / gam_cae_k;
     fluxes[flu_eta] 			= (state_r* R_0_passive_k - R_0_passive_k) / R_0_passive_k;
@@ -711,9 +677,7 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_K_input]		= K_input(t);
     fluxes[flu_nvu_Glu]     = nvu_Glu(t);
 
-
 // Differential Equations:
-
 
     du[i_radius		] = 1 / ETA * (state_r * fluxes[flu_pt] / fluxes[flu_h_r] - fluxes[flu_E] * (state_r * R_0_passive_k - fluxes[flu_R_0])/fluxes[flu_R_0]); // Radius - nondimensional (state_r * R_0_passive: dimensional)
 
@@ -1154,18 +1118,12 @@ void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
 
         for (int k = workspace->dfdx->r[igrp]; k < workspace->dfdx->r[igrp + 1]; k++)
         {
-            
             j = workspace->dfdx->g[k];
             h[j] = eps; // * fabs(y[j]); 
             y1[j] += h[j];
-
         }
 
-
         nvu_rhs(t,y1,f1, workspace->fluxes);
-
-
-
 
         for (int k = workspace->dfdx->r[igrp]; k < workspace->dfdx->r[igrp+1]; k++)
         {
@@ -1288,8 +1246,9 @@ void NVUNode::calculate_pressure_index()
 
     // Relationship between coordinate and pressure arrays in H-tree. No dependency between nodes.
     workspace->pressuresIndex = bestIndex / 2;
+#ifdef DEBUG
     printf("Node: %d. P-index: %d\n", getNodeIndex(), workspace->pressuresIndex);
-    
+#endif
 
     free(myCoords);
     free(treeCoords);
