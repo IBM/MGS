@@ -198,10 +198,9 @@ ccred:=$(shell echo -e "\033[0;31m")
 ccnormal:=$(shell echo -e "\033[0m")
 Model2Use:=$(shell pwd)/include/Model2Use.h
 
-FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
 #a:=$(awk '/^[ ]*#define/{ print $$2 }' < $${Model2Use} )
 ifeq (,$(wildcard $(Model2Use)))
-target:
+pre_req:
 	@touch ${Model2Use}
 	@echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
 	@echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
@@ -219,23 +218,26 @@ target:
 	@echo "#endif" >> ${Model2Use} 
 	#$(shell echo -e "$(ccred) Please open and revise ${Model2Use} \033[0m")
 	$(echo  "$(ccred) Please open and revise ${Model2Use} \033[0m")
-	FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
-	echo ${FoundModel2Use}
+	$(eval FoundModel2Use := $(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) )
 	@if [[ "x${FoundModel2Use}" = x ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
 	@touch $(ERROR_MARKER)
-else ifeq ("x${FoundModel2Use}","x ")
-target:
+else 
+FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
+ifeq ("x${FoundModel2Use}","x ")
+pre_req:
 	@if [[ "x${FoundModel2Use}" = "x " ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
 	@touch $(ERROR_MARKER)
 
 else
-target: $(TARGETS)  library
+pre_req: 
+endif
 endif
 
+target: pre_req $(TARGETS)  library
 
 depend: ; makedepend $(ND_SOURCES)
 
