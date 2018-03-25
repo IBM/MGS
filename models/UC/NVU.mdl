@@ -300,14 +300,15 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
   }
 
   
+  //{{{Phases
   InitPhase initStateVariables(state_r, K_ecs, stateVariables, coords); 
   InitPhase initJacobian();
 
   RuntimePhase update(K_ecs);
   RuntimePhase copy(publicValue, state_r, stateVariables);
 
-
   FinalPhase finalize;
+  //}}}
 
   //{{{ Output
   ValueProducer.value << &publicValue;
@@ -320,7 +321,7 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
   CoordsProducer.coords << &coords;
   //}}}
 
-//{{{input
+  //{{{Input
 //#if NTS_INTEGRATION
   Connection Pre Node (PSet.identifier=="MegaSS") Expects 
        VoltageProducer, NumSpikesProducer
