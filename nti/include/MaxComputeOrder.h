@@ -175,6 +175,17 @@
 #define THRESHOLD_SIZE_R_SOMA  2.0 // [um]
 #endif
 //}}}
+
+
+// Add internal noise to each neuron (junction only, i.e. soma)
+//  currently the parameter are hard-coded (we may want to pass via HodgkinHuxleyVoltageJunction)
+// #define INTRINSIC_NOISE_TO_NEURON
+
+// if enabled, we can define ArrayCurrentPulseGenerator 
+// and connect to HodgkinHuxleyVoltageJunction (i.e. soma only)
+// by doing this, we just create 1 pulse-generator that is capable of 
+//  generating different streams of currents to create heterogeneity
+// #define CURRENT_STREAMS_TO_NEURON
 //}}}
 
 //numerics
@@ -416,8 +427,13 @@
 //#define RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
 //}}}
 
-//Extension to other system
-//{{{ 
-//#define NVU_NTS_EXTENSION
+// Other extensions
+//{{{
+//#define NVU_NTS_EXTENSION  //we need this to enable TissueFunctor to work with NVU
+//#define DYNAMIC_ECS_Sodium
+//#define DYNAMIC_ECS_Potassium
+//#define DYNAMIC_ECS_Temperature
+////with this, the ExtracellularMedium is nolonger be used, instead
+//                     //we use ECSNode
 //}}}
 #endif //_MAXCOMPUTEORDER_H

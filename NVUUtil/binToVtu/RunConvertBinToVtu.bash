@@ -27,9 +27,9 @@ if [ $1 = "-c" ]; then
 	MASK=$2
 	shift
 	shift
-	taskset -c $MASK ${base_dir}/bin/ConvertBinToVtu $@
+	taskset -c $MASK ${base_dir}/ConvertBinToVtu $@
 else
-	${base_dir}/bin/ConvertBinToVtu $@
+	${base_dir}/ConvertBinToVtu $@
 fi;
 
 

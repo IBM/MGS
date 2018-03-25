@@ -19,6 +19,10 @@
 #include "GridLayerDescriptor.h"
 
 #include <memory>
+#include <cmath>
+
+
+//#define DEBUG
 
 void ConnectNodeSetsByVolumeFunctor::userInitialize(LensContext* CG_c) 
 {
@@ -121,9 +125,8 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 
   int myRank = sim->getRank();
   double criterion = radius*radius;
-//#define DEBUG
 #ifdef DEBUG
-  int rank_2_use = 1;
+  int rank_2_use = 0;
   if (myRank == rank_2_use){
     std::cerr<< myRank<< " center-node size: " << ctrs << ", sample-node size: " << smps <<std::endl
       << std::flush;
@@ -145,7 +148,8 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       std::vector<double> smpCtr({dims->x, dims->y, dims->z});      
 #ifdef DEBUG
       if (myRank == rank_2_use){
-	std::cerr<< myRank<< " cpt-coord: " << dims->x << "," <<dims->y <<"," <<dims->z <<std::endl
+	std::cerr<< myRank<< " cpt-coord: " << dims->x << "," <<dims->y <<"," <<dims->z 
+	  << " range to connect " << radius << " micrometer "<< std::endl
 	  << std::flush;
       }
 #endif
@@ -160,14 +164,17 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 	}
 	//calculateRealCoordinatesCenter(grdCtr, scale, gridSize[0], gridSize[1], gridSize[2], volCtr);// grid's dimension is returned as (Z,Y,X)
 	calculateRealCoordinatesCenterNTS(grdCtr, scale, gridSize[0], gridSize[1], gridSize[2], volCtr);// grid's dimension is returned as (X,Y,Z)
+	if (SqDist(&volCtr[0], &smpCtr[0])<criterion) *a=1;	
 #ifdef DEBUG
       if (myRank == rank_2_use){
-	std::cerr<< "-- nvu info: length=" << scale << ", index = "<< grdCtr[0] <<"," << grdCtr[1] << "," << grdCtr[2] <<std::endl;
-	std::cerr<< myRank<< " NVU-center-coord: " << volCtr[0] << "," << volCtr[1] <<"," << volCtr[2] <<std::endl
-	  << std::flush;
+	std::cerr<< "         -- nvu info: length=" << scale << ", index = "<< grdCtr[0] <<"," << grdCtr[1] << "," << grdCtr[2] <<std::endl;
+	std::cerr<< myRank<< "        NVU-center-coord: " << volCtr[0] << "," << volCtr[1] <<"," << volCtr[2] ;
+	if (*a == 1)
+	  std::cerr << "-- connected" << std::endl;
+	else
+	  std::cerr << "-- NOconnected as distance is" << sqrt(SqDist(&volCtr[0], &smpCtr[0])) << std::endl;
       }
 #endif
-	if (SqDist(&volCtr[0], &smpCtr[0])<criterion) *a=1;	
       }
     }
   }

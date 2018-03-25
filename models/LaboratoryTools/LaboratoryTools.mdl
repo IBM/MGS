@@ -181,6 +181,59 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   }
   //}}}
 }
+
+Variable ArrayCurrentPulseGenerator Implements CurrentArrayProducer
+{
+  //{{{
+  //{{{Data
+  //{{{user-input
+  dyn_var_t peak;
+  //{{{for white-noise
+  dyn_var_t mean;
+  dyn_var_t sd;
+  //}}}
+  dyn_var_t init_duration;
+  dyn_var_t period;
+  dyn_var_t duration;
+  dyn_var_t delay;
+  dyn_var_t last;
+  dyn_var_t inc;
+  string pattern; // supported protocols [periodic_train, periodic, poisson, dualexp, ramp]
+  int write_to_file; // YES or NO
+  string fileName; // fileName if 'write_to_file = 1'
+  float io_interval; //[ms] - default is 1.0 [ms]
+  //{{{ use with dualexp
+  dyn_var_t riseTime; //[ms]
+  dyn_var_t decayTime; //[ms]
+  //}}}
+  //{{{ use with multiple-trains, each train is a tuple of small pulse
+  int num_trains;
+  int num_pulses_per_train;
+  float intra_train_gap;  //[ms]
+  //}}}
+  int num_streams; //how many different streams of current that you want to generate. Neurons will receive from one of these streams
+  dyn_var_t[] I; // [pA]
+  //}}}
+#ifdef CONSIDER_DI_DV
+  dyn_var_t[] di_dv; // conductance [nS/um^2]
+#endif
+  dyn_var_t* deltaT;
+  //}}}
+
+  InitPhase initialize(I);
+  RuntimePhase update(I);
+  FinalPhase finalize();
+
+  CurrentArrayProducer.currents << &I;
+#ifdef CONSIDER_DI_DV
+  CurrentArrayProducer.di_dv << &di_dv;
+#endif
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
+}
+
 Variable RampCurrentGenerator Implements CurrentProducer
 {
   //{{{
@@ -369,6 +422,33 @@ Variable ReversalPotentialDisplay
 }
 //}}}
 
+//Variable SignalOutput
+//{
+////{{{
+// 
+//  int* [] signal_io; // 0 = no write, 1 = write (the target has the responsibility to turn off)
+//
+//  dyn_var_t* deltaT;
+//
+//  InitPhase initialize;
+//  FinalPhase finalize;
+//  TriggeredFunction dataCollection;
+//
+//  InAttrPSet {
+//    string identifier;
+//  }
+//
+//  UserFunction setUpPointers;
+//
+//  Connection Pre Node (PSet.identifier=="htree") Expects SignalHook
+//   {
+//    SignalHook.signalhook >> signal_io;
+//  }
+//  Connection Pre Constant () Expects TimeStepProducer {
+//    TimeStepProducer.deltaT >> deltaT;
+//  }
+////}}}
+//}
 ///////////////////////////////////////////////
 // Current I/O
 //{{{

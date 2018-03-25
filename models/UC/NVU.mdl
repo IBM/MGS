@@ -11,29 +11,33 @@ Interface ECSKProducer{
 }
 
 
-Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariablesProducer, CoordsProducer {
+Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariablesProducer, CoordsProducer 
+{
+//{{{
+  //{{{Life-related data  [to be removed]
   int value;
   int publicValue;
   int* [] neighbors;
+  //}}}
 
+  //{{{Extracellular data
   double K_ecs;
   double* [] K_ecs_neighbors;
+  dyn_var_t* voltage;
+  int* numSpikes;
+  //}}}
   
 
   double [] stateVariables;
   double [] coords;
   double state_r; //radius
 
-  dyn_var_t* voltage;
-
-
-
   Shared {
   //{{{
-    double L0;
+    double L0; // in meter
 
     // Timestep. Can be multiplied by number of simulation iterations to get current time.
-    dyn_var_t* deltaT;
+    dyn_var_t* deltaT;  // in milisecond
     double []* pressures;
     double []* coordsArray;
     double [] blockSize;
@@ -295,7 +299,7 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     string identifier;
   }
 
-
+  
   InitPhase initStateVariables(state_r, K_ecs, stateVariables, coords); 
   InitPhase initJacobian();
 
@@ -305,6 +309,7 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
 
   FinalPhase finalize;
 
+  //{{{ Output
   ValueProducer.value << &publicValue;
 
   ECSKProducer.K_ecs << &K_ecs;
@@ -313,26 +318,38 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
   StateVariablesProducer.stateVariables << &stateVariables;
 
   CoordsProducer.coords << &coords;
+  //}}}
 
+//{{{input
 //#if NTS_INTEGRATION
-  Connection Pre Node (PSet.identifier=="MegaSS") Expects VoltageProducer { //PSet.identifier=="connexon[Voltage]"
+  Connection Pre Node (PSet.identifier=="MegaSS") Expects 
+       VoltageProducer, NumSpikesProducer
+  { //PSet.identifier=="connexon[Voltage]"
     VoltageProducer.voltage >> voltage;
+    NumSpikesProducer.numSpikes >> numSpikes;
   }
 //#endif
 
-  Connection Pre Node (PSet.identifier=="NVU") Expects ValueProducer, ECSKProducer {
+  Connection Pre Node (PSet.identifier=="NVU") Expects 
+    ValueProducer, ECSKProducer 
+  {
     ValueProducer.value >> neighbors;
     ECSKProducer.K_ecs >> K_ecs_neighbors;
   };
 
-  Connection Pre Node (PSet.identifier=="htree") Expects PressureArrayProducer, CoordsArrayProducer {
+  Connection Pre Node (PSet.identifier=="htree") Expects 
+    PressureArrayProducer, CoordsArrayProducer 
+  {
     PressureArrayProducer.pressures >> Shared.pressures;
     CoordsArrayProducer.coordsArray >> Shared.coordsArray;
   };
 
-
-  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+  Connection Pre Constant (PSet.identifier=="dt") Expects 
+    TimeStepProducer 
+  {
     TimeStepProducer.deltaT >> Shared.deltaT;
   };
+//}}}
+//}}}
 }
 #endif

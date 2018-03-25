@@ -6,9 +6,9 @@
 
 Node Htree Implements PressureArrayProducer, CoordsArrayProducer {
   double [] pressures;
-  int numberNVUs;
+  /*int numberNVUs;*/
   double dtWrite;
-  double [] coordsArray;
+  double [] coordsArray; //numberNVUs * DIMENSIONS
   double L0;
  
 
@@ -16,15 +16,16 @@ Node Htree Implements PressureArrayProducer, CoordsArrayProducer {
 
   Shared {
     dyn_var_t* deltaT;
-    int [] gridSize;
 
     double []* tempStateVariables;
     double []* tempNVUcoords;
 
   }
 
+  //{{{Output
   PressureArrayProducer.pressures << &pressures;
   CoordsArrayProducer.coordsArray << &coordsArray;
+  //}}}
 
 
   InitPhase initTree(pressures, coordsArray);
@@ -32,6 +33,7 @@ Node Htree Implements PressureArrayProducer, CoordsArrayProducer {
   RuntimePhase writeToFiles();
   RuntimePhase updatePressures();
   RuntimePhase copy(pressures);
+  //TriggeredFunction dataCollection;  can we have TriggerredFunction  on regular node?
 
   FinalPhase finalize;
 
@@ -40,7 +42,8 @@ Node Htree Implements PressureArrayProducer, CoordsArrayProducer {
   }
 
   UserFunction setPointers;
-  Connection Pre Node (PSet.identifier=="NVU") Expects RadiusProducer, StateVariablesProducer, CoordsProducer
+  Connection Pre Node (PSet.identifier=="NVU") Expects 
+      RadiusProducer, StateVariablesProducer, CoordsProducer
   {
     RadiusProducer.radius >> NVUinputs.radius; // auto adds an element for each connection (bumps the struct to one bigger)
     StateVariablesProducer.stateVariables >> Shared.tempStateVariables;

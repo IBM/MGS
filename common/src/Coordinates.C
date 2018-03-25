@@ -8,15 +8,34 @@ grid dimensions.
 Currently the Z-dimension is not being used, so all coordinates are given a Z
 value of 0.0.
 */
+void calculateRealCoordinatesNVU(std::vector<int> indexCoordinate, double length,
+                              int xNumberNVUs, int yNumberNVUs, int zNumberNVUs,
+                              std::vector<double> &realCoordinate)
+{
+  double x, y, z;
+
+  x = indexCoordinate[0] * 2 * length - ((xNumberNVUs - 1) * length);
+  y = indexCoordinate[1] * 2 * length - ((yNumberNVUs - 1) * length);
+
+  realCoordinate.push_back(x);
+  realCoordinate.push_back(y);
+
+  // No real implementation for Z axis coordinates/3D simulations YET.
+  if (indexCoordinate.size() == 3)
+  {
+    z = 0.0;
+    realCoordinate.push_back(z);
+  }
+}
 void _calculateRealCoordinates(std::vector<int> indexCoordinate, double length,
                               int xNumberNVUs, int yNumberNVUs, int zNumberNVUs,
                               std::vector<double> &realCoordinate)
 {
   double x, y, z;
 
-  x = indexCoordinate[0] * length - ((xNumberNVUs - 1) * length);
-  y = indexCoordinate[1] * length - ((yNumberNVUs - 1) * length);
-  z = indexCoordinate[2] * length - ((zNumberNVUs - 1) * length);
+  x = indexCoordinate[0] * 2 * length - ((xNumberNVUs - 1) * length);
+  y = indexCoordinate[1] * 2 * length - ((yNumberNVUs - 1) * length);
+  z = indexCoordinate[2] * 2 * length - ((zNumberNVUs - 1) * length);
 
   realCoordinate.push_back(x);
   realCoordinate.push_back(y);
@@ -38,9 +57,9 @@ void _calculateRealCoordinatesCenter(std::vector<int> indexCoordinate, double le
 {
   double x, y, z;
 
-  x = indexCoordinate[0] * length - ((xNumberNVUs - 1) * length) + length/2;
-  y = indexCoordinate[1] * length - ((yNumberNVUs - 1) * length) + length/2;
-  z = indexCoordinate[2] * length - ((zNumberNVUs - 1) * length) + length/2;
+  x = indexCoordinate[0] * 2 * length - ((xNumberNVUs - 1) * length) ; //+ length/2;
+  y = indexCoordinate[1] * 2 * length - ((yNumberNVUs - 1) * length) ; //+ length/2;
+  z = indexCoordinate[2] * 2 * length - ((zNumberNVUs - 1) * length) ; //+ length/2;
 
   realCoordinate.push_back(x);
   realCoordinate.push_back(y);
@@ -107,6 +126,9 @@ void calculateIndexCoordinates(double *realCoordinate, int size, double length,
     indexCoordinate.push_back(z);
   }
 }
+/* 
+ * realCoordinate using NTS's coord convention: [0] ~ X, [1] ~ Y, [2] ~ Z-axis 
+ */
 bool isInNVUGrid(std::vector<double> realCoordinate,
 		double length, 
 		int xNumberNVUs, int yNumberNVUs, 
@@ -121,11 +143,18 @@ bool isInNVUGrid(double *realCoordinate, int size, double length,
                  int xNumberNVUs, int yNumberNVUs, int zNumberNVUs)
 {
   std::vector<int> indexCoordinate;
-  calculateIndexCoordinates(realCoordinate, size, length, xNumberNVUs,
-                            yNumberNVUs, zNumberNVUs, indexCoordinate);
+  float lx = - length * 2 * (xNumberNVUs/2);
+  float ux = length * 2 * (xNumberNVUs/2);
+  float ly = - length * 2 * (yNumberNVUs/2);
+  float uy = length * 2 * (yNumberNVUs/2);
+  float lz = - length * 2 * (zNumberNVUs/2);
+  float uz = length * 2 * (zNumberNVUs/2);
   bool result = false;
-  if (indexCoordinate[0] < xNumberNVUs && indexCoordinate[1] < yNumberNVUs &&
-      indexCoordinate[2] < zNumberNVUs)
+  if (
+      lx <= realCoordinate[0] and  realCoordinate[0] <= ux and 
+      ly <= realCoordinate[1] and  realCoordinate[1] <= uy and 
+      lz <= realCoordinate[2] and  realCoordinate[2] <= uz 
+     )
     result = true;
   return result;
 }

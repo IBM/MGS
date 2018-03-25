@@ -445,6 +445,9 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
   dyn_var_t I_fromdend; // [pA]
 #endif
+#ifdef INTRINSIC_NOISE_TO_NEURON
+  dyn_var_t noise_factor_current_injection; // in range [0, 1] (no noise = 1)
+#endif
   //}}}
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   //data mainly used to dynamically assign different conductance on different location
@@ -475,6 +478,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     dyn_var_t Na; // [mM]
     dyn_var_t K;  // [mM]
     dyn_var_t E_leak;  // [miliVolt] = [mV]
+    dyn_var_t[]* tmp_injectedCurrents;
     //}}}
   }
   //}}}
@@ -605,6 +609,32 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     add_zero_didv();
 #endif
    }
+
+  /* We use this when we design a single CurrentPulseObject
+that can spit out multiple current streams, and the neuron will receive the current
+from one of those streams*/
+  UserFunction select_current_stream;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentArrayProducer
+   {// current-clamp (from one stream)
+    CurrentArrayProducer.currents >> Shared.tmp_injectedCurrents;
+#ifdef CONSIDER_DI_DV
+    add_zero_didv();
+#endif
+    select_current_stream();
+   }
+
+//  /* this enable a single object that can induce different stimulus to different neurons
+//   depending upon the noise factor*/
+//  Connection Pre Variable (PSet.identifier=="stimulation_noise" && checkSite()) Expects 
+//    CurrentProducer, ScaleFactor
+//   {// current-clamp
+//    CurrentProducer.current >> injectedCurrents_withnoise;
+//    ScaleFactor.factor >> noise_factor;
+//#ifdef CONSIDER_DI_DV
+//    add_zero_didv();
+//#endif
+//   }
 
   PredicateFunction confirmUniqueDeltaT;
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {

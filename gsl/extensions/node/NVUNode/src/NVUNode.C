@@ -5,6 +5,7 @@
 #include "Grid.h"
 #include "GridLayerDescriptor.h"
 #include "Coordinates.h"
+#include <algorithm>
 
 /****** Model parameters ******/
 
@@ -248,14 +249,24 @@
 #define const_m_c (getSharedMembers().const_m_c) // FIXed from m_c
 
 #define tau_diffusion (getSharedMembers().tau_diffusion) // for K+ ecs diff
-#define TStep (*(getSharedMembers().deltaT) * 1e-3)
+#define TStep (*(getSharedMembers().deltaT) * 1e-3)  // sec
 //#define DEBUG
+#define THRESHOLD_NUMSPIKES 2
+#define GLUT_MIN 0.0  // uM
+#define K_extra_baseline  3.0 //mM
+#define K_extra_min 1.0 //mM
 
 void NVUNode::initStateVariables(RNG& rng) 
 {
     if (not getSharedMembers().deltaT)
 	std::cerr << "Please connect deltaT to NVU nodes";
     assert(getSharedMembers().deltaT);
+
+    _gIdx = 
+	this->getGlobalIndex();
+
+    Glut_out = GLUT_MIN;
+    K_out = K_extra_baseline;
 
     solver_init(); // calls nvu_ics within
 
@@ -268,9 +279,22 @@ void NVUNode::initStateVariables(RNG& rng)
     std::vector<int> gridSize = 
 	this->getGridLayerDescriptor()->getGrid()->getSize();
     getNodeCoords(indexCoordinate);
-    calculateRealCoordinatesNTS(indexCoordinate, getSharedMembers().L0, gridSize[0], gridSize[1], gridSize[2], realCoordinate);
+    /* L0 in meter and thus coords are in meter */
+    calculateRealCoordinatesNTS(indexCoordinate, getSharedMembers().L0, 
+	    gridSize[0], gridSize[1], gridSize[2], realCoordinate);
+//#define DEBUG_2
+#ifdef DEBUG_2
+   std::cerr << "NVUnode with globalIdx = " 
+      << this->getGlobalIndex()
+      << ", coord: " << 
+      realCoordinate[0] << "," << 
+      realCoordinate[1] << "," << 
+      realCoordinate[2] << std::endl;
+   std::cerr << std::endl;
+#endif
 
     // Copy from vector to shallow array defined in mdl
+    //coords.decreaseSizeTo(0);
     for (int i = 0; i < realCoordinate.size(); i++)
     {
         coords.push_back(realCoordinate[i]);
@@ -333,9 +357,24 @@ void NVUNode::initJacobian(RNG& rng)
     workspace->converged = 0;
 }
 
- // Fixed step Backward Euler ODE solver for ONE iteration
+// Fixed step Backward Euler ODE solver for ONE iteration
 void NVUNode::update(RNG& rng) 
 {
+#if INPUT_TO_NVU == OPTION_NEURON
+#ifdef DEBUG
+    //if (LFP > -50)
+    {
+       //std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes << std::endl;
+       std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes 
+	   << " Glut = " << Glut_out //<< std::endl;
+	   << " K_o = " << K_out << std::endl;
+       //for (auto& n : Vm)
+       //   std::cerr << " " <<  *n ;
+    }
+#endif
+    nvu_Glu();
+    nvu_K();
+#endif
     // LIFE
     workspace->counter++;
     if (workspace->counter >= LIFE_TIME * ITERATIONS_PER_SEC)
@@ -382,7 +421,6 @@ void NVUNode::update(RNG& rng)
     for (int k = 0; k < workspace->maxits; k++)
     {
         evaluate(workspace->tnext, workspace->w, workspace->f); // f = g(w)
-
         // yeah not sure about this one.. original check was if every process has converged right? Should be fine...?
         if (workspace->converged)
         {
@@ -390,7 +428,6 @@ void NVUNode::update(RNG& rng)
             {
                 workspace->jac_needed = 1;
             }
-
             break; // w contains the correct value
         }
 
@@ -446,7 +483,7 @@ void NVUNode::copy(RNG& rng)
 
 void NVUNode::finalize(RNG& rng) 
 {
-	if (workspace->J != NULL) cs_spfree(workspace->J);
+    if (workspace->J != NULL) cs_spfree(workspace->J);
     if (workspace->dfdx->r != NULL) free(workspace->dfdx->r);
     if (workspace->dfdx->g != NULL) free(workspace->dfdx->g);
     if (workspace->dfdx->A != NULL) cs_spfree(workspace->dfdx->A);
@@ -637,8 +674,13 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
 
 // NO pathway fluxes
 
+#if INPUT_TO_NVU == OPTION_LIFE
     fluxes[flu_P_NR2AO]         = nvu_Glu(t) / (betA + nvu_Glu(t));
     fluxes[flu_P_NR2BO]         = nvu_Glu(t) / (betB + nvu_Glu(t));
+#elif INPUT_TO_NVU == OPTION_NEURON
+    fluxes[flu_P_NR2AO]         = Glut_out / (betA + Glut_out);
+    fluxes[flu_P_NR2BO]         = Glut_out / (betB + Glut_out);
+#endif
 
     fluxes[flu_I_Ca]            = (-4 * v_n * G_M * P_Ca_P_M * (Ca_ex/const_M)) / (1+exp(-80*(v_n+0.02))) * (exp(2 * v_n * Farad / (R_gas * Temp))) / (1 - exp(2 * v_n * Farad / (R_gas * Temp))) * (0.63 * fluxes[flu_P_NR2AO] + 11 * fluxes[flu_P_NR2BO]);
     fluxes[flu_CaM]             = u[ca_n] / const_m_c;                                      // concentration of calmodulin / calcium complexes ; (100)
@@ -657,7 +699,11 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_V_max_pde]			= k_pde * u[cGMP];
 
     // AC Ca2+ fluxes
+#if INPUT_TO_NVU == OPTION_LIFE
     fluxes[flu_rho]				= 0.1 + 0.6/1846 * nvu_Glu(t);
+#elif INPUT_TO_NVU == OPTION_NEURON
+    fluxes[flu_rho]				= 0.1 + 0.6/1846 * Glut_out;
+#endif
 
     fluxes[flu_ip3_k] 		= J_max * pow(( u[ip3_k] / ( u[ip3_k] + K_I ) * u[ca_k] / ( u[ca_k] + const_K_act ) * u[h_k] ) , 3) * (1.0 - u[ca_k] / u[s_k]);
     fluxes[flu_er_leak] 	= P_L * ( 1.0 - u[ca_k] / u[s_k] );
@@ -674,8 +720,13 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_minf_k] 			= ( 1 / ( 1 + exp( - (fluxes[flu_eta] - epshalf_k) / kappa_k ) ) ) * ( ( 1 / (1 + fluxes[flu_H_Ca_k]) ) * (fluxes[flu_H_Ca_k] + tanh(( fluxes[flu_v_k] - v1_TRPV_k) / v2_TRPV_k )));
     fluxes[flu_t_Ca_k] 			= t_TRPV_k / u[ca_p];
     fluxes[flu_VOCC_k]		= fluxes[flu_VOCC_i];
+#if INPUT_TO_NVU == OPTION_LIFE
     fluxes[flu_K_input]		= K_input(t);
     fluxes[flu_nvu_Glu]     = nvu_Glu(t);
+#elif INPUT_TO_NVU == OPTION_NEURON
+    fluxes[flu_K_input]		= K_out;
+    fluxes[flu_nvu_Glu]     = Glut_out;
+#endif
 
 // Differential Equations:
 
@@ -692,8 +743,13 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     du[ w_k     ] = fluxes[flu_phi_w] * (fluxes[flu_w_inf] - u[w_k]);                            // s-1
 
     //SC:
+#if INPUT_TO_NVU == OPTION_LIFE
     du[ N_Na_s  ] = - k_C * K_input(t) - du[ N_Na_k];                           // uMm s-1
     du[ N_K_s   ] = k_C * K_input(t) + fluxes[flu_J_K_k] - 2 * fluxes[flu_J_NaK_k] - fluxes[flu_J_NKCC1_k] - fluxes[flu_J_KCC1_k] + fluxes[flu_R_s] * ( (u[K_e] - fluxes[flu_K_s]) / tau2);                 // uMm s-1
+#elif INPUT_TO_NVU == OPTION_NEURON
+    du[ N_Na_s  ] = - k_C * K_out - du[ N_Na_k];                           // uMm s-1
+    du[ N_K_s   ] = k_C * K_out + fluxes[flu_J_K_k] - 2 * fluxes[flu_J_NaK_k] - fluxes[flu_J_NKCC1_k] - fluxes[flu_J_KCC1_k] + fluxes[flu_R_s] * ( (u[K_e] - fluxes[flu_K_s]) / tau2);                 // uMm s-1
+#endif
 
 
     du[ N_HCO3_s] = - du[ N_HCO3_k];                                                // uMm s-1
@@ -773,6 +829,8 @@ double NVUNode::factorial(int c)
     return result;
 }
 
+
+#if INPUT_TO_NVU == OPTION_LIFE
 // time-varying glutamate input signal
 double NVUNode::nvu_Glu(double t)
 {
@@ -789,8 +847,30 @@ double NVUNode::nvu_Glu(double t)
     double Glu_out = Glu_min + (Glu_max - Glu_min) * Glu_time;
     return Glu_out;
 }
+#elif INPUT_TO_NVU == OPTION_NEURON
+// time-varying glutamate input signal
+// TODO: use LFP (from MegaSynapticSpace) and produce Glu
+void NVUNode::nvu_Glu()
+{
+    if (*numSpikes >= THRESHOLD_NUMSPIKES)
+    {
+       //double Glu_min = 0;
+       double Glut_max = 1846; // uM - one vesicle (Santucci)
 
+       //double Glu_time = 0.5 * tanh((t) / 1) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME)) / 1);
+       //double Glu_time = 0.5 * tanh((t - workspace->injectStart) / 1) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME)) / 1);
 
+       Glut_out += Glut_max; 
+    }
+    //float Glut_lifetime = 10e-3; // sec
+    float Glut_lifetime = 2e-3; // sec
+    float J_decay = 1.0 / (Glut_lifetime) *
+                    (Glut_out - GLUT_MIN);  // [uM/sec]
+    Glut_out = std::max(GLUT_MIN, Glut_out - TStep * J_decay);
+}
+#endif
+
+#if INPUT_TO_NVU == OPTION_LIFE
 // time-varying K+ input signal (simulating neuronal activity)
 double NVUNode::K_input(double t)
 {
@@ -817,6 +897,7 @@ double NVUNode::K_input(double t)
 
     double K_time;
 
+    //NOTE: currently use 'value' from LifeNode as the driver for neuron's Glut release 
     if (value == 0 || t < INITIAL_WAIT)
     {
         return 0.0;
@@ -841,6 +922,59 @@ double NVUNode::K_input(double t)
     double K_out = K_input_min + (K_input_max - K_input_min) * K_time; // 0 if t3 < t or x,y <= 0
     return K_out;
 }
+#elif INPUT_TO_NVU == OPTION_NEURON
+void NVUNode::nvu_K()
+{
+    if (*numSpikes >= THRESHOLD_NUMSPIKES)
+    {
+	//double K_input_min  = 0;
+	//double K_input_max  = 2.67;
+	double K_input_max  = 0.017;
+	K_out += K_input_max;
+
+	//double lengthpulse  = LIFE_TIME / 2.0; // Half up then half down during 'pulse'
+	//double lengtht1     = INJECT_TIME;
+
+	//double t0           = workspace->injectStart;
+	//double t1           = t0 + lengtht1;
+	//double t2           = t0 + lengthpulse;
+	//double t3           = t1 + lengthpulse;
+
+	//int alpha           = 2;
+	//int beta            = 5;
+	//double deltat       = INJECT_TIME;
+	//double gab          = factorial(alpha + beta - 1);
+	//double ga           = factorial(alpha - 1);
+	//double gb           = factorial(beta - 1);
+	////TODO: switch to using factorial in NumberUtils
+	////     and only store result of gab/(ga*gb)
+
+
+	//double K_time;
+
+	//if (t >= t0 && t <= t1)
+	//{
+	//    K_time = 1 * gab / (ga * gb) * pow((1 - (t - t0) / deltat), (beta - 1)) * pow(((t - t0) / deltat), (alpha-1));
+
+	//}
+	//else if (t >= t2 && t <= t3)
+	//{
+	//    //K_time = - F_input;
+	//    K_time = - 1;
+	//}   
+	//else
+	//{
+	//    K_time = 0;
+	//}
+
+	///K_out = K_input_min + (K_input_max - K_input_min) * K_time; // 0 if t3 < t or x,y <= 0
+    }
+    float K_lifetime = 1e-3; // sec
+    float J_decay = 1.0 / (K_lifetime) *
+                    (K_out - K_extra_baseline);  // [mM/sec]
+    K_out = std::max(K_extra_min, K_out - TStep * J_decay);
+}
+#endif
 
 // time-varying PLC input signal
 double NVUNode::PLC_input(double t)
@@ -1190,7 +1324,6 @@ void NVUNode::diffuse()
 /**
 Calculates the correct index to access its corresponding pressure from the H-tree 
 given its own coordinates and the coordinates of all end-terminals from the H-tree.
-
 */
 void NVUNode::calculate_pressure_index()
 {
@@ -1219,7 +1352,6 @@ void NVUNode::calculate_pressure_index()
     workspace->pressuresIndex = 0;
     int currentNodeIndex = 0;
     int bestIndex = 0;
-
 
     // Find where it's found inside getSharedMembers().coordsArray with information of DIMENSIONS.
     // Begin at second set of coordinates.

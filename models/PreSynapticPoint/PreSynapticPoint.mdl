@@ -274,31 +274,37 @@ Receive voltage from multiple neurons
 Produce: LFP
 */
 Node VoltageMegaSynapticSpace Implements 
-     VoltageProducer
+     VoltageProducer, NumSpikesProducer
 { 
 ///*{{{*/
   dyn_var_t* [] Vm; // reference to the voltage of the neurons
   dyn_var_t LFP;  // aggregate Vm [mV] of all the neurons 
+  int numSpikes;
 
   Shared {
     BranchDataStruct* branchData; // reference to the branch having the compartment of Vi
     double L0; //in meter
+    dyn_var_t* deltaT; // [ms]
   }
 
   InitPhase produceInitialVoltage(LFP);
   RuntimePhase produceVoltage(LFP), computeState;
 
   VoltageProducer.voltage << &LFP;
+  NumSpikesProducer.numSpikes << &numSpikes;
 
   InAttrPSet {
     string identifier;
     int idx; //connect to either an exact compartment-index
   }
 
-  Connection Pre Node (PSet.identifier=="connexon") Expects 
+  Connection Pre Node (PSet.identifier=="adaptor") Expects 
     VoltageProducer//, BranchDataProducer
   {
     VoltageProducer.voltage >> Vm;
+  }
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
   }
 /*}}}*/
 }

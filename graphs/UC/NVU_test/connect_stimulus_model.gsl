@@ -17,8 +17,12 @@ polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHO
 #endif
 #if 1
    polyConnect(timeStep, somaStimInj, <>, <>);
+#ifdef CURRENT_STREAMS_TO_NEURON
+   polyConnect(somaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", PRMASK1_STIM>), <>, <identifier="stimulation">);
+#else
    polyConnect(somaStimInj, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", PRMASK1_STIM>), <>, <identifier="stimulation">);
    polyConnect(somaStimInj, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", PRMASK1_STIM>), <>, <identifier="stimulation", idx=-1>);
+#endif
 #else 
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
    polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);

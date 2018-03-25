@@ -71,6 +71,17 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
   assert(Vnew.size() == 1);
   assert(dimensions.size() == 1);
 
+#ifdef INTRINSIC_NOISE_TO_NEURON
+#define LOWER 0.7  // msec
+#define UPPER 1.1  // msec
+#define DELAY_UPPER 350.0 // msec
+#define DELAY_LOWER 270.0  // msec
+  noise_factor_current_injection = drandom(LOWER, UPPER, rng);
+  //std::cerr << "noise " << noise_factor_current_injection << " from " << getGlobalIndex() <<  std::endl;
+  delay_until_adjust_noise =  drandom(DELAY_LOWER, DELAY_UPPER, rng);
+  checked_time = getSimulation().getIteration() * *getSharedMembers().deltaT;
+
+#endif
 
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   dyn_var_t Vm_default = Vnew[0];
@@ -318,10 +329,30 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   area_used = area;
   #endif
 #endif
+#ifdef INTRINSIC_NOISE_TO_NEURON
+  if (checked_time + delay_until_adjust_noise > 
+      getSimulation().getIteration() * *getSharedMembers().deltaT
+      )
+  {
+    checked_time = getSimulation().getIteration() * *getSharedMembers().deltaT;
+    delay_until_adjust_noise =  drandom(DELAY_LOWER, DELAY_UPPER, rng);
+    noise_factor_current_injection = drandom(LOWER, UPPER, rng);
+    //std::cerr << " noise " << noise_factor_current_injection << " from " << getGlobalIndex() <<  std::endl;
+  }
+  //double injcurrent_E  = 0.0;
+  //double injcurrent_I  = 0.0;
+  double injcurrent  = 0.0;
+  for (; iter != end; ++iter)
+  {
+    injcurrent += **iter / area_used; // at time (t+dt/2)
+  }
+  current += injcurrent * noise_factor_current_injection;
+#else
   for (; iter != end; ++iter)
   {
     current += **iter / area_used; // at time (t+dt/2)
   }
+#endif
 //#ifdef CONSIDER_DI_DV
 //  iter = injectedCurrents_conductance_didv.begin();
 //  end = injectedCurrents_conductance_didv.end();
@@ -496,10 +527,19 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
 #endif
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
+#ifdef INTRINSIC_NOISE_TO_NEURON
+  double injcurrent  = 0.0;
+  for (; iter != end; ++iter)
+  {
+    injcurrent += **iter / area_used; // at time (t+dt/2)
+  }
+  current += injcurrent * noise_factor_current_injection;
+#else
   for (; iter != end; ++iter)
   {
     current += **iter / area_used; // at time (t+dt/2)
   }
+#endif
 //#ifdef CONSIDER_DI_DV
 //  iter = injectedCurrents_conductance_didv.begin();
 //  end = injectedCurrents_conductance_didv.end();
@@ -633,6 +673,15 @@ void HodgkinHuxleyVoltageJunction::add_zero_didv(const String& CG_direction, con
 {
   _zero_conductance = 0;
   injectedCurrents_conductance_didv.push_back(&_zero_conductance);
+}
+void HodgkinHuxleyVoltageJunction::select_current_stream(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
+{
+  int num_streams = getSharedMembers().tmp_injectedCurrents->size();
+  //RNG& rng = getSimulation().getSharedWorkUnitRandomSeedGenerator();
+  RNG_ns& rng = getSimulation().getSharedFunctorRandomSeedGenerator();
+  int _i = irandom(0, num_streams-1, rng);
+  //std::cerr << "neuron connect " << _i << ",   " << num_streams << std::endl;
+  injectedCurrents.push_back(&(*(getSharedMembers().tmp_injectedCurrents))[_i]);
 }
 
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)

@@ -7,9 +7,25 @@
 #include "GridLayerDescriptor.h"
 #include "Grid.h"
 
+#define DEBUG
+#define THRESHOLD -40
+
 void VoltageMegaSynapticSpace::produceInitialVoltage(RNG& rng) 
 {
    _numInputs = Vm.size();
+   _BinWidth = 10.0 ; // msec  - spikes within thin windows are counted TODO - modulable
+   //_timeSpikesAtInput = new float[_numInputs]();
+   for (int _i=0; _i< _numInputs; _i++)
+      _timeSpikesAtInput.push_back(0.0-_BinWidth);
+#ifdef DEBUG
+   std::cerr << "MegaSS with globalIdx = " 
+      << this->getGlobalIndex()
+      << ", receives " << _numInputs << "neurons" << std::endl;
+   //for (auto& n : Vm)
+   //   std::cerr << "AAA ";
+   std::cerr << std::endl;
+   std::cerr << std::endl;
+#endif
 }
 
 void VoltageMegaSynapticSpace::produceVoltage(RNG& rng) 
@@ -20,14 +36,43 @@ void VoltageMegaSynapticSpace::computeState(RNG& rng)
 {
    //aggregate all ShallowArray<dyn_var_t*> Vm
    //to produce LFP
-   LFP = 0.0; 
+   LFP = -70.0; // resting (mV) 
    //std::for_each(Vm.begin(), Vm.end(), [&])
    for (auto& n : Vm)
       LFP +=  *n;
    LFP /= _numInputs;
+#define TStep (*(getSharedMembers().deltaT))  // msec
+   float currentTime = (getSimulation().getIteration() * TStep);
+   numSpikes = 0;
+   int _i = 0;
+   for (auto& n : Vm)
+   {
+      if (*n > THRESHOLD)
+      {
+         _timeSpikesAtInput[_i] = currentTime;
+      }
+      if (_timeSpikesAtInput[_i] >= currentTime - _BinWidth)
+      {
+         numSpikes++;
+      }
+      _i++;
+   }
+   // for (auto& n : Vm)
+   //    if (*n > THRESHOLD)
+   //       numSpikes++;
+//#ifdef DEBUG
+//   //if (LFP > -50)
+//   {
+//      std::cerr << "LFP: " << LFP << " numSpikes = " << numSpikes << std::endl;
+//      //for (auto& n : Vm)
+//      //   std::cerr << " " <<  *n ;
+//   }
+//#endif
 }
 
 VoltageMegaSynapticSpace::~VoltageMegaSynapticSpace() 
 {
+   //if (_timeSpikesAtInput)
+   //   delete[] _timeSpikesAtInput;
 }
 
