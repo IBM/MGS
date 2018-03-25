@@ -4,7 +4,6 @@
 #include "rndm.h"
 
 #define TStep (*(getSharedMembers().deltaT)*1e-3)  //(sec)
-#define gridSize getSharedMembers().gridSize
 
 
 const double RMIN  = 10e-6; // meter, radius of smallest vessel (in meter)
@@ -17,11 +16,14 @@ const double R0    = 10e-6;  // meter (for nondimensionalising)
 const double P0    = 8000.0;  // Pascal (scaling factor for nondim)
 const double PCAP  = 4000.0 / P0;  // Pascal (capillary bed pressure), normalized
 
+//#define DEBUG
+
 void Htree::initTree(RNG& rng) 
 {
     // Allocate memory for all arrays, structs, and classes inside TreeWorkspace.
     malloc_tree();
-    tree->numberNVUs = gridSize[0] * gridSize[1] * gridSize[2];
+    tree->numberNVUs = _numberNVUs; 
+    std::cerr<< "Number of NVUs as seen by Htree is " << tree->numberNVUs << std::endl;
     assert(tree->numberNVUs > 0 && "number of NVU's <= 0 (bad input)");
 
     tree->nu = NEQ * tree->numberNVUs;
@@ -71,8 +73,12 @@ void Htree::initTree(RNG& rng)
     tree->QglobalPos = 0;
     tree->PglobalPos = 0;
     init_io();
-    write_info();
-
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+    _prevWritingTime = 0.0; // (second)
+    write_data(0); 
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
+    write_info_n_data();
+#endif
 }
 
 void Htree::updatePressures(RNG& rng) 
@@ -104,6 +110,10 @@ void Htree::finalize(RNG& rng)
 {
     // Write data for the final timestep before quitting
     writeToFiles(rng);
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+    write_info();
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
+#endif
 
     if (tree != NULL) close_io();
 
@@ -133,6 +143,7 @@ void Htree::setPointers(const String& CG_direction, const String& CG_component, 
     // add connection (array of state variables from a single NVU) to list of all variables
     NVUinputs[NVUinputs.size() - 1].NVUstateVariables = getSharedMembers().tempStateVariables;
     NVUinputs[NVUinputs.size() - 1].NVUcoords = getSharedMembers().tempNVUcoords;
+    _numberNVUs += 1; //TODO replace with NVUinputs.size()
 }
 
 // Copy pressures from tree->p to pressureArray so that NVUs can read their new pressures
@@ -145,8 +156,45 @@ void Htree::copy(RNG& rng)
     }
 }
 
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+void Htree::writeToFiles(RNG& rng)
+{
+    double currentTime = TStep * getSimulation().getIteration();
+    //if (tree->counter % 100000 == 0)  /* assuming dt=10e-6 second --> output ever 1 second */
+    double recordInterval = dtWrite * 1e-3; // (second)
+    if (currentTime >= _prevWritingTime+recordInterval)
+    {
+        _prevWritingTime += recordInterval;
 
+#ifdef DEBUG
+        printf("Writing Data at t=%f\n", currentTime);
+#endif
+        int correctedNVUIndex;
 
+        // Pull out state variables and reorder them before writing them'
+        for (int i = 0; i < tree->numberNVUs; i++)
+        {
+            correctedNVUIndex = tree->NVUIndices[i];
+                        
+            for (int j = 0; j < NEQ; j++)
+            {
+                tree->stateVars[i * NEQ + j] = (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j];
+            }
+        }
+
+        write_data();
+        write_flow();
+
+        // Pull out the pressures
+        for (int i = 0; i < tree->A->m; i ++)
+        {
+            tree->p[i] = pressures[i];
+        }
+        write_pressure();   
+        tree->counter++;
+    }
+}   
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
 void Htree::writeToFiles(RNG& rng)
 {
     if (tree->counter % 100000 == 0) 
@@ -179,6 +227,7 @@ void Htree::writeToFiles(RNG& rng)
     }
     tree->counter++;
 }   
+#endif
 
 Htree::~Htree() 
 {
@@ -291,7 +340,6 @@ void Htree::set_spatial_coordinates()
     iglobal = rank % mglobal;
     jglobal = rank / mglobal;
 
-
     double xoffset, yoffset;
     xoffset = (double) ((2*jglobal - (nglobal-1)) * nlocal) * L0;
     yoffset = (double) ((2*iglobal - (mglobal-1)) * mlocal) * L0;
@@ -302,6 +350,11 @@ void Htree::set_spatial_coordinates()
         {
             tree->x[i + mlocal * j] = xoffset + L0 * (double) (2*j - (nlocal - 1));
             tree->y[i + mlocal * j] = yoffset + L0 * (double) (2*i - (mlocal - 1));
+#ifdef DEBUG
+        std::cerr<< " tree->x[" << i + mlocal * j << "]" << xoffset + L0 * (double) (2*j - (nlocal - 1)) << "; tree->y " << 
+            yoffset + L0 * (double) (2*i - (mlocal - 1)) << 
+            std::endl;
+#endif
         }
     }
 
@@ -624,6 +677,35 @@ void Htree::close_io()
     free(tree->Poutfilename);
 }
 
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+void Htree::write_data(int part)
+{
+    if (part == 0)
+    {
+        std::ofstream& output=*dataOut;
+
+        for (int i = 0; i < tree->numberNVUs; i++)
+        {
+            output.write(reinterpret_cast<const char*> (&tree->x[i]), sizeof(tree->x[i]));
+        }
+        for (int i = 0; i < tree->numberNVUs; i++)
+        {
+            output.write(reinterpret_cast<const char*> (&tree->y[i]), sizeof(tree->y[i]));
+        }
+    }
+    else{
+        double t = TStep * getSimulation().getIteration();
+        std::ofstream& output=*dataOut;
+
+        output.write(reinterpret_cast<const char*> (&t), sizeof(t));
+
+        for (int i = 0; i < tree->nu; i++)
+        {
+            output.write(reinterpret_cast<const char*> (&(tree->stateVars[i])), sizeof(tree->stateVars[i]));
+        }
+    }
+}
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
 void Htree::write_data()
 {
     double t = TStep * getSimulation().getIteration();
@@ -636,6 +718,7 @@ void Htree::write_data()
         output.write(reinterpret_cast<const char*> (&(tree->stateVars[i])), sizeof(tree->stateVars[i]));
     }
 }
+#endif
 
 void Htree::write_flow()
 {
@@ -662,7 +745,43 @@ void Htree::write_pressure()
     }
 }
 
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+/* write some reference data for reading back data 
+ *   8 fields
+ * HISTORY:
+ *    2018-03-24:
+ *        write at the end of the simulation as some new data are unknown until the end
+ *        add 'n_datapoints'
+ *        move piece of the code writing true data to the associated location in write_data(0)
+ */
 void Htree::write_info()
+{
+    // Write the summary info to disk
+    char * infofilename;
+
+    FILE *fp;
+    // Write the data file
+    char iSuffix[] = "/info.dat";
+    infofilename = (char *)malloc(FILENAMESIZE * sizeof(*infofilename));
+    sprintf(infofilename, "%s%s", tree->dirName, iSuffix);
+
+    fp = fopen(infofilename, "w");
+    fprintf(fp, "n_processors    n_blocks_per_rank        n_state_vars   m_local         n_local         m_global        n_global     n_datapoints\n");
+    fprintf(fp, "%-16d", 1);
+    fprintf(fp, "%-16d", tree->numberNVUs);
+    fprintf(fp, "%-16d", NEQ);
+    fprintf(fp, "%-16d", tree->mlocal);
+    fprintf(fp, "%-16d", tree->nlocal);
+    fprintf(fp, "%-16d", tree->mglobal);
+    fprintf(fp, "%-16d", tree->nglobal);
+    fprintf(fp, "%-16d", tree->counter);
+    fprintf(fp, "\n");
+    fclose(fp);
+
+    free(infofilename);
+}
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
+void Htree::write_info_n_data()
 {
     // Write the summary info to disk
     char * infofilename;
@@ -698,6 +817,7 @@ void Htree::write_info()
         output.write(reinterpret_cast<const char*> (&tree->y[i]), sizeof(tree->y[i]));
     }
 }
+#endif
 
 /** For each item in the coordinates from NVU nodes, find their index in my x,y coordinates.
 
@@ -705,14 +825,24 @@ void Htree::write_info()
 void Htree::calculate_indices()
 {
     // put x and y arrays into coordinates array to use here and for NVU nodes to compare with on their next phase
-    //todo think abotu removing x,y arrays and only use mdl level shallowarray. wirint to mpi with strides?
+    //todo think about removing x,y arrays and only use mdl level shallowarray. wirint to mpi with strides?
 
     for (int i = 0; i < tree->numberNVUs; i++)
     {
         for (int j = 0; j < DIMENSIONS; j++)
         {
+            /* NOTE: as NVU can be on a different process of the Htree
+             * NVU's coord from other ranks are only available since InitPhase 
+             */
             coordsArray.push_back((*NVUinputs[i].NVUcoords)[j]);
         }
+#ifdef DEBUG
+        std::cerr<< " nvu " << i << " has coordsArray: " << 
+            (*NVUinputs[i].NVUcoords)[0] <<","<<  
+            (*NVUinputs[i].NVUcoords)[1] <<","<<
+            (*NVUinputs[i].NVUcoords)[2] <<
+            std::endl;
+#endif
     }
 
     NVUinput currentNVU;
@@ -775,5 +905,5 @@ void Htree::calculate_indices()
     free(currentNVUCoords);
     free(treeCoords);
 
-    std::cout << "H-tree: Finished calcualting tree indices\n";
+    std::cout << "H-tree: Finished calculating tree indices\n";
 }

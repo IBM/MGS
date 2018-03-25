@@ -163,7 +163,7 @@ void CurrentPulseGenerator::update_PoissonProtocol(RNG& rng, float currentTime)
   {  // no pulse
     I = 0.0;
     peakInc += inc;
-    nextPulse += log(drandom(rng)) * period;
+    nextPulse -= log(drandom(rng)) * period;
   }
   else if (currentTime >= nextPulse && currentTime <= last)
   {  // having pulse
@@ -279,16 +279,21 @@ void CurrentPulseGenerator::update_WhiteNoiseProtocol(RNG& rng, float currentTim
   if (currentTime >= (nextPulse + duration) && currentTime <= last)
   {  // no pulse
     I = 0.0;
-    nextPulse += log(drandom(rng)) * period;
+    nextPulse -= log(drandom(rng)) * period;
   }
   else if (currentTime >= nextPulse && currentTime <= last)
   {  // having pulse
     I = gaussian(mean, sd, rng);
   }
 }
-CurrentPulseGenerator::CurrentPulseGenerator() : CG_CurrentPulseGenerator(), outFile(0) {}
 
-CurrentPulseGenerator::~CurrentPulseGenerator() { 
+CurrentPulseGenerator::CurrentPulseGenerator() : 
+  CG_CurrentPulseGenerator(), outFile(0) 
+{
+}
+
+CurrentPulseGenerator::~CurrentPulseGenerator() 
+{ 
   if (write_to_file) 
     delete outFile; 
 }

@@ -13,14 +13,20 @@
 #include "Coordinates.h"
 #include "MaxComputeOrder.h"
 
+#define OPTION_LIFE 0
+#define OPTION_NEURON 1
+//#define INPUT_TO_NVU OPTION_LIFE
+#define INPUT_TO_NVU OPTION_NEURON 
+
+
 #define WRITE_STATE_VARS 0
 #define WRITE_FLUXES 0
 #define PLOTTING_NODE 0
 
-#define LIFE_TIME 100.0 // TODO unit  Stewart?
-#define INJECT_TIME 10.0 // TODO unit??? needs to be less than half of (LIFE_TIME - INJECT_TIME)
+#define LIFE_TIME 100.0 // (sec) 
+#define INJECT_TIME 10.0 // (sec) needs to be less than half of (LIFE_TIME - INJECT_TIME)
 
-#define INITIAL_WAIT LIFE_TIME // TODO unit?
+#define INITIAL_WAIT LIFE_TIME // (sec) 
 #define POW_OF_2(x) (1 << (x)) // macro for 2^x using bitwise shift
 
 #define ITERATIONS_PER_SEC 100000
@@ -127,11 +133,15 @@ class NVUNode : public CG_NVUNode
     // Right hand side routine for one block
     void  nvu_rhs(double t, double *u, double *du, double *fluxes);
 
+#if INPUT_TO_NVU == OPTION_LIFE
     //time- and space-dependent Glu input
     double nvu_Glu(double t);
-
     //time- and space-dependent K+ input
-    double K_input(double t);
+    double K_input(double t);  
+#elif INPUT_TO_NVU == OPTION_NEURON
+    void nvu_Glu();
+    void nvu_K();
+#endif
 
     //time- and space-dependent flux_ft input
     double flux_ft(double t);
@@ -152,6 +162,11 @@ class NVUNode : public CG_NVUNode
     void calculate_pressure_index();
 
     //int sizecheck(double *x, int n, double tol);
+    int _gIdx;
+    //float _idxCounter;
+
+    double Glut_out; //uM  - glut-concentration
+    double K_out; //mM  - Potassium-concentration
 
 };
 

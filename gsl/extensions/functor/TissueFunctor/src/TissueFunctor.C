@@ -7954,6 +7954,10 @@ Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*
 
   rval = layer->getGrid();
   int nds=nodeDescriptors.size();
+//#define DEBUG
+#ifdef DEBUG
+  std::cerr << "Probe_region total " << nds << " elements" << std::endl;
+#endif
 
   if (layout!="NO_LAYOUT_ID_SPECIFIED") {
     ShallowArray< int > lytr; //keep the density

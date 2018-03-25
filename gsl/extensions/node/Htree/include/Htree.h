@@ -16,6 +16,10 @@
 #define FILENAMESIZE 2014
 
 #define POW_OF_2(x) (1 << (x)) // macro for 2^x using bitwise shift
+#define UC_OLD_CODE 0 
+#define IBM_NEW_CODE 1
+//#define HTREE_IO_CHOICE UC_OLD_CODE 
+#define HTREE_IO_CHOICE IBM_NEW_CODE
 
 struct TreeWorkspace {
   // Geometrical information
@@ -31,7 +35,7 @@ struct TreeWorkspace {
   cs *G;      // Conductance matrix
   int *level; // Level of each vessel in A
   double *g;  // Conductance, one per vessel. will be a pointer to data in G
-  // int 	numNVU; // Number of NVU's
+
   int nu;      // Number of equations total
   int neq;     // Number of equations per block
   int mlocal;  // Size of subtree
@@ -63,8 +67,8 @@ struct TreeWorkspace {
   double *u; // Intermediate variable for parallel flow computation
   double *v; // Intermediate variable for parallel flow computation
 
-  double *x; // x coordinates
-  double *y; // y coordinates
+  double *x; // x coordinates of NVU nodes
+  double *y; // y coordinates of NVU nodes
 
   // double  *xn;    // extra n-sized workspace
   double *xm; // extra m-sized workspace
@@ -87,7 +91,11 @@ struct TreeWorkspace {
 
   double *stateVars; // array of all statevariables.
 
-  int counter;
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+  long counter; // now keep how many data point written out
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
+  int counter; //original is used to triggering I/O
+#endif
 
   int *NVUIndices;
   int numberNVUs;
@@ -100,6 +108,7 @@ public:
   void finalize(RNG &rng);
   void copy(RNG &rng);
   void writeToFiles(RNG &rng);
+  //virtual void dataCollection(Trigger* trigger, NDPairList* ndPairList);
 
   virtual void setPointers(const String &CG_direction,
                            const String &CG_component, NodeDescriptor *CG_node,
@@ -138,11 +147,18 @@ private:
   void malloc_tree();
   void init_io();
   void close_io();
+#if HTREE_IO_CHOICE == IBM_NEW_CODE
+  void write_data(int part_index=1);
+  void write_info();
+#elif HTREE_IO_CHOICE == UC_OLD_CODE
   void write_data();
+  void write_info_n_data(); /* old version */
+#endif
   void write_flow();
   void write_pressure();
-  void write_info();
   void calculate_indices();
+  int _numberNVUs = 0;
+  double _prevWritingTime = 0.0; /* the time (in sec) at which data is written*/
 };
 
 #endif

@@ -2,6 +2,9 @@
 #define std_MDL
 #include "../../nti/include/MaxComputeOrder.h"
 
+Interface NumSpikesProducer{
+  int* numSpikes;
+}
 
 Interface TimeProducer {
 	dyn_var_t* pulseTime;

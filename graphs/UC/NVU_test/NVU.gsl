@@ -1,31 +1,224 @@
 #include "../../std/std.gsl"
-#define NVU_X 2
-#define NVU_Y 2
+#define NVU_X 4
+#define NVU_Y 4
 #define NVU_Z 1
 
 #define L0_VALUE 200e-6 // length characteristic value for grid in  micro meters (for smallest vessel)
 
-InitPhases = { initParams, initialize1, initialize2, initialize3 };
-RuntimePhases = { writeData, update1, copy1, update2, copy2, lastPhase };
-FinalPhases = { finalize };
+#define _CCAT(x,y) x ## y
+#define CCAT(x,y) _CCAT(x,y)
+#define _STR(x) #x
+#define STR(x) _STR(x)
 
-NodeType NVUNode(< tooSparse=0, tooCrowded=3, L0 = L0_VALUE, gridSize={NVU_X, NVU_Y, NVU_Z} >) {
-	paramInitalize->initParams,
+InitPhases = { initParams, initialize1, initialize2, initialize3, initialize4, initialize5, initialize6 };
+RuntimePhases = { writeData, update1, copy1, update2, copy2, 
+      updateNMDADepPlasticity,
+      correctJunction, // correct prediction of v(t+dt/2), ca(t+dt/2) using gate(t+dt/2)
+      lastPhase, 
+      solveChannels  };
+FinalPhases = { finalize };
+//{{{ 2. Methods for Time-Step and Time-end
+//{{{list to choose
+//for SIMULATION_STOP
+#define BASED_ON_ITERATIONS_COUNT 1
+#define BASED_ON_TIMES_COUNT 2
+//for SIMULATION_RECORD //only for SIMULATION_STOP==...TIMES_COUNT
+#define _SR_FROM_BEGINNING 1
+#define _SR_AFTER_A_DELAY 2
+//}}}
+
+//#define SIMULATION_STOP BASED_ON_ITERATIONS_COUNT
+#define SIMULATION_STOP BASED_ON_TIMES_COUNT
+#define SIMULATION_RECORD _SR_FROM_BEGINNING
+//#define SIMULATION_RECORD _SR_AFTER_A_DELAY
+
+//}}}
+
+//{{{ 3. Simulation configuration:  time + time-step + I/O
+//#define TimeStep_value   0.000010 // [ms] -- safe timestep
+//#define TimeStep_value   0.0030 // [ms]
+//#define TimeStep_value    0.05 //0.005 //0.0005// [ms]
+#define TimeStep_value   0.01 //0.005 //0.001 // [ms]
+//#define TimeStep_value    0.09 //0.005 //0.0005// [ms]
+//#define TimeStep_value   0.00080 // [ms] - NOTE: may need this with detailed morphology+spine
+//#define TimeStep_value   0.005 //0.005 //0.001 // [ms]
+
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+//{{{
+	#define TimeEnd        201//550  // 1300      // [ms]
+
+	#define TimeStartVClamp       20  // 1300      // [ms]
+
+  #define TimeVClampSet0    0    // [ms]
+  #define TimeVClampSet1    40    // [ms]
+  #define TimeVClampSet2    100    // [ms]
+  #define TimeVClampSet3    200    // [ms]
+	#define TimeOffVClamp       400  // 1300      // [ms]
+	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+//}}}
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+//{{{
+	#define NumIterationsUntilEnd   1000000   // unitless
+	//#define NumIterationsUntilEnd   1000000   // unitless
+	//#define NumIterationsUntilEnd   (TimeEnd/TimeStep_value)   // unitless
+//}}}
+#else
+  assert(0);
+#endif
+
+
+  //{{{recording-interval (I/O)
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+	#define RecordInterval   0.1   //  [ms]
+	//#define RecordInterval   TimeStep_value   //  [ms]
+  #define TimeStartRecord  1000.0 // [ms]
+#elif  SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+	#define RecordInterval  1  //10   // every ... timesteps
+#else
+  assert(0);
+#endif
+  //}}}
+//}}}
+// 4. CONSTANT [no need to change, modify SECTIONZ]
+/*{{{*/
+ConstantType TimeStep;
+TimeStep timeStep< deltaT=TimeStep_value >; // msec- converted to s in nvu/htree
+//TimeStep timeStep< deltaT=1e-2 >; // ms 
+/*}}}*/
+// 4b. SERVICE
+//{{{
+//Service Provider to Simulation Info
+// NOTE: Use global is critical to ensure each MPI rank has a copy
+// NOTE 1 - calculateInfo is when incrementing the time (right after v(texit-dt) -> v(texit))   so we put to solveChannels which is right after 'finish'
+VariableType SimulationInfo(global) {initialize->initialize4, calculateInfo->solveChannels};
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+//NOTE: This enable us to simulate the system by setting time_init to a negative value
+//   for waiting until saturation
+SimulationInfo simInfo<recordIntervalInTime=RecordInterval, currentTime=0>;
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+SimulationInfo simInfo<recordIntervalInIterations=RecordInterval>;
+#endif
+#ifdef ADAPTIVE_IO
+VariableType DetectDataChangeOneCompartment {initialize->initialize4, calculateInfo->updateNMDADepPlasticity};
+DetectDataChangeOneCompartment somaVoltageDetect<criteria=0.010>; //record with change > x% previous value
+#endif
+//Service <serviceAccessorName> (service)
+// service = query_path_product | declarator ','  string_literal_list
+// query_path_product = query_path::declerator | ::declarator
+// NOTE: 'declarator' =  the name of variableType/NodeType instance/ConstantType instance
+//      string_literal_list = the data member name in string
+Service RuntimePhaseIteration(simInfo, "iterationCount");
+Service CurrentTime (simInfo, "currentTime");
+Service ImplicitRecordInterval (simInfo, "recordIntervalInIterations");
+#ifdef ADAPTIVE_IO
+Service AdaptWriteSomaVoltage(somaVoltageDetect, "triggerWrite");
+#endif
+	polyConnect(timeStep, simInfo, <>, <>);
+//}}}
+// 5. TRIGGER
+/*{{{*/
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
+Trigger UnsignedServiceTrigger(string description, Service svc, string operator, Service svc2, int delay, string phaseName);
+Trigger FloatTrigger(string description, Service svc, string operator, float criterion, int delay, string phaseName);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
+Trigger CompositeTriggerServiceTrigger(string description, Trigger triggerA, int critA, string operator, Service triggerB, int critB, int delay, string phaseName);
+
+
+//return True if triggerA is TRUE and _semaphore is not set
+Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, int delay, string phaseName);
+//Trigger SemaphoreTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay, string phaseName);
+
+
+
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+//{{{
+  #if STIMULUS_CASE == CASE_01
+  //{{{
+  FloatTrigger currentOn("Current On criteria",
+   			 CurrentTime, ">=", 20, 0, updateNMDADepPlasticity );
+  FloatTrigger currentOff("Current On criteria",
+   			 CurrentTime, ">=", 1700, 0, updateNMDADepPlasticity );
+  FloatTrigger currentOn2("Current On criteria",
+   			 CurrentTime, ">=", 1900, 0, updateNMDADepPlasticity );
+  FloatTrigger currentOff2("Current On criteria",
+  			 CurrentTime, ">=", 420, 0, updateNMDADepPlasticity );
+  //}}}
+  #endif
+
+  #if SIMULATION_RECORD == _SR_FROM_BEGINNING
+  //{{{
+
+    #ifdef ADAPTIVE_IO
+    //{{{
+      UnsignedServiceTrigger recOnPriorCond("Iteration Trigger : !% " STR(RecordInterval) "[ms]",
+		RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
+      CompositeTriggerServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]",
+		recOnPriorCond, 1,  "||", AdaptWriteSomaVoltage, 1 , 0, updateNMDADepPlasticity); //Record every ms
+    //}}}
+    #else
+    //{{{
+      UnsignedServiceTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms]",
+		RuntimePhaseIteration, "!%", ImplicitRecordInterval, 0, updateNMDADepPlasticity); //Record every ms
+    //}}}
+    #endif
+  //}}}
+  #elif SIMULATION_RECORD == _SR_AFTER_A_DELAY
+  //{{{
+    FloatTrigger delayStartRecord("Trigger when time pass : >= " STR(TimeStartRecord) "[ms]",
+              CurrentTime, ">=", TimeStartRecord, 0, updateNMDADepPlasticity); //Record only after it passes
+    CompositeTrigger recOn("Iteration Trigger : !% " STR(RecordInterval) "[ms] after a delay " STR(TimeStartRecord) " [ms]",
+              recOn, 1, "&&", delayStartRecord, 1, 0, updateNMDADepPlasticity); //Record every ms after it passes certain time
+  //}}}
+  #endif
+
+//}}}
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+//{{{
+UnsignedTrigger voltageClampOn("Iteration Trigger : == 10000",
+ 			 ::Iteration, "==", 1000, 0, solveChannels );
+UnsignedTrigger currentOn("Iteration Trigger : == 10000",
+ 			 ::Iteration, "==", 001, 0, solveChannels );
+//SA: Changed 10,200 to 12000
+UnsignedTrigger currentMod1("Iteration Trigger : == 12000",
+ 			 ::Iteration, "==", 400000, 0, solveChannels );
+UnsignedTrigger currentMod2("Iteration Trigger : == 12000",
+ 			 ::Iteration, "==", 600000, 0, solveChannels );
+//SA: Changed 10,400 to 14000
+UnsignedTrigger currentOff("Iteration Trigger : == 40000",
+ 			 ::Iteration, "==",800000, 0, solveChannels );
+
+UnsignedTrigger calciumOn("Iteration Trigger : == 1",
+ 			 ::Iteration, "==", 1, 0, solveChannels );
+
+UnsignedTrigger calciumOff("Iteration Trigger : == 50000",
+ 			 ::Iteration, "==", 50000, 0, solveChannels );
+	
+UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
+ 			 ::Iteration, "!%",RecordInterval , 0, solveChannels );
+//UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
+//          ::Iteration, "!%", RecordInterval, 0, solveChannels ); //Record every ms
+//}}}
+#endif
+/*}}}*/
+
+//{{{ NVU
+//{{{Nodes
+/* NVU code still uses meter unit */
+NodeType NVUNode(< tooSparse=0, tooCrowded=3, L0 = L0_VALUE>) {
+  paramInitalize->initParams,
   initStateVariables->initialize1,
   initJacobian->initialize3,
   update->update1,
   copy->copy1
 };
-NodeType Htree(< gridSize={NVU_X, NVU_Y, NVU_Z} >) {
-	initTree->initialize2,
-	updatePressures->update2,
+NodeType Htree() {
+  initTree->initialize2,
+  updatePressures->update2,
   copy->copy2,
-
   writeToFiles->writeData
 };
+//}}}
 
-ConstantType TimeStep;
-TimeStep timeStep< deltaT=1e-2 >; // ms - converted to s in nvu/htree
 
 BindName NVU_ATT("identifier", "NVU");
 NdplInAttrInit nvu_att(NVU_ATT);
@@ -37,6 +230,7 @@ NdplInAttrInit tree_att(TREE_ATT);
 
 Grid NVUGrid
 {
+  //{{{
   Dimension(NVU_X, NVU_Y, NVU_Z);
 //layers
   Layer(NVUnodes, NVUNode, UniformLayout(1), < nodekind="Nodes" >);
@@ -49,44 +243,47 @@ Grid NVUGrid
   //InitNodes ( .[0:7, 3:3, 0:0].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> (< value = 1 > ) ) );
   //InitNodes ( .[3:4, 3:4, 0:0].Layer(NVUnodes), Same( Pset<NVUNode, NodeInit> ( < value = 0 > ) ) );
 
-   
   NodeSet all(.[].Layer(NVUnodes));
   connectNodeSets(all, all, EachDst(RadialSampler(1.0)), outAttrDef, nvu_att);
 
-	polyConnect(timeStep, .[].Layer(NVUnodes), <>, <identifier="dt">);
+  polyConnect(timeStep, .[].Layer(NVUnodes), <>, <identifier="dt">);
 
+  //}}}
 };
 
 Grid HtreeGrid
 {
-	Dimension(1);
-	Layer(htree_layer, Htree, UniformLayout(1), < nodekind="Nodes" >);
-	InitNodes ( .[].Layer(htree_layer), Same( Pset<Htree, NodeInit> ( <dtWrite = 1.0, L0 = L0_VALUE> ) ) );
-	polyConnect(timeStep, .[].Layer(htree_layer), <>, <identifier="dt">);
-
+  //{{{
+  Dimension(1);
+  Layer(htree_layer, Htree, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes ( .[].Layer(htree_layer), Same( Pset<Htree, NodeInit> ( <dtWrite = 1.0, L0 = L0_VALUE> ) ) );
+  polyConnect(timeStep, .[].Layer(htree_layer), <>, <identifier="dt">);
+  //}}}
 };
 
 Composite Brain
 {
+  //{{{
   NVUGrid NVUs;
   HtreeGrid tree; 
 
   connectNodeSets(tree[].Layer(htree_layer), NVUs[].Layer(NVUnodes), EachDst(EachAvg(1)), outAttrDef, tree_att);
   connectNodeSets(NVUs[].Layer(NVUnodes), tree[].Layer(htree_layer), EachDst(EachAvg(1)), outAttrDef, nvu_att);
 
+  //}}}
 };
+//}}}
 
 
 Brain world;
 
 
-
-Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
-Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
-
-// UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
-//  			 ::Iteration, ">=", 1, 0, dataCollect);
-UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 100000, 0, lastPhase); //1 sec = 100000
-//collector.dataCollection() on iterTrig;
+#if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
+  //criteria is evaluated at any time correctJunction is called
+FloatTrigger endTrig("Time Trigger to end or stop",
+		CurrentTime , ">=", TimeEnd, 0, correctJunction);
+#elif SIMULATION_STOP == BASED_ON_ITERATIONS_COUNT
+UnsignedTrigger endTrig("Iteration Trigger to end or stop",
+		::Iteration, "==", NumIterationsUntilEnd, 0, correctJunction);
+#endif
 Stop on endTrig;

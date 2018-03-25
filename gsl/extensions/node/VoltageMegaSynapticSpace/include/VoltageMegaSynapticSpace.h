@@ -14,6 +14,9 @@ class VoltageMegaSynapticSpace : public CG_VoltageMegaSynapticSpace
       virtual ~VoltageMegaSynapticSpace();
    private:
       int _numInputs;
+      //float* _timeSpikesAtInput;
+      std::vector<float> _timeSpikesAtInput;
+      float _BinWidth;
 };
 
 #endif

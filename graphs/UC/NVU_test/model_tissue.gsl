@@ -87,7 +87,7 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 
 #if  SIMULATION_STOP == BASED_ON_TIMES_COUNT
 //{{{
-	#define TimeEnd        550//550  // 1300      // [ms]
+	#define TimeEnd        850//550  // 1300      // [ms]
 
 	#define TimeStartVClamp       20  // 1300      // [ms]
 
@@ -243,7 +243,10 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 //{{{ GABAR
 //NOTE: gGABAA(total) ~ 0.25 to 1.2 nS
 // E_GABA = - 80 mV
-#define GABAAR_CONDUCTANCE 0.50 // nS/um^2
+//#define GABAAR_CONDUCTANCE 0.50 // nS/um^2
+//#define GABAAR_CONDUCTANCE 0.020 // nS/um^2 - need to be adjusted based on # of synaptic inputs
+//#define GABAAR_CONDUCTANCE 0.00020 // nS/um^2 - 10 neurons/NVU , prob. synapse = 0.6, distance = 150
+#define GABAAR_CONDUCTANCE 0.00060 // nS/um^2 - 10 neurons/NVU , prob. synapse = 0.6, distance = 150
 //}}}
 //{{{ PMCA
 //#define tau_PMCA_Calciumclearance   0.9  // [msec],e.g. 0.9-2 [msec]
@@ -1017,6 +1020,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 //{{{
 //IMPORTANT: current stimulus is discrete event
 VariableType CurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
+VariableType ArrayCurrentPulseGenerator { initialize->initialize1, update->updateNMDADepPlasticity};
 VariableType PointCurrentSource { stimulate->updateNMDADepPlasticity};
 VariableType PointCalciumSource { stimulate->updateNMDADepPlasticity};
 //                     I(t+dt/2)  ~ I(t) + di/dv * (V(t+dt/2) - V(t))
@@ -1218,7 +1222,7 @@ Grid MSN_D1Neuron{
 #if defined(SIMULATE_DOPA)
 	Layer(branches_Dopa, DopaConcentration, tissueFunctor("Layout", <nodekind="CompartmentVariables[Dopa]">), <nodekind="CompartmentVariables[Dopa]">, tissueGM);
 	Layer(endPoints_Dopa, DopaConcentrationEndPoint, tissueFunctor("Layout", <nodekind="EndPoints[Dopa]">), <nodekind="EndPoints[Dopa]">, tissueGM);
-  Layer(junctions_Dopa, DopaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Dopa]">), <nodekind="Junctions[Dopa]">, tissueGM);
+        Layer(junctions_Dopa, DopaConcentrationJunction, tissueFunctor("Layout", <nodekind="Junctions[Dopa]">), <nodekind="Junctions[Dopa]">, tissueGM);
 	Layer(junctionPoints_Dopa, DopaConcentrationJunctionPoint, tissueFunctor("Layout", <nodekind="JunctionPoints[Dopa]">), <nodekind="JunctionPoints[Dopa]">, tissueGM);
 #endif
       /*}}}*/
@@ -1232,22 +1236,22 @@ Grid MSN_D1Neuron{
 	Layer(NasChannels, ChannelNas, tissueFunctor("Layout", < nodekind="Channels[Nas]" >), < nodekind="Channels[Nas]" >, tissueGM);
      //}}}
      //{{{ K+ channels
-   Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
+        Layer(KDRChannels, ChannelKDR, tissueFunctor("Layout", < nodekind="Channels[KDR]" >), < nodekind="Channels[KDR]" >, tissueGM);
 	Layer(KAfChannels, ChannelKAf, tissueFunctor("Layout", < nodekind="Channels[KAf]" >), < nodekind="Channels[KAf]" >, tissueGM);
 	Layer(KAsChannels, ChannelKAs, tissueFunctor("Layout", < nodekind="Channels[KAs]" >), < nodekind="Channels[KAs]" >, tissueGM);
 	Layer(KRPChannels, ChannelKRP, tissueFunctor("Layout", < nodekind="Channels[KRP]" >), < nodekind="Channels[KRP]" >, tissueGM);
 	Layer(KIRChannels, ChannelKIR, tissueFunctor("Layout", < nodekind="Channels[KIR]" >), < nodekind="Channels[KIR]" >, tissueGM);
 	Layer(BKalphabetaChannels, ChannelBKalphabeta,  tissueFunctor("Layout", < nodekind="Channels[BK]" >), < nodekind="Channels[BK]" >, tissueGM);
 	Layer(SKChannels, ChannelSK,  tissueFunctor("Layout", < nodekind="Channels[SK]" >), < nodekind="Channels[SK]" >, tissueGM);
-  Layer(KCaChannels, KCaChannel, tissueFunctor("Layout", < nodekind="Channels[KCa]" >), < nodekind="Channels[KCa]" >, tissueGM);
+        Layer(KCaChannels, KCaChannel, tissueFunctor("Layout", < nodekind="Channels[KCa]" >), < nodekind="Channels[KCa]" >, tissueGM);
      //}}}
      //{{{HCN
-     Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
+        Layer(HCNChannels, ChannelHCN, tissueFunctor("Layout", < nodekind="Channels[HCN]" >), < nodekind="Channels[HCN]" >, tissueGM);
      //}}}
     //{{{ Ca2+ channels
 #if defined(SIMULATE_CACYTO)
-   Layer(CalChannels, CalChannel, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
-   Layer(CahChannels, CahChannel, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
+        Layer(CalChannels, CalChannel, tissueFunctor("Layout", < nodekind="Channels[Cal]" >), < nodekind="Channels[Cal]" >, tissueGM);
+        Layer(CahChannels, CahChannel, tissueFunctor("Layout", < nodekind="Channels[Cah]" >), < nodekind="Channels[Cah]" >, tissueGM);
 
 	Layer(CaLv12Channels, ChannelCaLv12_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv12]" >), < nodekind="Channels[CaLv12]" >, tissueGM);
 	Layer(CaLv13Channels, ChannelCaLv13_GHK, tissueFunctor("Layout", < nodekind="Channels[CaLv13]" >), < nodekind="Channels[CaLv13]" >, tissueGM);
