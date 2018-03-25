@@ -256,13 +256,18 @@
 #define K_extra_baseline  3.0 //mM
 #define K_extra_min 1.0 //mM
 
-void NVUNode::initStateVariables(RNG& rng) 
+void NVUNode::initStateVariables(RNG& rng)
 {
     if (not getSharedMembers().deltaT)
 	std::cerr << "Please connect deltaT to NVU nodes";
     assert(getSharedMembers().deltaT);
+#if INPUT_TO_NVU == OPTION_NEURON
+    if (not numSpikes)
+	std::cerr << "Please connect NTS (e.g. MegaSynapticSpace) to NVU nodes";
+    assert(numSpikes);
+#endif
 
-    _gIdx = 
+    _gIdx =
 	this->getGlobalIndex();
 
     Glut_out = GLUT_MIN;
@@ -274,21 +279,21 @@ void NVUNode::initStateVariables(RNG& rng)
     std::vector<double> realCoordinate;
 
     // Set my own coordinates
-    // Get index-based coordinates and 
+    // Get index-based coordinates and
     // scale to physiological units based on NVUNode's length
-    std::vector<int> gridSize = 
+    std::vector<int> gridSize =
 	this->getGridLayerDescriptor()->getGrid()->getSize();
     getNodeCoords(indexCoordinate);
     /* L0 in meter and thus coords are in meter */
-    calculateRealCoordinatesNTS(indexCoordinate, getSharedMembers().L0, 
+    calculateRealCoordinatesNTS(indexCoordinate, getSharedMembers().L0,
 	    gridSize[0], gridSize[1], gridSize[2], realCoordinate);
 //#define DEBUG_2
 #ifdef DEBUG_2
-   std::cerr << "NVUnode with globalIdx = " 
+   std::cerr << "NVUnode with globalIdx = "
       << this->getGlobalIndex()
-      << ", coord: " << 
-      realCoordinate[0] << "," << 
-      realCoordinate[1] << "," << 
+      << ", coord: " <<
+      realCoordinate[0] << "," <<
+      realCoordinate[1] << "," <<
       realCoordinate[2] << std::endl;
    std::cerr << std::endl;
 #endif
@@ -333,7 +338,7 @@ void NVUNode::initStateVariables(RNG& rng)
 #endif
 }
 
-void NVUNode::initJacobian(RNG& rng) 
+void NVUNode::initJacobian(RNG& rng)
 {
     calculate_pressure_index(); // Calculate my index in H tree coordinates array
 
@@ -358,14 +363,16 @@ void NVUNode::initJacobian(RNG& rng)
 }
 
 // Fixed step Backward Euler ODE solver for ONE iteration
-void NVUNode::update(RNG& rng) 
+ // TODO: review this
+ //
+void NVUNode::update(RNG& rng)
 {
 #if INPUT_TO_NVU == OPTION_NEURON
 #ifdef DEBUG
     //if (LFP > -50)
     {
        //std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes << std::endl;
-       std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes 
+       std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes
 	   << " Glut = " << Glut_out //<< std::endl;
 	   << " K_o = " << K_out << std::endl;
        //for (auto& n : Vm)
@@ -378,18 +385,18 @@ void NVUNode::update(RNG& rng)
     // LIFE
     workspace->counter++;
     if (workspace->counter >= LIFE_TIME * ITERATIONS_PER_SEC)
-    {   
+    {
         int neighborCount=0;
         ShallowArray<int*>::iterator iter, end = neighbors.end();
         for (iter=neighbors.begin(); iter!=end; ++iter) {
            neighborCount += **iter;
         }
 
-        if (neighborCount<= getSharedMembers().tooSparse || neighborCount>=getSharedMembers().tooCrowded) 
+        if (neighborCount<= getSharedMembers().tooSparse || neighborCount>=getSharedMembers().tooCrowded)
         {
             value=0;
         }
-        else 
+        else
         {
             workspace->injectStart = workspace->t;
             value=1;
@@ -437,6 +444,7 @@ void NVUNode::update(RNG& rng)
         daxpy(NEQ, -TStep, workspace->f, workspace->x);
 
         workspace->converged = 1;
+    //TODO: this one is the actual implementation of the backward Euler
         lusoln(workspace->x);  // solve (workspace->x is now increment)
         daxpy(NEQ, -1, workspace->x, workspace->w); // update w with new value
     }
@@ -449,48 +457,48 @@ void NVUNode::update(RNG& rng)
 }
 
 
-void NVUNode::copy(RNG& rng) 
+void NVUNode::copy(RNG& rng)
 {
-	workspace->t = workspace->tnext; //  is the same as getSimulation().getIteration() * TStep.
-	dcopy(NEQ, workspace->w, workspace->y); // update y values
+   workspace->t = workspace->tnext; //  is the same as getSimulation().getIteration() * TStep.
+   dcopy(NEQ, workspace->w, workspace->y); // update y values
 
-	// Copy new radius for H tree to see.
-	state_r = workspace->y[i_radius];
+   // Copy new radius for H tree to see.
+   state_r = workspace->y[i_radius];
 
-	//Copy solution vector into statevariables array for H tree to see
-	for (int i = 0; i < NEQ; i++)
-	{
-		stateVariables[i] = workspace->y[i];
-	}
+   //Copy solution vector into statevariables array for H tree to see
+   for (int i = 0; i < NEQ; i++)
+   {
+      stateVariables[i] = workspace->y[i];
+   }
 
-    publicValue = value; // for LIFE
-    K_ecs = workspace->y[K_e];
+   publicValue = value; // for LIFE
+   K_ecs = workspace->y[K_e];
 
 
 #if WRITE_STATE_VARS || WRITE_FLUXES
-	if (fmod(workspace->t, workspace->dtwrite) < TStep && getNodeIndex() == PLOTTING_NODE)
-	{
+   if (fmod(workspace->t, workspace->dtwrite) < TStep && getNodeIndex() == PLOTTING_NODE)
+   {
 #if WRITE_STATE_VARS
-		write_state_var_data();	
+      write_state_var_data();
 #endif
 #if WRITE_FLUXES
-		write_fluxes_data();	
+      write_fluxes_data();
 #endif
-	}
-#endif	
+   }
+#endif
 
 }
 
-void NVUNode::finalize(RNG& rng) 
+void NVUNode::finalize(RNG& rng)
 {
     if (workspace->J != NULL) cs_spfree(workspace->J);
     if (workspace->dfdx->r != NULL) free(workspace->dfdx->r);
     if (workspace->dfdx->g != NULL) free(workspace->dfdx->g);
     if (workspace->dfdx->A != NULL) cs_spfree(workspace->dfdx->A);
     if (workspace->dfdx != NULL) free(workspace->dfdx);
-    
+
     if (workspace->dfdx_pattern != NULL) cs_spfree(workspace->dfdx_pattern);
-    
+
     if (workspace->N != NULL) cs_nfree(workspace->N);
     if (workspace->N != NULL) cs_di_sfree(workspace->S);
     if (workspace->y != NULL) free(workspace->y);
@@ -510,8 +518,9 @@ void NVUNode::finalize(RNG& rng)
 
 
 
-// TODO: These are the ICs used in parbrain, but they are not at steady state. 
+// TODO: These are the ICs used in parbrain, but they are not at steady state.
 // When you are confident with your results, change them accodingly.
+// NEQ  - here is NEQ=42 state variables
 void NVUNode::nvu_ics()
 {
 	workspace->y[i_radius]  = 1.49986;
@@ -569,8 +578,8 @@ void NVUNode::nvu_ics()
 	workspace->y[ca_p]     = 1713.39;
 }
 
-// right hand side evaluation function. 
-//      t       time, 
+// right hand side evaluation function.
+//      t       time,
 //      u       state variables, the first of which is the vessel radius
 //      du      output vector, in the same order (already allocated)
 void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
@@ -589,7 +598,7 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     //fluxes[flu_delta_p] = 18.6; // NVU (without parbrain) value.
 
     // SC fluxes
-    fluxes[flu_R_s]        	    = R_tot - u[R_k];                            // u[R_k] is AC volume-area ratio, fluxes[flu_R_s] is SC   
+    fluxes[flu_R_s]        	    = R_tot - u[R_k];                            // u[R_k] is AC volume-area ratio, fluxes[flu_R_s] is SC
 
     fluxes[flu_N_Cl_s]         	= u[N_Na_s] + u[N_K_s] - u[N_HCO3_s];  //
     fluxes[flu_Na_s]           	= u[N_Na_s] / fluxes[flu_R_s];                       //
@@ -644,7 +653,7 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_v_KIR_i]    		= z_1 * u[K_p] / unitcon + z_2;                                  // mV           u[K_p],
     fluxes[flu_G_KIR_i]    		= exp( z_5 * u[v_i] + z_3 * u[K_p] / unitcon + z_4 );        // pS pF-1 =s-1  u[v_i], u[K_p]
     fluxes[flu_J_KIR_i]    		= F_il/delta_mv * (fluxes[flu_G_KIR_i]) * (u[v_i] - (fluxes[flu_v_KIR_i]));            // mV s-1 //     u[v_i], u[K_p]
-    
+
     // EC fluxes
     fluxes[flu_v_cpl_j]			= - g_hat * ( u[v_j] - u[v_i] );
     fluxes[flu_c_cpl_j]			= - p_hat * ( u[ca_j] - u[ca_i] );
@@ -781,6 +790,8 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     /***********NO pathway***********/
 
     // NE:
+    // TODO: remove that and bring to NTS's neuron model
+    //  or to MegaSynapticSpace
     du[ca_n]       = (fluxes[flu_I_Ca] / (2*Farad * V_spine) - (k_ex * (u[ca_n] - Ca_rest))) / (1 + lambda);     //\muM
     du[nNOS]       = V_maxNOS * fluxes[flu_CaM] / (K_actNOS + fluxes[flu_CaM]) - mu2 * u[nNOS] ;                  //\muM
     du[NOn]       = u[nNOS] * V_max_NO_n * const_On / (K_mO2_n + const_On) * LArg / (K_mArg_n + LArg) - ((u[NOn] - u[NOk]) / tau_nk) - (k_O2* pow(u[NOn],2) * const_On);
@@ -860,7 +871,7 @@ void NVUNode::nvu_Glu()
        //double Glu_time = 0.5 * tanh((t) / 1) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME)) / 1);
        //double Glu_time = 0.5 * tanh((t - workspace->injectStart) / 1) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME)) / 1);
 
-       Glut_out += Glut_max; 
+       Glut_out += Glut_max;
     }
     //float Glut_lifetime = 10e-3; // sec
     float Glut_lifetime = 2e-3; // sec
@@ -897,7 +908,7 @@ double NVUNode::K_input(double t)
 
     double K_time;
 
-    //NOTE: currently use 'value' from LifeNode as the driver for neuron's Glut release 
+    //NOTE: currently use 'value' from LifeNode as the driver for neuron's Glut release
     if (value == 0 || t < INITIAL_WAIT)
     {
         return 0.0;
@@ -907,13 +918,13 @@ double NVUNode::K_input(double t)
     if (t >= t0 && t <= t1)
     {
         K_time = 1 * gab / (ga * gb) * pow((1 - (t - t0) / deltat), (beta - 1)) * pow(((t - t0) / deltat), (alpha-1));
-        
+
     }
     else if (t >= t2 && t <= t3)
     {
         //K_time = - F_input;
         K_time = - 1;
-    }   
+    }
     else
     {
         K_time = 0;
@@ -961,7 +972,7 @@ void NVUNode::nvu_K()
 	//{
 	//    //K_time = - F_input;
 	//    K_time = - 1;
-	//}   
+	//}
 	//else
 	//{
 	//    K_time = 0;
@@ -979,10 +990,10 @@ void NVUNode::nvu_K()
 // time-varying PLC input signal
 double NVUNode::PLC_input(double t)
 {
-    double PLC_min = 0.18;		
-    double PLC_max = 0.4;		
-    // double t_up   = 4000;		
-    // double t_down = 6000;		
+    double PLC_min = 0.18;
+    double PLC_max = 0.4;
+    // double t_up   = 4000;
+    // double t_down = 6000;
     double ampl = 3;
     double ramp = 0.003;//0.002;
     double PLC_time = 0.5 * tanh((t - workspace->injectStart) / 0.05) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME / 2.0)) / 0.05);
@@ -1067,7 +1078,7 @@ void NVUNode::solver_init()
     workspace->mdeclared = 0;
 
     workspace->jacupdates = 0;
-    workspace->fevals     = 0;                 
+    workspace->fevals     = 0;
     workspace->isjac = 0;
 
     //nvu init
@@ -1155,6 +1166,7 @@ void NVUNode::newton_matrix()
     cs_spfree(M);
 }
 
+// b  = array of all ODEs, i.e. 'du' array
 int NVUNode::lusoln(double *b)
 {
     // Can only be called if newton_matrix has been called already
@@ -1197,7 +1209,7 @@ void NVUNode::evaluate(double t, double *y, double *dy)
     for (int i = 0; i < workspace->num_fluxes; i++)
     {
         assert(!isnan(workspace->fluxes[i]));
-    }           
+    }
 }
 
 void NVUNode::jacupdate(double t, double *u)
@@ -1226,12 +1238,12 @@ void NVUNode::init_dfdx()
     // Load sparsity pattern for one block (dfdx_pattern) and add to make Jacobian for all blocks (dfdx)
     int nblocks = workspace->nblocks;
     cs *J;
-    J = blkdiag(workspace->dfdx_pattern, nblocks, nblocks);   
+    J = blkdiag(workspace->dfdx_pattern, nblocks, nblocks);
 
     workspace->dfdx = numjacinit(J);
 
     cs_spfree(J);
-    
+
 }
 
 void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
@@ -1242,7 +1254,7 @@ void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
     y1 = (double *)malloc((NEQ+1) * sizeof (*y1));
     h  = (double *)malloc((NEQ+1) * sizeof (*h));
     f1 = (double *)malloc((NEQ+1) * sizeof (*f1));
-    
+
     for (int igrp = 0; igrp < workspace->dfdx->ng; igrp++)
     {
         for (int k = 0; k < NEQ; k++)
@@ -1253,7 +1265,7 @@ void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
         for (int k = workspace->dfdx->r[igrp]; k < workspace->dfdx->r[igrp + 1]; k++)
         {
             j = workspace->dfdx->g[k];
-            h[j] = eps; // * fabs(y[j]); 
+            h[j] = eps; // * fabs(y[j]);
             y1[j] += h[j];
         }
 
@@ -1272,8 +1284,8 @@ void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
     }
 
 
-    free(y1); 
-    free(h); 
+    free(y1);
+    free(h);
     free(f1);
 }
 
@@ -1310,8 +1322,8 @@ void NVUNode::write_fluxes_data()
 Iterate over all connected NVU neighbors and calculate diffusion between them.
 Updates own ecs K+ dirvative value, expected to take place before solving for a given iteration.
 */
-void NVUNode::diffuse() 
-{	
+void NVUNode::diffuse()
+{
 	double flu_diff_k;
     for (int i = 0; i < K_ecs_neighbors.size(); i++)
     {
@@ -1322,12 +1334,12 @@ void NVUNode::diffuse()
 
 
 /**
-Calculates the correct index to access its corresponding pressure from the H-tree 
+Calculates the correct index to access its corresponding pressure from the H-tree
 given its own coordinates and the coordinates of all end-terminals from the H-tree.
 */
 void NVUNode::calculate_pressure_index()
 {
-    std::vector<int> gridSize = 
+    std::vector<int> gridSize =
 	this->getGridLayerDescriptor()->getGrid()->getSize();
     int numberNVUs = gridSize[0] * gridSize[1] * gridSize[2];
 
@@ -1340,7 +1352,7 @@ void NVUNode::calculate_pressure_index()
 
     double *treeCoords = (double *)malloc(DIMENSIONS * sizeof(double*));
 
-    // Get first coordinate from array to initalise shortest distance.             
+    // Get first coordinate from array to initalise shortest distance.
     for (int i = 0; i < DIMENSIONS; i++)
     {
         treeCoords[i] = (*getSharedMembers().coordsArray)[i];
@@ -1387,6 +1399,6 @@ void NVUNode::calculate_pressure_index()
 }
 
 
-NVUNode::~NVUNode() 
+NVUNode::~NVUNode()
 {
 }

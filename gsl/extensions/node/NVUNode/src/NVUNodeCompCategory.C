@@ -240,17 +240,16 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().P0    = 8000  ;  // Pa (scaling factor for nondim)
     getSharedMembers().PCAP  = 4000  ;  // Pa (capillary bed pressure)
 
-	// Pressure constants
-	getSharedMembers().HRR        = 0.1   ;  // Nondimensional (thickness to radius ratio)
-	getSharedMembers().RSCALE     = 0.6   ;  // Dimensionless
-	getSharedMembers().E0         = 66e3  ;  // Pa
-	getSharedMembers().EPASSIVE   = 66e3  ;  // Pa
-	getSharedMembers().EACTIVE    = 233e3 ;  // Pa
-	getSharedMembers().ETA        = 1e4;//2.8e2 ;  // Pa s
-	getSharedMembers().T0         = 1     ;  // s
+    // Pressure constants
+    getSharedMembers().HRR        = 0.1   ;  // Nondimensional (thickness to radius ratio)
+    getSharedMembers().RSCALE     = 0.6   ;  // Dimensionless
+    getSharedMembers().E0         = 66e3  ;  // Pa
+    getSharedMembers().EPASSIVE   = 66e3  ;  // Pa
+    getSharedMembers().EACTIVE    = 233e3 ;  // Pa
+    getSharedMembers().ETA        = 1e4;//2.8e2 ;  // Pa s
+    getSharedMembers().T0         = 1     ;  // s
 
 
-	getSharedMembers().PA2MMHG   = 0.00750061683; // convert from Pa to mmHg
+    getSharedMembers().PA2MMHG   = 0.00750061683; // convert from Pa to mmHg
     getSharedMembers().tau_diffusion   = 4.3; // for ecs K+
-
 }

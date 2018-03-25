@@ -34,21 +34,22 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
 
   Shared {
   //{{{
+    //{{{Life
+    int tooSparse;
+    int tooCrowded;
+    //}}}
     double L0; // in meter
 
+    //{{{
     // Timestep. Can be multiplied by number of simulation iterations to get current time.
     dyn_var_t* deltaT;  // in milisecond
     double []* pressures;
     double []* coordsArray;
     double [] blockSize;
 
-    int tooSparse;
-    int tooCrowded;
-
-
         /****** Model parameters ******/
 
-    // Pressure constants
+    //{{{ Pressure constants
     double PA2MMHG;
     double T0;
     double ETA;
@@ -61,14 +62,16 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double R0;  // m (for nondimensionalising)
     double P0;  // Pa (scaling factor for nondim)
     double PCAP;  // Pa (capillary bed pressure)
+    //}}}
 
-    // general constants:
+    //{{{ general constants:
     double Farad;
     double R_gas;
     double Temp;
     double unitcon;
+    //}}}
 
-    // NE & AC constants:
+    //{{{ NE & AC constants:
     double L_p;
     double R_tot;
     double X_k;
@@ -86,12 +89,14 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double K_Na_k;
     double K_K_s;
     double k_C;
+    //}}}
 
-    // Perivascular Space constants:
+    //{{{ Perivascular Space constants:
     double R_decay;
     double K_p_min;
+    //}}}
 
-    // BK channel constants:
+    //{{{ BK channel constants:
     double A_ef_k;
     double v_4;
     double psi_w;
@@ -99,8 +104,9 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double g_BK_k;
     double VR_pa;
     double VR_ps;
+    //}}}
 
-    // SMC constants:
+    //{{{SMC constants:
     double F_il;
     double z_1;
     double z_2;
@@ -135,14 +141,16 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double v_Ca3;
     double R_K;
     double const_k_i;
+    //}}}
 
-    // Stretch-activated channels
+    //{{{Stretch-activated channels
     double G_stretch;
     double Esac;
     double alpha1;
     double sig0;
+    //}}}
 
-    // EC constants:
+    //{{{ EC constants:
     double Fmax_j;
     double Kr_j;
     double B_j;
@@ -181,14 +189,15 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double K7_c;
     double gam_cross;
     double LArg_j;
+    //}}}
 
-    // ECS:
+    //{{{ ECS:
     // tau is dx^2 / 2D where dx is the length and D is diffusion rate
     double tau2;
     double tau_diffusion;
+    //}}}
 
-    // NO pathway
-
+    //{{{NO pathway
     double LArg;
     double V_spine;
     double k_ex;
@@ -242,8 +251,9 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double K_mO2_j;
     double V_NOj_max;
     double K_mArg_j;
+    //}}}
 
-    // AC Ca2+
+    //{{{AC Ca2+
     double r_buff;
     double G_TRPV_k;
     double g_TRPV_k;
@@ -288,6 +298,7 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double trpv_switch;
     double z_Ca;
     double const_m_c;
+    //}}}
 
     InitPhase paramInitalize();
 
@@ -299,15 +310,15 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     string identifier;
   }
 
-  
-  InitPhase initStateVariables(state_r, K_ecs, stateVariables, coords); 
+  //{{{Phases
+  InitPhase initStateVariables(state_r, K_ecs, stateVariables, coords);
   InitPhase initJacobian();
 
   RuntimePhase update(K_ecs);
   RuntimePhase copy(publicValue, state_r, stateVariables);
 
-
   FinalPhase finalize;
+  //}}}
 
   //{{{ Output
   ValueProducer.value << &publicValue;
