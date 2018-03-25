@@ -63,12 +63,23 @@ ifeq ($(OPERATING_SYSTEM), AIX)
    endif
 endif
 
-#For debugging
-ifeq ($(CC), g++)
-   CFLAGS += -ggdb -g
-endif
-ifeq ($(CC), xlC_r)
-   CFLAGS += -g
+# Check if release mode
+ifeq ($(RELEASE), -release)
+  #For debugging
+  ifeq ($(CC), g++)
+     CFLAGS += -O3
+  endif
+  ifeq ($(CC), xlC_r)
+     CFLAGS += -O3
+  endif
+else
+  #For debugging
+  ifeq ($(CC), g++)
+     CFLAGS += -ggdb -g
+  endif
+  ifeq ($(CC), xlC_r)
+     CFLAGS += -g
+  endif
 endif
 
 #Optimization

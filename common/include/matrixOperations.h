@@ -4,7 +4,7 @@
 #include <cs.h>
 #include <assert.h>
 #include <stdint.h>
-#include "../../nti/include/MaxComputeOrder.h"
+#include "../../nti/include/NVUMacros.h"
 
 typedef struct numjac {
     cs *A;  /* numerical Jacobian stored in here */
