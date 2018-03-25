@@ -62,7 +62,7 @@ Struct ReceptorCurrent {
 Struct InjectedCurrent {
 // which is positive for inward current
   dyn_var_t* current; // (pA)
-  dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
+  dyn_var_t area;  // (um^2) membrane-surface area of the compartment
   int index;     //  index of the compartment on a given branch to which the current is injected
 #ifdef CONSIDER_DI_DV
   dyn_var_t* conductance_didv;  //the di/dv term to help estimate [nS/um^2]
@@ -83,7 +83,7 @@ Struct ReceptorCaCurrent {
 
 Struct InjectedCaCurrent {
   dyn_var_t* current;  // [pA]
-  dyn_var_t currentToConc; // [uM] 
+  dyn_var_t currentToConc; // [uM]
   int index;
 }
 
@@ -93,13 +93,13 @@ Struct ChannelCaFluxes {
 }
 
 
-// for modeling IP3 production via some injected current 
+// for modeling IP3 production via some injected current
 Struct InjectedIP3Current {
   dyn_var_t* current;  // [pA]
-  dyn_var_t currentToConc; // [uM] 
+  dyn_var_t currentToConc; // [uM]
   int index;
 }
-// for modeling IP3 production via some 'channels' 
+// for modeling IP3 production via some 'channels'
 Struct ChannelIP3Fluxes {
   dyn_var_t []* fluxes; // [uM/ms]
 }
@@ -117,11 +117,11 @@ Struct ChannelIP3Currents {
 Struct TargetAttachCaConcentration{
   dyn_var_t* Ca;  // [uM]
   dyn_var_t* inverseTime;  // [1/ms]
-  int index; // index of compartment at which the spine attach (or the shaft attach) 
+  int index; // index of compartment at which the spine attach (or the shaft attach)
 }
 Struct TargetAttachIP3Concentration{
   dyn_var_t* IP3;  // [uM]
   dyn_var_t* inverseTime;  // [1/ms]
-  int index; // index of compartment at which the spine attach (or the shaft attach) 
+  int index; // index of compartment at which the spine attach (or the shaft attach)
 }
 #endif
