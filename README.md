@@ -1,25 +1,30 @@
-./make_nts  [print out help instruction]
-./make_mgs  [print out help instruction]
-./make_both  [print out help instruction]
+# Build instructions
 
+./make_nts  *[print out help instruction]*  
+./make_mgs  *[print out help instruction]*  
+./make_both  *[print out help instruction]*  
 
-GSL:
-./build_gsl -h     [print out help instruction]
-  ./build_gsl --rebuild --release -d 4   is good for release
-  ./build_gsl --rebuild -d 4 is good for debugging
+**GSL:**  
+  ./build_gsl -h     *[print out help instruction]*  
+  ./build_gsl --rebuild --release -d 4   is good for release  
+  ./build_gsl --rebuild -d 4 is good for debugging  
 
+**NTI:**  
+ make debug=yes    debug  
+ make              release  
 
-NTI:
- make debug=yes    debug
- make              release
+**External libraries required:**  
+  bison v2.4.1  
+  flex v2.5.4  
+  lgmp  
+  
+# Run flags
+  -t Number of threads  
+  -f gsl file to run  
+  -s random number generator seed  
 
-
-External library:
-  bison v2.4.1
-  flex v2.5.4
-  lgmp
-
-
+# Commit tags
+When presenting work with MGS/NTS components to a client, a git tag should be created and recorded in the [Box note](https://ibm.ent.box.com/notes/231444066519). See instructions inside the Box note on how to create the tag including a naming convention.
 
 # ZenHub
 The following is based on the reading of [ZenHub's documentation](https://www.zenhub.com/github-project-management.pdf), [IBM's ZenHub documentation](https://pages.github.ibm.com/the-playbook/zenhub/) and other tutorial and help guides.
