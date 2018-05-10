@@ -26,12 +26,13 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
    double HIP;
    double eta_IP;
    double TE;
-   SORNSynapseInput [] lateralExcInputs;
-   //SpikeInput [] lateralInhInputs;
+   float delay;
+   NazeSORNDelayedSynapseInput [] lateralExcInputs;
    SORNSynapseInput [] lateralInhInputs;
    Input modulatoryInput;
    NormalizedThalamicInput normalizedThInput;
-
+   Input [] tmsInput;
+   
    Shared {	
      double g;
      //double eta_IP;
@@ -45,6 +46,10 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      double sigma_HIP;
      double ratio_HIP;
 
+     float mu_delay;
+     float sigma_delay;
+     float ratio_delay;
+
      double sigma2_chi;
      double eta_inhib;
      double eta_STDP;
@@ -55,11 +60,14 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      double p_c;
      double Ach;
      int Ach_time;  // time at which Ach is turned ON
+
      InitPhase initializeShared();
-     
+     InitPhase saveInitParams();
+
      string inDirectory;
      string outDirectory;
      string outputWeightsFileName;
+     string outputDelaysFileName;
      string [] inFiles;
      float[] initWeights;
 
@@ -69,6 +77,9 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      int [] loadWeightsOn;
      int loadWeightsNext;
      RuntimePhase inputWeightsShared;
+     int [] collectDelaysOn;
+     int collectDelaysNext;
+     RuntimePhase outputDelaysShared;
     }
 
    InAttrPSet {
@@ -123,6 +134,11 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
       OutputProducer.output >> normalizedThInput.input;
    }
 
+   Connection Pre Node (PSet.identifier=="TMS") Expects OutputProducer {
+      OutputProducer.output >> tmsInput.input;
+      //PSet.weight >> tmsInput.weight;
+      //setIndices();
+   }
 }
 
 Node NazeSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {

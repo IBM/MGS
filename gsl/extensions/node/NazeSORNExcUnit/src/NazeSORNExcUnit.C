@@ -36,6 +36,18 @@ void NazeSORNExcUnit::initialize(RNG& rng)
   double sigma = std::sqrt(std::log( std::pow(SHD.sigma_IP,2) / std::pow(SHD.mu_IP,2) + 1));
   eta_IP = exp(median + sigma*std::abs(gaussian(rng)));
   TE = drandom(rng)*SHD.TE_max;
+  //std::cout << "median = " << median << ";  sigma = " << sigma <<";  etaIP = " << eta_IP << ";  HIP = " << HIP << std::endl;
+  
+  // Setup buffer containing the delayed input
+  if (std::round(SHD.mu_delay) > 0) {
+    ShallowArray<NazeSORNDelayedSynapseInput>::iterator it_exc, end_exc = lateralExcInputs.end();
+    for(it_exc=lateralExcInputs.begin(); it_exc!=end_exc; it_exc++){    
+      it_exc->delay = std::lrint(std::abs(SHD.mu_delay + gaussian(rng)*SHD.sigma_delay));
+      if (it_exc->delay<1) it_exc->delay=1;
+      it_exc->spikes_circ_buffer.increaseSizeTo(it_exc->delay + 1);  //!\ assumes delay given in dt units !
+      it_exc->a_circ_buffer.increaseSizeTo(it_exc->delay + 2);  //!\ +2 because stores a and aPrev
+    }
+  }
   // Normalization of I2E synaptic weights at initialization only
   double sumI=0;
   ShallowArray<SORNSynapseInput>::iterator iter, end=lateralInhInputs.end();
@@ -54,16 +66,25 @@ void NazeSORNExcUnit::initialize(RNG& rng)
 
 void NazeSORNExcUnit::update(RNG& rng) 
 {
-  // normalization and sum of L5 Exc inputs
+  // delay, normalization and sum of L5 Exc inputs
   double sumW=0;
   double sumE=0;
-  ShallowArray<SORNSynapseInput>::iterator iter, end=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator iter, end=lateralExcInputs.end();
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) 
-    if (iter->synapse) sumW += iter->weight;
+    if (iter->synapse) {
+      sumW += iter->weight;
+      if(iter->delay > 0) {
+        iter->spikes_circ_buffer[ITER % iter->delay] = *(iter->spike);
+        iter->a_circ_buffer[ITER % iter->delay] = *(iter->a);
+      }
+  }
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
     if (iter->synapse && sumW!=0) {
-      (iter->weight) /= SHD.g*sumW;	
-      if (*(iter->spike)) sumE += iter->weight;
+      (iter->weight) /= SHD.g*sumW;
+      if (iter->delay>0) {
+        if (iter->spikes_circ_buffer[(ITER+1) % iter->delay]) sumE += iter->weight;
+      } 
+      else if (*(iter->spike)) sumE += iter->weight;
     }
   }
   // modulation from L2/3 or Thalamus
@@ -94,7 +115,7 @@ void NazeSORNExcUnit::update(RNG& rng)
     if (iter2->synapse && *(iter2->spike)) sumI += iter2->weight;*/
   
   // integration of inputs
-  x = sumE - sumI - TE + SHD.sigma2_chi*gaussian(rng);
+  x = sumE - sumI - TE + SHD.sigma2_chi*gaussian(rng) + *tmsInput[0].input;
   double newSpike = (x>0) ? 1.0 : 0.0;
   // update threshold
   TE = TE + eta_IP*(spike-HIP);
@@ -103,7 +124,9 @@ void NazeSORNExcUnit::update(RNG& rng)
     if (iter->synapse) {
       // NEW STDP RULE:
       //iter->weight += SHD.eta_STDP * ( spike * *(iter->spikePrev) - spikePrev * *(iter->spike) ); 
-      iter->weight += SHD.eta_STDP * ( a * *(iter->aPrev) - aPrev * *(iter->a) ); 
+      //iter->weight += SHD.eta_STDP * ( a * *(iter->aPrev) - aPrev * *(iter->a) ); 
+      iter->weight += SHD.eta_STDP * ( a * iter->a_circ_buffer[(ITER+1) % iter->delay] \
+					- aPrev * iter->a_circ_buffer[(ITER+2) % iter->delay] ); // a stored at mod ITER+2; aPrev at %ITER+1
       // pruning
       if (iter->weight<0.0001) {
         iter->weight=0;
@@ -183,8 +206,8 @@ bool NazeSORNExcUnit::checkInitWeights(const String& CG_direction, const String&
 {
   if (SHD.initWeights.size()==0) return true;
   else {
-    int outIdx = getNode()->getIndex();
-    int inIdx = CG_node->getNode()->getIndex();
+    int outIdx = getNode()->getIndex()+1;		//+1 because compatibility w/ matlab
+    int inIdx = CG_node->getNode()->getIndex()+1;
     ShallowArray<float>::const_iterator it = SHD.initWeights.begin();
     ShallowArray<float>::const_iterator end = SHD.initWeights.end();
     for (it; it<end; it+=3) {
@@ -202,7 +225,7 @@ bool NazeSORNExcUnit::checkInitWeights(const String& CG_direction, const String&
 
 void NazeSORNExcUnit::outputWeights(std::ofstream& fsE2E, std::ofstream& fsI2E)
 {
-  ShallowArray<SORNSynapseInput>::iterator iter, end=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator iter, end=lateralExcInputs.end();
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
     if(iter->synapse) fsE2E<<iter->row<<" "<<iter->col<<" "<<iter->weight<<std::endl;
   }
@@ -213,9 +236,17 @@ void NazeSORNExcUnit::outputWeights(std::ofstream& fsE2E, std::ofstream& fsI2E)
   }
 }
 
+void NazeSORNExcUnit::outputDelays(std::ofstream& fsE2Ed)
+{
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator iter, end=lateralExcInputs.end();
+  for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
+    if(iter->synapse) fsE2Ed<<iter->row<<" "<<iter->col<<" "<<iter->delay<<std::endl;
+  }
+}
+
 void NazeSORNExcUnit::inputWeights(int col, float weight)
 {
-  ShallowArray<SORNSynapseInput>::iterator E2Eiter, E2Eend=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator E2Eiter, E2Eend=lateralExcInputs.end();
   for (E2Eiter=lateralExcInputs.begin(); E2Eiter!=E2Eend; ++E2Eiter) {
     if (E2Eiter->col==col) {
       E2Eiter->synapse=true;
@@ -240,6 +271,12 @@ void NazeSORNExcUnit::inputI2EWeights(int col, float weight)
 void NazeSORNExcUnit::inputTE(float val)
 {
   TE=val; 
+}
+
+void NazeSORNExcUnit::getInitParams(std::ofstream& fs_etaIP, std::ofstream& fs_HIP)
+{
+  fs_etaIP << eta_IP << " ";
+  fs_HIP << HIP << " ";
 }
 
 NazeSORNExcUnit::~NazeSORNExcUnit() 

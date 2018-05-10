@@ -36,6 +36,7 @@ void NazeSORNExcUnitCompCategory::initializeShared(RNG& rng)
   SHD.sigma_HIP = SHD.mu_HIP*SHD.ratio_HIP;
   SHD.sigma_IP = SHD.mu_IP*SHD.ratio_IP;
   SHD.eta_STDP = 4*SHD.eta_inhib;
+  SHD.sigma_delay = SHD.mu_delay*SHD.ratio_delay;
   int n=SHD.collectWeightsOn.size();
   if (n>0) {
     for (int i=0; i<n; ++i) {
@@ -50,6 +51,29 @@ void NazeSORNExcUnitCompCategory::initializeShared(RNG& rng)
       fsI2E.close();
     }
   }
+}
+
+void NazeSORNExcUnitCompCategory::saveInitParams(RNG& rng)
+{
+  std::ofstream fs_etaIP, fs_HIP;
+  std::ostringstream os;
+  os.str("");
+  os << SHD.outDirectory << "etaIPs.txt";
+  fs_etaIP.open(os.str().c_str(), std::ofstream::trunc|std::ofstream::out);
+  os.str("");
+  os << SHD.outDirectory << "HIPs.txt";
+  fs_HIP.open(os.str().c_str(), std::ofstream::trunc|std::ofstream::out);
+
+  ShallowArray<NazeSORNExcUnit>::iterator it = _nodes.begin();
+  ShallowArray<NazeSORNExcUnit>::iterator end = _nodes.end();
+  for(; it!=end; ++it) {
+    (*it).getInitParams(fs_etaIP, fs_HIP);
+  }
+  fs_etaIP << std::endl;
+  fs_HIP << std::endl; 
+  fs_etaIP.close();
+  fs_HIP.close();
+  
 }
 
 void NazeSORNExcUnitCompCategory::outputWeightsShared(RNG& rng) 
@@ -86,6 +110,7 @@ void NazeSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
 {
   if (SHD.loadWeightsOn.size()>0) {
     if (SHD.loadWeightsOn[SHD.loadWeightsNext]==ITER) {
+      std::cout << "Importing SORN Weights at timestep " << ITER << std::endl;
       if (SHD.loadWeightsOn.size()-1>SHD.loadWeightsNext) ++SHD.loadWeightsNext;
       int rank=getSimulation().getRank();
       int n=0; //node number
@@ -163,3 +188,31 @@ void NazeSORNExcUnitCompCategory::inputWeightsShared(RNG& rng)
     }
   }
 }
+
+void NazeSORNExcUnitCompCategory::outputDelaysShared(RNG& rng) 
+{
+  if (SHD.collectDelaysOn.size()>0) {
+    if (SHD.collectDelaysOn[SHD.collectDelaysNext]==ITER) {
+      if (SHD.collectDelaysOn.size()-1>SHD.collectDelaysNext) ++SHD.collectDelaysNext;
+      int rank=getSimulation().getRank();
+      int n=0;
+      while (n<getSimulation().getNumProcesses()) {
+	if (n==rank) {
+	  std::ofstream fsE2Ed; 
+	  std::ostringstream os;
+	  os<<SHD.outDirectory<<"E2E_"<<SHD.outputDelaysFileName<<"_"<<ITER<<".dat";
+	  fsE2Ed.open(os.str().c_str(), std::ofstream::app|std::ofstream::out);
+
+          ShallowArray<NazeSORNExcUnit>::iterator it = _nodes.begin();
+	  ShallowArray<NazeSORNExcUnit>::iterator end = _nodes.end();
+	  for (; it != end; ++it) (*it).outputDelays(fsE2Ed);
+	  fsE2Ed.close();
+	}
+	++n;
+	MPI_Barrier(MPI_COMM_WORLD);
+      }
+    }
+  }
+}
+
+

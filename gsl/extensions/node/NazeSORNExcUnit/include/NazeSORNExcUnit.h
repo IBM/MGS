@@ -33,9 +33,11 @@ class NazeSORNExcUnit : public CG_NazeSORNExcUnit
       virtual void setI2EIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset);
       virtual bool checkInitWeights(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNExcUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNExcUnitOutAttrPSet* CG_outAttrPset);
       virtual void outputWeights(std::ofstream& fsE2E, std::ofstream& fsI2E);
+      virtual void outputDelays(std::ofstream& fsE2Ed);
       virtual void inputWeights(int col, float weight);
       virtual void inputI2EWeights(int col, float weight);
       void inputTE(float val);
+      virtual void getInitParams(std::ofstream& fs_etaIP, std::ofstream& fs_HIP);
       virtual ~NazeSORNExcUnit();
 };
 

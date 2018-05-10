@@ -26,7 +26,9 @@ class NazeSORNExcUnitCompCategory : public CG_NazeSORNExcUnitCompCategory
    public:
       NazeSORNExcUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
       void initializeShared(RNG& rng);
+      void saveInitParams(RNG& rng);
       void outputWeightsShared(RNG& rng);
+      void outputDelaysShared(RNG& rng);
       void inputWeightsShared(RNG& rng);
 };
 
