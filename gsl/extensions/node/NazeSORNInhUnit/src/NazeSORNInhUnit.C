@@ -39,7 +39,7 @@ void NazeSORNInhUnit::initialize(RNG& rng)
   ShallowArray<SpikeInput>::iterator iter, end=lateralExcInputs.end();
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) sumE+=iter->weight;
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
-	if (sumE!=0) (iter->weight) /= SHD.g*sumE;
+	if (sumE!=0) (iter->weight) /= (sumE/SHD.EIratio);
   }	
   
   // Normalize Inh2Inh weights

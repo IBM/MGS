@@ -27,14 +27,15 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
    double eta_IP;
    double TE;
    float delay;
+   float sigma_delay;
    NazeSORNDelayedSynapseInput [] lateralExcInputs;
    SORNSynapseInput [] lateralInhInputs;
    Input modulatoryInput;
    NormalizedThalamicInput normalizedThInput;
-   Input [] tmsInput;
+   Input tmsInput;
    
    Shared {	
-     double g;
+     double EIratio;
      //double eta_IP;
      double mu_IP;
      double sigma_IP;
@@ -46,8 +47,7 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      double sigma_HIP;
      double ratio_HIP;
 
-     float mu_delay;
-     float sigma_delay;
+     float [] mu_delay;
      float ratio_delay;
 
      double sigma2_chi;
@@ -154,7 +154,7 @@ Node NazeSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
    Input modulatoryInput;
    
    Shared {
-     double g;
+     double EIratio;
      double mu_IP;
      double sigma_IP;
      double ratio_IP;

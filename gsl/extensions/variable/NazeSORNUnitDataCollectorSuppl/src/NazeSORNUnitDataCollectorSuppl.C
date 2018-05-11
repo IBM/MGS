@@ -94,11 +94,11 @@ void NazeSORNUnitDataCollectorSuppl::dataCollection(Trigger* trigger, NDPairList
   {
     if (binary)
       {
-	unsigned t = getSimulation().getIteration();
+	//unsigned t = getSimulation().getIteration();
 	ShallowArray<double*>::iterator iter=thresholds.begin(), end=thresholds.end();
-	for (int n=0; iter!=end; ++iter, n++)
+	for (iter; iter!=end; iter++)
 	  {
-	    thresholdsFile->write(reinterpret_cast<char *>(&n), sizeof(double));
+	    thresholdsFile->write(reinterpret_cast<char *>(*iter), sizeof(double));
 	  }
       }
     else

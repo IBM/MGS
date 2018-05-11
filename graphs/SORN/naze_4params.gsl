@@ -16,7 +16,7 @@
 #include "../std/std.gsl"
 
 #define IN_DIR "/home/naze/MGS/graphs/SORN/2018mar16/muIP0_001/ratioIP1_0/etaSTDP0_001/muHIP0_01/ratioHIP0_5/g1_0/muHIPi0_02/0/E2X0_05/I2X0_1/"
-#define DIRECTORY "./2018may09/muIP0_0001/ratioIP1_0/etaSTDP0_001/tauSTDP!XX_DIR_2_XX!/muHIP0_01/ratioHIP0_5/muHIPi0_02/ratioHIPi0_5/g!XX_DIR_1_XX!/E2X0_05/I2X0_1/muDelay!XX_DIR_3_XX!/ratioDelay!XX_DIR_4_XX!/"
+#define DIRECTORY "./2018may11/stimCfrac!XX_DIR_3_XX!/muIP0_1/ratioIP1_0/etaSTDP0_000001/tauSTDP!XX_DIR_2_XX!/muHIP0_001/ratioHIP0_5/muHIPi0_005/ratioHIPi0_5/EIratio!XX_DIR_1_XX!/E2X0_05/I2X0_1/muDelay1_3_6/ratioDelay!XX_DIR_4_XX!/"
 #define FILE_EXTENSION ".dat"
 #define BINARY 1
 
@@ -27,20 +27,20 @@ FinalPhases = { finalize };
 //LoadSparseMatrix loadSparseMatrix(IN_DIR, "E2E_Weights_1000000.dat");
 
 NodeType NazeSORNExcUnit(< 
-       mu_delay = !XX_VAR_3_XX!,
+       mu_delay = {1.0, 3.0, 6.0},
        ratio_delay = !XX_VAR_4_XX!,
-       mu_IP = 0.0001,
+       mu_IP = 0.1,
        ratio_IP = 1.0,  //!\\ not the same type of ratio as ratio_HIP
        TE_max = 1.0,
        //sigma_HIP = 0.005,
-       mu_HIP = 0.01,
+       mu_HIP = 0.001,
        ratio_HIP = 0.5,
        sigma2_chi = 0.01,
-       eta_inhib = 0.001,  //eta_STDP = 0.004,
+       eta_inhib = 0.000001,  //eta_STDP = 0.004,
        mu_iSTDP = 0.1,
        tau_STDP = !XX_VAR_2_XX!,
        p_c = 0.00000001,
-       g = !XX_VAR_1_XX!,
+       EIratio = !XX_VAR_1_XX!,
        Ach = 0.0,
        inDirectory = IN_DIR,
        inFiles = {"E2E_Weights_1000000.dat", "I2E_Weights_1000000.dat"},
@@ -54,13 +54,13 @@ NodeType NazeSORNExcUnit(<
        >);
 
 NodeType NazeSORNInhUnit(< 
-       mu_IP = 0.0001,
+       mu_IP = 0.1,
        ratio_IP = 1.0,  //!\\ not the same type of ratio as ratio_HIP
-       mu_HIP = 0.02,
+       mu_HIP = 0.005,
        ratio_HIP = 0.5,
        TI_max = 1.0,
        tau_STDP = 0.9,
-       g = !XX_VAR_1_XX!,
+       EIratio = !XX_VAR_1_XX!,
        sigma2_chi = 0.01,
        loadWeightsOn = {0},
        inDirectory = IN_DIR,
@@ -71,11 +71,11 @@ NodeType NazeSORNInhUnit(<
        >);
 
 NodeType ToneUnit(<
-	start_time = 00000,
- 	stop_time = 000000,
-        duration = 25, //!XX_VAR_4_XX!,
+	start_time = 400000,  // in dt unit
+ 	stop_time = 500000,
+        duration = 10, //!XX_VAR_4_XX!,
  	interval = 20000,
-	amplitude = 0.5 //!XX_VAR_3_XX!
+	amplitude = 0.1 //!XX_VAR_3_XX!
 	>);
 
 
@@ -144,7 +144,7 @@ connectNodeSets(sorn_I[].Layer(inh), sorn_E[].Layer(exc), EachDst(EachAvg(0.1)),
 connectNodeSets(sorn_E[].Layer(exc), sorn_I[].Layer(inh), EachDst(EachAvg(0.05)), outAttrDef, E2I);
 //connectNodeSets(sorn_I[].Layer(inh), sorn_E[].Layer(exc), EachDstPropSrc(RadialSampler(100.0)), outAttrDef, I2E);
 //connectNodeSets(sorn_E[].Layer(exc), sorn_I[].Layer(inh), EachDst(EachAvg(0.2)), outAttrDef, E2I);
-connectNodeSets(tmsPulse[].Layer(tms), sorn_E[].Layer(exc), EachDst(EachAvg(1.0)), outAttrDef, PULSE);
+connectNodeSets(tmsPulse[].Layer(tms), sorn_E[].Layer(exc), EachDst(EachAvg(!XX_VAR_3_XX!)), outAttrDef, PULSE);
 
 // DCA directives here
 
@@ -153,7 +153,7 @@ NazeSORNUnitDataCollector collector_E <fileName="SORN-EOutput", deltaT=0.001, bi
 polyConnect(sorn_E[].Layer(exc), collector_E, <>, <>);
 
 VariableType NazeSORNUnitDataCollectorSuppl;
-NazeSORNUnitDataCollectorSuppl collector_E_Suppl <fileName="TEs", deltaT=0.001, binary=BINARY, fileExt=FILE_EXTENSION, directory=DIRECTORY, op_saveThresholds=1 >;
+NazeSORNUnitDataCollectorSuppl collector_E_Suppl <fileName="SORN_Exc_TEs", deltaT=0.001, binary=BINARY, fileExt=FILE_EXTENSION, directory=DIRECTORY, op_saveThresholds=1 >;
 polyConnect(sorn_E[].Layer(exc), collector_E_Suppl, <>, <>);
 
 NazeSORNUnitDataCollector collector_I <fileName="SORN-IOutput", deltaT=0.001, binary=BINARY, fileExt=FILE_EXTENSION, directory=DIRECTORY, op_saveSpikes=1 >;
@@ -162,13 +162,13 @@ polyConnect(sorn_I[].Layer(inh), collector_I, <>, <>);
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
 
 UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
- 			 ::Iteration, ">=", 1000000, 0, dataCollect);
+ 			 ::Iteration, ">=", 200000, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 2000, 0, lastPhase); 
+			 ::Iteration, "==", 500000, 0, lastPhase); 
 
 UnsignedTrigger iterTrigSuppl("Iteration Trigger : >= 0 ", 
- 			 ::Iteration, ">=", 900000, 0, dataCollect);
+ 			 ::Iteration, ">=", 300000, 0, dataCollect);
 
 collector_E.dataCollection() on iterTrig;
 //collector_E_Suppl.dataCollection() on iterTrigSuppl;

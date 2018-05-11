@@ -37,12 +37,18 @@ void NazeSORNExcUnit::initialize(RNG& rng)
   eta_IP = exp(median + sigma*std::abs(gaussian(rng)));
   TE = drandom(rng)*SHD.TE_max;
   //std::cout << "median = " << median << ";  sigma = " << sigma <<";  etaIP = " << eta_IP << ";  HIP = " << HIP << std::endl;
-  
+ 
+  // Get delay index randomly 
+  //std::random_device rd;
+  //std::mt19937 eng(rd);
+  //std::uniform_int_distribution<> distr(0, SHD.mu_delay.size()-1);
+  int di = std::rand() % SHD.mu_delay.size();
+  sigma_delay = SHD.mu_delay[di]*SHD.ratio_delay;
   // Setup buffer containing the delayed input
-  if (std::round(SHD.mu_delay) > 0) {
+  if (std::round(SHD.mu_delay[di]) > 0) {
     ShallowArray<NazeSORNDelayedSynapseInput>::iterator it_exc, end_exc = lateralExcInputs.end();
     for(it_exc=lateralExcInputs.begin(); it_exc!=end_exc; it_exc++){    
-      it_exc->delay = std::lrint(std::abs(SHD.mu_delay + gaussian(rng)*SHD.sigma_delay));
+      it_exc->delay = std::lrint(std::abs(SHD.mu_delay[di] + gaussian(rng)*sigma_delay));
       if (it_exc->delay<1) it_exc->delay=1;
       it_exc->spikes_circ_buffer.increaseSizeTo(it_exc->delay + 1);  //!\ assumes delay given in dt units !
       it_exc->a_circ_buffer.increaseSizeTo(it_exc->delay + 2);  //!\ +2 because stores a and aPrev
@@ -59,7 +65,7 @@ void NazeSORNExcUnit::initialize(RNG& rng)
   }
   
   if (normalizedThInput.input){
-    normalizedThInput.minVal = 0.0;
+			normalizedThInput.minVal = 0.0;
     normalizedThInput.maxVal = 1.0;
   }
 }
@@ -80,7 +86,7 @@ void NazeSORNExcUnit::update(RNG& rng)
   }
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
     if (iter->synapse && sumW!=0) {
-      (iter->weight) /= SHD.g*sumW;
+      (iter->weight) /= (sumW/SHD.EIratio);
       if (iter->delay>0) {
         if (iter->spikes_circ_buffer[(ITER+1) % iter->delay]) sumE += iter->weight;
       } 
@@ -115,7 +121,9 @@ void NazeSORNExcUnit::update(RNG& rng)
     if (iter2->synapse && *(iter2->spike)) sumI += iter2->weight;*/
   
   // integration of inputs
-  x = sumE - sumI - TE + SHD.sigma2_chi*gaussian(rng) + *tmsInput[0].input;
+  double stim = 0;
+  if (tmsInput.input) stim=*(tmsInput.input);
+  x = sumE - sumI - TE + SHD.sigma2_chi*gaussian(rng) + stim;
   double newSpike = (x>0) ? 1.0 : 0.0;
   // update threshold
   TE = TE + eta_IP*(spike-HIP);

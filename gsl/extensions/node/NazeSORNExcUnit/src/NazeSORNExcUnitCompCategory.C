@@ -36,7 +36,7 @@ void NazeSORNExcUnitCompCategory::initializeShared(RNG& rng)
   SHD.sigma_HIP = SHD.mu_HIP*SHD.ratio_HIP;
   SHD.sigma_IP = SHD.mu_IP*SHD.ratio_IP;
   SHD.eta_STDP = 4*SHD.eta_inhib;
-  SHD.sigma_delay = SHD.mu_delay*SHD.ratio_delay;
+  //SHD.sigma_delay = SHD.mu_delay*SHD.ratio_delay;
   int n=SHD.collectWeightsOn.size();
   if (n>0) {
     for (int i=0; i<n; ++i) {

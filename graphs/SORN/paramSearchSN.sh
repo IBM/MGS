@@ -18,10 +18,10 @@ additionalVariables_2=ERROR_is_2D
 additionalVariables_3=ERROR_is_2D
 
 # If 4D search - use ERROR_is_1D when is 1D or ERROR_not_in_use when not in use.
-variable_1=(0.5 1.0 1.5)      # g
-variable_2=(0.01 0.02 0.04)     # muHIPi
-variable_3=(0.05 0.1 0.2)      # E2X_cfrac
-variable_4=(0.05 0.1 0.2)      # I2X_cfrac
+variable_1=(0.8)      	# EIratio
+variable_2=(0.9)    # tauSTDP
+variable_3=(0.5)      # stimCfrac
+variable_4=(0.1)      # ratioDelay
 
 
 # If 2D search - use ERROR_is_1D when is 1D or ERROR_not_in_use when not in use.
