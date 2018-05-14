@@ -110,6 +110,13 @@ Interface NazeSORNDelayedSpikeProducer {
   double* aPrev;
 }
 
+Interface NazeSORNDelayedSpikeProducer {
+  bool* spikePrev;
+  bool* spike;
+  double* a;
+  double* aPrev;
+}
+
 Interface WaveProducer
 {
   double* wave;
@@ -269,6 +276,20 @@ Struct SORNSynapseInput {
   double* aPrev;
   double weight;
   bool synapse;
+  int row;
+  int col;
+}
+
+Struct NazeSORNDelayedSynapseInput {
+  bool* spikePrev;
+  bool* spike;
+  double* a;
+  double* aPrev;
+  double weight;
+  bool synapse;
+  int delay;
+  bool[] spikes_circ_buffer;
+  double[] a_circ_buffer;
   int row;
   int col;
 }
