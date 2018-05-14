@@ -291,7 +291,8 @@ for vX=vX_range
                 print([directory,'cortex'],'-depsc');
             end
             if (postprocess_Spikes)
-                figure(2); clf; % Spikes
+                fig2=figure(2); clf; % Spikes
+                fig2.Renderer='Painters';
 %                 if (postprocess_PlotAll)
 %                     segmentDim=XdimStrSpikes;
 %                 else
@@ -312,7 +313,7 @@ for vX=vX_range
                         end
                     end
                 end
-                scatter(temp(:,2),temp(:,1));
+                scatter(temp(:,2),temp(:,1),'.');
                 xlim([Tmin*(1/dt) Tmax*(1/dt)]);
                 ylim([0 Nspikes]);
 %                 if (postprocess_PlotAll)
@@ -335,7 +336,8 @@ for vX=vX_range
 %             Dmin = [XminStr,YminStr,ZminStr];
 %             points = round(bsxfun(@plus,Dmin,points));
             if (postprocess_Thresholds)
-                figure(4); clf; % Threshold
+                fig4=figure(4); clf; % Threshold
+                fig4.Renderer='Painters';
                 for i=1:Nstr*3
                     subplot(3, Nstr, i);
                     plot(threshold(:,points(i,1),points(i,2),points(i,3))); 
@@ -346,7 +348,8 @@ for vX=vX_range
                 print([directory,'threshold'],'-depsc');
             end
             if (postprocess_Voltages)
-                figure(5); clf; % Voltage (with spikes)
+                fig5=figure(5); clf; % Voltage (with spikes)
+                fig5.Renderer='Painters';
                 for i=1:Nstr*3
                     subplot(3, Nstr, i);
                     plot(voltage(:,points(i,1),points(i,2),points(i,3))); 
@@ -357,7 +360,8 @@ for vX=vX_range
                 print([directory,'voltage'],'-depsc');
             end
             if (postprocess_LFPs)
-                figure(10); clf; % LFP electrodes
+                fig10=figure(10); clf; % LFP electrodes
+                fig10.Renderer='Painters';
                 i=1;
                 for x=1:XdimLFP
                     for y=1:YdimLFP
@@ -387,7 +391,8 @@ for vX=vX_range
                 end
                 pxxStd = std(pxx);
                 pxxMean = mean(pxx);
-                figure(11); clf; % Frequency analysis
+                fig11=figure(11); clf; % Frequency analysis
+                fig11.Renderer='Painters';
                 X=[pmtmFrange,fliplr(pmtmFrange)];
                 Y=[10*log10(pxxMean+pxxStd),fliplr(10*log10(pxxMean-pxxStd))];
                 fill(X,Y,'r','LineStyle','none');
@@ -402,7 +407,8 @@ for vX=vX_range
             end
             if (postprocess_weights)
                 warning('Code needs updating to be efficient');
-                figure(13); clf;
+                fig13=figure(13); clf;
+                fig13.Renderer='Painters';
                 temp = [];
                 for i=1:YdimStrSpikes*XdimStrSpikes*ZdimStrSpikes
                     temp = [temp, weights{i}];
@@ -415,7 +421,8 @@ for vX=vX_range
             end
             if (postprocess_GJs)
                 warning('Code needs updating to be efficient');
-                figure(14); clf;
+                fig14=figure(14); clf;
+                fig14.Renderer='Painters';
                 temp = [];
                 for i=1:YdimStrSpikes*XdimStrSpikes*ZdimStrSpikes
                     temp = [temp, GJs{i}];
@@ -428,7 +435,8 @@ for vX=vX_range
             end
             if (postprocess_PSPs)
                 warning('Code needs updating to be efficient');
-                figure(15); clf;
+                fig15=figure(15); clf;
+                fig15.Renderer='Painters';
                 i=1;
                 for x=rowMin:rowMax
                     for y=1:colMin:colMax
@@ -447,7 +455,8 @@ for vX=vX_range
                     postprocess_totalGJ)
                 %%
                 % Main figure
-                figure(16); clf; hold on;
+                fig16=figure(16); clf; hold on;
+                fig16.Renderer='Painters';
                 h1 = histogram(totalDriver(:));
                 h1.Normalization = 'probability';
                 h1.BinWidth = 0.03;
@@ -489,9 +498,9 @@ for vX=vX_range
                     LFPs_animate = mat2gray(LFPs);
                     LFPs_animate = 1-LFPs_animate;
                     %% Animated LFP time series
-                    fig = figure(17); clf;
-                    fig.Color = 'black';
-                    fig.Position = [50 50 1280 720];%1920 1080];
+                    fig17=figure(17); clf;
+                    fig17.Color = 'black';
+                    fig17.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_ts.avi']);
                     frameRate = 60;
                     vid.FrameRate = frameRate;
@@ -515,11 +524,11 @@ for vX=vX_range
                     % Animate
                     for ti=linspace(Tmin+2,size(temp,2),frameRate*Tmax)
                         plot(temp(:,round(1:ti))');
-%                         axis([0 size(temp,2) 0 Nstr]);
-                        axis([0 size(temp,2)/10000 0 Nstr]);
+                        axis([0 size(temp,2) 0 Nstr]);
+%                         axis([0 size(temp,2)/10000 0 Nstr]);
                         ax = gca; ax.XTick = []; ax.YTick = []; ax.ZTick = []; axis off;
                         title(['EEG (time=',num2str(ti/1000,'%01.3f'),'s)'],'FontSize',20);
-                        frame = getframe(fig);
+                        frame = getframe(fig17);
                         writeVideo(vid,frame);
                     end        
                     close(vid);
@@ -531,9 +540,9 @@ for vX=vX_range
                     YminLFP=1;
                     ZmaxLFP=ZdimLFP;
                     ZminLFP=1;
-                    fig = figure(18); clf;
-                    fig.Color = 'black';
-                    fig.Position = [50 50 1280 720];%1920 1080];
+                    fig18=figure(18); clf;
+                    fig18.Color = 'black';
+                    fig18.Position = [50 50 1280 720];%1920 1080];
                     vid = VideoWriter([directory,'LFP_3D.avi']);
                     vid.FrameRate = 10;
                     vid.Quality = 100;
@@ -569,7 +578,7 @@ for vX=vX_range
                             r=0;
                         end
                         % Add the figure as a frame in the movie
-                        frame = getframe(fig);
+                        frame = getframe(fig18);
                         writeVideo(vid,frame);
                     end
                     close(vid);
