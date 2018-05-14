@@ -1,12 +1,11 @@
-
 clear all; %close all; 
 set(0,'defaulttextinterpreter','latex'); rng('shuffle');
 %% Load data parameters
 dt=0.0001; % time step in s
 sf=0.0050; % sample frequency in s
-T=5; % Length of simulation time saving data (excluding spikes) in s
+T=100; % Length of simulation time saving data (excluding spikes) in s
 Tmin=0; Tmax=T; % default
-TminZoom=2; TmaxZoom=3;
+TminZoom=19.6; TmaxZoom=20.6;
 loadData = true;
 parameterSearch = false;
 animatedVisualization = false;
@@ -17,8 +16,8 @@ postprocess_Spikes = true;
 postprocess_Thresholds = false;
 postprocess_Voltages = false;
 postprocess_LFPs = true;
-postprocess_weights = true;
-postprocess_GJs = true;
+postprocess_weights = false;%true;
+postprocess_GJs = false;%true;
 postprocess_PSPs = false;
 postprocess_totalDriver = false;
 postprocess_totalIPSC = false;
@@ -274,7 +273,8 @@ for vX=vX_range
             end
             %% Plot
             if (postprocess_CortexInput)
-                figure(1); clf; % Cortex input
+                fig1=figure(1); clf; % Cortex input
+                fig1.Renderer='Painters';
                 i=1;
                 for x=1:XdimCtx
                     for y=1:YdimCtx
