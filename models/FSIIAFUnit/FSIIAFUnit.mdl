@@ -88,10 +88,7 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
      bool op_saveGJs;
      bool op_savePSPs;
      bool op_saveExtra;
-<<<<<<< HEAD:models/FSIIAFUnit/FSIIAFUnit.mdl
      bool op_saveLayout;
-=======
->>>>>>> Separated data collection in to two groups.:models/TraubIAFUnit/TraubIAFUnit.mdl
    }
 
    InAttrPSet {
@@ -104,11 +101,7 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
    InitPhase initialize();
 
    RuntimePhase updateInput(synapses_total, drive_total, IPSC_total, GJ_total);
-<<<<<<< HEAD:models/FSIIAFUnit/FSIIAFUnit.mdl
    RuntimePhase updateV(Theta, I_sum);
-=======
-   RuntimePhase updateV(Theta);
->>>>>>> Separated data collection in to two groups.:models/TraubIAFUnit/TraubIAFUnit.mdl
    RuntimePhase threshold(spike, V_spike);
    
    SpikeProducer.spike << &spike;
@@ -118,16 +111,12 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
    Output3Producer.output1 << &drive_total;
    Output3Producer.output2 << &IPSC_total;
    Output3Producer.output3 << &GJ_total;
-<<<<<<< HEAD:models/FSIIAFUnit/FSIIAFUnit.mdl
   
    Output2Producer.output1 << &rho;
    Output2Producer.output2 << &phi;
  
    ActiveMembraneProducer.output << &I_sum;
 
-=======
-   
->>>>>>> Separated data collection in to two groups.:models/TraubIAFUnit/TraubIAFUnit.mdl
    UserFunction setIndices;
    PredicateFunction bidirectional1;   
    PredicateFunction bidirectional2;   
