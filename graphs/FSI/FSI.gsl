@@ -34,41 +34,17 @@ NodeType WaveDriverUnit(<
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
 			inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
                         op_random = 1,
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
                         scale = 1.25
-=======
-                        scale = 1.0 //1.5
->>>>>>> GJs are not bidirectional.:graphs/Traub/Traub.gsl
-=======
-			//inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
-			//inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
-			inputFileName = "toUseWindow.mat",
                         op_random = 1,
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
                         scale = 2.0
->>>>>>> Updated to use short LFP data.:graphs/Traub/Traub.gsl
-=======
-                        scale = 1.25
->>>>>>> Used in revised paper sent to Rebec Lab.:graphs/Traub/Traub.gsl
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
 
 // Connectivity and weights
 EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
 BindName CTXw("weight", 1.0, "identifier", "driver");
 NdplInAttrInit ctxW(CTXw);
-
-// Initialize waves
-#define AMPMIN 0.5 //1.0
-
-#define AMPMAX 1.0 //1.5
-BindName initWave("Hz", Gaussian(3.0,0.1),
-                  "phase", Gaussian(0.0,6.28319), // in rad (360 = 6.28319)
-                  "amplitude", UniformDist(AMPMIN, AMPMAX),
-                  "wave", UniformDist(AMPMIN, AMPMAX));
-NdplNodeInit heterWave(initWave);
 
 
 // ##### FSI network #####
@@ -95,13 +71,9 @@ NodeType FSIIAFUnit(<
                       op_saveWeights = 1,
                       op_saveGJs = 1,
                       op_savePSPs = 0,
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
                       op_saveExtra = 0,
                       mu_rho = -1.0, // < 0 is uniform distribution; > 2pi direction is set to same
                       mu_phi = -1.0
-=======
-                      op_saveExtra = 0
->>>>>>> Separated data collection in to two groups.:graphs/Traub/Traub.gsl
                       >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
 
 // Synaptic connectivity
@@ -110,45 +82,15 @@ EachDstPropSrc ipsp_fsi(RadialDensitySampler(72, 2.829, uniformDensity, 2.829));
 // (nbrConnections, radius, densityDistribution, boundaryMargin)
 
 // Synaptic weights 
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
 BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.375)), "identifier", "ipsp");
-=======
-BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.65)), "identifier", "ipsp");
->>>>>>> Separated data collection in to two groups.:graphs/Traub/Traub.gsl
-=======
-BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.45)), "identifier", "ipsp");
->>>>>>> Updated to use short LFP data.:graphs/Traub/Traub.gsl
-=======
-BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.375)), "identifier", "ipsp");
->>>>>>> Used in revised paper sent to Rebec Lab.:graphs/Traub/Traub.gsl
 NdplInAttrInit ipsp(IPSP);
 
 // Gap junctions connectivity
 EachDstPropSrc gj_fsi(Unique(RadialSampler(1.733,2.0)));
 
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
 // Gap junctions "weights"
 BindName GJ1("conductance", 18.0, "identifier", "gj1", "connectionFraction", 0.2263);
 BindName GJ2("conductance", 18.0, "identifier", "gj2", "connectionFraction", 0.2263);
-=======
-// Gap junctions weights
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
-<<<<<<< HEAD:graphs/FSI/FSI.gsl
-BindName GJ1("conductance", 17.0, "identifier", "gj1", "connectionFraction", 0.2263);
-BindName GJ2("conductance", 17.0, "identifier", "gj2", "connectionFraction", 0.2263);
->>>>>>> Separated data collection in to two groups.:graphs/Traub/Traub.gsl
-=======
-BindName GJ1("conductance", 16.0, "identifier", "gj1", "connectionFraction", 0.2263);
-BindName GJ2("conductance", 16.0, "identifier", "gj2", "connectionFraction", 0.2263);
-=======
-BindName GJ1("conductance", 18.0, "identifier", "gj1", "connectionFraction", 0.2263);
-BindName GJ2("conductance", 18.0, "identifier", "gj2", "connectionFraction", 0.2263);
->>>>>>> Used in revised paper sent to Rebec Lab.:graphs/Traub/Traub.gsl
-//BindName GJ1("conductance", 0.0, "identifier", "gj1", "connectionFraction", 0.2263);
-//BindName GJ2("conductance", 0.0, "identifier", "gj2", "connectionFraction", 0.2263);
->>>>>>> Updated to use short LFP data.:graphs/Traub/Traub.gsl
 NdplInAttrInit gj1(GJ1);
 NdplInAttrInit gj2(GJ1);
 
@@ -203,14 +145,6 @@ VariableType FSIIAFUnitDataCollector;
 FSIIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
   op_saveSpikes=1, op_saveSpikesAll=0, Xmin=0, Xmax=8, Ymin=0, Ymax=8, Zmin=0, Zmin=8>;
 polyConnect(iaf/fsi[].Layer(FSIs), FSIcollector, <>, <>);
-
-/*
-VariableType TraubIAFUnitExtraDataCollector;
-TraubIAFUnitExtraDataCollector FSIExtracollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveVoltages=1, op_saveThresholds=1, op_saveTotalDriver=1, op_saveTotalIPSC=1,
-  op_saveTotalGJ=1>;
-polyConnect(iaf/fsi[].Layer(FSIs), FSIExtracollector, <>, <>);
-*/
 
 VariableType LFPDataAnalyzer;
 LFPDataAnalyzer LFPanalyzer<directory=DIRECTORY, fileExt=FILE_EXTENSION,
