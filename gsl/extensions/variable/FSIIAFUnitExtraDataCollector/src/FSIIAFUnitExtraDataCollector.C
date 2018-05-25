@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -14,8 +14,8 @@
 // =================================================================
 
 #include "Lens.h"
-#include "TraubIAFUnitExtraDataCollector.h"
-#include "CG_TraubIAFUnitExtraDataCollector.h"
+#include "FSIIAFUnitExtraDataCollector.h"
+#include "CG_FSIIAFUnitExtraDataCollector.h"
 #include "NodeDescriptor.h"
 #include "Node.h"
 #include <map>
@@ -25,7 +25,7 @@
 #include <iostream>
 #include <utility>
 
-void TraubIAFUnitExtraDataCollector::initialize(RNG& rng) 
+void FSIIAFUnitExtraDataCollector::initialize(RNG& rng) 
 {
   // Sort pointers by indices, row major
   std::map<unsigned, 
@@ -182,7 +182,7 @@ void TraubIAFUnitExtraDataCollector::initialize(RNG& rng)
     }  
 }
 
-void TraubIAFUnitExtraDataCollector::finalize(RNG& rng) 
+void FSIIAFUnitExtraDataCollector::finalize(RNG& rng) 
 {  
   if (op_saveVoltages)
     {
@@ -215,7 +215,7 @@ void TraubIAFUnitExtraDataCollector::finalize(RNG& rng)
     }
 }
 
-void TraubIAFUnitExtraDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
+void FSIIAFUnitExtraDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
 {
 
   if (op_saveVoltages)
@@ -273,7 +273,7 @@ void TraubIAFUnitExtraDataCollector::dataCollection(Trigger* trigger, NDPairList
   
 }
 
-void TraubIAFUnitExtraDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitExtraDataCollectorInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitExtraDataCollectorOutAttrPSet* CG_outAttrPset) 
+void FSIIAFUnitExtraDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitExtraDataCollectorInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitExtraDataCollectorOutAttrPSet* CG_outAttrPset) 
 {
   ShallowArray<unsigned,3,2> coords;
   CG_node->getNode()->getNodeCoords(coords);
@@ -283,27 +283,27 @@ void TraubIAFUnitExtraDataCollector::getNodeIndices(const String& CG_direction, 
   slices.push_back(coords[2]);
 }
 
-TraubIAFUnitExtraDataCollector::TraubIAFUnitExtraDataCollector() 
-  : CG_TraubIAFUnitExtraDataCollector()
+FSIIAFUnitExtraDataCollector::FSIIAFUnitExtraDataCollector() 
+  : CG_FSIIAFUnitExtraDataCollector()
 {
 }
 
-TraubIAFUnitExtraDataCollector::~TraubIAFUnitExtraDataCollector() 
+FSIIAFUnitExtraDataCollector::~FSIIAFUnitExtraDataCollector() 
 {
 }
 
-void TraubIAFUnitExtraDataCollector::duplicate(std::auto_ptr<TraubIAFUnitExtraDataCollector>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::auto_ptr<FSIIAFUnitExtraDataCollector>& dup) const
 {
-  dup.reset(new TraubIAFUnitExtraDataCollector(*this));
+  dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void TraubIAFUnitExtraDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
 {
-  dup.reset(new TraubIAFUnitExtraDataCollector(*this));
+  dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void TraubIAFUnitExtraDataCollector::duplicate(std::auto_ptr<CG_TraubIAFUnitExtraDataCollector>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::auto_ptr<CG_FSIIAFUnitExtraDataCollector>& dup) const
 {
-  dup.reset(new TraubIAFUnitExtraDataCollector(*this));
+  dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 

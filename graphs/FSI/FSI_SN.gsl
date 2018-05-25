@@ -57,7 +57,7 @@ NdplNodeInit heterWave(initWave);*/
 
 // ##### FSI network #####
 // Node parameters
-NodeType TraubIAFUnit(< 
+NodeType FSIIAFUnit(< 
                       b = 10.0,                // s^-1      
                       GoC = 50.0,              // s^-1
                       C = 1.0,
@@ -112,7 +112,7 @@ Grid CTX
 Grid FSI
 {
   Dimension(20,20,10);
-  Layer(FSIs, TraubIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+  Layer(FSIs, FSIIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(FSIs), heterN);
   connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
                   ipsp_fsi, outAttrDef, ipsp);
@@ -138,8 +138,8 @@ FileDriverUnitDataCollector CTXcollector<directory=DIRECTORY, fileExt=FILE_EXTEN
   op_saveOutputs=1>;
 polyConnect(iaf/ctx[].Layer(LayerV), CTXcollector, <>, <>);*/
 
-VariableType TraubIAFUnitDataCollector;
-TraubIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+VariableType FSIIAFUnitDataCollector;
+FSIIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
   op_saveSpikes=1, op_saveSpikesAll=0, Xmin=0, Xmax=8, Ymin=0, Ymax=8, Zmin=0, Zmin=8>;
 polyConnect(iaf/fsi[].Layer(FSIs), FSIcollector, <>, <>);
 

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -13,18 +13,18 @@
 //
 // =================================================================
 
-#ifndef TraubIAFUnitCompCategory_H
-#define TraubIAFUnitCompCategory_H
+#ifndef FSIIAFUnitCompCategory_H
+#define FSIIAFUnitCompCategory_H
 
 #include "Lens.h"
-#include "CG_TraubIAFUnitCompCategory.h"
+#include "CG_FSIIAFUnitCompCategory.h"
 
 class NDPairList;
 
-class TraubIAFUnitCompCategory : public CG_TraubIAFUnitCompCategory
+class FSIIAFUnitCompCategory : public CG_FSIIAFUnitCompCategory
 {
    public:
-      TraubIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+      FSIIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
       void initializeShared(RNG& rng);
       void outputPSPsShared(RNG& rng);
  private:

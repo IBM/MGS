@@ -13,11 +13,11 @@
 //
 // =================================================================
 
-#ifndef TRAUBIAFUNIT_MDL
-#define TRAUBIAFUNIT_MDL
+#ifndef FSIIAFUNIT_MDL
+#define FSIIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node TraubIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
+Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
   OutputProducer, Output3Producer {
    double [] I; // These variable names are according to Mihalas and Niebur, 2009
    double [] [] I_p;

@@ -13,11 +13,11 @@
 //
 // =================================================================
 
-#ifndef TRAUBIAFUNITDATACOLLECTORS_MDL
-#define TRAUBIAFUNITDATACOLLECTORS_MDL
+#ifndef FSIIAFUNITDATACOLLECTORS_MDL
+#define FSIIAFUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Variable TraubIAFUnitDataCollector
+Variable FSIIAFUnitDataCollector
 {
    string directory;
    string fileExt;

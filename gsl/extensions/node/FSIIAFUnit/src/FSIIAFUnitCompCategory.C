@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -14,21 +14,21 @@
 // =================================================================
 
 #include "Lens.h"
-#include "TraubIAFUnitCompCategory.h"
+#include "FSIIAFUnitCompCategory.h"
 #include "NDPairList.h"
-#include "CG_TraubIAFUnitCompCategory.h"
+#include "CG_FSIIAFUnitCompCategory.h"
 #include <fstream>
 #include <sstream>
 
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
 
-TraubIAFUnitCompCategory::TraubIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : CG_TraubIAFUnitCompCategory(sim, modelName, ndpList)
+FSIIAFUnitCompCategory::FSIIAFUnitCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
+   : CG_FSIIAFUnitCompCategory(sim, modelName, ndpList)
 {
 }
 
-void TraubIAFUnitCompCategory::initializeShared(RNG& rng) 
+void FSIIAFUnitCompCategory::initializeShared(RNG& rng) 
 {
   std::ostringstream sysCall;
   sysCall<<"mkdir -p "<<SHD.sharedDirectory.c_str()<<";";
@@ -56,8 +56,8 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
       n=0;
       while (n<getSimulation().getNumProcesses()) {
         if (n==rank) {
-          ShallowArray<TraubIAFUnit>::iterator it = _nodes.begin();
-          ShallowArray<TraubIAFUnit>::iterator end = _nodes.end();
+          ShallowArray<FSIIAFUnit>::iterator it = _nodes.begin();
+          ShallowArray<FSIIAFUnit>::iterator end = _nodes.end();
           weight_file->open(os_weight.str().c_str(),
                             std::ofstream::out | std::ofstream::app | std::ofstream::binary);
           for (; it != end; ++it)
@@ -86,8 +86,8 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
       n=0;
       while (n<getSimulation().getNumProcesses()) {
         if (n==rank) {
-          ShallowArray<TraubIAFUnit>::iterator it = _nodes.begin();
-          ShallowArray<TraubIAFUnit>::iterator end = _nodes.end();
+          ShallowArray<FSIIAFUnit>::iterator it = _nodes.begin();
+          ShallowArray<FSIIAFUnit>::iterator end = _nodes.end();
           GJ_file->open(os_GJ.str().c_str(),
                             std::ofstream::out | std::ofstream::app | std::ofstream::binary);
           for (; it != end; ++it)
@@ -115,7 +115,7 @@ void TraubIAFUnitCompCategory::initializeShared(RNG& rng)
     }
 }
 
-void TraubIAFUnitCompCategory::outputPSPsShared(RNG& rng) 
+void FSIIAFUnitCompCategory::outputPSPsShared(RNG& rng) 
 {
   if (SHD.op_savePSPs)
     {
@@ -123,8 +123,8 @@ void TraubIAFUnitCompCategory::outputPSPsShared(RNG& rng)
       int n=0;  
       while (n<getSimulation().getNumProcesses()) {
         if (n==rank) {
-          ShallowArray<TraubIAFUnit>::iterator it = _nodes.begin();
-          ShallowArray<TraubIAFUnit>::iterator end = _nodes.end();
+          ShallowArray<FSIIAFUnit>::iterator it = _nodes.begin();
+          ShallowArray<FSIIAFUnit>::iterator end = _nodes.end();
           psp_file->open(os_psp.str().c_str(),
                          std::ofstream::out | std::ofstream::app | std::ofstream::binary);
           for (; it != end; ++it)

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -13,16 +13,16 @@
 //
 // =================================================================
 
-#ifndef TraubIAFUnitDataCollector_H
-#define TraubIAFUnitDataCollector_H
+#ifndef FSIIAFUnitDataCollector_H
+#define FSIIAFUnitDataCollector_H
 
 #include "Lens.h"
-#include "CG_TraubIAFUnitDataCollector.h"
+#include "CG_FSIIAFUnitDataCollector.h"
 #include <memory>
 #include <fstream>
 #include <iostream>
 
-class TraubIAFUnitDataCollector : public CG_TraubIAFUnitDataCollector
+class FSIIAFUnitDataCollector : public CG_FSIIAFUnitDataCollector
 {
    public:
       void initialize(RNG& rng);

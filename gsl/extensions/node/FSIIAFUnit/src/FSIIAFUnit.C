@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -14,8 +14,8 @@
 // =================================================================
 
 #include "Lens.h"
-#include "TraubIAFUnit.h"
-#include "CG_TraubIAFUnit.h"
+#include "FSIIAFUnit.h"
+#include "CG_FSIIAFUnit.h"
 #include "GridLayerData.h"
 #include "rndm.h"
 #include <fstream>
@@ -26,7 +26,7 @@
 #define TIME ITER*getSharedMembers().deltaT
 #define RANK getSimulation().getRank()
 
-void TraubIAFUnit::initialize(RNG& rng) 
+void FSIIAFUnit::initialize(RNG& rng) 
 {
   spike=false;
   //  Theta=SHD.Theta_inf;
@@ -53,7 +53,7 @@ void TraubIAFUnit::initialize(RNG& rng)
     ctxInputWeight = 1.0;
 }
 
-void TraubIAFUnit::updateInput(RNG& rng) 
+void FSIIAFUnit::updateInput(RNG& rng) 
 {
   // Cortex input
   double driver = 0.0;
@@ -92,7 +92,7 @@ void TraubIAFUnit::updateInput(RNG& rng)
     }
 }
 
-void TraubIAFUnit::updateV(RNG& rng)
+void FSIIAFUnit::updateV(RNG& rng)
 {
   // Neuron
   int nI=I.size();
@@ -125,7 +125,7 @@ void TraubIAFUnit::updateV(RNG& rng)
   Theta=Theta_p[ip];
 }
 
-void TraubIAFUnit::threshold(RNG& rng) 
+void FSIIAFUnit::threshold(RNG& rng) 
 {
   spike=(V>Theta);
   if (spike)
@@ -153,7 +153,7 @@ void TraubIAFUnit::threshold(RNG& rng)
     V_spike=V;
 }
 
-void TraubIAFUnit::outputPSPs(std::ofstream& fs)
+void FSIIAFUnit::outputPSPs(std::ofstream& fs)
 {
   ShallowArray<PSPInput>::iterator iter, end=lateralInputs.end();
   float temp = 0.;
@@ -164,7 +164,7 @@ void TraubIAFUnit::outputPSPs(std::ofstream& fs)
     }
 }
 
-void TraubIAFUnit::outputWeights(std::ofstream& fs)
+void FSIIAFUnit::outputWeights(std::ofstream& fs)
 {
   ShallowArray<PSPInput>::iterator iter, end=lateralInputs.end();
   int temp = lateralInputs.size();
@@ -177,7 +177,7 @@ void TraubIAFUnit::outputWeights(std::ofstream& fs)
     }
 }
 
-void TraubIAFUnit::outputGJs(std::ofstream& fs)
+void FSIIAFUnit::outputGJs(std::ofstream& fs)
 {
   ShallowArray<GJInput>::iterator iter, end=gjInputs.end();
   int temp = gjInputs.size();  
@@ -196,7 +196,7 @@ void TraubIAFUnit::outputGJs(std::ofstream& fs)
     }
 }
 
-bool TraubIAFUnit::bidirectional1(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
+bool FSIIAFUnit::bidirectional1(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset) 
 {
   
   // N.B.: this function assumes both layers are in the same grid and therefore
@@ -220,7 +220,7 @@ bool TraubIAFUnit::bidirectional1(const String& CG_direction, const String& CG_c
     return false;
 }
 
-bool TraubIAFUnit::bidirectional2(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
+bool FSIIAFUnit::bidirectional2(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset) 
 {
   
   // N.B.: this function assumes both layers are in the same grid and therefore
@@ -254,7 +254,7 @@ bool TraubIAFUnit::bidirectional2(const String& CG_direction, const String& CG_c
     return false;
 }
  
-void TraubIAFUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_TraubIAFUnitInAttrPSet* CG_inAttrPset, CG_TraubIAFUnitOutAttrPSet* CG_outAttrPset) 
+void FSIIAFUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_FSIIAFUnitInAttrPSet* CG_inAttrPset, CG_FSIIAFUnitOutAttrPSet* CG_outAttrPset) 
 {
   if (CG_inAttrPset->identifier=="driver") {
     ctxInputs[ctxInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab 
@@ -268,7 +268,7 @@ void TraubIAFUnit::setIndices(const String& CG_direction, const String& CG_compo
   }
 }
 
-TraubIAFUnit::~TraubIAFUnit() 
+FSIIAFUnit::~FSIIAFUnit() 
 {
 }
 
