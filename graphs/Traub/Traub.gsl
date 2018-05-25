@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -23,19 +23,12 @@ FinalPhases = { finalize };
 #define DELTA_T 0.0001
 
 
-// ##### Driving wave input from cortex #####
+// ##### Driving input from cortex #####
 // Node parameters
-NodeType WaveDriverUnit(<
-                        deltaT = DELTA_T,       // in s
-                        op_constant = 0
-                        >) {update->run1} ;
-
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
-			//inputFileName = "WT39_07_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
-			//inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
-			inputFileName = "toUseWindow.mat",
+			inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.mat",
                         op_random = 1,
                         scale = 1.25
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
@@ -44,16 +37,6 @@ NodeType FileDriverUnit(<
 EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
 BindName CTXw("weight", 1.0, "identifier", "driver");
 NdplInAttrInit ctxW(CTXw);
-
-// Initialize waves
-#define AMPMIN 0.5 //1.0
-
-#define AMPMAX 1.0 //1.5
-BindName initWave("Hz", Gaussian(3.0,0.1),
-                  "phase", Gaussian(0.0,6.28319), // in rad (360 = 6.28319)
-                  "amplitude", UniformDist(AMPMIN, AMPMAX),
-                  "wave", UniformDist(AMPMIN, AMPMAX));
-NdplNodeInit heterWave(initWave);
 
 
 
@@ -94,16 +77,13 @@ BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),
 NdplInAttrInit ipsp(IPSP);
 
 // Gap junctions connectivity
-//EachDstPropSrc gj_fsi(Unique(RadialDensitySampler(26, 1.415, uniformDensity, 1.415)));
 EachDstPropSrc gj_fsi(Unique(RadialSampler(1.733,2.0)));
 
-// Gap junctions weights
+// Gap junctions "weights"
 BindName GJ1("conductance", 18.0, "identifier", "gj1", "connectionFraction", 0.2263);
 BindName GJ2("conductance", 18.0, "identifier", "gj2", "connectionFraction", 0.2263);
-//BindName GJ1("conductance", 0.0, "identifier", "gj1", "connectionFraction", 0.2263);
-//BindName GJ2("conductance", 0.0, "identifier", "gj2", "connectionFraction", 0.2263);
 NdplInAttrInit gj1(GJ1);
-NdplInAttrInit gj2(GJ2);
+NdplInAttrInit gj2(GJ1);
 
 // Initialize neurons
 BindName initN("V", UniformDist(-0.07,-0.05), // Uniform from reset to mean threshold
@@ -116,10 +96,6 @@ NdplNodeInit heterN(initN);
 Grid CTX
 {
   Dimension(3,3,3);
-  /*
-  Layer(LayerV, WaveDriverUnit, UniformLayout(1), < nodekind="Nodes" >);
-  InitNodes(.[].Layer(LayerV), heterWave);
-  */
   Layer(LayerV, FileDriverUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(LayerV), nodeDef);  
 };
@@ -150,12 +126,6 @@ CortexFSI iaf;
 
 
 // ##### Setup data collectors and analyzers #####
-/*
-VariableType WaveDriverUnitDataCollector;
-WaveDriverUnitDataCollector CTXWcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveWaves=1>;
-polyConnect(iaf/ctx[].Layer(LayerV), CTXWcollector, <>, <>);
-*/
 VariableType FileDriverUnitDataCollector;
 FileDriverUnitDataCollector CTXFcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
   op_saveOutputs=1>;
@@ -165,14 +135,6 @@ VariableType TraubIAFUnitDataCollector;
 TraubIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
   op_saveSpikes=1, op_saveSpikesAll=0, Xmin=0, Xmax=8, Ymin=0, Ymax=8, Zmin=0, Zmin=8>;
 polyConnect(iaf/fsi[].Layer(FSIs), FSIcollector, <>, <>);
-
-/*
-VariableType TraubIAFUnitExtraDataCollector;
-TraubIAFUnitExtraDataCollector FSIExtracollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveVoltages=1, op_saveThresholds=1, op_saveTotalDriver=1, op_saveTotalIPSC=1,
-  op_saveTotalGJ=1>;
-polyConnect(iaf/fsi[].Layer(FSIs), FSIExtracollector, <>, <>);
-*/
 
 VariableType LFPDataAnalyzer;
 LFPDataAnalyzer LFPanalyzer<directory=DIRECTORY, fileExt=FILE_EXTENSION,
@@ -203,10 +165,8 @@ UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 50",
 UnsignedTrigger endTrig("Iteration Trigger to end or stop",
                         ::Iteration, "==", 1000000, 0, lastPhase); // in dt
 
-//CTXWcollector.dataCollection() on iterTrigSampled;
 CTXFcollector.dataCollection() on iterTrigSampled;
 FSIcollector.dataCollection() on iterTrig;
-//FSIExtracollector.dataCollection() on iterTrigSampled;
 LFPanalyzer.dataCollection() on iterTrigSampled;
 
 Stop on endTrig;
