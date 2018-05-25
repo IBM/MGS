@@ -22,7 +22,8 @@ postprocess_PSPs = false;
 postprocess_totalDriver = false;
 postprocess_totalIPSC = false;
 postprocess_totalGJ = false;
-directory='../../graphs/Traub/';
+directory='../../graphs/FSI/';
+% directory='../../../../../chdi_common/team-A/Results/00015_9df8ac3/long_sims/scale=1_25/without_GJs/';
 fileExt='.dat';
 % for no parameter search just set to all ranges to zero
 vX_range=0;
