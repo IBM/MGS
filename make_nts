@@ -239,7 +239,7 @@ if which python | grep -q1 /\python; then
 fi
 
 if ldconfig -p | grep libgmp; then
-    echo libgmp found...; else libgmp not found!;
+    echo libgmp found...; else libgmp not found! please either install through your distribution's package manager or from source;
         exit;
 fi
 
