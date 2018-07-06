@@ -155,13 +155,14 @@ SUPPORTED_COMPONENTS="all common mdl gsl nti"
 #}}}
 
 ########################################
-### Check required tools ###
+### Check required tools/libraries ###
 ## 1. MPI library
 ## 2. Bison
 ## 3. Flex
 ## 4. Python
-## 5. CUDA [optional]
-## 6. Armadillo [optional]
+## 5. libgmp
+## 6. CUDA [optional]
+## 7. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
@@ -231,6 +232,11 @@ fi
 if which python | grep -q1 /\python; then
     echo python found...; else echo python not found!;
 	exit;
+fi
+
+if ldconfig -p | grep libgmp; then
+    echo libgmp found...; else libgmp not found!;
+        exit;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
