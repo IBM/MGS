@@ -197,7 +197,7 @@ if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
 fi
 
 if which flex | grep -q1 /\flex; then
-    echo flex found...; else echo flex not found!; exit; fi
+    echo flex found...; else echo flex not found! please either install through your distribution's package manager or from source; exit; fi
 
 VALID_FLEX_VERSION=2.5.4
 FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
