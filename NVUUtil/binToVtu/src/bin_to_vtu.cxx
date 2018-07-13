@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
         // (don't change).
   char Prefix[] = "";
 
-  std::cerr << "Reminder that usage: " << argv[0]
-            << " <Data directory> <Final time> <Output per sec>\n";
+  //std::cerr << "Reminder that usage: " << argv[0]
+  //          << " <Data directory> <Final time> <Output per sec>\n";
 
 //*****************************************************************************************
 // run with no arguments for debugging
@@ -64,18 +64,27 @@ int main(int argc, char *argv[])
     printf(
         "Uh oh, spaghettio. You have not entered the correct number of "
         "arguments.\n");
+#if USE_TIME == TIME_INT
     std::cerr << "Usage: " << argv[0] << " <Data directory> <Final time>\n";
+#elif USE_TIME == TIME_FLOAT
+    std::cerr << "Usage: " << argv[0] << " <Data directory> <Num_data_point_to_skip>\n";
+    std::cerr << "Default: \n" 
+      << "       <Num_data_point_to_skip>   =  0\n";
+#endif
     exit(EXIT_FAILURE);
   }
 
   char *dirName = argv[1];  // First argument: Folder name.
 #if USE_TIME == TIME_INT
   /* the original code requires 'integer' time in second */
+  // which is used later to derive number of data points
   int tf = atoi(argv[2]);   // Second argument: Final time (atoi: str -> int).
 #elif USE_TIME == TIME_FLOAT
   /* try to accept float  in second
    * so that we can plot neuron spiking at the same time */
-  float tf = atof(argv[2]);   // Second argument: Final time (atoi: str -> int).
+  //actually we don't need, as  number of data points is extracted from info.dat
+  //float tf = atof(argv[2]);   // Second argument: Final time 
+  int num_datapoint_skips = atoi(argv[2]);
 #endif
 #endif
   //******************************************************************************************
@@ -236,7 +245,7 @@ int main(int argc, char *argv[])
   int row = 0;
   int col = POW_OF_2(n_levels - 1);
   int xbranch = 0;
-  int offset = n_nodes + 1;  // +1 because we need to add the leaf nodes.
+  //int offset = n_nodes + 1;  // +1 because we need to add the leaf nodes.
 
   int nx[n_branches], ny[n_branches], nz1[n_nodes], nz2[n_nodes], h1[n_nodes],
       h2[n_nodes];
@@ -383,15 +392,41 @@ int main(int argc, char *argv[])
 
   // 4. Add binary data as attributes to cells:
 
+  /* wrong order */
+  //char const *var_names[] = {
+  //    "R",     "R_k",    "Na_k", "K_k",  "HCO3_k",    "Cl_k",    "Na_s",
+  //    "K_s",   "HCO3_s", "K_p",  "w_k",  "Ca_i",      "s_i",     "v_i",
+  //    "w_i",   "IP3_i",  "K_i",  "Ca_j", "s_j",       "v_j",     "IP3_j",
+  //    "Mp",    "AMp",    "AM",   "K_e",  "PLC_input", "K_input", "flux_ft",
+  //    "NO_n",  "NO_k",   "NO_i", "NO_j", "cGMP",      "eNOS",    "nNOS",
+  //    "Ca_n",  "E_b",    "E_6c", "Ca_k", "s_k",       "h_k",     "IP3_k",
+  //    "eet_k", "m_k",    "Ca_p"};
+
+  /* correct */
+  /* rename:
+   * s_i --> Casr_i
+   * s_j --> Caer_j
+  //
+  //To be added
+      //"PLC_input", "K_input", "flux_ft",
+  NOTE:
+    /// k = astrocyte
+    /// n = neuron
+    /// s = synaptic cleft
+    /// i = SMC cell
+    /// j = endothelial cell
+    /// e = extracellular space
+   */
   char const *var_names[] = {
       "R",     "R_k",    "Na_k", "K_k",  "HCO3_k",    "Cl_k",    "Na_s",
-      "K_s",   "HCO3_s", "K_p",  "w_k",  "Ca_i",      "s_i",     "v_i",
-      "w_i",   "IP3_i",  "K_i",  "Ca_j", "s_j",       "v_j",     "IP3_j",
-      "Mp",    "AMp",    "AM",   "K_e",  "PLC_input", "K_input", "flux_ft",
-      "NO_n",  "NO_k",   "NO_i", "NO_j", "cGMP",      "eNOS",    "nNOS",
-      "Ca_n",  "E_b",    "E_6c", "Ca_k", "s_k",       "h_k",     "IP3_k",
-      "eet_k", "m_k",    "Ca_p"};
-
+      "K_s",   "HCO3_s", "K_p",  "w_k",  "Ca_i",      "Casr_i",     "v_i",
+      "w_i",   "IP3_i",  "K_i",  "Ca_j", "Caer_j",       "v_j",     "IP3_j",
+      "Mp",    "AMp",    "AM",   "K_e",  "NO_n",  "NO_k",   "NO_i", 
+      "NO_j", "cGMP",      "eNOS",    "nNOS", "Ca_n",  "E_b",    "E_6c", 
+      "Ca_k", "s_k",       "h_k",     "IP3_k", "eet_k", "m_k",    "Ca_p",
+  /* extra part */
+      "Glut_out", "numSpikes"
+  };
 #if USE_TIME == TIME_INT
   /* it is assumed the number of data point is tf */ 
   int num_time_steps = tf;
@@ -425,6 +460,7 @@ int main(int argc, char *argv[])
 #endif
 
   // 4.1 Time step loop:
+  int counter = 0;
   for (int i = 0; i <= num_time_steps;)
   {
     int ts_in_buffer;
@@ -453,6 +489,17 @@ int main(int argc, char *argv[])
                    tissue_seg_size * ts_in_buffer * sizeof(double));
     is_flow.read((char *)flow_buffer,
                  flow_seg_size * ts_in_buffer * sizeof(double));
+    if (counter < num_datapoint_skips)
+    {
+      counter++;
+      free(tissue_buffer);
+      free(flow_buffer);
+      continue;
+    }
+    else{
+      counter = 0;
+      //writing below
+    }
 
 #pragma omp parallel for firstprivate(i)
     for (int t = 0; t < ts_in_buffer; t++)
@@ -478,18 +525,21 @@ int main(int argc, char *argv[])
 
       double *cur_ts_tissue = tissue_buffer + t * tissue_seg_size;
       double *cur_ts_flow = flow_buffer + t * flow_seg_size;
+#ifdef DEBUG
       double time_tb, time_tree;
-
       time_tb = *cur_ts_tissue;
       cur_ts_tissue++;
       time_tree = *cur_ts_flow;
+#endif
       cur_ts_flow++;
 
 #pragma omp critical
       {
-        //std::cout << "Tissue Time: " << time_tb
-        //          << " \t Flow Time: " << time_tree
-        //          << std::endl;  // Print time from both files for comparison.
+#ifdef DEBUG
+        std::cout << "Tissue Time: " << time_tb
+                  << " \t Flow Time: " << time_tree
+                  << std::endl;  // Print time from both files for comparison.
+#endif 
       }
 
       // 4.1.1 Tissue blocks:
@@ -701,8 +751,20 @@ int main(int argc, char *argv[])
       appendFilter->AddInputConnection(tubeFilter->GetOutputPort());
 
       // 5. Write to files:
+      //if (counter < num_datapoint_skips)
+      //{
+      //  counter++;
+      //  free(tissue_buffer);
+      //  free(flow_buffer);
+      //  continue;
+      //}
+      //else{
+      //  counter = 0;
+      //  //writing below
+      //}
 
       // 5.1 Tissue blocks:
+#if 1
       std::ostringstream filename_buffer_tb;
       char tbVtuSuffix[] = "/paraView_blocks";
       char tbVtuOutfile[128];
@@ -717,8 +779,10 @@ int main(int argc, char *argv[])
       writer_tb->SetFileName(filename_buffer_tb.str().c_str());
       writer_tb->SetInputData(uGrid);
       writer_tb->Write();
+#endif
 
       // 5.2 H-Tree (tubeFilter):
+#if 1
       std::ostringstream filename_buffer_tree;
       char fVtuSuffix[] = "/paraView_Htree_tubes";
       char fVtuOutfile[128];
@@ -732,8 +796,11 @@ int main(int argc, char *argv[])
       writer_tree->SetFileName(filename_buffer_tree.str().c_str());
       writer_tree->SetInputConnection(appendFilter->GetOutputPort());
       writer_tree->Write();
+#endif
 
       // 5.3 H-Tree_lines:
+      
+#if 1
       std::ostringstream filename_buffer_tree2;
       char fVtuSuffix2[] = "/paraView_Htree_lines";
       char fVtuOutfile2[128];
@@ -748,6 +815,7 @@ int main(int argc, char *argv[])
       writer2->SetFileName(filename_buffer_tree2.str().c_str());
       writer2->SetInputData(uGrid2);
       writer2->Write();
+#endif
 #ifndef OMP
       i = i + 1;
 #endif
