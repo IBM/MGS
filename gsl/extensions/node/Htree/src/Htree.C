@@ -26,7 +26,7 @@ void Htree::initTree(RNG& rng)
     std::cerr<< "Number of NVUs as seen by Htree is " << tree->numberNVUs << std::endl;
     assert(tree->numberNVUs > 0 && "number of NVU's <= 0 (bad input)");
 
-    tree->nu = NEQ * tree->numberNVUs;
+    tree->nu = NEQ_TOTAL * tree->numberNVUs;
     /*
     Parse input parameters and set tree sizes. There are four N values
     that matter: 
@@ -44,6 +44,7 @@ void Htree::initTree(RNG& rng)
     tree->N0 = 0;//(int) round(log2((double) tree->N)); 
     tree->Np = tree->N - tree->N0; // Dependent on number of levels and number of cores running
 
+    /* must call after above setting */
     init_subtree();                // Init adjacency matrix and workspace for subtree
 
     // Set IC's for pressure array
@@ -89,7 +90,7 @@ void Htree::updatePressures(RNG& rng)
     // Update conductances of autoregulating vessels
     for (int i = 0; i < tree->numberNVUs; i++)
     {
-        //r = y[NEQ*i]; // Radius is always the first variable
+        //r = y[NEQ_TOTAL*i]; // Radius is always the first variable
         correctedNVUIndex = tree->NVUIndices[i];
         r = *(NVUinputs[correctedNVUIndex].radius);
         assert(!isnan(r));
@@ -103,7 +104,6 @@ void Htree::updatePressures(RNG& rng)
     compute_uv(PCAP); // compute the intermediate variables u and v
 
     compute_sub(p0, PCAP); // compute p, w and q  
-
 }
 
 void Htree::finalize(RNG& rng) 
@@ -176,9 +176,12 @@ void Htree::writeToFiles(RNG& rng)
         {
             correctedNVUIndex = tree->NVUIndices[i];
                         
-            for (int j = 0; j < NEQ; j++)
+            for (int j = 0; j < NEQ_TOTAL; j++)
             {
-                tree->stateVars[i * NEQ + j] = (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j];
+                tree->stateVars[i * NEQ_TOTAL + j] = (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j];
+                if (j == NEQ)
+                    std::cerr << "Htree:   Glut = " << (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j]
+                        << std::endl;
             }
         }
 
@@ -207,9 +210,9 @@ void Htree::writeToFiles(RNG& rng)
         {
             correctedNVUIndex = tree->NVUIndices[i];
                         
-            for (int j = 0; j < NEQ; j++)
+            for (int j = 0; j < NEQ_TOTAL; j++)
             {
-                tree->stateVars[i * NEQ + j] = (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j];
+                tree->stateVars[i * NEQ_TOTAL + j] = (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j];
             }
         }
 
@@ -303,7 +306,8 @@ void Htree::init_subtree()
 
     tree->xm = (double *) malloc(tree->A->m * sizeof(*tree->xm));
 
-    tree->stateVars = (double *)malloc (tree->numberNVUs * NEQ * (sizeof *tree->stateVars));
+    //tree->stateVars = (double *)malloc (tree->numberNVUs * NEQ_TOTAL * (sizeof *tree->stateVars));
+    tree->stateVars = (double *)malloc (tree->nu * (sizeof *tree->stateVars));
     tree->NVUIndices = (int *) malloc (tree->numberNVUs * (sizeof *tree->NVUIndices));
 }
 
@@ -769,7 +773,7 @@ void Htree::write_info()
     fprintf(fp, "n_processors    n_blocks_per_rank        n_state_vars   m_local         n_local         m_global        n_global     n_datapoints\n");
     fprintf(fp, "%-16d", 1);
     fprintf(fp, "%-16d", tree->numberNVUs);
-    fprintf(fp, "%-16d", NEQ);
+    fprintf(fp, "%-16d", NEQ_TOTAL);
     fprintf(fp, "%-16d", tree->mlocal);
     fprintf(fp, "%-16d", tree->nlocal);
     fprintf(fp, "%-16d", tree->mglobal);
@@ -796,7 +800,7 @@ void Htree::write_info_n_data()
     fprintf(fp, "n_processors    n_blocks_per_rank        n_state_vars   m_local         n_local         m_global        n_global\n");
     fprintf(fp, "%-16d", 1);
     fprintf(fp, "%-16d", tree->numberNVUs);
-    fprintf(fp, "%-16d", NEQ);
+    fprintf(fp, "%-16d", NEQ_TOTAL);
     fprintf(fp, "%-16d", tree->mlocal);
     fprintf(fp, "%-16d", tree->nlocal);
     fprintf(fp, "%-16d", tree->mglobal);
@@ -819,8 +823,8 @@ void Htree::write_info_n_data()
 }
 #endif
 
-/** For each item in the coordinates from NVU nodes, find their index in my x,y coordinates.
-
+/* 
+ * For each item in the coordinates from NVU nodes, find their index in my x,y coordinates.
 */
 void Htree::calculate_indices()
 {

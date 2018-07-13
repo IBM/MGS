@@ -4,52 +4,77 @@
 
 // NVU
 //{{{
-#define NEQ 42
-#define DIMENSIONS 3
+#define NEQ  42   // those solved by ODE
+#define NEQ_EXTRA 2   // those NVU receives (from NTS?) but want to export along with it
+#define NEQ_TOTAL (NEQ + NEQ_EXTRA) // those Htree export
 
-#define NTS_INTEGRATION	0
+#define DIMENSIONS 3  // 3-dimensional space
 
+//#define NTS_INTEGRATION	0  // to be removed
+
+
+// Here keep track the indices of the associated variable name in 
+//   1. stateVar array
+//   2. flux     array
+
+// total(stateVar) = 
+// 6+3+1+6+4+3+1+10+7 = 41
+//{{{
 #define i_radius   0 // radius has to be 0, this is assumed elsewhere
-
-// AC
+// AC  6
+//{{{ 
 #define R_k        1
 #define N_Na_k     2
 #define N_K_k      3
 #define N_HCO3_k   4
 #define N_Cl_k     5
 #define w_k        10
+//}}}
 
-// SC
+// SC  3
+//{{{ 
 #define N_Na_s     6
 #define N_K_s      7
 #define N_HCO3_s   8
+//}}}
 
-// PVS
+// PVS  1
+//{{{ 
 #define K_p        9
+//}}}
 
-// SMC
+// SMC  6
+//{{{ 
 #define ca_i       11
 #define ca_sr_i    12
 #define v_i        13
 #define w_i        14
 #define ip3_i      15
 #define K_i        16
+//}}}
 
-// EC
+// EC  4
+//{{{ 
 #define ca_j       17
 #define ca_er_j    18
 #define v_j        19
 #define ip3_j      20
+//}}}
 
-// Mech
+// Mech  3
+//{{{ 
 #define Mp         21
 #define AMp        22
 #define AM         23
+//}}}
 
-// ECS
+// ECS  1
+//{{{ 
 #define K_e      24
+//}}}
 
-// NO pathway
+// NO pathway  10
+//{{{ 
 #define NOn         25
 #define NOk         26
 #define NOi         27
@@ -60,8 +85,10 @@
 #define ca_n        32
 #define E_b         33
 #define E_6c        34
+//}}}
 
-// AC Ca2+
+// AC Ca2+   7
+//{{{ 
 #define ca_k        35
 #define s_k         36
 #define h_k         37
@@ -69,8 +96,11 @@
 #define eet_k       39
 #define m_k         40
 #define ca_p        41
+//}}}
+//}}}
 
-// NVU fluxes
+// NVU fluxes  103
+//{{{ 
 #define flu_pt  0
 #define flu_P_str 1
 #define flu_delta_p 2
@@ -174,6 +204,8 @@
 #define flu_VOCC_k  100
 #define flu_K_input 101
 #define flu_nvu_Glu 102
+//}}}
+
 //}}}
 
 

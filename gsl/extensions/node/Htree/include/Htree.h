@@ -36,7 +36,7 @@ struct TreeWorkspace {
   int *level; // Level of each vessel in A
   double *g;  // Conductance, one per vessel. will be a pointer to data in G
 
-  int nu;      // Number of equations total
+  int nu;      // Number of equations total (NEQ * numberNVUs)
   int neq;     // Number of equations per block
   int mlocal;  // Size of subtree
   int nlocal;  // ..
