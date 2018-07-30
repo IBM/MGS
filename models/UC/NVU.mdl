@@ -1,5 +1,16 @@
 #ifndef NVUNODE_MDL
 #define NVUNODE_MDL
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+ */
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+// =================================================================
+
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 #include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
@@ -21,16 +32,17 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
   //}}}
 
   //{{{Extracellular data
-  double K_ecs;
+  double K_ecs;  //diffusion of K+  (uM)
   double* [] K_ecs_neighbors;
   dyn_var_t* voltage;
   int* numSpikes;
   //}}}
   
-
+  //{{{Internal datariables;
+  double [] coords; // (x,y,z) [um] Cartesian coordinate (of the center of the NVU)
+  double state_r; // [um] radius of the microvessel associated with the NVU
+  //}}}
   double [] stateVariables;
-  double [] coords;
-  double state_r; //radius
 
   Shared {
   //{{{
@@ -48,6 +60,10 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double [] blockSize;
 
         /****** Model parameters ******/
+    //total 
+    //11+4+17+2+7+34+4+38+3+53+44
+    // = 217
+
 
     //{{{ Pressure constants
     double PA2MMHG;
@@ -299,8 +315,9 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
     double z_Ca;
     double const_m_c;
     //}}}
+    //}}}
 
-    InitPhase paramInitalize();
+    InitPhase paramInitialize();
 
     //string json_file; //hold all parameters' initial values
   //}}}
@@ -314,7 +331,10 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
   InitPhase initStateVariables(state_r, K_ecs, stateVariables, coords);
   InitPhase initJacobian();
 
-  RuntimePhase update(K_ecs);
+  RuntimePhase update(K_ecs); //TODO: may need to use predictor-corrector scheme
+   // to improve accuracy
+  //RuntimePhase predictor(K_ecs);
+  //RuntimePhase corrector(K_ecs);
   RuntimePhase copy(publicValue, state_r, stateVariables);
 
   FinalPhase finalize;
@@ -356,11 +376,11 @@ Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariab
   };
 
   Connection Pre Constant (PSet.identifier=="dt") Expects 
-    TimeStepProducer 
+    TimeStepProducer
   {
     TimeStepProducer.deltaT >> Shared.deltaT;
   };
-//}}}
+  //}}}
 //}}}
 }
 #endif

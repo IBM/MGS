@@ -64,11 +64,11 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 // IKAf = g * m * h * (V-E)
 #define VHALF_M -33.1                 
 #define k_M -7.5                       
-#define VHALF_H -70.4 
+#define VHALF_H -70.4
 #define k_H 7.6
 
-#define TAU_M 1.0 //ms                    
-#define TAU_H 25.0   // ms                 
+#define TAU_M 1.0 //ms
+#define TAU_H 25.0   // ms
 
 #elif CHANNEL_KAf == KAf_WOLF_2005
 //  Inactivation reference from  Tkatch - Surmeier (2000)

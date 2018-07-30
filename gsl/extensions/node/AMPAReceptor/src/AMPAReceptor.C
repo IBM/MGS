@@ -39,12 +39,16 @@
 #define NEUROTRANSMITTER      \
   (getSharedMembers().NTmax / \
    (1.0 + exp(-(*Vpre - getSharedMembers().Vp) / getSharedMembers().Kp)))
+
 #elif RECEPTOR_AMPA == AMPAR_POINTPROCESS
 // NOTE: Vp = Vthreshold
 #define NEUROTRANSMITTER      \
   (((*Vpre) > getSharedMembers().Vp ? getSharedMembers().NTmax : 0))
+
 #else
+  {
   NOT SUPPORT
+  }
 #endif
 
 //END

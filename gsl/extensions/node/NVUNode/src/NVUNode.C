@@ -11,6 +11,9 @@
 
 // Pressure constants
 
+#if 1   //group large code
+#define L0 (getSharedMembers().L0)
+
 #define PA2MMHG (getSharedMembers().PA2MMHG)
 #define T0 (getSharedMembers().T0)
 #define ETA (getSharedMembers().ETA)
@@ -250,11 +253,12 @@
 
 #define tau_diffusion (getSharedMembers().tau_diffusion) // for K+ ecs diff
 #define TStep (*(getSharedMembers().deltaT) * 1e-3)  // sec
-//#define DEBUG
+#define DEBUG
 #define THRESHOLD_NUMSPIKES 2
 #define GLUT_MIN 0.0  // uM
-#define K_extra_baseline  3.0 //mM
-#define K_extra_min 1.0 //mM
+#define K_extra_baseline  3000.0 //uM
+#define K_s_min  0.001  // uM
+#endif
 
 void NVUNode::initStateVariables(RNG& rng)
 {
@@ -269,9 +273,30 @@ void NVUNode::initStateVariables(RNG& rng)
 
     _gIdx =
 	this->getGlobalIndex();
+#if 1
+    int rank = getSimulation().getRank();
+    int comm_size = getSimulation().getNumProcesses();
+    for (int i = 0; i < comm_size; i++)
+    {
+       MPI_Barrier(MPI_COMM_WORLD);
+       std::vector<int> coords;
+       int x, y;
+       getNodeCoords(coords);
+       if (i == rank and getSimulation().isSimulatePass())
+       {
+	  std::cerr << "AAA: " << rank << ": " 
+	     << _gIdx << ", " << getIndex() 
+	     << ", " << getNodeIndex() 
+	     << ", " << coords[0] << "_" << coords[1] << "_" << coords[2] << "; "
+	     << ", " << std::endl;
+       }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
     Glut_out = GLUT_MIN;
-    K_out = K_extra_baseline;
+    //K_out = K_extra_baseline;
+    J_K_out = 0.0;
 
     solver_init(); // calls nvu_ics within
 
@@ -284,8 +309,9 @@ void NVUNode::initStateVariables(RNG& rng)
     std::vector<int> gridSize =
 	this->getGridLayerDescriptor()->getGrid()->getSize();
     getNodeCoords(indexCoordinate);
+    //wrong:calculateRealCoordinates(indexCoordinate, getSharedMembers().L0, gridSize[0], gridSize[1], gridSize[2], realCoordinate);
     /* L0 in meter and thus coords are in meter */
-    calculateRealCoordinatesNTS(indexCoordinate, getSharedMembers().L0,
+    calculateRealCoordinatesNTS(indexCoordinate, L0,
 	    gridSize[0], gridSize[1], gridSize[2], realCoordinate);
 //#define DEBUG_2
 #ifdef DEBUG_2
@@ -313,6 +339,9 @@ void NVUNode::initStateVariables(RNG& rng)
     {
     	stateVariables.push_back(workspace->y[i]);
     }
+    /* add those from outside */
+    add_or_update_extra_stateVariables(0); //0 = add, 1 = update (default)
+    assert(stateVariables.size() == NEQ_TOTAL);
 
     // Map state variable in array to mdl level variable ECS K+ for diffusion to take place.
     K_ecs = workspace->y[K_e];
@@ -326,14 +355,14 @@ void NVUNode::initStateVariables(RNG& rng)
     if (getNodeIndex() == PLOTTING_NODE)    {
         printf("Writing State vars has been selected on node %d.\n",getNodeIndex());
     	workspace->state_var_file = fopen("NVUOutputStateVars.csv", "w");
-    	fprintf(workspace->state_var_file, "#i_radius,R_k,N_Na_k,N_K_k,N_HCO3_k,N_Cl_k,w_k,N_Na_s,N_K_s,N_HCO3_s,K_p,ca_i,ca_sr_i,v_i,w_i,ip3_i,K_i,ca_j,ca_er_j,v_j,ip3_j,Mp,AMp,AM,K_e,NOn,NOk,NOi,NOj,cGMP,eNOS,nNOS,ca_n,E_b,E_6c,ca_k,s_k,h_k,ip3_k,eet_k,m_k,ca_p,t\n");
+    	fprintf(workspace->state_var_file, "#t, i_radius, R_k, N_Na_k, N_K_k, N_HCO3_k, N_Cl_k, w_k, N_Na_s, N_K_s, N_HCO3_s, K_p, ca_i, ca_sr_i, v_i, w_i, ip3_i, K_i, ca_j, ca_er_j, v_j, ip3_j, Mp, AMp, AM, K_e, NOn, NOk, NOi, NOj, cGMP, eNOS, nNOS, ca_n, E_b, E_6c, ca_k, s_k, h_k, ip3_k, eet_k, m_k, ca_p\n");
     }
 #endif
 #if WRITE_FLUXES
     if (getNodeIndex() == PLOTTING_NODE)    {
         printf("Writing fluxes has been selected on node %d.\n",getNodeIndex());
     	workspace->fluxes_file = fopen("NVUOutputFluxes.csv", "w");
-    	fprintf(workspace->fluxes_file, "#flu_pt,flu_P_str,flu_delta_p,flu_R_s,flu_N_Cl_s,flu_Na_s,flu_K_s,flu_HCO3_s,flu_Cl_s,flu_E_TRPV_k,flu_Na_k,flu_K_k,flu_HCO3_k,flu_Cl_k,flu_E_Na_k,flu_E_K_k,flu_E_Cl_k,flu_E_NBC_k,flu_E_BK_k,flu_J_NaK_k,flu_v_k,flu_J_KCC1_k,flu_J_NBC_k,flu_J_NKCC1_k,flu_J_Na_k,flu_J_K_k,flu_J_BK_k,flu_M,flu_h_r,flu_v_cpl_i,flu_c_cpl_i,flu_I_cpl_i,flu_rho_i,flu_ip3_i,flu_SRuptake_i,flu_CICR_i,flu_extrusion_i,flu_leak_i,flu_VOCC_i,flu_NaCa_i,flu_NaK_i,flu_Cl_i,flu_K_i,flu_degrad_i,flu_J_stretch_i,flu_v_KIR_i,flu_G_KIR_i,flu_J_KIR_i,flu_v_cpl_j,flu_c_cpl_j,flu_I_cpl_j,flu_rho_j,flu_O_j,flu_ip3_j,flu_ERuptake_j,flu_CICR_j,flu_extrusion_j,flu_leak_j,flu_cation_j,flu_BKCa_j,flu_SKCa_j,flu_K_j,flu_R_j,flu_degrad_j,flu_J_stretch_j,flu_K1_c,flu_K6_c,flu_F_r,flu_E,flu_R_0,flu_P_NR2AO,flu_P_NR2BO,flu_I_Ca,flu_CaM,flu_tau_w,flu_W_tau_w,flu_F_tau_w,flu_k4,flu_R_cGMP2,flu_K2_c,flu_K5_c,flu_c_w,flu_Kactivation_i,flu_E_5c,flu_V_max_pde,flu_rho,flu_ip3_k,flu_er_leak,flu_pump_k,flu_I_TRPV_k,flu_TRPV_k,flu_B_cyt,flu_G,flu_v_3,flu_w_inf,flu_phi_w,flu_H_Ca_k,flu_eta,flu_minf_k,flu_t_Ca_k,flu_VOCC_k,flu_K_input,flu_nvu_Glu,t\n");
+    	fprintf(workspace->fluxes_file, "#t, flu_pt, flu_P_str, flu_delta_p, flu_R_s, flu_N_Cl_s, flu_Na_s, flu_K_s, flu_HCO3_s, flu_Cl_s, flu_E_TRPV_k, flu_Na_k, flu_K_k, flu_HCO3_k, flu_Cl_k, flu_E_Na_k, flu_E_K_k, flu_E_Cl_k, flu_E_NBC_k, flu_E_BK_k, flu_J_NaK_k, flu_v_k, flu_J_KCC1_k, flu_J_NBC_k, flu_J_NKCC1_k, flu_J_Na_k, flu_J_K_k, flu_J_BK_k, flu_M, flu_h_r, flu_v_cpl_i, flu_c_cpl_i, flu_I_cpl_i, flu_rho_i, flu_ip3_i, flu_SRuptake_i, flu_CICR_i, flu_extrusion_i, flu_leak_i, flu_VOCC_i, flu_NaCa_i, flu_NaK_i, flu_Cl_i, flu_K_i, flu_degrad_i, flu_J_stretch_i, flu_v_KIR_i, flu_G_KIR_i, flu_J_KIR_i, flu_v_cpl_j, flu_c_cpl_j, flu_I_cpl_j, flu_rho_j, flu_O_j, flu_ip3_j, flu_ERuptake_j, flu_CICR_j, flu_extrusion_j, flu_leak_j, flu_cation_j, flu_BKCa_j, flu_SKCa_j, flu_K_j, flu_R_j, flu_degrad_j, flu_J_stretch_j, flu_K1_c, flu_K6_c, flu_F_r, flu_E, flu_R_0, flu_P_NR2AO, flu_P_NR2BO, flu_I_Ca, flu_CaM, flu_tau_w, flu_W_tau_w, flu_F_tau_w, flu_k4, flu_R_cGMP2, flu_K2_c, flu_K5_c, flu_c_w, flu_Kactivation_i, flu_E_5c, flu_V_max_pde, flu_rho, flu_ip3_k, flu_er_leak, flu_pump_k, flu_I_TRPV_k, flu_TRPV_k, flu_B_cyt, flu_G, flu_v_3, flu_w_inf, flu_phi_w, flu_H_Ca_k, flu_eta, flu_minf_k, flu_t_Ca_k, flu_VOCC_k, flu_K_input, flu_nvu_Glu\n");
     }
 #endif
 }
@@ -362,26 +391,12 @@ void NVUNode::initJacobian(RNG& rng)
     workspace->converged = 0;
 }
 
-// Fixed step Backward Euler ODE solver for ONE iteration
+ // Fixed step Backward Euler ODE solver for ONE iteration
  // TODO: review this
  //
 void NVUNode::update(RNG& rng)
 {
-#if INPUT_TO_NVU == OPTION_NEURON
-#ifdef DEBUG
-    //if (LFP > -50)
-    {
-       //std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes << std::endl;
-       std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes
-	   << " Glut = " << Glut_out //<< std::endl;
-	   << " K_o = " << K_out << std::endl;
-       //for (auto& n : Vm)
-       //   std::cerr << " " <<  *n ;
-    }
-#endif
-    nvu_Glu();
-    nvu_K();
-#endif
+#if INPUT_TO_NVU == OPTION_LIFE
     // LIFE
     workspace->counter++;
     if (workspace->counter >= LIFE_TIME * ITERATIONS_PER_SEC)
@@ -403,6 +418,26 @@ void NVUNode::update(RNG& rng)
         }
         workspace->counter = 0;
     }
+#elif INPUT_TO_NVU == OPTION_NEURON
+#ifdef DEBUG
+    //if (LFP > -50)
+    {
+       //std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes << std::endl;
+       std::cerr << "nvu LFP: " << *voltage << " numSpikes = " << *numSpikes
+	  << " time = " << workspace->t
+	  << " Glut = " << Glut_out
+	  << " K_sc(megaSC) = " << workspace->y[N_K_s]
+	  << " K_o(EC) = " << workspace->y[K_e]
+	  << " J_K_out = " << J_K_out
+	  << " ECS_input= " << ECS_input(workspace->t)
+	  << std::endl;
+       //for (auto& n : Vm)
+       //   std::cerr << " " <<  *n ;
+    }
+#endif
+    nvu_Glu();
+    nvu_K();
+#endif
 
     // Perform a Jacobian update if necessary. This is in sync across
     if (workspace->jac_needed)
@@ -470,6 +505,7 @@ void NVUNode::copy(RNG& rng)
    {
       stateVariables[i] = workspace->y[i];
    }
+   add_or_update_extra_stateVariables(1); //0 = add, 1 = update (default)
 
    publicValue = value; // for LIFE
    K_ecs = workspace->y[K_e];
@@ -523,59 +559,81 @@ void NVUNode::finalize(RNG& rng)
 // NEQ  - here is NEQ=42 state variables
 void NVUNode::nvu_ics()
 {
-	workspace->y[i_radius]  = 1.49986;
+   workspace->y[i_radius]  = 1.49986; // unit (maybe unitless)? - is this vessel radius?
 
-	workspace->y[R_k]       = 6.20112e-8;
-	workspace->y[N_Na_k]    = 0.00115629;
-	workspace->y[N_K_k]     = 0.00554052;
-	workspace->y[N_HCO3_k]  = 0.000582264;
-	workspace->y[N_Cl_k]    = 0.000505576;
-	workspace->y[w_k]       = 3.61562e-5;
+   {//AC
+   workspace->y[R_k]       = 6.20112e-8;
+   workspace->y[N_Na_k]    = 0.00115629;
+   workspace->y[N_K_k]     = 0.00554052;
+   workspace->y[N_HCO3_k]  = 0.000582264;
+   workspace->y[N_Cl_k]    = 0.000505576;
+   workspace->y[w_k]       = 3.61562e-5;
+   // AC Ca2+ pathway *******************
+   workspace->y[ca_k]     = 0.133719;
+   workspace->y[s_k]      = 502.461;
+   workspace->y[h_k]      = 0.427865;
+   workspace->y[ip3_k]    = 0.048299;
+   workspace->y[eet_k]    = 0.337187;
+   workspace->y[m_k]      = 0.896358;
+   workspace->y[ca_p]     = 1713.39;
+   }
 
-	workspace->y[N_Na_s]    = 0.00414271;
-	workspace->y[N_K_s]     = 7.27797e-5;
-	workspace->y[N_HCO3_s]  = 0.000438336;
+   {//SC cleft 
+//#define K_s_baseline 2811.28  // what unit ???
+#define K_s   3639   // [uM] ~ 3.6 mM
+#define VolumeArea_ratio_s (2e-8)   // [meter]
+//#define K_s_baseline 7.27797e-5   // [uM.m]
+#define K_s_baseline (K_s * VolumeArea_ratio_s)   // [uM.m]
+// it is the concentration multiplied by the volume-area ratio of synaptic cleft 
+// //TODO : ask Stewart to find out why K+ in synaptic cleft is too small?
+#define Na_s   207135.5   // [uM] ~ 207.1 mM
+#define Na_s_baseline (Na_s * VolumeArea_ratio_s)   // [uM.m]
+#define HCO3_s   87667.24   // [uM] ~ 87.6 mM
+#define HCO3_s_baseline (Na_s * VolumeArea_ratio_s)   // [uM.m]
+      workspace->y[N_K_s]     = K_s_baseline;  // [uM.m]
+      //workspace->y[N_Na_s]    = 0.00414271;
+      workspace->y[N_Na_s]    = Na_s_baseline; // [uM.m]
+      //workspace->y[N_HCO3_s]  = 0.000438336;
+      workspace->y[N_HCO3_s]  = HCO3_s_baseline;
+   }
 
-	workspace->y[K_p]       = 3246.44;
+   workspace->y[K_p]       = 3246.44;
 
-	workspace->y[ca_i]      = 0.137077;
-	workspace->y[ca_sr_i]   = 1.20037;
-	workspace->y[v_i]       = -58.5812;
-	workspace->y[w_i]       = 0.38778;
-	workspace->y[ip3_i]     = 0.45;
-	workspace->y[K_i]       = 99994.8;
+   {//SMC
+      workspace->y[ca_i]      = 0.137077;  // microMolar
+      workspace->y[ca_sr_i]   = 1.20037;  // unit? (maybe mM)
+      workspace->y[v_i]       = -58.5812; // [mV]
+      workspace->y[w_i]       = 0.38778;
+      workspace->y[ip3_i]     = 0.45; // uM
+      workspace->y[K_i]       = 99994.8; // uM
+   }
 
-	workspace->y[ca_j]      = 0.537991;
-	workspace->y[ca_er_j]   = 0.872007;
-	workspace->y[v_j]       = -64.8638;
-	workspace->y[ip3_j]     = 1.35;
+   {//EC (endothelial)
+      //TODO: revise Ca_j why so big in EC?
+      workspace->y[ca_j]      = 0.537991;  // uM 
+      workspace->y[ca_er_j]   = 0.872007;  // uM
+      workspace->y[v_j]       = -64.8638;  // mV
+      workspace->y[ip3_j]     = 1.35;  // uM
+   }
 
-	workspace->y[Mp]        = 0.0165439;
-	workspace->y[AMp]       = 0.00434288;
-	workspace->y[AM]        = 0.0623458;
+   //Mech (SMC)
+   workspace->y[Mp]        = 0.0165439;
+   workspace->y[AMp]       = 0.00434288;
+   workspace->y[AM]        = 0.0623458;
 
-	workspace->y[K_e]		= 2811.29;
+   workspace->y[K_e]	= 2811.29; // (microMolar)
 
-	// NO pathway*************//****
-	workspace->y[NOn]       = 0.273264;
-	workspace->y[NOk]       = 0.21676;
-	workspace->y[NOi]       = 0.160269;
-	workspace->y[NOj]       = 0.159001;
-	workspace->y[cGMP]      = 11.6217;
-	workspace->y[eNOS]      = 2.38751;
-	workspace->y[nNOS]      = 0.317995;
-	workspace->y[ca_n]      = 0.1;
-	workspace->y[E_b]       = 0.184071;
-	workspace->y[E_6c]      = 0.586609;
-
-	// AC Ca2+ pathway *******************
-	workspace->y[ca_k]     = 0.133719;
-	workspace->y[s_k]      = 502.461;
-	workspace->y[h_k]      = 0.427865;
-	workspace->y[ip3_k]    = 0.048299;
-	workspace->y[eet_k]    = 0.337187;
-	workspace->y[m_k]      = 0.896358;
-	workspace->y[ca_p]     = 1713.39;
+   // NO pathway*************//****
+   workspace->y[NOn]       = 0.273264;
+   workspace->y[NOk]       = 0.21676;
+   workspace->y[NOi]       = 0.160269;
+   workspace->y[NOj]       = 0.159001;
+   workspace->y[cGMP]      = 11.6217;
+   workspace->y[eNOS]      = 2.38751;
+   workspace->y[nNOS]      = 0.317995;
+   workspace->y[ca_n]      = 0.1;
+   workspace->y[E_b]       = 0.184071;
+   workspace->y[E_6c]      = 0.586609;
 }
 
 // right hand side evaluation function.
@@ -586,75 +644,88 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
 {
     double p = (*getSharedMembers().pressures)[workspace->pressuresIndex];
     assert(!isnan(p));
+#if defined(SIMULATE_ISOLATE_VESSEL_CLAMP_PRESSURE)
+    //clamp pressure
+    p = 2.0; //unitless
+#endif
 
     // Fluxes:
 
     // pressure
-    fluxes[flu_pt] 					= P0 / 2 * (p + workspace->pcap); // x P0 to make dimensional, transmural pressure in Pa
+    fluxes[flu_pt] = P0 / 2 * (p + workspace->pcap); // x P0 to make dimensional, transmural pressure in Pa
+    //std::cout<< "TUAN" << fluxes[flu_pt] <<":"<<p<<"__"; //around 4290.xx (and change), and p around 0.57xx (and change)
 
-    //fluxes[flu_pt] = 4000; // NVU (without parbrain) value.
-	fluxes[flu_P_str] 				= fluxes[flu_pt] * PA2MMHG; // transmural pressure in mmHg
-	fluxes[flu_delta_p]				= P0 * (p - workspace->pcap); // dimensional pressure drop over leaf vessel
+#if defined(SIMULATE_ISOLATE_VESSEL_CLAMP_PRESSURE)
+    //fluxes[flu_pt] = 16000; // NVU (without parbrain) value.
+#endif
+    fluxes[flu_P_str] = fluxes[flu_pt] * PA2MMHG; // transmural pressure in mmHg
+    fluxes[flu_delta_p] = P0 * (p - workspace->pcap); // dimensional pressure drop over leaf vessel
+#if defined(SIMULATE_ISOLATE_VESSEL_CLAMP_PRESSURE)
     //fluxes[flu_delta_p] = 18.6; // NVU (without parbrain) value.
+    //fluxes[flu_delta_p] = 18.6; // NVU (without parbrain) value.
+#endif
 
-    // SC fluxes
-    fluxes[flu_R_s]        	    = R_tot - u[R_k];                            // u[R_k] is AC volume-area ratio, fluxes[flu_R_s] is SC
+    {// SC fluxes
+    fluxes[flu_R_s] = R_tot - u[R_k];                            // u[R_k] is AC volume-area ratio, fluxes[flu_R_s] is SC
 
     fluxes[flu_N_Cl_s]         	= u[N_Na_s] + u[N_K_s] - u[N_HCO3_s];  //
-    fluxes[flu_Na_s]           	= u[N_Na_s] / fluxes[flu_R_s];                       //
+    fluxes[flu_Na_s]           	= u[N_Na_s] / fluxes[flu_R_s];      //
 
-    fluxes[flu_K_s]            	= u[N_K_s] / fluxes[flu_R_s];                        //
-    fluxes[flu_HCO3_s]         	= u[N_HCO3_s] / fluxes[flu_R_s];                     //
-    fluxes[flu_Cl_s]           	= fluxes[flu_N_Cl_s] / fluxes[flu_R_s];                         //
+    fluxes[flu_K_s]            	= u[N_K_s] / fluxes[flu_R_s];           //
+    fluxes[flu_HCO3_s]         	= u[N_HCO3_s] / fluxes[flu_R_s];        //
+    fluxes[flu_Cl_s]           	= fluxes[flu_N_Cl_s] / fluxes[flu_R_s];  //
+    }
 
-    // AC fluxes
-    fluxes[flu_E_TRPV_k]	= R_gas * Temp / (z_Ca * Farad) * log(u[ca_p] / u[ca_k]); // TRPV4 channel Nernst Potential
+    {// AC fluxes
+    fluxes[flu_E_TRPV_k] = R_gas * Temp / (z_Ca * Farad) * log(u[ca_p] / u[ca_k]); // TRPV4 channel Nernst Potential
 
     fluxes[flu_Na_k]           	= u[N_Na_k] / u[R_k];                     //
     fluxes[flu_K_k]            	= u[N_K_k] / u[R_k];                      //
     fluxes[flu_HCO3_k]         	= u[N_HCO3_k] / u[R_k];                   //
     fluxes[flu_Cl_k]           	= u[N_Cl_k] / u[R_k];                     //
 
-    fluxes[flu_E_Na_k]         	= (R_gas * Temp) / (z_Na * Farad) * log(fluxes[flu_Na_s] / fluxes[flu_Na_k]);    // V
+    fluxes[flu_E_Na_k] = (R_gas * Temp) / (z_Na * Farad) * log(fluxes[flu_Na_s] / fluxes[flu_Na_k]);    // V
 
-    fluxes[flu_E_K_k]          	= (R_gas * Temp) / (z_K  * Farad) * log(fluxes[flu_K_s] / fluxes[flu_K_k] );     // V
-    fluxes[flu_E_Cl_k]         	= (R_gas * Temp) / (z_Cl * Farad) * log(fluxes[flu_Cl_s] / fluxes[flu_Cl_k]);    // V
-    fluxes[flu_E_NBC_k]        	= (R_gas * Temp) / (z_NBC* Farad) * log((fluxes[flu_Na_s] * pow(fluxes[flu_HCO3_s],2))/(fluxes[flu_Na_k] * pow(fluxes[flu_HCO3_k],2)));     // V
-    fluxes[flu_E_BK_k]         	= reverseBK + switchBK * ((R_gas * Temp) / (z_K  * Farad) * log(u[K_p] / fluxes[flu_K_k]));   // V
-    fluxes[flu_J_NaK_k]        	= J_NaK_max * ( pow(fluxes[flu_Na_k],1.5) / ( pow(fluxes[flu_Na_k],1.5) + pow(K_Na_k,1.5) ) ) * ( fluxes[flu_K_s] / (fluxes[flu_K_s] + K_K_s) );    // uMm s-1
-    fluxes[flu_v_k]         	= ( g_Na_k * fluxes[flu_E_Na_k] + g_K_k * fluxes[flu_E_K_k] + g_TRPV_k * u[m_k] * fluxes[flu_E_TRPV_k] + g_Cl_k * fluxes[flu_E_Cl_k] + g_NBC_k * fluxes[flu_E_NBC_k] + g_BK_k * u[w_k] * fluxes[flu_E_BK_k] - fluxes[flu_J_NaK_k] * Farad / unitcon ) / ( g_Na_k + g_K_k + g_Cl_k + g_NBC_k + g_TRPV_k * u[m_k] + g_BK_k * u[w_k] );
-    fluxes[flu_J_KCC1_k]       	= (R_gas * Temp * g_KCC1_k) / (pow(Farad,2)) * log(((fluxes[flu_K_s]) * (fluxes[flu_Cl_s]))/((fluxes[flu_K_k])*(fluxes[flu_Cl_k]))) * unitcon;   //uMm s-1
-    fluxes[flu_J_NBC_k]        	= g_NBC_k / Farad * (fluxes[flu_v_k] - fluxes[flu_E_NBC_k]) * unitcon;       //uMm s-1
-    fluxes[flu_J_NKCC1_k]     	= (g_NKCC1_k * R_gas * Temp) / (pow(Farad,2))  * log(((fluxes[flu_K_s]) * (fluxes[flu_Na_s]) * pow(fluxes[flu_Cl_s],2)) /((fluxes[flu_K_k]) * (fluxes[flu_Na_k]) * pow(fluxes[flu_Cl_k],2)))*unitcon;        //uMm s-1
-    fluxes[flu_J_Na_k]   		= g_Na_k / Farad * (fluxes[flu_v_k] - fluxes[flu_E_Na_k]) * unitcon;              //uMm s-1
-    fluxes[flu_J_K_k]    		= g_K_k  / Farad * ((fluxes[flu_v_k]) - (fluxes[flu_E_K_k] )) * unitcon;          //uMm s-1
-    fluxes[flu_J_BK_k]   		= g_BK_k / Farad * u[w_k] * (fluxes[flu_v_k] - fluxes[flu_E_BK_k]) * unitcon;  //uMm s-1
+    fluxes[flu_E_K_k] = (R_gas * Temp) / (z_K  * Farad) * log(fluxes[flu_K_s] / fluxes[flu_K_k] );     // V
+    fluxes[flu_E_Cl_k] = (R_gas * Temp) / (z_Cl * Farad) * log(fluxes[flu_Cl_s] / fluxes[flu_Cl_k]);    // V
+    fluxes[flu_E_NBC_k] = (R_gas * Temp) / (z_NBC* Farad) * log((fluxes[flu_Na_s] * pow(fluxes[flu_HCO3_s],2))/(fluxes[flu_Na_k] * pow(fluxes[flu_HCO3_k],2)));     // V
+    fluxes[flu_E_BK_k] = reverseBK + switchBK * ((R_gas * Temp) / (z_K  * Farad) * log(u[K_p] / fluxes[flu_K_k]));   // V
+    fluxes[flu_J_NaK_k] = J_NaK_max * ( pow(fluxes[flu_Na_k],1.5) / ( pow(fluxes[flu_Na_k],1.5) + pow(K_Na_k,1.5) ) ) * ( fluxes[flu_K_s] / (fluxes[flu_K_s] + K_K_s) );    // uMm s-1
+    fluxes[flu_v_k] = ( g_Na_k * fluxes[flu_E_Na_k] + g_K_k * fluxes[flu_E_K_k] + g_TRPV_k * u[m_k] * fluxes[flu_E_TRPV_k] + g_Cl_k * fluxes[flu_E_Cl_k] + g_NBC_k * fluxes[flu_E_NBC_k] + g_BK_k * u[w_k] * fluxes[flu_E_BK_k] - fluxes[flu_J_NaK_k] * Farad / unitcon ) / ( g_Na_k + g_K_k + g_Cl_k + g_NBC_k + g_TRPV_k * u[m_k] + g_BK_k * u[w_k] );
+    fluxes[flu_J_KCC1_k] = (R_gas * Temp * g_KCC1_k) / (pow(Farad,2)) * log(((fluxes[flu_K_s]) * (fluxes[flu_Cl_s]))/((fluxes[flu_K_k])*(fluxes[flu_Cl_k]))) * unitcon;   //uMm s-1
+    fluxes[flu_J_NBC_k] = g_NBC_k / Farad * (fluxes[flu_v_k] - fluxes[flu_E_NBC_k]) * unitcon;       //uMm s-1
+    fluxes[flu_J_NKCC1_k] = (g_NKCC1_k * R_gas * Temp) / (pow(Farad,2))  * log(((fluxes[flu_K_s]) * (fluxes[flu_Na_s]) * pow(fluxes[flu_Cl_s],2)) /((fluxes[flu_K_k]) * (fluxes[flu_Na_k]) * pow(fluxes[flu_Cl_k],2)))*unitcon;        //uMm s-1
+    fluxes[flu_J_Na_k]  = g_Na_k / Farad * (fluxes[flu_v_k] - fluxes[flu_E_Na_k]) * unitcon;              //uMm s-1
+    fluxes[flu_J_K_k]   = g_K_k  / Farad * ((fluxes[flu_v_k]) - (fluxes[flu_E_K_k] )) * unitcon;          //uMm s-1
+    fluxes[flu_J_BK_k]  = g_BK_k / Farad * u[w_k] * (fluxes[flu_v_k] - fluxes[flu_E_BK_k]) * unitcon;  //uMm s-1
+    }
 
-    // SMC fluxes
-    fluxes[flu_M]               = 1 - u[Mp] - u[AM] - u[AMp];
-    fluxes[flu_h_r]             = 0.1 * state_r; 												//(non-dimensional!)
-    fluxes[flu_v_cpl_i]		    = - g_hat * ( u[v_i] - u[v_j] );
+    {// SMC fluxes
+    fluxes[flu_M] = 1 - u[Mp] - u[AM] - u[AMp];
+    fluxes[flu_h_r] = 0.1 * state_r; //(non-dimensional!)
+    fluxes[flu_v_cpl_i] = - g_hat * ( u[v_i] - u[v_j] );
     fluxes[flu_c_cpl_i]         = - p_hat * ( u[ca_i] - u[ca_j] );
     fluxes[flu_I_cpl_i]         = - p_hatIP3 * ( u[ip3_i] - u[ip3_j] );
-    fluxes[flu_rho_i]		    = 1;
-    fluxes[flu_ip3_i]		    = Fmax_i *  pow(u[ip3_i],2) / ( pow(Kr_i,2) + pow(u[ip3_i],2) );
+    fluxes[flu_rho_i] = 1;
+    fluxes[flu_ip3_i] = Fmax_i *  pow(u[ip3_i],2) / ( pow(Kr_i,2) + pow(u[ip3_i],2) );
     fluxes[flu_SRuptake_i]      = B_i * pow(u[ca_i],2) / ( pow(u[ca_i],2) + pow(cb_i,2) );
-    fluxes[flu_CICR_i]		    = CICR_rate * pow(u[ca_sr_i],2) / ( pow(sc_i,2) + pow(u[ca_sr_i],2) ) *  ( pow(u[ca_i],4) ) / ( pow(cc_i,4) + pow(u[ca_i],4) );
-    fluxes[flu_extrusion_i]	    = D_i * u[ca_i] * (1 + ( u[v_i] - vd_i ) / Rd_i );
-    fluxes[flu_leak_i] 		    = L_i * u[ca_sr_i];
-    fluxes[flu_VOCC_i]		    = G_Ca * ( u[v_i] - v_Ca1 ) / ( 1 + exp( - ( u[v_i] - v_Ca2 ) / ( R_Ca ) ) );
-    fluxes[flu_NaCa_i]		    = G_NaCa * u[ca_i] * ( u[v_i] - v_NaCa ) / ( u[ca_i] + c_NaCa ) ;
-    fluxes[flu_NaK_i]		    = F_NaK;
-    fluxes[flu_Cl_i]		    = G_Cl * (u[v_i] - v_Cl);
-    fluxes[flu_K_i]			    = G_K * u[w_i] * ( u[v_i] - vK_i );
+    fluxes[flu_CICR_i] = CICR_rate * pow(u[ca_sr_i],2) / ( pow(sc_i,2) + pow(u[ca_sr_i],2) ) *  ( pow(u[ca_i],4) ) / ( pow(cc_i,4) + pow(u[ca_i],4) );
+    fluxes[flu_extrusion_i]     = D_i * u[ca_i] * (1 + ( u[v_i] - vd_i ) / Rd_i );
+    fluxes[flu_leak_i]       = L_i * u[ca_sr_i];
+    fluxes[flu_VOCC_i]      = G_Ca * ( u[v_i] - v_Ca1 ) / ( 1 + exp( - ( u[v_i] - v_Ca2 ) / ( R_Ca ) ) );
+    fluxes[flu_NaCa_i]      = G_NaCa * u[ca_i] * ( u[v_i] - v_NaCa ) / ( u[ca_i] + c_NaCa ) ;
+    fluxes[flu_NaK_i]      = F_NaK;
+    fluxes[flu_Cl_i]      = G_Cl * (u[v_i] - v_Cl);
+    fluxes[flu_K_i] = G_K * u[w_i] * ( u[v_i] - vK_i );
 
     fluxes[flu_degrad_i]	    = const_k_i * u[ip3_i];
-    fluxes[flu_J_stretch_i]     = G_stretch/(1 + exp( -alpha1 * (fluxes[flu_P_str] * state_r / fluxes[flu_h_r] - sig0))) * (u[v_i] - Esac);
-    fluxes[flu_v_KIR_i]    		= z_1 * u[K_p] / unitcon + z_2;                                  // mV           u[K_p],
-    fluxes[flu_G_KIR_i]    		= exp( z_5 * u[v_i] + z_3 * u[K_p] / unitcon + z_4 );        // pS pF-1 =s-1  u[v_i], u[K_p]
-    fluxes[flu_J_KIR_i]    		= F_il/delta_mv * (fluxes[flu_G_KIR_i]) * (u[v_i] - (fluxes[flu_v_KIR_i]));            // mV s-1 //     u[v_i], u[K_p]
+    fluxes[flu_J_stretch_i] = G_stretch/(1 + exp( -alpha1 * (fluxes[flu_P_str] * state_r / fluxes[flu_h_r] - sig0))) * (u[v_i] - Esac);
+    fluxes[flu_v_KIR_i] = z_1 * u[K_p] / unitcon + z_2; // mV u[K_p],
+    fluxes[flu_G_KIR_i] = exp( z_5 * u[v_i] + z_3 * u[K_p] / unitcon + z_4 ); // pS pF-1 =s-1 u[v_i], u[K_p]
+    fluxes[flu_J_KIR_i] = F_il/delta_mv * (fluxes[flu_G_KIR_i]) * (u[v_i] - (fluxes[flu_v_KIR_i])); // mV s-1 // u[v_i], u[K_p]
+    }
 
-    // EC fluxes
+    {// EC fluxes
     fluxes[flu_v_cpl_j]			= - g_hat * ( u[v_j] - u[v_i] );
     fluxes[flu_c_cpl_j]			= - p_hat * ( u[ca_j] - u[ca_i] );
     fluxes[flu_I_cpl_j]			= - p_hatIP3 * ( u[ip3_j] - u[ip3_i] );
@@ -662,27 +733,28 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_O_j] 			= JO_j;
     fluxes[flu_ip3_j]			= Fmax_j * ( pow(u[ip3_j], 2) ) / ( pow(Kr_j, 2) + pow(u[ip3_j], 2) );
     fluxes[flu_ERuptake_j]      = B_j * ( pow(u[ca_j], 2) ) / ( pow(u[ca_j], 2) + pow(cb_j, 2) );
-    fluxes[flu_CICR_j]			= C_j *  ( pow(u[ca_er_j], 2) ) / ( pow(sc_j, 2) + pow(u[ca_er_j], 2) ) *  ( pow(u[ca_j], 4) ) / ( pow(cc_j,4) + pow(u[ca_j],4) );
+    fluxes[flu_CICR_j] = C_j *  ( pow(u[ca_er_j], 2) ) / ( pow(sc_j, 2) + pow(u[ca_er_j], 2) ) *  ( pow(u[ca_j], 4) ) / ( pow(cc_j,4) + pow(u[ca_j],4) );
     fluxes[flu_extrusion_j]     = D_j * u[ca_j];
     fluxes[flu_leak_j]          = L_j * u[ca_er_j];
-    fluxes[flu_cation_j] 		= G_cat * ( E_Ca - u[v_j]) * 0.5 * ( 1 + tanh( ( log10( u[ca_j] ) - m3cat )  /  m4cat  ) );
-    fluxes[flu_BKCa_j] 			= 0.2 * ( 1 + tanh( ( (  log10(u[ca_j]) - const_c) * ( u[v_j] - const_b ) - const_a1 ) / ( m3b* pow(( u[v_j] + a2 * ( log10( u[ca_j] ) - const_c ) - const_b),2) + m4b ) ) );
-    fluxes[flu_SKCa_j] 			= 0.3 * ( 1 + tanh( ( log10(u[ca_j]) - m3s ) /  m4s ));
-    fluxes[flu_K_j] 			= G_tot * ( u[v_j] - vK_j ) * ( fluxes[flu_BKCa_j] + fluxes[flu_SKCa_j] );
-    fluxes[flu_R_j] 			= G_R * ( u[v_j] - v_rest);
-    fluxes[flu_degrad_j] 		= const_k_j * u[ip3_j];
-    fluxes[flu_J_stretch_j]     = G_stretch / (1 + exp(-alpha1*(fluxes[flu_P_str] * state_r / fluxes[flu_h_r] - sig0))) * (u[v_j] - Esac);
+    fluxes[flu_cation_j] = G_cat * ( E_Ca - u[v_j]) * 0.5 * ( 1 + tanh( ( log10( u[ca_j] ) - m3cat ) / m4cat ) );
+    fluxes[flu_BKCa_j] = 0.2 * ( 1 + tanh( ( ( log10(u[ca_j]) - const_c) * ( u[v_j] - const_b ) - const_a1 ) / ( m3b* pow(( u[v_j] + a2 * ( log10( u[ca_j] ) - const_c ) - const_b),2) + m4b ) ) );
+    fluxes[flu_SKCa_j] = 0.3 * ( 1 + tanh( ( log10(u[ca_j]) - m3s ) / m4s ));
+    fluxes[flu_K_j] = G_tot * ( u[v_j] - vK_j ) * ( fluxes[flu_BKCa_j] + fluxes[flu_SKCa_j] );
+    fluxes[flu_R_j] = G_R * ( u[v_j] - v_rest);
+    fluxes[flu_degrad_j] = const_k_j * u[ip3_j];
+    fluxes[flu_J_stretch_j] = G_stretch / (1 + exp(-alpha1*(fluxes[flu_P_str] * state_r / fluxes[flu_h_r] - sig0))) * (u[v_j] - Esac);
+    }
 
-// Mech fluxes
-    fluxes[flu_K1_c]         	= gam_cross * pow(u[ca_i],3);
-    fluxes[flu_K6_c]        	= fluxes[flu_K1_c];
-    fluxes[flu_F_r]			    = u[AMp] + u[AM];
+    // Mech fluxes
+    fluxes[flu_K1_c]    = gam_cross * pow(u[ca_i],3);
+    fluxes[flu_K6_c]    = fluxes[flu_K1_c];
+    fluxes[flu_F_r]	= u[AMp] + u[AM];
 
-    fluxes[flu_E] 			    = EPASSIVE + fluxes[flu_F_r] * (EACTIVE - EPASSIVE);
-    fluxes[flu_R_0] 			= R_0_passive_k + fluxes[flu_F_r] * (RSCALE - 1) * R_0_passive_k;
+    fluxes[flu_E] 	= EPASSIVE + fluxes[flu_F_r] * (EACTIVE - EPASSIVE);
+    fluxes[flu_R_0] 	= R_0_passive_k + fluxes[flu_F_r] * (RSCALE - 1) * R_0_passive_k;
+    
 
-// NO pathway fluxes
-
+    // NO pathway fluxes
 #if INPUT_TO_NVU == OPTION_LIFE
     fluxes[flu_P_NR2AO]         = nvu_Glu(t) / (betA + nvu_Glu(t));
     fluxes[flu_P_NR2BO]         = nvu_Glu(t) / (betB + nvu_Glu(t));
@@ -692,14 +764,14 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
 #endif
 
     fluxes[flu_I_Ca]            = (-4 * v_n * G_M * P_Ca_P_M * (Ca_ex/const_M)) / (1+exp(-80*(v_n+0.02))) * (exp(2 * v_n * Farad / (R_gas * Temp))) / (1 - exp(2 * v_n * Farad / (R_gas * Temp))) * (0.63 * fluxes[flu_P_NR2AO] + 11 * fluxes[flu_P_NR2BO]);
-    fluxes[flu_CaM]             = u[ca_n] / const_m_c;                                      // concentration of calmodulin / calcium complexes ; (100)
-    fluxes[flu_tau_w]			= (R_0_passive_k * state_r) * fluxes[flu_delta_p] / (2*200e-6); // WSS using pressure from the H tree. L_0 = 200 um
+    fluxes[flu_CaM]             = u[ca_n] / const_m_c;            // concentration of calmodulin / calcium complexes ; (100)
+    fluxes[flu_tau_w] = (R_0_passive_k * state_r) * fluxes[flu_delta_p] / (2*L0); // WSS using pressure from the H tree. L_0 = 200 um
 
     fluxes[flu_W_tau_w]         = W_0 * pow((fluxes[flu_tau_w] + sqrt(16 * pow(delt_wss,2) + pow(fluxes[flu_tau_w],2)) - 4 * delt_wss),2) / (fluxes[flu_tau_w] + sqrt(16 * pow(delt_wss,2) + pow(fluxes[flu_tau_w],2))) ;  // - tick
     fluxes[flu_F_tau_w]         = 1 / (1 + const_alp * exp(-fluxes[flu_W_tau_w])) - 1 / (1 + const_alp); // -(1/(1+alp)) was added to get no NO at 0 wss (!) - tick
     fluxes[flu_k4]              = C_4 * pow(u[cGMP], const_m);
     fluxes[flu_R_cGMP2]         = (pow(u[cGMP], 2)) / (pow(u[cGMP], 2) + pow(K_m_mlcp, 2)); // - tick
-    fluxes[flu_K2_c]            = 58.1395 * k_mlcp_b + 58.1395 * k_mlcp_c * fluxes[flu_R_cGMP2];  // Factor is chosen to relate two-state model of Yang2005 to Hai&Murphy model
+    fluxes[flu_K2_c] = 58.1395 * k_mlcp_b + 58.1395 * k_mlcp_c * fluxes[flu_R_cGMP2];  // Factor is chosen to relate two-state model of Yang2005 to Hai&Murphy model
     fluxes[flu_K5_c]            = fluxes[flu_K2_c];
     fluxes[flu_c_w]             = 1/2 * ( 1 + tanh( (u[cGMP] - 10.75) / 0.668 ) );
 
@@ -730,11 +802,12 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     fluxes[flu_t_Ca_k] 			= t_TRPV_k / u[ca_p];
     fluxes[flu_VOCC_k]		= fluxes[flu_VOCC_i];
 #if INPUT_TO_NVU == OPTION_LIFE
+    //from presynaptic(firing) neuron only
     fluxes[flu_K_input]		= K_input(t);
     fluxes[flu_nvu_Glu]     = nvu_Glu(t);
 #elif INPUT_TO_NVU == OPTION_NEURON
-    fluxes[flu_K_input]		= K_out;
-    fluxes[flu_nvu_Glu]     = Glut_out;
+    fluxes[flu_K_input]		= J_K_out;
+    fluxes[flu_nvu_Glu]     = J_Glut_out;
 #endif
 
 // Differential Equations:
@@ -744,20 +817,36 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     //AC:
     du[ R_k     ] = L_p * (fluxes[flu_Na_k] + fluxes[flu_K_k] + fluxes[flu_Cl_k] + fluxes[flu_HCO3_k] - fluxes[flu_Na_s] - fluxes[flu_K_s] - fluxes[flu_Cl_s] - fluxes[flu_HCO3_s] + X_k / u[R_k]);  // m s-1
 
-
     du[ N_Na_k  ] = -fluxes[flu_J_Na_k] - 3 * fluxes[flu_J_NaK_k] + fluxes[flu_J_NKCC1_k] + fluxes[flu_J_NBC_k];    // uMm s-1
     du[ N_K_k   ] = -fluxes[flu_J_K_k] + 2 * fluxes[flu_J_NaK_k] + fluxes[flu_J_NKCC1_k] + fluxes[flu_J_KCC1_k] -fluxes[flu_J_BK_k]; // uMm s-1
     du[ N_HCO3_k] = 2 * fluxes[flu_J_NBC_k];                                                // uMm s-1
-    du[ N_Cl_k  ] = du[ N_Na_k] + du[ N_K_k] - du[ N_HCO3_k];                       // uMm s-1, modified equation compared to the one of Ostby  //
+    du[ N_Cl_k  ] = du[N_Na_k] + du[ N_K_k] - du[ N_HCO3_k]; // uMm s-1, modified equation compared to the one of Ostby  //
     du[ w_k     ] = fluxes[flu_phi_w] * (fluxes[flu_w_inf] - u[w_k]);                            // s-1
 
     //SC:
 #if INPUT_TO_NVU == OPTION_LIFE
-    du[ N_Na_s  ] = - k_C * K_input(t) - du[ N_Na_k];                           // uMm s-1
-    du[ N_K_s   ] = k_C * K_input(t) + fluxes[flu_J_K_k] - 2 * fluxes[flu_J_NaK_k] - fluxes[flu_J_NKCC1_k] - fluxes[flu_J_KCC1_k] + fluxes[flu_R_s] * ( (u[K_e] - fluxes[flu_K_s]) / tau2);                 // uMm s-1
+    du[N_Na_s] = - k_C * K_input(t) - du[N_Na_k]; // uMm s-1
+    du[N_K_s] = k_C * K_input(t) + fluxes[flu_J_K_k] - 2 * fluxes[flu_J_NaK_k] - fluxes[flu_J_NKCC1_k] - fluxes[flu_J_KCC1_k] + fluxes[flu_R_s] * ( (u[K_e] - fluxes[flu_K_s]) / tau2);                 // uMm s-1
 #elif INPUT_TO_NVU == OPTION_NEURON
-    du[ N_Na_s  ] = - k_C * K_out - du[ N_Na_k];                           // uMm s-1
-    du[ N_K_s   ] = k_C * K_out + fluxes[flu_J_K_k] - 2 * fluxes[flu_J_NaK_k] - fluxes[flu_J_NKCC1_k] - fluxes[flu_J_KCC1_k] + fluxes[flu_R_s] * ( (u[K_e] - fluxes[flu_K_s]) / tau2);                 // uMm s-1
+    /* assuming
+     * Na uptake into (presynaptic/firing) neuron
+     * K+ release from (presynaptic/firing) neuron
+     * are of the same rate (k_C)
+     * and the flux J_K_out, J_Na_out
+     */
+
+    /*
+     * During neuronal activity, outflux of K+ is counter balance by the same amount in terms of
+     *    total influx of Na+ and Cl-
+     * Here, Ostby 1999 assume the majority of influx is via Na+, so
+     * J_Na is about (-1 * J_K)
+     */
+    J_Na_out = J_K_out;
+    du[N_Na_s] = - k_C * J_Na_out - du[N_Na_k];                           // uMm s-1
+    du[N_K_s] =
+       /*neuron*/ k_C * J_K_out
+       /*astrocyte*/ + fluxes[flu_J_K_k] - 2 * fluxes[flu_J_NaK_k] - fluxes[flu_J_NKCC1_k] - fluxes[flu_J_KCC1_k]
+       /*SC*/ + fluxes[flu_R_s] * ( (u[K_e] - fluxes[flu_K_s]) / tau2);                 // uMm s-1
 #endif
 
 
@@ -766,35 +855,39 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     //PVS:
     du[ K_p     ] = fluxes[flu_J_BK_k] / (VR_pa * u[R_k]) + fluxes[flu_J_KIR_i] / VR_ps - R_decay * (u[K_p] - K_p_min);         // uM s-1
 
-    //SMC:
+    {//SMC:
     du[ ca_i    ] = fluxes[flu_c_cpl_i] + fluxes[flu_rho_i] * ( fluxes[flu_ip3_i] - fluxes[flu_SRuptake_i] + fluxes[flu_CICR_i] - fluxes[flu_extrusion_i] + fluxes[flu_leak_i] - fluxes[flu_VOCC_i] + fluxes[flu_NaCa_i] - 0.1* fluxes[flu_J_stretch_i]);
     du[ ca_sr_i ] = fluxes[flu_SRuptake_i] - fluxes[flu_CICR_i] - fluxes[flu_leak_i] ;
     du[ v_i     ] = fluxes[flu_v_cpl_i] + delta_mv * ( - fluxes[flu_NaK_i] - fluxes[flu_Cl_i] - 2 * fluxes[flu_VOCC_i] - fluxes[flu_NaCa_i] - fluxes[flu_K_i] - fluxes[flu_J_stretch_i] - fluxes[flu_J_KIR_i] );
     du[ w_i     ] = lam * (fluxes[flu_Kactivation_i] - u[w_i] ) ;
     du[ ip3_i   ] = fluxes[flu_I_cpl_i] - fluxes[flu_degrad_i] ;          // **
     du[ K_i     ] = - fluxes[flu_J_KIR_i] - fluxes[flu_K_i] + fluxes[flu_NaK_i];                                            // uM s-1
+    // Mech: (SMC)
+    du[ Mp   	] = K4_c * u[AMp] + fluxes[flu_K1_c] * fluxes[flu_M] - (fluxes[flu_K2_c] + K3_c) * u[Mp];
+    du[ AMp  	] = K3_c * u[Mp] + fluxes[flu_K6_c] * u[AM] - (K4_c + fluxes[flu_K5_c]) * u[AMp];
+    du[ AM   	] = fluxes[flu_K5_c] * u[AMp] - ( K7_c + fluxes[flu_K6_c] ) * u[AM];
+    }
 
-    //EC:
+    {//EC:
     du[ca_j     ] = fluxes[flu_c_cpl_j] + fluxes[flu_rho_j] * ( fluxes[flu_ip3_j] - fluxes[flu_ERuptake_j] + fluxes[flu_CICR_j] - fluxes[flu_extrusion_j] + fluxes[flu_leak_j] + fluxes[flu_cation_j] + fluxes[flu_O_j] - fluxes[flu_J_stretch_j] ) ;
     du[ca_er_j  ] = fluxes[flu_ERuptake_j] - fluxes[flu_CICR_j] - fluxes[flu_leak_j] ;
     du[v_j      ] = fluxes[flu_v_cpl_j] - 1/C_m * ( fluxes[flu_K_j] + fluxes[flu_R_j] ) ;
     du[ip3_j    ] = fluxes[flu_I_cpl_j] + J_PLC - fluxes[flu_degrad_j] ;  // **
 
-    // Mech:
-    du[ Mp   	] = K4_c * u[AMp] + fluxes[flu_K1_c] * fluxes[flu_M] - (fluxes[flu_K2_c] + K3_c) * u[Mp];
-    du[ AMp  	] = K3_c * u[Mp] + fluxes[flu_K6_c] * u[AM] - (K4_c + fluxes[flu_K5_c]) * u[AMp];
-    du[ AM   	] = fluxes[flu_K5_c] * u[AMp] - ( K7_c + fluxes[flu_K6_c] ) * u[AM];
+    }
 
-    //ECS:				smc efflux				SC flux
-    du[ K_e		] = - fluxes[flu_NaK_i] + fluxes[flu_K_i] - ( (u[K_e] - fluxes[flu_K_s]) / tau2) + ECS_input(t);
+    {//ECS:		smc efflux				SC flux
+    du[K_e] = - fluxes[flu_NaK_i] + fluxes[flu_K_i] - ( (u[K_e] - fluxes[flu_K_s]) / tau2) + ECS_input(t);
+    }
     /***********NO pathway***********/
 
-    // NE:
+    {// NE:
     // TODO: remove that and bring to NTS's neuron model
     //  or to MegaSynapticSpace
     du[ca_n]       = (fluxes[flu_I_Ca] / (2*Farad * V_spine) - (k_ex * (u[ca_n] - Ca_rest))) / (1 + lambda);     //\muM
     du[nNOS]       = V_maxNOS * fluxes[flu_CaM] / (K_actNOS + fluxes[flu_CaM]) - mu2 * u[nNOS] ;                  //\muM
     du[NOn]       = u[nNOS] * V_max_NO_n * const_On / (K_mO2_n + const_On) * LArg / (K_mArg_n + LArg) - ((u[NOn] - u[NOk]) / tau_nk) - (k_O2* pow(u[NOn],2) * const_On);
+    }
 
     // AC:
     du[NOk]       = (u[NOn] - u[NOk]) / tau_nk + (u[NOi] - u[NOk]) / tau_ki - k_O2 * pow(u[NOk],2) * const_Ok;
@@ -805,27 +898,29 @@ void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
     du[E_6c]       = k1 * u[E_b] * u[NOi] - k_1 * u[E_6c] - k2 * u[E_6c] - k3 * u[E_6c] * u[NOi] ;
     du[cGMP]       = V_max_sGC * fluxes[flu_E_5c] - fluxes[flu_V_max_pde] * u[cGMP] / (K_m_pde + u[cGMP]);
 
-    // EC:
+    {// EC:
     du[eNOS]       = gam_eNOS * (K_dis * u[ca_j] / (K_eNOS + u[ca_j]))  // Ca-dependent activation - tick
 					+ (1 - gam_eNOS) * (g_max * fluxes[flu_F_tau_w]) // wss-dependent activation - tick
 					- mu2 * u[eNOS];      // deactivation - tick
     du[NOj]       = V_NOj_max * u[eNOS] * const_Oj / (K_mO2_j + const_Oj) * LArg_j / (K_mArg_j + LArg_j) // production - tick
 					- k_O2 * pow(u[NOj],2) * const_Oj // consumption
 					+ (u[NOi] - u[NOj]) / tau_ij - u[NOj] * 4 * D_NO / (pow(25,2)); // Either R0*state_r or 25
+    }
 
     /**********Astrocytic Calcium*******/
 
-    // AC:
+    {// AC:
     du[ca_k]	= fluxes[flu_B_cyt] * (fluxes[flu_ip3_k] - fluxes[flu_pump_k] + fluxes[flu_er_leak] + fluxes[flu_TRPV_k]/r_buff);
     du[s_k]		= -(fluxes[flu_B_cyt] * (fluxes[flu_ip3_k] - fluxes[flu_pump_k] + fluxes[flu_er_leak])) / (VR_ER_cyt);
     du[h_k]		= k_on * (K_inh - (u[ca_k] + K_inh) * u[h_k]);
     du[ip3_k]	= r_h * fluxes[flu_G] - k_deg * u[ip3_k];
     du[eet_k]	= V_eet * fmax((u[ca_k] - Ca_k_min), 0) - k_eet * u[eet_k];
     du[m_k]		= trpv_switch * (fluxes[flu_minf_k] - u[m_k]) / (fluxes[flu_t_Ca_k] * u[ca_p]);
+    }
 
-	//PVS:
+    {//PVS:
     du[ca_p]	= (-fluxes[flu_TRPV_k] / VR_pa) + (fluxes[flu_VOCC_k] / VR_ps) - Ca_decay_k * (u[ca_p] - Capmin_k);
-
+    }
 }
 
 double NVUNode::factorial(int c)
@@ -839,7 +934,6 @@ double NVUNode::factorial(int c)
 
     return result;
 }
-
 
 #if INPUT_TO_NVU == OPTION_LIFE
 // time-varying glutamate input signal
@@ -863,13 +957,11 @@ double NVUNode::nvu_Glu(double t)
 // TODO: use LFP (from MegaSynapticSpace) and produce Glu
 void NVUNode::nvu_Glu()
 {
+   double prev_Glut_out = Glut_out;
     if (*numSpikes >= THRESHOLD_NUMSPIKES)
     {
        //double Glu_min = 0;
        double Glut_max = 1846; // uM - one vesicle (Santucci)
-
-       //double Glu_time = 0.5 * tanh((t) / 1) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME)) / 1);
-       //double Glu_time = 0.5 * tanh((t - workspace->injectStart) / 1) - 0.5 * tanh((t - (workspace->injectStart + LIFE_TIME)) / 1);
 
        Glut_out += Glut_max;
     }
@@ -878,15 +970,19 @@ void NVUNode::nvu_Glu()
     float J_decay = 1.0 / (Glut_lifetime) *
                     (Glut_out - GLUT_MIN);  // [uM/sec]
     Glut_out = std::max(GLUT_MIN, Glut_out - TStep * J_decay);
+    J_Glut_out = (Glut_out - prev_Glut_out)/TStep;
 }
 #endif
 
 #if INPUT_TO_NVU == OPTION_LIFE
 // time-varying K+ input signal (simulating neuronal activity)
+/*
+ * Ostby model
+ */
 double NVUNode::K_input(double t)
 {
     double K_input_min  = 0;
-    double K_input_max  = 2.67;
+    double K_input_max  = 2.67; // unit??
 
     double lengthpulse  = LIFE_TIME / 2.0; // Half up then half down during 'pulse'
     double lengtht1     = INJECT_TIME;
@@ -896,8 +992,8 @@ double NVUNode::K_input(double t)
     double t2           = t0 + lengthpulse;
     double t3           = t1 + lengthpulse;
 
-    int alpha           = 2;
-    int beta            = 5;
+    int alpha           = 2;  // (unitless) alpha-distribution constant
+    int beta            = 5;  // (unitless) beta-distribution constant
     double deltat       = INJECT_TIME;
     double gab          = factorial(alpha + beta - 1);
     double ga           = factorial(alpha - 1);
@@ -914,16 +1010,17 @@ double NVUNode::K_input(double t)
         return 0.0;
     }
 
-
+    double Finput = 1.0; //(amplitude) scaling factor
     if (t >= t0 && t <= t1)
     {
-        K_time = 1 * gab / (ga * gb) * pow((1 - (t - t0) / deltat), (beta - 1)) * pow(((t - t0) / deltat), (alpha-1));
-
+        K_time = Finput * gab / (ga * gb) * 
+	    pow((1 - (t - t0) / deltat), (beta - 1)) * 
+	    pow(((t - t0) / deltat), (alpha-1)); //unitless
     }
     else if (t >= t2 && t <= t3)
     {
-        //K_time = - F_input;
-        K_time = - 1;
+        K_time = - Finput;
+        //K_time = - 1;
     }
     else
     {
@@ -936,54 +1033,21 @@ double NVUNode::K_input(double t)
 #elif INPUT_TO_NVU == OPTION_NEURON
 void NVUNode::nvu_K()
 {
+   //double prev_K_out = K_out;
     if (*numSpikes >= THRESHOLD_NUMSPIKES)
     {
-	//double K_input_min  = 0;
-	//double K_input_max  = 2.67;
-	double K_input_max  = 0.017;
-	K_out += K_input_max;
-
-	//double lengthpulse  = LIFE_TIME / 2.0; // Half up then half down during 'pulse'
-	//double lengtht1     = INJECT_TIME;
-
-	//double t0           = workspace->injectStart;
-	//double t1           = t0 + lengtht1;
-	//double t2           = t0 + lengthpulse;
-	//double t3           = t1 + lengthpulse;
-
-	//int alpha           = 2;
-	//int beta            = 5;
-	//double deltat       = INJECT_TIME;
-	//double gab          = factorial(alpha + beta - 1);
-	//double ga           = factorial(alpha - 1);
-	//double gb           = factorial(beta - 1);
-	////TODO: switch to using factorial in NumberUtils
-	////     and only store result of gab/(ga*gb)
-
-
-	//double K_time;
-
-	//if (t >= t0 && t <= t1)
-	//{
-	//    K_time = 1 * gab / (ga * gb) * pow((1 - (t - t0) / deltat), (beta - 1)) * pow(((t - t0) / deltat), (alpha-1));
-
-	//}
-	//else if (t >= t2 && t <= t3)
-	//{
-	//    //K_time = - F_input;
-	//    K_time = - 1;
-	//}
-	//else
-	//{
-	//    K_time = 0;
-	//}
-
-	///K_out = K_input_min + (K_input_max - K_input_min) * K_time; // 0 if t3 < t or x,y <= 0
+	double K_input_max  = 2.67; // uM???
+	float scale_factor = 10000.0;
+	J_K_out = (K_input_max)/TStep/scale_factor;
     }
-    float K_lifetime = 1e-3; // sec
+    float K_lifetime = 2e-3; // sec
     float J_decay = 1.0 / (K_lifetime) *
-                    (K_out - K_extra_baseline);  // [mM/sec]
-    K_out = std::max(K_extra_min, K_out - TStep * J_decay);
+                    (workspace->y[N_K_s] - K_s_baseline);  // [uM/sec or mM/sec ??? try to find out]
+    workspace->y[N_K_s] = std::max(K_s_min, workspace->y[N_K_s] - TStep * J_decay);
+
+//    if (J_K_out > 0.0)
+//       std::cerr << "J_K_out " << J_K_out << ", and *k_C " << J_K_out * k_C
+//	  << "  numSpi " << *numSpikes << std::endl;
 }
 #endif
 
@@ -1036,7 +1100,6 @@ double NVUNode::ECS_input(double t)
     double ECS_out = ECS_max * ECS_time;
 
     return ECS_out;
-
 }
 
 
@@ -1073,7 +1136,8 @@ void NVUNode::solver_init()
     workspace->ytol   = 1e-3;           // relative error tolerance for Newton convergence 1e-3
     workspace->nconv  = 5;              // Newton iteration threshold for Jacobian reevaluation 5
     workspace->maxits = 100;            // Maximum number of Newton iterations 100
-    workspace->dtwrite = 1.0;             // Time step for writing to file (and screen)
+    //workspace->dtwrite = 1.0;             // Time step (in seconds) for writing to file (and screen)
+    workspace->dtwrite = 0.10;             // Time step (in seconds) for writing to file (and screen)
 
     workspace->mdeclared = 0;
 
@@ -1083,8 +1147,8 @@ void NVUNode::solver_init()
 
     //nvu init
     workspace->num_fluxes = 103;
-    workspace->counter = 0;
-    workspace->injectStart = 0.0;
+    workspace->counter = 0;  // to be used in LIFE only
+    workspace->injectStart = 0.0;  // for impulse simulation purpose, i.e. track when an impulse is given
 
 
     // Sparsity patterns (approximated by matrices full of 1s). Will be improved as simulation progresses.
@@ -1197,12 +1261,24 @@ void NVUNode::evaluate(double t, double *y, double *dy)
 {
     workspace->fevals++;
     nvu_rhs(t, y, dy, workspace->fluxes);
-    diffuse(); // IN NVU 1.2 only ECS K+ is diffused.
+#ifdef MODEL_DIFFUSE
+    diffuse(); 
+#endif
 
     // Ensure all state variables, fluxes, and derivatives are non-NaN.
     for (int i = 0; i < NEQ; i++)
     {
+	if (isnan(y[i]))
+	{
+	   std::cerr << " time " << (getSimulation().getIteration() * TStep)
+	      << ": NaN for y[" << i << "]";
+	}
         assert(!isnan(y[i]));
+	if (isnan(dy[i]))
+	{
+	   std::cerr << " time " << (getSimulation().getIteration() * TStep)
+	      << ": NaN for dy[" << i << "]";
+	}
         assert(!isnan(dy[i]));
     }
 
@@ -1212,6 +1288,10 @@ void NVUNode::evaluate(double t, double *y, double *dy)
     }
 }
 
+/*
+ * t <---- workspace->t   (time)
+ * u <---- workspace->y   (state-Vars)
+ */
 void NVUNode::jacupdate(double t, double *u)
 {
     workspace->jacupdates++;
@@ -1219,11 +1299,9 @@ void NVUNode::jacupdate(double t, double *u)
     double eps = 1e-6;
 
     f = (double *)malloc(NEQ * sizeof (*f ));
-    evaluate(t, u, f);
+    evaluate(t, u, f);  // f ~ du
 
     eval_dfdx(t, u, f, eps);
-
-
 
     if (workspace->isjac) cs_spfree(workspace->J);
 
@@ -1243,9 +1321,14 @@ void NVUNode::init_dfdx()
     workspace->dfdx = numjacinit(J);
 
     cs_spfree(J);
-
 }
 
+/*
+ * Evaluate
+ * y = state-vars
+ * f = dy
+ * eps = epsilon
+ */
 void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
 {
     int i, j;
@@ -1283,7 +1366,6 @@ void NVUNode::eval_dfdx(double t, double *y, double *f, double eps)
         }
     }
 
-
     free(y1);
     free(h);
     free(f1);
@@ -1297,34 +1379,34 @@ NVU node as .csv files, to be converted later using the plotting script "plot_sp
 */
 void NVUNode::write_state_var_data()
 {
+    fprintf(workspace->state_var_file, "%f",workspace->t);
     for (int i = 0; i < NEQ; i++)
     {
     	// workspacerite radius values in um - they are non-dimensional in the system.
-    	if (i == i_radius) fprintf(workspace->state_var_file,"%f,",20.0 * workspace->y[i]);
-    	else fprintf(workspace->state_var_file,"%.10f,",workspace->y[i]);
+    	if (i == i_radius) fprintf(workspace->state_var_file,", %f",20.0 * workspace->y[i]);
+    	else fprintf(workspace->state_var_file,", %.10f",workspace->y[i]);
     }
-    fprintf(workspace->state_var_file, "%f\n",workspace->t);
+    fprintf(workspace->state_var_file, "\n");
 }
 
 void NVUNode::write_fluxes_data()
 {
+    fprintf(workspace->fluxes_file, "%f",workspace->t);
     for (int i = 0; i < workspace->num_fluxes; i++)
     {
-        fprintf(workspace->fluxes_file,"%.10f,",workspace->fluxes[i]);
+        fprintf(workspace->fluxes_file,", %.10f",workspace->fluxes[i]);
     }
-    fprintf(workspace->fluxes_file, "%f\n",workspace->t);
+    fprintf(workspace->fluxes_file, "\n");
 }
-
-
-
 
 /**
 Iterate over all connected NVU neighbors and calculate diffusion between them.
-Updates own ecs K+ dirvative value, expected to take place before solving for a given iteration.
+Updates own ecs K+ derivative value, expected to take place before solving for a given iteration.
+// IN NVU 1.2 only ECS K+ is diffused.
 */
 void NVUNode::diffuse()
 {
-	double flu_diff_k;
+    double flu_diff_k;
     for (int i = 0; i < K_ecs_neighbors.size(); i++)
     {
         flu_diff_k = (*(K_ecs_neighbors[i]) - workspace->y[K_e]) / tau_diffusion;
@@ -1383,22 +1465,71 @@ void NVUNode::calculate_pressure_index()
         {
             shortestDistance = distance;
             bestIndex = currentNodeIndex;
-
         }
-
     }
 
     // Relationship between coordinate and pressure arrays in H-tree. No dependency between nodes.
     workspace->pressuresIndex = bestIndex / 2;
 #ifdef DEBUG
-    printf("Node: %d. P-index: %d\n", getNodeIndex(), workspace->pressuresIndex);
+    //printf("Node: %d. P-index: %d\n", getNodeIndex(), workspace->pressuresIndex);
+    int rank = getSimulation().getRank();
+    int comm_size = getSimulation().getNumProcesses();
+    for (int i = 0; i < comm_size; i++)
+    {
+       MPI_Barrier(MPI_COMM_WORLD);
+       std::vector<int> coords;
+       int x, y;
+       getNodeCoords(coords);
+       //getNodeCoords2Dim(x, y);
+       if (i == rank and getSimulation().isSimulatePass())
+       {
+	  char str[1024];
+	  snprintf(str, sizeof(str), "rank: %d, Node: %d. P-index: %d\n"
+		, i, getNodeIndex(), workspace->pressuresIndex);
+	  std::cerr << str << std::endl; 
+       }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
     free(myCoords);
     free(treeCoords);
 }
 
-
 NVUNode::~NVUNode()
 {
+}
+
+/*
+ * some times we want to export NVU-associated data, but these
+ * data are not solved by NVU's ODE system
+ * condition(int):   0 = add element to array
+ *                   1 = assign data to array
+ */
+void NVUNode::add_or_update_extra_stateVariables(int condition)
+{
+    // Glut concentration
+    // numSpikes
+    if (condition == 0)
+    {//add elements
+       assert(stateVariables.size() == NEQ);
+       stateVariables.push_back(Glut_out);
+       /* these already in ODE system
+       // K+ extracellular
+       stateVariables.push_back(K_out);
+	*/
+#if INPUT_TO_NVU == OPTION_NEURON
+       stateVariables.push_back(*numSpikes);
+#else
+       stateVariables.push_back(0.0);
+#endif
+    }
+    else{
+       //assign value
+       //stateVariables[NEQ] = K_out;
+       stateVariables[NEQ] = Glut_out;
+#if INPUT_TO_NVU == OPTION_NEURON
+       stateVariables[NEQ+1] = *numSpikes;
+#endif
+    }
 }

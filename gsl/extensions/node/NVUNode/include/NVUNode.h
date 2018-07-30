@@ -15,12 +15,14 @@
 
 #define OPTION_LIFE 0
 #define OPTION_NEURON 1
-//#define INPUT_TO_NVU OPTION_LIFE
-#define INPUT_TO_NVU OPTION_NEURON 
+#define INPUT_TO_NVU OPTION_LIFE
+//#define INPUT_TO_NVU OPTION_NEURON 
 
 
-#define WRITE_STATE_VARS 0
-#define WRITE_FLUXES 0
+//I/O or not, and if so, on what node?
+#define WRITE_STATE_VARS 1
+#define WRITE_FLUXES 1
+//what NVUNode to plot
 #define PLOTTING_NODE 0
 
 #define LIFE_TIME 100.0 // (sec) 
@@ -30,6 +32,9 @@
 #define POW_OF_2(x) (1 << (x)) // macro for 2^x using bitwise shift
 
 #define ITERATIONS_PER_SEC 100000
+
+//#define MODEL_DIFFUSE
+#define SIMULATE_ISOLATE_VESSEL_CLAMP_PRESSURE
 
 struct Workspace 
 {
@@ -116,7 +121,7 @@ class NVUNode : public CG_NVUNode
     void back_euler();
     void solver_init();
     void write_state_var_data();
-        void write_fluxes_data();
+    void write_fluxes_data();
 
 
     // From brain.h
@@ -160,13 +165,18 @@ class NVUNode : public CG_NVUNode
         
     void diffuse();
     void calculate_pressure_index();
+    void add_or_update_extra_stateVariables(int condition); //0 = add, 1 = update (default)
 
     //int sizecheck(double *x, int n, double tol);
     int _gIdx;
     //float _idxCounter;
 
-    double Glut_out; //uM  - glut-concentration
-    double K_out; //mM  - Potassium-concentration
+    double Glut_out; //uM  - glut-concentration (in MegaSC) as a result of release/reuptake from presynaptic(firing) neuron only [NOT counting remval effect from other cells]
+    //double K_out; //mM  - Potassium-concentration as a result of ....
+    double J_Na_out; // uM/sec - flux of uptake Na+ from MegaSynapticCleft into (presynaptic/firing) neuron
+    double J_K_out; // uM/sec  - flux of release K+ into MegaSynapticCleft
+    double J_Glut_out; // uM/sec - flux of release Glut into MegaSynapticCleft
+    /* NOTE: K+ in the extracellular space (EC) is calculated in ODE */
 
 };
 

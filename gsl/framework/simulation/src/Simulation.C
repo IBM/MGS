@@ -108,7 +108,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
       _graphSize(0), _graph(0), _publisher(0), _dependencyParser(0), _detachUserInterface(false)
 #ifdef  HAVE_MPI
       , _iSenders(0), _iReceivers(0), _commEngine(0), _P2P(false), _alltoallw(false), _alltoallv(true)
-#endif  //HAVE_MPI	
+#endif  //HAVE_MPI
       , _numWorkUnits(numWorkUnits), _numGranules(0), _partitioner(0)
 {
    std::string fileName;
@@ -306,7 +306,7 @@ bool Simulation::start()
 	 LENS_PT_LOCK(_stateMutex);
 	 simstate = _state;
 	 LENS_PT_UNLOCK(_stateMutex);
-	
+
       } while(simstate== _UNUSED);
 
       if (simstate==_STOP) {
@@ -671,7 +671,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	       rebuildRequested = _commEngine->Communicate();
 	       assert(!rebuildRequested);
 	     }
-	   }	
+	   }
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
 	 //if (&phases == &_initPhases && it==phases.begin()) while(1) {}
@@ -694,7 +694,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 		  it->getWorkUnits().insert(
 		     it->getWorkUnits().end(), workUnits.begin(),
 		     workUnits.end());
-	       }	
+	       }
 	    }
 	 }
 

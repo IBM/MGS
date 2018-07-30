@@ -199,7 +199,6 @@ void HodgkinHuxleyVoltageJunction::initializeJunction(RNG& rng)
     cmt = 2.0 * Cm / *(getSharedMembers().deltaT);
   }
 
-
 #ifdef DEBUG_HH
   std::cerr << "JUNCTION (" << dimension->x << "," << dimension->y << ","
     << dimension->z << "," << dimension->r 
@@ -312,23 +311,27 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   //  4. injected currents [pA]
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
-  dyn_var_t area_used = 1.0; 
+  dyn_var_t area_used = 1.0;  // [um^2]
 #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
   area_used = 1.0;
 #else 
+  area_used = area;
   #ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
   if ((dimensionInputs.size() > 3) /* to skip soma head*/
       && (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
   {
     area_used = (area / SOMA_AREA_SCALE_FACTOR) ; // at time (t+dt/2)
-  }else
-  {
-    area_used = area;
   }
-  #else
-  area_used = area;
   #endif
 #endif
+
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  bool found_change = false;
+  //  4b. consider abrupt change in injected currents [pA]
+  Array<dyn_var_t>::iterator piter;
+  piter = previous_injectedCurrent.begin();
+#endif
+
 #ifdef INTRINSIC_NOISE_TO_NEURON
   if (checked_time + delay_until_adjust_noise > 
       getSimulation().getIteration() * *getSharedMembers().deltaT
@@ -348,9 +351,33 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
   }
   current += injcurrent * noise_factor_current_injection;
 #else
-  for (; iter != end; ++iter)
+  for (; iter != end; ++iter
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+      , ++piter
+#endif
+      )
   {
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        && gAxial.size() > 2 /* to skip soma head*/)
+    {
+#if 1 // use this only
+#define STIM_CHANGE_THRESHOLD 10.0 // pA
+      if (std::fabs(**iter - *piter) > STIM_CHANGE_THRESHOLD )
+      {
+        found_change = true;
+        _count_timer = 1; //3; //6; //10;
+      }
+      current += **iter / area_used; // at time (t+dt/2)
+#else
+        std::cout << " GET INTO WRONG LOCATION " << std::endl;
+        current += (**iter + ((**iter - *piter)/0.001 * Vcur)) / area_used; // at time (t+dt/2)
+#endif
+         *piter = **iter;
+    }
+#else
     current += **iter / area_used; // at time (t+dt/2)
+#endif
   }
 #endif
 //#ifdef CONSIDER_DI_DV
@@ -363,32 +390,43 @@ void HodgkinHuxleyVoltageJunction::predictJunction(RNG& rng)
 //  }
 //#endif
 
-  // 5. Current loss due to passive diffusion to adjacent compartments
-  Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
-  Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  //Here, current is withheld, i.e. no axial current 
+  // for certain time-iterations so that the current is charged the voltage enough
+  if (not found_change and not (_count_timer > 0))
+  {
+    if (_count_timer >= 0)
+      _count_timer -= 1;
+#endif
+    // 5. Current loss due to passive diffusion to adjacent compartments
+    Array<dyn_var_t>::iterator xiter = gAxial.begin(), xend = gAxial.end();
+    Array<dyn_var_t*>::iterator viter = voltageInputs.begin();
   //NOTE: No need to have it; we just put into correctJunction()
 //#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
 //  dyn_var_t temp = 0.0;
 //#endif
-  for (; xiter != xend; ++xiter, ++viter)
-  {
+    for (; xiter != xend; ++xiter, ++viter)
+    {
 #if 0
-    //original approach
-    //current += (*xiter) * ((**viter) - Vcur);
-    current += (*xiter) * ((**viter) - Vnew[0]);
+      //original approach
+      //current += (*xiter) * ((**viter) - Vcur);
+      current += (*xiter) * ((**viter) - Vnew[0]);
 #else
-    current += (*xiter) * (**viter);
-    conductance += (*xiter);  
+      current += (*xiter) * (**viter);
+      conductance += (*xiter);  
 #endif
-//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
-////    = Area(soma) * SUM( {Vdend - Vsoma}/ (r_dend_soma) )
-////    = SUM( gAxial * {Vdend - Vsoma} )
-//    temp += (*xiter) * ((**viter) - Vnew[0]) //[pA/um^2]
-//#endif
-  }
+      //#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+      ////    = Area(soma) * SUM( {Vdend - Vsoma}/ (r_dend_soma) )
+      ////    = SUM( gAxial * {Vdend - Vsoma} )
+      //    temp += (*xiter) * ((**viter) - Vnew[0]) //[pA/um^2]
+      //#endif
+    }
 //#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
 //  I_fromdend = area * temp; //[pA]
 //#endif
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  }
+#endif
 
   //float Vold = Vnew[0];
   Vnew[0] = current / conductance; //estimate at (t+dt/2)
@@ -508,25 +546,28 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   //}
 
   //  4. injected currents [pA]
-  dyn_var_t area_used = 1.0; 
+  dyn_var_t area_used = 1.0;  // [um^2]
 #ifdef INJECTED_CURRENT_IS_POINT_PROCESS 
   area_used = 1.0;
 #else 
+  area_used = area;
   #ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
   if ((dimensionInputs.size() > 3) /* to skip soma head*/
       && (_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA))
   {
     area_used = (area / SOMA_AREA_SCALE_FACTOR) ; // at time (t+dt/2)
-  }else
-  {
-    area_used = area;
   }
-  #else
-  area_used = area;
   #endif
 #endif
   iter = injectedCurrents.begin();
   end = injectedCurrents.end();
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+  bool found_change = false;
+  //  4b. consider abrupt change in injected currents [pA]
+  Array<dyn_var_t>::iterator piter;
+  piter = previous_injectedCurrent.begin();
+#endif
+
 #ifdef INTRINSIC_NOISE_TO_NEURON
   double injcurrent  = 0.0;
   for (; iter != end; ++iter)
@@ -535,9 +576,33 @@ void HodgkinHuxleyVoltageJunction::correctJunction(RNG& rng)
   }
   current += injcurrent * noise_factor_current_injection;
 #else
-  for (; iter != end; ++iter)
+  for (; iter != end; ++iter
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+      , ++piter
+#endif
+      )
   {
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        && gAxial.size() > 2 /* to skip soma head*/)
+    {
+#if 1 // use this only
+#define STIM_CHANGE_THRESHOLD 10.0 // pA
+      //if (std::fabs(**iter - *piter) > STIM_CHANGE_THRESHOLD )
+      //{
+      //  found_change = true;
+      //  _count_timer = 10;
+      //}
+      current += **iter / area_used; // at time (t+dt/2)
+#else
+      std::cout << " GET INTO WRONG LOCATION " << std::endl;
+      current += (**iter + ((**iter - *piter)/0.001 * Vcur)) / area_used; // at time (t+dt/2)
+#endif
+      *piter = **iter;
+    }
+#else
     current += **iter / area_used; // at time (t+dt/2)
+#endif
   }
 #endif
 //#ifdef CONSIDER_DI_DV
@@ -674,6 +739,7 @@ void HodgkinHuxleyVoltageJunction::add_zero_didv(const String& CG_direction, con
   _zero_conductance = 0;
   injectedCurrents_conductance_didv.push_back(&_zero_conductance);
 }
+
 void HodgkinHuxleyVoltageJunction::select_current_stream(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
 {
   int num_streams = getSharedMembers().tmp_injectedCurrents->size();
@@ -683,6 +749,15 @@ void HodgkinHuxleyVoltageJunction::select_current_stream(const String& CG_direct
   //std::cerr << "neuron connect " << _i << ",   " << num_streams << std::endl;
   injectedCurrents.push_back(&(*(getSharedMembers().tmp_injectedCurrents))[_i]);
 }
+
+#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+void HodgkinHuxleyVoltageJunction::update_stim_reference(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset)
+{
+  //this kep track the value of Istim in the previous time-step 
+  dyn_var_t value = 0.0; 
+  previous_injectedCurrent.push_back(value);
+}
+#endif
 
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
 void HodgkinHuxleyVoltageJunction::updateSpineCount(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_HodgkinHuxleyVoltageJunctionInAttrPSet* CG_inAttrPset, CG_HodgkinHuxleyVoltageJunctionOutAttrPSet* CG_outAttrPset) 

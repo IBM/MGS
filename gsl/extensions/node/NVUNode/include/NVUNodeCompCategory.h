@@ -10,7 +10,7 @@ class NVUNodeCompCategory : public CG_NVUNodeCompCategory
 {
    public:
       NVUNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
-      void paramInitalize(RNG& rng);
+      void paramInitialize(RNG& rng);
 
 };
 

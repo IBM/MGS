@@ -7,7 +7,6 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-
 // GOAL: stimulus
 //{{{
 Variable VoltageClamp Implements CurrentProducer
@@ -74,7 +73,7 @@ Variable VoltageClamp Implements CurrentProducer
   CurrentProducer.current << &Igen;
 #ifdef CONSIDER_DI_DV
   DIDV_ConductanceProducer.conductance_didv << &conductance_didv;
-#endif		
+#endif
 
   InAttrPSet {
     string identifier;
@@ -86,11 +85,13 @@ Variable VoltageClamp Implements CurrentProducer
   //Use this for SERIES_RESISTANCE (type==1)
   Connection Pre Node (PSet.identifier=="JUNCTION") Expects
         VoltageArrayProducer, DimensionArrayProducer
-  {	
+  {
     VoltageArrayProducer.voltageArray >> V;
     DimensionArrayProducer.dimensionArray >> dimensions;
   }
-  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, DimensionArrayProducer{
+  Connection Pre Node (PSet.identifier=="BRANCH") Expects
+        VoltageArrayProducer, DimensionArrayProducer
+  {
   //NOTE:  Not support 'ComputeBranch' yet, as it needs to produce CurrentArrayProducer
   //NOTE: As the connection between VC and HHVoltage should be bi-directional
   //   there is a chance of error when user not doing this properly, i.e. maybe we should let TissueFunctor
@@ -425,7 +426,7 @@ Variable ReversalPotentialDisplay
 //Variable SignalOutput
 //{
 ////{{{
-// 
+//
 //  int* [] signal_io; // 0 = no write, 1 = write (the target has the responsibility to turn off)
 //
 //  dyn_var_t* deltaT;
@@ -656,16 +657,10 @@ Variable AnyCurrentDisplay
 #ifdef IDEA_CURRENTONCOMPT
       , DimensionArrayProducer
 #endif
-//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
-//      , IOCurrentProducer
-//#endif
    {		//
      VoltageArrayProducer.voltageArray >> V_connect;
      ConductanceProducer.conductance >> gLeak;
      BranchDataProducer.branchData >> leakBranchData;
-//#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
-//     IOCurrentProducer.current >> I_junction;
-//#endif
 #ifdef IDEA_CURRENTONCOMPT
      DimensionArrayProducer.dimensionArray >> dimensions_connect;
 #endif

@@ -8,48 +8,58 @@ NVUNodeCompCategory::NVUNodeCompCategory(Simulation& sim, const std::string& mod
 {
 }
 
-void NVUNodeCompCategory::paramInitalize(RNG& rng) 
+void NVUNodeCompCategory::paramInitialize(RNG& rng) 
 {
-    // general constants:
-    getSharedMembers().Farad       = 96500         ;// [C mol-1] Faradays constant.
+   //m.  = meter
+   //s.  = second
+   {//general constants
+    getSharedMembers().Farad       = 96485.33289   ;// [C mol-1] Faradays constant.
     getSharedMembers().R_gas       = 8.315         ;// [J mol-1K-1]
     getSharedMembers().Temp        = 300           ;// [K]
     getSharedMembers().unitcon     = 1e3           ;// [-] Factor to convert equations to another unit.
+   }
 
-// NE & AC constants:
-    getSharedMembers().L_p         = 2.1e-9        ;// [m uM-1s-1]
-    getSharedMembers().R_tot       = 8.79e-8       ;// [m]   total volume surface area ratio AC+SC
-    getSharedMembers().X_k         = 12.41e-3      ;// [uMm]
-    getSharedMembers().z_Na        = 1             ;// [-]
+   {// NE & AC constants:
+    getSharedMembers().L_p         = 2.1e-9        ;// [m . uM-1 . s-1]  total water permeaility per unit area of astrocyte
+    getSharedMembers().R_tot       = 8.79e-8       ;// [m]   total volume/surface_area ratio AC+SC
+    getSharedMembers().X_k         = 12.41e-3      ;// [uM . m] number of negatively charged, impermeable ions trapped within astrocyte divided by astrocyte membrane area
+    getSharedMembers().z_Na        = 1             ;// [-]  valence
     getSharedMembers().z_K         = 1             ;// [-]
     getSharedMembers().z_Cl        = -1            ;// [-]
     getSharedMembers().z_NBC       = -1            ;// [-]
-    getSharedMembers().g_K_k       = 40            ;// [ohm-1m-2]
-    getSharedMembers().g_KCC1_k    = 1e-2          ;// [ohm-1m-2]
-    getSharedMembers().g_NBC_k     = 7.57e-1       ;// [ohm-1m-2]
-    getSharedMembers().g_Cl_k      = 8.797e-1      ;// [ohm-1m-2]
-    getSharedMembers().g_NKCC1_k   = 5.54e-2       ;// [ohm-1m-2]
-    getSharedMembers().g_Na_k      = 1.314         ;// [ohm-1m-2]
-    getSharedMembers().J_NaK_max   = 1.42e-3       ;// [uMm s-1]
+    //TODO: ask not the same in value in NVu-1.2-equations:  all divided by 10^3
+    getSharedMembers().g_K_k       = 40            ;// [Ohm-1 . m-2]  K+ ion conductance 
+    getSharedMembers().g_KCC1_k    = 1e-2          ;// [Ohm-1 . m-2]
+    getSharedMembers().g_NBC_k     = 7.57e-1       ;// [Ohm-1 . m-2]
+    getSharedMembers().g_Cl_k      = 8.797e-1      ;// [Ohm-1 . m-2]
+    getSharedMembers().g_NKCC1_k   = 5.54e-2       ;// [Ohm-1 . m-2]
+    getSharedMembers().g_Na_k      = 1.314         ;// [Ohm-1 . m-2]
+
+    getSharedMembers().J_NaK_max   = 1.42e-3       ;// [uM . s-1]
     getSharedMembers().K_Na_k      = 10e3          ;// [uM]
     getSharedMembers().K_K_s       = 1.5e3         ;// [uM]
+   }
+
+    /* uptake or release  factor */
     getSharedMembers().k_C         = 7.35e-5       ;// [muM s-1]
 
-// Perivascular Space constants:
+    {// Perivascular Space constants:
     getSharedMembers().R_decay     = 0.05;  // s^-1
     getSharedMembers().K_p_min   = 3e3;     // uM
+    }
 
-// BK channel constants:
+    {// BK channel constants:
     getSharedMembers().A_ef_k      = 3.7e-9        ;                // m2       Area of an endfoot of an astrocyte, equal to Area astrocyte at synaptic cleft
     getSharedMembers().v_4         = 8e-3       ;               // V        A measure of the spread of the distribution
     getSharedMembers().psi_w       = 2.664         ;                // s-1      A characteristic time
     getSharedMembers().G_BK_k      = 225         ;              // !!!
-    getSharedMembers().g_BK_k      = getSharedMembers().G_BK_k * 1e-12 / getSharedMembers().A_ef_k ;    // ohm-1m-2  Specific capacitance of the BK-Channel in units of Ostby
+    getSharedMembers().g_BK_k      = getSharedMembers().G_BK_k * 1e-12 / getSharedMembers().A_ef_k ;    // Ohm-1m-2  Specific capacitance of the BK-Channel in units of Ostby
     getSharedMembers().VR_pa       = 0.001           ;              // [-]       The estimated volume ratio of perivascular space to astrocyte: Model estimation
     getSharedMembers().VR_ps       = 0.001         ;                // [-]       The estimated volume ratio of perivascular space to SMC: Model Estimation
+    }
 
-// SMC constants:
-    getSharedMembers().F_il         = 7.5e2;        //[-] scaling factor to fit the experimental data of Filosa
+    {// SMC constants:
+    getSharedMembers().F_il     = 7.5e2;        //[-] scaling factor to fit the experimental data of Filosa
     getSharedMembers().z_1      =4.5;           //[-] parameter fitted on experimental data of Filosa
     getSharedMembers().z_2      =-1.12e2;       //[-] parameter fitted on experimental data of Filosa
     getSharedMembers().z_3      =4.2e-1;        //[-] parameter fitted on experimental data of Filosa
@@ -83,14 +93,16 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().v_Ca3        = -27;          // correct
     getSharedMembers().R_K      = 12;
     getSharedMembers().const_k_i      = 0.1;
+    }
 
-// Stretch-activated channels
+    {// Stretch-activated channels
     getSharedMembers().G_stretch   = 0.0061;       // uM mV-1 s-1   (stretch activated channels)
     getSharedMembers().Esac        = -18;          // mV
     getSharedMembers().alpha1      = 0.0074;
     getSharedMembers().sig0        = 500;
+    }
 
-// EC constants:
+    {// EC constants:
     getSharedMembers().Fmax_j       = 0.23;         // [microM/s]
     getSharedMembers().Kr_j     = 1;
     getSharedMembers().B_j      = 0.5;
@@ -126,16 +138,17 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().C_Hillmann = 1;
     getSharedMembers().K3_c        = 0.4 * getSharedMembers().C_Hillmann;
     getSharedMembers().K4_c        = 0.1 * getSharedMembers().C_Hillmann;
-    getSharedMembers().K7_c        = 0.1 * getSharedMembers().C_Hillmann;
-    getSharedMembers().gam_cross   = 17 * getSharedMembers().C_Hillmann;
+    getSharedMembers().K7_c        = 0.1 * getSharedMembers().C_Hillmann;// [s^-1]
+    getSharedMembers().gam_cross   = 17 * getSharedMembers().C_Hillmann; // [uM^-3 . s^-1] = gamma_cross = sensitivity of contractile apparatus to calcium 
     getSharedMembers().LArg_j        = 100;
+    }
 
-    // ECS:
+    {// ECS:
     // tau is dx^2 / 2D where dx is the length and D is diffusion rate
     getSharedMembers().tau2          = 2.8;     // (sec) characteristic time scale for ion to travel from PVS to SC (AC length is ~100 um, based on protoplasmic astrocyte process length of ~50 um)
+    }
 
-    // NO pathway
-
+    {// NO pathway
     getSharedMembers().LArg        = 100;
     getSharedMembers().V_spine     = 8e-8;
     getSharedMembers().k_ex        = 1600;
@@ -189,8 +202,9 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().K_mO2_j     = 7.7;
     getSharedMembers().V_NOj_max   = 1.22;
     getSharedMembers().K_mArg_j    = 1.5;
+    }
 
-    // AC Ca2+
+    {// AC Ca2+
     getSharedMembers().r_buff           = 0.05;
     getSharedMembers().G_TRPV_k     = 50;
     getSharedMembers().g_TRPV_k     = getSharedMembers().G_TRPV_k * 1e-12 / getSharedMembers().A_ef_k;
@@ -205,7 +219,7 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().B_ex             = 11.35;
     getSharedMembers().BK_end           = 40;
     getSharedMembers().K_ex         = 0.26;
-    getSharedMembers().const_delta            = 1.235e-2;
+    getSharedMembers().const_delta  = 1.235e-2; //TODO what is this
     getSharedMembers().K_G          = 8.82;
     getSharedMembers().Ca_3         = 0.4;
     getSharedMembers().Ca_4         = 0.35;
@@ -214,7 +228,7 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().eet_shift        = 2e-3;
     getSharedMembers().gam_cae_k        = 200;
     getSharedMembers().gam_cai_k        = 0.01;
-    getSharedMembers().R_0_passive_k    = 20e-6;
+    getSharedMembers().R_0_passive_k    = 20e-6;  // meter --> vessel radius when no stress applied
     getSharedMembers().epshalf_k        = 0.1;
     getSharedMembers().kappa_k      = 0.1;
     getSharedMembers().v1_TRPV_k        = 0.12;
@@ -235,21 +249,27 @@ void NVUNodeCompCategory::paramInitalize(RNG& rng)
     getSharedMembers().trpv_switch  = 1;
     getSharedMembers().z_Ca         = 2;
     getSharedMembers().const_m_c          = 4;
+    }
 
-    getSharedMembers().R0    = 10e-6 ;  // m (for nondimensionalising)
+// TODO these are also in Htree :( Make them extern constants? Or make a static class Constants
+    getSharedMembers().R0    = 10e-6 ;  // m (for non-dimensionalising)
     getSharedMembers().P0    = 8000  ;  // Pa (scaling factor for nondim)
-    getSharedMembers().PCAP  = 4000  ;  // Pa (capillary bed pressure)
+    getSharedMembers().PCAP  = 4000  ;  // Pa (capillary bed pressure) 
+    //NOTE: 4000 Pa ~ 30 mmHg
+    //NOTE: 8000 Pa ~ 60 mmHg
+    //NOTE: R0 = 10 micrometer = 10e-6 meter
+    
 
-    // Pressure constants
+    {// Pressure constants
     getSharedMembers().HRR        = 0.1   ;  // Nondimensional (thickness to radius ratio)
     getSharedMembers().RSCALE     = 0.6   ;  // Dimensionless
     getSharedMembers().E0         = 66e3  ;  // Pa
     getSharedMembers().EPASSIVE   = 66e3  ;  // Pa
     getSharedMembers().EACTIVE    = 233e3 ;  // Pa
     getSharedMembers().ETA        = 1e4;//2.8e2 ;  // Pa s
-    getSharedMembers().T0         = 1     ;  // s
-
-
+    getSharedMembers().T0         = 1     ;  // s  (~ second)
     getSharedMembers().PA2MMHG   = 0.00750061683; // convert from Pa to mmHg
+    }
+
     getSharedMembers().tau_diffusion   = 4.3; // for ecs K+
 }

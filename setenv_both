@@ -5,7 +5,3 @@ export LENSROOT=$NTSROOT/gsl
 export MDLROOT=$NTSROOT/mdl
 export PATH=$NTSROOT/gsl/bin:$PATH
 export GSLPARSER=$NTSROOT/gsl/bin/gslparser
-#touch gsl/extensions/variable/variables.mdf
-#touch gsl/extensions/struct/structs.mdf
-#touch gsl/extensions/functor/functors.mdf
-#touch models/compartmental.mdf

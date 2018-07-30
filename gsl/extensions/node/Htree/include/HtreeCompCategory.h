@@ -1,5 +1,8 @@
 #ifndef HtreeCompCategory_H
 #define HtreeCompCategory_H
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+*/
 
 #include "Lens.h"
 #include "CG_HtreeCompCategory.h"

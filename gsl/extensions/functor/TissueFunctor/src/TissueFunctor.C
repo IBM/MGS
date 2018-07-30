@@ -2649,7 +2649,7 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
   }
   else {
     std::cerr<<"Unrecognized tissue element specifier: "<<tissueElement<<std::endl;
-    exit(0);
+    exit(1);
   }
   return rval;
 }
@@ -2923,7 +2923,6 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
   //           the grid-index (indexPost) to which postCapsule belongs
   //  and decide if an instance for the NodeType to be created or not at indexPre
   //         and/or indexPost
-  //
   if (electrical || chemical || point || bidirectional)
   {
     // REMEBER that all the touches (within the current MPI process) have been detected,
@@ -6018,6 +6017,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               mixedSynapse.push_back(receptor);
 //#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
 #ifdef  RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+              // This is designed to work with PreSynapticPoint
               //NOTE: POST = postsynaptic side
               //      PRE  = presynaptic side
               //Here, the line [[original implementation]]
@@ -7429,6 +7429,27 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
       }
       assert(0);
     }
+//#ifdef NVU_NTS_EXTENSION
+//    std::map<std::string, ProbedCategory_t> ::iterator 
+//        probiter = _probedCategory.find(layout);
+//    if (probiter != _probedCategory.end() &&
+//        (probeCat != (*probiter).second))
+//    {
+//      if (_rank == 0){
+//        std::cerr<<"Error on TissueFunctor Probe! The probe "
+//          << layout << " was reused on a different ProbedCategory."
+//          << " It was assigned to " << ProbedCategory_ToString((*probiter).second) 
+//          << "; and now is used in " << ProbedCategory_ToString(probeCat)<<std::endl;
+//      }
+//      assert(0);
+//    }
+//    else{
+//      if (_rank == 0){
+//        std::cerr<<" You forgot to add the probe" << std::endl;
+//      }
+//      assert(0);
+//    }
+//#endif
 
     std::pair<std::string, std::string> cattype=getCategoryTypePair(ndpiter, remaining);
     std::map<std::pair<std::string, std::string>, 
@@ -9179,7 +9200,6 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 // HISTORY:
 //   v.1.1 : update the distribution in step 2
 #ifdef IDEA1
-
 //int TissueFunctor::getNumCompartments(ComputeBranch* branch)
 //{
 //    std::vector<int> cptsizes_in_branch;

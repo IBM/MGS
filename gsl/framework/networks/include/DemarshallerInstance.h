@@ -28,7 +28,8 @@
 #include <string>
 #include <cassert>
 
-template <class T> class DemarshallerInstance : public Demarshaller
+template <class T> 
+class DemarshallerInstance : public Demarshaller
 {
 public:
    DemarshallerInstance()
@@ -78,7 +79,8 @@ private:
    int _offset;
 };
 
-template <class T> class DemarshallerInstance<Array<T> >: public Demarshaller {
+template <class T> 
+class DemarshallerInstance<Array<T> >: public Demarshaller {
 public:
    DemarshallerInstance(Array<T> * destination)
      : _arrayDestination(destination), _arrayIndex(0), _arraySize(0), _arraySizeDemarshaller(&_arraySize)

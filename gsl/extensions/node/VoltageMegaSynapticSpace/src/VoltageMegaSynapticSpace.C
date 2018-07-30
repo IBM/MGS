@@ -8,7 +8,7 @@
 #include "Grid.h"
 
 #define DEBUG
-#define THRESHOLD -40
+#define THRESHOLD -30
 
 void VoltageMegaSynapticSpace::produceInitialVoltage(RNG& rng) 
 {
@@ -16,7 +16,10 @@ void VoltageMegaSynapticSpace::produceInitialVoltage(RNG& rng)
    _BinWidth = 10.0 ; // msec  - spikes within thin windows are counted TODO - modulable
    //_timeSpikesAtInput = new float[_numInputs]();
    for (int _i=0; _i< _numInputs; _i++)
+   {
       _timeSpikesAtInput.push_back(0.0-_BinWidth);
+      _spikeAtInputIsOn.push_back(0);
+   }
 #ifdef DEBUG
    std::cerr << "MegaSS with globalIdx = " 
       << this->getGlobalIndex()
@@ -49,7 +52,15 @@ void VoltageMegaSynapticSpace::computeState(RNG& rng)
    {
       if (*n > THRESHOLD)
       {
-         _timeSpikesAtInput[_i] = currentTime;
+         if (_spikeAtInputIsOn[_i] == false)
+         {
+            _timeSpikesAtInput[_i] = currentTime;
+            _spikeAtInputIsOn[_i] = true;
+         }
+      }
+      else if (_spikeAtInputIsOn[_i] == true)
+      {
+         _spikeAtInputIsOn[_i] = false;
       }
       if (_timeSpikesAtInput[_i] >= currentTime - _BinWidth)
       {

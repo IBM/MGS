@@ -284,43 +284,42 @@ if [ $CONTINUE == 1 ]; then
     fi
     if [ "$REBUILD" == "-rebuild" ]; then \
       #{{{
-      echo "Rebuild GSL"
-      if [ -f Makefile ]; then 
-        rm Makefile
-      fi
-      # Generate Makefile and make!
-      createMakeFile
-      make clean
-      if [ "$COLAB" == "--colab" ]; then 
-        make -j $NPROCS library
-      fi
-      make -j $NPROCS;
-      #}}}
+    echo "Rebuild GSL"
+    if [ -f Makefile ]; then 
+      rm Makefile
     fi
-  else
-
-    if [ ! -f Makefile ]; then
-      createMakeFile
-    fi
+    # Generate Makefile and make!
+    createMakeFile
+    make clean
     if [ "$COLAB" == "--colab" ]; then 
       make -j $NPROCS library
     fi
-    if [ $? -gt 0 ]; then
-      echo -e "${cc_red}Build GSL library failed ! ${cc_normal}\n";
-      exit 1;
-    fi
     make -j $NPROCS;
+    #}}}
   fi
-
-  if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
-    echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
+else
+  if [ ! -f Makefile ]; then
+    createMakeFile
+  fi
+  if [ "$COLAB" == "--colab" ]; then 
+    make -j $NPROCS library
+  fi
+  if [ $? -gt 0 ]; then
+    echo -e "${cc_red}Build GSL library failed ! ${cc_normal}\n";
     exit 1;
-  elif [ "$CLEAN" == "-clean" ]; then 
-    echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
-    if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
-      echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
-    fi
-  else
+  fi
+  make -j $NPROCS;
+fi
+
+if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
+  echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
+  exit 1;
+elif [ "$CLEAN" == "-clean" ]; then 
+  echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
+  if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
     echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
   fi
+else
+  echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
+fi
 fi

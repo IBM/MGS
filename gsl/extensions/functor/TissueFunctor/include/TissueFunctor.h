@@ -391,7 +391,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::vector<std::map<Touch*, int> > _synapticCleftMaps; 
 
   //Zipper purpose
-  // map<"PROBED-name", vector-holding-#instances-at-each-gridIndex(i.e.MPIrank) >
+  // map<"PROBED-name", vector-holding-#instances(i.e. density)-at-each-gridIndex(i.e.MPIrank) >
   //                 NOTE: the index of the vector is also the gridIndex
   std::map<std::string, ShallowArray<int> > _probedLayoutsMap;
   // map<"PROBED-name", map< pair{category, typename }, pair{ Grid*, vector<ND*>} > >

@@ -1,5 +1,18 @@
 #ifndef Htree_H
 #define Htree_H
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+ */
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2018
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+// =================================================================
+
 
 #include "CG_Htree.h"
 #include "Lens.h"
@@ -94,7 +107,7 @@ struct TreeWorkspace {
 #if HTREE_IO_CHOICE == IBM_NEW_CODE
   long counter; // now keep how many data point written out
 #elif HTREE_IO_CHOICE == UC_OLD_CODE
-  int counter; //original is used to triggering I/O
+  int counter; //original is used for triggering I/O
 #endif
 
   int *NVUIndices;

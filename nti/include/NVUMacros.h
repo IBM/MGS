@@ -1,6 +1,8 @@
 #ifndef _NVUMacros_H
 #define _NVUMacros_H
-
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+*/
 
 // NVU
 //{{{

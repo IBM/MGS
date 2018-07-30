@@ -2,6 +2,7 @@
 #include "ChannelNat.h"
 #include "CG_ChannelNat.h"
 #include "rndm.h"
+
 #include "SegmentDescriptor.h"
 #include "Branch.h"
 #include "GlobalNTSConfig.h"

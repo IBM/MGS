@@ -1,5 +1,13 @@
 #ifndef _NTSMacros_H
 #define _NTSMacros_H
+#// =================================================================
+#// Licensed Materials - Property of IBM
+#//
+#// "Restricted Materials of IBM"
+#//
+#// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+#//
+#// =================================================================
 
 
 /// IMPORTANT: jump to USER-SELECTED section
@@ -14,14 +22,18 @@
 //
 //{{{
 #define e0  1.602e-19   // Coulomb = [C] - the elementary charge for 1 univalent ion
-#define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant - total charges for 1 mole
-                        // of univalent ion
+#define zF  96485.33289  //[C/mol]=[mJ/(mV.mol)] - Faraday constant 
+               //- total electric charges for 1 mole of univalent ion
+               // zF = e0 * zN_A
 #define zR  8.314472e3 //[mJ/(K.mol)] - universal gas constant
 #define zCa 2          // valance of Ca2+ ions
 #define zNa 1          // valence of Na+ ions
 #define zK  1          // valence of K+ ions
 #define zkB  1.381e-23  // [J/K] = Joule/Kelvin = Boltzmann constant (R/N_A)
-#define zN_A 6.022e23   // [1/mol] = number of molecuels/atoms/ions per mole - Avogadro number
+#define zN_A 6.022e23   // [1/mol] = number of particles (e.g. molecules/atoms/ions) per mole - Avogadro number
+          // zN_A = N / n 
+          //   N = # particles
+          //   n = # moles
 
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
@@ -520,7 +532,6 @@
 //  2.b to disable any channel from the model, just comment it out
 #if MODEL_TO_USE == _MSN_2000_MAHON
 //{{{
-  //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define SIMULATE_VM
   //#define SIMULATE_CACYTO

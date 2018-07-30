@@ -1,3 +1,21 @@
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+ */
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-11-19-2018
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
 #include "Lens.h"
 #include "Htree.h"
 #include "CG_Htree.h"
@@ -15,6 +33,9 @@ const double MU    = 3.5e-3; // Pascal.second, blood viscosity
 const double R0    = 10e-6;  // meter (for nondimensionalising)
 const double P0    = 8000.0;  // Pascal (scaling factor for nondim)
 const double PCAP  = 4000.0 / P0;  // Pascal (capillary bed pressure), normalized
+    //NOTE: 4000 Pa ~ 30 mmHg
+    //NOTE: 8000 Pa ~ 60 mmHg
+    //NOTE: R0 = 10 micrometer = 10e-6 meter
 
 //#define DEBUG
 
@@ -52,6 +73,7 @@ void Htree::initTree(RNG& rng)
     {
         pressures.push_back(0);
     }
+    std::cout<< "Total " << tree->A->m << " vessel-segments in the Htree"<<std::endl;
     set_spatial_coordinates();
     compute_symbol_cholesky();
 
@@ -60,10 +82,7 @@ void Htree::initTree(RNG& rng)
 
     calculate_indices();
 
-    double r, l;
-    int correctedNVUIndex;
     // Update conductances of autoregulating vessels
-
     updatePressures(rng);
 
     copy(rng);
@@ -82,6 +101,9 @@ void Htree::initTree(RNG& rng)
 #endif
 }
 
+/*
+ * Update conductances from all auto-regulating vessels-segments
+ */
 void Htree::updatePressures(RNG& rng) 
 {
     double r, l;
@@ -92,10 +114,12 @@ void Htree::updatePressures(RNG& rng)
     {
         //r = y[NEQ_TOTAL*i]; // Radius is always the first variable
         correctedNVUIndex = tree->NVUIndices[i];
+        //std::cout << i << " is index of NVU " << correctedNVUIndex << " as seen by Htree" << std::endl;
         r = *(NVUinputs[correctedNVUIndex].radius);
         assert(!isnan(r));
         l = tree->l[i];
         tree->g[i] = pow(r, 4) / l;
+        //TODO double check if we should use 'i' or 'correctedNVUIndex'
     }
 
     double t = TStep * getSimulation().getIteration();
@@ -144,6 +168,7 @@ void Htree::setPointers(const String& CG_direction, const String& CG_component, 
     NVUinputs[NVUinputs.size() - 1].NVUstateVariables = getSharedMembers().tempStateVariables;
     NVUinputs[NVUinputs.size() - 1].NVUcoords = getSharedMembers().tempNVUcoords;
     _numberNVUs += 1; //TODO replace with NVUinputs.size()
+    assert(_numberNVUs == NVUinputs.size());
 }
 
 // Copy pressures from tree->p to pressureArray so that NVUs can read their new pressures
@@ -179,9 +204,11 @@ void Htree::writeToFiles(RNG& rng)
             for (int j = 0; j < NEQ_TOTAL; j++)
             {
                 tree->stateVars[i * NEQ_TOTAL + j] = (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j];
+#if defined(DEBUG)
                 if (j == NEQ)
                     std::cerr << "Htree:   Glut = " << (*NVUinputs[correctedNVUIndex].NVUstateVariables)[j]
                         << std::endl;
+#endif
             }
         }
 
@@ -737,6 +764,10 @@ void Htree::write_flow()
     }
 }
 
+/*
+ * write binary file (cast to char) with multi-column fields
+ * time pressuresArray
+ */
 void Htree::write_pressure()
 {
     double t = TStep * getSimulation().getIteration();
@@ -823,7 +854,7 @@ void Htree::write_info_n_data()
 }
 #endif
 
-/* 
+/*
  * For each item in the coordinates from NVU nodes, find their index in my x,y coordinates.
 */
 void Htree::calculate_indices()

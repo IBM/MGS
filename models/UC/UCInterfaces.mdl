@@ -1,5 +1,9 @@
-#ifndef uc_mdl
-#define uc_mdl
+#ifndef UC_MDL
+#define UC_MDL
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+ */
+
 
 Struct NVUinput {
   double* radius;
@@ -15,13 +19,13 @@ Interface RadiusProducer {
   double* radius;
 }
 Interface StateVariablesProducer {
-	double []* stateVariables;
+  double []* stateVariables;
 }
 Interface CoordsProducer {
-	double []* coords;
+  double []* coords;
 }
 Interface CoordsArrayProducer {
-	double []* coordsArray;
+  double []* coordsArray;
 }
 // Interface FlowArray{
 //   double []* flow;

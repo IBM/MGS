@@ -62,6 +62,6 @@ void ChannelBKalphabetaCompCategory::count()
   float std = sqrt(totalVariance / getSimulation().getNumProcesses());
 
   if (getSimulation().getRank() == 0)
-    printf("Total KRP Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
+    printf("Total BK(alpha,beta) Channel = %lld, Mean = %lf, StDev = %lf\n", totalCount,
            mean, std);
 }

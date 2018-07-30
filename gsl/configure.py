@@ -1111,7 +1111,7 @@ COLAB_NODE_MODULES :=  \\
         SpineAttachment_VmCaiCaER \\
         Connexon \\
 
-"""
+"""  # noqa
         retStr += \
             """\
 
@@ -1140,7 +1140,7 @@ TRIGGER_MODULES := UnsignedServiceTrigger \\
 VARIABLE_MODULES := BasicNodeSetVariable \\
         NodeSetSPMVariable \\
 
-"""
+"""  # noqa
 
         if self.options.colab is True:
             if (self.options.asNts is True) or (self.options.asBoth is True):
@@ -1169,64 +1169,65 @@ COLAB_VARIABLE_MODULES := BasicNodeSetVariable \\
         SimulationInfo \\
         DetectDataChangeOneCompartment \\
 
-"""
+"""  # noqa
         if self.options.colab is False:
             retStr += \
                 """\
 FUNCTOR_MODULES := BinomialDist \\
-       CombineNVPairs \\
-       ConnectNodeSetsFunctor \\
-       DstDimensionConstrainedSampler \\
-       DstRefDistanceModifier \\
-       DstRefGaussianWeightModifier \\
-       DstRefSumRsqrdInvWeightModifier \\
-       DstScaledContractedGaussianWeightModifier \\
-       DstScaledGaussianWeightModifier \\
-       ExecuteShell \\
-       Exp \\
-       GetDstNodeCoordFunctor \\
-       GetNodeCoordFunctor \\
-       GetPostNodeCoordFunctor \\
-       GetPreNodeCoordFunctor \\
-       GetPreNodeIndex \\
-       IsoSampler \\
-       IsoSamplerHybrid \\
-       Log \\
-       ModifyParameterSet \\
-       NameReturnValue \\
-       Neg \\
-       PolyConnectorFunctor \\
-       RandomDispersalLayout \\
-       RefAngleModifier \\
-       RefDistanceModifier \\
-       ReversedDstRefGaussianWeightModifier \\
-       ReversedSrcRefGaussianWeightModifier \\
-       ReverseFunctor \\
-       Round \\
-       Scale \\
-       ServiceConnectorFunctor \\
-       SrcDimensionConstrainedSampler \\
-       SrcRefDistanceModifier \\
-       SrcRefGaussianWeightModifier \\
-       SrcRefPeakedWeightModifier \\
-       SrcRefSumRsqrdInvWeightModifier \\
-       SrcScaledContractedGaussianWeightModifier \\
-       SrcScaledGaussianWeightModifier \\
-       SrcRefDoGWeightModifier \\
-       Threshold \\
-       ToroidalRadialSampler \\
-       UniformDiscreteDist \\
-       ConnectNodeSetsByVolumeFunctor \\
+        CombineNVPairs \\
+        ConnectNodeSetsFunctor \\
+        DstDimensionConstrainedSampler \\
+        DstRefDistanceModifier \\
+        DstRefGaussianWeightModifier \\
+        DstRefSumRsqrdInvWeightModifier \\
+        DstScaledContractedGaussianWeightModifier \\
+        DstScaledGaussianWeightModifier \\
+        ExecuteShell \\
+        Exp \\
+        GetDstNodeCoordFunctor \\
+        GetNodeCoordFunctor \\
+        GetPostNodeCoordFunctor \\
+        GetPreNodeCoordFunctor \\
+        GetPreNodeIndex \\
+        IsoSampler \\
+        IsoSamplerHybrid \\
+        LoadMatrix \\
+        Log \\
+        ModifyParameterSet \\
+        NameReturnValue \\
+        Neg \\
+        PolyConnectorFunctor \\
+        RandomDispersalLayout \\
+        RefAngleModifier \\
+        RefDistanceModifier \\
+        ReversedDstRefGaussianWeightModifier \\
+        ReversedSrcRefGaussianWeightModifier \\
+        ReverseFunctor \\
+        Round \\
+        Scale \\
+        ServiceConnectorFunctor \\
+        SrcDimensionConstrainedSampler \\
+        SrcRefDistanceModifier \\
+        SrcRefDoGWeightModifier \\
+        SrcRefGaussianWeightModifier \\
+        SrcRefPeakedWeightModifier \\
+        SrcRefSumRsqrdInvWeightModifier \\
+        SrcScaledContractedGaussianWeightModifier \\
+        SrcScaledGaussianWeightModifier \\
+        Threshold \\
+        ToroidalRadialSampler \\
+        UniformDiscreteDist \\
+        ConnectNodeSetsByVolumeFunctor \\
 """
         _tissuefunctor_modules = \
             """\
-       TissueConnectorFunctor \\
-       TissueFunctor \\
-       TissueLayoutFunctor \\
-       TissueMGSifyFunctor \\
-       TissueNodeInitFunctor \\
-       TissueProbeFunctor \\
-       Zipper \\"""
+        TissueConnectorFunctor \\
+        TissueFunctor \\
+        TissueLayoutFunctor \\
+        TissueMGSifyFunctor \\
+        TissueNodeInitFunctor \\
+        TissueProbeFunctor \\
+        Zipper \\"""
         if self.options.colab is False:
             if (self.options.asNts is True) or (self.options.asBoth is True):
                 retStr += _tissuefunctor_modules + \
@@ -1238,50 +1239,50 @@ FUNCTOR_MODULES := BinomialDist \\
 COLAB_FUNCTOR_MODULES :=  \\
 """ + _tissuefunctor_modules + \
                     """
-       BinomialDist \\
-       CombineNVPairs \\
-       ConnectNodeSetsFunctor \\
-       DstDimensionConstrainedSampler \\
-       DstRefDistanceModifier \\
-       DstRefGaussianWeightModifier \\
-       DstRefSumRsqrdInvWeightModifier \\
-       DstScaledContractedGaussianWeightModifier \\
-       DstScaledGaussianWeightModifier \\
-       Exp \\
-       GetDstNodeCoordFunctor \\
-       GetNodeCoordFunctor \\
-       GetPostNodeCoordFunctor \\
-       GetPreNodeCoordFunctor \\
-       GetPreNodeIndex \\
-       IsoSampler \\
-       Log \\
-       ModifyParameterSet \\
-       NameReturnValue \\
-       Neg \\
-       PolyConnectorFunctor \\
-       RandomDispersalLayout \\
-       RefAngleModifier \\
-       RefDistanceModifier \\
-       ReversedDstRefGaussianWeightModifier \\
-       ReversedSrcRefGaussianWeightModifier \\
-       ReverseFunctor \\
-       Round \\
-       Scale \\
-       ServiceConnectorFunctor \\
-       SrcDimensionConstrainedSampler \\
-       SrcRefDistanceModifier \\
-       SrcRefDoGWeightModifier \\
-       SrcRefGaussianWeightModifier \\
-       SrcRefPeakedWeightModifier \\
-       SrcRefSumRsqrdInvWeightModifier \\
-       SrcScaledContractedGaussianWeightModifier \\
-       SrcScaledGaussianWeightModifier \\
-       Threshold \\
-       ToroidalRadialSampler \\
-       UniformDiscreteDist \\
-       ConnectNodeSetsByVolumeFunctor \\
+        BinomialDist \\
+        CombineNVPairs \\
+        ConnectNodeSetsFunctor \\
+        DstDimensionConstrainedSampler \\
+        DstRefDistanceModifier \\
+        DstRefGaussianWeightModifier \\
+        DstRefSumRsqrdInvWeightModifier \\
+        DstScaledContractedGaussianWeightModifier \\
+        DstScaledGaussianWeightModifier \\
+        Exp \\
+        GetDstNodeCoordFunctor \\
+        GetNodeCoordFunctor \\
+        GetPostNodeCoordFunctor \\
+        GetPreNodeCoordFunctor \\
+        GetPreNodeIndex \\
+        IsoSampler \\
+        Log \\
+        ModifyParameterSet \\
+        NameReturnValue \\
+        Neg \\
+        PolyConnectorFunctor \\
+        RandomDispersalLayout \\
+        RefAngleModifier \\
+        RefDistanceModifier \\
+        ReversedDstRefGaussianWeightModifier \\
+        ReversedSrcRefGaussianWeightModifier \\
+        ReverseFunctor \\
+        Round \\
+        Scale \\
+        ServiceConnectorFunctor \\
+        SrcDimensionConstrainedSampler \\
+        SrcRefDistanceModifier \\
+        SrcRefDoGWeightModifier \\
+        SrcRefGaussianWeightModifier \\
+        SrcRefPeakedWeightModifier \\
+        SrcRefSumRsqrdInvWeightModifier \\
+        SrcScaledContractedGaussianWeightModifier \\
+        SrcScaledGaussianWeightModifier \\
+        Threshold \\
+        ToroidalRadialSampler \\
+        UniformDiscreteDist \\
+        ConnectNodeSetsByVolumeFunctor \\
 
-"""
+"""  # noqa
         if (self.options.asMgs is True) or (self.options.asBoth is True):
             retStr += \
                 """\
@@ -2036,7 +2037,7 @@ def prereq_packages():
     for package in required_pkgs:
         try:
             __import__(package)
-        except ImportError as e:
+        except ImportError as _e:
             print("Please install: sudo pip install --user %s" % (package))
 
 

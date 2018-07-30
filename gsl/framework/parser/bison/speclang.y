@@ -2442,11 +2442,11 @@ grid_function_name: INITNODES '(' argument_list ')' ';' {
 		      "GridFunctionName", 
 		      "Layer ( Declarator , ArgumentList )");
    
-   SyntaxError* error2 = 
-      new SyntaxError(CURRENTFILE, @1.first_line, 
-		      "GridFunctionName", 
-		      "Layer ( Declarator , ArgumentList )", 
-		      "default granule for grid");
+//   SyntaxError* error2 = 
+//      new SyntaxError(CURRENTFILE, @1.first_line, 
+//		      "GridFunctionName", 
+//		      "Layer ( Declarator , ArgumentList )", 
+//		      "default granule for grid");
     $$ = new C_grid_function_name($3, $5, localError);
 }
 | LAYER error_list ';' {

@@ -16,6 +16,7 @@ class VoltageMegaSynapticSpace : public CG_VoltageMegaSynapticSpace
       int _numInputs;
       //float* _timeSpikesAtInput;
       std::vector<float> _timeSpikesAtInput;
+      std::vector<bool> _spikeAtInputIsOn; //keep track if the spike at a given neuron is off or not
       float _BinWidth;
 };
 
