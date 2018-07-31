@@ -34,9 +34,22 @@ void NazeSORNInhUnit::initialize(RNG& rng)
   eta_IP = exp(median + sigma*std::abs(gaussian(rng)));
   TI = drandom(rng)*SHD.TI_max;
 
+  // Setup buffer containing the delayed input
+  int di = std::rand() % SHD.mu_delay.size();
+  sigma_delay = SHD.mu_delay[di]*SHD.ratio_delay;
+  if (std::round(SHD.mu_delay[di]) > 0) {
+    ShallowArray<NazeSORNDelayedSynapseInput>::iterator it_exc, end_exc = lateralExcInputs.end();
+    for(it_exc=lateralExcInputs.begin(); it_exc!=end_exc; it_exc++){    
+      it_exc->delay = std::lrint(std::abs(SHD.mu_delay[di] + gaussian(rng)*sigma_delay));
+      if (it_exc->delay<1) it_exc->delay=1;
+      it_exc->spikes_circ_buffer.increaseSizeTo(it_exc->delay + 1);  //!\ assumes delay given in dt units !
+      it_exc->a_circ_buffer.increaseSizeTo(it_exc->delay + 2);  //!\ +2 because stores a and aPrev
+    }
+  }
+
   // Normalize Exc2Inh weights
   double sumE=0;
-  ShallowArray<SpikeInput>::iterator iter, end=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator iter, end=lateralExcInputs.end();
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) sumE+=iter->weight;
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
 	if (sumE!=0) (iter->weight) /= (sumE/SHD.EIratio);
@@ -55,7 +68,7 @@ void NazeSORNInhUnit::initialize(RNG& rng)
 void NazeSORNInhUnit::update(RNG& rng) 
 {
   double sumE = 0;
-  ShallowArray<SpikeInput>::iterator iter, end=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator iter, end=lateralExcInputs.end();
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter)
     if (*(iter->spike)) sumE += iter->weight;
   
@@ -72,7 +85,9 @@ void NazeSORNInhUnit::fire(RNG& rng)
 {
   spikePrev=spike;
   spike=(y>0);
-  ya = SHD.tau_STDP * ( (y>0) ? 1.0 : 0.0 );
+  yaPrev = ya;
+  ya = SHD.tau_STDP * ya + ( (y>0) ? 1.0 : 0.0 );
+  ya = (ya>1.0) ? 1.0 : ya;
 }
 
 void NazeSORNInhUnit::setExcIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_NazeSORNInhUnitInAttrPSet* CG_inAttrPset, CG_NazeSORNInhUnitOutAttrPSet* CG_outAttrPset) 
@@ -89,7 +104,7 @@ void NazeSORNInhUnit::setInhIndices(const String& CG_direction, const String& CG
 
 void NazeSORNInhUnit::outputWeights(std::ofstream& fsE2I)
 {
-  ShallowArray<SpikeInput>::iterator iter, end=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator iter, end=lateralExcInputs.end();
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
     fsE2I<<iter->row<<" "<<iter->col<<" "<<iter->weight<<std::endl;
   }
@@ -97,7 +112,7 @@ void NazeSORNInhUnit::outputWeights(std::ofstream& fsE2I)
 
 void NazeSORNInhUnit::inputWeights(std::ifstream& fsE2I, int col, float weight)
 {
-  ShallowArray<SpikeInput>::iterator E2Iiter, E2Iend=lateralExcInputs.end();
+  ShallowArray<NazeSORNDelayedSynapseInput>::iterator E2Iiter, E2Iend=lateralExcInputs.end();
   for (E2Iiter=lateralExcInputs.begin(); E2Iiter!=E2Iend; ++E2Iiter) {
     if (E2Iiter->col==col) {
       E2Iiter->weight = static_cast<double>(weight);

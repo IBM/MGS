@@ -80,7 +80,7 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      int [] collectDelaysOn;
      int collectDelaysNext;
      RuntimePhase outputDelaysShared;
-    }
+   }
 
    InAttrPSet {
      string identifier;
@@ -142,14 +142,18 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
 }
 
 Node NazeSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
-   double y; // These variable names are according to Naze et al. 2015
+   double y;  // membrane integrator
    double ya; // accumulator for tailed STDP
+   double yaPrev;
    bool spike;
    bool spikePrev;
    double TI;
    double HIP;
    double eta_IP;
-   SpikeInput [] lateralExcInputs;
+   float delay;
+   float sigma_delay;
+
+   NazeSORNDelayedSynapseInput [] lateralExcInputs;
    SpikeInput [] lateralInhInputs;
    Input modulatoryInput;
    
@@ -162,6 +166,9 @@ Node NazeSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      double mu_HIP;
      double sigma_HIP;
      double ratio_HIP;
+
+     float [] mu_delay;
+     float ratio_delay;
 
      double TI_max;
      double sigma2_chi;
@@ -203,8 +210,11 @@ Node NazeSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
    UserFunction setInhIndices;
 //   PredicateFunction checkInitWeights;   
   
-   Connection Pre Node (PSet.identifier=="lateralExc") Expects SpikeProducer {
-      SpikeProducer.spike >> lateralExcInputs.spike;
+   Connection Pre Node (PSet.identifier=="lateralExc") Expects SORNSpikeProducer {
+      SORNSpikeProducer.spikePrev >> lateralExcInputs.spikePrev;
+      SORNSpikeProducer.spike >> lateralExcInputs.spike;
+      SORNSpikeProducer.a >> lateralExcInputs.a;
+      SORNSpikeProducer.aPrev >> lateralExcInputs.aPrev;
       PSet.weight >> lateralExcInputs.weight;
       setExcIndices();
    }
