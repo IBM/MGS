@@ -80,7 +80,7 @@ Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer
      int [] collectDelaysOn;
      int collectDelaysNext;
      RuntimePhase outputDelaysShared;
-    }
+   }
 
     InAttrPSet {
      string identifier;
