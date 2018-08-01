@@ -9,20 +9,21 @@ LDFLAGS+= -shared
 
 RELEASE?="" # Potentially set by make_XXX or the user from the command line
 
+TARGET_LIB_DIR=../gsl/lib
 # Check if release mode
 ifeq ($(RELEASE), -release)
    # No debugging
    # Yes optimization
    CFLAGS += -O3
-   UTILS_LIB_SHARED = ../gsl/lib/libutils.so
-   UTILS_LIB = ../gsl/lib/libutils.a
+   UTILS_LIB_SHARED = $(TARGET_LIB_DIR)/libutils.so
+   UTILS_LIB = $(TARGET_LIB_DIR)/libutils.a
 else
    # Yes debugging
    CFLAGS += -ggdb -g
    # Minimal optimization
    CFLAGS += -Og
-   UTILS_LIB_SHARED = ../gsl/lib/libutils_db.so
-   UTILS_LIB = ../gsl/lib/libutils_db.a
+   UTILS_LIB_SHARED = $(TARGET_LIB_DIR)/libutils_db.so
+   UTILS_LIB = $(TARGET_LIB_DIR)/libutils_db.a
 endif
 
 
@@ -59,6 +60,7 @@ realclean: clean
 	-@rm -f $(UTILS_LIB) $(UTILS_LIB_SHARED)
 
 library: ${COLAB_FILES_OBJS}
+	@mkdir -p $(TARGET_LIB_DIR)
 	ar rcs $(UTILS_LIB) \
 	   $(COLAB_FILES_OBJS)
 	$(CC) $(LDFLAGS) -o ${UTILS_LIB_SHARED} \

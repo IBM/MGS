@@ -6,6 +6,7 @@
 #include "GridLayerDescriptor.h"
 #include "Coordinates.h"
 #include <algorithm>
+#include <cmath>
 
 /****** Model parameters ******/
 
@@ -643,7 +644,7 @@ void NVUNode::nvu_ics()
 void NVUNode::nvu_rhs(double t, double *u, double *du, double *fluxes)
 {
     double p = (*getSharedMembers().pressures)[workspace->pressuresIndex];
-    assert(!isnan(p));
+    assert(!std::isnan(p));
 #if defined(SIMULATE_ISOLATE_VESSEL_CLAMP_PRESSURE)
     //clamp pressure
     p = 2.0; //unitless
@@ -1268,23 +1269,23 @@ void NVUNode::evaluate(double t, double *y, double *dy)
     // Ensure all state variables, fluxes, and derivatives are non-NaN.
     for (int i = 0; i < NEQ; i++)
     {
-	if (isnan(y[i]))
+	if (std::isnan(y[i]))
 	{
 	   std::cerr << " time " << (getSimulation().getIteration() * TStep)
 	      << ": NaN for y[" << i << "]";
 	}
-        assert(!isnan(y[i]));
-	if (isnan(dy[i]))
+        assert(!std::isnan(y[i]));
+	if (std::isnan(dy[i]))
 	{
 	   std::cerr << " time " << (getSimulation().getIteration() * TStep)
 	      << ": NaN for dy[" << i << "]";
 	}
-        assert(!isnan(dy[i]));
+        assert(!std::isnan(dy[i]));
     }
 
     for (int i = 0; i < workspace->num_fluxes; i++)
     {
-        assert(!isnan(workspace->fluxes[i]));
+        assert(!std::isnan(workspace->fluxes[i]));
     }
 }
 

@@ -116,7 +116,7 @@ void Htree::updatePressures(RNG& rng)
         correctedNVUIndex = tree->NVUIndices[i];
         //std::cout << i << " is index of NVU " << correctedNVUIndex << " as seen by Htree" << std::endl;
         r = *(NVUinputs[correctedNVUIndex].radius);
-        assert(!isnan(r));
+        assert(!std::isnan(r));
         l = tree->l[i];
         tree->g[i] = pow(r, 4) / l;
         //TODO double check if we should use 'i' or 'correctedNVUIndex'

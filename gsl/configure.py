@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 """
 help to generate Makefile
 """
@@ -9,8 +9,39 @@ from __future__ import print_function
 import os
 import os.path
 import sys
-import popen2
+import distutils.spawn
+if sys.version_info[0] < 3:
+    import popen2
+    def find_version(name, full_path_name):
+        cmd = full_path_name + " --version"
+        (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
+        stderr = stderrFile.read()
+        if stderr != "":
+            raise FatalError(name + " has an error for command " + cmd)
+        stdout = stdoutFile.readline()
+        if stdout.find("GNU") == -1:
+            raise FatalError(self.bisonBin + " is not GNU")
+        tokens = stdout.split()
+        file_version = tokens[-1]
+        return file_version
+else:
+    import subprocess
+    def find_version(name, full_path_name):
+        print(type(full_path_name))
+        cmd = [full_path_name, "--version"]
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        lines = stdout.splitlines()
+        line = lines[0].decode('ascii')
+        tokens = line.split()
+        file_version = tokens[-1]
+        return file_version
+
+import pip
 # import string
+
+if not 'builtins' in sys.modules.keys():
+        pip.main(['install', 'future'])
 import getopt
 from builtins import range
 
@@ -141,10 +172,8 @@ def findFile(name, required=False):
     find file path
     """
     cmd = "which " + name
-    (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
-    stdout = stdoutFile.read()
-    stderr = stderrFile.read()
-    if stderr != "" or stdout.find(" ") != -1:
+    stdout = distutils.spawn.find_executable(name)
+    if stdout is None:
         if required is True:
             raise FatalError("Required file " + name + " could not be found.")
         return ""
@@ -758,16 +787,7 @@ class BuildSetup:
 
     def bisonVersionFinder(self):
         """bison version"""
-        cmd = self.bisonBin + " --version"
-        (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
-        stderr = stderrFile.read()
-        if stderr != "":
-            raise FatalError(self.bisonBin + " has an error for command " + cmd)
-        stdout = stdoutFile.readline()
-        if stdout.find("GNU") == -1:
-            raise FatalError(self.bisonBin + " is not GNU")
-        tokens = stdout.split()
-        self.bisonVersion = tokens[-1]
+        self.bisonVersion = find_version("bison", self.bisonBin)
 
     def main(self):
         """main action"""

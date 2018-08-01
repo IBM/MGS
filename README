@@ -13,6 +13,6 @@ NTI:
 
 
 External library:
-  bison
+  bison [built using m4 >= 1.4.17]
   flex
   lgmp

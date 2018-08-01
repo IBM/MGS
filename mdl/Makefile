@@ -130,8 +130,10 @@ scanner/lex.yy.o: scanner/lex.yy.cc scanner/mdl.l
 $(OBJS_DIR)/%.o : %.C
 	$(CC) $(CFLAGS)  $(OBJECTONLYFLAGS) -c $< -o $@
 
+$(LIB_DIR):
+	@mkdir -p lib
 
-lib/libmdl.a: $(OBJS)
+lib/libmdl.a: $(OBJS) | $(LIB_DIR)
 	ar rvu $@ $(OBJS)
 	ranlib $@	
 
@@ -139,6 +141,7 @@ LIBS += lib/libmdl.a
 
 
 final: mdl.tab.h $(OBJS) parser/mdl.tab.c lib/libmdl.a scanner/lex.yy.cc
+	@mkdir -p $(BIN_DIR)
 	-rm -f $(BIN_DIR)/$(EXE_FILE)
 	$(CC) $(CFLAGS) parser/mdl.tab.c scanner/lex.yy.cc $(LIBS) \
            $(XLINKER) -o $(BIN_DIR)/$(EXE_FILE) $(FINAL_TARGET_FLAG)
