@@ -1,3 +1,14 @@
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+*/
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+//
+// =================================================================
 #include <algorithm>
 #include "Coordinates.h"
 
@@ -134,9 +145,9 @@ bool isInNVUGrid(std::vector<double> realCoordinate,
 		int xNumberNVUs, int yNumberNVUs, 
 		int zNumberNVUs)
 {
-  int size = realCoordinate.size();
+  int ndims = realCoordinate.size();
   double *rCoord = &realCoordinate[0];
-  return isInNVUGrid(rCoord, size, length,
+  return isInNVUGrid(rCoord, ndims, length,
       xNumberNVUs, yNumberNVUs, zNumberNVUs);
 }
 bool isInNVUGrid(double *realCoordinate, int size, double length,

@@ -1,9 +1,24 @@
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+*/
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+//
+// =================================================================
 #ifndef _COORDINATES_H
 #define _COORDINATES_H
 
 #include <math.h>
 #include <vector>
 
+/* IMPORTANT: as long as 
+ * realCordinate and length in the same unit
+ * They should be ok
+ */
 
 void calculateRealCoordinatesNVU(std::vector<int> indexCoordinate, double length, int xNumberNVUs, int yNumberNVUs, 
 		int zNumberNVUs, std::vector<double> &realCoordinate);
