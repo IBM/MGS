@@ -1,5 +1,7 @@
 #include "PointNeuronTools/PointNeuronTools.mdl"
 
+#include "BengioRateInterneuron/BengioRateInterneuron.mdl"
+#include "BengioRatePyramidal/BengioRatePyramidal.mdl"
 #include "BitMapPhenotype/BitmapPhenotype.mdl"
 #include "BoutonIAFUnit/BoutonIAFUnit.mdl"
 #include "CleftAstrocyteIAFUnit/CleftAstrocyteIAFUnit.mdl"
