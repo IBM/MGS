@@ -125,6 +125,10 @@ void BitmapPhenotypeCompCategory::initializeShared(RNG& rng)
   }
   updateShared(rng);
   delete [] filenames;
+
+  int imgNbr = SHD.imageNbr = irandom(0,SHD.nbrImages-1,rng);
+  SHD.row=irandom(0,SHD.imgRows[imgNbr]-SHD.gridMaxL,rng);
+  SHD.col=irandom(0,SHD.imgCols[imgNbr]-SHD.gridMaxW,rng);
 }
 
 void BitmapPhenotypeCompCategory::updateShared(RNG& rng) 
