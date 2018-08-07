@@ -99,7 +99,6 @@ void LFPDataAnalyzer::initialize(RNG& rng)
     elecCenterZ[i] = ((double) Zdim / (double) (numElecPerDimZ + 1)) * (double) (i + 1);
   
   LFPs.increaseSizeTo(numElecPerDimX * numElecPerDimY * numElecPerDimZ);
-
   
     
   // 3. Create the output files...
@@ -122,6 +121,18 @@ void LFPDataAnalyzer::initialize(RNG& rng)
       LFP_file->write(reinterpret_cast<char *>(&numElecPerDimY), sizeof(numElecPerDimY));
       LFP_file->write(reinterpret_cast<char *>(&numElecPerDimZ), sizeof(numElecPerDimZ));
     }
+  
+
+  // 4. Setup memory for each neuron's contribution to each electrode's LFP reccording
+  contrib.increaseSizeTo(numElecPerDimX + numElecPerDimY + numElecPerDimZ);
+  for (int n=0; n<(numElecPerDimX+numElecPerDimY+numElecPerDimZ); n++) {
+    contrib[n].increaseSizeTo(sz);
+    // initialize to unit value
+    for (int i=0; i<sz, i++) {
+      contrib[n][i] = 1.0;
+    }
+  }
+ 
 }
 
 void LFPDataAnalyzer::finalize(RNG& rng) 
@@ -143,8 +154,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
       ShallowArray<int>::iterator iterCols, endCols=cols.end();
       ShallowArray<int>::iterator iterSlices, endSlices=slices.end();
       ShallowArray<double>::iterator iterLFPs=LFPs.begin(), endLFPs=LFPs.end();
-      ShallowArray<double*>::iterator iterLFPs_ind,
-        endLFPs_ind=LFPs_individual.end();
+      ShallowArray<double*>::iterator iterLFPs_ind,  endLFPs_ind=LFPs_individual.end();
       double dist;
       // For each electrode ...
       for (int z=0; z<numElecPerDimZ; z++)
@@ -170,7 +180,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                                   + pow(elecCenterZ[z]-*iterSlices,2)
                                   );
                       if (dist <= elecRadius)
-                        *iterLFPs += normal_pdf(dist, 0.0, elecSigma) * **iterLFPs_ind;
+                        *iterLFPs += contrib[x+y+z][n] * normal_pdf(dist, 0.0, elecSigma) * **iterLFPs_ind;
                     }
                   ++iterLFPs;
                 }
@@ -185,6 +195,41 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         }
     }
 }
+
+
+/** Function that compute the contribution of each unit to the LFP of each electrode **/
+void LFPDataAnalyzer::setContributions(Trigger* trigger, NDPairList* ndPairList){
+ 
+  ShallowArray<double*>::iterator iterRhos, endRhos=rhos.end();
+  ShallowArray<double*>::iterator iterPhis, endRhos=phis.end();
+  ShallowArray<int>::iterator iterRows, endRows=rows.end();
+  ShallowArray<int>::iterator iterCols, endCols=cols.end();
+  ShallowArray<int>::iterator iterSlices, endSlices=slices.end();
+//  ShallowArray<double[]>::iterator iter1, end1=contrib.end();
+//  ShallowArray<double>::iterator iter2, end2=iter1.end();
+  
+  for (int z=0; z<numElecPerDimZ; z++) {
+    for (int y=0; y<numElecPerDimY; y++) {
+      for (int x=0; x<numElecPerDimX; x++) {
+        iterRows = rows.begin();
+        iterCols = cols.begin();
+        iterSlices = slices.begin();
+        for(int n=0; iterRhos != endRhos; ++iterRhos, ++iterPhis, ++iterRows, ++iterCols, ++iterSlices, ++n) {
+          // workout coordinates of tip of orientation vector starting at soma
+          double x_o = *iterRows + sin(*iterRhos)*cos(*iterPhis);
+          double y_o = *iterCols + sin(*iterRhos)*sin(*iterPhis);
+          double z_o = *iterSlices + cos(*iterRhos);
+          // distances between electrode and soma, and electrode and tip of vector
+          double d_o = sqrt(pow(elecCenterX[x]-x_o,2) + pow(elecCenterY[y]-y_o,2) + pow(elecCenterZ[z]-z_o,2));
+          double d_n = sqrt(pow(elecCenterX[x]-*iterRows,2) + pow(elecCenterY[y]-*iterCols,2) + pow(elecCenterZ[z]-*iterSlices,2));
+          // compute contribution of each neuron to each electrode based on orientation
+          contrib[x+y+z][n] = d_n - d_o;
+        }
+      }
+    }
+  }
+}
+
 
 void LFPDataAnalyzer::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset) 
 {

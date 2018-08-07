@@ -18,7 +18,7 @@
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
 Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
-  OutputProducer, Output3Producer {
+  OutputProducer, Output3Producer, Output2Producer {
    double [] I; // These variable names are according to Mihalas and Niebur, 2009
    double [] [] I_p;
    double [] dI;
@@ -29,11 +29,14 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
    double [] Theta_p;
    bool spike;               // currentspike
    float V_spike;            // V with spike
-   unsigned spike_cnt;            // counts the duration of the spike
+   unsigned spike_cnt;       // counts the duration of the spike
    
    Input [] ctxInputs;       // delta input from cortex
    double ctxInputWeight;    // if this node receives multiple ctx inputs
                              // they should be weighted accordingly.
+ 
+   double rho;	     	     // zenith (for spherical coordinates)
+   double phi;		     // azimut (for spherical coordinates)
    
    PSPInput [] lateralInputs;// lateral IPSPs
 
@@ -103,7 +106,10 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
    Output3Producer.output1 << &drive_total;
    Output3Producer.output2 << &IPSC_total;
    Output3Producer.output3 << &GJ_total;
-   
+  
+   Output2Producer.output1 << &rho;
+   Output2Producer.output2 << &phi;
+ 
    UserFunction setIndices;
    PredicateFunction bidirectional1;   
    PredicateFunction bidirectional2;   

@@ -16,7 +16,7 @@
 #include "../std/std.gsl"
 
 #define IN_DIR "/home/naze/MGS/graphs/SORN/2018mar16/muIP0_001/ratioIP1_0/etaSTDP0_001/muHIP0_01/ratioHIP0_5/g1_0/muHIPi0_02/0/E2X0_05/I2X0_1/"
-#define DIRECTORY "./2018july30/stimCfrac!XX_DIR_3_XX!/muIP0_1/ratioIP1_0/muIPi0_1/ratioIPi1_0/etaSTDP0_000001/tauSTDP!XX_DIR_2_XX!/muHIP0_002/ratioHIP0_5/muHIPi0_004/ratioHIPi0_5/EIratio!XX_DIR_1_XX!/E2X0_05/I2X0_1/muDelay1_2_3_5_8_13_21_34_55_89/ratioDelay!XX_DIR_4_XX!/"
+#define DIRECTORY "./2018aug06/xy/s_tauR_5x_faster/s_tauF_5x_slower/sfr3/stimCfrac!XX_DIR_3_XX!/stimItv10s/stimDur3ms/stimAmp0_1/muIP0_05/ratioIP1_0/muIPi0_05/ratioIPi1_0/etaSTDP0_000001/tauSTDP!XX_DIR_2_XX!/muHIP0_002/ratioHIP0_5/muHIPi0_004/ratioHIPi0_5/EIratio!XX_DIR_1_XX!/E2X0_05/I2X0_1/muDelay1_2_3_5_8_13_21/ratioDelay!XX_DIR_4_XX!/"
 #define FILE_EXTENSION ".dat"
 #define BINARY 1
 
@@ -27,9 +27,9 @@ FinalPhases = { finalize };
 //LoadSparseMatrix loadSparseMatrix(IN_DIR, "E2E_Weights_1000000.dat");
 
 NodeType NazeSORNExcUnit(< 
-       mu_delay = {1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 89.0},
+       mu_delay = {1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0},
        ratio_delay = !XX_VAR_4_XX!,
-       mu_IP = 0.1,
+       mu_IP = 0.05,
        ratio_IP = 1.0,  //!\\ not the same type of ratio as ratio_HIP
        TE_max = 1.0,
        //sigma_HIP = 0.005,
@@ -40,6 +40,12 @@ NodeType NazeSORNExcUnit(<
        mu_iSTDP = 0.1,
        tau_STDP = !XX_VAR_2_XX!,
        p_c = 0.00000001,
+       dt = 0.001,
+       a_r = 0.072,
+       a_f = 0.0066,
+       s_tauR = 0.004 ,
+       s_tauF = 0.065,
+       sfr = 0.0,   
        EIratio = !XX_VAR_1_XX!,
        Ach = 0.0,
        inDirectory = IN_DIR,
@@ -54,9 +60,9 @@ NodeType NazeSORNExcUnit(<
        >);
 
 NodeType NazeSORNInhUnit(< 
-       mu_delay = {1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 89.0},
+       mu_delay = {1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0},
        ratio_delay = !XX_VAR_4_XX!,
-       mu_IP = 0.1,
+       mu_IP = 0.05,
        ratio_IP = 1.0,  //!\\ not the same type of ratio as ratio_HIP
        mu_HIP = 0.004,
        ratio_HIP = 0.5,
@@ -73,10 +79,10 @@ NodeType NazeSORNInhUnit(<
        >);
 
 NodeType ToneUnit(<
-	start_time = 400000,  // in dt unit
- 	stop_time = 500000,
-        duration = 10, //!XX_VAR_4_XX!,
- 	interval = 20000,
+	start_time = 90000,  // in dt unit
+ 	stop_time = 100000,
+        duration = 3, //!XX_VAR_4_XX!,
+ 	interval = 10000,
 	amplitude = 0.1 //!XX_VAR_3_XX!
 	>);
 
@@ -155,7 +161,7 @@ NazeSORNUnitDataCollector collector_E <fileName="SORN-EOutput", deltaT=0.001, bi
 polyConnect(sorn_E[].Layer(exc), collector_E, <>, <>);
 
 VariableType NazeSORNUnitDataCollectorSuppl;
-NazeSORNUnitDataCollectorSuppl collector_E_Suppl <fileName="SORN_Exc_TEs", deltaT=0.001, binary=BINARY, fileExt=FILE_EXTENSION, directory=DIRECTORY, op_saveThresholds=1 >;
+NazeSORNUnitDataCollectorSuppl collector_E_Suppl <outputFileName="SORN_Exc_Xs", thresholdFileName="SORN_Exc_TEs", sumEFileName="sumEs", sumIFileName="sumIs", deltaT=0.001, binary=BINARY, fileExt=FILE_EXTENSION, directory=DIRECTORY, op_saveThresholds=1, op_saveOutputs=1, op_saveSumE=1, op_saveSumI=1>;
 polyConnect(sorn_E[].Layer(exc), collector_E_Suppl, <>, <>);
 
 NazeSORNUnitDataCollector collector_I <fileName="SORN-IOutput", deltaT=0.001, binary=BINARY, fileExt=FILE_EXTENSION, directory=DIRECTORY, op_saveSpikes=1 >;
@@ -164,15 +170,15 @@ polyConnect(sorn_I[].Layer(inh), collector_I, <>, <>);
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
 
 UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
- 			 ::Iteration, ">=", 200000, 0, dataCollect);
+ 			 ::Iteration, ">=", 80000, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 500000, 0, lastPhase); 
+			 ::Iteration, "==", 100000, 0, lastPhase); 
 
 UnsignedTrigger iterTrigSuppl("Iteration Trigger : >= 0 ", 
- 			 ::Iteration, ">=", 300000, 0, dataCollect);
+ 			 ::Iteration, ">=", 80000, 0, dataCollect);
 
 collector_E.dataCollection() on iterTrig;
-//collector_E_Suppl.dataCollection() on iterTrigSuppl;
+collector_E_Suppl.dataCollection() on iterTrigSuppl;
 collector_I.dataCollection() on iterTrig;
 Stop on endTrig;
