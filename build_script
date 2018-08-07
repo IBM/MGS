@@ -324,14 +324,13 @@ TYPE="MGS"
 fi
 
 ########################################
-### Check required tools/libraries ###
+### Check required tools ###
 ## 1. MPI library
 ## 2. Bison
 ## 3. Flex
 ## 4. Python
-## 5. libgmp
-## 6. CUDA [optional]
-## 7. Armadillo [optional]
+## 5. CUDA [optional]
+## 6. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
