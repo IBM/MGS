@@ -76,6 +76,11 @@ Node BengioRatePyramidal Implements FiringRateProducer, OutputProducer {
       PSet.weight >> interneuronInputs.weight;
    }
 
+   Connection Pre Node (PSet.identifier=="sensory") Expects OutputProducer {
+      OutputProducer.output >> pyramidalForwardInputs.input;
+      PSet.weight >> pyramidalForwardInputs.weight;
+   }
+
    Connection Pre Node (PSet.identifier=="forward") Expects FiringRateProducer {
       FiringRateProducer.output >> pyramidalForwardInputs.input;
       PSet.weight >> pyramidalForwardInputs.weight;
