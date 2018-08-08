@@ -10,7 +10,7 @@
 class LoadSparseMatrix : public CG_LoadSparseMatrixBase
 {
    public:
-      void userInitialize(LensContext* CG_c, String& filename);
+      void userInitialize(LensContext* CG_c, String& filepath, String& filename);
       ShallowArray<float> userExecute(LensContext* CG_c);
       LoadSparseMatrix();
       virtual ~LoadSparseMatrix();

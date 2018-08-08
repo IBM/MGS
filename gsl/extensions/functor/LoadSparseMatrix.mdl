@@ -2,7 +2,7 @@
 #define LoadSparseMatrix_MDL
 
 Framework Functor LoadSparseMatrix {
-   Initialize(string filename);
+   Initialize(string filepath, string filename);
    float[] Execute();
 }
 
