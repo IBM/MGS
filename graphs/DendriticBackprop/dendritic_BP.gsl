@@ -61,44 +61,38 @@ Grid Retina
 	InitNodes ( .[], nodeDef );
 };
 
-Grid Thalamus
+ConnectionScript NNconnect(NodeSet pre, NodeSet post, String id, float radius)
 {
-	Dimension ( 11, 11 );
-        Layer(relayNeurons, GatedThalamicUnit, UniformLayout(1), < nodekind="mc" >);
-	InitNodes ( .[], nodeDef );
+   NdplModifier lat(inAttrDef, < identifier=id>);
+   connectNodeSets(pre, post, EachDstPropSrc(RadialSampler(radius)), outAttrDef, lat);
 };
-
-ConnectionScript LNconnect(NodeSet ns, float radius)
-{
-   NdplModifier lnc(inAttrDef, < identifier="LN">);
-   connectNodeSets(ns, ns, EachDstPropSrc(RadialSampler(radius)), outAttrDef, lnc);
-};
-LNconnect connectLN();
+NNconnect connectNN();
 
 Grid Cortex
 {
 	Dimension ( 11, 11 );
-        Layer(superficial, LinskerInfomaxUnit, UniformLayout(1), < nodekind="mc" >);
-	InitNodes ( .[], Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=0.000001>)));
-	InitNodes ( .[0,0], Same(Pset < LinskerInfomaxUnit, NodeInit > (<e=1.0>)));
-	connectLN(.[], 200.0);
+        Layer(interneuron, , UniformLayout(1), < nodekind="in" >);
+        Layer(pyramidal, , UniformLayout(1), < nodekind="py" >);
+	InitNodes ( .[].Layer(intereuron), Same(Pset < BengioRateInterneuron, NodeInit >));
+	InitNodes ( .[].Layer(V1), Same(Pset < BengioRatePyramidal, NodeInit >));
+	InitNodes ( .[].Layer(V2), Same(Pset < BengioRatePyramidal, NodeInit >));
+	InitNodes ( .[].Layer(V3), Same(Pset < BengioRatePyramidal, NodeInit >));
+	connectNN(.[].Layer(interneuron), .[].Layer(interneuron), "lateral", 200.0);
+	connectNN(.[].Layer(interneuron), .[].Layer(V1), "interneuron", 200.0);
+	connectNN(.[].Layer(interneuron), .[].Layer(V2), "interneuron", 200.0);
+	connectNN(.[].Layer(interneuron), .[].Layer(V3), "interneuron", 200.0);
+	connectNN(.[].Layer(V1), .[].Layer(V2), "forward", 200.0);
+	connectNN(.[].Layer(V2), .[].Layer(V3), "forward", 200.0);
 };
 
 Composite EarlyVision
 {
 	Retina retina;
-	Thalamus thalamus;
 	Cortex cortex;
 
-	//NdplModifier rgc2th(inAttrDef, < identifier="phenotypic" >);
-	//SrcRefDoGWeightModifier R2T(rgc2th, 0.5, 48.0, 1.0, 24.0, 0);
- 	BindName rgc2th("identifier", "phenotypic");
-	NdplInAttrInit R2T(rgc2th);
-   	connectNodeSets(retina[], thalamus[], EachDst(EachAvg(1.0)), outAttrDef, R2T);
-
- 	BindName th2ctx("weight", Gaussian(0,1.0), "identifier", "TH");
-	NdplInAttrInit T2C(th2ctx);
-   	connectNodeSets(thalamus[], cortex[], EachDst(EachAvg(1.0)), outAttrDef, T2C);
+ 	BindName sen("identifier", "sensory");
+	NdplInAttrInit SEN(sen);
+   	connectNodeSets(retina[], cortex.[].Layer(V1), EachDst(EachAvg(1.0)), outAttrDef, SEN);
 };
 EarlyVision earlyVision;
 
