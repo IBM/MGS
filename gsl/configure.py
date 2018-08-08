@@ -1250,6 +1250,7 @@ FUNCTOR_MODULES := BinomialDist \\
         GetPreNodeIndex \\
         IsoSampler \\
         IsoSamplerHybrid \\
+       	GradientLayout \\
         LoadMatrix \\
         LoadSparseMatrix \\
         Log \\

@@ -14,6 +14,7 @@
 #include "GetPostNodeCoordFunctor.mdl"
 #include "GetPreNodeCoordFunctor.mdl"
 #include "GetPreNodeIndex.mdl"
+#include "GradientLayout.mdl"
 #include "IsoSampler.mdl"
 #include "LoadMatrix.mdl"
 #include "LoadSparseMatrix.mdl"

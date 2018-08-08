@@ -29,7 +29,7 @@ void RabinovichWinnerlessUnitDataCollector::initialize(RNG& rng)
 {
   int mxrow=0;
   // Sort pointers by indices, row major
-  std::map<unsigned, std::map<unsigned, std::map<unsigned, double*> > >sorter;
+  std::map<unsigned, std::map<unsigned, std::map<unsigned, std::vector<double*> > > >sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
   assert(slices.size()==x.size());
@@ -38,22 +38,26 @@ void RabinovichWinnerlessUnitDataCollector::initialize(RNG& rng)
   mxcol=0;
   for (int j=0; j<sz; ++j)
     {
-      sorter[rows[j]][cols[j]][slices[j]]=x[j];
+      sorter[rows[j]][cols[j]][slices[j]].push_back(x[j]);
       if (mxrow<rows[j]) mxrow=rows[j];
       if (mxcol<cols[j]) mxcol=cols[j];
       if (mxslice<slices[j]) mxslice=slices[j];                    
     }
   x.clear();
-  std::map<unsigned, std::map<unsigned, std::map<unsigned, double*> > >::iterator miter1, mend1=sorter.end();
+  std::map<unsigned, std::map<unsigned, std::map<unsigned, std::vector<double*> > > >::iterator miter1, mend1=sorter.end();
   for (miter1=sorter.begin(); miter1!=mend1; ++miter1)
     {
-      std::map<unsigned, std::map<unsigned, double*> >::iterator miter2, mend2=miter1->second.end();
+      std::map<unsigned, std::map<unsigned, std::vector<double*> > >::iterator miter2, mend2=miter1->second.end();
       for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2)
 	{
-	  std::map<unsigned, double*>::iterator miter3, mend3=miter2->second.end();
+	  std::map<unsigned, std::vector<double*> >::iterator miter3, mend3=miter2->second.end();
 	  for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3)
 	    {
-	      x.push_back(miter3->second);
+	      std::vector<double*>::iterator viter=miter3->second.begin(), 
+		vend=miter3->second.end();
+	      for (; viter!=vend; ++viter) {
+		x.push_back(*viter);
+	      }
 	    }
 	}
   }

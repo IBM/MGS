@@ -125,6 +125,7 @@ Functor Round(Functor);
 Functor FloatArrayMaker(Functor, int);
 Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
+Layout GradientLayout(int total, float slope, list<int> origin, int originDensity, list<int> gradientDimensions);
 Functor UniformDiscreteDist(float n1, float n2);
 Functor LoadSparseMatrix(string filename);
 // TODO: duplicate?
