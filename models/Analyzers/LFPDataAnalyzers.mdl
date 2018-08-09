@@ -64,6 +64,7 @@ Variable LFPDataAnalyzer
  
   InitPhase initialize;
   TriggeredFunction dataCollection;
+  TriggeredFunction setContributions;
   FinalPhase finalize;
 }
 

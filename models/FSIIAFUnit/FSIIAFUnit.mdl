@@ -71,6 +71,9 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
      double deltaT;          // s
      int np;                 // number of numerical fixed point iterations
 
+     float mu_rho;	     // mean zenith angle
+     float mu_phi;	     // mean azimut angle
+
      string sharedDirectory;
      string sharedFileExt;
      int [] collectWeightsOn;

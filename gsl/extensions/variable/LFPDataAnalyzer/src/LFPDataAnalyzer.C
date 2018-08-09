@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include <utility>
+#include <random>
 
 double LFPDataAnalyzer::normal_pdf(double x, double mean, double sigma)
 {
@@ -128,7 +129,7 @@ void LFPDataAnalyzer::initialize(RNG& rng)
   for (int n=0; n<(numElecPerDimX+numElecPerDimY+numElecPerDimZ); n++) {
     contrib[n].increaseSizeTo(sz);
     // initialize to unit value
-    for (int i=0; i<sz, i++) {
+    for (int i=0; i<sz; i++) {
       contrib[n][i] = 1.0;
     }
   }
@@ -172,7 +173,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                   // with a 3D Gaussian weighting depending on distance
                   // to the elctrode.
                   for (int n=0; iterLFPs_ind != endLFPs_ind;
-                       ++iterLFPs_ind, ++iterRows, ++iterCols, ++iterSlices)
+                       ++iterLFPs_ind, ++iterRows, ++iterCols, ++iterSlices, n++)
                     {
                       dist = sqrt(
                                   pow(elecCenterX[x]-*iterRows,2)
@@ -180,6 +181,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                                   + pow(elecCenterZ[z]-*iterSlices,2)
                                   );
                       if (dist <= elecRadius)
+	   		//std::cout << x << " " << y << " " << z << " " << n << " : " << contrib[x+y+z][n] << std::endl;
                         *iterLFPs += contrib[x+y+z][n] * normal_pdf(dist, 0.0, elecSigma) * **iterLFPs_ind;
                     }
                   ++iterLFPs;
@@ -201,24 +203,25 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
 void LFPDataAnalyzer::setContributions(Trigger* trigger, NDPairList* ndPairList){
  
   ShallowArray<double*>::iterator iterRhos, endRhos=rhos.end();
-  ShallowArray<double*>::iterator iterPhis, endRhos=phis.end();
+  ShallowArray<double*>::iterator iterPhis, endPhis=phis.end();
   ShallowArray<int>::iterator iterRows, endRows=rows.end();
   ShallowArray<int>::iterator iterCols, endCols=cols.end();
   ShallowArray<int>::iterator iterSlices, endSlices=slices.end();
-//  ShallowArray<double[]>::iterator iter1, end1=contrib.end();
-//  ShallowArray<double>::iterator iter2, end2=iter1.end();
   
   for (int z=0; z<numElecPerDimZ; z++) {
     for (int y=0; y<numElecPerDimY; y++) {
       for (int x=0; x<numElecPerDimX; x++) {
+        iterRhos = rhos.begin();
+        iterPhis = phis.begin();
         iterRows = rows.begin();
         iterCols = cols.begin();
         iterSlices = slices.begin();
-        for(int n=0; iterRhos != endRhos; ++iterRhos, ++iterPhis, ++iterRows, ++iterCols, ++iterSlices, ++n) {
+        for(int n=0; iterRhos != endRhos; ++iterRhos, ++iterPhis, ++iterRows, ++iterCols, ++iterSlices, n++) {
+//	  std::cout << "n=" << n << ";  x=" << x << ";  y=" << y <<  ";  n=" << n << std::endl;
           // workout coordinates of tip of orientation vector starting at soma
-          double x_o = *iterRows + sin(*iterRhos)*cos(*iterPhis);
-          double y_o = *iterCols + sin(*iterRhos)*sin(*iterPhis);
-          double z_o = *iterSlices + cos(*iterRhos);
+          double x_o = *iterRows + sin(**iterRhos)*cos(**iterPhis);
+          double y_o = *iterCols + sin(**iterRhos)*sin(**iterPhis);
+          double z_o = *iterSlices + cos(**iterRhos);
           // distances between electrode and soma, and electrode and tip of vector
           double d_o = sqrt(pow(elecCenterX[x]-x_o,2) + pow(elecCenterY[y]-y_o,2) + pow(elecCenterZ[z]-z_o,2));
           double d_n = sqrt(pow(elecCenterX[x]-*iterRows,2) + pow(elecCenterY[y]-*iterCols,2) + pow(elecCenterZ[z]-*iterSlices,2));

@@ -20,6 +20,7 @@
 #include "rndm.h"
 #include <fstream>
 #include <sstream>
+#include <math.h>
 
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
@@ -51,6 +52,16 @@ void FSIIAFUnit::initialize(RNG& rng)
     ctxInputWeight = 1.0 / (double) ctxInputs.size();
   else
     ctxInputWeight = 1.0;
+
+  // Setup unit's orientation  TODO: normal distrib.
+  if (SHD.mu_rho < -0.5) {
+    rho = drandom(rng) * M_PI;
+  }
+  if (SHD.mu_phi < -0.5) {
+    phi = drandom(rng) * 2*M_PI;
+  }
+ 
+
 }
 
 void FSIIAFUnit::updateInput(RNG& rng) 
