@@ -87,6 +87,7 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
      bool op_saveGJs;
      bool op_savePSPs;
      bool op_saveExtra;
+     bool op_saveLayout;
    }
 
    InAttrPSet {

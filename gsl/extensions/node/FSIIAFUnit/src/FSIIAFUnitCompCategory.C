@@ -113,6 +113,44 @@ void FSIIAFUnitCompCategory::initializeShared(RNG& rng)
         MPI_Barrier(MPI_COMM_WORLD); // wait for node creating the stream to finish
       }
     }
+  
+  if (SHD.op_saveLayout){ 
+    std::ofstream* fs_layout;
+    std::ostringstream os_layout;
+    // Take it in turn opening and creating the file to create the stream on each node
+    n=0;
+    while (n<getSimulation().getNumProcesses()) {
+      if (n==rank) {  
+        os_layout<<SHD.sharedDirectory<<"FSILayout.txt";
+        fs_layout = new std::ofstream(os_layout.str().c_str(), std::ofstream::out | std::ofstream::trunc);
+        fs_layout->close();
+      }
+      ++n;
+      MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
+    }
+    // Now take it in turn writing to the file, where rank 0 also clears the file.
+     n=0;
+    while (n<getSimulation().getNumProcesses()) {
+      if(n==rank){
+	fs_layout->open(os_layout.str().c_str(), std::ofstream::app|std::ofstream::out);
+	ShallowArray<FSIIAFUnit>::iterator it=_nodes.begin();
+	ShallowArray<FSIIAFUnit>::iterator end=_nodes.end();
+	std::vector<int> coords; 
+	for(it; it!=end; it++){
+	  (*it).getNodeCoords(coords); 
+	  *fs_layout << (*it).getGlobalIndex() << " " << (*it).getNodeIndex() << " " << (*it).getIndex() << " ";
+	  for(std::vector<int>::iterator viter = coords.begin(); viter!=coords.end(); viter++){
+	    *fs_layout << *viter << " ";
+	  }
+	  *fs_layout << std::endl;
+	  coords.clear();
+	}
+	fs_layout->close();
+      }
+      ++n;
+      MPI_Barrier(MPI_COMM_WORLD); // wait node creating the stream to finish
+    }
+  }
 }
 
 void FSIIAFUnitCompCategory::outputPSPsShared(RNG& rng) 

@@ -1251,6 +1251,7 @@ FUNCTOR_MODULES := BinomialDist \\
         IsoSampler \\
         IsoSamplerHybrid \\
        	GradientLayout \\
+       	NormalizedGradientLayout \\
         LoadMatrix \\
         LoadSparseMatrix \\
         Log \\
