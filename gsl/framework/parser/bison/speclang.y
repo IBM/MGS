@@ -23,8 +23,8 @@
 using namespace std;
 
 #define USABLE
-#define YYPARSE_PARAM parm
-#define YYLEX_PARAM parm
+//#define YYPARSE_PARAM parm
+//#define YYLEX_PARAM parm
 #define YYDEBUG 1
 #define CONTEXT ((LensContext *) parm)
 #define yyparse lensparse
@@ -41,7 +41,8 @@ using namespace std;
 #define PRCRLMISMATCH "possible curly brackets mismatch use Declarator { GridDefinitionBody } or Declarator { GridDefinitionBody } Declarator"
 #define EXPDECLBEFCURL "expecting a declarator before {"
    
-   void lenserror(const char *s);
+   //void lenserror(const char *s);
+   void lenserror(YYLTYPE* llocp, void* parm, const char *s);
    int lenslex(YYSTYPE *lvalp, YYLTYPE *locp, void *context);
    inline void HIGH_LEVEL_EXECUTE(void* parm, C_production* l) {
 	 l->checkChildren();
@@ -70,12 +71,14 @@ using namespace std;
 
 %}
 
-%pure_parser
+%pure-parser
 %locations
+%lex-param {parm}
+%parse-param {void* parm}
 
 %{
-#ifndef YYSTYPE_DEFINITION
-#define YYSTYPE_DEFINITION
+//#ifndef YYSTYPE_DEFINITION
+//#define YYSTYPE_DEFINITION
 %}
 
 
@@ -187,7 +190,7 @@ using namespace std;
 } 
 
 %{
-#endif
+//#endif
 %}
 
 %token TOOLTYPE
@@ -2958,7 +2961,11 @@ int main(int argc, char** argv)
    }
 }
 
-void lenserror(const char *s)
+//void lenserror(const char *s)
+//{
+//   fprintf(stderr,"%s\n",s);
+//}
+void lenserror(YYLTYPE* llocp, void* parm, const char *s)
 {
    fprintf(stderr,"%s\n",s);
 }

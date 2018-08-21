@@ -26,6 +26,7 @@ T Square(T x)
 // GOAL:  find factorial
 //  result = N!
 void factorial(mpz_t result, unsigned long N);
+double factorial(int c);
 
 // GOAL: find (N+M-1)! / (M! * (N-1)!)
 // How many ways to put M balls into N bins

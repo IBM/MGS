@@ -59,6 +59,69 @@ if [ "$1" == "--help" ] || [ $# == 0 ]; then
   print_help
 fi
 #}}}
+RunInstallFlex()
+{
+  #{{{
+    Ask_InstallPath $1
+    rm -rf flex-2.6.4
+    rm -rf flex-2.6.4.tar.gz
+    wget "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
+    tar -xvf flex-2.6.4.tar.gz
+    cd flex-2.6.4
+    if [ "$flex_path" == '' ]; then
+      ./configure
+    else
+      echo "./configure --prefix=$flex_path"
+    fi
+    make -j10
+    sudo make install
+    cd -
+    rm -rf flex-2.6.4
+    rm flex-2.6.4.tar.gz
+    echo "please update:"
+    echo "   PATH: $flex_path/bin"
+    echo "   LD_LIBRARY_PATH, LD_RUN_PATH, and LIBRARY_PATH: $flex_path/lib" 
+    echo "   CPATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH, INCLUDE: $flex_path/include" 
+    echo "   MANPATH: $flex_path/man"
+    echo "and reload shell"
+  #}}}
+}
+Ask_InstallPath()
+{
+  #{{{
+  # print question
+  echo -n "Where do you want to install "$1"?(Press Enter for default (e.g. /usr/local/bin): "
+
+  # read answer
+  read -e path 
+
+  # check and act on given answer
+  flex_path=$(eval echo $path)
+  #}}}
+}
+Yes_No_InstallFlex()
+{
+  #{{{
+  # print question
+  echo -n "Do you want to install Flex 2.6.4?(yes(y)/no(n)): "
+
+  # read answer
+  read YnAnswer
+
+  # all to lower case
+  YnAnswer=$(echo $YnAnswer | awk '{print tolower($0)}')
+
+  # check and act on given answer
+  case $YnAnswer in
+    "yes")  RunInstallFlex "Flex 2.6.4";;
+    "y")  RunInstallFlex "Flex 2.6.4";;
+    "no")  ;;
+    "n")  ;;
+    *)      echo "Please answer yes(y) or no(n)" ; Yes_No_InstallFlex;;
+  esac
+  #}}}
+}
+
 function make_functor_mdf()
 {
   cat functors_common.mdf > $1
@@ -226,7 +289,8 @@ fi
 if which flex | grep -q1 /\flex; then
     echo flex found...; else echo flex not found!; exit; fi
 
-VALID_FLEX_VERSION=2.5.4
+VALID_FLEX_VERSION=2.6.4
+#{{{
 FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
 echo version $FLEX_VERSION...
 read c_major c_minor c_rev << EOF
@@ -237,24 +301,36 @@ read n_major n_minor n_rev << EOF
 `echo ${FLEX_VERSION} | tr "." " "`
 EOF
 if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
+FLEX_FAILED=0
 if [ "$n_major" -ne "$c_major" ]; then
-    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$PLATFORM" == "LINUX" ]; then
-	exit;
-    fi
+  FLEX_FAILED=1
+  #  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  #  if [ "$PLATFORM" == "LINUX" ]; then
+  #      exit;
+  #  fi
 fi
 if [ "$n_major" -eq "$c_major" ] &&  [ "$n_minor" -ne "$c_minor" ]; then
-    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$PLATFORM" == "LINUX" ]; then
-	exit;
-    fi
+  FLEX_FAILED=1
+  #  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  #  if [ "$PLATFORM" == "LINUX" ]; then
+  #      exit;
+  #  fi
 fi
 if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -ne "$c_rev" ]; then
-    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$PLATFORM" == "LINUX" ]; then
-	exit;
-    fi
+  FLEX_FAILED=1
+  #  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  #  if [ "$PLATFORM" == "LINUX" ]; then
+  #      exit;
+  #  fi
 fi
+if [ $FLEX_FAILED -eq 1 ]; then
+  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  Yes_No_InstallFlex
+  if [ "$PLATFORM" == "LINUX" ]; then 
+    exit;
+  fi
+fi
+#}}}
 
 if which python | grep -q1 /\python; then
     echo python found...; else echo python not found!;
@@ -494,6 +570,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname "CG_*" | xargs -I{} rm {}
+      find $BASE_FOLDER/models -iname ".*mdl" | xargs -I{} rm {}
       touch $BASE_FOLDER/models/all.mdf
       #}}}
     fi

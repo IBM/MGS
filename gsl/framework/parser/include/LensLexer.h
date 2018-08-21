@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,7 +17,9 @@
 #define _lenslexer_h
 #include "Copyright.h"
 
+#if !defined(yyFlexLexerOnce) 
 #include <FlexLexer.h>
+#endif 
 #include "LensParser.h"
 #include <string>
 #ifndef YYSTYPE_DEFINITION
