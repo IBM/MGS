@@ -1,0 +1,82 @@
+#ifndef HTREE_MDL
+#define HTREE_MDL
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+ */
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+//
+// =================================================================
+
+#include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.mdl"
+#include "UCInterfaces.mdl"
+
+Node Htree Implements PressureArrayProducer, CoordsArrayProducer {
+//{{{
+  //{{{data
+  //{{{internal
+  double [] pressures; // TODO unit 
+  /*int numberNVUs;*/
+  double [] coordsArray; //numberNVUs * DIMENSIONS
+  //}}}
+  //{{{passable 
+  double dtWrite; // (miliseconds) - interval between two data writes
+  double L0;
+  //}}}
+  //{{{receivable
+  NVUinput [] NVUinputs;
+  //}}}
+  //}}}
+
+  Shared {
+    //{{{
+    dyn_var_t* deltaT; // (miliseconds)
+
+    double []* tempStateVariables;
+    double []* tempNVUcoords;
+    //}}}
+  }
+
+  //{{{Output
+  PressureArrayProducer.pressures << &pressures;
+  CoordsArrayProducer.coordsArray << &coordsArray;
+  //}}}
+
+
+  //{{{Phases
+  InitPhase initTree(pressures, coordsArray);
+  //InitPhase initialWrite();
+  RuntimePhase writeToFiles();
+  RuntimePhase updatePressures();
+  RuntimePhase copy(pressures);
+  //TriggeredFunction dataCollection;  can we have TriggerredFunction  on regular node?
+  FinalPhase finalize;
+  //}}}
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  //{{{Input
+  UserFunction setPointers;
+  Connection Pre Node (PSet.identifier=="NVU") Expects 
+      RadiusProducer, StateVariablesProducer, CoordsProducer
+  {
+    RadiusProducer.radius >> NVUinputs.radius; // auto adds an element for each connection (bumps the struct to one bigger)
+    StateVariablesProducer.stateVariables >> Shared.tempStateVariables;
+    CoordsProducer.coords >> Shared.tempNVUcoords;
+    setPointers();
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  };
+  //}}}
+//}}}
+}
+#endif

@@ -96,6 +96,11 @@ void CaCurrentDisplay::initialize(RNG& rng)
           assert(synapseBranchData[i]->size() % 2 == 0);
 
           assert(synapseIndices[i].size() == 2);
+          //TUAN TODO: if SynapticCleft is not on the same rank with receptor, then the data below is not available 
+          //  for the pre-synaptic side (at connection time)
+          //  so either (1) ignore the pre-side information
+          //     or     (2) update it at the first init-phase kernel
+    #if 0
           (*outFile) << std::fixed << " ["
                      << *(reinterpret_cast<unsigned long long*>(
                             &((*synapseBranchData[i])[0]->key))) << ","
@@ -103,6 +108,12 @@ void CaCurrentDisplay::initialize(RNG& rng)
                      << *(reinterpret_cast<unsigned long long*>(
                             &((*synapseBranchData[i])[1]->key))) << ","
                      << *(synapseIndices[i][1]) << "] ";
+#else
+          (*outFile) << std::fixed << " [post-side:"
+                     << *(reinterpret_cast<unsigned long long*>(
+                            &((*synapseBranchData[i])[1]->key))) << ","
+                     << *(synapseIndices[i][1]) << "] ";
+#endif
         }
       }
     }

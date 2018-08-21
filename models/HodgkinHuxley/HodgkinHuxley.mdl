@@ -40,6 +40,11 @@ Interface CurrentArrayProducer {
 #endif
 }
 
+Interface IOCurrentProducer {
+//designed for I/O purpose
+//NOTE: currently being used for I/O sum(axial-current-to-soma) as total current (pA)
+  dyn_var_t * current;
+}
 Interface IOCurrentArrayProducer {
 //designed for I/O purpose
 // This is to avoid the case when HH-channel produces (conductanceArray,ErevArray)

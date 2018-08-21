@@ -7,7 +7,8 @@
 
 #include "MaxComputeOrder.h"
 
-#define DEBUG_CHAN
+// DEBUG_CHAN = write gating states' values to file
+//#define DEBUG_CHAN
 #include <iostream>
 #include <fstream>
 #include <sstream>

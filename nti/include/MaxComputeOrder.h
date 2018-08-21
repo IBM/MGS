@@ -175,6 +175,17 @@
 #define THRESHOLD_SIZE_R_SOMA  2.0 // [um]
 #endif
 //}}}
+
+
+// Add internal noise to each neuron (junction only, i.e. soma)
+//  currently the parameter are hard-coded (we may want to pass via HodgkinHuxleyVoltageJunction)
+// #define INTRINSIC_NOISE_TO_NEURON
+
+// if enabled, we can define ArrayCurrentPulseGenerator 
+// and connect to HodgkinHuxleyVoltageJunction (i.e. soma only)
+// by doing this, we just create 1 pulse-generator that is capable of 
+//  generating different streams of currents to create heterogeneity
+// #define CURRENT_STREAMS_TO_NEURON
 //}}}
 
 //numerics
@@ -183,24 +194,15 @@
 //#define NEW_RADIUS_CALCULATION_JUNCTION    //if defined; then at junction Rb=(*diter)->r
                         // if not; then Rb = ((*diter)->r + dimension->r)/2
                         
-//#define PREDICT_JUNCTION_IGNORE_AXIAL  // if defined; then the injected current is 
-//     applied to calculate Vpredict(junction) before axial-current is calculated
-//     This is important to help Iinject have strong enough effect on soma
-//     HOWEVER, BE CAUTIOUS, this may affect numerics of other junctions (under investigation)
-//     This is good for Voltage only
-//     NOTE: DO NOT USE THIS
-
 //#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
 //  IN a real-world system, the current injected is 'sensed' by the soma first;
 //  before any significant propagation
-//  HOWVER, when modeling, by considering axial propagation and injected the current
-//  at the same time; may pose a challenging problem
-//  This can be solved using small time-step (or adaptive time-step with small 
-//  value whenever there is a current injection). 
-//  HOWVER, in fixed time-step system, this is quite challenge.
-//  Because of that, we can design a system to consider the change in current
-//  dI/dt 
-//  if dI/dt > threshold, ignore axial current in that estimation
+//  In NEURON, the soma is modeled as a cylinder, and thus it has 2 'end' nodes only
+//  In NTS, the soma is modeled as a sphere, and thus it can has many nodes 
+//     which makes the injected current less available to the soma center point
+//  Because of that, we can design a system to consider the injected current
+//     available to a smaller region, rather than to the whole-soma
+//     due to the cytosolic resistance 
 
 
 
@@ -243,7 +245,8 @@
 
 #define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM //if defined, then the user can specify what compartments is neck or head of the spine via SynParams.par in  COMPARTMENT_SPINE_NECK, COMPARTMENT_SPINE_HEAD
        
-//{{{ choices for how data is exchanged when we couple spines to shaft
+//choices for how data is exchanged when we couple spines to shaft
+//{{{ 
 //BY DEFAULT: 
 //  the current between spine-neck and den-shaft is modeled as injectedCurrent producer
 //    Iinj(to-neck, time=t+dt/2) = g * (Vshaft(t) - Vneck(t)) 
@@ -275,7 +278,7 @@
 //   --> 'rate' of signal loss is reduced
 //   NOTE: Require defining of OPTION2; and disable OPTION1
 
-//#define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR // NOT ready yet
+//#define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR 
 //  This need to combine with OPTION2 above
 //  Basically, for each compartment that has many spines
 //       it calculate Vnew_shaft[t+dt/2] using  Vspines[t]
@@ -292,7 +295,7 @@
 //   capture [NT] of a particular type of Neurotransmitter (e.g. Glut, GABA)
 // We also needs to update Synapse-receptors's Interfaces
 
-//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to hae DA, Ser as part of neurotransmitter in the SynapticCleft Node
+//#define SUPPORT_MODULABLE_CLEFT  //enable this if we want to have DA, Ser(otonin) as part of neurotransmitter in the SynapticCleft Node
 
 //NOTE: This is for the choice of defining input to/output from SynapticReceptor
 //      inside TissueFunctor
@@ -305,6 +308,11 @@
 //#else //RECEPTOR_POST_AS_INPUT_POST_AS_OUTPUT
 //     In this case, the SynapticCleft is hardcoded to receive 'Voltage'
 //     which is used for calculating [NT]
+
+//by default, a single capsule can be used to create a single SynapticCleft maximum. This is however, a limitation when we build a network of single-compartmental neuron
+//where we want a neuron can form multiple SynapticClefts with other neurons through its single capsule
+//#define SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE   //tell TissueFunctor to enable multiple SynapticCleft instances from a single junctional pre-capsule
+//TODO: may need to update for compartmental capsule? (currently not having a user-case)
 //}}}
 
 //IP3 modeling
@@ -381,6 +389,20 @@
 #define FRACTION_SURFACEAREA_MICRODOMAIN3 1.0  //[% of membrane surface area]
 //}}}
 
+//Global parameters
+// //all compartments have the same Vhalf_(m/h)_adjust
+//#define TURN_ON_ADJUST_VHALF_SIMPLE
+// //each compartment may have the different Vhalf_(m/h)_adjust
+// (not implemented)
+//#define TURN_ON_ADJUST_VHALF_COMPARTMENT
+// // pass tau(Vm) as explicit parameters
+// // then each branch-type may have different tau(Vm)
+// // but all compartments in that branchtype receive same tau(Vm)
+//#define TURN_ON_ADJUST_TIMECONSTANT
+// // if defined, then the parameters (e.g. those in the ODE/PDE)
+// // are saved when an associated trigger is activated
+// // and then restore when an associated trigger is activated
+//#define ENABLE_STORE_AND_RESET_PARAMETERS
 
 //I/O options
 //{{{I/O options
@@ -398,6 +420,20 @@
 //  IDEA_CURRENTONCOMPT (if defined, we can output the current on any compartments on any branch by providing the 'site')
 //#define IDEA_ILEAK
 //#define IDEA_CURRENTONCOMPT
+
+// RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT enable this if we want to track the total axial current 
+//    flowing into soma as (pA)
+//    = Area(soma) * SUM( {Vdend - Vsoma}/ (r_dend_soma) )
+//#define RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
 //}}}
 
+// Other extensions
+//{{{
+//#define NVU_NTS_EXTENSION  //we need this to enable TissueFunctor to work with NVU
+//#define DYNAMIC_ECS_Sodium
+//#define DYNAMIC_ECS_Potassium
+//#define DYNAMIC_ECS_Temperature
+////with this, the ExtracellularMedium is nolonger be used, instead
+//                     //we use ECSNode
+//}}}
 #endif //_MAXCOMPUTEORDER_H

@@ -1,0 +1,386 @@
+#ifndef NVUNODE_MDL
+#define NVUNODE_MDL
+/*
+@ University of Canterbury 2017-2018. All rights reserved.
+ */
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+// =================================================================
+
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "UCInterfaces.mdl"
+
+Interface ECSKProducer{
+    double * K_ecs;
+}
+
+
+Node NVUNode Implements ValueProducer, RadiusProducer, ECSKProducer, StateVariablesProducer, CoordsProducer 
+{
+//{{{
+  //{{{Life-related data  [to be removed]
+  int value;
+  int publicValue;
+  int* [] neighbors;
+  //}}}
+
+  //{{{Extracellular data
+  double K_ecs;  //diffusion of K+  (uM)
+  double* [] K_ecs_neighbors;
+  dyn_var_t* voltage;
+  int* numSpikes;
+  //}}}
+  
+  //{{{Internal datariables;
+  double [] coords; // (x,y,z) [um] Cartesian coordinate (of the center of the NVU)
+  double state_r; // [um] radius of the microvessel associated with the NVU
+  //}}}
+  double [] stateVariables;
+
+  Shared {
+  //{{{
+    //{{{Life
+    int tooSparse;
+    int tooCrowded;
+    //}}}
+    double L0; // in meter
+
+    //{{{
+    // Timestep. Can be multiplied by number of simulation iterations to get current time.
+    dyn_var_t* deltaT;  // in milisecond
+    double []* pressures;
+    double []* coordsArray;
+    double [] blockSize;
+
+        /****** Model parameters ******/
+    //total 
+    //11+4+17+2+7+34+4+38+3+53+44
+    // = 217
+
+
+    //{{{ Pressure constants
+    double PA2MMHG;
+    double T0;
+    double ETA;
+    double EACTIVE;
+    double EPASSIVE;
+    double E0;
+    double RSCALE;
+    double HRR;
+
+    double R0;  // m (for nondimensionalising)
+    double P0;  // Pa (scaling factor for nondim)
+    double PCAP;  // Pa (capillary bed pressure)
+    //}}}
+
+    //{{{ general constants:
+    double Farad;
+    double R_gas;
+    double Temp;
+    double unitcon;
+    //}}}
+
+    //{{{ NE & AC constants:
+    double L_p;
+    double R_tot;
+    double X_k;
+    double z_Na;
+    double z_K;
+    double z_Cl;
+    double z_NBC;
+    double g_K_k;
+    double g_KCC1_k;
+    double g_NBC_k;
+    double g_Cl_k;
+    double g_NKCC1_k;
+    double g_Na_k;
+    double J_NaK_max;
+    double K_Na_k;
+    double K_K_s;
+    double k_C;
+    //}}}
+
+    //{{{ Perivascular Space constants:
+    double R_decay;
+    double K_p_min;
+    //}}}
+
+    //{{{ BK channel constants:
+    double A_ef_k;
+    double v_4;
+    double psi_w;
+    double G_BK_k;
+    double g_BK_k;
+    double VR_pa;
+    double VR_ps;
+    //}}}
+
+    //{{{SMC constants:
+    double F_il;
+    double z_1;
+    double z_2;
+    double z_3;
+    double z_4;
+    double z_5;
+    double Fmax_i;
+    double Kr_i;
+    double G_Ca;
+    double v_Ca1;
+    double v_Ca2;
+    double R_Ca;
+    double G_NaCa;
+    double c_NaCa;
+    double v_NaCa;
+    double B_i;
+    double cb_i;
+    double CICR_rate; // from C_i
+    double sc_i;
+    double cc_i;
+    double D_i;
+    double vd_i;
+    double Rd_i;
+    double L_i;
+    double delta_mv;
+    double F_NaK;
+    double G_Cl;
+    double v_Cl;
+    double G_K;
+    double vK_i;
+    double lam;
+    double v_Ca3;
+    double R_K;
+    double const_k_i;
+    //}}}
+
+    //{{{Stretch-activated channels
+    double G_stretch;
+    double Esac;
+    double alpha1;
+    double sig0;
+    //}}}
+
+    //{{{ EC constants:
+    double Fmax_j;
+    double Kr_j;
+    double B_j;
+    double cb_j;
+    double C_j;
+    double sc_j;
+    double cc_j;
+    double D_j;
+    double L_j;
+    double G_cat;
+    double E_Ca;
+    double m3cat;
+    double m4cat;
+    double JO_j;
+    double C_m;
+    double G_tot;
+    double vK_j;
+    double const_a1;
+    double a2;
+    double const_b;
+    double const_c;
+    double m3b;
+    double m4b;
+    double m3s;
+    double m4s;
+    double G_R;
+    double v_rest;
+    double const_k_j;
+    double J_PLC;
+    double g_hat;
+    double p_hat;
+    double p_hatIP3;
+    double C_Hillmann;
+    double K3_c;
+    double K4_c;
+    double K7_c;
+    double gam_cross;
+    double LArg_j;
+    //}}}
+
+    //{{{ ECS:
+    // tau is dx^2 / 2D where dx is the length and D is diffusion rate
+    double tau2;
+    double tau_diffusion;
+    //}}}
+
+    //{{{NO pathway
+    double LArg;
+    double V_spine;
+    double k_ex;
+    double Ca_rest;
+    double lambda;
+    double V_maxNOS;
+    double V_max_NO_n;
+    double K_mO2_n;
+    double K_mArg_n;
+    double K_actNOS;
+    double D_NO;
+    double k_O2;
+    double const_On;
+    double v_n;
+    double const_Ok;
+    double G_M;
+    double dist_nk;
+    double dist_ki;
+    double dist_ij;
+    double tau_nk;
+    double tau_ki;
+    double tau_ij;
+    double P_Ca_P_M;
+    double Ca_ex;
+    double const_M;
+    double betA;
+    double betB;
+    double const_Oj;
+    double K_dis;
+    double K_eNOS;
+    double mu2;
+    double g_max;
+    double const_alp;
+    double W_0;
+    double delt_wss;
+    double k_dno;
+    double k1;
+    double k2;
+    double k3;
+    double k_1;
+    double V_max_sGC;
+    double k_pde;
+    double C_4;
+    double K_m_pde;
+    double k_mlcp_b;
+    double k_mlcp_c;
+    double K_m_mlcp;
+    double bet_i;
+    double const_m;
+    double gam_eNOS;
+    double K_mO2_j;
+    double V_NOj_max;
+    double K_mArg_j;
+    //}}}
+
+    //{{{AC Ca2+
+    double r_buff;
+    double G_TRPV_k;
+    double g_TRPV_k;
+    double J_max;
+    double const_K_act;
+    double K_I;
+    double P_L;
+    double k_pump;
+    double const_V_max;
+    double C_astr_k;
+    double gamma_k;
+    double B_ex;
+    double BK_end;
+    double K_ex;
+    double const_delta;
+    double K_G;
+    double Ca_3;
+    double Ca_4;
+    double v_5;
+    double v_7;
+    double eet_shift;
+    double gam_cae_k;
+    double gam_cai_k;
+    double R_0_passive_k;
+    double epshalf_k;
+    double kappa_k;
+    double v1_TRPV_k;
+    double v2_TRPV_k;
+    double t_TRPV_k;
+    double VR_ER_cyt;
+    double K_inh;
+    double k_on;
+    double k_deg;
+    double r_h;
+    double Ca_k_min;
+    double k_eet;
+    double V_eet;
+    double Ca_decay_k;
+    double Capmin_k;
+    double reverseBK;
+    double switchBK;
+    double trpv_switch;
+    double z_Ca;
+    double const_m_c;
+    //}}}
+    //}}}
+
+    InitPhase paramInitialize();
+
+    //string json_file; //hold all parameters' initial values
+  //}}}
+  }
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  //{{{Phases
+  InitPhase initStateVariables(state_r, K_ecs, stateVariables, coords);
+  InitPhase initJacobian();
+
+  RuntimePhase update(K_ecs); //TODO: may need to use predictor-corrector scheme
+   // to improve accuracy
+  //RuntimePhase predictor(K_ecs);
+  //RuntimePhase corrector(K_ecs);
+  RuntimePhase copy(publicValue, state_r, stateVariables);
+
+  FinalPhase finalize;
+  //}}}
+
+  //{{{ Output
+  ValueProducer.value << &publicValue;
+
+  ECSKProducer.K_ecs << &K_ecs;
+
+  RadiusProducer.radius << &state_r;
+  StateVariablesProducer.stateVariables << &stateVariables;
+
+  CoordsProducer.coords << &coords;
+  //}}}
+
+  //{{{Input
+//#if NTS_INTEGRATION
+  Connection Pre Node (PSet.identifier=="MegaSS") Expects 
+       VoltageProducer, NumSpikesProducer
+  { //PSet.identifier=="connexon[Voltage]"
+    VoltageProducer.voltage >> voltage;
+    NumSpikesProducer.numSpikes >> numSpikes;
+  }
+//#endif
+
+  Connection Pre Node (PSet.identifier=="NVU") Expects 
+    ValueProducer, ECSKProducer 
+  {
+    ValueProducer.value >> neighbors;
+    ECSKProducer.K_ecs >> K_ecs_neighbors;
+  };
+
+  Connection Pre Node (PSet.identifier=="htree") Expects 
+    PressureArrayProducer, CoordsArrayProducer 
+  {
+    PressureArrayProducer.pressures >> Shared.pressures;
+    CoordsArrayProducer.coordsArray >> Shared.coordsArray;
+  };
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects 
+    TimeStepProducer
+  {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  };
+  //}}}
+//}}}
+}
+#endif

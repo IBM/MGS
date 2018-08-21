@@ -17,7 +17,9 @@
 #define MdlLexer_H
 #include "Mdl.h"
 
+#if !defined(yyFlexLexerOnce) 
 #include <FlexLexer.h>
+#endif 
 #include "ParserClasses.h"
 #include <string>
 #ifndef YYSTYPE_DEFINITION

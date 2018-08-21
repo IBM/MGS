@@ -107,6 +107,8 @@ void StringUtils::trim(std::string &s)
    The word is  (in descending order of priority)
    1. fully enclosed by square bracket [   ]
    2. space-delimited 
+RETURN: 
+  1 = success
    */
   int StringUtils::readOneWord(FILE* fpF, char* oneword)
   {

@@ -1,5 +1,7 @@
 export NTSMGSROOT=`pwd`
-export LENSROOT=$NTSMGSROOT/gsl
-export MDLROOT=$NTSMGSROOT/mdl
-export PATH=$NTSMGSROOT/gsl/bin:$PATH
-
+export NTSROOT=`pwd`
+export MGSROOT=`pwd`
+export LENSROOT=$NTSROOT/gsl
+export MDLROOT=$NTSROOT/mdl
+export PATH=$NTSROOT/gsl/bin:$PATH
+export GSLPARSER=$NTSROOT/gsl/bin/gslparser

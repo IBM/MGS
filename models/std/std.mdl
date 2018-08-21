@@ -2,6 +2,9 @@
 #define std_MDL
 #include "../../nti/include/MaxComputeOrder.h"
 
+Interface NumSpikesProducer{
+  int* numSpikes;
+}
 
 Interface TimeProducer {
 	dyn_var_t* pulseTime;
@@ -27,6 +30,46 @@ Struct ModificationStruct {
 	NDPairList* list;
 }
 
+Struct TissueSite {
+	dyn_var_t x;
+	dyn_var_t y;
+	dyn_var_t z;
+	dyn_var_t r;
+}
+
+//{{{structs - Channel/Receptor currents
+Struct ChannelCurrents {
+//use this for Hodgkin-Huxley equation
+  dyn_var_t []* conductances; // [nS/um^2]
+  dyn_var_t []* reversalPotentials; // [mV]
+}
+
+Struct ChannelCurrentsGHK {
+//use this for GHK equation
+// which is negative for inward currents
+  dyn_var_t []* currents; // [pA/um^2]
+#ifdef CONSIDER_DI_DV
+  dyn_var_t []* di_dv; // conductance [nS/um^2] - the change from V(t) to V(t+0.001)
+#endif
+}
+
+Struct ReceptorCurrent {
+  dyn_var_t* conductance; // [nS/um^2]
+  dyn_var_t* reversalPotential; // [mV]
+  int index; //index of the compartment on a given branch to which the current is injected
+}
+
+Struct InjectedCurrent {
+// which is positive for inward current
+  dyn_var_t* current; // (pA)
+  dyn_var_t area;  // (um^2) membrane-surface area of the compartment
+  int index;     //  index of the compartment on a given branch to which the current is injected
+#ifdef CONSIDER_DI_DV
+  dyn_var_t* conductance_didv;  //the di/dv term to help estimate [nS/um^2]
+#endif
+}
+//}}}
+
 // for modeling Ca-currents via channels on SL membrane
 Struct ChannelCaCurrents {
   dyn_var_t []* currents; // [pA/um^2]
@@ -40,7 +83,7 @@ Struct ReceptorCaCurrent {
 
 Struct InjectedCaCurrent {
   dyn_var_t* current;  // [pA]
-  dyn_var_t currentToConc; // [uM] 
+  dyn_var_t currentToConc; // [uM]
   int index;
 }
 
@@ -50,13 +93,13 @@ Struct ChannelCaFluxes {
 }
 
 
-// for modeling IP3 production via some injected current 
+// for modeling IP3 production via some injected current
 Struct InjectedIP3Current {
   dyn_var_t* current;  // [pA]
-  dyn_var_t currentToConc; // [uM] 
+  dyn_var_t currentToConc; // [uM]
   int index;
 }
-// for modeling IP3 production via some 'channels' 
+// for modeling IP3 production via some 'channels'
 Struct ChannelIP3Fluxes {
   dyn_var_t []* fluxes; // [uM/ms]
 }
@@ -74,11 +117,11 @@ Struct ChannelIP3Currents {
 Struct TargetAttachCaConcentration{
   dyn_var_t* Ca;  // [uM]
   dyn_var_t* inverseTime;  // [1/ms]
-  int index; // index of compartment at which the spine attach (or the shaft attach) 
+  int index; // index of compartment at which the spine attach (or the shaft attach)
 }
 Struct TargetAttachIP3Concentration{
   dyn_var_t* IP3;  // [uM]
   dyn_var_t* inverseTime;  // [1/ms]
-  int index; // index of compartment at which the spine attach (or the shaft attach) 
+  int index; // index of compartment at which the spine attach (or the shaft attach)
 }
 #endif

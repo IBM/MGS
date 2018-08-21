@@ -1,0 +1,149 @@
+#ifndef ECS_MDL
+#define ECS_MDL
+#include "../../nti/include/MaxComputeOrder.h"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../std/std.mdl"
+
+Interface AnythingIntProducer {
+   int* anything;
+}
+
+Node ECS_Medium Implements 
+    AnythingIntProducer 
+#if defined(DYNAMIC_ECS_Sodium)
+    , NaConcentrationProducer 
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+    , KConcentrationProducer 
+#endif
+#if defined(DYNAMIC_ECS_Temperature)
+    , TemperatureProducer 
+#endif
+//{{{not being used
+#if 0
+    , CaConcentrationProducer, MgConcentrationProducer
+    , KetamineProducer, GlycineProducer
+#endif
+//}}}
+{// NOTE: Be careful when modifying the unit
+  //{{{data
+#if defined(DYNAMIC_ECS_Sodium)
+  dyn_var_t Na; // [mM] extracellular concetrations expressed by ion name alone
+  dyn_var_t* [] Na_neighbors;
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+  dyn_var_t K;  // [mM]
+  dyn_var_t* [] K_neighbors;
+#endif
+#if defined(DYNAMIC_ECS_Temperature)
+  dyn_var_t T;  // [K]
+#endif
+  int anything;
+  int *anything_reference;
+//{{{not being used
+#if 0
+  dyn_var_t Mg; // [mM]
+  dyn_var_t Ketamine; // 0 .. 1 (fraction of ketamine block)
+  dyn_var_t Ca; // [uM]
+  dyn_var_t Glycine; // [uM]
+#endif
+//}}}
+  Shared {
+  //{{{
+    dyn_var_t* deltaT;
+    double L0;
+    int[] gridSize;
+  //}}}
+  }
+  //}}}
+
+  //output
+  //{{{
+  AnythingIntProducer.anything << &anything;
+#if defined(DYNAMIC_ECS_Sodium)
+  NaConcentrationProducer.Na << &Na;
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+  KConcentrationProducer.K << &K;
+#endif
+#if defined(DYNAMIC_ECS_Temperature)
+  TemperatureProducer.T << &T;
+#endif
+//not being used
+//{{{
+#if 0
+  CaConcentrationProducer.Ca << &Ca;
+  MgConcentrationProducer.Mg << &Mg;
+  KetamineProducer.Ketamine << &Ketamine;
+  GlycineProducer.Glycine << &Glycine;
+#endif
+//}}}
+  //}}}
+
+  //{{{Phases
+  InitPhase initParams(
+#if defined(DYNAMIC_ECS_Sodium)
+       Na, 
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+       K, 
+#endif
+#if defined(DYNAMIC_ECS_Temperature)
+       T, 
+#endif 
+       anything); 
+
+  RuntimePhase update();
+  RuntimePhase copy(
+#if defined(DYNAMIC_ECS_Sodium)
+       Na, 
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+       K, 
+#endif
+#if defined(DYNAMIC_ECS_Temperature)
+       T, 
+#endif 
+       anything); 
+
+  FinalPhase finalize;
+  //}}}
+
+  InAttrPSet {
+    string identifier;
+  }
+
+  //connection
+  //{{{
+  Connection Pre Node (PSet.identifier=="ECS") Expects 
+    AnythingIntProducer 
+#if defined(DYNAMIC_ECS_Sodium)
+    , NaConcentrationProducer 
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+    , KConcentrationProducer 
+#endif
+  {
+#if defined(DYNAMIC_ECS_Sodium)
+  NaConcentrationProducer.Na >> Na_neighbors;
+#endif
+#if defined(DYNAMIC_ECS_Potassium)
+  KConcentrationProducer.K >> K_neighbors ;
+#endif
+  AnythingIntProducer.anything >> anything_reference; //dummy
+  };
+
+  //Connection Pre Node (PSet.identifier=="htree") Expects PressureArrayProducer, CoordsArrayProducer {
+  //  PressureArrayProducer.pressures >> Shared.pressures;
+  //  CoordsArrayProducer.coordsArray >> Shared.coordsArray;
+  //};
+
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  };
+  //}}}
+}
+
+#endif
+

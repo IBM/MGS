@@ -1,8 +1,16 @@
 #ifndef _NTSMacros_H
 #define _NTSMacros_H
+#// =================================================================
+#// Licensed Materials - Property of IBM
+#//
+#// "Restricted Materials of IBM"
+#//
+#// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+#//
+#// =================================================================
 
 
-/// IMPORTANT: jump to USER-SELECTED section 
+/// IMPORTANT: jump to USER-SELECTED section
 
 ///////////////////////////////////////////////////////////////////////
 /// General definition
@@ -14,14 +22,18 @@
 //
 //{{{
 #define e0  1.602e-19   // Coulomb = [C] - the elementary charge for 1 univalent ion
-#define zF  96485.3399  //[C/mol]=[mJ/(mV.mol)] - Faraday constant - total charges for 1 mole 
-                        // of univalent ion
+#define zF  96485.33289  //[C/mol]=[mJ/(mV.mol)] - Faraday constant 
+               //- total electric charges for 1 mole of univalent ion
+               // zF = e0 * zN_A
 #define zR  8.314472e3 //[mJ/(K.mol)] - universal gas constant
 #define zCa 2          // valance of Ca2+ ions
 #define zNa 1          // valence of Na+ ions
 #define zK  1          // valence of K+ ions
 #define zkB  1.381e-23  // [J/K] = Joule/Kelvin = Boltzmann constant (R/N_A)
-#define zN_A 6.022e23   // [1/mol] = number of molecuels/atoms/ions per mole - Avogadro number
+#define zN_A 6.022e23   // [1/mol] = number of particles (e.g. molecules/atoms/ions) per mole - Avogadro number
+          // zN_A = N / n 
+          //   N = # particles
+          //   n = # moles
 
 #define zCa2F2_R ((zCa*zCa)*(zF*zF)/(zR))
 #define zCaF_R (zCa*zF/(zR))
@@ -56,29 +68,29 @@
   // USAGE: fraction of rough endoplasmic reticulum volume vs total compartment volume
   //        (only soma)
 #define FRACTIONVOLUME_RoughER    0.15
- 
+
   // assume that the surface area of cytoplasm is the same as that of biomembrane
-#define FRACTION_SURFACEAREA_CYTO 1.0 
+#define FRACTION_SURFACEAREA_CYTO 1.0
 
   // the surface area of ER may be a few times more than that of biomembrane
 	// due to the folding structure
 	// Liver hepatocyte
-#define FRACTION_SURFACEAREA_SmoothER 8 
+#define FRACTION_SURFACEAREA_SmoothER 8
 #define FRACTION_SURFACEAREA_RoughER 27
   // Pancreatic exocrine cell
-//#define FRACTION_SURFACEAREA_SmoothER 8 
+//#define FRACTION_SURFACEAREA_SmoothER 8
 //#define FRACTION_SURFACEAREA_RoughER 27
 
   // the fraction of cross-surface area of the volume occupied by cyto
   //               compared to that occupied by total compartment volume
-#define FRACTION_CROSS_SECTIONALAREA_CYTO 0.5 
-  
-#define FRACTION_CROSS_SECTIONALAREA_ER 0.032 
+#define FRACTION_CROSS_SECTIONALAREA_CYTO 0.5
+
+#define FRACTION_CROSS_SECTIONALAREA_ER 0.032
 //}}}
 
 ///////////////////////////////////////////////////////////////////////
-// SIMULATION_INVOLVE macro
 // {{{to be removed
+// SIMULATION_INVOLVE macro
 //NOTE: Assign to one of this for further computation
 //   --> The value order are important here
 //       Don't change it
@@ -91,20 +103,33 @@
 //}}}
 //IMPORTANT: Enable one or many from this list in your cell model
 //          SIMULATE_VM must always be defined
+//          others can be enabled within the MODEL_TO_USE macro's value
+//          depending on the details of cell's model
+//{{{
 #define SIMULATE_VM
 //#define SIMULATE_CACYTO
 //#define SIMULATE_CAER
 //#define SIMULATE_DOPA
 //#define SIMULATE_IP3
+//#define USE_CALCIUM_INDICATOR
+//NOTE: When using USE_CALCIUM_INDICATOR
+// the Fluo and Ca-Fluo are assumed immobile (stationary)
+// (or if they are truly mobile, the diffusion should be
+// incorporated into the
+// effective diffusion of free Ca2+)
  //default
-
+//}}}
 
 ///////////////////////////////////////////////////////////////////////
 // list of paper models
 #define _COMPONENT_UNDEFINED    0
 //{{{
-//{{{ Na-models
+//Channels
+//{{{
+////Na-models
+//{{{
 //Na-transient   CHANNEL_NAT macro
+//{{{
 #define NAT_HODGKIN_HUXLEY_1952 1
 #define NAT_WOLF_2005           2
 #define NAT_HAY_2011            3
@@ -117,36 +142,54 @@
 #define NAT_MSN_TUAN_JAMES_2017 10
 
 #define _NAT_DEFAULT NAT_HODGKIN_HUXLEY_1952
+//}}}
 
 //NAT_AIS Channel Channel_NAT_AIS macro
-#define NAT_AIS_TRAUB_1994     1     
+//{{{
+#define NAT_AIS_TRAUB_1994     1
+#define NAT_AIS_MSN_TUAN_JAMES_2017 2
 
 #define _NAT_AIS_DEFAULT NAT_AIS_TRAUB_1994
+//}}}
+
 // Na-persistent CHANNEL_NAP macro
+//{{{
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
 #define _NAP_DEFAULT NAP_WOLF_2005
+//}}}
 
+// Nas
+//{{{
 #define NAS_MAHON_2000  2
 
 #define _NAS_DEFAULT NAS_MAHON_2000
-
+//}}}
 //}}}
 
-//{{{ K-models
+////K-models
+//{{{
 // KAf   CHANNEL_KAf macro
 //{{{
-#define KAf_TRAUB_1994             2
-#define KAf_MAHON_2000             3
-#define KAf_KORNGREEN_SAKMANN_2000 4
-#define KAf_WOLF_2005              5
-#define KAf_EVANS_2012             6
+//cell-type specific
+//Use these in Kv4p2 channels only
+#define Kv42_MSN_TKATCH_SURMEIER_2000       1
+#define Kv42_ChAT_str_TKATCH_SURMEIER_2000  2
+#define Kv42_ChAT_bf_TKATCH_SURMEIER_2000   3
+#define Kv42_GP_TKATCH_SURMEIER_2000        4
+//
+#define KAf_TRAUB_1994             10
+#define KAf_MAHON_2000             11
+#define KAf_KORNGREEN_SAKMANN_2000 12
+#define KAf_WOLF_2005              13
+#define KAf_EVANS_2012             14
+
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
 //}}}
 // KAs   CHANNEL_KAs macro
 //{{{
-#define KAs_MAHON_2000             2 
+#define KAs_MAHON_2000             2
 #define KAs_KORNGREEN_SAKMANN_2000 3
 #define KAs_WOLF_2005              4
 #define KAs_EVANS_2012             5
@@ -166,7 +209,7 @@
 //}}}
 // KRP   CHANNEL_KRP macro
 //{{{
-#define KRP_MAHON_2000         2 
+#define KRP_MAHON_2000         2
 #define KRP_WOLF_2005          3
 
 #define _KRP_DEFAULT           KRP_WOLF_2005
@@ -180,9 +223,9 @@
 #define KDR_SCHWEIGHOFER_1999   6
 #define KDR_MIGLIORE_1999       8
 #define KDR_MAHON_2000          7
-#define KDR_ERISIR_1999         9 
-#define KDR_MOYER_2007          KDR_ERISIR_1999 
-#define KDR_TUAN_JAMES_2017     10 
+#define KDR_ERISIR_1999         9
+#define KDR_MOYER_2007          KDR_ERISIR_1999
+#define KDR_TUAN_JAMES_2017     10
 
 #define _KDR_DEFAULT KDR_TRAUB_1994
 
@@ -197,8 +240,8 @@
 // BK-alphabeta   CHANNEL_BKalphabeta macro
 // NOTE: Those with the same values are indeed the same model
 //        just being used in different papers
-#define BKalphabeta_SHAO_1999       2       
-#define BKalphabeta_WOLF_2005       BKalphabeta_SHAO_1999       
+#define BKalphabeta_SHAO_1999       2
+#define BKalphabeta_WOLF_2005       BKalphabeta_SHAO_1999
 
 #define _BKalphabeta_DEFAULT        BKalphabeta_SHAO_1999
 // BK
@@ -238,7 +281,8 @@
 //}}}
 //}}}
 
-//{{{ HCN-models
+////HCN-models
+//{{{
 // HCN   CHANNEL_HCN macro
 #define HCN_HUGUENARD_MCCORMICK_1992 1
 #define HCN_VANDERGIESSEN_DEZEEUW_2008 2
@@ -248,7 +292,8 @@
 #define _HCN_DEFAULT HCN_HUGUENARD_MCCORMICK_1992
 //}}}
 
-//{{{ Ca-models
+////Ca-models
+//{{{
 //CaHVA  CHANNEL_CaHVA
 //{{{
 #define CaHVA_TRAUB_1994  1
@@ -261,18 +306,18 @@
 #define CaLVA_AVERY_JOHNSTON_1996 2
 #define CaLVA_HAY_2011 3
 
-#define _CaLVA_DEFAULT CaLVA_HAY_2011 
+#define _CaLVA_DEFAULT CaLVA_HAY_2011
 //}}}
 // CaL CHANNEL_CaL macro  (designed for maximal user's defined parameters)
 //{{{
-//}}}
 #define CaL_GENERAL    100
+//}}}
 // CaLv12 (HVA)   CHANNEL_CaLv12 macro
 //{{{
 #define CaLv12_GHK_Standen_Stanfield_1982_option1 3
 #define CaLv12_GHK_Standen_Stanfield_1982_option2 4
-#define CaLv12_GHK_WOLF_2005                      5 
-#define CaLv12_GHK_TUAN_2017                      6 
+#define CaLv12_GHK_WOLF_2005                      5
+#define CaLv12_GHK_TUAN_2017                      6
 
 #define _CaLv12_DEFAULT      CaLv12_GHK_WOLF_2005
 //}}}
@@ -312,9 +357,12 @@
 #define _CaT_DEFAULT CaT_GHK_WOLF_2005
 //}}}
 //}}}
+//}}}
 
-//{{{ Synapse Receptors
-// NMDAR      RECEPTOR_NMDA macro 
+////Synapse Receptors
+//{{{
+// NMDAR      RECEPTOR_NMDA macro
+//{{{
 #define NMDAR_POINTPROCESS                    1
 #define NMDAR_BEHABADI_2012                   2
 #define NMDAR_JADI_2012                       3
@@ -323,66 +371,83 @@
 //#define NMDAR_Markov_DESTEXHE_MAINEN_SEJNOWSKI_1994     6
 
 #define _NMDAR_DEFAULT   NMDAR_POINTPROCESS
+//}}}
 // AMPAR      RECEPTOR_AMPA macro
+//{{{
 #define AMPAR_POINTPROCESS                    1
 #define AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
 //#define AMPAR_Markov_DESTEXHE_MAINEN_SEJNOWSKI_1994  4
 
 #define _AMPAR_DEFAULT AMPAR_POINTPROCESS
+//}}}
 // GABA_A     RECEPTOR_GABAA
+//{{{
 #define GABAAR_POINTPROCESS 1
 #define GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
 
 #define _GABAAR_DEFAULT GABAAR_POINTPROCESS
+//}}}
 // GABA_B     RECEPTOR_GABAB
+//{{{
 #define GABABR_DESTEXHE_SEJNOWSKI_1996  3
 
 #define _GABABR_DEFAULT GABABR_DESTEXHE_SEJNOWSKI_1996
 //}}}
+//}}}
 
-//{{{ Sarcolema membrane exchanger/pump
+//Plasma-membrane exchanger/pump
+//{{{
 // PMCA       PUMP_PMCA:
 //{{{
   // PUMPRATE_CONSTANT = all branches have the same clearance rate
 #define PMCA_PUMPRATE_CONSTANT 1
   // each branch has a different clearance rate
 #define PMCA_PUMPRATE_CONSTANT_DYNAMICS 2
-#define PMCA_Traub_Llinas_1997 PMCA_PUMPRATE_CONSTANT  
-#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 3 
-#define PMCA_Zador_Koch_Brown_1990 PMCA_PUMPRATE_VOLTAGE_FUNCTION 
+#define PMCA_Traub_Llinas_1997 PMCA_PUMPRATE_CONSTANT
+#define PMCA_PUMPRATE_VOLTAGE_FUNCTION 3
+#define PMCA_Zador_Koch_Brown_1990 PMCA_PUMPRATE_VOLTAGE_FUNCTION
 #define PMCA_Jafri_Rice_Winslow_1998 4
 #define PMCA_Greenstein_Winslow_2002       5
 
 #define _PMCA_DEFAULT PMCA_PUMPRATE_CONSTANT
 //}}}
 // NCX        EXCHANGER_NCX
-#define NCX_Kimura_Miyamae_Noma_1987       2  
+// {{{
+#define NCX_Kimura_Miyamae_Noma_1987       2
 #define NCX_Gabbiani_Midtgaard_Kopfel_1994 3
 #define NCX_Weber_Bers_2001                4
 
 
 #define _NCX_DEFAULT  NCX_Weber_Bers_2001
+// }}}
 //}}}
 
-//{{{ ER membrane channels/pump
+//ER membrane channels/pump
+//{{{
 // RYR       CHANNEL_RYR
+//{{{
 #define RYR2_WILLIAMS_JAFRI_2011 1
 
 #define _RYR_DEFAULT RYR2_WILLIAMS_JAFRI_2011
+//}}}
 
 // IP3R     CHANNEL_IP3R
+// {{{
 #define IP3R_ULLAH_MAK_PEARSON_2012 1
 #define IP3R_LI_RINZEL_1994         2
 #define IP3R_SMITH_2002             3
 #define IP3R_SNEYD_DUFOUR_2002      4
 
 #define _IP3R_DEFAULT IP3R_ULLAH_MAK_PEARSON_2012
+// }}}
 
 // SERCA    PUMP_SERCA
+// {{{
 #define SERCA_Klein_Schneider_1991 1
 #define SERCA_Tran_Crampin_2009  2
 
 #define _SERCA_DEFAULT SERCA_Tran_Crampin_2009
+// }}}
 
 //}}}
 //}}}
@@ -393,10 +458,10 @@
 #define USE_PRESYNAPTICPOINT   1
 #define USE_SYNAPTICCLEFT      2
 //{{{ Neurotransmitter Update method
-//     GLUTAMATE_UPDATE_METHOD 
+//     GLUTAMATE_UPDATE_METHOD
 //     GABA_UPDATE_METHOD NEURO
-// Neurotransmitter update method 
-//   Use a continuous function to transform presynaptic Vm 
+// Neurotransmitter update method
+//   Use a continuous function to transform presynaptic Vm
 //   into transmitter concentration as a sigmoid function
 //   from Tmin to Tmax
 //   T(Vpre) = Tmin + Tmax / ( 1 + exp (- (Vpre - Vp) /  Kp) )
@@ -404,7 +469,7 @@
 #define NEUROTRANSMITTER_BIEXPONENTIAL 2
 //}}}
 ///////////////////////////////////////////////////////////////////////
-// How you want to model dynamics 
+// How you want to model dynamics
 //{{{ Calcium-dynamics method
 #define REGULAR_DYNAMICS  1
 #define FAST_BUFFERING   2
@@ -413,22 +478,22 @@
 ///////////////////////////////////////////////////////////////////////
 /// Define what models are available here
 //    MODEL_TO_USE macro
-//  NOTE: Code-based is 
+//  NOTE: Code-based is
 //     1xx ~ Pyramidal
 //     2xx ~ MSN
 //     3xx ~ Interneuron
-//     4xx ~ IO                  
+//     4xx ~ IO
 //     5xx ~ spines
 //     6xx ~ microdomain
 //{{{
-#define _MODEL_NOT_DEFINED    0 
+#define _MODEL_NOT_DEFINED    0
 #define _MODEL_TESTING        1
 
 #define _PYRAMIDAL_2011_HAY  100
 #define _PYRAMIDAL_L5b_2016_TUAN_JAMES 101
 #define _PYRAMIDAL_L5b_2017_TUAN_JAMES 102
 
-#define _MSN_2005_WOLF            200    
+#define _MSN_2005_WOLF            200
 #define _MSN_2016_TUAN_JAMES      201
 #define _MSN_2012_EVANS_BLACKWELL 202
 #define _MSN_2000_MAHON           203
@@ -443,12 +508,12 @@
 #define _MICRODOMAIN_DA_NEURON_2017_TUAN_JAMES 600
 #define _MICRODOMAIN_MSN_STRIATUM_NEURON_2017_TUAN_JAMES 601
 //}}}
-// define 
+// define
 
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
-// USER-SELECTED SECTION 
+// USER-SELECTED SECTION
 // 1. to choose a model: select the proper value for MODEL_TO_USE
 // Please don't do it here, edit inside this file
 #include "Model2Use.h"
@@ -460,21 +525,21 @@
 // MODEL DESIGN
 // IMPORTANT: try not to modify an existing one, instead create a new one
 //           by copying an existing model, and define a new name
-//           in section MODEL_TO_USE macro 
+//           in section MODEL_TO_USE macro
 //           user are free to work on section _MODEL_TESTING
 // 2. configure each model
 //  2.a select what compartmental variables to use
 //  2.b to disable any channel from the model, just comment it out
 #if MODEL_TO_USE == _MSN_2000_MAHON
 //{{{
-  //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define SIMULATE_VM
   //#define SIMULATE_CACYTO
   //#define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-#define DEBUG_COMPARTMENT
+//#define DEBUG_COMPARTMENT
 #define USE_SOMA_AS_POINT
-#define WRITE_GATES
-#define IDEA_CURRENTONCOMPT 
+//#define WRITE_GATES
+#define IDEA_CURRENTONCOMPT
 #define IDEA_ILEAK
 
 //{{{
@@ -484,7 +549,7 @@
 
   #define CHANNEL_KIR KIR_MAHON_2000
   #define CHANNEL_KDR KDR_MAHON_2000
-  #define CHANNEL_KAf KAf_MAHON_2000 
+  #define CHANNEL_KAf KAf_MAHON_2000
   #define CHANNEL_KAs KAs_MAHON_2000
   #define CHANNEL_KRP KRP_MAHON_2000
 
@@ -492,11 +557,11 @@
 //}}}
 #elif   MODEL_TO_USE == _MSN_2005_WOLF
 //{{{
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define IDEA_CURRENTONCOMPT 
+#define IDEA_CURRENTONCOMPT
 #define IDEA_ILEAK
 //  #define SIMULATION_INVOLVE VM_CACYTO
 #define SIMULATE_VM
@@ -504,7 +569,7 @@
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
   #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
-//{{{ list channels 
+//{{{ list channels
   #define CHANNEL_NAT NAT_WOLF_2005
   #define CHANNEL_NAP NAP_WOLF_2005
   #define CHANNEL_KAf KAf_WOLF_2005
@@ -537,7 +602,7 @@
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
   #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 
-//{{{ list channels 
+//{{{ list channels
   #define CHANNEL_NAT NAT_TRAUB_1994
   #define CHANNEL_NAT_AIS NAT_AIS_TRAUB_1994
   #define CHANNEL_KDR KDR_TRAUB_1995
@@ -552,21 +617,21 @@
 
 //}}}
 #elif MODEL_TO_USE == _MSN_2016_TUAN_JAMES
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 //{{{
-//#define STRETCH_SOMA_WITH 105 //#135.0    
+//#define STRETCH_SOMA_WITH 105 //#135.0
 #define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define  IDEA_CURRENTONCOMPT 
+#define  IDEA_CURRENTONCOMPT
 
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 //#define SIMULATE_CAER
 //#define SIMULATE_IP3
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
   #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
 //{{{//list channels
   #define CHANNEL_NAT NAT_WOLF_2005
@@ -594,7 +659,7 @@
   //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 
   #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  #define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
+  #define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
 
   #define CHANNEL_RYR RYR2_WILLIAMS_JAFRI_2011
@@ -605,9 +670,9 @@
 
 //}}}
 #elif MODEL_TO_USE == _MSN_2012_EVANS_BLACKWELL
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 //{{{
-//#define STRETCH_SOMA_WITH 105 //#135.0    
+//#define STRETCH_SOMA_WITH 105 //#135.0
 //#define SCALING_NECK_FROM_SOMA 5.9  //>1: make neck smaller
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
@@ -616,7 +681,7 @@
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
   #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
+  #define CALCIUM_ER_DYNAMICS FAST_BUFFERING
   #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
 //{{{//list channels
   #define CHANNEL_NAT NAT_OGATA_TATEBAYASHI_1990
@@ -642,7 +707,7 @@
   ////#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 
   //#define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  //#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
+  //#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
   //#define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
 
   //#define CHANNEL_RYR RYR2_WILLIAMS_JAFRI_2011
@@ -657,12 +722,12 @@
   //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
 #define STRETCH_SOMA_WITH 35.0    //seem ok  value if used
 
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
   #define IDEA_DYNAMIC_INITIALVOLTAGE
   #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
   #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
   #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define  IDEA_CURRENTONCOMPT 
+#define  IDEA_CURRENTONCOMPT
 
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
@@ -684,9 +749,9 @@
   //#define RECEPTOR_NMDA NMDAR_JADI_2012
   #define RECEPTOR_NMDA NMDAR_BEHABADI_2012
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION  
+  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION
   #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS
-  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990 
+  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990
   //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 //}}}
 
@@ -698,7 +763,7 @@
 #define STRETCH_SOMA_WITH 20.0    // GOOD VALUE - time2AP is long enough so that AP can stop
              //after the 5ms stim; and then can end properly without generating the doublets
 //#define STRETCH_SOMA_WITH 30.0    //seem ok  value if used
-//#define STRETCH_SOMA_WITH 35.0    // (DEFAULT) working to trigger AP 
+//#define STRETCH_SOMA_WITH 35.0    // (DEFAULT) working to trigger AP
   //#define SCALING_NECK_FROM_SOMA 2.0  //>1: make neck smaller
   #define SCALING_NECK_FROM_SOMA 2.2  //>1: make neck smaller
   //#define SCALING_NECK_FROM_SOMA 2.35  //>1: make neck smaller
@@ -749,9 +814,9 @@
   #define RECEPTOR_NMDA NMDAR_BEHABADI_2012
   //#define RECEPTOR_NMDA NMDAR_BEHABADI_2012_MODIFIED
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION  
+  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION
   #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS
-  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990 
+  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990
   //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 //}}}
 
@@ -764,7 +829,7 @@
 #define STRETCH_SOMA_WITH 20.0    // GOOD VALUE - time2AP is long enough so that AP can stop
              //after the 5ms stim; and then can end properly without generating the doublets
 //#define STRETCH_SOMA_WITH 30.0    //seem ok  value if used
-//#define STRETCH_SOMA_WITH 35.0    // (DEFAULT) working to trigger AP 
+//#define STRETCH_SOMA_WITH 35.0    // (DEFAULT) working to trigger AP
   //#define SCALING_NECK_FROM_SOMA 2.0  //>1: make neck smaller
   #define SCALING_NECK_FROM_SOMA 2.2  //>1: make neck smaller
   //#define SCALING_NECK_FROM_SOMA 2.35  //>1: make neck smaller
@@ -806,9 +871,9 @@
   #define RECEPTOR_NMDA NMDAR_BEHABADI_2012
   //#define RECEPTOR_NMDA NMDAR_BEHABADI_2012_MODIFIED
   #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION  
+  //#define PUMP_PMCA PMCA_PUMPRATE_VOLTAGE_FUNCTION
   #define PUMP_PMCA PMCA_PUMPRATE_CONSTANT_DYNAMICS
-  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990 
+  //#define PUMP_PMCA  PMCA_Zador_Koch_Brown_1990
   //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 //}}}
 
@@ -824,9 +889,9 @@
   #define CHANNEL_NAT NAT_SCHWEIGHOFER_1999 //ok perfect
   //#define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952 //ok yet soma activation is lower
   //#define CHANNEL_NAT NAT_HAY_2011 //ok
-  #define CHANNEL_HCN HCN_HUGUENARD_MCCORMICK_1992 
-  //#define CHANNEL_KDR KDR_SCHWEIGHOFER_1999 //failed 
-  //#define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952 
+  #define CHANNEL_HCN HCN_HUGUENARD_MCCORMICK_1992
+  //#define CHANNEL_KDR KDR_SCHWEIGHOFER_1999 //failed
+  //#define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952
   #define CHANNEL_KDR  KDR_TRAUB_1994 //ok perfect
   #define CHANNEL_CaL CaL
   #define CHANNEL_CaH CaHVA_TRAUB_1994
@@ -836,19 +901,19 @@
 //}}}
 #elif MODEL_TO_USE == _SPINE_MSN_2017_TUAN_JAMES
 //#{{{
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
 //#define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_BIEXPONENTIAL
 //#define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_BIEXPONENTIAL
-#define  IDEA_CURRENTONCOMPT 
+#define  IDEA_CURRENTONCOMPT
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 #define SIMULATE_CAER
 #define SIMULATE_IP3
 #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-#define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
+#define CALCIUM_ER_DYNAMICS FAST_BUFFERING
 #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
 #define TOUCHDETECT_SINGLENEURON_SPINES
 //#define MICRODOMAIN_CALCIUM
@@ -891,17 +956,17 @@
 //#}}}
 #elif MODEL_TO_USE == _MICRODOMAIN_DA_NEURON_2017_TUAN_JAMES
 //#{{{
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define IDEA_CURRENTONCOMPT 
+#define IDEA_CURRENTONCOMPT
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 #define SIMULATE_CAER
 //#define SIMULATE_IP3
 #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-#define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
+#define CALCIUM_ER_DYNAMICS FAST_BUFFERING
   #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
 //{{{//list channels
 #define CHANNEL_NAT NAT_WOLF_2005
@@ -929,7 +994,7 @@
 //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 
 #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
+#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
 #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
 
 #define CHANNEL_RYR RYR2_WILLIAMS_JAFRI_2011
@@ -942,22 +1007,26 @@
 #elif MODEL_TO_USE == _MICRODOMAIN_MSN_STRIATUM_NEURON_2017_TUAN_JAMES
 //#{{{
 //NOTE: Enable these two are important for having good accuracy with thousands of spines
-#define CONSIDER_MANYSPINE_EFFECT_OPTION2_revised 
-#define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR 
+#define CONSIDER_MANYSPINE_EFFECT_OPTION2_PREDICTOR_CORRECTOR
 
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 #define SYNAPSE_MODEL_STRATEGY USE_SYNAPTICCLEFT
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #define GABA_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define  IDEA_CURRENTONCOMPT 
+#define IDEA_CURRENTONCOMPT
 #define IDEA_ILEAK
+#define RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+//#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
+#define TURN_ON_ADJUST_VHALF_SIMPLE
+
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 //#define SIMULATE_CAER
 //#define SIMULATE_IP3
+
 #define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
-#define CALCIUM_ER_DYNAMICS FAST_BUFFERING 
-  #define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
+#define CALCIUM_ER_DYNAMICS FAST_BUFFERING
+#define IP3_CYTO_DYNAMICS  REGULAR_DYNAMICS
 //#define SCALING_NECK_FROM_SOMA 0.20  //>1: make neck smaller
 
 #define TOUCHDETECT_SINGLENEURON_SPINES
@@ -967,12 +1036,11 @@
 #define CHANNEL_KCNK KCNK_GHK_TUAN_2017
   //#define CHANNEL_KIR KIR_WOLF_2005
 #define CHANNEL_KIR KIR2_1_TUAN_JAMES_2017
-//#define PREDICT_JUNCTION_IGNORE_AXIAL  
-//#define CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
 
 //active
-  //#define CHANNEL_NAT NAT_WOLF_2005
+//#define CHANNEL_NAT NAT_WOLF_2005
 #define CHANNEL_NAT NAT_MSN_TUAN_JAMES_2017
+#define CHANNEL_NAT_AIS NAT_AIS_MSN_TUAN_JAMES_2017
   #define CHANNEL_NAP NAP_WOLF_2005
   #define CHANNEL_KAf KAf_WOLF_2005
 //#define CHANNEL_KAf KAf_EVANS_2012
@@ -981,7 +1049,7 @@
   #define CHANNEL_KRP KRP_WOLF_2005
 //#define CHANNEL_KDR  KDR_TRAUB_1995
 //#define CHANNEL_KDR KDR_ERISIR_1999 // long inactivation as Vh=-44
-#define CHANNEL_KDR KDR_TUAN_JAMES_2017 // try to shift Vh to -30 side 
+#define CHANNEL_KDR KDR_TUAN_JAMES_2017 // try to shift Vh to -30 side
 //#define CHANNEL_KDR KDR_MIGLIORE_1999  // turn off too early
   #define CHANNEL_BKalphabeta  BKalphabeta_WOLF_2005
   #define CHANNEL_SK SK_WOLF_2005
@@ -1016,7 +1084,7 @@
 //#define PUMP_PMCA  PMCA_Jafri_Rice_Winslow_1998
 
 #define RECEPTOR_AMPA AMPAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
-#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990 
+#define RECEPTOR_NMDA NMDAR_JAHR_STEVENS_1990
 #define RECEPTOR_GABAA GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994
 
 #define CHANNEL_RYR RYR2_WILLIAMS_JAFRI_2011
@@ -1031,11 +1099,11 @@
 #define SIMULATE_VM
 #define SIMULATE_CACYTO
 #define ADAPTIVE_IO
-#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM 
+#define SUPPORT_DEFINING_SPINE_HEAD_N_NECK_VIA_PARAM
 
 //{{{
-  #define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952 
-  #define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952 
+  #define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952
+  #define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952
 //}}}
 #endif
 
@@ -1160,9 +1228,9 @@
 #endif
 
 	 // if explicit synapse space is used
-//#if SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT 
-	 // default: use simple estimation of neurotransmitter as 
-	 // given in Dextexhe-Mainen-Sejnowski 1994 
+//#if SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+	 // default: use simple estimation of neurotransmitter as
+	 // given in Dextexhe-Mainen-Sejnowski 1994
 #ifndef GLUTAMATE_UPDATE_METHOD
 #define GLUTAMATE_UPDATE_METHOD NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
 #endif

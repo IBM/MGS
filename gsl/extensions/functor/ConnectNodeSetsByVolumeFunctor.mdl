@@ -1,0 +1,11 @@
+#ifndef ConnectNodeSetsByVolumeFunctor_MDL
+#define ConnectNodeSetsByVolumeFunctor_MDL
+
+Framework Functor ConnectNodeSetsByVolumeFunctor Category "CONNECTOR" {
+   Initialize();
+   void Execute (NodeSet* source, NodeSet* destination, string center,  
+		 float radius, float scale, Functor* sourceOutAttr, 
+		 Functor* destinationInAttr);
+}
+
+#endif

@@ -9,7 +9,7 @@
 
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
-Node ChannelNat Implements 
+Node ChannelNat Implements
      ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm
      IOCurrentArrayProducer, // to I/O
      BranchDataProducer, DimensionArrayProducer {
@@ -22,14 +22,25 @@ Node ChannelNat Implements
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
-  //float [] Vhalf_m_shift; // [mV]
-  //float [] Vhalf_h_shift; // [mV]
-  float Vhalf_m_shift; // [mV]
-  float Vhalf_h_shift; // [mV]
+#if defined(TURN_ON_ADJUST_VHALF_COMPARTMENT)
+  float [] Vhalf_act_shift; // [mV]
+  float [] Vhalf_inact_shift; // [mV]
+#elif defined(TURN_ON_ADJUST_VHALF_SIMPLE)
+  float Vhalf_act_shift; // [mV]
+  float Vhalf_inact_shift; // [mV]
+  float k_act;   //adjust slope  [mV]
+  float k_inact; //adjust slope  [mV]
+#endif
+#if defined(TURN_ON_ADJUST_TIMECONSTANT)
+  float[] tau_act_Vm; //(ms) - the time constant of activating gate at different Vm given in Vm_tau_act
+  float[] Vm_tau_act; //(mV) - the array of major Vm points (e.g. -70, -60, ... )
+  float[] tau_inact_Vm; //(ms) - the time constant of inactivating gate at different Vm given in Vm_tau_inact
+  float[] Vm_tau_inact;
+#endif
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
-  BranchDataStruct* branchData; 
+  BranchDataStruct* branchData;
   DimensionStruct* []* dimensions;
   //int index; //index of the compartment in branch
 
@@ -45,12 +56,12 @@ Node ChannelNat Implements
   // Cah 3
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_dists={380.0,480.0, 590}>
   // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-  // Nat 3 
+  // Nat 3
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_branchorders={0, 1, 2}>
   // 4 0 <gbar_values={0.0555,0.555,0.000555}>
   //}}}
 
@@ -61,10 +72,11 @@ Node ChannelNat Implements
     dyn_var_t* Na_EC;  // [mM]
     dyn_var_t* deltaT; // [ms]
     dyn_var_t* T;      // [K]
-    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-                      //   and tempt. used for the simulation 
+    dyn_var_t Tadj;  // kinetics adjustment based on recorded data
+                      //   and tempt. used for the simulation
     dyn_var_t [] E_Na; // [mV]
     InitPhase computeE; // [mV]
+    string data_path; //location where data (if internally written, should reside) - default: ./
   //}}}
   }
 
@@ -82,7 +94,7 @@ Node ChannelNat Implements
     int idx;   // index of the compartment on a branch
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer,
           BranchDataProducer, DimensionArrayProducer
   {
     VoltageArrayProducer.voltageArray >> V;
@@ -94,7 +106,7 @@ Node ChannelNat Implements
     NaConcentrationProducer.Na >> Shared.Na_IC;
   }
 
-  Connection Pre Constant (PSet.identifier=="EC") 
+  Connection Pre Constant (PSet.identifier=="EC")
 	Expects NaConcentrationProducer, TemperatureProducer {
     NaConcentrationProducer.Na >> Shared.Na_EC;
     TemperatureProducer.T >> Shared.T;
@@ -107,7 +119,7 @@ Node ChannelNat Implements
 }
 
 ////NOTE: Model suppose to be specific for Nav1.6 gene-expressed Na+ channel
-//Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+//Node ChannelNatv16 Implements ConductanceArrayProducer, ReversalPotentialArrayProducer,
 //BranchDataProducer, IOCurrentArrayProducer {
 ///*{{{*/
 //  //DATA
@@ -119,13 +131,13 @@ Node ChannelNat Implements
 //  dyn_var_t [] h;
 //  dyn_var_t [] g;  // nS/um^2
 //  //dyn_var_t [] Vhalf_m; // [mV]
-//  dyn_var_t [] Vhalf_m_shift; // [mV]
+//  dyn_var_t [] Vhalf_act_shift; // [mV]
 //  //dyn_var_t [] Vhalf_h; // [mV]
-//  dyn_var_t [] Vhalf_h_shift; // [mV]
+//  dyn_var_t [] Vhalf_inact_shift; // [mV]
 //  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
 //  // reference data
 //  dyn_var_t []* V;//transmembrane voltage [mV]
-//  BranchDataStruct* branchData; 
+//  BranchDataStruct* branchData;
 //  DimensionStruct* []* dimensions;
 //  //int index; //index of the compartment in branch
 //
@@ -141,12 +153,12 @@ Node ChannelNat Implements
 //  // Cah 3
 //  // BRANCHTYPE MTYPE
 //  // 1 0 <gbar={0.00992}>
-//  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+//  // 4 0 <gbar_dists={380.0,480.0, 590}>
 //  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-//  // Nat 3 
+//  // Nat 3
 //  // BRANCHTYPE MTYPE
 //  // 1 0 <gbar={0.00992}>
-//  // 4 0 <gbar_branchorders={0, 1, 2}> 
+//  // 4 0 <gbar_branchorders={0, 1, 2}>
 //  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
 //  //}}}
 //
@@ -157,8 +169,8 @@ Node ChannelNat Implements
 //    dyn_var_t* Na_EC; // [mM]
 //    dyn_var_t* deltaT; // [ms]
 //    dyn_var_t* T;     // [K]
-//    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-//                      //   and tempt. used for the simulation 
+//    dyn_var_t Tadj;  // kinetics adjustment based on recorded data
+//                      //   and tempt. used for the simulation
 //    dyn_var_t [] E_Na; // [mV]
 //    InitPhase computeE; // [mV]
 //  //}}}
@@ -177,7 +189,7 @@ Node ChannelNat Implements
 //    int idx;   // index of the compartment on a branch
 //  }
 //
-//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer,
 //          BranchDataProducer, DimensionArrayProducer
 //  {
 //    VoltageArrayProducer.voltageArray >> V;
@@ -189,7 +201,7 @@ Node ChannelNat Implements
 //    NaConcentrationProducer.Na >> Shared.Na_IC;
 //  }
 //
-//  Connection Pre Constant (PSet.identifier=="EC") 
+//  Connection Pre Constant (PSet.identifier=="EC")
 //	Expects NaConcentrationProducer, TemperatureProducer {
 //    NaConcentrationProducer.Na >> Shared.Na_EC;
 //    TemperatureProducer.T >> Shared.T;
@@ -203,8 +215,10 @@ Node ChannelNat Implements
 
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
-Node ChannelNat_AIS Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
-BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
+Node ChannelNat_AIS Implements
+     ConductanceArrayProducer, ReversalPotentialArrayProducer, // to Vm
+     IOCurrentArrayProducer, // to I/O
+     BranchDataProducer, DimensionArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -214,10 +228,23 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
   dyn_var_t [] m;
   dyn_var_t [] h;
   dyn_var_t [] g;  // nS/um^2
+#if defined(TURN_ON_ADJUST_VHALF_COMPARTMENT)
+  float [] Vhalf_act_shift; // [mV]
+  float [] Vhalf_inact_shift; // [mV]
+#elif defined(TURN_ON_ADJUST_VHALF_SIMPLE)
+  float Vhalf_act_shift; // [mV]
+  float Vhalf_inact_shift; // [mV]
+#endif
+#if defined(TURN_ON_ADJUST_TIMECONSTANT)
+  float[] tau_act_Vm; //(ms) - the time constant of activating gate at different Vm given in Vm_tau_act
+  float[] Vm_tau_act; //(mV) - the array of major Vm points (e.g. -70, -60, ... )
+  float[] tau_inact_Vm; //(ms) - the time constant of inactivating gate at different Vm given in Vm_tau_inact
+  float[] Vm_tau_inact;
+#endif
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
-  BranchDataStruct* branchData; 
+  BranchDataStruct* branchData;
   DimensionStruct* []* dimensions;
   //int index; //index of the compartment in branch
 
@@ -233,12 +260,12 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
   // Cah 3
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_dists={380.0,480.0, 590}>
   // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-  // Nat 3 
+  // Nat 3
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_branchorders={0, 1, 2}>
   // 4 0 <gbar_values={0.0555,0.555,0.000555}>
   //}}}
 
@@ -249,8 +276,8 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
     dyn_var_t* Na_EC; // [mM]
     dyn_var_t* deltaT; // [ms]
     dyn_var_t* T;     // [K]
-    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-                      //   and tempt. used for the simulation 
+    dyn_var_t Tadj;  // kinetics adjustment based on recorded data
+                      //   and tempt. used for the simulation
     dyn_var_t [] E_Na; // [mV]
     InitPhase computeE; // [mV]
   //}}}
@@ -270,7 +297,7 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
     int idx;   // index of the compartment on a branch
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer,
           BranchDataProducer, DimensionArrayProducer
   {
     VoltageArrayProducer.voltageArray >> V;
@@ -282,7 +309,7 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
     NaConcentrationProducer.Na >> Shared.Na_IC;
   }
 
-  Connection Pre Constant (PSet.identifier=="EC") 
+  Connection Pre Constant (PSet.identifier=="EC")
 	Expects NaConcentrationProducer, TemperatureProducer {
     NaConcentrationProducer.Na >> Shared.Na_EC;
     TemperatureProducer.T >> Shared.T;

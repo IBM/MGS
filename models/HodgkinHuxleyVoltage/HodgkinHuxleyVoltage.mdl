@@ -8,42 +8,6 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../LaboratoryTools/LaboratoryTools.mdl"
 
-//{{{structs
-Struct ChannelCurrents {
-//use this for Hodgkin-Huxley equation
-  dyn_var_t []* conductances; // [nS/um^2]
-  dyn_var_t []* reversalPotentials; // [mV]
-}
-
-Struct ChannelCurrentsGHK {
-//use this for GHK equation
-// which is negative for inward currents
-  dyn_var_t []* currents; // [pA/um^2]
-#ifdef CONSIDER_DI_DV
-  dyn_var_t []* di_dv; // conductance [nS/um^2] - the change from V(t) to V(t+0.001)
-#endif
-}
-
-Struct ReceptorCurrent {
-  dyn_var_t* conductance; // [nS/um^2]
-  dyn_var_t* reversalPotential; // [mV]
-  int index; //index of the compartment on a given branch to which the current is injected
-}
-
-Struct InjectedCurrent {
-// which is positive for inward current
-  dyn_var_t* current; // (pA)
-  dyn_var_t area;  // (um^2) membrane-surface area of the compartment 
-  int index;     //  index of the compartment on a given branch to which the current is injected
-#ifdef CONSIDER_DI_DV
-  dyn_var_t* conductance_didv;  //the di/dv term to help estimate [nS/um^2]
-#endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  float previous_current;
-#endif
-}
-//}}}
-
 //TUAN: TODO consider add SurfaceAreaLengthProducer interface here so that SpineAttachment node 
 //          knows about the length and radius of the compartment
 // It represents one regular branch (which comprises regular compartments + implicit junctions)
@@ -315,7 +279,9 @@ Node HodgkinHuxleyVoltage Implements SolutionArrayProducer,
 #endif
    }
 #endif
-  Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects ConductanceProducer, ReversalPotentialProducer {
+  Connection Pre Node (PSet.identifier=="chemicalSynapse[Voltage]") Expects 
+    ConductanceProducer, ReversalPotentialProducer 
+  {
     ConductanceProducer.conductance >> receptorCurrents.conductance;
     ReversalPotentialProducer.reversalPotential >> receptorCurrents.reversalPotential;
     setReceptorCurrent();
@@ -434,20 +400,25 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
      ConductanceProducer,
      ReversalPotentialProducer,
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+     IOCurrentProducer,
+#endif
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
       CountInformationArrayProducer, 
 #endif
    NaConcentrationProducer, KConcentrationProducer 
 {
-// Explicit junction branch: a branch comprised of half-compartments (or better half-capsules) 
-//   at a junction 
-//   All half-compartments (one from the parent compartment, and all others are from
-//          daughter branches) are assumed iso-potential (i.e. same Vm)
-// The diffusion between the half-compartments in junction-branch 
-//   is modeled as 'gAxial' and 
-//       cross-sectional area 'area'
-// NOTE: A soma is a special kind of junction-branch
-//   and its surface are is treated differently
+// Explicit junction branch: a single-compartment branch which represents either
+//        1. the soma
+//        2. a branching node between two compute_branch of compute-order MAX_COMPUTE_ORDER and 0 
+//   CASE 1: geometry is simply the whole-soma spherical capsule
+//   CASE 2: geometry is created by taking half-compartments (or better half-capsules) 
+//           (from the parent compartment, and all others are from
+//            daughter branches) 
+// The diffusion between this compartment (of junction branch) 
+//   and adjacent compartments (each from either parent-compute-branch or any of 
+//       the children compute-branches)
+//   is modeled as 'gAxial' and cross-sectional area 'area'
 /*{{{*/
   //DATA
   //{{{
@@ -471,6 +442,12 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
   dyn_var_t Cm; // [pF/um^2]
   dyn_var_t cmt; // intermediate value = 2*Cm/dt [pF/(um^2 . ms)]
   dyn_var_t gLeak; // [nS/um^2]
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  dyn_var_t I_fromdend; // [pA]
+#endif
+#ifdef INTRINSIC_NOISE_TO_NEURON
+  dyn_var_t noise_factor_current_injection; // in range [0, 1] (no noise = 1)
+#endif
   //}}}
 #ifdef IDEA_DYNAMIC_INITIALVOLTAGE
   //data mainly used to dynamically assign different conductance on different location
@@ -490,9 +467,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef CONSIDER_DI_DV
   dyn_var_t* [] injectedCurrents_conductance_didv;
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  dyn_var_t [] previous_injectedCurrent;
-#endif
   //}}}
 
 
@@ -504,6 +478,7 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
     dyn_var_t Na; // [mM]
     dyn_var_t K;  // [mM]
     dyn_var_t E_leak;  // [miliVolt] = [mV]
+    dyn_var_t[]* tmp_injectedCurrents;
     //}}}
   }
   //}}}
@@ -515,6 +490,9 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef IDEA_ILEAK
   ConductanceProducer.conductance << &gLeak;
   ReversalPotentialProducer.reversalPotential << &Shared.E_leak;
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  IOCurrentProducer.current << &I_fromdend;
 #endif
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
   CountInformationArrayProducer.countSpineConnected << &countSpineConnected;
@@ -530,9 +508,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #endif
 #ifdef CONSIDER_DI_DV
   UserFunction add_zero_didv;
-#endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-  UserFunction update_stim_reference;
 #endif
   InitPhase initializeJunction;
    
@@ -584,9 +559,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
     updateGapJunctionCount();
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
-#endif
    }
 
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
@@ -606,9 +578,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #endif
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
     updateSpineCount();
-#endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
 #endif
    }
 #endif
@@ -630,9 +599,6 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef CONSIDER_DI_DV
     DIDV_ConductanceProducer.conductance_didv >> injectedCurrents_conductance_didv;
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
-#endif
    }
 
   Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
@@ -642,10 +608,33 @@ Node HodgkinHuxleyVoltageJunction Implements DimensionArrayProducer, BranchDataP
 #ifdef CONSIDER_DI_DV
     add_zero_didv();
 #endif
-#ifdef CONSIDER_EFFECT_LARGE_CHANGE_CURRENT_STIMULATE
-    update_stim_reference();
-#endif
    }
+
+  /* We use this when we design a single CurrentPulseObject
+that can spit out multiple current streams, and the neuron will receive the current
+from one of those streams*/
+  UserFunction select_current_stream;
+  Connection Pre Variable (PSet.identifier=="stimulation" && checkSite()) Expects 
+    CurrentArrayProducer
+   {// current-clamp (from one stream)
+    CurrentArrayProducer.currents >> Shared.tmp_injectedCurrents;
+#ifdef CONSIDER_DI_DV
+    add_zero_didv();
+#endif
+    select_current_stream();
+   }
+
+//  /* this enable a single object that can induce different stimulus to different neurons
+//   depending upon the noise factor*/
+//  Connection Pre Variable (PSet.identifier=="stimulation_noise" && checkSite()) Expects 
+//    CurrentProducer, ScaleFactor
+//   {// current-clamp
+//    CurrentProducer.current >> injectedCurrents_withnoise;
+//    ScaleFactor.factor >> noise_factor;
+//#ifdef CONSIDER_DI_DV
+//    add_zero_didv();
+//#endif
+//   }
 
   PredicateFunction confirmUniqueDeltaT;
   Connection Pre Constant (PSet.identifier=="dt" && confirmUniqueDeltaT()) Expects TimeStepProducer {

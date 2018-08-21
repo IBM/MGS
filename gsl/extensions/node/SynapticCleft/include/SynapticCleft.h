@@ -7,6 +7,8 @@
 
 #include "MaxComputeOrder.h"
 
+//#define DEBUG
+
 class SynapticCleft : public CG_SynapticCleft
 {
   public:
@@ -22,6 +24,9 @@ class SynapticCleft : public CG_SynapticCleft
   private:
   float _timeLastSpike = 0; //from the last spike of pre-synaptic
   bool _reset = true;
+#ifdef DEBUG
+  std::string data_received;
+#endif
 };
 
 #endif

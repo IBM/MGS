@@ -94,7 +94,6 @@ void Granule::addGraphConnection(unsigned graphId, float weight)
 
 void Granule::setGraphId(unsigned& current)
 {
-
    if (_depends == NULL) {
       _graphId = current++;      
    } else {
@@ -162,4 +161,6 @@ std::istream& operator>>(std::istream& is, Granule& inp)
 
 Granule::~Granule()
 {
+  //TUAN TODO: review if we can explicit delete it here, or what in charge of deleting
+  //delete _computeCost;
 }

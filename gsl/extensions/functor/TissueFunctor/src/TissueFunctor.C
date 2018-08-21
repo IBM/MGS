@@ -54,6 +54,7 @@
 
 #include "MaxComputeOrder.h"
 #include "NTSMacros.h"
+#include "Coordinates.h"
 #ifdef HAVE_MPI
 
 #include "SegmentForceAggregator.h"
@@ -93,8 +94,6 @@
 #include "Touch.h"
 
 #include <cstdlib>
-#include "MaxComputeOrder.h"
-#include "NTSMacros.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -1133,7 +1132,7 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
   int nTouchDetectors = commandLine.getNumberOfDetectors();
   if (nTouchDetectors == 0) nTouchDetectors = _size;
 
-  bool autapses = false;
+  bool autapses = false; // neuron that self-touch it
 
   SynapseTouchSpace electricalSynapseTouchSpace(SynapseTouchSpace::ELECTRICAL,
                                                 params, autapses);
@@ -1192,8 +1191,8 @@ void TissueFunctor::touchDetect(Params* params, LensContext* CG_c)
     ////END TUAN TESTING
     
     touchDetector->setPass(TissueContext::FIRST_PASS);
-    // touchDetector->unique(true);
-    touchDetector->unique(false);
+    touchDetector->unique(true);
+    //touchDetector->unique(false);
 #ifdef SYNAPSE_PARAMS_TOUCH_DETECT
     _tissueContext->_decomposition->resetCriteria(&detectionTouchSpace);
 #endif
@@ -2341,7 +2340,7 @@ void TissueFunctor::getNodekind(const NDPairList* ndpl,
 }
 
 // GOAL: return the ComputeBranch of the branch
-//   nodeType     = string of nodetype (e.g. Calcium)
+//   nodeType     = string of nodetype (e.g. Calcium (if BRANCH), Nat (if JUNCTION))
 //   nodeIndex = grid's node
 //   densityIndex = index in that grid's node
 //   <"nodeType", <"nodeIndex", < density-index, ComputeBranch*>
@@ -2594,7 +2593,10 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
     }
     else {
       //special "Layout" for being used in Zipper
-      //do both: Layout, store and Probe  
+      //do 
+      //    1. configure _probedLayoutsMap 
+      //    2. call _layoutFunctor which will derive density information
+      //        from _probedLayoutsMap 
       //NOTE: A Layout has a unique name given via 'PROBED=name'
       // it basically do layout inside probe (which store Grid*, NodeDescriptor*)
       // and the Layout to find the probed Grid; 
@@ -2647,7 +2649,7 @@ std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
   }
   else {
     std::cerr<<"Unrecognized tissue element specifier: "<<tissueElement<<std::endl;
-    exit(0);
+    exit(1);
   }
   return rval;
 }
@@ -2898,13 +2900,23 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
   //  i.e. not compartment variables
   //  then traverse the touchVectors to determine if an instance of such nodetype 
   //  should be created   (through the increase of rval[grid-index])
+  //   (and if created, create-on the MPI rank having pre-side Capsule)
   //  which is later can be used by ::doConnector() to establish connection
-  //     cpt<--[connexon]-->cpt
-  //     cpt<--[spineconnexon]--><--[spineconnexon]-->cpt
-  //     bouton --[presynapticpoint]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  //  NOTE: the symbol '|' represents MPI border if present
+  //     cpt<--[connexon]-->'|' cpt
+  //     cpt<--[spineconnexon]-->'|'<--[spineconnexon]-->cpt
+  //     bouton --[presynapticpoint]-->'|' one-or-many-ChemicalSynapses-receptors-on-spine-head
   //                                ?(pass Vpre) 
-  //     bouton --[synapticCleft]-->one-or-many-ChemicalSynapses-receptors-on-spine-head
+  // IDEA: bouton --[synapticCleft]-->'|' one-or-many-ChemicalSynapses-receptors-on-spine-head
   //                              ?(pass [NT])
+  // ORDER:
+  //      preCpt -> synapticCleftNode  (always on the same rank)
+  //      postCpt -> synapticCleftNode (can be different rank)
+  //      synapticCleftNode -> receptor (can be different rank)
+  //      postCpt -> receptor
+  //      receptor -> postCpt 
+  //      receptorA -> receptorB (two receptors on the same synapse
+  //                             for plasticity purpose, i.e. mixed-synapse)
   //  Here, one or two instances may needed be created using one or two sides of a Touch
   //  then find the preCapsule and postCapsule for each Touch
   //  identify the grid-index (indexPre) to which preCapsule belongs
@@ -2913,7 +2925,7 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
   //         and/or indexPost
   if (electrical || chemical || point || bidirectional)
   {
-    // REMEBER that all the touches have been detected,
+    // REMEBER that all the touches (within the current MPI process) have been detected,
     // we just need to find out which compartment (from which branch) connect
     // to which compartment (in which branch)
     // and use the branches (as well as other keyfields, e.g. MTYPE) to
@@ -3000,11 +3012,18 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
 #else
       if (_segmentDescriptor.getFlag(key1) &&
           _tissueContext->isTouchToEnd(*preCapsule, *titer))
-      {  // pre component is LENS junction
+      {  // pre component is LENS junction (i.e. explicit junction)
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+        if (point &&
+            _capsuleJctPointIndexMap[nodeType].find(std::make_pair(preCapsule, postCapsule)) !=
+                _capsuleJctPointIndexMap[nodeType].end())
+          continue;
+#else
         if (point &&
             _capsuleJctPointIndexMap[nodeType].find(preCapsule) !=
                 _capsuleJctPointIndexMap[nodeType].end())
           continue;
+#endif
         preJunction = true;
         indexPre = _tissueContext->getRankOfEndPoint(preCapsule->getBranch());
       }
@@ -3107,8 +3126,16 @@ ShallowArray<int> TissueFunctor::doLayoutNTS(LensContext* lc)
                       rval[indexPre];
 #else
                 if (preJunction)
+                {
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                  _capsuleJctPointIndexMap[nodeType][std::make_pair(preCapsule, postCapsule)] =
+                      rval[indexPre];
+#else
                   _capsuleJctPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
+#endif
+
+                }
                 else
                   _capsuleCptPointIndexMap[nodeType][preCapsule] =
                       rval[indexPre];
@@ -5961,6 +5988,7 @@ void TissueFunctor::doConnector(LensContext* lc)
             csend = csynTargets->end();
         std::vector<int> typeCounter;
         typeCounter.resize(_chemicalSynapseTypesMap.size(), 0);//number of Layers defined with "ChemicalSynapses"
+        bool first_receptor = true;
         for (csiter = csynTargets->begin(); csiter != csend; ++csiter)
         {
           std::map<std::string, std::pair<std::list<std::string>,
@@ -5989,6 +6017,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               mixedSynapse.push_back(receptor);
 //#define RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
 #ifdef  RECEPTOR_PRE_AS_INPUT_POST_AS_INPUT_OUTPUT
+              // This is designed to work with PreSynapticPoint
               //NOTE: POST = postsynaptic side
               //      PRE  = presynaptic side
               //Here, the line [[original implementation]]
@@ -6080,10 +6109,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][jctCapsulePreCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       preSynPoints[preSynPointType] =
                           preSynapticPointAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6124,10 +6161,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][jctCapsulePostCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6262,7 +6307,7 @@ void TissueFunctor::doConnector(LensContext* lc)
               std::list<std::string>::iterator
                   ctiter = preData.begin(),
                   ctend = preData.end();
-              for (; ctiter != ctend; ++ctiter)
+              for (; first_receptor && ctiter != ctend; ++ctiter)
               {//Pre-compartment(presume only Voltage-pre) project to SynapticCleft/PreSynapticPoint
                 NodeDescriptor* preCpt = 0;
                 int preIdx = 0;
@@ -6342,10 +6387,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][jctCapsulePreCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       preSynPoints[preSynPointType] =
                           preSynapticPointAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6384,10 +6437,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][jctCapsulePostCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      synapticCleftNodes[cleftType] =
+                          synapticCleftAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [synapticCleftType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       synapticCleftNodes[cleftType] =
                           synapticCleftAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [synapticCleftType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6409,10 +6470,13 @@ void TissueFunctor::doConnector(LensContext* lc)
               // Post - as input to cleft/presynapticPoint
               // IMPORTANT: This is not about passing voltage/calcium data, it pass 'information'
               //            about 'compartment' on post-side
+              //            --> so need only once
+              //  (only Voltage is being used and this is enforced by SynapticCleft model)
+              //  --> so it won't work if a receptor doesn't have Voltage as input
               //std::list<std::string>::iterator
               ctiter = targetsIter->second.first.begin(),
                      ctend = targetsIter->second.first.end();
-              for (; ctiter != ctend; ++ctiter)
+              for (; first_receptor && ctiter != ctend; ++ctiter)
               {//input to cleft/presynapticPoint
                 //NOTE: As the name may contains domain names
                 // Calcium(domain1, domainA)
@@ -6528,10 +6592,18 @@ void TissueFunctor::doConnector(LensContext* lc)
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][jctCapsulePreCapsule]);
 #else
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+                      preSynPoints[preSynPointType] =
+                          preSynapticPointAccessor->getNodeDescriptor(
+                              indexPre, _capsuleJctPointIndexMap
+                                            [preSynapticPointType][std::make_pair(preCapsule, postCapsule)]);
+#else
                       preSynPoints[preSynPointType] =
                           preSynapticPointAccessor->getNodeDescriptor(
                               indexPre, _capsuleJctPointIndexMap
                                             [preSynapticPointType][preCapsule]);
+#endif
+
 #endif
                     }
                     else
@@ -6562,6 +6634,7 @@ void TissueFunctor::doConnector(LensContext* lc)
                 }
               }
               // Post - as input to receptor
+              // NMDAR [ Voltage, Calcium ] [...]
               //std::list<std::string>::iterator
               ctiter = targetsIter->second.first.begin(),
                      ctend = targetsIter->second.first.end();
@@ -6754,6 +6827,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 #endif
               }
 #endif
+              first_receptor = false;
             }
             typeCounter[synapseType]++;
           }
@@ -7085,7 +7159,7 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
 
     mask = _segmentDescriptor.getMask(maskVector);
     targetKey = _segmentDescriptor.getSegmentKey(maskVector, ids);
-    delete ids;
+    delete[] ids;
   }
   std::vector<NodeDescriptor*> nodeDescriptors;
   GridLayerDescriptor* layer = 0;
@@ -7168,9 +7242,19 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
                   ->getKey();
 #endif
       }
+//#ifdef MICRODOMAIN_CALCIUM
+////not implemented yet
+//      if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey &&
+//          layer->getNodeAccessor()->getNodeDescriptor(_rank, i))->microdomainName.size() > 0   //TUAN HERE
+//          )
+//        nodeDescriptors.push_back(
+//            layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+//#else
+//It's ok to print current that direct toward domain just by specifying the branch criteria
       if (_segmentDescriptor.getSegmentKey(key, mask) == targetKey)
         nodeDescriptors.push_back(
             layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+//#endif
     }
   }
   if (category == "SYNAPSE")
@@ -7281,6 +7365,9 @@ void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
   }
   rval.reset(ns);
 }
+// GOAL:  <internal use by tissueFunctor("Layout", <PROBE="pr0"...>)>
+//    return the set of node instances to be selected
+//      via the variable nodeDescriptors
 Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors)
 {
   Grid* rval=0;
@@ -7291,27 +7378,47 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
 
   std::string layout="NO_LAYOUT_ID_SPECIFIED";
   int remaining=_params->size();
-  int N=-1;
+
   assert((*ndpiter)->getName()=="PROBED");
   StringDataItem* layoutDI = dynamic_cast<StringDataItem*>((*ndpiter)->getDataItem());
   layout=layoutDI->getString();
+
+  std::vector<float> vN;
+  int NumCptsToExtract = -1;
+  ProbedCategory_t probeCat = ProbedCategory_t::NOT_SET;
 
   --ndpiter;
   --remaining;
   if (ndpiter!=ndpend_reverse && (*ndpiter)->getName()=="N") {
     NumericDataItem* nDI = dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
     if (nDI==0) {
+#ifdef NVU_NTS_EXTENSION
+      FloatArrayDataItem* arrayDI = dynamic_cast<FloatArrayDataItem*>((*ndpiter)->getDataItem());
+      if (arrayDI==0) {
+        std::cerr<<"N parameter of TissueProbe must be a number (NVU-NVU,NVU-MGS) " <<
+          "or an array (NVU-NTS) of " <<
+          "{ NVU_X, NVU_Y, NVVU_Z, RADIUS} !"<<std::endl;
+        exit(0);
+      }
+      else{
+        vN = *(arrayDI->getFloatVector());
+        probeCat = ProbedCategory_t::NTS_NVU;
+      }
+#else
       std::cerr<<"N parameter of TissueProbe must be a number!"<<std::endl;
       exit(0);
+#endif
     }
-    N=nDI->getInt();
+    else{
+        NumCptsToExtract=nDI->getInt();
+        assert(NumCptsToExtract > 0);
+        probeCat = ProbedCategory_t::NTS_MGS;
+    }
     --ndpiter;
     --remaining;
   }
-  
   std::map<std::string, std::map<std::pair<std::string, std::string>, std::pair<Grid*, std::vector<NodeDescriptor*> > > > ::iterator miter=_probedNodesMap.end();
   if (layout!="NO_LAYOUT_ID_SPECIFIED") miter=_probedNodesMap.find(layout);
-
   if (miter!=_probedNodesMap.end()) {
     //PROBE-name exist, reuse them
     if (remaining<2)
@@ -7322,12 +7429,34 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
       }
       assert(0);
     }
+//#ifdef NVU_NTS_EXTENSION
+//    std::map<std::string, ProbedCategory_t> ::iterator 
+//        probiter = _probedCategory.find(layout);
+//    if (probiter != _probedCategory.end() &&
+//        (probeCat != (*probiter).second))
+//    {
+//      if (_rank == 0){
+//        std::cerr<<"Error on TissueFunctor Probe! The probe "
+//          << layout << " was reused on a different ProbedCategory."
+//          << " It was assigned to " << ProbedCategory_ToString((*probiter).second) 
+//          << "; and now is used in " << ProbedCategory_ToString(probeCat)<<std::endl;
+//      }
+//      assert(0);
+//    }
+//    else{
+//      if (_rank == 0){
+//        std::cerr<<" You forgot to add the probe" << std::endl;
+//      }
+//      assert(0);
+//    }
+//#endif
 
     std::pair<std::string, std::string> cattype=getCategoryTypePair(ndpiter, remaining);
     std::map<std::pair<std::string, std::string>, 
       std::pair<Grid*, std::vector<NodeDescriptor*> > > ::iterator 
         mmiter = miter->second.find(cattype);
     if (mmiter!=miter->second.end()) {
+      //found the existing (CATEGORY, TYPE) list of nodes
       rval = mmiter->second.first;
       nodeDescriptors = mmiter->second.second;
     }
@@ -7352,8 +7481,8 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
       //{//we cannot check, as N is splitted across processes
       //  std::cerr << "WARNING: Please make sure you use the same N's value for the same PROBED name " << std::endl;
       //  assert(0);
-
       //}
+      //or maybe we can sum all the 'size' and check (using rank0) if the sum is equal to 'N'
       for (viter=pattern.begin(); viter!=vend; ++viter) {
         NodeDescriptor* nd = *viter;
         nodeDescriptors.push_back(layer->getNodeAccessor()->
@@ -7361,12 +7490,42 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
       }
     }
   }
-  else {
+  else{
     //first time use the PROBE-name or we use non-PROBE-layer
     nodeDescriptors.clear();
     if (remaining<2)
+    {
       std::cerr<<"Error on TissueFunctor Probe! No mask specified!"<<std::endl;
-
+      assert(0);
+    }
+    _probedCategory[layout] = probeCat;
+    if (NumCptsToExtract == -1)
+    {
+      rval = doProbe_Region(lc, nodeDescriptors,
+          layout, 
+          ndpiter, ndpend_reverse,
+          remaining,
+          vN);
+    }else{
+      rval = doProbe_Number(lc, nodeDescriptors,
+          layout, 
+          ndpiter, ndpend_reverse,
+          remaining,
+          NumCptsToExtract);
+    }
+  }
+  return rval;
+}
+Grid* TissueFunctor::doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+        const std::string layout,
+        NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
+        int& remaining,
+        int NumCptsToExtract)
+{
+  Grid* rval=0;
+  std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+  {
+    //first time use the PROBE-name or we use non-PROBE-layer
     std::pair<std::string, std::string> cattype=getCategoryTypePair(ndpiter, remaining);
     std::string category = cattype.first;
     std::string type = cattype.second;
@@ -7413,6 +7572,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
     }
 
     //SELECTION PROCESS
+    // build vector -> nodeDescriptors
     std::vector<double> surfaceAreas;
     GridLayerDescriptor* layer=0;
     std::map<ComputeBranch*, std::vector<int> >* indexMap;
@@ -7428,7 +7588,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
         if ( (mapiter->second)[0]==_rank && _segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
           nodeDescriptors.push_back(layer->getNodeAccessor()->
               getNodeDescriptor((mapiter->second)[0], (mapiter->second)[1]));
-          if (N>=0) surfaceAreas.push_back(mapiter->first->getSurfaceArea());
+          if (NumCptsToExtract>=0) surfaceAreas.push_back(mapiter->first->getSurfaceArea());
         }
       }
     }
@@ -7441,7 +7601,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
         if ( (mapiter->second)[0]==_rank && _segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
           nodeDescriptors.push_back(layer->getNodeAccessor()->
               getNodeDescriptor((mapiter->second)[0], (mapiter->second)[1]));
-          if (N>=0) surfaceAreas.push_back(mapiter->first->getEndSphereSurfaceArea());
+          if (NumCptsToExtract>=0) surfaceAreas.push_back(mapiter->first->getEndSphereSurfaceArea());
         }
       }
     }
@@ -7457,31 +7617,37 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
         double surfaceArea=0;
         if (i < nChannelBranches) {
 #ifdef MICRODOMAIN_CALCIUM
-          std::tuple<int, int, std::string>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
+          std::tuple<int, int, std::string>& channelBranchIndexPair
+            =_channelBranchIndices1[typeIdx][i][0];
           ComputeBranch* branch=findBranch(_rank, std::get<0>(channelBranchIndexPair), 
               _compartmentVariableTypes[std::get<1>(channelBranchIndexPair)]);
 #else
-          std::pair<int, int>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
-          ComputeBranch* branch=findBranch(_rank, channelBranchIndexPair.first, _compartmentVariableTypes[channelBranchIndexPair.second]);
+          std::pair<int, int>& channelBranchIndexPair=
+            _channelBranchIndices1[typeIdx][i][0];
+          ComputeBranch* branch=findBranch(_rank, channelBranchIndexPair.first, 
+              _compartmentVariableTypes[channelBranchIndexPair.second]);
 #endif
           key=branch->_capsules[0].getKey();
-          if (N>=0) surfaceArea=branch->getSurfaceArea();
+          if (NumCptsToExtract>=0) surfaceArea=branch->getSurfaceArea();
         }
         else {
 #ifdef MICRODOMAIN_CALCIUM
-          std::tuple<int, int, std::string>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
+          std::tuple<int, int, std::string>& channelJunctionIndexPair=
+            _channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
           Capsule* junction=findJunction(_rank, std::get<0>(channelJunctionIndexPair), 
               _compartmentVariableTypes[std::get<1>(channelJunctionIndexPair)]);
 #else
-          std::pair<int, int>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
-          Capsule* junction=findJunction(_rank, channelJunctionIndexPair.first, _compartmentVariableTypes[channelJunctionIndexPair.second]);
+          std::pair<int, int>& channelJunctionIndexPair=
+            _channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
+          Capsule* junction=findJunction(_rank, channelJunctionIndexPair.first, 
+              _compartmentVariableTypes[channelJunctionIndexPair.second]);
 #endif
           key=junction->getKey();
-          if (N>=0) surfaceArea=junction->getEndSphereSurfaceArea();
+          if (NumCptsToExtract>=0) surfaceArea=junction->getEndSphereSurfaceArea();
         }
         if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
           nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
-          if (N>=0) surfaceAreas.push_back(surfaceArea);
+          if (NumCptsToExtract>=0) surfaceAreas.push_back(surfaceArea);
         }
       }
     }
@@ -7500,7 +7666,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
         key_size_t key = touch->getKey2();
         if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
           nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
-          if (N>=0) surfaceAreas.push_back(1.0);
+          if (NumCptsToExtract>=0) surfaceAreas.push_back(1.0);
         }
       }
       //for (int i=0; i<density; ++i) {
@@ -7520,7 +7686,7 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
         key_size_t key = touch->getKey1();
         if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
           nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
-          if (N>=0) surfaceAreas.push_back(1.0);
+          if (NumCptsToExtract>=0) surfaceAreas.push_back(1.0);
         }
       }
       //for (int i=0; i<density; ++i) {
@@ -7531,12 +7697,13 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
     rval = layer->getGrid();
     int nds=nodeDescriptors.size();
 
+    // revise vector -> nodeDescriptors
     if (layout!="NO_LAYOUT_ID_SPECIFIED") {
       ShallowArray< int > lytr; //keep the density
       int* lytc = new int[_size]();
       MPI_Allgather(&nds, 1, MPI_INT, lytc, 1, MPI_INT, MPI_COMM_WORLD);
 
-      if (N>=0) {
+      if (NumCptsToExtract>=0) {
         RNG rng;
         rng.reSeedShared(layout[0]);
         int seed=lrandom(rng);
@@ -7570,12 +7737,12 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
         MPI_Allgatherv(saR, nds, MPI_DOUBLE, saRT, lytc, rdispls, MPI_DOUBLE, MPI_COMM_WORLD);
         std::vector<NodeDescriptor*> survivors;
         int count=0;
-        while (count<N) {
+        while (count<NumCptsToExtract) {
           std::map<double, int> shuffle;
           for (int n=0; n<totalNodes; ++n) 
             if (drandom(rng)<saRT[n]) shuffle[drandom(rng)]=n;
           std::map<double, int>::iterator miter, mend=shuffle.end();
-          for (miter=shuffle.begin(); miter!=mend && count<N; ++miter) {
+          for (miter=shuffle.begin(); miter!=mend && count<NumCptsToExtract; ++miter) {
             ++count;
             int nidx=miter->second;
             if (nidx>=lo && nidx<hi) 
@@ -7598,6 +7765,231 @@ Grid* TissueFunctor::doProbe(LensContext* lc, std::vector<NodeDescriptor*>& node
       _probedNodesMap[layout][cattype]=std::pair<Grid*, std::vector<NodeDescriptor*> >
         (rval, nodeDescriptors);
     }
+  }
+  return rval;
+}
+Grid* TissueFunctor::doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+    const std::string layout,
+    NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
+    int& remaining,
+    std::vector<float> vN)
+{
+  Grid* rval=0;
+  std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
+  //first time use the PROBE-name or we use non-PROBE-layer
+  std::pair<std::string, std::string> cattype=getCategoryTypePair(ndpiter, remaining);
+  std::string category = cattype.first;
+  std::string type = cattype.second;
+
+  bool esyn=false;
+  int typeIdx=getTypeLayerIdx(category, type, esyn);
+
+  --ndpiter;
+  --remaining;
+
+  unsigned long long mask=0;
+  key_size_t targetKey=0;
+
+  //TUAN ADD PROBE SYNAPSERECEPTOR + CLEFT
+  //if (category == "BRANCH" || category == "JUNCTION" || category == "CHANNEL"
+  //    || category == "SYNAPSE" || category == "CLEFT"
+  //   )
+  if (category=="BRANCH" || category=="JUNCTION" || category=="CHANNEL") 
+  {
+    //find: mask + targetKey
+    unsigned int* ids=new unsigned int[remaining];
+    unsigned int idx=-1;
+    for (; ndpiter!=ndpend_reverse; --ndpiter, --remaining) {
+      NumericDataItem* ndi=dynamic_cast<NumericDataItem*>((*ndpiter)->getDataItem());
+      if (ndi<=0) {
+        std::cerr<<"TissueProbe parameter specification must comprise unsigned integers!"<<std::endl;
+        exit(0);
+      }
+      maskVector.push_back(_segmentDescriptor.getSegmentKeyData((*ndpiter)->getName()));
+      int val = ndi->getUnsignedInt();
+      std::string fieldName ((*ndpiter)->getName());
+      Params::reviseParamValue((unsigned int&)val, fieldName);
+      if (val < 0)
+      {
+        std::cerr << "ERROR: The value of " << (*ndpiter)->getName() << " is in invalid range" << std::endl;
+        assert(val >= 0);
+      }
+      ids[++idx] = val; 
+    }
+
+    mask=_segmentDescriptor.getMask(maskVector);
+    targetKey=_segmentDescriptor.getSegmentKey(maskVector, ids);
+    delete ids;
+  }
+
+  //SELECTION PROCESS
+  // build vector -> nodeDescriptors
+  //std::vector<double> surfaceAreas;
+  GridLayerDescriptor* layer=0;
+  std::map<ComputeBranch*, std::vector<int> >* indexMap;
+
+  //Step 1 (case 1): any things associated with a given branch (e.g. CB or Junction)
+  //             density assignment based on surfaceArea of all matched-compartment area
+  if (category=="BRANCH") {
+    layer=_compartmentVariableLayers[typeIdx];
+    assert(layer);
+    std::map<ComputeBranch*, std::vector<int> >::iterator mapiter, mapend=_branchIndexMap[type].end();
+    for (mapiter=_branchIndexMap[type].begin(); mapiter!=mapend; ++mapiter) {
+      key_size_t key=mapiter->first->_capsules->getKey();
+      if ( (mapiter->second)[0]==_rank && _segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+        //LIMITATION: use the center capsule's coordinate to
+        // determine if we should get that whole CB
+        //Capsule& caps = (mapiter->first)->lastCapsule();
+        int ncaps = mapiter->first->_nCapsules;
+        Capsule& caps = mapiter->first->_capsules[ncaps/2];
+        double length = vN[3]; //L0 in meter
+        length *= 1e6; // convert to micrometer
+        if (isInNVUGrid(caps.getBeginCoordinates(), 3, length, (int)vN[0], (int)vN[1], (int)vN[2]))
+        {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->
+              getNodeDescriptor((mapiter->second)[0], (mapiter->second)[1]));
+        //if (NumCptsToExtract>=0) surfaceAreas.push_back(mapiter->first->getSurfaceArea());
+        }
+      }
+    }
+  }
+  if (category=="JUNCTION") {
+    layer=_junctionLayers[typeIdx];
+    assert(layer);
+    std::map<Capsule*, std::vector<int> >::iterator mapiter, mapend=_junctionIndexMap[type].end();
+    for (mapiter=_junctionIndexMap[type].begin(); mapiter!=mapend; ++mapiter) {
+      key_size_t key=mapiter->first->getKey();
+      if ( (mapiter->second)[0]==_rank && _segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+        //LIMITATION: use the center capsule's coordinate to
+        // determine if we should get that whole CB
+        //Capsule& caps = (mapiter->first)->lastCapsule();
+        Capsule& caps = mapiter->first[0];
+        double length = vN[3]; //L0 in meter
+        length *= 1e6; // convert to micrometer
+        if (isInNVUGrid(caps.getBeginCoordinates(), 3, length, (int)vN[0], (int)vN[1], (int)vN[2]))
+        {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->
+              getNodeDescriptor((mapiter->second)[0], (mapiter->second)[1]));
+        //if (NumCptsToExtract>=0) surfaceAreas.push_back(mapiter->first->getEndSphereSurfaceArea());
+
+        }
+      }
+    }
+  }
+  if (category=="CHANNEL") {
+    //NOTE: The density of channels come from  (1) those associated with CBs;
+    //               and then (2) those associated with Junctions
+    layer=_channelLayers[typeIdx];
+    assert(layer);
+    int density=layer->getDensity(_rank);
+    int nChannelBranches=_channelBranchIndices1[typeIdx].size(); 
+    key_size_t key;
+    Capsule* caps;
+    for (int i=0; i<density; ++i) {
+      double surfaceArea=0;
+      if (i < nChannelBranches) {
+#ifdef MICRODOMAIN_CALCIUM
+        std::tuple<int, int, std::string>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
+        ComputeBranch* branch=findBranch(_rank, std::get<0>(channelBranchIndexPair), 
+            _compartmentVariableTypes[std::get<1>(channelBranchIndexPair)]);
+#else
+        std::pair<int, int>& channelBranchIndexPair=_channelBranchIndices1[typeIdx][i][0];
+        ComputeBranch* branch=findBranch(_rank, channelBranchIndexPair.first, _compartmentVariableTypes[channelBranchIndexPair.second]);
+#endif
+        key=branch->_capsules[0].getKey();
+        int ncaps = branch->_nCapsules;
+        caps = &(branch->_capsules[ncaps/2]);
+        //if (NumCptsToExtract>=0) surfaceArea=branch->getSurfaceArea();
+      }
+      else {
+#ifdef MICRODOMAIN_CALCIUM
+        std::tuple<int, int, std::string>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
+        Capsule* junction=findJunction(_rank, std::get<0>(channelJunctionIndexPair), 
+            _compartmentVariableTypes[std::get<1>(channelJunctionIndexPair)]);
+#else
+        std::pair<int, int>& channelJunctionIndexPair=_channelJunctionIndices1[typeIdx][i-nChannelBranches][0];
+        Capsule* junction=findJunction(_rank, channelJunctionIndexPair.first, _compartmentVariableTypes[channelJunctionIndexPair.second]);
+#endif
+        key=junction->getKey();
+        caps = junction;
+        //if (NumCptsToExtract>=0) surfaceArea=junction->getEndSphereSurfaceArea();
+      }
+      if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+        double length = vN[3]; //L0 in meter
+        length *= 1e6; // convert to micrometer
+        if (isInNVUGrid(caps->getBeginCoordinates(), 3, length, (int)vN[0], (int)vN[1], (int)vN[2]))
+        {
+          nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+        //if (NumCptsToExtract>=0) surfaceAreas.push_back(surfaceArea);
+
+        }
+      }
+    }
+  }
+  //Step 1 (case 2): any things independent from a neuron (e.g. synapse, cleft)
+  //            density assignment based on counts (i.e. same surface Area)
+  if (category=="SYNAPSE") {
+    assert(0);
+    //use Post-side
+    layer = esyn ? _electricalSynapseLayers[typeIdx] : _chemicalSynapseLayers[typeIdx];
+    assert(layer);
+    int density=layer->getDensity(_rank);
+    std::map<Touch*, int> mymap = _synapseReceptorMaps[typeIdx]; 
+    for (auto const &entity : mymap )
+    {
+      Touch* touch = entity.first;
+      int i = entity.second;
+      key_size_t key = touch->getKey2();
+      if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+        assert(0); // not supported yet
+        nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+        //if (NumCptsToExtract>=0) surfaceAreas.push_back(1.0);
+      }
+    }
+    //for (int i=0; i<density; ++i) {
+    //  nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+    //}
+  }
+  if (category=="CLEFT") {
+    assert(0); // not supported yet
+    //use Pre-side 
+    layer = _synapticCleftLayers[typeIdx] ;
+    assert(layer);
+    int density=layer->getDensity(_rank);
+    std::map<Touch*, int> mymap = _synapticCleftMaps[typeIdx]; 
+    for (auto const &entity : mymap )
+    {
+      Touch* touch = entity.first;
+      int i = entity.second;
+      key_size_t key = touch->getKey1();
+      if (_segmentDescriptor.getSegmentKey(key, mask)==targetKey) {
+        assert(0); // not supported yet
+        nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+        //if (NumCptsToExtract>=0) surfaceAreas.push_back(1.0);
+      }
+    }
+    //for (int i=0; i<density; ++i) {
+    //  nodeDescriptors.push_back(layer->getNodeAccessor()->getNodeDescriptor(_rank, i));
+    //}
+  }
+
+  rval = layer->getGrid();
+  int nds=nodeDescriptors.size();
+//#define DEBUG
+#ifdef DEBUG
+  std::cerr << "Probe_region total " << nds << " elements" << std::endl;
+#endif
+
+  if (layout!="NO_LAYOUT_ID_SPECIFIED") {
+    ShallowArray< int > lytr; //keep the density
+    int* lytc = new int[_size]();
+    MPI_Allgather(&nds, 1, MPI_INT, lytc, 1, MPI_INT, MPI_COMM_WORLD);
+    for (int n=0; n<_size; ++n) 
+      lytr.push_back(lytc[n]);
+    delete [] lytc;
+    _probedLayoutsMap[layout]=lytr;
+    _probedNodesMap[layout][cattype]=std::pair<Grid*, std::vector<NodeDescriptor*> >
+      (rval, nodeDescriptors);
   }
   return rval;
 }
@@ -7636,6 +8028,11 @@ void TissueFunctor::doMGSify(LensContext* lc)
 //   As currently, Synapse Receptors are not supposed to
 // have parameters whose values varies upon neuron types/branch location
 // TUAN TODO: maybe consider this in the future
+// Example:
+//  <gbar={10.0}>
+//  <float:gbar={10.0}>
+//  <int:m=2>
+//  <string:tag=abc>
 void TissueFunctor::getModelParams(Params::ModelType modelType,
                                    NDPairList& paramsLocal,
                                    std::string& nodeType, key_size_t key)
@@ -8014,6 +8411,10 @@ bool TissueFunctor::setGenerated(
   // endspecialTreatment
   bool alreadyThere = false;
   key_size_t dummy_key;
+  //ignore special treatment
+  if (_tissueParams._use_biological_constraint == 0)
+    specialTreatment = "";
+  ///////
   if (miter == smap.end())
   {
     if (specialTreatment == "BidirectionalConnections")
@@ -9040,6 +9441,7 @@ dyn_var_t TissueFunctor::getFractionCapsuleVolumeFromPost(ComputeBranch* branch)
 //  rval = ncpts;
 //  return rval;
 //}
+
 #else
 int TissueFunctor::getFirstIndexOfCapsuleSpanningSoma(ComputeBranch* branch)
 {
@@ -9356,13 +9758,14 @@ int TissueFunctor::getTypeLayerIdx(std::string category, std::string type, bool&
       typeIter=_electricalSynapseTypesMap.find(type);
       if (typeIter==_electricalSynapseTypesMap.end()) {
         std::cerr<<"Unrecognized TYPE during TissueProbe : "<<type<<" !"<<std::endl;
-        esyn=true;
         exit(0);
       }
+      else
+        esyn=true;
     }
     typeIdx=typeIter->second;
   }
-	else if (category == "CLEFT")
+  else if (category == "CLEFT")
   {//Done
     typeIter = _synapticCleftTypesMap.find(type);
     //if (typeIter == _synapticCleftTypesMap.end())

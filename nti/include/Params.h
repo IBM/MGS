@@ -405,6 +405,8 @@ class Params
   ErrorCode readNonTouchTargets(FILE* fpF);  // support
                                              // array-form for
                                              // all
+  ErrorCode readExtraInfoSynParams(FILE* fpF);
+
   void skipSection(FILE* fpF);
 
   unsigned long long readNamedParam(
@@ -452,6 +454,9 @@ class Params
   double* _bondK0;
   double* _bondR0;
   int _nBondTypes;
+  public:
+  int _use_biological_constraint;
+  private:
 
   double* _angleK0;
   double* _angleR0;

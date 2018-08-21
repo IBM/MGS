@@ -18,24 +18,28 @@
 #include "CG_Connexon.h"
 #include "rndm.h"
 
-void Connexon::produceInitialVoltage(RNG& rng) 
+void Connexon::produceInitialVoltage(RNG& rng)
 {
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+  {
   g = g / (dimension->surface_area);            // [nS/um^2]
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2_revised
-  //g = g / *countGapJunctionConnectedToCompartment_j; 
-  g = g / *countGapJunctionConnectedToCompartment_i; 
+  //g = g / *countGapJunctionConnectedToCompartment_j;
+  g = g / *countGapJunctionConnectedToCompartment_i;
 #endif
+  }
 #else
+  {
   //g = A / (Raxial * distance);            // [nS]  -- provided by the user via parameter
+  }
 #endif
 }
 
-void Connexon::produceVoltage(RNG& rng) 
+void Connexon::produceVoltage(RNG& rng)
 {
 }
 
-void Connexon::computeState(RNG& rng) 
+void Connexon::computeState(RNG& rng)
 {
 #ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
   I=g*(*Vj-*Vi) / *countGapJunctionConnectedToCompartment_j;//TUAN TODO TO BE REVISED
@@ -48,7 +52,7 @@ void Connexon::computeState(RNG& rng)
 #endif
 }
 
-void Connexon::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ConnexonInAttrPSet* CG_inAttrPset, CG_ConnexonOutAttrPSet* CG_outAttrPset) 
+void Connexon::setPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ConnexonInAttrPSet* CG_inAttrPset, CG_ConnexonOutAttrPSet* CG_outAttrPset)
 {
   if (CG_inAttrPset->idx>=0) {
     index=CG_inAttrPset->idx;
@@ -61,15 +65,15 @@ void Connexon::setPointers(const String& CG_direction, const String& CG_componen
   Vi = &((*(getSharedMembers().voltageConnect))[index]);
 //#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION1
 #if defined(CONSIDER_MANYSPINE_EFFECT_OPTION1) || defined(CONSIDER_MANYSPINE_EFFECT_OPTION2_revised)
-  countGapJunctionConnectedToCompartment_i = 
+  countGapJunctionConnectedToCompartment_i =
     &((*(getSharedMembers().countGapJunctionConnect))[index]);
 #endif
-#ifdef CONSIDER_MANYSPINE_EFFECT_OPTION2
+#if defined(CONSIDER_MANYSPINE_EFFECT_OPTION2)
   dimension = ((*(getSharedMembers().dimensionsConnect))[index]);
 #endif
 }
 
-Connexon::~Connexon() 
+Connexon::~Connexon()
 {
 }
 

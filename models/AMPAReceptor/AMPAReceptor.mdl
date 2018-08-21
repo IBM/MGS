@@ -85,6 +85,10 @@ Node AMPAReceptor Implements ConductanceProducer, ReversalPotentialProducer
     //   and tempt. used for the simulation 
     InitPhase computeTadj;  
     int[] * indexPrePost_connect;
+#ifdef KEEP_PAIR_PRE_POST
+//temporary use when SynapticCleft is not on the same rank with post-synaptic receptor
+    BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
     //}}}
    }
 
@@ -170,6 +174,8 @@ This will enable having only 1 neurotransmitter variable in SynapticCleft
 #ifdef KEEP_PAIR_PRE_POST
     //no-need as we already have this information from 'synapticCleft' connection
     //BranchDataProducer.branchData >> branchDataPrePost; //- old design
+//HOWVER: in the case of SynapticCleft is on different rank of the post-side receptor - we need to keep the post-side informaiton 
+    BranchDataProducer.branchData >> Shared.branchDataPost;
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif
@@ -276,6 +282,10 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
     //   and tempt. used for the simulation 
     InitPhase computeTadj;   
     int[] * indexPrePost_connect;
+#ifdef KEEP_PAIR_PRE_POST
+//temporary use when SynapticCleft is not on the same rank with post-synaptic receptor
+    BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
     //}}}
    }
 
@@ -336,6 +346,8 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
 #endif
   {
     //{{{
+//TUAN TODO: the problem may arise if SynapticCleft is not on the same rank with the receptor
+//   it means none of the internal data is available at connection time
     GlutamateConcentrationProducer.NT >> Glut;
 #ifdef KEEP_PAIR_PRE_POST
     BranchDataArrayProducer.branchDataArray >> branchDataPrePost;
@@ -357,6 +369,8 @@ Node AMPAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
 #ifdef KEEP_PAIR_PRE_POST
     //no-need as we already have this information from 'synapticCleft' connection
     //BranchDataProducer.branchData >> branchDataPrePost;
+//HOWVER: in the case of SynapticCleft is on different rank of the post-side receptor - we need to keep the post-side informaiton 
+    BranchDataProducer.branchData >> Shared.branchDataPost;
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif

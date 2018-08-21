@@ -7,7 +7,7 @@
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
 
-Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProducer,
      BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 /*{{{*/
   //DATA
@@ -26,7 +26,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
   // reference data
   dyn_var_t []* V;//transmembrane voltage [mV]
-  BranchDataStruct* branchData; 
+  BranchDataStruct* branchData;
   DimensionStruct* []* dimensions;
   //int index; //index of the compartment in branch
 
@@ -42,12 +42,12 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
   // Cah 3
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_dists={380.0,480.0, 590}>
   // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-  // Nat 3 
+  // Nat 3
   // BRANCHTYPE MTYPE
   // 1 0 <gbar={0.00992}>
-  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_branchorders={0, 1, 2}>
   // 4 0 <gbar_values={0.0555,0.555,0.000555}>
   //}}}
 
@@ -58,8 +58,8 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     dyn_var_t* K_EC; // [mM]
     dyn_var_t* deltaT; // [ms]
     dyn_var_t* T;     // [K]
-    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-                      //   and tempt. used for the simulation 
+    dyn_var_t Tadj;  // kinetics adjustment based on recorded data
+                      //   and tempt. used for the simulation
     //dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
     dyn_var_t [] E_K; // [mV]
     InitPhase computeE; // [mV]
@@ -80,7 +80,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     int idx;   // index of the compartment on a branch
   }
 
-  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer,
           BranchDataProducer, DimensionArrayProducer
   {
     VoltageArrayProducer.voltageArray >> V;
@@ -92,7 +92,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
     KConcentrationProducer.K >> Shared.K_IC;
   }
 
-  Connection Pre Constant (PSet.identifier=="EC") 
+  Connection Pre Constant (PSet.identifier=="EC")
 	Expects KConcentrationProducer, TemperatureProducer {
     KConcentrationProducer.K >> Shared.K_EC;
     TemperatureProducer.T >> Shared.T;
@@ -105,7 +105,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 }
 
 
-//Node ChannelKIR_Markov Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, 
+//Node ChannelKIR_Markov Implements ConductanceArrayProducer, ReversalPotentialArrayProducer,
 //     BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 ///*{{{*/
 //  //DATA
@@ -123,7 +123,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 //  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
 //  // reference data
 //  dyn_var_t []* V;//transmembrane voltage [mV]
-//  BranchDataStruct* branchData; 
+//  BranchDataStruct* branchData;
 //  DimensionStruct* []* dimensions;
 //  //int index; //index of the compartment in branch
 //
@@ -139,12 +139,12 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 //  // Cah 3
 //  // BRANCHTYPE MTYPE
 //  // 1 0 <gbar={0.00992}>
-//  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+//  // 4 0 <gbar_dists={380.0,480.0, 590}>
 //  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
-//  // Nat 3 
+//  // Nat 3
 //  // BRANCHTYPE MTYPE
 //  // 1 0 <gbar={0.00992}>
-//  // 4 0 <gbar_branchorders={0, 1, 2}> 
+//  // 4 0 <gbar_branchorders={0, 1, 2}>
 //  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
 //  //}}}
 //
@@ -155,8 +155,8 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 //    dyn_var_t* K_EC; // [mM]
 //    dyn_var_t* deltaT; // [ms]
 //    dyn_var_t* T;     // [K]
-//    dyn_var_t Tadj;  // kinetics adjustment based on recorded data 
-//                      //   and tempt. used for the simulation 
+//    dyn_var_t Tadj;  // kinetics adjustment based on recorded data
+//                      //   and tempt. used for the simulation
 //    //dyn_var_t a; // fraction of inactivation (i.e. channel with partial inactivation properties)
 //    dyn_var_t [] E_K; // [mV]
 //    InitPhase computeE; // [mV]
@@ -177,7 +177,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 //    int idx;   // index of the compartment on a branch
 //  }
 //
-//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, 
+//  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer,
 //          BranchDataProducer, DimensionArrayProducer
 //  {
 //    VoltageArrayProducer.voltageArray >> V;
@@ -189,7 +189,7 @@ Node ChannelKIR Implements ConductanceArrayProducer, ReversalPotentialArrayProdu
 //    KConcentrationProducer.K >> Shared.K_IC;
 //  }
 //
-//  Connection Pre Constant (PSet.identifier=="EC") 
+//  Connection Pre Constant (PSet.identifier=="EC")
 //	Expects KConcentrationProducer, TemperatureProducer {
 //    KConcentrationProducer.K >> Shared.K_EC;
 //    TemperatureProducer.T >> Shared.T;

@@ -190,7 +190,7 @@ void ChannelCaN_GHK::update(RNG& rng)
       I_Ca[i] = update_current(v, cai, i);  // [pA/um^2]
 #ifdef CONSIDER_DI_DV
       dyn_var_t I_Ca_dv = update_current(v+0.001, cai, i);  // [pA/um^2]
-      conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);
+      conductance_didv[i] = (I_Ca_dv - I_Ca[i])/(0.001);  // [nS/um^2]
 #endif
     }
 #endif

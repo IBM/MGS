@@ -17,7 +17,9 @@
 #define _lenslexer_h
 #include "Copyright.h"
 
+#if !defined(yyFlexLexerOnce) 
 #include <FlexLexer.h>
+#endif 
 #include "LensParser.h"
 #include <string>
 #ifndef YYSTYPE_DEFINITION

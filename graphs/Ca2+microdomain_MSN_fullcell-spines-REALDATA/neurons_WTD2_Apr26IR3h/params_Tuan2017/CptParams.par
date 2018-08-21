@@ -15,23 +15,26 @@ MTYPE BRANCHTYPE
 2     1
 3     1
 
-COMPARTMENT_VARIABLE_TARGETS 7
-BRANCHTYPE MTYPE
-#{{{
-1 [1:10] Voltage Calcium  CalciumER IP3
-1 0      Voltage Calcium  CalciumER 
-2 [0:10] Voltage Calcium
-3 [0:10] Voltage Calcium  CalciumER  
-4 [0:10] Voltage Calcium  CalciumER
-5 [0:10] Voltage Calcium  CalciumER
-6 [0:10] Voltage Calcium  CalciumER
+COMPARTMENT_VARIABLE_TARGETS 8
+MTYPE BRANCHTYPE 
+#{{{ 8
+0 1      Voltage Calcium  CalciumER 
+0 [2,5,7] Voltage Calcium  
+0 [3,4,6] Voltage Calcium  CalciumER 
+[2,3] 1      Voltage Calcium  CalciumER  IP3
+[2,3] 3      Voltage Calcium  CalciumER  IP3
+[4,5] 1      Voltage Calcium  CalciumER  
+[4,5] [2,5,7]      Voltage Calcium  
+[4,5] [3,4,6]      Voltage Calcium CalciumER  
 #}}}
 
 COMPARTMENT_VARIABLE_COSTS 4
+#{{{ 4
 Voltage 1.0
 Calcium 1.0
 CalciumER 1.0
 IP3 1.0
+#}}}
 
 #{{{units
 # Cm ~ [pF/um^2]
@@ -45,13 +48,13 @@ Voltage 17
 MTYPE BRANCHTYPE
 #{{{ 17
 #{{{neuron 7
-0 1 <Cm=0.01; gLeak=0.0002>
-0 2 <Cm=0.01; gLeak=0.000325>
-0 5 <Cm=0.01; gLeak=0.000325>
-0 7 <Cm=0.01; gLeak=0.000325>
-0 3 <Cm=0.02; gLeak=0.000295>
-0 4 <Cm=0.02; gLeak=0.000295>
-0 6 <Cm=0.01; gLeak=0.000138>
+0 1 <Cm=0.01; gLeak=2.0e-4>
+0 2 <Cm=0.01; gLeak=3.25e-4>
+0 5 <Cm=0.01; gLeak=3.25e-4>
+0 7 <Cm=0.01; gLeak=3.25e-4>
+0 3 <Cm=0.02; gLeak=2.95e-4>
+0 4 <Cm=0.02; gLeak=2.95e-4>
+0 6 <Cm=0.01; gLeak=1.38e-4>
 #}}}
 ##{{{ GABAergic bouton 2
 1 1 <Cm=0.01; gLeak=0.000295>
@@ -68,4 +71,5 @@ MTYPE BRANCHTYPE
 4 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
 5 1 <Cm=0.01; gLeak=0.000338; Vnew={-70.0}>
 5 2 <Cm=0.01; gLeak=0.000325; Vnew={-70.0}>
+#}}}
 #}}}

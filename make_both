@@ -23,30 +23,35 @@ rm_ifexist() {
 }
 
 function print_help {
-	echo -e "\n\n${cc_blue}Make both NTS and MGS...${cc_normal} \n\nOption include : \n\n 
+  echo -e "\n\n${cc_blue}Make both NTS and MGS...${cc_normal} \n\nOption include : \n\n 
   -p [LINUX|BGL|BGP|BGQ]        default = LINUX  build to run on what platform
   -c [all|common|mdl|gsl|nti]   default = all    what components to build
   -r|--release                  to build in release mode [default: debug mode]
   -j <n>                        with <n> is number of processes [default: 2/3 of total cores]
-  -g|--gpu                      build with GPU extensions
-  -a|--arma                     build with Armadillo extensions
-  --clean
+  -s|--singlethread             to build in single thread
   --mco                         <max-compute-order>
-
-Example:
-1) make_nts -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
-2) make_nts -p BGL :            makes both NTS and MGS on Blue Gene/L
-3) make_nts -p BGP :            makes both NTS and MGS on Blue Gene/P
-4) make_nts -p BGQ :            make both NTS and MGS on Blue Gene/Q\n
-Other options:\n
   --clean                       to clean everything
   --rebuild                     to clean and rebuild
-  --mco        
-  -s|--singlethread             to build in single thread
   --loglevel [1|2]              determine the log-level
                                 [by default: build with -g information, but not printing out any thing]
                                   log1 = print out DEBUG_HH and DEBUG_ASSERT
                                   log2 = print out ... during loops
+  --colab                       build libraries for collaborators (gsl/lib) 
+  --regen                       regenerate gsl/Makefile  
+  HETE ARCHITECTURE:
+  -g|--gpu                      build with GPU extensions
+  -a|--arma                     build with Armadillo extensions
+
+Example:
+1) make_both -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
+2) make_both -p BGL :            builds both NTS and MGS on Blue Gene/L
+3) make_both -p BGP :            builds both NTS and MGS on Blue Gene/P
+4) make_both -p BGQ :            builds both NTS and MGS on Blue Gene/Q\n
+\n
+Extra Libraries:
+  export SUITESPARSE=\`pwd\`/SuiteSparse/
+  export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$SUITESPARSE/lib
+
 \n\n"; exit;
 }
 
@@ -54,7 +59,83 @@ if [ "$1" == "--help" ] || [ $# == 0 ]; then
   print_help
 fi
 #}}}
+RunInstallFlex()
+{
+  #{{{
+    Ask_InstallPath $1
+    rm -rf flex-2.6.4
+    rm -rf flex-2.6.4.tar.gz
+    wget "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
+    tar -xvf flex-2.6.4.tar.gz
+    cd flex-2.6.4
+    if [ "$flex_path" == '' ]; then
+      ./configure
+    else
+      echo "./configure --prefix=$flex_path"
+    fi
+    make -j10
+    sudo make install
+    cd -
+    rm -rf flex-2.6.4
+    rm flex-2.6.4.tar.gz
+    echo "please update:"
+    echo "   PATH: $flex_path/bin"
+    echo "   LD_LIBRARY_PATH, LD_RUN_PATH, and LIBRARY_PATH: $flex_path/lib" 
+    echo "   CPATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH, INCLUDE: $flex_path/include" 
+    echo "   MANPATH: $flex_path/man"
+    echo "and reload shell"
+  #}}}
+}
+Ask_InstallPath()
+{
+  #{{{
+  # print question
+  echo -n "Where do you want to install "$1"?(Press Enter for default (e.g. /usr/local/bin): "
 
+  # read answer
+  read -e path 
+
+  # check and act on given answer
+  flex_path=$(eval echo $path)
+  #}}}
+}
+Yes_No_InstallFlex()
+{
+  #{{{
+  # print question
+  echo -n "Do you want to install Flex 2.6.4?(yes(y)/no(n)): "
+
+  # read answer
+  read YnAnswer
+
+  # all to lower case
+  YnAnswer=$(echo $YnAnswer | awk '{print tolower($0)}')
+
+  # check and act on given answer
+  case $YnAnswer in
+    "yes")  RunInstallFlex "Flex 2.6.4";;
+    "y")  RunInstallFlex "Flex 2.6.4";;
+    "no")  ;;
+    "n")  ;;
+    *)      echo "Please answer yes(y) or no(n)" ; Yes_No_InstallFlex;;
+  esac
+  #}}}
+}
+
+function make_functor_mdf()
+{
+  cat functors_common.mdf > $1
+  #cat functors_both.mdf >> $1
+  cat functors_nts.mdf >> $1
+  #cat functors_mgs.mdf >> $1
+  if [ -f colab_functors.mdf ]; then
+    cat colab_functors.mdf >> $1
+  else
+    touch $1
+  fi
+}
+
+#########################################
 
 TYPE="BOTH"  # NTS, MGS, BOTH
 ##########################################
@@ -68,7 +149,10 @@ MCO=""
 RELEASE=""
 GPU=""
 ARMA=""
+REGENMAKEFILE=""
 GSL_BUILD_MODE=""
+COLAB=""
+TARGET_BUILD=""
 optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
@@ -102,8 +186,15 @@ while getopts "$optspec" optchar; do
                 clean)
                     CLEAN="-clean"
                     ;;
+                colab)
+                    TARGET_BUILD="library"
+                    COLAB="--colab"
+                    ;;
                 rebuild)
                     REBUILD="-rebuild"
+                    ;;
+                regen)
+                    REGENMAKEFILE="--regen"
                     ;;
                 singlethread)
                     NPROCS=1
@@ -199,7 +290,8 @@ fi
 if which flex | grep -q1 /\flex; then
     echo flex found...; else echo flex not found!; exit; fi
 
-VALID_FLEX_VERSION=2.5.4
+VALID_FLEX_VERSION=2.6.4
+#{{{
 FLEX_VERSION=`flex --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
 echo version $FLEX_VERSION...
 read c_major c_minor c_rev << EOF
@@ -210,62 +302,92 @@ read n_major n_minor n_rev << EOF
 `echo ${FLEX_VERSION} | tr "." " "`
 EOF
 if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
+FLEX_FAILED=0
 if [ "$n_major" -ne "$c_major" ]; then
-    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$PLATFORM" == "LINUX" ]; then
-	exit;
-    fi
+  FLEX_FAILED=1
+  #  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  #  if [ "$PLATFORM" == "LINUX" ]; then
+  #      exit;
+  #  fi
 fi
 if [ "$n_major" -eq "$c_major" ] &&  [ "$n_minor" -ne "$c_minor" ]; then
-    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$PLATFORM" == "LINUX" ]; then
-	exit;
-    fi
+  FLEX_FAILED=1
+  #  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  #  if [ "$PLATFORM" == "LINUX" ]; then
+  #      exit;
+  #  fi
 fi
 if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -ne "$c_rev" ]; then
-    echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
-    if [ "$PLATFORM" == "LINUX" ]; then
-	exit;
-    fi
+  FLEX_FAILED=1
+  #  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  #  if [ "$PLATFORM" == "LINUX" ]; then
+  #      exit;
+  #  fi
 fi
-
-if which python | grep -q1 /\python; then
-    echo python found...; else echo python not found!;
-	exit;
-fi
-
-if ldconfig -p | grep libgmp; then
-    echo libgmp found...; else libgmp not found! please either install through your distributions package manager or from source;
-        exit;
-fi
-
-if [ "$GPU" == "--gpu" ]; then
-    if which nvidia-smi | grep -q1 /\nvidia-smi; then
-        echo CUDA probably found...; else echo CUDA potentially not found!;
-                                          exit
-    fi
-fi
-
-if [ "$ARMA" == "--arma" ]; then
-    if `ldconfig -p | grep -q armadillo`; then
-        echo Armadillo probably found...; else echo Armadillo potentially not found!;
-                                          exit
-    fi
+if [ $FLEX_FAILED -eq 1 ]; then
+  echo flex version $VALID_FLEX_VERSION required: flex.sourceforge.net!
+  Yes_No_InstallFlex
+  if [ "$PLATFORM" == "LINUX" ]; then 
+    exit;
+  fi
 fi
 #}}}
 
-if [ "$NTSMGSROOT" == "" ]; then
+if which python | grep -q1 /\python; then
+  echo "python found..."; else echo "python not found!";
+  exit;
+fi
+
+if ldconfig -p | grep libgmp; then
+  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source";
+  exit;
+fi
+
+if [ "$GPU" == "--gpu" ]; then
+  if which nvidia-smi | grep -q1 /\nvidia-smi; then
+    echo "CUDA probably found..."; else echo "CUDA potentially not found!";
+    exit
+  fi
+fi
+
+if [ "$ARMA" == "--arma" ]; then
+  if `ldconfig -p | grep -q armadillo`; then
+    echo "Armadillo probably found..."; else echo "Armadillo potentially not found!";
+    exit
+  fi
+fi
+#}}}
+#{{{ 
+if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
+  echo "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
+  echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+  exit 1
+fi
+if [[ -z "${SUITESPARSE}" ]]; then
+  echo "Please install (if needed) and run: export SUITESPARSE=/path/to/suitesparse"
+  exit 1
+fi
+BASE_FOLDER=$NTSMGSROOT
+#}}}
+
+########################################
+### Check supporting files/settings ###
+#{{{pre-configure and testing
+if [ "$BASE_FOLDER" == "" ]; then
   echo "Please run: source setenv_both"
-  exit
+  exit 1
+elif [ "$BASE_FOLDER" != $(pwd) ]; then
+  echo "Please run: source setenv_both"
+  exit 1
 fi
 if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-  echo "First build. Please run with --rebuild"
-  exit
+  echo "First build. Auto run with --rebuild"
+  REBUILD="-rebuild"
 fi
 
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
-  if  [ "$NTSMGSROOT" != "$line" ]; then
+  if  [ "$BASE_FOLDER" != "$line" ]; then
     echo "Please run: source setenv_both"
     rm .built
     exit
@@ -273,51 +395,54 @@ if [  -f ".built"  ]; then
   PREV_TYPE=$(sed '2q;d' ".built")
 fi
 if [ "$CLEAN" == "-clean" ] ; then
-  rm_ifexist $NTSMGSROOT/.built
+  rm_ifexist $BASE_FOLDER/.built
 fi
 if [ "$REBUILD" == "-rebuild" ] ;then
-  cd $NTSMGSROOT
-  touch .built && echo $NTSMGSROOT > .built
+  cd $BASE_FOLDER
+  touch .built && echo $BASE_FOLDER > .built
   echo $TYPE >> .built # 2nd-line
 fi
 if [ "$TYPE" != "$PREV_TYPE" ]; then
   gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
 fi
+#}}}
+
 ################################################
 ### MDL code ###
 #{{{
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  echo "Start build MDL parser"
   cd $MDLROOT
 
   touch mdl.make.mark
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ]; then
       make clean;
-      echo "${cc_blue}Removed MDL code successful.${cc_normal}"
+      echo "${cc_blue}Removed MDL code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make -j $NPROCS RELEASE="$RELEASE"
-      if [ `ls $MDLROOT/bin/mdlparser` ]; then
-        echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
-      fi
+      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    make -j $NPROCS RELEASE="$RELEASE"
-    if [ `ls $MDLROOT/bin/mdlparser` ]; then
-      echo  -e "${cc_blue} Build MDL successful.${cc_normal}\n"
-    fi
+    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
   fi
-  if [ "$CLEAN" != "-clean" ] ; then
-    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser` ]; then
+  if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$TARGET_BUILD" != "" ]; then
+      # we also want to build the executable
+      make -j $NPROCS RELEASE="$RELEASE"
+    fi
+    if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark
-      cd $NTSMGSROOT
+      cd $BASE_FOLDER
       echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
       exit;
+    else
+      echo  -e "${cc_blue} Build MDL successfully.${cc_normal}\n"
     fi
     rm -f mdl.make.mark
-    cd $NTSMGSROOT
+    cd $BASE_FOLDER
   fi
 fi
 #}}}
@@ -326,7 +451,8 @@ fi
 ### COMMON code ###
 #{{{
 if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  cd $NTSMGSROOT/common
+  echo "Start build COMMON"
+  cd $BASE_FOLDER/common
   sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   sed 's/FOR_BLUEGENE_Q=1/FOR_BLUEGENE_Q=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
@@ -336,19 +462,30 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
   fi
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
-      make realclean;
-      echo "${cc_blue}Removed COMMON code successful.${cc_normal}"
+      make realclean RELEASE="$RELEASE";
+      echo "${cc_blue}Removed COMMON code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
-      make realclean;
-      make -j $NPROCS RELEASE="$RELEASE"
-      echo "${cc_blue}Build COMMON code successful.${cc_normal}"
+      make realclean RELEASE="$RELEASE";
+      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    make -j $NPROCS RELEASE="$RELEASE"
-    echo "${cc_blue}Build COMMON code successful.${cc_normal}"
+    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
   fi
-  cd $NTSMGSROOT
+  if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$TARGET_BUILD" != "" ]; then
+      # we also want to build the executable
+      make -j $NPROCS RELEASE="$RELEASE"
+    fi
+    if [ $? -gt 0 ]; then
+      cd $BASE_FOLDER
+      echo -e "${cc_red}Build COMMON code failed ! ${cc_normal}";
+      exit;
+    else
+      echo -e "${cc_blue}Build COMMON code successfully.${cc_normal}"
+    fi
+  fi
+  cd $BASE_FOLDER
 fi
 #}}}
 
@@ -356,7 +493,7 @@ fi
 ### NTI code ###
 #{{{
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  cd $NTSMGSROOT/nti
+  cd $BASE_FOLDER/nti
   if [ -f .build_error ]; then rm .build_error; fi
   if [ "$MCO" == "-MCO" ]; then
     #TODO: Find out what is $3 here to replace it
@@ -373,56 +510,78 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean;
+      echo -e "${cc_blue}Removed NTI code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      make realclean;
-      if [ "$RELEASE" == "-release" ]; then
-          make -j $NPROCS RELEASE="-release"
-      else
-          make -j $NPROCS RELEASE=""
-      fi
+      make realclean RELEASE="$RELEASE";
+      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    if [ "$RELEASE" == "-release" ]; then
-        make -j $NPROCS RELEASE="-release"
-    else
-        make -j $NPROCS RELEASE=""
+    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+  fi
+  if [ -f .build_error ]; then 
+    cd $BASE_FOLDER
+    exit ; 
+  fi
+  if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
+    if [ "$TARGET_BUILD" != "" ]; then
+      # we also want to build the executable
+      make -j $NPROCS RELEASE="$RELEASE"
     fi
+    BUILD_FAIL=0
+    if [ "$RELEASE" == "-release" ]; then
+      if [ ! `ls $LENSROOT/lib/libnti.a 2>/dev/null` ]; then
+        BUILD_FAIL=1
+      fi
+    else
+      if [ ! -f $LENSROOT/lib/libnti_db.a ]; then
+        BUILD_FAIL=1
+      fi
+    fi
+    if [ $BUILD_FAIL -eq 1 ]; then
+      cd $BASE_FOLDER
+      echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
+      exit;
+    else
+      echo -e "${cc_blue}Build NTI code successfully.${cc_normal}"
+    fi
+    cd $BASE_FOLDER
   fi
-  if [ -f .build_error ]; then exit ; fi
-  if [ $? -gt 0 ] || [ ! `ls $LENSROOT/lib/liblensdomain.a` ]; then
-    cd $NTSMGSROOT
-    echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
-    exit;
-  fi
-  cd $NTSMGSROOT
-  echo "${cc_blue}Complete build NTI code${cc_normal}"
 fi
 #}}}
 
 ##########################################
 ### GSL code ###
 #{{{
+EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} --as-both-Nts-Mgs"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  if [ "$REGENMAKEFILE" == "--regen" ] ; then
+    cd $LENSROOT
+    ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
+    echo "Complete: regenerate gsl/Makefile"
+    exit
+  fi
+  echo "Start build GSL"
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     #{{{
     cd $LENSROOT
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
-      ./build_gsl -p $PLATFORM --clean --as-both-Nts-Mgs
-      rm_ifexist $NTSMGSROOT/models/Extensions.mk
-      #rm_ifexist $NTSMGSROOT/models/all.mdf
-      #rm_ifexist $NTSMGSROOT/models/all_test.mdf
+      ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --clean
+      rm_ifexist $BASE_FOLDER/models/Extensions.mk
+      #rm_ifexist $BASE_FOLDER/models/all.mdf
+      #rm_ifexist $BASE_FOLDER/models/all_test.mdf
       rm_ifexist $LENSROOT/extensions/functor/all.mdf
       rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
       find . -iname "CG_*" | xargs -I{} rm {}
-      find $NTSMGSROOT/models -iname "CG_*" | xargs -I{} rm {}
-      touch $NTSMGSROOT/models/all.mdf
+      find $BASE_FOLDER/models -iname "CG_*" | xargs -I{} rm {}
+      find $BASE_FOLDER/models -iname ".*mdl" | xargs -I{} rm {}
+      touch $BASE_FOLDER/models/all.mdf
       #}}}
     fi
     cd -
-    cd $NTSMGSROOT
+    cd $BASE_FOLDER
     if [ "$REBUILD" == "-rebuild" ] ;then
       #{{{
       cd $LENSROOT/extensions/variable
@@ -433,16 +592,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #rm_ifexist all.mdf
       JUST_CREATE=0
       if [ ! -f all.mdf ]; then
-        cat functors_common.mdf > all.mdf
-        cat functors_both.mdf >> all.mdf
-        cat functors_nts.mdf >> all.mdf
-        cat functors_mgs.mdf >> all.mdf
         JUST_CREATE=1
+        make_functor_mdf all.mdf
       fi
-      cat functors_common.mdf > all_test.mdf
-      cat functors_both.mdf  >> all_test.mdf
-      cat functors_nts.mdf   >> all_test.mdf
-      cat functors_mgs.mdf   >> all_test.mdf
+      make_functor_mdf all_test.mdf
       if [ ! diff -q all_test.mdf all.mdf &>/dev/null ] || [ $JUST_CREATE -eq 1 ]; then
         mv all_test.mdf all.mdf
         ./define all.mdf $REBUILD
@@ -451,7 +604,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #rm_ifexist all.mdf
       #cat nts.mdf >> all.mdf
       #cat mgs.mdf >> all.mdf
-      cd $NTSMGSROOT/models
+      cd $BASE_FOLDER/models
       if [ $PREV_TYPE != $TYPE ]; then
         if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
           touch nts.mdf
@@ -464,13 +617,13 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       ./define all.mdf $REBUILD
 
       cp Extensions.mk $LENSROOT/
-      cd $NTSMGSROOT
+      cd $BASE_FOLDER
       #}}}
     fi
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      ./build_gsl -p $PLATFORM --rebuild -j $NPROCS $GSL_BUILD_MODE --as-both-Nts-Mgs $GPU  $ARMA
+      ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA
     fi
     cd -
     #}}}
@@ -481,16 +634,13 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $LENSROOT/extensions/struct
     ./define structs.mdf $REBUILD
     cd $LENSROOT/extensions/functor
-    cat functors_common.mdf >> all_test.mdf
-    cat functors_nts.mdf >> all_test.mdf
-    cat functors_mgs.mdf >> all_test.mdf
-    cat functors_both.mdf >> all_test.mdf
+    make_functor_mdf all_test.mdf
     if ! diff -q all_test.mdf all.mdf &>/dev/null; then
       mv all_test.mdf all.mdf
       ./define all.mdf $REBUILD
     fi
     rm_ifexist all_test.mdf
-    cd $NTSMGSROOT/models
+    cd $BASE_FOLDER/models
     if [ $PREV_TYPE != $TYPE ]; then
       if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
         touch nts.mdf
@@ -508,10 +658,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     fi
 
     cp Extensions.mk $LENSROOT/
-    cd $NTSMGSROOT
+    cd $BASE_FOLDER
     # -s or -singlethread
     cd $LENSROOT
-    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-both-Nts-Mgs $GPU  $ARMA
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE ${EXTRA_ARGS} $GPU  $ARMA
     cd -
     #}}}
   fi
@@ -539,4 +689,3 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   fi
 fi
 #}}}
-

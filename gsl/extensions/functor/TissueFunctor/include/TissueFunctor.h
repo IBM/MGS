@@ -51,6 +51,7 @@ class ComputeBranch;
 class CG_CompartmentDimension;
 class NodeAccessor;
 
+enum class ProbedCategory_t {NOT_SET, NTS_MGS, NTS_NVU};
 class TissueFunctor : public CG_TissueFunctorBase 
 {
   friend class TissueLayoutFunctor;
@@ -140,6 +141,16 @@ class TissueFunctor : public CG_TissueFunctorBase
   void doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval);
   //Zipper purpose
   Grid* doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
+  Grid* doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+        const std::string layout,
+        NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
+        int& remaining,
+        int NumCptsToExtract);
+  Grid* doProbe_Region(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
+        const std::string layout,
+        NDPairList::iterator& ndpiter, NDPairList::iterator& ndpend_reverse,
+        int& remaining,
+        std::vector<float> vN);
   std::pair<std::string, std::string> getCategoryTypePair(NDPairList::iterator& ndpiter, int & remaining);
   int getTypeLayerIdx(std::string category, std::string type, bool& esyn);
   GridLayerDescriptor* getGridLayerDescriptor(std::string category, int typeIdx, bool esyn);
@@ -268,7 +279,13 @@ class TissueFunctor : public CG_TissueFunctorBase
   // NOTE: density-index = index in the density array of Capsules for the
   // current gridnode
   std::map<std::string, std::map<Capsule*, int> > _capsuleCptPointIndexMap;
+#ifdef SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE
+  //std::map<std::string, std::map<Touch*, int > > _capsuleJctPointIndexMap;
+  std::map<std::string, std::map<std::pair<Capsule*, Capsule*>, int > > _capsuleJctPointIndexMap;
+#else
+  //nodetype = 'tight' (SynapticCleft's name), 'Nat' (Channel's name)
   std::map<std::string, std::map<Capsule*, int> > _capsuleJctPointIndexMap;
+#endif
 
   // NOTE: While parsing GSL, each layer is given an index,
   //                   starting from 0 for the first Layer in A GRID
@@ -374,7 +391,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   std::vector<std::map<Touch*, int> > _synapticCleftMaps; 
 
   //Zipper purpose
-  // map<"PROBED-name", vector-holding-#instances-at-each-gridIndex >
+  // map<"PROBED-name", vector-holding-#instances(i.e. density)-at-each-gridIndex(i.e.MPIrank) >
   //                 NOTE: the index of the vector is also the gridIndex
   std::map<std::string, ShallowArray<int> > _probedLayoutsMap;
   // map<"PROBED-name", map< pair{category, typename }, pair{ Grid*, vector<ND*>} > >
@@ -382,6 +399,16 @@ class TissueFunctor : public CG_TissueFunctorBase
   //            one of the NTS-layer as defined 
   //            which can be tracked using <Grid*, vector<ND*>>
   std::map<std::string, std::map<std::pair<std::string, std::string>, std::pair<Grid*, std::vector<NodeDescriptor*> > > > _probedNodesMap;
+  std::map<std::string, ProbedCategory_t> _probedCategory;
+  inline const char* ProbedCategory_ToString(ProbedCategory_t v)
+  {
+    switch (v)
+    {
+      case ProbedCategory_t::NTS_MGS:   return "NTS_MGS";
+      case ProbedCategory_t::NTS_NVU:   return "NTS_NVU";
+      default:      return "[Unknown ProbedCategory]";
+    }
+  };
   //end Zipper
 
   // NOTE:

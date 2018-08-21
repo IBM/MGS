@@ -45,7 +45,7 @@ VolumeGranuleMapper::VolumeGranuleMapper(Simulation& sim, std::vector<DataItem*>
 
    StringDataItem* descriptionDI = dynamic_cast<StringDataItem*>(*iter);
    if (descriptionDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on VolumeGranuleMapper!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to StringDataItem failed on VolumeGranuleMapper! (first argument)"<<std::endl;
       exit(-1);
    }
    _description  = descriptionDI->getString();
@@ -53,7 +53,7 @@ VolumeGranuleMapper::VolumeGranuleMapper(Simulation& sim, std::vector<DataItem*>
    ++iter;
    IntArrayDataItem* dimensionsDI = dynamic_cast<IntArrayDataItem*>(*iter);
    if (dimensionsDI == 0) {
-      std::cerr<<"Dynamic cast of DataItem to IntArrayDataItem failed on VolumeGranuleMapper!"<<std::endl;
+      std::cerr<<"Dynamic cast of DataItem to IntArrayDataItem failed on VolumeGranuleMapper! (second argument)"<<std::endl;
       exit(-1);
    }
    std::vector<int> const * v=dimensionsDI->getIntVector();
@@ -72,7 +72,7 @@ VolumeGranuleMapper::VolumeGranuleMapper(Simulation& sim, std::vector<DataItem*>
    }     
 
    else {
-     std::cerr<<"Dynamic cast of DataItem to IntArrayDataItem failed on VolumeGranuleMapper!"<<std::endl;
+     std::cerr<<"Dynamic cast of DataItem to IntArrayDataItem failed on VolumeGranuleMapper! (third argument)"<<std::endl;
      exit(-1);
    }
 
@@ -81,7 +81,7 @@ VolumeGranuleMapper::VolumeGranuleMapper(Simulation& sim, std::vector<DataItem*>
      ++iter;
      NumericDataItem* numGranulesDI = dynamic_cast<NumericDataItem*>(*iter);
      if (numGranulesDI == 0) {
-       std::cerr<<"Dynamic cast of DataItem to NumericDataItem failed on FFTGranuleMapper!"<<std::endl;
+       std::cerr<<"Dynamic cast of DataItem to NumericDataItem failed on VolumeGranuleMapper! (fourth argument)"<<std::endl;
        exit(-1);
      }
      numGranules=numGranulesDI->getInt();    

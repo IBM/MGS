@@ -343,3 +343,13 @@ MTYPE BRANCHTYPE
 1 2 <tau={1.9}>
 #}}}
 #}}}
+# UNITS: 
+#  v_efflux = 1/ms  [DEFAULT: 0.1 [ms^-1]]
+#  depth    = nanometer
+#  fraction_surface = % [of membrane-surface-area]
+# IMPORTANT: ';' separated list of values
+MICRODOMAIN_PARAMS 3
+domain1  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain2  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+domain3  <v_efflux={0.03}; depth_microdomain={10}; fraction_surface={1.0}>
+

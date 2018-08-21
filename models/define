@@ -16,6 +16,20 @@
 # HOW TO USE
 # ./define <file.mdf> [-rebuild]
 
+#{{{
+function run_mdlparser() {
+  #{{{
+  # NOTE: $LENSROOT/extensions/functor need to be added explicitly to configure.py
+  #temp_mdf_only=$(mktemp)
+  #temp_mdl_only=$(mktemp)
+  #grep  '^[^//]' $1 | awk '/mdf"/ {print $2}' > ${temp_mdf_only}
+  #grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_mdl_only}
+  $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+  #$MDLROOT/bin/mdlparser `cat ${temp_mdf_only} | tr '\n' ' ' ` ${temp_mdfl_only} -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+  #}}}
+}
+#}}}
+
 temp_mdf_only=$(mktemp)
 temp_mdl_only=$(mktemp)
 grep  '^[^//]' $1 | awk '/mdf"/ {print}' > ${temp_mdf_only}
@@ -31,10 +45,12 @@ while read in; do
   file_name=`echo $in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   if [ -f $file_name ]; then
     cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
+    temp_file_name=$(mktemp)
+    grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_file_name}
     while read mdl_in; do 
       mdl_file_name=`echo $mdl_in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
       MDLFILES+=($mdl_file_name)
-    done < $file_name
+    done < $temp_file_name
   fi
 done < ${temp_mdf_only}
 
@@ -52,9 +68,12 @@ rm -f defineModels1.sh;
 rm -f defineModels2.sh;
 ##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
 REGEN=0
-if [ define -ot $1 ] && [ "$RERUN" -eq 1 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; REGEN=1; fi
+if [ ! -f $LENSROOT/Extensions.mk ]; then
+  run_mdlparser $1; REGEN=1; 
+fi
+if [ define -ot $1 ] && [ "$RERUN" -eq 1 ]; then run_mdlparser $1;  REGEN=1; fi
 if [ $REGEN -eq 0 ]; then
-  if [ define -ot $1 ] && [ "$2" == "-force" ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; REGEN=1; fi
+  if [ define -ot $1 ] && [ "$2" == "-force" ]; then run_mdlparser $1; REGEN=1; fi
 fi
 #$MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
 for i in "${MDLFILES[@]}"
@@ -62,7 +81,7 @@ do
   if [ define -ot $i ]; then RERUN=1; cpp $i > $(dirname "${i}")"/."$(basename "${i}"); fi
   touch $i
 done
-if [ "$RERUN" -eq 1 ]  && [ $REGEN -eq 0 ]; then $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct; REGEN=1; fi
+if [ "$RERUN" -eq 1 ]  && [ $REGEN -eq 0 ]; then run_mdlparser $1; REGEN=1; fi
 touch $1
 sleep 2
 touch define;

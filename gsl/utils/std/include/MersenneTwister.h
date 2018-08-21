@@ -69,7 +69,6 @@
 static const char* MT_copyright = "Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura, All rights reserved.";
 
 class MersenneTwister {
-
  private:
   const unsigned _constantN;
   const unsigned _constantM;

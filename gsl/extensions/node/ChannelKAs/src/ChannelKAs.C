@@ -124,16 +124,19 @@ void ChannelKAs::update(RNG& rng)
   dyn_var_t dt = *(getSharedMembers().deltaT);
 #if defined(WRITE_GATES)                                                  
   bool is_write = false;
-  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
-      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  if (outFile)
   {
-    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
-    if (currentTime >= _prevTime + IO_INTERVAL)                           
-    {                                                                     
-      (*outFile) << std::endl;                                            
-      (*outFile) <<  currentTime;                                         
-      _prevTime = currentTime;                                            
-      is_write = true;
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    {
+      float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+      if (currentTime >= _prevTime + IO_INTERVAL)                           
+      {                                                                     
+        (*outFile) << std::endl;                                            
+        (*outFile) <<  currentTime;                                         
+        _prevTime = currentTime;                                            
+        is_write = true;
+      }
     }
   }
 #endif
@@ -158,8 +161,8 @@ void ChannelKAs::update(RNG& rng)
       // dyn_var_t tauh = (THC1 + (THC2 + THF*(v + THV1))*exp(-pow((v +
       // THV2)/THD,2)))/T_ADJ;
       dyn_var_t tauh =
-          (THC1 + (THC2 + THF * (v + THV1)) * exp(-pow((v + THV2) / THD, 2))) /
-          getSharedMembers().Tadj;
+        (THC1 + (THC2 + THF * (v + THV1)) * exp(-pow((v + THV2) / THD, 2))) /
+        getSharedMembers().Tadj;
       dyn_var_t pm = 0.5 * dt / taum;
       dyn_var_t ph = 0.5 * dt / tauh;
       m[i] = (2.0 * pm * minf + m[i] * (1.0 - pm)) / (1.0 + pm);
@@ -169,12 +172,12 @@ void ChannelKAs::update(RNG& rng)
     dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
     dyn_var_t tau_m = (tau_M / (exp(-(v - VHALF_TAUM) / k_TAUM) +
-                                exp((v - VHALF_TAUM) / k_TAUM))) /
-                      getSharedMembers().Tadj;
+          exp((v - VHALF_TAUM) / k_TAUM))) /
+      getSharedMembers().Tadj;
     dyn_var_t tau_h = (1790 +
-                       2930 * exp(-pow((v - VHALF_TAUH) / k_TAUH, 2)) *
-                           ((v - VHALF_TAUH) / k_TAUH)) /
-                      getSharedMembers().Tadj;
+        2930 * exp(-pow((v - VHALF_TAUH) / k_TAUH, 2)) *
+        ((v - VHALF_TAUH) / k_TAUH)) /
+      getSharedMembers().Tadj;
     dyn_var_t pm = 0.5 * dt / tau_m;
     dyn_var_t ph = 0.5 * dt / tau_h;
     m[i] = (2.0 * pm * m_inf + m[i] * (1.0 - pm)) / (1.0 + pm);
@@ -320,8 +323,8 @@ void ChannelKAs::initialize(RNG& rng)
         gbar[i] = gbar_default;
     }
     /*else if (gbar_values.size() == 1) {
-gbar[i] = gbar_values[0];
-} */
+    gbar[i] = gbar_values[0];
+    } */
     else if (gbar_branchorders.size() > 0)
     {
       unsigned int j;
@@ -415,11 +418,14 @@ gbar[i] = gbar_values[0];
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);  // at time t0+dt/2
 #if defined(WRITE_GATES)                                      
-    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
-        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    if (outFile)
     {
-      (*outFile) << std::fixed << fieldDelimiter << m[i];       
-      (*outFile) << std::fixed << fieldDelimiter << h[i];       
+      if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+          _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+      {
+        (*outFile) << std::fixed << fieldDelimiter << m[i];       
+        (*outFile) << std::fixed << fieldDelimiter << h[i];       
+      }
     }
 #endif                                                        
   }

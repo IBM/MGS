@@ -20,6 +20,18 @@ void factorial(mpz_t result, unsigned long N)
   }
 }
 
+double factorial(int c)
+{
+    double result = 1;
+
+    for (int n = 1; n <= c; n++)
+    {
+        result = result * n;
+    }
+
+    return result;
+}
+
 // GOAL: find (N+M-1)! / (M! * (N-1)!)
 // How many ways to put M balls into N bins
 // without discriminating balls

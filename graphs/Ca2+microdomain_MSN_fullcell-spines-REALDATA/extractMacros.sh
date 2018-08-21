@@ -16,6 +16,7 @@ if [ ! -d ${OUTPUTFOLDER} ]; then  mkdir ${OUTPUTFOLDER}; fi
 
 DoPlot()
 {
+  #{{{
   ## Modify this function to do plotting for the output data
   if [ "$RUNSIM_COMPLETED" == 1 ]; then
     ## NOTE: comment out if we don't want to plot
@@ -34,13 +35,17 @@ DoPlot()
     # if [ -f  "$OutputFolderName/SEClamp.txt" ]; then
     #   xmgrace -block $OutputFolderName/SEClamp.txt  -bxy 1:2 & 
     # fi
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  $OutputFolderName/ &
-    python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  $OutputFolderName/ 
-    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_shaft &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_currents.py  --folder $OutputFolderName/ &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  --folder $OutputFolderName/ &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  --folder $OutputFolderName/ 
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_soma.py  --folder $OutputFolderName/ --absolute_current & 
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_ais.py  --folder $OutputFolderName/ --absolute_current &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_shaft &
     #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix proximal_spine &
-    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_spine&
-    #python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_shaft &
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_spine&
+    python /data/tmhoangt/Scripts/NTS_plotting/plot_spine.py --folder $OutputFolderName/ --prefix distal_shaft &
   fi
+  #}}}
 }
 #}}}
 
@@ -329,6 +334,7 @@ if [ ! -d "$OutputFolderName" ]; then
 else
   if [ "$secondArg" != "-plot-only" ]; then
     echo "second arg is $secondArg"
+    echo "Folder: $OutputFolderName"
     Yes_No_RunSim
   else
     RUNSIM_COMPLETED=1

@@ -22,6 +22,7 @@
 #define CASE_01  1   //inject soma [square pulse current]
 #define CASE_01b  101   //inject soma [brief train of AP]
 #define CASE_01c  201   //inject soma [point current source]
+#define CASE_01d  301   //inject soma [ramp current]
 #define CASE_02  2   //inject shaft with dual-exp EPSP-like current injection
 #define CASE_03  3   //inject a particular presynaptic neuron 
 #define CASE_04  4  //inject presynaptic neurons at distal region
@@ -68,7 +69,9 @@ print("WARNING: You haven't selected MODEL_TO_USE")
 #define OutputFolderName dataFolder morph  "Tuan_rest" STR(EXTENSION)
 print("Case 00: resting");
 #elif STIMULUS_CASE ==  CASE_01 || \
-      STIMULUS_CASE == CASE_01b
+      STIMULUS_CASE ==  CASE_01b || \
+      STIMULUS_CASE ==  CASE_01c || \
+      STIMULUS_CASE ==  CASE_01d 
 #define OutputFolderName dataFolder morph  "Tuan_triggersoma" STR(EXTENSION)
 #elif STIMULUS_CASE ==  CASE_02
 #define OutputFolderName dataFolder morph  "Tuan_triggershaft" STR(EXTENSION)
@@ -1393,18 +1396,18 @@ Grid MSN_D1Neuron{
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
   // TODO: If we want to use neurotransmitter concentration, what is the best strategy? to map through pre-synaptic voltage?
   //TUAN TODO rename to 'tight' and update Synparams
-          //Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
-          Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[tight]" >), < nodekind="SynapticClefts[tight]" >, tissueGM);
-  #endif
-          /*}}}*/
+  //Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[Voltage]" >), < nodekind="SynapticClefts[Voltage]" >, tissueGM);
+        Layer(SynapticClefts, SynapticCleft, tissueFunctor("Layout", < nodekind="SynapticClefts[tight]" >), < nodekind="SynapticClefts[tight]" >, tissueGM);
+#endif
+        /*}}}*/
         // 3.2. CHEMICAL SYNAPSE RECEPTORS
         /*{{{*/
-          Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
-          Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
-          Layer(AMPASynapsesMushroomSpine, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
-          Layer(NMDASynapsesMushroomSpine, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
-          Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
-          Layer(mGluRType1Synapses, mGluReceptorType1, tissueFunctor("Layout", < nodekind="ChemicalSynapses[mGluR]" >), < nodekind="ChemicalSynapses[mGluR]" >, tissueGM);
+        Layer(AMPASynapses, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAthin]" >), < nodekind="ChemicalSynapses[AMPAthin]" >, tissueGM);
+        Layer(NMDASynapses, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAthin]" >), < nodekind="ChemicalSynapses[NMDAthin]" >, tissueGM);
+        Layer(AMPASynapsesMushroomSpine, AMPAReceptor_Markov, tissueFunctor("Layout", < nodekind="ChemicalSynapses[AMPAmush]" >), < nodekind="ChemicalSynapses[AMPAmush]" >, tissueGM);
+        Layer(NMDASynapsesMushroomSpine, NMDAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[NMDAmush]" >), < nodekind="ChemicalSynapses[NMDAmush]" >, tissueGM);
+        Layer(GABAASynapses, GABAAReceptor, tissueFunctor("Layout", < nodekind="ChemicalSynapses[GABAA]" >), < nodekind="ChemicalSynapses[GABAA]" >, tissueGM);
+        Layer(mGluRType1Synapses, mGluReceptorType1, tissueFunctor("Layout", < nodekind="ChemicalSynapses[mGluR]" >), < nodekind="ChemicalSynapses[mGluR]" >, tissueGM);
       /*}}}*/
 
       // 3.3. SpineAttachment

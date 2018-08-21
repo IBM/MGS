@@ -4,6 +4,7 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "NodeProxyBase.h"
 
 //#define	Glut_max  *(getSharedMembers().Glut_baseline);
 //#define	GABA_max  *(getSharedMembers().GABA_baseline);
@@ -30,6 +31,9 @@
 #define Vp_Glut (getSharedMembers().Vp_Glut)
 #define Kp_Glut (getSharedMembers().Kp_Glut)
 #define dt (*(getSharedMembers().deltaT))
+#define GABA_max (getSharedMembers().GABA_max)
+#define Vp_GABA (getSharedMembers().Vp_GABA)
+#define Kp_GABA (getSharedMembers().Kp_GABA)
 
 void SynapticCleft::produceInitialState(RNG& rng)
 {
@@ -52,6 +56,9 @@ void SynapticCleft::produceInitialState(RNG& rng)
 void SynapticCleft::produceState(RNG& rng)
 {
   dyn_var_t* V = Vpre;
+  if (Vpre == NULL)
+    //dummy SynapticCleft
+    return;
   float currentTime = dt * (getSimulation().getIteration());
   if (*V < Vthreshold)
   {
@@ -75,9 +82,9 @@ void SynapticCleft::produceState(RNG& rng)
   }
   {  // GABA
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_DESTEXHE_MAINEN_SEJNOWSKI_1994
-    GABA = (getSharedMembers().GABA_max /
-            (1.0 + exp(-(*V - getSharedMembers().Vp_GABA) /
-                       getSharedMembers().Kp_GABA)));
+    GABA = (GABA_max /
+            (1.0 + exp(-(*V - Vp_GABA) /
+                       Kp_GABA)));
 #elif GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
     float J_decay = 1.0 / ((getSharedMembers().tau_GABA)) *
                     (GABA - getSharedMembers().GABA_baseline);  // [uM/msec]
@@ -117,6 +124,7 @@ void SynapticCleft::produceState(RNG& rng)
 #if GLUTAMATE_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
     Glut += (GlutperVesicle / AvogN) / (Cleft_Volume) * 1e6;
 #endif
+    GABA = (GABA_max / (1.0 + exp(-(*V - Vp_GABA) / Kp_GABA)));
 #if GABA_UPDATE_METHOD == NEUROTRANSMITTER_BIEXPONENTIAL
     GABA += (GABAperVesicle / AvogN) / (Cleft_Volume) * 1e6;
 #endif
@@ -131,12 +139,16 @@ void SynapticCleft::setPointers(const String& CG_direction,
                                 CG_SynapticCleftInAttrPSet* CG_inAttrPset,
                                 CG_SynapticCleftOutAttrPSet* CG_outAttrPset)
 {
+#ifdef DEBUG
+  data_received.append(CG_inAttrPset->side.c_str());
+#endif
   if (CG_inAttrPset->side == "pre")
   {
     int index = CG_inAttrPset->idx;
     assert(getSharedMembers().voltageConnect);
     assert(index >= 0 && index < getSharedMembers().voltageConnect->size());
     Vpre = &((*(getSharedMembers().voltageConnect))[index]);
+    dimensionsPrePost.push_back((*(getSharedMembers().dimensionsArray_connect))[index]);
 
 #ifdef KEEP_PAIR_PRE_POST
     indexPrePost.push_back(index);
@@ -148,7 +160,20 @@ void SynapticCleft::setPointers(const String& CG_direction,
   }
   else if (CG_inAttrPset->side == "post")
   {
-    int index = CG_inAttrPset->idx + getSharedMembers().voltageConnect->size();
+    //wrong: int index = CG_inAttrPset->idx + getSharedMembers().voltageConnect->size();
+    int index = CG_inAttrPset->idx;
+    NodeProxyBase* node = dynamic_cast<NodeProxyBase*>(CG_node->getNode());
+    if (node == 0)
+    {//not a proxy
+      dimensionsPrePost.push_back((*(getSharedMembers().dimensionsArray_connect))[index]);
+    }
+    else
+    {
+      //TUAN TODO: this is a temporary workaround solution
+      // i.e. use the location of the pre as the post 
+      // we need this to use for connection time 
+      dimensionsPrePost.push_back(dimensionsPrePost[0]);
+    }
 #ifdef KEEP_PAIR_PRE_POST
     indexPrePost.push_back(index);
 #else

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 sed '/\\/p' $1 | \
     sed 's/#include "/cp $LENSROOT\/Extensions.mk $LENSROOT\/Extensions.mk.bak ; $MDLROOT\/bin\/mdlparser /g' | \

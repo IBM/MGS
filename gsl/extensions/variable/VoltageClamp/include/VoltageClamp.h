@@ -36,6 +36,7 @@ class VoltageClamp : public CG_VoltageClamp
       virtual void duplicate(std::auto_ptr<VoltageClamp>& dup) const;
       virtual void duplicate(std::auto_ptr<Variable>& dup) const;
       virtual void duplicate(std::auto_ptr<CG_VoltageClamp>& dup) const;
+      virtual void setInjectedCurrent(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_VoltageClampInAttrPSet* CG_inAttrPset, CG_VoltageClampOutAttrPSet* CG_outAttrPset);
    private:
       std::ofstream* outFile = 0;
       float _timeStart; //time point when start Vclamp
@@ -43,7 +44,7 @@ class VoltageClamp : public CG_VoltageClamp
       int _status; // 
       bool _isOn;
       float _Vprev;	// Declare voltage from previous iteration for calculating dV
-      int waveformIdx;
+      int waveformIdx;  // Declare index of the waveform array
       float _gainTime; //[ms] the time to reach Vc2 from Vc1
       float getCurrentTime();
       void update_gainTime();

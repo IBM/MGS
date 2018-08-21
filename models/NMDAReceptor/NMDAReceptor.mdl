@@ -136,6 +136,10 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
 #endif
     //}}}
     int[] * indexPrePost_connect;
+ #ifdef KEEP_PAIR_PRE_POST
+//temporary use when SynapticCleft is not on the same rank with post-synaptic receptor
+    BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
    }
 
   //{{{Phases 
@@ -220,6 +224,8 @@ Node NMDAReceptor Implements ConductanceProducer, ReversalPotentialProducer
 #ifdef KEEP_PAIR_PRE_POST
     //no-need as we already have this information from 'synapticCleft' connection
     //BranchDataProducer.branchData >> branchDataPrePost;
+//HOWVER: in the case of SynapticCleft is on different rank of the post-side receptor - we need to keep the post-side informaiton 
+    BranchDataProducer.branchData >> Shared.branchDataPost;
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif
@@ -412,6 +418,10 @@ Node NMDAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
 #endif
     //}}}
     int[] * indexPrePost_connect;
+#ifdef KEEP_PAIR_PRE_POST
+//temporary use when SynapticCleft is not on the same rank with post-synaptic receptor
+    BranchDataStruct*  branchDataPost; // only 1 post-side
+#endif
    }
 
   //{{{Phases 
@@ -496,6 +506,8 @@ Node NMDAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
 #ifdef KEEP_PAIR_PRE_POST
     //no-need as we already have this information from 'synapticCleft' connection
     //BranchDataProducer.branchData >> branchDataPrePost;
+//HOWVER: in the case of SynapticCleft is on different rank of the post-side receptor - we need to keep the post-side informaiton 
+    BranchDataProducer.branchData >> Shared.branchDataPost;
 #else
     BranchDataProducer.branchData >> branchDataPost;
 #endif
@@ -508,6 +520,7 @@ Node NMDAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
   }
 
 #ifdef MICRODOMAIN_CALCIUM
+  //{{{
   UserFunction setCalciumMicrodomain;
   Connection Pre Node (PSet.identifier=="compartment[Calcium(domain)]") Expects 
     CaMicrodomainConcentrationArrayProducer
@@ -520,6 +533,7 @@ Node NMDAReceptor_Markov Implements ConductanceProducer, ReversalPotentialProduc
       CaMicrodomainNameArrayProducer.microdomainNames >> Shared.tmp_microdomainNames;
       setCalciumMicrodomain();
   }
+  //}}}
 #endif
   Connection Pre Node (PSet.identifier=="compartment[Calcium]") Expects 
     CaConcentrationArrayProducer {

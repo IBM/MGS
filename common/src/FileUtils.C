@@ -18,6 +18,7 @@ bool FileFolderUtils::isFolderExist(const std::string& path,
                                     const std::string& fileExtensions)
 {
   // StringUtils::Tokenize(path, )
+  assert(0);
   return false;
 }
 
@@ -30,10 +31,10 @@ bool FileFolderUtils::isFileExist(const std::string& file_name)
 //ASSSUMPTION: # --> comment
 // comma or space delimiter
 // 1. first non-comment line indicate the space-separated fieldnames  (time, Vm)
-// 2. second non-comment line indicate the # of column 
+// 2. second non-comment line indicate the # of column
 std::map< std::string, std::vector<float> > FileFolderUtils::readCsvFile(const std::string& file_name, unsigned int & num_col)
 {
-  std::ifstream data(file_name);
+  std::ifstream data(file_name.c_str());
 
   //int row_count = 0;
   std::string line;

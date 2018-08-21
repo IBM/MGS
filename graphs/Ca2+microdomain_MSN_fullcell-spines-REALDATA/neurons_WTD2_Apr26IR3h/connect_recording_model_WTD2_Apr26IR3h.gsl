@@ -230,6 +230,9 @@ polyConnect(timeStep, somaCurrentsDisplay, <>, <>);
 #ifdef IDEA_ILEAK
 polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="JUNCTION">);
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="JUNCTION", type="axial">);
+#endif
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat">);
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap">);
 polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KAf",  BRANCHORDER=0, NEURON_INDEX=neuronIndex>), somaCurrentsDisplay, <>, <identifier="CHANNEL", type="KAf">);
@@ -822,6 +825,53 @@ polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaT", BRANCHORDER
 //}}}
 	//}}}
  //}}}
+
+//{{{currentStimSite_0
+TissueSite currentStimSite_0(-154.9, 144.5, -30.4, 15.0); //?? um to soma, radius = ?? um
+polyConnect(timeStep, spineVoltageDisplay, <>, <>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=2>), spineVoltageDisplay, <>, <site=spine_currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=2>), spineVoltageDisplay, <>, <site=currentStimSite_0>);
+//{{{NMDAR current
+polyConnect(timeStep, spineNMDARDisplay, <>, <>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDAmush", MTYPE=2>), spineNMDARDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDAmush", MTYPE=3>), spineNMDARDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+//polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="NMDA", MTYPE=3>), spineNMDARDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+//}}}
+//{{{AMPAR
+polyConnect(timeStep, spineAMPARDisplay, <>, <>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", MTYPE=2>), spineAMPARDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPAmush", MTYPE=3>), spineAMPARDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+//polyConnect(tissueFunctor("Probe", <CATEGORY="SYNAPSE", TYPE="AMPA", MTYPE=3>), spineAMPARDisplay, <>, <identifier="SYNAPSE", site=currentStimSite_0>);
+//}}}
+//{{{currents MTYPE=2
+polyConnect(timeStep, spineCurrentsDisplay, <>, <>);
+#ifdef IDEA_ILEAK
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="JUNCTION", site=currentStimSite_0>);
+#endif
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nat", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="Nat", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Nap", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="Nap", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KAf",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="KAf", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KAs",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="KAs", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KCNK",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="KCNK", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KIR",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="KIR", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KRP",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="KRP", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="KDR",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="KDR", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="BK",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="BK", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=currentStimSite_0>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="Kv31",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="Kv31", site=currentStimSite_0>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="HCN",  BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="HCN", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaLv12", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="CaLv12", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaLv13", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="CaLv13", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaN", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="CaN", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaPQ", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="CaPQ", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaR", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="CaR", site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="CaT", BRANCHORDER=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="CaT", site=currentStimSite_0>);
+//polyConnect( tissueFunctor("Probe", <CATEGORY="CHANNEL", TYPE="SK",  BRANCHTYPE=0, MTYPE=2>), spineCurrentsDisplay, <>, <identifier="CHANNEL", type="SK", site=currentStimSite_0>);
+//}}}
+polyConnect(timeStep, presynapticSomaDisplayVm, <>, <>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=4>), presynapticSomaDisplayVm, <>, <site=currentStimSite_0>);
+polyConnect( tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, MTYPE=5>), presynapticSomaDisplayVm, <>, <site=currentStimSite_0>);
+//}}}
 
   //mushroom spine + bouton
 ////#define preMushSynIndex 1

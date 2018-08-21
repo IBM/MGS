@@ -5,44 +5,50 @@
 esc=`echo -en "\033"`
 
 # Set colors
+#{{{
 cc_red="${esc}[0;31m"
 cc_green="${esc}[0;32m"
 cc_yellow="${esc}[0;33m"
 cc_blue="${esc}[0;34m"
 cc_normal=`echo -en "${esc}[m\017"`
+#}}}
 
 function contains() {
-local n=$#
-local value=${!n}
-for ((i=1;i < $#;i++)) {
-	if [ "${!i}" == "${value}"  ]; then
-		echo "y"
-		return 0
-	fi
+  #{{{
+  local n=$#
+  local value=${!n}
+  for ((i=1;i < $#;i++)) {
+    if [ "${!i}" == "${value}"  ]; then
+      echo "y"
+      return 0
+    fi
 
-}
-echo "n"
-return 1
-
+  }
+  echo "n"
+  return 1
+  #}}}
 }
 
 function createMakeFile(){
+  #{{{
+    EXTRA_ARGS=${COLAB}
     ## detect if -release is used for optimization and debugging options
     if [ "$RELEASE" == "-release" ]; then
       ## detect if building as NTS, MGS, or both
       case $AS in
-          "-as-Nts") ./configure.py --O3 $PLATFORM_OPTS --as-Nts;;
-          "-as-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-Mgs;;
-          "-as-both-Nts-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-both-Nts-Mgs;;
+          "-as-Nts") ./configure.py --O3 $PLATFORM_OPTS --as-Nts ${EXTRA_ARGS};;
+          "-as-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-Mgs ${EXTRA_ARGS};;
+          "-as-both-Nts-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-both-Nts-Mgs ${EXTRA_ARGS};;
       esac
     else
       ## detect if building as NTS, MGS, or both
       case $AS in
-          "-as-Nts") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Nts;;
-          "-as-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Mgs;;
-          "-as-both-Nts-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-both-Nts-Mgs;;
+          "-as-Nts") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Nts ${EXTRA_ARGS};;
+          "-as-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Mgs ${EXTRA_ARGS};;
+          "-as-both-Nts-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-both-Nts-Mgs ${EXTRA_ARGS};;
       esac
     fi
+  #}}}
 }
 
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
@@ -53,7 +59,8 @@ SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 function print_help {
 	echo "SYNTAX: $0 
   -p <$SUPPORTED_PLATFORMS>    [default: LINUX]
-  [--clean | --rebuild]
+  [--clean | --rebuild | --regen]
+  --regen               regenerate Makefile (gsl/Makefile)
   -j <n>                with <n> is num-processes [default: 2/3 total cores]
   -r|--release|<empty>  [default: (empty)]
   -d 1                  [default: debug_assert]
@@ -71,6 +78,8 @@ function print_help {
   --as-Nts:             build/configure as NTS
   --as-Mgs:             build/configure as MGS
   --as-both-Nts-Mgs:    build/configure as both NTS and MGS
+
+  --colab:              build/configure for colaborator's use
   "
 	echo "NOTE: [] (optional), <> (required)"
 	echo "NOTE: choose one value inside < >"
@@ -92,7 +101,9 @@ GSL_BUILD_MODE=""
 RELEASE=""
 GPU=""
 ARMA=""
-AS=""
+AS="-as-Nts"
+COLAB=""
+REGENMAKEFILE=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 if [ "$#" -gt 2 ] ; then
@@ -127,6 +138,9 @@ while getopts "$optspec" optchar; do
           rebuild)
               REBUILD="-rebuild"
               ;;
+          regen)
+              REGENMAKEFILE="-regen"
+              ;;
           singlethread)
               NPROCS=1
               ;;
@@ -138,6 +152,9 @@ while getopts "$optspec" optchar; do
               ;;
           arma) # Armadillo extensions
               ARMA="-arma"
+              ;;
+          colab) # collaboration's use 
+              COLAB="--colab"
               ;;
           loglevel=*)
             val=${OPTARG#*=}
@@ -239,18 +256,34 @@ for val in "${DEBUGOPTS[@]}"; do
 done
 #}}}
 
-if [ "$CLEAN" == "-clean" ] || \
-   [ "$REBUILD" == "-rebuild" ]; then \
-  if [ "$CLEAN" == "-clean" ] ; then
-    echo "clean-up GSL"
-    if [ -f Makefile ]; then 
-      make clean
-      rm Makefile
-    else
-      echo -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
-    fi
+CONTINUE=1
+if [ "$REGENMAKEFILE" == "-regen" ]; then 
+  #{{{
+  echo "Regen Makefile"
+  if [ -f Makefile ]; then 
+    rm Makefile
   fi
-  if [ "$REBUILD" == "-rebuild" ]; then \
+  # Generate Makefile and make!
+  createMakeFile
+  CONTINUE=0
+  #}}}
+fi 
+if [ $CONTINUE == 1 ]; then
+  if [ "$CLEAN" == "-clean" ] || \
+    [ "$REBUILD" == "-rebuild" ]; then \
+    if [ "$CLEAN" == "-clean" ] ; then
+      #{{{
+      echo "clean-up GSL"
+      if [ -f Makefile ]; then 
+        make clean
+        rm Makefile
+      else
+        echo -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
+      fi
+      #}}}
+    fi
+    if [ "$REBUILD" == "-rebuild" ]; then \
+      #{{{
     echo "Rebuild GSL"
     if [ -f Makefile ]; then 
       rm Makefile
@@ -258,18 +291,29 @@ if [ "$CLEAN" == "-clean" ] || \
     # Generate Makefile and make!
     createMakeFile
     make clean
+    if [ "$COLAB" == "--colab" ]; then 
+      make -j $NPROCS library
+    fi
     make -j $NPROCS;
+    #}}}
   fi
 else
   if [ ! -f Makefile ]; then
     createMakeFile
+  fi
+  if [ "$COLAB" == "--colab" ]; then 
+    make -j $NPROCS library
+  fi
+  if [ $? -gt 0 ]; then
+    echo -e "${cc_red}Build GSL library failed ! ${cc_normal}\n";
+    exit 1;
   fi
   make -j $NPROCS;
 fi
 
 if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
   echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
-  exit;
+  exit 1;
 elif [ "$CLEAN" == "-clean" ]; then 
   echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
   if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
@@ -277,4 +321,5 @@ elif [ "$CLEAN" == "-clean" ]; then
   fi
 else
   echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
+fi
 fi

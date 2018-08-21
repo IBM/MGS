@@ -27,83 +27,63 @@ BIN_DIR=./bin
 
 
 ifeq ($(A2AW), 1)
-
-A2A = -DA2AW
-
+   A2A = -DA2AW
 endif
 
 
 
 ifeq ($(FOR_BLUEGENE_Q), 1)
+   CXX=mpixlcxx_r
+   LD=mpixlcxx_r
+   BGQ_FLOOR = /bgsys/drivers/ppcfloor
+   LDFLAGS = 
+   CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEQ #-DDISABLE_PTHREADS 
+   CFLAGS += -qarch=qp -qtune=qp -qdebug=unlimitin
+else ifeq ($(FOR_BLUEGENE_P), 1)
+   CXX=mpixlcxx_r
+   LD=mpixlcxx_r
+   BGP_FLOOR = /bgsys/drivers/ppcfloor
+   LDFLAGS = 
+   CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEP #-DDISABLE_PTHREADS 
+   CFLAGS += -I$(BGP_FLOOR)/arch/include -qarch=450 -qtune=450 -qdebug=unlimitin
+else ifeq ($(FOR_BLUEGENE_L), 1)
+   #CVC=/gpfs/S_fs1/kozloski/bc/viz/bg/cvc/
+   MPI_INCDIRS=-I/bgl/BlueLight/ppcfloor/bglsys/include
+   MPI_LIBDIRS=-L/bgl/BlueLight/ppcfloor/bglsys/lib
+   MPI_LIBS=-lmpich.rts -lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts -lrts.rts
+   CXX=blrts_xlC
+   LD=blrts_xlC
+   CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEL -DMPICH_IGNORE_CXX_SEEK $(MPI_INCDIRS) #-I$(CVC)/include/CVC
+   LDFLAGS = $(MPI_LIBDIRS) #-L$(CVC)/lib/CVC
+   #EXTRA_LD = -lcvcmc -lcvct
+   #CVCSRC = cvc.cxx
 
-CXX=mpixlcxx_r
-LD=mpixlcxx_r
-BGQ_FLOOR = /bgsys/drivers/ppcfloor
-LDFLAGS = 
-CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEQ #-DDISABLE_PTHREADS 
-CFLAGS += -qarch=qp -qtune=qp -qdebug=unlimitin
+else ifeq ($(FOR_AIX), 1)
 
-else
+   CXX=mpCC_r
+   LD=mpCC_r
+   MAKE64=#-q64
+   CFLAGS = $(A2A) -DUAIX #-DDISABLE_PTHREADS
 
-ifeq ($(FOR_BLUEGENE_P), 1)
+else # Linux
 
-CXX=mpixlcxx_r
-LD=mpixlcxx_r
-BGP_FLOOR = /bgsys/drivers/ppcfloor
-LDFLAGS = 
-CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEP #-DDISABLE_PTHREADS 
-CFLAGS += -I$(BGP_FLOOR)/arch/include -qarch=450 -qtune=450 -qdebug=unlimitin
-
-else
-
-ifeq ($(FOR_BLUEGENE_L), 1)
-
-#CVC=/gpfs/S_fs1/kozloski/bc/viz/bg/cvc/
-MPI_INCDIRS=-I/bgl/BlueLight/ppcfloor/bglsys/include
-MPI_LIBDIRS=-L/bgl/BlueLight/ppcfloor/bglsys/lib
-MPI_LIBS=-lmpich.rts -lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts -lrts.rts
-CXX=blrts_xlC
-LD=blrts_xlC
-CFLAGS = $(A2A) -DUSING_BLUEGENE -DUSING_BLUEGENEL -DMPICH_IGNORE_CXX_SEEK $(MPI_INCDIRS) #-I$(CVC)/include/CVC
-LDFLAGS = $(MPI_LIBDIRS) #-L$(CVC)/lib/CVC
-#EXTRA_LD = -lcvcmc -lcvct
-#CVCSRC = cvc.cxx
-
-else
-
-ifeq ($(FOR_AIX), 1)
-
-CXX=mpCC_r
-LD=mpCC_r
-MAKE64=#-q64
-CFLAGS = $(A2A) -DUAIX #-DDISABLE_PTHREADS
-
-else
-
-#CVC=/home/kozloski/bc/viz/linux/cvc/
-CXX=mpiCC
-LD=mpiCC
-#LDFLAGS = -L$(CVC)/lib/CVC
-#EXTRA_LD = -lcvcmc -lcvct
-CFLAGS = $(A2A)  #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
-#CFLAGS = -DUSING_BLUEGENE -I$(CVC)/include/CVC -DVERBOSE
-#CVCSRC = cvc.cxx
-CFLAGS  += -MMD
-
-endif
-
-endif
-
-endif
-
+   #CVC=/home/kozloski/bc/viz/linux/cvc/
+   CXX=mpiCC
+   LD=mpiCC
+   #LDFLAGS = -L$(CVC)/lib/CVC
+   #EXTRA_LD = -lcvcmc -lcvct
+   CFLAGS = $(A2A)  #-DDISABLE_PTHREADS -I$(CVC)/include/CVC
+   #CFLAGS = -DUSING_BLUEGENE -I$(CVC)/include/CVC -DVERBOSE
+   #CVCSRC = cvc.cxx
+   CFLAGS  += -MMD
 endif
 
 STD_UTILS_OBJ_PATH := ../gsl/utils/std/obj
 STD_UTILS_INC_PATH := ../gsl/utils/std/include/
 CFLAGS += -I$(HEADER_DIR) 
 #Add support for GMP library
-CFLAGS += -lgmp -std=c++11 -Wno-deprecated-declarations
-LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
+CFLAGS += -lgmp -std=c++11 -fPIC -Wno-deprecated-declarations
+LDFLAGS += -shared -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
 					 -I../gsl/framework/factories/include/
 
 
@@ -114,11 +94,16 @@ ifeq ($(RELEASE), -release)
    # No debugging
    # Yes optimization
    OPT = -O3
+   TISSUE_LIB = ../gsl/lib/libnti.a
+   TISSUE_LIB_SHARED = ../gsl/lib/libnti.so
 else
    # Yes debugging
    DEBUG += -ggdb -g
    # Minimal optimization
    OPT = -Og
+   TISSUE_LIB = ../gsl/lib/libnti_db.a
+   TISSUE_LIB_SHARED = ../gsl/lib/libnti_db.so
+   #TISSUE_LIB ERROR_MARKER== ../lib/libTissueSim.a
 endif
 
 UTILS=-I../gsl/utils/std/include -I../common/include/
@@ -203,21 +188,19 @@ ND_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/
 TD_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${TD_UNSHARED_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o})
 
 TISSUE_LIB_OBJECTS = $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(patsubst %, $(OBJ_DIR)/%, ${NG_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${ND_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TD_SOURCES:.cxx=.o}) $(patsubst %, $(OBJ_DIR)/%, ${TISSUE_LIB_SOURCES:.cxx=.o})
+TISSUE_LIB_OBJECTS_UNIQUE= $(shell echo "${TISSUE_LIB_OBJECTS}" |  xargs -n1 | sort -u | xargs)
 
 COMMON_DIR=../common/obj/
 COMMON_OBJS := $(foreach dir,$(COMMON_DIR), $(wildcard $(dir)/*.o))
 ERROR_MARKER=.build_error
-TISSUE_LIB = ../gsl/lib/liblensdomain.a
-#TISSUE_LIB ERROR_MARKER== ../lib/libTissueSim.a
 TARGETS = $(TISSUE_LIB) neuroGen neuroDev touchDetect
 ccred:=$(shell echo -e "\033[0;31m")
 ccnormal:=$(shell echo -e "\033[0m")
 Model2Use:=$(shell pwd)/include/Model2Use.h
 
-FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
 #a:=$(awk '/^[ ]*#define/{ print $$2 }' < $${Model2Use} )
 ifeq (,$(wildcard $(Model2Use)))
-target:
+pre_req:
 	@touch ${Model2Use}
 	@echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
 	@echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
@@ -225,6 +208,8 @@ target:
 	@echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
 	@echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
 	@echo "//#define USE_DOUBLES   [to enable double-precision]" >> ${Model2Use} 
+	@echo "#define NVU_NTS_EXTENSION  //we need this to enable NTS to work with NVU" >> ${Model2Use}
+	@echo "#define SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE " >> ${Model2Use}
 	@echo "//#define WAIT_FOR_REST" >> ${Model2Use}
 	@echo "#ifdef WAIT_FOR_REST" >> ${Model2Use} 
 	@echo "#define NOGATING_TIME 20.0 //ms" >> ${Model2Use} 
@@ -233,28 +218,38 @@ target:
 	@echo "#endif" >> ${Model2Use} 
 	#$(shell echo -e "$(ccred) Please open and revise ${Model2Use} \033[0m")
 	$(echo  "$(ccred) Please open and revise ${Model2Use} \033[0m")
-	echo ${FoundModel2Use}
+	$(eval FoundModel2Use := $(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) )
 	@if [[ "x${FoundModel2Use}" = x ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
 	@touch $(ERROR_MARKER)
-else ifeq ("x${FoundModel2Use}","x ")
-target:
+else 
+FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
+ifeq ("x${FoundModel2Use}","x ")
+pre_req:
 	@if [[ "x${FoundModel2Use}" = "x " ]]; then \
 echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
 fi
 	@touch $(ERROR_MARKER)
 
 else
-target: $(TARGETS) 
+pre_req: 
+endif
 endif
 
+target: pre_req $(TARGETS)  library
 
 depend: ; makedepend $(ND_SOURCES)
 
 uninstall: 
 
 install: all
+
+library: ${TISSUE_LIB_OBJECTS}
+	ar rcs $(TISSUE_LIB) \
+	   $(TISSUE_LIB_OBJECTS)
+	$(LD) $(LDFLAGS) -o ${TISSUE_LIB_SHARED} \
+	   $(TISSUE_LIB_OBJECTS_UNIQUE)
 
 clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o  $(BIN_DIR)/neuroGen $(BIN_DIR)/neuroDev $(BIN_DIR)/touchDetect $(OBJ_DIR)/*  $(HEADER_DIR)/Model2Use.h.gch
 realclean: clean

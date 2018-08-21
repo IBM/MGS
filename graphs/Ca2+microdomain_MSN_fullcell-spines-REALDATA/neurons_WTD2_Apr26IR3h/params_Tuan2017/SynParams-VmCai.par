@@ -4,15 +4,19 @@
 # BRANCHTYPE = 1 (soma), 2(axon), 3(basal-den), 4(apical-den), 5(AIS), 6(tuft-den)
 #}}}
 ELECTRICAL_SYNAPSE_TARGETS 2
+#{{{
 BRANCHTYPE ETYPE
 BRANCHTYPE ETYPE
 2 0 2 0 AxAxGap [Voltage] 1.0
 #3 0 3 0 DenDenGap [Voltage] 1.0
 3 1 3 1 DenDenGap [Voltage] 1.0
+#}}}
 
 ELECTRICAL_SYNAPSE_COSTS 2
+#{{{
 AxAxGap 0.005309
 DenDenGap 0.005309
+#}}}
 
 #TUAN; everytime a chemical synapse is formed
 # a bidirectional connection must be created as well
@@ -26,6 +30,7 @@ DenDenGap 0.005309
 #  a solid convention of spineneck
 #  Currently, the convention for spineneck is non-zero neuron-index and BRANCHTYPE=3
 BIDIRECTIONAL_CONNECTION_TARGETS 6
+#{{{
 # formed between 3-branch in thin(2) or mush(3) spines
 # with any den(3,4,6) of main neuron(0)
 BRANCHTYPE MTYPE
@@ -36,6 +41,7 @@ BRANCHTYPE MTYPE
 3 3     4 0   DenSpine [Voltage Calcium] 1.0
 3 2     6 0   DenSpine [Voltage Calcium] 1.0
 3 3     6 0   DenSpine [Voltage Calcium] 1.0
+#}}}
 
 
 BIDIRECTIONAL_CONNECTION_COSTS 1
@@ -72,6 +78,7 @@ DenSpine 0.005309
 #    First set of key-fields --> pre-synaptic neuron
 #    Second set of key-fields -> post-synaptic neuron
 CHEMICAL_SYNAPSE_TARGETS 4
+#{{{
 BRANCHTYPE MTYPE ETYPE
 BRANCHTYPE MTYPE
 #{{{bouton-spine
@@ -87,6 +94,7 @@ BRANCHTYPE MTYPE
 #{{{bouton-neuron
 2 1 1   3 0   [GABAA] [Voltage] [Voltage] 1.0
 2 1 1   4 0   [GABAA] [Voltage] [Voltage] 1.0
+#}}}
 #}}}
 
 CHEMICAL_SYNAPSE_COSTS 5

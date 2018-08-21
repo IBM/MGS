@@ -17,21 +17,17 @@
 #define RNG_H
 
 #ifdef HAVE_GPU
-
 #include "RNG_GPU.h"
 typedef MRG32k3a_GPU RNG_ns; // non-reseedable
 typedef MRG32k3a_S_GPU RNG; // reseedable
 
 #else
-
 //#include "MRG32k3a.h"
 //typedef MRG32k3a RNG_ns; // non-reseedable
 //typedef MRG32k3a_S RNG; // reseedable
-
 #include "MersenneTwister.h"
 typedef MersenneTwister RNG_ns; // non-reseedable
 typedef MersenneTwister_S RNG; // reseedable
-
 #endif // HAVE_GPU
 
 // Below here is old (as of 08/19/16) code that may not
@@ -47,7 +43,6 @@ static RNG& getRangen() {
 };
 static RNG& getSharedRangen() {
       return SharedRangen;
-}
-;
+};
 */
 #endif

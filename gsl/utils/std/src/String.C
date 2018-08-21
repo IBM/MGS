@@ -52,6 +52,7 @@ String::String() {
 String::String(const String& str) {
   _size = str._size;
   _capacity = str._capacity;
+  //reset();
   _data = new char[_capacity];
   // memmove(_data, str._data, _size);
   std::copy(str._data, str._data + _size, _data);
@@ -66,6 +67,7 @@ String::String(const char* cstr) {
   //_size = strlen(cstr);
   _size = length;
   _capacity = ((_size + AllocIncr - 1) / AllocIncr) * AllocIncr;
+  //reset();
   _data = new char[_capacity];
   // memmove(_data, cstr, _size);
   std::copy(cstr, cstr + _size, _data);
@@ -74,14 +76,25 @@ String::String(const char* cstr) {
 String::String(char fillCh, unsigned int count) {
   _capacity = ((count + AllocIncr - 1) / AllocIncr) * AllocIncr;
   _size = _capacity;
+  //reset();
   _data = new char[_capacity];
   // memset(_data, fillCh, count);
   std::fill(_data, _data + count, fillCh);
 }
 
 // destructor
-String::~String() { delete[] _data; }
+String::~String() { reset(); }
 
+inline void String::reset()
+{
+  /* free all memory
+   */
+  if (_size>0) {
+    delete[] _data;
+    _data=0;
+    _size=0;
+  }
+}
 // value return methods
 unsigned int String::size() { return _size; }
 

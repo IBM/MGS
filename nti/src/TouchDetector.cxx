@@ -776,12 +776,13 @@ void TouchDetector::doWork(int threadID, int sid, ThreadUserData* data,
                            Mutex* mutex)
 {
 #ifdef TOUCHDETECT_SINGLENEURON_SPINES
-  doWork_new(threadID, sid, data, mutex);
   ////TUAN TODO: there is a bug in doWork_new
   //that makes touch creation is not symmetric when we increase the radius real big
+  doWork_new(threadID, sid, data, mutex);
 #else
    doWork_original(threadID, sid, data, mutex);
 #endif
+
 }
 
 // NOTE: This implementation was derived to ensure that only 1 capsule got
@@ -1075,7 +1076,6 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
           }
           if (countTouch)
           {  // finally, accept the touch
-
             touchVector.push_back(touch, mutex);
 #ifdef TD_DEBUG
             numTouchesForThisCapsule += 1;
@@ -1137,7 +1137,6 @@ void TouchDetector::doWork_new(int threadID, int sid, ThreadUserData* data,
 void TouchDetector::doWork_original(int threadID, int sid, ThreadUserData* data,
                                     Mutex* mutex)
 {
-
   Params* params = data->_parms[threadID];
   TouchVector& touchVector = _threadUserData->_touchVectors[threadID];
   RNG& rng = _threadUserData->_rangens[threadID];
@@ -1154,6 +1153,7 @@ void TouchDetector::doWork_original(int threadID, int sid, ThreadUserData* data,
   double pointLineDistances[4];
   // loop through all other Capsules
   for (int sid2 = 0; sid2 < _numberOfCapsules; ++sid2)
+  {
     // check prob. for forming a touch
     if (_appositionRate >= 1.0 || drandom(rng) < _appositionRate)
     {
@@ -1207,7 +1207,6 @@ void TouchDetector::doWork_original(int threadID, int sid, ThreadUserData* data,
 
         if (((ww0 * ww0 + ww1 * ww1 + ww2 * ww2) <= disSphere))
         {  // it is 0.5*0.5
-
           // u0 = s1Bx - s1Ax;   COMPUTED ABOVE : OPTIMIZATION
           // u1 = s1By - s1Ay;   COMPUTED ABOVE : OPTIMIZATION
           // u2 = s1Bz - s1Az;   COMPUTED ABOVE : OPTIMIZATION
@@ -1411,6 +1410,7 @@ void TouchDetector::doWork_original(int threadID, int sid, ThreadUserData* data,
         }      // if((ww0 * ww0 + ww1 * ww1 + ww2
       }        // if (detectionTouchSpace->areInSpace...
     }          // for (; sid2<_nCapsules...
+  }
 }
 
 void TouchDetector::distancePointLine(double p1A[3], double p1B[3],

@@ -20,7 +20,7 @@ static pthread_once_t once_KIR = PTHREAD_ONCE_INIT;
 // Article:
 // Hayashi H, Fishman HM (1988). Inward rectifier K+ channel kinetics from
 // analysis of the complex conductance of aplysia neuronal membrane.
-// Biophys J 53, 747-757. 
+// Biophys J 53, 747-757.
 //
 // NEURON : Aplysia neuron (non-amammalian)
 // DATA: Vclamp in range -90 mV to -40 mV
@@ -37,7 +37,7 @@ static pthread_once_t once_KIR = PTHREAD_ONCE_INIT;
 // MODEL: 3-state Markov model  if [Ba2+] is considered (see ChannelKIR_Markov)
 // MODEL: 2-state when assuming [Ba2+]_o is 0
 #define Vmshift 0 // [mV] - to shift Vhalf if E_K from -45 in experiment is adjusted to E_K in the in vitro e.g. -90mV
-#define VHALF_M (-52 + Vmshift)    
+#define VHALF_M (-52 + Vmshift)
 #define k_M 13
 #define LOOKUP_TAUM_LENGTH 6
 const dyn_var_t ChannelKIR::_Vmrange_taum[] = {
@@ -46,11 +46,11 @@ dyn_var_t ChannelKIR::taumKIR[] = {
     4.0000, 4.7170, 5.3763, 6.0606, 6.8966, 7.6923};
 std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 
-#elif CHANNEL_KIR == KIR_MAHON_2000  
+#elif CHANNEL_KIR == KIR_MAHON_2000
 //assume activation is instantaneous
-#define VHALF_M -100 
-#define k_M 10 
-//#define TAUM 1 //ms                  
+#define VHALF_M -100
+#define k_M 10
+//#define TAUM 1 //ms
 #elif CHANNEL_KIR == KIR_WOLF_2005
 // Model non-inactivating KIR (presumbly associated with SP(+) SPN in NAc) ~ Kir2.2???
 // DATA:
@@ -58,7 +58,7 @@ std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 //   2. time-constant
 // DATA-1:
 //  temperature 22-23 celcius
-//  steady-state activation curve: use KIR channel (Kir2.1) data from 
+//  steady-state activation curve: use KIR channel (Kir2.1) data from
 //     human embryonic kidney cells [Kubo, Murata, 2001] expressed in oocytes
 //        --> this data use: [K]_i ~ 80 mMi and [K]_o = 10mM --> E_K ~ -52 mV
 //   Fig.2(B) left
@@ -68,7 +68,7 @@ std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 //  YET it is adjusted as well - according to the value of [K+]_o in the model
 //        IN Aplisia, tau_m is known to increase with increasing [K+]_o
 
-/* 
+/*
 Uchimura N, Cherubini E, North RA (1989).  Inward rectification
 in rat nucleus accumbens neurons. J Neurophysiol 62, 1280-1286.
 
@@ -76,15 +76,15 @@ Kubo Y, Murata Y (2001).  Control of rectification and permeation by two
 distinct sites after the second transmembrane region in Kir2.1 K+
 channel. J Physiol 531, 645-660.
 */
-  
+
 #define Vmshift -30 // [mV] - to shift Vhalf if E_K from -52 in experiment is adjusted to E_K in the in vitro e.g. -82mV
 #define VHALF_M (-52 + Vmshift)
 #define k_M 13
 #define LOOKUP_TAUM_LENGTH 16
 const dyn_var_t ChannelKIR::_Vmrange_taum[] = {
-    -100, -90, -80, -70, -60, -50, -40, -30, 
+    -100, -90, -80, -70, -60, -50, -40, -30,
     -20, -10, 0, 10, 20, 30, 40, 50};
-#if 0 // USE_NEURON_CODE == 1  
+#if 0 // USE_NEURON_CODE == 1
 //NOTE: The values here are used in NEURON-implementation which require Phi=0.5 (or Temperature = 43.320)
 //dyn_var_t ChannelKIR::taumKIR[] = {
 //    3.7313, 4.0000, 4.7170, 5.3763, 6.0606, 6.8966, 7.6923, 7.1429,
@@ -93,7 +93,7 @@ const dyn_var_t ChannelKIR::_Vmrange_taum[] = {
 #else
 //NOTE: The values here are exact values mapping to the 35 celcius
 dyn_var_t ChannelKIR::taumKIR[] = {
-    7.465,  8,      9.435 ,10.755, 12.12  ,13.795, 15.385, 14.285, 
+    7.465,  8,      9.435 ,10.755, 12.12  ,13.795, 15.385, 14.285,
    11.765, 8.89,    8,      8,      8,      8,      8,      8};
 #endif
 std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
@@ -115,10 +115,10 @@ expression in rat nucleus accumbens medium spiny neurons. J Neurosci
 #define k_M 13
 #define LOOKUP_TAUM_LENGTH 18
 const dyn_var_t ChannelKIR::_Vmrange_taum[] = {-120, -110,
-    -100, -90, -80, -70, -60, -50, -40, -30, 
+    -100, -90, -80, -70, -60, -50, -40, -30,
     -20, -10, 0, 10, 20, 30, 40, 50};
 dyn_var_t ChannelKIR::taumKIR[] = {0.075, 0.219,
-    0.691, 1.948 , 3.207, 10.755, 12.12  ,13.795, 15.385, 14.285, 
+    0.691, 1.948 , 3.207, 10.755, 12.12  ,13.795, 15.385, 14.285,
    11.765, 8.89  ,    8,      8,      8,      8,      8,      8};
 std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 #elif CHANNEL_KIR == KIR2_1_STEEPHEN_MANCHANDA_2009
@@ -135,10 +135,10 @@ std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 #define k_M 13
 #define LOOKUP_TAUM_LENGTH 18
 const dyn_var_t ChannelKIR::_Vmrange_taum[] = {-120, -110,
-    -100, -90, -80, -70, -60, -50, -40, -30, 
+    -100, -90, -80, -70, -60, -50, -40, -30,
     -20, -10, 0, 10, 20, 30, 40, 50};
 dyn_var_t ChannelKIR::taumKIR[] = {0.075, 0.219,
-    0.691, 1.948 , 3.207, 10.755, 12.12  ,13.795, 15.385, 14.285, 
+    0.691, 1.948 , 3.207, 10.755, 12.12  ,13.795, 15.385, 14.285,
    11.765, 8.89  ,    8,      8,      8,      8,      8,      8};
 std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 #define LOOKUP_TAUH_LENGTH 3  // size of the below array
@@ -152,14 +152,14 @@ dyn_var_t ChannelKIR::h_inf_KIR[] = {0.0, 0.13, 1};
 //     as found in substance ENK(+) and ENK/SP-expressing MSN in NAc [Mermelstein et al., 1998] - D1-MSN
 // extended those in Steephen-2009
 //  DATA:
-//     Ariano, Levine (2004) 
+//     Ariano, Levine (2004)
 //        initial activation 	about -70 to -80 mV
 //        Vhalf_activation -106 to -108 mV
 //  time constant from Aplysia neuron (Kir2.3)
 //
-//  steady-state activation curve: use KIR channel (Kir2.1) data from 
-//    Ariano, Levine (2004) at -97 mV 
-/* 
+//  steady-state activation curve: use KIR channel (Kir2.1) data from
+//    Ariano, Levine (2004) at -97 mV
+/*
 
 */
 
@@ -168,10 +168,10 @@ dyn_var_t ChannelKIR::h_inf_KIR[] = {0.0, 0.13, 1};
 #define k_M 12.7
 #define LOOKUP_TAUM_LENGTH 18
 const dyn_var_t ChannelKIR::_Vmrange_taum[] = {-120, -110,
-    -100, -90, -80, -70, -60, -50, -40, -30, 
+    -100, -90, -80, -70, -60, -50, -40, -30,
     -20, -10, 0, 10, 20, 30, 40, 50};
 dyn_var_t ChannelKIR::taumKIR[] = {0.075, 0.219,
-    0.691, 1.948 , 3.207, 10.755, 12.12  ,13.795, 15.385, 14.285, 
+    0.691, 1.948 , 3.207, 10.755, 12.12  ,13.795, 15.385, 14.285,
    11.765, 8.89  ,    8,      8,      8,      8,      8,      8};
 std::vector<dyn_var_t> ChannelKIR::Vmrange_taum;
 #define LOOKUP_TAUH_LENGTH 3  // size of the below array
@@ -197,7 +197,7 @@ void ChannelKIR::update(RNG& rng)
     dyn_var_t v = (*V)[i];
 #if CHANNEL_KIR == KIR_HAYASHI_FISHMAN_1988 || \
     CHANNEL_KIR == KIR_WOLF_2005 || \
-    CHANNEL_KIR == KIR_STEEPHEN_MANCHANDA_2009 
+    CHANNEL_KIR == KIR_STEEPHEN_MANCHANDA_2009
     // NOTE: Some models use m_inf and tau_m to estimate m
     std::vector<dyn_var_t>::iterator low =
         std::lower_bound(Vmrange_taum.begin(), Vmrange_taum.end(), v);
@@ -207,7 +207,7 @@ void ChannelKIR::update(RNG& rng)
     if (index == 0)
       taum = taumKIR[0];
     else
-      taum = linear_interp(Vmrange_taum[index-1], taumKIR[index-1], 
+      taum = linear_interp(Vmrange_taum[index-1], taumKIR[index-1],
         Vmrange_taum[index], taumKIR[index], v);
     dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
 
@@ -226,7 +226,7 @@ void ChannelKIR::update(RNG& rng)
     if (index == 0)
       taum = taumKIR[0];
     else
-      taum = linear_interp(Vmrange_taum[index-1], taumKIR[index-1], 
+      taum = linear_interp(Vmrange_taum[index-1], taumKIR[index-1],
         Vmrange_taum[index], taumKIR[index], v);
     dyn_var_t qm = dt * getSharedMembers().Tadj / (taum * 2);
 
@@ -244,9 +244,9 @@ void ChannelKIR::update(RNG& rng)
     }
     else
     {
-      h_inf = linear_interp(Vmrange_tauh[index-1], h_inf_KIR[index-1], 
+      h_inf = linear_interp(Vmrange_tauh[index-1], h_inf_KIR[index-1],
         Vmrange_tauh[index], h_inf_KIR[index], v);
-      tauh = linear_interp(Vmrange_tauh[index-1], tauhKIR[index-1], 
+      tauh = linear_interp(Vmrange_tauh[index-1], tauhKIR[index-1],
         Vmrange_tauh[index], tauhKIR[index], v);
     }
 
@@ -254,9 +254,9 @@ void ChannelKIR::update(RNG& rng)
     h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
 
     g[i] = gbar[i] * m[i] * (frac_inact * h[i] + (1-frac_inact));
-#elif CHANNEL_KIR == KIR_MAHON_2000                          
+#elif CHANNEL_KIR == KIR_MAHON_2000
     //dyn_var_t qm = dt * getSharedMembers().Tadj / (TAUM * 2);
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M)); 
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     m[i] = m_inf;
     g[i] = gbar[i] * m[i];
 #else
@@ -270,15 +270,15 @@ void ChannelKIR::update(RNG& rng)
   }
 }
 
-// GOAL: To meet second-order derivative, the gates is calculated to 
+// GOAL: To meet second-order derivative, the gates is calculated to
 //     give the value at time (t0+dt/2) using data voltage v(t0)
-//  NOTE: 
+//  NOTE:
 //    If steady-state formula is used, then the calculated value of gates
 //            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
-//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//    If non-steady-state formula (dy/dt = f(v)) is used, then
 //        once gate(t0) is calculated using v(t0)
 //        we need to estimate gate(t0+dt/2)
-//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2
 void ChannelKIR::initialize(RNG& rng)
 {
 #if CHANNEL_KIR == KIR2_1_STEEPHEN_MANCHANDA_2009 || \
@@ -323,7 +323,7 @@ void ChannelKIR::initialize(RNG& rng)
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
       gbar[i] = gbar_values[j];
-    } 
+    }
     /*else if (gbar_values.size() == 1) {
       gbar[i] = gbar_values[0];
     } */
@@ -339,7 +339,7 @@ void ChannelKIR::initialize(RNG& rng)
       {
 	gbar[i] = gbar_values[j-1];
       }
-      else if (j < gbar_values.size()) 
+      else if (j < gbar_values.size())
         gbar[i] = gbar_values[j];
       else
         gbar[i] = gbar_default;
@@ -353,10 +353,10 @@ void ChannelKIR::initialize(RNG& rng)
     dyn_var_t v = (*V)[i];
 #if CHANNEL_KIR == KIR_HAYASHI_FISHMAN_1988 || \
     CHANNEL_KIR == KIR_WOLF_2005 || \
-    CHANNEL_KIR == KIR_STEEPHEN_MANCHANDA_2009 
+    CHANNEL_KIR == KIR_STEEPHEN_MANCHANDA_2009
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     g[i] = gbar[i] * m[i];
-#elif CHANNEL_KIR == KIR_MAHON_2000              
+#elif CHANNEL_KIR == KIR_MAHON_2000
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     g[i] = gbar[i] * m[i];
 
@@ -370,7 +370,7 @@ void ChannelKIR::initialize(RNG& rng)
     if (index == 0)
       h_inf = h_inf_KIR[0];
     else
-      h_inf = linear_interp(Vmrange_tauh[index-1], h_inf_KIR[index-1], 
+      h_inf = linear_interp(Vmrange_tauh[index-1], h_inf_KIR[index-1],
         Vmrange_tauh[index], h_inf_KIR[index], v);
     h[i] = h_inf;
 

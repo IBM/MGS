@@ -546,9 +546,11 @@ class SomeClass(object):
             #           4. numChildren
             assert dist2soma >= 0.0
             self.point_lookup[id] = {'type': line[1],
-                                     'siteX': line[2], 'siteY': line[3],
-                                     'siteZ': line[4],
-                                     'siteR': line[5], 'parent': line[6],
+                                     'siteX': float(line[2]),
+                                     'siteY': float(line[3]),
+                                     'siteZ': float(line[4]),
+                                     'siteR': float(line[5]),
+                                     'parent': line[6],
                                      'dist2soma': dist2soma,
                                      'dist2branchPoint': dist2branchPoint,
                                      'branchOrder': branchOrder,
@@ -2730,13 +2732,13 @@ class SomeClass(object):
             #           130,140,150,160,170,180,190,200,210 ]
             incr_slot = [10] * (len(distance_slot)-1) # 21 increments (each with 10 micrometer)
             ## Wilson et al., (1983) data
-            #mean_spineoccurence_slot = [0.5, 1.5, 3, 15, 30, 40, 35, 30, 27, 25,  25, 22, 20,
-            #             18, 15, 13, 13, 12, 10, 9, 7 ] # every incr_slot[..] (micrometer)
-            #std_spineoccurence_slot  = [ 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
+            mean_spineoccurence_slot = [0.5, 1.5, 3, 15, 30, 40, 35, 30, 27, 25,  25, 22, 20,
+                         18, 15, 13, 13, 12, 10, 9, 7 ] # every incr_slot[..] (micrometer)
+            std_spineoccurence_slot  = [ 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
             ## Suarez et al., (2014) data
-            mean_spineoccurence_slot = [0.5, 1.5,  3,  5,  7, 8, 9, 10, 8, 9, 8 , 8, 9 ,
-                        8, 8, 7, 8, 9, 9, 8, 8 ] # every incr_slot[..] (micrometer)
-            std_spineoccurence_slot  = [ 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
+            # mean_spineoccurence_slot = [0.5, 1.5,  3,  5,  7, 8, 9, 10, 8, 9, 8 , 8, 9 ,
+                        # 8, 8, 7, 8, 9, 9, 8, 8 ] # every incr_slot[..] (micrometer)
+            # std_spineoccurence_slot  = [ 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
             ##
             # 1spine occur every '...' )um
             ### TEST CASE HERE
@@ -2962,12 +2964,12 @@ class SomeClass(object):
                 distance=self._find_distance(cid, pid)
                 #distance=self.point_lookup[id]['dist2branchPoint'] - \
                 #    self.point_lookup[pid]['dist2branchPoint']
-                x1 = self.point_lookup[cid]['siteX']
-                y1 = self.point_lookup[cid]['siteY']
-                z1 = self.point_lookup[cid]['siteZ']
-                parent_x1 = self.point_lookup[pid]['siteX']
-                parent_y1 = self.point_lookup[pid]['siteY']
-                parent_z1 = self.point_lookup[pid]['siteZ']
+                x1 = float(self.point_lookup[cid]['siteX'])
+                y1 = float(self.point_lookup[cid]['siteY'])
+                z1 = float(self.point_lookup[cid]['siteZ'])
+                parent_x1 = float(self.point_lookup[pid]['siteX'])
+                parent_y1 = float(self.point_lookup[pid]['siteY'])
+                parent_z1 = float(self.point_lookup[pid]['siteZ'])
                 #GOAL: find a proximal-side point along the tree that
                 #   1. not exceeding the binslot length
                 #   2. not passing the branchpoint

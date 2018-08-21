@@ -7,13 +7,6 @@
 #include "../BranchSolver/BranchSolver.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
-Struct TissueSite {
-	dyn_var_t x;
-	dyn_var_t y;
-	dyn_var_t z;
-	dyn_var_t r;
-}
-
 // GOAL: stimulus
 //{{{
 Variable VoltageClamp Implements CurrentProducer
@@ -22,7 +15,7 @@ Variable VoltageClamp Implements CurrentProducer
 #endif
 {
   //{{{
-  //{{{HOWTOUSE: 
+  //{{{HOWTOUSE:
   //  1. define the object: choose a voltage-clamp technique using 'type'
   //  1.  set 'command' or 'waveform' voltage data by triggering either 'setCommand()' or 'startWaveform()'
   //             setCommand(command=40.0) # clamped voltage value
@@ -40,11 +33,10 @@ Variable VoltageClamp Implements CurrentProducer
   // }}}
   dyn_var_t command; 	// Declare command voltage
   dyn_var_t [] waveform;// Declare an array for the waveform (each index map to a single time-step clamped voltage)
-  //int waveformIdx;	// Declare index of the waveform array
-  int type; // type = [1 = emulate inject current compensation; 
+  int type; // type = [1 = emulate inject current compensation;
             //         2 = direct modulate Vm with a certain 'gainTime' duration to reach Vc from Vm
             //         3 = read from 'tVm_file' input file (2 columns: time-Vm)]
-  dyn_var_t Igen;	// (pA) current injection - Declare the feedback current applied to hold voltage constant
+  dyn_var_t Igen;	// (pA) current injection - Declare the feedback current applied to hold voltage at a given 'command' value
 #ifdef CONSIDER_DI_DV
   dyn_var_t conductance_didv; // [nS/um^2] - conductance
 #endif
@@ -65,47 +57,57 @@ Variable VoltageClamp Implements CurrentProducer
   string tVm_file;  // [type=3][input] = hold time-Vm
   //}}}
   string fileName;  // [type=1,3][output] = hold time - Igen
+  float output_interval;
   //}}}
 
-  TriggeredFunction startWaveform;	  			// Define the trigger for the waveform or
-  TriggeredFunction setCommand;					// a single command like a step
+  TriggeredFunction startWaveform;	// Define the trigger for the waveform or
+  TriggeredFunction setCommand;	// a single command like a step
   TriggeredFunction toggle; // switch on/off the Vc -- default is OFF
 
   InitPhase initialize;
   RuntimePhase updateI;
   FinalPhase finalize;
 
-  CurrentProducer.current << &Igen;	// Describes the output of the function which is the current Igen
+  UserFunction  setInjectedCurrent;
+
+  CurrentProducer.current << &Igen;
 #ifdef CONSIDER_DI_DV
   DIDV_ConductanceProducer.conductance_didv << &conductance_didv;
-#endif		
+#endif
 
   InAttrPSet {
     string identifier;
+    int idx;
   }
 
   //{{{Input Connections
   //NOTE: Currently limited to junction (e.g. soma) only
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, DimensionArrayProducer{	
+  //Use this for SERIES_RESISTANCE (type==1)
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects
+        VoltageArrayProducer, DimensionArrayProducer
+  {
     VoltageArrayProducer.voltageArray >> V;
-    DimensionArrayProducer.dimensionArray >> dimensions;   
+    DimensionArrayProducer.dimensionArray >> dimensions;
   }
-  //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		// 
-  //  VoltageArrayProducer.voltageArray >> V;
-  //  ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
-  //}
-  //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, DimensionArrayProducer{
-  ////NOTE:  Not support 'ComputeBranch' yet, as it needs to produce CurrentArrayProducer
-  ////NOTE: As the connection between VC and HHVoltage should be bi-directional
-  ////   there is a chance of error when user not doing this properly, i.e. maybe we should let TissueFunctor 
-  ////   does the job
-  //  VoltageArrayProducer.voltageArray >> V;
-  //  //ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
-  //  DimensionArrayProducer.dimensionArray >> dimensions;   
-  //}
+  Connection Pre Node (PSet.identifier=="BRANCH") Expects
+        VoltageArrayProducer, DimensionArrayProducer
+  {
+  //NOTE:  Not support 'ComputeBranch' yet, as it needs to produce CurrentArrayProducer
+  //NOTE: As the connection between VC and HHVoltage should be bi-directional
+  //   there is a chance of error when user not doing this properly, i.e. maybe we should let TissueFunctor
+  //   does the job
+    VoltageArrayProducer.voltageArray >> V;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+    setInjectedCurrent();
+  }
   //Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, SurfaceAreaProducer {
+  // // NOTE: DimensionArrayProducer also has surface_area information
   //	VoltageArrayProducer.voltageArray >> V;
   //	SurfaceAreaProducer.surfaceArea >> surfaceArea;
+  //}
+  //Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, ConnectionSurfaceAreaProducer {		//
+  //  VoltageArrayProducer.voltageArray >> V;
+  //  ConnectionSurfaceAreaProducer.surfaceArea >> surfaceArea;
   //}
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;
@@ -134,6 +136,8 @@ Variable PointCalciumSource Implements CaCurrentProducer
 //}}}
 }
 
+//HISTORY:
+//  2018-Jan-08: add init_duration
 Variable CurrentPulseGenerator Implements CurrentProducer
 {
   //{{{
@@ -141,9 +145,10 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   //{{{user-input
   dyn_var_t peak;
   //{{{for white-noise
-  dyn_var_t mean; 
+  dyn_var_t mean;
   dyn_var_t sd;
   //}}}
+  dyn_var_t init_duration;
   dyn_var_t period;
   dyn_var_t duration;
   dyn_var_t delay;
@@ -177,18 +182,74 @@ Variable CurrentPulseGenerator Implements CurrentProducer
   }
   //}}}
 }
-Variable RampCurrentGenerator Implements CurrentProducer
+
+Variable ArrayCurrentPulseGenerator Implements CurrentArrayProducer
 {
   //{{{
   //{{{Data
   //{{{user-input
-  dyn_var_t Istart; // [pA]
-  dyn_var_t Iend;  // [pA]
+  dyn_var_t peak;
+  //{{{for white-noise
+  dyn_var_t mean;
+  dyn_var_t sd;
+  //}}}
+  dyn_var_t init_duration;
   dyn_var_t period;
   dyn_var_t duration;
   dyn_var_t delay;
   dyn_var_t last;
   dyn_var_t inc;
+  string pattern; // supported protocols [periodic_train, periodic, poisson, dualexp, ramp]
+  int write_to_file; // YES or NO
+  string fileName; // fileName if 'write_to_file = 1'
+  float io_interval; //[ms] - default is 1.0 [ms]
+  //{{{ use with dualexp
+  dyn_var_t riseTime; //[ms]
+  dyn_var_t decayTime; //[ms]
+  //}}}
+  //{{{ use with multiple-trains, each train is a tuple of small pulse
+  int num_trains;
+  int num_pulses_per_train;
+  float intra_train_gap;  //[ms]
+  //}}}
+  int num_streams; //how many different streams of current that you want to generate. Neurons will receive from one of these streams
+  dyn_var_t[] I; // [pA]
+  //}}}
+#ifdef CONSIDER_DI_DV
+  dyn_var_t[] di_dv; // conductance [nS/um^2]
+#endif
+  dyn_var_t* deltaT;
+  //}}}
+
+  InitPhase initialize(I);
+  RuntimePhase update(I);
+  FinalPhase finalize();
+
+  CurrentArrayProducer.currents << &I;
+#ifdef CONSIDER_DI_DV
+  CurrentArrayProducer.di_dv << &di_dv;
+#endif
+  Connection Pre Constant () Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> deltaT;
+  }
+  //}}}
+}
+
+Variable RampCurrentGenerator Implements CurrentProducer
+{
+  //{{{
+  //{{{Data
+  //{{{user-input
+  dyn_var_t init_duration;
+  dyn_var_t[] Iramp; // [pA]
+  /*dyn_var_t Istart; // [pA] - local now*/
+  /*dyn_var_t Iend;  // [pA] - local now*/
+  dyn_var_t[] time_points; //(ms)
+  dyn_var_t period;
+  /*dyn_var_t duration; - local now*/
+  dyn_var_t delay;
+  dyn_var_t last;
+  dyn_var_t inc; //not being used
   string pattern; //(ramp)
   int write_to_file; // YES or NO
   string fileName; // fileName if 'write_to_file = 1'
@@ -216,7 +277,7 @@ Variable RampCurrentGenerator Implements CurrentProducer
 // GOAL: it connects to 1 or more Voltage producer compartment/channel/...
 //    so one connection is an element in the array []V;
 //          that reference to the real data 'dyn_var_t []*'
-//   each Voltage is written to one column in the file, in the order it is connected 
+//   each Voltage is written to one column in the file, in the order it is connected
 //   the first column is always the time
 // FORMAT:
 //  time  V1  V2 V3 ....
@@ -226,9 +287,9 @@ Variable VoltageDisplay
   //{{{ Data
 	string fileName;
 	int [] [] indices;// each element keeps track of (from a given ComputeBranch)
-                    // the vector of indices of the compartments on that 
+                    // the vector of indices of the compartments on that
                     // data 'V' below is need to be recorded
-	dyn_var_t []* []  V;// each element is a reference to 
+	dyn_var_t []* []  V;// each element is a reference to
                    // a vector of data to record on 1 ComputeBranch
 	dyn_var_t []* V_connect;
 	DimensionStruct* []* [] dimensions;
@@ -253,7 +314,7 @@ Variable VoltageDisplay
 	UserFunction setUpPointers;
 
 	Connection Pre Node () Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {// NOTE: each node represents data associated with compartments in 1 ComputeBranch
-		VoltageArrayProducer.voltageArray >> V_connect; 
+		VoltageArrayProducer.voltageArray >> V_connect;
 		DimensionArrayProducer.dimensionArray >> dimensions_connect;
 		BranchDataProducer.branchData >> branchData_connect;
 		setUpPointers();
@@ -262,7 +323,7 @@ Variable VoltageDisplay
 		TimeStepProducer.deltaT >> deltaT;
 	}
 //}}}
-} 
+}
 
 Variable ConductanceDisplay
 {
@@ -314,7 +375,7 @@ Variable ConductanceDisplay
 		TimeStepProducer.deltaT >> deltaT;
 	}
 //}}}
-} 
+}
 
 Variable ReversalPotentialDisplay
 {
@@ -359,9 +420,36 @@ Variable ReversalPotentialDisplay
 		TimeStepProducer.deltaT >> deltaT;
 	}
 //}}}
-} 
+}
 //}}}
 
+//Variable SignalOutput
+//{
+////{{{
+//
+//  int* [] signal_io; // 0 = no write, 1 = write (the target has the responsibility to turn off)
+//
+//  dyn_var_t* deltaT;
+//
+//  InitPhase initialize;
+//  FinalPhase finalize;
+//  TriggeredFunction dataCollection;
+//
+//  InAttrPSet {
+//    string identifier;
+//  }
+//
+//  UserFunction setUpPointers;
+//
+//  Connection Pre Node (PSet.identifier=="htree") Expects SignalHook
+//   {
+//    SignalHook.signalhook >> signal_io;
+//  }
+//  Connection Pre Constant () Expects TimeStepProducer {
+//    TimeStepProducer.deltaT >> deltaT;
+//  }
+////}}}
+//}
 ///////////////////////////////////////////////
 // Current I/O
 //{{{
@@ -392,6 +480,7 @@ Variable CurrentDisplay
 
 	InAttrPSet {
 		string identifier;
+    TissueSite site;
 	}
 
 	UserFunction setUpPointers;
@@ -416,7 +505,7 @@ Variable CurrentDisplay
 		TimeStepProducer.deltaT >> deltaT;
 	}
 //}}}
-} 
+}
 
 Variable CaCurrentDisplay
 {
@@ -445,6 +534,7 @@ Variable CaCurrentDisplay
 
   InAttrPSet {
     string identifier;
+    TissueSite site;
   }
 
   UserFunction setUpPointers;
@@ -469,7 +559,7 @@ Variable CaCurrentDisplay
     TimeStepProducer.deltaT >> deltaT;
   }
   //}}}
-} 
+}
 
 Variable AnyCurrentDisplay
 {
@@ -477,13 +567,13 @@ Variable AnyCurrentDisplay
   string fileName;
 
   //Compartmental
-  //{{{ 
+  //{{{
 #ifdef IDEA_CURRENTONCOMPT
   int [] [] indices_channel;//only print out current on given compartments in a branch
 #else
   int [] indices; //assume print out current on ALL compartments in a branch
 #endif
-  dyn_var_t []* [] I_channel;
+  dyn_var_t []* [] I_channel; // unit: (typically it's current density) [pA/um^2]
   dyn_var_t []* I_channelConnect;
   BranchDataStruct* [] channelBranchData;
 #ifdef IDEA_ILEAK
@@ -497,12 +587,16 @@ Variable AnyCurrentDisplay
   int [] [] indices_leak;
 #endif
 #endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  dyn_var_t* [] I_junction; //[pA] - axial currents
+#endif
   string [] strChannelTypeOnCompt;
   //}}}
 
   //Synapse-receptor
   //{{{
   dyn_var_t* [] I_synapse;
+  dyn_var_t* I_synapse_connect;
   BranchDataStruct* []* [] synapseBranchData;     //the postsynaptic location
   BranchDataStruct* []* synapseBranchDataConnect;
   int* [] [] synapseIndices;
@@ -510,7 +604,9 @@ Variable AnyCurrentDisplay
   string [] strChannelTypeOnSynapse;
 
   BranchDataStruct* [] connexonBranchData;
+  BranchDataStruct* connexonBranchData_connect;
   int* [] connexonIndices;
+  int* connexonIndices_connect;
   //}}}
 
   dyn_var_t* deltaT;
@@ -525,24 +621,26 @@ Variable AnyCurrentDisplay
 #endif
 
   InAttrPSet {
+    //{{{
     string identifier;//CHANNEL, BRANCH, JUNCTION, SYNAPSE, CONNEXON
     string type;//Nat, Cah
 #ifdef IDEA_CURRENTONCOMPT
     TissueSite site;
 #endif
+    //}}}
   }
 
   UserFunction setUpPointers;
 
   //{{{Inputs
-  //{{{leak in BRANCH
 #ifdef IDEA_ILEAK
-  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, 
-       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  
+  //{{{leak in BRANCH
+  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer,
+       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer
 #ifdef IDEA_CURRENTONCOMPT
-	 , DimensionArrayProducer 
+	 , DimensionArrayProducer
 #endif
-   {		// 
+   {		//
      VoltageArrayProducer.voltageArray >> V_connect;
      ConductanceProducer.conductance >> gLeak;
      BranchDataProducer.branchData >> leakBranchData;
@@ -554,12 +652,12 @@ Variable AnyCurrentDisplay
    }
   //}}}
   //{{{leak in JUNCTION
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, 
-      ConductanceProducer, BranchDataProducer, ReversalPotentialProducer 
+  Connection Pre Node ((PSet.identifier=="JUNCTION") && (PSet.type !="axial")) Expects VoltageArrayProducer,
+      ConductanceProducer, BranchDataProducer, ReversalPotentialProducer
 #ifdef IDEA_CURRENTONCOMPT
-      , DimensionArrayProducer 
+      , DimensionArrayProducer
 #endif
-   {		// 
+   {		//
      VoltageArrayProducer.voltageArray >> V_connect;
      ConductanceProducer.conductance >> gLeak;
      BranchDataProducer.branchData >> leakBranchData;
@@ -569,13 +667,30 @@ Variable AnyCurrentDisplay
      ReversalPotentialProducer.reversalPotential >> Eleak;
      setUpPointers();
    }
-#endif
   //}}}
+#endif
+#ifdef RECORD_AXIAL_CURRENT_AS_INJECTED_CURRENT
+  //{{{axial currents into JUNCTION
+  Connection Pre Node ((PSet.identifier=="JUNCTION") && (PSet.type=="axial")) Expects
+      IOCurrentProducer
+//, BranchDataProducer
+//#ifdef IDEA_CURRENTONCOMPT
+//      , DimensionArrayProducer
+//#endif
+   {		//
+     IOCurrentProducer.current >> I_junction;
+//#ifdef IDEA_CURRENTONCOMPT
+//     DimensionArrayProducer.dimensionArray >> dimensions_connect;
+//#endif
+//     setUpPointers();
+   }
+  //}}}
+#endif
   //{{{current via CHANNEL
   //Use for GHK-based current formula
-  Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer 
+  Connection Pre Node (PSet.identifier=="CHANNEL") Expects CurrentArrayProducer, BranchDataProducer
 #ifdef IDEA_CURRENTONCOMPT
-    , DimensionArrayProducer 
+    , DimensionArrayProducer
 #endif
     {
       CurrentArrayProducer.currents >> I_channelConnect;
@@ -588,7 +703,7 @@ Variable AnyCurrentDisplay
   //Use for HH-based current formula
   Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer
 #ifdef IDEA_CURRENTONCOMPT
-    , DimensionArrayProducer 
+    , DimensionArrayProducer
 #endif
     {
       IOCurrentArrayProducer.currents >> I_channelConnect;
@@ -599,9 +714,9 @@ Variable AnyCurrentDisplay
       setUpPointers();
     }
   //{{{old
-  //	//Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer 
+  //	//Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaCurrentArrayProducer, BranchDataProducer
   //#ifdef IDEA_CURRENTONCOMPT
-  //  , DimensionArrayProducer 
+  //  , DimensionArrayProducer
   //#endif
   //{
   //		CaCurrentArrayProducer.currents >> I_channelConnect;
@@ -614,24 +729,44 @@ Variable AnyCurrentDisplay
   //}}}
   //}}}
   //{{{current via receptor (at SYNAPSE)
-  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
-    CurrentProducer.current >> I_synapse;
+  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CurrentProducer
+    , BranchDataArrayProducer, IndexArrayProducer
+    , DimensionArrayProducer
+  {
+    CurrentProducer.current >> I_synapse_connect;
     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+    DimensionArrayProducer.dimensionArray >> dimensions_connect;
     setUpPointers();
   }
-  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer, BranchDataArrayProducer, IndexArrayProducer {
-    CaCurrentProducer.current >> I_synapse;
+  Connection Pre Node (PSet.identifier=="SYNAPSE") Expects CaCurrentProducer
+    , BranchDataArrayProducer, IndexArrayProducer
+    , DimensionArrayProducer
+  {
+    CaCurrentProducer.current >> I_synapse_connect;
     BranchDataArrayProducer.branchDataArray >> synapseBranchDataConnect;
     IndexArrayProducer.indexArray >> synapseIndicesConnect;
+    DimensionArrayProducer.dimensionArray >> dimensions_connect;
     setUpPointers();
   }
   //}}}
   //{{{current via CONNEXON
-  Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer, BranchDataProducer, IndexProducer {
+  Connection Pre Node (PSet.identifier=="CONNEXON") Expects CurrentProducer
+    , BranchDataProducer, IndexProducer
+#ifdef IDEA_CURRENTONCOMPT
+    , DimensionArrayProducer
+#endif
+  {
+#ifdef IDEA_CURRENTONCOMPT
+    CurrentProducer.current >> I_synapse_connect;
+    BranchDataProducer.branchData >> connexonBranchData_connect;
+    IndexProducer.index >> connexonIndices_connect;
+    setUpPointers();
+#else
     CurrentProducer.current >> I_synapse;
     BranchDataProducer.branchData >> connexonBranchData;
     IndexProducer.index >> connexonIndices;
+#endif
   }
   Connection Pre Constant () Expects TimeStepProducer {
     TimeStepProducer.deltaT >> deltaT;
@@ -639,14 +774,14 @@ Variable AnyCurrentDisplay
   //}}}
   //}}}
   //}}}
-} 
+}
 Variable AnyFluxDisplay
 {
   //{{{
   string fileName;
 
   //Compartmental
-  //{{{ 
+  //{{{
 #ifdef IDEA_CURRENTONCOMPT
   int [] [] indices_channel;//only print out current on given compartments in a branch
 #else
@@ -705,12 +840,12 @@ Variable AnyFluxDisplay
 
 //{{{obsolete
 //#ifdef IDEA_ILEAK
-//  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer, 
-//       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer  
+//  Connection Pre Node (PSet.identifier=="BRANCH") Expects VoltageArrayProducer,
+//       ConductanceProducer, BranchDataProducer, ReversalPotentialProducer
 //#ifdef IDEA_CURRENTONCOMPT
-//	 , DimensionArrayProducer 
+//	 , DimensionArrayProducer
 //#endif
-//   {		// 
+//   {		//
 //     VoltageArrayProducer.voltageArray >> V_connect;
 //     ConductanceProducer.conductance >> gLeak;
 //     BranchDataProducer.branchData >> leakBranchData;
@@ -720,12 +855,12 @@ Variable AnyFluxDisplay
 //     ReversalPotentialProducer.reversalPotential >> Eleak;
 //     setUpPointers();
 //   }
-//  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer, 
-//      ConductanceProducer, BranchDataProducer, ReversalPotentialProducer 
+//  Connection Pre Node (PSet.identifier=="JUNCTION") Expects VoltageArrayProducer,
+//      ConductanceProducer, BranchDataProducer, ReversalPotentialProducer
 //#ifdef IDEA_CURRENTONCOMPT
-//      , DimensionArrayProducer 
+//      , DimensionArrayProducer
 //#endif
-//   {		// 
+//   {		//
 //     VoltageArrayProducer.voltageArray >> V_connect;
 //     ConductanceProducer.conductance >> gLeak;
 //     BranchDataProducer.branchData >> leakBranchData;
@@ -741,9 +876,9 @@ Variable AnyFluxDisplay
   //{{{Inputs
   //{{{flux via CHANNEL
   //Use for flux producer current formula
-  Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaFluxArrayProducer, BranchDataProducer 
+  Connection Pre Node (PSet.identifier=="CHANNEL") Expects CaFluxArrayProducer, BranchDataProducer
 #ifdef IDEA_CURRENTONCOMPT
-    , DimensionArrayProducer 
+    , DimensionArrayProducer
 #endif
     {
       CaFluxArrayProducer.fluxes >> J_channelConnect;
@@ -762,7 +897,7 @@ Variable AnyFluxDisplay
 //  //Use for HH-based current formula
 //  Connection Pre Node (PSet.identifier=="CHANNEL") Expects IOCurrentArrayProducer, BranchDataProducer
 //#ifdef IDEA_CURRENTONCOMPT
-//    , DimensionArrayProducer 
+//    , DimensionArrayProducer
 //#endif
 //    {
 //      IOCurrentArrayProducer.currents >> J_channelConnect;
@@ -791,7 +926,7 @@ Variable AnyFluxDisplay
 //  }
   //}}}
   //}}}
-} 
+}
 //}}}
 
 ///////////////////////////////////////////////
@@ -848,7 +983,7 @@ Variable AnyFluxDisplay
 //		TimeStepProducer.deltaT >> deltaT;
 //	}
 ////}}}
-//} 
+//}
 
 Variable CalciumDisplay
 {
@@ -856,7 +991,7 @@ Variable CalciumDisplay
   string fileName;
   int [] [] indices;
 
-  //Compartmental 
+  //Compartmental
   //{{{
   dyn_var_t []* []  Ca;
   dyn_var_t []* Ca_connect;
@@ -893,7 +1028,7 @@ Variable CalciumDisplay
     TimeStepProducer.deltaT >> deltaT;
   }
   //}}}
-} 
+}
 
 Variable CalciumDomainDisplay
 {
@@ -901,7 +1036,7 @@ Variable CalciumDomainDisplay
   string fileName;
   int [] [] indices;
 
-  //Compartmental 
+  //Compartmental
   //{{{
   dyn_var_t []* []  Ca; //1 element = array represents all microdomains in 1 branch
           // [block1][block2]...[block_n]
@@ -929,14 +1064,14 @@ Variable CalciumDomainDisplay
   //}}}
 
   InAttrPSet {
-    string identifier; 
+    string identifier;
     TissueSite site;
     string domainName; // must be a domain name
   }
 
   UserFunction setUpPointers;
 
-  Connection Pre Node () Expects CaMicrodomainConcentrationArrayProducer, BranchDataProducer, 
+  Connection Pre Node () Expects CaMicrodomainConcentrationArrayProducer, BranchDataProducer,
 	     DimensionArrayProducer, CaMicrodomainNameArrayProducer {
     CaMicrodomainConcentrationArrayProducer.CaConcentrations >> Ca_connect;
     DimensionArrayProducer.dimensionArray >> dimensions_connect;
@@ -948,13 +1083,13 @@ Variable CalciumDomainDisplay
     TimeStepProducer.deltaT >> deltaT;
   }
   //}}}
-} 
+}
 Variable AnyConcentrationDisplay
 {
   //{{{
   string fileName;
 
-  //Compartmental 
+  //Compartmental
   //{{{
   //dyn_var_t []* []  Ca;
   //dyn_var_t []* []  CaER;
@@ -986,7 +1121,7 @@ Variable AnyConcentrationDisplay
   //dyn_var_t * cleftConcentration_connect;
   dyn_var_t * []  NT; //Glut, GABA, eCB, DA, Ser
 
-  BranchDataStruct* [] cleftBranchData;       // the pre or postynaptic branch 
+  BranchDataStruct* [] cleftBranchData;       // the pre or postynaptic branch
   int [] cleftIndices;
 #ifdef KEEP_PAIR_PRE_POST
   BranchDataStruct*[]*   cleftBranchDataConnect;//...depending upon the value of 'side'
@@ -1020,16 +1155,16 @@ Variable AnyConcentrationDisplay
 
   UserFunction setUpPointers;
 
-  //{{{Inputs 
+  //{{{Inputs
   //{{{concentrations from branches & junctions
-  Connection Pre Node (PSet.identifier=="BRANCH") Expects CaConcentrationArrayProducer, 
+  Connection Pre Node (PSet.identifier=="BRANCH") Expects CaConcentrationArrayProducer,
 	     BranchDataProducer, DimensionArrayProducer {
 	       CaConcentrationArrayProducer.CaConcentrations >> concentrations_connect;
 	       DimensionArrayProducer.dimensionArray >> dimensions_connect;
 	       BranchDataProducer.branchData >> branchData_connect;
 	       setUpPointers();
 	     }
-  Connection Pre Node (PSet.identifier=="BRANCH") Expects IP3ConcentrationArrayProducer, 
+  Connection Pre Node (PSet.identifier=="BRANCH") Expects IP3ConcentrationArrayProducer,
 	     BranchDataProducer, DimensionArrayProducer {
 	       IP3ConcentrationArrayProducer.IP3Concentrations >> concentrations_connect;
 	       DimensionArrayProducer.dimensionArray >> dimensions_connect;
@@ -1037,14 +1172,14 @@ Variable AnyConcentrationDisplay
 	       setUpPointers();
 	     }
   //{{{obsolete
-  //Connection Pre Node (PSet.identifier=="BRANCH[Calcium]") Expects CaConcentrationArrayProducer, 
+  //Connection Pre Node (PSet.identifier=="BRANCH[Calcium]") Expects CaConcentrationArrayProducer,
   //          BranchDataProducer, DimensionArrayProducer {
   //	CaConcentrationArrayProducer.CaConcentrations >> compartment_connect;
   //	DimensionArrayProducer.dimensionArray >> dimensions_connect;
   //	BranchDataProducer.branchData >> branchData_connect;
   //	setUpPointers();
   //}
-  //Connection Pre Node (PSet.identifier=="BRANCH[CalciumER]") Expects CaConcentrationArrayProducer, 
+  //Connection Pre Node (PSet.identifier=="BRANCH[CalciumER]") Expects CaConcentrationArrayProducer,
   //          BranchDataProducer, DimensionArrayProducer {
   //	CaConcentrationArrayProducer.CaConcentrations >> compartment_connect;
   //	DimensionArrayProducer.dimensionArray >> dimensions_connect;
@@ -1052,28 +1187,28 @@ Variable AnyConcentrationDisplay
   //	setUpPointers();
   //}
   //}}}
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects CaConcentrationArrayProducer, 
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects CaConcentrationArrayProducer,
 	     BranchDataProducer, DimensionArrayProducer {
 	       CaConcentrationArrayProducer.CaConcentrations >> concentrations_connect;
 	       DimensionArrayProducer.dimensionArray >> dimensions_connect;
 	       BranchDataProducer.branchData >> branchData_connect;
 	       setUpPointers();
 	     }
-  Connection Pre Node (PSet.identifier=="JUNCTION") Expects IP3ConcentrationArrayProducer, 
+  Connection Pre Node (PSet.identifier=="JUNCTION") Expects IP3ConcentrationArrayProducer,
 	     BranchDataProducer, DimensionArrayProducer {
 	       IP3ConcentrationArrayProducer.IP3Concentrations >> concentrations_connect;
 	       DimensionArrayProducer.dimensionArray >> dimensions_connect;
 	       BranchDataProducer.branchData >> branchData_connect;
 	       setUpPointers();
 	     }
-  //Connection Pre Node (PSet.identifier=="JUNCTION[Calcium]") Expects CaConcentrationArrayProducer, 
+  //Connection Pre Node (PSet.identifier=="JUNCTION[Calcium]") Expects CaConcentrationArrayProducer,
   //          BranchDataProducer, DimensionArrayProducer {
   //	CaConcentrationArrayProducer.CaConcentrations >> compartment_connect;
   //	DimensionArrayProducer.dimensionArray >> dimensions_connect;
   //	BranchDataProducer.branchData >> branchData_connect;
   //	setUpPointers();
   //}
-  //Connection Pre Node (PSet.identifier=="JUNCTION[CalciumER]") Expects CaConcentrationArrayProducer, 
+  //Connection Pre Node (PSet.identifier=="JUNCTION[CalciumER]") Expects CaConcentrationArrayProducer,
   //          BranchDataProducer, DimensionArrayProducer {
   //	CaConcentrationArrayProducer.CaConcentrations >> compartment_connect;
   //	DimensionArrayProducer.dimensionArray >> dimensions_connect;
@@ -1084,9 +1219,9 @@ Variable AnyConcentrationDisplay
   //{{{NT concentrations from clefts
 #ifdef KEEP_PAIR_PRE_POST
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Glut")
-      ) Expects 
-    GlutamateConcentrationProducer 
-    , BranchDataArrayProducer, DirectIndexArrayProducer 
+      ) Expects
+    GlutamateConcentrationProducer
+    , BranchDataArrayProducer, DirectIndexArrayProducer
     , DimensionArrayProducer //for pre and post, in that order
     {
       GlutamateConcentrationProducer.NT >> NT;
@@ -1100,8 +1235,8 @@ Variable AnyConcentrationDisplay
   //{{{
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Glut")
       && (PSet.side=="pre")
-      ) Expects 
-    GlutamateConcentrationProducer 
+      ) Expects
+    GlutamateConcentrationProducer
     , BranchDataProducerPre, IndexProducerPre
     {
       GlutamateConcentrationProducer.NT >> NT;
@@ -1110,8 +1245,8 @@ Variable AnyConcentrationDisplay
       setUpPointers();
     }
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Glut")
-      && (PSet.side=="post")) Expects 
-    GlutamateConcentrationProducer, 
+      && (PSet.side=="post")) Expects
+    GlutamateConcentrationProducer,
     BranchDataProducerPost, IndexProducer {
       GlutamateConcentrationProducer.NT >> NT;
       BranchDataProducerPost.branchData >> cleftBranchDataConnect;
@@ -1122,9 +1257,9 @@ Variable AnyConcentrationDisplay
 #endif
 #ifdef KEEP_PAIR_PRE_POST
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="GABA")
-      ) Expects 
-    GlutamateConcentrationProducer 
-    , BranchDataArrayProducer, DirectIndexArrayProducer 
+      ) Expects
+    GlutamateConcentrationProducer
+    , BranchDataArrayProducer, DirectIndexArrayProducer
     , DimensionArrayProducer //for pre and post, in that order
     {
       GlutamateConcentrationProducer.NT >> NT;
@@ -1134,7 +1269,7 @@ Variable AnyConcentrationDisplay
       setUpPointers();
     }
 #else
-  Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="GABA")) Expects 
+  Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="GABA")) Expects
     GABAConcentrationProducer,
     BranchDataProducer, IndexProducer {
       GABAConcentrationProducer.NT >> NT;
@@ -1147,9 +1282,9 @@ Variable AnyConcentrationDisplay
 #if SUPPORT_MODULABLE_CLEFT
 #ifdef KEEP_PAIR_PRE_POST
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="DA")
-      ) Expects 
-    GlutamateConcentrationProducer 
-    , BranchDataArrayProducer, DirectIndexArrayProducer 
+      ) Expects
+    GlutamateConcentrationProducer
+    , BranchDataArrayProducer, DirectIndexArrayProducer
     , DimensionArrayProducer //for pre and post, in that order
     {
       GlutamateConcentrationProducer.NT >> NT;
@@ -1159,9 +1294,9 @@ Variable AnyConcentrationDisplay
       setUpPointers();
     }
   Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Ser")
-      ) Expects 
-    GlutamateConcentrationProducer 
-    , BranchDataArrayProducer, DirectIndexArrayProducer 
+      ) Expects
+    GlutamateConcentrationProducer
+    , BranchDataArrayProducer, DirectIndexArrayProducer
     , DimensionArrayProducer //for pre and post, in that order
     {
       GlutamateConcentrationProducer.NT >> NT;
@@ -1171,7 +1306,7 @@ Variable AnyConcentrationDisplay
       setUpPointers();
     }
 #else
-  Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="DA")) Expects 
+  Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="DA")) Expects
     DAConcentrationProducer,
     BranchDataProducer, IndexProducer {
       DAConcentrationProducer.NT >> NT;
@@ -1179,7 +1314,7 @@ Variable AnyConcentrationDisplay
       IndexProducer.index >> cleftIndicesConnect;
       setUpPointers();
     }
-  Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Ser")) Expects 
+  Connection Pre Node ((PSet.identifier=="CLEFT") && (PSet.type=="Ser")) Expects
     SerConcentrationProducer,
     BranchDataProducer, IndexProducer {
       SerConcentrationProducer.NT >> NT;
@@ -1189,7 +1324,7 @@ Variable AnyConcentrationDisplay
     }
 #endif
 #endif
-  //Connection Pre Node (PSet.identifier=="CLEFT") Expects GlutamateConcentrationProducer, 
+  //Connection Pre Node (PSet.identifier=="CLEFT") Expects GlutamateConcentrationProducer,
   //       GABAConcentrationProducer,
   //       BranchDataProducer, IndexProducer {
   //  GlutamateConcentrationProducer.NT >> Glut;
@@ -1204,7 +1339,7 @@ Variable AnyConcentrationDisplay
   }
   //}}}
   //}}}
-} 
+}
 //}}}
 
 
@@ -1260,7 +1395,7 @@ Variable AnyConcentrationDisplay
 //		TimeStepProducer.deltaT >> deltaT;
 //	}
 ////}}}
-//} 
+//}
 //
 //Variable IndirectCurrentDisplay
 //{//TUAN TODO: how to implement that we can provide current for channel that only produce g and Erev
@@ -1313,11 +1448,11 @@ Variable AnyConcentrationDisplay
 //		TimeStepProducer.deltaT >> deltaT;
 //	}
 ////}}}
-//} 
+//}
 
 
 ///////////////////////////////////////////////
-//Variable collect data to support visualization 
+//Variable collect data to support visualization
 //{{{
 Variable CalciumVisualization
 {
@@ -1351,7 +1486,7 @@ Variable CalciumVisualization
     TimeStepProducer.deltaT >> deltaT;
   }
   //}}}
-} 
+}
 
 Variable VoltageVisualization
 {
@@ -1385,7 +1520,7 @@ Variable VoltageVisualization
 		TimeStepProducer.deltaT >> deltaT;
 	}
 //}}}
-} 
+}
 //}}}
 
 
@@ -1400,15 +1535,21 @@ Variable SimulationSetter Implements PlasticityToggleProducer
 
 	PlasticityToggleProducer.plasticityToggle << &plasticityToggle;
 //}}}
-} 
+}
 
-Variable SimulationInfo 
+Variable SimulationInfo
 {
+//NOTE: We use this variable to help
+// 1. use time as the criterion (beside iteration index)
+// 2. pass a file whose content can be checked to halt the simulation
   //{{{
   //{{{DATA
   //{{{passed by user (either of this)
   float recordIntervalInTime; //[ms]
-  int recordIntervalInIterations; 
+  int recordIntervalInIterations;
+  //}}}
+  //{{{passed by user
+  string halt_file;
   //}}}
   //{{{internal/reference
   //NOTE: make sure it has to be 'float'
@@ -1416,6 +1557,7 @@ Variable SimulationInfo
   float currentTime;    //[ms]
   dyn_var_t* deltaT;
   unsigned iterationCount; // zero-based for RuntimePhase loop, unlike ::Iteration is 1-based (as it starts from InitPhase)
+  unsigned isUserWantToHalt;    //True/False (i.e. 1/0) as MGS does not have 'bool' type
   //}}}
   //}}}
 
@@ -1469,10 +1611,10 @@ Variable DetectDataChangeOneCompartment
 
   Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
-    , BranchDataProducer, DimensionArrayProducer 
+    , BranchDataProducer, DimensionArrayProducer
 #endif
   {
-    CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+    CaConcentrationArrayProducer.CaConcentrations >> data_connect;
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
     DimensionArrayProducer.dimensionArray >> dimensions_connect;
     BranchDataProducer.branchData >> branchData_connect;
@@ -1482,10 +1624,10 @@ Variable DetectDataChangeOneCompartment
   }
   Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
-    , BranchDataProducer, DimensionArrayProducer 
+    , BranchDataProducer, DimensionArrayProducer
 #endif
   {
-    VoltageArrayProducer.voltageArray >> data_connect; 
+    VoltageArrayProducer.voltageArray >> data_connect;
 #if DETECT_CHANGE == _SINGLE_SENSOR_DETECT_CHANGE
     DimensionArrayProducer.dimensionArray >> dimensions_connect;
     BranchDataProducer.branchData >> branchData_connect;
@@ -1523,13 +1665,13 @@ Variable DetectDataChangeOneCompartment
 //  }
 //
 //  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
-//    CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+//    CaConcentrationArrayProducer.CaConcentrations >> data_connect;
 //    DimensionArrayProducer.dimensionArray >> dimensions_connect;
 //    BranchDataProducer.branchData >> branchData_connect;
 //    setUpPointers();
 //  }
 //  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
-//    VoltageArrayProducer.voltageArray >> data_connect; 
+//    VoltageArrayProducer.voltageArray >> data_connect;
 //    DimensionArrayProducer.dimensionArray >> dimensions_connect;
 //    BranchDataProducer.branchData >> branchData_connect;
 //    setUpPointers();
@@ -1551,10 +1693,10 @@ Variable DetectDataChangeOneCompartment
 //
 //  DimensionStruct* []* [] dimensions;
 //  DimensionStruct* []* dimensions_connect;
-//  dyn_var_t []* []  data;// each element is a reference to 
+//  dyn_var_t []* []  data;// each element is a reference to
 //  float slope;
 //  //NOTE: If we use this then slope = min(slope_arr)
-//  float [] []  data_prev;// each element is a reference to 
+//  float [] []  data_prev;// each element is a reference to
 //  float[] slope_arr;
 //
 //  InitPhase initialize;
@@ -1566,13 +1708,13 @@ Variable DetectDataChangeOneCompartment
 //  }
 //
 //  Connection Pre Node (PSet.identifier == "JUNCTION") Expects CaConcentrationArrayProducer, BranchDataProducer, DimensionArrayProducer {
-//    CaConcentrationArrayProducer.CaConcentrations >> data_connect; 
+//    CaConcentrationArrayProducer.CaConcentrations >> data_connect;
 //    DimensionArrayProducer.dimensionArray >> dimensions_connect;
 //    BranchDataProducer.branchData >> branchData_connect;
 //    setUpPointers();
 //  }
 //  Connection Pre Node (PSet.identifier == "JUNCTION") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
-//    VoltageArrayProducer.voltageArray >> data_connect; 
+//    VoltageArrayProducer.voltageArray >> data_connect;
 //    DimensionArrayProducer.dimensionArray >> dimensions_connect;
 //    BranchDataProducer.branchData >> branchData_connect;
 //    setUpPointers();

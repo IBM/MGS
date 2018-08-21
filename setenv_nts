@@ -1,4 +1,0 @@
-export NTSROOT=`pwd`
-export LENSROOT=$NTSROOT/gsl
-export MDLROOT=$NTSROOT/mdl
-export PATH=$NTSROOT/gsl/bin:$PATH
