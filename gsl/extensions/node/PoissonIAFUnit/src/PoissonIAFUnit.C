@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -21,17 +21,13 @@
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
 
-void PoissonIAFUnit::initialize(RNG& rng)
-{
-}
-
 void PoissonIAFUnit::update(RNG& rng)
 {
   // Produce a spike with a Poisson distribution with the given firing rate
   spike = (drandom(rng) <= (Hz / (1. / SHD.deltaT)));
 
   // If the simulation has reached a certain period, apply a perturbation
-  if (ITER == 5000000)
+  if (SHD.op_perturbation && ITER == SHD.perturbationT)
     Hz = drandom(0.0, 150.0, rng);
 }
 

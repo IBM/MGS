@@ -1,0 +1,53 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef GOODWINDATACOLLECTORS_MDL
+#define GOODWINDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable GoodwinDataCollector
+{
+  string directory;
+  string filePrep;
+  string fileApp;
+  string fileExt;
+  int [] rows;
+  int [] cols;
+  int [] slices;
+  int mxslice;
+  double* [] X;
+  double* [] Y;
+  double* [] Z;
+  UserFunction getNodeIndices;
+
+  // Flags
+  bool op_saveX;
+  bool op_saveY;
+  bool op_saveZ;
+
+  Connection Pre Node () Expects GoodwinProducer
+  {
+    GoodwinProducer.X >> X;
+    GoodwinProducer.Y >> Y;
+    GoodwinProducer.Z >> Z;
+    getNodeIndices();
+  }
+
+  InitPhase initialize;
+  TriggeredFunction dataCollection;
+  FinalPhase finalize;
+}
+
+#endif

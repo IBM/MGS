@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -40,9 +40,10 @@ NodeType LinskerInfomaxUnit (<
 	betaC = 0.0007,
 	betaW0 = 0.0007,
 	betaQ = 0.0021,
+        inversion_method = 0,
         weightsFileName = "Weights",
 	collectWeightsOn = {1, 5000000, 10000000, 15000000, 20000000, 25000000, 30000000}
->) { outputWeightsShared->run1, copy->run2, update->run4 };
+>) { outputWeightsShared->run1, copy->run2, update->run4, invertQmatrixShared->run3};
 
 Grid Retina
 {

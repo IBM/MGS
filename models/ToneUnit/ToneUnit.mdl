@@ -1,0 +1,53 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef TONEUNIT_MDL
+#define TONEUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node ToneUnit Implements OutputProducer
+{
+  // Parameters set by the user
+  // Parameters used by the wave update function
+  double tone;             // actual tone
+ 
+  Shared
+    {
+      int start_time;
+      int stop_time;
+      int duration;
+      int interval;
+      double amplitude;
+ 
+      double deltaT; // in s
+     
+      InitPhase initializeShared;
+    }
+
+  InAttrPSet 
+    {
+      string identifier;
+    }
+  
+  InitPhase initialize();
+
+  RuntimePhase update(tone);
+
+  OutputProducer.output << &tone; // the tone output  
+  
+  UserFunction setIndices;
+}
+
+#endif

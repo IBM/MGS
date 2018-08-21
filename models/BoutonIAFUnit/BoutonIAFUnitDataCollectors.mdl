@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -20,27 +20,35 @@
 Variable BoutonIAFUnitDataCollector
 {
   string directory;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;
   int [] slices;
   int mxslice;
-  double* [] glutamate;
-  double* [] availableGlutamate;
-  double* [] Cb1Rcurrent;
+  double* [] neurotransmitter;
+  double* [] availableNeurotransmitter;
+  double* [] CB1R;
+  double* [] CB1Runbound;
+  double* [] CB1Rcurrent;
   UserFunction getNodeIndices;
 
   // Flags
-  bool op_saveGlutamate;
-  bool op_saveAvailableGlutamate;
-  bool op_saveCb1R;
+  bool op_saveNeurotransmitter;
+  bool op_saveAvailableNeurotransmitter;
+  bool op_saveCB1R;
+  bool op_saveCB1Runbound;
+  bool op_saveCB1Rcurrent;
 
-  Connection Pre Node () Expects GlutamateIAFProducer, AvailableGlutamateIAFProducer,
-    Cb1RIAFProducer
+  Connection Pre Node () Expects NeurotransmitterIAFProducer, AvailableNeurotransmitterIAFProducer,
+    CB1RIAFProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamate;
-    AvailableGlutamateIAFProducer.availableGlutamate >> availableGlutamate;
-    Cb1RIAFProducer.Cb1Rcurrent >> Cb1Rcurrent;
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitter;
+    AvailableNeurotransmitterIAFProducer.availableNeurotransmitter >> availableNeurotransmitter;
+    CB1RIAFProducer.CB1R >> CB1R;
+    CB1RIAFProducer.CB1Runbound >> CB1Runbound;
+    CB1RIAFProducer.CB1Rcurrent >> CB1Rcurrent;
     getNodeIndices();
   }
 

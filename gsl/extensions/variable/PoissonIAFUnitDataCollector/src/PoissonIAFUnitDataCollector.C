@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -93,7 +93,7 @@ void PoissonIAFUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveSpikes)
     {
-      os_spikes<<directory<<"PoissonSpikes"<<fileExt;
+      os_spikes<<directory<<filePrep<<"PoissonSpikes"<<fileApp<<fileExt;
       spikes_file=new std::ofstream(os_spikes.str().c_str(),
                                     std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       spikes_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

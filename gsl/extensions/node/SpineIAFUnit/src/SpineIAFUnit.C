@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -25,36 +25,50 @@
 
 void SpineIAFUnit::initialize(RNG& rng)
 {
+  // Check if more than one input
+  if (SHD.op_check_NeurotransmitterIAFInput
+      && neurotransmitterInput.size() != SHD.expected_NeurotransmitterIAFInputN)
+    std::cout << "SpineIAFUnit: neurotransmitter inputs should be "
+              << SHD.expected_NeurotransmitterIAFInputN << ", but it is "
+              << neurotransmitterInput.size() << "." << std::endl;
+  if (SHD.op_check_SpikeInput
+      && postSpikeInput.size() != SHD.expected_SpikeInputN)
+    std::cout << "SpineIAFUnit: spike inputs should be "
+              << SHD.expected_SpikeInputN << ", but it is "
+              << postSpikeInput.size() << "." << std::endl;
+  /*
+  std::cout << "Spine Input Size: " << postSpikeInput.size() << std::endl;
+  for (int i=0; i<postSpikeInput.size(); i++)
+    std::cout << "Neuron:" << postSpikeInput[i].col << " Spine:" << postSpikeInput[i].row << std::endl;
+  */
   // Default starting values
   AMPArise = 0.0;
   AMPAcurrent = 0.0;
-  mGluRrise = 0.0;
-  mGluRcurrent = 0.0;
+  mGluR5rise = 0.0;
+  mGluR5current = 0.0;
   Ca = 0.0;
-  ECB = 0.0;
+  eCB = 0.0;
 }
 
 void SpineIAFUnit::update(RNG& rng)
-{
-  /*
+{  
   // If the simulation has reached a certain period, apply a perturbation
-  if (ITER == 750000)
-    AMPAweight = drandom(0.0, 150.0, rng);
-  */
-
+  if (SHD.op_perturbation && ITER == SHD.perturbationT)
+    AMPAweight = drandom(0.0, 1.5, rng);
+  
   // ##### Vars needed #####
-  double glutamate;
-  if (glutamateInput.size() > 0)
-    glutamate = *(glutamateInput[0].glutamate) * glutamateInput[0].weight; // only consider first one, weight is structural plasticity
+  double neurotransmitter;
+  if (neurotransmitterInput.size() > 0)
+    neurotransmitter = *(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight; // only consider first one, weight is structural plasticity
   else
-    glutamate = 0.0;
+    neurotransmitter = 0.0;
 
 
 
   // ##### AMPA #####
-  // AMPA input is the minimum of AMPA weight and glutamate
+  // AMPA input is the minimum of AMPA weight and neurotransmitter
   // Only updated when there is a pre-spike
-  double AMPAinput = std::min(glutamate, AMPAweight);
+  double AMPAinput = std::min(neurotransmitter, AMPAweight);
 
   // Update AMPA rise with the AMPA activity
   AMPArise += ((-AMPArise + AMPAinput) / SHD.AMPAriseTau ) * SHD.deltaT;
@@ -63,18 +77,32 @@ void SpineIAFUnit::update(RNG& rng)
 
 
 
-  // ##### mGluR #####
-  // mGluR input is any excess glutamate bigger than AMPA weight
-  double mGluRinput = 0.0;
-  if (glutamate > AMPAweight)
-    mGluRinput = (glutamate - AMPAweight) * SHD.mGluRsensitivity; // adjust the sensitivity as well
+  // ##### mGluR5 #####
+  // mGluR5 input is any excess neurotransmitter bigger than AMPA weight
+  double mGluR5input = 0.0;
+  if (neurotransmitter > AMPAweight)
+    mGluR5input = (neurotransmitter - AMPAweight) * SHD.mGluR5sensitivity; // adjust the sensitivity as well
 
-  // Update mGluR rise with the mGluR activity
-  mGluRrise += ((-mGluRrise + mGluRinput) / SHD.mGluRriseTau ) * SHD.deltaT;
-  // Update mGluR current (fall) with the mGluR rise
-  mGluRcurrent += ((-mGluRcurrent + mGluRrise) / SHD.mGluRfallTau) * SHD.deltaT;
+  // Update mGluR5 rise with the mGluR5 activity
+  mGluR5rise += ((-mGluR5rise + mGluR5input) / SHD.mGluR5riseTau ) * SHD.deltaT;
+  // Update mGluR5 current (fall) with the mGluR5 rise
+  mGluR5current += ((-mGluR5current + mGluR5rise) / SHD.mGluR5fallTau) * SHD.deltaT;
 
 
+
+  // ##### NMDAR #####
+  double NMDARopenInput = 0.0;
+  if (neurotransmitterInput.size() > 0)
+    NMDARopenInput = (*(neurotransmitterInput[0].neurotransmitter) * neurotransmitterInput[0].weight); // only going to be one, weight is structural plasticity; adjust the sensitivity as well
+  NMDARopen += ((-NMDARopen + NMDARopenInput) / SHD.NMDARopenTau) * SHD.deltaT;
+  double NMDARinput = 0.0;
+  if (postSpikeInput.size() > 0)
+    NMDARinput = *(postSpikeInput[0].spike) * postSpikeInput[0].weight; // only going to be one, weight is structural plasticity  
+  NMDARCarise += ((-NMDARCarise + (NMDARinput * NMDARopen * SHD.NMDARCasensitivity))
+                  / SHD.NMDARCariseTau) * SHD.deltaT;
+  NMDARCacurrent += ((-NMDARCacurrent + NMDARCarise) / SHD.NMDARCafallTau) * SHD.deltaT;  
+
+  
 
   // ##### Ca2+ #####
   // Ca2+ input
@@ -83,11 +111,7 @@ void SpineIAFUnit::update(RNG& rng)
     CaVSCCinput = SHD.CaVSCC * pow(AMPAweight, SHD.CaVSCCpow);
   else
     CaVSCCinput = SHD.CaVSCC;
-  if (postSpikeInput.size() > 0)
-    CaVSCCinput += (SHD.CaBP * (*(postSpikeInput[0].spike) * postSpikeInput[0].weight)); // only going to be one, weight is structural plasticity
-
-  double CaInput = CaVSCCinput * AMPAcurrent;
-  CaInput = CaVSCCinput * (glutamate > 0.0 ? 1.0 : 0.0);
+  double CaInput = (CaVSCCinput * AMPAcurrent) + NMDARCacurrent;
 
   // Update Ca2+ rise with VSCC and BP
   Carise += ((-Carise + CaInput) / SHD.CariseTau) * SHD.deltaT;
@@ -97,9 +121,9 @@ void SpineIAFUnit::update(RNG& rng)
 
 
   // ##### endocannabinoids #####
-  // Update ECB (is always in the range 0 to 1)
-  // with Ca2+ and the mGluR modulation (AND gate)
-  ECB = ECBproduction(Ca * mGluRmodulation(mGluRcurrent));
+  // Update eCB (is always in the range 0 to 1)
+  // with Ca2+ and the mGluR5 modulation (AND gate)
+  eCB = eCBproduction(Ca * mGluR5modulation(mGluR5current));
 }
 
 void SpineIAFUnit::outputWeights(std::ofstream& fs)
@@ -108,46 +132,46 @@ void SpineIAFUnit::outputWeights(std::ofstream& fs)
   fs.write(reinterpret_cast<char *>(&temp), sizeof(temp));
 }
 
-void SpineIAFUnit::setGlutamateIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
+void SpineIAFUnit::setNeurotransmitterIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  glutamateInput[glutamateInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  glutamateInput[glutamateInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  neurotransmitterInput[neurotransmitterInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  neurotransmitterInput[neurotransmitterInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 void SpineIAFUnit::setPostSpikeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  postSpikeInput[postSpikeInput.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  postSpikeInput[postSpikeInput.size()-1].col = CG_node->getGlobalIndex()+1;
+  postSpikeInput[postSpikeInput.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  postSpikeInput[postSpikeInput.size()-1].col = CG_node->getIndex()+1;
 }
 
 SpineIAFUnit::~SpineIAFUnit()
 {
 }
 
-double SpineIAFUnit::ECBsigmoid(double Ca)
+double SpineIAFUnit::eCBsigmoid(double Ca)
 {
-  return 1.0 / ( 1.0 + exp(-SHD.ECBprodC * (Ca - SHD.ECBprodD)) );
+  return 1.0 / ( 1.0 + exp(-SHD.eCBprodC * (Ca - SHD.eCBprodD)) );
 }
 
-double SpineIAFUnit::ECBproduction(double Ca)
+double SpineIAFUnit::eCBproduction(double Ca)
 {
   // Computes the sigmoidal production of cannabinoids depending on Ca2+
   // NOTE: this is mirrored in SpineIAFUnitDataCollector. If changed here, change there too.
-  double ECB = 0.0;
+  double eCB = 0.0;
   // 1. the general sigmoid
-  ECB = ECBsigmoid(Ca);
-  // 2. make zero ECB at zero Ca2+
-  ECB -= ECBsigmoid(0.0);
-  // 3. Make one ECB at >= one Ca2+
-  ECB *= 1.0 / (ECBsigmoid(1.0) - ECBsigmoid(0.0));
-  if (ECB > 1.0)
-    ECB = 1.0;
+  eCB = eCBsigmoid(Ca);
+  // 2. make zero eCB at zero Ca2+
+  eCB -= eCBsigmoid(0.0);
+  // 3. Make one eCB at >= one Ca2+
+  eCB *= 1.0 / (eCBsigmoid(1.0) - eCBsigmoid(0.0));
+  if (eCB > 1.0)
+    eCB = 1.0;
 
-  return ECB;
+  return eCB;
 }
 
-double SpineIAFUnit::mGluRmodulation(double mGluR)
+double SpineIAFUnit::mGluR5modulation(double mGluR5)
 {
-  return ECBproduction(mGluR); // just use the same modified sigmoid
+  return eCBproduction(mGluR5); // just use the same modified sigmoid
 }
 

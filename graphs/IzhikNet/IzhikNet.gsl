@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -23,7 +23,7 @@ FinalPhases = { finalize };
 #define SIZE 576
 
 
-#define CONPROBXX 0.1
+#define CONPROBXX 0.2
 #define WEILOXX 0.512 //0.64 
 #define WEIHIXX 0.768 //0.96 
 
@@ -31,7 +31,7 @@ FinalPhases = { finalize };
 #define INPLOXX 4.51 //4.51
 #define INPHIXX 4.81 //5.51
 
-#define DELTAT 0.05
+#define DELTAT 0.1
 
 
 NodeType IzhikUnit(<
@@ -85,7 +85,7 @@ NdplInAttrInit inpW(INPW);
 
 Grid IAF
 {
-   Dimension(24,24);
+   Dimension(4,4);
    Layer(nodes, IzhikUnit, UniformLayout(1), < nodekind="Nodes" >);
    Layer(inps, SwitchInput, UniformLayout(1), < nodekind="Nodes" >);
 
@@ -122,7 +122,7 @@ UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ",
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
 			 ::Iteration, "==", 4196304, 0, lastPhase); 
 
-//collector.dataCollection() on iterTrig;
+collector.dataCollection() on iterTrig;
 
 collector.dataCollectionSpike() on iterTrig;
 

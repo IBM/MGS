@@ -22,6 +22,7 @@ class GatedThalamoCorticalUnitDataCollector : public CG_GatedThalamoCorticalUnit
 
  private:
       std::ofstream* file;
+      std::ofstream* yfile;
 };
 
 #endif

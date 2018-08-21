@@ -1,0 +1,9 @@
+#ifndef LoadMatrix_MDL
+#define LoadMatrix_MDL
+
+Framework Functor LoadMatrix {
+   Initialize(string filename, int rows, int cols);
+   float [] Execute();
+}
+
+#endif

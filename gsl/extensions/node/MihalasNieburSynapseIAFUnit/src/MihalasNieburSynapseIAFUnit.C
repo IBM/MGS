@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -22,7 +22,16 @@
 
 void MihalasNieburSynapseIAFUnit::initialize(RNG& rng)
 {
-  //  std::cout << AMPAcurrentInputs.size() << std::endl;
+  if (SHD.op_check_SynapticCurrentIAFInput
+      && AMPAcurrentInputs.size() != SHD.expected_SynapticCurrentIAFInputN)
+    std::cout << "MihalasNieburSynapseIAFUnit: synaptic current inputs should be "
+              << SHD.expected_SynapticCurrentIAFInputN << ", but it is "
+              << AMPAcurrentInputs.size() << "." << std::endl;
+  /*
+  std::cout << "Neuron Input Size: " << AMPAcurrentInputs.size() << std::endl;
+  for (int i=0; i<AMPAcurrentInputs.size(); i++)
+    std::cout << "Spine:" << AMPAcurrentInputs[i].col << " Neuron:" << AMPAcurrentInputs[i].row << std::endl;
+  */  
   spike=false;
   V=SHD.V_r;
   Theta=SHD.Theta_inf;
@@ -109,8 +118,8 @@ void MihalasNieburSynapseIAFUnit::threshold(RNG& rng)
 
 void MihalasNieburSynapseIAFUnit::setAMPAIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburSynapseIAFUnitInAttrPSet* CG_inAttrPset, CG_MihalasNieburSynapseIAFUnitOutAttrPSet* CG_outAttrPset)
 {
-  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].row =  getGlobalIndex()+1; // +1 is for Matlab
-  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].col = CG_node->getGlobalIndex()+1;
+  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].row =  getIndex()+1; // +1 is for Matlab
+  AMPAcurrentInputs[AMPAcurrentInputs.size()-1].col = CG_node->getIndex()+1;
 }
 
 MihalasNieburSynapseIAFUnit::~MihalasNieburSynapseIAFUnit()

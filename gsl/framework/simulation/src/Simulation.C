@@ -344,7 +344,7 @@ bool Simulation::start()
    if (_initPhases.size() > 0) {
       if (_rank==0) printf("Running Init Phases.\n\n");
       runPhases(_initPhases);
-   }
+   }   
 
 #ifdef HAVE_MPI
    if (_rank==0) printf("Flushing Proxies.\n\n");
@@ -671,7 +671,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	       rebuildRequested = _commEngine->Communicate();
 	       assert(!rebuildRequested);
 	     }
-	   }
+	   }	     
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
 	 //if (&phases == &_initPhases && it==phases.begin()) while(1) {}

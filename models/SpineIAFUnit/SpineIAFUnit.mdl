@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,51 +17,72 @@
 #define SPINEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
+Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFProducer
 {
-  GlutamateIAFInput [] glutamateInput;     // glutamate input
+  NeurotransmitterIAFInput [] neurotransmitterInput; // neurotransmitter input
   double AMPAweight;                       // weight of AMPA, PSD surface area
   double AMPArise;                         // rise current of AMPA
   double AMPAcurrent;                      // fall current of AMPA
 
-  double mGluRrise;                        // rise current of mGluR
-  double mGluRcurrent;                     // fall current of mGluR
+  double mGluR5rise;                       // rise current of mGluR5
+  double mGluR5current;                    // fall current of mGluR5
+
+  double NMDARopen;                        // how much the NMDAR is open
+  double NMDARCarise;                      // rise current of NMDAR-mediated Ca2+
+  double NMDARCacurrent;                   // fall current of NMDAR-mediated Ca2+
+  
+  double Carise;                           // rise of spine Ca2+
+  double Ca;                               // fall of spine Ca2+
+
+  double eCB;                              // endogenous cannabinoids
 
   SpikeInput [] postSpikeInput;            // post-synaptic back propagating spike
-  double Carise;                           // rise of Ca2+
-  double Ca;                               // fall of Ca2+
-
-  double ECB;                              // endogenous cannabinoids
 
   Shared
     {
       double AMPAriseTau;                  // rise time constant of AMPA
       double AMPAfallTau;                  // fall time constant of AMPA
 
-      double mGluRriseTau;                 // rise time constant of mGluR
-      double mGluRfallTau;                 // fall time constant of mGluR
-      double mGluRsensitivity;             // weight of mGluR
+      double mGluR5riseTau;                // rise time constant of mGluR5
+      double mGluR5fallTau;                // fall time constant of mGluR5
+      double mGluR5sensitivity;            // weight of mGluR5
 
-      double CariseTau;                    // rise time constant of Ca2+
-      double CafallTau;                    // fall time constant of Ca2+
+      double NMDARopenTau;                 // decay time constant of NMDAR open
+      double NMDARCariseTau;               // rise time constant of NMDAR-mediated Ca2+
+      double NMDARCafallTau;               // fall time constant of NMDAR-mediated Ca2+
+      double NMDARCasensitivity;           // weight of NMDAR
+
+      double CariseTau;                    // rise time constant of spine Ca2+
+      double CafallTau;                    // fall time constant of spine Ca2+
       bool op_CaVSCCdepend;                // whether the per VSCC activation Ca2+ is
                                            // dependent on the size of the spine or not
       double CaVSCC;                       // per VSCC activation, amount to increase Ca2+
       double CaVSCCpow;                    // if dependent, CaVSCC*(AMPAweight^pow)
-      double CaBP;                         // per BP spike, amount to increase Ca2+
 
-      double ECBprodC;                     // ECB production function - steepness
-      double ECBprodD;                     // ECB production function - shifts
+      double eCBprodC;                     // eCB production function - steepness
+      double eCBprodD;                     // eCB production function - shifts
 
       double deltaT;                       // in s
+      unsigned perturbationT;              // when to perturb
 
       string sharedDirectory;
+      string sharedFilePrep;
+      string sharedFileApp;
       string sharedFileExt;
+      int [] collectWeightsOn;
+      int collectWeightsNext;
 
       InitPhase initializeShared;
+      RuntimePhase outputWeightsShared;
 
       // Flags
       bool op_saveWeights;
+      bool op_perturbation;
+
+      bool op_check_NeurotransmitterIAFInput;
+      unsigned expected_NeurotransmitterIAFInputN;
+      bool op_check_SpikeInput;
+      unsigned expected_SpikeInputN;
     }
 
   InAttrPSet
@@ -71,25 +92,27 @@ Node SpineIAFUnit Implements SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFPr
     }
 
   InitPhase initialize();
-
   RuntimePhase update(AMPAweight, AMPAcurrent,
-                      mGluRcurrent,
-                      Ca, ECB);
+                      mGluR5current,
+                      NMDARopen, NMDARCacurrent,
+                      Ca, eCB);
 
   SynapticCurrentIAFProducer.AMPAweight << &AMPAweight;             // the AMPA weight
   SynapticCurrentIAFProducer.AMPAcurrent << &AMPAcurrent;           // the AMPA synaptic current output
-  SynapticCurrentIAFProducer.mGluRcurrent << &mGluRcurrent;         // the mGluR synaptic current output
+  SynapticCurrentIAFProducer.mGluR5current << &mGluR5current;       // the mGluR5 synaptic current output
+  SynapticCurrentIAFProducer.NMDARopen << &NMDARopen;               // how much the NDMAR is open
+  SynapticCurrentIAFProducer.NMDARCacurrent << &NMDARCacurrent;     // the NMDAR synaptic current output
   CaIAFProducer.Ca << &Ca;                                          // Ca2+
-  ECBIAFProducer.ECB << &ECB;                                       // endogenous cannabinoid
+  eCBIAFProducer.eCB << &eCB;                                       // endogenous cannabinoid
 
-  UserFunction setGlutamateIndices;
+  UserFunction setNeurotransmitterIndices;
   UserFunction setPostSpikeIndices;
 
-  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer
+  Connection Pre Node (PSet.identifier=="neurotransmitterInput") Expects NeurotransmitterIAFProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
-    PSet.weight >> glutamateInput.weight;
-    setGlutamateIndices();
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitterInput.neurotransmitter;
+    PSet.weight >> neurotransmitterInput.weight;
+    setNeurotransmitterIndices();
   }
 
   Connection Pre Node (PSet.identifier=="postSpikesInput") Expects SpikeProducer

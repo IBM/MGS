@@ -1,0 +1,55 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights 
+// Use, duplication or disclosure restricted by
+// Gsa ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef MAHONUNITDATACOLLECTOR_MDL
+#define MAHONUNITDATACOLLECTOR_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+#include "MahonUnit.mdl"
+
+Variable MahonUnitDataCollector
+{
+   string fileName;
+   int [] rows;
+   int [] cols;
+   int mxcol;
+   double* [] x1;
+   double* [] x2;
+   double* [] x3;
+   bool* [] spikes;   
+   double deltaT;
+   int maxoutnum;
+   
+
+   UserFunction getNodeIndices;
+
+   Connection Pre Node () Expects SpikeProducer, DataFeed
+   {
+     DataFeed.x1 >> x1;
+     DataFeed.x2 >> x2;
+     DataFeed.x3 >> x3;
+     SpikeProducer.spike >> spikes;
+     //     OutputProducer.output >> g;
+     //VoltageIAFProducer.voltage >> V;
+     getNodeIndices();
+   }
+ 
+
+
+   InitPhase initialize;
+   TriggeredFunction dataCollection, dataCollectionSpike;
+   FinalPhase finalize;
+}
+
+#endif

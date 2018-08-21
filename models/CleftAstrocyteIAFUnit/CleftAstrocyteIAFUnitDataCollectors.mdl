@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -20,20 +20,25 @@
 Variable CleftAstrocyteIAFUnitDataCollector
 {
   string directory;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;
   int [] slices;
   int mxslice;
-  double* [] glutamate;
+  double* [] neurotransmitter;
+  double* [] eCB;
   UserFunction getNodeIndices;
    
   // Flags
-  bool op_saveGlutamate;
+  bool op_saveNeurotransmitter;
+  bool op_saveeCB;
   
-  Connection Pre Node () Expects GlutamateIAFProducer
+  Connection Pre Node () Expects NeurotransmitterIAFProducer, eCBIAFProducer
   {
-    GlutamateIAFProducer.glutamate >> glutamate;
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitter;
+    eCBIAFProducer.eCB >> eCB;
     getNodeIndices();
   }
   

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -23,6 +23,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 
 void ZhengSORNUnitDataCollector::initialize(RNG& rng) 
 {
@@ -65,7 +66,7 @@ void ZhengSORNUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* nd
   int end=spikes.size();
   for (int idx=0; idx!=end; ++idx) {
     if (*(spikes[idx]))
-      output<<t<<" "<<idx<<std::endl;
+      output << std::fixed << std::setprecision(3) << t <<" "<< idx << std::endl;
   }
 }
 

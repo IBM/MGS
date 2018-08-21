@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -16,7 +16,6 @@
 #ifndef TRAUBIAFUNITDATACOLLECTORS_MDL
 #define TRAUBIAFUNITDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Variable TraubIAFUnitDataCollector
 {
@@ -50,12 +49,12 @@ Variable TraubIAFUnitDataCollector
    bool op_saveLFPs;
    
    Connection Pre Node () Expects OutputProducer, ThresholdProducer,
-     SpikeProducer, VoltageProducer, LFPProducer
+     SpikeProducer, VoltageIAFProducer, LFPProducer
    {
       OutputProducer.output >> voltages;
       ThresholdProducer.threshold >> thresholds;
       SpikeProducer.spike >> spikes;
-      VoltageProducer.voltage >> spikevoltages;
+      VoltageIAFProducer.voltage >> spikevoltages;
       LFPProducer.LFP >> LFP_synapses;
       getNodeIndices();
    }

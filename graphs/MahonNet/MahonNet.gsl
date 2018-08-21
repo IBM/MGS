@@ -1,0 +1,148 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+//RuntimePhases = { dataCollect, update, threshold, outputWeightsShared, lastPhase };
+//RuntimePhases = { dataCollect, updateInputState, update1, flushVars, update2, flushVars, update3, flushVars, update4, flushVars, updateOutputs, lastPhase };
+RuntimePhases = { dataCollect, updateInputState, update, flushVars1, update1, flushVars2, update2, flushVars3, update3, flushVars4, update4, updateOutputs, lastPhase };
+//RuntimePhases = { dataCollect, updateInputState, flushVars1, update1, updateOutputs, lastPhase };
+//RuntimePhases = { dataCollect, updateInputState, update, updateOutputs, lastPhase };
+
+FinalPhases = { finalize };
+
+
+//#define SIZE 4
+
+
+//#define CONPROBXX 
+//#define WEILOXX 
+//#define WEIHIXX 
+
+
+//#define INPLOXX 
+//#define INPHIXX 
+
+//#define DELTAT 0.1
+#define INJCUR 0 
+
+
+NodeType MahonUnit(<deltaT = DELTATXX, spikethresh = 0.0 >);
+
+
+NodeType SwitchInput(<period = 0.0,
+		     refract = 200000000.0,		       
+		     deltaT = DELTATXX >);
+
+NodeType LypCollector(<>);
+BindName GBN("output", 0.0);
+NdplNodeInit gbn(GBN);
+
+BindName initN("V_init", UniformDist(-75, -80), "g_init", 0.0, "injCur", INJCUR, 
+	       "connectionSeed",  UniformDist(0, 10000000), "synb", UniformDist(SYNBLOXX,SYNBHIXX));
+BindName initS("inplo",  INPLOXX, "inphi", INPHIXX);
+NdplNodeInit heterN(initN);
+NdplNodeInit heterS(initS);
+
+
+BindName RECW("weight", Neg(UniformDist(WEILOXX,WEIHIXX)), "identifier", "MSN");
+NdplInAttrInit recW(RECW);
+
+BindName IN("weight", Neg(UniformDist(WEILOXX,WEIHIXX)),
+	    "identifier", "MSN",
+	    "connectionProb", CONPROBXX);
+	    //"connectionSeed",  UniformDist(0, 10000));
+
+//  "connectionSeed", 123456789);
+
+NdplInAttrInit lateral(IN);
+
+BindName INPW("identifier", "SWITCHINP");
+NdplInAttrInit inpW(INPW);
+
+//list<float> uniformDensity = {1.0};
+//EachDstPropSrc recC(RadialDensitySampler(50, 5, uniformDensity, 5));
+
+
+Grid MahonGrid
+{
+   Dimension(SIZEXX,SIZEXX);
+   Layer(nodes, MahonUnit, UniformLayout(1), < nodekind="Nodes" >);
+   Layer(inps, SwitchInput, UniformLayout(1), < nodekind="Nodes" >);
+
+   InitNodes( .[].Layer(nodes), heterN);
+   InitNodes( .[].Layer(inps), heterS);
+
+   connectNodeSets(.[].Layer(nodes), .[].Layer(nodes), 
+		   //Unique(EachDst(EachAvg(CONPROBXX))), outAttrDef, recW);
+		   Unique(EachDst(EachAvg(1.0))), outAttrDef, lateral);
+
+   connectNodeSets(.[].Layer(inps), .[].Layer(nodes), 
+		   IsoSampler(), outAttrDef, inpW);
+
+};
+
+Grid LypGrid
+{
+   Dimension(1,1);
+   Layer(node, LypCollector, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(node), gbn);
+  
+};
+
+BindName bn2("identifier", "LYPCOLLECTOR");
+NdplInAttrInit bn22(bn2);
+
+BindName bn3("identifier", "MSN");
+NdplInAttrInit bn33(bn3);
+
+
+Composite MahonLyp
+{
+  LypGrid lyp;
+  MahonGrid mg;
+  connectNodeSets(lyp[].Layer(node), mg[].Layer(nodes), EachDst(EachAvg(1.0)), outAttrDef, bn22);
+  connectNodeSets(mg[].Layer(nodes), lyp[].Layer(node), EachDst(EachAvg(1.0)), outAttrDef, bn33);
+
+
+};
+MahonLyp ml;
+
+//IAF iaf;
+
+// DCA directives here
+
+
+VariableType MahonUnitDataCollector;
+MahonUnitDataCollector collector<fileName="Output.dat", deltaT = DELTATXX, maxoutnum = 10>;
+
+polyConnect(ml/mg[].Layer(nodes), collector, <>, <>);
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+//Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, "==", TLENXX, 0, lastPhase); 
+
+collector.dataCollection() on iterTrig;
+
+collector.dataCollectionSpike() on iterTrig;
+
+Stop on endTrig;
+

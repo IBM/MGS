@@ -23,18 +23,16 @@ void SwitchInput::initialize(RNG& rng)
 
 }
 
-/*
+
 void SwitchInput::update(RNG& rng) 
 {
 
- if (ITER*SHD.deltaT >= SHD.stateswitchtimes[SHD.currentstate]) 
-    {
-      SHD.currentstate++;
-      drivinp = & drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
+ 
+  drivinp = drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
       
-    }
+ 
 }
-*/
+
 
 SwitchInput::~SwitchInput() 
 {

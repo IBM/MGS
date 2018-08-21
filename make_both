@@ -43,10 +43,10 @@ function print_help {
   -a|--arma                     build with Armadillo extensions
 
 Example:
-1) make_nts -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
-2) make_nts -p BGL :            builds both NTS and MGS on Blue Gene/L
-3) make_nts -p BGP :            builds both NTS and MGS on Blue Gene/P
-4) make_nts -p BGQ :            builds both NTS and MGS on Blue Gene/Q\n
+1) make_both -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
+2) make_both -p BGL :            builds both NTS and MGS on Blue Gene/L
+3) make_both -p BGP :            builds both NTS and MGS on Blue Gene/P
+4) make_both -p BGQ :            builds both NTS and MGS on Blue Gene/Q\n
 \n
 Extra Libraries:
   export SUITESPARSE=\`pwd\`/SuiteSparse/
@@ -246,13 +246,14 @@ SUPPORTED_COMPONENTS="all common mdl gsl nti"
 #}}}
 
 ########################################
-### Check required tools ###
+### Check required tools/libraries ###
 ## 1. MPI library
 ## 2. Bison
 ## 3. Flex
 ## 4. Python
-## 5. CUDA [optional]
-## 6. Armadillo [optional]
+## 5. libgmp
+## 6. CUDA [optional]
+## 7. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
@@ -333,22 +334,27 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-    echo python found...; else echo python not found!;
-	exit;
+  echo "python found..."; else echo "python not found!";
+  exit;
+fi
+
+if ldconfig -p | grep libgmp; then
+  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source";
+  exit;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
-    if which nvidia-smi | grep -q1 /\nvidia-smi; then
-        echo CUDA probably found...; else echo CUDA potentially not found!;
-                                          exit
-    fi
+  if which nvidia-smi | grep -q1 /\nvidia-smi; then
+    echo "CUDA probably found..."; else echo "CUDA potentially not found!";
+    exit
+  fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
-    if `ldconfig -p | grep -q armadillo`; then
-        echo Armadillo probably found...; else echo Armadillo potentially not found!;
-                                          exit
-    fi
+  if `ldconfig -p | grep -q armadillo`; then
+    echo "Armadillo probably found..."; else echo "Armadillo potentially not found!";
+    exit
+  fi
 fi
 #}}}
 #{{{ 
@@ -683,4 +689,3 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   fi
 fi
 #}}}
-

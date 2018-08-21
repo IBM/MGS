@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -16,10 +16,9 @@
 #ifndef MIHALASNIEBURSYNAPSEIAFUNIT_MDL
 #define MIHALASNIEBURSYNAPSEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
-#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Node MihalasNieburSynapseIAFUnit Implements SpikeProducer, OutputProducer, ThresholdProducer,
-  VoltageProducer {
+  VoltageIAFProducer {
   double [] I; // These variable names are according to Mihalas and Niebur, 2009
   double [] [] I_p;
   double [] dI;
@@ -54,7 +53,9 @@ Node MihalasNieburSynapseIAFUnit Implements SpikeProducer, OutputProducer, Thres
     double deltaT;          // s
     int np;                 // number of numerical fixed point iterations
 
-    InitPhase initializeShared;
+    // Flags
+    bool op_check_SynapticCurrentIAFInput;
+    unsigned expected_SynapticCurrentIAFInputN;
   }
 
   InAttrPSet {
@@ -63,14 +64,13 @@ Node MihalasNieburSynapseIAFUnit Implements SpikeProducer, OutputProducer, Thres
   }
 
   InitPhase initialize();
-
   RuntimePhase update(V, Theta);
   RuntimePhase threshold(spike, V_spike);
 
   OutputProducer.output << &V;
   ThresholdProducer.threshold << &Theta;
   SpikeProducer.spike << &spike;
-  VoltageProducer.voltage << &V_spike;
+  VoltageIAFProducer.voltage << &V_spike;
 
   UserFunction setAMPAIndices;
 

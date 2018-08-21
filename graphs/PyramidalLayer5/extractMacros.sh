@@ -1,5 +1,5 @@
 #!/bin/bash
-#author  = Hoang Trong Minh Tuan (@IBM - 2016)
+#author  = Hoang Trong Minh Tuan (@IBM - 2016-2017)
 #version = 1.0
 
 #{{{USER-SETTING

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -20,33 +20,41 @@
 Variable SpineIAFUnitDataCollector
 {
   string directory;
+  string filePrep;
+  string fileApp;
   string fileExt;
   int [] rows;
   int [] cols;
   int [] slices;
   int mxslice;
   double* [] AMPAcurrent;
-  double* [] mGluRcurrent;
+  double* [] mGluR5current;
+  double* [] NMDARopen;
+  double* [] NMDARCacurrent;
   double* [] Ca;
-  double* [] ECB;
+  double* [] eCB;
   UserFunction getNodeIndices;
 
   // Paramaters
-  double ECBprodC; // ECB production function - steepness
-  double ECBprodD; // ECB production function - shifts
+  double eCBprodC; // eCB production function - steepness
+  double eCBprodD; // eCB production function - shifts
 
   // Flags
   bool op_saveAMPA;
-  bool op_savemGluR;
+  bool op_savemGluR5;
+  bool op_saveNMDARopen;
+  bool op_saveNMDARCacurrent;
   bool op_saveCa;
-  bool op_saveECB;
+  bool op_saveeCB;
 
-  Connection Pre Node () Expects SynapticCurrentIAFProducer, CaIAFProducer, ECBIAFProducer
+  Connection Pre Node () Expects SynapticCurrentIAFProducer, CaIAFProducer, eCBIAFProducer
   {
     SynapticCurrentIAFProducer.AMPAcurrent >> AMPAcurrent;
-    SynapticCurrentIAFProducer.mGluRcurrent >> mGluRcurrent;
+    SynapticCurrentIAFProducer.mGluR5current >> mGluR5current;
+    SynapticCurrentIAFProducer.NMDARopen >> NMDARopen;
+    SynapticCurrentIAFProducer.NMDARCacurrent >> NMDARCacurrent;
     CaIAFProducer.Ca >> Ca;
-    ECBIAFProducer.ECB >> ECB;
+    eCBIAFProducer.eCB >> eCB;
     getNodeIndices();
   }
 

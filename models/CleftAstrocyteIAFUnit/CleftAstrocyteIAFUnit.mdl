@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -17,18 +17,26 @@
 #define CLEFTASTROCYTEIAFUNIT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer
+Node CleftAstrocyteIAFUnit Implements NeurotransmitterIAFProducer, eCBIAFProducer
 {
-  GlutamateIAFInput [] glutamateInput; // input of spike
-  double glutamate;                    // current glutamate concentration
-
+  int neurotransmitterType;                          // type of neurotransmitter
+  
+  NeurotransmitterIAFInput [] neurotransmitterInput; // input of spike
+  double neurotransmitter;                           // current neurotransmitter concentration
+  eCBIAFInput [] eCBInput;                           // input of eCB
+  double eCB;                                        // current endogenous cannabinoids concentration
+  
   Shared
     {
-      double glutamateDecayTau;        // glutamate decay tau (i.e. glutamate reuptake via GLT-1) in s
+      double [] neurotransmitterDecayTau; // neurotransmitter decay tau
 
       double deltaT;                   // in s
 
-      InitPhase initializeShared;
+      // Flags
+      bool op_check_NeurotransmitterIAFInput;
+      unsigned expected_NeurotransmitterIAFInputN;
+      bool op_check_eCBIAFInput;
+      unsigned expected_eCBIAFInputN;      
     }
 
   InAttrPSet
@@ -38,18 +46,25 @@ Node CleftAstrocyteIAFUnit Implements GlutamateIAFProducer
     }
 
   InitPhase initialize();
+  RuntimePhase update(neurotransmitter, eCB);
 
-  RuntimePhase update(glutamate);
+  NeurotransmitterIAFProducer.neurotransmitter << &neurotransmitter; // neurotransmitter output
+  eCBIAFProducer.eCB << &eCB; // endogenous cannabinoids output
 
-  GlutamateIAFProducer.glutamate << &glutamate; // glutamate output
+  UserFunction setNeurotransmitterIndices;
+  UserFunction seteCBIndices;  
 
-  UserFunction setGlutamateIndices;
-
-  Connection Pre Node (PSet.identifier=="glutamateInput") Expects GlutamateIAFProducer
+  Connection Pre Node (PSet.identifier=="neurotransmitterInput") Expects NeurotransmitterIAFProducer    
   {
-    GlutamateIAFProducer.glutamate >> glutamateInput.glutamate;
-    PSet.weight >> glutamateInput.weight;
+    NeurotransmitterIAFProducer.neurotransmitter >> neurotransmitterInput.neurotransmitter;
+    PSet.weight >> neurotransmitterInput.weight;
   }
+
+  Connection Pre Node (PSet.identifier=="eCBinput") Expects eCBIAFProducer
+  {
+    eCBIAFProducer.eCB >> eCBInput.eCB;
+    PSet.weight >> eCBInput.weight;
+  }  
 }
 
 #endif

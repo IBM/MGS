@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -15,67 +15,102 @@
 
 #include "../std/std.gsl"
 
-InitPhases = { initializeShared, initialize };
-RuntimePhases = { dataCollect, run1, run2, run3, run4, run5, run6, lastPhase };
+InitPhases = { init1, init2, initialize };
+RuntimePhases = { run1, run2, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
 // ##### Common parameters #####
 #define DIRECTORY "./"
 #define FILE_EXTENSION ".dat"
+#define GLUTAMATE_PREP "Glutamate_"
 #define DELTAT 0.0001
-#define XDIM 500
+#define XDIM 100
 #define YDIM 1
 #define ZDIM 1
-#define N_INNER 10
-#define XDIM_INNER 5000 // XDIM * N_INNER
+#define N_INNER 50 // (number of inner per XDIM)
+#define N_INNER_RADIUS 49 // (N_INNER - 1)
+#define XDIM_INNER 5000 // (XDIM * N_INNER)
 #define YDIM_INNER 1
 #define ZDIM_INNER 1
-#define INNER_FRAC 0.002 // (N_INNER / XDIM_INNER)
+#define INNER_FRAC 0.01 // (N_INNER / XDIM_INNER)
+#define OP_T 1000000
+#define OP_PERT_HZ 0 // to the perturb with a change in Hz the system or not
+#define OP_PERT_HZ_T 1000000 // if perturbing the system with a change in Hz, when
+#define OP_PERT_AMPA 0 // to the perturb with a change in AMPA weights the system or not
+#define OP_PERT_AMPA_T OP_PERT_HZ_T // if perturbing the system with a change in AMPA weights, when
 
 
 
 // ##### Nodes #####
 NodeType PoissonIAFUnit(<
-                        deltaT = DELTAT // in s
-                        >) { update->run1 };
+                        deltaT = DELTAT, // in s
+                        op_perturbation = OP_PERT_HZ,
+                        perturbationT = OP_PERT_HZ_T
+                        >) {update->run1 };
 
 NodeType BoutonIAFUnit(<
-                       glutamateAdaptRate = 0.00004,   // in arb. unit; free parameter
-                       glutamateRecoverTau = 4.28,    // in s (from Pyott and Rosenmund, 2002; slow component)
-                       Cb1RriseTau = 4.0,             // in s (fitted to Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
-                       Cb1RfallTau = 22.5,            // in s (from Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
+                       neurotransmitterAdaptRate = 0.000035, //0.000035,   // in arb. unit; free parameter
+                       neurotransmitterRecoverTau = 4.28,    // in s (from Pyott and Rosenmund, 2002; slow component)
+                       CB1RriseTau = 4.0,             // in s (fitted to Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
+                       CB1RfallTau = 22.5,            // in s (from Wilson & Nicoll, 2001; Fig 2D, NB hippocampal gabba)
                        deltaT = DELTAT,               // in s
                        sharedDirectory = DIRECTORY,
+                       sharedFilePrep = GLUTAMATE_PREP,
                        sharedFileExt = FILE_EXTENSION,
                        op_saveIndexs = 1              // whether to save the incoming pre-indexs or not
-                       >) { update->run2, copy->run2 };
+                       >) {initializeShared->init1, update->run2};
+
+/*
+NodeType Goodwin(<
+                 tau = 1,                       // in arb. unit; free parameter
+                 K1 = 1.0,                      // in arb. unit; free parameter
+                 k1 = 10.0,                     // in arb. unit; free parameter; WT=10.0
+                 k2 = 1.0,                      // in arb. unit; free parameter
+                 k3 = 15.0,                     // in arb. unit; free parameter
+                 k4 = 1.0,                      // in arb. unit; free parameter
+                 k5 = 15.0,                     // in arb. unit; free parameter
+                 k6 = 0.001,                    // in arb. unit; free parameter
+                 n = 0.5,                       // in arb. unit; free parameter
+                 deltaT = DELTAT,               // in s
+                 op_Cannabinoids = 1,
+                 Cannabinoids_sigmoid_C = 0.3,  // in arb. unit; free parameter
+                 Cannabinoids_sigmoid_D = 50.0  // in arb. unit; free parameter
+                 >) {update->run1};
+*/
 
 NodeType CleftAstrocyteIAFUnit(<
-                               glutamateDecayTau = 0.040, // in s (from Parsons et al., 2016; Sup Fig 6D, 1 pulse)
+                               neurotransmitterDecayTau = 0.045, // in s (fitted to Parsons et al., 2016; Sup Fig 6D, 1 pulse)
                                deltaT = DELTAT            // in s
-                               >) { update->run3 };
+                               >) { update->run1};
 
-#define ECBPRODC 10.0
-#define ECBPRODD 0.5
+#define eCBPRODC 10.0
+#define eCBPRODD 0.5
 NodeType SpineIAFUnit(<
-                      AMPAriseTau = 0.004, // in s (from Fino et al., 2010; Fig 1B)
-                      AMPAfallTau = 0.030, // in s (from Fino et al., 2010; Fig 1B)
-                      mGluRriseTau = 0.25, // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
-                      mGluRfallTau = 0.25, // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
-                      mGluRsensitivity = 400.0, // mGlur sensitivity to excess glutamate; free parameter
-                      CariseTau = 0.010,   // in s (fitted to Tuan's model)
-                      CafallTau = 0.008,   // in s (fitted to Tuan's model)
-                      op_CaVSCCdepend = 1, // CaVSCC Ca2+ is dependent on spine size
-                      CaVSCC = 90.0,       // in arb. unit; free parameter
-                      CaVSCCpow = -0.5,    // CaVSCC*(AMPAweight^pow), in arb. unit
-                      CaBP = 0.0,          // in arb. unit; free parameter
-                      ECBprodC = ECBPRODC, // in arb. unit
-                      ECBprodD = ECBPRODD, // in arb. unit
-                      deltaT = DELTAT,     // in s
+                      AMPAriseTau = 0.004,   // in s (fitted to Fino et al., 2010; Fig 1B)
+                      AMPAfallTau = 0.030,   // in s (fitted to Fino et al., 2010; Fig 1B)
+                      mGluR5riseTau = 0.25,  // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
+                      mGluR5fallTau = 0.25,  // in s (fitted to Reichelt & Knopfel, 2002; Fig 1B, NB Purkinje)
+                      mGluR5sensitivity = 400.0, // mGlur sensitivity to excess glutamate; free parameter
+                      NMDARopenTau = 0.1,    // in s; free parameter
+                      NMDARCariseTau = 0.01, // in s; free parameter
+                      NMDARCafallTau = 0.05, // in s; free parameter
+                      NMDARCasensitivity = 12500.0, //25000.0, // NMDAR Ca2+ sensitivity; free parameter
+                      CariseTau = 0.010,     // in s (fitted to Tuan's model)
+                      CafallTau = 0.008,     // in s (fitted to Tuan's model)
+                      op_CaVSCCdepend = 1,   // CaVSCC Ca2+ is dependent on spine size
+                      CaVSCC = 125.0, //250.0,        // in arb. unit; free parameter
+                      CaVSCCpow = -0.5,      // CaVSCC*(AMPAweight^pow), in arb. unit
+                      eCBprodC = eCBPRODC,   // in arb. unit
+                      eCBprodD = eCBPRODD,   // in arb. unit
+                      deltaT = DELTAT,       // in s
                       sharedDirectory = DIRECTORY,
+                      sharedFilePrep = GLUTAMATE_PREP,
                       sharedFileExt = FILE_EXTENSION,
-                      op_saveWeights = 1   // whether to save the spine weights or not
-                      >) { update->run4 };
+                      op_saveWeights = 1,   // whether to save the spine weights or not
+                      op_perturbation = OP_PERT_AMPA,
+                      perturbationT = OP_PERT_AMPA_T,
+                      collectWeightsOn = {1,OP_PERT_AMPA_T} // when to save the spine weights
+                      >) {initializeShared->init2, update->run2, outputWeightsShared->dataCollect};
 
 NodeType MihalasNieburSynapseIAFUnit(<
                                      b = 10.0,             // s^-1
@@ -93,25 +128,31 @@ NodeType MihalasNieburSynapseIAFUnit(<
                                      spike_cntMax = 0.001, // s
                                      np = 0,
                                      V_max = 0.04
-                                     >) { update->run5, threshold->run6 };
+                                     >) {update->run1, threshold->run2};
 
 
 
 // ##### Initialize nodes #####
 // Initialize Hz and spikes
-BindName initInput("Hz", UniformDist(0,150));//Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),10.0)); // arb. unit
+//BindName initInput("Hz", 75.0);
+BindName initInput("Hz", UniformDist(0.0, 150.0));
 //BindName initInput("Hz", Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.0)),10.0)); // arb. unit
-//BindName initInput("Hz", 20.0); // arb. unit
 NdplNodeInit heterInput(initInput);
 
 // Initialize boutons
-//BindName initBoutons("availableGlutamate", UniformDist(0.0, 1.5), "maxGlutamate", 2.0); // arb. unit, arb. unit
-BindName initBoutons("availableGlutamate", 2.0, "maxGlutamate", 2.0); // arb. unit, arb. unit
-NdplNodeInit heterBoutons(initBoutons);
+BindName initGlutamateBoutons("availableNeurotransmitter", 2.0, "maxNeurotransmitter", 2.0,
+                              "CB1R", 1.0, "neurotransmitterType", 0); // arb. unit, arb. unit, arb. unit
+NdplNodeInit heterGlutamateBoutons(initGlutamateBoutons);
+
+/*
+// Initialize Goodwin
+BindName initGoodwins();
+NdplNodeInit heterGoodwins(initGoodwins);
+*/
 
 // Initialize clefts/astrocytes
-BindName initCleftsAstrocytes(); // nothing to initialize
-NdplNodeInit heterCleftsAstrocytes(initCleftsAstrocytes);
+BindName initGlutamateCleftsAstrocytes("neurotransmitterType", 0);
+NdplNodeInit heterGlutamateCleftsAstrocytes(initGlutamateCleftsAstrocytes);
 
 // Initialize spines
 BindName initSpines("AMPAweight", UniformDist(0.0, 1.5)); // arb. unit
@@ -129,24 +170,36 @@ BindName IN_W("weight", 1.0, "identifier", "inputSpikes");
 NdplInAttrInit inW(IN_W);
 
 // Glutamate weights between boutons and clefts/astrocytes, structural plasticity
-BindName GLUT_W("weight", 1.0, "identifier", "glutamateInput");
-NdplInAttrInit glutW(GLUT_W);
+BindName NEUROTRANSMITTER_W("weight", 1.0, "identifier", "neurotransmitterInput");
+NdplInAttrInit neurotransmitterW(NEUROTRANSMITTER_W);
 
 // Glutamate weights between boutons and spines, structural plasticity
-BindName PRE_W("weight", 1.0, "identifier", "glutamateInput");
+BindName PRE_W("weight", 1.0, "identifier", "neurotransmitterInput");
 NdplInAttrInit preW(PRE_W);
 
+// Y weights between Goodwin and boutons, structural plasticity
+BindName CB1_W("weight", 0.0067, "identifier", "CB1input"); // parameterized from MATLAB version
+NdplInAttrInit cb1W(CB1_W);
+
+// Unbound CB1R weights between boutons and Goodwin, structural plasticity
+BindName CB1RUNBOUND_W("weight", 400.0, "identifier", "in1"); // parameterized from MATLAB version
+NdplInAttrInit cb1runboundW(CB1RUNBOUND_W);
+
 // AMPA weights between spines and output neurons, structural plasticity
-BindName AMPA_W("weight", 100.0, "identifier", "AMPAcurrentInputs");
+BindName AMPA_W("weight", 5.5, "identifier", "AMPAcurrentInputs");
 NdplInAttrInit ampaW(AMPA_W);
 
 // Back-propagating spike weights between output neurons and spines, structural plasticity
-BindName POST_W("weight", 0.0, "identifier", "postSpikesInput");
+BindName POST_W("weight", 1.0, "identifier", "postSpikesInput");
 NdplInAttrInit postW(POST_W);
 
-// Retrograde ECB weight between spines and boutons, structural plasticity
-BindName ECB_W("weight", 1.0, "identifier", "ECBinput");
-NdplInAttrInit ecbW(ECB_W);
+// Retrograde eCB weight between spines/dendrites and clefts/atrocytes, structural plasticity
+BindName ECB1_W("weight", 1.0, "identifier", "eCBinput");
+NdplInAttrInit ecb1W(ECB1_W);
+
+// Retrograde eCB weight between clefts/atrocytes and glutamatergic/GABAergic boutons, structural plasticity
+BindName ECB2_W("weight", 1.0, "identifier", "eCBinput");
+NdplInAttrInit ecb2W(ECB2_W);
 
 
 
@@ -158,27 +211,45 @@ Grid Input
   InitNodes(.[].Layer(input), heterInput);
 };
 
-Grid Cannabinoid
+Grid GlutamateSynapse
 {
   Dimension(XDIM_INNER,YDIM_INNER,ZDIM_INNER);
   Layer(boutons, BoutonIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
-  InitNodes(.[].Layer(boutons), heterBoutons);
+  InitNodes(.[].Layer(boutons), heterGlutamateBoutons);
+  /*
+  Layer(Goodwins, Goodwin, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(Goodwins), heterGoodwins);
+  */
   Layer(cleftsAstrocytes, CleftAstrocyteIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
-  InitNodes(.[].Layer(cleftsAstrocytes), heterCleftsAstrocytes);
+  InitNodes(.[].Layer(cleftsAstrocytes), heterGlutamateCleftsAstrocytes);
   Layer(spines, SpineIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
   InitNodes(.[].Layer(spines), heterSpines);
 
   // bouton -> cleft
   connectNodeSets(.[].Layer(boutons), .[].Layer(cleftsAstrocytes),
-                  IsoSampler(), outAttrDef, glutW);
+                  IsoSampler(), outAttrDef, neurotransmitterW);
 
   // bouton -> spine
   connectNodeSets(.[].Layer(boutons), .[].Layer(spines),
                   IsoSampler(), outAttrDef, preW);
 
-  // post -> spine
-  connectNodeSets(.[].Layer(spines), .[].Layer(boutons),
-                  IsoSampler(), outAttrDef, ecbW);
+  // spine -> cleft
+  connectNodeSets(.[].Layer(spines), .[].Layer(cleftsAstrocytes),
+                  IsoSampler(), outAttrDef, ecb1W);
+
+  // cleft -> bouton
+  connectNodeSets(.[].Layer(cleftsAstrocytes), .[].Layer(boutons),
+                  IsoSampler(), outAttrDef, ecb2W);
+
+  /*
+  // Goodwin -> bouton
+  connectNodeSets(.[].Layer(Goodwins), .[].Layer(boutons),
+                  IsoSampler(), outAttrDef, cb1W);
+  
+  // bouton -> Goodwin
+  connectNodeSets(.[].Layer(boutons), .[].Layer(Goodwins),
+                  IsoSampler(), outAttrDef, cb1runboundW);
+  */
 };
 
 Grid Output
@@ -190,21 +261,22 @@ Grid Output
 
 Composite CorticoStriatoCannabinoid
 {
-  Input pre;
-  Cannabinoid cann;
+  Input glutamatePre;
+  Input GABAPre;
+  GlutamateSynapse glutamateSyn;
   Output post;
 
-  // pre -> bouton
-  connectNodeSets(pre[].Layer(input), cann[].Layer(boutons),
+  // glutamate pre -> glutamate bouton
+  connectNodeSets(glutamatePre[].Layer(input), glutamateSyn[].Layer(boutons),
                   EachDst(EachAvg(INNER_FRAC)), outAttrDef, inW);
 
   // spine -> post
-  connectNodeSets(cann[].Layer(spines), post[].Layer(output),
-                  EachDst(EachAvg(INNER_FRAC)), outAttrDef, ampaW);
+  connectNodeSets(glutamateSyn[].Layer(spines), post[].Layer(output),
+                  EachDstPropSrc(RadialSampler(N_INNER_RADIUS, 0, 1),1), outAttrDef, ampaW);
 
-  // post -> pre
-  //  connectNodeSets(post[].Layer(output), cann[].Layer(spines),
-  //                  IsoSampler(), outAttrDef, postW);
+  // post -> spine (has to connect to the same spines that connected to it)
+  connectNodeSets(post[].Layer(output), glutamateSyn[].Layer(spines),
+                  EachDstPropSrc(RadialSampler(0.1),1), outAttrDef, postW);
 };
 
 CorticoStriatoCannabinoid CSC;
@@ -213,28 +285,40 @@ CorticoStriatoCannabinoid CSC;
 
 // ##### Data collectors #####
 VariableType PoissonIAFUnitDataCollector;
-PoissonIAFUnitDataCollector inputCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveSpikes=1>;
+PoissonIAFUnitDataCollector glutamateInputCollector<directory=DIRECTORY, filePrep=GLUTAMATE_PREP,
+  fileExt=FILE_EXTENSION, op_saveSpikes=1>;
+polyConnect(CSC/glutamatePre[].Layer(input), glutamateInputCollector, <>, <>);
+  fileExt=FILE_EXTENSION, op_saveSpikes=1>;
 polyConnect(CSC/pre[].Layer(input), inputCollector, <>, <>);
 
 VariableType BoutonIAFUnitDataCollector;
-BoutonIAFUnitDataCollector boutonCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=0, op_saveAvailableGlutamate=1, op_saveCb1R=0>;
-polyConnect(CSC/cann[].Layer(boutons), boutonCollector, <>, <>);
+BoutonIAFUnitDataCollector glutamateBoutonCollector<directory=DIRECTORY, filePrep=GLUTAMATE_PREP,
+  fileExt=FILE_EXTENSION, op_saveNeurotransmitter=1, op_saveAvailableNeurotransmitter=1,
+  op_saveCB1R=1, op_saveCB1Runbound=1, op_saveCB1Rcurrent=1>;
+polyConnect(CSC/glutamateSyn[].Layer(boutons), glutamateBoutonCollector, <>, <>);
+
+/*
+VariableType GoodwinDataCollector;
+GoodwinDataCollector GoodwinCollector<directory=DIRECTORY, filePrep="Glutamate", 
+fileExt=FILE_EXTENSION, op_saveX=1, op_saveY=1, op_saveZ=1>;
+polyConnect(CSC/cann[].Layer(Goodwins), GoodwinCollector, <>, <>);
+*/
 
 VariableType CleftAstrocyteIAFUnitDataCollector;
-CleftAstrocyteIAFUnitDataCollector cleftAstroCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveGlutamate=1>;
-polyConnect(CSC/cann[].Layer(cleftsAstrocytes), cleftAstroCollector, <>, <>);
+CleftAstrocyteIAFUnitDataCollector glutamateCleftAstroCollector<directory=DIRECTORY, 
+  filePrep=GLUTAMATE_PREP, fileExt=FILE_EXTENSION, op_saveNeurotransmitter=1, op_saveeCB=1>;
+polyConnect(CSC/glutamateSyn[].Layer(cleftsAstrocytes), glutamateCleftAstroCollector, <>, <>);
 
 VariableType SpineIAFUnitDataCollector;
-SpineIAFUnitDataCollector spineCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveAMPA=0, op_savemGluR=0, op_saveCa=0, op_saveECB=0, ECBprodC=ECBPRODC, ECBprodD=ECBPRODD>;
-polyConnect(CSC/cann[].Layer(spines), spineCollector, <>, <>);
+SpineIAFUnitDataCollector spineCollector<directory=DIRECTORY, filePrep=GLUTAMATE_PREP,
+  fileExt=FILE_EXTENSION, op_saveAMPA=1, op_savemGluR5=1,
+  op_saveNMDARopen=1, op_saveNMDARCacurrent=1, op_saveCa=1,
+  op_saveeCB=1, eCBprodC=eCBPRODC, eCBprodD=eCBPRODD>;
+polyConnect(CSC/glutamateSyn[].Layer(spines), spineCollector, <>, <>);
 
 VariableType MihalasNieburSynapseIAFUnitDataCollector;
-MihalasNieburSynapseIAFUnitDataCollector outputCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveSpikes=0>;
+MihalasNieburSynapseIAFUnitDataCollector outputCollector<directory=DIRECTORY,
+  filePrep="Output_", fileExt=FILE_EXTENSION, op_saveSpikes=1>;
 polyConnect(CSC/post[].Layer(output), outputCollector, <>, <>);
 
 
@@ -248,7 +332,7 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
 UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ",
  			 ::Iteration, ">", 0, 0, dataCollect);
 
-UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20", // if >1 glutamate spikes will not visualize!
+UnsignedTrigger iterTrigSF("Iteration Trigger : !% 20", // if >1 neurotransmitter spikes will not visualize! typically 20
  			 ::Iteration, "!%", 20, 0, dataCollect);
 
 CompositeTrigger iterTrigSampled("Iteration Trigger: (!%20) && (>= 0)",
@@ -256,11 +340,13 @@ CompositeTrigger iterTrigSampled("Iteration Trigger: (!%20) && (>= 0)",
                                  iterTrigSF, 1, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop",
-                        ::Iteration, "==", 10000000, 0, lastPhase); // in dt
+                        ::Iteration, "==", OP_T, 0, lastPhase); // in dt
 
-inputCollector.dataCollection() on iterTrig;
-boutonCollector.dataCollection() on iterTrigSampled;
-cleftAstroCollector.dataCollection() on iterTrigSampled;
+glutamateInputCollector.dataCollection() on iterTrig;
+GABAInputCollector.dataCollection() on iterTrig;
+glutamateBoutonCollector.dataCollection() on iterTrigSampled;
+//GoodwinCollector.dataCollection() on iterTrigSampled;
+glutamateCleftAstroCollector.dataCollection() on iterTrigSampled;
 spineCollector.dataCollection() on iterTrigSampled;
 outputCollector.dataCollectionSpikes() on iterTrig;
 outputCollector.dataCollectionOther() on iterTrigSampled;

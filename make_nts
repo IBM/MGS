@@ -64,6 +64,7 @@ RunInstallFlex()
   #{{{
     Ask_InstallPath $1
     rm -rf flex-2.6.4
+    rm -rf flex-2.6.4.tar.gz
     wget "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
     tar -xvf flex-2.6.4.tar.gz
     cd flex-2.6.4
@@ -245,13 +246,14 @@ SUPPORTED_COMPONENTS="all common mdl gsl nti"
 #}}}
 
 ########################################
-### Check required tools ###
+### Check required tools/libraries ###
 ## 1. MPI library
 ## 2. Bison
 ## 3. Flex
 ## 4. Python
-## 5. CUDA [optional]
-## 6. Armadillo [optional]
+## 5. libgmp
+## 6. CUDA [optional]
+## 7. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
@@ -332,22 +334,27 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-    echo python found...; else echo python not found!;
-	exit;
+  echo "python found..."; else echo "python not found!";
+  exit;
+fi
+
+if ldconfig -p | grep libgmp; then
+  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source";
+  exit;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
-    if which nvidia-smi | grep -q1 /\nvidia-smi; then
-        echo CUDA probably found...; else echo CUDA potentially not found!;
-                                          exit
-    fi
+  if which nvidia-smi | grep -q1 /\nvidia-smi; then
+    echo "CUDA probably found..."; else echo "CUDA potentially not found!";
+    exit
+  fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
-    if `ldconfig -p | grep -q armadillo`; then
-        echo Armadillo probably found...; else echo Armadillo potentially not found!;
-                                          exit
-    fi
+  if `ldconfig -p | grep -q armadillo`; then
+    echo "Armadillo probably found..."; else echo "Armadillo potentially not found!";
+    exit
+  fi
 fi
 #}}}
 #{{{ 
@@ -427,7 +434,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       # we also want to build the executable
       make -j $NPROCS RELEASE="$RELEASE"
     fi
-    if [ $? -gt 0 ] || [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
+    if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark
       cd $BASE_FOLDER
       echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
@@ -547,11 +554,11 @@ fi
 ##########################################
 ### GSL code ###
 #{{{
-EXTRA_ARGS="${COLAB} ${REGENMAKEFILE}"
+EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} --as-Nts"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
-    ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE --as-both-Nts-Mgs $GPU  $ARMA 
+    ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
     echo "Complete: regenerate gsl/Makefile"
     exit
   fi
@@ -562,7 +569,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     chmod +x ./build_gsl
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
-      ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --clean --as-Nts
+      ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --clean
       rm_ifexist $BASE_FOLDER/models/Extensions.mk
       #rm_ifexist $BASE_FOLDER/models/all.mdf
       #rm_ifexist $BASE_FOLDER/models/all_test.mdf
@@ -616,7 +623,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd -
     cd $LENSROOT
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
-      ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA
+      ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA
     fi
     cd -
     #}}}
@@ -654,7 +661,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     cd $BASE_FOLDER
     # -s or -singlethread
     cd $LENSROOT
-    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE --as-Nts $GPU  $ARMA
+    ./build_gsl -p $PLATFORM -j $NPROCS $GSL_BUILD_MODE ${EXTRA_ARGS} $GPU  $ARMA
     cd -
     #}}}
   fi
@@ -673,13 +680,12 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
 
     To run a test MGS simulation :
 
-      1) type \"cd graphs/IAF\"
-      2) type \"mpiexec -n 1 ../../gsl/bin/gslparser -t 4 -f leakyIAF.gsl -s \`date +%s\`\"
-      3) type \"cd ../../postprocess/IAF/\"
-      4) run the MATLAB script \"leakyIAF.m\"
-      \n\n"
+      1) type \"cd graphs/Compartmental\"/
+      2) browse to http://neuromorpho.org/neuroMorpho/bylab.jsp
+      3) click \"Markram,\" \"Select All,\" \"Get SWC files of selected neurons\"
+      4) download and extract zipped .swc files to graphs/Compartmental/neurons/*.swc
+      5) type \"mpiexec -n 2  ../../gsl/bin/gslparser Tissue1.gsl\"\n\n"
     fi
   fi
 fi
 #}}}
-

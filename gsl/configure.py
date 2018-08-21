@@ -12,6 +12,7 @@ import sys
 import distutils.spawn
 if sys.version_info[0] < 3:
     import popen2
+
     def find_version(name, full_path_name):
         cmd = full_path_name + " --version"
         (stdoutFile, stdinFile, stderrFile) = popen2.popen3(cmd)
@@ -20,12 +21,13 @@ if sys.version_info[0] < 3:
             raise FatalError(name + " has an error for command " + cmd)
         stdout = stdoutFile.readline()
         if stdout.find("GNU") == -1:
-            raise FatalError(self.bisonBin + " is not GNU")
+            raise FatalError(full_path_name + " is not GNU")
         tokens = stdout.split()
         file_version = tokens[-1]
         return file_version
 else:
     import subprocess
+
     def find_version(name, full_path_name):
         print(type(full_path_name))
         cmd = [full_path_name, "--version"]
@@ -40,7 +42,7 @@ else:
 import pip
 # import string
 
-if not 'builtins' in sys.modules.keys():
+if 'builtins' not in sys.modules.keys():
         pip.main(['install', 'future'])
 import getopt
 from builtins import range
@@ -171,7 +173,7 @@ def findFile(name, required=False):
     """
     find file path
     """
-    cmd = "which " + name
+    # cmd = "which " + name
     stdout = distutils.spawn.find_executable(name)
     if stdout is None:
         if required is True:
@@ -1522,6 +1524,12 @@ CFLAGS += $(COLAB_CFLAGS) \
         if self.options.withArma is True:
             retStr += " -DHAVE_ARMA"
 
+        if self.options.withGpu is True:
+            retStr += " -DHAVE_GPU"
+
+        if self.options.withArma is True:
+            retStr += " -DHAVE_ARMA"
+
         if self.options.profile == USE:
             retStr += " -DPROFILING"
 
@@ -1621,6 +1629,12 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
             else:
                 retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti -lnts -lutils"
         retStr += " $(OTHER_LIBS)"
+
+        if self.options.withGpu is True:
+            retStr += " -lcudart -lcurand"
+
+        if self.options.withArma is True:
+            retStr += " -llapack -lopenblas -larmadillo"
 
         retStr += "\n"
         return retStr

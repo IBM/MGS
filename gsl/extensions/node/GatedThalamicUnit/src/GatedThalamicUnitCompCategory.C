@@ -49,7 +49,7 @@ void GatedThalamicUnitCompCategory::outputWeightsShared(RNG& rng)
 	  fsPH.close();
 	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
@@ -90,7 +90,7 @@ void GatedThalamicUnitCompCategory::inputWeightsShared(RNG& rng)
 	  }
 	}
 	++n;
-	MPI::COMM_WORLD.Barrier();
+	MPI_Barrier(MPI_COMM_WORLD);
       }
     }
   }
