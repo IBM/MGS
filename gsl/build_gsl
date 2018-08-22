@@ -31,22 +31,13 @@ function contains() {
 
 function createMakeFile(){
   #{{{
-    EXTRA_ARGS=${COLAB}
+    EXTRA_ARGS="${COLAB} ${BUILD_TARGET}"
     ## detect if -release is used for optimization and debugging options
     if [ "$RELEASE" == "-release" ]; then
       ## detect if building as NTS, MGS, or both
-      case $AS in
-          "-as-Nts") ./configure.py --O3 $PLATFORM_OPTS --as-Nts ${EXTRA_ARGS};;
-          "-as-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-Mgs ${EXTRA_ARGS};;
-          "-as-both-Nts-Mgs") ./configure.py --O3 $PLATFORM_OPTS --as-both-Nts-Mgs ${EXTRA_ARGS};;
-      esac
+      ./configure.py --O3 $PLATFORM_OPTS ${EXTRA_ARGS}
     else
-      ## detect if building as NTS, MGS, or both
-      case $AS in
-          "-as-Nts") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Nts ${EXTRA_ARGS};;
-          "-as-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-Mgs ${EXTRA_ARGS};;
-          "-as-both-Nts-Mgs") ./configure.py --Og --debug $DEBUGMACROS $PLATFORM_OPTS --as-both-Nts-Mgs ${EXTRA_ARGS};;
-      esac
+      ./configure.py --Og --debug ${DEBUGMACROS} $PLATFORM_OPTS ${EXTRA_ARGS}
     fi
   #}}}
 }
@@ -57,7 +48,7 @@ SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 #   PRINT HELP
 #{{{
 function print_help {
-	echo "SYNTAX: $0 
+  echo "SYNTAX: $0 
   -p <$SUPPORTED_PLATFORMS>    [default: LINUX]
   [--clean | --rebuild | --regen]
   --regen               regenerate Makefile (gsl/Makefile)
@@ -75,15 +66,16 @@ function print_help {
   --loglevel 1:         debug with debug_assert and debug_hh for initialize methods
   --loglevel 2:         debug with debug_assert and debug_hh and print out debug for loops
 
-  --as-Nts:             build/configure as NTS
-  --as-Mgs:             build/configure as MGS
-  --as-both-Nts-Mgs:    build/configure as both NTS and MGS
+  PREDEFINED TARGETS:
+  --as-Nts              build NTS
+  --as-Nts-NVU          build NTS+NVU
+  --as-IBEx             build IBEx
 
-  --colab:              build/configure for colaborator's use
+  --colab:              build/configure shared libraries for colaborator's use
   "
-	echo "NOTE: [] (optional), <> (required)"
-	echo "NOTE: choose one value inside < >"
-	exit;
+  echo "NOTE: [] (optional), <> (required)"
+  echo "NOTE: choose one value inside < >"
+  exit;
 }
 
 if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ "$1" == "" ]; then 
@@ -101,7 +93,7 @@ GSL_BUILD_MODE=""
 RELEASE=""
 GPU=""
 ARMA=""
-AS="-as-Nts"
+BUILD_TARGET=""
 COLAB=""
 REGENMAKEFILE=""
 DEBUGOPTS="1"
@@ -172,19 +164,23 @@ while getopts "$optspec" optchar; do
                 ;;
             esac
             ;;
-          as-Nts) # as NTS
-              AS="-as-Nts"
-              ;;
+          as-Nts)
+            BUILD_TARGET="--as-Nts"
+            ;;
+          as-Nts-NVU)
+            BUILD_TARGET="--as-Nts-NVU"
+            EXTRA_LIBS+=" USE_SUITESPARSE=1"
+            ;;
+          as-IBEx)
+            BUILD_TARGET="--as-IBEx"
+            ;;
           as-Mgs) # as MGS
-              AS="-as-Mgs"
-              ;;
-          as-both-Nts-Mgs) # as both NTS and MGS
-              AS="-as-both-Nts-Mgs"
-              ;;
+            BUILD_TARGET="-as-Mgs"
+            ;;
           someloglevel)
-              val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-              echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
-              ;;
+            val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+            echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+            ;;
           =*)
               val=${OPTARG#*=}
               opt=${OPTARG%=$val}
@@ -275,7 +271,7 @@ if [ $CONTINUE == 1 ]; then
       #{{{
       echo "clean-up GSL"
       if [ -f Makefile ]; then 
-        make clean
+        make clean ${EXTRA_LIBS}
         rm Makefile
       else
         echo -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
@@ -290,11 +286,11 @@ if [ $CONTINUE == 1 ]; then
     fi
     # Generate Makefile and make!
     createMakeFile
-    make clean
+    make clean ${EXTRA_LIBS}
     if [ "$COLAB" == "--colab" ]; then 
-      make -j $NPROCS library
+      make -j $NPROCS library ${EXTRA_LIBS}
     fi
-    make -j $NPROCS;
+    make -j $NPROCS ${EXTRA_LIBS};
     #}}}
   fi
 else
@@ -302,13 +298,13 @@ else
     createMakeFile
   fi
   if [ "$COLAB" == "--colab" ]; then 
-    make -j $NPROCS library
+    make -j $NPROCS library ${EXTRA_LIBS}
   fi
   if [ $? -gt 0 ]; then
     echo -e "${cc_red}Build GSL library failed ! ${cc_normal}\n";
     exit 1;
   fi
-  make -j $NPROCS;
+  make -j $NPROCS ${EXTRA_LIBS};
 fi
 
 if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 

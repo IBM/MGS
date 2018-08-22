@@ -6,10 +6,10 @@ sed '/\\/p' $1 | \
         defineModels1.sh;
 
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
-    awk '{ print  $0 }' defineModels1.sh > \
+    gawk '{ print  $0 }' defineModels1.sh > \
         defineModels2.sh;
 else
-    awk '{ print "if [ '$1' -ot " $6" ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > \
+    gawk '{ print "if [ '$1' -ot " $6" ] || [ define -ot '$1' ]; then " $0 " fi" }' defineModels1.sh > \
         defineModels2.sh;
 fi
 

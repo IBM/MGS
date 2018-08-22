@@ -22,8 +22,8 @@ function run_mdlparser() {
   # NOTE: $LENSROOT/extensions/functor need to be added explicitly to configure.py
   #temp_mdf_only=$(mktemp)
   #temp_mdl_only=$(mktemp)
-  #grep  '^[^//]' $1 | awk '/mdf"/ {print $2}' > ${temp_mdf_only}
-  #grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_mdl_only}
+  #grep  '^[^//]' $1 | gawk '/mdf"/ {print $2}' > ${temp_mdf_only}
+  #grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
   $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
   #$MDLROOT/bin/mdlparser `cat ${temp_mdf_only} | tr '\n' ' ' ` ${temp_mdfl_only} -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
   #}}}
@@ -32,23 +32,23 @@ function run_mdlparser() {
 
 temp_mdf_only=$(mktemp)
 temp_mdl_only=$(mktemp)
-grep  '^[^//]' $1 | awk '/mdf"/ {print}' > ${temp_mdf_only}
-grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_mdl_only}
+grep  '^[^//]' $1 | gawk '/mdf"/ {print}' > ${temp_mdf_only}
+grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
 
 MDLFILES=()
 sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
 while read mdl_in; do 
-  mdl_file_name=`echo $mdl_in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+  mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   MDLFILES+=($mdl_file_name)
 done < $temp_mdl_only
 while read in; do 
-  file_name=`echo $in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+  file_name=`echo $in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   if [ -f $file_name ]; then
     cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
     temp_file_name=$(mktemp)
-    grep  '^[^//]' $1 | awk '/mdl"/ {print}' > ${temp_file_name}
+    grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_file_name}
     while read mdl_in; do 
-      mdl_file_name=`echo $mdl_in | awk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
+      mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
       MDLFILES+=($mdl_file_name)
     done < $temp_file_name
   fi
@@ -56,10 +56,10 @@ done < ${temp_mdf_only}
 
 RERUN=0
 if [ $# -gt 1 ] && [ $2 == "-rebuild" ]; then
-  awk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
+  gawk '{ print  $0 }' defineModels1.sh > defineModels2.sh;
   RERUN=1
 else
-  awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; if ! cmp --silent <(cpp " $2 "/" $5")   " $2 "/." $5 "; then cpp " $2 "/" $5 " >" $2 "/." $5 ";" $0 " fi" }' defineModels1.sh > defineModels2.sh;
+  gawk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(gawk -F\" |{\"  '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(gawk -F\" |{\" '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(gawk -F\" |{\" '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|gawk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(gawk -F\" |{\" '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; if ! cmp --silent <(cpp " $2 "/" $5")   " $2 "/." $5 "; then cpp " $2 "/" $5 " >" $2 "/." $5 ";" $0 " fi" }' defineModels1.sh > defineModels2.sh;
 fi
 
 set -e
@@ -90,15 +90,3 @@ cp $LENSROOT/Extensions.mk{,.bak}
 cp Extensions.mk $LENSROOT
 rm ${temp_mdf_only}
 rm ${temp_mdl_only}
-
-# <<<OLD_MGS; uncomment these
-#touch define;
-#touch $1;
-#    OLD_MGS>>>
-
-#grep  '^[^//]' $1 | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
-  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi" }' defineModels1.sh > defineModels2.sh;
-  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; if [ ! -d " $2 "/`awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1); exit;}}'"'"' " $2 "/" $5 "` ]; then " $0 " fi " }' defineModels1.sh > defineModels2.sh;
-  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;
-  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;
-  #awk 'NF { print "if [ ! -f " $2 "/" $5" ]; then echo \" not found: " $2 "/" $5 "\"; exit 1; fi; if [ '$1' -ot " $2 "/" $5 " ] || { [ define -ot '$1' ] && [ define -ot " $2 "/" $5 " ];}; then " $0 " fi; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Node\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{for(i=1;i<=NF;i++) if (\$i==\"Constant\" && \$(i+2)==\"Implements\") {print \$(i+1);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(awk '"'"'{if (\$1==\"Variable\" ) {print \$(2);}}'"'"' " $2 "/" $5 "); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done; for i in \$(comm -12 <(cpp " $2 "/" $5 "|awk '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"'|sort) <(awk '"'"'{if (\$1==\"Interface\" ) {print \$(2);}}'"'"' " $2 "/" $5 "|sort)); do if [ ! -d " $2 "/$i ]; then " $0 " fi; done " }' defineModels1.sh > defineModels2.sh;

@@ -5,3 +5,4 @@
 #include "TissueNodeInitFunctor.mdl"
 #include "TissueProbeFunctor.mdl"
 #include "Zipper.mdl"
+#include "ConnectNodeSetsByVolumeFunctor.mdl"

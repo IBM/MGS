@@ -1,6 +1,7 @@
 #ifndef _MATRIXOPERATIONS_H
 #define _MATRIXOPERATIONS_H
 
+#ifdef USE_SUITESPARSE
 #include <cs.h>
 #include <assert.h>
 #include <stdint.h>
@@ -57,5 +58,6 @@ uint32_t    imortony(uint32_t x);
 numjac *    numjacinit(cs *A);
 cs *        mldivide_chol(cs *A, css *S, cs *B);
 double 		distanceBetween2Points(double *a, double *b, const int dimensions);
+#endif
 
 #endif

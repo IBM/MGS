@@ -40,4 +40,3 @@
 #include "Threshold.mdl"
 #include "ToroidalRadialSampler.mdl"
 #include "UniformDiscreteDist.mdl"
-#include "ConnectNodeSetsByVolumeFunctor.mdl"
