@@ -205,7 +205,7 @@ UnsignedTrigger recOn("Iteration Trigger : !% " STR(RecordInterval),
 //{{{Nodes
 /* NVU code still uses meter unit */
 NodeType NVUNode(< tooSparse=0, tooCrowded=3, L0 = L0_VALUE>) {
-  paramInitalize->initParams,
+  paramInitialize->initParams,
   initStateVariables->initialize1,
   initJacobian->initialize3,
   update->update1,

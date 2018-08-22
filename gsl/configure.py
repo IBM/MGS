@@ -324,8 +324,9 @@ class Options:
         self.blueGene = False  # True, False
         self.rebuild = False  # True, False
         self.asNts = False  # True, False
+        self.asNtsNVU = False  # True, False
+        self.asIBEx = False  # True, False
         self.asMgs = False  # True, False
-        self.asBoth = False  # True, False
         self.colab = False  # True, False
         self.help = False  # True, False
 
@@ -363,6 +364,8 @@ class Options:
                            ("blueGeneQ", "configures for blueGeneQ environment"),
                            ("rebuild", "rebuilds the project"),
                            ("as-Nts", "configures as NTS"),
+                           ("as-Nts-NVU", "configures as NTS+NVU"),
+                           ("as-IBEx", "configures as IBEx"),
                            ("as-Mgs", "configures as MGS"),
                            ("colab", "build for collaborators"),
                            ("as-both-Nts-Mgs", "configures as both NTS and MGS"),
@@ -502,10 +505,12 @@ class Options:
                     self.rebuild = True
                 if o == "--as-Nts":
                     self.asNts = True
+                if o == "--as-Nts-NVU":
+                    self.asNtsNVU = True
+                if o == "--as-IBEx":
+                    self.asIBEx = True
                 if o == "--as-Mgs":
                     self.asMgs = True
-                if o == "--as-both-Nts-Mgs":
-                    self.asBoth = True
                 if o == "--colab":
                     self.colab = True
                 if o == "--help":
@@ -748,7 +753,7 @@ class BuildSetup:
         retStr += "\n"
 
         retStr += TAB + "NTI: "
-        if (self.options.asNts is True) or (self.options.asBoth is True):
+        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "Used"
         else:
             retStr += "Not used"
@@ -917,7 +922,7 @@ BIN_DIR?=./bin
 EXE_FILE=gslparser
 
 """
-        if (self.options.asNts is True) or (self.options.asBoth is True):
+        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += \
                 """\
 NTI_DIR=../nti
@@ -1067,7 +1072,7 @@ NODE_MODULES :=
 """
 
         if self.options.colab is True:
-            if (self.options.asNts is True) or (self.options.asBoth is True):
+            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += \
                     """\
 COLAB_NODE_MODULES :=  \\
@@ -1141,7 +1146,6 @@ STRUCT_MODULES := CoordsStruct \\
 
 """
         if self.options.colab is True:
-            if (self.options.asNts is True) or (self.options.asBoth is True):
                 retStr += \
                     """\
 TRIGGER_MODULES :=
@@ -1165,7 +1169,7 @@ VARIABLE_MODULES := BasicNodeSetVariable \\
 """  # noqa
 
         if self.options.colab is True:
-            if (self.options.asNts is True) or (self.options.asBoth is True):
+            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += \
                     """\
 COLAB_VARIABLE_MODULES := BasicNodeSetVariable \\
@@ -1239,7 +1243,6 @@ FUNCTOR_MODULES := BinomialDist \\
         Threshold \\
         ToroidalRadialSampler \\
         UniformDiscreteDist \\
-        ConnectNodeSetsByVolumeFunctor \\
 """
         _tissuefunctor_modules = \
             """\
@@ -1249,9 +1252,10 @@ FUNCTOR_MODULES := BinomialDist \\
         TissueMGSifyFunctor \\
         TissueNodeInitFunctor \\
         TissueProbeFunctor \\
-        Zipper \\"""
+        Zipper \\
+        ConnectNodeSetsByVolumeFunctor \\"""
         if self.options.colab is False:
-            if (self.options.asNts is True) or (self.options.asBoth is True):
+            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += _tissuefunctor_modules + \
                     """
 
@@ -1302,14 +1306,9 @@ COLAB_FUNCTOR_MODULES :=  \\
         Threshold \\
         ToroidalRadialSampler \\
         UniformDiscreteDist \\
-        ConnectNodeSetsByVolumeFunctor \\
 
 """  # noqa
-        if (self.options.asMgs is True) or (self.options.asBoth is True):
-            retStr += \
-                """\
-"""
-        if self.options.asBoth is True:
+        if (self.options.asMgs is True):
             retStr += \
                 """\
 """
@@ -1353,7 +1352,7 @@ SOURCES_FILENAME_ONLY :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 PURE_OBJS := $(patsubst %.C, %.o, $(SOURCES_FILENAME_ONLY))
 
 """
-        if (self.options.asNts is True) or (self.options.asBoth is True):
+        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += \
                 """\
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
@@ -1436,7 +1435,10 @@ COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
         retStr = \
             """\
 # OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7 -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7
+ifeq ($(USE_SUITESPARSE), 1)
+OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
+endif
 LDFLAGS := -shared
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
@@ -1759,7 +1761,7 @@ DX_INCLUDE := framework/dca/include
 
 $(OBJS_DIR)/%.o : %.C
 \t$(CC) $(CFLAGS) $(COMMON_OBJS) """
-        if (self.options.asNts is True) or (self.options.asBoth is True):
+        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
         retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
 """
@@ -1868,7 +1870,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         if self.options.colab is True:
             pass
         else:
-            if (self.options.asNts is True) or (self.options.asBoth is True):
+            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
         retStr += "$(COMMON_OBJS) $(LIBS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr

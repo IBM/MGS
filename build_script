@@ -23,11 +23,12 @@ rm_ifexist() {
 }
 
 function print_help {
+  #{{{
   echo -e "\n\n${cc_blue}Make both NTS and MGS...${cc_normal} \n\nOption include : \n\n 
-  -p [LINUX|BGL|BGP|BGQ]        default = LINUX  build to run on what platform
+  -p [LINUX|BGL|BGP|BGQ|SMP]    default = LINUX  build to run on what platform
   -c [all|common|mdl|gsl|nti]   default = all    what components to build
-  -r|--release                  to build in release mode [default: debug mode]
-  -j <n>                        with <n> is number of processes [default: 2/3 of total cores]
+  -r|--release                  (flag) to build in release mode [default: debug mode]
+  -j <n>                        with <n> is number of processes for parallel build [default: 2/3 of total cores]
   -s|--singlethread             to build in single thread
   --mco                         <max-compute-order>
   --clean                       to clean everything
@@ -42,6 +43,11 @@ function print_help {
   -g|--gpu                      build with GPU extensions
   -a|--arma                     build with Armadillo extensions
 
+  PREDEFINED TARGETS:
+  --as-Nts                      build NTS
+  --as-Nts-NVU                  build NTS+NVU
+  --as-IBEx                     build IBEx
+
 Example:
 1) make_both -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
 2) make_both -p BGL :            builds both NTS and MGS on Blue Gene/L
@@ -51,8 +57,10 @@ Example:
 Extra Libraries:
   export SUITESPARSE=\`pwd\`/SuiteSparse/
   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$SUITESPARSE/lib
+  export PYTHON_INCLUDE_DIR=/usr/lib/python3.6
 
 \n\n"; exit;
+  #}}}
 }
 
 if [ "$1" == "--help" ] || [ $# == 0 ]; then
@@ -90,10 +98,9 @@ Ask_InstallPath()
 {
   #{{{
   # print question
-  echo -n "Where do you want to install "$1"?(Press Enter for default (e.g. /usr/local/bin): "
-
-  # read answer
-  read -e path 
+  DEFAULT_PATH="/usr/local/bin"
+  read -p "Where do you want to install "$1"?(Press Enter for default (${DEFAULT_PATH}): " path
+  path=${path:-${DEFAULT_PATH}}
 
   # check and act on given answer
   flex_path=$(eval echo $path)
@@ -121,38 +128,87 @@ Yes_No_InstallFlex()
   esac
   #}}}
 }
+Yes_No_RebuildClean()
+{
+  #{{{
+  # print question
+  read -p "Do you want to continue with --rebuild --clean (yes(y)/no(n)) [enter = y]: " YnAnswer
+
+  # read answer
+  YnAnswer=${YnAnswer:-y}
+
+  # all to lower case
+  YnAnswer=$(echo $YnAnswer | awk '{print tolower($0)}')
+
+  # check and act on given answer
+  case $YnAnswer in
+    "yes")  REBUILD="-rebuild"; CLEAN="-clean";;
+    "y")  REBUILD="-rebuild"; CLEAN="-clean";;
+    "no") exit ;;
+    "n")  exit ;;
+    *)    echo "Please answer yes(y) or no(n)" ; Yes_No_RebuildClean;;
+  esac
+  #}}}
+}
+
 
 function make_functor_mdf()
 {
+  #{{{
   cat functors_common.mdf > $1
   #cat functors_both.mdf >> $1
+if [[ "$BUILD_TARGET" == "--as-Nts" ]] || [[ "$BUILD_TARGET" == "--as-Nts-NVU" ]] ; then
   cat functors_nts.mdf >> $1
+fi
   #cat functors_mgs.mdf >> $1
   if [ -f colab_functors.mdf ]; then
     cat colab_functors.mdf >> $1
   else
     touch $1
   fi
+  #}}}
+}
+
+function touch_mdf_upon_changing_target()
+{
+  #{{{
+      if [ $PREV_TYPE != $TYPE ]; then
+        if [[  $TYPE == *"NTS"* ]]; then
+          touch nts.mdf
+        fi
+        if [[ $TYPE == *"NVU"* ]]; then
+          touch NVU.mdf
+        fi
+        if [[ $TYPE == *"IBEx"* ]]; then
+          touch mgs.mdf
+        fi
+        if [[ $TYPE == *"MGS"* ]]; then
+          touch all.mdf
+        fi
+        rm_ifexist Extensions.mk
+      fi
+  #}}}
 }
 
 #########################################
 
-TYPE="BOTH"  # NTS, MGS, BOTH
 ##########################################
 ## Detect what need to be built
 #{{{
-PLATFORM="LINUX"
 WHAT_TO_BUILD="all"
+PLATFORM="LINUX"
 CLEAN=""
 REBUILD=""
-MCO=""
+GSL_BUILD_MODE=""
 RELEASE=""
 GPU=""
 ARMA=""
 REGENMAKEFILE=""
-GSL_BUILD_MODE=""
+MCO=""
 COLAB=""
-TARGET_BUILD=""
+TARGET_MAKE=""
+BUILD_TARGET=""
+MDF_TARGET="all.mdf"
 optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
@@ -183,11 +239,24 @@ while getopts "$optspec" optchar; do
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
+                as-Nts)
+                    BUILD_TARGET="--as-Nts"
+                    MDF_TARGET="nts.mdf"
+                    ;;
+                as-Nts-NVU)
+                    BUILD_TARGET="--as-Nts-NVU"
+                    MDF_TARGET="ntsnvu.mdf"
+                    EXTRA_LIBS+=" USE_SUITESPARSE=1"
+                    ;;
+                as-IBEx)
+                    BUILD_TARGET="--as-IBEx"
+                    MDF_TARGET="ibex.mdf"
+                    ;;
                 clean)
                     CLEAN="-clean"
                     ;;
                 colab)
-                    TARGET_BUILD="library"
+                    TARGET_MAKE="library"
                     COLAB="--colab"
                     ;;
                 rebuild)
@@ -244,6 +313,15 @@ SUPPORTED_COMPONENTS="all common mdl gsl nti"
 [[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
 
 #}}}
+if [[ "$BUILD_TARGET" == "--as-Nts" ]] ; then
+TYPE="NTS" 
+elif [[ "$BUILD_TARGET" == "--as-Nts-NVU" ]] ; then
+TYPE="NTSNVU"  # NTS, MGS, BOTH
+elif [[ "$BUILD_TARGET" == "--as-IBEx" ]] ; then
+TYPE="IBEx"  
+else 
+TYPE="MGS" 
+fi
 
 ########################################
 ### Check required tools/libraries ###
@@ -288,7 +366,9 @@ if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
 fi
 
 if which flex | grep -q1 /\flex; then
-    echo flex found...; else echo flex not found!; exit; fi
+  echo flex found...; else echo flex not found! please either install through your distributions package manager or from source; 
+  exit; 
+fi
 
 VALID_FLEX_VERSION=2.6.4
 #{{{
@@ -334,25 +414,25 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-  echo "python found..."; else echo "python not found!";
+  echo "python found..."; else echo "python not found! please either install through your distributions package manager or from source";
   exit;
 fi
 
 if ldconfig -p | grep libgmp; then
-  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source";
+  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
   exit;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
   if which nvidia-smi | grep -q1 /\nvidia-smi; then
-    echo "CUDA probably found..."; else echo "CUDA potentially not found!";
+    echo "CUDA probably found..."; else echo "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
     exit
   fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
   if `ldconfig -p | grep -q armadillo`; then
-    echo "Armadillo probably found..."; else echo "Armadillo potentially not found!";
+    echo "Armadillo probably found..."; else echo "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
     exit
   fi
 fi
@@ -363,9 +443,12 @@ if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
   echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
   exit 1
 fi
+if [ "$BUILD_TARGET" == "--as-Nts-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
-  echo "Please install (if needed) and run: export SUITESPARSE=/path/to/suitesparse"
+  echo "Please install the SuiteSparse libraries (www.suitesparse.com)"
+  echo " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
   exit 1
+fi
 fi
 BASE_FOLDER=$NTSMGSROOT
 #}}}
@@ -373,6 +456,17 @@ BASE_FOLDER=$NTSMGSROOT
 ########################################
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
+cd $BASE_FOLDER/models
+if [ ! -f ${MDF_TARGET} ]; then 
+  touch ${MDF_TARGET}
+  echo "// MDL files
+#include "std/std_interfaces.mdl"
+
+// MDF files
+
+  " > ${MDF_TARGET}
+fi
+cd -
 if [ "$BASE_FOLDER" == "" ]; then
   echo "Please run: source setenv_both"
   exit 1
@@ -397,14 +491,11 @@ fi
 if [ "$CLEAN" == "-clean" ] ; then
   rm_ifexist $BASE_FOLDER/.built
 fi
-if [ "$REBUILD" == "-rebuild" ] ;then
-  cd $BASE_FOLDER
-  touch .built && echo $BASE_FOLDER > .built
-  echo $TYPE >> .built # 2nd-line
-fi
 if [ "$TYPE" != "$PREV_TYPE" ]; then
-  gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
+  #gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
+  echo "You switch the build from ${PREV_TYPE} to ${TYPE}. It needs to be built with --rebuild --clean"
+  Yes_No_RebuildClean
 fi
 #}}}
 
@@ -423,13 +514,13 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-    if [ "$TARGET_BUILD" != "" ]; then
+    if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
       make -j $NPROCS RELEASE="$RELEASE"
     fi
@@ -462,20 +553,20 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
   fi
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
-      make realclean RELEASE="$RELEASE";
+      make realclean RELEASE="$RELEASE" ${EXTRA_LIBS};
       echo "${cc_blue}Removed COMMON code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
-      make realclean RELEASE="$RELEASE";
-      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+      make realclean RELEASE="$RELEASE" ${EXTRA_LIBS};
+      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
     fi
   else
-    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-    if [ "$TARGET_BUILD" != "" ]; then
+    if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
-      make -j $NPROCS RELEASE="$RELEASE"
+      make -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
     fi
     if [ $? -gt 0 ]; then
       cd $BASE_FOLDER
@@ -492,6 +583,7 @@ fi
 ################################################
 ### NTI code ###
 #{{{
+if [[ "$BUILD_TARGET" == "--as-Nts" ]] || [[ "$BUILD_TARGET" == "--as-Nts-NVU" ]] ; then
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   cd $BASE_FOLDER/nti
   if [ -f .build_error ]; then rm .build_error; fi
@@ -514,17 +606,17 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean RELEASE="$RELEASE";
-      make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    make ${TARGET_BUILD} -j $NPROCS RELEASE="$RELEASE"
+    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
   fi
   if [ -f .build_error ]; then 
     cd $BASE_FOLDER
     exit ; 
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
-    if [ "$TARGET_BUILD" != "" ]; then
+    if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
       make -j $NPROCS RELEASE="$RELEASE"
     fi
@@ -548,12 +640,13 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     cd $BASE_FOLDER
   fi
 fi
+fi
 #}}}
 
 ##########################################
 ### GSL code ###
 #{{{
-EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} --as-both-Nts-Mgs"
+EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
@@ -605,16 +698,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #cat nts.mdf >> all.mdf
       #cat mgs.mdf >> all.mdf
       cd $BASE_FOLDER/models
-      if [ $PREV_TYPE != $TYPE ]; then
-        if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
-          touch nts.mdf
-        fi
-        if [[ $TYPE == "BOTH" || $TYPE == "MGS" ]]; then
-          touch mgs.mdf
-        fi
-      fi
-      touch all.mdf
-      ./define all.mdf $REBUILD
+      touch_mdf_upon_changing_target
+      #touch all.mdf
+      #./define all.mdf $REBUILD
+      touch ${MDF_TARGET}
+      ./define ${MDF_TARGET} $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $BASE_FOLDER
@@ -641,20 +729,12 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     fi
     rm_ifexist all_test.mdf
     cd $BASE_FOLDER/models
-    if [ $PREV_TYPE != $TYPE ]; then
-      if [[ $TYPE == "BOTH" || $TYPE == "NTS" ]]; then
-        touch nts.mdf
-      fi
-      if [[ $TYPE == "BOTH" || $TYPE == "MGS" ]]; then
-        touch mgs.mdf
-      fi
-      rm Extensions.mk
-    fi
+    touch_mdf_upon_changing_target
     if [ ! -f Extensions.mk ]; then
-      touch all.mdf;
-      ./define all.mdf -force
+      touch ${MDF_TARGET};
+      ./define ${MDF_TARGET} -force
     else
-      ./define all.mdf $REBUILD
+      ./define ${MDF_TARGET} $REBUILD
     fi
 
     cp Extensions.mk $LENSROOT/
@@ -667,7 +747,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
-      echo -e "\n\n\n${cc_blue}Congratulations! You have made NTS and MGS...${cc_normal}
+      echo -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
     To run the test NTS tissue simulation :
 
@@ -685,6 +765,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       3) type \"cd ../../postprocess/IAF/\"
       4) run the MATLAB script \"leakyIAF.m\"
       \n\n"
+      if [ "$REBUILD" == "-rebuild" ] ;then
+        cd $BASE_FOLDER
+        touch .built && echo $BASE_FOLDER > .built
+        echo $TYPE >> .built # 2nd-line
+      fi
     fi
   fi
 fi

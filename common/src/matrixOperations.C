@@ -1,6 +1,7 @@
 #include "matrixOperations.h"
 
 // VECTOR FUNCTIONS
+#ifdef USE_SUITESPARSE
 
 double * onesv(int n)
 {
@@ -783,3 +784,4 @@ double distanceBetween2Points(double *a, double *b, const int dimensions)
     }
     return sqrt(inner);
 }
+#endif

@@ -4,7 +4,9 @@ INCDIR= ./include
 CC=g++
 CFLAGS=-I$(INCDIR) -Wall -Werror -lgmp -std=c++11 -Wno-deprecated-declarations # -pedantic
 CFLAGS+= -fPIC 
-OTHER_LIBS := -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+ifeq ($(USE_SUITESPARSE), 1)
+   OTHER_LIBS := -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
+endif
 LDFLAGS+= -shared
 
 RELEASE?="" # Potentially set by make_XXX or the user from the command line
