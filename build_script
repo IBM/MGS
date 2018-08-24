@@ -461,6 +461,8 @@ if [ ! -f ${MDF_TARGET} ]; then
   touch ${MDF_TARGET}
   echo '// MDL files
 #include "std/std_interfaces.mdl"
+#include "Life/Life.mdl"
+#include "Life/LifeDataCollectors.mdl"
 
 // MDF files
 
