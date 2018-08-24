@@ -325,7 +325,7 @@ class Options:
         self.rebuild = False  # True, False
         self.asNts = False  # True, False
         self.asNtsNVU = False  # True, False
-        self.asIBEx = False  # True, False
+        self.asNGS = False  # True, False
         self.asMgs = False  # True, False
         self.colab = False  # True, False
         self.help = False  # True, False
@@ -363,10 +363,10 @@ class Options:
                            ("blueGeneP", "configures for blueGeneP environment"),
                            ("blueGeneQ", "configures for blueGeneQ environment"),
                            ("rebuild", "rebuilds the project"),
-                           ("as-Nts", "configures as NTS"),
-                           ("as-Nts-NVU", "configures as NTS+NVU"),
-                           ("as-IBEx", "configures as IBEx"),
-                           ("as-Mgs", "configures as MGS"),
+                           ("as-NTS", "configures as NTS"),
+                           ("as-NTS-NVU", "configures as NTS+NVU"),
+                           ("as-NGS", "configures as NGS"),
+                           ("as-MGS", "configures as MGS"),
                            ("colab", "build for collaborators"),
                            ("as-both-Nts-Mgs", "configures as both NTS and MGS"),
                            ("help", "displays the available options")]
@@ -503,13 +503,13 @@ class Options:
                     self.blueGeneQ = True
                 if o == "--rebuild":
                     self.rebuild = True
-                if o == "--as-Nts":
+                if o == "--as-NTS":
                     self.asNts = True
-                if o == "--as-Nts-NVU":
+                if o == "--as-NTS-NVU":
                     self.asNtsNVU = True
-                if o == "--as-IBEx":
-                    self.asIBEx = True
-                if o == "--as-Mgs":
+                if o == "--as-NGS":
+                    self.asNGS = True
+                if o == "--as-MGS":
                     self.asMgs = True
                 if o == "--colab":
                     self.colab = True

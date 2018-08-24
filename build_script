@@ -44,9 +44,9 @@ function print_help {
   -a|--arma                     build with Armadillo extensions
 
   PREDEFINED TARGETS:
-  --as-Nts                      build NTS
-  --as-Nts-NVU                  build NTS+NVU
-  --as-IBEx                     build IBEx
+  --as-NTS                      build Neural Tissue Simulator (NTS)
+  --as-NTS-NVU                  build NTS+NVU
+  --as-NGS                      build Neural Graph Simulator (NGS)
 
 Example:
 1) make_both -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
@@ -157,7 +157,7 @@ function make_functor_mdf()
   #{{{
   cat functors_common.mdf > $1
   #cat functors_both.mdf >> $1
-if [[ "$BUILD_TARGET" == "--as-Nts" ]] || [[ "$BUILD_TARGET" == "--as-Nts-NVU" ]] ; then
+if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
   cat functors_nts.mdf >> $1
 fi
   #cat functors_mgs.mdf >> $1
@@ -179,14 +179,14 @@ function touch_mdf_upon_changing_target()
         if [[ $TYPE == *"NVU"* ]]; then
           touch NVU.mdf
         fi
-        if [[ $TYPE == *"IBEx"* ]]; then
-          touch mgs.mdf
+        if [[ $TYPE == *"NGS"* ]]; then
+          touch ngs.mdf
         fi
         if [[ $TYPE == *"MGS"* ]]; then
-          touch all.mdf
+          touch mgs.mdf
         fi
-        rm_ifexist Extensions.mk
       fi
+      rm_ifexist Extensions.mk
   #}}}
 }
 
@@ -208,7 +208,7 @@ MCO=""
 COLAB=""
 TARGET_MAKE=""
 BUILD_TARGET=""
-MDF_TARGET="all.mdf"
+MDF_TARGET="mgs.mdf"
 optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
@@ -239,18 +239,18 @@ while getopts "$optspec" optchar; do
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
-                as-Nts)
-                    BUILD_TARGET="--as-Nts"
+                as-NTS)
+                    BUILD_TARGET="--as-NTS"
                     MDF_TARGET="nts.mdf"
                     ;;
-                as-Nts-NVU)
-                    BUILD_TARGET="--as-Nts-NVU"
+                as-NTS-NVU)
+                    BUILD_TARGET="--as-NTS-NVU"
                     MDF_TARGET="ntsnvu.mdf"
                     EXTRA_LIBS+=" USE_SUITESPARSE=1"
                     ;;
-                as-IBEx)
-                    BUILD_TARGET="--as-IBEx"
-                    MDF_TARGET="ibex.mdf"
+                as-NGS)
+                    BUILD_TARGET="--as-NGS"
+                    MDF_TARGET="ngs.mdf"
                     ;;
                 clean)
                     CLEAN="-clean"
@@ -313,12 +313,12 @@ SUPPORTED_COMPONENTS="all common mdl gsl nti"
 [[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
 
 #}}}
-if [[ "$BUILD_TARGET" == "--as-Nts" ]] ; then
+if [[ "$BUILD_TARGET" == "--as-NTS" ]] ; then
 TYPE="NTS" 
-elif [[ "$BUILD_TARGET" == "--as-Nts-NVU" ]] ; then
+elif [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
 TYPE="NTSNVU"  # NTS, MGS, BOTH
-elif [[ "$BUILD_TARGET" == "--as-IBEx" ]] ; then
-TYPE="IBEx"  
+elif [[ "$BUILD_TARGET" == "--as-NGS" ]] ; then
+TYPE="NGS"  
 else 
 TYPE="MGS" 
 fi
@@ -443,7 +443,7 @@ if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
   echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
   exit 1
 fi
-if [ "$BUILD_TARGET" == "--as-Nts-NVU" ]; then
+if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
   echo "Please install the SuiteSparse libraries (www.suitesparse.com)"
   echo " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
@@ -459,12 +459,12 @@ BASE_FOLDER=$NTSMGSROOT
 cd $BASE_FOLDER/models
 if [ ! -f ${MDF_TARGET} ]; then 
   touch ${MDF_TARGET}
-  echo "// MDL files
+  echo '// MDL files
 #include "std/std_interfaces.mdl"
 
 // MDF files
 
-  " > ${MDF_TARGET}
+  ' > ${MDF_TARGET}
 fi
 cd -
 if [ "$BASE_FOLDER" == "" ]; then
@@ -583,7 +583,7 @@ fi
 ################################################
 ### NTI code ###
 #{{{
-if [[ "$BUILD_TARGET" == "--as-Nts" ]] || [[ "$BUILD_TARGET" == "--as-Nts-NVU" ]] ; then
+if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   cd $BASE_FOLDER/nti
   if [ -f .build_error ]; then rm .build_error; fi

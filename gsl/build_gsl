@@ -67,9 +67,9 @@ function print_help {
   --loglevel 2:         debug with debug_assert and debug_hh and print out debug for loops
 
   PREDEFINED TARGETS:
-  --as-Nts              build NTS
-  --as-Nts-NVU          build NTS+NVU
-  --as-IBEx             build IBEx
+  --as-NTS              build Neural Tissue Simulator (NTS)
+  --as-NTS-NVU          build NTS+NVU
+  --as-NGS              build Neural Graph Simulator (NGS)
 
   --colab:              build/configure shared libraries for colaborator's use
   "
@@ -164,18 +164,18 @@ while getopts "$optspec" optchar; do
                 ;;
             esac
             ;;
-          as-Nts)
-            BUILD_TARGET="--as-Nts"
+          as-NTS)
+            BUILD_TARGET="--as-NTS"
             ;;
-          as-Nts-NVU)
-            BUILD_TARGET="--as-Nts-NVU"
+          as-NTS-NVU)
+            BUILD_TARGET="--as-NTS-NVU"
             EXTRA_LIBS+=" USE_SUITESPARSE=1"
             ;;
-          as-IBEx)
-            BUILD_TARGET="--as-IBEx"
+          as-NGS)
+            BUILD_TARGET="--as-NGS"
             ;;
-          as-Mgs) # as MGS
-            BUILD_TARGET="-as-Mgs"
+          as-MGS) # as MGS
+            BUILD_TARGET="-as-MGS"
             ;;
           someloglevel)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
