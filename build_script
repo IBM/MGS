@@ -762,6 +762,11 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
 
     To run a test MGS simulation :
 
+      1) type \"cd graphs/Life\"
+      2) type \"mpiexec -n 1 ../../gsl/bin/gslparser -t 4 -f Life.gsl\"
+
+    To run a test NGS simulation :
+
       1) type \"cd graphs/IAF\"
       2) type \"mpiexec -n 1 ../../gsl/bin/gslparser -t 4 -f leakyIAF.gsl -s \`date +%s\`\"
       3) type \"cd ../../postprocess/IAF/\"
