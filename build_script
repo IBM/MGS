@@ -24,7 +24,7 @@ rm_ifexist() {
 
 function print_help {
   #{{{
-  echo -e "\n\n${cc_blue}Make both NTS and MGS...${cc_normal} \n\nOption include : \n\n 
+  echo -e "\n\n 
   -p [LINUX|BGL|BGP|BGQ|SMP]    default = LINUX  build to run on what platform
   -c [all|common|mdl|gsl|nti]   default = all    what components to build
   -r|--release                  (flag) to build in release mode [default: debug mode]
@@ -46,13 +46,13 @@ function print_help {
   PREDEFINED TARGETS:
   --as-NTS                      build Neural Tissue Simulator (NTS)
   --as-NTS-NVU                  build NTS+NVU
-  --as-NGS                      build Neural Graph Simulator (NGS)
+  --as-NGS                      build Neuronal Graph Simulator (NGS)
 
 Example:
-1) make_both -p LINUX :          builds both NTS and MGS in a LINUX environment using MPI
-2) make_both -p BGL :            builds both NTS and MGS on Blue Gene/L
-3) make_both -p BGP :            builds both NTS and MGS on Blue Gene/P
-4) make_both -p BGQ :            builds both NTS and MGS on Blue Gene/Q\n
+1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
+2) build_script -p BGL --as-NGS	    :          builds NGS on Blue Gene/L
+3) build_script -p BGP		    :          builds custom MGS domain on Blue Gene/P as specified in mgs.mdf
+4) build_script -p BGQ		    :          builds both NTS and NGS on Blue Gene/Q if mgs.mdf include nts.mdf and ngs.mdf\n
 \n
 Extra Libraries:
   export SUITESPARSE=\`pwd\`/SuiteSparse/
@@ -316,7 +316,7 @@ SUPPORTED_COMPONENTS="all common mdl gsl nti"
 if [[ "$BUILD_TARGET" == "--as-NTS" ]] ; then
 TYPE="NTS" 
 elif [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
-TYPE="NTSNVU"  # NTS, MGS, BOTH
+TYPE="NTSNVU"
 elif [[ "$BUILD_TARGET" == "--as-NGS" ]] ; then
 TYPE="NGS"  
 else 
@@ -324,7 +324,7 @@ TYPE="MGS"
 fi
 
 ########################################
-### Check required tools/libraries ###
+### Check required tools ###
 ## 1. MPI library
 ## 2. Bison
 ## 3. Flex
@@ -496,7 +496,7 @@ fi
 if [ "$TYPE" != "$PREV_TYPE" ]; then
   #gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
-  echo "You switch the build from ${PREV_TYPE} to ${TYPE}. It needs to be built with --rebuild --clean"
+  echo "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
   Yes_No_RebuildClean
 fi
 #}}}
