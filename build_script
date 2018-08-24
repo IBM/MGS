@@ -470,10 +470,10 @@ if [ ! -f ${MDF_TARGET} ]; then
 fi
 cd -
 if [ "$BASE_FOLDER" == "" ]; then
-  echo "Please run: source setenv_both"
+  echo "Please run: source set_env"
   exit 1
 elif [ "$BASE_FOLDER" != $(pwd) ]; then
-  echo "Please run: source setenv_both"
+  echo "Please run: source set_env"
   exit 1
 fi
 if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
@@ -484,7 +484,7 @@ fi
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
   if  [ "$BASE_FOLDER" != "$line" ]; then
-    echo "Please run: source setenv_both"
+    echo "Please run: source set_env"
     rm .built
     exit
   fi
