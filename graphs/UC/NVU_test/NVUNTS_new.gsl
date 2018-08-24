@@ -47,6 +47,9 @@
 
 //OTHERS FUNCTORS
 /*{{{*/
+Connector ConnectNodeSetsByVolumeFunctor();
+ConnectNodeSetsByVolumeFunctor connectNodeSetsByVolume();
+
 Connector Zipper();
 Zipper zipper();
 //defined in std.gsl

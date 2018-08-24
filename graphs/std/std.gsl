@@ -79,9 +79,6 @@ PolyConnectorFunctor polyConnect();
 Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
 
-Connector ConnectNodeSetsByVolumeFunctor();
-ConnectNodeSetsByVolumeFunctor connectNodeSetsByVolume();
-
 SamplingFctr2 IsoSampler();
 IsoSampler isoSampler();
 

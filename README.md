@@ -1,8 +1,6 @@
 # Build instructions
 
-./make_nts  *[print out help instruction]*  
-./make_mgs  *[print out help instruction]*  
-./make_both  *[print out help instruction]*  
+./build_script  *[print out help instruction]*  
 
 **GSL:**  
   ./build_gsl -h     *[print out help instruction]*  
@@ -14,9 +12,10 @@
  make              release  
 
 **External libraries required:**  
-  bison v2.4.1  
-  flex v2.5.4  
+  bison v2.4.1  or above 
+  flex v2.5.4   or above
   lgmp  
+  python
   
 # Run flags
   -t Number of threads  
