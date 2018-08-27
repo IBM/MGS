@@ -66,8 +66,8 @@ NodeType FSIIAFUnit(<
                       op_savePSPs = 0,
                       op_saveExtra = 0,
                       op_saveLayout = 1,
-                      mu_rho = 1.0,		// zenith angle (0<rho<pi) for unit's orientation (<0.5: uniform)
-                      mu_phi = 1.0		// azimut       (0<phi<2*pi)
+                      mu_rho = -1.0,		// zenith angle (0<rho<pi) for unit's orientation (<0.5: uniform)
+                      mu_phi = -1.0		// azimut       (0<phi<2*pi)
                       >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
 
 // Synaptic connectivity
@@ -175,6 +175,6 @@ UnsignedTrigger setContribTrig("Iteration Trigger to set contribution of indiv n
 CTXFcollector.dataCollection() on iterTrigSampled;
 FSIcollector.dataCollection() on iterTrig;
 LFPanalyzer.dataCollection() on iterTrigSampled;
-//LFPanalyzer.setContributions() on setContribTrig;
+LFPanalyzer.setContributions() on setContribTrig;
 
 Stop on endTrig;
