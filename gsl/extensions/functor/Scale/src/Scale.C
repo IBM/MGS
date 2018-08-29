@@ -31,7 +31,7 @@ double Scale::userExecute(LensContext* CG_c)
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
   if (ndi==0) {
-    throw SyntaxErrorException("Log, second argument: functor did not return a number");
+    throw SyntaxErrorException("Scale, second argument: functor did not return a number");
   }
   return ndi->getDouble()*init.scale;  
 }

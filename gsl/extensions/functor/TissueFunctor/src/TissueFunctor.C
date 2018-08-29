@@ -4208,12 +4208,44 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   NDPairList brd2cpt;
   brd2cpt.push_back(new NDPair("identifier", "branchData"));
 
+  NDPairList paramsLocal = *(_params.get());
+  NDPairList::iterator ndpiter = _params->begin(); 
+  Functor* ifunctor = 0;
+  while (ndpiter!=_params->end() ) {
+    if ( (*ndpiter)->getName()=="initializer") {
+      FunctorDataItem* functorDI =
+      dynamic_cast<FunctorDataItem*>((*ndpiter)->getDataItem());
+      if (functorDI == 0)
+	  std::cerr << "Reserved \"initializer\" parameter of TissueProbe must be a functor!"
+		    << std::endl;
+      else {
+	ifunctor = functorDI->getFunctor();
+	_params->clear();
+	break;
+      }
+    }
+    ++ndpiter;
+  }
   for (; node != nodesEnd; ++node)
   {  // traverse all instances of the nodeset
     if ((*node)->getNode())
     {
       NDPairList paramsLocal = *(_params.get());
       (*gld)->getNodeType()->getInitializationParameterSet(initPset);
+      if (ifunctor) {
+	std::vector<DataItem*> nullArgs;
+	std::auto_ptr<DataItem> rval_ap;
+	ifunctor->execute(lc, nullArgs, rval_ap);
+	NDPairListDataItem* ndpldi = 
+	  dynamic_cast<NDPairListDataItem*>(rval_ap.get());
+	if (ndpldi == 0) {
+	  throw SyntaxErrorException(
+	    "Dynamic cast of DataItem to NDPairListDataItem failed on TissueFunctor");
+	}
+	else {
+	  initPset->set(*(ndpldi->getNDPairList()));
+	}
+      }
       ParameterSet* pset = initPset.get();
       int nodeIndex = (*node)->getNodeIndex();
       int densityIndex = (*node)->getDensityIndex();

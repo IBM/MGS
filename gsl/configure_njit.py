@@ -1106,20 +1106,14 @@ COLAB_NODE_MODULES :=  \\
         BackwardSolvePoint4  \\
         BackwardSolvePoint5  \\
         BackwardSolvePoint6  \\
-        ChannelNat  \\
-        ChannelNap  \\
+        ChannelLeak  \\
         ChannelNas  \\
         ChannelKIR  \\
-        ChannelKDR  \\
-        ChannelKAf  \\
-        ChannelKAs  \\
         ChannelKRP  \\
         ChannelBKalphabeta  \\
-        ChannelSK  \\
         KCaChannel \\
         CalChannel \\
         CahChannel \\
-        ChannelHCN \\
         ChannelCaLv12_GHK \\
         ChannelCaLv13_GHK \\
         ChannelCaN_GHK \\
@@ -1132,13 +1126,12 @@ COLAB_NODE_MODULES :=  \\
         AMPAReceptor \\
         AMPAReceptor_Markov \\
         NMDAReceptor \\
-        GABAAReceptor \\
         SpineAttachment_Vm \\
         SpineAttachment_VmCai \\
         SpineAttachment_VmCaiCaER \\
         Connexon \\
-
 """  # noqa
+
         retStr += \
             """\
 
