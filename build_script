@@ -432,7 +432,7 @@ if [  -f "${Model2Use}"  ]; then
     EMPTY_FILE=1
   fi
 fi
-if [ "$EMPTY_FILE" == ""  ]; then
+if [ $EMPTY_FILE -eq 1  ]; then
   touch ${Model2Use}
   echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
   echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
