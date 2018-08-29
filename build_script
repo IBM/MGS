@@ -37,7 +37,6 @@ function print_help {
                                 [by default: build with -g information, but not printing out any thing]
                                   log1 = print out DEBUG_HH and DEBUG_ASSERT
                                   log2 = print out ... during loops
-  --colab                       build libraries for collaborators (gsl/lib) 
   --regen                       regenerate gsl/Makefile  
   --profile                     generate profile output
   HETEROGENOUS ARCHITECTURE:
@@ -65,10 +64,15 @@ Extra Libraries:
   #}}}
 }
 
+function print_do_preq {
+   echo -e "${cc_red}Please run${cc_normal}: source set_env"
+}
+
 if [ "$1" == "--help" ] || [ $# == 0 ]; then
   print_help
 fi
 #}}}
+#{{{
 RunInstallFlex()
 {
   #{{{
@@ -153,7 +157,6 @@ Yes_No_RebuildClean()
   #}}}
 }
 
-
 function make_functor_mdf()
 {
   #{{{
@@ -192,6 +195,7 @@ function touch_mdf_upon_changing_target()
       rm_ifexist Extensions.mk
   #}}}
 }
+#}}}
 
 #########################################
 
@@ -211,7 +215,8 @@ MCO=""
 COLAB=""
 TARGET_MAKE=""
 BUILD_TARGET=""
-MDF_TARGET="mgs.mdf"
+MGS_TARGET_FILENAME="mgs.mdf"
+MDF_TARGET=${MGS_TARGET_FILENAME}
 optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
@@ -260,13 +265,22 @@ while getopts "$optspec" optchar; do
                     ;;
                 colab)
                     TARGET_MAKE="library"
-                    COLAB="--colab"
+                    #client="${!OPTIND}"
+                    client="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                    if [ -z $client ] || [ "${client:0:1}" == "-" ]; then
+                      echo "Please select a value for --${OPTARG} option"
+                      exit
+                    else
+                      echo "Build library for colaborator: " ${client}
+                    fi
+                    COLAB="--colab ${client}"
                     ;;
                 rebuild)
                     REBUILD="-rebuild"
                     ;;
                 regen)
                     REGENMAKEFILE="--regen"
+                    echo "Regenerate gsl/Makefile"
                     ;;
                 singlethread)
                     NPROCS=1
@@ -334,6 +348,80 @@ if [ -f module_load.sh ]; then
   source module_load.sh
 fi
 
+#{{{ pre-requisite
+BASE_FOLDER=$NTSMGSROOT
+if [ "$BASE_FOLDER" == "" ]; then
+  print_do_preq
+  exit 1
+elif [ "$BASE_FOLDER" != $(pwd) ]; then
+  print_do_preq
+  exit 1
+fi
+cd $BASE_FOLDER/models
+  touch ${MGS_TARGET_FILENAME}
+  echo '// MDL files
+#include "std/std_interfaces.mdl"
+#include "Life/Life.mdl"
+#include "Life/LifeDataCollectors.mdl"
+
+// MDF files
+
+' > ${MGS_TARGET_FILENAME}
+if [ ! -f ${MDF_TARGET} ]; then 
+  echo "ERROR: File ${MDF_TARGET} does not exist."
+fi
+cd -
+
+SUPPORTED_COLAB_CLIENTS="njit ucnz"
+for name in ${SUPPORTED_COLAB_CLIENTS}; do
+  NTSMacros_File=$BASE_FOLDER/nti/include/NTSMacros_${name}.h
+  if [ -f ${NTSMacros_File} ]; then rm ${NTSMacros_File}; fi
+done
+if [ ! -z $client ]; then
+  cd ${BASE_FOLDER}/gsl
+  if [ -f Makefile ]; then rm Makefile; fi
+  cd -
+fi
+
+if [ "${client}" == "njit" ]; then 
+  NTSMacros_File=$BASE_FOLDER/nti/include/NTSMacros_${client}.h
+  echo "
+  #define IDEA_CURRENTONCOMPT
+  #define IDEA_ILEAK
+  #define SIMULATE_VM
+  #define SIMULATE_CACYTO
+  " > ${NTSMacros_File}
+fi
+if [ "${client}" == "ucnz" ]; then 
+  NTSMacros_File=$BASE_FOLDER/nti/include/NTSMacros_${client}.h
+  echo "
+  #define IDEA_CURRENTONCOMPT
+  #define IDEA_ILEAK
+  #define SIMULATE_VM
+  #define SIMULATE_CACYTO
+  " > ${NTSMacros_File}
+fi
+
+Model2Use=$BASE_FOLDER/nti/include/Model2Use.h
+if [ ! -f "${Model2Use}"  ]; then
+  touch ${Model2Use}
+  echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
+  echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
+  echo "//--------------------" >> ${Model2Use}
+  echo "#define MODEL_TO_USE _MSN_2000_MAHON //with <value> is a macro defined in NTSMacros.h" >> ${Model2Use}
+  echo "//#define MAX_COMPUTE_ORDER <value> (range: 0-7)" >> ${Model2Use}
+  echo "//#define USE_DOUBLES   [to enable double-precision]" >> ${Model2Use} 
+  echo "#define NVU_NTS_EXTENSION  //we need this to enable NTS to work with NVU" >> ${Model2Use}
+  echo "#define SINGLE_JUNCTIONAL_CAPSULE_CAN_FORM_MULTIPLE_SYNAPSE ">> ${Model2Use} 
+  echo "//#define WAIT_FOR_REST" >> ${Model2Use}
+  echo "#ifdef WAIT_FOR_REST" >> ${Model2Use} 
+  echo "#define NOGATING_TIME 20.0 //ms" >> ${Model2Use} 
+  echo "#else " >> ${Model2Use} 
+  echo "#define NOGATING_TIME 0.0 //ms" >> ${Model2Use} 
+  echo "#endif" >> ${Model2Use} 
+fi 
+
+#}}}
 ########################################
 ### Check required tools ###
 ## 1. MPI library
@@ -477,33 +565,11 @@ if [[ -z "${SUITESPARSE}" ]]; then
   exit 1
 fi
 fi
-BASE_FOLDER=$NTSMGSROOT
 #}}}
 
 ########################################
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
-if [ "$BASE_FOLDER" == "" ]; then
-  echo "Please run: source set_env"
-  exit 1
-elif [ "$BASE_FOLDER" != $(pwd) ]; then
-  echo "Please run: source set_env"
-  exit 1
-fi
-cd $BASE_FOLDER/models
-if [ ! -f ${MDF_TARGET} ]; then 
-  touch ${MDF_TARGET}
-  echo '// MDL files
-#include "std/std_interfaces.mdl"
-#include "PointNeuronTools/PointNeuronTools.mdl"
-#include "Life/Life.mdl"
-#include "Life/LifeDataCollectors.mdl"
-
-// MDF files
-
-  ' > ${MDF_TARGET}
-fi
-cd -
 if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
   echo "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
@@ -705,7 +771,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       find . -iname "CG_*" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname "CG_*" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname ".*mdl" | xargs -I{} rm {}
-      touch $BASE_FOLDER/models/all.mdf
+      touch $BASE_FOLDER/models/${MDF_TARGET}
       #}}}
     fi
     cd -

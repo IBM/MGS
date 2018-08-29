@@ -119,6 +119,12 @@
 // effective diffusion of free Ca2+)
  //default
 //}}}
+#if __has_include("NTSMacros_njit.h")
+#include "NTSMacros_njit.h"
+#endif
+#if __has_include("NTSMacros_ucnz.h")
+#include "NTSMacros_ucnz.h"
+#endif
 
 ///////////////////////////////////////////////////////////////////////
 // list of paper models

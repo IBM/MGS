@@ -21,6 +21,7 @@
 //#include <sstream>
 #include "DataItem.h"
 #include "NumericDataItem.h"
+#include "NumericArrayDataItem.h"
 #include "FloatDataItem.h"
 #include "IntDataItem.h"
 #include "FunctorDataItem.h"
@@ -81,11 +82,13 @@ void BindNameFunctor::doExecute(LensContext *c,
 	 std::unique_ptr<DataItem> rval_ap;
 	 fdi->getFunctor()->execute(c, nullArgs, rval_ap);
          NumericDataItem* ndi = dynamic_cast<NumericDataItem*>(rval_ap.get());
-         if (ndi ==0) {
+         NumericArrayDataItem* nadi = dynamic_cast<NumericArrayDataItem*>(rval_ap.get());
+         if (ndi ==0 && nadi ==0) {
 	    throw SyntaxErrorException(
-	       "Functor doesn't return a numeric value in BindNameFunctor");
+	       "Functor doesn't return a numeric or numeric array value in BindNameFunctor");
          }
-	 ndi->duplicate(di);
+	 if (ndi) ndi->duplicate(di);
+	 else if (nadi) nadi->duplicate(di);
       } else {
 	 iter->second->duplicate(di);
       }
