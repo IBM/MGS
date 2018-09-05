@@ -1,6 +1,7 @@
 #include "BinomialDist.mdl"
 #include "CombineNVPairs.mdl"
 #include "ConnectNodeSetsFunctor.mdl"
+#include "FloatArrayMaker.mdl"
 #include "DstDimensionConstrainedSampler.mdl"
 #include "DstRefDistanceModifier.mdl"
 #include "DstRefGaussianWeightModifier.mdl"

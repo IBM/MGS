@@ -11,6 +11,8 @@
 #include "Connexon/Connexon.mdl"
 #include "PreSynapticPoint/PreSynapticPoint.mdl"
 
+#include "ChannelLeak/ChannelLeak.mdl"
+
 #include "ChannelNat/ChannelNat.mdl"
 #include "ChannelNap/ChannelNap.mdl"
 #include "ChannelNas/ChannelNas.mdl"

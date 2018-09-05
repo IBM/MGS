@@ -1106,6 +1106,7 @@ COLAB_NODE_MODULES :=  \\
         BackwardSolvePoint4  \\
         BackwardSolvePoint5  \\
         BackwardSolvePoint6  \\
+        ChannelLeak  \\
         ChannelNat  \\
         ChannelNap  \\
         ChannelNas  \\
@@ -1137,8 +1138,8 @@ COLAB_NODE_MODULES :=  \\
         SpineAttachment_VmCai \\
         SpineAttachment_VmCaiCaER \\
         Connexon \\
-
 """  # noqa
+
         retStr += \
             """\
 

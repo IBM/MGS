@@ -31,13 +31,24 @@ function contains() {
 
 function createMakeFile(){
   #{{{
+    PYTHON_FILE=./configure.py
+    if [ "${COLAB}" == "--colab" ]; then
+      if [ "${client}" == "njit" ]; then
+        PYTHON_FILE=./configure_njit.py
+      elif [ "${client}" == "ucnz" ]; then
+        PYTHON_FILE=./configure_ucnz.py
+      else
+        echo "Non suppported client ${client}"
+        exit;
+      fi
+    fi
     EXTRA_ARGS="${COLAB} ${BUILD_TARGET}"
     ## detect if -release is used for optimization and debugging options
     if [ "$RELEASE" == "-release" ]; then
       ## detect if building as NTS, MGS, or both
-      ./configure.py --O3 $PLATFORM_OPTS ${EXTRA_ARGS}
+      ${PYTHON_FILE} --O3 $PLATFORM_OPTS ${EXTRA_ARGS}
     else
-      ./configure.py --Og --debug ${DEBUGMACROS} $PLATFORM_OPTS ${EXTRA_ARGS}
+      ${PYTHON_FILE} --Og --debug ${DEBUGMACROS} $PLATFORM_OPTS ${EXTRA_ARGS}
     fi
   #}}}
 }
@@ -67,11 +78,11 @@ function print_help {
   --loglevel 2:         debug with debug_assert and debug_hh and print out debug for loops
 
   PREDEFINED TARGETS:
+  --as-MGS              (default) build generic Model Graph Simulator (MGS)
   --as-NTS              build Neural Tissue Simulator (NTS)
   --as-NTS-NVU          build NTS+NVU
   --as-NGS              build Neural Graph Simulator (NGS)
 
-  --colab:              build/configure shared libraries for colaborator's use
   "
   echo "NOTE: [] (optional), <> (required)"
   echo "NOTE: choose one value inside < >"
@@ -146,7 +157,14 @@ while getopts "$optspec" optchar; do
               ARMA="-arma"
               ;;
           colab) # collaboration's use 
-              COLAB="--colab"
+              client="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+              if [ -z $client ] || [ "${client:0:1}" == "-" ]; then
+                echo "Please select a value for --${OPTARG} option"
+                exit
+              else
+                echo "Build library for colaborator: " ${client}
+              fi
+              COLAB="--colab"  # don't use value here
               ;;
           loglevel=*)
             val=${OPTARG#*=}
