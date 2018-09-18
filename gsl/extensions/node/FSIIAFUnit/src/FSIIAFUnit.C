@@ -107,7 +107,7 @@ void FSIIAFUnit::updateV(RNG& rng)
 {
   // Neuron
   int nI=I.size();
-  double I_sum = 0.0;
+  I_sum = 0.0;
   int ip=0;
   for (int n=0; n<nI; ++n) {
     dI[n] = SHD.k[n]*I[n]*SHD.deltaT;

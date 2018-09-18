@@ -40,7 +40,7 @@ void LFPDataAnalyzer::initialize(RNG& rng)
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned,
-                             double*   // second
+                             std::pair<double*, double*>   // second
                              >
                     >
            >
@@ -48,35 +48,38 @@ void LFPDataAnalyzer::initialize(RNG& rng)
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
   assert(slices.size()==LFPs_individual.size());
+  assert(slices.size()==Membrane_individual.size());
   int sz=LFPs_individual.size();
   int mxrow=0;
   int mxcol=0;
   for (int j=0; j<sz; ++j) {
-    sorter[rows[j]][cols[j]][slices[j]]=LFPs_individual[j];
+    sorter[rows[j]][cols[j]][slices[j]] = std::make_pair(LFPs_individual[j], Membrane_individual[j]);
     if (mxrow<rows[j]) mxrow=rows[j];
     if (mxcol<cols[j]) mxcol=cols[j];
     if (mxslice<slices[j]) mxslice=slices[j];
   }
   LFPs_individual.clear();
+  Membrane_individual.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned,
-                             double*
+                             std::pair<double*, double*>
                              >
                     >
            >::iterator miter1, mend1=sorter.end();
   for (miter1=sorter.begin(); miter1!=mend1; ++miter1) {
     std::map<unsigned, 
              std::map<unsigned, 
-                      double*
+                      std::pair<double*, double*>
                       >
              >::iterator miter2, mend2=miter1->second.end();
     for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2) {
       std::map<unsigned, 
-               double*
+               std::pair<double*, double*>
                >::iterator miter3, mend3=miter2->second.end();
       for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3) {
-        LFPs_individual.push_back(miter3->second);
+        LFPs_individual.push_back(miter3->second.first);
+        Membrane_individual.push_back(miter3->second.second);
       }
     }
   }
@@ -156,6 +159,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
       ShallowArray<int>::iterator iterSlices, endSlices=slices.end();
       ShallowArray<double>::iterator iterLFPs=LFPs.begin(), endLFPs=LFPs.end();
       ShallowArray<double*>::iterator iterLFPs_ind,  endLFPs_ind=LFPs_individual.end();
+      ShallowArray<double*>::iterator iterMembrane_ind,  endMembrane_ind=Membrane_individual.end();
       double dist;
       // For each electrode ...
       for (int z=0; z<numElecPerDimZ; z++)
@@ -165,6 +169,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
               for (int x=0; x<numElecPerDimX; x++)
                 {
                   iterLFPs_ind = LFPs_individual.begin();
+                  iterMembrane_ind = Membrane_individual.begin();
                   iterRows = rows.begin();
                   iterCols = cols.begin();
                   iterSlices = slices.begin();
@@ -173,7 +178,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                   // with a 3D Gaussian weighting depending on distance
                   // to the elctrode.
                   for (int n=0; iterLFPs_ind != endLFPs_ind;
-                       ++iterLFPs_ind, ++iterRows, ++iterCols, ++iterSlices, n++)
+                       ++iterLFPs_ind, ++iterMembrane_ind, ++iterRows, ++iterCols, ++iterSlices, n++)
                     {
                       dist = sqrt(
                                   pow(elecCenterX[x]-*iterRows,2)
@@ -182,7 +187,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                                   );
                       if (dist <= elecRadius)
 	   		//std::cout << x << " " << y << " " << z << " " << n << " : " << contrib[x+y+z][n] << std::endl;
-                        *iterLFPs += contrib[x+y+z][n] * normal_pdf(dist, 0.0, elecSigma) * **iterLFPs_ind;
+                        *iterLFPs += contrib[x+y+z][n] * normal_pdf(dist, 0.0, elecSigma) * (**iterLFPs_ind + **iterMembrane_ind);
                     }
                   ++iterLFPs;
                 }

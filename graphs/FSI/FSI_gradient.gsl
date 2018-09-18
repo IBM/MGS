@@ -18,7 +18,7 @@ InitPhases = { init1, init2, initialize };
 RuntimePhases = { setContributions, run1, run2, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
-#define DIRECTORY "./2018aug25_rho-1_phi-1_gj8/"
+#define DIRECTORY "./2018aug28_rho1_phi1_Raw_gj12/"
 #define FILE_EXTENSION ".dat"
 #define DELTA_T 0.0001
 
@@ -28,7 +28,7 @@ FinalPhases = { finalize };
 NodeType FileDriverUnit(<
                         deltaT = DELTA_T,       // in s
 			sf = 0.001,
-			inputFileName = "HD44_08_Delta_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
+			inputFileName = "HD44_08_Raw_QuietRest_Ctx_zm_cutNeg_std_val1.txt",
                         op_random = 1,
                         scale = 1.25
                         >) {initializeShared->init1, readInputFile->run2, updateOutput->run1};
@@ -66,8 +66,8 @@ NodeType FSIIAFUnit(<
                       op_savePSPs = 0,
                       op_saveExtra = 0,
                       op_saveLayout = 1,
-                      mu_rho = -1.0,		// zenith angle (0<rho<pi) for unit's orientation (<0.5: uniform)
-                      mu_phi = -1.0		// azimut       (0<phi<2*pi)
+                      mu_rho = 1.0,		// zenith angle (0<rho<pi) for unit's orientation (<0.5: uniform)
+                      mu_phi = 1.0		// azimut       (0<phi<2*pi)
                       >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
 
 // Synaptic connectivity
@@ -83,8 +83,8 @@ NdplInAttrInit ipsp(IPSP);
 EachDstPropSrc gj_fsi(Unique(RadialSampler(1.733,2.0)));
 
 // Gap junctions "weights"
-BindName GJ1("conductance", 8.0, "identifier", "gj1", "connectionFraction", 0.2263);
-BindName GJ2("conductance", 8.0, "identifier", "gj2", "connectionFraction", 0.2263);
+BindName GJ1("conductance", 12.0, "identifier", "gj1", "connectionFraction", 0.2263);
+BindName GJ2("conductance", 12.0, "identifier", "gj2", "connectionFraction", 0.2263);
 NdplInAttrInit gj1(GJ1);
 NdplInAttrInit gj2(GJ1);
 
@@ -106,8 +106,8 @@ Grid CTX
 Grid FSI
 {
   Dimension(27,27,27);
-//  Layer(FSIs, FSIIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
-  Layer(FSIs, FSIIAFUnit, NormalizedGradientLayout(19683, -1.5, {0,25,0}, {1,1,1}), < nodekind="Nodes" >);
+  Layer(FSIs, FSIIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+//  Layer(FSIs, FSIIAFUnit, NormalizedGradientLayout(19683, -1.5, {0,25,0}, {1,1,1}), < nodekind="Nodes" >);
   InitNodes(.[].Layer(FSIs), heterN);
   connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
                   ipsp_fsi, outAttrDef, ipsp);
@@ -175,6 +175,6 @@ UnsignedTrigger setContribTrig("Iteration Trigger to set contribution of indiv n
 CTXFcollector.dataCollection() on iterTrigSampled;
 FSIcollector.dataCollection() on iterTrig;
 LFPanalyzer.dataCollection() on iterTrigSampled;
-LFPanalyzer.setContributions() on setContribTrig;
+//LFPanalyzer.setContributions() on setContribTrig;
 
 Stop on endTrig;

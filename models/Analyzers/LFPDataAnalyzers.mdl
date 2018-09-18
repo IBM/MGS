@@ -27,6 +27,7 @@ Variable LFPDataAnalyzer
   int mxslice;
   // In data
   double* [] LFPs_individual;
+  double* [] Membrane_individual;
   // Parameters about the size of LFP data to analyze
   int Xdim;
   int Ydim;
@@ -54,11 +55,12 @@ Variable LFPDataAnalyzer
   // Flags
   bool op_saveLFPs;
    
-  Connection Pre Node () Expects OutputProducer, Output2Producer
+  Connection Pre Node () Expects OutputProducer, Output2Producer, ActiveMembraneProducer
   {
     OutputProducer.output >> LFPs_individual;
     Output2Producer.output1 >> rhos;
     Output2Producer.output2 >> phis;
+    ActiveMembraneProducer.output >> Membrane_individual;
     getNodeIndices();
   }
  
