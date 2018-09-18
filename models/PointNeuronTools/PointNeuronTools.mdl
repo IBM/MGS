@@ -226,6 +226,13 @@ Interface DiffusionProducer {
   double* I_diff;
 }
 
+Interface GoodwinProducer 
+{
+  double* X;
+  double* Y;
+  double* Z;
+}
+
 Interface ActiveMembraneProducer {
   double * output;
 }
