@@ -219,6 +219,10 @@ Interface DiffusionProducer {
   double* I_diff;
 }
 
+Interface ActiveMembraneProducer {
+  double * output;
+}
+
 Struct Input {
   double* input;
   double weight;
