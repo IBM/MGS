@@ -1,14 +1,22 @@
 /*
-@ University of Canterbury 2017-2018. All rights reserved.
+=================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-03-25-2018
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+================================================================
+(C) Copyright University of Canterbury 2017-2018. All rights reserved.
+
+================================================================
 */
-// =================================================================
-// Licensed Materials - Property of IBM
-//
-// "Restricted Materials of IBM"
-//
-// (C) Copyright IBM Corp. 2005-2018  All rights reserved
-//
-// =================================================================
 #ifndef _COORDINATES_H
 #define _COORDINATES_H
 

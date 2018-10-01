@@ -1,3 +1,25 @@
+/*
+=================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-03-25-2018
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #ifndef ChannelKAs_H
 #define ChannelKAs_H
 
@@ -24,6 +46,12 @@
 #elif CHANNEL_KAs == KAs_EVANS_2012
 #define BASED_TEMPERATURE 35.0  // Celcius 
 #define Q10 2.5                            
+
+#elif CHANNEL_KAs == KAs_FUJITA_2012
+#define BASED_TEMPERATURE 25 // arbitrary
+#define Q10 1 // sets Tadj =1
+
+
 #endif
 
 #ifndef Q10

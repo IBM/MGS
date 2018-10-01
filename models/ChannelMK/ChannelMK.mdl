@@ -1,5 +1,25 @@
 #ifndef ChannelMK_MDL
 #define ChannelMK_MDL
+///* =================================================================
+//Licensed Materials - Property of IBM
+//
+//"Restricted Materials of IBM"
+//
+//BMC-YKT-07-18-2017
+//
+//(C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+//US Government Users Restricted Rights -
+//Use, duplication or disclosure restricted by
+//GSA ADP Schedule Contract with IBM Corp.
+//
+//=================================================================
+//
+//(C) Copyright 2018 New Jersey Institute of Technology.
+//
+//=================================================================
+//*/
+
 
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
@@ -10,7 +30,7 @@
 // higher current --> slower frequency (or high adaptation)
 //NOTE: Don't use CurrentArrayProducer as it causes conflict with GHK-formula
 //    Use IOCurrentArrayProducer instead
-Node ChannelMK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer {
+Node ChannelMK Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
 /*{{{*/
   //DATA
   // Hodgkin-Huxley-based formula
@@ -65,6 +85,7 @@ Node ChannelMK Implements ConductanceArrayProducer, ReversalPotentialArrayProduc
   ConductanceArrayProducer.conductanceArray << &g;
   ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
   BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
   IOCurrentArrayProducer.currents << &Iion;
 
   InAttrPSet {

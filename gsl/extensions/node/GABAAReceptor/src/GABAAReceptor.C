@@ -1,17 +1,23 @@
-// =================================================================
-// Licensed Materials - Property of IBM
-//
-// "Restricted Materials of IBM"
-//
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
 
 #include "Lens.h"
 #include "GABAAReceptor.h"
@@ -29,6 +35,18 @@
 //   C <==>[alpha * [NT]][beta] O
 // then given r = fO (fraction of AMPAR in Open state)
 //    dr/dt = alpha * NT * (1-r) - beta * r
+#if RECEPTOR_GABAA == GABAAR_MULTIPLEPARAMS
+  #define ALPHA a
+  #define BETA b
+  #if SYNAPSE_MODEL_STRATEGY == USE_PRESYNAPTICPOINT
+  #define NEUROTRANSMITTER      \
+    (getSharedMembers().NTmax / \
+     (1.0 + exp(-(*Vpre - H_theta) / H_sigma)))
+  #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
+  #define NEUROTRANSMITTER *GABA
+  #endif
+
+#else 
 #define ALPHA (getSharedMembers().alpha)
 #define BETA (getSharedMembers().beta)
 
@@ -39,6 +57,7 @@
 
 #elif SYNAPSE_MODEL_STRATEGY == USE_SYNAPTICCLEFT
 #define NEUROTRANSMITTER *GABA
+#endif
 #endif
 
 #define DT (*(getSharedMembers().deltaT))

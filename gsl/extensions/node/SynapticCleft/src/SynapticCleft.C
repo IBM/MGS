@@ -2,6 +2,21 @@
 #include "Lens.h"
 #include "SynapticCleft.h"
 #include "rndm.h"
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+*/
 
 #include "MaxComputeOrder.h"
 #include "NodeProxyBase.h"
@@ -89,13 +104,13 @@ void SynapticCleft::produceState(RNG& rng)
     float J_decay = 1.0 / ((getSharedMembers().tau_GABA)) *
                     (GABA - getSharedMembers().GABA_baseline);  // [uM/msec]
     //GABA = GABA +
-    //       dt * ((getSharedMembers().GABA_max /
+    //       dt * (GABA_max /
     //              (1.0 + exp(-(*V - getSharedMembers().Vp_GABA) /
     //                         getSharedMembers().Kp_GABA))) -
     //             J_decay);
     GABA -= dt * J_decay;
     //GABA = GABA +
-    //  ((getSharedMembers().GABA_max /
+    //  (GABA_max /
     //    (1.0 + exp(-(*V - getSharedMembers().Vp_GABA) /
     //    	   getSharedMembers().Kp_GABA))) -
     //   dt * J_decay);

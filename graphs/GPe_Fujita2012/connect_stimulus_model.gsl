@@ -1,0 +1,14 @@
+
+#if STIMULUS_CASE == CASE_08
+polyConnect(timeStep, somaClamp, <>, <>);
+polyConnect(somaClamp, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+polyConnect(tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHORDER=0, NEURON_INDEX=0>), somaClamp, <>, <identifier="JUNCTION">);
+#endif
+
+#if STIMULUS_CASE == CASE_01
+   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
+#endif
+//   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Voltage", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);
+//   polyConnect(pointCurrentSource, tissueFunctor("Probe", <CATEGORY="BRANCH", TYPE="Voltage", BRANCHTYPE=3, NEURON_INDEX=0>), <>, <identifier="stimulation", idx=-1>);
+//   polyConnect(pointCalciumSource, tissueFunctor("Probe", <CATEGORY="JUNCTION", TYPE="Calcium", BRANCHTYPE=1, NEURON_INDEX=0>), <>, <identifier="stimulation">);

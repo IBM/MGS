@@ -1,3 +1,25 @@
+/*
+=================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-03-25-2018
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #include "CG_ChannelKAs.h"
 #include "ChannelKAs.h"
 #include "Lens.h"
@@ -105,6 +127,50 @@ SegmentDescriptor ChannelKAs::_segmentDescriptor;
 #define BHC 0.002
 #define BHV 50.0
 #define BHD -70
+
+#elif CHANNEL_KAs == KAs_FUJITA_2012                                                
+// Gate: m^4 * h                                                            
+//Reference from Fujita et al, Kv4s slow inactivating  type A
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)                 
+//                                                      
+//m activation, h inactivation
+// dm/dt = (minf( V ) - V)/tau_m(V) 
+// dh/dt = (hinf( V ) - V)/tau_h(V) 
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))                               
+// hinf  = 1 / (1 + exp( (V - VHALF_H) / k_H))                               
+// tau_m = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - V)/SIG0_M) + exp( (PHI_M - V)/SIG1_M) )
+// tau_h = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - V)/SIG0_H) + exp( (PHI_H - V)/SIG1_H) )
+//
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+#define VHALF_M -49
+
+#define k_M 12.5
+
+#define VHALF_H -83
+
+#define k_H -10
+
+#define TAU0_M 0.25
+
+#define TAU1_M 7.0
+
+#define PHI_M -49
+
+#define SIG0_M 29
+
+#define SIG1_M -29
+
+#define TAU0_H 50
+
+#define TAU1_H 121
+
+#define PHI_H -83
+
+#define SIG0_H 10
+
+#define SIG1_H -10
+
+
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -224,6 +290,17 @@ void ChannelKAs::update(RNG& rng)
       dyn_var_t qh = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
       m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
       h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    }
+#elif CHANNEL_KAs == KAs_FUJITA_2012
+    {
+ dyn_var_t taum = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - v)/SIG0_M) + exp( (PHI_M - v)/SIG1_M) );
+   dyn_var_t qm = dt  / (taum * 2);
+ dyn_var_t tauh = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - v)/SIG0_H) + exp( (PHI_H - v)/SIG1_H) );
+   dyn_var_t qh = dt  / (tauh * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+   dyn_var_t h_inf = 1.0 / (1 + exp(( VHALF_H - v) / k_H));                               
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
     }
 #else
     NOT IMPLEMENTED YET;
@@ -413,6 +490,11 @@ void ChannelKAs::initialize(RNG& rng)
       h[i] = ah / (ah+bh);
       g[i] = gbar[i] * m[i] * m[i] * (frac_inact * h[i] + (1 - frac_inact));
     }
+ #elif CHANNEL_KAs == KAs_FUJITA_2012
+   m[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M));
+   h[i] =1.0 / (1 + exp( (VHALF_H-v) / k_H));                               
+   g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i]* h[i];
+    
 #else
     NOT IMPLEMENTED YET;
 #endif

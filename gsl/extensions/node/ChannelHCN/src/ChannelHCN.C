@@ -1,17 +1,23 @@
-// =================================================================
-// Licensed Materials - Property of IBM
-//
-// "Restricted Materials of IBM"
-//
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
 
 #include "Lens.h"
 #include "ChannelHCN.h"
@@ -21,12 +27,22 @@
 #include "SegmentDescriptor.h"
 #include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
+#include "MaxComputeOrder.h"
+#include "Branch.h"
 
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+#include <cmath>
 
 #define SMALL 1.0E-6
+#define decimal_places 6     
+#define fieldDelimiter "\t"  
+
+#if defined(WRITE_GATES)                                      
+SegmentDescriptor ChannelHCN::_segmentDescriptor;
+#endif
+
 
 #if CHANNEL_HCN == HCN_HUGUENARD_MCCORMICK_1992
 /*
@@ -81,6 +97,34 @@ The choice N = 1 is justified as there is no apparent delay in activation
 #define AMD 11.9
 #define BMC 0.193
 #define BMD 33.1
+
+#elif CHANNEL_HCN == HCN_FUJITA_2012                                                
+// Gate: m                                                               
+//Reference from Fujita et al, 
+// Hyperpolarization-activated cyclic nucleotide-modulated cation current
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)                 
+//                                                      
+//m activation
+// dm/dt = (minf( V ) - V)/tau_m(V) 
+//  dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift) / k_M));
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))                               
+// tau_h = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - V)/SIG0_M) + exp( (PHI_M - V)/SIG1_M) )
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+//#define Vshift 7  // [mV]                                                           
+#define VHALF_M -76.4
+
+#define k_M -3.3
+
+#define TAU0_M 0
+
+#define TAU1_M 3625
+
+#define PHI_M -76.4
+
+#define SIG0_M 6.56
+
+#define SIG1_M -7.48
+
 #endif
 
 dyn_var_t ChannelHCN::conductance(int i)
@@ -105,6 +149,23 @@ dyn_var_t ChannelHCN::conductance(int i)
 void ChannelHCN::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+
+#if defined(WRITE_GATES)                                                  
+  bool is_write = false;
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+    if (currentTime >= _prevTime + IO_INTERVAL)                           
+    {                                                                     
+      (*outFile) << std::endl;                                            
+      (*outFile) <<  currentTime;                                         
+      _prevTime = currentTime;                                            
+      is_write = true;
+    }
+  }
+#endif
+ 
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -135,15 +196,34 @@ void ChannelHCN::update(RNG& rng)
     dyn_var_t pm = 0.5 * dt * (am + bm) * getSharedMembers().Tadj;
     m[i] = (dt * am * getSharedMembers().Tadj + m[i] * (1.0 - pm)) / (1.0 + pm);
     g[i] = gbar[i] * m[i];
+#elif CHANNEL_HCN == HCN_FUJITA_2012
+     {
+   dyn_var_t taum = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - v)/SIG0_M) + exp( (PHI_M - v)/SIG1_M) );
+   dyn_var_t qm = dt  / (taum * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    g[i] = gbar[i] * m[i];
+    }
+
+
 #else
 	assert(0);
 #endif
 		Iion[i] = g[i] * (v - getSharedMembers().E_HCN[0]);
+ #if defined(WRITE_GATES)                                                  
+    if (is_write)
+    {           
+      (*outFile) << std::fixed << fieldDelimiter << m[i];                 
+   }                                                                     
+#endif                                                                    
+ 
   }
 }
 
 void ChannelHCN::initialize(RNG& rng)
 {
+    if (std::abs(gbar_scale) <= 0.000001)
+        gbar_scale = 1.0;
   unsigned size = branchData->size;
   assert(V);
   assert(gbar.size() == size);
@@ -217,6 +297,24 @@ void ChannelHCN::initialize(RNG& rng)
     gbar[i] = gbar[i] * gbar_scale;
   }
 
+#if defined(WRITE_GATES)                                      
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    std::ostringstream os;                                    
+    std::string fileName = "gates_HCN.txt";                       
+    os << fileName << getSimulation().getRank() ;              
+    outFile = new std::ofstream(os.str().c_str());            
+    outFile->precision(decimal_places);    
+(*outFile) << "#Time" << fieldDelimiter << "gates: m[, m]*"; 
+    _prevTime = 0.0;                                          
+    float currentTime = 0.0;  // should also be (dt/2)                                 
+    (*outFile) << std::endl;                                  
+    (*outFile) <<  currentTime;                               
+  }
+#endif
+ 
+
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -236,10 +334,22 @@ void ChannelHCN::initialize(RNG& rng)
     dyn_var_t bm = BMC * exp(v / BMD);
     m[i] = am / (am + bm);
     g[i] = gbar[i] * m[i];
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+   m[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M)); 
+   g[i] = gbar[i] * m[i];
 #else
     assert(0);
 #endif
 		Iion[i] = g[i] * (v - getSharedMembers().E_HCN[0]);
+
+#if defined(WRITE_GATES)                                      
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << m[i];       
+    }
+#endif                                                        
+ 
   }
 }
 
