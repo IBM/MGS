@@ -1,3 +1,24 @@
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #include "Lens.h"
 #include "ChannelNap.h"
 #include "CG_ChannelNap.h"
@@ -80,6 +101,70 @@ const dyn_var_t ChannelNap::_Vmrange_tauh[] = {-100, -90, -80, -70, -60, -50, -4
 dyn_var_t ChannelNap::tauhNap[] = {4500, 4750, 5200, 6100, 6300, 5000, 4250, 3500,
                               3000, 2700, 2500, 2100, 2100, 2100, 2100};
 std::vector<dyn_var_t> ChannelNap::Vmrange_tauh;
+#elif CHANNEL_NAP == NAP_FUJITA_2012
+// Gate: m^3 * h * s                                                               
+//Reference from Fujita et al
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)                 
+//                                                      
+//m activation, h inactivation, s slow inactivation
+// dm/dt = (minf( V ) - V)/tau_m(V) 
+// dh/dt = (hinf( V ) - V)/tau_h(V) 
+// ds/dt = (sinf( V ) - V)/tau_s(V) 
+//  dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift) / k_M));
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))                               
+// hinf  = 1 / (1 + exp( (V - VHALF_H) / k_H))                               
+// sinf  = S_MIN + (1-S_MIN) / (1 + exp( (V - VHALF_S) / k_S))                               
+// tau_m = TAU0_M  
+// tau_h = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - V)/SIG0_H) + exp( (PHI_H - V)/SIG1_H) )
+// tau_s = TAU0_S + (TAU1_S - TAU0_S) / ( exp( (PHI_S - V)/SIG0_S) + exp( (PHI_S - V)/SIG1_S) )
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+//#define Vshift 7  // [mV]                                                           
+#define VHALF_M -57.7
+
+#define k_M 5.7
+
+#define VHALF_H -57
+
+#define k_H -4
+
+#define H_MIN 0.154
+
+#define VHALF_S -10
+
+#define k_S -4.9
+
+#define TAU0_M 0.03
+
+#define TAU1_M 0.146
+
+#define PHI_M -42.6
+
+#define SIG0_M 14.4
+
+#define SIG1_M -14.4
+
+#define TAU0_H 10
+
+#define TAU1_H 17
+
+#define PHI_H -34
+
+#define SIG0_H 26
+
+#define SIG1_H -31.9
+
+#define AALPHA_S -0.00000288
+
+#define BALPHA_S -0.000049
+
+#define KALPHA_S 4.63
+
+#define ABETA_S 0.00000694
+
+#define BBETA_S 0.000447
+
+#define KBETA_S -2.63
+
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -147,7 +232,28 @@ void ChannelNap::update(RNG& rng)
     dyn_var_t qm = dt * getSharedMembers().Tadj / (tau_m * 2); 
                                                                
     m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);      
-    }                                                          
+    }
+
+ #elif CHANNEL_NAP == NAP_FUJITA_2012
+    {
+
+   dyn_var_t taum = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - v)/SIG0_M) + exp( (PHI_M - v)/SIG1_M) );
+   dyn_var_t qm = dt  / (taum * 2);
+   dyn_var_t tauh = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - v)/SIG0_H) + exp( (PHI_H - v)/SIG1_H) );
+   dyn_var_t qh = dt  / (tauh * 2);
+   dyn_var_t ah = (AALPHA_S * v + BALPHA_S) / (1 - exp( (v+BALPHA_S/AALPHA_S)/KALPHA_S));
+   dyn_var_t bh = (ABETA_S * v + BBETA_S) / (1 - exp( (v+BBETA_S/ABETA_S)/KBETA_S));
+   dyn_var_t taus = 1 / (ah + bh);
+   dyn_var_t qs = dt  / (taus * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+   dyn_var_t h_inf = H_MIN +  (1.0-H_MIN) / (1 + exp(( VHALF_H - v) / k_H));
+   dyn_var_t s_inf  =  1.0 / (1 + exp( ( VHALF_S - v) / k_S));                               
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    s[i] = (2 * s_inf * qs - s[i] * (qs - 1)) / (qs + 1);
+    }
+
+   
 #else
     NOT IMPLEMENTED YET
 #endif
@@ -166,6 +272,8 @@ void ChannelNap::update(RNG& rng)
     g[i]=gbar[i]*m[i]*m[i]*m[i]*h[i];
 #elif CHANNEL_NAP == NAP_MAHON_2000   
     g[i] = gbar[i] * m[i] ;           
+#elif CHANNEL_NAP == NAP_FUJITA_2012
+    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i] * s[i];    
 #endif
 #ifdef WAIT_FOR_REST
     float currentTime = getSimulation().getIteration() * (*getSharedMembers().deltaT);
@@ -198,6 +306,9 @@ void ChannelNap::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
+#if CHANNEL_NAP == NAP_FUJITA_2012
+  if (s.size() != size) s.increaseSizeTo(size);
+#endif
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
 	SegmentDescriptor segmentDescriptor;
@@ -261,6 +372,11 @@ void ChannelNap::initialize(RNG& rng)
 #elif CHANNEL_NAP == NAP_MAHON_2000                 
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));    
     g[i] = gbar[i] * m[i] ;   
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+   m[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M));
+   h[i] = H_MIN + (1-H_MIN) / (1 + exp((VHALF_H-v) / k_H));
+   s[i]  = 1.0  / (1 + exp( (VHALF_S-v) / k_S));   
+   g[i] = gbar[i]*m[i]*m[i]*m[i]*h[i]*s[i];   
 #else
     NOT IMPLEMENTED YET
 #endif

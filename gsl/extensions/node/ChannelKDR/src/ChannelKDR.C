@@ -1,16 +1,21 @@
-// =================================================================
-// Licensed Materials - Property of IBM
-// "Restricted Materials of IBM"
-//
-// BMC-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
+/* =================================================================
+ Licensed Materials - Property of IBM
+ "Restricted Materials of IBM"
+
+ BMC-YKT-07-18-2017
+
+ (C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+ US Government Users Restricted Rights -
+ Use, duplication or disclosure restricted by
+ GSA ADP Schedule Contract with IBM Corp.
+
+ =================================================================
+
+ (C) Copyright 2018 New Jersey Institute of Technology.
+
+ =================================================================
+*/
 
 #include "Lens.h"
 #include "ChannelKDR.h"
@@ -26,9 +31,18 @@
 // NOTE: play a major role in setting interspike interval under constant Iinject
 //       and shape late repolarization phase of AP --> prevent doublet
 #define SMALL 1.0E-6
+#define decimal_places 6
+#define fieldDelimiter "\t"
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+static pthread_once_t once_KDR = PTHREAD_ONCE_INIT;
+#if defined(WRITE_GATES)                                      
+SegmentDescriptor ChannelKDR::_segmentDescriptor;
+#endif
+
+
 
 // NOTE: vtrap(x,y) = x/(exp(x/y)-1)
 // a_m  = AMC*(V - AMV)/( exp( (V - AMV)/AMD ) - 1.0 )
@@ -143,6 +157,45 @@
 #define BNC 0.0043  
 #define BNV (-44.0 + Vh_shift) // mV 
 #define BND 34.0  // mV
+
+
+#elif CHANNEL_KDR == KDR_FUJITA_2012                                                
+// Gate: m^4 * h                                                            
+//Reference from Fujita et al, Kv2 slow delayed rectifier
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)                 
+//                                                      
+//m activation, h inactivation
+// dm/dt = (minf( V ) - V)/tau_m(V) 
+// dh/dt = (hinf( V ) - V)/tau_h(V) 
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))                               
+// hinf  = H_MIN + (1-H_MIN) / (1 + exp( (V - VHALF_H) / k_H))                               
+// tau_m = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - V)/SIG0_M) + exp( (PHI_M - V)/SIG1_M) )
+// tau_h = TAU0_H 
+//
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+#define VHALF_M -33.2
+
+#define k_M 9.1
+
+#define VHALF_H -20
+
+#define k_H -10
+
+#define H_MIN 0.2
+
+#define TAU0_M 0.1
+
+#define TAU1_M 3.0
+
+#define PHI_M -33.2
+
+#define SIG0_M 21.7
+
+#define SIG1_M -13.9
+
+#define TAU0_H 3400
+
+
 #endif
 
 #ifndef scale_tau_n
@@ -155,6 +208,22 @@
 void ChannelKDR::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+#if defined(WRITE_GATES)                                                  
+  bool is_write = false;
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+    if (currentTime >= _prevTime + IO_INTERVAL)                           
+    {                                                                     
+      (*outFile) << std::endl;                                            
+      (*outFile) <<  currentTime;                                         
+      _prevTime = currentTime;                                            
+      is_write = true;
+    }
+  }
+#endif
+ 
   for (unsigned i=0; i<branchData->size; ++i) 
   {
     dyn_var_t v=(*V)[i];
@@ -233,9 +302,33 @@ void ChannelKDR::update(RNG& rng)
     n[i] = (2 * n_inf * qn - n[i] * (qn - 1)) / (qn + 1);                
     g[i] = gbar[i] * pow(n[i], 4); 
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+ #elif CHANNEL_KDR == KDR_FUJITA_2012
+    {
+ dyn_var_t taum = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - v)/SIG0_M) + exp( (PHI_M - v)/SIG1_M) );
+   dyn_var_t qm = dt  / (taum * 2);
+   dyn_var_t tauh = TAU0_H;
+   dyn_var_t qh = dt  / (tauh * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+   dyn_var_t h_inf  = H_MIN + (1-H_MIN) / (1 + exp( ( VHALF_H - v) / k_H));                               
+   // in paper, m,h used. Naming convention for m retained in equation, but switch to n 
+   // for consistency with regard to data storage
+    n[i] = (2 * m_inf * qm - n[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    g[i] = gbar[i] * n[i] * n[i] * n[i] * n[i] * h[i];
+    Iion[i] = g[i] * (v-getSharedMembers().E_K[0]);
+    }
 #else
     NOT IMPLEMENTED YET;
 #endif
+#if defined(WRITE_GATES)                                                  
+    if (is_write)
+    {           
+      (*outFile) << std::fixed << fieldDelimiter << n[i];                 
+    #if CHANNEL_KDR == KDR_FUJITA_2012
+      (*outFile) << std::fixed << fieldDelimiter << h[i];
+    #endif
+   }
+#endif                                                                    
   }
 }
 
@@ -257,6 +350,9 @@ void ChannelKDR::initialize(RNG& rng)
   assert (V->size()==size);
   if (g.size()!=size) g.increaseSizeTo(size);
   if (n.size()!=size) n.increaseSizeTo(size);
+#if CHANNEL_KDR == KDR_FUJITA_2012
+  if (h.size()!=size) h.increaseSizeTo(size);
+#endif
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
   // initialize
   SegmentDescriptor segmentDescriptor;
@@ -309,7 +405,26 @@ void ChannelKDR::initialize(RNG& rng)
       gbar[i] = gbar_default;
     }
   }
-
+#if defined(WRITE_GATES)                                      
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    std::ostringstream os;                                    
+    std::string fileName = "gates_KDR.txt";                       
+    os << fileName << getSimulation().getRank() ;              
+    outFile = new std::ofstream(os.str().c_str());            
+    outFile->precision(decimal_places);    
+	#if CHANNEL_KDR == KDR_FUJITA_2012    
+    (*outFile) << "#Time" << fieldDelimiter << "gates: m, h [, m,h]*"; 
+	#else
+    (*outFile) << "#Time" << fieldDelimiter << "gates: m [, m]*"; 
+	#endif
+    _prevTime = 0.0;                                          
+    float currentTime = 0.0;  // should also be (dt/2)                                 
+    (*outFile) << std::endl;                                  
+    (*outFile) <<  currentTime;                               
+  }
+#endif
   for (unsigned i=0; i<size; ++i) 
   {
     dyn_var_t v=(*V)[i];
@@ -349,13 +464,31 @@ void ChannelKDR::initialize(RNG& rng)
     dyn_var_t an = ANC * vtrap( v - ANV, AND);
     dyn_var_t bn = BNC / (exp((v - BNV) / BND));
     n[i] = an / (an + bn);
-    g[i] = gbar[i] * pow(n[i], 4); 
+    g[i] = gbar[i] * pow(n[i], 4);
+#elif CHANNEL_KDR == KDR_FUJITA_2012
+   n[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M));
+   h[i]  = H_MIN + (1-H_MIN) / (1 + exp( (VHALF_H-v) / k_H));                               
+   g[i] = gbar[i] * n[i] * n[i] * n[i] * n[i] * h[i];
 #endif
+#if defined(WRITE_GATES)                                      
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << n[i];       
+      #if CHANNEL_KDR == KDR_FUJITA_2012
+      (*outFile) << std::fixed << fieldDelimiter << h[i];  
+      #endif
+   } 
+#endif                                                        
+ 
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
   }
 }
 
 ChannelKDR::~ChannelKDR()
 {
+#if defined(WRITE_GATES)
+   if (outFile) outFile->close();
+#endif
 }
 

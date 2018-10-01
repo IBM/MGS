@@ -1,3 +1,25 @@
+/*
+=================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-03-25-2018
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #include "Lens.h"
 #include "ChannelKAf.h"
 #include "CG_ChannelKAf.h"
@@ -10,11 +32,17 @@
 #include "GlobalNTSConfig.h"
 #include "NumberUtils.h"
 #include "SegmentDescriptor.h"
+#include "Branch.h"
 
 #define SMALL 1.0E-6
-
+#define decimal_places 6
+#define fieldDelimiter "\t"
 
 static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
+#if defined(WRITE_GATES)
+SegmentDescriptor ChannelKAf::_segmentDescriptor;
+#endif
+
 
 //
 // This is an implementation of the fast component of A-type (KAf, KAt)
@@ -58,12 +86,12 @@ static pthread_once_t once_KAf = PTHREAD_ONCE_INIT;
 #define THV 83.0
 #define THD 23.0
 
-#elif CHANNEL_KAf == KAf_MAHON_2000   
+#elif CHANNEL_KAf == KAf_MAHON_2000
 // Mahon 2000
 // NOTE: Similar to Surmeier et al. (1989) estimation A-type LVA-neuron
 // IKAf = g * m * h * (V-E)
-#define VHALF_M -33.1                 
-#define k_M -7.5                       
+#define VHALF_M -33.1
+#define k_M -7.5
 #define VHALF_H -70.4
 #define k_H 7.6
 
@@ -109,7 +137,52 @@ std::vector<dyn_var_t> ChannelKAf::Vmrange_taum;
 #define BHV (-55.0 + Eleak)
 #define BHD -11.0
 #define scale_tau_m 1.5
-#define scale_tau_h 0.67 
+#define scale_tau_h 0.67
+
+#elif CHANNEL_KAf == KAf_FUJITA_2012
+// Gate: m^4 * h
+//Reference from Fujita et al, Kv4f fast inactivating  type A
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)
+//
+//m activation, h inactivation
+// dm/dt = (minf( V ) - V)/tau_m(V)
+// dh/dt = (hinf( V ) - V)/tau_h(V)
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))
+// hinf  = 1 / (1 + exp( (V - VHALF_H) / k_H))
+// tau_m = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - V)/SIG0_M) + exp( (PHI_M - V)/SIG1_M) )
+// tau_h = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - V)/SIG0_H) + exp( (PHI_H - V)/SIG1_H) )
+//
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+#define VHALF_M -49
+
+#define k_M 12.5
+
+#define VHALF_H -83
+
+#define k_H -10
+
+#define TAU0_M 0.25
+
+#define TAU1_M 7.0
+
+#define PHI_M -49
+
+#define SIG0_M 29
+
+#define SIG1_M -29
+
+#define TAU0_H 7.0
+
+#define TAU1_H 21
+
+#define PHI_H -83
+
+#define SIG0_H 10
+
+#define SIG1_H -10
+
+
+
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -118,7 +191,7 @@ NOT IMPLEMENTED YET
 #define scale_tau_m 1.0
 #endif
 #ifndef scale_tau_h
-#define scale_tau_h 1.0 
+#define scale_tau_h 1.0
 #endif
 
 // GOAL: update gates using v(t+dt/2) and gate(t-dt/2)
@@ -127,6 +200,24 @@ NOT IMPLEMENTED YET
 void ChannelKAf::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+
+#if defined(WRITE_GATES)
+  bool is_write = false;
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;
+    if (currentTime >= _prevTime + IO_INTERVAL)
+    {
+      (*outFile) << std::endl;
+      (*outFile) <<  currentTime;
+      _prevTime = currentTime;
+      is_write = true;
+    }
+  }
+#endif
+
+
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -159,15 +250,15 @@ void ChannelKAf::update(RNG& rng)
       m[i] = (2.0 * pm * minf + m[i] * (1.0 - pm)) / (1.0 + pm);
       h[i] = (2.0 * ph * hinf + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
-#elif CHANNEL_KAf == KAf_MAHON_2000                                
+#elif CHANNEL_KAf == KAf_MAHON_2000
     {
-    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));       
-    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));       
-    
-    dyn_var_t pm = 0.5*dt*getSharedMembers().Tadj / TAU_M;        
-    dyn_var_t ph = 0.5*dt*getSharedMembers().Tadj / TAU_H;        
-    m[i] = (2.0*pm*m_inf + m[i]*(1.0 - pm))/(1.0 + pm);            
-    h[i] = (2.0*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);            
+    dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M) / k_M));
+    dyn_var_t h_inf = 1.0 / (1 + exp((v - VHALF_H) / k_H));
+
+    dyn_var_t pm = 0.5*dt*getSharedMembers().Tadj / TAU_M;
+    dyn_var_t ph = 0.5*dt*getSharedMembers().Tadj / TAU_H;
+    m[i] = (2.0*pm*m_inf + m[i]*(1.0 - pm))/(1.0 + pm);
+    h[i] = (2.0*ph*h_inf + h[i]*(1.0 - ph))/(1.0 + ph);
     }
 #elif CHANNEL_KAf == KAf_WOLF_2005
     {
@@ -206,6 +297,20 @@ void ChannelKAf::update(RNG& rng)
       dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj / scale_tau_h;
       h[i] = (dt * ah + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
+
+ #elif CHANNEL_KAf == KAf_FUJITA_2012
+    {
+ dyn_var_t taum = TAU0_M + (TAU1_M - TAU0_M) / ( exp( (PHI_M - v)/SIG0_M) + exp( (PHI_M - v)/SIG1_M) );
+   dyn_var_t qm = dt  / (taum * 2);
+ dyn_var_t tauh = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - v)/SIG0_H) + exp( (PHI_H - v)/SIG1_H) );
+   dyn_var_t qh = dt  / (tauh * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+   dyn_var_t h_inf = 1.0 / (1 + exp(( VHALF_H - v) / k_H));
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    }
+
+
 #else
     NOT IMPLEMENTED YET;
 #endif
@@ -217,31 +322,41 @@ void ChannelKAf::update(RNG& rng)
       if (h[i] < 0.0) { h[i] = 0.0; }
       else if (h[i] > 1.0) { h[i] = 1.0; }
     }
-    
+
 #if CHANNEL_KAf == KAf_TRAUB_1994
     g[i] = gbar[i] * m[i] * h[i];
-#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000
+#elif CHANNEL_KAf == KAf_KORNGREEN_SAKMANN_2000 || \
+    CHANNEL_KAf == KAf_FUJITA_2012
     g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_MAHON_2000
-    g[i] = gbar[i] * m[i] * h[i];    
+    g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_WOLF_2005
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_EVANS_2012
     g[i] = gbar[i] * m[i] * m[i] * h[i];
 #endif
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // 'v'(t+dt/2) and gate(t+dt/2)
+ #if defined(WRITE_GATES)
+    if (is_write)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << m[i];
+      (*outFile) << std::fixed << fieldDelimiter << h[i];
+   }
+#endif
+
+
   }
 }
 
-// GOAL: To meet second-order derivative, the gates is calculated to 
+// GOAL: To meet second-order derivative, the gates is calculated to
 //     give the value at time (t0+dt/2) using data voltage v(t0)
-//  NOTE: 
+//  NOTE:
 //    If steady-state formula is used, then the calculated value of gates
 //            is at time (t0); but as steady-state, value at time (t0+dt/2) is the same
-//    If non-steady-state formula (dy/dt = f(v)) is used, then 
+//    If non-steady-state formula (dy/dt = f(v)) is used, then
 //        once gate(t0) is calculated using v(t0)
 //        we need to estimate gate(t0+dt/2)
-//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2 
+//                  gate(t0+dt/2) = gate(t0) + f(v(t0)) * dt/2
 void ChannelKAf::initialize(RNG& rng)
 {
   pthread_once(&once_KAf, ChannelKAf::initialize_others);
@@ -284,7 +399,7 @@ void ChannelKAf::initialize(RNG& rng)
         if ((*dimensions)[i]->dist2soma < gbar_dists[j]) break;
       }
       gbar[i] = gbar_values[j];
-    } 
+    }
     else if (gbar_branchorders.size() > 0)
     {
       unsigned int j;
@@ -317,10 +432,28 @@ void ChannelKAf::initialize(RNG& rng)
       gbar[i] = gbar_default;
     }
   }
+
+#if defined(WRITE_GATES)
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    std::ostringstream os;
+    std::string fileName = "gates_KAf.txt";
+    os << fileName << getSimulation().getRank();
+    outFile = new std::ofstream(os.str().c_str());
+    outFile->precision(decimal_places);
+    (*outFile) << "#Time" << fieldDelimiter << "gates: m, h [, m,h]*";
+    _prevTime = 0.0;
+    float currentTime = 0.0;  // should also be (dt/2)
+    (*outFile) << std::endl;
+    (*outFile) <<  currentTime;
+  }
+#endif
+
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
-#if CHANNEL_KAf == KAf_TRAUB_1994    
+#if CHANNEL_KAf == KAf_TRAUB_1994
     dyn_var_t am = AMC * vtrap((v - AMV), AMD);
     dyn_var_t bm = (BMC * (v - BMV)) / (exp((v - BMV) / BMD) - 1);
     dyn_var_t ah = AHC * exp((v - AHV) / AHD);
@@ -332,10 +465,10 @@ void ChannelKAf::initialize(RNG& rng)
     m[i] = 1.0 / (1.0 + exp(-(v + IMV) / IMD));
     h[i] = 1.0 / (1.0 + exp((v + IHV) / IHD));
     g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i] * h[i];
-#elif CHANNEL_KAf == KAf_MAHON_2000                  
-    m[i] = 1.0 / (1 + exp(-(v - VHALF_M) / k_M));    
-    h[i] = 1.0 / (1 + exp(-(v - VHALF_H) / k_H));    
-    g[i] = gbar[i] * m[i] * h[i];                    
+#elif CHANNEL_KAf == KAf_MAHON_2000
+    m[i] = 1.0 / (1 + exp(-(v - VHALF_M) / k_M));
+    h[i] = 1.0 / (1 + exp(-(v - VHALF_H) / k_H));
+    g[i] = gbar[i] * m[i] * h[i];
 #elif CHANNEL_KAf == KAf_WOLF_2005
     m[i] = 1.0 / (1 + exp((v - VHALF_M) / k_M));
     h[i] = 1.0 / (1 + exp((v - VHALF_H) / k_H));
@@ -348,6 +481,10 @@ void ChannelKAf::initialize(RNG& rng)
     m[i] = am / (am + bm);  // steady-state value
     h[i] = ah / (ah + bh);
     g[i] = gbar[i] * m[i] * m[i] * h[i];
+#elif CHANNEL_KAf == KAf_FUJITA_2012
+   m[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M));
+   h[i] =1.0 / (1 + exp( (VHALF_H-v) / k_H));
+   g[i] = gbar[i] * m[i] * m[i] * m[i] * m[i]* h[i];
 #else
     NOT IMPLEMENTED YET;
 // m[i] = am / (am + bm);  // steady-state value
@@ -355,6 +492,17 @@ void ChannelKAf::initialize(RNG& rng)
 #endif
 
     Iion[i] = g[i] * (v - getSharedMembers().E_K[0]); // v(t) and gate(t0+dt/2)
+
+  #if defined(WRITE_GATES)
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << m[i];
+      (*outFile) << std::fixed << fieldDelimiter << h[i];
+   }
+   #endif
+
+
   }
 }
 

@@ -1,6 +1,27 @@
 #ifndef ChannelKv31_MDL
 #define ChannelKv31_MDL
 
+///* =================================================================
+//Licensed Materials - Property of IBM
+//
+//"Restricted Materials of IBM"
+//
+//BMC-YKT-07-18-2017
+//
+//(C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+//US Government Users Restricted Rights -
+//Use, duplication or disclosure restricted by
+//GSA ADP Schedule Contract with IBM Corp.
+//
+//=================================================================
+//
+//(C) Copyright 2018 New Jersey Institute of Technology.
+//
+//=================================================================
+//*/
+
+#include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
 #include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "../BranchSolver/BranchSolver.mdl"
@@ -13,6 +34,9 @@ Node ChannelKv31 Implements ConductanceArrayProducer, ReversalPotentialArrayProd
   //{{{
   //internal data
   dyn_var_t [] m;
+#if CHANNEL_Kv31 == Kv31_FUJITA_2012
+  dyn_var_t [] h;
+#endif
   dyn_var_t [] g;
   dyn_var_t [] gbar;
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O

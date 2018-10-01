@@ -1,5 +1,24 @@
 #ifndef ChannelNap_MDL
 #define ChannelNap_MDL
+///* =================================================================
+//Licensed Materials - Property of IBM
+//
+//"Restricted Materials of IBM"
+//
+//BMC-YKT-07-18-2017
+//
+//(C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+//US Government Users Restricted Rights -
+//Use, duplication or disclosure restricted by
+//GSA ADP Schedule Contract with IBM Corp.
+//
+//=================================================================
+//
+//(C) Copyright 2018 New Jersey Institute of Technology.
+//
+//=================================================================
+//*/
 
 #include "../../nti/include/MaxComputeOrder.h"
 
@@ -16,6 +35,9 @@ BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
   //internal data
   dyn_var_t [] m;
   dyn_var_t [] h;
+  #if CHANNEL_NAP == NAP_FUJITA_2012
+    dyn_var_t [] s;
+  #endif
   dyn_var_t [] g;  // nS/um^2
   dyn_var_t [] gbar; // nS/um^2
   dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O

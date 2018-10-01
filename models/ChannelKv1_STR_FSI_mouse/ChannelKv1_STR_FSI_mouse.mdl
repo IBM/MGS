@@ -1,0 +1,105 @@
+
+#// =================================================================
+#//
+#// (C) Copyright 2018 New Jersey Institute of Technology.
+#//
+#// =================================================================
+
+
+#ifndef ChannelKv1_STR_FSI_mouse_MDL
+#define ChannelKv1_STR_FSI_mouse_MDL
+
+
+#include "../../nti/include/MaxComputeOrder.h"
+#include "../std/std.mdl"
+#include "../HodgkinHuxley/HodgkinHuxley.mdl"
+#include "../BranchSolver/BranchSolver.mdl"
+
+// d type, slowly inactivating (Kv1) potassium channel
+Node ChannelKv1_STR_FSI_mouse Implements ConductanceArrayProducer, ReversalPotentialArrayProducer, BranchDataProducer, IOCurrentArrayProducer, DimensionArrayProducer {
+/*{{{*/
+  //DATA
+  // Hodgkin-Huxley-based formula
+  //{{{
+  //internal data
+  dyn_var_t [] m;
+  dyn_var_t [] h;
+  dyn_var_t [] g;
+  dyn_var_t [] gbar;
+  dyn_var_t [] Iion; // [pA/um^2] - no need for double,  as only for I/O
+
+  dyn_var_t []* V;
+	
+  BranchDataStruct* branchData; 
+  DimensionStruct* []* dimensions;
+  //data mainly used to dynamically assign different conductance on different location
+  //NOTE: In SynParams.par file
+  //    Use either gbar_dists or gbar_branch
+  //      and combine with gbar_values
+  float [] gbar_dists; // an array that indicate the threshold-distance (in micrometer)
+  float [] gbar_branchorders;// an array that indicate the branch-order (zero-based integer)
+  float [] gbar_values;// ... having the corresponding gbar conductance
+  // Example:
+  // CHANNEL_PARAMS 2
+  // Cah 3
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_dists={380.0,480.0, 590}> 
+  // 4 0 <gbar_values={0.000555,0.00555,0.000555}>
+  // Nat 3 
+  // BRANCHTYPE MTYPE
+  // 1 0 <gbar={0.00992}>
+  // 4 0 <gbar_branchorders={0, 1, 2}> 
+  // 4 0 <gbar_values={0.0555,0.555,0.000555}>
+  //}}}
+
+  //SHARED DATA
+  Shared {
+  //{{{
+    dyn_var_t* K_IC;    // [mM]
+    dyn_var_t* K_EC;    // [mM]
+    dyn_var_t* deltaT;  // [ms]
+    dyn_var_t* T;       // [K]
+    dyn_var_t Tadj;     // kinetics adjustment based on recorded data 
+                        //   and tempt. used for the simulation 
+    dyn_var_t [] E_K;   // [mV]
+    InitPhase computeE; // [mV]
+  //}}}
+  }
+
+  RuntimePhase update;
+  InitPhase initialize;
+
+  ConductanceArrayProducer.conductanceArray << &g;
+  ReversalPotentialArrayProducer.reversalPotentials << &Shared.E_K;
+  BranchDataProducer.branchData << branchData;
+  DimensionArrayProducer.dimensionArray << dimensions;
+  IOCurrentArrayProducer.currents << &Iion;
+
+  InAttrPSet {
+    string identifier;
+    int idx;
+  }
+
+  Connection Pre Node (PSet.identifier=="compartment[Voltage]") Expects VoltageArrayProducer, BranchDataProducer, DimensionArrayProducer {
+    VoltageArrayProducer.voltageArray >> V;
+    BranchDataProducer.branchData >> branchData;
+    DimensionArrayProducer.dimensionArray >> dimensions;
+  }
+
+  Connection Pre Node (PSet.identifier=="IC[Voltage]") Expects KConcentrationProducer {
+    KConcentrationProducer.K >> Shared.K_IC;
+  }
+
+  Connection Pre Constant (PSet.identifier=="EC") 
+    Expects KConcentrationProducer, TemperatureProducer {
+    KConcentrationProducer.K >> Shared.K_EC;
+    TemperatureProducer.T >> Shared.T;
+  }
+
+  Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
+    TimeStepProducer.deltaT >> Shared.deltaT;
+  }
+}
+
+#endif

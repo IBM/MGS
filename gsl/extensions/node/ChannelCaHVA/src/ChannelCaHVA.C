@@ -1,3 +1,25 @@
+/*
+=================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-03-25-2018
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+ (C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #include "Lens.h"
 #include "ChannelCaHVA.h"
 #include "CG_ChannelCaHVA.h"
@@ -10,9 +32,19 @@
 #include "NumberUtils.h"
 
 #define SMALL 1.0E-6
+#define decimal_places 6
+#define fieldDelimiter "\t"
+
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+
+//static pthread_once_t once_CaHVA = PTHREAD_ONCE_INIT;
+#if defined(WRITE_GATES)                                      
+SegmentDescriptor ChannelCaHVA::_segmentDescriptor;
+#endif
+
 
 #if CHANNEL_CaHVA == CaHVA_REUVENI_AMITAI_GUTNICK_1993 
 #define AMC -0.055
@@ -39,6 +71,24 @@
 #define Eleak -65.0 //[mV]
 #define am  (1.6 / (1.0 + exp(-0.072 * (v-65-Eleak))))
 #define bm  (0.02 * (vtrap((v-Eleak-51.1), 5.0)))
+
+#elif CHANNEL_CaHVA == CaHVA_FUJITA_2012
+
+// Gate: m                                                            
+//Reference from Fujita et al, ICaH high-voltage activated calcium current
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)                 
+//                                                      
+// m activation
+// dm/dt = (minf( V ) - V)/tau_m(V) 
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))                               
+// tau_m = TAU0_M 
+//
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)                                                
+#define VHALF_M -20
+
+#define k_M 7
+#define Erev_Ca 130
+#define TAU0_M 0.2
 
 #endif
 
@@ -112,6 +162,23 @@ void ChannelCaHVA::initialize(RNG& rng)
     }
   }
 
+#if defined(WRITE_GATES)                                      
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    std::ostringstream os;                                    
+    std::string fileName = "gates_CaH.txt";                       
+    os << fileName << getSimulation().getRank();              
+    outFile = new std::ofstream(os.str().c_str());            
+    outFile->precision(decimal_places);                       
+    (*outFile) << "#Time" << fieldDelimiter << "gates: m [, m]*"; 
+    _prevTime = 0.0;                                          
+    float currentTime = 0.0;  // should also be (dt/2)                                 
+    (*outFile) << std::endl;                                  
+    (*outFile) <<  currentTime;                               
+  }
+#endif
+ 
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -136,6 +203,11 @@ void ChannelCaHVA::initialize(RNG& rng)
     g[i] = gbar[i]*s[i]*s[i]*k[i];
 
     }
+
+#elif CHANNEL_CaHVA == CaHVA_FUJITA_2012
+   E_Ca[i] = Erev_Ca;
+   s[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M));
+   g[i] = gbar[i] * s[i];      
 #else
     // E_rev  = RT/(zCa.F)ln([Ca]o/[Ca]i)   [mV]
 
@@ -143,12 +215,37 @@ void ChannelCaHVA::initialize(RNG& rng)
     I_Ca[i] = g[i] * (v-E_Ca[i]);
     //Iion[i] = I_Ca[i];
     //Iion[i] = g[i] * (v-E_Ca[i]);
+ #if defined(WRITE_GATES)                                      
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << s[i];       
+    }
+#endif                                                        
+ 
   }
 }
 
 void ChannelCaHVA::update(RNG& rng) 
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+
+#if defined(WRITE_GATES)                                                  
+  bool is_write = false;
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+    if (currentTime >= _prevTime + IO_INTERVAL)                           
+    {                                                                     
+      (*outFile) << std::endl;                                            
+      (*outFile) <<  currentTime;                                         
+      _prevTime = currentTime;                                            
+      is_write = true;
+    }
+  }
+#endif
+ 
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -171,6 +268,17 @@ void ChannelCaHVA::update(RNG& rng)
     // see Rempe-Chopp (2006)
     dyn_var_t pm = 0.5 * dt * (am + bm);
     s[i] = (dt * am + s[i] * (1.0 - pm)) / (1.0 + pm);
+
+#elif CHANNEL_CaHVA == CaHVA_FUJITA_2012
+    {
+	    // s = m
+  E_Ca[i] = Erev_Ca;
+ dyn_var_t taum = TAU0_M;
+   dyn_var_t qm = dt  / (taum * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+    s[i] = (2 * m_inf * qm - s[i] * (qm - 1)) / (qm + 1);
+    }
+
 #endif
 
 
@@ -192,6 +300,9 @@ void ChannelCaHVA::update(RNG& rng)
     g[i] = gbar[i] * s[i] *  s[i];
     I_Ca[i] = g[i] * (v-E_Ca[i]);
     //Iion[i] = g[i] * (v-E_Ca[i]);
+#elif CHANNEL_CaHVA == CaHVA_FUJITA_2012
+    g[i] = gbar[i] * s[i];
+    I_Ca[i] = g[i] * (v-E_Ca[i]);
 #endif
 
 #ifdef WAIT_FOR_REST
@@ -200,6 +311,13 @@ void ChannelCaHVA::update(RNG& rng)
 			I_Ca[i] = 0.0;
 #endif
     //Iion[i] = I_Ca[i]; //g[i] * (v-E_Ca[i]);
+#if defined(WRITE_GATES)                                                  
+    if (is_write)
+    {           
+      (*outFile) << std::fixed << fieldDelimiter << s[i];                 
+    }                                                                     
+#endif                                                                    
+ 
   }
 }
 
