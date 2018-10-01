@@ -1,0 +1,31 @@
+//{{{voltage
+#define DAT0 "soma_voltage1.dat"
+//#define DAT1 "soma_voltage2.dat"
+//#define DAT1 "axon_voltage.dat"
+//#define DAT2 "dend_voltage.dat"
+VoltageDisplay voltageDisplay0<fileName=PathFileCombine(DAT0)>;
+voltageDisplay0.dataCollection(<>) on recOn;
+//VoltageDisplay voltageDisplay1<fileName=PathFileCombine(DAT1)>;
+//voltageDisplay1.dataCollection(<>) on recOn1;
+//VoltageDisplay voltageDisplay2<fileName=PathFileCombine(DAT2)>;
+//voltageDisplay2.dataCollection(<>) on recOn1;
+//}}}
+
+
+//{{{soma
+
+AnyCurrentDisplay somaCurrentsDisplay<fileName= PathFileCombine("somaCurrents.dat")>;
+somaCurrentsDisplay.dataCollection(<>) on recOn;
+//}}}
+
+
+
+//{{{calcium
+#define DAT10 "soma_calcium.dat"
+//#define DAT11 "dend_calcium.dat"
+//CalciumDisplay calciumDisplay10<fileName=DAT10>;
+CalciumDisplay calciumDisplay10<fileName=PathFileCombine(DAT10)>;
+calciumDisplay10.dataCollection(<>) on recOn;
+//CalciumDisplay calciumDisplay11<fileName=DAT11>;
+//calciumDisplay11.dataCollection(<>) on recOn;
+//}}}

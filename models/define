@@ -1,6 +1,20 @@
 #!/bin/bash
-### UPDATE: 
-# (Aug-08-2017) 
+#// =================================================================
+#// Licensed Materials - Property of IBM
+#//
+#// "Restricted Materials of IBM"
+#//
+#// BCM-YKT-07-18-2017
+#//
+#// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+#//
+#// US Government Users Restricted Rights -
+#// Use, duplication or disclosure restricted by
+#// GSA ADP Schedule Contract with IBM Corp.
+#//
+#// =================================================================
+### UPDATE:
+# (Aug-08-2017)
 #  comment starting with // is allowed in *.mdf file
 #  MDL file in sub-folder is allowed now
 #  automatically detect change in MDL file
@@ -37,17 +51,17 @@ grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
 
 MDLFILES=()
 sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
-while read mdl_in; do 
+while read mdl_in; do
   mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   MDLFILES+=($mdl_file_name)
 done < $temp_mdl_only
-while read in; do 
+while read in; do
   file_name=`echo $in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   if [ -f $file_name ]; then
     cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
     temp_file_name=$(mktemp)
     grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_file_name}
-    while read mdl_in; do 
+    while read mdl_in; do
       mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
       MDLFILES+=($mdl_file_name)
     done < $temp_file_name
@@ -69,7 +83,7 @@ rm -f defineModels2.sh;
 ##NOTE: we need this to regenerate Extension.mk file (yet it doesn't rebuild)
 REGEN=0
 if [ ! -f $LENSROOT/Extensions.mk ]; then
-  run_mdlparser $1; REGEN=1; 
+  run_mdlparser $1; REGEN=1;
 fi
 if [ define -ot $1 ] && [ "$RERUN" -eq 1 ]; then run_mdlparser $1;  REGEN=1; fi
 if [ $REGEN -eq 0 ]; then

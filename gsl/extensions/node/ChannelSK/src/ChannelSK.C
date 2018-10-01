@@ -1,3 +1,24 @@
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #include "Lens.h"
 #include "ChannelSK.h"
 #include "CG_ChannelSK.h"
@@ -7,14 +28,24 @@
 #include "Branch.h"
 #include "GlobalNTSConfig.h"
 #include "MaxComputeOrder.h"
+#include "NumberUtils.h"
 
 #define SMALL 1.0E-6
+#define decimal_places 6     
+#define fieldDelimiter "\t"  
+
 // unit conversion 
 #define uM2mM  1e-3 // from [uM] to [mM] concentration
 
 #include <math.h>
 #include <pthread.h>
 #include <algorithm>
+
+#if defined(WRITE_GATES)                                      
+SegmentDescriptor ChannelSK::_segmentDescriptor;
+#endif
+
+
 
 #define Cai_base 0.1 // [uM]
 //
@@ -68,6 +99,18 @@
 #define alpha 0.28  // [1/ms]
 #define beta 0.480  // [1/ms]
 
+#elif CHANNEL_SK == SK_FUJITA_2012
+// This is an implementation of the SK channel in Fujita et al 2012
+// modification of GPe neuron model proposed by Gunay et al.
+// m activation
+// dm/dt = (minf( [Ca]) - V)/tau_m([Ca])
+
+#define KCa_half .35
+#define Hill_coef 4.6
+#define TAU_1 76
+#define TAU_0 4.0
+#define Ca_sat 5.0
+
 #else
 NOT IMPLEMENTED YET
 #endif
@@ -117,6 +160,23 @@ dyn_var_t ChannelSK::bwrate(dyn_var_t v, dyn_var_t cai)
 void ChannelSK::update(RNG& rng)
 {
   dyn_var_t dt = *(getSharedMembers().deltaT);
+
+#if defined(WRITE_GATES)                                                  
+  bool is_write = false;
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    float currentTime = float(getSimulation().getIteration()) * dt + dt/2;       
+    if (currentTime >= _prevTime + IO_INTERVAL)                           
+    {                                                                     
+      (*outFile) << std::endl;                                            
+      (*outFile) <<  currentTime;                                         
+      _prevTime = currentTime;                                            
+      is_write = true;
+    }
+  }
+#endif
+ 
   for (unsigned i = 0; i < branchData->size; ++i)
   {
     dyn_var_t v = (*V)[i];      //[mV]
@@ -149,6 +209,7 @@ void ChannelSK::update(RNG& rng)
     //dO = (Oinf - O)/(tau/Tadj);
     // Rempe-Chopp 2006
     fO[i] = (2 * Oinf * Tscale_tau + fO[i] * (1-Tscale_tau))/(1+Tscale_tau);
+
 #ifdef DEBUG_ASSERT
     //assert(fabs(fO[0] + fC[0] - 1.0) < SMALL);  // conservation
 #endif
@@ -174,10 +235,34 @@ void ChannelSK::update(RNG& rng)
     fO[i] = (2 * minf * qm - fO[i] * (qm-1)) / (qm + 1);
     g[i] = gbar[i]*fO[i];
   }
+
+#elif CHANNEL_SK == SK_FUJITA_2012
+   { 	
+	   dyn_var_t taum=TAU_0;
+		// fO = m
+	if (cai<Ca_sat)  {
+	 taum = TAU_1 - ( ( TAU_1 - TAU_0 ) * cai ) / Ca_sat; 
+	}
+//	else {
+//	       	dyn_var_t taum = TAU_0;
+//	}	
+ 	   dyn_var_t qm = dt  / (taum * 2);
+ 	   dyn_var_t m_inf = (1.0)/ (1.0 + pow(KCa_half/cai, Hill_coef));
+       	   fO[i] = (2 * m_inf * qm - fO[i] * (qm - 1)) / (qm + 1);
+	   g[i] = gbar[i]*fO[i];
+    }
+
 #else
     NOT IMPLEMENTED YET
 #endif
 		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+
+#if defined(WRITE_GATES)                                                  
+    if (is_write)
+    {           
+      (*outFile) << std::fixed << fieldDelimiter << fO[i];                 
+   }                                                                     
+#endif  
   }
 }
 
@@ -241,7 +326,23 @@ void ChannelSK::initialize(RNG& rng)
     }
   }
   //assert(fabs(fO[0] + fC[0] - 1.0) < SMALL);  // conservation
-  
+  #if defined(WRITE_GATES)                                      
+  if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+      _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+  {
+    std::ostringstream os;                                    
+    std::string fileName = "gates_SK.txt";                       
+    os << fileName << getSimulation().getRank() ;              
+    outFile = new std::ofstream(os.str().c_str());            
+    outFile->precision(decimal_places);    
+(*outFile) << "#Time" << fieldDelimiter << "gates: fO [, m]*"; 
+    _prevTime = 0.0;                                          
+    float currentTime = 0.0;  // should also be (dt/2)                                 
+    (*outFile) << std::endl;                                  
+    (*outFile) <<  currentTime;                               
+  }
+#endif
+
   for (unsigned i = 0; i < size; ++i)
   {
     dyn_var_t v = (*V)[i];
@@ -263,7 +364,9 @@ void ChannelSK::initialize(RNG& rng)
       
     }
 #elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT || \
-    CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN
+    CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN || \ 
+    CHANNEL_SK == SK_FUJITA_2012 
+
     {
     //m[i] = 1.0/(1 + pow(KCa_half/cai,Hill_coef));
     //g[i] = gbar[i]*m[i];
@@ -283,6 +386,15 @@ void ChannelSK::initialize(RNG& rng)
     }
 #endif
 		Iion[i] = g[i] * (v - getSharedMembers().E_K[0]);
+
+#if defined(WRITE_GATES)        
+    if ((_segmentDescriptor.getBranchType(branchData->key) == Branch::_SOMA) &&
+        _segmentDescriptor.getNeuronIndex(branchData->key) == 0)
+    {
+      (*outFile) << std::fixed << fieldDelimiter << fO[i];       
+    }
+#endif                                                        
+ 
   }
 }
 

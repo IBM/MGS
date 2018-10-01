@@ -1,3 +1,25 @@
+/*
+=================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-03-25-2018
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+================================================================
+
+ (C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #ifndef ChannelKAf_H
 #define ChannelKAf_H
 
@@ -6,6 +28,9 @@
 #include "rndm.h"
 
 #include "MaxComputeOrder.h"
+#include "SegmentDescriptor.h"
+#include <fstream> 
+
 
 #if CHANNEL_KAf == KAf_TRAUB_1994  // There is no temperature dependence
 #define BASED_TEMPERATURE 23.0     // Celcius
@@ -26,6 +51,11 @@
 #elif CHANNEL_KAf == KAf_EVANS_2012
 #define BASED_TEMPERATURE 22.0  // Celcius
 #define Q10 2.3
+
+#elif CHANNEL_KAf == KAf_FUJITA_2012
+#define BASED_TEMPERATURE 25 // arbitrary
+#define Q10 1 // sets Tadj =1
+
 #endif
 
 #ifndef Q10
@@ -44,6 +74,14 @@ class ChannelKAf : public CG_ChannelKAf
   static dyn_var_t taumKAf[];
   static std::vector<dyn_var_t> Vmrange_taum;
 #endif
+#if defined(WRITE_GATES)      
+  std::ofstream* outFile;     
+  float _prevTime;            
+  static SegmentDescriptor _segmentDescriptor;
+#define IO_INTERVAL 0.1 // ms 
+#endif                        
+
+
 };
 
 #endif

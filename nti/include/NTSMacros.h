@@ -5,7 +5,13 @@
 #//
 #// "Restricted Materials of IBM"
 #//
-#// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+#// BCM-YKT-07-18-2017
+#//
+#// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+#//
+#// US Government Users Restricted Rights -
+#// Use, duplication or disclosure restricted by
+#// GSA ADP Schedule Contract with IBM Corp.
 #//
 #// =================================================================
 
@@ -146,7 +152,7 @@
 #define NAT_WANG_BUSZAKI_1996  8
 #define NAT_MAHON_2000         9
 #define NAT_MSN_TUAN_JAMES_2017 10
-
+#define NAT_FUJITA_2012        11
 #define _NAT_DEFAULT NAT_HODGKIN_HUXLEY_1952
 //}}}
 
@@ -162,6 +168,7 @@
 //{{{
 #define NAP_WOLF_2005           2
 #define NAP_MAGISTRETTI_1999    3
+#define NAP_FUJITA_2012         4
 #define _NAP_DEFAULT NAP_WOLF_2005
 //}}}
 
@@ -189,6 +196,7 @@
 #define KAf_KORNGREEN_SAKMANN_2000 12
 #define KAf_WOLF_2005              13
 #define KAf_EVANS_2012             14
+#define KAf_FUJITA_2012		       15
 
 
 #define _KAf_DEFAULT           KAf_WOLF_2005
@@ -199,6 +207,7 @@
 #define KAs_KORNGREEN_SAKMANN_2000 3
 #define KAs_WOLF_2005              4
 #define KAs_EVANS_2012             5
+#define KAs_FUJITA_2012 	       6
 
 #define _KAs_DEFAULT           KAs_WOLF_2005
 //}}}
@@ -232,6 +241,7 @@
 #define KDR_ERISIR_1999         9
 #define KDR_MOYER_2007          KDR_ERISIR_1999
 #define KDR_TUAN_JAMES_2017     10
+#define KDR_FUJITA_2012 	    11
 
 #define _KDR_DEFAULT KDR_TRAUB_1994
 
@@ -263,12 +273,14 @@
 #define SK2_KOHLER_ADELMAN_1996_RAT 3
 #define SK1_KOHLER_ADELMAN_1996_HUMAN 4
 #define SK_TRAUB_1994 5
+#define SK_FUJITA_2012 6
 
 #define _SK_DEFAULT SK_WOLF_2005
 //}}}
 // MK (Muscarinic-sensitive K+ current) CHANNEL_MK macro
 //{{{
 #define  MK_ADAMS_BROWN_CONSTANTI_1982  1
+#define  MK_FUJITA_2012 		2
 
 #define _MK_DEFAULT MK_ADAMS_BROWN_CONSTANTI_1982
 //}}}
@@ -276,7 +288,7 @@
 // Kv31 (Shaker-related)
 //{{{
 #define  Kv31_RETTIG_1992  1
-
+#define  Kv31_FUJITA_2012  2
 #define _Kv31_DEFAULT Kv31_RETTIG_1992
 //}}}
 // KCNK (background leak K+ current)
@@ -294,6 +306,7 @@
 #define HCN_VANDERGIESSEN_DEZEEUW_2008 2
 #define HCN_KOLE_2006 3
 #define HCN_HAY_2011 4
+#define HCN_FUJITA_2012 5
 
 #define _HCN_DEFAULT HCN_HUGUENARD_MCCORMICK_1992
 //}}}
@@ -304,6 +317,7 @@
 //{{{
 #define CaHVA_TRAUB_1994  1
 #define CaHVA_REUVENI_AMITAI_GUTNICK_1993 2
+#define CaHVA_FUJITA_2012		  3
 
 #define _CaHVA_DEFAULT CaHVA_TRAUB_1994
 //}}}
@@ -390,6 +404,7 @@
 //{{{
 #define GABAAR_POINTPROCESS 1
 #define GABAAR_DESTEXHE_MAINEN_SEJNOWSKI_1994  3
+#define GABAAR_MULTIPLEPARAMS 4
 
 #define _GABAAR_DEFAULT GABAAR_POINTPROCESS
 //}}}
@@ -491,6 +506,7 @@
 //     4xx ~ IO
 //     5xx ~ spines
 //     6xx ~ microdomain
+//     7xx ~ GPe
 //{{{
 #define _MODEL_NOT_DEFINED    0
 #define _MODEL_TESTING        1
@@ -513,6 +529,8 @@
 
 #define _MICRODOMAIN_DA_NEURON_2017_TUAN_JAMES 600
 #define _MICRODOMAIN_MSN_STRIATUM_NEURON_2017_TUAN_JAMES 601
+
+#define _GPE_2012_FUJITA 700
 //}}}
 // define
 
@@ -1110,6 +1128,59 @@
 //{{{
   #define CHANNEL_NAT NAT_HODGKIN_HUXLEY_1952
   #define CHANNEL_KDR KDR_HODGKIN_HUXLEY_1952
+//}}}
+
+#elif MODEL_TO_USE == _GPE_2012_FUJITA
+//{{{
+  //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SIMULATE_VM
+  #define SIMULATE_CACYTO
+  //#define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+#define DEBUG_COMPARTMENT
+//#define USE_SOMA_AS_POINT
+//#define WRITE_GATES
+#define IDEA_CURRENTONCOMPT
+#define IDEA_ILEAK
+
+//{
+  #define CHANNEL_NAT NAT_FUJITA_2012
+  #define CHANNEL_NAP NAP_FUJITA_2012
+  #define CHANNEL_Kv31 Kv31_FUJITA_2012
+  #define CHANNEL_KDR KDR_FUJITA_2012
+  #define CHANNEL_KAf KAf_FUJITA_2012
+  #define CHANNEL_KAs KAs_FUJITA_2012
+  #define CHANNEL_MK  MK_FUJITA_2012
+  #define CHANNEL_CaHVA CaHVA_FUJITA_2012
+  #define CHANNEL_HCN HCN_FUJITA_2012
+  #define CHANNEL_SK SK_FUJITA_2012
+  #define RECEPTOR_GABAA GABAAR_MULTIPLEPARAMS
+//}}}
+//}}}
+#elif MODEL_TO_USE == _STR_FSI_2007_GOLOMB
+//{{{
+  //#define SYNAPSE_MODEL_STRATEGY USE_PRESYNAPTICPOINT
+  #define SIMULATE_VM
+//  #define SIMULATE_CACYTO
+  //#define CALCIUM_CYTO_DYNAMICS FAST_BUFFERING
+#define DEBUG_COMPARTMENT
+//#define USE_SOMA_AS_POINT
+//#define WRITE_GATES
+#define IDEA_CURRENTONCOMPT 
+#define IDEA_ILEAK
+
+//{
+//  #define CHANNEL_NAT NAT_FUJITA_2012
+//  #define CHANNEL_NAP NAP_FUJITA_2012
+//  #define CHANNEL_Kv31 Kv31_FUJITA_2012
+//  #define CHANNEL_KDR KDR_FUJITA_2012
+//  #define CHANNEL_KAf KAf_FUJITA_2012 
+//  #define CHANNEL_KAs KAs_FUJITA_2012
+//  #define CHANNEL_MK  MK_FUJITA_2012 
+//  #define CHANNEL_CaHVA CaHVA_FUJITA_2012
+//  #define CHANNEL_HCN HCN_FUJITA_2012
+//  #define CHANNEL_SK SK_FUJITA_2012
+//  #define RECEPTOR_GABAA GABAAR_MULTIPLEPARAMS
+//}}}
 //}}}
 #endif
 

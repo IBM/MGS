@@ -1,0 +1,214 @@
+#// =================================================================
+#//
+#// (C) Copyright 2018 New Jersey Institute of Technology.
+#//
+#// =================================================================
+CHANNEL_TARGETS 6
+MTYPE BRANCHTYPE
+#1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] Nas [Voltage] [Voltage] KDR [Voltage] [Voltage] KIR [Voltage] [Voltage] KAf [Voltage] [Voltage] KAs [Voltage] [Voltage] KRP [Voltage] [Voltage] 
+#1 Nat [Voltage] [Voltage] KDR [Voltage] [Voltage] KIR [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage] Nap [Voltage] [Voltage] Kv31 [Voltage] [Voltage] KDR [Voltage] [Voltage]  KAf [Voltage] [Voltage] \
+# KAs [Voltage] [Voltage] MK [Voltage] [Voltage] Cah [Voltage] [Voltage, Calcium] HCN [Voltage] [Voltage] SK [Voltage, Calcium] [Voltage] PMCA [Calcium] [Calcium] 
+1 1 NatGPe [Voltage] [Voltage] \
+   NapGPe [Voltage] [Voltage]  \
+  KDRGPe [Voltage] [Voltage] \
+ KAfGPe [Voltage] [Voltage]  \
+  KAsGPe [Voltage] [Voltage] \
+ Kv31GPe [Voltage] [Voltage] \
+ MKGPe [Voltage] [Voltage] \
+ HCNGPe [Voltage] [Voltage] \
+ SKGPe [Voltage, Calcium] [Voltage] \
+ CahGPe [Voltage] [Voltage, Calcium] \
+ LeakGPe [Voltage] [Voltage] \ 
+ LeakExc [Voltage] [Voltage] \ 
+ PMCA [Calcium] [Calcium]
+
+
+1 3 NatGPe [Voltage] [Voltage]
+
+2 1 NatMSN [Voltage] [Voltage] \
+   NapMSN [Voltage] [Voltage]  \
+  NasMSN [Voltage] [Voltage]  \
+  KDRMSN [Voltage] [Voltage] \
+ KAfMSN [Voltage] [Voltage]  \
+  KAsMSN [Voltage] [Voltage] \
+  KRPMSN [Voltage] [Voltage] \
+ LeakMSN [Voltage] [Voltage] \ 
+ LeakExc [Voltage] [Voltage] \ 
+  KIRMSN [Voltage] [Voltage] 
+
+
+2 3 NatMSN [Voltage] [Voltage]
+
+3 1 NatFSI [Voltage] [Voltage] \
+Kv31FSI [Voltage] [Voltage] \
+ LeakFSI [Voltage] [Voltage] \ 
+ LeakExc [Voltage] [Voltage] \ 
+Kv1FSI [Voltage] [Voltage] 
+
+3 3 NatFSI [Voltage] [Voltage]
+
+
+
+#1 Nap [Voltage] [Voltage]
+#1 KDR [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+#1 Nat [Voltage] [Voltage]
+
+  CHANNEL_COSTS 26
+  LeakExc 0.254051
+  LeakGPe 0.254051
+  LeakMSN 0.254051
+  LeakFSI 0.254051
+  NapGPe 0.414243
+  NapMSN 0.254051
+  NatGPe 0.254051
+  NatMSN 0.254051
+  NatFSI 0.254051
+  KDRGPe 0.254051
+  KDRMSN 0.254051
+  KAfGPe 0.254051
+  KAfMSN 0.254051
+  KAsGPe 0.254051
+  KAsMSN 0.254051
+  Kv31GPe 0.254051 	
+  Kv31FSI 0.254051 	
+  Kv1FSI 0.254051 	
+  MKGPe   0.254051 	
+  CahGPe  0.254051 	
+  HCNGPe  0.254051 	
+  SKGPe   0.254051
+  KIRMSN 0.254051
+  KRPMSN 0.254051
+  NasMSN 0.254051
+  PMCA 0.254051 	
+##NOTE:Unit conversion tips [right side is NTS's units]
+# Pbar [cm/sec]  --> 100*Pbar [um/ms] 
+# gbar [mS/cm^2] --> gbar/100 [nS/um^2]
+# gbar [S/cm^2]  --> 10*gbar  [nS/um^2]
+# Ibar [uA/cm^2] --> Ibar/100 [pA/um^2]
+  CHANNEL_PARAMS 25
+  LeakExc 3
+  BRANCHTYPE MTYPE
+  1 1 <gbar ={0.0002}>
+  1 2 <gbar ={0.00066}>
+ # 1 2 <gbar ={0.00083}>
+  1 3 <gbar ={0.00095}>
+
+  LeakGPe 1
+  BRANCHTYPE
+  1 <gbar={0.00068}>
+
+  LeakMSN 1
+  BRANCHTYPE
+  1 <gbar={0.00075}>
+
+  LeakFSI 1
+  BRANCHTYPE
+  1 <gbar={0.0025}>
+ 
+  NatGPe 1
+  BRANCHTYPE
+  1 <gbar={0.5}>
+ 
+  NatMSN 1
+  BRANCHTYPE
+  1 <gbar={0.35}> 
+ 
+  NatFSI 1
+  BRANCHTYPE
+  1 <gbar={1.125}> 
+ 
+  #1 <gbar={0.0}> 
+  NapGPe 1
+  BRANCHTYPE
+  1 <gbar = {0.001}>
+  NapMSN 1
+  BRANCHTYPE
+  1 <gbar = {0.0002}>
+  #1 <gbar=0.0002}>
+  #1 <gbar=0.0}>
+  NasMSN 1
+# gbar [mS/cm^2] --> gbar/100 [nS/um^2]
+  BRANCHTYPE
+  1 <gbar={0.0011}>
+  #1 <gbar={0.0}>
+
+  KDRGPe 1
+  BRANCHTYPE
+  1 <gbar={0.001}>
+
+  KDRMSN 1
+  BRANCHTYPE
+  1 <gbar={0.06}>
+
+ # 1 <gbar={0.060}>
+  #1 <gbar={0.0}>
+  KIRMSN 1
+  BRANCHTYPE
+  1 <gbar={0.0015}>
+ # 1 <gbar={0.0032}> #higher conductance seems to delay first spike
+  #1 <gbar={0.0}>
+
+  KAfGPe 1
+  BRANCHTYPE
+  1 <gbar={0.02}>
+
+  KAfMSN 1
+  BRANCHTYPE
+  1 <gbar={0.0009}>
+#
+  #1 <gbar={0.0009}>
+  #1 <gbar={0.0}> blocking this didn't do anything
+ 
+  KAsGPe 1
+  BRANCHTYPE
+  1 <gbar={0.01}>
+
+  KAsMSN 1
+  BRANCHTYPE
+  1 <gbar={0.0032}>
+
+  # 1 <gbar={0.0032}>  
+ # 1 <gbar={0.0026}> #0.0028 and kir 0.0021 gave same control as previous values 
+  #1 <gbar={0.0}>  blocking gave 4 spikes on each pulse
+  KRPMSN 1
+  BRANCHTYPE
+  1 <gbar={0.0042}>
+ # 1 <gbar={0.0036}>
+  #1 <gbar={0.0032}> #0.0032 on this and KAs 0.0026 and KIR 0.0038 gave 24ms t1-t2
+  #1 <gbar={0.00}> blocking this gave a lot of spoikes and a smooth after depolarization 
+
+  Kv31GPe 1
+  BRANCHTYPE
+  1 <gbar={0.1}>
+
+  Kv31FSI 1
+  BRANCHTYPE
+  1 <gbar={2.25}>
+
+  Kv1FSI 1
+  BRANCHTYPE
+  1 <gbar={0.001}>
+
+  MKGPe 1
+  BRANCHTYPE
+  1 <gbar={.002 }>
+
+  CahGPe 1
+  BRANCHTYPE
+  1 <gbar={0.003 }>
+
+  HCNGPe 1
+  BRANCHTYPE
+  1 <gbar={0.001 }>
+ # 1 <gbar_values={.001}> 
+  SKGPe 1
+  BRANCHTYPE
+  1 <gbar={0.004 }>
+ 
+# PMCA 1
+#  BRANCHTYPE
+#  1 <gbar={} > 

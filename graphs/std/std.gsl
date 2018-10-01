@@ -122,7 +122,7 @@ Functor Log(Functor);
 Functor Neg(Functor);
 Functor Scale(Functor);
 Functor Round(Functor);
-Functor FloatArrayMaker(Functor,int);
+Functor FloatArrayMaker(Functor, int);
 Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
 Functor UniformDiscreteDist(float n1, float n2);
