@@ -38,7 +38,7 @@ SameFunctor::SameFunctor(const SameFunctor& csf)
 }
 
 
-void SameFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void SameFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new SameFunctor(*this));
 }
@@ -71,7 +71,7 @@ void SameFunctor::doInitialize(LensContext *c,
 
 void SameFunctor::doExecute(LensContext *c, 
 			    const std::vector<DataItem*>& args, 
-			    std::auto_ptr<DataItem>& rvalue)
+			    std::unique_ptr<DataItem>& rvalue)
 {
    NodeSet *nodeset = c->layerContext->nodeset;
    std::vector<NodeDescriptor*>::iterator nodesIter, nodesEnd;

@@ -205,16 +205,16 @@ void CalciumDomainDisplay::setUpPointers(
 CalciumDomainDisplay::CalciumDomainDisplay() : CG_CalciumDomainDisplay(), outFile(0) {}
 CalciumDomainDisplay::~CalciumDomainDisplay() { delete outFile; }
 void CalciumDomainDisplay::duplicate(
-    std::auto_ptr<CalciumDomainDisplay>& dup) const
+    std::unique_ptr<CalciumDomainDisplay>& dup) const
 {
   dup.reset(new CalciumDomainDisplay(*this));
 }
-void CalciumDomainDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void CalciumDomainDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CalciumDomainDisplay(*this));
 }
 void CalciumDomainDisplay::duplicate(
-    std::auto_ptr<CG_CalciumDomainDisplay>& dup) const
+    std::unique_ptr<CG_CalciumDomainDisplay>& dup) const
 {
   dup.reset(new CalciumDomainDisplay(*this));
 }

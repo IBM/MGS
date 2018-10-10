@@ -39,6 +39,9 @@ class ArrayIterator
       ArrayIterator() 
 	 : _blocksArray(0), _index(0), _currentData(0), _blockSize(0) {}
 
+      /*
+       * index = block index
+       */
       ArrayIterator(T*** blocksArray, int index, int blockSize) 
 	 : _blocksArray(blocksArray), _index(index), _currentData(0), 
 	   _blockSize(blockSize) {
@@ -61,6 +64,9 @@ class ArrayIterator
 	 return _currentData;
       }
 
+      /* compare exact data element's location 
+       * (i.e. same block index, and same local-index-within-block)
+       */
       inline bool operator==(const ArrayIterator& rv) {
 	 return (_blocksArray == rv._blocksArray) && (_index == rv._index) &&
 	    (_currentData == rv._currentData);
@@ -70,18 +76,26 @@ class ArrayIterator
 	 return !operator==(rv);
       }
 
+      /* actually compare based on block index
+       */
       inline bool operator<=(const ArrayIterator& rv) {
 	 return _index <= rv._index;
       }
 
+      /* actually compare based on block index
+       */
       inline bool operator<(const ArrayIterator& rv) {
 	 return _index < rv._index;
       }
 
+      /* actually compare based on block index
+       */
       inline bool operator>=(const ArrayIterator& rv) {
 	 return _index >= rv._index;
       }
 
+      /* actually compare based on block index
+       */
       inline bool operator>(const ArrayIterator& rv) {
 	 return _index > rv._index;
       }

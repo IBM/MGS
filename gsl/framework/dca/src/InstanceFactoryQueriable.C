@@ -42,7 +42,7 @@ InstanceFactoryQueriable::InstanceFactoryQueriable(InstanceFactory* instanceFact
    _instanceQF->setDescription("Type instances.");
    _instanceQF->setFormat("");
 
-   std::auto_ptr<QueryField> aptr_QF(_instanceQF);
+   std::unique_ptr<QueryField> aptr_QF(_instanceQF);
    _queryDescriptor.addQueryField(aptr_QF);
 }
 
@@ -59,7 +59,7 @@ InstanceFactoryQueriable::InstanceFactoryQueriable(const InstanceFactoryQueriabl
 }
 
 
-void InstanceFactoryQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void InstanceFactoryQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    InstanceFactoryDataItem* di = new InstanceFactoryDataItem;
    di->setInstanceFactory(_instanceFactory);
@@ -67,9 +67,9 @@ void InstanceFactoryQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> InstanceFactoryQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> InstanceFactoryQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
 
    // Make sure query field is present
    if (_queryDescriptor.getQueryFields().size()) {
@@ -78,7 +78,7 @@ std::auto_ptr<QueryResult> InstanceFactoryQueriable::query(int maxItem, int minI
       std::list<Queriable*>::iterator end = _queriableList.end();
       for (;iter!=end;++iter) {
          if ((*iter)->getQueriableDescriptor().getName() == field) {
-            std::auto_ptr<Queriable> aptr_q;
+            std::unique_ptr<Queriable> aptr_q;
 	    (*iter)->duplicate(aptr_q);
             qr->addQueriable(aptr_q);
          }
@@ -89,15 +89,15 @@ std::auto_ptr<QueryResult> InstanceFactoryQueriable::query(int maxItem, int minI
 }
 
 
-void InstanceFactoryQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void InstanceFactoryQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new InstanceFactoryQueriable(*this));
 }
 
 
-void InstanceFactoryQueriable::addQueriable(std::auto_ptr<DataItemQueriable> & q)
+void InstanceFactoryQueriable::addQueriable(std::unique_ptr<DataItemQueriable> & q)
 {
-   std::auto_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(q->getName(), q->getDescription()));
+   std::unique_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(q->getName(), q->getDescription()));
    _instanceQF->addEnumEntry(aptrEnumEntry);
                                  // the queriableList along with its descriptors and their queriables are
    _queriableList.push_back(q.release());
@@ -105,7 +105,7 @@ void InstanceFactoryQueriable::addQueriable(std::auto_ptr<DataItemQueriable> & q
 }
 
 void InstanceFactoryQueriable::duplicate(
-   std::auto_ptr<InstanceFactoryQueriable>& dup) const
+   std::unique_ptr<InstanceFactoryQueriable>& dup) const
 {
    dup.reset(new InstanceFactoryQueriable(*this));
 }

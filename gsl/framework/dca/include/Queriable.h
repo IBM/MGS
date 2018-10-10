@@ -38,11 +38,11 @@ class Queriable
    public:
       Queriable();
       Queriable(const Queriable&);
-      virtual std::auto_ptr<QueryResult> query(int maxtItem = 0, int minItem = 0
+      virtual std::unique_ptr<QueryResult> query(int maxtItem = 0, int minItem = 0
 					  , int searchSize = 0) =0;
       virtual Publisher* getQPublisher() =0;
-      virtual void duplicate(std::auto_ptr<Queriable>& dup) const =0;
-      virtual void getDataItem(std::auto_ptr<DataItem> &) =0;
+      virtual void duplicate(std::unique_ptr<Queriable>& dup) const =0;
+      virtual void getDataItem(std::unique_ptr<DataItem> &) =0;
 
       std::list<Queriable*> const & getQueriableList() const;
       QueriableDescriptor & getQueriableDescriptor ();
@@ -53,7 +53,7 @@ class Queriable
       virtual ~Queriable();
 
    protected:
-      std::auto_ptr<EnumEntry> & emptyEnum();
+      std::unique_ptr<EnumEntry> & emptyEnum();
                                  // All queriables in this list are created in derived class constructors
       std::list<Queriable*> _queriableList;
       // or added piecemeal.
@@ -66,6 +66,6 @@ class Queriable
       std::string _queriableType;
 
    private:
-      std::auto_ptr<EnumEntry> _aptrEmptyEnum;
+      std::unique_ptr<EnumEntry> _aptrEmptyEnum;
 };
 #endif

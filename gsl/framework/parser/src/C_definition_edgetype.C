@@ -88,7 +88,7 @@ void C_definition_edgetype::internalExecute(LensContext *c)
    EdgeTypeDataItem *etdi = new EdgeTypeDataItem();
    etdi->setEdgeType(et);
 
-   std::auto_ptr<DataItem> etdi_ap(static_cast<DataItem*>(etdi));
+   std::unique_ptr<DataItem> etdi_ap(static_cast<DataItem*>(etdi));
    try {
       c->symTable.addEntry(_declarator->getName(), etdi_ap);
    } catch (SyntaxErrorException& e) {

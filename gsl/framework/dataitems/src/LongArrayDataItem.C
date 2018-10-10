@@ -66,7 +66,7 @@ LongArrayDataItem::LongArrayDataItem(const LongArrayDataItem& DI)
 
 // Utility methods
 
-void LongArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void LongArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new LongArrayDataItem(*this)));
 }

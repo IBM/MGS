@@ -30,9 +30,9 @@ class ConductanceDisplay : public CG_ConductanceDisplay
       virtual void setUpPointers(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ConductanceDisplayInAttrPSet* CG_inAttrPset, CG_ConductanceDisplayOutAttrPSet* CG_outAttrPset);
       ConductanceDisplay();
       virtual ~ConductanceDisplay();
-      virtual void duplicate(std::auto_ptr<ConductanceDisplay>& dup) const;
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ConductanceDisplay>& dup) const;
+      virtual void duplicate(std::unique_ptr<ConductanceDisplay>& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ConductanceDisplay>& dup) const;
    private:
       std::ofstream* outFile = 0;
 };

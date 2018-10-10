@@ -143,7 +143,7 @@ void ServiceConnectorFunctor::userExecute(
   StringDataItem* stringDI;
   FunctorDataItem* functorDI;
   std::string serviceName;
-  std::auto_ptr<Functor> functorAp;
+  std::unique_ptr<Functor> functorAp;
   while (it != end)
   {
     serviceName = "";
@@ -215,18 +215,18 @@ ServiceConnectorFunctor::ServiceConnectorFunctor()
 ServiceConnectorFunctor::~ServiceConnectorFunctor() {}
 
 void ServiceConnectorFunctor::duplicate(
-    std::auto_ptr<ServiceConnectorFunctor>& dup) const
+    std::unique_ptr<ServiceConnectorFunctor>& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
 
-void ServiceConnectorFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void ServiceConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
 
 void ServiceConnectorFunctor::duplicate(
-    std::auto_ptr<CG_ServiceConnectorFunctorBase>& dup) const
+    std::unique_ptr<CG_ServiceConnectorFunctorBase>& dup) const
 {
   dup.reset(new ServiceConnectorFunctor(*this));
 }
@@ -318,7 +318,7 @@ ServiceConnectorFunctor::ServiceConnectorElement::ServiceConnectorElement(
 }
 
 ServiceConnectorFunctor::ServiceConnectorElement::ServiceConnectorElement(
-    std::auto_ptr<Functor>& functor, const std::string& acceptorName)
+    std::unique_ptr<Functor>& functor, const std::string& acceptorName)
     : _serviceName(""), _acceptorName(acceptorName), _functor(0)
 {
   _functor = functor.release();
@@ -445,7 +445,7 @@ void ServiceConnectorFunctor::ServiceConnectorElement::stringConnection(
 void ServiceConnectorFunctor::ServiceConnectorElement::functorConnection(
     ServiceConnectorFunctor& parent)
 {
-  std::auto_ptr<DataItem> retValue;
+  std::unique_ptr<DataItem> retValue;
   std::vector<DataItem*> args;
   // If the source is constant or variable, than new dataitems that
   // doesn't own their _data is needed for ConstantDataItem and
@@ -523,7 +523,7 @@ void ServiceConnectorFunctor::ServiceConnectorElement::copyOwnedHeap(
 {
   if (rv._functor)
   {
-    std::auto_ptr<Functor> dup;
+    std::unique_ptr<Functor> dup;
     rv._functor->duplicate(dup);
     _functor = dup.release();
   }

@@ -27,7 +27,7 @@ class RepertoireFactory
 {
    public:
       virtual Repertoire* createRepertoire(std::string const& repName, LensContext* c) = 0;
-      virtual void duplicate(std::auto_ptr<RepertoireFactory>& rv) const =0;
+      virtual void duplicate(std::unique_ptr<RepertoireFactory>& rv) const =0;
       virtual ~RepertoireFactory(){};
 };
 #endif

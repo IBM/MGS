@@ -25,26 +25,26 @@ ConstantType::ConstantType()
 {
 }
 
-void ConstantType::getInstance(std::auto_ptr<DataItem> & adi, 
+void ConstantType::getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
 			       LensContext* c)
 {
    ConstantDataItem* cdi = new ConstantDataItem;
 
-   std::auto_ptr<Constant> ac;
+   std::unique_ptr<Constant> ac;
    getConstant(ac);
    ac->initialize(c, *args);
    cdi->setConstant(ac);
    adi.reset(cdi);
 }
 
-void ConstantType::getInstance(std::auto_ptr<DataItem> & adi, 
+void ConstantType::getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
 			       LensContext* c)
 {
    ConstantDataItem* cdi = new ConstantDataItem;
 
-   std::auto_ptr<Constant> ac;
+   std::unique_ptr<Constant> ac;
    getConstant(ac);
    ac->initialize(ndplist);
    cdi->setConstant(ac);

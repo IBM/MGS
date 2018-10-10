@@ -33,7 +33,7 @@ void C_declaration_trigger::internalExecute(LensContext *c)
    _trigger->execute(c);
 
    TriggerDataItem *nsdi = new TriggerDataItem;
-   std::auto_ptr<DataItem> nsdi_ap(nsdi);
+   std::unique_ptr<DataItem> nsdi_ap(nsdi);
 
    Trigger* t;
    t = _trigger->getTrigger();

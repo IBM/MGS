@@ -1518,7 +1518,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
       {
         DataItemArrayDataItem* dimArray = new DataItemArrayDataItem(size);
         ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
-        std::auto_ptr<DataItem> aptr_cst;
+        std::unique_ptr<DataItem> aptr_cst;
         std::vector<CG_CompartmentDimension*>& dimensions =
           _tissueContext->_branchDimensionsMap[branch];
         if (dimensions.size() > 0)
@@ -1769,7 +1769,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             StructDataItem* dimsDI = getDimension(
                 lc, begCap->getBeginCoordinates(), endCap->getEndCoordinates(),
                 radius, dist2soma, surface_area, volume, length);
-            std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
+            std::unique_ptr<DataItem> dimsDI_ap(dimsDI);
             NDPair* ndp = new NDPair("dimension", dimsDI_ap);
 
             NDPairList dimParams;
@@ -1777,7 +1777,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
             ct->getInstance(aptr_cst, dimParams, lc);
             ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-            std::auto_ptr<Constant> aptr_dim;
+            std::unique_ptr<Constant> aptr_dim;
             cdi->getConstant()->duplicate(aptr_dim);
             Constant* dim = aptr_dim.release();
             dimensions.push_back(dynamic_cast<CG_CompartmentDimension*>(dim));
@@ -1856,7 +1856,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
           StringUtils::trim(varName);
           // std::cerr << "varName = " << varName << std::endl;
 
-          std::auto_ptr<DataItem> arrayDI_ap(arrayDI);
+          std::unique_ptr<DataItem> arrayDI_ap(arrayDI);
           NDPair* ndp = new NDPair(varName, arrayDI_ap);
           params->push_back(ndp);
         }
@@ -1881,7 +1881,7 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
     if (miter == _tissueContext->_junctionDimensionMap.end())
     {
       ConstantType* ct = lc->sim->getConstantType("CompartmentDimension");
-      std::auto_ptr<DataItem> aptr_cst;
+      std::unique_ptr<DataItem> aptr_cst;
       ComputeBranch* branch_parent = junctionCapsule->getBranch();
       std::list<ComputeBranch*>::const_iterator
         iter = branch_parent->_daughters.begin(),
@@ -2088,13 +2088,13 @@ int TissueFunctor::compartmentalize(LensContext* lc, NDPairList* params,
         getDimension(lc, junctionCapsule->getEndCoordinates(),
             (dyn_var_t)junctionCapsule->getRadius(),
             (dyn_var_t)dist2soma, surface_area, volume, length);
-      std::auto_ptr<DataItem> dimsDI_ap(dimsDI);
+      std::unique_ptr<DataItem> dimsDI_ap(dimsDI);
       NDPair* ndp = new NDPair("dimension", dimsDI_ap);
       NDPairList dimParams;
       dimParams.push_back(ndp);
       ct->getInstance(aptr_cst, dimParams, lc);
       ConstantDataItem* cdi = dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-      std::auto_ptr<Constant> aptr_dim;
+      std::unique_ptr<Constant> aptr_dim;
       cdi->getConstant()->duplicate(aptr_dim);
       Constant* dim = aptr_dim.release();
       _tissueContext->_junctionDimensionMap[junctionCapsule] =
@@ -2179,35 +2179,35 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
 
   //TUAN TODO PLAN: Use FloatDataItem is better (for coordinate)
   DoubleDataItem* xddi = new DoubleDataItem(cds[0]);
-  std::auto_ptr<DataItem> xddi_ap(xddi);
+  std::unique_ptr<DataItem> xddi_ap(xddi);
   NDPair* x = new NDPair("x", xddi_ap);
 
   DoubleDataItem* yddi = new DoubleDataItem(cds[1]);
-  std::auto_ptr<DataItem> yddi_ap(yddi);
+  std::unique_ptr<DataItem> yddi_ap(yddi);
   NDPair* y = new NDPair("y", yddi_ap);
 
   DoubleDataItem* zddi = new DoubleDataItem(cds[2]);
-  std::auto_ptr<DataItem> zddi_ap(zddi);
+  std::unique_ptr<DataItem> zddi_ap(zddi);
   NDPair* z = new NDPair("z", zddi_ap);
 
   DoubleDataItem* rddi = new DoubleDataItem(radius);
-  std::auto_ptr<DataItem> rddi_ap(rddi);
+  std::unique_ptr<DataItem> rddi_ap(rddi);
   NDPair* r = new NDPair("r", rddi_ap);
 
   DoubleDataItem* d2sddi = new DoubleDataItem(dist2soma);
-  std::auto_ptr<DataItem> d2sddi_ap(d2sddi);
+  std::unique_ptr<DataItem> d2sddi_ap(d2sddi);
   NDPair* d2s = new NDPair("dist2soma", d2sddi_ap);
 
   DoubleDataItem* areaddi = new DoubleDataItem(surface_area);
-  std::auto_ptr<DataItem> areaddi_ap(areaddi);
+  std::unique_ptr<DataItem> areaddi_ap(areaddi);
   NDPair* area = new NDPair("surface_area", areaddi_ap);
 
   DoubleDataItem* volumeddi = new DoubleDataItem(volume);
-  std::auto_ptr<DataItem> volumeddi_ap(volumeddi);
+  std::unique_ptr<DataItem> volumeddi_ap(volumeddi);
   NDPair* volumeptr = new NDPair("volume", volumeddi_ap);
 
   DoubleDataItem* lengthddi = new DoubleDataItem(length);
-  std::auto_ptr<DataItem> lengthddi_ap(lengthddi);
+  std::unique_ptr<DataItem> lengthddi_ap(lengthddi);
   NDPair* lengthptr = new NDPair("length", lengthddi_ap);
 
   NDPairList dimList;
@@ -2253,7 +2253,7 @@ StructDataItem* TissueFunctor::getDimension(LensContext* lc, double* cds,
   }
 #endif
   StructType* st = lc->sim->getStructType("DimensionStruct");
-  std::auto_ptr<Struct> dims;
+  std::unique_ptr<Struct> dims;
   st->getStruct(dims);
   dims->initialize(dimList);
   StructDataItem* dimsDI = new StructDataItem(dims);
@@ -2563,7 +2563,7 @@ void TissueFunctor::connect(Simulation* sim, Connector* connector,
                             NodeDescriptor* from, NodeDescriptor* to,
                             NDPairList& ndpl)
 {
-  std::auto_ptr<ParameterSet> inAttrPSet, outAttrPSet;
+  std::unique_ptr<ParameterSet> inAttrPSet, outAttrPSet;
   to->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(
       inAttrPSet);
   from->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(
@@ -2572,12 +2572,12 @@ void TissueFunctor::connect(Simulation* sim, Connector* connector,
   connector->nodeToNode(from, outAttrPSet.get(), to, inAttrPSet.get(), sim);
 }
 
-std::auto_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
+std::unique_ptr<Functor> TissueFunctor::userExecute(LensContext* CG_c,
                                                   String& tissueElement,
                                                   NDPairList*& params)
 {
   params->duplicate(_params);
-  std::auto_ptr<Functor> rval;
+  std::unique_ptr<Functor> rval;
 
   if (tissueElement == "Layout")
   {
@@ -4088,7 +4088,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
   //NOTE: _params holds the NDPairList data passed to tissueFunctor as part of the InitNodes
   // statement
   assert(_params.get());
-  std::auto_ptr<ParameterSet> initPset;
+  std::unique_ptr<ParameterSet> initPset;
   std::vector<NodeDescriptor*> nodes;  // pointer to instances of nodes in grids
   std::vector<NodeDescriptor*>::iterator node, nodesEnd;
 
@@ -4225,7 +4225,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
         ConstantType* ct = lc->sim->getConstantType("BranchData");
         NDPairList branchDataStructParams;
         IntDataItem* sizeDI = new IntDataItem(size);
-        std::auto_ptr<DataItem> sizeDI_ap(sizeDI);
+        std::unique_ptr<DataItem> sizeDI_ap(sizeDI);
         NDPair* ndp = new NDPair("size", sizeDI_ap);
         branchDataStructParams.push_back(ndp);
         if (nodeCategory == "CompartmentVariables")
@@ -4246,19 +4246,19 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           // change the key size (key_size_t)
           DoubleDataItem* keyDI =
               new DoubleDataItem(branch->_capsules[0].getKey());
-          std::auto_ptr<DataItem> keyDI_ap(keyDI);
+          std::unique_ptr<DataItem> keyDI_ap(keyDI);
           ndp = new NDPair("key", keyDI_ap);
           branchDataStructParams.push_back(ndp);
-          std::auto_ptr<DataItem> aptr_st;
+          std::unique_ptr<DataItem> aptr_st;
           st->getInstance(aptr_st, branchDataStructParams, lc);
           ndp = new NDPair("branchData", aptr_st);
           NDPairList branchDataParams;
           branchDataParams.push_back(ndp);
-          std::auto_ptr<DataItem> aptr_cst;
+          std::unique_ptr<DataItem> aptr_cst;
           ct->getInstance(aptr_cst, branchDataParams, lc);
           ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-          std::auto_ptr<Constant> aptr_brd;
+          std::unique_ptr<Constant> aptr_brd;
           cdi->getConstant()->duplicate(aptr_brd);
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
@@ -4330,19 +4330,19 @@ void TissueFunctor::doNodeInit(LensContext* lc)
           pset->set(paramsLocal);
           (*node)->getNode()->initialize(pset);
           DoubleDataItem* keyDI = new DoubleDataItem(key);
-          std::auto_ptr<DataItem> keyDI_ap(keyDI);
+          std::unique_ptr<DataItem> keyDI_ap(keyDI);
           NDPair* ndp = new NDPair("key", keyDI_ap);
           branchDataStructParams.push_back(ndp);
-          std::auto_ptr<DataItem> aptr_st;
+          std::unique_ptr<DataItem> aptr_st;
           st->getInstance(aptr_st, branchDataStructParams, lc);
           ndp = new NDPair("branchData", aptr_st);
           NDPairList branchDataParams;
           branchDataParams.push_back(ndp);
-          std::auto_ptr<DataItem> aptr_cst;
+          std::unique_ptr<DataItem> aptr_cst;
           ct->getInstance(aptr_cst, branchDataParams, lc);
           ConstantDataItem* cdi =
               dynamic_cast<ConstantDataItem*>(aptr_cst.get());
-          std::auto_ptr<Constant> aptr_brd;
+          std::unique_ptr<Constant> aptr_brd;
           cdi->getConstant()->duplicate(aptr_brd);
           Constant* brd = aptr_brd.release();
           branchData = (dynamic_cast<CG_BranchData*>(brd));
@@ -7076,7 +7076,7 @@ void TissueFunctor::doConnector(LensContext* lc)
 //                    neuron based on the order given in neurons.txt
 //
 // NOTE: It is mainly used identify the data (to be recorded) 
-void TissueFunctor::doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval)
+void TissueFunctor::doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval)
 {
   std::vector<SegmentDescriptor::SegmentKeyData> maskVector;
   NDPairList::iterator ndpiter = _params->end(),
@@ -8100,13 +8100,13 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
       if (!found)
       {
         FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
-        std::auto_ptr<DataItem> paramDI_ap(paramDI);
+        std::unique_ptr<DataItem> paramDI_ap(paramDI);
         NDPair* ndp = new NDPair(varName, paramDI_ap);
         paramsLocal.push_back(ndp);
       }
       // END NEW CODE
       // FloatDataItem* paramDI = new FloatDataItem((float)cpiter->second);
-      // std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      // std::unique_ptr<DataItem> paramDI_ap(paramDI);
       // NDPair* ndp = new NDPair(varName, paramDI_ap);
       // paramsLocal.push_back(ndp);
     }
@@ -8114,7 +8114,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     {
       ////////////
       IntDataItem* paramDI = new IntDataItem((int)cpiter->second);
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      std::unique_ptr<DataItem> paramDI_ap(paramDI);
       NDPair* ndp = new NDPair(varName, paramDI_ap);
       paramsLocal.push_back(ndp);
     }
@@ -8123,7 +8123,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     //{
     //  ////////////
 		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
-    //  std::auto_ptr<DataItem> paramDI_ap(paramDI);
+    //  std::unique_ptr<DataItem> paramDI_ap(paramDI);
     //  NDPair* ndp = new NDPair(varName, paramDI_ap);
     //  paramsLocal.push_back(ndp);
     //}
@@ -8155,7 +8155,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       FloatArrayDataItem* paramDI = new FloatArrayDataItem(farr);
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      std::unique_ptr<DataItem> paramDI_ap(paramDI);
       if (!paramsLocal.replace(capiter->first, paramDI_ap))
       {
         // NDPair* ndp = new NDPair(capiter->first, paramDI_ap);
@@ -8170,7 +8170,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
                                        vend = capiter->second.end();
       for (; viter != vend; ++viter) farr.push_back(*viter);
       IntArrayDataItem* paramDI = new IntArrayDataItem(farr);
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      std::unique_ptr<DataItem> paramDI_ap(paramDI);
       if (!paramsLocal.replace(capiter->first, paramDI_ap))
       {
         // NDPair* ndp = new NDPair(capiter->first, paramDI_ap);
@@ -8183,7 +8183,7 @@ void TissueFunctor::getModelParams(Params::ModelType modelType,
     //{
     //  ////////////
 		//	StringDataItem* paramDI = new StringDataItem(cpiter->second);
-    //  std::auto_ptr<DataItem> paramDI_ap(paramDI);
+    //  std::unique_ptr<DataItem> paramDI_ap(paramDI);
     //  NDPair* ndp = new NDPair(varName, paramDI_ap);
     //  paramsLocal.push_back(ndp);
     //}
@@ -8981,17 +8981,17 @@ TissueFunctor::~TissueFunctor()
 #endif
 }
 
-void TissueFunctor::duplicate(std::auto_ptr<TissueFunctor>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<TissueFunctor>& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }
 
-void TissueFunctor::duplicate(std::auto_ptr<CG_TissueFunctorBase>& dup) const
+void TissueFunctor::duplicate(std::unique_ptr<CG_TissueFunctorBase>& dup) const
 {
   dup.reset(new TissueFunctor(*this));
 }

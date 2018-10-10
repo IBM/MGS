@@ -68,7 +68,7 @@ UnsignedTriggerDescriptor::UnsignedTriggerDescriptor(Simulation& s)
 
 
 void UnsignedTriggerDescriptor::getQueriable(
-   std::auto_ptr<InstanceFactoryQueriable>& dup)
+   std::unique_ptr<InstanceFactoryQueriable>& dup)
 {
    dup.reset(new InstanceFactoryQueriable(this));
    Array<Trigger*>::iterator it, end = _triggerList.end();
@@ -76,10 +76,10 @@ void UnsignedTriggerDescriptor::getQueriable(
       Trigger* t = (*it);
       TriggerDataItem* tdi = new TriggerDataItem;
       tdi->setTrigger(t);
-      std::auto_ptr<DataItem> apdi(tdi);
+      std::unique_ptr<DataItem> apdi(tdi);
       DataItemQueriable* diq = new DataItemQueriable(apdi);
       diq->setName(t->getDescription());
-      std::auto_ptr<DataItemQueriable> apq(diq);
+      std::unique_ptr<DataItemQueriable> apq(diq);
       dup->addQueriable(apq);
    }
    dup->setName(_name);
@@ -155,7 +155,7 @@ Trigger* UnsignedTriggerDescriptor::getTrigger(NDPairList& ndp)
 }
 
 void UnsignedTriggerDescriptor::duplicate(
-   std::auto_ptr<TriggerType>& dup) const
+   std::unique_ptr<TriggerType>& dup) const
 {
    dup.reset(new UnsignedTriggerDescriptor(*this));
 }

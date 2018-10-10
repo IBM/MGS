@@ -25,7 +25,7 @@ NodeTypeSetDataItem::NodeTypeSetDataItem()
 {
 }
 
-NodeTypeSetDataItem::NodeTypeSetDataItem(std::auto_ptr<NodeTypeSet> nodeTypeSet) 
+NodeTypeSetDataItem::NodeTypeSetDataItem(std::unique_ptr<NodeTypeSet> nodeTypeSet) 
 {
    _nodeTypeSet = nodeTypeSet.release();
 }
@@ -37,7 +37,7 @@ NodeTypeSetDataItem::NodeTypeSetDataItem(const NodeTypeSetDataItem& DI)
 
 
 // Utility methods
-void NodeTypeSetDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void NodeTypeSetDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new NodeTypeSetDataItem(*this)));
 }

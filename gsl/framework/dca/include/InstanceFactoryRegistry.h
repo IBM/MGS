@@ -38,7 +38,7 @@ class InstanceFactoryRegistry
 	 Simulation& sim, DependencyParser& dep, 
 	 std::string InstanceFactoryName) = 0;
       virtual void getQueriable(
-	 std::auto_ptr<InstanceFactoryRegistryQueriable>& dup) = 0;
+	 std::unique_ptr<InstanceFactoryRegistryQueriable>& dup) = 0;
       virtual std::string getTypeName() {
 	 return _typeName;
       }

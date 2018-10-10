@@ -41,10 +41,10 @@ class SymbolTable
       DataItem* getCurrentScopeEntry(const std::string& symbol);
 
       void addEntry(const std::string& symbol, 
-		    std::auto_ptr<DataItem>& value);
+		    std::unique_ptr<DataItem>& value);
       void updateEntry(const std::string& symbol, 
-		       std::auto_ptr<DataItem>& value);
-      int addCompositeTrigger(std::auto_ptr<DataItem>& value);
+		       std::unique_ptr<DataItem>& value);
+      int addCompositeTrigger(std::unique_ptr<DataItem>& value);
 
       void addLocalScope();
       void removeLocalScope();

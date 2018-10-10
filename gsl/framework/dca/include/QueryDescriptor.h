@@ -35,7 +35,7 @@ class QueryDescriptor
       QueryDescriptor();
       QueryDescriptor(const QueryDescriptor&);
       QueryDescriptor& operator=(const QueryDescriptor& QD);
-      int addQueryField(std::auto_ptr<QueryField> & qf);
+      int addQueryField(std::unique_ptr<QueryField> & qf);
       void clearFields();
       std::vector<QueryField*> & getQueryFields();
       bool isAnyFieldSet();

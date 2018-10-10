@@ -212,8 +212,8 @@ DataItem *C_type_specifier::getValidArgument(DataItem *DI) {
             //                   DataItemArrayDataItem *rddi = new
             //                   DataItemArrayDataItem(coord);
             //                   for ( iter = begin; iter != end; ++iter ) {
-            //                      std::auto_ptr<DataItem> *di_ap = new
-            //                      std::auto_ptr<DataItem>(getValidArgument(*iter));
+            //                      std::unique_ptr<DataItem> *di_ap = new
+            //                      std::unique_ptr<DataItem>(getValidArgument(*iter));
             //                      rddi->setDataItem ( coord, *di_ap );
             //                      coord[0]++;
             //                   }

@@ -57,7 +57,7 @@ C_phase_list::C_phase_list(C_phase_list *al, C_phase *a, SyntaxError * error)
 	 delete _error;
 	 _error = al->_error->duplicate();
       }
-      std::auto_ptr<std::vector<C_phase*> > phases;
+      std::unique_ptr<std::vector<C_phase*> > phases;
       al->releaseList(phases);
       _phases = phases.release();
       if (a) _phases->push_back(a);
@@ -67,7 +67,7 @@ C_phase_list::C_phase_list(C_phase_list *al, C_phase *a, SyntaxError * error)
 
 
 void C_phase_list::releaseList(
-   std::auto_ptr<std::vector<C_phase*> >& phases)
+   std::unique_ptr<std::vector<C_phase*> >& phases)
 {
    phases.reset(_phases);
    _phases = 0;

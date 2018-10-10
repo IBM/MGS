@@ -22,7 +22,7 @@
 #include "C_type_specifier.h"
 #include "C_initializable_type_specifier.h"
 
-void ArgumentListHelper::getDataItem(std::auto_ptr<DataItem>& dataItem
+void ArgumentListHelper::getDataItem(std::unique_ptr<DataItem>& dataItem
 				, LensContext* c
 				, C_argument_list* argumentList
 				, C_type_specifier* typeSpec)
@@ -43,7 +43,7 @@ void ArgumentListHelper::getDataItem(std::auto_ptr<DataItem>& dataItem
 
    coord[0]=0;
    for ( iter = begin; iter != end; ++iter ) {
-      std::auto_ptr<DataItem> temp;
+      std::unique_ptr<DataItem> temp;
       (*iter)->duplicate(temp);
       di_array_di->setDataItem( coord, temp );
       coord[0]++;
@@ -69,8 +69,8 @@ void ArgumentListHelper::getDataItem(std::auto_ptr<DataItem>& dataItem
    DataItem *di = ts.getValidArgument(di_array_di);
    // kind of gets out of our regular way
    // To fix: make C_type_specifier::getValidArgument pass this as a 
-   // std::auto_ptr cause  ownership is passed, but in parser ownership 
-   // is occasionally passed /wo std::auto_ptr anyways.
+   // std::unique_ptr cause  ownership is passed, but in parser ownership 
+   // is occasionally passed /wo std::unique_ptr anyways.
    if (di != di_array_di) {
       delete di_array_di;
    }

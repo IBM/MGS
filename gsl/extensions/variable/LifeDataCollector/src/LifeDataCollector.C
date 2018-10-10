@@ -24,7 +24,7 @@
 #include <sstream>
 #include <iostream>
 
-void LifeDataCollector::initialize(RNG& rng) 
+CUDA_CALLABLE void LifeDataCollector::initialize(RNG& rng) 
 {
   // Sort pointers by indices, row major
   std::map<unsigned, std::map<unsigned, int*> > sorter;
@@ -52,7 +52,7 @@ void LifeDataCollector::initialize(RNG& rng)
   output<<mxrow+1<<" "<<mxcol+1<<std::endl<<std::endl;
 }
 
-void LifeDataCollector::finalize(RNG& rng) 
+CUDA_CALLABLE void LifeDataCollector::finalize(RNG& rng) 
 {
   file->close();
 }
@@ -91,17 +91,17 @@ LifeDataCollector::~LifeDataCollector()
   delete file;
 }
 
-void LifeDataCollector::duplicate(std::auto_ptr<LifeDataCollector>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<LifeDataCollector>& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }
 
-void LifeDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }
 
-void LifeDataCollector::duplicate(std::auto_ptr<CG_LifeDataCollector>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<CG_LifeDataCollector>& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }

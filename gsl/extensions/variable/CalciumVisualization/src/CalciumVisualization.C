@@ -539,18 +539,18 @@ CalciumVisualization::~CalciumVisualization()
 }
 
 void CalciumVisualization::duplicate(
-    std::auto_ptr<CalciumVisualization>& dup) const
+    std::unique_ptr<CalciumVisualization>& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
-void CalciumVisualization::duplicate(std::auto_ptr<Variable>& dup) const
+void CalciumVisualization::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }
 
 void CalciumVisualization::duplicate(
-    std::auto_ptr<CG_CalciumVisualization>& dup) const
+    std::unique_ptr<CG_CalciumVisualization>& dup) const
 {
   dup.reset(new CalciumVisualization(*this));
 }

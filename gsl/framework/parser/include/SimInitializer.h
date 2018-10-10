@@ -34,7 +34,7 @@ class SimInitializer
    private:
       bool internalExecute(int argc, char** argv);
       bool runSimulationAndUI(
-	 CommandLine& commandLine, std::auto_ptr<Simulation>& sim);
+	 CommandLine& commandLine, std::unique_ptr<Simulation>& sim);
       int _rank;
       int _size;
       static RunTimeTopology _topology;

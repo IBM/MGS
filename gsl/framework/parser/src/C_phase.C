@@ -13,6 +13,7 @@
 //
 // =================================================================
 
+#include <utility>
 #include "C_phase.h"
 #include "SyntaxError.h"
 #include "C_production.h"
@@ -24,7 +25,7 @@
 
 void C_phase::internalExecute(LensContext *c)
 {
-   std::auto_ptr<Phase> dup;
+   std::unique_ptr<Phase> dup;
    c->getCurrentPhase(dup);
    dup->setName(_phase);
    if (_machineType) {
@@ -32,7 +33,7 @@ void C_phase::internalExecute(LensContext *c)
      dup->setMachineType(_machineType->getMachineType());
    }
    Phase* insToSim = dup.get();
-   std::auto_ptr<DataItem> pdi(new PhaseDataItem(dup));
+   std::unique_ptr<DataItem> pdi(new PhaseDataItem(dup));
    try {
       c->symTable.addEntry(_phase, pdi);
    } catch (SyntaxErrorException& e) {

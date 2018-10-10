@@ -120,7 +120,7 @@ void SimulationPublisher::copyOwnedData(const SimulationPublisher& rv)
   if (rv._services.size() > 0)
   {
     std::vector<Service*>::const_iterator it, end = rv._services.end();
-    std::auto_ptr<Service> dup;
+    std::unique_ptr<Service> dup;
     for (it = rv._services.begin(); it != end; ++it)
     {
       (*it)->duplicate(dup);
@@ -131,7 +131,7 @@ void SimulationPublisher::copyOwnedData(const SimulationPublisher& rv)
   {
     std::vector<TriggerType*>::const_iterator it,
         end = rv._triggerDescriptors.end();
-    std::auto_ptr<TriggerType> dup;
+    std::unique_ptr<TriggerType> dup;
     for (it = rv._triggerDescriptors.begin(); it != end; ++it)
     {
       (*it)->duplicate(dup);
@@ -162,7 +162,7 @@ void SimulationPublisher::destructOwnedData()
   }
 }
 
-void SimulationPublisher::duplicate(std::auto_ptr<Publisher>& dup) const
+void SimulationPublisher::duplicate(std::unique_ptr<Publisher>& dup) const
 {
   dup.reset(new SimulationPublisher(*this));
 }

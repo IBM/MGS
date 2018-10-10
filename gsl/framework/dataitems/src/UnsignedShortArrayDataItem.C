@@ -65,7 +65,7 @@ UnsignedShortArrayDataItem::UnsignedShortArrayDataItem(const UnsignedShortArrayD
 
 // Utility methods
 
-void UnsignedShortArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void UnsignedShortArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new UnsignedShortArrayDataItem(*this)));
 }

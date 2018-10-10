@@ -34,7 +34,7 @@ IntDataItem::IntDataItem(const IntDataItem& DI)
 
 
 // Utility methods
-void IntDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void IntDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new IntDataItem(*this)));
 }

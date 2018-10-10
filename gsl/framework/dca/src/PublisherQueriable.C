@@ -42,7 +42,7 @@ PublisherQueriable::PublisherQueriable(const PublisherQueriable& q)
 }
 
 
-void PublisherQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void PublisherQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    PublisherDataItem* di = new PublisherDataItem;
    di->setPublisher(_publisher);
@@ -50,9 +50,9 @@ void PublisherQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> PublisherQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> PublisherQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
    std::cerr<<"Queries not implemented on PublisherQueriable!"<<std::endl;
    return qr;
 }
@@ -64,7 +64,7 @@ Publisher* PublisherQueriable::getQPublisher()
 }
 
 
-void PublisherQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void PublisherQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new PublisherQueriable(*this));
 }

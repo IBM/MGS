@@ -36,10 +36,10 @@ void SrcScaledContractedGaussianWeightModifier::userInitialize(LensContext* CG_c
   _contract=contract;
 }
 
-std::auto_ptr<ParameterSet> SrcScaledContractedGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcScaledContractedGaussianWeightModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -81,17 +81,17 @@ std::auto_ptr<ParameterSet> SrcScaledContractedGaussianWeightModifier::userExecu
 
    std::string name="weight";
    FloatDataItem* fdi=new FloatDataItem(weight);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
    NDPair* ndp = new NDPair(name, fdi_ap);
    ndpl.push_back(ndp);
 
    name="distance";
    FloatDataItem* fdi2=new FloatDataItem(sqrt(distance));
-   std::auto_ptr<DataItem> fdi_ap2(fdi2);
+   std::unique_ptr<DataItem> fdi_ap2(fdi2);
    NDPair* ndp2 = new NDPair(name, fdi_ap2);
    ndpl.push_back(ndp2);
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -106,17 +106,17 @@ SrcScaledContractedGaussianWeightModifier::~SrcScaledContractedGaussianWeightMod
 {
 }
 
-void SrcScaledContractedGaussianWeightModifier::duplicate(std::auto_ptr<SrcScaledContractedGaussianWeightModifier>& dup) const
+void SrcScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<SrcScaledContractedGaussianWeightModifier>& dup) const
 {
    dup.reset(new SrcScaledContractedGaussianWeightModifier(*this));
 }
 
-void SrcScaledContractedGaussianWeightModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void SrcScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new SrcScaledContractedGaussianWeightModifier(*this));
 }
 
-void SrcScaledContractedGaussianWeightModifier::duplicate(std::auto_ptr<CG_SrcScaledContractedGaussianWeightModifierBase>& dup) const
+void SrcScaledContractedGaussianWeightModifier::duplicate(std::unique_ptr<CG_SrcScaledContractedGaussianWeightModifierBase>& dup) const
 {
    dup.reset(new SrcScaledContractedGaussianWeightModifier(*this));
 }

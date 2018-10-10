@@ -152,17 +152,17 @@ DetectDataChangeOneCompartment::~DetectDataChangeOneCompartment()
 {
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::auto_ptr<DetectDataChangeOneCompartment>& dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<DetectDataChangeOneCompartment>& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::auto_ptr<Variable>& dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }
 
-void DetectDataChangeOneCompartment::duplicate(std::auto_ptr<CG_DetectDataChangeOneCompartment>& dup) const
+void DetectDataChangeOneCompartment::duplicate(std::unique_ptr<CG_DetectDataChangeOneCompartment>& dup) const
 {
    dup.reset(new DetectDataChangeOneCompartment(*this));
 }

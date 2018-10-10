@@ -39,7 +39,7 @@ class ServiceDataItem : public DataItem
       ~ServiceDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       Service* getService() const;

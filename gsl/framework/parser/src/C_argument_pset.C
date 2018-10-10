@@ -35,7 +35,7 @@ void C_argument_pset::internalExecute(LensContext *c)
    _parameter_set_DI = new ParameterSetDataItem();
    NDPairList dummy;
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    if (_parm_type_pair->getModelType() == C_parameter_type_pair::_EDGE) {
       EdgeType* et = 0;
       if (_ndp_clause_list) {
@@ -83,7 +83,7 @@ C_argument_pset::C_argument_pset(const C_argument_pset& rv)
    if (rv._ndp_clause_list) 
       _ndp_clause_list = rv._ndp_clause_list->duplicate();
    if (rv._parameter_set_DI) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._parameter_set_DI->duplicate(cc_di);
       _parameter_set_DI = dynamic_cast<ParameterSetDataItem*>(cc_di.release());
    }

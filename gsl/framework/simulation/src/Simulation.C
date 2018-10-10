@@ -85,6 +85,11 @@ int Simulation::P2P_TAG = 21;
 
 #endif // DISABLE_PTHREADS
 
+#if defined(HAVE_GPU) && defined(__NVCC__)
+   #include <cuda_runtime_api.h>
+#endif
+
+
 // Set states; _iteration to 1
 #ifndef DISABLE_PTHREADS
 Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed)
@@ -162,11 +167,55 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
    _nump=1;
 #endif // HAVE_MPI
 
+#if defined(HAVE_GPU) && defined(__NVCC__)
+   int deviceCount = -1; // number of devices
+   int dev = 0;
+
+   cudaGetDeviceCount(&deviceCount);
+
+   if (deviceCount == 0) {
+     fprintf(stderr, "No CUDA devices found\n");
+     return;
+   }
+   else{
+     std::cout << "There are " << deviceCount << " CUDA devices found\n";
+   }
+
+   dev = _rank % int(_nump / deviceCount);
+   cudaError_t error = cudaSetDevice(dev);
+   if (error != cudaSuccess) {
+     fprintf(stderr, "Error setting device to %d on rank %d (%d processes): %s\n",
+	 dev, _rank, _nump, cudaGetErrorString(error));
+     return;
+   }
+   else{
+     printf("     rank %d get GPU %d\n", _rank, dev);
+     print_GPU_info(dev);
+   }
+#endif
+ 
    // Seed the random number generator
    _rng.reSeed(seed, _rank) ;
    _rngShared.reSeedShared(seed-1);
    _rngSeed=seed;
 }
+
+#if defined(HAVE_GPU) && defined(__NVCC__)
+void Simulation::print_GPU_info(int devID)
+{
+  cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, devID);
+  printf("Device Number: %d\n", devID);
+  printf("  Device name: %s\n", prop.name);
+  printf("  CC: %d.%d\n", prop.major, prop.minor);
+  printf("  Memory Clock Rate (KHz): %d\n",
+      prop.memoryClockRate);
+  printf("  Memory Bus Width (bits): %d\n",
+      prop.memoryBusWidth);
+  printf("  Peak Memory Bandwidth (GB/s): %f\n\n",
+      2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
+}
+#endif
 
 void Simulation::pauseHandler()
 {
@@ -344,7 +393,7 @@ bool Simulation::start()
    if (_initPhases.size() > 0) {
       if (_rank==0) printf("Running Init Phases.\n\n");
       runPhases(_initPhases);
-   }   
+   }
 
 #ifdef HAVE_MPI
    if (_rank==0) printf("Flushing Proxies.\n\n");
@@ -675,7 +724,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	       rebuildRequested = _commEngine->Communicate();
 	       assert(!rebuildRequested);
 	     }
-	   }	     
+	   }	
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
 	 //if (&phases == &_initPhases && it==phases.begin()) while(1) {}
@@ -923,7 +972,7 @@ void Simulation::getGranules(NodeSet& nodeSet, GranuleSet& granuleSet)
    }
 }
 
-void Simulation::addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper)
+void Simulation::addGranuleMapper(std::unique_ptr<GranuleMapper>& granuleMapper)
 {
    granuleMapper->setGlobalGranuleIds(_globalGranuleId);  // _globalGranuleId is incremented by this function call
    _granuleMappers.push_back(granuleMapper.release());

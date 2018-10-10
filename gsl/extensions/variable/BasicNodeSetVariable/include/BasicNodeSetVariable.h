@@ -24,13 +24,13 @@
 class BasicNodeSetVariable : public CG_BasicNodeSetVariable
 {
    public:
-      virtual void initialize(RNG&);
+      CUDA_CALLABLE virtual void initialize(RNG&);
       virtual void dca(Trigger* trigger, NDPairList* ndPairList);
       BasicNodeSetVariable();
       virtual ~BasicNodeSetVariable();
-      virtual void duplicate(std::auto_ptr<BasicNodeSetVariable>& dup) const;
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_BasicNodeSetVariable>& dup) const;
+      virtual void duplicate(std::unique_ptr<BasicNodeSetVariable>& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_BasicNodeSetVariable>& dup) const;
    private:
       ShallowArray<float> _coords;
       int _updateCounter;

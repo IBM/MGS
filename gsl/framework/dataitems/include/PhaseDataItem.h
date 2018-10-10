@@ -38,19 +38,19 @@ class PhaseDataItem : public DataItem
 
       // Constructors
       PhaseDataItem();
-      PhaseDataItem(std::auto_ptr<Phase> data);
+      PhaseDataItem(std::unique_ptr<Phase>& data);
       PhaseDataItem(const PhaseDataItem& rv);
 
       // Destructor
       ~PhaseDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       // Singlet Methods
       Phase* getPhase(Error* error=0) const;
-      void setPhase(std::auto_ptr<Phase>& data, Error* error=0);
+      void setPhase(std::unique_ptr<Phase>& data, Error* error=0);
       std::string getString(Error* error=0) const;
 
 };

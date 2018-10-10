@@ -28,7 +28,7 @@ C_declaration* C_declaration_init_phases::duplicate() const
 
 void C_declaration_init_phases::internalExecute(LensContext *c)
 {
-   std::auto_ptr<Phase> phase(new InitPhase());
+   std::unique_ptr<Phase> phase(new InitPhase());
    c->setCurrentPhase(phase);
    _phaseList->execute(c);
 }

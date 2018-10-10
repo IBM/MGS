@@ -267,17 +267,17 @@ AnyConcentrationDisplay::~AnyConcentrationDisplay()
 {
 }
 
-void AnyConcentrationDisplay::duplicate(std::auto_ptr<AnyConcentrationDisplay>& dup) const
+void AnyConcentrationDisplay::duplicate(std::unique_ptr<AnyConcentrationDisplay>& dup) const
 {
    dup.reset(new AnyConcentrationDisplay(*this));
 }
 
-void AnyConcentrationDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void AnyConcentrationDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new AnyConcentrationDisplay(*this));
 }
 
-void AnyConcentrationDisplay::duplicate(std::auto_ptr<CG_AnyConcentrationDisplay>& dup) const
+void AnyConcentrationDisplay::duplicate(std::unique_ptr<CG_AnyConcentrationDisplay>& dup) const
 {
    dup.reset(new AnyConcentrationDisplay(*this));
 }

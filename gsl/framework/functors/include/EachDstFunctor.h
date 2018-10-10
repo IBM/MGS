@@ -32,16 +32,16 @@ class EachDstFunctor: public SampFctr2Functor
    public:
       EachDstFunctor();
       EachDstFunctor(const EachDstFunctor&);
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~EachDstFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
    private:
-      std::auto_ptr<Functor> _functor_ap;
+      std::unique_ptr<Functor> _functor_ap;
       bool _isUntouched;
       NodeSet *_destinationSet;
       std::vector<NodeDescriptor*> _nodes;

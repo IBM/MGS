@@ -25,10 +25,10 @@ void NameReturnValue::userInitialize(LensContext* CG_c, String& s, Functor*& f)
 {
 }
 
-std::auto_ptr<NDPairList> NameReturnValue::userExecute(LensContext* CG_c) 
+std::unique_ptr<NDPairList> NameReturnValue::userExecute(LensContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> rval_ap;
+  std::unique_ptr<DataItem> rval_ap;
   init.f->execute(CG_c, nullArgs, rval_ap);
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -38,7 +38,7 @@ std::auto_ptr<NDPairList> NameReturnValue::userExecute(LensContext* CG_c)
 
   std::string s(init.s.c_str());
   NDPair* ndp = new NDPair(s, rval_ap);
-  std::auto_ptr<NDPairList> rval(new NDPairList());  
+  std::unique_ptr<NDPairList> rval(new NDPairList());  
   rval->push_back(ndp);
   return rval;
 }
@@ -52,17 +52,17 @@ NameReturnValue::~NameReturnValue()
 {
 }
 
-void NameReturnValue::duplicate(std::auto_ptr<NameReturnValue>& dup) const
+void NameReturnValue::duplicate(std::unique_ptr<NameReturnValue>& dup) const
 {
    dup.reset(new NameReturnValue(*this));
 }
 
-void NameReturnValue::duplicate(std::auto_ptr<Functor>& dup) const
+void NameReturnValue::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new NameReturnValue(*this));
 }
 
-void NameReturnValue::duplicate(std::auto_ptr<CG_NameReturnValueBase>& dup) const
+void NameReturnValue::duplicate(std::unique_ptr<CG_NameReturnValueBase>& dup) const
 {
    dup.reset(new NameReturnValue(*this));
 }

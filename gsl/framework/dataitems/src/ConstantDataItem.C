@@ -25,7 +25,7 @@ ConstantDataItem::ConstantDataItem()
 {
 }
 
-ConstantDataItem::ConstantDataItem(std::auto_ptr<Constant> data)
+ConstantDataItem::ConstantDataItem(std::unique_ptr<Constant> data)
 {
    _data = data.release();
 }
@@ -42,7 +42,7 @@ ConstantDataItem::ConstantDataItem(const ConstantDataItem& rv)
 }
 
 // Utility methods
-void ConstantDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ConstantDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new ConstantDataItem(*this));
 }
@@ -68,7 +68,7 @@ Constant* ConstantDataItem::getConstant(Error* error) const
    return _data;
 }
 
-void ConstantDataItem::setConstant(std::auto_ptr<Constant>& c , Error* error)
+void ConstantDataItem::setConstant(std::unique_ptr<Constant>& c , Error* error)
 {
    delete _data;
    _data = c.release();
@@ -82,7 +82,7 @@ std::string ConstantDataItem::getString(Error* error) const
 void ConstantDataItem::copyOwnedHeap(const ConstantDataItem& rv)
 {
    if (rv._data) {
-      std::auto_ptr<Constant> dup;
+      std::unique_ptr<Constant> dup;
       rv._data->duplicate(dup);
       _data = dup.release();
    } else {

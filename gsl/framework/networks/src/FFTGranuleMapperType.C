@@ -36,7 +36,7 @@ FFTGranuleMapperType::FFTGranuleMapperType(Simulation& s)
 
 
 void FFTGranuleMapperType::getQueriable(
-   std::auto_ptr<InstanceFactoryQueriable>& dup)
+   std::unique_ptr<InstanceFactoryQueriable>& dup)
 {
    dup.reset(new InstanceFactoryQueriable(this));
    Array<GranuleMapper*>::iterator it, end = _granuleMapperList.end();
@@ -44,17 +44,17 @@ void FFTGranuleMapperType::getQueriable(
       GranuleMapper* gm = (*it);
       GranuleMapperDataItem* gmdi = new GranuleMapperDataItem;
       gmdi->setGranuleMapper(gm);
-      std::auto_ptr<DataItem> apdi(gmdi);
+      std::unique_ptr<DataItem> apdi(gmdi);
       DataItemQueriable* diq = new DataItemQueriable(apdi);
       diq->setName(gm->getName());
-      std::auto_ptr<DataItemQueriable> apq(diq);
+      std::unique_ptr<DataItemQueriable> apq(diq);
       dup->addQueriable(apq);
    }
    dup->setName(_name);
 }
 
 
-void FFTGranuleMapperType::getGranuleMapper(std::vector<DataItem*> const & args, std::auto_ptr<GranuleMapper>& apgm)
+void FFTGranuleMapperType::getGranuleMapper(std::vector<DataItem*> const & args, std::unique_ptr<GranuleMapper>& apgm)
 {
    GranuleMapper* rval = new FFTGranuleMapper(_sim, args);
    _granuleMapperList.push_back(rval);
@@ -65,7 +65,7 @@ void FFTGranuleMapperType::getGranuleMapper(std::vector<DataItem*> const & args,
 }
 
 void FFTGranuleMapperType::duplicate(
-   std::auto_ptr<GranuleMapperType>& dup) const
+   std::unique_ptr<GranuleMapperType>& dup) const
 {
    dup.reset(new FFTGranuleMapperType(*this));
 }

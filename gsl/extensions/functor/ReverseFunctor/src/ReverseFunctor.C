@@ -27,7 +27,7 @@ void ReverseFunctor::userInitialize(LensContext* CG_c, Functor*& f)
 void ReverseFunctor::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -50,17 +50,17 @@ ReverseFunctor::~ReverseFunctor()
 {
 }
 
-void ReverseFunctor::duplicate(std::auto_ptr<ReverseFunctor>& dup) const
+void ReverseFunctor::duplicate(std::unique_ptr<ReverseFunctor>& dup) const
 {
    dup.reset(new ReverseFunctor(*this));
 }
 
-void ReverseFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void ReverseFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new ReverseFunctor(*this));
 }
 
-void ReverseFunctor::duplicate(std::auto_ptr<CG_ReverseFunctorBase>& dup) const
+void ReverseFunctor::duplicate(std::unique_ptr<CG_ReverseFunctorBase>& dup) const
 {
    dup.reset(new ReverseFunctor(*this));
 }

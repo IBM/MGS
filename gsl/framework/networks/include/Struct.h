@@ -29,7 +29,7 @@ class Struct
 
    public:
       Struct();
-      virtual void duplicate(std::auto_ptr<Struct>& dup) const=0;
+      virtual void duplicate(std::unique_ptr<Struct>& dup) const=0;
       void initialize(LensContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
       virtual ~Struct();

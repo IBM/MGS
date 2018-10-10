@@ -31,17 +31,17 @@ class NdplInAttrInitFunctor: public InAttrInitializerFunctor
    public:
       NdplInAttrInitFunctor();
       NdplInAttrInitFunctor(const NdplInAttrInitFunctor&);
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~NdplInAttrInitFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
    private:
-      std::auto_ptr<Functor> _functor_ap;
-      std::auto_ptr<ParameterSet> _pset_ap;
+      std::unique_ptr<Functor> _functor_ap;
+      std::unique_ptr<ParameterSet> _pset_ap;
 
 };
 #endif

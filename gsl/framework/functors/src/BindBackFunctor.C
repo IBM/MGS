@@ -40,7 +40,7 @@ void BindBackFunctor::doInitialize(LensContext *c,
 	 "Dynamic cast of DataItem to FunctorDataItem failed in BindBackFunctor");
    }
 
-   std::auto_ptr<Functor> fap;
+   std::unique_ptr<Functor> fap;
    fdi->getFunctor()->duplicate(fap);
    _bind_functor = fap.release();
 
@@ -48,7 +48,7 @@ void BindBackFunctor::doInitialize(LensContext *c,
       begin = args.begin(), end = args.end();
    begin++;
 
-   std::auto_ptr<DataItem> DI;
+   std::unique_ptr<DataItem> DI;
    for ( iter = begin; iter != end; ++iter ) {
       (*iter)->duplicate(DI);
       _bind_args.push_back( DI.release());
@@ -58,7 +58,7 @@ void BindBackFunctor::doInitialize(LensContext *c,
 
 void BindBackFunctor::doExecute(LensContext *c, 
 				const std::vector<DataItem*>& args, 
-				std::auto_ptr<DataItem>& rvalue)
+				std::unique_ptr<DataItem>& rvalue)
 {
    std::vector<DataItem*> expArgs;
 
@@ -76,7 +76,7 @@ void BindBackFunctor::doExecute(LensContext *c,
 }
 
 
-void BindBackFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void BindBackFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new BindBackFunctor(*this));
 }
@@ -92,7 +92,7 @@ BindBackFunctor::BindBackFunctor(const BindBackFunctor &f)
 : _bind_functor(0)
 {
    if (f._bind_functor) {
-      std::auto_ptr<Functor> fap;
+      std::unique_ptr<Functor> fap;
       f._bind_functor->duplicate(fap);
       _bind_functor = fap.release();
    }
@@ -100,7 +100,7 @@ BindBackFunctor::BindBackFunctor(const BindBackFunctor &f)
    std::vector<DataItem*>::const_iterator iter, 
       begin = f._bind_args.begin(), end = f._bind_args.end();
 
-   std::auto_ptr<DataItem> DI;
+   std::unique_ptr<DataItem> DI;
    for ( iter = begin; iter != end; ++iter ) {
       (*iter)->duplicate(DI);
       _bind_args.push_back(DI.release());

@@ -214,13 +214,13 @@ case $PLATFORM in
     PLATFORM_OPTS+=""
     ;;
   BGL )
-    PLATFORM_OPTS+=" --blueGeneL "
+    PLATFORM_OPTS+="--with-mpi --blueGeneL "
     ;;
   BGP )
-    PLATFORM_OPTS+=" --blueGeneP "
+    PLATFORM_OPTS+="--with-mpi --blueGeneP "
     ;;
   BGQ )
-    PLATFORM_OPTS+=" --blueGeneQ "
+    PLATFORM_OPTS+="--with-mpi --blueGeneQ "
     ;;
 esac
 

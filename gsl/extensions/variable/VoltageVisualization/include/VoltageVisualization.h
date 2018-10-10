@@ -39,9 +39,9 @@ class VoltageVisualization : public CG_VoltageVisualization
       Constant* CG_constant, CG_VoltageVisualizationInAttrPSet* CG_inAttrPset,
       CG_VoltageVisualizationOutAttrPSet* CG_outAttrPset);
   virtual ~VoltageVisualization();
-  virtual void duplicate(std::auto_ptr<VoltageVisualization>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_VoltageVisualization>& dup) const;
+  virtual void duplicate(std::unique_ptr<VoltageVisualization>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_VoltageVisualization>& dup) const;
 
   private:
   float swapByteOrder(float*);

@@ -35,7 +35,7 @@ FloatDataItem::FloatDataItem(const FloatDataItem& DI)
 
 
 // Utility methods
-void FloatDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void FloatDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new FloatDataItem(*this)));
 }

@@ -50,7 +50,7 @@ GranuleMapperTypeDataItem::GranuleMapperTypeDataItem(const GranuleMapperTypeData
 
 
 // Utility methods
-void GranuleMapperTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void GranuleMapperTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new GranuleMapperTypeDataItem(*this));
 }

@@ -19,7 +19,7 @@
 //#include <sstream>
 //#include <iostream>
 
-DataItemQueriable::DataItemQueriable(std::auto_ptr<DataItem> & dataItem)
+DataItemQueriable::DataItemQueriable(std::unique_ptr<DataItem> & dataItem)
 {
    _dataItem = dataItem.release();
    _publisherQueriable = false;
@@ -32,7 +32,7 @@ DataItemQueriable::DataItemQueriable(std::auto_ptr<DataItem> & dataItem)
 DataItemQueriable::DataItemQueriable(const DataItemQueriable & q)
    : Queriable(q)
 {
-   std::auto_ptr<DataItem> apdi;
+   std::unique_ptr<DataItem> apdi;
    q._dataItem->duplicate(apdi);
    _dataItem = apdi.release();
 }
@@ -50,15 +50,15 @@ void DataItemQueriable::setName(std::string name)
 }
 
 
-void DataItemQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void DataItemQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    _dataItem->duplicate(apdi);
 }
 
 
-std::auto_ptr<QueryResult> DataItemQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> DataItemQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
    std::cerr<<"Queries not implemented on DataItemQueriable!"<<std::endl;
    return qr;
 }
@@ -70,7 +70,7 @@ Publisher* DataItemQueriable::getQPublisher()
 }
 
 
-void DataItemQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void DataItemQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new DataItemQueriable(*this));
 }

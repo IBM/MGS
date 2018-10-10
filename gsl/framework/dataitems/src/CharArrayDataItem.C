@@ -66,7 +66,7 @@ CharArrayDataItem::CharArrayDataItem(const CharArrayDataItem& DI)
 
 
 // Utility methods
-void CharArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void CharArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new CharArrayDataItem(*this)));
 }
@@ -96,7 +96,7 @@ const char* CharArrayDataItem::getType() const
 
 void CharArrayDataItem::setDimensions(std::vector<int> const &dimensions)
 {
-   std::auto_ptr<DataItem*> diap;
+   std::unique_ptr<DataItem*> diap;
    unsigned size = getOffset(dimensions);
    std::vector<char> *dest = new std::vector<char>(size);
    dest->assign(dest->size(),0);

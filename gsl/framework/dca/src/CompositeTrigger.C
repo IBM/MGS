@@ -199,7 +199,7 @@ bool CompositeTrigger::isSingle()
    return (_triggerA->status() == _criterionA);
 }
 
-void CompositeTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void CompositeTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
    dup.reset(new CompositeTrigger(*this));
 }

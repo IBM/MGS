@@ -52,7 +52,7 @@ C_composite_definition_body* C_composite_definition_body::duplicate() const
 }
 
 void C_composite_definition_body::duplicate(
-   std::auto_ptr<RepertoireFactory>& rv) const
+   std::unique_ptr<RepertoireFactory>& rv) const
 {
    rv.reset(new C_composite_definition_body(*this));
 }
@@ -80,14 +80,14 @@ Repertoire* C_composite_definition_body::createRepertoire(
    }
    Repertoire* parentRep = crdi->getRepertoire();
 
-   std::auto_ptr<Repertoire> rap(composite);
+   std::unique_ptr<Repertoire> rap(composite);
    parentRep->addSubRepertoire(rap);
    //composite->setParentRepertoire(parentRep);
 
    // Put new repertoire in symbol table in the current scope
    RepertoireDataItem * rdi = new RepertoireDataItem;
    rdi->setRepertoire(composite);
-   std::auto_ptr<DataItem> di_ap(rdi);
+   std::unique_ptr<DataItem> di_ap(rdi);
 
    try {
       c->symTable.addEntry(repName, di_ap);

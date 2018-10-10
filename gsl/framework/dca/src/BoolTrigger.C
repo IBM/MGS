@@ -137,7 +137,7 @@ bool BoolTrigger::isEqual() { return (*_service) == _criterion; }
 
 bool BoolTrigger::isNotEqual() { return (*_service) != _criterion; }
 
-void BoolTrigger::duplicate(std::auto_ptr<Trigger>& dup) const {
+void BoolTrigger::duplicate(std::unique_ptr<Trigger>& dup) const {
   dup.reset(new BoolTrigger(*this));
 }
 

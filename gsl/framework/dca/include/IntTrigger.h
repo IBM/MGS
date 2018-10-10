@@ -32,7 +32,7 @@ class IntTrigger : public TriggerBase
    public:
       IntTrigger(Simulation& sim, std::vector<DataItem*> const & args);
       virtual bool status();
-      virtual void duplicate(std::auto_ptr<Trigger>& dup) const;
+      virtual void duplicate(std::unique_ptr<Trigger>& dup) const;
       virtual ~IntTrigger();
    private:
       void setEvaluator(std::string op);

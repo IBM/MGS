@@ -77,9 +77,9 @@ void ConnectNodeSetsByVolumeFunctor::userExecute(LensContext* CG_c, NodeSet*& so
   }
 
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> outAttrRVal;
-  std::auto_ptr<DataItem> inAttrRVal;
-  std::auto_ptr<DataItem> rval;
+  std::unique_ptr<DataItem> outAttrRVal;
+  std::unique_ptr<DataItem> inAttrRVal;
+  std::unique_ptr<DataItem> rval;
   ParameterSetDataItem *psdi;
   //cc->done = false;
   std::vector<NodeDescriptor*> _nodes;
@@ -217,17 +217,17 @@ ConnectNodeSetsByVolumeFunctor::~ConnectNodeSetsByVolumeFunctor()
 {
 }
 
-void ConnectNodeSetsByVolumeFunctor::duplicate(std::auto_ptr<ConnectNodeSetsByVolumeFunctor>& dup) const
+void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<ConnectNodeSetsByVolumeFunctor>& dup) const
 {
    dup.reset(new ConnectNodeSetsByVolumeFunctor(*this));
 }
 
-void ConnectNodeSetsByVolumeFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new ConnectNodeSetsByVolumeFunctor(*this));
 }
 
-void ConnectNodeSetsByVolumeFunctor::duplicate(std::auto_ptr<CG_ConnectNodeSetsByVolumeFunctorBase>& dup) const
+void ConnectNodeSetsByVolumeFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsByVolumeFunctorBase>& dup) const
 {
    dup.reset(new ConnectNodeSetsByVolumeFunctor(*this));
 }

@@ -41,7 +41,7 @@ NdplEdgeInitFunctor::NdplEdgeInitFunctor(const NdplEdgeInitFunctor& csf)
 }
 
 
-void NdplEdgeInitFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void NdplEdgeInitFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new NdplEdgeInitFunctor(*this));
 }
@@ -75,13 +75,13 @@ void NdplEdgeInitFunctor::doInitialize(LensContext *c,
 
 void NdplEdgeInitFunctor::doExecute(LensContext *c, 
 				    const std::vector<DataItem*>& args, 
-				    std::auto_ptr<DataItem>& rvalue)
+				    std::unique_ptr<DataItem>& rvalue)
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    ConnectionContext *cc = c->connectionContext;
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    cc->edgeType->getInitializationParameterSet(pset);
 
    _functor_ap->execute(c, nullArgs, rval_ap);

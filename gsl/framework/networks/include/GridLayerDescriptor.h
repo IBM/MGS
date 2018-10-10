@@ -85,7 +85,7 @@ class GridLayerDescriptor
 			  std::string name, NodeType* nt, 
 			  const NDPairList& ndpl, unsigned granuleMapperIndex);
 
-      void setNodeAccessor(std::auto_ptr<NodeAccessor>&);
+      void setNodeAccessor(std::unique_ptr<NodeAccessor>&);
 
 	  //NOTE: Example Layer declared in GLS
 	  //Layer(layer_name, HodgkinHuxleyVoltage, tissueFunctor("Layout", <nodekind="Branches"),

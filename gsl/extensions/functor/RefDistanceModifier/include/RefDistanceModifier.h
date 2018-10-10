@@ -26,12 +26,12 @@ class RefDistanceModifier : public CG_RefDistanceModifierBase
 {
    public:
       void userInitialize(LensContext* CG_c, int& directionFlag, int& WrapFlag, Functor*& f);
-      std::auto_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       RefDistanceModifier();
       virtual ~RefDistanceModifier();
-      virtual void duplicate(std::auto_ptr<RefDistanceModifier>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_RefDistanceModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<RefDistanceModifier>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_RefDistanceModifierBase>& dup) const;
 };
 
 #endif

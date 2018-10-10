@@ -186,17 +186,17 @@ CurrentDisplay::CurrentDisplay() : CG_CurrentDisplay(), outFile(0) {}
 
 CurrentDisplay::~CurrentDisplay() { delete outFile; }
 
-void CurrentDisplay::duplicate(std::auto_ptr<CurrentDisplay>& dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<CurrentDisplay>& dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }
 
-void CurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }
 
-void CurrentDisplay::duplicate(std::auto_ptr<CG_CurrentDisplay>& dup) const
+void CurrentDisplay::duplicate(std::unique_ptr<CG_CurrentDisplay>& dup) const
 {
   dup.reset(new CurrentDisplay(*this));
 }

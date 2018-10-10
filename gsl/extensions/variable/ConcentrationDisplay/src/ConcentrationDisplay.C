@@ -177,17 +177,17 @@ ConcentrationDisplay::ConcentrationDisplay() : CG_ConcentrationDisplay(), outFil
 
 ConcentrationDisplay::~ConcentrationDisplay() { delete outFile; }
 
-void ConcentrationDisplay::duplicate(std::auto_ptr<ConcentrationDisplay>& dup) const
+void ConcentrationDisplay::duplicate(std::unique_ptr<ConcentrationDisplay>& dup) const
 {
   dup.reset(new ConcentrationDisplay(*this));
 }
 
-void ConcentrationDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void ConcentrationDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new ConcentrationDisplay(*this));
 }
 
-void ConcentrationDisplay::duplicate(std::auto_ptr<CG_ConcentrationDisplay>& dup) const
+void ConcentrationDisplay::duplicate(std::unique_ptr<CG_ConcentrationDisplay>& dup) const
 {
   dup.reset(new ConcentrationDisplay(*this));
 }

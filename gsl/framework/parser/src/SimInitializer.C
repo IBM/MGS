@@ -118,9 +118,9 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    if (!(commandLine.parse(argc, argv))) {
       return false;
    }
-   std::auto_ptr<Simulation> sim;
-   std::auto_ptr<LensLexer> scanner;
-   std::auto_ptr<LensContext> context;
+   std::unique_ptr<Simulation> sim;
+   std::unique_ptr<LensLexer> scanner;
+   std::unique_ptr<LensContext> context;
    
    char const* infilename = commandLine.getGslFile().c_str();
    std::istream *infile;
@@ -283,7 +283,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::cerr << "_connectionIncrement->_communicationBytes=" << _connectionIncrement->_communicationBytes << std::endl;
 #endif
 
-     std::auto_ptr<LensContext> firstPassContext;
+     std::unique_ptr<LensContext> firstPassContext;
      context->duplicate(firstPassContext);
      firstPassContext->addCurrentRepertoire(sim->getRootRepertoire());
      if (sim->getRank()==0) printf("\nThe first execution of the parse tree begins.\n\n");
@@ -380,19 +380,19 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 }
 
 bool SimInitializer::runSimulationAndUI(
-   CommandLine& commandLine, std::auto_ptr<Simulation>& sim)
+   CommandLine& commandLine, std::unique_ptr<Simulation>& sim)
 {
 #ifndef DISABLE_PTHREADS
    bool noUI = false;
-   std::auto_ptr<GraphicalUserInterface> guiInterface;
-   std::auto_ptr<TextUserInterface> textInterface;
+   std::unique_ptr<GraphicalUserInterface> guiInterface;
+   std::unique_ptr<TextUserInterface> textInterface;
 
    if (commandLine.getUserInterface() == "gui") {
       guiInterface.reset(
 	 new GraphicalUserInterface(commandLine.getGuiPort(), *sim));
       assert(guiInterface.get());
 
-      std::auto_ptr<PauseActionable> pa(new SBrowser(*sim, 
+      std::unique_ptr<PauseActionable> pa(new SBrowser(*sim, 
 						     guiInterface.get()));
       sim->getTriggeredPauseAction()->insert(pa);
       sim->setUI(guiInterface.get());
@@ -402,7 +402,7 @@ bool SimInitializer::runSimulationAndUI(
       textInterface.reset(new TextUserInterface);
       assert(textInterface.get());
 
-      std::auto_ptr<PauseActionable> pa(new Browser(*sim, 
+      std::unique_ptr<PauseActionable> pa(new Browser(*sim, 
 						    textInterface.get()));
       sim->getTriggeredPauseAction()->insert(pa);
       sim->setUI(textInterface.get());

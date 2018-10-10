@@ -49,7 +49,7 @@ void InstanceFactory::copyOwnedHeap(const InstanceFactory& rv)
 	 , end2 = (*it).end();
       std::vector<std::pair<std::string, DataItem*> > nVec;
       for (it2 = (*it).begin(); it2 != end2; ++it2) {
-	 std::auto_ptr<DataItem> dup;
+	 std::unique_ptr<DataItem> dup;
 	 ((*it2).second)->duplicate(dup);
 	 std::pair<std::string, DataItem*> nPair;
 	 nPair.first = (*it2).first;
@@ -60,7 +60,7 @@ void InstanceFactory::copyOwnedHeap(const InstanceFactory& rv)
    }
    std::vector<DataItem*>::const_iterator it2, end2 = rv._instances.end();
    for(it2 = rv._instances.begin(); it2!=end2; ++it2) {
-      std::auto_ptr<DataItem> dup;
+      std::unique_ptr<DataItem> dup;
       (*it2)->duplicate(dup);
       _instances.push_back(dup.release());
    }

@@ -853,7 +853,7 @@ class BuildSetup:
         """
         options to GCC
         """
-        if self.options.withMpi is True:
+        def setCompilersMPI(self):
             if self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
                     self.options.compiler = "gcc"
@@ -889,6 +889,22 @@ class BuildSetup:
                                 self.cppCompiler = findFile("mpiCC", True)
                                 findFile("mpiCC", True)
                                 # raise FatalError("Currently MPI is only used by AIX")
+
+        def setCompilersMPI_GPU(self):
+            if self.operatingSystem == "Linux":
+                self.options.compiler = "nvcc"
+                self.cCompiler = findFile("nvcc", True)
+                findFile("nvcc", True)
+                self.cppCompiler = findFile("nvcc", True)
+                findFile("nvcc", True)
+            else:
+                raise FatalError("Currently MPI+GPU is only available on LINUX")
+
+        if self.options.withMpi is True:
+            if self.options.withGpu is True:
+                setCompilersMPI_GPU(self)
+            else:
+                setCompilersMPI(self)
             return  # important do not continue this function after here.
 
         if not (self.options.compiler == "xl" or self.options.compiler == "gcc"):
@@ -1431,6 +1447,95 @@ COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
         retStr += "\n"
         return retStr
 
+    def getNVCCFlags(self):  # noqa
+        retStr = \
+            """\
+# OTHER_LIBS :=-lgmp -lpython2.7
+OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7
+ifeq ($(USE_SUITESPARSE), 1)
+OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
+endif
+LDFLAGS := -shared
+"""
+        retStr += \
+            """
+# https://github.com/OpenGP/htrack/blob/master/cmake/ConfigureCUDA.cmake
+# set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -w -Xcompiler -fPIC" )
+# set(CUDA_NVCC_FLAGS "-gencode arch=compute_50,code=sm_50") # GTX980
+# set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -g") # HOST debug mode
+# set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -G") # DEV debug mode
+# Tesla : -gencode arch=compute_10,code=sm_10
+# Fermi : -gencode arch=compute_20,code=sm_20
+
+#CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+#CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+#CFLAGS += --compiler-options -fPIC -MMD
+#CFLAGS += -g -fno-inline -fno-eliminate-unused-debug-types -DDEBUG_ASSERT -DNOWARNING_DYNAMICCAST -Og -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU -DHAVE_GPU
+
+# SOURCE_AS_CPP := -x c++
+SOURCE_AS_CPP := -x cu
+CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
+CUDA_NVCC_FLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+CUDA_NVCC_FLAGS += --compiler-options -fPIC \
+"""
+        if self.options.blueGene is False:
+            retStr += \
+                """\
+--compiler-options -MMD \
+"""
+        if self.options.debug == USE:
+            retStr += " -g -G "
+        # if self.options.debug == USE:
+        Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "
+        Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 \ "
+        Gencode_Kepler = " -gencode arch=compute_30,code=sm_30 \ "
+        """ NVCC 7.5 (Kepler + Maxwell native; Pascal PTX JIT)"""
+        Gencode_Kepler_2 = " -gencode=arch=compute_50,code=sm_50 \    "
+        Gencode_Kepler_3 = " -gencode=arch=compute_52,code=sm_52 \    "
+        Gencode_Kepler_4 = " -gencode=arch=compute_52,code=compute_52 \ "
+        Gencode_NVCC7_5 = """ -gencode=arch=compute_30,code=sm_30 \
+  -gencode=arch=compute_35,code=sm_35 \
+  -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52  \
+  -gencode=arch=compute_52,code=compute_52  \
+        """
+        """ NVCC 8.0 (Maxwell + Pascal native)"""
+        Gencode_NVCC8_0 = """  -gencode=arch=compute_30,code=sm_30 \
+  -gencode=arch=compute_35,code=sm_35 \
+  -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52 \
+  -gencode=arch=compute_60,code=sm_60 \
+  -gencode=arch=compute_61,code=sm_61 \
+  -gencode=arch=compute_61,code=compute_61 \
+  """
+        """ NVCC 9.0 (Volta native)"""
+        Gencode_NVCC9_0 = """ -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52 \
+  -gencode=arch=compute_60,code=sm_60 \
+  -gencode=arch=compute_61,code=sm_61 \
+  -gencode=arch=compute_70,code=sm_70 \
+  -gencode=arch=compute_70,code=compute_70 \
+ """
+        """ NVCC 10.0 (Turing native)"""
+        Gencode_NVCC10_0 = """ -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52 \
+  -gencode=arch=compute_60,code=sm_60 \
+  -gencode=arch=compute_61,code=sm_61 \
+  -gencode=arch=compute_70,code=sm_70 \
+  -gencode=arch=compute_70,code=compute_70 \
+  -gencode=arch=compute_75,code=compute_75 \
+ """
+        retStr += Gencode_NVCC9_0
+
+
+        retStr += \
+            """\
+
+CFLAGS := ${CUDA_NVCC_FLAGS}
+"""
+        retStr += "\n"
+        return retStr
+
     def getCFlags(self):  # noqa
         retStr = \
             """\
@@ -1440,6 +1545,9 @@ ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
 endif
 LDFLAGS := -shared
+"""
+        retStr += \
+            """
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
 CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
 CFLAGS += -fPIC \
@@ -1587,7 +1695,8 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
 
 """
         # retStr += "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
-        retStr += "LIBS := "
+        retStr += """
+LIBS := """
         if self.options.dynamicLoading is True:
             retStr += "-ldl "
         if self.options.pthreads is True:
@@ -1601,9 +1710,9 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
         if self.operatingSystem == "AIX":
             retStr += "$(LENS_LIBS_EXT) "
         elif self.operatingSystem == "Linux":
-            retStr += "-Wl,--whole-archive "
+            # retStr += "-Wl,--whole-archive "
             retStr += "$(LENS_LIBS_EXT) "
-            retStr += "-Wl,-no-whole-archive "
+            # retStr += "-Wl,-no-whole-archive "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
 
@@ -1621,6 +1730,8 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
 
         if self.options.withGpu is True:
             retStr += " -lcudart -lcurand"
+            if self.options.withMpi is True:
+                retStr += " -lmpi_cxx -lmpi"
 
         if self.options.withArma is True:
             retStr += " -llapack -lopenblas -larmadillo"
@@ -1631,9 +1742,6 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
             else:
                 retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti -lnts -lutils"
         retStr += " $(OTHER_LIBS)"
-
-        if self.options.withGpu is True:
-            retStr += " -lcudart -lcurand"
 
         if self.options.withArma is True:
             retStr += " -llapack -lopenblas -larmadillo"
@@ -1674,7 +1782,11 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
         retStr = "FINAL_TARGET_FLAG = "
 
         if self.operatingSystem == "Linux":
-            retStr += LINUX_FINAL_TARGET_FLAG
+            if self.options.withGpu is True:
+                pass
+                # retStr += "-Xlinker -rdynamic"
+            else:
+                retStr += LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "AIX":
 
             if self.options.dynamicLoading is True:
@@ -1760,10 +1872,16 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-\t$(CC) $(CFLAGS) $(COMMON_OBJS) """
+\t$(CC) $(CFLAGS) """
+        if (self.options.withGpu is True):
+            retStr += "$(SOURCE_AS_CPP) "
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
-        retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+        if (self.options.withGpu is True):
+            retStr += """-c $< $(OTHER_LIBS_HEADER) -o $@
+"""
+        else:
+            retStr += """-c $< $(OTHER_LIBS_HEADER) -o $@
 """
         return retStr
 
@@ -1813,6 +1931,17 @@ framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
 \tmv speclang.tab.c ../generated/speclang.tab.C; mv speclang.tab.h ../generated
 
+"""
+        if self.options.withGpu is True:
+            retStr += \
+                """
+$(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
+\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(SOURCE_AS_CPP) -o $@
+
+"""
+        else:
+            retStr += \
+                """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 
@@ -1841,8 +1970,15 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
 \tcp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
 """
 
-        retStr += \
-            """
+        if self.options.withGpu is True:
+            retStr += \
+                """
+$(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
+\t$(CC) -c $< $(CFLAGS) $(SOURCE_AS_CPP) -o $@
+"""
+        else:
+            retStr += \
+                """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
 \t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 """
@@ -1872,7 +2008,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         else:
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
-        retStr += "$(COMMON_OBJS) $(LIBS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "$(COMMON_OBJS) $(CFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -2016,7 +2152,10 @@ clean:
 
         fileBody += self.getObjectOnlyFlags()
 
-        fileBody += self.getCFlags()
+        if self.options.withGpu is True:
+            fileBody += self.getNVCCFlags()
+        else:
+            fileBody += self.getCFlags()
         fileBody += "\n"
         # fileBody += self.getLensLibs()
         fileBody += self.getLibs()

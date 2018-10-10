@@ -41,12 +41,12 @@ class TriggerType : public InstanceFactory
       // not necessary for now Array handles itself
       // TriggerType(const TriggerType& rv);
       // TriggerType& operator=(const TriggerType& rv);
-      virtual void duplicate(std::auto_ptr<TriggerType>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<TriggerType>& dup) const = 0;
       std::string getModelName() {return _modelName;}
-      virtual void getInstance(std::auto_ptr<DataItem> &, 
+      virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
 			       LensContext* c = 0);
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
 			       LensContext* c);
       virtual std::string getName() {return _name;}

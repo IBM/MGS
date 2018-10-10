@@ -85,14 +85,14 @@ class LENSServer : public TriggerableBase {
   void muter(char* s);
   void unMuter(char* s);
 
-  void keepDataItem(std::auto_ptr<DataItem>& diap);
+  void keepDataItem(std::unique_ptr<DataItem>& diap);
   int isConnected();
   ~LENSServer();
 
   protected:
   virtual TriggerableBase::EventType createTriggerableCaller(
       const std::string& functionName, NDPairList* ndpList,
-      std::auto_ptr<TriggerableCaller>& triggerableCaller);
+      std::unique_ptr<TriggerableCaller>& triggerableCaller);
 
   private:
   int _controlSock;
@@ -160,7 +160,7 @@ public:
       (_triggerable->*_triggerFunction)(trigger, _ndPairList);
     }
     virtual Triggerable* getTriggerable() { return _triggerable; }
-    virtual void duplicate(std::auto_ptr<TriggerableCaller>& dup) const {
+    virtual void duplicate(std::unique_ptr<TriggerableCaller>& dup) const {
       dup.reset(new LENSServerEvent(*this));
     }
 
@@ -199,7 +199,7 @@ inline LENSServer::LENSServer(int p, Simulation& s)
   ServiceDataItem svrc = ServiceDataItem();
   svrc.setService(sptr);
 
-  std::auto_ptr<Phase> phaseAp(new RuntimePhase(_s.getFinalRuntimePhaseName()));
+  std::unique_ptr<Phase> phaseAp(new RuntimePhase(_s.getFinalRuntimePhaseName()));
   PhaseDataItem phase(phaseAp);
 
   std::vector<DataItem*> vecky;
@@ -210,7 +210,7 @@ inline LENSServer::LENSServer(int p, Simulation& s)
   vecky.push_back(&delay);
   vecky.push_back(&phase);
 
-  std::auto_ptr<NDPairList> ndp(0);
+  std::unique_ptr<NDPairList> ndp(nullptr);
   _itrTrigger = _s.getTriggerType("UnsignedTrigger")->getTrigger(vecky);
   addTrigger(_itrTrigger, "event", ndp);
   //   _itrTrigger->addTriggerable(this);
@@ -523,7 +523,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
     for (int i = 0; i < nbrArgs; ++i) {
       char* paramType = strtok(NULL, "<>");
       char* value = strtok(NULL, "<>");
-      std::auto_ptr<DataItem> apdi;
+      std::unique_ptr<DataItem> apdi;
       if (strcmp(paramType, "string") == 0) {
         paramDesc[i].second->duplicate(apdi);
         StringDataItem* sdi = dynamic_cast<StringDataItem*>(apdi.get());
@@ -568,7 +568,7 @@ inline const char* LENSServer::composerMsgHandler(char* msg) {
       }
     }
     LensContext c(&_s);
-    std::auto_ptr<DataItem> apdi;
+    std::unique_ptr<DataItem> apdi;
     ifc->getInstance(apdi, &args, &c);
     // sendToClient
     char sendbuff[MAXBUFFSIZE];
@@ -1014,13 +1014,13 @@ s[i] = '>';
 */
 }
 
-inline void LENSServer::keepDataItem(std::auto_ptr<DataItem>& diap) {
+inline void LENSServer::keepDataItem(std::unique_ptr<DataItem>& diap) {
   _dataItems.push_back(diap.release());
 }
 
 inline TriggerableBase::EventType LENSServer::createTriggerableCaller(
     const std::string& functionName, NDPairList* ndpList,
-    std::auto_ptr<TriggerableCaller>& triggerableCaller) {
+    std::unique_ptr<TriggerableCaller>& triggerableCaller) {
   if (functionName != "event") {
     throw SyntaxErrorException(
         functionName +

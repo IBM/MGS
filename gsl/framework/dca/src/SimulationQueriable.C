@@ -43,11 +43,11 @@ SimulationQueriable::SimulationQueriable(Simulation* sim)
    _queriableList.push_back(new RepertoireQueriable(_sim->getRootRepertoire()));
    _queriableList.push_back(new PublisherRegistryQueriable(_sim->getPublisherRegistry()));
 
-   std::auto_ptr<QueryField> aptr_QF(new QueryField(QueryField::ENUM));
+   std::unique_ptr<QueryField> aptr_QF(new QueryField(QueryField::ENUM));
    aptr_QF->setName("Simulation Queriables");
    aptr_QF->setDescription("Queriables available from Simulation.");
    aptr_QF->setFormat("");
-   std::auto_ptr<EnumEntry> aptrEnumEntry(new EnumEntry("Root Repertoire", "Provide queriable Root Repertoire."));
+   std::unique_ptr<EnumEntry> aptrEnumEntry(new EnumEntry("Root Repertoire", "Provide queriable Root Repertoire."));
    aptr_QF->addEnumEntry(aptrEnumEntry);
    aptrEnumEntry.reset(new EnumEntry("Publisher Registry", "Provide queriable Publisher Registry."));
    aptr_QF->addEnumEntry(aptrEnumEntry);
@@ -57,7 +57,7 @@ SimulationQueriable::SimulationQueriable(Simulation* sim)
    std::vector<InstanceFactoryRegistry*>::const_iterator end = registries.end();
    for (;iter!=end;++iter) {
       InstanceFactoryRegistry* ifr = (*iter);
-      std::auto_ptr<InstanceFactoryRegistryQueriable> ifQuer;
+      std::unique_ptr<InstanceFactoryRegistryQueriable> ifQuer;
       ifr->getQueriable(ifQuer);
       _queriableList.push_back(ifQuer.release());
       std::ostringstream name, description;
@@ -85,7 +85,7 @@ void SimulationQueriable::refresh()
    }
    for (;reg_iter!=reg_end;++reg_iter) {
       InstanceFactoryRegistry* ifr = (*reg_iter);
-      std::auto_ptr<InstanceFactoryRegistryQueriable> ifQuer;
+      std::unique_ptr<InstanceFactoryRegistryQueriable> ifQuer;
       ifr->getQueriable(ifQuer);
       _queriableList.push_back(ifQuer.release());
    }
@@ -98,7 +98,7 @@ SimulationQueriable::SimulationQueriable(const SimulationQueriable & q)
 }
 
 
-void SimulationQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void SimulationQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    SimulationDataItem* di = new SimulationDataItem;
    di->setSimulation(_sim);
@@ -106,13 +106,13 @@ void SimulationQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> SimulationQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> SimulationQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
 
    // Make sure query field is present
    if (_queryDescriptor.getQueryFields().size()) {
-      std::auto_ptr<Queriable> aptr_q;
+      std::unique_ptr<Queriable> aptr_q;
       std::string field = _queryDescriptor.getQueryFields().front()->getField();
       if (field == "Root Repertoire") {
          aptr_q.reset(new RepertoireQueriable(_sim->getRootRepertoire()));
@@ -135,7 +135,7 @@ Publisher* SimulationQueriable::getQPublisher()
 }
 
 
-void SimulationQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void SimulationQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new SimulationQueriable(*this));
 }

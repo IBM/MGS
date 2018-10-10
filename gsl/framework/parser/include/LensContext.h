@@ -52,8 +52,8 @@ class LensContext
       void addStatement(C_production* statement);
       void execute();
       
-      void getCurrentPhase(std::auto_ptr<Phase>& phase) const;
-      void setCurrentPhase(std::auto_ptr<Phase>& phase);
+      void getCurrentPhase(std::unique_ptr<Phase>& phase) const;
+      void setCurrentPhase(std::unique_ptr<Phase>& phase);
 
       CompCategoryBase* getCurrentCompCategoryBase() const {
 	 return _currentCompCategoryBase;
@@ -62,7 +62,7 @@ class LensContext
 	 _currentCompCategoryBase = cc;
       }
       
-      virtual void duplicate(std::auto_ptr<LensContext>& dup) const;
+      virtual void duplicate(std::unique_ptr<LensContext>& dup) const;
 
       void addCurrentRepertoire(Repertoire* rep);
 

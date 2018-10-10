@@ -62,7 +62,7 @@ void C_definition_variabletype::internalExecute(LensContext *c)
 
    VariableTypeDataItem* ttdi = new VariableTypeDataItem;
    ttdi->setVariableType(tt);
-   std::auto_ptr<DataItem> diap(ttdi);
+   std::unique_ptr<DataItem> diap(ttdi);
    try {
       c->symTable.addEntry(_declarator->getName(), diap);
    } catch (SyntaxErrorException& e) {

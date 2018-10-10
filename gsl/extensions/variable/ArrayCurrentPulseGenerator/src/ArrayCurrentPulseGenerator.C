@@ -341,17 +341,17 @@ ArrayCurrentPulseGenerator::~ArrayCurrentPulseGenerator()
     delete outFile; 
 }
 
-void ArrayCurrentPulseGenerator::duplicate(std::auto_ptr<ArrayCurrentPulseGenerator>& dup) const
+void ArrayCurrentPulseGenerator::duplicate(std::unique_ptr<ArrayCurrentPulseGenerator>& dup) const
 {
    dup.reset(new ArrayCurrentPulseGenerator(*this));
 }
 
-void ArrayCurrentPulseGenerator::duplicate(std::auto_ptr<Variable>& dup) const
+void ArrayCurrentPulseGenerator::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new ArrayCurrentPulseGenerator(*this));
 }
 
-void ArrayCurrentPulseGenerator::duplicate(std::auto_ptr<CG_ArrayCurrentPulseGenerator>& dup) const
+void ArrayCurrentPulseGenerator::duplicate(std::unique_ptr<CG_ArrayCurrentPulseGenerator>& dup) const
 {
    dup.reset(new ArrayCurrentPulseGenerator(*this));
 }

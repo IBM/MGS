@@ -72,7 +72,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
 
   DataItem* sourceDI=0;
   sourceFunctorDI = dynamic_cast<FunctorDataItem*>(*it);
-  std::auto_ptr<DataItem> ap_sourceDI;
+  std::unique_ptr<DataItem> ap_sourceDI;
   std::vector<NodeDescriptor*> sourceNodes;
   if (sourceFunctorDI) {//passed a functor
     std::vector<DataItem*> nullArgs;
@@ -105,7 +105,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
 
   DataItem* destinationDI=0;
   destinationFunctorDI = dynamic_cast<FunctorDataItem*>(*it);
-  std::auto_ptr<DataItem> ap_destinationDI;
+  std::unique_ptr<DataItem> ap_destinationDI;
   std::vector<NodeDescriptor*> destinationNodes;
   if (destinationFunctorDI) {//passed a functor
     std::vector<DataItem*> nullArgs;
@@ -198,8 +198,8 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
   }
 
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> outAttrRVal;
-  std::auto_ptr<DataItem> inAttrRVal;
+  std::unique_ptr<DataItem> outAttrRVal;
+  std::unique_ptr<DataItem> inAttrRVal;
 
   for (int n=0; n<sz; ++n) {//traverse every nodes
     Connector* lc;
@@ -231,7 +231,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
 #if 1
         //James K.
         IntDataItem* idxDI=new IntDataItem(-1);
-        std::auto_ptr<DataItem> paramDI_ap(idxDI);
+        std::unique_ptr<DataItem> paramDI_ap(idxDI);
         NDPair* ndpIdx=new NDPair("idx", paramDI_ap);
         FloatDataItem* branchPropDI=new FloatDataItem((*branchPropList)[n]);
         paramDI_ap.reset(branchPropDI);
@@ -287,7 +287,7 @@ void Zipper::userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterat
 
         int cptIdx = std::floor(float(bds->size) * (*branchPropList)[n]);
         IntDataItem* idxDI=new IntDataItem(cptIdx);
-        std::auto_ptr<DataItem> paramDI_ap(idxDI);
+        std::unique_ptr<DataItem> paramDI_ap(idxDI);
         NDPair* ndpIdx=new NDPair("idx", paramDI_ap);
         NDPairList ndpl;
         ndpl.push_back(ndpIdx);
@@ -327,17 +327,17 @@ Zipper::~Zipper()
   if (_lensConnector) delete _lensConnector;
 }
 
-void Zipper::duplicate(std::auto_ptr<Zipper>& dup) const
+void Zipper::duplicate(std::unique_ptr<Zipper>& dup) const
 {
    dup.reset(new Zipper(*this));
 }
 
-void Zipper::duplicate(std::auto_ptr<Functor>& dup) const
+void Zipper::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new Zipper(*this));
 }
 
-void Zipper::duplicate(std::auto_ptr<CG_ZipperBase>& dup) const
+void Zipper::duplicate(std::unique_ptr<CG_ZipperBase>& dup) const
 {
    dup.reset(new Zipper(*this));
 }

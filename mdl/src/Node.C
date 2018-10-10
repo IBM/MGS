@@ -135,6 +135,60 @@ void Node::generateGridLayerData()
       << TAB << "int gridNodes = _gridLayerDescriptor->getGrid()->getNbrGridNodes();\n"
       << TAB << "Simulation *sim = &compCategory->getSimulation();\n"
       << TAB << "unsigned my_rank = sim->getRank();\n"
+      << "#if defined(HAVE_GPU) && defined(__NVCC__)\n"
+      //<< TAB << "/*"
+      << TAB << "if (sim->isGranuleMapperPass()) {\n"
+      //<< TAB << "if (sim->isGranuleMapperPass() || sim->isCostAggregationPass()) {\n"
+      << TAB << TAB << "if (sim->_nodes_count.count(\"" << getInstanceName() + "\") == 0)\n"
+      << TAB << TAB << "{ \n"
+      << TAB << TAB << TAB << "std::vector<int> nodes_on_ranks(sim->getNumProcesses(), 0);\n"
+      << TAB << TAB << TAB << "sim->_nodes_count[\"" << getInstanceName() << "\"] = nodes_on_ranks;\n"
+      //<< TAB << TAB << TAB << "sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank] = 0;\n "
+      << TAB << TAB << TAB << "std::vector<Granule*> nodes_on_partitions;\n"
+      << TAB << TAB << TAB << "sim->_nodes_granules[\"" << getInstanceName() << "\"] = nodes_on_partitions;\n"
+      << TAB << TAB << "}\n"
+      << TAB << TAB << "for(int n = 0, gn = 0; gn < gridNodes; ++gn) {\n"
+      << TAB << TAB << TAB << "if (uniformDensity) {\n"
+      << TAB << TAB << TAB << TAB << "top = (gn + 1) * uniformDensity;\n"
+      << TAB << TAB << TAB << "} else {\n"
+      << TAB << TAB << TAB << TAB
+      << TAB << "top = _nodeOffsets[gn] + _gridLayerDescriptor->getDensity(gn);\n"
+      << TAB << TAB << TAB << "}\n"
+      << TAB << TAB << TAB << "for (; n < top; ++n) {\n"
+      << TAB << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setNodeIndex(gn);\n"
+      << TAB << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setIndex(n);\n"
+      << TAB << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setGridLayerData(this);\n"
+      //<< TAB << TAB << TAB << TAB << "if (sim->getGranule(_nodeInstanceAccessors[n])->getPartitionId() == my_rank) {\n" 
+//    << TAB   << TAB << TAB << TAB << "if (!sim->isDistributed() || sim->getGranule(_nodeInstanceAccessors[n])->getGraphId() == my_rank) {\n"
+      //<< TAB << TAB << TAB << TAB << TAB << "sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank] += 1;;\n"
+      //<< TAB << TAB << TAB << TAB << "}\n"
+      << TAB << TAB << TAB << TAB <<  "/* it means instance 'LifeNode' at index 'i'\n"
+      << TAB << TAB << TAB << TAB <<  " * is created on partition 'sim->_nodes_granules[\"LifeNode\"][i]->getPartitionId()'\n"
+      << TAB << TAB << TAB << TAB <<  " */\n"
+      << TAB << TAB << TAB << TAB <<  "sim->_nodes_granules[\"" << getInstanceName() << "\"].push_back(sim->getGranule(_nodeInstanceAccessors[n]));\n"
+      << TAB << TAB << TAB << "}\n"
+      << TAB << TAB << "}\n"
+      << TAB << "}\n"
+      << TAB << "if (sim->isSimulatePass())\n"
+      << TAB << "{\n"
+      //<< TAB << "    compCategory->allocateNodes(sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank]);\n"
+      << TAB << TAB << "/* at the first layer of 'LifeNode' then allocate memory */\n"
+      << TAB << TAB << "if (sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank] == 0)\n"
+      << TAB << TAB << "{\n"
+      //<< TAB << TAB << "   auto tmpNodeAccessor = new NodeInstanceAccessor();\n"
+      << TAB << TAB << "   for(int n = 0; n < sim->_nodes_granules[\"" << getInstanceName() << "\"].size(); ++n) {\n"
+      << TAB << TAB << "      if (sim->_nodes_granules[\"" << getInstanceName() << "\"][n]->getPartitionId()  == my_rank)\n"
+      << TAB << TAB << "      {\n"
+      << TAB << TAB << "         sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank] += 1;\n"
+      << TAB << TAB << "      }\n"
+      << TAB << TAB << "   }\n"
+      //<< TAB << TAB << "   delete tmpNodeAccessor;\n"
+      << TAB << TAB << "   sim->_nodes_granules.erase(\"" << getInstanceName() << "\");\n"
+      << TAB << TAB << "   compCategory->allocateNodes(sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank]);\n"
+      << TAB << TAB << "}\n"
+      << TAB << "}\n"         
+      //<< TAB << "*/\n"
+      << "#endif\n"
       << TAB << "for(int n = 0, gn = 0; gn < gridNodes; ++gn) {\n"
       << TAB << TAB << "if (uniformDensity) {\n"
       << TAB << TAB << TAB << "top = (gn + 1) * uniformDensity;\n"
@@ -152,7 +206,6 @@ void Node::generateGridLayerData()
       << TAB << TAB << TAB << "}\n"
       << TAB << TAB << "}\n"
       << TAB << "}\n";
-
 
    constructor->setFunctionBody(constructorFB.str());
    std::auto_ptr<Method> consToIns(constructor.release());
@@ -322,7 +375,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       new Method("getNodeAccessor", "void"));
    getNodeAccessorMethod->setVirtual();
    getNodeAccessorMethod->addParameter(
-      "std::auto_ptr<NodeAccessor>& nodeAccessor");
+      "std::unique_ptr<NodeAccessor>& nodeAccessor");
    getNodeAccessorMethod->addParameter(
       "GridLayerDescriptor* gridLayerDescriptor");
    std::ostringstream getNodeAccessorMethodFB;   
@@ -353,6 +406,18 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    allocateNodeMethod->setFunctionBody(
       allocateNodeMethodFB.str());
    instance.addMethod(allocateNodeMethod);
+
+   // Add allocateNodes method (i.e. pre-allocate in memory)
+   std::auto_ptr<Method> allocateNodesMethod(
+      new Method("allocateNodes", "void"));
+   allocateNodesMethod->addParameter(
+      "size_t size");
+   std::ostringstream allocateNodesMethodFB;   
+   allocateNodesMethodFB
+      << TAB << "_nodes.resize_allocated(size);\n";
+   allocateNodesMethod->setFunctionBody(
+      allocateNodesMethodFB.str());
+   instance.addMethod(allocateNodesMethod);
 
    // Add getNbrComputationalUnits method
    std::auto_ptr<Method> getNbrComputationalUnitsMethod(

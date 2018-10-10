@@ -36,14 +36,14 @@ class ManhattanRingFunctor: public SampFctr1Functor
 	 std::vector<int> origin, NodeSet* sourceSet, 
 	 std::vector<int> & radiusSample,
 	 std::vector<std::vector<NodeDescriptor*> >&collectedRadialNodes);
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~ManhattanRingFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
    private:
       std::vector<std::vector<NodeDescriptor*> > _sampleSet;
       std::vector<int> _list;

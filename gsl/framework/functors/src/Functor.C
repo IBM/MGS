@@ -27,7 +27,7 @@ void Functor::initialize(LensContext* c, const std::vector<DataItem*>& args) {
 }
 
 void Functor::execute(LensContext* c, const std::vector<DataItem*>& args,
-                      std::auto_ptr<DataItem>& rvalue) {
+                      std::unique_ptr<DataItem>& rvalue) {
   doExecute(c, args, rvalue);
 }
 

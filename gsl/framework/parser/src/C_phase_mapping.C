@@ -46,7 +46,7 @@ void C_phase_mapping::internalExecute(LensContext *c)
       throwError(_modelPhase + " type: " + type + ", " + _simulationPhase +
 		 " type: " + phaseDataItem->getPhase()->getType() + ".");
    }
-   std::auto_ptr<Phase> dup;
+   std::unique_ptr<Phase> dup;
    phaseDataItem->getPhase()->duplicate(dup);
    ccBase->addPhaseMapping(_modelPhase, dup);
 }

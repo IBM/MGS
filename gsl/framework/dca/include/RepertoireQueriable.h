@@ -43,12 +43,12 @@ class RepertoireQueriable : public Queriable
       std::list<QueriableDescriptor> const & getQueriableList() const;
       QueriableDescriptor & getQueriableDescriptor();
       QueriableDescriptor & getQueriableDescriptor(std::string context);
-      std::auto_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
+      std::unique_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
       QueryDescriptor & getQueryDescriptor();
       Publisher* getQPublisher();
       bool isPublisherQueriable();
-      virtual void duplicate(std::auto_ptr<Queriable>& dup) const;
-      void getDataItem(std::auto_ptr<DataItem> &);
+      virtual void duplicate(std::unique_ptr<Queriable>& dup) const;
+      void getDataItem(std::unique_ptr<DataItem> &);
       ~RepertoireQueriable();
 
    private:

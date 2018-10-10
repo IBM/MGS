@@ -35,7 +35,6 @@ class ConnectionIncrement;
 
 class VolumeGranuleMapper : public GranuleMapperBase
 {
-
    public:
       VolumeGranuleMapper(Simulation& sim, std::vector<DataItem*> const & args);
       

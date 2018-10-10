@@ -31,7 +31,7 @@ void C_declaration_list_parameter::internalExecute(LensContext *c)
       _typeSpec->execute(c);
    _declarator->execute(c);
    _argumentList->execute(c);
-   std::auto_ptr<DataItem> diap;
+   std::unique_ptr<DataItem> diap;
    ArgumentListHelper helper;
    helper.getDataItem(diap, c, _argumentList, _typeSpec);
    try {

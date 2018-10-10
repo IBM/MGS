@@ -26,7 +26,7 @@ class RuntimePhase : public Phase {
 
    public:
   RuntimePhase(const std::string& name = "", PhaseElement::machineType mType = CPU);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~RuntimePhase();
      
       virtual std::string getType() const;

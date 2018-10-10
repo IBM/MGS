@@ -541,18 +541,18 @@ VoltageVisualization::~VoltageVisualization()
 }
 
 void VoltageVisualization::duplicate(
-    std::auto_ptr<VoltageVisualization>& dup) const
+    std::unique_ptr<VoltageVisualization>& dup) const
 {
   dup.reset(new VoltageVisualization(*this));
 }
 
-void VoltageVisualization::duplicate(std::auto_ptr<Variable>& dup) const
+void VoltageVisualization::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new VoltageVisualization(*this));
 }
 
 void VoltageVisualization::duplicate(
-    std::auto_ptr<CG_VoltageVisualization>& dup) const
+    std::unique_ptr<CG_VoltageVisualization>& dup) const
 {
   dup.reset(new VoltageVisualization(*this));
 }

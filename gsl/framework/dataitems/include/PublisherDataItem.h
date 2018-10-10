@@ -39,7 +39,7 @@ class PublisherDataItem : public DataItem
       ~PublisherDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       Publisher* getPublisher() const;

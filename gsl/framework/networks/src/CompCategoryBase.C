@@ -66,7 +66,7 @@ CompCategoryBase::~CompCategoryBase()
 }
 
 void CompCategoryBase::addPhaseMapping(const std::string& name, 
-				       std::auto_ptr<Phase>& phase)
+				       std::unique_ptr<Phase>& phase)
 {
    std::map<std::string, Phase*>::iterator it = _phaseMappings.find(name);
    if (it != _phaseMappings.end()) { 
@@ -135,7 +135,7 @@ void CompCategoryBase::setUnmappedPhases(LensContext* c)
 	       phaseDataItem->getPhase()->getType() + ".";
 	    throw SyntaxErrorException(mes);
 	 } 
-	 std::auto_ptr<Phase> dup;
+	 std::unique_ptr<Phase> dup;
 	 phaseDataItem->getPhase()->duplicate(dup);
 	 addPhaseMapping(it->first, dup);	 
       }

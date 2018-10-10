@@ -52,7 +52,7 @@ ConstantTypeDataItem::ConstantTypeDataItem(const ConstantTypeDataItem& DI)
 
 
 // Utility methods
-void ConstantTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ConstantTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new ConstantTypeDataItem(*this));
 }

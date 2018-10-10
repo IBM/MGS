@@ -66,7 +66,7 @@ UnsignedIntArrayDataItem::UnsignedIntArrayDataItem(const UnsignedIntArrayDataIte
 
 // Utility methods
 
-void UnsignedIntArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void UnsignedIntArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new UnsignedIntArrayDataItem(*this)));
 }
@@ -204,7 +204,8 @@ unsigned char UnsignedIntArrayDataItem::getUnsignedChar(std::vector<int> coords,
       exit(-1);
    }
    if (error) {
-      if (((*_data)[offset] > UCHAR_MAX) || ((*_data)[offset] < 0)) *error = CONVERSION_OUT_OF_RANGE;
+      //if (((*_data)[offset] > UCHAR_MAX) || ((*_data)[offset] < 0)) *error = CONVERSION_OUT_OF_RANGE;
+      if (((*_data)[offset] > UCHAR_MAX)) *error = CONVERSION_OUT_OF_RANGE;
    }
    return (unsigned char)(*_data)[offset];
 }
@@ -285,7 +286,8 @@ unsigned short UnsignedIntArrayDataItem::getUnsignedShort(std::vector<int> coord
       exit(-1);
    }
    if (error) {
-      if (((*_data)[offset] > USHRT_MAX) || ((*_data)[offset] < 0)) *error = CONVERSION_OUT_OF_RANGE;
+      //if (((*_data)[offset] > USHRT_MAX) || ((*_data)[offset] < 0)) *error = CONVERSION_OUT_OF_RANGE;
+      if (((*_data)[offset] > USHRT_MAX)) *error = CONVERSION_OUT_OF_RANGE;
    }
    return (unsigned short)(*_data)[offset];
 }
@@ -346,9 +348,6 @@ unsigned int UnsignedIntArrayDataItem::getUnsignedInt(std::vector<int> coords, E
    if (offset>_data->size()) {
       std::cerr<<"UnsignedIntArrayDataItem:: coordinates out of range!"<<std::endl;
       exit(-1);
-   }
-   if (error) {
-      if ((*_data)[offset] < 0) *error = CONVERSION_OUT_OF_RANGE;
    }
    return (unsigned int)(*_data)[offset];
 }

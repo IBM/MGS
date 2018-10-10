@@ -42,26 +42,26 @@ StructType& StructType::operator=(const StructType& rv)
    return *this;
 }
 
-void StructType::getInstance(std::auto_ptr<DataItem> & adi, 
+void StructType::getInstance(std::unique_ptr<DataItem> & adi, 
 			     std::vector<DataItem*> const * args, 
 			     LensContext* c)
 {
    StructDataItem* sdi = new StructDataItem;
 
-   std::auto_ptr<Struct> as;
+   std::unique_ptr<Struct> as;
    getStruct(as);
    as->initialize(c, *args);
    sdi->setStruct(as);
    adi.reset(sdi);
 }
 
-void StructType::getInstance(std::auto_ptr<DataItem> & adi, 
+void StructType::getInstance(std::unique_ptr<DataItem> & adi, 
 			     const NDPairList& ndplist, 
 			     LensContext* c)
 {
    StructDataItem* sdi = new StructDataItem;
 
-   std::auto_ptr<Struct> as;
+   std::unique_ptr<Struct> as;
    getStruct(as);
    as->initialize(ndplist);
    sdi->setStruct(as);
@@ -77,7 +77,7 @@ void StructType::copyContents(const StructType& rv)
 {
    std::list<Struct*>::const_iterator it, end = rv._structList.end();
    for (it = rv._structList.begin(); it!=end; ++it) {
-      std::auto_ptr<Struct> dup;
+      std::unique_ptr<Struct> dup;
       (*it)->duplicate(dup);
       _structList.push_back(dup.release());
    }

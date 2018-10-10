@@ -137,17 +137,17 @@ MihalasNieburIAFUnitDataCollector::~MihalasNieburIAFUnitDataCollector()
 {
 }
 
-void MihalasNieburIAFUnitDataCollector::duplicate(std::auto_ptr<MihalasNieburIAFUnitDataCollector>& dup) const
+void MihalasNieburIAFUnitDataCollector::duplicate(std::unique_ptr<MihalasNieburIAFUnitDataCollector>& dup) const
 {
    dup.reset(new MihalasNieburIAFUnitDataCollector(*this));
 }
 
-void MihalasNieburIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void MihalasNieburIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new MihalasNieburIAFUnitDataCollector(*this));
 }
 
-void MihalasNieburIAFUnitDataCollector::duplicate(std::auto_ptr<CG_MihalasNieburIAFUnitDataCollector>& dup) const
+void MihalasNieburIAFUnitDataCollector::duplicate(std::unique_ptr<CG_MihalasNieburIAFUnitDataCollector>& dup) const
 {
    dup.reset(new MihalasNieburIAFUnitDataCollector(*this));
 }

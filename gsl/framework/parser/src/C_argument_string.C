@@ -28,7 +28,7 @@ C_argument_string::C_argument_string(const C_argument_string& rv)
    : C_argument(rv), _str_dataitem(0),_string(0)
 {
    if (rv._str_dataitem) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._str_dataitem->duplicate(cc_di);
       _str_dataitem = dynamic_cast<StringDataItem*>(cc_di.release());
    }

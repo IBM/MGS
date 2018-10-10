@@ -23,7 +23,7 @@ void C_ndpair_clause_list_body::internalExecute(LensContext *c)
 {
    delete _ndpairList;
    _ndpairList = new NDPairList;
-   std::auto_ptr<NDPair> ndp;
+   std::unique_ptr<NDPair> ndp;
    std::list<C_ndpair_clause*>::iterator i, end = _list->end();
    for(i = _list->begin(); i != end; ++i) {
       (*i)->execute(c);

@@ -25,7 +25,7 @@ GridSetDataItem::GridSetDataItem()
 {
 }
 
-GridSetDataItem::GridSetDataItem(std::auto_ptr<GridSet> gridset) 
+GridSetDataItem::GridSetDataItem(std::unique_ptr<GridSet> gridset) 
 {
    _gridset = gridset.release();
 }
@@ -37,7 +37,7 @@ GridSetDataItem::GridSetDataItem(const GridSetDataItem& DI)
 
 
 // Utility methods
-void GridSetDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void GridSetDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new GridSetDataItem(*this)));
 }

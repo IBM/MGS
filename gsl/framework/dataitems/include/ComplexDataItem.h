@@ -36,7 +36,7 @@ class ComplexDataItem : public DataItem
       ComplexDataItem(std::string & complexType);
       ComplexDataItem(const ComplexDataItem& DI);
 
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       std::string getString(Error* error=0) const;

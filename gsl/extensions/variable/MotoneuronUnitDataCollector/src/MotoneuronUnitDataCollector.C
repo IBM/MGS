@@ -1235,17 +1235,17 @@ MotoneuronUnitDataCollector::~MotoneuronUnitDataCollector()
 {
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::auto_ptr<MotoneuronUnitDataCollector>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<MotoneuronUnitDataCollector>& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }
 
-void MotoneuronUnitDataCollector::duplicate(std::auto_ptr<CG_MotoneuronUnitDataCollector>& dup) const
+void MotoneuronUnitDataCollector::duplicate(std::unique_ptr<CG_MotoneuronUnitDataCollector>& dup) const
 {
   dup.reset(new MotoneuronUnitDataCollector(*this));
 }

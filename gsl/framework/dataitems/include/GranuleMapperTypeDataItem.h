@@ -38,7 +38,7 @@ class GranuleMapperTypeDataItem : public InstanceFactoryDataItem
       GranuleMapperTypeDataItem(const GranuleMapperTypeDataItem& DI);
 
       const char* getType() const;
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
 
       void setGranuleMapperType(GranuleMapperType*);
       GranuleMapperType* getGranuleMapperType() const;

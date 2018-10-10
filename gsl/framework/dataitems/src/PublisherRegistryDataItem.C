@@ -33,7 +33,7 @@ PublisherRegistryDataItem::PublisherRegistryDataItem(const PublisherRegistryData
 
 
 // Utility methods
-void PublisherRegistryDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void PublisherRegistryDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new PublisherRegistryDataItem(*this));
 }

@@ -20,9 +20,9 @@ class AnyConcentrationDisplay : public CG_AnyConcentrationDisplay
       CG_AnyConcentrationDisplayOutAttrPSet* CG_outAttrPset);
   AnyConcentrationDisplay();
   virtual ~AnyConcentrationDisplay();
-  virtual void duplicate(std::auto_ptr<AnyConcentrationDisplay>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_AnyConcentrationDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<AnyConcentrationDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_AnyConcentrationDisplay>& dup) const;
 
   private:
   std::ofstream* outFile = 0;

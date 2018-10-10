@@ -33,16 +33,16 @@ class ConstantType : public InstanceFactory
 {
    public:
       ConstantType();
-      virtual void duplicate(std::auto_ptr<ConstantType>& dup) const=0;
-      virtual void getConstant(std::auto_ptr<Constant> & r_aptr)=0;
+      virtual void duplicate(std::unique_ptr<ConstantType>& dup) const=0;
+      virtual void getConstant(std::unique_ptr<Constant> & r_aptr)=0;
       virtual Constant* getConstant()=0;
       virtual std::string getName()=0;
       virtual std::string getDescription()=0;
       virtual ~ConstantType();
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
 			       LensContext* c);
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
 			       LensContext* c);
    protected:

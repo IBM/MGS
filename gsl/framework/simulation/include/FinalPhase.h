@@ -26,7 +26,7 @@ class FinalPhase : public Phase {
 
    public:
       FinalPhase(const std::string& name = "", PhaseElement::machineType mType = CPU);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~FinalPhase();
      
       virtual std::string getType() const;

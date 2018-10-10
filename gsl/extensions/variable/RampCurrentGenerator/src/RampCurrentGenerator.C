@@ -205,17 +205,17 @@ RampCurrentGenerator::~RampCurrentGenerator()
     delete outFile; 
 }
 
-void RampCurrentGenerator::duplicate(std::auto_ptr<RampCurrentGenerator>& dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<RampCurrentGenerator>& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }
 
-void RampCurrentGenerator::duplicate(std::auto_ptr<Variable>& dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }
 
-void RampCurrentGenerator::duplicate(std::auto_ptr<CG_RampCurrentGenerator>& dup) const
+void RampCurrentGenerator::duplicate(std::unique_ptr<CG_RampCurrentGenerator>& dup) const
 {
    dup.reset(new RampCurrentGenerator(*this));
 }

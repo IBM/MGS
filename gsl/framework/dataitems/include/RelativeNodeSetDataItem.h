@@ -33,14 +33,14 @@ class RelativeNodeSetDataItem : public DataItem
 
       // Constructors
       RelativeNodeSetDataItem();
-      RelativeNodeSetDataItem(std::auto_ptr<C_relative_nodeset> relativeNodeset);
+      RelativeNodeSetDataItem(std::unique_ptr<C_relative_nodeset> relativeNodeset);
       RelativeNodeSetDataItem(const RelativeNodeSetDataItem& DI);
 
       // Destructor
       ~RelativeNodeSetDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       C_relative_nodeset* getRelativeNodeSet() const;

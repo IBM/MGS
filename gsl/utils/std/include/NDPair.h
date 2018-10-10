@@ -24,7 +24,7 @@
 class NDPair
 {
    public:
-      NDPair(const std::string& name, std::auto_ptr<DataItem>& di);
+      NDPair(const std::string& name, std::unique_ptr<DataItem>& di);
       NDPair(const std::string& name, const std::string& value);
       NDPair(const std::string& name, double value);
       NDPair(const std::string& name, int value);
@@ -37,8 +37,8 @@ class NDPair
       void setValue(const std::string& value);
       void setValue(int value);
       void setValue(double value);
-      void getDataItemOwnership(std::auto_ptr<DataItem>& di);
-      void setDataItemOwnership(std::auto_ptr<DataItem>& di);
+      void getDataItemOwnership(std::unique_ptr<DataItem>& di);
+      void setDataItemOwnership(std::unique_ptr<DataItem>& di);
       int operator==(const std::string& n) const;
       int operator!=(const std::string& n) const;
       ~NDPair();
@@ -46,6 +46,6 @@ class NDPair
       void copyContents(const NDPair& rv);
       void destructContents();
       std::string _name;
-      std::auto_ptr<DataItem> _dataItem;
+      std::unique_ptr<DataItem> _dataItem;
 };
 #endif

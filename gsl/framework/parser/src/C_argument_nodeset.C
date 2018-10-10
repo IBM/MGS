@@ -50,7 +50,7 @@ C_argument_nodeset::C_argument_nodeset(const C_argument_nodeset& rv)
       _gridset = rv._gridset->duplicate();
    }
    if (rv._nodeset_DI) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._nodeset_DI->duplicate(cc_di);
       _nodeset_DI = dynamic_cast<NodeSetDataItem*>(cc_di.release());
    }

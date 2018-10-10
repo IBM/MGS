@@ -225,7 +225,7 @@ void Functor::generateInstanceBase()
    instance->addMethod(methodCup);
    std::string retStr;
    if (_returnType->isPointer() && _returnType->shouldBeOwned()) {
-      retStr = "std::auto_ptr<" + _returnType->getDescriptor() + ">";
+      retStr = "std::unique_ptr<" + _returnType->getDescriptor() + ">";
    } else {
       retStr = _returnType->getTypeString();
    }
@@ -257,7 +257,7 @@ void Functor::createInitMethod(std::auto_ptr<Method>& method,
 
    bool isRetValVoid = (dynamic_cast<VoidType*>(_returnType) != 0);
    if (hasRetVal) {
-      method->addParameter("std::auto_ptr<DataItem>& rvalue");     
+      method->addParameter("std::unique_ptr<DataItem>& rvalue");     
    }
 
    std::string userFunctionCaller =
@@ -272,7 +272,7 @@ void Functor::createInitMethod(std::auto_ptr<Method>& method,
    if (hasRetVal && !isRetValVoid) {
       if (_returnType->isPointer() && _returnType->shouldBeOwned()) {
 	 doInitFunctionBody 
-	    << TAB << "std::auto_ptr<" << _returnType->getDescriptor() 
+	    << TAB << "std::unique_ptr<" << _returnType->getDescriptor() 
 	    << "> transfer(" << userFunctionCaller << ".release());\n"
 	    << TAB << "rvalue.reset(new " << _returnType->getDataItemString() 
 	    << "(transfer));\n";	 
@@ -336,7 +336,7 @@ void Functor::generateInstance()
    instance->addMethod(methodCup);
    std::string retStr;
    if (_returnType->isPointer() && _returnType->shouldBeOwned()) {
-      retStr = "std::auto_ptr<" + _returnType->getDescriptor() + ">";
+      retStr = "std::unique_ptr<" + _returnType->getDescriptor() + ">";
    } else {
       retStr = _returnType->getTypeString();
    }

@@ -66,7 +66,7 @@ ShortArrayDataItem::ShortArrayDataItem(const ShortArrayDataItem& DI)
 
 // Utility methods
 
-void ShortArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ShortArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new ShortArrayDataItem(*this)));
 }

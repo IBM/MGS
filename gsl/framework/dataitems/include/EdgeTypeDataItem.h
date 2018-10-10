@@ -37,7 +37,7 @@ class EdgeTypeDataItem : public DataItem
 
       virtual EdgeTypeDataItem& operator=(const EdgeTypeDataItem& DI);
 
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       void setEdgeType(EdgeType*);

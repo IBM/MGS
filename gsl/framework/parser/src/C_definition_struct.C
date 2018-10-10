@@ -37,7 +37,7 @@ void C_definition_struct::internalExecute(LensContext *c)
    }
    StructTypeDataItem* ttdi = new StructTypeDataItem;
    ttdi->setStructType(tt);
-   std::auto_ptr<DataItem> diap(ttdi);
+   std::unique_ptr<DataItem> diap(ttdi);
    try {
       c->symTable.addEntry(_declarator->getName(), diap);
    } catch (SyntaxErrorException& e) {

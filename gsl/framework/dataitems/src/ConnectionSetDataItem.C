@@ -36,7 +36,7 @@ ConnectionSetDataItem::ConnectionSetDataItem(const ConnectionSetDataItem& DI)
 }
 
 
-void ConnectionSetDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ConnectionSetDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new ConnectionSetDataItem(*this)));
 }

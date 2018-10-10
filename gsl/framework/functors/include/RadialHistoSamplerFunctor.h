@@ -57,14 +57,14 @@ class RadialHistoSamplerFunctor: public SampFctr1Functor
       };
 
       RadialHistoSamplerFunctor();
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~RadialHistoSamplerFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
       float getCummulativeProbability(
 	 float distance, float scale, 
 	 std::vector<CummulativeProbabilitySegment> &segs);

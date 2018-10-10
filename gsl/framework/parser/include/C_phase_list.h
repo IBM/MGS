@@ -32,7 +32,7 @@ class C_phase_list : public C_production
       C_phase_list(const C_phase_list&);
       C_phase_list(C_phase *, SyntaxError *);
       C_phase_list(C_phase_list *, C_phase *, SyntaxError *);
-      void releaseList(std::auto_ptr<std::vector<C_phase*> >& phases);
+      void releaseList(std::unique_ptr<std::vector<C_phase*> >& phases);
       virtual ~C_phase_list();
       virtual C_phase_list* duplicate() const;
       virtual void internalExecute(LensContext *);

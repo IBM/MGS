@@ -33,7 +33,7 @@ class NDPairList
       NDPairList();
       NDPairList(const NDPairList& rv);
       NDPairList& operator=(const NDPairList& rv);
-      virtual void duplicate(std::auto_ptr<NDPairList>& dup) const;
+      virtual void duplicate(std::unique_ptr<NDPairList>& dup) const;
       virtual ~NDPairList();
 
       unsigned size() {
@@ -94,7 +94,7 @@ class NDPairList
       bool replace(const std::string&, const std::string&);
       bool replace(const std::string&, int);
       bool replace(const std::string&, double);
-      bool replace(const std::string&, std::auto_ptr<DataItem>&);
+      bool replace(const std::string&, std::unique_ptr<DataItem>&);
       std::list<NDPair*>& getData() {
 	 return _data;
       }

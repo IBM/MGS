@@ -26,12 +26,12 @@ class SrcScaledGaussianWeightModifier : public CG_SrcScaledGaussianWeightModifie
 {
    public:
       void userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max);
-      std::auto_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       SrcScaledGaussianWeightModifier();
       virtual ~SrcScaledGaussianWeightModifier();
-      virtual void duplicate(std::auto_ptr<SrcScaledGaussianWeightModifier>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_SrcScaledGaussianWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SrcScaledGaussianWeightModifier>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SrcScaledGaussianWeightModifierBase>& dup) const;
 
       float _sigma;
       float _max;

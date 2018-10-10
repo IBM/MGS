@@ -33,7 +33,7 @@ TriggerDataItem::TriggerDataItem(const TriggerDataItem& DI)
 
 
 // Utility methods
-void TriggerDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void TriggerDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new TriggerDataItem(*this));
 }

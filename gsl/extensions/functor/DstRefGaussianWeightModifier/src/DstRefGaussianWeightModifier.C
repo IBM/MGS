@@ -35,10 +35,10 @@ void DstRefGaussianWeightModifier::userInitialize(LensContext* CG_c, Functor*& f
   _wrapDistance=wrapDistance;
 }
 
-std::auto_ptr<ParameterSet> DstRefGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> DstRefGaussianWeightModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -98,17 +98,17 @@ std::auto_ptr<ParameterSet> DstRefGaussianWeightModifier::userExecute(LensContex
 
    std::string name="weight";
    FloatDataItem* fdi=new FloatDataItem(weight);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
    NDPair* ndp = new NDPair(name, fdi_ap);
    ndpl.push_back(ndp);
 
    name="distance";
    FloatDataItem* fdi2=new FloatDataItem(distance);
-   std::auto_ptr<DataItem> fdi_ap2(fdi2);
+   std::unique_ptr<DataItem> fdi_ap2(fdi2);
    NDPair* ndp2 = new NDPair(name, fdi_ap2);
    ndpl.push_back(ndp2);
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -123,17 +123,17 @@ DstRefGaussianWeightModifier::~DstRefGaussianWeightModifier()
 {
 }
 
-void DstRefGaussianWeightModifier::duplicate(std::auto_ptr<DstRefGaussianWeightModifier>& dup) const
+void DstRefGaussianWeightModifier::duplicate(std::unique_ptr<DstRefGaussianWeightModifier>& dup) const
 {
    dup.reset(new DstRefGaussianWeightModifier(*this));
 }
 
-void DstRefGaussianWeightModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void DstRefGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new DstRefGaussianWeightModifier(*this));
 }
 
-void DstRefGaussianWeightModifier::duplicate(std::auto_ptr<CG_DstRefGaussianWeightModifierBase>& dup) const
+void DstRefGaussianWeightModifier::duplicate(std::unique_ptr<CG_DstRefGaussianWeightModifierBase>& dup) const
 {
    dup.reset(new DstRefGaussianWeightModifier(*this));
 }

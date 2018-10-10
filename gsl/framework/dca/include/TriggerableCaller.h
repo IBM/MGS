@@ -36,7 +36,7 @@ class TriggerableCaller
 	 : _ndPairList(ndPairList) {}
       virtual void event(Trigger* trigger) = 0;
       virtual Triggerable* getTriggerable() = 0;
-      virtual void duplicate(std::auto_ptr<TriggerableCaller>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<TriggerableCaller>& dup) const = 0;
       virtual ~TriggerableCaller() {};
    protected:
       NDPairList* _ndPairList;

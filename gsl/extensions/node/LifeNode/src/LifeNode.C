@@ -18,12 +18,12 @@
 #include "CG_LifeNode.h"
 #include "rndm.h"
 
-void LifeNode::initialize(RNG& rng) 
+CUDA_CALLABLE void LifeNode::initialize(RNG& rng) 
 {
    publicValue=value;
 }
 
-void LifeNode::update(RNG& rng) 
+CUDA_CALLABLE void LifeNode::update(RNG& rng) 
 {
    int neighborCount=0;
    ShallowArray<int*>::iterator iter, end = neighbors.end();

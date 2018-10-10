@@ -26,7 +26,7 @@ RelativeNodeSetDataItem::RelativeNodeSetDataItem()
 }
 
 RelativeNodeSetDataItem::RelativeNodeSetDataItem(
-   std::auto_ptr<C_relative_nodeset> relativeNodeset)
+   std::unique_ptr<C_relative_nodeset> relativeNodeset)
 {
    _relativeNodeset = relativeNodeset.release();
 }
@@ -41,7 +41,7 @@ RelativeNodeSetDataItem::RelativeNodeSetDataItem(const RelativeNodeSetDataItem& 
 
 
 // utility methods
-void RelativeNodeSetDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void RelativeNodeSetDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new RelativeNodeSetDataItem(*this)));
 }

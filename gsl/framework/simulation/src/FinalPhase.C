@@ -32,7 +32,7 @@ std::string FinalPhase::getType() const
    return "Final";
 }
 
-void FinalPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void FinalPhase::duplicate(std::unique_ptr<Phase>& rv) const
 {
    rv.reset(new FinalPhase(*this));
 }

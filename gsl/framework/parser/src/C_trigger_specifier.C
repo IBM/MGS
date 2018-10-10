@@ -52,7 +52,7 @@ void C_trigger_specifier::internalExecute(LensContext *c)
 	 throwError(mes);	 
       }
       NDPairList* ndpList = 0;
-      std::auto_ptr<NDPairList> ndpListAp;
+      std::unique_ptr<NDPairList> ndpListAp;
       ndpListAp.reset(0);
       if (_ndpairList) {
 	 _ndpairList->execute(c);
@@ -79,7 +79,7 @@ void C_trigger_specifier::internalExecute(LensContext *c)
       }
    } else {
       Triggerable* triggerable = 0;
-      std::auto_ptr<NDPairList> ndpList;
+      std::unique_ptr<NDPairList> ndpList;
       ndpList.reset(0);
       if (_triggerableSpecifier == "pause") {
 	 triggerable = c->sim->getPauser();

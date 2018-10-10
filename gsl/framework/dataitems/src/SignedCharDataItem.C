@@ -33,7 +33,7 @@ SignedCharDataItem::SignedCharDataItem(const SignedCharDataItem& DI)
 
 
 // Utility methods
-void SignedCharDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void SignedCharDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new SignedCharDataItem(*this)));
 }

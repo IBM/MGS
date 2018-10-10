@@ -42,7 +42,7 @@ void C_declaration_index_set::internalExecute(LensContext *c)
    IndexSetDataItem* isdi = new IndexSetDataItem();
    isdi->setIndexSet(indexSet);
 
-   std::auto_ptr<DataItem> di_ap(isdi);
+   std::unique_ptr<DataItem> di_ap(isdi);
    try {
       c->symTable.addEntry(_declarator->getName(), di_ap);
    } catch (SyntaxErrorException& e) {

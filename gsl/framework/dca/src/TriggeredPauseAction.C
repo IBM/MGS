@@ -29,7 +29,7 @@ void TriggeredPauseAction::startAction()
    }
 }
 
-void TriggeredPauseAction::insert(std::auto_ptr<PauseActionable>& item)
+void TriggeredPauseAction::insert(std::unique_ptr<PauseActionable>& item)
 {
    _list.push_back(item.release());
 }

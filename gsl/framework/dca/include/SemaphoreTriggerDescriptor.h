@@ -38,9 +38,9 @@ class SemaphoreTriggerDescriptor : public TriggerType
       SemaphoreTriggerDescriptor(Simulation& s);
       Trigger* getTrigger(NDPairList& ndp);
       Trigger* getTrigger(std::vector<DataItem*> const & args);
-      virtual void duplicate(std::auto_ptr<TriggerType>& dup) const;
+      virtual void duplicate(std::unique_ptr<TriggerType>& dup) const;
       virtual ~SemaphoreTriggerDescriptor();
-      virtual void getQueriable(std::auto_ptr<InstanceFactoryQueriable>& dup);
+      virtual void getQueriable(std::unique_ptr<InstanceFactoryQueriable>& dup);
    private:
       Simulation& _sim;
 };

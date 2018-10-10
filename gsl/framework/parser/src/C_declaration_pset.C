@@ -36,7 +36,7 @@ void C_declaration_pset::internalExecute(LensContext *c)
    _ndpClauseList->execute(c);
    NDPairList dummy;
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    if (_parameterTypePair->getModelType() == C_parameter_type_pair::_EDGE) {
       EdgeType* et = 0;
       if (_ndpClauseList) {
@@ -77,7 +77,7 @@ void C_declaration_pset::internalExecute(LensContext *c)
 
    ParameterSetDataItem* psdi = new ParameterSetDataItem();
    psdi->setParameterSet(pset);
-   std::auto_ptr<DataItem> psdi_ap(psdi);
+   std::unique_ptr<DataItem> psdi_ap(psdi);
    try {
       c->symTable.addEntry(_declarator->getName(), psdi_ap);
    } catch (SyntaxErrorException& e) {

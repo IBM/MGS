@@ -45,7 +45,7 @@ NodeQueriable::NodeQueriable(const NodeQueriable & q)
 }
 
 
-void NodeQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void NodeQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    NodeDataItem* di = new NodeDataItem;
    // WARNING: THIS NODE CAN AND WILL OFTEN BE NULL IN A DISTRIBUTED RUN. ARCHITECTURE NEEDS WORK HERE.
@@ -55,9 +55,9 @@ void NodeQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> NodeQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> NodeQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
    std::cerr<<"Queries not implemented on NodeQueriable!"<<std::endl;
    return qr;
 }
@@ -69,7 +69,7 @@ Publisher* NodeQueriable::getQPublisher()
 }
 
 
-void NodeQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void NodeQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new NodeQueriable(*this));
 }

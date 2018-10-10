@@ -35,7 +35,7 @@ ConnectionSetQueriable::ConnectionSetQueriable(ConnectionSet* cnxnSet)
    _queriableDescription = "Access edges in a connection set by index:";
    _queriableType = "Connection Set";
    if (_cnxnSet->size() > 0) {
-      std::auto_ptr<QueryField> aptr_edgeIdxQF(new QueryField(QueryField::VALUE));
+      std::unique_ptr<QueryField> aptr_edgeIdxQF(new QueryField(QueryField::VALUE));
       aptr_edgeIdxQF->setName("Edge Index");
       aptr_edgeIdxQF->setDescription("Index of edge.");
       std::ostringstream ostr;
@@ -52,7 +52,7 @@ ConnectionSetQueriable::ConnectionSetQueriable(const ConnectionSetQueriable & q)
 }
 
 
-void ConnectionSetQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void ConnectionSetQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    ConnectionSetDataItem* di = new ConnectionSetDataItem;
    di->setConnectionSet(_cnxnSet);
@@ -60,16 +60,16 @@ void ConnectionSetQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> ConnectionSetQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> ConnectionSetQueriable::query(int maxItem, int minItem, int searchSize)
 {
    std::vector<QueryField*> & queryFields = _queryDescriptor.getQueryFields();
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
    int idx = -1;
    std::istringstream istr(queryFields[_edgeIdxIdx]->getField());
    istr>>idx;
    if ((idx<(int)_cnxnSet->size()) && (idx>=0)) {
       qr->_numFound = 1;
-      std::auto_ptr<Queriable> aptrQueriable(new EdgeQueriable((*_cnxnSet)[idx]));
+      std::unique_ptr<Queriable> aptrQueriable(new EdgeQueriable((*_cnxnSet)[idx]));
       qr->addQueriable(aptrQueriable);
    }
    return qr;
@@ -82,7 +82,7 @@ Publisher* ConnectionSetQueriable::getQPublisher()
 }
 
 
-void ConnectionSetQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void ConnectionSetQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new ConnectionSetQueriable(*this));
 }

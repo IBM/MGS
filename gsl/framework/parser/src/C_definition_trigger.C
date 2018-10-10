@@ -45,7 +45,7 @@ void C_definition_trigger::internalExecute(LensContext *c)
    _constructor_list = _constructor_ptl->getList();
    TriggerTypeDataItem* ttdi = new TriggerTypeDataItem;
    ttdi->setTriggerType(tt);
-   std::auto_ptr<DataItem> diap(ttdi);
+   std::unique_ptr<DataItem> diap(ttdi);
    try {
       c->symTable.addEntry(_declarator->getName(), diap);
    } catch (SyntaxErrorException& e) {

@@ -32,9 +32,9 @@ class UnsignedTriggerDescriptor : public TriggerType
       UnsignedTriggerDescriptor(Simulation& s);
       Trigger* getTrigger(NDPairList& ndp);
       Trigger* getTrigger(const std::vector<DataItem*>& args);
-      virtual void duplicate(std::auto_ptr<TriggerType>& dup) const;
+      virtual void duplicate(std::unique_ptr<TriggerType>& dup) const;
       virtual ~UnsignedTriggerDescriptor();
-      virtual void getQueriable(std::auto_ptr<InstanceFactoryQueriable>& dup);
+      virtual void getQueriable(std::unique_ptr<InstanceFactoryQueriable>& dup);
    private:
       Simulation& _sim;
 };

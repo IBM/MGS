@@ -33,7 +33,7 @@ SimulationDataItem::SimulationDataItem(const SimulationDataItem& DI)
 
 
 // Utility methods
-void SimulationDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void SimulationDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new SimulationDataItem(*this));
 }

@@ -33,7 +33,7 @@ InstanceFactoryDataItem::InstanceFactoryDataItem(const InstanceFactoryDataItem& 
 
 
 // Utility methods
-void InstanceFactoryDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void InstanceFactoryDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new InstanceFactoryDataItem(*this));
 }

@@ -33,15 +33,15 @@ class RepertoireFactoryDataItem : public DataItem
       RepertoireFactoryDataItem & operator=(const RepertoireFactoryDataItem &);
       // Constructors
       RepertoireFactoryDataItem();
-      RepertoireFactoryDataItem(std::auto_ptr<RepertoireFactory> data);
+      RepertoireFactoryDataItem(std::unique_ptr<RepertoireFactory> data);
       RepertoireFactoryDataItem(const RepertoireFactoryDataItem& DI);
       ~RepertoireFactoryDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       RepertoireFactory* getFactory(Error* error=0) const;
-      void setFactory(std::auto_ptr<RepertoireFactory>&, Error* error=0);
+      void setFactory(std::unique_ptr<RepertoireFactory>&, Error* error=0);
 };
 #endif

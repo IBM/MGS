@@ -217,17 +217,17 @@ GoodwinDataCollector::~GoodwinDataCollector()
 {
 }
 
-void GoodwinDataCollector::duplicate(std::auto_ptr<GoodwinDataCollector>& dup) const
+void GoodwinDataCollector::duplicate(std::unique_ptr<GoodwinDataCollector>& dup) const
 {
   dup.reset(new GoodwinDataCollector(*this));
 }
 
-void GoodwinDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void GoodwinDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new GoodwinDataCollector(*this));
 }
 
-void GoodwinDataCollector::duplicate(std::auto_ptr<CG_GoodwinDataCollector>& dup) const
+void GoodwinDataCollector::duplicate(std::unique_ptr<CG_GoodwinDataCollector>& dup) const
 {
   dup.reset(new GoodwinDataCollector(*this));
 }

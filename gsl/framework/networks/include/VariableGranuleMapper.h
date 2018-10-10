@@ -55,7 +55,7 @@ class VariableGranuleMapper : public GranuleMapper
       virtual ~VariableGranuleMapper();
       virtual unsigned getIndex() {return _index;}
       virtual void setIndex(unsigned index) {_index=index;}
-      virtual void duplicate(std::auto_ptr<GranuleMapper>& dup) const {assert(0);}
+      virtual void duplicate(std::unique_ptr<GranuleMapper>& dup) const {assert(0);}
       virtual std::string getName() {return _name;}
 	
    private:

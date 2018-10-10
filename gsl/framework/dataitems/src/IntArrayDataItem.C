@@ -66,7 +66,7 @@ IntArrayDataItem::IntArrayDataItem(const IntArrayDataItem& DI)
 
 // Utility methods
 
-void IntArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void IntArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new IntArrayDataItem(*this));
 }

@@ -35,10 +35,10 @@ void ReversedDstRefGaussianWeightModifier::userInitialize(LensContext* CG_c, Fun
   _wrapDistance=wrapDistance;
 }
 
-std::auto_ptr<ParameterSet> ReversedDstRefGaussianWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> ReversedDstRefGaussianWeightModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -98,17 +98,17 @@ std::auto_ptr<ParameterSet> ReversedDstRefGaussianWeightModifier::userExecute(Le
 
    std::string name="weight";
    FloatDataItem* fdi=new FloatDataItem(weight);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
    NDPair* ndp = new NDPair(name, fdi_ap);
    ndpl.push_back(ndp);
 
    name="distance";
    FloatDataItem* fdi2=new FloatDataItem(distance);
-   std::auto_ptr<DataItem> fdi_ap2(fdi2);
+   std::unique_ptr<DataItem> fdi_ap2(fdi2);
    NDPair* ndp2 = new NDPair(name, fdi_ap2);
    ndpl.push_back(ndp2);
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -123,17 +123,17 @@ ReversedDstRefGaussianWeightModifier::~ReversedDstRefGaussianWeightModifier()
 {
 }
 
-void ReversedDstRefGaussianWeightModifier::duplicate(std::auto_ptr<ReversedDstRefGaussianWeightModifier>& dup) const
+void ReversedDstRefGaussianWeightModifier::duplicate(std::unique_ptr<ReversedDstRefGaussianWeightModifier>& dup) const
 {
    dup.reset(new ReversedDstRefGaussianWeightModifier(*this));
 }
 
-void ReversedDstRefGaussianWeightModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void ReversedDstRefGaussianWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new ReversedDstRefGaussianWeightModifier(*this));
 }
 
-void ReversedDstRefGaussianWeightModifier::duplicate(std::auto_ptr<CG_ReversedDstRefGaussianWeightModifierBase>& dup) const
+void ReversedDstRefGaussianWeightModifier::duplicate(std::unique_ptr<CG_ReversedDstRefGaussianWeightModifierBase>& dup) const
 {
    dup.reset(new ReversedDstRefGaussianWeightModifier(*this));
 }

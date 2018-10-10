@@ -95,7 +95,7 @@ void BitmapPhenotypeCompCategory::initializeShared(RNG& rng)
 	std::cerr<<"Bad filename: "<<filenames[i][j]<<std::endl;
 	exit(-1);
       }
-      std::auto_ptr<char> image_aptr;
+      std::unique_ptr<char> image_aptr;
 
       BitMapHeader bmp;
       bmp.readGrayscales(inFile, image_aptr);

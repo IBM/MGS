@@ -30,9 +30,9 @@ class TissueConnectorFunctor : public CG_TissueConnectorFunctorBase, public Tiss
       TissueConnectorFunctor();
       TissueConnectorFunctor(TissueConnectorFunctor const &);
       virtual ~TissueConnectorFunctor();
-      virtual void duplicate(std::auto_ptr<TissueConnectorFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_TissueConnectorFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<TissueConnectorFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_TissueConnectorFunctorBase>& dup) const;
       void setTissueFunctor(TissueFunctor* tf) {_tissueFunctor=tf;}
 
    private:

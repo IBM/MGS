@@ -43,17 +43,17 @@ TissueNodeInitFunctor::~TissueNodeInitFunctor()
 {
 }
 
-void TissueNodeInitFunctor::duplicate(std::auto_ptr<TissueNodeInitFunctor>& dup) const
+void TissueNodeInitFunctor::duplicate(std::unique_ptr<TissueNodeInitFunctor>& dup) const
 {
    dup.reset(new TissueNodeInitFunctor(*this));
 }
 
-void TissueNodeInitFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void TissueNodeInitFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new TissueNodeInitFunctor(*this));
 }
 
-void TissueNodeInitFunctor::duplicate(std::auto_ptr<CG_TissueNodeInitFunctorBase>& dup) const
+void TissueNodeInitFunctor::duplicate(std::unique_ptr<CG_TissueNodeInitFunctorBase>& dup) const
 {
    dup.reset(new TissueNodeInitFunctor(*this));
 }

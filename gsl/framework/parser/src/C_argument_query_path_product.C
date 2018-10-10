@@ -43,12 +43,12 @@ C_argument_query_path_product::C_argument_query_path_product(
       _queryPathProduct = rv._queryPathProduct->duplicate();
    }
    if (rv._serviceDI) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._serviceDI->duplicate(cc_di);
       _serviceDI = dynamic_cast<ServiceDataItem*>(cc_di.release());
    }
    if (rv._triggerDI) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._triggerDI->duplicate(cc_di);
       _triggerDI = dynamic_cast<TriggerTypeDataItem*>(cc_di.release());
    }

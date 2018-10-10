@@ -33,7 +33,7 @@ EdgeTypeDataItem::EdgeTypeDataItem(const EdgeTypeDataItem& DI)
 
 
 // Utility methods
-void EdgeTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void EdgeTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new EdgeTypeDataItem(*this));
 }

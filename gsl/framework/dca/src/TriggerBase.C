@@ -80,7 +80,7 @@ TriggerBase::~TriggerBase()
 
 void TriggerBase::copyOwnedHeap(const TriggerBase& rv)
 {
-   std::auto_ptr<TriggerableCaller> dup;
+   std::unique_ptr<TriggerableCaller> dup;
    std::vector<TriggerableCaller*>::const_iterator it, 
       end = rv._serialTriggerableCallers.end();
    for (it = rv._serialTriggerableCallers.begin(); it != end; ++it) {

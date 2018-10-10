@@ -32,7 +32,7 @@ UnsignedShortDataItem::UnsignedShortDataItem(const UnsignedShortDataItem& DI)
 
 
 // Utility methods
-void UnsignedShortDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void UnsignedShortDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new UnsignedShortDataItem(*this)));
 }

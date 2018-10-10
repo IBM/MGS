@@ -56,16 +56,16 @@ class BitMapHeader
   void writePaletteRedToRed(FILE*);
   void writePaletteBlueToRed(FILE*);
 
-  void readGrayscales(FILE*, std::auto_ptr<char>& grays);
-  void readColors(FILE*, std::auto_ptr<char>& reds, std::auto_ptr<char>& greens, std::auto_ptr<char>& blues);
-  void readReds(FILE*, std::auto_ptr<char>& reds);
-  void readGreens(FILE*, std::auto_ptr<char>& greens);
-  void readBlues(FILE*, std::auto_ptr<char>& blues);
+  void readGrayscales(FILE*, std::unique_ptr<char>& grays);
+  void readColors(FILE*, std::unique_ptr<char>& reds, std::unique_ptr<char>& greens, std::unique_ptr<char>& blues);
+  void readReds(FILE*, std::unique_ptr<char>& reds);
+  void readGreens(FILE*, std::unique_ptr<char>& greens);
+  void readBlues(FILE*, std::unique_ptr<char>& blues);
 
   // Visual System Methods
-  void readLuminences(FILE*, std::auto_ptr<char>& luminences);
-  void readRedGreenOpponents(FILE*, std::auto_ptr<char>& regGreenOpponents);
-  void readYellowBlueOpponents(FILE*, std::auto_ptr<char>& yellowBlueOpponents);
+  void readLuminences(FILE*, std::unique_ptr<char>& luminences);
+  void readRedGreenOpponents(FILE*, std::unique_ptr<char>& regGreenOpponents);
+  void readYellowBlueOpponents(FILE*, std::unique_ptr<char>& yellowBlueOpponents);
 
   void hsv2rgb(float h, float s, float v, float& r,
 	       float& g, float& b) const;

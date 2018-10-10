@@ -32,7 +32,7 @@ std::string LoadPhase::getType() const
    return "Load";
 }
 
-void LoadPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void LoadPhase::duplicate(std::unique_ptr<Phase>& rv) const
 {
    rv.reset(new LoadPhase(*this));
 }

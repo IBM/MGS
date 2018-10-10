@@ -242,7 +242,7 @@ class Simulation : public Publishable {
   // language tree. It is intended to be used by the two pass system.
   void resetInternals();
 
-  void addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper);
+  void addGranuleMapper(std::unique_ptr<GranuleMapper>& granuleMapper);
 
   void setVariableGranuleMapperIndex(unsigned idx) {
     _variableGranuleMapperIndex = idx;
@@ -316,6 +316,17 @@ class Simulation : public Publishable {
     return _edgeCatList;
   }
 
+#if defined(HAVE_GPU) && defined(__NVCC__)
+  /* < LifeNode, <rank_0 = 1, rank_1 = 2, rank_2 = 5> > keep tracks # nodes created for each nodetype
+   *        for each rank
+   */
+  std::map< std::string, std::vector<int> > _nodes_count; 
+  // "LifeNode" on what (original and unique) partionId
+  //std::map< std::string, std::vector<int> >  _nodes_partition;
+  std::map< std::string, std::vector<Granule*> >  _nodes_granules;
+    //std::vector<int> > _nodes_count; 
+  void print_GPU_info(int devID);
+#endif
   private:
   StateType _state;
   unsigned _iteration;
@@ -437,6 +448,7 @@ class Simulation : public Publishable {
   int _numWorkUnits;
   int _numGranules;
   Partitioner* _partitioner;
+
 };
 
 #endif

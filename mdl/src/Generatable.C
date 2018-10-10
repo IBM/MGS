@@ -213,8 +213,8 @@ void Generatable::createDirectoryStructure()
    if (_fileOutput) {
       std::string sysCall = "mkdir -p " + getModuleName() + " ; " 
 	 + "mkdir -p " + getModuleName() + "/src ; " 
-	 + "mkdir -p " + getModuleName() + "/include ; "
-	 + "mkdir -p " + getModuleName() + "/obj ; ";
+	 + "mkdir -p " + getModuleName() + "/include ; ";
+	 //+ "mkdir -p " + getModuleName() + "/obj ; "; //TUAN (09-25-2018): there is no need for this, as all object files are put into the same folder
       try {
 	 system(sysCall.c_str());
       } catch(...) {};
@@ -249,7 +249,7 @@ void Generatable::generateType()
       new Method("get" + moduleTypeNameCap, "void") );
    getGeneratableAutoMethod->setVirtual(true);
    getGeneratableAutoMethod->addParameter(
-      "std::auto_ptr<" + moduleTypeNameCap + ">& aptr");
+      "std::unique_ptr<" + moduleTypeNameCap + ">& aptr");
    getGeneratableAutoMethod->setFunctionBody(
       TAB + "aptr.reset(" + instanceInitializer +");\n");
    instance->addMethod(getGeneratableAutoMethod);
@@ -282,7 +282,7 @@ void Generatable::generateType()
       new Method("getQueriable", "void"));
    getQueriableMethod->setVirtual(true);
    getQueriableMethod->addParameter(
-      "std::auto_ptr<InstanceFactoryQueriable>& dup");
+      "std::unique_ptr<InstanceFactoryQueriable>& dup");
    std::ostringstream getQueriableMethodFunctionBody;
    getQueriableMethodFunctionBody 
       << TAB << "dup.reset(new InstanceFactoryQueriable(this));\n"

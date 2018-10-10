@@ -195,17 +195,17 @@ VoltageDisplay::VoltageDisplay() : CG_VoltageDisplay(), outFile(0) {}
 
 VoltageDisplay::~VoltageDisplay() { delete outFile; }
 
-void VoltageDisplay::duplicate(std::auto_ptr<VoltageDisplay>& dup) const
+void VoltageDisplay::duplicate(std::unique_ptr<VoltageDisplay>& dup) const
 {
   dup.reset(new VoltageDisplay(*this));
 }
 
-void VoltageDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void VoltageDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new VoltageDisplay(*this));
 }
 
-void VoltageDisplay::duplicate(std::auto_ptr<CG_VoltageDisplay>& dup) const
+void VoltageDisplay::duplicate(std::unique_ptr<CG_VoltageDisplay>& dup) const
 {
   dup.reset(new VoltageDisplay(*this));
 }

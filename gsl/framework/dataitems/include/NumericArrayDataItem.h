@@ -32,6 +32,7 @@ class NumericArrayDataItem: public ArrayDataItem
       NumericArrayDataItem& operator=(const NumericArrayDataItem& DI);
       virtual NumericArrayDataItem & assign(const NumericArrayDataItem &) =0;
 
+      using DataItem::getString;
       virtual std::string getString(std::vector<int> coords, Error* error = 0) const=0;
       virtual void setString(std::vector<int> coords, std::string value, Error* error = 0)=0;
 

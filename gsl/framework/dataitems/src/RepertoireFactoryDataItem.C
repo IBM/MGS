@@ -26,7 +26,7 @@ RepertoireFactoryDataItem::RepertoireFactoryDataItem()
 {
 }
 
-RepertoireFactoryDataItem::RepertoireFactoryDataItem(std::auto_ptr<RepertoireFactory> data)
+RepertoireFactoryDataItem::RepertoireFactoryDataItem(std::unique_ptr<RepertoireFactory> data)
 {
    _data = data.release();
 }
@@ -36,7 +36,7 @@ RepertoireFactoryDataItem::RepertoireFactoryDataItem(const RepertoireFactoryData
    : _data(0)
 {
    if (DI._data) {
-      std::auto_ptr<RepertoireFactory> dup;
+      std::unique_ptr<RepertoireFactory> dup;
       DI._data->duplicate(dup);
       _data = dup.release();
    }
@@ -48,7 +48,7 @@ RepertoireFactoryDataItem::~RepertoireFactoryDataItem()
 }
 
 // Utility methods
-void RepertoireFactoryDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void RepertoireFactoryDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new RepertoireFactoryDataItem(*this)));
 }
@@ -59,7 +59,7 @@ RepertoireFactoryDataItem& RepertoireFactoryDataItem::operator=(const Repertoire
 
    delete _data;
    if (DI._data) {
-      std::auto_ptr<RepertoireFactory> dup;
+      std::unique_ptr<RepertoireFactory> dup;
       DI._data->duplicate(dup);
       _data = dup.release();
    }
@@ -79,7 +79,7 @@ RepertoireFactory* RepertoireFactoryDataItem::getFactory(Error* error) const
 }
 
 
-void RepertoireFactoryDataItem::setFactory(std::auto_ptr<RepertoireFactory>& rf, Error* error)
+void RepertoireFactoryDataItem::setFactory(std::unique_ptr<RepertoireFactory>& rf, Error* error)
 {
    delete _data;
    _data = rf.release();

@@ -23,9 +23,9 @@
 class LifeNode : public CG_LifeNode
 {
    public:
-      void initialize(RNG& rng);
-      void update(RNG& rng);
-      void copy(RNG& rng);
+      CUDA_CALLABLE void initialize(RNG& rng);
+      CUDA_CALLABLE void update(RNG& rng);
+      CUDA_CALLABLE void copy(RNG& rng);
       virtual ~LifeNode();
 };
 

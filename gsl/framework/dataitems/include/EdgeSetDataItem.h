@@ -35,11 +35,11 @@ class EdgeSetDataItem : public TriggerableDataItem
       virtual EdgeSetDataItem& operator=(const EdgeSetDataItem& DI);
 
       EdgeSetDataItem();
-      EdgeSetDataItem(std::auto_ptr<EdgeSet> data);
+      EdgeSetDataItem(std::unique_ptr<EdgeSet> data);
       EdgeSetDataItem(const EdgeSetDataItem& DI);
       ~EdgeSetDataItem();
 
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       EdgeSet* getEdgeSet(Error* error=0) const;
