@@ -61,7 +61,6 @@ bool Initializer::execute()
    char temporaryName[256] = "/tmp/bc_mpp.XXXXXX";             // modified by Jizhu Lu on 01/10/2006
 
    std::ostringstream command;
-//   if (tmpnam(temporaryName)) {                         // commented out by Jizhu Lu on 01/10/2006
    if (mkstemp(temporaryName)) {                          // added by Jizhu Lu on 01/10/2006
       #ifdef LINUX
       command << "cpp ";
@@ -157,6 +156,8 @@ bool Initializer::execute()
    generateMakefileExtension(); // hack for MBL
    generateCopyModules(); // hack for MBL
 //   generateCopyModulesPy();
+   
+   //free memory/resources
    delete infile;
    unlink(temporaryName);                      // added by Jizhu Lu on 01/10/2006 to remove the temporary file.
    return true;
@@ -271,4 +272,9 @@ void Initializer::generateCopyModulesPy()
    std::string cmd = "chmod +x ";
    cmd += fileName;
    system(cmd.c_str());
+}
+Initializer::~Initializer()
+{
+   if (_generatables)
+     delete _generatables;
 }
