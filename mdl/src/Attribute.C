@@ -103,7 +103,7 @@ std::string Attribute::getCopyString(const std::string& tab)
 	       << tab << TAB << "*" << getName() << " = *(rv." << getName() 
 	       << ");\n";
 	 } else {
-	    os << tab << TAB << "std::auto_ptr< " << getType() << " > dup;\n"
+	    os << tab << TAB << "std::unique_ptr< " << getType() << " > dup;\n"
 	       << tab << TAB << "rv." << getName() << "->duplicate(dup);\n"
 	       << tab << TAB << getName() << " = dup.release();\n";
 	 }

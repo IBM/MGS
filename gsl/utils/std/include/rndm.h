@@ -21,6 +21,11 @@
 #include <cassert>
 
 #include "RNG.h"
+#if defined(HAVE_GPU) && defined(__NVCC__)
+#define CUDA_CALLABLE __host__ __device__
+#else 
+#define CUDA_CALLABLE 
+#endif
 
 inline double drandom(RNG_ns& rangen)
 {

@@ -35,10 +35,10 @@ class SimulationQueriable : public Queriable
    public:
       SimulationQueriable(Simulation* simulation);
       SimulationQueriable(const SimulationQueriable&);
-      std::auto_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
+      std::unique_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
       Publisher* getQPublisher();
-      virtual void duplicate(std::auto_ptr<Queriable>& dup) const;
-      void getDataItem(std::auto_ptr<DataItem> &);
+      virtual void duplicate(std::unique_ptr<Queriable>& dup) const;
+      void getDataItem(std::unique_ptr<DataItem> &);
       void refresh();
       ~SimulationQueriable();
 

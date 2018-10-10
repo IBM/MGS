@@ -142,17 +142,17 @@ WaveDriverUnitDataCollector::~WaveDriverUnitDataCollector()
 {
 }
 
-void WaveDriverUnitDataCollector::duplicate(std::auto_ptr<WaveDriverUnitDataCollector>& dup) const
+void WaveDriverUnitDataCollector::duplicate(std::unique_ptr<WaveDriverUnitDataCollector>& dup) const
 {
   dup.reset(new WaveDriverUnitDataCollector(*this));
 }
 
-void WaveDriverUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void WaveDriverUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new WaveDriverUnitDataCollector(*this));
 }
 
-void WaveDriverUnitDataCollector::duplicate(std::auto_ptr<CG_WaveDriverUnitDataCollector>& dup) const
+void WaveDriverUnitDataCollector::duplicate(std::unique_ptr<CG_WaveDriverUnitDataCollector>& dup) const
 {
   dup.reset(new WaveDriverUnitDataCollector(*this));
 }

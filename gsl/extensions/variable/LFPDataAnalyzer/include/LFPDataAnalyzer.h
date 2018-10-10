@@ -31,9 +31,9 @@ class LFPDataAnalyzer : public CG_LFPDataAnalyzer
   virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset);
   LFPDataAnalyzer();
   virtual ~LFPDataAnalyzer();
-  virtual void duplicate(std::auto_ptr<LFPDataAnalyzer>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_LFPDataAnalyzer>& dup) const;
+  virtual void duplicate(std::unique_ptr<LFPDataAnalyzer>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_LFPDataAnalyzer>& dup) const;
  private:
   std::ofstream* LFP_file;
   double normal_pdf(double x, double mean, double sigma);

@@ -34,10 +34,10 @@ class PublisherQueriable : public Queriable
    public:
       PublisherQueriable(Publisher* entryPublisher);
       PublisherQueriable(const PublisherQueriable&);
-      std::auto_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
+      std::unique_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
       Publisher* getQPublisher();
-      virtual void duplicate(std::auto_ptr<Queriable>& dup) const;
-      void getDataItem(std::auto_ptr<DataItem> &);
+      virtual void duplicate(std::unique_ptr<Queriable>& dup) const;
+      void getDataItem(std::unique_ptr<DataItem> &);
       ~PublisherQueriable();
 
    private:

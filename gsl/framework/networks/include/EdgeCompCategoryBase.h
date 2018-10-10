@@ -39,11 +39,11 @@ class EdgeCompCategoryBase : public CompCategoryBase, public EdgeType
 
       // EdgeType functions to be implemented
       virtual void getInitializationParameterSet(
-	 std::auto_ptr<ParameterSet>& initPSet) = 0;
+	 std::unique_ptr<ParameterSet>& initPSet) = 0;
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& inAttrPSet) = 0;
+	 std::unique_ptr<ParameterSet>& inAttrPSet) = 0;
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& outAttrPSet) = 0;
+	 std::unique_ptr<ParameterSet>& outAttrPSet) = 0;
       virtual std::string getModelName() {
 	 return _modelName;
       }

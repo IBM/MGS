@@ -26,7 +26,7 @@ NDPairDataItem::NDPairDataItem()
 {
 }
 
-NDPairDataItem::NDPairDataItem(std::auto_ptr<NDPair> data)
+NDPairDataItem::NDPairDataItem(std::unique_ptr<NDPair> data)
 {
    _data = data.release();
 }
@@ -38,7 +38,7 @@ NDPairDataItem::NDPairDataItem(const NDPairDataItem& DI)
 
 
 // Utility methods
-void NDPairDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void NDPairDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new NDPairDataItem(*this));
 }
@@ -65,13 +65,13 @@ NDPair* NDPairDataItem::getNDPair() const
    return _data;
 }
 
-void NDPairDataItem::releaseNDPair(std::auto_ptr<NDPair>& ndp)
+void NDPairDataItem::releaseNDPair(std::unique_ptr<NDPair>& ndp)
 {
    ndp.reset(_data);
    _data = 0;
 }
 
-void NDPairDataItem::setNDPair(std::auto_ptr<NDPair>& ndp)
+void NDPairDataItem::setNDPair(std::unique_ptr<NDPair>& ndp)
 {
    delete _data;
    _data = ndp.release();

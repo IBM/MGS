@@ -36,7 +36,7 @@ ConnectionScriptFunctor::ConnectionScriptFunctor(
 }
 
 
-void ConnectionScriptFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void ConnectionScriptFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new ConnectionScriptFunctor(*this));
 }
@@ -57,7 +57,7 @@ void ConnectionScriptFunctor::doInitialize(LensContext *c,
 
 void ConnectionScriptFunctor::doExecute(LensContext *c, 
 					const std::vector<DataItem*>& args, 
-					std::auto_ptr<DataItem>& rvalue)
+					std::unique_ptr<DataItem>& rvalue)
 {
    c->symTable.addLocalScope();
    DataItem *currentArg = 0;
@@ -80,7 +80,7 @@ void ConnectionScriptFunctor::doExecute(LensContext *c,
 
       // Now put named arguments into the symbol table
       if (currentName!="") {
-         std::auto_ptr<DataItem> diap;
+         std::unique_ptr<DataItem> diap;
          currentArg->duplicate(diap);
          c->symTable.addEntry(currentName,diap);
       }

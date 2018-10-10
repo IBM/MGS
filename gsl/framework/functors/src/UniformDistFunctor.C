@@ -56,7 +56,7 @@ void UniformDistFunctor::doInitialize(LensContext *c,
 
 void UniformDistFunctor::doExecute(LensContext *c, 
 				   const std::vector<DataItem*>& args, 
-				   std::auto_ptr<DataItem>& rvalue)
+				   std::unique_ptr<DataItem>& rvalue)
 {
    FloatDataItem fdi;
 
@@ -68,7 +68,7 @@ void UniformDistFunctor::doExecute(LensContext *c,
 }
 
 
-void UniformDistFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void UniformDistFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new UniformDistFunctor(*this));
 }

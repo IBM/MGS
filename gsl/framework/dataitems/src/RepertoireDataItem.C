@@ -42,7 +42,7 @@ RepertoireDataItem::RepertoireDataItem(const RepertoireDataItem& DI)
 
 
 // Utility methods
-void RepertoireDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void RepertoireDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new RepertoireDataItem(*this)));
 }

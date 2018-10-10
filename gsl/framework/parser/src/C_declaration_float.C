@@ -31,7 +31,7 @@ void C_declaration_float::internalExecute(LensContext *c)
    FloatDataItem *fdi =new FloatDataItem;
    fdi->setFloat(_floatValue);
 
-   std::auto_ptr<DataItem> fdi_ap(static_cast<DataItem*>(fdi));
+   std::unique_ptr<DataItem> fdi_ap(static_cast<DataItem*>(fdi));
    try {
       c->symTable.addEntry(_declarator->getName(), fdi_ap);
    } catch (SyntaxErrorException& e) {

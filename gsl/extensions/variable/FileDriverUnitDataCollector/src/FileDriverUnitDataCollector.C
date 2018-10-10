@@ -142,17 +142,17 @@ FileDriverUnitDataCollector::~FileDriverUnitDataCollector()
 {
 }
 
-void FileDriverUnitDataCollector::duplicate(std::auto_ptr<FileDriverUnitDataCollector>& dup) const
+void FileDriverUnitDataCollector::duplicate(std::unique_ptr<FileDriverUnitDataCollector>& dup) const
 {
   dup.reset(new FileDriverUnitDataCollector(*this));
 }
 
-void FileDriverUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void FileDriverUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new FileDriverUnitDataCollector(*this));
 }
 
-void FileDriverUnitDataCollector::duplicate(std::auto_ptr<CG_FileDriverUnitDataCollector>& dup) const
+void FileDriverUnitDataCollector::duplicate(std::unique_ptr<CG_FileDriverUnitDataCollector>& dup) const
 {
   dup.reset(new FileDriverUnitDataCollector(*this));
 }

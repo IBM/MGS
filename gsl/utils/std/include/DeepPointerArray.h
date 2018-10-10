@@ -19,6 +19,9 @@
 
 #include "Array.h"
 
+/* IMPORTANT
+ * In GPU scenario: blockSize, blockIncrementSize do NOT play any role
+ */
 template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE, 
 	  unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
 class DeepPointerArray : public Array<T*>
@@ -28,8 +31,8 @@ class DeepPointerArray : public Array<T*>
       DeepPointerArray(const DeepPointerArray* rv);
       DeepPointerArray(const DeepPointerArray& rv);
       DeepPointerArray& operator=(const DeepPointerArray& rv);
-      virtual void duplicate(std::auto_ptr<Array<T*> >& rv) const;
-      virtual void duplicate(std::auto_ptr<DeepPointerArray<T, 
+      virtual void duplicate(std::unique_ptr<Array<T*> >& rv) const;
+      virtual void duplicate(std::unique_ptr<DeepPointerArray<T, 
 			     blockSize, blockIncrementSize> >& rv) const;
       virtual ~DeepPointerArray();
 
@@ -40,12 +43,14 @@ class DeepPointerArray : public Array<T*>
 
    protected:
       virtual void internalCopy(T*& lval, T*& rval);
+#if ! (defined(HAVE_GPU) && defined(__NVCC__))
       virtual unsigned getBlockSize() const {
 	 return blockSize;
       }
       virtual unsigned getBlockIncrementSize() const {
 	 return blockIncrementSize;
       }
+#endif
       void destructContents();
       void copyContents(const DeepPointerArray& rv);
 };
@@ -88,14 +93,14 @@ DeepPointerArray<T, blockSize, blockIncrementSize>::operator=(
 
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void DeepPointerArray<T, blockSize, blockIncrementSize>::duplicate(
-   std::auto_ptr<Array<T*> >& rv) const
+   std::unique_ptr<Array<T*> >& rv) const
 {
    rv.reset(new DeepPointerArray<T, blockSize, blockIncrementSize>(this));
 }
 
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void DeepPointerArray<T, blockSize, blockIncrementSize>::duplicate(
-   std::auto_ptr<
+   std::unique_ptr<
    DeepPointerArray<T, blockSize, blockIncrementSize> >& rv) const
 {
    rv.reset(new DeepPointerArray<T, blockSize, blockIncrementSize>(this));
@@ -111,6 +116,10 @@ template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void DeepPointerArray<T, blockSize, blockIncrementSize>::internalCopy(
    T*& lval, T*& rval)
 {
+   /* for any class 'T' that we want to be on Unfied Memory
+    * we should make such class derived from 'Managed' class
+    * in that we overwrite the new and delete operator
+    */
    T* retVal = new T();
    *retVal = *rval;
    lval = retVal;
@@ -119,6 +128,16 @@ void DeepPointerArray<T, blockSize, blockIncrementSize>::internalCopy(
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void DeepPointerArray<T, blockSize, blockIncrementSize>::destructContents()
 {
+#if defined(HAVE_GPU) && defined(__NVCC__)
+   for (unsigned j = 0; j < this->_size; j++) {
+      //TUAN TODO FIX
+      //use this->_mem_location == MemLocation::CPU  or MemLocation::UnifiedMemory
+      ////check if data as regular pointer (CPU memory)
+      delete this->_data[j];
+      // or on Unified Memory
+      // delete_memory(this->_data[j]);
+   }
+#else
    unsigned index = 0;
    for (unsigned i = 0; (i < this->_activeBlocks) && (index < this->_size); 
 	i++) {
@@ -127,6 +146,7 @@ void DeepPointerArray<T, blockSize, blockIncrementSize>::destructContents()
 	 delete this->_blocksArray[i][j];
       }
    }
+#endif
 }
 
 #endif

@@ -602,18 +602,18 @@ AnyCurrentDisplay::AnyCurrentDisplay() : CG_AnyCurrentDisplay(), outFile(0) {}
 
 AnyCurrentDisplay::~AnyCurrentDisplay() { delete outFile; }
 
-void AnyCurrentDisplay::duplicate(std::auto_ptr<AnyCurrentDisplay>& dup) const
+void AnyCurrentDisplay::duplicate(std::unique_ptr<AnyCurrentDisplay>& dup) const
 {
   dup.reset(new AnyCurrentDisplay(*this));
 }
 
-void AnyCurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void AnyCurrentDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new AnyCurrentDisplay(*this));
 }
 
 void AnyCurrentDisplay::duplicate(
-    std::auto_ptr<CG_AnyCurrentDisplay>& dup) const
+    std::unique_ptr<CG_AnyCurrentDisplay>& dup) const
 {
   dup.reset(new AnyCurrentDisplay(*this));
 }

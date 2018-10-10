@@ -28,7 +28,7 @@ void C_type_definition::internalExecute(LensContext *c)
 {
    _typeName->execute(c);
    RepertoireFactoryDataItem * rdi = new RepertoireFactoryDataItem;
-   std::auto_ptr<DataItem> di_ap(rdi);
+   std::unique_ptr<DataItem> di_ap(rdi);
 
    if(_type == _GRID) {
       // here i have to transfer the parse tree
@@ -37,7 +37,7 @@ void C_type_definition::internalExecute(LensContext *c)
       // of _gridDefBody to factory data item.
 
       _gridDefBody->execute(c);
-      std::auto_ptr<RepertoireFactory> dup(
+      std::unique_ptr<RepertoireFactory> dup(
 	 new C_grid_definition_body(*_gridDefBody));
       rdi->setFactory(dup);
       try {
@@ -63,7 +63,7 @@ void C_type_definition::internalExecute(LensContext *c)
 
    if(_type == _COMPOSITE) {
       _compositeDefBody->execute(c);
-      std::auto_ptr<RepertoireFactory> dup(
+      std::unique_ptr<RepertoireFactory> dup(
 	 new C_composite_definition_body(*_compositeDefBody));
       rdi->setFactory(dup);
       try {

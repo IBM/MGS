@@ -49,12 +49,12 @@ EdgeBase::EdgeBase(const EdgeBase& rv)
      _edgeCompCategoryBase(rv._edgeCompCategoryBase)
 {
    if (rv._publisher) {
-      std::auto_ptr<Publisher> dup;
+      std::unique_ptr<Publisher> dup;
       rv._publisher->duplicate(dup);
       _publisher = dup.release();
    }
    if (rv._relationalDataUnit) {
-      std::auto_ptr<EdgeRelationalDataUnit> dup;
+      std::unique_ptr<EdgeRelationalDataUnit> dup;
       rv._relationalDataUnit->duplicate(dup);
       _relationalDataUnit = dup.release();
    }   

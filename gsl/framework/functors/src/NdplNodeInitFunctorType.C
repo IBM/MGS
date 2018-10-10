@@ -26,7 +26,7 @@
 
 NdplNodeInitFunctorType::NdplNodeInitFunctorType() {}
 
-void NdplNodeInitFunctorType::getFunctor(std::auto_ptr<Functor> & r_aptr)
+void NdplNodeInitFunctorType::getFunctor(std::unique_ptr<Functor> & r_aptr)
 {
    r_aptr.reset(new NdplNodeInitFunctor());
 }
@@ -45,7 +45,7 @@ std::string NdplNodeInitFunctorType::getDescription()
 
 
 void NdplNodeInitFunctorType::getQueriable(
-   std::auto_ptr<InstanceFactoryQueriable>& dup)
+   std::unique_ptr<InstanceFactoryQueriable>& dup)
 {
    dup.reset(new InstanceFactoryQueriable(this));
    Array<Functor*>::iterator it, end = _functorList.end();
@@ -53,11 +53,11 @@ void NdplNodeInitFunctorType::getQueriable(
       Functor* f = (*it);
       FunctorDataItem* fdi = new FunctorDataItem;
       fdi->setFunctor(f);
-      std::auto_ptr<DataItem> apdi(fdi);
+      std::unique_ptr<DataItem> apdi(fdi);
       DataItemQueriable* diq = new DataItemQueriable(apdi);
       diq->setName(getName());
       diq->setDescription(getDescription());
-      std::auto_ptr<DataItemQueriable> apq(diq);
+      std::unique_ptr<DataItemQueriable> apq(diq);
       dup->addQueriable(apq);
    }
    dup->setName(getName());

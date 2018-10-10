@@ -183,17 +183,17 @@ C_argument_matrix::C_argument_matrix(const C_argument_matrix &rv)
     _arg_list = rv._arg_list->duplicate();
   }
   if (rv._float_array_di) {
-    std::auto_ptr<DataItem> cc_di;
+    std::unique_ptr<DataItem> cc_di;
     rv._float_array_di->duplicate(cc_di);
     _float_array_di = dynamic_cast<FloatArrayDataItem *>(cc_di.release());
   }
   if (rv._int_array_di) {
-    std::auto_ptr<DataItem> cc_di;
+    std::unique_ptr<DataItem> cc_di;
     rv._int_array_di->duplicate(cc_di);
     _int_array_di = dynamic_cast<IntArrayDataItem *>(cc_di.release());
   }
   if (rv._di_array_di) {
-    std::auto_ptr<DataItem> cc_di;
+    std::unique_ptr<DataItem> cc_di;
     rv._di_array_di->duplicate(cc_di);
     _di_array_di = dynamic_cast<DataItemArrayDataItem *>(cc_di.release());
   }

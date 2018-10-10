@@ -33,7 +33,7 @@ ServiceDataItem::ServiceDataItem(const ServiceDataItem& DI)
 
 
 // Utility methods
-void ServiceDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ServiceDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new ServiceDataItem(*this));
 }

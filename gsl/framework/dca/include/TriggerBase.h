@@ -38,11 +38,11 @@ class TriggerBase : public Trigger {
   virtual void setDelay(unsigned delay) { _delay = delay; }
   virtual unsigned getDelay() { return _delay; }
   virtual void addSerialTriggerableCaller(
-      std::auto_ptr<TriggerableCaller>& triggerableCaller) {
+      std::unique_ptr<TriggerableCaller>& triggerableCaller) {
     _serialTriggerableCallers.push_back(triggerableCaller.release());
   }
   virtual void addParallelTriggerableCaller(
-      std::auto_ptr<TriggerableCaller>& triggerableCaller) {
+      std::unique_ptr<TriggerableCaller>& triggerableCaller) {
     _parallelTriggerableCallers.push_back(triggerableCaller.release());
     partitionWorkUnits();
   }

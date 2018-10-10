@@ -28,17 +28,17 @@ ToneUnitDataCollector::~ToneUnitDataCollector()
 {
 }
 
-void ToneUnitDataCollector::duplicate(std::auto_ptr<ToneUnitDataCollector>& dup) const
+void ToneUnitDataCollector::duplicate(std::unique_ptr<ToneUnitDataCollector>& dup) const
 {
    dup.reset(new ToneUnitDataCollector(*this));
 }
 
-void ToneUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void ToneUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new ToneUnitDataCollector(*this));
 }
 
-void ToneUnitDataCollector::duplicate(std::auto_ptr<CG_ToneUnitDataCollector>& dup) const
+void ToneUnitDataCollector::duplicate(std::unique_ptr<CG_ToneUnitDataCollector>& dup) const
 {
    dup.reset(new ToneUnitDataCollector(*this));
 }

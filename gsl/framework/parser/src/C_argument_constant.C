@@ -42,13 +42,13 @@ C_argument_constant::C_argument_constant(const C_argument_constant& rv)
       _constant = rv._constant->duplicate();
    }
    if (rv._int_dataitem) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._int_dataitem->duplicate(cc_di);
       _int_dataitem = dynamic_cast<IntDataItem*>(cc_di.release());
    }
 
    if (rv._float_dataitem) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._float_dataitem->duplicate(cc_di);
       _float_dataitem = dynamic_cast<FloatDataItem*>(cc_di.release());
    }

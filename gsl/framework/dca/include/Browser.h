@@ -136,7 +136,7 @@ inline void Browser::browse()
 
             if ((queriables_idx>0) && (queriables_idx<j+1)) {
                queriables_idx-=1;
-	       std::auto_ptr<Queriable> dup;
+	       std::unique_ptr<Queriable> dup;
 	       ((*result)[queriables_idx])->duplicate(dup);
                _currentQ = dup.release();
                _historyQ.push_back(_currentQ);

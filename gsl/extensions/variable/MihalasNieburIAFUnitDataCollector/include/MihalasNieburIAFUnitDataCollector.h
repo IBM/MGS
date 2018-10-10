@@ -31,9 +31,9 @@ class MihalasNieburIAFUnitDataCollector : public CG_MihalasNieburIAFUnitDataColl
       virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MihalasNieburIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
       MihalasNieburIAFUnitDataCollector();
       virtual ~MihalasNieburIAFUnitDataCollector();
-      virtual void duplicate(std::auto_ptr<MihalasNieburIAFUnitDataCollector>& dup) const;
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_MihalasNieburIAFUnitDataCollector>& dup) const;
+      virtual void duplicate(std::unique_ptr<MihalasNieburIAFUnitDataCollector>& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_MihalasNieburIAFUnitDataCollector>& dup) const;
  private:
       std::ofstream* voltage_file;
       std::ofstream* threshold_file;

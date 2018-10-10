@@ -63,7 +63,7 @@ C_separation_constraint_list::C_separation_constraint_list(
 	 delete _error;
 	 _error = al->_error->duplicate();
       }
-      std::auto_ptr<std::vector<C_separation_constraint*> > 
+      std::unique_ptr<std::vector<C_separation_constraint*> > 
 	 separation_constraints;
       al->releaseList(separation_constraints);
       _separation_constraints = separation_constraints.release();
@@ -74,7 +74,7 @@ C_separation_constraint_list::C_separation_constraint_list(
 
 
 void C_separation_constraint_list::releaseList(
-   std::auto_ptr<std::vector<C_separation_constraint*> >& 
+   std::unique_ptr<std::vector<C_separation_constraint*> >& 
    separation_constraints)
 {
    separation_constraints.reset(_separation_constraints);

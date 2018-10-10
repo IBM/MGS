@@ -182,17 +182,17 @@ CalciumDisplay::CalciumDisplay() : CG_CalciumDisplay(), outFile(0) {}
 
 CalciumDisplay::~CalciumDisplay() { delete outFile; }
 
-void CalciumDisplay::duplicate(std::auto_ptr<CalciumDisplay>& dup) const
+void CalciumDisplay::duplicate(std::unique_ptr<CalciumDisplay>& dup) const
 {
   dup.reset(new CalciumDisplay(*this));
 }
 
-void CalciumDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void CalciumDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CalciumDisplay(*this));
 }
 
-void CalciumDisplay::duplicate(std::auto_ptr<CG_CalciumDisplay>& dup) const
+void CalciumDisplay::duplicate(std::unique_ptr<CG_CalciumDisplay>& dup) const
 {
   dup.reset(new CalciumDisplay(*this));
 }

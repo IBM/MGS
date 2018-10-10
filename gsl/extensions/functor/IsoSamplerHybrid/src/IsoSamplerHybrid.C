@@ -65,17 +65,17 @@ IsoSamplerHybrid::~IsoSamplerHybrid()
 {
 }
 
-void IsoSamplerHybrid::duplicate(std::auto_ptr<IsoSamplerHybrid>& dup) const
+void IsoSamplerHybrid::duplicate(std::unique_ptr<IsoSamplerHybrid>& dup) const
 {
    dup.reset(new IsoSamplerHybrid(*this));
 }
 
-void IsoSamplerHybrid::duplicate(std::auto_ptr<Functor>& dup) const
+void IsoSamplerHybrid::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new IsoSamplerHybrid(*this));
 }
 
-void IsoSamplerHybrid::duplicate(std::auto_ptr<CG_IsoSamplerHybridBase>& dup) const
+void IsoSamplerHybrid::duplicate(std::unique_ptr<CG_IsoSamplerHybridBase>& dup) const
 {
    dup.reset(new IsoSamplerHybrid(*this));
 }

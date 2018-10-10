@@ -38,10 +38,10 @@ class InstanceFactory
       const & getParameterDescription() {
 	 return _parameterDescription;
       }
-      virtual void getInstance(std::auto_ptr<DataItem> &, 
+      virtual void getInstance(std::unique_ptr<DataItem> &, 
 			       std::vector<DataItem*> const *, 
 			       LensContext *) = 0;
-      virtual void getInstance(std::auto_ptr<DataItem> &, 
+      virtual void getInstance(std::unique_ptr<DataItem> &, 
  			       const NDPairList& ndplist,
 			       LensContext *) = 0;
       virtual std::string getName() =0;
@@ -50,7 +50,7 @@ class InstanceFactory
 	 return _instances;
       }
       virtual void getQueriable(
-	 std::auto_ptr<InstanceFactoryQueriable>& dup) =0;
+	 std::unique_ptr<InstanceFactoryQueriable>& dup) =0;
       virtual ~InstanceFactory();
    protected:
       std::vector<std::vector<std::pair<std::string, DataItem*> > > _parameterDescription;

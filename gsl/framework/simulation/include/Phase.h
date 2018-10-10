@@ -26,7 +26,7 @@ class Phase {
 
    public:
       Phase(const std::string& name);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const = 0;
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const = 0;
       virtual ~Phase();
      
       virtual std::string getType() const = 0;

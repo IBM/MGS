@@ -42,7 +42,7 @@ StringDataItem::StringDataItem(const StringDataItem& DI)
 
 
 // Utility methods
-void StringDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void StringDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new StringDataItem(*this)));
 }

@@ -38,19 +38,19 @@ class StructDataItem : public DataItem
 
       // Constructors
       StructDataItem();
-      StructDataItem(std::auto_ptr<Struct> data);
+      StructDataItem(std::unique_ptr<Struct> data);
       StructDataItem(const StructDataItem& rv);
 
       // Destructor
       ~StructDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       // Singlet Methods
       Struct* getStruct(Error* error=0) const;
-      void setStruct(std::auto_ptr<Struct>& s, Error* error=0);
+      void setStruct(std::unique_ptr<Struct>& s, Error* error=0);
       std::string getString(Error* error=0) const;
 
 };

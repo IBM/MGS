@@ -273,7 +273,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    getInitializationParameterSetMethod->setConst();
    getInitializationParameterSetMethod->setVirtual();
    getInitializationParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& initPSet");
+      "std::unique_ptr<ParameterSet>& initPSet");
    getInitializationParameterSetMethod->setFunctionBody(
       TAB + "initPSet.reset(new " + getPSetName() + "());\n");
    instance.addMethod(getInitializationParameterSetMethod);
@@ -284,7 +284,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    getInAttrParameterSetMethod->setConst();
    getInAttrParameterSetMethod->setVirtual();
    getInAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + INATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
    getInAttrParameterSetMethod->setFunctionBody(
       TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
    instance.addMethod(getInAttrParameterSetMethod);
@@ -295,7 +295,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    getOutAttrParameterSetMethod->setConst();
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance.addMethod(getOutAttrParameterSetMethod);
@@ -318,7 +318,7 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      getInitializationParameterSetMethod->setConst();
      getInitializationParameterSetMethod->setVirtual();
      getInitializationParameterSetMethod->addParameter(
-						       "std::auto_ptr<ParameterSet>& initPSet");
+						       "std::unique_ptr<ParameterSet>& initPSet");
      getInitializationParameterSetMethod->setFunctionBody(
 							  TAB + "initPSet.reset(new " + getPSetName() + "());\n");
      instance.addMethod(getInitializationParameterSetMethod);
@@ -329,7 +329,7 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      getInAttrParameterSetMethod->setConst();
      getInAttrParameterSetMethod->setVirtual();
      getInAttrParameterSetMethod->addParameter(
-					       "std::auto_ptr<ParameterSet>& " + INATTRPSETNAME);
+					       "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
      getInAttrParameterSetMethod->setFunctionBody(
        TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
      instance.addMethod(getInAttrParameterSetMethod);
@@ -340,7 +340,7 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      getOutAttrParameterSetMethod->setConst();
      getOutAttrParameterSetMethod->setVirtual();
      getOutAttrParameterSetMethod->addParameter(
-						"std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+						"std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
      getOutAttrParameterSetMethod->setFunctionBody(
        TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
      instance.addMethod(getOutAttrParameterSetMethod);
@@ -404,7 +404,7 @@ void CompCategoryBase::generateCompCategoryBase()
       new Method("getInitializationParameterSet", "void"));
    getInitializationParameterSetMethod->setVirtual();
    getInitializationParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& initPSet");
+      "std::unique_ptr<ParameterSet>& initPSet");
    getInitializationParameterSetMethod->setFunctionBody(
       TAB + "initPSet.reset(new " + getPSetName() + "());\n");
    instance->addMethod(getInitializationParameterSetMethod);
@@ -414,7 +414,7 @@ void CompCategoryBase::generateCompCategoryBase()
       new Method("getInAttrParameterSet", "void"));
    getInAttrParameterSetMethod->setVirtual();
    getInAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + INATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
    getInAttrParameterSetMethod->setFunctionBody(
       TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
    instance->addMethod(getInAttrParameterSetMethod);
@@ -424,7 +424,7 @@ void CompCategoryBase::generateCompCategoryBase()
       new Method("getOutAttrParameterSet", "void"));
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance->addMethod(getOutAttrParameterSetMethod);
@@ -802,7 +802,7 @@ void CompCategoryBase::addCreateTriggerableCallerMethod(
    method->setVirtual();
    method->addParameter("const std::string& " + TRIGGERABLEFUNCTIONNAME);
    method->addParameter("NDPairList* " + TRIGGERABLENDPLIST);
-   method->addParameter("std::auto_ptr<TriggerableCaller>& " + 
+   method->addParameter("std::unique_ptr<TriggerableCaller>& " + 
 			TRIGGERABLECALLER);
    std::ostringstream os;
 
@@ -1070,7 +1070,7 @@ std::string CompCategoryBase::getFindDemarshallerFB() const
       << TAB << "if (iter == _demarshallerMap.end()) {\n"
       << TAB << TAB << "ccd = new CCDemarshaller(&getSimulation());\n"
       << TAB << TAB << "_demarshallerMap[fromPartitionId] = ccd;\n\n"
-      << TAB << TAB << "std::auto_ptr<" + getInstanceProxyDemarshallerName() + "> ap;\n"
+      << TAB << TAB << "std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> ap;\n"
       << TAB << TAB << getInstanceProxyName() + "::CG_recv_FLUSH_LENS_demarshaller(ap);\n"
       << TAB << TAB << "ccd->CG_recvTemplates[\"FLUSH_LENS\"] = ap.release();\n\n"
       << TAB << TAB << "std::map<std::string, Phase*>::iterator it, end = _phaseMappings.end();\n"
@@ -1559,7 +1559,7 @@ std::string CompCategoryBase::getFindDemarshallerFillerCode() const
      for (it = _instancePhases->begin(); it != end; ++it) {
        if ((*it)->hasPackedVariables()) {
          os << TAB << TAB << TAB << "if (it->second->getName() == getSimulationPhaseName(\"" << (*it)->getName() << "\")){\n"
-	    << TAB << TAB << TAB << TAB << "std::auto_ptr<" << getInstanceProxyDemarshallerName() << "> ap;\n"
+	    << TAB << TAB << TAB << TAB << "std::unique_ptr<" << getInstanceProxyDemarshallerName() << "> ap;\n"
    	 << TAB << TAB << TAB << TAB << getInstanceProxyName() << "::CG_recv_" << (*it)->getName() << "_demarshaller(ap);\n"
    	 << TAB << TAB << TAB << TAB << "ccd->CG_recvTemplates[(it->second->getName())] = ap.release();\n"
    	 << TAB << TAB << TAB << "}\n";

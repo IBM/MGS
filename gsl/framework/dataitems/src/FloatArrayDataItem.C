@@ -64,7 +64,7 @@ FloatArrayDataItem::FloatArrayDataItem(const FloatArrayDataItem& DI)
 }
 
 // Utility method
-void FloatArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void FloatArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new FloatArrayDataItem(*this)));
 }

@@ -75,10 +75,10 @@ void DstRefSumRsqrdInvWeightModifier::userInitialize(LensContext* CG_c, Functor*
   }
 }
 
-std::auto_ptr<ParameterSet> DstRefSumRsqrdInvWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> DstRefSumRsqrdInvWeightModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -110,19 +110,19 @@ std::auto_ptr<ParameterSet> DstRefSumRsqrdInvWeightModifier::userExecute(LensCon
 
    std::string name="weight";
    FloatDataItem* fdi=new FloatDataItem(weight);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
    NDPair* ndp = new NDPair(name, fdi_ap);
    ndpl.push_back(ndp);
 
    if (_setDistance) {
      name="distance";
      FloatDataItem* fdi2=new FloatDataItem(distance);
-     std::auto_ptr<DataItem> fdi_ap2(fdi2);
+     std::unique_ptr<DataItem> fdi_ap2(fdi2);
      NDPair* ndp2 = new NDPair(name, fdi_ap2);
      ndpl.push_back(ndp2);
    }
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -137,17 +137,17 @@ DstRefSumRsqrdInvWeightModifier::~DstRefSumRsqrdInvWeightModifier()
 {
 }
 
-void DstRefSumRsqrdInvWeightModifier::duplicate(std::auto_ptr<DstRefSumRsqrdInvWeightModifier>& dup) const
+void DstRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<DstRefSumRsqrdInvWeightModifier>& dup) const
 {
    dup.reset(new DstRefSumRsqrdInvWeightModifier(*this));
 }
 
-void DstRefSumRsqrdInvWeightModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void DstRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new DstRefSumRsqrdInvWeightModifier(*this));
 }
 
-void DstRefSumRsqrdInvWeightModifier::duplicate(std::auto_ptr<CG_DstRefSumRsqrdInvWeightModifierBase>& dup) const
+void DstRefSumRsqrdInvWeightModifier::duplicate(std::unique_ptr<CG_DstRefSumRsqrdInvWeightModifierBase>& dup) const
 {
    dup.reset(new DstRefSumRsqrdInvWeightModifier(*this));
 }

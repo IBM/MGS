@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 #Escape code
@@ -172,7 +172,7 @@ fi
 function touch_mdf_upon_changing_target()
 {
   #{{{
-      if [ $PREV_TYPE != $TYPE ]; then
+      if [ "$PREV_TYPE" != "$TYPE" ]; then
         if [[  $TYPE == *"NTS"* ]]; then
           touch nts.mdf
         fi
@@ -323,6 +323,11 @@ else
 TYPE="MGS" 
 fi
 
+if [ -f module_load.sh ]; then 
+  source ~/.zshrc_simple
+  source module_load.sh
+fi
+
 ########################################
 ### Check required tools ###
 ## 1. MPI library
@@ -440,7 +445,17 @@ fi
 if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
   echo "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
   echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+  echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
   exit 1
+fi
+if [[ -z "${PYTHON_LIB}" ]]; then
+  if `ldconfig -p | grep -q libpython3.6m`; then
+    echo "libpython3.6m.so found"
+  else
+    echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
+    echo " e.g: export PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
+    exit 1
+  fi
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
@@ -455,6 +470,13 @@ BASE_FOLDER=$NTSMGSROOT
 ########################################
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
+if [ "$BASE_FOLDER" == "" ]; then
+  echo "Please run: source set_env"
+  exit 1
+elif [ "$BASE_FOLDER" != $(pwd) ]; then
+  echo "Please run: source set_env"
+  exit 1
+fi
 cd $BASE_FOLDER/models
 if [ ! -f ${MDF_TARGET} ]; then 
   touch ${MDF_TARGET}
@@ -468,13 +490,6 @@ if [ ! -f ${MDF_TARGET} ]; then
   ' > ${MDF_TARGET}
 fi
 cd -
-if [ "$BASE_FOLDER" == "" ]; then
-  echo "Please run: source set_env"
-  exit 1
-elif [ "$BASE_FOLDER" != $(pwd) ]; then
-  echo "Please run: source set_env"
-  exit 1
-fi
 if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
   echo "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
@@ -495,8 +510,10 @@ fi
 if [ "$TYPE" != "$PREV_TYPE" ]; then
   #gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
-  echo "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
-  Yes_No_RebuildClean
+  if [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
+    echo "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
+    Yes_No_RebuildClean
+  fi
 fi
 #}}}
 
@@ -652,7 +669,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
     ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
-    echo "Complete: regenerate gsl/Makefile"
+    echo "${cc_blue}Complete: regenerate gsl/Makefile${cc_normal}"
     exit
   fi
   echo "Start build GSL"

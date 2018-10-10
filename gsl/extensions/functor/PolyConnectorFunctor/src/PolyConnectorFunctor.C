@@ -84,7 +84,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
 
    DataItem* sourceDI=0;
    sourceFunctorDI = dynamic_cast<FunctorDataItem*>(*it);
-   std::auto_ptr<DataItem> ap_sourceDI;
+   std::unique_ptr<DataItem> ap_sourceDI;
    if (sourceFunctorDI) {
      std::vector<DataItem*> nullArgs;
      sourceFunctorDI->getFunctor()->execute(CG_c, nullArgs, ap_sourceDI);
@@ -121,7 +121,7 @@ void PolyConnectorFunctor::userExecute(LensContext* CG_c, std::vector<DataItem*>
 
    DataItem* destinationDI=0;
    destinationFunctorDI = dynamic_cast<FunctorDataItem*>(*it);
-   std::auto_ptr<DataItem> ap_destinationDI;
+   std::unique_ptr<DataItem> ap_destinationDI;
    if (destinationFunctorDI) {
      std::vector<DataItem*> nullArgs;
      destinationFunctorDI->getFunctor()->execute(CG_c, nullArgs, ap_destinationDI);
@@ -318,17 +318,17 @@ PolyConnectorFunctor::~PolyConnectorFunctor()
 {
 }
 
-void PolyConnectorFunctor::duplicate(std::auto_ptr<PolyConnectorFunctor>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<PolyConnectorFunctor>& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }
 
-void PolyConnectorFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }
 
-void PolyConnectorFunctor::duplicate(std::auto_ptr<CG_PolyConnectorFunctorBase>& dup) const
+void PolyConnectorFunctor::duplicate(std::unique_ptr<CG_PolyConnectorFunctorBase>& dup) const
 {
    dup.reset(new PolyConnectorFunctor(*this));
 }

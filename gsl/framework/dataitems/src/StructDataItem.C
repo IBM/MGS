@@ -25,7 +25,7 @@ StructDataItem::StructDataItem()
 {
 }
 
-StructDataItem::StructDataItem(std::auto_ptr<Struct> data)
+StructDataItem::StructDataItem(std::unique_ptr<Struct> data)
 {
    _data = data.release();
 }
@@ -42,7 +42,7 @@ StructDataItem::StructDataItem(const StructDataItem& rv)
 }
 
 // Utility methods
-void StructDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void StructDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new StructDataItem(*this));
 }
@@ -68,7 +68,7 @@ Struct* StructDataItem::getStruct(Error* error) const
    return _data;
 }
 
-void StructDataItem::setStruct(std::auto_ptr<Struct>& s, Error* error)
+void StructDataItem::setStruct(std::unique_ptr<Struct>& s, Error* error)
 {
    delete _data;
    _data = s.release();
@@ -82,7 +82,7 @@ std::string StructDataItem::getString(Error* error) const
 void StructDataItem::copyOwnedHeap(const StructDataItem& rv)
 {
    if (rv._data) {
-      std::auto_ptr<Struct> dup;
+      std::unique_ptr<Struct> dup;
       rv._data->duplicate(dup);
       _data = dup.release();
    } else {

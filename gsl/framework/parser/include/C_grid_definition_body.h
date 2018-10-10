@@ -36,7 +36,7 @@ class C_grid_definition_body : public C_production, public RepertoireFactory
 			     SyntaxError *);
       virtual ~C_grid_definition_body();
       virtual C_grid_definition_body* duplicate() const;
-      virtual void duplicate(std::auto_ptr<RepertoireFactory>& rv) const;
+      virtual void duplicate(std::unique_ptr<RepertoireFactory>& rv) const;
       virtual void internalExecute(LensContext *);
       virtual void checkChildren();
       virtual void recursivePrint();

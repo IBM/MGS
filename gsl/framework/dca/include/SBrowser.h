@@ -602,7 +602,7 @@ strcpy(dataitembuff, "display dataitem ");
 strcat(dataitembuff, sd->getType());
 
 _UI->getServer()->sendToClient(dataitembuff);
-std::auto_ptr<DataItem> apdi(sd);
+std::unique_ptr<DataItem> apdi(sd);
 _UI->getServer()->keepDataItem(apdi);
 */
     } else {
@@ -694,7 +694,7 @@ _UI->getServer()->keepDataItem(apdi);
         itr++;
       }
 
-      std::auto_ptr<DataItem> d;
+      std::unique_ptr<DataItem> d;
       _currentQ->getDataItem(d);
       TriggerDataItem* tdi = dynamic_cast<TriggerDataItem*>(d.get());
 
@@ -737,7 +737,7 @@ _UI->getServer()->sendToClient(outbuff);
     unsigned selection = atoi(cmd + 23);
 
     if ((_result != NULL) && (selection < _result->size())) {
-      std::auto_ptr<Queriable> dup;
+      std::unique_ptr<Queriable> dup;
       (*_result)[selection]->duplicate(dup);
       Queriable* q = dup.release();
       Publisher* p = q->getQPublisher();
@@ -771,7 +771,7 @@ _UI->getServer()->sendToClient(outbuff);
     unsigned selection = atoi(cmd + 20);
 
     if ((_result != NULL) && (selection < _result->size())) {
-      std::auto_ptr<Queriable> dup;
+      std::unique_ptr<Queriable> dup;
       (*_result)[selection]->duplicate(dup);
       _currentQ = dup.release();
       _historyQ.push_back(_currentQ);
@@ -806,7 +806,7 @@ if ((selection >= 0) && (selection < qlist.size())) {
   itr = qlist.begin();
   for (unsigned ct = 0; ct <= selection; ct++) {
     if (selection == ct) {
-      std::auto_ptr<DataItem> d;
+      std::unique_ptr<DataItem> d;
       (*itr)->getDataItem(d);
       char dataitembuff[MAXBUFFSIZE];
       strcpy(dataitembuff, "display dataitem ");
@@ -827,10 +827,10 @@ if ((selection >= 0) && (selection < qlist.size())) {
     if ((_result != NULL) && (selection < _result->size())) {
       // TUAN: temporary disable the code
       /*
-std::auto_ptr<Queriable> dup;
+std::unique_ptr<Queriable> dup;
 (*_result)[selection]->duplicate(dup);
 Queriable* q = dup.release();
-std::auto_ptr<DataItem> d;
+std::unique_ptr<DataItem> d;
 q->getDataItem(d);
 char dataitembuff[MAXBUFFSIZE];
 strcpy(dataitembuff, "display dataitem ");

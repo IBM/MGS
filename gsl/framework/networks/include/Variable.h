@@ -49,13 +49,13 @@ class Variable : public VariableDescriptor, public ServiceAcceptor,
       virtual void addPreNode(NodeDescriptor* n, ParameterSet* InAttrPSet) = 0;
       virtual void addPreVariable(VariableDescriptor* v, ParameterSet* InAttrPSet) = 0;
       virtual void getInitializationParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& inAttrPSet) const = 0;
+	 std::unique_ptr<ParameterSet>& inAttrPSet) const = 0;
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& outAttrPSet) const = 0;
+	 std::unique_ptr<ParameterSet>& outAttrPSet) const = 0;
       virtual ~Variable();
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const = 0;
       void initialize(LensContext *c, const std::vector<DataItem*>& args);
       void initialize(const NDPairList& ndplist);
 //      virtual ConnectionIncrement* getComputeCost() const = 0;

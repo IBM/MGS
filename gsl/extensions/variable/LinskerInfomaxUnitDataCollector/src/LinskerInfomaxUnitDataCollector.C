@@ -90,17 +90,17 @@ LinskerInfomaxUnitDataCollector::~LinskerInfomaxUnitDataCollector()
 {
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::auto_ptr<LinskerInfomaxUnitDataCollector>& dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<LinskerInfomaxUnitDataCollector>& dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }
 
-void LinskerInfomaxUnitDataCollector::duplicate(std::auto_ptr<CG_LinskerInfomaxUnitDataCollector>& dup) const
+void LinskerInfomaxUnitDataCollector::duplicate(std::unique_ptr<CG_LinskerInfomaxUnitDataCollector>& dup) const
 {
    dup.reset(new LinskerInfomaxUnitDataCollector(*this));
 }

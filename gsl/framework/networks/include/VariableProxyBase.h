@@ -123,7 +123,7 @@ class VariableProxyBase : public Variable
 
       virtual TriggerableBase::EventType createTriggerableCaller(
 	 const std::string& name, NDPairList* ndpList, 
-	 std::auto_ptr<TriggerableCaller>& triggerableCaller) {
+	 std::unique_ptr<TriggerableCaller>& triggerableCaller) {
 	 throw SyntaxErrorException(
 	    name + " is not defined in variable proxy.");
 	 return TriggerableBase::_UNALTERED;

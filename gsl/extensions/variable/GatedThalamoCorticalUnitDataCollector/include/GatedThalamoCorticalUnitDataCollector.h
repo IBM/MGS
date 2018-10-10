@@ -16,9 +16,9 @@ class GatedThalamoCorticalUnitDataCollector : public CG_GatedThalamoCorticalUnit
       virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GatedThalamoCorticalUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_GatedThalamoCorticalUnitDataCollectorOutAttrPSet* CG_outAttrPset);
       GatedThalamoCorticalUnitDataCollector();
       virtual ~GatedThalamoCorticalUnitDataCollector();
-      virtual void duplicate(std::auto_ptr<GatedThalamoCorticalUnitDataCollector>& dup) const;
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_GatedThalamoCorticalUnitDataCollector>& dup) const;
+      virtual void duplicate(std::unique_ptr<GatedThalamoCorticalUnitDataCollector>& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_GatedThalamoCorticalUnitDataCollector>& dup) const;
 
  private:
       std::ofstream* file;

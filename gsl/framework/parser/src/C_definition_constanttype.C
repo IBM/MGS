@@ -39,7 +39,7 @@ void C_definition_constanttype::internalExecute(LensContext *c)
    }
    ConstantTypeDataItem* ttdi = new ConstantTypeDataItem;
    ttdi->setConstantType(tt);
-   std::auto_ptr<DataItem> diap(ttdi);
+   std::unique_ptr<DataItem> diap(ttdi);
    try {
       c->symTable.addEntry(_declarator->getName(), diap);
    } catch (SyntaxErrorException& e) {

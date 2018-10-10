@@ -31,12 +31,12 @@ class Publisher;
 class DataItemQueriable : public Queriable
 {
    public:
-      DataItemQueriable(std::auto_ptr<DataItem> & dataItem);
+      DataItemQueriable(std::unique_ptr<DataItem> & dataItem);
       DataItemQueriable(const DataItemQueriable &);
-      std::auto_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
+      std::unique_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
       Publisher* getQPublisher();
-      virtual void duplicate(std::auto_ptr<Queriable>& dup) const;
-      void getDataItem(std::auto_ptr<DataItem> &);
+      virtual void duplicate(std::unique_ptr<Queriable>& dup) const;
+      void getDataItem(std::unique_ptr<DataItem> &);
       void setName(std::string name);
       void setDescription(std::string description);
       std::string getName() {return _queriableName;}

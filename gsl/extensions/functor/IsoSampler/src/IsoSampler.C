@@ -79,17 +79,17 @@ IsoSampler::~IsoSampler()
 {
 }
 
-void IsoSampler::duplicate(std::auto_ptr<IsoSampler>& dup) const
+void IsoSampler::duplicate(std::unique_ptr<IsoSampler>& dup) const
 {
    dup.reset(new IsoSampler(*this));
 }
 
-void IsoSampler::duplicate(std::auto_ptr<Functor>& dup) const
+void IsoSampler::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new IsoSampler(*this));
 }
 
-void IsoSampler::duplicate(std::auto_ptr<CG_IsoSamplerBase>& dup) const
+void IsoSampler::duplicate(std::unique_ptr<CG_IsoSamplerBase>& dup) const
 {
    dup.reset(new IsoSampler(*this));
 }

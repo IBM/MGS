@@ -28,16 +28,16 @@ ScriptFunctorType::ScriptFunctorType(C_connection_script_definition *def, std::s
 }
 
 
-void ScriptFunctorType::getQueriable(std::auto_ptr<InstanceFactoryQueriable>& dup)
+void ScriptFunctorType::getQueriable(std::unique_ptr<InstanceFactoryQueriable>& dup)
 {
    FunctorDataItem* fdi = new FunctorDataItem;
    fdi->setFunctor(_c_script_def->getFunctor());
-   std::auto_ptr<DataItem> apdi(fdi);
+   std::unique_ptr<DataItem> apdi(fdi);
 
    DataItemQueriable* diq = new DataItemQueriable(apdi);
    diq->setName(getName());
    diq->setDescription(getDescription());
-   std::auto_ptr<DataItemQueriable> apq(diq);
+   std::unique_ptr<DataItemQueriable> apq(diq);
 
    dup.reset(new InstanceFactoryQueriable(this));
    dup->addQueriable(apq);
@@ -58,7 +58,7 @@ ScriptFunctorType::ScriptFunctorType(ScriptFunctorType const *sft)
 }
 
 
-void ScriptFunctorType::getFunctor(std::auto_ptr<Functor> & r_aptr)
+void ScriptFunctorType::getFunctor(std::unique_ptr<Functor> & r_aptr)
 {
    _c_script_def->getFunctor()->duplicate(r_aptr);
 }

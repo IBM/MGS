@@ -41,7 +41,7 @@ OutAttrDefaultFunctor::OutAttrDefaultFunctor(const OutAttrDefaultFunctor& csf)
    }
 }
 
-void OutAttrDefaultFunctor::duplicate (std::auto_ptr<Functor> &fap) const
+void OutAttrDefaultFunctor::duplicate (std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new OutAttrDefaultFunctor(*this));
 }
@@ -60,10 +60,10 @@ void OutAttrDefaultFunctor::doInitialize(LensContext *c,
 
 void OutAttrDefaultFunctor::doExecute(
    LensContext *c, const std::vector<DataItem*>& args, 
-   std::auto_ptr<DataItem>& rvalue)
+   std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext *cc = c->connectionContext;
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    NodeType *nt = cc->sourceNode->getGridLayerDescriptor()->getNodeType();
    nt->getOutAttrParameterSet(pset);
 

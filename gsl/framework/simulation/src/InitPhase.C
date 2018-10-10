@@ -32,7 +32,7 @@ std::string InitPhase::getType() const
    return "Init";
 }
 
-void InitPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void InitPhase::duplicate(std::unique_ptr<Phase>& rv) const
 {
    rv.reset(new InitPhase(*this));
 }

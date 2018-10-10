@@ -26,7 +26,7 @@ void Neg::userInitialize(LensContext* CG_c, Functor*& f)
 double Neg::userExecute(LensContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> rval_ap;
+  std::unique_ptr<DataItem> rval_ap;
   init.f->execute(CG_c, nullArgs, rval_ap);
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -45,17 +45,17 @@ Neg::~Neg()
 {
 }
 
-void Neg::duplicate(std::auto_ptr<Neg>& dup) const
+void Neg::duplicate(std::unique_ptr<Neg>& dup) const
 {
    dup.reset(new Neg(*this));
 }
 
-void Neg::duplicate(std::auto_ptr<Functor>& dup) const
+void Neg::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new Neg(*this));
 }
 
-void Neg::duplicate(std::auto_ptr<CG_NegBase>& dup) const
+void Neg::duplicate(std::unique_ptr<CG_NegBase>& dup) const
 {
    dup.reset(new Neg(*this));
 }

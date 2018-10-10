@@ -320,7 +320,7 @@ void InterfaceImplementorBase::generatePublisher()
 
    // add duplicate method - standard methods are not added
    std::auto_ptr<Method> dupPublisher(new Method("duplicate", "void"));
-   dupPublisher->addParameter("std::auto_ptr<Publisher>& dup");
+   dupPublisher->addParameter("std::unique_ptr<Publisher>& dup");
    dupPublisher->setFunctionBody(
       TAB + "dup.reset(new " + getPublisherName() + "(*this));\n");
    dupPublisher->setVirtual();
@@ -503,7 +503,7 @@ void InterfaceImplementorBase::generateInstanceProxy()
    		    new Method(PREFIX+"recv_"+(*piter)->getName()+"_demarshaller", "void"));
             demarshaller->setAccessType(AccessType::PUBLIC);
             demarshaller->setMacroConditional(mpiConditional);
-            demarshaller->addParameter("std::auto_ptr<" + getInstanceProxyDemarshallerName() + "> &ap");
+            demarshaller->addParameter("std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> &ap");
             demarshaller->setStatic();
             std::ostringstream funBody;
             funBody << TAB << "PhaseDemarshaller_" << (*piter)->getName() << "* di = new PhaseDemarshaller_" 
@@ -519,7 +519,7 @@ void InterfaceImplementorBase::generateInstanceProxy()
       new Method(PREFIX + "recv_FLUSH_LENS_demarshaller", "void"));
    initializeProxyDemarshaller->setAccessType(AccessType::PUBLIC);
    initializeProxyDemarshaller->setMacroConditional(mpiConditional); 
-   initializeProxyDemarshaller->addParameter("std::auto_ptr<" + getInstanceProxyDemarshallerName() + "> &ap");
+   initializeProxyDemarshaller->addParameter("std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> &ap");
    initializeProxyDemarshaller->setStatic();
    std::ostringstream funBody;
    funBody << TAB << "PhaseDemarshaller_FLUSH_LENS *di = new PhaseDemarshaller_FLUSH_LENS();\n"

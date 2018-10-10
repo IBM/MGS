@@ -247,17 +247,17 @@ MihalasNieburSynapseIAFUnitDataCollector::~MihalasNieburSynapseIAFUnitDataCollec
 {
 }
 
-void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::auto_ptr<MihalasNieburSynapseIAFUnitDataCollector>& dup) const
+void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::unique_ptr<MihalasNieburSynapseIAFUnitDataCollector>& dup) const
 {
   dup.reset(new MihalasNieburSynapseIAFUnitDataCollector(*this));
 }
 
-void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new MihalasNieburSynapseIAFUnitDataCollector(*this));
 }
 
-void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::auto_ptr<CG_MihalasNieburSynapseIAFUnitDataCollector>& dup) const
+void MihalasNieburSynapseIAFUnitDataCollector::duplicate(std::unique_ptr<CG_MihalasNieburSynapseIAFUnitDataCollector>& dup) const
 {
   dup.reset(new MihalasNieburSynapseIAFUnitDataCollector(*this));
 }

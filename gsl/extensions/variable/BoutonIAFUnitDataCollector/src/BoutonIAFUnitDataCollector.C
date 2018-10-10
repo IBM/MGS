@@ -325,17 +325,17 @@ BoutonIAFUnitDataCollector::~BoutonIAFUnitDataCollector()
 {
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::auto_ptr<BoutonIAFUnitDataCollector>& dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<BoutonIAFUnitDataCollector>& dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }
 
-void BoutonIAFUnitDataCollector::duplicate(std::auto_ptr<CG_BoutonIAFUnitDataCollector>& dup) const
+void BoutonIAFUnitDataCollector::duplicate(std::unique_ptr<CG_BoutonIAFUnitDataCollector>& dup) const
 {
   dup.reset(new BoutonIAFUnitDataCollector(*this));
 }

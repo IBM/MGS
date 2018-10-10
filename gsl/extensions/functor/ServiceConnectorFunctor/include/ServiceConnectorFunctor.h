@@ -42,9 +42,9 @@ class ServiceConnectorFunctor : public CG_ServiceConnectorFunctorBase
       void userExecute(LensContext* CG_c, std::vector<DataItem*>::const_iterator begin, std::vector<DataItem*>::const_iterator end);
       ServiceConnectorFunctor();
       virtual ~ServiceConnectorFunctor();
-      virtual void duplicate(std::auto_ptr<ServiceConnectorFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ServiceConnectorFunctorBase>& dup) const;   
+      virtual void duplicate(std::unique_ptr<ServiceConnectorFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ServiceConnectorFunctorBase>& dup) const;   
    private:
       inline void connectToService(Service* service, 
 				   const std::string& acceptorName) const;
@@ -60,7 +60,7 @@ class ServiceConnectorFunctor : public CG_ServiceConnectorFunctorBase
 	 public:
 	    ServiceConnectorElement(const std::string& serviceName, 
 				    const std::string& acceptorName);
-	    ServiceConnectorElement(std::auto_ptr<Functor>& functor,
+	    ServiceConnectorElement(std::unique_ptr<Functor>& functor,
 				    const std::string& acceptorName);
 	    ~ServiceConnectorElement();
 	    ServiceConnectorElement(const ServiceConnectorElement& rv);

@@ -461,6 +461,7 @@ void Class::generateOutput(const std::string& modifier,
    if (_fileOutput) {
      std::string name = _alternateFileName;
      if (name == "") name = _name;
+     /* TUAN TODO: consider using Boost.FileSystem for cross-platform */
       std::string fName = directory + "/" + name + modifier;
       if (_userCode) {
 	 fName += ".gen";
@@ -795,7 +796,7 @@ void Class::addDuplicate()
    if (!pureVirtualExists) {
       // duplicate for self
       std::auto_ptr<Method> dupSelf(new Method("duplicate", "void"));
-      dupSelf->addParameter("std::auto_ptr<" + getName() + ">& dup");
+      dupSelf->addParameter("std::unique_ptr<" + getName() + ">& dup");
       dupSelf->setFunctionBody(commonBody);
       dupSelf->setVirtual();
       dupSelf->setConst();
@@ -806,7 +807,7 @@ void Class::addDuplicate()
       for (sit = _duplicateTypes.begin(); sit != send; ++sit) {
 	 std::auto_ptr<Method> dupInd(new Method("duplicate", "void"));
 	 dupInd->addParameter(
-	    "std::auto_ptr<" + *sit + ">& dup");
+	    "std::unique_ptr<" + *sit + ">& dup");
 	 dupInd->setFunctionBody(commonBody);
 	 dupInd->setVirtual();
 	 dupInd->setConst();
@@ -818,7 +819,7 @@ void Class::addDuplicate()
 	 for (std::vector<BaseClass*>::const_iterator 
 		 it = _baseClasses.begin(); it != _baseClasses.end(); ++it) {
 	    std::auto_ptr<Method> dupBase(new Method("duplicate", "void"));
-	    dupBase->addParameter("std::auto_ptr<" 
+	    dupBase->addParameter("std::unique_ptr<" 
 				   + (*it)->getName() + ">& dup");
 	    dupBase->setFunctionBody(commonBody);
 	    dupBase->setVirtual();

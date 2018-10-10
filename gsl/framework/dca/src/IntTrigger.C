@@ -178,7 +178,7 @@ bool IntTrigger::isModulusNonZero()
    return (*_service) % _criterion;
 }
 
-void IntTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void IntTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
    dup.reset(new IntTrigger(*this));
 }

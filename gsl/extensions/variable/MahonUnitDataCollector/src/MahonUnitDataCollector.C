@@ -290,17 +290,17 @@ MahonUnitDataCollector::~MahonUnitDataCollector()
   if (x2_file) delete x2_file; if (x3_file) delete x3_file; 
 }
 
-void MahonUnitDataCollector::duplicate(std::auto_ptr<MahonUnitDataCollector>& dup) const
+void MahonUnitDataCollector::duplicate(std::unique_ptr<MahonUnitDataCollector>& dup) const
 {
    dup.reset(new MahonUnitDataCollector(*this));
 }
 
-void MahonUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void MahonUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new MahonUnitDataCollector(*this));
 }
 
-void MahonUnitDataCollector::duplicate(std::auto_ptr<CG_MahonUnitDataCollector>& dup) const
+void MahonUnitDataCollector::duplicate(std::unique_ptr<CG_MahonUnitDataCollector>& dup) const
 {
    dup.reset(new MahonUnitDataCollector(*this));
 }

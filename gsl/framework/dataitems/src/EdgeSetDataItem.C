@@ -32,7 +32,7 @@ EdgeSetDataItem::EdgeSetDataItem()
 {
 }
 
-EdgeSetDataItem::EdgeSetDataItem(std::auto_ptr<EdgeSet> data)
+EdgeSetDataItem::EdgeSetDataItem(std::unique_ptr<EdgeSet> data)
 {
    _data = data.release();
 }
@@ -43,7 +43,7 @@ EdgeSetDataItem::EdgeSetDataItem(const EdgeSetDataItem& DI)
 }
 
 
-void EdgeSetDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void EdgeSetDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new EdgeSetDataItem(*this));
 }

@@ -35,7 +35,7 @@ VariableDataItem::~VariableDataItem()
 {
 }
 
-void VariableDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void VariableDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new VariableDataItem(*this));
 }

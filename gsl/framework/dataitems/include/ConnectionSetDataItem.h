@@ -34,7 +34,7 @@ class ConnectionSetDataItem : public DataItem
       ConnectionSetDataItem(ConnectionSet *data = 0);
       ConnectionSetDataItem(const ConnectionSetDataItem& DI);
 
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       ConnectionSet* getConnectionSet(Error* error=0) const;

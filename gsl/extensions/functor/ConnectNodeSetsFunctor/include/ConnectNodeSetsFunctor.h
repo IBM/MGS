@@ -32,9 +32,9 @@ class ConnectNodeSetsFunctor : public CG_ConnectNodeSetsFunctorBase
       void userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr);
       ConnectNodeSetsFunctor();
       virtual ~ConnectNodeSetsFunctor();
-      virtual void duplicate(std::auto_ptr<ConnectNodeSetsFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ConnectNodeSetsFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<ConnectNodeSetsFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ConnectNodeSetsFunctorBase>& dup) const;
    private:
       NoConnectConnector* _noConnector;
       GranuleConnector* _granuleConnector;

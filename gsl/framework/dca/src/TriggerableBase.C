@@ -21,13 +21,13 @@
 #include <cassert>
 
 void TriggerableBase::addTrigger(
-   Trigger* trigger, const std::string& functionName, std::auto_ptr<NDPairList>& ndpList)
+   Trigger* trigger, const std::string& functionName, std::unique_ptr<NDPairList>& ndpList)
 {
    NDPairList* ndp = ndpList.release();
    if (ndp) {
       _ndPairLists.push_back(ndp);
    }
-   std::auto_ptr<TriggerableCaller> cup;
+   std::unique_ptr<TriggerableCaller> cup;
    EventType type = createTriggerableCaller(functionName, ndp, cup);
    assert(type != _UNALTERED);
    if (type == _SERIAL) {

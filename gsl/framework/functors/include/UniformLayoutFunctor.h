@@ -24,7 +24,7 @@ class UniformLayoutFunctor: public LayoutFunctor
 {
    public:
       UniformLayoutFunctor();
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~UniformLayoutFunctor();
 
    private:
@@ -33,7 +33,7 @@ class UniformLayoutFunctor: public LayoutFunctor
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
 
       // members
       IntArrayDataItem _density;

@@ -17,9 +17,9 @@ class IsoSamplerHybrid : public CG_IsoSamplerHybridBase
       void userExecute(LensContext* CG_c);
       IsoSamplerHybrid();
       virtual ~IsoSamplerHybrid();
-      virtual void duplicate(std::auto_ptr<IsoSamplerHybrid>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_IsoSamplerHybridBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<IsoSamplerHybrid>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_IsoSamplerHybridBase>& dup) const;
 
    private:
       bool _done;

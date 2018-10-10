@@ -160,7 +160,7 @@ std::string DataType::duplicateIfOwned(const std::string& name,
    if (shouldBeOwned()) {
       std::ostringstream os;
       newName = name + "ap";
-      os << tab << TAB << "std::auto_ptr< " 
+      os << tab << TAB << "std::unique_ptr< " 
 	 << getDescriptor() << " > " << newName << ";\n"
 	 << tab << TAB << name << "->" << getDataItemFunctionString() 
 	 << "->duplicate("

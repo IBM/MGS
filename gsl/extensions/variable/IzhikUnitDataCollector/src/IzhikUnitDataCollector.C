@@ -175,17 +175,17 @@ IzhikUnitDataCollector::~IzhikUnitDataCollector()
   if (trans_file) delete trans_file;
 }
 
-void IzhikUnitDataCollector::duplicate(std::auto_ptr<IzhikUnitDataCollector>& dup) const
+void IzhikUnitDataCollector::duplicate(std::unique_ptr<IzhikUnitDataCollector>& dup) const
 {
    dup.reset(new IzhikUnitDataCollector(*this));
 }
 
-void IzhikUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void IzhikUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new IzhikUnitDataCollector(*this));
 }
 
-void IzhikUnitDataCollector::duplicate(std::auto_ptr<CG_IzhikUnitDataCollector>& dup) const
+void IzhikUnitDataCollector::duplicate(std::unique_ptr<CG_IzhikUnitDataCollector>& dup) const
 {
    dup.reset(new IzhikUnitDataCollector(*this));
 }

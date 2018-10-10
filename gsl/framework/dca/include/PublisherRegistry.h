@@ -33,7 +33,7 @@ class PublisherRegistry
       PublisherRegistry(Simulation& s);
       const std::list<Publisher*> & getPublisherList();
       Publisher* getPublisher(std::string publisherName);
-      void addPublisher(std::auto_ptr<Publisher> & ptrPublisher);
+      void addPublisher(std::unique_ptr<Publisher> & ptrPublisher);
       void removePublisher(std::string publisherName);
       ~PublisherRegistry();
    private:

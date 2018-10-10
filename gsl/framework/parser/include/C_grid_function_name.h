@@ -42,6 +42,7 @@ class C_grid_function_name : public C_production_grid
 
    private:
       Type _type;
+      /* representing 4 or 5 arguments passed to 'Layer' statement in GSL */
       C_argument_list *_argList;
       void initNodes(LensContext *c, Grid* g);
       void layers(LensContext *c, Grid* g);

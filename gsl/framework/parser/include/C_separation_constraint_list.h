@@ -32,7 +32,7 @@ class C_separation_constraint_list : public C_production
       C_separation_constraint_list(C_separation_constraint *, SyntaxError *);
       C_separation_constraint_list(C_separation_constraint_list *, 
 				   C_separation_constraint *, SyntaxError *);
-      void releaseList(std::auto_ptr<std::vector<C_separation_constraint*> >& 
+      void releaseList(std::unique_ptr<std::vector<C_separation_constraint*> >& 
 		       separation_constraints);
       const std::vector<C_separation_constraint*>& getList() const {
 	 return *_separation_constraints;

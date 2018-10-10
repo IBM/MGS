@@ -27,9 +27,9 @@ class PointCalciumSource : public CG_PointCalciumSource
       virtual void setCaCurrent(Trigger* trigger, NDPairList* ndPairList);
       PointCalciumSource();
       virtual ~PointCalciumSource();
-      virtual void duplicate(std::auto_ptr<PointCalciumSource>& dup) const;
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_PointCalciumSource>& dup) const;
+      virtual void duplicate(std::unique_ptr<PointCalciumSource>& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_PointCalciumSource>& dup) const;
 };
 
 #endif

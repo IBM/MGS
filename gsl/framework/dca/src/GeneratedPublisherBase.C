@@ -114,7 +114,7 @@ void GeneratedPublisherBase::copyOwnedHeap(const GeneratedPublisherBase& rv)
    if (rv._services.size() > 0) {
       std::vector<Service*>::const_iterator it, end = rv._services.end();
       for (it = rv._services.begin(); it != end; ++it) {
-	 std::auto_ptr<Service> dup;
+	 std::unique_ptr<Service> dup;
 	 (*it)->duplicate(dup);
 	 _services.push_back(dup.release());
       }
@@ -123,7 +123,7 @@ void GeneratedPublisherBase::copyOwnedHeap(const GeneratedPublisherBase& rv)
       std::vector<TriggerType*>::const_iterator it, 
 	 end = rv._triggerDescriptors.end();
       for (it = rv._triggerDescriptors.begin(); it != end; ++it) {
-	 std::auto_ptr<TriggerType> dup;
+	 std::unique_ptr<TriggerType> dup;
 	 (*it)->duplicate(dup);
 	 _triggerDescriptors.push_back(dup.release());
       }

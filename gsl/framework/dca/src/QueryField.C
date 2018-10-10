@@ -94,7 +94,7 @@ std::vector<EnumEntry*> const & QueryField::getEnumEntries() const
 }
 
 
-void QueryField::addEnumEntry(std::auto_ptr<EnumEntry> & aptrEnumEntry)
+void QueryField::addEnumEntry(std::unique_ptr<EnumEntry> & aptrEnumEntry)
 {
    if (_type == ENUM) _enumEntries.push_back(aptrEnumEntry.release());
    if (_type == VALUE) std::cerr<<"Cannot add enum entry to VALUE type Query Field!"<<std::endl;

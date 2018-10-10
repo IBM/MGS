@@ -177,17 +177,17 @@ CleftAstrocyteIAFUnitDataCollector::~CleftAstrocyteIAFUnitDataCollector()
 {
 }
 
-void CleftAstrocyteIAFUnitDataCollector::duplicate(std::auto_ptr<CleftAstrocyteIAFUnitDataCollector>& dup) const
+void CleftAstrocyteIAFUnitDataCollector::duplicate(std::unique_ptr<CleftAstrocyteIAFUnitDataCollector>& dup) const
 {
   dup.reset(new CleftAstrocyteIAFUnitDataCollector(*this));
 }
 
-void CleftAstrocyteIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void CleftAstrocyteIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CleftAstrocyteIAFUnitDataCollector(*this));
 }
 
-void CleftAstrocyteIAFUnitDataCollector::duplicate(std::auto_ptr<CG_CleftAstrocyteIAFUnitDataCollector>& dup) const
+void CleftAstrocyteIAFUnitDataCollector::duplicate(std::unique_ptr<CG_CleftAstrocyteIAFUnitDataCollector>& dup) const
 {
   dup.reset(new CleftAstrocyteIAFUnitDataCollector(*this));
 }

@@ -30,7 +30,7 @@ ScriptFunctorTypeDataItem::ScriptFunctorTypeDataItem(ScriptFunctorTypeDataItem c
    FunctorTypeDataItem::setFunctorType(_ownedFunctorType);
 }
 
-void ScriptFunctorTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ScriptFunctorTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    DataItem *p= new ScriptFunctorTypeDataItem(this);
    r_aptr.reset(p);

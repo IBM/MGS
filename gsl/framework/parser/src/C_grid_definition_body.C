@@ -66,7 +66,7 @@ C_grid_definition_body* C_grid_definition_body::duplicate() const
 }
 
 void C_grid_definition_body::duplicate(
-   std::auto_ptr<RepertoireFactory>& rv) const
+   std::unique_ptr<RepertoireFactory>& rv) const
 {
    rv.reset(new C_grid_definition_body(*this));
 }
@@ -103,14 +103,14 @@ Repertoire* C_grid_definition_body::createRepertoire(
    }
    Repertoire* parentRep = crdi->getRepertoire();
 
-   std::auto_ptr<Repertoire> rap(gridRep);
+   std::unique_ptr<Repertoire> rap(gridRep);
    parentRep->addSubRepertoire(rap);
    //gridRep->setParentRepertoire(parentRep);
 
    // put new repertoire in symbol table in the current scope
     RepertoireDataItem * rdi = new RepertoireDataItem;
     rdi->setRepertoire(gridRep);
-    std::auto_ptr<DataItem> di_ap(rdi);
+    std::unique_ptr<DataItem> di_ap(rdi);
 
    try {
       c->symTable.addEntry(repName, di_ap);

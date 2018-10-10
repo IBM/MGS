@@ -65,7 +65,7 @@ void PublisherRegistry::removePublisher(std::string publisherName)
 }
 
 
-void PublisherRegistry::addPublisher(std::auto_ptr<Publisher> & ptrPublisher)
+void PublisherRegistry::addPublisher(std::unique_ptr<Publisher> & ptrPublisher)
 {
    bool add = true;
    std::list<Publisher*>::iterator end = _pubList.end();

@@ -25,7 +25,7 @@ class LoadPhase : public Phase {
 
    public:
       LoadPhase(const std::string& name = "");
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~LoadPhase();
      
       virtual std::string getType() const;

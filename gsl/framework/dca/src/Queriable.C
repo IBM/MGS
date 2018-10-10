@@ -40,7 +40,7 @@ Queriable::Queriable(const Queriable& q)
      _queriableType(q._queriableType)
 {
    _qd.setQueriable(this);
-   std::auto_ptr<Queriable> dup;
+   std::unique_ptr<Queriable> dup;
    for (std::list<Queriable*>::const_iterator i = q._queriableList.begin();
 	i != q._queriableList.end(); i++) {
       (*i)->duplicate(dup);
@@ -89,7 +89,7 @@ bool Queriable::isPublisherQueriable()
 }
 
 
-std::auto_ptr<EnumEntry> & Queriable::emptyEnum()
+std::unique_ptr<EnumEntry> & Queriable::emptyEnum()
 {
    _aptrEmptyEnum.reset(new EnumEntry("",""));
    return _aptrEmptyEnum;

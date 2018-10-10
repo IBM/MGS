@@ -96,7 +96,7 @@ C_ndpair_clause_list* C_ndpair_clause_list::duplicate() const
    return new C_ndpair_clause_list(*this);
 }
 
-void C_ndpair_clause_list::releaseList(std::auto_ptr<NDPairList>& ndp)
+void C_ndpair_clause_list::releaseList(std::unique_ptr<NDPairList>& ndp)
 {
    ndp.reset(_list);
    _list = 0;

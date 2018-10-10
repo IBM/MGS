@@ -93,7 +93,7 @@ C_relative_nodeset::C_relative_nodeset(const C_relative_nodeset& rv)
       _gridNodeSet = rv._gridNodeSet->duplicate();
    }
    if (rv._storedContext) {
-      std::auto_ptr<LensContext> dup;
+      std::unique_ptr<LensContext> dup;
       rv._storedContext->duplicate(dup);
       _storedContext = dup.release();
    }

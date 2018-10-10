@@ -32,9 +32,9 @@ class MihalasNieburSynapseIAFUnitDataCollector : public CG_MihalasNieburSynapseI
   virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MihalasNieburSynapseIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_MihalasNieburSynapseIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
   MihalasNieburSynapseIAFUnitDataCollector();
   virtual ~MihalasNieburSynapseIAFUnitDataCollector();
-  virtual void duplicate(std::auto_ptr<MihalasNieburSynapseIAFUnitDataCollector>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_MihalasNieburSynapseIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<MihalasNieburSynapseIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_MihalasNieburSynapseIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* voltage_file;
   std::ofstream* threshold_file;

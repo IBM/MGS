@@ -75,7 +75,7 @@ SymbolTable::SymbolTable(const SymbolTable& st)
 
       Scope::const_iterator it, end = (*scope)->end();
       for(it = (*scope)->begin(); it != end; ++it) {
-         std::auto_ptr<DataItem> apdi;
+         std::unique_ptr<DataItem> apdi;
          const Scope::value_type& vt = (*it);
          vt.second->duplicate(apdi);
          newScope->insert(Scope::value_type(vt.first, apdi.release()));
@@ -126,7 +126,7 @@ DataItem* SymbolTable::getCurrentScopeEntry(const std::string& symbol)
 }
 
 void SymbolTable::addEntry(const std::string& symbol, 
-			   std::auto_ptr<DataItem> &value)
+			   std::unique_ptr<DataItem> &value)
 {
    Scope* scope = _scopes.back();
 
@@ -141,7 +141,7 @@ void SymbolTable::addEntry(const std::string& symbol,
 }
 
 void SymbolTable::updateEntry(const std::string& symbol, 
-			      std::auto_ptr<DataItem>& value)
+			      std::unique_ptr<DataItem>& value)
 {
    bool found = false;
    Scope::iterator de;
@@ -162,7 +162,7 @@ void SymbolTable::updateEntry(const std::string& symbol,
    }
 }
 
-int SymbolTable::addCompositeTrigger(std::auto_ptr<DataItem> &value)
+int SymbolTable::addCompositeTrigger(std::unique_ptr<DataItem> &value)
 {
    int retval = 0;
    Scope* scope = _scopes.back();

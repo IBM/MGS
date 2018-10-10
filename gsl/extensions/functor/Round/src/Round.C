@@ -26,7 +26,7 @@ void Round::userInitialize(LensContext* CG_c, Functor*& f)
 double Round::userExecute(LensContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> rval_ap;
+  std::unique_ptr<DataItem> rval_ap;
   init.f->execute(CG_c, nullArgs, rval_ap);
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -45,17 +45,17 @@ Round::~Round()
 {
 }
 
-void Round::duplicate(std::auto_ptr<Round>& dup) const
+void Round::duplicate(std::unique_ptr<Round>& dup) const
 {
    dup.reset(new Round(*this));
 }
 
-void Round::duplicate(std::auto_ptr<Functor>& dup) const
+void Round::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new Round(*this));
 }
 
-void Round::duplicate(std::auto_ptr<CG_RoundBase>& dup) const
+void Round::duplicate(std::unique_ptr<CG_RoundBase>& dup) const
 {
    dup.reset(new Round(*this));
 }

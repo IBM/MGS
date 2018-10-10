@@ -34,10 +34,10 @@
 #include <math.h>
 
 
-std::auto_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -97,12 +97,12 @@ std::auto_ptr<ParameterSet> RefAngleModifier::userExecute(LensContext* CG_c)
  
    std::string name="angle";
    FloatDataItem* fdi=new FloatDataItem(angle);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
 
    NDPair* ndp = new NDPair(name, fdi_ap);
    NDPairList ndpl;
    ndpl.push_back(ndp);
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -121,17 +121,17 @@ RefAngleModifier::~RefAngleModifier()
 {
 }
 
-void RefAngleModifier::duplicate(std::auto_ptr<RefAngleModifier>& dup) const
+void RefAngleModifier::duplicate(std::unique_ptr<RefAngleModifier>& dup) const
 {
    dup.reset(new RefAngleModifier(*this));
 }
 
-void RefAngleModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void RefAngleModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new RefAngleModifier(*this));
 }
 
-void RefAngleModifier::duplicate(std::auto_ptr<CG_RefAngleModifierBase>& dup) const
+void RefAngleModifier::duplicate(std::unique_ptr<CG_RefAngleModifierBase>& dup) const
 {
    dup.reset(new RefAngleModifier(*this));
 }

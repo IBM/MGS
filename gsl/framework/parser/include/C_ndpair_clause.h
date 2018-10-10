@@ -39,7 +39,7 @@ class C_ndpair_clause : public C_production
       const NDPair& getNDPair() {
 	 return *_ndpair;
       }
-      void releaseNDPair(std::auto_ptr<NDPair>& ndp);
+      void releaseNDPair(std::unique_ptr<NDPair>& ndp);
 
    private:
       NDPair* _ndpair;

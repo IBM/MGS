@@ -66,7 +66,7 @@ SignedCharArrayDataItem::SignedCharArrayDataItem(const SignedCharArrayDataItem& 
 
 // Utility methods
 
-void SignedCharArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void SignedCharArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new SignedCharArrayDataItem(*this)));
 }

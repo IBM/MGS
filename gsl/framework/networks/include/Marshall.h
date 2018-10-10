@@ -79,6 +79,7 @@ template <class T>
 class MarshallerInstance<Array<T> >
 {
 public:
+  /* TODO TUAN check if we need to modify to work with flat array for GPU here */
    void marshall(OutputStream* stream, Array<T> const & data) {
      MarshallerInstance<T> mi1;
      unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();

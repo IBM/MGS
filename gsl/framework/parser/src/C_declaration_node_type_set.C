@@ -30,7 +30,7 @@ void C_declaration_node_type_set::internalExecute(LensContext *c)
    NodeTypeSetDataItem *ntsdi = new NodeTypeSetDataItem;
    ntsdi->setNodeTypeSet(_nodeTypeSetSpecifierClause);
 
-   std::auto_ptr<DataItem> ntsdi_ap(ntsdi);
+   std::unique_ptr<DataItem> ntsdi_ap(ntsdi);
    try {
       c->symTable.addEntry(_declarator->getName(), ntsdi_ap);
    } catch (SyntaxErrorException& e) {

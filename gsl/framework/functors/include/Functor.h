@@ -29,19 +29,19 @@ class Functor {
   virtual const std::string& getCategory() const;
   void initialize(LensContext* c, const std::vector<DataItem*>& args);
   void execute(LensContext* c, const std::vector<DataItem*>& args,
-               std::auto_ptr<DataItem>& rvalue);
+               std::unique_ptr<DataItem>& rvalue);
   Functor(const Functor& rv) {};
   Functor& operator=(const Functor& rv) {
     return *this;
   };
-  virtual void duplicate(std::auto_ptr<Functor>& fap) const = 0;
+  virtual void duplicate(std::unique_ptr<Functor>& fap) const = 0;
   virtual ~Functor();
 
   protected:
   virtual void doInitialize(LensContext* c,
                             const std::vector<DataItem*>& args) = 0;
   virtual void doExecute(LensContext* c, const std::vector<DataItem*>& args,
-                         std::auto_ptr<DataItem>& rvalue) = 0;
+                         std::unique_ptr<DataItem>& rvalue) = 0;
 
   public:
   static const std::string _category;

@@ -32,7 +32,7 @@ std::string RuntimePhase::getType() const
    return "Runtime";
 }
 
-void RuntimePhase::duplicate(std::auto_ptr<Phase>& rv) const
+void RuntimePhase::duplicate(std::unique_ptr<Phase>& rv) const
 {
    rv.reset(new RuntimePhase(*this));
 }

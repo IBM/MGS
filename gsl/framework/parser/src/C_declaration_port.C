@@ -38,7 +38,7 @@ void C_declaration_port::internalExecute(LensContext *c)
    // transfer fd to DataItem
    IntDataItem *idi = new IntDataItem;
    idi->setInt(fd);
-   std::auto_ptr<DataItem> idi_ap(idi);
+   std::unique_ptr<DataItem> idi_ap(idi);
    try {
       c->symTable.addEntry(_declarator->getName(), idi_ap);
    } catch (SyntaxErrorException& e) {

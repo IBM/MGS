@@ -25,7 +25,7 @@ ParameterSetDataItem::ParameterSetDataItem()
 {
 }
 
-ParameterSetDataItem::ParameterSetDataItem(std::auto_ptr<ParameterSet> data) 
+ParameterSetDataItem::ParameterSetDataItem(std::unique_ptr<ParameterSet>& data) 
 {
    _data = data.release();
 }
@@ -33,14 +33,14 @@ ParameterSetDataItem::ParameterSetDataItem(std::auto_ptr<ParameterSet> data)
 
 ParameterSetDataItem::ParameterSetDataItem(const ParameterSetDataItem& DI)
 {
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    DI._data->duplicate(pset);
    _data = pset.release();
 }
 
 
 // Utility methods
-void ParameterSetDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ParameterSetDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new ParameterSetDataItem(*this));
 }
@@ -67,7 +67,7 @@ ParameterSet* ParameterSetDataItem::getParameterSet() const
 }
 
 
-void ParameterSetDataItem::setParameterSet(std::auto_ptr<ParameterSet> & i)
+void ParameterSetDataItem::setParameterSet(std::unique_ptr<ParameterSet> & i)
 {
    delete _data;
    _data = i.release();

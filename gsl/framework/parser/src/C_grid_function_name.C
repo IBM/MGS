@@ -81,7 +81,6 @@ C_grid_function_name::~C_grid_function_name() {
 }
 
 void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
-
   const std::vector<DataItem*>* args = _argList->getVectorDataItem();
   if (args->size() < 2) {
     std::string mes =
@@ -120,7 +119,7 @@ void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
     }
 
     // call the functor to initialize the nodes
-    std::auto_ptr<DataItem> returnValue;
+    std::unique_ptr<DataItem> returnValue;
     std::vector<DataItem*> emptyArgs;
     functor->execute(c, emptyArgs, returnValue);
   }
@@ -130,6 +129,9 @@ void C_grid_function_name::initNodes(LensContext* c, Grid* grid) {
   c->layerContext = 0;
 }
 
+/* being called when a 'Layers'
+ * statement is detected in GSL
+ */
 void C_grid_function_name::layers(LensContext* c, Grid* grid) {
   std::string name = _declarator->getName();
 
@@ -178,7 +180,7 @@ void C_grid_function_name::layers(LensContext* c, Grid* grid) {
   NDPairList* ndpairlist = ndpdi->getNDPairList();
 
   // Get density vector from the layout functor
-  std::auto_ptr<DataItem> returnValue;
+  std::unique_ptr<DataItem> returnValue;
   std::vector<DataItem*> newArgs;
 
   c->layerContext = new LayerDefinitionContext;
@@ -239,7 +241,7 @@ void C_grid_function_name::layers(LensContext* c, Grid* grid) {
 
       GranuleMapperType* gt =
           c->sim->getGranuleMapperType("VolumeGranuleMapper");
-      std::auto_ptr<GranuleMapper> apgm;
+      std::unique_ptr<GranuleMapper> apgm;
       gt->getGranuleMapper(gmargs, apgm);
       granuleMapper = apgm.get();
 

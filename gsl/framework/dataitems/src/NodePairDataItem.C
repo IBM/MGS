@@ -33,7 +33,7 @@ NodePairDataItem::NodePairDataItem(const NodePairDataItem& DI)
 
 
 // Utility methods
-void NodePairDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void NodePairDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new NodePairDataItem(*this)));
 }

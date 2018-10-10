@@ -39,9 +39,9 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
    cc->destinationSet = destination;
 
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> outAttrRVal;
-   std::auto_ptr<DataItem> inAttrRVal;
-   std::auto_ptr<DataItem> rval;
+   std::unique_ptr<DataItem> outAttrRVal;
+   std::unique_ptr<DataItem> inAttrRVal;
+   std::unique_ptr<DataItem> rval;
 
    // call sampfctr2, which will set source and destination nodes 
    // (and maybe other stuff)
@@ -105,17 +105,17 @@ ConnectNodeSetsFunctor::~ConnectNodeSetsFunctor()
 {
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::auto_ptr<ConnectNodeSetsFunctor>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<ConnectNodeSetsFunctor>& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }
 
-void ConnectNodeSetsFunctor::duplicate(std::auto_ptr<CG_ConnectNodeSetsFunctorBase>& dup) const
+void ConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_ConnectNodeSetsFunctorBase>& dup) const
 {
    dup.reset(new ConnectNodeSetsFunctor(*this));
 }

@@ -168,18 +168,18 @@ ConductanceDisplay::ConductanceDisplay() : CG_ConductanceDisplay(), outFile(0)
 
 ConductanceDisplay::~ConductanceDisplay() { delete outFile; }
 
-void ConductanceDisplay::duplicate(std::auto_ptr<ConductanceDisplay>& dup) const
+void ConductanceDisplay::duplicate(std::unique_ptr<ConductanceDisplay>& dup) const
 {
   dup.reset(new ConductanceDisplay(*this));
 }
 
-void ConductanceDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void ConductanceDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new ConductanceDisplay(*this));
 }
 
 void ConductanceDisplay::duplicate(
-    std::auto_ptr<CG_ConductanceDisplay>& dup) const
+    std::unique_ptr<CG_ConductanceDisplay>& dup) const
 {
   dup.reset(new ConductanceDisplay(*this));
 }

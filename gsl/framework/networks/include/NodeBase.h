@@ -20,6 +20,7 @@
 #include "Node.h"
 #include "NodeRelationalDataUnit.h"
 #include "ShallowArray.h"
+#include "rndm.h"
 
 #include <deque>
 #include <vector>

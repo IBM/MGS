@@ -33,7 +33,7 @@ class C_composite_definition_body : public C_production, public RepertoireFactor
       C_composite_definition_body(C_composite_statement_list *, SyntaxError *);
       virtual ~C_composite_definition_body();
       virtual C_composite_definition_body* duplicate() const;
-      virtual void duplicate(std::auto_ptr<RepertoireFactory>& rv) const;
+      virtual void duplicate(std::unique_ptr<RepertoireFactory>& rv) const;
       virtual void internalExecute(LensContext *);
       virtual void checkChildren();
       virtual void recursivePrint();

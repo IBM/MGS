@@ -40,7 +40,7 @@ class DataItemArrayDataItem : public ArrayDataItem
       ~DataItemArrayDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       void setDimensions(std::vector<int> const &dimensions);
       const char* getType() const;
 
@@ -49,7 +49,7 @@ class DataItemArrayDataItem : public ArrayDataItem
       std::string getString(std::vector<int> coords, Error* error) const;
 
       DataItem* getDataItem(std::vector<int> coords, Error* error=0) const;
-      void setDataItem(std::vector<int> coords, std::auto_ptr<DataItem> & value, Error* error=0);
+      void setDataItem(std::vector<int> coords, std::unique_ptr<DataItem> & value, Error* error=0);
       const std::vector<DataItem*>*  getDataItemVector() const;
       std::vector<DataItem*>* getModifiableDataItemVector();
 };

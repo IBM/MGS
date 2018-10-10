@@ -322,17 +322,17 @@ TraubIAFUnitDataCollector::~TraubIAFUnitDataCollector()
 {
 }
 
-void TraubIAFUnitDataCollector::duplicate(std::auto_ptr<TraubIAFUnitDataCollector>& dup) const
+void TraubIAFUnitDataCollector::duplicate(std::unique_ptr<TraubIAFUnitDataCollector>& dup) const
 {
    dup.reset(new TraubIAFUnitDataCollector(*this));
 }
 
-void TraubIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void TraubIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new TraubIAFUnitDataCollector(*this));
 }
 
-void TraubIAFUnitDataCollector::duplicate(std::auto_ptr<CG_TraubIAFUnitDataCollector>& dup) const
+void TraubIAFUnitDataCollector::duplicate(std::unique_ptr<CG_TraubIAFUnitDataCollector>& dup) const
 {
    dup.reset(new TraubIAFUnitDataCollector(*this));
 }

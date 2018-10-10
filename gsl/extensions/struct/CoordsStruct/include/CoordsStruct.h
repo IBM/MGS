@@ -35,8 +35,8 @@ class CoordsStruct : public Struct
    public:
       CoordsStruct();
       virtual ~CoordsStruct();
-      virtual void duplicate(std::auto_ptr<CoordsStruct>& dup) const;
-      virtual void duplicate(std::auto_ptr<Struct>& dup) const;
+      virtual void duplicate(std::unique_ptr<CoordsStruct>& dup) const;
+      virtual void duplicate(std::unique_ptr<Struct>& dup) const;
       ShallowArray< unsigned, 3, 2 > coords;
    protected:
       virtual void doInitialize(LensContext *c, const std::vector<DataItem*>& args);

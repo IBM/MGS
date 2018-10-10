@@ -37,14 +37,14 @@ class FunctorType : public InstanceFactory
       // not necessary for now Array handles itself
       // FunctorType(const FunctorType& rv);
       // FunctorType& operator=(const FunctorType& rv);
-      virtual void getFunctor(std::auto_ptr<Functor> & r_aptr) =0;
+      virtual void getFunctor(std::unique_ptr<Functor> & r_aptr) =0;
       virtual Functor* getFunctor() =0;
       virtual ~FunctorType();
       std::string getCategory();
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
 			       LensContext* c);
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
 			       LensContext* c);
 

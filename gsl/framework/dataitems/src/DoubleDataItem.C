@@ -34,7 +34,7 @@ DoubleDataItem::DoubleDataItem(const DoubleDataItem& DI)
 
 
 // Utility methods
-void DoubleDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void DoubleDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new DoubleDataItem(*this)));
 }

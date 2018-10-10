@@ -88,7 +88,7 @@ void C_query_path::internalExecute(LensContext *c)
          else {
             Queriable* tmp;
             tmp = currentQ;
-	    std::auto_ptr<Queriable> dup;
+	    std::unique_ptr<Queriable> dup;
 	    currentQ->query()->front()->duplicate(dup);
 	    currentQ = dup.release();
             delete tmp;

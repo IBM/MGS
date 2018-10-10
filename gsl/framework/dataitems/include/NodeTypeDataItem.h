@@ -38,7 +38,7 @@ class NodeTypeDataItem : public DataItem
       NodeTypeDataItem(const NodeTypeDataItem& DI);
 
       const char* getType() const;
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
 
       void setNodeType(NodeType*);
       NodeType* getNodeType() const;

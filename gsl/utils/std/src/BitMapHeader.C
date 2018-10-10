@@ -131,7 +131,7 @@ void BitMapHeader::writeToFile(FILE* out) {
   }
 }
 
-void BitMapHeader::readGrayscales(FILE* in, std::auto_ptr<char>& grays) {
+void BitMapHeader::readGrayscales(FILE* in, std::unique_ptr<char>& grays) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -198,9 +198,9 @@ void BitMapHeader::readGrayscales(FILE* in, std::auto_ptr<char>& grays) {
   grays.reset(g);
 }
 
-void BitMapHeader::readColors(FILE* in, std::auto_ptr<char>& reds,
-                              std::auto_ptr<char>& greens,
-                              std::auto_ptr<char>& blues) {
+void BitMapHeader::readColors(FILE* in, std::unique_ptr<char>& reds,
+                              std::unique_ptr<char>& greens,
+                              std::unique_ptr<char>& blues) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -259,7 +259,7 @@ void BitMapHeader::readColors(FILE* in, std::auto_ptr<char>& reds,
   blues.reset(b);
 }
 
-void BitMapHeader::readReds(FILE* in, std::auto_ptr<char>& reds) {
+void BitMapHeader::readReds(FILE* in, std::unique_ptr<char>& reds) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -312,7 +312,7 @@ void BitMapHeader::readReds(FILE* in, std::auto_ptr<char>& reds) {
   reds.reset(r);
 }
 
-void BitMapHeader::readGreens(FILE* in, std::auto_ptr<char>& greens) {
+void BitMapHeader::readGreens(FILE* in, std::unique_ptr<char>& greens) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -365,7 +365,7 @@ void BitMapHeader::readGreens(FILE* in, std::auto_ptr<char>& greens) {
   greens.reset(g);
 }
 
-void BitMapHeader::readBlues(FILE* in, std::auto_ptr<char>& blues) {
+void BitMapHeader::readBlues(FILE* in, std::unique_ptr<char>& blues) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -418,7 +418,7 @@ void BitMapHeader::readBlues(FILE* in, std::auto_ptr<char>& blues) {
   blues.reset(b);
 }
 
-void BitMapHeader::readLuminences(FILE* in, std::auto_ptr<char>& luminences) {
+void BitMapHeader::readLuminences(FILE* in, std::unique_ptr<char>& luminences) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -472,7 +472,7 @@ void BitMapHeader::readLuminences(FILE* in, std::auto_ptr<char>& luminences) {
 }
 
 void BitMapHeader::readRedGreenOpponents(
-    FILE* in, std::auto_ptr<char>& redGreenOpponents) {
+    FILE* in, std::unique_ptr<char>& redGreenOpponents) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;
@@ -526,7 +526,7 @@ void BitMapHeader::readRedGreenOpponents(
 }
 
 void BitMapHeader::readYellowBlueOpponents(
-    FILE* in, std::auto_ptr<char>& yellowBlueOpponents) {
+    FILE* in, std::unique_ptr<char>& yellowBlueOpponents) {
   size_t s = fread(fileHeader.identifier, sizeof(char), 2, in);
   if (feof(in)) {
     std::cerr << "Unexpected EOF in BitMapHeader!" << std::endl;

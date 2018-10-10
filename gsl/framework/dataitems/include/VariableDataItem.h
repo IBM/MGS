@@ -39,7 +39,7 @@ class VariableDataItem : public TriggerableDataItem
 
       ~VariableDataItem();
 
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       VariableInstanceAccessor* getVariable(Error* error=0) const;

@@ -30,9 +30,9 @@ class RankGranuleMapperType : public GranuleMapperType
 {
    public:
       RankGranuleMapperType(Simulation& s);
-      void getGranuleMapper(std::vector<DataItem*> const & args, std::auto_ptr<GranuleMapper>&);
-      virtual void duplicate(std::auto_ptr<GranuleMapperType>& dup) const;
+      void getGranuleMapper(std::vector<DataItem*> const & args, std::unique_ptr<GranuleMapper>&);
+      virtual void duplicate(std::unique_ptr<GranuleMapperType>& dup) const;
       virtual ~RankGranuleMapperType();
-      virtual void getQueriable(std::auto_ptr<InstanceFactoryQueriable>& dup);
+      virtual void getQueriable(std::unique_ptr<InstanceFactoryQueriable>& dup);
 };
 #endif

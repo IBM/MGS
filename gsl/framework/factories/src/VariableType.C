@@ -30,7 +30,7 @@ VariableType::VariableType() : InstanceFactory()
   _instanceAtEachMPIProcess = false;
 }
 
-void VariableType::getInstance(std::auto_ptr<DataItem>& adi,
+void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
                                std::vector<DataItem*> const* args,
                                LensContext* c)
 {
@@ -99,7 +99,7 @@ void VariableType::getInstance(std::auto_ptr<DataItem>& adi,
   adi.reset(vdi);
 }
 
-void VariableType::getInstance(std::auto_ptr<DataItem>& adi,
+void VariableType::getInstance(std::unique_ptr<DataItem>& adi,
                                const NDPairList& ndplist, LensContext* c)
 {
   VariableDataItem* vdi = new VariableDataItem;
@@ -175,7 +175,7 @@ void VariableType::addGranuleToSimulation(Simulation& sim,
 {
   if (!sim.hasVariableGranuleMapper())
   {
-    std::auto_ptr<GranuleMapper> granuleMapper;
+    std::unique_ptr<GranuleMapper> granuleMapper;
     GranuleMapper* gm = new VariableGranuleMapper(&sim);
     granuleMapper.reset(gm);
     unsigned index = sim.getGranuleMapperCount();

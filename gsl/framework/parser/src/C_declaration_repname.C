@@ -30,7 +30,7 @@ void C_declaration_repname::internalExecute(LensContext *c)
    Repertoire *rep = _repname->getRepertoire();
    if(rep) {
       RepertoireDataItem *rpdi = new RepertoireDataItem;
-      std::auto_ptr<DataItem> rp_ap(rpdi);
+      std::unique_ptr<DataItem> rp_ap(rpdi);
       rpdi->setRepertoire(rep);
       try {
 	 c->symTable.addEntry(_declarator->getName(), rp_ap);

@@ -103,12 +103,12 @@ GridLayerDescriptor* Grid::addLayer(const std::vector<int>& densityVector,
 {
    GridLayerDescriptor *gld = new GridLayerDescriptor(
       this, densityVector, name, nt, ndpList, granuleMapperIndex);
-   std::auto_ptr<GridLayerDescriptor> gld_ap(gld);
+   std::unique_ptr<GridLayerDescriptor> gld_ap(gld);
    addLayer(gld_ap);
    return gld;
 }
 
-void Grid::addLayer(std::auto_ptr<GridLayerDescriptor> & layer)
+void Grid::addLayer(std::unique_ptr<GridLayerDescriptor> & layer)
 {
    if (layer->getMaxDensity() > _maxDensity) {
       _maxDensity = layer->getMaxDensity();

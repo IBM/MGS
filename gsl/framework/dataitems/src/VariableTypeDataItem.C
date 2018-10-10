@@ -52,7 +52,7 @@ VariableTypeDataItem::VariableTypeDataItem(const VariableTypeDataItem& DI)
 
 
 // Utility methods
-void VariableTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void VariableTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new VariableTypeDataItem(*this));
 }

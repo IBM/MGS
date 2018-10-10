@@ -30,9 +30,9 @@ class BinomialDist : public CG_BinomialDistBase
       BinomialDist();
       BinomialDist(const BinomialDist&);
       virtual ~BinomialDist();
-      virtual void duplicate(std::auto_ptr<BinomialDist>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_BinomialDistBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<BinomialDist>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_BinomialDistBase>& dup) const;
 
       //   private:
       //      RNG _rng;

@@ -31,7 +31,7 @@ GridLayerDescriptor::GridLayerDescriptor(
    if (_densityVector.size() == 1) {
       _uniformDensity = _densityVector[0];
    }
-   std::auto_ptr<NodeAccessor> nodeAccessor;
+   std::unique_ptr<NodeAccessor> nodeAccessor;
    _nt->getNodeAccessor(nodeAccessor, this);
    setNodeAccessor(nodeAccessor);
 }
@@ -103,7 +103,7 @@ void GridLayerDescriptor::replaceDensityVector(unsigned* replacement, int size)
   }
 }
 
-void GridLayerDescriptor::setNodeAccessor(std::auto_ptr<NodeAccessor>& na)
+void GridLayerDescriptor::setNodeAccessor(std::unique_ptr<NodeAccessor>& na)
 {
    _nodeAccessor = na.release();
 }

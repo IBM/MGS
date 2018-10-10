@@ -43,7 +43,7 @@ GridQueriable::GridQueriable(Grid* grid)
    _queriableDescription = "Access nodes in a grid by grid coordinates, index, and layer:";
    _queriableType = "Grid";
    for (unsigned i = 0; i<_size.size(); i++) {
-      std::auto_ptr<QueryField> aptrQF(new QueryField(QueryField::VALUE));
+      std::unique_ptr<QueryField> aptrQF(new QueryField(QueryField::VALUE));
       ptrQF = aptrQF.get();
       ostr<<"Coord"<<i;
       ptrQF->setName(ostr.str());
@@ -55,7 +55,7 @@ GridQueriable::GridQueriable(Grid* grid)
       _queryDescriptor.addQueryField(aptrQF);
    }
 
-   std::auto_ptr<QueryField> aptr_densityQF(new QueryField(QueryField::VALUE));
+   std::unique_ptr<QueryField> aptr_densityQF(new QueryField(QueryField::VALUE));
    aptr_densityQF->setName("Index");
    aptr_densityQF->setDescription("Index of node within Grid Coordinate.");
    ostr.str("");
@@ -63,11 +63,11 @@ GridQueriable::GridQueriable(Grid* grid)
    aptr_densityQF->setFormat(ostr.str());
    _densityIdxIdx = _queryDescriptor.addQueryField(aptr_densityQF);
 
-   std::auto_ptr<QueryField> aptr_layerQF(new QueryField(QueryField::ENUM));
+   std::unique_ptr<QueryField> aptr_layerQF(new QueryField(QueryField::ENUM));
    aptr_layerQF->setName("Grid Layer");
    aptr_layerQF->setDescription("Enumerated list of Grid Layers.");
    for (unsigned i = 0; i<_grid->size(); i++) {
-      std::auto_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(((*_grid)[i])->getName(), ((*_grid)[i])->getModelName()));
+      std::unique_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(((*_grid)[i])->getName(), ((*_grid)[i])->getModelName()));
       aptr_layerQF->addEnumEntry(aptrEnumEntry);
    }
    _layerIdx = _queryDescriptor.addQueryField(aptr_layerQF);
@@ -81,7 +81,7 @@ GridQueriable::GridQueriable(const GridQueriable & q)
 }
 
 
-void GridQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void GridQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    GridDataItem* di = new GridDataItem;
    di->setGrid(_grid);
@@ -89,10 +89,10 @@ void GridQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> GridQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> GridQueriable::query(int maxItem, int minItem, int searchSize)
 {
    std::vector<QueryField*> & queryFields = _queryDescriptor.getQueryFields();
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
    std::vector<int> coords;
    int didx;
    int idx;
@@ -127,7 +127,7 @@ std::auto_ptr<QueryResult> GridQueriable::query(int maxItem, int minItem, int se
                }
                else if (qr->_numFound>minItem) {
                   NodeDescriptor* nd = (*iter)->getNodeAccessor()->getNodeDescriptor(coords, didx);
-                  std::auto_ptr<Queriable> aptrQueriable(new NodeQueriable(nd));
+                  std::unique_ptr<Queriable> aptrQueriable(new NodeQueriable(nd));
                   qr->addQueriable(aptrQueriable);
                }
             }
@@ -145,7 +145,7 @@ Publisher* GridQueriable::getQPublisher()
 }
 
 
-void GridQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void GridQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new GridQueriable(*this));
 }

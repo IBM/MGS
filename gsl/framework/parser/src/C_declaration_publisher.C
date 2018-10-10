@@ -28,7 +28,7 @@ void C_declaration_publisher::internalExecute(LensContext *c)
    _query_path->execute(c);
 
    PublisherDataItem *pdi = new PublisherDataItem;
-   std::auto_ptr<DataItem> pdi_ap(pdi);
+   std::unique_ptr<DataItem> pdi_ap(pdi);
 
    Publisher *ns = _query_path->getPublisher();;
    pdi->setPublisher(ns);

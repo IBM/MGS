@@ -98,12 +98,12 @@ CoordsStruct::~CoordsStruct()
 {
 }
 
-void CoordsStruct::duplicate(std::auto_ptr<CoordsStruct>& dup) const
+void CoordsStruct::duplicate(std::unique_ptr<CoordsStruct>& dup) const
 {
    dup.reset(new CoordsStruct(*this));
 }
 
-void CoordsStruct::duplicate(std::auto_ptr<Struct>& dup) const
+void CoordsStruct::duplicate(std::unique_ptr<Struct>& dup) const
 {
    dup.reset(new CoordsStruct(*this));
 }

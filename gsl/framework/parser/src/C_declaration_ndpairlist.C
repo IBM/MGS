@@ -28,11 +28,11 @@ void C_declaration_ndpairlist::internalExecute(LensContext *c)
    _declarator->execute(c);
    _ndp_clause_list->execute(c);
 
-   std::auto_ptr<NDPairList> ndp;
+   std::unique_ptr<NDPairList> ndp;
    _ndp_clause_list->releaseList(ndp);   
    NDPairListDataItem *nvl = new NDPairListDataItem;
    nvl->setNDPairList(ndp);
-   std::auto_ptr<DataItem> nvl_ap(nvl);
+   std::unique_ptr<DataItem> nvl_ap(nvl);
 
    try {
       c->symTable.addEntry(_declarator->getName(), nvl_ap);

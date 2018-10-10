@@ -213,7 +213,7 @@ bool SemaphoreTrigger::isSingle()
    return (_triggerA->status() == _criterionA);
 }
 
-void SemaphoreTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void SemaphoreTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
    dup.reset(new SemaphoreTrigger(*this));
 }

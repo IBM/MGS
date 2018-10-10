@@ -71,17 +71,17 @@ GetNodeCoordFunctor& GetNodeCoordFunctor::operator=(
    return *this;
 }
 
-void GetNodeCoordFunctor::duplicate(std::auto_ptr<GetNodeCoordFunctor>& dup) const
+void GetNodeCoordFunctor::duplicate(std::unique_ptr<GetNodeCoordFunctor>& dup) const
 {
    dup.reset(new GetNodeCoordFunctor(*this));
 }
 
-void GetNodeCoordFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void GetNodeCoordFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new GetNodeCoordFunctor(*this));
 }
 
-void GetNodeCoordFunctor::duplicate(std::auto_ptr<CG_GetNodeCoordFunctorBase>& dup) const
+void GetNodeCoordFunctor::duplicate(std::unique_ptr<CG_GetNodeCoordFunctorBase>& dup) const
 {
    dup.reset(new GetNodeCoordFunctor(*this));
 }
@@ -89,7 +89,7 @@ void GetNodeCoordFunctor::duplicate(std::auto_ptr<CG_GetNodeCoordFunctorBase>& d
 void GetNodeCoordFunctor::copyOwnedHeap(const GetNodeCoordFunctor& rv)
 {
    if (rv._service) {
-      std::auto_ptr<Service> dup;
+      std::unique_ptr<Service> dup;
       rv._service->duplicate(dup);
       _service = dup.release();
    } else {

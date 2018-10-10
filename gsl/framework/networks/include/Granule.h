@@ -49,9 +49,13 @@ class Granule
 	 return _graphId;
       }
       void  setPartitionId(unsigned partitionId) {
+	 //_old_partitionId = _partitionId;
 	 _partitionId = partitionId; 
       }
       unsigned getPartitionId() const;
+      //void  getOldPartitionId(unsigned partitionId) {
+      //   return _old_partitionId;
+      //}
 
       std::set<GraphConnection> const & getGraphConnections() const {
 	 return _graphConnections;
@@ -94,7 +98,10 @@ class Granule
       std::vector<double> _granuleCoordinates;
       unsigned _globalGranuleId;
       unsigned _graphId;
-      unsigned _partitionId;
+      unsigned _partitionId;  //initially, this is the same as _old_partitionId
+        // after sim->setGraph(), it is equals to the MPI-rank on which the nodes associated with 
+	// such Granule should be created
+      //unsigned _old_partitionId;
       ConnectionIncrement* _computeCost;
 //      std::map<std::string, ConnectionIncrement> _computeCost;
       // _depends is used to figure out the graphId if this granule 

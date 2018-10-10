@@ -28,9 +28,9 @@ class Scale : public CG_ScaleBase
       double userExecute(LensContext* CG_c);
       Scale();
       virtual ~Scale();
-      virtual void duplicate(std::auto_ptr<Scale>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ScaleBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Scale>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ScaleBase>& dup) const;
 };
 
 #endif

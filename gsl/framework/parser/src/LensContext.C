@@ -39,7 +39,7 @@ void LensContext::addCurrentRepertoire(Repertoire* rep)
 {
    RepertoireDataItem* rdi = new RepertoireDataItem();
    rdi->setRepertoire(rep);
-   std::auto_ptr<DataItem> ap_di(rdi);
+   std::unique_ptr<DataItem> ap_di(rdi);
    std::string currentRep("CurrentRepertoire");
    try {
       symTable.addEntry(currentRep, ap_di);
@@ -57,7 +57,7 @@ LensContext::LensContext(const LensContext& lc)
      _error(lc._error), _currentPhase(0)
 {
    if (lc._currentPhase) {
-     std::auto_ptr<Phase> dup;
+     std::unique_ptr<Phase> dup;
      lc._currentPhase->duplicate(dup);
      _currentPhase = dup.release();
    }
@@ -98,18 +98,18 @@ LensContext::~LensContext()
    delete connectionContext;
 }
 
-void LensContext::getCurrentPhase(std::auto_ptr<Phase>& phase) const
+void LensContext::getCurrentPhase(std::unique_ptr<Phase>& phase) const
 {
    _currentPhase->duplicate(phase);
 }
 
-void LensContext::setCurrentPhase(std::auto_ptr<Phase>& phase)
+void LensContext::setCurrentPhase(std::unique_ptr<Phase>& phase)
 {
    delete _currentPhase;
    _currentPhase = phase.release();
 }
 
-void LensContext::duplicate(std::auto_ptr<LensContext>& dup) const
+void LensContext::duplicate(std::unique_ptr<LensContext>& dup) const
 {
    dup.reset(new LensContext(*this));
 }

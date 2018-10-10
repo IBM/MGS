@@ -147,17 +147,17 @@ PoissonIAFUnitDataCollector::~PoissonIAFUnitDataCollector()
 {
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::auto_ptr<PoissonIAFUnitDataCollector>& dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<PoissonIAFUnitDataCollector>& dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }
 
-void PoissonIAFUnitDataCollector::duplicate(std::auto_ptr<CG_PoissonIAFUnitDataCollector>& dup) const
+void PoissonIAFUnitDataCollector::duplicate(std::unique_ptr<CG_PoissonIAFUnitDataCollector>& dup) const
 {
   dup.reset(new PoissonIAFUnitDataCollector(*this));
 }

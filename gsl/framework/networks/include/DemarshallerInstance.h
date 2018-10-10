@@ -109,6 +109,7 @@ public:
 	      && _arraySizeDemarshaller.done()
 	      );
    }
+  /* TODO TUAN check if we need to modify to work with flat array for GPU here */
    virtual void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs)
    {
      if (_arraySize < _arrayDestination->getSizeToCommunicate()) {

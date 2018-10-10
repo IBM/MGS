@@ -31,9 +31,9 @@ class GoodwinDataCollector : public CG_GoodwinDataCollector
   virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_GoodwinDataCollectorInAttrPSet* CG_inAttrPset, CG_GoodwinDataCollectorOutAttrPSet* CG_outAttrPset);
   GoodwinDataCollector();
   virtual ~GoodwinDataCollector();
-  virtual void duplicate(std::auto_ptr<GoodwinDataCollector>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_GoodwinDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<GoodwinDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_GoodwinDataCollector>& dup) const;
  private:
   std::ofstream* X_file;  
   std::ofstream* Y_file;  

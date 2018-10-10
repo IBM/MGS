@@ -43,7 +43,7 @@ NodeSetArrayDataItem::NodeSetArrayDataItem(const NodeSetArrayDataItem& DI)
 
 
 // Utility methods
-void NodeSetArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void NodeSetArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new NodeSetArrayDataItem(*this)));
 }
@@ -146,7 +146,7 @@ NodeSetArrayDataItem::NodeSetArrayDataItem(ShallowArray<NodeSet*> const & data)
 // Utility method
 void NodeSetArrayDataItem::setDimensions(std::vector<int> const &dimensions)
 {
-   std::auto_ptr<DataItem*> diap;
+   std::unique_ptr<DataItem*> diap;
    unsigned size=1;
    std::vector<int>::iterator iter, dend =_dimensions.end();
    for(iter=_dimensions.begin();iter!=dend;++iter) size *= *iter;

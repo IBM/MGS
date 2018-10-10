@@ -35,15 +35,15 @@ class ParameterSetDataItem : public DataItem
 
       // Constructors
       ParameterSetDataItem();
-      ParameterSetDataItem(std::auto_ptr<ParameterSet> data);
+      ParameterSetDataItem(std::unique_ptr<ParameterSet>& data);
       ~ParameterSetDataItem();
       ParameterSetDataItem(const ParameterSetDataItem& DI);
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       ParameterSet* getParameterSet() const;
-      void setParameterSet(std::auto_ptr<ParameterSet> & ps);
+      void setParameterSet(std::unique_ptr<ParameterSet> & ps);
 };
 #endif

@@ -66,7 +66,7 @@ BoolArrayDataItem::BoolArrayDataItem(const BoolArrayDataItem& DI)
 
 
 // Utility methods
-void BoolArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void BoolArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new BoolArrayDataItem(*this)));
 }
@@ -91,7 +91,7 @@ NumericArrayDataItem& BoolArrayDataItem::assign(const NumericArrayDataItem& DI)
 
 void BoolArrayDataItem::setDimensions(std::vector<int> const &dimensions)
 {
-   std::auto_ptr<DataItem*> diap;
+   std::unique_ptr<DataItem*> diap;
    unsigned size = getOffset(dimensions);
    std::vector<bool> *dest = new std::vector<bool>(size);
    dest->assign(dest->size(),0);

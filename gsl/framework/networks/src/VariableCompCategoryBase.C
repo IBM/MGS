@@ -60,7 +60,7 @@ int VariableCompCategoryBase::initPartitions(int num)
 
 // move to CG later
 void VariableCompCategoryBase::getQueriable(
-   std::auto_ptr<InstanceFactoryQueriable>& dup)
+   std::unique_ptr<InstanceFactoryQueriable>& dup)
 {
    dup.reset(new InstanceFactoryQueriable(this));
    dup->setName(getModelName());

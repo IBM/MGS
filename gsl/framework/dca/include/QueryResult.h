@@ -30,7 +30,7 @@ class QueryResult : public std::vector<Queriable*>
       QueryResult();
       int _numFound;
       int _searchCompleted;
-      void addQueriable(std::auto_ptr<Queriable> & q);
+      void addQueriable(std::unique_ptr<Queriable> & q);
       ~QueryResult();
 };
 #endif

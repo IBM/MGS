@@ -86,7 +86,7 @@ class NodeSet : public GridSet
 	setLayers(std::vector<GridLayerDescriptor*>());
       }
       
-      virtual void duplicate(std::auto_ptr<NodeSet>& dup) const;
+      virtual void duplicate(std::unique_ptr<NodeSet>& dup) const;
 
    protected:
       void resetAllLayers();

@@ -29,7 +29,7 @@ void C_declaration_nodeset::internalExecute(LensContext *c)
    _nodeset->execute(c);
 
    NodeSetDataItem *nsdi = new NodeSetDataItem;
-   std::auto_ptr<DataItem> nsdi_ap(nsdi);
+   std::unique_ptr<DataItem> nsdi_ap(nsdi);
 
    NodeSet *ns = _nodeset->getNodeSet();;
    nsdi->setNodeSet(ns);

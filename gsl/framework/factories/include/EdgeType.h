@@ -32,7 +32,7 @@ class EdgeType
 {
 
    public:
-      virtual void getInitializationParameterSet(std::auto_ptr<ParameterSet> & r_aptr) =0;
+      virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;
       virtual Edge* getEdge() =0;
       virtual std::string getModelName() =0;
       virtual ~EdgeType() {}
@@ -43,9 +43,9 @@ class EdgeType
 
       // Will be = 0 when CG is complete
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) {};
+	 std::unique_ptr<ParameterSet> & r_aptr) {};
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) {};
+	 std::unique_ptr<ParameterSet> & r_aptr) {};
 
 };
 #endif

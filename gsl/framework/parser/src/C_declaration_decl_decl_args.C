@@ -57,7 +57,7 @@ void C_declaration_decl_decl_args::internalExecute(LensContext *c)
       throwError(mes);
    }
    InstanceFactory* ifc = ifdi->getInstanceFactory();
-   std::auto_ptr<DataItem> inst_ap;
+   std::unique_ptr<DataItem> inst_ap;
    try {
       if (_argList) {
 	 ifc->getInstance(inst_ap, _argList->getVectorDataItem(), c);
@@ -95,7 +95,7 @@ C_declaration_decl_decl_args::C_declaration_decl_decl_args(
       _ndpair_clause_list = rv._ndpair_clause_list->duplicate();
    }
    if (rv._dataitem) {
-      std::auto_ptr<DataItem> di_ap;
+      std::unique_ptr<DataItem> di_ap;
       rv._dataitem->duplicate(di_ap);
       _dataitem = di_ap.release();
    }

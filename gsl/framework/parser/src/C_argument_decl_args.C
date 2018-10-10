@@ -48,7 +48,7 @@ void C_argument_decl_args::internalExecute(LensContext *c)
 	 throwError(mes);
       }
       InstanceFactory* ifc = ftdi->getInstanceFactory();
-      std::auto_ptr<DataItem> apdi;
+      std::unique_ptr<DataItem> apdi;
       ifc->getInstance(apdi, _argList->getVectorDataItem(),c);
       DataItem* di = apdi.release();
       delete _dataItem;
@@ -68,7 +68,7 @@ void C_argument_decl_args::internalExecute(LensContext *c)
 	 throwError(mes);
       }
       Functor* f = fdi->getFunctor();
-      std::auto_ptr<DataItem> rval;
+      std::unique_ptr<DataItem> rval;
       f->execute(c,*(_argList->getVectorDataItem()), rval);
       delete _dataItem;
       _dataItem = rval.release();
@@ -91,7 +91,7 @@ C_argument_decl_args::C_argument_decl_args(const C_argument_decl_args& rv)
       _argList = rv._argList->duplicate();
    }
    if (rv._dataItem) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._dataItem->duplicate(cc_di);
       _dataItem = cc_di.release();
    }

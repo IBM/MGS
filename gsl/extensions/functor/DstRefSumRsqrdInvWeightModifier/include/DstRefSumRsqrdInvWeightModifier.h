@@ -27,12 +27,12 @@ class DstRefSumRsqrdInvWeightModifier : public CG_DstRefSumRsqrdInvWeightModifie
 {
    public:
       void userInitialize(LensContext* CG_c, Functor*& f, int& maxDim, bool& setDistance);
-      std::auto_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       DstRefSumRsqrdInvWeightModifier();
       virtual ~DstRefSumRsqrdInvWeightModifier();
-      virtual void duplicate(std::auto_ptr<DstRefSumRsqrdInvWeightModifier>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_DstRefSumRsqrdInvWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<DstRefSumRsqrdInvWeightModifier>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_DstRefSumRsqrdInvWeightModifierBase>& dup) const;
 
       bool _setDistance;
       std::map<float, float> _radiusMap;

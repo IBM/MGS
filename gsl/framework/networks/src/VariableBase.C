@@ -173,14 +173,14 @@ VariableBase::~VariableBase()
 void VariableBase::copyOwnedHeap(const VariableBase& rv)
 {
    if (rv._publisher) {
-      std::auto_ptr<Publisher> dup;
+      std::unique_ptr<Publisher> dup;
       rv._publisher->duplicate(dup);
       _publisher = dup.release();
    } else {
       _publisher = 0;
    }
    if (rv._relationalDataUnit) {
-      std::auto_ptr<VariableRelationalDataUnit> dup;
+      std::unique_ptr<VariableRelationalDataUnit> dup;
       rv._relationalDataUnit->duplicate(dup);
       _relationalDataUnit = dup.release();
    } else {

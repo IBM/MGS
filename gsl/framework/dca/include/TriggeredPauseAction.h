@@ -27,7 +27,7 @@ class TriggeredPauseAction : public std::list<PauseActionable*>
    public:
       TriggeredPauseAction();
       void startAction();
-      void insert (std::auto_ptr<PauseActionable>& item);
+      void insert (std::unique_ptr<PauseActionable>& item);
       ~TriggeredPauseAction();
 
    private:

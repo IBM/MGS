@@ -31,9 +31,9 @@ class BoutonIAFUnitDataCollector : public CG_BoutonIAFUnitDataCollector
   virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_BoutonIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_BoutonIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
   BoutonIAFUnitDataCollector();
   virtual ~BoutonIAFUnitDataCollector();
-  virtual void duplicate(std::auto_ptr<BoutonIAFUnitDataCollector>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_BoutonIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<BoutonIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_BoutonIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* neurotransmitter_file;
   std::ofstream* availableNeurotransmitter_file;

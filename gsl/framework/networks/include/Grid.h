@@ -102,7 +102,7 @@ class Grid : public std::vector<GridLayerDescriptor*>
       void checkCoordinateSanity(const std::vector<int>& coords) const;
 
    private:
-      void addLayer(std::auto_ptr<GridLayerDescriptor>&);
+      void addLayer(std::unique_ptr<GridLayerDescriptor>&);
 
       unsigned _dimensions;
       unsigned _gridNodes;

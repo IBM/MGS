@@ -13,9 +13,9 @@ class GetPreNodeIndex : public CG_GetPreNodeIndexBase
       int userExecute(LensContext* CG_c);
       GetPreNodeIndex();
       virtual ~GetPreNodeIndex();
-      virtual void duplicate(std::auto_ptr<GetPreNodeIndex>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_GetPreNodeIndexBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<GetPreNodeIndex>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_GetPreNodeIndexBase>& dup) const;
 };
 
 #endif

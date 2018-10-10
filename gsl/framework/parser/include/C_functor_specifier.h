@@ -43,6 +43,6 @@ class C_functor_specifier : public C_production
    private:
       C_declarator* _functorDeclarator;
       C_argument_list* _argumentList;
-      std::auto_ptr<DataItem> _rval;
+      std::unique_ptr<DataItem> _rval;
 };
 #endif

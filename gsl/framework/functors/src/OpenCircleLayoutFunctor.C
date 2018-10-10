@@ -43,7 +43,7 @@ void OpenCircleLayoutFunctor::doInitialize(LensContext *c,
 
 void OpenCircleLayoutFunctor::doExecute(LensContext *c, 
 					const std::vector<DataItem*>& args, 
-					std::auto_ptr<DataItem>& rvalue)
+					std::unique_ptr<DataItem>& rvalue)
 {
    double radiansPerPosition = (2.0*M_PI)/double(_nbrPositions);
    Grid* g = c->layerContext->grid;
@@ -110,7 +110,7 @@ void OpenCircleLayoutFunctor::doExecute(LensContext *c,
 }
 
 
-void OpenCircleLayoutFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void OpenCircleLayoutFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new OpenCircleLayoutFunctor(*this));
 }

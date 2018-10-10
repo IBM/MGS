@@ -29,7 +29,7 @@ void C_declaration_rel_nodeset::internalExecute(LensContext *c)
    RelativeNodeSetDataItem *rnsdi = new RelativeNodeSetDataItem;
    rnsdi->setRelativeNodeSet(_relativeNodeSet);
 
-   std::auto_ptr<DataItem> rnsdi_ap(rnsdi);
+   std::unique_ptr<DataItem> rnsdi_ap(rnsdi);
    try {
       c->symTable.addEntry(_declaration->getName(), rnsdi_ap);
    } catch (SyntaxErrorException& e) {

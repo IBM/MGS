@@ -92,7 +92,7 @@ void C_definition_nodetype::internalExecute(LensContext *c)
    NodeTypeDataItem *ntdi = new NodeTypeDataItem();
    ntdi->setNodeType(nt);
 
-   std::auto_ptr<DataItem> ntdi_ap(static_cast<DataItem*>(ntdi));
+   std::unique_ptr<DataItem> ntdi_ap(static_cast<DataItem*>(ntdi));
    try {
       c->symTable.addEntry(_declarator->getName(), ntdi_ap);
    } catch (SyntaxErrorException& e) {

@@ -35,7 +35,7 @@ class Service
       virtual std::string getStringValue() const = 0;      
       virtual void setStringValue(const std::string& value) = 0;      
 
-      virtual void duplicate(std::auto_ptr<Service>& dup) const = 0;
+      virtual void duplicate(std::unique_ptr<Service>& dup) const = 0;
       virtual ~Service() {}
 
 

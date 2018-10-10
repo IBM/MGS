@@ -88,17 +88,17 @@ ZhengSORNUnitDataCollector::~ZhengSORNUnitDataCollector()
 {
 }
 
-void ZhengSORNUnitDataCollector::duplicate(std::auto_ptr<ZhengSORNUnitDataCollector>& dup) const
+void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<ZhengSORNUnitDataCollector>& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollector(*this));
 }
 
-void ZhengSORNUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollector(*this));
 }
 
-void ZhengSORNUnitDataCollector::duplicate(std::auto_ptr<CG_ZhengSORNUnitDataCollector>& dup) const
+void ZhengSORNUnitDataCollector::duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollector>& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollector(*this));
 }

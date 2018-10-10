@@ -139,7 +139,7 @@ void QueryPathParser::parsePath(std::string path)
             (*fields_iter)->setField(*query_iter);
             ++fields_iter;
          }
-         std::auto_ptr<QueryResult> result(currentQ->query(1,0,1));
+         std::unique_ptr<QueryResult> result(currentQ->query(1,0,1));
          if (result->size() == 0) {
             if (i+1 > frames) {
                std::cerr<<"Query "<<n<<" in query path: \""<<path<<"\""<<std::endl<<"returned no results!"<<std::endl;
@@ -149,7 +149,7 @@ void QueryPathParser::parsePath(std::string path)
          }
          else {
             delete currentQ;
-	    std::auto_ptr<Queriable> dup;
+	    std::unique_ptr<Queriable> dup;
 	    result->front()->duplicate(dup);
             currentQ = dup.release();
             break;

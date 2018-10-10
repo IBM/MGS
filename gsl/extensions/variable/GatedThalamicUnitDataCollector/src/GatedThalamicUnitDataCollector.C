@@ -76,17 +76,17 @@ GatedThalamicUnitDataCollector::~GatedThalamicUnitDataCollector()
   delete file;
 }
 
-void GatedThalamicUnitDataCollector::duplicate(std::auto_ptr<GatedThalamicUnitDataCollector>& dup) const
+void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<GatedThalamicUnitDataCollector>& dup) const
 {
    dup.reset(new GatedThalamicUnitDataCollector(*this));
 }
 
-void GatedThalamicUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new GatedThalamicUnitDataCollector(*this));
 }
 
-void GatedThalamicUnitDataCollector::duplicate(std::auto_ptr<CG_GatedThalamicUnitDataCollector>& dup) const
+void GatedThalamicUnitDataCollector::duplicate(std::unique_ptr<CG_GatedThalamicUnitDataCollector>& dup) const
 {
    dup.reset(new GatedThalamicUnitDataCollector(*this));
 }

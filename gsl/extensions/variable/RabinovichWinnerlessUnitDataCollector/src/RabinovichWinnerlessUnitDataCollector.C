@@ -201,17 +201,17 @@ RabinovichWinnerlessUnitDataCollector::~RabinovichWinnerlessUnitDataCollector()
 {
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::auto_ptr<RabinovichWinnerlessUnitDataCollector>& dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<RabinovichWinnerlessUnitDataCollector>& dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }
 
-void RabinovichWinnerlessUnitDataCollector::duplicate(std::auto_ptr<CG_RabinovichWinnerlessUnitDataCollector>& dup) const
+void RabinovichWinnerlessUnitDataCollector::duplicate(std::unique_ptr<CG_RabinovichWinnerlessUnitDataCollector>& dup) const
 {
    dup.reset(new RabinovichWinnerlessUnitDataCollector(*this));
 }

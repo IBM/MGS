@@ -45,13 +45,13 @@ void UniformLayoutFunctor::doInitialize(LensContext *c,
 
 void UniformLayoutFunctor::doExecute(LensContext *c, 
 				     const std::vector<DataItem*>& args, 
-				     std::auto_ptr<DataItem>& rvalue)
+				     std::unique_ptr<DataItem>& rvalue)
 {
    rvalue.reset(new IntArrayDataItem(_density));
 }
 
 
-void UniformLayoutFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void UniformLayoutFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new UniformLayoutFunctor(*this));
 }

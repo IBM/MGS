@@ -38,7 +38,7 @@ PublisherRegistryQueriable::PublisherRegistryQueriable(PublisherRegistry* publis
    _queriableDescription = "Access entries in the Publisher Registry:";
    _queriableType = "Publisher Registry";
 
-   std::auto_ptr<QueryField> aptr_QF(new QueryField(QueryField::ENUM));
+   std::unique_ptr<QueryField> aptr_QF(new QueryField(QueryField::ENUM));
    aptr_QF->setName("Publisher Registry Queriables");
    aptr_QF->setDescription("Publisher Registry's queriables entries.");
    aptr_QF->setFormat("");
@@ -48,7 +48,7 @@ PublisherRegistryQueriable::PublisherRegistryQueriable(PublisherRegistry* publis
    std::list<Publisher*>::const_iterator end = l.end();
    for (; iter != end; ++iter) {
       Publisher* pub = (*iter);
-      std::auto_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(pub->getName(), pub->getDescription()));
+      std::unique_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(pub->getName(), pub->getDescription()));
       aptr_QF->addEnumEntry(aptrEnumEntry);
       _queriableList.push_back(new PublisherQueriable(*iter));
    }
@@ -63,7 +63,7 @@ PublisherRegistryQueriable::PublisherRegistryQueriable(
 }
 
 
-void PublisherRegistryQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void PublisherRegistryQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    PublisherRegistryDataItem* di = new PublisherRegistryDataItem;
    di->setPublisherRegistry(_publisherRegistry);
@@ -71,14 +71,14 @@ void PublisherRegistryQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> PublisherRegistryQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> PublisherRegistryQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
 
    // Make sure query field is present
    if (_queryDescriptor.getQueryFields().size()) {
       std::string field = _queryDescriptor.getQueryFields().front()->getField();
-      std::auto_ptr<Queriable> aptr_q(new PublisherQueriable(_publisherRegistry->getPublisher(field)));
+      std::unique_ptr<Queriable> aptr_q(new PublisherQueriable(_publisherRegistry->getPublisher(field)));
       qr->addQueriable(aptr_q);
    }
    else std::cerr<<"No query fields found in Publisher Registry!"<<std::endl;
@@ -91,7 +91,7 @@ Publisher* PublisherRegistryQueriable::getQPublisher()
    return 0;
 }
 
-void PublisherRegistryQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void PublisherRegistryQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new PublisherRegistryQueriable(*this));
 }

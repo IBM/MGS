@@ -43,7 +43,7 @@ class C_ndpair_clause_list : public C_production
       NDPairList* getList() {
 	 return _list;
       }
-      void releaseList(std::auto_ptr<NDPairList>& ndp);
+      void releaseList(std::unique_ptr<NDPairList>& ndp);
       const NDPairList& getNDPList() {
 	 return *_list;
       }

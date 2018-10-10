@@ -168,7 +168,7 @@ bool FloatTrigger::isGreaterThanOrEqual() { return (*_service) >= _criterion; }
 
 bool FloatTrigger::isLessThanOrEqual() { return (*_service) <= _criterion; }
 
-void FloatTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void FloatTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
   dup.reset(new FloatTrigger(*this));
 }
