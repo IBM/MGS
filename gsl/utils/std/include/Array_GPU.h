@@ -27,7 +27,7 @@ class Managed
   public:
     void _check(cudaError_t r, int line) {
       if (r != cudaSuccess) {
-	printf("CUDA error on line %d: %s\n", line, cudaGetErrorString(r), line);
+	printf("CUDA error on line %d: %s\n", line, cudaGetErrorString(r));
 	exit(0);
       }
     }

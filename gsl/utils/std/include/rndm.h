@@ -23,8 +23,8 @@
 #include "RNG.h"
 #if defined(HAVE_GPU) && defined(__NVCC__)
 #define CUDA_CALLABLE __host__ __device__
-#else 
-#define CUDA_CALLABLE 
+#else
+#define CUDA_CALLABLE
 #endif
 
 inline double drandom(RNG_ns& rangen)
@@ -53,7 +53,7 @@ inline int irandom(RNG_ns& rangen)
 }
 
 inline int irandom(int min, int max, RNG_ns& rangen)
-{  
+{
   return int(floor(drandom(double(min), double(max+1), rangen)));
 }
 
