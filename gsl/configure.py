@@ -1451,7 +1451,13 @@ COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
         retStr = \
             """\
 # OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7
+OTHER_LIBS :=-lgmp  \
+"""
+        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{} ".format(self.pythonLibName)
+
+        retStr += "\n"
+        retStr += \
+            """\
 ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
 endif
@@ -1540,7 +1546,13 @@ CFLAGS := ${CUDA_NVCC_FLAGS}
         retStr = \
             """\
 # OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7
+OTHER_LIBS :=-lgmp  \
+"""
+        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
+
+        retStr += "\n"
+        retStr += \
+            """\
 ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
 endif
@@ -2143,6 +2155,23 @@ clean:
 """
         return retStr
 
+
+    def getPythonLibName(self):
+        import os, fnmatch
+        def find(pattern, path):
+            result = []
+            for roots, dirs, files in os.walk(path):
+                for name in files:
+                    if fnmatch.fnmatch(name, pattern):
+                        result.append(name)
+            return result
+        libs_found = find("libpython*.so", os.environ["PYTHON_LIB"])
+        if not libs_found:
+            self.pythonLibName = "python2.7"
+        else:
+            self.pythonLibName = libs_found[0][:-3][3:]
+
+
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
         fileBody += "\n"
@@ -2152,6 +2181,7 @@ clean:
 
         fileBody += self.getObjectOnlyFlags()
 
+        self.getPythonLibName()
         if self.options.withGpu is True:
             fileBody += self.getNVCCFlags()
         else:
