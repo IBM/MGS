@@ -30,7 +30,6 @@ class QueryDescriptor;
 
 class NodeQueriable : public Queriable
 {
-
    public:
       NodeQueriable(NodeDescriptor* nodeDescriptor);
       NodeQueriable(const NodeQueriable&);

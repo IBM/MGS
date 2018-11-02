@@ -66,6 +66,7 @@
 #endif  // HAVE_MPI
 
 #include <limits.h>
+#include <unordered_map>
 
 class CompCategory;
 class Repertoire;
@@ -119,9 +120,11 @@ class Simulation : public Publishable {
   };
 
 #ifndef DISABLE_PTHREADS
-  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed);
+  //Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed);
+  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed, int gpuID);
 #else // DISABLE_PTHREADS
-  Simulation(int numWorkUnits, unsigned seed);
+  //Simulation(int numWorkUnits, unsigned seed);
+  Simulation(int numWorkUnits, unsigned seed, int gpuID);
 #endif  // DISABLE_PTHREADS
 
 #ifdef HAVE_MPI
@@ -316,13 +319,71 @@ class Simulation : public Publishable {
   }
 
 #if defined(HAVE_GPU) && defined(__NVCC__)
-  /* < LifeNode, <rank_0 = 1, rank_1 = 2, rank_2 = 5> > keep tracks # nodes created for each nodetype
-   *        for each rank
+  /* 
+   *       keep tracks # nodes created for each nodetype, e.g. LifeNode
+   *        on all ranks
+   * < "LifeNode", <rank_0 = 1, rank_1 = 2, rank_2 = 5> > 
    */
   std::map< std::string, std::vector<int> > _nodes_count; 
   // "LifeNode" on what (original and unique) partionId
   //std::map< std::string, std::vector<int> >  _nodes_partition;
   std::map< std::string, std::vector<Granule*> >  _nodes_granules;
+
+  /*
+   *     keep tracks # proxy (of the 'from' NodeDescriptor)
+   *     to be created for a given proxytype, e.g. CG_LifeNodeProxy
+   *     which is supposed to be from different MPI ranks
+   */
+  /* 
+   * NOTE: Maybe we just need to store 'LifeNode', rather than'CG_LifeNodeProxy
+   * < "CG_LifeNodeProxy", 
+   *      {0 : <rank_0 = 0, rank_1 = 2, rank_2 = 5> 
+   *       1 : <rank_0 = 3, rank_1 = 0, rank_2 = 0> 
+   *       2 : <rank_0 = 2, rank_1 = 0, rank_2 = 0> }
+   * > 
+   */
+  //std::map< std::string, std::map< int, std::vector<int> > > _proxy_count;
+  /* however, if we're only interested in the current rank
+   * i.e. key = current_rank
+   */
+  std::map< std::string,  std::vector<int>  > _proxy_count;
+  // representing the connection from nodetype1 to nodetype2
+  // NOTE: consider using the 'LifeNode' or 'CG_LifeNodeProxy' for the string
+  std::map< std::pair<std::string, std::string>, 
+    /* with Granule* from instances of nodes from nodetype1 are tracked */
+    /* with Granule* from instances of nodes from nodetype2 are tracked */
+    //std::vector< std::pair<std::vector<Granule*>, std::vector<Granule*> > >
+    std::vector< std::pair<Granule*, Granule* > >
+      >  _nodes_from_to_granules;
+  /* 
+  std::map< std::pair<std::string, std::string>, 
+    std::vector< std::pair<NodeDescriptor*, NodeDescriptor*> >
+      >  _nodes_from_to_ND;
+  As 'NodeDescriptor*' are deleted once sim.resetInternal() is called
+  we propose using an integer to uniquely pointing
+   * */
+  //std::map< std::pair<std::string, std::string>, 
+  //  std::vector< std::pair<int, int > >
+  //    >  _nodes_from_to_ND;
+  ////std::vector<NodeDescriptor*> _nodes_ND; //temporary keep tracks of ND has been used
+  
+  /* Is this correct? Granule* is unique for each layer, but NOT unique for grid-elements 
+   *  in that layer
+   */
+  //std::map<Granule*, std::vector<int>> _granules_and_NDIdentifier;
+  // it tells this Granule* (representing what nodetype as the referenced by 'from')
+  //    hold the 'LifeNode' how many instance
+  //    i.e. it tells how many instance from the rank given by 'Granule*'->getPartitionId()
+  std::map<Granule*, std::map<std::string, int>> _granulesFrom_NT_count;
+  //std::map<Granule*, std::vector<NodeDescriptor*> > _granulesFrom_and_ND;
+
+  std::unordered_map<NodeDescriptor*, int> _nodes_ND; //telling if a ND is already used or not
+  //std::map<NodeDescriptor*, int> _nodes_ND; //map a ND to an integer, unique for the nodetype
+     // that the ND represents
+  //std::map<std::string, int> _current_ND_index; //track the current NodeDescriptor for the 
+     // nodetype as name given by the key
+
+
     //std::vector<int> > _nodes_count; 
   void print_GPU_info(int devID);
 #endif

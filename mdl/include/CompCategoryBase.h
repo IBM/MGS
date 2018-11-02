@@ -31,7 +31,6 @@ class StructType;
 class ConnectionIncrement;
 
 class CompCategoryBase : public InterfaceImplementorBase {
-
    public:
       CompCategoryBase(const std::string& fileName);
       CompCategoryBase(const CompCategoryBase& rv);

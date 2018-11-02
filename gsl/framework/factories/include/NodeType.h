@@ -28,7 +28,6 @@ class ConnectionIncrement;
 
 class NodeType
 {
-
    public:
       virtual void getNodeAccessor(std::unique_ptr<NodeAccessor> & r_aptr, GridLayerDescriptor* gridLayerDescriptor) =0;
       virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;

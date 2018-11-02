@@ -88,13 +88,17 @@ int Simulation::P2P_TAG = 21;
 #if defined(HAVE_GPU) && defined(__NVCC__)
    #include <cuda_runtime_api.h>
 #endif
+#include "rndm.h"
 
 
 // Set states; _iteration to 1
 #ifndef DISABLE_PTHREADS
-Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed)
+//Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed)
+Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed, 
+    int gpuID)
 #else // DISABLE_PTHREADS
-Simulation::Simulation(int numWorkUnits, unsigned seed)
+//Simulation::Simulation(int numWorkUnits, unsigned seed)
+Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
 #endif // DISABLE_PTHREADS
 
    :  _state(Simulation::_UNUSED), _iteration(0), _ntm(0), _etm(0), _root(0),
@@ -171,7 +175,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
    int deviceCount = -1; // number of devices
    int dev = 0;
 
-   cudaGetDeviceCount(&deviceCount);
+   gpuErrorCheck(cudaGetDeviceCount(&deviceCount));
 
    if (deviceCount == 0) {
      fprintf(stderr, "No CUDA devices found\n");
@@ -181,7 +185,13 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
      std::cout << "There are " << deviceCount << " CUDA devices found\n";
    }
 
-   dev = _rank % int(_nump / deviceCount);
+
+   if (gpuID < 0)
+   {
+     dev = _rank % int(deviceCount);
+   }else {
+     dev = gpuID;
+   }
    cudaError_t error = cudaSetDevice(dev);
    if (error != cudaSuccess) {
      fprintf(stderr, "Error setting device to %d on rank %d (%d processes): %s\n",
@@ -204,7 +214,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
 void Simulation::print_GPU_info(int devID)
 {
   cudaDeviceProp prop;
-  cudaGetDeviceProperties(&prop, devID);
+  gpuErrorCheck(cudaGetDeviceProperties(&prop, devID));
   printf("Device Number: %d\n", devID);
   printf("  Device name: %s\n", prop.name);
   printf("  CC: %d.%d\n", prop.major, prop.minor);
@@ -707,6 +717,10 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	 for(it3 = it->getWorkUnits().begin(); it3 != end3; ++it3) {
 	    (*it3)->execute();
 	 }
+#if defined(HAVE_GPU) && defined(__NVCC__)
+	 //TUAN TODO: consider sync based on stream later
+	 cudaDeviceSynchronize();
+#endif
 
 #ifdef HAVE_MPI
 	 if (_communicatingPhases[_phaseName]) {

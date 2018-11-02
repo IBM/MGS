@@ -186,7 +186,8 @@ function touch_mdf_upon_changing_target()
           touch mgs.mdf
         fi
       fi
-      rm_ifexist Extensions.mk
+      #for debug purpose
+      #rm_ifexist Extensions.mk
   #}}}
 }
 
@@ -451,6 +452,9 @@ fi
 if [[ -z "${PYTHON_LIB}" ]]; then
   if `ldconfig -p | grep -q libpython3.6m`; then
     echo "libpython3.6m.so found"
+    PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
+    PYTHON_LIB=$(dirname $PYTHON_LIB)
+    export PYTHON_LIB=$PYTHON_LIB
   else
     echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
     echo " e.g: export PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
@@ -720,7 +724,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #touch all.mdf
       #./define all.mdf $REBUILD
       touch ${MDF_TARGET}
-      ./define ${MDF_TARGET} $REBUILD
+      #block for debug
+      #./define ${MDF_TARGET} $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $BASE_FOLDER

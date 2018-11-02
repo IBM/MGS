@@ -23,6 +23,25 @@
 #include "RNG.h"
 #if defined(HAVE_GPU) && defined(__NVCC__)
 #define CUDA_CALLABLE __host__ __device__
+#define TEST_USING_GPU_COMPUTING
+#ifndef CUDA_CHECK_CODE
+#define CUDA_CHECK_CODE
+#define gpuErrorCheck(r) {_check((r), __FILE__, __LINE__);}
+inline    void _check(cudaError_t r, const char* file, int line, bool abort=true) 
+{
+  if (r != cudaSuccess) {
+    printf("CUDA error in file %s on line %d: %s --> %s\n", file, line, cudaGetErrorName(r), cudaGetErrorString(r));
+    if (abort) exit(0);
+  }
+}
+
+#define OPTION_3 3
+#define OPTION_4 4
+
+#define PROXY_ALLOCATION  OPTION_3
+//#define PROXY_ALLOCATION  OPTION_4
+
+#endif
 #else
 #define CUDA_CALLABLE
 #endif

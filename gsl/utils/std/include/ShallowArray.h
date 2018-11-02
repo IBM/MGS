@@ -23,6 +23,16 @@
 /* IMPORTANT
  * In GPU scenario: blockSize, blockIncrementSize do NOT play any role
  */
+#if defined(HAVE_GPU) && defined(__NVCC__)
+  #include "ShallowArray_GPU.h"
+#endif
+
+#ifdef USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+//Only C++11
+template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE,
+          unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
+using ShallowArray = ShallowArray_Flat<T, 0, blockIncrementSize>;
+#else
 template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE,
           unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
 class ShallowArray : public Array<T>
@@ -39,10 +49,10 @@ class ShallowArray : public Array<T>
 
   protected:
   virtual void internalCopy(T& lval, T& rval);
-#if ! (defined(HAVE_GPU) && defined(__NVCC__))
+//#if ! (defined(HAVE_GPU) && defined(__NVCC__))
   virtual unsigned getBlockSize() const { return blockSize; }
   virtual unsigned getBlockIncrementSize() const { return blockIncrementSize; }
-#endif
+//#endif
   void destructContents();
   void copyContents(const ShallowArray& rv);
 };
@@ -125,5 +135,6 @@ template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void ShallowArray<T, blockSize, blockIncrementSize>::destructContents()
 {
 }
+#endif
 
 #endif

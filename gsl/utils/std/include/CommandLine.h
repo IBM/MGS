@@ -28,6 +28,10 @@ class CommandLine
   bool parse(int argc, char** argv);
   ~CommandLine();
 
+  int getGpuID() const {
+    return _gpuID;
+  }
+
 #ifndef DISABLE_PTHREADS
   int getThreads() const {
     return _threads;
@@ -87,5 +91,6 @@ class CommandLine
   bool _outputGraph;
   bool _simulate;
   bool _verbose;
+  int _gpuID;
 };
 #endif

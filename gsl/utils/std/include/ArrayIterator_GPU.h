@@ -21,26 +21,27 @@
 #include <sstream>
 #include <iterator>
 #include <cstddef>
+#include "rndm.h"
 
 template<typename T, typename NonConstT>
-class ArrayIterator
+class Array_FlatIterator
 {
    public:
       // For Const iterators to reach non-const alikes internals.
       // Used for special conversion constructor below.
-      friend class ArrayIterator<const T, T>;
+      friend class Array_FlatIterator<const T, T>;
       
-      typedef ArrayIterator<T, NonConstT> self_type;
+      typedef Array_FlatIterator<T, NonConstT> self_type;
 
       typedef T& reference;
       typedef T* pointer;
       typedef int difference_type;
       typedef std::random_access_iterator_tag iterator_category;
       
-      ArrayIterator() 
+      CUDA_CALLABLE Array_FlatIterator() 
 	 : _index(0), _currentData(nullptr) {}
 
-      ArrayIterator(T** data_pointer, int index) 
+      CUDA_CALLABLE Array_FlatIterator(T** data_pointer, int index) 
 	 : _data_pointer(data_pointer), _index(index), _currentData(nullptr) 
       {
 	 setCurrentDataWithIndex();
@@ -49,49 +50,49 @@ class ArrayIterator
       // This is a constructor that creates const versions of non_const
       // iterators. It is necessary because begin() and end() return 
       // non-const iterators.
-      ArrayIterator(
-	 const ArrayIterator<NonConstT, NonConstT> &rv)
+      CUDA_CALLABLE Array_FlatIterator(
+	 const Array_FlatIterator<NonConstT, NonConstT> &rv)
 	 : _data_pointer(rv._data_pointer), 
 	 _currentData(rv._currentData) {}
 
-      reference operator*()  { 
+      CUDA_CALLABLE reference operator*()  { 
 	 return *_currentData;
       }
 
-      pointer operator->() { 
+      CUDA_CALLABLE pointer operator->() { 
 	 return _currentData;
       }
 
-      inline bool operator==(const ArrayIterator& rv) {
+      CUDA_CALLABLE inline bool operator==(const Array_FlatIterator& rv) {
 	 return (_data_pointer == rv._data_pointer) && (_currentData == rv._currentData);
       }
 
-      inline bool operator!=(const ArrayIterator& rv) {
+      CUDA_CALLABLE inline bool operator!=(const Array_FlatIterator& rv) {
 	 return !operator==(rv);
       }
 
-      inline bool operator<=(const ArrayIterator& rv) {
+      CUDA_CALLABLE inline bool operator<=(const Array_FlatIterator& rv) {
 	 return _index <= rv._index;
       }
 
-      inline bool operator<(const ArrayIterator& rv) {
+      CUDA_CALLABLE inline bool operator<(const Array_FlatIterator& rv) {
 	 return _index < rv._index;
       }
 
-      inline bool operator>=(const ArrayIterator& rv) {
+      CUDA_CALLABLE inline bool operator>=(const Array_FlatIterator& rv) {
 	 return _index >= rv._index;
       }
 
-      inline bool operator>(const ArrayIterator& rv) {
+      CUDA_CALLABLE inline bool operator>(const Array_FlatIterator& rv) {
 	 return _index > rv._index;
       }
 
-      ArrayIterator operator+(unsigned int num) {
-	 ArrayIterator retVal(_data_pointer, _index + num);
+      CUDA_CALLABLE Array_FlatIterator operator+(unsigned int num) {
+	 Array_FlatIterator retVal(_data_pointer, _index + num);
 	 return retVal;
       }
 
-      ArrayIterator& operator+=(unsigned int num) {
+      CUDA_CALLABLE Array_FlatIterator& operator+=(unsigned int num) {
 	 _index += num;
 	 setCurrentDataWithIndex();
 	 return *this;
@@ -100,40 +101,40 @@ class ArrayIterator
       /*
        * move per block
        */
-      ArrayIterator operator-(unsigned int num) {
-	 ArrayIterator retVal(_data_pointer, _index - num);
+      CUDA_CALLABLE Array_FlatIterator operator-(unsigned int num) {
+	 Array_FlatIterator retVal(_data_pointer, _index - num);
 	 return retVal;
       }
 
-      difference_type operator-(ArrayIterator& other) {
+      CUDA_CALLABLE difference_type operator-(Array_FlatIterator& other) {
 	 return _index - other._index;
       }
 
-      ArrayIterator& operator-=(unsigned int num) {
+      CUDA_CALLABLE Array_FlatIterator& operator-=(unsigned int num) {
 	 _index -= num;
 	 setCurrentDataWithIndex();
 	 return *this;
       }
 
-      ArrayIterator& operator++() {
+      CUDA_CALLABLE Array_FlatIterator& operator++() {
 	 _currentData++;
 	 _index++;
 	 return *this;
       }
 
-      ArrayIterator operator++(int num) {
+      CUDA_CALLABLE Array_FlatIterator operator++(int num) {
 	 self_type retVal = *this;
 	 ++(*this);
 	 return retVal;
       }
 
-      ArrayIterator& operator--() {
+      CUDA_CALLABLE Array_FlatIterator& operator--() {
 	 _currentData--;
 	 _index--;
 	 return *this;
       }
 
-      ArrayIterator operator--(int num) {
+      CUDA_CALLABLE Array_FlatIterator operator--(int num) {
 	 self_type retVal = *this;
 	 --(*this);
 	 return retVal;
@@ -144,7 +145,7 @@ class ArrayIterator
       int _index;
       T* _currentData;
 
-      void setCurrentDataWithIndex() {
+      CUDA_CALLABLE void setCurrentDataWithIndex() {
 	 //_currentData = &((*_data_pointer)[_index]);      
 	 if (*_data_pointer == nullptr)
 	 {

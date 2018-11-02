@@ -79,6 +79,68 @@ private:
    int _offset;
 };
 
+template <> class DemarshallerInstance<std::string>: public Demarshaller {
+public:
+   DemarshallerInstance(std::string * destination)
+     : _stringDestination(destination), _stringIndex(0), _stringSize(0), _stringSizeDemarshaller(&_stringSize)
+   {
+   }
+   DemarshallerInstance()
+     : _stringDestination(0), _stringIndex(0), _stringSize(0), _stringSizeDemarshaller(&_stringSize)
+   {
+   }
+   void setDestination(std::string *stringDestination) {
+      _stringDestination = stringDestination;
+      reset();
+   }
+   virtual void reset(){
+      _stringIndex = _stringSize = 0;
+      _stringSizeDemarshaller.reset();
+      *_stringDestination = "";
+   }
+   virtual bool done() {
+       return ( _stringSizeDemarshaller.done() &&
+                (_stringIndex == _stringSize) );
+   }
+   virtual void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs)
+   {
+       blengths.push_back(_stringDestination->size());
+       MPI_Aint blockAddress;
+       MPI_Get_address(const_cast<char*>(_stringDestination->c_str()), &blockAddress);
+       blocs.push_back(blockAddress);
+   } 
+   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) // returns bytes remaining in the buffer
+   {
+       const char* buff = buffer;
+       int buffSize = size;
+       if (!_stringSizeDemarshaller.done()) {
+         buffSize = _stringSizeDemarshaller.demarshall(buffer, size, rebuildRequested);
+         buff = buffer+(size-buffSize);
+         if (_stringSizeDemarshaller.done()) { 
+	   *_stringDestination="";
+         }
+       }
+       if (!done() && buffSize!=0) {
+	 int bytesRemaining = _stringSize - _stringIndex;
+	 int toTransfer = (bytesRemaining<buffSize)?bytesRemaining:buffSize;
+	 _stringDestination->append(buff, toTransfer);
+	 buffSize -= toTransfer;
+	 _stringIndex += toTransfer;
+       }
+       return buffSize;
+   }
+   ~DemarshallerInstance()
+   {
+   }
+
+private:
+   std::string* _stringDestination;
+   int _stringIndex;
+   int _stringSize;
+
+   DemarshallerInstance<int> _stringSizeDemarshaller;
+};
+
 template <class T> 
 class DemarshallerInstance<Array<T> >: public Demarshaller {
 public:
@@ -165,68 +227,6 @@ private:
    DemarshallerInstance<T>* _arrayElementDemarshaller;
 };
 
-template <> class DemarshallerInstance<std::string>: public Demarshaller {
-public:
-   DemarshallerInstance(std::string * destination)
-     : _stringDestination(destination), _stringIndex(0), _stringSize(0), _stringSizeDemarshaller(&_stringSize)
-   {
-   }
-   DemarshallerInstance()
-     : _stringDestination(0), _stringIndex(0), _stringSize(0), _stringSizeDemarshaller(&_stringSize)
-   {
-   }
-   void setDestination(std::string *stringDestination) {
-      _stringDestination = stringDestination;
-      reset();
-   }
-   virtual void reset(){
-      _stringIndex = _stringSize = 0;
-      _stringSizeDemarshaller.reset();
-      *_stringDestination = "";
-   }
-   virtual bool done() {
-       return ( _stringSizeDemarshaller.done() &&
-                (_stringIndex == _stringSize) );
-   }
-   virtual void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs)
-   {
-       blengths.push_back(_stringDestination->size());
-       MPI_Aint blockAddress;
-       MPI_Get_address(const_cast<char*>(_stringDestination->c_str()), &blockAddress);
-       blocs.push_back(blockAddress);
-   } 
-   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) // returns bytes remaining in the buffer
-   {
-       const char* buff = buffer;
-       int buffSize = size;
-       if (!_stringSizeDemarshaller.done()) {
-         buffSize = _stringSizeDemarshaller.demarshall(buffer, size, rebuildRequested);
-         buff = buffer+(size-buffSize);
-         if (_stringSizeDemarshaller.done()) { 
-	   *_stringDestination="";
-         }
-       }
-       if (!done() && buffSize!=0) {
-	 int bytesRemaining = _stringSize - _stringIndex;
-	 int toTransfer = (bytesRemaining<buffSize)?bytesRemaining:buffSize;
-	 _stringDestination->append(buff, toTransfer);
-	 buffSize -= toTransfer;
-	 _stringIndex += toTransfer;
-       }
-       return buffSize;
-   }
-   ~DemarshallerInstance()
-   {
-   }
-
-private:
-   std::string* _stringDestination;
-   int _stringIndex;
-   int _stringSize;
-
-   DemarshallerInstance<int> _stringSizeDemarshaller;
-};
-
 template <class T> class DemarshallerInstance<ShallowArray<T> > : public DemarshallerInstance<Array<T> >
 {
 public:
@@ -278,6 +278,130 @@ public:
 };
 
 
+//#if defined(HAVE_GPU) && defined(__NVCC__)
+//template <class T> 
+//class DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >: public Demarshaller {
+//public:
+//   DemarshallerInstance(Array<T, Array::UNIFIED_MEM> * destination)
+//     : _arrayDestination(destination), _arrayIndex(0), _arraySize(0), _arraySizeDemarshaller(&_arraySize)
+//   {
+//       _arrayElementDemarshaller = new DemarshallerInstance<T>(); // must set this up later
+//   }
+//   DemarshallerInstance()
+//     : _arrayDestination(0), _arrayIndex(0), _arraySize(0), _arraySizeDemarshaller(&_arraySize)
+//   {
+//       _arrayElementDemarshaller = new DemarshallerInstance<T>(); // must set this up later
+//   }
+//   void setDestination(Array<T, Array::UNIFIED_MEM> *arrayDestination) {
+//      _arrayDestination = arrayDestination;
+//      reset();
+//   }
+//   virtual void reset() {
+//      _arrayIndex = 0;
+//      _arraySize = _arrayDestination->size();
+//      _arraySizeDemarshaller.reset();
+//      _arrayElementDemarshaller->reset();
+//   }
+//   virtual bool done() {
+//     return ( (_arraySize==0 || 
+//	      ( _arrayIndex == _arraySize && 
+//		_arrayElementDemarshaller->done() ) ) 
+//	      && _arraySizeDemarshaller.done()
+//	      );
+//   }
+//  /* TODO TUAN check if we need to modify to work with flat array for GPU here */
+//   virtual void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs)
+//   {
+//      printf("Need to check here to fix bug in MPI");
+//     if (_arraySize < _arrayDestination->getSizeToCommunicate()) {
+//       _arraySize = _arrayDestination->getSizeToCommunicate();
+//       _arrayDestination->increaseSizeTo(_arraySize);
+//     }
+//     else if (_arraySize > _arrayDestination->getSizeToCommunicate()) {
+//       _arraySize = _arrayDestination->getSizeToCommunicate();
+//       _arrayDestination->decreaseSizeTo(_arraySize);
+//     }
+//     typename Array<T, Array::UNIFIED_MEM>::iterator iter, end=_arrayDestination->end();
+//     for (iter=_arrayDestination->begin(); iter!=end; ++iter) {
+//       _arrayElementDemarshaller->setDestination(&(*iter));	     
+//       _arrayElementDemarshaller->getBlocks(blengths, blocs);
+//     }
+//     _arraySizeDemarshaller.getBlocks(blengths, blocs);
+//   } 
+//   virtual int demarshall(const char * buffer, int size, bool& rebuildRequested) // returns bytes remaining in the buffer
+//   {
+//     const char* buff = buffer;
+//     int buffSize = size;
+//     assert(buffSize>0);
+//     while ( _arraySize>0 &&
+//	     (_arrayIndex<_arraySize || !_arrayElementDemarshaller->done() ) ) {
+//       _arrayElementDemarshaller->setDestination(&(*_arrayDestination)[_arrayIndex]);
+//       buffSize = _arrayElementDemarshaller->demarshall(buff, buffSize, rebuildRequested);       
+//       assert(buffSize>0);
+//       buff = buffer+(size-buffSize);
+//       if (_arrayElementDemarshaller->done()) ++_arrayIndex;
+//     }
+//     while (!_arraySizeDemarshaller.done()) {
+//       buffSize = _arraySizeDemarshaller.demarshall(buff, buffSize, rebuildRequested);
+//       buff = buffer+(size-buffSize);
+//     }
+//     if (_arraySize != _arrayDestination->size()) {
+//       rebuildRequested = true;
+//       _arrayDestination->setSizeToCommunicate(_arraySize);
+//       _arraySize=_arrayDestination->size();
+//     }
+//     return buffSize;
+//   }
+//   ~DemarshallerInstance()
+//   {
+//       delete _arrayElementDemarshaller;
+//   }
+//
+//private:
+//   Array<T, Array::UNIFIED_MEM>* _arrayDestination;
+//   int _arrayIndex;
+//   unsigned _arraySize;
+//
+//   DemarshallerInstance<unsigned> _arraySizeDemarshaller;
+//   DemarshallerInstance<T>* _arrayElementDemarshaller;
+//};
+//
+//template <class T> class DemarshallerInstance<ShallowArray<T, Array::UNIFIED_MEM> > : public DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >
+//{
+//public:
+//   DemarshallerInstance(ShallowArray<T, Array::UNIFIED_MEM> * destination)
+//     : DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >(destination)
+//   {
+//   }
+//   DemarshallerInstance()
+//     : DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >()
+//   {
+//   }
+//   void setDestination(ShallowArray<T, Array::UNIFIED_MEM> *arrayDestination) 
+//   {
+//      DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >::setDestination(arrayDestination);
+//   }
+//};
+//
+//template <class T> class DemarshallerInstance<DeepPointerArray<T, Array::UNIFIED_MEM> > : public DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >
+//{
+//public:
+//   DemarshallerInstance(DeepPointerArray<T, Array::UNIFIED_MEM> * destination)
+//     : DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >(destination)
+//   {
+//   }
+//   DemarshallerInstance()
+//     : DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >()
+//   {
+//   }
+//   void setDestination(DeepPointerArray<T, Array::UNIFIED_MEM> *arrayDestination) 
+//   {
+//      DemarshallerInstance<Array<T, Array::UNIFIED_MEM> >::setDestination(arrayDestination);
+//   }
+//};
+//
+//
+//#endif
 /*
 
 UNIFINISHED: Marshall.h and MarshallCommon.h must also be modified. Consider making NDPairlist use a ShallowArray of NDPairs - JK

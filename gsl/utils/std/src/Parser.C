@@ -24,6 +24,7 @@ void Parser::help() {
    std::cout << "    -u :      User interface: text, gui or none. (default:text)" << std::endl;
    std::cout << "    -p :      Port for gui connection to simulation. (default:4000)" << std::endl;
    std::cout << "    -w :      Number of work units. (default:nThreads)" << std::endl;
+   std::cout << "    -d :      The GPU device ID to use (same for all MPI ranks)" << std::endl;
 #endif
    std::cout << std::endl;
    std::cout << "  switches:" << std::endl;

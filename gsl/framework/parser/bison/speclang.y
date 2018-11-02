@@ -2936,7 +2936,9 @@ int main(int argc, char** argv)
 
   int rank=0;
 #ifdef HAVE_MPI
-  MPI_Init(&argc, &argv);
+  //MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
   if (rank==0) {
@@ -2946,15 +2948,20 @@ int main(int argc, char** argv)
           << ".                                                           .\n"
           << ".  \"Restricted Materials of IBM\"                            .\n"
           << ".                                                           .\n"
-          << ".  BCM-YKT-07-18-2017, Version 1.1.0                        .\n"
+          << ".  BCM-YKT-10-20-2018, Version 3.0.0                        .\n"
           << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
+          << ".  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .\n"
           << ".                                                           .\n"
           << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n";
   }
 
    SimInitializer si;
-   if (si.execute(&argc, &argv)) {
+   auto retVal = si.execute(&argc, &argv);
+#ifdef HAVE_MPI
+   MPI_Finalize();
+#endif 
+
+   if (retVal) {
       return 0;
    } else {
       return 1;
