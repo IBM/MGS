@@ -41,7 +41,6 @@ class NDPairList;
 
 class Grid : public std::vector<GridLayerDescriptor*>
 {
-
    public:
       Grid(const std::vector<int>& size);
       virtual ~Grid();

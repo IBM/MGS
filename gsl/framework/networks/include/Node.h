@@ -39,7 +39,6 @@ class NodeDescriptor;
 
 class Node : public NodeDescriptor, public ServiceAcceptor, public TriggerableBase
 {
-
    public:
       virtual void initialize(ParameterSet* initPSet) =0;
 

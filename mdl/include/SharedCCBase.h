@@ -34,7 +34,6 @@
 class Generatable;
 
 class SharedCCBase : public ConnectionCCBase {
-
    public:
       SharedCCBase(const std::string& fileName);
       SharedCCBase(const SharedCCBase& rv);

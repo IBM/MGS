@@ -29,7 +29,6 @@ class Generatable;
 class ArrayType;
 
 class ConnectionCCBase : public CompCategoryBase {
-
    public:
       ConnectionCCBase(const std::string& fileName);
       ConnectionCCBase(const ConnectionCCBase& rv);

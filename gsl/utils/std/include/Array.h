@@ -31,6 +31,8 @@ const unsigned SUGGESTEDBLOCKINCREMENTSIZE = 4;
 #define CUDA_OPTION_2  2    // used custom allocator + Thrust
 #define CUDA_OPTION  CUDA_OPTION_1
 
+//#define USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+
 #if defined(HAVE_GPU) && defined(__NVCC__)
 #include "ArrayIterator_GPU.h"
   #if CUDA_OPTION  == CUDA_OPTION_1
@@ -39,6 +41,13 @@ const unsigned SUGGESTEDBLOCKINCREMENTSIZE = 4;
   #include "Array_GPU_option2.h"
 
   #endif
+#endif
+
+#ifdef USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+//Only C++11
+template <class T>
+using Array = Array_Flat<T, 0>;
+
 #else
 #include "ArrayIterator.h"
 template <class T>

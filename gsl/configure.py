@@ -630,7 +630,7 @@ class BuildSetup:
                 self.objectMode = self.options.compilationMode
         elif self.operatingSystem == "Linux":
             self.architecture = self.unameInfo[4]
-            self.objectMode = "32"
+            self.objectMode = "64"
         else:
             raise FatalError(PROJECT_NAME + " only runs in AIX or Linux")
 
@@ -1005,12 +1005,13 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         """check if 64-bit"""
         retStr = "MAKE64 = "
         if self.objectMode == "64":
-            if self.options.compiler == "gcc":
-                retStr += AIX_GNU_64BIT_FLAG
-            elif self.options.compiler == "xl":
-                retStr += AIX_XL_64BIT_FLAG
-            else:
-                raise InternalError("Compiler " + self.options.compiler + " is not found")
+            if self.operatingSystem == "AIX":
+                if self.options.compiler == "gcc":
+                    retStr += AIX_GNU_64BIT_FLAG
+                elif self.options.compiler == "xl":
+                    retStr += AIX_XL_64BIT_FLAG
+                else:
+                    raise InternalError("Compiler " + self.options.compiler + " is not found")
         retStr += "\n"
         return retStr
 
@@ -1490,21 +1491,26 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
 --compiler-options -MMD \
 """
         if self.options.debug == USE:
-            retStr += " -g -G "
+            retStr += " -g -G"
+            # to add '-pg' run with --profile
         # if self.options.debug == USE:
-        Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "
-        Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 \ "
-        Gencode_Kepler = " -gencode arch=compute_30,code=sm_30 \ "
+        Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "  # NOQA
+        Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 \ "  # NOQA
+        Gencode_Kepler_1 = " -gencode arch=compute_30,code=sm_30 \ "  # NOQA
+        Gencode_Kepler_2 = " -gencode arch=compute_35,code=sm_35 \ "  # NOQA
+        Gencode_Kepler_3 = " -gencode arch=compute_35,code=compute_35 \ "  # NOQA
         """ NVCC 7.5 (Kepler + Maxwell native; Pascal PTX JIT)"""
-        Gencode_Kepler_2 = " -gencode=arch=compute_50,code=sm_50 \    "
-        Gencode_Kepler_3 = " -gencode=arch=compute_52,code=sm_52 \    "
-        Gencode_Kepler_4 = " -gencode=arch=compute_52,code=compute_52 \ "
+        Gencode_Maxwell_1 = " -gencode=arch=compute_50,code=sm_50 \    "  # NOQA
+        Gencode_Maxwell_2 = " -gencode=arch=compute_52,code=sm_52 \    "  # NOQA
+        Gencode_Maxwell_3 = " -gencode=arch=compute_52,code=compute_52 \ "  # NOQA
+        Gencode_Kepler = Gencode_Kepler_1 + Gencode_Kepler_2 + Gencode_Kepler_3  # NOQA
+        Gencode_Maxwell = Gencode_Maxwell_1 + Gencode_Maxwell_2 + Gencode_Maxwell_3  # NOQA
         Gencode_NVCC7_5 = """ -gencode=arch=compute_30,code=sm_30 \
   -gencode=arch=compute_35,code=sm_35 \
   -gencode=arch=compute_50,code=sm_50 \
   -gencode=arch=compute_52,code=sm_52  \
   -gencode=arch=compute_52,code=compute_52  \
-        """
+        """  # NOQA
         """ NVCC 8.0 (Maxwell + Pascal native)"""
         Gencode_NVCC8_0 = """  -gencode=arch=compute_30,code=sm_30 \
   -gencode=arch=compute_35,code=sm_35 \
@@ -1531,8 +1537,12 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
   -gencode=arch=compute_70,code=compute_70 \
   -gencode=arch=compute_75,code=compute_75 \
  """
-        retStr += Gencode_NVCC9_0
-
+        Gencode_Volta = """ -gencode=arch=compute_70,code=sm_70 \
+  -gencode=arch=compute_70,code=compute_70 \
+ """
+        # retStr += Gencode_NVCC8_0
+        # retStr += Gencode_NVCC9_0
+        retStr += Gencode_Volta
 
         retStr += \
             """\
@@ -2155,9 +2165,10 @@ clean:
 """
         return retStr
 
-
     def getPythonLibName(self):
-        import os, fnmatch
+        import os
+        import fnmatch
+
         def find(pattern, path):
             result = []
             for roots, dirs, files in os.walk(path):
@@ -2170,7 +2181,6 @@ clean:
             self.pythonLibName = "python2.7"
         else:
             self.pythonLibName = libs_found[0][:-3][3:]
-
 
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()

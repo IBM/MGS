@@ -31,7 +31,6 @@ class ParameterSet;
 class Edge : public Publishable, public ServiceAcceptor,
 	     public TriggerableBase
 {
-
    public:
       virtual void initialize(ParameterSet* initPSet) = 0;
       virtual NodeDescriptor* getPreNode() = 0;

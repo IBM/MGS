@@ -97,8 +97,10 @@ Repertoire* C_grid_definition_body::createRepertoire(
    const RepertoireDataItem* crdi = dynamic_cast<const RepertoireDataItem*>(
       c->symTable.getEntry(currentRep));
    if (crdi == 0) {
+//      std::string mes = 
+//	 "dynamic cast of DataItem to RepertoireDataItem failed";
       std::string mes = 
-	 "dynamic cast of DataItem to RepertoireDataItem failed";
+	 "dynamic cast of DataItem to RepertoireDataItem failed: the grid " + repName + " should be at the highest level" ;
       throwError(mes);
    }
    Repertoire* parentRep = crdi->getRepertoire();

@@ -22,6 +22,16 @@
 /* IMPORTANT
  * In GPU scenario: blockSize, blockIncrementSize do NOT play any role
  */
+#if defined(HAVE_GPU) && defined(__NVCC__)
+  #include "DeepPointerArray_GPU.h"
+#endif
+
+#ifdef USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+//Only C++11
+template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE,
+          unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
+using DeepPointerArray = DeepPointerArray_Flat<T, 0, blockIncrementSize>;
+#else
 template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE, 
 	  unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
 class DeepPointerArray : public Array<T*>
@@ -43,14 +53,14 @@ class DeepPointerArray : public Array<T*>
 
    protected:
       virtual void internalCopy(T*& lval, T*& rval);
-#if ! (defined(HAVE_GPU) && defined(__NVCC__))
+//#if ! (defined(HAVE_GPU) && defined(__NVCC__))
       virtual unsigned getBlockSize() const {
 	 return blockSize;
       }
       virtual unsigned getBlockIncrementSize() const {
 	 return blockIncrementSize;
       }
-#endif
+//#endif
       void destructContents();
       void copyContents(const DeepPointerArray& rv);
 };
@@ -128,16 +138,16 @@ void DeepPointerArray<T, blockSize, blockIncrementSize>::internalCopy(
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void DeepPointerArray<T, blockSize, blockIncrementSize>::destructContents()
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
-   for (unsigned j = 0; j < this->_size; j++) {
-      //TUAN TODO FIX
-      //use this->_mem_location == MemLocation::CPU  or MemLocation::UnifiedMemory
-      ////check if data as regular pointer (CPU memory)
-      delete this->_data[j];
-      // or on Unified Memory
-      // delete_memory(this->_data[j]);
-   }
-#else
+//#if defined(HAVE_GPU) && defined(__NVCC__)
+//   for (unsigned j = 0; j < this->_size; j++) {
+//      //TUAN TODO FIX
+//      //use this->_mem_location == MemLocation::CPU  or MemLocation::UnifiedMemory
+//      ////check if data as regular pointer (CPU memory)
+//      delete this->_data[j];
+//      // or on Unified Memory
+//      // delete_memory(this->_data[j]);
+//   }
+//#else
    unsigned index = 0;
    for (unsigned i = 0; (i < this->_activeBlocks) && (index < this->_size); 
 	i++) {
@@ -146,7 +156,8 @@ void DeepPointerArray<T, blockSize, blockIncrementSize>::destructContents()
 	 delete this->_blocksArray[i][j];
       }
    }
-#endif
+//#endif
 }
 
+#endif
 #endif

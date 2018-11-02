@@ -38,7 +38,6 @@ class Simulation;
 
 class NodeBase : public Node
 {
-
    public:
       NodeBase();
       virtual const std::deque<Constant*>& getPreConstantList();

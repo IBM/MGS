@@ -467,6 +467,20 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    sendMapIter->setMacroConditional(mpiConditional);
    instance.addAttribute(sendMapIterAptr);
 
+   /*
+#if defined(HAVE_GPU) && defined(__NVCC__)
+      //ShallowArray<int, Array::MemLocation::UNIFIED_MEM> um_value;
+      //ShallowArray<int, Array::MemLocation::UNIFIED_MEM> um_publicValue;
+      //ShallowArray<ShallowArray< int*, Array::MemLocation::UNIFIED_MEM >, Array::MemLocation::UNIFIED_MEM> um_neighbors;
+      int* um_value; //to be allocated using cudaMallocManaged
+      int* um_publicValue; //to be allocated using cudaMallocManaged
+      std::vector<int*> um_neighbors;
+      ShallowArray_Flat<ShallowArray< int*, Array_Flat::MemLocation::UNIFIED_MEM >, Array_Flat::MemLocation::UNIFIED_MEM> um_neighbors;
+      ShallowArray<LifeNode, 1000, 4> _nodes;
+#else
+      ShallowArray<LifeNode, 1000, 4> _nodes;
+#endif
+    */
    CustomAttribute* nodes = new CustomAttribute("_nodes", "ShallowArray<" + getInstanceName() + ", 1000, 4>");
    // QUESTION: should this shallow array be setOwned? JK, RR, DL 11/29/05
    std::auto_ptr<Attribute> nodesAp(nodes);

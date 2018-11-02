@@ -17,9 +17,18 @@
 #define RNG_H
 
 #ifdef HAVE_GPU
+
+#if defined(HAVE_GPU) && defined(__NVCC__)
+//TUAN TODO
+//this is better, and we will design a new strategy for using RNG directly on GPU
+#include "MersenneTwister.h"
+typedef MersenneTwister RNG_ns; // non-reseedable
+typedef MersenneTwister_S RNG; // reseedable
+#else
 #include "RNG_GPU.h"
 typedef MRG32k3a_GPU RNG_ns; // non-reseedable
 typedef MRG32k3a_S_GPU RNG; // reseedable
+#endif
 
 #else
 //#include "MRG32k3a.h"

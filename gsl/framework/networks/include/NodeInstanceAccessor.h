@@ -38,7 +38,6 @@ class GridLayerDescriptor;
 
 class NodeInstanceAccessor : public NodeDescriptor
 {
-
    public:
       NodeInstanceAccessor();
       virtual GridLayerData* getGridLayerData() const; 

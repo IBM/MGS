@@ -103,10 +103,6 @@ bool SimInitializer::execute(int* argc, char*** argv)
 
 #endif 
    retVal = internalExecute(*argc, *argv);
-#ifdef HAVE_MPI
-   MPI_Finalize();
-#endif 
-
    return retVal;
 }
 
@@ -216,9 +212,11 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #endif /* PROFILING */
    
 #ifndef DISABLE_PTHREADS
-   sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed()));
+   //sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed()));
+   sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed(), commandLine.getGpuID()));
 #else // DISABLE_PTHREADS
-   sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed());
+   //sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed());
+   sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed(), commandLine.getGpuID());
 #endif // DISABLE_PTHREADS
 
    if (!commandLine.getEnableErd()) sim->disableEdgeRelationalData();
