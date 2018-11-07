@@ -79,14 +79,16 @@ void LensContext::execute()
    std::vector<C_production*>::iterator it, end = _statements.end();
 #define DEBUG
 #ifdef DEBUG
-   int i = 0;
+   int i = 1;
+   sim->benchmark_set_timelapsed_diff();
 #endif
    for (it = _statements.begin(); it != end; it++) {
       try {
 	(*it)->execute(this);
 #ifdef DEBUG 
 	std::cout<< ".............statement " << i++ << std::endl;
-	sim->benchmark_timelapsed("... ");
+	//sim->benchmark_timelapsed("... ");
+	sim->benchmark_timelapsed_diff("... ");
 #endif
       } catch (SyntaxErrorException& e) {
 	e.printError();

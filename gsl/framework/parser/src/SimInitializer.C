@@ -310,12 +310,24 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #ifdef USING_BLUEGENE
      if (sim->getRank()==0) printf("Available memory after simulation initialization first pass: %lf MB.\n\n",AvailableMemory());
 #endif 
+       if (sim->getRank()==0)
+       {
+	 sim->benchmark_timelapsed_diff(" ...setSeparatinGranules + setGraph ())");
+       } 
      
      if (commandLine.getSimulate()) {
        if (sim->getRank()==0) printf("Resetting simulation.\n\n");
        sim->resetInternals();
        sim->setSimulatePass();
+       if (sim->getRank()==0)
+       {
+	 sim->benchmark_timelapsed_diff(" ... resetInternals, setSimulatePass())");
+       } 
        context->addCurrentRepertoire(sim->getRootRepertoire());
+       if (sim->getRank()==0)
+       {
+	 sim->benchmark_timelapsed_diff(" ... addCurrentRepertoire())");
+       } 
        if (sim->getRank()==0) printf("The second execution of the parse tree begins.\n\n");
        context->execute();
      }

@@ -1088,14 +1088,29 @@ void Simulation::benchmark_start(const std::string& msg)
    LENS_PT_LOCK(_timerMutex);
    _simTimer.start();
    if (_rank==0) printf("%s start: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   _prevTimeElapsed  = _simTimer.lapWallTime();
    LENS_PT_UNLOCK(_timerMutex);
 }
 void Simulation::benchmark_timelapsed(const std::string& msg)
 {
    LENS_PT_LOCK(_timerMutex);
    if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   _prevTimeElapsed  = _simTimer.lapWallTime();
    LENS_PT_UNLOCK(_timerMutex);
 
+}
+void Simulation::benchmark_set_timelapsed_diff()
+{
+   LENS_PT_LOCK(_timerMutex);
+   _prevTimeElapsed  = _simTimer.lapWallTime();
+   LENS_PT_UNLOCK(_timerMutex);
+}
+void Simulation::benchmark_timelapsed_diff(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime() - _prevTimeElapsed);
+   _prevTimeElapsed  = _simTimer.lapWallTime();
+   LENS_PT_UNLOCK(_timerMutex);
 }
 void Simulation::benchmark_end(const std::string& msg)
 {
