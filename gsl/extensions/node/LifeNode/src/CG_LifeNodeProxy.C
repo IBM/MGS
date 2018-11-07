@@ -50,6 +50,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_
       : CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->publicValue))
 #endif
       {
+#if defined(HAVE_GPU) && defined(__NVCC__)
     #if PROXY_ALLOCATION == OPTION_3
         auto x1 = proxy->getCompCategory();
         //auto x2 = x1->getDemarshaller(proxy->demarshaller_index);
@@ -60,6 +61,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_
     #elif PROXY_ALLOCATION == OPTION_4
             publicValueDemarshaller.setDestination(&(proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]))
     #endif
+#endif
          _demarshallers.push_back(&publicValueDemarshaller);
       }
       void CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::setDestination(CG_LifeNodeProxy *proxy)

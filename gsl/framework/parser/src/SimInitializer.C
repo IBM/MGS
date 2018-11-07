@@ -125,7 +125,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    // Debugging flag for bison
    yydebug = 0;
 
-#ifndef PROFILING
+//#ifndef PROFILING
    bool processed=false;
 #ifdef USING_BLUEGENE
    char temporaryName[256];
@@ -207,9 +207,9 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::cerr << "Unable to preprocess gsl file, aborting..." << std::endl << std::endl;
      return false;
    }
-#else
-   infile = new std::ifstream(infilename);
-#endif /* PROFILING */
+//#else
+//   infile = new std::ifstream(infilename);
+//#endif /* PROFILING */
    
 #ifndef DISABLE_PTHREADS
    //sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed()));
@@ -218,6 +218,10 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    //sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed());
    sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed(), commandLine.getGpuID());
 #endif // DISABLE_PTHREADS
+   if (sim->getRank()==0)
+   {
+   sim->benchmark_start("Preparation");
+   } 
 
    if (!commandLine.getEnableErd()) sim->disableEdgeRelationalData();
 
@@ -284,10 +288,18 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::unique_ptr<LensContext> firstPassContext;
      context->duplicate(firstPassContext);
      firstPassContext->addCurrentRepertoire(sim->getRootRepertoire());
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_timelapsed("Preparation");
+     } 
      if (sim->getRank()==0) printf("\nThe first execution of the parse tree begins.\n\n");
      if (sim->getRank()==0 && sim->isCostAggregationPass()) std::cout << "Aggregating costs in granule graph." << std::endl << std::endl;
 
      firstPassContext->execute();
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_timelapsed("Preparation (firstPassContext->execute())");
+     } 
      if (firstPassContext->isError()) {
        if (sim->getRank()==0) printf("Quitting due to errors...\n\n");
        return false;
@@ -307,6 +319,10 @@ bool SimInitializer::internalExecute(int argc, char** argv)
        if (sim->getRank()==0) printf("The second execution of the parse tree begins.\n\n");
        context->execute();
      }
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_timelapsed("Preparation (context->execute())");
+     } 
    /*
    }
    catch (SyntaxErrorException& e) {
@@ -320,6 +336,10 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      return false;
    }
    
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_end("Preparation");
+     } 
    bool retVal = true;
    
    if (commandLine.getSimulate()) {
@@ -335,7 +355,9 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    delete infile;
    delete partitioner;
 
+//#ifndef PROFILING
    unlink(temporaryName);
+//#endif
 
 #ifdef VERBOSE
    if (sim->P2P()) {

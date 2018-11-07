@@ -77,9 +77,17 @@ void LensContext::addStatement(C_production* statement)
 void LensContext::execute() 
 {
    std::vector<C_production*>::iterator it, end = _statements.end();
+#define DEBUG
+#ifdef DEBUG
+   int i = 0;
+#endif
    for (it = _statements.begin(); it != end; it++) {
       try {
 	(*it)->execute(this);
+#ifdef DEBUG 
+	std::cout<< ".............statement " << i++ << std::endl;
+	sim->benchmark_timelapsed("... ");
+#endif
       } catch (SyntaxErrorException& e) {
 	e.printError();
 	 (*it)->recursivePrint();

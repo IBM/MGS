@@ -32,6 +32,13 @@ void ConnectNodeSetsFunctor::userInitialize(LensContext* CG_c)
 
 void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
+#define DEBUG
+#ifdef DEBUG
+     if (CG_c->sim->getRank()==0)
+     {
+       CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() start)");
+     } 
+#endif
    CG_c->connectionContext->reset();
    ConnectionContext* cc = CG_c->connectionContext;
 
@@ -91,6 +98,21 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
       // (and maybe other stuff)
       sampling->execute(CG_c, nullArgs, rval);
    }
+#ifdef DEBUG
+     if (CG_c->sim->getRank()==0)
+     {
+	std::string msg;
+	if (CG_c->sim->isGranuleMapperPass()) {
+	   msg = "_noConnector";
+	} else if (CG_c->sim->isCostAggregationPass()) {
+	   msg = "_granuleConnector";
+	} else if (CG_c->sim->isSimulatePass()) {
+	   msg = "_lensConnector";
+	} 
+	std::cout << ".........." << msg << std::endl;
+       CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() end)");
+     } 
+#endif
 }
 
 ConnectNodeSetsFunctor::ConnectNodeSetsFunctor() 
