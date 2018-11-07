@@ -159,6 +159,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
 
    LENS_PT_LOCK(_timerMutex);
    _simTimer.start();
+   if (_rank==0) printf("Simulation construct start: t = %lf\n\n", _simTimer.lapWallTime());
    LENS_PT_UNLOCK(_timerMutex);
 
 #ifdef HAVE_MPI
@@ -208,6 +209,10 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _rng.reSeed(seed, _rank) ;
    _rngShared.reSeedShared(seed-1);
    _rngSeed=seed;
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("Simulation construct end: t = %lf\n\n", _simTimer.lapWallTime());
+   _simTimer.reset();
+   LENS_PT_UNLOCK(_timerMutex);
 }
 
 #if defined(HAVE_GPU) && defined(__NVCC__)
@@ -279,6 +284,10 @@ void Simulation::run()
 
 bool Simulation::start()
 {
+   LENS_PT_LOCK(_timerMutex);
+   _simTimer.start();
+   if (_rank==0) printf("Initialization start: t = %lf\n\n", _simTimer.lapWallTime());
+   LENS_PT_UNLOCK(_timerMutex);
 #ifdef HAVE_MPI
    // set up the communication infrastructure
    std::vector<int> pIdList;
@@ -1072,6 +1081,29 @@ void Simulation::setSeparationGranules()
 	 (*gIt)->setDepends(&(*it));
       }
    }
+}
+
+void Simulation::benchmark_start(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   _simTimer.start();
+   if (_rank==0) printf("%s start: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   LENS_PT_UNLOCK(_timerMutex);
+}
+void Simulation::benchmark_timelapsed(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   LENS_PT_UNLOCK(_timerMutex);
+
+}
+void Simulation::benchmark_end(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("%s end: t = %lf\n\n", msg.c_str(), _simTimer.lapWallTime());
+   _simTimer.reset();
+   LENS_PT_UNLOCK(_timerMutex);
+
 }
 
 #ifdef HAVE_MPI

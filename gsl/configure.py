@@ -353,6 +353,7 @@ class Options:
                            ("nowarning_dynamiccast", "disable printing out Dynamic Cast failed warning messages"),
                            ("tvMemDebug", "enable totalview memory debugging for parallel jobs (perfomance impact)"),
                            ("mpiTrace", "enable mpiTrace profiling (for BG)"),
+                           ("profile", "enable generating profiling (to be used by gprof)"),
                            ("enable-dl", "enable dynamic loading, else everything is statically linked"),
                            ("domainLib", "link to domain specific library"),
                            ("disable-pthreads", "disable pthreads, there will be a single thread"),
@@ -1493,6 +1494,9 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
         if self.options.debug == USE:
             retStr += " -g -G"
             # to add '-pg' run with --profile
+        if self.options.profile == USE:
+            retStr += " " + PROFILING_FLAGS
+
         # if self.options.debug == USE:
         Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "  # NOQA
         Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 \ "  # NOQA

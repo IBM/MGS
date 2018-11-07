@@ -325,10 +325,12 @@ class Simulation : public Publishable {
    *        on all ranks
    * < "LifeNode", <rank_0 = 1, rank_1 = 2, rank_2 = 5> > 
    */
-  std::map< std::string, std::vector<int> > _nodes_count; 
+  std::map< std::string, std::vector<int> > _nodes_count;  //maybe slower
+  //std::map< std::string, std::list<int> > _nodes_count; 
   // "LifeNode" on what (original and unique) partionId
   //std::map< std::string, std::vector<int> >  _nodes_partition;
-  std::map< std::string, std::vector<Granule*> >  _nodes_granules;
+  std::map< std::string, std::vector<Granule*> >  _nodes_granules; //maybe slower
+  //std::map< std::string, std::list<Granule*> >  _nodes_granules; 
 
   /*
    *     keep tracks # proxy (of the 'from' NodeDescriptor)
@@ -347,14 +349,17 @@ class Simulation : public Publishable {
   /* however, if we're only interested in the current rank
    * i.e. key = current_rank
    */
-  std::map< std::string,  std::vector<int>  > _proxy_count;
+  std::map< std::string,  std::vector<int>  > _proxy_count;  //maybe slower
+  //std::map< std::string,  std::list<int>  > _proxy_count;
   // representing the connection from nodetype1 to nodetype2
   // NOTE: consider using the 'LifeNode' or 'CG_LifeNodeProxy' for the string
   std::map< std::pair<std::string, std::string>, 
     /* with Granule* from instances of nodes from nodetype1 are tracked */
     /* with Granule* from instances of nodes from nodetype2 are tracked */
     //std::vector< std::pair<std::vector<Granule*>, std::vector<Granule*> > >
-    std::vector< std::pair<Granule*, Granule* > >
+    
+    //std::vector< std::pair<Granule*, Granule* > > //maybe slower
+    std::list< std::pair<Granule*, Granule* > >
       >  _nodes_from_to_granules;
   /* 
   std::map< std::pair<std::string, std::string>, 
@@ -388,6 +393,10 @@ class Simulation : public Publishable {
     //std::vector<int> > _nodes_count; 
   void print_GPU_info(int devID);
 #endif
+  //these two new functions to support printing time info
+  void benchmark_start(const std::string&);
+  void benchmark_timelapsed(const std::string&);
+  void benchmark_end(const std::string&);
   private:
   StateType _state;
   unsigned _iteration;
