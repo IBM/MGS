@@ -395,6 +395,8 @@ class Simulation : public Publishable {
   //these two new functions to support printing time info
   void benchmark_start(const std::string&);
   void benchmark_timelapsed(const std::string&);
+  void benchmark_timelapsed_diff(const std::string&);
+  void benchmark_set_timelapsed_diff();
   void benchmark_end(const std::string&);
   private:
   StateType _state;
@@ -402,6 +404,7 @@ class Simulation : public Publishable {
   TypeManager<NodeType>* _ntm;
   TypeManager<EdgeType>* _etm;
   SysTimer _simTimer;
+  double _prevTimeElapsed;
   float _mark;
   Repertoire* _root;
   
