@@ -34,6 +34,7 @@ class NodeType
       virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;
       virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;
       virtual std::string getModelName() =0;
+      virtual const char* c_str() const = 0;
       virtual ConnectionIncrement* getComputeCost() = 0;
       virtual ~NodeType() {}
 };
