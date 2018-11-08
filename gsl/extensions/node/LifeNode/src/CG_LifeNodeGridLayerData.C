@@ -32,12 +32,21 @@
 CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* compCategory, GridLayerDescriptor* gridLayerDescriptor, int gridLayerIndex) 
    : GridLayerData(compCategory, gridLayerDescriptor, gridLayerIndex)
 {
+   Simulation *sim = &compCategory->getSimulation();
+#define DEBUG
+#ifdef DEBUG
+   int i = 1;
+   sim->benchmark_set_timelapsed_diff();
+#endif
    _nodeInstanceAccessors = new NodeInstanceAccessor[_nbrUnits];
+#ifdef DEBUG 
+	std::cout<< ".............CG_LifeNodeGridLayerData " << i++ << std::endl;
+	sim->benchmark_timelapsed_diff("... ");
+#endif
    // set gridNode index for each node's relational information
    int top;
    int uniformDensity = _gridLayerDescriptor->isUniform();
    int gridNodes = _gridLayerDescriptor->getGrid()->getNbrGridNodes();
-   Simulation *sim = &compCategory->getSimulation();
    unsigned my_rank = sim->getRank();
 #if defined(HAVE_GPU) && defined(__NVCC__)
    if (sim->isGranuleMapperPass()) {
@@ -64,6 +73,10 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
             sim->_nodes_granules["LifeNode"].push_back(sim->getGranule(_nodeInstanceAccessors[n]));
          }
       }
+#ifdef DEBUG 
+	std::cout<< ".............CG_LifeNodeGridLayerData GranuleMapperPass " << i++ << std::endl;
+	sim->benchmark_timelapsed_diff("... ");
+#endif
    }
    if (sim->isSimulatePass())
    {
@@ -171,6 +184,10 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
       //   compCategory->allocateProxies(sim->_proxy_count["LifeNode"]);
       //   sim->_proxy_count.erase("LifeNode");
       //} 
+#ifdef DEBUG 
+	std::cout<< ".............CG_LifeNodeGridLayerData simulatePass " << i++ << std::endl;
+	sim->benchmark_timelapsed_diff("... ");
+#endif
    }
 #endif
 #if defined(HAVE_GPU) && defined(__NVCC__)
@@ -193,6 +210,10 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
       }
    }
 #if defined(HAVE_GPU) && defined(__NVCC__)
+#ifdef DEBUG 
+	std::cout<< ".............CG_LifeNodeGridLayerData simulatePass " << i++ << std::endl;
+	sim->benchmark_timelapsed_diff("... ");
+#endif
    }
 #endif
 }

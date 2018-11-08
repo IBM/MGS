@@ -121,113 +121,7 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg
 //}
 
 #ifdef TEST_USING_GPU_COMPUTING
-//void __global__ CG_LifeNodeCompCategory::kernel_update(
-//      //RNG& rng
-//      int size,
-//      int tooSparse, 
-//      int tooCrowded
-//      ) 
-//{
-//   int index =  blockDim.x * blockIdx.x + threadIdx.x;
-//   if (index < size)
-//   {
-//      int neighborCount=0;
-//      ShallowArray_Flat<int*>::iterator iter, end = um_neighbors[index].end();
-//      for (iter=um_neighbors[index].begin(); iter!=end; ++iter) {
-//         neighborCount += **iter;
-//      }
-//
-//      if (neighborCount<= tooSparse || neighborCount>= tooCrowded) {
-//         value[index]=0;
-//      }
-//      else {
-//         value[index]=1;
-//      }
-//   }
-//}
-//void __global__ CG_LifeNodeCompCategory::kernel_copy(
-//      //RNG& rng
-//      int size
-//      ) 
-//{
-//   int index =  blockDim.x * blockIdx.x + threadIdx.x;
-//   if (index < size)
-//   {
-//      um_publicValue[index]=um_value[index];
-//   }
-//}
-void CG_LifeNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, RNG& rng) 
-{
-   //int BLOCKS_LIFENODE = _nodes.size();
-   //int THREADS_PER_BLOCK_LIFENODE = 1;
-   int THREADS_PER_BLOCK_LIFENODE = 256;
-   int BLOCKS_LIFENODE = ceil((float)_nodes.size() / THREADS_PER_BLOCK_LIFENODE);
-   //kernel_update<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
-   //      _nodes.size()
-   //      , getSharedMembers().tooSparse
-   //      , getSharedMembers().tooCrowded
-   //      );
-   //TUAN TODO: consider using stream later
-   LifeNode_kernel_initialize<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
-         um_value.getDataRef(),
-         um_publicValue.getDataRef(),
-         um_neighbors.getDataRef(),
-         _nodes.size()
-         , getSharedMembers().tooSparse
-         , getSharedMembers().tooCrowded
-         );
-   gpuErrorCheck( cudaPeekAtLastError() );
-}
-void CG_LifeNodeCompCategory::CG_host_update(NodePartitionItem* arg, RNG& rng) 
-{
-   //int BLOCKS_LIFENODE = _nodes.size();
-   //int THREADS_PER_BLOCK_LIFENODE = 1;
-   int THREADS_PER_BLOCK_LIFENODE = 256;
-   int BLOCKS_LIFENODE = ceil((float)_nodes.size() / THREADS_PER_BLOCK_LIFENODE);
-   /* similar effect */
-   //int BLOCKS_LIFENODE = (_nodes.size() + THREADS_PER_BLOCK_LIFENODE -1 ) / THREADS_PER_BLOCK_LIFENODE);
-   /* consider using this to improve performance [if we know some data are mostly read]
-    * cudaMemAdvise(A, size, cudaMemAdviseSetReadMostly, 0); 
-    * cudaMemAdvise(B, size, cudaMemAdviseSetReadMostly, 0);
-    */
-   //kernel_update<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
-   //      _nodes.size()
-   //      , getSharedMembers().tooSparse
-   //      , getSharedMembers().tooCrowded
-   //      );
-   //TUAN TODO: consider using stream later
-   LifeNode_kernel_update<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
-         um_value.getDataRef(),
-         um_publicValue.getDataRef(),
-         um_neighbors.getDataRef(),
-         _nodes.size()
-         , getSharedMembers().tooSparse
-         , getSharedMembers().tooCrowded
-         );
-   gpuErrorCheck( cudaPeekAtLastError() );
-}
-void CG_LifeNodeCompCategory::CG_host_copy(NodePartitionItem* arg, RNG& rng) 
-{
-   //int BLOCKS_LIFENODE = _nodes.size();
-   //int THREADS_PER_BLOCK_LIFENODE = 1;
-   int THREADS_PER_BLOCK_LIFENODE = 256;
-   int BLOCKS_LIFENODE = ceil((float)_nodes.size() / THREADS_PER_BLOCK_LIFENODE);
-   //kernel_copy<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
-   //      _nodes.size()
-   //      , getSharedMembers().tooSparse
-   //      , getSharedMembers().tooCrowded
-   //      );
-   //TUAN TODO: consider using stream later
-   LifeNode_kernel_copy<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
-         um_value.getDataRef(),
-         um_publicValue.getDataRef(),
-         um_neighbors.getDataRef(),
-         _nodes.size()
-         , getSharedMembers().tooSparse
-         , getSharedMembers().tooCrowded
-         );
-   gpuErrorCheck( cudaPeekAtLastError() );
-}
+#include "LifeNodeCompCategory.incl"
 #endif
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, RNG& rng) 
@@ -651,13 +545,39 @@ void CG_LifeNodeCompCategory::allocateNode(NodeDescriptor* nd)
    _nodes[_nodes.size()-1].setCompCategory(_nodes.size()-1, this);
    um_value.increaseSizeTo(sz);
    um_publicValue.increaseSizeTo(sz);
+
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
    //NODE for array, we may want to consider allocate the internal array 
    //// with large enough size
    //by checking of type is a pointer
    um_neighbors.increaseSizeTo(sz);
    int MAX_SUBARRAY_SIZE = 20;
    //NOTE: um_neighbors is an array of array
+   //TUAN
+   ////This is the one that hurt the performance of initialization
    um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   int MAX_SUBARRAY_SIZE = 20;
+   um_neighbors.increaseSizeTo(sz*MAX_SUBARRAY_SIZE);
+   um_neighbors_start_offset.increaseSizeTo(sz);
+   um_neighbors_num_elements.increaseSizeTo(sz);
+   um_neighbors_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;
+   um_neighbors_num_elements[sz-1] = 0; //TUAN TODO consider having an API to ShallowArray to set all values
+   // which internally calls cudaMemSet or an equivalent functions
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   um_neighbors.increaseSizeTo(sz*um_neighbors_max_elements);
+   um_neighbors_num_elements.increaseSizeTo(sz);
+   um_neighbors_num_elements[sz-1] = 0; //TUAN TODO consider having an API to ShallowArray to set all values
+   // which internally calls cudaMemSet or an equivalent functions
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   //do something here
+   //int MAX_SUBARRAY_SIZE = 20;
+   um_neighbors.increaseSizeTo(sz*MAX_SUBARRAY_SIZE);
+   um_neighbors_start_offset.increaseSizeTo(sz);
+   // NOTE: We need an internal data structure to keep tracks how many incoming connections to a given 'reference' data array 
+   // TUAN TODO fix this equation
+   um_neighbors_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;
+#endif
 #endif
    _nodes[_nodes.size()-1].setNodeDescriptor(nd);
    nd->setNode(&_nodes[_nodes.size()-1]);
@@ -702,6 +622,8 @@ void CG_LifeNodeCompCategory::allocateNodes(size_t size)
    //um_neighbors.resize_allocated_array(size, force_resize, MAX_SUBARRAY_SIZE);
    // 3. orgnanize as array of array
    //     ShallowArray<ShallowArray<T>>
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   //do nothing
    um_neighbors.resize_allocated(size, force_resize);
    //NOTE: we put the code inside :allocateNode
    //  and potentially ::allocateProxy
@@ -711,6 +633,29 @@ void CG_LifeNodeCompCategory::allocateNodes(size_t size)
    //   for (int i = 0; i < size; i++)
    //      um_neighbors[i].resize_allocated_subarray(MAX_SUBARRAY_SIZE);
    //}
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   //do something here
+   um_neighbors.resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);
+   um_neighbors_start_offset.resize_allocated(size, force_resize);
+   um_neighbors_num_elements.resize_allocated(size, force_resize);
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   //do something here
+   int MAX_SUBARRAY_SIZE = 20;
+   um_neighbors_max_elements = MAX_SUBARRAY_SIZE;
+   um_neighbors.resize_allocated(size*um_neighbors_max_elements, force_resize);
+   um_neighbors_num_elements.resize_allocated(size, force_resize);
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   //do something here
+   int um_neighbors_total_connections=0;
+   // NOTE: We need an internal data structure to keep tracks how many incoming connections to a given 'reference' data array 
+   /*
+    for each node
+    {
+           um_neighbors_total_connection += node[i].num_input_connections_for(um_neighbors);
+    }
+    */
+   um_neighbors.resize_allocated(um_neighbors_total_connection, force_resize);
+#endif
 #endif
 }
 

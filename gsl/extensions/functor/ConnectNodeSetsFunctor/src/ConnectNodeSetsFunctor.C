@@ -38,6 +38,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
      {
        CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() start)");
      } 
+     CG_c->sim->resetCounter();
 #endif
    CG_c->connectionContext->reset();
    ConnectionContext* cc = CG_c->connectionContext;
@@ -91,6 +92,9 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
       }
       cc->inAttrPSet = psdi->getParameterSet();
 
+#ifdef DEBUG
+      CG_c->sim->increaseCounter();
+#endif
       lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
 		     cc->inAttrPSet, CG_c->sim);
 
@@ -111,6 +115,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	} 
 	std::cout << ".........." << msg << std::endl;
        CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() end)");
+	std::cout << ".......... nodeToNode() has been called " << CG_c->sim->getCounter() << " times"<< std::endl;
      } 
 #endif
 }

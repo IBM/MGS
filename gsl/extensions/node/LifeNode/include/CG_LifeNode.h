@@ -54,11 +54,6 @@ class VariableDescriptor;
 
 class CG_LifeNode : public ValueProducer, public NodeBase
 {
-//#if defined(HAVE_GPU) && defined(__NVCC__)
-//#define um_value (_container->um_value[index]) 
-//#define um_publicValue (_container->um_publicValue[index]) 
-//#define um_neighbors (_container->um_neighbors[index]) 
-//#endif
    friend class CG_LifeNodePublisher;
 #ifdef HAVE_MPI
    friend class CG_LifeNodeCompCategory;
@@ -70,9 +65,14 @@ class CG_LifeNode : public ValueProducer, public NodeBase
       virtual const char* getServiceDescription(void* data) const;
       virtual Publisher* getPublisher();
       virtual void initialize(ParameterSet* CG_initPSet);
-      virtual CUDA_CALLABLE void initialize(RNG& rng)=0;
-      virtual CUDA_CALLABLE void update(RNG& rng)=0;
-      virtual CUDA_CALLABLE void copy(RNG& rng)=0;
+      ///TUAN NOTE: we cann't make them '__global__' if we use static data member '_container'
+      //  This is ok, as we don't put data member inside class
+      //virtual CUDA_CALLABLE void initialize(RNG& rng)=0;
+      //virtual CUDA_CALLABLE void update(RNG& rng)=0;
+      //virtual CUDA_CALLABLE void copy(RNG& rng)=0;
+      virtual void initialize(RNG& rng)=0;
+      virtual void update(RNG& rng)=0;
+      virtual void copy(RNG& rng)=0;
       virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet>& initPSet) const;
       virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet>& CG_castedPSet) const;
       virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet>& CG_castedPSet) const;
@@ -85,6 +85,9 @@ class CG_LifeNode : public ValueProducer, public NodeBase
       virtual void addPreVariable(VariableDescriptor* CG_variable, ParameterSet* CG_pset);
       virtual void addPreEdge(Edge* CG_edge, ParameterSet* CG_pset);
       virtual void addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset);
+      //TUAN TODO : make all connection function return 'bool'
+      //so that we can detect if a connection is successfull for memory allocation
+      //virtual bool addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset);
       virtual ConnectionIncrement* getComputeCost() const;
       CG_LifeNode();
       virtual ~CG_LifeNode();
@@ -94,7 +97,7 @@ class CG_LifeNode : public ValueProducer, public NodeBase
       {
          MarshallerInstance<int > mi0;
          //mi0.marshall(stream, publicValue);
-         //TODO revise here
+         //TUAN TODO revise here
          //mi0.marshall(stream, _container->um_publicValue[index]);
       }
 #endif
@@ -116,7 +119,8 @@ class CG_LifeNode : public ValueProducer, public NodeBase
       //    so that we don't make '_container' public
       // and also to avoid the error 'access incomplete type' if we make '_container' as private
       //
-      CG_LifeNodeCompCategory* _container;
+      //CG_LifeNodeCompCategory* _container;
+      static CG_LifeNodeCompCategory* _container; //just declaration, need to be instantiated in the .cpp
       //LifeNodeCompCategory* _container;
    protected:
       //int& value(){ return _container->um_value[index];}
