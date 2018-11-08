@@ -23,9 +23,14 @@
 class LifeNode : public CG_LifeNode
 {
    public:
-      CUDA_CALLABLE void initialize(RNG& rng);
-      CUDA_CALLABLE void update(RNG& rng);
-      CUDA_CALLABLE void copy(RNG& rng);
+      ///TUAN NOTE: we cann't make them '__global__' if we use static data member '_container'
+      //  This is ok, as we don't put data member inside class
+      //CUDA_CALLABLE void initialize(RNG& rng);
+      //CUDA_CALLABLE void update(RNG& rng);
+      //CUDA_CALLABLE void copy(RNG& rng);
+      void initialize(RNG& rng);
+      void update(RNG& rng);
+      void copy(RNG& rng);
       virtual ~LifeNode();
 };
 
