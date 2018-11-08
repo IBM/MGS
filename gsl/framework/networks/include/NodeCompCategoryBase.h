@@ -55,6 +55,9 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       virtual std::string getModelName() {
 	return _modelName;
       }
+      virtual const char* c_str() const {
+	return _modelName.c_str();
+      }
       virtual std::deque<int> const & getGridLayerDataOffsets() {
 	return _gridLayerDataOffsets;
       }
