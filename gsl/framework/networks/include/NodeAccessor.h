@@ -27,7 +27,6 @@ class GridLayerDescriptor;
 
 class NodeAccessor
 {
-
    public:
       virtual NodeDescriptor* getNodeDescriptor(std::vector<int> const & coords, int densityIndex) =0;
       virtual NodeDescriptor* getNodeDescriptor(int nodeIndex, int densityIndex) =0;

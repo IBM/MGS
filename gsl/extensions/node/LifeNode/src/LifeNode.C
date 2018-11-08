@@ -26,22 +26,43 @@
 #define publicValue (_container->um_publicValue[index]) 
 #define neighbors (_container->um_neighbors[index]) 
 #endif
-CUDA_CALLABLE void LifeNode::initialize(RNG& rng) 
+//CUDA_CALLABLE 
+void LifeNode::initialize(RNG& rng) 
 {
    publicValue=value;
 }
 
-CUDA_CALLABLE void LifeNode::update(RNG& rng) 
+//CUDA_CALLABLE 
+void LifeNode::update(RNG& rng) 
 {
    int neighborCount=0;
 #if defined(HAVE_GPU) && defined(__NVCC__)
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
    ShallowArray_Flat<int*>::iterator iter, end = neighbors.end();
-#else
-   ShallowArray<int*>::iterator iter, end = neighbors.end();
-#endif
    for (iter=neighbors.begin(); iter!=end; ++iter) {
      neighborCount += **iter;
    }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   auto um_neighbors_from = _container->um_neighbors_start_offset[index];
+   auto um_neighbors_to = _container->um_neighbors_num_elements[index]-1;
+   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
+     neighborCount += *(_container->um_neighbors[idx]);
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   auto um_neighbors_from = index * _container->um_neighbors_max_elements;
+   auto um_neighbors_to = _container->um_neighbors_num_elements[index]-1;
+   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
+     neighborCount += *(_container->um_neighbors[idx]);
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   assert(0);
+ #endif
+#else
+   ShallowArray<int*>::iterator iter, end = neighbors.end();
+   for (iter=neighbors.begin(); iter!=end; ++iter) {
+     neighborCount += **iter;
+   }
+#endif
    
    //TUAN TODO 
    /// consider here as we cannot access SharedMembers directly

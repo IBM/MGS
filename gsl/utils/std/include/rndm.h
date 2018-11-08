@@ -23,7 +23,11 @@
 #include "RNG.h"
 #if defined(HAVE_GPU) && defined(__NVCC__)
 #define CUDA_CALLABLE __host__ __device__
+
 #define TEST_USING_GPU_COMPUTING
+
+//#define TEST_INITNODE_ON_CPU
+
 #ifndef CUDA_CHECK_CODE
 #define CUDA_CHECK_CODE
 #define gpuErrorCheck(r) {_check((r), __FILE__, __LINE__);}
@@ -37,9 +41,53 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 
 #define OPTION_3 3
 #define OPTION_4 4
+#define OPTION_4b 41
+#define OPTION_5 5
 
+//NOTE: for proxy
+//  OPTION_3 = means each CCDemarshaller has its own array of data, tracking the mapping to nodes in a different rank
+//  OPTION_4 = means each CCDemarshaller only keep the index to the data, 
+//    data nows belong to the global proxy-data array in the xxxCompCategory
 #define PROXY_ALLOCATION  OPTION_3
 //#define PROXY_ALLOCATION  OPTION_4
+
+//NOTE: By default, a scalar data member (say float type) of LifeNode is re-organized as
+//   class CG_LifeNodeCompCategory{
+//   //float*  data;
+//   ShalloaArray_Flat<float> data;
+//   }
+// Howabout an array data member (say int*[]) of LifeNode
+// HERE
+// OPTION_3 means 
+//   class CG_LifeNodeCompCategory{
+//   ShallowArray_Flat< ShallowArray_Flat<float*>>  data;
+//   }
+// OPTION_4 means  (we need three array to track with MAX_SUBARRAY_SIZE is used)
+//   class CG_LifeNodeCompCategory{
+//   ShallowArray_Flat< float*>  data;
+//   ShallowArray_Flat< int>  data_start_offset;
+//   ShallowArray_Flat< int>  data_num_elements;
+//   }
+// OPTION_4b means  (we need 2 array to track with MAX_SUBARRAY_SIZE is used)
+//   class CG_LifeNodeCompCategory{
+//   ShallowArray_Flat< float*>  data;
+//   ShallowArray_Flat< int>  data_num_elements;
+//   int data_max_elements; // = MAX_SUBARRAY_SIZE
+//   }
+// OPTION_5 means  (we need two array to track if we know exactly how many elements for each subarray)
+//   and the number of elements for 'i'-th node is 
+//                     (data_start_offset[i+1] - data_start_offset[i])     if 0<i<n-1
+//                     (data_start_offset.size() - data_start_offset[i])   if i = n-1
+//         with 'n' is number of nodes
+//   class CG_LifeNodeCompCategory{
+//   ShallowArray_Flat< float*>  data;
+//   ShallowArray_Flat< int>  data_start_offset;
+//   }
+//
+//   IMPORTANT:  for OPTION_4 and OPTION_5, we need to revise global kernel behavior
+//   support: OPTION_3, OPTION_4, OPTION_4b, OPTION_5
+//#define DATAMEMBER_ARRAY_ALLOCATION OPTION_3
+#define DATAMEMBER_ARRAY_ALLOCATION OPTION_4b
 
 #endif
 #else

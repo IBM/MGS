@@ -249,6 +249,7 @@ class Array_Flat //: public Managed
 	_mem_location(memLocation), _array_design(FLAT_ARRAY)
       {
 	_data = nullptr;
+	//TUAN TODO : plan to disable this, and any use must call 'resize_allocated()' explitly
 	resize_allocated(MINIMAL_SIZE_ARR);
       }
 
