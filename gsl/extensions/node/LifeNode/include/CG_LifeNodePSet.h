@@ -41,7 +41,15 @@ class CG_LifeNodePSet : public ParameterSet
 #if defined(HAVE_GPU) && defined(__NVCC__)
       //TUAN TODO: we may not need to have 'reference' elements array here
       //  otherwise, consider proper allocation
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #endif
 #else
       ShallowArray< int* > neighbors;
 #endif

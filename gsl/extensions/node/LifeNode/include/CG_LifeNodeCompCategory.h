@@ -440,14 +440,35 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, 
          Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_neighbors;
     #endif
+
       ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
+      //TUAN TODO test to see if we can reduce 'InitNode' execution time
+   #ifdef TEST_INITNODE_ON_CPU
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::CPU> init_um_value; //for storing data from 'InitNode' statement
+   #endif
       ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_publicValue;
+   #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, 
          Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
       //int* um_value; //to be allocated using cudaMallocManaged
       //int* um_publicValue; //to be allocated using cudaMallocManaged
       //std::vector<int*> um_neighbors;
       //ShallowArray_Flat<ShallowArray< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+      //always 'int' for the two below arrays
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+      //always 'int' for the two below arrays
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+      int um_neighbors_max_elements;
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+      //always 'int' for the below array
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+   #endif
    protected:
       ShallowArray_Flat<LifeNode, Array_Flat<int>::MemLocation::CPU, 1000> _nodes;
 #else

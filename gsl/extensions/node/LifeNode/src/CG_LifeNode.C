@@ -50,6 +50,11 @@
 #include <iostream>
 #include <memory>
 
+
+#if defined(HAVE_GPU) && defined(__NVCC__)
+CG_LifeNodeCompCategory* CG_LifeNode::_container=nullptr; //instantiation 
+#endif
+
 int* CG_LifeNode::CG_get_ValueProducer_value() 
 {
 #if defined(HAVE_GPU) && defined(__NVCC__)
@@ -68,9 +73,21 @@ const char* CG_LifeNode::getServiceName(void* data) const
    if (data == &(_container->um_publicValue[index])) {
       return "publicValue";
    }
-   if (data == &(_container->um_neighbors)) {
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   if (data == &(_container->um_neighbors[index])) {
       return "neighbors";
    }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   if (data == &(_container->um_neighbors[_container->um_neighbors_start_offset[index]])) {
+      return "neighbors";
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   if (data == &(_container->um_neighbors[index*_container->um_neighbors_max_elements])) {
+      return "neighbors";
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   assert(0);
+ #endif
    if (data == &(getSharedMembers().tooCrowded)) {
       return "tooCrowded";
    }
@@ -108,9 +125,21 @@ const char* CG_LifeNode::getServiceDescription(void* data) const
    if (data == &(_container->um_publicValue[index])) {
       return "";
    }
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
    if (data == &(_container->um_neighbors[index])) {
       return "";
    }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   if (data == &(_container->um_neighbors[_container->um_neighbors_start_offset[index]])) {
+      return "";
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   if (data == &(_container->um_neighbors[index*_container->um_neighbors_max_elements])) {
+      return "";
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   assert(0);
+ #endif
    if (data == &(getSharedMembers().tooCrowded)) {
       return "";
    }
@@ -196,7 +225,33 @@ void CG_LifeNode::initialize(ParameterSet* CG_initPSet)
    //neighbors() = CG_pset->neighbors;
    _container->um_value[index] = CG_pset->value;
    _container->um_publicValue[index] = CG_pset->publicValue;
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
    _container->um_neighbors[index] = CG_pset->neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   auto um_neighbors_from = _container->um_neighbors_start_offset[index];
+   auto um_neighbors_to = _container->um_neighbors_start_offset[index+1]-1;
+   //TUAN TODO : implement SliceArray 
+   //_container->um_neighbors[um_neighbors_from : um_neighbors_to] = CG_pset->neighbors;
+   // ... or for now
+   for (auto i = 0; i <  min(um_neighbors_to - um_neighbors_from+1, CG_pset->neighbors.size()); ++i)
+   {
+      _container->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   auto um_neighbors_from =  index * _container->um_neighbors_max_elements;
+   auto um_neighbors_to =  (index+1) * _container->um_neighbors_max_elements - 1;
+   //TUAN TODO : implement SliceArray 
+   //_container->um_neighbors[um_neighbors_from : um_neighbors_to] = CG_pset->neighbors;
+   // ... or for now
+   for (auto i = 0; i <  min(um_neighbors_to - um_neighbors_from+1, CG_pset->neighbors.size()); ++i)
+   {
+      _container->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
+   }
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   //_container->um_neighbors[index] = CG_pset->neighbors;
+   assert(0);
+ #endif
+
 #else
    value = CG_pset->value;
    publicValue = CG_pset->publicValue;
@@ -257,7 +312,19 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
          throw SyntaxErrorException("Expected a int service for neighbors");
       }
 #if defined(HAVE_GPU) && defined(__NVCC__)
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       _container->um_neighbors[index].insert(CG_local->getData());
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      _container->um_neighbors_num_elements[index] +=1;
+      auto um_neighbors_index = _container->um_neighbors_start_offset[index] + _container->um_neighbors_num_elements[index]-1;
+      _container->um_neighbors[um_neighbors_index] = (CG_local->getData());
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      _container->um_neighbors_num_elements[index] +=1;
+      auto um_neighbors_index = index * _container->um_neighbors_max_elements + _container->um_neighbors_num_elements[index]-1;
+      _container->um_neighbors[um_neighbors_index] = (CG_local->getData());
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      assert(0);
+ #endif
 #else
       neighbors.insert(CG_local->getData());
 #endif
@@ -324,7 +391,11 @@ void CG_LifeNode::addPreEdge(Edge* CG_edge, ParameterSet* CG_pset)
    checkAndAddPreEdge(CG_edge);
 }
 
+//#if defined(HAVE_GPU) && defined(__NVCC__)
+//bool CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset) 
+//#else
 void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset) 
+//#endif
 {
    /* TODO - here it requires ShallowArray to be the same as ShallowArray_Flat */
    ValueProducer* CG_ValueProducerPtr = dynamic_cast<ValueProducer*>(CG_node->getNode());
@@ -347,7 +418,23 @@ void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset)
       }; 
       matchPredicateAndCast = true; 
 #if defined(HAVE_GPU) && defined(__NVCC__)
+      //TUAN NOTE: 
+      // Using 'InitNode' is not that efficient to initialize data
+      // Please consider using a InitPhase's CG_host_initialize() and evoke the kernel 
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       _container->um_neighbors[index].insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      _container->um_neighbors_num_elements[index] +=1;
+      auto um_neighbors_index = _container->um_neighbors_start_offset[index] + _container->um_neighbors_num_elements[index]-1;
+      _container->um_neighbors[um_neighbors_index] = (CG_ValueProducerPtr->CG_get_ValueProducer_value());
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      //TUAN TODO see if we can improve speed of this
+      _container->um_neighbors_num_elements[index] +=1;
+      auto um_neighbors_index = index * _container->um_neighbors_max_elements + _container->um_neighbors_num_elements[index]-1;
+      _container->um_neighbors[um_neighbors_index] = (CG_ValueProducerPtr->CG_get_ValueProducer_value());
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      assert(0);
+ #endif
 #else
       neighbors.insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
 #endif
@@ -355,6 +442,9 @@ void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset)
 
    checkAndAddPreNode(CG_node);
    assert(noPredicateMatch || matchPredicateAndCast);
+//#if defined(HAVE_GPU) && defined(__NVCC__)
+//   return castMatchLocal;
+//#endif
 }
 
 ConnectionIncrement* CG_LifeNode::getComputeCost() const

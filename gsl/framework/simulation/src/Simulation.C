@@ -358,7 +358,6 @@ bool Simulation::start()
       // would start it.
       run();
    } else {
-
       GraphicalUserInterface* g = dynamic_cast<GraphicalUserInterface*>(_ui);
 
       if (g) {

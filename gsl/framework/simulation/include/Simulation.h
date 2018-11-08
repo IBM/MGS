@@ -393,12 +393,18 @@ class Simulation : public Publishable {
     //std::vector<int> > _nodes_count; 
   void print_GPU_info(int devID);
 #endif
+  //DEBUG PURPOSE
+  int _counter = 0; // for debug purpose, e.g. test how many times a function has been called
+  void resetCounter(){_counter=0; };
+  void increaseCounter(){++_counter;};
+  int  getCounter(){return _counter;};
   //these two new functions to support printing time info
   void benchmark_start(const std::string&);
   void benchmark_timelapsed(const std::string&);
   void benchmark_timelapsed_diff(const std::string&);
   void benchmark_set_timelapsed_diff();
   void benchmark_end(const std::string&);
+  //END DEBUG PURPOSE
   private:
   StateType _state;
   unsigned _iteration;
