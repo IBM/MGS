@@ -24,7 +24,7 @@
 #include <sstream>
 #include <iostream>
 
-CUDA_CALLABLE void LifeDataCollector::initialize(RNG& rng) 
+void LifeDataCollector::initialize(RNG& rng) 
 {
   // Sort pointers by indices, row major
   std::map<unsigned, std::map<unsigned, int*> > sorter;
@@ -52,7 +52,7 @@ CUDA_CALLABLE void LifeDataCollector::initialize(RNG& rng)
   output<<mxrow+1<<" "<<mxcol+1<<std::endl<<std::endl;
 }
 
-CUDA_CALLABLE void LifeDataCollector::finalize(RNG& rng) 
+void LifeDataCollector::finalize(RNG& rng) 
 {
   file->close();
 }

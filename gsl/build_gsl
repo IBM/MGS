@@ -42,6 +42,21 @@ function createMakeFile(){
   #}}}
 }
 
+function detectCPU() {
+cpu=`lscpu | grep Architecture | awk '{print $2;}'`
+modelname=""
+if [[ "$cpu" == "x86_64" ]]; then 
+  :
+elif [[ "$cpu" == "ppc64le" ]]; then 
+  modelname=`lscpu | grep "Model name" | awk '{print $3;}' | awk -F';' '{print $1;}'`
+  #https://developer.ibm.com/linuxonpower/compiler-options-table/
+  if [[ "$modelname" == "POWER8" ]]; then 
+    :
+  elif [[ "$modelname" == "POWER9" ]]; then 
+    :
+  fi
+fi
+}
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 
 #########################################
