@@ -218,6 +218,10 @@ void CG_LifeNode::CG_getSendType_FLUSH_LENS(std::vector<int>& blengths, std::vec
 
 void CG_LifeNode::initialize(ParameterSet* CG_initPSet) 
 {
+   //TUAN NOTE: 
+   //This method is internally evoked by 'InitNode' statement in GSL
+   // Using 'InitNode' is not that efficient to initialize data
+   // Please consider using a InitPhase's CG_host_initialize() and evoke the kernel 
    CG_LifeNodePSet* CG_pset = dynamic_cast<CG_LifeNodePSet*>(CG_initPSet);
 #if defined(HAVE_GPU) && defined(__NVCC__)
    //value() = CG_pset->value;
@@ -418,9 +422,6 @@ void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset)
       }; 
       matchPredicateAndCast = true; 
 #if defined(HAVE_GPU) && defined(__NVCC__)
-      //TUAN NOTE: 
-      // Using 'InitNode' is not that efficient to initialize data
-      // Please consider using a InitPhase's CG_host_initialize() and evoke the kernel 
  #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       _container->um_neighbors[index].insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
  #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
