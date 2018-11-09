@@ -1454,6 +1454,10 @@ CUDA_EXTENSION_MODULES := $(patsubst %,extensions/%,$(CUDA_EXTENSION_MODULES))
 CUDA_MODULES := $(CUDA_EXTENSION_MODULES)
 CUDA_SOURCES_DIRS := $(patsubst %,%/src, $(CUDA_MODULES))
 CUDA_CODE := $(foreach dir,$(CUDA_SOURCES_DIRS),$(wildcard $(dir)/CG_*.C))
+
+CUDA_PURE_OBJS := $(patsubst %.C, %.o, $(CUDA_CODE))
+
+CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
 """
         return retStr
 
@@ -1522,6 +1526,19 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
         if self.options.profile == USE:
             retStr += " " + PROFILING_FLAGS
 
+        if self.options.optimization == "O":
+            retStr += " " + O_OPTIMIZATION_FLAG
+        if self.options.optimization == "O2":
+            retStr += " " + O2_OPTIMIZATION_FLAG
+        if self.options.optimization == "O3":
+            retStr += " " + O3_OPTIMIZATION_FLAG
+        if self.options.optimization == "O4":
+            retStr += " " + O4_OPTIMIZATION_FLAG
+        if self.options.optimization == "O5":
+            retStr += " " + O5_OPTIMIZATION_FLAG
+        if self.options.optimization == "Og":
+            retStr += " " + OG_OPTIMIZATION_FLAG
+
         # if self.options.debug == USE:
         Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "  # NOQA
         Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 \ "  # NOQA
@@ -1577,8 +1594,10 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
 
         retStr += """
 LDFLAGS: $(CUDA_NVCC_FLAGS)
-CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
-        """
+CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP) --compiler-options  -mcpu=power9
+# NVCC fails with this --compiler-options -flto
+#https://devtalk.nvidia.com/default/topic/1026826/link-time-optimization-with-cuda-on-linux-flto-/?offset=6
+"""
         return retStr
 
     def getCFlags(self):  # noqa
@@ -1780,7 +1799,7 @@ LIBS := """
                 retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
 
         if self.options.withGpu is True:
-            retStr += " -lcudart -lcurand"
+            retStr += " -lcuda -lcudart -lcurand"
             if self.options.withMpi is True:
                 retStr += " -lmpi_cxx -lmpi"
 
