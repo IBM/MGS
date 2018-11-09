@@ -47,7 +47,6 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
    int top;
    int uniformDensity = _gridLayerDescriptor->isUniform();
    int gridNodes = _gridLayerDescriptor->getGrid()->getNbrGridNodes();
-   Simulation *sim = &compCategory->getSimulation();
    unsigned my_rank = sim->getRank();
 #if defined(HAVE_GPU) 
    if (sim->isGranuleMapperPass()) {

@@ -250,7 +250,10 @@ class Array_Flat //: public Managed
       {
 	_data = nullptr;
 	//TUAN TODO : plan to disable this, and any use must call 'resize_allocated()' explitly
-	resize_allocated(MINIMAL_SIZE_ARR);
+	//STATUS: completed
+	//So, for now we only pre-allocate if it's on CPU
+	if (_mem_location == MemLocation::CPU)
+	  resize_allocated(MINIMAL_SIZE_ARR);
       }
 
       virtual void internalCopy(T& lval, T& rval) = 0;
@@ -288,7 +291,11 @@ Array_Flat<T, memLocation>::Array_Flat(unsigned incrementSize)
      _incremental_size = DEFAULT_INCREMENTAL_SIZE_ARR; //default
    }
    _data = nullptr;
-   resize_allocated(MINIMAL_SIZE_ARR);
+   //TUAN TODO : plan to disable this, and any use must call 'resize_allocated()' explitly
+   //STATUS: completed
+   //So, for now we only pre-allocate if it's on CPU
+   if (_mem_location == MemLocation::CPU)
+     resize_allocated(MINIMAL_SIZE_ARR);
    //_data = new T[sizeof(T) * num_elements];
    ////if (std::is_same<T, GranuleMapper>::value) { 
    ////  /* ... */ 
