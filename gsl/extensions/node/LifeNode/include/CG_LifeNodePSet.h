@@ -38,7 +38,7 @@ class CG_LifeNodePSet : public ParameterSet
       virtual void duplicate(std::unique_ptr<ParameterSet>& dup) const;
       int value;
       int publicValue;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
       //TUAN TODO: we may not need to have 'reference' elements array here
       //  otherwise, consider proper allocation
  #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3

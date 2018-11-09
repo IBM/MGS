@@ -97,7 +97,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          if (inList) {
             inList = inList && (_receiveList.size()!=0);
             if (inList) {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
                auto niter=_receiveList.begin();
 #else
                ShallowArray<CG_LifeNodeProxy>::iterator niter=_receiveList.begin();
@@ -165,7 +165,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          if (inList) {
             inList = inList && (_receiveList.size()!=0);
             if (inList) {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
                auto niter=_receiveList.begin();
 #else
 
@@ -225,7 +225,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());
          if (diter != CG_recvTemplates.end()) {
             CG_LifeNodeProxyDemarshaller* dm = diter->second;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
             auto &niter = _receiveState;
             auto nend = _receiveList.end();
 #else
@@ -249,7 +249,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       NodeProxyBase* addDestination()
       {
          _receiveList.increaseSizeTo(_receiveList.size()+1);
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
          int sz = _receiveList.size();
          um_value.increaseSizeTo(sz);
@@ -278,7 +278,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       virtual ~CCDemarshaller()
       {
       }
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
    public:
       ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
@@ -413,7 +413,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       ConnectionIncrement* getComputeCost();
       virtual ~CG_LifeNodeCompCategory();
       static CG_LifeNodeSharedMembers* CG_sharedMembers;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
       std::map <int, CCDemarshaller*>& getDemarshallerMap(){ return _demarshallerMap; };
 #endif
    protected:
@@ -431,7 +431,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
 #ifdef HAVE_MPI
       std::map <int, ShallowArray<CG_LifeNode*> >::iterator _sendMapIter;
 #endif
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    public:
       //TUAN: we can use 'public' or derive a function (with auto-generated name)
     #if PROXY_ALLOCATION == OPTION_4

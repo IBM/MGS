@@ -319,7 +319,7 @@ class Simulation : public Publishable {
     return _edgeCatList;
   }
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
   /* 
    *       keep tracks # nodes created for each nodetype, e.g. LifeNode
    *        on all ranks

@@ -47,8 +47,9 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
    int top;
    int uniformDensity = _gridLayerDescriptor->isUniform();
    int gridNodes = _gridLayerDescriptor->getGrid()->getNbrGridNodes();
+   Simulation *sim = &compCategory->getSimulation();
    unsigned my_rank = sim->getRank();
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    if (sim->isGranuleMapperPass()) {
       if (sim->_nodes_count.count("LifeNode") == 0)
       { 
@@ -190,7 +191,7 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
 #endif
    }
 #endif
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    if (! sim->isGranuleMapperPass()) {
 #endif
    for(int n = 0, gn = 0; gn < gridNodes; ++gn) {
@@ -209,7 +210,7 @@ CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData(CG_LifeNodeCompCategory* comp
          }
       }
    }
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 #ifdef DEBUG 
 	std::cout<< ".............CG_LifeNodeGridLayerData simulatePass " << i++ << std::endl;
 	sim->benchmark_timelapsed_diff("... ");

@@ -50,7 +50,7 @@ void NoConnectConnector::nodeToNode(
    NodeDescriptor *from, ParameterSet *outAttrPSet, NodeDescriptor *to, 
    ParameterSet *inAttrPSet, Simulation* sim)
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    // store the information about 'from' and 'to' partitionId
    // NOTE: The nodedescriptor can represent 2 different nodetypes, e.g. LifeNode and PredetorNode
 #ifdef HAVE_MPI

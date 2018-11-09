@@ -38,7 +38,7 @@
 #include <memory>
 
 CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_LifeNodeProxy* proxy)
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
       : CG_LifeNodeProxyDemarshaller(proxy) 
       //, publicValueDemarshaller(&(((proxy->getCompCategory())->getDemarshaller(proxy->demarshaller_index))->um_publicValue[proxy->index]))
@@ -50,7 +50,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_
       : CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->publicValue))
 #endif
       {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
         auto x1 = proxy->getCompCategory();
         //auto x2 = x1->getDemarshaller(proxy->demarshaller_index);
@@ -67,7 +67,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_
       void CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::setDestination(CG_LifeNodeProxy *proxy)
       {
          _proxy = proxy;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
          //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
       ////TODO fix here using above
@@ -84,7 +84,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_
       }
 
 CG_LifeNodeProxy::PhaseDemarshaller_copy::PhaseDemarshaller_copy(CG_LifeNodeProxy* proxy)
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
       //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]))
       : CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&((proxy->getCompCategory()->getDemarshaller(proxy->getDemarshallerIndex()))->um_publicValue[proxy->getDataIndex()]))
@@ -105,7 +105,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_copy::PhaseDemarshaller_copy(CG_LifeNodeProx
       void CG_LifeNodeProxy::PhaseDemarshaller_copy::setDestination(CG_LifeNodeProxy *proxy)
       {
          _proxy = proxy;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
          //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
       //TODO fix here using above
@@ -126,7 +126,7 @@ CG_LifeNodeProxy::PhaseDemarshaller_copy::PhaseDemarshaller_copy(CG_LifeNodeProx
 
 int* CG_LifeNodeProxy::CG_get_ValueProducer_value() 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    //return &(_container->um_publicValue[index]);
    //TUAN TODO:
    //partitionId need to be a data member
@@ -197,7 +197,7 @@ void CG_LifeNodeProxy::addPostNode(NodeDescriptor* CG_node, ParameterSet* CG_pse
 
 CG_LifeNodeProxy::CG_LifeNodeProxy() 
    : ValueProducer(), NodeProxyBase()
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
      , index(0), _container(nullptr) 
 #else
      , value(0), publicValue(0)

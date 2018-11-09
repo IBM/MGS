@@ -127,7 +127,8 @@ while getopts "$optspec" optchar; do
     -)  #parse long-option
       case "${OPTARG}" in
           clean)
-              CLEAN="-clean"
+            # CUDA DEBUG TUAN disable for now
+              #CLEAN="-clean"
               ;;
           rebuild)
               REBUILD="-rebuild"

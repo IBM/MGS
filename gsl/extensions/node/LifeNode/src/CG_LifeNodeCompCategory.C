@@ -102,7 +102,7 @@ void CG_LifeNodeCompCategory::getOutAttrParameterSet(std::unique_ptr<ParameterSe
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg, RNG& rng) 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
    ShallowArray_Flat<LifeNode>::iterator end = _nodes.begin();
 #else
@@ -126,7 +126,7 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, RNG& rng) 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
    ShallowArray_Flat<LifeNode>::iterator end = _nodes.begin();
 #else
@@ -142,7 +142,7 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, RN
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_copy(NodePartitionItem* arg, RNG& rng) 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
    ShallowArray_Flat<LifeNode>::iterator end = _nodes.begin();
 #else
@@ -239,7 +239,7 @@ void CG_LifeNodeCompCategory::addToSendMap(int toPartitionId, Node* node)
 #ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::allocateProxy(int fromPartitionId, NodeDescriptor* nd) 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    #if PROXY_ALLOCATION == OPTION_3
       /* local proxy data + local _receiveList */
       CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
@@ -537,7 +537,7 @@ void CG_LifeNodeCompCategory::getNodeAccessor(std::unique_ptr<NodeAccessor>& nod
 void CG_LifeNodeCompCategory::allocateNode(NodeDescriptor* nd) 
 {
    _nodes.increaseSizeTo(_nodes.size()+1);
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    int sz = _nodes.size();
    //TUAN TODO
    //// maybe we want CG_LifeNode to have a static (i.e. single copy)
@@ -586,7 +586,7 @@ void CG_LifeNodeCompCategory::allocateNode(NodeDescriptor* nd)
 
 void CG_LifeNodeCompCategory::allocateNodes(size_t size) 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    bool force_resize = true;
    _nodes.resize_allocated(size, force_resize);
    um_value.resize_allocated(size, force_resize);
@@ -661,7 +661,7 @@ void CG_LifeNodeCompCategory::allocateNodes(size_t size)
 
 void CG_LifeNodeCompCategory::allocateProxies(const std::vector<int>& sizes)
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    unsigned my_rank = _sim.getRank();
 #if PROXY_ALLOCATION == OPTION_3
    bool force_resize = true;

@@ -85,7 +85,7 @@ int Simulation::P2P_TAG = 21;
 
 #endif // DISABLE_PTHREADS
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    #include <cuda_runtime_api.h>
 #endif
 #include "rndm.h"
@@ -172,7 +172,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _nump=1;
 #endif // HAVE_MPI
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    int deviceCount = -1; // number of devices
    int dev = 0;
 
@@ -215,7 +215,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    LENS_PT_UNLOCK(_timerMutex);
 }
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 void Simulation::print_GPU_info(int devID)
 {
   cudaDeviceProp prop;
@@ -729,7 +729,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	 for(it3 = it->getWorkUnits().begin(); it3 != end3; ++it3) {
 	    (*it3)->execute();
 	 }
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 	 //TUAN TODO: consider sync based on stream later
 	 cudaDeviceSynchronize();
 #endif

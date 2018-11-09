@@ -24,7 +24,8 @@
 class NodeSetSPMVariable : public CG_NodeSetSPMVariable
 {
    public:
-      CUDA_CALLABLE virtual void initialize(RNG&);
+      //CUDA_CALLABLE 
+      virtual void initialize(RNG&);
       virtual void dca(Trigger* trigger, NDPairList* ndPairList);
       NodeSetSPMVariable();
       virtual ~NodeSetSPMVariable();

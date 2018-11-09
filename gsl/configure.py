@@ -612,6 +612,11 @@ class BuildSetup:
         # Compilers
         self.cCompiler = ""
         self.cppCompiler = ""
+        self.nvccCompiler = ""
+
+        # decide if we want to compile all codes via nvcc
+        # or just those with CUDA code using nvcc
+        self.separate_compile = False
 
         # Command line options
         self.options = Options(sys.argv)
@@ -894,10 +899,18 @@ class BuildSetup:
         def setCompilersMPI_GPU(self):
             if self.operatingSystem == "Linux":
                 self.options.compiler = "nvcc"
-                self.cCompiler = findFile("nvcc", True)
-                findFile("nvcc", True)
-                self.cppCompiler = findFile("nvcc", True)
-                findFile("nvcc", True)
+                # consider switching to using gcc and nvcc for different codes
+                if self.separate_compile:
+                    self.nvccCompiler = findFile("nvcc", True)
+                    # self.cCompiler = findFile("gcc", True)
+                    # self.cppCompiler = findFile("g++", True)
+                    self.cCompiler = findFile("mpicc", True)
+                    self.cppCompiler = findFile("mpiCC", True)
+                else:
+                    self.cCompiler = findFile("nvcc", True)
+                    # findFile("nvcc", True)
+                    self.cppCompiler = findFile("nvcc", True)
+                # findFile("nvcc", True)
             else:
                 raise FatalError("Currently MPI+GPU is only available on LINUX")
 
@@ -982,6 +995,8 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 
 """
 
+        if self.options.withGpu is True:
+            retStr += "NVCC := " + self.nvccCompiler + "\n"
         retStr += "CC := " + self.cppCompiler + "\n"
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
@@ -1430,6 +1445,16 @@ vpath %.c $(COLAB_SOURCES_DIRS)
 vpath %.h $(COLAB_HEADERS_DIRS) framework/parser/generated
 COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
 """
+        if self.separate_compile is True:
+            retStr += \
+                """
+CUDA_NODE_MODULES := LifeNode
+CUDA_EXTENSION_MODULES += $(patsubst %,node/%,$(CUDA_NODE_MODULES))
+CUDA_EXTENSION_MODULES := $(patsubst %,extensions/%,$(CUDA_EXTENSION_MODULES))
+CUDA_MODULES := $(CUDA_EXTENSION_MODULES)
+CUDA_SOURCES_DIRS := $(patsubst %,%/src, $(CUDA_MODULES))
+CUDA_CODE := $(foreach dir,$(CUDA_SOURCES_DIRS),$(wildcard $(dir)/CG_*.C))
+"""
         return retStr
 
     def getObjectOnlyFlags(self):
@@ -1463,7 +1488,7 @@ OTHER_LIBS :=-lgmp  \
 ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
 endif
-LDFLAGS := -shared
+#LDFLAGS := -shared
 """
         retStr += \
             """
@@ -1548,12 +1573,12 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
         # retStr += Gencode_NVCC9_0
         retStr += Gencode_Volta
 
-        retStr += \
-            """\
-
-CFLAGS := ${CUDA_NVCC_FLAGS}
-"""
         retStr += "\n"
+
+        retStr += """
+LDFLAGS: $(CUDA_NVCC_FLAGS)
+CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
+        """
         return retStr
 
     def getCFlags(self):  # noqa
@@ -1570,7 +1595,7 @@ OTHER_LIBS :=-lgmp  \
 ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
 endif
-LDFLAGS := -shared
+#LDFLAGS := -shared
 """
         retStr += \
             """
@@ -1899,8 +1924,8 @@ DX_INCLUDE := framework/dca/include
 
 $(OBJS_DIR)/%.o : %.C
 \t$(CC) $(CFLAGS) """
-        if (self.options.withGpu is True):
-            retStr += "$(SOURCE_AS_CPP) "
+        # if (self.options.withGpu is True):
+        #     retStr += "$(SOURCE_AS_CPP) "
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
         if (self.options.withGpu is True):
@@ -1962,7 +1987,7 @@ framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
             retStr += \
                 """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
-\t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(SOURCE_AS_CPP) -o $@
+\t$(CC) -c $< -DYYDEBUG $(CFLAGS) -o $@
 
 """
         else:
@@ -2000,7 +2025,7 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
             retStr += \
                 """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
-\t$(CC) -c $< $(CFLAGS) $(SOURCE_AS_CPP) -o $@
+\t$(CC) -c $< $(CFLAGS)  -o $@
 """
         else:
             retStr += \
@@ -2034,7 +2059,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         else:
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
-        retStr += "$(COMMON_OBJS) $(CFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "$(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -2198,6 +2223,17 @@ clean:
         self.getPythonLibName()
         if self.options.withGpu is True:
             fileBody += self.getNVCCFlags()
+            if self.separate_compile:
+                fileBody += self.getCFlags()
+            else:
+                fileBody += \
+                    """\
+CFLAGS := ${CUDA_NVCC_FLAGS}
+"""
+#                fileBody += """\
+#CFLAGS := --compiler-bindir  {0}
+#""".format(findFile("g++", True))
+
         else:
             fileBody += self.getCFlags()
         fileBody += "\n"

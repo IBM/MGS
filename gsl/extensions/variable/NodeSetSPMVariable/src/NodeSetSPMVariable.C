@@ -25,7 +25,8 @@
 #include <iostream>
 #include <cstdio>
 
-CUDA_CALLABLE void NodeSetSPMVariable::initialize(RNG& rng) 
+//CUDA_CALLABLE 
+void NodeSetSPMVariable::initialize(RNG& rng) 
 {
    assert(coords.size() == vals.size());
    dimx = dimy = 0;
