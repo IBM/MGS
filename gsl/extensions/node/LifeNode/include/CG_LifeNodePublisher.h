@@ -25,7 +25,7 @@
 #include <memory>
 
 class CG_LifeNode;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 class CG_LifeNodeCompCategory;
 #endif
 

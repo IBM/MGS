@@ -82,7 +82,7 @@ std::string Phase::getGenerateString() const
 
 void Phase::generateVirtualUserMethod(Class& c) const
 {
-   std::auto_ptr<Method> method(new Method(_name, "CUDA_CALLABLE void"));
+   std::auto_ptr<Method> method(new Method(_name, "void"));
    method->setVirtual();
    method->setPureVirtual(true);
    method->addParameter("RNG& rng");
@@ -96,7 +96,7 @@ void Phase::generateUserMethod(Class& c) const
 
 void Phase::generateInternalUserMethod(Class& c) const
 {
-   std::auto_ptr<Method> method(new Method(_name, "CUDA_CALLABLE void"));
+   std::auto_ptr<Method> method(new Method(_name, "void"));
    //method->setInline();
    method->addParameter("RNG& rng");
    c.addMethod(method);

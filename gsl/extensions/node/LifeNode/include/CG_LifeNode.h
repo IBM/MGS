@@ -112,7 +112,7 @@ class CG_LifeNode : public ValueProducer, public NodeBase
 #endif
       virtual TriggerableBase::EventType createTriggerableCaller(const std::string& CG_triggerableFunctionName, NDPairList* CG_triggerableNdpList, std::unique_ptr<TriggerableCaller>& CG_triggerableCaller);
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
       int index; //the index in the array
    public:
       //TUAN TODO: write a method function to provide the access to '_container' 

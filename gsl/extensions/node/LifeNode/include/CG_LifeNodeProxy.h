@@ -62,7 +62,7 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
        //TUAN NOTE: we have to move to source file as we use CG_LifeNodeCompCategory's method
        //otherwise: incomplete type 'error' 
       PhaseDemarshaller_FLUSH_LENS(CG_LifeNodeProxy* proxy)
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
       //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]))
       : CG_LifeNodeProxyDemarshaller(proxy)
@@ -98,7 +98,7 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
       void setDestination(CG_LifeNodeProxy *proxy)
       {
          _proxy = proxy;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
          //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
       ////TODO fix here using above
@@ -134,7 +134,7 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
       PhaseDemarshaller_copy(CG_LifeNodeProxy* proxy);
       /*
       PhaseDemarshaller_copy(CG_LifeNodeProxy* proxy)
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
       //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]))
       : CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&((proxy->getCompCategory()->getDemarshaller(demarshaller_index)).um_publicValue[proxy->index]))
@@ -158,7 +158,7 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
       void setDestination(CG_LifeNodeProxy *proxy)
       {
          _proxy = proxy;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
          //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
       //TODO fix here using above
@@ -198,7 +198,7 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
       virtual void addPostNode(NodeDescriptor* CG_node, ParameterSet* CG_pset);
       CG_LifeNodeProxy();
       virtual ~CG_LifeNodeProxy();
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
       CG_LifeNodeCompCategory* getCompCategory() {return _container;};
       int getDemarshallerIndex() {return demarshaller_index;};
@@ -209,7 +209,7 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
    #endif
 #endif
    protected:
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
       int demarshaller_index;
       int index; //local to the given CCDermarshaller

@@ -24,7 +24,8 @@
 class BasicNodeSetVariable : public CG_BasicNodeSetVariable
 {
    public:
-      CUDA_CALLABLE virtual void initialize(RNG&);
+      //CUDA_CALLABLE 
+      virtual void initialize(RNG&);
       virtual void dca(Trigger* trigger, NDPairList* ndPairList);
       BasicNodeSetVariable();
       virtual ~BasicNodeSetVariable();

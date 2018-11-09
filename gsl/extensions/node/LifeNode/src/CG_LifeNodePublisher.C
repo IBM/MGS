@@ -22,12 +22,8 @@
 #include "ShallowArray.h"
 #include "Simulation.h"
 #include <memory>
+#include "CG_LifeNodeCompCategory.h"
 
-//#if defined(HAVE_GPU) && defined(__NVCC__)
-//#define value (_container->um_value[_data->index]) 
-//#define publicValue (_container->um_publicValue[_data->index]) 
-//#define neighbors (_container->um_neighbors[_data->index]) 
-//#endif
 CG_LifeNodePublisher::CG_LifeNodePublisher(Simulation& sim, CG_LifeNode* data) 
    : GeneratedPublisherBase(sim), _data(data)
 {
@@ -64,8 +60,8 @@ Service* CG_LifeNodePublisher::createService(const std::string& serviceRequested
 {
    Service* rval = 0;
    if (serviceRequested == "value") {
-#if defined(HAVE_GPU) && defined(__NVCC__)
-      //rval = new GenericService< int >(_data, &(_data->_container->um_value[index]));
+#if defined(HAVE_GPU) 
+      rval = new GenericService< int >(_data, &((_data->_container->um_value)[_data->index]));
 #else
       rval = new GenericService< int >(_data, &(_data->value));
 #endif
@@ -73,8 +69,8 @@ Service* CG_LifeNodePublisher::createService(const std::string& serviceRequested
       return rval;
    }
    if (serviceRequested == "publicValue") {
-#if defined(HAVE_GPU) && defined(__NVCC__)
-      //rval = new GenericService< int >(_data, &(_data->_container->um_publicValue[index]));
+#if defined(HAVE_GPU) 
+      rval = new GenericService< int >(_data, &(_data->_container->um_publicValue[_data->index]));
 #else
       rval = new GenericService< int >(_data, &(_data->publicValue));
 #endif
@@ -82,8 +78,21 @@ Service* CG_LifeNodePublisher::createService(const std::string& serviceRequested
       return rval;
    }
    if (serviceRequested == "neighbors") {
-#if defined(HAVE_GPU) && defined(__NVCC__)
-      //rval = new GenericService< ShallowArray_Flat< int* > >(_data, &(_data->_container->um_neighbors[index]));
+#if defined(HAVE_GPU) 
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      rval = new GenericService< ShallowArray_Flat< int* > >(_data, &(_data->_container->um_neighbors[_data->index]));
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      int offset = _data->_container->um_neighbors_start_offset[_data->index] + _data->_container->um_neighbors_num_elements[_data->index];
+      //rval = new GenericService< ShallowArray_Flat< int* > >(_data, &(_data->_container->um_neighbors[offset]));
+      rval = new GenericService< int* >(_data, &(_data->_container->um_neighbors[offset]));
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      int offset = _data->index * _data->_container->um_neighbors_max_elements + _data->_container->um_neighbors_num_elements[_data->index];
+      //rval = new GenericService< ShallowArray_Flat< int* > >(_data, &(_data->_container->um_neighbors[offset]));
+      //rval = new GenericService< int* >(_data, &(_data->_container->um_neighbors[offset]));
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      //rval = new GenericService< ShallowArray_Flat< int* > >(_data, &(_data->_container->um_neighbors[_data->_container->um_neighbors_start_offset[index]));
+      assert(0);
+ #endif
 #else
       rval = new GenericService< ShallowArray< int* > >(_data, &(_data->neighbors));
 #endif

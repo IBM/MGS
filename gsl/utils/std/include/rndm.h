@@ -21,7 +21,11 @@
 #include <cassert>
 
 #include "RNG.h"
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
+
+#include "driver_types.h"
+#include <cuda_runtime.h>
+
 #define CUDA_CALLABLE __host__ __device__
 
 #define TEST_USING_GPU_COMPUTING

@@ -23,7 +23,7 @@
 /* IMPORTANT
  * In GPU scenario: blockSize, blockIncrementSize do NOT play any role
  */
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
   #include "ShallowArray_GPU.h"
 #endif
 

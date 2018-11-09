@@ -16,12 +16,12 @@
 #include "Lens.h"
 #include "LifeNode.h"
 #include "CG_LifeNode.h"
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 #include "CG_LifeNodeCompCategory.h"
 #endif
 #include "rndm.h"
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 #define value (_container->um_value[index]) 
 #define publicValue (_container->um_publicValue[index]) 
 #define neighbors (_container->um_neighbors[index]) 
@@ -36,7 +36,7 @@ void LifeNode::initialize(RNG& rng)
 void LifeNode::update(RNG& rng) 
 {
    int neighborCount=0;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
  #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
    ShallowArray_Flat<int*>::iterator iter, end = neighbors.end();
    for (iter=neighbors.begin(); iter!=end; ++iter) {

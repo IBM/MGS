@@ -22,7 +22,7 @@
 /* IMPORTANT
  * In GPU scenario: blockSize, blockIncrementSize do NOT play any role
  */
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
   #include "DeepPointerArray_GPU.h"
 #endif
 
@@ -53,7 +53,7 @@ class DeepPointerArray : public Array<T*>
 
    protected:
       virtual void internalCopy(T*& lval, T*& rval);
-//#if ! (defined(HAVE_GPU) && defined(__NVCC__))
+//#if ! (defined(HAVE_GPU) )
       virtual unsigned getBlockSize() const {
 	 return blockSize;
       }
@@ -138,7 +138,7 @@ void DeepPointerArray<T, blockSize, blockIncrementSize>::internalCopy(
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void DeepPointerArray<T, blockSize, blockIncrementSize>::destructContents()
 {
-//#if defined(HAVE_GPU) && defined(__NVCC__)
+//#if defined(HAVE_GPU) 
 //   for (unsigned j = 0; j < this->_size; j++) {
 //      //TUAN TODO FIX
 //      //use this->_mem_location == MemLocation::CPU  or MemLocation::UnifiedMemory

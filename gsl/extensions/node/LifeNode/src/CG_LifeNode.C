@@ -49,15 +49,16 @@
 #include "VariableDescriptor.h"
 #include <iostream>
 #include <memory>
+#include <algorithm>
 
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 CG_LifeNodeCompCategory* CG_LifeNode::_container=nullptr; //instantiation 
 #endif
 
 int* CG_LifeNode::CG_get_ValueProducer_value() 
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    return &(_container->um_publicValue[index]);
 #else
    return &publicValue;
@@ -66,7 +67,7 @@ int* CG_LifeNode::CG_get_ValueProducer_value()
 
 const char* CG_LifeNode::getServiceName(void* data) const
 {
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    if (data == &(_container->um_value[index])) {
       return "value";
    }
@@ -118,7 +119,7 @@ const char* CG_LifeNode::getServiceDescription(void* data) const
 {
    //IMPORTANT: By default, non of the data member is a service
    // i.e. we cannot use via GSL
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    if (data == &(_container->um_value[index])) {
       return "";
    }
@@ -178,7 +179,7 @@ Publisher* CG_LifeNode::getPublisher()
 void CG_LifeNode::CG_getSendType_copy(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs) const
 {
    MarshallerInstance<int > mi0;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    //TUAN TODO - consider to revise this
    //  as we no longer need block-length, and block-index
    //  in a flat array
@@ -193,7 +194,7 @@ void CG_LifeNode::CG_getSendType_copy(std::vector<int>& blengths, std::vector<MP
 void CG_LifeNode::CG_send_FLUSH_LENS(OutputStream* stream) const
 {
    MarshallerInstance<int > mi0;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    mi0.marshall(stream, _container->um_publicValue[index]);
 #else
    mi0.marshall(stream, publicValue);
@@ -205,7 +206,7 @@ void CG_LifeNode::CG_send_FLUSH_LENS(OutputStream* stream) const
 void CG_LifeNode::CG_getSendType_FLUSH_LENS(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs) const
 {
    MarshallerInstance<int > mi0;
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    //TUAN TODO - consider to revise this
    //  as we no longer need block-length, and block-index
    //  in a flat array
@@ -223,7 +224,7 @@ void CG_LifeNode::initialize(ParameterSet* CG_initPSet)
    // Using 'InitNode' is not that efficient to initialize data
    // Please consider using a InitPhase's CG_host_initialize() and evoke the kernel 
    CG_LifeNodePSet* CG_pset = dynamic_cast<CG_LifeNodePSet*>(CG_initPSet);
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
    //value() = CG_pset->value;
    //publicValue() = CG_pset->publicValue;
    //neighbors() = CG_pset->neighbors;
@@ -237,7 +238,7 @@ void CG_LifeNode::initialize(ParameterSet* CG_initPSet)
    //TUAN TODO : implement SliceArray 
    //_container->um_neighbors[um_neighbors_from : um_neighbors_to] = CG_pset->neighbors;
    // ... or for now
-   for (auto i = 0; i <  min(um_neighbors_to - um_neighbors_from+1, CG_pset->neighbors.size()); ++i)
+   for (auto i = 0; i <  std::min(um_neighbors_to - um_neighbors_from+1, (int)CG_pset->neighbors.size()); ++i)
    {
       _container->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
    }
@@ -247,7 +248,7 @@ void CG_LifeNode::initialize(ParameterSet* CG_initPSet)
    //TUAN TODO : implement SliceArray 
    //_container->um_neighbors[um_neighbors_from : um_neighbors_to] = CG_pset->neighbors;
    // ... or for now
-   for (auto i = 0; i <  min(um_neighbors_to - um_neighbors_from+1, CG_pset->neighbors.size()); ++i)
+   for (auto i = 0; i <  std::min(um_neighbors_to - um_neighbors_from+1, (int)CG_pset->neighbors.size()); ++i)
    {
       _container->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
    }
@@ -291,7 +292,7 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
       if (CG_local == 0) {
          throw SyntaxErrorException("Expected a int service for value");
       }
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
       _container->um_value[index] = *CG_local->getData();
 #else
       value = *CG_local->getData();
@@ -303,7 +304,7 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
       if (CG_local == 0) {
          throw SyntaxErrorException("Expected a int service for publicValue");
       }
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
       _container->um_publicValue[index] = *CG_local->getData();
 #else
       publicValue = *CG_local->getData();
@@ -315,7 +316,7 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
       if (CG_local == 0) {
          throw SyntaxErrorException("Expected a int service for neighbors");
       }
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
  #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       _container->um_neighbors[index].insert(CG_local->getData());
  #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
@@ -395,7 +396,7 @@ void CG_LifeNode::addPreEdge(Edge* CG_edge, ParameterSet* CG_pset)
    checkAndAddPreEdge(CG_edge);
 }
 
-//#if defined(HAVE_GPU) && defined(__NVCC__)
+//#if defined(HAVE_GPU) 
 //bool CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset) 
 //#else
 void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset) 
@@ -421,7 +422,7 @@ void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset)
          assert(0);
       }; 
       matchPredicateAndCast = true; 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
  #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
       _container->um_neighbors[index].insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
  #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
@@ -443,7 +444,7 @@ void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset)
 
    checkAndAddPreNode(CG_node);
    assert(noPredicateMatch || matchPredicateAndCast);
-//#if defined(HAVE_GPU) && defined(__NVCC__)
+//#if defined(HAVE_GPU) 
 //   return castMatchLocal;
 //#endif
 }
@@ -458,7 +459,7 @@ ConnectionIncrement* CG_LifeNode::getComputeCost() const
 
 CG_LifeNode::CG_LifeNode() 
    : ValueProducer(), NodeBase()
-#if ! (defined(HAVE_GPU) && defined(__NVCC__))
+#if ! (defined(HAVE_GPU) )
      , value(0), publicValue(0)
 #endif
 {

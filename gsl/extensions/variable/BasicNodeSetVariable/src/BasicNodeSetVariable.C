@@ -18,7 +18,8 @@
 #include "CG_BasicNodeSetVariable.h"
 #include <memory>
 
-CUDA_CALLABLE void BasicNodeSetVariable::initialize(RNG& rng) 
+//CUDA_CALLABLE 
+void BasicNodeSetVariable::initialize(RNG& rng) 
 {
    assert(coords.size() == vals.size());
    

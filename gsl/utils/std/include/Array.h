@@ -33,7 +33,7 @@ const unsigned SUGGESTEDBLOCKINCREMENTSIZE = 4;
 
 //#define USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
 
-#if defined(HAVE_GPU) && defined(__NVCC__)
+#if defined(HAVE_GPU) 
 #include "ArrayIterator_GPU.h"
   #if CUDA_OPTION  == CUDA_OPTION_1
   #include "Array_GPU.h"
