@@ -16,7 +16,7 @@
 #include "PhaseElement.h"
 #include <string>
 
-PhaseElement::PhaseElement(const std::string& name)
-   : _name(name)
+PhaseElement::PhaseElement(const std::string& name, PhaseElement::machineType mType)
+  : _name(name), _machineType(mType)
 {
 }

@@ -284,10 +284,10 @@ class Simulation : public Publishable {
   void disableEdgeRelationalData() { _erd = false; }
   void setPauserStatus(bool pauserStatus) { _pauserStatus = pauserStatus; }
   void addSocket(int fd);
-  void addInitPhase(const std::string& name);
-  void addRuntimePhase(const std::string& name);
-  void addLoadPhase(const std::string& name);
-  void addFinalPhase(const std::string& name);
+  void addInitPhase(const std::string& name, PhaseElement::machineType mType);
+  void addRuntimePhase(const std::string& name, PhaseElement::machineType mType);
+  void addLoadPhase(const std::string& name, PhaseElement::machineType mType);
+  void addFinalPhase(const std::string& name, PhaseElement::machineType mType);
 
   void addWorkUnits(const std::string& name, std::deque<WorkUnit*>& workUnits);
   void addTrigger(const std::string& name, Trigger* trigger);

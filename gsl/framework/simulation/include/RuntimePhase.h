@@ -1,4 +1,4 @@
-// =================================================================
+R// =================================================================
 // Licensed Materials - Property of IBM
 //
 // "Restricted Materials of IBM"
@@ -15,6 +15,7 @@
 
 #ifndef RuntimePhase_H
 #define RuntimePhase_H
+#include "PhaseElement.h"
 #include "Copyright.h"
 
 #include "Phase.h"
@@ -24,7 +25,7 @@
 class RuntimePhase : public Phase {
 
    public:
-      RuntimePhase(const std::string& name = "");
+  RuntimePhase(const std::string& name = "", PhaseElement::machineType mType = CPU);
       virtual void duplicate(std::auto_ptr<Phase>& rv) const;
       virtual ~RuntimePhase();
      

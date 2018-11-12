@@ -18,8 +18,8 @@
 #include <string>
 #include "Simulation.h"
 
-FinalPhase::FinalPhase(const std::string& name)
-   : Phase(name)
+FinalPhase::FinalPhase(const std::string& name, PhaseElement::machineType mType)
+  : Phase(name, mType)
 {
 }
 
@@ -39,5 +39,5 @@ void FinalPhase::duplicate(std::auto_ptr<Phase>& rv) const
 
 void FinalPhase::addToSimulation(Simulation* sim) const
 {
-   sim->addFinalPhase(_name);
+   sim->addFinalPhase(_name, _machineType);
 }

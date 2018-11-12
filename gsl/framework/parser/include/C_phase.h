@@ -15,6 +15,7 @@
 
 #ifndef C_phase_H
 #define C_phase_H
+#include "C_machine_type.h"
 #include "Copyright.h"
 
 #include <string>
@@ -27,7 +28,7 @@ class C_phase : public C_production
 {
    public:
       C_phase(const C_phase&);
-      C_phase(const std::string& , SyntaxError *);
+      C_phase(const std::string&, C_machine_type* mType, SyntaxError *);
       virtual ~C_phase();
       virtual C_phase* duplicate() const;
       virtual void internalExecute(LensContext *);
@@ -39,5 +40,6 @@ class C_phase : public C_production
 
    private:
       std::string _phase;
+      C_machine_type* _machineType;
 };
 #endif

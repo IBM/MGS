@@ -545,9 +545,9 @@ Simulation::~Simulation()
    if (_rank==0) printf("Simulation destructed.\n");
 }
 
-void Simulation::addInitPhase(const std::string& name)
+void Simulation::addInitPhase(const std::string& name, PhaseElement::machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _initPhases.push_back(phase);
    _phaseNames.push_back(name);
    #ifdef HAVE_MPI
@@ -555,9 +555,9 @@ void Simulation::addInitPhase(const std::string& name)
    #endif
 }
 
-void Simulation::addRuntimePhase(const std::string& name)
+void Simulation::addRuntimePhase(const std::string& name, PhaseElement::machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _runtimePhases.push_back(phase);
    _phaseNames.push_back(name);
    #ifdef HAVE_MPI
@@ -565,9 +565,9 @@ void Simulation::addRuntimePhase(const std::string& name)
    #endif
 }
 
-void Simulation::addLoadPhase(const std::string& name)
+void Simulation::addLoadPhase(const std::string& name, PhaseElement::machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _loadPhases.push_back(phase);
    _phaseNames.push_back(name);
    #ifdef HAVE_MPI
@@ -575,9 +575,9 @@ void Simulation::addLoadPhase(const std::string& name)
    #endif
 }
 
-void Simulation::addFinalPhase(const std::string& name)
+void Simulation::addFinalPhase(const std::string& name, PhaseElement::machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _finalPhases.push_back(phase);
    _phaseNames.push_back(name);
    #ifdef HAVE_MPI

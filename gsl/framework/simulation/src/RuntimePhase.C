@@ -18,8 +18,8 @@
 #include <string>
 #include "Simulation.h"
 
-RuntimePhase::RuntimePhase(const std::string& name)
-   : Phase(name)
+RuntimePhase::RuntimePhase(const std::string& name, PhaseElement::machineType mType)
+  : Phase(name, mType)
 {
 }
 
@@ -39,5 +39,5 @@ void RuntimePhase::duplicate(std::auto_ptr<Phase>& rv) const
 
 void RuntimePhase::addToSimulation(Simulation* sim) const
 {
-   sim->addRuntimePhase(_name);
+   sim->addRuntimePhase(_name, _machineType);
 }

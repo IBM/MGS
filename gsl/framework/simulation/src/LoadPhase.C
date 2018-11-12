@@ -18,8 +18,8 @@
 #include <string>
 #include "Simulation.h"
 
-LoadPhase::LoadPhase(const std::string& name)
-   : Phase(name)
+LoadPhase::LoadPhase(const std::string& name, PhaseElement::machineType mType)
+   : Phase(name, mType)
 {
 }
 
@@ -39,5 +39,5 @@ void LoadPhase::duplicate(std::auto_ptr<Phase>& rv) const
 
 void LoadPhase::addToSimulation(Simulation* sim) const
 {
-   sim->addLoadPhase(_name);
+  sim->addLoadPhase(_name, _machineType);
 }

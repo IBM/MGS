@@ -186,6 +186,7 @@ using namespace std;
       C_phase_mapping_list *P_phase_mapping_list;
       C_separation_constraint *P_separation_constraint;
       C_separation_constraint_list *P_separation_constraint_list;
+      C_machine_type *P_machine_type;
       std::string *P_string_literal_list;
 } 
 
@@ -383,6 +384,7 @@ using namespace std;
 %type <P_phase_mapping_list> phase_mapping_list;
 %type <P_separation_constraint> separation_constraint;
 %type <P_separation_constraint_list> separation_constraint_list;
+%type <P_machine_type> machine_type;
 
 %left EXP_AND EXP_OR EXP_XOR
 
@@ -2870,12 +2872,29 @@ system_call: SYSTEM '(' string_literal_list ')' ';' {
 }
 ;
 
+
+machine_type: IDENTIFIER {
+   new SyntaxError(CURRENTFILE, @1.first_line, 
+		      "Machine Type", "Identifier");
+   localError->setOriginal();
+   $$ = new C_machine_type(*$1, localError);
+   delete $1;
+}
+
 phase: IDENTIFIER {
    SyntaxError* localError = 
       new SyntaxError(CURRENTFILE, @1.first_line, 
 		      "Phase", "Identifier");
    localError->setOriginal();
-   $$ = new C_phase(*$1, localError);
+   $$ = new C_phase(*$1, 0, localError);
+   delete $1;
+}
+| IDENTIFIER '(' machine_type ')'
+   SyntaxError* localError = 
+      new SyntaxError(CURRENTFILE, @1.first_line, 
+		      "Phase", "Identifier");
+   localError->setOriginal();
+   $$ = new C_phase(*$1, $3, localError);
    delete $1;
 }
 ;
