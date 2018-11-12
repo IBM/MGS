@@ -55,4 +55,9 @@ const std::string OUTPUTSTREAM = "OutputStream";
 const std::string RECVTEMPLATES = "CG_recvTemplates";
 const std::string SENDTEMPLATES = "CG_sendTemplates";
 const std::string GETSENDTYPETEMPLATES = "CG_getSendTypeTemplates";
+const std::string PREFIX_MEMBERNAME = "um_";
+const std::string REF_CC_OBJECT = "_container"; // data member that references to CompCategory object
+const std::string REF_INDEX = "index"; // index to data array as stored in ompCategory object
+const std::string STR_GPU_CHECK_START = "#ifdef HAVE_GPU";
+const std::string STR_GPU_CHECK_END = "#endif";
 #endif

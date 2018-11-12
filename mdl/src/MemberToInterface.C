@@ -63,7 +63,6 @@ bool MemberToInterface::checkAllMapped()
 
 void MemberToInterface::checkAndExtraWork(const std::string& name,
    DataType* member, const DataType* interface, bool amp) {
-
    const std::vector<std::string>& subAttributePath = 
       member->getSubAttributePath();
    
@@ -184,11 +183,34 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
 	 name = "getNonConstSharedMembers()." + name;
       }
       name += path;
-      method->setFunctionBody(
-			      (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
-			      + TAB + "return " 
-			      + (it->getNeedsAmpersand() ? "&" : "") 
-			      + name + ";\n");
+      if (it->getDataType()->isShared()) {
+	 method->setFunctionBody(
+	       (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+	       + TAB + "return " 
+	       + (it->getNeedsAmpersand() ? "&" : "") 
+	       + name + ";\n");
+      }else 
+      {
+	 std::string body;
+	 body = STR_GPU_CHECK_START + "\n"
+	    +
+	    (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+	    + TAB + "return " 
+	    + (it->getNeedsAmpersand() ? "&" : "") 
+	    + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
+	    + name + "["+REF_INDEX+"]);\n"
+	    +
+	    "#else\n"
+	    +
+	    (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+	    + TAB + "return " 
+	    + (it->getNeedsAmpersand() ? "&" : "") 
+	    + name + ";\n"
+	    + STR_GPU_CHECK_END + "\n" ;
+	 method->setFunctionBody(
+	       body
+	       );
+      }
       method->setVirtual();
       instance.addMethod(method);
    }      
