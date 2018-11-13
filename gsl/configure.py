@@ -1196,8 +1196,7 @@ TRIGGER_MODULES := UnsignedServiceTrigger \\
         if self.options.colab is False:
             retStr += \
                 """\
-VARIABLE_MODULES := BasicNodeSetVariable \\
-        NodeSetSPMVariable \\
+VARIABLE_MODULES := \\
 
 """  # noqa
 

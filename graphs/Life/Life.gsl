@@ -14,8 +14,8 @@
 // =================================================================
 
 #include "../std/std.gsl"
-InitPhases = { initialize };
-RuntimePhases = { dataCollect, update, copy, lastPhase };
+InitPhases = { initialize(GPU) };
+RuntimePhases = { dataCollect, update(GPU), copy, lastPhase };
 FinalPhases = { finalize };
 
 NodeType LifeNode(< tooSparse=1, tooCrowded=4 >);
@@ -33,7 +33,14 @@ Grid World
 World world;
 
 // DCA directives here
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
 
+UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
+
+
+#if 0
 VariableType LifeDataCollector;
 LifeDataCollector collector<fileName="LifeOutput.txt">;
 
@@ -41,14 +48,9 @@ LifeDataCollector collector<fileName="LifeOutput.txt">;
 //	       "value", "vals");
 
 polyConnect(world[].Layer(nodes), collector, <>, <>);
-
-Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
-Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
-
-UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
- 			 ::Iteration, ">=", 1, 0, dataCollect);
+collector.dataCollection() on iterTrig;
+#endif
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 1000, 0, lastPhase); 
-collector.dataCollection() on iterTrig;
+			 ::Iteration, "==", 100000, 0, lastPhase); 
 Stop on endTrig;
