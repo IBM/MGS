@@ -27,6 +27,7 @@ class Trigger;
 class PhaseElement {
 
    public:
+      enum machineType { NOT_SET, CPU, GPU, FPGA };
       PhaseElement(const std::string& name, PhaseElement::machineType mType);
      
       std::string getName() const {
@@ -47,8 +48,6 @@ class PhaseElement {
       std::deque<Trigger*>& getTriggers() {
 	 return _triggers;
       }
-
-      enum class machineType { NOT_SET, CPU, GPU, FPGA };
 
    protected:
       std::string _name;
