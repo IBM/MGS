@@ -25,7 +25,7 @@
 class LoadPhase : public Phase {
 
    public:
-      LoadPhase(const std::string& name = "", PhaseElement::machineType mType = CPU);
+      LoadPhase(const std::string& name = "", PhaseElement::machineType mType = PhaseElement::CPU);
       virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~LoadPhase();
      
