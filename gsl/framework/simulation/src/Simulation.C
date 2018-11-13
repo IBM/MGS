@@ -404,7 +404,7 @@ bool Simulation::start()
       std::list<EdgeCompCategoryBase*>::iterator it, end;
       end = _edgeCatList.end();
       for(it = _edgeCatList.begin(); it != end; ++it) {
-	 (*it)->initPartitions(numberOfCores);
+	(*it)->initPartitions(numberOfCores, 0);
       }
    }
 
