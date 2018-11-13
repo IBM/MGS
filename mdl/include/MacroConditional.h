@@ -36,12 +36,19 @@ class MacroConditional
       void setName(const std::string& name) {
 	 _name = name;
       }
+      void setNegateCondition() {
+	 _negate_condition = true;
+      }
+      void unsetNegateCondition() {
+	 _negate_condition = false;
+      }
 
       std::string getBeginning() const;
       std::string getEnding() const;
 
    private:
       std::string _name;
+      bool _negate_condition; //if True, then print '#if ! defined(...)'
 };
 
 #endif

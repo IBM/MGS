@@ -172,6 +172,12 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
  	 std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
 	 att->setAccessType(accessType);
+	 if (add_gpu_attributes)
+	 {//make these data members 'disappear' in GPU
+	   MacroConditional gpuConditional(GPUCONDITIONAL);
+	   gpuConditional.setNegateCondition();
+	   att->setMacroConditional(gpuConditional);
+	 }
 	 addAttribute(att);
       }
    }

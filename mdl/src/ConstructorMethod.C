@@ -73,7 +73,8 @@ void ConstructorMethod::internalAddConstructorInitializer(
 	    if (first) {
 	       first = false;
 	    } else {
-	       inits += ", ";
+	       if ((*it)->getMacroConditional().getName() == "")
+		  inits += ", ";
 	    }
 	    inits += eachInit;
 	 }
