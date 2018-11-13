@@ -37,7 +37,7 @@ EdgeCompCategoryBase::~EdgeCompCategoryBase()
 //    }
 }
 
-int EdgeCompCategoryBase::initPartitions(int num)
+void EdgeCompCategoryBase::initPartitions(int num)
 {
    int totalSize = getNumOfEdges();
    if (num > totalSize) {

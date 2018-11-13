@@ -279,11 +279,11 @@ bool Simulation::start()
    // is paused) before the simulation is started.
    // DHC 8/03
 
-   int numberOfPartitions = 1;
+   int numberOfCores = 1;
 
 #ifndef DISABLE_PTHREADS
 
-   numberOfPartitions = _numWorkUnits;
+   numberOfCores = _numWorkUnits;
 
    if (_ui == 0) { // no mutex needed because there is no user interface.
       // We have to start the simulation here, otherwise the browser
@@ -329,7 +329,7 @@ bool Simulation::start()
       std::list<DistributableCompCategoryBase*>::iterator it, end;
       end = _distCatList.end();
       for(it = _distCatList.begin(); it != end; ++it) {
-	 (*it)->initPartitions(numberOfPartitions);
+	 (*it)->initPartitions(numberOfCores, 1);
       }
    }
 
@@ -337,7 +337,7 @@ bool Simulation::start()
       std::list<EdgeCompCategoryBase*>::iterator it, end;
       end = _edgeCatList.end();
       for(it = _edgeCatList.begin(); it != end; ++it) {
-	 (*it)->initPartitions(numberOfPartitions);
+	 (*it)->initPartitions(numberOfCores);
       }
    }
 
@@ -550,6 +550,7 @@ void Simulation::addInitPhase(const std::string& name, PhaseElement::machineType
    PhaseElement phase(name, mType);
    _initPhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
@@ -560,6 +561,7 @@ void Simulation::addRuntimePhase(const std::string& name, PhaseElement::machineT
    PhaseElement phase(name, mType);
    _runtimePhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
@@ -570,6 +572,7 @@ void Simulation::addLoadPhase(const std::string& name, PhaseElement::machineType
    PhaseElement phase(name, mType);
    _loadPhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
@@ -580,6 +583,7 @@ void Simulation::addFinalPhase(const std::string& name, PhaseElement::machineTyp
    PhaseElement phase(name, mType);
    _finalPhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
@@ -805,6 +809,13 @@ std::string Simulation::findLaterPhase(const std::string& first,
 	     << second << std::endl;
    exit(-1);
    return first;
+}
+
+PhaseElement::machineType Simulation::getPhaseMachineType(std::string& name) {
+  std::map<std::string, PhaseElement::machineType>::iterator
+    mtiter=_machineTypes.find(name);
+  assert(mtiter!=_machineTypes.end());
+  return mtiter->second;
 }
 
 std::string Simulation::getFinalRuntimePhaseName() {

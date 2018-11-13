@@ -29,8 +29,8 @@
 NodeCompCategoryBase::NodeCompCategoryBase(
    Simulation& sim, const std::string& modelName)
    : DistributableCompCategoryBase(sim), NodeType(), _gridLayerDataArray(0), 
-     _gridLayerDataArraySize(0), _partitions(0), _nbrPartitions(0),
-   _modelName(modelName)
+     _gridLayerDataArraySize(0), _corePartitions(0), _gpuPartitions(0),
+     _nbrCorePartitions(0), _nbrGpuPartitions(0), _modelName(modelName)
 
 {
   _gridLayerDataOffsets.push_back(0);
@@ -44,33 +44,45 @@ NodeCompCategoryBase::~NodeCompCategoryBase()
        delete *it;
    }
    delete[] _gridLayerDataArray;
-   delete[] _partitions;
+   delete[] _corePartitions;
+   delete[] _gpuPartitions;
 }
 
-int NodeCompCategoryBase::initPartitions(int num)
+void NodeCompCategoryBase::initPartitions(int numCores, int numGPUs)
 {
 
    int n=getNbrComputationalUnits();
-   if (n == 0){
-      num = 1;
-      _nbrPartitions = num;
-      _partitions = new NodePartitionItem[num];
-   
-      _partitions[0].startIndex = 1;
-      _partitions[0].endIndex =  0;
+   if (n == 0) {
+      numCores = numGPUs = 1;
+      _nbrCorePartitions = _nbrGpuPartitions = numCores;
+      _corePartitions = new NodePartitionItem[numCores];
+      _gpuPartitions = new NodePartitionItem[numGPUs];
+      
+      _corePartitions[0].startIndex = _gpuPartitions[0].startIndex = 1;
+      _corePartitions[0].endIndex = _gpuPartitions[0].endIndex = 0;
    } 
-   else{
-      if (n < num) num = n;
-      _nbrPartitions = num;
-      _partitions = new NodePartitionItem[num];
-      int unitsPerPartition= n/num;
+   else {
+      if (n < numCores) numCores = n;
+      if (n < numGPUs) numGPUs = n;
+      _nbrCorePartitions = numCores;
+      _nbrGpuPartitions = numGPUs;
+      _corePartitions = new NodePartitionItem[numCores];
+      _gpuPartitions = new NodePartitionItem[numGPUs];
+      
+      int unitsPerCorePartition= n/numCores;
+      int unitsPerGpuPartition= n/numGPUs;
    
-      for (int idx=0; idx < num; ++idx) {
-        _partitions[idx].startIndex = idx*unitsPerPartition;
-        _partitions[idx].endIndex =  (idx+1)*unitsPerPartition - 1;					
+      for (int idx=0; idx < numCores; ++idx) {
+        _corePartitions[idx].startIndex = idx*unitsPerCorePartition;
+        _corePartitions[idx].endIndex =  (idx+1)*unitsPerCorePartition - 1;
       }
-       _partitions[num-1].endIndex = n - 1;
+       _corePartitions[numCores-1].endIndex = n - 1;
+
+      for (int idx=0; idx < numGPUs; ++idx) {
+        _gpuPartitions[idx].startIndex = idx*unitsPerGpuPartition;
+        _gpuPartitions[idx].endIndex =  (idx+1)*unitsPerGpuPartition - 1;
+      }
+       _gpuPartitions[numGPUs-1].endIndex = n - 1;
    }
    getWorkUnits();
-   return num;
 }

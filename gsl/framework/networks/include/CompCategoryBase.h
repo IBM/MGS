@@ -52,7 +52,8 @@ class CompCategoryBase : public CompCategory
       
    protected:
 
-      std::map<std::string, std::deque<WorkUnit*> > _workUnits;
+      std::map<std::string, std::deque<WorkUnit*> > _coreWorkUnits;
+      std::map<std::string, std::deque<WorkUnit*> > _gpuWorkUnits;
       Simulation& _sim;
 
       void initializePhase(const std::string& name, const std::string& type, bool);

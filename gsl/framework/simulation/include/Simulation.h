@@ -295,6 +295,7 @@ class Simulation : public Publishable {
   std::string findLaterPhase(const std::string& first,
                              const std::string& second);
 
+  PhaseElement::machineType getPhaseMachineType(std::string& name);
   std::string getFinalRuntimePhaseName();
   void detachUserInterface() { _detachUserInterface = true; }
   virtual ~Simulation();
@@ -403,6 +404,7 @@ class Simulation : public Publishable {
   std::deque<PhaseElement> _loadPhases;
   std::deque<PhaseElement> _finalPhases;
   std::map<std::string, bool> _communicatingPhases;
+  std::map<std::string, PhaseElement::machineType> _machineTypes;
   int _rank;
   int _nump;
   std::string _phaseName;

@@ -62,7 +62,7 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       // virtual void store(std::ostream&) =0;
       // virtual void reload(std::istream&) =0;
 
-      virtual int initPartitions(int num);
+      virtual void initPartitions(int numCores, int numGPUs);
       virtual int getNbrComputationalUnits() =0;
       virtual void allocateNode(NodeDescriptor* nd) = 0;
 
@@ -82,8 +82,10 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       GridLayerData** _gridLayerDataArray;
       int _gridLayerDataArraySize;
 
-      NodePartitionItem* _partitions;
-      int _nbrPartitions;
+      NodePartitionItem* _corePartitions;
+      NodePartitionItem* _gpuPartitions;
+      int _nbrCorePartions;
+      int _nbrGpuPartitions;
 
       std::string _modelName;
       

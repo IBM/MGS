@@ -44,13 +44,21 @@ CompCategoryBase::CompCategoryBase(
 CompCategoryBase::~CompCategoryBase()
 {
    std::map<std::string, std::deque<WorkUnit*> >::iterator mapIt, 
-      mapEnd = _workUnits.end();
-   for (mapIt = _workUnits.begin(); mapIt != mapEnd; ++mapIt) {
+      mapEnd = _coreWorkUnits.end();
+   for (mapIt = _coreWorkUnits.begin(); mapIt != mapEnd; ++mapIt) {
       std::deque<WorkUnit*>::iterator it, end = mapIt->second.end();
       for (it = mapIt->second.begin(); it != end; ++it) {
 	 delete *it;
       }
    }
+   mapEnd = _gpuWorkUnits.end();
+   for (mapIt = _gpuWorkUnits.begin(); mapIt != mapEnd; ++mapIt) {
+      std::deque<WorkUnit*>::iterator it, end = mapIt->second.end();
+      for (it = mapIt->second.begin(); it != end; ++it) {
+	 delete *it;
+      }
+   }
+
    std::map<std::string, Phase*>::iterator pIt, pEnd = _phaseMappings.end();
    for (pIt = _phaseMappings.begin(); pIt != pEnd; ++pIt) {
       delete pIt->second;
