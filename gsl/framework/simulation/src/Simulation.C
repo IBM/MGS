@@ -882,7 +882,7 @@ std::string Simulation::findLaterPhase(const std::string& first,
    return first;
 }
 
-PhaseElement::machineType Simulation::getPhaseMachineType(std::string& name) {
+PhaseElement::machineType Simulation::getPhaseMachineType(std::string const & name) {
   std::map<std::string, PhaseElement::machineType>::iterator
     mtiter=_machineTypes.find(name);
   assert(mtiter!=_machineTypes.end());
