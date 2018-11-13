@@ -24,7 +24,6 @@
 #include "TypeDefinition.h"
 #include "IncludeHeader.h"
 #include "IncludeClass.h"
-#include "AccessType.h"
 #include "Attribute.h"
 #include "Method.h"
 #include <string>
@@ -61,7 +60,8 @@ class Class
       void addDataTypeDataItemHeaders(
 	 const MemberContainer<DataType>& members);
       void addAttributes(const MemberContainer<DataType>& members
-			 , int accessType = AccessType::PUBLIC, bool suppressPointers=false);
+			 , AccessType accessType = AccessType::PUBLIC, bool suppressPointers=false,
+			 bool add_gpu_attributes=false);
 
       void addClass(const std::string& cl, 
 		     const std::string& conditional = "") {
@@ -69,7 +69,7 @@ class Class
       }
 
       void addMemberClass(std::auto_ptr<Class>& cl, 
-		     int accessType, const std::string& conditional = "") {
+		     AccessType accessType, const std::string& conditional = "") {
 	 cl->setMemberClass();
 	 _memberClasses[accessType].push_back(cl.release());
       }
@@ -83,9 +83,19 @@ class Class
 	 _baseClasses.push_back(bc.release());
       }
 
+      /* to be removed when we convert from auto_ptr to unique_ptr */
       void addAttribute(std::auto_ptr<Attribute>& att) {
 	 if (att->getStatic() ) _generateSourceFile=true;
 	 _attributes.push_back(att.release());
+      }
+      void addAttribute(std::unique_ptr<Attribute>& att, MachineType mach_type=MachineType::CPU) {
+	 if (att->getStatic() ) _generateSourceFile=true;
+	 if (mach_type == MachineType::CPU)
+	    _attributes.push_back(att.release());
+	 else if (mach_type == MachineType::GPU)
+	    _attributes_gpu.push_back(att.release());
+	 else 
+	    assert(0);
       }
 
       void addMethod(std::auto_ptr<Method>& mt) {
@@ -194,20 +204,20 @@ class Class
 			std::ostringstream& os);
       void printClasses(std::ostringstream& os);
       void printClassHeaders(std::ostringstream& os);
-      void printTypeDefs(int type, std::ostringstream& os);
-      void printMethodDefinitions(int type, std::ostringstream& os);
+      void printTypeDefs(AccessType type, std::ostringstream& os);
+      void printMethodDefinitions(AccessType type, std::ostringstream& os);
       void printExternCDefinitions(std::ostringstream& os);
       void printExternCPPDefinitions(std::ostringstream& os);
       void printExtraSourceStrings(std::ostringstream& os);
       void printAttributeStaticInstances(std::ostringstream& os);
       void printPartnerClasses(std::ostringstream& os);
       void printMethods(std::ostringstream& os);
-      void printAttributes(int type, std::ostringstream& os);
-      void printAccess(int type, const std::string& name, 
+      void printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type=MachineType::CPU);
+      void printAccess(AccessType type, const std::string& name, 
 		       std::ostringstream& os);
-      void printAccessMemberClasses(int type, const std::string& name, 
+      void printAccessMemberClasses(AccessType type, const std::string& name, 
 					   std::ostringstream& os);
-      bool isAccessRequired(int type);
+      bool isAccessRequired(AccessType type);
       void generateOutput(const std::string& modifier, 
 			  const std::string& directory,
 			  std::ostringstream& os);     
@@ -230,17 +240,19 @@ class Class
       std::set<IncludeHeader> _headers;
       std::set<IncludeHeader> _extraSourceHeaders;
       std::set<IncludeClass> _classes;
-      std::map<int, std::vector<Class*> > _memberClasses;
+      std::map<AccessType, std::vector<Class*> > _memberClasses;
       std::vector<Class*> _partnerClasses;
 
       std::vector<std::string> _extraSourceStrings;
       std::vector<BaseClass*> _baseClasses;
       std::vector<Attribute*> _attributes;
+      std::vector<Attribute*> _attributes_gpu; //copied from InterfaceImplementorBase
       std::vector<Method*> _methods;
       std::vector<std::string> _templateClassParameters;
       std::vector<std::string> _templateClassSpecializations;
       bool _fileOutput;
       bool _userCode;
+      //bool _has_gpu_attributes; //turn this on if we need to create 'index', '_container'
       std::string _sourceFileBeginning;
       bool _copyingDisabled;
       bool _copyingRemoved;

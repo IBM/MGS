@@ -27,7 +27,7 @@ class DataTypeAttribute : public Attribute
 {
    public:
       DataTypeAttribute(std::auto_ptr<DataType>& data, 
-			int accessType = AccessType::PUBLIC);
+			AccessType accessType = AccessType::PUBLIC);
       DataTypeAttribute(const DataTypeAttribute& rv);
       void duplicate(std::auto_ptr<Attribute>& dup) const;
       DataTypeAttribute& operator=(const DataTypeAttribute& rv);

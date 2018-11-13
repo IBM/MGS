@@ -121,7 +121,7 @@ void Method::printSourceBody(std::ostringstream& os)
    os << "}\n";
 }
 
-void Method::printDefinition(int type, std::ostringstream& os)
+void Method::printDefinition(AccessType type, std::ostringstream& os)
 {
    if ((getAccessType() == type) && !isExternC() && !isExternCPP()) {
       internalPrintDefinition(TAB+TAB, os);

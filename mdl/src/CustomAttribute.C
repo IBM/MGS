@@ -31,7 +31,7 @@ CustomAttribute::CustomAttribute()
 
 CustomAttribute::CustomAttribute(const std::string& name, 
 				 const std::string& type
-	  , int accessType)
+	  , AccessType accessType)
    : Attribute(accessType), _name(name), _type(type), _basic(false), 
      _pointer(false), _owned(false), _cArray(false), _customDelete(false), _cArraySize(""), 
      _reference(false), _parameterName("")

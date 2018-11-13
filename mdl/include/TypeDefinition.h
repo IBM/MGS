@@ -26,14 +26,14 @@
 class TypeDefinition
 {
    public:
-      TypeDefinition(int accessType = AccessType::PUBLIC);
+      TypeDefinition(AccessType accessType = AccessType::PUBLIC);
       ~TypeDefinition() {};
 
-      int getAccessType() const {
+      AccessType getAccessType() const {
 	 return _accessType;
       }
 
-      void setAccessType(int acc) {
+      void setAccessType(AccessType acc) {
 	 _accessType = acc;
       }
 
@@ -53,11 +53,11 @@ class TypeDefinition
 	 _macroConditional = macroConditional;
       }      
 
-      void printTypeDef(int type, std::ostringstream& os) const;
+      void printTypeDef(AccessType type, std::ostringstream& os) const;
 
    private:
       // Shows if the attribute is public, protected, or private
-      int _accessType;
+      AccessType _accessType;
 
       // The definition defined by the user
       std::string _definition;

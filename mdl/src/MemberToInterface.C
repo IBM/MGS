@@ -191,8 +191,10 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
 	       + name + ";\n");
       }else 
       {
+	 //TUAN: only accept non-shared data on GPU for now
+	 // maybe in the future we want to define shared data as '__constant__' or ...
 	 std::string body;
-	 body = STR_GPU_CHECK_START + "\n"
+	 body = STR_GPU_CHECK_START 
 	    +
 	    (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
 	    + TAB + "return " 
@@ -206,7 +208,7 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
 	    + TAB + "return " 
 	    + (it->getNeedsAmpersand() ? "&" : "") 
 	    + name + ";\n"
-	    + STR_GPU_CHECK_END + "\n" ;
+	    + STR_GPU_CHECK_END;
 	 method->setFunctionBody(
 	       body
 	       );

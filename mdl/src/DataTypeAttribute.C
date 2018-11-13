@@ -20,7 +20,7 @@
 #include <vector>
 
 DataTypeAttribute::DataTypeAttribute(std::auto_ptr<DataType>& data,
-				     int accessType)
+				     AccessType accessType)
    : Attribute(accessType)
 {
    _dataType = data.release();

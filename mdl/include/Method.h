@@ -72,11 +72,11 @@ class Method
 	 return _parameters;
       }
 
-      int getAccessType() const {
+      AccessType getAccessType() const {
 	 return _accessType;
       }
 
-      void setAccessType(int acc=AccessType::PUBLIC) {
+      void setAccessType(AccessType acc=AccessType::PUBLIC) {
 	 _accessType = acc;
       }
 
@@ -159,7 +159,7 @@ class Method
       }      
 
       void printSource(const std::string& className, std::ostringstream& os);
-      void printDefinition(int type, std::ostringstream& os);
+      void printDefinition(AccessType type, std::ostringstream& os);
       void printExternCDefinition(std::ostringstream& os);
       void printExternCPPDefinition(std::ostringstream& os);
       void printSourceBody(std::ostringstream& os);
@@ -174,7 +174,7 @@ class Method
       std::string _functionBody;
       std::vector<std::string> _parameters;
       std::vector<std::string> _templateParameters;
-      int _accessType;
+      AccessType _accessType;
       bool _virtual;
       bool _pureVirtual;
       bool _const;

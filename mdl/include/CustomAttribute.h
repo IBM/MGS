@@ -28,7 +28,7 @@ class CustomAttribute : public Attribute
    public:
       CustomAttribute();
       CustomAttribute(const std::string& name, const std::string& type,
-		      int accessType = AccessType::PUBLIC);
+		      AccessType accessType = AccessType::PUBLIC);
       void duplicate(std::auto_ptr<Attribute>& dup) const;
       virtual ~CustomAttribute();
 

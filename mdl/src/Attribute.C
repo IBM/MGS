@@ -21,7 +21,7 @@
 #include <vector>
 #include <sstream>
 
-Attribute::Attribute(int accessType)
+Attribute::Attribute(AccessType accessType)
    : _accessType(accessType), _static(false), 
      _constructorParameterNameExtra("")
 {
@@ -36,7 +36,8 @@ std::string Attribute::getStaticInstanceCode(
 {
    std::string retVal = "";
    if (_static) {
-      retVal = getType();
+      retVal = _macroConditional.getBeginning();
+      retVal += getType();
       if (isPointer()) {
 	 retVal += "*";
       }
@@ -45,11 +46,12 @@ std::string Attribute::getStaticInstanceCode(
 	 retVal += " = 0";
       }
       retVal += ";\n";
+      retVal += _macroConditional.getEnding();
    }
    return retVal;
 }
 
-std::string Attribute::getDefinition(int type) const
+std::string Attribute::getDefinition(AccessType type) const
 {
    std::ostringstream os;
    if (type == getAccessType()) {
