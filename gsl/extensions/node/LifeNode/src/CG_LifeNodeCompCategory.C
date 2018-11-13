@@ -161,7 +161,7 @@ void CG_LifeNodeCompCategory::getWorkUnits()
   
    switch(_sim.getPhaseMachineType("initialize"))
    {
-     case GPU :
+     case PhaseElement::GPU :
       NodePartitionItem* it = _gpuPartitions;
       NodePartitionItem* end = it + _nbrGpuPartitions;
       for (; it < end; ++it) {
@@ -171,7 +171,7 @@ void CG_LifeNodeCompCategory::getWorkUnits()
       _sim.addWorkUnits(getSimulationPhaseName("initialize"), _gpuWorkUnits["initialize"] );
       break;
 
-     case CPU :
+     case PhaseElement::CPU :
       NodePartitionItem* it = _corePartitions;
       NodePartitionItem* end = it + _nbrCorePartitions;
       for (; it < end; ++it) {
@@ -188,7 +188,7 @@ void CG_LifeNodeCompCategory::getWorkUnits()
    
    switch(_sim.getPhaseMachineType("update"))
    {
-     case GPU :
+     case PhaseElement::GPU :
       NodePartitionItem* it = _gpuPartitions;
       NodePartitionItem* end = it + _nbrGpuPartitions;
       for (; it < end; ++it) {
@@ -198,7 +198,7 @@ void CG_LifeNodeCompCategory::getWorkUnits()
       _sim.addWorkUnits(getSimulationPhaseName("update"), _gpuWorkUnits["update"] );
       break;
 
-     case CPU :
+     case PhaseElement::CPU :
       NodePartitionItem* it = _corePartitions;
       NodePartitionItem* end = it + _nbrCorePartitions;
       for (; it < end; ++it) {
@@ -216,7 +216,7 @@ void CG_LifeNodeCompCategory::getWorkUnits()
    
    switch(_sim.getPhaseMachineType("copy"))
    {
-     case GPU : 
+     case PhaseElement::GPU : 
       NodePartitionItem* it = _gpuPartitions;
       NodePartitionItem* end = it + _nbrGpuPartitions;
       for (; it < end; ++it) {
@@ -226,7 +226,7 @@ void CG_LifeNodeCompCategory::getWorkUnits()
       _sim.addWorkUnits(getSimulationPhaseName("copy"), _gpuWorkUnits["copy"] );
       break;
 
-     case CPU :
+     case PhaseElement::CPU :
       NodePartitionItem* it = _corePartitions;
       NodePartitionItem* end = it + _nbrCorePartitions;
       for (; it < end; ++it) {
