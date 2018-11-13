@@ -23,20 +23,18 @@
 
 void C_machine_type::internalExecute(LensContext *c)
 {
-  switch(_machineName) {
-  case "CPU" :
+  if (_machineName=="CPU") {
     _machineType = PhaseElement::CPU;
-    break;
-  case "GPU" :
+  }
+  else if (_machineName=="GPU") {
     _machineType = PhaseElement::GPU;
-    break;
-  case "FPGA" :
+  }
+  else if (_machineName=="FPGA") {
     _machineType = PhaseElement::FPGA;
-    break;
-  default:
+  }
+  else {
     std::string mes = "Unrecognized MachineType " + _machineName + "!";
     throwError(mes);
-    break;
   }
 }
 
