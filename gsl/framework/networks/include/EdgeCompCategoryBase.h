@@ -51,7 +51,7 @@ class EdgeCompCategoryBase : public CompCategoryBase, public EdgeType
       // virtual void store(std::ostream&) =0;
       // virtual void reload(std::istream&) =0;
 
-      virtual void initPartitions(int num);
+      virtual void initPartitions(int numCores, int numGPUs);
 
    protected:
 

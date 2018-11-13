@@ -37,22 +37,22 @@ EdgeCompCategoryBase::~EdgeCompCategoryBase()
 //    }
 }
 
-void EdgeCompCategoryBase::initPartitions(int num)
+void EdgeCompCategoryBase::initPartitions(int numCores, int numGPUs)
 {
    int totalSize = getNumOfEdges();
-   if (num > totalSize) {
-      num = totalSize;
+   if (numCores > totalSize) {
+      numCores = totalSize;
    }
 
-   if (num > 0) {
-      _nbrPartitions = num;
-      _partitions = new EdgePartitionItem[num];
-      int chunkSize = int(floor(double(totalSize)/double(num)));
+   if (numCores > 0) {
+      _nbrPartitions = numCores;
+      _partitions = new EdgePartitionItem[numCores];
+      int chunkSize = int(floor(double(totalSize)/double(numCores)));
 
-      int extraData = totalSize - (chunkSize * num);
+      int extraData = totalSize - (chunkSize * numCores);
       
       int startIndex = 0;
-      for (int i = 0; i < num; ++i) {
+      for (int i = 0; i < numCores; ++i) {
 	 _partitions[i].startIndex = startIndex;
 	 _partitions[i].endIndex = startIndex + chunkSize - 1;
 	 totalSize -= chunkSize;
@@ -65,5 +65,4 @@ void EdgeCompCategoryBase::initPartitions(int num)
       assert(totalSize == 0);
    }
    getWorkUnits();
-   return num;
 }
