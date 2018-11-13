@@ -92,6 +92,19 @@ class MemberContainer {
 	 }
 	 return retVal;
       };
+      inline T* addMember(const std::string& name, std::unique_ptr<T>& member) {
+	 const_iterator it, end = _members.end();
+	 for (it = _members.begin(); it != end; it++) {
+	    if (it->first == name) {
+	       std::ostringstream stream;
+	       stream << name << " is already in the container.";
+	       throw DuplicateException(stream.str()); 
+	    }
+	 }
+
+	 _members.push_back(type(name, member.release()));
+	 return (_members.rbegin())->second;
+      } 
       inline T* addMember(const std::string& name, std::auto_ptr<T>& member) {
 	 const_iterator it, end = _members.end();
 	 for (it = _members.begin(); it != end; it++) {

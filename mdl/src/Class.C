@@ -18,6 +18,7 @@
 #include "CopyConstructorMethod.h"
 #include "DefaultConstructorMethod.h"
 #include "Attribute.h"
+#include "CustomAttribute.h"
 #include "DataTypeAttribute.h"
 #include "Constants.h"
 #include "AccessType.h"
@@ -33,6 +34,9 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <chrono>
+#include <time.h>
+#include <cstring>
 
 Class::Class()
    : _name(""), _fileOutput(true), _userCode(false),
@@ -155,7 +159,8 @@ void Class::addDataTypeDataItemHeaders(
 }
 
 void Class::addAttributes(const MemberContainer<DataType>& members
-			  , int accessType, bool suppressPointers)
+			  , AccessType accessType, bool suppressPointers,
+			  bool add_gpu_attributes)
 {
    if (members.size() > 0) {
       addDataTypeHeaders(members);
@@ -169,6 +174,30 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	 att->setAccessType(accessType);
 	 addAttribute(att);
       }
+   }
+   //extension for GPU 
+   if (add_gpu_attributes)
+   {
+     //we need to add two data elements
+     //  int index;
+     //  static CG_"name"CompCategory* REF_CC_OBJECT;
+     //std::unique_ptr<DataType> dup;
+     //dup(new IntType());
+     //std::auto_ptr<Attribute> att_index(new DataTypeAttribute(dup));
+     //CustomAttribute* att_index= new CustomAttribute(REF_INDEX, "int*");
+     MacroConditional gpuConditional(GPUCONDITIONAL);
+     std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_INDEX, "int*", accessType));
+     att_index->setMacroConditional(gpuConditional);
+     addAttribute(att_index, MachineType::GPU);
+     //_instances_GPU.addMember("index", dup);
+     //_instances_GPU.addMember(att_index);
+     std::unique_ptr<Attribute> att_ccAccessors(new CustomAttribute(REF_CC_OBJECT, _name + COMPCATEGORY + "*", accessType));
+     att_ccAccessors->setMacroConditional(gpuConditional);
+     att_ccAccessors->setStatic();
+     auto ptr = dynamic_cast<CustomAttribute&>(*att_ccAccessors);
+     ptr.setPointer();
+     //_instances_GPU.addMember(att_ccAccessors);
+     addAttribute(att_ccAccessors, MachineType::GPU);
    }
 }
 
@@ -217,6 +246,11 @@ void Class::destructOwnedHeap()
       delete *it;
    }
    _attributes.clear();
+   for (std::vector<Attribute*>::iterator it = _attributes_gpu.begin();
+	it != _attributes_gpu.end(); ++it) {
+      delete *it;
+   }
+   _attributes_gpu.clear();
    for (std::vector<Method*>::iterator it = _methods.begin();
 	it != _methods.end(); ++it) {
       delete *it;
@@ -237,6 +271,12 @@ void Class::copyOwnedHeap(const Class& rv)
       std::auto_ptr<Attribute> dup;
       (*it)->duplicate(dup);
       _attributes.push_back(dup.release());
+   }
+   for (std::vector<Attribute*>::const_iterator it = rv._attributes_gpu.begin();
+	it != rv._attributes_gpu.end(); ++it) {
+      std::auto_ptr<Attribute> dup;
+      (*it)->duplicate(dup);
+      _attributes_gpu.push_back(dup.release());
    }
    for (std::vector<Method*>::const_iterator it = rv._methods.begin();
 	it != rv._methods.end(); ++it) {
@@ -260,14 +300,28 @@ void Class::printBeginning(std::ostringstream& os)
 
 void Class::printCopyright(std::ostringstream& os)
 {
- os << "// =================================================================\n"
+  std::string current_date; 
+  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
+  std::time_t time = std::chrono::system_clock::to_time_t(tp);
+  std::tm* timetm = std::localtime(&time);
+  char date_time_format[] = "%m-%d-%Y";
+  char time_str[] = "mm-dd-yyyyaa";
+  strftime(time_str, strlen(time_str), date_time_format, timetm);
+  char year_format[] = "%Y";
+  char year[] = "mm-dd-yyyya";
+  strftime(year, strlen(year), year_format, timetm);
+  os << "// =================================================================\n"
     << "// Licensed Materials - Property of IBM\n"
     << "//\n"
     << "// \"Restricted Materials of IBM\n"
     << "//\n"
-    << "// BCM-YKT-07-18-2017\n"
+    //<< "// BCM-YKT-07-18-2017\n"
+    << "// BCM-YKT-"
+    << time_str << "\n"
     << "//\n"
-    << "// (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
+    << "//  (C) Copyright IBM Corp. 2005-"
+    << year << "  All rights reserved   .\n"
+    //<< "// (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
     << "// US Government Users Restricted Rights -\n"
     << "// Use, duplication or disclosure restricted by\n"
     << "// GSA ADP Schedule Contract with IBM Corp.\n"
@@ -303,7 +357,7 @@ void Class::printClassHeaders(std::ostringstream& os)
    }
 }
 
-void Class::printTypeDefs(int type, std::ostringstream& os)
+void Class::printTypeDefs(AccessType type, std::ostringstream& os)
 {
    for (std::vector<TypeDefinition>::const_iterator it = 
 	   _typeDefinitions.begin();
@@ -312,7 +366,7 @@ void Class::printTypeDefs(int type, std::ostringstream& os)
    }
 }
 
-void Class::printMethodDefinitions(int type, std::ostringstream& os)
+void Class::printMethodDefinitions(AccessType type, std::ostringstream& os)
 {
    for (std::vector<Method*>::const_iterator it = _methods.begin();
 	it != _methods.end(); ++it) {
@@ -368,6 +422,10 @@ void Class::printAttributeStaticInstances(std::ostringstream& os)
 	it != _attributes.end(); ++it) {
       os << (*it)->getStaticInstanceCode(_name);
    }
+   for (std::vector<Attribute*>::const_iterator it = _attributes_gpu.begin();
+        it != _attributes_gpu.end(); ++it) {
+      os << (*it)->getStaticInstanceCode(_name);
+   }
 }
 
 
@@ -380,12 +438,25 @@ void Class::printMethods(std::ostringstream& os)
 }
 
 
-void Class::printAttributes(int type, std::ostringstream& os)
+void Class::printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type)
 {
-   for (std::vector<Attribute*>::const_iterator it = _attributes.begin();
+  if (mach_type == MachineType::CPU)
+  {
+    for (std::vector<Attribute*>::const_iterator it = _attributes.begin();
 	it != _attributes.end(); ++it) {
       os << (*it)->getDefinition(type);
-   }
+    }
+  }
+  else if (mach_type == MachineType::GPU)
+  {
+    for (std::vector<Attribute*>::const_iterator it = _attributes_gpu.begin();
+	it != _attributes_gpu.end(); ++it) {
+      os << (*it)->getDefinition(type);
+    }
+  }
+  else{
+    assert(0);
+  }
 }
 
 void Class::printPartnerClasses(std::ostringstream& os)
@@ -399,21 +470,31 @@ void Class::printPartnerClasses(std::ostringstream& os)
 }
 
 
-void Class::printAccess(int type, const std::string& name, 
+void Class::printAccess(AccessType type, const std::string& name, 
 			std::ostringstream& os)
 {
    if (isAccessRequired(type)) {
       os << TAB << name << ":\n";
       printTypeDefs(type, os);
       printMethodDefinitions(type, os);
+      if (name == "protected" and _attributes_gpu.size() > 0)
+      {
+	os  << STR_GPU_CHECK_START;
+	printAttributes(type, os, MachineType::GPU);
+	os << "#else\n";
+      }
       printAttributes(type, os);
+      if (name == "protected")
+      {
+	os << "#endif\n";
+      }
    }
 }
 
-void Class::printAccessMemberClasses(int type, const std::string& name, 
+void Class::printAccessMemberClasses(AccessType type, const std::string& name, 
 			std::ostringstream& os)
 {
-  std::map<int, std::vector<Class*> >::iterator classVec = _memberClasses.find(type);
+  std::map<AccessType, std::vector<Class*> >::iterator classVec = _memberClasses.find(type);
   if ( classVec != _memberClasses.end() ) {
     os << TAB << name << ":\n";
     std::vector<Class*>& classes = _memberClasses[type];
@@ -430,7 +511,7 @@ void Class::printAccessMemberClasses(int type, const std::string& name,
   }
 }
 
-bool Class::isAccessRequired(int type)
+bool Class::isAccessRequired(AccessType type)
 {
    for (std::vector<TypeDefinition>::const_iterator it = 
 	   _typeDefinitions.begin();

@@ -17,10 +17,12 @@
 #define DataType_H
 #include "Mdl.h"
 
+#include "Constants.h"
 #include <string>
 #include <memory>
 #include <vector>
 #include <set>
+#include <cassert>
 
 class Class;
 
@@ -50,11 +52,17 @@ class DataType {
       void setShared(bool shared) {
 	 _shared = shared;
       }
-      const std::string& getName() const {
-	 return _name;
+      const std::string& getName(MachineType mach_type=MachineType::CPU) const {
+	 if (mach_type == MachineType::CPU)
+	    return _name;
+	 else if (mach_type == MachineType::GPU)
+	    return _name_gpu; 
+	 else 
+	    assert(0);
       }
       void setName(const std::string& name) {
 	 _name = name;
+	 _name_gpu = REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
       }
       const std::string& getComment() const {
 	 return _comment;
@@ -211,11 +219,15 @@ class DataType {
 	 const std::string& tab) const;
 
       // This function returns code for the name of the service.
-      virtual std::string getServiceNameString(const std::string& tab) const;
+      virtual std::string getServiceNameString(const std::string& tab,
+	    MachineType mach_type=MachineType::CPU
+	    ) const;
 
       // This function returns code for the description of the service.
       virtual std::string getServiceDescriptionString(
-	 const std::string& tab) const;
+	 const std::string& tab,
+	 MachineType mach_type=MachineType::CPU
+	 ) const;
 
       // This function returns code for the name of the service.
       std::string getOptionalServiceNameString(
@@ -277,7 +289,8 @@ class DataType {
       
    private:
       std::string getServiceInfoString(
-	 const std::string& tab, const std::string& info) const;
+	 const std::string& tab, const std::string& info,
+	 MachineType mach_type = MachineType::CPU) const;
 
       std::string getOptionalServiceInfoString(
 	 const std::string& tab, const std::string& info) const;
@@ -285,6 +298,7 @@ class DataType {
       bool _derived;
       bool _shared;
       std::string _name;
+      std::string _name_gpu;
       std::string _comment;
       std::vector<std::string> _subAttributePath;
 };

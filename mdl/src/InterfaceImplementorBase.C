@@ -395,7 +395,32 @@ void InterfaceImplementorBase::generateInstanceBase()
    instance->addClass("ConnectionIncrement");     // added by Jizhu Lu on 03/01/2006
 
    // Add the instances.
-   instance->addAttributes(getInstances(), AccessType::PROTECTED);
+   //instance->set_gpu();
+   std::auto_ptr<Method> setCC(
+      new Method("setCompCategory", "void"));
+   //getPublisherMethod->setVirtual();
+   std::string arg1 = "_" + REF_INDEX;
+   setCC->addParameter("int " + arg1);
+   setCC->addParameter(instance->getName() + COMPCATEGORY + "* cc_ptr");
+   std::ostringstream setCCstream;
+   setCCstream 
+      << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = cc_ptr;\n";
+   setCC->setFunctionBody(setCCstream.str());
+   setCC->setInline();
+   MacroConditional gpuConditional(GPUCONDITIONAL);
+   setCC->setMacroConditional(gpuConditional);
+   instance->addMethod(setCC);
+   std::auto_ptr<Method> getCC(
+      new Method("getContainer", instance->getName() + COMPCATEGORY + "*"));
+   //getPublisherMethod->setVirtual();
+   std::ostringstream getCCstream;
+   getCCstream 
+      << TAB << TAB << "return " << REF_CC_OBJECT << ";\n";
+   getCC->setFunctionBody(getCCstream.str());
+   getCC->setInline();
+   getCC->setMacroConditional(gpuConditional);
+   instance->addMethod(getCC);
+   instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true);
 
    // Add the interface base classes, implement the get methods.
    setupInstanceInterfaces(instance);
@@ -416,10 +441,17 @@ void InterfaceImplementorBase::generateInstanceBase()
    getServiceNameMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
    std::ostringstream getServiceNameMethodFB;
    getServiceNameMethodFB
+      << STR_GPU_CHECK_START
+      << getInstanceServiceNames(TAB, MachineType::GPU)
+      << getOptionalInstanceServiceNames(TAB)
+      << getExtraServiceNames(TAB)
+      << getExtraOptionalServiceNames(TAB)
+      << "#else\n"
       << getInstanceServiceNames(TAB)
       << getOptionalInstanceServiceNames(TAB)
       << getExtraServiceNames(TAB)
       << getExtraOptionalServiceNames(TAB)
+      << STR_GPU_CHECK_END
       << TAB << "return \"Error in Service Name!\";\n";
    getServiceNameMethod->setFunctionBody(
       getServiceNameMethodFB.str());
@@ -433,10 +465,17 @@ void InterfaceImplementorBase::generateInstanceBase()
    getServiceDescriptionMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
    std::ostringstream getServiceDescriptionMethodFB;
    getServiceDescriptionMethodFB
+      << STR_GPU_CHECK_START
+      << getInstanceServiceDescriptions(TAB, MachineType::GPU)
+      << getOptionalInstanceServiceDescriptions(TAB)
+      << getExtraServiceDescriptions(TAB)
+      << getExtraOptionalServiceDescriptions(TAB)
+      <<  "#else\n"
       << getInstanceServiceDescriptions(TAB)
       << getOptionalInstanceServiceDescriptions(TAB)
       << getExtraServiceDescriptions(TAB)
       << getExtraOptionalServiceDescriptions(TAB)
+      << STR_GPU_CHECK_END
       << TAB << "return \"Error in Service Description!\";\n";
    getServiceDescriptionMethod->setFunctionBody(
       getServiceDescriptionMethodFB.str());
@@ -843,9 +882,9 @@ std::string InterfaceImplementorBase::getExtraOptionalServices(
 }
 
 std::string InterfaceImplementorBase::getInstanceServiceNames(
-   const std::string& tab) const
+   const std::string& tab, MachineType machine_type) const
 {
-   return createServiceNames(_instances, tab);   
+   return createServiceNames(_instances, tab, machine_type);   
 }
 
 std::string InterfaceImplementorBase::getOptionalInstanceServiceNames(
@@ -867,9 +906,11 @@ std::string InterfaceImplementorBase::getExtraOptionalServiceNames(
 }
 
 std::string InterfaceImplementorBase::getInstanceServiceDescriptions(
-   const std::string& tab) const
+   const std::string& tab,
+   MachineType mach_type
+   ) const
 {
-   return createServiceDescriptions(_instances, tab);   
+   return createServiceDescriptions(_instances, tab, mach_type);   
 }
 
 std::string InterfaceImplementorBase::getOptionalInstanceServiceDescriptions(
@@ -939,12 +980,23 @@ std::string InterfaceImplementorBase::createOptionalServices(
 
 std::string InterfaceImplementorBase::createServiceNames(
    const MemberContainer<DataType>& members, 
-   const std::string& tab) const
+   const std::string& tab,
+   MachineType machine_type) const
 {
    std::ostringstream os;
-   MemberContainer<DataType>::const_iterator it, end = members.end();
-   for (it = members.begin(); it != end; ++it) {
-      os << (*it).second->getServiceNameString(tab);
+   if (machine_type == MachineType::CPU)
+   {
+      MemberContainer<DataType>::const_iterator it, end = members.end();
+      for (it = members.begin(); it != end; ++it) {
+         os << (*it).second->getServiceNameString(tab);
+      }
+   }
+   else if (machine_type == MachineType::GPU)
+   {
+      MemberContainer<DataType>::const_iterator it, end = members.end();
+      for (it = members.begin(); it != end; ++it) {
+         os << (*it).second->getServiceNameString(tab, machine_type);
+      }
    }
    return os.str();
 }
@@ -963,12 +1015,14 @@ std::string InterfaceImplementorBase::createOptionalServiceNames(
 
 std::string InterfaceImplementorBase::createServiceDescriptions(
    const MemberContainer<DataType>& members, 
-   const std::string& tab) const
+   const std::string& tab,
+   MachineType mach_type
+   ) const
 {
    std::ostringstream os;
    MemberContainer<DataType>::const_iterator it, end = members.end();
    for (it = members.begin(); it != end; ++it) {
-      os << (*it).second->getServiceDescriptionString(tab);
+      os << (*it).second->getServiceDescriptionString(tab, mach_type);
    }
    return os.str();
 }

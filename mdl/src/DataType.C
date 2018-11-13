@@ -31,6 +31,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <cxxabi.h>
 
 DataType::DataType() 
    : _pointer(false), _derived(false), _shared(false), _name(""), _comment("")
@@ -350,15 +351,19 @@ std::string DataType::getOptionalServiceString(const std::string& tab) const
    return os.str();
 }
 
-std::string DataType::getServiceNameString(const std::string& tab) const
+std::string DataType::getServiceNameString(const std::string& tab,
+				     MachineType mach_type
+      ) const
 {
-   return getServiceInfoString(tab, getName());
+   return getServiceInfoString(tab, getName(), mach_type);
 }
 
 std::string DataType::getServiceDescriptionString(
-	 const std::string& tab) const
+	 const std::string& tab,
+	 MachineType mach_type
+	 ) const
 {
-   return getServiceInfoString(tab, getComment());
+   return getServiceInfoString(tab, getComment(), mach_type);
 }
 
 std::string DataType::getOptionalServiceNameString(
@@ -374,21 +379,67 @@ std::string DataType::getOptionalServiceDescriptionString(
 }
 
 std::string DataType::getServiceInfoString(
-   const std::string& tab, const std::string& info) const
+   const std::string& tab, const std::string& info,
+   MachineType mach_type
+   ) const
 {
    // No services for pointers
    if (isPointer()) {
       return "";
    }
    std::ostringstream os;
-   os << tab << "if (" << PUBDATANAME << " == &(";
-   if (_shared) {
-      os << "getSharedMembers().";
-   } 
-   os << getName();
-   os << ")) {\n"
-      << tab << TAB << "return \"" << info << "\";\n"
-      << tab << "}\n";
+   int status;
+   char * demangled = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+   std::string datatype(demangled);
+   free(demangled);
+   if (datatype.find("ArrayType") != std::string::npos 
+	 and mach_type == MachineType::GPU)
+   {
+      os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";
+      os << tab << "if (" << PUBDATANAME << " == &(";
+      if (_shared) {
+	 os << "getSharedMembers().";
+      } 
+      os << getName(mach_type);
+      os << ")) {\n"
+	 << tab << TAB << "return \"" << info << "\";\n"
+	 << tab << "}\n";
+
+      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+      os << tab << "if (" << PUBDATANAME << " == &(";
+      if (_shared) {
+	 os << "getSharedMembers().";
+      } 
+      os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + SUFFIX_MEMBERNAME_ARRAY + "[" + REF_INDEX + "]";
+      os << ")) {\n"
+	 << tab << TAB << "return \"" << info << "\";\n"
+	 << tab << "}\n";
+
+      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n";
+      os << tab << "if (" << PUBDATANAME << " == &(";
+      if (_shared) {
+	 os << "getSharedMembers().";
+      } 
+      os << getName(mach_type);
+      os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "*" + REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + SUFFIX_MEMBERNAME_ARRAY_MAXELEMENTS + "]";
+      os << ")) {\n"
+	 << tab << TAB << "return \"" << info << "\";\n"
+	 << tab << "}\n";
+
+      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n";
+      os << tab << "assert(0);\n";
+      os << "#endif\n";
+   }
+   else{
+      os << tab << "if (" << PUBDATANAME << " == &(";
+      if (_shared) {
+	 os << "getSharedMembers().";
+      } 
+      os << getName(mach_type);
+      os << ")) {\n"
+	 << tab << TAB << "return \"" << info << "\";\n"
+	 << tab << "}\n";
+   }
    return os.str();
 }
 

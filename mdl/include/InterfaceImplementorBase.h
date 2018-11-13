@@ -146,7 +146,8 @@ class InterfaceImplementorBase : public Generatable {
       virtual std::string getExtraOptionalServices(
 	 const std::string& tab) const;
 
-      std::string getInstanceServiceNames(const std::string& tab) const;
+      std::string getInstanceServiceNames(const std::string& tab, 
+	    MachineType mach_type=MachineType::CPU) const;
       std::string getOptionalInstanceServiceNames(
 	 const std::string& tab) const;
       virtual std::string getExtraServiceNames(const std::string& tab) const;
@@ -154,7 +155,9 @@ class InterfaceImplementorBase : public Generatable {
 	 const std::string& tab) const;
 
       std::string getInstanceServiceDescriptions(
-	 const std::string& tab) const;
+	 const std::string& tab,
+	 MachineType mach_type=MachineType::CPU
+	 ) const;
       std::string getOptionalInstanceServiceDescriptions(
 	 const std::string& tab) const;
       virtual std::string getExtraServiceDescriptions(
@@ -179,7 +182,9 @@ class InterfaceImplementorBase : public Generatable {
 	 const std::string& tab) const;
 
       std::string createServiceNames(const MemberContainer<DataType>& members, 
-				     const std::string& tab) const;
+				     const std::string& tab,
+				     MachineType mach_type=MachineType::CPU
+				     ) const;
 
       std::string createOptionalServiceNames(
 	 const MemberContainer<DataType>& members, 
@@ -195,7 +200,9 @@ class InterfaceImplementorBase : public Generatable {
 
       std::string createServiceDescriptions(
 	 const MemberContainer<DataType>& members, 
-	 const std::string& tab) const;
+	 const std::string& tab,
+	 MachineType mach_type=MachineType::CPU
+	 ) const;
 
       std::string createOptionalServiceDescriptions(
 	 const MemberContainer<DataType>& members, 

@@ -26,7 +26,7 @@
 class Attribute
 {
    public:
-      Attribute(int accessType = AccessType::PUBLIC);
+      Attribute(AccessType accessType = AccessType::PUBLIC);
       virtual void duplicate(std::auto_ptr<Attribute>& dup) const = 0;
       virtual ~Attribute();
       virtual std::string getName() const = 0;
@@ -35,11 +35,11 @@ class Attribute
       virtual bool isPointer() const = 0;
       virtual bool isOwned() const = 0;
       
-      int getAccessType() const {
+      AccessType getAccessType() const {
 	 return _accessType;
       }
 
-      void setAccessType(int acc) {
+      void setAccessType(AccessType acc) {
 	 _accessType = acc;
       }
 
@@ -101,7 +101,7 @@ class Attribute
       }
 
       // Prints itself to be put in .h file if the type matches
-      std::string getDefinition(int type) const;
+      std::string getDefinition(AccessType type) const;
       
       // This method fills in the initializer to be used in Constructors,
       // if the attribute is basic or it is a pointer the it initializes 
@@ -147,7 +147,7 @@ class Attribute
 
    private:
       // Shows if the attribute is public, protected, or private
-      int _accessType;
+      AccessType _accessType;
 
       // if != "", this attribute is in a container so it should be
       // copied specially.
