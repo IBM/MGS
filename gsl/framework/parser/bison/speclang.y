@@ -2889,7 +2889,7 @@ phase: IDENTIFIER {
    $$ = new C_phase(*$1, 0, localError);
    delete $1;
 }
-| IDENTIFIER '(' machine_type ')'
+| IDENTIFIER '(' machine_type ')' {
    SyntaxError* localError = 
       new SyntaxError(CURRENTFILE, @1.first_line, 
 		      "Phase", "Identifier");
