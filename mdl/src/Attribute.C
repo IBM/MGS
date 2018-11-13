@@ -74,11 +74,25 @@ std::string Attribute::getDefinition(AccessType type) const
 void Attribute::fillInitializer(std::string& init) const
 {
    init = ""; // Important should reset to "" this is checked by the caller.
+   bool process_param = false;
+   if (getConstructorParameterName() != "" || 
+	 isPointer() || isBasic()
+      )
+      process_param = true;
+   if (process_param)
+      init += "\n" + _macroConditional.getBeginning();
+   std::string prefix=", ";
+
+   if (_macroConditional.getName() != "" &&
+	 process_param)
+      init += prefix;
    if (getConstructorParameterName() != "") {
-      init = getName() + "(" + getConstructorParameterName() + ")";
+      init += getName() + "(" + getConstructorParameterName() + ")";
    } else if (isPointer() || isBasic()) {
-      init = getName() + "(0)";	    
+      init += getName() + "(0)";	    
    }
+   if (process_param)
+      init += "\n" + _macroConditional.getEnding();
 }
 
 void Attribute::fillCopyInitializer(std::string& init, 

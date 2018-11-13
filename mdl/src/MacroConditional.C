@@ -20,6 +20,7 @@
 MacroConditional::MacroConditional(const std::string& name)
    : _name(name)
 {
+   _negate_condition = false;
 }
 
 std::string MacroConditional::getBeginning() const
@@ -27,7 +28,11 @@ std::string MacroConditional::getBeginning() const
    if (_name == "") {
       return "";
    } else {
-      return "#ifdef " + _name + "\n";
+      //return "#ifdef " + _name + "\n";
+      if (_negate_condition)
+	 return "#if ! defined( " + _name + ")\n";
+      else
+	 return "#if defined( " + _name + ")\n";
    }
 }
 
