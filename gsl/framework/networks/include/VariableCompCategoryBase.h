@@ -46,7 +46,7 @@ class VariableCompCategoryBase : public DistributableCompCategoryBase, public Va
       virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet>& initPSet) = 0;
       virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet>& inAttrPSet) = 0;
       virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet>& outAttrPSet) = 0;
-      virtual int initPartitions(int num);
+      virtual void initPartitions(int numCores, int numGPUs);
 
       // move to CG later
       virtual void getQueriable(

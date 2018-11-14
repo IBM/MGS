@@ -2874,7 +2874,8 @@ system_call: SYSTEM '(' string_literal_list ')' ';' {
 
 
 machine_type: IDENTIFIER {
-   new SyntaxError(CURRENTFILE, @1.first_line, 
+   SyntaxError* localError = 
+     new SyntaxError(CURRENTFILE, @1.first_line, 
 		      "Machine Type", "Identifier");
    localError->setOriginal();
    $$ = new C_machine_type(*$1, localError);
@@ -2889,7 +2890,7 @@ phase: IDENTIFIER {
    $$ = new C_phase(*$1, 0, localError);
    delete $1;
 }
-| IDENTIFIER '(' machine_type ')'
+| IDENTIFIER '(' machine_type ')' {
    SyntaxError* localError = 
       new SyntaxError(CURRENTFILE, @1.first_line, 
 		      "Phase", "Identifier");

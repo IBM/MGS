@@ -31,31 +31,30 @@ VariableCompCategoryBase::~VariableCompCategoryBase()
    delete[] _partitions;
 }
 
-int VariableCompCategoryBase::initPartitions(int num)
+void VariableCompCategoryBase::initPartitions(int numCores, int numGPUs)
 {
    int n = _variableList.size();
    if (n==0) {
-      num = 1;
-      _nbrPartitions = num;
-      _partitions = new VariablePartitionItem[num];
+      numCores = 1;
+      _nbrPartitions = numCores;
+      _partitions = new VariablePartitionItem[numCores];
    
       _partitions[0].startIndex = 1;
       _partitions[0].endIndex =  0;
    }
    else{
-      if (n < num) num = n;
-      _nbrPartitions = num;
-      _partitions = new VariablePartitionItem[num];
-      int unitsPerPartition= n/num;
+      if (n < numCores) numCores = n;
+      _nbrPartitions = numCores;
+      _partitions = new VariablePartitionItem[numCores];
+      int unitsPerPartition= n/numCores;
    
-      for (int idx=0; idx < num; ++idx) {
+      for (int idx=0; idx < numCores; ++idx) {
         _partitions[idx].startIndex = idx*unitsPerPartition;
         _partitions[idx].endIndex =  (idx+1)*unitsPerPartition - 1;					
       }
-       _partitions[num-1].endIndex = n - 1;
+       _partitions[numCores-1].endIndex = n - 1;
    }
    getWorkUnits();
-   return num;
 }
 
 // move to CG later

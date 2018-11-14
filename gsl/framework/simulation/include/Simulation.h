@@ -298,7 +298,7 @@ class Simulation : public Publishable {
   std::string findLaterPhase(const std::string& first,
                              const std::string& second);
 
-  PhaseElement::machineType getPhaseMachineType(std::string& name);
+  PhaseElement::machineType getPhaseMachineType(std::string const & name);
   std::string getFinalRuntimePhaseName();
   void detachUserInterface() { _detachUserInterface = true; }
   virtual ~Simulation();

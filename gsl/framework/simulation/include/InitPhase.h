@@ -25,7 +25,7 @@
 class InitPhase : public Phase {
 
    public:
-      InitPhase(const std::string& name = "", PhaseElement::machineType mType = CPU);
+      InitPhase(const std::string& name = "", PhaseElement::machineType mType = PhaseElement::CPU);
       virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~InitPhase();
      

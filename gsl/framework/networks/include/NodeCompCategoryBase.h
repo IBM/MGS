@@ -87,7 +87,7 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
 
       NodePartitionItem* _corePartitions;
       NodePartitionItem* _gpuPartitions;
-      int _nbrCorePartions;
+      int _nbrCorePartitions;
       int _nbrGpuPartitions;
 
       std::string _modelName;
