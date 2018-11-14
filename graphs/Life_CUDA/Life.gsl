@@ -31,33 +31,35 @@ FinalPhases = { finalize };
 
 NodeType LifeNode(< tooSparse=1, tooCrowded=4 >);
 
-Grid World
-{
-#if 1
-   Dimension(20,20);
-   Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   Layer(nodes2, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   /*InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );*/
-   /*InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );*/
-   //Dimension(100,100);
-   //Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   //InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
-   //InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
-#else
-   Dimension(1000,1000);
-   Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   InitNodes ( .[250:750, 250:750].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
-   InitNodes ( .[400:600, 400:600].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
-#endif
-   NodeSet all(.[].Layer(nodes));
-   connectNodeSets(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
-};
-World world;
+//Grid World
+//{
+//#if 1
+//   Dimension(20,20);
+//   Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
+//   Layer(nodes2, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
+//   /*InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );*/
+//   /*InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );*/
+//   //Dimension(100,100);
+//   //Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
+//   //InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
+//   //InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
+//#else
+//   Dimension(1000,1000);
+//   Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
+//   InitNodes ( .[250:750, 250:750].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
+//   InitNodes ( .[400:600, 400:600].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
+//#endif
+//   NodeSet all(.[].Layer(nodes));
+//   connectNodeSets(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
+//};
+//World world;
 
 Grid World_other
 {
    Dimension(2,2);
    Layer(nodes3, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
+   NodeSet all(.[].Layer(nodes3));
+   connectNodeSets(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
 };
 World_other world2;
 //

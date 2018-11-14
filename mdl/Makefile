@@ -43,7 +43,7 @@ SRCS :=
 FINAL_TARGET_FLAG := 
 
 ifeq ($(CC), g++)
-  CFLAGS += -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align
+  CFLAGS += -std=c++11 -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated-declarations
 endif
 
 ifeq ($(OPERATING_SYSTEM), Linux)

@@ -397,7 +397,7 @@ void InterfaceImplementorBase::generateInstanceBase()
    // Add the instances.
    //instance->set_gpu();
    std::auto_ptr<Method> setCC(
-      new Method("setCompCategory", "void"));
+      new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
    //getPublisherMethod->setVirtual();
    std::string arg1 = "_" + REF_INDEX;
    setCC->addParameter("int " + arg1);
@@ -411,7 +411,7 @@ void InterfaceImplementorBase::generateInstanceBase()
    setCC->setMacroConditional(gpuConditional);
    instance->addMethod(setCC);
    std::auto_ptr<Method> getCC(
-      new Method("getContainer", instance->getName() + COMPCATEGORY + "*"));
+      new Method(GETCOMPCATEGORY_FUNC_NAME, instance->getName() + COMPCATEGORY + "*"));
    //getPublisherMethod->setVirtual();
    std::ostringstream getCCstream;
    getCCstream 

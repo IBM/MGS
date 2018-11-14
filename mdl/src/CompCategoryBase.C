@@ -239,11 +239,19 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
 	 << TAB << getPSetName() << "* " << PREFIX << "pset = dynamic_cast<" 
 	 << getPSetName() << "*>"
 	 << "(" << PREFIX << "initPSet);\n"; 
+      initializeFB << STR_GPU_CHECK_START;
+      for (it = getInstances().begin(); it != end; ++it){
+	 initializeFB
+	    << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" 
+	    << it->first << ";\n";
+      }
+      initializeFB << "#else\n";
       for (it = getInstances().begin(); it != end; ++it){
 	 initializeFB
 	    << TAB << it->first << " = " << PREFIX << "pset->" 
 	    << it->first << ";\n";
       }
+      initializeFB << STR_GPU_CHECK_END;
    }
    initializeMethod->setFunctionBody(initializeFB.str());
    instance.addMethod(initializeMethod);

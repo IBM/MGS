@@ -63,6 +63,8 @@ const std::string REF_INDEX = "index"; // index to data array as stored in ompCa
 const std::string STR_GPU_CHECK_START = "#ifdef HAVE_GPU\n";
 const std::string GPUCONDITIONAL = "HAVE_GPU";
 const std::string STR_GPU_CHECK_END = "#endif\n";
+const std::string GETCOMPCATEGORY_FUNC_NAME = "getContainer";
+const std::string SETCOMPCATEGORY_FUNC_NAME = "setCompCategory";
 enum class MachineType {
    CPU, GPU
 };

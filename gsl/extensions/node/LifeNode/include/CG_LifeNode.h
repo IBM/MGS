@@ -1,3 +1,4 @@
+/* Class::printCopyright(os)*/
 // =================================================================
 // Licensed Materials - Property of IBM
 //
@@ -11,11 +12,22 @@
 // GSA ADP Schedule Contract with IBM Corp.
 //
 // =================================================================
+/* end Class::printCopyright(os)*/
 
+/* Class::printBeginning(os)*/
 #ifndef CG_LifeNode_H
 #define CG_LifeNode_H
+/* end Class::printBeginning(os)*/
 
+/* ... part of Class::generateHeader( "CG_LifeNode" )*/
 #include "Lens.h"
+
+/* Class::printHeaders(_headers, os)  - 
+ *  using _headers (std::set   of { _name = "CG_header_name", _macroCondition = {_name="" | "MPI"} })
+ *      which were generated 
+ *              via InterfaceImplementorBase::generateInstanceBase()
+instance->addHeader(...)
+ *  add all headers */
 #include "CG_LifeNodeInAttrPSet.h"
 #include "CG_LifeNodeOutAttrPSet.h"
 #include "CG_LifeNodePSet.h"
@@ -43,7 +55,16 @@
 #include "VariableDescriptor.h"
 #include <iostream>
 #include <memory>
+/* end Class::printHeaders(_headers, os)  - add all headers */
 
+
+/* Class::printClasses(os)  - add all class declaration
+ *  using _classes  (std::set   of { _name = "CG_header_name", _macroCondition = {_name="" | "MPI"} })
+ *      which were generated 
+ *              via InterfaceImplementorBase::generateInstanceBase()
+instance->addClass(...)
+ *
+ * */
 class CG_LifeNodeCompCategory;
 class ConnectionIncrement;
 class Constant;
@@ -52,13 +73,33 @@ class Node;
 class Variable;
 class VariableDescriptor;
 
-class CG_LifeNode : public ValueProducer, public NodeBase
+/* Class::generateClassDefinition(os) 
+ which traverse 
+     <IncludeClass>::iter -> getClassCode()
+ * */
+class CG_LifeNode 
+/*   <BaseClass*>: iter   -> getConditional(); //e.g. #ifdef MPI
+ *
+ *
+ *   NOTE: A Class can be a member of another class so 
+ *     if (_memberClass)
+ *     {... }
+ */
+: public ValueProducer, public NodeBase
 {
+   /*
+    * _friendDeclarations.size()
+    * <FriendDeclaration>::iter  -> getCodeString();
+    */
    friend class CG_LifeNodePublisher;
 #ifdef HAVE_MPI
    friend class CG_LifeNodeCompCategory;
 #endif
    friend class LifeNodeCompCategory;
+
+   /*
+    * Class::printAccessMemberClass(AccessType::PUBLIC, "public", os)
+    */
    public:
       virtual int* CG_get_ValueProducer_value();
       virtual const char* getServiceName(void* data) const;
@@ -91,14 +132,21 @@ class CG_LifeNode : public ValueProducer, public NodeBase
       virtual ConnectionIncrement* getComputeCost() const;
       CG_LifeNode();
       virtual ~CG_LifeNode();
+
+   /*
+    * Class::printAccessMemberClass(AccessType::PROTECTED , "public", os)
+    */
    protected:
 #ifdef HAVE_MPI
       void CG_send_copy(OutputStream* stream) const
       {
          MarshallerInstance<int > mi0;
-         //mi0.marshall(stream, publicValue);
+#if defined(HAVE_GPU) 
          //TUAN TODO revise here
          //mi0.marshall(stream, _container->um_publicValue[index]);
+#else
+         mi0.marshall(stream, publicValue);
+#endif
       }
 #endif
 #ifdef HAVE_MPI
@@ -112,6 +160,14 @@ class CG_LifeNode : public ValueProducer, public NodeBase
 #endif
       virtual TriggerableBase::EventType createTriggerableCaller(const std::string& CG_triggerableFunctionName, NDPairList* CG_triggerableNdpList, std::unique_ptr<TriggerableCaller>& CG_triggerableCaller);
 
+
+      /*
+       * The data member is generated, using info added via
+       *    Class::addAttributes(const MemberContainer<DataType>& members, ....)
+       *       in that 'members' hold vector of 
+       *              key=name of data member ('value', 'publicValue', 'neighbors'), 
+       *              value=object (IntType, ...)
+       */
 #if defined(HAVE_GPU) 
       int index; //the index in the array
    public:
@@ -128,12 +184,24 @@ class CG_LifeNode : public ValueProducer, public NodeBase
       //inline ShallowArray_Flat<int*> & neighbors(){ return _container->um_neighbors[index];}
       void setCompCategory(int _index, CG_LifeNodeCompCategory* cg) { index = _index; _container=cg; }
 #else
+   protected:
       int value;
       int publicValue;
       ShallowArray< int* > neighbors;
 #endif
+
+   /*
+    * Class::printAccessMemberClass(AccessType::PRIVATE, "public", os)
+    */
    private:
       CG_LifeNodeSharedMembers& getNonConstSharedMembers();
 };
 
+/* Class::printPartnerClasses(os) */
+
+/* Class::printExternCDefinition(os) */
+
+/* Class::printExternCPPDefinition(os) */
+
+/* os << "#endif" */
 #endif

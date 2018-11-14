@@ -2,6 +2,8 @@
 directory $NTSROOT/gsl/framework/parser/bison/
 source ~/.gdbinit.local
 set breakpoint pending on
+#set cuda break_on_launch application
+set cuda memcheck on
 #b HodgkinHuxleyVoltageJunction.C:166 if nidx == 0 and bidx== 0 and (iteration==1)
 #b HodgkinHuxleyVoltageJunction.C:166 if nidx==0 and bidx==0 and iteration=90
 
@@ -112,7 +114,6 @@ set breakpoint pending on
 ##b Array_GPU.h:33
 ##b Array_GPU.h:40
 ##b CG_LifeNodeCompCategory::allocateNode
-#b CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData
 ##b Array<LifeNode>::Array()
 ##b Array_GPU.h:283
 #b Array_GPU.h:65
@@ -125,12 +126,75 @@ set breakpoint pending on
 #b SimInitializer.C:306
 #b SimInitializer.C:307
 #b C_declaration_repertoire::internalExecute
-b Grid::addLayer
+#b Grid::addLayer
 #b GridLayerDescriptor.C:31
+#b GridLayerDescriptor::GridLayerDescriptor
 #b Simulation::addUnseparableGranuleSet
 #b Simulation::setGraph
 #b Simulation.C:171
-b CG_LifeNodeCompCategory.C:452
-b CG_LifeNodeGridLayerData.C:81
+#b C_type_definition.C:29
+#b Grid::Grid
+#b CG_LifeNodeCompCategory.C:452
+#b CG_LifeNodeGridLayerData.C:81
+#b CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData 
+#b CG_LifeNodeCompCategory.C:443
+##b GridQueriable.C:129
+#b LifeNode::copy
 
-r Life.gsl
+## start from here
+b CommandLine.C:72
+b Simulation.C:130 
+b CG_LifeNodeCompCategory::CG_LifeNodeCompCategory
+#b Functor.C:31
+#b CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData
+b CG_LifeNodeCompCategory::allocateNodes
+b CG_LifeNodeCompCategory::allocateNode
+b NoConnectConnector::nodeToNode
+b LensConnector::nodeToNode
+b ConnectNodeSetsFunctor.C:48
+##b RadialSamplerFunctor.C:160
+b CG_LifeNode::addPreNode
+#b ShallowArray_Flat::ShallowArray_Flat()
+#b Array_Flat::Array_Flat
+#b CG_LifeNodeGridLayerData.C:70
+#b CG_LifeNodeGridLayerData.C:86
+b CG_LifeNodeCompCategory::allocateProxies
+b CG_LifeNodeCompCategory::allocateProxy
+b CG_LifeNodeCompCategory::CG_host_update
+b CG_LifeNodeCompCategory::CG_host_copy
+b LifeNode_kernel_update
+b LifeNode_kernel_copy
+#b Array_GPU.h:122
+#b CG_LifeNodeCompCategory::getInitializationParameterSet
+b CG_LifeNodeCompCategory::getWorkUnits
+b Simulation.C:702
+b Simulation.C:446
+#b exit
+#b pthread_create
+#b MRG32k3a_S_GPU::reSeedShared
+#b SysTimer::start()
+#b SysTimer::reset()
+b LensContext.C:88 if (i == 17)
+
+
+
+#rbreak LifeNode.h:.
+#rbreak CG_LifeNode.h:.
+#b NodeDescriptor::setGridLayerData
+#b NodeDescriptor::getGridLayerData
+#b NodeDescriptor::getGridLayerDescriptor
+#b NodeDescriptor::getDensityIndex
+#b NodeDescriptor::getNodeCoords
+#b NodeDescriptor::getNodeCoords
+#b NodeDescriptor::getNodeCoords2Dim 
+#b NodeDescriptor::getNode
+#b NodeDescriptor::setNode
+#b NodeDescriptor::getNodeIndex
+#b NodeDescriptor::setNodeIndex
+#b NodeDescriptor::getIndex
+#b NodeDescriptor::setIndex
+#b NodeDescriptor::getGlobalIndex
+#r Life.gsl
+#r Life_complete.gsl -d 1
+#r Life_profile.gsl
+r Life_debug.gsl -d 1
