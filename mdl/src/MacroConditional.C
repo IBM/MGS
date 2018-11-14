@@ -30,9 +30,9 @@ std::string MacroConditional::getBeginning() const
    } else {
       //return "#ifdef " + _name + "\n";
       if (_negate_condition)
-	 return "#if ! defined( " + _name + ")\n";
+	 return "#if ! defined(" + _name + ")\n";
       else
-	 return "#if defined( " + _name + ")\n";
+	 return "#if defined(" + _name + ")\n";
    }
 }
 

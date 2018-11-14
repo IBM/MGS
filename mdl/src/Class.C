@@ -192,7 +192,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
      //std::auto_ptr<Attribute> att_index(new DataTypeAttribute(dup));
      //CustomAttribute* att_index= new CustomAttribute(REF_INDEX, "int*");
      MacroConditional gpuConditional(GPUCONDITIONAL);
-     std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_INDEX, "int*", accessType));
+     std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_INDEX, "int", accessType));
      att_index->setMacroConditional(gpuConditional);
      addAttribute(att_index, MachineType::GPU);
      //_instances_GPU.addMember("index", dup);

@@ -241,9 +241,52 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
 	 << "(" << PREFIX << "initPSet);\n"; 
       initializeFB << STR_GPU_CHECK_START;
       for (it = getInstances().begin(); it != end; ++it){
-	 initializeFB
-	    << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" 
-	    << it->first << ";\n";
+	 if (it->second->isArray())
+	 {
+	   initializeFB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	      << TAB 
+	      << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" 
+	      << it->first << ";\n"
+	      << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	      << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_from = "
+	      << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "_start_offset[" << REF_INDEX << "];\n"
+	      << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_to = "
+	      << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "_start_offset[" << REF_INDEX << "+1]-1;\n"
+	      << TAB << "for (auto i = 0; i <  std::min(" << PREFIX_MEMBERNAME << it->first << "_to" 
+	      << " - " << PREFIX_MEMBERNAME << it->first << "_from+1"
+	      << ", (int)CG_pset->" << it->first << ".size()); ++i)\n"
+	      << TAB << "{\n"
+	      << TAB << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "[i+" << PREFIX_MEMBERNAME << it->first << "_from]"
+	      << " = " << "CG_pset->" << it->first << "[i];\n"
+	      << TAB << "}\n"
+	      << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	      << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_from = "
+	      << REF_INDEX << " *" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "_max_elements;\n"
+	      << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_to = "
+	      << "(" << REF_INDEX << "+1) *" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "_max_elements - 1;\n"
+	      << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "_start_offset[" << REF_INDEX << "+1]-1;\n"
+	      << TAB << "for (auto i = 0; i <  std::min(" << PREFIX_MEMBERNAME << it->first << "_to" 
+	      << " - " << PREFIX_MEMBERNAME << it->first << "_from+1"
+	      << ", (int)CG_pset->" << it->first << ".size()); ++i)\n"
+	      << TAB << "{\n"
+	      << TAB << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+	      << "[i+" << PREFIX_MEMBERNAME << it->first << "_from]"
+	      << " = " << "CG_pset->" << it->first << "[i];\n"
+	      << TAB << "}\n"
+	      << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	      <<  TAB << "assert(0);\n"
+	      << "#endif\n";
+	 }else{
+	    initializeFB
+	       << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" 
+	       << it->first << ";\n";
+	 }
       }
       initializeFB << "#else\n";
       for (it = getInstances().begin(); it != end; ++it){
