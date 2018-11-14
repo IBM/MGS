@@ -388,11 +388,12 @@ std::string DataType::getServiceInfoString(
       return "";
    }
    std::ostringstream os;
-   int status;
-   char * demangled = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
-   std::string datatype(demangled);
-   free(demangled);
-   if (datatype.find("ArrayType") != std::string::npos 
+   //int status;
+   //char * demangled = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+   //std::string datatype(demangled);
+   //free(demangled);
+   //if (datatype.find("ArrayType") != std::string::npos 
+   if (this->isArray() 
 	 and mach_type == MachineType::GPU)
    {
       os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";

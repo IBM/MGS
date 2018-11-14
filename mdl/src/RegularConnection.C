@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -145,6 +145,12 @@ std::string RegularConnection::getUserFunctionCallsString() const
 std::string RegularConnection::getConnectionCode(
    const std::string& name, const std::string& functionParameters) const
 {
+   return getConnectionCode(name, functionParameters, MachineType::CPU);
+}
+std::string RegularConnection::getConnectionCode(
+   const std::string& name, const std::string& functionParameters,
+   MachineType mach_type) const
+{
    std::ostringstream os;
    std::string psetName;
    if (_directionType == _PRE) {
@@ -159,24 +165,29 @@ std::string RegularConnection::getConnectionCode(
       os << TAB << "if (";
       if (_predicate) {
        	 os << _predicate->getName();
-				 predicateString = (_predicate->getName());
-				 //predicateString = (_predicate->getPredicate1Name());
+	 predicateString = (_predicate->getName());
+	 //predicateString = (_predicate->getPredicate1Name());
       }
       os << ") {\n";
-//      os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
+      //      os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
    } else {
       tab = TAB;
-//      os << getCommonConnectionCode(tab, name);
+      //      os << getCommonConnectionCode(tab, name);
    }
-	 //os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
-	 os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicateString);
-	 if (_userFunctionCalls) {
+   //os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
+   os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicateString, mach_type);
+   if (_userFunctionCalls) {
      os << tab <<  "if (castMatchLocal) { \n";
      std::vector<UserFunctionCall*>::const_iterator it, 
        end = _userFunctionCalls->end();
      for (it = _userFunctionCalls->begin();  it != end; ++it) {
        //os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
-       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
+       if (mach_type == MachineType::GPU)
+	  //need to be updated when this condition meet
+	  os << tab << TAB << (*it)->getName() << "TUAN TO UPDATE"<< "(" << functionParameters << ");\n";
+       else
+	  os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
+
      }
      os << tab << "}; \n";
    }

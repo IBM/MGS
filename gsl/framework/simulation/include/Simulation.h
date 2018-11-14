@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -494,6 +494,7 @@ class Simulation : public Publishable {
   std::deque<PhaseElement> _loadPhases;
   std::deque<PhaseElement> _finalPhases;
   std::map<std::string, bool> _communicatingPhases;
+  //map from a phase's name, e.g. 'update' (as declared in GSL), to the machine type, e.g. GPU, which handle that type
   std::map<std::string, PhaseElement::machineType> _machineTypes;
   int _rank;
   int _nump;

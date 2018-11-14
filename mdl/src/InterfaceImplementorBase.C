@@ -382,6 +382,7 @@ void InterfaceImplementorBase::generatePublisher()
 void InterfaceImplementorBase::generateInstanceBase()
 {
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
+   //instance.addSupportMachineType(this->getSupportMachineType);
 
    instance->addHeader("\"" + getPublisherName() + ".h\"");
    instance->addHeader("\"" + getOutAttrPSetName() + ".h\"");
@@ -396,31 +397,37 @@ void InterfaceImplementorBase::generateInstanceBase()
 
    // Add the instances.
    //instance->set_gpu();
-   std::auto_ptr<Method> setCC(
-      new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
-   //getPublisherMethod->setVirtual();
-   std::string arg1 = "_" + REF_INDEX;
-   setCC->addParameter("int " + arg1);
-   setCC->addParameter(instance->getName() + COMPCATEGORY + "* cc_ptr");
-   std::ostringstream setCCstream;
-   setCCstream 
-      << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = cc_ptr;\n";
-   setCC->setFunctionBody(setCCstream.str());
-   setCC->setInline();
-   MacroConditional gpuConditional(GPUCONDITIONAL);
-   setCC->setMacroConditional(gpuConditional);
-   instance->addMethod(setCC);
-   std::auto_ptr<Method> getCC(
-      new Method(GETCOMPCATEGORY_FUNC_NAME, instance->getName() + COMPCATEGORY + "*"));
-   //getPublisherMethod->setVirtual();
-   std::ostringstream getCCstream;
-   getCCstream 
-      << TAB << TAB << "return " << REF_CC_OBJECT << ";\n";
-   getCC->setFunctionBody(getCCstream.str());
-   getCC->setInline();
-   getCC->setMacroConditional(gpuConditional);
-   instance->addMethod(getCC);
-   instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      std::auto_ptr<Method> setCC(
+            new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
+      //getPublisherMethod->setVirtual();
+      std::string arg1 = "_" + REF_INDEX;
+      setCC->addParameter("int " + arg1);
+      setCC->addParameter(instance->getName() + COMPCATEGORY + "* cc_ptr");
+      std::ostringstream setCCstream;
+      setCCstream 
+         << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = cc_ptr;\n";
+      setCC->setFunctionBody(setCCstream.str());
+      setCC->setInline();
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      setCC->setMacroConditional(gpuConditional);
+      instance->addMethod(setCC);
+      std::auto_ptr<Method> getCC(
+            new Method(GETCOMPCATEGORY_FUNC_NAME, instance->getName() + COMPCATEGORY + "*"));
+      //getPublisherMethod->setVirtual();
+      std::ostringstream getCCstream;
+      getCCstream 
+         << TAB << TAB << "return " << REF_CC_OBJECT << ";\n";
+      getCC->setFunctionBody(getCCstream.str());
+      getCC->setInline();
+      getCC->setMacroConditional(gpuConditional);
+      instance->addMethod(getCC);
+      instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true);
+   }
+   else{
+      instance->addAttributes(getInstances(), AccessType::PROTECTED, false);
+   }
 
    // Add the interface base classes, implement the get methods.
    setupInstanceInterfaces(instance);
@@ -440,18 +447,31 @@ void InterfaceImplementorBase::generateInstanceBase()
    getServiceNameMethod->setConst();
    getServiceNameMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
    std::ostringstream getServiceNameMethodFB;
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      getServiceNameMethodFB
+         << STR_GPU_CHECK_START
+         << getInstanceServiceNames(TAB, MachineType::GPU)
+         << getOptionalInstanceServiceNames(TAB)
+         << getExtraServiceNames(TAB)
+         << getExtraOptionalServiceNames(TAB)
+         << "#else\n";
+   }
+   else{//leave blank
+   }
    getServiceNameMethodFB
-      << STR_GPU_CHECK_START
-      << getInstanceServiceNames(TAB, MachineType::GPU)
-      << getOptionalInstanceServiceNames(TAB)
-      << getExtraServiceNames(TAB)
-      << getExtraOptionalServiceNames(TAB)
-      << "#else\n"
       << getInstanceServiceNames(TAB)
       << getOptionalInstanceServiceNames(TAB)
       << getExtraServiceNames(TAB)
-      << getExtraOptionalServiceNames(TAB)
-      << STR_GPU_CHECK_END
+      << getExtraOptionalServiceNames(TAB);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      getServiceNameMethodFB
+         << STR_GPU_CHECK_END;
+   }
+   else{//leave blank
+   }
+   getServiceNameMethodFB
       << TAB << "return \"Error in Service Name!\";\n";
    getServiceNameMethod->setFunctionBody(
       getServiceNameMethodFB.str());
@@ -464,18 +484,27 @@ void InterfaceImplementorBase::generateInstanceBase()
    getServiceDescriptionMethod->setConst();
    getServiceDescriptionMethod->addParameter(PUBDATATYPE + " " + PUBDATANAME);
    std::ostringstream getServiceDescriptionMethodFB;
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      getServiceDescriptionMethodFB
+         << STR_GPU_CHECK_START
+         << getInstanceServiceDescriptions(TAB, MachineType::GPU)
+         << getOptionalInstanceServiceDescriptions(TAB)
+         << getExtraServiceDescriptions(TAB)
+         << getExtraOptionalServiceDescriptions(TAB)
+         <<  "#else\n";
+   }
    getServiceDescriptionMethodFB
-      << STR_GPU_CHECK_START
-      << getInstanceServiceDescriptions(TAB, MachineType::GPU)
-      << getOptionalInstanceServiceDescriptions(TAB)
-      << getExtraServiceDescriptions(TAB)
-      << getExtraOptionalServiceDescriptions(TAB)
-      <<  "#else\n"
       << getInstanceServiceDescriptions(TAB)
       << getOptionalInstanceServiceDescriptions(TAB)
       << getExtraServiceDescriptions(TAB)
-      << getExtraOptionalServiceDescriptions(TAB)
-      << STR_GPU_CHECK_END
+      << getExtraOptionalServiceDescriptions(TAB);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+   getServiceDescriptionMethodFB
+      << STR_GPU_CHECK_END;
+   }
+   getServiceDescriptionMethodFB
       << TAB << "return \"Error in Service Description!\";\n";
    getServiceDescriptionMethod->setFunctionBody(
       getServiceDescriptionMethodFB.str());
@@ -1303,9 +1332,25 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
 		   funBody << TAB << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
                } else
                   miSN = (*typeMarshallerIter).second;
+
+               if (isSupportedMachineType(MachineType::GPU))
+               {
+                  funBody 
+                     << STR_GPU_CHECK_START;
+                  funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
+                  if ((*pviter)->isPointer()) funBody << "*";
+                  funBody 
+                     << (*pviter)->getName(MachineType::GPU) << ");\n"
+                     << "#else\n";
+               }
                funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
 	       if ((*pviter)->isPointer()) funBody << "*";
 	       funBody << (*pviter)->getName() << ");\n";
+               if (isSupportedMachineType(MachineType::GPU))
+               {
+                  funBody 
+                     << STR_GPU_CHECK_END;
+               }
             }   
             getSendType->setFunctionBody(funBody.str());
             instance.addMethod(getSendType);
@@ -1340,9 +1385,24 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
 	 funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
      } else
        miSN = (*typeMarshallerIter).second;
+
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         funBody 
+            << STR_GPU_CHECK_START;
+         funBody << TAB << "mi" << miSN << ".marshall(stream, ";
+         if ((*it)->isPointer()) funBody << "*";
+         funBody << (*it)->getName() << ");\n"
+            << "#else\n";
+      }
      funBody << TAB << "mi" << miSN << ".marshall(stream, ";
      if ((*it)->isPointer()) funBody << "*";
      funBody << (*it)->getName() << ");\n";
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         funBody 
+            << STR_GPU_CHECK_END;
+      }
    }
    initializeProxySender->setFunctionBody(funBody.str());
    instance.addMethod(initializeProxySender);
@@ -1369,9 +1429,25 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
 	   funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
       } else
          miSN = (*typeMarshallerIter).second;
+
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         funBody 
+            << STR_GPU_CHECK_START;
+         funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
+         if ((*it)->isPointer()) funBody << "*";
+         funBody 
+            << (*it)->getName(MachineType::GPU) << ");\n"
+            << "#else\n";
+      }
       funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
       if ((*it)->isPointer()) funBody << "*";
       funBody << (*it)->getName() << ");\n";
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         funBody 
+            << STR_GPU_CHECK_END;
+      }
    }
    initializeProxyGetSendType->setFunctionBody(funBody.str());
    instance.addMethod(initializeProxyGetSendType);

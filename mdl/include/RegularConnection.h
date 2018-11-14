@@ -44,6 +44,10 @@ class RegularConnection : public Connection {
 
       virtual std::string getConnectionCode(
 	 const std::string& name, const std::string& functionParameters) const;
+      virtual std::string getConnectionCode(
+	 const std::string& name, const std::string& functionParameters,
+	 MachineType mach_type) const;
+
       void getFunctionPredicateNames(std::set<std::string>& names) const;
 
    protected:

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -112,8 +112,11 @@ class Connection {
 
       std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab, 
 					  const std::string& name) const;
-			std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
-					const std::string& name, const std::string& predicate) const;
+      std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
+	    const std::string& name, const std::string& predicate) const;
+      std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
+	    const std::string& name, const std::string& predicate,
+	    MachineType mach_type) const;
       DirectionType _directionType;
       ComponentType _componentType;
 

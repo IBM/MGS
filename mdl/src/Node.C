@@ -60,6 +60,7 @@ std::string Node::getModuleTypeName() const
 void Node::internalGenerateFiles() 
 {
    assert(strcmp(getName().c_str(), ""));
+   addSupportForMachineType(MachineType::GPU);
 
    generateInstanceBase();
    generateInstance();

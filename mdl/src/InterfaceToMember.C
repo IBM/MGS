@@ -150,6 +150,12 @@ InterfaceToMember::~InterfaceToMember()
 std::string InterfaceToMember::getInterfaceToMemberCode(
    const std::string& tab, std::set<std::string>& requiredIncreases) const
 {
+   return getInterfaceToMemberCode(tab, requiredIncreases, MachineType::CPU);
+}
+std::string InterfaceToMember::getInterfaceToMemberCode(
+   const std::string& tab, std::set<std::string>& requiredIncreases,
+   MachineType mach_type) const
+{
    std::string interfaceName = PREFIX + _interface->getName() + "Ptr";   
    std::string memberName;
 
@@ -171,7 +177,7 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
       if (it->getDataType()->isShared()) {
 	 memberName = "getNonConstSharedMembers().";
       }
-      memberName += it->getDataType()->getName();
+      memberName += it->getDataType()->getName(mach_type);
       std::string getMethod;
       getMethod = interfaceName + "->" + PREFIX + "get_" + 
 	 _interface->getName() + "_" + it->getName() + "()";
@@ -180,13 +186,57 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
 	 os << tab << memberName << path << " = " << getMethod << ";\n";
       } else { // ONETOMANY
 	 if (path == "") {
-	    os << tab << memberName << ".insert(" << getMethod << ");\n";
-// 	    std::string sizeName = PREFIX + memberName + "Size";
-// 	    os << tab << "int " << sizeName << " = " << memberName 
-// 	       << ".size();\n"
-// 	       << tab <<  memberName << ".increase();\n" 
-// 	       << tab << memberName << "[" << sizeName << "]" 
-// 	       << " = " << getMethod << ";\n";
+	    if (mach_type == MachineType::GPU)
+	    {
+	       if (it->getDataType()->isArray())
+	       {
+		  std::string tmpVarName = PREFIX_MEMBERNAME + it->getDataType()->getName() + "_index"; 
+		  const DataType* dt_ptr = it->getDataType();
+		  os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+		     << TAB << memberName << ".insert(" 
+		     << getMethod << ");\n";
+		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+		  os << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements["
+		     << REF_INDEX << "] +=1;\n"
+		     << TAB << "auto " << tmpVarName << " = " 
+		     << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_offset["  
+		     << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
+		     << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() 
+		     << "[" << tmpVarName << "] = " 
+		     << getMethod << ");\n";
+		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+		     << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" 
+		     << REF_INDEX << "] +=1;\n"
+		     << TAB << "auto " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
+		     << PREFIX_MEMBERNAME << dt_ptr->getName() << "_max_elements + " 
+		     << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements["
+		     << REF_INDEX << "]-1;\n"
+		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" 
+		     << tmpVarName << "] = " 
+		     << getMethod << ");\n";
+		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+		     << TAB << "assert(0);\n"
+		     << "#endif\n";
+	       }
+	       else{
+		  os << tab << memberName << ".insert(" << getMethod << ");\n";
+		  //os << tab << REF_CC_OBJECT << it->getDataType()->getName(mach_type) << ".insert(" << getMethod << ");\n";
+	       }
+	    }
+	    else if (mach_type == MachineType::CPU)
+	    {
+	       os << tab << memberName << ".insert(" << getMethod << ");\n";
+	       // 	    std::string sizeName = PREFIX + memberName + "Size";
+	       // 	    os << tab << "int " << sizeName << " = " << memberName 
+	       // 	       << ".size();\n"
+	       // 	       << tab <<  memberName << ".increase();\n" 
+	       // 	       << tab << memberName << "[" << sizeName << "]" 
+	       // 	       << " = " << getMethod << ";\n";
+	    }
+	    else{
+	       assert(0);
+	    }
 	 } else {
   	    std::string sizeName = PREFIX + memberName + "Size";
 	    requiredIncreases.insert(memberName);

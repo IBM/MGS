@@ -102,6 +102,15 @@ class CG_LifeNode
     */
    public:
       virtual int* CG_get_ValueProducer_value();
+#if defined(HAVE_GPU)
+      void setCompCategory(int _index, CG_LifeNodeCompCategory* cg) { index = _index; _container=cg; }
+#endif
+#if defined(HAVE_GPU)
+      CG_LifeNodeGPUCompCategory* getContainer()
+      {
+      return _container;
+      }
+#endif
       virtual const char* getServiceName(void* data) const;
       virtual const char* getServiceDescription(void* data) const;
       virtual Publisher* getPublisher();
@@ -169,8 +178,8 @@ class CG_LifeNode
        *              value=object (IntType, ...)
        */
 #if defined(HAVE_GPU) 
+   protected:
       int index; //the index in the array
-   public:
       //TUAN TODO: write a method function to provide the access to '_container' 
       //    so that we don't make '_container' public
       // and also to avoid the error 'access incomplete type' if we make '_container' as private
@@ -178,11 +187,9 @@ class CG_LifeNode
       //CG_LifeNodeCompCategory* _container;
       static CG_LifeNodeCompCategory* _container; //just declaration, need to be instantiated in the .cpp
       //LifeNodeCompCategory* _container;
-   protected:
       //int& value(){ return _container->um_value[index];}
       //inline int& publicValue(){ return _container->um_publicValue[index];}
       //inline ShallowArray_Flat<int*> & neighbors(){ return _container->um_neighbors[index];}
-      void setCompCategory(int _index, CG_LifeNodeCompCategory* cg) { index = _index; _container=cg; }
 #else
    protected:
       int value;

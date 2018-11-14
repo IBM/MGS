@@ -52,9 +52,6 @@
 #include <algorithm>
 
 
-#if defined(HAVE_GPU) 
-CG_LifeNodeCompCategory* CG_LifeNode::_container=nullptr; //instantiation 
-#endif
 
 int* CG_LifeNode::CG_get_ValueProducer_value() 
 {
@@ -470,3 +467,6 @@ CG_LifeNode::~CG_LifeNode()
 {
 }
 
+#if defined(HAVE_GPU) 
+CG_LifeNodeCompCategory* CG_LifeNode::_container=nullptr; //instantiation 
+#endif

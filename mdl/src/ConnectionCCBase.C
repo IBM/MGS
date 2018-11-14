@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -220,8 +220,20 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
 	 (*it2)->getInterfaceCasts(componentName);
       interfaceCasts.insert(
 	 tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
+
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+	 subBody += STR_GPU_CHECK_START;
+	 subBody += (*it2)->getConnectionCode(getName(), 
+	       functionParameters, MachineType::GPU) + "\n"; 
+	 subBody += "#else\n";
+      }
       subBody += (*it2)->getConnectionCode(getName(), 
 					   functionParameters) + "\n"; 
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+	 subBody += STR_GPU_CHECK_END;
+      }
    }
    std::set<std::string>::iterator it3, end3 = interfaceCasts.end();
    for (it3 = interfaceCasts.begin(); it3 != end3; ++it3) {
@@ -378,7 +390,6 @@ void ConnectionCCBase::setPredicateFunctions(
 
 std::string ConnectionCCBase::getAcceptServiceBody() const
 {
-
    std::ostringstream os;
    MemberContainer<DataType>::const_iterator it, end = getInstances().end();   
    for (it = getInstances().begin(); it != end; ++it) {
@@ -416,13 +427,28 @@ std::string ConnectionCCBase::getNonArrayConnectionAccept(
       << TAB << TAB << TAB << "throw SyntaxErrorException("
       << "\"Expected a " << elem->getDescriptor() << " service for " 
       << elem->getName() << "\");\n"
-      << TAB << TAB << "}\n"
-      << TAB << TAB << elem->getName() << " = ";
+      << TAB << TAB << "}\n";
+
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      os << STR_GPU_CHECK_START;
+      os  << TAB << TAB << elem->getName(MachineType::GPU) << " = ";
+      if (!pointer) {
+	 os << "*";
+      }
+      os << local << "->getData();\n"
+	 << "#else\n";
+   }
+   os  << TAB << TAB << elem->getName() << " = ";
    if (!pointer) {
       os << "*";
    }
-   os << local << "->getData();\n"
-      << TAB << TAB << "return;\n"
+   os << local << "->getData();\n";
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      os << STR_GPU_CHECK_END;
+   }
+   os   << TAB << TAB << "return;\n"
       << TAB << "}\n";            
    return os.str();
 }
@@ -452,14 +478,55 @@ std::string ConnectionCCBase::getArrayConnectionAccept(
       << TAB << TAB << TAB << "throw SyntaxErrorException("
       << "\"Expected a " << descriptor << " service for "
       << elem->getName() << "\");\n"
-      << TAB << TAB << "}\n"
-      << TAB << TAB << elem->getName() << insert;
+      << TAB << TAB << "}\n";
+
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      os << STR_GPU_CHECK_START;
+      os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	 << TAB << REF_CC_OBJECT << "->" << elem->getName(MachineType::GPU) << insert 
+	 << local 
+	 << "->getData());\n";
+      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+      std::string tmpVarName = PREFIX_MEMBERNAME + elem->getName() + "_index"; 
+      os << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements["
+	 << REF_INDEX << "] +=1;\n"
+         << TAB << "auto " << tmpVarName << " = " 
+	 << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME <<elem->getName() << "_offset["  
+	 << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
+	 << elem->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+          << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() 
+	  << "[" << tmpVarName << "] = " 
+	  << local 
+	  << "->getData());\n";
+      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+          << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements[" 
+	  << REF_INDEX << "] +=1;\n"
+          << TAB << "auto " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
+	  << PREFIX_MEMBERNAME << elem->getName() << "_max_elements + " 
+	  << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements["
+	  << REF_INDEX << "]-1;\n"
+          << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "[" 
+	  << tmpVarName << "] = " 
+	  << local 
+	  << "->getData());\n";
+      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	  << TAB << "assert(0);\n"
+	  << "#endif\n";
+
+	 os << "#else\n";
+   }
+   os   << TAB << TAB << elem->getName() << insert;
    if (!pointer) {
       os << "*";
    }
    os << local 
-      << "->getData());\n"
-      << TAB << TAB << "return;\n"
+      << "->getData());\n";
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      os << STR_GPU_CHECK_END;
+   }
+   os << TAB << TAB << "return;\n"
       << TAB << "}\n";            
    return os.str();
 }

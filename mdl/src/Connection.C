@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -167,6 +167,12 @@ std::string Connection::getCommonConnectionCode(const std::string& tab,
 std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
 						const std::string& name, const std::string& predicate) const
 {
+   return getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicate, MachineType::CPU); 
+}
+std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
+						const std::string& name, const std::string& predicate,
+						MachineType mach_type) const
+{
    std::ostringstream os;
 
    std::set<std::string> interfaceNames = getInterfaceNames();
@@ -195,7 +201,7 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 	 std::string subtab = tab + TAB;
    for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
 		 interfaceToMemberCodes += 
-			 it2->second->getInterfaceToMemberCode(subtab, requiredIncreases);
+			 it2->second->getInterfaceToMemberCode(subtab, requiredIncreases, mach_type);
    }
    psetToMemberCodes = _psetMappings.getPSetToMemberCode(subtab, 
 							 requiredIncreases);

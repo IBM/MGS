@@ -33,13 +33,16 @@
 
 Generatable::Generatable(const std::string& fileName)
    : _fileOutput(true), _fileName(fileName), _linkType(_DYNAMIC), 
-     _frameWorkElement(false)
+     _frameWorkElement(false), _supportedMachineType(MachineType::CPU)
 {
+   //_supportedMachineTypes.insert(MachineType::CPU);
 }
 
 Generatable::Generatable(const Generatable& rv)
    : _fileOutput(rv._fileOutput), _fileName(rv._fileName), 
-     _linkType(rv._linkType), _frameWorkElement(rv._frameWorkElement)     
+     _linkType(rv._linkType), _frameWorkElement(rv._frameWorkElement),
+     //_supportedMachineTypes(rv._supportedMachineTypes)     
+     _supportedMachineType(rv._supportedMachineType)     
 {
    copyOwnedHeap(rv);
 }
