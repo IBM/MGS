@@ -62,10 +62,10 @@ void Node::internalGenerateFiles()
    assert(strcmp(getName().c_str(), ""));
    addSupportForMachineType(MachineType::GPU);
 
-   generateInstanceBase();
-   generateInstance();
-   generateCompCategoryBase();
-   generateCompCategory();
+   generateInstanceBase(); //CG_LifeNode.h/,C
+   generateInstance();  //LifeNode.h/C.gen
+   generateCompCategoryBase(); //CG_LifeNodeCompCategory.h/.C
+   generateCompCategory(); //LifeNodeCompCategory.h/.C.gen
    generateFactory();
    generateGridLayerData();
    generateNodeAccessor();

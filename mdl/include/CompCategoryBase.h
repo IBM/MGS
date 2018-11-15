@@ -74,7 +74,7 @@ class CompCategoryBase : public InterfaceImplementorBase {
       std::string getInstanceName() const {
 	 return getName();
       }
-      std::string getCompCategoryBaseName() const {
+      virtual std::string getCompCategoryBaseName() const {
 	 return PREFIX + getName() + COMPCATEGORY;
       }
       std::string getCompCategoryName() const {

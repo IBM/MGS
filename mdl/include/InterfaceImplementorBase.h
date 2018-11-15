@@ -262,6 +262,12 @@ class InterfaceImplementorBase : public Generatable {
       const std::vector<DataType*>& getInterfaceImplementors() const {
 	 return _interfaceImplementors;
       }
+
+      virtual std::string getCompCategoryBaseName() const {
+	 //NOTE: must be re-implemented by the derived class which is a CompCategoryBase
+	 return "";
+      };
+
       std::vector<Phase*>* _instancePhases;
 
    private:

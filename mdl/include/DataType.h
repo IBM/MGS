@@ -62,7 +62,8 @@ class DataType {
       }
       void setName(const std::string& name) {
 	 _name = name;
-	 _name_gpu = REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
+	 //_name_gpu = REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
+	 _name_gpu = GETCOMPCATEGORY_FUNC_NAME+"()->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
       }
       const std::string& getComment() const {
 	 return _comment;
@@ -211,6 +212,7 @@ class DataType {
       // This function returns a code string that is used by publisher's to 
       // create services.
       virtual std::string getServiceString(const std::string& tab) const;
+      virtual std::string getServiceString(const std::string& tab, MachineType mach_type) const;
 
       
       // This function returns a code string that is used by publisher's to 

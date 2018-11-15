@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <cxxabi.h>
+#include <regex>
 
 DataType::DataType() 
    : _pointer(false), _derived(false), _shared(false), _name(""), _comment("")
@@ -313,21 +314,84 @@ bool DataType::anythingToCopy()
 
 std::string DataType::getServiceString(const std::string& tab) const
 {
+   return getServiceString(tab, MachineType::CPU);
+}
+std::string DataType::getServiceString(const std::string& tab, MachineType mach_type) const
+{
    // No services for pointers that are not optional
    if (isPointer()) {
       return "";
    }
+   std::string open_parenthesis="", close_paranthesis="";
+   if (mach_type == MachineType::GPU)
+   {
+      open_parenthesis="(", close_paranthesis=")";
+   }
    std::ostringstream os;
    os << tab << "if (" << SERVICEREQUESTED << " == \"" << getName() 
-      << "\") {\n"
-      << tab << TAB << "rval = new GenericService< " << getTypeString() 
-      << " >(" << DATA << ", " << "&("; 
-   os<< DATA << "->";
-   if (_shared) {
-      os << "getNonConstSharedMembers().";
-   } 
-   os << getName() << ")" << ");\n"
-      << tab << TAB << "_services.push_back(rval);\n"
+      << "\") {\n";
+
+   if (mach_type == MachineType::GPU and ! _shared)
+   {
+      if (isArray())
+      {
+	 std::string  type = getTypeString(); 
+	 std::string from = "ShallowArray<";
+	 std::string to = "ShallowArray_Flat<";
+	 type = type.replace(type.find(from),from.length(),to);
+	 std::size_t start = type.find_first_of("<");
+	 std::size_t last = type.find_first_of(">");
+	 std::string element_datatype = type.substr(start, last-start);
+	 os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";
+	 os << tab << TAB << "rval = new GenericService< " << type
+	    << " >(" << DATA << ", " << "&("; 
+	 os<< open_parenthesis << DATA << "->";
+	 if (_shared) {
+	    os << "getNonConstSharedMembers().";
+	 } 
+	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_paranthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+	 os << tab << TAB << "int offset = " << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
+	    << getName() << "_start_offset[" << DATA << "->" << REF_INDEX << "];\n"
+	    //" + " << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
+	    << getName() << "_num_elements[" << DATA << "->" << REF_INDEX << "];\n";
+	 os << tab << TAB << "rval = new GenericService< " << element_datatype << 
+	    " >(" << DATA << ", &("  << open_parenthesis
+	    << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
+	    << getName() << close_paranthesis << "[offset]));\n";
+	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n";
+	 os << tab << TAB << "int offset = " << DATA << "->" << REF_INDEX << " * " 
+	    << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << 
+	    PREFIX_MEMBERNAME << getName() << "_max_elements;\n"; 
+	   //<< " + " << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" 
+	   //<< PREFIX_MEMBERNAME << getName() << "_num_elements[" << DATA << "->" << REF_INDEX << "];\n";
+	 os << tab << TAB << "rval = new GenericService< " << element_datatype << 
+	    " >(" << DATA << ", &("  << open_parenthesis
+	    << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
+	    << getName() << close_paranthesis << "[offset]));\n";
+	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n";
+	 os << tab << TAB << "assert(0);\n";
+	 os << "#endif\n";
+      }else{
+	 os << tab << TAB << "rval = new GenericService< " << getTypeString() 
+	    << " >(" << DATA << ", " << "&("; 
+	 os<< open_parenthesis << DATA << "->";
+	 if (_shared) {
+	    os << "getNonConstSharedMembers().";
+	 } 
+	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_paranthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+      }
+   }
+   else{
+      os << tab << TAB << "rval = new GenericService< " << getTypeString() 
+	 << " >(" << DATA << ", " << "&("; 
+      os<< open_parenthesis << DATA << "->";
+      if (_shared) {
+	 os << "getNonConstSharedMembers().";
+      } 
+      os << getName() << ")" << ");\n";
+   }
+   os   << tab << TAB << "_services.push_back(rval);\n"
       << tab << TAB << "return rval;\n"
       << tab << "}\n";
    return os.str();

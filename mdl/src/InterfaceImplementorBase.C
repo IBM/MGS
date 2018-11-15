@@ -247,6 +247,10 @@ void InterfaceImplementorBase::generatePublisher()
    instance->addHeader("\"ServiceDescriptor.h\"");
    addInstanceServiceHeaders(instance);
    addExtraServiceHeaders(instance);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      instance->addClass(getCompCategoryBaseName());
+   }
    instance->addClass(getInstanceBaseName());
 
    CustomAttribute* data = new CustomAttribute("_data", getInstanceBaseName(), 
@@ -911,9 +915,9 @@ std::string InterfaceImplementorBase::getExtraOptionalServices(
 }
 
 std::string InterfaceImplementorBase::getInstanceServiceNames(
-   const std::string& tab, MachineType machine_type) const
+   const std::string& tab, MachineType mach_type) const
 {
-   return createServiceNames(_instances, tab, machine_type);   
+   return createServiceNames(_instances, tab, mach_type);   
 }
 
 std::string InterfaceImplementorBase::getOptionalInstanceServiceNames(
@@ -991,7 +995,17 @@ std::string InterfaceImplementorBase::createServices(
    std::ostringstream os;
    MemberContainer<DataType>::const_iterator it, end = members.end();
    for (it = members.begin(); it != end; ++it) {
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+        os << STR_GPU_CHECK_START;
+        os << (*it).second->getServiceString(tab, MachineType::GPU)
+            << "#else\n";
+      }
       os << (*it).second->getServiceString(tab);
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         os << STR_GPU_CHECK_END;
+      }
    }
    return os.str();
 }
@@ -1010,21 +1024,21 @@ std::string InterfaceImplementorBase::createOptionalServices(
 std::string InterfaceImplementorBase::createServiceNames(
    const MemberContainer<DataType>& members, 
    const std::string& tab,
-   MachineType machine_type) const
+   MachineType mach_type) const
 {
    std::ostringstream os;
-   if (machine_type == MachineType::CPU)
+   if (mach_type == MachineType::CPU)
    {
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; ++it) {
          os << (*it).second->getServiceNameString(tab);
       }
    }
-   else if (machine_type == MachineType::GPU)
+   else if (mach_type == MachineType::GPU)
    {
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; ++it) {
-         os << (*it).second->getServiceNameString(tab, machine_type);
+         os << (*it).second->getServiceNameString(tab, mach_type);
       }
    }
    return os.str();
