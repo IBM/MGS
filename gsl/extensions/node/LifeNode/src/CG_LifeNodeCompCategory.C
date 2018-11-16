@@ -282,7 +282,7 @@ void CG_LifeNodeCompCategory::allocateProxy(int fromPartitionId, NodeDescriptor*
       CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
       NodeProxyBase* proxy = ccd->addDestination();
       proxy->setNodeDescriptor(nd);
-      ((CG_LifeNodeProxy*)proxy)->setCompCategory(fromPartitionId, ccd->_receiveList.size()-1, this);
+      ((CG_LifeNodeProxy*)proxy)->setCompCategory(ccd->_receiveList.size()-1, this, fromPartitionId);
       nd->setNode(proxy);
    #elif PROXY_ALLOCATION == OPTION_4
       CCDemarshaller* ccd = findDemarshaller(fromPartitionId);

@@ -60,12 +60,61 @@ const std::string SUFFIX_MEMBERNAME_ARRAY = "_start_offset";
 const std::string SUFFIX_MEMBERNAME_ARRAY_MAXELEMENTS = "_max_elements";
 const std::string REF_CC_OBJECT = "_container"; // data member that references to CompCategory object
 const std::string REF_INDEX = "index"; // index to data array as stored in ompCategory object
+const std::string REF_DEMARSHALLER_INDEX = "demarshaller_index"; // index to CCDermarshaller 
 const std::string STR_GPU_CHECK_START = "#ifdef HAVE_GPU\n";
 const std::string GPUCONDITIONAL = "HAVE_GPU";
 const std::string STR_GPU_CHECK_END = "#endif\n";
 const std::string GETCOMPCATEGORY_FUNC_NAME = "getContainer";
 const std::string SETCOMPCATEGORY_FUNC_NAME = "setCompCategory";
+const std::string GETDEMARSHALLER_FUNC_NAME = "getDemarshallerIndex";
+const std::string GETDATA_FUNC_NAME = "getDataIndex";
 enum class MachineType {
    CPU, GPU
 };
+
+template< typename T >
+class Enum
+{
+   //NOTE: functional, but not completed
+public:
+   class Iterator
+   {
+   public:
+      Iterator( int value ) :
+         m_value( value )
+      { }
+
+      T operator*( void ) const
+      {
+         return (T)m_value;
+      }
+
+      void operator++( void )
+      {
+         ++m_value;
+      }
+
+      bool operator!=( Iterator rhs )
+      {
+         return m_value != rhs.m_value;
+      }
+
+   private:
+      int m_value;
+   };
+
+};
+
+template< typename T >
+typename Enum<T>::Iterator begin( Enum<T> )
+{
+   return typename Enum<T>::Iterator( (int)T::First );
+}
+
+template< typename T >
+typename Enum<T>::Iterator end( Enum<T> )
+{
+   return typename Enum<T>::Iterator( ((int)T::Last) + 1 );
+}
+
 #endif

@@ -37,6 +37,11 @@ class BaseClass;
 class Class
 {
    public:
+      enum class PrimeType{ UN_SET, Node, Variable };
+      enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
+      void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
+      PrimeType getClassInfoPrimeType(){ return _classInfo.first; };
+      SubType getClassInfoSubType(){ return _classInfo.second; };
       Class();
       Class(const std::string& name);
       Class(const Class& rv);
@@ -71,6 +76,7 @@ class Class
       void addMemberClass(std::auto_ptr<Class>& cl, 
 		     AccessType accessType, const std::string& conditional = "") {
 	 cl->setMemberClass();
+	 cl->setParentClassName(_name);
 	 _memberClasses[accessType].push_back(cl.release());
       }
 
@@ -190,7 +196,9 @@ class Class
       void setFileOutput(bool);
       void setTemplateClass(bool templateClass=true) {_templateClass=templateClass;}
       bool generateSourceFile() {return _generateSourceFile;}
-      void setMemberClass(bool memberClass=true) {_memberClass=memberClass;}
+      void setMemberClass(bool memberClass=true) {_memberClass=memberClass; if (memberClass == false) _nameParentClass="";}
+      void setParentClassName(std::string nameParentClass) {_nameParentClass=nameParentClass;}
+
       bool isMemberClass() {return _memberClass;}
       void setAlternateFileName(std::string s) {_alternateFileName=s;}
       std::string getFileName();
@@ -211,6 +219,7 @@ class Class
       void printExtraSourceStrings(std::ostringstream& os);
       void printAttributeStaticInstances(std::ostringstream& os);
       void printPartnerClasses(std::ostringstream& os);
+      void printMemberClassesMethods(std::ostringstream& os);
       void printMethods(std::ostringstream& os);
       void printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type=MachineType::CPU);
       void printAccess(AccessType type, const std::string& name, 
@@ -235,6 +244,7 @@ class Class
       void addDuplicate();
       bool hasOwnedHeapData();
       std::string _name;
+      std::string _nameParentClass;
       // Duplicate types that are not direct superClasses.
       std::vector<std::string> _duplicateTypes;
       std::set<IncludeHeader> _headers;
@@ -263,6 +273,7 @@ class Class
       std::vector<FriendDeclaration> _friendDeclarations;
       MacroConditional _macroConditional;
       std::vector<TypeDefinition> _typeDefinitions;
+      std::pair<PrimeType, SubType> _classInfo;
 };
 
 #endif

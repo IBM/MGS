@@ -386,6 +386,7 @@ void InterfaceImplementorBase::generatePublisher()
 void InterfaceImplementorBase::generateInstanceBase()
 {
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
+   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
    //instance.addSupportMachineType(this->getSupportMachineType);
 
    instance->addHeader("\"" + getPublisherName() + ".h\"");
@@ -408,10 +409,11 @@ void InterfaceImplementorBase::generateInstanceBase()
       //getPublisherMethod->setVirtual();
       std::string arg1 = "_" + REF_INDEX;
       setCC->addParameter("int " + arg1);
-      setCC->addParameter(instance->getName() + COMPCATEGORY + "* cc_ptr");
+      std::string arg2 = "_" + REF_CC_OBJECT;
+      setCC->addParameter(instance->getName() + COMPCATEGORY + "* " + arg2);
       std::ostringstream setCCstream;
       setCCstream 
-         << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = cc_ptr;\n";
+         << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = " << arg2 << ";\n";
       setCC->setFunctionBody(setCCstream.str());
       setCC->setInline();
       MacroConditional gpuConditional(GPUCONDITIONAL);
@@ -531,6 +533,7 @@ void InterfaceImplementorBase::generateInstanceProxy()
 {
    if (getType()=="Constant" || getType()=="Edge") return;
    std::auto_ptr<Class> instance(new Class(getInstanceProxyName()));
+   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassProxy));
 
    MacroConditional mpiConditional(MPICONDITIONAL);
 
@@ -551,7 +554,96 @@ void InterfaceImplementorBase::generateInstanceProxy()
    instance->addClass("Edge");
 
    // Add the instances.
-   instance->addAttributes(getInstances(), AccessType::PROTECTED, true);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      {
+         std::auto_ptr<Method> setCC(
+               new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
+         //getPublisherMethod->setVirtual();
+         std::string arg1 = "_" + REF_INDEX;
+         setCC->addParameter("int " + arg1);
+         std::string arg2 = "_" + REF_CC_OBJECT;
+         //setCC->addParameter(instance->getName() + COMPCATEGORY + "* " + arg2);
+         setCC->addParameter(getInstanceBaseName() + COMPCATEGORY + "* " + arg2);
+         std::string arg3 = "_" + REF_DEMARSHALLER_INDEX;
+         setCC->addParameter("int " + arg3);
+         std::ostringstream setCCstream;
+         setCCstream 
+            << TAB << TAB << REF_INDEX << " = " << arg1 << ";\n " 
+            << TAB << TAB << REF_CC_OBJECT << " = " << arg2 << ";\n"
+            << TAB << TAB << REF_DEMARSHALLER_INDEX << " = " << arg3 << ";\n";
+         setCC->setFunctionBody(setCCstream.str());
+         setCC->setInline();
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
+         setCC->setMacroConditional(gpuConditional);
+         instance->addMethod(setCC);
+      }
+      {
+         std::auto_ptr<Method> setCC(
+               new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
+         //getPublisherMethod->setVirtual();
+         std::string arg1 = "_" + REF_INDEX;
+         setCC->addParameter("int " + arg1);
+         std::string arg2 = "_" + REF_CC_OBJECT;
+         //setCC->addParameter(instance->getName() + COMPCATEGORY + "* " + arg2);
+         setCC->addParameter(getInstanceBaseName() + COMPCATEGORY + "* " + arg2);
+         std::ostringstream setCCstream;
+         setCCstream 
+            << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = " << arg2 << ";\n";
+         setCC->setFunctionBody(setCCstream.str());
+         setCC->setInline();
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+         setCC->setMacroConditional(gpuConditional);
+         instance->addMethod(setCC);
+      }
+      {
+         std::auto_ptr<Method> getCC(
+               new Method(GETCOMPCATEGORY_FUNC_NAME, getInstanceBaseName() + COMPCATEGORY + "*"));
+         //getPublisherMethod->setVirtual();
+         std::ostringstream getCCstream;
+         getCCstream 
+            << TAB << TAB << "return " << REF_CC_OBJECT << ";\n";
+         getCC->setFunctionBody(getCCstream.str());
+         getCC->setInline();
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         getCC->setMacroConditional(gpuConditional);
+         instance->addMethod(getCC);
+      }
+      {
+         std::auto_ptr<Method> getCC(
+               new Method(GETDEMARSHALLER_FUNC_NAME, "int"));
+         //getPublisherMethod->setVirtual();
+         std::ostringstream getCCstream;
+         getCCstream 
+            << TAB << TAB << "return " << REF_DEMARSHALLER_INDEX << ";\n";
+         getCC->setFunctionBody(getCCstream.str());
+         getCC->setInline();
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
+         getCC->setMacroConditional(gpuConditional);
+         instance->addMethod(getCC);
+      }
+      {
+         std::auto_ptr<Method> getCC(
+               new Method(GETDATA_FUNC_NAME, "int"));
+         //getPublisherMethod->setVirtual();
+         std::ostringstream getCCstream;
+         getCCstream 
+            << TAB << TAB << "return " << REF_INDEX<< ";\n";
+         getCC->setFunctionBody(getCCstream.str());
+         getCC->setInline();
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         getCC->setMacroConditional(gpuConditional);
+         instance->addMethod(getCC);
+      }
+
+      instance->addAttributes(getInstances(), AccessType::PROTECTED, true, true);
+   }
+   else{
+      instance->addAttributes(getInstances(), AccessType::PROTECTED, true);
+   }
 
    setInterfaceImplementors();
 
@@ -737,7 +829,8 @@ void InterfaceImplementorBase::generateInstanceProxy()
    demarshallerInstance->addMethod(consToIns2);
    
    std::auto_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
-   setDestinationMethod->setInline();
+   if (! isSupportedMachineType(MachineType::GPU))
+      setDestinationMethod->setInline();
    setDestinationMethod->addParameter(getInstanceProxyName()+" *proxy");
    setDestinationMethod->setFunctionBody(setDestinationMethodFB.str());
    demarshallerInstance->addMethod(setDestinationMethod);
@@ -814,7 +907,10 @@ void InterfaceImplementorBase::generateInstanceProxy()
           demarshallerInstance->addMethod(consToIns2);
       
           std::auto_ptr<Method> setDestinationMethod(new Method("setDestination", "void"));
-          setDestinationMethod->setInline();
+          //TUAN TODO: add the subclass's body call from the source file
+          //as right now, if not set inline then there is no body 
+          if (! isSupportedMachineType(MachineType::GPU))
+             setDestinationMethod->setInline();
           setDestinationMethod->addParameter(getInstanceProxyName()+" *proxy");
           setDestinationMethod->setFunctionBody(setDestinationMethodFB.str());
           demarshallerInstance->addMethod(setDestinationMethod);

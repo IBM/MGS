@@ -49,39 +49,39 @@ CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::PhaseDemarshaller_FLUSH_LENS(CG_
 #else
       : CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->publicValue))
 #endif
-      {
+{
 #if defined(HAVE_GPU) 
-    #if PROXY_ALLOCATION == OPTION_3
-        auto x1 = proxy->getCompCategory();
-        //auto x2 = x1->getDemarshaller(proxy->demarshaller_index);
-        auto x2 = x1->getDemarshaller(proxy->getDemarshallerIndex());
-        //publicValueDemarshaller.setDestination(&(x2->um_publicValue[proxy->index]));
-        publicValueDemarshaller.setDestination(&(x2->um_publicValue[proxy->getDataIndex()]));
-        //publicValueDemarshaller.setDestination(&((proxy->getCompCategory()->getDemarshaller(demarshaller_index)).um_publicValue[proxy->index]));
-    #elif PROXY_ALLOCATION == OPTION_4
-            publicValueDemarshaller.setDestination(&(proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]))
-    #endif
+#if PROXY_ALLOCATION == OPTION_3
+  auto x1 = proxy->getCompCategory();
+  //auto x2 = x1->getDemarshaller(proxy->demarshaller_index);
+  auto x2 = x1->getDemarshaller(proxy->getDemarshallerIndex());
+  //publicValueDemarshaller.setDestination(&(x2->um_publicValue[proxy->index]));
+  publicValueDemarshaller.setDestination(&(x2->um_publicValue[proxy->getDataIndex()]));
+  //publicValueDemarshaller.setDestination(&((proxy->getCompCategory()->getDemarshaller(demarshaller_index)).um_publicValue[proxy->index]));
+#elif PROXY_ALLOCATION == OPTION_4
+  publicValueDemarshaller.setDestination(&(proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]))
 #endif
-         _demarshallers.push_back(&publicValueDemarshaller);
-      }
-      void CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::setDestination(CG_LifeNodeProxy *proxy)
-      {
-         _proxy = proxy;
+#endif
+    _demarshallers.push_back(&publicValueDemarshaller);
+}
+void CG_LifeNodeProxy::PhaseDemarshaller_FLUSH_LENS::setDestination(CG_LifeNodeProxy *proxy)
+{
+  _proxy = proxy;
 #if defined(HAVE_GPU) 
-    #if PROXY_ALLOCATION == OPTION_3
-         //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
-      ////TODO fix here using above
-         //publicValueDemarshaller.setDestination(&(_proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]));
-         publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->getDemarshaller(proxy->getDemarshallerIndex())->um_publicValue[proxy->getDataIndex()]));
-    #elif PROXY_ALLOCATION == OPTION_4
-         //publicValueDemarshaller.setDestination(&(_proxy->_container->proxy_um_publicValue[proxy->index]));
-         publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]));
-    #endif
+#if PROXY_ALLOCATION == OPTION_3
+  //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
+  ////TODO fix here using above
+  //publicValueDemarshaller.setDestination(&(_proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]));
+  publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->getDemarshaller(proxy->getDemarshallerIndex())->um_publicValue[proxy->getDataIndex()]));
+#elif PROXY_ALLOCATION == OPTION_4
+  //publicValueDemarshaller.setDestination(&(_proxy->_container->proxy_um_publicValue[proxy->index]));
+  publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]));
+#endif
 #else
-         publicValueDemarshaller.setDestination(&(_proxy->publicValue));
+  publicValueDemarshaller.setDestination(&(_proxy->publicValue));
 #endif
-         reset();
-      }
+  reset();
+}
 
 CG_LifeNodeProxy::PhaseDemarshaller_copy::PhaseDemarshaller_copy(CG_LifeNodeProxy* proxy)
 #if defined(HAVE_GPU) 
@@ -98,30 +98,30 @@ CG_LifeNodeProxy::PhaseDemarshaller_copy::PhaseDemarshaller_copy(CG_LifeNodeProx
 #else
       : CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->publicValue))
 #endif
-      {
-         _demarshallers.push_back(&publicValueDemarshaller);
-      }
+{
+  _demarshallers.push_back(&publicValueDemarshaller);
+}
 
-      void CG_LifeNodeProxy::PhaseDemarshaller_copy::setDestination(CG_LifeNodeProxy *proxy)
-      {
-         _proxy = proxy;
+void CG_LifeNodeProxy::PhaseDemarshaller_copy::setDestination(CG_LifeNodeProxy *proxy)
+{
+  _proxy = proxy;
 #if defined(HAVE_GPU) 
-    #if PROXY_ALLOCATION == OPTION_3
-         //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
-      //TODO fix here using above
-         //publicValueDemarshaller.setDestination(&(_proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]));
-         publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->getDemarshaller(proxy->getDemarshallerIndex())->um_publicValue[proxy->getDataIndex()]));
-      //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]))
-    #elif PROXY_ALLOCATION == OPTION_4
-         //publicValueDemarshaller.setDestination(&(_proxy->_container->proxy_um_publicValue[proxy->index]));
-         publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]));
-      //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->proxy_um_publicValue[proxy->index]))
-    #endif
-#else
-         publicValueDemarshaller.setDestination(&(_proxy->publicValue));
+#if PROXY_ALLOCATION == OPTION_3
+  //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
+  //TODO fix here using above
+  //publicValueDemarshaller.setDestination(&(_proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]));
+  publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->getDemarshaller(proxy->getDemarshallerIndex())->um_publicValue[proxy->getDataIndex()]));
+  //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]))
+#elif PROXY_ALLOCATION == OPTION_4
+  //publicValueDemarshaller.setDestination(&(_proxy->_container->proxy_um_publicValue[proxy->index]));
+  publicValueDemarshaller.setDestination(&(_proxy->getCompCategory()->proxy_um_publicValue[proxy->getDataIndex()]));
+  //: CG_LifeNodeProxyDemarshaller(proxy), publicValueDemarshaller(&(proxy->_container->proxy_um_publicValue[proxy->index]))
 #endif
-         reset();
-      }
+#else
+  publicValueDemarshaller.setDestination(&(_proxy->publicValue));
+#endif
+  reset();
+}
 
 
 int* CG_LifeNodeProxy::CG_get_ValueProducer_value() 
@@ -209,4 +209,7 @@ CG_LifeNodeProxy::~CG_LifeNodeProxy()
 {
 }
 
+#if defined(HAVE_GPU)
+CG_LifeNodeCompCategory* CG_LifeNodeProxy::_container;
+#endif
 #endif

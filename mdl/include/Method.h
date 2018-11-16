@@ -158,7 +158,7 @@ class Method
 	 _macroConditional = macroConditional;
       }      
 
-      void printSource(const std::string& className, std::ostringstream& os);
+      void printSource(const std::string& className, std::ostringstream& os, const std::string& parentClassName="");
       void printDefinition(AccessType type, std::ostringstream& os);
       void printExternCDefinition(std::ostringstream& os);
       void printExternCPPDefinition(std::ostringstream& os);

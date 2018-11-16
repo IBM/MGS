@@ -213,16 +213,16 @@ class CG_LifeNodeProxy : public ValueProducer, public NodeProxyBase
     #if PROXY_ALLOCATION == OPTION_3
       int demarshaller_index;
       int index; //local to the given CCDermarshaller
-      CG_LifeNodeCompCategory* _container;
+      static CG_LifeNodeCompCategory* _container;
 
-      void setCompCategory(int _demarshaller_index, int _index, CG_LifeNodeCompCategory* cg) {
+      void setCompCategory(int _index, CG_LifeNodeCompCategory* __container, int _demarshaller_index) {
          index = _index;
+         _container = __container;
          demarshaller_index = _demarshaller_index; 
-         _container = cg;
       }      //void setCCDemarshaller(int _index, CG_LifeNodeCompCategory* cg) { index = _index; _container=cg; }
    #elif PROXY_ALLOCATION == OPTION_4
       int index; //global index
-      CG_LifeNodeCompCategory* _container;
+      static CG_LifeNodeCompCategory* _container;
       void setCompCategory(int _index, CG_LifeNodeCompCategory* cg){
          index = _index;
          _container = cg;

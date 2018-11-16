@@ -21,27 +21,37 @@ MacroConditional::MacroConditional(const std::string& name)
    : _name(name)
 {
    _negate_condition = false;
+   _extraTest = "";
 }
 
 std::string MacroConditional::getBeginning() const
 {
+   std::string macroStart("");
    if (_name == "") {
-      return "";
    } else {
-      //return "#ifdef " + _name + "\n";
       if (_negate_condition)
-	 return "#if ! defined(" + _name + ")\n";
+	 macroStart += "#if ! defined(" + _name + ")\n";
       else
-	 return "#if defined(" + _name + ")\n";
+	 macroStart += "#if defined(" + _name + ")\n";
    }
+   if (! _extraTest.empty())
+   {
+	 macroStart += "#if " + _extraTest + "\n";
+   }
+   return macroStart;
 }
 
 std::string MacroConditional::getEnding() const
 {
-   if (_name == "") {
-      return "";
-   } else {
-      return "#endif\n";
+   std::string macroEnd("");
+   if (! _extraTest.empty())
+   {
+      macroEnd += "#endif\n";
    }
+   if (_name == "") {
+   } else {
+      macroEnd += "#endif\n";
+   }
+   return macroEnd;
 }
 

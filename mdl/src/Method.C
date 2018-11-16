@@ -47,8 +47,12 @@ Method::~Method()
 {
 }
 
-void Method::printSource(const std::string& className, std::ostringstream& os)
+void Method::printSource(const std::string& className, std::ostringstream& os, const std::string& parentClassName)
 {
+  std::string prefix("");
+  if (! parentClassName.empty())
+    prefix = parentClassName + "::";
+
    if (isPureVirtual() || isInline()) {
       return;
    }
@@ -66,7 +70,7 @@ void Method::printSource(const std::string& className, std::ostringstream& os)
      os << _returnStr << " ";
    }
    if (!(isExternC() || isExternCPP())) {
-     os << className << "::";
+     os << prefix << className << "::";
    }
    os << _name << "(";
    bool first = true;

@@ -46,9 +46,14 @@ class MacroConditional
       std::string getBeginning() const;
       std::string getEnding() const;
 
+      void addExtraTest(const std::string& name) {
+	 _extraTest = name;
+      }
    private:
       std::string _name;
       bool _negate_condition; //if True, then print '#if ! defined(...)'
+      std::string _extraTest;
+      //std::vector<std::string> _extraTest;
 };
 
 #endif

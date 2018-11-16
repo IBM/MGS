@@ -39,17 +39,17 @@
 #include <cstring>
 
 Class::Class()
-   : _name(""), _fileOutput(true), _userCode(false),
+   : _name(""), _nameParentClass(""), _fileOutput(true), _userCode(false),
      _sourceFileBeginning(""), _copyingDisabled(false), _copyingRemoved(false), _templateClass(false), _generateSourceFile(false),
-     _memberClass(false), _alternateFileName("")
+     _memberClass(false), _alternateFileName(""), 
+     _classInfo(std::make_pair(PrimeType::UN_SET, SubType::UN_SET))
 {
 }
 
 Class::Class(const std::string& name)
-   : _name(name), _fileOutput(true), _userCode(false),
-     _sourceFileBeginning(""), _copyingDisabled(false), _copyingRemoved(false), _templateClass(false), _generateSourceFile(false),
-     _memberClass(false), _alternateFileName("")
+   : Class()
 {
+  _name = name;
 }
 
 Class::Class(const Class& rv)
@@ -66,7 +66,8 @@ Class::Class(const Class& rv)
      _alternateFileName(rv._alternateFileName),
      _friendDeclarations(rv._friendDeclarations), 
      _macroConditional(rv._macroConditional), 
-     _typeDefinitions(rv._typeDefinitions)
+     _typeDefinitions(rv._typeDefinitions),
+     _classInfo(rv._classInfo)
 {
    copyOwnedHeap(rv);
 }
@@ -191,19 +192,41 @@ void Class::addAttributes(const MemberContainer<DataType>& members
      //dup(new IntType());
      //std::auto_ptr<Attribute> att_index(new DataTypeAttribute(dup));
      //CustomAttribute* att_index= new CustomAttribute(REF_INDEX, "int*");
-     MacroConditional gpuConditional(GPUCONDITIONAL);
-     std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_INDEX, "int", accessType));
-     att_index->setMacroConditional(gpuConditional);
-     addAttribute(att_index, MachineType::GPU);
-     //_instances_GPU.addMember("index", dup);
-     //_instances_GPU.addMember(att_index);
-     std::unique_ptr<Attribute> att_ccAccessors(new CustomAttribute(REF_CC_OBJECT, _name + COMPCATEGORY + "*", accessType));
-     att_ccAccessors->setMacroConditional(gpuConditional);
-     att_ccAccessors->setStatic();
-     auto ptr = dynamic_cast<CustomAttribute&>(*att_ccAccessors);
-     ptr.setPointer();
-     //_instances_GPU.addMember(att_ccAccessors);
-     addAttribute(att_ccAccessors, MachineType::GPU);
+     {
+       MacroConditional gpuConditional(GPUCONDITIONAL);
+       std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_INDEX, "int", accessType));
+       att_index->setMacroConditional(gpuConditional);
+       addAttribute(att_index, MachineType::GPU);
+     }
+     {
+       MacroConditional gpuConditional(GPUCONDITIONAL);
+       std::string nametype;
+       if (getClassInfoSubType() == SubType::BaseClassProxy)
+       {
+	 std::size_t pos = _name.find("Proxy");
+	 nametype = _name.substr(0, pos) + COMPCATEGORY + "*";
+       }
+       else
+       {
+	 nametype = _name + COMPCATEGORY + "*";
+       }
+       std::unique_ptr<Attribute> att_ccAccessors(new CustomAttribute(REF_CC_OBJECT, nametype, accessType));
+       att_ccAccessors->setMacroConditional(gpuConditional);
+       att_ccAccessors->setStatic();
+       auto ptr = dynamic_cast<CustomAttribute&>(*att_ccAccessors);
+       ptr.setPointer();
+       addAttribute(att_ccAccessors, MachineType::GPU);
+     }
+
+     if (getClassInfoSubType() == SubType::BaseClassProxy)
+     {
+
+       MacroConditional gpuConditional(GPUCONDITIONAL);
+       gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
+       std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_DEMARSHALLER_INDEX, "int", accessType));
+       att_index->setMacroConditional(gpuConditional);
+       addAttribute(att_index, MachineType::GPU);
+     }
    }
 }
 
@@ -439,7 +462,7 @@ void Class::printMethods(std::ostringstream& os)
 {
    for (std::vector<Method*>::const_iterator it = _methods.begin();
 	it != _methods.end(); ++it) {
-      (*it)->printSource(_name, os);
+      (*it)->printSource(_name, os, _nameParentClass);
    }
 }
 
@@ -490,7 +513,7 @@ void Class::printAccess(AccessType type, const std::string& name,
 	os << "#else\n";
       }
       printAttributes(type, os);
-      if (name == "protected")
+      if (name == "protected" and _attributes_gpu.size() > 0)
       {
 	os << "#endif\n";
       }
@@ -514,6 +537,28 @@ void Class::printAccessMemberClasses(AccessType type, const std::string& name,
       os <<  (*iter)->getMacroConditional().getEnding();
       if ((*iter)->_memberClass) os << "\n";
     }   
+  }
+}
+
+void Class::printMemberClassesMethods(std::ostringstream& os)
+{
+  for( auto type: Enum<AccessType>() )
+  {
+    std::map<AccessType, std::vector<Class*> >::iterator classVec = _memberClasses.find(type);
+    if ( classVec != _memberClasses.end() ) {
+      //os << TAB << name << ":\n";
+      std::vector<Class*>& classes = _memberClasses[type];
+      std::vector<Class*>::iterator iter = classes.begin();
+      std::vector<Class*>::iterator end = classes.end();    
+      for (; iter!=end; ++iter) {
+	//if ((*iter)->_memberClass) os << "\n";
+	os << (*iter)->getMacroConditional().getBeginning();
+	//if ((*iter)->_memberClass) os << TAB;
+	(*iter)->printMethods(os);
+	os <<  (*iter)->getMacroConditional().getEnding();
+	//if ((*iter)->_memberClass) os << "\n";
+      }   
+    }
   }
 }
 
@@ -654,6 +699,8 @@ void Class::generateSource(const std::string& moduleName)
    printClassHeaders(os);
    printHeaders(_headers, os);
    os << "\n";
+
+   printMemberClassesMethods(os);
    printMethods(os);
    printExtraSourceStrings(os);
    printAttributeStaticInstances(os);

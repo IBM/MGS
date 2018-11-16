@@ -73,6 +73,7 @@ void ConstructorMethod::internalAddConstructorInitializer(
 	    if (first) {
 	       first = false;
 	    } else {
+	       /* if the attribute is wrapped inside the macro-check, then the comma is added already*/
 	       if ((*it)->getMacroConditional().getName() == "")
 		  inits += ", ";
 	    }

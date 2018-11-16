@@ -20,6 +20,7 @@
 //namespace AccessType {
 //   enum {PUBLIC, PROTECTED, PRIVATE};
 //}
-enum class AccessType {PUBLIC, PROTECTED, PRIVATE};
+enum class AccessType {PUBLIC, PROTECTED, PRIVATE,
+   First=PUBLIC, Last=PRIVATE};
 
 #endif
