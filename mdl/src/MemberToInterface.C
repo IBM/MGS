@@ -241,10 +241,37 @@ void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
 	 name = "getNonConstSharedMembers()." + name;
       }
       name += path;
-      method->setFunctionBody(
-	 TAB + "return &" 
-	 + name + ";\n");
+      if (it->getDataType()->isShared()) {
+	 method->setFunctionBody(
+	       TAB + "return &" 
+	       + name + ";\n");
+      }
+      else{
+	 //TUAN: proxy only have non-shared data on GPU for now
+	 // maybe in the future we want to define shared data as '__constant__' or ...
+	 std::string body;
+	 body = STR_GPU_CHECK_START 
+	    +
+	       "#if PROXY_ALLOCATION == OPTION_3\n"
+	    + TAB + "return &" 
+	    + "(("+REF_CC_OBJECT+"->" + GETDEMARSHALLER_FUNC_NAME + "(" 
+	    + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME  
+	    + name + "["+REF_INDEX+"]);\n"
+	    + "#elif PROXY_ALLOCATION == OPTION_4\n"
+	    + TAB + "return &" 
+	    + "("+REF_CC_OBJECT+"->" + PREFIX_PROXY_MEMBERNAME
+	    + name + "["+REF_INDEX+"]);\n"
+	    + "#endif\n\n"
+	    + "#else\n"
+	    + TAB + "return &" 
+	    + name + ";\n"
+	    + STR_GPU_CHECK_END;
+	 method->setFunctionBody(
+	       body
+	       );
+      }
       method->setVirtual();
+
       instance.addMethod(method);
    }      
 }

@@ -613,7 +613,7 @@ void InterfaceImplementorBase::generateInstanceProxy()
       }
       {
          std::auto_ptr<Method> getCC(
-               new Method(GETDEMARSHALLER_FUNC_NAME, "int"));
+               new Method(GETDEMARSHALLERINDEX_FUNC_NAME, "int"));
          //getPublisherMethod->setVirtual();
          std::ostringstream getCCstream;
          getCCstream 
@@ -767,7 +767,13 @@ void InterfaceImplementorBase::generateInstanceProxy()
    std::ostringstream setDestinationMethodFB;
    initString1 << (baseName + "()");
    initString2 << (baseName + "(proxy)");
-   setDestinationMethodFB << TAB << TAB << TAB << "_proxy = proxy;\n";
+
+   std::string indent_body(TAB + TAB + TAB);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      indent_body = TAB;
+   }
+   setDestinationMethodFB << indent_body << "_proxy = proxy;\n";
 
    std::list<std::string> varNameList;
    std::list<const DataType*>::iterator varsIter, varsEnd = allVars.end();
@@ -781,19 +787,58 @@ void InterfaceImplementorBase::generateInstanceProxy()
    bool parsingError = false;
    std::vector<DataType*>::iterator it, end = _interfaceImplementors.end();
    for (it = _interfaceImplementors.begin(); it != end; ++it) {
-      initString1<<", ";
-      initString2<<", ";
       std::string varName = (*it)->getName();
+      initString1<<", ";
+      std::string indent_body(TAB + TAB + TAB);
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         std::string supplement_initString2("");
+         supplement_initString2 += "\n" + STR_GPU_CHECK_START;
+         supplement_initString2 += "#if PROXY_ALLOCATION == OPTION_3\n";
+         supplement_initString2 += ", " + varName + "Demarshaller(&(((proxy->" + GETCOMPCATEGORY_FUNC_NAME + "())->" + GETDEMARSHALLER_FUNC_NAME + "(proxy->" + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME + varName + "[proxy->" + REF_INDEX + "]))\n";
+         supplement_initString2 += "#elif PROXY_ALLOCATION == OPTION_4\n";
+         supplement_initString2 += TAB + ", " + varName + "Demarshaller(&(proxy->" + GETCOMPCATEGORY_FUNC_NAME+ "()->" + PREFIX_PROXY_MEMBERNAME + varName + "[proxy->" + GETDATA_FUNC_NAME + "()]))\n";
+         supplement_initString2 += "#endif\n";
+         supplement_initString2 += "#else\n";
+         initString2 << supplement_initString2 ;
+         indent_body = TAB;
+      }
+      initString2<<", ";
       std::string varDesc = (*it)->getDescriptor();
       if (!binary_search(varNameList.begin(), varNameList.end(), varName)) {
          std::cerr << "Warning: variable \'" << (*it)->getName() << "\' used in interface is missing in phase's changing variable list!" << std::endl;
          parsingError = true;
       }
-      constructorFB << TAB << TAB << TAB << "_demarshallers.push_back(&" << varName << "Demarshaller);\n";
+      constructorFB << indent_body << "_demarshallers.push_back(&" << varName << "Demarshaller);\n";
       initString1 << varName << "Demarshaller()";
       initString2 << varName << "Demarshaller(&(proxy->" << varName <<"))";
-      setDestinationMethodFB << TAB << TAB << TAB << varName << "Demarshaller.setDestination(&(_proxy->" << varName << "));\n";
+
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         setDestinationMethodFB << TAB << STR_GPU_CHECK_START;
+         setDestinationMethodFB << TAB << "#if PROXY_ALLOCATION == OPTION_3\n";
+         //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
+         ////TODO fix here using above
+         //publicValueDemarshaller.setDestination(&(_proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]));
+         setDestinationMethodFB << indent_body << varName << "Demarshaller.setDestination(&(_proxy->"
+            << GETCOMPCATEGORY_FUNC_NAME << "()->" << GETDEMARSHALLER_FUNC_NAME << "(proxy->"
+            << GETDEMARSHALLERINDEX_FUNC_NAME << "())->" <<  PREFIX_MEMBERNAME <<  varName << "[proxy->" 
+            << GETDATA_FUNC_NAME << "()]));\n";
+         setDestinationMethodFB << TAB << "#elif PROXY_ALLOCATION == OPTION_4\n"
+            //publicValueDemarshaller.setDestination(&(_proxy->_container->proxy_um_publicValue[proxy->index]));
+            << varName << "Demarshaller.setDestination(&(_proxy->" << GETCOMPCATEGORY_FUNC_NAME << "()->" 
+            << PREFIX_PROXY_MEMBERNAME << varName << "[proxy->" << GETDATA_FUNC_NAME << "()]));\n";
+         setDestinationMethodFB << TAB << "#endif\n";
+
+         setDestinationMethodFB << TAB << "#else\n";
+      }
+      setDestinationMethodFB << indent_body << varName << "Demarshaller.setDestination(&(_proxy->" << varName << "));\n";
     
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         setDestinationMethodFB << TAB << STR_GPU_CHECK_END;
+      }
+
       CustomAttribute* demarshaller;
       if ((*it)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
 							    "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
@@ -809,8 +854,12 @@ void InterfaceImplementorBase::generateInstanceProxy()
       }
       std::auto_ptr<Attribute> demarshallerAp(demarshaller);
       demarshallerInstance->addAttribute(demarshallerAp);
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+         initString2 << "\n" << STR_GPU_CHECK_END;
+      }
    }   
-   setDestinationMethodFB << TAB << TAB << TAB << "reset();\n";
+   setDestinationMethodFB << indent_body << "reset();\n";
    if (parsingError) {
       std::cerr << "\nWarning: Some variables used in interface are missing in phase's changing variable list!\n" << std::endl;
    }
@@ -821,7 +870,8 @@ void InterfaceImplementorBase::generateInstanceProxy()
    constructor2->setInitializationStr(initString2.str());
    constructor2->setFunctionBody(constructorFB.str());
    constructor2->addParameter(getInstanceProxyName() + "* proxy");
-   constructor2->setInline();
+   if (! isSupportedMachineType(MachineType::GPU))
+      constructor2->setInline();
 
    std::auto_ptr<Method> consToIns1(constructor1.release());
    std::auto_ptr<Method> consToIns2(constructor2.release());
@@ -861,22 +911,66 @@ void InterfaceImplementorBase::generateInstanceProxy()
           std::ostringstream setDestinationMethodFB;
           initString1 << (baseName + "()");
           initString2 << (baseName + "(proxy)");
-          setDestinationMethodFB << TAB << TAB << TAB << "_proxy = proxy;\n";
-          if (allVars.size() != 0) {
-   	     initString1<<", ";
-   	     initString2<<", ";
+
+          std::string indent_body(TAB + TAB + TAB);
+          if (isSupportedMachineType(MachineType::GPU))
+          {
+             indent_body = TAB;
           }
+          setDestinationMethodFB << indent_body << "_proxy = proxy;\n";
+          //if (allVars.size() != 0) {
+   	  //   initString1<<", ";
+   	  //   initString2<<", ";
+          //}
    
           std::vector<const DataType*>::iterator varsIter, varsEnd = vars.end();
           varsIter = vars.begin();
           while (varsIter != varsEnd) {
    	     std::string varName = (*varsIter)->getName();
    	     std::string varDesc = (*varsIter)->getDescriptor();
+   	     initString1<<", ";
+             if (isSupportedMachineType(MachineType::GPU))
+             {
+                std::string supplement_initString2("");
+                supplement_initString2 += "\n" + STR_GPU_CHECK_START;
+                supplement_initString2 += "#if PROXY_ALLOCATION == OPTION_3\n";
+                supplement_initString2 += ", " + varName + "Demarshaller(&(((proxy->" + GETCOMPCATEGORY_FUNC_NAME + "())->" + GETDEMARSHALLERINDEX_FUNC_NAME + "(proxy->" + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME + varName + "[proxy->" + REF_INDEX + "]))\n";
+                supplement_initString2 += "#elif PROXY_ALLOCATION == OPTION_4\n";
+                supplement_initString2 += TAB + ", " + varName + "Demarshaller(&(proxy->" + GETCOMPCATEGORY_FUNC_NAME+ "()->" + PREFIX_PROXY_MEMBERNAME + varName + "[proxy->" + GETDATA_FUNC_NAME + "()]))\n";
+                supplement_initString2 += "#endif\n";
+                supplement_initString2 += "#else\n";
+                initString2 << supplement_initString2 ;
+             }
+   	     initString2<<", ";
    	     constructorFB << TAB << TAB << TAB << "_demarshallers.push_back(&" << varName << "Demarshaller);\n";
    	     initString1 << varName << "Demarshaller()";
    	     initString2 << varName << "Demarshaller(&(proxy->" << varName <<"))";
-   	     setDestinationMethodFB << TAB << TAB << TAB << varName << "Demarshaller.setDestination(&(_proxy->" << varName << "));\n";
+             if (isSupportedMachineType(MachineType::GPU))
+             {
+                setDestinationMethodFB << TAB << STR_GPU_CHECK_START;
+                setDestinationMethodFB << TAB << "#if PROXY_ALLOCATION == OPTION_3\n";
+                //publicValueDemarshaller.setDestination(&(_proxy->_container->um_publicValue[_proxy->index]));
+                ////TODO fix here using above
+                //publicValueDemarshaller.setDestination(&(_proxy->_container->_demarshallerMap[demarshaller_index].um_publicValue[proxy->index]));
+                setDestinationMethodFB << indent_body << varName << "Demarshaller.setDestination(&(_proxy->"
+                   << GETCOMPCATEGORY_FUNC_NAME << "()->" << GETDEMARSHALLER_FUNC_NAME << "(proxy->"
+                   << GETDEMARSHALLERINDEX_FUNC_NAME << "())->" <<  PREFIX_MEMBERNAME <<  varName << "[proxy->" 
+                   << GETDATA_FUNC_NAME << "()]));\n";
+                setDestinationMethodFB << TAB << "#elif PROXY_ALLOCATION == OPTION_4\n"
+                   //publicValueDemarshaller.setDestination(&(_proxy->_container->proxy_um_publicValue[proxy->index]));
+                   << varName << "Demarshaller.setDestination(&(_proxy->" << GETCOMPCATEGORY_FUNC_NAME << "()->" 
+                   << PREFIX_PROXY_MEMBERNAME << varName << "[proxy->" << GETDATA_FUNC_NAME << "()]));\n";
+                setDestinationMethodFB << TAB << "#endif\n";
+
+                setDestinationMethodFB << TAB << "#else\n";
+             }
+   	     setDestinationMethodFB << indent_body << varName << "Demarshaller.setDestination(&(_proxy->" << varName << "));\n";
    
+             if (isSupportedMachineType(MachineType::GPU))
+             {
+                setDestinationMethodFB << TAB << STR_GPU_CHECK_END;
+             }
+
 	     CustomAttribute* demarshaller;
 	     if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
 								      "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
@@ -886,10 +980,15 @@ void InterfaceImplementorBase::generateInstanceProxy()
    	     std::auto_ptr<Attribute> demarshallerAp(demarshaller);
    	     demarshallerInstance->addAttribute(demarshallerAp);
    
-   	     if (++varsIter != varsEnd) {
-   	        initString1 << ", ";
-   	        initString2 << ", ";
-   	     }
+   	     //if (++varsIter != varsEnd) {
+   	     //   initString1 << ", ";
+   	     //   initString2 << ", ";
+   	     //}
+             ++varsIter;
+             if (isSupportedMachineType(MachineType::GPU))
+             {
+                initString2 << "\n" << STR_GPU_CHECK_END;
+             }
           }
           setDestinationMethodFB << TAB << TAB << TAB << "reset();\n";
    
@@ -899,7 +998,8 @@ void InterfaceImplementorBase::generateInstanceProxy()
           constructor2->setInitializationStr(initString2.str());
           constructor2->setFunctionBody(constructorFB.str());
           constructor2->addParameter(getInstanceProxyName() + "* proxy");
-          constructor2->setInline();
+          if (! isSupportedMachineType(MachineType::GPU))
+             constructor2->setInline();
    
           std::auto_ptr<Method> consToIns1(constructor1.release());
           std::auto_ptr<Method> consToIns2(constructor2.release());

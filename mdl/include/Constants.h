@@ -56,6 +56,7 @@ const std::string RECVTEMPLATES = "CG_recvTemplates";
 const std::string SENDTEMPLATES = "CG_sendTemplates";
 const std::string GETSENDTYPETEMPLATES = "CG_getSendTypeTemplates";
 const std::string PREFIX_MEMBERNAME = "um_";
+const std::string PREFIX_PROXY_MEMBERNAME = "proxy_um_";
 const std::string SUFFIX_MEMBERNAME_ARRAY = "_start_offset";
 const std::string SUFFIX_MEMBERNAME_ARRAY_MAXELEMENTS = "_max_elements";
 const std::string REF_CC_OBJECT = "_container"; // data member that references to CompCategory object
@@ -64,9 +65,11 @@ const std::string REF_DEMARSHALLER_INDEX = "demarshaller_index"; // index to CCD
 const std::string STR_GPU_CHECK_START = "#ifdef HAVE_GPU\n";
 const std::string GPUCONDITIONAL = "HAVE_GPU";
 const std::string STR_GPU_CHECK_END = "#endif\n";
-const std::string GETCOMPCATEGORY_FUNC_NAME = "getContainer";
+const std::string GETCOMPCATEGORY_FUNC_NAME = "getCompCategory";
 const std::string SETCOMPCATEGORY_FUNC_NAME = "setCompCategory";
-const std::string GETDEMARSHALLER_FUNC_NAME = "getDemarshallerIndex";
+const std::string GETDEMARSHALLERINDEX_FUNC_NAME = "getDemarshallerIndex";
+const std::string GETDEMARSHALLER_FUNC_NAME = "getDemarshaller";  // if not found, return 'nullptr'
+const std::string FINDDEMARSHALLER_FUNC_NAME = "findDemarshaller"; //create if not existing
 const std::string GETDATA_FUNC_NAME = "getDataIndex";
 enum class MachineType {
    CPU, GPU
