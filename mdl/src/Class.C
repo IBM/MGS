@@ -913,6 +913,7 @@ void Class::generateSource(const std::string& moduleName)
    std::size_t npos = cuda_filename.find(PREFIX);
    if (npos == 0)
      cuda_filename = cuda_filename.substr(PREFIX.length());
+   os <<  STR_GPU_CHECK_START ;
    os << "#include \"" << cuda_filename << ".cu\"\n";
    std::map< std::string, std::ostringstream> incl_files_os;
    std::map< std::string, std::ostringstream> cu_files_os;
@@ -945,6 +946,7 @@ void Class::generateSource(const std::string& moduleName)
      auto rawname =  filename.substr(0, pos);
      generateOutputCustom(rawname+".cu", moduleName + "/src", cu_files_os[filename]);
    }
+   os <<  STR_GPU_CHECK_END << "\n";
    printMemberClassesMethods(os);
    printMethods(os);
    printExtraSourceStrings(os);

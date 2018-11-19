@@ -415,7 +415,37 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       "size_t size");
    std::ostringstream allocateNodesMethodFB;   
    allocateNodesMethodFB
-      << TAB << "_nodes.resize_allocated(size);\n";
+      << STR_GPU_CHECK_START
+      << TAB << "bool force_resize = true;\n"
+      << TAB << "_nodes.resize_allocated(size, force_resize);\n";
+   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+      if (it->second->isArray())
+      {
+          //NOTE: um_neighbors is an array of array
+	 allocateNodesMethodFB << TAB 
+	    << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
+	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+	    << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
+	    << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	    << "int MAX_SUBARRAY_SIZE = 20;\n"
+	    << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
+	    << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	    << "assert(0);\n"
+	    << "#endif\n";
+      }
+      else{
+	 allocateNodesMethodFB << TAB 
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
+      }
+   }
+   allocateNodesMethodFB << "#else\n"
+      << TAB << "_nodes.resize_allocated(size);\n"
+      << STR_GPU_CHECK_END;
    allocateNodesMethod->setFunctionBody(
       allocateNodesMethodFB.str());
    instance.addMethod(allocateNodesMethod);
