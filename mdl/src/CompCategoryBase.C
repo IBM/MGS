@@ -428,9 +428,10 @@ void CompCategoryBase::generateInstance()
    _classes.push_back(instance.release());  
 }
 
-void CompCategoryBase::generateCompCategoryBase()
+void CompCategoryBase::generateCompCategoryBase(Class* ptr)
 {
-   std::auto_ptr<Class> instance(new Class(getCompCategoryBaseName()));
+   std::auto_ptr<Class> instance(ptr == nullptr? new Class(getCompCategoryBaseName()) : ptr);
+   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseCompCategory));
 
    std::auto_ptr<BaseClass> base(new BaseClass(getFrameworkCompCategoryName()));   
    instance->addBaseClass(base);
@@ -484,6 +485,10 @@ void CompCategoryBase::generateCompCategoryBase()
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance->addMethod(getOutAttrParameterSetMethod);
 
+   // Add getSharedMembers() to the current class 
+   instance->addKernelArgs("_nodes.size()", "size", "unsigned");
+   addSharedDataToKernelArgs(instance.get());
+   
    // Add the instance phase caller methods
    if(_instancePhases) {
       std::vector<Phase*>::iterator it, end = _instancePhases->end();

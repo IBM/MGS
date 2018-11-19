@@ -37,12 +37,14 @@
 #include <chrono>
 #include <time.h>
 #include <cstring>
+#include <algorithm>
 
 Class::Class()
    : _name(""), _nameParentClass(""), _fileOutput(true), _userCode(false),
      _sourceFileBeginning(""), _copyingDisabled(false), _copyingRemoved(false), _templateClass(false), _generateSourceFile(false),
      _memberClass(false), _alternateFileName(""), 
-     _classInfo(std::make_pair(PrimeType::UN_SET, SubType::UN_SET))
+     _classInfo(std::make_pair(PrimeType::UN_SET, SubType::UN_SET)),
+     _gpuKernelArgs("")
 {
 }
 
@@ -67,7 +69,8 @@ Class::Class(const Class& rv)
      _friendDeclarations(rv._friendDeclarations), 
      _macroConditional(rv._macroConditional), 
      _typeDefinitions(rv._typeDefinitions),
-     _classInfo(rv._classInfo)
+     _classInfo(rv._classInfo),
+     _gpuKernelArgs(rv._gpuKernelArgs)
 {
    copyOwnedHeap(rv);
 }
@@ -161,7 +164,7 @@ void Class::addDataTypeDataItemHeaders(
 
 void Class::addAttributes(const MemberContainer<DataType>& members
 			  , AccessType accessType, bool suppressPointers,
-			  bool add_gpu_attributes)
+			  bool add_gpu_attributes, Class* compcat_ptr)
 {
    if (members.size() > 0) {
       addDataTypeHeaders(members);
@@ -178,6 +181,137 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	   MacroConditional gpuConditional(GPUCONDITIONAL);
 	   gpuConditional.setNegateCondition();
 	   att->setMacroConditional(gpuConditional);
+
+	   if (compcat_ptr)
+	   {
+	     MacroConditional gpuConditional(GPUCONDITIONAL);
+	     auto member_attr_name = it->first;
+	     auto dt = it->second;
+	     if (dt->isArray())
+	     {
+	       //if (! dt->getType()->isPointer())
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 type = type.replace(type.find(from),from.length(),to);
+		 from = ">";
+		 to = ", Array_Flat<int>::MemLocation::UNIFIED_MEM>";
+		 type = type.replace(type.find(from),from.length(),to);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_PROXY_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + type + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+	       }
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 type = type.replace(type.find(from),from.length(),to);
+		 from = ">";
+		 to = ", Array_Flat<int>::MemLocation::UNIFIED_MEM>";
+		 type = type.replace(type.find(from),from.length(),to);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + type + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_3");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+	       }
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 std::size_t start = type.find_first_of("<");
+		 std::size_t last = type.find_first_of(">");
+		 std::string element_datatype = type.substr(start, last-start);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_4");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() + 
+		       "_start_offset", "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() +
+		       "_num_elements", "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+	       }
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 std::size_t start = type.find_first_of("<");
+		 std::size_t last = type.find_first_of(">");
+		 std::string element_datatype = type.substr(start, last-start);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() + 
+		       "_max_elements", "int", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() +
+		       "_num_elements", "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+	       }
+/*
+          #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+             ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >,
+                Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
+          #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+             ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+             //always 'int' for the two below arrays
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+          #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+             ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+             //always 'int' for the two below arrays
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+             int um_neighbors_max_elements;
+          #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+             ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+             //always 'int' for the below array
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+          #endif
+  */
+	     }
+	     else{
+	       /*
+           #if PROXY_ALLOCATION == OPTION_4
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_value;
+           #endif
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
+		*/
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_PROXY_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + dt->getTypeString() + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+	       }
+	       std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + dt->getTypeString() + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+	     att_cc->setMacroConditional(gpuConditional);
+	     compcat_ptr->addAttribute(att_cc);
+	     //compcat_ptr->addAttribute(att_index, MachineType::GPU);
+	     }
+	     //std::string kernelArgStr = PREFIX_MEMBERNAME + dt->getName() + ".getDataRef()";
+	     //compcat_ptr->addKernelArgs(kernelArgStr, dt->getName(), dt->getDescriptor()+"* ");
+	     compcat_ptr->addKernelArgs(dt);
+	   }
 	 }
 	 addAttribute(att);
       }
@@ -401,6 +535,15 @@ void Class::printMethodDefinitions(AccessType type, std::ostringstream& os)
 	it != _methods.end(); ++it) {
      (*it)->printDefinition(type, os);
    }
+   for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+    {//these are for the method whose definition is written into a different file
+      // which is included into the main source file
+      auto& value = it->second;
+      for (std::vector<Method*>::const_iterator it = value.begin();
+	  it != value.end(); ++it) {
+	(*it)->printDefinition(type, os);
+      }
+    }
 }
 
 void Class::printExternCDefinitions(std::ostringstream& os)
@@ -605,6 +748,19 @@ void Class::generateOutput(const std::string& modifier,
    } 
 }
 
+void Class::generateOutputCustom(const std::string& filename, 
+			   const std::string& directory,
+			   std::ostringstream& os)
+{
+  /* TUAN TODO: consider using Boost.FileSystem for cross-platform */
+  std::string fName = directory + "/" + filename;
+  fName += ".gen";
+  //else return; // hack for MBL
+  std::ofstream fs(fName.c_str());
+  fs << os.str();
+  fs.close();
+}
+
 void Class::generateHeader(const std::string& moduleName)
 {
    std::ostringstream os;
@@ -685,6 +841,18 @@ void Class::generateClassDefinition(std::ostringstream& os)
    os << "};\n\n";
 }
 
+void Class::printGPUSource(std::string method, std::ostringstream& os)
+{
+  os << "void __global__ " <<  method << "(\n"  
+    << _gpuKernelArgs
+    << ")\n"
+    << "{\n" 
+    << TAB << "int index = blockDim.x * blockIdx.x + threadIdx.x;\n"
+    << TAB << "if (index < size) {\n" 
+    << TAB << TAB << " // add your code here\n"
+    << TAB << "}\n"
+    << "}\n";
+}
 void Class::generateSource(const std::string& moduleName)
 {
    std::ostringstream os;
@@ -700,6 +868,42 @@ void Class::generateSource(const std::string& moduleName)
    printHeaders(_headers, os);
    os << "\n";
 
+   std::string cuda_filename = getName();
+   std::size_t npos = cuda_filename.find(PREFIX);
+   if (npos == 0)
+     cuda_filename = cuda_filename.substr(PREFIX.length());
+   os << "#include \"" << cuda_filename << ".cu\"\n";
+   std::map< std::string, std::ostringstream> incl_files_os;
+   std::map< std::string, std::ostringstream> cu_files_os;
+   for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+    {//these are for the method whose definition is written into a different file
+      // which is included into the main source file
+      auto& filename = it->first;
+      os << "#include \"" << filename << "\"\n";
+      auto& value = it->second;
+      std::string UPPERNAME = _name;
+      std::transform(UPPERNAME.begin(), UPPERNAME.end(), UPPERNAME.begin(), [](char c){ return std::toupper(c); });
+      cu_files_os[filename] << "#ifndef " << UPPERNAME << "_CU\n"
+	<< "#define " << UPPERNAME << "_CU\n";
+      for (std::vector<Method*>::const_iterator method_iter = value.begin();
+          method_iter != value.end(); ++method_iter) {
+	//className, ostream, _nameParentClass
+        (*method_iter)->printSource(_name, incl_files_os[filename], _nameParentClass);
+	std::size_t pos = _name.find_last_of(COMPCATEGORY);
+	std::string nodename = _name.substr(PREFIX.length(), pos);
+        printGPUSource((*method_iter)->getGPUName(), cu_files_os[filename]);
+      }
+      cu_files_os[filename] << "#endif\n";
+    }
+   for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+   {
+     auto& filename = it->first;
+     //TUAN TODO move .cu and .incl out of filename
+     generateOutputCustom(filename, moduleName + "/src", incl_files_os[filename]);
+     std::size_t pos = filename.find_last_of(".");
+     auto rawname =  filename.substr(0, pos);
+     generateOutputCustom(rawname+".cu", moduleName + "/src", cu_files_os[filename]);
+   }
    printMemberClassesMethods(os);
    printMethods(os);
    printExtraSourceStrings(os);

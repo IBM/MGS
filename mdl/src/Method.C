@@ -24,6 +24,7 @@
 
 Method::Method()
    : _name(""), _returnStr(""), _functionBody(""), 
+     _kernelname(""),
      _accessType(AccessType::PUBLIC), _virtual(false),
      _pureVirtual(false), _const(false), _externC(false), 
      _externCPP(false), _inline(false), _template(false), _static(false)

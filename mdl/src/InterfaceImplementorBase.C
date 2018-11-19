@@ -383,10 +383,14 @@ void InterfaceImplementorBase::generatePublisher()
    _classes.push_back(instance.release());  
 }
 
-void InterfaceImplementorBase::generateInstanceBase()
-{
+std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
+{//e.g. CG_LifeNode.h/.C
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
    instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
+   /* as 'publicValue' data in CG_LifeNode becomes 'um_publicValue' in CG_LifeNodeCompCategory
+    * we create this CompCategory's Class object here as well 
+    */
+   std::unique_ptr<Class> compcat_instance(new Class(instance->getName() + COMPCATEGORY));
    //instance.addSupportMachineType(this->getSupportMachineType);
 
    instance->addHeader("\"" + getPublisherName() + ".h\"");
@@ -429,7 +433,7 @@ void InterfaceImplementorBase::generateInstanceBase()
       getCC->setInline();
       getCC->setMacroConditional(gpuConditional);
       instance->addMethod(getCC);
-      instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true);
+      instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true, compcat_instance.get());
    }
    else{
       instance->addAttributes(getInstances(), AccessType::PROTECTED, false);
@@ -527,6 +531,7 @@ void InterfaceImplementorBase::generateInstanceBase()
    addExtraInstanceBaseMethods(*(instance.get()));
    instance->addStandardMethods();
    _classes.push_back(instance.release());  
+   return compcat_instance;
 }
 
 void InterfaceImplementorBase::generateInstanceProxy()

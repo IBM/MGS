@@ -20,6 +20,7 @@
 #include "Constants.h"
 #include <memory>
 #include <string>
+#include <iostream>
 
 PhaseTypeInstance::PhaseTypeInstance()
    : PhaseType()
@@ -50,49 +51,90 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
    Class& c, const std::string& name, const std::string& instanceType, 
    const std::string& componentType) const
 {
-   std::ostringstream os;
-   std::auto_ptr<Method> method;
-   getInternalInstancePhaseMethod(method, name, componentType);
+   {//the same for all class (default is CPU machine-type)
+      std::ostringstream os;
+      std::auto_ptr<Method> method;
+      getInternalInstancePhaseMethod(method, name, componentType);
 
-   std::string insBaseType = PREFIX + instanceType;
-   
-   // not OO may change architecture - sgc
-   if (componentType == "Node") {
-      // Change the cast to static_cast later
-     os << TAB << "ShallowArray<"<<instanceType<<">::iterator it = _nodes.begin();\n"
-	<< TAB << "ShallowArray<"<<instanceType<<">::iterator end = _nodes.begin();\n"
-        << TAB << "it += arg->startIndex;\n"
-        << TAB << "end += arg->endIndex;\n"       
-	<< TAB << "for (; it <= end; ++it) {\n"
-	<< TAB << TAB << "(*it)." << name << "(rng);\n"
-	<< TAB << "}\n";
-   } else if (componentType == "Variable") {
-      os
-	 << TAB << "DuplicatePointerArray<Variable>::iterator it" 
-	 << " = _variableList.begin() + arg->startIndex;\n"
-	 << TAB << "DuplicatePointerArray<Variable>::iterator end" 
-	 << " = _variableList.begin() + arg->endIndex;\n"
-	 << TAB << "for (; it <= end; ++it) {\n"
-	 << TAB << TAB << instanceType << "* elem = dynamic_cast<" 
-	 << instanceType << "*>(*it);\n"
-	 // for now
-	 << TAB << TAB << "assert(elem != 0); // for now \n"
-	 << TAB << TAB << "elem->" << name << "(rng);\n"
-	 << TAB << "}\n";
-   } else if (componentType == "Edge") {
-      os
-	 << TAB << "ShallowArray<" << instanceType << ">::iterator it" 
-	 << " = _edgeList.begin() + arg->startIndex;\n"
-	 << TAB << "ShallowArray<" << instanceType << ">::iterator end" 
-	 << " = _edgeList.begin() + arg->endIndex;\n"
-	 << TAB << "for (; it <= end; ++it) {\n"
-	 << TAB << TAB << "it->" << name << "(rng);\n"
-	 << TAB << "}\n";
+      std::string insBaseType = PREFIX + instanceType;
 
+      // not OO may change architecture - sgc
+      if (componentType == "Node") {
+	 // Change the cast to static_cast later
+	 os << "#if defined(HAVE_GPU)\n";
+	 os << TAB << "ShallowArray_Flat<"<<instanceType<<">::iterator it = _nodes.begin();\n"
+	    << TAB << "ShallowArray_Flat<"<<instanceType<<">::iterator end = _nodes.begin();\n"
+	    << "#else\n";
+	 os << TAB << "ShallowArray<"<<instanceType<<">::iterator it = _nodes.begin();\n"
+	    << TAB << "ShallowArray<"<<instanceType<<">::iterator end = _nodes.begin();\n"
+	    << "#endif\n"
+	    << TAB << "it += arg->startIndex;\n"
+	    << TAB << "end += arg->endIndex;\n"       
+	    << TAB << "for (; it <= end; ++it) {\n"
+	    << TAB << TAB << "(*it)." << name << "(rng);\n"
+	    << TAB << "}\n";
+      } else if (componentType == "Variable") {
+	 os
+	    << TAB << "DuplicatePointerArray<Variable>::iterator it" 
+	    << " = _variableList.begin() + arg->startIndex;\n"
+	    << TAB << "DuplicatePointerArray<Variable>::iterator end" 
+	    << " = _variableList.begin() + arg->endIndex;\n"
+	    << TAB << "for (; it <= end; ++it) {\n"
+	    << TAB << TAB << instanceType << "* elem = dynamic_cast<" 
+	    << instanceType << "*>(*it);\n"
+	    // for now
+	    << TAB << TAB << "assert(elem != 0); // for now \n"
+	    << TAB << TAB << "elem->" << name << "(rng);\n"
+	    << TAB << "}\n";
+      } else if (componentType == "Edge") {
+	 os
+	    << TAB << "ShallowArray<" << instanceType << ">::iterator it" 
+	    << " = _edgeList.begin() + arg->startIndex;\n"
+	    << TAB << "ShallowArray<" << instanceType << ">::iterator end" 
+	    << " = _edgeList.begin() + arg->endIndex;\n"
+	    << TAB << "for (; it <= end; ++it) {\n"
+	    << TAB << TAB << "it->" << name << "(rng);\n"
+	    << TAB << "}\n";
+
+      }
+      method->setFunctionBody(os.str());
+      c.addMethod(method);
    }
+   {//special treatment, i.e. get phases for different machine type
+      std::ostringstream os;
+      //Here is for GPU machine-type
+      std::auto_ptr<Method> method;
+      getInternalInstancePhaseMethod(method, name, componentType, MachineType::GPU);
+      std::string gpuKernelName(instanceType + "_kernel_" + name);
+      method->setGPUName(gpuKernelName);
 
-   method->setFunctionBody(os.str());
-   c.addMethod(method);
+      std::string insBaseType = PREFIX + instanceType;
+
+      // not OO may change architecture - sgc
+      if (componentType == "Node") {
+	 // Change the cast to static_cast later
+	 os 
+	  << TAB << "//int BLOCKS= _nodes.size();\n"
+          << TAB << "//int THREADS_PER_BLOCK = 1;\n"
+          << TAB << "int THREADS_PER_BLOCK= 256;\n"
+          << TAB << "int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);\n"
+          //<< TAB << "//TUAN TODO: consider using stream later\n"
+          //<< TAB << "LifeNode_kernel_initialize<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (\n"
+          //<< TAB << instanceType << "_kernel_" << method << "<<< BLOCKS, THREADS_PER_BLOCK >>> (\n"
+          << TAB << gpuKernelName << "<<< BLOCKS, THREADS_PER_BLOCK >>> (\n"
+	  << c.getKernelArgsAsCalledFromCPU() 
+          << TAB << ");\n"
+          << TAB << "gpuErrorCheck( cudaPeekAtLastError() );\n";
+
+	 method->setFunctionBody(os.str());
+	 c.addMethodToExternalFile(instanceType + COMPCATEGORY + ".incl", method);
+      } else if (componentType == "Variable") {
+	 //nothing
+      } else if (componentType == "Edge") 
+      {
+	 //nothing
+      }
+   }
 }
 
 std::string PhaseTypeInstance::getWorkUnitsMethodBody(
