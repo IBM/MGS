@@ -62,9 +62,9 @@ void Node::internalGenerateFiles()
    assert(strcmp(getName().c_str(), ""));
    addSupportForMachineType(MachineType::GPU);
 
-   generateInstanceBase(); //CG_LifeNode.h/,C
+   std::unique_ptr<Class> compcat_ptr = generateInstanceBase(); //CG_LifeNode.h/,C
    generateInstance();  //LifeNode.h/C.gen
-   generateCompCategoryBase(); //CG_LifeNodeCompCategory.h/.C
+   generateCompCategoryBase(compcat_ptr.release()); //CG_LifeNodeCompCategory.h/.C
    generateCompCategory(); //LifeNodeCompCategory.h/.C.gen
    generateFactory();
    generateGridLayerData();
@@ -415,7 +415,37 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       "size_t size");
    std::ostringstream allocateNodesMethodFB;   
    allocateNodesMethodFB
-      << TAB << "_nodes.resize_allocated(size);\n";
+      << STR_GPU_CHECK_START
+      << TAB << "bool force_resize = true;\n"
+      << TAB << "_nodes.resize_allocated(size, force_resize);\n";
+   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+      if (it->second->isArray())
+      {
+          //NOTE: um_neighbors is an array of array
+	 allocateNodesMethodFB << TAB 
+	    << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
+	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+	    << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
+	    << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	    << "int MAX_SUBARRAY_SIZE = 20;\n"
+	    << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
+	    << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	    << "assert(0);\n"
+	    << "#endif\n";
+      }
+      else{
+	 allocateNodesMethodFB << TAB 
+	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
+      }
+   }
+   allocateNodesMethodFB << "#else\n"
+      << TAB << "_nodes.resize_allocated(size);\n"
+      << STR_GPU_CHECK_END;
    allocateNodesMethod->setFunctionBody(
       allocateNodesMethodFB.str());
    instance.addMethod(allocateNodesMethod);
@@ -482,25 +512,53 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       ShallowArray<LifeNode, 1000, 4> _nodes;
 #endif
     */
-   CustomAttribute* nodes = new CustomAttribute("_nodes", "ShallowArray<" + getInstanceName() + ", 1000, 4>");
-   // QUESTION: should this shallow array be setOwned? JK, RR, DL 11/29/05
-   std::auto_ptr<Attribute> nodesAp(nodes);
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      gpuConditional.setNegateCondition();
+      CustomAttribute* nodes = new CustomAttribute("_nodes", "ShallowArray<" + getInstanceName() + ", 1000, 4>");
+      nodes->setMacroConditional(gpuConditional);
+      // QUESTION: should this shallow array be setOwned? JK, RR, DL 11/29/05
+      std::auto_ptr<Attribute> nodesAp(nodes);
 
-   std::ostringstream nodesDeleteString;
-   nodesDeleteString << "#ifdef HAVE_MPI\n"
-                     << TAB << "std::map<int, CCDemarshaller*>::iterator end2 = _demarshallerMap.end();\n"
-                     << TAB << "for (std::map<int, CCDemarshaller*>::iterator iter2=_demarshallerMap.begin(); iter2!=end2; ++iter2) {\n"
-                     << TAB << TAB << "delete (*iter2).second;\n"
-                     << TAB << "}\n"
-		     << "#endif\n"
-		     << TAB << "if (CG_sharedMembers) {\n"
-		     << TAB << TAB << "delete CG_sharedMembers;\n"
-		     << TAB << TAB << "CG_sharedMembers=0;\n"
-		     << TAB << "}\n";
+      std::ostringstream nodesDeleteString;
+      nodesDeleteString << "#ifdef HAVE_MPI\n"
+	 << TAB << "std::map<int, CCDemarshaller*>::iterator end2 = _demarshallerMap.end();\n"
+	 << TAB << "for (std::map<int, CCDemarshaller*>::iterator iter2=_demarshallerMap.begin(); iter2!=end2; ++iter2) {\n"
+	 << TAB << TAB << "delete (*iter2).second;\n"
+	 << TAB << "}\n"
+	 << "#endif\n"
+	 << TAB << "if (CG_sharedMembers) {\n"
+	 << TAB << TAB << "delete CG_sharedMembers;\n"
+	 << TAB << TAB << "CG_sharedMembers=0;\n"
+	 << TAB << "}\n";
 
-   nodes->setCustomDeleteString(nodesDeleteString.str());
-   nodes->setAccessType(AccessType::PROTECTED);
-   instance.addAttribute(nodesAp);
+      nodes->setCustomDeleteString(nodesDeleteString.str());
+      nodes->setAccessType(AccessType::PROTECTED);
+      instance.addAttribute(nodesAp);
+   }
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* nodes = new CustomAttribute("_nodes", "ShallowArray_Flat<" + getInstanceName() + ", Array_Flat<int>::MemLocation::CPU, 1000>");
+      nodes->setMacroConditional(gpuConditional);
+      // QUESTION: should this shallow array be setOwned? JK, RR, DL 11/29/05
+      std::auto_ptr<Attribute> nodesAp(nodes);
+
+      //std::ostringstream nodesDeleteString;
+      //nodesDeleteString << "#ifdef HAVE_MPI\n"
+      //   << TAB << "std::map<int, CCDemarshaller*>::iterator end2 = _demarshallerMap.end();\n"
+      //   << TAB << "for (std::map<int, CCDemarshaller*>::iterator iter2=_demarshallerMap.begin(); iter2!=end2; ++iter2) {\n"
+      //   << TAB << TAB << "delete (*iter2).second;\n"
+      //   << TAB << "}\n"
+      //   << "#endif\n"
+      //   << TAB << "if (CG_sharedMembers) {\n"
+      //   << TAB << TAB << "delete CG_sharedMembers;\n"
+      //   << TAB << TAB << "CG_sharedMembers=0;\n"
+      //   << TAB << "}\n";
+
+      //nodes->setCustomDeleteString(nodesDeleteString.str());
+      nodes->setAccessType(AccessType::PROTECTED);
+      instance.addAttribute(nodesAp);
+   }
 
    CustomAttribute* compCost = new CustomAttribute("_computeCost", "ConnectionIncrement");
    std::auto_ptr<Attribute> compCostAp(compCost);

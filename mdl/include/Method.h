@@ -43,6 +43,13 @@ class Method
       void setName(const std::string& name) {
 	 _name = name;
       }
+      const std::string& getGPUName() const {
+	 return _kernelname;
+      }
+
+      void setGPUName(const std::string& name) {
+	 _kernelname = name;
+      }
 
       const std::string& getReturnStr() const {
 	 return _returnStr;
@@ -172,6 +179,7 @@ class Method
       std::string _name;
       std::string _returnStr;
       std::string _functionBody;
+      std::string _kernelname; //if a method is supposed to call a GPU kernel, then it needs to track the GPU kernel name as well
       std::vector<std::string> _parameters;
       std::vector<std::string> _templateParameters;
       AccessType _accessType;

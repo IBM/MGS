@@ -428,9 +428,10 @@ void CompCategoryBase::generateInstance()
    _classes.push_back(instance.release());  
 }
 
-void CompCategoryBase::generateCompCategoryBase()
+void CompCategoryBase::generateCompCategoryBase(Class* ptr)
 {
-   std::auto_ptr<Class> instance(new Class(getCompCategoryBaseName()));
+   std::auto_ptr<Class> instance(ptr == nullptr? new Class(getCompCategoryBaseName()) : ptr);
+   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseCompCategory));
 
    std::auto_ptr<BaseClass> base(new BaseClass(getFrameworkCompCategoryName()));   
    instance->addBaseClass(base);
@@ -484,6 +485,10 @@ void CompCategoryBase::generateCompCategoryBase()
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance->addMethod(getOutAttrParameterSetMethod);
 
+   // Add getSharedMembers() to the current class 
+   instance->addKernelArgs("_nodes.size()", "size", "unsigned");
+   addSharedDataToKernelArgs(instance.get());
+   
    // Add the instance phase caller methods
    if(_instancePhases) {
       std::vector<Phase*>::iterator it, end = _instancePhases->end();
@@ -1337,19 +1342,57 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    ccdemarshaller->addFriendDeclaration(ccFriend);
 
    // receiveList attribute
+   MacroConditional gpuConditional(GPUCONDITIONAL);
+   gpuConditional.setNegateCondition();
+
    CustomAttribute* receiveList = new CustomAttribute("_receiveList", "ShallowArray<"+getInstanceProxyName()+">", AccessType::PROTECTED);
+   if (isSupportedMachineType(MachineType::GPU))
+      receiveList->setMacroConditional(gpuConditional);
    std::auto_ptr<Attribute> receiveListAp(receiveList);
    ccdemarshaller->addAttribute(receiveListAp);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* receiveList = new CustomAttribute("_receiveList", "ShallowArray_Flat<"+getInstanceProxyName()+">", AccessType::PROTECTED);
+      receiveList->setMacroConditional(gpuConditional);
+      std::auto_ptr<Attribute> receiveListAp(receiveList);
+      ccdemarshaller->addAttribute(receiveListAp);
+   }
 
    // receiveListIter attribute
    CustomAttribute* receiveListIter = new CustomAttribute("_receiveListIter", "ShallowArray<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+   if (isSupportedMachineType(MachineType::GPU))
+      receiveListIter->setMacroConditional(gpuConditional);
    std::auto_ptr<Attribute> receiveListIterAp(receiveListIter);
    ccdemarshaller->addAttribute(receiveListIterAp);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* receiveListIter = new CustomAttribute("_receiveListIter", "ShallowArray_Flat<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+      receiveListIter->setMacroConditional(gpuConditional);
+      std::auto_ptr<Attribute> receiveListIterAp(receiveListIter);
+      ccdemarshaller->addAttribute(receiveListIterAp);
+   }
 
    // receiveState attribute
    CustomAttribute* receiveState = new CustomAttribute("_receiveState", "ShallowArray<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+   if (isSupportedMachineType(MachineType::GPU))
+      receiveState->setMacroConditional(gpuConditional);
    std::auto_ptr<Attribute> receiveStateAp(receiveState);
    ccdemarshaller->addAttribute(receiveStateAp);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* receiveState = new CustomAttribute("_receiveState", "ShallowArray_Flat<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+      receiveState->setMacroConditional(gpuConditional);
+      std::auto_ptr<Attribute> receiveStateAp(receiveState);
+      ccdemarshaller->addAttribute(receiveStateAp);
+   }
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      ccdemarshaller->setClassInfo(std::make_pair(Class::PrimeType::CCDemarshaller, Class::SubType::UN_SET));
+      ccdemarshaller->addAttributes(getInstances(), AccessType::PUBLIC, true, true);
+   }
 
    // recvTemplates attribute
    CustomAttribute* recvTemplates = new CustomAttribute("CG_recvTemplates", "CG_RecvDemarshallers", AccessType::PROTECTED);
@@ -1382,7 +1425,8 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "if (inList) {\n"
        << TAB << TAB << TAB << TAB << "inList = inList && (_receiveList.size()!=0);\n"
        << TAB << TAB << TAB << TAB << "if (inList) {\n"
-       << TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       //<< TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       << TAB << TAB << TAB << TAB << TAB << "auto niter=_receiveList.begin();\n"
        << TAB << TAB << TAB << TAB << TAB << getInstanceProxyDemarshallerName() << "* dm = diter->second;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<MPI_Aint> blocs;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<int> npls;\n"
@@ -1444,7 +1488,8 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "if (inList) {\n"
        << TAB << TAB << TAB << TAB << "inList = inList && (_receiveList.size()!=0);\n"
        << TAB << TAB << TAB << TAB << "if (inList) {\n"
-       << TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       //<< TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       << TAB << TAB << TAB << TAB << TAB << "auto niter=_receiveList.begin();\n"
        << TAB << TAB << TAB << TAB << TAB << getInstanceProxyDemarshallerName() << "* dm = diter->second;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<MPI_Aint> blocs;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<int> npls;\n"
@@ -1498,8 +1543,10 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());\n"
        << TAB << TAB << TAB << "if (diter != CG_recvTemplates.end()) {\n"
 		      << TAB << TAB << TAB << TAB << getInstanceProxyDemarshallerName() + "* dm = diter->second;\n"
-       << TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator &niter = _receiveState;\n"
-       << TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator nend = _receiveList.end();\n"
+       //<< TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator &niter = _receiveState;\n"
+       //<< TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator nend = _receiveList.end();\n"
+       << TAB << TAB << TAB << TAB << "auto  &niter = _receiveState;\n"
+       << TAB << TAB << TAB << TAB << "auto nend = _receiveList.end();\n"
        << TAB << TAB << TAB << TAB << "const char* buff = buffer;\n"
        << TAB << TAB << TAB << TAB << "while (niter!=nend && buffSize!=0) {\n"
        << TAB << TAB << TAB << TAB << TAB << "buffSize = dm->demarshall(buff, buffSize, rebuildRequested);\n"
@@ -1515,7 +1562,29 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "return buffSize;\n";
 
    addDestinationMethodFB << TAB << TAB << TAB << "_receiveList.increaseSizeTo(_receiveList.size()+1);\n"
-			  << TAB << TAB << TAB << "return &_receiveList[_receiveList.size()-1];\n";
+	 << TAB << TAB 
+	 << " #if defined(HAVE_GPU)\n"
+	 << TAB << TAB << TAB 
+         << "#if PROXY_ALLOCATION == OPTION_3\n"
+	 << TAB << TAB << TAB 
+         << "int sz = _receiveList.size();\n";
+      addDestinationMethodFB << TAB << TAB << TAB 
+	 << "int MAX_SUBARRAY_SIZE = 20;\n";
+   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+      addDestinationMethodFB << TAB << TAB << TAB 
+	 << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
+      if (it->second->isArray())
+      {
+          //NOTE: um_neighbors is an array of array
+	 addDestinationMethodFB << TAB << TAB << TAB 
+          << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n";
+      }
+   }
+      addDestinationMethodFB << TAB << TAB << TAB 
+           << "#endif\n"
+	 << TAB << TAB
+	 << "#endif\n"
+	 << TAB << TAB << TAB << "return &_receiveList[_receiveList.size()-1];\n";
 
    resetMethodFB << TAB << TAB << TAB << "CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());\n"
        << TAB << TAB << TAB << "if (diter != CG_recvTemplates.end()) {\n"

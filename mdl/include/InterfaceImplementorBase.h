@@ -130,7 +130,7 @@ class InterfaceImplementorBase : public Generatable {
 			   , const std::string& name = "") const; 
       void generateOutAttrPSet();
       void generatePublisher();
-      void generateInstanceBase();
+      std::unique_ptr<Class> generateInstanceBase(); //to support GPU, the CG_LifeNode class's data is now part of CG_LifeNodeCompCategory, so we expand the API to return the Class object representing CG_LifeNodeCompCategory
       void generateInstanceProxy();
       
       void addInstanceServiceHeaders(std::auto_ptr<Class>& instance) const;

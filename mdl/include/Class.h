@@ -26,6 +26,7 @@
 #include "IncludeClass.h"
 #include "Attribute.h"
 #include "Method.h"
+#include "ArrayType.h"
 #include <string>
 #include <vector>
 #include <set>
@@ -37,7 +38,7 @@ class BaseClass;
 class Class
 {
    public:
-      enum class PrimeType{ UN_SET, Node, Variable };
+      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller };
       enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
       void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
       PrimeType getClassInfoPrimeType(){ return _classInfo.first; };
@@ -66,7 +67,8 @@ class Class
 	 const MemberContainer<DataType>& members);
       void addAttributes(const MemberContainer<DataType>& members
 			 , AccessType accessType = AccessType::PUBLIC, bool suppressPointers=false,
-			 bool add_gpu_attributes=false);
+			 bool add_gpu_attributes=false,
+			 Class* compcat_ptr = nullptr);
 
       void addClass(const std::string& cl, 
 		     const std::string& conditional = "") {
@@ -107,6 +109,11 @@ class Class
       void addMethod(std::auto_ptr<Method>& mt) {
 	if (!(mt->isInline())) _generateSourceFile=true;
 	 _methods.push_back(mt.release());
+      }
+      void addMethodToExternalFile(std::string external_filename, std::auto_ptr<Method>& mt) {
+	 assert(mt->isInline() == false);
+	//if (!(mt->isInline())) _generateSourceFile=true;
+	 _methodsInDifferentFile[external_filename].push_back(mt.release());
       }
 
       void addTemplateClassParameter(const std::string& str) {
@@ -202,6 +209,103 @@ class Class
       bool isMemberClass() {return _memberClass;}
       void setAlternateFileName(std::string s) {_alternateFileName=s;}
       std::string getFileName();
+      /*
+       * arg (as called from CPU-side)= um_value.getDataRef()
+       * param (for definition)= value
+       * typeStr (for definition)=  'int*'
+       */
+      void addKernelArgs(std::string arg, std::string param, std::string typeStr){
+         if (_gpuKernelArgs.empty())
+         {
+            _gpuKernelArgsAsCalledFromCPU = TAB + TAB + arg + "\n";
+            _gpuKernelArgs = TAB + typeStr + " " + param + "\n";
+         }
+         else{
+            _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
+            _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
+         }
+      }
+      void addKernelArgs(DataType* dt, bool sharedData=false){
+	 std::string arg = PREFIX_MEMBERNAME + dt->getName() + ".getDataRef()";
+	 if (sharedData)
+	       arg ="getSharedMembers()." + dt->getName();
+	 std::string param = dt->getName();
+	 std::string typeStr = dt->getDescriptor();
+	 std::ostringstream os;
+	 std::ostringstream os_gpu;
+	 if (dt->isArray())
+	 {
+	    os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << dt->getName() << ".getDataRef(),\n"
+	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << dt->getName() << ".getDataRef(),\n"
+	       << TAB << dt->getName() << "_start_offset.getDataRef(),\n"
+	       << TAB << dt->getName() << "_num_elements.getDataRef(),\n"
+	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << dt->getName() << ".getDataRef(),\n"
+	       << TAB << dt->getName() << "_max_elements,\n"
+	       << TAB << dt->getName() << "_num_elements.getDataRef(),\n"
+	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << dt->getName() << ".getDataRef(),\n"
+	       << TAB << "//need more info here\n"
+	       << "#endif\n";
+
+	    ArrayType* arr_dt = dynamic_cast<ArrayType*>(dt);
+	    os_gpu << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << "ShallowArray_Flat<" << arr_dt->getType()->getTypeString() << ", Array_Flat<int>::MemLocation::UNIFIED_MEM>* " << dt->getName() << ",\n"
+	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << arr_dt->getType()->getTypeString() << "* " << dt->getName() << ",\n"
+	       << TAB << "int* " << dt->getName() << "_start_offset,\n"
+	       << TAB << "int* " << dt->getName() << "_num_elements,\n"
+	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << arr_dt->getType()->getTypeString() << "* " << dt->getName() << ",\n"
+	       << TAB << "int " << dt->getName() << "_max_elements,\n"
+	       << TAB << "int* " << dt->getName() << "_num_elements,\n"
+	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << dt->getDescriptor() << "* " << dt->getName() << "\n"
+	       << TAB << "//need more info here\n"
+	       << "#endif\n";
+	 }
+	 if (_gpuKernelArgs.empty())
+	 {
+	    if (dt->isArray())
+	    {
+	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str() + "\n";
+	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
+
+	    }else
+	    {
+	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + arg + "\n";
+	       _gpuKernelArgs = TAB + typeStr + " " + param + "\n";
+	    }
+	 }
+	 else{
+	    if (dt->isArray())
+	    {
+	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + os.str() + "\n";
+	       _gpuKernelArgs += TAB + os_gpu.str() + "\n";
+
+	    }else
+	    {
+	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
+	       _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
+	    }
+	 }
+      }
+      void printGPUSource(std::string method, std::ostringstream& os);
+
+      void addSharedDataToKernelArgs(const MemberContainer<DataType>& sharedMembers)
+      {
+	 if (sharedMembers.size() > 0) {
+	    MemberContainer<DataType>::const_iterator it, end = sharedMembers.end();
+	    for (it = sharedMembers.begin(); it != end; ++it) {
+	       //std::string name="getSharedMembers()." + it->first;
+	       //addKernelArgs(name, name, it->second->getDescriptor());
+	       addKernelArgs(it->second, true);
+	    }
+	 }
+      };
+      std::string getKernelArgsAsCalledFromCPU(){ return _gpuKernelArgsAsCalledFromCPU; };
 
    private:
       void destructOwnedHeap();
@@ -230,6 +334,9 @@ class Class
       void generateOutput(const std::string& modifier, 
 			  const std::string& directory,
 			  std::ostringstream& os);     
+      void generateOutputCustom(const std::string& filename, 
+	    const std::string& directory,
+	    std::ostringstream& os);
       void generateHeader(const std::string& moduleName);     
       void generateClassDefinition(std::ostringstream& os); 
       void generateSource(const std::string& moduleName);
@@ -274,6 +381,19 @@ class Class
       MacroConditional _macroConditional;
       std::vector<TypeDefinition> _typeDefinitions;
       std::pair<PrimeType, SubType> _classInfo;
+
+      /* add here any thing that you want to add to class definition section, 
+       * e.g. a function declaration [but the body won't be here or in the source file]
+       * This serve the purpose of having the funciton body in a different file, 
+       * e.g. LifeNodeCompCategory.incl
+       */
+      //std::map<AccessType, std::vector<std::string> > _extraClassHeaderString;
+      //std::map<std::string, std::vector<std::string> > _extraClassHeaderString;
+      
+      //map from file name, e.g. "LifeNodeCompCategory.incl" to the body of class
+      std::map<std::string, std::vector<Method*>> _methodsInDifferentFile;
+      std::string _gpuKernelArgsAsCalledFromCPU; //CUDA kernel argument
+      std::string _gpuKernelArgs; //CUDA kernel argument
 };
 
 #endif
