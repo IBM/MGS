@@ -18,7 +18,7 @@
 #include <string>
 #include "Simulation.h"
 
-LoadPhase::LoadPhase(const std::string& name, PhaseElement::machineType mType)
+LoadPhase::LoadPhase(const std::string& name, machineType mType)
    : Phase(name, mType)
 {
 }

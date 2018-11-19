@@ -34,12 +34,12 @@ class C_machine_type : public C_production
       virtual void internalExecute(LensContext *);
       virtual void checkChildren();
       virtual void recursivePrint();
-      PhaseElement::machineType getMachineType() {
+      machineType getMachineType() {
 	 return _machineType;
       }
 
    private:
       std::string _machineName;
-      PhaseElement::machineType _machineType;
+      machineType _machineType;
 };
 #endif

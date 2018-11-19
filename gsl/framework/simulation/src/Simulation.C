@@ -612,7 +612,7 @@ Simulation::~Simulation()
    if (_rank==0) printf("Simulation destructed.\n");
 }
 
-void Simulation::addInitPhase(const std::string& name, PhaseElement::machineType mType)
+void Simulation::addInitPhase(const std::string& name, machineType mType)
 {
    PhaseElement phase(name, mType);
    _initPhases.push_back(phase);
@@ -623,7 +623,7 @@ void Simulation::addInitPhase(const std::string& name, PhaseElement::machineType
    #endif
 }
 
-void Simulation::addRuntimePhase(const std::string& name, PhaseElement::machineType mType)
+void Simulation::addRuntimePhase(const std::string& name, machineType mType)
 {
    PhaseElement phase(name, mType);
    _runtimePhases.push_back(phase);
@@ -634,7 +634,7 @@ void Simulation::addRuntimePhase(const std::string& name, PhaseElement::machineT
    #endif
 }
 
-void Simulation::addLoadPhase(const std::string& name, PhaseElement::machineType mType)
+void Simulation::addLoadPhase(const std::string& name, machineType mType)
 {
    PhaseElement phase(name, mType);
    _loadPhases.push_back(phase);
@@ -645,7 +645,7 @@ void Simulation::addLoadPhase(const std::string& name, PhaseElement::machineType
    #endif
 }
 
-void Simulation::addFinalPhase(const std::string& name, PhaseElement::machineType mType)
+void Simulation::addFinalPhase(const std::string& name, machineType mType)
 {
    PhaseElement phase(name, mType);
    _finalPhases.push_back(phase);
@@ -882,8 +882,8 @@ std::string Simulation::findLaterPhase(const std::string& first,
    return first;
 }
 
-PhaseElement::machineType Simulation::getPhaseMachineType(std::string const & name) {
-  std::map<std::string, PhaseElement::machineType>::iterator
+machineType Simulation::getPhaseMachineType(std::string const & name) {
+  std::map<std::string, machineType>::iterator
     mtiter=_machineTypes.find(name);
   assert(mtiter!=_machineTypes.end());
   return mtiter->second;

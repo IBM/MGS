@@ -49,7 +49,7 @@ function print_help {
   --as-NTS-NVU                  build NTS+NVU
   --as-NGS                      build Neuronal Graph Simulator (NGS)
 
-Example:
+Examples:
 1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
 2) build_script -p BGL --as-NGS	    :          builds NGS on Blue Gene/L
 3) build_script -p BGP		    :          builds custom MGS domain on Blue Gene/P as specified in mgs.mdf

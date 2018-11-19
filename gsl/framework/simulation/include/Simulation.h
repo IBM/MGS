@@ -287,10 +287,10 @@ class Simulation : public Publishable {
   void disableEdgeRelationalData() { _erd = false; }
   void setPauserStatus(bool pauserStatus) { _pauserStatus = pauserStatus; }
   void addSocket(int fd);
-  void addInitPhase(const std::string& name, PhaseElement::machineType mType);
-  void addRuntimePhase(const std::string& name, PhaseElement::machineType mType);
-  void addLoadPhase(const std::string& name, PhaseElement::machineType mType);
-  void addFinalPhase(const std::string& name, PhaseElement::machineType mType);
+  void addInitPhase(const std::string& name, machineType mType);
+  void addRuntimePhase(const std::string& name, machineType mType);
+  void addLoadPhase(const std::string& name, machineType mType);
+  void addFinalPhase(const std::string& name, machineType mType);
 
   void addWorkUnits(const std::string& name, std::deque<WorkUnit*>& workUnits);
   void addTrigger(const std::string& name, Trigger* trigger);
@@ -298,7 +298,7 @@ class Simulation : public Publishable {
   std::string findLaterPhase(const std::string& first,
                              const std::string& second);
 
-  PhaseElement::machineType getPhaseMachineType(std::string const & name);
+  machineType getPhaseMachineType(std::string const & name);
   std::string getFinalRuntimePhaseName();
   void detachUserInterface() { _detachUserInterface = true; }
   virtual ~Simulation();
@@ -495,7 +495,7 @@ class Simulation : public Publishable {
   std::deque<PhaseElement> _finalPhases;
   std::map<std::string, bool> _communicatingPhases;
   //map from a phase's name, e.g. 'update' (as declared in GSL), to the machine type, e.g. GPU, which handle that type
-  std::map<std::string, PhaseElement::machineType> _machineTypes;
+  std::map<std::string, machineType> _machineTypes;
   int _rank;
   int _nump;
   std::string _phaseName;

@@ -24,11 +24,12 @@ class Simulation;
 class WorkUnit;
 class Trigger;
 
+enum class machineType { NOT_SET, CPU, GPU, FPGA };
+
 class PhaseElement {
 
    public:
-      enum machineType { NOT_SET, CPU, GPU, FPGA };
-      PhaseElement(const std::string& name, PhaseElement::machineType mType);
+      PhaseElement(const std::string& name, machineType mType);
      
       std::string getName() const {
 	 return _name;
@@ -36,10 +37,10 @@ class PhaseElement {
       void setName(const std::string& name) {
 	 _name = name;
       }
-      PhaseElement::machineType getMachineType() {
+      machineType getMachineType() {
 	return _machineType;
       }
-      void setMachineType(PhaseElement::machineType mType) {
+      void setMachineType(machineType mType) {
 	_machineType = mType;
       }
       std::deque<WorkUnit*>& getWorkUnits() {
@@ -51,7 +52,7 @@ class PhaseElement {
 
    protected:
       std::string _name;
-      PhaseElement::machineType _machineType;
+      machineType _machineType;
       std::deque<WorkUnit*> _workUnits;
       std::deque<Trigger*> _triggers;
 };

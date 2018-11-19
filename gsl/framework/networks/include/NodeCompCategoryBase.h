@@ -85,9 +85,9 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       GridLayerData** _gridLayerDataArray;
       int _gridLayerDataArraySize;
 
-      NodePartitionItem* _corePartitions;
+      NodePartitionItem* _cpuPartitions;
       NodePartitionItem* _gpuPartitions;
-      int _nbrCorePartitions;
+      int _nbrCpuPartitions;
       int _nbrGpuPartitions;
 
       std::string _modelName;

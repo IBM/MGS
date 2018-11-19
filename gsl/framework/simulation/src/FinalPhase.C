@@ -18,7 +18,7 @@
 #include <string>
 #include "Simulation.h"
 
-FinalPhase::FinalPhase(const std::string& name, PhaseElement::machineType mType)
+FinalPhase::FinalPhase(const std::string& name, machineType mType)
   : Phase(name, mType)
 {
 }

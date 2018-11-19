@@ -161,27 +161,27 @@ void CG_LifeNodeCompCategory::getWorkUnits()
   
    switch(_sim.getPhaseMachineType("initialize"))
    {
-     case PhaseElement::GPU :
+     case machineType::GPU :
      {
       NodePartitionItem* it = _gpuPartitions;
       NodePartitionItem* end = it + _nbrGpuPartitions;
       for (; it < end; ++it) {
          WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_host_initialize, this);
-         _gpuWorkUnits["initialize"].push_back(workUnit);
+         _workUnits["initialize"].push_back(workUnit);
       }
-      _sim.addWorkUnits(getSimulationPhaseName("initialize"), _gpuWorkUnits["initialize"] );
+      _sim.addWorkUnits(getSimulationPhaseName("initialize"), _workUnits["initialize"] );
      }
      break;
 
-     case PhaseElement::CPU :
+     case machineType::CPU :
      {
-      NodePartitionItem* it = _corePartitions;
-      NodePartitionItem* end = it + _nbrCorePartitions;
+      NodePartitionItem* it = _cpuPartitions;
+      NodePartitionItem* end = it + _nbrCpuPartitions;
       for (; it < end; ++it) {
          WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_InstancePhase_initialize, this);
-         _coreWorkUnits["initialize"].push_back(workUnit);
+         _workUnits["initialize"].push_back(workUnit);
       }
-      _sim.addWorkUnits(getSimulationPhaseName("initialize"), _coreWorkUnits["initialize"] );
+      _sim.addWorkUnits(getSimulationPhaseName("initialize"), _workUnits["initialize"] );
      }
      break;
 
@@ -192,27 +192,27 @@ void CG_LifeNodeCompCategory::getWorkUnits()
    
    switch(_sim.getPhaseMachineType("update"))
    {
-     case PhaseElement::GPU :
+     case machineType::GPU :
      {
       NodePartitionItem* it = _gpuPartitions;
       NodePartitionItem* end = it + _nbrGpuPartitions;
       for (; it < end; ++it) {
          WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_host_update, this);
-         _gpuWorkUnits["update"].push_back(workUnit);
+         _workUnits["update"].push_back(workUnit);
       }
-      _sim.addWorkUnits(getSimulationPhaseName("update"), _gpuWorkUnits["update"] );
+      _sim.addWorkUnits(getSimulationPhaseName("update"), _workUnits["update"] );
      }
      break;
 
-     case PhaseElement::CPU :
+     case machineType::CPU :
      {
-      NodePartitionItem* it = _corePartitions;
-      NodePartitionItem* end = it + _nbrCorePartitions;
+      NodePartitionItem* it = _cpuPartitions;
+      NodePartitionItem* end = it + _nbrCpuPartitions;
       for (; it < end; ++it) {
          WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_InstancePhase_update, this);
-         _coreWorkUnits["update"].push_back(workUnit);
+         _workUnits["update"].push_back(workUnit);
       }
-      _sim.addWorkUnits(getSimulationPhaseName("update"), _coreWorkUnits["update"] );
+      _sim.addWorkUnits(getSimulationPhaseName("update"), _workUnits["update"] );
      }
      break;
       
@@ -224,27 +224,27 @@ void CG_LifeNodeCompCategory::getWorkUnits()
    
    switch(_sim.getPhaseMachineType("copy"))
    {
-     case PhaseElement::GPU :
+     case machineType::GPU :
      {
       NodePartitionItem* it = _gpuPartitions;
       NodePartitionItem* end = it + _nbrGpuPartitions;
       for (; it < end; ++it) {
          WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_host_copy, this);
-         _gpuWorkUnits["copy"].push_back(workUnit);
+         _workUnits["copy"].push_back(workUnit);
       }
-      _sim.addWorkUnits(getSimulationPhaseName("copy"), _gpuWorkUnits["copy"] );
+      _sim.addWorkUnits(getSimulationPhaseName("copy"), _workUnits["copy"] );
      }
      break;
 
-     case PhaseElement::CPU :
+     case machineType::CPU :
      {
-      NodePartitionItem* it = _corePartitions;
-      NodePartitionItem* end = it + _nbrCorePartitions;
+      NodePartitionItem* it = _cpuPartitions;
+      NodePartitionItem* end = it + _nbrCpuPartitions;
       for (; it < end; ++it) {
 	WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_InstancePhase_copy, this);
-	_coreWorkUnits["copy"].push_back(workUnit);
+	_workUnits["copy"].push_back(workUnit);
       }
-      _sim.addWorkUnits(getSimulationPhaseName("copy"), _coreWorkUnits["copy"] );
+      _sim.addWorkUnits(getSimulationPhaseName("copy"), _workUnits["copy"] );
      }
      break;
 

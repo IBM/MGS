@@ -26,7 +26,7 @@ class Simulation;
 class Phase {
 
    public:
-  Phase(const std::string& name, PhaseElement::machineType mType);
+  Phase(const std::string& name, machineType mType);
       virtual void duplicate(std::unique_ptr<Phase>& rv) const = 0;
       virtual ~Phase();
      
@@ -37,17 +37,17 @@ class Phase {
       void setName(const std::string& name) {
 	 _name = name;
       }
-      PhaseElement::machineType getMachineType() {
+      machineType getMachineType() {
 	return _machineType;
       }
-      void setMachineType(PhaseElement::machineType mType) {
+      void setMachineType(machineType mType) {
 	_machineType = mType;
       }
       virtual void addToSimulation(Simulation* sim) const =0;
       
    protected:
       std::string _name;
-      PhaseElement::machineType _machineType;      
+      machineType _machineType;      
 };
 
 

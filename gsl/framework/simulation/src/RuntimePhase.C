@@ -18,7 +18,7 @@
 #include <string>
 #include "Simulation.h"
 
-RuntimePhase::RuntimePhase(const std::string& name, PhaseElement::machineType mType)
+RuntimePhase::RuntimePhase(const std::string& name, machineType mType)
   : Phase(name, mType)
 {
 }

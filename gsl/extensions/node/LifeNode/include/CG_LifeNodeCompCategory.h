@@ -325,10 +325,10 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       virtual void CG_InstancePhase_initialize(NodePartitionItem* arg, RNG& rng);
       virtual void CG_InstancePhase_update(NodePartitionItem* arg, RNG& rng);
       virtual void CG_InstancePhase_copy(NodePartitionItem* arg, RNG& rng);
-#ifdef TEST_USING_GPU_COMPUTING
-      void CG_host_initialize(NodePartitionItem* arg, RNG& rng); 
-      void CG_host_update(NodePartitionItem* arg, RNG& rng); 
-      void CG_host_copy(NodePartitionItem* arg, RNG& rng); 
+      //#ifdef TEST_USING_GPU_COMPUTING
+      void CG_host_initialize(NodePartitionItem* arg, RNG& rng) {} 
+      void CG_host_update(NodePartitionItem* arg, RNG& rng) {}
+      void CG_host_copy(NodePartitionItem* arg, RNG& rng) {}
       //void __global__ kernel_update(
       //      //RNG& rng
       //      int size
@@ -343,7 +343,7 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       //      //RNG& rng
       //      int size
       //      ); 
-#endif
+      //#endif
       virtual void getWorkUnits();
 #ifdef HAVE_MPI
       virtual void addToSendMap(int toPartitionId, Node* node);
