@@ -27,6 +27,7 @@
 #include "VoidType.h"
 #include "BaseClass.h"
 #include "FriendDeclaration.h"
+#include "ArrayType.h"
 
 #include <string>
 #include <vector>
@@ -166,6 +167,47 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 			  , AccessType accessType, bool suppressPointers,
 			  bool add_gpu_attributes, Class* compcat_ptr)
 {
+  if (getClassInfoPrimeType() == PrimeType::CCDemarshaller)
+  {
+   if (members.size() > 0) {
+      addDataTypeHeaders(members);
+      addDataTypeDataItemHeaders(members);
+      MemberContainer<DataType>::const_iterator it, end = members.end();
+      for (it = members.begin(); it != end; ++it) {
+	 std::auto_ptr<DataType> dup;
+	 it->second->duplicate(dup);
+	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
+	 if (add_gpu_attributes)
+	 {//make these data members 'disappear' in GPU
+	   CustomAttribute* att;
+	   if (dup->isArray()) 
+	   {
+	     att= new CustomAttribute(PREFIX_MEMBERNAME + dup->getName(), "ShallowArray_Flat<ShallowArray_Flat<"
+		 + (dynamic_cast<ArrayType*>(dup.get()))->getType()->getTypeString()+
+		 ", Array_Flat<int>::MemLocation::UnifiedMem>,Array_Flat<int>::MemLocation::UnifiedMem>", accessType);
+
+	   }else
+	     att= new CustomAttribute(PREFIX_MEMBERNAME + dup->getName(), "ShallowArray_Flat<"+dup->getTypeString()+
+		 ",Array_Flat<int>::MemLocation::UnifiedMem>", accessType);
+	   att->setAccessType(accessType);
+	   MacroConditional gpuConditional(GPUCONDITIONAL);
+	   gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
+	   att->setMacroConditional(gpuConditional);
+	   std::auto_ptr<Attribute> att_smart(att);
+	   addAttribute(att_smart);
+	 }
+      }
+   }
+
+   MacroConditional gpuConditional(GPUCONDITIONAL);
+   gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+   std::unique_ptr<Attribute> att_index(new CustomAttribute("offset", "int", accessType));
+   att_index->setMacroConditional(gpuConditional);
+   addAttribute(att_index);
+   //addAttribute(att_index, MachineType::GPU);
+   return;
+  }
+
    if (members.size() > 0) {
       addDataTypeHeaders(members);
       addDataTypeDataItemHeaders(members);
@@ -354,7 +396,6 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 
      if (getClassInfoSubType() == SubType::BaseClassProxy)
      {
-
        MacroConditional gpuConditional(GPUCONDITIONAL);
        gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
        std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_DEMARSHALLER_INDEX, "int", accessType));

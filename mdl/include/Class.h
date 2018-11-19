@@ -38,7 +38,7 @@ class BaseClass;
 class Class
 {
    public:
-      enum class PrimeType{ UN_SET, Node, Variable };
+      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller };
       enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
       void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
       PrimeType getClassInfoPrimeType(){ return _classInfo.first; };
