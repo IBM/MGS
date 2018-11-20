@@ -19,7 +19,7 @@
 #include "WorkUnit.h"
 #include "rndm.h"
 
-CG_LifeNodeWorkUnitInstance::CG_LifeNodeWorkUnitInstance(NodePartitionItem* arg, void (CG_LifeNodeCompCategory::*computeState) (NodePartitionItem*, RNG&), CG_LifeNodeCompCategory* compCategory) 
+CG_LifeNodeWorkUnitInstance::CG_LifeNodeWorkUnitInstance(NodePartitionItem* arg, void (CG_LifeNodeCompCategory::*computeState) (NodePartitionItem*, CG_LifeNodeWorkUnitInstance*), CG_LifeNodeCompCategory* compCategory) 
    : WorkUnit(), _arg(arg), _compCategory(compCategory), _computeState(computeState)
 {
    _rng.reSeed(urandom(_compCategory->getSimulation().getWorkUnitRandomSeedGenerator()), _compCategory->getSimulation().getRank());
@@ -27,7 +27,7 @@ CG_LifeNodeWorkUnitInstance::CG_LifeNodeWorkUnitInstance(NodePartitionItem* arg,
 
 void CG_LifeNodeWorkUnitInstance::execute() 
 {
-   (*_compCategory.*_computeState)(_arg, _rng);
+   (*_compCategory.*_computeState)(_arg, this);
 }
 
 CG_LifeNodeWorkUnitInstance::~CG_LifeNodeWorkUnitInstance() 

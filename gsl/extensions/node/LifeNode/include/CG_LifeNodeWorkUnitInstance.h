@@ -20,19 +20,25 @@
 #include "WorkUnit.h"
 #include "rndm.h"
 
+
 class CG_LifeNodeCompCategory;
 
 class CG_LifeNodeWorkUnitInstance : public WorkUnit
 {
    public:
-      CG_LifeNodeWorkUnitInstance(NodePartitionItem* arg, void (CG_LifeNodeCompCategory::*computeState) (NodePartitionItem*, RNG&), CG_LifeNodeCompCategory* compCategory);
+      CG_LifeNodeWorkUnitInstance(NodePartitionItem* arg, void (CG_LifeNodeCompCategory::*computeState) (NodePartitionItem*, CG_LifeNodeWorkUnitInstance*), CG_LifeNodeCompCategory* compCategory);
       virtual void execute();
       virtual ~CG_LifeNodeWorkUnitInstance();
+      RNG& getRNG() {return _rng;}
+      void setGPUMachineID(int machineID) {_machineID = machineID;}
+      int getGPUMachineID() {return _machineID;}
+      
    private:
       NodePartitionItem* _arg;
       CG_LifeNodeCompCategory* _compCategory;
-      void (CG_LifeNodeCompCategory::*_computeState) (NodePartitionItem*, RNG&);
+      void (CG_LifeNodeCompCategory::*_computeState) (NodePartitionItem*, CG_LifeNodeWorkUnitInstance*);
       RNG _rng;
+      int _machineID;
 };
 
 #endif

@@ -100,7 +100,7 @@ void CG_LifeNodeCompCategory::getOutAttrParameterSet(std::unique_ptr<ParameterSe
    CG_castedPSet.reset(new CG_LifeNodeOutAttrPSet());
 }
 
-void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg, RNG& rng) 
+void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
 #if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
@@ -112,7 +112,7 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg
    it += arg->startIndex;
    end += arg->endIndex;
    for (; it <= end; ++it) {
-      (*it).initialize(rng);
+     (*it).initialize(wu->getRNG());
    }
 }
 
@@ -124,7 +124,7 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg
 #include "LifeNodeCompCategory.incl"
 #endif
 
-void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, RNG& rng) 
+void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
 #if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
@@ -136,11 +136,11 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, RN
    it += arg->startIndex;
    end += arg->endIndex;
    for (; it <= end; ++it) {
-      (*it).update(rng);
+     (*it).update(wu->getRNG());
    }
 }
 
-void CG_LifeNodeCompCategory::CG_InstancePhase_copy(NodePartitionItem* arg, RNG& rng) 
+void CG_LifeNodeCompCategory::CG_InstancePhase_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
 #if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
@@ -152,7 +152,7 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_copy(NodePartitionItem* arg, RNG&
    it += arg->startIndex;
    end += arg->endIndex;
    for (; it <= end; ++it) {
-      (*it).copy(rng);
+      (*it).copy(wu->getRNG());
    }
 }
 

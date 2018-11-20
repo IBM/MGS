@@ -322,13 +322,13 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet>& initPSet);
       virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet>& CG_castedPSet);
       virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet>& CG_castedPSet);
-      virtual void CG_InstancePhase_initialize(NodePartitionItem* arg, RNG& rng);
-      virtual void CG_InstancePhase_update(NodePartitionItem* arg, RNG& rng);
-      virtual void CG_InstancePhase_copy(NodePartitionItem* arg, RNG& rng);
+      virtual void CG_InstancePhase_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
+      virtual void CG_InstancePhase_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
+      virtual void CG_InstancePhase_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
       //#ifdef TEST_USING_GPU_COMPUTING
-      void CG_host_initialize(NodePartitionItem* arg, RNG& rng) {} 
-      void CG_host_update(NodePartitionItem* arg, RNG& rng) {}
-      void CG_host_copy(NodePartitionItem* arg, RNG& rng) {}
+      void CG_host_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) {} 
+      void CG_host_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) {}
+      void CG_host_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) {}
       //void __global__ kernel_update(
       //      //RNG& rng
       //      int size
