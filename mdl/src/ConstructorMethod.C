@@ -19,6 +19,7 @@
 #include "MemberContainer.h"
 #include "DataType.h"
 #include "Constants.h"
+#include <iostream>
 #include <string>
 #include <vector>
 #include <cassert>
@@ -84,8 +85,14 @@ void ConstructorMethod::internalAddConstructorInitializer(
    if (inits == "") {
       _initializationStr = beginning;
    } else {
-      if (beginning != "") {	 
-	 _initializationStr = beginning + ", " + inits;
+      if (beginning != "") {
+	if (inits.find("#")!=std::string::npos) {
+	  // This checks for a starting macro which already starts with comma
+	  _initializationStr = beginning + inits;
+	}
+	else {
+	  _initializationStr = beginning + ", " + inits;
+	}
       } else {
 	 _initializationStr = inits;
       }
