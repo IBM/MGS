@@ -794,11 +794,42 @@ std::string CompCategoryBase::createAddNodeMethodBody(std::string firstParam, st
 std::string CompCategoryBase::createAllocateProxyMethodBody(std::string firstParam, std::string secondParam) const
 {
    std::ostringstream os;
+
+   os << STR_GPU_CHECK_START
+      << TAB << "#if PROXY_ALLOCATION == OPTION_3\n"
+         /* local proxy data + local _receiveList */
+      << TAB << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+      << TAB << TAB << "NodeProxyBase* proxy = ccd->addDestination();\n"
+      << TAB << TAB << "proxy->setNodeDescriptor(nd);\n"
+      << TAB << TAB << "((CG_LifeNodeProxy*)proxy)->setCompCategory(ccd->_receiveList.size()-1, this, fromPartitionId);\n"
+      << TAB << TAB << "nd->setNode(proxy);\n"
+      << TAB << "#elif PROXY_ALLOCATION == OPTION_4\n"
+      << TAB << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n";
+             /* global proxy data */
+   if (getInstances().size() > 0) {
+   }
+   os
+      << TAB << TAB << "int sz = proxy_um_value.size()+1;\n"
+      << TAB << TAB << "public_um_value.increaseSizeTo(sz);\n"
+      << TAB << TAB << "public_um_publicValue.increaseSizeTo(sz);\n"
+      << TAB << TAB << "public_um_neighbors.increaseSizeTo(sz);\n"
+      << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+      //NOTE: um_neighbors is an array of array
+      << TAB << TAB << "public_um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n"
+      /* local _receiveList */
+      << TAB << TAB << "NodeProxyBase* proxy = ccd->addDestination();\n"
+      << TAB << TAB << "proxy->setNodeDescriptor(nd);\n"
+      << TAB << TAB << "((CG_LifeNodeProxy*)proxy)->setCompCategory(sz-1, this);\n"
+      << TAB << TAB << "nd->setNode(proxy);\n"
+      << TAB << "#endif\n"
+      << "#else\n";
+
    os << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n";
    os << TAB << getType() << "ProxyBase* proxy = ccd->addDestination();\n";
    os << TAB << "proxy->set" + getType() + "Descriptor(" + secondParam + ");\n";
    if (!strcmp(getType().c_str(), "Variable")) os << TAB << "proxy->setVariableType(this);\n";
    os << TAB << secondParam + "->set" + getType() + "(proxy);\n";               
+   os << STR_GPU_CHECK_END;
    return os.str();
 }
 

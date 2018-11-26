@@ -400,6 +400,42 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    std::ostringstream allocateNodeMethodFB;   
    allocateNodeMethodFB
       << TAB << "_nodes.increaseSizeTo(_nodes.size()+1);\n"
+      << STR_GPU_CHECK_START
+      << TAB << "int sz = _nodes.size();\n"
+      //<< TAB << "_nodes[_nodes.size()-1].setCompCategory(_nodes.size()-1, this);\n";
+      << TAB << "_nodes[sz-1].setCompCategory(sz-1, this);\n";
+      for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+	 if (it->second->isArray())
+	 {
+	    //NOTE: um_neighbors is an array of array
+	    allocateNodeMethodFB 
+	       << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n"
+	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz*MAX_SUBARRAY_SIZE);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.increaseSizeTo(sz);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.increaseSizeTo(sz);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements[sz-1] = 0;\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz*" << PREFIX_MEMBERNAME << it->first << "_max_elements);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.increaseSizeTo(sz);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements[sz-1] = 0;\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz * MAX_SUBARRAY_SIZE);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.increaseSizeTo(sz);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;\n"
+	       << TAB << "#endif\n";
+	 }
+	 else{
+	    allocateNodeMethodFB 
+	       << TAB <<PREFIX_MEMBERNAME<< it->first <<  ".increaseSizeTo(sz);\n";
+	 }
+      }
+   allocateNodeMethodFB  << STR_GPU_CHECK_END
       << TAB << "_nodes[_nodes.size()-1].setNodeDescriptor(nd);\n"
       << TAB << "nd->setNode(&_nodes[_nodes.size()-1]);\n"
       << TAB << "nd->getGridLayerData()->incrementNbrNodesAllocated();\n";
@@ -422,33 +458,141 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       if (it->second->isArray())
       {
           //NOTE: um_neighbors is an array of array
-	 allocateNodesMethodFB << TAB 
-	    << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
-	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
-	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
-	    << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
-	    << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
-	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
-	    << "int MAX_SUBARRAY_SIZE = 20;\n"
-	    << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
-	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
-	    << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
-	    << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
-	    << "assert(0);\n"
-	    << "#endif\n";
+	 allocateNodesMethodFB 
+	    << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
+	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	    << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	    << TAB << TAB << "assert(0);\n"
+	    << TAB << "#endif\n";
       }
       else{
-	 allocateNodesMethodFB << TAB 
-	    << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
+	 allocateNodesMethodFB 
+	    << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
       }
    }
-   allocateNodesMethodFB << "#else\n"
-      << TAB << "_nodes.resize_allocated(size);\n"
-      << STR_GPU_CHECK_END;
+   //allocateNodesMethodFB << "#else\n"
+   //   << TAB << "_nodes.resize_allocated(size);\n"
+   //   << STR_GPU_CHECK_END;
+   allocateNodesMethodFB << STR_GPU_CHECK_END;
    allocateNodesMethod->setFunctionBody(
       allocateNodesMethodFB.str());
    instance.addMethod(allocateNodesMethod);
+
+
+   // Add allocateProxies method (i.e. pre-allocate in memory)
+   std::auto_ptr<Method> allocateProxiesMethod(
+      new Method("allocateProxies", "void"));
+   allocateProxiesMethod->addParameter(
+      "const std::vector<size_t>& sizes");
+   std::ostringstream allocateProxiesMethodFB;   
+   allocateProxiesMethodFB
+      << STR_GPU_CHECK_START
+      << TAB << "unsigned my_rank = _sim.getRank();\n"
+      << TAB << "bool force_resize = true;\n"
+      << "#if PROXY_ALLOCATION == OPTION_3\n"
+      << TAB << "for (int i = 0; i < _sim.getNumProcesses(); i++)\n"
+      << TAB << "{\n"
+      << TAB << TAB << "if (i != my_rank)\n"
+      << TAB << TAB << "{\n"
+      << TAB << TAB << TAB << "CCDemarshaller* ccd = findDemarshaller(i);\n"
+      << TAB << TAB << TAB << "int size = sizes[i];\n"
+      << TAB << TAB << TAB << "if (size > 0)\n"
+      << TAB << TAB << TAB << "{\n"
+      << TAB << TAB << TAB << TAB << "ccd->_receiveList.resize_allocated(size, force_resize);\n";
+   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+      if (it->second->isArray())
+      {
+	 allocateProxiesMethodFB 
+	    << TAB << TAB << TAB << TAB << "ccd->" << it->first << ".resize_allocated(size, force_resize);\n";
+	 //NOTE: um_neighbors is an array of array
+	 //allocateProxiesMethodFB 
+	 //   << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
+	 //   << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	 //   << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	 //   << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	 //   << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	 //   << TAB << TAB << "assert(0);\n"
+	 //   << TAB << "#endif\n";
+      }
+      else{
+	 allocateProxiesMethodFB 
+	    << TAB << TAB << TAB << TAB << "ccd->" << it->first << ".resize_allocated(size, force_resize);\n";
+      }
+   }
+   allocateProxiesMethodFB 
+      << TAB << TAB << TAB << "}\n"
+      << TAB << TAB << "}\n"
+      << TAB << "}\n";
+   allocateProxiesMethodFB
+      << "#elif PROXY_ALLOCATION == OPTION_4\n"
+   << TAB << "int total = std::accumulate(sizes.begin(), sizes.end(), 0);\n"
+   << TAB << "assert(0);\n"
+   << TAB << "int offset = 0;\n"
+   << TAB << "for (int i = 0; i < _sim.getNumProcesses(); i++)\n"
+   << TAB << "{\n"
+   << TAB << TAB << "offset += sizes[i];\n"
+   << TAB << TAB << "if (i != my_rank)\n"
+   << TAB << TAB << "{\n"
+   << TAB << TAB << TAB << "CCDemarshaller* ccd = findDemarshaller(i);\n"
+   << TAB << TAB << TAB << "int size = sizes[i];\n"
+   << TAB << TAB << TAB << "if (size > 0)\n"     
+   << TAB << TAB << TAB << "{\n"               
+   << TAB << TAB << TAB << TAB << "ccd->_receiveList.resize_allocated(size, force_resize);\n"
+   << TAB << TAB << TAB << TAB << "ccd->offset = offset;\n"
+   << TAB << TAB << TAB << "}\n"                         
+   << TAB << TAB << "}\n"                                               
+   << TAB << "}\n"                                                 ;
+   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+      if (it->second->isArray())
+      {
+	 allocateProxiesMethodFB 
+	    << TAB << "this->" << PREFIX_PROXY_MEMBERNAME << it->first << ".resize_allocated(total, force_resize);\n";
+         //NOTE: um_neighbors is an array of array
+	 //allocateProxiesMethodFB 
+	 //   << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
+	 //   << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	 //   << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	 //   << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
+	 //   << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	 //   << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	 //   << TAB << TAB << "assert(0);\n"
+	 //   << TAB << "#endif\n";
+      }
+      else{
+	 allocateProxiesMethodFB 
+	    << TAB << "this->" << PREFIX_PROXY_MEMBERNAME << it->first << ".resize_allocated(total, force_resize);\n";
+      }
+   }
+   //allocateProxiesMethodFB << "#else\n"
+   //   << TAB << "_nodes.resize_allocated(size);\n"
+   //   << STR_GPU_CHECK_END;
+   allocateProxiesMethodFB << STR_GPU_CHECK_END;
+   allocateProxiesMethod->setFunctionBody(
+      allocateProxiesMethodFB.str());
+   instance.addMethod(allocateProxiesMethod);
+
 
    // Add getNbrComputationalUnits method
    std::auto_ptr<Method> getNbrComputationalUnitsMethod(
