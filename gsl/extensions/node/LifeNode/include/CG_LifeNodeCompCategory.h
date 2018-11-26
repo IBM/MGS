@@ -252,12 +252,12 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
 #if defined(HAVE_GPU) 
     #if PROXY_ALLOCATION == OPTION_3
          int sz = _receiveList.size();
+         int MAX_SUBARRAY_SIZE = 20;
          um_value.increaseSizeTo(sz);
          um_publicValue.increaseSizeTo(sz);
          um_neighbors.increaseSizeTo(sz);
-   int MAX_SUBARRAY_SIZE = 20;
-   //NOTE: um_neighbors is an array of array
-   um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
+         //NOTE: um_neighbors is an array of array
+         um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
     #endif
 #endif
          return &_receiveList[_receiveList.size()-1];

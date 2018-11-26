@@ -72,6 +72,10 @@
 #ifdef TEST_USING_GPU_COMPUTING
 #include "LifeNodeCompCategory.cu"
 #endif
+#ifdef TEST_USING_GPU_COMPUTING
+#include "LifeNodeCompCategory.incl"
+#endif
+
 
 CG_LifeNodeCompCategory::CG_LifeNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
    : NodeCompCategoryBase(sim, modelName)
@@ -119,10 +123,6 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg
 //void CG_LifeNodeCompCategory::CG_host_update(NodePartitionItem* arg, RNG& rng) 
 //{
 //}
-
-#ifdef TEST_USING_GPU_COMPUTING
-#include "LifeNodeCompCategory.incl"
-#endif
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
@@ -700,8 +700,8 @@ void CG_LifeNodeCompCategory::allocateProxies(const std::vector<int>& sizes)
 {
 #if defined(HAVE_GPU) 
    unsigned my_rank = _sim.getRank();
-#if PROXY_ALLOCATION == OPTION_3
    bool force_resize = true;
+#if PROXY_ALLOCATION == OPTION_3
    for (int i = 0; i < _sim.getNumProcesses(); i++)
    {
       if (i != my_rank)
@@ -734,7 +734,6 @@ void CG_LifeNodeCompCategory::allocateProxies(const std::vector<int>& sizes)
 #elif PROXY_ALLOCATION == OPTION_4
    int total = std::accumulate(sizes.begin(), sizes.end(), 0); 
    assert(0);
-   bool force_resize = true;
    int offset = 0;
    for (int i = 0; i < _sim.getNumProcesses(); i++)
    {

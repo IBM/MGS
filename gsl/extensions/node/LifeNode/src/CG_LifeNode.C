@@ -456,6 +456,10 @@ ConnectionIncrement* CG_LifeNode::getComputeCost() const
 
 CG_LifeNode::CG_LifeNode() 
    : ValueProducer(), NodeBase()
+#if (defined(HAVE_GPU) )
+     /* having this is not important */
+     , index(0), _container(nullptr)
+#endif
 #if ! (defined(HAVE_GPU) )
      , value(0), publicValue(0)
 #endif
