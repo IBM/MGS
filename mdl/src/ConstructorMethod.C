@@ -88,7 +88,7 @@ void ConstructorMethod::internalAddConstructorInitializer(
       if (beginning != "") {
 	if (inits.find("#")!=std::string::npos) {
 	  // This checks for a starting macro which already starts with comma
-	  _initializationStr = beginning + inits;
+	  _initializationStr = beginning + "\n" + inits;
 	}
 	else {
 	  _initializationStr = beginning + ", " + inits;
@@ -105,7 +105,7 @@ std::string ConstructorMethod::printConstructorExtra()
    if (_initializationStr != "") {
       retVal = TAB;
       if (isInline()) retVal += TAB;
-      retVal += ": " + _initializationStr + "\n";
+      retVal += ": " + _initializationStr;
    }
    return retVal;
 }

@@ -913,11 +913,14 @@ void Class::generateSource(const std::string& moduleName)
    std::size_t npos = cuda_filename.find(PREFIX);
    if (npos == 0)
      cuda_filename = cuda_filename.substr(PREFIX.length());
-   os <<  STR_GPU_CHECK_START ;
-   os << "#include \"" << cuda_filename << ".cu\"\n";
-   std::map< std::string, std::ostringstream> incl_files_os;
-   std::map< std::string, std::ostringstream> cu_files_os;
-   for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+  if (getClassInfoPrimeType() == PrimeType::Node and 
+      getClassInfoSubType() == SubType::BaseCompCategory)
+  {
+    os <<  STR_GPU_CHECK_START ;
+    os << "#include \"" << cuda_filename << ".cu\"\n";
+    std::map< std::string, std::ostringstream> incl_files_os;
+    std::map< std::string, std::ostringstream> cu_files_os;
+    for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
     {//these are for the method whose definition is written into a different file
       // which is included into the main source file
       auto& filename = it->first;
@@ -928,25 +931,26 @@ void Class::generateSource(const std::string& moduleName)
       cu_files_os[filename] << "#ifndef " << UPPERNAME << "_CU\n"
 	<< "#define " << UPPERNAME << "_CU\n";
       for (std::vector<Method*>::const_iterator method_iter = value.begin();
-          method_iter != value.end(); ++method_iter) {
+	  method_iter != value.end(); ++method_iter) {
 	//className, ostream, _nameParentClass
-        (*method_iter)->printSource(_name, incl_files_os[filename], _nameParentClass);
+	(*method_iter)->printSource(_name, incl_files_os[filename], _nameParentClass);
 	std::size_t pos = _name.find_last_of(COMPCATEGORY);
 	std::string nodename = _name.substr(PREFIX.length(), pos);
-        printGPUSource((*method_iter)->getGPUName(), cu_files_os[filename]);
+	printGPUSource((*method_iter)->getGPUName(), cu_files_os[filename]);
       }
       cu_files_os[filename] << "#endif\n";
     }
-   for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
-   {
-     auto& filename = it->first;
-     //TUAN TODO move .cu and .incl out of filename
-     generateOutputCustom(filename, moduleName + "/src", incl_files_os[filename]);
-     std::size_t pos = filename.find_last_of(".");
-     auto rawname =  filename.substr(0, pos);
-     generateOutputCustom(rawname+".cu", moduleName + "/src", cu_files_os[filename]);
-   }
-   os <<  STR_GPU_CHECK_END << "\n";
+    for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+    {
+      auto& filename = it->first;
+      //TUAN TODO move .cu and .incl out of filename
+      generateOutputCustom(filename, moduleName + "/src", incl_files_os[filename]);
+      std::size_t pos = filename.find_last_of(".");
+      auto rawname =  filename.substr(0, pos);
+      generateOutputCustom(rawname+".cu", moduleName + "/src", cu_files_os[filename]);
+    }
+    os <<  STR_GPU_CHECK_END << "\n";
+  }
    printMemberClassesMethods(os);
    printMethods(os);
    printExtraSourceStrings(os);

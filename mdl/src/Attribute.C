@@ -80,18 +80,19 @@ void Attribute::fillInitializer(std::string& init) const
       )
       process_param = true;
    if (process_param)
-      init += "\n" + _macroConditional.getBeginning();
+      init += _macroConditional.getBeginning();
    std::string prefix=", ";
 
    if (_macroConditional.getName() != "" &&
 	 process_param)
-      init += prefix;
+      init += TAB + prefix;
    if (getConstructorParameterName() != "") {
       init += getName() + "(" + getConstructorParameterName() + ")";
    } else if (isPointer() || isBasic()) {
       init += getName() + "(0)";	    
    }
-   if (process_param)
+   if (_macroConditional.getName() != "" &&
+	 process_param)
       init += "\n" + _macroConditional.getEnding();
 }
 
