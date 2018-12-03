@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-12-03-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -25,7 +25,7 @@
 #include "CG_LifeNodeInAttrPSet.h"
 #include "CG_LifeNodeOutAttrPSet.h"
 #include "CG_LifeNodePSet.h"
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)
 #include "CG_LifeNodeProxyDemarshaller.h"
 #endif
 #include "CG_LifeNodePublisher.h"
@@ -34,11 +34,11 @@
 #include "DataItemArrayDataItem.h"
 #include "IntArrayDataItem.h"
 #include "IntDataItem.h"
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)
 #include "Marshall.h"
 #endif
 #include "NodeBase.h"
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)
 #include "OutputStream.h"
 #endif
 #include "Service.h"
@@ -49,13 +49,10 @@
 #include "VariableDescriptor.h"
 #include <iostream>
 #include <memory>
-#include <algorithm>
-
-
 
 int* CG_LifeNode::CG_get_ValueProducer_value() 
 {
-#if defined(HAVE_GPU) 
+#ifdef HAVE_GPU
    return &(_container->um_publicValue[index]);
 #else
    return &publicValue;
@@ -64,28 +61,28 @@ int* CG_LifeNode::CG_get_ValueProducer_value()
 
 const char* CG_LifeNode::getServiceName(void* data) const
 {
-#if defined(HAVE_GPU) 
-   if (data == &(_container->um_value[index])) {
+#ifdef HAVE_GPU
+   if (data == &(getCompCategory()->um_value[index])) {
       return "value";
    }
-   if (data == &(_container->um_publicValue[index])) {
+   if (data == &(getCompCategory()->um_publicValue[index])) {
       return "publicValue";
    }
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-   if (data == &(_container->um_neighbors[index])) {
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   if (data == &(getCompCategory()->um_neighbors[index])) {
       return "neighbors";
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-   if (data == &(_container->um_neighbors[_container->um_neighbors_start_offset[index]])) {
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   if (data == &(_container->um_neighbors_start_offset[index])) {
       return "neighbors";
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-   if (data == &(_container->um_neighbors[index*_container->um_neighbors_max_elements])) {
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   if (data == &(getCompCategory()->um_neighbors[index]_container->um_neighbors[index*_container->um_neighbors_max_elements])) {
       return "neighbors";
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
    assert(0);
- #endif
+#endif
    if (data == &(getSharedMembers().tooCrowded)) {
       return "tooCrowded";
    }
@@ -114,30 +111,28 @@ const char* CG_LifeNode::getServiceName(void* data) const
 
 const char* CG_LifeNode::getServiceDescription(void* data) const
 {
-   //IMPORTANT: By default, non of the data member is a service
-   // i.e. we cannot use via GSL
-#if defined(HAVE_GPU) 
-   if (data == &(_container->um_value[index])) {
+#ifdef HAVE_GPU
+   if (data == &(getCompCategory()->um_value[index])) {
       return "";
    }
-   if (data == &(_container->um_publicValue[index])) {
+   if (data == &(getCompCategory()->um_publicValue[index])) {
       return "";
    }
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-   if (data == &(_container->um_neighbors[index])) {
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   if (data == &(getCompCategory()->um_neighbors[index])) {
       return "";
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-   if (data == &(_container->um_neighbors[_container->um_neighbors_start_offset[index]])) {
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   if (data == &(_container->um_neighbors_start_offset[index])) {
       return "";
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-   if (data == &(_container->um_neighbors[index*_container->um_neighbors_max_elements])) {
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   if (data == &(getCompCategory()->um_neighbors[index]_container->um_neighbors[index*_container->um_neighbors_max_elements])) {
       return "";
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
    assert(0);
- #endif
+#endif
    if (data == &(getSharedMembers().tooCrowded)) {
       return "";
    }
@@ -172,42 +167,36 @@ Publisher* CG_LifeNode::getPublisher()
    return _publisher;
 }
 
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)
 void CG_LifeNode::CG_getSendType_copy(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs) const
 {
    MarshallerInstance<int > mi0;
-#if defined(HAVE_GPU) 
-   //TUAN TODO - consider to revise this
-   //  as we no longer need block-length, and block-index
-   //  in a flat array
-   mi0.getBlocks(blengths, blocs, _container->um_publicValue[index]);
+#ifdef HAVE_GPU
+   mi0.getBlocks(blengths, blocs, getCompCategory()->um_publicValue[index]);
 #else
    mi0.getBlocks(blengths, blocs, publicValue);
 #endif
 }
 #endif
 
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)
 void CG_LifeNode::CG_send_FLUSH_LENS(OutputStream* stream) const
 {
    MarshallerInstance<int > mi0;
-#if defined(HAVE_GPU) 
-   mi0.marshall(stream, _container->um_publicValue[index]);
+#ifdef HAVE_GPU
+   mi0.marshall(stream, publicValue);
 #else
    mi0.marshall(stream, publicValue);
 #endif
 }
 #endif
 
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)
 void CG_LifeNode::CG_getSendType_FLUSH_LENS(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs) const
 {
    MarshallerInstance<int > mi0;
-#if defined(HAVE_GPU) 
-   //TUAN TODO - consider to revise this
-   //  as we no longer need block-length, and block-index
-   //  in a flat array
-   mi0.getBlocks(blengths, blocs, _container->um_publicValue[index]);
+#ifdef HAVE_GPU
+   mi0.getBlocks(blengths, blocs, getCompCategory()->um_publicValue[index]);
 #else
    mi0.getBlocks(blengths, blocs, publicValue);
 #endif
@@ -216,44 +205,29 @@ void CG_LifeNode::CG_getSendType_FLUSH_LENS(std::vector<int>& blengths, std::vec
 
 void CG_LifeNode::initialize(ParameterSet* CG_initPSet) 
 {
-   //TUAN NOTE: 
-   //This method is internally evoked by 'InitNode' statement in GSL
-   // Using 'InitNode' is not that efficient to initialize data
-   // Please consider using a InitPhase's CG_host_initialize() and evoke the kernel 
    CG_LifeNodePSet* CG_pset = dynamic_cast<CG_LifeNodePSet*>(CG_initPSet);
-#if defined(HAVE_GPU) 
-   //value() = CG_pset->value;
-   //publicValue() = CG_pset->publicValue;
-   //neighbors() = CG_pset->neighbors;
-   _container->um_value[index] = CG_pset->value;
-   _container->um_publicValue[index] = CG_pset->publicValue;
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-   _container->um_neighbors[index] = CG_pset->neighbors;
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-   auto um_neighbors_from = _container->um_neighbors_start_offset[index];
-   auto um_neighbors_to = _container->um_neighbors_start_offset[index+1]-1;
-   //TUAN TODO : implement SliceArray 
-   //_container->um_neighbors[um_neighbors_from : um_neighbors_to] = CG_pset->neighbors;
-   // ... or for now
+#ifdef HAVE_GPU
+   getCompCategory()->um_value[index] = CG_pset->value;
+   getCompCategory()->um_publicValue[index] = CG_pset->publicValue;
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   getCompCategory()->um_neighbors[index] = CG_pset->neighbors;
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   auto um_neighbors_from = getCompCategory()->um_neighbors_start_offset[index];
+   auto um_neighbors_to = getCompCategory()->um_neighbors_start_offset[index+1]-1;
    for (auto i = 0; i <  std::min(um_neighbors_to - um_neighbors_from+1, (int)CG_pset->neighbors.size()); ++i)
    {
-      _container->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
+      getCompCategory()->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-   auto um_neighbors_from =  index * _container->um_neighbors_max_elements;
-   auto um_neighbors_to =  (index+1) * _container->um_neighbors_max_elements - 1;
-   //TUAN TODO : implement SliceArray 
-   //_container->um_neighbors[um_neighbors_from : um_neighbors_to] = CG_pset->neighbors;
-   // ... or for now
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   auto um_neighbors_from = index *getCompCategory()->um_neighbors_max_elements;
+   auto um_neighbors_to = (index+1) * getCompCategory()->um_neighbors_max_elements - 1;
    for (auto i = 0; i <  std::min(um_neighbors_to - um_neighbors_from+1, (int)CG_pset->neighbors.size()); ++i)
    {
-      _container->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
+      getCompCategory()->um_neighbors[i+um_neighbors_from] = CG_pset->neighbors[i];
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-   //_container->um_neighbors[index] = CG_pset->neighbors;
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
    assert(0);
- #endif
-
+#endif
 #else
    value = CG_pset->value;
    publicValue = CG_pset->publicValue;
@@ -289,8 +263,8 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
       if (CG_local == 0) {
          throw SyntaxErrorException("Expected a int service for value");
       }
-#if defined(HAVE_GPU) 
-      _container->um_value[index] = *CG_local->getData();
+#ifdef HAVE_GPU
+      getCompCategory()->um_value[index] = *CG_local->getData();
 #else
       value = *CG_local->getData();
 #endif
@@ -301,8 +275,8 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
       if (CG_local == 0) {
          throw SyntaxErrorException("Expected a int service for publicValue");
       }
-#if defined(HAVE_GPU) 
-      _container->um_publicValue[index] = *CG_local->getData();
+#ifdef HAVE_GPU
+      getCompCategory()->um_publicValue[index] = *CG_local->getData();
 #else
       publicValue = *CG_local->getData();
 #endif
@@ -313,20 +287,20 @@ void CG_LifeNode::acceptService(Service* service, const std::string& name)
       if (CG_local == 0) {
          throw SyntaxErrorException("Expected a int service for neighbors");
       }
-#if defined(HAVE_GPU) 
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-      _container->um_neighbors[index].insert(CG_local->getData());
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      _container->um_neighbors_num_elements[index] +=1;
-      auto um_neighbors_index = _container->um_neighbors_start_offset[index] + _container->um_neighbors_num_elements[index]-1;
-      _container->um_neighbors[um_neighbors_index] = (CG_local->getData());
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      _container->um_neighbors_num_elements[index] +=1;
-      auto um_neighbors_index = index * _container->um_neighbors_max_elements + _container->um_neighbors_num_elements[index]-1;
-      _container->um_neighbors[um_neighbors_index] = (CG_local->getData());
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-      assert(0);
- #endif
+#ifdef HAVE_GPU
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   _container->getCompCategory()->um_neighbors[index].insert(CG_local->getData());
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   _container->um_neighbors_num_elements[index] +=1;
+   auto um_neighbors_index = _container->um_neighbors_offset[index] + _container->um_neighbors_num_elements[index]-1;
+   _container->um_neighbors[um_neighbors_index] = CG_local->getData());
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   _container->um_neighbors_num_elements[index] +=1;
+   auto um_neighbors_index = index * _container->um_neighbors_max_elements + _container->um_neighbors_num_elements[index]-1;
+   _container->um_neighbors[um_neighbors_index] = CG_local->getData());
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   assert(0);
+#endif
 #else
       neighbors.insert(CG_local->getData());
 #endif
@@ -393,17 +367,13 @@ void CG_LifeNode::addPreEdge(Edge* CG_edge, ParameterSet* CG_pset)
    checkAndAddPreEdge(CG_edge);
 }
 
-//#if defined(HAVE_GPU) 
-//bool CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset) 
-//#else
 void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset) 
-//#endif
 {
-   /* TODO - here it requires ShallowArray to be the same as ShallowArray_Flat */
    ValueProducer* CG_ValueProducerPtr = dynamic_cast<ValueProducer*>(CG_node->getNode());
    CG_LifeNodeInAttrPSet* CG_castedPSet = dynamic_cast <CG_LifeNodeInAttrPSet*>(CG_pset);
    bool noPredicateMatch= true; 
    bool matchPredicateAndCast= false; 
+#ifdef HAVE_GPU
    bool castMatchLocal = true;
    noPredicateMatch = true;
    if (CG_ValueProducerPtr == 0) {
@@ -419,31 +389,43 @@ void CG_LifeNode::addPreNode(NodeDescriptor* CG_node, ParameterSet* CG_pset)
          assert(0);
       }; 
       matchPredicateAndCast = true; 
-#if defined(HAVE_GPU) 
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-      _container->um_neighbors[index].insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      _container->um_neighbors_num_elements[index] +=1;
-      auto um_neighbors_index = _container->um_neighbors_start_offset[index] + _container->um_neighbors_num_elements[index]-1;
-      _container->um_neighbors[um_neighbors_index] = (CG_ValueProducerPtr->CG_get_ValueProducer_value());
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      //TUAN TODO see if we can improve speed of this
-      _container->um_neighbors_num_elements[index] +=1;
-      auto um_neighbors_index = index * _container->um_neighbors_max_elements + _container->um_neighbors_num_elements[index]-1;
-      _container->um_neighbors[um_neighbors_index] = (CG_ValueProducerPtr->CG_get_ValueProducer_value());
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-      assert(0);
- #endif
-#else
-      neighbors.insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   getCompCategory()->um_neighbors[index].insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   _container->um_neighbors_num_elements[index] +=1;
+   auto um_neighbors_index = _container->um_neighbors_offset[index] + _container->um_neighbors_num_elements[index]-1;
+   _container->um_neighbors[um_neighbors_index] = CG_ValueProducerPtr->CG_get_ValueProducer_value());
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   _container->um_neighbors_num_elements[index] +=1;
+   auto um_neighbors_index = index * _container->um_neighbors_max_elements + _container->um_neighbors_num_elements[index]-1;
+   _container->um_neighbors[um_neighbors_index] = CG_ValueProducerPtr->CG_get_ValueProducer_value());
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   assert(0);
 #endif
    } 
 
+#else
+   bool castMatchLocal = true;
+   noPredicateMatch = true;
+   if (CG_ValueProducerPtr == 0) {
+#if !defined(NOWARNING_DYNAMICCAST) 
+      std::cerr << "Dynamic Cast of ValueProducer failed in LifeNode" << std::endl;
+#endif
+      castMatchLocal = false;
+   }
+
+   if (castMatchLocal) { 
+      if (matchPredicateAndCast) {
+         std::cerr << "WARNING: You already have a cast match of predicate" << R"()";
+         assert(0);
+      }; 
+      matchPredicateAndCast = true; 
+      neighbors.insert(CG_ValueProducerPtr->CG_get_ValueProducer_value());
+   } 
+
+#endif
    checkAndAddPreNode(CG_node);
    assert(noPredicateMatch || matchPredicateAndCast);
-//#if defined(HAVE_GPU) 
-//   return castMatchLocal;
-//#endif
 }
 
 ConnectionIncrement* CG_LifeNode::getComputeCost() const
@@ -456,21 +438,19 @@ ConnectionIncrement* CG_LifeNode::getComputeCost() const
 
 CG_LifeNode::CG_LifeNode() 
    : ValueProducer(), NodeBase()
-#if (defined(HAVE_GPU) )
-     /* having this is not important */
-     , index(0), _container(nullptr)
+#if ! defined(HAVE_GPU)
+   , value(0)
 #endif
-#if ! (defined(HAVE_GPU) )
-     , value(0), publicValue(0)
+#if ! defined(HAVE_GPU)
+   , publicValue(0)
 #endif
 {
-   //TUAN make sure _container is pointed to the right one
 }
 
 CG_LifeNode::~CG_LifeNode() 
 {
 }
 
-#if defined(HAVE_GPU) 
-CG_LifeNodeCompCategory* CG_LifeNode::_container=nullptr; //instantiation 
+#if defined(HAVE_GPU)
+CG_LifeNodeCompCategory* CG_LifeNode::_container;
 #endif

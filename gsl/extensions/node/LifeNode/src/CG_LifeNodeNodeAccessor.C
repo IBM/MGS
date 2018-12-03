@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-12-03-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -69,8 +69,7 @@ NodeDescriptor* CG_LifeNodeNodeAccessor::getNodeDescriptor(int nodeIndex, int de
 }
 
 CG_LifeNodeNodeAccessor::CG_LifeNodeNodeAccessor(Simulation& sim, GridLayerDescriptor* gridLayerDescriptor, CG_LifeNodeGridLayerData* gridLayerData) 
-   : NodeAccessor(), _sim(sim), _gridLayerDescriptor(gridLayerDescriptor), _gridLayerData(gridLayerData)
-{
+   : NodeAccessor(), _sim(sim), _gridLayerDescriptor(gridLayerDescriptor), _gridLayerData(gridLayerData){
 }
 
 CG_LifeNodeNodeAccessor::~CG_LifeNodeNodeAccessor() 
