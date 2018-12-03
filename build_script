@@ -188,7 +188,7 @@ function touch_mdf_upon_changing_target()
         fi
       fi
       #CUDA DEBUG for debug purpose
-      #rm_ifexist Extensions.mk
+      rm_ifexist Extensions.mk
   #}}}
 }
 
@@ -729,7 +729,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #./define all.mdf $REBUILD
       touch ${MDF_TARGET}
       #CUDA DEBUG block for debug
-      #./define ${MDF_TARGET} $REBUILD
+      ./define ${MDF_TARGET} $REBUILD
 
       cp Extensions.mk $LENSROOT/
       cd $BASE_FOLDER

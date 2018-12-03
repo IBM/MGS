@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-12-03-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -25,14 +25,18 @@ class CG_LifeNodeCompCategory;
 class CG_LifeNodeWorkUnitGridLayers : public WorkUnit
 {
    public:
-      CG_LifeNodeWorkUnitGridLayers(GridLayerData* arg, void (CG_LifeNodeCompCategory::*computeState) (GridLayerData*, RNG&), CG_LifeNodeCompCategory* compCategory);
+      CG_LifeNodeWorkUnitGridLayers(GridLayerData* arg, void (CG_LifeNodeCompCategory::*computeState) (GridLayerData*, CG_LifeNodeWorkUnitGridLayers*), CG_LifeNodeCompCategory* compCategory);
       virtual void execute();
+      RNG& getRNG();
+      void setGPUMachineID(int GPUMachineID);
+      int getGPUMachineID();
       virtual ~CG_LifeNodeWorkUnitGridLayers();
    private:
       GridLayerData* _arg;
       CG_LifeNodeCompCategory* _compCategory;
-      void (CG_LifeNodeCompCategory::*_computeState) (GridLayerData*, RNG&);
+      void (CG_LifeNodeCompCategory::*_computeState) (GridLayerData*, CG_LifeNodeWorkUnitGridLayers*);
       RNG _rng;
+      int _GPUMachineID;
 };
 
 #endif

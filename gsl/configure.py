@@ -1535,8 +1535,8 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
             retStr += " " + O4_OPTIMIZATION_FLAG
         if self.options.optimization == "O5":
             retStr += " " + O5_OPTIMIZATION_FLAG
-        if self.options.optimization == "Og":
-            retStr += " " + OG_OPTIMIZATION_FLAG
+        #if self.options.optimization == "Og":
+        #    retStr += " " + OG_OPTIMIZATION_FLAG
 
         # if self.options.debug == USE:
         Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "  # NOQA
@@ -1593,7 +1593,8 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
 
         retStr += """
 LDFLAGS: $(CUDA_NVCC_FLAGS)
-CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP) --compiler-options  -mcpu=power9
+CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
+#--compiler-options -mcpu=power9
 # NVCC fails with this --compiler-options -flto
 #https://devtalk.nvidia.com/default/topic/1026826/link-time-optimization-with-cuda-on-linux-flto-/?offset=6
 """
