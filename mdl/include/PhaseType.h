@@ -36,9 +36,10 @@ class PhaseType {
 	 const std::string& componentType) const =0;
       virtual void generateInstancePhaseMethod(
 	 Class& c, const std::string& name, const std::string& instanceType, 
-	 const std::string& componentType) const = 0;
+	 const std::string& componentType, const std::string& workUnitName) const = 0;
       std::string getInstancePhaseMethodName(const std::string& name,
-	    MachineType mach_type = MachineType::CPU) const;
+					     const std::string &workUnitName,
+					     MachineType mach_type = MachineType::CPU) const;
 
       virtual std::string getWorkUnitsMethodBody(
 	 const std::string& tab, const std::string& workUnits,
@@ -49,6 +50,7 @@ class PhaseType {
       void getInternalInstancePhaseMethod(
 	 std::auto_ptr<Method>& method, const std::string& name, 
 	 const std::string& componentType,
+	 const std::string& workUnitName,
 	 MachineType mach_type = MachineType::CPU) const;
 };
 

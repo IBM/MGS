@@ -17,6 +17,7 @@
 #define Constants_H
 #include "Mdl.h"
 
+#include <map>
 #include <string>
 
 const std::string TAB = "   ";
@@ -74,6 +75,12 @@ const std::string GETDATA_FUNC_NAME = "getDataIndex";
 enum class MachineType {
    CPU, GPU
 };
+
+static std::map<MachineType, std::string> MachineTypeNames =
+  {
+    { MachineType::CPU, "CPU"},
+    { MachineType::GPU, "GPU"}
+  };
 
 template< typename T >
 class Enum

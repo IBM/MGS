@@ -42,7 +42,8 @@ class Phase {
       void generateUserMethod(Class& c) const;    
       void generateInstancePhaseMethod(
 	 Class& c, const std::string& instanceType, 
-	 const std::string& componentType) const;
+	 const std::string& componentType,
+	 const std::string& workUnitName) const;
       std::string getType() const;
 
       std::string getName() const {
