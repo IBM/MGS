@@ -31,7 +31,7 @@ class PhaseTypeShared : public PhaseType {
       virtual std::string getParameter(const std::string& componentType) const;
       virtual void generateInstancePhaseMethod(
 	 Class& c, const std::string& name, const std::string& instanceType, 
-	 const std::string& componentType) const;    
+	 const std::string& componentType, const std::string& workUnitName) const;    
       virtual std::string getWorkUnitsMethodBody(
 	 const std::string& tab, const std::string& workUnits,
 	 const std::string& instanceType, const std::string& name, 

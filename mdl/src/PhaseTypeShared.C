@@ -47,7 +47,8 @@ std::string PhaseTypeShared::getParameter(
 
 void PhaseTypeShared::generateInstancePhaseMethod( 
    Class& c, const std::string& name, const std::string& instanceType, 
-   const std::string& componentType) const
+   const std::string& componentType,
+   const std::string& workUnitName) const
 {
    // nothing
 }
@@ -62,7 +63,7 @@ std::string PhaseTypeShared::getWorkUnitsMethodBody(
    os << tab << "WorkUnit* workUnit = new " << PREFIX << instanceType 
       << "WorkUnitShared(&" << instanceType << COMPCATEGORY << "::" 
       << name << ", this);\n" 
-      //<< tab << workUnits << ".push_back(workUnit);\n"
+      //<< tab << workUnits << "ma.push_back(workUnit);\n"
       << tab << "_" << workUnits << "[\"" << name 
       << "\"].push_back(workUnit);\n"
       << tab << "_sim.addWorkUnits(getSimulationPhaseName(\"" << name 

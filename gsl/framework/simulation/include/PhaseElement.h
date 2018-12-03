@@ -24,7 +24,8 @@ class Simulation;
 class WorkUnit;
 class Trigger;
 
-enum class machineType { NOT_SET, CPU, GPU, FPGA };
+enum class machineType { CPU, GPU, FPGA, NOT_SET };
+// Remember to change in mdl file Constants.h
 
 class PhaseElement {
 

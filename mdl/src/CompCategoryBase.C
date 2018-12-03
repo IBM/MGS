@@ -494,7 +494,8 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
       std::vector<Phase*>::iterator it, end = _instancePhases->end();
       for (it = _instancePhases->begin(); it != end; ++it) {
 	 (*it)->generateInstancePhaseMethod(
-	    *instance.get(), getInstanceName(), getType());
+                *instance.get(), getInstanceName(), getType(),
+		getWorkUnitCommonName("Instance"));
       }
    }  
 
@@ -608,7 +609,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    if (argumentType != "") {
       computeStateAttName += "*, "; 
    }
-   computeStateAttName += "RNG&";
+   computeStateAttName += getWorkUnitCommonName(workUnitType) + "*";
    computeStateAttName += ")"; 
 
    std::string computeStatePar = 
@@ -616,7 +617,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    if (argumentType != "") {
       computeStatePar += "*, "; 
    }
-   computeStatePar += "RNG&";
+   computeStatePar += getWorkUnitCommonName(workUnitType) + "*";
    computeStatePar += ")"; 
 
    instance->addHeader("\"" + baseName + ".h\"");
@@ -650,6 +651,11 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
       "_rng", "RNG",
       AccessType::PRIVATE);
    attCup.reset(rngAtt);
+   instance->addAttribute(attCup);
+   CustomAttribute* machineIDAtt = new CustomAttribute(
+      "_GPUMachineID", "int",
+      AccessType::PRIVATE);
+   attCup.reset(machineIDAtt);
    instance->addAttribute(attCup);
 
    // Constructor 
@@ -685,11 +691,39 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
 	 << "_arg, ";
    }
    executeFB
-     << "_rng";
+     << "this";
    executeFB
       << ");\n";
    executeMethod->setFunctionBody(executeFB.str());
    instance->addMethod(executeMethod);
+
+   // getRNG
+   std::auto_ptr<Method> getRNGMethod(
+      new Method("getRNG", "RNG&"));
+   std::ostringstream getRNGFB;   
+   getRNGFB
+      << TAB << "return _rng;\n";
+   getRNGMethod->setFunctionBody(getRNGFB.str());
+   instance->addMethod(getRNGMethod);
+
+   // setGPUMachineID
+   std::auto_ptr<Method> setGPUMachineIDMethod(
+      new Method("setGPUMachineID", "void"));
+   setGPUMachineIDMethod->addParameter("int GPUMachineID");
+   std::ostringstream setGPUMachineIDFB;   
+   setGPUMachineIDFB
+      << TAB << "_GPUMachineID = GPUMachineID;\n";
+   setGPUMachineIDMethod->setFunctionBody(setGPUMachineIDFB.str());
+   instance->addMethod(setGPUMachineIDMethod);
+
+   // getGPUMachineID
+   std::auto_ptr<Method> getGPUMachineIDMethod(
+      new Method("getGPUMachineID", "int"));
+   std::ostringstream getGPUMachineIDFB;   
+   getGPUMachineIDFB
+      << TAB << "return _GPUMachineID;\n";
+   getGPUMachineIDMethod->setFunctionBody(getGPUMachineIDFB.str());
+   instance->addMethod(getGPUMachineIDMethod);
 
    // Don't add the standard methods
    instance->addBasicDestructor();
@@ -794,42 +828,11 @@ std::string CompCategoryBase::createAddNodeMethodBody(std::string firstParam, st
 std::string CompCategoryBase::createAllocateProxyMethodBody(std::string firstParam, std::string secondParam) const
 {
    std::ostringstream os;
-
-   os << STR_GPU_CHECK_START
-      << TAB << "#if PROXY_ALLOCATION == OPTION_3\n"
-         /* local proxy data + local _receiveList */
-      << TAB << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
-      << TAB << TAB << "NodeProxyBase* proxy = ccd->addDestination();\n"
-      << TAB << TAB << "proxy->setNodeDescriptor(nd);\n"
-      << TAB << TAB << "((CG_LifeNodeProxy*)proxy)->setCompCategory(ccd->_receiveList.size()-1, this, fromPartitionId);\n"
-      << TAB << TAB << "nd->setNode(proxy);\n"
-      << TAB << "#elif PROXY_ALLOCATION == OPTION_4\n"
-      << TAB << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n";
-             /* global proxy data */
-   if (getInstances().size() > 0) {
-   }
-   os
-      << TAB << TAB << "int sz = proxy_um_value.size()+1;\n"
-      << TAB << TAB << "public_um_value.increaseSizeTo(sz);\n"
-      << TAB << TAB << "public_um_publicValue.increaseSizeTo(sz);\n"
-      << TAB << TAB << "public_um_neighbors.increaseSizeTo(sz);\n"
-      << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
-      //NOTE: um_neighbors is an array of array
-      << TAB << TAB << "public_um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n"
-      /* local _receiveList */
-      << TAB << TAB << "NodeProxyBase* proxy = ccd->addDestination();\n"
-      << TAB << TAB << "proxy->setNodeDescriptor(nd);\n"
-      << TAB << TAB << "((CG_LifeNodeProxy*)proxy)->setCompCategory(sz-1, this);\n"
-      << TAB << TAB << "nd->setNode(proxy);\n"
-      << TAB << "#endif\n"
-      << "#else\n";
-
    os << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n";
    os << TAB << getType() << "ProxyBase* proxy = ccd->addDestination();\n";
    os << TAB << "proxy->set" + getType() + "Descriptor(" + secondParam + ");\n";
    if (!strcmp(getType().c_str(), "Variable")) os << TAB << "proxy->setVariableType(this);\n";
    os << TAB << secondParam + "->set" + getType() + "(proxy);\n";               
-   os << STR_GPU_CHECK_END;
    return os.str();
 }
 
