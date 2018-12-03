@@ -62,7 +62,7 @@ void Node::internalGenerateFiles()
    assert(strcmp(getName().c_str(), ""));
    addSupportForMachineType(MachineType::GPU);
 
-   std::unique_ptr<Class> compcat_ptr = generateInstanceBase(); //CG_LifeNode.h/,C
+   std::unique_ptr<Class> compcat_ptr = generateInstanceBase(Class::PrimeType::Node); //CG_LifeNode.h/,C
    generateInstance();  //LifeNode.h/C.gen
    generateCompCategoryBase(compcat_ptr.release()); //CG_LifeNodeCompCategory.h/.C
    generateCompCategory(); //LifeNodeCompCategory.h/.C.gen

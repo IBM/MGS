@@ -193,22 +193,29 @@ void MemberToInterface::setupAccessorMethods(Class& instance) const
       {
 	 //TUAN: only accept non-shared data on GPU for now
 	 // maybe in the future we want to define shared data as '__constant__' or ...
-	 std::string body;
-	 body = STR_GPU_CHECK_START 
-	    +
+	 std::string body("");
+	 if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+	 {
+	    body = STR_GPU_CHECK_START 
+	       +
+	       (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+	       + TAB + "return " 
+	       + (it->getNeedsAmpersand() ? "&" : "") 
+	       + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
+	       + name + "["+REF_INDEX+"]);\n"
+	       +
+	       "#else\n";
+	 }
+	 body +=
 	    (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
 	    + TAB + "return " 
 	    + (it->getNeedsAmpersand() ? "&" : "") 
-	    + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
-	    + name + "["+REF_INDEX+"]);\n"
-	    +
-	    "#else\n"
-	    +
-	    (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
-	    + TAB + "return " 
-	    + (it->getNeedsAmpersand() ? "&" : "") 
-	    + name + ";\n"
-	    + STR_GPU_CHECK_END;
+	    + name + ";\n";
+	 if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+	 {
+	    body +=
+	       STR_GPU_CHECK_END;
+	 }
 	 method->setFunctionBody(
 	       body
 	       );

@@ -384,9 +384,16 @@ void InterfaceImplementorBase::generatePublisher()
 }
 
 std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
+{
+   return generateInstanceBase(Class::PrimeType::UN_SET);
+}
+std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(Class::PrimeType type)
 {//e.g. CG_LifeNode.h/.C
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
-   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
+   if (type == Class::PrimeType::Node)
+   {
+      instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
+   }
    /* as 'publicValue' data in CG_LifeNode becomes 'um_publicValue' in CG_LifeNodeCompCategory
     * we create this CompCategory's Class object here as well 
     */
