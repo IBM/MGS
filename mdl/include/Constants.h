@@ -1,4 +1,4 @@
-// =================================================================
+continued// =================================================================
 // Licensed Materials - Property of IBM
 //
 // "Restricted Materials of IBM"
@@ -73,7 +73,7 @@ const std::string GETDEMARSHALLER_FUNC_NAME = "getDemarshaller";  // if not foun
 const std::string FINDDEMARSHALLER_FUNC_NAME = "findDemarshaller"; //create if not existing
 const std::string GETDATA_FUNC_NAME = "getDataIndex";
 enum class MachineType {
-   CPU, GPU
+   CPU, GPU, FPGA
 };
 
 static std::map<MachineType, std::string> MachineTypeNames =
