@@ -178,7 +178,7 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
 	 if (mt.first == MachineType::GPU)
 	    os << tab << STR_GPU_CHECK_END;
       }
-      os << tab << TAB << "default : std::cout << \"Not supporting processor: \" << MachineTypeNames[_sim.getPhaseMachineType(\"" << name << "\")] << std::endl ; assert(0); break;\n"
+      os << tab << TAB << "default : std::cerr << \"ERROR: Not supporting processor: \" << MachineTypeNames[_sim.getPhaseMachineType(\"" << name << "\")] << std::endl ; assert(0); break;\n"
 	 << tab << "}\n";
 
    }
