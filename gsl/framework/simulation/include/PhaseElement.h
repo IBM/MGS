@@ -19,6 +19,7 @@
 
 #include <string>
 #include <deque>
+#include <map>
 
 class Simulation;
 class WorkUnit;
