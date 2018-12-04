@@ -147,33 +147,36 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
   
    std::string partitionItem = componentType + "PartitionItem";
    std::string workUnitName = instanceType + "WorkUnitInstance"; 
-   os << tab << "switch(_sim.getPhaseMachineType(\"" << name
-      << "\") )\n";
-   os << tab << "{\n";
-   for(const auto& mt : MachineTypeNames) {    
-     os << tab << TAB << "case machineType::" << mt.second << " :\n";
-     os << tab << TAB << "{\n";
-     os << tab << TAB << TAB <<  partitionItem << "* it = _" << mt.second << "partitions;\n"
-	<< tab << TAB << TAB << partitionItem << "* end = it + _nbr"
-	<< mt.second << "partitions;\n"
-	<< tab << TAB << TAB << "for (; it < end; ++it) {\n"
-	<< tab << TAB << TAB << TAB << "WorkUnit* workUnit = \n"
-	<< tab << TAB << TAB << TAB << TAB << "new " << workUnitName << "(it,\n"
-	<< tab << TAB << TAB << TAB << TAB << TAB << "&" << instanceType << COMPCATEGORY << "::" 
-	<< getInstancePhaseMethodName(name, workUnitName, mt.first) << ", this);\n" 
-	<< tab << TAB << TAB << TAB << "_" << workUnits << "[\"" << name 
-	<< "\"].push_back(workUnit);\n"
-	<< tab << TAB << TAB << "}\n"
-	<< tab << TAB << TAB << "_sim.addWorkUnits(getSimulationPhaseName(\"" << name 
-	<< "\"), _" << workUnits 
-	<< "[\"" << name << "\"]" << " );\n"
-	<< tab << TAB << "}\n"
-	<< tab << TAB << "break;\n\n";
+   if (componentType == "Node")
+   {
+      os << tab << "switch(_sim.getPhaseMachineType(\"" << name
+	 << "\") )\n";
+      os << tab << "{\n";
+      for(const auto& mt : MachineTypeNames) {    
+	 os << tab << TAB << "case machineType::" << mt.second << " :\n";
+	 os << tab << TAB << "{\n";
+	 os << tab << TAB << TAB <<  partitionItem << "* it = _" << mt.second << "partitions;\n"
+	    << tab << TAB << TAB << partitionItem << "* end = it + _nbr"
+	    << mt.second << "partitions;\n"
+	    << tab << TAB << TAB << "for (; it < end; ++it) {\n"
+	    << tab << TAB << TAB << TAB << "WorkUnit* workUnit = \n"
+	    << tab << TAB << TAB << TAB << TAB << "new " << workUnitName << "(it,\n"
+	    << tab << TAB << TAB << TAB << TAB << TAB << "&" << instanceType << COMPCATEGORY << "::" 
+	    << getInstancePhaseMethodName(name, workUnitName, mt.first) << ", this);\n" 
+	    << tab << TAB << TAB << TAB << "_" << workUnits << "[\"" << name 
+	    << "\"].push_back(workUnit);\n"
+	    << tab << TAB << TAB << "}\n"
+	    << tab << TAB << TAB << "_sim.addWorkUnits(getSimulationPhaseName(\"" << name 
+	    << "\"), _" << workUnits 
+	    << "[\"" << name << "\"]" << " );\n"
+	    << tab << TAB << "}\n"
+	    << tab << TAB << "break;\n\n";
+      }
+      os << tab << TAB << "default : assert(0); break;\n"
+	 << tab << "}\n";
+
    }
-   os << tab << TAB << "default : assert(0); break;\n"
-      << tab << "}\n";
-	
-   /*
+   else{
    os << tab << partitionItem << "* it = _partitions;\n"
       << tab << partitionItem << "* end = it + _nbrPartitions;\n"
       << tab << "for (; it < end; ++it) {\n"
@@ -187,6 +190,7 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
       << tab << "_sim.addWorkUnits(getSimulationPhaseName(\"" << name 
       << "\"), _" << workUnits 
       << "[\"" << name << "\"]" << " );\n";
-   */
+   }
+	
    return os.str();
 }
