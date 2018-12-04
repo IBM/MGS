@@ -155,6 +155,8 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
 	 << "\") )\n";
       os << tab << "{\n";
       for(const auto& mt : MachineTypeNames) {    
+	 if (mt.first == MachineType::GPU)
+	    os << tab << STR_GPU_CHECK_START;
 	 os << tab << TAB << "case machineType::" << mt.second << " :\n";
 	 os << tab << TAB << "{\n";
 	 os << tab << TAB << TAB <<  partitionItem << "* it = _" << mt.second << "partitions;\n"
@@ -173,6 +175,8 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
 	    << "[\"" << name << "\"]" << " );\n"
 	    << tab << TAB << "}\n"
 	    << tab << TAB << "break;\n\n";
+	 if (mt.first == MachineType::GPU)
+	    os << tab << STR_GPU_CHECK_END;
       }
       os << tab << TAB << "default : assert(0); break;\n"
 	 << tab << "}\n";
