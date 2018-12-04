@@ -33,7 +33,7 @@
 //      um_publicValue[index]=um_value[index];
 //   }
 //}
-void CG_LifeNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, RNG& rng) 
+void CG_LifeNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
    //int BLOCKS_LIFENODE = _nodes.size();
    //int THREADS_PER_BLOCK_LIFENODE = 1;
@@ -55,7 +55,7 @@ void CG_LifeNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, RNG& rn
          );
    gpuErrorCheck( cudaPeekAtLastError() );
 }
-void CG_LifeNodeCompCategory::CG_host_update(NodePartitionItem* arg, RNG& rng) 
+void CG_LifeNodeCompCategory::CG_host_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
    //int BLOCKS_LIFENODE = _nodes.size();
    //int THREADS_PER_BLOCK_LIFENODE = 1;
@@ -96,7 +96,7 @@ void CG_LifeNodeCompCategory::CG_host_update(NodePartitionItem* arg, RNG& rng)
          );
    gpuErrorCheck( cudaPeekAtLastError() );
 }
-void CG_LifeNodeCompCategory::CG_host_copy(NodePartitionItem* arg, RNG& rng) 
+void CG_LifeNodeCompCategory::CG_host_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
    //int BLOCKS_LIFENODE = _nodes.size();
    //int THREADS_PER_BLOCK_LIFENODE = 1;
