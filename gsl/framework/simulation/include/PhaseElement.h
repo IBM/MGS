@@ -28,9 +28,9 @@ enum class machineType { CPU, GPU, FPGA, NOT_SET };
 // Remember to change in mdl file Constants.h
 static std::map<MachineType, std::string> MachineTypeNames =
   {
-    { MachineType::CPU, "CPU"},
-    { MachineType::GPU, "GPU"},
-    { MachineType::FPGA, "FPGA"}
+    { machineType::CPU, "CPU"},
+    { machineType::GPU, "GPU"},
+    { machineType::FPGA, "FPGA"}
   };
 
 class PhaseElement {
