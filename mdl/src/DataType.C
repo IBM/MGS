@@ -322,10 +322,10 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
    if (isPointer()) {
       return "";
    }
-   std::string open_parenthesis="", close_paranthesis="";
+   std::string open_parenthesis="", close_parenthesis="";
    if (mach_type == MachineType::GPU)
    {
-      open_parenthesis="(", close_paranthesis=")";
+      open_parenthesis="(", close_parenthesis=")";
    }
    std::ostringstream os;
    os << tab << "if (" << SERVICEREQUESTED << " == \"" << getName() 
@@ -341,7 +341,7 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
 	 type = type.replace(type.find(from),from.length(),to);
 	 std::size_t start = type.find_first_of("<");
 	 std::size_t last = type.find_first_of(">");
-	 std::string element_datatype = type.substr(start, last-start);
+	 std::string element_datatype = type.substr(start+1, last-start-1);
 	 os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";
 	 os << tab << TAB << "rval = new GenericService< " << type
 	    << " >(" << DATA << ", " << "&("; 
@@ -349,7 +349,13 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
 	 if (_shared) {
 	    os << "getNonConstSharedMembers().";
 	 } 
-	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_paranthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_parenthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+	 os << "#else\n"
+	    << " // ignore it as GenericService has >> operator that does not accept pointer\n"
+	    << " // and we most likely won't use this service\n"
+	    << "#endif\n";
+	 std::string comment = "// ";
+	 /*
 	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
 	 os << tab << TAB << "int offset = " << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
 	    << getName() << "_start_offset[" << DATA << "->" << REF_INDEX << "];\n"
@@ -358,20 +364,21 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
 	 os << tab << TAB << "rval = new GenericService< " << element_datatype << 
 	    " >(" << DATA << ", &("  << open_parenthesis
 	    << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
-	    << getName() << close_paranthesis << "[offset]));\n";
+	    << getName() << close_parenthesis << "[offset]));\n";
 	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n";
 	 os << tab << TAB << "int offset = " << DATA << "->" << REF_INDEX << " * " 
 	    << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << 
 	    PREFIX_MEMBERNAME << getName() << "_max_elements;\n"; 
-	   //<< " + " << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" 
-	   //<< PREFIX_MEMBERNAME << getName() << "_num_elements[" << DATA << "->" << REF_INDEX << "];\n";
+	    //<< " + " << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" 
+	    //<< PREFIX_MEMBERNAME << getName() << "_num_elements[" << DATA << "->" << REF_INDEX << "];\n";
 	 os << tab << TAB << "rval = new GenericService< " << element_datatype << 
 	    " >(" << DATA << ", &("  << open_parenthesis
 	    << DATA << "->" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME 
-	    << getName() << close_paranthesis << "[offset]));\n";
+	    << getName() << close_parenthesis << "[offset]));\n";
 	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n";
 	 os << tab << TAB << "assert(0);\n";
 	 os << "#endif\n";
+	 */
       }else{
 	 os << tab << TAB << "rval = new GenericService< " << getTypeString() 
 	    << " >(" << DATA << ", " << "&("; 
@@ -379,13 +386,14 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
 	 if (_shared) {
 	    os << "getNonConstSharedMembers().";
 	 } 
-	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_paranthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
+	 os << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << getName() << close_parenthesis << "[" << DATA << "->" << REF_INDEX << "]" << ")" << ");\n";
       }
    }
    else{
       os << tab << TAB << "rval = new GenericService< " << getTypeString() 
 	 << " >(" << DATA << ", " << "&("; 
-      os<< open_parenthesis << DATA << "->";
+      os //<< open_parenthesis 
+	 << DATA << "->";
       if (_shared) {
 	 os << "getNonConstSharedMembers().";
       } 
@@ -452,58 +460,66 @@ std::string DataType::getServiceInfoString(
       return "";
    }
    std::ostringstream os;
-   //int status;
-   //char * demangled = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
-   //std::string datatype(demangled);
-   //free(demangled);
-   //if (datatype.find("ArrayType") != std::string::npos 
-   if (this->isArray() 
-	 and mach_type == MachineType::GPU)
-   {
-      os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";
+   if (_shared) {
       os << tab << "if (" << PUBDATANAME << " == &(";
-      if (_shared) {
-	 os << "getSharedMembers().";
-      } 
-      os << getName(mach_type);
+      os << "getSharedMembers().";
+      os << getName();
       os << ")) {\n"
 	 << tab << TAB << "return \"" << info << "\";\n"
 	 << tab << "}\n";
-
-      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
-      os << tab << "if (" << PUBDATANAME << " == &(";
-      if (_shared) {
-	 os << "getSharedMembers().";
-      } 
-      os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + SUFFIX_MEMBERNAME_ARRAY + "[" + REF_INDEX + "]";
-      os << ")) {\n"
-	 << tab << TAB << "return \"" << info << "\";\n"
-	 << tab << "}\n";
-
-      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n";
-      os << tab << "if (" << PUBDATANAME << " == &(";
-      if (_shared) {
-	 os << "getSharedMembers().";
-      } 
-      os << getName(mach_type);
-      os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "*" + REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + SUFFIX_MEMBERNAME_ARRAY_MAXELEMENTS + "]";
-      os << ")) {\n"
-	 << tab << TAB << "return \"" << info << "\";\n"
-	 << tab << "}\n";
-
-      os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n";
-      os << tab << "assert(0);\n";
-      os << "#endif\n";
    }
    else{
-      os << tab << "if (" << PUBDATANAME << " == &(";
-      if (_shared) {
-	 os << "getSharedMembers().";
-      } 
-      os << getName(mach_type);
-      os << ")) {\n"
-	 << tab << TAB << "return \"" << info << "\";\n"
-	 << tab << "}\n";
+      //int status;
+      //char * demangled = abi::__cxa_demangle(typeid(*this).name(),0,0,&status);
+      //std::string datatype(demangled);
+      //free(demangled);
+      //if (datatype.find("ArrayType") != std::string::npos 
+      if (this->isArray() 
+	    and mach_type == MachineType::GPU)
+      {
+	 os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";
+	 os << tab << "if (" << PUBDATANAME << " == &(";
+	 os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
+	 os << ")) {\n"
+	    << tab << TAB << "return \"" << info << "\";\n"
+	    << tab << "}\n";
+
+	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+	 os << tab << "if (" << PUBDATANAME << " == &(";
+	 os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_CC_OBJECT +"->" + PREFIX_MEMBERNAME + _name + SUFFIX_MEMBERNAME_ARRAY + "[" + REF_INDEX + "]" + "]";
+	 os << ")) {\n"
+	    << tab << TAB << "return \"" << info << "\";\n"
+	    << tab << "}\n";
+
+	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n";
+	 os << tab << "if (" << PUBDATANAME << " == &(";
+	 os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "*" + REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + SUFFIX_MEMBERNAME_ARRAY_MAXELEMENTS + "]";
+	 os << ")) {\n"
+	    << tab << TAB << "return \"" << info << "\";\n"
+	    << tab << "}\n";
+
+	 os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n";
+	 os << tab << "assert(0);\n";
+	 os << "#endif\n";
+      }
+      else{
+	 if (mach_type == MachineType::GPU)
+	 {
+	    os << tab << "if (" << PUBDATANAME << " == &(";
+	    os << REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
+	    os << ")) {\n"
+	       << tab << TAB << "return \"" << info << "\";\n"
+	       << tab << "}\n";
+	 }
+	 else{
+	    os << tab << "if (" << PUBDATANAME << " == &(";
+	    os << getName();
+	    os << ")) {\n"
+	       << tab << TAB << "return \"" << info << "\";\n"
+	       << tab << "}\n";
+	 }
+      }
+
    }
    return os.str();
 }

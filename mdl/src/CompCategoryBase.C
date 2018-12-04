@@ -431,7 +431,8 @@ void CompCategoryBase::generateInstance()
 void CompCategoryBase::generateCompCategoryBase(Class* ptr)
 {
    std::auto_ptr<Class> instance(ptr == nullptr? new Class(getCompCategoryBaseName()) : ptr);
-   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseCompCategory));
+   if (isSupportedMachineType(MachineType::GPU))
+      instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseCompCategory));
 
    std::auto_ptr<BaseClass> base(new BaseClass(getFrameworkCompCategoryName()));   
    instance->addBaseClass(base);
@@ -1595,29 +1596,34 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "}\n"
        << TAB << TAB << TAB << "return buffSize;\n";
 
-   addDestinationMethodFB << TAB << TAB << TAB << "_receiveList.increaseSizeTo(_receiveList.size()+1);\n"
+   addDestinationMethodFB << TAB << TAB << TAB << "_receiveList.increaseSizeTo(_receiveList.size()+1);\n";
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      addDestinationMethodFB
 	 << TAB << TAB 
-	 << " #if defined(HAVE_GPU)\n"
+	 << STR_GPU_CHECK_START
 	 << TAB << TAB << TAB 
-         << "#if PROXY_ALLOCATION == OPTION_3\n"
+	 << "#if PROXY_ALLOCATION == OPTION_3\n"
 	 << TAB << TAB << TAB 
-         << "int sz = _receiveList.size();\n";
+	 << "int sz = _receiveList.size();\n";
       addDestinationMethodFB << TAB << TAB << TAB 
 	 << "int MAX_SUBARRAY_SIZE = 20;\n";
-   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
-      addDestinationMethodFB << TAB << TAB << TAB 
-	 << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
-      if (it->second->isArray())
-      {
-          //NOTE: um_neighbors is an array of array
+      for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
 	 addDestinationMethodFB << TAB << TAB << TAB 
-          << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n";
+	    << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
+	 if (it->second->isArray())
+	 {
+	    //NOTE: um_neighbors is an array of array
+	    addDestinationMethodFB << TAB << TAB << TAB 
+	       << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n";
+	 }
       }
-   }
       addDestinationMethodFB << TAB << TAB << TAB 
-           << "#endif\n"
-	 << TAB << TAB
 	 << "#endif\n"
+	 << TAB << TAB
+	 << STR_GPU_CHECK_END;
+   }
+   addDestinationMethodFB 
 	 << TAB << TAB << TAB << "return &_receiveList[_receiveList.size()-1];\n";
 
    resetMethodFB << TAB << TAB << TAB << "CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());\n"

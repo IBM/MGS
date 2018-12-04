@@ -184,11 +184,11 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	   {
 	     att= new CustomAttribute(PREFIX_MEMBERNAME + dup->getName(), "ShallowArray_Flat<ShallowArray_Flat<"
 		 + (dynamic_cast<ArrayType*>(dup.get()))->getType()->getTypeString()+
-		 ", Array_Flat<int>::MemLocation::UnifiedMem>,Array_Flat<int>::MemLocation::UnifiedMem>", accessType);
+		 ", Array_Flat<int>::MemLocation::UNIFIED_MEM>,Array_Flat<int>::MemLocation::UNIFIED_MEM>", accessType);
 
 	   }else
 	     att= new CustomAttribute(PREFIX_MEMBERNAME + dup->getName(), "ShallowArray_Flat<"+dup->getTypeString()+
-		 ",Array_Flat<int>::MemLocation::UnifiedMem>", accessType);
+		 ",Array_Flat<int>::MemLocation::UNIFIED_MEM>", accessType);
 	   att->setAccessType(accessType);
 	   MacroConditional gpuConditional(GPUCONDITIONAL);
 	   gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
@@ -267,20 +267,20 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 		 std::string  type = dt->getTypeString(); 
 		 std::size_t start = type.find_first_of("<");
 		 std::size_t last = type.find_first_of(">");
-		 std::string element_datatype = type.substr(start, last-start);
+		 std::string element_datatype = type.substr(start+1, last-start-1);
 		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
 		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_4");
 		 att_cc->setMacroConditional(gpuConditional);
 		 compcat_ptr->addAttribute(att_cc);
 		 {
 		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() + 
-		       "_start_offset", "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		       "_start_offset", "ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
 		 att_cc->setMacroConditional(gpuConditional);
 		 compcat_ptr->addAttribute(att_cc);
 		 }
 		 {
 		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() +
-		       "_num_elements", "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		       "_num_elements", "ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
 		 att_cc->setMacroConditional(gpuConditional);
 		 compcat_ptr->addAttribute(att_cc);
 		 }
@@ -292,7 +292,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 		 std::string  type = dt->getTypeString(); 
 		 std::size_t start = type.find_first_of("<");
 		 std::size_t last = type.find_first_of(">");
-		 std::string element_datatype = type.substr(start, last-start);
+		 std::string element_datatype = type.substr(start+1, last-start-1);
 		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
 		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b");
 		 att_cc->setMacroConditional(gpuConditional);
@@ -305,7 +305,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 		 }
 		 {
 		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() +
-		       "_num_elements", "ShallowArray_Flat<" + element_datatype + ", Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
+		       "_num_elements", "ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM>", AccessType::PUBLIC));
 		 att_cc->setMacroConditional(gpuConditional);
 		 compcat_ptr->addAttribute(att_cc);
 		 }

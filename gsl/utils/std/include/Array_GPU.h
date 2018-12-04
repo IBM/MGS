@@ -177,6 +177,7 @@ class Array_Flat //: public Managed
     void decrease();
     void assign(unsigned n, const T& val);
     void insert(const T& element);
+    void replace(int index, const T& element); //replace the element at index 'index' with new value
     void push_back(const T& element) {
       insert(element);
     }
@@ -471,6 +472,18 @@ void Array_Flat<T, memLocation>::insert(const T& element)
   else{
     resize_allocated(_allocated_size + _incremental_size); 
     _data[_size++] = element;
+  }
+}
+
+template <class T, int memLocation>
+void Array_Flat<T, memLocation>::replace(int index, const T& element)
+{
+  if(index < _size)
+  {
+    _data[index] = element;
+  }
+  else{
+    assert(0);
   }
 }
 

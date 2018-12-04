@@ -62,7 +62,7 @@ void Node::internalGenerateFiles()
    assert(strcmp(getName().c_str(), ""));
    addSupportForMachineType(MachineType::GPU);
 
-   std::unique_ptr<Class> compcat_ptr = generateInstanceBase(Class::PrimeType::Node); //CG_LifeNode.h/,C
+   std::unique_ptr<Class> compcat_ptr = generateInstanceBase(); //CG_LifeNode.h/,C
    generateInstance();  //LifeNode.h/C.gen
    generateCompCategoryBase(compcat_ptr.release()); //CG_LifeNodeCompCategory.h/.C
    generateCompCategory(); //LifeNodeCompCategory.h/.C.gen
@@ -512,7 +512,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       if (it->second->isArray())
       {
 	 allocateProxiesMethodFB 
-	    << TAB << TAB << TAB << TAB << "ccd->" << it->first << ".resize_allocated(size, force_resize);\n";
+	    << TAB << TAB << TAB << TAB << "ccd->" << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
 	 //NOTE: um_neighbors is an array of array
 	 //allocateProxiesMethodFB 
 	 //   << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
@@ -532,7 +532,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       }
       else{
 	 allocateProxiesMethodFB 
-	    << TAB << TAB << TAB << TAB << "ccd->" << it->first << ".resize_allocated(size, force_resize);\n";
+	    << TAB << TAB << TAB << TAB << "ccd->" << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
       }
    }
    allocateProxiesMethodFB 
@@ -585,6 +585,8 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	    << TAB << "this->" << PREFIX_PROXY_MEMBERNAME << it->first << ".resize_allocated(total, force_resize);\n";
       }
    }
+   allocateProxiesMethodFB
+      << "#endif //PROXY_ALLOCATION\n";
    //allocateProxiesMethodFB << "#else\n"
    //   << TAB << "_nodes.resize_allocated(size);\n"
    //   << STR_GPU_CHECK_END;

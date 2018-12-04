@@ -193,28 +193,36 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
 		  std::string tmpVarName = PREFIX_MEMBERNAME + it->getDataType()->getName() + "_index"; 
 		  const DataType* dt_ptr = it->getDataType();
 		  os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-		     << TAB << memberName << ".insert(" 
+		     //<< TAB << memberName << ".insert(" 
+		     //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" << REF_INDEX << "].insert("
+		     << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".insert("
 		     << getMethod << ");\n";
 		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
 		  os << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements["
 		     << REF_INDEX << "] +=1;\n"
-		     << TAB << "auto " << tmpVarName << " = " 
+		     << TAB << "int " << tmpVarName << " = " 
 		     << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_offset["  
 		     << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
 		     << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
 		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() 
-		     << "[" << tmpVarName << "] = " 
+		     << ".replace(" << tmpVarName << ", " 
 		     << getMethod << ");\n";
+		     //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() 
+		     //<< "[" << tmpVarName << "] = " 
+		     //<< getMethod << ");\n";
 		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
 		     << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" 
 		     << REF_INDEX << "] +=1;\n"
-		     << TAB << "auto " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
+		     << TAB << "int " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
 		     << PREFIX_MEMBERNAME << dt_ptr->getName() << "_max_elements + " 
 		     << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements["
 		     << REF_INDEX << "]-1;\n"
-		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" 
-		     << tmpVarName << "] = " 
+		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << ".replace(" 
+		     << tmpVarName << ", " 
 		     << getMethod << ");\n";
+		     //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" 
+		     //<< tmpVarName << "] = " 
+		     //<< getMethod << ");\n";
 		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
 		     << TAB << "assert(0);\n"
 		     << "#endif\n";

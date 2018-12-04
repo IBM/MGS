@@ -384,16 +384,10 @@ void InterfaceImplementorBase::generatePublisher()
 }
 
 std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
-{
-   return generateInstanceBase(Class::PrimeType::UN_SET);
-}
-std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(Class::PrimeType type)
 {//e.g. CG_LifeNode.h/.C
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
-   if (type == Class::PrimeType::Node)
-   {
+   if (isSupportedMachineType(MachineType::GPU))
       instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
-   }
    /* as 'publicValue' data in CG_LifeNode becomes 'um_publicValue' in CG_LifeNodeCompCategory
     * we create this CompCategory's Class object here as well 
     */
@@ -946,7 +940,7 @@ void InterfaceImplementorBase::generateInstanceProxy()
                 std::string supplement_initString2("");
                 supplement_initString2 += "\n" + STR_GPU_CHECK_START;
                 supplement_initString2 += "#if PROXY_ALLOCATION == OPTION_3\n";
-                supplement_initString2 += ", " + varName + "Demarshaller(&(((proxy->" + GETCOMPCATEGORY_FUNC_NAME + "())->" + GETDEMARSHALLERINDEX_FUNC_NAME + "(proxy->" + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME + varName + "[proxy->" + REF_INDEX + "]))\n";
+                supplement_initString2 += ", " + varName + "Demarshaller(&(((proxy->" + GETCOMPCATEGORY_FUNC_NAME + "())->" + GETDEMARSHALLER_FUNC_NAME + "(proxy->" + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME + varName + "[proxy->" + REF_INDEX + "]))\n";
                 supplement_initString2 += "#elif PROXY_ALLOCATION == OPTION_4\n";
                 supplement_initString2 += TAB + ", " + varName + "Demarshaller(&(proxy->" + GETCOMPCATEGORY_FUNC_NAME+ "()->" + PREFIX_PROXY_MEMBERNAME + varName + "[proxy->" + GETDATA_FUNC_NAME + "()]))\n";
                 supplement_initString2 += "#endif\n";
@@ -1505,7 +1499,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
             std::auto_ptr<Method> sender(
                new Method(PREFIX+"send_"+(*piter)->getName(), "void"));
             sender->setAccessType(AccessType::PROTECTED);
-            sender->setInline();
+            //sender->setInline();
 	    sender->setMacroConditional(mpiConditional);
             sender->addParameter(OUTPUTSTREAM + "* stream");
             sender->setConst();
@@ -1519,16 +1513,32 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                if ((typeMarshallerIter=typeMarshaller.find((*pviter)->getDescriptor())) == typeMarshaller.end()) {
                   miSN = typeSN++;
                   typeMarshaller[(*pviter)->getDescriptor()] = miSN;
-		  funBody << TAB << TAB << TAB;
+		  funBody 
+                     //<< TAB << TAB 
+                     << TAB;
 		  if ((*pviter)->isTemplateMarshalled())
 		    funBody << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
 		  else
 		    funBody << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
                } else
                   miSN = (*typeMarshallerIter).second;
-               funBody << TAB << TAB << TAB << "mi" << miSN << ".marshall(stream, ";
+               funBody 
+                  //<< TAB << TAB 
+                  << STR_GPU_CHECK_START
+                  //<< TAB << TAB 
+                  << TAB << "mi" << miSN << ".marshall(stream, " ;
+               if ((*pviter)->isPointer()) funBody << "*";
+               funBody  << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << (*pviter)->getName() << "[" << REF_INDEX << "]);\n"
+                  //<< TAB << TAB 
+                  << "#else\n";
+               funBody 
+                  //<< TAB << TAB 
+                  << TAB << "mi" << miSN << ".marshall(stream, ";
 	       if ((*pviter)->isPointer()) funBody << "*";
 	       funBody << (*pviter)->getName() << ");\n";
+               funBody 
+                  //<< TAB << TAB  
+                  << STR_GPU_CHECK_END;
             }   
             sender->setFunctionBody(funBody.str());
             instance.addMethod(sender);
@@ -1562,7 +1572,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                   funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
                   if ((*pviter)->isPointer()) funBody << "*";
                   funBody 
-                     << (*pviter)->getName(MachineType::GPU) << ");\n"
+                     << (*pviter)->getNameRaw(MachineType::GPU) << ");\n"
                      << "#else\n";
                }
                funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
@@ -1614,12 +1624,13 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
             << STR_GPU_CHECK_START;
          funBody << TAB << "mi" << miSN << ".marshall(stream, ";
          if ((*it)->isPointer()) funBody << "*";
-         funBody << (*it)->getName() << ");\n"
+         funBody //<< (*it)->getName() << ");\n"
+            << (*it)->getNameRaw(MachineType::GPU) << ");\n"
             << "#else\n";
       }
-     funBody << TAB << "mi" << miSN << ".marshall(stream, ";
-     if ((*it)->isPointer()) funBody << "*";
-     funBody << (*it)->getName() << ");\n";
+      funBody << TAB << "mi" << miSN << ".marshall(stream, ";
+      if ((*it)->isPointer()) funBody << "*";
+      funBody << (*it)->getName() << ");\n";
       if (isSupportedMachineType(MachineType::GPU))
       {
          funBody 
@@ -1659,7 +1670,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
          funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
          if ((*it)->isPointer()) funBody << "*";
          funBody 
-            << (*it)->getName(MachineType::GPU) << ");\n"
+            << (*it)->getNameRaw(MachineType::GPU) << ");\n"
             << "#else\n";
       }
       funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";

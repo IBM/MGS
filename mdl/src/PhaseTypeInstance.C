@@ -72,7 +72,7 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
 	    << TAB << "it += arg->startIndex;\n"
 	    << TAB << "end += arg->endIndex;\n"       
 	    << TAB << "for (; it <= end; ++it) {\n"
-	    << TAB << TAB << "(*it)." << name << "(rng);\n"
+	    << TAB << TAB << "(*it)." << name << "(wu->getRNG());\n"
 	    << TAB << "}\n";
       } else if (componentType == "Variable") {
 	 os
@@ -85,7 +85,7 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
 	    << instanceType << "*>(*it);\n"
 	    // for now
 	    << TAB << TAB << "assert(elem != 0); // for now \n"
-	    << TAB << TAB << "elem->" << name << "(rng);\n"
+	    << TAB << TAB << "elem->" << name << "(wu->getRNG());\n"
 	    << TAB << "}\n";
       } else if (componentType == "Edge") {
 	 os
@@ -94,7 +94,7 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
 	    << TAB << "ShallowArray<" << instanceType << ">::iterator end" 
 	    << " = _edgeList.begin() + arg->endIndex;\n"
 	    << TAB << "for (; it <= end; ++it) {\n"
-	    << TAB << TAB << "it->" << name << "(rng);\n"
+	    << TAB << TAB << "it->" << name << "(wu->getRNG());\n"
 	    << TAB << "}\n";
 
       }

@@ -484,32 +484,43 @@ std::string ConnectionCCBase::getArrayConnectionAccept(
    {
       os << STR_GPU_CHECK_START;
       os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-	 << TAB << REF_CC_OBJECT << "->" << elem->getName(MachineType::GPU) << insert 
+	 //<< TAB << REF_CC_OBJECT << "->" << elem->getName(MachineType::GPU) 
+	 << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME <<elem->getName() 
+	 << "[" << REF_INDEX << "]"
+	 << insert 
 	 << local 
 	 << "->getData());\n";
       os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
       std::string tmpVarName = PREFIX_MEMBERNAME + elem->getName() + "_index"; 
       os << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements["
 	 << REF_INDEX << "] +=1;\n"
-         << TAB << "auto " << tmpVarName << " = " 
+         << TAB << "int " << tmpVarName << " = " 
 	 << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME <<elem->getName() << "_offset["  
 	 << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
 	 << elem->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
           << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() 
-	  << "[" << tmpVarName << "] = " 
+	  << ".replace(" << tmpVarName << ", " 
 	  << local 
 	  << "->getData());\n";
+          //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() 
+	  //<< "[" << tmpVarName << "] = " 
+	  //<< local 
+	  //<< "->getData();\n";
       os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
           << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements[" 
 	  << REF_INDEX << "] +=1;\n"
-          << TAB << "auto " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
+          << TAB << "int " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
 	  << PREFIX_MEMBERNAME << elem->getName() << "_max_elements + " 
 	  << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements["
 	  << REF_INDEX << "]-1;\n"
-          << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "[" 
-	  << tmpVarName << "] = " 
+          << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << ".replace(" 
+	  << tmpVarName << ", " 
 	  << local 
 	  << "->getData());\n";
+          //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "[" 
+	  //<< tmpVarName << "] = " 
+	  //<< local 
+	  //<< "->getData();\n";
       os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
 	  << TAB << "assert(0);\n"
 	  << "#endif\n";

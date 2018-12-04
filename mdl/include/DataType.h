@@ -60,10 +60,22 @@ class DataType {
 	 else 
 	    assert(0);
       }
+      const std::string& getNameRaw(MachineType mach_type=MachineType::CPU) const {
+	 /* use this to access data directly the '_container' from CG_LifeNode */
+	 if (mach_type == MachineType::CPU)
+	    return _name;
+	 else if (mach_type == MachineType::GPU)
+	 {
+	    return _name_gpu_raw;
+	 }
+	 else 
+	    assert(0);
+      }
       void setName(const std::string& name) {
 	 _name = name;
 	 //_name_gpu = REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
 	 _name_gpu = GETCOMPCATEGORY_FUNC_NAME+"()->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
+	 _name_gpu_raw = REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME + _name + "[" + REF_INDEX + "]";
       }
       const std::string& getComment() const {
 	 return _comment;
@@ -301,6 +313,7 @@ class DataType {
       bool _shared;
       std::string _name;
       std::string _name_gpu;
+      std::string _name_gpu_raw;
       std::string _comment;
       std::vector<std::string> _subAttributePath;
 };
