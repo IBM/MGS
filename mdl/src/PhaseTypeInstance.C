@@ -157,6 +157,8 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
       for(const auto& mt : MachineTypeNames) {    
 	 if (mt.first == MachineType::GPU)
 	    os << tab << STR_GPU_CHECK_START;
+	 if (mt.first == MachineType::FPGA)
+	    os << tab << STR_FPGA_CHECK_START;
 	 os << tab << TAB << "case machineType::" << mt.second << " :\n";
 	 os << tab << TAB << "{\n";
 	 os << tab << TAB << TAB <<  partitionItem << "* it = _" << mt.second << "partitions;\n"
@@ -177,6 +179,8 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
 	    << tab << TAB << "break;\n\n";
 	 if (mt.first == MachineType::GPU)
 	    os << tab << STR_GPU_CHECK_END;
+	 if (mt.first == MachineType::FPGA)
+	    os << tab << STR_FPGA_CHECK_END;
       }
       os << tab << TAB << "default : std::cerr << \"ERROR: Not supporting processor: \" << MachineTypeNames[_sim.getPhaseMachineType(\"" << name << "\")] << std::endl ; assert(0); break;\n"
 	 << tab << "}\n";
