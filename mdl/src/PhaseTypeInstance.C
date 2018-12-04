@@ -110,6 +110,8 @@ void PhaseTypeInstance::generateInstancePhaseMethod(
       method->setGPUName(gpuKernelName);
 
       std::string insBaseType = PREFIX + instanceType;
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      method->setMacroConditional(gpuConditional);
 
       // not OO may change architecture - sgc
       if (componentType == "Node") {
