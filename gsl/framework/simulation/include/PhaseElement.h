@@ -26,7 +26,7 @@ class Trigger;
 
 enum class machineType { CPU, GPU, FPGA, NOT_SET };
 // Remember to change in mdl file Constants.h
-static std::map<MachineType, std::string> MachineTypeNames =
+static std::map<machineType, std::string> MachineTypeNames =
   {
     { machineType::CPU, "CPU"},
     { machineType::GPU, "GPU"},
