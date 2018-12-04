@@ -79,7 +79,8 @@ enum class MachineType {
 static std::map<MachineType, std::string> MachineTypeNames =
   {
     { MachineType::CPU, "CPU"},
-    { MachineType::GPU, "GPU"}
+    { MachineType::GPU, "GPU"},
+    { MachineType::FPGA, "FPGA"}
   };
 
 template< typename T >
