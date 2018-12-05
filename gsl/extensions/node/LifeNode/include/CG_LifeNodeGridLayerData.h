@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -16,13 +16,13 @@
 #define CG_LifeNodeGridLayerData_H
 
 #include "Lens.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "CG_LifeNodeProxy.h"
 #endif
 #include "Grid.h"
 #include "GridLayerData.h"
 #include "NodeInstanceAccessor.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "ShallowArray.h"
 #endif
 

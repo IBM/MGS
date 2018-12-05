@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -55,7 +55,8 @@ void CG_LifeNodeSharedMembers::setUp(const NDPairList& ndplist)
 }
 
 CG_LifeNodeSharedMembers::CG_LifeNodeSharedMembers() 
-   : tooCrowded(0), tooSparse(0){
+   : tooCrowded(0), tooSparse(0)
+{
 }
 
 CG_LifeNodeSharedMembers::~CG_LifeNodeSharedMembers() 

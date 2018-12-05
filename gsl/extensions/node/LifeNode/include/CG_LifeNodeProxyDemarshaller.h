@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -16,7 +16,7 @@
 #define CG_LifeNodeProxyDemarshaller_H
 
 #include "Lens.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "CG_LifeNodeProxyDemarshaller.h"
 #include "StructDemarshallerBase.h"
 
@@ -26,10 +26,12 @@ class CG_LifeNodeProxyDemarshaller : public StructDemarshallerBase
 {
    public:
       CG_LifeNodeProxyDemarshaller()
-      : _proxy(0)      {
+      : _proxy(0)
+      {
       }
       CG_LifeNodeProxyDemarshaller(CG_LifeNodeProxy* p)
-      : _proxy(p)      {
+      : _proxy(p)
+      {
       }
       virtual void setDestination(CG_LifeNodeProxy *proxy)=0;
       virtual ~CG_LifeNodeProxyDemarshaller()

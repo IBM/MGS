@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -25,7 +25,9 @@
 #include <memory>
 
 class CG_LifeNode;
+#if defined(HAVE_GPU) 
 class CG_LifeNodeCompCategory;
+#endif
 
 class CG_LifeNodePublisher : public GeneratedPublisherBase
 {

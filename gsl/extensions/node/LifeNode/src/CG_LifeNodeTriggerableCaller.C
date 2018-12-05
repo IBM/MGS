@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -19,7 +19,8 @@
 #include <memory>
 
 CG_LifeNodeTriggerableCaller::CG_LifeNodeTriggerableCaller(NDPairList* ndPairList, void (CG_LifeNode::*function) (Trigger*, NDPairList*), CG_LifeNode* triggerable) 
-   : TriggerableCaller(ndPairList), _function(function), _triggerable(triggerable){
+   : TriggerableCaller(ndPairList), _function(function), _triggerable(triggerable)
+{
 }
 
 void CG_LifeNodeTriggerableCaller::event(Trigger* trigger) 
@@ -33,7 +34,8 @@ Triggerable* CG_LifeNodeTriggerableCaller::getTriggerable()
 }
 
 CG_LifeNodeTriggerableCaller::CG_LifeNodeTriggerableCaller() 
-   : TriggerableCaller(), _triggerable(0){
+   : TriggerableCaller(), _triggerable(0)
+{
 }
 
 CG_LifeNodeTriggerableCaller::~CG_LifeNodeTriggerableCaller() 

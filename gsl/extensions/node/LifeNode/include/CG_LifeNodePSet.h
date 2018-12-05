@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -38,7 +38,21 @@ class CG_LifeNodePSet : public ParameterSet
       virtual void duplicate(std::unique_ptr<ParameterSet>& dup) const;
       int value;
       int publicValue;
+#if defined(HAVE_GPU) 
+      //TUAN TODO: we may not need to have 'reference' elements array here
+      //  otherwise, consider proper allocation
+ #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+ #endif
+#else
       ShallowArray< int* > neighbors;
+#endif
 };
 
 #endif

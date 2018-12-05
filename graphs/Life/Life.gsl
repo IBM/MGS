@@ -13,7 +13,6 @@
 //
 // =================================================================
 
-<<<<<<< HEAD
 //#include "../std/std.gsl"
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
 Layout UniformLayout(int); // Functor provides uniform density vector for grid layers
@@ -26,23 +25,25 @@ InAttrDefault inAttrDef();
 Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
 
+#define USE_GPU_GSL
+#ifdef USE_GPU_GSL
+InitPhases = { initialize(GPU) };
+RuntimePhases = { dataCollect, update(GPU), copy(GPU), lastPhase };
+FinalPhases = { finalize };
+#else
 InitPhases = { initialize };
 RuntimePhases = { dataCollect, update, copy, lastPhase };
-=======
-#include "../std/std.gsl"
-InitPhases = { initialize(GPU) };
-RuntimePhases = { dataCollect, update(GPU), copy, lastPhase };
->>>>>>> 655cee12bf4e250874fbfa772aecdcf32e3edfda
 FinalPhases = { finalize };
+#endif
 
 NodeType LifeNode(< tooSparse=1, tooCrowded=4 >);
 
 Grid World
 {
 #if 1
-   Dimension(20,20);
+   Dimension(200,200);
    Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   Layer(nodes2, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
+   //Layer(nodes2, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
    /*InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );*/
    /*InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );*/
    //Dimension(100,100);
@@ -60,36 +61,9 @@ Grid World
 };
 World world;
 
-<<<<<<< HEAD
-Grid World_other
-{
-   Dimension(2,2);
-   Layer(nodes3, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-};
-World_other world2;
-//
-//// DCA directives here
-//
-////VariableType LifeDataCollector;
-////LifeDataCollector collector<fileName="LifeOutput.txt">;
-////
-//////serviceConnect(world[].Layer(nodes), collector, GetNodeCoordFunctor(), "coordsArray",
-//////	       "value", "vals");
-////
-////polyConnect(world[].Layer(nodes), collector, <>, <>);
-////
-////Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
-////
-////UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
-//// 			 ::Iteration, ">=", 1, 0, dataCollect);
-////collector.dataCollection() on iterTrig;
-
-UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 1000, 0, lastPhase); 
-=======
 // DCA directives here
-Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
-Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
+//Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+//Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
 
 UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
  			 ::Iteration, ">=", 1, 0, dataCollect);
@@ -108,5 +82,4 @@ collector.dataCollection() on iterTrig;
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
 			 ::Iteration, "==", 100000, 0, lastPhase); 
->>>>>>> 655cee12bf4e250874fbfa772aecdcf32e3edfda
 Stop on endTrig;

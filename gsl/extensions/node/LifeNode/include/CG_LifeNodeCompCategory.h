@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -21,45 +21,45 @@
 #include "CG_LifeNodeNodeAccessor.h"
 #include "CG_LifeNodeOutAttrPSet.h"
 #include "CG_LifeNodePSet.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "CG_LifeNodeProxy.h"
 #endif
 #include "CG_LifeNodeSharedMembers.h"
 #include "CG_LifeNodeWorkUnitGridLayers.h"
 #include "CG_LifeNodeWorkUnitInstance.h"
 #include "CG_LifeNodeWorkUnitShared.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "ConnectionIncrement.h"
 #endif
 #include "GridLayerData.h"
 #include "GridLayerDescriptor.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "IndexedBlockCreator.h"
 #endif
 #include "LifeNode.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "MemPattern.h"
 #endif
 #include "NodeCompCategoryBase.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "OutputStream.h"
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "Phase.h"
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "ShallowArray.h"
 #endif
 #include "Simulation.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include <cassert>
 #endif
 #include <deque>
 #include <iostream>
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include <list>
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include <map>
 #endif
 #include <memory>
@@ -69,18 +69,24 @@
 class CG_LifeNode;
 class NDPairList;
 
+
 class CG_LifeNodeCompCategory : public NodeCompCategoryBase
 {
    private:
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
+      //TUAN TODO
+      //// may need to revise this so that it nolonger use 'IndexedBlockCreator'
+      // or 
+      // // the Index is always 0 [to maintain the original API]
    class CCDemarshaller : public Demarshaller, public IndexedBlockCreator
    {
       friend class CG_LifeNodeCompCategory;
    public:
       typedef std::map<std::string, CG_LifeNodeProxyDemarshaller*> CG_RecvDemarshallers;
       CCDemarshaller(Simulation* sim)
-      : Demarshaller()      {
+      : Demarshaller()
+      {
          _sim = sim;
       }
       int setMemPattern(std::string phaseName, int source, MemPattern* mpptr)
@@ -91,7 +97,11 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          if (inList) {
             inList = inList && (_receiveList.size()!=0);
             if (inList) {
+#if defined(HAVE_GPU) 
                auto niter=_receiveList.begin();
+#else
+               ShallowArray<CG_LifeNodeProxy>::iterator niter=_receiveList.begin();
+#endif
                CG_LifeNodeProxyDemarshaller* dm = diter->second;
                std::vector<MPI_Aint> blocs;
                std::vector<int> npls;
@@ -155,7 +165,12 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          if (inList) {
             inList = inList && (_receiveList.size()!=0);
             if (inList) {
+#if defined(HAVE_GPU) 
                auto niter=_receiveList.begin();
+#else
+
+               ShallowArray<CG_LifeNodeProxy>::iterator niter=_receiveList.begin();
+#endif
                CG_LifeNodeProxyDemarshaller* dm = diter->second;
                std::vector<MPI_Aint> blocs;
                std::vector<int> npls;
@@ -210,8 +225,13 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());
          if (diter != CG_recvTemplates.end()) {
             CG_LifeNodeProxyDemarshaller* dm = diter->second;
-            auto  &niter = _receiveState;
+#if defined(HAVE_GPU) 
+            auto &niter = _receiveState;
             auto nend = _receiveList.end();
+#else
+            ShallowArray<CG_LifeNodeProxy>::iterator &niter = _receiveState;
+            ShallowArray<CG_LifeNodeProxy>::iterator nend = _receiveList.end();
+#endif
             const char* buff = buffer;
             while (niter!=nend && buffSize!=0) {
                buffSize = dm->demarshall(buff, buffSize, rebuildRequested);
@@ -229,16 +249,17 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       NodeProxyBase* addDestination()
       {
          _receiveList.increaseSizeTo(_receiveList.size()+1);
-       #if defined(HAVE_GPU)
-         #if PROXY_ALLOCATION == OPTION_3
+#if defined(HAVE_GPU) 
+    #if PROXY_ALLOCATION == OPTION_3
          int sz = _receiveList.size();
          int MAX_SUBARRAY_SIZE = 20;
          um_value.increaseSizeTo(sz);
          um_publicValue.increaseSizeTo(sz);
          um_neighbors.increaseSizeTo(sz);
+         //NOTE: um_neighbors is an array of array
          um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
-         #endif
-      #endif
+    #endif
+#endif
          return &_receiveList[_receiveList.size()-1];
       }
       void reset()
@@ -257,44 +278,31 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       virtual ~CCDemarshaller()
       {
       }
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_3
-      ShallowArray_Flat<int,Array_Flat<int>::MemLocation::UnifiedMem> um_value;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_3
-      ShallowArray_Flat<int,Array_Flat<int>::MemLocation::UnifiedMem> um_publicValue;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_3
-      ShallowArray_Flat<ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UnifiedMem>,Array_Flat<int>::MemLocation::UnifiedMem> um_neighbors;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_4
+#if defined(HAVE_GPU) 
+    #if PROXY_ALLOCATION == OPTION_3
+   public:
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_publicValue;
+      ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
+    #elif PROXY_ALLOCATION == OPTION_4
       int offset;
-#endif
-#endif
+    #endif
+      //ShallowArray<CG_LifeNodeProxy> _receiveList; //On CPU
+      //ShallowArray<CG_LifeNodeProxy>::iterator _receiveListIter;
+      //ShallowArray<CG_LifeNodeProxy>::iterator _receiveState;
+
    protected:
-#if ! defined(HAVE_GPU)
-      ShallowArray<CG_LifeNodeProxy> _receiveList;
-#endif
-#if defined(HAVE_GPU)
-      ShallowArray_Flat<CG_LifeNodeProxy> _receiveList;
-#endif
-#if ! defined(HAVE_GPU)
-      ShallowArray<CG_LifeNodeProxy>::iterator _receiveListIter;
-#endif
-#if defined(HAVE_GPU)
+      ShallowArray_Flat<CG_LifeNodeProxy> _receiveList; //On CPU, but linear memory
       ShallowArray_Flat<CG_LifeNodeProxy>::iterator _receiveListIter;
-#endif
-#if ! defined(HAVE_GPU)
-      ShallowArray<CG_LifeNodeProxy>::iterator _receiveState;
-#endif
-#if defined(HAVE_GPU)
       ShallowArray_Flat<CG_LifeNodeProxy>::iterator _receiveState;
+      
+      //ShallowArray_Flat<CG_LifeNodeProxy, Array_Flat<int>::MemLocation::UNIFIED_MEM> _receiveList; // On UnifiedMem
+      //ShallowArray_Flat<CG_LifeNodeProxy>::iterator _receiveListIter;
+      //ShallowArray_Flat<CG_LifeNodeProxy>::iterator _receiveState;
+#else
+      ShallowArray<CG_LifeNodeProxy> _receiveList;
+      ShallowArray<CG_LifeNodeProxy>::iterator _receiveListIter;
+      ShallowArray<CG_LifeNodeProxy>::iterator _receiveState;
 #endif
       CG_RecvDemarshallers CG_recvTemplates;
    private:
@@ -304,10 +312,10 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
 #endif
 
    public:
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       typedef void (CG_LifeNode::*CG_T_SendFunctionPtr)(OutputStream* ) const;
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       typedef void (CG_LifeNode::*CG_T_GetSendTypeFunctionPtr)(std::vector<int>&, std::vector<MPI_Aint>&) const;
 #endif
       CG_LifeNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
@@ -317,47 +325,66 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
       virtual void CG_InstancePhase_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
       virtual void CG_InstancePhase_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
       virtual void CG_InstancePhase_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
+      //#ifdef TEST_USING_GPU_COMPUTING
+      void CG_host_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu); 
+      void CG_host_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu); 
+      void CG_host_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu); 
+      //void __global__ kernel_update(
+      //      //RNG& rng
+      //      int size
+      //      , int tooSparse 
+      //      , int tooCrowded
+      //      /* check which order is easier to genrate code */
+      //      //int tooSparse,  
+      //      //int tooCrowded, 
+      //      //int size
+      //      ); 
+      //void __global__ kernel_copy(
+      //      //RNG& rng
+      //      int size
+      //      ); 
+      //#endif
       virtual void getWorkUnits();
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual void addToSendMap(int toPartitionId, Node* node);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual void allocateProxy(int fromPartitionId, NodeDescriptor* nd);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       void addVariableNamesForPhase(std::set<std::string>& namesSet, const std::string& phase);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual void setDistributionTemplates();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual void resetSendProcessIdIterators();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual int getSendNextProcessId();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual bool atSendProcessIdEnd();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual void resetReceiveProcessIdIterators();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual int getReceiveNextProcessId();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual bool atReceiveProcessIdEnd();
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual int setMemPattern(std::string phaseName, int dest, MemPattern* mpptr);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual int getIndexedBlock(std::string phaseName, int dest, MPI_Datatype* blockType, MPI_Aint& blockLocation);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual IndexedBlockCreator* getReceiveBlockCreator(int fromPartitionId);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual void send(int pid, OutputStream* os)
       {
          std::map<std::string, CG_T_SendFunctionPtr>::iterator fiter = CG_sendTemplates.find(getSimulation().getPhaseName());
@@ -371,105 +398,88 @@ class CG_LifeNodeCompCategory : public NodeCompCategoryBase
          }
       }
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual CG_LifeNodeCompCategory::CCDemarshaller* getDemarshaller(int fromPartitionId);
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       virtual CG_LifeNodeCompCategory::CCDemarshaller* findDemarshaller(int fromPartitionId);
 #endif
       CG_LifeNodeSharedMembers& getSharedMembers();
       virtual void getNodeAccessor(std::unique_ptr<NodeAccessor>& nodeAccessor, GridLayerDescriptor* gridLayerDescriptor);
       void allocateNode(NodeDescriptor* nd);
       void allocateNodes(size_t size);
-      void allocateProxies(const std::vector<size_t>& sizes);
+      void allocateProxies(const std::vector<int>& sizes);
       int getNbrComputationalUnits();
       ConnectionIncrement* getComputeCost();
       virtual ~CG_LifeNodeCompCategory();
-      virtual void CG_host_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
-      virtual void CG_host_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
-      virtual void CG_host_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu);
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_4
-      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_value;
-#endif
-#endif
-#if defined(HAVE_GPU)
-      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
-#endif
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_4
-      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_publicValue;
-#endif
-#endif
-#if defined(HAVE_GPU)
-      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_publicValue;
-#endif
-#if defined(HAVE_GPU)
-#if PROXY_ALLOCATION == OPTION_4
-      ShallowArray_Flat<ShallowArray_Flat< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM>, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_neighbors;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-      ShallowArray_Flat<ShallowArray_Flat< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM>, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      ShallowArray_Flat<< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      ShallowArray_Flat<< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors_start_offset;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      ShallowArray_Flat<< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors_num_elements;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      ShallowArray_Flat<< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      int um_neighbors_max_elements;
-#endif
-#endif
-#if defined(HAVE_GPU)
-#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      ShallowArray_Flat<< int* , Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors_num_elements;
-#endif
-#endif
       static CG_LifeNodeSharedMembers* CG_sharedMembers;
+#if defined(HAVE_GPU) 
+      std::map <int, CCDemarshaller*>& getDemarshallerMap(){ return _demarshallerMap; };
+#endif
    protected:
-#if defined(HAVE_MPI)
+      //TUAN TODO
+      //we need to revise data in _sendMap and ...
+#ifdef HAVE_MPI
       std::map <int, CCDemarshaller*> _demarshallerMap;
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       std::map <int, CCDemarshaller*>::iterator _demarshallerMapIter;
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       std::map <int, ShallowArray<CG_LifeNode*> > _sendMap;
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       std::map <int, ShallowArray<CG_LifeNode*> >::iterator _sendMapIter;
 #endif
-#if ! defined(HAVE_GPU)
-      ShallowArray<LifeNode, 1000, 4> _nodes;
-#endif
-#if defined(HAVE_GPU)
+#if defined(HAVE_GPU) 
+   public:
+      //TUAN: we can use 'public' or derive a function (with auto-generated name)
+    #if PROXY_ALLOCATION == OPTION_4
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_value;
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_publicValue;
+      ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, 
+         Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_neighbors;
+    #endif
+
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
+      //TUAN TODO test to see if we can reduce 'InitNode' execution time
+   #ifdef TEST_INITNODE_ON_CPU
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::CPU> init_um_value; //for storing data from 'InitNode' statement
+   #endif
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_publicValue;
+   #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, 
+         Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
+      //int* um_value; //to be allocated using cudaMallocManaged
+      //int* um_publicValue; //to be allocated using cudaMallocManaged
+      //std::vector<int*> um_neighbors;
+      //ShallowArray_Flat<ShallowArray< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+      //always 'int' for the two below arrays
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+      //always 'int' for the two below arrays
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+      int um_neighbors_max_elements;
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+      //always 'int' for the below array
+      ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+   #endif
+   protected:
       ShallowArray_Flat<LifeNode, Array_Flat<int>::MemLocation::CPU, 1000> _nodes;
+#else
+      ShallowArray<LifeNode, 1000, 4> _nodes;
 #endif
       ConnectionIncrement _computeCost;
    private:
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       std::map<std::string, CG_T_SendFunctionPtr> CG_sendTemplates;
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
       std::map<std::string, CG_T_GetSendTypeFunctionPtr> CG_getSendTypeTemplates;
 #endif
 };

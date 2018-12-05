@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM
 //
-// BCM-YKT-12-03-2018
+// BCM-YKT-07-18-2017
 //
-//  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
 // GSA ADP Schedule Contract with IBM Corp.
@@ -22,60 +22,64 @@
 #include "CG_LifeNodeNodeAccessor.h"
 #include "CG_LifeNodeOutAttrPSet.h"
 #include "CG_LifeNodePSet.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "CG_LifeNodeProxy.h"
 #endif
 #include "CG_LifeNodeSharedMembers.h"
 #include "CG_LifeNodeWorkUnitGridLayers.h"
 #include "CG_LifeNodeWorkUnitInstance.h"
 #include "CG_LifeNodeWorkUnitShared.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "ConnectionIncrement.h"
 #endif
 #include "GridLayerData.h"
 #include "GridLayerDescriptor.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "IndexedBlockCreator.h"
 #endif
 #include "LifeNode.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "MemPattern.h"
 #endif
 #include "NodeCompCategoryBase.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "OutputStream.h"
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "Phase.h"
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include "ShallowArray.h"
 #endif
 #include "Simulation.h"
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include <cassert>
 #endif
 #include <deque>
 #include <iostream>
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include <list>
 #endif
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 #include <map>
 #endif
 #include <memory>
 #include <set>
 #include <string>
+#include <numeric>
+#include <cmath>
 
-#ifdef HAVE_GPU
+#ifdef TEST_USING_GPU_COMPUTING
 #include "LifeNodeCompCategory.cu"
+#endif
+#ifdef TEST_USING_GPU_COMPUTING
 #include "LifeNodeCompCategory.incl"
 #endif
 
-#if defined(HAVE_MPI)
-#endif
+
 CG_LifeNodeCompCategory::CG_LifeNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
-   : NodeCompCategoryBase(sim, modelName){
+   : NodeCompCategoryBase(sim, modelName)
+{
    if (CG_sharedMembers==0) {
       CG_sharedMembers = new CG_LifeNodeSharedMembers();
       CG_sharedMembers->setUp(ndpList);
@@ -102,7 +106,7 @@ void CG_LifeNodeCompCategory::getOutAttrParameterSet(std::unique_ptr<ParameterSe
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
-#if defined(HAVE_GPU)
+#if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
    ShallowArray_Flat<LifeNode>::iterator end = _nodes.begin();
 #else
@@ -112,13 +116,13 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_initialize(NodePartitionItem* arg
    it += arg->startIndex;
    end += arg->endIndex;
    for (; it <= end; ++it) {
-      (*it).initialize(rng);
+     (*it).initialize(wu->getRNG());
    }
 }
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
-#if defined(HAVE_GPU)
+#if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
    ShallowArray_Flat<LifeNode>::iterator end = _nodes.begin();
 #else
@@ -128,13 +132,13 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_update(NodePartitionItem* arg, CG
    it += arg->startIndex;
    end += arg->endIndex;
    for (; it <= end; ++it) {
-      (*it).update(rng);
+     (*it).update(wu->getRNG());
    }
 }
 
 void CG_LifeNodeCompCategory::CG_InstancePhase_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
 {
-#if defined(HAVE_GPU)
+#if defined(HAVE_GPU) 
    ShallowArray_Flat<LifeNode>::iterator it = _nodes.begin();
    ShallowArray_Flat<LifeNode>::iterator end = _nodes.begin();
 #else
@@ -144,117 +148,109 @@ void CG_LifeNodeCompCategory::CG_InstancePhase_copy(NodePartitionItem* arg, CG_L
    it += arg->startIndex;
    end += arg->endIndex;
    for (; it <= end; ++it) {
-      (*it).copy(rng);
+      (*it).copy(wu->getRNG());
    }
 }
 
 void CG_LifeNodeCompCategory::getWorkUnits() 
 {
+  
+   switch(_sim.getPhaseMachineType("initialize"))
    {
-      switch(_sim.getPhaseMachineType("initialize") )
-      {
-         case machineType::CPU :
-         {
-            NodePartitionItem* it = _CPUpartitions;
-            NodePartitionItem* end = it + _nbrCPUpartitions;
-            for (; it < end; ++it) {
-               WorkUnit* workUnit = 
-                  new CG_LifeNodeWorkUnitInstance(it,
-                     &CG_LifeNodeCompCategory::CG_InstancePhase_initialize, this);
-               _workUnits["initialize"].push_back(workUnit);
-            }
-            _sim.addWorkUnits(getSimulationPhaseName("initialize"), _workUnits["initialize"] );
-         }
-         break;
-
-         case machineType::GPU :
-         {
-            NodePartitionItem* it = _GPUpartitions;
-            NodePartitionItem* end = it + _nbrGPUpartitions;
-            for (; it < end; ++it) {
-               WorkUnit* workUnit = 
-                  new CG_LifeNodeWorkUnitInstance(it,
-                     &CG_LifeNodeCompCategory::CG_host_initialize, this);
-               _workUnits["initialize"].push_back(workUnit);
-            }
-            _sim.addWorkUnits(getSimulationPhaseName("initialize"), _workUnits["initialize"] );
-         }
-         break;
-
-         default : assert(0); break;
+     case machineType::GPU :
+     {
+      NodePartitionItem* it = _GPUpartitions;
+      NodePartitionItem* end = it + _nbrGPUpartitions;
+      for (; it < end; ++it) {
+         WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_host_initialize, this);
+         _workUnits["initialize"].push_back(workUnit);
       }
+      _sim.addWorkUnits(getSimulationPhaseName("initialize"), _workUnits["initialize"] );
+     }
+     break;
+
+     case machineType::CPU :
+     {
+      NodePartitionItem* it = _CPUpartitions;
+      NodePartitionItem* end = it + _nbrCPUpartitions;
+      for (; it < end; ++it) {
+         WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_InstancePhase_initialize, this);
+         _workUnits["initialize"].push_back(workUnit);
+      }
+      _sim.addWorkUnits(getSimulationPhaseName("initialize"), _workUnits["initialize"] );
+     }
+     break;
+
+     default :
+      assert(0);
+      break;
    }
+   
+   switch(_sim.getPhaseMachineType("update"))
    {
-      switch(_sim.getPhaseMachineType("update") )
-      {
-         case machineType::CPU :
-         {
-            NodePartitionItem* it = _CPUpartitions;
-            NodePartitionItem* end = it + _nbrCPUpartitions;
-            for (; it < end; ++it) {
-               WorkUnit* workUnit = 
-                  new CG_LifeNodeWorkUnitInstance(it,
-                     &CG_LifeNodeCompCategory::CG_InstancePhase_update, this);
-               _workUnits["update"].push_back(workUnit);
-            }
-            _sim.addWorkUnits(getSimulationPhaseName("update"), _workUnits["update"] );
-         }
-         break;
-
-         case machineType::GPU :
-         {
-            NodePartitionItem* it = _GPUpartitions;
-            NodePartitionItem* end = it + _nbrGPUpartitions;
-            for (; it < end; ++it) {
-               WorkUnit* workUnit = 
-                  new CG_LifeNodeWorkUnitInstance(it,
-                     &CG_LifeNodeCompCategory::CG_host_update, this);
-               _workUnits["update"].push_back(workUnit);
-            }
-            _sim.addWorkUnits(getSimulationPhaseName("update"), _workUnits["update"] );
-         }
-         break;
-
-         default : assert(0); break;
+     case machineType::GPU :
+     {
+      NodePartitionItem* it = _GPUpartitions;
+      NodePartitionItem* end = it + _nbrGPUpartitions;
+      for (; it < end; ++it) {
+         WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_host_update, this);
+         _workUnits["update"].push_back(workUnit);
       }
+      _sim.addWorkUnits(getSimulationPhaseName("update"), _workUnits["update"] );
+     }
+     break;
+
+     case machineType::CPU :
+     {
+      NodePartitionItem* it = _CPUpartitions;
+      NodePartitionItem* end = it + _nbrCPUpartitions;
+      for (; it < end; ++it) {
+         WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_InstancePhase_update, this);
+         _workUnits["update"].push_back(workUnit);
+      }
+      _sim.addWorkUnits(getSimulationPhaseName("update"), _workUnits["update"] );
+     }
+     break;
+      
+     default :
+      assert(0);
+      break;
    }
+
+   
+   switch(_sim.getPhaseMachineType("copy"))
    {
-      switch(_sim.getPhaseMachineType("copy") )
-      {
-         case machineType::CPU :
-         {
-            NodePartitionItem* it = _CPUpartitions;
-            NodePartitionItem* end = it + _nbrCPUpartitions;
-            for (; it < end; ++it) {
-               WorkUnit* workUnit = 
-                  new CG_LifeNodeWorkUnitInstance(it,
-                     &CG_LifeNodeCompCategory::CG_InstancePhase_copy, this);
-               _workUnits["copy"].push_back(workUnit);
-            }
-            _sim.addWorkUnits(getSimulationPhaseName("copy"), _workUnits["copy"] );
-         }
-         break;
-
-         case machineType::GPU :
-         {
-            NodePartitionItem* it = _GPUpartitions;
-            NodePartitionItem* end = it + _nbrGPUpartitions;
-            for (; it < end; ++it) {
-               WorkUnit* workUnit = 
-                  new CG_LifeNodeWorkUnitInstance(it,
-                     &CG_LifeNodeCompCategory::CG_host_copy, this);
-               _workUnits["copy"].push_back(workUnit);
-            }
-            _sim.addWorkUnits(getSimulationPhaseName("copy"), _workUnits["copy"] );
-         }
-         break;
-
-         default : assert(0); break;
+     case machineType::GPU :
+     {
+      NodePartitionItem* it = _GPUpartitions;
+      NodePartitionItem* end = it + _nbrGPUpartitions;
+      for (; it < end; ++it) {
+         WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_host_copy, this);
+         _workUnits["copy"].push_back(workUnit);
       }
+      _sim.addWorkUnits(getSimulationPhaseName("copy"), _workUnits["copy"] );
+     }
+     break;
+
+     case machineType::CPU :
+     {
+      NodePartitionItem* it = _CPUpartitions;
+      NodePartitionItem* end = it + _nbrCPUpartitions;
+      for (; it < end; ++it) {
+	WorkUnit* workUnit = new CG_LifeNodeWorkUnitInstance(it, &CG_LifeNodeCompCategory::CG_InstancePhase_copy, this);
+	_workUnits["copy"].push_back(workUnit);
+      }
+      _sim.addWorkUnits(getSimulationPhaseName("copy"), _workUnits["copy"] );
+     }
+     break;
+
+     default :
+      assert(0);
+      break;
    }
 }
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::addToSendMap(int toPartitionId, Node* node) 
 {
    CG_LifeNode* localNode = dynamic_cast<CG_LifeNode*>(node);
@@ -273,17 +269,45 @@ void CG_LifeNodeCompCategory::addToSendMap(int toPartitionId, Node* node)
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::allocateProxy(int fromPartitionId, NodeDescriptor* nd) 
 {
+#if defined(HAVE_GPU) 
+   #if PROXY_ALLOCATION == OPTION_3
+      /* local proxy data + local _receiveList */
+      CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
+      NodeProxyBase* proxy = ccd->addDestination();
+      proxy->setNodeDescriptor(nd);
+      ((CG_LifeNodeProxy*)proxy)->setCompCategory(ccd->_receiveList.size()-1, this, fromPartitionId);
+      nd->setNode(proxy);
+   #elif PROXY_ALLOCATION == OPTION_4
+      CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
+      /* global proxy data */
+      int sz = proxy_um_value.size()+1;
+      public_um_value.increaseSizeTo(sz);
+      public_um_publicValue.increaseSizeTo(sz);
+      public_um_neighbors.increaseSizeTo(sz);
+      int MAX_SUBARRAY_SIZE = 20;
+      //NOTE: um_neighbors is an array of array
+      public_um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
+
+      /* local _receiveList */
+      NodeProxyBase* proxy = ccd->addDestination();
+      proxy->setNodeDescriptor(nd);
+      ((CG_LifeNodeProxy*)proxy)->setCompCategory(sz-1, this);
+      nd->setNode(proxy);
+   #endif
+   
+#else
    CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
    NodeProxyBase* proxy = ccd->addDestination();
    proxy->setNodeDescriptor(nd);
    nd->setNode(proxy);
+#endif
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::addVariableNamesForPhase(std::set<std::string>& namesSet, const std::string& phase) 
 {
    if (phase == "copy") {
@@ -292,7 +316,7 @@ void CG_LifeNodeCompCategory::addVariableNamesForPhase(std::set<std::string>& na
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::setDistributionTemplates() 
 {
    CG_sendTemplates["FLUSH_LENS"] = &CG_LifeNode::CG_send_FLUSH_LENS;
@@ -307,14 +331,14 @@ void CG_LifeNodeCompCategory::setDistributionTemplates()
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::resetSendProcessIdIterators() 
 {
    _sendMapIter=_sendMap.begin();
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 int CG_LifeNodeCompCategory::getSendNextProcessId() 
 {
    int rval=-1;
@@ -324,21 +348,21 @@ int CG_LifeNodeCompCategory::getSendNextProcessId()
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 bool CG_LifeNodeCompCategory::atSendProcessIdEnd() 
 {
    return (_sendMapIter==_sendMap.end());
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 void CG_LifeNodeCompCategory::resetReceiveProcessIdIterators() 
 {
    _demarshallerMapIter=_demarshallerMap.begin();
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 int CG_LifeNodeCompCategory::getReceiveNextProcessId() 
 {
    int rval=-1;
@@ -348,14 +372,14 @@ int CG_LifeNodeCompCategory::getReceiveNextProcessId()
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 bool CG_LifeNodeCompCategory::atReceiveProcessIdEnd() 
 {
    return (_demarshallerMapIter==_demarshallerMap.end());
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 int CG_LifeNodeCompCategory::setMemPattern(std::string phaseName, int dest, MemPattern* mpptr) 
 {
    std::map<std::string, CG_T_GetSendTypeFunctionPtr>::iterator fiter = CG_getSendTypeTemplates.find(phaseName);
@@ -422,7 +446,7 @@ int CG_LifeNodeCompCategory::setMemPattern(std::string phaseName, int dest, MemP
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 int CG_LifeNodeCompCategory::getIndexedBlock(std::string phaseName, int dest, MPI_Datatype* blockType, MPI_Aint& blockLocation) 
 {
    std::map<std::string, CG_T_GetSendTypeFunctionPtr>::iterator fiter = CG_getSendTypeTemplates.find(phaseName);
@@ -480,14 +504,14 @@ int CG_LifeNodeCompCategory::getIndexedBlock(std::string phaseName, int dest, MP
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 IndexedBlockCreator* CG_LifeNodeCompCategory::getReceiveBlockCreator(int fromPartitionId) 
 {
    return getDemarshaller(fromPartitionId);
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 CG_LifeNodeCompCategory::CCDemarshaller* CG_LifeNodeCompCategory::getDemarshaller(int fromPartitionId) 
 {
    CCDemarshaller* ccd=0;
@@ -500,7 +524,7 @@ CG_LifeNodeCompCategory::CCDemarshaller* CG_LifeNodeCompCategory::getDemarshalle
 }
 #endif
 
-#if defined(HAVE_MPI)
+#ifdef HAVE_MPI
 CG_LifeNodeCompCategory::CCDemarshaller* CG_LifeNodeCompCategory::findDemarshaller(int fromPartitionId) 
 {
    CCDemarshaller* ccd;
@@ -546,31 +570,47 @@ void CG_LifeNodeCompCategory::getNodeAccessor(std::unique_ptr<NodeAccessor>& nod
 void CG_LifeNodeCompCategory::allocateNode(NodeDescriptor* nd) 
 {
    _nodes.increaseSizeTo(_nodes.size()+1);
-#ifdef HAVE_GPU
+#if defined(HAVE_GPU) 
    int sz = _nodes.size();
-   _nodes[sz-1].setCompCategory(sz-1, this);
+   //TUAN TODO
+   //// maybe we want CG_LifeNode to have a static (i.e. single copy)
+   // data member _container, as there is actually only 1 copy of LifeNodeCompCategory
+   _nodes[_nodes.size()-1].setCompCategory(_nodes.size()-1, this);
    um_value.increaseSizeTo(sz);
    um_publicValue.increaseSizeTo(sz);
-   #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-      um_neighbors.increaseSizeTo(sz);
-      int MAX_SUBARRAY_SIZE = 20;
-      um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
-   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      int MAX_SUBARRAY_SIZE = 20;
-      um_neighbors.increaseSizeTo(sz*MAX_SUBARRAY_SIZE);
-      um_neighbors_start_offset.increaseSizeTo(sz);
-      um_neighbors_num_elements.increaseSizeTo(sz);
-      um_neighbors_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;
-      um_neighbors_num_elements[sz-1] = 0;
-   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      um_neighbors.increaseSizeTo(sz*um_neighbors_max_elements);
-      um_neighbors_num_elements.increaseSizeTo(sz);
-      um_neighbors_num_elements[sz-1] = 0;
-   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-      um_neighbors.increaseSizeTo(sz * MAX_SUBARRAY_SIZE);
-      um_neighbors_start_offset.increaseSizeTo(sz);
-      um_neighbors_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;
-   #endif
+
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   //NODE for array, we may want to consider allocate the internal array 
+   //// with large enough size
+   //by checking of type is a pointer
+   um_neighbors.increaseSizeTo(sz);
+   int MAX_SUBARRAY_SIZE = 20;
+   //NOTE: um_neighbors is an array of array
+   //TUAN
+   ////This is the one that hurt the performance of initialization
+   um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   int MAX_SUBARRAY_SIZE = 20;
+   um_neighbors.increaseSizeTo(sz*MAX_SUBARRAY_SIZE);
+   um_neighbors_start_offset.increaseSizeTo(sz);
+   um_neighbors_num_elements.increaseSizeTo(sz);
+   um_neighbors_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;
+   um_neighbors_num_elements[sz-1] = 0; //TUAN TODO consider having an API to ShallowArray to set all values
+   // which internally calls cudaMemSet or an equivalent functions
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   um_neighbors.increaseSizeTo(sz*um_neighbors_max_elements);
+   um_neighbors_num_elements.increaseSizeTo(sz);
+   um_neighbors_num_elements[sz-1] = 0; //TUAN TODO consider having an API to ShallowArray to set all values
+   // which internally calls cudaMemSet or an equivalent functions
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   //do something here
+   //int MAX_SUBARRAY_SIZE = 20;
+   um_neighbors.increaseSizeTo(sz*MAX_SUBARRAY_SIZE);
+   um_neighbors_start_offset.increaseSizeTo(sz);
+   // NOTE: We need an internal data structure to keep tracks how many incoming connections to a given 'reference' data array 
+   // TUAN TODO fix this equation
+   um_neighbors_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;
+#endif
 #endif
    _nodes[_nodes.size()-1].setNodeDescriptor(nd);
    nd->setNode(&_nodes[_nodes.size()-1]);
@@ -579,31 +619,82 @@ void CG_LifeNodeCompCategory::allocateNode(NodeDescriptor* nd)
 
 void CG_LifeNodeCompCategory::allocateNodes(size_t size) 
 {
-#ifdef HAVE_GPU
+#if defined(HAVE_GPU) 
    bool force_resize = true;
    _nodes.resize_allocated(size, force_resize);
    um_value.resize_allocated(size, force_resize);
    um_publicValue.resize_allocated(size, force_resize);
-   #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-      um_neighbors.resize_allocated(size, force_resize);
-   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-      um_neighbors.resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);
-      um_neighbors_start_offset.resize_allocated(size, force_resize);
-      um_neighbors_num_elements.resize_allocated(size, force_resize);
-   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-      int MAX_SUBARRAY_SIZE = 20;
-      um_neighbors_max_elements = MAX_SUBARRAY_SIZE;
-      um_neighbors.resize_allocated(size*um_neighbors_max_elements, force_resize);
-      um_neighbors_num_elements.resize_allocated(size, force_resize);
-   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-      assert(0);
-   #endif
+   /*
+    * MDL:   int*[] neighbors;
+    * C++:
+    *     ShallowArray<  ShallowArray<int*> > um_neighbors;l
+    */
+   //NODE for array, we may want to consider allocate the internal array 
+   //// with large enough size
+   //by checking of type is a pointer
+   //NOTE: We need to make a choice
+   // 1. orgnanize as single-large 
+   // *     ShallowArray<int*> um_neighbors;
+   // with elements from 
+   //  um_neighbors[(i-1)* MAX_SUBARRAY_SIZE : i * MAX_SUBARRAY_SIZE-1]
+   //     are where elements from node[i]'s um_neighbors
+   // new_size = size * MAX_SUBARRAY_SIZE
+   //um_neighbors.resize_allocated(size, MAX_SUBARRAY_SIZE, force_resize);
+   // 2. orgnanize as array of array
+   // * C++:
+   // *     ShallowArray<  ShallowArray<int*> > um_neighbors;l
+   // with elements from 
+   //  [(i-1)* MAX_SUBARRAY_SIZE : i * MAX_SUBARRAY_SIZE-1]
+   //     are where elements from um_neighbors[i] reside 
+   //   This requires modify the allocator, so that it first allocated large enough memory
+   
+   //    and have a check inside ::resize_allocated
+   //    of non-zero _num
+   //um_neighbors.set_preallocated_size(MAX_SUBARRAY_SIZE);
+   //um_neighbors.resize_allocated_array(size, force_resize, MAX_SUBARRAY_SIZE);
+   //um_neighbors.resize_allocated_array(size, force_resize, MAX_SUBARRAY_SIZE);
+   // 3. orgnanize as array of array
+   //     ShallowArray<ShallowArray<T>>
+#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+   //do nothing
+   um_neighbors.resize_allocated(size, force_resize);
+   //NOTE: we put the code inside :allocateNode
+   //  and potentially ::allocateProxy
+   //int MAX_SUBARRAY_SIZE = 20;
+   ////if (isDerivedFrom<Array_Flat, decltype(um_neighbors[0])>::value)
+   //{
+   //   for (int i = 0; i < size; i++)
+   //      um_neighbors[i].resize_allocated_subarray(MAX_SUBARRAY_SIZE);
+   //}
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   //do something here
+   um_neighbors.resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);
+   um_neighbors_start_offset.resize_allocated(size, force_resize);
+   um_neighbors_num_elements.resize_allocated(size, force_resize);
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+   //do something here
+   int MAX_SUBARRAY_SIZE = 20;
+   um_neighbors_max_elements = MAX_SUBARRAY_SIZE;
+   um_neighbors.resize_allocated(size*um_neighbors_max_elements, force_resize);
+   um_neighbors_num_elements.resize_allocated(size, force_resize);
+#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+   //do something here
+   int um_neighbors_total_connections=0;
+   // NOTE: We need an internal data structure to keep tracks how many incoming connections to a given 'reference' data array 
+   /*
+    for each node
+    {
+           um_neighbors_total_connection += node[i].num_input_connections_for(um_neighbors);
+    }
+    */
+   um_neighbors.resize_allocated(um_neighbors_total_connection, force_resize);
+#endif
 #endif
 }
 
-void CG_LifeNodeCompCategory::allocateProxies(const std::vector<size_t>& sizes) 
+void CG_LifeNodeCompCategory::allocateProxies(const std::vector<int>& sizes)
 {
-#ifdef HAVE_GPU
+#if defined(HAVE_GPU) 
    unsigned my_rank = _sim.getRank();
    bool force_resize = true;
 #if PROXY_ALLOCATION == OPTION_3
@@ -615,15 +706,29 @@ void CG_LifeNodeCompCategory::allocateProxies(const std::vector<size_t>& sizes)
          int size = sizes[i];
          if (size > 0)
          {
+            //kv.second->allocateProxies(kv.first, sizes[kv.first])
             ccd->_receiveList.resize_allocated(size, force_resize);
-            ccd->value.resize_allocated(size, force_resize);
-            ccd->publicValue.resize_allocated(size, force_resize);
-            ccd->neighbors.resize_allocated(size, force_resize);
+            ccd->um_value.resize_allocated(size, force_resize);
+            ccd->um_publicValue.resize_allocated(size, force_resize);
+            ccd->um_neighbors.resize_allocated(size, force_resize);
          }
       }
    }
+   //for (auto& kv : _demarshallerMap)
+   //{
+   //   if (kv.first != my_rank)
+   //   {
+   //      CCDemarshaller* ccd = findDemarshaller(kv.first);
+   //      int size = sizes[kv.first];
+   //      //kv.second->allocateProxies(kv.first, sizes[kv.first])
+   //      ccd->_receiveList.resize_allocated(size, force_resize);
+   //      ccd->um_value.resize_allocated(size, force_resize);
+   //      ccd->um_publicValue.resize_allocated(size, force_resize);
+   //      ccd->um_neighbors.resize_allocated(size, force_resize);
+   //   }
+   //}
 #elif PROXY_ALLOCATION == OPTION_4
-   int total = std::accumulate(sizes.begin(), sizes.end(), 0);
+   int total = std::accumulate(sizes.begin(), sizes.end(), 0); 
    assert(0);
    int offset = 0;
    for (int i = 0; i < _sim.getNumProcesses(); i++)
@@ -643,6 +748,8 @@ void CG_LifeNodeCompCategory::allocateProxies(const std::vector<size_t>& sizes)
    this->proxy_um_value.resize_allocated(total, force_resize);
    this->proxy_um_publicValue.resize_allocated(total, force_resize);
    this->proxy_um_neighbors.resize_allocated(total, force_resize);
+#endif
+
 #endif
 }
 
