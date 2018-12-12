@@ -445,6 +445,8 @@ void CompCategoryBase::generateCompCategoryBase(Class* ptr)
    instance->addHeader("<string>");
    instance->addHeader("<iostream>");
    instance->addHeader("<set>");
+   instance->addHeader("<numeric>");
+   instance->addHeader("<cmath>");
    instance->addHeader("\"" + getPSetName() + ".h\"");
    instance->addHeader("\"" + getInAttrPSetName() + ".h\"");
    instance->addHeader("\"" + getOutAttrPSetName() + ".h\"");
@@ -846,14 +848,14 @@ std::string CompCategoryBase::createAllocateProxyMethodBody(std::string firstPar
          << TAB <<"   int MAX_SUBARRAY_SIZE = 20;\n";
       for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
 	 if (it == getInstances().begin())
-	    os << TAB <<"   int sz = " << PREFIX_MEMBERNAME << it->first << ".size()+1;\n";
+	    os << TAB <<"   int sz = " << PREFIX_PROXY_MEMBERNAME << it->first << ".size()+1;\n";
 	 os << TAB << TAB 
-	    << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
+	    << PREFIX_PROXY_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
 	 if (it->second->isArray())
 	 {
 	    //NOTE: um_neighbors is an array of array
 	    os << TAB << TAB 
-	       << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " 
+	       << PREFIX_PROXY_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " 
 	       << MEMORY_LOCATION << ");\n";
 	 }
       }

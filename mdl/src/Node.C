@@ -567,7 +567,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    allocateProxiesMethodFB
       << "#elif PROXY_ALLOCATION == OPTION_4\n"
    << TAB << "int total = std::accumulate(sizes.begin(), sizes.end(), 0);\n"
-   << TAB << "assert(0);\n"
+   //<< TAB << "assert(0);\n"
    << TAB << "int offset = 0;\n"
    << TAB << "for (int i = 0; i < _sim.getNumProcesses(); i++)\n"
    << TAB << "{\n"

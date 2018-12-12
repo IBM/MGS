@@ -52,8 +52,8 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 //  OPTION_3 = means each CCDemarshaller has its own array of data, tracking the mapping to nodes in a different rank
 //  OPTION_4 = means each CCDemarshaller only keep the index to the data, 
 //    data nows belong to the global proxy-data array in the xxxCompCategory
-#define PROXY_ALLOCATION  OPTION_3
-//#define PROXY_ALLOCATION  OPTION_4
+//#define PROXY_ALLOCATION  OPTION_3
+#define PROXY_ALLOCATION  OPTION_4
 
 //NOTE: By default, a scalar data member (say float type) of LifeNode is re-organized as
 //   class CG_LifeNodeCompCategory{
