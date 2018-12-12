@@ -349,7 +349,8 @@ class Simulation : public Publishable {
   /* however, if we're only interested in the current rank
    * i.e. key = current_rank
    */
-  std::map< std::string,  std::vector<int>  > _proxy_count;  //maybe slower
+  std::map< std::string,  std::vector<size_t>  > _proxy_count;  //maybe slower [use size_t]
+  //std::map< std::string,  std::vector<int>  > _proxy_count;  //maybe slower
   //std::map< std::string,  std::list<int>  > _proxy_count;
   // representing the connection from nodetype1 to nodetype2
   // NOTE: consider using the 'LifeNode' or 'CG_LifeNodeProxy' for the string

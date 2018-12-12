@@ -252,7 +252,7 @@ class Class
 
 	    ArrayType* arr_dt = dynamic_cast<ArrayType*>(dt);
 	    os_gpu << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-	       << TAB << "ShallowArray_Flat<" << arr_dt->getType()->getTypeString() << ", Array_Flat<int>::MemLocation::UNIFIED_MEM>* " << dt->getName() << ",\n"
+	       << TAB << "ShallowArray_Flat<" << arr_dt->getType()->getTypeString() << ", " << MEMORY_LOCATION << ">* " << dt->getName() << ",\n"
 	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
 	       << TAB << arr_dt->getType()->getTypeString() << "* " << dt->getName() << ",\n"
 	       << TAB << "int* " << dt->getName() << "_start_offset,\n"

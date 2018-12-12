@@ -829,11 +829,67 @@ std::string CompCategoryBase::createAddNodeMethodBody(std::string firstParam, st
 std::string CompCategoryBase::createAllocateProxyMethodBody(std::string firstParam, std::string secondParam) const
 {
    std::ostringstream os;
+   //if (!strcmp(getType().c_str(), "Node") )
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      os << STR_GPU_CHECK_START
+         << TAB <<"#if PROXY_ALLOCATION == OPTION_3\n"
+         << TAB <<"   /* local proxy data + local _receiveList */\n"
+         << TAB <<"   CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+         << TAB <<"   NodeProxyBase* proxy = ccd->addDestination();\n"
+         << TAB <<"   proxy->setNodeDescriptor(nd);\n"
+         << TAB <<"   ((" << getInstanceProxyName() << "*)proxy)->setCompCategory(ccd->_receiveList.size()-1, this, fromPartitionId);\n"
+         << TAB <<"   nd->setNode(proxy);\n"
+         << TAB <<"#elif PROXY_ALLOCATION == OPTION_4\n"
+         << TAB <<"   CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+         << TAB <<"   /* global proxy data */\n"
+         << TAB <<"   int MAX_SUBARRAY_SIZE = 20;\n";
+      for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+	 if (it == getInstances().begin())
+	    os << TAB <<"   int sz = " << PREFIX_MEMBERNAME << it->first << ".size()+1;\n";
+	 os << TAB << TAB 
+	    << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
+	 if (it->second->isArray())
+	 {
+	    //NOTE: um_neighbors is an array of array
+	    os << TAB << TAB 
+	       << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " 
+	       << MEMORY_LOCATION << ");\n";
+	 }
+      }
+      //os << TAB <<"       proxy_um_value.increaseSizeTo(sz);
+      //os << TAB <<"       proxy_um_publicValue.increaseSizeTo(sz);
+      //os << TAB <<"       proxy_um_neighbors.increaseSizeTo(sz);
+      //os << TAB <<"       //NOTE: um_neighbors is an array of array
+      //os << TAB <<"       proxy_um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
+      //os << TAB <<" 
+      os << TAB <<"   /* local _receiveList */\n"
+         << TAB <<"   NodeProxyBase* proxy = ccd->addDestination();\n"
+         << TAB <<"   proxy->setNodeDescriptor(nd);\n"
+      //os << TAB <<"   ((CG_LifeNodeProxy*)proxy)->setCompCategory(sz-1, this);
+         << TAB <<"   ((" << getInstanceProxyName() << "*)proxy)->setCompCategory(sz-1, this);\n"
+         << TAB <<"   nd->setNode(proxy);\n"
+         << TAB <<"#endif\n"
+         << TAB <<"\n"   
+         << " #else\n"
+      //os << TAB <<"    CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
+      //os << TAB <<"    NodeProxyBase* proxy = ccd->addDestination();
+      //os << TAB <<"    proxy->setNodeDescriptor(nd);
+      //os << TAB <<"    nd->setNode(proxy);\n"
+         << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+         << TAB << getType() << "ProxyBase* proxy = ccd->addDestination();\n"
+         << TAB << "proxy->set" + getType() + "Descriptor(" + secondParam + ");\n";
+      if (!strcmp(getType().c_str(), "Variable")) os << TAB << "proxy->setVariableType(this);\n";
+      os << TAB << secondParam + "->set" + getType() + "(proxy);\n";               
+      os << STR_GPU_CHECK_END; 
+   }
+   else{
    os << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n";
    os << TAB << getType() << "ProxyBase* proxy = ccd->addDestination();\n";
    os << TAB << "proxy->set" + getType() + "Descriptor(" + secondParam + ");\n";
    if (!strcmp(getType().c_str(), "Variable")) os << TAB << "proxy->setVariableType(this);\n";
    os << TAB << secondParam + "->set" + getType() + "(proxy);\n";               
+   }
    return os.str();
 }
 
@@ -1615,7 +1671,8 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
 	 {
 	    //NOTE: um_neighbors is an array of array
 	    addDestinationMethodFB << TAB << TAB << TAB 
-	       << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n";
+	       << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " 
+	       << MEMORY_LOCATION << ");\n";
 	 }
       }
       addDestinationMethodFB << TAB << TAB << TAB 

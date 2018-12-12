@@ -74,6 +74,10 @@ const std::string GETDEMARSHALLERINDEX_FUNC_NAME = "getDemarshallerIndex";
 const std::string GETDEMARSHALLER_FUNC_NAME = "getDemarshaller";  // if not found, return 'nullptr'
 const std::string FINDDEMARSHALLER_FUNC_NAME = "findDemarshaller"; //create if not existing
 const std::string GETDATA_FUNC_NAME = "getDataIndex";
+
+const std::string MEMORY_LOCATION = "Array_Flat<int>::MemLocation::UNIFIED_MEM";
+//const std::string MEMORY_LOCATION = "Array_Flat<int>::MemLocation::CPU";
+
 enum class MachineType {
    CPU, GPU, FPGA
 };

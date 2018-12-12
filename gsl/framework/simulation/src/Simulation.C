@@ -176,6 +176,9 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    int deviceCount = -1; // number of devices
    int dev = 0;
 
+//#define DEBUG_FLATARRAY
+#ifdef DEBUG_FLATARRAY
+#else
    gpuErrorCheck(cudaGetDeviceCount(&deviceCount));
 
    if (deviceCount == 0) {
@@ -203,6 +206,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
      printf("     rank %d get GPU %d\n", _rank, dev);
      print_GPU_info(dev);
    }
+#endif
 #endif
  
    // Seed the random number generator

@@ -187,9 +187,31 @@ void Node::generateGridLayerData()
       << TAB << TAB << "   sim->_nodes_granules.erase(\"" << getInstanceName() << "\");\n"
       << TAB << TAB << "   compCategory->allocateNodes(sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank]);\n"
       << TAB << TAB << "}\n"
+      << TAB << TAB << "/* at the first layer then allocate all proxies, i.e. CG_LifeNodeProxy\n"
+      << TAB << TAB << " */\n"
+      << TAB << TAB << "if (sim->_proxy_count.count(\"" << getInstanceName() << "\") == 0)\n"
+      << TAB << TAB << "{\n"
+      << TAB //<< TAB << "   std::vector<int> proxy_from_ranks(sim->getNumProcesses(), 0);\n"
+      << TAB << TAB << "   std::vector<size_t> proxy_from_ranks(sim->getNumProcesses(), 0);\n"
+      << TAB << TAB << "   sim->_proxy_count[\"" << getInstanceName() << "\"] = proxy_from_ranks;\n"
+      << TAB //<< TAB << "   //std::map<Granule*, std::map<std::string, int>> _granulesFrom_NT_count;
+      << TAB << TAB << "   for (auto& kv : sim->_granulesFrom_NT_count)\n"
+      << TAB << TAB << "   {\n"
+      << TAB << TAB << "      int other_rank = kv.first->getPartitionId();\n"
+      << TAB << TAB << "      if (other_rank != my_rank)\n"
+      << TAB << TAB << "      {\n"
+      << TAB << TAB << "         if (kv.second.count(\"" << getInstanceName() << "\") > 0)\n"
+      << TAB << TAB << "            sim->_proxy_count[\"" << getInstanceName() << "\"][other_rank] = kv.second[\"" << getInstanceName() << "\"];\n"
+      << TAB << TAB << "      }\n"
+      << TAB << TAB << "   }\n"
+      << TAB << TAB << "   compCategory->allocateProxies(sim->_proxy_count[\"" << getInstanceName() << "\"]);\n"
+      << TAB << TAB << "}\n"
       << TAB << "}\n"         
       //<< TAB << "*/\n"
       << "#endif\n"
+      << STR_GPU_CHECK_START
+      << "if (! sim->isGranuleMapperPass()) {\n"
+      << STR_GPU_CHECK_END
       << TAB << "for(int n = 0, gn = 0; gn < gridNodes; ++gn) {\n"
       << TAB << TAB << "if (uniformDensity) {\n"
       << TAB << TAB << TAB << "top = (gn + 1) * uniformDensity;\n"
@@ -206,7 +228,10 @@ void Node::generateGridLayerData()
       << TAB << TAB << TAB << TAB << "compCategory->allocateNode(&_nodeInstanceAccessors[n]);\n"
       << TAB << TAB << TAB << "}\n"
       << TAB << TAB << "}\n"
-      << TAB << "}\n";
+      << TAB << "}\n"
+      << STR_GPU_CHECK_START
+      << "}\n"
+      << STR_GPU_CHECK_END;
 
    constructor->setFunctionBody(constructorFB.str());
    std::auto_ptr<Method> consToIns(constructor.release());
@@ -412,7 +437,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	       << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n"
 	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
-	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " << MEMORY_LOCATION << ");\n"
 	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
 	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz*MAX_SUBARRAY_SIZE);\n"
