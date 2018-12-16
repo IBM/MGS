@@ -487,8 +487,11 @@ std::string ConnectionCCBase::getArrayConnectionAccept(
 	 //<< TAB << REF_CC_OBJECT << "->" << elem->getName(MachineType::GPU) 
 	 << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME <<elem->getName() 
 	 << "[" << REF_INDEX << "]"
-	 << insert 
-	 << local 
+	 << insert;
+      if (!pointer) {
+	 os << "*";
+      }
+      os << local 
 	 << "->getData());\n";
       os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
       std::string tmpVarName = PREFIX_MEMBERNAME + elem->getName() + "_index"; 
@@ -499,8 +502,11 @@ std::string ConnectionCCBase::getArrayConnectionAccept(
 	 << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
 	 << elem->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
           << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() 
-	  << ".replace(" << tmpVarName << ", " 
-	  << local 
+	  << ".replace(" << tmpVarName << ", "; 
+      if (!pointer) {
+	 os << "*";
+      }
+      os  << local 
 	  << "->getData());\n";
           //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() 
 	  //<< "[" << tmpVarName << "] = " 
@@ -514,8 +520,11 @@ std::string ConnectionCCBase::getArrayConnectionAccept(
 	  << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "_num_elements["
 	  << REF_INDEX << "]-1;\n"
           << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << ".replace(" 
-	  << tmpVarName << ", " 
-	  << local 
+	  << tmpVarName << ", "; 
+      if (!pointer) {
+	 os << "*";
+      }
+      os << local 
 	  << "->getData());\n";
           //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << elem->getName() << "[" 
 	  //<< tmpVarName << "] = " 
