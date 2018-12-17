@@ -184,10 +184,10 @@ std::string RegularConnection::getConnectionCode(
        //os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
        if (mach_type == MachineType::GPU)
 	  //need to be updated when this condition meet
-	  os << tab << TAB << (*it)->getName() << "TUAN TO UPDATE"<< "(" << functionParameters << ");\n";
+	  //os << tab << TAB << (*it)->getName() << "TUAN TO UPDATE"<< "(" << functionParameters << ");\n";
+	  os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
        else
 	  os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
-
      }
      os << tab << "}; \n";
    }

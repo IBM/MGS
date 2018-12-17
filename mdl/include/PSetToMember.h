@@ -70,6 +70,9 @@ class PSetToMember {
       std::string getPSetToMemberCode(
 	 const std::string& tab, 
 	 std::set<std::string>& requiredIncreases) const;
+      std::string getPSetToMemberCode(
+	    const std::string& tab, std::set<std::string>& requiredIncreases,
+	    MachineType mach_type) const;
    private:
       void destructOwnedHeap();
       void copyOwnedHeap(const PSetToMember& rv);

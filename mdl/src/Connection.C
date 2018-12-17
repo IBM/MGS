@@ -204,7 +204,7 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 			 it2->second->getInterfaceToMemberCode(subtab, requiredIncreases, mach_type);
    }
    psetToMemberCodes = _psetMappings.getPSetToMemberCode(subtab, 
-							 requiredIncreases);
+							 requiredIncreases, mach_type);
 
    end = requiredIncreases.end();
 	 os << tab <<  "if (castMatchLocal) { \n";

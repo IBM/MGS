@@ -213,6 +213,12 @@ void PSetToMember::checkAndExtraWork(const std::string& name,
 std::string PSetToMember::getPSetToMemberCode(
    const std::string& tab, std::set<std::string>& requiredIncreases) const
 {
+   return getPSetToMemberCode(tab, requiredIncreases, MachineType::CPU);
+}
+std::string PSetToMember::getPSetToMemberCode(
+   const std::string& tab, std::set<std::string>& requiredIncreases,
+   MachineType mach_type) const
+{
    std::string psetName = INATTRPSETNAME;   
    std::string memberName;
 
@@ -240,9 +246,63 @@ std::string PSetToMember::getPSetToMemberCode(
 	    << PREFIX << "get_" << _pset->getName() << "_" << it->first 
 	    << "();\n";
       } else { // ONETOMANY
+	 std::string getMethod;
+	 getMethod = psetName + "->" + it->first;
 	 if (path == "") {
-	    os << tab << memberName << ".insert(" << psetName << "->" 
-	       << it->first << ");\n";
+	    if (mach_type == MachineType::GPU)
+	    {
+	       if (it->second->isArray())
+	       {
+		  std::string tmpVarName = PREFIX_MEMBERNAME + it->second->getName() + "_index"; 
+		  const DataType* dt_ptr = it->second;
+		  os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+		     //<< TAB << memberName << ".insert(" 
+		     //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" << REF_INDEX << "].insert("
+		     << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".insert("
+		     << getMethod << ");\n";
+		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+		  os << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements["
+		     << REF_INDEX << "] +=1;\n"
+		     << TAB << "int " << tmpVarName << " = " 
+		     << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_offset["  
+		     << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
+		     << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() 
+		     << ".replace(" << tmpVarName << ", " 
+		     << getMethod << ");\n";
+		     //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() 
+		     //<< "[" << tmpVarName << "] = " 
+		     //<< getMethod << ");\n";
+		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+		     << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" 
+		     << REF_INDEX << "] +=1;\n"
+		     << TAB << "int " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" 
+		     << PREFIX_MEMBERNAME << dt_ptr->getName() << "_max_elements + " 
+		     << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements["
+		     << REF_INDEX << "]-1;\n"
+		     << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << ".replace(" 
+		     << tmpVarName << ", " 
+		     << getMethod << ");\n";
+		     //<< TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" 
+		     //<< tmpVarName << "] = " 
+		     //<< getMethod << ");\n";
+		  os << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+		     << TAB << "assert(0);\n"
+		     << "#endif\n";
+	       }
+	       else{
+		  os << tab << memberName << ".insert(" << psetName << "->" 
+		     << it->first << ");\n";
+	       }
+	    }
+	    else if (mach_type == MachineType::CPU)
+	    {
+	       os << tab << memberName << ".insert(" << psetName << "->" 
+		  << it->first << ");\n";
+	    }
+	    else{
+	       assert(0);
+	    }
 	 } else {
 	    //pyramidalLateralInputs[CG_pyramidalLateralInputsSize].weight = CG_castedPSet->weight;
 	    if (mach_type == MachineType::GPU)
