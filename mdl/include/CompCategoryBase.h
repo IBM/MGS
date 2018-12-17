@@ -54,6 +54,7 @@ class CompCategoryBase : public InterfaceImplementorBase {
       void generatePSet();
       void generateWorkUnitInstance();
       void generateInstance();
+      void generateInstance(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType, Class* ptr=nullptr);
       void generateCompCategoryBase(Class* ptr=nullptr);
       void generateCompCategory();
       void generateTriggerableCallerInstance();

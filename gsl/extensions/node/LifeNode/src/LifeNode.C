@@ -43,6 +43,10 @@ void LifeNode::update(RNG& rng)
      neighborCount += **iter;
    }
  #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+   /* NOTE: *iter
+    * becomes
+    *       (_container->um_neighbors[idx])
+    */
    auto um_neighbors_from = _container->um_neighbors_start_offset[index];
    auto um_neighbors_to = _container->um_neighbors_num_elements[index]-1;
    for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {

@@ -223,52 +223,62 @@ class Class
          else{
             _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
             _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
-         }
+         };
       }
       void addKernelArgs(DataType* dt, bool sharedData=false){
 	 std::string arg = PREFIX_MEMBERNAME + dt->getName() + ".getDataRef()";
+	 //std::string typeStr = dt->getDescriptor() + "*"; //get array pointer
+	 std::string typeStr = dt->getTypeString() + "*"; //get array pointer
 	 if (sharedData)
+	 {
 	       arg ="getSharedMembers()." + dt->getName();
+	       //typeStr = dt->getDescriptor();
+	       typeStr = dt->getTypeString();
+	 }
 	 std::string param = dt->getName();
-	 std::string typeStr = dt->getDescriptor();
 	 std::ostringstream os;
 	 std::ostringstream os_gpu;
-	 if (dt->isArray())
+	 if (dt->isArray() and not sharedData)
 	 {
+	    std::string arg = PREFIX_MEMBERNAME + dt->getName() ;
+	    std::string comma=", ";
+	    std::string firstcomma = ", ";
+	    if (_gpuKernelArgs.empty())
+	       firstcomma="";
 	    os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-	       << TAB << dt->getName() << ".getDataRef(),\n"
-	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
-	       << TAB << dt->getName() << ".getDataRef(),\n"
-	       << TAB << dt->getName() << "_start_offset.getDataRef(),\n"
-	       << TAB << dt->getName() << "_num_elements.getDataRef(),\n"
-	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
-	       << TAB << dt->getName() << ".getDataRef(),\n"
-	       << TAB << dt->getName() << "_max_elements,\n"
-	       << TAB << dt->getName() << "_num_elements.getDataRef(),\n"
-	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
-	       << TAB << dt->getName() << ".getDataRef(),\n"
-	       << TAB << "//need more info here\n"
-	       << "#endif\n";
+	       << TAB << TAB << firstcomma << arg << ".getDataRef()\n"
+	       << TAB << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << TAB << comma << arg << ".getDataRef()\n"
+	       << TAB << TAB << comma << arg << "_start_offset.getDataRef()\n"
+	       << TAB << TAB << comma << arg << "_num_elements.getDataRef()\n"
+	       << TAB << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << TAB << comma << arg << ".getDataRef()\n"
+	       << TAB << TAB << comma << arg << "_max_elements\n"
+	       << TAB << TAB << comma << arg << "_num_elements.getDataRef()\n"
+	       << TAB << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << TAB << comma << arg << ".getDataRef()\n"
+	       << TAB << TAB << "//need more info here\n"
+	       << TAB << TAB << "#endif\n";
 
 	    ArrayType* arr_dt = dynamic_cast<ArrayType*>(dt);
 	    os_gpu << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-	       << TAB << "ShallowArray_Flat<" << arr_dt->getType()->getTypeString() << ", " << MEMORY_LOCATION << ">* " << dt->getName() << ",\n"
-	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
-	       << TAB << arr_dt->getType()->getTypeString() << "* " << dt->getName() << ",\n"
-	       << TAB << "int* " << dt->getName() << "_start_offset,\n"
-	       << TAB << "int* " << dt->getName() << "_num_elements,\n"
-	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
-	       << TAB << arr_dt->getType()->getTypeString() << "* " << dt->getName() << ",\n"
-	       << TAB << "int " << dt->getName() << "_max_elements,\n"
-	       << TAB << "int* " << dt->getName() << "_num_elements,\n"
-	       << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
-	       << TAB << dt->getDescriptor() << "* " << dt->getName() << "\n"
+	       << TAB << firstcomma << "ShallowArray_Flat<" << arr_dt->getType()->getTypeString() << ", " << MEMORY_LOCATION << ">* " << dt->getName() << "\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << comma << arr_dt->getType()->getTypeString() << "* " << dt->getName() << "\n"
+	       << TAB << comma << "int* " << dt->getName() << "_start_offset\n"
+	       << TAB << comma << "int* " << dt->getName() << "_num_elements\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << comma << arr_dt->getType()->getTypeString() << "* " << dt->getName() << "\n"
+	       << TAB << comma << "int " << dt->getName() << "_max_elements\n"
+	       << TAB << comma << "int* " << dt->getName() << "_num_elements\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << comma << dt->getDescriptor() << "* " << dt->getName() << "\n"
 	       << TAB << "//need more info here\n"
-	       << "#endif\n";
+	       << TAB << "#endif\n";
 	 }
 	 if (_gpuKernelArgs.empty())
 	 {
-	    if (dt->isArray())
+	    if (dt->isArray() and not sharedData)
 	    {
 	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str() + "\n";
 	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
@@ -280,7 +290,7 @@ class Class
 	    }
 	 }
 	 else{
-	    if (dt->isArray())
+	    if (dt->isArray() and not sharedData)
 	    {
 	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + os.str() + "\n";
 	       _gpuKernelArgs += TAB + os_gpu.str() + "\n";
@@ -293,6 +303,21 @@ class Class
 	 }
       }
       void printGPUSource(std::string method, std::ostringstream& os);
+      void addDataNameMapping(std::string nameMapping){
+	 /*
+       #define u  (_container->mu_u[index])
+	  */
+	 _dataNamesInNodes += nameMapping + "\n";
+      }
+      void cloneDataNameMapping(std::string nameMapping){
+	 _dataNamesInNodes = nameMapping;
+      }
+      std::string getDataNameMapping(){
+	 return _dataNamesInNodes ;
+      }
+      void resetDataNameMapping(){
+	 _dataNamesInNodes = "";
+      }
 
       void addSharedDataToKernelArgs(const MemberContainer<DataType>& sharedMembers)
       {
@@ -394,6 +419,7 @@ class Class
       std::map<std::string, std::vector<Method*>> _methodsInDifferentFile;
       std::string _gpuKernelArgsAsCalledFromCPU; //CUDA kernel argument
       std::string _gpuKernelArgs; //CUDA kernel argument
+      std::string _dataNamesInNodes; //define the name to be used in say LifeNode.C when CUDA-awareness code is used 
 };
 
 #endif

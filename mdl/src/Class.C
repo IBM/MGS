@@ -45,7 +45,7 @@ Class::Class()
      _sourceFileBeginning(""), _copyingDisabled(false), _copyingRemoved(false), _templateClass(false), _generateSourceFile(false),
      _memberClass(false), _alternateFileName(""), 
      _classInfo(std::make_pair(PrimeType::UN_SET, SubType::UN_SET)),
-     _gpuKernelArgs("")
+     _gpuKernelArgs(""), _dataNamesInNodes("")
 {
 }
 
@@ -71,7 +71,8 @@ Class::Class(const Class& rv)
      _macroConditional(rv._macroConditional), 
      _typeDefinitions(rv._typeDefinitions),
      _classInfo(rv._classInfo),
-     _gpuKernelArgs(rv._gpuKernelArgs)
+     _gpuKernelArgs(rv._gpuKernelArgs),
+     _dataNamesInNodes(rv._dataNamesInNodes)
 {
    copyOwnedHeap(rv);
 }
@@ -212,6 +213,8 @@ void Class::addAttributes(const MemberContainer<DataType>& members
       addDataTypeHeaders(members);
       addDataTypeDataItemHeaders(members);
       MemberContainer<DataType>::const_iterator it, end = members.end();
+      if (add_gpu_attributes and compcat_ptr)
+	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_START); 
       for (it = members.begin(); it != end; ++it) {
 	 std::auto_ptr<DataType> dup;
 	 it->second->duplicate(dup);
@@ -353,10 +356,17 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	     //std::string kernelArgStr = PREFIX_MEMBERNAME + dt->getName() + ".getDataRef()";
 	     //compcat_ptr->addKernelArgs(kernelArgStr, dt->getName(), dt->getDescriptor()+"* ");
 	     compcat_ptr->addKernelArgs(dt);
+	     if (add_gpu_attributes and compcat_ptr)
+	     {
+	       std::string nameMapping = "#define " + dt->getName() + "  (" + REF_CC_OBJECT + "->" + PREFIX_MEMBERNAME + dt->getName() + "[" + REF_INDEX + "])"; 
+	       compcat_ptr->addDataNameMapping(nameMapping);
+	     }
 	   }
 	 }
 	 addAttribute(att);
       }
+      if (add_gpu_attributes and compcat_ptr)
+	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_END); 
    }
    //extension for GPU 
    if (add_gpu_attributes)
@@ -907,6 +917,15 @@ void Class::generateSource(const std::string& moduleName)
    printHeaders(_extraSourceHeaders, os);
    printClassHeaders(os);
    printHeaders(_headers, os);
+  if (getClassInfoPrimeType() == PrimeType::Node and 
+      getClassInfoSubType() == SubType::Class)
+  {
+    os <<  STR_GPU_CHECK_START;
+    os << "#include \"" << PREFIX << getName() << COMPCATEGORY << ".h\"\n";
+    os << STR_GPU_CHECK_END;
+    os << "\n"
+      << _dataNamesInNodes << "\n";
+  } 
    os << "\n";
 
    std::string cuda_filename = getName();

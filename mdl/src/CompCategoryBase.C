@@ -406,7 +406,22 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
 
 void CompCategoryBase::generateInstance()
 {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   generateInstance(use_classType, classType);
+
+}
+void CompCategoryBase::generateInstance(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType, Class* compcat_ptr)
+{
    std::auto_ptr<Class> instance(new Class(getInstanceName()));
+   //if (isSupportedMachineType(MachineType::GPU) and use_classType)
+   if (use_classType)
+      instance->setClassInfo(classType);
+   if (compcat_ptr)
+   {
+      instance->cloneDataNameMapping(compcat_ptr->getDataNameMapping()) ;
+      compcat_ptr->resetDataNameMapping();
+   }
 
    instance->setUserCode();
 

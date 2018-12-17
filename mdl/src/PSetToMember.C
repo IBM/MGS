@@ -244,11 +244,46 @@ std::string PSetToMember::getPSetToMemberCode(
 	    os << tab << memberName << ".insert(" << psetName << "->" 
 	       << it->first << ");\n";
 	 } else {
-  	    std::string sizeName = PREFIX + memberName + "Size";
-	    requiredIncreases.insert(memberName);
-	    os << tab << memberName << "[" << sizeName << "]" 
-	       << path << " = " << psetName << "->" 
-	       << it->first << ";\n";	    
+	    //pyramidalLateralInputs[CG_pyramidalLateralInputsSize].weight = CG_castedPSet->weight;
+	    if (mach_type == MachineType::GPU)
+	    {
+	       if (it->second->isArray())
+	       {
+		  std::string tmpVarName = PREFIX_MEMBERNAME + it->second->getName() + "_index"; 
+		  const DataType* dt_ptr = it->second;
+		  std::string sizeName = "CG_" + dt_ptr->getName(MachineType::CPU) + "Size"; 
+		  std::string tab = TAB + TAB + TAB;
+		  os << tab << "{\n";
+		  os << tab << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+		     << tab << TAB << "int " << sizeName <<  " =" << dt_ptr->getNameRaw(MachineType::GPU) << ".size();\n"
+		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << "[" << sizeName << "]" << path << " = " << getMethod << ";\n";
+		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+		  os << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "] +=1;\n"
+		     << tab << TAB << "int " << tmpVarName << " = " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_offset["  << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+		     << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" << tmpVarName << "]" << path << " = " << getMethod << ";\n";
+		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+		     << tab << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "] +=1;\n"
+		     << tab << TAB << "int " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_max_elements + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+		     << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" << tmpVarName << "]" << path << " = " << getMethod << ";\n";
+		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+		     << tab << TAB << "assert(0);\n"
+		     << tab << "#endif\n";
+		  os << tab << "}\n";
+	       }
+	       else{
+		  os << tab << memberName << ".insert(" << getMethod << ");\n";
+		  //os << tab << REF_CC_OBJECT << it->getDataType()->getName(mach_type) << ".insert(" << getMethod << ");\n";
+	       }
+	    }
+	    else if (mach_type == MachineType::CPU)
+	    {
+	       std::string sizeName = PREFIX + memberName + "Size";
+	       requiredIncreases.insert(memberName);
+	       os << tab << memberName << "[" << sizeName << "]" 
+		  << path << " = " << psetName << "->" 
+		  << it->first << ";\n";	    
+	    }
 	 }
       }
    }

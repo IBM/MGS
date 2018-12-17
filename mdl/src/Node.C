@@ -63,7 +63,9 @@ void Node::internalGenerateFiles()
    addSupportForMachineType(MachineType::GPU);
 
    std::unique_ptr<Class> compcat_ptr = generateInstanceBase(); //CG_LifeNode.h/,C
-   generateInstance();  //LifeNode.h/C.gen
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);
+   bool use_classType = true;
+   generateInstance(use_classType, classType, compcat_ptr.get());  //LifeNode.h/C.gen
    generateCompCategoryBase(compcat_ptr.release()); //CG_LifeNodeCompCategory.h/.C
    generateCompCategory(); //LifeNodeCompCategory.h/.C.gen
    generateFactory();
@@ -491,10 +493,12 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
 	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	    << TAB << TAB << "{\n"
 	    << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
-	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*um_neighbors_max_elements, force_resize);\n"
+	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*" << PREFIX_MEMBERNAME << it->first <<  "_max_elements, force_resize);\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
+	    << TAB << TAB << "}\n"
 	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
 	    << TAB << TAB << "assert(0);\n"
 	    << TAB << "#endif\n";

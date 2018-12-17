@@ -246,13 +246,71 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
 	       assert(0);
 	    }
 	 } else {
-  	    std::string sizeName = PREFIX + memberName + "Size";
-	    requiredIncreases.insert(memberName);
-//  	    os << tab << "int " << sizeName << " = " << memberName 
-//  	       << ".size();\n"
-// 	       << tab <<  memberName << ".increase();\n";
-	    os << tab << memberName << "[" << sizeName << "]" 
-	       << path << " = " << getMethod << ";\n";	    
+	    if (mach_type == MachineType::GPU)
+	    {
+	       if (it->getDataType()->isArray())
+	       {
+		  std::string tmpVarName = PREFIX_MEMBERNAME + it->getDataType()->getName() + "_index"; 
+		  const DataType* dt_ptr = it->getDataType();
+//#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+//         int CG_pyramidalLateralInputsSize = _container->um_pyramidalLateralInputs[index].size();
+//         _container->um_pyramidalLateralInputs[index].increase();
+//         _container->um_pyramidalLateralInputs[index][CG_pyramidalLateralInputsSize].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         pyramidalLateralInputs[CG_pyramidalLateralInputsSize].weight = CG_castedPSet->weight;
+//#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+//         _container->um_pyramidalLateralInputs_num_elements[index] +=1;
+//         int um_pyramidalLateralInputs_index = _container->um_pyramidalLateralInputs_offset[index] + _container->um_pyramidalLateralInputs_num_elements[index]-1;
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].weight = CG_castedPSet->weight;
+//#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+//         _container->um_pyramidalLateralInputs_num_elements[index] +=1;
+//         int um_pyramidalLateralInputs_index = index * _container->um_pyramidalLateralInputs_max_elements + _container->um_pyramidalLateralInputs_num_elements[index]-1;
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].weight = CG_castedPSet->weight;
+//#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+//   assert(0);
+//#else
+//#endif
+//         int CG_pyramidalLateralInputsSize = pyramidalLateralInputs.size();
+//         pyramidalLateralInputs.increase();
+//         pyramidalLateralInputs[CG_pyramidalLateralInputsSize].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         pyramidalLateralInputs[CG_pyramidalLateralInputsSize].weight = CG_castedPSet->weight;
+		  std::string sizeName = "CG_" + dt_ptr->getName(MachineType::CPU) + "Size"; 
+		  std::string tab = TAB + TAB + TAB;
+		  os << tab << "{\n";
+		  os << tab << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+		     << tab << TAB << "int " << sizeName <<  " =" << dt_ptr->getNameRaw(MachineType::GPU) << ".size();\n"
+		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << "[" << sizeName << "]" << path << " = " << getMethod << ";\n";
+		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
+		  os << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "] +=1;\n"
+		     << tab << TAB << "int " << tmpVarName << " = " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_offset[" << REF_INDEX << "] + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME 
+		     << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+		     << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" << tmpVarName << "]" << path << " = " << getMethod << ";\n";
+		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+		     << tab << TAB <<REF_CC_OBJECT <<  "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "] +=1;\n"
+		     << tab << TAB << "int " << tmpVarName << " = " << REF_INDEX << " * " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_max_elements + " << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "]-1;\n"
+		     << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "[" << tmpVarName << "]" << path << " = " << getMethod << ";\n";
+		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+		     << tab << TAB << "assert(0);\n"
+		     << tab << "#endif\n";
+		  os << tab << "}\n";
+	       }
+	       else{
+		  os << tab << memberName << ".insert(" << getMethod << ");\n";
+		  //os << tab << REF_CC_OBJECT << it->getDataType()->getName(mach_type) << ".insert(" << getMethod << ");\n";
+	       }
+	    }
+	    else if (mach_type == MachineType::CPU)
+	    {
+	       std::string sizeName = PREFIX + memberName + "Size";
+	       requiredIncreases.insert(memberName);
+	       //  	    os << tab << "int " << sizeName << " = " << memberName 
+	       //  	       << ".size();\n"
+	       // 	       << tab <<  memberName << ".increase();\n";
+	       os << tab << memberName << "[" << sizeName << "]" 
+		  << path << " = " << getMethod << ";\n";	    
+	    }
 	 }
       }
    }
