@@ -221,7 +221,7 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
       interfaceCasts.insert(
 	 tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
 
-      if (isSupportedMachineType(MachineType::GPU))
+      if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE)
       {
 	 subBody += STR_GPU_CHECK_START;
 	 subBody += (*it2)->getConnectionCode(getName(), 
@@ -230,7 +230,7 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
       }
       subBody += (*it2)->getConnectionCode(getName(), 
 					   functionParameters) + "\n"; 
-      if (isSupportedMachineType(MachineType::GPU))
+      if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE )
       {
 	 subBody += STR_GPU_CHECK_END;
       }

@@ -191,7 +191,7 @@ void Node::generateGridLayerData()
       << TAB << TAB << " */\n"
       << TAB << TAB << "if (sim->_proxy_count.count(\"" << getInstanceName() << "\") == 0)\n"
       << TAB << TAB << "{\n"
-      << TAB //<< TAB << "   std::vector<int> proxy_from_ranks(sim->getNumProcesses(), 0);\n"
+      //<< TAB << TAB << "   std::vector<int> proxy_from_ranks(sim->getNumProcesses(), 0);\n"
       << TAB << TAB << "   std::vector<size_t> proxy_from_ranks(sim->getNumProcesses(), 0);\n"
       << TAB << TAB << "   sim->_proxy_count[\"" << getInstanceName() << "\"] = proxy_from_ranks;\n"
       << TAB //<< TAB << "   //std::map<Granule*, std::map<std::string, int>> _granulesFrom_NT_count;
