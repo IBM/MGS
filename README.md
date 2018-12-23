@@ -16,6 +16,10 @@
   flex v2.5.4   or above
   lgmp  
   python
+    pybind11
+    env PYTHON_INCLUDE_DIR
+  cxsparse library
+    env SUITESPARSE
   
 # Run flags
   -t Number of threads  

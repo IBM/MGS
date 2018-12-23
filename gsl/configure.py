@@ -1488,8 +1488,14 @@ OTHER_LIBS :=-lgmp  \
         retStr += "\n"
         retStr += \
             """\
+OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+"""
+        retStr += "\n"
+        retStr += \
+            """\
 ifeq ($(USE_SUITESPARSE), 1)
 OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
+OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include
 endif
 #LDFLAGS := -shared
 """

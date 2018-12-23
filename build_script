@@ -540,15 +540,15 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
+      make ${TARGET_MAKE} RELEASE="$RELEASE -j $NPROCS"
     fi
   else
-    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
+    make ${TARGET_MAKE} RELEASE="$RELEASE -j $NPROCS"
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
-      make -j $NPROCS RELEASE="$RELEASE"
+      make RELEASE="$RELEASE -j $NPROCS"
     fi
     if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark
