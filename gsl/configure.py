@@ -1520,11 +1520,11 @@ CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generat
 CUDA_NVCC_FLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
 CUDA_NVCC_FLAGS += --compiler-options -fPIC \
 """
-        if self.options.blueGene is False:
-            retStr += \
-                """\
---compiler-options -MMD \
-"""
+#         if self.options.blueGene is False:
+#             retStr += \
+#                 """\
+# --compiler-options -MMD \
+# """
         if self.options.debug == USE:
             retStr += " -g -G"
             # to add '-pg' run with --profile
