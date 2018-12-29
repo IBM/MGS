@@ -77,15 +77,15 @@ void LensContext::addStatement(C_production* statement)
 void LensContext::execute() 
 {
    std::vector<C_production*>::iterator it, end = _statements.end();
-#define DEBUG
-#ifdef DEBUG
+#define DEBUG_TIMER
+#ifdef DEBUG_TIMER
    int i = 1;
    sim->benchmark_set_timelapsed_diff();
 #endif
    for (it = _statements.begin(); it != end; it++) {
       try {
 	(*it)->execute(this);
-#ifdef DEBUG 
+#ifdef DEBUG_TIMER 
 	if (sim->getRank() == 0)
 	  std::cout<< ".............statement " << i++ << std::endl;
 	//sim->benchmark_timelapsed("... ");

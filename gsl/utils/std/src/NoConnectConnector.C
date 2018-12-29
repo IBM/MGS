@@ -59,13 +59,25 @@ void NoConnectConnector::nodeToNode(
    //int toPartitionId = sim->getGranule(*to)->getPartitionId();
    auto nodetype_from = from->getGridLayerData()->getNodeCompCategoryBase()->getModelName();
    auto nodetype_to = to->getGridLayerData()->getNodeCompCategoryBase()->getModelName();
-   auto key = std::make_pair(nodetype_from, nodetype_to);
-   {
-         //std::vector<int> nodes_on_ranks(sim->getNumProcesses(), 0);
-         //std::vector<int> all_ranks(sim->getNumProcesses(), nodes_on_ranks);
-      auto value = std::make_pair(sim->getGranule(*from), sim->getGranule(*to));
-      sim->_nodes_from_to_granules[key].push_back(value);
-   }
+//   auto key = std::make_pair(nodetype_from, nodetype_to);
+//#define DETECT_PROXY_COUNT NEW_APPROACH
+//#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+//   std::map<Granule*, int> nodecounts_on_granules;
+//   auto value = std::make_pair(nodecounts_on_granules, nodecounts_on_granules);
+//   sim->_nodes_from_to_granules[key] = value;
+//#endif
+//   {
+//         //std::vector<int> nodes_on_ranks(sim->getNumProcesses(), 0);
+//         //std::vector<int> all_ranks(sim->getNumProcesses(), nodes_on_ranks);
+//#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+//      sim->_nodes_from_to_granules[key].first[sim->getGranule(*from)] += 1;
+//      sim->_nodes_from_to_granules[key].second[sim->getGranule(*to)] += 1;
+//#else
+//      auto value = std::make_pair(sim->getGranule(*from), sim->getGranule(*to));
+//      sim->_nodes_from_to_granules[key].push_back(value);
+//#endif
+//   }
+   if (sim->getGranule(*from) != sim->getGranule(*to))
    {
       if (sim->_granulesFrom_NT_count.count(sim->getGranule(*from)) == 0)
       {

@@ -329,13 +329,18 @@ class Simulation : public Publishable {
   //std::map< std::string, std::list<int> > _nodes_count; 
   // "LifeNode" on what (original and unique) partionId
   //std::map< std::string, std::vector<int> >  _nodes_partition;
+#if defined(DETECT_NODE_COUNT) && (DETECT_NODE_COUNT == NEW_APPROACH)
+  std::map< std::string, std::map<Granule*, int> >  _nodes_granules; 
+#else
   std::map< std::string, std::vector<Granule*> >  _nodes_granules; //maybe slower
+#endif
   //std::map< std::string, std::list<Granule*> >  _nodes_granules; 
 
   /*
    *     keep tracks # proxy (of the 'from' NodeDescriptor)
    *     to be created for a given proxytype, e.g. CG_LifeNodeProxy
    *     which is supposed to be from different MPI ranks
+   *     (i.e. the partition of the granule associated with that 'from' NodeDescriptor is differet from current rank)
    */
   /* 
    * NOTE: Maybe we just need to store 'LifeNode', rather than'CG_LifeNodeProxy
@@ -354,14 +359,26 @@ class Simulation : public Publishable {
   //std::map< std::string,  std::list<int>  > _proxy_count;
   // representing the connection from nodetype1 to nodetype2
   // NOTE: consider using the 'LifeNode' or 'CG_LifeNodeProxy' for the string
-  std::map< std::pair<std::string, std::string>, 
-    /* with Granule* from instances of nodes from nodetype1 are tracked */
-    /* with Granule* from instances of nodes from nodetype2 are tracked */
-    //std::vector< std::pair<std::vector<Granule*>, std::vector<Granule*> > >
-    
-    //std::vector< std::pair<Granule*, Granule* > > //maybe slower
-    std::list< std::pair<Granule*, Granule* > >
-      >  _nodes_from_to_granules;
+//#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+//  std::map< std::pair<std::string, std::string>, 
+//    /* with first Granule* from instances of nodes from nodetype1 are tracked */
+//    /* 'int' is the count of node belonging to that Granule */
+//    /* with second Granule* from instances of nodes from nodetype2 are tracked */
+//    /* 'int' is the count of node belonging to that Granule */
+//    std::pair< std::map<Granule*, int>, 
+//               std::map<Granule*, int> 
+//             > 
+//      >  _nodes_from_to_granules;
+//#else
+//  std::map< std::pair<std::string, std::string>, 
+//    /* with Granule* from instances of nodes from nodetype1 are tracked */
+//    /* with Granule* from instances of nodes from nodetype2 are tracked */
+//    //std::vector< std::pair<std::vector<Granule*>, std::vector<Granule*> > >
+//    
+//    //std::vector< std::pair<Granule*, Granule* > > //maybe slower
+//    std::list< std::pair<Granule*, Granule* > >
+//      >  _nodes_from_to_granules;
+//#endif
   /* 
   std::map< std::pair<std::string, std::string>, 
     std::vector< std::pair<NodeDescriptor*, NodeDescriptor*> >
@@ -384,11 +401,15 @@ class Simulation : public Publishable {
   std::map<Granule*, std::map<std::string, int>> _granulesFrom_NT_count;
   //std::map<Granule*, std::vector<NodeDescriptor*> > _granulesFrom_and_ND;
 
+#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+  std::unordered_set<NodeDescriptor*> _nodes_ND; //telling if a ND is already used or not
+#else
   std::unordered_map<NodeDescriptor*, int> _nodes_ND; //telling if a ND is already used or not
   //std::map<NodeDescriptor*, int> _nodes_ND; //map a ND to an integer, unique for the nodetype
      // that the ND represents
   //std::map<std::string, int> _current_ND_index; //track the current NodeDescriptor for the 
      // nodetype as name given by the key
+#endif
 
 
     //std::vector<int> > _nodes_count; 
