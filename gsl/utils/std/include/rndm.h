@@ -43,13 +43,44 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
   }
 }
 
+#define OLD_APPROACH 0
+#define NEW_APPROACH 1
+//#define DETECT_PROXY_COUNT NEW_APPROACH   // NOT COMPLETED
+//      ... BETTER
+#define DETECT_NODE_COUNT NEW_APPROACH 
+
+#define SUPPORT_MULTITHREAD_NODEACCESSOR_SETUP 
+/*
+ * in CG_xxxGridLayerData.C 
+ * the setup of _nodeInstanceAccessor[n] is as serial process
+ * which becomes too slow on extremely large grid
+ *
+ */
+
+#define SUPPORT_MULTITHREAD_CONNECTION
+//   test the idea that only split the destsets 
+//     for each node in sourceset, do 
+//        parallel-detect nodes in the destsets  [save quite amount of time]
+//   ----
+//   then sequential connect node in sourceset, to selected nodes in destsets 
+
+//#define TEST_MULTIPLE_THREADS  //test the idea of splitting both sourceset and destsets into K subgroups
+//   and do sourceset[i] --> sourceset[j]
+
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#include <thread>
+#include <mutex>
+#include <functional>
+#include <algorithm>
+#endif
+
 #define OPTION_3 3
 #define OPTION_4 4
 #define OPTION_4b 41
 #define OPTION_5 5
 
 //NOTE: for proxy
-//  OPTION_3 = means each CCDemarshaller has its own array of data, tracking the mapping to nodes in a different rank
+//  OPTION_3 = means each CCDemarshaller has its own array of data, tracking the mapping to nodes in a different rank -- BETTER
 //  OPTION_4 = means each CCDemarshaller only keep the index to the data, 
 //    data nows belong to the global proxy-data array in the xxxCompCategory
 //#define PROXY_ALLOCATION  OPTION_3

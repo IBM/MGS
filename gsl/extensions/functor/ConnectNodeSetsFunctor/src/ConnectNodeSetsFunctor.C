@@ -26,6 +26,10 @@
 #include "Simulation.h"
 #include <memory>
 
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#include <thread>
+#endif
+
 void ConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
 {
 }
@@ -71,9 +75,119 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
      exit(0);
    }
 
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+   bool functor_with_multithread = true;
+   if ((cc->sourceNodes.size() == 0 && cc->destinationNodes.size() == 0))
+      functor_with_multithread  = false;
+   //assert(! (cc->sourceNodes.size() >0 && cc->destinationNodes.size() > 0));
+   if (functor_with_multithread)
+   {
+      while(!cc->done) {
+	 cc->restart = false;
+	 for (int i = 0; i < cc->destinationNodes.size(); ++i)
+	 {
+	    cc->currentSample++;
+	    cc->destinationNode = cc->destinationNodes[i];
+
+	    ParameterSetDataItem *psdi;
+	    sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
+	    psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
+	    if (psdi==0) {
+	       throw SyntaxErrorException(
+		     "ConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
+	    }
+	    cc->outAttrPSet = psdi->getParameterSet();
+
+	    destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
+	    psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
+	    if (psdi==0) {
+	       throw SyntaxErrorException(
+		     "ConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
+	    }
+	    cc->inAttrPSet = psdi->getParameterSet();
+
+#ifdef DEBUG
+	    CG_c->sim->increaseCounter();
+#endif
+	    lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
+		  cc->inAttrPSet, CG_c->sim);
+	 }
+	 for (int i = 0; i < cc->sourceNodes.size(); ++i)
+	 {
+	    cc->currentSample++;
+	    cc->sourceNode = cc->sourceNodes[i];
+
+	    ParameterSetDataItem *psdi;
+	    sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
+	    psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
+	    if (psdi==0) {
+	       throw SyntaxErrorException(
+		     "ConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
+	    }
+	    cc->outAttrPSet = psdi->getParameterSet();
+
+	    destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
+	    psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
+	    if (psdi==0) {
+	       throw SyntaxErrorException(
+		     "ConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
+	    }
+	    cc->inAttrPSet = psdi->getParameterSet();
+
+#ifdef DEBUG
+	    CG_c->sim->increaseCounter();
+#endif
+	    lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
+		  cc->inAttrPSet, CG_c->sim);
+	 }
+
+	 // call sampfctr2, which will set source and destination nodes 
+	 // (and maybe other stuff)
+	 sampling->execute(CG_c, nullArgs, rval);
+      }
+   }
+   else{
+      /* some sampling functor has not implemented multi-threading support */
+      while(!cc->done) {
+	 cc->restart = false;
+	 cc->currentSample++; // i.e. a valid pair of (source,dest) is found
+	 // validity is based on SamplingFunctor only
+	 // it does not take into account 'Interface' and Predicate of Attributes + UserFunction
+
+	 ParameterSetDataItem *psdi;
+	 sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
+	 psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
+	 if (psdi==0) {
+	    throw SyntaxErrorException(
+		  "ConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
+	 }
+	 cc->outAttrPSet = psdi->getParameterSet();
+
+	 destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
+	 psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
+	 if (psdi==0) {
+	    throw SyntaxErrorException(
+		  "ConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
+	 }
+	 cc->inAttrPSet = psdi->getParameterSet();
+
+#ifdef DEBUG
+	 CG_c->sim->increaseCounter();
+#endif
+	 lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
+	       cc->inAttrPSet, CG_c->sim);
+
+	 // call sampfctr2, which will set source and destination nodes 
+	 // (and maybe other stuff)
+	 sampling->execute(CG_c, nullArgs, rval);
+      }
+   }
+#else
    while(!cc->done) {
       cc->restart = false;
-      cc->currentSample++;
+      cc->currentSample++; // i.e. a valid pair of (source,dest) is found
+       // validity is based on SamplingFunctor only
+       // it does not take into account 'Interface' and Predicate of Attributes + UserFunction
 
       ParameterSetDataItem *psdi;
       sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
@@ -102,6 +216,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
       // (and maybe other stuff)
       sampling->execute(CG_c, nullArgs, rval);
    }
+#endif
 #ifdef DEBUG
      if (CG_c->sim->getRank()==0)
      {

@@ -20,6 +20,9 @@
 #include <list>
 #include "SymbolTable.h"
 
+#include "rndm.h"
+#include <vector>
+
 class NodeSet;
 class NodeDescriptor;
 class Edge;
@@ -67,6 +70,19 @@ class ConnectionContext
       ConnectionContext* parent;
       NodeSet* sourceSet;
       NodeSet* destinationSet;
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+      /* only one is used
+       *  use destinationNodes, if we iterate through source-nodes first
+       *  use sourceNodes, if we iterate through dest-nodes first
+       * */
+      std::vector<NodeDescriptor*> destinationNodes;
+      std::vector<NodeDescriptor*> sourceNodes;
+#endif
+      /* (sourceNode, destinationNode) is the node pair to be returned for connection */
+      /*
+       * restart = true if we're actually reset from the beginning
+       * done    = true if we have reached to the end, i.e. traverse all the nodes 
+       */
       NodeDescriptor* sourceNode;
       NodeDescriptor* destinationNode;
       NodeDescriptor* sourceRefNode;

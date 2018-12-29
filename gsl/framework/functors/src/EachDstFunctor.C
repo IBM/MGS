@@ -90,6 +90,12 @@ void EachDstFunctor::doExecute(LensContext *c,
       _nodesEnd = _nodes.end();
       _isUntouched = false;
       count = 0;
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+      cc->sourceNode = 0;
+      cc->destinationNode = 0;
+      cc->sourceNodes.resize(0);
+      cc->destinationNodes.resize(0);
+#endif
    }
 
    std::vector<DataItem*> nullArgs;
@@ -99,8 +105,24 @@ void EachDstFunctor::doExecute(LensContext *c,
    cc->current = ConnectionContext::_SOURCE;
    // about to call another functor, 
    // setting that functor's responsibility to source
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+   if (_nodesIter == _nodesEnd) {
+      cc->sourceNode = 0;
+      cc->destinationNode = 0;
+      cc->sourceNodes.resize(0);
+      cc->destinationNodes.resize(0);
+      cc->done = true;
+   }
+   else{
+      _functor_ap->execute(c, nullArgs, rval_ap);
+      ++_nodesIter;
+   }
+#else
    _functor_ap->execute(c, nullArgs, rval_ap);
    while(cc->done && _nodesIter!=_nodesEnd) {
+      /* cc->done  means completed the SOURCE-nodeset
+       *  but there is still node in the DEST-nodeset to investigate
+       */
       ++_nodesIter;
       if (_nodesIter == _nodesEnd) {
 	 break;
@@ -116,6 +138,7 @@ void EachDstFunctor::doExecute(LensContext *c,
       cc->destinationNode = 0;
       cc->done = true;
    }
+#endif
    cc->restart = originalRestart;
 }
 

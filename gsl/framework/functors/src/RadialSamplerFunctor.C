@@ -33,6 +33,8 @@
 #include "DataItemQueriable.h"
 #include "FunctorDataItem.h"
 #include "SyntaxErrorException.h"
+#include "rndm.h"
+
 #include <sstream>
 #include <stdlib.h>
 #include <math.h>
@@ -125,12 +127,20 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
    bool refNodeDifferent = false;
    NodeSet* source=0;
    NodeDescriptor** slot=0;
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+   std::vector<NodeDescriptor*>* slots;
+#endif
 
    switch(resp) {
       case ConnectionContext::_SOURCE:
          //if (_speak) std::cout<<" each source node based on a complete sampling with a radius surrounding a ref node";
          source = cc->sourceSet;
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+         cc->sourceNodes.resize(0);
+         slots = &cc->sourceNodes;
+#else
          slot = &cc->sourceNode;
+#endif
          if(_refNode != cc->sourceRefNode) {
             _refNode = cc->sourceRefNode;
 	    _refNode->getNodeCoords(_refcoords);
@@ -140,7 +150,12 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
       case ConnectionContext::_DEST:
          //if (_speak) std::cout<<" each destination node based on a complete sampling within a radius surrounding a ref node";
          source = cc->destinationSet;
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+         cc->destinationNodes.resize(0);
+         slots = &cc->destinationNodes;
+#else
          slot = &cc->destinationNode;
+#endif
          if(_refNode != cc->destinationRefNode) {
             _refNode = cc->destinationRefNode;
 	    _refNode->getNodeCoords(_refcoords);
@@ -179,6 +194,78 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
      _nbrNodes = _nodes.size();
    }
     
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+    //const size_t nthreads = std::thread::hardware_concurrency();
+    //TUAN NOTE: currently only maximum 10 threads
+    const size_t nthreads = std::min(10, (int)std::thread::hardware_concurrency());
+    {
+      // Pre loop
+      //std::cout<<"parallel ("<<nthreads<<" threads):"<<std::endl;
+      std::vector<std::thread> threads(nthreads);
+      std::mutex critical;
+      const size_t nloop = _nbrNodes; 
+      for(int t = 0;t<nthreads;t++)
+      {
+        /* each thread bind to a lambdas function
+             the lambdas function accepts 3 arguments: 
+               t= thread index
+               bi = start index of data
+               ei = end index of data
+         */
+        threads[t] = std::thread(std::bind(
+              [&](const int bi, const int ei, const int t)
+              {
+                // loop over all items
+                for(int i = bi;i<ei;i++)
+                {
+                  auto _currentNode = i;
+
+                  float distance, dd;
+                  bool outside=true;
+                  NodeDescriptor* n;
+                  std::vector<int> coords;
+                  n = _nodes[_currentNode];
+                  n->getNodeCoords(coords);     
+                  // inner loop
+                  {
+                   if (
+                       (_direction == 0) || // both direction
+                       ((_direction > 0) && // positive direction
+                        ((coords[0] >= _refcoords[0])
+                         && (coords[1] >= _refcoords[1])
+                         && (coords[2] >= _refcoords[2]))) ||
+                       ((_direction < 0) && // negative direction
+                        ((coords[0] <= _refcoords[0])
+                         && (coords[1] <= _refcoords[1])
+                         && (coords[2] <= _refcoords[2])))
+                       )
+                     {
+                       distance = 0;
+                       for(unsigned i=0;i<coords.size();++i) {
+                         dd = _refcoords[i] - coords[i];
+                         distance += dd*dd;
+                       }
+                       distance=sqrt(distance);
+                     }
+                   else
+                     distance = _radius + 1.0;
+     
+                   if (distance<=_radius) {
+                     // make update critical
+                     std::lock_guard<std::mutex> lock(critical);
+                     slots->push_back(_nodes[_currentNode]);
+                   }
+                  }
+                }
+              }, t*nloop/nthreads, (t+1)==nthreads?nloop:(t+1)*nloop/nthreads, t));
+      }
+      std::for_each(threads.begin(),threads.end(),[](std::thread& x){x.join();});
+      // Post loop
+      //std::cout << ".. completed multi-thread with " << slots->size() << " node found\n"; 
+      _currentNode = _nbrNodes;
+      cc->done = true;
+    }
+#else
    if (_currentNode==_nbrNodes) {
      *slot = 0;
      cc->done = true;
@@ -228,4 +315,5 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
    }
    ++_currentNode;
    cc->done = false;
+#endif
 }
