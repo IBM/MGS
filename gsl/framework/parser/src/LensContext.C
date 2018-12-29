@@ -86,7 +86,8 @@ void LensContext::execute()
       try {
 	(*it)->execute(this);
 #ifdef DEBUG 
-	std::cout<< ".............statement " << i++ << std::endl;
+	if (sim->getRank() == 0)
+	  std::cout<< ".............statement " << i++ << std::endl;
 	//sim->benchmark_timelapsed("... ");
 	sim->benchmark_timelapsed_diff("... ");
 #endif
