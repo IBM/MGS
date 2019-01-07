@@ -94,6 +94,11 @@ void Variable::internalGenerateFiles()
    generateWorkUnitInstance();
    generateTriggerableCallerInstance();
    generateInstanceProxy();
+   {
+   auto classType = std::make_pair(Class::PrimeType::Variable, Class::SubType::BaseClassProxy );
+   bool use_classType = true;
+   generateInstanceProxy(use_classType, classType);
+   }
 }
 
 void Variable::addCompCategoryBaseConstructorMethod(Class& instance) const

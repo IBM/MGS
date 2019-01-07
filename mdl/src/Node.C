@@ -62,7 +62,13 @@ void Node::internalGenerateFiles()
    assert(strcmp(getName().c_str(), ""));
    addSupportForMachineType(MachineType::GPU);
 
-   std::unique_ptr<Class> compcat_ptr = generateInstanceBase(); //CG_LifeNode.h/,C
+   std::unique_ptr<Class> compcat_ptr; 
+   {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass);
+   bool use_classType = true;
+   compcat_ptr = generateInstanceBase(use_classType, classType); //CG_LifeNode.h/,C
+   }
+   //compcat_ptr = generateInstanceBase(); //CG_LifeNode.h/,C
    auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);
    bool use_classType = true;
    generateInstance(use_classType, classType, compcat_ptr.get());  //LifeNode.h/C.gen
@@ -80,7 +86,11 @@ void Node::internalGenerateFiles()
    generateWorkUnitShared();
    generateSharedMembers();
    generateTriggerableCallerInstance();
-   generateInstanceProxy();
+   {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassProxy );
+   bool use_classType = true;
+   generateInstanceProxy(use_classType, classType);
+   }
    generateResourceFile();
 }
 

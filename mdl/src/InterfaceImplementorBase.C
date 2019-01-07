@@ -383,11 +383,19 @@ void InterfaceImplementorBase::generatePublisher()
    _classes.push_back(instance.release());  
 }
 
-std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
-{//e.g. CG_LifeNode.h/.C
+void InterfaceImplementorBase::generateInstanceBase()
+{
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   generateInstanceBase(use_classType, classType);
+}
+void InterfaceImplementorBase::generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
+{//e.g. CG_LifeNode.h/.C  [Node or Variable]
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
-   if (isSupportedMachineType(MachineType::GPU))
-      instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
+   //if (isSupportedMachineType(MachineType::GPU))
+   //   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
+   if (use_classType)
+      instance->setClassInfo(classType);
    /* as 'publicValue' data in CG_LifeNode becomes 'um_publicValue' in CG_LifeNodeCompCategory
     * we create this CompCategory's Class object here as well 
     */
@@ -537,10 +545,17 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
 
 void InterfaceImplementorBase::generateInstanceProxy()
 {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   generateInstanceProxy(use_classType, classType);
+}
+void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
+{
    if (getType()=="Constant" || getType()=="Edge") return;
    std::auto_ptr<Class> instance(new Class(getInstanceProxyName()));
-   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassProxy));
-
+   if (use_classType)
+      instance->setClassInfo(classType);
+      //instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassProxy));
    MacroConditional mpiConditional(MPICONDITIONAL);
 
    instance->setMacroConditional(mpiConditional);
