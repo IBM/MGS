@@ -1755,10 +1755,10 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-\t$(CC) $(CFLAGS) $(COMMON_OBJS) """
+\t$(CC) $(CFLAGS)  """
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
-        retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+        retStr += """$(OBJECTONLYFLAGS) -c $< -o $@
 """
         return retStr
 

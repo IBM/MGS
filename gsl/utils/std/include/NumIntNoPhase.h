@@ -20,51 +20,50 @@
 
 #include "ShallowArray.h"
 
-class numInt
-{
- protected :
-
-  virtual void initializeIterator(int, double) = 0;
-  virtual void callIterate(ShallowArray< double > &) = 0;
-  virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
-
-};
-
-
-class EU : public numInt
-{
-
-protected:
-  
-  void initializeIterator(int, double);
-  void callIterate(ShallowArray< double > &);
-
- private:
-
-  ShallowArray< double > dx1;
-  ShallowArray< double >::iterator i1, i2;
-  double dT;
-
-};
-
-
-
-class RK4 : public numInt
-{
-  // public:
-  //  RK4(){} 
-  
-  
-  protected:
-  
-  void initializeIterator(int, double);
-  void callIterate(ShallowArray< double > &);
-
- private:
-
-  ShallowArray< double > dx1, dx2, dx3, x1;
-  ShallowArray< double >::iterator i1, i2, i3, i4;
-  double dT, dT2, dT6;
-};
+//class numInt
+//{
+// protected :
+//
+//  virtual void initializeIterator(int, double) = 0;
+//  virtual void callIterate(ShallowArray< double > &) = 0;
+//  virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
+//
+//};
+//
+//
+//class EU : public numInt
+//{
+//protected:
+//  
+//  void initializeIterator(int, double);
+//  void callIterate(ShallowArray< double > &);
+//
+// private:
+//
+//  ShallowArray< double > dx1;
+//  ShallowArray< double >::iterator i1, i2;
+//  double dT;
+//
+//};
+//
+//
+//
+//class RK4 : public numInt
+//{
+//  // public:
+//  //  RK4(){} 
+//  
+//  
+//  protected:
+//  
+//  void initializeIterator(int, double);
+//  void callIterate(ShallowArray< double > &);
+//
+// private:
+//
+//  ShallowArray< double > dx1, dx2, dx3, x1;
+//  ShallowArray< double >::iterator i1, i2, i3, i4;
+//  double dT, dT2, dT6;
+//};
 
 #endif

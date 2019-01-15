@@ -48,7 +48,6 @@ class numInt
 
 class EU : public numInt
 {
-
 protected:
   
   void initializeIterator(int, double);
