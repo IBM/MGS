@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -228,24 +228,10 @@ class LypIntCounter : public RK4PhasedOld
 
 
  private:
-  int counter;
-  RK4PhasedVars rk2;
 
-  double d0;
-
-  
-  void setPetVars() 
-  {
-    double val1 = d0/diffLen();
-    ShallowArray< double >::iterator i1,i2;
-    for (i1=rk1.x.begin(),i2=rk2.x.begin();i1!=rk1.x.end();i1++,i2++) 
-      *i2 = *i1 + (*i2 - *i1)*val1;
-  }
-  
-
-  RNG rng;
-
-
+  ShallowArray< double > dx1, dx2, dx3, x1;
+  ShallowArray< double >::iterator i1, i2, i3, i4;
+  double dT, dT2, dT6;
 };
 
 
@@ -253,10 +239,10 @@ class LypIntCounter : public RK4PhasedOld
 /*
 class LypInt : public RK4Phased
 {
- protected :
-
-  void initializeIterator(int n, double dt);
+    
+  protected:
   
+  void initializeIterator(int, double);
   void callIteratePhase1();
   void callIteratePhase2();
   void callIteratePhase3();
@@ -393,33 +379,17 @@ class LypInt2 : public numInt
   //const double & deltaT() const {return dT;}
   //double & deltaT() {return dT;}
 
-  //virtual double diffLen() const =  0;
-  double diffLen(){}
+  //ShallowArray< double > x;
 
  private:
 
-  NUMINT_T origInt, petInt;
-  double d0;
-
-  void setPetVars() 
-  {
-    double val1 = d0/diffLen();
-    //if (count >= lypskip) lyp+=log(val1/deltaT());
-    //count++; 
-    ShallowArray< double >::iterator i1,i2;
-    for (i1=origInt.Vars().begin(),i2=petInt.Vars().begin();i1!=origInt.Vars().end();i1++,i2++) 
-      *i2 = *i1 + (*i2 - *i1)*val1;
-  }
-
-  RNG rng;
-  //double lyp;
-  //int lypskip;
-  //int count;
-
+  ShallowArray< double > dx1, dx2, dx3, x1;
+  ShallowArray< double >::iterator i1, i2, i3, i4;
+  double dT2, dT6;
 };
 
 
-	       */
+*/
 
 
 #endif
