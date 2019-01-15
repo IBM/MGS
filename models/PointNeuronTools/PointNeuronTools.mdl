@@ -233,8 +233,9 @@ Interface GoodwinProducer
   double* Z;
 }
 
-Interface ActiveMembraneProducer {
-  double * output;
+Interface ActiveMembraneProducer
+{
+  double* output;
 }
 
 Struct Input {
