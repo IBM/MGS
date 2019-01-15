@@ -194,6 +194,19 @@ void MahonUnitDataCollector::finalize(RNG& rng)
 
 }
 
+void MahonUnitDataCollector::dataCollectionLFP(Trigger* trigger, NDPairList* ndPairList) 
+{
+
+  std::ofstream& output=*x3_file;
+  ShallowArray<double*>::iterator iter=x3.begin(), end=x3.end();
+  double tot = 0;
+  for (;iter!=end; ++iter) tot+=(**iter); 
+   
+  output<<ITER*deltaT<<" "<<tot<<std::endl;
+  
+
+}
+
 void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
 {
 
@@ -202,48 +215,25 @@ void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPair
   ShallowArray<double*>::iterator iter=x1.begin(), end=x1.end();
   for (int col=0; iter!=end && col<maxoutnum; ++iter, ++col) {
     output<<**iter<<" ";
-    /*
-    if (++col>mxcol) {
-      output<<std::endl;
-      col=0;
-    }
-    */
+
   }
   output<<std::endl;}
 
 
+ 
   {std::ofstream& output=*x2_file;
-  output<<ITER*deltaT<<" ";//std::endl;
-  ShallowArray<double*>::iterator iter=x2.begin(), end=x2.end();
-  for (int col=0; iter!=end && col<maxoutnum; ++iter, ++col) {
-    output<<**iter<<" ";
-    /*
-    if (++col>mxcol) {
-      output<<std::endl;
-      col=0;
-    }
-    */
-  }
-  output<<std::endl;}
-
-
-  {std::ofstream& output=*x3_file;
   output<<ITER*deltaT<<" ";//std::endl;
   ShallowArray<double*>::iterator iter=x3.begin(), end=x3.end();
   for (int col=0; iter!=end && col<maxoutnum; ++iter, ++col) {
     output<<**iter<<" ";
-    /*
-    if (++col>mxcol) {
-      output<<std::endl;
-      col=0;
-    }
-    */
+   
   }
   output<<std::endl;}
 
-
-
 }
+
+
+
 
 void MahonUnitDataCollector::dataCollectionSpike(Trigger* trigger, NDPairList* ndPairList) 
 {

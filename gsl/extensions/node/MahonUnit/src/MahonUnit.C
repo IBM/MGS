@@ -281,10 +281,11 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
   
   dg = SYNA*((double) (V>0.0))*(1.0 - g) - synb*g;
 
+  dV = drive*(V - VCL);
 
   //dV = 0;
 
-  dV = drive*(V - VCL);
+  
   dV -= IonChannel<double>(V,GLEAK,VLEAK);
 
   dV -= IonChannel<double>(V,Nasm,GNAS,VNAS);
@@ -302,14 +303,14 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
     (V,gatefcnInstant<double>(Namalpha<double>(V),Nambeta<double>(V)),Nah,GNACHAN,VNACHAN);
 
 
-  const int t2 = TIME;
+  //const int t2 = TIME;
   //const int t1 = t2 % 400;
 
   //if (t2>10000 && t1>200) dV += injCur;
   //if (t2>10000) dV += injCur;
 
 
-  dV += (*drivinp);
+  dV -= (*drivinp)*V;
   dV /=CAPAC;
 
   dNasm = ratefcn<double>(Nasm,sigmoid<float>(V,NASMTHE,NASMK),
@@ -352,7 +353,7 @@ void MahonUnit::initialize(RNG& rng)
   
   //ShallowArray<double> & x = s1.x;//nodeVars;
 
-  ShallowArray<double> & x = Vars();
+  //  ShallowArray<double> & x = Vars();
 
   double & V = x[0];
   double & Nasm = x[1];
@@ -398,38 +399,29 @@ void MahonUnit::initialize(RNG& rng)
 
 }
 
-
 void MahonUnit::update1(RNG& rng) 
 {
-  callIteratePhase1(rk1);
+  callIteratePhase1();
   //callIterate(s1.x);
 }
 
 void MahonUnit::update2(RNG& rng) 
 {
-  callIteratePhase2(rk1);
+  callIteratePhase2();
   //callIterate(s1.x);
 }
 
 void MahonUnit::update3(RNG& rng) 
 {
-  callIteratePhase3(rk1);
+  callIteratePhase3();
   //callIterate(s1.x);
 }
 
 void MahonUnit::update4(RNG& rng) 
 {
-  callIteratePhase4(rk1);
+  callIteratePhase4();
   //callIterate(s1.x);
 }
-
-
-/*
-void MahonUnit::update(RNG& rng) 
-{
-  callIterate(); 
-}
-*/
 
 void MahonUnit::flushVars(const ShallowArray< double > & x)
 {
@@ -442,43 +434,47 @@ void MahonUnit::flushVars(const ShallowArray< double > & x)
 //}
 
 
-
 void MahonUnit::flushVars1(RNG& rng) 
 {
-
-  prePhase1(rk1);
-
+  prePhase1();
+  //  flushVars_x();
 }
 
 void MahonUnit::flushVars2(RNG& rng) 
 {
-  prePhase2(rk1);
-
+  prePhase2();
+  //flushVars_x1();
 }
 
 void MahonUnit::flushVars3(RNG& rng) 
 {
-  prePhase3(rk1);
-
+  prePhase3();
+  //flushVars_x1();
 }
 
 void MahonUnit::flushVars4(RNG& rng) 
 {
-  prePhase4(rk1);
- 
+  prePhase4();
+  //flushVars_x1();
 }
-
 
 
 void MahonUnit::updateOutputs(RNG& rng) 
 {
-
-  ShallowArray<double> & x = Vars();
+  //ShallowArray<double> & x = Vars();
   if (x[0]>= SHD.spikethresh && var1 < SHD.spikethresh) spike = true;
   else spike = false;
   var1 = x[0];
   var2 = x[5];
-  var3 = x[11];
+
+  ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  double drive=0;
+  for (iter=MSNNetInps.begin(); iter!=end; ++iter) {
+    drive += *(iter->input)*iter->weight;
+  }
+
+
+  var3 = drive; //x[11];
 }
 
 
@@ -583,18 +579,6 @@ void MahonUnit::setIndices(const String& CG_direction, const String& CG_componen
   MSNNetInps[MSNNetInps.size()-1].row = getGlobalIndex()+1; // +1 is for Matlab
   MSNNetInps[MSNNetInps.size()-1].col = CG_node->getGlobalIndex()+1; 
 
-}
-
-
-
-
-
-void MahonUnit::setLypIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_MahonUnitInAttrPSet* CG_inAttrPset, CG_MahonUnitOutAttrPSet* CG_outAttrPset) 
-{
-  std::ofstream ofs;
-  ofs.open ("MahonLypcons.dat", std::ofstream::out | std::ofstream::app);
-  ofs << getGlobalIndex() << " " << CG_node->getGlobalIndex() << std::endl;
-  ofs.close();
 }
 
 
