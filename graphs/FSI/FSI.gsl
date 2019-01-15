@@ -15,7 +15,7 @@
 
 #include "../std/std.gsl"
 InitPhases = { init1, init2, initialize };
-RuntimePhases = { run1, run2, dataCollect, lastPhase };
+RuntimePhases = { setContributions, run1, run2, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
@@ -64,7 +64,9 @@ NodeType FSIIAFUnit(<
                       op_saveWeights = 1,
                       op_saveGJs = 1,
                       op_savePSPs = 0,
-                      op_saveExtra = 0
+                      op_saveExtra = 0,
+                      mu_rho = -1.0, // < 0 is uniform distribution; > 2pi direction is set to same
+                      mu_phi = -1.0
                       >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
 
 // Synaptic connectivity
@@ -104,6 +106,7 @@ Grid FSI
 {
   Dimension(27,27,27);
   Layer(FSIs, FSIIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+  //Layer(FSIs, FSIIAFUnit, RandomDispersalLayout(19683), < nodekind="Nodes" >);
   InitNodes(.[].Layer(FSIs), heterN);
   connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
                   ipsp_fsi, outAttrDef, ipsp);
@@ -165,8 +168,12 @@ UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 50",
 UnsignedTrigger endTrig("Iteration Trigger to end or stop",
                         ::Iteration, "==", 1000000, 0, lastPhase); // in dt
 
+UnsignedTrigger setContribTrig("Iteration Trigger to set contribution of indiv neurons at sim init",
+                        ::Iteration, "==", 1, 0, setContributions); // in dt
+
 CTXFcollector.dataCollection() on iterTrigSampled;
 FSIcollector.dataCollection() on iterTrig;
 LFPanalyzer.dataCollection() on iterTrigSampled;
+LFPanalyzer.setContributions() on setContribTrig;
 
 Stop on endTrig;
