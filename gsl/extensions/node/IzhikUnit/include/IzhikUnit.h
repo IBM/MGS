@@ -7,7 +7,7 @@
 #include <fstream>
 #include "NumIntNoPhase.h"
 
-class IzhikUnit : public CG_IzhikUnit, public RK4
+class IzhikUnit : public CG_IzhikUnit, public RK4NoPhase
 {
    public:
       void initialize(RNG& rng);

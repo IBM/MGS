@@ -922,9 +922,9 @@ BIN_DIR?=./bin
 EXE_FILE=gslparser
 
 """
-        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-            retStr += \
-                """\
+        # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+        retStr += \
+            """\
 NTI_DIR=../nti
 NTI_OBJ_DIR=$(NTI_DIR)/obj
 NTI_INC_DIR=$(NTI_DIR)/include
@@ -1072,8 +1072,8 @@ NODE_MODULES :=
 """
 
         if self.options.colab is True:
-            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-                retStr += \
+            # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+            retStr += \
                     """\
 COLAB_NODE_MODULES :=  \\
         HodgkinHuxleyVoltage \\
@@ -1130,6 +1130,7 @@ COLAB_NODE_MODULES :=  \\
         SpineAttachment_VmCai \\
         SpineAttachment_VmCaiCaER \\
         Connexon \\
+        SwitchInput \\
 """  # noqa
 
         retStr += \
@@ -1162,8 +1163,8 @@ VARIABLE_MODULES := BasicNodeSetVariable \\
 """  # noqa
 
         if self.options.colab is True:
-            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-                retStr += \
+            # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+            retStr += \
                     """\
 COLAB_VARIABLE_MODULES := BasicNodeSetVariable \\
         NodeSetSPMVariable \\
@@ -1249,8 +1250,8 @@ FUNCTOR_MODULES := BinomialDist \\
         Zipper \\
         ConnectNodeSetsByVolumeFunctor \\"""
         if self.options.colab is False:
-            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-                retStr += _tissuefunctor_modules + \
+            # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+            retStr += _tissuefunctor_modules + \
                     """
 
 """
@@ -1347,9 +1348,9 @@ SOURCES_FILENAME_ONLY :=$(shell for file in $(notdir $(MYSOURCES)); do \\
 PURE_OBJS := $(patsubst %.C, %.o, $(SOURCES_FILENAME_ONLY))
 
 """
-        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-            retStr += \
-                """\
+        # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+        retStr += \
+            """\
 NTI_OBJS := $(foreach dir,$(NTI_OBJ_DIR),$(wildcard $(dir)/*.o))
 TEMP := $(filter-out $(NTI_OBJ_DIR)/neuroGen.o $(NTI_OBJ_DIR)/neuroDev.o $(NTI_OBJ_DIR)/touchDetect.o, $(NTI_OBJS))
 NTI_OBJS := $(TEMP)
@@ -1756,8 +1757,9 @@ DX_INCLUDE := framework/dca/include
 
 $(OBJS_DIR)/%.o : %.C
 \t$(CC) $(CFLAGS)  """
-        if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-            retStr += "-I$(NTI_INC_DIR) "
+        # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+        #    retStr += "-I$(NTI_INC_DIR) "
+        retStr += "-I$(NTI_INC_DIR) "
         retStr += """$(OBJECTONLYFLAGS) -c $< -o $@
 """
         return retStr
@@ -1865,8 +1867,8 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         if self.options.colab is True:
             pass
         else:
-            if (self.options.asNts is True) or (self.options.asNtsNVU is True):
-                retStr += "$(NTI_OBJS) "
+            # if (self.options.asNts is True) or (self.options.asNtsNVU is True):
+            retStr += "$(NTI_OBJS) "
         retStr += "$(COMMON_OBJS) $(LIBS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
@@ -2068,7 +2070,7 @@ def prereq_packages():
     for package in required_pkgs:
         try:
             __import__(package)
-        except ImportError as _e:
+        except ImportError:
             print("Please install: sudo pip install --user %s" % (package))
 
 

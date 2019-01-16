@@ -94,7 +94,6 @@ class RK4 : public numInt
 
 class RK4Phased  : public numInt
 {
-    
   protected:
   
   void initializeIterator(int, double);
