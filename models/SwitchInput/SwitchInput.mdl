@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // Us Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -16,6 +16,7 @@
 #ifndef SWITCHINPUT_MDL
 #define SWITCHINPUT_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
+//#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 
 Node SwitchInput Implements OutputProducer 
 {
@@ -26,11 +27,13 @@ Node SwitchInput Implements OutputProducer
   Shared {
     
     double deltaT; 
+    double noiselev, tscale, var1, var2;
 
     unsigned [] stateseq;
     double [] stateswitchtimes; //end time of current state.
     unsigned currentstate;
     unsigned statenum;
+    unsigned inpnum;
 
     unsigned seqlen;
     double refract;

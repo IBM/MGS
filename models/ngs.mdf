@@ -1,4 +1,7 @@
 // MDL files
+#include "Life/Life.mdl"
+#include "Life/LifeDataCollectors.mdl"
+
 #include "PointNeuronTools/PointNeuronTools.mdl"
 
 #include "BengioRateInterneuron/BengioRateInterneuron.mdl"
@@ -12,7 +15,6 @@
 #include "Goodwin/Goodwin.mdl"
 #include "IzhikUnit/IzhikUnit.mdl"
 #include "LeakyIAFUnit/LeakyIAFUnit.mdl"
-#include "Life/Life.mdl"
 #include "LinskerInfomaxUnit/LinskerInfomaxUnit.mdl"
 #include "LypCollector/LypCollector.mdl"
 #include "MahonUnit/MahonUnit.mdl"
