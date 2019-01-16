@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -42,7 +42,6 @@ void EU::initializeIterator(int numvars_, double dT_)
 
 void EU::callIteratePhase1()
 {
-
   derivs(x,dx1); 
 
   for (i1=dx1.begin(),i2=x.begin();i1!=dx1.end();i1++,i2++)
@@ -66,7 +65,6 @@ void RK4::initializeIterator(int numvars_, double dT_)
 
 void RK4::callIterate(ShallowArray< double > & x)
 {
-
   derivs(x,dx1); 
 
   
@@ -111,7 +109,6 @@ void RK4Phased::initializeIterator(int numvars_, double dT_)
 
 void RK4Phased::callIteratePhase1()
 {
-
   derivs(x,dx1); 
 
   //x->dx1
@@ -124,7 +121,6 @@ void RK4Phased::callIteratePhase1()
 
 void RK4Phased::callIteratePhase2()
 {
-
   derivs(x1,dx2);
   //x1 - > dx2
   //x, dx2 -> x1
@@ -136,7 +132,6 @@ void RK4Phased::callIteratePhase2()
 
 void RK4Phased::callIteratePhase3()
 {
-
   derivs(x1,dx3);
   //x1 -> dx3
   //x, dx3, dx2 -> x1
@@ -151,7 +146,6 @@ void RK4Phased::callIteratePhase3()
 
 void RK4Phased::callIteratePhase4()
 {
-  
   derivs(x1,dx2);
   //x1 -> dx2
   //dx1, x, dx3, dx2 -> x
@@ -160,3 +154,86 @@ void RK4Phased::callIteratePhase4()
    *i2 = *i2 + dT6*(*i1 + *i4 + 2.0**i3);
 
 }
+
+/*
+
+void LypInt::initializeIterator(int numvars_, double dT_)
+{
+
+  RK4Phased::initializeIterator(numvars_,dT_);
+     
+  //deltaT() = dT_;
+  d0 = DPREC;
+
+  rk2.dx1.increaseSizeTo(numvars_);
+  rk2.dx2.increaseSizeTo(numvars_);
+  rk2.dx3.increaseSizeTo(numvars_);
+  rk2.x1.increaseSizeTo(numvars_);  
+  rk2.x.increaseSizeTo(numvars_);  
+}
+
+
+void LypInt::callIteratePhase1()
+{
+
+  RK4Phased::callIteratePhase1();
+
+  derivs(rk2.x,rk2.dx1); 
+
+  //x->dx1
+  //dx1,x -> x1
+
+  for (rk2.i1=rk2.x1.begin(),rk2.i2=rk2.x.begin(),rk2.i3=rk2.dx1.begin();rk2.i1!=rk2.x1.end();rk2.i1++,rk2.i2++,rk2.i3++) 
+    *rk2.i1 = *rk2.i2 + dT2**rk2.i3;
+
+}
+
+void LypInt::callIteratePhase2()
+{
+
+  RK4Phased::callIteratePhase2();
+
+  derivs(rk2.x1,rk2.dx2);
+  //x1 - > dx2
+  //x, dx2 -> x1
+
+  for (rk2.i1=rk2.x1.begin(),rk2.i2=rk2.x.begin(),rk2.i3=rk2.dx2.begin();rk2.i1!=rk2.x1.end();rk2.i1++,rk2.i2++,rk2.i3++) 
+    *rk2.i1 = *rk2.i2 + dT2**rk2.i3;
+
+}
+
+void LypInt::callIteratePhase3()
+{
+
+  RK4Phased::callIteratePhase3();
+
+  derivs(rk2.x1,rk2.dx3);
+  //x1 -> dx3
+  //x, dx3, dx2 -> x1
+
+  for (rk2.i1=rk2.x1.begin(),rk2.i2=rk2.x.begin(),rk2.i3=rk2.dx3.begin(),rk2.i4=rk2.dx2.begin();
+       rk2.i1!=rk2.x1.end();rk2.i1++,rk2.i2++,rk2.i3++,rk2.i4++)
+    { 
+      *rk2.i1 = *rk2.i2 + deltaT()**rk2.i3;
+      *rk2.i3 += *rk2.i4;
+    }
+
+}
+
+void LypInt::callIteratePhase4()
+{
+  
+ RK4Phased::callIteratePhase4();
+
+  derivs(rk2.x1,rk2.dx2);
+  //x1 -> dx2
+  //dx1, x, dx3, dx2 -> x
+
+  for (rk2.i1=rk2.dx1.begin(),rk2.i2=rk2.x.begin(),rk2.i3=rk2.dx3.begin(),rk2.i4=rk2.dx2.begin();
+       rk2.i1!=rk2.dx1.end();rk2.i1++,rk2.i2++,rk2.i3++,rk2.i4++)
+   *rk2.i2 = *rk2.i2 + dT6*(*rk2.i1 + *rk2.i4 + 2.0**rk2.i3);
+
+}
+
+*/
+
