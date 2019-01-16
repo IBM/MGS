@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-11-19-2015
+// BCM-YKT-07-18-2017
 //
-// (C) Copyright IBM Corp. 2005-2015  All rights reserved
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -193,7 +193,6 @@ void RK4PhasedOld::callIteratePhase2(RK4PhasedVars & rk1)
   for (i1=x1.begin(),i2=x.begin(),i3=dx1.begin();i1!=x1.end();i1++,i2++,i3++) 
     *i1 = *i2 + dT2**i3;
 
-  
   derivs(x1,dx2);
 }
 
@@ -294,13 +293,16 @@ void RK4Phased::callIteratePhase4()
 
 }
 
-
 /*
 
 void LypInt::initializeIterator(int numvars_, double dT_)
 {
 
+<<<<<<< HEAD
   RK4PhasedOld::initializeIterator(numvars_,dT_);
+=======
+  RK4Phased::initializeIterator(numvars_,dT_);
+>>>>>>> restore removed codes and fix dates of copyright
      
   //deltaT() = dT_;
   d0 = DPREC;
@@ -316,7 +318,11 @@ void LypInt::initializeIterator(int numvars_, double dT_)
 void LypInt::callIteratePhase1()
 {
 
+<<<<<<< HEAD
   RK4PhasedOld::callIteratePhase1();
+=======
+  RK4Phased::callIteratePhase1();
+>>>>>>> restore removed codes and fix dates of copyright
 
   derivs(rk2.x,rk2.dx1); 
 
@@ -331,7 +337,11 @@ void LypInt::callIteratePhase1()
 void LypInt::callIteratePhase2()
 {
 
+<<<<<<< HEAD
   RK4PhasedOld::callIteratePhase2();
+=======
+  RK4Phased::callIteratePhase2();
+>>>>>>> restore removed codes and fix dates of copyright
 
   derivs(rk2.x1,rk2.dx2);
   //x1 - > dx2
@@ -345,7 +355,11 @@ void LypInt::callIteratePhase2()
 void LypInt::callIteratePhase3()
 {
 
+<<<<<<< HEAD
   RK4PhasedOld::callIteratePhase3();
+=======
+  RK4Phased::callIteratePhase3();
+>>>>>>> restore removed codes and fix dates of copyright
 
   derivs(rk2.x1,rk2.dx3);
   //x1 -> dx3
@@ -363,7 +377,11 @@ void LypInt::callIteratePhase3()
 void LypInt::callIteratePhase4()
 {
   
+<<<<<<< HEAD
  RK4PhasedOld::callIteratePhase4();
+=======
+ RK4Phased::callIteratePhase4();
+>>>>>>> restore removed codes and fix dates of copyright
 
   derivs(rk2.x1,rk2.dx2);
   //x1 -> dx2
