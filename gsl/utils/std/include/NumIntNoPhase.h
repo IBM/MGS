@@ -20,7 +20,7 @@
 
 #include "ShallowArray.h"
 
-class numInt
+class numIntNoPhase
 {
  protected :
 
@@ -31,9 +31,8 @@ class numInt
 };
 
 
-class EU : public numInt
+class EUNoPhase : public numIntNoPhase
 {
-
 protected:
   
   void initializeIterator(int, double);
@@ -49,7 +48,7 @@ protected:
 
 
 
-class RK4 : public numInt
+class RK4NoPhase : public numIntNoPhase
 {
   // public:
   //  RK4(){} 

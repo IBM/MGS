@@ -184,6 +184,12 @@ Interface GoodwinProducer
   double* Z;
 }
 
+Interface DataFeed {
+  double * x1;
+  double * x2;
+  double * x3;
+}
+
 Struct Input {
   double* input;
   double weight;
@@ -320,5 +326,6 @@ Constant PointNeuronStimulator Implements OutputProducer {
   double output;
   OutputProducer.output << &output;
 }
+
 
 #endif

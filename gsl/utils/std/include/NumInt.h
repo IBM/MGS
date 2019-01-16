@@ -17,16 +17,15 @@
 #define NUMINT_H
 #include "Copyright.h"
 
-#include "rndm.h"
+
 #include "ShallowArray.h"
 
-
-
-class numInt2
+#define DPREC 10.0e-12
+class numInt
 {
  protected :
 
-  virtual void initializeIterator(int, double) = 0; 
+  virtual void initializeIterator(int, double) = 0;
   virtual void callIteratePhase1() = 0;
   virtual void callIteratePhase2() = 0;
   virtual void callIteratePhase3() = 0;
@@ -38,19 +37,18 @@ class numInt2
   virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
   virtual void flushVars(const ShallowArray< double > &) = 0;
 
-  virtual const ShallowArray< double > & Vars() const = 0; 
-  virtual ShallowArray< double > & Vars() = 0;
-  const double & deltaT() const {return dT;}
-  double & deltaT() {return dT;}
+  //const ShallowArray< double > & Vars() const {return x;}
+  //ShallowArray< double > & Vars() {return x;}
+  //const double & deltaT() const {return dT;}
+  //double & deltaT() {return dT;}
 
- private:
-  int numvars;
+ protected:
+  ShallowArray< double > x;
   double dT;
 };
 
-class EU2 : public numInt2
+class EU : public numInt
 {
-
 protected:
   
   void initializeIterator(int, double);
@@ -65,12 +63,10 @@ protected:
   //virtual void flushVars_x() = 0;
   //virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
 
-  const ShallowArray< double > & Vars() const {return x;}
-  ShallowArray< double > & Vars() {return x;}
+  
 
  private:
 
-  ShallowArray< double > x;
   ShallowArray< double > dx1;
   ShallowArray< double >::iterator i1, i2;
 
@@ -78,44 +74,55 @@ protected:
 
 
 
-struct RK4PhasedVars
+class RK4 : public numInt
 {
-
-  ShallowArray< double > dx1, dx2, dx3, x1, x;
-  ShallowArray< double >::iterator i1, i2, i3, i4;
+  // public:
+  //  RK4(){} 
   
-};
-
-
-class RK4Phased  
-{
-    
+  
   protected:
   
   void initializeIterator(int, double);
-  void callIteratePhase1(RK4PhasedVars &);
-  void callIteratePhase2(RK4PhasedVars &);
-  void callIteratePhase3(RK4PhasedVars &);
-  void callIteratePhase4(RK4PhasedVars &);
-  void prePhase1(RK4PhasedVars & rk1){flushVars(rk1.x);}
-  void prePhase2(RK4PhasedVars & rk1){flushVars(rk1.x1);}
-  void prePhase3(RK4PhasedVars & rk1){flushVars(rk1.x1);}
-  void prePhase4(RK4PhasedVars & rk1){flushVars(rk1.x1);}
-  virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
-  virtual void flushVars(const ShallowArray< double > &) = 0;
+  void callIterate(ShallowArray< double > &);
 
-  const ShallowArray< double > & Vars() const {return rk1.x;}
-  ShallowArray< double > & Vars() {return rk1.x;}
+ private:
 
-
-  RK4PhasedVars rk1;
-  double dT2, dT6, dT;
+  ShallowArray< double > dx1, dx2, dx3, x1;
+  ShallowArray< double >::iterator i1, i2, i3, i4;
+  double dT, dT2, dT6;
 };
+
+
+class RK4Phased  : public numInt
+{
+  protected:
+  
+  void initializeIterator(int, double);
+  void callIteratePhase1();
+  void callIteratePhase2();
+  void callIteratePhase3();
+  void callIteratePhase4();
+  void prePhase1(){flushVars(x);}
+  void prePhase2(){flushVars(x1);}
+  void prePhase3(){flushVars(x1);}
+  void prePhase4(){flushVars(x1);}
+  //virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
+  //virtual void flushVars_x() = 0;
+  //virtual void flushVars_x1() = 0;
+
+  //ShallowArray< double > x;
+
+ private:
+
+  ShallowArray< double > dx1, dx2, dx3, x1;
+  ShallowArray< double >::iterator i1, i2, i3, i4;
+  double dT2, dT6;
+};
+
 
 
 class RK4Counter : public RK4Phased
 {
-
  protected:
 
   void initializeIterator(int n, double dt)
@@ -140,13 +147,8 @@ class RK4Counter : public RK4Phased
   int counter;
 
 };
-
-#define DPREC 10.0e-12
-
-
 class LypIntCounter : public RK4Phased
 {
-
  protected:
 
   void initializeIterator(int n, double dt)
@@ -217,7 +219,6 @@ class LypIntCounter : public RK4Phased
 
 
 /*
-
 class LypInt : public RK4Phased
 {
  protected :
@@ -267,16 +268,12 @@ class LypInt : public RK4Phased
   RK4PhasedVars rk2;
 
 };
-
 */
 
 
-	       /*
-
-
+/*
 #define DPREC 10.0e-12
 //#define LYPLAG 1000
-
 template<class NUMINT_T>
 class LypInt2 : public numInt
 {
@@ -391,9 +388,6 @@ class LypInt2 : public numInt
 
 
 	       */
-
-
-
 
 
 #endif

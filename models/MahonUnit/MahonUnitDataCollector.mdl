@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-19-2015
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2015  All rights reserved
 //
 // US Government Users Restricted Rights 
 // Use, duplication or disclosure restricted by
@@ -16,6 +16,7 @@
 #ifndef MAHONUNITDATACOLLECTOR_MDL
 #define MAHONUNITDATACOLLECTOR_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
+//#include "../HodgkinHuxley/HodgkinHuxley.mdl"
 #include "MahonUnit.mdl"
 
 Variable MahonUnitDataCollector
@@ -41,14 +42,14 @@ Variable MahonUnitDataCollector
      DataFeed.x3 >> x3;
      SpikeProducer.spike >> spikes;
      //     OutputProducer.output >> g;
-     //VoltageIAFProducer.voltage >> V;
+     //VoltageProducer.voltage >> V;
      getNodeIndices();
    }
  
 
 
    InitPhase initialize;
-   TriggeredFunction dataCollection, dataCollectionSpike;
+   TriggeredFunction dataCollection, dataCollectionSpike, dataCollectionLFP;
    FinalPhase finalize;
 }
 

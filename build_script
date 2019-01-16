@@ -162,6 +162,11 @@ function make_functor_mdf()
   #cat functors_both.mdf >> $1
 if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
   cat functors_nts.mdf >> $1
+else
+if [ "${client}" == "njit" ]; then 
+  cat functors_nts.mdf >> $1
+fi
+
 fi
   #cat functors_mgs.mdf >> $1
   if [ -f colab_functors.mdf ]; then
@@ -326,6 +331,10 @@ SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 SUPPORTED_COMPONENTS="all common mdl gsl nti"
 [[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
 
+if [ "${client}" == "njit" ]; then
+  MGS_TARGET_FILENAME="njit.mdf"
+  MDF_TARGET=${MGS_TARGET_FILENAME}
+fi
 #}}}
 if [[ "$BUILD_TARGET" == "--as-NTS" ]] ; then
 TYPE="NTS" 
@@ -347,6 +356,7 @@ elif [ "$BASE_FOLDER" != $(pwd) ]; then
   exit 1
 fi
 cd $BASE_FOLDER/models
+if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
   touch ${MGS_TARGET_FILENAME}
   echo '// MDL files
 #include "std/std_interfaces.mdl"
@@ -356,6 +366,7 @@ cd $BASE_FOLDER/models
 // MDF files
 
   ' > ${MGS_TARGET_FILENAME}
+fi
 if [ ! -f ${MDF_TARGET} ]; then 
   echo "ERROR: File ${MDF_TARGET} does not exist."
 fi

@@ -37,6 +37,7 @@ au BufNewFile,BufRead make_both setlocal foldmethod=marker
 au BufNewFile,BufRead make_mgs setlocal foldmethod=marker
 au BufNewFile,BufRead make_colab setlocal foldmethod=marker
 au BufNewFile,BufRead build_gsl setlocal foldmethod=marker
+au BufNewFile,BufRead build_script setlocal foldmethod=marker
 au BufNewFile,BufRead *.mk setlocal ft=mdl foldmethod=marker
 "noremap <leader>f <Esc>:syn region myFold start="/*{{{*/" end="/*}}}*/" transparent fold<CR>
 noremap <leader>f <Esc>:syn region myFold start="{{{" end="}}}" transparent fold<CR>
