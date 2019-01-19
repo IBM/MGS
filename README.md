@@ -21,13 +21,19 @@
   cxsparse library
     env SUITESPARSE
   
-# Run flags
+## Run flags
   -t Number of threads  
   -f gsl file to run  
   -s random number generator seed  
 
-# Commit tags
+## Commit tags
 When presenting work with MGS/NTS components to a client, a git tag should be created and recorded in the [Box note](https://ibm.ent.box.com/notes/231444066519). See instructions inside the Box note on how to create the tag including a naming convention.
+
+## FAQ
+
+1. Why it seems rebuilding from the beginning?
+The build will needs to be successfull. Then it will enables continuous building. 
+So, you should get the minimal systems to get built first, before adding many more models.
 
 # ZenHub
 The following is based on the reading of [ZenHub's documentation](https://www.zenhub.com/github-project-management.pdf), [IBM's ZenHub documentation](https://pages.github.ibm.com/the-playbook/zenhub/) and other tutorial and help guides.

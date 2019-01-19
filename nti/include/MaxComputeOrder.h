@@ -48,11 +48,11 @@
 //   e.g. typedef double dyn_var_t;
 //   e.g. typedef float dyn_var_t;
 //   e.g. typedef double key_size_t
-#ifdef USE_DOUBLES
- #define dyn_var_t double
-#else
- #define dyn_var_t float
-#endif
+//   TUAN TODO: using typdef
+//   typedef dyn_var_t double 
+//   or better yet 'using'
+//   https://stackoverflow.com/questions/36518029/proper-way-to-define-type-typedef-vs-define
+#include "../../gsl/utils/std/include/Constants.h"
 //NOTE: both must match the size: double == unsigned long long
 #define key_size_t double
 #define key_mask_size_t unsigned long long

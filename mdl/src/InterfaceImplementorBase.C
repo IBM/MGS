@@ -192,6 +192,17 @@ void InterfaceImplementorBase::createPSetClass(
    const MemberContainer<DataType>& members,
    const std::string& name) const 
 {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   createPSetClass(instance, members, use_classType, classType, name);
+
+}
+void InterfaceImplementorBase::createPSetClass(
+   std::auto_ptr<Class>& instance,
+   const MemberContainer<DataType>& members,
+   bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType,
+   const std::string& name) const 
+{
    std::string fullName = getCommonPSetName(name);
    instance.reset(new Class(fullName));
    
@@ -205,6 +216,13 @@ void InterfaceImplementorBase::createPSetClass(
    instance->addHeader("<memory>");
    instance->addHeader("<typeinfo>");
    instance->addExtraSourceHeader("<sstream>");
+   if (name.empty())
+   {
+      if (use_classType)
+      {
+         instance->setClassInfo(classType);
+      }
+   }
    instance->addAttributes(members);
 
    std::auto_ptr<Method> setUpMethod(new Method("set", "void") );
@@ -383,17 +401,15 @@ void InterfaceImplementorBase::generatePublisher()
    _classes.push_back(instance.release());  
 }
 
-void InterfaceImplementorBase::generateInstanceBase()
+std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
 {
    auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
    bool use_classType=false;
-   generateInstanceBase(use_classType, classType);
+   return generateInstanceBase(use_classType, classType);
 }
-void InterfaceImplementorBase::generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
+std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
 {//e.g. CG_LifeNode.h/.C  [Node or Variable]
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
-   //if (isSupportedMachineType(MachineType::GPU))
-   //   instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClass));
    if (use_classType)
       instance->setClassInfo(classType);
    /* as 'publicValue' data in CG_LifeNode becomes 'um_publicValue' in CG_LifeNodeCompCategory
@@ -555,7 +571,6 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
    std::auto_ptr<Class> instance(new Class(getInstanceProxyName()));
    if (use_classType)
       instance->setClassInfo(classType);
-      //instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassProxy));
    MacroConditional mpiConditional(MPICONDITIONAL);
 
    instance->setMacroConditional(mpiConditional);

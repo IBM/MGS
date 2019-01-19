@@ -211,8 +211,19 @@ void CompCategoryBase::generateInAttrPSet()
 
 void CompCategoryBase::generatePSet()
 {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   generatePSet(use_classType, classType);
+}
+void CompCategoryBase::generatePSet(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
+{
    std::auto_ptr<Class> instance;
-   createPSetClass(instance, getInstances());
+   if (use_classType)
+   {
+      createPSetClass(instance, getInstances(), use_classType, classType);
+   }
+   else
+      createPSetClass(instance, getInstances());
    _classes.push_back(instance.release());
 }
 
@@ -246,9 +257,16 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
 	    if (it->second->isArray())
 	    {
 	       initializeFB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
-		  << TAB 
-		  << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" 
-		  << it->first << ";\n"
+		  << TAB << "if (" << PREFIX << "pset->" << it->first << ".size() > 0)\n"
+		  << TAB << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" << it->first << ";\n"
+		  //<< TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" << it->first << ";\n"
+		  //<< TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "].copyContents(" << PREFIX << "pset->" << it->first << ");\n"
+		  /*
+ if (CG_pset->interneuronInputs.size() > 0)
+
+//getCompCategory()->um_interneuronInputs[index] = CG_pset->interneuronInputs;
+getCompCategory()->um_interneuronInputs[index].copyContents(CG_pset->interneuronInputs);
+		   */
 		  << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
 		  << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_from = "
 		  << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
@@ -860,7 +878,7 @@ std::string CompCategoryBase::createAllocateProxyMethodBody(std::string firstPar
          << TAB <<"#elif PROXY_ALLOCATION == OPTION_4\n"
          << TAB <<"   CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
          << TAB <<"   /* global proxy data */\n"
-         << TAB <<"   int MAX_SUBARRAY_SIZE = 20;\n";
+	 << TAB << "  int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n";
       for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
 	 if (it == getInstances().begin())
 	    os << TAB <<"   int sz = " << PREFIX_PROXY_MEMBERNAME << it->first << ".size()+1;\n";
@@ -1680,7 +1698,7 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
 	 << TAB << TAB << TAB 
 	 << "int sz = _receiveList.size();\n";
       addDestinationMethodFB << TAB << TAB << TAB 
-	 << "int MAX_SUBARRAY_SIZE = 20;\n";
+	 << "int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n";
       for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
 	 addDestinationMethodFB << TAB << TAB << TAB 
 	    << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";

@@ -141,8 +141,10 @@ Struct TargetAttachIP3Concentration{
   int index; // index of compartment at which the spine attach (or the shaft attach)
 }
 
-Variable SimulationInfo Implements TimeStepProducer, TimeStepProducerSEC, TimeStepProducerMS, TimeUnitProducer, TimeProducerSEC,
-	TimeProducerMS
+Variable SimulationInfo Implements TimeStepProducer, 
+	TimeStepProducerSEC, TimeStepProducerMS, 
+	TimeUnitProducer, 
+	TimeProducerSEC, TimeProducerMS
 {
 //NOTE: We use this variable to help
 // 1. use time as the criterion (beside iteration index)
@@ -183,6 +185,7 @@ Variable SimulationInfo Implements TimeStepProducer, TimeStepProducerSEC, TimeSt
   InitPhase initialize;
   RuntimePhase calculateInfo; //estimate the current time
 
+  //NOTE: There is no need to receive from an outside 'CONSTANT' TimeStep
   //Connection Pre Constant () Expects TimeStepProducer {
   //  TimeStepProducer.deltaT >> deltaT;
   //}

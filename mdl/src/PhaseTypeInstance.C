@@ -151,8 +151,8 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
    std::string workUnitName = instanceType + "WorkUnitInstance"; 
    if (componentType == "Node")
    {
-      os << tab << "switch(_sim.getPhaseMachineType(\"" << name
-	 << "\") )\n";
+      os << tab << "switch(_sim.getPhaseMachineType(getSimulationPhaseName(\"" << name
+	 << "\")) )\n";
       os << tab << "{\n";
       for(const auto& mt : MachineTypeNames) {    
 	 if (mt.first == MachineType::GPU)
@@ -182,7 +182,7 @@ std::string PhaseTypeInstance::getWorkUnitsMethodBody(
 	 if (mt.first == MachineType::FPGA)
 	    os << tab << STR_FPGA_CHECK_END;
       }
-      os << tab << TAB << "default : std::cerr << \"ERROR: Not supporting processor: \" << MachineTypeNames[_sim.getPhaseMachineType(\"" << name << "\")] << std::endl ; assert(0); break;\n"
+      os << tab << TAB << "default : std::cerr << \"ERROR: Not supporting processor: \" << MachineTypeNames[_sim.getPhaseMachineType(getSimulationPhaseName(\"" << name << "\"))] << std::endl ; assert(0); break;\n"
 	 << tab << "}\n";
 
    }

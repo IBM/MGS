@@ -77,6 +77,7 @@ const std::string GETDATA_FUNC_NAME = "getDataIndex";
 
 const std::string MEMORY_LOCATION = "Array_Flat<int>::MemLocation::UNIFIED_MEM";
 //const std::string MEMORY_LOCATION = "Array_Flat<int>::MemLocation::CPU";
+const std::string COMMON_MAX_SUBARRAY_SIZE = "1000"; // the max size for
 
 enum class MachineType {
    CPU, GPU, FPGA

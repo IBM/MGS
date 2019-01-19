@@ -900,7 +900,11 @@ std::string Simulation::findLaterPhase(const std::string& first,
    return first;
 }
 
-machineType Simulation::getPhaseMachineType(std::string const & name) {
+/*
+ * _machineTypes only tracks the simulation's phase
+ */
+machineType Simulation::getPhaseMachineType(std::string const & name) 
+{
   std::map<std::string, machineType>::iterator
     mtiter=_machineTypes.find(name);
   assert(mtiter!=_machineTypes.end());

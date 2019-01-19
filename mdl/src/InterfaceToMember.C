@@ -254,7 +254,11 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
 		  const DataType* dt_ptr = it->getDataType();
 //#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
 //         int CG_pyramidalLateralInputsSize = _container->um_pyramidalLateralInputs[index].size();
-//         _container->um_pyramidalLateralInputs[index].increase();
+//         if (! sizedIncreased)
+//         {  	sizedIncreased = true; 
+//        	 _container->um_pyramidalLateralInputs[index].increase();
+//         }
+//         else { CG_pyramidalLateralInputsSize -= 1; }
 //         _container->um_pyramidalLateralInputs[index][CG_pyramidalLateralInputsSize].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
 //         pyramidalLateralInputs[CG_pyramidalLateralInputsSize].weight = CG_castedPSet->weight;
 //#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
@@ -280,7 +284,15 @@ std::string InterfaceToMember::getInterfaceToMemberCode(
 		  os << tab << "{\n";
 		  os << tab << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
 		     << tab << TAB << "int " << sizeName <<  " =" << dt_ptr->getNameRaw(MachineType::GPU) << ".size();\n"
-		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+		     << tab << TAB << "if (! sizeIncreased) \n"
+		     << tab << TAB << "{\n"
+		     << tab << TAB << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+		     << tab << TAB << TAB << "sizeIncreased = true;\n"
+		     << tab << TAB << "}\n"
+		     << tab << TAB << "else{\n"
+		     << tab << TAB << TAB << sizeName << "--;\n"
+		     << tab << TAB << "}\n"
+		     //<< tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
 		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << "[" << sizeName << "]" << path << " = " << getMethod << ";\n";
 		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
 		  os << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "] +=1;\n"

@@ -207,12 +207,16 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 							 requiredIncreases, mach_type);
 
    end = requiredIncreases.end();
-	 os << tab <<  "if (castMatchLocal) { \n";
-	 os << tab << TAB <<  "if (matchPredicateAndCast) {\n";
-	 os << tab << TAB << TAB <<  "std::cerr << \"WARNING: You already have a cast match of predicate\" << R\"(" << predicate << ")\";\n";
-	 os << tab << TAB << TAB <<  "assert(0);\n";
-	 os << tab << TAB <<  "}; \n";
-	 os << tab << TAB <<  "matchPredicateAndCast = true; \n";
+   os << tab <<  "if (castMatchLocal) { \n";
+   os << tab << TAB <<  "if (matchPredicateAndCast) {\n";
+   os << tab << TAB << TAB <<  "std::cerr << \"WARNING: You already have a cast match of predicate\" << R\"(" << predicate << ")\";\n";
+   os << tab << TAB << TAB <<  "assert(0);\n";
+   os << tab << TAB <<  "}; \n";
+   os << tab << TAB <<  "matchPredicateAndCast = true; \n";
+   if (mach_type == MachineType::GPU)
+   {
+      os << tab << TAB <<  "bool sizeIncreased = false; \n";
+   }
 
    for (it = requiredIncreases.begin(); it != end; ++it) {
       std::string sizeName = PREFIX + *it + "Size";
@@ -265,13 +269,13 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 							 requiredIncreases);
 
    end = requiredIncreases.end();
-	 os << tab <<  "if (matchLocal) { \n";
-	 os << tab << TAB <<  "match = true; \n";
+   os << tab <<  "if (matchLocal) { \n";
+   os << tab << TAB <<  "match = true; \n";
 
-	 os << tab << TAB <<"//for the same inAttr, only enable one path of connection \n";
-	 os << tab << TAB <<"//from one node to another\n";
-	 //os << tab << TAB << predicate <<"\n";
-	 os << tab << TAB		<< "if (map_inAttr.count(CG_castedPSet->identifier) == 0)\n";
+   os << tab << TAB <<"//for the same inAttr, only enable one path of connection \n";
+   os << tab << TAB <<"//from one node to another\n";
+   //os << tab << TAB << predicate <<"\n";
+   os << tab << TAB		<< "if (map_inAttr.count(CG_castedPSet->identifier) == 0)\n";
    os << tab << TAB << TAB <<"map_inAttr[CG_castedPSet->identifier] = 1;\n";
    os << tab << TAB << "else\n";
    os << tab << TAB << TAB << "map_inAttr[CG_castedPSet->identifier] += 1;\n";

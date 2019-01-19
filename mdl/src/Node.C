@@ -79,7 +79,11 @@ void Node::internalGenerateFiles()
    generateNodeAccessor();
    generateInAttrPSet();
    generateOutAttrPSet();
-   generatePSet();
+   {
+      auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassPSet);
+      bool use_classType = true;
+      generatePSet(use_classType, classType);
+   }
    generatePublisher();
    generateWorkUnitGridLayers();
    generateWorkUnitInstance();
@@ -468,12 +472,12 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	 {
 	    //NOTE: um_neighbors is an array of array
 	    allocateNodeMethodFB 
+	       << TAB << "{\n"
+	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n"
 	       << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n"
-	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " << MEMORY_LOCATION << ");\n"
 	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
-	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz*MAX_SUBARRAY_SIZE);\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.increaseSizeTo(sz);\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.increaseSizeTo(sz);\n"
@@ -487,7 +491,9 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz * MAX_SUBARRAY_SIZE);\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.increaseSizeTo(sz);\n"
 	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset[sz-1] = (sz-1) * MAX_SUBARRAY_SIZE;\n"
-	       << TAB << "#endif\n";
+	       << TAB << "#endif\n"
+	       << TAB << "}\n"
+	       ;
 	 }
 	 else{
 	    allocateNodeMethodFB 
@@ -521,12 +527,13 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	    << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
 	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	    << TAB << TAB << "int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_start_offset.resize_allocated(size, force_resize);\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"
 	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
 	    << TAB << TAB << "{\n"
-	    << TAB << TAB << "int MAX_SUBARRAY_SIZE = 20;\n"
+	    << TAB << TAB << "int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_max_elements = MAX_SUBARRAY_SIZE;\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size*" << PREFIX_MEMBERNAME << it->first <<  "_max_elements, force_resize);\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.resize_allocated(size, force_resize);\n"

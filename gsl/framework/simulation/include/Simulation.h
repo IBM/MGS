@@ -196,6 +196,7 @@ class Simulation : public Publishable {
   const std::vector<InstanceFactoryRegistry*>& getInstanceFactoryRegistries() {
     return _instanceFactoryRegistries;
   }
+  //TUAN TODO: change to using size_t
   unsigned getIteration() { return _iteration; }
 
   std::vector<std::string> const& getPhaseNames() { return _phaseNames; }
@@ -487,7 +488,9 @@ class Simulation : public Publishable {
   //END DEBUG PURPOSE
   private:
   StateType _state;
+  //TUAN TODO: change to using size_t
   unsigned _iteration;
+  double currentTime; 
   TypeManager<NodeType>* _ntm;
   TypeManager<EdgeType>* _etm;
   SysTimer _simTimer;
@@ -574,7 +577,7 @@ class Simulation : public Publishable {
   std::deque<PhaseElement> _loadPhases;
   std::deque<PhaseElement> _finalPhases;
   std::map<std::string, bool> _communicatingPhases;
-  //map from a phase's name, e.g. 'update' (as declared in GSL), to the machine type, e.g. GPU, which handle that type
+  //map from a simulation phase's name, e.g. 'update' (as declared in GSL), to the machine type, e.g. GPU, which handle that type
   std::map<std::string, machineType> _machineTypes;
   int _rank;
   int _nump;

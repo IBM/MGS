@@ -309,6 +309,28 @@ std::string PSetToMember::getPSetToMemberCode(
 	    {
 	       if (it->second->isArray())
 	       {
+//#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+//         int CG_pyramidalLateralInputsSize = _container->um_pyramidalLateralInputs[index].size();
+//         if (! sizedIncreased)
+//         {  	sizedIncreased = true; 
+//        	 _container->um_pyramidalLateralInputs[index].increase();
+//         }
+//         else { CG_pyramidalLateralInputsSize -= 1; }
+//         _container->um_pyramidalLateralInputs[index][CG_pyramidalLateralInputsSize].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         pyramidalLateralInputs[CG_pyramidalLateralInputsSize].weight = CG_castedPSet->weight;
+//#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+//         _container->um_pyramidalLateralInputs_num_elements[index] +=1;
+//         int um_pyramidalLateralInputs_index = _container->um_pyramidalLateralInputs_offset[index] + _container->um_pyramidalLateralInputs_num_elements[index]-1;
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].weight = CG_castedPSet->weight;
+//#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+//         _container->um_pyramidalLateralInputs_num_elements[index] +=1;
+//         int um_pyramidalLateralInputs_index = index * _container->um_pyramidalLateralInputs_max_elements + _container->um_pyramidalLateralInputs_num_elements[index]-1;
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].input = CG_FiringRateProducerPtr->CG_get_FiringRateProducer_output();
+//         _container->um_pyramidalLateralInputs[um_pyramidalLateralInputs_index].weight = CG_castedPSet->weight;
+//#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+//   assert(0);
+//#else
 		  std::string tmpVarName = PREFIX_MEMBERNAME + it->second->getName() + "_index"; 
 		  const DataType* dt_ptr = it->second;
 		  std::string sizeName = "CG_" + dt_ptr->getName(MachineType::CPU) + "Size"; 
@@ -316,7 +338,17 @@ std::string PSetToMember::getPSetToMemberCode(
 		  os << tab << "{\n";
 		  os << tab << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
 		     << tab << TAB << "int " << sizeName <<  " =" << dt_ptr->getNameRaw(MachineType::GPU) << ".size();\n"
-		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+		     //<< tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+
+		     << tab << TAB << "if (! sizeIncreased) \n"
+		     << tab << TAB << "{\n"
+		     << tab << TAB << TAB << dt_ptr->getNameRaw(MachineType::GPU) << ".increase();\n"
+		     << tab << TAB << TAB << "sizeIncreased = true;\n"
+		     << tab << TAB << "}\n"
+		     << tab << TAB << "else{\n"
+		     << tab << TAB << TAB << sizeName << "--;\n"
+		     << tab << TAB << "}\n"
+
 		     << tab << TAB << dt_ptr->getNameRaw(MachineType::GPU) << "[" << sizeName << "]" << path << " = " << getMethod << ";\n";
 		  os << tab << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n";
 		  os << tab << TAB << REF_CC_OBJECT << "->" << PREFIX_MEMBERNAME << dt_ptr->getName() << "_num_elements[" << REF_INDEX << "] +=1;\n"

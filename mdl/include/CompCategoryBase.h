@@ -52,6 +52,7 @@ class CompCategoryBase : public InterfaceImplementorBase {
    protected:
       void generateInAttrPSet();
       void generatePSet();
+      void generatePSet(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       void generateWorkUnitInstance();
       void generateInstance();
       void generateInstance(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType, Class* ptr=nullptr);

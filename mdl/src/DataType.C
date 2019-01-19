@@ -342,6 +342,7 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
 	 std::size_t start = type.find_first_of("<");
 	 std::size_t last = type.find_first_of(">");
 	 std::string element_datatype = type.substr(start+1, last-start-1);
+	 type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
 	 os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n";
 	 os << tab << TAB << "rval = new GenericService< " << type
 	    << " >(" << DATA << ", " << "&("; 

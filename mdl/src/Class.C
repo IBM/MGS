@@ -194,7 +194,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	   MacroConditional gpuConditional(GPUCONDITIONAL);
 	   gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
 	   att->setMacroConditional(gpuConditional);
-	   std::auto_ptr<Attribute> att_smart(att);
+	   std::unique_ptr<Attribute> att_smart(att);
 	   addAttribute(att_smart);
 	 }
       }
@@ -219,7 +219,8 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	 std::auto_ptr<DataType> dup;
 	 it->second->duplicate(dup);
 	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
- 	 std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
+ 	 //std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
+ 	 std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
 	 att->setAccessType(accessType);
 	 if (add_gpu_attributes)
 	 {//make these data members 'disappear' in GPU
@@ -363,7 +364,55 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	     }
 	   }
 	 }
-	 addAttribute(att);
+	 if (getClassInfoSubType() == SubType::BaseClassPSet and 
+	     getClassInfoPrimeType() == PrimeType::Node and 
+	     ((DataTypeAttribute*)att.get())->getDataType()->isArray())
+	 {
+	   //std::unique_ptr<Attribute> att_cc = att;
+	   MacroConditional gpuConditional(GPUCONDITIONAL);
+	   auto member_attr_name = it->first;
+	   auto dt = it->second;
+	   {
+	     MacroConditional gpuConditional(GPUCONDITIONAL);
+	     std::string from = "ShallowArray<";
+	     std::string to = "ShallowArray_Flat<";
+	     std::string  type = dt->getTypeString(); 
+	     type = type.replace(type.find(from),from.length(),to);
+	     from = ">";
+	     to = ", " + MEMORY_LOCATION + ">";
+	     type = type.replace(type.find(from),from.length(),to);
+	     //std::unique_ptr<Attribute> att_cc(new CustomAttribute(dt->getName(), "ShallowArray_Flat<" + type + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+	     std::unique_ptr<Attribute> att_cc(new CustomAttribute(dt->getName(), type , AccessType::PUBLIC));
+	     //gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_3");
+	     att_cc->setMacroConditional(gpuConditional);
+	     //att->setMacroConditional(gpuConditional);
+	     addAttribute(att_cc);
+	     //addAttribute(att);
+	   }
+	   gpuConditional.setNegateCondition();
+	   att->setMacroConditional(gpuConditional);
+	   addAttribute(att);
+	   //MachineType mach_type=MachineType::GPU;
+	   //addAttribute(att, mach_type);
+	   //addAttribute(att);
+//#if defined(HAVE_GPU) 
+//      //TUAN TODO: we may not need to have 'reference' elements array here
+//      //  otherwise, consider proper allocation
+// #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #endif
+//#else
+//      ShallowArray< int* > neighbors;
+//#endif
+	 }
+	 else
+	   addAttribute(att);
       }
       if (add_gpu_attributes and compcat_ptr)
 	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_END); 
