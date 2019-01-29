@@ -18,6 +18,7 @@
 #include "Copyright.h"
 
 
+#include "rndm.h"
 #include "ShallowArray.h"
 
 #define DPREC 10.0e-12
@@ -120,14 +121,45 @@ class RK4Phased  : public numInt
 };
 
 
+struct RK4PhasedVars
+{
+  ShallowArray< double > dx1, dx2, dx3, x1, x;
+  ShallowArray< double >::iterator i1, i2, i3, i4;
+};
 
-class RK4Counter : public RK4Phased
+
+class RK4PhasedOld
+{
+    
+  protected:
+  
+  void initializeIterator(int, double);
+  void callIteratePhase1(RK4PhasedVars &);
+  void callIteratePhase2(RK4PhasedVars &);
+  void callIteratePhase3(RK4PhasedVars &);
+  void callIteratePhase4(RK4PhasedVars &);
+  void prePhase1(RK4PhasedVars & rk1){flushVars(rk1.x);}
+  void prePhase2(RK4PhasedVars & rk1){flushVars(rk1.x1);}
+  void prePhase3(RK4PhasedVars & rk1){flushVars(rk1.x1);}
+  void prePhase4(RK4PhasedVars & rk1){flushVars(rk1.x1);}
+  virtual void derivs(const ShallowArray< double > &, ShallowArray< double > &) = 0;
+  virtual void flushVars(const ShallowArray< double > &) = 0;
+
+  const ShallowArray< double > & Vars() const {return rk1.x;}
+  ShallowArray< double > & Vars() {return rk1.x;}
+
+
+  RK4PhasedVars rk1;
+  double dT2, dT6, dT;
+};
+
+class RK4Counter : public RK4PhasedOld
 {
  protected:
 
   void initializeIterator(int n, double dt)
   {
-    RK4Phased::initializeIterator(n,dt);
+    RK4PhasedOld::initializeIterator(n,dt);
     counter = 0;
   }
 
@@ -147,13 +179,13 @@ class RK4Counter : public RK4Phased
   int counter;
 
 };
-class LypIntCounter : public RK4Phased
+class LypIntCounter : public RK4PhasedOld
 {
  protected:
 
   void initializeIterator(int n, double dt)
   {
-    RK4Phased::initializeIterator(n,dt);
+    RK4PhasedOld::initializeIterator(n,dt);
     counter = 0;
     rk2.dx1.increaseSizeTo(n);
     rk2.dx2.increaseSizeTo(n);
