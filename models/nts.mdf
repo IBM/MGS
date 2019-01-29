@@ -1,3 +1,6 @@
+#include "Life/Life.mdl"
+#include "Life/LifeDataCollectors.mdl"
+
 #include "std/std.mdl"
 #include "LaboratoryTools/LaboratoryTools.mdl"
 #include "BranchSolver/BranchSolver.mdl"
