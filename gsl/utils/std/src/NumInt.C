@@ -162,10 +162,11 @@ void RK4PhasedOld::initializeIterator(int numvars_, double dT_)
   //numInt::initializeIterator(numvars_,dT_);
   dT = dT_;
   dT2=dT_/2.0; dT6 = dT_/6.0;
-  dx1.increaseSizeTo(numvars_);
-  dx2.increaseSizeTo(numvars_);
-  dx3.increaseSizeTo(numvars_);
-  x1.increaseSizeTo(numvars_);  
+  rk1.dx1.increaseSizeTo(numvars_);
+  rk1.dx2.increaseSizeTo(numvars_);
+  rk1.dx3.increaseSizeTo(numvars_);
+  rk1.x1.increaseSizeTo(numvars_);  
+  rk1.x.increaseSizeTo(numvars_);  
 }
 
 
@@ -189,21 +190,23 @@ void RK4PhasedOld::callIteratePhase2(RK4PhasedVars & rk1)
   //x1 - > dx2
   //x, dx2 -> x1
 
-  
-  for (i1=x1.begin(),i2=x.begin(),i3=dx1.begin();i1!=x1.end();i1++,i2++,i3++) 
-    *i1 = *i2 + dT2**i3;
+  for (rk1.i1=rk1.x1.begin(),rk1.i2=rk1.x.begin(),rk1.i3=rk1.dx2.begin();rk1.i1!=rk1.x1.end();rk1.i1++,rk1.i2++,rk1.i3++) 
+    *rk1.i1 = *rk1.i2 + dT2**rk1.i3;
 
-  derivs(x1,dx2);
 }
 
 void RK4PhasedOld::callIteratePhase3(RK4PhasedVars & rk1)
 {
-  derivs(x1,dx3);
 
-  for (i1=x1.begin(),i2=x.begin(),i3=dx3.begin(),i4=dx2.begin();i1!=x1.end();i1++,i2++,i3++,i4++)
+  derivs(rk1.x1,rk1.dx3);
+  //x1 -> dx3
+  //x, dx3, dx2 -> x1
+
+  for (rk1.i1=rk1.x1.begin(),rk1.i2=rk1.x.begin(),rk1.i3=rk1.dx3.begin(),rk1.i4=rk1.dx2.begin();
+       rk1.i1!=rk1.x1.end();rk1.i1++,rk1.i2++,rk1.i3++,rk1.i4++)
     { 
-    *i1 = *i2 + dT**i3;
-    *i3 += *i4;
+      *rk1.i1 = *rk1.i2 + dT**rk1.i3;
+      *rk1.i3 += *rk1.i4;
     }
 
 }
@@ -298,11 +301,8 @@ void RK4Phased::callIteratePhase4()
 void LypInt::initializeIterator(int numvars_, double dT_)
 {
 
-<<<<<<< HEAD
-  RK4PhasedOld::initializeIterator(numvars_,dT_);
-=======
   RK4Phased::initializeIterator(numvars_,dT_);
->>>>>>> restore removed codes and fix dates of copyright
+  RK4PhasedOld::initializeIterator(numvars_,dT_);
      
   //deltaT() = dT_;
   d0 = DPREC;
@@ -318,11 +318,7 @@ void LypInt::initializeIterator(int numvars_, double dT_)
 void LypInt::callIteratePhase1()
 {
 
-<<<<<<< HEAD
-  RK4PhasedOld::callIteratePhase1();
-=======
   RK4Phased::callIteratePhase1();
->>>>>>> restore removed codes and fix dates of copyright
 
   derivs(rk2.x,rk2.dx1); 
 
@@ -337,11 +333,8 @@ void LypInt::callIteratePhase1()
 void LypInt::callIteratePhase2()
 {
 
-<<<<<<< HEAD
-  RK4PhasedOld::callIteratePhase2();
-=======
   RK4Phased::callIteratePhase2();
->>>>>>> restore removed codes and fix dates of copyright
+  RK4PhasedOld::callIteratePhase2();
 
   derivs(rk2.x1,rk2.dx2);
   //x1 - > dx2
@@ -355,11 +348,8 @@ void LypInt::callIteratePhase2()
 void LypInt::callIteratePhase3()
 {
 
-<<<<<<< HEAD
-  RK4PhasedOld::callIteratePhase3();
-=======
   RK4Phased::callIteratePhase3();
->>>>>>> restore removed codes and fix dates of copyright
+  RK4PhasedOld::callIteratePhase3();
 
   derivs(rk2.x1,rk2.dx3);
   //x1 -> dx3
@@ -377,11 +367,8 @@ void LypInt::callIteratePhase3()
 void LypInt::callIteratePhase4()
 {
   
-<<<<<<< HEAD
  RK4PhasedOld::callIteratePhase4();
-=======
- RK4Phased::callIteratePhase4();
->>>>>>> restore removed codes and fix dates of copyright
+ RK4PhasedOld::callIteratePhase4();
 
   derivs(rk2.x1,rk2.dx2);
   //x1 -> dx2
