@@ -35,7 +35,7 @@ Cxsz = [55; 91; 92; 162];
 inpFB = [3, 1, 4, 2];
 filepath = '/media/nvme/MGS/graphs/IBEx/';  % your path to IBEx here if needed
 figure('Position', [200 200 900 1200]);
-show_connectivities=1;
+show_connectivities=0;
 save_figs=1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot L2/3 activity (Infomax)
