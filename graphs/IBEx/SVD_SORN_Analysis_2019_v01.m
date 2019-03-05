@@ -4,16 +4,16 @@ Cxoffs = [0; 55; 146; 238; 400];
 plot_scatter=1; 
 save_figs=1;
 
-t_start=800; t_stop=810; % beginning and end chosen for plotting scatter plots (in sec, from total simulation)
-
+t_start=100; t_stop=110; % beginning and end chosen for plotting scatter plots (in sec, from total simulation)
+dt=0.001;
 % times for SVD analysis (in sec, from begining of simulation), use 10s period by default, for other period, need change in plotting below.. 
-t1=500; t2=t1+10; t3=800; t4=t3+10;
+t1=100; t2=t1+10; t3=180; t4=t3+10;
 
 %% Scatter plot of L5 spiking activity
 figure();
 totalUnits = 0 ;
 files = {['M1i.txt'], ['Msupi.txt'], ['S1i.txt'], ['Sseci.txt']};
-filepath = '/home/naze/MGS/graphs/IBEx/2018jan16morning/';  %% your path here if needed
+filepath = '/media/nvme/MGS/graphs/IBEx/';  %% your path here if needed
 var = {['M1'], ['Msup'], ['S1'], ['Ssec']};
 for idx = 1:size(files,2)
     filename = strcat(filepath, files{idx});
@@ -36,13 +36,13 @@ for idx = 1:size(files,2)
     expr = strcat(var(idx),'_units = data(4:2:end);');
     eval(expr{1});
     clear data;
-    expr = strcat(var(idx),'_idx_start = find(',var(idx),'_times>=t_start);');
+    expr = strcat(var(idx),'_idx_start = find(',var(idx),'_times>=(t_start/dt));');
     eval(expr{1});
-    expr = strcat(var(idx),'_idx_stop = find(', var(idx), '_times>=t_stop);');
+    expr = strcat(var(idx),'_idx_stop = find(', var(idx), '_times<=(t_stop/dt));');
     eval(expr{1});
     
     offset = Cxoffs(idx)+1;
-    expr = strcat('scatter(', var(idx),'_times(',var(idx),'_idx_start:',var(idx),'_idx_stop), ',var(idx),'_units(',var(idx),'_idx_start:',var(idx),'_idx_stop)+offset);');
+    expr = strcat('scatter(', var(idx),'_times(',var(idx),'_idx_start(1):',var(idx),'_idx_stop(end))*dt, ',var(idx),'_units(',var(idx),'_idx_start(1):',var(idx),'_idx_stop(end))+offset);');
     eval(expr{1});
     hold on;
 end
@@ -73,10 +73,9 @@ t_beg = {t1-t_artifact, t3-t_artifact}; t_end={t2+t_artifact, t4+t_artifact};
 boxcar=ones(tauZ,1); % sliding window for box car filtering
 
 % create cell to store full matrices of data (in ms, however times in sec so need to *1000, and add tauZ for "boxcar" filtering)
-epoch1 = zeros(round((t_end{1}-t_beg{1})*1000+tauZ+1), totalUnits);
-epoch2 = zeros(round((t_end{2}-t_beg{2})*1000+tauZ+1), totalUnits);
+epoch1 = zeros(round((t_end{1}-t_beg{1})/dt+tauZ+1), totalUnits);
+epoch2 = zeros(round((t_end{2}-t_beg{2})/dt+tauZ+1), totalUnits);
 epochs = {epoch1, epoch2};
-SFRE_rasters = {epoch1, epoch2};
 clear epoch1 epoch2;
 
 gauss_conv = normpdf(-round(tauZ/2):round(tauZ/2), 0, 20);  % gaussian kernel to convolute signal (based on tauZ=100)
@@ -84,21 +83,20 @@ gauss_conv = normpdf(-round(tauZ/2):round(tauZ/2), 0, 20);  % gaussian kernel to
 % transforms data (sparse matrices) into full matrix
 for ep=1:length(epochs)
     for m=1:length(var)
-        t_idx = find(times{m}>=t_beg{ep} & times{m}<=t_end{ep});
+        t_idx = find(times{m}>=t_beg{ep}/dt & times{m}<=t_end{ep}/dt);
         for i=1:Cxsz(m)
             unit_i_idx = find(units{m}(t_idx)==(i-1));
             t_i_idx = t_idx(unit_i_idx);
-            t_i_idx_full = round((times{m}(t_i_idx)-t_beg{ep})*1000);
+            t_i_idx_full = round(times{m}(t_i_idx)-t_beg{ep}/dt);
             epochs{ep}(t_i_idx_full+1,Cxoffs(m)+i)=1; % +1 for matlab (idx 0 exists in MGS)
         end
     end
-    SFRE_rasters{ep} = epochs{ep}(t_artifact*1000:end-t_artifact*1000, :);
     % filter epochs using gaussian kernel convolution (better than boxcar filtering)
     for ts=1:(size(epochs{ep},1)-tauZ)
         epochs{ep}(ts,:) = gauss_conv * epochs{ep}(ts:ts+tauZ,:);
     end
     %epochs{ep} = conv2(epochs{ep}, boxcar, 'same');
-    epochs{ep} = epochs{ep}(t_artifact*1000+tauZ:end-t_artifact*1000, :); % remove artifact of convolution
+    epochs{ep} = epochs{ep}(t_artifact/dt+tauZ:end-t_artifact/dt, :); % remove artifact of convolution
 end
 
 
@@ -110,7 +108,7 @@ eigenval = cell(2,nAreas); % row1: t1 to t2; row2: t3 to t4
 figure('Units', 'normalized', 'Position', [0 0 0.6 0.6]);
 % Set Info Text Box
 textBox = uicontrol('style', 'text');
-figname=sprintf('SVD_L5_SORN_comp%ivs%ivs%i | 2018Jan15eve', comp(1), comp(2), comp(3));
+figname=sprintf('SVD_L5_SORN_comp%ivs%ivs%i', comp(1), comp(2), comp(3));
 set(textBox, 'String', figname, 'FontSize', 14);
 set(textBox, 'Units', 'normalized', 'Position', [0 0.95 1 0.05]); % position [left bottow width height]
 

@@ -28,14 +28,14 @@
 %       Threshold_DA.txt : Threshold evolution (activity dependent)
 
 
-t_start=500; t_stop=510; % beginning and end chosen for plotting (in sec, from beggining of simulation)
+t_start=190; t_stop=200; % beginning and end chosen for plotting (in sec, from beggining of simulation)
 dt=0.001; 
 Cxoffs = [0; 55; 146; 238; 400];
 Cxsz = [55; 91; 92; 162];
 inpFB = [3, 1, 4, 2];
-filepath = '/media/nvme/MGS/graphs/IBEx/2019feb25/';  % your path to IBEx here if needed
+filepath = '/media/nvme/MGS/graphs/IBEx/';  % your path to IBEx here if needed
 figure('Position', [200 200 900 1200]);
-show_connectivities=1;
+show_connectivities=0;
 save_figs=1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot L2/3 activity (Infomax)
@@ -128,7 +128,7 @@ for idx = 1:size(files,2)
     expr = strcat(var(idx),'_mean =  zeros((t_stop-t_start)/dt+1, 1);');
     eval(expr{1});
     
-    expr = strcat(var(idx),'_idx = find(',var(idx),'_times>=t_start & ', var(idx),'_times<t_stop);');
+    expr = strcat(var(idx),'_idx = find(',var(idx),'_times>=(t_start/dt) & ', var(idx),'_times<(t_stop/dt));');
     eval(expr{1});
     
 %     expr = strcat(var(idx),'_idx_start = find(',var(idx),'_times>=t_start);');
@@ -138,7 +138,7 @@ for idx = 1:size(files,2)
     
     offset = Cxoffs(idx)+1;
     
-    expr = strcat('scatter(', var(idx),'_times(',var(idx),'_idx), ',var(idx),'_units(',var(idx),'_idx)+offset);');
+    expr = strcat('scatter(', var(idx),'_times(',var(idx),'_idx)*dt, ',var(idx),'_units(',var(idx),'_idx)+offset);');
     eval(expr{1});
     hold on;
 end
@@ -170,7 +170,7 @@ for idx = 1:4
     expr = strcat('area_times = ',var(idx),'_times;');    
     eval(expr{1});
     for i = 1:numel(area_idx)
-        new_time = round((area_times(area_idx(i))-t_start)/dt);
+        new_time = round((area_times(area_idx(i))-t_start/dt));
         SORN_mean(new_time+1, idx) = SORN_mean(new_time+1, idx) + 1;
     end
     SORN_mean(:,idx) = SORN_mean(:,idx) / Cxsz(idx);

@@ -101,9 +101,9 @@ void ZhengSORNExcUnit::update(RNG& rng)
   // update exc synapses (E2E)
   for (iter=lateralExcInputs.begin(); iter!=end; ++iter) {
     if (iter->synapse) {
-      // NEW STDP RULE:
-      //iter->weight += SHD.eta_STDP * ( spike * *(iter->spikePrev) - spikePrev * *(iter->spike) ); 
-      iter->weight += SHD.eta_STDP * ( a * *(iter->aPrev) - aPrev * *(iter->a) ); 
+      iter->weight += SHD.eta_STDP * ( spike * *(iter->spikePrev) - spikePrev * *(iter->spike) ); 
+      // NEW STDP RULE: (used with accu and tau_STDP)
+      //iter->weight += SHD.eta_STDP * ( a * *(iter->aPrev) - aPrev * *(iter->a) ); 
       // pruning
       if (iter->weight<0.0001) {
         iter->weight=0;
@@ -123,8 +123,9 @@ void ZhengSORNExcUnit::update(RNG& rng)
   for (iter2=lateralInhInputs.begin(); iter2!=end2; ++iter2) {
     if(iter2->synapse){
 	if (*(iter2->spikePrev)) {
-      	  //iter2->weight -= (spike ? SHD.eta_iLTP : SHD.eta_inhib);  // eta_iLTP=-0.01; eta_inhib=0.001
-      	  iter2->weight -= SHD.eta_inhib * (1.0 - newSpike*SHD.eta_iSTDP) * *(iter2->a);
+      	  iter2->weight -= (spike ? SHD.eta_iLTP : SHD.eta_inhib);  // eta_iLTP=-0.01; eta_inhib=0.001
+          // NEW STDP RULE: (used with accu and tau_STDP)
+      	  //iter2->weight -= SHD.eta_inhib * (1.0 - newSpike*SHD.eta_iSTDP) * *(iter2->a);
         }
         if (iter2->weight<0.001) {
 	  iter2->weight=0.001;
