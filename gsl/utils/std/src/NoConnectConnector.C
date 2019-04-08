@@ -77,7 +77,7 @@ void NoConnectConnector::nodeToNode(
 //      sim->_nodes_from_to_granules[key].push_back(value);
 //#endif
 //   }
-   if (sim->getGranule(*from) != sim->getGranule(*to))
+   //DON"T USE THIS CHECK: "if (sim->getGranule(*from) != sim->getGranule(*to))
    {
       if (sim->_granulesFrom_NT_count.count(sim->getGranule(*from)) == 0)
       {

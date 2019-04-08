@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstddef>
 #include "rndm.h"
+#include <vector>
 //#define USE_SMART_PTR
 #ifdef USE_SMART_PTR
 #include "Array_GPU_unique_ptr.h"
@@ -82,6 +83,8 @@ class Managed
     }
 };
 
+#include <memory>
+#include <new>
 /*
  * CONSTRAINT: 
  *   to enable the iterrator to work properly, _data is at minimal 1 element
@@ -103,8 +106,15 @@ class Array_Flat //: public Managed
     
     friend class Array_FlatIterator<T, T>;
     friend class Array_FlatIterator<const T, T>;
-    void * new_memory(size_t len)
+    /* len = in number of bytes */
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+    //T* new_memory(size_t len, char*& new_pBuffer)
+    T* new_memory(size_t len, char** new_pBuffer)
+#else
+    T * new_memory(size_t len)
+#endif
     {
+      //std::cout << " ... new_memory size in GB " << len/1024/1024/1024 << " GB\n";
       /* testing: use again host allocation */
       T* ptr; //void *ptr;
 //#ifdef USE_FLATARRAY_UM
@@ -113,9 +123,128 @@ class Array_Flat //: public Managed
 //#else
 //      ptr = ::new T[len/sizeof(T)];
 //#endif
+
       if (_mem_location == MemLocation::CPU)
       {
-      ptr = ::new T[len/sizeof(T)];
+#define DEBUG_SIZE_INFO
+#if defined(DEBUG_SIZE_INFO)
+	double sizeGB = ((double)len) /1024/1024/1024;
+	double sizeMB = ((double)len) /1024/1024;
+	if (sizeGB >= 1)
+	{
+	  std::cout << "AAA" << sizeGB << "GB for " 
+	    //<< typeid(*this).name() << " " 
+	    << typeid(T).name() << "\n";
+	}
+	else if (sizeMB >= 1)
+	{
+	  std::cout << "BBB" << sizeMB << "MB for " 
+	    << typeid(T).name() << "\n";
+	}
+#endif
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
+	ptr = allocator.allocate(len/sizeof(T));
+#elif defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+	/*
+	 https://stackoverflow.com/questions/15254/can-placement-new-for-arrays-be-used-in-a-portable-way
+	 */
+	size_t NUMELEMENTS = len/sizeof(T);
+	//char* pBuffer;
+	//pBuffer = malloc(len);
+	//pBuffer = new char[len];
+	*new_pBuffer = new char[len];
+	/* placement new on array */
+	//ptr = new (pBuffer) T[len/sizeof(T)];
+	/* placement new on individual element */
+	/* we can use multiple thread here as well? */
+	//ptr = (T*)pBuffer;
+#if defined(DEBUG_SIZE_INFO)
+	if (sizeGB >= 1)
+	{
+	  std::cout << "    pass new char" << "\n";
+	}
+#endif
+	//
+	ptr = (T*)*new_pBuffer;
+	/* serisal version */
+	//https://stackoverflow.com/questions/4011577/placement-new-array-alignment?rq=1
+	//https://stackoverflow.com/questions/4754763/object-array-initialization-without-default-constructor
+	
+	for(size_t i = 0; i < NUMELEMENTS; ++i)
+	{
+	  //&ptr[i] = new (ptr + i) T();
+	  new (ptr + i) T();
+        #if defined(DEBUG_SIZE_INFO)
+	  if (sizeGB >= 1)
+	  {
+	    if (i > 0 and i % 100000000 == 0)
+	      std::cout << "    index "<< i << "\n";
+	  }
+        #endif
+       }
+       //end serial version
+       
+	/* parallel version */
+//       const size_t nthreads = std::min(10, (int)std::thread::hardware_concurrency());
+//       {
+//	  // Pre loop
+//	  //std::cout<<"parallel ("<<nthreads<<" threads):"<<std::endl;
+//	  std::vector<std::thread> threads(nthreads);
+//	  std::mutex critical;
+//	  const size_t nloop = NUMELEMENTS; 
+//	  for(int t = 0;t<nthreads;t++)
+//	  {
+//	     /* each thread bind to a lambdas function
+//		   the lambdas function accepts 3 arguments: 
+//		      t= thread index
+//		      bi = start index of data
+//		      ei = end index of data
+//		*/
+//	     threads[t] = std::thread(std::bind(
+//	     [&](const size_t bi, const size_t ei, const int t)
+//	     {
+//		// loop over all items
+//		for(size_t gn = bi; gn <ei; gn++)
+//		{
+//		  new (ptr + gn) T();
+//		}
+//		{
+//		//critical region
+//		std::lock_guard<std::mutex> lock(critical);
+//
+//#if defined(DEBUG_SIZE_INFO)
+//	if (sizeGB >= 1)
+//	{
+//	    std::cout << "    done thread "<< t << "\n";
+//	}
+//#endif
+//		}
+//	     }, t*nloop/nthreads, (t+1)==nthreads?nloop:(t+1)*nloop/nthreads, t));
+//	  }
+//	  std::for_each(threads.begin(),threads.end(),[](std::thread& x){x.join();});
+//	  // Post loop
+//	  // ..nothing
+////#ifdef DEBUG_TIMER 
+////       sim->benchmark_timelapsed_diff("... time for multithread() 20threads" );
+////#endif
+//       }
+#else
+	//ptr = ::new T[len/sizeof(T)];
+	//ptr = ::new T[len/sizeof(T)];
+	ptr = new T[len/sizeof(T)];
+	//size_t numObjs = len/sizeof(T);
+	//ptr = new T[numObjs];
+#endif
+#if defined(DEBUG_SIZE_INFO)
+	if (sizeGB >= 1)
+	{
+	  std::cout << "end" << sizeGB << "GB\n";
+	}
+	else if (sizeMB >= 1)
+	{
+	  std::cout << "end" << sizeMB << "MB\n";
+	}
+#endif
       }
       else if (_mem_location == MemLocation::UNIFIED_MEM){
       gpuErrorCheck(cudaGetLastError());
@@ -137,7 +266,20 @@ class Array_Flat //: public Managed
 //#endif
       if (_mem_location == MemLocation::CPU)
       {
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
+	for (size_t i =0; i < _size; ++i)
+	  allocator.destroy(ptr+i);
+	allocator.deallocate(ptr, _allocated_size);
+#elif defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+	/* we can use multiple thread here as well? */
+	for(int i = 0; i < _allocated_size; ++i)
+	{
+	  _data[i].~T();
+	}
+	delete[] pBuffer;
+#else
       ::delete[] ptr;
+#endif
       }else if (_mem_location == MemLocation::UNIFIED_MEM){
       gpuErrorCheck(cudaDeviceSynchronize());
       gpuErrorCheck(cudaFree(ptr));         
@@ -153,7 +295,7 @@ class Array_Flat //: public Managed
      * With MemLocation, now we use
      *      DuplicatePointerArray<GranuleMapper, 0, 50> _granuleMapperList;
      */
-    Array_Flat(unsigned incrementSize);
+    Array_Flat(int64_t incrementSize);
     /* delete all existing memory
      * then re-create to the minimal size
      * and set num-elements to 0
@@ -168,27 +310,27 @@ class Array_Flat //: public Managed
     };
 
     CUDA_CALLABLE T* getDataRef() {return _data; };
-    void increaseSizeTo(unsigned newSize, bool force_trim_memory_to_smaller = false);
-    void decreaseSizeTo(unsigned newSize);
+    void increaseSizeTo(int64_t newSize, bool force_trim_memory_to_smaller = false);
+    void decreaseSizeTo(int64_t newSize);
     //void resize_allocated(unsigned newSize);
-    void resize_allocated(size_t newSize, bool force_trim_memory_to_smaller = false);
-    void resize_allocated_subarray(size_t MAX_SUBARRAY_SIZE, uint8_t location);
+    void resize_allocated(int64_t newSize, bool force_trim_memory_to_smaller = false);
+    void resize_allocated_subarray(int64_t MAX_SUBARRAY_SIZE, uint8_t location);
     void increase();
     void decrease();
-    void assign(unsigned n, const T& val);
+    void assign(int64_t n, const T& val);
     void insert(const T& element);
-    void replace(int index, const T& element); //replace the element at index 'index' with new value
+    void replace(int64_t index, const T& element); //replace the element at index 'index' with new value
     void push_back(const T& element) {
       insert(element);
     }
-    CUDA_CALLABLE T& operator[](int index);
-    CUDA_CALLABLE const T& operator[](int index) const;
+    CUDA_CALLABLE T& operator[](int64_t index);
+    CUDA_CALLABLE const T& operator[](int64_t index) const;
     CUDA_CALLABLE Array_Flat& operator=(const Array_Flat& rv);
     //virtual void duplicate(std::unique_ptr<Array_Flat<T>>& rv) const = 0;
     virtual void duplicate(std::unique_ptr<Array_Flat<T, memLocation>>& rv) const = 0;
     virtual ~Array_Flat();
     
-    CUDA_CALLABLE unsigned size() const {
+    CUDA_CALLABLE size_t size() const {
       return _size;
     }
     
@@ -263,17 +405,23 @@ class Array_Flat //: public Managed
        */
       void destructContents();
       void copyContents(const Array_Flat& rv);
-      void demote (int, int); 
+      void demote (size_t, size_t); 
 	  // NOTE: Arrays are organized in the form of multiple 'logical blocks'
 	  //       i.e. memory increase/reduced, in the form of one or many blocks
-      int _allocated_size;  // the #elements as allocated
-      int _incremental_size;  // the extra #elements to be iallocated
-      unsigned _size; //the number of elements in the array containing data
+      size_t _allocated_size;  // the #elements as allocated
+      int _incremental_size;  // the extra #elements to be allocated
+      size_t _size; //the number of elements in the array containing data
       unsigned _communicatedSize; //the number of elements MPI has communicated
       unsigned _sizeToCommunicate; //the number of elements MPI is to communicate
       T* _data; // the flat array of data (to be on Unified Memory)
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+      char* pBuffer;
+#endif
       uint8_t _mem_location;  //
       uint8_t _array_design;
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
+      std::allocator<T> allocator;
+#endif
    public:
       //TUAN: make this public so that we can use
       // Array_Flat<int>::MemLocation::CPU
@@ -282,7 +430,7 @@ class Array_Flat //: public Managed
 };
 
 template <class T, int memLocation>
-Array_Flat<T, memLocation>::Array_Flat(unsigned incrementSize)
+Array_Flat<T, memLocation>::Array_Flat(int64_t incrementSize)
   : _allocated_size(0), _incremental_size(incrementSize), 
   _size(0), _communicatedSize(0),  _sizeToCommunicate(0),
   _mem_location(memLocation), _array_design(FLAT_ARRAY)
@@ -318,8 +466,9 @@ Array_Flat<T, memLocation>::Array_Flat(unsigned incrementSize)
  *     (default)just trim the elements at the end [no change physically allocated memory]
  */
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::resize_allocated(size_t newSize, bool force_trim_memory_to_smaller)
+void Array_Flat<T, memLocation>::resize_allocated(int64_t newSize, bool force_trim_memory_to_smaller)
 {
+  //std::cout << " resize_allocated size in GB " << newSize * sizeof(T)/1024/1024/1024 << " GB\n";
   /* As 
    * ShallowArray_Flat< type_element>
    *   if type_element is 'ShallowArray'
@@ -342,7 +491,7 @@ void Array_Flat<T, memLocation>::resize_allocated(size_t newSize, bool force_tri
     //  }
     //}
   }
-  if ((int)newSize <= (int)_allocated_size-NUM_TRAILING_ELEMENT)
+  if (newSize <= (int64_t)_allocated_size-NUM_TRAILING_ELEMENT)
   {
     if (! force_trim_memory_to_smaller)
       return;
@@ -352,10 +501,23 @@ void Array_Flat<T, memLocation>::resize_allocated(size_t newSize, bool force_tri
     assert(0);
     return;
   }
-  int num_data_2_allocate = newSize+NUM_TRAILING_ELEMENT;
+  size_t num_data_2_allocate = newSize+NUM_TRAILING_ELEMENT;
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+  T* new_data;
+  char* new_pBuffer;
+  /* error as we're trying to bind an address to a reference 
+   *
+   * &new_pBuffer creates a temporary value, which cannot be bound to a reference to non-const.
+   * */
+  //new_data = (T*)new_memory(num_data_2_allocate*sizeof(T), &new_pBuffer);  // this use overloaded
+  new_data = (T*)new_memory(num_data_2_allocate*sizeof(T), &new_pBuffer);  // this use overloaded
+  //char** pnew_pBuffer = &new_pBuffer;
+  //new_data = (T*)new_memory(num_data_2_allocate*sizeof(T), pnew_pBuffer);  // this use overloaded
+#else
   //T* new_data = new T[newSize*sizeof(T)];  // this use standard C++ 
   //T* new_data = new((size_t)newSize*sizeof(T));  // this use overloaded
-  T* new_data = (T*)new_memory((size_t)num_data_2_allocate*sizeof(T));  // this use overloaded
+  T* new_data = (T*)new_memory(num_data_2_allocate*sizeof(T));  // this use overloaded
+#endif
 //  /* TODO
 //   * check if 'T' is of type Array_Flat or ShallowArray_Flat
 //   * then allocate new_data[i]
@@ -384,20 +546,29 @@ void Array_Flat<T, memLocation>::resize_allocated(size_t newSize, bool force_tri
   if (_data != nullptr)
   {
     if (_size > 0)
-      std::copy_n((T*)_data, std::min(newSize, (size_t)_size), new_data);
+      std::copy_n((T*)_data, std::min((size_t)newSize, _size), new_data);
     delete_memory(_data);  // this use overloadded 
   }
   _data = new_data;
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+  pBuffer = new_pBuffer;
+#endif
   _allocated_size = num_data_2_allocate;
 }
 
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::resize_allocated_subarray(size_t MAX_SUBARRAY_SIZE,
+void Array_Flat<T, memLocation>::resize_allocated_subarray(int64_t MAX_SUBARRAY_SIZE,
    uint8_t mem_location)
 {
+  if (MAX_SUBARRAY_SIZE> std::numeric_limits<decltype(_incremental_size)>::max())
+  {
+    std::cout << "ERROR: size too large\n";
+    assert(0);
+    return;
+  }
 //#define MAX_SUBARRAY_SIZE 20
   /* need to allocate memory */
-  int newSize = MAX_SUBARRAY_SIZE;
+  auto newSize = MAX_SUBARRAY_SIZE;
   _mem_location = mem_location;
   if (_incremental_size == 0)
   {
@@ -423,16 +594,20 @@ void Array_Flat<T, memLocation>::resize_allocated_subarray(size_t MAX_SUBARRAY_S
  * make an array (i.e.i adjust _size) larger or smaller
  */
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::increaseSizeTo(unsigned newSize, bool force_trim_memory_to_smaller)
+void Array_Flat<T, memLocation>::increaseSizeTo(int64_t newSize, bool force_trim_memory_to_smaller)
 {
   //resize_allocated(newSize+NUM_TRAILING_ELEMENT, force_trim_memory_to_smaller);
   resize_allocated(newSize, force_trim_memory_to_smaller);
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_STD_ALLOCATOR
+  for (size_t i = _size; i < newSize; ++i)
+    allocator.construct(_data + i);
+#endif
   _size = newSize;
 }
 
 
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::decreaseSizeTo(unsigned newSize)
+void Array_Flat<T, memLocation>::decreaseSizeTo(int64_t newSize)
 {
   //resize_allocated(newSize+NUM_TRAILING_ELEMENT);
   resize_allocated(newSize);
@@ -476,19 +651,20 @@ void Array_Flat<T, memLocation>::insert(const T& element)
 }
 
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::replace(int index, const T& element)
+void Array_Flat<T, memLocation>::replace(int64_t index, const T& element)
 {
   if(index < _size)
   {
     _data[index] = element;
   }
   else{
+    std::cerr << "index = " << index << " while _size = " << _size << std::endl;
     assert(0);
   }
 }
 
 template <class T, int memLocation>
-CUDA_CALLABLE const T& Array_Flat<T, memLocation>::operator[](int index) const
+CUDA_CALLABLE const T& Array_Flat<T, memLocation>::operator[](int64_t index) const
 {
    if ((index >= _size) || (index < 0)){
      assert(0); 
@@ -498,7 +674,7 @@ CUDA_CALLABLE const T& Array_Flat<T, memLocation>::operator[](int index) const
 }
 
 template <class T, int memLocation>
-CUDA_CALLABLE T& Array_Flat<T, memLocation>::operator[](int index)
+CUDA_CALLABLE T& Array_Flat<T, memLocation>::operator[](int64_t index)
 {
    if ((index >= _size) || (index < 0)){
      assert(0); 
@@ -552,7 +728,7 @@ void Array_Flat<T, memLocation>::copyContents(const Array_Flat& rv)
      //_incremental_size = rv._incremental_size; 
      //_communicatedSize = rv._communicatedSize;  
      //_sizeToCommunicate = rv._sizeToCommunicate;
-     for (unsigned j = 0; (j < _size); j++) {
+     for (size_t j = 0; (j < _size); j++) {
        /* copy individual elements*/
        internalCopy(_data[j], rv._data[j]); // multiplicating is done if necessary
      };
@@ -562,7 +738,7 @@ void Array_Flat<T, memLocation>::copyContents(const Array_Flat& rv)
 template <class T, int memLocation>
 void Array_Flat<T, memLocation>::sort()
 {
-  int i;
+  size_t i;
   T temp;
   Array_Flat<T>& a=(*this);
 
@@ -578,10 +754,10 @@ void Array_Flat<T, memLocation>::sort()
 }
 
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::demote(int boss, int bottomEmployee)
+void Array_Flat<T, memLocation>::demote(size_t boss, size_t bottomEmployee)
 {
   Array_Flat<T>& a=(*this);
-  int topEmployee;
+  size_t topEmployee;
   T temp;
   while (bottomEmployee>=2*boss) {
     topEmployee = 2*boss + ( ( (bottomEmployee!=2*boss) && (a[2*boss+1]>=a[2*boss] ) ) ? 1 : 0 );
@@ -601,7 +777,7 @@ void Array_Flat<T, memLocation>::unique()
 {
   if (_size>0) {
     Array_Flat<T>& a=(*this);
-    int i=0, j=0;
+    size_t i=0, j=0;
     while (j<_size) {
       while (j<_size && a[i]==a[j]) ++j;
       ++i;
@@ -614,10 +790,16 @@ void Array_Flat<T, memLocation>::unique()
 template <class T, int memLocation>
 void Array_Flat<T, memLocation>::merge(const Array_Flat& rv)
 {
-  int n=rv.size();
+  size_t n=rv.size();
   if (n>0) {
     Array_Flat<T>& a=(*this);
-    int m=_size;
+    size_t m=_size;
+    if ( m+n > std::numeric_limits<int64_t>::max())
+    {
+      std::cout << "ERROR: size too large\n";
+      assert(0);
+      return;
+    }
     increaseSizeTo(m+n);
     //memcpy(&_data[_size-1], rv._data, n);
     std::copy_n(rv._data, n, &_data[_size-1]);
@@ -653,20 +835,20 @@ void Array_Flat<T, memLocation>::destructContents()
  * assign all n-elements of other array to the same value 'val'
  */
 template <class T, int memLocation>
-void Array_Flat<T, memLocation>::assign(unsigned n, const T& val)
+void Array_Flat<T, memLocation>::assign(int64_t n, const T& val)
 {
   clear();
   increaseSizeTo(n);
   //TODO improve effiency
-  for (unsigned i = 0; i < n; ++i) {
+  for (size_t i = 0; i < n; ++i) {
     (*this)[i]=val;
   }
 }
 
 template <class T, int memLocation>
 std::ostream& operator<<(std::ostream& os, const Array_Flat<T, memLocation>& arr) {
-   unsigned size = arr.size();
-   for (unsigned i = 0; i < size; ++i) {
+   size_t size = arr.size();
+   for (size_t i = 0; i < size; ++i) {
       os << arr[i] << " ";
    }
    return os;

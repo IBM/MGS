@@ -120,6 +120,9 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
 #endif  //HAVE_MPI
       , _numWorkUnits(numWorkUnits), _numGranules(0), _partitioner(0)
 {
+#if defined(REUSE_NODEACCESSORS)
+  _currentConnectNodeSet = 0;
+#endif
    std::string fileName;
    fileName = "/so/Dependfile";
 
@@ -136,6 +139,17 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
       //Create a thread pool with the desired number of threads
       _threadPool = new ThreadPool(_numThreads, _numCpus, bindThreadsToCpus);
    }
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#if defined(USE_THREADPOOL_C11)
+   {
+      //the thread pool is created, and release at the end of each connection
+     //int numThreads = 10;
+     //const size_t nthreads = std::min(10, (int)std::thread::hardware_concurrency());
+     const size_t nthreads = std::min(_numThreads, (int)std::thread::hardware_concurrency());
+     threadPoolC11.reset(new ThreadPoolC11(nthreads));
+   }
+#endif
+#endif
 #endif // DISABLE_PTHREADS
 
    _root = new Repertoire("Root");
@@ -157,11 +171,6 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _ntm = new TypeManager<NodeType>();
    _etm = new TypeManager<EdgeType>();
 
-   LENS_PT_LOCK(_timerMutex);
-   _simTimer.start();
-   if (_rank==0) printf("Simulation construct start: t = %lf\n\n", _simTimer.lapWallTime());
-   LENS_PT_UNLOCK(_timerMutex);
-
 #ifdef HAVE_MPI
    _phaseNames.push_back("FLUSH_LENS");
    _communicatingPhases["FLUSH_LENS"]=true;
@@ -171,6 +180,11 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
    _rank=0;
    _nump=1;
 #endif // HAVE_MPI
+
+   LENS_PT_LOCK(_timerMutex);
+   _simTimer.start();
+   if (_rank==0) printf("Simulation construct start: t = %lf\n\n", _simTimer.lapWallTime());
+   LENS_PT_UNLOCK(_timerMutex);
 
 #if defined(HAVE_GPU) 
    int deviceCount = -1; // number of devices
@@ -1094,12 +1108,13 @@ void Simulation::benchmark_start(const std::string& msg)
    _prevTimeElapsed  = _simTimer.lapWallTime();
    LENS_PT_UNLOCK(_timerMutex);
 }
-void Simulation::benchmark_timelapsed(const std::string& msg)
+double Simulation::benchmark_timelapsed(const std::string& msg)
 {
    LENS_PT_LOCK(_timerMutex);
    if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
    _prevTimeElapsed  = _simTimer.lapWallTime();
    LENS_PT_UNLOCK(_timerMutex);
+   return _prevTimeElapsed;
 
 }
 void Simulation::benchmark_set_timelapsed_diff()
@@ -1111,7 +1126,7 @@ void Simulation::benchmark_set_timelapsed_diff()
 void Simulation::benchmark_timelapsed_diff(const std::string& msg)
 {
    LENS_PT_LOCK(_timerMutex);
-   if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime() - _prevTimeElapsed);
+   if (_rank==0) printf("%s duration: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime() - _prevTimeElapsed);
    _prevTimeElapsed  = _simTimer.lapWallTime();
    LENS_PT_UNLOCK(_timerMutex);
 }

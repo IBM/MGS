@@ -65,6 +65,14 @@
 #include <mpi.h>
 #endif  // HAVE_MPI
 
+#if defined(USE_THREADPOOL_C11)
+#include "ThreadPoolC11.h"
+#endif
+
+#if defined(REUSE_NODEACCESSORS)
+#include "NodeInstanceAccessor.h"
+#endif
+
 #include <limits.h>
 #include <unordered_map>
 
@@ -220,7 +228,11 @@ class Simulation : public Publishable {
 
   PassType getPassType() const { return _passType; }
   void setCostAggregationPass() { _passType = _COST_AGGREGATION_PASS; }
-  void setSimulatePass() { _passType = _SIMULATE_PASS; }
+  void setSimulatePass() { _passType = _SIMULATE_PASS; 
+#if defined(REUSE_NODEACCESSORS)
+    _currentConnectNodeSet = 0;
+#endif
+  }
   bool isGranuleMapperPass() const {
     return (_passType == _GRANULE_MAPPER_PASS);
   }
@@ -320,6 +332,20 @@ class Simulation : public Publishable {
   }
 
 #if defined(HAVE_GPU) 
+      // track Granule* with the index of NodeInstanceAccessor
+      // as the search from node index to Granule is expensive
+      //to save computation time
+#if defined(TEST_IDEA_TRACK_GRANULE)
+      //we don't need the value of type 'bool', use unordered_map for fast searching
+      // std::string = nodetype name such as 'LifeNode'
+      //std::unordered_map<Granule*, std::unordered_map<int, bool> > _granule2Nodes;
+      //   -> the Granule* and the index of 'LifeNode'-NodeAccessor's associated with that granule
+  std::map< std::string, 
+      std::unordered_map<Granule*, std::vector<size_t> >> _granule2Nodes;
+      //track only Granule* belong to current rank
+      //std::vector<Granule*> _granule2Nodes;
+#endif
+
   /* 
    *       keep tracks # nodes created for each nodetype, e.g. LifeNode
    *        on all ranks
@@ -414,15 +440,47 @@ class Simulation : public Publishable {
 
     //std::vector<int> > _nodes_count; 
   void print_GPU_info(int devID);
+
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#if defined(USE_THREADPOOL_C11)
+  std::unique_ptr<ThreadPoolC11> threadPoolC11;
+#endif
+#endif
+
+
+#if defined(REUSE_NODEACCESSORS)
+  //track nodeaccessors from every model, e.g. CG_LifeNodeGridLayerData
+  //["LifeNode"] = _nodeInstanceAccessors;
+  //NOTE: NodeDescriptor *  is a NodeInstanceAccessor * 
+  std::map< std::string, NodeInstanceAccessor*>
+      nodeInstanceAccessor;
+  //at a given ConnectNodeset, of index 'i'
+  // the node of ND 'key' connect to the nodes in std::list
+  //keep track the connection from 1 ND (the key) to many other ND
+  //std::map< NodeInstanceAccessor*, 
+  //  std::map< int, std::list<NodeInstanceAccessor*>>
+  //    >
+  //    ND_from_to;
+  std::unordered_map< int, 
+    std::unordered_map< NodeDescriptor*,  /* the node that either connect to or get connection from nodes in the vector below*/ 
+      std::pair<std::vector<NodeDescriptor*>, int> > /*  the .second is the integer tracking current index in the vector*/
+      >
+      ND_from_to;
+  int _currentConnectNodeSet; //track the current connection NodeSet? do we need this or 
+  // the ConnectNodeSetFunctor also have the index?
+  //std::map< NodeInstanceAccessor*, int>
+  //    ND_from_to_currentIndex;
+#endif
+
 #endif
   //DEBUG PURPOSE
-  int _counter = 0; // for debug purpose, e.g. test how many times a function has been called
+  size_t _counter = 0; // for debug purpose, e.g. test how many times a function has been called
   void resetCounter(){_counter=0; };
   void increaseCounter(){++_counter;};
-  int  getCounter(){return _counter;};
+  size_t getCounter(){return _counter;};
   //these two new functions to support printing time info
   void benchmark_start(const std::string&);
-  void benchmark_timelapsed(const std::string&);
+  double benchmark_timelapsed(const std::string&);
   void benchmark_timelapsed_diff(const std::string&);
   void benchmark_set_timelapsed_diff();
   void benchmark_end(const std::string&);
@@ -550,6 +608,16 @@ class Simulation : public Publishable {
   int _numWorkUnits;
   int _numGranules;
   Partitioner* _partitioner;
+//#define TEST_PUTTING_nodes_toSimulation
+//#if defined(HAVE_GPU)  and defined(TEST_PUTTING_nodes_toSimulation)
+//  //for testing purpose
+//  //to see if allocate here still slow
+//  public:
+//  //std::map<std::string,
+//  //    ShallowArray_Flat<LifeNode, Array_Flat<int>::MemLocation::CPU, 1000>
+//  //      > _nodes;
+//  ShallowArray_Flat<LifeNode, Array_Flat<int>::MemLocation::CPU, 1000> _nodes;
+//#endif
 
 };
 

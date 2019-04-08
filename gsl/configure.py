@@ -1510,20 +1510,15 @@ endif
 # Fermi : -gencode arch=compute_20,code=sm_20
 
 #CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-#CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+#CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
 #CFLAGS += --compiler-options -fPIC -MMD
 #CFLAGS += -g -fno-inline -fno-eliminate-unused-debug-types -DDEBUG_ASSERT -DNOWARNING_DYNAMICCAST -Og -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU -DHAVE_GPU
 
 # SOURCE_AS_CPP := -x c++
 SOURCE_AS_CPP := -x cu
 CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
-CUDA_NVCC_FLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+CUDA_NVCC_FLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
 CUDA_NVCC_FLAGS += --compiler-options -fPIC \
-"""
-        if self.options.blueGene is False:
-            retStr += \
-                """\
---compiler-options -MMD \
 """
         if self.options.debug == USE:
             retStr += " -g -G"
@@ -1625,7 +1620,7 @@ endif
         retStr += \
             """
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
 CFLAGS += -fPIC \
 """
         if self.options.colab is True:

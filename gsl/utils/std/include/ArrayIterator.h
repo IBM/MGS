@@ -45,7 +45,12 @@ class ArrayIterator
       ArrayIterator(T*** blocksArray, int index, int blockSize) 
 	 : _blocksArray(blocksArray), _index(index), _currentData(0), 
 	   _blockSize(blockSize) {
+#if defined(ARRAY_LAZY_ALLOCATION)
+	if (*_blocksArray != 0)
+	   setCurrentDataWithIndex();
+#else
 	 setCurrentDataWithIndex();
+#endif
       }
 
       // This is a constructor that creates const versions of non_const

@@ -23,6 +23,7 @@
 #include <cassert>
 #include <memory>
 #include <algorithm>
+#include "rndm.h"
 
 const unsigned SUGGESTEDARRAYBLOCKSIZE = 10;
 const unsigned SUGGESTEDBLOCKINCREMENTSIZE = 4;
@@ -178,8 +179,12 @@ template <class T>
 Array<T>::Array(unsigned blockIncrementSize)
    : _size(0), _communicatedSize(0), _sizeToCommunicate(0), _activeBlocks(0), _activeBlocksSize(0), _blocksArray(0)
 {
+#if defined(ARRAY_LAZY_ALLOCATION)
+   _activeBlocksSize = 0;
+#else
    _activeBlocksSize += blockIncrementSize;
    _blocksArray = new T*[_activeBlocksSize];
+#endif
 }
 
 /*
@@ -224,6 +229,13 @@ void Array<T>::increase()
        _blocksArray = tmp;
      }
      _activeBlocks++;
+#if defined(ARRAY_LAZY_ALLOCATION)
+     if (_activeBlocksSize == 0)
+     {
+       _activeBlocksSize += getBlockIncrementSize();
+       _blocksArray = new T*[_activeBlocksSize];
+     }
+#endif
      _blocksArray[_activeBlocks - 1] = new T[getBlockSize()];
    }
    _size++;
@@ -232,6 +244,9 @@ void Array<T>::increase()
 template <class T>
 void Array<T>::decrease()
 {
+  if (_size <= 0)
+    return;
+
   --_size;
   if ((_size % getBlockSize()) == 0) {
     delete [] _blocksArray[_activeBlocks - 1];

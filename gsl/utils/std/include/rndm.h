@@ -43,6 +43,15 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
   }
 }
 
+/* IMPORTANT: this is necessary for large-scale simulation */
+#define ARRAY_LAZY_ALLOCATION
+
+/* as we create CG_LifeNodeGridLayerData 
+ * we should not re-create NodeAccessor 
+ *  from RuntimePhase
+ */
+//#define REUSE_NODEACCESSORS
+
 #define OLD_APPROACH 0
 #define NEW_APPROACH 1
 //#define DETECT_PROXY_COUNT NEW_APPROACH   // NOT COMPLETED
@@ -57,17 +66,57 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
  *
  */
 
-#define SUPPORT_MULTITHREAD_CONNECTION
+#define USE_ONLY_MAIN_THREAD 0
+#define USE_DYNAMIC_MULTIPLE_THREAD 1
+#define USE_STATIC_THREADPOOL 2
+// IF defined (in any form), it means we use a vector to tracks (dest)-nodes that the current source-node 
+// .. want to connect; or tracks (source)-nodes that connect to the current dest-node
+//#define SUPPORT_MULTITHREAD_CONNECTION USE_ONLY_MAIN_THREAD
+//DON'T USE the below for now, as not working for large-scale problem due to dynamic thread creation
+//  ... and even using ThreadPool - maybe the number of threads taking resources -> slower
+//#define SUPPORT_MULTITHREAD_CONNECTION USE_DYNAMIC_MULTIPLE_THREAD
+//#define SUPPORT_MULTITHREAD_CONNECTION USE_STATIC_THREADPOOL
 //   test the idea that only split the destsets 
 //     for each node in sourceset, do 
 //        parallel-detect nodes in the destsets  [save quite amount of time]
 //   ----
 //   then sequential connect node in sourceset, to selected nodes in destsets 
 
+// we need this to make MULTITHREAD_CONNECTION work on large problem
+//   ... to avoid creating/destroying threads repeatedly
+#if defined(SUPPORT_MULTITHREAD_CONNECTION) && SUPPORT_MULTITHREAD_CONNECTION == USE_STATIC_THREADPOOL
+#define USE_THREADPOOL_C11
+#endif
+#if defined(SUPPORT_MULTITHREAD_CONNECTION) && \
+  (SUPPORT_MULTITHREAD_CONNECTION == USE_DYNAMIC_THREADPOOL || \
+  SUPPORT_MULTITHREAD_CONNECTION == USE_STATIC_THREADPOOL) 
+#define USING_SUB_NODESET
+#endif
+
+/* NOT COMPLETED */
 //#define TEST_MULTIPLE_THREADS  //test the idea of splitting both sourceset and destsets into K subgroups
 //   and do sourceset[i] --> sourceset[j]
 
-#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+/* NOT COMPLETED */
+#define USE_STD_ALLOCATOR  0
+#define USE_PLACEMENT_NEW  1
+//#define FLAT_MEM_MANAGEMENT USE_STD_ALLOCATOR
+#define FLAT_MEM_MANAGEMENT  USE_PLACEMENT_NEW
+
+/* track for fast searching */
+#define TEST_IDEA_TRACK_GRANULE
+
+/* this enable add all nodes in parallel 
+ * also, allocateNodes()
+ *   does 2 things: allocate memory, constructors, and set the size
+ *   to the desired value
+ * NOTE: need 'TEST_IDEA_TRACK_GRANULE' enabled
+ * */
+#define PARALLEL_ADD_NODE
+
+#if defined(SUPPORT_MULTITHREAD_CONNECTION) || \
+    defined(SUPPORT_MULTITHREAD_NODEACCESSOR_SETUP) || \
+    defined(PARALLEL_ADD_NODE)
 #include <thread>
 #include <mutex>
 #include <functional>
@@ -83,8 +132,8 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 //  OPTION_3 = means each CCDemarshaller has its own array of data, tracking the mapping to nodes in a different rank -- BETTER
 //  OPTION_4 = means each CCDemarshaller only keep the index to the data, 
 //    data nows belong to the global proxy-data array in the xxxCompCategory
-//#define PROXY_ALLOCATION  OPTION_3
-#define PROXY_ALLOCATION  OPTION_4
+#define PROXY_ALLOCATION  OPTION_3
+//#define PROXY_ALLOCATION  OPTION_4
 
 //NOTE: By default, a scalar data member (say float type) of LifeNode is re-organized as
 //   class CG_LifeNodeCompCategory{

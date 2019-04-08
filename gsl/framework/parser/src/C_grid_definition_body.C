@@ -24,6 +24,10 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
+#define DEBUG_TIMER
+#ifdef DEBUG_TIMER 
+#include "Simulation.h"
+#endif
 
 void C_grid_definition_body::internalExecute(LensContext *c)
 {
@@ -81,6 +85,11 @@ C_grid_definition_body::~C_grid_definition_body()
 Repertoire* C_grid_definition_body::createRepertoire(
    std::string const& repName, LensContext* c)
 {
+#ifdef DEBUG_TIMER 
+   Simulation* sim = c->sim;
+	if (sim->getRank() == 0)
+	  std::cout<< ".............inside create repertoire "  << std::endl;
+#endif
    std::vector<int> size;
    // _dimDecl is dim declaration
    // _icl is int constant list
@@ -128,11 +137,20 @@ Repertoire* C_grid_definition_body::createRepertoire(
 		 currentRep + " " + e.getError());
    }
    
+#ifdef DEBUG_TIMER 
+	sim->benchmark_timelapsed_diff("... before creating localCopy ()");
+#endif
    // Create a copy so that the original does not get modified.
    C_grid_translation_unit* localCopy = 
       new C_grid_translation_unit(*_gridTransUnit);
+#ifdef DEBUG_TIMER 
+	sim->benchmark_timelapsed_diff("... after creating localCopy ()");
+#endif
    try {
       localCopy->execute(c, grid);
+#ifdef DEBUG_TIMER 
+	sim->benchmark_timelapsed_diff("... after localCopy->execute()");
+#endif
    } catch (SyntaxErrorException& e) {
       e.printError();
       e.resetError();
