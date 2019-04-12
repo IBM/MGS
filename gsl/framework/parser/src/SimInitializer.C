@@ -312,7 +312,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #endif 
        if (sim->getRank()==0)
        {
-	 sim->benchmark_timelapsed_diff(" ...setSeparatinGranules + setGraph ())");
+	 sim->benchmark_timelapsed_diff(" ...setSeparationGranules + setGraph ())");
        } 
      
      if (commandLine.getSimulate()) {

@@ -24,7 +24,7 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
-#define DEBUG_TIMER
+//#define DEBUG_TIMER
 #ifdef DEBUG_TIMER 
 #include "Simulation.h"
 #endif

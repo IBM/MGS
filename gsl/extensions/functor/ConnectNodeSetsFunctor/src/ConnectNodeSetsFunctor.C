@@ -26,7 +26,10 @@
 #include "Simulation.h"
 #include <memory>
 
-#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#if defined(SUPPORT_MULTITHREAD_CONNECTION) && SUPPORT_MULTITHREAD_CONNECTION == USE_STATIC_THREADPOOL
+#if defined(USE_THREADPOOL_C11)
+#include "ThreadPoolC11.h"
+#endif
 #include <thread>
 #endif
 
@@ -36,8 +39,8 @@ void ConnectNodeSetsFunctor::userInitialize(LensContext* CG_c)
 
 void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr) 
 {
-#define DEBUG
-#ifdef DEBUG
+//#define DEBUG_TIMER
+#ifdef DEBUG_TIMER
      if (CG_c->sim->getRank()==0)
      {
        CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() start)");
@@ -54,6 +57,14 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
    std::unique_ptr<DataItem> outAttrRVal;
    std::unique_ptr<DataItem> inAttrRVal;
    std::unique_ptr<DataItem> rval;
+
+#if defined(SUPPORT_MULTITHREAD_CONNECTION) && SUPPORT_MULTITHREAD_CONNECTION == USE_STATIC_THREADPOOL
+#if defined(USE_THREADPOOL_C11)
+   {
+     CG_c->sim->threadPoolC11->init();
+   }
+#endif
+#endif
 
    // call sampfctr2, which will set source and destination nodes 
    // (and maybe other stuff)
@@ -82,7 +93,8 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
    //assert(! (cc->sourceNodes.size() >0 && cc->destinationNodes.size() > 0));
    if (functor_with_multithread)
    {
-      while(!cc->done) {
+      while(!cc->done) 
+      {
 	 cc->restart = false;
 	 for (int i = 0; i < cc->destinationNodes.size(); ++i)
 	 {
@@ -106,7 +118,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	    }
 	    cc->inAttrPSet = psdi->getParameterSet();
 
-#ifdef DEBUG
+#ifdef DEBUG_TIMER
 	    CG_c->sim->increaseCounter();
 #endif
 	    lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
@@ -134,7 +146,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	    }
 	    cc->inAttrPSet = psdi->getParameterSet();
 
-#ifdef DEBUG
+#ifdef DEBUG_TIMER
 	    CG_c->sim->increaseCounter();
 #endif
 	    lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
@@ -144,6 +156,14 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	 // call sampfctr2, which will set source and destination nodes 
 	 // (and maybe other stuff)
 	 sampling->execute(CG_c, nullArgs, rval);
+//#if defined(USE_THREADPOOL_C11)
+//2^24  ~ 17million
+	 //if (cc->currentSample % 10000000 == 0) 
+	 //{
+	 //   std::cout << "... passing another batch" << std::endl;
+	 //   CG_c->sim->benchmark_timelapsed("..... ");
+	 //}
+//#endif
       }
    }
    else{
@@ -171,7 +191,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	 }
 	 cc->inAttrPSet = psdi->getParameterSet();
 
-#ifdef DEBUG
+#ifdef DEBUG_TIMER
 	 CG_c->sim->increaseCounter();
 #endif
 	 lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
@@ -182,6 +202,10 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	 sampling->execute(CG_c, nullArgs, rval);
       }
    }
+#if defined(USE_THREADPOOL_C11)
+   CG_c->sim->threadPoolC11->shutdown();
+#endif
+
 #else
    while(!cc->done) {
       cc->restart = false;
@@ -206,8 +230,13 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
       }
       cc->inAttrPSet = psdi->getParameterSet();
 
-#ifdef DEBUG
+#ifdef DEBUG_TIMER
       CG_c->sim->increaseCounter();
+      if (CG_c->sim->getRank() == 0 &&  CG_c->sim->getCounter() % 10000000 == 0)
+      {
+	 std::cout << ".......... nodeToNode() ... called " << CG_c->sim->getCounter() << " times, and took " /*<< std::endl */;
+	 CG_c->sim->benchmark_timelapsed_diff("................................");
+      }
 #endif
       lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
 		     cc->inAttrPSet, CG_c->sim);
@@ -217,7 +246,7 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
       sampling->execute(CG_c, nullArgs, rval);
    }
 #endif
-#ifdef DEBUG
+#ifdef DEBUG_TIMER
      if (CG_c->sim->getRank()==0)
      {
 	std::string msg;
@@ -232,6 +261,13 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
        CG_c->sim->benchmark_timelapsed(".. ConnectNodeSetsFunctor (userExecute() end)");
 	std::cout << ".......... nodeToNode() has been called " << CG_c->sim->getCounter() << " times"<< std::endl;
      } 
+#endif
+#if defined(REUSE_NODEACCESSORS)
+     //must be reset, right before isSimulatePass()
+     CG_c->sim->_currentConnectNodeSet++;
+     //if (CG_c->sim->isSimulatePass()) {
+     //   CG_c->sim->_currentConnectNodeSet++;
+     //}
 #endif
 }
 

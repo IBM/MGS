@@ -23,6 +23,7 @@
 #include "FunctorDataItem.h"
 #include "DataItemQueriable.h"
 #include "Functor.h"
+#include "Simulation.h"
 
 void PrintFunctor::doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args)
@@ -36,8 +37,11 @@ void PrintFunctor::doExecute(LensContext *c,
 {
    std::vector<DataItem*>::const_iterator i, 
       begin = args.begin(), end = args.end();
-   for (i = begin;i!=end;++i)
-      std::cout << (*i)->getString() <<std::endl;
+   if (c->sim->getRank() == 0)
+   {
+      for (i = begin;i!=end;++i)
+	 std::cout << (*i)->getString() <<std::endl;
+   }
 
 }
 

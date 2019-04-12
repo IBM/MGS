@@ -98,5 +98,11 @@ class NodeSet : public GridSet
       bool _allIndices;
       std::vector<int> _indices;
       std::vector<GridLayerDescriptor*> _layers;
+#ifdef TEST_MULTIPLE_THREADS
+      int _numPartitions;
+   public:
+      void setNumPartitions(int partitionCount);
+      void getNodes(std::vector<NodeDescriptor*>& nodes, int partitionIdx);
+#endif
 };
 #endif

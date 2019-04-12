@@ -17,6 +17,8 @@
 #define _EACHDSTFUNCTOR_H_
 #include "Copyright.h"
 
+#include "NumericDataItem.h"
+#include "IntDataItem.h"
 #include "SampFctr2Functor.h"
 #include <memory>
 #include <list>
@@ -42,11 +44,18 @@ class EachDstFunctor: public SampFctr2Functor
 			     std::unique_ptr<DataItem>& rvalue);
    private:
       std::unique_ptr<Functor> _functor_ap;
-      bool _isUntouched;
+      //bool _isUntouched;
       NodeSet *_destinationSet;
       std::vector<NodeDescriptor*> _nodes;
       std::vector<NodeDescriptor*>::iterator _nodesIter, _nodesEnd;
       int count;
+      int _allowConnectToItself;
+#define REUSE_MEMORY
+#ifdef REUSE_MEMORY
+      std::vector<DataItem*> nullArgs;
+      //nullArgs.push_back(connectionContext);
+      std::unique_ptr<DataItem> rval_ap;
+#endif
 
 };
 #endif

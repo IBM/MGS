@@ -54,5 +54,6 @@ class RadialSamplerFunctor: public SampFctr1Functor
       int _currentNode;
       int _nbrNodes;
       std::vector<int> _refcoords;
+      double _square_radius;
 };
 #endif

@@ -219,6 +219,43 @@ void NodeSet::getNodes(std::vector<NodeDescriptor*> &nodes,
    }
 }
 
+#ifdef TEST_MULTIPLE_THREADS
+void NodeSet::setNumPartitions(int partitionCount)
+{
+  _numPartitions = partitionCount;
+}
+void NodeSet::getNodes(std::vector<NodeDescriptor*>& nodes, int partitionIdx)
+{
+    /*
+      Strategy:
+      1) determine coordinate range, layers, and indices
+      2) loop through coordinate range
+      3) loop through layers
+      rest in inlined function:
+         4) loop through valid indices
+         5) push Node * onto vector
+   */
+
+   nodes.clear();
+
+   // make sure _layers contains valid layers
+   resetAllLayers();
+   std::vector<GridLayerDescriptor*>::const_iterator it, end = _layers.end();
+
+   unsigned coordIndex;
+
+   // main loop
+   VolumeOdometer vo(_beginCoords, _increment, _endCoords);
+   std::vector<int>& coords = vo.look();
+   for (; !vo.isRolledOver(); vo.next()) {
+      coordIndex = _grid->getNodeIndex(coords);
+      for(it = _layers.begin(); it != end; ++it) {
+	getNodesWithCoordinates(nodes, (*it), coordIndex);
+      }
+   }
+}
+#endif
+
 const std::vector<GridLayerDescriptor*> & NodeSet::getLayers()
 {
    // The original grid might have new layers, so we have to check.

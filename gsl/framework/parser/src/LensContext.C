@@ -77,7 +77,7 @@ void LensContext::addStatement(C_production* statement)
 void LensContext::execute() 
 {
    std::vector<C_production*>::iterator it, end = _statements.end();
-#define DEBUG_TIMER
+//#define DEBUG_TIMER
 #ifdef DEBUG_TIMER
    int i = 1;
    sim->benchmark_set_timelapsed_diff();

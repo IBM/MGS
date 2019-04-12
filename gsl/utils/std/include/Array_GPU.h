@@ -126,7 +126,7 @@ class Array_Flat //: public Managed
 
       if (_mem_location == MemLocation::CPU)
       {
-#define DEBUG_SIZE_INFO
+//#define DEBUG_SIZE_INFO
 #if defined(DEBUG_SIZE_INFO)
 	double sizeGB = ((double)len) /1024/1024/1024;
 	double sizeMB = ((double)len) /1024/1024;

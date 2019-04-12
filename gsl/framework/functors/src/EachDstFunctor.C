@@ -27,7 +27,8 @@
 #include "SyntaxErrorException.h"
 
 EachDstFunctor::EachDstFunctor()
-   : _isUntouched(true), _destinationSet(0), count(0)
+   : //_isUntouched(true), 
+   _destinationSet(0), count(0), _allowConnectToItself(1)
 {
    _nodesIter = _nodes.begin();
    _nodesEnd = _nodes.end();
@@ -35,8 +36,10 @@ EachDstFunctor::EachDstFunctor()
 
 
 EachDstFunctor::EachDstFunctor(const EachDstFunctor& csf)
-   : _isUntouched(csf._isUntouched), _destinationSet(csf._destinationSet), 
-     _nodes(csf._nodes), count(csf.count)
+   : //_isUntouched(csf._isUntouched), 
+      _destinationSet(csf._destinationSet), 
+     _nodes(csf._nodes), count(csf.count), _allowConnectToItself(csf._allowConnectToItself)
+
 {
    if (csf._functor_ap.get()) csf._functor_ap->duplicate(_functor_ap);
    _nodesIter = _nodes.begin();
@@ -58,20 +61,45 @@ EachDstFunctor::~EachDstFunctor()
 void EachDstFunctor::doInitialize(LensContext *c, 
 				  const std::vector<DataItem*>& args)
 {
-   if (args.size() != 1) {
-      throw SyntaxErrorException(
-	 "Improper number of initialization arguments passed to EachDstFunctor");
+   int nbrArgs=args.size();
+   std::ostringstream baseMsg;
+   baseMsg << "\texpected: EachDst(SampFctr1_typefunctor)\n"
+	 << "\texpected: EachDst(SampFctr1_typefunctor, int allowConnectToItself )\n"
+	 << "\t\tdefault: allowConnectToItself = 1 [acceptable values: 0 or 1] - if the source and the dest node can be the same?" << std::endl;
+   if (nbrArgs != 1 and nbrArgs != 2) {
+      std::ostringstream msg;
+      msg << "Improper number of initialization arguments passed to EachDstFunctor" << std::endl
+	 << baseMsg.str();
+      throw SyntaxErrorException(msg.str());
    }
    FunctorDataItem* fdi = dynamic_cast<FunctorDataItem*>(args[0]);
    if (fdi == 0) {
-      throw SyntaxErrorException(
-	 "Dynamic cast of DataItem to FunctorDataItem failed on EachDstFunctor");
+	 std::ostringstream msg;
+	 msg << "First argument is not a functor" << std::endl
+	    << baseMsg.str();
+      throw SyntaxErrorException(msg.str());
    }
    if (fdi->getFunctor()) fdi->getFunctor()->duplicate(_functor_ap);
    else {
       throw SyntaxErrorException(
 	 "Bad functor argument passed to EachDstFunctor");
    }
+   if (nbrArgs==2) {
+      NumericDataItem *allowConnectToItselfDI = 
+	 dynamic_cast<NumericDataItem*>(args[1]);
+      if (allowConnectToItselfDI==0) {
+	 std::ostringstream msg;
+	 msg << "Second argument is not a number" << std::endl
+	    << baseMsg.str();
+	 throw SyntaxErrorException(msg.str());
+      }
+      _allowConnectToItself=unsigned(allowConnectToItselfDI->getInt());
+   }
+#if ! defined(REUSE_MEMORY)
+   std::unique_ptr<IntDataItem> connectItself(new IntDataItem()); 
+   connectItself->setInt(_allowConnectToItself); // 1 = allow to connect to itself, 0 = no
+
+#endif
 }
 
 
@@ -88,18 +116,25 @@ void EachDstFunctor::doExecute(LensContext *c,
       _destinationSet->getNodes(_nodes);
       _nodesIter = _nodes.begin();
       _nodesEnd = _nodes.end();
-      _isUntouched = false;
+      //_isUntouched = false;
       count = 0;
-#if defined(SUPPORT_MULTITHREAD_CONNECTION)
-      cc->sourceNode = 0;
-      cc->destinationNode = 0;
-      cc->sourceNodes.resize(0);
-      cc->destinationNodes.resize(0);
-#endif
    }
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+   cc->sourceNode = 0;
+   cc->destinationNode = 0;
+   cc->sourceNodes.resize(0);
+   cc->destinationNodes.resize(0);
+#endif
+
+   //note: this should be passed from outside, and set default to 0
+#if ! defined(REUSE_MEMORY)
+   std::unique_ptr<IntDataItem> connectItself(new IntDataItem()); 
+   connectItself->setInt(_allowConnectToItself); // 1 = allow to connect to itself, 0 = no
 
    std::vector<DataItem*> nullArgs;
+   //nullArgs.push_back(connectionContext);
    std::unique_ptr<DataItem> rval_ap;
+#endif
 
    cc->destinationNode = cc->sourceRefNode = (*_nodesIter);
    cc->current = ConnectionContext::_SOURCE;
@@ -114,10 +149,25 @@ void EachDstFunctor::doExecute(LensContext *c,
       cc->done = true;
    }
    else{
+#if defined(USING_SUB_NODESET) || \
+      (defined(SUPPORT_MULTITHREAD_CONNECTION) && \
+       SUPPORT_MULTITHREAD_CONNECTION == USE_ONLY_MAIN_THREAD)
+      //must set restart to true, for approach using sub-nodeset
+      cc->restart = true;
+#endif
       _functor_ap->execute(c, nullArgs, rval_ap);
       ++_nodesIter;
    }
 #else
+#if defined(REUSE_NODEACCESSORS)
+   if (cc->restart)
+   {
+   auto _refNode = cc->sourceRefNode;
+   c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode] = std::make_pair(std::vector<NodeDescriptor*>(), int());
+   //if (c->sim->ND_from_to[c->sim->_currentConnectNodeSet].count(_refNode) == 0)
+   //  c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode] = std::make_pair(std::vector<NodeDescriptor*>(), int());
+   }
+#endif
    _functor_ap->execute(c, nullArgs, rval_ap);
    while(cc->done && _nodesIter!=_nodesEnd) {
       /* cc->done  means completed the SOURCE-nodeset
@@ -130,6 +180,14 @@ void EachDstFunctor::doExecute(LensContext *c,
       cc->destinationNode = cc->sourceRefNode = (*_nodesIter);
       cc->current = ConnectionContext::_SOURCE;
       cc->restart = true;
+#if defined(REUSE_NODEACCESSORS)
+      {
+	 auto _refNode = cc->sourceRefNode;
+	 c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode] = std::make_pair(std::vector<NodeDescriptor*>(), int());
+	 //if (c->sim->ND_from_to[c->sim->_currentConnectNodeSet].count(_refNode) == 0)
+	 //  c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode] = std::make_pair(std::vector<NodeDescriptor*>(), int());
+      }
+#endif
       _functor_ap->execute(c, nullArgs, rval_ap);
       cc->restart = originalRestart;
    }
@@ -169,7 +227,7 @@ return
  and then generate a list of nodes
  within the ring and pick one of them,
  otherwise just pick one of them
- (uniform distribuition),
+ (uniform distribution),
  then update the count of generated
  nodes.
 * ********************* */
