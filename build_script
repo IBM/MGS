@@ -540,7 +540,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make ${TARGET_MAKE} RELEASE="$RELEASE -j $NPROCS"
+      make ${TARGET_MAKE} RELEASE="$RELEASE" -j $NPROCS
     fi
   else
     make ${TARGET_MAKE} RELEASE="$RELEASE -j $NPROCS"
@@ -548,7 +548,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
-      make RELEASE="$RELEASE -j $NPROCS"
+      make RELEASE="$RELEASE" -j $NPROCS
     fi
     if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark
@@ -688,7 +688,9 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
       ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --clean
+      #CUDA DEBUG for debug purpose
       rm_ifexist $BASE_FOLDER/models/Extensions.mk
+
       #rm_ifexist $BASE_FOLDER/models/all.mdf
       #rm_ifexist $BASE_FOLDER/models/all_test.mdf
       rm_ifexist $LENSROOT/extensions/functor/all.mdf
@@ -728,10 +730,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #touch all.mdf
       #./define all.mdf $REBUILD
       touch ${MDF_TARGET}
-      #CUDA DEBUG block for debug
+      #CUDA DEBUG block 2 lines for debug [to preserve CG_* code ]
       ./define ${MDF_TARGET} $REBUILD
-
       cp Extensions.mk $LENSROOT/
+
       cd $BASE_FOLDER
       #}}}
     fi

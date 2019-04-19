@@ -126,7 +126,7 @@ class VariableProxyBase : public Variable
 	 std::unique_ptr<TriggerableCaller>& triggerableCaller) {
 	 throw SyntaxErrorException(
 	    name + " is not defined in variable proxy.");
-	 return TriggerableBase::_UNALTERED;
+	 //return TriggerableBase::_UNALTERED;
       }
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args) {

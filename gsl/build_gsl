@@ -115,9 +115,6 @@ REGENMAKEFILE=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 PROFILE=""
-if [ "$#" -gt 2 ] ; then
-	NPROCS=$3
-fi
 
 optspec=":d:p:sr-:j:"
 while getopts "$optspec" optchar; do
@@ -142,8 +139,9 @@ while getopts "$optspec" optchar; do
     -)  #parse long-option
       case "${OPTARG}" in
           clean)
-            # CUDA DEBUG TUAN disable for now
-              #CLEAN="-clean"
+            # CUDA DEBUG disable [not deleting CG_* files] 
+            # (if enabled, then also enable line 733 in build_script)
+              CLEAN="-clean"
               ;;
           rebuild)
               REBUILD="-rebuild"

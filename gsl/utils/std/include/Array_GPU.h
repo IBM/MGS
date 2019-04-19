@@ -637,9 +637,15 @@ void Array_Flat<T, memLocation>::insert(const T& element)
 {
   if (_allocated_size == 0)
   {
+#if defined(FLAT_MEM_MANAGEMENT) && FLAT_MEM_MANAGEMENT  == USE_PLACEMENT_NEW
+  T* new_data;
+  char* new_pBuffer;
+  _data = (T*)new_memory((size_t)_incremental_size*sizeof(T), &new_pBuffer);  // this use overloaded
+#else
     //_data = new T[_incremental_size*sizeof(T)];
     //_data = new((size_t)_incremental_size*sizeof(T));  // this use overloaded
     _data = (T*)new_memory((size_t)_incremental_size*sizeof(T));  // this use overloaded
+#endif
     _allocated_size = _incremental_size;
   }
   if (_size <= _allocated_size)
@@ -742,7 +748,7 @@ void Array_Flat<T, memLocation>::sort()
   T temp;
   Array_Flat<T>& a=(*this);
 
-  for (i=_size-1; i>=0; --i)
+  for (i=_size; i-- >0;)
     demote(i, _size-1);
 
   for (i=_size-1; i>=1; --i) {

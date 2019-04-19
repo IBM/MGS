@@ -100,8 +100,8 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 /* NOT COMPLETED */
 #define USE_STD_ALLOCATOR  0
 #define USE_PLACEMENT_NEW  1
-//#define FLAT_MEM_MANAGEMENT USE_STD_ALLOCATOR
-#define FLAT_MEM_MANAGEMENT  USE_PLACEMENT_NEW
+#define FLAT_MEM_MANAGEMENT USE_STD_ALLOCATOR
+//#define FLAT_MEM_MANAGEMENT  USE_PLACEMENT_NEW
 
 /* track for fast searching */
 #define TEST_IDEA_TRACK_GRANULE
@@ -254,5 +254,47 @@ inline double gaussian(double mean, double sd, RNG_ns& rangen)
 {
    return (sd*gaussian(rangen) + mean);
 }
+
+
+/* x value range -2 to 2
+ * y value: 0 to 1
+ * small change in x brings large change in y
+ * USE: usually used in output layer of a binary classification [result is 0 or 1]
+ * NOTE: Use softmax for multiple-class classification
+ */
+template<typename T>
+CUDA_CALLABLE T sigmoid(T x)
+{
+  return exp(x) / (1 + exp(x));
+}
+
+/* Rectified Linear Unit
+ * y in range [0, inf]
+ * USE: most widely used activation function [in hidden layers]
+ *  as we can easily calculate the differential (less computational expensive than 'tanh', 'sigmoid' function), 
+ *  --> we can easily do backpropagate errors
+ *  also, at a time, only a few neurons are activated -> making the network sparse, i.e. efficient and easy for computation
+ *
+ */
+template<typename T>
+CUDA_CALLABLE T ReLU(T x)
+{
+  return fmaxf(x, 0);
+}
+
+/* 
+- a shifted version of sigmoid
+ * y value: -1 to 1
+ * USE: usually used in hidden layer 
+ * [the means of the layer is closed to 0, helps in centering the data 
+ *    -> make learning for next layer much easier]
+ * almost always work better than sigmoid
+*/
+template<typename T>
+CUDA_CALLABLE T tanh(T x)
+{
+  return 2/(1+exp(-2*x))-1; 
+}
+
 
 #endif

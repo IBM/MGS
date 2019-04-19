@@ -412,7 +412,7 @@ bool NodeSet::haveCommonNode(const NodeSet& rv) const
       for (it2 = rv._layers.begin(); it2 != end2; ++it2) {
 	 if (*it == *it2) {
 	    return true;
-	    break;
+	    //break;
 	 }
       }
    }

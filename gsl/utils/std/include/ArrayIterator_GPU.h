@@ -149,7 +149,7 @@ class Array_FlatIterator
 	 //_currentData = &((*_data_pointer)[_index]);      
 	 if (*_data_pointer == nullptr)
 	 {
-	    _currentData == nullptr;
+	    _currentData = nullptr;
 	 }
 	 else{
 	    _currentData = ((*_data_pointer) + _index);      

@@ -36,7 +36,7 @@ TriggerableBase::EventType NodeProxyBase::createTriggerableCaller(
    std::unique_ptr<TriggerableCaller>& triggerableCaller) {
    throw SyntaxErrorException(
       name + " is not defined in node proxy.");
-   return TriggerableBase::_UNALTERED;
+   //return TriggerableBase::_UNALTERED;
 }
 
 GridLayerData* NodeProxyBase::getGridLayerData() const

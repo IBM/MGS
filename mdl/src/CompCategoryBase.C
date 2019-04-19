@@ -1004,7 +1004,7 @@ void CompCategoryBase::addCreateTriggerableCallerMethod(
       << "throw SyntaxErrorException(" << TRIGGERABLEFUNCTIONNAME 
       << " + \" is not defined in " << getInstanceName() 
       << " as a Triggerable function.\");\n"
-      << TAB << "return " << UNALTEREDRETURN << ";\n";
+      << TAB << "//return " << UNALTEREDRETURN << ";\n";
    method->setFunctionBody(os.str());
    instance.addMethod(method);   
 }

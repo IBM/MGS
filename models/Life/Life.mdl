@@ -17,25 +17,63 @@
 #define LIFENODE_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
-Node LifeNode Implements ValueProducer {
+//{{{
+//Node LifeNode Implements ValueProducer{
+//   int value;
+//   int publicValue;
+//   int* [] neighbors;
+//
+//   Shared {
+//     int tooSparse;
+//     int tooCrowded;
+//     int actionType;
+//	   int complexity;
+//   }
+//
+//   InitPhase initialize();
+//   RuntimePhase update();
+//   RuntimePhase updateWeight();
+//   RuntimePhase copy(publicValue);
+//
+//   ValueProducer.value << &publicValue;
+//   
+//
+//   Connection Pre Node () Expects ValueProducer {
+//      ValueProducer.value >> neighbors;
+//   }
+//}
+//}}}
+Node LifeNode Implements ValueProducer, FloatProducer {
+   //{{{internal data 
    int value;
    int publicValue;
+   float weight;
+   float publicWeight;
+   //}}}
    int* [] neighbors;
+   float* [] neighborsWeight;
 
    Shared {
+     //{{{
      int tooSparse;
      int tooCrowded;
+     int actionType;
+     int complexity;
+     //}}}
    }
 
    InitPhase initialize();
    RuntimePhase update();
-   RuntimePhase copy(publicValue);
+   RuntimePhase updateWeight();
+   RuntimePhase copy(publicValue, publicWeight);
 
    ValueProducer.value << &publicValue;
+   FloatProducer.value << &publicWeight;
    
 
-   Connection Pre Node () Expects ValueProducer {
+   Connection Pre Node () Expects ValueProducer, FloatProducer {
       ValueProducer.value >> neighbors;
+      FloatProducer.value >> neighborsWeight;
    }
 }
 #endif

@@ -19,7 +19,11 @@
 #include "Lens.h"
 #include "CG_LifeNode.h"
 #include "rndm.h"
+#include "NumberUtils.h"
 
+#define F_SIGMOID 0 
+#define F_ReLU    1
+#define F_TANH 2
 class LifeNode : public CG_LifeNode
 {
    public:
@@ -30,6 +34,7 @@ class LifeNode : public CG_LifeNode
       //CUDA_CALLABLE void copy(RNG& rng);
       void initialize(RNG& rng);
       void update(RNG& rng);
+      void updateWeight(RNG& rng);
       void copy(RNG& rng);
       virtual ~LifeNode();
 };

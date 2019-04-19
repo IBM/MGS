@@ -99,8 +99,8 @@ BGCartesianPartitioner::BGCartesianPartitioner(const std::string& fileName, bool
   MPI_Comm cart_comm;
   _nprocs = 1;
   for (int i=0; i<DIM; ++i) _nprocs*=_mesh[i];
-  int periods[DIM] = {0,0,0};
-  int reorder = 0;
+  //int periods[DIM] = {0,0,0};
+  //int reorder = 0;
 }
 
 void BGCartesianPartitioner::partition(std::vector<Granule*>& graph, 
