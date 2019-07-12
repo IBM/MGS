@@ -35,7 +35,7 @@ NodeType LinskerInfomaxUnit (<
 >) { outputWeightsShared->dataCollect, invertQmatrixShared->inputWeightsShared, copy->run1, update->run2 };
 
 NodeType ZhengSORNExcUnit(< 
-       eta_IP = 0.0001,
+       //eta_IP = 0.0001,
        TE_max = 1.0,
        mu_IP = 0.1,
        sigma_HIP = 0.0,
@@ -46,16 +46,16 @@ NodeType ZhengSORNExcUnit(<
        p_c = 0.00000001,  // probability of new connection at each time step (0.2 in matlab -> p_c * nbUnits * AvgNbSynapsePerUnit = 0.2)
        Ach = 1.0,
        Ach_time = 1000,  // time step to turn Ach ON
-       loadWeightsOn = {1},
-       weightsFileName = "Weights",
+       //loadWeightsOn = {1},
+       outputWeightsFileName = "Weights",
        collectWeightsOn = {1, 100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000, 1600000, 1700000, 1800000, 1900000, 2000000, 2100000, 2200000, 2300000, 2400000, 2500000, 2600000, 2700000, 2800000, 2900000, 3000000, 3100000, 3200000, 3300000, 3400000, 3500000, 3600000, 3700000, 3800000, 3900000, 4000000, 4100000, 4200000, 4300000, 4400000, 4500000, 4600000, 4700000, 4800000, 4900000, 5000000, 6000000, 7000000, 8000000, 9000000, 9100000, 9200000, 9300000, 9400000, 9500000, 9600000, 9700000, 9800000, 9900000, 10000000}
        >) {fire->run1, update->run2 };
 
 NodeType ZhengSORNInhUnit(< 
         TI_max = 0.5,
         sigma2_chi = 0.0,
-        loadWeightsOn = {1},
-        weightsFileName = "Weights",
+        //loadWeightsOn = {1},
+        outputWeightsFileName = "Weights",
         collectWeightsOn = {2}
   >) {inputWeightsShared->dataCollect, outputWeightsShared->dataCollect, fire->run1, update->run2};
 
@@ -560,10 +560,10 @@ Trigger UnsignedTrigger(string description, Service svc, string operator, int cr
 // 			 ::Iteration, "=", 50000, 0, endTraining);
 
 UnsignedTrigger iterTrig("Iteration Trigger", 
- 			 ::Iteration, ">", 5000000, 0, dataCollect);
+ 			 ::Iteration, ">", 0, 0, dataCollect);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, ">", 6000000, 0, lastPhase); 
+			 ::Iteration, ">", 1000000, 0, lastPhase); 
 
 collector_M1s.dataCollection() on iterTrig;
 collector_Msups.dataCollection() on iterTrig;

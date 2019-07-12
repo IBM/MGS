@@ -1,0 +1,12 @@
+#ifndef BidirectConnectNodeSetsFunctor_MDL
+#define BidirectConnectNodeSetsFunctor_MDL
+
+Framework Functor BidirectConnectNodeSetsFunctor Category "CONNECTOR" {
+   Initialize();
+   void Execute (NodeSet* source, NodeSet* destination, 
+		 Functor* sampling, Functor* sourceOutAttr, 
+		 Functor* destinationInAttr, Functor* destinationOutAttr,
+		 Functor* sourceInAttr);
+}
+
+#endif

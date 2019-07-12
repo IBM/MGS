@@ -1,0 +1,141 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "BidirectConnectNodeSetsFunctor.h"
+#include "CG_BidirectConnectNodeSetsFunctorBase.h"
+#include "LensContext.h"
+#include "Connector.h"
+#include "LensConnector.h"
+#include "GranuleConnector.h"
+#include "NoConnectConnector.h"
+#include "ConnectionContext.h"
+#include "SyntaxErrorException.h"
+#include "ParameterSetDataItem.h"
+#include "Simulation.h"
+#include <memory>
+
+void BidirectConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
+{
+}
+
+void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, NodeSet*& destination, Functor*& sampling, Functor*& sourceOutAttr, Functor*& destinationInAttr, Functor*& destinationOutAttr, Functor*& sourceInAttr) 
+{
+   CG_c->connectionContext->reset();
+   ConnectionContext* cc = CG_c->connectionContext;
+
+   cc->sourceSet = source;
+   cc->destinationSet = destination;
+
+   std::vector<DataItem*> nullArgs;
+   std::auto_ptr<DataItem> outAttrRVal;
+   std::auto_ptr<DataItem> inAttrRVal;
+   std::auto_ptr<DataItem> rval;
+
+   // call sampfctr2, which will set source and destination nodes 
+   // (and maybe other stuff)
+   sampling->execute(CG_c, nullArgs, rval);
+
+   // loop until one of the nodes is null
+   //while(cc->destinationNode!=0 && cc->sourceNode!=0)
+
+   Connector* lc;
+
+   if (CG_c->sim->isGranuleMapperPass()) {
+     lc=_noConnector;
+   } else if (CG_c->sim->isCostAggregationPass()) {
+     lc=_granuleConnector;
+   } else if (CG_c->sim->isSimulatePass()) {
+     lc=_lensConnector;
+   } else {
+     std::cerr<<"Error, BidirectConnectNodeSetsFunctor : no connection context set!"<<std::endl;
+     exit(0);
+   }
+
+   while(!cc->done) {
+      cc->restart = false;
+      cc->currentSample++;
+
+      ParameterSetDataItem *psdi;
+      sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
+      psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
+      if (psdi==0) {
+         throw SyntaxErrorException(
+	    "BidirectConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
+      }
+      cc->outAttrPSet = psdi->getParameterSet();
+
+      destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
+      psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
+      if (psdi==0) {
+         throw SyntaxErrorException(
+	    "BidirectConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
+      }
+      cc->inAttrPSet = psdi->getParameterSet();
+
+      lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
+		     cc->inAttrPSet, CG_c->sim);
+
+      destinationOutAttr->execute(CG_c, nullArgs, outAttrRVal);
+      psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
+      if (psdi==0) {
+         throw SyntaxErrorException(
+	    "BidirectConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
+      }
+      cc->outAttrPSet = psdi->getParameterSet();
+
+      sourceInAttr->execute(CG_c, nullArgs, inAttrRVal);
+      psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
+      if (psdi==0) {
+         throw SyntaxErrorException(
+	    "BidirectConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
+      }
+      cc->inAttrPSet = psdi->getParameterSet();
+
+      lc->nodeToNode(cc->destinationNode, cc->outAttrPSet, cc->sourceNode, 
+		     cc->inAttrPSet, CG_c->sim);
+
+      // call sampfctr2, which will set source and destination nodes 
+      // (and maybe other stuff)
+      sampling->execute(CG_c, nullArgs, rval);
+   }
+}
+
+BidirectConnectNodeSetsFunctor::BidirectConnectNodeSetsFunctor() 
+   : CG_BidirectConnectNodeSetsFunctorBase()
+{
+   _noConnector = new NoConnectConnector;
+   _granuleConnector = new GranuleConnector;
+   _lensConnector = new LensConnector;
+}
+
+BidirectConnectNodeSetsFunctor::~BidirectConnectNodeSetsFunctor() 
+{
+}
+
+void BidirectConnectNodeSetsFunctor::duplicate(std::auto_ptr<BidirectConnectNodeSetsFunctor>& dup) const
+{
+   dup.reset(new BidirectConnectNodeSetsFunctor(*this));
+}
+
+void BidirectConnectNodeSetsFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+{
+   dup.reset(new BidirectConnectNodeSetsFunctor(*this));
+}
+
+void BidirectConnectNodeSetsFunctor::duplicate(std::auto_ptr<CG_BidirectConnectNodeSetsFunctorBase>& dup) const
+{
+   dup.reset(new BidirectConnectNodeSetsFunctor(*this));
+}
+

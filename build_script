@@ -44,6 +44,13 @@ function print_help {
   Third-party libraries:
   -g|--gpu                      build with GPU extensions (CUDA library)
   -a|--arma                     build with Armadillo library 
+  
+  HETEROGENEOUS ARCHITECTURES:
+  -g|--gpu                      build with GPU extensions
+  -a|--arma                     build with Armadillo extensions
+
+  DEFAULT TARGET:
+  NO FLAG			build with models/mgs.mdf
 
   PREDEFINED TARGETS:
   --as-MGS                      (default) build Model Graph Simulator (MGS) - using mgs.mdf
@@ -383,9 +390,11 @@ elif [ "$BASE_FOLDER" != $(pwd) ]; then
   print_do_preq
   exit 1
 fi
+
 cd $BASE_FOLDER/models
 if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
   touch ${MGS_TARGET_FILENAME}
+if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
   echo '// MDL files
 #include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"

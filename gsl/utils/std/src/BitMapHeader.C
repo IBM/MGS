@@ -9,7 +9,7 @@
 
 #define INDEX(x, y) (((y) * (infoHeader.width)) + (x))
 
-#define BIGENDIAN
+//#define BIGENDIAN
 
 BitMapHeader::BitMapHeader() {
   fileHeader.identifier[0] = 'B';
