@@ -45,10 +45,6 @@ function print_help {
   -g|--gpu                      build with GPU extensions (CUDA library)
   -a|--arma                     build with Armadillo library 
   
-  HETEROGENEOUS ARCHITECTURES:
-  -g|--gpu                      build with GPU extensions
-  -a|--arma                     build with Armadillo extensions
-
   DEFAULT TARGET:
   NO FLAG			build with models/mgs.mdf
 
@@ -403,7 +399,7 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 
 // MDF files
 
-' > ${MGS_TARGET_FILENAME}
+  ' > ${MGS_TARGET_FILENAME}
 fi
 if [ ! -f ${MDF_TARGET} ]; then 
   echoerr "ERROR: File ${MDF_TARGET} does not exist."

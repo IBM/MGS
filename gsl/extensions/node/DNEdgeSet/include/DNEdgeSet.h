@@ -12,6 +12,11 @@ class DNEdgeSet : public CG_DNEdgeSet
       void initialize(RNG& rng);
       void update(RNG& rng);
       virtual ~DNEdgeSet();
+<<<<<<< HEAD
+=======
+
+   private:
+>>>>>>> Adding DNN model suite.
       TransferFunction transferFunction;
 };
 

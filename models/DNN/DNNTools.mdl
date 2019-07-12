@@ -36,9 +36,12 @@ Constant Bias Implements ForwardProducer {
    double output;
    ForwardProducer.forward << &output;
 }
+<<<<<<< HEAD
 
 Struct EdgeSetInput {
    double []* inputArray;
    unsigned inputIndex;
 }
+=======
+>>>>>>> Adding DNN model suite.
 #endif

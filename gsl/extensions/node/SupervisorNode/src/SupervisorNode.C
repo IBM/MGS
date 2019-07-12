@@ -2,20 +2,28 @@
 #include "SupervisorNode.h"
 #include "CG_SupervisorNode.h"
 #include "rndm.h"
+<<<<<<< HEAD
 #include "IsToast.h"
 #include <math.h>
+=======
+>>>>>>> Adding DNN model suite.
 
 #define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()
 
 void SupervisorNode::initialize(RNG& rng) 
 {
+<<<<<<< HEAD
   primaryGradient = PRELIM_STATE;
   logits.increaseSizeTo(predictions.size());
+=======
+  transferFunction.setType(SHD.transferFunctionName);
+>>>>>>> Adding DNN model suite.
 }
 
 void SupervisorNode::update(RNG& rng) 
 {
+<<<<<<< HEAD
   ShallowArray<double*>::iterator iter, end = predictions.end();  
   if (!ready) {
     for (iter=predictions.begin(); iter!=end; ++iter) {
@@ -65,6 +73,14 @@ void SupervisorNode::update(RNG& rng)
   }
 }
 
+=======
+  double oneHot = (SHD.label == getGlobalIndex()) ? 1.0 : 0;
+  double error = oneHot - *prediction;
+  if (SHD.refreshErrors) sumOfSquaredError=0;
+  sumOfSquaredError += error * error;
+  primaryGradient = (oneHot - *prediction) * transferFunction.derivativeOfTransfer(*prediction);
+}
+>>>>>>> Adding DNN model suite.
 SupervisorNode::~SupervisorNode() 
 {
 }

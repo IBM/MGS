@@ -20,10 +20,21 @@
 Node DNNode Implements ForwardProducer, BackwardProducer {
    double output;
    double gradient;
+<<<<<<< HEAD
    EdgeSetInput [] inputs;
    double* weightedGradient;
    bool ready;
    
+=======
+   double* [] inputs;
+   double* weightedGradient;
+   bool ready;
+   
+   Shared {
+     double []* currentConnection;
+   }
+
+>>>>>>> Adding DNN model suite.
    InitPhase initialize();
    RuntimePhase update(output, gradient);
 
@@ -35,32 +46,54 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
      unsigned index;
    }
 
+<<<<<<< HEAD
    UserFunction extractInputIndex;
 
    Connection Pre Node (PSet.identifier=="input") Expects ForwardArrayProducer {
       ForwardArrayProducer.forwardArray >> inputs.inputArray;
       extractInputIndex();
+=======
+   UserFunction extractInputPointer;
+
+   Connection Pre Node (PSet.identifier=="input") Expects ForwardArrayProducer {
+      ForwardArrayProducer.forwardArray >> Shared.currentConnection;
+      extractInputPointer();
+>>>>>>> Adding DNN model suite.
    }
 
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
       BackwardProducer.backward >> weightedGradient;
    }
+<<<<<<< HEAD
+=======
+
+   Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
+      ForwardProducer.forward >> inputs;
+   }
+>>>>>>> Adding DNN model suite.
 }
 
 Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    double [] weights;
+<<<<<<< HEAD
    double [] deltaWeights;
    double [] deltaWeightsSquared;
+=======
+>>>>>>> Adding DNN model suite.
    double [] weightedOutputs;
    double weightedGradient;
    double [] echoes;
    unsigned echoIndex;
+<<<<<<< HEAD
    double biasCorrectionW;
    double biasCorrectionS;
+=======
+>>>>>>> Adding DNN model suite.
 
    double* input;
    double* [] gradients;
 
+<<<<<<< HEAD
    bool readyForward;
    bool readyBackward;
 
@@ -74,6 +107,17 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
      double alpha;
      double beta;
      string [] optimization;
+=======
+   double oldDeltaWeight;
+
+   bool readyForward;
+   bool readyBackward;
+
+   Shared {
+     string transferFunctionName;
+     double eta;
+     double alpha;
+>>>>>>> Adding DNN model suite.
    }
 
    InitPhase initialize();
@@ -90,6 +134,7 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
       ForwardProducer.forward >> input;
    }
 
+<<<<<<< HEAD
    Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
       ForwardProducer.forward >> input;
    }
@@ -98,32 +143,52 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
       BackwardProducer.backward >> gradients;
    }
 
+=======
+   Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
+      BackwardProducer.backward >> gradients;
+   }
+>>>>>>> Adding DNN model suite.
 }
 
 
 Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
 
   double primaryGradient;
+<<<<<<< HEAD
   double* [] predictions;
   double [] logits;
   double sumOfSquaredError;
   unsigned wins;
+=======
+  double* prediction;
+  double sumOfSquaredError;
+>>>>>>> Adding DNN model suite.
   bool ready;
 
   Shared {
     string transferFunctionName;
+<<<<<<< HEAD
     unsigned [] labels;
     unsigned labelIndex;
     unsigned numberOfInputs;
     unsigned numberOfLabels;
     double [] x;
     bool shready;
+=======
+    unsigned label;
+    double [] x;
+>>>>>>> Adding DNN model suite.
 
     string dataLocation;
     bool test;
     bool refreshErrors;
+<<<<<<< HEAD
     unsigned trainingEpoch;
     unsigned trainingEpochs;
+=======
+    unsigned trainingPass;
+    unsigned trainingIterations;
+>>>>>>> Adding DNN model suite.
     unsigned imageIndex;
 
     InitPhase initializeShared;
@@ -138,10 +203,18 @@ Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
 
    InAttrPSet {
      string identifier;
+<<<<<<< HEAD
    }
 
    Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {
       ForwardProducer.forward >> predictions;
+=======
+     unsigned index;
+   }
+
+   Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {
+      ForwardProducer.forward >> prediction;
+>>>>>>> Adding DNN model suite.
    }
 }
 
