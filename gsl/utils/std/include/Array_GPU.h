@@ -419,8 +419,8 @@ class Array_Flat //: public Managed
       /* wipe everything
        * don't create minimal data
        */
-      void destructContents();
-      void copyContents(const Array_Flat& rv);
+      CUDA_CALLABLE void destructContents();
+      CUDA_CALLABLE void copyContents(const Array_Flat& rv);
       void demote (size_t, size_t); 
 	  // NOTE: Arrays are organized in the form of multiple 'logical blocks'
 	  //       i.e. memory increase/reduced, in the form of one or many blocks

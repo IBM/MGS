@@ -169,25 +169,18 @@ std::string RegularConnection::getConnectionCode(
 	 if (_predicate) {
 	    os << _predicate->getName();
 	    predicateString = (_predicate->getName());
-	    //predicateString = (_predicate->getPredicate1Name());
 	 }
 	 os << ") {\n";
-	 //      os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
       } else {
 	 tab = TAB;
-	 //      os << getCommonConnectionCode(tab, name);
       }
-      ////os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name);
       os << getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicateString, mach_type, dummy);
       if (_userFunctionCalls) {
 	 os << tab <<  "if (castMatchLocal) { \n";
 	 std::vector<UserFunctionCall*>::const_iterator it, 
 	    end = _userFunctionCalls->end();
 	 for (it = _userFunctionCalls->begin();  it != end; ++it) {
-	    //os << tab << (*it)->getName() << "(" << functionParameters << ");\n";
 	    if (mach_type == MachineType::GPU)
-	       //need to be updated when this condition meet
-	       //os << tab << TAB << (*it)->getName() << "TUAN TO UPDATE"<< "(" << functionParameters << ");\n";
 	       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
 	    else
 	       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
@@ -198,7 +191,6 @@ std::string RegularConnection::getConnectionCode(
 	 os << TAB << "}\n";      
       }
    }else{
-
       if (_directionType == _PRE) {
 	 psetName += INATTRPSETNAME;
       } else {

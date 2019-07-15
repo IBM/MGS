@@ -40,14 +40,15 @@ function print_help {
   --colab                       build libraries for collaborators (gsl/lib) 
   --regen                       regenerate gsl/Makefile  
   --profile                     generate profile output
-  HETE ARCHITECTURE:
+  HETEROGENOUS ARCHITECTURE:
   -g|--gpu                      build with GPU extensions
   -a|--arma                     build with Armadillo extensions
 
   PREDEFINED TARGETS:
-  --as-NTS                      build Neural Tissue Simulator (NTS)
-  --as-NTS-NVU                  build NTS+NVU
-  --as-NGS                      build Neuronal Graph Simulator (NGS)
+  --as-MGS                      (default) build Model Graph Simulator (MGS) - using mgs.mdf
+  --as-NTS                      build Neural Tissue Simulator (NTS) - using models/nts.mdf
+  --as-NTS-NVU                  build NTS+NVU - using NVU.mdf
+  --as-NGS                      build Neuronal Graph Simulator (NGS) - using ngs.mdf
 
 Examples:
 1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
@@ -433,6 +434,10 @@ if ldconfig -p | grep libgmp; then
 fi
 
 if [ "$GPU" == "--gpu" ]; then
+  if which nvcc | grep -q1 nvcc; then
+    echo "CUDA nvcc found..."; else echo "CUDA nvcc is not found! (install from https://developer.nvidia.com/cuda-downloads)";
+    exit
+  fi
   if which nvidia-smi | grep -q1 /\nvidia-smi; then
     echo "CUDA probably found..."; else echo "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
     exit
@@ -490,6 +495,7 @@ if [ ! -f ${MDF_TARGET} ]; then
   touch ${MDF_TARGET}
   echo '// MDL files
 #include "std/std_interfaces.mdl"
+#include "PointNeuronTools/PointNeuronTools.mdl"
 #include "Life/Life.mdl"
 #include "Life/LifeDataCollectors.mdl"
 
@@ -674,6 +680,7 @@ fi
 #{{{
 EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  #{{{
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
     ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
@@ -775,6 +782,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     #}}}
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
+    #{{{
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
       echo -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
@@ -805,6 +813,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
         echo $TYPE >> .built # 2nd-line
       fi
     fi
+    #}}}
   fi
+  #}}}
 fi
 #}}}

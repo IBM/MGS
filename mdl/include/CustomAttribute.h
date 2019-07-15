@@ -52,6 +52,7 @@ class CustomAttribute : public Attribute
       void setInitializeString(const std::string& init);
       virtual std::string getDeleteString();
       void setCustomDeleteString(std::string);
+      void setCompleteCustomDeleteString(std::string);
       std::string getCustomDeleteString();
 
       // References have to be initialized at construction, therefore every
@@ -96,6 +97,9 @@ class CustomAttribute : public Attribute
       bool _owned;
       bool _cArray;
       bool _customDelete;
+      /* this flag is added to provide a way to customize the deletion
+       * of _nodeInstanceAccessors */
+      bool _completeCustomeDelete=false; 
       std::string _cArraySize;
       bool _reference;
       std::string _parameterName;

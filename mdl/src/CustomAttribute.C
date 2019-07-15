@@ -194,14 +194,27 @@ void CustomAttribute::fillInitializer(std::string& init) const
 
 std::string CustomAttribute::getDeleteString() 
 {
+
+  /* by default: this add a piece of code to the front of the deletion
+   * of data member */
   std::string rval="";
   if (_customDelete) {
     rval = _customDeleteString;
   }
-  rval += Attribute::getDeleteString();
+  if (not _completeCustomeDelete)
+  {
+    /* by default: then the deletion is always enforced */
+    rval += Attribute::getDeleteString();
+  }
   return rval;
 }
 
+void CustomAttribute::setCompleteCustomDeleteString(std::string deleteString)
+{
+  _customDeleteString=deleteString;
+  _customDelete=true;
+  _completeCustomeDelete=true;
+}
 void CustomAttribute::setCustomDeleteString(std::string deleteString)
 {
   _customDeleteString=deleteString;

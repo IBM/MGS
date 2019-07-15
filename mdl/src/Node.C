@@ -127,6 +127,22 @@ void Node::generateGridLayerData()
    nodeInstanceAccessors->setCArray();
    nodeInstanceAccessors->setOwned();
    nodeInstanceAccessors->setPointer();
+
+   std::ostringstream customDeleteString;   
+   customDeleteString << 
+"#ifdef REUSE_NODEACCESSORS\n"
+      << TAB << 
+      "Simulation *sim = &(_nodeInstanceAccessors[0].getGridLayerData()->getNodeCompCategoryBase()->getSimulation());\n"
+      << TAB << 
+      "if (sim->isSimulatePass())\n"
+      << TAB << TAB << 
+      "delete[] _nodeInstanceAccessors;\n"
+"#else\n"
+      << TAB << 
+      "delete[] _nodeInstanceAccessors;\n"
+"#endif\n";
+   std::string deleteString(customDeleteString.str());
+   nodeInstanceAccessors->setCompleteCustomDeleteString(deleteString);
    
    std::auto_ptr<Attribute> nodeInstanceAccessorsAp(nodeInstanceAccessors);
    instance->addAttribute(nodeInstanceAccessorsAp);
@@ -144,13 +160,64 @@ void Node::generateGridLayerData()
    constructor->setInitializationStr(
       "GridLayerData(compCategory, gridLayerDescriptor, gridLayerIndex)");
    std::ostringstream constructorFB;
+
+   std::string className = getInstanceName();
    constructorFB
+      << TAB << "Simulation *sim = &compCategory->getSimulation();\n"
+      << "#ifdef REUSE_NODEACCESSORS\n"
+      << TAB << 
+      "if (sim->isGranuleMapperPass())\n"
+      << TAB << 
+      "{\n"
+      << TAB << TAB << 
+       "if (sim->nodeInstanceAccessor.count(\"" << className << "\") == 0)\n"
+      << TAB << TAB << 
+       "{\n"
+      << TAB << TAB << TAB << 
+           "std::map<int, NodeInstanceAccessor*> gridlayer_2_NA;\n"
+      << TAB << TAB << TAB << 
+           "sim->nodeInstanceAccessor[\"" << className << "\"] = gridlayer_2_NA;\n"
+      << TAB << TAB << 
+       "}\n"
+      << TAB << TAB << 
+       "_nodeInstanceAccessors = new NodeInstanceAccessor[_nbrUnits];\n"
+      << TAB << TAB << 
+       "sim->nodeInstanceAccessor[\"" << className << "\"][getGridLayerIndex()] =  _nodeInstanceAccessors;\n"
+      << TAB << 
+      "}\n"
+      << TAB << 
+      "else{\n"
+      << TAB << TAB << 
+       "_nodeInstanceAccessors = sim->nodeInstanceAccessor[\"" << className << "\"][getGridLayerIndex()];\n"
+      << TAB << 
+      "}\n"
+      << TAB << 
+"#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)\n"
+      << TAB << 
+      "if (sim->_nodeShared.count(\"" << className << "\") == 0)\n"
+      << TAB << 
+      "{\n"
+      << TAB << TAB << 
+	 className << "* ptr = (new " << className << "());\n"
+      << TAB << TAB << 
+	 "sim->_nodeShared[\"" << className << "\"] = ptr;\n"
+      << TAB << 
+      "}\n"
+      << TAB << 
+      "for (int ii = 0; ii < _nbrUnits; ii++)\n"
+      << TAB << 
+      "    _nodeInstanceAccessors[ii].setSharedNode(sim->_nodeShared[\"" << className << "\"]);\n"
+      << TAB << 
+"#endif\n"
+      <<
+"#else\n"
       << TAB << "_nodeInstanceAccessors = new NodeInstanceAccessor[_nbrUnits];\n"
+      <<
+"#endif\n"
       << TAB <<"// set gridNode index for each node's relational information\n"
       << TAB << "int top;\n"
       << TAB << "int uniformDensity = _gridLayerDescriptor->isUniform();\n"
       << TAB << "int gridNodes = _gridLayerDescriptor->getGrid()->getNbrGridNodes();\n"
-      << TAB << "Simulation *sim = &compCategory->getSimulation();\n"
       << TAB << "unsigned my_rank = sim->getRank();\n"
       << "#if defined(HAVE_GPU) && defined(__NVCC__)\n"
       //<< TAB << "/*"
@@ -181,7 +248,7 @@ void Node::generateGridLayerData()
       << TAB << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setIndex(n);\n"
       << TAB << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setGridLayerData(this);\n"
       //<< TAB << TAB << TAB << TAB << "if (sim->getGranule(_nodeInstanceAccessors[n])->getPartitionId() == my_rank) {\n" 
-//    << TAB   << TAB << TAB << TAB << "if (!sim->isDistributed() || sim->getGranule(_nodeInstanceAccessors[n])->getGraphId() == my_rank) {\n"
+      //<< TAB << TAB << TAB << TAB << "if (!sim->isDistributed() || sim->getGranule(_nodeInstanceAccessors[n])->getGraphId() == my_rank) {\n"
       //<< TAB << TAB << TAB << TAB << TAB << "sim->_nodes_count[\"" << getInstanceName() << "\"][my_rank] += 1;;\n"
       //<< TAB << TAB << TAB << TAB << "}\n"
       << TAB << TAB << TAB << TAB <<  "/* it means instance 'LifeNode' at index 'i'\n"
@@ -258,8 +325,14 @@ void Node::generateGridLayerData()
       << "top = _nodeOffsets[gn] + _gridLayerDescriptor->getDensity(gn);\n"
       << TAB << TAB << "}\n"
       << TAB << TAB << "for (; n < top; ++n) {\n"
+      << TAB << 
+	 "#if not defined(REUSE_NODEACCESSORS)\n"
+      << TAB << 
+        "//as this is already set during GRANULE_MAPPER_PASS (see above)\n"
       << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setNodeIndex(gn);\n"
       << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setIndex(n);\n"
+      << TAB << 
+	 "#endif\n"
       << TAB << TAB << TAB << "_nodeInstanceAccessors[n].setGridLayerData(this);\n\n"
       << TAB << TAB << TAB << "if (sim->isSimulatePass() && sim->getGranule(_nodeInstanceAccessors[n])->getPartitionId() == my_rank) {\n" 
 //      << TAB << TAB << TAB << "if (!sim->isDistributed() || sim->getGranule(_nodeInstanceAccessors[n])->getGraphId() == my_rank) {\n"
@@ -466,6 +539,7 @@ void Node::_add_allocateNode_Method(Class& instance) const
 	    subMethodTrackConnection 
 	       << TAB << "{\n"
 	       << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << TAB << tmpVarName << ".increaseSizeTo(sz);\n"
 	       << TAB << TAB << "/* find the subarray size for this node */\n"
 	       << TAB << TAB <<
 	       "int gridLayerIndex = nd->getGridLayerData()->getGridLayerIndex();\n" 

@@ -39,7 +39,7 @@ else:
         file_version = tokens[-1]
         return file_version
 
-import pip
+# import pip
 # import string
 
 # if 'builtins' not in sys.modules.keys():
@@ -1536,19 +1536,19 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
             retStr += " " + O4_OPTIMIZATION_FLAG
         if self.options.optimization == "O5":
             retStr += " " + O5_OPTIMIZATION_FLAG
-        #if self.options.optimization == "Og":
+        # if self.options.optimization == "Og":
         #    retStr += " " + OG_OPTIMIZATION_FLAG
 
         # if self.options.debug == USE:
-        Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 \ "  # NOQA
-        Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 \ "  # NOQA
-        Gencode_Kepler_1 = " -gencode arch=compute_30,code=sm_30 \ "  # NOQA
-        Gencode_Kepler_2 = " -gencode arch=compute_35,code=sm_35 \ "  # NOQA
-        Gencode_Kepler_3 = " -gencode arch=compute_35,code=compute_35 \ "  # NOQA
+        Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 "  # NOQA
+        Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 "  # NOQA
+        Gencode_Kepler_1 = " -gencode arch=compute_30,code=sm_30 "  # NOQA
+        Gencode_Kepler_2 = " -gencode arch=compute_35,code=sm_35 "  # NOQA
+        Gencode_Kepler_3 = " -gencode arch=compute_35,code=compute_35 "  # NOQA
         """ NVCC 7.5 (Kepler + Maxwell native; Pascal PTX JIT)"""
-        Gencode_Maxwell_1 = " -gencode=arch=compute_50,code=sm_50 \    "  # NOQA
-        Gencode_Maxwell_2 = " -gencode=arch=compute_52,code=sm_52 \    "  # NOQA
-        Gencode_Maxwell_3 = " -gencode=arch=compute_52,code=compute_52 \ "  # NOQA
+        Gencode_Maxwell_1 = " -gencode=arch=compute_50,code=sm_50 "  # NOQA
+        Gencode_Maxwell_2 = " -gencode=arch=compute_52,code=sm_52 "  # NOQA
+        Gencode_Maxwell_3 = " -gencode=arch=compute_52,code=compute_52 "  # NOQA
         Gencode_Kepler = Gencode_Kepler_1 + Gencode_Kepler_2 + Gencode_Kepler_3  # NOQA
         Gencode_Maxwell = Gencode_Maxwell_1 + Gencode_Maxwell_2 + Gencode_Maxwell_3  # NOQA
         Gencode_NVCC7_5 = """ -gencode=arch=compute_30,code=sm_30 \
@@ -1588,7 +1588,8 @@ CUDA_NVCC_FLAGS += --compiler-options -fPIC \
  """
         # retStr += Gencode_NVCC8_0
         # retStr += Gencode_NVCC9_0
-        retStr += Gencode_Volta
+        # retStr += Gencode_Volta
+        retStr += Gencode_Kepler_3
 
         retStr += "\n"
 
@@ -1802,7 +1803,7 @@ LIBS := """
         if self.options.withGpu is True:
             retStr += " -lcuda -lcudart -lcurand"
             if self.options.withMpi is True:
-                retStr += " -lmpi_cxx -lmpi"
+                retStr += " -lmpi_cxx -lmpi -lopen-pal"
 
         if self.options.withArma is True:
             retStr += " -llapack -lopenblas -larmadillo"
@@ -2251,8 +2252,8 @@ clean:
 CFLAGS := ${CUDA_NVCC_FLAGS}
 """
 #                fileBody += """\
-#CFLAGS := --compiler-bindir  {0}
-#""".format(findFile("g++", True))
+# CFLAGS := --compiler-bindir  {0}
+# """.format(findFile("g++", True))
 
         else:
             fileBody += self.getCFlags()
@@ -2312,7 +2313,7 @@ def prereq_packages():
     for package in required_pkgs:
         try:
             __import__(package)
-        except ImportError as _e:
+        except ImportError:
             print("Please install: sudo pip install --user %s" % (package))
 
 
