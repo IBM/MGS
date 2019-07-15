@@ -50,7 +50,13 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
  * we should not re-create NodeAccessor 
  *  from RuntimePhase
  */
-//#define REUSE_NODEACCESSORS
+#define REUSE_NODEACCESSORS
+//1.--> the REUSE_EXTRACTED_NODESET_FOR_CONNECTION require the activation of REUSE_NODEACCESSORS
+//#define REUSE_EXTRACTED_NODESET_FOR_CONNECTION 
+//2.--> the TRACK_SUBARRAY_SIZE require the activation of REUSE_NODEACCESSORS
+#define TRACK_SUBARRAY_SIZE
+//(no longer used)--> the BASED_ON_INDEX require the activation of TRACK_SUBARRAY_SIZE 
+     //#define BASED_ON_INDEX
 
 #define OLD_APPROACH 0
 #define NEW_APPROACH 1
@@ -146,19 +152,20 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 //   class CG_LifeNodeCompCategory{
 //   ShallowArray_Flat< ShallowArray_Flat<float*>>  data;
 //   }
-// OPTION_4 means  (we need three array to track with MAX_SUBARRAY_SIZE is used)
+// OPTION_4 means  (we need three arrays to track with MAX_SUBARRAY_SIZE is used)
+//         [potentially to behave like OPTION_5 if we replace MAX_SUBARRAY_SIZE with the exact-size of subarray]
 //   class CG_LifeNodeCompCategory{
 //   ShallowArray_Flat< float*>  data;
 //   ShallowArray_Flat< int>  data_start_offset;
 //   ShallowArray_Flat< int>  data_num_elements;
 //   }
-// OPTION_4b means  (we need 2 array to track with MAX_SUBARRAY_SIZE is used)
+// OPTION_4b means  (we need 2 arrays to track with MAX_SUBARRAY_SIZE is used)
 //   class CG_LifeNodeCompCategory{
 //   ShallowArray_Flat< float*>  data;
 //   ShallowArray_Flat< int>  data_num_elements;
 //   int data_max_elements; // = MAX_SUBARRAY_SIZE
 //   }
-// OPTION_5 means  (we need two array to track if we know exactly how many elements for each subarray)
+// OPTION_5 means  (we need 2 arrays to track if we know exactly how many elements for each subarray)
 //   and the number of elements for 'i'-th node is 
 //                     (data_start_offset[i+1] - data_start_offset[i])     if 0<i<n-1
 //                     (data_start_offset.size() - data_start_offset[i])   if i = n-1
@@ -169,9 +176,15 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
 //   }
 //
 //   IMPORTANT:  for OPTION_4 and OPTION_5, we need to revise global kernel behavior
-//   support: OPTION_3, OPTION_4, OPTION_4b, OPTION_5
-//#define DATAMEMBER_ARRAY_ALLOCATION OPTION_3
-#define DATAMEMBER_ARRAY_ALLOCATION OPTION_4b
+//   support: OPTION_3, OPTION_4, OPTION_4b
+//   non-complete: OPTION_5 (no data declaration for OPTION_5 and is similar to OPTION_4 with turning off USE_SHARED_MAX_SUBARRAY)
+//   Use OPTION_3 if we want the sub-array to be resized by any InitPhase functions
+#define DATAMEMBER_ARRAY_ALLOCATION OPTION_3
+//#define DATAMEMBER_ARRAY_ALLOCATION OPTION_4b
+
+// IF (1), then the size information is stored at 
+//  std::pair(-1, -1)
+#define USE_SHARED_MAX_SUBARRAY 1
 
 #endif
 #else

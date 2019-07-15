@@ -23,6 +23,9 @@
 
 NodeInstanceAccessor::NodeInstanceAccessor()
    : _gridLayerData(0), _node(0), _nodeIndex(0), _index(0)
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+     , _sharedNode(0)
+#endif
 {
 }
 
@@ -75,6 +78,16 @@ Node* NodeInstanceAccessor::getNode()
 {
    return _node;
 }
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+Node* NodeInstanceAccessor::getSharedNode()
+{
+   return _sharedNode;
+}
+void NodeInstanceAccessor::setSharedNode(Node* n)
+{
+   _sharedNode=n;
+}
+#endif
 
 void NodeInstanceAccessor::setNode(Node* n)
 {

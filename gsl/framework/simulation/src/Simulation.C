@@ -120,7 +120,7 @@ Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
 #endif  //HAVE_MPI
       , _numWorkUnits(numWorkUnits), _numGranules(0), _partitioner(0)
 {
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
   _currentConnectNodeSet = 0;
 #endif
    std::string fileName;
@@ -626,6 +626,13 @@ Simulation::~Simulation()
    }
    MPI_Barrier(MPI_COMM_WORLD);
 #endif // HAVE_MPI
+
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+  for( auto it = _nodeShared.begin(); it != _nodeShared.end(); ++it )
+  {
+    if (it->second) delete it->second;
+  }
+#endif
 
    if (_rank==0) printf("Simulation destructed.\n");
 }

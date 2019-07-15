@@ -262,8 +262,9 @@ void ConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& source, No
 	std::cout << ".......... nodeToNode() has been called " << CG_c->sim->getCounter() << " times"<< std::endl;
      } 
 #endif
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
      //must be reset, right before isSimulatePass()
+     assert(0); // check again this piece of code
      CG_c->sim->_currentConnectNodeSet++;
      //if (CG_c->sim->isSimulatePass()) {
      //   CG_c->sim->_currentConnectNodeSet++;

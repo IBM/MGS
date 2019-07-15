@@ -122,6 +122,7 @@ class NodeProxyBase : public Node
       virtual bool hasService() {
          return false;
       }
+      /* adding to ensure these methods are implemented for proxies but they are not supposed to be used */
       virtual void addPreConstant(Constant* CG_constant, 
 				  ParameterSet* CG_pset) {
 	 assert(false);
@@ -140,6 +141,11 @@ class NodeProxyBase : public Node
 	 assert(false);
       }
 
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+      virtual void addPreNode_Dummy(NodeDescriptor* CG_node, ParameterSet* CG_pset, Simulation* sim, NodeDescriptor*) {
+	 assert(false);
+      }
+#endif
 
    protected:
       NodeRelationalDataUnit* _relationalInformation;

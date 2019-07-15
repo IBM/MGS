@@ -35,10 +35,13 @@ class InterfaceToMember : public InterfaceMapping {
 	 const std::string& tab, 
 	 std::set<std::string>& requiredIncreases) const;
 
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
       std::string getInterfaceToMemberCode(
 	 const std::string& tab, 
 	 std::set<std::string>& requiredIncreases, 
-	 MachineType mach_type) const;
+	 MachineType mach_type,
+	 bool dummy=0,
+	 const std::string& className="") const;
 
       std::string getInterfaceToMemberString(
 	 const std::string& interfaceName) const;

@@ -50,6 +50,7 @@ class ConnectionCCBase : public CompCategoryBase {
    protected:
       virtual std::string getAddPreEdgeFunctionBody() const;
       virtual std::string getAddPreNodeFunctionBody() const;
+      virtual std::string getAddPreNode_DummyFunctionBody() const;
       virtual std::string getAddPreConstantFunctionBody() const;
       virtual std::string getAddPreVariableFunctionBody() const;
 
@@ -69,11 +70,14 @@ class ConnectionCCBase : public CompCategoryBase {
       void copyOwnedHeap(const ConnectionCCBase& rv);
       void destructOwnedHeap();
       std::vector<RegularConnection*> _connections;
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
       virtual std::string getAddConnectionFunctionBodyExtra(
 	 Connection::ComponentType componentType, 
 	 Connection::DirectionType directionType,
 	 const std::string& componentName, const std::string& psetType, 
-	 const std::string& psetName) const;
+	 const std::string& psetName,
+	 bool dummy=0
+	 ) const;
       void addExtraInstanceMethodsCommon(Class& instance, 
 					 bool pureVirtual) const;
       std::vector<UserFunction*>* _userFunctions;

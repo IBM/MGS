@@ -320,7 +320,8 @@ class Array_Flat //: public Managed
     void assign(int64_t n, const T& val);
     void insert(const T& element);
     void replace(int64_t index, const T& element); //replace the element at index 'index' with new value
-    void push_back(const T& element) {
+    void push_back(const T& element) 
+    {
       insert(element);
     }
     CUDA_CALLABLE T& operator[](int64_t index);
@@ -330,47 +331,62 @@ class Array_Flat //: public Managed
     virtual void duplicate(std::unique_ptr<Array_Flat<T, memLocation>>& rv) const = 0;
     virtual ~Array_Flat();
     
-    CUDA_CALLABLE size_t size() const {
+    CUDA_CALLABLE size_t size() const 
+    {
       return _size;
     }
+    CUDA_CALLABLE size_t allocated_size() const 
+    {
+      return _allocated_size;
+    }
     
-    const unsigned & getCommunicatedSize() const {
+    const unsigned & getCommunicatedSize() const 
+    {
       return _communicatedSize;
     }
 
-    unsigned & getCommunicatedSize() {
+    unsigned & getCommunicatedSize() 
+    {
       return _communicatedSize;
     }
 
-    void setCommunicatedSize(unsigned communicatedSize) {
+    void setCommunicatedSize(unsigned communicatedSize) 
+    {
       _communicatedSize = communicatedSize;
     }
 
-    const unsigned & getSizeToCommunicate() const {
+    const unsigned & getSizeToCommunicate() const 
+    {
       return _sizeToCommunicate;
     }
 
-    unsigned & getSizeToCommunicate() {
+    unsigned & getSizeToCommunicate() 
+    {
       return _sizeToCommunicate;
     }
 
-    void setSizeToCommunicate(unsigned sizeToCommunicate) {
+    void setSizeToCommunicate(unsigned sizeToCommunicate) 
+    {
       _sizeToCommunicate = sizeToCommunicate;
     }
 
-    CUDA_CALLABLE iterator begin() {
+    CUDA_CALLABLE iterator begin() 
+    {
       return iterator(&_data, 0);
     }
     
-    CUDA_CALLABLE iterator end() {
+    CUDA_CALLABLE iterator end() 
+    {
       return iterator(&_data, size());
     }
     
-    CUDA_CALLABLE const_iterator begin() const {
+    CUDA_CALLABLE const_iterator begin() const 
+    {
       return const_iterator(const_cast<const T**>(&_data), 0);
     }
     
-    CUDA_CALLABLE const_iterator end() const { 
+    CUDA_CALLABLE const_iterator end() const 
+    {
       return const_iterator(
 			    const_cast<const T**>(&_data), size());
     }

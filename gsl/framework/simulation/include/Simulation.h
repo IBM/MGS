@@ -230,7 +230,7 @@ class Simulation : public Publishable {
   PassType getPassType() const { return _passType; }
   void setCostAggregationPass() { _passType = _COST_AGGREGATION_PASS; }
   void setSimulatePass() { _passType = _SIMULATE_PASS; 
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
     _currentConnectNodeSet = 0;
 #endif
   }
@@ -357,11 +357,17 @@ class Simulation : public Publishable {
   // "LifeNode" on what (original and unique) partionId
   //std::map< std::string, std::vector<int> >  _nodes_partition;
 #if defined(DETECT_NODE_COUNT) && (DETECT_NODE_COUNT == NEW_APPROACH)
+  //For a given model, e.g. "LifeNode", its node-instances can belong to different Granule
+  //  we track how many of node-instances for a given modeltype are assigned to one Granule*
+  //  and finally, one we know the Granule* that belongs to the same MPI rank 
+  //  --> we can find the total node-instance to be created
+  //  THIS METHOD IS FASTER, LESS MEMORY
   std::map< std::string, std::map<Granule*, int> >  _nodes_granules; 
 #else
   std::map< std::string, std::vector<Granule*> >  _nodes_granules; //maybe slower
 #endif
   //std::map< std::string, std::list<Granule*> >  _nodes_granules; 
+
 
   /*
    *     keep tracks # proxy (of the 'from' NodeDescriptor)
@@ -451,10 +457,13 @@ class Simulation : public Publishable {
 
 #if defined(REUSE_NODEACCESSORS)
   //track nodeaccessors from every model, e.g. CG_LifeNodeGridLayerData
-  //["LifeNode"] = _nodeInstanceAccessors;
+  //IMPORTANT: At each Layer statement, it creates a new CG_LifeNodeGridLayerData object
+  //// so each layer has its own array of _nodeInstanceAccessors
+  //["LifeNode"][layerIndex] = _nodeInstanceAccessors;
   //NOTE: NodeDescriptor *  is a NodeInstanceAccessor * 
-  std::map< std::string, NodeInstanceAccessor*>
+  std::map< std::string, std::map <int, NodeInstanceAccessor*> >
       nodeInstanceAccessor;
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
   //at a given ConnectNodeset, of index 'i'
   // the node of ND 'key' connect to the nodes in std::list
   //keep track the connection from 1 ND (the key) to many other ND
@@ -468,9 +477,42 @@ class Simulation : public Publishable {
       >
       ND_from_to;
   int _currentConnectNodeSet; //track the current connection NodeSet? do we need this or 
+#endif
   // the ConnectNodeSetFunctor also have the index?
   //std::map< NodeInstanceAccessor*, int>
   //    ND_from_to_currentIndex;
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+  //SUBARRAY_DETECTION
+  //DETECT subarray-size for each node for a given model
+  //A node-instance is uniquely identified by its
+  //   1. gridLayerindex
+  //   2. the global index in the array _node or the associated _nodeAccessor
+  //For a given model, e.g. "LifeNode", its node-instances can belong to different Granule
+  //  we track (gridIndex, n) of the nodes on each Granule*
+  //  and finally, those Granule* belong to the same MPI rank --> total node-instance to be created
+  //std::map< std::string, std::map<Granule*,  std::pair<int, int> > >  _nodes_granules_information; 
+  //   #if defined(BASED_ON_INDEX)
+  ////--> use "LifeNode": {gridlayerIndex, global-node-index}
+  ////NOTE: In NTS, each rank does not know #nodes in the other ranks, so using this is may not working
+  //std::map< std::string, std::pair<int, int> >  _nodes_identifier; 
+  //   #else
+  ////--> use "LifeNode": {gridlayerIndex, associated-NodeAccessor}
+  //std::map< std::string, std::pair<int, NodeDescriptor*> >  _nodes_identifier; 
+  //   #endif
+  // ModelName, then DataMemberOfTypeArray(should be 1D) then size for each node instance
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<int, int> : int}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : number-of-inputs-for-this-data-member-as-array}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : the-expected-size-for-um_inputs}}
+  std::map< std::string, std::map< std::string, std::map<std::pair<int, int> , int> > > _nodes_subarray;  
+  //  {"LeakyIAFUnit": one-instance-of-this-class}
+  std::map< std::string, Node* >  _nodeShared; 
+
+  //std::map< std::string, std::map< std::string, std::vector<int> > > _nodes_subarray;  
+  //std::map< std::string, Node* >  _proxyShared; 
+  /* store the current index in flat-flat array */
+  /* maybe we don't need this as the um_inputs.size() should be the same value */
+  //std::map< std::string, std::map< std::string, size_t> > _nodes_subarray_current_index_count;  
+#endif
 #endif
 
 #endif

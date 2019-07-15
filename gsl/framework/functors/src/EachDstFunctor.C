@@ -159,7 +159,7 @@ void EachDstFunctor::doExecute(LensContext *c,
       ++_nodesIter;
    }
 #else
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
    if (cc->restart)
    {
    auto _refNode = cc->sourceRefNode;
@@ -180,7 +180,7 @@ void EachDstFunctor::doExecute(LensContext *c,
       cc->destinationNode = cc->sourceRefNode = (*_nodesIter);
       cc->current = ConnectionContext::_SOURCE;
       cc->restart = true;
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
       {
 	 auto _refNode = cc->sourceRefNode;
 	 c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode] = std::make_pair(std::vector<NodeDescriptor*>(), int());

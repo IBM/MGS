@@ -114,9 +114,11 @@ class Connection {
 					  const std::string& name) const;
       std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
 	    const std::string& name, const std::string& predicate) const;
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
       std::string getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
 	    const std::string& name, const std::string& predicate,
-	    MachineType mach_type) const;
+	    MachineType mach_type,
+	    bool dummy=0) const;
       DirectionType _directionType;
       ComponentType _componentType;
 

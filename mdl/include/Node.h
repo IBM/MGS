@@ -55,6 +55,10 @@ class Node : public SharedCCBase {
       virtual void addExtraCompCategoryBaseMethods(Class& instance) const;
       virtual void addExtraCompCategoryMethods(Class& instance) const;
       virtual void addCompCategoryBaseConstructorMethod(Class& instance) const;
+   private:
+      void _add_allocateNode_Method(Class& instance) const;
+      void _add_allocateNodes_Method(Class& instance) const;
+      void _add_allocateProxies_Method(Class& instance) const;
 };
 
 

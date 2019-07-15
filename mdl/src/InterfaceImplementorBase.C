@@ -1373,32 +1373,64 @@ void InterfaceImplementorBase::setupProxyInterfaces(
    }
 }
 
+/* the new argument 'dummy'
+ * is used to help creating :addPreNode_Dummy(...)
+ */
 std::string InterfaceImplementorBase::getAddConnectionFunctionBody(
    Connection::ComponentType componentType, 
-   Connection::DirectionType directionType) const
+   Connection::DirectionType directionType,
+   bool dummy) const
 {
+   if (dummy)
+   {
+      assert(directionType == Connection::_PRE);
+      assert(componentType == Connection::_NODE);
+   }
    std::ostringstream os;
    std::string connectionAdd;
    std::string componentName;
    std::string psetType;
    std::string psetName;
-   if (directionType == Connection::_PRE) {
-      connectionAdd = "Pre";
-      psetName = INATTRPSETNAME;
-      psetType = getInAttrPSetName();
-   } else { // Connection::_POST
-      connectionAdd = "Post";
-      psetName = OUTATTRPSETNAME;
-      psetType = getOutAttrPSetName();
+   if (dummy)
+   {
+      //do this
+      if (directionType == Connection::_PRE) {
+         connectionAdd = "Pre";
+         psetName = INATTRPSETNAME;
+         psetType = getInAttrPSetName();
+      } else { // Connection::_POST
+         connectionAdd = "Post";
+         psetName = OUTATTRPSETNAME;
+         psetType = getOutAttrPSetName();
+      }
+      //connectionAdd += Connection::getStringForComponentType(componentType);
+      //componentName = Connection::getParameterNameForComponentType(componentType);
+      os << getAddConnectionFunctionBodyExtra(componentType, directionType,
+            componentName, psetType, psetName, dummy);
+      //os << TAB << "checkAndAdd" << connectionAdd << "(" 
+      //   << componentName << ");\n";
+      //if (connectionAdd == "PreNode" )
+      //   os << TAB << "assert(noPredicateMatch || matchPredicateAndCast);\n";
    }
-   connectionAdd += Connection::getStringForComponentType(componentType);
-   componentName = Connection::getParameterNameForComponentType(componentType);
-   os << getAddConnectionFunctionBodyExtra(componentType, directionType,
-					   componentName, psetType, psetName);
-   os << TAB << "checkAndAdd" << connectionAdd << "(" 
-      << componentName << ");\n";
-	 if (connectionAdd == "PreNode" )
-   	 os << TAB << "assert(noPredicateMatch || matchPredicateAndCast);\n";
+   else{
+      if (directionType == Connection::_PRE) {
+         connectionAdd = "Pre";
+         psetName = INATTRPSETNAME;
+         psetType = getInAttrPSetName();
+      } else { // Connection::_POST
+         connectionAdd = "Post";
+         psetName = OUTATTRPSETNAME;
+         psetType = getOutAttrPSetName();
+      }
+      connectionAdd += Connection::getStringForComponentType(componentType);
+      componentName = Connection::getParameterNameForComponentType(componentType);
+      os << getAddConnectionFunctionBodyExtra(componentType, directionType,
+            componentName, psetType, psetName);
+      os << TAB << "checkAndAdd" << connectionAdd << "(" 
+         << componentName << ");\n";
+      if (connectionAdd == "PreNode" )
+         os << TAB << "assert(noPredicateMatch || matchPredicateAndCast);\n";
+   }
    return os.str();
 }
 

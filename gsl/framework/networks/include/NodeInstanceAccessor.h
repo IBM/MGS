@@ -48,6 +48,10 @@ class NodeInstanceAccessor : public NodeDescriptor
       virtual void getNodeCoords(ShallowArray<unsigned, 3, 2>& coords) const;
       virtual void getNodeCoords2Dim(int& x, int& y) const;
       virtual Node* getNode();
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+      Node* getSharedNode();
+      void setSharedNode(Node*);
+#endif
       virtual void setNode(Node*);
       virtual int getNodeIndex() const;
       virtual void setNodeIndex(int pos);
@@ -73,6 +77,9 @@ class NodeInstanceAccessor : public NodeDescriptor
       Node* _node;
       int _nodeIndex;
       int _index;
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+      Node* _sharedNode;
+#endif
 };
 
 #endif

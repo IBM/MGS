@@ -356,6 +356,22 @@ void Node::addExtraInstanceBaseMethods(Class& instance) const
    addPreNodeMethod->setFunctionBody(getAddPreNodeFunctionBody());
    instance.addMethod(addPreNodeMethod);
 
+   // addPreNode_Dummy method
+   //virtual void addPreNode_Dummy(NodeDescriptor* CG_node /*nd_for_the_incoming_node*/, ParameterSet* CG_pset, Simulation* sim, NodeDescriptor* nd_for_this_node);
+   std::auto_ptr<Method> addPreNode_DummyMethod(new Method("addPreNode_Dummy", "void"));
+   addPreNode_DummyMethod->setVirtual();
+   addPreNode_DummyMethod->addParameter("NodeDescriptor* " + PREFIX + "node");
+   addPreNode_DummyMethod->addParameter("ParameterSet* " + PREFIX + "pset");
+   addPreNode_DummyMethod->addParameter("Simulation* sim");
+   addPreNode_DummyMethod->addParameter("NodeDescriptor* nd_for_this_node");
+   addPreNode_DummyMethod->setFunctionBody(getAddPreNode_DummyFunctionBody());
+
+   std::vector<std::string> conds;
+   conds.push_back(REUSENA_CONDITIONAL);
+   conds.push_back(TRACK_SAS_CONDITIONAL);
+   MacroConditional trackConnectionConditional(conds);
+   addPreNode_DummyMethod->setMacroConditional(trackConnectionConditional);
+   instance.addMethod(addPreNode_DummyMethod);
    instance.addHeader("\"" + baseName + ".h\"");
 
    // add getComputeCost method
@@ -423,47 +439,86 @@ void Node::addExtraInstanceMethods(Class& instance) const
    instance.addBasicDestructor();
 }
 
-void Node::addExtraCompCategoryBaseMethods(Class& instance) const
+void Node::_add_allocateNode_Method(Class& instance) const
 {
-   SharedCCBase::addExtraCompCategoryBaseMethods(instance);
-   
-   instance.addHeader("\"" + getNodeAccessorName() + ".h\"");
-   instance.addHeader("\"" + getGridLayerDataName() + ".h\"");
-   instance.addHeader("\"GridLayerData.h\"");
-   instance.addHeader("\"" + getWorkUnitGridLayersName() + ".h\"");
-   instance.addHeader("\"" + getInstanceName() + ".h\"");
-   instance.addHeader("\"GridLayerDescriptor.h\"");
-
-   // Add getNodeAccessor method
-   std::auto_ptr<Method> getNodeAccessorMethod(
-      new Method("getNodeAccessor", "void"));
-   getNodeAccessorMethod->setVirtual();
-   getNodeAccessorMethod->addParameter(
-      "std::unique_ptr<NodeAccessor>& nodeAccessor");
-   getNodeAccessorMethod->addParameter(
-      "GridLayerDescriptor* gridLayerDescriptor");
-   std::ostringstream getNodeAccessorMethodFB;   
-   getNodeAccessorMethodFB 
-      << TAB << getGridLayerDataName()
-      << "* currentGridLayerData = new " << getGridLayerDataName() 
-      << "(this, gridLayerDescriptor, _gridLayerDataArraySize);\n"
-      << TAB << "_gridLayerDataList.push_back(currentGridLayerData);\n"
-      << TAB << "_gridLayerDataArraySize++;\n"
-      << TAB << "_gridLayerDataOffsets.push_back(_gridLayerDataOffsets.back()+currentGridLayerData->getNbrUnits());\n"
-      << TAB << "nodeAccessor.reset(new " << getNodeAccessorName() 
-      << "(getSimulation(), gridLayerDescriptor, currentGridLayerData));\n";
-   getNodeAccessorMethod->setFunctionBody(getNodeAccessorMethodFB.str());
-   instance.addMethod(getNodeAccessorMethod);
-
-   // Add allocateNode method
    std::auto_ptr<Method> allocateNodeMethod(
       new Method("allocateNode", "void"));
    allocateNodeMethod->addParameter(
       "NodeDescriptor* nd");
    std::ostringstream allocateNodeMethodFB;   
-   allocateNodeMethodFB
-      << TAB << "_nodes.increaseSizeTo(_nodes.size()+1);\n"
-      << STR_GPU_CHECK_START
+   std::vector<std::string> conds;
+   conds.push_back(REUSENA_CONDITIONAL);
+   conds.push_back(TRACK_SAS_CONDITIONAL);
+   MacroConditional trackConnectionConditional(conds);
+
+   std::ostringstream subMethodNoTrackConnection;   
+   std::ostringstream subMethodTrackConnection;   
+
+   std::string className = getName();
+   subMethodTrackConnection 
+      << TAB << "int sz = _nodes.size();\n"
+      << TAB << "_nodes[sz-1].setCompCategory(sz-1, this);\n";
+      for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+	 if (it->second->isArray())
+	 {
+	    std::string tmpVarName = PREFIX_MEMBERNAME + it->first;
+	    //NOTE: um_neighbors is an array of array
+	    subMethodTrackConnection 
+	       << TAB << "{\n"
+	       << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << TAB << "/* find the subarray size for this node */\n"
+	       << TAB << TAB <<
+	       "int gridLayerIndex = nd->getGridLayerData()->getGridLayerIndex();\n" 
+	       << TAB << TAB <<
+	       "int nodeAccessor_index = ((NodeInstanceAccessor*)nd)->getIndex();\n" 
+	       << TAB << TAB <<
+	       "std::pair<int, int> pair_data = std::make_pair(gridLayerIndex, nodeAccessor_index);\n" 
+	       << TAB << TAB <<
+	       "int subarray_size = _sim._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][pair_data];\n"
+	       << TAB << TAB <<
+	       PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(subarray_size, Array_Flat<int>::MemLocation::UNIFIED_MEM);\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << TAB << tmpVarName << "_start_offset.increaseSizeTo(sz);\n"
+	       << TAB << TAB << tmpVarName << "_num_elements.increaseSizeTo(sz);\n"
+	       << TAB << TAB << "if (USE_SHARED_MAX_SUBARRAY)\n"
+	       << TAB << TAB << "{\n"
+	       << TAB << TAB << "//KEEP USING MAX_SUBARRAY_SIZE style, i.e. all nodes share the same MAX_SUBARRAY_SIZE for a specific subarray data member\n"
+	       << TAB << TAB << TAB << tmpVarName << "_start_offset[sz-1] = " << tmpVarName << ".size();\n"
+	       << TAB << TAB << TAB << tmpVarName << ".increaseSizeTo(sz*getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][std::make_pair(-1,-1)]);\n"
+	       << TAB << TAB << "}else{\n"
+	       << TAB << TAB << TAB << "// OR using exact-size of subarray for each node\n"
+	       << TAB << TAB << TAB << tmpVarName << "_start_offset[sz-1] = " << tmpVarName << ".size();\n"
+	       << TAB << TAB << TAB << "int gridLayerIndex = nd->getGridLayerData()->getGridLayerIndex();\n"
+	       << TAB << TAB << TAB << "int nodeAccessor_index = ((NodeInstanceAccessor*)nd)->getIndex();\n"
+	       << TAB << TAB << TAB << "std::pair<int, int> pair_data = std::make_pair(gridLayerIndex, nodeAccessor_index);\n"
+	       << TAB << TAB << TAB << "int subarray_size = _sim._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][pair_data];\n"
+	       << TAB << TAB << TAB << tmpVarName << ".increaseSizeTo(" << tmpVarName << ".size() + subarray_size);\n"
+	       << TAB << TAB << "}\n"
+	       << TAB << TAB << tmpVarName << "_num_elements[sz-1] = 0;\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz*" << PREFIX_MEMBERNAME << it->first << "_max_elements);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements.increaseSizeTo(sz);\n"
+	       << TAB << TAB << PREFIX_MEMBERNAME << it->first << "_num_elements[sz-1] = 0;\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << TAB << "assert(0);\n"
+	       //<< TAB << TAB << "// using exact-size of subarray for each node\n"
+	       //<< TAB << TAB << tmpVarName << "_start_offset[sz-1] = " << tmpVarName << ".size();\n"
+	       //<< TAB << TAB << "int gridLayerIndex = nd->getGridLayerData()->getGridLayerIndex();\n"
+	       //<< TAB << TAB << "int nodeAccessor_index = ((NodeInstanceAccessor*)nd)->getIndex();\n"
+	       //<< TAB << TAB << "std::pair<int, int> pair_data = std::make_pair(gridLayerIndex, nodeAccessor_index);\n"
+	       //<< TAB << TAB << "int subarray_size = _sim._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][pair_data];\n"
+	       //<< TAB << TAB << tmpVarName << ".increaseSizeTo(" << tmpVarName << ".size() + subarray_size);\n"
+	       << TAB << "#endif\n"
+	       << TAB << "}\n"
+	       ;
+	 }
+	 else{
+	    subMethodTrackConnection 
+	       << TAB <<PREFIX_MEMBERNAME<< it->first <<  ".increaseSizeTo(sz);\n";
+	 }
+      }
+
+   subMethodNoTrackConnection 
       << TAB << "int sz = _nodes.size();\n"
       //<< TAB << "_nodes[_nodes.size()-1].setCompCategory(_nodes.size()-1, this);\n";
       << TAB << "_nodes[sz-1].setCompCategory(sz-1, this);\n";
@@ -471,7 +526,7 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	 if (it->second->isArray())
 	 {
 	    //NOTE: um_neighbors is an array of array
-	    allocateNodeMethodFB 
+	    subMethodNoTrackConnection 
 	       << TAB << "{\n"
 	       << TAB << TAB << "int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n"
 	       << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
@@ -496,10 +551,19 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	       ;
 	 }
 	 else{
-	    allocateNodeMethodFB 
+	    subMethodNoTrackConnection
 	       << TAB <<PREFIX_MEMBERNAME<< it->first <<  ".increaseSizeTo(sz);\n";
 	 }
       }
+
+   allocateNodeMethodFB
+      << TAB << "_nodes.increaseSizeTo(_nodes.size()+1);\n"
+      << STR_GPU_CHECK_START
+      << trackConnectionConditional.getBeginning()
+      << subMethodTrackConnection.str()
+      << "#else\n"
+      << subMethodNoTrackConnection.str()
+      << trackConnectionConditional.getEnding();
    allocateNodeMethodFB  << STR_GPU_CHECK_END
       << TAB << "_nodes[_nodes.size()-1].setNodeDescriptor(nd);\n"
       << TAB << "nd->setNode(&_nodes[_nodes.size()-1]);\n"
@@ -509,21 +573,94 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
       allocateNodeMethodFB.str());
    instance.addMethod(allocateNodeMethod);
 
-   // Add allocateNodes method (i.e. pre-allocate in memory)
+}
+
+void Node::_add_allocateNodes_Method(Class& instance) const
+{
    std::auto_ptr<Method> allocateNodesMethod(
       new Method("allocateNodes", "void"));
    allocateNodesMethod->addParameter(
       "size_t size");
    std::ostringstream allocateNodesMethodFB;   
-   allocateNodesMethodFB
-      << STR_GPU_CHECK_START
-      << TAB << "bool force_resize = true;\n"
-      << TAB << "_nodes.resize_allocated(size, force_resize);\n";
+   std::vector<std::string> conds;
+   conds.push_back(REUSENA_CONDITIONAL);
+   conds.push_back(TRACK_SAS_CONDITIONAL);
+   MacroConditional trackConnectionConditional(conds);
+
+   std::ostringstream subMethodNoTrackConnection;   
+   std::ostringstream subMethodTrackConnection;   
+
+   std::string className = getName();
+
+   subMethodTrackConnection << "";
+   for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+      if (it->second->isArray())
+      {
+	 std::string tmpVarName = PREFIX_MEMBERNAME + it->first;
+          //NOTE: um_neighbors is an array of array
+         subMethodTrackConnection 
+            << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+            << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
+            << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+            << TAB << TAB << "size_t MAX_SUBARRAY_SIZE = 0;\n"
+            << TAB << TAB << "size_t count = 0;\n"
+	    << TAB << TAB << "auto iter = getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"].begin();\n"
+	    << TAB << TAB << "auto iend = getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"].end();\n"
+      	    << TAB << TAB << "for (; iter < iend; iter++)\n"
+      	    << TAB << TAB << "{\n"
+      	    << TAB << TAB << "    MAX_SUBARRAY_SIZE = max(MAX_SUBARRAY_SIZE, iter->second);\n"
+      	    << TAB << TAB << "    count += iter->second;\n"
+      	    << TAB << TAB << "}\n"
+	    << TAB << TAB << "std::pair<int, int> key4_max_of_max = std::make_pair(-1,-1);\n"
+      	    << TAB << TAB << "getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][key4_max_of_max] = MAX_SUBARRAY_SIZE;\n"
+      	    << TAB << TAB << "std::pair<int, int> key4_total = std::make_pair(-2,-2);\n"
+      	    << TAB << TAB << "getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][key4_total] = count;\n"
+	    << TAB << TAB << "if (USE_SHARED_MAX_SUBARRAY)\n"
+      	    << TAB << TAB << "{\n"
+      	    << TAB << TAB << "   //with some wasteful - but is based on max-size of that array-datamember\n"
+      	    << TAB << TAB << "    um_inputs.resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+      	    << TAB << TAB << "}\n"
+      	    << TAB << TAB << "else{\n"
+      	    << TAB << TAB << "   //exact size needed (behave like OPTION_5)\n"
+      	    << TAB << TAB << "    um_inputs.resize_allocated(count, force_resize);\n"
+      	    << TAB << TAB << "}\n"
+            << TAB << TAB << tmpVarName << "_start_offset.resize_allocated(size, force_resize);\n"
+            << TAB << TAB << tmpVarName << "_num_elements.resize_allocated(size, force_resize);\n"
+            << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+            << TAB << TAB << "{\n"
+            << TAB << TAB << "size_t MAX_SUBARRAY_SIZE = 0;\n"
+            << TAB << TAB << "size_t count = 0;\n"
+	    << TAB << TAB << "auto iter = getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"].begin();\n"
+	    << TAB << TAB << "auto iend = getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"].end();\n"
+      	    << TAB << TAB << "for (; iter < iend; iter++)\n"
+      	    << TAB << TAB << "{\n"
+      	    << TAB << TAB << "    MAX_SUBARRAY_SIZE = max(MAX_SUBARRAY_SIZE, iter->second);\n"
+      	    << TAB << TAB << "    count += iter->second;\n"
+      	    << TAB << TAB << "}\n"
+            << TAB << TAB << tmpVarName << "_max_elements = MAX_SUBARRAY_SIZE;\n"
+	    << TAB << TAB << "std::pair<int, int> key4_max_of_max = std::make_pair(-1,-1);\n"
+      	    << TAB << TAB << "getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][key4_max_of_max] = MAX_SUBARRAY_SIZE;\n"
+      	    << TAB << TAB << "std::pair<int, int> key4_total = std::make_pair(-2,-2);\n"
+      	    << TAB << TAB << "getSimulation()._nodes_subarray[\"" << className << "\"][\"" << tmpVarName << "\"][key4_total] = count;\n"
+      	    << TAB << TAB << "um_inputs.resize_allocated(size*MAX_SUBARRAY_SIZE, force_resize);\n"
+            << TAB << TAB << tmpVarName << "_num_elements.resize_allocated(size, force_resize);\n"
+            << TAB << TAB << "}\n"
+            << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+            << TAB << TAB << "assert(0);\n"
+            << TAB << "#endif\n";
+      }
+      else{
+         subMethodTrackConnection 
+            << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
+      }
+   }
+
+   subMethodNoTrackConnection << "";
    for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
       if (it->second->isArray())
       {
           //NOTE: um_neighbors is an array of array
-	 allocateNodesMethodFB 
+	 subMethodNoTrackConnection 
 	    << TAB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
 	    << TAB << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n"
 	    << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
@@ -543,20 +680,29 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
 	    << TAB << "#endif\n";
       }
       else{
-	 allocateNodesMethodFB 
+	 subMethodNoTrackConnection 
 	    << TAB << PREFIX_MEMBERNAME << it->first << ".resize_allocated(size, force_resize);\n";
       }
    }
-   //allocateNodesMethodFB << "#else\n"
-   //   << TAB << "_nodes.resize_allocated(size);\n"
-   //   << STR_GPU_CHECK_END;
+
+   allocateNodesMethodFB
+      << STR_GPU_CHECK_START
+      << TAB << "bool force_resize = true;\n"
+      << TAB << "_nodes.resize_allocated(size, force_resize);\n"
+      << trackConnectionConditional.getBeginning()
+      << subMethodTrackConnection.str()
+      << "#else\n"
+      << subMethodNoTrackConnection.str()
+      << trackConnectionConditional.getEnding();
    allocateNodesMethodFB << STR_GPU_CHECK_END;
    allocateNodesMethod->setFunctionBody(
       allocateNodesMethodFB.str());
    instance.addMethod(allocateNodesMethod);
 
+}
 
-   // Add allocateProxies method (i.e. pre-allocate in memory)
+void Node::_add_allocateProxies_Method(Class& instance) const
+{
    std::auto_ptr<Method> allocateProxiesMethod(
       new Method("allocateProxies", "void"));
    allocateProxiesMethod->addParameter(
@@ -662,9 +808,52 @@ void Node::addExtraCompCategoryBaseMethods(Class& instance) const
    allocateProxiesMethod->setFunctionBody(
       allocateProxiesMethodFB.str());
    instance.addMethod(allocateProxiesMethod);
+}
 
+void Node::addExtraCompCategoryBaseMethods(Class& instance) const
+{
+   SharedCCBase::addExtraCompCategoryBaseMethods(instance);
+   
+   instance.addHeader("\"" + getNodeAccessorName() + ".h\"");
+   instance.addHeader("\"" + getGridLayerDataName() + ".h\"");
+   instance.addHeader("\"GridLayerData.h\"");
+   instance.addHeader("\"" + getWorkUnitGridLayersName() + ".h\"");
+   instance.addHeader("\"" + getInstanceName() + ".h\"");
+   instance.addHeader("\"GridLayerDescriptor.h\"");
+
+   // Add getNodeAccessor method
+   std::auto_ptr<Method> getNodeAccessorMethod(
+      new Method("getNodeAccessor", "void"));
+   getNodeAccessorMethod->setVirtual();
+   getNodeAccessorMethod->addParameter(
+      "std::unique_ptr<NodeAccessor>& nodeAccessor");
+   getNodeAccessorMethod->addParameter(
+      "GridLayerDescriptor* gridLayerDescriptor");
+   std::ostringstream getNodeAccessorMethodFB;   
+   getNodeAccessorMethodFB 
+      << TAB << getGridLayerDataName()
+      << "* currentGridLayerData = new " << getGridLayerDataName() 
+      << "(this, gridLayerDescriptor, _gridLayerDataArraySize);\n"
+      << TAB << "_gridLayerDataList.push_back(currentGridLayerData);\n"
+      << TAB << "_gridLayerDataArraySize++;\n"
+      << TAB << "_gridLayerDataOffsets.push_back(_gridLayerDataOffsets.back()+currentGridLayerData->getNbrUnits());\n"
+      << TAB << "nodeAccessor.reset(new " << getNodeAccessorName() 
+      << "(getSimulation(), gridLayerDescriptor, currentGridLayerData));\n";
+   getNodeAccessorMethod->setFunctionBody(getNodeAccessorMethodFB.str());
+   instance.addMethod(getNodeAccessorMethod);
+
+   // Add allocateNode method
+   this->_add_allocateNode_Method(instance);
+
+   // Add allocateNodes method (i.e. pre-allocate in memory)
+   this->_add_allocateNodes_Method(instance);
+
+
+   // Add allocateProxies method (i.e. pre-allocate in memory)
+   this->_add_allocateProxies_Method(instance);
 
    // Add getNbrComputationalUnits method
+   //this->_add_getNbrComputationalUnits_Method(instance);
    std::auto_ptr<Method> getNbrComputationalUnitsMethod(
       new Method("getNbrComputationalUnits", "int"));
    std::ostringstream getNbrComputationalUnitsMethodFB;   

@@ -166,6 +166,12 @@ std::string ConnectionCCBase::getAddPreNodeFunctionBody() const
    return getAddConnectionFunctionBody(RegularConnection::_NODE, 
 				       RegularConnection::_PRE);
 }
+std::string ConnectionCCBase::getAddPreNode_DummyFunctionBody() const
+{
+   bool dummy=1;
+   return getAddConnectionFunctionBody(RegularConnection::_NODE, 
+				       RegularConnection::_PRE, dummy);
+}
 
 std::string ConnectionCCBase::getAddPreConstantFunctionBody() const
 {
@@ -179,77 +185,157 @@ std::string ConnectionCCBase::getAddPreVariableFunctionBody() const
 				       RegularConnection::_PRE);
 }
 
+/* add the new argument 'dummy' 
+ *  as this is evoked by 'getAddConnectionFunction(...)'
+ *  to add the body to :addPreNode_Dummy(...)
+ */
 std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
    Connection::ComponentType componentType, 
    Connection::DirectionType directionType,
    const std::string& componentName, const std::string& psetType, 
-   const std::string& psetName) const
+   const std::string& psetName,
+   bool dummy
+   ) const
 {
    std::ostringstream os;
    std::string subBody = "";
    
-   // the parameters that will be passed to Predicate and User functions
-   std::string functionParameters;
-   functionParameters += "\"" + Connection::getStringForDirectionType(
-      directionType) + "\", "
-      + "\"" + Connection::getStringForComponentType(componentType) + "\", "
-      + Connection::getParametersForComponentType(componentType) + ", " 
-      + Connection::getParametersForDirectionType(directionType);
-   std::vector<const RegularConnection*> connections;   
-   std::vector<RegularConnection*>::const_iterator it, 
-      end = _connections.end();
-   for (it = _connections.begin(); it != end; ++it) {
-      if ((componentType == (*it)->getComponentType()) &&
-	  (directionType == (*it)->getDirectionType())) {
-	 connections.push_back(*it);
+   if (dummy)
+   {
+      // the parameters that will be passed to Predicate and User functions
+      std::string functionParameters;
+      functionParameters += "\"" + Connection::getStringForDirectionType(
+	    directionType) + "\", "
+	 + "\"" + Connection::getStringForComponentType(componentType) + "\", "
+	 + Connection::getParametersForComponentType(componentType) + ", " 
+	 + Connection::getParametersForDirectionType(directionType);
+      std::vector<const RegularConnection*> connections;   
+      std::vector<RegularConnection*>::const_iterator it, 
+	 end = _connections.end();
+      for (it = _connections.begin(); it != end; ++it) {
+	 if ((componentType == (*it)->getComponentType()) &&
+	       (directionType == (*it)->getDirectionType())) {
+	    connections.push_back(*it);
+	 }
       }
-   }
-   std::set<std::string> interfaceCasts;
-   std::vector<const RegularConnection*>::const_iterator it2, 
-      end2 = connections.end();
-   // evaluation of predicates
-   std::set<std::string> predicateFunctions;
-   for (it2 = connections.begin(); it2 != end2; ++it2) {
-      (*it2)->getFunctionPredicateNames(predicateFunctions);
-   }   
-   // ConnectionCodes
-	 subBody += TAB + "bool noPredicateMatch= true; \n";
-	 subBody += TAB + "bool matchPredicateAndCast= false; \n";
-   for (it2 = connections.begin(); it2 != end2; ++it2) {
-      std::set<std::string> tmpInterfaceCasts= 
-	 (*it2)->getInterfaceCasts(componentName);
-      interfaceCasts.insert(
-	 tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
+      std::set<std::string> interfaceCasts;
+      std::vector<const RegularConnection*>::const_iterator it2, 
+	 end2 = connections.end();
+      // evaluation of predicates
+      std::set<std::string> predicateFunctions;
+      for (it2 = connections.begin(); it2 != end2; ++it2) {
+	 (*it2)->getFunctionPredicateNames(predicateFunctions);
+      }   
+      // ConnectionCodes
+      subBody += TAB + "bool noPredicateMatch= true; \n";
+      subBody += TAB + "bool matchPredicateAndCast= false; \n";
+      for (it2 = connections.begin(); it2 != end2; ++it2) {
+	 std::set<std::string> tmpInterfaceCasts= 
+	    (*it2)->getInterfaceCasts(componentName);
+	 interfaceCasts.insert(
+	       tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
 
-      if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE)
-      {
-	 subBody += STR_GPU_CHECK_START;
+	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE)
+	 {
+	    subBody += STR_GPU_CHECK_START;
+	    subBody += "// CPU-GPU code\n";
+	    subBody += (*it2)->getConnectionCode(getName(), 
+		  functionParameters, MachineType::GPU, dummy) + "\n"; 
+	    subBody += "#else\n";
+	 }
+	 /* CPU code */
+	 subBody += "// CPU-only code\n";
+	 subBody += TAB + "assert(0);\n";
+	 //subBody += (*it2)->getConnectionCode(getName(), 
+	 //      functionParameters) + "\n"; 
+	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE )
+	 {
+	    subBody += STR_GPU_CHECK_END;
+	 }
+      }
+      std::set<std::string>::iterator it3, end3 = interfaceCasts.end();
+      //for (it3 = interfaceCasts.begin(); it3 != end3; ++it3) {
+      //   os << TAB << *it3;
+      //}
+      if ((subBody != "") || predicateFunctions.size() > 0) { 
+	 os << TAB << psetType << "* " << psetName << " = dynamic_cast <" 
+	    << psetType << "*>(" << PREFIX << "pset);\n";
+      }
+      end3 = predicateFunctions.end();
+      for (it3 = predicateFunctions.begin(); it3 != end3; ++it3) {
+	 os << TAB << "bool " << PREDICATEFUNCTIONPREFIX << *it3 << " = " 
+	    << *it3 << "(" << functionParameters << ");\n";
+      }   
+      if ((subBody != "") || predicateFunctions.size() > 0) { 
+	 os << subBody;
+      }
+
+   }
+   else{
+      // the parameters that will be passed to Predicate and User functions
+      std::string functionParameters;
+      functionParameters += "\"" + Connection::getStringForDirectionType(
+	    directionType) + "\", "
+	 + "\"" + Connection::getStringForComponentType(componentType) + "\", "
+	 + Connection::getParametersForComponentType(componentType) + ", " 
+	 + Connection::getParametersForDirectionType(directionType);
+      std::vector<const RegularConnection*> connections;   
+      std::vector<RegularConnection*>::const_iterator it, 
+	 end = _connections.end();
+      for (it = _connections.begin(); it != end; ++it) {
+	 if ((componentType == (*it)->getComponentType()) &&
+	       (directionType == (*it)->getDirectionType())) {
+	    connections.push_back(*it);
+	 }
+      }
+      std::set<std::string> interfaceCasts;
+      std::vector<const RegularConnection*>::const_iterator it2, 
+	 end2 = connections.end();
+      // evaluation of predicates
+      std::set<std::string> predicateFunctions;
+      for (it2 = connections.begin(); it2 != end2; ++it2) {
+	 (*it2)->getFunctionPredicateNames(predicateFunctions);
+      }   
+      // ConnectionCodes
+      subBody += TAB + "bool noPredicateMatch= true; \n";
+      subBody += TAB + "bool matchPredicateAndCast= false; \n";
+      for (it2 = connections.begin(); it2 != end2; ++it2) {
+	 std::set<std::string> tmpInterfaceCasts= 
+	    (*it2)->getInterfaceCasts(componentName);
+	 interfaceCasts.insert(
+	       tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
+
+	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE)
+	 {
+	    subBody += STR_GPU_CHECK_START;
+	    subBody += (*it2)->getConnectionCode(getName(), 
+		  functionParameters, MachineType::GPU) + "\n"; 
+	    subBody += "#else\n";
+	 }
 	 subBody += (*it2)->getConnectionCode(getName(), 
-	       functionParameters, MachineType::GPU) + "\n"; 
-	 subBody += "#else\n";
+	       functionParameters) + "\n"; 
+	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE )
+	 {
+	    subBody += STR_GPU_CHECK_END;
+	 }
       }
-      subBody += (*it2)->getConnectionCode(getName(), 
-					   functionParameters) + "\n"; 
-      if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE )
-      {
-	 subBody += STR_GPU_CHECK_END;
+      std::set<std::string>::iterator it3, end3 = interfaceCasts.end();
+      for (it3 = interfaceCasts.begin(); it3 != end3; ++it3) {
+	 os << TAB << *it3;
       }
-   }
-   std::set<std::string>::iterator it3, end3 = interfaceCasts.end();
-   for (it3 = interfaceCasts.begin(); it3 != end3; ++it3) {
-      os << TAB << *it3;
-   }
-   if ((subBody != "") || predicateFunctions.size() > 0) { 
-      os << TAB << psetType << "* " << psetName << " = dynamic_cast <" 
-	 << psetType << "*>(" << PREFIX << "pset);\n";
-   }
-   end3 = predicateFunctions.end();
-   for (it3 = predicateFunctions.begin(); it3 != end3; ++it3) {
-      os << TAB << "bool " << PREDICATEFUNCTIONPREFIX << *it3 << " = " 
-	 << *it3 << "(" << functionParameters << ");\n";
-   }   
-   if ((subBody != "") || predicateFunctions.size() > 0) { 
-      os << subBody;
+      if ((subBody != "") || predicateFunctions.size() > 0) { 
+	 os << TAB << psetType << "* " << psetName << " = dynamic_cast <" 
+	    << psetType << "*>(" << PREFIX << "pset);\n";
+      }
+      end3 = predicateFunctions.end();
+      for (it3 = predicateFunctions.begin(); it3 != end3; ++it3) {
+	 os << TAB << "bool " << PREDICATEFUNCTIONPREFIX << *it3 << " = " 
+	    << *it3 << "(" << functionParameters << ");\n";
+      }   
+      if ((subBody != "") || predicateFunctions.size() > 0) { 
+	 os << subBody;
+      }
+
    }
    return os.str();
 }

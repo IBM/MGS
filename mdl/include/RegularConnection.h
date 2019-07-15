@@ -44,9 +44,11 @@ class RegularConnection : public Connection {
 
       virtual std::string getConnectionCode(
 	 const std::string& name, const std::string& functionParameters) const;
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
       virtual std::string getConnectionCode(
 	 const std::string& name, const std::string& functionParameters,
-	 MachineType mach_type) const;
+	 MachineType mach_type,
+	 bool dummy=0) const;
 
       void getFunctionPredicateNames(std::set<std::string>& names) const;
 

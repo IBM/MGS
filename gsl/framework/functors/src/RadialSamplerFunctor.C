@@ -150,7 +150,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
 #if defined(SUPPORT_MULTITHREAD_CONNECTION)
          cc->sourceNodes.resize(0);
          slots = &cc->sourceNodes;
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
          if (c->sim->isSimulatePass())
          {
            *slots = std::move(c->sim->ND_from_to[c->sim->_currentConnectNodeSet][cc->sourceRefNode].first);
@@ -159,7 +159,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
 #endif
 #else
          slot = &cc->sourceNode;
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
          if (c->sim->isSimulatePass())
          {
            auto& nodes = c->sim->ND_from_to[c->sim->_currentConnectNodeSet][cc->sourceRefNode];
@@ -187,7 +187,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
 #if defined(SUPPORT_MULTITHREAD_CONNECTION)
          cc->destinationNodes.resize(0);
          slots = &cc->destinationNodes;
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
          if (c->sim->isSimulatePass())
          {
            *slots = std::move(c->sim->ND_from_to[c->sim->_currentConnectNodeSet][cc->destinationRefNode].first);
@@ -196,7 +196,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
 #endif
 #else
          slot = &cc->destinationNode;
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
          if (c->sim->isSimulatePass())
          {
            auto& nodes = c->sim->ND_from_to[c->sim->_currentConnectNodeSet][cc->destinationRefNode];
@@ -300,7 +300,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
      }
      // Post loop
      //std::cout << ".. completed multi-thread with " << slots->size() << " node found\n"; 
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
      c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode].first = *slots;
 #endif
      _currentNode = _nbrNodes;
@@ -505,7 +505,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
       while ( ! c->sim->threadPoolC11->finishedJobs()) {}; //until jobs completed 
       // Post loop
       //std::cout << ".. RadialSampler completed multi-thread with " << slots->size() << " node found\n"; 
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
        c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode].first = *slots;
 #endif
       _currentNode = _nbrNodes;
@@ -601,7 +601,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
       std::for_each(threads.begin(),threads.end(),[](std::thread& x){x.join();});
       // Post loop
       //std::cout << ".. completed multi-thread with " << slots->size() << " node found\n"; 
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
        c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode].first = *slots;
 #endif
       _currentNode = _nbrNodes;
@@ -682,7 +682,7 @@ void RadialSamplerFunctor::doExecute(LensContext *c,
      if (distance<=_radius) {
        outside=false;
        *slot = _nodes[_currentNode];
-#if defined(REUSE_NODEACCESSORS)
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
        c->sim->ND_from_to[c->sim->_currentConnectNodeSet][_refNode].first.push_back(*slot);
 #endif
       }

@@ -100,6 +100,14 @@ void NoConnectConnector::nodeToNode(
          }
       }
    }
+//SUPPORT_ARRAY_ELEMENT
+//DETECT_SUBARRAY_SIZE
+//          STANDARD: to->getNode()->addPreNode(from, inAttrPSet);
+   //or we use
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+   ((NodeInstanceAccessor*)to)->getSharedNode()->addPreNode_Dummy(from, inAttrPSet, sim, to);
+#endif
+//END_SUPPORT_ARRAY_ELEMENT
 #endif
 
 #endif

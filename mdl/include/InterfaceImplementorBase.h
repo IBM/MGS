@@ -243,16 +243,19 @@ class InterfaceImplementorBase : public Generatable {
 	 return;
       }
 
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
       std::string getAddConnectionFunctionBody(
 	 Connection::ComponentType componentType, 
-	 Connection::DirectionType directionType) const;
+	 Connection::DirectionType directionType,
+	 bool dummy=0) const;
 
       // Will be implemented in derived classes.
       virtual std::string getAddConnectionFunctionBodyExtra(
 	 Connection::ComponentType componentType, 
 	 Connection::DirectionType directionType,
 	 const std::string& componentName, const std::string& psetType, 
-	 const std::string& psetName) const {
+	 const std::string& psetName,
+	 bool dummy = 0) const {
 	 return "";
       }
 
