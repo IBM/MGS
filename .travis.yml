@@ -25,6 +25,7 @@ addons:
       #- llvm-toolchain-precise-3.8
     packages:
     - g++-6
+    - ubuntu-drivers-common
       #- nvidia-415
       #- clang-3.8
 install:
