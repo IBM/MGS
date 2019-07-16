@@ -11,7 +11,7 @@ else
   ./configure \
     --enable-mpi-cxx \
     --prefix=`pwd`/../ompi \
-    --with-cuda
+    --with-cuda=/usr/local/cuda
   make -j4
   make install
   cd -
