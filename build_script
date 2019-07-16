@@ -434,11 +434,11 @@ fi
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
-    echo mpi found...; else echo mpi not found!; exit; fi
+    echo mpi found...; else echo mpi not found!; exit 1; fi
 fi
 
 if which bison | grep -q1 /\bison; then
-    echo bison found...; else echo bison not found!; exit; fi
+    echo bison found...; else echo bison not found!; exit 1; fi
 
 VALID_BISON_VERSION=2.3
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
@@ -453,20 +453,20 @@ EOF
 if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
 if [ "$n_major" -lt "$c_major" ]; then
     echo bison version $VALID_BISON_VERSION or greater required!
-    exit;
+    exit 1;
 fi
 if [ "$n_major" -eq "$c_major" ] && [ "$n_minor" -lt "$c_minor" ]; then
     echo bison version $VALID_BISON_VERSION or greater required!
-    exit;
+    exit 1;
 fi
 if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
     echo bison version $VALID_BISON_VERSION or greater required!
-    exit;
+    exit 1;
 fi
 
 if which flex | grep -q1 /\flex; then
   echo flex found...; else echo flex not found! please either install through your distributions package manager or from source; 
-  exit; 
+  exit 1; 
 fi
 
 VALID_FLEX_VERSION=2.6.4
