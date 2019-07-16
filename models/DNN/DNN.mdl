@@ -21,7 +21,6 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
    double output;
    double gradient;
    EdgeSetInput [] inputs;
-   double* bias;
    double* weightedGradient;
    bool ready;
    
@@ -45,10 +44,6 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
 
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
       BackwardProducer.backward >> weightedGradient;
-   }
-
-   Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
-      ForwardProducer.forward >> bias;
    }
 }
 
@@ -87,9 +82,14 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
       ForwardProducer.forward >> input;
    }
 
+   Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
+      ForwardProducer.forward >> input;
+   }
+
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
       BackwardProducer.backward >> gradients;
    }
+
 }
 
 

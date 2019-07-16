@@ -24,7 +24,7 @@ void DNNode::update(RNG& rng)
     }
   }
   if (ready) {
-    output = bias ? *bias : 0;
+    output = 0;
     for (iter=inputs.begin(); iter!=end; ++iter) {
       output += (*iter->inputArray)[iter->inputIndex];
     }
