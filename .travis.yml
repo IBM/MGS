@@ -80,6 +80,15 @@ before_install:
   #- ubuntu-drivers list
   #- sh ./get_cuda.sh
   - sh ./get_ompi.sh
+  - MPI_HOME=`pwd`/../ompi
+  - PATH=${MPI_HOME}/bin:${PATH}
+  - LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
+  - LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
+  - LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
+  - CPATH=${MPI_HOME}/lib:${CPATH}
+  - C_INCLUDE_PATH=${MPI_HOME}/lib:${C_INCLUDE_PATH}
+  - INCLUDE_PATH=${MPI_HOME}/lib:${INCLUDE_PATH}
+  - CPLUS_INCLUDE_PATH=${MPI_HOME}/lib:${CPLUS_INCLUDE_PATH}
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
