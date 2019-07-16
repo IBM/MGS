@@ -12,7 +12,7 @@ else
     --enable-mpi-cxx \
     --prefix=`pwd`/../ompi \
     --with-cuda=/usr/local/cuda
-  make -j4
+  make -j4 > /dev/null 2>&1
   make install
   cd -
   rm -rf ${FILENAME}
