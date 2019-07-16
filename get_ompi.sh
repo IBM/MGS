@@ -10,7 +10,7 @@ else
   cd ${FILENAME}
   ./configure \
     --enable-mpi-cxx \
-    --prefix=`pwd`/../mpich \
+    --prefix=`pwd`/../ompi \
     --with-cuda
   make -j4
   make install
