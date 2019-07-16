@@ -80,7 +80,7 @@ before_install:
   #- ubuntu-drivers list
   #- sh ./get_cuda.sh
   - sh ./get_ompi.sh
-  - MPI_HOME=`pwd`/../ompi
+  - MPI_HOME=`pwd`/ompi
   - PATH=${MPI_HOME}/bin:${PATH}
   - LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
   - LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
