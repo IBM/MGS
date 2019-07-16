@@ -25,6 +25,7 @@ addons:
       #- llvm-toolchain-precise-3.8
     packages:
     - g++-6
+    - bison
     - ubuntu-drivers-common
       #- nvidia-415
       #- clang-3.8
@@ -62,16 +63,19 @@ cache:
   - ompi
 
 before_install:
-  - INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
-  - wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
-  - sudo dpkg -i ${INSTALLER}
-  - wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
-  - sudo apt-key add 7fa2af80.pub
-  - sudo apt update -qq
-  - sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
-  - sudo apt clean
   - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
-  - sudo ln -s ${CUDA_HOME} /usr/local/cuda
+  - |
+    if [ ! -d ${CUDA_HOME} ]; then
+      INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+      wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+      sudo dpkg -i ${INSTALLER}
+      wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+      sudo apt-key add 7fa2af80.pub
+      sudo apt update -qq
+      sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+      sudo apt clean
+      sudo ln -s ${CUDA_HOME} /usr/local/cuda
+    fi
   - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
   - PATH=${CUDA_HOME}/bin:${PATH}
     #  - wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip
@@ -79,8 +83,8 @@ before_install:
   - PATH=${PATH}:${PWD}
   #- ubuntu-drivers list
   #- sh ./get_cuda.sh
-  - sh ./get_ompi.sh
   - MPI_HOME=`pwd`/ompi
+  - if [ ! -d ${MPI_HOME} ]; then sh ./get_ompi.sh; fi
   - PATH=${MPI_HOME}/bin:${PATH}
   - LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
   - LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
