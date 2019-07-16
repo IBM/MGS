@@ -23,7 +23,6 @@
 #include "ConnectionContext.h"
 #include "SyntaxErrorException.h"
 #include "ParameterSetDataItem.h"
-<<<<<<< HEAD
 /*
 #include "NodeDescriptor.h"
 #include "ParameterSet.h"
@@ -34,10 +33,6 @@
 #include "Simulation.h"
 #include <memory>
 #include <map>
-=======
-#include "Simulation.h"
-#include <memory>
->>>>>>> Adding DNN model suite.
 
 void BidirectConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
 {
@@ -50,11 +45,6 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 
    cc->sourceSet = source;
    cc->destinationSet = destination;
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> Adding DNN model suite.
    std::vector<DataItem*> nullArgs;
    std::auto_ptr<DataItem> outAttrRVal;
    std::auto_ptr<DataItem> inAttrRVal;
@@ -63,11 +53,8 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
    // call sampfctr2, which will set source and destination nodes 
    // (and maybe other stuff)
    sampling->execute(CG_c, nullArgs, rval);
-<<<<<<< HEAD
    NodeDescriptor* srcNode = cc->sourceNode;
    NodeDescriptor* dstNode = cc->destinationNode;
-=======
->>>>>>> Adding DNN model suite.
 
    // loop until one of the nodes is null
    //while(cc->destinationNode!=0 && cc->sourceNode!=0)
@@ -85,25 +72,17 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
      exit(0);
    }
 
-<<<<<<< HEAD
    //   std::map<NodeDescriptor*, unsigned> indexMap;
-=======
->>>>>>> Adding DNN model suite.
    while(!cc->done) {
       cc->restart = false;
       cc->currentSample++;
 
-<<<<<<< HEAD
       cc->sourceNode = dstNode;
       cc->destinationNode = srcNode;
 
       ParameterSetDataItem *psdi;
 
       destinationOutAttr->execute(CG_c, nullArgs, outAttrRVal);
-=======
-      ParameterSetDataItem *psdi;
-      sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
->>>>>>> Adding DNN model suite.
       psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
       if (psdi==0) {
          throw SyntaxErrorException(
@@ -111,11 +90,7 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       }
       cc->outAttrPSet = psdi->getParameterSet();
 
-<<<<<<< HEAD
       sourceInAttr->execute(CG_c, nullArgs, inAttrRVal);
-=======
-      destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
->>>>>>> Adding DNN model suite.
       psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
       if (psdi==0) {
          throw SyntaxErrorException(
@@ -126,7 +101,6 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
 		     cc->inAttrPSet, CG_c->sim);
 
-<<<<<<< HEAD
       cc->sourceNode = srcNode;
       cc->destinationNode = dstNode;
       /*
@@ -136,9 +110,6 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       else thisIndex = ++indexMap[cc->sourceNode];
       */
       sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
-=======
-      destinationOutAttr->execute(CG_c, nullArgs, outAttrRVal);
->>>>>>> Adding DNN model suite.
       psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
       if (psdi==0) {
          throw SyntaxErrorException(
@@ -146,18 +117,13 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       }
       cc->outAttrPSet = psdi->getParameterSet();
 
-<<<<<<< HEAD
       destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
-=======
-      sourceInAttr->execute(CG_c, nullArgs, inAttrRVal);
->>>>>>> Adding DNN model suite.
       psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
       if (psdi==0) {
          throw SyntaxErrorException(
 	    "BidirectConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
       }
       cc->inAttrPSet = psdi->getParameterSet();
-<<<<<<< HEAD
       /*
       NDPairList paramsLocal;
       UnsignedIntDataItem* paramDI = new UnsignedIntDataItem(thisIndex);
@@ -168,22 +134,14 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       */
 
       lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
-=======
-
-      lc->nodeToNode(cc->destinationNode, cc->outAttrPSet, cc->sourceNode, 
->>>>>>> Adding DNN model suite.
 		     cc->inAttrPSet, CG_c->sim);
 
       // call sampfctr2, which will set source and destination nodes 
       // (and maybe other stuff)
-<<<<<<< HEAD
       
       sampling->execute(CG_c, nullArgs, rval);
       srcNode = cc->sourceNode;
       dstNode = cc->destinationNode;
-=======
-      sampling->execute(CG_c, nullArgs, rval);
->>>>>>> Adding DNN model suite.
    }
 }
 

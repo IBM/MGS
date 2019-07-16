@@ -4,16 +4,13 @@
 #include "rndm.h"
 
 #define PRELIM_STATE DBL_MAX
-<<<<<<< HEAD
 #define SMALL_NUMBER 0.00000001
-=======
->>>>>>> Adding DNN model suite.
 #define SHD getSharedMembers()
 
 void DNEdgeSet::initialize(RNG& rng) 
 {
   unsigned sz = gradients.size();
-<<<<<<< HEAD
+
   weightedOutputs.increaseSizeTo(sz);
   weights.increaseSizeTo(sz);
   deltaWeights.increaseSizeTo(sz);
@@ -37,17 +34,6 @@ void DNEdgeSet::initialize(RNG& rng)
     else if (*oiter=="RMSprop") rmsprop=true;
     else if (*oiter=="Adam") momentum=rmsprop=true;
   }  
-=======
-  assert(weightedOutputs.size() == sz);
-  weights.increaseSizeTo(sz);
-  for (unsigned n=0; n<sz; ++n) {
-    weights[n] = drandom(rng);
-    weightedOutputs[n] = PRELIM_STATE;
-  }
-  readyForward = false;
-  readyBackward = false;
-  transferFunction.setType(SHD.transferFunctionName);
->>>>>>> Adding DNN model suite.
 }
 
 void DNEdgeSet::update(RNG& rng) 
@@ -56,7 +42,6 @@ void DNEdgeSet::update(RNG& rng)
     readyForward = *input != PRELIM_STATE;
     
   ShallowArray<double*>::iterator giter, gend = gradients.end();
-<<<<<<< HEAD
   if (readyForward) {
     ShallowArray<double>::iterator witer=weights.begin(),
       diter=deltaWeights.begin(),
@@ -110,39 +95,6 @@ void DNEdgeSet::update(RNG& rng)
 
       weightedGradient = dow * transferFunction.derivativeOfTransfer(echoes[echoIndex]);
       echoes[echoIndex] = transferInput;
-=======
-  if (!readyBackward) {
-    for (giter=gradients.begin(); giter!=gend; ++giter) {
-      readyBackward = **giter != PRELIM_STATE;
-      if (!readyBackward) {
-	echoes.push_back(*input);
-	break;
-      }
-    }
-  }
-  if (readyForward) {
-    ShallowArray<double>::iterator witer=weights.begin(),
-      woiter=weightedOutputs.begin(),
-      woend=weightedOutputs.end();
-
-    for (; woiter!=woend; ++woiter, ++witer)
-      *woiter = *witer * transferFunction.transfer(*input);
-
-    if (readyBackward) {
-      double dow = 0;
-      witer=weights.begin();
-      for (giter=gradients.begin(); giter!=gend; ++giter, ++witer) {
-	dow +=  *witer * **giter;
-	double deltaWeight =
-	  SHD.eta * transferFunction.transfer(echoes[echoIndex]) * **giter +
-	  SHD.alpha * oldDeltaWeight;
-	
-	*witer += deltaWeight;
-	oldDeltaWeight = deltaWeight;
-      }
-      weightedGradient = dow * transferFunction.derivativeOfTransfer(echoes[echoIndex]);
-      echoes[echoIndex] = *input;
->>>>>>> Adding DNN model suite.
       if (++echoIndex == echoes.size()) echoIndex = 0; 
     }
   }
