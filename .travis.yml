@@ -39,6 +39,7 @@ cache:
 
 before_install:
   - ubuntu-drivers list
+  - sh ./get_cuda.sh
   - sh ./get_ompi.sh
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
