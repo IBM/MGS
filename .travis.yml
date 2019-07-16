@@ -64,7 +64,7 @@ cache:
   - ompi
   - flex
   - /usr/local/cuda-${CUDA_SHORT}
-command 
+
 before_install:
   - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
   - |
