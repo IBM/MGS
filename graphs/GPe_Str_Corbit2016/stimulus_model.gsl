@@ -1,0 +1,118 @@
+#// =================================================================
+#//
+#// (C) Copyright 2018 New Jersey Institute of Technology.
+#//
+#// =================================================================
+
+#if STIMULUS_CASE == CASE_08
+//{{{
+#define USE_SERIES_RESISTANCE
+#ifdef USE_SERIES_RESISTANCE
+// Iinject = (Vc - Vm) / Rs;
+// Rs = [GOhm] -- default is 1.0 [MOhm] ~ 0.001 GOhm
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.1, fileName="SEClamp.txt">;
+//(bad)VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.01, fileName="SEClamp.txt">;
+//VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.1, fileName="SEClamp.txt">;
+VoltageClamp somaClamp<type=1, command = -80.0, Rs=0.001, fileName="SEClamp.txt">;
+#else
+//NOTE: User can define 'idx' to specify compartment index (default is 0)
+// Iinject = beta * Cm * (Vc - Vm) / (dt/2) * Area() ; //(pA) 
+VoltageClamp somaClamp<type=1, command = -80.0, beta=2.0, Cm =0.01>;
+#endif
+//NOTE: command = [mV]; gaimTime = [ms] - good value 0.05ms
+//VoltageClamp somaClamp<type=2, command = -100.0, gainTime=0.05>; // time 0
+
+somaClamp.toggle() on voltageClampSet0Sem; 
+somaClamp.setCommand( < 
+   command = 0.0   // [mV]  - a command Voltage
+   > ) on voltageClampSet1Sem; //TimeSetVClamp1
+
+////NOTE: You have up to 3 time points to set different Vclamp values
+//somaClamp.setCommand( < 
+//   command = -20.0   // [mV]  - a command Voltage
+//   > ) on voltageClampSet2Sem; //TimeSetVClamp2
+//somaClamp.setCommand( < 
+//   command = +20.0   // [mV]  - a command Voltage
+//   > ) on voltageClampSet3Sem; //TimeSetVClamp3
+///somaClamp.startWaveform( <
+///   waveform = {val1, val2, val3, val4} 
+///   > ) on voltageClampSet1;
+///somaClamp.startWaveform( <
+///   waveformFile = "2column-(time-Vm)-filename.txt"
+///   > ) on voltageClampSet1;
+
+//NOTE: Default initial is OFF
+//somaClamp.toggle() on voltageClampOnSem; //toggle clamping
+//somaClamp.toggle() on voltageClampOffSem; //toggle clamping
+//Old use
+//somaClamp.toggle(<toggle=1>) on voltageClampOnSem; //toggle clamping
+//somaClamp.toggle(<toggle=1>) on voltageClampOffSem; //toggle clamping
+
+#define t0 0.0 //[ms]
+#define t1 10.0 // [ms]
+#define t2 30.0  //[ms]
+#define t3 50.0 //[ms]
+#define Vc0 -80.0 //[ms]
+#define Vc1 20.0  //[ms]
+#define Vc2 -100.0 //[ms]
+#define Vc3 -80.0 //[ms]
+
+//}}}
+#endif
+
+
+
+#if STIMULUS_CASE == CASE_01
+//{{{
+//#define CURRENT_STIM  0.0143   // pA - no KAs
+//#define CURRENT_STIM  0.0294 //pA - 
+//#define CURRENT_STIM  0.0178 //pA -  Used this current for calibrating between using diff and same E_K and E_Na
+//#define CURRENT_STIM 0.0241  //- This 1.5xRh for WT used in all Double protocol simulations
+//#define CURRENT_STIM 0.0322  // this is 1.5xRh for HD used in all double protocols 
+#define CURRENT_STIM 0
+PointCurrentSource pointCurrentSource<>;
+
+pointCurrentSource.setCurrent(<						
+      //I=0.0
+      //I = 4.52                   	// pA
+      I =  CURRENT_STIM //1.67 //0.1 //0.4 //(if the convention for all other channels is as per NTS) //40                   	// pA
+      >) on currentOn;
+
+pointCurrentSource.setCurrent(<						
+      //I = 4.52                   	// pA
+      I =  0.0 //0.4 //(if the convention for all other channels is as per NTS) //40                   	// pA
+//	I= CURRENT_STIM
+      >) on currentOff;
+pointCurrentSource.setCurrent(<						
+      //I = 4.52                   	// pA
+//	I= CURRENT_STIM
+      I = 0.0 //CURRENT_STIM  //0.0167 //0.0167 //0.4 //(if the convention for all other channels is as per NTS) //40                   	// pA
+      >) on currentOn2;
+pointCurrentSource.setCurrent(<						
+      //I = 4.52                   	// pA
+//	I= CURRENT_STIM
+      I =  0.0 //0.4 //(if the convention for all other channels is as per NTS) //40                   	// pA
+      >) on currentOff2;
+//pointCurrentSource.setCurrent(<						
+//				I = 4.52                     	// pA
+//			     >) on currentMod1;
+//pointCurrentSource.setCurrent(<						
+//				I = 4.52                 	// pA
+//			     >) on currentMod2;
+//
+//pointCurrentSource.setCurrent(<						
+//				I = 0.0          	        // pA
+//			     >) on currentOff;
+
+//PointCalciumSource pointCalciumSource<>;
+
+//pointCalciumSource.setCaCurrent(<						
+//				I_Ca = 0.0                 	// pA_Ca
+//			     >) on calciumOn;
+
+//pointCalciumSource.setCaCurrent(<						
+//				I_Ca = 0.0                 	// pA_Ca
+//			     >) on calciumOff;
+
+//}}}
+#endif

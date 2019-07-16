@@ -1,17 +1,23 @@
-// =================================================================
-// Licensed Materials - Property of IBM
-//
-// "Restricted Materials of IBM"
-//
-// BCM-YKT-07-18-2017
-//
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
-//
-// US Government Users Restricted Rights -
-// Use, duplication or disclosure restricted by
-// GSA ADP Schedule Contract with IBM Corp.
-//
-// =================================================================
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
 
 #ifndef GABAAReceptor_H
 #define GABAAReceptor_H
@@ -27,6 +33,9 @@
 #elif RECEPTOR_GABAA == GABAAR_POINTPROCESS
 #define BASED_TEMPERATURE 35.0  // Celcius
 #define Q10 3.0
+#elif RECEPTOR_GABAA == GABAAR_MULTIPLEPARAMS
+#define BASED_TEMPERATURE 25.0  // arbitrary, Q10 = 1
+#define Q10 1.0
 #endif
 
 

@@ -37,8 +37,8 @@
 
 #ifndef MRG2K3A_H
 #define MRG2K3A_H
-#define CM0 4294967087.0
-#define CM1 4294944443.0
+#define CM0 4294967087.0 //m1 = 2^32 - 209
+#define CM1 4294944443.0 //m2 = 2^32 - 22853
 #define CA02   1403580.0
 #define CA03   -810728.0
 #define CA11    527612.0

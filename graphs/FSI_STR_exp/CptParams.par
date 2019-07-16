@@ -1,0 +1,36 @@
+#{{{explains
+# NOTE: No ER on axon branch
+# MTYPE = 0 (neuron), = 1 (GABA bouton), = 2 or 3 (thin or mush spine)
+#       = 4 or 5 (thin or mush bouton)
+# BRANCHTYPE = 1=soma, 2=axon, 3=basal-den, 4=apical-den, 5=AIS, 6=tuft-den, 7=axonhillock
+#}}}
+COMPARTMENT_SPINE_NECK 1
+MTYPE BRANCHTYPE
+[5, 6]     3
+COMPARTMENT_SPINE_HEAD 2
+MTYPE BRANCHTYPE
+5     1
+6     1
+
+COMPARTMENT_VARIABLE_TARGETS 9
+MTYPE BRANCHTYPE
+1 1 Voltage Calcium 
+1 2 Voltage
+1 3 Voltage 
+2 1 Voltage 
+2 2 Voltage
+2 3 Voltage
+3 1 Voltage 
+3 2 Voltage
+3 3 Voltage
+
+COMPARTMENT_VARIABLE_COSTS 2
+Voltage 1.0
+Calcium 1.0
+
+COMPARTMENT_VARIABLE_PARAMS 1
+Voltage 3
+ MTYPE
+ 1 <Cm = 0.024>
+ 2 <Cm = 0.01>
+ 3 <Cm = 0.01>

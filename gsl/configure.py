@@ -1762,7 +1762,7 @@ DX_INCLUDE := framework/dca/include
 #	true
 
 $(OBJS_DIR)/%.o : %.C
-\t$(CC) $(CFLAGS) $(COMMON_OBJS) """
+\t$(CC) $(CFLAGS) """
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
         retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
@@ -2075,7 +2075,7 @@ def prereq_packages():
     for package in required_pkgs:
         try:
             __import__(package)
-        except ImportError as _e:
+        except ImportError:
             print("Please install: sudo pip install --user %s" % (package))
 
 

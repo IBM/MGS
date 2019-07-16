@@ -1,3 +1,24 @@
+/* =================================================================
+Licensed Materials - Property of IBM
+
+"Restricted Materials of IBM"
+
+BMC-YKT-07-18-2017
+
+(C) Copyright IBM Corp. 2005-2017  All rights reserved
+
+US Government Users Restricted Rights -
+Use, duplication or disclosure restricted by
+GSA ADP Schedule Contract with IBM Corp.
+
+=================================================================
+
+(C) Copyright 2018 New Jersey Institute of Technology.
+
+=================================================================
+*/
+
+
 #include "Lens.h"
 #include "ChannelNat.h"
 #include "CG_ChannelNat.h"
@@ -441,6 +462,61 @@ dyn_var_t ChannelNat::tauhNat[] = {5.9196, 5.9196, 5.9197, 6.9103, 8.2985, 3.911
 #endif
 std::vector<dyn_var_t> ChannelNat::Vmrange_taum;
 std::vector<dyn_var_t> ChannelNat::Vmrange_tauh;
+
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+// Gate: m^3 * h * s
+//Reference from Fujita et al
+//modification of GPe neuron model proposed by Gunay et al (GPe neuron in basal ganglia)
+//
+//m activation, h inactivation, s slow inactivation
+// dm/dt = (minf( V ) - V)/tau_m(V)
+// dh/dt = (hinf( V ) - V)/tau_h(V)
+// ds/dt = (sinf( V ) - V)/tau_s(V)
+//  dyn_var_t m_inf = 1.0 / (1 + exp((v - VHALF_M - Vhalf_m_shift) / k_M));
+// minf  = 1 / (1 + exp( (V - VHALF_M) / k_M))
+// hinf  = 1 / (1 + exp( (V - VHALF_H) / k_H))
+// sinf  = S_MIN + (1-S_MIN) / (1 + exp( (V - VHALF_S) / k_S))
+// tau_m = TAU0_M
+// tau_h = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - V)/SIG0_H) + exp( (PHI_H - V)/SIG1_H) )
+// tau_s = TAU0_S + (TAU1_S - TAU0_S) / ( exp( (PHI_S - V)/SIG0_S) + exp( (PHI_S - V)/SIG1_S) )
+// NOTE: vtrap(x,y) = x/(exp(x/y)-1)
+//#define Vshift 7  // [mV]
+#define VHALF_M -39
+
+#define k_M 5.0
+
+#define VHALF_H -48
+
+#define k_H -2.8
+
+#define VHALF_S -40
+
+#define k_S -5.4
+
+#define S_MIN 0.15
+
+#define TAU0_M .028
+
+#define TAU0_H 0.25
+
+#define TAU1_H 4.0
+
+#define PHI_H -43
+
+#define SIG0_H 10
+
+#define SIG1_H -5.0
+
+#define TAU0_S 10
+
+#define TAU1_S 1000
+
+#define PHI_S -40
+
+#define SIG0_S 18.3
+
+#define SIG1_S -10
+
 #else
   NOT IMPLEMENTED YET
 #endif
@@ -599,6 +675,23 @@ void ChannelNat::update(RNG& rng)
     dyn_var_t ph = 0.5 * dt * (ah + bh) * getSharedMembers().Tadj;
     h[i] = (dt * ah * getSharedMembers().Tadj + h[i] * (1.0 - ph)) / (1.0 + ph);
     }
+
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+    {
+   dyn_var_t taum = TAU0_M;
+   dyn_var_t qm = dt  / (taum * 2);
+   dyn_var_t tauh = TAU0_H + (TAU1_H - TAU0_H) / ( exp( (PHI_H - v)/SIG0_H) + exp( (PHI_H - v)/SIG1_H) );
+   dyn_var_t qh = dt  / (tauh * 2);
+   dyn_var_t taus = TAU0_S + (TAU1_S - TAU0_S) / ( exp( (PHI_S - v)/SIG0_S) + exp( (PHI_S - v)/SIG1_S) );
+   dyn_var_t qs = dt  / (taus * 2);
+   dyn_var_t m_inf = 1.0 / (1 + exp(( VHALF_M - v) / k_M));
+   dyn_var_t h_inf = 1.0 / (1 + exp(( VHALF_H - v) / k_H));
+   dyn_var_t s_inf  = S_MIN + (1-S_MIN) / (1 + exp( ( VHALF_S - v) / k_S));
+    m[i] = (2 * m_inf * qm - m[i] * (qm - 1)) / (qm + 1);
+    h[i] = (2 * h_inf * qh - h[i] * (qh - 1)) / (qh + 1);
+    s[i] = (2 * s_inf * qs - s[i] * (qs - 1)) / (qs + 1);
+    }
+
 #else
     assert(0);
 #endif
@@ -613,6 +706,8 @@ void ChannelNat::update(RNG& rng)
 
 #if CHANNEL_NAT == NAT_TRAUB_1994
     g[i] = gbar[i] * m[i] *  m[i] * h[i];
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i] * s[i];
 #else
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i];
 #endif
@@ -627,7 +722,10 @@ void ChannelNat::update(RNG& rng)
     {
       (*outFile) << std::fixed << fieldDelimiter << m[i];
       (*outFile) << std::fixed << fieldDelimiter << h[i];
-    }
+	#if CHANNEL_NAT == NAT_FUJITA_2012
+      (*outFile) << std::fixed << fieldDelimiter << s[i];
+	#endif
+   }
 #endif
   }
 }
@@ -653,6 +751,9 @@ void ChannelNat::initialize(RNG& rng)
   if (g.size() != size) g.increaseSizeTo(size);
   if (m.size() != size) m.increaseSizeTo(size);
   if (h.size() != size) h.increaseSizeTo(size);
+#if CHANNEL_NAT == NAT_FUJITA_2012
+  if (s.size() != size) s.increaseSizeTo(size);
+#endif
   //if (Vhalf_act_shift.size() !=size) Vhalf_act_shift.increaseSizeTo(size);
   //if (Vhalf_inact_shift.size() !=size) Vhalf_inact_shift.increaseSizeTo(size);
   if (Iion.size()!=size) Iion.increaseSizeTo(size);
@@ -815,12 +916,18 @@ void ChannelNat::initialize(RNG& rng)
     CHANNEL_NAT == NAT_MSN_TUAN_JAMES_2017
     m[i] = 1.0 / (1 + exp((v - VHALF_M - Vhalf_act_shift) / (k_M+k_act)));
     h[i] = 1.0 / (1 + exp((v - VHALF_H - Vhalf_inact_shift) / (k_H+k_inact)));
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+   m[i] = 1.0 / (1 + exp((VHALF_M-v) / k_M));
+   h[i] = 1.0 / (1 + exp((VHALF_H-v) / k_H));
+   s[i]  = S_MIN + (1-S_MIN) / (1 + exp( (VHALF_S-v) / k_S));
 #else
     assert(0);
 #endif
 
 #if CHANNEL_NAT == NAT_TRAUB_1994
     g[i] = gbar[i] * m[i] *  m[i] * h[i];
+#elif CHANNEL_NAT == NAT_FUJITA_2012
+    g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i] * s[i];
 #else
     g[i] = gbar[i] * m[i] * m[i] * m[i] * h[i]; // at time (t+dt/2) -
 #endif

@@ -1,5 +1,24 @@
 #ifndef GABAAReceptor_MDL
 #define GABAAReceptor_MDL
+///* =================================================================
+//Licensed Materials - Property of IBM
+//
+//"Restricted Materials of IBM"
+//
+//BMC-YKT-07-18-2017
+//
+//(C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+//US Government Users Restricted Rights -
+//Use, duplication or disclosure restricted by
+//GSA ADP Schedule Contract with IBM Corp.
+//
+//=================================================================
+//
+//(C) Copyright 2018 New Jersey Institute of Technology.
+//
+//=================================================================
+//*/
 
 #include "../../nti/include/MaxComputeOrder.h"
 #include "../std/std.mdl"
@@ -28,6 +47,12 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   dyn_var_t gbar;
   dyn_var_t r; // fraction of opening receptors
   dyn_var_t I; // [pA/um^2] 
+#if RECEPTOR_GABAA == GABAAR_MULTIPLEPARAMS
+  dyn_var_t a;    // receptor gating rise rate
+  dyn_var_t b;    // receptor gating fail rate
+  dyn_var_t H_theta;  // half point of the sigmoid for heaviside
+  dyn_var_t H_sigma;  // slope of the sigmoid for heaviside
+#endif
 
   //{{{cleft-info
   dyn_var_t* GABA; // [uM] concentration
@@ -71,14 +96,14 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   //}}}
 
   Shared {
-		//{{{ C <==>[alpha * r(NT) * f(Vpost)][beta]
+    //{{{ C <==>[alpha * r(NT) * f(Vpost)][beta]
     dyn_var_t alpha;
     dyn_var_t beta;
-		//{{{ only used with preSynapticPoint
+    //{{{ only used with preSynapticPoint
     dyn_var_t NTmax;
     dyn_var_t Vp;
     dyn_var_t Kp;
-	  //}}}
+    //}}}
     dyn_var_t E;
     dyn_var_t* deltaT;
     dyn_var_t *T;   // [K]
@@ -113,7 +138,6 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   CurrentProducer.current << &I;
   DimensionArrayProducer.dimensionArray << dimensions;
   //}}} 
-
 
   InAttrPSet {
     string identifier;
@@ -190,6 +214,7 @@ Node GABAAReceptor Implements ConductanceProducer, ReversalPotentialProducer
   Connection Pre Constant (PSet.identifier=="dt") Expects TimeStepProducer {
   TimeStepProducer.deltaT >> Shared.deltaT;
   }
+  //}}}
 /*}}}*/
 }
 

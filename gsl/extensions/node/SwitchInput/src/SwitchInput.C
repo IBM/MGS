@@ -9,7 +9,6 @@
 
 void SwitchInput::initialize(RNG& rng) 
 {
-
   drivinps.increaseSizeTo(SHD.statenum);
   ShallowArray<double>::iterator iter = drivinps.begin(), end=drivinps.end();
   for (; iter!=end; ++iter) (*iter) =  drandom(inplo,inphi,rng);
@@ -26,11 +25,21 @@ void SwitchInput::initialize(RNG& rng)
 
 void SwitchInput::update(RNG& rng) 
 {
+  //drivinp = drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
 
- 
-  drivinp = drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
+  //drivinp =drivinps[SHD.inpnum];
+  //drivinp += (drivinps[SHD.inpnum]-drivinp)*SHD.var1 + drandom(-1,1,rng)*SHD.var2;
+  drivinp = drivinps[SHD.inpnum];
+
+ /*
+ if (ITER*SHD.deltaT >= SHD.stateswitchtimes[SHD.currentstate]) 
+    {
+      SHD.currentstate++;
+      drivinp = & drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
       
- 
+    }
+ */
+
 }
 
 

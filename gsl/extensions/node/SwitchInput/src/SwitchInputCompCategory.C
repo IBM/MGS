@@ -16,6 +16,9 @@ SwitchInputCompCategory::SwitchInputCompCategory(Simulation& sim, const std::str
 void SwitchInputCompCategory::initializeShared(RNG& rng) 
 {
 
+  SHD.var1 = SHD.deltaT*SHD.tscale;
+  SHD.var2 = sqrt(SHD.var1)*SHD.noiselev;
+
   SHD.currentstate = 0;
 
   SHD.statenum = 2;
@@ -66,6 +69,7 @@ void SwitchInputCompCategory::initializeShared(RNG& rng)
   ofs << std::endl;
   ofs.close();
 
+  SHD.inpnum = SHD.stateseq[SHD.currentstate % SHD.seqlen];
 
 }
 
@@ -74,15 +78,15 @@ void SwitchInputCompCategory::updateInputState(RNG& rng)
 {
 
   if (ITER*SHD.deltaT >= SHD.stateswitchtimes[SHD.currentstate]) 
-    
+    {
       SHD.currentstate++;
+      SHD.inpnum = SHD.stateseq[SHD.currentstate % SHD.seqlen];
+
+      //ShallowArray<SwitchInput>::iterator it = _nodes.begin();
+      //ShallowArray<SwitchInput>::iterator end = _nodes.end();
+      //for (; it != end; ++it) (*it).drivinp = (*it).drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
       
-  /*
-      ShallowArray<SwitchInput>::iterator it = _nodes.begin();
-      ShallowArray<SwitchInput>::iterator end = _nodes.end();
-      for (; it != end; ++it) (*it).drivinp = (*it).drivinps[SHD.stateseq[SHD.currentstate % SHD.seqlen]];
-  */  
-    
+    }
 
 }
 
