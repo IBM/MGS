@@ -7,7 +7,8 @@ services:
 
 if: branch = for_nvu 
 
-language: cpp
+#language: cpp
+language: generic 
 
 compiler:
   - gcc
