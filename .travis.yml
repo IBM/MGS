@@ -2,6 +2,9 @@ dist: xenial
 
 sudo: required
 
+services:
+  - docker
+
 if: branch = for_nvu 
 
 language: cpp
@@ -22,10 +25,12 @@ install:
 - "[ $CXX = g++ ] && export CXX=g++-6 || true"
 - "[ $CXX = clang++ ] && export CXX=clang++-3.8 || true"
 
-services:
-  - docker
+cache:
+  directories:
+  - mpich
 
 before_install:
+  - sh ./get_ompi.sh
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
