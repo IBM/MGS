@@ -23,8 +23,14 @@
 #include "ConnectionContext.h"
 #include "SyntaxErrorException.h"
 #include "ParameterSetDataItem.h"
+#include "NodeDescriptor.h"
+#include "ParameterSet.h"
+#include "NDPairList.h"
+#include "NDPair.h"
+#include "UnsignedIntDataItem.h"
 #include "Simulation.h"
 #include <memory>
+#include <map>
 
 void BidirectConnectNodeSetsFunctor::userInitialize(LensContext* CG_c) 
 {
@@ -37,7 +43,7 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 
    cc->sourceSet = source;
    cc->destinationSet = destination;
-
+      
    std::vector<DataItem*> nullArgs;
    std::auto_ptr<DataItem> outAttrRVal;
    std::auto_ptr<DataItem> inAttrRVal;
@@ -46,6 +52,8 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
    // call sampfctr2, which will set source and destination nodes 
    // (and maybe other stuff)
    sampling->execute(CG_c, nullArgs, rval);
+   NodeDescriptor* srcNode = cc->sourceNode;
+   NodeDescriptor* dstNode = cc->destinationNode;
 
    // loop until one of the nodes is null
    //while(cc->destinationNode!=0 && cc->sourceNode!=0)
@@ -63,29 +71,15 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
      exit(0);
    }
 
+   std::map<NodeDescriptor*, unsigned> indexMap;
    while(!cc->done) {
       cc->restart = false;
       cc->currentSample++;
 
+      cc->sourceNode = dstNode;
+      cc->destinationNode = srcNode;
+
       ParameterSetDataItem *psdi;
-      sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
-      psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
-      if (psdi==0) {
-         throw SyntaxErrorException(
-	    "BidirectConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
-      }
-      cc->outAttrPSet = psdi->getParameterSet();
-
-      destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
-      psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
-      if (psdi==0) {
-         throw SyntaxErrorException(
-	    "BidirectConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
-      }
-      cc->inAttrPSet = psdi->getParameterSet();
-
-      lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
-		     cc->inAttrPSet, CG_c->sim);
 
       destinationOutAttr->execute(CG_c, nullArgs, outAttrRVal);
       psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
@@ -103,12 +97,48 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       }
       cc->inAttrPSet = psdi->getParameterSet();
 
-      lc->nodeToNode(cc->destinationNode, cc->outAttrPSet, cc->sourceNode, 
+      lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
+		     cc->inAttrPSet, CG_c->sim);
+
+      cc->sourceNode = srcNode;
+      cc->destinationNode = dstNode;
+
+      unsigned thisIndex=0;
+      if (indexMap.find(cc->sourceNode) == indexMap.end())
+	indexMap[cc->sourceNode]=0;
+      else thisIndex = ++indexMap[cc->sourceNode];
+
+      sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
+      psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
+      if (psdi==0) {
+         throw SyntaxErrorException(
+	    "BidirectConnectNodeSets: OutAttrPSet functor did not return a Parameter Set!");
+      }
+      cc->outAttrPSet = psdi->getParameterSet();
+
+      destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
+      psdi = dynamic_cast<ParameterSetDataItem*>(inAttrRVal.get());
+      if (psdi==0) {
+         throw SyntaxErrorException(
+	    "BidirectConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
+      }
+      cc->inAttrPSet = psdi->getParameterSet();
+      NDPairList paramsLocal;
+      UnsignedIntDataItem* paramDI = new UnsignedIntDataItem(thisIndex);
+      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      NDPair* ndp = new NDPair("index", paramDI_ap);
+      paramsLocal.push_back(ndp);
+      cc->inAttrPSet->set(paramsLocal);
+
+      lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
 		     cc->inAttrPSet, CG_c->sim);
 
       // call sampfctr2, which will set source and destination nodes 
       // (and maybe other stuff)
+      
       sampling->execute(CG_c, nullArgs, rval);
+      srcNode = cc->sourceNode;
+      dstNode = cc->destinationNode;
    }
 }
 

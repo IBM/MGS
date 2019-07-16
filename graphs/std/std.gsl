@@ -79,6 +79,9 @@ PolyConnectorFunctor polyConnect();
 Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
 
+Connector BidirectConnectNodeSetsFunctor();
+BidirectConnectNodeSetsFunctor bidirectConnectNodeSets();
+
 SamplingFctr2 IsoSampler();
 IsoSampler isoSampler();
 

@@ -9,7 +9,7 @@
 void DNEdgeSet::initialize(RNG& rng) 
 {
   unsigned sz = gradients.size();
-  assert(weightedOutputs.size() == sz);
+  weightedOutputs.increaseSizeTo(sz);
   weights.increaseSizeTo(sz);
   for (unsigned n=0; n<sz; ++n) {
     weights[n] = drandom(rng);
@@ -26,35 +26,36 @@ void DNEdgeSet::update(RNG& rng)
     readyForward = *input != PRELIM_STATE;
     
   ShallowArray<double*>::iterator giter, gend = gradients.end();
-  if (!readyBackward) {
-    for (giter=gradients.begin(); giter!=gend; ++giter) {
-      readyBackward = **giter != PRELIM_STATE;
-      if (!readyBackward) {
-	echoes.push_back(*input);
-	break;
-      }
-    }
-  }
   if (readyForward) {
     ShallowArray<double>::iterator witer=weights.begin(),
       woiter=weightedOutputs.begin(),
       woend=weightedOutputs.end();
 
-    for (; woiter!=woend; ++woiter, ++witer)
+    for (; woiter!=woend; ++woiter, ++witer) {
       *woiter = *witer * transferFunction.transfer(*input);
-
+    }
+    if (!readyBackward) {
+      for (giter=gradients.begin(); giter!=gend; ++giter) {
+	readyBackward = **giter != PRELIM_STATE;
+	if (!readyBackward) {
+	  echoes.push_back(*input);
+	  break;
+	}
+      }
+    }
     if (readyBackward) {
       double dow = 0;
       witer=weights.begin();
       for (giter=gradients.begin(); giter!=gend; ++giter, ++witer) {
 	dow +=  *witer * **giter;
 	double deltaWeight =
-	  SHD.eta * transferFunction.transfer(echoes[echoIndex]) * **giter +
+	  (1-SHD.alpha) * SHD.eta * transferFunction.transfer(echoes[echoIndex]) * **giter +
 	  SHD.alpha * oldDeltaWeight;
 	
 	*witer += deltaWeight;
 	oldDeltaWeight = deltaWeight;
       }
+
       weightedGradient = dow * transferFunction.derivativeOfTransfer(echoes[echoIndex]);
       echoes[echoIndex] = *input;
       if (++echoIndex == echoes.size()) echoIndex = 0; 

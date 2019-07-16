@@ -36,4 +36,9 @@ Constant Bias Implements ForwardProducer {
    double output;
    ForwardProducer.forward << &output;
 }
+
+Struct EdgeSetInput {
+   double []* inputArray;
+   unsigned inputIndex;
+}
 #endif

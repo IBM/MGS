@@ -20,14 +20,11 @@
 Node DNNode Implements ForwardProducer, BackwardProducer {
    double output;
    double gradient;
-   double* [] inputs;
+   EdgeSetInput [] inputs;
+   double* bias;
    double* weightedGradient;
    bool ready;
    
-   Shared {
-     double []* currentConnection;
-   }
-
    InitPhase initialize();
    RuntimePhase update(output, gradient);
 
@@ -39,11 +36,11 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
      unsigned index;
    }
 
-   UserFunction extractInputPointer;
+   UserFunction extractInputIndex;
 
    Connection Pre Node (PSet.identifier=="input") Expects ForwardArrayProducer {
-      ForwardArrayProducer.forwardArray >> Shared.currentConnection;
-      extractInputPointer();
+      ForwardArrayProducer.forwardArray >> inputs.inputArray;
+      extractInputIndex();
    }
 
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
@@ -51,7 +48,7 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
    }
 
    Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
-      ForwardProducer.forward >> inputs;
+      ForwardProducer.forward >> bias;
    }
 }
 
