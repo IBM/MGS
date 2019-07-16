@@ -25,7 +25,7 @@ addons:
       #- llvm-toolchain-precise-3.8
     packages:
     - g++-6
-    - nvidia-driver-415
+    - nvidia-415
       #- clang-3.8
 install:
 - "[ $CXX = g++ ] && export CXX=g++-6 || true"
