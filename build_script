@@ -368,7 +368,6 @@ elif [ "$BASE_FOLDER" != $(pwd) ]; then
 fi
 cd $BASE_FOLDER/models
 if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
-  touch ${MGS_TARGET_FILENAME}
   echo '// MDL files
 #include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"
@@ -378,6 +377,7 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 
 ' > ${MGS_TARGET_FILENAME}
 fi
+touch ${MGS_TARGET_FILENAME}
 if [ ! -f ${MDF_TARGET} ]; then 
   echo "ERROR: File ${MDF_TARGET} does not exist."
 fi
