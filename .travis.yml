@@ -37,13 +37,13 @@ install:
 
 matrix:
   include:
-    - name: CUDA 8
-      env:
-      - CUDA=8.0.61-1
-      - CUDA_SHORT=8.0
-      - CUDA_APT=8-0
-      - UBUNTU_VERSION=ubuntu1604
-      dist: xenial
+    #- name: CUDA 8
+    #  env:
+    #  - CUDA=8.0.61-1
+    #  - CUDA_SHORT=8.0
+    #  - CUDA_APT=8-0
+    #  - UBUNTU_VERSION=ubuntu1604
+    #  dist: xenial
     - name: CUDA 9
       env:
       - CUDA=9.2.148-1
@@ -51,13 +51,13 @@ matrix:
       - CUDA_APT=9-2
       - UBUNTU_VERSION=ubuntu1604
       dist: xenial
-    - name: CUDA 10
-      env:
-      - CUDA=10.1.105-1
-      - CUDA_APT=10-1
-      - CUDA_SHORT=10.1
-      - UBUNTU_VERSION=ubuntu1804
-      dist: bionic
+      #- name: CUDA 10
+      #- env:
+      #- - CUDA=10.1.105-1
+      #- - CUDA_APT=10-1
+      #- - CUDA_SHORT=10.1
+      #- - UBUNTU_VERSION=ubuntu1804
+      #- dist: bionic
 
 cache:
   directories:
@@ -89,7 +89,7 @@ before_install:
   #- sh ./get_cuda.sh
   - MPI_HOME=`pwd`/ompi
   #- if [ ! -d "${MPI_HOME}" ]; then sh ./get_ompi.sh; fi
-  - sh ./get_ompi.sh
+  - sh ./get_ompi.sh > /dev/null
   - export PATH=${MPI_HOME}/bin:${PATH}
   - export LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
@@ -100,7 +100,7 @@ before_install:
   - export CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
   - FLEX_HOME=`pwd`/flex
   #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
-  - sh ./get_flex.sh
+  - sh ./get_flex.sh > /dev/null
   - export PATH=${FLEX_HOME}/bin:${PATH}
   - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
@@ -111,6 +111,7 @@ before_install:
   - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
   - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
   - pip install --trusted-host pypi.python.org -r requirements.txt --user
+  - ls $MPI_HOME/bin
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
@@ -120,6 +121,7 @@ script:
   - source set_env
   - source set_env
   - ./build_script -p LINUX --as-MGS > /dev/null
+  - ls gsl/
 
     #script:
     #  - docker ps -a
