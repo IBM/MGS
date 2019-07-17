@@ -83,7 +83,7 @@ void DNEdgeSet::update(RNG& rng)
 	}
 	else
 	  update *= deltaWeight;
-	
+
 	if (rmsprop)
 	  update /= sqrt(*siter + SMALL_NUMBER);
 
