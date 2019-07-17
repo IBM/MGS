@@ -106,7 +106,6 @@ before_install:
   - C_INCLUDE_PATH=${FLEX_HOME}/lib:${C_INCLUDE_PATH}
   - INCLUDE_PATH=${FLEX_HOME}/lib:${INCLUDE_PATH}
   - CPLUS_INCLUDE_PATH=${FLEX_HOME}/lib:${CPLUS_INCLUDE_PATH}
-  - echo "PATH: ${PATH}"
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
