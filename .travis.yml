@@ -102,6 +102,7 @@ before_install:
   #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
   - sh ./get_flex.sh
   - export PATH=${FLEX_HOME}/bin:${PATH}
+  - ls `pwd`/flex/include
   - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
   - export LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
