@@ -94,23 +94,22 @@ before_install:
   - export LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
   - export LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
-  - export CPATH=${MPI_HOME}/lib:${CPATH}
-  - export C_INCLUDE_PATH=${MPI_HOME}/lib:${C_INCLUDE_PATH}
-  - export INCLUDE_PATH=${MPI_HOME}/lib:${INCLUDE_PATH}
-  - export CPLUS_INCLUDE_PATH=${MPI_HOME}/lib:${CPLUS_INCLUDE_PATH}
+  - export CPATH=${MPI_HOME}/include:${CPATH}
+  - export C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH}
+  - export INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH}
+  - export CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
   - FLEX_HOME=`pwd`/flex
   #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
   - sh ./get_flex.sh
   - export PATH=${FLEX_HOME}/bin:${PATH}
-  - ls `pwd`/flex/include
   - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
   - export LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
-  - export CPATH=${FLEX_HOME}/lib:${CPATH}
-  - export C_INCLUDE_PATH=${FLEX_HOME}/lib:${C_INCLUDE_PATH}
-  - export INCLUDE_PATH=${FLEX_HOME}/lib:${INCLUDE_PATH}
-  - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/lib:${CPLUS_INCLUDE_PATH}
-  - export INCLUDE=${FLEX_HOME}/lib:${INCLUDE}
+  - export CPATH=${FLEX_HOME}/include:${CPATH}
+  - export C_INCLUDE_PATH=${FLEX_HOME}/include:${C_INCLUDE_PATH}
+  - export INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH}
+  - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
+  - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
