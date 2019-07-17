@@ -23,11 +23,13 @@
 #include "ConnectionContext.h"
 #include "SyntaxErrorException.h"
 #include "ParameterSetDataItem.h"
+/*
 #include "NodeDescriptor.h"
 #include "ParameterSet.h"
 #include "NDPairList.h"
 #include "NDPair.h"
 #include "UnsignedIntDataItem.h"
+*/
 #include "Simulation.h"
 #include <memory>
 #include <map>
@@ -71,7 +73,7 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
      exit(0);
    }
 
-   std::map<NodeDescriptor*, unsigned> indexMap;
+   //   std::map<NodeDescriptor*, unsigned> indexMap;
    while(!cc->done) {
       cc->restart = false;
       cc->currentSample++;
@@ -102,12 +104,12 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 
       cc->sourceNode = srcNode;
       cc->destinationNode = dstNode;
-
+      /*
       unsigned thisIndex=0;
       if (indexMap.find(cc->sourceNode) == indexMap.end())
 	indexMap[cc->sourceNode]=0;
       else thisIndex = ++indexMap[cc->sourceNode];
-
+      */
       sourceOutAttr->execute(CG_c, nullArgs, outAttrRVal);
       psdi = dynamic_cast<ParameterSetDataItem*>(outAttrRVal.get());
       if (psdi==0) {
@@ -123,12 +125,14 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
 	    "BidirectConnectNodeSets: InAttrPSet functor did not return a Parameter Set!");
       }
       cc->inAttrPSet = psdi->getParameterSet();
+      /*
       NDPairList paramsLocal;
       UnsignedIntDataItem* paramDI = new UnsignedIntDataItem(thisIndex);
       std::auto_ptr<DataItem> paramDI_ap(paramDI);
       NDPair* ndp = new NDPair("index", paramDI_ap);
       paramsLocal.push_back(ndp);
       cc->inAttrPSet->set(paramsLocal);
+      */
 
       lc->nodeToNode(cc->sourceNode, cc->outAttrPSet, cc->destinationNode, 
 		     cc->inAttrPSet, CG_c->sim);

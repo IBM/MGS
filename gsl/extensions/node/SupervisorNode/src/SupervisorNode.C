@@ -2,6 +2,7 @@
 #include "SupervisorNode.h"
 #include "CG_SupervisorNode.h"
 #include "rndm.h"
+#include "IsToast.h"
 
 #define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()
@@ -21,7 +22,7 @@ void SupervisorNode::update(RNG& rng)
   if (ready) {
     double oneHot = (SHD.label == getGlobalIndex()) ? 1.0 : 0;
 
-    double error = oneHot - *prediction;
+    double error = oneHot - transferFunction.transfer(*prediction);
     if (SHD.refreshErrors) {
       sumOfSquaredError=0;
     }

@@ -29,6 +29,8 @@ InAttrDefault inAttrDef();
 
 InAttrInitializer NdplInAttrInit(NDPairListFunctor);
 
+InAttrInitializer SetSourceArrayIndexFunctor;
+
 Functor OutAttrDefault; //  Functor that gives default out attribute Pset for a node
 OutAttrDefault outAttrDef();
 

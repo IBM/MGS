@@ -124,7 +124,6 @@ Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
 
    InAttrPSet {
      string identifier;
-     unsigned index;
    }
 
    Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {

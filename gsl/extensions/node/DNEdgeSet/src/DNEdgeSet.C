@@ -31,8 +31,10 @@ void DNEdgeSet::update(RNG& rng)
       woiter=weightedOutputs.begin(),
       woend=weightedOutputs.end();
 
+    double transferInput = transferFunction.transfer(*input);
+    
     for (; woiter!=woend; ++woiter, ++witer) {
-      *woiter = *witer * transferFunction.transfer(*input);
+      *woiter = *witer * transferInput;
     }
     if (!readyBackward) {
       for (giter=gradients.begin(); giter!=gend; ++giter) {
@@ -45,11 +47,13 @@ void DNEdgeSet::update(RNG& rng)
     }
     if (readyBackward) {
       double dow = 0;
+      double transferEcho = transferFunction.transfer(echoes[echoIndex]);
       witer=weights.begin();
+      
       for (giter=gradients.begin(); giter!=gend; ++giter, ++witer) {
 	dow +=  *witer * **giter;
 	double deltaWeight =
-	  (1-SHD.alpha) * SHD.eta * transferFunction.transfer(echoes[echoIndex]) * **giter +
+	  (1-SHD.alpha) * SHD.eta * transferEcho * **giter +
 	  SHD.alpha * oldDeltaWeight;
 	
 	*witer += deltaWeight;

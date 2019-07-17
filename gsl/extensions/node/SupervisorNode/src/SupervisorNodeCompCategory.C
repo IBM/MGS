@@ -37,7 +37,7 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
     
     if (++SHD.imageIndex==dataset.training_images.size()) {      
       SHD.imageIndex=0;
-      outputError();
+      outputError(dataset.training_images.size());
       if (++SHD.trainingPass>SHD.trainingIterations)
 	SHD.test = true;
     }
@@ -48,23 +48,23 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
     }
     SHD.label = dataset.test_labels[SHD.imageIndex];
     if (++SHD.imageIndex==dataset.test_images.size())
-      outputError();
+      outputError(dataset.test_images.size());
   }
 }
 
-void SupervisorNodeCompCategory::outputError()
+void SupervisorNodeCompCategory::outputError(int numberOfInputs)
 {
   SHD.refreshErrors = true;
   double outError=0;
   ShallowArray<SupervisorNode>::iterator nodesIter=_nodes.begin(), nodesEnd=_nodes.end();
   for (; nodesIter!=nodesEnd; ++nodesIter) {
     outError += nodesIter->sumOfSquaredError;
-    std::cerr<<((SHD.label==nodesIter->getGlobalIndex()) ? 1.0 : 0)
+    std::cerr<<((SHD.label==nodesIter->getNodeIndex()) ? 1.0 : 0)
 	     <<"   |   "<<*(nodesIter->prediction)<<std::endl;
   }
   double currentError=0;
   MPI_Allreduce(&outError, &currentError, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  currentError/=_nodes.size();
+  currentError/=(_nodes.size()*numberOfInputs);
   if (getSimulation().getRank()==0)
     std::cout<<ITER<<" : current error = "<<currentError<<std::endl;
 }

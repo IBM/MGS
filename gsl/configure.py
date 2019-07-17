@@ -1270,6 +1270,7 @@ FUNCTOR_MODULES := BidirectConnectNodeSetsFunctor \\
         Round \\
         Scale \\
         ServiceConnectorFunctor \\
+        SetSourceArrayIndexFunctor \\
         SrcDimensionConstrainedSampler \\
         SrcRefDistanceModifier \\
         SrcRefDoGWeightModifier \\

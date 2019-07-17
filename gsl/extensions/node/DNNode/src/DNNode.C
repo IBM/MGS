@@ -4,6 +4,11 @@
 #include "rndm.h"
 #include <cfloat>
 
+#define TOASTED
+#ifdef TOASTED
+#include "IsToast.h"
+#endif
+
 #define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()
 
@@ -25,10 +30,16 @@ void DNNode::update(RNG& rng)
   }
   if (ready) {
     output = 0;
+#ifdef TOASTED
+    if (isToast(*weightedGradient,getSimulation().getIteration())) assert(0);
+#endif
     for (iter=inputs.begin(); iter!=end; ++iter) {
       output += (*iter->inputArray)[iter->inputIndex];
     }
     gradient = *weightedGradient;
+#ifdef TOASTED
+    if (isToast(output,getSimulation().getIteration())) assert(0);
+#endif
   }
 }
 
