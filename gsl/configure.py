@@ -39,11 +39,11 @@ else:
         file_version = tokens[-1]
         return file_version
 
-import pip
+# import pip
 # import string
 
-if 'builtins' not in sys.modules.keys():
-        pip.main(['install', 'future'])
+# if 'builtins' not in sys.modules.keys():
+        # pip.main(['install', 'future'])
 import getopt
 from builtins import range
 
