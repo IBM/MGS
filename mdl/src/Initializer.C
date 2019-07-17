@@ -219,7 +219,7 @@ void Initializer::generateCopyModules()
        }
        os << *it2 << " ";
      }
-     os << " $LENSROOT/extensions/" << it->first << "\n";
+     os << " $LENSROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
    }   
    //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
    // this can be done (if needed), by calling via the ../define script
