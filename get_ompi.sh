@@ -10,7 +10,7 @@ else
   cd ${FILENAME}
   ./configure \
     --enable-mpi-cxx \
-    --prefix=`pwd`/../ompi \
+    --prefix=$TRAVIS_BUILD_DIR/ompi \
     --with-cuda=/usr/local/cuda > /dev/null 
   make -j4 > /dev/null 2>&1
   make install
