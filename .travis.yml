@@ -98,7 +98,8 @@ before_install:
   - INCLUDE_PATH=${MPI_HOME}/lib:${INCLUDE_PATH}
   - CPLUS_INCLUDE_PATH=${MPI_HOME}/lib:${CPLUS_INCLUDE_PATH}
   - FLEX_HOME=`pwd`/flex
-  - if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
+  #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
+  - sh ./get_flex.sh
   - PATH=${FLEX_HOME}/bin:${PATH}
   - LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
   - LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
