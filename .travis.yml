@@ -111,7 +111,6 @@ before_install:
   - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
   - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
   - pip install --trusted-host pypi.python.org -r requirements.txt --user
-  - ls $MPI_HOME/bin
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
@@ -120,10 +119,7 @@ before_install:
 script:
   - source set_env
   - source set_env
-  - ./build_script -p LINUX --as-MGS --clean --rebuild
-    #> /dev/null
-  - ls gsl/
-
+  - ./build_script -p LINUX --as-MGS --clean --rebuild > /dev/null
     #script:
     #  - docker ps -a
 
