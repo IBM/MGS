@@ -130,7 +130,8 @@ before_install:
 script:
   - source set_env
   - source set_env
-  - ./build_script -p LINUX --as-MGS --clean --rebuild > /dev/null
+  - ./build_script -p LINUX --as-MGS --clean --rebuild 
+    #> /dev/null
     #script:
     #  - docker ps -a
 
