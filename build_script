@@ -620,7 +620,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       echoerr -e "${cc_red}Build MDL failed ! ${cc_normal}";
       exit;
     else
-      echoerr  -e "${cc_blue} Build MDL successfully.${cc_normal}\n"
+      echoerr  -e "${cc_blue}Build MDL successfully.${cc_normal}\n"
     fi
     rm -f mdl.make.mark
     cd $BASE_FOLDER
