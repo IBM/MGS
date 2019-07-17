@@ -202,6 +202,12 @@ function touch_mdf_upon_changing_target()
   #}}}
 }
 #}}}
+#{{{
+echoerr()
+{
+  echo "$@" 1>&2;
+}
+#}}}
 
 #########################################
 
@@ -227,15 +233,15 @@ optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
     p)
-      echo "Platform: $OPTARG" >&2
+      echoerr "Platform: $OPTARG" >&2
       PLATFORM=$OPTARG
       ;;
     c)
-      echo "Build: $OPTARG"
+      echoerr "Build: $OPTARG"
       WHAT_TO_BUILD=$OPTARG
       ;;
     j)
-      echo "Num-processes: $OPTARG"
+      echoerr "Num-processes: $OPTARG"
       NPROCS=$OPTARG
       ;;
     s)
@@ -274,10 +280,10 @@ while getopts "$optspec" optchar; do
                     #client="${!OPTIND}"
                     client="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     if [ -z $client ] || [ "${client:0:1}" == "-" ]; then
-                      echo "Please select a value for --${OPTARG} option"
+                      echoerr "Please select a value for --${OPTARG} option"
                       exit
                     else
-                      echo "Build library for colaborator: " ${client}
+                      echoerr "Build library for colaborator: " ${client}
                     fi
                     COLAB="--colab ${client}"
                     ;;
@@ -286,7 +292,7 @@ while getopts "$optspec" optchar; do
                     ;;
                 regen)
                     REGENMAKEFILE="--regen"
-                    echo "Regenerate gsl/Makefile"
+                    echoerr "Regenerate gsl/Makefile"
                     ;;
                 singlethread)
                     NPROCS=1
@@ -313,30 +319,30 @@ while getopts "$optspec" optchar; do
                     ;;
                 someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                    echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+                    echoerr "parsing option: '--${OPTARG}', value: '${val}'";
                     ;;
                 =*)
                     val=${OPTARG#*=}
                     opt=${OPTARG%=$val}
-                    echo "parsing option: '--${opt}', value: '${val}'" >&2
+                    echoerr "parsing option: '--${opt}', value: '${val}'"
                     ;;
                 *)
                     if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
-                        echo "unknown option --${OPTARG}" >&2
+                        echoerr "unknown option --${OPTARG}" 
                     fi
                     ;;
             esac;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+      echoerr "Invalid option: -$OPTARG" 
       exit 1
       ;;
   esac
 done
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
-[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echoerr "wrong-platform $PLATFORM"; print_help; exit 1; }
 
 SUPPORTED_COMPONENTS="all common mdl gsl nti"
-[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
+[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echoerr "wrong component $WHAT_TO_BUILD"; print_help; exit 1; }
 
 if [ "${client}" == "njit" ]; then
   MGS_TARGET_FILENAME="njit.mdf"
@@ -381,7 +387,7 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 fi
 touch ${MGS_TARGET_FILENAME}
 if [ ! -f ${MDF_TARGET} ]; then 
-  echo "ERROR: File ${MDF_TARGET} does not exist."
+  echoerr "ERROR: File ${MDF_TARGET} does not exist."
 fi
 cd -
 
@@ -446,11 +452,11 @@ fi
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
-    echo mpi found...; else echo mpi not found!; exit 1; fi
+    echo mpi found...; else echoerr "mpi not found!"; exit 1; fi
 fi
 
 if which bison | grep -q1 /\bison; then
-    echo bison found...; else echo bison not found!; exit 1; fi
+    echo bison found...; else echoerr "bison not found!"; exit 1; fi
 
 VALID_BISON_VERSION=2.3
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
@@ -477,7 +483,7 @@ if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
 fi
 
 if which flex | grep -q1 /\flex; then
-  echo flex found...; else echo flex not found! please either install through your distributions package manager or from source; 
+  echo flex found...; else echoerr "flex not found! please either install through your distributions package manager or from source"; 
   exit 1; 
 fi
 
@@ -525,12 +531,12 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-  echo "python found..."; else echo "python not found! please either install through your distributions package manager or from source";
+  echo "python found..."; else echoerr "python not found! please either install through your distributions package manager or from source";
   exit;
 fi
 
 if ldconfig -p | grep libgmp; then
-  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
+  echo "libgmp found..."; else echoerr "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
   exit;
 fi
 
@@ -540,23 +546,23 @@ if [ "$GPU" == "--gpu" ]; then
     exit
   fi
   if which nvidia-smi | grep -q1 /\nvidia-smi; then
-    echo "CUDA probably found..."; else echo "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
-    exit
+    echo "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
+    exit 1
   fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
   if `ldconfig -p | grep -q armadillo`; then
-    echo "Armadillo probably found..."; else echo "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
-    exit
+    echo "Armadillo probably found..."; else echoerr "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
+    exit 1
   fi
 fi
 #}}}
 #{{{ 
 if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
-  echo "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
-  echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
-  echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
+  echoerr "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
+  echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+  echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
   exit 1
 fi
 if [[ -z "${PYTHON_LIB}" ]]; then
@@ -573,8 +579,8 @@ if [[ -z "${PYTHON_LIB}" ]]; then
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
-  echo "Please install the SuiteSparse libraries (www.suitesparse.com)"
-  echo " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
+  echoerr "Please install the SuiteSparse libraries (www.suitesparse.com)"
+  echoerr " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
   exit 1
 fi
 fi
@@ -584,16 +590,16 @@ fi
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
 if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-  echo "First build. Auto run with --rebuild"
+  echoerr "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
 fi
 
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
   if  [ "$BASE_FOLDER" != "$line" ]; then
-    echo "Please run: source set_env"
+    echoerr "Please run: source set_env"
     rm .built
-    exit
+    exit 1
   fi
   PREV_TYPE=$(sed '2q;d' ".built")
 fi
@@ -604,7 +610,7 @@ if [ "$TYPE" != "$PREV_TYPE" ]; then
   #gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
   if [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-    echo "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
+    echoerr "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
     Yes_No_RebuildClean
   fi
 fi
@@ -614,7 +620,7 @@ fi
 ### MDL code ###
 #{{{
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  echo "Start build MDL parser"
+  echoerr "Start build MDL parser"
   cd $MDLROOT
 
   touch mdl.make.mark
@@ -653,7 +659,7 @@ fi
 ### COMMON code ###
 #{{{
 if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  echo "Start build COMMON"
+  echoerr "Start build COMMON"
   cd $BASE_FOLDER/common
   sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
@@ -766,7 +772,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     echo "${cc_blue}Complete: regenerate gsl/Makefile${cc_normal}"
     exit
   fi
-  echo "Start build GSL"
+  echoerr "Start build GSL"
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     #{{{
     cd $LENSROOT
