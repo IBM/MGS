@@ -789,6 +789,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
 
       cp Extensions.mk $LENSROOT/
       cd $BASE_FOLDER
+      cat $LENSROOT/Extensions.mk
+      ls $LENSROOT/extensions/interface/ValueProducer/*
+      ls $LENSROOT/extensions/interface/ValueProducer/include
+      exit
       #}}}
     fi
     cd -
