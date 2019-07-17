@@ -442,11 +442,11 @@ fi
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
-    echo mpi found...; else echoerr "mpi not found!"; exit 1; fi
+    echoerr mpi found...; else echoerr "mpi not found!"; exit 1; fi
 fi
 
 if which bison | grep -q1 /\bison; then
-    echo bison found...; else echoerr "bison not found!"; exit 1; fi
+    echoerr bison found...; else echoerr "bison not found!"; exit 1; fi
 
 VALID_BISON_VERSION=2.3
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
@@ -460,20 +460,20 @@ read n_major n_minor n_rev << EOF
 EOF
 if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
 if [ "$n_major" -lt "$c_major" ]; then
-    echo bison version $VALID_BISON_VERSION or greater required!
+    echoerr bison version $VALID_BISON_VERSION or greater required!
     exit 1;
 fi
 if [ "$n_major" -eq "$c_major" ] && [ "$n_minor" -lt "$c_minor" ]; then
-    echo bison version $VALID_BISON_VERSION or greater required!
+    echoerr bison version $VALID_BISON_VERSION or greater required!
     exit 1;
 fi
 if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
-    echo bison version $VALID_BISON_VERSION or greater required!
+    echoerr bison version $VALID_BISON_VERSION or greater required!
     exit 1;
 fi
 
 if which flex | grep -q1 /\flex; then
-  echo flex found...; else echoerr "flex not found! please either install through your distributions package manager or from source"; 
+  echoerr flex found...; else echoerr "flex not found! please either install through your distributions package manager or from source"; 
   exit 1; 
 fi
 
@@ -521,25 +521,25 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-  echo "python found..."; else echoerr "python not found! please either install through your distributions package manager or from source";
-  exit;
+  echoerr "python found..."; else echoerr "python not found! please either install through your distributions package manager or from source";
+  exit 1;
 fi
 
 if ldconfig -p | grep libgmp; then
-  echo "libgmp found..."; else echoerr "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
-  exit;
+  echoerr "libgmp found..."; else echoerr "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
+  exit 1;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
   if which nvidia-smi | grep -q1 /\nvidia-smi; then
-    echo "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
+    echoerr "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
     exit 1
   fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
   if `ldconfig -p | grep -q armadillo`; then
-    echo "Armadillo probably found..."; else echoerr "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
+    echoerr "Armadillo probably found..."; else echoerr "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
     exit 1
   fi
 fi
@@ -600,7 +600,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ]; then
       make clean;
-      echo "${cc_blue}Removed MDL code successfully.${cc_normal}"
+      echoerr "${cc_blue}Removed MDL code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
@@ -617,10 +617,10 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark
       cd $BASE_FOLDER
-      echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
+      echoerr -e "${cc_red}Build MDL failed ! ${cc_normal}";
       exit;
     else
-      echo  -e "${cc_blue} Build MDL successfully.${cc_normal}\n"
+      echoerr  -e "${cc_blue} Build MDL successfully.${cc_normal}\n"
     fi
     rm -f mdl.make.mark
     cd $BASE_FOLDER
@@ -644,7 +644,7 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean RELEASE="$RELEASE" ${EXTRA_LIBS};
-      echo "${cc_blue}Removed COMMON code successfully.${cc_normal}"
+      echoerr "${cc_blue}Removed COMMON code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
       make realclean RELEASE="$RELEASE" ${EXTRA_LIBS};
@@ -660,10 +660,10 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     fi
     if [ $? -gt 0 ]; then
       cd $BASE_FOLDER
-      echo -e "${cc_red}Build COMMON code failed ! ${cc_normal}";
+      echoerr -e "${cc_red}Build COMMON code failed ! ${cc_normal}";
       exit;
     else
-      echo -e "${cc_blue}Build COMMON code successfully.${cc_normal}"
+      echoerr -e "${cc_blue}Build COMMON code successfully.${cc_normal}"
     fi
   fi
   cd $BASE_FOLDER
@@ -692,7 +692,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean;
-      echo -e "${cc_blue}Removed NTI code successfully.${cc_normal}"
+      echoerr -e "${cc_blue}Removed NTI code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean RELEASE="$RELEASE";
@@ -722,10 +722,10 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ $BUILD_FAIL -eq 1 ]; then
       cd $BASE_FOLDER
-      echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
+      echoerr -e "${cc_red}Build NTI failed ! ${cc_normal}";
       exit;
     else
-      echo -e "${cc_blue}Build NTI code successfully.${cc_normal}"
+      echoerr -e "${cc_blue}Build NTI code successfully.${cc_normal}"
     fi
     cd $BASE_FOLDER
   fi
@@ -741,7 +741,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
     ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
-    echo "Complete: regenerate gsl/Makefile"
+    echoerr "Complete: regenerate gsl/Makefile"
     exit 
   fi
   echoerr "Start build GSL"
@@ -837,7 +837,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
-      echo -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
+      echoerr -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
     To run the test NTS tissue simulation :
 

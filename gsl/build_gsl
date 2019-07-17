@@ -52,6 +52,12 @@ function createMakeFile(){
     fi
   #}}}
 }
+function echoerr()
+#{{{
+{
+  echo "$@" 1>&2;
+}
+#}}}
 
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 
@@ -117,11 +123,11 @@ optspec=":d:p:sr-:j:"
 while getopts "$optspec" optchar; do
   case $optchar in
     p)
-      echo "Platform: $OPTARG" >&2
+      echoerr "Platform: $OPTARG"
       PLATFORM=$OPTARG
       ;;
     j)
-      echo "Num-processes: $OPTARG"
+      echoerr "Num-processes: $OPTARG"
       NPROCS=$OPTARG
       ;;
     s)
@@ -159,10 +165,10 @@ while getopts "$optspec" optchar; do
           colab) # collaboration's use 
               client="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
               if [ -z $client ] || [ "${client:0:1}" == "-" ]; then
-                echo "Please select a value for --${OPTARG} option"
-                exit
+                echoerr "Please select a value for --${OPTARG} option"
+                exit 1
               else
-                echo "Build library for colaborator: " ${client}
+                echoerr "Build library for colaborator: " ${client}
               fi
               COLAB="--colab"  # don't use value here
               ;;
@@ -197,21 +203,21 @@ while getopts "$optspec" optchar; do
             ;;
           someloglevel)
             val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-            echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+            echoerr "parsing option: '--${OPTARG}', value: '${val}'";
             ;;
           =*)
               val=${OPTARG#*=}
               opt=${OPTARG%=$val}
-              echo "parsing option: '--${opt}', value: '${val}'" >&2
+              echoerr "parsing option: '--${opt}', value: '${val}'" 
               ;;
           *)
               if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
-                  echo "unknown option --${OPTARG}" >&2
+                  echoerr "unknown option --${OPTARG}"
               fi
               ;;
       esac;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+      echoerr "Invalid option: -$OPTARG" 
       exit 1
       ;;
     # TODO: remove?
@@ -221,7 +227,7 @@ while getopts "$optspec" optchar; do
 #      ;;
   esac
 done
-[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echoerr "wrong-platform $PLATFORM"; print_help; exit 1; }
 
 PLATFORM_OPTS="--domainLib  "
 case $PLATFORM in
@@ -273,7 +279,7 @@ done
 CONTINUE=1
 if [ "$REGENMAKEFILE" == "-regen" ]; then 
   #{{{
-  echo "Regen Makefile"
+  echoerr "Regen Makefile"
   if [ -f Makefile ]; then 
     rm Makefile
   fi
@@ -287,18 +293,18 @@ if [ $CONTINUE == 1 ]; then
     [ "$REBUILD" == "-rebuild" ]; then \
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
-      echo "clean-up GSL"
+      echoerr "clean-up GSL"
       if [ -f Makefile ]; then 
         make clean ${EXTRA_LIBS}
         rm Makefile
       else
-        echo -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
+        echoerr -e "${cc_red}No Makefile to clean ! ${cc_normal}\n";
       fi
       #}}}
     fi
     if [ "$REBUILD" == "-rebuild" ]; then \
       #{{{
-    echo "Rebuild GSL"
+    echoerr "Rebuild GSL"
     if [ -f Makefile ]; then 
       rm Makefile
     fi
@@ -319,21 +325,21 @@ else
     make -j $NPROCS library ${EXTRA_LIBS}
   fi
   if [ $? -gt 0 ]; then
-    echo -e "${cc_red}Build GSL library failed ! ${cc_normal}\n";
+    echoerr -e "${cc_red}Build GSL library failed ! ${cc_normal}\n";
     exit 1;
   fi
   make -j $NPROCS ${EXTRA_LIBS};
 fi
 
 if [ "$CLEAN" != "-clean" ] && { [ $? -gt 0 ] || [ ! `ls $LENSROOT/bin/gslparser` ];}; then 
-  echo -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
+  echoerr -e "${cc_red}Build GSL failed ! ${cc_normal}\n";
   exit 1;
 elif [ "$CLEAN" == "-clean" ]; then 
-  echo -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
+  echoerr -e "\n\n\n${cc_blue}You have removed GSL successful.${cc_normal}\n";
   if [ "$REBUILD" == "-rebuild" ] && { [ `ls $LENSROOT/bin/gslparser` ];}; then 
-    echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
+    echoerr -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
   fi
 else
-  echo -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
+  echoerr -e "\n\n\n${cc_blue}Build GSL successful.${cc_normal}\n";
 fi
 fi
