@@ -373,6 +373,7 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 #include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"
 #include "Life/LifeDataCollectors.mdl"
+#include "PointNeuronTools/PointNeuronTools.mdl"
 
 // MDF files
 
@@ -820,10 +821,6 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cp Extensions.mk $LENSROOT/
 
       cd $BASE_FOLDER
-      cat $LENSROOT/Extensions.mk
-      ls $LENSROOT/extensions/interface/ValueProducer/*
-      ls $LENSROOT/extensions/interface/ValueProducer/include
-      exit
       #}}}
     fi
     cd -
