@@ -181,7 +181,7 @@ fi
 function touch_mdf_upon_changing_target()
 {
   #{{{
-      if [ $PREV_TYPE != $TYPE ]; then
+      if [ "$PREV_TYPE" != "$TYPE" ]; then
         if [[  $TYPE == *"NTS"* ]]; then
           touch nts.mdf
         fi
