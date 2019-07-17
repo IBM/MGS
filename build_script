@@ -59,6 +59,7 @@ Extra Libraries:
   export SUITESPARSE=\`pwd\`/SuiteSparse/
   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$SUITESPARSE/lib
   export PYTHON_INCLUDE_DIR=/usr/lib/python3.6
+  export PYTHON_INCLUDE_DIR=/usr/include/python2.7
 
 \n\n"; exit;
   #}}}
