@@ -90,25 +90,26 @@ before_install:
   - MPI_HOME=`pwd`/ompi
   #- if [ ! -d "${MPI_HOME}" ]; then sh ./get_ompi.sh; fi
   - sh ./get_ompi.sh
-  - PATH=${MPI_HOME}/bin:${PATH}
-  - LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
-  - LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
-  - LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
-  - CPATH=${MPI_HOME}/lib:${CPATH}
-  - C_INCLUDE_PATH=${MPI_HOME}/lib:${C_INCLUDE_PATH}
-  - INCLUDE_PATH=${MPI_HOME}/lib:${INCLUDE_PATH}
-  - CPLUS_INCLUDE_PATH=${MPI_HOME}/lib:${CPLUS_INCLUDE_PATH}
+  - export PATH=${MPI_HOME}/bin:${PATH}
+  - export LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
+  - export LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
+  - export LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
+  - export CPATH=${MPI_HOME}/lib:${CPATH}
+  - export C_INCLUDE_PATH=${MPI_HOME}/lib:${C_INCLUDE_PATH}
+  - export INCLUDE_PATH=${MPI_HOME}/lib:${INCLUDE_PATH}
+  - export CPLUS_INCLUDE_PATH=${MPI_HOME}/lib:${CPLUS_INCLUDE_PATH}
   - FLEX_HOME=`pwd`/flex
   #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
   - sh ./get_flex.sh
-  - PATH=${FLEX_HOME}/bin:${PATH}
-  - LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
-  - LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
-  - LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
-  - CPATH=${FLEX_HOME}/lib:${CPATH}
-  - C_INCLUDE_PATH=${FLEX_HOME}/lib:${C_INCLUDE_PATH}
-  - INCLUDE_PATH=${FLEX_HOME}/lib:${INCLUDE_PATH}
-  - CPLUS_INCLUDE_PATH=${FLEX_HOME}/lib:${CPLUS_INCLUDE_PATH}
+  - export PATH=${FLEX_HOME}/bin:${PATH}
+  - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
+  - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
+  - export LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
+  - export CPATH=${FLEX_HOME}/lib:${CPATH}
+  - export C_INCLUDE_PATH=${FLEX_HOME}/lib:${C_INCLUDE_PATH}
+  - export INCLUDE_PATH=${FLEX_HOME}/lib:${INCLUDE_PATH}
+  - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/lib:${CPLUS_INCLUDE_PATH}
+  - export INCLUDE=${FLEX_HOME}/lib:${INCLUDE}
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
