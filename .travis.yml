@@ -110,7 +110,7 @@ before_install:
   - export INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH}
   - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
   - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
-  - pip install --trusted-host pypi.python.org -r requirements.txt
+  - pip install --trusted-host pypi.python.org -r requirements.txt --user
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
