@@ -1,0 +1,10 @@
+#ifndef SetSourceArrayIndexFunctor_MDL
+#define SetSourceArrayIndexFunctor_MDL
+
+Framework Functor SetSourceArrayIndexFunctor Category "INATTRINITIALIZER" {
+   Initialize(Functor* destinationInAttr);
+   ParameterSet* Execute ();
+}
+
+#endif
+  
