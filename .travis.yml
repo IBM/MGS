@@ -27,7 +27,6 @@ addons:
       #- llvm-toolchain-precise-3.8
     packages:
     - g++-6
-    - bison
     - ubuntu-drivers-common
       #- nvidia-415
       #- clang-3.8
@@ -98,6 +97,18 @@ before_install:
   - export C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH}
   - export INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH}
   - export CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
+  - BISON_HOME=`pwd`/bison
+  #- if [ ! -d "${BISON_HOME}" ]; then sh ./get_bison.sh; fi
+  - sh ./get_bison.sh > /dev/null
+  - export PATH=${BISON_HOME}/bin:${PATH}
+  - export LD_LIBRARY_PATH=${BISON_HOME}/lib:${LD_LIBRARY_PATH}
+  - export LD_RUN_PATH=${BISON_HOME}/lib:${LD_RUN_PATH}
+  - export LIBRARY_PATH=${BISON_HOME}/lib:${LIBRARY_PATH}
+  - export CPATH=${BISON_HOME}/include:${CPATH}
+  - export C_INCLUDE_PATH=${BISON_HOME}/include:${C_INCLUDE_PATH}
+  - export INCLUDE_PATH=${BISON_HOME}/include:${INCLUDE_PATH}
+  - export CPLUS_INCLUDE_PATH=${BISON_HOME}/include:${CPLUS_INCLUDE_PATH}
+  - export INCLUDE=${BISON_HOME}/include:${INCLUDE}
   - FLEX_HOME=`pwd`/flex
   #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
   - sh ./get_flex.sh > /dev/null
