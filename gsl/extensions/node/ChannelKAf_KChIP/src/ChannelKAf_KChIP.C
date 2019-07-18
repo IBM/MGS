@@ -14,7 +14,9 @@
 
 #define SMALL 1.0E-6
 // unit conversion
+#ifndef uM2mM
 #define uM2mM 1e-3
+#endif
 //
 #define Cai_base 0.1  // [uM]
 

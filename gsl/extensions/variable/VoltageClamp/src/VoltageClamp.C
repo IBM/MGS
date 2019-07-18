@@ -25,7 +25,9 @@
 #include "FileUtils.h"
 #include "NumberUtils.h"
 
+#ifndef SMALL
 #define SMALL 1.0e-6
+#endif
 // use 0 or 1
 #define ABRUPT_JUMP_VOLTAGE 1
 #define IO_INTERVAL 1.0 // ms

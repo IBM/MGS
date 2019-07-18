@@ -1,10 +1,11 @@
-wget "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.4.0.tar.gz"
-
 FILENAME=SuiteSparse-5.4.0
+DIRNAME=SuiteSparse
+wget "http://faculty.cse.tamu.edu/davis/SuiteSparse/$FILENAME.tar.gz"
+
 tar -xvf ${FILENAME}.tar.gz
-cd ${FILENAME}
+cd ${DIRNAME}
 ./configure --prefix=$TRAVIS_BUILD_DIR/suitesparse
 make -j10
 make install
 cd -
-rm -rf $FILENAME
+rm -rf $DIRNAME

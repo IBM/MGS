@@ -35,7 +35,9 @@ GSA ADP Schedule Contract with IBM Corp.
 #define fieldDelimiter "\t"  
 
 // unit conversion 
+#ifndef uM2mM
 #define uM2mM  1e-3 // from [uM] to [mM] concentration
+#endif
 
 #include <math.h>
 #include <pthread.h>
@@ -364,7 +366,7 @@ void ChannelSK::initialize(RNG& rng)
       
     }
 #elif CHANNEL_SK == SK2_KOHLER_ADELMAN_1996_RAT || \
-    CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN || \ 
+    CHANNEL_SK == SK1_KOHLER_ADELMAN_1996_HUMAN || \
     CHANNEL_SK == SK_FUJITA_2012 
 
     {

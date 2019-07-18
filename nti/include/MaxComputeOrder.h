@@ -97,7 +97,9 @@
 //// if enabled, print Hodgkin-Huxley information
 
 // if enabled, it always check for NaN or values outside the expected range
+#ifndef DEBUG_ASSERT
 #define DEBUG_ASSERT
+#endif
 
 //  IDEA_DYNAMIC_INITIALVOLTAGE (if defined, it enables us to pass different voltage value at different location of branch tree - this helps to reach equilibrium faster on neuron where gradient voltage occurs)
 //#define IDEA_DYNAMIC_INITIALVOLTAGE  // can be defined inside NTSMacros.h within the MODEL_TO_USE section
