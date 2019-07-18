@@ -34,41 +34,69 @@ install:
 - "[ $CXX = g++ ] && export CXX=g++-6 || true"
   #- "[ $CXX = clang++ ] && export CXX=clang++-3.8 || true"
 
-jobs:
-  include:
-    - stage: MGS 
-      #if: branch = master
-      if: branch = for_nvu 
-      name: "Installing dependencies..."
-      #script: npm install
-      script: 
-        - source set_env
-        - source set_env
-        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
-    - stage: NGS 
-      #if: branch = master
-      if: branch = for_nvu 
-      skip_cleanup: true
-      name: "Building app..."
-      #script: npm run-script build
-      script: echo "NGS build TUAN"
-    - stage: NTS 
-      #if: branch = master
-      if: branch = for_nvu 
-      #skip_cleanup: true
-      #name: "Shipping..."
-      #script: npm run-script deploy
-      script: echo "NTS build TUAN"
-    - stage: NTSNVU 
-      #if: branch = master
-      if: branch = for_nvu 
-      #skip_cleanup: true
-      #name: "Shipping..."
-      #script: npm run-script deploy
-      script: echo "NTS-NVU build TUAN"
+#jobs:
+#  include:
+#    - stage: MGS 
+#      #if: branch = master
+#      if: branch = for_nvu 
+#      name: "Installing dependencies..."
+#      #script: npm install
+#      script: 
+#        - source set_env
+#        - source set_env
+#        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
+#    - stage: NGS 
+#      #if: branch = master
+#      if: branch = for_nvu 
+#      skip_cleanup: true
+#      name: "Building app..."
+#      #script: npm run-script build
+#      script: echo "NGS build TUAN"
+#    - stage: NTS 
+#      #if: branch = master
+#      if: branch = for_nvu 
+#      #skip_cleanup: true
+#      #name: "Shipping..."
+#      #script: npm run-script deploy
+#      script: echo "NTS build TUAN"
+#    - stage: NTSNVU 
+#      #if: branch = master
+#      if: branch = for_nvu 
+#      #skip_cleanup: true
+#      #name: "Shipping..."
+#      #script: npm run-script deploy
+#      script: echo "NTS-NVU build TUAN"
 
 matrix:
   include:
+    - name: MGS
+      env:
+      - CUDA=9.2.148-1
+      - CUDA_SHORT=9.2
+      - CUDA_APT=9-2
+      - UBUNTU_VERSION=ubuntu1604
+      - BUILD_SYSTEM=--as-MGS
+    - name: NGS
+      env:
+      - CUDA=9.2.148-1
+      - CUDA_SHORT=9.2
+      - CUDA_APT=9-2
+      - UBUNTU_VERSION=ubuntu1604
+      - BUILD_SYSTEM=--as-NGS
+    - name: NTS
+      env:
+      - CUDA=9.2.148-1
+      - CUDA_SHORT=9.2
+      - CUDA_APT=9-2
+      - UBUNTU_VERSION=ubuntu1604
+      - BUILD_SYSTEM=--as-NTS
+    - name: NTS-NVU
+      env:
+      - CUDA=9.2.148-1
+      - CUDA_SHORT=9.2
+      - CUDA_APT=9-2
+      - UBUNTU_VERSION=ubuntu1604
+      - BUILD_SYSTEM=--as-NTS-NVU
     #- name: CUDA 8
     #  env:
     #  - CUDA=8.0.61-1
@@ -76,13 +104,13 @@ matrix:
     #  - CUDA_APT=8-0
     #  - UBUNTU_VERSION=ubuntu1604
     #  dist: xenial
-    - name: CUDA 9
-      env:
-      - CUDA=9.2.148-1
-      - CUDA_SHORT=9.2
-      - CUDA_APT=9-2
-      - UBUNTU_VERSION=ubuntu1604
-      dist: xenial
+    #- name: CUDA 9
+    #  env:
+    #  - CUDA=9.2.148-1
+    #  - CUDA_SHORT=9.2
+    #  - CUDA_APT=9-2
+    #  - UBUNTU_VERSION=ubuntu1604
+    #  dist: xenial
       #- name: CUDA 10
       #- env:
       #- - CUDA=10.1.105-1
@@ -163,7 +191,7 @@ before_install:
 script:
   - source set_env
   - source set_env
-  - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
+  - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
     #script:
     #  - docker ps -a
 
