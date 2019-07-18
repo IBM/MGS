@@ -44,7 +44,7 @@ cache:
   - ompi
   - flex
   - bison
-  - suitesparse
+  #- suitesparse
     #- /usr/local/cuda-${CUDA_SHORT}
 
 jobs:
@@ -74,7 +74,6 @@ jobs:
         - sh ./get_ompi.sh > /dev/null
         - sh ./get_bison.sh > /dev/null
         - sh ./get_flex.sh > /dev/null
-        - sh ./get_suitesparse.sh 
           #- go get github.com/golang/dep/cmd/dep
           #- dep ensure              # cache vendor
           #- make testdaemon-image   # cache images
@@ -181,21 +180,34 @@ jobs:
           #      skip_cleanup: true
           #      name: "Building app..."
           #      #script: npm run-script build
-          #      script: echo "NGS build TUAN"
+          #      script: 
+          #      - echo "NGS build TUAN"
+          #        - source set_env
+          #        - source set_env
+          #        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
           #    - stage: NTS 
           #      #if: branch = master
           #      if: branch = for_nvu 
           #      #skip_cleanup: true
           #      #name: "Shipping..."
           #      #script: npm run-script deploy
-          #      script: echo "NTS build TUAN"
+          #      script: 
+          #      - echo "NTS build TUAN"
+          #        - source set_env
+          #        - source set_env
+          #        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
           #    - stage: NTSNVU 
           #      #if: branch = master
           #      if: branch = for_nvu 
           #      #skip_cleanup: true
           #      #name: "Shipping..."
           #      #script: npm run-script deploy
-          #      script: echo "NTS-NVU build TUAN"
+          #      script: 
+          #      - echo "NTS-NVU build TUAN"
+          #- sh ./get_suitesparse.sh 
+          #        - source set_env
+          #        - source set_env
+          #        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
     - stage: deploy
       after_success:
         - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
