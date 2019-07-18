@@ -183,6 +183,20 @@ before_install:
   - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
   - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
   - pip install --trusted-host pypi.python.org -r requirements.txt --user
+  - |
+    if [ "$BUILD_SYSTEM" == "--as-NTS-NVU" ]; then 
+      sh ./get_suitesparse.sh 
+      export SUITESPARSE_HOME=`pwd`/suitesparse
+      export PATH=${SUITESPARSE_HOME}/bin:${PATH}
+      export LD_LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LD_LIBRARY_PATH}
+      export LD_RUN_PATH=${SUITESPARSE_HOME}/lib:${LD_RUN_PATH}
+      export LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LIBRARY_PATH}
+      export CPATH=${SUITESPARSE_HOME}/include:${CPATH}
+      export C_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${C_INCLUDE_PATH}
+      export INCLUDE_PATH=${SUITESPARSE_HOME}/include:${INCLUDE_PATH}
+      export CPLUS_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${CPLUS_INCLUDE_PATH}
+      export INCLUDE=${SUITESPARSE_HOME}/include:${INCLUDE}
+    fi
   - echo "Testing Docker Hub credentials"
     #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - echo "Docker Hub credentials are working"
