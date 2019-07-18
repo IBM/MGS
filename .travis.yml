@@ -34,8 +34,19 @@ install:
 - "[ $CXX = g++ ] && export CXX=g++-6 || true"
   #- "[ $CXX = clang++ ] && export CXX=clang++-3.8 || true"
 
-#jobs:
-#  include:
+jobs:
+  include:
+    - stage: precache
+      script: true
+      install:
+        - sh ./get_ompi.sh > /dev/null
+        - sh ./get_bison.sh > /dev/null
+        - sh ./get_flex.sh > /dev/null
+        - sh ./get_suitesparse.sh 
+        #- go get github.com/golang/dep/cmd/dep
+        #- dep ensure              # cache vendor
+        #- make testdaemon-image   # cache images
+        #- make web-deps           # cache node_modules
 #    - stage: MGS 
 #      #if: branch = master
 #      if: branch = for_nvu 
@@ -67,6 +78,12 @@ install:
 #      #script: npm run-script deploy
 #      script: echo "NTS-NVU build TUAN"
 
+stages:
+  - precache 
+  - test
+  - compile
+  - deploy
+
 matrix:
   include:
     - name: MGS
@@ -83,20 +100,20 @@ matrix:
       - CUDA_APT=9-2
       - UBUNTU_VERSION=ubuntu1604
       - BUILD_SYSTEM=--as-NGS
-    - name: NTS
-      env:
-      - CUDA=9.2.148-1
-      - CUDA_SHORT=9.2
-      - CUDA_APT=9-2
-      - UBUNTU_VERSION=ubuntu1604
-      - BUILD_SYSTEM=--as-NTS
-    - name: NTS-NVU
-      env:
-      - CUDA=9.2.148-1
-      - CUDA_SHORT=9.2
-      - CUDA_APT=9-2
-      - UBUNTU_VERSION=ubuntu1604
-      - BUILD_SYSTEM=--as-NTS-NVU
+    #- name: NTS
+      #env:
+      #- CUDA=9.2.148-1
+      #- CUDA_SHORT=9.2
+      #- CUDA_APT=9-2
+      #- UBUNTU_VERSION=ubuntu1604
+      #- BUILD_SYSTEM=--as-NTS
+    #- name: NTS-NVU
+      #env:
+      #- CUDA=9.2.148-1
+      #- CUDA_SHORT=9.2
+      #- CUDA_APT=9-2
+      #- UBUNTU_VERSION=ubuntu1604
+      #- BUILD_SYSTEM=--as-NTS-NVU
     #- name: CUDA 8
     #  env:
     #  - CUDA=8.0.61-1
@@ -151,7 +168,6 @@ before_install:
   #- sh ./get_cuda.sh
   - MPI_HOME=`pwd`/ompi
   #- if [ ! -d "${MPI_HOME}" ]; then sh ./get_ompi.sh; fi
-  - sh ./get_ompi.sh > /dev/null
   - export PATH=${MPI_HOME}/bin:${PATH}
   - export LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
@@ -162,7 +178,6 @@ before_install:
   - export CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
   - BISON_HOME=`pwd`/bison
   #- if [ ! -d "${BISON_HOME}" ]; then sh ./get_bison.sh; fi
-  - sh ./get_bison.sh > /dev/null
   - export PATH=${BISON_HOME}/bin:${PATH}
   - export LD_LIBRARY_PATH=${BISON_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${BISON_HOME}/lib:${LD_RUN_PATH}
@@ -174,7 +189,6 @@ before_install:
   - export INCLUDE=${BISON_HOME}/include:${INCLUDE}
   - FLEX_HOME=`pwd`/flex
   #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
-  - sh ./get_flex.sh > /dev/null
   - export PATH=${FLEX_HOME}/bin:${PATH}
   - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
   - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
@@ -187,7 +201,6 @@ before_install:
   - pip install --trusted-host pypi.python.org -r requirements.txt --user
   - |
     if [ "$BUILD_SYSTEM" == "--as-NTS-NVU" ]; then 
-      sh ./get_suitesparse.sh 
       export SUITESPARSE_HOME=`pwd`/suitesparse
       export SUITESPARSE=`pwd`/suitesparse
       export PATH=${SUITESPARSE_HOME}/bin:${PATH}
@@ -209,7 +222,7 @@ script:
   - echo "$BUILD_SYSTEM"
   - source set_env
   - source set_env
-  - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+  #- ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
     #script:
     #  - docker ps -a
 
