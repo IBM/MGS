@@ -34,6 +34,36 @@ install:
 - "[ $CXX = g++ ] && export CXX=g++-6 || true"
   #- "[ $CXX = clang++ ] && export CXX=clang++-3.8 || true"
 
+jobs:
+  include:
+    - stage: MGS 
+      #if: branch = master
+      if: branch = for_nvu 
+      name: "Installing dependencies..."
+      #script: npm install
+      script: echo "MGS build TUAN"
+    - stage: NGS 
+      #if: branch = master
+      if: branch = for_nvu 
+      skip_cleanup: true
+      name: "Building app..."
+      #script: npm run-script build
+      script: echo "NGS build TUAN"
+    - stage: NTS 
+      #if: branch = master
+      if: branch = for_nvu 
+      #skip_cleanup: true
+      #name: "Shipping..."
+      #script: npm run-script deploy
+      script: echo "NTS build TUAN"
+    - stage: NTSNVU 
+      #if: branch = master
+      if: branch = for_nvu 
+      #skip_cleanup: true
+      #name: "Shipping..."
+      #script: npm run-script deploy
+      script: echo "NTS-NVU build TUAN"
+
 matrix:
   include:
     #- name: CUDA 8
@@ -130,7 +160,7 @@ before_install:
 script:
   - source set_env
   - source set_env
-  - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
+  #- ./build_script -p LINUX --as-MGS --rebuild > /dev/null
     #script:
     #  - docker ps -a
 
