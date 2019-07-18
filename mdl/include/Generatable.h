@@ -22,12 +22,14 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <cassert>
 
 #include "MemberContainer.h"
 
 class Class;
 class DataType;
 class BaseClass; 
+class CommandLine;
 
 class Generatable {
    public:
@@ -70,6 +72,11 @@ class Generatable {
       
       void setFrameWorkElement(bool val = true) {
 	 _frameWorkElement = val;
+      }
+      void setCommandLine(CommandLine& obj){ _cmdLine = &obj;}
+      CommandLine* getCommandLine(){ 
+	 assert(_cmdLine != 0); 
+	 return _cmdLine;
       }
 
    protected:
@@ -146,6 +153,7 @@ class Generatable {
       std::string _fileName; 
       LinkType _linkType;
       bool _frameWorkElement;
+      CommandLine* _cmdLine; //hold the result parsed from command-line [use to determine code-behavior]
 };
 
 #endif // Generatable_H

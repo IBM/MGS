@@ -23,7 +23,7 @@ OBJECTONLYFLAGS :=
 
 # Look for include files in each of the modules
 #  This will append CFLAGS with a string like '-Idir1/include -Idir2/include'
-CFLAGS := -Iinclude -Iparser 
+CFLAGS := -Iinclude -Iparser  -std=c++11 -Wno-deprecated-declarations
 
 # Create a variable 'ADDCFLAGS' that you can use to add to the CFLAGS from the
 # command line option of gmake if necessary

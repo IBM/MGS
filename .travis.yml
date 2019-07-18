@@ -189,6 +189,7 @@ before_install:
     if [ "$BUILD_SYSTEM" == "--as-NTS-NVU" ]; then 
       sh ./get_suitesparse.sh 
       export SUITESPARSE_HOME=`pwd`/suitesparse
+      export SUITESPARSE=`pwd`/suitesparse
       export PATH=${SUITESPARSE_HOME}/bin:${PATH}
       export LD_LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LD_LIBRARY_PATH}
       export LD_RUN_PATH=${SUITESPARSE_HOME}/lib:${LD_RUN_PATH}
@@ -205,6 +206,7 @@ before_install:
     #- docker build -t build-springxd-base .
 
 script:
+  - echo "$BUILD_SYSTEM"
   - source set_env
   - source set_env
   - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null

@@ -22,6 +22,7 @@ void Parser::help() {
    std::cout << std::endl;
    std::cout << "  switches:" << std::endl;
    std::cout << "    -s :      Modules generated for static linking" << std::endl;
+   std::cout << "    -n :      No printing warnings" << std::endl;
    std::cout << std::endl;
    std::cout << "  mdlFile: the MDL file to parse(mandatory)" << std::endl;
    std::cout << std::endl << std::endl;

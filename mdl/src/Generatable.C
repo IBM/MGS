@@ -34,12 +34,14 @@
 Generatable::Generatable(const std::string& fileName)
    : _fileOutput(true), _fileName(fileName), _linkType(_DYNAMIC), 
      _frameWorkElement(false)
+     , _cmdLine(0)
 {
 }
 
 Generatable::Generatable(const Generatable& rv)
    : _fileOutput(rv._fileOutput), _fileName(rv._fileName), 
      _linkType(rv._linkType), _frameWorkElement(rv._frameWorkElement)     
+     , _cmdLine(rv._cmdLine)
 {
    copyOwnedHeap(rv);
 }
@@ -53,6 +55,7 @@ Generatable& Generatable::operator=(const Generatable& rv)
       _fileName = rv._fileName;
       _linkType = rv._linkType;
       _frameWorkElement = rv._frameWorkElement;
+      _cmdLine = rv._cmdLine;
    }
    return *this;
 }
