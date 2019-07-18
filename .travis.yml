@@ -36,9 +36,28 @@ install:
 
 jobs:
   include:
+    ############################
+    #       Set up cache       #
+    ############################
     - stage: precache
       script: true
+      name: "Installing dependencies..."
       install:
+        - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+        - |
+          if [ ! -d "${CUDA_HOME}" ]; then
+          INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+          wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+          sudo dpkg -i ${INSTALLER}
+          wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+          sudo apt-key add 7fa2af80.pub
+          sudo apt update -qq
+          sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt clean
+          fi
+        - sudo ln -s ${CUDA_HOME} /usr/local/cuda
+        - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+        - PATH=${CUDA_HOME}/bin:${PATH}
         - sh ./get_ompi.sh > /dev/null
         - sh ./get_bison.sh > /dev/null
         - sh ./get_flex.sh > /dev/null
@@ -47,42 +66,129 @@ jobs:
         #- dep ensure              # cache vendor
         #- make testdaemon-image   # cache images
         #- make web-deps           # cache node_modules
-#    - stage: MGS 
-#      #if: branch = master
-#      if: branch = for_nvu 
-#      name: "Installing dependencies..."
-#      #script: npm install
-#      script: 
-#        - source set_env
-#        - source set_env
-#        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
-#    - stage: NGS 
-#      #if: branch = master
-#      if: branch = for_nvu 
-#      skip_cleanup: true
-#      name: "Building app..."
-#      #script: npm run-script build
-#      script: echo "NGS build TUAN"
-#    - stage: NTS 
-#      #if: branch = master
-#      if: branch = for_nvu 
-#      #skip_cleanup: true
-#      #name: "Shipping..."
-#      #script: npm run-script deploy
-#      script: echo "NTS build TUAN"
-#    - stage: NTSNVU 
-#      #if: branch = master
-#      if: branch = for_nvu 
-#      #skip_cleanup: true
-#      #name: "Shipping..."
-#      #script: npm run-script deploy
-#      script: echo "NTS-NVU build TUAN"
+    - &shared 
+      stage: MGS 
+      before_install:
+        - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+        - |
+          if [ ! -d "${CUDA_HOME}" ]; then
+          INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+          wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+          sudo dpkg -i ${INSTALLER}
+          wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+          sudo apt-key add 7fa2af80.pub
+          sudo apt update -qq
+          sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt clean
+          fi
+        - sudo ln -s ${CUDA_HOME} /usr/local/cuda
+        - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+        - PATH=${CUDA_HOME}/bin:${PATH}
+          #  - wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip
+          #- unzip ninja-linux.zip
+        - PATH=${PATH}:${PWD}
+          #- ubuntu-drivers list
+          #- sh ./get_cuda.sh
+        - MPI_HOME=`pwd`/ompi
+          #- if [ ! -d "${MPI_HOME}" ]; then sh ./get_ompi.sh; fi
+        - export PATH=${MPI_HOME}/bin:${PATH}
+        - export LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
+        - export LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
+        - export LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
+        - export CPATH=${MPI_HOME}/include:${CPATH}
+        - export C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH}
+        - export INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH}
+        - export CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
+        - BISON_HOME=`pwd`/bison
+          #- if [ ! -d "${BISON_HOME}" ]; then sh ./get_bison.sh; fi
+        - export PATH=${BISON_HOME}/bin:${PATH}
+        - export LD_LIBRARY_PATH=${BISON_HOME}/lib:${LD_LIBRARY_PATH}
+        - export LD_RUN_PATH=${BISON_HOME}/lib:${LD_RUN_PATH}
+        - export LIBRARY_PATH=${BISON_HOME}/lib:${LIBRARY_PATH}
+        - export CPATH=${BISON_HOME}/include:${CPATH}
+        - export C_INCLUDE_PATH=${BISON_HOME}/include:${C_INCLUDE_PATH}
+        - export INCLUDE_PATH=${BISON_HOME}/include:${INCLUDE_PATH}
+        - export CPLUS_INCLUDE_PATH=${BISON_HOME}/include:${CPLUS_INCLUDE_PATH}
+        - export INCLUDE=${BISON_HOME}/include:${INCLUDE}
+        - FLEX_HOME=`pwd`/flex
+          #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
+        - export PATH=${FLEX_HOME}/bin:${PATH}
+        - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
+        - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
+        - export LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
+        - export CPATH=${FLEX_HOME}/include:${CPATH}
+        - export C_INCLUDE_PATH=${FLEX_HOME}/include:${C_INCLUDE_PATH}
+        - export INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH}
+        - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
+        - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
+        - pip install --trusted-host pypi.python.org -r requirements.txt --user
+        - |
+          if [ "$BUILD_SYSTEM" == "--as-NTS-NVU" ]; then 
+          export SUITESPARSE_HOME=`pwd`/suitesparse
+          export SUITESPARSE=`pwd`/suitesparse
+          export PATH=${SUITESPARSE_HOME}/bin:${PATH}
+          export LD_LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LD_LIBRARY_PATH}
+          export LD_RUN_PATH=${SUITESPARSE_HOME}/lib:${LD_RUN_PATH}
+          export LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LIBRARY_PATH}
+          export CPATH=${SUITESPARSE_HOME}/include:${CPATH}
+          export C_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${C_INCLUDE_PATH}
+          export INCLUDE_PATH=${SUITESPARSE_HOME}/include:${INCLUDE_PATH}
+          export CPLUS_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${CPLUS_INCLUDE_PATH}
+          export INCLUDE=${SUITESPARSE_HOME}/include:${INCLUDE}
+          fi
+        - echo "Testing Docker Hub credentials"
+          #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+        - echo "Docker Hub credentials are working"
+          #- docker build -t build-springxd-base .
+      script:
+        - echo "$BUILD_SYSTEM"
+        - source set_env
+        - source set_env
+        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+    - stage: MGS 
+      <<: *test
+      script:
+        - echo "$BUILD_SYSTEM"
+        - source set_env
+        - source set_env
+        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+    #script:
+    #  - docker ps -a
+          #      #if: branch = master
+          #      if: branch = for_nvu 
+          #      name: "Installing dependencies..."
+          #      #script: npm install
+          #      script: 
+          #        - source set_env
+          #        - source set_env
+          #        - ./build_script -p LINUX --as-MGS --rebuild > /dev/null
+          #    - stage: NGS 
+          #      #if: branch = master
+          #      if: branch = for_nvu 
+          #      skip_cleanup: true
+          #      name: "Building app..."
+          #      #script: npm run-script build
+          #      script: echo "NGS build TUAN"
+          #    - stage: NTS 
+          #      #if: branch = master
+          #      if: branch = for_nvu 
+          #      #skip_cleanup: true
+          #      #name: "Shipping..."
+          #      #script: npm run-script deploy
+          #      script: echo "NTS build TUAN"
+          #    - stage: NTSNVU 
+          #      #if: branch = master
+          #      if: branch = for_nvu 
+          #      #skip_cleanup: true
+          #      #name: "Shipping..."
+          #      #script: npm run-script deploy
+          #      script: echo "NTS-NVU build TUAN"
 
-stages:
-  - precache 
-  - test
-  - compile
-  - deploy
+#stages:
+  #- precache 
+  #- test
+  #- compile
+  #- deploy
 
 matrix:
   include:
@@ -145,86 +251,7 @@ cache:
   - suitesparse
     #- /usr/local/cuda-${CUDA_SHORT}
 
-before_install:
-  - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
-  - |
-    if [ ! -d "${CUDA_HOME}" ]; then
-      INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
-      wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
-      sudo dpkg -i ${INSTALLER}
-      wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
-      sudo apt-key add 7fa2af80.pub
-      sudo apt update -qq
-      sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
-      sudo apt clean
-    fi
-  - sudo ln -s ${CUDA_HOME} /usr/local/cuda
-  - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
-  - PATH=${CUDA_HOME}/bin:${PATH}
-    #  - wget https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-linux.zip
-    #- unzip ninja-linux.zip
-  - PATH=${PATH}:${PWD}
-  #- ubuntu-drivers list
-  #- sh ./get_cuda.sh
-  - MPI_HOME=`pwd`/ompi
-  #- if [ ! -d "${MPI_HOME}" ]; then sh ./get_ompi.sh; fi
-  - export PATH=${MPI_HOME}/bin:${PATH}
-  - export LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
-  - export LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
-  - export LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
-  - export CPATH=${MPI_HOME}/include:${CPATH}
-  - export C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH}
-  - export INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH}
-  - export CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
-  - BISON_HOME=`pwd`/bison
-  #- if [ ! -d "${BISON_HOME}" ]; then sh ./get_bison.sh; fi
-  - export PATH=${BISON_HOME}/bin:${PATH}
-  - export LD_LIBRARY_PATH=${BISON_HOME}/lib:${LD_LIBRARY_PATH}
-  - export LD_RUN_PATH=${BISON_HOME}/lib:${LD_RUN_PATH}
-  - export LIBRARY_PATH=${BISON_HOME}/lib:${LIBRARY_PATH}
-  - export CPATH=${BISON_HOME}/include:${CPATH}
-  - export C_INCLUDE_PATH=${BISON_HOME}/include:${C_INCLUDE_PATH}
-  - export INCLUDE_PATH=${BISON_HOME}/include:${INCLUDE_PATH}
-  - export CPLUS_INCLUDE_PATH=${BISON_HOME}/include:${CPLUS_INCLUDE_PATH}
-  - export INCLUDE=${BISON_HOME}/include:${INCLUDE}
-  - FLEX_HOME=`pwd`/flex
-  #- if [ ! -d "${FLEX_HOME}" ]; then sh ./get_flex.sh; fi
-  - export PATH=${FLEX_HOME}/bin:${PATH}
-  - export LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
-  - export LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
-  - export LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
-  - export CPATH=${FLEX_HOME}/include:${CPATH}
-  - export C_INCLUDE_PATH=${FLEX_HOME}/include:${C_INCLUDE_PATH}
-  - export INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH}
-  - export CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
-  - export INCLUDE=${FLEX_HOME}/include:${INCLUDE}
-  - pip install --trusted-host pypi.python.org -r requirements.txt --user
-  - |
-    if [ "$BUILD_SYSTEM" == "--as-NTS-NVU" ]; then 
-      export SUITESPARSE_HOME=`pwd`/suitesparse
-      export SUITESPARSE=`pwd`/suitesparse
-      export PATH=${SUITESPARSE_HOME}/bin:${PATH}
-      export LD_LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LD_LIBRARY_PATH}
-      export LD_RUN_PATH=${SUITESPARSE_HOME}/lib:${LD_RUN_PATH}
-      export LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LIBRARY_PATH}
-      export CPATH=${SUITESPARSE_HOME}/include:${CPATH}
-      export C_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${C_INCLUDE_PATH}
-      export INCLUDE_PATH=${SUITESPARSE_HOME}/include:${INCLUDE_PATH}
-      export CPLUS_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${CPLUS_INCLUDE_PATH}
-      export INCLUDE=${SUITESPARSE_HOME}/include:${INCLUDE}
-    fi
-  - echo "Testing Docker Hub credentials"
-    #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
-  - echo "Docker Hub credentials are working"
-    #- docker build -t build-springxd-base .
 
-script:
-  - echo "$BUILD_SYSTEM"
-  - source set_env
-  - source set_env
-  #- ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
-    #script:
-    #  - docker ps -a
 
 after_success:
   - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
