@@ -3,10 +3,7 @@
 #include "CG_SupervisorNode.h"
 #include "rndm.h"
 #include "IsToast.h"
-<<<<<<< HEAD
 #include <math.h>
-=======
->>>>>>> Closer to working.
 
 #define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()
