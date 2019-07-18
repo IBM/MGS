@@ -5,7 +5,9 @@
 
 #define SMALL 1.0E-6
 // unit conversion 
+#ifndef uM2mM
 #define uM2mM  1e-3
+#endif
 
 #include <math.h>
 #include <pthread.h>

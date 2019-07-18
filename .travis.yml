@@ -121,10 +121,12 @@ matrix:
 
 cache:
   directories:
-  - mpich
+  #- mpich
   - ompi
   - flex
-  - /usr/local/cuda-${CUDA_SHORT}
+  - bison
+  - suitesparse
+    #- /usr/local/cuda-${CUDA_SHORT}
 
 before_install:
   - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
