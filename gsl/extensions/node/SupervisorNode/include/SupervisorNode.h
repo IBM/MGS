@@ -12,8 +12,6 @@ class SupervisorNode : public CG_SupervisorNode
       void initialize(RNG& rng);
       void update(RNG& rng);
       virtual ~SupervisorNode();
-
-   private:
       TransferFunction transferFunction;
       
 };

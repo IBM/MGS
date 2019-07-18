@@ -12,8 +12,6 @@ class DNEdgeSet : public CG_DNEdgeSet
       void initialize(RNG& rng);
       void update(RNG& rng);
       virtual ~DNEdgeSet();
-
-   private:
       TransferFunction transferFunction;
 };
 

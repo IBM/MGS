@@ -49,6 +49,7 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
 
 Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    double [] weights;
+   double [] deltaWeights;
    double [] weightedOutputs;
    double weightedGradient;
    double [] echoes;

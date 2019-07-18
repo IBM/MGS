@@ -20,15 +20,16 @@ void SupervisorNode::update(RNG& rng)
     ready = (*prediction != PRELIM_STATE); 
   }
   if (ready) {
-    double oneHot = (SHD.label == getGlobalIndex()) ? 1.0 : 0;
+    double oneHot = (SHD.label == getGlobalIndex()) ? 1.0 : -1.0;
 
-    double error = oneHot - transferFunction.transfer(*prediction);
+    double tpred = transferFunction.transfer(*prediction);
+    double error = oneHot - tpred;
     if (SHD.refreshErrors) {
       sumOfSquaredError=0;
     }
     sumOfSquaredError += error * error;
 
-    primaryGradient = (oneHot - *prediction) * transferFunction.derivativeOfTransfer(*prediction);
+    primaryGradient = error * transferFunction.derivativeOfTransfer(tpred);
   }
 }
 SupervisorNode::~SupervisorNode() 
