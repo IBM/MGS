@@ -842,7 +842,8 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
       initString2<<", ";
       std::string varDesc = (*it)->getDescriptor();
       if (!binary_search(varNameList.begin(), varNameList.end(), varName)) {
-         std::cerr << "Warning: variable \'" << (*it)->getName() << "\' used in interface is missing in phase's changing variable list!" << std::endl;
+         if (getCommandLine()->printWarning())
+            std::cerr << "Warning: variable \'" << (*it)->getName() << "\' used in interface is missing in phase's changing variable list!" << std::endl;
          parsingError = true;
       }
       constructorFB << indent_body << "_demarshallers.push_back(&" << varName << "Demarshaller);\n";

@@ -38,7 +38,7 @@ function run_mdlparser() {
   #temp_mdl_only=$(mktemp)
   #grep  '^[^//]' $1 | gawk '/mdf"/ {print $2}' > ${temp_mdf_only}
   #grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
-  $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
+  $MDLROOT/bin/mdlparser $1 -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct -n;
   #$MDLROOT/bin/mdlparser `cat ${temp_mdf_only} | tr '\n' ' ' ` ${temp_mdfl_only} -i $LENSROOT/extensions/variable:$LENSROOT/extensions/struct;
   #}}}
 }
@@ -50,7 +50,7 @@ grep  '^[^//]' $1 | gawk '/mdf"/ {print}' > ${temp_mdf_only}
 grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_mdl_only}
 
 MDLFILES=()
-sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' > defineModels1.sh;
+sed '/\\/p' ${temp_mdl_only}| sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ -n ; sh copyModules ; cd - ;/g' > defineModels1.sh;
 while read mdl_in; do
   mdl_file_name=`echo $mdl_in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   MDLFILES+=($mdl_file_name)
@@ -58,7 +58,7 @@ done < $temp_mdl_only
 while read in; do
   file_name=`echo $in | gawk  '{print \$2}' | sed -e "s/^\"//" -e "s/\"$//"  `
   if [ -f $file_name ]; then
-    cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
+    cat ${file_name} | grep  '^[^//]'  | sed '/\\/p' | sed 's/#include "/cd /g' | sed 's/\(.*\)\//\1 ; $MDLROOT\/bin\/mdlparser /g' | sed 's/"/ -n ; sh copyModules ; cd - ;/g' >> defineModels1.sh;
     temp_file_name=$(mktemp)
     grep  '^[^//]' $1 | gawk '/mdl"/ {print}' > ${temp_file_name}
     while read mdl_in; do

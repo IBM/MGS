@@ -25,6 +25,7 @@
 #include "Connection.h"
 #include "Interface.h"
 #include "Phase.h"
+#include "CommandLine.h"
 
 #include <memory>
 #include <string>

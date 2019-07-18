@@ -120,6 +120,9 @@ bool Initializer::execute()
    MemberContainer<Generatable>::const_iterator end = 
       context->_generatables->end();
    MemberContainer<Generatable>::const_iterator it;
+   for (it = context->_generatables->begin(); it != end; it++) {
+     it->second->setCommandLine(commandLine);
+   }
    try {
       for (it = context->_generatables->begin(); it != end; it++) {
 	 it->second->generate();

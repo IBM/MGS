@@ -34,6 +34,7 @@
 Generatable::Generatable(const std::string& fileName)
    : _fileOutput(true), _fileName(fileName), _linkType(_DYNAMIC), 
      _frameWorkElement(false), _supportedMachineType(MachineType::CPU)
+     , _cmdLine(0)
 {
    //_supportedMachineTypes.insert(MachineType::CPU);
 }
@@ -43,6 +44,7 @@ Generatable::Generatable(const Generatable& rv)
      _linkType(rv._linkType), _frameWorkElement(rv._frameWorkElement),
      //_supportedMachineTypes(rv._supportedMachineTypes)     
      _supportedMachineType(rv._supportedMachineType)     
+     , _cmdLine(rv._cmdLine)
 {
    copyOwnedHeap(rv);
 }
@@ -56,6 +58,7 @@ Generatable& Generatable::operator=(const Generatable& rv)
       _fileName = rv._fileName;
       _linkType = rv._linkType;
       _frameWorkElement = rv._frameWorkElement;
+      _cmdLine = rv._cmdLine;
    }
    return *this;
 }
