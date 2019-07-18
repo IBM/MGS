@@ -774,7 +774,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $LENSROOT/extensions/functor
       #rm_ifexist all.mdf
       JUST_CREATE=0
-      if [ ! -f all.mdf ]; then
+      if [[ ! -f all.mdf ]] || [[ "$PREV_TYPE" != "$TYPE" ]]; then
         JUST_CREATE=1
         make_functor_mdf all.mdf
       fi

@@ -1,5 +1,7 @@
+#include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"
 #include "Life/LifeDataCollectors.mdl"
+#include "PointNeuronTools/PointNeuronTools.mdl"
 
 #include "std/std.mdl"
 #include "LaboratoryTools/LaboratoryTools.mdl"
