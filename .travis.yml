@@ -162,15 +162,23 @@ jobs:
         - source set_env
         - source set_env
         - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
-    #- stage: NGS 
-      #<<: *test
-      #before_install:
-        #- export BUILD_SYSTEM=--as-NGS
+    - stage: NGS 
+      <<: *test
+      before_install:
+        - export BUILD_SYSTEM=--as-NGS
       #script:
         #- echo "$BUILD_SYSTEM"
         #- source set_env
         #- source set_env
         #- ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+    - stage: NTS 
+      <<: *test
+      before_install:
+        - export BUILD_SYSTEM=--as-NTS
+    - stage: NTS-NVU 
+      <<: *test
+      before_install:
+        - export BUILD_SYSTEM=--as-NTS-NVU
     - stage: deploy
       after_success:
         - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
