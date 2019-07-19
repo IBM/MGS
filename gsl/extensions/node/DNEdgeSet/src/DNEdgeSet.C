@@ -13,7 +13,7 @@ void DNEdgeSet::initialize(RNG& rng)
   weights.increaseSizeTo(sz);
   deltaWeights.increaseSizeTo(sz);
   for (unsigned n=0; n<sz; ++n) {
-    weights[n] = drandom(rng);
+    weights[n] = drandom(rng) * 2 - 1.0;
     weightedOutputs[n] = PRELIM_STATE;
   }
   readyForward = false;
