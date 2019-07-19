@@ -5,10 +5,10 @@ wget "http://faculty.cse.tamu.edu/davis/SuiteSparse/$FILENAME.tar.gz"
 fi
 
 tar -xvf ${FILENAME}.tar.gz > /dev/null
-cd ${DIRNAME}
+#cd ${DIRNAME}
 #./configure --prefix=$TRAVIS_BUILD_DIR/suitesparse
-cd CXSparse
+cd ${DIRNAME}/CXSparse
 make -j10
 make install
 cd -
-#rm -rf $DIRNAME
+rm -rf $DIRNAME
