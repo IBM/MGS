@@ -32,6 +32,13 @@ addons:
     packages:
     - g++-6
     - ubuntu-drivers-common
+    - libblas-dev 
+    - libblas3
+    - liblapack-dev
+    - liblapack3
+    - libopenblas-dev
+    - libopenblas-base
+    - gfortran
       #- nvidia-415
       #- clang-3.8
 #install:
