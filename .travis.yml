@@ -119,9 +119,9 @@ jobs:
           if [ ! -f "${SUITESPARSE}/lib/libcxsparse.so" ]; then
           sh ./get_suitesparse.sh > /dev/null
           fi
-    #- &shared 
-      #stage: MGS 
-    - stage: MGS 
+    - &shared 
+      stage: MGS 
+    #- stage: MGS 
       before_install:
         - export BUILD_SYSTEM=--as-MGS
       install:
