@@ -1,0 +1,210 @@
+# 
+# HPC Base image
+# Contents:
+#   CUDA version 9.0
+#   FFTW version 3.3.8
+#   GNU compilers (upstream)
+#   HDF5 version 1.10.4
+#   Mellanox OFED version 3.4-1.0.0.0
+#   OpenMPI version 3.1.2
+#   Python 2 and 3 (upstream)
+# 
+
+FROM nvidia/cuda:9.0-devel-ubuntu16.04 AS devel
+
+LABEL maintainer="tmhoangt@us.ibm.com"
+# Python
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        python \
+        python3 && \
+    rm -rf /var/lib/apt/lists/*
+
+# GNU compiler
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        g++ \
+        gcc \
+        gfortran && \
+    rm -rf /var/lib/apt/lists/*
+
+# Mellanox OFED version 3.4-1.0.0.0
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libnl-3-200 \
+        libnl-route-3-200 \
+        libnuma1 \
+        wget && \
+    rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/MLNX_OFED-3.4-1.0.0.0/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz && \
+    mkdir -p /var/tmp && tar -x -f /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz -C /var/tmp -z && \
+    dpkg --install /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/ibverbs-utils_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm1_*_amd64.deb && \
+    rm -rf /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64
+
+# OpenMPI version 3.1.2
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bzip2 \
+        file \
+        hwloc \
+        libnuma-dev \
+        make \
+        openssh-client \
+        perl \
+        tar \
+        wget && \
+    rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.2.tar.bz2 && \
+    mkdir -p /var/tmp && tar -x -f /var/tmp/openmpi-3.1.2.tar.bz2 -C /var/tmp -j && \
+    cd /var/tmp/openmpi-3.1.2 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/openmpi --disable-getpwuid --enable-orterun-prefix-by-default --with-cuda --with-verbs && \
+    make -j$(nproc) && \
+    make -j$(nproc) install && \
+    rm -rf /var/tmp/openmpi-3.1.2.tar.bz2 /var/tmp/openmpi-3.1.2
+ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
+    PATH=/usr/local/openmpi/bin:$PATH
+
+# HDF5 version 1.10.4
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bzip2 \
+        file \
+        make \
+        wget \
+        zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.4/src/hdf5-1.10.4.tar.bz2 && \
+    mkdir -p /var/tmp && tar -x -f /var/tmp/hdf5-1.10.4.tar.bz2 -C /var/tmp -j && \
+    cd /var/tmp/hdf5-1.10.4 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/hdf5 --enable-cxx --enable-fortran && \
+    make -j$(nproc) && \
+    make -j$(nproc) install && \
+    rm -rf /var/tmp/hdf5-1.10.4.tar.bz2 /var/tmp/hdf5-1.10.4
+ENV HDF5_DIR=/usr/local/hdf5 \
+    LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
+    PATH=/usr/local/hdf5/bin:$PATH
+
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        build-essential \
+        gawk \
+        git \
+        gzip \
+        libssl-dev \
+        libtool \
+        lmod \
+        make \
+        libgmp3-dev \
+        m4 \
+        openssh-client \
+        patch \
+        python-pip \
+        python-setuptools \
+        rsh-client \
+        tar \
+        unzip \
+        wget \
+        xz-utils && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV MGSROOT=/mgs
+ENV PACKAGES_DIR=/usr/local
+ENV TRAVIS_BUILD_DIR=$PACKAGES_DIR 
+ENV BISON_HOME=${TRAVIS_BUILD_DIR}/bison 
+ENV PATH=${BISON_HOME}/bin:${PATH} \
+    LD_LIBRARY_PATH=${BISON_HOME}/lib:${LD_LIBRARY_PATH} \
+    LD_RUN_PATH=${BISON_HOME}/lib:${LD_RUN_PATH} \
+    LIBRARY_PATH=${BISON_HOME}/lib:${LIBRARY_PATH} \
+    CPATH=${BISON_HOME}/include:${CPATH}
+ENV FLEX_HOME=${TRAVIS_BUILD_DIR}/flex 
+ENV PATH=${FLEX_HOME}/bin:${PATH} \
+    LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH} \
+    LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH} \
+    LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH} \
+    CPATH=${FLEX_HOME}/include:${CPATH} \
+    C_INCLUDE_PATH=${FLEX_HOME}/include:${C_INCLUDE_PATH} \
+    INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH} \
+    CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH} \
+    INCLUDE=${FLEX_HOME}/include:${INCLUDE}
+ENV PYTHON_INCLUDE_DIR=/usr/include/python2.7/
+
+RUN mkdir /home/app
+ADD ./get_bison.sh /home/packages/
+ADD ./get_flex.sh /home/packages/
+WORKDIR /home/packages
+RUN /bin/bash -c "source  ./get_bison.sh"
+RUN /bin/bash -c "source  ./get_flex.sh"
+
+ADD . $MGSROOT
+WORKDIR /mgs
+#RUN cp /bin/bash /bin/sh
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        locate \
+        apt-utils && \
+    rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        libpython2.7 && \
+    rm -rf /var/lib/apt/lists/*
+ENV PYTHON_LIB=/usr/lib/python2.7/config-x86_64-linux-gnu/
+ENV LD_LIBRARY_PATH=${PYTHON_LIB}:$LD_LIBRARY_PATH \
+    LD_RUN_PATH=${PYTHON_LIB}:${LD_RUN_PATH} \
+    LIBRARY_PATH=${PYTHON_LIB}:${LIBRARY_PATH}
+RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX"
+#RUN cd /mgs; source ./set_env; source  ./get_bison.sh
+#RUN cd /mgs; source ./set_env; ./build_script -p LINUX
+#RUN ["/bin/bash", "-c", "echo hello all in one string"].
+#RUN echo "source ~/google-cloud-sdk/path.bash.inc" >> ~/.bashrc
+#RUN source ~/.bashrc
+RUN useradd mgs 
+USER mgs
+
+# FROM nvidia/cuda:9.0-runtime-ubuntu16.04
+# 
+# # Python
+# RUN apt-get update -y && \
+#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#         python \
+#         python3 && \
+#     rm -rf /var/lib/apt/lists/*
+# 
+# # GNU compiler runtime
+# RUN apt-get update -y && \
+#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#         libgfortran3 \
+#         libgomp1 && \
+#     rm -rf /var/lib/apt/lists/*
+# 
+# # Mellanox OFED version 3.4-1.0.0.0
+# RUN apt-get update -y && \
+#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#         libnl-3-200 \
+#         libnl-route-3-200 \
+#         libnuma1 \
+#         wget && \
+#     rm -rf /var/lib/apt/lists/*
+# RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/MLNX_OFED-3.4-1.0.0.0/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz && \
+#     mkdir -p /var/tmp && tar -x -f /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz -C /var/tmp -z && \
+#     dpkg --install /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/ibverbs-utils_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm1_*_amd64.deb && \
+#     rm -rf /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64
+# 
+# # OpenMPI
+# RUN apt-get update -y && \
+#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#         hwloc \
+#         openssh-client && \
+#     rm -rf /var/lib/apt/lists/*
+# COPY --from=devel /usr/local/openmpi /usr/local/openmpi
+# ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
+#     PATH=/usr/local/openmpi/bin:$PATH
+# 
+# # HDF5
+# RUN apt-get update -y && \
+#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+#         zlib1g && \
+#     rm -rf /var/lib/apt/lists/*
+# COPY --from=devel /usr/local/hdf5 /usr/local/hdf5
+# ENV HDF5_DIR=/usr/local/hdf5 \
+#     LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
+#     PATH=/usr/local/hdf5/bin:$PATH
+
+

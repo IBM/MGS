@@ -12,7 +12,7 @@
  make              release  
 
 **External libraries required:**  
-  bison v2.4.1  or above 
+  bison v2.4.1  or above [built using m4 >= 1.4.17]
   flex v2.5.4   or above
   lgmp  
   python

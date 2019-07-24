@@ -1,0 +1,4 @@
+FROM scratch
+COPY .keep /mgs/gsl/obj
+COPY .keep /mgs/common/obj
+COPY .keep /mgs/nti/obj
