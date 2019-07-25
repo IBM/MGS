@@ -422,7 +422,17 @@ if [ "${client}" == "ucnz" ]; then
 fi
 
 Model2Use=$BASE_FOLDER/nti/include/Model2Use.h
+EMPTY_FILE=0
 if [ ! -f "${Model2Use}"  ]; then
+  EMPTY_FILE=1
+fi
+if [  -f "${Model2Use}"  ]; then
+  line=$(head -n 1 "${Model2Use}")
+  if [ "$line" == "" ]; then
+    EMPTY_FILE=1
+  fi
+fi
+if [ "$EMPTY_FILE" == ""  ]; then
   touch ${Model2Use}
   echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
   echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
@@ -589,7 +599,14 @@ fi
 ########################################
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
-if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
+FIRST_BUILD=0
+if [  -f ".built"  ]; then
+  line=$(head -n 1 ".built")
+  if [ "$line" == "" ]; then
+    FIRST_BUILD=1
+  fi
+fi
+if [ $FIRST_BUILD ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
   echoerr "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
 fi
