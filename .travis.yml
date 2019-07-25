@@ -188,6 +188,8 @@ jobs:
       <<: *shared
       script:
         - ls $SUITESPARSE_HOME/*
+        - ls $FLEX_HOME
+        - ls $TRAVIS_BUILD_DIR
       before_install:
         - export BUILD_SYSTEM=--as-NTS-NVU
     - stage: deploy
