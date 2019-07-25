@@ -175,6 +175,7 @@ jobs:
     - stage: NTS-NVU 
       <<: *shared
       script:
+        - ls $SUITESPARSE_HOME/include
         - ls $SUITESPARSE_HOME
         - ls $FLEX_HOME
         - ls $TRAVIS_BUILD_DIR
