@@ -126,75 +126,76 @@ jobs:
           fi
         - |
           if [ ! -f "${SUITESPARSE}/lib/libcxsparse.so" ]; then
-          sh ./get_suitesparse.sh > /dev/null
+          sh ./get_suitesparse.sh 
+          #> /dev/null
           fi
         - ls $SUITESPARSE_HOME/include
         - ls $SUITESPARSE_HOME
         - ls $SUITESPARSE_HOME/lib
         - ls $SUITESPARSE_HOME
-    - &shared 
-      stage: MGS 
-      before_install:
-        - export BUILD_SYSTEM=--as-MGS
-      install:
-        - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
-        - |
-          if [ ! -d "${CUDA_HOME}" ]; then
-          INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
-          wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
-          sudo dpkg -i ${INSTALLER}
-          wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
-          sudo apt-key add 7fa2af80.pub
-          sudo apt update -qq
-          sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
-          sudo apt clean
-          fi
-        - sudo ln -s ${CUDA_HOME} /usr/local/cuda
-        - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
-        - PATH=${CUDA_HOME}/bin:${PATH}
-        - PATH=${PATH}:${PWD}
-        - pip install --trusted-host pypi.python.org -r requirements.txt --user
-        - echo "Testing Docker Hub credentials"
-          #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
-        - echo "Docker Hub credentials are working"
-          #- docker build -t build-springxd-base .
-      script:
-        - echo "$BUILD_SYSTEM"
-        - source set_env
-        - source set_env
-        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
-    - stage: NGS 
-      <<: *shared
-      before_install:
-        - export BUILD_SYSTEM=--as-NGS
-    - stage: NTS 
-      <<: *shared
-      before_install:
-        - export BUILD_SYSTEM=--as-NTS
-      script:
-        - echo "$BUILD_SYSTEM"
-        - source set_env
-        - source set_env
-        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild 
-    - stage: NTS-NVU 
-      <<: *shared
-      script:
-        - ls $SUITESPARSE_HOME/include
-        - ls $SUITESPARSE_HOME/lib
-        - ls $FLEX_HOME
-        - ls $TRAVIS_BUILD_DIR
-        - echo $FLEX_HOME
-        - echo $SUITESPARSE_HOME
-      before_install:
-        - export BUILD_SYSTEM=--as-NTS-NVU
-    - stage: deploy
-      after_success:
-        - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
-          #  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then echo -e "Push Container to Docker Hub"; fi
-          #  - docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
-          #  - export REPO=jayjohnson/springxd-base
-          #  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-          #  - docker build -f Dockerfile -t $REPO:$COMMIT .
-          #  - docker tag $REPO:$COMMIT $REPO:$TAG
-          #  - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
-          #  - docker push $REPO
+    #- &shared 
+      #stage: MGS 
+      #before_install:
+        #- export BUILD_SYSTEM=--as-MGS
+      #install:
+        #- CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+        #- |
+          #if [ ! -d "${CUDA_HOME}" ]; then
+          #INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+          #wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+          #sudo dpkg -i ${INSTALLER}
+          #wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+          #sudo apt-key add 7fa2af80.pub
+          #sudo apt update -qq
+          #sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          #sudo apt clean
+          #fi
+        #- sudo ln -s ${CUDA_HOME} /usr/local/cuda
+        #- LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+        #- PATH=${CUDA_HOME}/bin:${PATH}
+        #- PATH=${PATH}:${PWD}
+        #- pip install --trusted-host pypi.python.org -r requirements.txt --user
+        #- echo "Testing Docker Hub credentials"
+          ##- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+        #- echo "Docker Hub credentials are working"
+          ##- docker build -t build-springxd-base .
+      #script:
+        #- echo "$BUILD_SYSTEM"
+        #- source set_env
+        #- source set_env
+        #- ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+    #- stage: NGS 
+      #<<: *shared
+      #before_install:
+        #- export BUILD_SYSTEM=--as-NGS
+    #- stage: NTS 
+      #<<: *shared
+      #before_install:
+        #- export BUILD_SYSTEM=--as-NTS
+      #script:
+        #- echo "$BUILD_SYSTEM"
+        #- source set_env
+        #- source set_env
+        #- ./build_script -p LINUX $BUILD_SYSTEM --rebuild 
+    #- stage: NTS-NVU 
+      #<<: *shared
+      #script:
+        #- ls $SUITESPARSE_HOME/include
+        #- ls $SUITESPARSE_HOME/lib
+        #- ls $FLEX_HOME
+        #- ls $TRAVIS_BUILD_DIR
+        #- echo $FLEX_HOME
+        #- echo $SUITESPARSE_HOME
+      #before_install:
+        #- export BUILD_SYSTEM=--as-NTS-NVU
+    #- stage: deploy
+      #after_success:
+        #- echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
+          ##  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then echo -e "Push Container to Docker Hub"; fi
+          ##  - docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+          ##  - export REPO=jayjohnson/springxd-base
+          ##  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+          ##  - docker build -f Dockerfile -t $REPO:$COMMIT .
+          ##  - docker tag $REPO:$COMMIT $REPO:$TAG
+          ##  - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+          ##  - docker push $REPO
