@@ -159,7 +159,7 @@ std::string ArrayType::getArrayInitializerString(const std::string& name
 						 , int level) const
 {
    std::cerr 
-      << "Careful Arrays in arrays have not been implemented fully yet." 
+      << "Careful Arrays in arrays have not been implemented fully yet for MPI-communication." 
       << std::endl;
 //  throw InternalException("Arrays in arrays have not been implemented yet.");
    return "/* Careful not Implemented... */\n";
