@@ -8,8 +8,12 @@ if [ -z "$TRAVIS_BUILD_DIR" ]; then
   TRAVIS_BUILD_DIR=`pwd`
 fi
 tar -xvf ${FILENAME}.tar.gz > /dev/null
-cd ${DIRNAME}/CXSparse
-make -j10
+cd ${DIRNAME}/SuiteSparse_config 
 make install INSTALL=$TRAVIS_BUILD_DIR/suitesparse
+make config
+make -j10
+cd -
+cd ${DIRNAME}/CXSparse
+make -j10 library
 cd -
 rm -rf $DIRNAME
