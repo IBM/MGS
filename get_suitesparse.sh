@@ -4,12 +4,12 @@ if [ ! -f $FILENAME.tar.gz ]; then
 wget "http://faculty.cse.tamu.edu/davis/SuiteSparse/$FILENAME.tar.gz"
 fi
 
+if [ -z "$TRAVIS_BUILD_DIR" ]; then
+  TRAVIS_BUILD_DIR=`pwd`
+fi
 tar -xvf ${FILENAME}.tar.gz > /dev/null
-cd ${DIRNAME}
-./configure --prefix=$TRAVIS_BUILD_DIR/suitesparse
-cd -
 cd ${DIRNAME}/CXSparse
 make -j10
-make install
+make install INSTALL=$TRAVIS_BUILD_DIR/suitesparse
 cd -
 rm -rf $DIRNAME
