@@ -158,6 +158,10 @@ jobs:
         - echo "$BUILD_SYSTEM"
         - source set_env
         - source set_env
+        - |
+          if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
+          rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
+          fi
         - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
         - |
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
