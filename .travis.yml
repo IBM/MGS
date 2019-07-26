@@ -150,15 +150,19 @@ jobs:
         - PATH=${CUDA_HOME}/bin:${PATH}
         - PATH=${PATH}:${PWD}
         - pip install --trusted-host pypi.python.org -r requirements.txt --user
-        - echo "Testing Docker Hub credentials"
+        #- echo "Testing Docker Hub credentials"
           #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
-        - echo "Docker Hub credentials are working"
+        #- echo "Docker Hub credentials are working"
           #- docker build -t build-springxd-base .
       script:
         - echo "$BUILD_SYSTEM"
         - source set_env
         - source set_env
         - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+        - |
+          if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
+          echo "Build successful"
+          fi
     - stage: NGS 
       <<: *shared
       before_install:
@@ -167,11 +171,6 @@ jobs:
       <<: *shared
       before_install:
         - export BUILD_SYSTEM=--as-NTS
-      script:
-        - echo "$BUILD_SYSTEM"
-        - source set_env
-        - source set_env
-        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild 
     - stage: NTS-NVU 
       <<: *shared
       before_install:
