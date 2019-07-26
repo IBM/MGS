@@ -747,7 +747,8 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   fi
   if [ -f .build_error ]; then 
     cd $BASE_FOLDER
-    exit ; 
+    echoerr -e "${cc_red}Built NTI failed.${cc_normal}"
+    exit 1; 
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
@@ -766,8 +767,8 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ $BUILD_FAIL -eq 1 ]; then
       cd $BASE_FOLDER
-      echoerr -e "${cc_red}Build NTI failed ! ${cc_normal}";
-      exit;
+      echoerr -e "${cc_red}Build NTI failed (2)! ${cc_normal}";
+      exit 1;
     else
       echoerr -e "${cc_blue}Build NTI code successfully.${cc_normal}"
     fi
