@@ -162,7 +162,7 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
-        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
+        - travis_wait 30 ./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null
         - |
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           echo "Build successful"
