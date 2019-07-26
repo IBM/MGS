@@ -662,7 +662,7 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
       rm mdl.make.mark
       cd $BASE_FOLDER
       echoerr -e "${cc_red}Build MDL failed ! ${cc_normal}";
-      exit;
+      exit 1;
     else
       echoerr  -e "${cc_blue}Build MDL successfully.${cc_normal}\n"
     fi
@@ -705,7 +705,7 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     if [ $? -gt 0 ]; then
       cd $BASE_FOLDER
       echoerr -e "${cc_red}Build COMMON code failed ! ${cc_normal}";
-      exit;
+      exit 1;
     else
       echoerr -e "${cc_blue}Build COMMON code successfully.${cc_normal}"
     fi
