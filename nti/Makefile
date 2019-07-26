@@ -220,24 +220,22 @@ pre_req:
 	$(echo  "$(ccred) Please open and revise ${Model2Use} \033[0m")
 	$(eval FoundModel2Use := $(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) )
 	@if [[ "x${FoundModel2Use}" = x ]]; then \
-echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
+echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; touch $(ERROR_MARKER); exit 1; \
 fi
-	@touch $(ERROR_MARKER)
 else 
 FoundModel2Use:=$(shell g++ -DMODEL_TO_USE ${Model2Use} 2>&1 | head -1) 
 ifeq ("x${FoundModel2Use}","x ")
 pre_req:
 	@if [[ "x${FoundModel2Use}" = "x " ]]; then \
-echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; exit ; \
+echo  "$(ccred) Please add MODEL_TO_USE value to file ${Model2Use} $(ccnormal)"; touch $(ERROR_MARKER); exit 1; \
 fi
-	@touch $(ERROR_MARKER)
 
 else
 pre_req: 
 endif
 endif
 
-target: pre_req $(TARGETS)  library
+target: pre_req | $(TARGETS)  library
 
 depend: ; makedepend $(ND_SOURCES)
 
