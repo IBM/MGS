@@ -162,9 +162,8 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
-        - travis_wait sh -c "pwd 2>&1 | tee /tmp/build.log"
-        - cat /tmp/build.log
-        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild 2>&1 | tee /tmp/build.log" > quick_build.sh
+        #- echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild 2>&1 | tee /tmp/build.log" > quick_build.sh
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null" > quick_build.sh
         - chmod +x ./quick_build.sh
         - travis_wait 30 sh -c ./quick_build.sh 
         - tail -n 40 /tmp/build.log
