@@ -34,6 +34,7 @@ bool CommandLine::parse(int argc, char** argv)
    parser.addOption(Option('f', "mdlFile", Option::TYPE_NONE));
    parser.addOption(Option('i', "includePath", Option::TYPE_REQUIRED));
    parser.addOption(Option('s', "static", Option::TYPE_NONE));
+   parser.addOption(Option('n', "no-warning", Option::TYPE_NONE));
 
    // No arguments: show help and quit
    if (argc == 1) {
@@ -52,6 +53,9 @@ bool CommandLine::parse(int argc, char** argv)
          } else if (option.getShortName() == 's') {
             std::cout << "Static link will be applied\n";
             _static = true;
+         } else if (option.getShortName() == 'n') {
+            std::cout << "No warning is printed\n";
+            _printWarning = false;
          } else if (option.getShortName() == 'i') {
             mdl::tokenize(value, _includePath, ':');
          }

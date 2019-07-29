@@ -57,6 +57,7 @@ Extra Libraries:
   export SUITESPARSE=\`pwd\`/SuiteSparse/
   export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$SUITESPARSE/lib
   export PYTHON_INCLUDE_DIR=/usr/lib/python3.6
+  export PYTHON_INCLUDE_DIR=/usr/include/python2.7
 
 \n\n"; exit;
   #}}}
@@ -180,7 +181,7 @@ fi
 function touch_mdf_upon_changing_target()
 {
   #{{{
-      if [ $PREV_TYPE != $TYPE ]; then
+      if [ "$PREV_TYPE" != "$TYPE" ]; then
         if [[  $TYPE == *"NTS"* ]]; then
           touch nts.mdf
         fi
@@ -196,6 +197,12 @@ function touch_mdf_upon_changing_target()
       fi
       rm_ifexist Extensions.mk
   #}}}
+}
+#}}}
+#{{{
+echoerr()
+{
+  echo "$@" 1>&2;
 }
 #}}}
 
@@ -223,15 +230,15 @@ optspec=":c:p:sr-:j:g:a"
 while getopts "$optspec" optchar; do
   case $optchar in
     p)
-      echo "Platform: $OPTARG" >&2
+      echoerr "Platform: $OPTARG" >&2
       PLATFORM=$OPTARG
       ;;
     c)
-      echo "Build: $OPTARG"
+      echoerr "Build: $OPTARG"
       WHAT_TO_BUILD=$OPTARG
       ;;
     j)
-      echo "Num-processes: $OPTARG"
+      echoerr "Num-processes: $OPTARG"
       NPROCS=$OPTARG
       ;;
     s)
@@ -270,10 +277,10 @@ while getopts "$optspec" optchar; do
                     #client="${!OPTIND}"
                     client="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     if [ -z $client ] || [ "${client:0:1}" == "-" ]; then
-                      echo "Please select a value for --${OPTARG} option"
+                      echoerr "Please select a value for --${OPTARG} option"
                       exit
                     else
-                      echo "Build library for colaborator: " ${client}
+                      echoerr "Build library for colaborator: " ${client}
                     fi
                     COLAB="--colab ${client}"
                     ;;
@@ -282,7 +289,7 @@ while getopts "$optspec" optchar; do
                     ;;
                 regen)
                     REGENMAKEFILE="--regen"
-                    echo "Regenerate gsl/Makefile"
+                    echoerr "Regenerate gsl/Makefile"
                     ;;
                 singlethread)
                     NPROCS=1
@@ -306,30 +313,30 @@ while getopts "$optspec" optchar; do
                     ;;
                 someloglevel)
                     val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                    echo "parsing option: '--${OPTARG}', value: '${val}'" >&2;
+                    echoerr "parsing option: '--${OPTARG}', value: '${val}'";
                     ;;
                 =*)
                     val=${OPTARG#*=}
                     opt=${OPTARG%=$val}
-                    echo "parsing option: '--${opt}', value: '${val}'" >&2
+                    echoerr "parsing option: '--${opt}', value: '${val}'"
                     ;;
                 *)
                     if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
-                        echo "unknown option --${OPTARG}" >&2
+                        echoerr "unknown option --${OPTARG}" 
                     fi
                     ;;
             esac;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+      echoerr "Invalid option: -$OPTARG" 
       exit 1
       ;;
   esac
 done
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
-[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echo "wrong-platform $PLATFORM"; print_help; exit; }
+[[ $SUPPORTED_PLATFORMS =~ (^|[[:space:]])"$PLATFORM"($|[[:space:]]) ]] && : || { echoerr "wrong-platform $PLATFORM"; print_help; exit 1; }
 
 SUPPORTED_COMPONENTS="all common mdl gsl nti"
-[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echo "wrong component $WHAT_TO_BUILD"; print_help; exit; }
+[[ $SUPPORTED_COMPONENTS =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] && : || { echoerr "wrong component $WHAT_TO_BUILD"; print_help; exit 1; }
 
 if [ "${client}" == "njit" ]; then
   MGS_TARGET_FILENAME="njit.mdf"
@@ -362,13 +369,14 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 #include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"
 #include "Life/LifeDataCollectors.mdl"
+#include "PointNeuronTools/PointNeuronTools.mdl"
 
 // MDF files
 
-  ' > ${MGS_TARGET_FILENAME}
+' > ${MGS_TARGET_FILENAME}
 fi
 if [ ! -f ${MDF_TARGET} ]; then 
-  echo "ERROR: File ${MDF_TARGET} does not exist."
+  echoerr "ERROR: File ${MDF_TARGET} does not exist."
 fi
 cd -
 
@@ -403,7 +411,17 @@ if [ "${client}" == "ucnz" ]; then
 fi
 
 Model2Use=$BASE_FOLDER/nti/include/Model2Use.h
+EMPTY_FILE=0
 if [ ! -f "${Model2Use}"  ]; then
+  EMPTY_FILE=1
+fi
+if [  -f "${Model2Use}"  ]; then
+  line=$(head -n 1 "${Model2Use}")
+  if [ "$line" == "" ]; then
+    EMPTY_FILE=1
+  fi
+fi
+if [ "$EMPTY_FILE" == ""  ]; then
   touch ${Model2Use}
   echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
   echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
@@ -434,11 +452,11 @@ fi
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
-    echo mpi found...; else echo mpi not found!; exit; fi
+    echoerr mpi found...; else echoerr "mpi not found!"; exit 1; fi
 fi
 
 if which bison | grep -q1 /\bison; then
-    echo bison found...; else echo bison not found!; exit; fi
+    echoerr bison found...; else echoerr "bison not found!"; exit 1; fi
 
 VALID_BISON_VERSION=2.3
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
@@ -452,21 +470,21 @@ read n_major n_minor n_rev << EOF
 EOF
 if ! [[ "$n_rev" =~ [0-9]+$ ]]; then n_rev=0; fi
 if [ "$n_major" -lt "$c_major" ]; then
-    echo bison version $VALID_BISON_VERSION or greater required!
-    exit;
+    echoerr bison version $VALID_BISON_VERSION or greater required!
+    exit 1;
 fi
 if [ "$n_major" -eq "$c_major" ] && [ "$n_minor" -lt "$c_minor" ]; then
-    echo bison version $VALID_BISON_VERSION or greater required!
-    exit;
+    echoerr bison version $VALID_BISON_VERSION or greater required!
+    exit 1;
 fi
 if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
-    echo bison version $VALID_BISON_VERSION or greater required!
-    exit;
+    echoerr bison version $VALID_BISON_VERSION or greater required!
+    exit 1;
 fi
 
 if which flex | grep -q1 /\flex; then
-  echo flex found...; else echo flex not found! please either install through your distributions package manager or from source; 
-  exit; 
+  echoerr flex found...; else echoerr "flex not found! please either install through your distributions package manager or from source"; 
+  exit 1; 
 fi
 
 VALID_FLEX_VERSION=2.6.4
@@ -513,39 +531,39 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-  echo "python found..."; else echo "python not found! please either install through your distributions package manager or from source";
-  exit;
+  echoerr "python found..."; else echoerr "python not found! please either install through your distributions package manager or from source";
+  exit 1;
 fi
 
 if ldconfig -p | grep libgmp; then
-  echo "libgmp found..."; else "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
-  exit;
+  echoerr "libgmp found..."; else echoerr "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
+  exit 1;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
   if which nvidia-smi | grep -q1 /\nvidia-smi; then
-    echo "CUDA probably found..."; else echo "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
-    exit
+    echoerr "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
+    exit 1
   fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
   if `ldconfig -p | grep -q armadillo`; then
-    echo "Armadillo probably found..."; else echo "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
-    exit
+    echoerr "Armadillo probably found..."; else echoerr "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
+    exit 1
   fi
 fi
 #}}}
 #{{{ 
 if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
-  echo "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
-  echo " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+  echoerr "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
+  echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
   exit 1
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
-  echo "Please install the SuiteSparse libraries (www.suitesparse.com)"
-  echo " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
+  echoerr "Please install the SuiteSparse libraries (www.suitesparse.com)"
+  echoerr " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
   exit 1
 fi
 fi
@@ -554,17 +572,24 @@ fi
 ########################################
 ### Check supporting files/settings ###
 #{{{pre-configure and testing
-if [ ! -f ".built" ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-  echo "First build. Auto run with --rebuild"
+FIRST_BUILD=0
+if [  -f ".built"  ]; then
+  line=$(head -n 1 ".built")
+  if [ "$line" == "" ]; then
+    FIRST_BUILD=1
+  fi
+fi
+if [ $FIRST_BUILD ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
+  echoerr "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
 fi
 
 if [  -f ".built"  ]; then
   line=$(head -n 1 ".built")
   if  [ "$BASE_FOLDER" != "$line" ]; then
-    echo "Please run: source set_env"
+    echoerr "Please run: source set_env"
     rm .built
-    exit
+    exit 1
   fi
   PREV_TYPE=$(sed '2q;d' ".built")
 fi
@@ -575,7 +600,7 @@ if [ "$TYPE" != "$PREV_TYPE" ]; then
   #gawk -v type="$TYPE"  -v prev_type="$PREV_TYPE" 'NR==2 { sub(prev_type, type)}1' .built > .built_tmp && mv .built_tmp .built
   rm -f gsl/Makefile
   if [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
-    echo "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
+    echoerr "You have switched the build from ${PREV_TYPE} to ${TYPE}. Build with --rebuild --clean"
     Yes_No_RebuildClean
   fi
 fi
@@ -585,14 +610,14 @@ fi
 ### MDL code ###
 #{{{
 if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  echo "Start build MDL parser"
+  echoerr "Start build MDL parser"
   cd $MDLROOT
 
   touch mdl.make.mark
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ]; then
       make clean;
-      echo "${cc_blue}Removed MDL code successfully.${cc_normal}"
+      echoerr "${cc_blue}Removed MDL code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
@@ -609,10 +634,10 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark
       cd $BASE_FOLDER
-      echo -e "${cc_red}Build MDL failed ! ${cc_normal}";
-      exit;
+      echoerr -e "${cc_red}Build MDL failed ! ${cc_normal}";
+      exit 1;
     else
-      echo  -e "${cc_blue} Build MDL successfully.${cc_normal}\n"
+      echoerr  -e "${cc_blue}Build MDL successfully.${cc_normal}\n"
     fi
     rm -f mdl.make.mark
     cd $BASE_FOLDER
@@ -624,7 +649,7 @@ fi
 ### COMMON code ###
 #{{{
 if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
-  echo "Start build COMMON"
+  echoerr "Start build COMMON"
   cd $BASE_FOLDER/common
   sed 's/FOR_BLUEGENE_L=1/FOR_BLUEGENE_L=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
   sed 's/FOR_BLUEGENE_P=1/FOR_BLUEGENE_P=0/g' Makefile > tmp.mk; mv tmp.mk Makefile;
@@ -636,7 +661,7 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean RELEASE="$RELEASE" ${EXTRA_LIBS};
-      echo "${cc_blue}Removed COMMON code successfully.${cc_normal}"
+      echoerr "${cc_blue}Removed COMMON code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] ; then
       make realclean RELEASE="$RELEASE" ${EXTRA_LIBS};
@@ -652,10 +677,10 @@ if [[ "common" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" 
     fi
     if [ $? -gt 0 ]; then
       cd $BASE_FOLDER
-      echo -e "${cc_red}Build COMMON code failed ! ${cc_normal}";
-      exit;
+      echoerr -e "${cc_red}Build COMMON code failed ! ${cc_normal}";
+      exit 1;
     else
-      echo -e "${cc_blue}Build COMMON code successfully.${cc_normal}"
+      echoerr -e "${cc_blue}Build COMMON code successfully.${cc_normal}"
     fi
   fi
   cd $BASE_FOLDER
@@ -684,7 +709,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$CLEAN" == "-clean" ] ; then
       make realclean;
-      echo -e "${cc_blue}Removed NTI code successfully.${cc_normal}"
+      echoerr -e "${cc_blue}Removed NTI code successfully.${cc_normal}"
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean RELEASE="$RELEASE";
@@ -695,7 +720,8 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   fi
   if [ -f .build_error ]; then 
     cd $BASE_FOLDER
-    exit ; 
+    echoerr -e "${cc_red}Built NTI failed.${cc_normal}"
+    exit 1; 
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
@@ -714,10 +740,10 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ $BUILD_FAIL -eq 1 ]; then
       cd $BASE_FOLDER
-      echo -e "${cc_red}Build NTI failed ! ${cc_normal}";
-      exit;
+      echoerr -e "${cc_red}Build NTI failed (2)! ${cc_normal}";
+      exit 1;
     else
-      echo -e "${cc_blue}Build NTI code successfully.${cc_normal}"
+      echoerr -e "${cc_blue}Build NTI code successfully.${cc_normal}"
     fi
     cd $BASE_FOLDER
   fi
@@ -733,10 +759,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
     ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
-    echo "Complete: regenerate gsl/Makefile"
-    exit
+    echoerr "Complete: regenerate gsl/Makefile"
+    exit 
   fi
-  echo "Start build GSL"
+  echoerr "Start build GSL"
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     #{{{
     cd $LENSROOT
@@ -766,7 +792,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       cd $LENSROOT/extensions/functor
       #rm_ifexist all.mdf
       JUST_CREATE=0
-      if [ ! -f all.mdf ]; then
+      if [[ ! -f all.mdf ]] || [[ "$PREV_TYPE" != "$TYPE" ]]; then
         JUST_CREATE=1
         make_functor_mdf all.mdf
       fi
@@ -829,7 +855,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
-      echo -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
+      echoerr -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
     To run the test NTS tissue simulation :
 

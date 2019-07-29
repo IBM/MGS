@@ -1,0 +1,196 @@
+dist: xenial
+
+sudo: required
+
+services:
+  - docker
+
+#if: branch = for_nvu 
+
+#language: cpp
+language: generic 
+
+compiler:
+  #- gcc
+  #- clang
+
+env:
+  global:
+    - PYTHON_INCLUDE_DIR=/usr/include/python2.7/
+    - CUDA=9.2.148-1
+    - CUDA_SHORT=9.2
+    - CUDA_APT=9-2
+    - UBUNTU_VERSION=ubuntu1604
+    - MPI_HOME=${TRAVIS_BUILD_DIR}/ompi
+    - PATH=${MPI_HOME}/bin:${PATH}
+    - LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH}
+    - LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH}
+    - LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH}
+    - CPATH=${MPI_HOME}/include:${CPATH}
+    - C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH}
+    - INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH}
+    - CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
+    - BISON_HOME=${TRAVIS_BUILD_DIR}/bison
+    - PATH=${BISON_HOME}/bin:${PATH}
+    - LD_LIBRARY_PATH=${BISON_HOME}/lib:${LD_LIBRARY_PATH}
+    - LD_RUN_PATH=${BISON_HOME}/lib:${LD_RUN_PATH}
+    - LIBRARY_PATH=${BISON_HOME}/lib:${LIBRARY_PATH}
+    - CPATH=${BISON_HOME}/include:${CPATH}
+    - C_INCLUDE_PATH=${BISON_HOME}/include:${C_INCLUDE_PATH}
+    - INCLUDE_PATH=${BISON_HOME}/include:${INCLUDE_PATH}
+    - CPLUS_INCLUDE_PATH=${BISON_HOME}/include:${CPLUS_INCLUDE_PATH}
+    - INCLUDE=${BISON_HOME}/include:${INCLUDE}
+    - FLEX_HOME=${TRAVIS_BUILD_DIR}/flex
+    - PATH=${FLEX_HOME}/bin:${PATH}
+    - LD_LIBRARY_PATH=${FLEX_HOME}/lib:${LD_LIBRARY_PATH}
+    - LD_RUN_PATH=${FLEX_HOME}/lib:${LD_RUN_PATH}
+    - LIBRARY_PATH=${FLEX_HOME}/lib:${LIBRARY_PATH}
+    - CPATH=${FLEX_HOME}/include:${CPATH}
+    - C_INCLUDE_PATH=${FLEX_HOME}/include:${C_INCLUDE_PATH}
+    - INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH}
+    - CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH}
+    - INCLUDE=${FLEX_HOME}/include:${INCLUDE}
+    - SUITESPARSE_HOME=${TRAVIS_BUILD_DIR}/suitesparse
+    - SUITESPARSE=${TRAVIS_BUILD_DIR}/suitesparse
+    - PATH=${SUITESPARSE_HOME}/bin:${PATH}
+    - LD_LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LD_LIBRARY_PATH}
+    - LD_RUN_PATH=${SUITESPARSE_HOME}/lib:${LD_RUN_PATH}
+    - LIBRARY_PATH=${SUITESPARSE_HOME}/lib:${LIBRARY_PATH}
+    - CPATH=${SUITESPARSE_HOME}/include:${CPATH}
+    - C_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${C_INCLUDE_PATH}
+    - INCLUDE_PATH=${SUITESPARSE_HOME}/include:${INCLUDE_PATH}
+    - CPLUS_INCLUDE_PATH=${SUITESPARSE_HOME}/include:${CPLUS_INCLUDE_PATH}
+    - INCLUDE=${SUITESPARSE_HOME}/include:${INCLUDE}
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - ppa:graphics-drivers/ppa
+      #- llvm-toolchain-precise-3.8
+    packages:
+    - g++-6
+    - ubuntu-drivers-common
+    - libblas-dev 
+    - libblas3
+    - liblapack-dev
+    - liblapack3
+    - libopenblas-dev
+    - libopenblas-base
+    - gfortran
+
+cache:
+  directories:
+  - ompi
+  - flex
+  - bison
+  - suitesparse
+
+jobs:
+  include:
+    ############################
+    #       Set up cache       #
+    ############################
+    - stage: precache
+      script: true
+      name: "Installing dependencies..."
+      install:
+        # always need CUDA install for OpenMPI #
+        - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+        - |
+          if [ ! -f "${CUDA_HOME}/lib64/libcudart.so" ]; then
+          INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+          wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+          sudo dpkg -i ${INSTALLER}
+          wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+          sudo apt-key add 7fa2af80.pub
+          sudo apt update -qq
+          sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt clean
+          fi
+        - sudo ln -s ${CUDA_HOME} /usr/local/cuda
+        - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+        - PATH=${CUDA_HOME}/bin:${PATH}
+        - echo "${MPI_HOME} ${BISON_HOME} ${FLEX_HOME} ${SUITESPARSE}"
+        - |
+          if [ ! -f "${MPI_HOME}/lib/libmpi.so" ]; then 
+          sh ./get_ompi.sh > /dev/null
+          fi
+        - |
+          if [ ! -f "$BISON_HOME/bin/bison" ]; then 
+          sh ./get_bison.sh > /dev/null
+          fi
+        - | 
+          if [ ! -f "${FLEX_HOME}/bin/flex" ]; then 
+          sh ./get_flex.sh > /dev/null
+          fi
+        - |
+          if [ ! -f "${SUITESPARSE}/lib/libcxsparse.so" ]; then
+          sh ./get_suitesparse.sh > /dev/null
+          fi
+    - &shared 
+      stage: MGS 
+      before_install:
+        - export BUILD_SYSTEM=--as-MGS
+      install:
+        - CUDA_HOME=/usr/local/cuda-${CUDA_SHORT}
+        - |
+          if [ ! -d "${CUDA_HOME}" ]; then
+          INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb
+          wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+          sudo dpkg -i ${INSTALLER}
+          wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+          sudo apt-key add 7fa2af80.pub
+          sudo apt update -qq
+          sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt clean
+          fi
+        - sudo ln -s ${CUDA_HOME} /usr/local/cuda
+        - LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+        - PATH=${CUDA_HOME}/bin:${PATH}
+        - PATH=${PATH}:${PWD}
+        - pip install --trusted-host pypi.python.org -r requirements.txt --user
+        #- echo "Testing Docker Hub credentials"
+          #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+        #- echo "Docker Hub credentials are working"
+          #- docker build -t build-springxd-base .
+      script:
+        - echo "$BUILD_SYSTEM"
+        - source set_env
+        - source set_env
+        - |
+          if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
+          rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
+          fi
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null" > quick_build.sh
+        - chmod +x ./quick_build.sh
+        - travis_wait 30 sh -c ./quick_build.sh 
+        - |
+          if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
+          echo "Build successful"
+          else
+          echo "Build failed"
+          fi
+    - stage: NGS 
+      <<: *shared
+      before_install:
+        - export BUILD_SYSTEM=--as-NGS
+    - stage: NTS 
+      <<: *shared
+      before_install:
+        - export BUILD_SYSTEM=--as-NTS
+    - stage: NTS-NVU 
+      <<: *shared
+      before_install:
+        - export BUILD_SYSTEM=--as-NTS-NVU
+    - stage: deploy
+      after_success:
+        - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
+          #  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then echo -e "Push Container to Docker Hub"; fi
+          #  - docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+          #  - export REPO=jayjohnson/springxd-base
+          #  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+          #  - docker build -f Dockerfile -t $REPO:$COMMIT .
+          #  - docker tag $REPO:$COMMIT $REPO:$TAG
+          #  - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+          #  - docker push $REPO

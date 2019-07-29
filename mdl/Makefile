@@ -23,7 +23,7 @@ OBJECTONLYFLAGS :=
 
 # Look for include files in each of the modules
 #  This will append CFLAGS with a string like '-Idir1/include -Idir2/include'
-CFLAGS := -Iinclude -Iparser 
+CFLAGS := -Iinclude -Iparser  -std=c++11 -Wno-deprecated-declarations
 
 # Create a variable 'ADDCFLAGS' that you can use to add to the CFLAGS from the
 # command line option of gmake if necessary
@@ -100,8 +100,8 @@ include sources.mk
 mdl.tab.h:  parser/mdl.y
 	cd parser; bison -v -d -b mdl mdl.y; cd ..
 
-#parser/mdl.tab.c: parser/mdl.y
-#	cd parser; bison -v -d -b mdl mdl.y; cd ..
+parser/mdl.tab.c: parser/mdl.y
+	cd parser; bison -v -d -b mdl mdl.y; cd ..
 
 # Scanner targets
 ifeq ($(FLEXFIXER), True)
@@ -122,6 +122,10 @@ scanner/lex.yy.o: scanner/lex.yy.cc scanner/mdl.l
 
 # Include the C include dependencies
 #include $(OBJS:.o=.d)
+$(OBJS) : | $(OBJS_DIR)
+
+$(OBJS_DIR):
+	mkdir $(OBJS_DIR)
 
 # Our Suffix rules
 #%.d: 

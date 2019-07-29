@@ -121,6 +121,9 @@ bool Initializer::execute()
    MemberContainer<Generatable>::const_iterator end = 
       context->_generatables->end();
    MemberContainer<Generatable>::const_iterator it;
+   for (it = context->_generatables->begin(); it != end; it++) {
+     it->second->setCommandLine(commandLine);
+   }
    try {
       for (it = context->_generatables->begin(); it != end; it++) {
 	 it->second->generate();
@@ -218,7 +221,7 @@ void Initializer::generateCopyModules()
        }
        os << *it2 << " ";
      }
-     os << " $LENSROOT/extensions/" << it->first << "\n";
+     os << " $LENSROOT/extensions/" << it->first << "> /dev/null 2>&1 || : \n";
    }   
    //TUAN: no need to overwrite Extensions.mk if we call mdlparser directly
    // this can be done (if needed), by calling via the ../define script

@@ -33,6 +33,9 @@ class CommandLine {
       bool isStatic() const {
 	 return _static;
       }	 
+      bool printWarning() const {
+	 return _printWarning;
+      }	 
 
       const std::vector<std::string>& getIncludePath() {
 	 return _includePath;
@@ -42,6 +45,7 @@ class CommandLine {
       void clear();
       std::string _fileName;
       bool _static;
+      bool _printWarning=true;
       std::vector<std::string> _includePath;
 };
 
