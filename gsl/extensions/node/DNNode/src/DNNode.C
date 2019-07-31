@@ -4,7 +4,7 @@
 #include "rndm.h"
 #include <cfloat>
 
-//#define TOASTED
+#define TOASTED
 #ifdef TOASTED
 #include "IsToast.h"
 #endif
@@ -30,14 +30,12 @@ void DNNode::update(RNG& rng)
   }
   if (ready) {
     output = 0;
-#ifdef TOASTED
-    if (isToast(*weightedGradient,getSimulation().getIteration())) assert(0);
-#endif
-    for (iter=inputs.begin(); iter!=end; ++iter) {
-      output += (*iter->inputArray)[iter->inputIndex];
-    }
+    for (iter=inputs.begin(); iter!=end; ++iter)
+      output += (*iter->inputArray)[iter->inputIndex];    
     gradient = *weightedGradient;
+
 #ifdef TOASTED
+    if (isToast(gradient,getSimulation().getIteration())) assert(0);
     if (isToast(output,getSimulation().getIteration())) assert(0);
 #endif
   }

@@ -3,35 +3,66 @@
 #include "CG_SupervisorNode.h"
 #include "rndm.h"
 #include "IsToast.h"
+#include <math.h>
 
 #define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()
 
 void SupervisorNode::initialize(RNG& rng) 
 {
-  transferFunction.setType(SHD.transferFunctionName);
   primaryGradient = PRELIM_STATE;
+  logits.increaseSizeTo(predictions.size());
 }
 
 void SupervisorNode::update(RNG& rng) 
 {
-  assert(prediction);
+  ShallowArray<double*>::iterator iter, end = predictions.end();  
   if (!ready) {
-    ready = (*prediction != PRELIM_STATE); 
+    for (iter=predictions.begin(); iter!=end; ++iter) {
+      ready = (**iter != PRELIM_STATE);
+      if (!ready) break;
+    }
   }
   if (ready) {
-    double oneHot = (SHD.label == getGlobalIndex()) ? 1.0 : -1.0;
+    double sumOfExp=0;
+    for (iter=predictions.begin(); iter!=end; ++iter) 
+      sumOfExp+=exp(**iter);
 
-    double tpred = transferFunction.transfer(*prediction);
-    double error = oneHot - tpred;
+    double oneHot = (SHD.labels[SHD.labelIndex] == getGlobalIndex()) ? 1.0 : 0.0;
+
+    ShallowArray<double>::iterator my_liter, liter=logits.begin(), lend=logits.end();
+
+    unsigned h=0;
+    unsigned winner=-1;
+    double maxLogit=-DBL_MAX;
+    for (iter=predictions.begin(); iter!=end; ++iter, ++liter, ++h) {
+      *liter = exp(**iter)/sumOfExp;
+      if (*liter>maxLogit) {
+	winner=h;
+	maxLogit=*liter;
+      }
+    }
+
+    if (winner==SHD.labels[SHD.labelIndex]) ++wins;
+    
+    my_liter = logits.begin()+getGlobalIndex();
+
+    double error = oneHot - *my_liter;
     if (SHD.refreshErrors) {
       sumOfSquaredError=0;
+      wins=0;
     }
     sumOfSquaredError += error * error;
 
-    primaryGradient = error * transferFunction.derivativeOfTransfer(tpred);
+    primaryGradient=0;
+    h=0;
+    for (liter=logits.begin(), iter=predictions.begin(); liter!=lend; ++h, ++liter, ++iter) {
+      primaryGradient += *my_liter * ( ( (liter==my_liter) ? 1.0 : 0.0 ) - *liter ) *
+	( ( (SHD.labels[SHD.labelIndex] == h) ? 1.0 : 0.0 ) - *liter );
+    }
   }
 }
+
 SupervisorNode::~SupervisorNode() 
 {
 }

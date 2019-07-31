@@ -49,14 +49,13 @@ void DNEdgeSet::update(RNG& rng)
     }
     if (readyBackward) {
       double dow = 0;
-      witer=weights.begin();
       
+      witer=weights.begin();      
       for (giter=gradients.begin(); giter!=gend; ++giter, ++witer, ++diter) {
 	dow +=  *witer * **giter;
 	double deltaWeight =
 	  (1-SHD.alpha) * SHD.eta * echoes[echoIndex] * **giter +
 	  SHD.alpha * *diter;
-	
 	*witer += deltaWeight;
 	*diter = deltaWeight;
       }

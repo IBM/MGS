@@ -20,41 +20,59 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
 	   <<std::endl<<std::endl;
   SHD.x.increaseSizeTo(1 * 28 * 28);
+  SHD.imageIndex=-1;
   SHD.trainingPass=1;
 }
 
 void SupervisorNodeCompCategory::updateShared(RNG& rng) 
 {
   SHD.refreshErrors = false;
+  bool output=false;
+  ++SHD.numberOfInputs;
+
+  unsigned label, oldLabel;
+
+  if (!SHD.shready) SHD.shready = isReady();
+  else oldLabel=SHD.labels[SHD.labelIndex];
+  
   if (!SHD.test) {
+    do {
+      if (++SHD.imageIndex==dataset.training_images.size()) {      
+	SHD.imageIndex=0;
+	if (SHD.shready) output=true;
+	if (++SHD.trainingPass>SHD.trainingIterations)
+	  SHD.test = true;
+      }
+      label = dataset.training_labels[SHD.imageIndex];
+      if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
+    } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<(1 * 28 * 28); ++idx) {
-      assert(dataset.training_images.size()>SHD.imageIndex);
-      assert(dataset.training_images[SHD.imageIndex].size()>idx);
-      assert(SHD.x.size()>idx);
       SHD.x[idx]=double(dataset.training_images[SHD.imageIndex][idx])/255.0;
-    }
-    SHD.label = dataset.training_labels[SHD.imageIndex];
-    
-    if (++SHD.imageIndex==dataset.training_images.size()) {      
-      SHD.imageIndex=0;
-      outputError(dataset.training_images.size());
-      if (++SHD.trainingPass>SHD.trainingIterations)
-	SHD.test = true;
     }
   }
   else {
-    for (unsigned idx=0; idx<(1 * 28 * 28); ++idx) {
+    do {
+      if (++SHD.imageIndex==dataset.test_images.size()) {
+	SHD.imageIndex=0;
+	if (SHD.shready) output=true;
+      }
+      label = dataset.test_labels[SHD.imageIndex];
+      if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
+    } while (label>SHD.numberOfLabels-1);
+    for (unsigned idx=0; idx<(1 * 28 * 28); ++idx)
       SHD.x[idx]=double(dataset.test_images[SHD.imageIndex][idx])/255.0;
-    }
-    SHD.label = dataset.test_labels[SHD.imageIndex];
-    if (++SHD.imageIndex==dataset.test_images.size())
-      outputError(dataset.test_images.size());
   }
+  if (!SHD.shready) {
+    SHD.labels.push_back(label);
+  }
+  else {
+    if (++SHD.labelIndex == SHD.labels.size()) SHD.labelIndex = 0;
+  }
+  if (output) outputError(oldLabel);
 }
 
-void SupervisorNodeCompCategory::outputError(int numberOfInputs)
+void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
 {
-  SHD.refreshErrors = true;
   double outError=0;
   ShallowArray<SupervisorNode>::iterator nodesIter=_nodes.begin(), nodesEnd=_nodes.end();
   for (unsigned rank=0; rank!=getSimulation().getNumProcesses(); ++rank) {
@@ -62,9 +80,10 @@ void SupervisorNodeCompCategory::outputError(int numberOfInputs)
       for (; nodesIter!=nodesEnd; ++nodesIter) {
 	outError += nodesIter->sumOfSquaredError;
 	std::cerr<<getSimulation().getRank()<<" : "
-		 <<((SHD.label==nodesIter->getGlobalIndex()) ? 1.0 : -1.0)
-		 <<"   |   "<<*(nodesIter->prediction)
-		 <<"   |   "<<nodesIter->transferFunction.transfer(*(nodesIter->prediction))
+		 <<currentLabel<<" : "
+		 <<( (currentLabel==nodesIter->getGlobalIndex()) ? 1.0 : 0.0)
+		 <<"   |   "<<*(nodesIter->predictions)[nodesIter->getGlobalIndex()]
+		 <<"   |   "<<(nodesIter->logits)[nodesIter->getGlobalIndex()]
 		 <<std::endl<<std::flush;
       }
     }
@@ -72,8 +91,23 @@ void SupervisorNodeCompCategory::outputError(int numberOfInputs)
   }
   double currentError=0;
   MPI_Allreduce(&outError, &currentError, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  currentError/=(_nodes.size()*numberOfInputs);
+  currentError/=(SHD.numberOfInputs*SHD.numberOfLabels);
   currentError=sqrt(currentError);
-  if (getSimulation().getRank()==0)
-    std::cout<<ITER<<" : current error = "<<currentError<<std::endl<<std::flush;
+  if (getSimulation().getRank()==0) {
+    std::cout<<ITER<<" : current error = "<<currentError;
+    std::cout<<" : wins ratio = "<<double(_nodes.begin()->wins)/double(SHD.numberOfInputs)<<std::endl<<std::flush;
+  }
+  SHD.numberOfInputs = 0;
+  SHD.refreshErrors = true;
+}
+
+bool SupervisorNodeCompCategory::isReady()
+{
+  bool rval=true;
+  ShallowArray<SupervisorNode>::iterator nodesIter, nodesEnd=_nodes.end();
+  for (nodesIter=_nodes.begin(); nodesIter!=nodesEnd; ++nodesIter) {
+    rval=nodesIter->ready;
+    if (!rval) break;
+  }
+  return rval;
 }

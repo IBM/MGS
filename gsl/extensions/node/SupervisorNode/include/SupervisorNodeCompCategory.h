@@ -16,7 +16,8 @@ class SupervisorNodeCompCategory : public CG_SupervisorNodeCompCategory
 
    private:
       mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> dataset;
-      void outputError(int);
+      void outputError(unsigned);
+      bool isReady();
 };
 
 #endif

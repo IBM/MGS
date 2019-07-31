@@ -97,14 +97,20 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
 Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
 
   double primaryGradient;
-  double* prediction;
+  double* [] predictions;
+  double [] logits;
   double sumOfSquaredError;
+  unsigned wins;
   bool ready;
 
   Shared {
     string transferFunctionName;
-    unsigned label;
+    unsigned [] labels;
+    unsigned labelIndex;
+    unsigned numberOfInputs;
+    unsigned numberOfLabels;
     double [] x;
+    bool shready;
 
     string dataLocation;
     bool test;
@@ -128,7 +134,7 @@ Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
    }
 
    Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {
-      ForwardProducer.forward >> prediction;
+      ForwardProducer.forward >> predictions;
    }
 }
 
