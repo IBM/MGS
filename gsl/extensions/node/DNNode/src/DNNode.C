@@ -4,7 +4,7 @@
 #include "rndm.h"
 #include <cfloat>
 
-//#define TOASTED
+#define TOASTED
 #ifdef TOASTED
 #include "IsToast.h"
 #endif

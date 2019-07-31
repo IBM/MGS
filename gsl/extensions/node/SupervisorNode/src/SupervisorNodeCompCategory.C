@@ -28,6 +28,7 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   SHD.imageIndex=-1;
   SHD.trainingEpoch=1;
   SHD.x.increaseSizeTo(1 * 28 * 28);
+  SHD.imageIndex=-1;
   SHD.trainingPass=1;
 }
 
@@ -44,6 +45,7 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
   
   if (!SHD.test) {
     do {
+<<<<<<< HEAD
       if (++SHD.imageIndex==dataset.training_images.size()) {
 	SHD.imageIndex=0;
 	shuffleDeck(dataset.training_images.size(),rng);
@@ -58,12 +60,26 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
     } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<IMG_SIZE; ++idx) {
       SHD.x[idx]=double(dataset.training_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
+=======
+      if (++SHD.imageIndex==dataset.training_images.size()) {      
+	SHD.imageIndex=0;
+	if (SHD.shready) output=true;
+	if (++SHD.trainingPass>SHD.trainingIterations)
+	  SHD.test = true;
+      }
+      label = dataset.training_labels[SHD.imageIndex];
+      if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
+    } while (label>SHD.numberOfLabels-1);
+    for (unsigned idx=0; idx<(1 * 28 * 28); ++idx) {
+      SHD.x[idx]=double(dataset.training_images[SHD.imageIndex][idx])/255.0;
+>>>>>>> Learning appears to be working for nlables=6
     }
   }
   else {
     do {
       if (++SHD.imageIndex==dataset.test_images.size()) {
 	SHD.imageIndex=0;
+<<<<<<< HEAD
 	shuffleDeck(dataset.test_images.size(),rng);
 	if (SHD.shready) output=true;
       }
@@ -72,6 +88,15 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
     } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<IMG_SIZE; ++idx)
       SHD.x[idx]=double(dataset.test_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
+=======
+	if (SHD.shready) output=true;
+      }
+      label = dataset.test_labels[SHD.imageIndex];
+      if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
+    } while (label>SHD.numberOfLabels-1);
+    for (unsigned idx=0; idx<(1 * 28 * 28); ++idx)
+      SHD.x[idx]=double(dataset.test_images[SHD.imageIndex][idx])/255.0;
+>>>>>>> Learning appears to be working for nlables=6
   }
   if (!SHD.shready) {
     SHD.labels.push_back(label);
