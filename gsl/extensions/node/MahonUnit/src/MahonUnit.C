@@ -4,6 +4,26 @@
 #include "GridLayerData.h"
 #include "rndm.h"
 #include "NumInt.h"
+#ifdef HAVE_GPU
+#include "CG_MahonUnitCompCategory.h"
+#endif
+
+#ifdef HAVE_GPU
+
+#define g_out  (_container->um_g_out[index])
+#define var1  (_container->um_var1[index])
+#define var2  (_container->um_var2[index])
+#define var3  (_container->um_var3[index])
+#define MSNNetInps  (_container->um_MSNNetInps[index])
+#define V_init  (_container->um_V_init[index])
+#define g_init  (_container->um_g_init[index])
+#define drivinp  (_container->um_drivinp[index])
+#define spike  (_container->um_spike[index])
+#define injCur  (_container->um_injCur[index])
+#define connectionSeed  (_container->um_connectionSeed[index])
+#define synb  (_container->um_synb[index])
+#endif
+
 
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
@@ -273,9 +293,10 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
 
 
 
-  ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  //ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  auto end=MSNNetInps.end();
   double drive=0;
-  for (iter=MSNNetInps.begin(); iter!=end; ++iter) {
+  for (auto iter=MSNNetInps.begin(); iter!=end; ++iter) {
     drive += *(iter->input)*iter->weight;
   }
   
@@ -467,9 +488,10 @@ void MahonUnit::updateOutputs(RNG& rng)
   var1 = x[0];
   var2 = x[5];
 
-  ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  //ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  auto end=MSNNetInps.end();
   double drive=0;
-  for (iter=MSNNetInps.begin(); iter!=end; ++iter) {
+  for (auto iter=MSNNetInps.begin(); iter!=end; ++iter) {
     drive += *(iter->input)*iter->weight;
   }
 
@@ -584,9 +606,10 @@ void MahonUnit::setIndices(const String& CG_direction, const String& CG_componen
 
 void MahonUnit::outputWeights(std::ofstream& fs)
 {
-  ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  //ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
+  auto end=MSNNetInps.end();
 
-  for (iter=MSNNetInps.begin(); iter!=end; ++iter)
+  for (auto iter=MSNNetInps.begin(); iter!=end; ++iter)
     fs<<iter->row<<" "<<iter->col<<" "<<iter->weight<<std::endl;
 }
 

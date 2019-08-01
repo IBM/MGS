@@ -14,9 +14,9 @@ class FloatArrayMaker : public CG_FloatArrayMakerBase
       ShallowArray< float > userExecute(LensContext* CG_c);
       FloatArrayMaker();
       virtual ~FloatArrayMaker();
-      virtual void duplicate(std::auto_ptr<FloatArrayMaker>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_FloatArrayMakerBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<FloatArrayMaker>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_FloatArrayMakerBase>& dup) const;
 };
 
 #endif
