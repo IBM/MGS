@@ -21,7 +21,17 @@
   cxsparse library
     env SUITESPARSE
   
-## Run flags
+# Container-based build
+
+./bootstrap_docker.sh
+docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
+#docker build -t mgs_baseimage  -f Dockerfile.build .
+
+docker run -it  --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+#docker run -it --entrypoint=/bin/bash --mount src="$(pwd)",target=/home/mgs,type=bind  mgs_baseimage
+#docker run -it --entrypoint=/bin/bash mgs_baseimage
+  
+# Run flags
   -t Number of threads  
   -f gsl file to run  
   -s random number generator seed  

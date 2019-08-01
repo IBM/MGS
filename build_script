@@ -551,11 +551,7 @@ if ldconfig -p | grep libgmp; then
 fi
 
 if [ "$GPU" == "--gpu" ]; then
-  if which nvcc | grep -q1 nvcc; then
-    echo "CUDA nvcc found..."; else echo "CUDA nvcc is not found! (install from https://developer.nvidia.com/cuda-downloads)";
-    exit
-  fi
-  if which nvidia-smi | grep -q1 /\nvidia-smi; then
+  if which nvcc | grep -q1 /\nvcc; then
     echoerr "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
     exit 1
   fi
@@ -606,7 +602,7 @@ if [  -f ".built"  ]; then
     FIRST_BUILD=1
   fi
 fi
-if [ $FIRST_BUILD ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
+if [ $FIRST_BUILD -eq 1 ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
   echoerr "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
 fi

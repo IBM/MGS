@@ -10,7 +10,7 @@
 #   Python 2 and 3 (upstream)
 # 
 
-FROM nvidia/cuda:9.0-devel-ubuntu16.04 AS devel
+FROM nvidia/cuda:9.0-devel-ubuntu16.04 AS devel-base
 
 LABEL maintainer="tmhoangt@us.ibm.com"
 # Python
@@ -104,6 +104,18 @@ RUN apt-get update -y && \
         wget \
         xz-utils && \
     rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        locate \
+        apt-utils && \
+    rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        python-dev \
+        python3-dev \
+        curl \
+        libpython2.7 && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV MGSROOT=/mgs
 ENV PACKAGES_DIR=/usr/local
@@ -133,78 +145,115 @@ WORKDIR /home/packages
 RUN /bin/bash -c "source  ./get_bison.sh"
 RUN /bin/bash -c "source  ./get_flex.sh"
 
+RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
+RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture)" \
+    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.4/gosu-$(dpkg --print-architecture).asc" \
+    && gpg --verify /usr/local/bin/gosu.asc \
+    && rm /usr/local/bin/gosu.asc \
+    && chmod +x /usr/local/bin/gosu
+
+ENV CUDA_HOME /usr/local/cuda
+ENV PATH=${CUDA_HOME}/bin:${PATH} \
+    LD_LIBRARY_PATH=${CUDA_HOME}/lib:${LD_LIBRARY_PATH} \
+    LD_RUN_PATH=${CUDA_HOME}/lib:${LD_RUN_PATH} \
+    LIBRARY_PATH=${CUDA_HOME}/lib:${LIBRARY_PATH} \
+    CPATH=${CUDA_HOME}/include:${CPATH} \
+    C_INCLUDE_PATH=${CUDA_HOME}/include \
+    CPLUS_INCLUDE_PATH=${CUDA_HOME}/include \
+    INCLUDE=${CUDA_HOME}/include 
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+VOLUME /home/mgs
+WORKDIR /home/mgs
+#RUN useradd mgs 
+#USER mgs
+
+########################################
+# Make build image
+########################################
+FROM devel-base as devel
+
+#RUN useradd mgs 
+#USER mgs
 ADD . $MGSROOT
 WORKDIR /mgs
-#RUN cp /bin/bash /bin/sh
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        locate \
-        apt-utils && \
-    rm -rf /var/lib/apt/lists/*
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        libpython2.7 && \
-    rm -rf /var/lib/apt/lists/*
 ENV PYTHON_LIB=/usr/lib/python2.7/config-x86_64-linux-gnu/
 ENV LD_LIBRARY_PATH=${PYTHON_LIB}:$LD_LIBRARY_PATH \
     LD_RUN_PATH=${PYTHON_LIB}:${LD_RUN_PATH} \
     LIBRARY_PATH=${PYTHON_LIB}:${LIBRARY_PATH}
-RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX"
+COPY --from=mgs_baseimage /mgs/gsl/obj /mgs/gsl/obj
+COPY --from=mgs_baseimage /mgs/common/obj /mgs/common/obj
+COPY --from=mgs_baseimage /mgs/nti/obj /mgs/nti/obj
+COPY --from=mgs_baseimage /mgs/nti/include/Model2Use.h /mgs/nti/include/
+COPY --from=mgs_baseimage /mgs/.built /mgs/
+#ENV GPU="--gpu"
+RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c common"
+RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c nti"
+RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release ${GPU} -c gsl"
+#RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LINUX --release"
 #RUN cd /mgs; source ./set_env; source  ./get_bison.sh
 #RUN cd /mgs; source ./set_env; ./build_script -p LINUX
 #RUN ["/bin/bash", "-c", "echo hello all in one string"].
 #RUN echo "source ~/google-cloud-sdk/path.bash.inc" >> ~/.bashrc
 #RUN source ~/.bashrc
-RUN useradd mgs 
-USER mgs
 
-# FROM nvidia/cuda:9.0-runtime-ubuntu16.04
-# 
-# # Python
-# RUN apt-get update -y && \
-#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#         python \
-#         python3 && \
-#     rm -rf /var/lib/apt/lists/*
-# 
-# # GNU compiler runtime
-# RUN apt-get update -y && \
-#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#         libgfortran3 \
-#         libgomp1 && \
-#     rm -rf /var/lib/apt/lists/*
-# 
-# # Mellanox OFED version 3.4-1.0.0.0
-# RUN apt-get update -y && \
-#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#         libnl-3-200 \
-#         libnl-route-3-200 \
-#         libnuma1 \
-#         wget && \
-#     rm -rf /var/lib/apt/lists/*
-# RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/MLNX_OFED-3.4-1.0.0.0/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz && \
-#     mkdir -p /var/tmp && tar -x -f /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz -C /var/tmp -z && \
-#     dpkg --install /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/ibverbs-utils_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm1_*_amd64.deb && \
-#     rm -rf /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64
-# 
-# # OpenMPI
-# RUN apt-get update -y && \
-#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#         hwloc \
-#         openssh-client && \
-#     rm -rf /var/lib/apt/lists/*
-# COPY --from=devel /usr/local/openmpi /usr/local/openmpi
-# ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
-#     PATH=/usr/local/openmpi/bin:$PATH
-# 
-# # HDF5
-# RUN apt-get update -y && \
-#     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-#         zlib1g && \
-#     rm -rf /var/lib/apt/lists/*
-# COPY --from=devel /usr/local/hdf5 /usr/local/hdf5
-# ENV HDF5_DIR=/usr/local/hdf5 \
-#     LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
-#     PATH=/usr/local/hdf5/bin:$PATH
+########################################
+# Make runtime image
+########################################
+FROM nvidia/cuda:9.0-runtime-ubuntu16.04
 
+# Python
+RUN apt-get update -y && \
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+python \
+python3 && \
+rm -rf /var/lib/apt/lists/*
+
+# GNU compiler runtime
+RUN apt-get update -y && \
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+libgfortran3 \
+libgomp1 && \
+rm -rf /var/lib/apt/lists/*
+
+# Mellanox OFED version 3.4-1.0.0.0
+RUN apt-get update -y && \
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+libnl-3-200 \
+libnl-route-3-200 \
+libnuma1 \
+wget && \
+rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp http://content.mellanox.com/ofed/MLNX_OFED-3.4-1.0.0.0/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz && \
+mkdir -p /var/tmp && tar -x -f /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz -C /var/tmp -z && \
+dpkg --install /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibverbs-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/ibverbs-utils_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibmad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libibumad-devel_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx4-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-1_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/libmlx5-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm-dev_*_amd64.deb /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64/DEBS/librdmacm1_*_amd64.deb && \
+rm -rf /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64.tgz /var/tmp/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64
+
+# OpenMPI
+RUN apt-get update -y && \
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+hwloc \
+openssh-client && \
+rm -rf /var/lib/apt/lists/*
+COPY --from=devel /usr/local/openmpi /usr/local/openmpi
+ENV LD_LIBRARY_PATH=/usr/local/openmpi/lib:$LD_LIBRARY_PATH \
+PATH=/usr/local/openmpi/bin:$PATH
+
+# HDF5
+RUN apt-get update -y && \
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+zlib1g && \
+rm -rf /var/lib/apt/lists/*
+COPY --from=devel /usr/local/hdf5 /usr/local/hdf5
+ENV HDF5_DIR=/usr/local/hdf5 \
+LD_LIBRARY_PATH=/usr/local/hdf5/lib:$LD_LIBRARY_PATH \
+PATH=/usr/local/hdf5/bin:$PATH
+
+# MGS binary
+COPY --from=devel /mgs/gsl/bin /mgs/gsl/bin
+ENTRYPOINT ["/mgs/gsl/bin/gslparser"]
 
