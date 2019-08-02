@@ -162,13 +162,15 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
-        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null" > quick_build.sh
+          #- echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null" > quick_build.sh
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt" > quick_build.sh
         - chmod +x ./quick_build.sh
         - travis_wait 30 sh -c ./quick_build.sh 
         - |
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           echo "Build successful"
           else
+          tail -n 300 /tmp/log_mgs.txt
           echo "Build failed"
           fi
     - stage: NGS 
