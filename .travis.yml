@@ -128,10 +128,6 @@ jobs:
           if [ ! -f "${SUITESPARSE}/lib/libcxsparse.so" ]; then
           sh ./get_suitesparse.sh > /dev/null
           fi
-        - ls $SUITESPARSE_HOME/include
-        - ls $SUITESPARSE_HOME
-        - ls $SUITESPARSE_HOME/lib
-        - ls $SUITESPARSE_HOME
     - &shared 
       stage: MGS 
       before_install:
@@ -155,7 +151,7 @@ jobs:
         - PATH=${PATH}:${PWD}
         - pip install --trusted-host pypi.python.org -r requirements.txt --user
         #- echo "Testing Docker Hub credentials"
-        #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+          #- docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
         #- echo "Docker Hub credentials are working"
           #- docker build -t build-springxd-base .
       script:
@@ -183,22 +179,14 @@ jobs:
       <<: *shared
       before_install:
         - export BUILD_SYSTEM=--as-NTS
-      script:
-        - echo "$BUILD_SYSTEM"
-        - source set_env
-        - source set_env
-        - ./build_script -p LINUX $BUILD_SYSTEM --rebuild 
     - stage: NTS-NVU 
       <<: *shared
-      script:
-        - ls $SUITESPARSE_HOME/include
-        - ls $SUITESPARSE_HOME/lib
-        - ls $FLEX_HOME
-        - ls $TRAVIS_BUILD_DIR
-        - echo $FLEX_HOME
-        - echo $SUITESPARSE_HOME
       before_install:
         - export BUILD_SYSTEM=--as-NTS-NVU
+    - stage: GPU
+      <<: *shared
+      before_install:
+        - export BUILD_SYSTEM=--as-GPU
     - stage: deploy
       after_success:
         - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"

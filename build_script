@@ -48,6 +48,7 @@ function print_help {
   --as-NTS                      build Neural Tissue Simulator (NTS) - using models/nts.mdf
   --as-NTS-NVU                  build NTS+NVU - using NVU.mdf
   --as-NGS                      build Neuronal Graph Simulator (NGS) - using ngs.mdf
+  --as-GPU                      models that support GPU
 
 Examples:
 1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
@@ -259,6 +260,11 @@ while getopts "$optspec" optchar; do
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
+                as-GPU)
+                    BUILD_TARGET="--as-GPU"
+                    MDF_TARGET="gpu.mdf"
+                    GPU="--gpu"
+                    ;;
                 as-NTS)
                     BUILD_TARGET="--as-NTS"
                     MDF_TARGET="nts.mdf"
@@ -355,6 +361,8 @@ elif [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
 TYPE="NTSNVU"
 elif [[ "$BUILD_TARGET" == "--as-NGS" ]] ; then
 TYPE="NGS"  
+elif [[ "$BUILD_TARGET" == "--as-GPU" ]] ; then
+TYPE="GPU"
 else 
 TYPE="MGS" 
 fi
