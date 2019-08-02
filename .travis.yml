@@ -171,7 +171,7 @@ jobs:
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
           #- echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null" > quick_build.sh
-        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt" > quick_build.sh
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt 2>&1 " > quick_build.sh
         - chmod +x ./quick_build.sh
         - travis_wait 30 sh -c ./quick_build.sh 
         - |
