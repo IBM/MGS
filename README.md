@@ -22,14 +22,25 @@
     env SUITESPARSE
   
 # Container-based build
+# Step 1
+```console
+sudo -i
+echo 1048576 > /proc/sys/fs/inotify/max_user_watches
+exit
+```
+# Step 2 [ignore if docker --version >= 19.03]
+# https://github.com/NVIDIA/nvidia-docker
+```console
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
-./bootstrap_docker.sh
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker
+```
+
 docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
-#docker build -t mgs_baseimage  -f Dockerfile.build .
-
-docker run -it  --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
-#docker run -it --entrypoint=/bin/bash --mount src="$(pwd)",target=/home/mgs,type=bind  mgs_baseimage
-#docker run -it --entrypoint=/bin/bash mgs_baseimage
+docker run --gpus all -it  --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
   
 # Run flags
   -t Number of threads  

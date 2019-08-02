@@ -10,7 +10,7 @@
 #   Python 2 and 3 (upstream)
 # 
 
-FROM nvidia/cuda:9.0-devel-ubuntu16.04 AS devel-base
+FROM nvidia/cuda:10.0-devel-ubuntu16.04 AS devel-base
 
 LABEL maintainer="tmhoangt@us.ibm.com"
 # Python
@@ -164,7 +164,7 @@ RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/dow
 
 ENV CUDA_HOME /usr/local/cuda
 ENV PATH=${CUDA_HOME}/bin:${PATH} \
-    LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH} \
+    LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH} \
     LD_RUN_PATH=${CUDA_HOME}/lib64:${LD_RUN_PATH} \
     LIBRARY_PATH=${CUDA_HOME}/lib64:${LIBRARY_PATH} \
     CPATH=${CUDA_HOME}/include:${CPATH} \
@@ -184,6 +184,15 @@ ENV PATH=${MPI_HOME}/bin:${PATH} \
      CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
 
 
+#RUN INSTALLER=cuda-repo-${UBUNTU_VERSION}_${CUDA}_amd64.deb && \
+    #wget http://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/${INSTALLER}
+          #sudo dpkg -i ${INSTALLER}
+          #wget https://developer.download.nvidia.com/compute/cuda/repos/${UBUNTU_VERSION}/x86_64/7fa2af80.pub
+          #sudo apt-key add 7fa2af80.pub
+          #sudo apt update -qq
+          #sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          #sudo apt clean
+          #fi
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -227,7 +236,8 @@ RUN /bin/bash -c  "source ./set_env && source ./set_env && ./build_script -p LIN
 ########################################
 # Make runtime image
 ########################################
-FROM nvidia/cuda:9.0-runtime-ubuntu16.04
+#FROM nvidia/cuda:9.0-runtime-ubuntu16.04
+FROM nvidia/cuda:10.0-runtime-ubuntu16.04
 
 # Python
 RUN apt-get update -y && \
@@ -278,5 +288,6 @@ PATH=/usr/local/hdf5/bin:$PATH
 
 # MGS binary
 COPY --from=devel /mgs/gsl/bin /mgs/gsl/bin
-ENTRYPOINT ["/mgs/gsl/bin/gslparser"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh && /mgs/gsl/bin/gslparser"]
+#ENTRYPOINT ["/mgs/gsl/bin/gslparser"]
 
