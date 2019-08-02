@@ -39,9 +39,9 @@ function print_help {
                                   log2 = print out ... during loops
   --regen                       regenerate gsl/Makefile  
   --profile                     generate profile output
-  HETEROGENOUS ARCHITECTURE:
-  -g|--gpu                      build with GPU extensions
-  -a|--arma                     build with Armadillo extensions
+  Third-party libraries:
+  -g|--gpu                      build with GPU extensions (CUDA library)
+  -a|--arma                     build with Armadillo library 
 
   PREDEFINED TARGETS:
   --as-MGS                      (default) build Model Graph Simulator (MGS) - using mgs.mdf
@@ -383,6 +383,7 @@ elif [ "$BASE_FOLDER" != $(pwd) ]; then
 fi
 cd $BASE_FOLDER/models
 if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
+  touch ${MGS_TARGET_FILENAME}
   echo '// MDL files
 #include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"
@@ -393,7 +394,6 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 
 ' > ${MGS_TARGET_FILENAME}
 fi
-touch ${MGS_TARGET_FILENAME}
 if [ ! -f ${MDF_TARGET} ]; then 
   echoerr "ERROR: File ${MDF_TARGET} does not exist."
 fi
@@ -465,8 +465,9 @@ fi
 ## 2. Bison
 ## 3. Flex
 ## 4. Python
-## 5. CUDA [optional]
-## 6. Armadillo [optional]
+## 5. libgmp
+## 6. CUDA [optional]
+## 7. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
@@ -583,7 +584,7 @@ if [[ -z "${PYTHON_LIB}" ]]; then
   if `ldconfig -p | grep -q libpython3.6m`; then
     echo "libpython3.6m.so found"
     PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
-    PYTHON_LIB=$(dirname $PYTHON_LIB)
+    PYTHON_LIB=$(dirname $PYTHON_LIB | uniq)
     export PYTHON_LIB=$PYTHON_LIB
   else
     echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
@@ -652,15 +653,15 @@ if [[ "mdl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ]; then
       make clean;
-      make ${TARGET_MAKE} RELEASE="$RELEASE" -j $NPROCS
+      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    make ${TARGET_MAKE} RELEASE="$RELEASE -j $NPROCS"
+    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
   fi
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
-      make RELEASE="$RELEASE" -j $NPROCS
+      make -j $NPROCS RELEASE="$RELEASE"
     fi
     if [ ! `ls $MDLROOT/bin/mdlparser 2>/dev/null` ]; then
       rm mdl.make.mark

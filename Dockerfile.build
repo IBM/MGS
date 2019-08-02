@@ -56,7 +56,7 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /var/tmp && wget -q -nc --no-check-certificate -P /var/tmp https://www.open-mpi.org/software/ompi/v3.1/downloads/openmpi-3.1.2.tar.bz2 && \
     mkdir -p /var/tmp && tar -x -f /var/tmp/openmpi-3.1.2.tar.bz2 -C /var/tmp -j && \
-    cd /var/tmp/openmpi-3.1.2 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/openmpi --disable-getpwuid --enable-orterun-prefix-by-default --with-cuda --with-verbs && \
+    cd /var/tmp/openmpi-3.1.2 &&  CC=gcc CXX=g++ F77=gfortran F90=gfortran FC=gfortran ./configure --prefix=/usr/local/openmpi --disable-getpwuid --enable-orterun-prefix-by-default --with-cuda --with-verbs --enable-mpi-cxx && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
     rm -rf /var/tmp/openmpi-3.1.2.tar.bz2 /var/tmp/openmpi-3.1.2
@@ -117,6 +117,16 @@ RUN apt-get update -y && \
         libpython2.7 && \
     rm -rf /var/lib/apt/lists/*
 
+RUN apt-get purge -y python.* && \
+    echo "deb http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu xenial main" >> /etc/apt/sources.list && \
+    echo "deb-src http://ppa.launchpad.net/fkrull/deadsnakes/ubuntu xenial main" >> /etc/apt/sources.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys FF3997E83CD969B409FB24BC5BB92C09DB82666C && \
+    apt-get update && \
+    apt-get install -y python3-pip python3.6 python3.6-dev && \
+    pip3 install --upgrade pip && \
+    ln -s /usr/bin/python3.6 /usr/bin/python && \
+    rm -rf /var/lib/apt/lists/*
+
 ENV MGSROOT=/mgs
 ENV PACKAGES_DIR=/usr/local
 ENV TRAVIS_BUILD_DIR=$PACKAGES_DIR 
@@ -154,13 +164,26 @@ RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/dow
 
 ENV CUDA_HOME /usr/local/cuda
 ENV PATH=${CUDA_HOME}/bin:${PATH} \
-    LD_LIBRARY_PATH=${CUDA_HOME}/lib:${LD_LIBRARY_PATH} \
-    LD_RUN_PATH=${CUDA_HOME}/lib:${LD_RUN_PATH} \
-    LIBRARY_PATH=${CUDA_HOME}/lib:${LIBRARY_PATH} \
+    LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH} \
+    LD_RUN_PATH=${CUDA_HOME}/lib64:${LD_RUN_PATH} \
+    LIBRARY_PATH=${CUDA_HOME}/lib64:${LIBRARY_PATH} \
     CPATH=${CUDA_HOME}/include:${CPATH} \
     C_INCLUDE_PATH=${CUDA_HOME}/include \
     CPLUS_INCLUDE_PATH=${CUDA_HOME}/include \
     INCLUDE=${CUDA_HOME}/include 
+RUN ln -s $CUDA_HOME/lib64/stubs/libcuda.so $CUDA_HOME/lib64/stubs/libcuda.so.1
+
+ENV MPI_HOME /usr/local/openmpi
+ENV PATH=${MPI_HOME}/bin:${PATH} \
+     LD_LIBRARY_PATH=${MPI_HOME}/lib:${LD_LIBRARY_PATH} \
+     LD_RUN_PATH=${MPI_HOME}/lib:${LD_RUN_PATH} \
+     LIBRARY_PATH=${MPI_HOME}/lib:${LIBRARY_PATH} \
+     CPATH=${MPI_HOME}/include:${CPATH} \
+     C_INCLUDE_PATH=${MPI_HOME}/include:${C_INCLUDE_PATH} \
+     INCLUDE_PATH=${MPI_HOME}/include:${INCLUDE_PATH} \
+     CPLUS_INCLUDE_PATH=${MPI_HOME}/include:${CPLUS_INCLUDE_PATH}
+
+
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
