@@ -23,10 +23,13 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
 	   <<std::endl<<std::endl;
   shuffleDeck(dataset.training_images.size(),rng);
+<<<<<<< HEAD
   SHD.x.increaseSizeTo(IMG_SIZE);
   for (int i=0; i<IMG_SIZE; ++i) SHD.x[i]=PRELIM_STATE;
   SHD.imageIndex=-1;
   SHD.trainingEpoch=1;
+=======
+>>>>>>> permutation of MNIST inputs
   SHD.x.increaseSizeTo(1 * 28 * 28);
   SHD.imageIndex=-1;
   SHD.trainingPass=1;
@@ -63,22 +66,30 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
 =======
       if (++SHD.imageIndex==dataset.training_images.size()) {      
 	SHD.imageIndex=0;
+	shuffleDeck(dataset.training_images.size(),rng);
 	if (SHD.shready) output=true;
-	if (++SHD.trainingPass>SHD.trainingIterations)
+	if (++SHD.trainingPass>SHD.trainingIterations) {
 	  SHD.test = true;
+	  shuffleDeck(dataset.test_images.size(),rng);
+	}
       }
-      label = dataset.training_labels[SHD.imageIndex];
+      label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<(1 * 28 * 28); ++idx) {
+<<<<<<< HEAD
       SHD.x[idx]=double(dataset.training_images[SHD.imageIndex][idx])/255.0;
 >>>>>>> Learning appears to be working for nlables=6
+=======
+      SHD.x[idx]=double(dataset.training_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;      
+>>>>>>> permutation of MNIST inputs
     }
   }
   else {
     do {
       if (++SHD.imageIndex==dataset.test_images.size()) {
 	SHD.imageIndex=0;
+<<<<<<< HEAD
 <<<<<<< HEAD
 	shuffleDeck(dataset.test_images.size(),rng);
 	if (SHD.shready) output=true;
@@ -89,14 +100,21 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
     for (unsigned idx=0; idx<IMG_SIZE; ++idx)
       SHD.x[idx]=double(dataset.test_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
 =======
+=======
+	shuffleDeck(dataset.test_images.size(),rng);
+>>>>>>> permutation of MNIST inputs
 	if (SHD.shready) output=true;
       }
-      label = dataset.test_labels[SHD.imageIndex];
+      label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<(1 * 28 * 28); ++idx)
+<<<<<<< HEAD
       SHD.x[idx]=double(dataset.test_images[SHD.imageIndex][idx])/255.0;
 >>>>>>> Learning appears to be working for nlables=6
+=======
+      SHD.x[idx]=double(dataset.test_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
+>>>>>>> permutation of MNIST inputs
   }
   if (!SHD.shready) {
     SHD.labels.push_back(label);
