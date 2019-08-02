@@ -155,7 +155,7 @@ Struct TargetAttachIP3Concentration{
   int index; // index of compartment at which the spine attach (or the shaft attach)
 }
 
-Variable SimulationInfo Implements TimeStepProducer, 
+Variable SimulationInfoNew Implements TimeStepProducer, 
 	TimeStepProducerSEC, TimeStepProducerMS, 
 	TimeUnitProducer, 
 	TimeProducerSEC, TimeProducerMS
