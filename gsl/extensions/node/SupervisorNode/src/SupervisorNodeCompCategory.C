@@ -3,6 +3,7 @@
 #include "NDPairList.h"
 #include "CG_SupervisorNodeCompCategory.h"
 #include <string>
+#include <map>
 
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
@@ -19,6 +20,7 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   std::cerr<<"mnist_reader loaded "<<dataset.training_images.size()<<" training images."<<std::endl;
   std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
 	   <<std::endl<<std::endl;
+  shuffleDeck(dataset.training_images.size(),rng);
   SHD.x.increaseSizeTo(1 * 28 * 28);
   SHD.imageIndex=-1;
   SHD.trainingPass=1;
@@ -39,28 +41,32 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
     do {
       if (++SHD.imageIndex==dataset.training_images.size()) {      
 	SHD.imageIndex=0;
+	shuffleDeck(dataset.training_images.size(),rng);
 	if (SHD.shready) output=true;
-	if (++SHD.trainingPass>SHD.trainingIterations)
+	if (++SHD.trainingPass>SHD.trainingIterations) {
 	  SHD.test = true;
+	  shuffleDeck(dataset.test_images.size(),rng);
+	}
       }
-      label = dataset.training_labels[SHD.imageIndex];
+      label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<(1 * 28 * 28); ++idx) {
-      SHD.x[idx]=double(dataset.training_images[SHD.imageIndex][idx])/255.0;
+      SHD.x[idx]=double(dataset.training_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;      
     }
   }
   else {
     do {
       if (++SHD.imageIndex==dataset.test_images.size()) {
 	SHD.imageIndex=0;
+	shuffleDeck(dataset.test_images.size(),rng);
 	if (SHD.shready) output=true;
       }
-      label = dataset.test_labels[SHD.imageIndex];
+      label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
     for (unsigned idx=0; idx<(1 * 28 * 28); ++idx)
-      SHD.x[idx]=double(dataset.test_images[SHD.imageIndex][idx])/255.0;
+      SHD.x[idx]=double(dataset.test_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
   }
   if (!SHD.shready) {
     SHD.labels.push_back(label);
@@ -109,5 +115,22 @@ bool SupervisorNodeCompCategory::isReady()
     rval=nodesIter->ready;
     if (!rval) break;
   }
-  return rval;
+  bool globalRval=false;
+  MPI_Allreduce(&rval, &globalRval, 1, MPI_C_BOOL, MPI_LAND, MPI_COMM_WORLD);
+  return globalRval;
+}
+
+void SupervisorNodeCompCategory::shuffleDeck(unsigned deckSize, RNG& rng)
+{
+  _shuffledDeck.clear();
+  std::map<double, unsigned> shuffler;
+  for (unsigned i=0; i<deckSize; ++i) {
+    //shuffler[double(i)]=i;
+    shuffler[drandom(rng)]=i;
+    //_shuffledDeck.push_back(i);
+  }
+  std::map<double, unsigned>::iterator miter, mend=shuffler.end();
+  for (miter=shuffler.begin(); miter!=mend; ++miter) {
+    _shuffledDeck.push_back(miter->second);
+  }
 }
