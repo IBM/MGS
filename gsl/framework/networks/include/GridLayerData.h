@@ -18,6 +18,7 @@
 #include "Copyright.h"
 
 #include <vector>
+#include <cstddef>
 
 class Node;
 class NodeDescriptor;

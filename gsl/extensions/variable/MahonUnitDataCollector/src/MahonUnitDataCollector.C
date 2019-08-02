@@ -17,25 +17,37 @@
 
 void MahonUnitDataCollector::initialize(RNG& rng) 
 {
+  std::ostringstream sysCall;
 
+  std::string output_dir(directory.c_str());
+  if (output_dir.length() == 0)
+    output_dir = "./";
+  if (output_dir.back() != '/')
+    output_dir.append("/");
+  try {
+    sysCall<<"mkdir -p "<<directory.c_str()<<" > /dev/null;";
+    int systemRet = system(sysCall.str().c_str());
+    if (systemRet == -1)
+      throw;
+  } catch(...) {};
 
   {std::ostringstream os1;
-    os1<<"x1_"<<fileName;
+    os1<< output_dir << "x1_"<<fileName;
     x1_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
   
 
   {std::ostringstream os1;
-    os1<<"Spike_"<<fileName;
+    os1<< output_dir << "Spike_"<<fileName;
     spike_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
 
 
   {std::ostringstream os1;
-    os1<<"x2_"<<fileName;
+    os1<< output_dir << "x2_"<<fileName;
     x2_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
   
 
   {std::ostringstream os1;
-    os1<<"x3_"<<fileName;
+    os1<< output_dir << "x3_"<<fileName;
     x3_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
 
 
@@ -175,7 +187,6 @@ unsigned i = miter2
 
 void MahonUnitDataCollector::finalize(RNG& rng) 
 {
-
   *spike_file<<std::endl;
   *x1_file<<std::endl;
   *x2_file<<std::endl;
@@ -196,7 +207,6 @@ void MahonUnitDataCollector::finalize(RNG& rng)
 
 void MahonUnitDataCollector::dataCollectionLFP(Trigger* trigger, NDPairList* ndPairList) 
 {
-
   std::ofstream& output=*x3_file;
   ShallowArray<double*>::iterator iter=x3.begin(), end=x3.end();
   double tot = 0;
@@ -209,7 +219,6 @@ void MahonUnitDataCollector::dataCollectionLFP(Trigger* trigger, NDPairList* ndP
 
 void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
 {
-
   {std::ofstream& output=*x1_file;
   output<<ITER*deltaT<<" ";//std::endl;
   ShallowArray<double*>::iterator iter=x1.begin(), end=x1.end();
@@ -237,8 +246,6 @@ void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPair
 
 void MahonUnitDataCollector::dataCollectionSpike(Trigger* trigger, NDPairList* ndPairList) 
 {
-
-
   std::ofstream& output=*spike_file;
   //output<<getSimulation().getIteration()<<" ";//std::endl;
   ShallowArray<bool*>::iterator iter=spikes.begin(), end=spikes.end();
@@ -276,8 +283,10 @@ MahonUnitDataCollector::MahonUnitDataCollector()
 
 MahonUnitDataCollector::~MahonUnitDataCollector() 
 {
-  if (x1_file) delete x1_file; if (spike_file) delete spike_file;
-  if (x2_file) delete x2_file; if (x3_file) delete x3_file; 
+  if (x1_file) delete x1_file; 
+  if (spike_file) delete spike_file;
+  if (x2_file) delete x2_file; 
+  if (x3_file) delete x3_file; 
 }
 
 void MahonUnitDataCollector::duplicate(std::unique_ptr<MahonUnitDataCollector>& dup) const

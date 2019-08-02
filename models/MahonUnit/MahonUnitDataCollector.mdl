@@ -17,10 +17,11 @@
 #define MAHONUNITDATACOLLECTOR_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 //#include "../HodgkinHuxley/HodgkinHuxley.mdl"
-#include "MahonUnit.mdl"
+//#include "MahonUnit.mdl"
 
 Variable MahonUnitDataCollector
 {
+   string directory;
    string fileName;
    int [] rows;
    int [] cols;

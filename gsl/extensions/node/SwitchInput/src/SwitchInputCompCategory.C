@@ -15,7 +15,6 @@ SwitchInputCompCategory::SwitchInputCompCategory(Simulation& sim, const std::str
 
 void SwitchInputCompCategory::initializeShared(RNG& rng) 
 {
-
   SHD.var1 = SHD.deltaT*SHD.tscale;
   SHD.var2 = sqrt(SHD.var1)*SHD.noiselev;
 
@@ -76,7 +75,6 @@ void SwitchInputCompCategory::initializeShared(RNG& rng)
 
 void SwitchInputCompCategory::updateInputState(RNG& rng) 
 {
-
   if (ITER*SHD.deltaT >= SHD.stateswitchtimes[SHD.currentstate]) 
     {
       SHD.currentstate++;

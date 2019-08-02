@@ -98,12 +98,12 @@ IAF iaf;
 
 
 VariableType MahonUnitDataCollector;
-MahonUnitDataCollector collector<fileName="Output.dat", deltaT = DELTATXX, maxoutnum = 10>;
+MahonUnitDataCollector collector<directory="DATA_FOLDER", fileName="Output.dat", deltaT = DELTATXX, maxoutnum = 10>;
 
 polyConnect(iaf[].Layer(nodes), collector, <>, <>);
 
 
-Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+/*Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);*/
 //Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
 
 UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 

@@ -130,6 +130,7 @@ struct RK4PhasedVars
 
 class RK4PhasedOld
 {
+    
   protected:
   
   void initializeIterator(int, double);

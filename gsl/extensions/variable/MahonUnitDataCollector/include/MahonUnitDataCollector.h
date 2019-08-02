@@ -24,10 +24,10 @@ class MahonUnitDataCollector : public CG_MahonUnitDataCollector
 
 
  private:
-      std::ofstream* spike_file;
-      std::ofstream* x1_file;
-      std::ofstream* x2_file;
-      std::ofstream* x3_file;
+      std::ofstream* spike_file=0;
+      std::ofstream* x1_file=0;
+      std::ofstream* x2_file=0;
+      std::ofstream* x3_file=0;
 
 };
 
