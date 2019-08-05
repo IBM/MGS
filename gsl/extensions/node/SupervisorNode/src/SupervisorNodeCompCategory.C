@@ -42,7 +42,7 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
   
   if (!SHD.test) {
     do {
-      if (++SHD.imageIndex==dataset.training_images.size()) {      
+      if (++SHD.imageIndex==dataset.training_images.size()) {
 	SHD.imageIndex=0;
 	shuffleDeck(dataset.training_images.size(),rng);
 	if (SHD.shready) output=true;
@@ -94,7 +94,7 @@ void SupervisorNodeCompCategory::outputError(unsigned currentLabel)
 		 <<"   |   "<<*(nodesIter->predictions)[nodesIter->getGlobalIndex()]
 		 <<"   |   "<<(nodesIter->logits)[nodesIter->getGlobalIndex()]
 		 <<std::endl<<std::flush;
-      }
+       }
     }
     MPI_Barrier(MPI_COMM_WORLD);
   }
@@ -127,12 +127,16 @@ void SupervisorNodeCompCategory::shuffleDeck(unsigned deckSize, RNG& rng)
 {
   _shuffledDeck.clear();
   std::map<double, unsigned> shuffler;
+  std::map<double, unsigned>::iterator miter;
+  double d;
   for (unsigned i=0; i<deckSize; ++i) {
-    //shuffler[double(i)]=i;
-    shuffler[drandom(rng)]=i;
-    //_shuffledDeck.push_back(i);
+    do {
+      d = drandom(rng);
+      miter = shuffler.find(d);
+    } while (miter!=shuffler.end());
+    shuffler[d]=i;
   }
-  std::map<double, unsigned>::iterator miter, mend=shuffler.end();
+  std::map<double, unsigned>::iterator mend=shuffler.end();
   for (miter=shuffler.begin(); miter!=mend; ++miter) {
     _shuffledDeck.push_back(miter->second);
   }
