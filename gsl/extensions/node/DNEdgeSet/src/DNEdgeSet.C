@@ -15,7 +15,9 @@ void DNEdgeSet::initialize(RNG& rng)
   for (unsigned n=0; n<sz; ++n) {
     weights[n] = drandom(rng) * 2 - 1.0;
     weightedOutputs[n] = PRELIM_STATE;
+    deltaWeights[n] = 0.0;
   }
+  weightedGradient = PRELIM_STATE;
   readyForward = false;
   readyBackward = false;
   transferFunction.setType(SHD.transferFunctionName);
@@ -41,8 +43,8 @@ void DNEdgeSet::update(RNG& rng)
     if (!readyBackward) {
       for (giter=gradients.begin(); giter!=gend; ++giter) {
 	readyBackward = **giter != PRELIM_STATE;
-	if (!readyBackward) {
-	  echoes.push_back(transferInput);
+	if (!readyBackward) {	  
+	  echoes.push_back(transferInput);	  
 	  break;
 	}
       }

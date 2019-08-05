@@ -5,8 +5,10 @@
 #include <string>
 #include <map>
 
+#define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()
 #define ITER getSimulation().getIteration()
+#define IMG_SIZE (1*28*28)
 
 SupervisorNodeCompCategory::SupervisorNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList) 
    : CG_SupervisorNodeCompCategory(sim, modelName, ndpList)
@@ -21,7 +23,8 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   std::cerr<<"mnist_reader loaded "<<dataset.test_images.size()<<" test images."
 	   <<std::endl<<std::endl;
   shuffleDeck(dataset.training_images.size(),rng);
-  SHD.x.increaseSizeTo(1 * 28 * 28);
+  SHD.x.increaseSizeTo(IMG_SIZE);
+  for (int i=0; i<IMG_SIZE; ++i) SHD.x[i]=PRELIM_STATE;
   SHD.imageIndex=-1;
   SHD.trainingPass=1;
 }
@@ -51,8 +54,8 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
       label = dataset.training_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
-    for (unsigned idx=0; idx<(1 * 28 * 28); ++idx) {
-      SHD.x[idx]=double(dataset.training_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;      
+    for (unsigned idx=0; idx<IMG_SIZE; ++idx) {
+      SHD.x[idx]=double(dataset.training_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
     }
   }
   else {
@@ -65,7 +68,7 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
       label = dataset.test_labels[_shuffledDeck[SHD.imageIndex]];
       if (SHD.shready) SHD.labels[SHD.labelIndex]=label;
     } while (label>SHD.numberOfLabels-1);
-    for (unsigned idx=0; idx<(1 * 28 * 28); ++idx)
+    for (unsigned idx=0; idx<IMG_SIZE; ++idx)
       SHD.x[idx]=double(dataset.test_images[_shuffledDeck[SHD.imageIndex]][idx])/255.0;
   }
   if (!SHD.shready) {
