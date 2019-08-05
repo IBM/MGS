@@ -20,7 +20,7 @@ void DNEdgeSet::initialize(RNG& rng)
   weightedGradient = PRELIM_STATE;
   readyForward = false;
   readyBackward = false;
-  transferFunction.setType(SHD.transferFunctionName);
+  transferFunction.setType(transferFunctionName);
 }
 
 void DNEdgeSet::update(RNG& rng) 

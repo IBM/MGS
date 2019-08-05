@@ -63,8 +63,9 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    bool readyForward;
    bool readyBackward;
 
+   string transferFunctionName;
+
    Shared {
-     string transferFunctionName;
      double eta;
      double alpha;
    }
