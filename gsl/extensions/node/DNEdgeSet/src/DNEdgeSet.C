@@ -72,20 +72,25 @@ void DNEdgeSet::update(RNG& rng)
 
 	double deltaWeight = echoes[echoIndex] * **giter;
 	double update = SHD.eta;
+
+	if (rmsprop)
+	  *siter = ( (1-SHD.beta) * deltaWeight * deltaWeight + SHD.beta * *siter ) / (1.0 - biasCorrectionS);
+
 	if (momentum) {
 	  *diter = ( (1-SHD.alpha) * deltaWeight + SHD.alpha * *diter ) / (1.0 - biasCorrectionW);
 	  update *=  *diter;
 	}
-	if (rmsprop) {
-	  *siter = ( (1-SHD.beta) * deltaWeight * deltaWeight + SHD.beta * *siter ) / (1.0 - biasCorrectionS);
+	else
+	  update *= deltaWeight;
+	
+	if (rmsprop)
 	  update /= sqrt(*siter + SMALL_NUMBER);
-	}
-	else if (!momentum) update *= deltaWeight;
+
 	*witer += update;
       }
 
-      if (momentum) biasCorrectionW *= SHD.alpha;// 1.0 - pow(SHD.alpha, getSimulation().getIteration());
-      if (rmsprop) biasCorrectionS *= SHD.beta; //1.0 - pow(SHD.beta, getSimulation().getIteration());
+      if (momentum) biasCorrectionW *= SHD.alpha;
+      if (rmsprop) biasCorrectionS *= SHD.beta;
 
       weightedGradient = dow * transferFunction.derivativeOfTransfer(echoes[echoIndex]);
       echoes[echoIndex] = transferInput;
