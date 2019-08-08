@@ -4,6 +4,7 @@
 #include "rndm.h"
 
 #define PRELIM_STATE DBL_MAX
+#define SMALL_NUMBER 0.00000001
 #define SHD getSharedMembers()
 
 void DNEdgeSet::initialize(RNG& rng) 
@@ -12,15 +13,26 @@ void DNEdgeSet::initialize(RNG& rng)
   weightedOutputs.increaseSizeTo(sz);
   weights.increaseSizeTo(sz);
   deltaWeights.increaseSizeTo(sz);
+  deltaWeightsSquared.increaseSizeTo(sz);
   for (unsigned n=0; n<sz; ++n) {
     weights[n] = drandom(rng) * 2 - 1.0;
     weightedOutputs[n] = PRELIM_STATE;
     deltaWeights[n] = 0.0;
+    deltaWeightsSquared[n] = 0.0;
   }
   weightedGradient = PRELIM_STATE;
   readyForward = false;
   readyBackward = false;
   transferFunction.setType(transferFunctionName);
+  biasCorrectionW = SHD.alpha;
+  biasCorrectionS = SHD.beta;
+
+  ShallowArray<String>::const_iterator oiter, oend = SHD.optimization.end();
+  for (oiter=SHD.optimization.begin(); oiter!=oend; ++oiter) {
+    if (*oiter=="Momentum") momentum=true;
+    else if (*oiter=="RMSprop") rmsprop=true;
+    else if (*oiter=="Adam") momentum=rmsprop=true;
+  }  
 }
 
 void DNEdgeSet::update(RNG& rng) 
@@ -32,6 +44,7 @@ void DNEdgeSet::update(RNG& rng)
   if (readyForward) {
     ShallowArray<double>::iterator witer=weights.begin(),
       diter=deltaWeights.begin(),
+      siter=deltaWeightsSquared.begin(),
       woiter=weightedOutputs.begin(),
       woend=weightedOutputs.end();
 
@@ -51,16 +64,28 @@ void DNEdgeSet::update(RNG& rng)
     }
     if (readyBackward) {
       double dow = 0;
+      assert(getSimulation().getIteration()>0);
       
       witer=weights.begin();      
-      for (giter=gradients.begin(); giter!=gend; ++giter, ++witer, ++diter) {
+      for (giter=gradients.begin(); giter!=gend; ++giter, ++witer, ++diter, ++siter) {
 	dow +=  *witer * **giter;
-	double deltaWeight =
-	  (1-SHD.alpha) * SHD.eta * echoes[echoIndex] * **giter +
-	  SHD.alpha * *diter;
-	*witer += deltaWeight;
-	*diter = deltaWeight;
+
+	double deltaWeight = echoes[echoIndex] * **giter;
+	double update = SHD.eta;
+	if (momentum) {
+	  *diter = ( (1-SHD.alpha) * deltaWeight + SHD.alpha * *diter ) / (1.0 - biasCorrectionW);
+	  update *=  *diter;
+	}
+	if (rmsprop) {
+	  *siter = ( (1-SHD.beta) * deltaWeight * deltaWeight + SHD.beta * *siter ) / (1.0 - biasCorrectionS);
+	  update /= sqrt(*siter + SMALL_NUMBER);
+	}
+	else if (!momentum) update *= deltaWeight;
+	*witer += update;
       }
+
+      if (momentum) biasCorrectionW *= SHD.alpha;// 1.0 - pow(SHD.alpha, getSimulation().getIteration());
+      if (rmsprop) biasCorrectionS *= SHD.beta; //1.0 - pow(SHD.beta, getSimulation().getIteration());
 
       weightedGradient = dow * transferFunction.derivativeOfTransfer(echoes[echoIndex]);
       echoes[echoIndex] = transferInput;

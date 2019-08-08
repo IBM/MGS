@@ -50,24 +50,30 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
 Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    double [] weights;
    double [] deltaWeights;
+   double [] deltaWeightsSquared;
    double [] weightedOutputs;
    double weightedGradient;
    double [] echoes;
    unsigned echoIndex;
+   double biasCorrectionW;
+   double biasCorrectionS;
 
    double* input;
    double* [] gradients;
-
-   double oldDeltaWeight;
 
    bool readyForward;
    bool readyBackward;
 
    string transferFunctionName;
 
+   bool momentum;
+   bool rmsprop;
+
    Shared {
      double eta;
      double alpha;
+     double beta;
+     string [] optimization;
    }
 
    InitPhase initialize();
