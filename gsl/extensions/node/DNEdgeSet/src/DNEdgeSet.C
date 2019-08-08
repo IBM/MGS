@@ -81,6 +81,7 @@ void DNEdgeSet::update(RNG& rng)
 	  *diter = ( (1-SHD.alpha) * deltaWeight + SHD.alpha * *diter ) / (1.0 - biasCorrectionW);
 	  update *=  *diter;
 	}
+
 	else
 	  update *= deltaWeight;
 
