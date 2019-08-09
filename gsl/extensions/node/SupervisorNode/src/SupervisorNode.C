@@ -55,10 +55,12 @@ void SupervisorNode::update(RNG& rng)
     sumOfSquaredError += error * error;
 
     primaryGradient=0;
-    h=0;
-    for (liter=logits.begin(), iter=predictions.begin(); liter!=lend; ++h, ++liter, ++iter) {
-      primaryGradient += *my_liter * ( ( (liter==my_liter) ? 1.0 : 0.0 ) - *liter ) *
-	( ( (SHD.labels[SHD.labelIndex] == h) ? 1.0 : 0.0 ) - *liter );
+    if (!SHD.test) {
+      h=0;
+      for (liter=logits.begin(), iter=predictions.begin(); liter!=lend; ++h, ++liter, ++iter) {
+	primaryGradient += *my_liter * ( ( (liter==my_liter) ? 1.0 : 0.0 ) - *liter ) *
+	  ( ( (SHD.labels[SHD.labelIndex] == h) ? 1.0 : 0.0 ) - *liter );
+      }
     }
   }
 }
