@@ -26,6 +26,7 @@
 
 class DataType;
 class Attribute;
+class Class;
 
 class Method
 {
@@ -36,6 +37,14 @@ class Method
       virtual void duplicate(std::auto_ptr<Method>& dup) const;
       virtual ~Method();
 
+      /* return the Class object upon which this Method object holds 
+       * the content of a method inside the class*/
+      const Class* getClass() const {
+	 return _classObj;
+      }
+      void setClass(Class* classObj) {
+	 _classObj=classObj;
+      }
       const std::string& getName() const {
 	 return _name;
       }
@@ -192,6 +201,8 @@ class Method
       bool _template;
       bool _static;
       MacroConditional _macroConditional;
+      /* to tell what class type this method belongs to */
+      Class* _classObj=0;
 };
 
 #endif

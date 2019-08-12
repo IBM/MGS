@@ -17,6 +17,7 @@
 #include "AccessType.h"
 #include "DataType.h"
 #include "Constants.h"
+#include "Class.h"
 #include <string>
 #include <vector>
 #include <sstream>
@@ -71,7 +72,7 @@ std::string Attribute::getDefinition(AccessType type) const
    return os.str();
 }
 
-void Attribute::fillInitializer(std::string& init) const
+void Attribute::fillInitializer(std::string& init, const Class* classObj) const
 {
    init = ""; // Important should reset to "" this is checked by the caller.
    bool process_param = false;
@@ -79,7 +80,8 @@ void Attribute::fillInitializer(std::string& init) const
 	 isPointer() || isBasic()
       )
       process_param = true;
-   if (process_param)
+   if (_macroConditional.getName() != "" &&
+	 process_param)
       init += _macroConditional.getBeginning();
    std::string prefix=", ";
 
@@ -94,6 +96,26 @@ void Attribute::fillInitializer(std::string& init) const
    if (_macroConditional.getName() != "" &&
 	 process_param)
       init += "\n" + _macroConditional.getEnding();
+   if (_macroConditional.getName() != "" &&
+	 process_param and classObj != 0)
+   {
+      if (classObj->getClassInfoPrimeType() == Class::PrimeType::Node
+	    and classObj->getClassInfoSubType() == Class::SubType::BaseClassPSet
+	 )
+      {
+	 MacroConditional tmpCond = _macroConditional;
+	 tmpCond.flipCondition();
+	 init += tmpCond.getBeginning();
+	 init += TAB + prefix;
+	 if (getConstructorParameterName() != "") {
+	    init += getName() + "(" + getConstructorParameterName() + ")";
+	 } else if (isPointer() || isBasic()) {
+	    init += getName() + "(0)";	    
+	 }
+	 init += "\n" + tmpCond.getEnding();
+	 tmpCond.flipCondition();
+      }
+   }
 }
 
 void Attribute::fillCopyInitializer(std::string& init, 

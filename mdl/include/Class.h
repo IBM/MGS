@@ -41,8 +41,8 @@ class Class
       enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller };
       enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
       void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
-      PrimeType getClassInfoPrimeType(){ return _classInfo.first; };
-      SubType getClassInfoSubType(){ return _classInfo.second; };
+      PrimeType getClassInfoPrimeType() const { return _classInfo.first; };
+      SubType getClassInfoSubType() const { return _classInfo.second; };
       Class();
       Class(const std::string& name);
       Class(const Class& rv);
@@ -79,6 +79,7 @@ class Class
 		     AccessType accessType, const std::string& conditional = "") {
 	 cl->setMemberClass();
 	 cl->setParentClassName(_name);
+	 cl->setParentClass(this);
 	 _memberClasses[accessType].push_back(cl.release());
       }
 
@@ -107,7 +108,8 @@ class Class
       }
 
       void addMethod(std::auto_ptr<Method>& mt) {
-	if (!(mt->isInline())) _generateSourceFile=true;
+	 mt->setClass(this);
+	 if (!(mt->isInline())) _generateSourceFile=true;
 	 _methods.push_back(mt.release());
       }
       void addMethodToExternalFile(std::string external_filename, std::auto_ptr<Method>& mt) {
@@ -205,6 +207,7 @@ class Class
       bool generateSourceFile() {return _generateSourceFile;}
       void setMemberClass(bool memberClass=true) {_memberClass=memberClass; if (memberClass == false) _nameParentClass="";}
       void setParentClassName(std::string nameParentClass) {_nameParentClass=nameParentClass;}
+      void setParentClass(Class* parentClass) {_parentClass=parentClass;}
 
       bool isMemberClass() {return _memberClass;}
       void setAlternateFileName(std::string s) {_alternateFileName=s;}
@@ -384,6 +387,7 @@ class Class
       std::set<IncludeClass> _classes;
       std::map<AccessType, std::vector<Class*> > _memberClasses;
       std::vector<Class*> _partnerClasses;
+      Class* _parentClass=0;/* if this object holds the Class which is defined within another class, this datamember tell the object of the parent class */
 
       std::vector<std::string> _extraSourceStrings;
       std::vector<BaseClass*> _baseClasses;

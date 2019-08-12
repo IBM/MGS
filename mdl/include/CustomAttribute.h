@@ -86,7 +86,7 @@ class CustomAttribute : public Attribute
       // itself to 0.
       // Custom attribute overrides if a certain string needs to be used
       // in initializing the attribute.
-      virtual void fillInitializer(std::string& init) const;
+      virtual void fillInitializer(std::string& init, const Class* classObj=0) const;
 
 
    private:

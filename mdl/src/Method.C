@@ -29,6 +29,7 @@ Method::Method()
      _pureVirtual(false), _const(false), _externC(false), 
      _externCPP(false), _inline(false), _template(false), _static(false)
 {
+  _classObj = 0;
 }
 
 Method::Method(const std::string& name, const std::string& returnStr
@@ -37,6 +38,7 @@ Method::Method(const std::string& name, const std::string& returnStr
      _accessType(AccessType::PUBLIC), _virtual(false), _pureVirtual(false),
      _const(false), _externC(false), _externCPP(false), _inline(false), _template(false), _static(false)
 {
+  _classObj = 0;
 }
 
 void Method::duplicate(std::auto_ptr<Method>& dup) const

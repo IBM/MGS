@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+class Class;
+
 class Attribute
 {
    public:
@@ -108,7 +110,7 @@ class Attribute
       // itself to 0.
       // Custom attribute overrides if a certain string needs to be used
       // in initializing the attribute.
-      virtual void fillInitializer(std::string& init) const;
+      virtual void fillInitializer(std::string& init, const Class* classObj=0) const;
 
       // This method fills in the initializer to be used in copy Constructors,
       // If the attribute is not an owned pointer it is assigned to the value

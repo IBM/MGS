@@ -1106,6 +1106,9 @@ void Class::addConstructor()
 {
    std::auto_ptr<DefaultConstructorMethod> constructor(
       new DefaultConstructorMethod(getName()));
+   /* need this so that it adds proper parameter initializers */
+   constructor->setClass(this);
+
    std::string bases = "";
    prepareBaseString(bases);
 

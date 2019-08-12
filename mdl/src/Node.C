@@ -82,7 +82,7 @@ void Node::internalGenerateFiles()
    {
       auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassPSet);
       bool use_classType = true;
-      generatePSet(use_classType, classType);
+      generatePSet(use_classType, classType); //CG_LifeNodePSet.h/.C
    }
    generatePublisher();
    generateWorkUnitGridLayers();

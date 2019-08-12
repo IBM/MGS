@@ -183,12 +183,12 @@ bool CustomAttribute::isDontCopy() const
    return false;
 }
 
-void CustomAttribute::fillInitializer(std::string& init) const
+void CustomAttribute::fillInitializer(std::string& init, const Class* classObj) const
 {
    if (_initializeString != "") {
       init = _initializeString;
    } else {
-      Attribute::fillInitializer(init);
+      Attribute::fillInitializer(init, classObj);
    }
 }
 

@@ -73,6 +73,9 @@ class MacroConditional
       void unsetNegateCondition() {
 	 _negate_condition = false;
       }
+      void flipCondition() {
+	 _negate_condition = not _negate_condition;
+      }
 
       std::string getBeginning() const;
       std::string getEnding() const;
