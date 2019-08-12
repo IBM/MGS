@@ -35,7 +35,7 @@ class FunctorDataItem : public DataItem
 
       // Constructors
       FunctorDataItem();
-      FunctorDataItem(std::unique_ptr<Functor> data);
+      FunctorDataItem(std::unique_ptr<Functor>& data);
       FunctorDataItem(const FunctorDataItem& DI);
 
       // Destructor

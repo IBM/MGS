@@ -25,7 +25,7 @@ StructDataItem::StructDataItem()
 {
 }
 
-StructDataItem::StructDataItem(std::unique_ptr<Struct> data)
+StructDataItem::StructDataItem(std::unique_ptr<Struct>& data)
 {
    _data = data.release();
 }

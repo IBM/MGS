@@ -36,7 +36,7 @@ class NodeSetDataItem : public TriggerableDataItem
 
       // Constructors
       NodeSetDataItem();
-      NodeSetDataItem(std::unique_ptr<NodeSet> nodeset);
+      NodeSetDataItem(std::unique_ptr<NodeSet>& nodeset);
       NodeSetDataItem(const NodeSetDataItem& DI);
 
       // Destructor

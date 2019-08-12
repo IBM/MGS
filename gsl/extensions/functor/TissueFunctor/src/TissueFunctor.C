@@ -4234,7 +4234,7 @@ void TissueFunctor::doNodeInit(LensContext* lc)
       (*gld)->getNodeType()->getInitializationParameterSet(initPset);
       if (ifunctor) {
 	std::vector<DataItem*> nullArgs;
-	std::auto_ptr<DataItem> rval_ap;
+	std::unique_ptr<DataItem> rval_ap;
 	ifunctor->execute(lc, nullArgs, rval_ap);
 	NDPairListDataItem* ndpldi = 
 	  dynamic_cast<NDPairListDataItem*>(rval_ap.get());

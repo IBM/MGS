@@ -25,7 +25,7 @@ FunctorDataItem::FunctorDataItem()
 {
 }
 
-FunctorDataItem::FunctorDataItem(std::unique_ptr<Functor> data)
+FunctorDataItem::FunctorDataItem(std::unique_ptr<Functor>& data)
 {
    _data = data.release();
 }

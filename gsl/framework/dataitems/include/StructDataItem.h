@@ -38,7 +38,7 @@ class StructDataItem : public DataItem
 
       // Constructors
       StructDataItem();
-      StructDataItem(std::unique_ptr<Struct> data);
+      StructDataItem(std::unique_ptr<Struct>& data);
       StructDataItem(const StructDataItem& rv);
 
       // Destructor

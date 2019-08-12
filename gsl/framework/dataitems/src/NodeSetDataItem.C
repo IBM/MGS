@@ -27,7 +27,7 @@ NodeSetDataItem::NodeSetDataItem()
 {
 }
 
-NodeSetDataItem::NodeSetDataItem(std::unique_ptr<NodeSet> nodeset)
+NodeSetDataItem::NodeSetDataItem(std::unique_ptr<NodeSet>& nodeset)
 {
    _nodeset = nodeset.release();
 }
