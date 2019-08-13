@@ -17,6 +17,7 @@ compiler:
 env:
   global:
     - PYTHON_INCLUDE_DIR=/usr/include/python3.6/
+    - PYTHON_LIB=/usr/lib/x86_64-linux-gnu/
     - CUDA=9.2.148-1
     - CUDA_SHORT=9.2
     - CUDA_APT=9-2
