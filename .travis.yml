@@ -180,7 +180,7 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           echo "Build successful"
           else
-          tail -n 300 /tmp/log_mgs.txt
+          tail -n 100 /tmp/log_mgs.txt
           echo "Build failed"
           fi
     - stage: NGS 
