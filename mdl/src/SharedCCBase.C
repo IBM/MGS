@@ -447,7 +447,7 @@ void SharedCCBase::generateWorkUnitShared()
    constructorFB 
       << TAB << "_compCategory = static_cast<" 
       << compCatName << "*>(compCategory);\n"
-      << TAB << "_rng.reSeedShared(urandom(_compCategory->getSimulation().getWorkUnitRandomSeedGenerator()));\n";   
+      << TAB << "_rng.reSeedShared(urandom(_compCategory->getSimulation().getSharedWorkUnitRandomSeedGenerator()));\n";   
    constructor->setFunctionBody(constructorFB.str());
    std::auto_ptr<Method> consToIns(constructor.release());
    instance->addMethod(consToIns);
