@@ -213,10 +213,12 @@ FROM devel-base as devel
 #USER mgs
 ADD . $MGSROOT
 WORKDIR /mgs
+
 ENV PYTHON_LIB=/usr/lib/python2.7/config-x86_64-linux-gnu/
 ENV LD_LIBRARY_PATH=${PYTHON_LIB}:$LD_LIBRARY_PATH \
     LD_RUN_PATH=${PYTHON_LIB}:${LD_RUN_PATH} \
     LIBRARY_PATH=${PYTHON_LIB}:${LIBRARY_PATH}
+
 COPY --from=mgs_baseimage /mgs/gsl/obj /mgs/gsl/obj
 COPY --from=mgs_baseimage /mgs/common/obj /mgs/common/obj
 COPY --from=mgs_baseimage /mgs/nti/obj /mgs/nti/obj
@@ -290,4 +292,5 @@ PATH=/usr/local/hdf5/bin:$PATH
 COPY --from=devel /mgs/gsl/bin /mgs/gsl/bin
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh && /mgs/gsl/bin/gslparser"]
 #ENTRYPOINT ["/mgs/gsl/bin/gslparser"]
+
 
