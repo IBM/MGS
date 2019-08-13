@@ -114,6 +114,7 @@ jobs:
           sudo apt-key add 7fa2af80.pub
           sudo apt update -qq
           sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt install -y cuda-curand-${CUDA_APT} cuda-curand-dev-${CUDA_APT} 
           sudo apt clean
           fi
         - sudo ln -s ${CUDA_HOME} /usr/local/cuda
