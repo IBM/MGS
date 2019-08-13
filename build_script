@@ -48,7 +48,7 @@ function print_help {
   --as-NTS                      build Neural Tissue Simulator (NTS) - using models/nts.mdf
   --as-NTS-NVU                  build NTS+NVU - using NVU.mdf
   --as-NGS                      build Neuronal Graph Simulator (NGS) - using ngs.mdf
-  --as-GPU                      models that support GPU
+  --as-GPU                      a collection of models that support CUDA GPU - using gpu.mdf
 
 Examples:
 1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
@@ -471,11 +471,18 @@ fi
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
-    echoerr mpi found...; else echoerr "mpi not found!"; exit 1; fi
+    echoerr mpi found...; else echoerr -e "${cc_red}mpi not found! please either install through your distributions package manager or from source${cc_normal}"; 
+    echoerr "... or run: sh ./get_ompi.sh"
+    echoerr "... or run: sh ./get_mpich.sh"
+    exit 1; 
+  fi
 fi
 
 if which bison | grep -q1 /\bison; then
-    echoerr bison found...; else echoerr "bison not found!"; exit 1; fi
+  echoerr bison found...; else echoerr -e "${cc_red}bison not found! please either install through your distributions package manager or from source${cc_normal}"; 
+  echoerr "... or run: sh ./get_bison.sh";
+  exit 1; 
+fi
 
 VALID_BISON_VERSION=2.3
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
@@ -502,7 +509,8 @@ if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
 fi
 
 if which flex | grep -q1 /\flex; then
-  echoerr flex found...; else echoerr "flex not found! please either install through your distributions package manager or from source"; 
+  echoerr flex found...; else echoerr -e "${cc_red}flex not found! please either install through your distributions package manager or from source${cc_normal}"; 
+  echoerr "... or run: sh ./get_flex.sh"
   exit 1; 
 fi
 
@@ -550,25 +558,25 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-  echoerr "python found..."; else echoerr "python not found! please either install through your distributions package manager or from source";
+  echoerr "python found..."; else echoerr -e "${cc_red}python not found! please either install through your distributions package manager or from source${cc_normal}";
   exit 1;
 fi
 
 if ldconfig -p | grep libgmp; then
-  echoerr "libgmp found..."; else echoerr "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
+  echoerr "libgmp found..."; else echoerr -e "${cc_red}libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)${cc_normal}";
   exit 1;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
   if which nvcc | grep -q1 /\nvcc; then
-    echoerr "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
+    echoerr "CUDA probably found..."; else echoerr -e "${cc_red}CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)${cc_normal}";
     exit 1
   fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
   if `ldconfig -p | grep -q armadillo`; then
-    echoerr "Armadillo probably found..."; else echoerr "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
+    echoerr "Armadillo probably found..."; else echoerr -e "${cc_red}Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)${cc_normal}";
     exit 1
   fi
 fi
@@ -594,8 +602,9 @@ if [[ -z "${PYTHON_LIB}" ]]; then
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
-  echoerr "Please install the SuiteSparse libraries (www.suitesparse.com)"
-  echoerr " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
+  echoerr -e "${cc_red}suitesparse not found! please install the SuiteSparse libraries (www.suitesparse.com)${cc_normal}"
+  echoerr "... or run: sh ./get_suitesparse.sh"
+  echoerr "... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
   exit 1
 fi
 fi
