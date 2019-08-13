@@ -18,9 +18,6 @@ void SwitchInputCompCategory::initializeShared(RNG& rng)
   SHD.var1 = SHD.deltaT*SHD.tscale;
   SHD.var2 = sqrt(SHD.var1)*SHD.noiselev;
 
-  SHD.var1 = SHD.deltaT*SHD.tscale;
-  SHD.var2 = sqrt(SHD.var1)*SHD.noiselev;
-
   SHD.currentstate = 0;
 
   SHD.statenum = 2;
