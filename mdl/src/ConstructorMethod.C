@@ -68,40 +68,50 @@ void ConstructorMethod::internalAddConstructorInitializer(
    bool on_first_round = true;
    bool previous_is_inside_macro_check = false; /* tell if the previous param is inside a macro check or not [if YES, then a new line is already added (and the current param, regardless inside a macro-check or not, can be safely added); if NO, then we need to add a new line if the current param is inside a macro-check]
 						   */
-   bool current_is_inside_macro_check = true;
+   bool current_is_inside_macro_check = false;
    if (attributes.size() > 0) {
       std::vector<Attribute*>::const_iterator it, end = attributes.end();
       std::string eachInit;
       for (it = attributes.begin(); it != end; it++) {
 	 callInitMethod(it, eachInit, copyFrom);
 	 if (eachInit != "") {
+	    if ((*it)->getMacroConditional().getName() == "")
+	    {
+	       current_is_inside_macro_check = false;
+	    }
+	    else
+	       current_is_inside_macro_check = true;
 	    if (first) {
 	       first = false;
 	    } else {
 	       on_first_round = false;
 	       /* if the attribute is wrapped inside the macro-check, then the comma is added already*/
-	       if ((*it)->getMacroConditional().getName() == "")
+	       if (current_is_inside_macro_check == false)
 	       {
-		  current_is_inside_macro_check = false;
+		  if (previous_is_inside_macro_check)
+		     inits += TAB + ", ";
+		  else
+		     inits += ", ";
 	       }
-	       else
-		  current_is_inside_macro_check = true;
-	       if (previous_is_inside_macro_check)
-		  inits += TAB + ", ";
-	       else
-		  inits += ", ";
 	    }
-	    if (previous_is_inside_macro_check)
+	    if (previous_is_inside_macro_check == false)
 	    {
-	       inits += eachInit;
-	    }else{
-	       if (current_is_inside_macro_check == true)
+	       if (current_is_inside_macro_check == false)
+		  inits += eachInit;
+	       else
 	       {
 		  if (on_first_round)
 		     inits += eachInit;
 		  else
 		     inits += "\n" + eachInit;
 	       }
+	    }else{
+	       if (current_is_inside_macro_check == true)
+	       {
+		  inits += eachInit;
+	       }
+	       else
+		  inits += eachInit;
 	    }
 	    previous_is_inside_macro_check = current_is_inside_macro_check;
 	 }
@@ -111,13 +121,17 @@ void ConstructorMethod::internalAddConstructorInitializer(
       _initializationStr = beginning;
    } else {
       if (beginning != "") {
-	if (inits.find("#")!=std::string::npos) {
-	  // This checks for a starting macro which already starts with comma
-	  _initializationStr = beginning + "\n" + inits;
-	}
-	else {
-	  _initializationStr = beginning + ", " + inits;
-	}
+	 std::size_t found = inits.find_first_not_of(" \n\t");
+	 if (found!=std::string::npos)
+	 {
+	    if (inits[found] == '#'){
+	       // This checks for a starting macro which already starts with comma
+	       _initializationStr = beginning + "\n" + inits;
+	    }
+	    else {
+	       _initializationStr = beginning + ", " + inits;
+	    }
+	 }
       } else {
 	 _initializationStr = inits;
       }
