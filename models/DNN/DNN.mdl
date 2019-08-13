@@ -122,8 +122,8 @@ Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
     string dataLocation;
     bool test;
     bool refreshErrors;
-    unsigned trainingPass;
-    unsigned trainingIterations;
+    unsigned trainingEpoch;
+    unsigned trainingEpochs;
     unsigned imageIndex;
 
     InitPhase initializeShared;

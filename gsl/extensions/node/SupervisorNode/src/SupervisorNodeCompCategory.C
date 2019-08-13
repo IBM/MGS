@@ -26,7 +26,7 @@ void SupervisorNodeCompCategory::initializeShared(RNG& rng)
   SHD.x.increaseSizeTo(IMG_SIZE);
   for (int i=0; i<IMG_SIZE; ++i) SHD.x[i]=PRELIM_STATE;
   SHD.imageIndex=-1;
-  SHD.trainingPass=1;
+  SHD.trainingEpoch=1;
 }
 
 void SupervisorNodeCompCategory::updateShared(RNG& rng) 
@@ -46,7 +46,7 @@ void SupervisorNodeCompCategory::updateShared(RNG& rng)
 	SHD.imageIndex=0;
 	shuffleDeck(dataset.training_images.size(),rng);
 	if (SHD.shready) output=true;
-	if (++SHD.trainingPass>SHD.trainingIterations) {
+	if (++SHD.trainingEpoch>SHD.trainingEpochs) {
 	  SHD.test = true;
 	  shuffleDeck(dataset.test_images.size(),rng);
 	}
