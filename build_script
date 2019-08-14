@@ -12,7 +12,10 @@ cc_blue="${esc}[0;34m"
 cc_normal=`echo -en "${esc}[m\017"`
 
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
-NPROCS=$(( $NPROCS*2/3 ))
+if [ $NPROCS -gt 2 ]; then
+  NPROCS=$(( $NPROCS*2/3 ))
+fi
+exit
 #########################################
 #   PRINT HELP
 #{{{
@@ -472,15 +475,15 @@ fi
 if [ "$PLATFORM" == "LINUX" ]; then
   if which mpiexec | grep -q1 /\mpiexec; then
     echoerr mpi found...; else echoerr -e "${cc_red}mpi not found! please either install through your distributions package manager or from source${cc_normal}"; 
-    echoerr "... or run: sh ./get_ompi.sh"
-    echoerr "... or run: sh ./get_mpich.sh"
+    echoerr "... or run: source ./get_ompi.sh"
+    echoerr "... or run: source ./get_mpich.sh"
     exit 1; 
   fi
 fi
 
 if which bison | grep -q1 /\bison; then
   echoerr bison found...; else echoerr -e "${cc_red}bison not found! please either install through your distributions package manager or from source${cc_normal}"; 
-  echoerr "... or run: sh ./get_bison.sh";
+  echoerr "... or run: source ./get_bison.sh";
   exit 1; 
 fi
 
@@ -510,7 +513,7 @@ fi
 
 if which flex | grep -q1 /\flex; then
   echoerr flex found...; else echoerr -e "${cc_red}flex not found! please either install through your distributions package manager or from source${cc_normal}"; 
-  echoerr "... or run: sh ./get_flex.sh"
+  echoerr "... or run: source ./get_flex.sh"
   exit 1; 
 fi
 
@@ -603,7 +606,7 @@ fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
   echoerr -e "${cc_red}suitesparse not found! please install the SuiteSparse libraries (www.suitesparse.com)${cc_normal}"
-  echoerr "... or run: sh ./get_suitesparse.sh"
+  echoerr "... or run: source ./get_suitesparse.sh"
   echoerr "... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
   exit 1
 fi

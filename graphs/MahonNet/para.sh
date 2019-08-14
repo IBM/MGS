@@ -94,4 +94,4 @@ for ge in ${var_ge[@]}; do
   run_serial $FOLDERSUFFIX $ge &
   sleep 1
 done; # ge
-
+echo "DONE"

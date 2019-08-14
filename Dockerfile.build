@@ -1,7 +1,7 @@
 # 
 # HPC Base image
 # Contents:
-#   CUDA version 9.0
+#   CUDA version 10.0
 #   FFTW version 3.3.8
 #   GNU compilers (upstream)
 #   HDF5 version 1.10.4

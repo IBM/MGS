@@ -22,14 +22,14 @@
     env SUITESPARSE
   
 # Container-based build
-# Step 1
+## Stepp 1
 ```console
 sudo -i
 echo 1048576 > /proc/sys/fs/inotify/max_user_watches
 exit
 ```
-# Step 2 [ignore if docker --version >= 19.03]
-# https://github.com/NVIDIA/nvidia-docker
+## Stepp 2 [ignore if docker --version >= 19.03]
+ https://github.com/NVIDIA/nvidia-docker
 ```console
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
@@ -39,8 +39,42 @@ sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
 
+## Stepp 3
+```console
 docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
-docker run --gpus all -it  --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+```
+
+## Stepp 4 [now you are inside the container]
+```console
+# The default folder is /home/mgs
+# You interact with the source as if you're on a regular machine
+./build_script -p LINUX --as-GPU
+# or
+./build_script -p LINUX --as-GPU --release
+
+# NOTE: When build using --as-GPU, you implicitly activate --gpu flag and the system is built using
+# ./models/gpu.mdf file
+
+# NOTE: Currently, the container does not have any editor (vi, emacs) as this would increase the size of the container
+# Code development can be done from the host-side (either opens a new shell, or we can switch to the host using Ctrl-p-q)
+# ... (do code development) and then switch to the container environment using 'docker attach'
+```
+
+## Hints
+Some common commands to work with docker
+```console
+# list images
+docker image ls
+
+# list containers (i.e. each is an instance of a particular image) - container's ID is on first column
+docker container ls
+
+#within a container, switch to host with <Ctrl>-p-q 
+
+# return to a running container, using the container's ID  (minimal 3 digits can be used)
+docker attach <CONTAINER-ID>
+```
   
 # Run flags
   -t Number of threads  
