@@ -59,7 +59,7 @@ docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,
 
 # NOTE: Currently, the container does not have any editor (vi, emacs) as this would increase the size of the container
 # Code development can be done from the host-side (either opens a new shell, or we can switch to the host using Ctrl-p-q)
-# ... (do code development) and then switch to the container environment using 'docker attach'
+# ... (do code development) and then switch to the container environment (for compiling/running gslparser) using 'docker attach'
 ```
 
 ## Hints
@@ -71,7 +71,7 @@ docker image ls
 # list containers (i.e. each is an instance of a particular image) - container's ID is on first column
 docker container ls
 
-#within a container, switch to host with <Ctrl>-p-q 
+# within a container, switch to host with <Ctrl>-p-q 
 
 # return to a running container, using the container's ID  (minimal 3 digits can be used)
 docker attach <CONTAINER-ID>
