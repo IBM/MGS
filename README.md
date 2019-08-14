@@ -22,13 +22,13 @@
     env SUITESPARSE
   
 # Container-based build
-## Stepp 1
+## Step 1
 ```console
 sudo -i
 echo 1048576 > /proc/sys/fs/inotify/max_user_watches
 exit
 ```
-## Stepp 2 [ignore if docker --version >= 19.03]
+## Step 2 [ignore if docker --version >= 19.03]
  https://github.com/NVIDIA/nvidia-docker
 ```console
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
@@ -39,13 +39,13 @@ sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
 
-## Stepp 3
+## Step 3
 ```console
 docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
 docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
 ```
 
-## Stepp 4 [now you are inside the container]
+## Step 4 [now you are inside the container]
 ```console
 # The default folder is /home/mgs
 # You interact with the source as if you're on a regular machine
