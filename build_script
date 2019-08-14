@@ -472,7 +472,7 @@ fi
 ## 7. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
-  if which mpiexec | grep -q1 /\mpiexec; then
+  if which mpiCC | grep -q1 /\mpiCC; then
     echoerr mpi found...; else echoerr -e "${cc_red}mpi not found! please either install through your distributions package manager or from source${cc_normal}"; 
     echoerr "... or run: source ./get_ompi.sh"
     echoerr "... or run: source ./get_mpich.sh"
