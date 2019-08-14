@@ -15,7 +15,6 @@ NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
 if [ $NPROCS -gt 2 ]; then
   NPROCS=$(( $NPROCS*2/3 ))
 fi
-exit
 #########################################
 #   PRINT HELP
 #{{{
