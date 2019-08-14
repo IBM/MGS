@@ -22,7 +22,8 @@
     env SUITESPARSE
   
 # Container-based build
-## Step 1
+## Step 1 [only run this if you get an error when running the container in Step 3]
+If inotify exceeds limit, then docker can not launch a new container, we can increase it
 ```console
 sudo -i
 echo 1048576 > /proc/sys/fs/inotify/max_user_watches
