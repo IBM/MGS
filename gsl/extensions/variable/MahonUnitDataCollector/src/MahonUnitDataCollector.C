@@ -49,6 +49,9 @@ void MahonUnitDataCollector::initialize(RNG& rng)
   {std::ostringstream os1;
     os1<< output_dir << "x3_"<<fileName;
     x3_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
+  {std::ostringstream os1;
+    os1<< output_dir << "timewindow_"<<fileName;
+    x4_file=new std::ofstream(os1.str().c_str(), std::ofstream::out | std::ofstream::app);}
 
 
   assert(rows.size()==cols.size());
@@ -187,15 +190,18 @@ unsigned i = miter2
 
 void MahonUnitDataCollector::finalize(RNG& rng) 
 {
+  //dataCollection();
   *spike_file<<std::endl;
   *x1_file<<std::endl;
   *x2_file<<std::endl;
   *x3_file<<std::endl;
+  *x4_file<< 0.0 << " " << ITER*deltaT <<std::endl;
 
   spike_file->close();
   x1_file->close();
   x2_file->close();
   x3_file->close();
+  x4_file->close();
 
   {std::ofstream ofs;
   ofs.open ("weights.dat", std::ofstream::out | std::ofstream::app);
@@ -232,7 +238,7 @@ void MahonUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPair
  
   {std::ofstream& output=*x2_file;
   output<<ITER*deltaT<<" ";//std::endl;
-  ShallowArray<double*>::iterator iter=x3.begin(), end=x3.end();
+  ShallowArray<double*>::iterator iter=x2.begin(), end=x2.end();
   for (int col=0; iter!=end && col<maxoutnum; ++iter, ++col) {
     output<<**iter<<" ";
    
@@ -251,7 +257,7 @@ void MahonUnitDataCollector::dataCollectionSpike(Trigger* trigger, NDPairList* n
   ShallowArray<bool*>::iterator iter=spikes.begin(), end=spikes.end();
   for (int col=0; iter!=end; ++iter, ++col) {
     if (**iter == true) 
-      output<<getSimulation().getIteration()<<" "<< col << std::endl;
+      output<<getSimulation().getIteration()*deltaT<<" "<< col << std::endl;
     /*
     if (++col>mxcol) {
       output<<std::endl;
@@ -287,6 +293,7 @@ MahonUnitDataCollector::~MahonUnitDataCollector()
   if (spike_file) delete spike_file;
   if (x2_file) delete x2_file; 
   if (x3_file) delete x3_file; 
+  if (x4_file) delete x4_file; 
 }
 
 void MahonUnitDataCollector::duplicate(std::unique_ptr<MahonUnitDataCollector>& dup) const

@@ -44,6 +44,10 @@ sudo systemctl restart docker
 ```console
 docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
 docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+
+
+# with debug-support to run gdb
+docker run --privileged --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
 ```
 
 ## Step 4 [now you are inside the container]

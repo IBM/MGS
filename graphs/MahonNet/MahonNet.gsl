@@ -98,7 +98,8 @@ IAF iaf;
 
 
 VariableType MahonUnitDataCollector;
-MahonUnitDataCollector collector<directory="DATA_FOLDER", fileName="Output.dat", deltaT = DELTATXX, maxoutnum = 10>;
+# maxoutnum = number of columns to write data [max = number of neurons]
+MahonUnitDataCollector collector<directory="DATA_FOLDER", fileName="Output.dat", deltaT = DELTATXX, maxoutnum = 2500>;
 
 polyConnect(iaf[].Layer(nodes), collector, <>, <>);
 

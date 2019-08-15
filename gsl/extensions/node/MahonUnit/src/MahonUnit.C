@@ -4,6 +4,7 @@
 #include "GridLayerData.h"
 #include "rndm.h"
 #include "NumInt.h"
+#include <fstream>
 #ifdef HAVE_GPU
 #include "CG_MahonUnitCompCategory.h"
 #endif
@@ -259,7 +260,6 @@ T TadjAdj(const T x, const T tadj)
 
 void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > & dx)
 {
-
   const double & V = x[0];
   double & dV = dx[0];
   const double & Nasm = x[1];
@@ -303,7 +303,11 @@ void MahonUnit::derivs(const ShallowArray< double > & x, ShallowArray< double > 
   dg = SYNA*((double) (V>0.0))*(1.0 - g) - synb*g;
 
   dV = drive*(V - VCL);
-
+  //std::cout << dV << std::endl; 
+  //std::ofstream syn_curr_file;
+  //syn_curr_file.open("syn_curr.txt",std::ofstream::out | std::ofstream::app);
+  //syn_curr_file << dV << " "; //std::endl;
+  //syn_curr_file.close();
   //dV = 0;
 
   
@@ -442,6 +446,10 @@ void MahonUnit::update4(RNG& rng)
 {
   callIteratePhase4();
   //callIterate(s1.x);
+  //std::ofstream syn_curr_file;
+  //syn_curr_file.open("syn_curr.txt",std::ofstream::out,std::ofstream::app);
+  //syn_curr_file << std::endl;
+  //syn_curr_file.close();
 }
 
 void MahonUnit::flushVars(const ShallowArray< double > & x)
@@ -486,7 +494,7 @@ void MahonUnit::updateOutputs(RNG& rng)
   if (x[0]>= SHD.spikethresh && var1 < SHD.spikethresh) spike = true;
   else spike = false;
   var1 = x[0];
-  var2 = x[5];
+  //var2 = x[5];
 
   //ShallowArray<Input>::iterator iter, end=MSNNetInps.end();
   auto end=MSNNetInps.end();
@@ -494,9 +502,11 @@ void MahonUnit::updateOutputs(RNG& rng)
   for (auto iter=MSNNetInps.begin(); iter!=end; ++iter) {
     drive += *(iter->input)*iter->weight;
   }
-
+  //std::cout << var2 << " " << drive*(x[0] - VCL) << std::endl;
 
   var3 = drive; //x[11];
+  var2 = drive*(x[0] - VCL);
+  //std::cout << var2 << std::endl;
 }
 
 

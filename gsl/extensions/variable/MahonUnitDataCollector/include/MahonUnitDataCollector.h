@@ -28,7 +28,7 @@ class MahonUnitDataCollector : public CG_MahonUnitDataCollector
       std::ofstream* x1_file=0;
       std::ofstream* x2_file=0;
       std::ofstream* x3_file=0;
-
+      std::ofstream* x4_file=0;
 };
 
 #endif
