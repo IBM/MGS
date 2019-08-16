@@ -146,7 +146,7 @@ ENV PATH=${FLEX_HOME}/bin:${PATH} \
     INCLUDE_PATH=${FLEX_HOME}/include:${INCLUDE_PATH} \
     CPLUS_INCLUDE_PATH=${FLEX_HOME}/include:${CPLUS_INCLUDE_PATH} \
     INCLUDE=${FLEX_HOME}/include:${INCLUDE}
-ENV PYTHON_INCLUDE_DIR=/usr/include/python2.7/
+ENV PYTHON_INCLUDE_DIR=/usr/include/python3.6m/
 
 RUN mkdir /home/app
 ADD ./get_bison.sh /home/packages/
