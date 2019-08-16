@@ -22,6 +22,18 @@
     env SUITESPARSE
   
 # Container-based build
+## Step 0
+
+We need to make sure the proper Nvidia driver is installed on the host machine. 
+Table 1 in the link below tells the minimal Nvidia driver version that works for each version of CUDA library.
+https://docs.nvidia.com/deploy/cuda-compatibility/index.html
+
+The container is based on CUDA 10.0.  The link to download and instruction to install the Nvidia driver:
+https://developer.nvidia.com/cuda-10.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1604&target_type=deblocal
+
+The link to all *.deb files:
+https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/
+
 ## Step 1 [only run this if you get an error when running the container in Step 3]
 If inotify exceeds limit, then docker can not launch a new container, we can increase it
 ```console
