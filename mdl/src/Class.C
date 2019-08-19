@@ -937,6 +937,14 @@ void Class::generateClassDefinition(std::ostringstream& os)
    printAccess(AccessType::PUBLIC, "public", os);
    printAccess(AccessType::PROTECTED, "protected", os);
    printAccess(AccessType::PRIVATE, "private", os);
+   if (getClassInfoPrimeType() == PrimeType::Node and
+       getClassInfoSubType() == SubType::BaseCompCategory)
+   {
+     std::string extra_inc_file(_name + ".h_extra.incl");
+     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+       << "      # include \"" << extra_inc_file << "\"\n" 
+       << "#endif\n";
+   }
    if (_memberClass) os << TAB;
    os << "};\n\n";
 }
