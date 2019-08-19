@@ -31,7 +31,7 @@ Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
 //}}}
 
-/*#define USE_GPU_GSL*/
+//#define USE_GPU_GSL
 #ifdef USE_GPU_GSL
 InitPhases = { initialize(GPU) };
 RuntimePhases = { dataCollect, update(GPU), updateWeight(GPU), copy(GPU), lastPhase };
