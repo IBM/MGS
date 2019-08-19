@@ -410,6 +410,8 @@ class Class
       MacroConditional _macroConditional;
       std::vector<TypeDefinition> _typeDefinitions;
       std::pair<PrimeType, SubType> _classInfo;
+      //<filename, content> of these extra files
+      std::map<std::string, std::string> _extra_files;
 
       /* add here any thing that you want to add to class definition section, 
        * e.g. a function declaration [but the body won't be here or in the source file]

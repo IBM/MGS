@@ -846,6 +846,19 @@ void Class::generateOutput(const std::string& modifier,
       fs << os.str();
       fs.close();
    } 
+   if (_extra_files.size() > 0)
+   {
+     auto iter = _extra_files.begin();
+     while (iter != _extra_files.end())
+     {
+       std::cout << iter->first << std::endl;
+       std::string fName = directory + "/" + iter->first;
+       std::ofstream fs(fName.c_str());
+       fs << iter->second;
+       fs.close();
+       iter++;
+     }
+   }
 }
 
 void Class::generateOutputCustom(const std::string& filename, 
@@ -892,6 +905,16 @@ void Class::generateHeader(const std::string& moduleName)
 void Class::generateClassDefinition(std::ostringstream& os) 
 {
    std::string s; 
+   if (getClassInfoPrimeType() == PrimeType::Node and
+       getClassInfoSubType() == SubType::BaseCompCategory)
+   {
+     std::string extra_inc_file(_name + ".h_header.incl");
+     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+       << "      #include \"" << extra_inc_file << "\"\n" 
+       << "#endif\n";
+     std::string gen_file(extra_inc_file + ".gen");
+     _extra_files[gen_file] = R"(# Please include any header files for the extra data that you add to  )" + _name;
+   }
    if (_templateClass) {
      getTemplateClassParametersString(s);
      os << "template " << s << " ";
@@ -942,8 +965,10 @@ void Class::generateClassDefinition(std::ostringstream& os)
    {
      std::string extra_inc_file(_name + ".h_extra.incl");
      os << "#if __has_include(\"" << extra_inc_file << "\")\n"
-       << "      # include \"" << extra_inc_file << "\"\n" 
+       << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
+     std::string gen_file(extra_inc_file + ".gen");
+     _extra_files[gen_file] = R"(# Please add any extra data member that you add to  )" + _name;
    }
    if (_memberClass) os << TAB;
    os << "};\n\n";
