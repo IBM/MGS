@@ -33,6 +33,7 @@ Interface Output3Producer {
   double* output1;
   double* output2;
   double* output3;
+}
 
 Interface OutputProducer {
   double* output;
