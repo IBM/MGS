@@ -31,51 +31,19 @@
 #define publicWeight  (_container->um_publicWeight[index])
 #define neighborsWeight  (_container->um_neighborsWeight[index])
 #endif
-//CUDA_CALLABLE 
 void LifeNode::initialize(RNG& rng) 
 {
    publicValue=value;
    weight = drandom(-1,1, rng);
 }
 
-//CUDA_CALLABLE 
 void LifeNode::update(RNG& rng) 
 {
    int neighborCount=0;
-#if defined(HAVE_GPU) 
-   {
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-   ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM>::iterator iter, end = neighbors.end();
-   for (iter=neighbors.begin(); iter!=end; ++iter) {
+   auto end = neighbors.end();
+   for (auto iter=neighbors.begin(); iter!=end; ++iter) {
      neighborCount += **iter;
    }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
-   /* NOTE: *iter
-    * becomes
-    *       (_container->um_neighbors[idx])
-    */
-   auto um_neighbors_from = _container->um_neighbors_start_offset[index];
-   auto um_neighbors_to = _container->um_neighbors_num_elements[index]-1;
-   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
-     neighborCount += *(_container->um_neighbors[idx]);
-   }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-   auto um_neighbors_from = index * _container->um_neighbors_max_elements;
-   auto um_neighbors_to = um_neighbors_from + _container->um_neighbors_num_elements[index];
-   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
-     neighborCount += *(_container->um_neighbors[idx]);
-   }
- #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-   assert(0);
- #endif
-   }
-#else
-   //original code [before GPU-support]
-   ShallowArray<int*>::iterator iter, end = neighbors.end();
-   for (iter=neighbors.begin(); iter!=end; ++iter) {
-     neighborCount += **iter;
-   }
-#endif
    
    if (neighborCount<= getSharedMembers().tooSparse || neighborCount>=getSharedMembers().tooCrowded) {
      value=0;
@@ -86,31 +54,72 @@ void LifeNode::update(RNG& rng)
    /* reproduction */
    //if (neighborCount == 3 and value == 0) value = 1;
 }
+//void LifeNode::update(RNG& rng) 
+//{
+//#if defined(HAVE_GPU) 
+//   {
+// #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+//   auto end = neighbors.end();
+//   for (auto iter=neighbors.begin(); iter!=end; ++iter) {
+//     neighborCount += **iter;
+//   }
+//   /* NOT recommended
+//   ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM>::iterator iter, end = neighbors.end();
+//   for (iter=neighbors.begin(); iter!=end; ++iter) {
+//     neighborCount += **iter;
+//   }
+//   */
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+//   /* NOTE: *iter
+//    * becomes
+//    *       (_container->um_neighbors[idx])
+//    */
+//   auto um_neighbors_from = _container->um_neighbors_start_offset[index];
+//   auto um_neighbors_to = _container->um_neighbors_num_elements[index]-1;
+//   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
+//     neighborCount += *(_container->um_neighbors[idx]);
+//   }
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+//   auto um_neighbors_from = index * _container->um_neighbors_max_elements;
+//   auto um_neighbors_to = um_neighbors_from + _container->um_neighbors_num_elements[index];
+//   for (auto idx = um_neighbors_from; idx < um_neighbors_to; ++idx) {
+//     neighborCount += *(_container->um_neighbors[idx]);
+//   }
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+//   assert(0);
+// #endif
+//   }
+//#else
+//   //original code [before GPU-support]
+//   ShallowArray<int*>::iterator iter, end = neighbors.end();
+//   for (iter=neighbors.begin(); iter!=end; ++iter) {
+//     neighborCount += **iter;
+//   }
+//#endif
+//}
 
-//CUDA_CALLABLE 
 void LifeNode::updateWeight(RNG& rng) 
 {
   float weightSum = 0;
-  float learnRate = 0.0001;
   float dw = 0;
   // add your code here
   for (int ii = 0; ii < SHD.complexity; ii++)
   {
 #if defined(HAVE_GPU) 
     {
- #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-   ShallowArray_Flat<float*, Array_Flat<int>::MemLocation::UNIFIED_MEM>::iterator iter, end = neighborsWeight.end();
-   for (iter=neighborsWeight.begin(); iter!=end; ++iter) {
-     weightSum += **iter;
-   }
-#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
-    auto um_neighborsWeight_from = index * _container->um_neighborsWeight_max_elements;
-    auto um_neighborsWeight_to = um_neighborsWeight_from + _container->um_neighborsWeight_num_elements[index];
-    for (auto idx = um_neighborsWeight_from; idx < um_neighborsWeight_to; ++idx) {
-      weightSum += *(_container->um_neighborsWeight[idx]);
-    }
-#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
-#endif
+  #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      auto end = neighborsWeight.end();
+      for (auto iter=neighborsWeight.begin(); iter!=end; ++iter) {
+        weightSum += **iter;
+      }
+  #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      auto um_neighborsWeight_from = index * _container->um_neighborsWeight_max_elements;
+      auto um_neighborsWeight_to = um_neighborsWeight_from + _container->um_neighborsWeight_num_elements[index];
+      for (auto idx = um_neighborsWeight_from; idx < um_neighborsWeight_to; ++idx) {
+        weightSum += *(_container->um_neighborsWeight[idx]);
+      }
+  #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+  #endif
     }
 #else 
    //original code [before GPU-support]

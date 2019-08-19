@@ -51,9 +51,8 @@ void __global__ LifeNode_kernel_update(
    if (index < size)
    {
       int neighborCount=0;
-      /* TUAN TODO find out the bug in here */
    #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
-      ShallowArray_Flat<int*>::iterator end = neighbors[index].end();
+      auto end = neighbors[index].end();
       for (auto iter=neighbors[index].begin(); iter!=end; ++iter) {
          neighborCount += **iter;
       }
@@ -142,7 +141,6 @@ void __global__ LifeNode_kernel_updateWeight(
    int index = blockDim.x * blockIdx.x + threadIdx.x;
    if (index < size) {
       float weightSum = 0;
-      float learnRate = 0.0001;
       float dw = 0;
        // add your code here
       for (int ii = 0; ii < complexity; ii++)
