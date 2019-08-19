@@ -19,9 +19,9 @@ class CalciumDomainDisplay : public CG_CalciumDomainDisplay
       CG_CalciumDomainDisplayOutAttrPSet* CG_outAttrPset);
   CalciumDomainDisplay();
   virtual ~CalciumDomainDisplay();
-  virtual void duplicate(std::auto_ptr<CalciumDomainDisplay>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_CalciumDomainDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<CalciumDomainDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_CalciumDomainDisplay>& dup) const;
 
   private:
   std::ofstream* outFile = 0;

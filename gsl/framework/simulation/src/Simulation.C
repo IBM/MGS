@@ -85,11 +85,20 @@ int Simulation::P2P_TAG = 21;
 
 #endif // DISABLE_PTHREADS
 
+#if defined(HAVE_GPU) 
+   #include <cuda_runtime_api.h>
+#endif
+#include "rndm.h"
+
+
 // Set states; _iteration to 1
 #ifndef DISABLE_PTHREADS
-Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed)
+//Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed)
+Simulation::Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed, 
+    int gpuID)
 #else // DISABLE_PTHREADS
-Simulation::Simulation(int numWorkUnits, unsigned seed)
+//Simulation::Simulation(int numWorkUnits, unsigned seed)
+Simulation::Simulation(int numWorkUnits, unsigned seed, int gpuID)
 #endif // DISABLE_PTHREADS
 
    :  _state(Simulation::_UNUSED), _iteration(0), _ntm(0), _etm(0), _root(0),
@@ -111,6 +120,9 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
 #endif  //HAVE_MPI
       , _numWorkUnits(numWorkUnits), _numGranules(0), _partitioner(0)
 {
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
+  _currentConnectNodeSet = 0;
+#endif
    std::string fileName;
    fileName = "/so/Dependfile";
 
@@ -127,6 +139,17 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
       //Create a thread pool with the desired number of threads
       _threadPool = new ThreadPool(_numThreads, _numCpus, bindThreadsToCpus);
    }
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#if defined(USE_THREADPOOL_C11)
+   {
+      //the thread pool is created, and release at the end of each connection
+     //int numThreads = 10;
+     //const size_t nthreads = std::min(10, (int)std::thread::hardware_concurrency());
+     const size_t nthreads = std::min(_numThreads, (int)std::thread::hardware_concurrency());
+     threadPoolC11.reset(new ThreadPoolC11(nthreads));
+   }
+#endif
+#endif
 #endif // DISABLE_PTHREADS
 
    _root = new Repertoire("Root");
@@ -148,10 +171,6 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
    _ntm = new TypeManager<NodeType>();
    _etm = new TypeManager<EdgeType>();
 
-   LENS_PT_LOCK(_timerMutex);
-   _simTimer.start();
-   LENS_PT_UNLOCK(_timerMutex);
-
 #ifdef HAVE_MPI
    _phaseNames.push_back("FLUSH_LENS");
    _communicatingPhases["FLUSH_LENS"]=true;
@@ -162,11 +181,74 @@ Simulation::Simulation(int numWorkUnits, unsigned seed)
    _nump=1;
 #endif // HAVE_MPI
 
+   LENS_PT_LOCK(_timerMutex);
+   _simTimer.start();
+   if (_rank==0) printf("Simulation construct start: t = %lf\n\n", _simTimer.lapWallTime());
+   LENS_PT_UNLOCK(_timerMutex);
+
+#if defined(HAVE_GPU) 
+   int deviceCount = -1; // number of devices
+   int dev = 0;
+
+//#define DEBUG_FLATARRAY
+#ifdef DEBUG_FLATARRAY
+#else
+   gpuErrorCheck(cudaGetDeviceCount(&deviceCount));
+
+   if (deviceCount == 0) {
+     fprintf(stderr, "No CUDA devices found\n");
+     return;
+   }
+   else{
+     std::cout << "There are " << deviceCount << " CUDA devices found\n";
+   }
+
+
+   if (gpuID < 0)
+   {
+     dev = _rank % int(deviceCount);
+   }else {
+     dev = gpuID;
+   }
+   cudaError_t error = cudaSetDevice(dev);
+   if (error != cudaSuccess) {
+     fprintf(stderr, "Error setting device to %d on rank %d (%d processes): %s\n",
+	 dev, _rank, _nump, cudaGetErrorString(error));
+     return;
+   }
+   else{
+     printf("     rank %d get GPU %d\n", _rank, dev);
+     print_GPU_info(dev);
+   }
+#endif
+#endif
+ 
    // Seed the random number generator
    _rng.reSeed(seed, _rank) ;
    _rngShared.reSeedShared(seed-1);
    _rngSeed=seed;
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("Simulation construct end: t = %lf\n\n", _simTimer.lapWallTime());
+   _simTimer.reset();
+   LENS_PT_UNLOCK(_timerMutex);
 }
+
+#if defined(HAVE_GPU) 
+void Simulation::print_GPU_info(int devID)
+{
+  cudaDeviceProp prop;
+  gpuErrorCheck(cudaGetDeviceProperties(&prop, devID));
+  printf("Device Number: %d\n", devID);
+  printf("  Device name: %s\n", prop.name);
+  printf("  CC: %d.%d\n", prop.major, prop.minor);
+  printf("  Memory Clock Rate (KHz): %d\n",
+      prop.memoryClockRate);
+  printf("  Memory Bus Width (bits): %d\n",
+      prop.memoryBusWidth);
+  printf("  Peak Memory Bandwidth (GB/s): %f\n\n",
+      2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
+}
+#endif
 
 void Simulation::pauseHandler()
 {
@@ -220,6 +302,10 @@ void Simulation::run()
 
 bool Simulation::start()
 {
+   LENS_PT_LOCK(_timerMutex);
+   _simTimer.start();
+   if (_rank==0) printf("Initialization start: t = %lf\n\n", _simTimer.lapWallTime());
+   LENS_PT_UNLOCK(_timerMutex);
 #ifdef HAVE_MPI
    // set up the communication infrastructure
    std::vector<int> pIdList;
@@ -279,18 +365,17 @@ bool Simulation::start()
    // is paused) before the simulation is started.
    // DHC 8/03
 
-   int numberOfPartitions = 1;
+   int numberOfCores = 1;
 
 #ifndef DISABLE_PTHREADS
 
-   numberOfPartitions = _numWorkUnits;
+   numberOfCores = _numWorkUnits;
 
    if (_ui == 0) { // no mutex needed because there is no user interface.
       // We have to start the simulation here, otherwise the browser
       // would start it.
       run();
    } else {
-
       GraphicalUserInterface* g = dynamic_cast<GraphicalUserInterface*>(_ui);
 
       if (g) {
@@ -329,7 +414,7 @@ bool Simulation::start()
       std::list<DistributableCompCategoryBase*>::iterator it, end;
       end = _distCatList.end();
       for(it = _distCatList.begin(); it != end; ++it) {
-	 (*it)->initPartitions(numberOfPartitions);
+	 (*it)->initPartitions(numberOfCores, 1);
       }
    }
 
@@ -337,14 +422,14 @@ bool Simulation::start()
       std::list<EdgeCompCategoryBase*>::iterator it, end;
       end = _edgeCatList.end();
       for(it = _edgeCatList.begin(); it != end; ++it) {
-	 (*it)->initPartitions(numberOfPartitions);
+	(*it)->initPartitions(numberOfCores, 0);
       }
    }
 
    if (_initPhases.size() > 0) {
       if (_rank==0) printf("Running Init Phases.\n\n");
       runPhases(_initPhases);
-   }   
+   }
 
 #ifdef HAVE_MPI
    if (_rank==0) printf("Flushing Proxies.\n\n");
@@ -542,44 +627,55 @@ Simulation::~Simulation()
    MPI_Barrier(MPI_COMM_WORLD);
 #endif // HAVE_MPI
 
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+  for( auto it = _nodeShared.begin(); it != _nodeShared.end(); ++it )
+  {
+    if (it->second) delete it->second;
+  }
+#endif
+
    if (_rank==0) printf("Simulation destructed.\n");
 }
 
-void Simulation::addInitPhase(const std::string& name)
+void Simulation::addInitPhase(const std::string& name, machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _initPhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
 }
 
-void Simulation::addRuntimePhase(const std::string& name)
+void Simulation::addRuntimePhase(const std::string& name, machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _runtimePhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
 }
 
-void Simulation::addLoadPhase(const std::string& name)
+void Simulation::addLoadPhase(const std::string& name, machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _loadPhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
 }
 
-void Simulation::addFinalPhase(const std::string& name)
+void Simulation::addFinalPhase(const std::string& name, machineType mType)
 {
-   PhaseElement phase(name);
+   PhaseElement phase(name, mType);
    _finalPhases.push_back(phase);
    _phaseNames.push_back(name);
+   _machineTypes[name]=mType;
    #ifdef HAVE_MPI
    _communicatingPhases[name]=false;
    #endif
@@ -658,6 +754,10 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	 for(it3 = it->getWorkUnits().begin(); it3 != end3; ++it3) {
 	    (*it3)->execute();
 	 }
+#if defined(HAVE_GPU) 
+	 //TUAN TODO: consider sync based on stream later
+	 cudaDeviceSynchronize();
+#endif
 
 #ifdef HAVE_MPI
 	 if (_communicatingPhases[_phaseName]) {
@@ -671,7 +771,7 @@ void Simulation::runPhases(std::deque<PhaseElement>& phases)
 	       rebuildRequested = _commEngine->Communicate();
 	       assert(!rebuildRequested);
 	     }
-	   }	     
+	   }	
 	   if (_P2P) MPI_Barrier(MPI_COMM_WORLD);
 	 }
 	 //if (&phases == &_initPhases && it==phases.begin()) while(1) {}
@@ -807,6 +907,17 @@ std::string Simulation::findLaterPhase(const std::string& first,
    return first;
 }
 
+/*
+ * _machineTypes only tracks the simulation's phase
+ */
+machineType Simulation::getPhaseMachineType(std::string const & name) 
+{
+  std::map<std::string, machineType>::iterator
+    mtiter=_machineTypes.find(name);
+  assert(mtiter!=_machineTypes.end());
+  return mtiter->second;
+}
+
 std::string Simulation::getFinalRuntimePhaseName() {
    assert(_runtimePhases.size() > 0);
    return _runtimePhases[_runtimePhases.size()-1].getName();
@@ -912,7 +1023,7 @@ void Simulation::getGranules(NodeSet& nodeSet, GranuleSet& granuleSet)
    }
 }
 
-void Simulation::addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper)
+void Simulation::addGranuleMapper(std::unique_ptr<GranuleMapper>& granuleMapper)
 {
    granuleMapper->setGlobalGranuleIds(_globalGranuleId);  // _globalGranuleId is incremented by this function call
    _granuleMappers.push_back(granuleMapper.release());
@@ -998,6 +1109,45 @@ void Simulation::setSeparationGranules()
 	 (*gIt)->setDepends(&(*it));
       }
    }
+}
+
+void Simulation::benchmark_start(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   _simTimer.start();
+   if (_rank==0) printf("%s start: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   _prevTimeElapsed  = _simTimer.lapWallTime();
+   LENS_PT_UNLOCK(_timerMutex);
+}
+double Simulation::benchmark_timelapsed(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("%s passed: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime());
+   _prevTimeElapsed  = _simTimer.lapWallTime();
+   LENS_PT_UNLOCK(_timerMutex);
+   return _prevTimeElapsed;
+
+}
+void Simulation::benchmark_set_timelapsed_diff()
+{
+   LENS_PT_LOCK(_timerMutex);
+   _prevTimeElapsed  = _simTimer.lapWallTime();
+   LENS_PT_UNLOCK(_timerMutex);
+}
+void Simulation::benchmark_timelapsed_diff(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("%s duration: t = %lf\n\n", msg.c_str(),  _simTimer.lapWallTime() - _prevTimeElapsed);
+   _prevTimeElapsed  = _simTimer.lapWallTime();
+   LENS_PT_UNLOCK(_timerMutex);
+}
+void Simulation::benchmark_end(const std::string& msg)
+{
+   LENS_PT_LOCK(_timerMutex);
+   if (_rank==0) printf("%s end: t = %lf\n\n", msg.c_str(), _simTimer.lapWallTime());
+   _simTimer.reset();
+   LENS_PT_UNLOCK(_timerMutex);
+
 }
 
 #ifdef HAVE_MPI

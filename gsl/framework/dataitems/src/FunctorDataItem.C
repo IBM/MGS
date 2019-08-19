@@ -25,7 +25,7 @@ FunctorDataItem::FunctorDataItem()
 {
 }
 
-FunctorDataItem::FunctorDataItem(std::auto_ptr<Functor> data)
+FunctorDataItem::FunctorDataItem(std::unique_ptr<Functor>& data)
 {
    _data = data.release();
 }
@@ -44,7 +44,7 @@ FunctorDataItem::FunctorDataItem(const FunctorDataItem& DI)
 
 
 // Utility methods
-void FunctorDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void FunctorDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new FunctorDataItem(*this));
 }
@@ -74,7 +74,7 @@ Functor* FunctorDataItem::getFunctor(Error* error) const
 void FunctorDataItem::setFunctor(Functor *f, Error* error)
 {
    delete _data;
-   std::auto_ptr<Functor> fap;
+   std::unique_ptr<Functor> fap;
    f->duplicate(fap);
    _data = fap.release();
 }

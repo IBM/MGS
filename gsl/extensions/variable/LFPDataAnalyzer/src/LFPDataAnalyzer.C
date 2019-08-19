@@ -205,17 +205,17 @@ LFPDataAnalyzer::~LFPDataAnalyzer()
 {
 }
 
-void LFPDataAnalyzer::duplicate(std::auto_ptr<LFPDataAnalyzer>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<LFPDataAnalyzer>& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::auto_ptr<Variable>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }
 
-void LFPDataAnalyzer::duplicate(std::auto_ptr<CG_LFPDataAnalyzer>& dup) const
+void LFPDataAnalyzer::duplicate(std::unique_ptr<CG_LFPDataAnalyzer>& dup) const
 {
   dup.reset(new LFPDataAnalyzer(*this));
 }

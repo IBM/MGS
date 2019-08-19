@@ -49,11 +49,12 @@ std::string PhaseTypeGridLayers::getParameter(
 
 void PhaseTypeGridLayers::generateInstancePhaseMethod( 
    Class& c, const std::string& name, const std::string& instanceType, 
-   const std::string& componentType) const
+   const std::string& componentType,
+   const std::string& workUnitName) const
 {
    std::ostringstream os;
    std::auto_ptr<Method> method;
-   getInternalInstancePhaseMethod(method, name, componentType);
+   getInternalInstancePhaseMethod(method, name, componentType, workUnitName);
 
    std::string insBaseType = PREFIX + instanceType;
 
@@ -75,14 +76,16 @@ std::string PhaseTypeGridLayers::getWorkUnitsMethodBody(
    const std::string& componentType) const
 {
    std::ostringstream os;
+   
+   std::string workUnitName = instanceType + "WorkUnitGridLayers"; 
 
    os << tab << instanceType << "GridLayerData** it = _gridLayerDataArray;\n"
       << tab << instanceType 
       << "GridLayerData** end = it + _gridLayerDataArraySize;\n"
       << tab << "for (; it < end; ++it) {\n"
-      << tab << TAB << "WorkUnit* workUnit = new " << instanceType 
-      << "WorkUnitGridLayers(*it, &" << instanceType << COMPCATEGORY << "::" 
-      << getInstancePhaseMethodName(name) << ", this);\n" 
+      << tab << TAB << "WorkUnit* workUnit = new " << workUnitName 
+      << "(*it, &" << instanceType << COMPCATEGORY << "::" 
+      << getInstancePhaseMethodName(name, workUnitName) << ", this);\n" 
       //<< tab << TAB << workUnits << ".push_back(workUnit);\n"
       << tab << TAB << "_" << workUnits << "[\"" << name 
       << "\"].push_back(workUnit);\n"

@@ -1,0 +1,140 @@
+#if defined(HAVE_GPU)
+void CG_LifeNodeCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
+{
+   //int BLOCKS_LIFENODE = _nodes.size();
+   //int THREADS_PER_BLOCK_LIFENODE = 1;
+   int THREADS_PER_BLOCK_LIFENODE = 256;
+   int BLOCKS_LIFENODE = ceil((float)_nodes.size() / THREADS_PER_BLOCK_LIFENODE);
+   for (int ii=0; ii < um_weight.size(); ii++)
+      um_weight[ii] = drandom(-1,1, wu->getRNG());
+   assert(BLOCKS_LIFENODE >=1);
+   //kernel_update<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
+   //      _nodes.size()
+   //      , getSharedMembers().tooSparse
+   //      , getSharedMembers().tooCrowded
+   //      );
+   //TUAN TODO: consider using stream later
+   LifeNode_kernel_initialize<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
+         um_value.getDataRef(),
+         um_publicValue.getDataRef(),
+         //um_neighbors.getDataRef(),
+         _nodes.size(),
+         getSharedMembers().tooSparse,
+         getSharedMembers().tooCrowded
+         );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+void CG_LifeNodeCompCategory::CG_host_update(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
+{
+   //int BLOCKS_LIFENODE = _nodes.size();
+   //int THREADS_PER_BLOCK_LIFENODE = 1;
+   int THREADS_PER_BLOCK_LIFENODE = 256;
+   int BLOCKS_LIFENODE = ceil((float)_nodes.size() / THREADS_PER_BLOCK_LIFENODE);
+   /* similar effect */
+   //int BLOCKS_LIFENODE = (_nodes.size() + THREADS_PER_BLOCK_LIFENODE -1 ) / THREADS_PER_BLOCK_LIFENODE);
+   /* consider using this to improve performance [if we know some data are mostly read]
+    * cudaMemAdvise(A, size, cudaMemAdviseSetReadMostly, 0); 
+    * cudaMemAdvise(B, size, cudaMemAdviseSetReadMostly, 0);
+    */
+   //kernel_update<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
+   //      _nodes.size()
+   //      , getSharedMembers().tooSparse
+   //      , getSharedMembers().tooCrowded
+   //      );
+   //TUAN TODO: consider using stream later
+   LifeNode_kernel_update<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
+         um_value.getDataRef(),
+         um_publicValue.getDataRef(),
+   #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+         um_neighbors.getDataRef(),
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+         um_neighbors.getDataRef(),
+         um_neighbors_start_offset.getDataRef(),
+         um_neighbors_num_elements.getDataRef(),
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+         um_neighbors.getDataRef(),
+         um_neighbors_max_elements,
+         um_neighbors_num_elements.getDataRef(),
+   #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+         um_neighbors.getDataRef(),
+         //need more info here
+   #endif
+         _nodes.size()
+         , getSharedMembers().tooSparse
+         , getSharedMembers().tooCrowded
+         );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+void CG_LifeNodeCompCategory::CG_host_copy(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
+{
+   //int BLOCKS_LIFENODE = _nodes.size();
+   //int THREADS_PER_BLOCK_LIFENODE = 1;
+   int THREADS_PER_BLOCK_LIFENODE = 256;
+   int BLOCKS_LIFENODE = ceil((float)_nodes.size() / THREADS_PER_BLOCK_LIFENODE);
+   //kernel_copy<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
+   //      _nodes.size()
+   //      , getSharedMembers().tooSparse
+   //      , getSharedMembers().tooCrowded
+   //      );
+   //TUAN TODO: consider using stream later
+   LifeNode_kernel_copy<<< BLOCKS_LIFENODE, THREADS_PER_BLOCK_LIFENODE >>> (
+         um_value.getDataRef(),
+         um_publicValue.getDataRef(),
+         um_weight.getDataRef(),
+         um_publicWeight.getDataRef(),
+         _nodes.size()
+         );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+void CG_LifeNodeCompCategory::CG_host_updateWeight(NodePartitionItem* arg, CG_LifeNodeWorkUnitInstance* wu) 
+{
+   //std::cout << " actionType = " << getSharedMembers().actionType << std::endl;
+
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   LifeNode_kernel_updateWeight<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      um_value.getDataRef()
+      , um_publicValue.getDataRef()
+      , um_weight.getDataRef()
+      , um_publicWeight.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_neighbors.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_neighbors.getDataRef()
+      , um_neighbors_start_offset.getDataRef()
+      , um_neighbors_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_neighbors.getDataRef()
+      , um_neighbors_max_elements
+      , um_neighbors_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_neighbors.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_neighborsWeight.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_neighborsWeight.getDataRef()
+      , um_neighborsWeight_start_offset.getDataRef()
+      , um_neighborsWeight_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_neighborsWeight.getDataRef()
+      , um_neighborsWeight_max_elements
+      , um_neighborsWeight_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_neighborsWeight.getDataRef()
+      //need more info here
+      #endif
+
+      , _nodes.size()
+      , getSharedMembers().complexity
+      , getSharedMembers().actionType
+      , getSharedMembers().tooCrowded
+      , getSharedMembers().tooSparse
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif

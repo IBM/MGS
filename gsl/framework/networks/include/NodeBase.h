@@ -20,6 +20,7 @@
 #include "Node.h"
 #include "NodeRelationalDataUnit.h"
 #include "ShallowArray.h"
+#include "rndm.h"
 
 #include <deque>
 #include <vector>
@@ -37,7 +38,6 @@ class Simulation;
 
 class NodeBase : public Node
 {
-
    public:
       NodeBase();
       virtual const std::deque<Constant*>& getPreConstantList();

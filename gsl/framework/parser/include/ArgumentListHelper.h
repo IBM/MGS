@@ -26,7 +26,7 @@
 class ArgumentListHelper
 {
    public:
-      void getDataItem(std::auto_ptr<DataItem>& dataItem
+      void getDataItem(std::unique_ptr<DataItem>& dataItem
 		  , LensContext* c
 		  , C_argument_list* argumentList
 		  , C_type_specifier* typeSpec);

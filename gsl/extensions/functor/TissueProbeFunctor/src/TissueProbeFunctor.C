@@ -31,9 +31,9 @@ void TissueProbeFunctor::userInitialize(LensContext* CG_c)
 {
 }
 
-std::auto_ptr<NodeSet> TissueProbeFunctor::userExecute(LensContext* CG_c) 
+std::unique_ptr<NodeSet> TissueProbeFunctor::userExecute(LensContext* CG_c) 
 {
-  std::auto_ptr<NodeSet> rval;
+  std::unique_ptr<NodeSet> rval;
   NDPairList::iterator ndpiter = _tissueFunctor->_params->end(),
                        ndpend_reverse = _tissueFunctor->_params->begin();
   //NDPairList::iterator ndpiter = _tissueFunctor->getParams()->end(),
@@ -91,17 +91,17 @@ TissueProbeFunctor::TissueProbeFunctor(TissueProbeFunctor* tpf)
 }
 
 
-void TissueProbeFunctor::duplicate(std::auto_ptr<TissueProbeFunctor>& dup) const
+void TissueProbeFunctor::duplicate(std::unique_ptr<TissueProbeFunctor>& dup) const
 {
    dup.reset(new TissueProbeFunctor(*this));
 }
 
-void TissueProbeFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void TissueProbeFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new TissueProbeFunctor(*this));
 }
 
-void TissueProbeFunctor::duplicate(std::auto_ptr<CG_TissueProbeFunctorBase>& dup) const
+void TissueProbeFunctor::duplicate(std::unique_ptr<CG_TissueProbeFunctorBase>& dup) const
 {
    dup.reset(new TissueProbeFunctor(*this));
 }

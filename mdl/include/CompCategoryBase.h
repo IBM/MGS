@@ -31,7 +31,6 @@ class StructType;
 class ConnectionIncrement;
 
 class CompCategoryBase : public InterfaceImplementorBase {
-
    public:
       CompCategoryBase(const std::string& fileName);
       CompCategoryBase(const CompCategoryBase& rv);
@@ -48,13 +47,16 @@ class CompCategoryBase : public InterfaceImplementorBase {
       StructType* getInAttrPSet() {
 	 return _inAttrPSet;
       }
+      virtual void addSharedDataToKernelArgs(Class* c) {};
 
    protected:
       void generateInAttrPSet();
       void generatePSet();
+      void generatePSet(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       void generateWorkUnitInstance();
       void generateInstance();
-      void generateCompCategoryBase();
+      void generateInstance(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType, Class* ptr=nullptr);
+      void generateCompCategoryBase(Class* ptr=nullptr);
       void generateCompCategory();
       void generateTriggerableCallerInstance();
       void generateResourceFile();                // added by Jizhu Lu on 02/09/2006
@@ -75,7 +77,7 @@ class CompCategoryBase : public InterfaceImplementorBase {
       std::string getInstanceName() const {
 	 return getName();
       }
-      std::string getCompCategoryBaseName() const {
+      virtual std::string getCompCategoryBaseName() const {
 	 return PREFIX + getName() + COMPCATEGORY;
       }
       std::string getCompCategoryName() const {

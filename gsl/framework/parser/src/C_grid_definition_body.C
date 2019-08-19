@@ -24,6 +24,10 @@
 #include "SyntaxError.h"
 #include "SyntaxErrorException.h"
 #include "C_production.h"
+//#define DEBUG_TIMER
+#ifdef DEBUG_TIMER 
+#include "Simulation.h"
+#endif
 
 void C_grid_definition_body::internalExecute(LensContext *c)
 {
@@ -66,7 +70,7 @@ C_grid_definition_body* C_grid_definition_body::duplicate() const
 }
 
 void C_grid_definition_body::duplicate(
-   std::auto_ptr<RepertoireFactory>& rv) const
+   std::unique_ptr<RepertoireFactory>& rv) const
 {
    rv.reset(new C_grid_definition_body(*this));
 }
@@ -81,6 +85,11 @@ C_grid_definition_body::~C_grid_definition_body()
 Repertoire* C_grid_definition_body::createRepertoire(
    std::string const& repName, LensContext* c)
 {
+#ifdef DEBUG_TIMER 
+   Simulation* sim = c->sim;
+	if (sim->getRank() == 0)
+	  std::cout<< ".............inside create repertoire "  << std::endl;
+#endif
    std::vector<int> size;
    // _dimDecl is dim declaration
    // _icl is int constant list
@@ -97,20 +106,22 @@ Repertoire* C_grid_definition_body::createRepertoire(
    const RepertoireDataItem* crdi = dynamic_cast<const RepertoireDataItem*>(
       c->symTable.getEntry(currentRep));
    if (crdi == 0) {
+//      std::string mes = 
+//	 "dynamic cast of DataItem to RepertoireDataItem failed";
       std::string mes = 
-	 "dynamic cast of DataItem to RepertoireDataItem failed";
+	 "dynamic cast of DataItem to RepertoireDataItem failed: the grid " + repName + " should be at the highest level" ;
       throwError(mes);
    }
    Repertoire* parentRep = crdi->getRepertoire();
 
-   std::auto_ptr<Repertoire> rap(gridRep);
+   std::unique_ptr<Repertoire> rap(gridRep);
    parentRep->addSubRepertoire(rap);
    //gridRep->setParentRepertoire(parentRep);
 
    // put new repertoire in symbol table in the current scope
     RepertoireDataItem * rdi = new RepertoireDataItem;
     rdi->setRepertoire(gridRep);
-    std::auto_ptr<DataItem> di_ap(rdi);
+    std::unique_ptr<DataItem> di_ap(rdi);
 
    try {
       c->symTable.addEntry(repName, di_ap);
@@ -126,11 +137,20 @@ Repertoire* C_grid_definition_body::createRepertoire(
 		 currentRep + " " + e.getError());
    }
    
+#ifdef DEBUG_TIMER 
+	sim->benchmark_timelapsed_diff("... before creating localCopy ()");
+#endif
    // Create a copy so that the original does not get modified.
    C_grid_translation_unit* localCopy = 
       new C_grid_translation_unit(*_gridTransUnit);
+#ifdef DEBUG_TIMER 
+	sim->benchmark_timelapsed_diff("... after creating localCopy ()");
+#endif
    try {
       localCopy->execute(c, grid);
+#ifdef DEBUG_TIMER 
+	sim->benchmark_timelapsed_diff("... after localCopy->execute()");
+#endif
    } catch (SyntaxErrorException& e) {
       e.printError();
       e.resetError();

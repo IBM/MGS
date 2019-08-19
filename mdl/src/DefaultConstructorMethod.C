@@ -73,5 +73,5 @@ void DefaultConstructorMethod::callInitMethod(
    const std::vector<Attribute*>::const_iterator& it,
    std::string& initStr, const std::string& copyFrom)
 {
-   (*it)->fillInitializer(initStr);
+   (*it)->fillInitializer(initStr, this->getClass());
 }

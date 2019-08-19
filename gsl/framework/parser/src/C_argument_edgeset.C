@@ -33,7 +33,7 @@ C_argument_edgeset::C_argument_edgeset(const C_argument_edgeset& rv)
       _edgeset = rv._edgeset->duplicate();
    }
    if (rv._edgesetDI) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._edgesetDI->duplicate(cc_di);
       _edgesetDI = dynamic_cast<EdgeSetDataItem*>(cc_di.release());
    }

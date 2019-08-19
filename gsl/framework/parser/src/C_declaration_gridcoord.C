@@ -31,7 +31,7 @@ void C_declaration_gridcoord::internalExecute(LensContext *c)
    //gsdi->setGridSet(_gridset->getGridSet());
    NodeSetDataItem *gsdi = new NodeSetDataItem;
    gsdi->setNodeSet(_gridset->getGridSet());
-   std::auto_ptr<DataItem> di_ap(static_cast<DataItem*>(gsdi));
+   std::unique_ptr<DataItem> di_ap(static_cast<DataItem*>(gsdi));
    try {
       c->symTable.addEntry(_declarator->getName(), di_ap);
    } catch (SyntaxErrorException& e) {

@@ -28,13 +28,13 @@ class ConnectionIncrement;
 
 class NodeType
 {
-
    public:
-      virtual void getNodeAccessor(std::auto_ptr<NodeAccessor> & r_aptr, GridLayerDescriptor* gridLayerDescriptor) =0;
-      virtual void getInitializationParameterSet(std::auto_ptr<ParameterSet> & r_aptr) =0;
-      virtual void getInAttrParameterSet(std::auto_ptr<ParameterSet> & r_aptr) =0;
-      virtual void getOutAttrParameterSet(std::auto_ptr<ParameterSet> & r_aptr) =0;
+      virtual void getNodeAccessor(std::unique_ptr<NodeAccessor> & r_aptr, GridLayerDescriptor* gridLayerDescriptor) =0;
+      virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;
+      virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;
+      virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet> & r_aptr) =0;
       virtual std::string getModelName() =0;
+      virtual const char* c_str() const = 0;
       virtual ConnectionIncrement* getComputeCost() = 0;
       virtual ~NodeType() {}
 };

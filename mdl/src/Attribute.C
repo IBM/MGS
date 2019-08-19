@@ -17,11 +17,12 @@
 #include "AccessType.h"
 #include "DataType.h"
 #include "Constants.h"
+#include "Class.h"
 #include <string>
 #include <vector>
 #include <sstream>
 
-Attribute::Attribute(int accessType)
+Attribute::Attribute(AccessType accessType)
    : _accessType(accessType), _static(false), 
      _constructorParameterNameExtra("")
 {
@@ -36,7 +37,8 @@ std::string Attribute::getStaticInstanceCode(
 {
    std::string retVal = "";
    if (_static) {
-      retVal = getType();
+      retVal = _macroConditional.getBeginning();
+      retVal += getType();
       if (isPointer()) {
 	 retVal += "*";
       }
@@ -45,11 +47,12 @@ std::string Attribute::getStaticInstanceCode(
 	 retVal += " = 0";
       }
       retVal += ";\n";
+      retVal += _macroConditional.getEnding();
    }
    return retVal;
 }
 
-std::string Attribute::getDefinition(int type) const
+std::string Attribute::getDefinition(AccessType type) const
 {
    std::ostringstream os;
    if (type == getAccessType()) {
@@ -69,13 +72,49 @@ std::string Attribute::getDefinition(int type) const
    return os.str();
 }
 
-void Attribute::fillInitializer(std::string& init) const
+void Attribute::fillInitializer(std::string& init, const Class* classObj) const
 {
    init = ""; // Important should reset to "" this is checked by the caller.
+   bool process_param = false;
+   if (getConstructorParameterName() != "" || 
+	 isPointer() || isBasic()
+      )
+      process_param = true;
+   if (_macroConditional.getName() != "" &&
+	 process_param)
+      init += _macroConditional.getBeginning();
+   std::string prefix=", ";
+
+   if (_macroConditional.getName() != "" &&
+	 process_param)
+      init += TAB + prefix;
    if (getConstructorParameterName() != "") {
-      init = getName() + "(" + getConstructorParameterName() + ")";
+      init += getName() + "(" + getConstructorParameterName() + ")";
    } else if (isPointer() || isBasic()) {
-      init = getName() + "(0)";	    
+      init += getName() + "(0)";	    
+   }
+   if (_macroConditional.getName() != "" &&
+	 process_param)
+      init += "\n" + _macroConditional.getEnding();
+   if (_macroConditional.getName() != "" &&
+	 process_param and classObj != 0)
+   {
+      if (classObj->getClassInfoPrimeType() == Class::PrimeType::Node
+	    and classObj->getClassInfoSubType() == Class::SubType::BaseClassPSet
+	 )
+      {
+	 MacroConditional tmpCond = _macroConditional;
+	 tmpCond.flipCondition();
+	 init += tmpCond.getBeginning();
+	 init += TAB + prefix;
+	 if (getConstructorParameterName() != "") {
+	    init += getName() + "(" + getConstructorParameterName() + ")";
+	 } else if (isPointer() || isBasic()) {
+	    init += getName() + "(0)";	    
+	 }
+	 init += "\n" + tmpCond.getEnding();
+	 tmpCond.flipCondition();
+      }
    }
 }
 
@@ -103,7 +142,7 @@ std::string Attribute::getCopyString(const std::string& tab)
 	       << tab << TAB << "*" << getName() << " = *(rv." << getName() 
 	       << ");\n";
 	 } else {
-	    os << tab << TAB << "std::auto_ptr< " << getType() << " > dup;\n"
+	    os << tab << TAB << "std::unique_ptr< " << getType() << " > dup;\n"
 	       << tab << TAB << "rv." << getName() << "->duplicate(dup);\n"
 	       << tab << TAB << getName() << " = dup.release();\n";
 	 }

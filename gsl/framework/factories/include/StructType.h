@@ -34,16 +34,16 @@ class StructType : public InstanceFactory
       StructType();
       StructType(const StructType& rv);
       StructType& operator=(const StructType& rv);
-      virtual void duplicate(std::auto_ptr<StructType>& dup) const=0;
-      virtual void getStruct(std::auto_ptr<Struct> & r_aptr)=0;
+      virtual void duplicate(std::unique_ptr<StructType>& dup) const=0;
+      virtual void getStruct(std::unique_ptr<Struct> & r_aptr)=0;
       virtual Struct* getStruct()=0;
       virtual std::string getName()=0;
       virtual std::string getDescription()=0;
       virtual ~StructType();
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       std::vector<DataItem*> const * args, 
 			       LensContext* c);
-      virtual void getInstance(std::auto_ptr<DataItem> & adi, 
+      virtual void getInstance(std::unique_ptr<DataItem> & adi, 
 			       const NDPairList& ndplist,
 			       LensContext* c);
    protected:

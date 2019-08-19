@@ -28,7 +28,7 @@ class CustomAttribute : public Attribute
    public:
       CustomAttribute();
       CustomAttribute(const std::string& name, const std::string& type,
-		      int accessType = AccessType::PUBLIC);
+		      AccessType accessType = AccessType::PUBLIC);
       void duplicate(std::auto_ptr<Attribute>& dup) const;
       virtual ~CustomAttribute();
 
@@ -52,6 +52,7 @@ class CustomAttribute : public Attribute
       void setInitializeString(const std::string& init);
       virtual std::string getDeleteString();
       void setCustomDeleteString(std::string);
+      void setCompleteCustomDeleteString(std::string);
       std::string getCustomDeleteString();
 
       // References have to be initialized at construction, therefore every
@@ -85,7 +86,7 @@ class CustomAttribute : public Attribute
       // itself to 0.
       // Custom attribute overrides if a certain string needs to be used
       // in initializing the attribute.
-      virtual void fillInitializer(std::string& init) const;
+      virtual void fillInitializer(std::string& init, const Class* classObj=0) const;
 
 
    private:
@@ -96,6 +97,9 @@ class CustomAttribute : public Attribute
       bool _owned;
       bool _cArray;
       bool _customDelete;
+      /* this flag is added to provide a way to customize the deletion
+       * of _nodeInstanceAccessors */
+      bool _completeCustomeDelete=false; 
       std::string _cArraySize;
       bool _reference;
       std::string _parameterName;

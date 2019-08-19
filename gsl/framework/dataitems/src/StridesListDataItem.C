@@ -32,7 +32,7 @@ StridesListDataItem::StridesListDataItem(const StridesListDataItem& DI)
 
 
 // Utility methods
-void StridesListDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void StridesListDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new StridesListDataItem(*this)));
 }

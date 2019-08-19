@@ -34,7 +34,7 @@ BoolDataItem::BoolDataItem(const BoolDataItem& DI)
 
 
 // Utility methods
-void BoolDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void BoolDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new BoolDataItem(*this));
 }

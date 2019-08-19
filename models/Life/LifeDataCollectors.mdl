@@ -17,6 +17,7 @@
 #define LIFENODEDATACOLLECTORS_MDL
 #include "../PointNeuronTools/PointNeuronTools.mdl"
 
+/* IMPORTANT: only support writing from nodes belonging to grid of 2D data */
 Variable LifeDataCollector
 {
    string fileName;

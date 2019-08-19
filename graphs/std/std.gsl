@@ -142,3 +142,6 @@ Functor Sum
  Return(float);
 };
 Sum sum();
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Trigger FloatTrigger(string description, Service svc, string operator, float criterion, int delay, string phaseName);

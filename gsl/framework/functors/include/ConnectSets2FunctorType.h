@@ -23,10 +23,10 @@ class ConnectSets2FunctorType : public FunctorType
 {
    public:
       ConnectSets2FunctorType();
-      void getFunctor(std::auto_ptr<Functor> & r_aptr);
+      void getFunctor(std::unique_ptr<Functor> & r_aptr);
       virtual std::string getName();
       virtual std::string getDescription();
-      void getQueriable(std::auto_ptr<InstanceFactoryQueriable>& dup);
+      void getQueriable(std::unique_ptr<InstanceFactoryQueriable>& dup);
       Functor* getFunctor();
       ~ConnectSets2FunctorType();
 };

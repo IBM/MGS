@@ -32,9 +32,9 @@ class SrcDimensionConstrainedSampler : public CG_SrcDimensionConstrainedSamplerB
       void userExecute(LensContext* CG_c);
       SrcDimensionConstrainedSampler();
       virtual ~SrcDimensionConstrainedSampler();
-      virtual void duplicate(std::auto_ptr<SrcDimensionConstrainedSampler>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_SrcDimensionConstrainedSamplerBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SrcDimensionConstrainedSampler>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SrcDimensionConstrainedSamplerBase>& dup) const;
 
    private:
       int _constrainedSrcDim;

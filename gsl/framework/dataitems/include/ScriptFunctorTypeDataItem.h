@@ -27,7 +27,7 @@ class ScriptFunctorTypeDataItem : public FunctorTypeDataItem
       ScriptFunctorTypeDataItem(ScriptFunctorTypeDataItem const *);
       void setFunctorType(FunctorType *type);
       ~ScriptFunctorTypeDataItem();
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
 
    private:
       FunctorType *_ownedFunctorType;

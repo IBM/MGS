@@ -103,10 +103,6 @@ bool SimInitializer::execute(int* argc, char*** argv)
 
 #endif 
    retVal = internalExecute(*argc, *argv);
-#ifdef HAVE_MPI
-   MPI_Finalize();
-#endif 
-
    return retVal;
 }
 
@@ -118,9 +114,9 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    if (!(commandLine.parse(argc, argv))) {
       return false;
    }
-   std::auto_ptr<Simulation> sim;
-   std::auto_ptr<LensLexer> scanner;
-   std::auto_ptr<LensContext> context;
+   std::unique_ptr<Simulation> sim;
+   std::unique_ptr<LensLexer> scanner;
+   std::unique_ptr<LensContext> context;
    
    char const* infilename = commandLine.getGslFile().c_str();
    std::istream *infile;
@@ -129,7 +125,7 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    // Debugging flag for bison
    yydebug = 0;
 
-#ifndef PROFILING
+//#ifndef PROFILING
    bool processed=false;
 #ifdef USING_BLUEGENE
    char temporaryName[256];
@@ -211,15 +207,21 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::cerr << "Unable to preprocess gsl file, aborting..." << std::endl << std::endl;
      return false;
    }
-#else
-   infile = new std::ifstream(infilename);
-#endif /* PROFILING */
+//#else
+//   infile = new std::ifstream(infilename);
+//#endif /* PROFILING */
    
 #ifndef DISABLE_PTHREADS
-   sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed()));
+   //sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed()));
+   sim.reset(new Simulation(commandLine.getThreads(), commandLine.getBindCpus(), commandLine.getWorkUnits(), commandLine.getSeed(), commandLine.getGpuID()));
 #else // DISABLE_PTHREADS
-   sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed());
+   //sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed());
+   sim.reset(new Simulation(commandLine.getWorkUnits(), commandLine.getSeed(), commandLine.getGpuID());
 #endif // DISABLE_PTHREADS
+   if (sim->getRank()==0)
+   {
+   sim->benchmark_start("Preparation");
+   } 
 
    if (!commandLine.getEnableErd()) sim->disableEdgeRelationalData();
 
@@ -283,13 +285,21 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      std::cerr << "_connectionIncrement->_communicationBytes=" << _connectionIncrement->_communicationBytes << std::endl;
 #endif
 
-     std::auto_ptr<LensContext> firstPassContext;
+     std::unique_ptr<LensContext> firstPassContext;
      context->duplicate(firstPassContext);
      firstPassContext->addCurrentRepertoire(sim->getRootRepertoire());
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_timelapsed("Preparation");
+     } 
      if (sim->getRank()==0) printf("\nThe first execution of the parse tree begins.\n\n");
      if (sim->getRank()==0 && sim->isCostAggregationPass()) std::cout << "Aggregating costs in granule graph." << std::endl << std::endl;
 
      firstPassContext->execute();
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_timelapsed("Preparation (firstPassContext->execute())");
+     } 
      if (firstPassContext->isError()) {
        if (sim->getRank()==0) printf("Quitting due to errors...\n\n");
        return false;
@@ -300,15 +310,31 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 #ifdef USING_BLUEGENE
      if (sim->getRank()==0) printf("Available memory after simulation initialization first pass: %lf MB.\n\n",AvailableMemory());
 #endif 
+       if (sim->getRank()==0)
+       {
+	 sim->benchmark_timelapsed_diff(" ...setSeparationGranules + setGraph ())");
+       } 
      
      if (commandLine.getSimulate()) {
        if (sim->getRank()==0) printf("Resetting simulation.\n\n");
        sim->resetInternals();
        sim->setSimulatePass();
+       if (sim->getRank()==0)
+       {
+	 sim->benchmark_timelapsed_diff(" ... resetInternals, setSimulatePass())");
+       } 
        context->addCurrentRepertoire(sim->getRootRepertoire());
+       if (sim->getRank()==0)
+       {
+	 sim->benchmark_timelapsed_diff(" ... addCurrentRepertoire())");
+       } 
        if (sim->getRank()==0) printf("The second execution of the parse tree begins.\n\n");
        context->execute();
      }
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_timelapsed("Preparation (context->execute())");
+     } 
    /*
    }
    catch (SyntaxErrorException& e) {
@@ -322,6 +348,10 @@ bool SimInitializer::internalExecute(int argc, char** argv)
      return false;
    }
    
+     if (sim->getRank()==0)
+     {
+       sim->benchmark_end("Preparation");
+     } 
    bool retVal = true;
    
    if (commandLine.getSimulate()) {
@@ -337,7 +367,9 @@ bool SimInitializer::internalExecute(int argc, char** argv)
    delete infile;
    delete partitioner;
 
+//#ifndef PROFILING
    unlink(temporaryName);
+//#endif
 
 #ifdef VERBOSE
    if (sim->P2P()) {
@@ -380,19 +412,19 @@ bool SimInitializer::internalExecute(int argc, char** argv)
 }
 
 bool SimInitializer::runSimulationAndUI(
-   CommandLine& commandLine, std::auto_ptr<Simulation>& sim)
+   CommandLine& commandLine, std::unique_ptr<Simulation>& sim)
 {
 #ifndef DISABLE_PTHREADS
    bool noUI = false;
-   std::auto_ptr<GraphicalUserInterface> guiInterface;
-   std::auto_ptr<TextUserInterface> textInterface;
+   std::unique_ptr<GraphicalUserInterface> guiInterface;
+   std::unique_ptr<TextUserInterface> textInterface;
 
    if (commandLine.getUserInterface() == "gui") {
       guiInterface.reset(
 	 new GraphicalUserInterface(commandLine.getGuiPort(), *sim));
       assert(guiInterface.get());
 
-      std::auto_ptr<PauseActionable> pa(new SBrowser(*sim, 
+      std::unique_ptr<PauseActionable> pa(new SBrowser(*sim, 
 						     guiInterface.get()));
       sim->getTriggeredPauseAction()->insert(pa);
       sim->setUI(guiInterface.get());
@@ -402,7 +434,7 @@ bool SimInitializer::runSimulationAndUI(
       textInterface.reset(new TextUserInterface);
       assert(textInterface.get());
 
-      std::auto_ptr<PauseActionable> pa(new Browser(*sim, 
+      std::unique_ptr<PauseActionable> pa(new Browser(*sim, 
 						    textInterface.get()));
       sim->getTriggeredPauseAction()->insert(pa);
       sim->setUI(textInterface.get());

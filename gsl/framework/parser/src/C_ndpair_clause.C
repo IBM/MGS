@@ -23,7 +23,7 @@ void C_ndpair_clause::internalExecute(LensContext *c)
    _name->execute(c);
    _argument->execute(c);
    delete _ndpair;
-   std::auto_ptr<DataItem> di;
+   std::unique_ptr<DataItem> di;
    _argument->getArgumentDataItem()->duplicate(di);
    _ndpair = new NDPair(_name->getName(), di);
 }
@@ -53,7 +53,7 @@ C_ndpair_clause* C_ndpair_clause::duplicate() const
    return new C_ndpair_clause(*this);
 }
 
-void C_ndpair_clause::releaseNDPair(std::auto_ptr<NDPair>& ndp)
+void C_ndpair_clause::releaseNDPair(std::unique_ptr<NDPair>& ndp)
 {
    ndp.reset(_ndpair);
    _ndpair = 0;

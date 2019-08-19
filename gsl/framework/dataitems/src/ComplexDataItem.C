@@ -49,7 +49,7 @@ ComplexDataItem::ComplexDataItem(const ComplexDataItem& DI)
 }
 
 
-void ComplexDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ComplexDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new ComplexDataItem(*this)));
 }

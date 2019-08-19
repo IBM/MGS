@@ -31,9 +31,9 @@ class ToroidalRadialSampler : public CG_ToroidalRadialSamplerBase
       void userExecute(LensContext* CG_c);
       ToroidalRadialSampler();
       virtual ~ToroidalRadialSampler();
-      virtual void duplicate(std::auto_ptr<ToroidalRadialSampler>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ToroidalRadialSamplerBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<ToroidalRadialSampler>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ToroidalRadialSamplerBase>& dup) const;
 
    private:
       NodeDescriptor *_refNode;

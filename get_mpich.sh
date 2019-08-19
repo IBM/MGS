@@ -1,14 +1,19 @@
+if [ -z "$TRAVIS_BUILD_DIR" ]; then
+  TRAVIS_BUILD_DIR=`pwd`
+fi
 if [ -f mpich/lib/libmpich.so ]; then
   echo "libmpich.so found -- nothing to build."
 else
+  FILENAME=mpich-3.2
+  DIRNAME=$FILENAME
   echo "Downloading mpich source."
-  wget http://www.mpich.org/static/downloads/3.2/mpich-3.2.tar.gz
-  tar xfz mpich-3.2.tar.gz
-  rm mpich-3.2.tar.gz
+  wget http://www.mpich.org/static/downloads/3.2/${FILENAME}.tar.gz
+  tar xfz ${FILENAME}.tar.gz
+  rm ${FILENAME}.tar.gz
   echo "configuring and building mpich."
-  cd mpich-3.2
+  cd ${DIRNAME}
   ./configure \
-          --prefix=`pwd`/../mpich \
+          --prefix=${TRAVIS_BUILD_DIR}/mpich \
           --enable-static=false \
           --enable-alloca=true \
           --disable-long-double \
@@ -20,5 +25,5 @@ else
   make -j4
   make install
   cd -
-  rm -rf mpich-3.2
+  rm -rf ${DIRNAME}
 fi

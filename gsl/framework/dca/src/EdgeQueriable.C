@@ -42,7 +42,7 @@ EdgeQueriable::EdgeQueriable(const EdgeQueriable & q)
 }
 
 
-void EdgeQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void EdgeQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    EdgeDataItem* di = new EdgeDataItem;
    di->setEdge(_edge);
@@ -50,9 +50,9 @@ void EdgeQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
 }
 
 
-std::auto_ptr<QueryResult> EdgeQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> EdgeQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
    std::cerr<<"Queries not implemented on EdgeQueriable!"<<std::endl;
    return qr;
 }
@@ -64,7 +64,7 @@ Publisher* EdgeQueriable::getQPublisher()
 }
 
 
-void EdgeQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void EdgeQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new EdgeQueriable(*this));
 }

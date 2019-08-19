@@ -15,7 +15,7 @@ ShallowArray< float > FloatArrayMaker::userExecute(LensContext* CG_c)
   this_rval.increaseSizeTo(init.size);
   for (int n=0; n<init.size; ++n) {
     std::vector<DataItem*> nullArgs;
-    std::auto_ptr<DataItem> rval_ap;
+    std::unique_ptr<DataItem> rval_ap;
     init.f->execute(CG_c, nullArgs, rval_ap);
     NumericDataItem *ndi = 
       dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -39,17 +39,17 @@ FloatArrayMaker::~FloatArrayMaker()
 {
 }
 
-void FloatArrayMaker::duplicate(std::auto_ptr<FloatArrayMaker>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<FloatArrayMaker>& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }
 
-void FloatArrayMaker::duplicate(std::auto_ptr<Functor>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }
 
-void FloatArrayMaker::duplicate(std::auto_ptr<CG_FloatArrayMakerBase>& dup) const
+void FloatArrayMaker::duplicate(std::unique_ptr<CG_FloatArrayMakerBase>& dup) const
 {
    dup.reset(new FloatArrayMaker(*this));
 }

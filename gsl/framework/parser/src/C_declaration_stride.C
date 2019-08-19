@@ -33,7 +33,7 @@ void C_declaration_stride::internalExecute(LensContext *c)
    // sldi->setStridesList(_stridesList);
    sldi->setStridesList(_cStrideList);
 
-   std::auto_ptr<DataItem> sldi_ap(static_cast<DataItem*>(sldi));
+   std::unique_ptr<DataItem> sldi_ap(static_cast<DataItem*>(sldi));
    try {
       c->symTable.addEntry(_cDeclarator->getName(), sldi_ap);
    } catch (SyntaxErrorException& e) {

@@ -48,7 +48,7 @@ EachSrcPropDstFunctor::EachSrcPropDstFunctor(const EachSrcPropDstFunctor& csf)
 }
 
 
-void EachSrcPropDstFunctor::duplicate (std::auto_ptr<Functor> &fap) const
+void EachSrcPropDstFunctor::duplicate (std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new EachSrcPropDstFunctor(*this));
 }
@@ -137,7 +137,7 @@ NodeDescriptor* EachSrcPropDstFunctor::getProportionalNode(LensContext *c)
 
 void EachSrcPropDstFunctor::doExecute(LensContext *c, 
 				      const std::vector<DataItem*>& args, 
-				      std::auto_ptr<DataItem>& rvalue)
+				      std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext* cc = c->connectionContext;
    bool originalRestart = cc->restart;
@@ -180,7 +180,7 @@ void EachSrcPropDstFunctor::doExecute(LensContext *c,
    }
 
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    cc->sourceNode = (*_nodesIter);
    cc->destinationRefNode = getProportionalNode(c);

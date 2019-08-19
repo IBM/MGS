@@ -35,7 +35,7 @@ class SemaphoreTrigger : public TriggerBase
 		       std::string& op);
       SemaphoreTrigger(Simulation& sim, Trigger* t1);
       virtual bool status();
-      virtual void duplicate(std::auto_ptr<Trigger>& dup) const;
+      virtual void duplicate(std::unique_ptr<Trigger>& dup) const;
       virtual ~SemaphoreTrigger();
    private:
       void setEvaluator();

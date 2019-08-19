@@ -18,6 +18,7 @@
 #include "Copyright.h"
 
 #include <vector>
+#include <cstddef>
 
 class Node;
 class NodeDescriptor;
@@ -45,15 +46,20 @@ class GridLayerData
 		    int gridLayerIndex);
       virtual ~GridLayerData();
 
-      int getNbrUnits() {
+      size_t getNbrUnits() 
+      {
 	 return _nbrUnits;
       }
 
-      int getNbrNodesAllocated() {
+      size_t getNbrNodesAllocated() 
+      {
 	 return _nbrNodesAllocated;
       }
       void incrementNbrNodesAllocated() {
 	++_nbrNodesAllocated;
+      }
+      void setNbrNodesAllocated(size_t size) {
+	_nbrNodesAllocated = size;
       }
 
       GridLayerDescriptor* getGridLayerDescriptor() {
@@ -79,8 +85,10 @@ class GridLayerData
       }
 
    protected:
-      int _nbrUnits;
-      int _nbrNodesAllocated; // _nbrNodeAllocated == _nbrUnits in non-distributed environment; <= _nbrUnits otherwise 
+      //int _nbrUnits;
+      size_t _nbrUnits;
+      //int _nbrNodesAllocated; // _nbrNodeAllocated == _nbrUnits in non-distributed environment; <= _nbrUnits otherwise 
+      size_t _nbrNodesAllocated; // _nbrNodeAllocated == _nbrUnits in non-distributed environment; <= _nbrUnits otherwise 
       GridLayerDescriptor *_gridLayerDescriptor;
       NodeCompCategoryBase* _compCategory;
       std::vector<int> _nodeOffsets;     

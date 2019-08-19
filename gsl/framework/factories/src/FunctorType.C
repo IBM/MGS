@@ -45,25 +45,25 @@ FunctorType::FunctorType()
 //    return *this;
 // }
 
-void FunctorType::getInstance(std::auto_ptr<DataItem> & adi, std::vector<DataItem*> const * args, LensContext* c)
+void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, std::vector<DataItem*> const * args, LensContext* c)
 {
    FunctorDataItem* fdi = new FunctorDataItem;
 
-   std::auto_ptr<Functor> af;
+   std::unique_ptr<Functor> af;
    getFunctor(af);
    af->initialize(c, *args);
    fdi->setFunctor(af.get());
 
 // Could not figure out why we need to duplicate and add to
 // the instances of the factory, so I disabled the code below - sgc   
-//   std::auto_ptr<DataItem> apdi;
+//   std::unique_ptr<DataItem> apdi;
 //   fdi->duplicate(apdi);
 //   _instances.push_back(apdi.release());
 
    adi.reset(fdi);
 }
 
-void FunctorType::getInstance(std::auto_ptr<DataItem> & adi, 
+void FunctorType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
 			      LensContext* c)
 {
@@ -87,7 +87,7 @@ std::string FunctorType::getCategory()
 // {
 //    std::list<Functor*>::const_iterator it, end = rv._functorList.end();
 //    for (it = rv._functorList.begin(); it!=end; ++it) {
-//       std::auto_ptr<Functor> dup;
+//       std::unique_ptr<Functor> dup;
 //       (*it)->duplicate(dup);
 //       _functorList.push_back(dup.release());
 //    }

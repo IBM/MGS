@@ -26,7 +26,7 @@ void Threshold::userInitialize(LensContext* CG_c, Functor*& f, double& threshold
 bool Threshold::userExecute(LensContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> rval_ap;
+  std::unique_ptr<DataItem> rval_ap;
   init.f->execute(CG_c, nullArgs, rval_ap);
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -45,17 +45,17 @@ Threshold::~Threshold()
 {
 }
 
-void Threshold::duplicate(std::auto_ptr<Threshold>& dup) const
+void Threshold::duplicate(std::unique_ptr<Threshold>& dup) const
 {
    dup.reset(new Threshold(*this));
 }
 
-void Threshold::duplicate(std::auto_ptr<Functor>& dup) const
+void Threshold::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new Threshold(*this));
 }
 
-void Threshold::duplicate(std::auto_ptr<CG_ThresholdBase>& dup) const
+void Threshold::duplicate(std::unique_ptr<CG_ThresholdBase>& dup) const
 {
    dup.reset(new Threshold(*this));
 }

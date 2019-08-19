@@ -42,7 +42,7 @@ function createMakeFile(){
         exit;
       fi
     fi
-    EXTRA_ARGS="${COLAB} ${BUILD_TARGET}"
+    EXTRA_ARGS="${COLAB} ${BUILD_TARGET} ${PROFILE}"
     ## detect if -release is used for optimization and debugging options
     if [ "$RELEASE" == "-release" ]; then
       ## detect if building as NTS, MGS, or both
@@ -59,6 +59,21 @@ function echoerr()
 }
 #}}}
 
+function detectCPU() {
+cpu=`lscpu | grep Architecture | awk '{print $2;}'`
+modelname=""
+if [[ "$cpu" == "x86_64" ]]; then 
+  :
+elif [[ "$cpu" == "ppc64le" ]]; then 
+  modelname=`lscpu | grep "Model name" | awk '{print $3;}' | awk -F';' '{print $1;}'`
+  #https://developer.ibm.com/linuxonpower/compiler-options-table/
+  if [[ "$modelname" == "POWER8" ]]; then 
+    :
+  elif [[ "$modelname" == "POWER9" ]]; then 
+    :
+  fi
+fi
+}
 SUPPORTED_PLATFORMS="LINUX BGL BGP BGQ SMP"
 
 #########################################
@@ -89,6 +104,8 @@ function print_help {
   --as-NTS-NVU          build NTS+NVU
   --as-NGS              build Neural Graph Simulator (NGS)
 
+  --colab:              build/configure shared libraries for colaborator's use
+  --profile             generate profile output
   "
   echo "NOTE: [] (optional), <> (required)"
   echo "NOTE: choose one value inside < >"
@@ -115,9 +132,7 @@ COLAB=""
 REGENMAKEFILE=""
 DEBUGOPTS="1"
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
-if [ "$#" -gt 2 ] ; then
-	NPROCS=$3
-fi
+PROFILE=""
 
 optspec=":d:p:sr-:j:"
 while getopts "$optspec" optchar; do
@@ -142,6 +157,8 @@ while getopts "$optspec" optchar; do
     -)  #parse long-option
       case "${OPTARG}" in
           clean)
+            # CUDA DEBUG disable [not deleting CG_* files] 
+            # (if enabled, then also enable line 733 in build_script)
               CLEAN="-clean"
               ;;
           rebuild)
@@ -159,6 +176,9 @@ while getopts "$optspec" optchar; do
           gpu) # GPU extensions
               GPU="-gpu"
               ;;
+          profile) # GPU extensions
+            PROFILE+=" --profile"
+            ;;
           arma) # Armadillo extensions
               ARMA="-arma"
               ;;
@@ -238,13 +258,13 @@ case $PLATFORM in
     PLATFORM_OPTS+=""
     ;;
   BGL )
-    PLATFORM_OPTS+=" --blueGeneL "
+    PLATFORM_OPTS+="--with-mpi --blueGeneL "
     ;;
   BGP )
-    PLATFORM_OPTS+=" --blueGeneP "
+    PLATFORM_OPTS+="--with-mpi --blueGeneP "
     ;;
   BGQ )
-    PLATFORM_OPTS+=" --blueGeneQ "
+    PLATFORM_OPTS+="--with-mpi --blueGeneQ "
     ;;
 esac
 

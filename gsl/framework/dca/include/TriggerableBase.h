@@ -33,13 +33,13 @@ class TriggerableBase : public Triggerable
 
       virtual void addTrigger(
 	 Trigger* trigger, const std::string& functionName, 
-	 std::auto_ptr<NDPairList>& ndpList);
+	 std::unique_ptr<NDPairList>& ndpList);
       virtual ~TriggerableBase() {}
 
    protected:
       virtual EventType createTriggerableCaller(
 	 const std::string& functionName, NDPairList* ndpList, 
-	 std::auto_ptr<TriggerableCaller>& triggerableCaller) = 0;
+	 std::unique_ptr<TriggerableCaller>& triggerableCaller) = 0;
    private:
       DuplicatePointerArray<NDPairList> _ndPairLists;
       std::vector<Trigger*> _triggers;

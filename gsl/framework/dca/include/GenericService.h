@@ -64,7 +64,7 @@ class GenericService : public Service
   }
   T* getData() { return _data; }
 
-  virtual void duplicate(std::auto_ptr<Service>& dup) const
+  virtual void duplicate(std::unique_ptr<Service>& dup) const
   {
     dup.reset(new GenericService<T>(*this));
   }

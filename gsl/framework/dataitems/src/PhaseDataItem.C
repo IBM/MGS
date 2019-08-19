@@ -25,7 +25,7 @@ PhaseDataItem::PhaseDataItem()
 {
 }
 
-PhaseDataItem::PhaseDataItem(std::auto_ptr<Phase> data)
+PhaseDataItem::PhaseDataItem(std::unique_ptr<Phase>& data)
 {
    _data = data.release();
 }
@@ -42,7 +42,7 @@ PhaseDataItem::PhaseDataItem(const PhaseDataItem& rv)
 }
 
 // Utility methods
-void PhaseDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void PhaseDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new PhaseDataItem(*this));
 }
@@ -68,7 +68,7 @@ Phase* PhaseDataItem::getPhase(Error* error) const
    return _data;
 }
 
-void PhaseDataItem::setPhase(std::auto_ptr<Phase>& data, Error* error)
+void PhaseDataItem::setPhase(std::unique_ptr<Phase>& data, Error* error)
 {
    delete _data;
    _data = data.release();
@@ -82,7 +82,7 @@ std::string PhaseDataItem::getString(Error* error) const
 void PhaseDataItem::copyOwnedHeap(const PhaseDataItem& rv)
 {
    if (rv._data) {
-      std::auto_ptr<Phase> dup;
+      std::unique_ptr<Phase> dup;
       rv._data->duplicate(dup);
       _data = dup.release();
    } else {

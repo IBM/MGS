@@ -15,6 +15,7 @@
 
 #ifndef LoadPhase_H
 #define LoadPhase_H
+#include "PhaseElement.h"
 #include "Copyright.h"
 
 #include "Phase.h"
@@ -24,8 +25,8 @@
 class LoadPhase : public Phase {
 
    public:
-      LoadPhase(const std::string& name = "");
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      LoadPhase(const std::string& name = "", machineType mType = machineType::CPU);
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~LoadPhase();
      
       virtual std::string getType() const;

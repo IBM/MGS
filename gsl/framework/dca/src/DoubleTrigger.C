@@ -162,7 +162,7 @@ bool DoubleTrigger::isLessThanOrEqual()
    return (*_service) <= _criterion;
 }
 
-void DoubleTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void DoubleTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
    dup.reset(new DoubleTrigger(*this));
 }

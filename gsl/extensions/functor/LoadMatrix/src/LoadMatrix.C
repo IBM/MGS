@@ -60,17 +60,17 @@ LoadMatrix::~LoadMatrix()
 {
 }
 
-void LoadMatrix::duplicate(std::auto_ptr<LoadMatrix>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<LoadMatrix>& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }
 
-void LoadMatrix::duplicate(std::auto_ptr<Functor>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }
 
-void LoadMatrix::duplicate(std::auto_ptr<CG_LoadMatrixBase>& dup) const
+void LoadMatrix::duplicate(std::unique_ptr<CG_LoadMatrixBase>& dup) const
 {
    dup.reset(new LoadMatrix(*this));
 }

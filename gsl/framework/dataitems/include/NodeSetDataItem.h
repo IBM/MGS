@@ -36,14 +36,14 @@ class NodeSetDataItem : public TriggerableDataItem
 
       // Constructors
       NodeSetDataItem();
-      NodeSetDataItem(std::auto_ptr<NodeSet> nodeset);
+      NodeSetDataItem(std::unique_ptr<NodeSet>& nodeset);
       NodeSetDataItem(const NodeSetDataItem& DI);
 
       // Destructor
       ~NodeSetDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       NodeSet* getNodeSet() const;

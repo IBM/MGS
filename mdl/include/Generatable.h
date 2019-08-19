@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -25,6 +25,7 @@
 #include <cassert>
 
 #include "MemberContainer.h"
+#include "Constants.h"
 
 class Class;
 class DataType;
@@ -41,6 +42,17 @@ class Generatable {
       Generatable& operator=(const Generatable& rv);
       virtual void duplicate(std::auto_ptr<Generatable>& rv) const = 0;
       virtual ~Generatable();        
+
+      //void addSupportForMachineType(MachineType mach){ _supportedMachineTypes.insert(mach) };
+      void addSupportForMachineType(MachineType mach){ _supportedMachineType = (mach);};
+      bool isSupportedMachineType(MachineType mach) const { 
+	 //const bool is_in = _supportedMachineTypes.find(mach) != _supportedMachineTypes.end();
+	 const bool is_in = _supportedMachineType == mach;
+	 return is_in;
+      };
+      MachineType getSupportedMachineType() const { 
+	 return _supportedMachineType;
+      };
 
       // Used to print out code for feedback to the user.
       virtual void generate() const = 0;
@@ -153,6 +165,8 @@ class Generatable {
       std::string _fileName; 
       LinkType _linkType;
       bool _frameWorkElement;
+      //std::set<MachineType> _supportedMachineTypes;
+      MachineType _supportedMachineType; //for now, it enable HAVE_GPU flag if GPU is supported
       CommandLine* _cmdLine; //hold the result parsed from command-line [use to determine code-behavior]
 };
 

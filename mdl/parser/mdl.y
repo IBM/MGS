@@ -75,7 +75,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <stdio.h>
+#include <chrono>
+#include <time.h>
 
 using namespace std;
 
@@ -1525,6 +1528,16 @@ inline int mdllex(YYSTYPE *lvalp, YYLTYPE *locp, void *context)
 
 int main(int argc, char *argv[])
 {
+  std::string current_date; 
+  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
+  std::time_t time = std::chrono::system_clock::to_time_t(tp);
+  std::tm* timetm = std::localtime(&time);
+  char date_time_format[] = "%m-%d-%Y";
+  char time_str[] = "mm-dd-yyyyaa";
+  strftime(time_str, strlen(time_str), date_time_format, timetm);
+  char year_format[] = "%Y";
+  char year[] = "mm-dd-yyyya";
+  strftime(year, strlen(year), year_format, timetm);
 
 std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
           << ".                                                           .\n"
@@ -1532,9 +1545,13 @@ std::cout << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n"
           << ".                                                           .\n"
           << ".  \"Restricted Materials of IBM\"                            .\n"
           << ".                                                           .\n"
-          << ".  BCM-YKT-07-18-2017                                     .\n"
+          //<< ".  BCM-YKT-07-18-2017                                     .\n"
+	  << ".  BCM-YKT-"
+	  << time_str << "                                     .\n"
           << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
+          //<< ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
+	  << ".  (C) Copyright IBM Corp. 2005-"
+	  << year << "  All rights reserved   .\n"
           << ".                                                           .\n"
           << ".                                                           .\n"
           << ".                                                           .\n"

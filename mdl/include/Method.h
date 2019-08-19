@@ -26,6 +26,7 @@
 
 class DataType;
 class Attribute;
+class Class;
 
 class Method
 {
@@ -36,12 +37,27 @@ class Method
       virtual void duplicate(std::auto_ptr<Method>& dup) const;
       virtual ~Method();
 
+      /* return the Class object upon which this Method object holds 
+       * the content of a method inside the class*/
+      const Class* getClass() const {
+	 return _classObj;
+      }
+      void setClass(Class* classObj) {
+	 _classObj=classObj;
+      }
       const std::string& getName() const {
 	 return _name;
       }
 
       void setName(const std::string& name) {
 	 _name = name;
+      }
+      const std::string& getGPUName() const {
+	 return _kernelname;
+      }
+
+      void setGPUName(const std::string& name) {
+	 _kernelname = name;
       }
 
       const std::string& getReturnStr() const {
@@ -72,11 +88,11 @@ class Method
 	 return _parameters;
       }
 
-      int getAccessType() const {
+      AccessType getAccessType() const {
 	 return _accessType;
       }
 
-      void setAccessType(int acc=AccessType::PUBLIC) {
+      void setAccessType(AccessType acc=AccessType::PUBLIC) {
 	 _accessType = acc;
       }
 
@@ -158,8 +174,8 @@ class Method
 	 _macroConditional = macroConditional;
       }      
 
-      void printSource(const std::string& className, std::ostringstream& os);
-      void printDefinition(int type, std::ostringstream& os);
+      void printSource(const std::string& className, std::ostringstream& os, const std::string& parentClassName="");
+      void printDefinition(AccessType type, std::ostringstream& os);
       void printExternCDefinition(std::ostringstream& os);
       void printExternCPPDefinition(std::ostringstream& os);
       void printSourceBody(std::ostringstream& os);
@@ -172,9 +188,10 @@ class Method
       std::string _name;
       std::string _returnStr;
       std::string _functionBody;
+      std::string _kernelname; //if a method is supposed to call a GPU kernel, then it needs to track the GPU kernel name as well
       std::vector<std::string> _parameters;
       std::vector<std::string> _templateParameters;
-      int _accessType;
+      AccessType _accessType;
       bool _virtual;
       bool _pureVirtual;
       bool _const;
@@ -184,6 +201,8 @@ class Method
       bool _template;
       bool _static;
       MacroConditional _macroConditional;
+      /* to tell what class type this method belongs to */
+      Class* _classObj=0;
 };
 
 #endif

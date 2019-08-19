@@ -16,14 +16,96 @@
   flex v2.5.4   or above
   lgmp  
   python
+    pybind11
+    env PYTHON_INCLUDE_DIR
+  cxsparse library
+    env SUITESPARSE
+  
+# Container-based build
+## Step 0
+
+We need to make sure the proper Nvidia driver is installed on the host machine. 
+Table 1 in the link below tells the minimal Nvidia driver version that works for each version of CUDA library.
+https://docs.nvidia.com/deploy/cuda-compatibility/index.html
+
+The container is based on CUDA 10.0.  The link to download and instruction to install the Nvidia driver:
+https://developer.nvidia.com/cuda-10.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1604&target_type=deblocal
+
+The link to all *.deb files:
+https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/
+
+## Step 1 [only run this if you get an error when running the container in Step 3]
+If inotify exceeds limit, then docker can not launch a new container, we can increase it
+```console
+sudo -i
+echo 1048576 > /proc/sys/fs/inotify/max_user_watches
+exit
+```
+## Step 2 [ignore if docker --version >= 19.03]
+ https://github.com/NVIDIA/nvidia-docker
+```console
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker
+```
+
+## Step 3
+```console
+docker build --target devel-base -t mgs_baseimage  -f Dockerfile.build .
+docker run --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+
+
+# with debug-support to run gdb
+docker run --privileged --gpus all -it  --name=mgs_dev --mount src="$(pwd)",target=/home/mgs,type=bind -e LOCAL_USER_ID=`id -u $USER`  mgs_baseimage /bin/bash
+```
+
+## Step 4 [now you are inside the container]
+```console
+# The default folder is /home/mgs
+# You interact with the source as if you're on a regular machine
+./build_script -p LINUX --as-GPU
+# or
+./build_script -p LINUX --as-GPU --release
+
+# NOTE: When build using --as-GPU, you implicitly activate --gpu flag and the system is built using
+# ./models/gpu.mdf file
+
+# NOTE: Currently, the container does not have any editor (vi, emacs) as this would increase the size of the container
+# Code development can be done from the host-side (either opens a new shell, or we can switch to the host using Ctrl-p-q)
+# ... (do code development) and then switch to the container environment (for compiling/running gslparser) using 'docker attach'
+```
+
+## Hints
+Some common commands to work with docker
+```console
+# list images
+docker image ls
+
+# list containers (i.e. each is an instance of a particular image) - container's ID is on first column
+docker container ls
+
+# within a container, switch to host with <Ctrl>-p-q 
+
+# return to a running container, using the container's ID  (minimal 3 digits can be used)
+docker attach <CONTAINER-ID>
+```
   
 # Run flags
   -t Number of threads  
   -f gsl file to run  
   -s random number generator seed  
 
-# Commit tags
+## Commit tags
 When presenting work with MGS/NTS components to a client, a git tag should be created and recorded in the [Box note](https://ibm.ent.box.com/notes/231444066519). See instructions inside the Box note on how to create the tag including a naming convention.
+
+## FAQ
+
+1. Why it seems rebuilding from the beginning?
+The build will needs to be successfull. Then it will enables continuous building. 
+So, you should get the minimal systems to get built first, before adding many more models.
 
 # ZenHub
 The following is based on the reading of [ZenHub's documentation](https://www.zenhub.com/github-project-management.pdf), [IBM's ZenHub documentation](https://pages.github.ibm.com/the-playbook/zenhub/) and other tutorial and help guides.

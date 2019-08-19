@@ -168,18 +168,18 @@ ReversalPotentialDisplay::ReversalPotentialDisplay()
 ReversalPotentialDisplay::~ReversalPotentialDisplay() { delete outFile; }
 
 void ReversalPotentialDisplay::duplicate(
-    std::auto_ptr<ReversalPotentialDisplay>& dup) const
+    std::unique_ptr<ReversalPotentialDisplay>& dup) const
 {
   dup.reset(new ReversalPotentialDisplay(*this));
 }
 
-void ReversalPotentialDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void ReversalPotentialDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new ReversalPotentialDisplay(*this));
 }
 
 void ReversalPotentialDisplay::duplicate(
-    std::auto_ptr<CG_ReversalPotentialDisplay>& dup) const
+    std::unique_ptr<CG_ReversalPotentialDisplay>& dup) const
 {
   dup.reset(new ReversalPotentialDisplay(*this));
 }

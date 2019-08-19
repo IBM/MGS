@@ -33,7 +33,7 @@ ShortDataItem::ShortDataItem(const ShortDataItem& DI)
 
 
 // Utility methods
-void ShortDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void ShortDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new ShortDataItem(*this)));
 }

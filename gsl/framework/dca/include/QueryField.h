@@ -39,7 +39,7 @@ class QueryField
       void setDescription(std::string description);
       queryType getType();
       std::vector<EnumEntry*> const & getEnumEntries() const;
-      void addEnumEntry(std::auto_ptr<EnumEntry>&);
+      void addEnumEntry(std::unique_ptr<EnumEntry>&);
       std::string getFormat();
       void setFormat(std::string format);
       bool isSet();

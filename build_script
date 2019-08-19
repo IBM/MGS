@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 #Escape code
@@ -12,7 +12,9 @@ cc_blue="${esc}[0;34m"
 cc_normal=`echo -en "${esc}[m\017"`
 
 NPROCS=$((`cat /proc/cpuinfo | grep processor | wc -l`))
-NPROCS=$(( $NPROCS*2/3 ))
+if [ $NPROCS -gt 2 ]; then
+  NPROCS=$(( $NPROCS*2/3 ))
+fi
 #########################################
 #   PRINT HELP
 #{{{
@@ -38,16 +40,19 @@ function print_help {
                                   log1 = print out DEBUG_HH and DEBUG_ASSERT
                                   log2 = print out ... during loops
   --regen                       regenerate gsl/Makefile  
-  HETE ARCHITECTURE:
-  -g|--gpu                      build with GPU extensions
-  -a|--arma                     build with Armadillo extensions
+  --profile                     generate profile output
+  Third-party libraries:
+  -g|--gpu                      build with GPU extensions (CUDA library)
+  -a|--arma                     build with Armadillo library 
 
   PREDEFINED TARGETS:
-  --as-NTS                      build Neural Tissue Simulator (NTS)
-  --as-NTS-NVU                  build NTS+NVU
-  --as-NGS                      build Neuronal Graph Simulator (NGS)
+  --as-MGS                      (default) build Model Graph Simulator (MGS) - using mgs.mdf
+  --as-NTS                      build Neural Tissue Simulator (NTS) - using models/nts.mdf
+  --as-NTS-NVU                  build NTS+NVU - using NVU.mdf
+  --as-NGS                      build Neuronal Graph Simulator (NGS) - using ngs.mdf
+  --as-GPU                      a collection of models that support CUDA GPU - using gpu.mdf
 
-Example:
+Examples:
 1) build_script -p LINUX --as-NTS   :          builds NTS in a LINUX environment using MPI
 2) build_script -p BGL --as-NGS	    :          builds NGS on Blue Gene/L
 3) build_script -p BGP		    :          builds custom MGS domain on Blue Gene/P as specified in mgs.mdf
@@ -195,6 +200,7 @@ function touch_mdf_upon_changing_target()
           touch mgs.mdf
         fi
       fi
+      #CUDA DEBUG for debug purpose
       rm_ifexist Extensions.mk
   #}}}
 }
@@ -246,7 +252,7 @@ while getopts "$optspec" optchar; do
       ;;
     r) # release
       RELEASE="-release"
-      GSL_BUILD_MODE="--release"
+      GSL_BUILD_MODE=" --release"
       ;;
     g) # GPU extensions
       GPU="--gpu"
@@ -256,6 +262,11 @@ while getopts "$optspec" optchar; do
       ;;
     -)  #parse long-option
             case "${OPTARG}" in
+                as-GPU)
+                    BUILD_TARGET="--as-GPU"
+                    MDF_TARGET="gpu.mdf"
+                    GPU="--gpu"
+                    ;;
                 as-NTS)
                     BUILD_TARGET="--as-NTS"
                     MDF_TARGET="nts.mdf"
@@ -299,7 +310,10 @@ while getopts "$optspec" optchar; do
                     ;;
 		release) # release
                     RELEASE="-release"
-                    GSL_BUILD_MODE="--release"
+                    GSL_BUILD_MODE+=" --release"
+		    ;;
+		profile) # GPU extensions
+                    GSL_BUILD_MODE+=" --profile"
 		    ;;
 		gpu) # GPU extensions
                     GPU="--gpu"
@@ -349,8 +363,15 @@ elif [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
 TYPE="NTSNVU"
 elif [[ "$BUILD_TARGET" == "--as-NGS" ]] ; then
 TYPE="NGS"  
+elif [[ "$BUILD_TARGET" == "--as-GPU" ]] ; then
+TYPE="GPU"
 else 
 TYPE="MGS" 
+fi
+
+if [ -f module_load.sh ]; then 
+  source ~/.zshrc_simple
+  source module_load.sh
 fi
 
 #{{{ pre-requisite
@@ -421,7 +442,7 @@ if [  -f "${Model2Use}"  ]; then
     EMPTY_FILE=1
   fi
 fi
-if [ "$EMPTY_FILE" == ""  ]; then
+if [ $EMPTY_FILE -eq 1  ]; then
   touch ${Model2Use}
   echo "//Please consider to define the following option, with MODEL_TO_USE is required" > ${Model2Use} 
   echo "//IMPORTANT: any change is expected to have full rebuild" >> ${Model2Use}
@@ -451,12 +472,19 @@ fi
 ## 7. Armadillo [optional]
 #{{{
 if [ "$PLATFORM" == "LINUX" ]; then
-  if which mpiexec | grep -q1 /\mpiexec; then
-    echoerr mpi found...; else echoerr "mpi not found!"; exit 1; fi
+  if which mpiCC | grep -q1 /\mpiCC; then
+    echoerr mpi found...; else echoerr -e "${cc_red}mpi not found! please either install through your distributions package manager or from source${cc_normal}"; 
+    echoerr "... or run: source ./get_ompi.sh"
+    echoerr "... or run: source ./get_mpich.sh"
+    exit 1; 
+  fi
 fi
 
 if which bison | grep -q1 /\bison; then
-    echoerr bison found...; else echoerr "bison not found!"; exit 1; fi
+  echoerr bison found...; else echoerr -e "${cc_red}bison not found! please either install through your distributions package manager or from source${cc_normal}"; 
+  echoerr "... or run: source ./get_bison.sh";
+  exit 1; 
+fi
 
 VALID_BISON_VERSION=2.3
 BISON_VERSION=`bison --version 2>&1 | awk 'NR==1{ gsub(/"/,""); print $NF }'`
@@ -483,7 +511,8 @@ if [ "$n_minor" -eq "$c_minor" ] &&  [ "$n_rev" -lt "$c_rev" ]; then
 fi
 
 if which flex | grep -q1 /\flex; then
-  echoerr flex found...; else echoerr "flex not found! please either install through your distributions package manager or from source"; 
+  echoerr flex found...; else echoerr -e "${cc_red}flex not found! please either install through your distributions package manager or from source${cc_normal}"; 
+  echoerr "... or run: source ./get_flex.sh"
   exit 1; 
 fi
 
@@ -531,25 +560,25 @@ fi
 #}}}
 
 if which python | grep -q1 /\python; then
-  echoerr "python found..."; else echoerr "python not found! please either install through your distributions package manager or from source";
+  echoerr "python found..."; else echoerr -e "${cc_red}python not found! please either install through your distributions package manager or from source${cc_normal}";
   exit 1;
 fi
 
 if ldconfig -p | grep libgmp; then
-  echoerr "libgmp found..."; else echoerr "libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)";
+  echoerr "libgmp found..."; else echoerr -e "${cc_red}libgmp not found! please either install through your distributions package manager or from source (https://gmplib.org)${cc_normal}";
   exit 1;
 fi
 
 if [ "$GPU" == "--gpu" ]; then
-  if which nvidia-smi | grep -q1 /\nvidia-smi; then
-    echoerr "CUDA probably found..."; else echoerr "CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)";
+  if which nvcc | grep -q1 /\nvcc; then
+    echoerr "CUDA probably found..."; else echoerr -e "${cc_red}CUDA potentially not found! (install from https://developer.nvidia.com/cuda-downloads)${cc_normal}";
     exit 1
   fi
 fi
 
 if [ "$ARMA" == "--arma" ]; then
   if `ldconfig -p | grep -q armadillo`; then
-    echoerr "Armadillo probably found..."; else echoerr "Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)";
+    echoerr "Armadillo probably found..."; else echoerr -e "${cc_red}Armadillo potentially not found! (install from http://arma.sourceforge.net/download.html)${cc_normal}";
     exit 1
   fi
 fi
@@ -558,12 +587,26 @@ fi
 if [[ -z "${PYTHON_INCLUDE_DIR}" ]]; then
   echoerr "Please export PYTHON_INCLUDE_DIR=/path/to/Python.h"
   echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python2.7/"
+  echoerr " e.g: export PYTHON_INCLUDE_DIR=/usr/include/python3.6/"
   exit 1
+fi
+if [[ -z "${PYTHON_LIB}" ]]; then
+  if `ldconfig -p | grep -q libpython3.6m`; then
+    echo "libpython3.6m.so found"
+    PYTHON_LIB=$(ldconfig -p | grep libpython3.6m | awk -F"=>" '{print $2;}')
+    PYTHON_LIB=$(dirname $PYTHON_LIB | uniq)
+    export PYTHON_LIB=$PYTHON_LIB
+  else
+    echo "Please export PYTHON_LIB=/path/to/libpython3.6m.so"
+    echo " e.g: export PYTHON_LIB=/usr/lib/x86_64-linux-gnu/"
+    exit 1
+  fi
 fi
 if [ "$BUILD_TARGET" == "--as-NTS-NVU" ]; then
 if [[ -z "${SUITESPARSE}" ]]; then
-  echoerr "Please install the SuiteSparse libraries (www.suitesparse.com)"
-  echoerr " ... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
+  echoerr -e "${cc_red}suitesparse not found! please install the SuiteSparse libraries (www.suitesparse.com)${cc_normal}"
+  echoerr "... or run: source ./get_suitesparse.sh"
+  echoerr "... then: export SUITESPARSE=/path/to/suitesparse_main_dir"
   exit 1
 fi
 fi
@@ -579,7 +622,7 @@ if [  -f ".built"  ]; then
     FIRST_BUILD=1
   fi
 fi
-if [ $FIRST_BUILD ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
+if [ $FIRST_BUILD -eq 1 ] && [[ "$REBUILD" != "-rebuild" && "$CLEAN" != "-clean" ]]; then
   echoerr "First build. Auto run with --rebuild"
   REBUILD="-rebuild"
 fi
@@ -756,11 +799,12 @@ fi
 #{{{
 EXTRA_ARGS="${COLAB} ${REGENMAKEFILE} ${BUILD_TARGET}"
 if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
+  #{{{
   if [ "$REGENMAKEFILE" == "--regen" ] ; then
     cd $LENSROOT
     ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --rebuild -j $NPROCS $GSL_BUILD_MODE $GPU  $ARMA 
-    echoerr "Complete: regenerate gsl/Makefile"
-    exit 
+    echoerr "${cc_blue}Complete: regenerate gsl/Makefile${cc_normal}"
+    exit
   fi
   echoerr "Start build GSL"
   if [ "$CLEAN" == "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
@@ -770,7 +814,9 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     if [ "$CLEAN" == "-clean" ] ; then
       #{{{
       ./build_gsl -p $PLATFORM ${EXTRA_ARGS} --clean
+      #CUDA DEBUG for debug purpose
       rm_ifexist $BASE_FOLDER/models/Extensions.mk
+
       #rm_ifexist $BASE_FOLDER/models/all.mdf
       #rm_ifexist $BASE_FOLDER/models/all_test.mdf
       rm_ifexist $LENSROOT/extensions/functor/all.mdf
@@ -810,9 +856,10 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #touch all.mdf
       #./define all.mdf $REBUILD
       touch ${MDF_TARGET}
+      #CUDA DEBUG block 2 lines for debug [to preserve CG_* code ]
       ./define ${MDF_TARGET} $REBUILD
-
       cp Extensions.mk $LENSROOT/
+
       cd $BASE_FOLDER
       #}}}
     fi
@@ -854,6 +901,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
     #}}}
   fi
   if { [ "$CLEAN" != "-clean"  ] || [ "$REBUILD" == "-rebuild"  ] ; } ; then
+    #{{{
     if [ $? -eq 0 ] && [  `ls $LENSROOT/bin/gslparser` ]; then
       echoerr -e "\n\n\n${cc_blue}Congratulations! You have made ${TYPE} ...${cc_normal}
 
@@ -884,6 +932,8 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
         echo $TYPE >> .built # 2nd-line
       fi
     fi
+    #}}}
   fi
+  #}}}
 fi
 #}}}

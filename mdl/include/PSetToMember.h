@@ -70,6 +70,12 @@ class PSetToMember {
       std::string getPSetToMemberCode(
 	 const std::string& tab, 
 	 std::set<std::string>& requiredIncreases) const;
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
+      std::string getPSetToMemberCode(
+	    const std::string& tab, std::set<std::string>& requiredIncreases,
+	    MachineType mach_type,
+	    bool dummy=0, 
+	    const std::string& className="") const;
    private:
       void destructOwnedHeap();
       void copyOwnedHeap(const PSetToMember& rv);

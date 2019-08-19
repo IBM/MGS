@@ -91,10 +91,10 @@ void Connector::constantToVariable(
    NDPairList* destinationInAttr)
 {
   if (destination->getVariable()) {
-    std::auto_ptr<ParameterSet> outAttrPSet;
+    std::unique_ptr<ParameterSet> outAttrPSet;
     source->getOutAttrParameterSet(outAttrPSet);
     outAttrPSet->set(*sourceOutAttr);
-    std::auto_ptr<ParameterSet> inAttrPSet;
+    std::unique_ptr<ParameterSet> inAttrPSet;
     destination->getVariable()->getInAttrParameterSet(inAttrPSet);
     inAttrPSet->set(*destinationInAttr);
     source->addPostVariable(destination, outAttrPSet.get());
@@ -113,10 +113,10 @@ void Connector::constantToNodeSet(
    destination->getNodes(nodes);
    std::vector<NodeDescriptor*>::iterator it = nodes.begin(), 
       end = nodes.end();
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    source->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    Node* node;
    for (; it != end; ++it) {      
       // @TODO Distributed local filter
@@ -156,10 +156,10 @@ void Connector::constantToNode(
        && toPartitionId == myRank                                                                             
 #endif          
       ){
-     std::auto_ptr<ParameterSet> outAttrPSet;
+     std::unique_ptr<ParameterSet> outAttrPSet;
      source->getOutAttrParameterSet(outAttrPSet);
      outAttrPSet->set(*sourceOutAttr);
-     std::auto_ptr<ParameterSet> inAttrPSet;  
+     std::unique_ptr<ParameterSet> inAttrPSet;  
      destination->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(inAttrPSet);
      inAttrPSet->set(*destinationInAttr);
      source->addPostNode(node, outAttrPSet.get());
@@ -173,10 +173,10 @@ void Connector::constantToEdgeSet(
 {
    std::vector<Edge*>& edges = destination->getEdges();
    std::vector<Edge*>::iterator it = edges.begin(), end = edges.end();
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    source->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    for (; it != end; ++it) {
      (*it)->getInAttrParameterSet(inAttrPSet);
      inAttrPSet->set(*destinationInAttr);

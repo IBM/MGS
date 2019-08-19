@@ -1,0 +1,469 @@
+#!/usr/bin/env python
+import sys, io, os, numpy as np
+import matplotlib.pyplot as plt
+
+HELPSTRING="GEN_DAT()\n\n\
+NAME\n\tgen_dat -- Computes mean interspike interval information from spike data. Output created where command is executed.\n\n\
+SYNOPSIS\n\tgen_dat [-f] [path/to/inputfile] ([-o] [outputfile] [...])\n\n\
+DESCRIPTION\n\tThe data should be in the following format:\n\t\tfirst column - spike time, second column - cell index number.\n\n\tThe following options are available:\n\
+\n\t-c\tcoefficient of variations distribution ['cv':array[float], 'cell':int]\n\
+\n\t-d\tdistribution of mean ISIs across cells ['misi':float, 'cell':int]\n\
+\n\t-e\tISI standard error [float]\n\
+\n\t-f\tSpecify the input data file to be used.\n\
+\n\t-h\tDiplay the help message for gen_dat.\n\
+\n\t-o\t(Optional) Specify the output filename to be used.\n\
+\n\t-p\tprobability of a value in a CV2 distribution ['upper-range':int, 'prob':int]\n\
+\n\t-s\tISI standard deviation [float]\n\
+\n\t-w\twipe out old files \n\
+"
+
+#formats:
+DAT=(float,int)
+DST=(np.ndarray,int)
+SIM=[('simulation',int)]
+SIMSPLIT="\n\n" #Delimiter separating simulations
+GESPLIT="\n\n\n" #Delimiter separating set of simulations for each Ge
+
+
+def parse():
+    """
+    data,simulations,filename,flags=parse()
+
+    data = ndarray of tuple (spike_time, cell_index)
+    simulations = ndarray of tuple (cell_index, )
+    filename = data filename
+    flags = a list of arguments
+
+    """
+    args = ' '.join(sys.argv[1:]).split()
+    infile=np.empty((0,), dtype={'names':('spike','cell'), 'formats':DAT})
+    simulations=np.empty((0,), dtype=SIM)
+    outfile=".dat"
+    flags=[]
+
+    if '-h' in args:
+        #print HELPSTRING
+        print(HELPSTRING)
+        sys.exit(0)
+
+    if args:
+        try:
+            while args:
+                arg=args.pop(0)
+                if arg == '-f':
+                    read=0
+                    arg=args.pop(0)
+                    data=io.open(arg, encoding="utf-8").read().split(SIMSPLIT)
+                    #data=io.open(arg,encoding="utf-8").read().split(GESPLIT)
+                    for sim in range(len(data)):
+                        if data[sim] == "":
+                            continue
+                        file=np.genfromtxt(io.StringIO(data[sim]), dtype={'names':('spike','cell'), 'formats':DAT})
+                        infile=np.append(infile, file)
+                        simulations=np.append(simulations, np.array([(sim,)]*file.size, dtype=SIM))
+                elif arg == '-o':
+                    read=1
+                    outfile=args.pop(0)
+                else:
+                    flags.append(arg)
+        except:
+            #print "Missing flag or argument.\n\n"+HELPSTRING
+            print("Missing flag or argument.\n\n"+HELPSTRING)
+            sys.exit(1)
+    else:
+        #print HELPSTRING
+        print(HELPSTRING)
+        sys.exit(1)
+    return infile, simulations, outfile, flags
+
+def clean(path):
+    assert (path != os.path.abspath(os.sep))
+    for root, dirs, files in os.walk(path, topdown=False):
+        for name in files:
+            os.remove(os.path.join(root, name))
+        os.rmdir(path)
+
+def ISIbyTime(data, col, cells):
+    """mean ISI of a cell for each given time frame
+    return: array[]
+    """
+    mISIs_windows=np.empty((0,), dtype={'names':('misi','cell'),'formats':DST})
+    #print('last: ', cells[-1])
+    for cell in cells:
+        misi=np.empty((0,))
+        data_cell=data[col == cell]
+        #print('data_cell: ',data_cell)
+        for i in range(4):
+            #print(data[data['spike'] <= 500])
+            inputs = data_cell[np.logical_and(data_cell['spike'] <= (2000/4)*(i+1), data_cell['spike'] >= i*(2000/4))]
+            input_col = inputs['cell']
+            #input_cells = np.unique(col)
+            mean_by_win = mISI(inputs,input_col,cell)
+            if mean_by_win is not None:
+                misi = np.append(misi,mean_by_win['misi'])
+            else:
+                np.append(misi,-99999)
+
+        if misi is not None:
+            mISIs_windows=np.append(mISIs_windows,np.array((misi,cell),dtype={'names':('misi','cell'),'formats':DST}))
+
+    return mISIs_windows
+
+def stdISIWs(data, col, cells):
+    """std ISI of mISIs (across windows) for each cell
+    return: array[]
+    """
+    stdISIs=np.empty((0,), dtype={'names':('std','cell'), 'formats':DST})
+
+    for cell in cells:
+        data_cell=data[col == cell]
+        std=stdISI(data_cell,col,cell)
+
+        if std is not None:
+            stdISIs=np.append(stdISIs,np.array((std,cell),dtype={'names':('std','cell'),'formats':DST}))
+
+    return stdISIs
+
+def reduceCells(data, col, cells, num_cells,threshold=4):
+    """reduces number of cells in the network
+    return: array[]
+    """
+    reduce_cells=np.arange(num_cells)
+    mean_period_first=np.empty((0,),dtype={'names':('misi','cell'),'formats':DST})
+    mean_period_last=np.empty((0,))
+    for cell in cells:
+        reduce_cond=data[col == cell]
+        #print('reduce_cells: ', len(reduce_cond['misi']))
+        if len(reduce_cond['misi'][0]) >= threshold:
+            mean_period_first=np.append(mean_period_first,np.array((reduce_cond['misi'][0][0],cell),dtype={'names':('misi','cell'),'formats':DST}))
+            mean_period_last=np.append(mean_period_last,reduce_cond['misi'][0][-1])
+        #for n in range(1,len(reduce_cond)):
+    #print('mean_period_first: ',mean_period_first)
+    #print('mean_period_last: ',mean_period_last)
+
+    mean_period_first.sort(order='misi')
+
+    #print('mean_period_first_sorted: ',mean_period_first)
+    #print('mean_period_first_cells: ',mean_period_first['cell'][0:num_cells])
+
+    return mean_period_first['cell'][0:num_cells]
+
+def mISI(data, col, cell, threshold=2):
+    """mean ISI of a cell
+    parameters: cell - index of the cell
+    return: array['misi':float, 'cell':int] or Null
+    """
+    spikes=data[col == cell]
+    #print(spikes)
+    if len(spikes) >= threshold:
+        first=spikes['spike'][0]
+        last=spikes['spike'][-1]
+        print('# of spikes: ',spikes.shape[0])
+        mean=(last - first)/(spikes.shape[0]-1)
+        return np.array((mean, cell), dtype={'names':('misi','cell'), 'formats':DAT})
+    else:
+        return None
+
+def mISIs(data, col, cells):
+    """mean ISIs of all cells
+    return: array['misi':float, 'cell':int]
+    """
+    distribution=np.empty((0,), dtype={'names':('misi','cell'), 'formats':DAT})
+    for cell in cells:
+        misi=mISI(data, col, cell)
+        if misi:
+            distribution=np.append(distribution, misi)
+    return distribution
+
+def stdISI(disi, col, cells):
+    """ ISI standard deviation across all cells using mISIs
+    return: float
+    """
+    if not len(disi):
+        return 0
+
+    # added to accomodate case when needing to take std. dev. of each cell
+    # across windows
+    if np.std(disi['misi']).all() == 0:
+        return np.std(disi['misi'][0])
+    return np.std(disi['misi'])
+
+def steISI(disi, col, cells, std=None):
+    """ ISI standard error across all cells using mISIs
+    return: float
+    """
+    N=len(disi)
+    if not N:
+        return 0
+    if not std:
+        std=stdISI(disi, col, cells)
+    return std/np.sqrt(N)
+
+def ISI(data, col, cells, threshold=3):
+    """inter-spike intervals for cell
+    return array['isi':array[float], 'cell':int]
+    """
+    isi=np.empty((0,), dtype={'names':('isi','cell'), 'formats':DST})
+    for cell in cells:
+        spikes=data[col == cell]
+        #print('spike_by_cell: ',spikes)
+        if len(spikes) >= threshold:
+            distribution=np.empty((0,))
+            for n in range(1, len(spikes)):
+                deltaT=np.abs(spikes['spike'][n] - spikes['spike'][n-1])
+                #print('ISI: ',deltaT)
+                #distribution=np.append(distribution,deltaT)
+                isi=np.append(isi,np.array((deltaT,cell),dtype={'names':('isi','cell'), 'formats':DST}))
+    return isi
+
+def CV2(data, col, cells, threshold=3):
+    """ coefficient of variations distribution of ISI
+    data inputted should be ISI values
+    return array['cv':array[float], 'cell':int]
+    """
+    #print(type(data))
+    cv2=np.empty((0,), dtype={'names':('cv','cell'), 'formats':DST})
+    for cell in cells:
+        isis=data[col == cell]
+        if len(isis) >= threshold:
+            distribution=np.empty((0,))
+            for n in range(1, len(isis)):
+                #cv=np.abs((data['spike'][n] - data['spike'][n-1]) /
+                #    (data['spike'][n] + data['spike'][n-1]))
+
+                cv=np.abs((isis['isi'][n]-isis['isi'][n-1])/
+                          (isis['isi'][n] + isis['isi'][n-1]))
+                distribution=np.append(distribution, cv)
+
+            cv2=np.append(cv2,np.array((distribution,cell), dtype={'names':('cv','cell'), 'formats':DST}))
+
+    #print(cv2[0])
+    print(len(cv2))
+    print(len(cells))
+    # ISI = np.zeros(len(cells))
+    # for idx, cell in enumerate(cells):
+    #     spikes=data[col == cell]
+    #     if len(spikes) >= threshold:
+    #         distribution=np.empty((0,))
+    #         for n in range(1, len(spikes)):
+    #             ISI[idx].append(np.abs((data['spike'][n] - data['spike'][n-1]))
+
+    # mISI = np.zeros(len(cells))
+    # for idx, cell in enumerate(cells):
+    #     mISI[idx] = np.mean(ISI[idx])
+    # SD = np.zeros(len(cells))
+    # for idx, cell in enumerate(cells):
+    #     SD[idx] = np.sqrt(mean(ISI[idx])
+
+    #             cv=np.abs((data['spike'][n] - data['spike'][n-1]) /
+    #                 (data['spike'][n] + data['spike'][n-1]))
+    #             distribution=np.append(distribution, cv)
+    #         cv2=np.append(cv2,np.array((distribution,cell), dtype={'names':('cv','cell'), 'formats':DST}))
+    return cv2
+
+def probability(cv2, size=10):
+    """ probability of a value in a CV2 distribution
+    return: array['pcv':array[int, int], 'cell':int]
+    """
+    def compute_range(data):
+        """ select a good bin size for the data provided
+        return: float
+        """
+        left,right=np.min(data),np.max(data)
+        # span=(right-left)
+        span=np.median(data)*2
+        return left,right,span
+
+    def compute_size(): #TODO
+        return float(size)
+
+    pcv=np.empty((0,), dtype={'names':('pcv','cell'), 'formats':DST})
+    for data,cell in cv2:
+        count=data.size
+        left,right,span=compute_range(data)
+        size=compute_size()
+        bins=np.zeros(int(size))
+        increment=span/(size-1)
+        addresses=np.array(data/increment, dtype=int)
+        for address in addresses:
+            bins[min(address,int(size-1))]+=1
+        p=np.vstack((np.arange(size)*increment,bins/count)).T
+        pcv=np.append(pcv,np.array((p,cell), dtype={'names':('pcv','cell'), 'formats':DST}))
+    return pcv
+
+def FR(data,data_isi,col, cells):
+    """
+
+    """
+    fire_rate = None
+    cell_fr=np.empty((0,))
+    spike_col=data['cell']
+    for cell in cells:
+        isi=data_isi[col == cell]
+        spikes=data[spike_col == cell]
+        fire_rate=(len(isi) + 1)/((spikes['spike'][0]+np.sum(isi['isi'])+(2000-spikes['spike'][-1]))/1000)
+        cell_fr=np.append(cell_fr,fire_rate)
+    return np.mean(cell_fr)
+
+def calculate(spikes, flags, cells=None):
+    """mean ISI distribution and standard deviation by cells for a simulation"""
+    col=spikes['cell']
+    disi=None
+    cv2=None
+    pcv=None
+    std=None
+    ste=None
+    isi=None
+    tisi=None
+    std_isis_win=None
+
+    if not cells:
+        cells=np.unique(col)
+
+    distribution=mISIs(spikes, col, cells)
+    if not flags or "-d" in flags:
+        disi=distribution
+    if not flags or "-s" in flags:
+        std=stdISI(distribution, col, cells)
+    if not flags or "-e" in flags:
+        ste=steISI(distribution, col, cells,)
+
+    tisi=ISIbyTime(spikes,col,cells)
+    std_isis_win=stdISIWs(tisi,tisi['cell'],np.unique(tisi['cell']))
+    reduced_net=reduceCells(tisi,tisi['cell'],np.unique(tisi['cell']),10)
+    # print(spikes)
+    # print("--")
+    # print(col)
+    # print("--")
+    # print(cells)
+    # print("--")
+
+    isi=ISI(spikes,col,cells)
+    fr=FR(spikes,isi,isi['cell'],np.unique(isi['cell']))
+    distribution=CV2(isi,isi['cell'],np.unique(isi['cell']))
+
+    if not flags or "-c" in flags:
+        cv2=distribution
+    if not flags or "-p" in flags:
+        pcv=probability(distribution)
+    return disi, std, ste, cv2, pcv, tisi, std_isis_win, reduced_net,fr
+
+def write(data,simulations,filename,flags):
+    sims=np.unique(simulations)
+    options = "w+"
+    fr = np.empty((0,)) # firing rate for each cell
+
+    if flags and "-w" in flags:
+        options = "w"
+    if not flags or "-d" in flags:
+        f_disi=open('misi'+filename, options)
+    if not flags or "-s" in flags:
+        f_std=open('std'+filename, options)
+    if not flags or "-e" in flags:
+        f_ste=open('ste'+filename, options)
+    if not flags or "-t" in flags:
+        f_tisi=open('tisi'+filename, options)
+    if not flags or "-i" in flags:
+        f_stdws=open('stdws'+filename, options)
+
+    f_rnet=open('rnet'+filename, options)
+
+    cdir=os.path.join('cv2/')
+    if os.path.exists(cdir):
+        clean(cdir)
+    if not flags or "-c" in flags:
+        os.makedirs(cdir)
+
+    pdir=os.path.join('pcv/')
+    if os.path.exists(pdir):
+        clean(pdir)
+    if not flags or "-p" in flags:
+        os.makedirs(pdir)
+
+    for s in range(sims.size):
+        simulation=sims[s]
+        spikes=data[simulations == simulation]
+        disi,std,ste,cv2,pcv,tisi,std_isis_win,reduced_net,mfr=calculate(spikes, flags)
+        #fr=np.append(fr,np.mean(np.log(1/(disi['misi']/1000))))
+        fr=np.append(fr,mfr)
+
+        if disi is not None:
+            for misi,cell in disi:
+                f_disi.write(str(misi)+' '+str(cell)+"\n")
+        if not flags or "-d" in flags:
+            f_disi.write('\n')
+        if std:
+            f_std.write(str(std)+"\n")
+        if not flags or "-s" in flags:
+            f_std.write('\n')
+        if ste:
+            f_ste.write(str(ste)+"\n")
+        if not flags or "-e" in flags:
+            f_ste.write('\n')
+        if cv2 is not None:
+            for cv,cell in cv2:
+                f_cv2=open(os.path.join(cdir, 'cv2_'+str(cell)+filename), "a+")
+                for v in cv:
+                    f_cv2.write(str(v)+' '+str(cell)+'\n')
+                f_cv2.write('\n')
+                f_cv2.close()
+        if pcv is not None:
+            for pb,cell in pcv:
+                f_pcv=open(os.path.join(pdir, 'pcv_'+str(cell)+filename), "a+")
+                for x,y in pb:
+                    f_pcv.write(str(x)+' '+str(y)+'\n')
+                f_pcv.write('\n')
+                f_pcv.close()
+
+        if tisi is not None:
+            for window,cell in tisi:
+                for misi in window:
+                    f_tisi.write(str(misi)+' '+str(cell)+"\n")
+
+        if not flags or "-t" in flags:
+            f_tisi.write('\n')
+
+        #print('std_array: ',std_isis_win)
+        if std_isis_win is not None:
+            for std,cell in std_isis_win:
+                f_stdws.write(str(std)+' '+str(cell)+'\n')
+
+        if not flags or "-i" in flags:
+            f_stdws.write('\n')
+
+
+        #keep_cells=np.isin(spikes['cell'],reduced_net)
+        #for spike,cell in spikes[keep_cells]:
+        #    f_rnet.write(str(spike)+' '+str(cell)+'\n')
+        f_rnet.write(str(reduced_net))
+        f_rnet.write('\n')
+
+    # Plot mean firing for varying inhibition I (g_i)
+    if(len(fr) > 1):
+        plt.loglog(np.arange(0,65,5),fr)
+        plt.xlabel('inhibition I')
+        plt.ylabel('firing rate (Hz)')
+        plt.title('Firing Rate for Ge = 25')
+        plt.show()
+
+    f_rnet.close()
+
+    if not flags or "-d" in flags:
+        f_disi.close()
+    if not flags or "-s" in flags:
+        f_std.close()
+    if not flags or "-e" in flags:
+        f_ste.close()
+    if not flags or "-t" in flags:
+        f_tisi.close()
+    if not flags or "-i" in flags:
+        f_stdws.close()
+
+def main():
+    data,simulations,filename,flags=parse()
+    c=write(data,simulations,filename,flags)
+
+main()
+
+
+

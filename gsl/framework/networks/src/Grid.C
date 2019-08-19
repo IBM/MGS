@@ -30,7 +30,6 @@
 Grid::Grid(const std::vector<int>& size) 
    : _dimensions(size.size()), _size(size), _maxDensity(0), 
      _minDensity(UINT_MAX)
-
 {
    // set up strides vector for fast computation of gridnode 
    // coordinates and indexes
@@ -103,12 +102,12 @@ GridLayerDescriptor* Grid::addLayer(const std::vector<int>& densityVector,
 {
    GridLayerDescriptor *gld = new GridLayerDescriptor(
       this, densityVector, name, nt, ndpList, granuleMapperIndex);
-   std::auto_ptr<GridLayerDescriptor> gld_ap(gld);
+   std::unique_ptr<GridLayerDescriptor> gld_ap(gld);
    addLayer(gld_ap);
    return gld;
 }
 
-void Grid::addLayer(std::auto_ptr<GridLayerDescriptor> & layer)
+void Grid::addLayer(std::unique_ptr<GridLayerDescriptor> & layer)
 {
    if (layer->getMaxDensity() > _maxDensity) {
       _maxDensity = layer->getMaxDensity();
@@ -236,3 +235,32 @@ Grid::~Grid()
       delete *it;
    }
 }
+//
+//inline unsigned Grid::getDimensions() const 
+//{
+//   return _dimensions;
+//}
+//inline unsigned Grid::getNbrGridNodes() const {
+//   return _gridNodes;
+//}
+//inline unsigned Grid::getNumLayers() const {
+//   return size();
+//}
+//inline unsigned Grid::getMaxDensity() const {
+//   return _maxDensity;
+//}
+//inline unsigned Grid::getMinDensity() const {
+//   return _minDensity;
+//}
+//inline Repertoire* Grid::getParentRepertoire() const {
+//   return _parentRepertoire;
+//}
+//inline void Grid::setParentRepertoire(Repertoire* parentRepertoire) {
+//   _parentRepertoire = parentRepertoire;
+//}
+//inline const std::vector<int>& Grid::getSize() const {
+//   return _size;
+//}
+//inline const std::vector<GridLayerDescriptor*>& Grid::getLayers() const {
+//   return *this;
+//}

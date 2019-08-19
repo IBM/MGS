@@ -21,9 +21,9 @@ class AnyFluxDisplay : public CG_AnyFluxDisplay
                              CG_AnyFluxDisplayOutAttrPSet* CG_outAttrPset);
   AnyFluxDisplay();
   virtual ~AnyFluxDisplay();
-  virtual void duplicate(std::auto_ptr<AnyFluxDisplay>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_AnyFluxDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<AnyFluxDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_AnyFluxDisplay>& dup) const;
 
   private:
   std::ofstream* outFile = 0;

@@ -1,0 +1,74 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef BENGIORATEINTERNEURON_MDL
+#define BENGIORATEINTERNEURON_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node BengioRateInterneuron Implements FiringRateProducer {
+   // These variable names are according to arXiv.org > q-bio > arXiv:1801.00062
+   // Dendritic error backpropagation in deep cortical microcircuits
+   // João Sacramento, Rui Ponte Costa, Yoshua Bengio, Walter Senn
+
+   double u;
+   double phi_u;
+   double v;
+   double i;
+
+   Input [] pyramidalLateralInputs;
+   double* [] pyramidalTeachingInputs;
+   
+   Shared {
+     double g_lk;
+     double g_D;
+     double sigma;
+     double E_inh;
+     double E_exc;
+     double g_som;
+     double eta_IP;
+     double dT;
+
+     double predictionFactor;
+
+     string sharedDirectory;
+     string sharedFileExt;     
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     bool saveBinary;
+     
+     RuntimePhase outputWeightsShared;
+     InitPhase initialize();
+   }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+   }
+
+   RuntimePhase update_U(phi_u);
+   RuntimePhase update_V;
+
+   FiringRateProducer.output << &phi_u;
+ 
+   Connection Pre Node (PSet.identifier=="lateral") Expects FiringRateProducer {
+      FiringRateProducer.output >> pyramidalLateralInputs.input;
+      PSet.weight >> pyramidalLateralInputs.weight;
+   }
+
+   Connection Pre Node (PSet.identifier=="teaching") Expects OutputProducer {
+      OutputProducer.output >> pyramidalTeachingInputs;
+   }
+}
+#endif

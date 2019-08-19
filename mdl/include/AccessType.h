@@ -17,8 +17,10 @@
 #define AccessType_H
 #include "Mdl.h"
 
-namespace AccessType {
-   enum {PUBLIC, PROTECTED, PRIVATE};
-}
+//namespace AccessType {
+//   enum {PUBLIC, PROTECTED, PRIVATE};
+//}
+enum class AccessType {PUBLIC, PROTECTED, PRIVATE,
+   First=PUBLIC, Last=PRIVATE};
 
 #endif

@@ -129,10 +129,17 @@ class InterfaceImplementorBase : public Generatable {
       void createPSetClass(std::auto_ptr<Class>& instance
 			   , const MemberContainer<DataType>& members
 			   , const std::string& name = "") const; 
+      void createPSetClass(std::auto_ptr<Class>& instance
+			   , const MemberContainer<DataType>& members
+			   , bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType
+			   , const std::string& name = ""
+			   ) const; 
       void generateOutAttrPSet();
       void generatePublisher();
-      void generateInstanceBase();
+      std::unique_ptr<Class> generateInstanceBase(); //to support GPU, the CG_LifeNode class's data is now part of CG_LifeNodeCompCategory, so we expand the API to return the Class object representing CG_LifeNodeCompCategory
+      std::unique_ptr<Class> generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       void generateInstanceProxy();
+      void generateInstanceProxy(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType);
       
       void addInstanceServiceHeaders(std::auto_ptr<Class>& instance) const;
       void addOptionalInstanceServiceHeaders(
@@ -147,7 +154,8 @@ class InterfaceImplementorBase : public Generatable {
       virtual std::string getExtraOptionalServices(
 	 const std::string& tab) const;
 
-      std::string getInstanceServiceNames(const std::string& tab) const;
+      std::string getInstanceServiceNames(const std::string& tab, 
+	    MachineType mach_type=MachineType::CPU) const;
       std::string getOptionalInstanceServiceNames(
 	 const std::string& tab) const;
       virtual std::string getExtraServiceNames(const std::string& tab) const;
@@ -155,7 +163,9 @@ class InterfaceImplementorBase : public Generatable {
 	 const std::string& tab) const;
 
       std::string getInstanceServiceDescriptions(
-	 const std::string& tab) const;
+	 const std::string& tab,
+	 MachineType mach_type=MachineType::CPU
+	 ) const;
       std::string getOptionalInstanceServiceDescriptions(
 	 const std::string& tab) const;
       virtual std::string getExtraServiceDescriptions(
@@ -180,7 +190,9 @@ class InterfaceImplementorBase : public Generatable {
 	 const std::string& tab) const;
 
       std::string createServiceNames(const MemberContainer<DataType>& members, 
-				     const std::string& tab) const;
+				     const std::string& tab,
+				     MachineType mach_type=MachineType::CPU
+				     ) const;
 
       std::string createOptionalServiceNames(
 	 const MemberContainer<DataType>& members, 
@@ -196,7 +208,9 @@ class InterfaceImplementorBase : public Generatable {
 
       std::string createServiceDescriptions(
 	 const MemberContainer<DataType>& members, 
-	 const std::string& tab) const;
+	 const std::string& tab,
+	 MachineType mach_type=MachineType::CPU
+	 ) const;
 
       std::string createOptionalServiceDescriptions(
 	 const MemberContainer<DataType>& members, 
@@ -230,16 +244,19 @@ class InterfaceImplementorBase : public Generatable {
 	 return;
       }
 
+      /* add 'dummy' to support adding code to :addPreNode_Dummy */
       std::string getAddConnectionFunctionBody(
 	 Connection::ComponentType componentType, 
-	 Connection::DirectionType directionType) const;
+	 Connection::DirectionType directionType,
+	 bool dummy=0) const;
 
       // Will be implemented in derived classes.
       virtual std::string getAddConnectionFunctionBodyExtra(
 	 Connection::ComponentType componentType, 
 	 Connection::DirectionType directionType,
 	 const std::string& componentName, const std::string& psetType, 
-	 const std::string& psetName) const {
+	 const std::string& psetName,
+	 bool dummy = 0) const {
 	 return "";
       }
 
@@ -256,6 +273,12 @@ class InterfaceImplementorBase : public Generatable {
       const std::vector<DataType*>& getInterfaceImplementors() const {
 	 return _interfaceImplementors;
       }
+
+      virtual std::string getCompCategoryBaseName() const {
+	 //NOTE: must be re-implemented by the derived class which is a CompCategoryBase
+	 return "";
+      };
+
       std::vector<Phase*>* _instancePhases;
 
    private:

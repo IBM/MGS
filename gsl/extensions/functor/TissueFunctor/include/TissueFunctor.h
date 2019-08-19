@@ -72,15 +72,15 @@ class TissueFunctor : public CG_TissueFunctorBase
 	//	       Functor*& layoutFunctor, Functor*& nodeInitFunctor,
 	//	       Functor*& connectorFunctor, Functor*& probeFunctor,
 	//	       Functor*& MGSifyFunctor); //idea abandoned - JamesK.
-  std::auto_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
+  std::unique_ptr<Functor> userExecute(LensContext* CG_c, String& tissueElement,
                                      NDPairList*& params);
 
   TissueFunctor();
   TissueFunctor(TissueFunctor const&);
   virtual ~TissueFunctor();
-  virtual void duplicate(std::auto_ptr<TissueFunctor>& dup) const;
-  virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_TissueFunctorBase>& dup) const;
+  virtual void duplicate(std::unique_ptr<TissueFunctor>& dup) const;
+  virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_TissueFunctorBase>& dup) const;
 
   private:
   dyn_var_t getFractionCapsuleVolumeFromPre(ComputeBranch* branch);
@@ -138,7 +138,7 @@ class TissueFunctor : public CG_TissueFunctorBase
   ShallowArray<int> doLayoutHybrid(LensContext* lc);
   void doNodeInit(LensContext* lc);
   void doConnector(LensContext* lc);
-  void doProbe(LensContext* lc, std::auto_ptr<NodeSet>& rval);
+  void doProbe(LensContext* lc, std::unique_ptr<NodeSet>& rval);
   //Zipper purpose
   Grid* doProbe(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors);
   Grid* doProbe_Number(LensContext* lc, std::vector<NodeDescriptor*>& nodeDescriptors,
@@ -332,12 +332,12 @@ class TissueFunctor : public CG_TissueFunctorBase
   GranuleConnector _granuleConnector;
   NoConnectConnector _noConnector;
 
-  std::auto_ptr<Functor> _layoutFunctor;
-  std::auto_ptr<Functor> _nodeInitFunctor;
-  std::auto_ptr<Functor> _connectorFunctor;
-  std::auto_ptr<Functor> _probeFunctor;
-  std::auto_ptr<Functor> _MGSifyFunctor;
-  std::auto_ptr<NDPairList> _params;
+  std::unique_ptr<Functor> _layoutFunctor;
+  std::unique_ptr<Functor> _nodeInitFunctor;
+  std::unique_ptr<Functor> _connectorFunctor;
+  std::unique_ptr<Functor> _probeFunctor;
+  std::unique_ptr<Functor> _MGSifyFunctor;
+  std::unique_ptr<NDPairList> _params;
   Params _tissueParams;
 
   // EXAMPLE: A touch is defined in SynParams.par

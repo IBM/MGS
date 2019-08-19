@@ -33,7 +33,7 @@ NodeDataItem::NodeDataItem(const NodeDataItem& DI)
 
 
 // Utility methods
-void NodeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void NodeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new NodeDataItem(*this));
 }

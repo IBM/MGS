@@ -18,6 +18,7 @@
 #include "CG_BasicNodeSetVariable.h"
 #include <memory>
 
+//CUDA_CALLABLE 
 void BasicNodeSetVariable::initialize(RNG& rng) 
 {
    assert(coords.size() == vals.size());
@@ -89,17 +90,17 @@ BasicNodeSetVariable::~BasicNodeSetVariable()
 {
 }
 
-void BasicNodeSetVariable::duplicate(std::auto_ptr<BasicNodeSetVariable>& dup) const
+void BasicNodeSetVariable::duplicate(std::unique_ptr<BasicNodeSetVariable>& dup) const
 {
    dup.reset(new BasicNodeSetVariable(*this));
 }
 
-void BasicNodeSetVariable::duplicate(std::auto_ptr<Variable>& dup) const
+void BasicNodeSetVariable::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new BasicNodeSetVariable(*this));
 }
 
-void BasicNodeSetVariable::duplicate(std::auto_ptr<CG_BasicNodeSetVariable>& dup) const
+void BasicNodeSetVariable::duplicate(std::unique_ptr<CG_BasicNodeSetVariable>& dup) const
 {
    dup.reset(new BasicNodeSetVariable(*this));
 }

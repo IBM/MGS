@@ -34,7 +34,7 @@ LongDataItem::LongDataItem(const LongDataItem& DI)
 
 
 // Utility methods
-void LongDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void LongDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new LongDataItem(*this)));
 }

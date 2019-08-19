@@ -39,7 +39,6 @@ class NodeDescriptor;
 
 class Node : public NodeDescriptor, public ServiceAcceptor, public TriggerableBase
 {
-
    public:
       virtual void initialize(ParameterSet* initPSet) =0;
 
@@ -53,15 +52,18 @@ class Node : public NodeDescriptor, public ServiceAcceptor, public TriggerableBa
       virtual void addPreConstant(Constant* c, ParameterSet* InAttrPSet) = 0;
       virtual void addPreEdge(Edge* e, ParameterSet* InAttrPSet)=0;
       virtual void addPreNode(NodeDescriptor* n, ParameterSet* InAttrPSet) = 0;
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+      virtual void addPreNode_Dummy(NodeDescriptor* CG_node, ParameterSet* CG_pset, Simulation* sim, NodeDescriptor* nd_for_this_node) = 0; 
+#endif
       virtual void addPreVariable(VariableDescriptor* v, ParameterSet* InAttrPSet) = 0;
       virtual ~Node() {}
 
       virtual void getInitializationParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
 
 //      virtual float getComputeCost() const = 0;
       virtual bool hasService() = 0;

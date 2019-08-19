@@ -96,10 +96,10 @@ void GranuleConnector::variableToNodeSet(
    destination->getNodes(nodes);
    std::vector<NodeDescriptor*>::iterator it = nodes.begin(), 
       end = nodes.end();
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    source->getVariable()->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    (*it)->getGridLayerDescriptor()->getNodeType()->getInAttrParameterSet(
       inAttrPSet);
    inAttrPSet->set(*destinationInAttr);
@@ -121,10 +121,10 @@ void GranuleConnector::variableToEdgeSet(
 {
    std::vector<Edge*>& edges = destination->getEdges();
    std::vector<Edge*>::iterator it = edges.begin(), end = edges.end();
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    source->getVariable()->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    (*it)->getInAttrParameterSet(inAttrPSet);
    inAttrPSet->set(*destinationInAttr);
 
@@ -142,10 +142,10 @@ void GranuleConnector::variableToVariable(
    VariableDescriptor* source, VariableDescriptor* destination, NDPairList* sourceOutAttr, 
    NDPairList* destinationInAttr, Simulation* sim)
 {
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    source->getVariable()->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    destination->getVariable()->getInAttrParameterSet(inAttrPSet);
    inAttrPSet->set(*destinationInAttr);
    
@@ -161,10 +161,10 @@ void GranuleConnector::nodeSetToVariable(
    std::vector<NodeDescriptor*> nodes;
    source->getNodes(nodes);
    std::vector<NodeDescriptor*>::iterator it = nodes.begin(), end = nodes.end();
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    (*it)->getGridLayerDescriptor()->getNodeType()->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    destination->getVariable()->getInAttrParameterSet(inAttrPSet);
    inAttrPSet->set(*destinationInAttr);
 
@@ -184,10 +184,10 @@ void GranuleConnector::edgeSetToVariable(
 {
    std::vector<Edge*>& edges = source->getEdges();
    std::vector<Edge*>::iterator it = edges.begin(), end = edges.end();
-   std::auto_ptr<ParameterSet> outAttrPSet;
+   std::unique_ptr<ParameterSet> outAttrPSet;
    (*it)->getOutAttrParameterSet(outAttrPSet);
    outAttrPSet->set(*sourceOutAttr);
-   std::auto_ptr<ParameterSet> inAttrPSet;
+   std::unique_ptr<ParameterSet> inAttrPSet;
    destination->getVariable()->getInAttrParameterSet(inAttrPSet);
    inAttrPSet->set(*destinationInAttr);
 

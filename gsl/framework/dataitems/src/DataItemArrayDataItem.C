@@ -33,7 +33,7 @@ DataItemArrayDataItem::DataItemArrayDataItem()
 DataItemArrayDataItem::DataItemArrayDataItem(const DataItemArrayDataItem& DI)
 {
    ArrayDataItem::_setDimensions(*DI.getDimensions());
-   std::auto_ptr<DataItem> diap;
+   std::unique_ptr<DataItem> diap;
    std::vector<DataItem*> &source = *DI._data;
    _data = new std::vector<DataItem*>(source.size());
    for (unsigned i=0;i<_data->size();++i) {
@@ -118,7 +118,7 @@ void DataItemArrayDataItem::setDimensions(std::vector<int> const &dimensions)
 }
 
 
-void DataItemArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void DataItemArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new DataItemArrayDataItem(*this)));
 }
@@ -134,7 +134,7 @@ DataItemArrayDataItem& DataItemArrayDataItem::assign(const DataItemArrayDataItem
 
    // Build new
    ArrayDataItem::_setDimensions(*DI.getDimensions());
-   std::auto_ptr<DataItem> diap;
+   std::unique_ptr<DataItem> diap;
    std::vector<DataItem*> const &source = *DI.getDataItemVector();
    _data = new std::vector<DataItem*>(source.size());
    for (unsigned i=0;i<_data->size();++i) {
@@ -192,7 +192,7 @@ DataItem* DataItemArrayDataItem::getDataItem(std::vector<int> coords, Error* err
 }
 
 
-void DataItemArrayDataItem::setDataItem(std::vector<int> coords, std::auto_ptr<DataItem> & value, Error* error)
+void DataItemArrayDataItem::setDataItem(std::vector<int> coords, std::unique_ptr<DataItem> & value, Error* error)
 {
    unsigned offset = getOffset(coords);
    if (offset>=_data->size()) {

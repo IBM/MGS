@@ -28,8 +28,24 @@ Interface UnspecifiedConnection {
 	bool b;
 }
 
+Interface TimeUnitProducer {
+	int* timeUnit;
+}
+
 Interface TimeStepProducer {
 	dyn_var_t* deltaT;
+}
+Interface TimeStepProducerMS {
+	dyn_var_t* deltaT;
+}
+Interface TimeStepProducerSEC {
+	dyn_var_t* deltaT;
+}
+Interface TimeProducerMS {
+	dyn_var_t* time;
+}
+Interface TimeProducerSEC {
+	dyn_var_t* time;
 }
 
 Constant TimeStep Implements TimeStepProducer {
@@ -137,5 +153,56 @@ Struct TargetAttachIP3Concentration{
   dyn_var_t* IP3;  // [uM]
   dyn_var_t* inverseTime;  // [1/ms]
   int index; // index of compartment at which the spine attach (or the shaft attach)
+}
+
+Variable SimulationInfoNew Implements TimeStepProducer, 
+	TimeStepProducerSEC, TimeStepProducerMS, 
+	TimeUnitProducer, 
+	TimeProducerSEC, TimeProducerMS
+{
+//NOTE: We use this variable to help
+// 1. use time as the criterion (beside iteration index)
+// 2. pass a file whose content can be checked to halt the simulation
+// 3. provide current time to the whole system
+  //{{{
+  //{{{DATA
+  //{{{passed by user (either of this)
+	dyn_var_t deltaT; 
+  float recordIntervalInTime; //
+  int recordIntervalInIterations;
+	int timeUnit; //check Constants.h and use TIME_UNIT_SECOND or TIME_UNIT_MILISECOND
+  //}}}
+  //{{{passed by user
+  string halt_file;
+  //}}}
+  //{{{internal/reference
+  //NOTE: make sure it has to be 'float'
+  // to be able to absorved by FloatTrigger
+	dyn_var_t deltaT_InMS; 
+	dyn_var_t deltaT_InSEC; 
+  dyn_var_t currentTime;   //in unit as defined by 'timeUnit' 
+  dyn_var_t currentTimeInMS;    //[ms]
+  dyn_var_t currentTimeInSEC;    //[s]
+  /*dyn_var_t* deltaT;*/
+  unsigned iterationCount; // zero-based for RuntimePhase loop, unlike ::Iteration is 1-based (as it starts from InitPhase)
+  unsigned isUserWantToHalt;    //True/False (i.e. 1/0) as MGS does not have 'bool' type
+  //}}}
+  //}}}
+
+	TimeStepProducer.deltaT << &deltaT;
+	TimeStepProducerSEC.deltaT << &deltaT_InSEC;
+	TimeStepProducerMS.deltaT << &deltaT_InMS;
+	TimeUnitProducer.timeUnit << &timeUnit;
+	TimeProducerMS.time << &currentTimeInMS;
+	TimeProducerSEC.time << &currentTimeInSEC;
+
+  InitPhase initialize;
+  RuntimePhase calculateInfo; //estimate the current time
+
+  //NOTE: There is no need to receive from an outside 'CONSTANT' TimeStep
+  //Connection Pre Constant () Expects TimeStepProducer {
+  //  TimeStepProducer.deltaT >> deltaT;
+  //}
+  //}}}
 }
 #endif

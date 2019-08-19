@@ -33,7 +33,7 @@ UnsignedCharDataItem::UnsignedCharDataItem(const UnsignedCharDataItem& DI)
 
 
 // Utility methods
-void UnsignedCharDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void UnsignedCharDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new UnsignedCharDataItem(*this)));
 }

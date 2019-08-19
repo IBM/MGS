@@ -27,7 +27,7 @@ void Log::userInitialize(LensContext* CG_c, Functor*& f)
 double Log::userExecute(LensContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> rval_ap;
+  std::unique_ptr<DataItem> rval_ap;
   init.f->execute(CG_c, nullArgs, rval_ap);
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -46,17 +46,17 @@ Log::~Log()
 {
 }
 
-void Log::duplicate(std::auto_ptr<Log>& dup) const
+void Log::duplicate(std::unique_ptr<Log>& dup) const
 {
    dup.reset(new Log(*this));
 }
 
-void Log::duplicate(std::auto_ptr<Functor>& dup) const
+void Log::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new Log(*this));
 }
 
-void Log::duplicate(std::auto_ptr<CG_LogBase>& dup) const
+void Log::duplicate(std::unique_ptr<CG_LogBase>& dup) const
 {
    dup.reset(new Log(*this));
 }

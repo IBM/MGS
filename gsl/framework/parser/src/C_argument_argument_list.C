@@ -34,7 +34,7 @@ void C_argument_argument_list::internalExecute(LensContext *c)
    if (_typeSpec) {
       _typeSpec->execute(c);
    }
-   std::auto_ptr<DataItem> diap;
+   std::unique_ptr<DataItem> diap;
    ArgumentListHelper helper;
    helper.getDataItem(diap, c, _arg_list, _typeSpec);
    _dataItem = diap.release();
@@ -48,7 +48,7 @@ C_argument_argument_list::C_argument_argument_list(
       _arg_list = rv._arg_list->duplicate();
    }
    if (rv._dataItem) {
-      std::auto_ptr<DataItem> di;
+      std::unique_ptr<DataItem> di;
       rv._dataItem->duplicate(di);
       _dataItem = di.release();
    }

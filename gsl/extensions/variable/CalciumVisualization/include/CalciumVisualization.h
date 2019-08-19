@@ -39,9 +39,9 @@ class CalciumVisualization : public CG_CalciumVisualization
       Constant* CG_constant, CG_CalciumVisualizationInAttrPSet* CG_inAttrPset,
       CG_CalciumVisualizationOutAttrPSet* CG_outAttrPset);
   virtual ~CalciumVisualization();
-  virtual void duplicate(std::auto_ptr<CalciumVisualization>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_CalciumVisualization>& dup) const;
+  virtual void duplicate(std::unique_ptr<CalciumVisualization>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_CalciumVisualization>& dup) const;
 
   private:
   float swapByteOrder(float*);

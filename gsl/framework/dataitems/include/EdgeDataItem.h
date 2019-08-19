@@ -39,7 +39,7 @@ class EdgeDataItem : public DataItem
       ~EdgeDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       Edge* getEdge() const;

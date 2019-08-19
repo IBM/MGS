@@ -18,6 +18,7 @@
 #include "CopyConstructorMethod.h"
 #include "DefaultConstructorMethod.h"
 #include "Attribute.h"
+#include "CustomAttribute.h"
 #include "DataTypeAttribute.h"
 #include "Constants.h"
 #include "AccessType.h"
@@ -26,6 +27,7 @@
 #include "VoidType.h"
 #include "BaseClass.h"
 #include "FriendDeclaration.h"
+#include "ArrayType.h"
 
 #include <string>
 #include <vector>
@@ -33,19 +35,24 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <chrono>
+#include <time.h>
+#include <cstring>
+#include <algorithm>
 
 Class::Class()
-   : _name(""), _fileOutput(true), _userCode(false),
+   : _name(""), _nameParentClass(""), _fileOutput(true), _userCode(false),
      _sourceFileBeginning(""), _copyingDisabled(false), _copyingRemoved(false), _templateClass(false), _generateSourceFile(false),
-     _memberClass(false), _alternateFileName("")
+     _memberClass(false), _alternateFileName(""), 
+     _classInfo(std::make_pair(PrimeType::UN_SET, SubType::UN_SET)),
+     _gpuKernelArgs(""), _dataNamesInNodes("")
 {
 }
 
 Class::Class(const std::string& name)
-   : _name(name), _fileOutput(true), _userCode(false),
-     _sourceFileBeginning(""), _copyingDisabled(false), _copyingRemoved(false), _templateClass(false), _generateSourceFile(false),
-     _memberClass(false), _alternateFileName("")
+   : Class()
 {
+  _name = name;
 }
 
 Class::Class(const Class& rv)
@@ -62,7 +69,10 @@ Class::Class(const Class& rv)
      _alternateFileName(rv._alternateFileName),
      _friendDeclarations(rv._friendDeclarations), 
      _macroConditional(rv._macroConditional), 
-     _typeDefinitions(rv._typeDefinitions)
+     _typeDefinitions(rv._typeDefinitions),
+     _classInfo(rv._classInfo),
+     _gpuKernelArgs(rv._gpuKernelArgs),
+     _dataNamesInNodes(rv._dataNamesInNodes)
 {
    copyOwnedHeap(rv);
 }
@@ -155,8 +165,11 @@ void Class::addDataTypeDataItemHeaders(
 }
 
 void Class::addAttributes(const MemberContainer<DataType>& members
-			  , int accessType, bool suppressPointers)
+			  , AccessType accessType, bool suppressPointers,
+			  bool add_gpu_attributes, Class* compcat_ptr)
 {
+  if (getClassInfoPrimeType() == PrimeType::CCDemarshaller)
+  {
    if (members.size() > 0) {
       addDataTypeHeaders(members);
       addDataTypeDataItemHeaders(members);
@@ -165,10 +178,289 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	 std::auto_ptr<DataType> dup;
 	 it->second->duplicate(dup);
 	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
- 	 std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
-	 att->setAccessType(accessType);
-	 addAttribute(att);
+	 if (add_gpu_attributes)
+	 {//make these data members 'disappear' in GPU
+	   CustomAttribute* att;
+	   if (dup->isArray()) 
+	   {
+	     att= new CustomAttribute(PREFIX_MEMBERNAME + dup->getName(), "ShallowArray_Flat<ShallowArray_Flat<"
+		 + (dynamic_cast<ArrayType*>(dup.get()))->getType()->getTypeString()+
+		 ", " + MEMORY_LOCATION + ">, " + MEMORY_LOCATION + ">", accessType);
+
+	   }else
+	     att= new CustomAttribute(PREFIX_MEMBERNAME + dup->getName(), "ShallowArray_Flat<"+dup->getTypeString()+
+		 ", " + MEMORY_LOCATION + ">", accessType);
+	   att->setAccessType(accessType);
+	   MacroConditional gpuConditional(GPUCONDITIONAL);
+	   gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
+	   att->setMacroConditional(gpuConditional);
+	   std::unique_ptr<Attribute> att_smart(att);
+	   addAttribute(att_smart);
+	 }
       }
+   }
+
+   MacroConditional gpuConditional(GPUCONDITIONAL);
+   gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+   std::unique_ptr<Attribute> att_index(new CustomAttribute("offset", "int", accessType));
+   att_index->setMacroConditional(gpuConditional);
+   addAttribute(att_index);
+   //addAttribute(att_index, MachineType::GPU);
+   return;
+  }
+
+   if (members.size() > 0) {
+      addDataTypeHeaders(members);
+      addDataTypeDataItemHeaders(members);
+      MemberContainer<DataType>::const_iterator it, end = members.end();
+      if (add_gpu_attributes and compcat_ptr)
+	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_START); 
+      for (it = members.begin(); it != end; ++it) {
+	 std::auto_ptr<DataType> dup;
+	 it->second->duplicate(dup);
+	 if (dup->isPointer() && suppressPointers) dup->setPointer(false);
+ 	 //std::auto_ptr<Attribute> att(new DataTypeAttribute(dup));
+ 	 std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
+	 att->setAccessType(accessType);
+	 if (add_gpu_attributes)
+	 {//make these data members 'disappear' in GPU
+	   MacroConditional gpuConditional(GPUCONDITIONAL);
+	   gpuConditional.setNegateCondition();
+	   att->setMacroConditional(gpuConditional);
+
+	   if (compcat_ptr)
+	   {
+	     MacroConditional gpuConditional(GPUCONDITIONAL);
+	     auto member_attr_name = it->first;
+	     auto dt = it->second;
+	     if (dt->isArray())
+	     {
+	       //if (! dt->getType()->isPointer())
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 type = type.replace(type.find(from),from.length(),to);
+		 from = ">";
+		 to = ", " + MEMORY_LOCATION + ">";
+		 type = type.replace(type.find(from),from.length(),to);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_PROXY_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + type + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+	       }
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 type = type.replace(type.find(from),from.length(),to);
+		 from = ">";
+		 to = ", " + MEMORY_LOCATION + ">";
+		 type = type.replace(type.find(from),from.length(),to);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + type + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_3");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+	       }
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 std::size_t start = type.find_first_of("<");
+		 std::size_t last = type.find_first_of(">");
+		 std::string element_datatype = type.substr(start+1, last-start-1);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + element_datatype + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_4");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() + 
+		       "_start_offset", "ShallowArray_Flat<int, " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() +
+		       "_num_elements", "ShallowArray_Flat<int, " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+	       }
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 std::string from = "ShallowArray<";
+		 std::string to = "ShallowArray_Flat<";
+		 std::string  type = dt->getTypeString(); 
+		 std::size_t start = type.find_first_of("<");
+		 std::size_t last = type.find_first_of(">");
+		 std::string element_datatype = type.substr(start+1, last-start-1);
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + element_datatype + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b");
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() + 
+		       "_max_elements", "int", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+		 {
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName() +
+		       "_num_elements", "ShallowArray_Flat<int, " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+		 }
+	       }
+/*
+          #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+             ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM >,
+                Array_Flat<int>::MemLocation::UNIFIED_MEM> um_neighbors;
+          #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+             ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+             //always 'int' for the two below arrays
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+          #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+             ShallowArray_Flat<int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+             //always 'int' for the two below arrays
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_num_elements;
+             int um_neighbors_max_elements;
+          #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+             ShallowArray_Flat<ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors;
+             //always 'int' for the below array
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM > um_neighbors_start_offset;
+          #endif
+  */
+	     }
+	     else{
+	       /*
+           #if PROXY_ALLOCATION == OPTION_4
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> proxy_um_value;
+           #endif
+             ShallowArray_Flat<int, Array_Flat<int>::MemLocation::UNIFIED_MEM> um_value;
+		*/
+	       {
+		 MacroConditional gpuConditional(GPUCONDITIONAL);
+		 gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_4");
+		 std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_PROXY_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + dt->getTypeString() + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+		 att_cc->setMacroConditional(gpuConditional);
+		 compcat_ptr->addAttribute(att_cc);
+	       }
+	       std::unique_ptr<Attribute> att_cc(new CustomAttribute(PREFIX_MEMBERNAME + dt->getName(), "ShallowArray_Flat<" + dt->getTypeString() + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+	     att_cc->setMacroConditional(gpuConditional);
+	     compcat_ptr->addAttribute(att_cc);
+	     //compcat_ptr->addAttribute(att_index, MachineType::GPU);
+	     }
+	     //std::string kernelArgStr = PREFIX_MEMBERNAME + dt->getName() + ".getDataRef()";
+	     //compcat_ptr->addKernelArgs(kernelArgStr, dt->getName(), dt->getDescriptor()+"* ");
+	     compcat_ptr->addKernelArgs(dt);
+	     if (add_gpu_attributes and compcat_ptr)
+	     {
+	       std::string nameMapping = "#define " + dt->getName() + "  (" + REF_CC_OBJECT + "->" + PREFIX_MEMBERNAME + dt->getName() + "[" + REF_INDEX + "])"; 
+	       compcat_ptr->addDataNameMapping(nameMapping);
+	     }
+	   }
+	 }
+	 if (getClassInfoSubType() == SubType::BaseClassPSet and 
+	     getClassInfoPrimeType() == PrimeType::Node and 
+	     ((DataTypeAttribute*)att.get())->getDataType()->isArray())
+	 {
+	   //std::unique_ptr<Attribute> att_cc = att;
+	   MacroConditional gpuConditional(GPUCONDITIONAL);
+	   auto member_attr_name = it->first;
+	   auto dt = it->second;
+	   {
+	     MacroConditional gpuConditional(GPUCONDITIONAL);
+	     std::string from = "ShallowArray<";
+	     std::string to = "ShallowArray_Flat<";
+	     std::string  type = dt->getTypeString(); 
+	     type = type.replace(type.find(from),from.length(),to);
+	     from = ">";
+	     to = ", " + MEMORY_LOCATION + ">";
+	     type = type.replace(type.find(from),from.length(),to);
+	     //std::unique_ptr<Attribute> att_cc(new CustomAttribute(dt->getName(), "ShallowArray_Flat<" + type + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+	     std::unique_ptr<Attribute> att_cc(new CustomAttribute(dt->getName(), type , AccessType::PUBLIC));
+	     //gpuConditional.addExtraTest("DATAMEMBER_ARRAY_ALLOCATION == OPTION_3");
+	     att_cc->setMacroConditional(gpuConditional);
+	     //att->setMacroConditional(gpuConditional);
+	     addAttribute(att_cc);
+	     //addAttribute(att);
+	   }
+	   gpuConditional.setNegateCondition();
+	   att->setMacroConditional(gpuConditional);
+	   addAttribute(att);
+	   //MachineType mach_type=MachineType::GPU;
+	   //addAttribute(att, mach_type);
+	   //addAttribute(att);
+//#if defined(HAVE_GPU) 
+//      //TUAN TODO: we may not need to have 'reference' elements array here
+//      //  otherwise, consider proper allocation
+// #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+//      ShallowArray_Flat< int*, Array_Flat<int>::MemLocation::UNIFIED_MEM > neighbors;
+// #endif
+//#else
+//      ShallowArray< int* > neighbors;
+//#endif
+	 }
+	 else
+	   addAttribute(att);
+      }
+      if (add_gpu_attributes and compcat_ptr)
+	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_END); 
+   }
+   //extension for GPU 
+   if (add_gpu_attributes)
+   {
+     //we need to add two data elements
+     //  int index;
+     //  static CG_"name"CompCategory* REF_CC_OBJECT;
+     //std::unique_ptr<DataType> dup;
+     //dup(new IntType());
+     //std::auto_ptr<Attribute> att_index(new DataTypeAttribute(dup));
+     //CustomAttribute* att_index= new CustomAttribute(REF_INDEX, "int*");
+     {
+       MacroConditional gpuConditional(GPUCONDITIONAL);
+       std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_INDEX, "int", accessType));
+       att_index->setMacroConditional(gpuConditional);
+       addAttribute(att_index, MachineType::GPU);
+     }
+     {
+       MacroConditional gpuConditional(GPUCONDITIONAL);
+       std::string nametype;
+       if (getClassInfoSubType() == SubType::BaseClassProxy)
+       {
+	 std::size_t pos = _name.find("Proxy");
+	 nametype = _name.substr(0, pos) + COMPCATEGORY + "*";
+       }
+       else
+       {
+	 nametype = _name + COMPCATEGORY + "*";
+       }
+       std::unique_ptr<Attribute> att_ccAccessors(new CustomAttribute(REF_CC_OBJECT, nametype, accessType));
+       att_ccAccessors->setMacroConditional(gpuConditional);
+       att_ccAccessors->setStatic();
+       auto ptr = dynamic_cast<CustomAttribute&>(*att_ccAccessors);
+       ptr.setPointer();
+       addAttribute(att_ccAccessors, MachineType::GPU);
+     }
+
+     if (getClassInfoSubType() == SubType::BaseClassProxy)
+     {
+       MacroConditional gpuConditional(GPUCONDITIONAL);
+       gpuConditional.addExtraTest("PROXY_ALLOCATION == OPTION_3");
+       std::unique_ptr<Attribute> att_index(new CustomAttribute(REF_DEMARSHALLER_INDEX, "int", accessType));
+       att_index->setMacroConditional(gpuConditional);
+       addAttribute(att_index, MachineType::GPU);
+     }
    }
 }
 
@@ -217,6 +509,11 @@ void Class::destructOwnedHeap()
       delete *it;
    }
    _attributes.clear();
+   for (std::vector<Attribute*>::iterator it = _attributes_gpu.begin();
+	it != _attributes_gpu.end(); ++it) {
+      delete *it;
+   }
+   _attributes_gpu.clear();
    for (std::vector<Method*>::iterator it = _methods.begin();
 	it != _methods.end(); ++it) {
       delete *it;
@@ -237,6 +534,12 @@ void Class::copyOwnedHeap(const Class& rv)
       std::auto_ptr<Attribute> dup;
       (*it)->duplicate(dup);
       _attributes.push_back(dup.release());
+   }
+   for (std::vector<Attribute*>::const_iterator it = rv._attributes_gpu.begin();
+	it != rv._attributes_gpu.end(); ++it) {
+      std::auto_ptr<Attribute> dup;
+      (*it)->duplicate(dup);
+      _attributes_gpu.push_back(dup.release());
    }
    for (std::vector<Method*>::const_iterator it = rv._methods.begin();
 	it != rv._methods.end(); ++it) {
@@ -260,14 +563,28 @@ void Class::printBeginning(std::ostringstream& os)
 
 void Class::printCopyright(std::ostringstream& os)
 {
- os << "// =================================================================\n"
+  std::string current_date; 
+  std::chrono::system_clock::time_point tp = std::chrono::system_clock::now();
+  std::time_t time = std::chrono::system_clock::to_time_t(tp);
+  std::tm* timetm = std::localtime(&time);
+  char date_time_format[] = "%m-%d-%Y";
+  char time_str[] = "mm-dd-yyyyaa";
+  strftime(time_str, strlen(time_str), date_time_format, timetm);
+  char year_format[] = "%Y";
+  char year[] = "mm-dd-yyyya";
+  strftime(year, strlen(year), year_format, timetm);
+  os << "// =================================================================\n"
     << "// Licensed Materials - Property of IBM\n"
     << "//\n"
     << "// \"Restricted Materials of IBM\n"
     << "//\n"
-    << "// BCM-YKT-07-18-2017\n"
+    //<< "// BCM-YKT-07-18-2017\n"
+    << "// BCM-YKT-"
+    << time_str << "\n"
     << "//\n"
-    << "// (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
+    << "//  (C) Copyright IBM Corp. 2005-"
+    << year << "  All rights reserved   .\n"
+    //<< "// (C) Copyright IBM Corp. 2005-2017  All rights reserved\n"
     << "// US Government Users Restricted Rights -\n"
     << "// Use, duplication or disclosure restricted by\n"
     << "// GSA ADP Schedule Contract with IBM Corp.\n"
@@ -303,7 +620,7 @@ void Class::printClassHeaders(std::ostringstream& os)
    }
 }
 
-void Class::printTypeDefs(int type, std::ostringstream& os)
+void Class::printTypeDefs(AccessType type, std::ostringstream& os)
 {
    for (std::vector<TypeDefinition>::const_iterator it = 
 	   _typeDefinitions.begin();
@@ -312,12 +629,21 @@ void Class::printTypeDefs(int type, std::ostringstream& os)
    }
 }
 
-void Class::printMethodDefinitions(int type, std::ostringstream& os)
+void Class::printMethodDefinitions(AccessType type, std::ostringstream& os)
 {
    for (std::vector<Method*>::const_iterator it = _methods.begin();
 	it != _methods.end(); ++it) {
      (*it)->printDefinition(type, os);
    }
+   for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+    {//these are for the method whose definition is written into a different file
+      // which is included into the main source file
+      auto& value = it->second;
+      for (std::vector<Method*>::const_iterator it = value.begin();
+	  it != value.end(); ++it) {
+	(*it)->printDefinition(type, os);
+      }
+    }
 }
 
 void Class::printExternCDefinitions(std::ostringstream& os)
@@ -368,6 +694,10 @@ void Class::printAttributeStaticInstances(std::ostringstream& os)
 	it != _attributes.end(); ++it) {
       os << (*it)->getStaticInstanceCode(_name);
    }
+   for (std::vector<Attribute*>::const_iterator it = _attributes_gpu.begin();
+        it != _attributes_gpu.end(); ++it) {
+      os << (*it)->getStaticInstanceCode(_name);
+   }
 }
 
 
@@ -375,17 +705,30 @@ void Class::printMethods(std::ostringstream& os)
 {
    for (std::vector<Method*>::const_iterator it = _methods.begin();
 	it != _methods.end(); ++it) {
-      (*it)->printSource(_name, os);
+      (*it)->printSource(_name, os, _nameParentClass);
    }
 }
 
 
-void Class::printAttributes(int type, std::ostringstream& os)
+void Class::printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type)
 {
-   for (std::vector<Attribute*>::const_iterator it = _attributes.begin();
+  if (mach_type == MachineType::CPU)
+  {
+    for (std::vector<Attribute*>::const_iterator it = _attributes.begin();
 	it != _attributes.end(); ++it) {
       os << (*it)->getDefinition(type);
-   }
+    }
+  }
+  else if (mach_type == MachineType::GPU)
+  {
+    for (std::vector<Attribute*>::const_iterator it = _attributes_gpu.begin();
+	it != _attributes_gpu.end(); ++it) {
+      os << (*it)->getDefinition(type);
+    }
+  }
+  else{
+    assert(0);
+  }
 }
 
 void Class::printPartnerClasses(std::ostringstream& os)
@@ -399,21 +742,31 @@ void Class::printPartnerClasses(std::ostringstream& os)
 }
 
 
-void Class::printAccess(int type, const std::string& name, 
+void Class::printAccess(AccessType type, const std::string& name, 
 			std::ostringstream& os)
 {
    if (isAccessRequired(type)) {
       os << TAB << name << ":\n";
       printTypeDefs(type, os);
       printMethodDefinitions(type, os);
+      if (name == "protected" and _attributes_gpu.size() > 0)
+      {
+	os  << STR_GPU_CHECK_START;
+	printAttributes(type, os, MachineType::GPU);
+	os << "#else\n";
+      }
       printAttributes(type, os);
+      if (name == "protected" and _attributes_gpu.size() > 0)
+      {
+	os << "#endif\n";
+      }
    }
 }
 
-void Class::printAccessMemberClasses(int type, const std::string& name, 
+void Class::printAccessMemberClasses(AccessType type, const std::string& name, 
 			std::ostringstream& os)
 {
-  std::map<int, std::vector<Class*> >::iterator classVec = _memberClasses.find(type);
+  std::map<AccessType, std::vector<Class*> >::iterator classVec = _memberClasses.find(type);
   if ( classVec != _memberClasses.end() ) {
     os << TAB << name << ":\n";
     std::vector<Class*>& classes = _memberClasses[type];
@@ -430,7 +783,29 @@ void Class::printAccessMemberClasses(int type, const std::string& name,
   }
 }
 
-bool Class::isAccessRequired(int type)
+void Class::printMemberClassesMethods(std::ostringstream& os)
+{
+  for( auto type: Enum<AccessType>() )
+  {
+    std::map<AccessType, std::vector<Class*> >::iterator classVec = _memberClasses.find(type);
+    if ( classVec != _memberClasses.end() ) {
+      //os << TAB << name << ":\n";
+      std::vector<Class*>& classes = _memberClasses[type];
+      std::vector<Class*>::iterator iter = classes.begin();
+      std::vector<Class*>::iterator end = classes.end();    
+      for (; iter!=end; ++iter) {
+	//if ((*iter)->_memberClass) os << "\n";
+	os << (*iter)->getMacroConditional().getBeginning();
+	//if ((*iter)->_memberClass) os << TAB;
+	(*iter)->printMethods(os);
+	os <<  (*iter)->getMacroConditional().getEnding();
+	//if ((*iter)->_memberClass) os << "\n";
+      }   
+    }
+  }
+}
+
+bool Class::isAccessRequired(AccessType type)
 {
    for (std::vector<TypeDefinition>::const_iterator it = 
 	   _typeDefinitions.begin();
@@ -461,6 +836,7 @@ void Class::generateOutput(const std::string& modifier,
    if (_fileOutput) {
      std::string name = _alternateFileName;
      if (name == "") name = _name;
+     /* TUAN TODO: consider using Boost.FileSystem for cross-platform */
       std::string fName = directory + "/" + name + modifier;
       if (_userCode) {
 	 fName += ".gen";
@@ -470,6 +846,32 @@ void Class::generateOutput(const std::string& modifier,
       fs << os.str();
       fs.close();
    } 
+   if (_extra_files.size() > 0)
+   {
+     auto iter = _extra_files.begin();
+     while (iter != _extra_files.end())
+     {
+       std::cout << iter->first << std::endl;
+       std::string fName = directory + "/" + iter->first;
+       std::ofstream fs(fName.c_str());
+       fs << iter->second;
+       fs.close();
+       iter++;
+     }
+   }
+}
+
+void Class::generateOutputCustom(const std::string& filename, 
+			   const std::string& directory,
+			   std::ostringstream& os)
+{
+  /* TUAN TODO: consider using Boost.FileSystem for cross-platform */
+  std::string fName = directory + "/" + filename;
+  fName += ".gen";
+  //else return; // hack for MBL
+  std::ofstream fs(fName.c_str());
+  fs << os.str();
+  fs.close();
 }
 
 void Class::generateHeader(const std::string& moduleName)
@@ -503,6 +905,16 @@ void Class::generateHeader(const std::string& moduleName)
 void Class::generateClassDefinition(std::ostringstream& os) 
 {
    std::string s; 
+   if (getClassInfoPrimeType() == PrimeType::Node and
+       getClassInfoSubType() == SubType::BaseCompCategory)
+   {
+     std::string extra_inc_file(_name + ".h_header.incl");
+     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+       << "      #include \"" << extra_inc_file << "\"\n" 
+       << "#endif\n";
+     std::string gen_file(extra_inc_file + ".gen");
+     _extra_files[gen_file] = R"(# Please include any header files for the extra data that you add to  )" + _name;
+   }
    if (_templateClass) {
      getTemplateClassParametersString(s);
      os << "template " << s << " ";
@@ -548,10 +960,32 @@ void Class::generateClassDefinition(std::ostringstream& os)
    printAccess(AccessType::PUBLIC, "public", os);
    printAccess(AccessType::PROTECTED, "protected", os);
    printAccess(AccessType::PRIVATE, "private", os);
+   if (getClassInfoPrimeType() == PrimeType::Node and
+       getClassInfoSubType() == SubType::BaseCompCategory)
+   {
+     std::string extra_inc_file(_name + ".h_extra.incl");
+     os << "#if __has_include(\"" << extra_inc_file << "\")\n"
+       << "      #include \"" << extra_inc_file << "\"\n" 
+       << "#endif\n";
+     std::string gen_file(extra_inc_file + ".gen");
+     _extra_files[gen_file] = R"(# Please add any extra data member that you add to  )" + _name;
+   }
    if (_memberClass) os << TAB;
    os << "};\n\n";
 }
 
+void Class::printGPUSource(std::string method, std::ostringstream& os)
+{
+  os << "void __global__ " <<  method << "(\n"  
+    << _gpuKernelArgs
+    << ")\n"
+    << "{\n" 
+    << TAB << "int index = blockDim.x * blockIdx.x + threadIdx.x;\n"
+    << TAB << "if (index < size) {\n" 
+    << TAB << TAB << " // add your code here\n"
+    << TAB << "}\n"
+    << "}\n";
+}
 void Class::generateSource(const std::string& moduleName)
 {
    std::ostringstream os;
@@ -565,7 +999,60 @@ void Class::generateSource(const std::string& moduleName)
    printHeaders(_extraSourceHeaders, os);
    printClassHeaders(os);
    printHeaders(_headers, os);
+  if (getClassInfoPrimeType() == PrimeType::Node and 
+      getClassInfoSubType() == SubType::Class)
+  {
+    os <<  STR_GPU_CHECK_START;
+    os << "#include \"" << PREFIX << getName() << COMPCATEGORY << ".h\"\n";
+    os << STR_GPU_CHECK_END;
+    os << "\n"
+      << _dataNamesInNodes << "\n";
+  } 
    os << "\n";
+
+   std::string cuda_filename = getName();
+   std::size_t npos = cuda_filename.find(PREFIX);
+   if (npos == 0)
+     cuda_filename = cuda_filename.substr(PREFIX.length());
+  if (getClassInfoPrimeType() == PrimeType::Node and 
+      getClassInfoSubType() == SubType::BaseCompCategory)
+  {
+    os <<  STR_GPU_CHECK_START ;
+    os << "#include \"" << cuda_filename << ".cu\"\n";
+    std::map< std::string, std::ostringstream> incl_files_os;
+    std::map< std::string, std::ostringstream> cu_files_os;
+    for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+    {//these are for the method whose definition is written into a different file
+      // which is included into the main source file
+      auto& filename = it->first;
+      os << "#include \"" << filename << "\"\n";
+      auto& value = it->second;
+      std::string UPPERNAME = _name;
+      std::transform(UPPERNAME.begin(), UPPERNAME.end(), UPPERNAME.begin(), [](char c){ return std::toupper(c); });
+      cu_files_os[filename] << "#ifndef " << UPPERNAME << "_CU\n"
+	<< "#define " << UPPERNAME << "_CU\n";
+      for (std::vector<Method*>::const_iterator method_iter = value.begin();
+	  method_iter != value.end(); ++method_iter) {
+	//className, ostream, _nameParentClass
+	(*method_iter)->printSource(_name, incl_files_os[filename], _nameParentClass);
+	std::size_t pos = _name.find_last_of(COMPCATEGORY);
+	std::string nodename = _name.substr(PREFIX.length(), pos);
+	printGPUSource((*method_iter)->getGPUName(), cu_files_os[filename]);
+      }
+      cu_files_os[filename] << "#endif\n";
+    }
+    for( auto it = _methodsInDifferentFile.begin(); it != _methodsInDifferentFile.end(); ++it )
+    {
+      auto& filename = it->first;
+      //TUAN TODO move .cu and .incl out of filename
+      generateOutputCustom(filename, moduleName + "/src", incl_files_os[filename]);
+      std::size_t pos = filename.find_last_of(".");
+      auto rawname =  filename.substr(0, pos);
+      generateOutputCustom(rawname+".cu", moduleName + "/src", cu_files_os[filename]);
+    }
+    os <<  STR_GPU_CHECK_END << "\n";
+  }
+   printMemberClassesMethods(os);
    printMethods(os);
    printExtraSourceStrings(os);
    printAttributeStaticInstances(os);
@@ -652,6 +1139,9 @@ void Class::addConstructor()
 {
    std::auto_ptr<DefaultConstructorMethod> constructor(
       new DefaultConstructorMethod(getName()));
+   /* need this so that it adds proper parameter initializers */
+   constructor->setClass(this);
+
    std::string bases = "";
    prepareBaseString(bases);
 
@@ -795,7 +1285,7 @@ void Class::addDuplicate()
    if (!pureVirtualExists) {
       // duplicate for self
       std::auto_ptr<Method> dupSelf(new Method("duplicate", "void"));
-      dupSelf->addParameter("std::auto_ptr<" + getName() + ">& dup");
+      dupSelf->addParameter("std::unique_ptr<" + getName() + ">& dup");
       dupSelf->setFunctionBody(commonBody);
       dupSelf->setVirtual();
       dupSelf->setConst();
@@ -806,7 +1296,7 @@ void Class::addDuplicate()
       for (sit = _duplicateTypes.begin(); sit != send; ++sit) {
 	 std::auto_ptr<Method> dupInd(new Method("duplicate", "void"));
 	 dupInd->addParameter(
-	    "std::auto_ptr<" + *sit + ">& dup");
+	    "std::unique_ptr<" + *sit + ">& dup");
 	 dupInd->setFunctionBody(commonBody);
 	 dupInd->setVirtual();
 	 dupInd->setConst();
@@ -818,7 +1308,7 @@ void Class::addDuplicate()
 	 for (std::vector<BaseClass*>::const_iterator 
 		 it = _baseClasses.begin(); it != _baseClasses.end(); ++it) {
 	    std::auto_ptr<Method> dupBase(new Method("duplicate", "void"));
-	    dupBase->addParameter("std::auto_ptr<" 
+	    dupBase->addParameter("std::unique_ptr<" 
 				   + (*it)->getName() + ">& dup");
 	    dupBase->setFunctionBody(commonBody);
 	    dupBase->setVirtual();

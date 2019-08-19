@@ -271,7 +271,8 @@ inline void ThreadPool::findUniqueKernels(int index)
    int i;
 
    for(i = 0; i <= index - 1; i++) {
-      if(thread_data_array[i].kernel_thread_id == thread_data_array[index].kernel_thread_id) {
+      if(thread_data_array[i].kernel_thread_id == thread_data_array[index].kernel_thread_id) 
+      {
          is_unique = 0;
          break;
       }
@@ -280,7 +281,8 @@ inline void ThreadPool::findUniqueKernels(int index)
    if(!is_unique) {
       thread_data_array[index].to_cancel = 1;
       // Unique kernel id.
-   } else {
+   } else 
+   {
       thread_data_array[index].to_cancel = 0;
    }
    // Now let the worker thread routine take care of exiting itself if necessary. 

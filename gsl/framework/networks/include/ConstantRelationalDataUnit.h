@@ -36,7 +36,7 @@ class ConstantRelationalDataUnit
       std::deque<VariableDescriptor*>& getPostVariables() {
 	 return _postVariables;
       }
-      void duplicate(std::auto_ptr<ConstantRelationalDataUnit>& dup) const {
+      void duplicate(std::unique_ptr<ConstantRelationalDataUnit>& dup) const {
 	 dup.reset(new ConstantRelationalDataUnit(*this));
       }
 

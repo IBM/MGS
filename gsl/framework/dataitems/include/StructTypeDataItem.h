@@ -38,7 +38,7 @@ class StructTypeDataItem : public InstanceFactoryDataItem
       StructTypeDataItem(const StructTypeDataItem& DI);
 
       const char* getType() const;
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
 
       void setStructType(StructType*);
       StructType* getStructType() const;

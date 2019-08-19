@@ -24,9 +24,9 @@
 #include "TypeDefinition.h"
 #include "IncludeHeader.h"
 #include "IncludeClass.h"
-#include "AccessType.h"
 #include "Attribute.h"
 #include "Method.h"
+#include "ArrayType.h"
 #include <string>
 #include <vector>
 #include <set>
@@ -38,6 +38,11 @@ class BaseClass;
 class Class
 {
    public:
+      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller };
+      enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
+      void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
+      PrimeType getClassInfoPrimeType() const { return _classInfo.first; };
+      SubType getClassInfoSubType() const { return _classInfo.second; };
       Class();
       Class(const std::string& name);
       Class(const Class& rv);
@@ -61,7 +66,9 @@ class Class
       void addDataTypeDataItemHeaders(
 	 const MemberContainer<DataType>& members);
       void addAttributes(const MemberContainer<DataType>& members
-			 , int accessType = AccessType::PUBLIC, bool suppressPointers=false);
+			 , AccessType accessType = AccessType::PUBLIC, bool suppressPointers=false,
+			 bool add_gpu_attributes=false,
+			 Class* compcat_ptr = nullptr);
 
       void addClass(const std::string& cl, 
 		     const std::string& conditional = "") {
@@ -69,8 +76,10 @@ class Class
       }
 
       void addMemberClass(std::auto_ptr<Class>& cl, 
-		     int accessType, const std::string& conditional = "") {
+		     AccessType accessType, const std::string& conditional = "") {
 	 cl->setMemberClass();
+	 cl->setParentClassName(_name);
+	 cl->setParentClass(this);
 	 _memberClasses[accessType].push_back(cl.release());
       }
 
@@ -83,14 +92,30 @@ class Class
 	 _baseClasses.push_back(bc.release());
       }
 
+      /* to be removed when we convert from auto_ptr to unique_ptr */
       void addAttribute(std::auto_ptr<Attribute>& att) {
 	 if (att->getStatic() ) _generateSourceFile=true;
 	 _attributes.push_back(att.release());
       }
+      void addAttribute(std::unique_ptr<Attribute>& att, MachineType mach_type=MachineType::CPU) {
+	 if (att->getStatic() ) _generateSourceFile=true;
+	 if (mach_type == MachineType::CPU)
+	    _attributes.push_back(att.release());
+	 else if (mach_type == MachineType::GPU)
+	    _attributes_gpu.push_back(att.release());
+	 else 
+	    assert(0);
+      }
 
       void addMethod(std::auto_ptr<Method>& mt) {
-	if (!(mt->isInline())) _generateSourceFile=true;
+	 mt->setClass(this);
+	 if (!(mt->isInline())) _generateSourceFile=true;
 	 _methods.push_back(mt.release());
+      }
+      void addMethodToExternalFile(std::string external_filename, std::auto_ptr<Method>& mt) {
+	 assert(mt->isInline() == false);
+	//if (!(mt->isInline())) _generateSourceFile=true;
+	 _methodsInDifferentFile[external_filename].push_back(mt.release());
       }
 
       void addTemplateClassParameter(const std::string& str) {
@@ -180,10 +205,135 @@ class Class
       void setFileOutput(bool);
       void setTemplateClass(bool templateClass=true) {_templateClass=templateClass;}
       bool generateSourceFile() {return _generateSourceFile;}
-      void setMemberClass(bool memberClass=true) {_memberClass=memberClass;}
+      void setMemberClass(bool memberClass=true) {_memberClass=memberClass; if (memberClass == false) _nameParentClass="";}
+      void setParentClassName(std::string nameParentClass) {_nameParentClass=nameParentClass;}
+      void setParentClass(Class* parentClass) {_parentClass=parentClass;}
+
       bool isMemberClass() {return _memberClass;}
       void setAlternateFileName(std::string s) {_alternateFileName=s;}
       std::string getFileName();
+      /*
+       * arg (as called from CPU-side)= um_value.getDataRef()
+       * param (for definition)= value
+       * typeStr (for definition)=  'int*'
+       */
+      void addKernelArgs(std::string arg, std::string param, std::string typeStr){
+         if (_gpuKernelArgs.empty())
+         {
+            _gpuKernelArgsAsCalledFromCPU = TAB + TAB + arg + "\n";
+            _gpuKernelArgs = TAB + typeStr + " " + param + "\n";
+         }
+         else{
+            _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
+            _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
+         };
+      }
+      void addKernelArgs(DataType* dt, bool sharedData=false){
+	 std::string arg = PREFIX_MEMBERNAME + dt->getName() + ".getDataRef()";
+	 //std::string typeStr = dt->getDescriptor() + "*"; //get array pointer
+	 std::string typeStr = dt->getTypeString() + "*"; //get array pointer
+	 if (sharedData)
+	 {
+	       arg ="getSharedMembers()." + dt->getName();
+	       //typeStr = dt->getDescriptor();
+	       typeStr = dt->getTypeString();
+	 }
+	 std::string param = dt->getName();
+	 std::ostringstream os;
+	 std::ostringstream os_gpu;
+	 if (dt->isArray() and not sharedData)
+	 {
+	    std::string arg = PREFIX_MEMBERNAME + dt->getName() ;
+	    std::string comma=", ";
+	    std::string firstcomma = ", ";
+	    if (_gpuKernelArgs.empty())
+	       firstcomma="";
+	    os << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << TAB << firstcomma << arg << ".getDataRef()\n"
+	       << TAB << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << TAB << comma << arg << ".getDataRef()\n"
+	       << TAB << TAB << comma << arg << "_start_offset.getDataRef()\n"
+	       << TAB << TAB << comma << arg << "_num_elements.getDataRef()\n"
+	       << TAB << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << TAB << comma << arg << ".getDataRef()\n"
+	       << TAB << TAB << comma << arg << "_max_elements\n"
+	       << TAB << TAB << comma << arg << "_num_elements.getDataRef()\n"
+	       << TAB << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << TAB << comma << arg << ".getDataRef()\n"
+	       << TAB << TAB << "//need more info here\n"
+	       << TAB << TAB << "#endif\n";
+
+	    ArrayType* arr_dt = dynamic_cast<ArrayType*>(dt);
+	    os_gpu << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+	       << TAB << firstcomma << "ShallowArray_Flat<" << arr_dt->getType()->getTypeString() << ", " << MEMORY_LOCATION << ">* " << dt->getName() << "\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+	       << TAB << comma << arr_dt->getType()->getTypeString() << "* " << dt->getName() << "\n"
+	       << TAB << comma << "int* " << dt->getName() << "_start_offset\n"
+	       << TAB << comma << "int* " << dt->getName() << "_num_elements\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+	       << TAB << comma << arr_dt->getType()->getTypeString() << "* " << dt->getName() << "\n"
+	       << TAB << comma << "int " << dt->getName() << "_max_elements\n"
+	       << TAB << comma << "int* " << dt->getName() << "_num_elements\n"
+	       << TAB << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+	       << TAB << comma << dt->getDescriptor() << "* " << dt->getName() << "\n"
+	       << TAB << "//need more info here\n"
+	       << TAB << "#endif\n";
+	 }
+	 if (_gpuKernelArgs.empty())
+	 {
+	    if (dt->isArray() and not sharedData)
+	    {
+	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str() + "\n";
+	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
+
+	    }else
+	    {
+	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + arg + "\n";
+	       _gpuKernelArgs = TAB + typeStr + " " + param + "\n";
+	    }
+	 }
+	 else{
+	    if (dt->isArray() and not sharedData)
+	    {
+	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + os.str() + "\n";
+	       _gpuKernelArgs += TAB + os_gpu.str() + "\n";
+
+	    }else
+	    {
+	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
+	       _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
+	    }
+	 }
+      }
+      void printGPUSource(std::string method, std::ostringstream& os);
+      void addDataNameMapping(std::string nameMapping){
+	 /*
+       #define u  (_container->mu_u[index])
+	  */
+	 _dataNamesInNodes += nameMapping + "\n";
+      }
+      void cloneDataNameMapping(std::string nameMapping){
+	 _dataNamesInNodes = nameMapping;
+      }
+      std::string getDataNameMapping(){
+	 return _dataNamesInNodes ;
+      }
+      void resetDataNameMapping(){
+	 _dataNamesInNodes = "";
+      }
+
+      void addSharedDataToKernelArgs(const MemberContainer<DataType>& sharedMembers)
+      {
+	 if (sharedMembers.size() > 0) {
+	    MemberContainer<DataType>::const_iterator it, end = sharedMembers.end();
+	    for (it = sharedMembers.begin(); it != end; ++it) {
+	       //std::string name="getSharedMembers()." + it->first;
+	       //addKernelArgs(name, name, it->second->getDescriptor());
+	       addKernelArgs(it->second, true);
+	    }
+	 }
+      };
+      std::string getKernelArgsAsCalledFromCPU(){ return _gpuKernelArgsAsCalledFromCPU; };
 
    private:
       void destructOwnedHeap();
@@ -194,23 +344,27 @@ class Class
 			std::ostringstream& os);
       void printClasses(std::ostringstream& os);
       void printClassHeaders(std::ostringstream& os);
-      void printTypeDefs(int type, std::ostringstream& os);
-      void printMethodDefinitions(int type, std::ostringstream& os);
+      void printTypeDefs(AccessType type, std::ostringstream& os);
+      void printMethodDefinitions(AccessType type, std::ostringstream& os);
       void printExternCDefinitions(std::ostringstream& os);
       void printExternCPPDefinitions(std::ostringstream& os);
       void printExtraSourceStrings(std::ostringstream& os);
       void printAttributeStaticInstances(std::ostringstream& os);
       void printPartnerClasses(std::ostringstream& os);
+      void printMemberClassesMethods(std::ostringstream& os);
       void printMethods(std::ostringstream& os);
-      void printAttributes(int type, std::ostringstream& os);
-      void printAccess(int type, const std::string& name, 
+      void printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type=MachineType::CPU);
+      void printAccess(AccessType type, const std::string& name, 
 		       std::ostringstream& os);
-      void printAccessMemberClasses(int type, const std::string& name, 
+      void printAccessMemberClasses(AccessType type, const std::string& name, 
 					   std::ostringstream& os);
-      bool isAccessRequired(int type);
+      bool isAccessRequired(AccessType type);
       void generateOutput(const std::string& modifier, 
 			  const std::string& directory,
 			  std::ostringstream& os);     
+      void generateOutputCustom(const std::string& filename, 
+	    const std::string& directory,
+	    std::ostringstream& os);
       void generateHeader(const std::string& moduleName);     
       void generateClassDefinition(std::ostringstream& os); 
       void generateSource(const std::string& moduleName);
@@ -225,22 +379,26 @@ class Class
       void addDuplicate();
       bool hasOwnedHeapData();
       std::string _name;
+      std::string _nameParentClass;
       // Duplicate types that are not direct superClasses.
       std::vector<std::string> _duplicateTypes;
       std::set<IncludeHeader> _headers;
       std::set<IncludeHeader> _extraSourceHeaders;
       std::set<IncludeClass> _classes;
-      std::map<int, std::vector<Class*> > _memberClasses;
+      std::map<AccessType, std::vector<Class*> > _memberClasses;
       std::vector<Class*> _partnerClasses;
+      Class* _parentClass=0;/* if this object holds the Class which is defined within another class, this datamember tell the object of the parent class */
 
       std::vector<std::string> _extraSourceStrings;
       std::vector<BaseClass*> _baseClasses;
       std::vector<Attribute*> _attributes;
+      std::vector<Attribute*> _attributes_gpu; //copied from InterfaceImplementorBase
       std::vector<Method*> _methods;
       std::vector<std::string> _templateClassParameters;
       std::vector<std::string> _templateClassSpecializations;
       bool _fileOutput;
       bool _userCode;
+      //bool _has_gpu_attributes; //turn this on if we need to create 'index', '_container'
       std::string _sourceFileBeginning;
       bool _copyingDisabled;
       bool _copyingRemoved;
@@ -251,6 +409,23 @@ class Class
       std::vector<FriendDeclaration> _friendDeclarations;
       MacroConditional _macroConditional;
       std::vector<TypeDefinition> _typeDefinitions;
+      std::pair<PrimeType, SubType> _classInfo;
+      //<filename, content> of these extra files
+      std::map<std::string, std::string> _extra_files;
+
+      /* add here any thing that you want to add to class definition section, 
+       * e.g. a function declaration [but the body won't be here or in the source file]
+       * This serve the purpose of having the funciton body in a different file, 
+       * e.g. LifeNodeCompCategory.incl
+       */
+      //std::map<AccessType, std::vector<std::string> > _extraClassHeaderString;
+      //std::map<std::string, std::vector<std::string> > _extraClassHeaderString;
+      
+      //map from file name, e.g. "LifeNodeCompCategory.incl" to the body of class
+      std::map<std::string, std::vector<Method*>> _methodsInDifferentFile;
+      std::string _gpuKernelArgsAsCalledFromCPU; //CUDA kernel argument
+      std::string _gpuKernelArgs; //CUDA kernel argument
+      std::string _dataNamesInNodes; //define the name to be used in say LifeNode.C when CUDA-awareness code is used 
 };
 
 #endif

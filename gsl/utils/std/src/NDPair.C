@@ -18,10 +18,10 @@
 #include "IntDataItem.h"
 #include "DoubleDataItem.h"
 
-NDPair::NDPair(const std::string& name, std::auto_ptr<DataItem>& di)
+NDPair::NDPair(const std::string& name, std::unique_ptr<DataItem>& di)
 : _name(name)
 {
-   _dataItem = di;
+   _dataItem = std::move(di);
 }
 
 NDPair::NDPair(const std::string& name, const std::string& value)
@@ -121,14 +121,14 @@ void NDPair::setDataItem(DataItem* di)
 }
 
 
-void NDPair::getDataItemOwnership(std::auto_ptr<DataItem>& di)
+void NDPair::getDataItemOwnership(std::unique_ptr<DataItem>& di)
 {
-   di = _dataItem;
+   di = std::move(_dataItem);
 }
 
-void NDPair::setDataItemOwnership(std::auto_ptr<DataItem>& di)
+void NDPair::setDataItemOwnership(std::unique_ptr<DataItem>& di)
 {
-   _dataItem = di;
+   _dataItem = std::move(di);
 }
 
 NDPair::~NDPair()

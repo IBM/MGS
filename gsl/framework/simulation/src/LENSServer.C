@@ -77,7 +77,7 @@ LENSServer::LENSServer(int p, Simulation& s)
    ServiceDataItem svrc = ServiceDataItem();
    svrc.setService(sptr);
 
-   std::auto_ptr<Phase> phaseAp(
+   std::unique_ptr<Phase> phaseAp(
       new RuntimePhase(_s.getFinalRuntimePhaseName()));
    PhaseDataItem phase(phaseAp);
 
@@ -89,7 +89,7 @@ LENSServer::LENSServer(int p, Simulation& s)
    vecky.push_back(&delay);
    vecky.push_back(&phase);
 
-   std::auto_ptr<NDPairList> ndp(0);
+   std::unique_ptr<NDPairList> ndp(0);
    _itrTrigger = _s.getTriggerType("UnsignedTrigger")->getTrigger(vecky);
    addTrigger(_itrTrigger, "event", ndp);
 //   _itrTrigger->addTriggerable(this);
@@ -379,7 +379,7 @@ const char* LENSServer:: composerMsgHandler(char* msg)
       for (int i=0; i<nbrArgs; ++i) {
          char* paramType = strtok(NULL, "<>");
          char* value = strtok(NULL, "<>");
-         std::auto_ptr<DataItem> apdi;
+         std::unique_ptr<DataItem> apdi;
          if (strcmp(paramType, "string")==0) {
             paramDesc[i].second->duplicate(apdi);
             StringDataItem* sdi = dynamic_cast<StringDataItem*>(apdi.get());
@@ -422,7 +422,7 @@ const char* LENSServer:: composerMsgHandler(char* msg)
          }
       }
       LensContext c(&_s);
-      std::auto_ptr<DataItem> apdi;
+      std::unique_ptr<DataItem> apdi;
       ifc->getInstance(apdi, &args, &c);
       // sendToClient
       char sendbuff[MAXBUFFSIZE];
@@ -842,14 +842,14 @@ void LENSServer::unMuter(char* s)
    }
 }
 
-void LENSServer::keepDataItem(std::auto_ptr<DataItem> & diap)
+void LENSServer::keepDataItem(std::unique_ptr<DataItem> & diap)
 {
    _dataItems.push_back(diap.release());
 }
 
 inline TriggerableBase::EventType LENSServer::createTriggerableCaller(
    const std::string& functionName, NDPairList* ndpList, 
-   std::auto_ptr<TriggerableCaller>& triggerableCaller)
+   std::unique_ptr<TriggerableCaller>& triggerableCaller)
 {
    if (functionName != "event") {
       throw SyntaxErrorException(

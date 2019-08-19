@@ -66,7 +66,7 @@ StringArrayDataItem::StringArrayDataItem(const StringArrayDataItem& DI)
 
 // Utility methods
 
-void StringArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void StringArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new StringArrayDataItem(*this)));
 }

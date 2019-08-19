@@ -50,11 +50,11 @@ InstanceFactoryRegistryQueriable::InstanceFactoryRegistryQueriable(InstanceFacto
    std::list<InstanceFactory*>::const_iterator end = l.end();
    for (; iter != end; ++iter) {
       InstanceFactory* ifc = (*iter);
-      std::auto_ptr<InstanceFactoryQueriable> apifq;
+      std::unique_ptr<InstanceFactoryQueriable> apifq;
       ifc->getQueriable(apifq);
       addQueriable(apifq);
    }
-   std::auto_ptr<QueryField> aptr_QF(_typeQF);
+   std::unique_ptr<QueryField> aptr_QF(_typeQF);
    _queryDescriptor.addQueryField(aptr_QF);
 }
 
@@ -65,7 +65,7 @@ InstanceFactoryRegistryQueriable::InstanceFactoryRegistryQueriable(const Instanc
 }
 
 
-void InstanceFactoryRegistryQueriable::getDataItem(std::auto_ptr<DataItem> & apdi)
+void InstanceFactoryRegistryQueriable::getDataItem(std::unique_ptr<DataItem> & apdi)
 {
    InstanceFactoryRegistryDataItem* di = new InstanceFactoryRegistryDataItem;
    di->setInstanceFactoryRegistry(_instanceFactoryRegistry);
@@ -73,9 +73,9 @@ void InstanceFactoryRegistryQueriable::getDataItem(std::auto_ptr<DataItem> & apd
 }
 
 
-std::auto_ptr<QueryResult> InstanceFactoryRegistryQueriable::query(int maxItem, int minItem, int searchSize)
+std::unique_ptr<QueryResult> InstanceFactoryRegistryQueriable::query(int maxItem, int minItem, int searchSize)
 {
-   std::auto_ptr<QueryResult> qr(new QueryResult());
+   std::unique_ptr<QueryResult> qr(new QueryResult());
 
    // Make sure query field is present
    if (_queryDescriptor.getQueryFields().size()) {
@@ -84,7 +84,7 @@ std::auto_ptr<QueryResult> InstanceFactoryRegistryQueriable::query(int maxItem, 
       std::list<Queriable*>::iterator end = _queriableList.end();
       for (;iter!=end;++iter) {
          if ((*iter)->getQueriableDescriptor().getName() == field) {
-            std::auto_ptr<Queriable> aptr_q;
+            std::unique_ptr<Queriable> aptr_q;
 	    (*iter)->duplicate(aptr_q);
             qr->addQueriable(aptr_q);
          }
@@ -95,15 +95,15 @@ std::auto_ptr<QueryResult> InstanceFactoryRegistryQueriable::query(int maxItem, 
 }
 
 
-void InstanceFactoryRegistryQueriable::duplicate(std::auto_ptr<Queriable>& dup) const
+void InstanceFactoryRegistryQueriable::duplicate(std::unique_ptr<Queriable>& dup) const
 {
    dup.reset(new InstanceFactoryRegistryQueriable(*this));
 }
 
 
-void InstanceFactoryRegistryQueriable::addQueriable(std::auto_ptr<InstanceFactoryQueriable> & q)
+void InstanceFactoryRegistryQueriable::addQueriable(std::unique_ptr<InstanceFactoryQueriable> & q)
 {
-   std::auto_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(q->getName(), q->getDescription()));
+   std::unique_ptr<EnumEntry> aptrEnumEntry(new EnumEntry(q->getName(), q->getDescription()));
    _typeQF->addEnumEntry(aptrEnumEntry);
                                  // the queriableList along with its descriptors and their queriables are
    _queriableList.push_back(q.release());

@@ -24,13 +24,14 @@
 class NodeSetSPMVariable : public CG_NodeSetSPMVariable
 {
    public:
+      //CUDA_CALLABLE 
       virtual void initialize(RNG&);
       virtual void dca(Trigger* trigger, NDPairList* ndPairList);
       NodeSetSPMVariable();
       virtual ~NodeSetSPMVariable();
-      virtual void duplicate(std::auto_ptr<NodeSetSPMVariable>& dup) const;
-      virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_NodeSetSPMVariable>& dup) const;
+      virtual void duplicate(std::unique_ptr<NodeSetSPMVariable>& dup) const;
+      virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_NodeSetSPMVariable>& dup) const;
 
    private:
       unsigned dimx;

@@ -37,15 +37,15 @@ class InstanceFactoryQueriable : public Queriable
    public:
       InstanceFactoryQueriable(InstanceFactory* instanceFactory);
       InstanceFactoryQueriable(const InstanceFactoryQueriable&);
-      std::auto_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
+      std::unique_ptr<QueryResult> query(int maxtItem, int minItem, int searchSize);
       Publisher* getQPublisher() {return 0;}
-      void duplicate(std::auto_ptr<InstanceFactoryQueriable>& dup) const;
-      virtual void duplicate(std::auto_ptr<Queriable>& dup) const;
-      void getDataItem(std::auto_ptr<DataItem> &);
+      void duplicate(std::unique_ptr<InstanceFactoryQueriable>& dup) const;
+      virtual void duplicate(std::unique_ptr<Queriable>& dup) const;
+      void getDataItem(std::unique_ptr<DataItem> &);
       void setName(std::string name);
       std::string getName() {return _queriableName;}
       std::string getDescription() {return _queriableDescription;}
-      void addQueriable(std::auto_ptr<DataItemQueriable> & q);
+      void addQueriable(std::unique_ptr<DataItemQueriable> & q);
       ~InstanceFactoryQueriable();
 
    private:

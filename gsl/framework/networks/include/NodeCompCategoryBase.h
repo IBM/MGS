@@ -44,16 +44,19 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
 
       // NodeType functions to be implemented
       virtual void getNodeAccessor(
-	 std::auto_ptr<NodeAccessor>& nodeAccessor, 
+	 std::unique_ptr<NodeAccessor>& nodeAccessor, 
 	 GridLayerDescriptor* gridLayerDescriptor) = 0;
       virtual void getInitializationParameterSet(
-	 std::auto_ptr<ParameterSet>& initPSet) = 0;
+	 std::unique_ptr<ParameterSet>& initPSet) = 0;
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& inAttrPSet) = 0;
+	 std::unique_ptr<ParameterSet>& inAttrPSet) = 0;
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& outAttrPSet) = 0;
+	 std::unique_ptr<ParameterSet>& outAttrPSet) = 0;
       virtual std::string getModelName() {
 	return _modelName;
+      }
+      virtual const char* c_str() const {
+	return _modelName.c_str();
       }
       virtual std::deque<int> const & getGridLayerDataOffsets() {
 	return _gridLayerDataOffsets;
@@ -62,7 +65,7 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       // virtual void store(std::ostream&) =0;
       // virtual void reload(std::istream&) =0;
 
-      virtual int initPartitions(int num);
+      virtual void initPartitions(int numCores, int numGPUs);
       virtual int getNbrComputationalUnits() =0;
       virtual void allocateNode(NodeDescriptor* nd) = 0;
 
@@ -82,8 +85,10 @@ class NodeCompCategoryBase : public DistributableCompCategoryBase, public NodeTy
       GridLayerData** _gridLayerDataArray;
       int _gridLayerDataArraySize;
 
-      NodePartitionItem* _partitions;
-      int _nbrPartitions;
+      NodePartitionItem* _CPUpartitions;
+      NodePartitionItem* _GPUpartitions;
+      int _nbrCPUpartitions;
+      int _nbrGPUpartitions;
 
       std::string _modelName;
       

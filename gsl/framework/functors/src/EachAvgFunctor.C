@@ -44,7 +44,7 @@ EachAvgFunctor::EachAvgFunctor(const EachAvgFunctor& csf)
    _nodesEnd = _nodes.end();
 }
 
-void EachAvgFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void EachAvgFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new EachAvgFunctor(*this));
 }
@@ -74,7 +74,7 @@ void EachAvgFunctor::doInitialize(LensContext *c,
 
 void EachAvgFunctor::doExecute(LensContext *c, 
 			       const std::vector<DataItem*>& args, 
-			       std::auto_ptr<DataItem>& rvalue)
+			       std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext* cc = c->connectionContext;
    NodeDescriptor** nodeSlot=0;

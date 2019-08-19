@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -65,7 +65,16 @@
 #include <mpi.h>
 #endif  // HAVE_MPI
 
+#if defined(USE_THREADPOOL_C11)
+#include "ThreadPoolC11.h"
+#endif
+
+#if defined(REUSE_NODEACCESSORS)
+#include "NodeInstanceAccessor.h"
+#endif
+
 #include <limits.h>
+#include <unordered_map>
 
 class CompCategory;
 class Repertoire;
@@ -119,9 +128,11 @@ class Simulation : public Publishable {
   };
 
 #ifndef DISABLE_PTHREADS
-  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed);
+  //Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed);
+  Simulation(int N, bool bindThreadsToCpus, int numWorkUnits, unsigned seed, int gpuID);
 #else // DISABLE_PTHREADS
-  Simulation(int numWorkUnits, unsigned seed);
+  //Simulation(int numWorkUnits, unsigned seed);
+  Simulation(int numWorkUnits, unsigned seed, int gpuID);
 #endif  // DISABLE_PTHREADS
 
 #ifdef HAVE_MPI
@@ -185,6 +196,7 @@ class Simulation : public Publishable {
   const std::vector<InstanceFactoryRegistry*>& getInstanceFactoryRegistries() {
     return _instanceFactoryRegistries;
   }
+  //TUAN TODO: change to using size_t
   unsigned getIteration() { return _iteration; }
 
   std::vector<std::string> const& getPhaseNames() { return _phaseNames; }
@@ -217,7 +229,11 @@ class Simulation : public Publishable {
 
   PassType getPassType() const { return _passType; }
   void setCostAggregationPass() { _passType = _COST_AGGREGATION_PASS; }
-  void setSimulatePass() { _passType = _SIMULATE_PASS; }
+  void setSimulatePass() { _passType = _SIMULATE_PASS; 
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
+    _currentConnectNodeSet = 0;
+#endif
+  }
   bool isGranuleMapperPass() const {
     return (_passType == _GRANULE_MAPPER_PASS);
   }
@@ -242,7 +258,7 @@ class Simulation : public Publishable {
   // language tree. It is intended to be used by the two pass system.
   void resetInternals();
 
-  void addGranuleMapper(std::auto_ptr<GranuleMapper>& granuleMapper);
+  void addGranuleMapper(std::unique_ptr<GranuleMapper>& granuleMapper);
 
   void setVariableGranuleMapperIndex(unsigned idx) {
     _variableGranuleMapperIndex = idx;
@@ -284,10 +300,10 @@ class Simulation : public Publishable {
   void disableEdgeRelationalData() { _erd = false; }
   void setPauserStatus(bool pauserStatus) { _pauserStatus = pauserStatus; }
   void addSocket(int fd);
-  void addInitPhase(const std::string& name);
-  void addRuntimePhase(const std::string& name);
-  void addLoadPhase(const std::string& name);
-  void addFinalPhase(const std::string& name);
+  void addInitPhase(const std::string& name, machineType mType);
+  void addRuntimePhase(const std::string& name, machineType mType);
+  void addLoadPhase(const std::string& name, machineType mType);
+  void addFinalPhase(const std::string& name, machineType mType);
 
   void addWorkUnits(const std::string& name, std::deque<WorkUnit*>& workUnits);
   void addTrigger(const std::string& name, Trigger* trigger);
@@ -295,6 +311,7 @@ class Simulation : public Publishable {
   std::string findLaterPhase(const std::string& first,
                              const std::string& second);
 
+  machineType getPhaseMachineType(std::string const & name);
   std::string getFinalRuntimePhaseName();
   void detachUserInterface() { _detachUserInterface = true; }
   virtual ~Simulation();
@@ -315,12 +332,211 @@ class Simulation : public Publishable {
     return _edgeCatList;
   }
 
+#if defined(HAVE_GPU) 
+      // track Granule* with the index of NodeInstanceAccessor
+      // as the search from node index to Granule is expensive
+      //to save computation time
+#if defined(TEST_IDEA_TRACK_GRANULE)
+      //we don't need the value of type 'bool', use unordered_map for fast searching
+      // std::string = nodetype name such as 'LifeNode'
+      //std::unordered_map<Granule*, std::unordered_map<int, bool> > _granule2Nodes;
+      //   -> the Granule* and the index of 'LifeNode'-NodeAccessor's associated with that granule
+  std::map< std::string, 
+      std::unordered_map<Granule*, std::vector<size_t> >> _granule2Nodes;
+      //track only Granule* belong to current rank
+      //std::vector<Granule*> _granule2Nodes;
+#endif
+
+  /* 
+   *       keep tracks # nodes created for each nodetype, e.g. LifeNode
+   *        on all ranks
+   * < "LifeNode", <rank_0 = 1, rank_1 = 2, rank_2 = 5> > 
+   */
+  std::map< std::string, std::vector<int> > _nodes_count;  //maybe slower
+  //std::map< std::string, std::list<int> > _nodes_count; 
+  // "LifeNode" on what (original and unique) partionId
+  //std::map< std::string, std::vector<int> >  _nodes_partition;
+#if defined(DETECT_NODE_COUNT) && (DETECT_NODE_COUNT == NEW_APPROACH)
+  //For a given model, e.g. "LifeNode", its node-instances can belong to different Granule
+  //  we track how many of node-instances for a given modeltype are assigned to one Granule*
+  //  and finally, one we know the Granule* that belongs to the same MPI rank 
+  //  --> we can find the total node-instance to be created
+  //  THIS METHOD IS FASTER, LESS MEMORY
+  std::map< std::string, std::map<Granule*, int> >  _nodes_granules; 
+#else
+  std::map< std::string, std::vector<Granule*> >  _nodes_granules; //maybe slower
+#endif
+  //std::map< std::string, std::list<Granule*> >  _nodes_granules; 
+
+
+  /*
+   *     keep tracks # proxy (of the 'from' NodeDescriptor)
+   *     to be created for a given proxytype, e.g. CG_LifeNodeProxy
+   *     which is supposed to be from different MPI ranks
+   *     (i.e. the partition of the granule associated with that 'from' NodeDescriptor is differet from current rank)
+   */
+  /* 
+   * NOTE: Maybe we just need to store 'LifeNode', rather than'CG_LifeNodeProxy
+   * < "CG_LifeNodeProxy", 
+   *      {0 : <rank_0 = 0, rank_1 = 2, rank_2 = 5> 
+   *       1 : <rank_0 = 3, rank_1 = 0, rank_2 = 0> 
+   *       2 : <rank_0 = 2, rank_1 = 0, rank_2 = 0> }
+   * > 
+   */
+  //std::map< std::string, std::map< int, std::vector<int> > > _proxy_count;
+  /* however, if we're only interested in the current rank
+   * i.e. key = current_rank
+   */
+  std::map< std::string,  std::vector<size_t>  > _proxy_count;  //maybe slower [use size_t]
+  //std::map< std::string,  std::vector<int>  > _proxy_count;  //maybe slower
+  //std::map< std::string,  std::list<int>  > _proxy_count;
+  // representing the connection from nodetype1 to nodetype2
+  // NOTE: consider using the 'LifeNode' or 'CG_LifeNodeProxy' for the string
+//#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+//  std::map< std::pair<std::string, std::string>, 
+//    /* with first Granule* from instances of nodes from nodetype1 are tracked */
+//    /* 'int' is the count of node belonging to that Granule */
+//    /* with second Granule* from instances of nodes from nodetype2 are tracked */
+//    /* 'int' is the count of node belonging to that Granule */
+//    std::pair< std::map<Granule*, int>, 
+//               std::map<Granule*, int> 
+//             > 
+//      >  _nodes_from_to_granules;
+//#else
+//  std::map< std::pair<std::string, std::string>, 
+//    /* with Granule* from instances of nodes from nodetype1 are tracked */
+//    /* with Granule* from instances of nodes from nodetype2 are tracked */
+//    //std::vector< std::pair<std::vector<Granule*>, std::vector<Granule*> > >
+//    
+//    //std::vector< std::pair<Granule*, Granule* > > //maybe slower
+//    std::list< std::pair<Granule*, Granule* > >
+//      >  _nodes_from_to_granules;
+//#endif
+  /* 
+  std::map< std::pair<std::string, std::string>, 
+    std::vector< std::pair<NodeDescriptor*, NodeDescriptor*> >
+      >  _nodes_from_to_ND;
+  As 'NodeDescriptor*' are deleted once sim.resetInternal() is called
+  we propose using an integer to uniquely pointing
+   * */
+  //std::map< std::pair<std::string, std::string>, 
+  //  std::vector< std::pair<int, int > >
+  //    >  _nodes_from_to_ND;
+  ////std::vector<NodeDescriptor*> _nodes_ND; //temporary keep tracks of ND has been used
+  
+  /* Is this correct? Granule* is unique for each layer, but NOT unique for grid-elements 
+   *  in that layer
+   */
+  //std::map<Granule*, std::vector<int>> _granules_and_NDIdentifier;
+  // it tells this Granule* (representing what nodetype as the referenced by 'from')
+  //    hold the 'LifeNode' how many instance
+  //    i.e. it tells how many instance from the rank given by 'Granule*'->getPartitionId()
+  std::map<Granule*, std::map<std::string, int>> _granulesFrom_NT_count;
+  //std::map<Granule*, std::vector<NodeDescriptor*> > _granulesFrom_and_ND;
+
+#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+  std::unordered_set<NodeDescriptor*> _nodes_ND; //telling if a ND is already used or not
+#else
+  std::unordered_map<NodeDescriptor*, int> _nodes_ND; //telling if a ND is already used or not
+  //std::map<NodeDescriptor*, int> _nodes_ND; //map a ND to an integer, unique for the nodetype
+     // that the ND represents
+  //std::map<std::string, int> _current_ND_index; //track the current NodeDescriptor for the 
+     // nodetype as name given by the key
+#endif
+
+
+    //std::vector<int> > _nodes_count; 
+  void print_GPU_info(int devID);
+
+#if defined(SUPPORT_MULTITHREAD_CONNECTION)
+#if defined(USE_THREADPOOL_C11)
+  std::unique_ptr<ThreadPoolC11> threadPoolC11;
+#endif
+#endif
+
+
+#if defined(REUSE_NODEACCESSORS)
+  //track nodeaccessors from every model, e.g. CG_LifeNodeGridLayerData
+  //IMPORTANT: At each Layer statement, it creates a new CG_LifeNodeGridLayerData object
+  //// so each layer has its own array of _nodeInstanceAccessors
+  //["LifeNode"][layerIndex] = _nodeInstanceAccessors;
+  //NOTE: NodeDescriptor *  is a NodeInstanceAccessor * 
+  std::map< std::string, std::map <int, NodeInstanceAccessor*> >
+      nodeInstanceAccessor;
+#if defined(REUSE_NODEACCESSORS) and defined(REUSE_EXTRACTED_NODESET_FOR_CONNECTION)
+  //at a given ConnectNodeset, of index 'i'
+  // the node of ND 'key' connect to the nodes in std::list
+  //keep track the connection from 1 ND (the key) to many other ND
+  //std::map< NodeInstanceAccessor*, 
+  //  std::map< int, std::list<NodeInstanceAccessor*>>
+  //    >
+  //    ND_from_to;
+  std::unordered_map< int, 
+    std::unordered_map< NodeDescriptor*,  /* the node that either connect to or get connection from nodes in the vector below*/ 
+      std::pair<std::vector<NodeDescriptor*>, int> > /*  the .second is the integer tracking current index in the vector*/
+      >
+      ND_from_to;
+  int _currentConnectNodeSet; //track the current connection NodeSet? do we need this or 
+#endif
+  // the ConnectNodeSetFunctor also have the index?
+  //std::map< NodeInstanceAccessor*, int>
+  //    ND_from_to_currentIndex;
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+  //SUBARRAY_DETECTION
+  //DETECT subarray-size for each node for a given model
+  //A node-instance is uniquely identified by its
+  //   1. gridLayerindex
+  //   2. the global index in the array _node or the associated _nodeAccessor
+  //For a given model, e.g. "LifeNode", its node-instances can belong to different Granule
+  //  we track (gridIndex, n) of the nodes on each Granule*
+  //  and finally, those Granule* belong to the same MPI rank --> total node-instance to be created
+  //std::map< std::string, std::map<Granule*,  std::pair<int, int> > >  _nodes_granules_information; 
+  //   #if defined(BASED_ON_INDEX)
+  ////--> use "LifeNode": {gridlayerIndex, global-node-index}
+  ////NOTE: In NTS, each rank does not know #nodes in the other ranks, so using this is may not working
+  //std::map< std::string, std::pair<int, int> >  _nodes_identifier; 
+  //   #else
+  ////--> use "LifeNode": {gridlayerIndex, associated-NodeAccessor}
+  //std::map< std::string, std::pair<int, NodeDescriptor*> >  _nodes_identifier; 
+  //   #endif
+  // ModelName, then DataMemberOfTypeArray(should be 1D) then size for each node instance
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<int, int> : int}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : number-of-inputs-for-this-data-member-as-array}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : the-expected-size-for-um_inputs}}
+  std::map< std::string, std::map< std::string, std::map<std::pair<int, int> , int> > > _nodes_subarray;  
+  //  {"LeakyIAFUnit": one-instance-of-this-class}
+  std::map< std::string, Node* >  _nodeShared; 
+
+  //std::map< std::string, std::map< std::string, std::vector<int> > > _nodes_subarray;  
+  //std::map< std::string, Node* >  _proxyShared; 
+  /* store the current index in flat-flat array */
+  /* maybe we don't need this as the um_inputs.size() should be the same value */
+  //std::map< std::string, std::map< std::string, size_t> > _nodes_subarray_current_index_count;  
+#endif
+#endif
+
+#endif
+  //DEBUG PURPOSE
+  size_t _counter = 0; // for debug purpose, e.g. test how many times a function has been called
+  void resetCounter(){_counter=0; };
+  void increaseCounter(){++_counter;};
+  size_t getCounter(){return _counter;};
+  //these two new functions to support printing time info
+  void benchmark_start(const std::string&);
+  double benchmark_timelapsed(const std::string&);
+  void benchmark_timelapsed_diff(const std::string&);
+  void benchmark_set_timelapsed_diff();
+  void benchmark_end(const std::string&);
+  //END DEBUG PURPOSE
   private:
   StateType _state;
+  //TUAN TODO: change to using size_t
   unsigned _iteration;
+  double currentTime; 
   TypeManager<NodeType>* _ntm;
   TypeManager<EdgeType>* _etm;
   SysTimer _simTimer;
+  double _prevTimeElapsed;
   float _mark;
   Repertoire* _root;
   
@@ -403,6 +619,8 @@ class Simulation : public Publishable {
   std::deque<PhaseElement> _loadPhases;
   std::deque<PhaseElement> _finalPhases;
   std::map<std::string, bool> _communicatingPhases;
+  //map from a simulation phase's name, e.g. 'update' (as declared in GSL), to the machine type, e.g. GPU, which handle that type
+  std::map<std::string, machineType> _machineTypes;
   int _rank;
   int _nump;
   std::string _phaseName;
@@ -435,6 +653,17 @@ class Simulation : public Publishable {
   int _numWorkUnits;
   int _numGranules;
   Partitioner* _partitioner;
+//#define TEST_PUTTING_nodes_toSimulation
+//#if defined(HAVE_GPU)  and defined(TEST_PUTTING_nodes_toSimulation)
+//  //for testing purpose
+//  //to see if allocate here still slow
+//  public:
+//  //std::map<std::string,
+//  //    ShallowArray_Flat<LifeNode, Array_Flat<int>::MemLocation::CPU, 1000>
+//  //      > _nodes;
+//  ShallowArray_Flat<LifeNode, Array_Flat<int>::MemLocation::CPU, 1000> _nodes;
+//#endif
+
 };
 
 #endif

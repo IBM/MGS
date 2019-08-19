@@ -26,7 +26,7 @@
 
 RadialDensitySamplerFunctorType::RadialDensitySamplerFunctorType() {}
 
-void RadialDensitySamplerFunctorType::getFunctor(std::auto_ptr<Functor> & r_aptr)
+void RadialDensitySamplerFunctorType::getFunctor(std::unique_ptr<Functor> & r_aptr)
 {
    r_aptr.reset(new RadialDensitySamplerFunctor());
 }
@@ -45,7 +45,7 @@ std::string RadialDensitySamplerFunctorType::getDescription()
 
 
 void RadialDensitySamplerFunctorType::getQueriable(
-   std::auto_ptr<InstanceFactoryQueriable>& dup)
+   std::unique_ptr<InstanceFactoryQueriable>& dup)
 {
    dup.reset(new InstanceFactoryQueriable(this));
    Array<Functor*>::iterator it, end = _functorList.end();
@@ -53,11 +53,11 @@ void RadialDensitySamplerFunctorType::getQueriable(
       Functor* f = (*it);
       FunctorDataItem* fdi = new FunctorDataItem;
       fdi->setFunctor(f);
-      std::auto_ptr<DataItem> apdi(fdi);
+      std::unique_ptr<DataItem> apdi(fdi);
       DataItemQueriable* diq = new DataItemQueriable(apdi);
       diq->setName(getName());
       diq->setDescription(getDescription());
-      std::auto_ptr<DataItemQueriable> apq(diq);
+      std::unique_ptr<DataItemQueriable> apq(diq);
       dup->addQueriable(apq);
    }
    dup->setName(getName());

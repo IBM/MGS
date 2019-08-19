@@ -20,6 +20,19 @@
 #include "Array.h"
 #include "ArrayException.h"
 
+/* IMPORTANT
+ * In GPU scenario: blockSize, blockIncrementSize do NOT play any role
+ */
+#if defined(HAVE_GPU) 
+  #include "ShallowArray_GPU.h"
+#endif
+
+#ifdef USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+//Only C++11
+template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE,
+          unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
+using ShallowArray = ShallowArray_Flat<T, 0, blockIncrementSize>;
+#else
 template <class T, unsigned blockSize = SUGGESTEDARRAYBLOCKSIZE,
           unsigned blockIncrementSize = SUGGESTEDBLOCKINCREMENTSIZE>
 class ShallowArray : public Array<T>
@@ -29,15 +42,17 @@ class ShallowArray : public Array<T>
   ShallowArray(const ShallowArray* rv);
   ShallowArray(const ShallowArray& rv);
   ShallowArray& operator=(const ShallowArray& rv);
-  virtual void duplicate(std::auto_ptr<Array<T> >& rv) const;
+  virtual void duplicate(std::unique_ptr<Array<T> >& rv) const;
   virtual void duplicate(
-      std::auto_ptr<ShallowArray<T, blockSize, blockIncrementSize> >& rv) const;
+      std::unique_ptr<ShallowArray<T, blockSize, blockIncrementSize> >& rv) const;
   virtual ~ShallowArray();
 
   protected:
   virtual void internalCopy(T& lval, T& rval);
+//#if ! (defined(HAVE_GPU) && defined(__NVCC__))
   virtual unsigned getBlockSize() const { return blockSize; }
   virtual unsigned getBlockIncrementSize() const { return blockIncrementSize; }
+//#endif
   void destructContents();
   void copyContents(const ShallowArray& rv);
 };
@@ -85,14 +100,14 @@ ShallowArray<T, blockSize, blockIncrementSize>&
 
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void ShallowArray<T, blockSize, blockIncrementSize>::duplicate(
-    std::auto_ptr<Array<T> >& rv) const
+    std::unique_ptr<Array<T> >& rv) const
 {
   rv.reset(new ShallowArray<T, blockSize, blockIncrementSize>(this));
 }
 
 template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void ShallowArray<T, blockSize, blockIncrementSize>::duplicate(
-    std::auto_ptr<ShallowArray<T, blockSize, blockIncrementSize> >& rv) const
+    std::unique_ptr<ShallowArray<T, blockSize, blockIncrementSize> >& rv) const
 {
   rv.reset(new ShallowArray<T, blockSize, blockIncrementSize>(this));
 }
@@ -120,5 +135,6 @@ template <class T, unsigned blockSize, unsigned blockIncrementSize>
 void ShallowArray<T, blockSize, blockIncrementSize>::destructContents()
 {
 }
+#endif
 
 #endif

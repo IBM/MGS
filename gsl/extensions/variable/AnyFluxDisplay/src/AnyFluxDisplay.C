@@ -544,17 +544,17 @@ AnyFluxDisplay::~AnyFluxDisplay()
   delete outFile;
 }
 
-void AnyFluxDisplay::duplicate(std::auto_ptr<AnyFluxDisplay>& dup) const
+void AnyFluxDisplay::duplicate(std::unique_ptr<AnyFluxDisplay>& dup) const
 {
    dup.reset(new AnyFluxDisplay(*this));
 }
 
-void AnyFluxDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void AnyFluxDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new AnyFluxDisplay(*this));
 }
 
-void AnyFluxDisplay::duplicate(std::auto_ptr<CG_AnyFluxDisplay>& dup) const
+void AnyFluxDisplay::duplicate(std::unique_ptr<CG_AnyFluxDisplay>& dup) const
 {
    dup.reset(new AnyFluxDisplay(*this));
 }

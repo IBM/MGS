@@ -171,17 +171,17 @@ LeakyIAFUnitDataCollector::~LeakyIAFUnitDataCollector()
 {
 }
 
-void LeakyIAFUnitDataCollector::duplicate(std::auto_ptr<LeakyIAFUnitDataCollector>& dup) const
+void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<LeakyIAFUnitDataCollector>& dup) const
 {
   dup.reset(new LeakyIAFUnitDataCollector(*this));
 }
 
-void LeakyIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new LeakyIAFUnitDataCollector(*this));
 }
 
-void LeakyIAFUnitDataCollector::duplicate(std::auto_ptr<CG_LeakyIAFUnitDataCollector>& dup) const
+void LeakyIAFUnitDataCollector::duplicate(std::unique_ptr<CG_LeakyIAFUnitDataCollector>& dup) const
 {
   dup.reset(new LeakyIAFUnitDataCollector(*this));
 }

@@ -33,10 +33,10 @@ void RefDistanceModifier::userInitialize(LensContext* CG_c, int& directionFlag, 
 {
 }
 
-std::auto_ptr<ParameterSet> RefDistanceModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> RefDistanceModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -90,12 +90,12 @@ std::auto_ptr<ParameterSet> RefDistanceModifier::userExecute(LensContext* CG_c)
    
    std::string name="distance";
    FloatDataItem* fdi=new FloatDataItem(distance);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
 
    NDPair* ndp = new NDPair(name, fdi_ap);
    NDPairList ndpl;
    ndpl.push_back(ndp);
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -110,17 +110,17 @@ RefDistanceModifier::~RefDistanceModifier()
 {
 }
 
-void RefDistanceModifier::duplicate(std::auto_ptr<RefDistanceModifier>& dup) const
+void RefDistanceModifier::duplicate(std::unique_ptr<RefDistanceModifier>& dup) const
 {
    dup.reset(new RefDistanceModifier(*this));
 }
 
-void RefDistanceModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void RefDistanceModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new RefDistanceModifier(*this));
 }
 
-void RefDistanceModifier::duplicate(std::auto_ptr<CG_RefDistanceModifierBase>& dup) const
+void RefDistanceModifier::duplicate(std::unique_ptr<CG_RefDistanceModifierBase>& dup) const
 {
    dup.reset(new RefDistanceModifier(*this));
 }

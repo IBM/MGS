@@ -17,9 +17,19 @@
 #define RNG_H
 
 #ifdef HAVE_GPU
-#include "RNG_GPU.h"
-typedef MRG32k3a_GPU RNG_ns; // non-reseedable
-typedef MRG32k3a_S_GPU RNG; // reseedable
+
+//#if defined(HAVE_GPU) 
+//TUAN TODO
+//this is better, and we will design a new strategy for using RNG directly on GPU
+//The reason is that each instance of RNG needs to keep its own copy of device internal memory
+#include "MersenneTwister.h"
+typedef MersenneTwister RNG_ns; // non-reseedable
+typedef MersenneTwister_S RNG; // reseedable
+//#else
+//#include "RNG_GPU.h"
+//typedef MRG32k3a_GPU RNG_ns; // non-reseedable
+//typedef MRG32k3a_S_GPU RNG; // reseedable
+//#endif
 
 #else
 //#include "MRG32k3a.h"

@@ -43,7 +43,7 @@ SRCS :=
 FINAL_TARGET_FLAG := 
 
 ifeq ($(CC), g++)
-  CFLAGS += -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align
+  CFLAGS += -std=c++11 -Wall -Wno-unused -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated-declarations
 endif
 
 ifeq ($(OPERATING_SYSTEM), Linux)
@@ -99,6 +99,8 @@ include sources.mk
 # Parser targets
 mdl.tab.h:  parser/mdl.y
 	cd parser; bison -v -d -b mdl mdl.y; cd ..
+	cd parser; mv mdl.tab.h ../include; cd -
+	
 
 parser/mdl.tab.c: parser/mdl.y
 	cd parser; bison -v -d -b mdl mdl.y; cd ..

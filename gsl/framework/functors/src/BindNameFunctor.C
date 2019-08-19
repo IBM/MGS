@@ -39,7 +39,7 @@ void BindNameFunctor::doInitialize(LensContext *c,
    std::vector<DataItem*>::const_iterator iter, 
       begin = args.begin(), end = args.end();
 
-   std::auto_ptr<DataItem> di;
+   std::unique_ptr<DataItem> di;
    for ( iter = begin; iter != end; ++iter) {
       std::pair<std::string, DataItem*> curElem;
 
@@ -63,23 +63,23 @@ void BindNameFunctor::doInitialize(LensContext *c,
 
 void BindNameFunctor::doExecute(LensContext *c, 
 				const std::vector<DataItem*>& args, 
-				std::auto_ptr<DataItem>& rvalue)
+				std::unique_ptr<DataItem>& rvalue)
 {
    // Get a list of names and values and store them in a NDPairList,
    // then reset the value
 
    std::vector<NDPairGenerator>::iterator iter, begin, end;
 
-   std::auto_ptr<NDPairList > ndpList(new NDPairList);
+   std::unique_ptr<NDPairList > ndpList(new NDPairList);
    begin = _nameDataItems.begin();
    end = _nameDataItems.end();
  
-   std::auto_ptr<DataItem> di;
+   std::unique_ptr<DataItem> di;
    for ( iter = begin; iter != end; ++iter) {
       FunctorDataItem* fdi = dynamic_cast<FunctorDataItem*>(iter->second);
       if (fdi) {
 	 std::vector<DataItem*> nullArgs;
-	 std::auto_ptr<DataItem> rval_ap;
+	 std::unique_ptr<DataItem> rval_ap;
 	 fdi->getFunctor()->execute(c, nullArgs, rval_ap);
          NumericDataItem* ndi = dynamic_cast<NumericDataItem*>(rval_ap.get());
          NumericArrayDataItem* nadi = dynamic_cast<NumericArrayDataItem*>(rval_ap.get());
@@ -102,7 +102,7 @@ void BindNameFunctor::doExecute(LensContext *c,
 }
 
 
-void BindNameFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void BindNameFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new BindNameFunctor(*this));
 }
@@ -116,7 +116,7 @@ BindNameFunctor::BindNameFunctor()
 BindNameFunctor::BindNameFunctor(const BindNameFunctor &f)
 {
 
-   std::auto_ptr<DataItem> di;
+   std::unique_ptr<DataItem> di;
    std::vector<NDPairGenerator>::const_iterator it, 
       end = f._nameDataItems.end();
    for (it = f._nameDataItems.begin(); it != end; ++it) {

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -211,8 +211,19 @@ void CompCategoryBase::generateInAttrPSet()
 
 void CompCategoryBase::generatePSet()
 {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   generatePSet(use_classType, classType);
+}
+void CompCategoryBase::generatePSet(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
+{
    std::auto_ptr<Class> instance;
-   createPSetClass(instance, getInstances());
+   if (use_classType)
+   {
+      createPSetClass(instance, getInstances(), use_classType, classType);
+   }
+   else
+      createPSetClass(instance, getInstances());
    _classes.push_back(instance.release());
 }
 
@@ -239,10 +250,72 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
 	 << TAB << getPSetName() << "* " << PREFIX << "pset = dynamic_cast<" 
 	 << getPSetName() << "*>"
 	 << "(" << PREFIX << "initPSet);\n"; 
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+	 initializeFB << STR_GPU_CHECK_START;
+	 for (it = getInstances().begin(); it != end; ++it){
+	    if (it->second->isArray())
+	    {
+	       initializeFB << "#if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3\n"
+		  << TAB << "if (" << PREFIX << "pset->" << it->first << ".size() > 0)\n"
+		  << TAB << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" << it->first << ";\n"
+		  //<< TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" << it->first << ";\n"
+		  //<< TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "].copyContents(" << PREFIX << "pset->" << it->first << ");\n"
+		  /*
+ if (CG_pset->interneuronInputs.size() > 0)
+
+//getCompCategory()->um_interneuronInputs[index] = CG_pset->interneuronInputs;
+getCompCategory()->um_interneuronInputs[index].copyContents(CG_pset->interneuronInputs);
+		   */
+		  << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4\n"
+		  << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_from = "
+		  << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+		  << "_start_offset[" << REF_INDEX << "];\n"
+		  << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_to = "
+		  << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+		  << "_start_offset[" << REF_INDEX << "+1]-1;\n"
+		  << TAB << "for (auto i = 0; i <  std::min(" << PREFIX_MEMBERNAME << it->first << "_to" 
+		  << " - " << PREFIX_MEMBERNAME << it->first << "_from+1"
+		  << ", (int)CG_pset->" << it->first << ".size()); ++i)\n"
+		  << TAB << "{\n"
+		  << TAB << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+		  << "[i+" << PREFIX_MEMBERNAME << it->first << "_from]"
+		  << " = " << "CG_pset->" << it->first << "[i];\n"
+		  << TAB << "}\n"
+		  << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b\n"
+		  << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_from = "
+		  << REF_INDEX << " *" << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+		  << "_max_elements;\n"
+		  << TAB << "auto " << PREFIX_MEMBERNAME << it->first << "_to = "
+		  << "(" << REF_INDEX << "+1) * " << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+		  << "_max_elements - 1;\n"
+		  << TAB << "for (auto i = 0; i <  std::min(" << PREFIX_MEMBERNAME << it->first << "_to" 
+		  << " - " << PREFIX_MEMBERNAME << it->first << "_from+1"
+		  << ", (int)CG_pset->" << it->first << ".size()); ++i)\n"
+		  << TAB << "{\n"
+		  << TAB << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first 
+		  << "[i+" << PREFIX_MEMBERNAME << it->first << "_from]"
+		  << " = " << "CG_pset->" << it->first << "[i];\n"
+		  << TAB << "}\n"
+		  << "#elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5\n"
+		  <<  TAB << "assert(0);\n"
+		  << "#endif\n";
+	    }else{
+	       initializeFB
+		  << TAB << GETCOMPCATEGORY_FUNC_NAME << "()->" << PREFIX_MEMBERNAME << it->first << "[" << REF_INDEX << "]" << " = " << PREFIX << "pset->" 
+		  << it->first << ";\n";
+	    }
+	 }
+	 initializeFB << "#else\n";
+      }
       for (it = getInstances().begin(); it != end; ++it){
 	 initializeFB
 	    << TAB << it->first << " = " << PREFIX << "pset->" 
 	    << it->first << ";\n";
+      }
+      if (isSupportedMachineType(MachineType::GPU))
+      {
+	 initializeFB << STR_GPU_CHECK_END;
       }
    }
    initializeMethod->setFunctionBody(initializeFB.str());
@@ -273,7 +346,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    getInitializationParameterSetMethod->setConst();
    getInitializationParameterSetMethod->setVirtual();
    getInitializationParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& initPSet");
+      "std::unique_ptr<ParameterSet>& initPSet");
    getInitializationParameterSetMethod->setFunctionBody(
       TAB + "initPSet.reset(new " + getPSetName() + "());\n");
    instance.addMethod(getInitializationParameterSetMethod);
@@ -284,7 +357,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    getInAttrParameterSetMethod->setConst();
    getInAttrParameterSetMethod->setVirtual();
    getInAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + INATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
    getInAttrParameterSetMethod->setFunctionBody(
       TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
    instance.addMethod(getInAttrParameterSetMethod);
@@ -295,7 +368,7 @@ void CompCategoryBase::addExtraInstanceBaseMethods(Class& instance) const
    getOutAttrParameterSetMethod->setConst();
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance.addMethod(getOutAttrParameterSetMethod);
@@ -318,7 +391,7 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      getInitializationParameterSetMethod->setConst();
      getInitializationParameterSetMethod->setVirtual();
      getInitializationParameterSetMethod->addParameter(
-						       "std::auto_ptr<ParameterSet>& initPSet");
+						       "std::unique_ptr<ParameterSet>& initPSet");
      getInitializationParameterSetMethod->setFunctionBody(
 							  TAB + "initPSet.reset(new " + getPSetName() + "());\n");
      instance.addMethod(getInitializationParameterSetMethod);
@@ -329,7 +402,7 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      getInAttrParameterSetMethod->setConst();
      getInAttrParameterSetMethod->setVirtual();
      getInAttrParameterSetMethod->addParameter(
-					       "std::auto_ptr<ParameterSet>& " + INATTRPSETNAME);
+					       "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
      getInAttrParameterSetMethod->setFunctionBody(
        TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
      instance.addMethod(getInAttrParameterSetMethod);
@@ -340,7 +413,7 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
      getOutAttrParameterSetMethod->setConst();
      getOutAttrParameterSetMethod->setVirtual();
      getOutAttrParameterSetMethod->addParameter(
-						"std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+						"std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
      getOutAttrParameterSetMethod->setFunctionBody(
        TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
      instance.addMethod(getOutAttrParameterSetMethod);
@@ -351,7 +424,22 @@ void CompCategoryBase::addExtraInstanceProxyMethods(Class& instance) const
 
 void CompCategoryBase::generateInstance()
 {
+   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   bool use_classType=false;
+   generateInstance(use_classType, classType);
+
+}
+void CompCategoryBase::generateInstance(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType, Class* compcat_ptr)
+{
    std::auto_ptr<Class> instance(new Class(getInstanceName()));
+   //if (isSupportedMachineType(MachineType::GPU) and use_classType)
+   if (use_classType)
+      instance->setClassInfo(classType);
+   if (compcat_ptr)
+   {
+      instance->cloneDataNameMapping(compcat_ptr->getDataNameMapping()) ;
+      compcat_ptr->resetDataNameMapping();
+   }
 
    instance->setUserCode();
 
@@ -373,9 +461,11 @@ void CompCategoryBase::generateInstance()
    _classes.push_back(instance.release());  
 }
 
-void CompCategoryBase::generateCompCategoryBase()
+void CompCategoryBase::generateCompCategoryBase(Class* ptr)
 {
-   std::auto_ptr<Class> instance(new Class(getCompCategoryBaseName()));
+   std::auto_ptr<Class> instance(ptr == nullptr? new Class(getCompCategoryBaseName()) : ptr);
+   if (isSupportedMachineType(MachineType::GPU))
+      instance->setClassInfo(std::make_pair(Class::PrimeType::Node, Class::SubType::BaseCompCategory));
 
    std::auto_ptr<BaseClass> base(new BaseClass(getFrameworkCompCategoryName()));   
    instance->addBaseClass(base);
@@ -388,6 +478,8 @@ void CompCategoryBase::generateCompCategoryBase()
    instance->addHeader("<string>");
    instance->addHeader("<iostream>");
    instance->addHeader("<set>");
+   instance->addHeader("<numeric>");
+   instance->addHeader("<cmath>");
    instance->addHeader("\"" + getPSetName() + ".h\"");
    instance->addHeader("\"" + getInAttrPSetName() + ".h\"");
    instance->addHeader("\"" + getOutAttrPSetName() + ".h\"");
@@ -404,7 +496,7 @@ void CompCategoryBase::generateCompCategoryBase()
       new Method("getInitializationParameterSet", "void"));
    getInitializationParameterSetMethod->setVirtual();
    getInitializationParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& initPSet");
+      "std::unique_ptr<ParameterSet>& initPSet");
    getInitializationParameterSetMethod->setFunctionBody(
       TAB + "initPSet.reset(new " + getPSetName() + "());\n");
    instance->addMethod(getInitializationParameterSetMethod);
@@ -414,7 +506,7 @@ void CompCategoryBase::generateCompCategoryBase()
       new Method("getInAttrParameterSet", "void"));
    getInAttrParameterSetMethod->setVirtual();
    getInAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + INATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + INATTRPSETNAME);
    getInAttrParameterSetMethod->setFunctionBody(
       TAB + INATTRPSETNAME + ".reset(new " + getInAttrPSetName() + "());\n");
    instance->addMethod(getInAttrParameterSetMethod);
@@ -424,17 +516,22 @@ void CompCategoryBase::generateCompCategoryBase()
       new Method("getOutAttrParameterSet", "void"));
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance->addMethod(getOutAttrParameterSetMethod);
 
+   // Add getSharedMembers() to the current class 
+   instance->addKernelArgs("_nodes.size()", "size", "unsigned");
+   addSharedDataToKernelArgs(instance.get());
+   
    // Add the instance phase caller methods
    if(_instancePhases) {
       std::vector<Phase*>::iterator it, end = _instancePhases->end();
       for (it = _instancePhases->begin(); it != end; ++it) {
 	 (*it)->generateInstancePhaseMethod(
-	    *instance.get(), getInstanceName(), getType());
+                *instance.get(), getInstanceName(), getType(),
+		getWorkUnitCommonName("Instance"));
       }
    }  
 
@@ -548,7 +645,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    if (argumentType != "") {
       computeStateAttName += "*, "; 
    }
-   computeStateAttName += "RNG&";
+   computeStateAttName += getWorkUnitCommonName(workUnitType) + "*";
    computeStateAttName += ")"; 
 
    std::string computeStatePar = 
@@ -556,7 +653,7 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
    if (argumentType != "") {
       computeStatePar += "*, "; 
    }
-   computeStatePar += "RNG&";
+   computeStatePar += getWorkUnitCommonName(workUnitType) + "*";
    computeStatePar += ")"; 
 
    instance->addHeader("\"" + baseName + ".h\"");
@@ -590,6 +687,11 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
       "_rng", "RNG",
       AccessType::PRIVATE);
    attCup.reset(rngAtt);
+   instance->addAttribute(attCup);
+   CustomAttribute* machineIDAtt = new CustomAttribute(
+      "_GPUMachineID", "int",
+      AccessType::PRIVATE);
+   attCup.reset(machineIDAtt);
    instance->addAttribute(attCup);
 
    // Constructor 
@@ -625,11 +727,39 @@ void CompCategoryBase::generateWorkUnitCommon(const std::string& workUnitType,
 	 << "_arg, ";
    }
    executeFB
-     << "_rng";
+     << "this";
    executeFB
       << ");\n";
    executeMethod->setFunctionBody(executeFB.str());
    instance->addMethod(executeMethod);
+
+   // getRNG
+   std::auto_ptr<Method> getRNGMethod(
+      new Method("getRNG", "RNG&"));
+   std::ostringstream getRNGFB;   
+   getRNGFB
+      << TAB << "return _rng;\n";
+   getRNGMethod->setFunctionBody(getRNGFB.str());
+   instance->addMethod(getRNGMethod);
+
+   // setGPUMachineID
+   std::auto_ptr<Method> setGPUMachineIDMethod(
+      new Method("setGPUMachineID", "void"));
+   setGPUMachineIDMethod->addParameter("int GPUMachineID");
+   std::ostringstream setGPUMachineIDFB;   
+   setGPUMachineIDFB
+      << TAB << "_GPUMachineID = GPUMachineID;\n";
+   setGPUMachineIDMethod->setFunctionBody(setGPUMachineIDFB.str());
+   instance->addMethod(setGPUMachineIDMethod);
+
+   // getGPUMachineID
+   std::auto_ptr<Method> getGPUMachineIDMethod(
+      new Method("getGPUMachineID", "int"));
+   std::ostringstream getGPUMachineIDFB;   
+   getGPUMachineIDFB
+      << TAB << "return _GPUMachineID;\n";
+   getGPUMachineIDMethod->setFunctionBody(getGPUMachineIDFB.str());
+   instance->addMethod(getGPUMachineIDMethod);
 
    // Don't add the standard methods
    instance->addBasicDestructor();
@@ -734,11 +864,67 @@ std::string CompCategoryBase::createAddNodeMethodBody(std::string firstParam, st
 std::string CompCategoryBase::createAllocateProxyMethodBody(std::string firstParam, std::string secondParam) const
 {
    std::ostringstream os;
+   //if (!strcmp(getType().c_str(), "Node") )
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      os << STR_GPU_CHECK_START
+         << TAB <<"#if PROXY_ALLOCATION == OPTION_3\n"
+         << TAB <<"   /* local proxy data + local _receiveList */\n"
+         << TAB <<"   CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+         << TAB <<"   NodeProxyBase* proxy = ccd->addDestination();\n"
+         << TAB <<"   proxy->setNodeDescriptor(nd);\n"
+         << TAB <<"   ((" << getInstanceProxyName() << "*)proxy)->setCompCategory(ccd->_receiveList.size()-1, this, fromPartitionId);\n"
+         << TAB <<"   nd->setNode(proxy);\n"
+         << TAB <<"#elif PROXY_ALLOCATION == OPTION_4\n"
+         << TAB <<"   CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+         << TAB <<"   /* global proxy data */\n"
+	 << TAB << "  int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n";
+      for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+	 if (it == getInstances().begin())
+	    os << TAB <<"   int sz = " << PREFIX_PROXY_MEMBERNAME << it->first << ".size()+1;\n";
+	 os << TAB << TAB 
+	    << PREFIX_PROXY_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
+	 if (it->second->isArray())
+	 {
+	    //NOTE: um_neighbors is an array of array
+	    os << TAB << TAB 
+	       << PREFIX_PROXY_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " 
+	       << MEMORY_LOCATION << ");\n";
+	 }
+      }
+      //os << TAB <<"       proxy_um_value.increaseSizeTo(sz);
+      //os << TAB <<"       proxy_um_publicValue.increaseSizeTo(sz);
+      //os << TAB <<"       proxy_um_neighbors.increaseSizeTo(sz);
+      //os << TAB <<"       //NOTE: um_neighbors is an array of array
+      //os << TAB <<"       proxy_um_neighbors[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, Array_Flat<int>::MemLocation::UNIFIED_MEM);
+      //os << TAB <<" 
+      os << TAB <<"   /* local _receiveList */\n"
+         << TAB <<"   NodeProxyBase* proxy = ccd->addDestination();\n"
+         << TAB <<"   proxy->setNodeDescriptor(nd);\n"
+      //os << TAB <<"   ((CG_LifeNodeProxy*)proxy)->setCompCategory(sz-1, this);
+         << TAB <<"   ((" << getInstanceProxyName() << "*)proxy)->setCompCategory(sz-1, this);\n"
+         << TAB <<"   nd->setNode(proxy);\n"
+         << TAB <<"#endif\n"
+         << TAB <<"\n"   
+         << " #else\n"
+      //os << TAB <<"    CCDemarshaller* ccd = findDemarshaller(fromPartitionId);
+      //os << TAB <<"    NodeProxyBase* proxy = ccd->addDestination();
+      //os << TAB <<"    proxy->setNodeDescriptor(nd);
+      //os << TAB <<"    nd->setNode(proxy);\n"
+         << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n"
+         << TAB << getType() << "ProxyBase* proxy = ccd->addDestination();\n"
+         << TAB << "proxy->set" + getType() + "Descriptor(" + secondParam + ");\n";
+      if (!strcmp(getType().c_str(), "Variable")) os << TAB << "proxy->setVariableType(this);\n";
+      os << TAB << secondParam + "->set" + getType() + "(proxy);\n";               
+      os << STR_GPU_CHECK_END; 
+   }
+   else{
    os << TAB << "CCDemarshaller* ccd = findDemarshaller(fromPartitionId);\n";
    os << TAB << getType() << "ProxyBase* proxy = ccd->addDestination();\n";
    os << TAB << "proxy->set" + getType() + "Descriptor(" + secondParam + ");\n";
    if (!strcmp(getType().c_str(), "Variable")) os << TAB << "proxy->setVariableType(this);\n";
    os << TAB << secondParam + "->set" + getType() + "(proxy);\n";               
+   }
    return os.str();
 }
 
@@ -802,7 +988,7 @@ void CompCategoryBase::addCreateTriggerableCallerMethod(
    method->setVirtual();
    method->addParameter("const std::string& " + TRIGGERABLEFUNCTIONNAME);
    method->addParameter("NDPairList* " + TRIGGERABLENDPLIST);
-   method->addParameter("std::auto_ptr<TriggerableCaller>& " + 
+   method->addParameter("std::unique_ptr<TriggerableCaller>& " + 
 			TRIGGERABLECALLER);
    std::ostringstream os;
 
@@ -818,7 +1004,7 @@ void CompCategoryBase::addCreateTriggerableCallerMethod(
       << "throw SyntaxErrorException(" << TRIGGERABLEFUNCTIONNAME 
       << " + \" is not defined in " << getInstanceName() 
       << " as a Triggerable function.\");\n"
-      << TAB << "return " << UNALTEREDRETURN << ";\n";
+      << TAB << "//return " << UNALTEREDRETURN << ";\n";
    method->setFunctionBody(os.str());
    instance.addMethod(method);   
 }
@@ -1070,7 +1256,7 @@ std::string CompCategoryBase::getFindDemarshallerFB() const
       << TAB << "if (iter == _demarshallerMap.end()) {\n"
       << TAB << TAB << "ccd = new CCDemarshaller(&getSimulation());\n"
       << TAB << TAB << "_demarshallerMap[fromPartitionId] = ccd;\n\n"
-      << TAB << TAB << "std::auto_ptr<" + getInstanceProxyDemarshallerName() + "> ap;\n"
+      << TAB << TAB << "std::unique_ptr<" + getInstanceProxyDemarshallerName() + "> ap;\n"
       << TAB << TAB << getInstanceProxyName() + "::CG_recv_FLUSH_LENS_demarshaller(ap);\n"
       << TAB << TAB << "ccd->CG_recvTemplates[\"FLUSH_LENS\"] = ap.release();\n\n"
       << TAB << TAB << "std::map<std::string, Phase*>::iterator it, end = _phaseMappings.end();\n"
@@ -1282,19 +1468,57 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
    ccdemarshaller->addFriendDeclaration(ccFriend);
 
    // receiveList attribute
+   MacroConditional gpuConditional(GPUCONDITIONAL);
+   gpuConditional.setNegateCondition();
+
    CustomAttribute* receiveList = new CustomAttribute("_receiveList", "ShallowArray<"+getInstanceProxyName()+">", AccessType::PROTECTED);
+   if (isSupportedMachineType(MachineType::GPU))
+      receiveList->setMacroConditional(gpuConditional);
    std::auto_ptr<Attribute> receiveListAp(receiveList);
    ccdemarshaller->addAttribute(receiveListAp);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* receiveList = new CustomAttribute("_receiveList", "ShallowArray_Flat<"+getInstanceProxyName()+">", AccessType::PROTECTED);
+      receiveList->setMacroConditional(gpuConditional);
+      std::auto_ptr<Attribute> receiveListAp(receiveList);
+      ccdemarshaller->addAttribute(receiveListAp);
+   }
 
    // receiveListIter attribute
    CustomAttribute* receiveListIter = new CustomAttribute("_receiveListIter", "ShallowArray<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+   if (isSupportedMachineType(MachineType::GPU))
+      receiveListIter->setMacroConditional(gpuConditional);
    std::auto_ptr<Attribute> receiveListIterAp(receiveListIter);
    ccdemarshaller->addAttribute(receiveListIterAp);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* receiveListIter = new CustomAttribute("_receiveListIter", "ShallowArray_Flat<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+      receiveListIter->setMacroConditional(gpuConditional);
+      std::auto_ptr<Attribute> receiveListIterAp(receiveListIter);
+      ccdemarshaller->addAttribute(receiveListIterAp);
+   }
 
    // receiveState attribute
    CustomAttribute* receiveState = new CustomAttribute("_receiveState", "ShallowArray<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+   if (isSupportedMachineType(MachineType::GPU))
+      receiveState->setMacroConditional(gpuConditional);
    std::auto_ptr<Attribute> receiveStateAp(receiveState);
    ccdemarshaller->addAttribute(receiveStateAp);
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      MacroConditional gpuConditional(GPUCONDITIONAL);
+      CustomAttribute* receiveState = new CustomAttribute("_receiveState", "ShallowArray_Flat<"+getInstanceProxyName()+">::iterator", AccessType::PROTECTED);
+      receiveState->setMacroConditional(gpuConditional);
+      std::auto_ptr<Attribute> receiveStateAp(receiveState);
+      ccdemarshaller->addAttribute(receiveStateAp);
+   }
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      ccdemarshaller->setClassInfo(std::make_pair(Class::PrimeType::CCDemarshaller, Class::SubType::UN_SET));
+      ccdemarshaller->addAttributes(getInstances(), AccessType::PUBLIC, true, true);
+   }
 
    // recvTemplates attribute
    CustomAttribute* recvTemplates = new CustomAttribute("CG_recvTemplates", "CG_RecvDemarshallers", AccessType::PROTECTED);
@@ -1327,7 +1551,8 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "if (inList) {\n"
        << TAB << TAB << TAB << TAB << "inList = inList && (_receiveList.size()!=0);\n"
        << TAB << TAB << TAB << TAB << "if (inList) {\n"
-       << TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       //<< TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       << TAB << TAB << TAB << TAB << TAB << "auto niter=_receiveList.begin();\n"
        << TAB << TAB << TAB << TAB << TAB << getInstanceProxyDemarshallerName() << "* dm = diter->second;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<MPI_Aint> blocs;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<int> npls;\n"
@@ -1389,7 +1614,8 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "if (inList) {\n"
        << TAB << TAB << TAB << TAB << "inList = inList && (_receiveList.size()!=0);\n"
        << TAB << TAB << TAB << TAB << "if (inList) {\n"
-       << TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       //<< TAB << TAB << TAB << TAB << TAB << "ShallowArray<" << getInstanceProxyName() << ">::iterator niter=_receiveList.begin();\n"
+       << TAB << TAB << TAB << TAB << TAB << "auto niter=_receiveList.begin();\n"
        << TAB << TAB << TAB << TAB << TAB << getInstanceProxyDemarshallerName() << "* dm = diter->second;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<MPI_Aint> blocs;\n"
        << TAB << TAB << TAB << TAB << TAB << "std::vector<int> npls;\n"
@@ -1443,8 +1669,10 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());\n"
        << TAB << TAB << TAB << "if (diter != CG_recvTemplates.end()) {\n"
 		      << TAB << TAB << TAB << TAB << getInstanceProxyDemarshallerName() + "* dm = diter->second;\n"
-       << TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator &niter = _receiveState;\n"
-       << TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator nend = _receiveList.end();\n"
+       //<< TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator &niter = _receiveState;\n"
+       //<< TAB << TAB << TAB << TAB << "ShallowArray<"+getInstanceProxyName()+">::iterator nend = _receiveList.end();\n"
+       << TAB << TAB << TAB << TAB << "auto  &niter = _receiveState;\n"
+       << TAB << TAB << TAB << TAB << "auto nend = _receiveList.end();\n"
        << TAB << TAB << TAB << TAB << "const char* buff = buffer;\n"
        << TAB << TAB << TAB << TAB << "while (niter!=nend && buffSize!=0) {\n"
        << TAB << TAB << TAB << TAB << TAB << "buffSize = dm->demarshall(buff, buffSize, rebuildRequested);\n"
@@ -1459,8 +1687,36 @@ void CompCategoryBase::addDistributionCodeToCC(Class& instance) const
        << TAB << TAB << TAB << "}\n"
        << TAB << TAB << TAB << "return buffSize;\n";
 
-   addDestinationMethodFB << TAB << TAB << TAB << "_receiveList.increaseSizeTo(_receiveList.size()+1);\n"
-			  << TAB << TAB << TAB << "return &_receiveList[_receiveList.size()-1];\n";
+   addDestinationMethodFB << TAB << TAB << TAB << "_receiveList.increaseSizeTo(_receiveList.size()+1);\n";
+   if (isSupportedMachineType(MachineType::GPU))
+   {
+      addDestinationMethodFB
+	 << TAB << TAB 
+	 << STR_GPU_CHECK_START
+	 << TAB << TAB << TAB 
+	 << "#if PROXY_ALLOCATION == OPTION_3\n"
+	 << TAB << TAB << TAB 
+	 << "int sz = _receiveList.size();\n";
+      addDestinationMethodFB << TAB << TAB << TAB 
+	 << "int MAX_SUBARRAY_SIZE = " << COMMON_MAX_SUBARRAY_SIZE << ";\n";
+      for (auto it = getInstances().begin(); it != getInstances().end(); ++it) {
+	 addDestinationMethodFB << TAB << TAB << TAB 
+	    << PREFIX_MEMBERNAME << it->first << ".increaseSizeTo(sz);\n";
+	 if (it->second->isArray())
+	 {
+	    //NOTE: um_neighbors is an array of array
+	    addDestinationMethodFB << TAB << TAB << TAB 
+	       << PREFIX_MEMBERNAME << it->first << "[sz-1].resize_allocated_subarray(MAX_SUBARRAY_SIZE, " 
+	       << MEMORY_LOCATION << ");\n";
+	 }
+      }
+      addDestinationMethodFB << TAB << TAB << TAB 
+	 << "#endif\n"
+	 << TAB << TAB
+	 << STR_GPU_CHECK_END;
+   }
+   addDestinationMethodFB 
+	 << TAB << TAB << TAB << "return &_receiveList[_receiveList.size()-1];\n";
 
    resetMethodFB << TAB << TAB << TAB << "CG_RecvDemarshallers::iterator diter = CG_recvTemplates.find(_sim->getPhaseName());\n"
        << TAB << TAB << TAB << "if (diter != CG_recvTemplates.end()) {\n"
@@ -1559,7 +1815,7 @@ std::string CompCategoryBase::getFindDemarshallerFillerCode() const
      for (it = _instancePhases->begin(); it != end; ++it) {
        if ((*it)->hasPackedVariables()) {
          os << TAB << TAB << TAB << "if (it->second->getName() == getSimulationPhaseName(\"" << (*it)->getName() << "\")){\n"
-	    << TAB << TAB << TAB << TAB << "std::auto_ptr<" << getInstanceProxyDemarshallerName() << "> ap;\n"
+	    << TAB << TAB << TAB << TAB << "std::unique_ptr<" << getInstanceProxyDemarshallerName() << "> ap;\n"
    	 << TAB << TAB << TAB << TAB << getInstanceProxyName() << "::CG_recv_" << (*it)->getName() << "_demarshaller(ap);\n"
    	 << TAB << TAB << TAB << TAB << "ccd->CG_recvTemplates[(it->second->getName())] = ap.release();\n"
    	 << TAB << TAB << TAB << "}\n";

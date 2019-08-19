@@ -32,7 +32,7 @@ NodeDefaultFunctor::NodeDefaultFunctor()
 {
 }
 
-void NodeDefaultFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void NodeDefaultFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new NodeDefaultFunctor(*this));
 }
@@ -51,9 +51,9 @@ void NodeDefaultFunctor::doInitialize(LensContext *c,
 
 void NodeDefaultFunctor::doExecute(LensContext *c, 
 				   const std::vector<DataItem*>& args, 
-				   std::auto_ptr<DataItem>& rvalue)
+				   std::unique_ptr<DataItem>& rvalue)
 {
-   std::auto_ptr<ParameterSet> initPset;
+   std::unique_ptr<ParameterSet> initPset;
    std::vector<NodeDescriptor*>  nodes;
    std::vector<NodeDescriptor*>::iterator node, nodesEnd;
 

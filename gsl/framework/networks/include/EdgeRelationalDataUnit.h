@@ -45,7 +45,7 @@ class EdgeRelationalDataUnit
       void setPreNode(NodeDescriptor* n) {
 	 _preNode = n;
       }
-      void duplicate(std::auto_ptr<EdgeRelationalDataUnit>& dup) const {
+      void duplicate(std::unique_ptr<EdgeRelationalDataUnit>& dup) const {
 	 dup.reset(new EdgeRelationalDataUnit(*this));
       }
 

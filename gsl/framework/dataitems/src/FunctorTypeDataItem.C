@@ -58,7 +58,7 @@ FunctorTypeDataItem::~FunctorTypeDataItem()
 }
 
 
-void FunctorTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void FunctorTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    DataItem *p= new FunctorTypeDataItem(this);
    r_aptr.reset(p);

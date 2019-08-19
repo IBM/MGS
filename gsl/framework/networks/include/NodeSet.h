@@ -86,7 +86,7 @@ class NodeSet : public GridSet
 	setLayers(std::vector<GridLayerDescriptor*>());
       }
       
-      virtual void duplicate(std::auto_ptr<NodeSet>& dup) const;
+      virtual void duplicate(std::unique_ptr<NodeSet>& dup) const;
 
    protected:
       void resetAllLayers();
@@ -98,5 +98,11 @@ class NodeSet : public GridSet
       bool _allIndices;
       std::vector<int> _indices;
       std::vector<GridLayerDescriptor*> _layers;
+#ifdef TEST_MULTIPLE_THREADS
+      int _numPartitions;
+   public:
+      void setNumPartitions(int partitionCount);
+      void getNodes(std::vector<NodeDescriptor*>& nodes, int partitionIdx);
+#endif
 };
 #endif

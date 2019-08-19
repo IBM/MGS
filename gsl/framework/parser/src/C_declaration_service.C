@@ -28,7 +28,7 @@ void C_declaration_service::internalExecute(LensContext *c)
    _service->execute(c);
 
    ServiceDataItem *sdi = new ServiceDataItem;
-   std::auto_ptr<DataItem> sdi_ap(sdi);
+   std::unique_ptr<DataItem> sdi_ap(sdi);
 
    Service *ns = _service->getService();;
    sdi->setService(ns);

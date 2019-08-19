@@ -33,14 +33,17 @@
 
 Generatable::Generatable(const std::string& fileName)
    : _fileOutput(true), _fileName(fileName), _linkType(_DYNAMIC), 
-     _frameWorkElement(false)
+     _frameWorkElement(false), _supportedMachineType(MachineType::CPU)
      , _cmdLine(0)
 {
+   //_supportedMachineTypes.insert(MachineType::CPU);
 }
 
 Generatable::Generatable(const Generatable& rv)
    : _fileOutput(rv._fileOutput), _fileName(rv._fileName), 
-     _linkType(rv._linkType), _frameWorkElement(rv._frameWorkElement)     
+     _linkType(rv._linkType), _frameWorkElement(rv._frameWorkElement),
+     //_supportedMachineTypes(rv._supportedMachineTypes)     
+     _supportedMachineType(rv._supportedMachineType)     
      , _cmdLine(rv._cmdLine)
 {
    copyOwnedHeap(rv);
@@ -216,8 +219,8 @@ void Generatable::createDirectoryStructure()
    if (_fileOutput) {
       std::string sysCall = "mkdir -p " + getModuleName() + " ; " 
 	 + "mkdir -p " + getModuleName() + "/src ; " 
-	 + "mkdir -p " + getModuleName() + "/include ; "
-	 + "mkdir -p " + getModuleName() + "/obj ; ";
+	 + "mkdir -p " + getModuleName() + "/include ; ";
+	 //+ "mkdir -p " + getModuleName() + "/obj ; "; //TUAN (09-25-2018): there is no need for this, as all object files are put into the same folder
       try {
 	 system(sysCall.c_str());
       } catch(...) {};
@@ -252,7 +255,7 @@ void Generatable::generateType()
       new Method("get" + moduleTypeNameCap, "void") );
    getGeneratableAutoMethod->setVirtual(true);
    getGeneratableAutoMethod->addParameter(
-      "std::auto_ptr<" + moduleTypeNameCap + ">& aptr");
+      "std::unique_ptr<" + moduleTypeNameCap + ">& aptr");
    getGeneratableAutoMethod->setFunctionBody(
       TAB + "aptr.reset(" + instanceInitializer +");\n");
    instance->addMethod(getGeneratableAutoMethod);
@@ -285,7 +288,7 @@ void Generatable::generateType()
       new Method("getQueriable", "void"));
    getQueriableMethod->setVirtual(true);
    getQueriableMethod->addParameter(
-      "std::auto_ptr<InstanceFactoryQueriable>& dup");
+      "std::unique_ptr<InstanceFactoryQueriable>& dup");
    std::ostringstream getQueriableMethodFunctionBody;
    getQueriableMethodFunctionBody 
       << TAB << "dup.reset(new InstanceFactoryQueriable(this));\n"

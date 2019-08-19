@@ -30,14 +30,14 @@ class BindNameFunctor: public NDPairListFunctor
       typedef std::pair<std::string, DataItem*> NDPairGenerator;
       BindNameFunctor();
       BindNameFunctor(const BindNameFunctor &);
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~BindNameFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
    private:
       std::vector<NDPairGenerator> _nameDataItems;
 };

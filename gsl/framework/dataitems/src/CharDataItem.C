@@ -36,7 +36,7 @@ CharDataItem::CharDataItem(const CharDataItem& DI)
 
 
 // Utility methods
-void CharDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void CharDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new CharDataItem(*this)));
 }

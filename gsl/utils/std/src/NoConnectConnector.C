@@ -36,6 +36,7 @@
 #include <cassert>
 
 #include <list>
+#include <utility>
 
 NoConnectConnector::NoConnectConnector()
 {
@@ -49,6 +50,67 @@ void NoConnectConnector::nodeToNode(
    NodeDescriptor *from, ParameterSet *outAttrPSet, NodeDescriptor *to, 
    ParameterSet *inAttrPSet, Simulation* sim)
 {
+#if defined(HAVE_GPU) 
+   // store the information about 'from' and 'to' partitionId
+   // NOTE: The nodedescriptor can represent 2 different nodetypes, e.g. LifeNode and PredetorNode
+#ifdef HAVE_MPI
+   int myRank = sim->getRank();
+   //int fromPartitionId = sim->getGranule(*from)->getPartitionId();
+   //int toPartitionId = sim->getGranule(*to)->getPartitionId();
+   auto nodetype_from = from->getGridLayerData()->getNodeCompCategoryBase()->getModelName();
+   auto nodetype_to = to->getGridLayerData()->getNodeCompCategoryBase()->getModelName();
+//   auto key = std::make_pair(nodetype_from, nodetype_to);
+//#define DETECT_PROXY_COUNT NEW_APPROACH
+//#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+//   std::map<Granule*, int> nodecounts_on_granules;
+//   auto value = std::make_pair(nodecounts_on_granules, nodecounts_on_granules);
+//   sim->_nodes_from_to_granules[key] = value;
+//#endif
+//   {
+//         //std::vector<int> nodes_on_ranks(sim->getNumProcesses(), 0);
+//         //std::vector<int> all_ranks(sim->getNumProcesses(), nodes_on_ranks);
+//#if defined(DETECT_PROXY_COUNT) && (DETECT_PROXY_COUNT == NEW_APPROACH)
+//      sim->_nodes_from_to_granules[key].first[sim->getGranule(*from)] += 1;
+//      sim->_nodes_from_to_granules[key].second[sim->getGranule(*to)] += 1;
+//#else
+//      auto value = std::make_pair(sim->getGranule(*from), sim->getGranule(*to));
+//      sim->_nodes_from_to_granules[key].push_back(value);
+//#endif
+//   }
+   //DON"T USE THIS CHECK: "if (sim->getGranule(*from) != sim->getGranule(*to))
+   {
+      if (sim->_granulesFrom_NT_count.count(sim->getGranule(*from)) == 0)
+      {
+         std::map<std::string, int> tmp { { nodetype_from, 1 } };
+         //tmp[nodetype_from] = 1;
+         sim->_granulesFrom_NT_count[sim->getGranule(*from)] = tmp;
+         if (sim->_nodes_ND.find(from) == sim->_nodes_ND.end())
+               sim->_nodes_ND[from] = 1;
+      }
+      else{
+         if (sim->_granulesFrom_NT_count[sim->getGranule(*from)].count(nodetype_from) == 0)
+            sim->_granulesFrom_NT_count[sim->getGranule(*from)][nodetype_from] = 1;
+         else
+         {
+            if (sim->_nodes_ND.find(from) == sim->_nodes_ND.end())
+            {
+               sim->_nodes_ND[from] = 1;
+               sim->_granulesFrom_NT_count[sim->getGranule(*from)][nodetype_from] += 1;
+            }
+         }
+      }
+   }
+//SUPPORT_ARRAY_ELEMENT
+//DETECT_SUBARRAY_SIZE
+//          STANDARD: to->getNode()->addPreNode(from, inAttrPSet);
+   //or we use
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+   ((NodeInstanceAccessor*)to)->getSharedNode()->addPreNode_Dummy(from, inAttrPSet, sim, to);
+#endif
+//END_SUPPORT_ARRAY_ELEMENT
+#endif
+
+#endif
 }
 
 void NoConnectConnector::nodeToNodeWithEdge(

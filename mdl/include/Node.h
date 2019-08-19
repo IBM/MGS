@@ -24,7 +24,6 @@
 class Generatable;
 
 class Node : public SharedCCBase {
-
    public:
       Node(const std::string& fileName);      
       virtual void duplicate(std::auto_ptr<Generatable>& rv) const;
@@ -56,6 +55,10 @@ class Node : public SharedCCBase {
       virtual void addExtraCompCategoryBaseMethods(Class& instance) const;
       virtual void addExtraCompCategoryMethods(Class& instance) const;
       virtual void addCompCategoryBaseConstructorMethod(Class& instance) const;
+   private:
+      void _add_allocateNode_Method(Class& instance) const;
+      void _add_allocateNodes_Method(Class& instance) const;
+      void _add_allocateProxies_Method(Class& instance) const;
 };
 
 

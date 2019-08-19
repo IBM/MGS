@@ -31,11 +31,11 @@ class ScriptFunctorType : public FunctorType
       virtual ~ScriptFunctorType ();
 
       // FunctorType methods
-      void getFunctor(std::auto_ptr<Functor> & r_aptr);
+      void getFunctor(std::unique_ptr<Functor> & r_aptr);
       Functor* getFunctor();
       virtual std::string getName();
       virtual std::string getDescription();
-      virtual void getQueriable(std::auto_ptr<InstanceFactoryQueriable>& dup);
+      virtual void getQueriable(std::unique_ptr<InstanceFactoryQueriable>& dup);
    private:
       std::string _functorName;
       C_connection_script_definition *_c_script_def;

@@ -186,6 +186,7 @@ using namespace std;
       C_phase_mapping_list *P_phase_mapping_list;
       C_separation_constraint *P_separation_constraint;
       C_separation_constraint_list *P_separation_constraint_list;
+      C_machine_type *P_machine_type;
       std::string *P_string_literal_list;
 } 
 
@@ -383,6 +384,7 @@ using namespace std;
 %type <P_phase_mapping_list> phase_mapping_list;
 %type <P_separation_constraint> separation_constraint;
 %type <P_separation_constraint_list> separation_constraint_list;
+%type <P_machine_type> machine_type;
 
 %left EXP_AND EXP_OR EXP_XOR
 
@@ -2870,12 +2872,30 @@ system_call: SYSTEM '(' string_literal_list ')' ';' {
 }
 ;
 
+
+machine_type: IDENTIFIER {
+   SyntaxError* localError = 
+     new SyntaxError(CURRENTFILE, @1.first_line, 
+		      "Machine Type", "Identifier");
+   localError->setOriginal();
+   $$ = new C_machine_type(*$1, localError);
+   delete $1;
+}
+
 phase: IDENTIFIER {
    SyntaxError* localError = 
       new SyntaxError(CURRENTFILE, @1.first_line, 
 		      "Phase", "Identifier");
    localError->setOriginal();
-   $$ = new C_phase(*$1, localError);
+   $$ = new C_phase(*$1, 0, localError);
+   delete $1;
+}
+| IDENTIFIER '(' machine_type ')' {
+   SyntaxError* localError = 
+      new SyntaxError(CURRENTFILE, @1.first_line, 
+		      "Phase", "Identifier");
+   localError->setOriginal();
+   $$ = new C_phase(*$1, $3, localError);
    delete $1;
 }
 ;
@@ -2936,7 +2956,9 @@ int main(int argc, char** argv)
 
   int rank=0;
 #ifdef HAVE_MPI
-  MPI_Init(&argc, &argv);
+  //MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
   if (rank==0) {
@@ -2946,15 +2968,20 @@ int main(int argc, char** argv)
           << ".                                                           .\n"
           << ".  \"Restricted Materials of IBM\"                            .\n"
           << ".                                                           .\n"
-          << ".  BCM-YKT-07-18-2017, Version 1.1.0                        .\n"
+          << ".  BCM-YKT-10-20-2018, Version 3.0.0                        .\n"
           << ".                                                           .\n"
-          << ".  (C) Copyright IBM Corp. 2005-2017  All rights reserved   .\n"
+          << ".  (C) Copyright IBM Corp. 2005-2018  All rights reserved   .\n"
           << ".                                                           .\n"
           << ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .\n";
   }
 
    SimInitializer si;
-   if (si.execute(&argc, &argv)) {
+   auto retVal = si.execute(&argc, &argv);
+#ifdef HAVE_MPI
+   MPI_Finalize();
+#endif 
+
+   if (retVal) {
       return 0;
    } else {
       return 1;

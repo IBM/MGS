@@ -29,20 +29,26 @@ PhaseType::~PhaseType()
 }
 
 std::string PhaseType::getInstancePhaseMethodName(
-   const std::string& name) const
+						  const std::string& name,
+						  const std::string& workUnitName,
+						  MachineType mach_type) const
 {
-   return PREFIX + "InstancePhase_" + name;
+   std::string method_name(PREFIX + "InstancePhase_" + name);
+   if (mach_type == MachineType::GPU)
+      method_name = PREFIX + "host_" + name;
+   return method_name;
 }
 
 void PhaseType::getInternalInstancePhaseMethod(
    std::auto_ptr<Method>& method, const std::string& name, 
-   const std::string& componentType) const
+   const std::string& componentType, const std::string& workUnitName,
+   MachineType mach_type) const
 {
-   method.reset(new Method(getInstancePhaseMethodName(name), "void"));
+   method.reset(new Method(getInstancePhaseMethodName(name, workUnitName, mach_type), "void"));
    method->setVirtual();
    std::string parameter = getParameter(componentType);
    if (parameter != "") {
       method->addParameter(parameter);
    }
-   method->addParameter("RNG& rng");
+   method->addParameter(workUnitName + "* wu");
 }

@@ -38,17 +38,17 @@ TissueMGSifyFunctor::~TissueMGSifyFunctor()
 {
 }
 
-void TissueMGSifyFunctor::duplicate(std::auto_ptr<TissueMGSifyFunctor>& dup) const
+void TissueMGSifyFunctor::duplicate(std::unique_ptr<TissueMGSifyFunctor>& dup) const
 {
    dup.reset(new TissueMGSifyFunctor(*this));
 }
 
-void TissueMGSifyFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void TissueMGSifyFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new TissueMGSifyFunctor(*this));
 }
 
-void TissueMGSifyFunctor::duplicate(std::auto_ptr<CG_TissueMGSifyFunctorBase>& dup) const
+void TissueMGSifyFunctor::duplicate(std::unique_ptr<CG_TissueMGSifyFunctorBase>& dup) const
 {
    dup.reset(new TissueMGSifyFunctor(*this));
 }

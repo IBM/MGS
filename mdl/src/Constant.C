@@ -109,7 +109,7 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
    getOutAttrParameterSetMethod->setConst();
    getOutAttrParameterSetMethod->setVirtual();
    getOutAttrParameterSetMethod->addParameter(
-      "std::auto_ptr<ParameterSet>& " + OUTATTRPSETNAME);
+      "std::unique_ptr<ParameterSet>& " + OUTATTRPSETNAME);
    getOutAttrParameterSetMethod->setFunctionBody(
       TAB + OUTATTRPSETNAME + ".reset(new " + getOutAttrPSetName() + "());\n");
    instance.addMethod(getOutAttrParameterSetMethod);

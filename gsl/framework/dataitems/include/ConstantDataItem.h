@@ -38,19 +38,19 @@ class ConstantDataItem : public DataItem
 
       // Constructors
       ConstantDataItem();
-      ConstantDataItem(std::auto_ptr<Constant> data);
+      ConstantDataItem(std::unique_ptr<Constant> data);
       ConstantDataItem(const ConstantDataItem& rv);
 
       // Destructor
       ~ConstantDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       // Singlet Methods
       Constant* getConstant(Error* error=0) const;
-      void setConstant(std::auto_ptr<Constant>& c, Error* error=0);
+      void setConstant(std::unique_ptr<Constant>& c, Error* error=0);
       std::string getString(Error* error=0) const;
 
 };

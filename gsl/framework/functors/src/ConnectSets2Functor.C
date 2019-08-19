@@ -43,7 +43,7 @@ ConnectSets2Functor::ConnectSets2Functor()
    _lensConnector = new LensConnector;
 }
 
-void ConnectSets2Functor::duplicate (std::auto_ptr<Functor> &fap) const
+void ConnectSets2Functor::duplicate (std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new ConnectSets2Functor(*this));
 }
@@ -80,7 +80,7 @@ void ConnectSets2Functor::doInitialize(LensContext *c,
 
 void ConnectSets2Functor::doExecute(LensContext *c, 
 				    const std::vector<DataItem*>& args, 
-				    std::auto_ptr<DataItem>& rvalue)
+				    std::unique_ptr<DataItem>& rvalue)
 {
    c->connectionContext->reset();
    ConnectionContext* cc = c->connectionContext;
@@ -141,10 +141,10 @@ void ConnectSets2Functor::doExecute(LensContext *c,
    Functor *inAttr = inAttrDI->getFunctor();
 
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> einitRVal;
-   std::auto_ptr<DataItem> outAttrRVal;
-   std::auto_ptr<DataItem> inAttrRVal;
-   std::auto_ptr<DataItem> rval;
+   std::unique_ptr<DataItem> einitRVal;
+   std::unique_ptr<DataItem> outAttrRVal;
+   std::unique_ptr<DataItem> inAttrRVal;
+   std::unique_ptr<DataItem> rval;
 
    // call sampfctr2, which will set source and destination 
    // nodes (and maybe other stuff)

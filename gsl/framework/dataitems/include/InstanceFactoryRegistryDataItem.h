@@ -39,7 +39,7 @@ class InstanceFactoryRegistryDataItem : public DataItem
       ~InstanceFactoryRegistryDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       InstanceFactoryRegistry* getInstanceFactoryRegistry() const;

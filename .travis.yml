@@ -16,7 +16,8 @@ compiler:
 
 env:
   global:
-    - PYTHON_INCLUDE_DIR=/usr/include/python2.7/
+    - PYTHON_INCLUDE_DIR=/usr/include/python3.6/
+    - PYTHON_LIB=/usr/lib/x86_64-linux-gnu/
     - CUDA=9.2.148-1
     - CUDA_SHORT=9.2
     - CUDA_APT=9-2
@@ -79,6 +80,15 @@ addons:
     - libopenblas-base
     - gfortran
 
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:deadsnakes/ppa'
+    packages:
+    - python3.6  # To compile targets with a 3.6 compiler.
+    - python3.6-dev  # To build host extension modules under 3.6
+    - python3.7-dev  # To build host extension modules under 3.7
+
 cache:
   directories:
   - ompi
@@ -106,6 +116,7 @@ jobs:
           sudo apt-key add 7fa2af80.pub
           sudo apt update -qq
           sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt install -y cuda-curand-${CUDA_APT} cuda-curand-dev-${CUDA_APT} 
           sudo apt clean
           fi
         - sudo ln -s ${CUDA_HOME} /usr/local/cuda
@@ -143,6 +154,7 @@ jobs:
           sudo apt-key add 7fa2af80.pub
           sudo apt update -qq
           sudo apt install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT} cuda-cufft-dev-${CUDA_APT}
+          sudo apt install -y cuda-curand-${CUDA_APT} cuda-curand-dev-${CUDA_APT} 
           sudo apt clean
           fi
         - sudo ln -s ${CUDA_HOME} /usr/local/cuda
@@ -162,13 +174,15 @@ jobs:
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           rm ${TRAVIS_BUILD_DIR}/gsl/bin/gslparser
           fi
-        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /dev/null" > quick_build.sh
+        - echo "./build_script -p LINUX $BUILD_SYSTEM --rebuild > /tmp/log_mgs.txt 2>&1 " > quick_build.sh
         - chmod +x ./quick_build.sh
         - travis_wait 30 sh -c ./quick_build.sh 
         - |
           if [ -f "${TRAVIS_BUILD_DIR}/gsl/bin/gslparser" ]; then
           echo "Build successful"
+          tail -n 50 /tmp/log_mgs.txt
           else
+          tail -n 100 /tmp/log_mgs.txt
           echo "Build failed"
           fi
     - stage: NGS 
@@ -183,6 +197,10 @@ jobs:
       <<: *shared
       before_install:
         - export BUILD_SYSTEM=--as-NTS-NVU
+    - stage: GPU
+      <<: *shared
+      before_install:
+        - export BUILD_SYSTEM=--as-GPU
     - stage: deploy
       after_success:
         - echo "Test Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"

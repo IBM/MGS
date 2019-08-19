@@ -13,27 +13,61 @@
 //
 // =================================================================
 
-#include "../std/std.gsl"
-InitPhases = { initialize };
-RuntimePhases = { dataCollect, update, copy, lastPhase };
-FinalPhases = { finalize };
+//{{{ Functors
+//#include "../std/std.gsl"
+NodeInitializer Same(Pset); // Functor that just provide parameter set argument
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+Layout UniformLayout(int); // Functor provides uniform density vector for grid layers
+SamplingFctr1 RadialSampler(float radius, int borderTolerance);
+SamplingFctr2 EachDst(SamplingFctr1 sf1);
+Functor OutAttrDefault; //  Functor that gives default out attribute Pset for a node
+OutAttrDefault outAttrDef();
+Functor InAttrDefault; //  Functor that gives default in attribute Pset for a node
+InAttrDefault inAttrDef();
+// Multi purpose Connectors
+Connector PolyConnectorFunctor();
+PolyConnectorFunctor polyConnect();
+Connector ConnectNodeSetsFunctor();
+ConnectNodeSetsFunctor connectNodeSets();
+//}}}
 
-NodeType LifeNode(< tooSparse=1, tooCrowded=4 >);
+/*#define USE_GPU_GSL*/
+#ifdef USE_GPU_GSL
+InitPhases = { initialize(GPU) };
+RuntimePhases = { dataCollect, update(GPU), updateWeight(GPU), copy(GPU), lastPhase };
+//RuntimePhases = { dataCollect, update, updateWeight(GPU), copy(GPU), lastPhase };
+FinalPhases = { finalize };
+#else
+InitPhases = { initialize };
+RuntimePhases = { dataCollect, update, updateWeight, copy, lastPhase };
+FinalPhases = { finalize };
+#endif
+
+#define F_SIGMOID 0 
+#define F_ReLU    1
+#define F_TANH 2
+NodeType LifeNode(< tooSparse=1, tooCrowded=4, actionType=1, complexity=200 >);
 
 Grid World
 {
-   Dimension(1000,1000);
+   Dimension(100,100);
    Layer(nodes, LifeNode, UniformLayout(1), < nodekind="Nodes" >);
-   InitNodes ( .[250:750, 250:750].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
-   InitNodes ( .[400:600, 400:600].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
+   InitNodes ( .[25:75, 25:75].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 1> ) ) );
+   InitNodes ( .[40:60, 40:60].Layer(nodes), Same( Pset<LifeNode, NodeInit> ( <value = 0> ) ) );
    NodeSet all(.[].Layer(nodes));
    connectNodeSets(all, all, EachDst(RadialSampler(1.5)), outAttrDef, inAttrDef);
 };
-
 World world;
 
 // DCA directives here
+//Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+//Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
 
+UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
+ 			 ::Iteration, ">=", 1, 0, dataCollect);
+
+//{{{
+#if 1
 VariableType LifeDataCollector;
 LifeDataCollector collector<fileName="LifeOutput.txt">;
 
@@ -41,14 +75,10 @@ LifeDataCollector collector<fileName="LifeOutput.txt">;
 //	       "value", "vals");
 
 polyConnect(world[].Layer(nodes), collector, <>, <>);
-
-Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
-Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string operator, Trigger triggerB, int critB, int delay);
-
-UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ", 
- 			 ::Iteration, ">=", 1, 0, dataCollect);
+collector.dataCollection() on iterTrig;
+#endif
+//}}}
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, "==", 1000, 0, lastPhase); 
-collector.dataCollection() on iterTrig;
+			 ::Iteration, "==", 50, 0, lastPhase); 
 Stop on endTrig;

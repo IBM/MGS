@@ -40,7 +40,7 @@ ManhattanRingFunctor::ManhattanRingFunctor()
 {
 }
 
-void ManhattanRingFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void ManhattanRingFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new ManhattanRingFunctor(*this));
 }
@@ -71,7 +71,7 @@ void ManhattanRingFunctor::doInitialize(LensContext *c,
 
 void ManhattanRingFunctor::doExecute(LensContext *c, 
 				     const std::vector<DataItem*>& args, 
-				     std::auto_ptr<DataItem>& rvalue)
+				     std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext* cc = c->connectionContext;
    ConnectionContext::Responsibility resp = cc->current;

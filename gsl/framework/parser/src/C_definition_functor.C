@@ -35,7 +35,7 @@ void C_definition_functor::internalExecute(LensContext *c)
    else {
       ftdi = new FunctorTypeDataItem;
    }
-   std::auto_ptr<DataItem> diap(ftdi);
+   std::unique_ptr<DataItem> diap(ftdi);
    ftdi->setFunctorType(_functor_def->getFunctorType());
    ftdi->setCategory(_functor_def->getCategory());
    ftdi->setConstructorParams(_functor_def->getConstructorParams());

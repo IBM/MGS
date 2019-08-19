@@ -299,18 +299,18 @@ CurrentPulseGenerator::~CurrentPulseGenerator()
 }
 
 void CurrentPulseGenerator::duplicate(
-    std::auto_ptr<CurrentPulseGenerator>& dup) const
+    std::unique_ptr<CurrentPulseGenerator>& dup) const
 {
   dup.reset(new CurrentPulseGenerator(*this));
 }
 
-void CurrentPulseGenerator::duplicate(std::auto_ptr<Variable>& dup) const
+void CurrentPulseGenerator::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CurrentPulseGenerator(*this));
 }
 
 void CurrentPulseGenerator::duplicate(
-    std::auto_ptr<CG_CurrentPulseGenerator>& dup) const
+    std::unique_ptr<CG_CurrentPulseGenerator>& dup) const
 {
   dup.reset(new CurrentPulseGenerator(*this));
 }

@@ -49,7 +49,7 @@ TriggerType::TriggerType(const std::string& modelName,
 //    return *this;
 // }
 
-void TriggerType::getInstance(std::auto_ptr<DataItem> & adi, 
+void TriggerType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      std::vector<DataItem*> const * args, 
 			      LensContext* c)
 {
@@ -58,7 +58,7 @@ void TriggerType::getInstance(std::auto_ptr<DataItem> & adi,
    adi.reset(di);
 }
 
-void TriggerType::getInstance(std::auto_ptr<DataItem> & adi, 
+void TriggerType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
 			      LensContext* c)
 {
@@ -77,7 +77,7 @@ TriggerType::~TriggerType() {
 //    if (rv._triggerList.size() > 0) {
 //       std::vector<Trigger*>::const_iterator it, end = rv._triggerList.end();
 //       for (it = rv._triggerList.begin(); it!=end; ++it) {
-// 	 std::auto_ptr<Trigger> dup;
+// 	 std::unique_ptr<Trigger> dup;
 // 	 (*it)->duplicate(dup);
 // 	 _triggerList.push_back(dup.release());
 //       }

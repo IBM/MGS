@@ -46,17 +46,17 @@ class NodeProxyBase : public Node
       }
 
       virtual void getInitializationParameterSet(
-	 std::auto_ptr<ParameterSet>& initPSet) const {
+	 std::unique_ptr<ParameterSet>& initPSet) const {
 	 assert(false);
       }
 
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& CG_castedPSet) const {
+	 std::unique_ptr<ParameterSet>& CG_castedPSet) const {
 	 assert(false);
       }
 
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet>& CG_castedPSet) const {
+	 std::unique_ptr<ParameterSet>& CG_castedPSet) const {
 	 assert(false);
       }
 
@@ -122,6 +122,7 @@ class NodeProxyBase : public Node
       virtual bool hasService() {
          return false;
       }
+      /* adding to ensure these methods are implemented for proxies but they are not supposed to be used */
       virtual void addPreConstant(Constant* CG_constant, 
 				  ParameterSet* CG_pset) {
 	 assert(false);
@@ -140,6 +141,11 @@ class NodeProxyBase : public Node
 	 assert(false);
       }
 
+#if defined(REUSE_NODEACCESSORS) and defined(TRACK_SUBARRAY_SIZE)
+      virtual void addPreNode_Dummy(NodeDescriptor* CG_node, ParameterSet* CG_pset, Simulation* sim, NodeDescriptor*) {
+	 assert(false);
+      }
+#endif
 
    protected:
       NodeRelationalDataUnit* _relationalInformation;
@@ -158,7 +164,7 @@ class NodeProxyBase : public Node
       // [begin]
       virtual TriggerableBase::EventType createTriggerableCaller(
 	 const std::string& name, NDPairList* ndpList, 
-	 std::auto_ptr<TriggerableCaller>& triggerableCaller);
+	 std::unique_ptr<TriggerableCaller>& triggerableCaller);
       // [end]
 
       NodeDescriptor* _nodeInstanceAccessor;

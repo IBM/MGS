@@ -31,11 +31,11 @@ void C_declaration_ndpair::internalExecute(LensContext *c)
 
    // now transfer to DataItem
 
-   std::auto_ptr<NDPair> ndp;
+   std::unique_ptr<NDPair> ndp;
    _ndp_clause->releaseNDPair(ndp);
    NDPairDataItem *nvdi = new NDPairDataItem;
    nvdi->setNDPair(ndp);
-   std::auto_ptr<DataItem> nvdi_ap(nvdi);
+   std::unique_ptr<DataItem> nvdi_ap(nvdi);
    try {
       c->symTable.addEntry(_declarator->getName(), nvdi_ap);
    } catch (SyntaxErrorException& e) {

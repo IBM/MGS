@@ -24,10 +24,12 @@
 
 Method::Method()
    : _name(""), _returnStr(""), _functionBody(""), 
+     _kernelname(""),
      _accessType(AccessType::PUBLIC), _virtual(false),
      _pureVirtual(false), _const(false), _externC(false), 
      _externCPP(false), _inline(false), _template(false), _static(false)
 {
+  _classObj = 0;
 }
 
 Method::Method(const std::string& name, const std::string& returnStr
@@ -36,6 +38,7 @@ Method::Method(const std::string& name, const std::string& returnStr
      _accessType(AccessType::PUBLIC), _virtual(false), _pureVirtual(false),
      _const(false), _externC(false), _externCPP(false), _inline(false), _template(false), _static(false)
 {
+  _classObj = 0;
 }
 
 void Method::duplicate(std::auto_ptr<Method>& dup) const
@@ -47,8 +50,12 @@ Method::~Method()
 {
 }
 
-void Method::printSource(const std::string& className, std::ostringstream& os)
+void Method::printSource(const std::string& className, std::ostringstream& os, const std::string& parentClassName)
 {
+  std::string prefix("");
+  if (! parentClassName.empty())
+    prefix = parentClassName + "::";
+
    if (isPureVirtual() || isInline()) {
       return;
    }
@@ -66,7 +73,7 @@ void Method::printSource(const std::string& className, std::ostringstream& os)
      os << _returnStr << " ";
    }
    if (!(isExternC() || isExternCPP())) {
-     os << className << "::";
+     os << prefix << className << "::";
    }
    os << _name << "(";
    bool first = true;
@@ -121,7 +128,7 @@ void Method::printSourceBody(std::ostringstream& os)
    os << "}\n";
 }
 
-void Method::printDefinition(int type, std::ostringstream& os)
+void Method::printDefinition(AccessType type, std::ostringstream& os)
 {
    if ((getAccessType() == type) && !isExternC() && !isExternCPP()) {
       internalPrintDefinition(TAB+TAB, os);

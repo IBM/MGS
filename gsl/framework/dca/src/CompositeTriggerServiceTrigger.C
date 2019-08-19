@@ -209,7 +209,7 @@ bool CompositeTriggerServiceTrigger::isSingle()
    return (_triggerA->status() == _criterionA);
 }
 
-void CompositeTriggerServiceTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void CompositeTriggerServiceTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
    dup.reset(new CompositeTriggerServiceTrigger(*this));
 }

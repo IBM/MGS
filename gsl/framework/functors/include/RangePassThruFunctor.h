@@ -26,14 +26,14 @@ class RangePassThruFunctor: public Functor
 {
    public:
       RangePassThruFunctor();
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~RangePassThruFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
    private:
       float  _left_limit;
       float  _right_limit;

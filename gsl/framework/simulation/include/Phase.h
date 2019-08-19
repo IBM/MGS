@@ -15,6 +15,7 @@
 
 #ifndef Phase_H
 #define Phase_H
+#include "PhaseElement.h"
 #include "Copyright.h"
 
 #include <memory>
@@ -25,8 +26,8 @@ class Simulation;
 class Phase {
 
    public:
-      Phase(const std::string& name);
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const = 0;
+  Phase(const std::string& name, machineType mType);
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const = 0;
       virtual ~Phase();
      
       virtual std::string getType() const = 0;
@@ -36,10 +37,17 @@ class Phase {
       void setName(const std::string& name) {
 	 _name = name;
       }
+      machineType getMachineType() {
+	return _machineType;
+      }
+      void setMachineType(machineType mType) {
+	_machineType = mType;
+      }
       virtual void addToSimulation(Simulation* sim) const =0;
       
    protected:
       std::string _name;
+      machineType _machineType;      
 };
 
 

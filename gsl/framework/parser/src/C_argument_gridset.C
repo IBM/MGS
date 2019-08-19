@@ -36,7 +36,7 @@ C_argument_gridset::C_argument_gridset(const C_argument_gridset& rv)
       _gridset = rv._gridset->duplicate();
    }
    if (rv._dataitem) {
-      std::auto_ptr<DataItem> di_ap;
+      std::unique_ptr<DataItem> di_ap;
       rv._dataitem->duplicate(di_ap);
       _dataitem = dynamic_cast<GridSetDataItem*>(di_ap.release());
    }

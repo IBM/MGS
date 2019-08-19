@@ -34,9 +34,9 @@ class GetPostNodeCoordFunctor : public CG_GetPostNodeCoordFunctorBase,
       GetPostNodeCoordFunctor(const GetPostNodeCoordFunctor& rv);
       GetPostNodeCoordFunctor& operator=(const GetPostNodeCoordFunctor& rv);
       virtual ~GetPostNodeCoordFunctor();
-      virtual void duplicate(std::auto_ptr<GetPostNodeCoordFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_GetPostNodeCoordFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<GetPostNodeCoordFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_GetPostNodeCoordFunctorBase>& dup) const;
       virtual Publisher* getPublisher() {
 	 return 0;
       }

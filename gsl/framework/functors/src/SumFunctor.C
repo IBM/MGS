@@ -38,7 +38,7 @@ void SumFunctor::doInitialize(LensContext *c,
                               const std::vector<DataItem *> &args) {}
 
 void SumFunctor::doExecute(LensContext *c, const std::vector<DataItem *> &args,
-                           std::auto_ptr<DataItem> &rvalue) {
+                           std::unique_ptr<DataItem> &rvalue) {
 
   std::cout << "DataItem type: " << args[0]->getType() << std::endl;
 
@@ -132,7 +132,7 @@ void SumFunctor::doExecute(LensContext *c, const std::vector<DataItem *> &args,
   }
 }
 
-void SumFunctor::duplicate(std::auto_ptr<Functor> &fap) const {
+void SumFunctor::duplicate(std::unique_ptr<Functor> &fap) const {
   Functor *p = new SumFunctor(*this);
   fap.reset(p);
 }
@@ -148,7 +148,7 @@ SumFunctor::SumFunctor(const SumFunctor &f) {
 
   _int_array = new std::vector<int>(*f._int_array);
 
-  std::auto_ptr<DataItem> diap;
+  std::unique_ptr<DataItem> diap;
   _di_array = new std::vector<DataItem *>(f._di_array->size());
   std::vector<DataItem *>::const_iterator i, begin = f._di_array->begin();
   std::vector<DataItem *>::const_iterator end = f._di_array->end();

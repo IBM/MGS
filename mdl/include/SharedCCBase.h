@@ -34,7 +34,6 @@
 class Generatable;
 
 class SharedCCBase : public ConnectionCCBase {
-
    public:
       SharedCCBase(const std::string& fileName);
       SharedCCBase(const SharedCCBase& rv);
@@ -123,6 +122,16 @@ class SharedCCBase : public ConnectionCCBase {
 
       virtual unsigned getExtraNumberOfServices() const {
 	 return _shareds.size() + _optionalSharedServices.size();
+      }
+      virtual void addSharedDataToKernelArgs(Class* c){
+	 if (_shareds.size() > 0) {
+	    MemberContainer<DataType>::const_iterator it, end = _shareds.end();
+	    for (it = _shareds.begin(); it != end; ++it) {
+	       //std::string name="getSharedMembers()." + it->first;
+	       //c->addKernelArgs(name, it->first, it->second->getDescriptor());
+	       c->addKernelArgs(it->second, true);
+	    }
+	 }
       }
 
    private:

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-11-14-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -167,59 +167,138 @@ std::string Connection::getCommonConnectionCode(const std::string& tab,
 std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
 						const std::string& name, const std::string& predicate) const
 {
+   return getCommonConnectionCodeAlternativeInterfaceSet(tab, name, predicate, MachineType::CPU); 
+}
+std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std::string& tab,
+						const std::string& name, const std::string& predicate,
+						MachineType mach_type,
+						bool dummy) const
+{
    std::ostringstream os;
 
-   std::set<std::string> interfaceNames = getInterfaceNames();
-   std::set<std::string>::iterator it, end = interfaceNames.end();
-	 os << tab << "bool castMatchLocal = true;\n";
-	 os << tab << "noPredicateMatch = true;\n";
-   for (it = interfaceNames.begin(); it != end; ++it) {
-      os << tab << "if (" << PREFIX << *it << "Ptr == 0) {\n"
-	 << "#if !defined(NOWARNING_DYNAMICCAST) \n"
-	 << tab << TAB << "std::cerr << \"Dynamic Cast of "
-	 << *it << " failed in " << name
-	 << "\" << std::endl;\n"
-	 << "#endif\n"
-	 //<< tab << TAB << "exit(-1);\n"
-	 << tab << TAB << "castMatchLocal = false;\n"
-	 << tab << "}\n"
-	 << "\n";
+   if (dummy)
+   {
+      // code in addPreNode_Dummy(..)
+      
+      std::set<std::string> interfaceNames = getInterfaceNames();
+      std::set<std::string>::iterator it, end = interfaceNames.end();
+      os << tab << "bool castMatchLocal = true;\n";
+      os << tab << "noPredicateMatch = true;\n";
+      //for (it = interfaceNames.begin(); it != end; ++it) {
+      //   os << tab << "if (" << PREFIX << *it << "Ptr == 0) {\n"
+      //      << "#if !defined(NOWARNING_DYNAMICCAST) \n"
+      //      << tab << TAB << "std::cerr << \"Dynamic Cast of "
+      //      << *it << " failed in " << name
+      //      << "\" << std::endl;\n"
+      //      << "#endif\n"
+      //      //<< tab << TAB << "exit(-1);\n"
+      //      << tab << TAB << "castMatchLocal = false;\n"
+      //      << tab << "}\n"
+      //      << "\n";
+      //}
+
+      MemberContainer<InterfaceToMember>::const_iterator it2, 
+	 end2 = _interfaces.end();
+
+      std::set<std::string> requiredIncreases;
+      std::string interfaceToMemberCodes;
+      std::string psetToMemberCodes;
+      std::string subtab = tab + TAB;
+      for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
+	 interfaceToMemberCodes += 
+	    it2->second->getInterfaceToMemberCode(subtab, requiredIncreases, mach_type, dummy, name);
+      }
+      psetToMemberCodes = _psetMappings.getPSetToMemberCode(subtab, 
+	    requiredIncreases, mach_type, dummy, name);
+
+      end = requiredIncreases.end();
+      os << tab <<  "if (castMatchLocal) { \n";
+      os << tab << TAB <<  "if (matchPredicateAndCast) {\n";
+      os << tab << TAB << TAB <<  "std::cerr << \"WARNING: You already have a cast match of predicate\" << R\"(" << predicate << ")\";\n";
+      os << tab << TAB << TAB <<  "assert(0);\n";
+      os << tab << TAB <<  "}; \n";
+      os << tab << TAB <<  "matchPredicateAndCast = true; \n";
+      if (mach_type == MachineType::GPU)
+      {
+	 //os << tab << TAB <<  "bool sizeIncreased = false; \n";
+         ////NOTE: For each subarray data members
+         //--> bool sizeIncreased_um_inputs  = false; 
+	 for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
+	    for (auto it = it2->second->getMappings().begin(); it != it2->second->getMappings().end(); ++it) {
+	       if (it->getDataType()->isArray())
+	       os << tab << TAB <<  "bool sizeIncreased_" << PREFIX_MEMBERNAME << it->getDataType()->getName() << " = false; \n";
+	    }
+	 }
+      }
+
+      for (it = requiredIncreases.begin(); it != end; ++it) {
+	 std::string sizeName = PREFIX + *it + "Size";
+	 os << tab << TAB << "int " << sizeName << " = " << *it 
+	    << ".size();\n"
+	    << tab << TAB << *it << ".increase();\n";
+      }
+
+      os <<  interfaceToMemberCodes
+	 <<  psetToMemberCodes;
+      os << tab <<  "} \n";
+      //os << tab <<  "match = match || matchLocal; \n";
+   }else{
+      // code not in addPreNode_Dummy(..)
+      std::set<std::string> interfaceNames = getInterfaceNames();
+      std::set<std::string>::iterator it, end = interfaceNames.end();
+      os << tab << "bool castMatchLocal = true;\n";
+      os << tab << "noPredicateMatch = true;\n";
+      for (it = interfaceNames.begin(); it != end; ++it) {
+	 os << tab << "if (" << PREFIX << *it << "Ptr == 0) {\n"
+	    << "#if !defined(NOWARNING_DYNAMICCAST) \n"
+	    << tab << TAB << "std::cerr << \"Dynamic Cast of "
+	    << *it << " failed in " << name
+	    << "\" << std::endl;\n"
+	    << "#endif\n"
+	    //<< tab << TAB << "exit(-1);\n"
+	    << tab << TAB << "castMatchLocal = false;\n"
+	    << tab << "}\n"
+	    << "\n";
+      }
+
+      MemberContainer<InterfaceToMember>::const_iterator it2, 
+	 end2 = _interfaces.end();
+
+      std::set<std::string> requiredIncreases;
+      std::string interfaceToMemberCodes;
+      std::string psetToMemberCodes;
+      std::string subtab = tab + TAB;
+      for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
+	 interfaceToMemberCodes += 
+	    it2->second->getInterfaceToMemberCode(subtab, requiredIncreases, mach_type);
+      }
+      psetToMemberCodes = _psetMappings.getPSetToMemberCode(subtab, 
+	    requiredIncreases, mach_type);
+
+      end = requiredIncreases.end();
+      os << tab <<  "if (castMatchLocal) { \n";
+      os << tab << TAB <<  "if (matchPredicateAndCast) {\n";
+      os << tab << TAB << TAB <<  "std::cerr << \"WARNING: You already have a cast match of predicate\" << R\"(" << predicate << ")\";\n";
+      os << tab << TAB << TAB <<  "assert(0);\n";
+      os << tab << TAB <<  "}; \n";
+      os << tab << TAB <<  "matchPredicateAndCast = true; \n";
+      if (mach_type == MachineType::GPU)
+      {
+	 os << tab << TAB <<  "bool sizeIncreased = false; \n";
+      }
+
+      for (it = requiredIncreases.begin(); it != end; ++it) {
+	 std::string sizeName = PREFIX + *it + "Size";
+	 os << tab << TAB << "int " << sizeName << " = " << *it 
+	    << ".size();\n"
+	    << tab << TAB << *it << ".increase();\n";
+      }
+
+      os <<  interfaceToMemberCodes
+	 <<  psetToMemberCodes;
+      os << tab <<  "} \n";
+      //os << tab <<  "match = match || matchLocal; \n";
    }
-
-   MemberContainer<InterfaceToMember>::const_iterator it2, 
-      end2 = _interfaces.end();
-   
-   std::set<std::string> requiredIncreases;
-   std::string interfaceToMemberCodes;
-   std::string psetToMemberCodes;
-	 std::string subtab = tab + TAB;
-   for (it2 = _interfaces.begin(); it2 != end2; ++it2) {
-		 interfaceToMemberCodes += 
-			 it2->second->getInterfaceToMemberCode(subtab, requiredIncreases);
-   }
-   psetToMemberCodes = _psetMappings.getPSetToMemberCode(subtab, 
-							 requiredIncreases);
-
-   end = requiredIncreases.end();
-	 os << tab <<  "if (castMatchLocal) { \n";
-	 os << tab << TAB <<  "if (matchPredicateAndCast) {\n";
-	 os << tab << TAB << TAB <<  "std::cerr << \"WARNING: You already have a cast match of predicate\" << R\"(" << predicate << ")\";\n";
-	 os << tab << TAB << TAB <<  "assert(0);\n";
-	 os << tab << TAB <<  "}; \n";
-	 os << tab << TAB <<  "matchPredicateAndCast = true; \n";
-
-   for (it = requiredIncreases.begin(); it != end; ++it) {
-      std::string sizeName = PREFIX + *it + "Size";
-      os << tab << TAB << "int " << sizeName << " = " << *it 
-	 << ".size();\n"
-	 << tab << TAB << *it << ".increase();\n";
-   }
-   
-
-   os <<  interfaceToMemberCodes
-      <<  psetToMemberCodes;
-	 os << tab <<  "} \n";
-	 //os << tab <<  "match = match || matchLocal; \n";
    return os.str();   
 }
 
@@ -259,13 +338,13 @@ std::string Connection::getCommonConnectionCodeAlternativeInterfaceSet(const std
 							 requiredIncreases);
 
    end = requiredIncreases.end();
-	 os << tab <<  "if (matchLocal) { \n";
-	 os << tab << TAB <<  "match = true; \n";
+   os << tab <<  "if (matchLocal) { \n";
+   os << tab << TAB <<  "match = true; \n";
 
-	 os << tab << TAB <<"//for the same inAttr, only enable one path of connection \n";
-	 os << tab << TAB <<"//from one node to another\n";
-	 //os << tab << TAB << predicate <<"\n";
-	 os << tab << TAB		<< "if (map_inAttr.count(CG_castedPSet->identifier) == 0)\n";
+   os << tab << TAB <<"//for the same inAttr, only enable one path of connection \n";
+   os << tab << TAB <<"//from one node to another\n";
+   //os << tab << TAB << predicate <<"\n";
+   os << tab << TAB		<< "if (map_inAttr.count(CG_castedPSet->identifier) == 0)\n";
    os << tab << TAB << TAB <<"map_inAttr[CG_castedPSet->identifier] = 1;\n";
    os << tab << TAB << "else\n";
    os << tab << TAB << TAB << "map_inAttr[CG_castedPSet->identifier] += 1;\n";

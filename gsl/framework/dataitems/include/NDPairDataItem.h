@@ -31,19 +31,19 @@ class NDPairDataItem : public DataItem
 
       // Constructors
       NDPairDataItem();
-      NDPairDataItem(std::auto_ptr<NDPair> data);
+      NDPairDataItem(std::unique_ptr<NDPair> data);
       NDPairDataItem(const NDPairDataItem& DI);
 
       // Destructor
       ~NDPairDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       NDPair* getNDPair() const;
-      void releaseNDPair(std::auto_ptr<NDPair>& ndp);
-      void setNDPair(std::auto_ptr<NDPair>& ndp);
+      void releaseNDPair(std::unique_ptr<NDPair>& ndp);
+      void setNDPair(std::unique_ptr<NDPair>& ndp);
    private:
       NDPair *_data;
       inline void copyContents(const NDPairDataItem& DI);

@@ -513,17 +513,17 @@ VoltageClamp::~VoltageClamp()
   delete outFile;
 }
 
-void VoltageClamp::duplicate(std::auto_ptr<VoltageClamp>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<VoltageClamp>& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::auto_ptr<Variable>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }
 
-void VoltageClamp::duplicate(std::auto_ptr<CG_VoltageClamp>& dup) const
+void VoltageClamp::duplicate(std::unique_ptr<CG_VoltageClamp>& dup) const
 {
    dup.reset(new VoltageClamp(*this));
 }

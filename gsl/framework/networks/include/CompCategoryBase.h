@@ -44,7 +44,7 @@ class CompCategoryBase : public CompCategory
       }
 
       void addPhaseMapping(const std::string& name, 
-			   std::auto_ptr<Phase>& phase);
+			   std::unique_ptr<Phase>& phase);
       std::string getSimulationPhaseName(const std::string& name);
       std::string getPhaseType(const std::string& name);
       void setUnmappedPhases(LensContext* c);

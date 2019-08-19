@@ -40,7 +40,7 @@ void BindFrontFunctor::doInitialize(LensContext *c,
 	 "Dynamic cast of DataItem to FunctorDataItem failed in BindFrontFunctor");
    }
 
-   std::auto_ptr<Functor> fap;
+   std::unique_ptr<Functor> fap;
    fdi->getFunctor()->duplicate(fap);
    _bind_functor = fap.release();
 
@@ -48,7 +48,7 @@ void BindFrontFunctor::doInitialize(LensContext *c,
       begin = args.begin(), end = args.end();
    begin++;
 
-   std::auto_ptr<DataItem> DI;
+   std::unique_ptr<DataItem> DI;
    for ( iter = begin; iter != end; ++iter ) {
       (*iter)->duplicate(DI);
       _bind_args.push_back( DI.release());
@@ -58,7 +58,7 @@ void BindFrontFunctor::doInitialize(LensContext *c,
 
 void BindFrontFunctor::doExecute(LensContext *c, 
 				 const std::vector<DataItem*>& args, 
-				 std::auto_ptr<DataItem>& rvalue)
+				 std::unique_ptr<DataItem>& rvalue)
 {
    std::vector<DataItem*> expArgs;
 
@@ -75,7 +75,7 @@ void BindFrontFunctor::doExecute(LensContext *c,
 }
 
 
-void BindFrontFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void BindFrontFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new BindFrontFunctor(*this));
 }
@@ -91,7 +91,7 @@ BindFrontFunctor::BindFrontFunctor(const BindFrontFunctor &f)
 : _bind_functor(0)
 {
    if (f._bind_functor) {
-      std::auto_ptr<Functor> fap;
+      std::unique_ptr<Functor> fap;
       f._bind_functor->duplicate(fap);
       _bind_functor = fap.release();
    }
@@ -99,7 +99,7 @@ BindFrontFunctor::BindFrontFunctor(const BindFrontFunctor &f)
    std::vector<DataItem*>::const_iterator iter, 
       begin = f._bind_args.begin(), end = f._bind_args.end();
 
-   std::auto_ptr<DataItem> DI;
+   std::unique_ptr<DataItem> DI;
    for ( iter = begin; iter != end; ++iter ) {
       (*iter)->duplicate(DI);
       _bind_args.push_back(DI.release());

@@ -15,6 +15,7 @@
 
 #ifndef RuntimePhase_H
 #define RuntimePhase_H
+#include "PhaseElement.h"
 #include "Copyright.h"
 
 #include "Phase.h"
@@ -24,8 +25,8 @@
 class RuntimePhase : public Phase {
 
    public:
-      RuntimePhase(const std::string& name = "");
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+  RuntimePhase(const std::string& name = "", machineType mType = machineType::CPU);
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~RuntimePhase();
      
       virtual std::string getType() const;

@@ -18,8 +18,8 @@
 #include <string>
 #include "Simulation.h"
 
-InitPhase::InitPhase(const std::string& name)
-   : Phase(name)
+InitPhase::InitPhase(const std::string& name, machineType mType)
+   : Phase(name, mType)
 {
 }
 
@@ -32,12 +32,12 @@ std::string InitPhase::getType() const
    return "Init";
 }
 
-void InitPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void InitPhase::duplicate(std::unique_ptr<Phase>& rv) const
 {
    rv.reset(new InitPhase(*this));
 }
 
 void InitPhase::addToSimulation(Simulation* sim) const
 {
-   sim->addInitPhase(_name);
+   sim->addInitPhase(_name, _machineType);
 }

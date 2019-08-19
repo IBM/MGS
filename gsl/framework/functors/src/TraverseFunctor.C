@@ -26,7 +26,7 @@ TraverseFunctor::TraverseFunctor()
 }
 
 
-void TraverseFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void TraverseFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new TraverseFunctor(*this));
 }
@@ -44,6 +44,6 @@ void TraverseFunctor::doInitialize(LensContext *c,
 
 void TraverseFunctor::doExecute(LensContext *c, 
 				const std::vector<DataItem*>& args, 
-				std::auto_ptr<DataItem>& rvalue)
+				std::unique_ptr<DataItem>& rvalue)
 {
 }

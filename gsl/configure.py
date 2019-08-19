@@ -353,6 +353,7 @@ class Options:
                            ("nowarning_dynamiccast", "disable printing out Dynamic Cast failed warning messages"),
                            ("tvMemDebug", "enable totalview memory debugging for parallel jobs (perfomance impact)"),
                            ("mpiTrace", "enable mpiTrace profiling (for BG)"),
+                           ("profile", "enable generating profiling (to be used by gprof)"),
                            ("enable-dl", "enable dynamic loading, else everything is statically linked"),
                            ("domainLib", "link to domain specific library"),
                            ("disable-pthreads", "disable pthreads, there will be a single thread"),
@@ -611,6 +612,11 @@ class BuildSetup:
         # Compilers
         self.cCompiler = ""
         self.cppCompiler = ""
+        self.nvccCompiler = ""
+
+        # decide if we want to compile all codes via nvcc
+        # or just those with CUDA code using nvcc
+        self.separate_compile = False
 
         # Command line options
         self.options = Options(sys.argv)
@@ -630,7 +636,7 @@ class BuildSetup:
                 self.objectMode = self.options.compilationMode
         elif self.operatingSystem == "Linux":
             self.architecture = self.unameInfo[4]
-            self.objectMode = "32"
+            self.objectMode = "64"
         else:
             raise FatalError(PROJECT_NAME + " only runs in AIX or Linux")
 
@@ -853,7 +859,7 @@ class BuildSetup:
         """
         options to GCC
         """
-        if self.options.withMpi is True:
+        def setCompilersMPI(self):
             if self.operatingSystem == "AIX":
                 if self.options.compiler == "gcc":
                     self.options.compiler = "gcc"
@@ -889,6 +895,30 @@ class BuildSetup:
                                 self.cppCompiler = findFile("mpiCC", True)
                                 findFile("mpiCC", True)
                                 # raise FatalError("Currently MPI is only used by AIX")
+
+        def setCompilersMPI_GPU(self):
+            if self.operatingSystem == "Linux":
+                self.options.compiler = "nvcc"
+                # consider switching to using gcc and nvcc for different codes
+                if self.separate_compile:
+                    self.nvccCompiler = findFile("nvcc", True)
+                    # self.cCompiler = findFile("gcc", True)
+                    # self.cppCompiler = findFile("g++", True)
+                    self.cCompiler = findFile("mpicc", True)
+                    self.cppCompiler = findFile("mpiCC", True)
+                else:
+                    self.cCompiler = findFile("nvcc", True)
+                    # findFile("nvcc", True)
+                    self.cppCompiler = findFile("nvcc", True)
+                # findFile("nvcc", True)
+            else:
+                raise FatalError("Currently MPI+GPU is only available on LINUX")
+
+        if self.options.withMpi is True:
+            if self.options.withGpu is True:
+                setCompilersMPI_GPU(self)
+            else:
+                setCompilersMPI(self)
             return  # important do not continue this function after here.
 
         if not (self.options.compiler == "xl" or self.options.compiler == "gcc"):
@@ -965,6 +995,8 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
 
 """
 
+        if self.options.withGpu is True:
+            retStr += "NVCC := " + self.nvccCompiler + "\n"
         retStr += "CC := " + self.cppCompiler + "\n"
         retStr += "C_COMP := " + self.cCompiler + "\n"
         if self.options.withMpi is True:
@@ -989,12 +1021,13 @@ MPI_INC = -I$(BGP_ROOT)/arch/include
         """check if 64-bit"""
         retStr = "MAKE64 = "
         if self.objectMode == "64":
-            if self.options.compiler == "gcc":
-                retStr += AIX_GNU_64BIT_FLAG
-            elif self.options.compiler == "xl":
-                retStr += AIX_XL_64BIT_FLAG
-            else:
-                raise InternalError("Compiler " + self.options.compiler + " is not found")
+            if self.operatingSystem == "AIX":
+                if self.options.compiler == "gcc":
+                    retStr += AIX_GNU_64BIT_FLAG
+                elif self.options.compiler == "xl":
+                    retStr += AIX_XL_64BIT_FLAG
+                else:
+                    raise InternalError("Compiler " + self.options.compiler + " is not found")
         retStr += "\n"
         return retStr
 
@@ -1163,8 +1196,7 @@ TRIGGER_MODULES := UnsignedServiceTrigger \\
         if self.options.colab is False:
             retStr += \
                 """\
-VARIABLE_MODULES := BasicNodeSetVariable \\
-        NodeSetSPMVariable \\
+VARIABLE_MODULES := \\
 
 """  # noqa
 
@@ -1414,6 +1446,20 @@ vpath %.c $(COLAB_SOURCES_DIRS)
 vpath %.h $(COLAB_HEADERS_DIRS) framework/parser/generated
 COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
 """
+        if self.separate_compile is True:
+            retStr += \
+                """
+CUDA_NODE_MODULES := LifeNode
+CUDA_EXTENSION_MODULES += $(patsubst %,node/%,$(CUDA_NODE_MODULES))
+CUDA_EXTENSION_MODULES := $(patsubst %,extensions/%,$(CUDA_EXTENSION_MODULES))
+CUDA_MODULES := $(CUDA_EXTENSION_MODULES)
+CUDA_SOURCES_DIRS := $(patsubst %,%/src, $(CUDA_MODULES))
+CUDA_CODE := $(foreach dir,$(CUDA_SOURCES_DIRS),$(wildcard $(dir)/CG_*.C))
+
+CUDA_PURE_OBJS := $(patsubst %.C, %.o, $(CUDA_CODE))
+
+CUDA_OBJS := $(patsubst %, $(OBJS_DIR)/%, $(CUDA_PURE_OBJS))
+"""
         return retStr
 
     def getObjectOnlyFlags(self):
@@ -1433,17 +1479,157 @@ COLAB_CFLAGS := $(patsubst %,-I%/include,$(COLAB_MODULES))
         retStr += "\n"
         return retStr
 
+    def getNVCCFlags(self):  # noqa
+        retStr = \
+            """\
+# OTHER_LIBS :=-lgmp -lpython2.7
+OTHER_LIBS :=-lgmp  \
+"""
+        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{} ".format(self.pythonLibName)
+
+        retStr += "\n"
+        retStr += \
+            """\
+OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+"""
+        retStr += "\n"
+        retStr += \
+            """\
+ifeq ($(USE_SUITESPARSE), 1)
+OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
+endif
+#LDFLAGS := -shared
+"""
+        retStr += \
+            """
+# https://github.com/OpenGP/htrack/blob/master/cmake/ConfigureCUDA.cmake
+# set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -w -Xcompiler -fPIC" )
+# set(CUDA_NVCC_FLAGS "-gencode arch=compute_50,code=sm_50") # GTX980
+# set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -g") # HOST debug mode
+# set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -G") # DEV debug mode
+# Tesla : -gencode arch=compute_10,code=sm_10
+# Fermi : -gencode arch=compute_20,code=sm_20
+
+#CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
+#CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
+#CFLAGS += --compiler-options -fPIC -MMD
+#CFLAGS += -g -fno-inline -fno-eliminate-unused-debug-types -DDEBUG_ASSERT -DNOWARNING_DYNAMICCAST -Og -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU -DHAVE_GPU
+
+# SOURCE_AS_CPP := -x c++
+SOURCE_AS_CPP := -x cu
+CUDA_NVCC_FLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI -DHAVE_GPU
+CUDA_NVCC_FLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
+CUDA_NVCC_FLAGS += --compiler-options -fPIC \
+"""
+        if self.options.debug == USE:
+            retStr += " -g -G"
+            # to add '-pg' run with --profile
+        if self.options.profile == USE:
+            retStr += " " + PROFILING_FLAGS
+
+        if self.options.optimization == "O":
+            retStr += " " + O_OPTIMIZATION_FLAG
+        if self.options.optimization == "O2":
+            retStr += " " + O2_OPTIMIZATION_FLAG
+        if self.options.optimization == "O3":
+            retStr += " " + O3_OPTIMIZATION_FLAG
+        if self.options.optimization == "O4":
+            retStr += " " + O4_OPTIMIZATION_FLAG
+        if self.options.optimization == "O5":
+            retStr += " " + O5_OPTIMIZATION_FLAG
+        # if self.options.optimization == "Og":
+        #    retStr += " " + OG_OPTIMIZATION_FLAG
+
+        # if self.options.debug == USE:
+        Gencode_Tesla = " -gencode arch=compute_10,code=sm_10 "  # NOQA
+        Gencode_Fermi = " -gencode arch=compute_20,code=sm_20 "  # NOQA
+        Gencode_Kepler_1 = " -gencode arch=compute_30,code=sm_30 "  # NOQA
+        Gencode_Kepler_2 = " -gencode arch=compute_35,code=sm_35 "  # NOQA
+        Gencode_Kepler_3 = " -gencode arch=compute_35,code=compute_35 "  # NOQA
+        """ NVCC 7.5 (Kepler + Maxwell native; Pascal PTX JIT)"""
+        Gencode_Maxwell_1 = " -gencode=arch=compute_50,code=sm_50 "  # NOQA
+        Gencode_Maxwell_2 = " -gencode=arch=compute_52,code=sm_52 "  # NOQA
+        Gencode_Maxwell_3 = " -gencode=arch=compute_52,code=compute_52 "  # NOQA
+        Gencode_Kepler = Gencode_Kepler_1 + Gencode_Kepler_2 + Gencode_Kepler_3  # NOQA
+        Gencode_Maxwell = Gencode_Maxwell_1 + Gencode_Maxwell_2 + Gencode_Maxwell_3  # NOQA
+        Gencode_NVCC7_5 = """ -gencode=arch=compute_30,code=sm_30 \
+  -gencode=arch=compute_35,code=sm_35 \
+  -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52  \
+  -gencode=arch=compute_52,code=compute_52  \
+        """  # NOQA
+        """ NVCC 8.0 (Maxwell + Pascal native)"""
+        Gencode_NVCC8_0 = """  -gencode=arch=compute_30,code=sm_30 \
+  -gencode=arch=compute_35,code=sm_35 \
+  -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52 \
+  -gencode=arch=compute_60,code=sm_60 \
+  -gencode=arch=compute_61,code=sm_61 \
+  -gencode=arch=compute_61,code=compute_61 \
+  """
+        """ NVCC 9.0 (Volta native)"""
+        Gencode_NVCC9_0 = """ -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52 \
+  -gencode=arch=compute_60,code=sm_60 \
+  -gencode=arch=compute_61,code=sm_61 \
+  -gencode=arch=compute_70,code=sm_70 \
+  -gencode=arch=compute_70,code=compute_70 \
+ """
+        """ NVCC 10.0 (Turing native)"""
+        Gencode_NVCC10_0 = """ -gencode=arch=compute_50,code=sm_50 \
+  -gencode=arch=compute_52,code=sm_52 \
+  -gencode=arch=compute_60,code=sm_60 \
+  -gencode=arch=compute_61,code=sm_61 \
+  -gencode=arch=compute_70,code=sm_70 \
+  -gencode=arch=compute_70,code=compute_70 \
+  -gencode=arch=compute_75,code=compute_75 \
+ """
+        Gencode_Volta = """ -gencode=arch=compute_70,code=sm_70 \
+  -gencode=arch=compute_70,code=compute_70 \
+ """
+        # retStr += Gencode_NVCC8_0
+        # retStr += Gencode_NVCC9_0
+        # retStr += Gencode_Volta
+        retStr += Gencode_Kepler_3
+
+        retStr += "\n"
+
+        retStr += """
+LDFLAGS: $(CUDA_NVCC_FLAGS)
+CUDA_NVCC_FLAGS += $(SOURCE_AS_CPP)
+#--compiler-options -mcpu=power9
+# NVCC fails with this --compiler-options -flto
+#https://devtalk.nvidia.com/default/topic/1026826/link-time-optimization-with-cuda-on-linux-flto-/?offset=6
+"""
+        return retStr
+
     def getCFlags(self):  # noqa
         retStr = \
             """\
 # OTHER_LIBS :=-lgmp -lpython2.7
-OTHER_LIBS :=-lgmp -I$(PYTHON_INCLUDE_DIR) -lpython2.7
+OTHER_LIBS :=-lgmp  \
+"""
+        retStr += " -I$(PYTHON_INCLUDE_DIR) -L$(PYTHON_LIB) -l{}".format(self.pythonLibName)
+
+        retStr += "\n"
+        retStr += \
+            """\
+OTHER_LIBS_HEADER :=-I$(PYTHON_INCLUDE_DIR)
+"""
+        retStr += "\n"
+        retStr += \
+            """\
 ifeq ($(USE_SUITESPARSE), 1)
-OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse -DUSE_SUITESPARSE
+OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
 endif
-LDFLAGS := -shared
+#LDFLAGS := -shared
+"""
+        retStr += \
+            """
 CFLAGS := $(patsubst %,-I%/include,$(MODULES)) $(patsubst %,-I%/generated,$(PARSER_PATH)) $(patsubst %,-I%/include,$(SPECIAL_EXTENSION_MODULES))  -DLINUX -DDISABLE_DYNAMIC_LOADING -DHAVE_MPI
-CFLAGS += -I../common/include -std=c++11 -Wno-deprecated-declarations
+CFLAGS += -I../common/include -std=c++14 -Wno-deprecated-declarations
 CFLAGS += -fPIC \
 """
         if self.options.colab is True:
@@ -1589,7 +1775,8 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
 
 """
         # retStr += "LENS_LIBS_EXT := $(LENS_LIBS) lib/liblensext.a\n"
-        retStr += "LIBS := "
+        retStr += """
+LIBS := """
         if self.options.dynamicLoading is True:
             retStr += "-ldl "
         if self.options.pthreads is True:
@@ -1603,9 +1790,9 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
         if self.operatingSystem == "AIX":
             retStr += "$(LENS_LIBS_EXT) "
         elif self.operatingSystem == "Linux":
-            retStr += "-Wl,--whole-archive "
+            # retStr += "-Wl,--whole-archive "
             retStr += "$(LENS_LIBS_EXT) "
-            retStr += "-Wl,-no-whole-archive "
+            # retStr += "-Wl,-no-whole-archive "
         else:
             raise InternalError("Unknown OS " + self.operatingSystem)
 
@@ -1622,7 +1809,9 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
                 retStr += " -L$(LAMHOME)/lib -lmpi -llammpi++ -llam -ldl -lpthread"
 
         if self.options.withGpu is True:
-            retStr += " -lcudart -lcurand"
+            retStr += " -lcuda -lcudart -lcurand"
+            if self.options.withMpi is True:
+                retStr += " -lmpi_cxx -lmpi -lopen-pal"
 
         if self.options.withArma is True:
             retStr += " -llapack -lopenblas -larmadillo"
@@ -1633,9 +1822,6 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
             else:
                 retStr += " -I$(NTI_INC_DIR) -L$(shell pwd)/lib/ -Wl,--rpath=$(shell pwd)/lib/ -lnti -lnts -lutils"
         retStr += " $(OTHER_LIBS)"
-
-        if self.options.withGpu is True:
-            retStr += " -lcudart -lcurand"
 
         if self.options.withArma is True:
             retStr += " -llapack -lopenblas -larmadillo"
@@ -1676,7 +1862,11 @@ NTS_LIBS := ${LENSROOT}/lib/libnts.so\n
         retStr = "FINAL_TARGET_FLAG = "
 
         if self.operatingSystem == "Linux":
-            retStr += LINUX_FINAL_TARGET_FLAG
+            if self.options.withGpu is True:
+                pass
+                # retStr += "-Xlinker -rdynamic"
+            else:
+                retStr += LINUX_FINAL_TARGET_FLAG
         elif self.operatingSystem == "AIX":
 
             if self.options.dynamicLoading is True:
@@ -1763,9 +1953,15 @@ DX_INCLUDE := framework/dca/include
 
 $(OBJS_DIR)/%.o : %.C
 \t$(CC) $(CFLAGS) """
+        # if (self.options.withGpu is True):
+        #     retStr += "$(SOURCE_AS_CPP) "
         if (self.options.asNts is True) or (self.options.asNtsNVU is True):
             retStr += "-I$(NTI_INC_DIR) "
-        retStr += """$(OBJECTONLYFLAGS) -c $< $(OTHER_LIBS) -o $@
+        if (self.options.withGpu is True):
+            retStr += """-c $< $(OTHER_LIBS_HEADER) -o $@
+"""
+        else:
+            retStr += """-c $< $(OTHER_LIBS_HEADER) -o $@
 """
         return retStr
 
@@ -1815,6 +2011,17 @@ framework/parser/generated/speclang.tab.C: framework/parser/bison/speclang.y
 \tcd framework/parser/bison; $(BISON) -v -d speclang.y; \\
 \tmv speclang.tab.c ../generated/speclang.tab.C 2>/dev/null; mv speclang.tab.h ../generated
 
+"""
+        if self.options.withGpu is True:
+            retStr += \
+                """
+$(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
+\t$(CC) -c $< -DYYDEBUG $(CFLAGS) -o $@
+
+"""
+        else:
+            retStr += \
+                """
 $(OBJS_DIR)/speclang.tab.o: framework/parser/generated/speclang.tab.C framework/parser/bison/speclang.y
 \t$(CC) -c $< -DYYDEBUG $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 
@@ -1843,8 +2050,15 @@ framework/parser/generated/lex.yy.C: framework/parser/flex/speclang.l
 \tcp framework/parser/flex/lex.yy.C.linux.i386 framework/parser/generated/lex.yy.C
 """
 
-        retStr += \
-            """
+        if self.options.withGpu is True:
+            retStr += \
+                """
+$(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
+\t$(CC) -c $< $(CFLAGS)  -o $@
+"""
+        else:
+            retStr += \
+                """
 $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/speclang.l
 \t$(CC) -c $< $(CFLAGS) $(OBJECTONLYFLAGS) -o $@
 """
@@ -1874,7 +2088,7 @@ $(OBJS_DIR)/lex.yy.o: framework/parser/generated/lex.yy.C framework/parser/flex/
         else:
             if (self.options.asNts is True) or (self.options.asNtsNVU is True):
                 retStr += "$(NTI_OBJS) "
-        retStr += "$(COMMON_OBJS) $(LIBS) $(OTHER_LIBS) $(CFLAGS) -o $(BIN_DIR)/$(EXE_FILE) "
+        retStr += "$(COMMON_OBJS) $(LDFLAGS) $(LIBS) -o $(BIN_DIR)/$(EXE_FILE) "
         return retStr
 
     def getDependfileTarget(self):
@@ -2009,6 +2223,23 @@ clean:
 """
         return retStr
 
+    def getPythonLibName(self):
+        import os
+        import fnmatch
+
+        def find(pattern, path):
+            result = []
+            for roots, dirs, files in os.walk(path):
+                for name in files:
+                    if fnmatch.fnmatch(name, pattern):
+                        result.append(name)
+            return result
+        libs_found = find("libpython*.so", os.environ["PYTHON_LIB"])
+        if not libs_found:
+            self.pythonLibName = "python2.7"
+        else:
+            self.pythonLibName = libs_found[0][:-3][3:]
+
     def generateMakefile(self, fileName):
         fileBody = self.getInitialValues()
         fileBody += "\n"
@@ -2018,7 +2249,22 @@ clean:
 
         fileBody += self.getObjectOnlyFlags()
 
-        fileBody += self.getCFlags()
+        self.getPythonLibName()
+        if self.options.withGpu is True:
+            fileBody += self.getNVCCFlags()
+            if self.separate_compile:
+                fileBody += self.getCFlags()
+            else:
+                fileBody += \
+                    """\
+CFLAGS := ${CUDA_NVCC_FLAGS}
+"""
+#                fileBody += """\
+# CFLAGS := --compiler-bindir  {0}
+# """.format(findFile("g++", True))
+
+        else:
+            fileBody += self.getCFlags()
         fileBody += "\n"
         # fileBody += self.getLensLibs()
         fileBody += self.getLibs()

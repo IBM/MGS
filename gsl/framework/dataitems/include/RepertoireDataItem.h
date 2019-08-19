@@ -39,7 +39,7 @@ class RepertoireDataItem : public DataItem
       void setRepertoire(Repertoire *);
 
       // Utility methods
-      virtual void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      virtual void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       virtual const char* getType() const;
       virtual std::string getString(Error* error=0) const;
 };

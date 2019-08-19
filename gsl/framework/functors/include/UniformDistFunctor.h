@@ -23,14 +23,14 @@ class UniformDistFunctor: public Functor
 {
    public:
       UniformDistFunctor();
-      virtual void duplicate(std::auto_ptr<Functor> &fap) const;
+      virtual void duplicate(std::unique_ptr<Functor> &fap) const;
       virtual ~UniformDistFunctor();
    protected:
       virtual void doInitialize(LensContext *c, 
 				const std::vector<DataItem*>& args);
       virtual void doExecute(LensContext *c, 
 			     const std::vector<DataItem*>& args, 
-			     std::auto_ptr<DataItem>& rvalue);
+			     std::unique_ptr<DataItem>& rvalue);
    private:
       float _minLim;
       float _maxLim;

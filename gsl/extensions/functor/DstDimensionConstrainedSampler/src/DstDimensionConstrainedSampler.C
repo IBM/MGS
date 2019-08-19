@@ -148,17 +148,17 @@ DstDimensionConstrainedSampler::~DstDimensionConstrainedSampler()
 {
 }
 
-void DstDimensionConstrainedSampler::duplicate(std::auto_ptr<DstDimensionConstrainedSampler>& dup) const
+void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<DstDimensionConstrainedSampler>& dup) const
 {
    dup.reset(new DstDimensionConstrainedSampler(*this));
 }
 
-void DstDimensionConstrainedSampler::duplicate(std::auto_ptr<Functor>& dup) const
+void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new DstDimensionConstrainedSampler(*this));
 }
 
-void DstDimensionConstrainedSampler::duplicate(std::auto_ptr<CG_DstDimensionConstrainedSamplerBase>& dup) const
+void DstDimensionConstrainedSampler::duplicate(std::unique_ptr<CG_DstDimensionConstrainedSamplerBase>& dup) const
 {
    dup.reset(new DstDimensionConstrainedSampler(*this));
 }

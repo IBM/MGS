@@ -26,12 +26,12 @@ class SrcRefGaussianWeightModifier : public CG_SrcRefGaussianWeightModifierBase
 {
    public:
       void userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max, int& wrapDistance);
-      std::auto_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       SrcRefGaussianWeightModifier();
       virtual ~SrcRefGaussianWeightModifier();
-      virtual void duplicate(std::auto_ptr<SrcRefGaussianWeightModifier>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_SrcRefGaussianWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SrcRefGaussianWeightModifier>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SrcRefGaussianWeightModifierBase>& dup) const;
 
       float _sigma;
       float _max;

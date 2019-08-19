@@ -1,0 +1,200 @@
+#directory /data/tmhoangt/nts/gsl/framework/parser/bison/
+directory $NTSROOT/gsl/framework/parser/bison/
+source ~/.gdbinit.local
+set breakpoint pending on
+#set cuda break_on_launch application
+set cuda memcheck on
+#b HodgkinHuxleyVoltageJunction.C:166 if nidx == 0 and bidx== 0 and (iteration==1)
+#b HodgkinHuxleyVoltageJunction.C:166 if nidx==0 and bidx==0 and iteration=90
+
+#b HodgkinHuxleyVoltage.C:222 if nidx == 0 && bidx == 134 
+#b HodgkinHuxleyVoltage.C:473 if nidx == 0 && bidx == 134 
+#b HodgkinHuxleyVoltage.C:577 if nidx == 0 && bidx == 134 
+#b HodgkinHuxleyVoltage.C:263 if nidx == 0 && bidx == 134 
+#
+##b HodgkinHuxleyVoltage.C:258 if nidx == 0 && bidx == 103 
+#b HodgkinHuxleyVoltage.C:222 if nidx == 0 && bidx == 103 && iteration>=100
+#b HodgkinHuxleyVoltage.C:543 if nidx == 0 && bidx == 103 && iteration>=100
+#b HodgkinHuxleyVoltage.C:577 if nidx == 0 && bidx == 103 && iteration>=100
+#b HodgkinHuxleyVoltage.C:222 if nidx == 0 && bidx == 104 && iteration>=100
+#b HodgkinHuxleyVoltage.C:543 if nidx == 0 && bidx == 104 && iteration>=100
+#b HodgkinHuxleyVoltage.C:577 if nidx == 0 && bidx == 104 && iteration>=100
+#b HodgkinHuxleyVoltage.C:222 if nidx == 0 && bidx == 105 && iteration>=100
+#b HodgkinHuxleyVoltage.C:543 if nidx == 0 && bidx == 105 && iteration>=100
+#b HodgkinHuxleyVoltage.C:577 if nidx == 0 && bidx == 105 && iteration>=100
+
+#b ChannelCaLv13_GHK.C:150 if brType == 0
+#b ChannelCaLv13_GHK::initialize
+
+#b HodgkinHuxleyVoltage.C:258 if nidx == 0 && bidx == 1 
+#b HodgkinHuxleyVoltage.C:557 if nidx == 0 && bidx == 1 
+##&& iteration==1
+#b HodgkinHuxleyVoltage.C:414 if nidx == 0 && bidx == 1 
+##&& iteration==1
+#b HodgkinHuxleyVoltage.C:218 if nidx == 0 && bidx == 1 
+##&& iteration==1
+##b HodgkinHuxleyVoltage.C:218 if iteration == 5
+#b HodgkinHuxleyVoltage.C:258 if nidx == 0 && bidx == 2 
+#b HodgkinHuxleyVoltage.C:557 if nidx == 0 && bidx == 2 
+##&& iteration==1
+#b HodgkinHuxleyVoltage.C:414 if nidx == 0 && bidx == 2 
+##&& iteration==1
+#b HodgkinHuxleyVoltage.C:218 if nidx == 0 && bidx == 2 
+#
+#b HodgkinHuxleyVoltage.C:542 if nidx == 87 && bidx == 13 && iteration==5
+#b Params.cxx:4667
+#ignore 1 17
+#b Params.cxx:836
+#b CompositeTrigger.C:41
+#b SyntaxError.C:41 if strcmp(prod, "Trigger") == 0 && err==1
+#b TissueFunctor.C:2460
+#b SyntaxError.C:64
+#b C_trigger.C:46
+#b VoltageClamp.C:52
+#b VoltageClamp::toggle
+#b VoltageClamp.C:74
+#b VoltageClamp.C:122
+#b VoltageClamp.C:151
+#b CaConcentration:createMicroDomainData
+#b CalciumDomainDisplay::setUpPointers
+#b CurrentPulseGenerator::update_PeriodicTrainProtocol
+#b ChannelNat.C:34 
+#b HodgkinHuxleyVoltageJunction.C:168
+#b HodgkinHuxleyVoltage.C:836 
+#b HodgkinHuxleyVoltage::getLambda
+#b CaConcentration.C:1230
+#b CaConcentration::updateMicrodomains_Ca
+#b SimulationInfo::calculateInfo
+#b SimulationInfo::initialize
+#b UnsignedServiceTrigger::isModulusZero
+#b VoltageDisplay::dataCollection
+#b VoltageClamp.C::initialize
+#b VoltageMegaSynapticSpace::computeState
+#b TouchDetector::doWork_original
+
+#b TissueFunctor.C:1146
+#b Params.cxx:6611
+#b Params.cxx:1145
+#b Params.cxx:1175
+#b Params.cxx:5028
+##b TissueContext.cxx:40
+##b TissueContext.cxx:194
+##b TouchDetector.cxx:141
+##b TouchDetector.cxx:640
+#b TouchDetector.cxx:1191
+#b TouchDetector.cxx:1215
+#b TouchDetector.cxx:1232
+#b TouchDetector.cxx:1247
+#b TouchDetector.cxx:1343
+##b Tissue.cxx:169
+#b TouchDetector.cxx:1218
+#b TissueFunctor.C:3099
+#b Params.cxx:5070
+#b GABAAReceptor.C:91
+#b SynapticCleft::setPointers
+#b TissueFunctor.C:3028
+#b TissueFunctor.C:2848 if (strcmp(nodekind[0].c_str(), "SynapticCleft") == 0)
+#b TissueFunctor.C:2975
+#b SynapticCleft::produceState
+#b VoltageMegaSynapticSpace::isInRange
+#b ConnectNodeSetsByVolumeFunctor.C:39
+#b Array_GPU.h:171
+#b Array::Array
+#b C_grid_function_name.C:245
+#b DuplicatePointerArray.h:59
+#b SimulationQueriable::SimulationQueriable
+#b UnsignedTriggerDescriptor::getQueriable
+#b UnsignedTriggerDescriptor::getTrigger
+#b CG_LifeNodeCompCategory::getInitializationParameterSet
+
+#b LifeNodeCompCategory::~LifeNodeCompCategory
+#b CG_LifeNodeCompCategory::~CG_LifeNodeCompCategory
+###b Array_GPU.h:20
+###b Array_GPU.h:28
+##b Array_GPU.h:33
+##b Array_GPU.h:40
+##b CG_LifeNodeCompCategory::allocateNode
+##b Array<LifeNode>::Array()
+##b Array_GPU.h:283
+#b Array_GPU.h:65
+#b Array_GPU.h:75
+#b Array_GPU.h:223
+#b SameFunctor::doExecute
+#b C_grid_function_name::layers
+#b Simulation.C:139
+#b Pauser.C:20
+#b SimInitializer.C:306
+#b SimInitializer.C:307
+#b C_declaration_repertoire::internalExecute
+#b Grid::addLayer
+#b GridLayerDescriptor.C:31
+#b GridLayerDescriptor::GridLayerDescriptor
+#b Simulation::addUnseparableGranuleSet
+#b Simulation::setGraph
+#b Simulation.C:171
+#b C_type_definition.C:29
+#b Grid::Grid
+#b CG_LifeNodeCompCategory.C:452
+#b CG_LifeNodeGridLayerData.C:81
+#b CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData 
+#b CG_LifeNodeCompCategory.C:443
+##b GridQueriable.C:129
+#b LifeNode::copy
+
+## start from here
+b CommandLine.C:72
+b Simulation.C:130 
+b CG_LifeNodeCompCategory::CG_LifeNodeCompCategory
+#b Functor.C:31
+#b CG_LifeNodeGridLayerData::CG_LifeNodeGridLayerData
+b CG_LifeNodeCompCategory::allocateNodes
+b CG_LifeNodeCompCategory::allocateNode
+b NoConnectConnector::nodeToNode
+b LensConnector::nodeToNode
+b ConnectNodeSetsFunctor.C:48
+##b RadialSamplerFunctor.C:160
+b CG_LifeNode::addPreNode
+#b ShallowArray_Flat::ShallowArray_Flat()
+#b Array_Flat::Array_Flat
+#b CG_LifeNodeGridLayerData.C:70
+#b CG_LifeNodeGridLayerData.C:86
+b CG_LifeNodeCompCategory::allocateProxies
+b CG_LifeNodeCompCategory::allocateProxy
+b CG_LifeNodeCompCategory::CG_host_update
+b CG_LifeNodeCompCategory::CG_host_copy
+b LifeNode_kernel_update
+b LifeNode_kernel_copy
+#b Array_GPU.h:122
+#b CG_LifeNodeCompCategory::getInitializationParameterSet
+b CG_LifeNodeCompCategory::getWorkUnits
+b Simulation.C:702
+b Simulation.C:446
+#b exit
+#b pthread_create
+#b MRG32k3a_S_GPU::reSeedShared
+#b SysTimer::start()
+#b SysTimer::reset()
+b LensContext.C:88 if (i == 17)
+
+
+
+#rbreak LifeNode.h:.
+#rbreak CG_LifeNode.h:.
+#b NodeDescriptor::setGridLayerData
+#b NodeDescriptor::getGridLayerData
+#b NodeDescriptor::getGridLayerDescriptor
+#b NodeDescriptor::getDensityIndex
+#b NodeDescriptor::getNodeCoords
+#b NodeDescriptor::getNodeCoords
+#b NodeDescriptor::getNodeCoords2Dim 
+#b NodeDescriptor::getNode
+#b NodeDescriptor::setNode
+#b NodeDescriptor::getNodeIndex
+#b NodeDescriptor::setNodeIndex
+#b NodeDescriptor::getIndex
+#b NodeDescriptor::setIndex
+#b NodeDescriptor::getGlobalIndex
+#r Life.gsl
+#r Life_complete.gsl -d 1
+#r Life_profile.gsl
+r Life_debug.gsl -d 1

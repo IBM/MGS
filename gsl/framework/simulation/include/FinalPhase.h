@@ -15,6 +15,7 @@
 
 #ifndef FinalPhase_H
 #define FinalPhase_H
+#include "PhaseElement.h"
 #include "Copyright.h"
 
 #include "Phase.h"
@@ -24,8 +25,8 @@
 class FinalPhase : public Phase {
 
    public:
-      FinalPhase(const std::string& name = "");
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      FinalPhase(const std::string& name = "", machineType mType = machineType::CPU);
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~FinalPhase();
      
       virtual std::string getType() const;

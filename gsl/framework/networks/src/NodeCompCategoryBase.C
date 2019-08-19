@@ -29,8 +29,8 @@
 NodeCompCategoryBase::NodeCompCategoryBase(
    Simulation& sim, const std::string& modelName)
    : DistributableCompCategoryBase(sim), NodeType(), _gridLayerDataArray(0), 
-     _gridLayerDataArraySize(0), _partitions(0), _nbrPartitions(0),
-   _modelName(modelName)
+     _gridLayerDataArraySize(0), _CPUpartitions(0), _GPUpartitions(0),
+     _nbrCPUpartitions(0), _nbrGPUpartitions(0), _modelName(modelName)
 
 {
   _gridLayerDataOffsets.push_back(0);
@@ -44,33 +44,43 @@ NodeCompCategoryBase::~NodeCompCategoryBase()
        delete *it;
    }
    delete[] _gridLayerDataArray;
-   delete[] _partitions;
+   delete[] _CPUpartitions;
+   delete[] _GPUpartitions;
 }
 
-int NodeCompCategoryBase::initPartitions(int num)
+void NodeCompCategoryBase::initPartitions(int numCpuWorkUnits, int numGpuWorkUnits)
 {
+   _nbrCPUpartitions = numCpuWorkUnits;
+   _nbrGPUpartitions = numGpuWorkUnits;
 
    int n=getNbrComputationalUnits();
-   if (n == 0){
-      num = 1;
-      _nbrPartitions = num;
-      _partitions = new NodePartitionItem[num];
-   
-      _partitions[0].startIndex = 1;
-      _partitions[0].endIndex =  0;
+   if (n == 0) {
+      _nbrCPUpartitions = _nbrGPUpartitions = 1;
+      _CPUpartitions = new NodePartitionItem[_nbrCPUpartitions];
+      _GPUpartitions = new NodePartitionItem[_nbrGPUpartitions];
+      
+      _CPUpartitions[0].startIndex = _GPUpartitions[0].startIndex = 1;
+      _CPUpartitions[0].endIndex = _GPUpartitions[0].endIndex = 0;
    } 
-   else{
-      if (n < num) num = n;
-      _nbrPartitions = num;
-      _partitions = new NodePartitionItem[num];
-      int unitsPerPartition= n/num;
-   
-      for (int idx=0; idx < num; ++idx) {
-        _partitions[idx].startIndex = idx*unitsPerPartition;
-        _partitions[idx].endIndex =  (idx+1)*unitsPerPartition - 1;					
+   else {
+      if (n < numCpuWorkUnits) _nbrCPUpartitions = n;
+      if (n < numGpuWorkUnits) _nbrGPUpartitions = n;
+      _CPUpartitions = new NodePartitionItem[_nbrCPUpartitions];
+      _GPUpartitions = new NodePartitionItem[_nbrGPUpartitions];
+      
+      int unitsPerCpuPartition= n/_nbrCPUpartitions;
+      for (int idx=0; idx < _nbrCPUpartitions; ++idx) {
+        _CPUpartitions[idx].startIndex = idx*unitsPerCpuPartition;
+        _CPUpartitions[idx].endIndex =  (idx+1)*unitsPerCpuPartition - 1;
       }
-       _partitions[num-1].endIndex = n - 1;
+       _CPUpartitions[_nbrCPUpartitions-1].endIndex = n - 1;
+
+      int unitsPerGpuPartition= n/_nbrGPUpartitions;   
+      for (int idx=0; idx < _nbrGPUpartitions; ++idx) {
+        _GPUpartitions[idx].startIndex = idx*unitsPerGpuPartition;
+        _GPUpartitions[idx].endIndex =  (idx+1)*unitsPerGpuPartition - 1;
+      }
+       _GPUpartitions[_nbrGPUpartitions-1].endIndex = n - 1;
    }
    getWorkUnits();
-   return num;
 }

@@ -33,7 +33,7 @@ GridDataItem::GridDataItem(const GridDataItem& DI)
 
 
 // Utility methods
-void GridDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void GridDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new GridDataItem(*this));
 }

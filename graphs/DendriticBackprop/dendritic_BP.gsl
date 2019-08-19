@@ -1,0 +1,134 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { outputWeightsShared, update_U, update_V, lastPhase };
+FinalPhases = { finalize };
+
+NodeType BitmapPhenotype(<
+      //{{{
+        period = 1000,
+	imageFiles = { "images.txt" },
+	betaX0 = 0.0001
+//}}}
+>) { updateShared->lastPhase, update->update_U };
+
+NodeType BengioRateInterneuron (<
+      //{{{
+	g_lk = 0.1,
+	g_D = 1.0,
+	sigma = 0.1,
+	E_inh = -70,
+      	E_exc = 0,
+	g_som = 0.8,
+	eta_IP = 0.0002375,
+	dT = 0.1
+//	collectWeightsOn = {2}
+//}}}
+>);
+
+NodeType BengioRatePyramidal (<
+      //{{{
+	g_lk = 0.1,
+	g_A = 0.8,
+	g_B = 1.0,
+	sigma = 0.1,
+	E_inh = -70,
+      	E_exc = 0,
+	g_som = 0.8,
+	eta_PI = 0.0005,
+	eta_PP = 0.0002375,
+	v_rest = 0,
+	i_toggle = 1.0,
+	dT = 0.1
+//	collectWeightsOn = {1, 5000000, 10000000, 15000000, 20000000, 25000000, 30000000}
+//}}}
+>) { update_Vs->update_V };
+
+Grid Retina
+{
+   //{{{
+	Dimension ( 11, 11 );
+        Layer(ganglionCells, BitmapPhenotype, UniformLayout(1), < nodekind="rgc" >);
+	InitNodes ( .[], nodeDef );
+//}}}
+};
+
+ConnectionScript NNconnect(NodeSet pre, NodeSet post, string id, float radius)
+{
+   //{{{
+   NdplModifier lat(inAttrDef, < identifier=id>);
+   connectNodeSets(pre, post, EachDstPropSrc(RadialSampler(radius)), outAttrDef, lat);
+//}}}
+};
+NNconnect connectNN();
+
+Grid Cortex
+{
+   //{{{
+	Dimension ( 11, 11 );
+        Layer(interneuron, BengioRateInterneuron, UniformLayout(1), < nodekind="in" >);
+        Layer(pyramidal, BengioRatePyramidal, UniformLayout(1), < nodekind="py" >);
+//TODO TUAN: define layer V1 to fix error
+	//InitNodes ( .[].Layer(intereuron), Same(Pset < BengioRateInterneuron, NodeInit >));
+	//InitNodes ( .[].Layer(V1), Same(Pset < BengioRatePyramidal, NodeInit >));
+	//InitNodes ( .[].Layer(V2), Same(Pset < BengioRatePyramidal, NodeInit >));
+	//InitNodes ( .[].Layer(V3), Same(Pset < BengioRatePyramidal, NodeInit >));
+	connectNN(.[].Layer(interneuron), .[].Layer(interneuron), "lateral", 200.0);
+	connectNN(.[].Layer(interneuron), .[].Layer(V1), "interneuron", 200.0);
+	connectNN(.[].Layer(interneuron), .[].Layer(V2), "interneuron", 200.0);
+	connectNN(.[].Layer(interneuron), .[].Layer(V3), "interneuron", 200.0);
+	//connectNN(.[].Layer(V1), .[].Layer(V2), "forward", 200.0);
+	//connectNN(.[].Layer(V2), .[].Layer(V3), "forward", 200.0);
+//}}}
+};
+
+Composite EarlyVision
+{
+   //{{{
+	Retina retina;
+	Cortex cortex;
+
+ 	BindName sen("identifier", "sensory");
+	NdplInAttrInit SEN(sen);
+   	//connectNodeSets(retina[], cortex.[].Layer(V1), EachDst(EachAvg(1.0)), outAttrDef, SEN);
+//}}}
+};
+EarlyVision earlyVision;
+
+// DCA directives here
+
+VariableType LinskerInfomaxUnitDataCollector;
+LinskerInfomaxUnitDataCollector collectorC <fileName="InfomaxOutput.txt">;
+polyConnect(earlyVision/cortex[].Layer(superficial), collectorC, <>, <>);
+
+VariableType GatedThalamicUnitDataCollector;
+GatedThalamicUnitDataCollector collectorT <fileName="ThalamicOutput.txt">;
+polyConnect(earlyVision/thalamus[].Layer(relayNeurons), collectorT, <>, <>);
+
+
+Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger", 
+ 			 ::Iteration, "!%", 10000, 0, run1);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+			 ::Iteration, ">", 30000000, 0, lastPhase); 
+
+collectorC.dataCollection() on iterTrig;
+collectorT.dataCollection() on iterTrig;
+Stop on endTrig;

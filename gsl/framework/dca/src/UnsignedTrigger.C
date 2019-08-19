@@ -200,7 +200,7 @@ bool UnsignedTrigger::isModulusZero() { return !((*_service) % _criterion); }
 
 bool UnsignedTrigger::isModulusNonZero() { return (*_service) % _criterion; }
 
-void UnsignedTrigger::duplicate(std::auto_ptr<Trigger>& dup) const
+void UnsignedTrigger::duplicate(std::unique_ptr<Trigger>& dup) const
 {
   dup.reset(new UnsignedTrigger(*this));
 }

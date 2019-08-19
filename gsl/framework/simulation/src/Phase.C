@@ -17,8 +17,8 @@
 #include <memory>
 #include <string>
 
-Phase::Phase(const std::string& name)
-   : _name(name)
+Phase::Phase(const std::string& name, machineType mType)
+  : _name(name), _machineType(mType) 
 {
 }
 

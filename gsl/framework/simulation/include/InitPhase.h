@@ -15,6 +15,7 @@
 
 #ifndef InitPhase_H
 #define InitPhase_H
+#include "PhaseElement.h"
 #include "Copyright.h"
 
 #include "Phase.h"
@@ -24,8 +25,8 @@
 class InitPhase : public Phase {
 
    public:
-      InitPhase(const std::string& name = "");
-      virtual void duplicate(std::auto_ptr<Phase>& rv) const;
+      InitPhase(const std::string& name = "", machineType mType = machineType::CPU);
+      virtual void duplicate(std::unique_ptr<Phase>& rv) const;
       virtual ~InitPhase();
      
       virtual std::string getType() const;

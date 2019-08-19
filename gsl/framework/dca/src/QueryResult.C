@@ -23,7 +23,7 @@ QueryResult::QueryResult()
 }
 
 
-void QueryResult::addQueriable(std::auto_ptr<Queriable> & q)
+void QueryResult::addQueriable(std::unique_ptr<Queriable> & q)
 {
    this->push_back(q.release());
 }

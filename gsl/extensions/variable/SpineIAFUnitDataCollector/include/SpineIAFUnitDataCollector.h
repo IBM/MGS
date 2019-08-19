@@ -31,9 +31,9 @@ class SpineIAFUnitDataCollector : public CG_SpineIAFUnitDataCollector
   virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_SpineIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_SpineIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
   SpineIAFUnitDataCollector();
   virtual ~SpineIAFUnitDataCollector();
-  virtual void duplicate(std::auto_ptr<SpineIAFUnitDataCollector>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_SpineIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<SpineIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_SpineIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* AMPA_file;
   std::ofstream* mGluR5_file;

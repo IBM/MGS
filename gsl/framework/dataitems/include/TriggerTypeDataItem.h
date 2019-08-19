@@ -38,7 +38,7 @@ class TriggerTypeDataItem : public InstanceFactoryDataItem
       TriggerTypeDataItem(const TriggerTypeDataItem& DI);
 
       const char* getType() const;
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
 
       void setTriggerType(TriggerType*);
       TriggerType* getTriggerType() const;

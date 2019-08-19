@@ -66,7 +66,7 @@ UnsignedCharArrayDataItem::UnsignedCharArrayDataItem(const UnsignedCharArrayData
 
 // Utility methods
 
-void UnsignedCharArrayDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void UnsignedCharArrayDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new UnsignedCharArrayDataItem(*this)));
 }

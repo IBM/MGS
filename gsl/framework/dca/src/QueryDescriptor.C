@@ -55,7 +55,7 @@ void QueryDescriptor::clearFields()
 }
 
 
-int QueryDescriptor::addQueryField(std::auto_ptr<QueryField> & qfield)
+int QueryDescriptor::addQueryField(std::unique_ptr<QueryField> & qfield)
 {
    _fields.push_back(qfield.release());
    return (_fields.size())-1;

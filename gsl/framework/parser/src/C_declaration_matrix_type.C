@@ -60,7 +60,7 @@ void C_declaration_matrix_type::internalExecute(LensContext *c)
       IntArrayDataItem *iarray_di = new IntArrayDataItem(matrixDimensions);
       ArrayDataItem *array_di = static_cast<ArrayDataItem*>(iarray_di);
       _matrixInitDeclarator->execute(c, array_di);
-      std::auto_ptr<DataItem> di_ap(static_cast<DataItem*>(array_di));
+      std::unique_ptr<DataItem> di_ap(static_cast<DataItem*>(array_di));
       try {
 	 c->symTable.addEntry(matrixName, di_ap);
       } catch (SyntaxErrorException& e) {
@@ -71,7 +71,7 @@ void C_declaration_matrix_type::internalExecute(LensContext *c)
       FloatArrayDataItem *farray_di = new FloatArrayDataItem(matrixDimensions);
       ArrayDataItem *array_di = static_cast<ArrayDataItem*>(farray_di);
       _matrixInitDeclarator->execute(c, array_di);
-      std::auto_ptr<DataItem> di_ap(static_cast<DataItem*>(array_di));
+      std::unique_ptr<DataItem> di_ap(static_cast<DataItem*>(array_di));
       try {
 	 c->symTable.addEntry(matrixName, di_ap);
       } catch (SyntaxErrorException& e) {

@@ -43,7 +43,7 @@ class NodeSetArrayDataItem : public ArrayDataItem
 
       // Utility methods
       void setDimensions(std::vector<int> const &dimensions);
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       // Array Methods

@@ -28,7 +28,7 @@ void C_declaration_edgeset::internalExecute(LensContext *c)
    _edgeset->execute(c);
 
    EdgeSetDataItem *esdi = new EdgeSetDataItem;
-   std::auto_ptr<DataItem> esdi_ap(esdi);
+   std::unique_ptr<DataItem> esdi_ap(esdi);
 
    EdgeSet *ns = _edgeset->getEdgeSet();
    esdi->setEdgeSet(ns);

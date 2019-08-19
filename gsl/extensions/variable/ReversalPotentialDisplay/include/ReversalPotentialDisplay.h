@@ -35,9 +35,9 @@ class ReversalPotentialDisplay : public CG_ReversalPotentialDisplay
       CG_ReversalPotentialDisplayOutAttrPSet* CG_outAttrPset);
   ReversalPotentialDisplay();
   virtual ~ReversalPotentialDisplay();
-  virtual void duplicate(std::auto_ptr<ReversalPotentialDisplay>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_ReversalPotentialDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<ReversalPotentialDisplay>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_ReversalPotentialDisplay>& dup) const;
 
   private:
   std::ofstream* outFile = 0;

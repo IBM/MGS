@@ -52,7 +52,7 @@ StructTypeDataItem::StructTypeDataItem(const StructTypeDataItem& DI)
 
 
 // Utility methods
-void StructTypeDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void StructTypeDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(new StructTypeDataItem(*this));
 }

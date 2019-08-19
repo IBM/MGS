@@ -28,8 +28,8 @@ class ReverseFunctor : public CG_ReverseFunctorBase
       void userExecute(LensContext* CG_c);
       ReverseFunctor();
       virtual ~ReverseFunctor();
-      virtual void duplicate(std::auto_ptr<ReverseFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ReverseFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<ReverseFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ReverseFunctorBase>& dup) const;
 };
 #endif

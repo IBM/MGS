@@ -105,10 +105,11 @@ void Phase::generateInternalUserMethod(Class& c) const
 
 void Phase::generateInstancePhaseMethod(
    Class& c, const std::string& instanceType, 
-   const std::string& componentType) const
+   const std::string& componentType,
+   const std::string& workUnitName) const
 {
    _phaseType->generateInstancePhaseMethod(c, _name, instanceType, 
-					   componentType);
+					   componentType, workUnitName);
 }
 
 void Phase::copyOwnedHeap(const Phase& rv)

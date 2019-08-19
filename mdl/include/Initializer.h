@@ -29,6 +29,7 @@ class Initializer
    public:
 
       Initializer(int argc, char** argv);
+      ~Initializer();
       bool execute();
 
    private:

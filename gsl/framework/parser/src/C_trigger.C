@@ -88,7 +88,7 @@ void C_trigger::internalExecute(LensContext *c)
 				   _ct2->getTrigger(), op);
    // Assing ownership to symTable
    TriggerDataItem *nsdi = new TriggerDataItem;
-   std::auto_ptr<DataItem> nsdi_ap(nsdi);
+   std::unique_ptr<DataItem> nsdi_ap(nsdi);
    nsdi->setTrigger(_trigger);
    c->symTable.addCompositeTrigger(nsdi_ap);
 }

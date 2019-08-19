@@ -24,6 +24,11 @@ Interface OutputProducer {
   double* output;
 }
 
+Interface FloatProducer {
+  float* value;
+}
+
+
 Interface PlasticOutputProducer {
   double* output;
   double* P1;

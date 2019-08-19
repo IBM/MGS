@@ -37,10 +37,10 @@ void SrcRefDoGWeightModifier::userInitialize(LensContext* CG_c, Functor*& f, flo
   _wrapDistance=wrapDistance;
 }
 
-std::auto_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* CG_c) 
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    init.f->execute(CG_c, nullArgs, rval_ap);
    ConnectionContext *cc = CG_c->connectionContext;
@@ -100,17 +100,17 @@ std::auto_ptr<ParameterSet> SrcRefDoGWeightModifier::userExecute(LensContext* CG
 
    std::string name="weight";
    FloatDataItem* fdi=new FloatDataItem(weight);
-   std::auto_ptr<DataItem> fdi_ap(fdi);
+   std::unique_ptr<DataItem> fdi_ap(fdi);
    NDPair* ndp = new NDPair(name, fdi_ap);
    ndpl.push_back(ndp);
 
    name="distance";
    FloatDataItem* fdi2=new FloatDataItem(distance);
-   std::auto_ptr<DataItem> fdi_ap2(fdi2);
+   std::unique_ptr<DataItem> fdi_ap2(fdi2);
    NDPair* ndp2 = new NDPair(name, fdi_ap2);
    ndpl.push_back(ndp2);
 
-   std::auto_ptr<ParameterSet> pset;
+   std::unique_ptr<ParameterSet> pset;
    psdi->getParameterSet()->duplicate(pset);
    pset->set(ndpl);
    return pset;
@@ -125,17 +125,17 @@ SrcRefDoGWeightModifier::~SrcRefDoGWeightModifier()
 {
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::auto_ptr<SrcRefDoGWeightModifier>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<SrcRefDoGWeightModifier>& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::auto_ptr<Functor>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }
 
-void SrcRefDoGWeightModifier::duplicate(std::auto_ptr<CG_SrcRefDoGWeightModifierBase>& dup) const
+void SrcRefDoGWeightModifier::duplicate(std::unique_ptr<CG_SrcRefDoGWeightModifierBase>& dup) const
 {
    dup.reset(new SrcRefDoGWeightModifier(*this));
 }

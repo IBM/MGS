@@ -17,7 +17,6 @@
 #define MARSHALL_H
 #include "Copyright.h"
 #ifdef HAVE_MPI
-
 #include <mpi.h>
 #include "OutputStream.h"
 #include "Array.h"
@@ -79,6 +78,7 @@ template <class T>
 class MarshallerInstance<Array<T> >
 {
 public:
+  /* TODO TUAN check if we need to modify to work with flat array for GPU here */
    void marshall(OutputStream* stream, Array<T> const & data) {
      MarshallerInstance<T> mi1;
      unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
@@ -138,6 +138,7 @@ public:
    }
 };
 
+//TUAN TODO: check if we need to make a copy for this with Array::UNIFIED_MEM
 template <class T>
 class MarshallerInstance<ShallowArray<T,3,2> >
 {
@@ -199,6 +200,104 @@ public:
      const_cast<DeepPointerArray<T>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
    }
 };
+
+//#if defined(HAVE_GPU) && defined(__NVCC__)
+//template <class T>
+//class MarshallerInstance<Array<T, Array::UNIFIED_MEM> >
+//{
+//public:
+//  /* TODO TUAN check if we need to modify to work with flat array for GPU here */
+//   void marshall(OutputStream* stream, Array<T, Array::UNIFIED_MEM> const & data) {
+//     MarshallerInstance<T> mi1;
+//     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+//     for (unsigned i=0; i < sz; ++i)
+//       mi1.marshall(stream, data[i]);
+//     if (sz<data.getCommunicatedSize()) {
+//       T padding;
+//       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+//	 mi1.marshall(stream, padding);
+//     }
+//     MarshallerInstance<unsigned> mi2;
+//     mi2.marshall(stream, data.size());
+//     if (data.size() != data.getCommunicatedSize()) {
+//       const_cast<Array<T, Array::UNIFIED_MEM>*>(&data)->setSizeToCommunicate(data.size());
+//       stream->requestRebuild(true);
+//     }
+//   }
+//   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, Array<T, Array::UNIFIED_MEM> const & data) {
+//     MarshallerInstance<T> mi1;
+//     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+//       mi1.getBlocks(blengths, blocs, data[i]);
+//     MarshallerInstance<unsigned> mi2;
+//     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+//     const_cast<Array<T, Array::UNIFIED_MEM>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
+//   }
+//};
+//
+//template <class T>
+//class MarshallerInstance<ShallowArray<T, Array::UNIFIED_MEM> >
+//{
+//public:
+//   void marshall(OutputStream* stream, ShallowArray<T, Array::UNIFIED_MEM> const & data) {
+//     MarshallerInstance<T> mi1;
+//     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+//     for (unsigned i=0; i < sz; ++i)
+//       mi1.marshall(stream, data[i]);
+//     if (sz<data.getCommunicatedSize()) {
+//       T padding;
+//       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+//	 mi1.marshall(stream, padding);
+//     }
+//     MarshallerInstance<unsigned> mi2;
+//     sz = data.size();
+//     mi2.marshall(stream, sz);
+//     if (sz != data.getCommunicatedSize()) {
+//       const_cast<ShallowArray<T, Array::UNIFIED_MEM>*>(&data)->setSizeToCommunicate(sz);
+//       stream->requestRebuild(true);
+//     }
+//   }
+//   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, ShallowArray<T, Array::UNIFIED_MEM> const & data) {
+//     MarshallerInstance<T> mi1;
+//     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+//       mi1.getBlocks(blengths, blocs, data[i]);
+//     MarshallerInstance<unsigned> mi2;
+//     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+//     const_cast<ShallowArray<T, Array::UNIFIED_MEM>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
+//   }
+//};
+//
+//
+//template <class T>
+//class MarshallerInstance<DeepPointerArray<T, Array::UNIFIED_MEM> >
+//{
+//public:
+//   void marshall(OutputStream* stream, DeepPointerArray<T, Array::UNIFIED_MEM> const & data) {
+//     MarshallerInstance<T> mi1;
+//     unsigned sz = (data.getCommunicatedSize() < data.size()) ? data.getCommunicatedSize() : data.size();
+//     for (unsigned i=0; i < sz; ++i)
+//       mi1.marshall(stream, data[i]);
+//     if (sz<data.getCommunicatedSize()) {
+//       T padding;
+//       for (unsigned i=sz; i < data.getCommunicatedSize(); ++i) 
+//	 mi1.marshall(stream, padding);
+//     }
+//     MarshallerInstance<unsigned> mi2;
+//     mi2.marshall(stream, data.size());
+//     if (data.size() != data.getCommunicatedSize()) {
+//       const_cast<DeepPointerArray<T, Array::UNIFIED_MEM>*>(&data)->setSizeToCommunicate(data.size());
+//       stream->requestRebuild(true);
+//     }
+//   }
+//   void getBlocks(std::vector<int>& blengths, std::vector<MPI_Aint>& blocs, DeepPointerArray<T, Array:UNIFIED_MEM> const & data) {
+//     MarshallerInstance<T> mi1;
+//     for (unsigned i=0; i < data.getSizeToCommunicate(); ++i)
+//       mi1.getBlocks(blengths, blocs, data[i]);
+//     MarshallerInstance<unsigned> mi2;
+//     mi2.getBlocks(blengths, blocs, data.getSizeToCommunicate());
+//     const_cast<DeepPointerArray<T, Array::UNIFIED_MEM>*>(&data)->setCommunicatedSize(data.getSizeToCommunicate());
+//   }
+//};
+//#endif
 /*
 template <class T>
 class MarshallerInstance<ShallowArray<T> >
@@ -290,8 +389,6 @@ public:
    }
 };
 
-#endif
-#endif
 */
 #endif
 #endif

@@ -32,19 +32,19 @@ class NDPairListDataItem : public DataItem
 
       // Constructors
       NDPairListDataItem();
-      NDPairListDataItem(std::auto_ptr<NDPairList> data);
+      NDPairListDataItem(std::unique_ptr<NDPairList>& data);
       NDPairListDataItem(const NDPairListDataItem& DI);
       
       // Destructor
       ~NDPairListDataItem();
 
       // Utility methods
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       const char* getType() const;
 
       NDPairList* getNDPairList(Error* error=0) const;
-      void releaseNDPairList(std::auto_ptr<NDPairList>& ap, Error* error=0);
-      void setNDPairList(std::auto_ptr<NDPairList>& ap, Error* error=0);
+      void releaseNDPairList(std::unique_ptr<NDPairList>& ap, Error* error=0);
+      void setNDPairList(std::unique_ptr<NDPairList>& ap, Error* error=0);
       virtual std::string getString(Error* error=0) const;
    private:
       NDPairList* _data;

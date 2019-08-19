@@ -1,8 +1,16 @@
-wget "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
-tar -xvf flex-2.6.4.tar.gz
-cd flex-2.6.4
+VER=2.6.4
+FILENAME=flex-$VER
+DIRNAME=$FILENAME
+wget "https://github.com/westes/flex/releases/download/v${VER}/${FILENAME}.tar.gz"
+
+if [ -z "$TRAVIS_BUILD_DIR" ]; then
+  TRAVIS_BUILD_DIR=`pwd`
+fi
+
+tar -xvf ${FILENAME}.tar.gz
+cd ${DIRNAME}
 ./configure --prefix=$TRAVIS_BUILD_DIR/flex
 make -j10
 make install
 cd -
-rm -rf flex-2.6.4
+rm -rf ${DIRNAME}

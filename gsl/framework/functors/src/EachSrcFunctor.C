@@ -44,7 +44,7 @@ EachSrcFunctor::EachSrcFunctor(const EachSrcFunctor& csf)
 }
 
 
-void EachSrcFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void EachSrcFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new EachSrcFunctor(*this));
 }
@@ -77,7 +77,7 @@ void EachSrcFunctor::doInitialize(LensContext *c,
 
 void EachSrcFunctor::doExecute(LensContext *c, 
 			       const std::vector<DataItem*>& args, 
-			       std::auto_ptr<DataItem>& rvalue)
+			       std::unique_ptr<DataItem>& rvalue)
 {
    ConnectionContext* cc = c->connectionContext;
    cc->done = false;
@@ -92,7 +92,7 @@ void EachSrcFunctor::doExecute(LensContext *c,
    }
 
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
    cc->sourceNode = cc->destinationRefNode = (*_nodesIter);
    cc->current = ConnectionContext::_DEST;
    _functor_ap->execute(c, nullArgs, rval_ap);

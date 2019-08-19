@@ -26,7 +26,7 @@ void C_argument_ndpair_clause_list::internalExecute(LensContext *c)
    if (_ndp_clause_list) {
       _ndp_clause_list->execute(c);
 
-      std::auto_ptr<NDPairList> ndp;
+      std::unique_ptr<NDPairList> ndp;
       _ndp_clause_list->releaseList(ndp);   
       _ndpl_dataitem = new NDPairListDataItem;
       _ndpl_dataitem->setNDPairList(ndp);
@@ -44,7 +44,7 @@ C_argument_ndpair_clause_list::C_argument_ndpair_clause_list(
       _ndp_clause_list = rv._ndp_clause_list->duplicate();
    }
    if (rv._ndpl_dataitem) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._ndpl_dataitem->duplicate(cc_di);
       _ndpl_dataitem = dynamic_cast<NDPairListDataItem*>(cc_di.release());
    }

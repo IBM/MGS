@@ -28,7 +28,7 @@ class Triggerable
    public:
       virtual void addTrigger(
 	 Trigger* trigger, const std::string& functionName, 
-	 std::auto_ptr<NDPairList>& ndpList) = 0;
+	 std::unique_ptr<NDPairList>& ndpList) = 0;
       virtual ~Triggerable() {};
 };
 #endif

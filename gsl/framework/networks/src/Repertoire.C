@@ -91,7 +91,7 @@ Grid* Repertoire::getGrid() const
    return _grid;
 }
 
-void Repertoire::addSubRepertoire(std::auto_ptr<Repertoire> & rep)
+void Repertoire::addSubRepertoire(std::unique_ptr<Repertoire> & rep)
 {
    if (_grid != 0)
       std::cerr<<"Cannot add Sub-Repertoire to Grid Repertoire!"<<std::endl;

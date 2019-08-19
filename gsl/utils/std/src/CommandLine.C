@@ -33,7 +33,7 @@ CommandLine::CommandLine(bool verbose)
 #endif // DISABLE_PTHREADS
   _seed(12345), // default seed
   _gslFile(""), _enableErd(false), _numWorkUnits(0), _readGraph(false), _outputGraph(false), _simulate(true), _verbose(verbose)
- 
+, _gpuID(-1) 
 {
 #ifdef SILENT_MODE
   _verbose=false;
@@ -58,6 +58,7 @@ bool CommandLine::parse(int argc, char** argv)
   parser.addOption(Parser::Option('b', "bindCpus", Parser::Option::TYPE_NONE));
 
 #endif // DISABLE_PTHREADS
+  parser.addOption(Parser::Option('d', "deviceID", Parser::Option::TYPE_REQUIRED));
   parser.addOption(Parser::Option('s', "seedRng", Parser::Option::TYPE_REQUIRED));
   parser.addOption(Parser::Option('r', "readGraph", Parser::Option::TYPE_NONE));
   parser.addOption(Parser::Option('o', "outputGraph", Parser::Option::TYPE_NONE));
@@ -69,8 +70,8 @@ bool CommandLine::parse(int argc, char** argv)
     return false;
   }
 
-  Parser::ParameterVector parameterVector = parser.parse(argc, argv);
   try {
+    Parser::ParameterVector parameterVector = parser.parse(argc, argv);
     if (_verbose && parameterVector.size()>0) std::cout << std::endl;
     for (Parser::ParameterVector::size_type i = 0; i < parameterVector.size(); i++) {
       Parser::Option option = parameterVector[i].getOption();
@@ -119,6 +120,9 @@ bool CommandLine::parse(int argc, char** argv)
       } else if (option.getShortName() == 'm') {
 	if (_verbose) std::cout << "Suppress simulation was set.\n";
 	_simulate = false;
+      } else if (option.getShortName() == 'd') {
+	if (_verbose) std::cout << "The GPU deviceID to use .\n";
+	_gpuID = atoi(value.c_str());
       }
     }
 #ifdef HAVE_GPU
@@ -126,7 +130,8 @@ bool CommandLine::parse(int argc, char** argv)
 #endif // HAVE_GPU          
   } catch (Parser::Exception exception) {
     std::cerr << "Exception: " << exception.getMessage() << "...exiting...\n";
-    exit(0);
+    return false;
+    //exit(0);
   }
    
 #ifndef DISABLE_PTHREADS

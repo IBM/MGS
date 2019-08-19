@@ -61,7 +61,7 @@ C_phase_mapping_list::C_phase_mapping_list(C_phase_mapping_list *al,
 	 delete _error;
 	 _error = al->_error->duplicate();
       }
-      std::auto_ptr<std::vector<C_phase_mapping*> > phases;
+      std::unique_ptr<std::vector<C_phase_mapping*> > phases;
       al->releaseList(phases);
       _phase_mappings = phases.release();
       if (a) _phase_mappings->push_back(a);
@@ -71,7 +71,7 @@ C_phase_mapping_list::C_phase_mapping_list(C_phase_mapping_list *al,
 
 
 void C_phase_mapping_list::releaseList(
-   std::auto_ptr<std::vector<C_phase_mapping*> >& phases)
+   std::unique_ptr<std::vector<C_phase_mapping*> >& phases)
 {
    phases.reset(_phase_mappings);
    _phase_mappings = 0;

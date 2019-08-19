@@ -32,9 +32,9 @@ class IsoSampler : public CG_IsoSamplerBase
       void userExecute(LensContext* CG_c);
       IsoSampler();
       virtual ~IsoSampler();
-      virtual void duplicate(std::auto_ptr<IsoSampler>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_IsoSamplerBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<IsoSampler>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_IsoSamplerBase>& dup) const;
 
    private:
       bool _done;

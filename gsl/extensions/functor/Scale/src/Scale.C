@@ -26,7 +26,7 @@ void Scale::userInitialize(LensContext* CG_c, Functor*& f, double& scale)
 double Scale::userExecute(LensContext* CG_c) 
 {
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> rval_ap;
+  std::unique_ptr<DataItem> rval_ap;
   init.f->execute(CG_c, nullArgs, rval_ap);
   NumericDataItem *ndi = 
     dynamic_cast<NumericDataItem*>(rval_ap.get());
@@ -45,17 +45,17 @@ Scale::~Scale()
 {
 }
 
-void Scale::duplicate(std::auto_ptr<Scale>& dup) const
+void Scale::duplicate(std::unique_ptr<Scale>& dup) const
 {
    dup.reset(new Scale(*this));
 }
 
-void Scale::duplicate(std::auto_ptr<Functor>& dup) const
+void Scale::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new Scale(*this));
 }
 
-void Scale::duplicate(std::auto_ptr<CG_ScaleBase>& dup) const
+void Scale::duplicate(std::unique_ptr<CG_ScaleBase>& dup) const
 {
    dup.reset(new Scale(*this));
 }

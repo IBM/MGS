@@ -18,8 +18,8 @@
 #include <string>
 #include "Simulation.h"
 
-LoadPhase::LoadPhase(const std::string& name)
-   : Phase(name)
+LoadPhase::LoadPhase(const std::string& name, machineType mType)
+   : Phase(name, mType)
 {
 }
 
@@ -32,12 +32,12 @@ std::string LoadPhase::getType() const
    return "Load";
 }
 
-void LoadPhase::duplicate(std::auto_ptr<Phase>& rv) const
+void LoadPhase::duplicate(std::unique_ptr<Phase>& rv) const
 {
    rv.reset(new LoadPhase(*this));
 }
 
 void LoadPhase::addToSimulation(Simulation* sim) const
 {
-   sim->addLoadPhase(_name);
+  sim->addLoadPhase(_name, _machineType);
 }

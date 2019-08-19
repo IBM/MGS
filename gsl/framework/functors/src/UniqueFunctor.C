@@ -38,7 +38,7 @@ UniqueFunctor::UniqueFunctor(const UniqueFunctor& csf)
 }
 
 
-void UniqueFunctor::duplicate(std::auto_ptr<Functor> &fap) const
+void UniqueFunctor::duplicate(std::unique_ptr<Functor> &fap) const
 {
    fap.reset(new UniqueFunctor(*this));
 }
@@ -74,10 +74,10 @@ void UniqueFunctor::doInitialize(LensContext *c,
 
 void UniqueFunctor::doExecute(LensContext *c, 
 			      const std::vector<DataItem*>& args, 
-			      std::auto_ptr<DataItem>& rvalue)
+			      std::unique_ptr<DataItem>& rvalue)
 {
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> rval_ap;
+   std::unique_ptr<DataItem> rval_ap;
 
    ConnectionContext *cc = c->connectionContext;
 

@@ -31,13 +31,13 @@ class TissueProbeFunctor : public CG_TissueProbeFunctorBase, public TissueElemen
 {
    public:
       void userInitialize(LensContext* CG_c);
-      std::auto_ptr<NodeSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<NodeSet> userExecute(LensContext* CG_c);
       TissueProbeFunctor();
       TissueProbeFunctor(TissueProbeFunctor*);
       virtual ~TissueProbeFunctor();
-      virtual void duplicate(std::auto_ptr<TissueProbeFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_TissueProbeFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<TissueProbeFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_TissueProbeFunctorBase>& dup) const;
       void setTissueFunctor(TissueFunctor* tf) {_tissueFunctor=tf;}
 
    private:

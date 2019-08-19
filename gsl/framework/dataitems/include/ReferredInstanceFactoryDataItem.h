@@ -40,7 +40,7 @@ class ReferredInstanceFactoryDataItem : public InstanceFactoryDataItem
       virtual ~ReferredInstanceFactoryDataItem();
 
       // Utility methods
-      virtual void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      virtual void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
       virtual const char* getType() const;
 
       virtual InstanceFactory* getInstanceFactory() const;

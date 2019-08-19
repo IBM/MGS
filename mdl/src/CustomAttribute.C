@@ -31,7 +31,7 @@ CustomAttribute::CustomAttribute()
 
 CustomAttribute::CustomAttribute(const std::string& name, 
 				 const std::string& type
-	  , int accessType)
+	  , AccessType accessType)
    : Attribute(accessType), _name(name), _type(type), _basic(false), 
      _pointer(false), _owned(false), _cArray(false), _customDelete(false), _cArraySize(""), 
      _reference(false), _parameterName("")
@@ -183,25 +183,38 @@ bool CustomAttribute::isDontCopy() const
    return false;
 }
 
-void CustomAttribute::fillInitializer(std::string& init) const
+void CustomAttribute::fillInitializer(std::string& init, const Class* classObj) const
 {
    if (_initializeString != "") {
       init = _initializeString;
    } else {
-      Attribute::fillInitializer(init);
+      Attribute::fillInitializer(init, classObj);
    }
 }
 
 std::string CustomAttribute::getDeleteString() 
 {
+
+  /* by default: this add a piece of code to the front of the deletion
+   * of data member */
   std::string rval="";
   if (_customDelete) {
     rval = _customDeleteString;
   }
-  rval += Attribute::getDeleteString();
+  if (not _completeCustomeDelete)
+  {
+    /* by default: then the deletion is always enforced */
+    rval += Attribute::getDeleteString();
+  }
   return rval;
 }
 
+void CustomAttribute::setCompleteCustomDeleteString(std::string deleteString)
+{
+  _customDeleteString=deleteString;
+  _customDelete=true;
+  _completeCustomeDelete=true;
+}
 void CustomAttribute::setCustomDeleteString(std::string deleteString)
 {
   _customDeleteString=deleteString;

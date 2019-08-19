@@ -8,6 +8,10 @@ if [ ! -f $FILENAME.tar.gz ]; then
     "https://ftp.gnu.org/gnu/bison/${FILENAME}.tar.gz"
 fi
 
+if [ -z "$TRAVIS_BUILD_DIR" ]; then
+  TRAVIS_BUILD_DIR=`pwd`
+fi
+
 tar -xvf ${FILENAME}.tar.gz > /dev/null
 cd ${DIRNAME}
 ./configure --prefix=$TRAVIS_BUILD_DIR/bison

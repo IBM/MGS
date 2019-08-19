@@ -91,17 +91,17 @@ LifeDataCollector::~LifeDataCollector()
   delete file;
 }
 
-void LifeDataCollector::duplicate(std::auto_ptr<LifeDataCollector>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<LifeDataCollector>& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }
 
-void LifeDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }
 
-void LifeDataCollector::duplicate(std::auto_ptr<CG_LifeDataCollector>& dup) const
+void LifeDataCollector::duplicate(std::unique_ptr<CG_LifeDataCollector>& dup) const
 {
    dup.reset(new LifeDataCollector(*this));
 }

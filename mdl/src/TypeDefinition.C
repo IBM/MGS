@@ -17,13 +17,13 @@
 #include "Constants.h"
 #include <sstream>
 
-TypeDefinition::TypeDefinition(int accessType)
+TypeDefinition::TypeDefinition(AccessType accessType)
    : _accessType(accessType), _definition("")
 {
 }
  
 void TypeDefinition::printTypeDef(
-   int type, std::ostringstream& os) const
+   AccessType type, std::ostringstream& os) const
 {
    if (type == _accessType) {
       os << _macroConditional.getBeginning() 

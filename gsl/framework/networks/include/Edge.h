@@ -31,7 +31,6 @@ class ParameterSet;
 class Edge : public Publishable, public ServiceAcceptor,
 	     public TriggerableBase
 {
-
    public:
       virtual void initialize(ParameterSet* initPSet) = 0;
       virtual NodeDescriptor* getPreNode() = 0;
@@ -42,11 +41,11 @@ class Edge : public Publishable, public ServiceAcceptor,
       virtual ~Edge() {}
 
       virtual void getInitializationParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
       virtual void getInAttrParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
       virtual void getOutAttrParameterSet(
-	 std::auto_ptr<ParameterSet> & r_aptr) const = 0;
+	 std::unique_ptr<ParameterSet> & r_aptr) const = 0;
 
       virtual void addPreConstant(Constant* c, ParameterSet* InAttrPSet) = 0;
       virtual void addPreVariable(VariableDescriptor* v, ParameterSet* InAttrPSet) = 0;

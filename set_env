@@ -5,3 +5,9 @@ export LENSROOT=$NTSROOT/gsl
 export MDLROOT=$NTSROOT/mdl
 export PATH=$NTSROOT/gsl/bin:$PATH
 export GSLPARSER=$NTSROOT/gsl/bin/gslparser
+if [ -f .built ]; then
+sed -i "1s@.*@$NTSROOT@" .built
+fi
+#module switch gcc/7.3
+#module switch cuda/9.2
+#module switch ompi/3.1.1_cuda9.2_gcc7.3

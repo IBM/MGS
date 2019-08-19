@@ -19,14 +19,38 @@
 #define Array_H
 #include "Copyright.h"
 
-#include "ArrayIterator.h"
 #include "ArrayException.h"
 #include <cassert>
 #include <memory>
+#include <algorithm>
+#include "rndm.h"
 
 const unsigned SUGGESTEDARRAYBLOCKSIZE = 10;
 const unsigned SUGGESTEDBLOCKINCREMENTSIZE = 4;
 
+#define CUDA_OPTION_1  1    // used Managed class
+#define CUDA_OPTION_2  2    // used custom allocator + Thrust
+#define CUDA_OPTION  CUDA_OPTION_1
+
+//#define USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+
+#if defined(HAVE_GPU) 
+#include "ArrayIterator_GPU.h"
+  #if CUDA_OPTION  == CUDA_OPTION_1
+  #include "Array_GPU.h"
+  #elif CUDA_OPTION  == CUDA_OPTION_2
+  #include "Array_GPU_option2.h"
+
+  #endif
+#endif
+
+#ifdef USE_FLATARRAY_FOR_CONVENTIONAL_ARRAY
+//Only C++11
+template <class T>
+using Array = Array_Flat<T, 0>;
+
+#else
+#include "ArrayIterator.h"
 template <class T>
 class Array
 {
@@ -40,6 +64,10 @@ class Array
     friend class ArrayIterator<const T, T>;
 
     Array(unsigned blockIncrementSize);
+    /* delete all existing memory
+     * then re-create to the minimal size
+     * and set num-elements to 0
+     */
     virtual void clear() {
       for (unsigned i = 0; i < _activeBlocks; i++) {
 	delete[] _blocksArray[i];
@@ -61,10 +89,10 @@ class Array
     void push_back(const T& element) {
       insert(element);
     }
-    T& operator[](unsigned index);
-    const T& operator[](unsigned index) const;
+    T& operator[](int index);
+    const T& operator[](int index) const;
     Array& operator=(const Array& rv);
-    virtual void duplicate(std::auto_ptr<Array>& rv) const = 0;
+    virtual void duplicate(std::unique_ptr<Array>& rv) const = 0;
     virtual ~Array();
     
     unsigned size() const {
@@ -129,8 +157,11 @@ class Array
       virtual void internalCopy(T& lval, T& rval) = 0;
       virtual unsigned getBlockSize() const = 0;
       virtual unsigned getBlockIncrementSize() const = 0;
+      /* wipe everything
+       * don't create minimal data
+       */
       void destructContents();
-      void copyContents(const Array& rv);
+      void copyContents(const Array& rv); //have to be called after destructContents
       void demote (int, int); 
 	  // NOTE: Arrays are organized in the form of multiple 'logical blocks'
 	  //       i.e. memory increase/reduced, in the form of one or many blocks
@@ -148,10 +179,18 @@ template <class T>
 Array<T>::Array(unsigned blockIncrementSize)
    : _size(0), _communicatedSize(0), _sizeToCommunicate(0), _activeBlocks(0), _activeBlocksSize(0), _blocksArray(0)
 {
+#if defined(ARRAY_LAZY_ALLOCATION)
+   _activeBlocksSize = 0;
+#else
    _activeBlocksSize += blockIncrementSize;
    _blocksArray = new T*[_activeBlocksSize];
+#endif
 }
 
+/*
+ * increase _size to 'newSize'
+ * and if need, allocate more memory 
+ */
 template <class T>
 void Array<T>::increaseSizeTo(unsigned newSize)
 {
@@ -163,11 +202,16 @@ void Array<T>::increaseSizeTo(unsigned newSize)
 template <class T>
 void Array<T>::decreaseSizeTo(unsigned newSize)
 {
-   while (_size > newSize) {
+   while (_size > newSize) 
+   {
       decrease();
    }
 }
 
+/*
+ * increase _size 
+ * and if need, allocate more memory 
+ */
 template <class T>
 void Array<T>::increase()
 {
@@ -185,6 +229,13 @@ void Array<T>::increase()
        _blocksArray = tmp;
      }
      _activeBlocks++;
+#if defined(ARRAY_LAZY_ALLOCATION)
+     if (_activeBlocksSize == 0)
+     {
+       _activeBlocksSize += getBlockIncrementSize();
+       _blocksArray = new T*[_activeBlocksSize];
+     }
+#endif
      _blocksArray[_activeBlocks - 1] = new T[getBlockSize()];
    }
    _size++;
@@ -193,6 +244,9 @@ void Array<T>::increase()
 template <class T>
 void Array<T>::decrease()
 {
+  if (_size <= 0)
+    return;
+
   --_size;
   if ((_size % getBlockSize()) == 0) {
     delete [] _blocksArray[_activeBlocks - 1];
@@ -217,7 +271,7 @@ void Array<T>::insert(const T& element)
 }
 
 template <class T>
-const T& Array<T>::operator[](unsigned index) const
+const T& Array<T>::operator[](int index) const
 {
    if ((index >= _size) || (index < 0)){
       throw ArrayException("index is out of bounds");
@@ -226,7 +280,7 @@ const T& Array<T>::operator[](unsigned index) const
 }
 
 template <class T>
-T& Array<T>::operator[](unsigned index)
+T& Array<T>::operator[](int index)
 {
    if ((index >= _size) || (index < 0)){
       throw ArrayException("index is out of bounds");
@@ -388,5 +442,7 @@ std::istream& operator>>(std::istream& is, Array<T>& arr) {
    assert(0);
    return is;
 }
+
+#endif
 
 #endif

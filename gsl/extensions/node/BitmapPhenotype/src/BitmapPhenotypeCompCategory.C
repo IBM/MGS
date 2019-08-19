@@ -95,7 +95,7 @@ void BitmapPhenotypeCompCategory::initializeShared(RNG& rng)
 	std::cerr<<"Bad filename: "<<filenames[i][j]<<std::endl;
 	exit(-1);
       }
-      std::auto_ptr<char> image_aptr;
+      std::unique_ptr<char> image_aptr;
 
       BitMapHeader bmp;
       bmp.readGrayscales(inFile, image_aptr);
@@ -125,6 +125,10 @@ void BitmapPhenotypeCompCategory::initializeShared(RNG& rng)
   }
   updateShared(rng);
   delete [] filenames;
+
+  int imgNbr = SHD.imageNbr = irandom(0,SHD.nbrImages-1,rng);
+  SHD.row=irandom(0,SHD.imgRows[imgNbr]-SHD.gridMaxL,rng);
+  SHD.col=irandom(0,SHD.imgCols[imgNbr]-SHD.gridMaxW,rng);
 }
 
 void BitmapPhenotypeCompCategory::updateShared(RNG& rng) 

@@ -31,9 +31,9 @@ class PoissonIAFUnitDataCollector : public CG_PoissonIAFUnitDataCollector
   virtual void getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_PoissonIAFUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_PoissonIAFUnitDataCollectorOutAttrPSet* CG_outAttrPset);
   PoissonIAFUnitDataCollector();
   virtual ~PoissonIAFUnitDataCollector();
-  virtual void duplicate(std::auto_ptr<PoissonIAFUnitDataCollector>& dup) const;
-  virtual void duplicate(std::auto_ptr<Variable>& dup) const;
-  virtual void duplicate(std::auto_ptr<CG_PoissonIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<PoissonIAFUnitDataCollector>& dup) const;
+  virtual void duplicate(std::unique_ptr<Variable>& dup) const;
+  virtual void duplicate(std::unique_ptr<CG_PoissonIAFUnitDataCollector>& dup) const;
  private:
   std::ofstream* spikes_file;
 };

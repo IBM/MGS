@@ -33,7 +33,7 @@ class C_phase_mapping_list : public C_production
       C_phase_mapping_list(C_phase_mapping *, SyntaxError *);
       C_phase_mapping_list(C_phase_mapping_list *, C_phase_mapping *, 
 			    SyntaxError *);
-      void releaseList(std::auto_ptr<std::vector<C_phase_mapping*> >& phases);
+      void releaseList(std::unique_ptr<std::vector<C_phase_mapping*> >& phases);
       virtual ~C_phase_mapping_list ();
       virtual C_phase_mapping_list* duplicate() const;
       virtual void internalExecute(LensContext *);

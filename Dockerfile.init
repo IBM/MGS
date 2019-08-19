@@ -2,3 +2,5 @@ FROM scratch
 COPY .keep /mgs/gsl/obj
 COPY .keep /mgs/common/obj
 COPY .keep /mgs/nti/obj
+COPY Model2Use.h /mgs/nti/include/
+COPY .built /mgs/

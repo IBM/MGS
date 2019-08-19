@@ -37,9 +37,9 @@ class GetPreNodeCoordFunctor : public CG_GetPreNodeCoordFunctorBase,
       virtual ~GetPreNodeCoordFunctor();
       GetPreNodeCoordFunctor(const GetPreNodeCoordFunctor& rv);
       GetPreNodeCoordFunctor& operator=(const GetPreNodeCoordFunctor& rv);
-      virtual void duplicate(std::auto_ptr<GetPreNodeCoordFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_GetPreNodeCoordFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<GetPreNodeCoordFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_GetPreNodeCoordFunctorBase>& dup) const;
       virtual Publisher* getPublisher() {
 	 return 0;
       }

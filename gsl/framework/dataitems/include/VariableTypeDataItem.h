@@ -38,7 +38,7 @@ class VariableTypeDataItem : public InstanceFactoryDataItem
       VariableTypeDataItem(const VariableTypeDataItem& DI);
 
       const char* getType() const;
-      void duplicate(std::auto_ptr<DataItem> & r_aptr) const;
+      void duplicate(std::unique_ptr<DataItem> & r_aptr) const;
 
       void setVariableType(VariableType*);
       VariableType* getVariableType() const;

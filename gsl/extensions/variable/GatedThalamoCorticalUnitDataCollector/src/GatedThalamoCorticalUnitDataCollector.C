@@ -110,17 +110,17 @@ GatedThalamoCorticalUnitDataCollector::~GatedThalamoCorticalUnitDataCollector()
 {
 }
 
-void GatedThalamoCorticalUnitDataCollector::duplicate(std::auto_ptr<GatedThalamoCorticalUnitDataCollector>& dup) const
+void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<GatedThalamoCorticalUnitDataCollector>& dup) const
 {
    dup.reset(new GatedThalamoCorticalUnitDataCollector(*this));
 }
 
-void GatedThalamoCorticalUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new GatedThalamoCorticalUnitDataCollector(*this));
 }
 
-void GatedThalamoCorticalUnitDataCollector::duplicate(std::auto_ptr<CG_GatedThalamoCorticalUnitDataCollector>& dup) const
+void GatedThalamoCorticalUnitDataCollector::duplicate(std::unique_ptr<CG_GatedThalamoCorticalUnitDataCollector>& dup) const
 {
    dup.reset(new GatedThalamoCorticalUnitDataCollector(*this));
 }

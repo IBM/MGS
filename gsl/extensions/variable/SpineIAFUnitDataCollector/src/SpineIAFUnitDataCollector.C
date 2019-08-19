@@ -383,17 +383,17 @@ SpineIAFUnitDataCollector::~SpineIAFUnitDataCollector()
 {
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::auto_ptr<SpineIAFUnitDataCollector>& dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<SpineIAFUnitDataCollector>& dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }
 
-void SpineIAFUnitDataCollector::duplicate(std::auto_ptr<CG_SpineIAFUnitDataCollector>& dup) const
+void SpineIAFUnitDataCollector::duplicate(std::unique_ptr<CG_SpineIAFUnitDataCollector>& dup) const
 {
   dup.reset(new SpineIAFUnitDataCollector(*this));
 }

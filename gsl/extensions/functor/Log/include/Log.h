@@ -28,9 +28,9 @@ class Log : public CG_LogBase
       double userExecute(LensContext* CG_c);
       Log();
       virtual ~Log();
-      virtual void duplicate(std::auto_ptr<Log>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_LogBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<Log>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_LogBase>& dup) const;
 };
 
 #endif

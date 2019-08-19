@@ -26,12 +26,12 @@ class ReversedSrcRefGaussianWeightModifier : public CG_ReversedSrcRefGaussianWei
 {
    public:
       void userInitialize(LensContext* CG_c, Functor*& f, float& sigma, float& max, int& wrapDistance);
-      std::auto_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       ReversedSrcRefGaussianWeightModifier();
       virtual ~ReversedSrcRefGaussianWeightModifier();
-      virtual void duplicate(std::auto_ptr<ReversedSrcRefGaussianWeightModifier>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_ReversedSrcRefGaussianWeightModifierBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<ReversedSrcRefGaussianWeightModifier>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_ReversedSrcRefGaussianWeightModifierBase>& dup) const;
 
       float _sigma;
       float _max;

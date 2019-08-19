@@ -85,7 +85,7 @@ class GridLayerDescriptor
 			  std::string name, NodeType* nt, 
 			  const NDPairList& ndpl, unsigned granuleMapperIndex);
 
-      void setNodeAccessor(std::auto_ptr<NodeAccessor>&);
+      void setNodeAccessor(std::unique_ptr<NodeAccessor>&);
 
 	  //NOTE: Example Layer declared in GLS
 	  //Layer(layer_name, HodgkinHuxleyVoltage, tissueFunctor("Layout", <nodekind="Branches"),
@@ -93,7 +93,7 @@ class GridLayerDescriptor
       Grid* _grid;
       NodeAccessor* _nodeAccessor;
       std::string _name; //e.g. would be 'layer_name'
-      NodeType* _nt; // point to HodgkinHuxleyVoltage
+      NodeType* _nt; // point to LifeNodeCompCategory, HodgkinHuxleyVoltageCompCategory
       std::vector<int> _densityVector;
       int _uniformDensity;
       NDPairList _ndpList;// this is the information in the last argument passed to 

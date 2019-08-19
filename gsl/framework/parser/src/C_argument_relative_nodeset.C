@@ -36,7 +36,7 @@ C_argument_relative_nodeset::C_argument_relative_nodeset(
       _rel_nodeset = rv._rel_nodeset->duplicate();
    }
    if (rv._rel_nodeset_DI) {
-      std::auto_ptr<DataItem> cc_di;
+      std::unique_ptr<DataItem> cc_di;
       rv._rel_nodeset_DI->duplicate(cc_di);
       _rel_nodeset_DI = dynamic_cast<RelativeNodeSetDataItem*>(
 	 cc_di.release());

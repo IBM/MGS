@@ -26,12 +26,12 @@ GranuleMapperType::GranuleMapperType(Simulation& s, const std::string& name, con
 {
 }
 
-void GranuleMapperType::getInstance(std::auto_ptr<DataItem> & adi, 
+void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      std::vector<DataItem*> const * args, 
 			      LensContext* c)
 {
    GranuleMapperDataItem* di = new GranuleMapperDataItem();
-   std::auto_ptr<GranuleMapper> apgm;
+   std::unique_ptr<GranuleMapper> apgm;
    if (_sim.isGranuleMapperPass() || _sim.isCostAggregationPass()) {
      getGranuleMapper(*args, apgm);
      GranuleMapper* gm = apgm.get();
@@ -46,7 +46,7 @@ void GranuleMapperType::getInstance(std::auto_ptr<DataItem> & adi,
    adi.reset(di);
 }
 
-void GranuleMapperType::getInstance(std::auto_ptr<DataItem> & adi, 
+void GranuleMapperType::getInstance(std::unique_ptr<DataItem> & adi, 
 			      const NDPairList& ndplist,
 			      LensContext* c)
 {

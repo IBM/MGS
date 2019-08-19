@@ -41,7 +41,7 @@ class Repertoire
       std::list<Repertoire*> const & getSubRepertoires() const;
       Repertoire* getSubRepertoire(std::string repName);
       Repertoire* getParentRepertoire() const;
-      void addSubRepertoire(std::auto_ptr<Repertoire> &);
+      void addSubRepertoire(std::unique_ptr<Repertoire> &);
       ConnectionSet* getConnectionSet(GridLayerDescriptor* prePtr, 
 				      GridLayerDescriptor* postPtr);
       std::list<ConnectionSet*> const & getConnectionSetList(

@@ -33,7 +33,7 @@ class CompCategory
       virtual void getWorkUnits() = 0;
 
       // Initializes partitions, pushes work units to the simulation.
-      virtual int initPartitions(int num) = 0;
+      virtual void initPartitions(int numCpuWorkUnits, int numGpuWorkUnits) = 0;
 #if 0
 #ifdef HAVE_MPI
       virtual void resetSendProcessIdIterators() = 0;

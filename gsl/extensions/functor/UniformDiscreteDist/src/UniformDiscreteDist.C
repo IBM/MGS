@@ -39,17 +39,17 @@ UniformDiscreteDist::~UniformDiscreteDist()
 {
 }
 
-void UniformDiscreteDist::duplicate(std::auto_ptr<UniformDiscreteDist>& dup) const
+void UniformDiscreteDist::duplicate(std::unique_ptr<UniformDiscreteDist>& dup) const
 {
    dup.reset(new UniformDiscreteDist(*this));
 }
 
-void UniformDiscreteDist::duplicate(std::auto_ptr<Functor>& dup) const
+void UniformDiscreteDist::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new UniformDiscreteDist(*this));
 }
 
-void UniformDiscreteDist::duplicate(std::auto_ptr<CG_UniformDiscreteDistBase>& dup) const
+void UniformDiscreteDist::duplicate(std::unique_ptr<CG_UniformDiscreteDistBase>& dup) const
 {
    dup.reset(new UniformDiscreteDist(*this));
 }

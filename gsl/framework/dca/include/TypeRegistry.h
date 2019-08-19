@@ -43,7 +43,7 @@ class TypeRegistry : public InstanceFactoryRegistry
 	 Simulation& sim, DependencyParser& dep, 
 	 std::string instanceFactoryName);
       virtual void getQueriable(
-	 std::auto_ptr<InstanceFactoryRegistryQueriable>& dup);
+	 std::unique_ptr<InstanceFactoryRegistryQueriable>& dup);
 
    private:
       TypeManager<T> _typeManager;
@@ -58,7 +58,7 @@ TypeRegistry<T>::TypeRegistry()
 
 template <class T>
 void TypeRegistry<T>::getQueriable(
-   std::auto_ptr<InstanceFactoryRegistryQueriable>& dup)
+   std::unique_ptr<InstanceFactoryRegistryQueriable>& dup)
 {
    dup.reset(new InstanceFactoryRegistryQueriable(this));
 }

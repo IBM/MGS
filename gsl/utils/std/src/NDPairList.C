@@ -40,7 +40,7 @@ NDPairList& NDPairList::operator=(const NDPairList& rv)
    return *this;
 }
 
-void NDPairList::duplicate(std::auto_ptr<NDPairList>& dup) const
+void NDPairList::duplicate(std::unique_ptr<NDPairList>& dup) const
 {
    dup.reset(new NDPairList(*this));
 }
@@ -110,7 +110,7 @@ bool NDPairList::replace(const std::string& name, double value)
   return rval;
 }
 
-bool NDPairList::replace(const std::string& name, std::auto_ptr<DataItem>& di)
+bool NDPairList::replace(const std::string& name, std::unique_ptr<DataItem>& di)
 {
   bool rval=false;
   std::list<NDPair*>::iterator it, end = _data.end();

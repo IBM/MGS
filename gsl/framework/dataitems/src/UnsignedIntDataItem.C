@@ -34,7 +34,7 @@ UnsignedIntDataItem::UnsignedIntDataItem(const UnsignedIntDataItem& DI)
 
 
 // Utility methods
-void UnsignedIntDataItem::duplicate(std::auto_ptr<DataItem> & r_aptr) const
+void UnsignedIntDataItem::duplicate(std::unique_ptr<DataItem> & r_aptr) const
 {
    r_aptr.reset(static_cast<DataItem*> (new UnsignedIntDataItem(*this)));
 }

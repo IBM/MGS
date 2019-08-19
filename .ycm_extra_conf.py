@@ -1,14 +1,20 @@
 import os
 import os.path
-import fnmatch
+# import fnmatch
 import logging
 import ycm_core
+
 
 def intersperse(word, your_list):
     x = [j for i in your_list for j in [word, i]]
     return x
 
+
 ntsroot = os.getenv('NTSROOT', '.')
+
+directory = ntsroot + '/mdl/'
+fold_list = [x[0] for x in os.walk(directory) if 'include' in x[0]]
+gsl_include_fold_list = intersperse('-I', fold_list)
 
 directory = ntsroot + '/gsl/'
 fold_list = [x[0] for x in os.walk(directory) if 'include' in x[0]]
@@ -22,12 +28,21 @@ directory = ntsroot + '/common/'
 fold_list = [x[0] for x in os.walk(directory) if 'include' in x[0]]
 common_include_fold_list = intersperse('-I', fold_list)
 
+# No longer used,
+#        e.g. warning about compatible with C++98
+#    '-Wc++98-compat',
+#        e.g. path to older c++
+#    '-isystem', '/usr/include/c++/4.8/',
+#    '-isystem', '/usr/include/x86_64-linux-gnu/c++/4.8',
+#    '-isystem', '/usr/include/c++/4.8/backward',
+#   '-isystem', '/usr/lib/gcc/x86_64-linux-gnu/4.8/include',
+#   '-isystem', '/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed',
+#   '-isystem', '/usr/include/x86_64-linux-gnu',
 BASE_FLAGS = [
     '-I.',
     '-Wall',
     '-Wextra',
     '-Werror',
-    '-Wc++98-compat',
     '-Wno-long-long',
     '-Wno-variadic-macros',
     '-fexceptions',
@@ -39,20 +54,15 @@ BASE_FLAGS = [
     '-I/usr/include/',
     '-nostdinc',
     '-nostdinc++',
-    '-isystem', '/usr/include/c++/4.8/',
-    '-isystem', '/usr/include/x86_64-linux-gnu/c++/4.8',
-    '-isystem', '/usr/include/c++/4.8/backward',
+    '-isystem', '/packages/gcc/7.3/include/c++/7.3.0/',
     '-isystem', '/usr/local/include',
-    '-isystem', '/usr/lib/gcc/x86_64-linux-gnu/4.8/include',
-    '-isystem', '/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed',
-    '-isystem', '/usr/include/x86_64-linux-gnu',
     '-isystem', '/usr/include',
     '-isystem', '/usr/include/openmpi',
     '-I', '/packages/gmp/6.0.0/include'
 ]
 # NOTE: run to get information
 # g++ -v -E -x c++ -
-#NOTE: from g++
+# NOTE: from g++
 # /packages/cuda/7.5/include
 # /packages/mpc/1.0.2/include
 # /packages/mpfr/3.1.3/include
@@ -65,7 +75,7 @@ BASE_FLAGS = [
 # /usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed
 # /usr/include/x86_64-linux-gnu
 # /usr/include
-#NOTE: from clang++
+# NOTE: from clang++
 #    '-isystem', '/packages/clang/3.6.2/include/c++/v1/',
 # /packages/clang/3.6.2/include
 # /packages/cuda/7.5/include
@@ -101,9 +111,11 @@ HEADER_EXTENSIONS = [
     '.hh'
 ]
 
+
 def IsHeaderFile(filename):
     extension = os.path.splitext(filename)[1]
     return extension in HEADER_EXTENSIONS
+
 
 def GetCompilationInfoForFile(database, filename):
     if IsHeaderFile(filename):
@@ -117,23 +129,25 @@ def GetCompilationInfoForFile(database, filename):
         return None
     return database.GetCompilationInfoForFile(filename)
 
+
 def FindNearest(path, target):
     candidate = os.path.join(path, target)
     if(os.path.isfile(candidate) or os.path.isdir(candidate)):
         logging.info("Found nearest " + target + " at " + candidate)
-        return candidate;
+        return candidate
     else:
-        parent = os.path.dirname(os.path.abspath(path));
+        parent = os.path.dirname(os.path.abspath(path))
         if(parent == path):
-            raise RuntimeError("Could not find " + target);
+            raise RuntimeError("Could not find " + target)
         return FindNearest(parent, target)
+
 
 def MakeRelativePathsInFlagsAbsolute(flags, working_directory):
     if not working_directory:
         return list(flags)
     new_flags = []
     make_next_absolute = False
-    path_flags = [ '-isystem', '-I', '-iquote', '--sysroot=' ]
+    path_flags = ['-isystem', '-I', '-iquote', '--sysroot=']
     for flag in flags:
         new_flag = flag
 
@@ -148,7 +162,7 @@ def MakeRelativePathsInFlagsAbsolute(flags, working_directory):
                 break
 
             if flag.startswith(path_flag):
-                path = flag[ len(path_flag): ]
+                path = flag[len(path_flag):]
                 new_flag = path_flag + os.path.join(working_directory, path)
                 break
 
@@ -162,8 +176,9 @@ def FlagsForClangComplete(root):
         clang_complete_path = FindNearest(root, '.clang_complete')
         clang_complete_flags = open(clang_complete_path, 'r').read().splitlines()
         return clang_complete_flags
-    except:
+    except Exception:
         return None
+
 
 def FlagsForInclude(root):
     try:
@@ -172,17 +187,18 @@ def FlagsForInclude(root):
         for dirroot, dirnames, filenames in os.walk(include_path):
             for dir_path in dirnames:
                 real_path = os.path.join(dirroot, dir_path)
-                flags = flags + ["-I" +real_path]
+                flags = flags + ["-I" + real_path]
         return flags
-    except:
+    except Exception:
         return None
+
 
 def FlagsForCompilationDatabase(root, filename):
     try:
         compilation_db_path = FindNearest(root, 'compile_commands.json')
         compilation_db_dir = os.path.dirname(compilation_db_path)
         logging.info("Set compilation database directory to " + compilation_db_dir)
-        compilation_db =  ycm_core.CompilationDatabase(compilation_db_dir)
+        compilation_db = ycm_core.CompilationDatabase(compilation_db_dir)
         if not compilation_db:
             logging.info("Compilation database file found but unable to load")
             return None
@@ -193,11 +209,12 @@ def FlagsForCompilationDatabase(root, filename):
         return MakeRelativePathsInFlagsAbsolute(
             compilation_info.compiler_flags_,
             compilation_info.compiler_working_dir_)
-    except:
+    except Exception:
         return None
 
+
 def FlagsForFile(filename):
-    root = os.path.realpath(filename);
+    root = os.path.realpath(filename)
     compilation_db_flags = FlagsForCompilationDatabase(root, filename)
     if compilation_db_flags:
         final_flags = compilation_db_flags

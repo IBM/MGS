@@ -195,17 +195,17 @@ CaCurrentDisplay::CaCurrentDisplay() : CG_CaCurrentDisplay(), outFile(0) {}
 
 CaCurrentDisplay::~CaCurrentDisplay() { delete outFile; }
 
-void CaCurrentDisplay::duplicate(std::auto_ptr<CaCurrentDisplay>& dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<CaCurrentDisplay>& dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }
 
-void CaCurrentDisplay::duplicate(std::auto_ptr<Variable>& dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }
 
-void CaCurrentDisplay::duplicate(std::auto_ptr<CG_CaCurrentDisplay>& dup) const
+void CaCurrentDisplay::duplicate(std::unique_ptr<CG_CaCurrentDisplay>& dup) const
 {
   dup.reset(new CaCurrentDisplay(*this));
 }

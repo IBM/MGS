@@ -38,11 +38,10 @@
 
 class DataItem
 {
-
    public:
       enum Error{CONVERSION_OUT_OF_RANGE, LOSS_OF_PRECISION, COORDS_OUT_OF_RANGE};
       DataItem();
-      virtual void duplicate(std::auto_ptr<DataItem> & r_aptr) const =0;
+      virtual void duplicate(std::unique_ptr<DataItem> & r_aptr) const =0;
       virtual const char* getType() const =0;
       virtual std::string getString(Error* error=0) const;
       virtual ~DataItem();

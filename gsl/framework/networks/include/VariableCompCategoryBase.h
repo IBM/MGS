@@ -43,14 +43,14 @@ class VariableCompCategoryBase : public DistributableCompCategoryBase, public Va
       virtual void allocateProxy(int fromPartitionId, VariableDescriptor* vd)=0;
 #endif
       virtual VariableCompCategoryBase* getCompCategoryBase() {return this;}
-      virtual void getInitializationParameterSet(std::auto_ptr<ParameterSet>& initPSet) = 0;
-      virtual void getInAttrParameterSet(std::auto_ptr<ParameterSet>& inAttrPSet) = 0;
-      virtual void getOutAttrParameterSet(std::auto_ptr<ParameterSet>& outAttrPSet) = 0;
-      virtual int initPartitions(int num);
+      virtual void getInitializationParameterSet(std::unique_ptr<ParameterSet>& initPSet) = 0;
+      virtual void getInAttrParameterSet(std::unique_ptr<ParameterSet>& inAttrPSet) = 0;
+      virtual void getOutAttrParameterSet(std::unique_ptr<ParameterSet>& outAttrPSet) = 0;
+      virtual void initPartitions(int numCores, int numGPUs);
 
       // move to CG later
       virtual void getQueriable(
-	 std::auto_ptr<InstanceFactoryQueriable>&  dup);
+	 std::unique_ptr<InstanceFactoryQueriable>&  dup);
 
    protected:
 
