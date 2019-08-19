@@ -20,19 +20,26 @@ Interface ValueProducer {
   int *value;
 }
 
-Interface OutputProducer {
-  double* output;
-}
-
 Interface FloatProducer {
   float* value;
 }
 
+Interface OutputProducer {
+  double* output;
+}
 
 Interface PlasticOutputProducer {
   double* output;
   double* P1;
   double* prePlastic;
+}
+
+Interface ExcitationProducer {
+  float* value;
+}
+
+Interface InhibitionProducer {
+  float* value;
 }
 
 Interface SpikeProducer {
