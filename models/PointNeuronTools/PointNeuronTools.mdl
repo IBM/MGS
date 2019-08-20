@@ -42,7 +42,8 @@ Interface InhibitionProducer {
   float* value;
 }
 
-Interface PermittivityProducer {
+Interface PermittivityProducer 
+{
   float* value;
 }
 
