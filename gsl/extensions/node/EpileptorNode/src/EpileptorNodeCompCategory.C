@@ -8,11 +8,9 @@ EpileptorNodeCompCategory::EpileptorNodeCompCategory(Simulation& sim, const std:
    : CG_EpileptorNodeCompCategory(sim, modelName, ndpList){
 }
 
-
 void EpileptorNodeCompCategory::initializeShared(RNG& rng) 
 {
 #ifdef Proix_et_al_2014
   SHD.y0=1.0;
 #endif
 }
-
