@@ -53,6 +53,10 @@ Interface InhibitionProducer {
   float* value;
 }
 
+Interface PermittivityProducer {
+  float* value;
+}
+
 Interface SpikeProducer {
   bool* spike;
 }
