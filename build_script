@@ -41,10 +41,11 @@ function print_help {
                                   log2 = print out ... during loops
   --regen                       regenerate gsl/Makefile  
   --profile                     generate profile output
-  Third-party libraries:
-  -g|--gpu                      build with GPU extensions (CUDA library)
-  -a|--arma                     build with Armadillo library 
   
+  HETEROGENEOUS ARCHITECTURES:
+  -g|--gpu                      build with GPU extensions
+  -a|--arma                     build with Armadillo extensions
+
   DEFAULT TARGET:
   NO FLAG			build with models/mgs.mdf
 
