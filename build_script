@@ -756,10 +756,10 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean RELEASE="$RELEASE";
-      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
+      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS} 
     fi
   else
-    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
+    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
   fi
   if [ -f .build_error ]; then 
     cd $BASE_FOLDER
@@ -769,7 +769,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
-      make -j $NPROCS RELEASE="$RELEASE"
+      make -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
     fi
     BUILD_FAIL=0
     if [ "$RELEASE" == "-release" ]; then

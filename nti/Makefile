@@ -78,14 +78,20 @@ else # Linux
    CFLAGS  += -MMD
 endif
 
+ifeq ($(USE_SUITESPARSE), 1)
+OTHER_LIBS += -I$(SUITESPARSE)/include -L$(SUITESPARSE)/lib -lcxsparse
+OTHER_LIBS_HEADER += -I$(SUITESPARSE)/include -DUSE_SUITESPARSE
+endif
 STD_UTILS_OBJ_PATH := ../gsl/utils/std/obj
 STD_UTILS_INC_PATH := ../gsl/utils/std/include/
 STD_FACTORIES_INC_PATH := ../gsl/framework/factories/include/
-CFLAGS += -I$(HEADER_DIR) 
+
+CFLAGS += -I$(HEADER_DIR) ${OTHER_LIBS_HEADER}
 #Add support for GMP library
-CFLAGS += -std=c++11 -fPIC -Wno-deprecated-declarations
-LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
-					 -I$(STD_FACTORIES_INC_PATH)
+CFLAGS += -std=c++11 -fPIC -Wno-deprecated-declarations \
+	  -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
+	  -I$(STD_FACTORIES_INC_PATH)
+LDFLAGS += -lgmp -std=c++11 ${OTHER_LIBS} 
 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
