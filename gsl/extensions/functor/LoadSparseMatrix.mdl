@@ -1,0 +1,9 @@
+#ifndef LoadSparseMatrix_MDL
+#define LoadSparseMatrix_MDL
+
+Framework Functor LoadSparseMatrix {
+   Initialize(string filepath, string filename);
+   float[] Execute();
+}
+
+#endif

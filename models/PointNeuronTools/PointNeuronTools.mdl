@@ -214,6 +214,11 @@ Struct Input {
   int col;
 }
 
+Struct EpileptorInput{
+  float* input;
+  float weight;
+}
+
 Struct StructuralInput {
   double* input;
   double weight;

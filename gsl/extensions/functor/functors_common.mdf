@@ -16,6 +16,7 @@
 #include "GetPreNodeIndex.mdl"
 #include "IsoSampler.mdl"
 #include "LoadMatrix.mdl"
+#include "LoadSparseMatrix.mdl"
 #include "Log.mdl"
 #include "ModifyParameterSet.mdl"
 #include "NameReturnValue.mdl"
