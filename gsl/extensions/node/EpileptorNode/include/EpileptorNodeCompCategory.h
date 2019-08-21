@@ -10,6 +10,7 @@ class EpileptorNodeCompCategory : public CG_EpileptorNodeCompCategory
 {
    public:
       EpileptorNodeCompCategory(Simulation& sim, const std::string& modelName, const NDPairList& ndpList);
+      std::map<std::pair<int, int>, float> connectionMap;
 };
 
 #endif

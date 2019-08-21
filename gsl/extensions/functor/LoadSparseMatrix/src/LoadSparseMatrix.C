@@ -6,6 +6,8 @@
 #include <memory>
 #include <fstream>
 
+//#define DBG
+
 void LoadSparseMatrix::userInitialize(LensContext* CG_c, String& filepath, String& filename) 
 {
 }
@@ -67,11 +69,13 @@ ShallowArray<float> LoadSparseMatrix::userExecute(LensContext* CG_c)
   }
   input.close();
   
+  /*
   it = rvals.begin();
   ShallowArray<float>::iterator end = rvals.end();
   for (it; it!= end; it+=3){
     std::cout << static_cast<int>(*it) << " " << static_cast<int>(*(it+1)) << " " << static_cast<float>(*(it+2)) << std::endl;
   }
+  */
   //std::cout<< rval <<std::endl;
   return rvals;
 }
