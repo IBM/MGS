@@ -391,7 +391,6 @@ fi
 cd $BASE_FOLDER/models
 if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
   touch ${MGS_TARGET_FILENAME}
-if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
   echo '// MDL files
 #include "std/std_interfaces.mdl"
 #include "Life/Life.mdl"
