@@ -10,6 +10,10 @@
 #define SHD getSharedMembers()
 #define GAMMA 0.01
 
+#define Naze_et_al_2015
+//#define Proix_et_al_2014
+//#define Proix_et_al_2018
+
 #ifdef HAVE_GPU
 
 #define x1  (_container->um_x1[index])
@@ -28,34 +32,35 @@
 
 void EpileptorNode::initialize(RNG& rng) 
 {
-  
 }
 
 void EpileptorNode::update(RNG& rng) 
 {
-  float t = ITER * SHD.dt;
   float f1 = (x1<0) ? ( (x1*x1*x1)-(3.0*x1*x1) ) : ( (x2-0.6*(z-4.0)*(z-4.0) ) * x1 );
-  float dx1 = y1 - f1 - z + SHD.I1;
-  float dy1 = SHD.y0 - 5*x1*x1 -y1;
-  float dz = (1.0/SHD.tau_0) * (4.0 * (x1-x0) - z);
-  float dg = -GAMMA * (g-0.1*x1); // See Jirsa et al. 2014, Supplementary material
-  float dx2 = -y2 + x2 - x2*x2*x2 + SHD.I2 + 2.0*g - 0.3*(z-3.5);
-  float f2 = (x2<-0.25) ? 0 : (6.0 * (x2+0.25) );
-  float dy2 = (1.0/SHD.tau_2) * (-y2 + f2);
+  dx1 = y1 - f1 - z + SHD.I1;
+  dy1 = SHD.y0 - 5.0*x1*x1 -y1;
 
+#ifdef Proix_et_al_2014
+  float h = SHD.x0 + 3.0/(1.0+exp((-x1-0.5)/0.1));
+  dz = (1.0/SHD.tau_0) * (h-z);
+#elif defined Naze_et_al_2014
+  dz = (1.0/SHD.tau_0) * (4.0 * (x1-x0) - z);
+#endif
+  
+  dg = -GAMMA * (g-0.1*x1); // See Jirsa et al. 2014, Supplementary material
+  dx2 = -y2 + x2 - x2*x2*x2 + SHD.I2 + 2.0*g - 0.3*(z-3.5);
+  float f2 = (x2<-0.25) ? 0 : (6.0 * (x2+0.25) );
+  dy2 = (1.0/SHD.tau_2) * (-y2 + f2);
+}
+
+void EpileptorNode::copy(RNG& rng) 
+{
   x1 += dx1;
   x2 += dx2;
   y1 += dy1;
   y2 += dy2;
   z += dz;
   g += dg;
-}
-
-void EpileptorNode::copy(RNG& rng) 
-{
-  public_x1 = x1;
-  public_x2 = x2;
-  public_z = z;
 }
 
 EpileptorNode::~EpileptorNode() 
