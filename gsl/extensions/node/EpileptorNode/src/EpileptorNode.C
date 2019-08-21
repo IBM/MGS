@@ -14,6 +14,10 @@
 #define SHD getSharedMembers()
 #define GAMMA 0.01
 
+#define Naze_et_al_2015
+//#define Proix_et_al_2014
+//#define Proix_et_al_2018
+
 #ifdef HAVE_GPU
 
 
