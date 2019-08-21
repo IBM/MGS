@@ -80,11 +80,12 @@ endif
 
 STD_UTILS_OBJ_PATH := ../gsl/utils/std/obj
 STD_UTILS_INC_PATH := ../gsl/utils/std/include/
+STD_FACTORIES_INC_PATH := ../gsl/framework/factories/include/
 CFLAGS += -I$(HEADER_DIR) 
 #Add support for GMP library
-CFLAGS += -lgmp -std=c++11 -fPIC -Wno-deprecated-declarations
-LDFLAGS += -shared -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
-					 -I../gsl/framework/factories/include/
+CFLAGS += -std=c++11 -fPIC -Wno-deprecated-declarations
+LDFLAGS += -lgmp -std=c++11 -I../common/include -I./include -I$(STD_UTILS_INC_PATH) \
+					 -I$(STD_FACTORIES_INC_PATH)
 
 
 DEFINES = #-DVERBOSE -DBINARY64BITS
@@ -246,7 +247,7 @@ install: all
 library: ${TISSUE_LIB_OBJECTS}
 	ar rcs $(TISSUE_LIB) \
 	   $(TISSUE_LIB_OBJECTS)
-	$(LD) $(LDFLAGS) -o ${TISSUE_LIB_SHARED} \
+	$(LD) $(LDFLAGS) -o ${TISSUE_LIB_SHARED} --shared \
 	   $(TISSUE_LIB_OBJECTS_UNIQUE)
 
 clean: ; -rm -f $(ND_SHARED_OBJECTS) $(NG_SHARED_OBJECTS) $(NG_OBJECTS) $(ND_OBJECTS) $(TD_OBJECTS) TissueContext.o  $(BIN_DIR)/neuroGen $(BIN_DIR)/neuroDev $(BIN_DIR)/touchDetect $(OBJ_DIR)/*  $(HEADER_DIR)/Model2Use.h.gch
@@ -279,24 +280,22 @@ neuroGen: $(NG_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroGen $(OPT) \
 		$(NG_OBJECTS) \
-		$(LDFLAGS) \
-		$(EXTRA_LD) $(MPI_LIBS)
+		$(COMMON_OBJS)\
+		$(LDFLAGS) $(EXTRA_LD) $(MPI_LIBS)
 
 neuroDev: $(ND_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/neuroDev $(OPT) \
 		$(ND_OBJECTS) \
 		$(COMMON_OBJS)\
-		$(LDFLAGS) \
-		$(EXTRA_LD) $(MPI_LIBS)
+		$(LDFLAGS) $(EXTRA_LD) $(MPI_LIBS)
 
 touchDetect: $(TD_OBJECTS)
 	mkdir -p $(BIN_DIR)
 	$(LD) $(MAKE64) $(DEBUG) -o $(BIN_DIR)/touchDetect $(OPT) \
 		$(TD_OBJECTS) \
 		$(COMMON_OBJS) \
-		$(LDFLAGS) \
-		$(EXTRA_LD) $(MPI_LIBS)
+		$(LDFLAGS) $(EXTRA_LD) $(MPI_LIBS)
 
 $(TISSUE_LIB): $(TISSUE_LIB_OBJECTS)
 		ar rcs $(TISSUE_LIB) \

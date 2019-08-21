@@ -733,7 +733,7 @@ fi
 ################################################
 ### NTI code ###
 #{{{
-if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
+if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] || [[ "$CLEAN" == "-clean" ]] ; then
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   cd $BASE_FOLDER/nti
   if [ -f .build_error ]; then rm .build_error; fi
