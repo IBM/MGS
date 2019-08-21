@@ -40,6 +40,7 @@
 #include <sstream>
 #include <algorithm>
 #include <float.h>
+#define DBG
 
 #define PAR_FILE_INDEX 8
 #define N_BRANCH_TYPES 3
