@@ -7,6 +7,7 @@ export PATH=$NTSROOT/gsl/bin:$PATH
 export GSLPARSER=$NTSROOT/gsl/bin/gslparser
 if [ -f .built ]; then
 sed -i "1s@.*@$NTSROOT@" .built
+sed -i "2s@.*@@" .built
 fi
 #module switch gcc/7.3
 #module switch cuda/9.2
