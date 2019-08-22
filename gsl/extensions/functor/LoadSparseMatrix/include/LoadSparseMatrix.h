@@ -14,9 +14,9 @@ class LoadSparseMatrix : public CG_LoadSparseMatrixBase
       ShallowArray<float> userExecute(LensContext* CG_c);
       LoadSparseMatrix();
       virtual ~LoadSparseMatrix();
-      virtual void duplicate(std::auto_ptr<LoadSparseMatrix>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_LoadSparseMatrixBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<LoadSparseMatrix>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_LoadSparseMatrixBase>& dup) const;
 };
 
 #endif

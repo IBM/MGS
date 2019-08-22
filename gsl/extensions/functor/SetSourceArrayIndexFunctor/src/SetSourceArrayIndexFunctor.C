@@ -18,14 +18,14 @@ void SetSourceArrayIndexFunctor::userInitialize(LensContext* CG_c, Functor*& des
   destinationInAttr->duplicate(_destinationInAttr);
 }
 
-std::auto_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(LensContext* CG_c) 
+std::unique_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(LensContext* CG_c) 
 {
   ConnectionContext* cc = CG_c->connectionContext;
   if (cc->restart) _indexMap.clear();
 
   std::vector<DataItem*> nullArgs;
-  std::auto_ptr<DataItem> inAttrRVal;
-  std::auto_ptr<ParameterSet> rval;
+  std::unique_ptr<DataItem> inAttrRVal;
+  std::unique_ptr<ParameterSet> rval;
   
   _destinationInAttr->execute(CG_c, nullArgs, inAttrRVal);
 
@@ -42,7 +42,7 @@ std::auto_ptr<ParameterSet> SetSourceArrayIndexFunctor::userExecute(LensContext*
   
   NDPairList paramsLocal;
   UnsignedIntDataItem* paramDI = new UnsignedIntDataItem(thisIndex);
-  std::auto_ptr<DataItem> paramDI_ap(paramDI);
+  std::unique_ptr<DataItem> paramDI_ap(paramDI);
   NDPair* ndp = new NDPair("index", paramDI_ap);
   paramsLocal.push_back(ndp);
 
@@ -66,17 +66,17 @@ SetSourceArrayIndexFunctor::~SetSourceArrayIndexFunctor()
 {
 }
 
-void SetSourceArrayIndexFunctor::duplicate(std::auto_ptr<SetSourceArrayIndexFunctor>& dup) const
+void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<SetSourceArrayIndexFunctor>& dup) const
 {
    dup.reset(new SetSourceArrayIndexFunctor(*this));
 }
 
-void SetSourceArrayIndexFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new SetSourceArrayIndexFunctor(*this));
 }
 
-void SetSourceArrayIndexFunctor::duplicate(std::auto_ptr<CG_SetSourceArrayIndexFunctorBase>& dup) const
+void SetSourceArrayIndexFunctor::duplicate(std::unique_ptr<CG_SetSourceArrayIndexFunctorBase>& dup) const
 {
    dup.reset(new SetSourceArrayIndexFunctor(*this));
 }

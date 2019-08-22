@@ -46,9 +46,9 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
    cc->sourceSet = source;
    cc->destinationSet = destination;
    std::vector<DataItem*> nullArgs;
-   std::auto_ptr<DataItem> outAttrRVal;
-   std::auto_ptr<DataItem> inAttrRVal;
-   std::auto_ptr<DataItem> rval;
+   std::unique_ptr<DataItem> outAttrRVal;
+   std::unique_ptr<DataItem> inAttrRVal;
+   std::unique_ptr<DataItem> rval;
 
    // call sampfctr2, which will set source and destination nodes 
    // (and maybe other stuff)
@@ -127,7 +127,7 @@ void BidirectConnectNodeSetsFunctor::userExecute(LensContext* CG_c, NodeSet*& so
       /*
       NDPairList paramsLocal;
       UnsignedIntDataItem* paramDI = new UnsignedIntDataItem(thisIndex);
-      std::auto_ptr<DataItem> paramDI_ap(paramDI);
+      std::unique_ptr<DataItem> paramDI_ap(paramDI);
       NDPair* ndp = new NDPair("index", paramDI_ap);
       paramsLocal.push_back(ndp);
       cc->inAttrPSet->set(paramsLocal);
@@ -157,17 +157,17 @@ BidirectConnectNodeSetsFunctor::~BidirectConnectNodeSetsFunctor()
 {
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::auto_ptr<BidirectConnectNodeSetsFunctor>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<BidirectConnectNodeSetsFunctor>& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::auto_ptr<Functor>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }
 
-void BidirectConnectNodeSetsFunctor::duplicate(std::auto_ptr<CG_BidirectConnectNodeSetsFunctorBase>& dup) const
+void BidirectConnectNodeSetsFunctor::duplicate(std::unique_ptr<CG_BidirectConnectNodeSetsFunctorBase>& dup) const
 {
    dup.reset(new BidirectConnectNodeSetsFunctor(*this));
 }

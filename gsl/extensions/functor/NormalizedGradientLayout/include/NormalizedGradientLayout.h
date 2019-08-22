@@ -14,9 +14,9 @@ class NormalizedGradientLayout : public CG_NormalizedGradientLayoutBase
       ShallowArray< int > userExecute(LensContext* CG_c);
       NormalizedGradientLayout();
       virtual ~NormalizedGradientLayout();
-      virtual void duplicate(std::auto_ptr<NormalizedGradientLayout>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_NormalizedGradientLayoutBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<NormalizedGradientLayout>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_NormalizedGradientLayoutBase>& dup) const;
 };
 
 #endif

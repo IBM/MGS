@@ -14,9 +14,9 @@ class GradientLayout : public CG_GradientLayoutBase
       ShallowArray< int > userExecute(LensContext* CG_c);
       GradientLayout();
       virtual ~GradientLayout();
-      virtual void duplicate(std::auto_ptr<GradientLayout>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_GradientLayoutBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<GradientLayout>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_GradientLayoutBase>& dup) const;
 };
 
 #endif

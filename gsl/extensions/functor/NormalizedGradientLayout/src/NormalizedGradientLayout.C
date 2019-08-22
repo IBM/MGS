@@ -87,17 +87,17 @@ NormalizedGradientLayout::~NormalizedGradientLayout()
 {
 }
 
-void NormalizedGradientLayout::duplicate(std::auto_ptr<NormalizedGradientLayout>& dup) const
+void NormalizedGradientLayout::duplicate(std::unique_ptr<NormalizedGradientLayout>& dup) const
 {
    dup.reset(new NormalizedGradientLayout(*this));
 }
 
-void NormalizedGradientLayout::duplicate(std::auto_ptr<Functor>& dup) const
+void NormalizedGradientLayout::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new NormalizedGradientLayout(*this));
 }
 
-void NormalizedGradientLayout::duplicate(std::auto_ptr<CG_NormalizedGradientLayoutBase>& dup) const
+void NormalizedGradientLayout::duplicate(std::unique_ptr<CG_NormalizedGradientLayoutBase>& dup) const
 {
    dup.reset(new NormalizedGradientLayout(*this));
 }

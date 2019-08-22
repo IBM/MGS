@@ -85,17 +85,17 @@ LoadSparseMatrix::~LoadSparseMatrix()
 {
 }
 
-void LoadSparseMatrix::duplicate(std::auto_ptr<LoadSparseMatrix>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<LoadSparseMatrix>& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }
 
-void LoadSparseMatrix::duplicate(std::auto_ptr<Functor>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<Functor>& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }
 
-void LoadSparseMatrix::duplicate(std::auto_ptr<CG_LoadSparseMatrixBase>& dup) const
+void LoadSparseMatrix::duplicate(std::unique_ptr<CG_LoadSparseMatrixBase>& dup) const
 {
    dup.reset(new LoadSparseMatrix(*this));
 }

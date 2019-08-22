@@ -13,16 +13,16 @@ class SetSourceArrayIndexFunctor : public CG_SetSourceArrayIndexFunctorBase
 {
    public:
       void userInitialize(LensContext* CG_c, Functor*& destinationInAttr);
-      std::auto_ptr<ParameterSet> userExecute(LensContext* CG_c);
+      std::unique_ptr<ParameterSet> userExecute(LensContext* CG_c);
       SetSourceArrayIndexFunctor();
       SetSourceArrayIndexFunctor(SetSourceArrayIndexFunctor const&);
       virtual ~SetSourceArrayIndexFunctor();
-      virtual void duplicate(std::auto_ptr<SetSourceArrayIndexFunctor>& dup) const;
-      virtual void duplicate(std::auto_ptr<Functor>& dup) const;
-      virtual void duplicate(std::auto_ptr<CG_SetSourceArrayIndexFunctorBase>& dup) const;
+      virtual void duplicate(std::unique_ptr<SetSourceArrayIndexFunctor>& dup) const;
+      virtual void duplicate(std::unique_ptr<Functor>& dup) const;
+      virtual void duplicate(std::unique_ptr<CG_SetSourceArrayIndexFunctorBase>& dup) const;
    private:
       std::map<NodeDescriptor*, unsigned> _indexMap;
-      std::auto_ptr<Functor> _destinationInAttr;
+      std::unique_ptr<Functor> _destinationInAttr;
 };
 
 #endif

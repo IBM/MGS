@@ -216,23 +216,6 @@ Interface DataFeed {
   double * x3;
 }
 
-Interface FieldProducer {
-  double* E;
-  double* I;
-}
-
-Interface DiffusionProducer {
-  double* E_diff;
-  double* I_diff;
-}
-
-Interface GoodwinProducer 
-{
-  double* X;
-  double* Y;
-  double* Z;
-}
-
 Interface ActiveMembraneProducer
 {
   double* output;
@@ -284,20 +267,6 @@ Struct SORNSynapseInput {
   double* aPrev;
   double weight;
   bool synapse;
-  int row;
-  int col;
-}
-
-Struct NazeSORNDelayedSynapseInput {
-  bool* spikePrev;
-  bool* spike;
-  double* a;
-  double* aPrev;
-  double weight;
-  bool synapse;
-  int delay;
-  bool[] spikes_circ_buffer;
-  double[] a_circ_buffer;
   int row;
   int col;
 }
