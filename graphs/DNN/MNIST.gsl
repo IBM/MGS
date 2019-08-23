@@ -1,0 +1,153 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initialize };
+RuntimePhases = { updateMNIST, updateNodes, updateEdgeSets(GPU), lastPhase };
+FinalPhases = { finalize };
+
+#define MNIST_DIRECTORY "/home/kozloski/Proprio/mnist_data/"
+#define TRANSFER_FUNCTION "tanh"
+#define N_LABELS 10
+
+NodeType DNNode() {update->updateNodes};
+
+NodeType DNEdgeSet(<
+	eta=0.00025,
+     	alpha=0.3,
+	beta=0.9,
+	optimization = { "Adam" }
+//	optimization = { "Momentum", "RMSprop" } // This is equivalent to Adam
+//	optimization = { "Momentum" }
+//	optimization = { "RMSprop" }
+	>) {update->updateEdgeSets};
+
+NodeType SupervisorNode(<
+	numberOfLabels=N_LABELS,
+	trainingEpochs=20,
+	dataLocation = MNIST_DIRECTORY
+	>) {initializeShared->initialize, updateShared->updateMNIST, update->updateEdgeSets};
+
+ConstantType Bias;
+
+BindName INP("identifier", "input");
+BindName GRD("identifier", "gradient");
+BindName BIS("identifier", "bias");
+
+NdplInAttrInit inp(INP);
+NdplInAttrInit grd(GRD);
+NdplInAttrInit bis(BIS);
+
+SetSourceArrayIndexFunctor input(inp);
+SetSourceArrayIndexFunctor gradient(grd);
+SetSourceArrayIndexFunctor bias(bis);
+
+Grid L1
+{
+   Dimension(28,28);
+   Layer(nodes, DNNode, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), nodeDef);
+   Layer(edgeSets, DNEdgeSet, UniformLayout(1), < nodekind="EdgeSets" > );
+   InitNodes( .[].Layer(edgeSets), Same(Pset < DNEdgeSet, NodeInit > (<transferFunctionName=TRANSFER_FUNCTION>)));
+   connectNodeSets(.[].Layer(nodes), .[].Layer(edgeSets), IsoSampler(), outAttrDef, inp);
+   connectNodeSets(.[].Layer(edgeSets), .[].Layer(nodes), IsoSampler(), outAttrDef, grd);
+};
+
+Grid L2
+{
+   Dimension(14,14);
+   Layer(nodes, DNNode, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), nodeDef);
+   Layer(edgeSets, DNEdgeSet, UniformLayout(1), < nodekind="EdgeSets" > );
+   InitNodes( .[].Layer(edgeSets), Same(Pset < DNEdgeSet, NodeInit > (<transferFunctionName=TRANSFER_FUNCTION>)));
+   connectNodeSets(.[].Layer(nodes), .[].Layer(edgeSets), IsoSampler(), outAttrDef, inp);
+   connectNodeSets(.[].Layer(edgeSets), .[].Layer(nodes), IsoSampler(), outAttrDef, grd);
+};
+
+Grid L3
+{
+   Dimension(100,1);
+   Layer(nodes, DNNode, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), nodeDef);
+   Layer(edgeSets, DNEdgeSet, UniformLayout(1), < nodekind="EdgeSets" > );
+   InitNodes( .[].Layer(edgeSets), Same(Pset < DNEdgeSet, NodeInit > (<transferFunctionName=TRANSFER_FUNCTION>)));
+   connectNodeSets(.[].Layer(nodes), .[].Layer(edgeSets), IsoSampler(), outAttrDef, inp);
+   connectNodeSets(.[].Layer(edgeSets), .[].Layer(nodes), IsoSampler(), outAttrDef, grd);
+};
+
+Grid L4
+{
+   Dimension(N_LABELS,1);
+   Layer(nodes, DNNode, UniformLayout(1), < nodekind="Nodes" >);
+   InitNodes( .[].Layer(nodes), nodeDef);
+};
+
+Grid Supervisor
+{
+   Dimension(N_LABELS,1);
+   Layer(supervisorNodes, SupervisorNode, UniformLayout(1), < nodekind="SupervisorNodes" >);
+   InitNodes( .[].Layer(supervisorNodes), nodeDef);
+};
+
+Grid WeightedBias
+{
+   Dimension(1,1);
+   Layer(edgeSet, DNEdgeSet, UniformLayout(1), < nodekind="EdgeSet" > );
+   InitNodes( .[].Layer(edgeSet), Same(Pset < DNEdgeSet, NodeInit > (<transferFunctionName=TRANSFER_FUNCTION>)));
+   Bias bias < output=1.0 >;
+   polyConnect(bias, .[].Layer(edgeSet), <>, <identifier="bias">);
+};
+
+Composite DNN
+{
+  L1 l1;
+  L2 l2a;
+  //L2 l2b;
+  //L2 l2c;
+  L3 l3;
+  L4 l4;
+
+  WeightedBias b2;
+  WeightedBias b3;
+  WeightedBias b4;
+
+  Supervisor supervisor;
+
+  connectNodeSets(supervisor[0,0].Layer(supervisorNodes), l1[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input);
+  bidirectConnectNodeSets(l1[].Layer(edgeSets), l2a[].Layer(nodes), EachDstPropSrc(RadialDensitySampler(8,3.0,{4.0, 3.0, 1.0})), outAttrDef, input, outAttrDef, grd);
+  //bidirectConnectNodeSets(l1[].Layer(edgeSets), l2b[].Layer(nodes), EachDstPropSrc(RadialDensitySampler(8,4.0,{1.0, 1.0, 2.0, 2.0})), outAttrDef, input, outAttrDef, grd);
+  //bidirectConnectNodeSets(l1[].Layer(edgeSets), l2c[].Layer(nodes), EachDstPropSrc(RadialDensitySampler(8,4.0,{2.0, 1.0, 1.0, 2.0})), outAttrDef, input, outAttrDef, grd);
+  bidirectConnectNodeSets(l2a[].Layer(edgeSets), l3[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  //bidirectConnectNodeSets(l2b[].Layer(edgeSets), l3[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  //bidirectConnectNodeSets(l2c[].Layer(edgeSets), l3[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  bidirectConnectNodeSets(l3[].Layer(edgeSets), l4[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  connectNodeSets(l4[].Layer(nodes), supervisor[].Layer(supervisorNodes), EachSrc(EachAvg(1.0)), outAttrDef, inp);  
+  connectNodeSets(supervisor[].Layer(supervisorNodes), l4[].Layer(nodes), IsoSampler(), outAttrDef, grd);  
+
+  bidirectConnectNodeSets(b2[].Layer(edgeSet), l2a[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  //bidirectConnectNodeSets(b2[].Layer(edgeSet), l2b[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  //bidirectConnectNodeSets(b2[].Layer(edgeSet), l2c[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);
+  bidirectConnectNodeSets(b3[].Layer(edgeSet), l3[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);    
+  bidirectConnectNodeSets(b4[].Layer(edgeSet), l4[].Layer(nodes), EachSrc(EachAvg(1.0)), outAttrDef, input, outAttrDef, grd);    
+};
+
+DNN dnn;
+
+//Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
+UnsignedTrigger endTrig("Iteration Trigger to end or stop",
+			 ::Iteration, "==", 1210001, 0, lastPhase);
+Stop on endTrig;
+
+

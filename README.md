@@ -20,7 +20,9 @@
     env PYTHON_INCLUDE_DIR
   cxsparse library
     env SUITESPARSE
-  
+  mnist (header only) 
+    Download and extract mnist-master.zip from https://github.com/wichtounet/mnist to gsl/utils
+      
 # Container-based build
 ## Step 0
 
