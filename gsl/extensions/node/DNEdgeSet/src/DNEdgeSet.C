@@ -2,6 +2,29 @@
 #include "DNEdgeSet.h"
 #include "CG_DNEdgeSet.h"
 #include "rndm.h"
+#ifdef HAVE_GPU
+#include "CG_DNEdgeSetCompCategory.h"
+#endif
+
+#ifdef HAVE_GPU
+
+#define weights  (_container->um_weights[index])
+#define deltaWeights  (_container->um_deltaWeights[index])
+#define deltaWeightsSquared  (_container->um_deltaWeightsSquared[index])
+#define weightedOutputs  (_container->um_weightedOutputs[index])
+#define weightedGradient  (_container->um_weightedGradient[index])
+#define echoes  (_container->um_echoes[index])
+#define echoIndex  (_container->um_echoIndex[index])
+#define biasCorrectionW  (_container->um_biasCorrectionW[index])
+#define biasCorrectionS  (_container->um_biasCorrectionS[index])
+#define input  (_container->um_input[index])
+#define gradients  (_container->um_gradients[index])
+#define readyForward  (_container->um_readyForward[index])
+#define readyBackward  (_container->um_readyBackward[index])
+#define transferFunctionName  (_container->um_transferFunctionName[index])
+#define momentum  (_container->um_momentum[index])
+#define rmsprop  (_container->um_rmsprop[index])
+#endif
 
 #define PRELIM_STATE DBL_MAX
 #define SMALL_NUMBER 0.00000001
@@ -41,9 +64,9 @@ void DNEdgeSet::update(RNG& rng)
   if (!readyForward)
     readyForward = *input != PRELIM_STATE;
     
-  ShallowArray<double*>::iterator giter, gend = gradients.end();
+  auto gend = gradients.end();
   if (readyForward) {
-    ShallowArray<double>::iterator witer=weights.begin(),
+    auto witer=weights.begin(),
       diter=deltaWeights.begin(),
       siter=deltaWeightsSquared.begin(),
       woiter=weightedOutputs.begin(),
@@ -55,7 +78,7 @@ void DNEdgeSet::update(RNG& rng)
       *woiter = *witer * transferInput;
     }
     if (!readyBackward) {
-      for (giter=gradients.begin(); giter!=gend; ++giter) {
+      for (auto giter=gradients.begin(); giter!=gend; ++giter) {
 	readyBackward = **giter != PRELIM_STATE;
 	if (!readyBackward) {	  
 	  echoes.push_back(transferInput);	  
@@ -68,7 +91,7 @@ void DNEdgeSet::update(RNG& rng)
       assert(getSimulation().getIteration()>0);
       
       witer=weights.begin();      
-      for (giter=gradients.begin(); giter!=gend; ++giter, ++witer, ++diter, ++siter) {
+      for (auto giter=gradients.begin(); giter!=gend; ++giter, ++witer, ++diter, ++siter) {
 	dow +=  *witer * **giter;
 
 	double deltaWeight = echoes[echoIndex] * **giter;

@@ -3,6 +3,18 @@
 #include "CG_DNNode.h"
 #include "rndm.h"
 #include <cfloat>
+#ifdef HAVE_GPU
+#include "CG_DNNodeCompCategory.h"
+#endif
+
+#ifdef HAVE_GPU
+
+#define output  (_container->um_output[index])
+#define gradient  (_container->um_gradient[index])
+#define inputs  (_container->um_inputs[index])
+#define weightedGradient  (_container->um_weightedGradient[index])
+#define ready  (_container->um_ready[index])
+#endif
 
 #define TOASTED
 #ifdef TOASTED

@@ -4,6 +4,20 @@
 #include "rndm.h"
 #include "IsToast.h"
 #include <math.h>
+#ifdef HAVE_GPU
+#include "CG_SupervisorNodeCompCategory.h"
+#endif
+
+#ifdef HAVE_GPU
+
+#define primaryGradient  (_container->um_primaryGradient[index])
+#define predictions  (_container->um_predictions[index])
+#define logits  (_container->um_logits[index])
+#define sumOfSquaredError  (_container->um_sumOfSquaredError[index])
+#define wins  (_container->um_wins[index])
+#define ready  (_container->um_ready[index])
+#endif
+
 
 #define PRELIM_STATE DBL_MAX
 #define SHD getSharedMembers()

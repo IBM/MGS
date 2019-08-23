@@ -1,0 +1,236 @@
+#if  defined(HAVE_GPU)
+void CG_DNEdgeSetCompCategory::CG_host_initialize(NodePartitionItem* arg, CG_DNEdgeSetWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   DNEdgeSet_kernel_initialize<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      um_weights.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_weights.getDataRef()
+      , um_weights_start_offset.getDataRef()
+      , um_weights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_weights.getDataRef()
+      , um_weights_max_elements
+      , um_weights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_weights.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_deltaWeights.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_deltaWeights.getDataRef()
+      , um_deltaWeights_start_offset.getDataRef()
+      , um_deltaWeights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_deltaWeights.getDataRef()
+      , um_deltaWeights_max_elements
+      , um_deltaWeights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_deltaWeights.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_deltaWeightsSquared.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_deltaWeightsSquared.getDataRef()
+      , um_deltaWeightsSquared_start_offset.getDataRef()
+      , um_deltaWeightsSquared_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_deltaWeightsSquared.getDataRef()
+      , um_deltaWeightsSquared_max_elements
+      , um_deltaWeightsSquared_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_deltaWeightsSquared.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_weightedOutputs.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_weightedOutputs.getDataRef()
+      , um_weightedOutputs_start_offset.getDataRef()
+      , um_weightedOutputs_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_weightedOutputs.getDataRef()
+      , um_weightedOutputs_max_elements
+      , um_weightedOutputs_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_weightedOutputs.getDataRef()
+      //need more info here
+      #endif
+
+      , um_weightedGradient.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_echoes.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_echoes.getDataRef()
+      , um_echoes_start_offset.getDataRef()
+      , um_echoes_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_echoes.getDataRef()
+      , um_echoes_max_elements
+      , um_echoes_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_echoes.getDataRef()
+      //need more info here
+      #endif
+
+      , um_echoIndex.getDataRef()
+      , um_biasCorrectionW.getDataRef()
+      , um_biasCorrectionS.getDataRef()
+      , um_input.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_gradients.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_gradients.getDataRef()
+      , um_gradients_start_offset.getDataRef()
+      , um_gradients_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_gradients.getDataRef()
+      , um_gradients_max_elements
+      , um_gradients_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_gradients.getDataRef()
+      //need more info here
+      #endif
+
+      , um_readyForward.getDataRef()
+      , um_readyBackward.getDataRef()
+      , um_transferFunctionName.getDataRef()
+      , um_momentum.getDataRef()
+      , um_rmsprop.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().optimization
+      , getSharedMembers().beta
+      , getSharedMembers().alpha
+      , getSharedMembers().eta
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+
+#if  defined(HAVE_GPU)
+void CG_DNEdgeSetCompCategory::CG_host_update(NodePartitionItem* arg, CG_DNEdgeSetWorkUnitInstance* wu) 
+{
+   //int BLOCKS= _nodes.size();
+   //int THREADS_PER_BLOCK = 1;
+   int THREADS_PER_BLOCK= 256;
+   int BLOCKS= ceil((float)_nodes.size() / THREADS_PER_BLOCK);
+   DNEdgeSet_kernel_update<<< BLOCKS, THREADS_PER_BLOCK >>> (
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      um_weights.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_weights.getDataRef()
+      , um_weights_start_offset.getDataRef()
+      , um_weights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_weights.getDataRef()
+      , um_weights_max_elements
+      , um_weights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_weights.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_deltaWeights.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_deltaWeights.getDataRef()
+      , um_deltaWeights_start_offset.getDataRef()
+      , um_deltaWeights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_deltaWeights.getDataRef()
+      , um_deltaWeights_max_elements
+      , um_deltaWeights_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_deltaWeights.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_deltaWeightsSquared.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_deltaWeightsSquared.getDataRef()
+      , um_deltaWeightsSquared_start_offset.getDataRef()
+      , um_deltaWeightsSquared_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_deltaWeightsSquared.getDataRef()
+      , um_deltaWeightsSquared_max_elements
+      , um_deltaWeightsSquared_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_deltaWeightsSquared.getDataRef()
+      //need more info here
+      #endif
+
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_weightedOutputs.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_weightedOutputs.getDataRef()
+      , um_weightedOutputs_start_offset.getDataRef()
+      , um_weightedOutputs_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_weightedOutputs.getDataRef()
+      , um_weightedOutputs_max_elements
+      , um_weightedOutputs_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_weightedOutputs.getDataRef()
+      //need more info here
+      #endif
+
+      , um_weightedGradient.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_echoes.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_echoes.getDataRef()
+      , um_echoes_start_offset.getDataRef()
+      , um_echoes_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_echoes.getDataRef()
+      , um_echoes_max_elements
+      , um_echoes_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_echoes.getDataRef()
+      //need more info here
+      #endif
+
+      , um_echoIndex.getDataRef()
+      , um_biasCorrectionW.getDataRef()
+      , um_biasCorrectionS.getDataRef()
+      , um_input.getDataRef()
+      #if DATAMEMBER_ARRAY_ALLOCATION == OPTION_3
+      , um_gradients.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4
+      , um_gradients.getDataRef()
+      , um_gradients_start_offset.getDataRef()
+      , um_gradients_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_4b
+      , um_gradients.getDataRef()
+      , um_gradients_max_elements
+      , um_gradients_num_elements.getDataRef()
+      #elif DATAMEMBER_ARRAY_ALLOCATION == OPTION_5
+      , um_gradients.getDataRef()
+      //need more info here
+      #endif
+
+      , um_readyForward.getDataRef()
+      , um_readyBackward.getDataRef()
+      , um_transferFunctionName.getDataRef()
+      , um_momentum.getDataRef()
+      , um_rmsprop.getDataRef()
+      , _nodes.size()
+      , getSharedMembers().optimization
+      , getSharedMembers().beta
+      , getSharedMembers().alpha
+      , getSharedMembers().eta
+   );
+   gpuErrorCheck( cudaPeekAtLastError() );
+}
+#endif
+

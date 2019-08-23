@@ -19,6 +19,7 @@
 #include <sstream>
 #include <cassert>
 #include <iostream>
+#include <math.h>
 
 #ifndef TOAST_OFF
 #define ISTOAST(x) if(isToast(x, (getSimulation().getIteration()))){assert(0);}
@@ -29,11 +30,11 @@
 template<class T> bool isToast(T f, int i)
 {
   bool rval=false;
-  if (isnan(f)) {
+  if (std::isnan(f)) {
     std::cerr<<"NaN detected at mark "<<i<<"!!"<<std::endl;
     rval=true;
   }
-  if (isinf(f)) {
+  if (std::isinf(f)) {
     std::cerr<<"INF detected at mark "<<i<<"!!"<<std::endl;
     rval=true;
   }
@@ -42,11 +43,11 @@ template<class T> bool isToast(T f, int i)
 
 template<class T> void isToast(T f)
 {
-  if (isnan(f)) {
+  if (std::isnan(f)) {
     std::cerr<<"NaN detected!!"<<std::endl;
     assert(0);
   }
-  if (isinf(f)) {
+  if (std::isinf(f)) {
     std::cerr<<"INF detected!!"<<std::endl;
     assert(0);
   }
