@@ -10,6 +10,7 @@ class TransferFunction
      TransferFunction() {}
      double (*transfer) (double);
      double (*derivativeOfTransfer) (double);
+     double (*identity) (double);
      
      void setType(String type) {
        if (type == "tanh") {
@@ -19,6 +20,10 @@ class TransferFunction
        else if (type == "relu") {
 	 transfer = &relu;
 	 derivativeOfTransfer = &drelu;
+       }
+       else if (type == "identity") {
+	 transfer = &identity;
+	 derivativeOfTransfer = &didentity;
        }
        else {
 	 std::cerr << "Unrecognized transfer function!" << std::endl;
@@ -37,6 +42,14 @@ class TransferFunction
 
      static double drelu(double _relu_) {
        return ( (_relu_>0) ? 1.0 : 0.0 );
+     }
+     
+     static double identity(double input) {
+       return ( input );
+     }
+	  
+     static double drelu(double _identity_) {
+       return ( 0.0 );
      }
 };
 

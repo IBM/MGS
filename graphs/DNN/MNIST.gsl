@@ -15,7 +15,7 @@
 
 #include "../std/std.gsl"
 InitPhases = { initialize };
-RuntimePhases = { updateMNIST, updateNodes, updateEdgeSets(GPU), lastPhase };
+RuntimePhases = { updateMNIST, updateNodes, updateEdgeSets, lastPhase };
 FinalPhases = { finalize };
 
 #define MNIST_DIRECTORY "/home/kozloski/Proprio/mnist_data/"
@@ -36,7 +36,7 @@ NodeType DNEdgeSet(<
 
 NodeType SupervisorNode(<
 	numberOfLabels=N_LABELS,
-	trainingEpochs=20,
+	trainingEpochs=10,
 	dataLocation = MNIST_DIRECTORY
 	>) {initializeShared->initialize, updateShared->updateMNIST, update->updateEdgeSets};
 
@@ -147,7 +147,7 @@ DNN dnn;
 
 //Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay, string phaseName);
 UnsignedTrigger endTrig("Iteration Trigger to end or stop",
-			 ::Iteration, "==", 1210001, 0, lastPhase);
+			 ::Iteration, "==", 610001, 0, lastPhase);
 Stop on endTrig;
 
 
