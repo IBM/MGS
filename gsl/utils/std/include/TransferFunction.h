@@ -10,7 +10,6 @@ class TransferFunction
      TransferFunction() {}
      double (*transfer) (double);
      double (*derivativeOfTransfer) (double);
-     double (*identity) (double);
      
      void setType(String type) {
        if (type == "tanh") {
@@ -48,9 +47,9 @@ class TransferFunction
        return ( input );
      }
 	  
-     static double drelu(double _identity_) {
+     static double didentity(double input) {
        return ( 0.0 );
-     }
+     }	  
 };
 
 #endif
