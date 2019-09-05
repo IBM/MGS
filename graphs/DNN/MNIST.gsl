@@ -101,13 +101,14 @@ Grid Supervisor
    InitNodes( .[].Layer(supervisorNodes), nodeDef);
 };
 
+Bias biasInput < output=1.0 >;
+
 Grid WeightedBias
 {
    Dimension(1,1);
    Layer(edgeSet, DNEdgeSet, UniformLayout(1), < nodekind="EdgeSet" > );
    InitNodes( .[].Layer(edgeSet), Same(Pset < DNEdgeSet, NodeInit > (<transferFunctionName=TRANSFER_FUNCTION>)));
-   Bias bias < output=1.0 >;
-   polyConnect(bias, .[].Layer(edgeSet), <>, <identifier="bias">);
+   polyConnect(biasInput, .[].Layer(edgeSet), <>, <identifier="bias">);
 };
 
 Composite DNN

@@ -63,6 +63,7 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
    double biasCorrectionW;
    double biasCorrectionS;
 
+   //double* bias;
    double* input;
    double* [] gradients;
 
@@ -97,6 +98,7 @@ Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
 
    Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
       ForwardProducer.forward >> input;
+      //ForwardProducer.forward >> bias;
    }
 
    Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {

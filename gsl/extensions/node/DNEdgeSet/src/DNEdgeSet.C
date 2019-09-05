@@ -32,6 +32,12 @@
 
 void DNEdgeSet::initialize(RNG& rng) 
 {
+  /*
+  if (bias) {
+    std::cerr<<*bias<<std::endl;
+    input=bias;
+  }
+  */
   unsigned sz = gradients.size();
 
   weightedOutputs.increaseSizeTo(sz);
