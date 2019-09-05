@@ -144,17 +144,17 @@ NazeSORNUnitDataCollector::~NazeSORNUnitDataCollector()
 {
 }
 
-void NazeSORNUnitDataCollector::duplicate(std::auto_ptr<NazeSORNUnitDataCollector>& dup) const
+void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<NazeSORNUnitDataCollector>& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollector(*this));
 }
 
-void NazeSORNUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollector(*this));
 }
 
-void NazeSORNUnitDataCollector::duplicate(std::auto_ptr<CG_NazeSORNUnitDataCollector>& dup) const
+void NazeSORNUnitDataCollector::duplicate(std::unique_ptr<CG_NazeSORNUnitDataCollector>& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollector(*this));
 }

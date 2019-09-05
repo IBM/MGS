@@ -133,17 +133,17 @@ ZhengSORNUnitDataCollectorSuppl::~ZhengSORNUnitDataCollectorSuppl()
 {
 }
 
-void ZhengSORNUnitDataCollectorSuppl::duplicate(std::auto_ptr<ZhengSORNUnitDataCollectorSuppl>& dup) const
+void ZhengSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<ZhengSORNUnitDataCollectorSuppl>& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollectorSuppl(*this));
 }
 
-void ZhengSORNUnitDataCollectorSuppl::duplicate(std::auto_ptr<Variable>& dup) const
+void ZhengSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollectorSuppl(*this));
 }
 
-void ZhengSORNUnitDataCollectorSuppl::duplicate(std::auto_ptr<CG_ZhengSORNUnitDataCollectorSuppl>& dup) const
+void ZhengSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<CG_ZhengSORNUnitDataCollectorSuppl>& dup) const
 {
    dup.reset(new ZhengSORNUnitDataCollectorSuppl(*this));
 }

@@ -162,17 +162,17 @@ FSIIAFUnitDataCollector::~FSIIAFUnitDataCollector()
 {
 }
 
-void FSIIAFUnitDataCollector::duplicate(std::auto_ptr<FSIIAFUnitDataCollector>& dup) const
+void FSIIAFUnitDataCollector::duplicate(std::unique_ptr<FSIIAFUnitDataCollector>& dup) const
 {
   dup.reset(new FSIIAFUnitDataCollector(*this));
 }
 
-void FSIIAFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void FSIIAFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new FSIIAFUnitDataCollector(*this));
 }
 
-void FSIIAFUnitDataCollector::duplicate(std::auto_ptr<CG_FSIIAFUnitDataCollector>& dup) const
+void FSIIAFUnitDataCollector::duplicate(std::unique_ptr<CG_FSIIAFUnitDataCollector>& dup) const
 {
   dup.reset(new FSIIAFUnitDataCollector(*this));
 }

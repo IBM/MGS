@@ -133,17 +133,17 @@ NazeSORNUnitDataCollectorSuppl::~NazeSORNUnitDataCollectorSuppl()
 {
 }
 
-void NazeSORNUnitDataCollectorSuppl::duplicate(std::auto_ptr<NazeSORNUnitDataCollectorSuppl>& dup) const
+void NazeSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<NazeSORNUnitDataCollectorSuppl>& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollectorSuppl(*this));
 }
 
-void NazeSORNUnitDataCollectorSuppl::duplicate(std::auto_ptr<Variable>& dup) const
+void NazeSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollectorSuppl(*this));
 }
 
-void NazeSORNUnitDataCollectorSuppl::duplicate(std::auto_ptr<CG_NazeSORNUnitDataCollectorSuppl>& dup) const
+void NazeSORNUnitDataCollectorSuppl::duplicate(std::unique_ptr<CG_NazeSORNUnitDataCollectorSuppl>& dup) const
 {
    dup.reset(new NazeSORNUnitDataCollectorSuppl(*this));
 }

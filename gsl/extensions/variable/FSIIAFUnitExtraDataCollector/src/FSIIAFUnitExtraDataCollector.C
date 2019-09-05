@@ -292,17 +292,17 @@ FSIIAFUnitExtraDataCollector::~FSIIAFUnitExtraDataCollector()
 {
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::auto_ptr<FSIIAFUnitExtraDataCollector>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<FSIIAFUnitExtraDataCollector>& dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
 
-void FSIIAFUnitExtraDataCollector::duplicate(std::auto_ptr<CG_FSIIAFUnitExtraDataCollector>& dup) const
+void FSIIAFUnitExtraDataCollector::duplicate(std::unique_ptr<CG_FSIIAFUnitExtraDataCollector>& dup) const
 {
   dup.reset(new FSIIAFUnitExtraDataCollector(*this));
 }
