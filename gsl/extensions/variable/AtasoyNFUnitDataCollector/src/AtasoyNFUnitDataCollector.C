@@ -24,17 +24,17 @@ AtasoyNFUnitDataCollector::~AtasoyNFUnitDataCollector()
 {
 }
 
-void AtasoyNFUnitDataCollector::duplicate(std::auto_ptr<AtasoyNFUnitDataCollector>& dup) const
+void AtasoyNFUnitDataCollector::duplicate(std::unique_ptr<AtasoyNFUnitDataCollector>& dup) const
 {
    dup.reset(new AtasoyNFUnitDataCollector(*this));
 }
 
-void AtasoyNFUnitDataCollector::duplicate(std::auto_ptr<Variable>& dup) const
+void AtasoyNFUnitDataCollector::duplicate(std::unique_ptr<Variable>& dup) const
 {
    dup.reset(new AtasoyNFUnitDataCollector(*this));
 }
 
-void AtasoyNFUnitDataCollector::duplicate(std::auto_ptr<CG_AtasoyNFUnitDataCollector>& dup) const
+void AtasoyNFUnitDataCollector::duplicate(std::unique_ptr<CG_AtasoyNFUnitDataCollector>& dup) const
 {
    dup.reset(new AtasoyNFUnitDataCollector(*this));
 }
