@@ -41,22 +41,24 @@
 #include <algorithm>
 #include <float.h>
 
+//#define DBG
+
 #define PAR_FILE_INDEX 8
 #define N_BRANCH_TYPES 3
 
 void print_help() {
-  std::cout << "USAGE:" << std::endl;
-  std::cout << std::endl;
-  std::cout << "./neuroGen [-tissue tissuefile] [-par parameterfilename] "
+  std::cerr << "USAGE:" << std::endl;
+  std::cerr << std::endl;
+  std::cerr << "./neuroGen [-tissue tissuefile] [-par parameterfilename_1 parameterfilename_2 parameterfilename_3] "
                "[-stdout] [-n]" << std::endl;
-  std::cout << "Example1: ./neuroGen -tissue \"minicolumn.txt\" " << std::endl;
-  std::cout << "Example2: (no tissue file, just one parameter filename for one "
-               "neuron): ./neuroGen -par \"params.txt\"" << std::endl;
+  std::cerr << "Example1: ./neuroGen -tissue \"minicolumn.txt\" " << std::endl;
+  std::cerr << "Example2: (no tissue file, just three parameter filenames for one "
+               "neuron): ./neuroGen -par \"params_1.txt params_2.txt params_3.txt\"" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
 #ifdef DBG
-  std::cout << "Hello from neuroGen: " << argv[0] << std::endl;
+  std::cerr << "Hello from neuroGen: " << argv[0] << std::endl;
 #endif
   int rank, size;
 
@@ -73,6 +75,10 @@ int main(int argc, char* argv[]) {
   std::vector<double> complexities;
   int neuronBegin = 0, neuronEnd = 0;
   RNG rng;
+
+#ifdef DBG
+  std::cerr << "Entering branch generation... " << argv[0] << std::endl;
+#endif
 
   for (int branchType = 0; branchType < N_BRANCH_TYPES;
        ++branchType) {  // 0:axon, 1:basal, 2:apical
@@ -99,6 +105,9 @@ int main(int argc, char* argv[]) {
     }
     for (int i = 1; i < argc; i++) {
       std::string sCurrentArg = argv[i];
+#ifdef DBG
+      std::cerr<<sCurrentArg<<std::endl;
+#endif      
       if ((sCurrentArg == "-?") || (sCurrentArg == "-help") ||
           (sCurrentArg == "-info")) {
         print_help();
@@ -106,27 +115,28 @@ int main(int argc, char* argv[]) {
         exit(0);
       }
       if ((sCurrentArg == "-par")) {
-        baseParFileName = argv[i + 1 + branchType];
+	assert(argc>=i+3);
+	baseParFileName = argv[i + 1 + branchType];
         for (int bt = 1; bt <= N_BRANCH_TYPES; ++bt) {
           // the last par file from axon, denda, dendb, will be the base name
           // from the new swc file, contcatenating all outputs
-		  if (std::string(argv[i+bt]) != "NULL") {
+	  if (std::string(argv[i+bt]) != "NULL") {
           //if (strcmp(argv[i + bt], "NULL")) {
             swcFileName = argv[i + bt];
             break;
           }
         }
-
+	parFile = false;
         if (baseParFileName != "NULL") parFile = true;
 #ifndef _SILENT_
-        std::cout << "Parameter file name: " << baseParFileName << std::endl;
+        std::cerr << "Parameter file name: " << baseParFileName << std::endl;
 #endif
-        i += N_BRANCH_TYPES;
+	i += N_BRANCH_TYPES;
       } else if ((sCurrentArg == "-tissue")) {
         btissueFile = true;
         tissueFileName = argv[i + 1];
 #ifndef _SILENT_
-        std::cout << "Tissue file name: " << tissueFileName << std::endl;
+        std::cerr << "Tissue file name: " << tissueFileName << std::endl;
 #endif
         if (branchType == 0) {
           // only need to do the following once per neuron
@@ -223,11 +233,12 @@ int main(int argc, char* argv[]) {
     NeurogenParams** params = 0;
     std::vector<std::string> fileNames;
     // char** fileNames=0;
+    /*
     if (branchType == 0) {
       NeurogenParams params_p(baseParFileName, rank);
       rng.reSeed(lrandom(params_p._rng), rank);
     }
-
+    */
     if (!btissueFile) {  // if there is no tissue file but just a parameter file
                          // to create only 1 neuron.
       if (parFile) {
@@ -249,7 +260,6 @@ int main(int argc, char* argv[]) {
         int neuronEnd =
             int(floor(double(rank + 1) * double(N) / double(size))) - 1;
         nNeuronsGenerated = neuronEnd - neuronBegin + 1;
-
         if (nNeuronsGenerated > 0) {
           params = new NeurogenParams* [nNeuronsGenerated];
           // fileNames = new char* [nNeuronsGenerated];
@@ -330,7 +340,7 @@ int main(int argc, char* argv[]) {
               std::vector<std::string> results(it, end);
 #ifdef DBG
               for (int j = 0; j < results.size(); j++)
-                std::cout << results[j] << std::endl;
+                std::cerr << results[j] << std::endl;
 #endif
               /*
   fileNames[idx] = new char[results.at(0).length()];

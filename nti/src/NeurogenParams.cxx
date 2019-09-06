@@ -22,7 +22,7 @@
 
 #include "NeurogenParams.h"
 #include <math.h>
-
+//#define DBG
 
 NeurogenParams::NeurogenParams(int rank) 
   :  startX(0),              // X-coordinate of the very first point of the Soma
@@ -133,10 +133,14 @@ void NeurogenParams::load(std::string fileName, int rank)
   if (myfile.is_open()) {
     while ( myfile.good() ) {
       getline (myfile, line);
-      //std::cout << line << std::endl;
+#ifdef DBG
+      std::cerr << line << std::endl;
+#endif
       if (line!="" && line.at(0)!='#') nrParLines++;
     }
-    //std::cout << "Nr of Parameter Lines read from input file: " << nrParLines << std::endl;
+#ifdef DBG
+    std::cerr << "Nr of Parameter Lines read from input file: " << nrParLines << std::endl;
+#endif
   }
   myfile.clear();
   myfile.seekg(0, std::ios_base::beg);
@@ -145,14 +149,18 @@ void NeurogenParams::load(std::string fileName, int rank)
   if (myfile.is_open()) {
     while (myfile.good() && i<nrParLines) {
       getline (myfile,line);
-      // std::cout << line << std::endl;
+#ifdef DBG
+      std::cerr << line << std::endl;
+#endif
       if (line.at(0)!='#') {
 	parLines[i] = line;
 	i++;
       }     
     }
-    //std::cout << parLines[0] << std::endl;
-    //std::cout << "Done Reading Parameter FIle" << std::endl;
+#ifdef DBG
+    std::cerr << parLines[0] << std::endl;
+    std::cerr << "Done Reading Parameter File" << std::endl;
+#endif
   }
   myfile.clear();
   myfile.close();
@@ -218,10 +226,11 @@ void NeurogenParams::load(std::string fileName, int rank)
     delete [] parLines;
   }
   else if (fileName!="NULL") {
-    std::cout << "Warning! Problem with the parameter file "<<fileName<<"! Using default parameters..." << std::endl;
+    std::cerr << "Warning! Problem with the parameter file "<<fileName<<"! Using default parameters..." << std::endl;
   }
   _rng.reSeed(RandSeed, _rank);
   convertDegreesToRadians();
+  printParams();
 }
 
 void NeurogenParams::printParams()

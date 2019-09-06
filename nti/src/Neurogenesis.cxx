@@ -416,8 +416,9 @@ void Neurogenesis::extendNeurites(int threadID, NeurogenParams* params) {
   ThreadData& data = _threadData[threadID];
   NeurogenParams params_p = *params;
 
-  if (params->terminalField != "NULL")
+  if (params->terminalField != "NULL") {
     params_p.load(params->terminalField, params->_rank);
+  }
   int b = 0;
   for (int i = 1; i < data.nrSegments; ++i) {
     if (data.Segments[i].isNeuriteOrigin()) {
