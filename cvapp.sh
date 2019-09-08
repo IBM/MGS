@@ -1,3 +1,3 @@
 #!/bin/bash
-cd ~/tools
+cd ~/tools/cvapp1.0
 java cvapp &
