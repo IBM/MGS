@@ -24,11 +24,6 @@ Node DNNode Implements ForwardProducer, BackwardProducer {
    double* weightedGradient;
    bool ready;
    
-   EdgeSetInput [] inputs;
-   double* bias;
-   double* weightedGradient;
-   bool ready;
-   
    InitPhase initialize();
    RuntimePhase update(output, gradient);
 
