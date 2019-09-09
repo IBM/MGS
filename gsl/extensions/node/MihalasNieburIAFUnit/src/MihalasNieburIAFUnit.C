@@ -40,7 +40,7 @@ void MihalasNieburIAFUnit::initialize(RNG& rng)
   Theta_p.increaseSizeTo(2);
   for (int n=0; n<nI; ++n) I[n]=I_p[0][n]=I_p[1][n]=dI[n]=0;
   for (int n=0; n<2; ++n) V_p[n]=Theta_p[n]=0;
- }
+}
 
 void MihalasNieburIAFUnit::update(RNG& rng) 
 {

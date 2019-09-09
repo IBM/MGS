@@ -163,8 +163,8 @@ void MihalasNieburSynapseIAFUnitDataCollector::finalize(RNG& rng)
   
   if (op_saveSpikes)
     {
-      spikes_file->close();
-      delete spikes_file;
+      spike_file->close();
+      delete spike_file;
     }
 }
 

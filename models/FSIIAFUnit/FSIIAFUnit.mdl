@@ -30,7 +30,6 @@ Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
    bool spike;               // currentspike
    float V_spike;            // V with spike
    unsigned spike_cnt;       // counts the duration of the spike
-   double I_e;               // total input
    
    Input [] ctxInputs;       // delta input from cortex
    double ctxInputWeight;    // if this node receives multiple ctx inputs

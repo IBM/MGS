@@ -101,13 +101,6 @@ void FSIIAFUnit::updateInput(RNG& rng)
 }
 
 void FSIIAFUnit::updateV(RNG& rng)
-{
-  // Neuron
-  I_e = driver + s_total + etonic; // total input
-  LFP_synapses = s_total;
-}
-
-void TraubIAFUnit::updateV(RNG& rng)
 {  // Neuron
   int nI=I.size();
   I_sum = 0.0;

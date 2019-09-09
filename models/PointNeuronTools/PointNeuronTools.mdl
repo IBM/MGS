@@ -110,13 +110,6 @@ Interface NazeSORNDelayedSpikeProducer {
   double* aPrev;
 }
 
-Interface NazeSORNDelayedSpikeProducer {
-  bool* spikePrev;
-  bool* spike;
-  double* a;
-  double* aPrev;
-}
-
 Interface WaveProducer
 {
   double* wave;
@@ -199,6 +192,16 @@ Interface MotoneuronProducer {
   */
 }
 
+Interface DiffusionProducer {
+  double* E_diff;
+  double* I_diff;
+}
+	
+Interface FieldProducer {
+  double* E;
+  double* I;
+}
+	
 Interface ReceptiveFieldProducer {
   double* output;
 }
