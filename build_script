@@ -42,10 +42,10 @@ function print_help {
   --regen                       regenerate gsl/Makefile  
   --profile                     generate profile output
   
-  HETEROGENEOUS ARCHITECTURES:
-  -g|--gpu                      build with GPU extensions
-  -a|--arma                     build with Armadillo extensions
-
+  Third-party libraries:
+  -g|--gpu                      build with GPU extensions (CUDA library)
+  -a|--arma                     build with Armadillo library 
+  
   DEFAULT TARGET:
   NO FLAG			build with models/mgs.mdf
 
