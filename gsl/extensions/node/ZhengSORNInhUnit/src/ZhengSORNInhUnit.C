@@ -27,6 +27,7 @@
 void ZhengSORNInhUnit::initialize(RNG& rng) 
 {
   spike=false;
+  ya = drandom(rng) * ( (drandom(rng)<0.2) ? 1.0 : 0.0 );
   TI = drandom(rng)*SHD.TI_max;
 
   double sumE=0;
@@ -50,6 +51,7 @@ void ZhengSORNInhUnit::fire(RNG& rng)
 {
   spikePrev=spike;
   spike=(y>0);
+  ya = SHD.tau_STDP * ( (y>0) ? 1.0 : 0.0 );
 }
 
 void ZhengSORNInhUnit::setIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNInhUnitInAttrPSet* CG_inAttrPset, CG_ZhengSORNInhUnitOutAttrPSet* CG_outAttrPset) 

@@ -15,12 +15,12 @@
 
 #include "../std/std.gsl"
 InitPhases = { initialize };
-RuntimePhases = { dataCollect, update, copy, outputWeightsShared, lastPhase };
+RuntimePhases = { update, copy, outputWeightsShared, dataCollect, lastPhase };
 FinalPhases = { finalize };
 
 #define DIRECTORY "./"
 #define FILE_EXTENSION ".dat"
-#define BINARY 1
+#define BINARY 0
 
 NodeType RabinovichWinnerlessUnit(<
      	a=0.7,
@@ -80,7 +80,7 @@ Winnerless winnerless;
 // DCA directives here
 VariableType RabinovichWinnerlessUnitDataCollector;
 RabinovichWinnerlessUnitDataCollector collector<binary=BINARY, directory=DIRECTORY, fileExt=FILE_EXTENSION,
-  op_saveX=1>;
+  op_saveX=1, fileName="test">;
 
 polyConnect(winnerless[].Layer(nodes), collector, <>, <>);
 
@@ -90,7 +90,7 @@ Trigger CompositeTrigger(string description, Trigger triggerA, int critA, string
 UnsignedTrigger iterTrig("Iteration Trigger : >= 1 ",
  			 ::Iteration, ">=", 1, 0, dataCollect);
 UnsignedTrigger endTrig("Iteration Trigger to end or stop",
-			 ::Iteration, "==", 1000000, 0, lastPhase);
+			 ::Iteration, "==", 1000, 0, lastPhase);
 collector.dataCollection() on iterTrig;
 Stop on endTrig;
 

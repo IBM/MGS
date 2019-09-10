@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <utility>
 
 void ZhengSORNUnitDataCollector::initialize(RNG& rng) 
 {
@@ -47,27 +48,82 @@ void ZhengSORNUnitDataCollector::initialize(RNG& rng)
     }
   }
 
-  // Create the output file...
-  file=new std::ofstream(fileName.c_str());
-  std::ofstream& output=*file;
-  output<<mxrow+1<<" "<<mxcol+1<<std::endl<<std::endl;
+  // Create the output files...
+  std::ostringstream sysCall;
+  sysCall<<"mkdir -p "<<directory.c_str()<<";";
+  try {
+    int systemRet = system(sysCall.str().c_str());
+    if (systemRet == -1)
+      throw;
+  } catch(...) {};
+
+  std::ostringstream os_spikes;
+
+  int Xdim = (int) mxrow+1;
+  int Ydim = (int) mxcol+1;
+  //int Zdim = (int) mxrow+1;    
+  
+  if (op_saveSpikes)
+    {
+      os_spikes<<directory<<fileName<<fileExt;
+      if (binary)
+        {          
+          spikesFile = new std::ofstream(os_spikes.str().c_str(), std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+          spikesFile->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));
+          spikesFile->write(reinterpret_cast<char *>(&Ydim), sizeof(Ydim));
+          //X_file->write(reinterpret_cast<char *>(&Zdim), sizeof(Zdim));
+        }
+      else
+        {
+          spikesFile = new std::ofstream(os_spikes.str().c_str());
+          std::ofstream& output = *spikesFile;
+          output << mxrow+1 << " " << mxcol+1 << std::endl << std::endl;          
+        }
+    }
 }
 
 void ZhengSORNUnitDataCollector::finalize(RNG& rng) 
 {
-  file->close();
-  delete file;
+  spikesFile->close();
+  delete spikesFile;
 }
 
 void ZhengSORNUnitDataCollector::dataCollection(Trigger* trigger, NDPairList* ndPairList) 
 {
-  double t= getSimulation().getIteration()*deltaT;
+  /*double t= getSimulation().getIteration()*deltaT;
   std::ofstream& output=*file;
   int end=spikes.size();
   for (int idx=0; idx!=end; ++idx) {
     if (*(spikes[idx]))
       output << std::fixed << std::setprecision(3) << t <<" "<< idx << std::endl;
-  }
+  }*/ 
+  if (op_saveSpikes)
+    {
+      if (binary)
+        {
+          unsigned t = getSimulation().getIteration();
+          ShallowArray<bool*>::iterator iter=spikes.begin(), end=spikes.end();
+          for (int n=0; iter!=end; ++iter, n++)
+            {
+              // Only write if spiking
+              if (**iter)
+                {
+                  spikesFile->write(reinterpret_cast<char *>(&n), sizeof(n));
+                  spikesFile->write(reinterpret_cast<char *>(&t), sizeof(t));
+                }
+            }
+        }
+      else
+        {
+          std::ofstream& output = *spikesFile;
+          double t = getSimulation().getIteration();
+          int end=spikes.size();
+          for (int idx=0; idx!=end; ++idx) {
+            if (*(spikes[idx]))
+              output << std::fixed << std::setprecision(3) << t <<" "<< idx << std::endl;
+            }
+        }
+    }
 }
 
 void ZhengSORNUnitDataCollector::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_ZhengSORNUnitDataCollectorInAttrPSet* CG_inAttrPset, CG_ZhengSORNUnitDataCollectorOutAttrPSet* CG_outAttrPset) 

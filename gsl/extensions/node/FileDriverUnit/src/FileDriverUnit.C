@@ -25,17 +25,17 @@
 #define SHD getSharedMembers()
 
 void FileDriverUnit::initialize(RNG& rng) 
-{
+{  
   // Set channels to node index, but adjust in case there are not enough channels
   if (SHD.op_random)
     channel = irandom(0, SHD.n_channels - 1, rng);
   else
-    channel = getGlobalIndex() % SHD.n_channels;  
+    channel = getGlobalIndex() % SHD.n_channels;
 }
 
-void FileDriverUnit::updateOutput(RNG& rng)
+void FileDriverUnit::updateOutput(RNG& rng) 
 {
-  if (ITER % SHD.period == 0)  
+  if (ITER % SHD.period == 0)
     output = SHD.input[channel] * SHD.scale;
 }
 

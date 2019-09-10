@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -27,6 +27,7 @@ Variable LFPDataAnalyzer
   int mxslice;
   // In data
   double* [] LFPs_individual;
+  double* [] Membrane_individual;
   // Parameters about the size of LFP data to analyze
   int Xdim;
   int Ydim;
@@ -44,20 +45,28 @@ Variable LFPDataAnalyzer
   double [] elecCenterZ; // and Z dimension.
   // Actual electrode LFPs
   double [] LFPs;
+  // Contribution of units to each electrode LFP based on orientation (independent of distance)
+  double [][] contrib;
+  double* [] rhos;
+  double* [] phis;
   
   UserFunction getNodeIndices;
    
   // Flags
   bool op_saveLFPs;
    
-  Connection Pre Node () Expects LFPProducer
+  Connection Pre Node () Expects OutputProducer, Output2Producer, ActiveMembraneProducer
   {
-    LFPProducer.LFP >> LFPs_individual;
+    OutputProducer.output >> LFPs_individual;
+    Output2Producer.output1 >> rhos;
+    Output2Producer.output2 >> phis;
+    ActiveMembraneProducer.output >> Membrane_individual;
     getNodeIndices();
   }
  
   InitPhase initialize;
   TriggeredFunction dataCollection;
+  TriggeredFunction setContributions;
   FinalPhase finalize;
 }
 

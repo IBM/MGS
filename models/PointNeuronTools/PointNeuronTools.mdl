@@ -28,6 +28,16 @@ Interface FloatProducer {
   float* value;
 }
 
+Interface Output2Producer {
+  double* output1;
+  double* output2;
+}
+
+Interface Output3Producer {
+  double* output1;
+  double* output2;
+  double* output3;
+}
 
 Interface PlasticOutputProducer {
   double* output;
@@ -46,11 +56,6 @@ Interface PlasticSpikeProducer {
 
 Interface ThresholdProducer {
   double* threshold;
-}
-
-Interface LFPProducer
-{
-  double* LFP;
 }
 
 Interface NeurotransmitterIAFProducer
@@ -94,6 +99,15 @@ Interface CB1RIAFProducer
 Interface SORNSpikeProducer {
   bool* spikePrev;
   bool* spike;
+  double* a;
+  double* aPrev;
+}
+
+Interface NazeSORNDelayedSpikeProducer {
+  bool* spikePrev;
+  bool* spike;
+  double* a;
+  double* aPrev;
 }
 
 Interface WaveProducer
@@ -178,6 +192,16 @@ Interface MotoneuronProducer {
   */
 }
 
+Interface DiffusionProducer {
+  double* E_diff;
+  double* I_diff;
+}
+	
+Interface FieldProducer {
+  double* E;
+  double* I;
+}
+	
 Interface ReceptiveFieldProducer {
   double* output;
 }
@@ -193,6 +217,11 @@ Interface DataFeed {
   double * x1;
   double * x2;
   double * x3;
+}
+
+Interface ActiveMembraneProducer
+{
+  double* output;
 }
 
 Struct Input {
@@ -237,8 +266,24 @@ Struct SynapseInput {
 Struct SORNSynapseInput {
   bool* spikePrev;
   bool* spike;
+  double* a;
+  double* aPrev;
   double weight;
   bool synapse;
+  int row;
+  int col;
+}
+
+Struct NazeSORNDelayedSynapseInput {
+  bool* spikePrev;
+  bool* spike;
+  double* a;
+  double* aPrev;
+  double weight;
+  bool synapse;
+  int delay;
+  bool[] spikes_circ_buffer;
+  double[] a_circ_buffer;
   int row;
   int col;
 }
@@ -325,6 +370,12 @@ Struct GoodwinInput
   double weight;
   int row;
   int col;
+}
+
+Struct NormalizedThalamicInput {
+  double* input;
+  double minVal;
+  double maxVal;
 }
 
 Constant PointNeuronStimulator Implements OutputProducer {

@@ -3,9 +3,9 @@
 //
 // "Restricted Materials of IBM"
 //
-// BCM-YKT-07-18-2017
+// BCM-YKT-07-18-2018
 //
-// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
 //
 // US Government Users Restricted Rights -
 // Use, duplication or disclosure restricted by
@@ -28,8 +28,6 @@ Node FileDriverUnit Implements OutputProducer
       string inputFileName; // File to load from
       unsigned n_channels;  // The number of channels in this file
       unsigned total_time;  // Length of data in the file
-      //      int offset;           // Offset of file. N.B. user doesn't have to set
-      //      int section;          // Section of the file (i.e. sections are delimited by an empty line)
       double sf;            // Sampling frequency of file (i.e. how often to load)
       unsigned period;      // Related to sf, how often to load. N.B. user doesn't have to set
       double scale;         // How much to scale the input by
@@ -52,9 +50,7 @@ Node FileDriverUnit Implements OutputProducer
   
   InitPhase initialize();
   RuntimePhase updateOutput(output);
-
-  OutputProducer.output << &output;   
-  
+  OutputProducer.output << &output;
   UserFunction setIndices;
 }
 

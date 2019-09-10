@@ -22,6 +22,7 @@ Variable RabinovichWinnerlessUnitDataCollector
    bool binary;
    string directory;
    string fileExt;
+   string fileName;
    int [] rows;
    int [] cols;
    int [] slices;

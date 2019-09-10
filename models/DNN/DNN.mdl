@@ -1,0 +1,151 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef DNN_MDL
+#define DNN_MDL
+#include "./DNNTools.mdl"
+
+Node DNNode Implements ForwardProducer, BackwardProducer {
+   double output;
+   double gradient;
+   EdgeSetInput [] inputs;
+   double* weightedGradient;
+   bool ready;
+   
+   InitPhase initialize();
+   RuntimePhase update(output, gradient);
+
+   ForwardProducer.forward << &output;
+   BackwardProducer.backward << &gradient;
+
+   InAttrPSet {
+     string identifier;
+     unsigned index;
+   }
+
+   UserFunction extractInputIndex;
+
+   Connection Pre Node (PSet.identifier=="input") Expects ForwardArrayProducer {
+      ForwardArrayProducer.forwardArray >> inputs.inputArray;
+      extractInputIndex();
+   }
+
+   Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
+      BackwardProducer.backward >> weightedGradient;
+   }
+}
+
+Node DNEdgeSet Implements ForwardArrayProducer, BackwardProducer {
+   double [] weights;
+   double [] deltaWeights;
+   double [] deltaWeightsSquared;
+   double [] weightedOutputs;
+   double weightedGradient;
+   double [] echoes;
+   unsigned echoIndex;
+   double biasCorrectionW;
+   double biasCorrectionS;
+
+   //double* bias;
+   double* input;
+   double* [] gradients;
+
+   bool readyForward;
+   bool readyBackward;
+
+   string transferFunctionName;
+
+   bool momentum;
+   bool rmsprop;
+
+   Shared {
+     double eta;
+     double alpha;
+     double beta;
+     string [] optimization;
+   }
+
+   InitPhase initialize();
+   RuntimePhase update(weightedOutputs, weightedGradient);
+
+   ForwardArrayProducer.forwardArray << &weightedOutputs;
+   BackwardProducer.backward << &weightedGradient;
+   
+   InAttrPSet {
+     string identifier;
+   }
+
+   Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {
+      ForwardProducer.forward >> input;
+   }
+
+   Connection Pre Constant (PSet.identifier=="bias") Expects ForwardProducer {
+      ForwardProducer.forward >> input;
+      //ForwardProducer.forward >> bias;
+   }
+
+   Connection Pre Node (PSet.identifier=="gradient") Expects BackwardProducer {
+      BackwardProducer.backward >> gradients;
+   }
+
+}
+
+
+Node SupervisorNode Implements BackwardProducer, ForwardArrayProducer {
+
+  double primaryGradient;
+  double* [] predictions;
+  double [] logits;
+  double sumOfSquaredError;
+  unsigned wins;
+  bool ready;
+
+  Shared {
+    string transferFunctionName;
+    unsigned [] labels;
+    unsigned labelIndex;
+    unsigned numberOfInputs;
+    unsigned numberOfLabels;
+    double [] x;
+    bool shready;
+
+    string dataLocation;
+    bool test;
+    bool refreshErrors;
+    unsigned trainingEpoch;
+    unsigned trainingEpochs;
+    unsigned imageIndex;
+
+    InitPhase initializeShared;
+    RuntimePhase updateShared;
+  }
+
+   InitPhase initialize();
+   RuntimePhase update(primaryGradient);
+
+   ForwardArrayProducer.forwardArray << &Shared.x;
+   BackwardProducer.backward << &primaryGradient;
+
+   InAttrPSet {
+     string identifier;
+   }
+
+   Connection Pre Node (PSet.identifier=="input") Expects ForwardProducer {
+      ForwardProducer.forward >> predictions;
+   }
+}
+
+
+#endif

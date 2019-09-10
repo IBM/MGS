@@ -25,7 +25,11 @@ GSA ADP Schedule Contract with IBM Corp.
 #include <ostream>
 #include <algorithm>
 #include <math.h>
-
+#ifdef HAVE_GPU
+#define CUDA_CALLABLE __host__ __device__
+#else
+#define CUDA_CALLABLE
+#endif
 //x = row, y=col
 //WIDTH=#col, HEIGHT=#row
 #ifndef Map1Dindex
@@ -111,4 +115,19 @@ T vtrap(T x, T2 y)
   return (fabs(x / y) < SMALL ? y * (1 - x / y / 2) : x / (exp(x / y) - 1));
 }
 
+template<typename T>
+CUDA_CALLABLE T dtanh(T _tanh_) {
+  //This function is designed to receive tanh as an argument
+  return 1.0 - _tanh_ * _tanh_;
+}
+
+template<typename T>
+CUDA_CALLABLE T relu(T input) {
+  return ( (input>0) ? input : 0.0 );
+}
+
+template<typename T>
+CUDA_CALLABLE T drelu(T _relu_) {
+  return ( (_relu_>0) ? 1.0 : 0.0 );
+}
 #endif

@@ -1,0 +1,174 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { init1, init2, initialize };
+RuntimePhases = { dataCollect, run1, run2, lastPhase };
+FinalPhases = { finalize };
+
+#define DIRECTORY "./"
+#define FILE_EXTENSION ".dat"
+
+
+
+// ##### Driving wave input from cortex #####
+// Node parameters
+NodeType FileDriverUnit(<
+                        deltaT = 0.0001,        // in s
+			sf = 0.001,
+			section = 1,
+			inputFileName = "/home/naze/Documents/Rebec_gamma_analysis/export/WT39_07_Delta_QuietRest_Str_zm_cutNeg_cwn.txt"
+                        >) {initializeShared->init1, readInputFile->run1};
+
+// Connectivity and weights
+//EachSrcPropDst ctx_2_fsi(RadialSampler(5.66.0, 4.0)); // radius of 5.66 reaches a square (plus potentiall 1)
+EachDstPropSrc ctx_2_fsi(RadialSampler(0.5));
+BindName CTXw("weight", 1.0, "identifier", "driver");
+NdplInAttrInit ctxW(CTXw);
+
+// Initialize waves
+#define AMPMIN 0.0
+#define AMPMAX 1.5
+/*BindName initWave("Hz", 1.5,
+                  "phase", Gaussian(0.0,0.174533), // in rad
+                  "amplitude", UniformDist(AMPMIN, AMPMAX),
+                  "op_modulateAmplitude", 1,
+                  "amplitudeMin", AMPMIN,
+                  "amplitudeMax", AMPMAX,
+                  "amplitudeModRate", 0.005,
+                  "op_modulateAmplitudeWeight", 1,                  
+                  "amplitudeA", 0.1,
+                  "amplitudeB", 0.5);
+NdplNodeInit heterWave(initWave);*/
+
+
+
+// ##### FSI network #####
+// Node parameters
+NodeType FSIIAFUnit(< 
+                      b = 10.0,                // s^-1      
+                      GoC = 50.0,              // s^-1
+                      C = 1.0,
+                      k = {200.0, 20.0},       // s^-1
+                      Theta_inf = -0.05,       // V
+                      R = {0.0, 1.0},
+                      E_L = -0.07,             // V
+                      V_r = -0.07,             // V
+                      Theta_r = -0.06,         // V
+                      a = 0.0,                 // s^-1
+                      A = {0.0, 0},            // V/s
+                      s_tauR = 0.0008,         // s
+                      s_tauF = 0.012,          // s
+                      deltaT = 0.0001,         // s
+                      spike_cntMax = 0.001,    // s
+                      np = 0,
+                      V_max = 0.04,
+                      sharedDirectory = DIRECTORY,
+                      sharedFileExt = FILE_EXTENSION,
+                      op_saveWeights = 1
+                      >) {initializeShared->init2, outputPSPsShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
+
+// Synaptic connectivity
+list<float> uniformDensity = {1.0};
+EachDstPropSrc ipsp_fsi(RadialDensitySampler(72, 2.829, uniformDensity, 2.829));
+// (nbrConnections, radius, densityDistribution, boundaryMargin)
+
+// Synaptic weights 
+BindName IPSP("weight", Neg(Scale(Exp(RangePassThru(-100,"<=",Gaussian(0.0,1.0),"<=",2.5)),0.75)), "identifier", "ipsp");
+NdplInAttrInit ipsp(IPSP);
+
+// Gap junctions connectivity
+EachDstPropSrc gj_fsi(RadialDensitySampler(9, 1.415, uniformDensity, 1.415));
+
+// Gap junctions weights
+BindName GJ("conductance", UniformDiscreteDist(0.0,44.0), "identifier", "gj");
+NdplInAttrInit gj(GJ);
+
+// Initialize neurons
+BindName initN("V", UniformDist(-0.07,-0.06)); // Uniform from reset to thresh
+NdplNodeInit heterN(initN);
+
+// ##### Setup and connect the graph #####
+Grid CTX
+{
+  Dimension(2,2,1);
+  Layer(LayerV, FileDriverUnit, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(LayerV), nodeDef); //heterWave);
+};
+
+
+Grid FSI
+{
+  Dimension(20,20,10);
+  Layer(FSIs, FSIIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(FSIs), heterN);
+  connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
+                  ipsp_fsi, outAttrDef, ipsp);
+  connectNodeSets(.[].Layer(FSIs), .[].Layer(FSIs),
+                  gj_fsi, outAttrDef, gj);
+};
+
+Composite CortexFSI
+{
+  CTX ctx;
+  FSI fsi;
+  connectNodeSets(ctx[].Layer(LayerV), fsi[].Layer(FSIs),
+                  ctx_2_fsi, outAttrDef, ctxW);
+};
+
+CortexFSI iaf;
+
+
+
+// ##### Setup data collectors and analyzers #####
+/*VariableType FileDriverUnitDataCollector;
+FileDriverUnitDataCollector CTXcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveOutputs=1>;
+polyConnect(iaf/ctx[].Layer(LayerV), CTXcollector, <>, <>);*/
+
+VariableType FSIIAFUnitDataCollector;
+FSIIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveSpikes=1, op_saveSpikesAll=0, Xmin=0, Xmax=8, Ymin=0, Ymax=8, Zmin=0, Zmin=8>;
+polyConnect(iaf/fsi[].Layer(FSIs), FSIcollector, <>, <>);
+
+VariableType LFPDataAnalyzer;
+LFPDataAnalyzer LFPanalyzer<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  elecRadius=4, elecSigma=1.8, numElecPerDimX=8, numElecPerDimY=8, numElecPerDimZ=8,
+  op_saveLFPs=1>;
+polyConnect(iaf/fsi[].Layer(FSIs), LFPanalyzer, <>, <>);
+
+
+
+// ##### Setup triggers #####
+Trigger UnsignedTrigger(string description, Service svc, string operator,
+                        int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
+                         string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">", 0, 0, dataCollect);
+
+UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 50", 
+                                ::Iteration, "!%", 50, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+                        ::Iteration, "==", 1000000, 0, lastPhase); // in dt
+                     
+//CTXcollector.dataCollection() on iterTrigSampled;
+FSIcollector.dataCollectionSpikes() on iterTrig;
+FSIcollector.dataCollectionOther() on iterTrigSampled;
+LFPanalyzer.dataCollection() on iterTrigSampled;
+
+Stop on endTrig;

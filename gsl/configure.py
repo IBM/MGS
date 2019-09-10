@@ -1067,6 +1067,7 @@ COLAB_FRAMEWORK_MODULES := \\
             """\
 \t\tstd \\
 \t\timg \\
+\t\tmnist-master\\
 """
         if self.options.colab is False:
             retStr += \
@@ -1231,7 +1232,8 @@ COLAB_VARIABLE_MODULES := BasicNodeSetVariable \\
         if self.options.colab is False:
             retStr += \
                 """\
-FUNCTOR_MODULES := BinomialDist \\
+FUNCTOR_MODULES := BidirectConnectNodeSetsFunctor \\
+        BinomialDist \\
         CombineNVPairs \\
         ConnectNodeSetsFunctor \\
         DstDimensionConstrainedSampler \\
@@ -1248,9 +1250,12 @@ FUNCTOR_MODULES := BinomialDist \\
         GetPostNodeCoordFunctor \\
         GetPreNodeCoordFunctor \\
         GetPreNodeIndex \\
-        IsoSampler \\
+       	IsoSampler \\
         IsoSamplerHybrid \\
+       	GradientLayout \\
+       	NormalizedGradientLayout \\
         LoadMatrix \\
+        LoadSparseMatrix \\
         Log \\
         ModifyParameterSet \\
         NameReturnValue \\
@@ -1265,6 +1270,7 @@ FUNCTOR_MODULES := BinomialDist \\
         Round \\
         Scale \\
         ServiceConnectorFunctor \\
+        SetSourceArrayIndexFunctor \\
         SrcDimensionConstrainedSampler \\
         SrcRefDistanceModifier \\
         SrcRefDoGWeightModifier \\
@@ -1298,6 +1304,7 @@ FUNCTOR_MODULES := BinomialDist \\
 COLAB_FUNCTOR_MODULES :=  \\
 """ + _tissuefunctor_modules + \
                     """
+        BidirectConnectNodeSetsFunctor \\
         BinomialDist \\
         CombineNVPairs \\
         ConnectNodeSetsFunctor \\

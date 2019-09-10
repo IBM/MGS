@@ -89,7 +89,7 @@ void WaveDriverUnitDataCollector::initialize(RNG& rng)
 
   if (op_saveWaves)
     {
-      os_wave<<directory<<"Wave"<<fileExt;
+      os_wave<<directory<<"Waves"<<fileExt;
       wave_file=new std::ofstream(os_wave.str().c_str(),
                                   std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       wave_file->write(reinterpret_cast<char *>(&Xdim), sizeof(Xdim));

@@ -41,9 +41,13 @@ function print_help {
                                   log2 = print out ... during loops
   --regen                       regenerate gsl/Makefile  
   --profile                     generate profile output
+  
   Third-party libraries:
   -g|--gpu                      build with GPU extensions (CUDA library)
   -a|--arma                     build with Armadillo library 
+  
+  DEFAULT TARGET:
+  NO FLAG			build with models/mgs.mdf
 
   PREDEFINED TARGETS:
   --as-MGS                      (default) build Model Graph Simulator (MGS) - using mgs.mdf
@@ -383,6 +387,7 @@ elif [ "$BASE_FOLDER" != $(pwd) ]; then
   print_do_preq
   exit 1
 fi
+
 cd $BASE_FOLDER/models
 if [ ! -f ${MGS_TARGET_FILENAME} ]; then 
   touch ${MGS_TARGET_FILENAME}
@@ -394,7 +399,7 @@ if [ ! -f ${MGS_TARGET_FILENAME} ]; then
 
 // MDF files
 
-' > ${MGS_TARGET_FILENAME}
+  ' > ${MGS_TARGET_FILENAME}
 fi
 if [ ! -f ${MDF_TARGET} ]; then 
   echoerr "ERROR: File ${MDF_TARGET} does not exist."

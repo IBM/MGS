@@ -1,0 +1,233 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef NAZESORNUNITS_MDL
+#define NAZESORNUNITS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node NazeSORNExcUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
+   double x; // These variable names are according to Naze et al. 2015
+   double a; // accumulator for tailed STDP function
+   double aPrev; 
+   bool spike;
+   bool spikePrev;
+   double HIP;
+   double eta_IP;
+   double TE;
+   float delay;
+   float sigma_delay;
+   NazeSORNDelayedSynapseInput [] lateralExcInputs;
+   SORNSynapseInput [] lateralInhInputs;
+   Input modulatoryInput;
+   NormalizedThalamicInput normalizedThInput;
+   Input tmsInput;
+   
+   Shared {	
+     double EIratio;
+     //double eta_IP;
+     double mu_IP;
+     double sigma_IP;
+     double ratio_IP;
+
+     double TE_max;
+
+     double mu_HIP;
+     double sigma_HIP;
+     double ratio_HIP;
+
+     float [] mu_delay;
+     float ratio_delay;
+
+     double sigma2_chi;
+     double eta_inhib;
+     double eta_STDP;
+     double mu_iSTDP;
+     double eta_iSTDP;
+     double eta_iLTP;
+     double tau_STDP;   // STDP accumulator time constant (i.e STDP window)
+     double p_c;
+     double Ach;
+     int Ach_time;  // time at which Ach is turned ON
+
+     InitPhase initializeShared();
+     InitPhase saveInitParams();
+
+     string inDirectory;
+     string outDirectory;
+     string outputWeightsFileName;
+     string outputDelaysFileName;
+     string [] inFiles;
+     float[] initWeights;
+
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     RuntimePhase outputWeightsShared;
+     int [] loadWeightsOn;
+     int loadWeightsNext;
+     RuntimePhase inputWeightsShared;
+     int [] collectDelaysOn;
+     int collectDelaysNext;
+     RuntimePhase outputDelaysShared;
+   }
+
+    InAttrPSet {
+     string identifier;
+     double weight;
+     double conditionalFraction;
+     double condition;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update(TE);
+   RuntimePhase fire(spike, spikePrev, a, aPrev);
+
+   SORNSpikeProducer.spikePrev << &spikePrev;   
+   SORNSpikeProducer.spike << &spike;   
+   SORNSpikeProducer.a << &a;   
+   SORNSpikeProducer.aPrev << &aPrev;   
+   SpikeProducer.spike << &spike;   
+   OutputProducer.output << &TE;   
+
+   UserFunction checkForSynapse;
+   UserFunction checkForInhSynapse;
+   UserFunction setE2EIndices;
+   UserFunction setI2EIndices;
+   PredicateFunction checkInitWeights;   
+
+   Connection Pre Node ((checkInitWeights()) && (PSet.identifier=="lateralExc")) Expects SORNSpikeProducer {
+      SORNSpikeProducer.spikePrev >> lateralExcInputs.spikePrev;
+      SORNSpikeProducer.spike >> lateralExcInputs.spike;
+      SORNSpikeProducer.a >> lateralExcInputs.a;
+      SORNSpikeProducer.aPrev >> lateralExcInputs.aPrev;
+      PSet.weight >> lateralExcInputs.weight;      
+      checkForSynapse();
+      setE2EIndices();
+   }
+
+   Connection Pre Node (PSet.identifier=="lateralInh") Expects SORNSpikeProducer {
+      SORNSpikeProducer.spikePrev >> lateralInhInputs.spikePrev;
+      SORNSpikeProducer.spike >> lateralInhInputs.spike;
+      SORNSpikeProducer.a >> lateralInhInputs.a;
+      PSet.weight >> lateralInhInputs.weight; 
+      checkForInhSynapse(); 
+      setI2EIndices();     
+   }
+   
+   Connection Pre Node (PSet.identifier=="modulatory") Expects OutputProducer {
+      OutputProducer.output >> modulatoryInput.input;
+   }
+
+   Connection Pre Node (PSet.identifier=="thalamic_modulatory") Expects OutputProducer {
+      OutputProducer.output >> normalizedThInput.input;
+   }
+
+   Connection Pre Node (PSet.identifier=="TMS") Expects OutputProducer {
+      OutputProducer.output >> tmsInput.input;
+      //PSet.weight >> tmsInput.weight;
+      //setIndices();
+   }
+}
+
+Node NazeSORNInhUnit Implements SORNSpikeProducer, SpikeProducer, OutputProducer {
+   double y;  // membrane integrator
+   double ya; // accumulator for tailed STDP
+   double yaPrev;
+   bool spike;
+   bool spikePrev;
+   double TI;
+   double HIP;
+   double eta_IP;
+   float delay;
+   float sigma_delay;
+
+   NazeSORNDelayedSynapseInput [] lateralExcInputs;
+   SpikeInput [] lateralInhInputs;
+   Input modulatoryInput;
+   
+   Shared {
+     double EIratio;
+     double mu_IP;
+     double sigma_IP;
+     double ratio_IP;
+
+     double mu_HIP;
+     double sigma_HIP;
+     double ratio_HIP;
+
+     float [] mu_delay;
+     float ratio_delay;
+
+     double TI_max;
+     double sigma2_chi;
+     double tau_STDP;
+     InitPhase initializeShared();
+     
+     string inDirectory;
+     string outDirectory;
+     string outputWeightsFileName;
+     string [] inFiles;
+     float[][] initWeights;
+     
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+     RuntimePhase outputWeightsShared;
+     int [] loadWeightsOn;
+     int loadWeightsNext;
+     RuntimePhase inputWeightsShared;
+}
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase update(y);
+   RuntimePhase fire(spike, spikePrev, ya);
+
+   SpikeProducer.spike << &spike;
+   SORNSpikeProducer.spike << &spike;   
+   SORNSpikeProducer.spikePrev << &spikePrev;   
+   SORNSpikeProducer.a << &ya;   
+   SORNSpikeProducer.aPrev << &ya;   
+   OutputProducer.output << &y;   
+   
+   UserFunction setExcIndices;
+   UserFunction setInhIndices;
+//   PredicateFunction checkInitWeights;   
+  
+   Connection Pre Node (PSet.identifier=="lateralExc") Expects SORNSpikeProducer {
+      SORNSpikeProducer.spikePrev >> lateralExcInputs.spikePrev;
+      SORNSpikeProducer.spike >> lateralExcInputs.spike;
+      SORNSpikeProducer.a >> lateralExcInputs.a;
+      SORNSpikeProducer.aPrev >> lateralExcInputs.aPrev;
+      PSet.weight >> lateralExcInputs.weight;
+      setExcIndices();
+   }
+   
+   Connection Pre Node (PSet.identifier=="lateralInh") Expects SpikeProducer {
+      SpikeProducer.spike >> lateralInhInputs.spike;
+      PSet.weight >> lateralInhInputs.weight;
+      setInhIndices();
+   }
+   
+   Connection Pre Node (PSet.identifier=="modulatory") Expects OutputProducer {
+      OutputProducer.output >> modulatoryInput.input;
+   }
+}
+
+#endif

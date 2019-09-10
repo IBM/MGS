@@ -19,14 +19,18 @@
 
 Variable ZhengSORNUnitDataCollector
 {
+   string directory;
    string fileName;
+   string fileExt;
    int [] rows;
    int [] cols;
    int mxcol;
    bool* [] spikes;
    UserFunction getNodeIndices;
    double deltaT;
-  
+   bool op_saveSpikes;
+   bool binary;
+ 
     Connection Pre Node () Expects SpikeProducer
    {
       SpikeProducer.spike >> spikes;

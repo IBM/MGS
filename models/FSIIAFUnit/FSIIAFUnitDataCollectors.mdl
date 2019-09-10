@@ -1,0 +1,54 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2018
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef FSIIAFUNITDATACOLLECTORS_MDL
+#define FSIIAFUNITDATACOLLECTORS_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Variable FSIIAFUnitDataCollector
+{
+   string directory;
+   string fileExt;
+   int [] rows;
+   int [] cols;
+   int [] slices;
+   int mxslice;
+   bool* [] spikes;
+   UserFunction getNodeIndices;
+
+   // Where to save
+   bool op_saveSpikesAll;
+   int Xmin;
+   int Xmax;
+   int Ymin;
+   int Ymax;
+   int Zmin;
+   int Zmax;
+
+   // Flags
+   bool op_saveSpikes;
+
+   Connection Pre Node () Expects SpikeProducer
+   {
+      SpikeProducer.spike >> spikes;
+      getNodeIndices();
+   }
+
+   InitPhase initialize;
+   TriggeredFunction dataCollection;
+   FinalPhase finalize;
+}
+
+#endif

@@ -30,7 +30,6 @@ Variable MihalasNieburIAFUnitDataCollector
 
    Connection Pre Node () Expects OutputProducer, ThresholdProducer, SpikeProducer
    {
-      OutputProducer.output >> voltages;
       ThresholdProducer.threshold >> thresholds;
       SpikeProducer.spike >> spikes;
       getNodeIndices();

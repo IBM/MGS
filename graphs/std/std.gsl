@@ -29,6 +29,8 @@ InAttrDefault inAttrDef();
 
 InAttrInitializer NdplInAttrInit(NDPairListFunctor);
 
+InAttrInitializer SetSourceArrayIndexFunctor;
+
 Functor OutAttrDefault; //  Functor that gives default out attribute Pset for a node
 OutAttrDefault outAttrDef();
 
@@ -79,6 +81,9 @@ PolyConnectorFunctor polyConnect();
 Connector ConnectNodeSetsFunctor();
 ConnectNodeSetsFunctor connectNodeSets();
 
+Connector BidirectConnectNodeSetsFunctor();
+BidirectConnectNodeSetsFunctor bidirectConnectNodeSets();
+
 SamplingFctr2 IsoSampler();
 IsoSampler isoSampler();
 
@@ -125,8 +130,10 @@ Functor Round(Functor);
 Functor FloatArrayMaker(Functor, int);
 Functor Threshold(Functor sample, float threshold);
 Layout RandomDispersalLayout(int totalToDisperse);
+Layout GradientLayout(int total, float slope, list<int> origin, int originDensity, list<int> gradientDimensions);
+Layout NormalizedGradientLayout(int total, float slope, list<int> origin, list<int> gradientDimensions);
 Functor UniformDiscreteDist(float n1, float n2);
-
+Functor LoadSparseMatrix(string filename);
 // TODO: duplicate?
 //SamplingFctr2 IsoSampler();
 //IsoSampler isoSampler();

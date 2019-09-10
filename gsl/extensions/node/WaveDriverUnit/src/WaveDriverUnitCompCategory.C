@@ -23,7 +23,3 @@ WaveDriverUnitCompCategory::WaveDriverUnitCompCategory(Simulation& sim, const st
 {
 }
 
-void WaveDriverUnitCompCategory::initializeShared(RNG& rng) 
-{
-}
-

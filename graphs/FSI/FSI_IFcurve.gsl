@@ -1,0 +1,126 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#include "../std/std.gsl"
+InitPhases = { initializeShared, initialize };
+RuntimePhases = { dataCollect, run1, run2, lastPhase };
+FinalPhases = { finalize };
+
+#define DIRECTORY "./"
+#define FILE_EXTENSION ".dat"
+
+
+
+// ##### INPUT #####
+NodeType WaveDriverUnit(<
+                        deltaT = 0.0001,       // in s
+                        op_constant = 1
+                        >) {update->run1};
+
+// Initialize neurons
+BindName initN("V", UniformDist(-0.07,-0.06)); // Uniform from reset to thresh
+NdplNodeInit heterN(initN);
+
+EachDstPropSrc input_2_fsi(IsoSampler());
+BindName INPUTw("weight", 1.0, "identifier", "driver");
+NdplInAttrInit inputW(INPUTw);
+
+
+
+// ##### FSIs #####
+// Node parameters
+NodeType FSIIAFUnit(< 
+                      b = 10.0,                // s^-1      
+                      GoC = 50.0,              // s^-1
+                      C = 1.0,
+                      k = {200.0, 20.0},       // s^-1
+                      Theta_inf = -0.05,       // V
+                      R = {0.0, 1.0},
+                      E_L = -0.07,             // V
+                      V_r = -0.07,             // V
+                      Theta_r = -0.06,         // V
+                      a = 0.0,                 // s^-1 when 0, the threshold is fixed
+                      A = {0.0, 0.0},          // V/s
+                      s_tauR = 0.0008,         // s
+                      s_tauF = 0.012,          // s
+                      deltaT = 0.0001,         // s
+                      spike_cntMax = 0.001,    // s
+                      np = 0,
+                      V_max = 0.04,
+                      sharedDirectory = DIRECTORY,
+                      sharedFileExt = FILE_EXTENSION,
+                      op_saveWeights = 0
+                      >) {outputPSPShared->dataCollect, updateInput->run2, updateV->run1, threshold->run2};
+
+// Initialize waves
+BindName initWave("wave", UniformDist(0.0, 0.2));//1.0));//6.0));
+NdplNodeInit heterWave(initWave);
+
+
+
+// ##### Setup and connect the graph #####
+Grid FSI
+{
+  Dimension(1000,1,1);
+  
+  Layer(input, WaveDriverUnit, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(input), heterWave);
+  
+  Layer(FSIs, FSIIAFUnit, UniformLayout(1), < nodekind="Nodes" >);
+  InitNodes(.[].Layer(FSIs), heterN);
+
+  connectNodeSets(.[].Layer(input), .[].Layer(FSIs),
+                  input_2_fsi, outAttrDef, inputW);
+};
+FSI fsi;
+
+
+// ##### Setup data collectors and analyzers #####
+VariableType WaveDriverUnitDataCollector;
+WaveDriverUnitDataCollector inputCollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveWaves=1>;
+polyConnect(fsi[].Layer(input), inputCollector, <>, <>);
+
+VariableType FSIIAFUnitDataCollector;
+FSIIAFUnitDataCollector FSIcollector<directory=DIRECTORY, fileExt=FILE_EXTENSION,
+  op_saveSpikes=1, op_saveSpikesAll=0, Xmin=0, Xmax=8, Ymin=0, Ymax=8, Zmin=0, Zmin=8>;
+polyConnect(fsi[].Layer(FSIs), FSIcollector, <>, <>);
+
+
+
+// ##### Setup triggers #####
+Trigger UnsignedTrigger(string description, Service svc, string operator,
+                        int criterion, int delay);
+Trigger CompositeTrigger(string description, Trigger triggerA, int critA,
+                         string operator, Trigger triggerB, int critB, int delay);
+
+UnsignedTrigger iterTrigFirst("Iteration Trigger : == 1 ", 
+ 			 ::Iteration, "==", 1, 0, dataCollect);
+
+UnsignedTrigger iterTrig("Iteration Trigger : >= 0 ", 
+ 			 ::Iteration, ">=", 0, 0, dataCollect);
+
+UnsignedTrigger iterTrigSampled("Iteration Trigger : !% 50", 
+                                ::Iteration, "!%", 50, 0, dataCollect);
+
+UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
+                        ::Iteration, "==", 10000, 0, lastPhase); // in dt
+
+inputCollector.dataCollection() on iterTrigFirst;
+FSIcollector.dataCollectionSpikes() on iterTrig;
+FSIcollector.dataCollectionOther() on iterTrigSampled;
+
+
+Stop on endTrig;

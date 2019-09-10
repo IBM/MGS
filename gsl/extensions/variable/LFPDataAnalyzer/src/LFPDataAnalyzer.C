@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include <utility>
+#include <random>
 
 double LFPDataAnalyzer::normal_pdf(double x, double mean, double sigma)
 {
@@ -39,7 +40,7 @@ void LFPDataAnalyzer::initialize(RNG& rng)
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned,
-                             double*   // second
+                             std::pair<double*, double*>   // second
                              >
                     >
            >
@@ -47,35 +48,38 @@ void LFPDataAnalyzer::initialize(RNG& rng)
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
   assert(slices.size()==LFPs_individual.size());
+  assert(slices.size()==Membrane_individual.size());
   int sz=LFPs_individual.size();
   int mxrow=0;
   int mxcol=0;
   for (int j=0; j<sz; ++j) {
-    sorter[rows[j]][cols[j]][slices[j]]=LFPs_individual[j];
+    sorter[rows[j]][cols[j]][slices[j]] = std::make_pair(LFPs_individual[j], Membrane_individual[j]);
     if (mxrow<rows[j]) mxrow=rows[j];
     if (mxcol<cols[j]) mxcol=cols[j];
     if (mxslice<slices[j]) mxslice=slices[j];
   }
   LFPs_individual.clear();
+  Membrane_individual.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned,
-                             double*
+                             std::pair<double*, double*>
                              >
                     >
            >::iterator miter1, mend1=sorter.end();
   for (miter1=sorter.begin(); miter1!=mend1; ++miter1) {
     std::map<unsigned, 
              std::map<unsigned, 
-                      double*
+                      std::pair<double*, double*>
                       >
              >::iterator miter2, mend2=miter1->second.end();
     for (miter2=miter1->second.begin(); miter2!=mend2; ++miter2) {
       std::map<unsigned, 
-               double*
+               std::pair<double*, double*>
                >::iterator miter3, mend3=miter2->second.end();
       for (miter3=miter2->second.begin(); miter3!=mend3; ++miter3) {
-        LFPs_individual.push_back(miter3->second);
+        LFPs_individual.push_back(miter3->second.first);
+        Membrane_individual.push_back(miter3->second.second);
       }
     }
   }
@@ -99,7 +103,6 @@ void LFPDataAnalyzer::initialize(RNG& rng)
     elecCenterZ[i] = ((double) Zdim / (double) (numElecPerDimZ + 1)) * (double) (i + 1);
   
   LFPs.increaseSizeTo(numElecPerDimX * numElecPerDimY * numElecPerDimZ);
-
   
     
   // 3. Create the output files...
@@ -115,13 +118,25 @@ void LFPDataAnalyzer::initialize(RNG& rng)
 
   if (op_saveLFPs)
     {
-      os_LFP<<directory<<"LFP"<<fileExt;
+      os_LFP<<directory<<"LFPs"<<fileExt;
       LFP_file=new std::ofstream(os_LFP.str().c_str(),
                                  std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
       LFP_file->write(reinterpret_cast<char *>(&numElecPerDimX), sizeof(numElecPerDimX));
       LFP_file->write(reinterpret_cast<char *>(&numElecPerDimY), sizeof(numElecPerDimY));
       LFP_file->write(reinterpret_cast<char *>(&numElecPerDimZ), sizeof(numElecPerDimZ));
     }
+  
+
+  // 4. Setup memory for each neuron's contribution to each electrode's LFP reccording
+  contrib.increaseSizeTo(numElecPerDimX + numElecPerDimY + numElecPerDimZ);
+  for (int n=0; n<(numElecPerDimX+numElecPerDimY+numElecPerDimZ); n++) {
+    contrib[n].increaseSizeTo(sz);
+    // initialize to unit value
+    for (int i=0; i<sz; i++) {
+      contrib[n][i] = 1.0;
+    }
+  }
+ 
 }
 
 void LFPDataAnalyzer::finalize(RNG& rng) 
@@ -143,8 +158,8 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
       ShallowArray<int>::iterator iterCols, endCols=cols.end();
       ShallowArray<int>::iterator iterSlices, endSlices=slices.end();
       ShallowArray<double>::iterator iterLFPs=LFPs.begin(), endLFPs=LFPs.end();
-      ShallowArray<double*>::iterator iterLFPs_ind,
-        endLFPs_ind=LFPs_individual.end();
+      ShallowArray<double*>::iterator iterLFPs_ind,  endLFPs_ind=LFPs_individual.end();
+      ShallowArray<double*>::iterator iterMembrane_ind,  endMembrane_ind=Membrane_individual.end();
       double dist;
       // For each electrode ...
       for (int z=0; z<numElecPerDimZ; z++)
@@ -154,6 +169,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
               for (int x=0; x<numElecPerDimX; x++)
                 {
                   iterLFPs_ind = LFPs_individual.begin();
+                  iterMembrane_ind = Membrane_individual.begin();
                   iterRows = rows.begin();
                   iterCols = cols.begin();
                   iterSlices = slices.begin();
@@ -162,7 +178,7 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                   // with a 3D Gaussian weighting depending on distance
                   // to the elctrode.
                   for (int n=0; iterLFPs_ind != endLFPs_ind;
-                       ++iterLFPs_ind, ++iterRows, ++iterCols, ++iterSlices)
+                       ++iterLFPs_ind, ++iterMembrane_ind, ++iterRows, ++iterCols, ++iterSlices, n++)
                     {
                       dist = sqrt(
                                   pow(elecCenterX[x]-*iterRows,2)
@@ -170,7 +186,8 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
                                   + pow(elecCenterZ[z]-*iterSlices,2)
                                   );
                       if (dist <= elecRadius)
-                        *iterLFPs += normal_pdf(dist, 0.0, elecSigma) * **iterLFPs_ind;
+	   		//std::cout << x << " " << y << " " << z << " " << n << " : " << contrib[x+y+z][n] << std::endl;
+                        *iterLFPs += contrib[x+y+z][n] * normal_pdf(dist, 0.0, elecSigma) * (**iterLFPs_ind + **iterMembrane_ind);
                     }
                   ++iterLFPs;
                 }
@@ -185,6 +202,42 @@ void LFPDataAnalyzer::dataCollection(Trigger* trigger, NDPairList* ndPairList)
         }
     }
 }
+
+
+/** Function that compute the contribution of each unit to the LFP of each electrode **/
+void LFPDataAnalyzer::setContributions(Trigger* trigger, NDPairList* ndPairList){
+ 
+  ShallowArray<double*>::iterator iterRhos, endRhos=rhos.end();
+  ShallowArray<double*>::iterator iterPhis, endPhis=phis.end();
+  ShallowArray<int>::iterator iterRows, endRows=rows.end();
+  ShallowArray<int>::iterator iterCols, endCols=cols.end();
+  ShallowArray<int>::iterator iterSlices, endSlices=slices.end();
+  
+  for (int z=0; z<numElecPerDimZ; z++) {
+    for (int y=0; y<numElecPerDimY; y++) {
+      for (int x=0; x<numElecPerDimX; x++) {
+        iterRhos = rhos.begin();
+        iterPhis = phis.begin();
+        iterRows = rows.begin();
+        iterCols = cols.begin();
+        iterSlices = slices.begin();
+        for(int n=0; iterRhos != endRhos; ++iterRhos, ++iterPhis, ++iterRows, ++iterCols, ++iterSlices, n++) {
+//	  std::cout << "n=" << n << ";  x=" << x << ";  y=" << y <<  ";  n=" << n << std::endl;
+          // workout coordinates of tip of orientation vector starting at soma
+          double x_o = *iterRows + sin(**iterRhos)*cos(**iterPhis);
+          double y_o = *iterCols + sin(**iterRhos)*sin(**iterPhis);
+          double z_o = *iterSlices + cos(**iterRhos);
+          // distances between electrode and soma, and electrode and tip of vector
+          double d_o = sqrt(pow(elecCenterX[x]-x_o,2) + pow(elecCenterY[y]-y_o,2) + pow(elecCenterZ[z]-z_o,2));
+          double d_n = sqrt(pow(elecCenterX[x]-*iterRows,2) + pow(elecCenterY[y]-*iterCols,2) + pow(elecCenterZ[z]-*iterSlices,2));
+          // compute contribution of each neuron to each electrode based on orientation
+          contrib[x+y+z][n] = d_n - d_o;
+        }
+      }
+    }
+  }
+}
+
 
 void LFPDataAnalyzer::getNodeIndices(const String& CG_direction, const String& CG_component, NodeDescriptor* CG_node, Edge* CG_edge, VariableDescriptor* CG_variable, Constant* CG_constant, CG_LFPDataAnalyzerInAttrPSet* CG_inAttrPset, CG_LFPDataAnalyzerOutAttrPSet* CG_outAttrPset) 
 {

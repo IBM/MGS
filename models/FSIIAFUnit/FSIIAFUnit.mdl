@@ -1,0 +1,147 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2018
+//
+// (C) Copyright IBM Corp. 2005-2018  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef FSIIAFUNIT_MDL
+#define FSIIAFUNIT_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node FSIIAFUnit Implements SpikeProducer, VoltageIAFProducer, ThresholdProducer,
+  OutputProducer, Output3Producer, Output2Producer, ActiveMembraneProducer {
+   double [] I; // These variable names are according to Mihalas and Niebur, 2009
+   double [] [] I_p;
+   double [] dI;
+   double V;                 // V
+   double [] V_p;
+   double Theta;             // V
+   double Theta_inf;         // V
+   double [] Theta_p;
+   bool spike;               // currentspike
+   float V_spike;            // V with spike
+   unsigned spike_cnt;       // counts the duration of the spike
+   
+   Input [] ctxInputs;       // delta input from cortex
+   double ctxInputWeight;    // if this node receives multiple ctx inputs
+                             // they should be weighted accordingly.
+   double rho;	     	     // zenith (for spherical coordinates)
+   double phi;		     // azimut (for spherical coordinates)
+   
+   PSPInput [] lateralInputs;// lateral IPSPs
+
+   GJInput [] gjInputs;      // lateral gap junctions
+   
+   double I_e;               // total neuronal input
+   double synapses_total;    // total synaptic input - excitatory drive and lateral inhibition
+   double drive_total;       // total excitatory input - excitatory drive
+   double IPSC_total;        // total IPSC input - lateral inhibition
+   double GJ_total;          // total GJ input - lateral GJs
+   double I_sum;	     // total active membrane currents
+   
+   Shared {
+     double b;               // s^-1
+     double G;
+     double C;
+     double GoC;             // s^-1
+     double [] k;            // s^-1
+     double [] R;
+     double E_L;             // V
+     double V_r;             // V
+     double Theta_r;         // V
+     float V_max;            // V
+
+     double a;               // s^-1
+     double [] A;            // V/s
+
+     double s_tauR;          // s
+     double s_tauF;          // s
+
+     double spike_cntMax;    // how long the spike should be (s)
+
+     double deltaT;          // s
+     int np;                 // number of numerical fixed point iterations
+
+     float mu_rho;	     // mean zenith angle
+     float mu_phi;	     // mean azimut angle
+
+     string sharedDirectory;
+     string sharedFileExt;
+     int [] collectWeightsOn;
+     int collectWeightsNext;
+
+     InitPhase initializeShared;
+     RuntimePhase outputPSPsShared;
+     
+     // Flags
+     bool op_saveWeights;
+     bool op_saveGJs;
+     bool op_savePSPs;
+     bool op_saveExtra;
+     bool op_saveLayout;
+   }
+
+   InAttrPSet {
+     string identifier;
+     double weight;
+     double conductance;
+     double connectionFraction;
+   }
+
+   InitPhase initialize();
+
+   RuntimePhase updateInput(synapses_total, drive_total, IPSC_total, GJ_total);
+   RuntimePhase updateV(Theta, I_sum);
+   RuntimePhase threshold(spike, V_spike);
+   
+   SpikeProducer.spike << &spike;
+   VoltageIAFProducer.voltage << &V_spike;
+   ThresholdProducer.threshold << &Theta;
+   OutputProducer.output << &synapses_total;
+   Output3Producer.output1 << &drive_total;
+   Output3Producer.output2 << &IPSC_total;
+   Output3Producer.output3 << &GJ_total;
+  
+   Output2Producer.output1 << &rho;
+   Output2Producer.output2 << &phi;
+ 
+   ActiveMembraneProducer.output << &I_sum;
+
+   UserFunction setIndices;
+   PredicateFunction bidirectional1;   
+   PredicateFunction bidirectional2;   
+
+   // can have predicate functions and multiple boolean nests here
+   Connection Pre Node (PSet.identifier=="driver") Expects OutputProducer {
+     OutputProducer.output >> ctxInputs.input;
+     PSet.weight >> ctxInputs.weight;
+   }
+
+   Connection Pre Node (PSet.identifier=="ipsp") Expects SpikeProducer {
+      SpikeProducer.spike >> lateralInputs.spike;
+      PSet.weight >> lateralInputs.weight;
+   }
+
+   Connection Pre Node ( (bidirectional1()) && (PSet.identifier=="gj1") ) Expects VoltageIAFProducer {
+     VoltageIAFProducer.voltage >> gjInputs.voltage; // i.e. V_spike
+     PSet.conductance >> gjInputs.conductance;
+     setIndices();
+   }
+
+   Connection Pre Node ( (bidirectional2()) && (PSet.identifier=="gj2") ) Expects VoltageIAFProducer {
+     VoltageIAFProducer.voltage >> gjInputs.voltage; // i.e. V_spike
+     PSet.conductance >> gjInputs.conductance;
+     setIndices();
+   }   
+}
+
+#endif

@@ -40,9 +40,9 @@ NodeType LinskerInfomaxUnit (<
 	betaC = 0.0007,
 	betaW0 = 0.0007,
 	betaQ = 0.0021,
-        inversion_method = 0,
+        inversion_method = 1,
         weightsFileName = "Weights",
-	collectWeightsOn = {1, 5000000, 10000000, 15000000, 20000000, 25000000, 30000000}
+	collectWeightsOn = {1, 50000000, 100000000, 150000000, 200000000, 250000000, 300000000}
 >) { outputWeightsShared->run1, copy->run2, update->run4, invertQmatrixShared->run3};
 
 Grid Retina
@@ -107,10 +107,10 @@ polyConnect(earlyVision/thalamus[].Layer(relayNeurons), collectorT, <>, <>);
 Trigger UnsignedTrigger(string description, Service svc, string operator, int criterion, int delay);
 
 UnsignedTrigger iterTrig("Iteration Trigger", 
- 			 ::Iteration, "!%", 10000, 0, run1);
+ 			 ::Iteration, "!%", 100000, 0, run1);
 
 UnsignedTrigger endTrig("Iteration Trigger to end or stop", 
-			 ::Iteration, ">", 30000000, 0, lastPhase); 
+			 ::Iteration, ">", 300000000, 0, lastPhase); 
 
 collectorC.dataCollection() on iterTrig;
 collectorT.dataCollection() on iterTrig;

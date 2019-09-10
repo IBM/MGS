@@ -35,14 +35,12 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
                                std::pair<double*, double*>, // second.first.first, second.first.second
                                std::pair<bool*, float*> // second.second.first, second.second.second
                                >
-                             >
-                    >
+                          >
+                   >
            >
     sorter;
   assert(rows.size()==slices.size());
   assert(cols.size()==slices.size());
-  assert(slices.size()==voltages.size());
-  assert(slices.size()==thresholds.size());
   assert(slices.size()==spikes.size());
   assert(slices.size()==spikevoltages.size());
   int sz=voltages.size();
@@ -57,10 +55,7 @@ void MihalasNieburSynapseIAFUnitDataCollector::initialize(RNG& rng)
     if (mxcol<cols[j]) mxcol=cols[j];
     if (mxslice<slices[j]) mxslice=slices[j];
   }
-  voltages.clear();
-  thresholds.clear();
   spikes.clear();
-  spikevoltages.clear();
   std::map<unsigned, 
 	   std::map<unsigned, 
                     std::map<unsigned, 
@@ -171,12 +166,6 @@ void MihalasNieburSynapseIAFUnitDataCollector::finalize(RNG& rng)
       spike_file->close();
       delete spike_file;
     }
-  
-  if (op_saveSpikeVoltages)
-    {
-      spikevoltage_file->close();
-      delete spikevoltage_file;
-    }
 }
 
 void MihalasNieburSynapseIAFUnitDataCollector::dataCollectionSpikes(Trigger* trigger, NDPairList* ndPairList) 
@@ -198,17 +187,6 @@ void MihalasNieburSynapseIAFUnitDataCollector::dataCollectionOther(Trigger* trig
 {
   ShallowArray<double*>::iterator iter, end;
   float temp = 0.;
-  if (op_saveVoltages)
-    {
-      iter=voltages.begin();
-      end=voltages.end();
-      for (int n=0; iter!=end; ++iter)
-        {
-          temp = (float) **iter;
-          voltage_file->write(reinterpret_cast<char *>(&temp), sizeof(temp));
-        }
-    }
-
   if (op_saveThresholds)
     {
       iter=thresholds.begin();
