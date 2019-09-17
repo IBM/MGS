@@ -38,6 +38,17 @@
 
 void EpileptorNode::initialize(RNG& rng) 
 {
+  int test=0;
+#ifdef Proix_et_al_2014
+  test++;
+#endif
+#ifdef Jirsa_et_al_2014
+  test++;
+#endif
+#ifdef Proix_et_al_2018
+  test++;
+#endif
+  assert(test==1);
 }
 
 void EpileptorNode::updateDeltas(RNG& rng) 
@@ -54,14 +65,18 @@ void EpileptorNode::updateDeltas(RNG& rng)
     coupling += iter->weight * (*(iter->input) - x1);
   }
   dz = (1.0/SHD.tau_0) * (h-z) - coupling;
-#elif defined Jirsa_et_al_2014
+#elif defined(Jirsa_et_al_2014)||defined(Proix_et_al_2018)
   dz = (1.0/SHD.tau_0) * (4.0 * (x1-x0) - z);
 #endif
   
   du = -GAMMA * (u-0.1*x1); // See Jirsa et al. 2014, Supplementary material
                             // in which , 0.002g become 2u :
   dx2 = -y2 + x2 - x2*x2*x2 + SHD.I2 + 2.0*u - 0.3*(z-3.5); 
+#ifdef Proix_et_al_2014
+  float f2 = (x2<-0.25) ? 0 : (6.0 * (x2+0.25) * x1 ); // Note: SN thinks difference with below was a typo
+#elif defined(Jirsa_et_al_2014)||defined(Proix_et_al_2018)
   float f2 = (x2<-0.25) ? 0 : (6.0 * (x2+0.25) );
+#endif
   dy2 = (1.0/SHD.tau_2) * (-y2 + f2);
 }
 
