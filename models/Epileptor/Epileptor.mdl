@@ -1,0 +1,77 @@
+// =================================================================
+// Licensed Materials - Property of IBM
+//
+// "Restricted Materials of IBM"
+//
+// BCM-YKT-07-18-2017
+//
+// (C) Copyright IBM Corp. 2005-2017  All rights reserved
+//
+// US Government Users Restricted Rights -
+// Use, duplication or disclosure restricted by
+// GSA ADP Schedule Contract with IBM Corp.
+//
+// =================================================================
+
+#ifndef EPILEPTORNODE_MDL
+#define EPILEPTORNODE_MDL
+#include "../PointNeuronTools/PointNeuronTools.mdl"
+
+Node EpileptorNode Implements ExcitationProducer, InhibitionProducer, PermittivityProducer {
+   //{{{internal data 
+   float x1;
+   float x2;
+   float y1;
+   float y2;
+   float z;
+   float x0;
+   float u;
+   float h;
+   
+   float dx1;
+   float dx2;
+   float dy1;
+   float dy2;
+   float dz;
+   float du;
+   
+   //}}}
+   EpileptorInput [] K;
+
+   Shared {
+     //{{{
+     float I1;
+     float I2;
+     float tau_0;
+     float tau_1; // must set to 1.0 in GSL
+     float tau_2;
+     float y0; // set to 1.0 in initialize phase as per Proix et al., 2014
+     float dt;
+     //}}}
+     InitPhase initializeShared();
+   }
+
+   InitPhase initialize();
+   RuntimePhase updateDeltas();
+   RuntimePhase update(x1, x2, z);
+
+   ExcitationProducer.value << &x1;
+   InhibitionProducer.value << &x2;
+   PermittivityProducer.value << &z; 
+
+   InAttrPSet {
+     float [] connectionMatrix;
+   }
+
+// The follow PredicateFunction requires users to connect Epileptors all to all, and lets the
+// the user specify connections via inclusion the connection matrix file read by LoadSparseMatrix
+   PredicateFunction checkConnection;
+   UserFunction setWeight;
+
+   Connection Pre Node (checkConnection()) Expects ExcitationProducer {
+     ExcitationProducer.value >> K.input;
+     setWeight();
+   }
+   
+}
+#endif
