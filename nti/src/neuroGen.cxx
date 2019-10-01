@@ -279,6 +279,11 @@ int main(int argc, char* argv[]) {
           strcpy(fileNames[idx], filename.str().c_str());
                   */
           fileNames.push_back(filename.str());
+          /*
+           * the rand_seed provided via the Params file is the seed for the RNG which generates the 
+           *            random seeds for each neuron's params[idx]
+           *  initially, all params[idx] get this rand_seed, but then each is updated with new seed value
+           */
           if (parFile) {
             params[idx] = new NeurogenParams(baseParFileName, rank);
 	    if (idx==0) rng.reSeedShared(params[idx]->RandSeed);
