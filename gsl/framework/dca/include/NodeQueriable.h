@@ -13,7 +13,7 @@
 //
 // =================================================================
 
-#ifndef NODEQUERIALBE_H
+#ifndef NODEQUERIABLE_H
 #define NODEQUERIABLE_H
 #include "Copyright.h"
 
