@@ -208,6 +208,49 @@ void Class::addAttributes(const MemberContainer<DataType>& members
    //addAttribute(att_index, MachineType::GPU);
    return;
   }
+  if (
+      (getClassInfoPrimeType() == PrimeType::Struct && 
+       getName().compare("CoordsStruct") != 0)
+      ||
+      (getClassInfoPrimeType() == PrimeType::Node  &&
+      getClassInfoSubType() == SubType::SharedMembers)
+      )
+  {/* special treatment for Struct: support array data memebr */
+    if (members.size() > 0) {
+      addDataTypeHeaders(members);
+      addDataTypeDataItemHeaders(members);
+      MemberContainer<DataType>::const_iterator it, end = members.end();
+      for (it = members.begin(); it != end; ++it) {
+	std::auto_ptr<DataType> dup;
+	it->second->duplicate(dup);
+	if (dup->isPointer() && suppressPointers) dup->setPointer(false);
+	if (dup->isArray()) 
+	{
+	  /* handling array data member in a Struct */
+	  CustomAttribute* att;
+	  att= new CustomAttribute(dup->getName(), "ShallowArray_Flat<"
+	      + (dynamic_cast<ArrayType*>(dup.get()))->getType()->getTypeString()+
+	      ", " + MEMORY_LOCATION + ">", accessType);
+	  if (dup->isPointer() && not suppressPointers) att->setPointer();
+	  att->setAccessType(accessType);
+	  std::unique_ptr<Attribute> att_smart(att);
+	  addAttribute(att_smart, MachineType::GPU);
+	}
+	else{
+	  std::auto_ptr<DataType> dup;
+	  it->second->duplicate(dup);
+	  if (dup->isPointer() && suppressPointers) dup->setPointer(false);
+	  std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
+	  att->setAccessType(accessType);
+	  addAttribute(att, MachineType::GPU);
+	}
+	std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
+	att->setAccessType(accessType);
+	addAttribute(att);
+      }
+    }
+    return;
+  }
 
    if (members.size() > 0) {
       addDataTypeHeaders(members);
@@ -223,11 +266,12 @@ void Class::addAttributes(const MemberContainer<DataType>& members
  	 std::unique_ptr<Attribute> att(new DataTypeAttribute(dup));
 	 att->setAccessType(accessType);
 	 if (add_gpu_attributes)
-	 {//make these data members 'disappear' in GPU
+	 {//make these data members 'disappear' in GPU (here, no longer as part of CG_LifeNode.h)
 	   MacroConditional gpuConditional(GPUCONDITIONAL);
 	   gpuConditional.setNegateCondition();
 	   att->setMacroConditional(gpuConditional);
 
+	   //and move them to CG_LifeNodeCompCategory
 	   if (compcat_ptr)
 	   {
 	     MacroConditional gpuConditional(GPUCONDITIONAL);
@@ -709,6 +753,16 @@ void Class::printMethods(std::ostringstream& os)
    }
 }
 
+int Class::numAttributesOfType(const std::vector<Attribute*>& attributes, const AccessType& type) const
+{
+  int sz = 0;
+  for (std::vector<Attribute*>::const_iterator it = attributes.begin();
+      it != attributes.end(); ++it) {
+    if ((*it)->getAccessType() == type)
+      sz +=1;
+  }
+  return sz;
+}
 
 void Class::printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type)
 {
@@ -749,14 +803,18 @@ void Class::printAccess(AccessType type, const std::string& name,
       os << TAB << name << ":\n";
       printTypeDefs(type, os);
       printMethodDefinitions(type, os);
-      if (name == "protected" and _attributes_gpu.size() > 0)
+
+//      bool ok = (name == "protected" and _attributes_gpu.size() > 0) ||
+//	(getClassInfoPrimeType() == PrimeType::Struct and _attributes_gpu.size() > 0);
+      bool ok = numAttributesOfType(_attributes_gpu, type) > 0;
+      if (ok)
       {
 	os  << STR_GPU_CHECK_START;
 	printAttributes(type, os, MachineType::GPU);
 	os << "#else\n";
       }
       printAttributes(type, os);
-      if (name == "protected" and _attributes_gpu.size() > 0)
+      if (ok)
       {
 	os << "#endif\n";
       }
@@ -851,7 +909,6 @@ void Class::generateOutput(const std::string& modifier,
      auto iter = _extra_files.begin();
      while (iter != _extra_files.end())
      {
-       std::cout << iter->first << std::endl;
        std::string fName = directory + "/" + iter->first;
        std::ofstream fs(fName.c_str());
        fs << iter->second;
@@ -913,7 +970,7 @@ void Class::generateClassDefinition(std::ostringstream& os)
        << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
      std::string gen_file(extra_inc_file + ".gen");
-     _extra_files[gen_file] = R"(# Please include any header files for the extra data that you add to  )" + _name;
+     _extra_files[gen_file] = R"(// Please include any header files for the extra data that you add to  )" + _name;
    }
    if (_templateClass) {
      getTemplateClassParametersString(s);
@@ -968,7 +1025,7 @@ void Class::generateClassDefinition(std::ostringstream& os)
        << "      #include \"" << extra_inc_file << "\"\n" 
        << "#endif\n";
      std::string gen_file(extra_inc_file + ".gen");
-     _extra_files[gen_file] = R"(# Please add any extra data member that you add to  )" + _name;
+     _extra_files[gen_file] = R"(// Please add any extra data member that you add to  )" + _name;
    }
    if (_memberClass) os << TAB;
    os << "};\n\n";
@@ -983,6 +1040,8 @@ void Class::printGPUSource(std::string method, std::ostringstream& os)
     << TAB << "int index = blockDim.x * blockIdx.x + threadIdx.x;\n"
     << TAB << "if (index < size) {\n" 
     << TAB << TAB << " // add your code here\n"
+    << TAB << TAB << " printf(\"Implement the kernel " << method << "\");\n"
+    << TAB << TAB << " assert(0);\n"
     << TAB << "}\n"
     << "}\n";
 }
