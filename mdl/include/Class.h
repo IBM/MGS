@@ -38,8 +38,8 @@ class BaseClass;
 class Class
 {
    public:
-      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller };
-      enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy };
+      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller, Struct };
+      enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy, SharedMembers, Publisher };
       void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
       PrimeType getClassInfoPrimeType() const { return _classInfo.first; };
       SubType getClassInfoSubType() const { return _classInfo.second; };
@@ -378,6 +378,7 @@ class Class
       void addDestructor();
       void addDuplicate();
       bool hasOwnedHeapData();
+      int numAttributesOfType(const std::vector<Attribute*>& attributes, const AccessType& type) const;
       std::string _name;
       std::string _nameParentClass;
       // Duplicate types that are not direct superClasses.

@@ -179,6 +179,9 @@ std::string StructType::getDataFromVariable(const std::string& name) const
 void StructType::generateInstance() 
 {
    std::auto_ptr<Class> instance(new Class(getTypeName()));
+
+   auto classType = std::make_pair(Class::PrimeType::Struct, Class::SubType::UN_SET);
+   instance->setClassInfo(classType);
    
    std::auto_ptr<BaseClass> structBase(new BaseClass("Struct"));
 
