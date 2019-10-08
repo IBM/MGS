@@ -180,10 +180,11 @@ std::string RegularConnection::getConnectionCode(
 	 std::vector<UserFunctionCall*>::const_iterator it, 
 	    end = _userFunctionCalls->end();
 	 for (it = _userFunctionCalls->begin();  it != end; ++it) {
+	    /* comment these functional call in a dummy setting */
 	    if (mach_type == MachineType::GPU)
-	       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
+	       os << tab << TAB << "//" << (*it)->getName() << "(" << functionParameters << ");\n";
 	    else
-	       os << tab << TAB << (*it)->getName() << "(" << functionParameters << ");\n";
+	       os << tab << TAB << "//" << (*it)->getName() << "(" << functionParameters << ");\n";
 	 }
 	 os << tab << "}; \n";
       }

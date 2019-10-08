@@ -163,66 +163,257 @@ std::string MemberToInterface::getMemberToInterfaceString(
 void MemberToInterface::setupAccessorMethods(Class& instance) const
 {
    const_iterator it, end = _mappings.end();
-   for (it = _mappings.begin(); it != end; ++it) {
-      const std::vector<std::string>& subAttributePath = 
-	 it->getDataType()->getSubAttributePath();
-      std::string path = "";
-      
-      std::vector<std::string>::const_iterator sit, send 
-	 = subAttributePath.end();
-      for (sit = subAttributePath.begin(); sit != send; ++sit) { 
-	 path += "." + *sit;
-      }
 
-      std::auto_ptr<Method> method(
-	 new Method(PREFIX + "get_" + _interface->getName() + "_" + 
-		    it->getName(),
-		    it->getTypeString()));
-      std::string name = it->getDataType()->getName();
-      if (it->getDataType()->isShared()) {
-	 name = "getNonConstSharedMembers()." + name;
-      }
-      name += path;
-      if (it->getDataType()->isShared()) {
-	 method->setFunctionBody(
-	       (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
-	       + TAB + "return " 
-	       + (it->getNeedsAmpersand() ? "&" : "") 
-	       + name + ";\n");
-      }else 
-      {
-	 //TUAN: only accept non-shared data on GPU for now
-	 // maybe in the future we want to define shared data as '__constant__' or ...
-	 std::string body("");
-	 if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
-	 {
-	    body = STR_GPU_CHECK_START 
-	       +
-	       (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
-	       + TAB + "return " 
-	       + (it->getNeedsAmpersand() ? "&" : "") 
-	       + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
-	       + name + "["+REF_INDEX+"]);\n"
-	       +
-	       "#else\n";
+   if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+   {
+      for (it = _mappings.begin(); it != end; ++it) {
+	 const std::vector<std::string>& subAttributePath = 
+	    it->getDataType()->getSubAttributePath();
+	 std::string path = "";
+
+	 std::vector<std::string>::const_iterator sit, send 
+	    = subAttributePath.end();
+	 for (sit = subAttributePath.begin(); sit != send; ++sit) { 
+	    path += "." + *sit;
 	 }
-	 body +=
-	    (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
-	    + TAB + "return " 
-	    + (it->getNeedsAmpersand() ? "&" : "") 
-	    + name + ";\n";
-	 if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+
+	 if (it->getDataType()->isArray())
 	 {
+	    //create 2 methods [one used in HAVE_GPU and one is not]
+	    {
+	       //#if defined(HAVE_GPU)
+	       // convert ShallowArray< double >* 
+	       // into 
+	       // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+	       std::string  type = it->getTypeString(); 
+	       std::string from = "ShallowArray<";
+	       std::string to = "ShallowArray_Flat<";
+	       type = type.replace(type.find(from),from.length(),to);
+	       std::size_t start = type.find_first_of("<");
+	       std::size_t last = type.find_first_of(">");
+	       std::string element_datatype = type.substr(start+1, last-start-1);
+	       type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+	       //
+	       std::auto_ptr<Method> method(
+		     new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+			type));
+
+	       MacroConditional gpuConditional(GPUCONDITIONAL);
+	       method->setMacroConditional(gpuConditional);
+
+	       std::string name = it->getDataType()->getName();
+	       if (it->getDataType()->isShared()) {
+		  name = "getNonConstSharedMembers()." + name;
+	       }
+	       name += path;
+	       if (it->getDataType()->isShared()) {
+		  method->setFunctionBody(
+			(!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+			+ TAB + "return " 
+			+ (it->getNeedsAmpersand() ? "&" : "") 
+			+ name + ";\n");
+	       }else 
+	       {
+		  //TUAN: only accept non-shared data on GPU for now
+		  // maybe in the future we want to define shared data as '__constant__' or ...
+		  std::string body("");
+		  body = (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		     + TAB + "return " 
+		     + (it->getNeedsAmpersand() ? "&" : "") 
+		     + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
+		     + name + "["+REF_INDEX+"]);\n";
+		  method->setFunctionBody(
+			body
+			);
+	       }
+	       method->setVirtual();
+	       instance.addMethod(method);
+	    }
+	    {
+	       //#if ! defined(HAVE_GPU)
+	       std::auto_ptr<Method> method(
+		     new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+			it->getTypeString()));
+
+	       MacroConditional gpuConditional(GPUCONDITIONAL);
+	       gpuConditional.setNegateCondition();
+	       method->setMacroConditional(gpuConditional);
+
+	       std::string name = it->getDataType()->getName();
+	       if (it->getDataType()->isShared()) {
+		  name = "getNonConstSharedMembers()." + name;
+	       }
+	       name += path;
+	       if (it->getDataType()->isShared()) {
+		  method->setFunctionBody(
+			(!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+			+ TAB + "return " 
+			+ (it->getNeedsAmpersand() ? "&" : "") 
+			+ name + ";\n");
+	       }else 
+	       {
+		  //TUAN: only accept non-shared data on GPU for now
+		  // maybe in the future we want to define shared data as '__constant__' or ...
+		  std::string body("");
+		  //if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+		  //{
+		  //   body = STR_GPU_CHECK_START 
+		  //      +
+		  //      (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		  //      + TAB + "return " 
+		  //      + (it->getNeedsAmpersand() ? "&" : "") 
+		  //      + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
+		  //      + name + "["+REF_INDEX+"]);\n"
+		  //      +
+		  //      "#else\n";
+		  //}
+		  body +=
+		     (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		     + TAB + "return " 
+		     + (it->getNeedsAmpersand() ? "&" : "") 
+		     + name + ";\n";
+		  //if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+		  //{
+		  //   body +=
+		  //      STR_GPU_CHECK_END;
+		  //}
+		  method->setFunctionBody(
+			body
+			);
+	       }
+	       method->setVirtual();
+	       instance.addMethod(method);
+
+	    }
+
+	 }
+	 else{
+	    std::auto_ptr<Method> method(
+		  new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+		     it->getTypeString()));
+	    std::string name = it->getDataType()->getName();
+	    if (it->getDataType()->isShared()) {
+	       name = "getNonConstSharedMembers()." + name;
+	    }
+	    name += path;
+	    if (it->getDataType()->isShared()) {
+	       method->setFunctionBody(
+		     (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		     + TAB + "return " 
+		     + (it->getNeedsAmpersand() ? "&" : "") 
+		     + name + ";\n");
+	    }else 
+	    {
+	       //TUAN: only accept non-shared data on GPU for now
+	       // maybe in the future we want to define shared data as '__constant__' or ...
+	       std::string body("");
+	       if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+	       {
+		  body = STR_GPU_CHECK_START 
+		     +
+		     (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		     + TAB + "return " 
+		     + (it->getNeedsAmpersand() ? "&" : "") 
+		     + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
+		     + name + "["+REF_INDEX+"]);\n"
+		     +
+		     "#else\n";
+	       }
+	       body +=
+		  (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		  + TAB + "return " 
+		  + (it->getNeedsAmpersand() ? "&" : "") 
+		  + name + ";\n";
+	       if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+	       {
+		  body +=
+		     STR_GPU_CHECK_END;
+	       }
+	       method->setFunctionBody(
+		     body
+		     );
+	    }
+	    method->setVirtual();
+	    instance.addMethod(method);
+	 }
+
+      }      
+
+   }else{
+      for (it = _mappings.begin(); it != end; ++it) {
+	 const std::vector<std::string>& subAttributePath = 
+	    it->getDataType()->getSubAttributePath();
+	 std::string path = "";
+
+	 std::vector<std::string>::const_iterator sit, send 
+	    = subAttributePath.end();
+	 for (sit = subAttributePath.begin(); sit != send; ++sit) { 
+	    path += "." + *sit;
+	 }
+
+	 std::auto_ptr<Method> method(
+	       new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+		  it->getTypeString()));
+	 std::string name = it->getDataType()->getName();
+	 if (it->getDataType()->isShared()) {
+	    name = "getNonConstSharedMembers()." + name;
+	 }
+	 name += path;
+	 if (it->getDataType()->isShared()) {
+	    method->setFunctionBody(
+		  (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		  + TAB + "return " 
+		  + (it->getNeedsAmpersand() ? "&" : "") 
+		  + name + ";\n");
+	 }else 
+	 {
+	    //TUAN: only accept non-shared data on GPU for now
+	    // maybe in the future we want to define shared data as '__constant__' or ...
+	    std::string body("");
+	    if (instance.getClassInfoPrimeType() == Class::PrimeType::Node)
+	    {
+	       body = STR_GPU_CHECK_START 
+		  +
+		  (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		  + TAB + "return " 
+		  + (it->getNeedsAmpersand() ? "&" : "") 
+		  + "("+REF_CC_OBJECT+"->" + PREFIX_MEMBERNAME  
+		  + name + "["+REF_INDEX+"]);\n"
+		  +
+		  "#else\n";
+	    }
+	    else if(instance.getClassInfoPrimeType() == Class::PrimeType::Constant)
+	    {
+	       //Constant
+	       std::string attName = PREFIX_MEMBERNAME + "constant_"+ instance.getName().substr(3)  + "_" + name;
+	       body = STR_GPU_CHECK_START 
+		  +
+		  (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+		  + TAB + "return " 
+		  + (it->getNeedsAmpersand() ? "&" : "") 
+		  + "(" + attName + "["+REF_INDEX+"]);\n"
+		  +
+		  "#else\n";
+	    }
 	    body +=
-	       STR_GPU_CHECK_END;
+	       (!it->getNeedsAmpersand() ? TAB + "assert(" + name + ");\n" : "")
+	       + TAB + "return " 
+	       + (it->getNeedsAmpersand() ? "&" : "") 
+	       + name + ";\n";
+	    if (instance.getClassInfoPrimeType() == Class::PrimeType::Node
+	       or instance.getClassInfoPrimeType() == Class::PrimeType::Constant)
+	    {
+	       body +=
+		  STR_GPU_CHECK_END;
+	    }
+	    method->setFunctionBody(
+		  body
+		  );
 	 }
-	 method->setFunctionBody(
-	       body
-	       );
-      }
-      method->setVirtual();
-      instance.addMethod(method);
-   }      
+	 method->setVirtual();
+	 instance.addMethod(method);
+      }      
+   }
 }
 
 void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
@@ -238,56 +429,159 @@ void MemberToInterface::setupProxyAccessorMethods(Class& instance) const
       for (sit = subAttributePath.begin(); sit != send; ++sit) { 
 	 path += "." + *sit;
       }
-
-      std::auto_ptr<Method> method(
-	 new Method(PREFIX + "get_" + _interface->getName() + "_" + 
-		    it->getName(),
-		    it->getTypeString()));
-      std::string name = it->getDataType()->getName();
-      if (it->getDataType()->isShared()) {
-	 name = "getNonConstSharedMembers()." + name;
-      }
-      name += path;
-      if (instance.getClassInfoPrimeType() != Class::PrimeType::Node)
+      if (it->getDataType()->isArray())
       {
-	 method->setFunctionBody(
-	       TAB + "return &" 
-	       + name + ";\n");
-      }
-      else{
+	 {
+	    //#if defined(HAVE_GPU)
+	    // convert ShallowArray< double >* 
+	    // into 
+	    // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+	    std::string  type = it->getTypeString(); 
+	    std::string from = "ShallowArray<";
+	    std::string to = "ShallowArray_Flat<";
+	    type = type.replace(type.find(from),from.length(),to);
+	    std::size_t start = type.find_first_of("<");
+	    std::size_t last = type.find_first_of(">");
+	    std::string element_datatype = type.substr(start+1, last-start-1);
+	    type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+	    //
+	    std::auto_ptr<Method> method(
+		  new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+		     type));
+	    MacroConditional gpuConditional(GPUCONDITIONAL);
+	    method->setMacroConditional(gpuConditional);
+
+	    std::string name = it->getDataType()->getName();
+	    if (it->getDataType()->isShared()) {
+	       name = "getNonConstSharedMembers()." + name;
+	    }
+	    name += path;
+	    if (instance.getClassInfoPrimeType() != Class::PrimeType::Node)
+	    {
+	       method->setFunctionBody(
+		     TAB + "return &" 
+		     + name + ";\n");
+	    }
+	    else{
+	       if (it->getDataType()->isShared()) {
+		  method->setFunctionBody(
+			TAB + "return &" 
+			+ name + ";\n");
+	       }
+	       else{
+		  //TUAN: proxy only have non-shared data on GPU for now
+		  // maybe in the future we want to define shared data as '__constant__' or ...
+		  std::string body;
+		  body = "#if PROXY_ALLOCATION == OPTION_3\n"
+		     + TAB + "return &" 
+		     + "(("+REF_CC_OBJECT+"->" + GETDEMARSHALLER_FUNC_NAME + "(" 
+		     + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME  
+		     + name + "["+REF_INDEX+"]);\n"
+		     + "#elif PROXY_ALLOCATION == OPTION_4\n"
+		     + TAB + "return &" 
+		     + "("+REF_CC_OBJECT+"->" + PREFIX_PROXY_MEMBERNAME
+		     + name + "["+REF_INDEX+"]);\n"
+		     + "#endif\n\n";
+		  method->setFunctionBody(
+			body
+			);
+	       }
+	 }
+	 method->setVirtual();
+
+	 instance.addMethod(method);
+	 }
+	 {
+	    //#if ! defined(HAVE_GPU)
+	    std::auto_ptr<Method> method(
+		  new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+		     it->getTypeString()));
+
+	    MacroConditional gpuConditional(GPUCONDITIONAL);
+	    gpuConditional.setNegateCondition();
+	    method->setMacroConditional(gpuConditional);
+
+	    std::string name = it->getDataType()->getName();
+	    if (it->getDataType()->isShared()) {
+	       name = "getNonConstSharedMembers()." + name;
+	    }
+	    name += path;
+	    if (instance.getClassInfoPrimeType() != Class::PrimeType::Node)
+	    {
+	       method->setFunctionBody(
+		     TAB + "return &" 
+		     + name + ";\n");
+	    }
+	    else{
+	       if (it->getDataType()->isShared()) {
+		  method->setFunctionBody(
+			TAB + "return &" 
+			+ name + ";\n");
+	       }
+	       else{
+		  std::string body;
+		  body = "return &" 
+		     + name + ";\n";
+		  method->setFunctionBody(
+			body
+			);
+	       }
+	    }
+	    method->setVirtual();
+
+	    instance.addMethod(method);
+	 }
+      }else{
+	 std::auto_ptr<Method> method(
+	       new Method(PREFIX + "get_" + _interface->getName() + "_" + it->getName(),
+		  it->getTypeString()));
+	 std::string name = it->getDataType()->getName();
 	 if (it->getDataType()->isShared()) {
+	    name = "getNonConstSharedMembers()." + name;
+	 }
+	 name += path;
+	 if (instance.getClassInfoPrimeType() != Class::PrimeType::Node)
+	 {
 	    method->setFunctionBody(
 		  TAB + "return &" 
 		  + name + ";\n");
 	 }
 	 else{
-	    //TUAN: proxy only have non-shared data on GPU for now
-	    // maybe in the future we want to define shared data as '__constant__' or ...
-	    std::string body;
-	    body = STR_GPU_CHECK_START 
-	       +
-	       "#if PROXY_ALLOCATION == OPTION_3\n"
-	       + TAB + "return &" 
-	       + "(("+REF_CC_OBJECT+"->" + GETDEMARSHALLER_FUNC_NAME + "(" 
-	       + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME  
-	       + name + "["+REF_INDEX+"]);\n"
-	       + "#elif PROXY_ALLOCATION == OPTION_4\n"
-	       + TAB + "return &" 
-	       + "("+REF_CC_OBJECT+"->" + PREFIX_PROXY_MEMBERNAME
-	       + name + "["+REF_INDEX+"]);\n"
-	       + "#endif\n\n"
-	       + "#else\n"
-	       + TAB + "return &" 
-	       + name + ";\n"
-	       + STR_GPU_CHECK_END;
-	    method->setFunctionBody(
-		  body
-		  );
+	    if (it->getDataType()->isShared()) {
+	       method->setFunctionBody(
+		     TAB + "return &" 
+		     + name + ";\n");
+	    }
+	    else{
+	       //TUAN: proxy only have non-shared data on GPU for now
+	       // maybe in the future we want to define shared data as '__constant__' or ...
+	       std::string body;
+	       body = STR_GPU_CHECK_START 
+		  +
+		  "#if PROXY_ALLOCATION == OPTION_3\n"
+		  + TAB + "return &" 
+		  + "(("+REF_CC_OBJECT+"->" + GETDEMARSHALLER_FUNC_NAME + "(" 
+		  + REF_DEMARSHALLER_INDEX + "))->" + PREFIX_MEMBERNAME  
+		  + name + "["+REF_INDEX+"]);\n"
+		  + "#elif PROXY_ALLOCATION == OPTION_4\n"
+		  + TAB + "return &" 
+		  + "("+REF_CC_OBJECT+"->" + PREFIX_PROXY_MEMBERNAME
+		  + name + "["+REF_INDEX+"]);\n"
+		  + "#endif\n\n"
+		  + "#else\n"
+		  + TAB + "return &" 
+		  + name + ";\n"
+		  + STR_GPU_CHECK_END;
+	       method->setFunctionBody(
+		     body
+		     );
+	    }
 	 }
-      }
-      method->setVirtual();
+	 method->setVirtual();
 
-      instance.addMethod(method);
+	 instance.addMethod(method);
+      }
+
    }      
 }
 

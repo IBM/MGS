@@ -52,16 +52,28 @@ std::string Constant::getModuleTypeName() const
 
 void Constant::internalGenerateFiles()
 {
+   addSupportForMachineType(MachineType::GPU);
    assert(strcmp(getName().c_str(), ""));  
-   generateType();
-   generateInstanceBase();
+   generateType(); //e.g. CG_BiasType
+   //generateInstanceBase(); // e.g. CG_Bias
+   {
+   auto classType = std::make_pair(Class::PrimeType::Constant, Class::SubType::BaseClass);
+   bool use_classType = true;
+   generateInstanceBase(use_classType, classType); //CG_Bias.h/.C
+   }
    generateFactory();
    generateOutAttrPSet();
-   generatePublisher();
+   //generatePublisher();
+   {
+   auto classType = std::make_pair(Class::PrimeType::Constant, Class::SubType::Publisher);
+   bool use_classType = true;
+   generatePublisher(use_classType, classType);//CG_BiasPublisher
+   }
 }
 
 void Constant::addExtraInstanceBaseMethods(Class& instance) const
 {
+   /* e.g. ConstantBase */
    std::string baseName = getType() + "Base";
    std::auto_ptr<BaseClass> base(new BaseClass(baseName));  
    CustomAttribute* cusAtt = new CustomAttribute("_sim", "Simulation", AccessType::PROTECTED);
@@ -71,7 +83,7 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
    base->addAttribute(simAtt);
 
    instance.addHeader("\"" + baseName + ".h\"");
-   instance.addHeader("\"" + getOutAttrPSetName() + ".h\"");
+   instance.addHeader("\"" + getOutAttrPSetName() + ".h\""); /* e.g. CG_BiasOutAttrPSet */
 
    instance.addBaseClass(base);
 
@@ -99,6 +111,18 @@ void Constant::addExtraInstanceBaseMethods(Class& instance) const
    addPostNodeMethod->addParameter("ParameterSet* " + PREFIX + "pset");
    addPostNodeMethod->setFunctionBody(getAddPostNodeFunctionBody());
    instance.addMethod(addPostNodeMethod);
+
+   // add CUDA GPU support
+   // inline int getIndex(){return __index__;};
+   std::auto_ptr<Method> getIndexMethod(new Method("getIndex", "inline int"));
+   getIndexMethod->setInline();
+   MacroConditional gpuConditional(GPUCONDITIONAL);
+   getIndexMethod->setMacroConditional(gpuConditional);
+   std::ostringstream getIndexMethodFB;   
+   getIndexMethodFB 
+      << TAB << TAB << TAB << "return __index__;\n";
+   getIndexMethod->setFunctionBody(getIndexMethodFB.str());
+   instance.addMethod(getIndexMethod);
 
    // add duplicate method
    instance.addDuplicateType("Constant");
