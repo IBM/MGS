@@ -244,7 +244,15 @@ void InterfaceImplementorBase::generateOutAttrPSet()
 
 void InterfaceImplementorBase::generatePublisher()
 {
+   auto classType = std::make_pair(Class::PrimeType::UN_SET, Class::SubType::UN_SET);//just anything, as it is ignored
+   bool use_classType=false;
+   generatePublisher(use_classType, classType);
+}
+void InterfaceImplementorBase::generatePublisher(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType)
+{
    std::auto_ptr<Class> instance(new Class(getPublisherName()));
+   if (use_classType)
+      instance->setClassInfo(classType);
    
    std::auto_ptr<Attribute> attCup;
 
@@ -283,6 +291,24 @@ void InterfaceImplementorBase::generatePublisher()
 			  AccessType::PRIVATE);
    attCup.reset(serviceDescriptors);
    instance->addAttribute(attCup);
+
+   if (instance->getClassInfoPrimeType() == Class::PrimeType::Constant
+      and instance->getClassInfoSubType() == Class::SubType::Publisher
+         ){ 
+      {
+         // name = "um_constant_" + <ConstantType> + "_" + datamemberName
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         MemberContainer<DataType>::const_iterator it, end = _instances.end();
+         for (it = _instances.begin(); it != end; ++it) {
+            auto member_attr_name = it->first;
+            auto dt = it->second;
+            std::string attName = PREFIX_MEMBERNAME + "constant_"+ getName()  + "_" + dt->getName();
+            std::unique_ptr<Attribute> att_cc(new CustomAttribute(attName, "extern ShallowArray_Flat<" + dt->getTypeString() + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
+            att_cc->setMacroConditional(gpuConditional);
+            instance->addGlobalAttribute(att_cc);
+         }
+      }
+   }
 
    // Constructor 
    std::auto_ptr<ConstructorMethod> constructor(
@@ -359,7 +385,7 @@ void InterfaceImplementorBase::generatePublisher()
    std::ostringstream createServiceMethodFB;
    createServiceMethodFB 
       << TAB << "Service* rval = 0;\n"
-      << getInstanceServices(TAB)
+      << getInstanceServices(TAB, instance.get())
       << getExtraServices(TAB)
       << TAB << "return rval;\n";
    createServiceMethod->setFunctionBody(
@@ -408,7 +434,7 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase()
    return generateInstanceBase(use_classType, classType);
 }
 std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_classType, std::pair<Class::PrimeType, Class::SubType> classType )
-{//e.g. CG_LifeNode.h/.C  [Node or Variable]
+{//e.g. CG_LifeNode.h/.C  [Node or Variable or Constant]
    std::auto_ptr<Class> instance(new Class(getInstanceBaseName()));
    if (use_classType)
       instance->setClassInfo(classType);
@@ -430,34 +456,36 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    instance->addClass("ConnectionIncrement");     // added by Jizhu Lu on 03/01/2006
 
    // Add the instances.
-   //instance->set_gpu();
    if (isSupportedMachineType(MachineType::GPU))
    {
-      std::auto_ptr<Method> setCC(
-            new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
-      //getPublisherMethod->setVirtual();
-      std::string arg1 = "_" + REF_INDEX;
-      setCC->addParameter("int " + arg1);
-      std::string arg2 = "_" + REF_CC_OBJECT;
-      setCC->addParameter(instance->getName() + COMPCATEGORY + "* " + arg2);
-      std::ostringstream setCCstream;
-      setCCstream 
-         << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = " << arg2 << ";\n";
-      setCC->setFunctionBody(setCCstream.str());
-      setCC->setInline();
-      MacroConditional gpuConditional(GPUCONDITIONAL);
-      setCC->setMacroConditional(gpuConditional);
-      instance->addMethod(setCC);
-      std::auto_ptr<Method> getCC(
-            new Method(GETCOMPCATEGORY_FUNC_NAME, instance->getName() + COMPCATEGORY + "*"));
-      //getPublisherMethod->setVirtual();
-      std::ostringstream getCCstream;
-      getCCstream 
-         << TAB << TAB << "return " << REF_CC_OBJECT << ";\n";
-      getCC->setFunctionBody(getCCstream.str());
-      getCC->setInline();
-      getCC->setMacroConditional(gpuConditional);
-      instance->addMethod(getCC);
+      if (instance->getClassInfoPrimeType() != Class::PrimeType::Constant)
+      {//getCompCategory, setCompCategory --> Node
+         std::auto_ptr<Method> setCC(
+               new Method(SETCOMPCATEGORY_FUNC_NAME, "void"));
+         //getPublisherMethod->setVirtual();
+         std::string arg1 = "_" + REF_INDEX;
+         setCC->addParameter("int " + arg1);
+         std::string arg2 = "_" + REF_CC_OBJECT;
+         setCC->addParameter(instance->getName() + COMPCATEGORY + "* " + arg2);
+         std::ostringstream setCCstream;
+         setCCstream 
+            << TAB << TAB << REF_INDEX << " = " << arg1 << "; " << REF_CC_OBJECT << " = " << arg2 << ";\n";
+         setCC->setFunctionBody(setCCstream.str());
+         setCC->setInline();
+         MacroConditional gpuConditional(GPUCONDITIONAL);
+         setCC->setMacroConditional(gpuConditional);
+         instance->addMethod(setCC);
+         std::auto_ptr<Method> getCC(
+               new Method(GETCOMPCATEGORY_FUNC_NAME, instance->getName() + COMPCATEGORY + "*"));
+         //getPublisherMethod->setVirtual();
+         std::ostringstream getCCstream;
+         getCCstream 
+            << TAB << TAB << "return " << REF_CC_OBJECT << ";\n";
+         getCC->setFunctionBody(getCCstream.str());
+         getCC->setInline();
+         getCC->setMacroConditional(gpuConditional);
+         instance->addMethod(getCC);
+      }
       instance->addAttributes(getInstances(), AccessType::PROTECTED, false, true, compcat_instance.get());
    }
    else{
@@ -475,7 +503,7 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    FriendDeclaration publisherFriend(getPublisherName());
    instance->addFriendDeclaration(publisherFriend);
 
-   // getServiceName method
+   {// getServiceName method
    std::auto_ptr<Method> getServiceNameMethod(
       new Method("getServiceName", "const char*"));
    getServiceNameMethod->setVirtual();
@@ -486,7 +514,7 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    {
       getServiceNameMethodFB
          << STR_GPU_CHECK_START
-         << getInstanceServiceNames(TAB, MachineType::GPU)
+         << getInstanceServiceNames(TAB, MachineType::GPU, instance.get())
          << getOptionalInstanceServiceNames(TAB)
          << getExtraServiceNames(TAB)
          << getExtraOptionalServiceNames(TAB)
@@ -511,7 +539,9 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    getServiceNameMethod->setFunctionBody(
       getServiceNameMethodFB.str());
    instance->addMethod(getServiceNameMethod);
+   }
    
+   {
    // getServiceDescription method
    std::auto_ptr<Method> getServiceDescriptionMethod(
       new Method("getServiceDescription", "const char*"));
@@ -523,7 +553,7 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    {
       getServiceDescriptionMethodFB
          << STR_GPU_CHECK_START
-         << getInstanceServiceDescriptions(TAB, MachineType::GPU)
+         << getInstanceServiceDescriptions(TAB, MachineType::GPU, instance.get())
          << getOptionalInstanceServiceDescriptions(TAB)
          << getExtraServiceDescriptions(TAB)
          << getExtraOptionalServiceDescriptions(TAB)
@@ -544,7 +574,9 @@ std::unique_ptr<Class> InterfaceImplementorBase::generateInstanceBase(bool use_c
    getServiceDescriptionMethod->setFunctionBody(
       getServiceDescriptionMethodFB.str());
    instance->addMethod(getServiceDescriptionMethod);
+   }
    
+   //getPublisher()
    addGetPublisherMethod(*(instance.get()));
 
    mdl::addOptionalServicesToClass(*(instance.get()), 
@@ -876,21 +908,81 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
          setDestinationMethodFB << TAB << STR_GPU_CHECK_END;
       }
 
-      CustomAttribute* demarshaller;
-      if ((*it)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
-							    "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
-      else {
-	demarshaller = new CustomAttribute(varName + "Demarshaller",
-					   "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
-	std::set<std::string> subStructTypes;
-	(*it)->getSubStructDescriptors(subStructTypes);
-	std::set<std::string>::iterator stypeIter, stypeEnd = subStructTypes.end();
-	for (stypeIter=subStructTypes.begin(); stypeIter!=stypeEnd; ++stypeIter) {
-	  instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
-	}	
+      if (isSupportedMachineType(MachineType::GPU) and (*it)->isArray())
+      {//for Proxy of a Node & array data
+         {
+            //non-GPU support 
+            CustomAttribute* demarshaller;
+            if ((*it)->isTemplateDemarshalled()) 
+               demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                     "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+            else {
+               demarshaller = new CustomAttribute(varName + "Demarshaller",
+                     "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+               std::set<std::string> subStructTypes;
+               (*it)->getSubStructDescriptors(subStructTypes);
+               std::set<std::string>::iterator stypeIter, stypeEnd = subStructTypes.end();
+               for (stypeIter=subStructTypes.begin(); stypeIter!=stypeEnd; ++stypeIter) {
+                  instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
+               }	
+            }
+            std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+            MacroConditional gpuConditional(GPUCONDITIONAL);
+            gpuConditional.setNegateCondition();
+            demarshallerAp->setMacroConditional(gpuConditional);
+            demarshallerInstance->addAttribute(demarshallerAp);
+         }
+         {
+            //CPU-GPU support
+            // convert ShallowArray< double >* 
+            // into 
+            // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+            std::string  type = (*it)->getDescriptor(); 
+            std::string from = "ShallowArray<";
+            std::string to = "ShallowArray_Flat<";
+            type = type.replace(type.find(from),from.length(),to);
+            std::size_t start = type.find_first_of("<");
+            std::size_t last = type.find_first_of(">");
+            std::string element_datatype = type.substr(start+1, last-start-1);
+            type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+            varDesc = type;
+            CustomAttribute* demarshaller;
+            if ((*it)->isTemplateDemarshalled()) 
+               demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                     "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+            else {
+               demarshaller = new CustomAttribute(varName + "Demarshaller",
+                     "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+               std::set<std::string> subStructTypes;
+               (*it)->getSubStructDescriptors(subStructTypes);
+               std::set<std::string>::iterator stypeIter, stypeEnd = subStructTypes.end();
+               for (stypeIter=subStructTypes.begin(); stypeIter!=stypeEnd; ++stypeIter) {
+                  instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
+               }	
+            }
+            std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+            MacroConditional gpuConditional(GPUCONDITIONAL);
+            demarshallerAp->setMacroConditional(gpuConditional);
+            demarshallerInstance->addAttribute(demarshallerAp);
+         }
+      }else{
+         CustomAttribute* demarshaller;
+         if ((*it)->isTemplateDemarshalled()) 
+            demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                  "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+         else {
+            demarshaller = new CustomAttribute(varName + "Demarshaller",
+                  "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+            std::set<std::string> subStructTypes;
+            (*it)->getSubStructDescriptors(subStructTypes);
+            std::set<std::string>::iterator stypeIter, stypeEnd = subStructTypes.end();
+            for (stypeIter=subStructTypes.begin(); stypeIter!=stypeEnd; ++stypeIter) {
+               instance->addHeader("\"CG_" + (*stypeIter) + "Demarshaller.h\"");
+            }	
+         }
+         std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+         demarshallerInstance->addAttribute(demarshallerAp);
       }
-      std::auto_ptr<Attribute> demarshallerAp(demarshaller);
-      demarshallerInstance->addAttribute(demarshallerAp);
       if (isSupportedMachineType(MachineType::GPU))
       {
          initString2 << "\n" << STR_GPU_CHECK_END;
@@ -1008,14 +1100,57 @@ void InterfaceImplementorBase::generateInstanceProxy(bool use_classType, std::pa
                 setDestinationMethodFB << TAB << STR_GPU_CHECK_END;
              }
 
-	     CustomAttribute* demarshaller;
-	     if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
-								      "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
-	     else demarshaller = new CustomAttribute(varName + "Demarshaller",
-						     "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
-	     
-   	     std::auto_ptr<Attribute> demarshallerAp(demarshaller);
-   	     demarshallerInstance->addAttribute(demarshallerAp);
+             if (isSupportedMachineType(MachineType::GPU) and (*varsIter)->isArray())
+             {//for Proxy of a Node & array data in PhaseDemarshaller_<phase>
+                {
+                   //non-GPU support
+                   CustomAttribute* demarshaller;
+                   if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                         "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+                   else demarshaller = new CustomAttribute(varName + "Demarshaller",
+                         "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+
+                   std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+                   MacroConditional gpuConditional(GPUCONDITIONAL);
+                   gpuConditional.setNegateCondition();
+                   demarshallerAp->setMacroConditional(gpuConditional);
+                   demarshallerInstance->addAttribute(demarshallerAp);
+                }
+                {
+                   //CPU-GPU support
+                   // convert ShallowArray< double >* 
+                   // into 
+                   // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+                   std::string  type = (*varsIter)->getDescriptor(); 
+                   std::string from = "ShallowArray<";
+                   std::string to = "ShallowArray_Flat<";
+                   type = type.replace(type.find(from),from.length(),to);
+                   std::size_t start = type.find_first_of("<");
+                   std::size_t last = type.find_first_of(">");
+                   std::string element_datatype = type.substr(start+1, last-start-1);
+                   type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+                   varDesc = type;
+                   CustomAttribute* demarshaller;
+                   if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                         "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+                   else demarshaller = new CustomAttribute(varName + "Demarshaller",
+                         "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+
+                   std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+                   MacroConditional gpuConditional(GPUCONDITIONAL);
+                   demarshallerAp->setMacroConditional(gpuConditional);
+                   demarshallerInstance->addAttribute(demarshallerAp);
+                }
+             }else{
+                CustomAttribute* demarshaller;
+                if ((*varsIter)->isTemplateDemarshalled()) demarshaller = new CustomAttribute(varName + "Demarshaller", 
+                      "DemarshallerInstance< " + varDesc + " >", AccessType::PRIVATE);
+                else demarshaller = new CustomAttribute(varName + "Demarshaller",
+                      "CG_" + varDesc + "Demarshaller", AccessType::PRIVATE);
+
+                std::auto_ptr<Attribute> demarshallerAp(demarshaller);
+                demarshallerInstance->addAttribute(demarshallerAp);
+             }
    
    	     //if (++varsIter != varsEnd) {
    	     //   initString1 << ", ";
@@ -1089,7 +1224,7 @@ void InterfaceImplementorBase::addExtraOptionalServiceHeaders(
 }
 
 std::string InterfaceImplementorBase::getInstanceServices(
-   const std::string& tab) const
+   const std::string& tab, const Class* instance) const
 {
 	//TUAN: IDEA - currently the body is generated as a sequence of 'if-statement'
 	//        which requires so many 'conditional-test' while only once is 'true'
@@ -1124,7 +1259,7 @@ std::string InterfaceImplementorBase::getInstanceServices(
 	*/
 	// Can we automate the code generation using
 	// 'dictionary' or 'switch statement' here?
-   return createServices(_instances, tab);
+   return createServices(_instances, tab, instance);
 }
 
 std::string InterfaceImplementorBase::getOptionalInstanceServices(
@@ -1148,9 +1283,9 @@ std::string InterfaceImplementorBase::getExtraOptionalServices(
 }
 
 std::string InterfaceImplementorBase::getInstanceServiceNames(
-   const std::string& tab, MachineType mach_type) const
+   const std::string& tab, MachineType mach_type, Class* instance) const
 {
-   return createServiceNames(_instances, tab, mach_type);   
+   return createServiceNames(_instances, tab, mach_type, instance);   
 }
 
 std::string InterfaceImplementorBase::getOptionalInstanceServiceNames(
@@ -1173,10 +1308,11 @@ std::string InterfaceImplementorBase::getExtraOptionalServiceNames(
 
 std::string InterfaceImplementorBase::getInstanceServiceDescriptions(
    const std::string& tab,
-   MachineType mach_type
+   MachineType mach_type,
+   const Class* instance
    ) const
 {
-   return createServiceDescriptions(_instances, tab, mach_type);   
+   return createServiceDescriptions(_instances, tab, mach_type, instance);   
 }
 
 std::string InterfaceImplementorBase::getOptionalInstanceServiceDescriptions(
@@ -1223,7 +1359,8 @@ std::string InterfaceImplementorBase::getExtraOptionalServiceDescriptors(
 
 
 std::string InterfaceImplementorBase::createServices(
-   const MemberContainer<DataType>& members, const std::string& tab) const
+   const MemberContainer<DataType>& members, const std::string& tab,
+   const Class* instance) const
 {
    std::ostringstream os;
    MemberContainer<DataType>::const_iterator it, end = members.end();
@@ -1231,7 +1368,7 @@ std::string InterfaceImplementorBase::createServices(
       if (isSupportedMachineType(MachineType::GPU))
       {
         os << STR_GPU_CHECK_START;
-        os << (*it).second->getServiceString(tab, MachineType::GPU)
+        os << (*it).second->getServiceString(tab, MachineType::GPU, instance)
             << "#else\n";
       }
       os << (*it).second->getServiceString(tab);
@@ -1257,7 +1394,7 @@ std::string InterfaceImplementorBase::createOptionalServices(
 std::string InterfaceImplementorBase::createServiceNames(
    const MemberContainer<DataType>& members, 
    const std::string& tab,
-   MachineType mach_type) const
+   MachineType mach_type, Class* instance) const
 {
    std::ostringstream os;
    if (mach_type == MachineType::CPU)
@@ -1271,7 +1408,7 @@ std::string InterfaceImplementorBase::createServiceNames(
    {
       MemberContainer<DataType>::const_iterator it, end = members.end();
       for (it = members.begin(); it != end; ++it) {
-         os << (*it).second->getServiceNameString(tab, mach_type);
+         os << (*it).second->getServiceNameString(tab, mach_type, instance);
       }
    }
    return os.str();
@@ -1292,13 +1429,14 @@ std::string InterfaceImplementorBase::createOptionalServiceNames(
 std::string InterfaceImplementorBase::createServiceDescriptions(
    const MemberContainer<DataType>& members, 
    const std::string& tab,
-   MachineType mach_type
+   MachineType mach_type,
+   const Class* instance
    ) const
 {
    std::ostringstream os;
    MemberContainer<DataType>::const_iterator it, end = members.end();
    for (it = members.begin(); it != end; ++it) {
-      os << (*it).second->getServiceDescriptionString(tab, mach_type);
+      os << (*it).second->getServiceDescriptionString(tab, mach_type, instance);
    }
    return os.str();
 }
@@ -1576,13 +1714,55 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                if ((typeMarshallerIter=typeMarshaller.find((*pviter)->getDescriptor())) == typeMarshaller.end()) {
                   miSN = typeSN++;
                   typeMarshaller[(*pviter)->getDescriptor()] = miSN;
-		  funBody 
-                     //<< TAB << TAB 
-                     << TAB;
-		  if ((*pviter)->isTemplateMarshalled())
-		    funBody << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
-		  else
-		    funBody << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                  
+                  if ((*pviter)->isArray())
+                  {
+                     //to support new CPU-GPU design
+                     //create 2 declarations [one used in HAVE_GPU and one is not]
+                     funBody << STR_GPU_CHECK_START;
+                     {
+                        // convert ShallowArray< double >* 
+                        // into 
+                        // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+                        std::string  type = (*pviter)->getDescriptor(); 
+                        std::string from = "ShallowArray<";
+                        std::string to = "ShallowArray_Flat<";
+                        type = type.replace(type.find(from),from.length(),to);
+                        std::size_t start = type.find_first_of("<");
+                        std::size_t last = type.find_first_of(">");
+                        std::string element_datatype = type.substr(start+1, last-start-1);
+                        type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+                        funBody 
+                           //<< TAB << TAB 
+                           << TAB;
+                        if ((*pviter)->isTemplateMarshalled())
+                           funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
+                        else
+                           funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+                     }
+                     funBody << "#else\n";
+                     {
+                        funBody 
+                           //<< TAB << TAB 
+                           << TAB;
+                        if ((*pviter)->isTemplateMarshalled())
+                           funBody << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
+                        else
+                           funBody << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                     }
+                     funBody << STR_GPU_CHECK_END;
+
+                  }
+                  else{
+                     //traditional design
+                     funBody 
+                        //<< TAB << TAB 
+                        << TAB;
+                     if ((*pviter)->isTemplateMarshalled())
+                        funBody << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
+                     else
+                        funBody << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                  }
                } else
                   miSN = (*typeMarshallerIter).second;
                funBody 
@@ -1621,10 +1801,47 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                if ((typeMarshallerIter=typeMarshaller.find((*pviter)->getDescriptor())) == typeMarshaller.end()) {
 		 miSN = typeSN++;
 		 typeMarshaller[(*pviter)->getDescriptor()] = miSN;
-		 if ((*pviter)->isTemplateMarshalled())
-		   funBody << TAB << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
-		 else
-		   funBody << TAB << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+
+                  if ((*pviter)->isArray())
+                  {
+                     //to support new CPU-GPU design
+                     funBody << STR_GPU_CHECK_START;
+                     {
+                        // convert ShallowArray< double >* 
+                        // into 
+                        // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+                        std::string  type = (*pviter)->getDescriptor(); 
+                        std::string from = "ShallowArray<";
+                        std::string to = "ShallowArray_Flat<";
+                        type = type.replace(type.find(from),from.length(),to);
+                        std::size_t start = type.find_first_of("<");
+                        std::size_t last = type.find_first_of(">");
+                        std::string element_datatype = type.substr(start+1, last-start-1);
+                        type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+                        if ((*pviter)->isTemplateMarshalled())
+                           funBody << TAB << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
+                        else
+                           funBody << TAB << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+
+
+                     }
+                     funBody << "#else\n";
+                     {
+                        if ((*pviter)->isTemplateMarshalled())
+                           funBody << TAB << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
+                        else
+                           funBody << TAB << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                     }
+                     funBody << STR_GPU_CHECK_END;
+                  } 
+                  else{
+                     //traditional design
+                     if ((*pviter)->isTemplateMarshalled())
+                        funBody << TAB << "MarshallerInstance<" << (*pviter)->getDescriptor() << " > mi" << miSN << ";\n";
+                     else
+                        funBody << TAB << "CG_" << (*pviter)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+                  }
+
                } else
                   miSN = (*typeMarshallerIter).second;
 
@@ -1634,6 +1851,7 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
                      << STR_GPU_CHECK_START;
                   funBody << TAB << "mi" << miSN << ".getBlocks(blengths, blocs, ";
                   if ((*pviter)->isPointer()) funBody << "*";
+
                   funBody 
                      << (*pviter)->getNameRaw(MachineType::GPU) << ");\n"
                      << "#else\n";
@@ -1673,11 +1891,48 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
      if ((typeMarshallerIter=typeMarshaller.find((*it)->getDescriptor())) == typeMarshaller.end()) {
        miSN = typeSN++;
        typeMarshaller[(*it)->getDescriptor()] = miSN;
-       funBody << TAB;
-       if ((*it)->isTemplateMarshalled())
-	 funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
-       else
-	 funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+
+      if ((*it)->isArray())
+      {
+	 //to support new CPU-GPU design
+	 //create 2 declarations [one used in HAVE_GPU and one is not]
+         funBody << STR_GPU_CHECK_START;
+         {
+	    // convert ShallowArray< double >* 
+	    // into 
+	    // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+	    std::string  type = (*it)->getDescriptor(); 
+	    std::string from = "ShallowArray<";
+	    std::string to = "ShallowArray_Flat<";
+	    type = type.replace(type.find(from),from.length(),to);
+	    std::size_t start = type.find_first_of("<");
+	    std::size_t last = type.find_first_of(">");
+	    std::string element_datatype = type.substr(start+1, last-start-1);
+	    type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+
+            funBody << TAB;
+            if ((*it)->isTemplateMarshalled())
+               funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
+            else
+               funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+         }
+         funBody << "#else\n";
+         {
+            funBody << TAB;
+            if ((*it)->isTemplateMarshalled())
+               funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
+            else
+               funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+         }
+         funBody << STR_GPU_CHECK_END;
+      }else{
+         //traditional design
+         funBody << TAB;
+         if ((*it)->isTemplateMarshalled())
+            funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
+         else
+            funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+      }
      } else
        miSN = (*typeMarshallerIter).second;
 
@@ -1718,11 +1973,50 @@ void InterfaceImplementorBase::addDistributionCodeToIB(Class& instance)
       if ((typeMarshallerIter=typeMarshaller.find((*it)->getDescriptor())) == typeMarshaller.end()) {
          miSN = typeSN++;
          typeMarshaller[(*it)->getDescriptor()] = miSN;
-	 funBody << TAB;
-	 if ((*it)->isTemplateMarshalled())
-	   funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
-	 else
-	   funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+
+
+
+         if ((*it)->isArray())
+         {
+            //to support new CPU-GPU design
+            //create 2 declarations [one used in HAVE_GPU and one is not]
+            funBody << STR_GPU_CHECK_START;
+            {
+               // convert ShallowArray< double >* 
+               // into 
+               // ShallowArray_Flat< double, Array_Flat<int>::MemLocation::UNIFIED_MEM>*
+               std::string  type = (*it)->getDescriptor(); 
+               std::string from = "ShallowArray<";
+               std::string to = "ShallowArray_Flat<";
+               type = type.replace(type.find(from),from.length(),to);
+               std::size_t start = type.find_first_of("<");
+               std::size_t last = type.find_first_of(">");
+               std::string element_datatype = type.substr(start+1, last-start-1);
+               type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+
+               funBody << TAB;
+               if ((*it)->isTemplateMarshalled())
+                  funBody << "MarshallerInstance<" << type << " > mi" << miSN << ";\n";
+               else
+                  funBody << "CG_" << type << "MarshallerInstance mi" << miSN <<";\n";
+            }
+            funBody << "#else\n";
+            {
+               funBody << TAB;
+               if ((*it)->isTemplateMarshalled())
+                  funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
+               else
+                  funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+            }
+            funBody << STR_GPU_CHECK_END;
+         }else{
+            //traditional design
+            funBody << TAB;
+            if ((*it)->isTemplateMarshalled())
+               funBody << "MarshallerInstance<" << (*it)->getDescriptor() << " > mi" << miSN << ";\n";
+            else
+               funBody << "CG_" << (*it)->getDescriptor() << "MarshallerInstance mi" << miSN <<";\n";
+         }
       } else
          miSN = (*typeMarshallerIter).second;
 
