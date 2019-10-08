@@ -192,7 +192,7 @@ void InterfaceImplementorBase::createPSetClass(
    const MemberContainer<DataType>& members,
    const std::string& name) const 
 {
-   auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Class);//just anything, as it is ignored
+   auto classType = std::make_pair(Class::PrimeType::UN_SET, Class::SubType::UN_SET);//just anything, as it is ignored
    bool use_classType=false;
    createPSetClass(instance, members, use_classType, classType, name);
 

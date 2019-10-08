@@ -79,6 +79,7 @@ void Node::internalGenerateFiles()
    generateNodeAccessor();
    generateInAttrPSet();
    generateOutAttrPSet();
+   //generatePSet();
    {
       auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassPSet);
       bool use_classType = true;
