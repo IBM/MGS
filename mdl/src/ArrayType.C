@@ -120,7 +120,8 @@ std::string ArrayType::getHeaderDataItemString() const
 }
 
 std::string ArrayType::getInitializerString(
-   const std::string& diArg, int level, bool isIterator, bool forPSet) const
+   const std::string& diArg, int level, bool isIterator, bool forPSet,
+   const Class* instance) const
 {
    std::string tab;
    setTabWithLevel(tab, level);
