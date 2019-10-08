@@ -38,7 +38,7 @@ class BaseClass;
 class Class
 {
    public:
-      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller, Struct };
+      enum class PrimeType{ UN_SET, Node, Variable, CCDemarshaller, Struct, Constant };
       enum class SubType{ UN_SET, BaseClass, Class, BaseCompCategory, CompCategory, BaseClasFactory, BaseClassGridLayerData, BaseClassInAttrPSet, BaseClassNodeAccessor, BaseClassOutAttrPSet, BaseClassPSet, BaseClassProxy, SharedMembers, Publisher };
       void setClassInfo(std::pair<PrimeType, SubType> _pair){ _classInfo = _pair; };
       PrimeType getClassInfoPrimeType() const { return _classInfo.first; };
@@ -103,6 +103,16 @@ class Class
 	    _attributes.push_back(att.release());
 	 else if (mach_type == MachineType::GPU)
 	    _attributes_gpu.push_back(att.release());
+	 else 
+	    assert(0);
+      }
+      //the attribute the is outside the class - i.e. global-scope level
+      void addGlobalAttribute(std::unique_ptr<Attribute>& att, MachineType mach_type=MachineType::CPU) {
+	 _generateSourceFile=true;
+	 if (mach_type == MachineType::CPU)
+	    _attributes_global.push_back(att.release());
+	 else if (mach_type == MachineType::GPU)
+	    _attributes_gpu_global.push_back(att.release());
 	 else 
 	    assert(0);
       }
@@ -307,8 +317,7 @@ class Class
       }
       void printGPUSource(std::string method, std::ostringstream& os);
       void addDataNameMapping(std::string nameMapping){
-	 /*
-       #define u  (_container->mu_u[index])
+	 /* #define u  (_container->mu_u[index])
 	  */
 	 _dataNamesInNodes += nameMapping + "\n";
       }
@@ -354,6 +363,8 @@ class Class
       void printMemberClassesMethods(std::ostringstream& os);
       void printMethods(std::ostringstream& os);
       void printAttributes(AccessType type, std::ostringstream& os, MachineType mach_type=MachineType::CPU);
+      //these attributes are saved to Source file
+      void printGlobalAttributes(std::ostringstream& os, MachineType mach_type);
       void printAccess(AccessType type, const std::string& name, 
 		       std::ostringstream& os);
       void printAccessMemberClasses(AccessType type, const std::string& name, 
@@ -394,6 +405,8 @@ class Class
       std::vector<BaseClass*> _baseClasses;
       std::vector<Attribute*> _attributes;
       std::vector<Attribute*> _attributes_gpu; //copied from InterfaceImplementorBase
+      std::vector<Attribute*> _attributes_global;
+      std::vector<Attribute*> _attributes_gpu_global; //copied from InterfaceImplementorBase
       std::vector<Method*> _methods;
       std::vector<std::string> _templateClassParameters;
       std::vector<std::string> _templateClassSpecializations;

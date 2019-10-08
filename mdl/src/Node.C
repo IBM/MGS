@@ -84,16 +84,26 @@ void Node::internalGenerateFiles()
       bool use_classType = true;
       generatePSet(use_classType, classType); //CG_LifeNodePSet.h/.C
    }
-   generatePublisher();
+   //generatePublisher();
+   {
+      auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::Publisher);
+      bool use_classType = true;
+      generatePublisher(use_classType, classType); //CG_LifeNodePublisher.h/.C
+   }
    generateWorkUnitGridLayers();
    generateWorkUnitInstance();
    generateWorkUnitShared();
-   generateSharedMembers();
+   //generateSharedMembers();
+   {
+      auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::SharedMembers);
+      bool use_classType = true;
+      generateSharedMembers(use_classType, classType); //CG_LifeNodeSharedMembers.h/.C
+   }
    generateTriggerableCallerInstance();
    {
    auto classType = std::make_pair(Class::PrimeType::Node, Class::SubType::BaseClassProxy );
    bool use_classType = true;
-   generateInstanceProxy(use_classType, classType);
+   generateInstanceProxy(use_classType, classType); //CG_LifeNodeProxy.h/.C
    }
    generateResourceFile();
 }
@@ -219,7 +229,7 @@ void Node::generateGridLayerData()
       << TAB << "int uniformDensity = _gridLayerDescriptor->isUniform();\n"
       << TAB << "int gridNodes = _gridLayerDescriptor->getGrid()->getNbrGridNodes();\n"
       << TAB << "unsigned my_rank = sim->getRank();\n"
-      << "#if defined(HAVE_GPU) && defined(__NVCC__)\n"
+      << "#if defined(HAVE_GPU)\n"
       //<< TAB << "/*"
       << TAB << "if (sim->isGranuleMapperPass()) {\n"
       //<< TAB << "if (sim->isGranuleMapperPass() || sim->isCostAggregationPass()) {\n"

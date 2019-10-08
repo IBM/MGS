@@ -235,7 +235,10 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
 	 interfaceCasts.insert(
 	       tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
 
-	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE)
+	 bool ok = (isSupportedMachineType(MachineType::GPU) and 
+	       (componentType == RegularConnection::_NODE or
+	       componentType == RegularConnection::_CONSTANT));
+	 if (ok)
 	 {
 	    subBody += STR_GPU_CHECK_START;
 	    subBody += "// CPU-GPU code\n";
@@ -248,7 +251,7 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
 	 subBody += TAB + "assert(0);\n";
 	 //subBody += (*it2)->getConnectionCode(getName(), 
 	 //      functionParameters) + "\n"; 
-	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE )
+	 if (ok)
 	 {
 	    subBody += STR_GPU_CHECK_END;
 	 }
@@ -305,7 +308,10 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
 	 interfaceCasts.insert(
 	       tmpInterfaceCasts.begin(), tmpInterfaceCasts.end());
 
-	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE)
+	 bool ok = (isSupportedMachineType(MachineType::GPU) and 
+	       (componentType == RegularConnection::_NODE or
+	       componentType == RegularConnection::_CONSTANT));
+	 if (ok)
 	 {
 	    subBody += STR_GPU_CHECK_START;
 	    subBody += (*it2)->getConnectionCode(getName(), 
@@ -314,7 +320,7 @@ std::string ConnectionCCBase::getAddConnectionFunctionBodyExtra(
 	 }
 	 subBody += (*it2)->getConnectionCode(getName(), 
 	       functionParameters) + "\n"; 
-	 if (isSupportedMachineType(MachineType::GPU) and componentType == RegularConnection::_NODE )
+	 if (ok)
 	 {
 	    subBody += STR_GPU_CHECK_END;
 	 }

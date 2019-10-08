@@ -148,12 +148,14 @@ class DataType {
       // is initialized by calling the apropriate function on the DataItem.
       virtual std::string getInitializerString(
 	 const std::string& diArg, int level = 0,
-	 bool isIterator = true, bool forPSet = false) const;
+	 bool isIterator = true, bool forPSet = false,
+	 const Class* instance=nullptr) const;
 
       // This function returns the code for iniitializing this dataType
       // using a DataItem for PSets. It uses getInitializerString internally.
       std::string getPSetString(const std::string& diArg, 
-				bool first = false) const;
+				bool first = false, 
+				const Class* instance=nullptr) const;
 
       // This function produces the checking code, and updates the name to
       // the type checked struct. This function does nothing, it is overriden
@@ -224,7 +226,8 @@ class DataType {
       // This function returns a code string that is used by publisher's to 
       // create services.
       virtual std::string getServiceString(const std::string& tab) const;
-      virtual std::string getServiceString(const std::string& tab, MachineType mach_type) const;
+      virtual std::string getServiceString(const std::string& tab, MachineType mach_type,
+	    const Class* instance=nullptr) const;
 
       
       // This function returns a code string that is used by publisher's to 
@@ -234,13 +237,13 @@ class DataType {
 
       // This function returns code for the name of the service.
       virtual std::string getServiceNameString(const std::string& tab,
-	    MachineType mach_type=MachineType::CPU
-	    ) const;
+	    MachineType mach_type=MachineType::CPU, const Class* instance=nullptr) const;
 
       // This function returns code for the description of the service.
       virtual std::string getServiceDescriptionString(
 	 const std::string& tab,
-	 MachineType mach_type=MachineType::CPU
+	 MachineType mach_type=MachineType::CPU,
+	 const Class* instance=nullptr
 	 ) const;
 
       // This function returns code for the name of the service.
@@ -304,7 +307,8 @@ class DataType {
    private:
       std::string getServiceInfoString(
 	 const std::string& tab, const std::string& info,
-	 MachineType mach_type = MachineType::CPU) const;
+	 MachineType mach_type = MachineType::CPU,
+	 const Class* instance=nullptr) const;
 
       std::string getOptionalServiceInfoString(
 	 const std::string& tab, const std::string& info) const;

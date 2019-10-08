@@ -454,6 +454,10 @@ class Simulation : public Publishable {
 #endif
 #endif
 
+  ///Track how many copies of a constantType object
+  //<"Bias" : 5 instance > 
+  std::map<std::string, int> constantTypeCount;
+  std::map<std::string, int> constantTypeCurrentIndex;
 
 #if defined(REUSE_NODEACCESSORS)
   //track nodeaccessors from every model, e.g. CG_LifeNodeGridLayerData
@@ -500,9 +504,9 @@ class Simulation : public Publishable {
   //std::map< std::string, std::pair<int, NodeDescriptor*> >  _nodes_identifier; 
   //   #endif
   // ModelName, then DataMemberOfTypeArray(should be 1D) then size for each node instance
-  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<int, int> : int}}
-  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : number-of-inputs-for-this-data-member-as-array}}
-  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : the-expected-size-for-um_inputs}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<int, int> : int}}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : number-of-inputs-for-this-data-member-as-array}}}
+  //  {"LeakyIAFUnit": { "um_inputs": {std::pair<gridlayerIndex, nodeAccessorIndex> : the-expected-size-for-um_inputs}}}
   std::map< std::string, std::map< std::string, std::map<std::pair<int, int> , int> > > _nodes_subarray;  
   //  {"LeakyIAFUnit": one-instance-of-this-class}
   std::map< std::string, Node* >  _nodeShared; 
