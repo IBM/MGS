@@ -420,6 +420,25 @@ std::string DataType::getServiceString(const std::string& tab, MachineType mach_
 	 }
       }
    }
+   else if (mach_type == MachineType::GPU and _shared and isArray())
+   {
+      std::string  type = getTypeString();
+      std::string from = "ShallowArray<";
+      std::string to = "ShallowArray_Flat<";
+      type = type.replace(type.find(from),from.length(),to);
+      std::size_t start = type.find_first_of("<");
+      std::size_t last = type.find_first_of(">");
+      std::string element_datatype = type.substr(start+1, last-start-1);
+      type = type.replace(start+1, last-start-1, element_datatype + ", " + MEMORY_LOCATION);
+      os << tab << TAB << "rval = new GenericService< " << type
+	 << " >(" << DATA << ", " << "&(";
+      os<< DATA << "->";
+      if (_shared) {
+	 os << "getNonConstSharedMembers().";
+      }
+      os << getName() << ")" << ");\n";
+      std::string comment = "// ";
+   }
    else{
       os << tab << TAB << "rval = new GenericService< " << getTypeString() 
 	 << " >(" << DATA << ", " << "&("; 
