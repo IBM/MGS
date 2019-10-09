@@ -1,3 +1,62 @@
+# Clone MGS source codes
+
+As the source-code has links to other repositories as submodules, we should clone the repository using the 'gc' command below
+
+```console
+function gc {
+git clone --recursive $1
+}
+```
+
+# Commit/Pull
+
+## Commit your code
+
+You may make changes to the MGS repository code or the submodules (i.e. other repository code).
+
+IMPORTANT: always publish the submodules changes before publishing the change to the parent project (i.e. MGS).
+This is critical as cloning the parent project needs to also clone the desired commit from the submodules.
+
+
+If you're in the subdirectory belonging to the submodule, your 'git push' can be understood as pushing to the submodule only.
+We want to recursively push not only the submodules, but also with the changes in the parent project.
+
+SOLUTION: Pushing changes using the function below
+
+```console
+function gpush {
+git push --recurse-submodules=on-demand
+}
+```
+
+or update the file $HOME/.gitconfig
+```console
+[alias]
+	spush = push --recurse-submodules=on-demand
+```
+
+## Pull from upstream 
+
+```console
+git pull
+``` 
+updates your local repository with upstream change. But that only works for MGS parent repository.
+
+To also get the change from submodule repository, we MUST remember: commit your local change of the submodule, as 
+running 
+```
+git submodule update
+```
+will overwrite the local changes by default.
+
+
+we use this command
+```console
+function gupdate {
+	git submodule update --remote --merge
+}
+```
+
 # Build instructions
 
 ./build_script  *[print out help instruction]*  
@@ -21,7 +80,10 @@
   cxsparse library
     env SUITESPARSE
   mnist (header only) 
-    Download and extract mnist-master.zip from https://github.com/wichtounet/mnist to gsl/utils
+    Download and extract mnist-master.zip from https://github.com/wichtounet/mnist to gsl/utils by running
+```console
+    git clone --depth=1 --branch=master https://github.com/wichtounet/mnist.git gsl/utils/mnist && rm -rf gsl/utils/mnist/.git 
+```
       
 # Container-based build
 ## Step 0

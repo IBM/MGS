@@ -50,6 +50,7 @@ function print_help {
   NO FLAG			build with models/mgs.mdf
 
   PREDEFINED TARGETS:
+  --as-file filename.mdf             build using models/filename.mdf
   --as-MGS                      (default) build Model Graph Simulator (MGS) - using mgs.mdf
   --as-NTS                      build Neural Tissue Simulator (NTS) - using models/nts.mdf
   --as-NTS-NVU                  build NTS+NVU - using NVU.mdf
@@ -283,6 +284,16 @@ while getopts "$optspec" optchar; do
                 as-NGS)
                     BUILD_TARGET="--as-NGS"
                     MDF_TARGET="ngs.mdf"
+                    ;;
+                -as-file)
+                    MDF_TARGET="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                    if [ -z $MDF_TARGET ] || [ "${MDF_TARGET:0:1}" == "-" ]; then
+                      echoerr "Please select a value for --${OPTARG} option"
+                      exit
+                    else
+                      echoerr "Build MGS using MDF file: : " ${MDF_TARGET}
+                    fi
+                    TYPE=$MDF_TARGET
                     ;;
                 clean)
                     CLEAN="-clean"
@@ -738,7 +749,7 @@ fi
 ################################################
 ### NTI code ###
 #{{{
-if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] || [[ "$CLEAN" == "-clean" ]] ; then
+if [[ "$BUILD_TARGET" == "--as-NTS" ]] || [[ "$BUILD_TARGET" == "--as-NTS-NVU" ]] ; then
 if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ; then
   cd $BASE_FOLDER/nti
   if [ -f .build_error ]; then rm .build_error; fi
@@ -761,10 +772,10 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
     fi
     if [ "$REBUILD" == "-rebuild" ] || [ "$MCO" == "-MCO" ]; then
       make realclean RELEASE="$RELEASE";
-      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS} 
+      make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
     fi
   else
-    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
+    make ${TARGET_MAKE} -j $NPROCS RELEASE="$RELEASE"
   fi
   if [ -f .build_error ]; then 
     cd $BASE_FOLDER
@@ -774,7 +785,7 @@ if [[ "nti" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] || [[ "all" =~ 
   if [ "$CLEAN" != "-clean" ] || [ "$REBUILD" == "-rebuild" ]; then
     if [ "$TARGET_MAKE" != "" ]; then
       # we also want to build the executable
-      make -j $NPROCS RELEASE="$RELEASE" ${EXTRA_LIBS}
+      make -j $NPROCS RELEASE="$RELEASE"
     fi
     BUILD_FAIL=0
     if [ "$RELEASE" == "-release" ]; then
@@ -826,7 +837,7 @@ if [[ "gsl" =~ (^|[[:space:]])"$WHAT_TO_BUILD"($|[[:space:]]) ]] ||  [[ "all" =~
       #rm_ifexist $BASE_FOLDER/models/all_test.mdf
       rm_ifexist $LENSROOT/extensions/functor/all.mdf
       rm_ifexist $LENSROOT/extensions/functor/all_test.mdf
-      find . -iname "CG_*" | xargs -I{} rm {}
+      find . -iname "CG_*" -not -name "*incl" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname "CG_*" | xargs -I{} rm {}
       find $BASE_FOLDER/models -iname ".*mdl" | xargs -I{} rm {}
       touch $BASE_FOLDER/models/${MDF_TARGET}
