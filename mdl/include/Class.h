@@ -223,9 +223,9 @@ class Class
       void setAlternateFileName(std::string s) {_alternateFileName=s;}
       std::string getFileName();
       /*
-       * arg (as called from CPU-side)= um_value.getDataRef()
-       * param (for definition)= value
-       * typeStr (for definition)=  'int*'
+       * arg (as called from CPU-side)= e.g. um_value.getDataRef() or _nodes.size()
+       * param (name for definition)= e.g. value or size
+       * typeStr (type for definition)=  'int*'
        */
       void addKernelArgs(std::string arg, std::string param, std::string typeStr){
          if (_gpuKernelArgs.empty())
@@ -288,6 +288,14 @@ class Class
 	       << TAB << comma << dt->getDescriptor() << "* " << dt->getName() << "\n"
 	       << TAB << "//need more info here\n"
 	       << TAB << "#endif\n";
+	 }else if (dt->isArray() and sharedData)
+	 {
+	    ArrayType* arr_dt = dynamic_cast<ArrayType*>(dt);
+	    std::string firstcomma = ", ";
+	    if (_gpuKernelArgs.empty())
+	       firstcomma="";
+	    os << "getSharedMembers()." << dt->getName() << ".getDataRef()";
+	    os_gpu << TAB << firstcomma << arr_dt->getType()->getTypeString() << "* " << dt->getName() ;
 	 }
 	 if (_gpuKernelArgs.empty())
 	 {
@@ -296,7 +304,13 @@ class Class
 	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str() + "\n";
 	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
 
-	    }else
+	    }
+	    else if (dt->isArray() and sharedData)
+	    {
+	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + os.str()+ "\n";
+	       _gpuKernelArgs = TAB + os_gpu.str() + "\n";
+	    }
+	    else
 	    {
 	       _gpuKernelArgsAsCalledFromCPU = TAB + TAB + arg + "\n";
 	       _gpuKernelArgs = TAB + typeStr + " " + param + "\n";
@@ -308,7 +322,13 @@ class Class
 	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + os.str() + "\n";
 	       _gpuKernelArgs += TAB + os_gpu.str() + "\n";
 
-	    }else
+	    }
+	    else if (dt->isArray() and sharedData)
+	    {
+	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB +  ", " + os.str() + "\n";
+	       _gpuKernelArgs += os_gpu.str() + "\n";
+	    }
+	    else
 	    {
 	       _gpuKernelArgsAsCalledFromCPU += TAB + TAB + ", " + arg + "\n";
 	       _gpuKernelArgs += TAB + ", " + typeStr + " " + param + "\n";
@@ -337,6 +357,7 @@ class Class
 	    MemberContainer<DataType>::const_iterator it, end = sharedMembers.end();
 	    for (it = sharedMembers.begin(); it != end; ++it) {
 	       //std::string name="getSharedMembers()." + it->first;
+	       std::cout << "TEST " << it->first << std::endl;
 	       //addKernelArgs(name, name, it->second->getDescriptor());
 	       addKernelArgs(it->second, true);
 	    }
