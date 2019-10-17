@@ -252,6 +252,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
     return;
   }
 
+   std::ostringstream removeDataFB; // functionBody
    if (members.size() > 0) {
       addDataTypeHeaders(members);
       addDataTypeDataItemHeaders(members);
@@ -421,6 +422,7 @@ void Class::addAttributes(const MemberContainer<DataType>& members
 	     std::unique_ptr<Attribute> att_cc(new CustomAttribute(attName, "ShallowArray_Flat<" + dt->getTypeString() + ", " + MEMORY_LOCATION + ">", AccessType::PUBLIC));
 	     att_cc->setMacroConditional(gpuConditional);
 	     addGlobalAttribute(att_cc);
+	     removeDataFB <<  TAB << attName << ".destructContents();\n";
 	   }
 	 }
 	 if (getClassInfoSubType() == SubType::BaseClassPSet and 
@@ -475,6 +477,15 @@ void Class::addAttributes(const MemberContainer<DataType>& members
       }
       if (add_gpu_attributes and compcat_ptr)
 	compcat_ptr->addDataNameMapping(STR_GPU_CHECK_END); 
+   }
+   if (getClassInfoPrimeType() == PrimeType::Constant){ 
+     std::string removeMethodName("remove_" + getName().substr(3));
+     std::auto_ptr<Method> removeDataMethod(new Method(removeMethodName, "void"));
+     removeDataMethod->setFunctionBody(removeDataFB.str());  
+     MacroConditional gpuConditional(GPUCONDITIONAL);
+     removeDataMethod->setMacroConditional(gpuConditional);
+     removeDataMethod->setStatic();
+     addMethod(removeDataMethod);
    }
    //extension for GPU 
    if (add_gpu_attributes)
@@ -1256,6 +1267,7 @@ void Class::addConstructor()
    if (getClassInfoPrimeType() == PrimeType::Constant)
    {
      std::string cls_name(getName().substr(3));
+     std::string removeMethodName("remove_" + getName().substr(3));
      fb << STR_GPU_CHECK_START;
    /*
     * 1. check for sim->_passType
@@ -1269,6 +1281,8 @@ void Class::addConstructor()
        "if (sim.constantTypeCount.find(\"" << cls_name << "\") == sim.constantTypeCount.end()) {\n"
        << tab << TAB << TAB <<
        "sim.constantTypeCount[\"" << cls_name << "\"] = 1;\n"
+       << tab << TAB << TAB <<
+       "assert(atexit(" << removeMethodName << ") == 0);\n"
        << tab << TAB <<
        "}\n"
        << tab << TAB <<
