@@ -42,6 +42,68 @@ inline    void _check(cudaError_t r, const char* file, int line, bool abort=true
     if (abort) exit(0);
   }
 }
+#ifndef DEVICE_RESET
+#define DEVICE_RESET cudaDeviceReset();
+#endif
+static const char *_cudaGetErrorEnum(cudaError_t error) {
+  return cudaGetErrorName(error);
+}
+template <typename T>
+void check(T result, char const *const func, const char *const file,
+           int const line) {
+  if (result) {
+    fprintf(stderr, "CUDA error at %s:%d code=%d(%s) \"%s\" \n", file, line,
+            static_cast<unsigned int>(result), _cudaGetErrorEnum(result), func);
+    DEVICE_RESET
+    // Make sure we call CUDA Device Reset before exiting
+    exit(EXIT_FAILURE);
+  }
+}
+class Managed
+{
+  public:
+    /* 
+     * T = data type for 1 element
+     * len = num_elements * sizeof(T)
+     */
+    void *operator new(size_t len)
+    {
+      void *ptr;
+      cudaMallocManaged(&ptr, len);
+      cudaDeviceSynchronize();
+      return ptr;
+    }
+    void operator delete(void* ptr)
+    {
+      cudaDeviceSynchronize();
+      cudaFree(ptr);
+    }
+
+    CUDA_CALLABLE void * new_memory(size_t len)
+    {
+      void *ptr=nullptr;
+#if ! defined(__CUDA_ARCH__)
+      gpuErrorCheck(cudaDeviceSynchronize());
+      gpuErrorCheck(cudaMallocManaged(&ptr, len));
+#else
+      assert(0);
+#endif
+      return ptr;
+    }
+    CUDA_CALLABLE void delete_memory(void* ptr)
+    {
+#if ! defined(__CUDA_ARCH__)
+      gpuErrorCheck(cudaDeviceSynchronize());
+      gpuErrorCheck(cudaFree(ptr));
+#else
+      assert(0);
+#endif
+    }
+};
+
+// This will output the proper CUDA error strings in the event
+// that a CUDA host call returns an error
+#define checkCudaErrors(val) check((val), #val, __FILE__, __LINE__)
 
 /* IMPORTANT: this is necessary for large-scale simulation */
 #define ARRAY_LAZY_ALLOCATION
@@ -309,5 +371,18 @@ CUDA_CALLABLE T tanh(T x)
   return 2/(1+exp(-2*x))-1; 
 }
 
+//referenced from https://github.com/eyalroz/libgiddy/blob/master/src/cuda/on_device/builtins.cuh
+#define __df__ __device__ __forceinline__
+
+template <typename T> __df__ T minimum(T x, T y);
+template <> __df__ int                 minimum<int               >(int x, int y)                               { return (int)fmin((double)x,(double)y);    }
+template <> __df__ size_t              minimum<size_t            >(size_t x, size_t y)                         { return (size_t)fmin((double)x,(double)y);    }
+//template <> __df__ unsigned int        minimum<unsigned          >(unsigned int x, unsigned int y)             { return umin(x,y);   }
+//template <> __df__ long                minimum<long              >(long x, long y)                             { return llmin(x,y);  }
+//template <> __df__ unsigned long       minimum<unsigned long     >(unsigned long x, unsigned long y)           { return ullmin(x,y); }
+//template <> __df__ long long           minimum< long long        >(long long x, long long y)                   { return llmin(x,y);  }
+//template <> __df__ unsigned long long  minimum<unsigned long long>(unsigned long long x, unsigned long long y) { return ullmin(x,y); }
+template <> __df__ float               minimum<float             >(float x, float y)                           { return fminf(x,y);  }
+template <> __df__ double              minimum<double            >(double x, double y)                         { return fmin(x,y);   }
 
 #endif
