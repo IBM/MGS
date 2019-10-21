@@ -1329,6 +1329,19 @@ void Class::addConstructor()
      fb << tab << "}\n";
      fb << STR_GPU_CHECK_END;
    }
+   if (getClassInfoPrimeType() == PrimeType::Node and 
+       getClassInfoSubType() == SubType::SharedMembers)
+   {
+     std::vector<Attribute*>::const_iterator it, end = _attributes_gpu.end();
+     fb << STR_GPU_CHECK_START;
+     for (it = _attributes_gpu.begin(); it != end; ++it) {
+       std::string attName = (*it)->getName();
+       if ((*it)->isPointer()) {
+	 fb << tab << attName  << " = new_memory<" << (*it)->getType() << ">();\n";
+       }
+     }
+     fb << STR_GPU_CHECK_END;
+   }
    consToIns->setFunctionBody(fb.str());  
    addMethod(consToIns);
 }
@@ -1431,6 +1444,24 @@ void Class::addDestructor()
    std::auto_ptr<Method> destructor(new Method("~" + getName()));
    if (hasOwnedHeapData() && !getCopyingRemoved()) {
       destructor->setFunctionBody(TAB + "destructOwnedHeap();\n");  
+   }
+   else{
+     if (getClassInfoPrimeType() == PrimeType::Node and 
+	 getClassInfoSubType() == SubType::SharedMembers)
+     {
+       std::ostringstream fb; // functionBody
+       std::string tab(TAB);
+       std::vector<Attribute*>::const_iterator it, end = _attributes_gpu.end();
+       fb << STR_GPU_CHECK_START;
+       for (it = _attributes_gpu.begin(); it != end; ++it) {
+	 std::string attName = (*it)->getName();
+	 if ((*it)->isPointer()) {
+	   fb << tab << "delete_memory(" << attName << ");\n";
+	 }
+       }
+       fb << STR_GPU_CHECK_END;
+       destructor->setFunctionBody(fb.str());  
+     }
    }
    destructor->setVirtual();
    addMethod(destructor);
